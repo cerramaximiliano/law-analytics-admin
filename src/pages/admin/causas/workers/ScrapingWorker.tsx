@@ -45,7 +45,11 @@ const FUERO_OPTIONS = [
 	{ value: "CIV", label: "Civil" },
 	{ value: "CSS", label: "Seguridad Social" },
 	{ value: "CNT", label: "Trabajo" },
+	{ value: "COM", label: "Comercial" },
 ];
+
+// Años disponibles para filtros (de más reciente a más antiguo)
+const YEAR_OPTIONS = ["2025", "2024", "2023", "2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015"];
 
 const ScrapingWorker = () => {
 	const { enqueueSnackbar } = useSnackbar();
@@ -69,6 +73,7 @@ const ScrapingWorker = () => {
 	const [fueroFilter, setFueroFilter] = useState<string>("TODOS");
 	const [yearFilter, setYearFilter] = useState<string>("TODOS");
 	const [progresoFilter, setProgresoFilter] = useState<string>("TODOS");
+	const [estadoFilter, setEstadoFilter] = useState<string>("TODOS");
 
 	// Estados de ordenamiento
 	const [sortBy, setSortBy] = useState<string>("nombre");
@@ -92,6 +97,7 @@ const ScrapingWorker = () => {
 		fuero = fueroFilter,
 		year = yearFilter,
 		progreso = progresoFilter,
+		estado = estadoFilter,
 		orderBy = sortBy,
 		order = sortOrder,
 	) => {
@@ -101,7 +107,7 @@ const ScrapingWorker = () => {
 			console.log("🔗 Base URL:", import.meta.env.VITE_WORKERS_URL);
 			console.log("📄 Página solicitada (0-based):", page, "→ API (1-based):", page + 1);
 			console.log("📏 Límite:", limit);
-			console.log("🔍 Filtros:", { fuero, year, progreso });
+			console.log("🔍 Filtros:", { fuero, year, progreso, estado });
 			console.log("🔄 Ordenamiento:", { sortBy: orderBy, sortOrder: order });
 
 			// La API usa páginas 1-based, pero MUI usa 0-based
@@ -114,6 +120,9 @@ const ScrapingWorker = () => {
 			}
 			if (progreso && progreso !== "TODOS") {
 				params.progreso = progreso;
+			}
+			if (estado && estado !== "TODOS") {
+				params.enabled = estado === "activo";
 			}
 			// El backend filtra por isTemporary: false por defecto
 			// No es necesario enviar includeTemporary=false explícitamente
@@ -195,8 +204,8 @@ const ScrapingWorker = () => {
 	};
 
 	useEffect(() => {
-		fetchConfigs(configPage, configRowsPerPage, fueroFilter, yearFilter, progresoFilter, sortBy, sortOrder);
-	}, [configPage, configRowsPerPage, fueroFilter, yearFilter, progresoFilter, sortBy, sortOrder]);
+		fetchConfigs(configPage, configRowsPerPage, fueroFilter, yearFilter, progresoFilter, estadoFilter, sortBy, sortOrder);
+	}, [configPage, configRowsPerPage, fueroFilter, yearFilter, progresoFilter, estadoFilter, sortBy, sortOrder]);
 
 	useEffect(() => {
 		fetchScrapingHistory(historyPage, historyFueroFilter, historyYearFilter, historySortBy, historySortOrder);
@@ -241,6 +250,14 @@ const ScrapingWorker = () => {
 	const handleProgresoFilterChange = (newProgreso: string) => {
 		console.log("🔍 Cambiando filtro de progreso:", newProgreso);
 		setProgresoFilter(newProgreso);
+		setConfigTotalSnapshot(null);
+		setConfigPage(0);
+	};
+
+	// Handler para cambio de filtro de estado
+	const handleEstadoFilterChange = (newEstado: string) => {
+		console.log("🔍 Cambiando filtro de estado:", newEstado);
+		setEstadoFilter(newEstado);
 		setConfigTotalSnapshot(null);
 		setConfigPage(0);
 	};
@@ -495,10 +512,11 @@ const ScrapingWorker = () => {
 					<FormControl size="small" sx={{ minWidth: 120 }}>
 						<Select value={yearFilter} onChange={(e) => handleYearFilterChange(e.target.value)} displayEmpty>
 							<MenuItem value="TODOS">Todos los Años</MenuItem>
-							<MenuItem value="2024">2024</MenuItem>
-							<MenuItem value="2023">2023</MenuItem>
-							<MenuItem value="2022">2022</MenuItem>
-							<MenuItem value="2021">2021</MenuItem>
+							{YEAR_OPTIONS.map((year) => (
+								<MenuItem key={year} value={year}>
+									{year}
+								</MenuItem>
+							))}
 						</Select>
 					</FormControl>
 					<FormControl size="small" sx={{ minWidth: 140 }}>
@@ -514,6 +532,23 @@ const ScrapingWorker = () => {
 								<Stack direction="row" spacing={1} alignItems="center">
 									<Typography variant="body2">En Progreso</Typography>
 									<Chip label="<100%" size="small" color="warning" />
+								</Stack>
+							</MenuItem>
+						</Select>
+					</FormControl>
+					<FormControl size="small" sx={{ minWidth: 130 }}>
+						<Select value={estadoFilter} onChange={(e) => handleEstadoFilterChange(e.target.value)} displayEmpty>
+							<MenuItem value="TODOS">Todos los Estados</MenuItem>
+							<MenuItem value="activo">
+								<Stack direction="row" spacing={1} alignItems="center">
+									<Typography variant="body2">Activos</Typography>
+									<Chip label="ON" size="small" color="success" />
+								</Stack>
+							</MenuItem>
+							<MenuItem value="inactivo">
+								<Stack direction="row" spacing={1} alignItems="center">
+									<Typography variant="body2">Inactivos</Typography>
+									<Chip label="OFF" size="small" color="default" />
 								</Stack>
 							</MenuItem>
 						</Select>
@@ -927,10 +962,11 @@ const ScrapingWorker = () => {
 						<FormControl size="small" sx={{ minWidth: 120 }}>
 							<Select value={historyYearFilter} onChange={(e) => handleHistoryYearFilterChange(e.target.value)}>
 								<MenuItem value="TODOS">Todos los Años</MenuItem>
-								<MenuItem value="2024">2024</MenuItem>
-								<MenuItem value="2023">2023</MenuItem>
-								<MenuItem value="2022">2022</MenuItem>
-								<MenuItem value="2021">2021</MenuItem>
+								{YEAR_OPTIONS.map((year) => (
+									<MenuItem key={year} value={year}>
+										{year}
+									</MenuItem>
+								))}
 							</Select>
 						</FormControl>
 						<Button

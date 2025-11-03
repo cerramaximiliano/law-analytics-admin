@@ -145,6 +145,7 @@ class WorkerConfigService {
 
 	async getConfigs(params?: {
 		activo?: boolean;
+		enabled?: boolean;
 		fuero?: string;
 		year?: string;
 		progreso?: string;
@@ -213,6 +214,7 @@ export class WorkersService {
 		workerType: WorkerType,
 		params?: {
 			activo?: boolean;
+			enabled?: boolean;
 			fuero?: string;
 			year?: string;
 			progreso?: string;
@@ -273,6 +275,7 @@ export class WorkersService {
 
 	static async getScrapingConfigs(params?: {
 		activo?: boolean;
+		enabled?: boolean;
 		fuero?: string;
 		year?: string;
 		progreso?: string;
