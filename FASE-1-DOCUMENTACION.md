@@ -236,24 +236,26 @@ Se configuraron todas las variables necesarias:
 
 ```env
 # Google OAuth (compartido con proyecto principal)
-VITE_AUTH0_GOOGLE_ID=949191831766-0dnnre28qhjn8jmbnn7h98lg8ng7dlh6.apps.googleusercontent.com
-VITE_GOOGLE_API_KEY=AIzaSyDXIx5hdvUHfT0rz7UdsY2mB_kTYEhQs5g
+VITE_AUTH0_GOOGLE_ID=<your-google-client-id>
+VITE_GOOGLE_API_KEY=<your-google-api-key>
 
 # API de autenticación (compartida)
 VITE_AUTH_URL=https://api.lawanalytics.app
 
 # API de Workers (nueva, específica de admin)
-VITE_WORKERS_URL=https://jenna-nonspillable-nontabularly.ngrok-free.dev/api
+VITE_WORKERS_URL=<your-workers-api-url>
 
 # Development
-VITE_DEV_EMAIL=maximilian@rumba-dev.com
-VITE_DEV_PASSWORD=12345678
+VITE_DEV_EMAIL=<dev-email>
+VITE_DEV_PASSWORD=<dev-password>
 VITE_MAINTENANCE_MODE=false
 ```
 
 **Archivos:**
-- `.env` - Variables de desarrollo
+- `.env` - Variables de desarrollo (no commiteado, ver .env.example)
 - `.env.example` - Plantilla para otros desarrolladores
+
+**Nota de Seguridad:** Las claves API reales deben estar solo en el archivo `.env` (nunca commiteado al repositorio).
 
 ### 8. ✅ Vite Configuration
 

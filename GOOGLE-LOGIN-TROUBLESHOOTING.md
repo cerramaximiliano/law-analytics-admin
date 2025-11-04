@@ -70,7 +70,7 @@ accounts.google.com/gsi/client:1
 
 1. **Ir a**: https://console.cloud.google.com/
 2. **APIs & Services** → **Credentials**
-3. **Buscar el Client ID**: `949191831766-0dnnre28qhjn8jmbnn7h98lg8ng7dlh6.apps.googleusercontent.com`
+3. **Buscar tu Client ID** (disponible en tu archivo `.env`)
 4. **Authorized JavaScript origins** debe incluir:
    ```
    http://localhost:5174
@@ -167,8 +167,7 @@ console.log(window.google);
 // En Console tab:
 console.log(import.meta.env.VITE_AUTH0_GOOGLE_ID);
 
-// Debe mostrar:
-"949191831766-0dnnre28qhjn8jmbnn7h98lg8ng7dlh6.apps.googleusercontent.com"
+// Debe mostrar tu Google Client ID configurado en .env
 ```
 
 ---
@@ -198,9 +197,9 @@ Posibles razones:
 
 ### 1. Variables de Entorno (.env)
 ```env
-VITE_AUTH0_GOOGLE_ID=949191831766-0dnnre28qhjn8jmbnn7h98lg8ng7dlh6.apps.googleusercontent.com
+VITE_AUTH0_GOOGLE_ID=<your-google-client-id>
 ```
-✅ **Correcto**
+✅ **Asegúrate de tener tu Client ID configurado**
 
 ### 2. App.tsx (línea 17)
 ```typescript

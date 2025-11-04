@@ -166,12 +166,15 @@ law-analytics-admin/
 
 ```env
 # Google OAuth
-VITE_AUTH0_GOOGLE_ID=949191831766-0dnnre28qhjn8jmbnn7h98lg8ng7dlh6.apps.googleusercontent.com
+VITE_AUTH0_GOOGLE_ID=<your-google-client-id>
+VITE_GOOGLE_API_KEY=<your-google-api-key>
 
 # API Endpoints
 VITE_AUTH_URL=https://api.lawanalytics.app
-VITE_WORKERS_URL=https://jenna-nonspillable-nontabularly.ngrok-free.dev/api
+VITE_WORKERS_URL=<your-workers-api-url>
 ```
+
+**Nota de Seguridad:** Ver archivo `.env.example` para la plantilla completa. Las credenciales reales deben estar solo en `.env` (no commiteado).
 
 ## Comandos Disponibles
 

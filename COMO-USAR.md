@@ -11,12 +11,20 @@ npm install
 ```
 
 ### 2. Configuración
-Verifica que el archivo `.env` contenga las URLs correctas:
-```env
-VITE_AUTH0_GOOGLE_ID=949191831766-0dnnre28qhjn8jmbnn7h98lg8ng7dlh6.apps.googleusercontent.com
-VITE_AUTH_URL=https://api.lawanalytics.app
-VITE_WORKERS_URL=https://jenna-nonspillable-nontabularly.ngrok-free.dev/api
+Copia el archivo `.env.example` a `.env` y configura las variables:
+```bash
+cp .env.example .env
 ```
+
+Edita el archivo `.env` con tus credenciales:
+```env
+VITE_AUTH0_GOOGLE_ID=<your-google-client-id>
+VITE_GOOGLE_API_KEY=<your-google-api-key>
+VITE_AUTH_URL=https://api.lawanalytics.app
+VITE_WORKERS_URL=<your-workers-api-url>
+```
+
+**Nota:** Nunca compartas o commitees el archivo `.env` con credenciales reales.
 
 ### 3. Desarrollo
 ```bash
