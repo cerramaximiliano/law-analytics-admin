@@ -40,17 +40,31 @@ Usuario → Request → API → Response (401)
 - Agrega el token al header `Authorization: Bearer {token}`
 - NO previene peticiones con token expirado
 
-**Response Interceptor:**
+**Success Response Interceptor:**
+- Captura tokens de headers (`authorization`, `x-auth-token`)
+- Captura tokens del body (`response.data.token`)
+- Almacena en `authTokenService` y `secureStorage`
+
+**Error Response Interceptor:**
 ```typescript
 if (error.response?.status === 401 && !originalRequest._retry) {
   originalRequest._retry = true;
 
-  // Intentar refresh
-  await axios.post(`${VITE_AUTH_URL}/api/auth/refresh-token`, {}, { withCredentials: true });
+  // Intentar refresh y capturar el nuevo token
+  const refreshResponse = await axios.post(`${VITE_AUTH_URL}/api/auth/refresh-token`, {}, { withCredentials: true });
 
-  // Si refresh OK, reintentar petición
-  const newToken = getAuthToken();
-  originalRequest.headers.Authorization = `Bearer ${newToken}`;
+  // Capturar token de la respuesta del refresh
+  const newToken = refreshResponse.headers["authorization"]?.replace("Bearer ", "")
+    || refreshResponse.headers["x-auth-token"]
+    || refreshResponse.data?.token;
+
+  if (newToken) {
+    authTokenService.setToken(newToken);
+    secureStorage.setAuthToken(newToken);
+    originalRequest.headers.Authorization = `Bearer ${newToken}`;
+  }
+
+  // Reintentar petición con nuevo token
   return workersAxios(originalRequest);
 }
 ```
@@ -101,10 +115,16 @@ VITE_WORKERS_URL=http://localhost:3035
 
 ## Captura y Almacenamiento de Token
 
-### Después del Refresh
-El nuevo token se captura automáticamente de:
+### En Todas las Respuestas Exitosas
+Tanto `workersAxios` como `authAxios` capturan tokens de TODAS las respuestas exitosas:
 1. Response headers: `authorization` o `x-auth-token`
 2. Response body: `response.data.token`
+
+### Específicamente en el Refresh
+Cuando se hace refresh del token:
+1. Se captura explícitamente de la respuesta del endpoint `/api/auth/refresh-token`
+2. Se almacena ANTES de reintentar la petición original
+3. Se actualiza el header `Authorization` de la petición original
 
 ### Almacenamiento
 ```typescript
