@@ -74,23 +74,13 @@ workersAxios.interceptors.request.use(
 	(config: InternalAxiosRequestConfig) => {
 		const token = getAuthToken();
 
-		console.log(`🌐 workersAxios: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
-		console.log("🔑 Token disponible:", token ? `${token.substring(0, 20)}...` : "NO");
-
 		if (token && config.headers) {
 			config.headers.Authorization = `Bearer ${token}`;
-			console.log("✅ Authorization header agregado:", config.headers.Authorization.substring(0, 30) + "...");
-		} else {
-			console.warn("⚠️ No se pudo agregar Authorization header. Token:", !!token, "Headers:", !!config.headers);
 		}
-
-		// Log de todos los headers que se enviarán
-		console.log("📤 Headers a enviar:", JSON.stringify(config.headers, null, 2));
 
 		return config;
 	},
 	(error) => {
-		console.error("❌ workersAxios: Request error:", error);
 		return Promise.reject(error);
 	},
 );
@@ -98,39 +88,29 @@ workersAxios.interceptors.request.use(
 // Response interceptor for error handling and token refresh
 workersAxios.interceptors.response.use(
 	(response: AxiosResponse) => {
-		console.log(`✅ workersAxios: Response ${response.status}:`, response.data);
 		return response;
 	},
 	async (error) => {
 		const originalRequest = error.config;
 
-		console.error("❌ workersAxios: Response error:", error.response || error);
-
 		// Si recibimos un 401 del servidor y no hemos intentado refrescar aún
 		if (error.response?.status === 401 && !originalRequest._retry) {
 			originalRequest._retry = true;
-
-			console.log("🔄 workersAxios: Intentando refrescar token...");
 
 			try {
 				// Intentar refrescar el token usando la API de autenticación
 				const authBaseURL = import.meta.env.VITE_AUTH_URL || "https://api.lawanalytics.app";
 				await axios.post(`${authBaseURL}/api/auth/refresh-token`, {}, { withCredentials: true });
 
-				console.log("✅ workersAxios: Token refrescado exitosamente");
-
 				// Obtener el nuevo token y reintentar la petición original
 				const newToken = getAuthToken();
 				if (newToken && originalRequest.headers) {
 					originalRequest.headers.Authorization = `Bearer ${newToken}`;
-					console.log("🔄 workersAxios: Reintentando petición original con nuevo token");
 				}
 
 				// Reintentar la petición original
 				return workersAxios(originalRequest);
 			} catch (refreshError) {
-				console.error("❌ workersAxios: Error al refrescar token:", refreshError);
-
 				// Si el refresh falla, limpiar tokens y redirigir al login
 				secureStorage.clearSession();
 				authTokenService.clearToken();

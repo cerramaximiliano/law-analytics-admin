@@ -155,12 +155,9 @@ class WorkerConfigService {
 		limit?: number;
 	}): Promise<WorkerConfigResponse> {
 		try {
-			console.log(`📡 WorkersService: GET ${this.endpoint}`, params);
 			const response = await workersAxios.get(this.endpoint, { params });
-			console.log(`✅ WorkersService: Response from ${this.endpoint}:`, response.data);
 			return response.data;
 		} catch (error) {
-			console.error(`❌ WorkersService: Error GET ${this.endpoint}:`, error);
 			throw WorkersService.handleError(error);
 		}
 	}
@@ -185,12 +182,9 @@ class WorkerConfigService {
 
 	async deleteConfig(id: string): Promise<WorkerConfigResponse> {
 		try {
-			console.log(`🗑️ WorkersService: DELETE ${this.endpoint}${id}`);
 			const response = await workersAxios.delete(`${this.endpoint}${id}`);
-			console.log(`✅ WorkersService: Deleted ${id}:`, response.data);
 			return response.data;
 		} catch (error) {
-			console.error(`❌ WorkersService: Error DELETE ${this.endpoint}${id}:`, error);
 			throw WorkersService.handleError(error);
 		}
 	}

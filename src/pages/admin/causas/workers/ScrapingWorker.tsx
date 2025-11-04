@@ -103,12 +103,6 @@ const ScrapingWorker = () => {
 	) => {
 		try {
 			setLoading(true);
-			console.log("📡 ScrapingWorker: Iniciando petición a WorkersService.getScrapingConfigs");
-			console.log("🔗 Base URL:", import.meta.env.VITE_WORKERS_URL);
-			console.log("📄 Página solicitada (0-based):", page, "→ API (1-based):", page + 1);
-			console.log("📏 Límite:", limit);
-			console.log("🔍 Filtros:", { fuero, year, progreso, estado });
-			console.log("🔄 Ordenamiento:", { sortBy: orderBy, sortOrder: order });
 
 			// La API usa páginas 1-based, pero MUI usa 0-based
 			const params: any = { page: page + 1, limit, sortBy: orderBy, sortOrder: order };
@@ -126,35 +120,18 @@ const ScrapingWorker = () => {
 			}
 			// El backend filtra por isTemporary: false por defecto
 			// No es necesario enviar includeTemporary=false explícitamente
-			console.log("📤 Parámetros enviados:", params);
 			const response = await WorkersService.getScrapingConfigs(params);
 
-			console.log("✅ ScrapingWorker: Respuesta recibida:", response);
-
 			if (response.success && Array.isArray(response.data)) {
-				console.log("✅ Configs encontrados:", response.data.length);
-				console.log("📊 Total:", response.total, "Páginas:", response.pages);
-				console.log("🔍 IMPORTANTE - Página:", response.page, "Count:", response.count, "Total:", response.total);
-
 				// Capturar snapshot del total en la primera carga
 				if (configTotalSnapshot === null) {
-					console.log("📸 Capturando snapshot del total:", response.total);
 					setConfigTotalSnapshot(response.total || 0);
-				}
-
-				// Alerta si el total cambia
-				if (configTotal > 0 && configTotal !== response.total) {
-					console.warn(`⚠️ ¡EL TOTAL CAMBIÓ! Anterior: ${configTotal}, Nuevo: ${response.total}`);
-					console.warn(`📸 Usando snapshot: ${configTotalSnapshot} para mantener paginación estable`);
 				}
 
 				setConfigs(response.data);
 				setConfigTotal(response.total || 0);
-			} else {
-				console.warn("⚠️ Respuesta sin datos o formato incorrecto:", response);
 			}
 		} catch (error) {
-			console.error("❌ ScrapingWorker: Error al cargar configs:", error);
 			enqueueSnackbar("Error al cargar las configuraciones de scraping", {
 				variant: "error",
 				anchorOrigin: { vertical: "bottom", horizontal: "right" },
@@ -183,8 +160,6 @@ const ScrapingWorker = () => {
 			if (year && year !== "TODOS") {
 				params.year = year;
 			}
-
-			console.log("📡 Fetching history with params:", params);
 
 			const response = await WorkersService.getScrapingHistory(params);
 			if (response.success) {
@@ -223,7 +198,6 @@ const ScrapingWorker = () => {
 
 	// Refrescar datos y resetear snapshot
 	const handleRefresh = () => {
-		console.log("🔄 Refrescando datos y reseteando snapshot");
 		setConfigTotalSnapshot(null); // Resetear snapshot
 		setConfigPage(0); // Volver a página 1
 		fetchConfigs(0, configRowsPerPage, fueroFilter);
@@ -232,7 +206,6 @@ const ScrapingWorker = () => {
 
 	// Handler para cambio de filtro de fuero
 	const handleFueroFilterChange = (newFuero: string) => {
-		console.log("🔍 Cambiando filtro de fuero:", newFuero);
 		setFueroFilter(newFuero);
 		setConfigTotalSnapshot(null); // Resetear snapshot al cambiar filtro
 		setConfigPage(0); // Volver a página 1
@@ -240,7 +213,6 @@ const ScrapingWorker = () => {
 
 	// Handler para cambio de filtro de año
 	const handleYearFilterChange = (newYear: string) => {
-		console.log("🔍 Cambiando filtro de año:", newYear);
 		setYearFilter(newYear);
 		setConfigTotalSnapshot(null);
 		setConfigPage(0);
@@ -248,7 +220,6 @@ const ScrapingWorker = () => {
 
 	// Handler para cambio de filtro de progreso
 	const handleProgresoFilterChange = (newProgreso: string) => {
-		console.log("🔍 Cambiando filtro de progreso:", newProgreso);
 		setProgresoFilter(newProgreso);
 		setConfigTotalSnapshot(null);
 		setConfigPage(0);
@@ -256,7 +227,6 @@ const ScrapingWorker = () => {
 
 	// Handler para cambio de filtro de estado
 	const handleEstadoFilterChange = (newEstado: string) => {
-		console.log("🔍 Cambiando filtro de estado:", newEstado);
 		setEstadoFilter(newEstado);
 		setConfigTotalSnapshot(null);
 		setConfigPage(0);
