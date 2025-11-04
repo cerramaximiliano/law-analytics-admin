@@ -321,19 +321,10 @@ export class WorkersService {
 
 	// Manejo de errores
 	static handleError(error: any): Error {
+		// Si es un error de axios, re-lanzarlo tal cual para que el interceptor pueda manejarlo
+		// Esto permite que el interceptor de workersAxios intente refrescar el token en errores 401
 		if (error.isAxiosError) {
-			if (error.response?.data?.message) {
-				return new Error(error.response.data.message);
-			}
-			if (error.response?.status === 401) {
-				return new Error("No autorizado");
-			}
-			if (error.response?.status === 403) {
-				return new Error("No tiene permisos de administrador");
-			}
-			if (error.response?.status === 404) {
-				return new Error("Configuración no encontrada");
-			}
+			throw error;
 		}
 		return new Error("Error al procesar la solicitud");
 	}
