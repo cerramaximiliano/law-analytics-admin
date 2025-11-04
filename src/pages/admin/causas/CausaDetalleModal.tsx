@@ -16,13 +16,15 @@ import {
 	TableHead,
 	TableRow,
 	TablePagination,
-	CircularProgress,
 	Alert,
 	Divider,
 	Stack,
+	Tabs,
+	Tab,
+	Link,
 } from "@mui/material";
 import { Causa } from "api/causas";
-import { CloseCircle } from "iconsax-react";
+import { CloseCircle, Link as LinkIcon } from "iconsax-react";
 
 interface CausaDetalleModalProps {
 	open: boolean;
@@ -47,13 +49,17 @@ const FUERO_COLORS: Record<string, "primary" | "success" | "warning" | "error"> 
 };
 
 const CausaDetalleModal = ({ open, onClose, causa }: CausaDetalleModalProps) => {
+	// Estado para el tab activo
+	const [activeTab, setActiveTab] = useState(0);
+
 	// Estados para movimientos paginados
 	const [movimientosPage, setMovimientosPage] = useState(0);
 	const [movimientosRowsPerPage, setMovimientosRowsPerPage] = useState(10);
 
-	// Resetear paginación cuando se abre el modal
+	// Resetear paginación y tab cuando se abre el modal
 	useEffect(() => {
 		if (open) {
+			setActiveTab(0);
 			setMovimientosPage(0);
 		}
 	}, [open]);
@@ -94,6 +100,10 @@ const CausaDetalleModal = ({ open, onClose, causa }: CausaDetalleModalProps) => 
 		setMovimientosPage(0);
 	};
 
+	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+		setActiveTab(newValue);
+	};
+
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
 			<DialogTitle>
@@ -103,148 +113,153 @@ const CausaDetalleModal = ({ open, onClose, causa }: CausaDetalleModalProps) => 
 				</Stack>
 			</DialogTitle>
 
+			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+				<Tabs value={activeTab} onChange={handleTabChange} aria-label="causa detail tabs">
+					<Tab label="Información General" />
+					<Tab label={`Movimientos (${movimientos.length})`} />
+				</Tabs>
+			</Box>
+
 			<DialogContent dividers>
-				<Grid container spacing={3}>
-					{/* Información principal */}
-					<Grid item xs={12}>
-						<Typography variant="h6" gutterBottom>
-							Información Principal
-						</Typography>
-						<Divider sx={{ mb: 2 }} />
-					</Grid>
+				{/* Tab Panel 0: Información General */}
+				{activeTab === 0 && (
+					<Grid container spacing={3}>
+						{/* Información principal */}
+						<Grid item xs={12}>
+							<Typography variant="h6" gutterBottom>
+								Información Principal
+							</Typography>
+							<Divider sx={{ mb: 2 }} />
+						</Grid>
 
-					<Grid item xs={12} sm={6} md={3}>
-						<Typography variant="caption" color="textSecondary">
-							ID
-						</Typography>
-						<Typography variant="body2" fontWeight="bold">
-							{getId(causa._id)}
-						</Typography>
-					</Grid>
+						<Grid item xs={12} sm={6} md={3}>
+							<Typography variant="caption" color="textSecondary">
+								ID
+							</Typography>
+							<Typography variant="body2" fontWeight="bold">
+								{getId(causa._id)}
+							</Typography>
+						</Grid>
 
-					<Grid item xs={12} sm={6} md={3}>
-						<Typography variant="caption" color="textSecondary">
-							Número
-						</Typography>
-						<Typography variant="body2" fontWeight="bold">
-							{causa.number}
-						</Typography>
-					</Grid>
+						<Grid item xs={12} sm={6} md={3}>
+							<Typography variant="caption" color="textSecondary">
+								Número
+							</Typography>
+							<Typography variant="body2" fontWeight="bold">
+								{causa.number}
+							</Typography>
+						</Grid>
 
-					<Grid item xs={12} sm={6} md={3}>
-						<Typography variant="caption" color="textSecondary">
-							Año
-						</Typography>
-						<Typography variant="body2" fontWeight="bold">
-							{causa.year}
-						</Typography>
-					</Grid>
+						<Grid item xs={12} sm={6} md={3}>
+							<Typography variant="caption" color="textSecondary">
+								Año
+							</Typography>
+							<Typography variant="body2" fontWeight="bold">
+								{causa.year}
+							</Typography>
+						</Grid>
 
-					<Grid item xs={12} sm={6} md={3}>
-						<Typography variant="caption" color="textSecondary">
-							Estado
-						</Typography>
-						<Box>
-							{causa.verified && <Chip label="Verificada" color="success" size="small" sx={{ mr: 0.5 }} />}
-							{causa.isValid && <Chip label="Válida" color="primary" size="small" />}
-						</Box>
-					</Grid>
+						<Grid item xs={12} sm={6} md={3}>
+							<Typography variant="caption" color="textSecondary">
+								Estado
+							</Typography>
+							<Box>
+								{causa.verified && <Chip label="Verificada" color="success" size="small" sx={{ mr: 0.5 }} />}
+								{causa.isValid && <Chip label="Válida" color="primary" size="small" />}
+							</Box>
+						</Grid>
 
-					<Grid item xs={12}>
-						<Typography variant="caption" color="textSecondary">
-							Carátula
-						</Typography>
-						<Typography variant="body2">{causa.caratula || "Sin carátula"}</Typography>
-					</Grid>
+						<Grid item xs={12}>
+							<Typography variant="caption" color="textSecondary">
+								Carátula
+							</Typography>
+							<Typography variant="body2">{causa.caratula || "Sin carátula"}</Typography>
+						</Grid>
 
-					<Grid item xs={12} md={6}>
-						<Typography variant="caption" color="textSecondary">
-							Juzgado
-						</Typography>
-						<Typography variant="body2">{causa.juzgado || "N/A"}</Typography>
-					</Grid>
+						<Grid item xs={12} md={6}>
+							<Typography variant="caption" color="textSecondary">
+								Juzgado
+							</Typography>
+							<Typography variant="body2">{causa.juzgado || "N/A"}</Typography>
+						</Grid>
 
-					<Grid item xs={12} md={6}>
-						<Typography variant="caption" color="textSecondary">
-							Objeto
-						</Typography>
-						<Typography variant="body2">{causa.objeto || "Sin objeto"}</Typography>
-					</Grid>
+						<Grid item xs={12} md={6}>
+							<Typography variant="caption" color="textSecondary">
+								Objeto
+							</Typography>
+							<Typography variant="body2">{causa.objeto || "Sin objeto"}</Typography>
+						</Grid>
 
-					{/* Fechas */}
-					<Grid item xs={12}>
-						<Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-							Fechas
-						</Typography>
-						<Divider sx={{ mb: 2 }} />
-					</Grid>
+						{/* Fechas */}
+						<Grid item xs={12}>
+							<Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+								Fechas
+							</Typography>
+							<Divider sx={{ mb: 2 }} />
+						</Grid>
 
-					<Grid item xs={12} sm={6} md={4}>
-						<Typography variant="caption" color="textSecondary">
-							Última Actualización
-						</Typography>
-						<Typography variant="body2">{formatDate(causa.lastUpdate)}</Typography>
-					</Grid>
+						<Grid item xs={12} sm={6} md={4}>
+							<Typography variant="caption" color="textSecondary">
+								Última Actualización
+							</Typography>
+							<Typography variant="body2">{formatDate(causa.lastUpdate)}</Typography>
+						</Grid>
 
-					<Grid item xs={12} sm={6} md={4}>
-						<Typography variant="caption" color="textSecondary">
-							Creado
-						</Typography>
-						<Typography variant="body2">{formatDate(causa.createdAt)}</Typography>
-					</Grid>
+						<Grid item xs={12} sm={6} md={4}>
+							<Typography variant="caption" color="textSecondary">
+								Creado
+							</Typography>
+							<Typography variant="body2">{formatDate(causa.createdAt)}</Typography>
+						</Grid>
 
-					<Grid item xs={12} sm={6} md={4}>
-						<Typography variant="caption" color="textSecondary">
-							Modificado
-						</Typography>
-						<Typography variant="body2">{formatDate(causa.updatedAt)}</Typography>
-					</Grid>
+						<Grid item xs={12} sm={6} md={4}>
+							<Typography variant="caption" color="textSecondary">
+								Modificado
+							</Typography>
+							<Typography variant="body2">{formatDate(causa.updatedAt)}</Typography>
+						</Grid>
 
-					{/* Carpetas y usuarios */}
-					{(causa.folderIds && causa.folderIds.length > 0) || (causa.userCausaIds && causa.userCausaIds.length > 0) ? (
-						<>
-							<Grid item xs={12}>
-								<Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-									Vínculos
-								</Typography>
-								<Divider sx={{ mb: 2 }} />
-							</Grid>
-
-							{causa.folderIds && causa.folderIds.length > 0 && (
-								<Grid item xs={12} md={6}>
-									<Typography variant="caption" color="textSecondary">
-										Carpetas Vinculadas
+						{/* Carpetas y usuarios */}
+						{(causa.folderIds && causa.folderIds.length > 0) || (causa.userCausaIds && causa.userCausaIds.length > 0) ? (
+							<>
+								<Grid item xs={12}>
+									<Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+										Vínculos
 									</Typography>
-									<Box>
-										<Chip label={`${causa.folderIds.length} carpetas`} size="small" />
-									</Box>
+									<Divider sx={{ mb: 2 }} />
 								</Grid>
-							)}
 
-							{causa.userCausaIds && causa.userCausaIds.length > 0 && (
-								<Grid item xs={12} md={6}>
-									<Typography variant="caption" color="textSecondary">
-										Usuarios Vinculados
-									</Typography>
-									<Box>
-										<Chip label={`${causa.userCausaIds.length} usuarios`} size="small" />
-									</Box>
-								</Grid>
-							)}
-						</>
-					) : null}
+								{causa.folderIds && causa.folderIds.length > 0 && (
+									<Grid item xs={12} md={6}>
+										<Typography variant="caption" color="textSecondary">
+											Carpetas Vinculadas
+										</Typography>
+										<Box>
+											<Chip label={`${causa.folderIds.length} carpetas`} size="small" />
+										</Box>
+									</Grid>
+								)}
 
-					{/* Movimientos */}
-					{movimientos.length > 0 ? (
-						<>
-							<Grid item xs={12}>
-								<Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-									Movimientos ({movimientos.length})
-								</Typography>
-								<Divider sx={{ mb: 2 }} />
-							</Grid>
+								{causa.userCausaIds && causa.userCausaIds.length > 0 && (
+									<Grid item xs={12} md={6}>
+										<Typography variant="caption" color="textSecondary">
+											Usuarios Vinculados
+										</Typography>
+										<Box>
+											<Chip label={`${causa.userCausaIds.length} usuarios`} size="small" />
+										</Box>
+									</Grid>
+								)}
+							</>
+						) : null}
+					</Grid>
+				)}
 
-							<Grid item xs={12}>
+				{/* Tab Panel 1: Movimientos */}
+				{activeTab === 1 && (
+					<Box>
+						{movimientos.length > 0 ? (
+							<>
 								<TableContainer>
 									<Table size="small">
 										<TableHead>
@@ -252,6 +267,7 @@ const CausaDetalleModal = ({ open, onClose, causa }: CausaDetalleModalProps) => 
 												<TableCell>Fecha</TableCell>
 												<TableCell>Descripción</TableCell>
 												<TableCell>Tipo</TableCell>
+												<TableCell align="center">Enlace</TableCell>
 											</TableRow>
 										</TableHead>
 										<TableBody>
@@ -265,6 +281,19 @@ const CausaDetalleModal = ({ open, onClose, causa }: CausaDetalleModalProps) => 
 													</TableCell>
 													<TableCell>
 														{mov.tipo && <Chip label={mov.tipo} size="small" variant="outlined" />}
+													</TableCell>
+													<TableCell align="center">
+														{mov.url ? (
+															<Link href={mov.url} target="_blank" rel="noopener noreferrer" underline="none">
+																<Button size="small" startIcon={<LinkIcon size={16} />} variant="outlined">
+																	Ver
+																</Button>
+															</Link>
+														) : (
+															<Typography variant="caption" color="textSecondary">
+																N/A
+															</Typography>
+														)}
 													</TableCell>
 												</TableRow>
 											))}
@@ -282,14 +311,12 @@ const CausaDetalleModal = ({ open, onClose, causa }: CausaDetalleModalProps) => 
 									labelRowsPerPage="Filas por página:"
 									labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
 								/>
-							</Grid>
-						</>
-					) : (
-						<Grid item xs={12}>
+							</>
+						) : (
 							<Alert severity="info">Esta causa no tiene movimientos registrados</Alert>
-						</Grid>
-					)}
-				</Grid>
+						)}
+					</Box>
+				)}
 			</DialogContent>
 
 			<DialogActions>

@@ -399,24 +399,20 @@ const CarpetasVerificadas = () => {
 													</Typography>
 												</TableCell>
 												<TableCell>{causa.year}</TableCell>
-												<TableCell>
-													<Tooltip title={causa.caratula || "Sin carátula"}>
-														<Typography variant="body2" noWrap sx={{ maxWidth: 250 }}>
-															{causa.caratula || "Sin carátula"}
-														</Typography>
-													</Tooltip>
+												<TableCell sx={{ maxWidth: 250 }}>
+													<Typography variant="body2" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
+														{causa.caratula || "Sin carátula"}
+													</Typography>
 												</TableCell>
 												<TableCell>
 													<Typography variant="body2" noWrap sx={{ maxWidth: 150 }}>
 														{causa.juzgado || "N/A"}
 													</Typography>
 												</TableCell>
-												<TableCell>
-													<Tooltip title={causa.objeto || "Sin objeto"}>
-														<Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
-															{causa.objeto || "Sin objeto"}
-														</Typography>
-													</Tooltip>
+												<TableCell sx={{ maxWidth: 200 }}>
+													<Typography variant="body2" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
+														{causa.objeto || "Sin objeto"}
+													</Typography>
 												</TableCell>
 												<TableCell align="center">
 													<Chip label={causa.movimientosCount || 0} size="small" variant="outlined" />
