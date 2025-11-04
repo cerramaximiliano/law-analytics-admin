@@ -68,45 +68,13 @@ const getAuthToken = () => {
 	return null;
 };
 
-// Helper function to check if token is expired
-const isTokenExpired = (token: string): boolean => {
-	try {
-		const payload = JSON.parse(atob(token.split(".")[1]));
-		const exp = payload.exp * 1000; // Convertir a milisegundos
-		const now = Date.now();
-		return exp < now;
-	} catch (e) {
-		console.warn("⚠️ authAxios: No se pudo decodificar el token");
-		return true; // Considerar expirado si no se puede decodificar
-	}
-};
-
 // Request interceptor to add auth token
 authAxios.interceptors.request.use(
 	(config: InternalAxiosRequestConfig) => {
 		const token = getAuthToken();
 
-		// Verificar si el token existe y está expirado
-		// PERO solo prevenir si NO es una petición de login/registro
-		const isAuthEndpoint = config.url?.includes("/login") || config.url?.includes("/register") || config.url?.includes("/google");
-
-		if (token) {
-			// Verificar expiración
-			if (!isAuthEndpoint && isTokenExpired(token)) {
-				console.error("🚫 authAxios: Token expirado, previniendo petición");
-				// Limpiar tokens expirados
-				secureStorage.clearSession();
-				authTokenService.clearToken();
-				// Redirigir al login
-				window.location.href = "/login";
-				// Rechazar la petición
-				return Promise.reject(new Error("Token has expired"));
-			}
-
-			// Si el token es válido o es un endpoint de auth, agregar header
-			if (config.headers) {
-				config.headers.Authorization = `Bearer ${token}`;
-			}
+		if (token && config.headers) {
+			config.headers.Authorization = `Bearer ${token}`;
 		}
 
 		return config;
@@ -116,7 +84,7 @@ authAxios.interceptors.request.use(
 	},
 );
 
-// Response interceptor for error handling
+// Response interceptor for error handling and token refresh
 authAxios.interceptors.response.use(
 	(response: AxiosResponse) => {
 		// Log para debugging
@@ -142,9 +110,55 @@ authAxios.interceptors.response.use(
 
 		return response;
 	},
-	(error) => {
-		// No manejar 401 aquí - dejar que el interceptor de ServerContext lo maneje
-		// para evitar múltiples redirects y loops
+	async (error) => {
+		const originalRequest = error.config;
+		const url = originalRequest?.url || "";
+
+		// Si es un error 401 y NO es una petición de autenticación
+		if (
+			error.response?.status === 401 &&
+			!originalRequest._retry &&
+			!url.includes("/login") &&
+			!url.includes("/register") &&
+			!url.includes("/google") &&
+			!url.includes("/refresh-token") &&
+			!url.includes("/logout")
+		) {
+			originalRequest._retry = true;
+
+			console.log("🔄 authAxios: Intentando refrescar token...");
+
+			try {
+				// Intentar refrescar el token
+				const refreshResponse = await authAxios.post("/api/auth/refresh-token", {}, { withCredentials: true });
+
+				console.log("✅ authAxios: Token refrescado exitosamente");
+
+				// Obtener el nuevo token y reintentar la petición original
+				const newToken = getAuthToken();
+				if (newToken && originalRequest.headers) {
+					originalRequest.headers.Authorization = `Bearer ${newToken}`;
+					console.log("🔄 authAxios: Reintentando petición original con nuevo token");
+				}
+
+				// Reintentar la petición original
+				return authAxios(originalRequest);
+			} catch (refreshError) {
+				console.error("❌ authAxios: Error al refrescar token:", refreshError);
+
+				// Si el refresh falla, limpiar tokens y redirigir al login
+				secureStorage.clearSession();
+				authTokenService.clearToken();
+
+				// Solo redirigir si no estamos ya en la página de login
+				if (!window.location.pathname.includes("/login")) {
+					window.location.href = "/login";
+				}
+
+				return Promise.reject(refreshError);
+			}
+		}
+
 		return Promise.reject(error);
 	},
 );

@@ -69,19 +69,6 @@ const getAuthToken = () => {
 	return null;
 };
 
-// Helper function to check if token is expired
-const isTokenExpired = (token: string): boolean => {
-	try {
-		const payload = JSON.parse(atob(token.split(".")[1]));
-		const exp = payload.exp * 1000; // Convertir a milisegundos
-		const now = Date.now();
-		return exp < now;
-	} catch (e) {
-		console.warn("⚠️ No se pudo decodificar el token");
-		return true; // Considerar expirado si no se puede decodificar
-	}
-};
-
 // Request interceptor to add auth token
 workersAxios.interceptors.request.use(
 	(config: InternalAxiosRequestConfig) => {
@@ -89,35 +76,6 @@ workersAxios.interceptors.request.use(
 
 		console.log(`🌐 workersAxios: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
 		console.log("🔑 Token disponible:", token ? `${token.substring(0, 20)}...` : "NO");
-
-		// Verificar si el token existe y está expirado
-		if (token) {
-			try {
-				const payload = JSON.parse(atob(token.split(".")[1]));
-				const exp = payload.exp * 1000; // Convertir a milisegundos
-				const now = Date.now();
-				const isExpired = exp < now;
-				const expiresIn = Math.floor((exp - now) / 1000 / 60); // Minutos restantes
-
-				console.log("🕐 Token expira en:", expiresIn, "minutos", isExpired ? "(⚠️ EXPIRADO)" : "(✅ Válido)");
-				console.log("📅 Token exp:", new Date(exp).toLocaleString());
-				console.log("📅 Ahora:", new Date(now).toLocaleString());
-
-				// Si el token está expirado, prevenir la petición y redirigir al login
-				if (isExpired) {
-					console.error("🚫 workersAxios: Token expirado, previniendo petición");
-					// Limpiar tokens expirados
-					secureStorage.clearSession();
-					authTokenService.clearToken();
-					// Redirigir al login
-					window.location.href = "/login";
-					// Rechazar la petición
-					return Promise.reject(new Error("Token has expired"));
-				}
-			} catch (e) {
-				console.warn("⚠️ No se pudo decodificar el token");
-			}
-		}
 
 		if (token && config.headers) {
 			config.headers.Authorization = `Bearer ${token}`;
@@ -137,25 +95,53 @@ workersAxios.interceptors.request.use(
 	},
 );
 
-// Response interceptor for error handling
+// Response interceptor for error handling and token refresh
 workersAxios.interceptors.response.use(
 	(response: AxiosResponse) => {
 		console.log(`✅ workersAxios: Response ${response.status}:`, response.data);
 		return response;
 	},
-	(error) => {
+	async (error) => {
+		const originalRequest = error.config;
+
 		console.error("❌ workersAxios: Response error:", error.response || error);
 
-		// Si recibimos un 401 del servidor, el token es inválido o expirado
-		if (error.response?.status === 401) {
-			console.error("🚫 workersAxios: Error 401 - Token inválido o expirado");
+		// Si recibimos un 401 del servidor y no hemos intentado refrescar aún
+		if (error.response?.status === 401 && !originalRequest._retry) {
+			originalRequest._retry = true;
 
-			// Limpiar tokens
-			secureStorage.clearSession();
-			authTokenService.clearToken();
+			console.log("🔄 workersAxios: Intentando refrescar token...");
 
-			// Redirigir al login
-			window.location.href = "/login";
+			try {
+				// Intentar refrescar el token usando la API de autenticación
+				const authBaseURL = import.meta.env.VITE_AUTH_URL || "https://api.lawanalytics.app";
+				await axios.post(`${authBaseURL}/api/auth/refresh-token`, {}, { withCredentials: true });
+
+				console.log("✅ workersAxios: Token refrescado exitosamente");
+
+				// Obtener el nuevo token y reintentar la petición original
+				const newToken = getAuthToken();
+				if (newToken && originalRequest.headers) {
+					originalRequest.headers.Authorization = `Bearer ${newToken}`;
+					console.log("🔄 workersAxios: Reintentando petición original con nuevo token");
+				}
+
+				// Reintentar la petición original
+				return workersAxios(originalRequest);
+			} catch (refreshError) {
+				console.error("❌ workersAxios: Error al refrescar token:", refreshError);
+
+				// Si el refresh falla, limpiar tokens y redirigir al login
+				secureStorage.clearSession();
+				authTokenService.clearToken();
+
+				// Solo redirigir si no estamos ya en la página de login
+				if (!window.location.pathname.includes("/login")) {
+					window.location.href = "/login";
+				}
+
+				return Promise.reject(refreshError);
+			}
 		}
 
 		return Promise.reject(error);
