@@ -71,7 +71,7 @@ const CausaDetalleModal = ({ open, onClose, causa }: CausaDetalleModalProps) => 
 		return typeof id === "string" ? id : id.$oid;
 	};
 
-	// Formatear fecha
+	// Formatear fecha completa (con hora)
 	const formatDate = (date: { $date: string } | string | undefined): string => {
 		if (!date) return "N/A";
 		const dateStr = typeof date === "string" ? date : date.$date;
@@ -81,6 +81,17 @@ const CausaDetalleModal = ({ open, onClose, causa }: CausaDetalleModalProps) => 
 			day: "2-digit",
 			hour: "2-digit",
 			minute: "2-digit",
+		});
+	};
+
+	// Formatear solo fecha (sin hora) - para tabla de movimientos
+	const formatDateOnly = (date: { $date: string } | string | undefined): string => {
+		if (!date) return "N/A";
+		const dateStr = typeof date === "string" ? date : date.$date;
+		return new Date(dateStr).toLocaleDateString("es-AR", {
+			year: "numeric",
+			month: "2-digit",
+			day: "2-digit",
 		});
 	};
 
@@ -107,17 +118,25 @@ const CausaDetalleModal = ({ open, onClose, causa }: CausaDetalleModalProps) => 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
 			<DialogTitle>
-				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Typography variant="h5">Detalles de la Causa</Typography>
-					<Chip
-						label={FUERO_LABELS[causa.fuero || "CIV"]}
-						color={FUERO_COLORS[causa.fuero || "CIV"]}
-						sx={{
-							...(causa.fuero === "CSS" && {
-								color: "rgba(0, 0, 0, 0.87)",
-							}),
-						}}
-					/>
+				<Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
+					<Box sx={{ flex: 1 }}>
+						<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+							<Typography variant="h5">Expediente: {causa.number}/{causa.year}</Typography>
+							<Chip
+								label={FUERO_LABELS[causa.fuero || "CIV"]}
+								color={FUERO_COLORS[causa.fuero || "CIV"]}
+								size="small"
+								sx={{
+									...(causa.fuero === "CSS" && {
+										color: "rgba(0, 0, 0, 0.87)",
+									}),
+								}}
+							/>
+						</Stack>
+						<Typography variant="body2" color="textSecondary">
+							{causa.caratula || "Sin carátula"}
+						</Typography>
+					</Box>
 				</Stack>
 			</DialogTitle>
 
@@ -282,7 +301,7 @@ const CausaDetalleModal = ({ open, onClose, causa }: CausaDetalleModalProps) => 
 											{paginatedMovimientos.map((mov: any, index: number) => (
 												<TableRow key={index} hover>
 													<TableCell width="15%">
-														<Typography variant="caption">{formatDate(mov.fecha || mov.createdAt)}</Typography>
+														<Typography variant="caption">{formatDateOnly(mov.fecha || mov.createdAt)}</Typography>
 													</TableCell>
 													<TableCell>
 														<Typography variant="body2" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
