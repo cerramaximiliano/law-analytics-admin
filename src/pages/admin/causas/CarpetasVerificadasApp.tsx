@@ -26,7 +26,7 @@ import {
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import CausasService, { Causa } from "api/causas";
+import { CausasPjnService, Causa } from "api/causasPjn";
 import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown } from "iconsax-react";
 import CausaDetalleModal from "./CausaDetalleModal";
 
@@ -46,7 +46,7 @@ const FUERO_COLORS: Record<string, "primary" | "success" | "warning" | "error"> 
 	CNT: "error",
 };
 
-const CarpetasVerificadas = () => {
+const CarpetasVerificadasApp = () => {
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Estados
@@ -123,7 +123,7 @@ const CarpetasVerificadas = () => {
 
 			console.log("🔍 Parámetros enviados a API:", params);
 
-			const response = await CausasService.getVerifiedCausas(params);
+			const response = await CausasPjnService.getVerifiedCausas(params);
 
 			if (response.success) {
 				setCausas(response.data);
@@ -216,7 +216,7 @@ const CarpetasVerificadas = () => {
 			const fuero = causa.fuero || "CIV";
 
 			// Obtener causa completa con movimientos
-			const response = await CausasService.getCausaById(fuero as any, causaId);
+			const response = await CausasPjnService.getCausaById(fuero as any, causaId);
 
 			if (response.success && response.data) {
 				// response.data puede ser un array o un objeto único
@@ -242,7 +242,7 @@ const CarpetasVerificadas = () => {
 	};
 
 	return (
-		<MainCard title="Carpetas Verificadas (Worker)">
+		<MainCard title="Carpetas Verificadas (App)">
 			<Grid container spacing={3}>
 				{/* Filtros */}
 				<Grid item xs={12}>
@@ -463,4 +463,4 @@ const CarpetasVerificadas = () => {
 	);
 };
 
-export default CarpetasVerificadas;
+export default CarpetasVerificadasApp;

@@ -35,10 +35,17 @@ const admin: NavItemType = {
 			breadcrumbs: true,
 			children: [
 				{
-					id: "causas-verified",
-					title: "Carpetas Verificadas",
+					id: "causas-verified-worker",
+					title: "Carpetas Verificadas (Worker)",
 					type: "item",
 					url: "/admin/causas/verified",
+					breadcrumbs: true,
+				},
+				{
+					id: "causas-verified-app",
+					title: "Carpetas Verificadas (App)",
+					type: "item",
+					url: "/admin/causas/verified-app",
 					breadcrumbs: true,
 				},
 			],
