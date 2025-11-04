@@ -11,6 +11,7 @@ export interface Causa {
 	fuero?: "CIV" | "COM" | "CSS" | "CNT";
 	verified?: boolean;
 	isValid?: boolean;
+	update?: boolean;
 	folderIds?: string[];
 	userCausaIds?: string[];
 	movimientosCount?: number;
@@ -127,6 +128,34 @@ export class CausasPjnService {
 	static async listObjetos(fuero: "CIV" | "COM" | "CSS" | "CNT"): Promise<any> {
 		try {
 			const response = await pjnAxios.get(`/api/causas/${fuero}/objetos`);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Actualizar campos de una causa
+	 */
+	static async updateCausa(
+		fuero: "CIV" | "COM" | "CSS" | "CNT",
+		id: string,
+		updateData: Partial<Causa>,
+	): Promise<CausasResponse> {
+		try {
+			const response = await pjnAxios.patch(`/api/causas/${fuero}/${id}`, updateData);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Eliminar un movimiento específico de una causa
+	 */
+	static async deleteMovimiento(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string, movimientoIndex: number): Promise<any> {
+		try {
+			const response = await pjnAxios.delete(`/api/causas/${fuero}/${id}/movimientos/${movimientoIndex}`);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);

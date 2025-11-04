@@ -22,14 +22,24 @@ import {
 	Tabs,
 	Tab,
 	Link,
+	IconButton,
+	Tooltip,
+	TextField,
+	Dialog as ConfirmDialog,
+	DialogTitle as ConfirmDialogTitle,
+	DialogContent as ConfirmDialogContent,
+	DialogActions as ConfirmDialogActions,
 } from "@mui/material";
-import { Causa } from "api/causas";
-import { CloseCircle, Link as LinkIcon } from "iconsax-react";
+import { Causa } from "api/causasPjn";
+import { CausasPjnService } from "api/causasPjn";
+import { CloseCircle, Link as LinkIcon, Trash, Edit, Save2, CloseSquare, TickCircle } from "iconsax-react";
+import { useSnackbar } from "notistack";
 
 interface CausaDetalleModalProps {
 	open: boolean;
 	onClose: () => void;
 	causa: Causa | null;
+	onCausaUpdated?: () => void;
 }
 
 // Mapeo de fueros a nombres legibles
@@ -48,7 +58,9 @@ const FUERO_COLORS: Record<string, "primary" | "success" | "warning" | "error"> 
 	CNT: "error",
 };
 
-const CausaDetalleModal = ({ open, onClose, causa }: CausaDetalleModalProps) => {
+const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated }: CausaDetalleModalProps) => {
+	const { enqueueSnackbar } = useSnackbar();
+
 	// Estado para el tab activo
 	const [activeTab, setActiveTab] = useState(0);
 
@@ -56,13 +68,31 @@ const CausaDetalleModal = ({ open, onClose, causa }: CausaDetalleModalProps) => 
 	const [movimientosPage, setMovimientosPage] = useState(0);
 	const [movimientosRowsPerPage, setMovimientosRowsPerPage] = useState(10);
 
-	// Resetear paginación y tab cuando se abre el modal
+	// Estados para edición
+	const [isEditing, setIsEditing] = useState(false);
+	const [editedCausa, setEditedCausa] = useState<Partial<Causa>>({});
+	const [isSaving, setIsSaving] = useState(false);
+
+	// Estados para confirmación de eliminación de movimiento
+	const [deleteMovConfirm, setDeleteMovConfirm] = useState<{ open: boolean; index: number | null }>({
+		open: false,
+		index: null,
+	});
+	const [isDeleting, setIsDeleting] = useState(false);
+
+	// Estados para la lista de movimientos (para actualizar después de eliminar)
+	const [currentMovimientos, setCurrentMovimientos] = useState<any[]>([]);
+
+	// Resetear estados cuando se abre el modal
 	useEffect(() => {
-		if (open) {
+		if (open && causa) {
 			setActiveTab(0);
 			setMovimientosPage(0);
+			setIsEditing(false);
+			setEditedCausa({});
+			setCurrentMovimientos((causa as any).movimientos || []);
 		}
-	}, [open]);
+	}, [open, causa]);
 
 	if (!causa) return null;
 
@@ -95,8 +125,18 @@ const CausaDetalleModal = ({ open, onClose, causa }: CausaDetalleModalProps) => 
 		});
 	};
 
+	// Convertir fecha para input datetime-local
+	const toDateTimeLocal = (date: { $date: string } | string | undefined): string => {
+		if (!date) return "";
+		const dateStr = typeof date === "string" ? date : date.$date;
+		const dateObj = new Date(dateStr);
+		const offset = dateObj.getTimezoneOffset();
+		const localDate = new Date(dateObj.getTime() - offset * 60 * 1000);
+		return localDate.toISOString().slice(0, 16);
+	};
+
 	// Obtener movimientos paginados
-	const movimientos = (causa as any).movimientos || [];
+	const movimientos = currentMovimientos;
 	const paginatedMovimientos = movimientos.slice(
 		movimientosPage * movimientosRowsPerPage,
 		movimientosPage * movimientosRowsPerPage + movimientosRowsPerPage,
@@ -115,245 +155,442 @@ const CausaDetalleModal = ({ open, onClose, causa }: CausaDetalleModalProps) => 
 		setActiveTab(newValue);
 	};
 
+	// Activar modo edición
+	const handleEditClick = () => {
+		setEditedCausa({
+			caratula: causa.caratula,
+			juzgado: causa.juzgado,
+			objeto: causa.objeto,
+			lastUpdate: causa.lastUpdate,
+		});
+		setIsEditing(true);
+	};
+
+	// Cancelar edición
+	const handleCancelEdit = () => {
+		setIsEditing(false);
+		setEditedCausa({});
+	};
+
+	// Guardar cambios
+	const handleSaveEdit = async () => {
+		try {
+			setIsSaving(true);
+			const causaId = getId(causa._id);
+			const fuero = causa.fuero || "CIV";
+
+			const response = await CausasPjnService.updateCausa(fuero as any, causaId, editedCausa);
+
+			if (response.success) {
+				enqueueSnackbar("Causa actualizada correctamente", {
+					variant: "success",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+				setIsEditing(false);
+				setEditedCausa({});
+				if (onCausaUpdated) {
+					onCausaUpdated();
+				}
+				onClose();
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al actualizar la causa", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			console.error(error);
+		} finally {
+			setIsSaving(false);
+		}
+	};
+
+	// Confirmar eliminación de movimiento
+	const handleDeleteMovClick = (index: number) => {
+		setDeleteMovConfirm({ open: true, index });
+	};
+
+	// Cancelar eliminación
+	const handleCancelDelete = () => {
+		setDeleteMovConfirm({ open: false, index: null });
+	};
+
+	// Eliminar movimiento
+	const handleConfirmDelete = async () => {
+		if (deleteMovConfirm.index === null) return;
+
+		try {
+			setIsDeleting(true);
+			const causaId = getId(causa._id);
+			const fuero = causa.fuero || "CIV";
+
+			const response = await CausasPjnService.deleteMovimiento(fuero as any, causaId, deleteMovConfirm.index);
+
+			if (response.success) {
+				enqueueSnackbar("Movimiento eliminado correctamente", {
+					variant: "success",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+
+				// Actualizar la lista de movimientos localmente
+				const newMovimientos = [...currentMovimientos];
+				newMovimientos.splice(deleteMovConfirm.index, 1);
+				setCurrentMovimientos(newMovimientos);
+
+				// Resetear página si es necesario
+				if (movimientosPage > 0 && newMovimientos.length <= movimientosPage * movimientosRowsPerPage) {
+					setMovimientosPage(movimientosPage - 1);
+				}
+
+				setDeleteMovConfirm({ open: false, index: null });
+				if (onCausaUpdated) {
+					onCausaUpdated();
+				}
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al eliminar el movimiento", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			console.error(error);
+		} finally {
+			setIsDeleting(false);
+		}
+	};
+
 	return (
-		<Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-			<DialogTitle>
-				<Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-					<Box sx={{ flex: 1 }}>
-						<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-							<Typography variant="h5">Expediente: {causa.number}/{causa.year}</Typography>
-							<Chip
-								label={FUERO_LABELS[causa.fuero || "CIV"]}
-								color={FUERO_COLORS[causa.fuero || "CIV"]}
-								size="small"
-								sx={{
-									...(causa.fuero === "CSS" && {
-										color: "rgba(0, 0, 0, 0.87)",
-									}),
-								}}
-							/>
-						</Stack>
-						<Typography variant="body2" color="textSecondary">
-							{causa.caratula || "Sin carátula"}
-						</Typography>
-					</Box>
-				</Stack>
-			</DialogTitle>
-
-			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-				<Tabs value={activeTab} onChange={handleTabChange} aria-label="causa detail tabs">
-					<Tab label="Información General" />
-					<Tab label={`Movimientos (${movimientos.length})`} />
-				</Tabs>
-			</Box>
-
-			<DialogContent dividers>
-				{/* Tab Panel 0: Información General */}
-				{activeTab === 0 && (
-					<Grid container spacing={3}>
-						{/* Información principal */}
-						<Grid item xs={12}>
-							<Typography variant="h6" gutterBottom>
-								Información Principal
+		<>
+			<Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+				<DialogTitle>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
+						<Box sx={{ flex: 1 }}>
+							<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+								<Typography variant="h5">
+									Expediente: {causa.number}/{causa.year}
+								</Typography>
+								<Chip
+									label={FUERO_LABELS[causa.fuero || "CIV"]}
+									color={FUERO_COLORS[causa.fuero || "CIV"]}
+									size="small"
+									sx={{
+										...(causa.fuero === "CSS" && {
+											color: "rgba(0, 0, 0, 0.87)",
+										}),
+									}}
+								/>
+							</Stack>
+							<Typography variant="body2" color="textSecondary">
+								{causa.caratula || "Sin carátula"}
 							</Typography>
-							<Divider sx={{ mb: 2 }} />
-						</Grid>
+						</Box>
+						{!isEditing && (
+							<Tooltip title="Editar causa">
+								<IconButton onClick={handleEditClick} color="primary" size="small">
+									<Edit size={20} />
+								</IconButton>
+							</Tooltip>
+						)}
+					</Stack>
+				</DialogTitle>
 
-						<Grid item xs={12} sm={6} md={3}>
-							<Typography variant="caption" color="textSecondary">
-								ID
-							</Typography>
-							<Typography variant="body2" fontWeight="bold">
-								{getId(causa._id)}
-							</Typography>
-						</Grid>
+				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+					<Tabs value={activeTab} onChange={handleTabChange} aria-label="causa detail tabs">
+						<Tab label="Información General" />
+						<Tab label={`Movimientos (${currentMovimientos.length})`} />
+					</Tabs>
+				</Box>
 
-						<Grid item xs={12} sm={6} md={3}>
-							<Typography variant="caption" color="textSecondary">
-								Número
-							</Typography>
-							<Typography variant="body2" fontWeight="bold">
-								{causa.number}
-							</Typography>
-						</Grid>
+				<DialogContent dividers>
+					{/* Tab Panel 0: Información General */}
+					{activeTab === 0 && (
+						<Grid container spacing={2}>
+							{/* Información principal - Vista compacta */}
+							<Grid item xs={12}>
+								<Typography variant="subtitle2" color="primary" gutterBottom>
+									Información Principal
+								</Typography>
+								<Divider sx={{ mb: 1.5 }} />
+							</Grid>
 
-						<Grid item xs={12} sm={6} md={3}>
-							<Typography variant="caption" color="textSecondary">
-								Año
-							</Typography>
-							<Typography variant="body2" fontWeight="bold">
-								{causa.year}
-							</Typography>
-						</Grid>
+							<Grid item xs={12} sm={6} md={3}>
+								<Typography variant="caption" color="textSecondary">
+									ID
+								</Typography>
+								<Typography variant="body2" sx={{ wordBreak: "break-all" }}>
+									{getId(causa._id)}
+								</Typography>
+							</Grid>
 
-						<Grid item xs={12} sm={6} md={3}>
-							<Typography variant="caption" color="textSecondary">
-								Estado
-							</Typography>
-							<Box>
-								{causa.verified && <Chip label="Verificada" color="success" size="small" sx={{ mr: 0.5 }} />}
-								{causa.isValid && <Chip label="Válida" color="primary" size="small" />}
-							</Box>
-						</Grid>
+							<Grid item xs={6} sm={3} md={2}>
+								<Typography variant="caption" color="textSecondary">
+									Número
+								</Typography>
+								<Typography variant="body2" fontWeight="bold">
+									{causa.number}
+								</Typography>
+							</Grid>
 
-						<Grid item xs={12}>
-							<Typography variant="caption" color="textSecondary">
-								Carátula
-							</Typography>
-							<Typography variant="body2">{causa.caratula || "Sin carátula"}</Typography>
-						</Grid>
+							<Grid item xs={6} sm={3} md={2}>
+								<Typography variant="caption" color="textSecondary">
+									Año
+								</Typography>
+								<Typography variant="body2" fontWeight="bold">
+									{causa.year}
+								</Typography>
+							</Grid>
 
-						<Grid item xs={12} md={6}>
-							<Typography variant="caption" color="textSecondary">
-								Juzgado
-							</Typography>
-							<Typography variant="body2">{causa.juzgado || "N/A"}</Typography>
-						</Grid>
+							<Grid item xs={12} sm={6} md={5}>
+								<Typography variant="caption" color="textSecondary">
+									Estado
+								</Typography>
+								<Box>
+									{causa.verified && <Chip label="Verificada" color="success" size="small" sx={{ mr: 0.5, mb: 0.5 }} />}
+									{causa.isValid && <Chip label="Válida" color="primary" size="small" sx={{ mr: 0.5, mb: 0.5 }} />}
+									{causa.update && <Chip label="Con actualización" color="warning" size="small" sx={{ mb: 0.5 }} />}
+								</Box>
+							</Grid>
 
-						<Grid item xs={12} md={6}>
-							<Typography variant="caption" color="textSecondary">
-								Objeto
-							</Typography>
-							<Typography variant="body2">{causa.objeto || "Sin objeto"}</Typography>
-						</Grid>
-
-						{/* Fechas */}
-						<Grid item xs={12}>
-							<Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-								Fechas
-							</Typography>
-							<Divider sx={{ mb: 2 }} />
-						</Grid>
-
-						<Grid item xs={12} sm={6} md={4}>
-							<Typography variant="caption" color="textSecondary">
-								Última Actualización
-							</Typography>
-							<Typography variant="body2">{formatDate(causa.lastUpdate)}</Typography>
-						</Grid>
-
-						<Grid item xs={12} sm={6} md={4}>
-							<Typography variant="caption" color="textSecondary">
-								Creado
-							</Typography>
-							<Typography variant="body2">{formatDate(causa.createdAt)}</Typography>
-						</Grid>
-
-						<Grid item xs={12} sm={6} md={4}>
-							<Typography variant="caption" color="textSecondary">
-								Modificado
-							</Typography>
-							<Typography variant="body2">{formatDate(causa.updatedAt)}</Typography>
-						</Grid>
-
-						{/* Carpetas y usuarios */}
-						{(causa.folderIds && causa.folderIds.length > 0) || (causa.userCausaIds && causa.userCausaIds.length > 0) ? (
-							<>
-								<Grid item xs={12}>
-									<Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-										Vínculos
-									</Typography>
-									<Divider sx={{ mb: 2 }} />
-								</Grid>
-
-								{causa.folderIds && causa.folderIds.length > 0 && (
-									<Grid item xs={12} md={6}>
-										<Typography variant="caption" color="textSecondary">
-											Carpetas Vinculadas
-										</Typography>
-										<Box>
-											<Chip label={`${causa.folderIds.length} carpetas`} size="small" />
-										</Box>
-									</Grid>
+							<Grid item xs={12}>
+								<Typography variant="caption" color="textSecondary">
+									Carátula
+								</Typography>
+								{isEditing ? (
+									<TextField
+										fullWidth
+										size="small"
+										value={editedCausa.caratula || ""}
+										onChange={(e) => setEditedCausa({ ...editedCausa, caratula: e.target.value })}
+										sx={{ mt: 0.5 }}
+									/>
+								) : (
+									<Typography variant="body2">{causa.caratula || "Sin carátula"}</Typography>
 								)}
+							</Grid>
 
-								{causa.userCausaIds && causa.userCausaIds.length > 0 && (
-									<Grid item xs={12} md={6}>
-										<Typography variant="caption" color="textSecondary">
-											Usuarios Vinculados
-										</Typography>
-										<Box>
-											<Chip label={`${causa.userCausaIds.length} usuarios`} size="small" />
-										</Box>
-									</Grid>
+							<Grid item xs={12} md={6}>
+								<Typography variant="caption" color="textSecondary">
+									Juzgado
+								</Typography>
+								{isEditing ? (
+									<TextField
+										fullWidth
+										size="small"
+										value={editedCausa.juzgado || ""}
+										onChange={(e) => setEditedCausa({ ...editedCausa, juzgado: e.target.value })}
+										sx={{ mt: 0.5 }}
+									/>
+								) : (
+									<Typography variant="body2">{causa.juzgado || "N/A"}</Typography>
 								)}
-							</>
-						) : null}
-					</Grid>
-				)}
+							</Grid>
 
-				{/* Tab Panel 1: Movimientos */}
-				{activeTab === 1 && (
-					<Box>
-						{movimientos.length > 0 ? (
-							<>
-								<TableContainer>
-									<Table size="small">
-										<TableHead>
-											<TableRow>
-												<TableCell>Fecha</TableCell>
-												<TableCell>Descripción</TableCell>
-												<TableCell>Tipo</TableCell>
-												<TableCell align="center">Enlace</TableCell>
-											</TableRow>
-										</TableHead>
-										<TableBody>
-											{paginatedMovimientos.map((mov: any, index: number) => (
-												<TableRow key={index} hover>
-													<TableCell width="15%">
-														<Typography variant="caption">{formatDateOnly(mov.fecha || mov.createdAt)}</Typography>
-													</TableCell>
-													<TableCell>
-														<Typography variant="body2" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
-															{mov.detalle || mov.descripcion || mov.texto || "Sin descripción"}
-														</Typography>
-													</TableCell>
-													<TableCell width="15%">
-														{mov.tipo && <Chip label={mov.tipo} size="small" variant="outlined" />}
-													</TableCell>
+							<Grid item xs={12} md={6}>
+								<Typography variant="caption" color="textSecondary">
+									Objeto
+								</Typography>
+								{isEditing ? (
+									<TextField
+										fullWidth
+										size="small"
+										value={editedCausa.objeto || ""}
+										onChange={(e) => setEditedCausa({ ...editedCausa, objeto: e.target.value })}
+										sx={{ mt: 0.5 }}
+									/>
+								) : (
+									<Typography variant="body2">{causa.objeto || "Sin objeto"}</Typography>
+								)}
+							</Grid>
+
+							{/* Fechas */}
+							<Grid item xs={12} sx={{ mt: 1 }}>
+								<Typography variant="subtitle2" color="primary" gutterBottom>
+									Fechas
+								</Typography>
+								<Divider sx={{ mb: 1.5 }} />
+							</Grid>
+
+							<Grid item xs={12} sm={6} md={4}>
+								<Typography variant="caption" color="textSecondary">
+									Última Actualización
+								</Typography>
+								{isEditing ? (
+									<TextField
+										fullWidth
+										type="datetime-local"
+										size="small"
+										value={toDateTimeLocal(editedCausa.lastUpdate || causa.lastUpdate)}
+										onChange={(e) => setEditedCausa({ ...editedCausa, lastUpdate: e.target.value })}
+										sx={{ mt: 0.5 }}
+									/>
+								) : (
+									<Typography variant="body2">{formatDate(causa.lastUpdate)}</Typography>
+								)}
+							</Grid>
+
+							<Grid item xs={12} sm={6} md={4}>
+								<Typography variant="caption" color="textSecondary">
+									Creado
+								</Typography>
+								<Typography variant="body2">{formatDate(causa.createdAt)}</Typography>
+							</Grid>
+
+							<Grid item xs={12} sm={6} md={4}>
+								<Typography variant="caption" color="textSecondary">
+									Modificado
+								</Typography>
+								<Typography variant="body2">{formatDate(causa.updatedAt)}</Typography>
+							</Grid>
+
+							{/* Vínculos */}
+							{(causa.folderIds && causa.folderIds.length > 0) || (causa.userCausaIds && causa.userCausaIds.length > 0) ? (
+								<>
+									<Grid item xs={12} sx={{ mt: 1 }}>
+										<Typography variant="subtitle2" color="primary" gutterBottom>
+											Vínculos
+										</Typography>
+										<Divider sx={{ mb: 1.5 }} />
+									</Grid>
+
+									{causa.folderIds && causa.folderIds.length > 0 && (
+										<Grid item xs={6} md={3}>
+											<Typography variant="caption" color="textSecondary">
+												Carpetas Vinculadas
+											</Typography>
+											<Box>
+												<Chip label={`${causa.folderIds.length}`} size="small" />
+											</Box>
+										</Grid>
+									)}
+
+									{causa.userCausaIds && causa.userCausaIds.length > 0 && (
+										<Grid item xs={6} md={3}>
+											<Typography variant="caption" color="textSecondary">
+												Usuarios Vinculados
+											</Typography>
+											<Box>
+												<Chip label={`${causa.userCausaIds.length}`} size="small" />
+											</Box>
+										</Grid>
+									)}
+								</>
+							) : null}
+						</Grid>
+					)}
+
+					{/* Tab Panel 1: Movimientos */}
+					{activeTab === 1 && (
+						<Box>
+							{movimientos.length > 0 ? (
+								<>
+									<TableContainer>
+										<Table size="small">
+											<TableHead>
+												<TableRow>
+													<TableCell width="12%">Fecha</TableCell>
+													<TableCell>Descripción</TableCell>
+													<TableCell width="12%">Tipo</TableCell>
 													<TableCell width="10%" align="center">
-														{mov.url ? (
-															<Link href={mov.url} target="_blank" rel="noopener noreferrer" underline="none">
-																<Button size="small" startIcon={<LinkIcon size={16} />} variant="outlined">
-																	Ver
-																</Button>
-															</Link>
-														) : (
-															<Typography variant="caption" color="textSecondary">
-																N/A
-															</Typography>
-														)}
+														Enlace
+													</TableCell>
+													<TableCell width="8%" align="center">
+														Acciones
 													</TableCell>
 												</TableRow>
-											))}
-										</TableBody>
-									</Table>
-								</TableContainer>
-								<TablePagination
-									rowsPerPageOptions={[5, 10, 25, 50]}
-									component="div"
-									count={movimientos.length}
-									rowsPerPage={movimientosRowsPerPage}
-									page={movimientosPage}
-									onPageChange={handleChangeMovimientosPage}
-									onRowsPerPageChange={handleChangeMovimientosRowsPerPage}
-									labelRowsPerPage="Filas por página:"
-									labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
-								/>
-							</>
-						) : (
-							<Alert severity="info">Esta causa no tiene movimientos registrados</Alert>
-						)}
-					</Box>
-				)}
-			</DialogContent>
+											</TableHead>
+											<TableBody>
+												{paginatedMovimientos.map((mov: any, index: number) => {
+													const actualIndex = movimientosPage * movimientosRowsPerPage + index;
+													return (
+														<TableRow key={actualIndex} hover>
+															<TableCell>
+																<Typography variant="caption">{formatDateOnly(mov.fecha || mov.createdAt)}</Typography>
+															</TableCell>
+															<TableCell>
+																<Typography variant="body2" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
+																	{mov.detalle || mov.descripcion || mov.texto || "Sin descripción"}
+																</Typography>
+															</TableCell>
+															<TableCell>{mov.tipo && <Chip label={mov.tipo} size="small" variant="outlined" />}</TableCell>
+															<TableCell align="center">
+																{mov.url ? (
+																	<Link href={mov.url} target="_blank" rel="noopener noreferrer" underline="none">
+																		<Tooltip title="Ver documento">
+																			<IconButton size="small" color="primary">
+																				<LinkIcon size={16} />
+																			</IconButton>
+																		</Tooltip>
+																	</Link>
+																) : (
+																	<Typography variant="caption" color="textSecondary">
+																		N/A
+																	</Typography>
+																)}
+															</TableCell>
+															<TableCell align="center">
+																<Tooltip title="Eliminar movimiento">
+																	<IconButton size="small" color="error" onClick={() => handleDeleteMovClick(actualIndex)}>
+																		<Trash size={16} />
+																	</IconButton>
+																</Tooltip>
+															</TableCell>
+														</TableRow>
+													);
+												})}
+											</TableBody>
+										</Table>
+									</TableContainer>
+									<TablePagination
+										rowsPerPageOptions={[5, 10, 25, 50]}
+										component="div"
+										count={movimientos.length}
+										rowsPerPage={movimientosRowsPerPage}
+										page={movimientosPage}
+										onPageChange={handleChangeMovimientosPage}
+										onRowsPerPageChange={handleChangeMovimientosRowsPerPage}
+										labelRowsPerPage="Filas por página:"
+										labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+									/>
+								</>
+							) : (
+								<Alert severity="info">Esta causa no tiene movimientos registrados</Alert>
+							)}
+						</Box>
+					)}
+				</DialogContent>
 
-			<DialogActions>
-				<Button onClick={onClose} startIcon={<CloseCircle size={18} />} variant="outlined">
-					Cerrar
-				</Button>
-			</DialogActions>
-		</Dialog>
+				<DialogActions>
+					{isEditing ? (
+						<>
+							<Button onClick={handleCancelEdit} startIcon={<CloseSquare size={18} />} variant="outlined" disabled={isSaving}>
+								Cancelar
+							</Button>
+							<Button onClick={handleSaveEdit} startIcon={<Save2 size={18} />} variant="contained" disabled={isSaving}>
+								{isSaving ? "Guardando..." : "Guardar"}
+							</Button>
+						</>
+					) : (
+						<Button onClick={onClose} startIcon={<CloseCircle size={18} />} variant="outlined">
+							Cerrar
+						</Button>
+					)}
+				</DialogActions>
+			</Dialog>
+
+			{/* Dialog de confirmación para eliminar movimiento */}
+			<ConfirmDialog open={deleteMovConfirm.open} onClose={handleCancelDelete}>
+				<ConfirmDialogTitle>Confirmar Eliminación</ConfirmDialogTitle>
+				<ConfirmDialogContent>
+					<Typography>¿Está seguro que desea eliminar este movimiento? Esta acción no se puede deshacer.</Typography>
+				</ConfirmDialogContent>
+				<ConfirmDialogActions>
+					<Button onClick={handleCancelDelete} variant="outlined" disabled={isDeleting}>
+						Cancelar
+					</Button>
+					<Button onClick={handleConfirmDelete} variant="contained" color="error" disabled={isDeleting} startIcon={<Trash size={18} />}>
+						{isDeleting ? "Eliminando..." : "Eliminar"}
+					</Button>
+				</ConfirmDialogActions>
+			</ConfirmDialog>
+		</>
 	);
 };
 
