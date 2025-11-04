@@ -52,6 +52,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 	// Procesar la cola de peticiones pendientes
 	const processRequestQueue = useCallback(async () => {
 		if (requestQueueService.hasQueuedRequests()) {
+			// Pequeña demora para asegurar que el token se haya propagado
+			await new Promise((resolve) => setTimeout(resolve, 100));
 			await requestQueueService.processQueue(axios);
 			window.dispatchEvent(new CustomEvent("requestQueueProcessed"));
 		}

@@ -1,4 +1,5 @@
 import { AxiosRequestConfig, AxiosResponse } from "axios";
+import authTokenService from "./authTokenService";
 
 interface QueuedRequest {
 	config: AxiosRequestConfig;
@@ -28,14 +29,32 @@ class RequestQueueService {
 		const pendingRequests = [...this.queue];
 		this.queue = [];
 
+		// Obtener el token actual
+		const currentToken = authTokenService.getToken();
+
 		for (const request of pendingRequests) {
 			try {
-				// Reintentar la petición original
-				const response = await axiosInstance({
+				// Actualizar el token en la configuración antes de reintentar
+				const updatedConfig: any = {
 					...request.config,
-					_retry: true,
-					_queued: true,
-				});
+					// NO establecer _retry: true aquí, ya que queremos que la petición
+					// se trate como nueva con el token fresco
+					_queued: true, // Mantener _queued para evitar reencolar si falla
+				};
+
+				// Actualizar el header de autorización con el nuevo token
+				if (currentToken) {
+					updatedConfig.headers = {
+						...updatedConfig.headers,
+						Authorization: `Bearer ${currentToken}`,
+					};
+				}
+
+				// Limpiar la flag _retry para permitir un nuevo intento de refresh si es necesario
+				delete updatedConfig._retry;
+
+				// Reintentar la petición original con el token actualizado
+				const response = await axiosInstance(updatedConfig);
 				request.resolve(response);
 			} catch (error) {
 				request.reject(error);

@@ -21,11 +21,14 @@ import {
 	Alert,
 	Tooltip,
 	IconButton,
+	TextField,
+	Button,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import CausasService, { Causa } from "api/causas";
-import { Refresh, Eye } from "iconsax-react";
+import { Refresh, Eye, SearchNormal1, CloseCircle } from "iconsax-react";
+import CausaDetalleModal from "./CausaDetalleModal";
 
 // Mapeo de fueros a nombres legibles
 const FUERO_LABELS: Record<string, string> = {
@@ -53,10 +56,28 @@ const CarpetasVerificadas = () => {
 	const [rowsPerPage, setRowsPerPage] = useState(25);
 	const [totalCount, setTotalCount] = useState(0);
 	const [fueroFilter, setFueroFilter] = useState<string>("todos");
-	const [breakdown, setBreakdown] = useState<{ civil: number; seguridad_social: number; trabajo: number } | null>(null);
+
+	// Filtros de búsqueda
+	const [searchNumber, setSearchNumber] = useState<string>("");
+	const [searchYear, setSearchYear] = useState<string>("");
+	const [searchObjeto, setSearchObjeto] = useState<string>("");
+	const [searchCaratula, setSearchCaratula] = useState<string>("");
+
+	// Modal de detalles
+	const [selectedCausa, setSelectedCausa] = useState<Causa | null>(null);
+	const [detailModalOpen, setDetailModalOpen] = useState(false);
+	const [loadingDetail, setLoadingDetail] = useState(false);
 
 	// Cargar causas verificadas
-	const fetchCausas = async (currentPage: number, limit: number, fuero: string) => {
+	const fetchCausas = async (
+		currentPage: number,
+		limit: number,
+		fuero: string,
+		number?: string,
+		year?: string,
+		objeto?: string,
+		caratula?: string,
+	) => {
 		try {
 			setLoading(true);
 
@@ -69,16 +90,27 @@ const CarpetasVerificadas = () => {
 				params.fuero = fuero;
 			}
 
+			if (number && number.trim() !== "") {
+				params.number = parseInt(number);
+			}
+
+			if (year && year.trim() !== "") {
+				params.year = parseInt(year);
+			}
+
+			if (objeto && objeto.trim() !== "") {
+				params.objeto = objeto.trim();
+			}
+
+			if (caratula && caratula.trim() !== "") {
+				params.caratula = caratula.trim();
+			}
+
 			const response = await CausasService.getVerifiedCausas(params);
 
 			if (response.success) {
 				setCausas(response.data);
 				setTotalCount(response.count || 0);
-
-				// Guardar breakdown si está disponible
-				if (response.breakdown) {
-					setBreakdown(response.breakdown);
-				}
 			}
 		} catch (error) {
 			enqueueSnackbar("Error al cargar las carpetas verificadas", {
@@ -93,7 +125,7 @@ const CarpetasVerificadas = () => {
 
 	// Efecto para cargar causas cuando cambian los filtros o paginación
 	useEffect(() => {
-		fetchCausas(page, rowsPerPage, fueroFilter);
+		fetchCausas(page, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula);
 	}, [page, rowsPerPage, fueroFilter]);
 
 	// Handlers de paginación
@@ -114,7 +146,23 @@ const CarpetasVerificadas = () => {
 
 	// Handler de refresh
 	const handleRefresh = () => {
-		fetchCausas(page, rowsPerPage, fueroFilter);
+		fetchCausas(page, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula);
+	};
+
+	// Handler de búsqueda
+	const handleSearch = () => {
+		setPage(0); // Resetear a página 1
+		fetchCausas(0, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula);
+	};
+
+	// Handler de limpiar búsqueda
+	const handleClearSearch = () => {
+		setSearchNumber("");
+		setSearchYear("");
+		setSearchObjeto("");
+		setSearchCaratula("");
+		setPage(0);
+		fetchCausas(0, rowsPerPage, fueroFilter, "", "", "", "");
 	};
 
 	// Formatear fecha
@@ -129,39 +177,127 @@ const CarpetasVerificadas = () => {
 		return typeof id === "string" ? id : id.$oid;
 	};
 
+	// Handler para ver detalles
+	const handleVerDetalles = async (causa: Causa) => {
+		try {
+			setLoadingDetail(true);
+			const causaId = getId(causa._id);
+			const fuero = causa.fuero || "CIV";
+
+			// Obtener causa completa con movimientos
+			const response = await CausasService.getCausaById(fuero as any, causaId);
+
+			if (response.success && response.data) {
+				// response.data puede ser un array o un objeto único
+				const causaCompleta = Array.isArray(response.data) ? response.data[0] : response.data;
+				setSelectedCausa(causaCompleta);
+				setDetailModalOpen(true);
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al cargar los detalles de la causa", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			console.error(error);
+		} finally {
+			setLoadingDetail(false);
+		}
+	};
+
+	// Handler para cerrar modal
+	const handleCloseModal = () => {
+		setDetailModalOpen(false);
+		setSelectedCausa(null);
+	};
+
 	return (
 		<MainCard title="Carpetas Verificadas">
 			<Grid container spacing={3}>
-				{/* Filtros y estadísticas */}
+				{/* Filtros */}
 				<Grid item xs={12}>
-					<Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
-						<Stack direction="row" spacing={2} alignItems="center">
-							<FormControl sx={{ minWidth: 200 }}>
+					<Grid container spacing={2}>
+						<Grid item xs={12} md={6} lg={2}>
+							<FormControl fullWidth>
 								<InputLabel>Fuero</InputLabel>
 								<Select value={fueroFilter} onChange={handleFueroChange} label="Fuero" size="small">
-									<MenuItem value="todos">Todos los Fueros</MenuItem>
+									<MenuItem value="todos">Todos</MenuItem>
 									<MenuItem value="CIV">Civil</MenuItem>
 									<MenuItem value="COM">Comercial</MenuItem>
-									<MenuItem value="CSS">Seguridad Social</MenuItem>
+									<MenuItem value="CSS">Seg. Social</MenuItem>
 									<MenuItem value="CNT">Trabajo</MenuItem>
 								</Select>
 							</FormControl>
-
-							<Tooltip title="Actualizar">
-								<IconButton onClick={handleRefresh} disabled={loading}>
-									<Refresh />
-								</IconButton>
-							</Tooltip>
-						</Stack>
-
-						{breakdown && (
+						</Grid>
+						<Grid item xs={12} md={6} lg={2}>
+							<TextField
+								fullWidth
+								label="Número"
+								type="number"
+								value={searchNumber}
+								onChange={(e) => setSearchNumber(e.target.value)}
+								size="small"
+								placeholder="Ej: 12345"
+							/>
+						</Grid>
+						<Grid item xs={12} md={6} lg={2}>
+							<TextField
+								fullWidth
+								label="Año"
+								type="number"
+								value={searchYear}
+								onChange={(e) => setSearchYear(e.target.value)}
+								size="small"
+								placeholder="Ej: 2024"
+							/>
+						</Grid>
+						<Grid item xs={12} md={6} lg={3}>
+							<TextField
+								fullWidth
+								label="Objeto"
+								value={searchObjeto}
+								onChange={(e) => setSearchObjeto(e.target.value)}
+								size="small"
+								placeholder="Ej: daños"
+							/>
+						</Grid>
+						<Grid item xs={12} md={6} lg={3}>
+							<TextField
+								fullWidth
+								label="Carátula"
+								value={searchCaratula}
+								onChange={(e) => setSearchCaratula(e.target.value)}
+								size="small"
+								placeholder="Ej: Pérez"
+							/>
+						</Grid>
+						<Grid item xs={12} md={6} lg={12}>
 							<Stack direction="row" spacing={1}>
-								<Chip label={`Civil: ${breakdown.civil}`} color="primary" size="small" />
-								<Chip label={`Seg. Social: ${breakdown.seguridad_social}`} color="warning" size="small" />
-								<Chip label={`Trabajo: ${breakdown.trabajo}`} color="error" size="small" />
+								<Button
+									variant="contained"
+									startIcon={<SearchNormal1 size={18} />}
+									onClick={handleSearch}
+									disabled={loading}
+									size="small"
+								>
+									Buscar
+								</Button>
+								<Button
+									variant="outlined"
+									startIcon={<CloseCircle size={18} />}
+									onClick={handleClearSearch}
+									disabled={loading}
+									size="small"
+								>
+									Limpiar
+								</Button>
+								<Tooltip title="Actualizar">
+									<IconButton onClick={handleRefresh} disabled={loading} size="small">
+										<Refresh />
+									</IconButton>
+								</Tooltip>
 							</Stack>
-						)}
-					</Stack>
+						</Grid>
+					</Grid>
 				</Grid>
 
 				{/* Tabla */}
@@ -228,7 +364,7 @@ const CarpetasVerificadas = () => {
 												</TableCell>
 												<TableCell align="center">
 													<Tooltip title="Ver detalles">
-														<IconButton size="small" color="primary">
+														<IconButton size="small" color="primary" onClick={() => handleVerDetalles(causa)} disabled={loadingDetail}>
 															<Eye size={18} />
 														</IconButton>
 													</Tooltip>
@@ -253,6 +389,9 @@ const CarpetasVerificadas = () => {
 					)}
 				</Grid>
 			</Grid>
+
+			{/* Modal de detalles */}
+			<CausaDetalleModal open={detailModalOpen} onClose={handleCloseModal} causa={selectedCausa} />
 		</MainCard>
 	);
 };

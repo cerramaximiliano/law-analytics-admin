@@ -45,15 +45,31 @@ export interface CausasResponse {
 // Servicio de causas
 export class CausasService {
 	/**
-	 * Obtener todas las causas verificadas
+	 * Obtener todas las causas verificadas con búsqueda avanzada
 	 */
 	static async getVerifiedCausas(params?: {
 		page?: number;
 		limit?: number;
 		fuero?: "CIV" | "COM" | "CSS" | "CNT" | "todos";
+		number?: number;
+		year?: number;
+		objeto?: string;
+		caratula?: string;
 	}): Promise<CausasResponse> {
 		try {
 			const response = await workersAxios.get("/api/causas/verified", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener una causa por ID
+	 */
+	static async getCausaById(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string): Promise<CausasResponse> {
+		try {
+			const response = await workersAxios.get(`/api/causas/${fuero}/id/${id}`);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);

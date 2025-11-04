@@ -136,6 +136,10 @@ workersAxios.interceptors.response.use(
 			} catch (refreshError) {
 				// Si el refresh falla, encolar la petición y mostrar modal de autenticación
 				// en lugar de redirigir directamente al login
+
+				// Marcar como encolada para evitar reencolar
+				originalRequest._queued = true;
+
 				const queuedPromise = requestQueueService.enqueue(originalRequest);
 
 				// Emitir evento para que el contexto de autenticación muestre el modal
