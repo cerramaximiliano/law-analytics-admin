@@ -27,7 +27,7 @@ import {
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import CausasService, { Causa } from "api/causas";
-import { Refresh, Eye, SearchNormal1, CloseCircle } from "iconsax-react";
+import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown } from "iconsax-react";
 import CausaDetalleModal from "./CausaDetalleModal";
 
 // Mapeo de fueros a nombres legibles
@@ -63,6 +63,10 @@ const CarpetasVerificadas = () => {
 	const [searchObjeto, setSearchObjeto] = useState<string>("");
 	const [searchCaratula, setSearchCaratula] = useState<string>("");
 
+	// Ordenamiento
+	const [sortBy, setSortBy] = useState<string>("year");
+	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
 	// Modal de detalles
 	const [selectedCausa, setSelectedCausa] = useState<Causa | null>(null);
 	const [detailModalOpen, setDetailModalOpen] = useState(false);
@@ -77,6 +81,8 @@ const CarpetasVerificadas = () => {
 		year?: string,
 		objeto?: string,
 		caratula?: string,
+		sortByParam?: string,
+		sortOrderParam?: "asc" | "desc",
 	) => {
 		try {
 			setLoading(true);
@@ -106,6 +112,15 @@ const CarpetasVerificadas = () => {
 				params.caratula = caratula.trim();
 			}
 
+			// Agregar parámetros de ordenamiento
+			if (sortByParam) {
+				params.sortBy = sortByParam;
+			}
+
+			if (sortOrderParam) {
+				params.sortOrder = sortOrderParam;
+			}
+
 			const response = await CausasService.getVerifiedCausas(params);
 
 			if (response.success) {
@@ -123,10 +138,10 @@ const CarpetasVerificadas = () => {
 		}
 	};
 
-	// Efecto para cargar causas cuando cambian los filtros o paginación
+	// Efecto para cargar causas cuando cambian los filtros, paginación u ordenamiento
 	useEffect(() => {
-		fetchCausas(page, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula);
-	}, [page, rowsPerPage, fueroFilter]);
+		fetchCausas(page, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder);
+	}, [page, rowsPerPage, fueroFilter, sortBy, sortOrder]);
 
 	// Handlers de paginación
 	const handleChangePage = (_event: unknown, newPage: number) => {
@@ -146,13 +161,13 @@ const CarpetasVerificadas = () => {
 
 	// Handler de refresh
 	const handleRefresh = () => {
-		fetchCausas(page, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula);
+		fetchCausas(page, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder);
 	};
 
 	// Handler de búsqueda
 	const handleSearch = () => {
 		setPage(0); // Resetear a página 1
-		fetchCausas(0, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula);
+		fetchCausas(0, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder);
 	};
 
 	// Handler de limpiar búsqueda
@@ -162,7 +177,19 @@ const CarpetasVerificadas = () => {
 		setSearchObjeto("");
 		setSearchCaratula("");
 		setPage(0);
-		fetchCausas(0, rowsPerPage, fueroFilter, "", "", "", "");
+		fetchCausas(0, rowsPerPage, fueroFilter, "", "", "", "", sortBy, sortOrder);
+	};
+
+	// Handler de cambio de ordenamiento
+	const handleSortChange = (event: any) => {
+		setSortBy(event.target.value);
+		setPage(0);
+	};
+
+	// Handler de cambio de dirección de ordenamiento
+	const handleSortOrderChange = () => {
+		setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+		setPage(0);
 	};
 
 	// Formatear fecha
@@ -270,7 +297,38 @@ const CarpetasVerificadas = () => {
 								placeholder="Ej: Pérez"
 							/>
 						</Grid>
-						<Grid item xs={12} md={6} lg={12}>
+					</Grid>
+				</Grid>
+
+				{/* Ordenamiento */}
+				<Grid item xs={12}>
+					<Grid container spacing={2} alignItems="center">
+						<Grid item xs={12} md={4} lg={3}>
+							<FormControl fullWidth>
+								<InputLabel>Ordenar por</InputLabel>
+								<Select value={sortBy} onChange={handleSortChange} label="Ordenar por" size="small">
+									<MenuItem value="year">Año</MenuItem>
+									<MenuItem value="number">Número</MenuItem>
+									<MenuItem value="caratula">Carátula</MenuItem>
+									<MenuItem value="juzgado">Juzgado</MenuItem>
+									<MenuItem value="objeto">Objeto</MenuItem>
+									<MenuItem value="movimientosCount">Movimientos</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={12} md={2} lg={2}>
+							<Button
+								fullWidth
+								variant="outlined"
+								startIcon={sortOrder === "asc" ? <ArrowUp size={18} /> : <ArrowDown size={18} />}
+								onClick={handleSortOrderChange}
+								disabled={loading}
+								size="small"
+							>
+								{sortOrder === "asc" ? "Ascendente" : "Descendente"}
+							</Button>
+						</Grid>
+						<Grid item xs={12} md={6} lg={7}>
 							<Stack direction="row" spacing={1}>
 								<Button
 									variant="contained"

@@ -45,7 +45,7 @@ export interface CausasResponse {
 // Servicio de causas
 export class CausasService {
 	/**
-	 * Obtener todas las causas verificadas con búsqueda avanzada
+	 * Obtener todas las causas verificadas con búsqueda avanzada y ordenamiento
 	 */
 	static async getVerifiedCausas(params?: {
 		page?: number;
@@ -55,6 +55,8 @@ export class CausasService {
 		year?: number;
 		objeto?: string;
 		caratula?: string;
+		sortBy?: "number" | "year" | "caratula" | "juzgado" | "objeto" | "movimientosCount";
+		sortOrder?: "asc" | "desc";
 	}): Promise<CausasResponse> {
 		try {
 			const response = await workersAxios.get("/api/causas/verified", { params });
