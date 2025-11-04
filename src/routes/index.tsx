@@ -16,6 +16,7 @@ const AuthCodeVerification = Loadable(lazy(() => import("pages/auth/code-verific
 
 // Admin pages
 const WorkersPage = Loadable(lazy(() => import("pages/admin/causas/workers")));
+const CarpetasVerificadas = Loadable(lazy(() => import("pages/admin/causas/CarpetasVerificadas")));
 
 // Placeholder pages
 const Dashboard = () => (
@@ -79,6 +80,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<WorkersPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "causas/verified",
+							element: (
+								<AdminRoleGuard>
+									<CarpetasVerificadas />
 								</AdminRoleGuard>
 							),
 						},
