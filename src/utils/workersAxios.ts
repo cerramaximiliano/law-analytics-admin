@@ -88,6 +88,20 @@ workersAxios.interceptors.request.use(
 // Response interceptor for error handling and token refresh
 workersAxios.interceptors.response.use(
 	(response: AxiosResponse) => {
+		// Capturar token del header si viene (para mantener token actualizado)
+		const token = response.headers["authorization"] || response.headers["x-auth-token"];
+		if (token) {
+			const cleanToken = token.replace("Bearer ", "");
+			authTokenService.setToken(cleanToken);
+			secureStorage.setAuthToken(cleanToken);
+		}
+
+		// Si la respuesta contiene un token en el body
+		if (response.data?.token) {
+			authTokenService.setToken(response.data.token);
+			secureStorage.setAuthToken(response.data.token);
+		}
+
 		return response;
 	},
 	async (error) => {
@@ -100,15 +114,23 @@ workersAxios.interceptors.response.use(
 			try {
 				// Intentar refrescar el token usando la API de autenticación
 				const authBaseURL = import.meta.env.VITE_AUTH_URL || "https://api.lawanalytics.app";
-				await axios.post(`${authBaseURL}/api/auth/refresh-token`, {}, { withCredentials: true });
+				const refreshResponse = await axios.post(`${authBaseURL}/api/auth/refresh-token`, {}, { withCredentials: true });
 
-				// Obtener el nuevo token y reintentar la petición original
-				const newToken = getAuthToken();
-				if (newToken && originalRequest.headers) {
-					originalRequest.headers.Authorization = `Bearer ${newToken}`;
+				// Capturar el nuevo token de la respuesta del refresh
+				const newToken =
+					refreshResponse.headers["authorization"]?.replace("Bearer ", "") ||
+					refreshResponse.headers["x-auth-token"] ||
+					refreshResponse.data?.token;
+
+				if (newToken) {
+					authTokenService.setToken(newToken);
+					secureStorage.setAuthToken(newToken);
+					if (originalRequest.headers) {
+						originalRequest.headers.Authorization = `Bearer ${newToken}`;
+					}
 				}
 
-				// Reintentar la petición original
+				// Reintentar la petición original con el nuevo token
 				return workersAxios(originalRequest);
 			} catch (refreshError) {
 				// Si el refresh falla, limpiar tokens y redirigir al login
