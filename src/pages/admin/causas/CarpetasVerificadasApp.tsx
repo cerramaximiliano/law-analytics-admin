@@ -53,7 +53,7 @@ const CarpetasVerificadasApp = () => {
 	const [causas, setCausas] = useState<Causa[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(25);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [totalCount, setTotalCount] = useState(0);
 	const [fueroFilter, setFueroFilter] = useState<string>("todos");
 

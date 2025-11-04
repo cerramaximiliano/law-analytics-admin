@@ -354,7 +354,14 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 								<Box>
 									{causa.verified && <Chip label="Verificada" color="success" size="small" sx={{ mr: 0.5, mb: 0.5 }} />}
 									{causa.isValid && <Chip label="Válida" color="primary" size="small" sx={{ mr: 0.5, mb: 0.5 }} />}
-									{causa.update && <Chip label="Con actualización" color="warning" size="small" sx={{ mb: 0.5 }} />}
+									{causa.update && (
+										<Chip
+											label="Con actualización"
+											color="warning"
+											size="small"
+											sx={{ mb: 0.5, color: "rgba(0, 0, 0, 0.87)" }}
+										/>
+									)}
 								</Box>
 							</Grid>
 
