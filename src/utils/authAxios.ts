@@ -2,6 +2,7 @@ import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 
 import Cookies from "js-cookie";
 import authTokenService from "services/authTokenService";
 import secureStorage from "services/secureStorage";
+import { requestQueueService } from "services/requestQueueService";
 
 // Instancia de Axios para la API de autenticación
 const authAxios: AxiosInstance = axios.create({
@@ -118,6 +119,7 @@ authAxios.interceptors.response.use(
 		if (
 			error.response?.status === 401 &&
 			!originalRequest._retry &&
+			!originalRequest._queued &&
 			!url.includes("/login") &&
 			!url.includes("/register") &&
 			!url.includes("/google") &&
@@ -126,36 +128,28 @@ authAxios.interceptors.response.use(
 		) {
 			originalRequest._retry = true;
 
-			console.log("🔄 authAxios: Intentando refrescar token...");
-
 			try {
 				// Intentar refrescar el token
 				const refreshResponse = await authAxios.post("/api/auth/refresh-token", {}, { withCredentials: true });
-
-				console.log("✅ authAxios: Token refrescado exitosamente");
 
 				// Obtener el nuevo token y reintentar la petición original
 				const newToken = getAuthToken();
 				if (newToken && originalRequest.headers) {
 					originalRequest.headers.Authorization = `Bearer ${newToken}`;
-					console.log("🔄 authAxios: Reintentando petición original con nuevo token");
 				}
 
 				// Reintentar la petición original
 				return authAxios(originalRequest);
 			} catch (refreshError) {
-				console.error("❌ authAxios: Error al refrescar token:", refreshError);
+				// Si el refresh falla, encolar la petición y mostrar modal de autenticación
+				// en lugar de redirigir directamente al login
+				const queuedPromise = requestQueueService.enqueue(originalRequest);
 
-				// Si el refresh falla, limpiar tokens y redirigir al login
-				secureStorage.clearSession();
-				authTokenService.clearToken();
+				// Emitir evento para que el contexto de autenticación muestre el modal
+				window.dispatchEvent(new CustomEvent("showUnauthorizedModal"));
 
-				// Solo redirigir si no estamos ya en la página de login
-				if (!window.location.pathname.includes("/login")) {
-					window.location.href = "/login";
-				}
-
-				return Promise.reject(refreshError);
+				// Retornar la Promise encolada que se resolverá después del login
+				return queuedPromise;
 			}
 		}
 

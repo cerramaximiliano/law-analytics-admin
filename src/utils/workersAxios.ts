@@ -2,6 +2,7 @@ import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 
 import Cookies from "js-cookie";
 import authTokenService from "services/authTokenService";
 import secureStorage from "services/secureStorage";
+import { requestQueueService } from "services/requestQueueService";
 
 // Instancia de Axios para la API de workers
 const workersAxios: AxiosInstance = axios.create({
@@ -108,7 +109,7 @@ workersAxios.interceptors.response.use(
 		const originalRequest = error.config;
 
 		// Si recibimos un 401 del servidor y no hemos intentado refrescar aún
-		if (error.response?.status === 401 && !originalRequest._retry) {
+		if (error.response?.status === 401 && !originalRequest._retry && !originalRequest._queued) {
 			originalRequest._retry = true;
 
 			try {
@@ -133,16 +134,15 @@ workersAxios.interceptors.response.use(
 				// Reintentar la petición original con el nuevo token
 				return workersAxios(originalRequest);
 			} catch (refreshError) {
-				// Si el refresh falla, limpiar tokens y redirigir al login
-				secureStorage.clearSession();
-				authTokenService.clearToken();
+				// Si el refresh falla, encolar la petición y mostrar modal de autenticación
+				// en lugar de redirigir directamente al login
+				const queuedPromise = requestQueueService.enqueue(originalRequest);
 
-				// Solo redirigir si no estamos ya en la página de login
-				if (!window.location.pathname.includes("/login")) {
-					window.location.href = "/login";
-				}
+				// Emitir evento para que el contexto de autenticación muestre el modal
+				window.dispatchEvent(new CustomEvent("showUnauthorizedModal"));
 
-				return Promise.reject(refreshError);
+				// Retornar la Promise encolada que se resolverá después del login
+				return queuedPromise;
 			}
 		}
 
