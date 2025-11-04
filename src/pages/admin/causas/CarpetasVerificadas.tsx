@@ -121,6 +121,8 @@ const CarpetasVerificadas = () => {
 				params.sortOrder = sortOrderParam;
 			}
 
+			console.log("🔍 Parámetros enviados a API:", params);
+
 			const response = await CausasService.getVerifiedCausas(params);
 
 			if (response.success) {
@@ -139,6 +141,8 @@ const CarpetasVerificadas = () => {
 	};
 
 	// Efecto para cargar causas cuando cambian los filtros, paginación u ordenamiento
+	// Los filtros de búsqueda (searchNumber, etc.) NO están en las dependencias para evitar
+	// búsquedas automáticas mientras el usuario escribe. Se aplican al hacer clic en "Buscar"
 	useEffect(() => {
 		fetchCausas(page, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder);
 	}, [page, rowsPerPage, fueroFilter, sortBy, sortOrder]);
