@@ -281,16 +281,18 @@ const CausaDetalleModal = ({ open, onClose, causa }: CausaDetalleModalProps) => 
 										<TableBody>
 											{paginatedMovimientos.map((mov: any, index: number) => (
 												<TableRow key={index} hover>
-													<TableCell>
+													<TableCell width="15%">
 														<Typography variant="caption">{formatDate(mov.fecha || mov.createdAt)}</Typography>
 													</TableCell>
 													<TableCell>
-														<Typography variant="body2">{mov.descripcion || mov.texto || "Sin descripción"}</Typography>
+														<Typography variant="body2" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
+															{mov.detalle || mov.descripcion || mov.texto || "Sin descripción"}
+														</Typography>
 													</TableCell>
-													<TableCell>
+													<TableCell width="15%">
 														{mov.tipo && <Chip label={mov.tipo} size="small" variant="outlined" />}
 													</TableCell>
-													<TableCell align="center">
+													<TableCell width="10%" align="center">
 														{mov.url ? (
 															<Link href={mov.url} target="_blank" rel="noopener noreferrer" underline="none">
 																<Button size="small" startIcon={<LinkIcon size={16} />} variant="outlined">
