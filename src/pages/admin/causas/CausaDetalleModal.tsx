@@ -115,14 +115,18 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated }: CausaDetall
 	};
 
 	// Formatear solo fecha (sin hora) - para tabla de movimientos
+	// Sin conversión de zona horaria - muestra exactamente la fecha guardada
 	const formatDateOnly = (date: { $date: string } | string | undefined): string => {
 		if (!date) return "N/A";
 		const dateStr = typeof date === "string" ? date : date.$date;
-		return new Date(dateStr).toLocaleDateString("es-AR", {
-			year: "numeric",
-			month: "2-digit",
-			day: "2-digit",
-		});
+		const dateObj = new Date(dateStr);
+
+		// Usar métodos UTC para evitar conversión de zona horaria
+		const day = String(dateObj.getUTCDate()).padStart(2, "0");
+		const month = String(dateObj.getUTCMonth() + 1).padStart(2, "0");
+		const year = dateObj.getUTCFullYear();
+
+		return `${day}/${month}/${year}`;
 	};
 
 	// Convertir fecha para input datetime-local
