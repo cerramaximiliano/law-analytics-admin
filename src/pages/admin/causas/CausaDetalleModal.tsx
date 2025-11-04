@@ -32,6 +32,7 @@ import {
 } from "@mui/material";
 import { Causa } from "api/causasPjn";
 import { CausasPjnService } from "api/causasPjn";
+import CausasService from "api/causas";
 import { CloseCircle, Link as LinkIcon, Trash, Edit, Save2, CloseSquare, TickCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 
@@ -40,6 +41,7 @@ interface CausaDetalleModalProps {
 	onClose: () => void;
 	causa: Causa | null;
 	onCausaUpdated?: () => void;
+	apiService?: "pjn" | "workers"; // Especifica qué servicio usar
 }
 
 // Mapeo de fueros a nombres legibles
@@ -58,8 +60,11 @@ const FUERO_COLORS: Record<string, "primary" | "success" | "warning" | "error"> 
 	CNT: "error",
 };
 
-const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated }: CausaDetalleModalProps) => {
+const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = "pjn" }: CausaDetalleModalProps) => {
 	const { enqueueSnackbar } = useSnackbar();
+
+	// Seleccionar el servicio apropiado
+	const ServiceAPI = apiService === "pjn" ? CausasPjnService : CausasService;
 
 	// Estado para el tab activo
 	const [activeTab, setActiveTab] = useState(0);
@@ -183,7 +188,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated }: CausaDetall
 			const causaId = getId(causa._id);
 			const fuero = causa.fuero || "CIV";
 
-			const response = await CausasPjnService.updateCausa(fuero as any, causaId, editedCausa);
+			const response = await ServiceAPI.updateCausa(fuero as any, causaId, editedCausa);
 
 			if (response.success) {
 				enqueueSnackbar("Causa actualizada correctamente", {
@@ -227,7 +232,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated }: CausaDetall
 			const causaId = getId(causa._id);
 			const fuero = causa.fuero || "CIV";
 
-			const response = await CausasPjnService.deleteMovimiento(fuero as any, causaId, deleteMovConfirm.index);
+			const response = await ServiceAPI.deleteMovimiento(fuero as any, causaId, deleteMovConfirm.index);
 
 			if (response.success) {
 				enqueueSnackbar("Movimiento eliminado correctamente", {

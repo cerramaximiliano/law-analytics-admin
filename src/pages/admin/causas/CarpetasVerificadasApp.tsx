@@ -458,7 +458,7 @@ const CarpetasVerificadasApp = () => {
 			</Grid>
 
 			{/* Modal de detalles */}
-			<CausaDetalleModal open={detailModalOpen} onClose={handleCloseModal} causa={selectedCausa} onCausaUpdated={handleRefresh} />
+			<CausaDetalleModal open={detailModalOpen} onClose={handleCloseModal} causa={selectedCausa} onCausaUpdated={handleRefresh} apiService="pjn" />
 		</MainCard>
 	);
 };
