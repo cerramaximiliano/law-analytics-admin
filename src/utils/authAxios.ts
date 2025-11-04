@@ -124,7 +124,8 @@ authAxios.interceptors.response.use(
 			!url.includes("/register") &&
 			!url.includes("/google") &&
 			!url.includes("/refresh-token") &&
-			!url.includes("/logout")
+			!url.includes("/logout") &&
+			!url.includes("/api/auth/me") // No intentar refresh en la verificación inicial
 		) {
 			originalRequest._retry = true;
 
