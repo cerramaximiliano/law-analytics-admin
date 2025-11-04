@@ -391,7 +391,16 @@ const CarpetasVerificadas = () => {
 										{causas.map((causa) => (
 											<TableRow key={getId(causa._id)} hover>
 												<TableCell>
-													<Chip label={FUERO_LABELS[causa.fuero || "CIV"]} color={FUERO_COLORS[causa.fuero || "CIV"]} size="small" />
+													<Chip
+														label={FUERO_LABELS[causa.fuero || "CIV"]}
+														color={FUERO_COLORS[causa.fuero || "CIV"]}
+														size="small"
+														sx={{
+															...(causa.fuero === "CSS" && {
+																color: "rgba(0, 0, 0, 0.87)",
+															}),
+														}}
+													/>
 												</TableCell>
 												<TableCell>
 													<Typography variant="body2" fontWeight="bold">

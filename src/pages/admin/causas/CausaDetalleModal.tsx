@@ -109,7 +109,15 @@ const CausaDetalleModal = ({ open, onClose, causa }: CausaDetalleModalProps) => 
 			<DialogTitle>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Typography variant="h5">Detalles de la Causa</Typography>
-					<Chip label={FUERO_LABELS[causa.fuero || "CIV"]} color={FUERO_COLORS[causa.fuero || "CIV"]} />
+					<Chip
+						label={FUERO_LABELS[causa.fuero || "CIV"]}
+						color={FUERO_COLORS[causa.fuero || "CIV"]}
+						sx={{
+							...(causa.fuero === "CSS" && {
+								color: "rgba(0, 0, 0, 0.87)",
+							}),
+						}}
+					/>
 				</Stack>
 			</DialogTitle>
 
