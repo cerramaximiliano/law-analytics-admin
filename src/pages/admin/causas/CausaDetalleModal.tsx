@@ -367,7 +367,21 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 
 				// Actualizar la lista de movimientos localmente
 				const movimientoAgregado = response.data.nuevoMovimiento;
-				const newMovimientos = [...currentMovimientos, movimientoAgregado];
+
+				// Insertar el movimiento en la posición correcta (orden descendente por fecha)
+				const fechaNuevo = new Date(movimientoAgregado.fecha);
+				let insertIndex = currentMovimientos.length; // Por defecto, al final
+
+				for (let i = 0; i < currentMovimientos.length; i++) {
+					const fechaActual = new Date(currentMovimientos[i].fecha);
+					if (fechaNuevo > fechaActual) {
+						insertIndex = i;
+						break;
+					}
+				}
+
+				const newMovimientos = [...currentMovimientos];
+				newMovimientos.splice(insertIndex, 0, movimientoAgregado);
 				setCurrentMovimientos(newMovimientos);
 
 				handleCloseAddMovDialog();
