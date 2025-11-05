@@ -60,6 +60,26 @@ const FUERO_COLORS: Record<string, "primary" | "success" | "warning" | "error"> 
 	CNT: "error",
 };
 
+// Función helper para normalizar fuero a código
+const normalizeFuero = (fuero: string | undefined): "CIV" | "COM" | "CSS" | "CNT" => {
+	if (!fuero) return "CIV";
+
+	// Si ya es un código válido, devolverlo
+	if (["CIV", "COM", "CSS", "CNT"].includes(fuero)) {
+		return fuero as "CIV" | "COM" | "CSS" | "CNT";
+	}
+
+	// Mapear nombres legibles a códigos
+	const mapping: Record<string, "CIV" | "COM" | "CSS" | "CNT"> = {
+		Civil: "CIV",
+		Comercial: "COM",
+		"Seguridad Social": "CSS",
+		Trabajo: "CNT",
+	};
+
+	return mapping[fuero] || "CIV";
+};
+
 const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = "pjn" }: CausaDetalleModalProps) => {
 	const { enqueueSnackbar } = useSnackbar();
 
@@ -196,9 +216,9 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 		try {
 			setIsSaving(true);
 			const causaId = getId(causa._id);
-			const fuero = causa.fuero || "CIV";
+			const fuero = normalizeFuero(causa.fuero);
 
-			const response = await ServiceAPI.updateCausa(fuero as any, causaId, editedCausa);
+			const response = await ServiceAPI.updateCausa(fuero, causaId, editedCausa);
 
 			if (response.success) {
 				enqueueSnackbar("Causa actualizada correctamente", {
@@ -240,9 +260,9 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 		try {
 			setIsDeleting(true);
 			const causaId = getId(causa._id);
-			const fuero = causa.fuero || "CIV";
+			const fuero = normalizeFuero(causa.fuero);
 
-			const response = await ServiceAPI.deleteMovimiento(fuero as any, causaId, deleteMovConfirm.index);
+			const response = await ServiceAPI.deleteMovimiento(fuero, causaId, deleteMovConfirm.index);
 
 			if (response.success) {
 				enqueueSnackbar("Movimiento eliminado correctamente", {
@@ -311,12 +331,12 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 		try {
 			setIsAddingMovimiento(true);
 			const causaId = getId(causa._id);
-			const fuero = causa.fuero || "CIV";
+			const fuero = normalizeFuero(causa.fuero);
 
 			// Convertir fecha a formato ISO UTC
 			const fechaISO = new Date(newMovimiento.fecha).toISOString();
 
-			const response = await ServiceAPI.addMovimiento(fuero as any, causaId, {
+			const response = await ServiceAPI.addMovimiento(fuero, causaId, {
 				fecha: fechaISO,
 				tipo: newMovimiento.tipo,
 				detalle: newMovimiento.detalle,
@@ -361,11 +381,11 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 									Expediente: {causa.number}/{causa.year}
 								</Typography>
 								<Chip
-									label={FUERO_LABELS[causa.fuero || "CIV"]}
-									color={FUERO_COLORS[causa.fuero || "CIV"]}
+									label={FUERO_LABELS[normalizeFuero(causa.fuero)]}
+									color={FUERO_COLORS[normalizeFuero(causa.fuero)]}
 									size="small"
 									sx={{
-										...(causa.fuero === "CSS" && {
+										...(normalizeFuero(causa.fuero) === "CSS" && {
 											color: "rgba(0, 0, 0, 0.87)",
 										}),
 									}}
