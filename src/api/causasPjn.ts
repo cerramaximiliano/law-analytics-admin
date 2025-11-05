@@ -175,7 +175,6 @@ export class CausasPjnService {
 			detalle: string;
 			url?: string | null;
 			sendNotification?: boolean;
-			userId?: string;
 		},
 	): Promise<any> {
 		try {

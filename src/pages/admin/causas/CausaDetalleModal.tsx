@@ -37,7 +37,6 @@ import { CausasPjnService } from "api/causasPjn";
 import CausasService from "api/causas";
 import { CloseCircle, Link as LinkIcon, Trash, Edit, Save2, CloseSquare, TickCircle, AddCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import useAuth from "hooks/useAuth";
 
 interface CausaDetalleModalProps {
 	open: boolean;
@@ -85,7 +84,6 @@ const normalizeFuero = (fuero: string | undefined): "CIV" | "COM" | "CSS" | "CNT
 
 const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = "pjn" }: CausaDetalleModalProps) => {
 	const { enqueueSnackbar } = useSnackbar();
-	const { user } = useAuth();
 
 	// Seleccionar el servicio apropiado
 	const ServiceAPI = apiService === "pjn" ? CausasPjnService : CausasService;
@@ -335,15 +333,6 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			return;
 		}
 
-		// Validar userId si se va a enviar notificación
-		if (sendNotification && !user?._id) {
-			enqueueSnackbar("No se puede enviar notificación: usuario no identificado", {
-				variant: "error",
-				anchorOrigin: { vertical: "bottom", horizontal: "right" },
-			});
-			return;
-		}
-
 		try {
 			setIsAddingMovimiento(true);
 			const causaId = getId(causa._id);
@@ -358,13 +347,17 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 				detalle: newMovimiento.detalle,
 				url: newMovimiento.url || null,
 				sendNotification,
-				userId: user?._id,
 			});
 
 			if (response.success) {
 				let mensaje = "Movimiento agregado correctamente";
 				if (sendNotification) {
-					mensaje += response.data.notificationSent ? " y notificación enviada" : " (la notificación falló)";
+					const usersNotified = response.data.usersNotified || 0;
+					if (response.data.notificationSent && usersNotified > 0) {
+						mensaje += ` y notificación enviada a ${usersNotified} usuario${usersNotified > 1 ? "s" : ""}`;
+					} else {
+						mensaje += " (la notificación falló o no hay usuarios habilitados)";
+					}
 				}
 
 				enqueueSnackbar(mensaje, {
@@ -795,13 +788,8 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 						<Grid item xs={12}>
 							<FormControlLabel
 								control={<Checkbox checked={sendNotification} onChange={(e) => setSendNotification(e.target.checked)} color="primary" />}
-								label="Enviar notificación"
+								label="Enviar notificación a usuarios habilitados"
 							/>
-							{sendNotification && !user?._id && (
-								<Typography variant="caption" color="error" display="block" sx={{ mt: 0.5 }}>
-									Advertencia: No se puede enviar notificación sin usuario identificado
-								</Typography>
-							)}
 						</Grid>
 					</Grid>
 				</ConfirmDialogContent>
