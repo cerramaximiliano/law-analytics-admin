@@ -16,6 +16,7 @@ export interface Causa {
 	userCausaIds?: string[];
 	movimientosCount?: number;
 	lastUpdate?: { $date: string } | string;
+	fechaUltimoMovimiento?: { $date: string } | string;
 	createdAt?: { $date: string } | string;
 	updatedAt?: { $date: string } | string;
 }
@@ -56,7 +57,7 @@ export class CausasPjnService {
 		year?: number;
 		objeto?: string;
 		caratula?: string;
-		sortBy?: "number" | "year" | "caratula" | "juzgado" | "objeto" | "movimientosCount";
+		sortBy?: "number" | "year" | "caratula" | "juzgado" | "objeto" | "movimientosCount" | "lastUpdate" | "fechaUltimoMovimiento";
 		sortOrder?: "asc" | "desc";
 	}): Promise<CausasResponse> {
 		try {
@@ -156,6 +157,27 @@ export class CausasPjnService {
 	static async deleteMovimiento(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string, movimientoIndex: number): Promise<any> {
 		try {
 			const response = await pjnAxios.delete(`/api/causas/${fuero}/${id}/movimientos/${movimientoIndex}`);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Agregar un movimiento a una causa
+	 */
+	static async addMovimiento(
+		fuero: "CIV" | "COM" | "CSS" | "CNT",
+		id: string,
+		movimiento: {
+			fecha: string;
+			tipo: string;
+			detalle: string;
+			url?: string | null;
+		},
+	): Promise<any> {
+		try {
+			const response = await pjnAxios.post(`/api/causas/${fuero}/${id}/movimientos`, movimiento);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);

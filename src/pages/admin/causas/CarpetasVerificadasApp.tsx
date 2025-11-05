@@ -27,8 +27,10 @@ import {
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { CausasPjnService, Causa } from "api/causasPjn";
-import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown } from "iconsax-react";
+import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
+import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification } from "iconsax-react";
 import CausaDetalleModal from "./CausaDetalleModal";
+import JudicialMovementsModal from "./JudicialMovementsModal";
 
 // Mapeo de fueros a nombres legibles
 const FUERO_LABELS: Record<string, string> = {
@@ -71,6 +73,12 @@ const CarpetasVerificadasApp = () => {
 	const [selectedCausa, setSelectedCausa] = useState<Causa | null>(null);
 	const [detailModalOpen, setDetailModalOpen] = useState(false);
 	const [loadingDetail, setLoadingDetail] = useState(false);
+
+	// Modal de movimientos judiciales
+	const [judicialMovements, setJudicialMovements] = useState<JudicialMovement[]>([]);
+	const [movementsModalOpen, setMovementsModalOpen] = useState(false);
+	const [loadingMovements, setLoadingMovements] = useState(false);
+	const [movementsError, setMovementsError] = useState<string>("");
 
 	// Cargar causas verificadas
 	const fetchCausas = async (
@@ -203,6 +211,33 @@ const CarpetasVerificadasApp = () => {
 		return new Date(dateStr).toLocaleDateString("es-AR");
 	};
 
+	// Formatear fecha UTC sin conversión a hora local
+	const formatDateUTC = (date: { $date: string } | string | undefined): string => {
+		if (!date) return "N/A";
+		const dateStr = typeof date === "string" ? date : date.$date;
+		const dateObj = new Date(dateStr);
+		// Usar UTC para evitar conversión de zona horaria
+		const day = dateObj.getUTCDate();
+		const month = dateObj.getUTCMonth() + 1;
+		const year = dateObj.getUTCFullYear();
+		return `${day}/${month}/${year}`;
+	};
+
+	// Verificar si dos fechas coinciden en día, mes y año (UTC)
+	const datesMatchUTC = (date1: { $date: string } | string | undefined, date2: { $date: string } | string | undefined): boolean => {
+		if (!date1 || !date2) return false;
+		const dateStr1 = typeof date1 === "string" ? date1 : date1.$date;
+		const dateStr2 = typeof date2 === "string" ? date2 : date2.$date;
+		const dateObj1 = new Date(dateStr1);
+		const dateObj2 = new Date(dateStr2);
+
+		return (
+			dateObj1.getUTCDate() === dateObj2.getUTCDate() &&
+			dateObj1.getUTCMonth() === dateObj2.getUTCMonth() &&
+			dateObj1.getUTCFullYear() === dateObj2.getUTCFullYear()
+		);
+	};
+
 	// Obtener ID como string
 	const getId = (id: string | { $oid: string }): string => {
 		return typeof id === "string" ? id : id.$oid;
@@ -239,6 +274,38 @@ const CarpetasVerificadasApp = () => {
 	const handleCloseModal = () => {
 		setDetailModalOpen(false);
 		setSelectedCausa(null);
+	};
+
+	// Handler para verificar notificaciones
+	const handleVerificarNotificaciones = async (causa: Causa) => {
+		try {
+			setLoadingMovements(true);
+			setMovementsError("");
+			const causaId = getId(causa._id);
+
+			const response = await JudicialMovementsService.getMovementsByExpedienteId(causaId);
+
+			if (response.success) {
+				setJudicialMovements(response.data);
+				setMovementsModalOpen(true);
+			} else {
+				setMovementsError(response.message || "Error al cargar las notificaciones");
+				setMovementsModalOpen(true);
+			}
+		} catch (error) {
+			console.error("Error al cargar notificaciones:", error);
+			setMovementsError("Error al cargar las notificaciones de movimientos judiciales");
+			setMovementsModalOpen(true);
+		} finally {
+			setLoadingMovements(false);
+		}
+	};
+
+	// Handler para cerrar modal de movimientos
+	const handleCloseMovementsModal = () => {
+		setMovementsModalOpen(false);
+		setJudicialMovements([]);
+		setMovementsError("");
 	};
 
 	return (
@@ -317,6 +384,8 @@ const CarpetasVerificadasApp = () => {
 									<MenuItem value="juzgado">Juzgado</MenuItem>
 									<MenuItem value="objeto">Objeto</MenuItem>
 									<MenuItem value="movimientosCount">Movimientos</MenuItem>
+									<MenuItem value="lastUpdate">Última Act.</MenuItem>
+									<MenuItem value="fechaUltimoMovimiento">Fecha Últ. Mov.</MenuItem>
 								</Select>
 							</FormControl>
 						</Grid>
@@ -384,6 +453,7 @@ const CarpetasVerificadasApp = () => {
 											<TableCell>Objeto</TableCell>
 											<TableCell align="center">Movimientos</TableCell>
 											<TableCell>Última Act.</TableCell>
+											<TableCell>Fecha Últ. Mov.</TableCell>
 											<TableCell align="center">Acciones</TableCell>
 										</TableRow>
 									</TableHead>
@@ -429,12 +499,29 @@ const CarpetasVerificadasApp = () => {
 												<TableCell>
 													<Typography variant="caption">{formatDate(causa.lastUpdate)}</Typography>
 												</TableCell>
+												<TableCell>
+													<Typography variant="caption">{formatDateUTC(causa.fechaUltimoMovimiento)}</Typography>
+												</TableCell>
 												<TableCell align="center">
-													<Tooltip title="Ver detalles">
-														<IconButton size="small" color="primary" onClick={() => handleVerDetalles(causa)} disabled={loadingDetail}>
-															<Eye size={18} />
-														</IconButton>
-													</Tooltip>
+													<Stack direction="row" spacing={0.5} justifyContent="center">
+														<Tooltip title="Ver detalles">
+															<IconButton size="small" color="primary" onClick={() => handleVerDetalles(causa)} disabled={loadingDetail}>
+																<Eye size={18} />
+															</IconButton>
+														</Tooltip>
+														{datesMatchUTC(causa.lastUpdate, causa.fechaUltimoMovimiento) && (
+															<Tooltip title="Verificar notificaciones">
+																<IconButton
+																	size="small"
+																	color="warning"
+																	onClick={() => handleVerificarNotificaciones(causa)}
+																	disabled={loadingMovements}
+																>
+																	<Notification size={18} />
+																</IconButton>
+															</Tooltip>
+														)}
+													</Stack>
 												</TableCell>
 											</TableRow>
 										))}
@@ -459,6 +546,15 @@ const CarpetasVerificadasApp = () => {
 
 			{/* Modal de detalles */}
 			<CausaDetalleModal open={detailModalOpen} onClose={handleCloseModal} causa={selectedCausa} onCausaUpdated={handleRefresh} apiService="pjn" />
+
+			{/* Modal de movimientos judiciales */}
+			<JudicialMovementsModal
+				open={movementsModalOpen}
+				onClose={handleCloseMovementsModal}
+				movements={judicialMovements}
+				loading={loadingMovements}
+				error={movementsError}
+			/>
 		</MainCard>
 	);
 };

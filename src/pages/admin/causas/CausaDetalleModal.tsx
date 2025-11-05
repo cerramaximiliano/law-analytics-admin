@@ -33,7 +33,7 @@ import {
 import { Causa } from "api/causasPjn";
 import { CausasPjnService } from "api/causasPjn";
 import CausasService from "api/causas";
-import { CloseCircle, Link as LinkIcon, Trash, Edit, Save2, CloseSquare, TickCircle } from "iconsax-react";
+import { CloseCircle, Link as LinkIcon, Trash, Edit, Save2, CloseSquare, TickCircle, AddCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 
 interface CausaDetalleModalProps {
@@ -87,6 +87,16 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 
 	// Estados para la lista de movimientos (para actualizar después de eliminar)
 	const [currentMovimientos, setCurrentMovimientos] = useState<any[]>([]);
+
+	// Estados para agregar movimiento
+	const [addMovDialogOpen, setAddMovDialogOpen] = useState(false);
+	const [newMovimiento, setNewMovimiento] = useState({
+		fecha: "",
+		tipo: "",
+		detalle: "",
+		url: "",
+	});
+	const [isAddingMovimiento, setIsAddingMovimiento] = useState(false);
 
 	// Resetear estados cuando se abre el modal
 	useEffect(() => {
@@ -263,6 +273,80 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			console.error(error);
 		} finally {
 			setIsDeleting(false);
+		}
+	};
+
+	// Abrir diálogo para agregar movimiento
+	const handleOpenAddMovDialog = () => {
+		setNewMovimiento({
+			fecha: "",
+			tipo: "",
+			detalle: "",
+			url: "",
+		});
+		setAddMovDialogOpen(true);
+	};
+
+	// Cerrar diálogo de agregar movimiento
+	const handleCloseAddMovDialog = () => {
+		setAddMovDialogOpen(false);
+		setNewMovimiento({
+			fecha: "",
+			tipo: "",
+			detalle: "",
+			url: "",
+		});
+	};
+
+	// Agregar movimiento
+	const handleAddMovimiento = async () => {
+		if (!newMovimiento.fecha || !newMovimiento.tipo || !newMovimiento.detalle) {
+			enqueueSnackbar("Fecha, tipo y detalle son campos obligatorios", {
+				variant: "warning",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			return;
+		}
+
+		try {
+			setIsAddingMovimiento(true);
+			const causaId = getId(causa._id);
+			const fuero = causa.fuero || "CIV";
+
+			// Convertir fecha a formato ISO UTC
+			const fechaISO = new Date(newMovimiento.fecha).toISOString();
+
+			const response = await ServiceAPI.addMovimiento(fuero as any, causaId, {
+				fecha: fechaISO,
+				tipo: newMovimiento.tipo,
+				detalle: newMovimiento.detalle,
+				url: newMovimiento.url || null,
+			});
+
+			if (response.success) {
+				enqueueSnackbar("Movimiento agregado correctamente", {
+					variant: "success",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+
+				// Actualizar la lista de movimientos localmente
+				const movimientoAgregado = response.data.nuevoMovimiento;
+				const newMovimientos = [...currentMovimientos, movimientoAgregado];
+				setCurrentMovimientos(newMovimientos);
+
+				handleCloseAddMovDialog();
+				if (onCausaUpdated) {
+					onCausaUpdated();
+				}
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al agregar el movimiento", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			console.error(error);
+		} finally {
+			setIsAddingMovimiento(false);
 		}
 	};
 
@@ -495,6 +579,11 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 					{/* Tab Panel 1: Movimientos */}
 					{activeTab === 1 && (
 						<Box>
+							<Box sx={{ mb: 2, display: "flex", justifyContent: "flex-end" }}>
+								<Button variant="contained" startIcon={<AddCircle size={18} />} onClick={handleOpenAddMovDialog} size="small">
+									Agregar Movimiento
+								</Button>
+							</Box>
 							{movimientos.length > 0 ? (
 								<>
 									<TableContainer>
@@ -603,6 +692,71 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 					</Button>
 					<Button onClick={handleConfirmDelete} variant="contained" color="error" disabled={isDeleting} startIcon={<Trash size={18} />}>
 						{isDeleting ? "Eliminando..." : "Eliminar"}
+					</Button>
+				</ConfirmDialogActions>
+			</ConfirmDialog>
+
+			{/* Dialog para agregar movimiento */}
+			<ConfirmDialog open={addMovDialogOpen} onClose={handleCloseAddMovDialog} maxWidth="sm" fullWidth>
+				<ConfirmDialogTitle>Agregar Movimiento</ConfirmDialogTitle>
+				<ConfirmDialogContent>
+					<Grid container spacing={2} sx={{ mt: 1 }}>
+						<Grid item xs={12}>
+							<TextField
+								fullWidth
+								label="Fecha"
+								type="date"
+								value={newMovimiento.fecha}
+								onChange={(e) => setNewMovimiento({ ...newMovimiento, fecha: e.target.value })}
+								InputLabelProps={{
+									shrink: true,
+								}}
+								required
+								size="small"
+							/>
+						</Grid>
+						<Grid item xs={12}>
+							<TextField
+								fullWidth
+								label="Tipo"
+								value={newMovimiento.tipo}
+								onChange={(e) => setNewMovimiento({ ...newMovimiento, tipo: e.target.value })}
+								placeholder="Ej: MOVIMIENTO, CEDULA ELECTRONICA TRIBUNAL"
+								required
+								size="small"
+							/>
+						</Grid>
+						<Grid item xs={12}>
+							<TextField
+								fullWidth
+								label="Detalle"
+								value={newMovimiento.detalle}
+								onChange={(e) => setNewMovimiento({ ...newMovimiento, detalle: e.target.value })}
+								placeholder="Descripción del movimiento"
+								multiline
+								rows={3}
+								required
+								size="small"
+							/>
+						</Grid>
+						<Grid item xs={12}>
+							<TextField
+								fullWidth
+								label="URL (opcional)"
+								value={newMovimiento.url}
+								onChange={(e) => setNewMovimiento({ ...newMovimiento, url: e.target.value })}
+								placeholder="https://..."
+								size="small"
+							/>
+						</Grid>
+					</Grid>
+				</ConfirmDialogContent>
+				<ConfirmDialogActions>
+					<Button onClick={handleCloseAddMovDialog} variant="outlined" disabled={isAddingMovimiento}>
+						Cancelar
+					</Button>
+					<Button onClick={handleAddMovimiento} variant="contained" disabled={isAddingMovimiento} startIcon={<AddCircle size={18} />}>
+						{isAddingMovimiento ? "Agregando..." : "Agregar"}
 					</Button>
 				</ConfirmDialogActions>
 			</ConfirmDialog>

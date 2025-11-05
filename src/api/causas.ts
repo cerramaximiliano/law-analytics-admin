@@ -162,6 +162,27 @@ export class CausasService {
 		}
 	}
 
+	/**
+	 * Agregar un movimiento a una causa
+	 */
+	static async addMovimiento(
+		fuero: "CIV" | "COM" | "CSS" | "CNT",
+		id: string,
+		movimiento: {
+			fecha: string;
+			tipo: string;
+			detalle: string;
+			url?: string | null;
+		},
+	): Promise<any> {
+		try {
+			const response = await workersAxios.post(`/api/causas/${fuero}/${id}/movimientos`, movimiento);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
 	// Manejo de errores
 	static handleError(error: any): Error {
 		// Re-throw axios errors for interceptor handling
