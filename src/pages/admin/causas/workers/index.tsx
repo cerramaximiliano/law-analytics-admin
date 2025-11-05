@@ -41,11 +41,11 @@ const WorkersConfig = () => {
 			status: "active",
 		},
 		{
-			label: "Actualización",
+			label: "Actualización (App)",
 			value: "app-update",
 			icon: <DocumentUpload size={20} />,
 			component: <AppUpdateWorker />,
-			description: "Mantiene actualizados los documentos de causas judiciales",
+			description: "Mantiene actualizados los documentos de causas judiciales (API de PJN)",
 			status: "active",
 		},
 		{

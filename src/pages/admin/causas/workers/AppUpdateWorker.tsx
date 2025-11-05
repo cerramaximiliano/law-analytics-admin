@@ -27,7 +27,8 @@ import {
 } from "@mui/material";
 import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, InfoCircle, ArrowDown2, ArrowUp2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import { WorkersService, WorkerConfig } from "api/workers";
+import { WorkerConfig } from "api/workers";
+import WorkersPjnService from "api/workersPjn";
 import AdvancedConfigModal from "./AdvancedConfigModal";
 
 // Enums para el worker de actualización
@@ -55,7 +56,7 @@ const AppUpdateWorker = () => {
 	const fetchConfigs = async () => {
 		try {
 			setLoading(true);
-			const response = await WorkersService.getAppUpdateConfigs({ page: 1, limit: 20 });
+			const response = await WorkersPjnService.getAppUpdateConfigs({ page: 1, limit: 20 });
 			if (response.success && Array.isArray(response.data)) {
 				setConfigs(response.data);
 			}
@@ -118,7 +119,7 @@ const AppUpdateWorker = () => {
 		if (!editingId) return;
 
 		try {
-			const response = await WorkersService.updateAppUpdateConfig(editingId, editValues);
+			const response = await WorkersPjnService.updateAppUpdateConfig(editingId, editValues);
 			if (response.success) {
 				enqueueSnackbar("Configuración actualizada exitosamente", {
 					variant: "success",
@@ -138,7 +139,7 @@ const AppUpdateWorker = () => {
 	const handleToggleEnabled = async (config: WorkerConfig) => {
 		const id = getConfigId(config);
 		try {
-			const response = await WorkersService.updateAppUpdateConfig(id, {
+			const response = await WorkersPjnService.updateAppUpdateConfig(id, {
 				enabled: !config.enabled,
 			});
 			if (response.success) {
