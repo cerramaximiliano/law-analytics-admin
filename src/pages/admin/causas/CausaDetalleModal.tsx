@@ -29,12 +29,15 @@ import {
 	DialogTitle as ConfirmDialogTitle,
 	DialogContent as ConfirmDialogContent,
 	DialogActions as ConfirmDialogActions,
+	Checkbox,
+	FormControlLabel,
 } from "@mui/material";
 import { Causa } from "api/causasPjn";
 import { CausasPjnService } from "api/causasPjn";
 import CausasService from "api/causas";
 import { CloseCircle, Link as LinkIcon, Trash, Edit, Save2, CloseSquare, TickCircle, AddCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
+import useAuth from "hooks/useAuth";
 
 interface CausaDetalleModalProps {
 	open: boolean;
@@ -82,6 +85,7 @@ const normalizeFuero = (fuero: string | undefined): "CIV" | "COM" | "CSS" | "CNT
 
 const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = "pjn" }: CausaDetalleModalProps) => {
 	const { enqueueSnackbar } = useSnackbar();
+	const { user } = useAuth();
 
 	// Seleccionar el servicio apropiado
 	const ServiceAPI = apiService === "pjn" ? CausasPjnService : CausasService;
@@ -116,6 +120,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 		detalle: "",
 		url: "",
 	});
+	const [sendNotification, setSendNotification] = useState(false);
 	const [isAddingMovimiento, setIsAddingMovimiento] = useState(false);
 
 	// Resetear estados cuando se abre el modal
@@ -304,6 +309,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			detalle: "",
 			url: "",
 		});
+		setSendNotification(false);
 		setAddMovDialogOpen(true);
 	};
 
@@ -316,6 +322,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			detalle: "",
 			url: "",
 		});
+		setSendNotification(false);
 	};
 
 	// Agregar movimiento
@@ -323,6 +330,15 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 		if (!newMovimiento.fecha || !newMovimiento.tipo || !newMovimiento.detalle) {
 			enqueueSnackbar("Fecha, tipo y detalle son campos obligatorios", {
 				variant: "warning",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			return;
+		}
+
+		// Validar userId si se va a enviar notificación
+		if (sendNotification && !user?._id) {
+			enqueueSnackbar("No se puede enviar notificación: usuario no identificado", {
+				variant: "error",
 				anchorOrigin: { vertical: "bottom", horizontal: "right" },
 			});
 			return;
@@ -341,10 +357,17 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 				tipo: newMovimiento.tipo,
 				detalle: newMovimiento.detalle,
 				url: newMovimiento.url || null,
+				sendNotification,
+				userId: user?._id,
 			});
 
 			if (response.success) {
-				enqueueSnackbar("Movimiento agregado correctamente", {
+				let mensaje = "Movimiento agregado correctamente";
+				if (sendNotification) {
+					mensaje += response.data.notificationSent ? " y notificación enviada" : " (la notificación falló)";
+				}
+
+				enqueueSnackbar(mensaje, {
 					variant: "success",
 					anchorOrigin: { vertical: "bottom", horizontal: "right" },
 				});
@@ -768,6 +791,17 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 								placeholder="https://..."
 								size="small"
 							/>
+						</Grid>
+						<Grid item xs={12}>
+							<FormControlLabel
+								control={<Checkbox checked={sendNotification} onChange={(e) => setSendNotification(e.target.checked)} color="primary" />}
+								label="Enviar notificación"
+							/>
+							{sendNotification && !user?._id && (
+								<Typography variant="caption" color="error" display="block" sx={{ mt: 0.5 }}>
+									Advertencia: No se puede enviar notificación sin usuario identificado
+								</Typography>
+							)}
 						</Grid>
 					</Grid>
 				</ConfirmDialogContent>

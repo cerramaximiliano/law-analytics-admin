@@ -173,6 +173,8 @@ export class CausasService {
 			tipo: string;
 			detalle: string;
 			url?: string | null;
+			sendNotification?: boolean;
+			userId?: string;
 		},
 	): Promise<any> {
 		try {
