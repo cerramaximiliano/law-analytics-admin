@@ -222,7 +222,20 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			const causaId = getId(causa._id);
 			const fuero = normalizeFuero(causa.fuero);
 
-			const response = await ServiceAPI.updateCausa(fuero, causaId, editedCausa);
+			// Preparar datos para enviar, convirtiendo fechas al formato ISO UTC
+			const dataToUpdate = { ...editedCausa };
+
+			// Convertir lastUpdate si fue editado
+			if (dataToUpdate.lastUpdate) {
+				dataToUpdate.lastUpdate = new Date(dataToUpdate.lastUpdate).toISOString();
+			}
+
+			// Convertir fechaUltimoMovimiento si fue editado
+			if (dataToUpdate.fechaUltimoMovimiento) {
+				dataToUpdate.fechaUltimoMovimiento = new Date(dataToUpdate.fechaUltimoMovimiento).toISOString();
+			}
+
+			const response = await ServiceAPI.updateCausa(fuero, causaId, dataToUpdate);
 
 			if (response.success) {
 				enqueueSnackbar("Causa actualizada correctamente", {
