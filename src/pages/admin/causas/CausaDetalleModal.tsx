@@ -36,7 +36,7 @@ import { Causa } from "api/causasPjn";
 import { CausasPjnService } from "api/causasPjn";
 import CausasService from "api/causas";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
-import { CloseCircle, Link as LinkIcon, Trash, Edit, Save2, CloseSquare, TickCircle, AddCircle, Notification, Eye } from "iconsax-react";
+import { CloseCircle, Link as LinkIcon, Trash, Edit, Save2, CloseSquare, TickCircle, AddCircle, Send2, Eye } from "iconsax-react";
 import { useSnackbar } from "notistack";
 
 interface CausaDetalleModalProps {
@@ -857,7 +857,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 																				onClick={() => handleNotifyMovimiento(actualIndex)}
 																				disabled={notifyingMovIndex === actualIndex}
 																			>
-																				<Notification size={16} />
+																				<Send2 size={16} />
 																			</IconButton>
 																		</span>
 																	</Tooltip>
