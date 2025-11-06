@@ -35,7 +35,8 @@ import {
 import { Causa } from "api/causasPjn";
 import { CausasPjnService } from "api/causasPjn";
 import CausasService from "api/causas";
-import { CloseCircle, Link as LinkIcon, Trash, Edit, Save2, CloseSquare, TickCircle, AddCircle, Notification } from "iconsax-react";
+import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
+import { CloseCircle, Link as LinkIcon, Trash, Edit, Save2, CloseSquare, TickCircle, AddCircle, Notification, Eye } from "iconsax-react";
 import { useSnackbar } from "notistack";
 
 interface CausaDetalleModalProps {
@@ -124,6 +125,12 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 	// Estado para envío de notificación de movimiento específico
 	const [notifyingMovIndex, setNotifyingMovIndex] = useState<number | null>(null);
 
+	// Estados para notificaciones judiciales
+	const [judicialMovements, setJudicialMovements] = useState<JudicialMovement[]>([]);
+	const [loadingJudicialMovements, setLoadingJudicialMovements] = useState(false);
+	const [selectedMovNotifications, setSelectedMovNotifications] = useState<JudicialMovement[]>([]);
+	const [notificationsDialogOpen, setNotificationsDialogOpen] = useState(false);
+
 	// Resetear estados cuando se abre el modal
 	useEffect(() => {
 		if (open && causa) {
@@ -132,8 +139,29 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			setIsEditing(false);
 			setEditedCausa({});
 			setCurrentMovimientos((causa as any).movimientos || []);
+			// Cargar notificaciones judiciales
+			loadJudicialMovements();
 		}
 	}, [open, causa]);
+
+	// Función para cargar notificaciones judiciales
+	const loadJudicialMovements = async () => {
+		if (!causa) return;
+
+		try {
+			setLoadingJudicialMovements(true);
+			const expedienteId = getId(causa._id);
+			const response = await JudicialMovementsService.getMovementsByExpedienteId(expedienteId);
+
+			if (response.success) {
+				setJudicialMovements(response.data);
+			}
+		} catch (error) {
+			console.error("Error al cargar notificaciones judiciales:", error);
+		} finally {
+			setLoadingJudicialMovements(false);
+		}
+	};
 
 	if (!causa) return null;
 
@@ -189,6 +217,46 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 		const month = String(dateObj.getUTCMonth() + 1).padStart(2, "0");
 		const day = String(dateObj.getUTCDate()).padStart(2, "0");
 		return `${year}-${month}-${day}`;
+	};
+
+	// Función para comparar fechas UTC (solo fecha, sin hora)
+	const compareDatesUTC = (date1: { $date: string } | string | undefined, date2: { $date: string } | string | undefined): boolean => {
+		if (!date1 || !date2) return false;
+		const dateStr1 = typeof date1 === "string" ? date1 : date1.$date;
+		const dateStr2 = typeof date2 === "string" ? date2 : date2.$date;
+		const dateObj1 = new Date(dateStr1);
+		const dateObj2 = new Date(dateStr2);
+
+		return (
+			dateObj1.getUTCDate() === dateObj2.getUTCDate() &&
+			dateObj1.getUTCMonth() === dateObj2.getUTCMonth() &&
+			dateObj1.getUTCFullYear() === dateObj2.getUTCFullYear()
+		);
+	};
+
+	// Encontrar notificaciones relacionadas a un movimiento
+	const getNotificationsForMovement = (mov: any): JudicialMovement[] => {
+		return judicialMovements.filter((jm) => {
+			// Comparar fecha (solo fecha, sin hora)
+			const datesMatch = compareDatesUTC(mov.fecha || mov.createdAt, jm.movimiento.fecha);
+
+			// Comparar tipo
+			const tipoMatch = mov.tipo?.toLowerCase().trim() === jm.movimiento.tipo?.toLowerCase().trim();
+
+			// Comparar detalle (parcialmente, por si hay pequeñas diferencias)
+			const detalleMatch = (mov.detalle || mov.descripcion || mov.texto || "")
+				.toLowerCase()
+				.includes(jm.movimiento.detalle?.toLowerCase().substring(0, 50) || "");
+
+			return datesMatch && tipoMatch && detalleMatch;
+		});
+	};
+
+	// Abrir dialog de notificaciones para un movimiento
+	const handleViewNotifications = (mov: any) => {
+		const notifications = getNotificationsForMovement(mov);
+		setSelectedMovNotifications(notifications);
+		setNotificationsDialogOpen(true);
 	};
 
 	// Obtener movimientos paginados
@@ -769,6 +837,18 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 															</TableCell>
 															<TableCell align="center">
 																<Stack direction="row" spacing={0.5} justifyContent="center">
+																	<Tooltip title="Ver notificaciones">
+																		<span>
+																			<IconButton
+																				size="small"
+																				color="info"
+																				onClick={() => handleViewNotifications(mov)}
+																				disabled={loadingJudicialMovements}
+																			>
+																				<Eye size={16} />
+																			</IconButton>
+																		</span>
+																	</Tooltip>
 																	<Tooltip title="Enviar notificación">
 																		<span>
 																			<IconButton
@@ -914,6 +994,130 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 					</Button>
 					<Button onClick={handleAddMovimiento} variant="contained" disabled={isAddingMovimiento} startIcon={<AddCircle size={18} />}>
 						{isAddingMovimiento ? "Agregando..." : "Agregar"}
+					</Button>
+				</ConfirmDialogActions>
+			</ConfirmDialog>
+
+			{/* Dialog para mostrar notificaciones de un movimiento específico */}
+			<ConfirmDialog open={notificationsDialogOpen} onClose={() => setNotificationsDialogOpen(false)} maxWidth="md" fullWidth>
+				<ConfirmDialogTitle>
+					<Box display="flex" justifyContent="space-between" alignItems="center">
+						<Typography variant="h6">Notificaciones del Movimiento</Typography>
+						<IconButton onClick={() => setNotificationsDialogOpen(false)} size="small">
+							<CloseCircle />
+						</IconButton>
+					</Box>
+				</ConfirmDialogTitle>
+				<ConfirmDialogContent>
+					{selectedMovNotifications.length === 0 ? (
+						<Alert severity="info">No se encontraron notificaciones para este movimiento</Alert>
+					) : (
+						<>
+							<Box mb={2}>
+								<Typography variant="body2" color="text.secondary">
+									Total de notificaciones: <strong>{selectedMovNotifications.length}</strong>
+								</Typography>
+							</Box>
+							<TableContainer>
+								<Table size="small">
+									<TableHead>
+										<TableRow>
+											<TableCell>Estado</TableCell>
+											<TableCell>Fecha Programada</TableCell>
+											<TableCell>Canales</TableCell>
+											<TableCell>Destinatarios</TableCell>
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{selectedMovNotifications.map((jm) => {
+											const jmId = typeof jm._id === "string" ? jm._id : jm._id.$oid;
+
+											// Extraer destinatarios
+											const recipients: string[] = [];
+											if (jm.notifications && jm.notifications.length > 0) {
+												jm.notifications.forEach((notification) => {
+													const match = notification.details.match(/enviada a (.+)$/);
+													if (match && match[1]) {
+														recipients.push(match[1]);
+													}
+												});
+											}
+
+											// Color del chip según estado
+											const getStatusColor = (status: string): "success" | "warning" | "error" | "default" => {
+												switch (status) {
+													case "sent":
+														return "success";
+													case "pending":
+														return "warning";
+													case "failed":
+														return "error";
+													default:
+														return "default";
+												}
+											};
+
+											const getStatusLabel = (status: string): string => {
+												switch (status) {
+													case "sent":
+														return "Enviado";
+													case "pending":
+														return "Pendiente";
+													case "failed":
+														return "Fallido";
+													default:
+														return status;
+												}
+											};
+
+											return (
+												<TableRow key={jmId} hover>
+													<TableCell>
+														<Chip label={getStatusLabel(jm.notificationStatus)} color={getStatusColor(jm.notificationStatus)} size="small" />
+													</TableCell>
+													<TableCell>
+														<Typography variant="caption">
+															{jm.notificationSettings?.notifyAt ? formatDate(jm.notificationSettings.notifyAt) : "N/A"}
+														</Typography>
+													</TableCell>
+													<TableCell>
+														<Stack direction="row" spacing={0.5}>
+															{jm.notificationSettings?.channels?.map((channel, idx) => (
+																<Chip key={idx} label={channel} size="small" variant="outlined" />
+															))}
+														</Stack>
+													</TableCell>
+													<TableCell>
+														{recipients.length > 0 ? (
+															<Stack spacing={0.5}>
+																{recipients.map((recipient, idx) => (
+																	<Typography key={idx} variant="caption" sx={{ wordBreak: "break-all" }}>
+																		{recipient}
+																	</Typography>
+																))}
+															</Stack>
+														) : jm.notificationStatus === "pending" ? (
+															<Typography variant="caption" color="text.secondary" fontStyle="italic">
+																Pendiente de envío
+															</Typography>
+														) : (
+															<Typography variant="caption" color="text.secondary">
+																N/A
+															</Typography>
+														)}
+													</TableCell>
+												</TableRow>
+											);
+										})}
+									</TableBody>
+								</Table>
+							</TableContainer>
+						</>
+					)}
+				</ConfirmDialogContent>
+				<ConfirmDialogActions>
+					<Button onClick={() => setNotificationsDialogOpen(false)} variant="outlined">
+						Cerrar
 					</Button>
 				</ConfirmDialogActions>
 			</ConfirmDialog>
