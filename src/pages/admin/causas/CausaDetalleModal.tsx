@@ -152,7 +152,9 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			setIsEditing(false);
 			setEditedCausa({});
 			setCurrentMovimientos((causa as any).movimientos || []);
-			setUpdateHistory((causa as any).updateHistory || []);
+			const history = (causa as any).updateHistory || [];
+			console.log("UpdateHistory loaded:", history);
+			setUpdateHistory(history);
 			// Cargar notificaciones judiciales
 			loadJudicialMovements();
 		}
@@ -1066,57 +1068,60 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 											</TableRow>
 										</TableHead>
 										<TableBody>
-											{updateHistory.map((entry, index) => (
-												<TableRow key={index} hover>
-													<TableCell>
-														<Typography variant="caption">
-															{formatDate(entry.timestamp || entry.date || entry.createdAt)}
-														</Typography>
-													</TableCell>
-													<TableCell>
-														{entry.updateType && (
-															<Chip label={entry.updateType} size="small" variant="outlined" color="primary" />
-														)}
-													</TableCell>
-													<TableCell>
-														<Typography variant="body2">{entry.source || "N/A"}</Typography>
-													</TableCell>
-													<TableCell>
-														{entry.changes && (
-															<Box>
-																{Object.entries(entry.changes).map(([key, value]: [string, any]) => {
-																	let displayValue = "";
-																	if (value === null || value === undefined) {
-																		displayValue = "N/A";
-																	} else if (typeof value === "object") {
-																		displayValue = JSON.stringify(value);
-																	} else {
-																		displayValue = String(value);
-																	}
-																	return (
+											{updateHistory.map((entry, index) => {
+												// Helper para convertir cualquier valor a string de forma segura
+												const safeStringify = (value: any): string => {
+													if (value === null || value === undefined) return "N/A";
+													if (typeof value === "string") return value;
+													if (typeof value === "number" || typeof value === "boolean") return String(value);
+													if (typeof value === "object") return JSON.stringify(value);
+													return String(value);
+												};
+
+												return (
+													<TableRow key={index} hover>
+														<TableCell>
+															<Typography variant="caption">
+																{formatDate(entry.timestamp || entry.date || entry.createdAt)}
+															</Typography>
+														</TableCell>
+														<TableCell>
+															{entry.updateType && (
+																<Chip label={String(entry.updateType)} size="small" variant="outlined" color="primary" />
+															)}
+														</TableCell>
+														<TableCell>
+															<Typography variant="body2">{safeStringify(entry.source)}</Typography>
+														</TableCell>
+														<TableCell>
+															{entry.changes && typeof entry.changes === "object" && (
+																<Box>
+																	{Object.entries(entry.changes).map(([key, value]: [string, any]) => (
 																		<Typography key={key} variant="caption" display="block">
-																			<strong>{key}:</strong> {displayValue}
+																			<strong>{key}:</strong> {safeStringify(value)}
 																		</Typography>
-																	);
-																})}
-															</Box>
-														)}
-														{entry.details && <Typography variant="caption">{entry.details}</Typography>}
-													</TableCell>
-													<TableCell align="center">
-														<Tooltip title="Eliminar entrada">
-															<IconButton
-																size="small"
-																color="error"
-																onClick={() => handleDeleteHistoryEntry(index)}
-																disabled={deletingHistoryEntry === index}
-															>
-																<Trash size={16} />
-															</IconButton>
-														</Tooltip>
-													</TableCell>
-												</TableRow>
-											))}
+																	))}
+																</Box>
+															)}
+															{entry.details && (
+																<Typography variant="caption">{safeStringify(entry.details)}</Typography>
+															)}
+														</TableCell>
+														<TableCell align="center">
+															<Tooltip title="Eliminar entrada">
+																<IconButton
+																	size="small"
+																	color="error"
+																	onClick={() => handleDeleteHistoryEntry(index)}
+																	disabled={deletingHistoryEntry === index}
+																>
+																	<Trash size={16} />
+																</IconButton>
+															</Tooltip>
+														</TableCell>
+													</TableRow>
+												);
+											})}
 										</TableBody>
 									</Table>
 								</TableContainer>
