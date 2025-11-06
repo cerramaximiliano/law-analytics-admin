@@ -48,6 +48,13 @@ const admin: NavItemType = {
 					url: "/admin/causas/verified-app",
 					breadcrumbs: true,
 				},
+				{
+					id: "causas-non-verified",
+					title: "Carpetas No Verificadas",
+					type: "item",
+					url: "/admin/causas/non-verified",
+					breadcrumbs: true,
+				},
 			],
 		},
 	],

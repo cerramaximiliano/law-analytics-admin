@@ -69,6 +69,28 @@ export class CausasPjnService {
 	}
 
 	/**
+	 * Obtener todas las causas no verificadas (verified: true, isValid: false)
+	 */
+	static async getNonVerifiedCausas(params?: {
+		page?: number;
+		limit?: number;
+		fuero?: "CIV" | "COM" | "CSS" | "CNT" | "todos";
+		number?: number;
+		year?: number;
+		objeto?: string;
+		caratula?: string;
+		sortBy?: "number" | "year" | "caratula" | "juzgado" | "objeto" | "movimientosCount" | "lastUpdate" | "fechaUltimoMovimiento";
+		sortOrder?: "asc" | "desc";
+	}): Promise<CausasResponse> {
+		try {
+			const response = await pjnAxios.get("/api/causas/non-verified", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
 	 * Obtener una causa por ID
 	 */
 	static async getCausaById(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string): Promise<CausasResponse> {
