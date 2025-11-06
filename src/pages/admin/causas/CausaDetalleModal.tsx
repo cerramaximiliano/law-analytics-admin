@@ -139,6 +139,11 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 	const [loadingUsers, setLoadingUsers] = useState(false);
 	const [pendingMovimientoIndex, setPendingMovimientoIndex] = useState<number | null>(null);
 
+	// Estados para historial de actualizaciones
+	const [updateHistory, setUpdateHistory] = useState<any[]>([]);
+	const [clearingHistory, setClearingHistory] = useState(false);
+	const [deletingHistoryEntry, setDeletingHistoryEntry] = useState<number | null>(null);
+
 	// Resetear estados cuando se abre el modal
 	useEffect(() => {
 		if (open && causa) {
@@ -147,6 +152,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			setIsEditing(false);
 			setEditedCausa({});
 			setCurrentMovimientos((causa as any).movimientos || []);
+			setUpdateHistory((causa as any).updateHistory || []);
 			// Cargar notificaciones judiciales
 			loadJudicialMovements();
 		}
@@ -317,19 +323,21 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 
 			// Convertir lastUpdate si fue editado
 			if (dataToUpdate.lastUpdate) {
-				dataToUpdate.lastUpdate = new Date(dataToUpdate.lastUpdate).toISOString();
+				const dateStr = typeof dataToUpdate.lastUpdate === "string" ? dataToUpdate.lastUpdate : dataToUpdate.lastUpdate.$date;
+				dataToUpdate.lastUpdate = new Date(dateStr).toISOString();
 			}
 
 			// Convertir fechaUltimoMovimiento si fue editado (formato YYYY-MM-DD a ISO UTC con hora 00:00:00)
 			if (dataToUpdate.fechaUltimoMovimiento) {
 				// Si viene en formato YYYY-MM-DD (del input date), agregar la hora UTC
 				const dateValue = dataToUpdate.fechaUltimoMovimiento;
-				if (typeof dateValue === "string" && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+				const dateStr = typeof dateValue === "string" ? dateValue : dateValue.$date;
+				if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
 					// Formato YYYY-MM-DD: agregar hora 00:00:00 UTC
-					dataToUpdate.fechaUltimoMovimiento = `${dateValue}T00:00:00.000Z`;
+					dataToUpdate.fechaUltimoMovimiento = `${dateStr}T00:00:00.000Z`;
 				} else {
 					// Ya viene con hora, convertir a ISO
-					dataToUpdate.fechaUltimoMovimiento = new Date(dataToUpdate.fechaUltimoMovimiento).toISOString();
+					dataToUpdate.fechaUltimoMovimiento = new Date(dateStr).toISOString();
 				}
 			}
 
@@ -604,6 +612,69 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 		setSelectedUsers((prev) => (prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]));
 	};
 
+	// Limpiar todo el historial de actualizaciones
+	const handleClearUpdateHistory = async () => {
+		if (!window.confirm("¿Está seguro de que desea eliminar todo el historial de actualizaciones?")) {
+			return;
+		}
+
+		try {
+			setClearingHistory(true);
+			const causaId = getId(causa._id);
+			const fuero = normalizeFuero(causa.fuero);
+
+			const response = await ServiceAPI.clearUpdateHistory(fuero, causaId);
+
+			if (response.success) {
+				setUpdateHistory([]);
+				enqueueSnackbar(response.message, {
+					variant: "success",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+				// Recargar la causa para actualizar los datos
+				if (onCausaUpdated) onCausaUpdated();
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al limpiar el historial", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			console.error(error);
+		} finally {
+			setClearingHistory(false);
+		}
+	};
+
+	// Eliminar una entrada específica del historial
+	const handleDeleteHistoryEntry = async (entryIndex: number) => {
+		try {
+			setDeletingHistoryEntry(entryIndex);
+			const causaId = getId(causa._id);
+			const fuero = normalizeFuero(causa.fuero);
+
+			const response = await ServiceAPI.deleteUpdateHistoryEntry(fuero, causaId, entryIndex);
+
+			if (response.success) {
+				// Actualizar el estado local eliminando la entrada
+				setUpdateHistory((prev) => prev.filter((_, index) => index !== entryIndex));
+				enqueueSnackbar("Entrada eliminada correctamente", {
+					variant: "success",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+				// Recargar la causa para actualizar los datos
+				if (onCausaUpdated) onCausaUpdated();
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al eliminar la entrada", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			console.error(error);
+		} finally {
+			setDeletingHistoryEntry(null);
+		}
+	};
+
 	return (
 		<>
 			<Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
@@ -643,6 +714,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 					<Tabs value={activeTab} onChange={handleTabChange} aria-label="causa detail tabs">
 						<Tab label="Información General" />
 						<Tab label={`Movimientos (${currentMovimientos.length})`} />
+						<Tab label={`Historial (${updateHistory.length})`} />
 					</Tabs>
 				</Box>
 
@@ -956,6 +1028,90 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 								</>
 							) : (
 								<Alert severity="info">Esta causa no tiene movimientos registrados</Alert>
+							)}
+						</Box>
+					)}
+
+					{/* Tab Panel 2: Historial de Actualizaciones */}
+					{activeTab === 2 && (
+						<Box>
+							<Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+								<Typography variant="h6">Historial de Actualizaciones</Typography>
+								{updateHistory.length > 0 && (
+									<Button
+										variant="outlined"
+										color="error"
+										size="small"
+										startIcon={<Trash size={18} />}
+										onClick={handleClearUpdateHistory}
+										disabled={clearingHistory}
+									>
+										{clearingHistory ? "Limpiando..." : "Limpiar Todo"}
+									</Button>
+								)}
+							</Box>
+
+							{updateHistory.length > 0 ? (
+								<TableContainer>
+									<Table size="small">
+										<TableHead>
+											<TableRow>
+												<TableCell width="20%">Fecha/Hora</TableCell>
+												<TableCell width="15%">Tipo</TableCell>
+												<TableCell width="15%">Origen</TableCell>
+												<TableCell>Detalles</TableCell>
+												<TableCell width="10%" align="center">
+													Acciones
+												</TableCell>
+											</TableRow>
+										</TableHead>
+										<TableBody>
+											{updateHistory.map((entry, index) => (
+												<TableRow key={index} hover>
+													<TableCell>
+														<Typography variant="caption">
+															{formatDate(entry.timestamp || entry.date || entry.createdAt)}
+														</Typography>
+													</TableCell>
+													<TableCell>
+														{entry.updateType && (
+															<Chip label={entry.updateType} size="small" variant="outlined" color="primary" />
+														)}
+													</TableCell>
+													<TableCell>
+														<Typography variant="body2">{entry.source || "N/A"}</Typography>
+													</TableCell>
+													<TableCell>
+														{entry.changes && (
+															<Box>
+																{Object.entries(entry.changes).map(([key, value]: [string, any]) => (
+																	<Typography key={key} variant="caption" display="block">
+																		<strong>{key}:</strong> {typeof value === "object" ? JSON.stringify(value) : value}
+																	</Typography>
+																))}
+															</Box>
+														)}
+														{entry.details && <Typography variant="caption">{entry.details}</Typography>}
+													</TableCell>
+													<TableCell align="center">
+														<Tooltip title="Eliminar entrada">
+															<IconButton
+																size="small"
+																color="error"
+																onClick={() => handleDeleteHistoryEntry(index)}
+																disabled={deletingHistoryEntry === index}
+															>
+																<Trash size={16} />
+															</IconButton>
+														</Tooltip>
+													</TableCell>
+												</TableRow>
+											))}
+										</TableBody>
+									</Table>
+								</TableContainer>
+							) : (
+								<Alert severity="info">No hay entradas en el historial de actualizaciones</Alert>
 							)}
 						</Box>
 					)}

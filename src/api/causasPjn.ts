@@ -231,6 +231,30 @@ export class CausasPjnService {
 		}
 	}
 
+	/**
+	 * Limpiar todo el historial de actualizaciones de una causa
+	 */
+	static async clearUpdateHistory(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string): Promise<any> {
+		try {
+			const response = await pjnAxios.delete(`/api/causas/${fuero}/${id}/update-history`);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Eliminar una entrada específica del historial de actualizaciones
+	 */
+	static async deleteUpdateHistoryEntry(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string, entryIndex: number): Promise<any> {
+		try {
+			const response = await pjnAxios.delete(`/api/causas/${fuero}/${id}/update-history/${entryIndex}`);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
 	// Manejo de errores
 	static handleError(error: any): Error {
 		// Re-throw axios errors for interceptor handling
