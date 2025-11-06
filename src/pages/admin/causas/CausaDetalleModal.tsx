@@ -1084,11 +1084,21 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 													<TableCell>
 														{entry.changes && (
 															<Box>
-																{Object.entries(entry.changes).map(([key, value]: [string, any]) => (
-																	<Typography key={key} variant="caption" display="block">
-																		<strong>{key}:</strong> {typeof value === "object" ? JSON.stringify(value) : value}
-																	</Typography>
-																))}
+																{Object.entries(entry.changes).map(([key, value]: [string, any]) => {
+																	let displayValue = "";
+																	if (value === null || value === undefined) {
+																		displayValue = "N/A";
+																	} else if (typeof value === "object") {
+																		displayValue = JSON.stringify(value);
+																	} else {
+																		displayValue = String(value);
+																	}
+																	return (
+																		<Typography key={key} variant="caption" display="block">
+																			<strong>{key}:</strong> {displayValue}
+																		</Typography>
+																	);
+																})}
 															</Box>
 														)}
 														{entry.details && <Typography variant="caption">{entry.details}</Typography>}
