@@ -76,6 +76,24 @@ const JudicialMovementsModal = ({ open, onClose, movements, loading, error }: Ju
 		}
 	};
 
+	// Extraer destinatarios de las notificaciones enviadas
+	const getRecipients = (movement: JudicialMovement): string[] => {
+		if (!movement.notifications || movement.notifications.length === 0) {
+			return [];
+		}
+
+		const recipients: string[] = [];
+		movement.notifications.forEach((notification) => {
+			// Extraer email del campo details: "Notificación enviada a email@domain.com"
+			const match = notification.details.match(/enviada a (.+)$/);
+			if (match && match[1]) {
+				recipients.push(match[1]);
+			}
+		});
+
+		return recipients;
+	};
+
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
 			<DialogTitle>
@@ -112,12 +130,14 @@ const JudicialMovementsModal = ({ open, onClose, movements, loading, error }: Ju
 										<TableCell>Estado</TableCell>
 										<TableCell>Notificado</TableCell>
 										<TableCell>Canales</TableCell>
+										<TableCell>Destinatarios</TableCell>
 										<TableCell align="center">Enlace</TableCell>
 									</TableRow>
 								</TableHead>
 								<TableBody>
 									{movements.map((movement) => {
 										const movementId = typeof movement._id === "string" ? movement._id : movement._id.$oid;
+										const recipients = getRecipients(movement);
 										return (
 											<TableRow key={movementId} hover>
 												<TableCell>
@@ -155,6 +175,25 @@ const JudicialMovementsModal = ({ open, onClose, movements, loading, error }: Ju
 															<Chip key={idx} label={channel} size="small" variant="outlined" />
 														))}
 													</Stack>
+												</TableCell>
+												<TableCell>
+													{recipients.length > 0 ? (
+														<Stack spacing={0.5}>
+															{recipients.map((recipient, idx) => (
+																<Typography key={idx} variant="caption" sx={{ wordBreak: "break-all" }}>
+																	{recipient}
+																</Typography>
+															))}
+														</Stack>
+													) : movement.notificationStatus === "pending" ? (
+														<Typography variant="caption" color="text.secondary" fontStyle="italic">
+															Pendiente de envío
+														</Typography>
+													) : (
+														<Typography variant="caption" color="text.secondary">
+															N/A
+														</Typography>
+													)}
 												</TableCell>
 												<TableCell align="center">
 													{movement.movimiento.url ? (
