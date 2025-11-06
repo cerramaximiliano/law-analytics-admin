@@ -460,8 +460,17 @@ const ScrapingWorker = () => {
 		);
 	}
 
-	// El filtrado se hace en el servidor, no necesitamos filtrar localmente
-	const filteredConfigs = configs;
+	// El filtrado se hace en el servidor, pero el ordenamiento por progreso se hace localmente
+	let filteredConfigs = [...configs];
+
+	// Si se está ordenando por progreso, ordenar localmente
+	if (sortBy === "progress") {
+		filteredConfigs = filteredConfigs.sort((a, b) => {
+			const progressA = calculateProgress(a);
+			const progressB = calculateProgress(b);
+			return sortOrder === "asc" ? progressA - progressB : progressB - progressA;
+		});
+	}
 
 	return (
 		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
@@ -592,7 +601,15 @@ const ScrapingWorker = () => {
 									Rango
 								</TableSortLabel>
 							</TableCell>
-							<TableCell align="center">Progreso</TableCell>
+							<TableCell align="center">
+								<TableSortLabel
+									active={sortBy === "progress"}
+									direction={sortBy === "progress" ? sortOrder : "asc"}
+									onClick={() => handleSort("progress")}
+								>
+									Progreso
+								</TableSortLabel>
+							</TableCell>
 							<TableCell align="center">Balance</TableCell>
 							<TableCell align="center">Captchas</TableCell>
 							<TableCell align="center">Proxy</TableCell>
