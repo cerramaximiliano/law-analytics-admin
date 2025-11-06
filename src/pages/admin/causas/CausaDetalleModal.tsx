@@ -177,6 +177,17 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 		return localDate.toISOString().slice(0, 16);
 	};
 
+	// Convertir fecha para input date (solo fecha, sin hora)
+	const toDateLocal = (date: { $date: string } | string | undefined): string => {
+		if (!date) return "";
+		const dateStr = typeof date === "string" ? date : date.$date;
+		const dateObj = new Date(dateStr);
+		const year = dateObj.getUTCFullYear();
+		const month = String(dateObj.getUTCMonth() + 1).padStart(2, "0");
+		const day = String(dateObj.getUTCDate()).padStart(2, "0");
+		return `${year}-${month}-${day}`;
+	};
+
 	// Obtener movimientos paginados
 	const movimientos = currentMovimientos;
 	const paginatedMovimientos = movimientos.slice(
@@ -230,9 +241,17 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 				dataToUpdate.lastUpdate = new Date(dataToUpdate.lastUpdate).toISOString();
 			}
 
-			// Convertir fechaUltimoMovimiento si fue editado
+			// Convertir fechaUltimoMovimiento si fue editado (formato YYYY-MM-DD a ISO UTC con hora 00:00:00)
 			if (dataToUpdate.fechaUltimoMovimiento) {
-				dataToUpdate.fechaUltimoMovimiento = new Date(dataToUpdate.fechaUltimoMovimiento).toISOString();
+				// Si viene en formato YYYY-MM-DD (del input date), agregar la hora UTC
+				const dateValue = dataToUpdate.fechaUltimoMovimiento;
+				if (typeof dateValue === "string" && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+					// Formato YYYY-MM-DD: agregar hora 00:00:00 UTC
+					dataToUpdate.fechaUltimoMovimiento = `${dateValue}T00:00:00.000Z`;
+				} else {
+					// Ya viene con hora, convertir a ISO
+					dataToUpdate.fechaUltimoMovimiento = new Date(dataToUpdate.fechaUltimoMovimiento).toISOString();
+				}
 			}
 
 			const response = await ServiceAPI.updateCausa(fuero, causaId, dataToUpdate);
@@ -597,11 +616,12 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 								{isEditing ? (
 									<TextField
 										fullWidth
-										type="datetime-local"
+										type="date"
 										size="small"
-										value={toDateTimeLocal(editedCausa.fechaUltimoMovimiento || causa.fechaUltimoMovimiento)}
+										value={toDateLocal(editedCausa.fechaUltimoMovimiento || causa.fechaUltimoMovimiento)}
 										onChange={(e) => setEditedCausa({ ...editedCausa, fechaUltimoMovimiento: e.target.value })}
 										sx={{ mt: 0.5 }}
+										InputLabelProps={{ shrink: true }}
 									/>
 								) : (
 									<Typography variant="body2">{formatDate(causa.fechaUltimoMovimiento)}</Typography>
