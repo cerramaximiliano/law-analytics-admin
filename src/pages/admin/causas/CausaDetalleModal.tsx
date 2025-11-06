@@ -31,6 +31,7 @@ import {
 	DialogActions as ConfirmDialogActions,
 	Checkbox,
 	FormControlLabel,
+	CircularProgress,
 } from "@mui/material";
 import { Causa } from "api/causasPjn";
 import { CausasPjnService } from "api/causasPjn";
@@ -130,6 +131,13 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 	const [loadingJudicialMovements, setLoadingJudicialMovements] = useState(false);
 	const [selectedMovNotifications, setSelectedMovNotifications] = useState<JudicialMovement[]>([]);
 	const [notificationsDialogOpen, setNotificationsDialogOpen] = useState(false);
+
+	// Estados para modal de confirmación de envío de notificaciones
+	const [sendNotifDialogOpen, setSendNotifDialogOpen] = useState(false);
+	const [notificationUsers, setNotificationUsers] = useState<Array<{ id: string; email: string; name: string }>>([]);
+	const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+	const [loadingUsers, setLoadingUsers] = useState(false);
+	const [pendingMovimientoIndex, setPendingMovimientoIndex] = useState<number | null>(null);
 
 	// Resetear estados cuando se abre el modal
 	useEffect(() => {
@@ -505,13 +513,57 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 	};
 
 	// Enviar notificación de movimiento específico
+	// Abrir modal de confirmación de notificación
 	const handleNotifyMovimiento = async (movimientoIndex: number) => {
 		try {
-			setNotifyingMovIndex(movimientoIndex);
+			setLoadingUsers(true);
+			setPendingMovimientoIndex(movimientoIndex);
 			const causaId = getId(causa._id);
 			const fuero = normalizeFuero(causa.fuero);
 
-			const response = await ServiceAPI.notifyMovimiento(fuero, causaId, movimientoIndex);
+			// Obtener usuarios habilitados para notificación
+			const response = await ServiceAPI.getNotificationUsers(fuero, causaId);
+
+			if (response.success && response.data.length > 0) {
+				setNotificationUsers(response.data);
+				// Seleccionar todos los usuarios por defecto
+				setSelectedUsers(response.data.map((u: any) => u.id));
+				setSendNotifDialogOpen(true);
+			} else {
+				enqueueSnackbar("No hay usuarios habilitados para notificar", {
+					variant: "warning",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al obtener usuarios para notificación", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			console.error(error);
+		} finally {
+			setLoadingUsers(false);
+		}
+	};
+
+	// Confirmar y enviar notificación
+	const handleConfirmSendNotification = async () => {
+		if (pendingMovimientoIndex === null) return;
+		if (selectedUsers.length === 0) {
+			enqueueSnackbar("Debe seleccionar al menos un usuario", {
+				variant: "warning",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			return;
+		}
+
+		try {
+			setNotifyingMovIndex(pendingMovimientoIndex);
+			setSendNotifDialogOpen(false);
+			const causaId = getId(causa._id);
+			const fuero = normalizeFuero(causa.fuero);
+
+			const response = await ServiceAPI.notifyMovimiento(fuero, causaId, pendingMovimientoIndex);
 
 			if (response.success) {
 				const usersNotified = response.data?.usersNotified || 0;
@@ -533,7 +585,23 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			console.error(error);
 		} finally {
 			setNotifyingMovIndex(null);
+			setPendingMovimientoIndex(null);
+			setSelectedUsers([]);
+			setNotificationUsers([]);
 		}
+	};
+
+	// Cancelar envío de notificación
+	const handleCancelSendNotification = () => {
+		setSendNotifDialogOpen(false);
+		setPendingMovimientoIndex(null);
+		setSelectedUsers([]);
+		setNotificationUsers([]);
+	};
+
+	// Toggle selección de usuario
+	const handleToggleUser = (userId: string) => {
+		setSelectedUsers((prev) => (prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]));
 	};
 
 	return (
@@ -1118,6 +1186,70 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 				<ConfirmDialogActions>
 					<Button onClick={() => setNotificationsDialogOpen(false)} variant="outlined">
 						Cerrar
+					</Button>
+				</ConfirmDialogActions>
+			</ConfirmDialog>
+
+			{/* Dialog para confirmar envío de notificaciones */}
+			<ConfirmDialog open={sendNotifDialogOpen} onClose={handleCancelSendNotification} maxWidth="sm" fullWidth>
+				<ConfirmDialogTitle>
+					<Box display="flex" justifyContent="space-between" alignItems="center">
+						<Typography variant="h6">Enviar Notificación</Typography>
+						<IconButton onClick={handleCancelSendNotification} size="small">
+							<CloseCircle />
+						</IconButton>
+					</Box>
+				</ConfirmDialogTitle>
+				<ConfirmDialogContent>
+					{loadingUsers ? (
+						<Box display="flex" justifyContent="center" p={3}>
+							<CircularProgress />
+						</Box>
+					) : (
+						<>
+							<Typography variant="body2" color="text.secondary" mb={2}>
+								Seleccione los destinatarios de la notificación:
+							</Typography>
+							<Box>
+								{notificationUsers.map((user) => (
+									<Box key={user.id} mb={1}>
+										<FormControlLabel
+											control={
+												<Checkbox checked={selectedUsers.includes(user.id)} onChange={() => handleToggleUser(user.id)} />
+											}
+											label={
+												<Box>
+													<Typography variant="body2" fontWeight="medium">
+														{user.name}
+													</Typography>
+													<Typography variant="caption" color="text.secondary">
+														{user.email}
+													</Typography>
+												</Box>
+											}
+										/>
+									</Box>
+								))}
+							</Box>
+							{selectedUsers.length === 0 && (
+								<Alert severity="warning" sx={{ mt: 2 }}>
+									Debe seleccionar al menos un destinatario
+								</Alert>
+							)}
+						</>
+					)}
+				</ConfirmDialogContent>
+				<ConfirmDialogActions>
+					<Button onClick={handleCancelSendNotification} variant="outlined">
+						Cancelar
+					</Button>
+					<Button
+						onClick={handleConfirmSendNotification}
+						variant="contained"
+						disabled={selectedUsers.length === 0 || loadingUsers}
+						startIcon={<Send2 size={18} />}
+					>
+						Enviar
 					</Button>
 				</ConfirmDialogActions>
 			</ConfirmDialog>

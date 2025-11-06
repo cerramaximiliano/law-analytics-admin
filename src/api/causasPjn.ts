@@ -219,6 +219,18 @@ export class CausasPjnService {
 		}
 	}
 
+	/**
+	 * Obtener usuarios con notificaciones habilitadas para una causa
+	 */
+	static async getNotificationUsers(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string): Promise<any> {
+		try {
+			const response = await pjnAxios.get(`/api/causas/${fuero}/${id}/notification-users`);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
 	// Manejo de errores
 	static handleError(error: any): Error {
 		// Re-throw axios errors for interceptor handling
