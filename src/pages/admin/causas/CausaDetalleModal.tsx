@@ -1058,36 +1058,25 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 									<Table size="small">
 										<TableHead>
 											<TableRow>
-												<TableCell width="12%">Fecha/Hora</TableCell>
-												<TableCell width="10%">Tipo</TableCell>
-												<TableCell width="8%" align="center">
+												<TableCell width="20%">Fecha/Hora</TableCell>
+												<TableCell width="15%">Tipo</TableCell>
+												<TableCell width="10%" align="center">
 													Estado
 												</TableCell>
-												<TableCell width="8%" align="center">
+												<TableCell width="12%" align="center">
 													Mov. Added
 												</TableCell>
-												<TableCell width="8%" align="center">
+												<TableCell width="12%" align="center">
 													Mov. Total
 												</TableCell>
-												<TableCell width="10%">Origen</TableCell>
-												<TableCell>Detalles</TableCell>
-												<TableCell width="8%" align="center">
+												<TableCell width="15%">Origen</TableCell>
+												<TableCell width="10%" align="center">
 													Acciones
 												</TableCell>
 											</TableRow>
 										</TableHead>
 										<TableBody>
-											{updateHistory.map((entry, index) => {
-												// Helper para convertir cualquier valor a string de forma segura
-												const safeStringify = (value: any): string => {
-													if (value === null || value === undefined) return "N/A";
-													if (typeof value === "string") return value;
-													if (typeof value === "number" || typeof value === "boolean") return String(value);
-													if (typeof value === "object") return JSON.stringify(value);
-													return String(value);
-												};
-
-												return (
+											{updateHistory.map((entry, index) => (
 													<TableRow key={index} hover>
 														<TableCell>
 															<Typography variant="caption">
@@ -1128,21 +1117,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 															)}
 														</TableCell>
 														<TableCell>
-															<Typography variant="body2">{safeStringify(entry.source)}</Typography>
-														</TableCell>
-														<TableCell>
-															{entry.changes && typeof entry.changes === "object" && (
-																<Box>
-																	{Object.entries(entry.changes).map(([key, value]: [string, any]) => (
-																		<Typography key={key} variant="caption" display="block">
-																			<strong>{key}:</strong> {safeStringify(value)}
-																		</Typography>
-																	))}
-																</Box>
-															)}
-															{entry.details && (
-																<Typography variant="caption">{safeStringify(entry.details)}</Typography>
-															)}
+															<Typography variant="body2">{entry.source || "N/A"}</Typography>
 														</TableCell>
 														<TableCell align="center">
 															<Tooltip title="Eliminar entrada">
@@ -1157,8 +1132,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 															</Tooltip>
 														</TableCell>
 													</TableRow>
-												);
-											})}
+											))}
 										</TableBody>
 									</Table>
 								</TableContainer>
