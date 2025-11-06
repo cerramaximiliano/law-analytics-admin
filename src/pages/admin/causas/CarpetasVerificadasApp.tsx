@@ -497,10 +497,30 @@ const CarpetasVerificadasApp = () => {
 													<Chip label={causa.movimientosCount || 0} size="small" variant="outlined" />
 												</TableCell>
 												<TableCell>
-													<Typography variant="caption">{formatDate(causa.lastUpdate)}</Typography>
+													<Typography
+														variant="caption"
+														sx={{
+															...(datesMatchUTC(causa.lastUpdate, causa.fechaUltimoMovimiento) && {
+																color: "success.main",
+																fontWeight: 600,
+															}),
+														}}
+													>
+														{formatDate(causa.lastUpdate)}
+													</Typography>
 												</TableCell>
 												<TableCell>
-													<Typography variant="caption">{formatDateUTC(causa.fechaUltimoMovimiento)}</Typography>
+													<Typography
+														variant="caption"
+														sx={{
+															...(datesMatchUTC(causa.lastUpdate, causa.fechaUltimoMovimiento) && {
+																color: "success.main",
+																fontWeight: 600,
+															}),
+														}}
+													>
+														{formatDateUTC(causa.fechaUltimoMovimiento)}
+													</Typography>
 												</TableCell>
 												<TableCell align="center">
 													<Stack direction="row" spacing={0.5} justifyContent="center">
@@ -509,18 +529,16 @@ const CarpetasVerificadasApp = () => {
 																<Eye size={18} />
 															</IconButton>
 														</Tooltip>
-														{datesMatchUTC(causa.lastUpdate, causa.fechaUltimoMovimiento) && (
-															<Tooltip title="Verificar notificaciones">
-																<IconButton
-																	size="small"
-																	color="warning"
-																	onClick={() => handleVerificarNotificaciones(causa)}
-																	disabled={loadingMovements}
-																>
-																	<Notification size={18} />
-																</IconButton>
-															</Tooltip>
-														)}
+														<Tooltip title="Verificar notificaciones">
+															<IconButton
+																size="small"
+																color={datesMatchUTC(causa.lastUpdate, causa.fechaUltimoMovimiento) ? "success" : "warning"}
+																onClick={() => handleVerificarNotificaciones(causa)}
+																disabled={loadingMovements}
+															>
+																<Notification size={18} />
+															</IconButton>
+														</Tooltip>
 													</Stack>
 												</TableCell>
 											</TableRow>
