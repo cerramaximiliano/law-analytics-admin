@@ -185,6 +185,18 @@ export class CausasPjnService {
 		}
 	}
 
+	/**
+	 * Enviar notificación de un movimiento específico
+	 */
+	static async notifyMovimiento(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string, movimientoIndex: number): Promise<any> {
+		try {
+			const response = await pjnAxios.post(`/api/causas/${fuero}/${id}/movimientos/${movimientoIndex}/notify`);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
 	// Manejo de errores
 	static handleError(error: any): Error {
 		// Re-throw axios errors for interceptor handling

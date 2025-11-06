@@ -35,7 +35,7 @@ import {
 import { Causa } from "api/causasPjn";
 import { CausasPjnService } from "api/causasPjn";
 import CausasService from "api/causas";
-import { CloseCircle, Link as LinkIcon, Trash, Edit, Save2, CloseSquare, TickCircle, AddCircle } from "iconsax-react";
+import { CloseCircle, Link as LinkIcon, Trash, Edit, Save2, CloseSquare, TickCircle, AddCircle, Notification } from "iconsax-react";
 import { useSnackbar } from "notistack";
 
 interface CausaDetalleModalProps {
@@ -120,6 +120,9 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 	});
 	const [sendNotification, setSendNotification] = useState(false);
 	const [isAddingMovimiento, setIsAddingMovimiento] = useState(false);
+
+	// Estado para envío de notificación de movimiento específico
+	const [notifyingMovIndex, setNotifyingMovIndex] = useState<number | null>(null);
 
 	// Resetear estados cuando se abre el modal
 	useEffect(() => {
@@ -433,6 +436,38 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 		}
 	};
 
+	// Enviar notificación de movimiento específico
+	const handleNotifyMovimiento = async (movimientoIndex: number) => {
+		try {
+			setNotifyingMovIndex(movimientoIndex);
+			const causaId = getId(causa._id);
+			const fuero = normalizeFuero(causa.fuero);
+
+			const response = await ServiceAPI.notifyMovimiento(fuero, causaId, movimientoIndex);
+
+			if (response.success) {
+				const usersNotified = response.data?.usersNotified || 0;
+				enqueueSnackbar(
+					usersNotified > 0
+						? `Notificación enviada a ${usersNotified} usuario${usersNotified > 1 ? "s" : ""}`
+						: "No hay usuarios habilitados para notificar",
+					{
+						variant: usersNotified > 0 ? "success" : "warning",
+						anchorOrigin: { vertical: "bottom", horizontal: "right" },
+					},
+				);
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al enviar la notificación", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			console.error(error);
+		} finally {
+			setNotifyingMovIndex(null);
+		}
+	};
+
 	return (
 		<>
 			<Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
@@ -733,11 +768,25 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 																)}
 															</TableCell>
 															<TableCell align="center">
-																<Tooltip title="Eliminar movimiento">
-																	<IconButton size="small" color="error" onClick={() => handleDeleteMovClick(actualIndex)}>
-																		<Trash size={16} />
-																	</IconButton>
-																</Tooltip>
+																<Stack direction="row" spacing={0.5} justifyContent="center">
+																	<Tooltip title="Enviar notificación">
+																		<span>
+																			<IconButton
+																				size="small"
+																				color="primary"
+																				onClick={() => handleNotifyMovimiento(actualIndex)}
+																				disabled={notifyingMovIndex === actualIndex}
+																			>
+																				<Notification size={16} />
+																			</IconButton>
+																		</span>
+																	</Tooltip>
+																	<Tooltip title="Eliminar movimiento">
+																		<IconButton size="small" color="error" onClick={() => handleDeleteMovClick(actualIndex)}>
+																			<Trash size={16} />
+																		</IconButton>
+																	</Tooltip>
+																</Stack>
 															</TableCell>
 														</TableRow>
 													);
