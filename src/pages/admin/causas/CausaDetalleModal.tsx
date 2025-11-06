@@ -828,77 +828,77 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 								)}
 							</Grid>
 
-							{/* Fechas */}
-							<Grid item xs={12} sx={{ mt: 1 }}>
+							{/* Fechas y Vínculos - Lado a lado */}
+							<Grid item xs={12} md={6} sx={{ mt: 1 }}>
 								<Typography variant="subtitle2" color="primary" gutterBottom>
 									Fechas
 								</Typography>
 								<Divider sx={{ mb: 1.5 }} />
-							</Grid>
 
-							<Grid item xs={12} sm={6} md={4}>
-								<Typography variant="caption" color="textSecondary">
-									Última Actualización
-								</Typography>
-								{isEditing ? (
-									<TextField
-										fullWidth
-										type="datetime-local"
-										size="small"
-										value={toDateTimeLocal(editedCausa.lastUpdate || causa.lastUpdate)}
-										onChange={(e) => setEditedCausa({ ...editedCausa, lastUpdate: e.target.value })}
-										sx={{ mt: 0.5 }}
-									/>
-								) : (
-									<Typography variant="body2">{formatDate(causa.lastUpdate)}</Typography>
-								)}
-							</Grid>
+								<Grid container spacing={2}>
+									<Grid item xs={12}>
+										<Typography variant="caption" color="textSecondary">
+											Última Actualización
+										</Typography>
+										{isEditing ? (
+											<TextField
+												fullWidth
+												type="datetime-local"
+												size="small"
+												value={toDateTimeLocal(editedCausa.lastUpdate || causa.lastUpdate)}
+												onChange={(e) => setEditedCausa({ ...editedCausa, lastUpdate: e.target.value })}
+												sx={{ mt: 0.5 }}
+											/>
+										) : (
+											<Typography variant="body2">{formatDate(causa.lastUpdate)}</Typography>
+										)}
+									</Grid>
 
-							<Grid item xs={12} sm={6} md={4}>
-								<Typography variant="caption" color="textSecondary">
-									Fecha Último Movimiento
-								</Typography>
-								{isEditing ? (
-									<TextField
-										fullWidth
-										type="date"
-										size="small"
-										value={toDateLocal(editedCausa.fechaUltimoMovimiento || causa.fechaUltimoMovimiento)}
-										onChange={(e) => setEditedCausa({ ...editedCausa, fechaUltimoMovimiento: e.target.value })}
-										sx={{ mt: 0.5 }}
-										InputLabelProps={{ shrink: true }}
-									/>
-								) : (
-									<Typography variant="body2">{formatDateOnly(causa.fechaUltimoMovimiento)}</Typography>
-								)}
-							</Grid>
+									<Grid item xs={12}>
+										<Typography variant="caption" color="textSecondary">
+											Fecha Último Movimiento
+										</Typography>
+										{isEditing ? (
+											<TextField
+												fullWidth
+												type="date"
+												size="small"
+												value={toDateLocal(editedCausa.fechaUltimoMovimiento || causa.fechaUltimoMovimiento)}
+												onChange={(e) => setEditedCausa({ ...editedCausa, fechaUltimoMovimiento: e.target.value })}
+												sx={{ mt: 0.5 }}
+												InputLabelProps={{ shrink: true }}
+											/>
+										) : (
+											<Typography variant="body2">{formatDateOnly(causa.fechaUltimoMovimiento)}</Typography>
+										)}
+									</Grid>
 
-							<Grid item xs={12} sm={6} md={4}>
-								<Typography variant="caption" color="textSecondary">
-									Creado
-								</Typography>
-								<Typography variant="body2">{formatDate(causa.createdAt)}</Typography>
-							</Grid>
+									<Grid item xs={6}>
+										<Typography variant="caption" color="textSecondary">
+											Creado
+										</Typography>
+										<Typography variant="body2">{formatDate(causa.createdAt)}</Typography>
+									</Grid>
 
-							<Grid item xs={12} sm={6} md={4}>
-								<Typography variant="caption" color="textSecondary">
-									Modificado
-								</Typography>
-								<Typography variant="body2">{formatDate(causa.updatedAt)}</Typography>
+									<Grid item xs={6}>
+										<Typography variant="caption" color="textSecondary">
+											Modificado
+										</Typography>
+										<Typography variant="body2">{formatDate(causa.updatedAt)}</Typography>
+									</Grid>
+								</Grid>
 							</Grid>
 
 							{/* Vínculos */}
-							{(causa.folderIds && causa.folderIds.length > 0) || (causa.userCausaIds && causa.userCausaIds.length > 0) ? (
-								<>
-									<Grid item xs={12} sx={{ mt: 1 }}>
-										<Typography variant="subtitle2" color="primary" gutterBottom>
-											Vínculos
-										</Typography>
-										<Divider sx={{ mb: 1.5 }} />
-									</Grid>
+							<Grid item xs={12} md={6} sx={{ mt: 1 }}>
+								<Typography variant="subtitle2" color="primary" gutterBottom>
+									Vínculos
+								</Typography>
+								<Divider sx={{ mb: 1.5 }} />
 
-									{causa.folderIds && causa.folderIds.length > 0 && (
-										<Grid item xs={6} md={3}>
+								<Grid container spacing={2}>
+									{causa.folderIds && causa.folderIds.length > 0 ? (
+										<Grid item xs={12}>
 											<Typography variant="caption" color="textSecondary">
 												Carpetas Vinculadas
 											</Typography>
@@ -906,10 +906,10 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 												<Chip label={`${causa.folderIds.length}`} size="small" />
 											</Box>
 										</Grid>
-									)}
+									) : null}
 
-									{causa.userCausaIds && causa.userCausaIds.length > 0 && (
-										<Grid item xs={6} md={3}>
+									{causa.userCausaIds && causa.userCausaIds.length > 0 ? (
+										<Grid item xs={12}>
 											<Typography variant="caption" color="textSecondary">
 												Usuarios Vinculados
 											</Typography>
@@ -917,9 +917,18 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 												<Chip label={`${causa.userCausaIds.length}`} size="small" />
 											</Box>
 										</Grid>
-									)}
-								</>
-							) : null}
+									) : null}
+
+									{(!causa.folderIds || causa.folderIds.length === 0) &&
+									(!causa.userCausaIds || causa.userCausaIds.length === 0) ? (
+										<Grid item xs={12}>
+											<Typography variant="body2" color="textSecondary">
+												Sin vínculos
+											</Typography>
+										</Grid>
+									) : null}
+								</Grid>
+							</Grid>
 						</Grid>
 					)}
 
