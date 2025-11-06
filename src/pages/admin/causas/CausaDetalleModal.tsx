@@ -1058,11 +1058,20 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 									<Table size="small">
 										<TableHead>
 											<TableRow>
-												<TableCell width="20%">Fecha/Hora</TableCell>
-												<TableCell width="15%">Tipo</TableCell>
-												<TableCell width="15%">Origen</TableCell>
+												<TableCell width="12%">Fecha/Hora</TableCell>
+												<TableCell width="10%">Tipo</TableCell>
+												<TableCell width="8%" align="center">
+													Estado
+												</TableCell>
+												<TableCell width="8%" align="center">
+													Mov. Added
+												</TableCell>
+												<TableCell width="8%" align="center">
+													Mov. Total
+												</TableCell>
+												<TableCell width="10%">Origen</TableCell>
 												<TableCell>Detalles</TableCell>
-												<TableCell width="10%" align="center">
+												<TableCell width="8%" align="center">
 													Acciones
 												</TableCell>
 											</TableRow>
@@ -1088,6 +1097,34 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 														<TableCell>
 															{entry.updateType && (
 																<Chip label={String(entry.updateType)} size="small" variant="outlined" color="primary" />
+															)}
+														</TableCell>
+														<TableCell align="center">
+															{entry.success !== undefined && (
+																<Tooltip title={entry.success ? "Exitoso" : "Fallido"}>
+																	{entry.success ? (
+																		<TickCircle size={20} color="#52c41a" variant="Bold" />
+																	) : (
+																		<CloseCircle size={20} color="#ff4d4f" variant="Bold" />
+																	)}
+																</Tooltip>
+															)}
+														</TableCell>
+														<TableCell align="center">
+															{entry.movimientosAdded !== undefined && (
+																<Chip
+																	label={entry.movimientosAdded > 0 ? `+${entry.movimientosAdded}` : entry.movimientosAdded}
+																	size="small"
+																	color={entry.movimientosAdded > 0 ? "success" : entry.movimientosAdded < 0 ? "error" : "default"}
+																	variant="filled"
+																/>
+															)}
+														</TableCell>
+														<TableCell align="center">
+															{entry.movimientosTotal !== undefined && (
+																<Typography variant="body2" fontWeight={600}>
+																	{entry.movimientosTotal}
+																</Typography>
 															)}
 														</TableCell>
 														<TableCell>
