@@ -1207,6 +1207,9 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 						</Box>
 					) : (
 						<>
+							<Alert severity="info" sx={{ mb: 2 }}>
+								Las notificaciones se enviarán de forma <strong>inmediata</strong> a los usuarios seleccionados.
+							</Alert>
 							<Typography variant="body2" color="text.secondary" mb={2}>
 								Seleccione los destinatarios de la notificación:
 							</Typography>
