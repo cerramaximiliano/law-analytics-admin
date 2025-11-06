@@ -29,7 +29,7 @@ const admin: NavItemType = {
 		},
 		{
 			id: "causas",
-			title: "Carpetas",
+			title: "Carpetas PJN",
 			type: "collapse",
 			icon: Folder2,
 			breadcrumbs: true,
