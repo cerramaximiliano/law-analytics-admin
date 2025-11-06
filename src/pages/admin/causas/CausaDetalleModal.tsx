@@ -400,6 +400,11 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 				newMovimientos.splice(deleteMovConfirm.index, 1);
 				setCurrentMovimientos(newMovimientos);
 
+				// Actualizar updateHistory si viene en la respuesta
+				if (response.data?.updateHistory) {
+					setUpdateHistory(response.data.updateHistory);
+				}
+
 				// Resetear página si es necesario
 				if (movimientosPage > 0 && newMovimientos.length <= movimientosPage * movimientosRowsPerPage) {
 					setMovimientosPage(movimientosPage - 1);
@@ -505,6 +510,11 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 				const newMovimientos = [...currentMovimientos];
 				newMovimientos.splice(insertIndex, 0, movimientoAgregado);
 				setCurrentMovimientos(newMovimientos);
+
+				// Actualizar updateHistory si viene en la respuesta
+				if (response.data?.updateHistory) {
+					setUpdateHistory(response.data.updateHistory);
+				}
 
 				handleCloseAddMovDialog();
 				if (onCausaUpdated) {
