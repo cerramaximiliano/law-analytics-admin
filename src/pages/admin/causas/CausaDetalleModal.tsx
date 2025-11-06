@@ -624,7 +624,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 										InputLabelProps={{ shrink: true }}
 									/>
 								) : (
-									<Typography variant="body2">{formatDate(causa.fechaUltimoMovimiento)}</Typography>
+									<Typography variant="body2">{formatDateOnly(causa.fechaUltimoMovimiento)}</Typography>
 								)}
 							</Grid>
 
