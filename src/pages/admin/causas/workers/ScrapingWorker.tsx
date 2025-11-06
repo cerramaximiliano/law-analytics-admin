@@ -104,8 +104,22 @@ const ScrapingWorker = () => {
 		try {
 			setLoading(true);
 
+			// Si ordenamos por progreso, necesitamos obtener TODOS los datos
+			// porque el progreso se calcula en el frontend
+			const isProgressSort = orderBy === "progress";
+
 			// La API usa páginas 1-based, pero MUI usa 0-based
-			const params: any = { page: page + 1, limit, sortBy: orderBy, sortOrder: order };
+			const params: any = {
+				page: isProgressSort ? 1 : page + 1,
+				limit: isProgressSort ? 1000 : limit, // Límite alto para obtener todos los datos
+			};
+
+			// Solo enviar sortBy y sortOrder si NO estamos ordenando por progreso
+			if (!isProgressSort) {
+				params.sortBy = orderBy;
+				params.sortOrder = order;
+			}
+
 			if (fuero && fuero !== "TODOS") {
 				params.fuero = fuero;
 			}
@@ -179,8 +193,21 @@ const ScrapingWorker = () => {
 	};
 
 	useEffect(() => {
+		// Si estamos ordenando por progreso, solo re-fetch cuando cambian filtros/sort, NO cuando cambia la página
+		// porque ya tenemos todos los datos y la paginación se hace client-side
 		fetchConfigs(configPage, configRowsPerPage, fueroFilter, yearFilter, progresoFilter, estadoFilter, sortBy, sortOrder);
-	}, [configPage, configRowsPerPage, fueroFilter, yearFilter, progresoFilter, estadoFilter, sortBy, sortOrder]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [
+		// Solo incluir configPage en las dependencias si NO estamos ordenando por progreso
+		...(sortBy !== "progress" ? [configPage] : []),
+		configRowsPerPage,
+		fueroFilter,
+		yearFilter,
+		progresoFilter,
+		estadoFilter,
+		sortBy,
+		sortOrder,
+	]);
 
 	useEffect(() => {
 		fetchScrapingHistory(historyPage, historyFueroFilter, historyYearFilter, historySortBy, historySortOrder);
@@ -463,13 +490,19 @@ const ScrapingWorker = () => {
 	// El filtrado se hace en el servidor, pero el ordenamiento por progreso se hace localmente
 	let filteredConfigs = [...configs];
 
-	// Si se está ordenando por progreso, ordenar localmente
+	// Si se está ordenando por progreso, ordenar localmente y aplicar paginación manual
 	if (sortBy === "progress") {
+		// Primero ordenar todos los datos
 		filteredConfigs = filteredConfigs.sort((a, b) => {
 			const progressA = calculateProgress(a);
 			const progressB = calculateProgress(b);
 			return sortOrder === "asc" ? progressA - progressB : progressB - progressA;
 		});
+
+		// Luego aplicar paginación client-side
+		const startIndex = configPage * configRowsPerPage;
+		const endIndex = startIndex + configRowsPerPage;
+		filteredConfigs = filteredConfigs.slice(startIndex, endIndex);
 	}
 
 	return (
