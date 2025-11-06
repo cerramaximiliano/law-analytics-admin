@@ -408,8 +408,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 							isInitialized: true,
 						},
 					});
-					// Reinicializar Google OAuth cuando no hay sesión
-					window.dispatchEvent(new Event("reinit-google-oauth"));
 				}
 			} catch (error) {
 				console.error("Error verifying session:", error);
@@ -419,8 +417,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 						isInitialized: true,
 					},
 				});
-				// Reinicializar Google OAuth cuando hay error de sesión
-				window.dispatchEvent(new Event("reinit-google-oauth"));
 			}
 		};
 
