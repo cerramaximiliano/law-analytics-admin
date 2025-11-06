@@ -204,6 +204,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			juzgado: causa.juzgado,
 			objeto: causa.objeto,
 			lastUpdate: causa.lastUpdate,
+			fechaUltimoMovimiento: causa.fechaUltimoMovimiento,
 		});
 		setIsEditing(true);
 	};
@@ -573,6 +574,24 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 									/>
 								) : (
 									<Typography variant="body2">{formatDate(causa.lastUpdate)}</Typography>
+								)}
+							</Grid>
+
+							<Grid item xs={12} sm={6} md={4}>
+								<Typography variant="caption" color="textSecondary">
+									Fecha Último Movimiento
+								</Typography>
+								{isEditing ? (
+									<TextField
+										fullWidth
+										type="datetime-local"
+										size="small"
+										value={toDateTimeLocal(editedCausa.fechaUltimoMovimiento || causa.fechaUltimoMovimiento)}
+										onChange={(e) => setEditedCausa({ ...editedCausa, fechaUltimoMovimiento: e.target.value })}
+										sx={{ mt: 0.5 }}
+									/>
+								) : (
+									<Typography variant="body2">{formatDate(causa.fechaUltimoMovimiento)}</Typography>
 								)}
 							</Grid>
 
