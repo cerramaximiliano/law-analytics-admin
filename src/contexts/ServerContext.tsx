@@ -417,6 +417,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 						isInitialized: true,
 					},
 				});
+			} finally {
+				// Disparar evento de que la autenticación se ha inicializado
+				// Esto permite que App.tsx empiece a escuchar eventos de reinit de Google OAuth
+				window.dispatchEvent(new Event("auth-initialized"));
 			}
 		};
 

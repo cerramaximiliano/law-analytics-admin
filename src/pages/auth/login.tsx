@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useGoogleLogin, CredentialResponse, GoogleOAuthProvider } from "@react-oauth/google";
-import { useState, useEffect } from "react";
+import { useGoogleLogin, CredentialResponse } from "@react-oauth/google";
+import { useState } from "react";
 // material-ui
 import { Grid, Stack, Alert, Typography, Box, LinearProgress } from "@mui/material";
 
@@ -13,15 +13,9 @@ import AuthWrapper from "sections/auth/AuthWrapper";
 import AuthLogin from "sections/auth/auth-forms/AuthLogin";
 import CustomGoogleButton from "components/auth/CustomGoogleButton";
 
-// Google OAuth Client ID
-const googleClientId = import.meta.env.VITE_AUTH0_GOOGLE_ID;
-if (!googleClientId) {
-	throw new Error("VITE_AUTH0_GOOGLE_ID no está definida. Asegúrate de configurarla en tu archivo .env");
-}
-
 // ================================|| LOGIN ||================================ //
 
-const LoginContent = () => {
+const Login = () => {
 	const { loginWithGoogle } = useAuth();
 	const [error, setError] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -154,30 +148,6 @@ const LoginContent = () => {
 				</Grid>
 			</Box>
 		</AuthWrapper>
-	);
-};
-
-// Wrapper con GoogleOAuthProvider y lógica de reinicialización
-const Login = () => {
-	const [googleProviderKey, setGoogleProviderKey] = useState(0);
-
-	// Reinicializar Google OAuth cuando se detecte logout
-	useEffect(() => {
-		const handleReinitGoogle = () => {
-			setGoogleProviderKey((prev) => prev + 1);
-		};
-
-		window.addEventListener("reinit-google-oauth", handleReinitGoogle);
-
-		return () => {
-			window.removeEventListener("reinit-google-oauth", handleReinitGoogle);
-		};
-	}, []);
-
-	return (
-		<GoogleOAuthProvider key={googleProviderKey} clientId={googleClientId}>
-			<LoginContent />
-		</GoogleOAuthProvider>
 	);
 };
 
