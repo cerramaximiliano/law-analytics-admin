@@ -115,6 +115,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 			reduxDispatch(logoutUser());
 			localDispatch({ type: LOGOUT });
 
+			// Disparar evento para reinicializar Google OAuth Provider
+			window.dispatchEvent(new Event("reinit-google-oauth"));
+
 			if (showMessage) {
 				showSnackbar("Sesión cerrada correctamente", "success");
 			}
@@ -405,6 +408,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 							isInitialized: true,
 						},
 					});
+					// Reinicializar Google OAuth cuando no hay sesión
+					window.dispatchEvent(new Event("reinit-google-oauth"));
 				}
 			} catch (error) {
 				console.error("Error verifying session:", error);
@@ -414,6 +419,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 						isInitialized: true,
 					},
 				});
+				// Reinicializar Google OAuth cuando hay error de sesión
+				window.dispatchEvent(new Event("reinit-google-oauth"));
 			}
 		};
 
