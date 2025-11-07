@@ -1,6 +1,5 @@
 import React from "react";
 import { useState, SyntheticEvent } from "react";
-import { Link as RouterLink } from "react-router-dom";
 
 // material-ui
 import {
@@ -10,13 +9,11 @@ import {
 	FormControlLabel,
 	FormHelperText,
 	Grid,
-	Link,
 	InputAdornment,
 	InputLabel,
 	OutlinedInput,
 	Stack,
 	Typography,
-	Box,
 } from "@mui/material";
 
 // third-party
@@ -287,35 +284,19 @@ const AuthLogin = ({ forgot, isGoogleLoading = false, onLoadingChange }: AuthLog
 								</Grid>
 
 								<Grid item xs={12} sx={{ mt: -1 }}>
-									<Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-										<FormControlLabel
-											control={
-												<Checkbox
-													checked={checked}
-													onChange={(event) => setChecked(event.target.checked)}
-													name="checked"
-													color="primary"
-													size="small"
-													disabled={isAnyFormLoading}
-												/>
-											}
-											label={<Typography variant="h6">Mantener la sesión abierta</Typography>}
-										/>
-
-										<Link
-											variant="h6"
-											component={isAnyFormLoading ? Box : RouterLink}
-											to={isAnyFormLoading ? undefined : isLoggedIn && forgot ? forgot : "/forgot-password"}
-											color={isAnyFormLoading ? "text.disabled" : "text.primary"}
-											sx={{
-												cursor: isAnyFormLoading ? "not-allowed" : "pointer",
-												pointerEvents: isAnyFormLoading ? "none" : "auto",
-												textDecoration: isAnyFormLoading ? "none" : undefined,
-											}}
-										>
-											Olvidé mi Password
-										</Link>
-									</Stack>
+									<FormControlLabel
+										control={
+											<Checkbox
+												checked={checked}
+												onChange={(event) => setChecked(event.target.checked)}
+												name="checked"
+												color="primary"
+												size="small"
+												disabled={isAnyFormLoading}
+											/>
+										}
+										label={<Typography variant="h6">Mantener la sesión abierta</Typography>}
+									/>
 								</Grid>
 								<Grid item xs={12}>
 									<AnimateButton>
