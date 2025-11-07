@@ -25,6 +25,13 @@ const admin: NavItemType = {
 					url: "/admin/causas/workers",
 					breadcrumbs: true,
 				},
+				{
+					id: "workers-mev",
+					title: "Workers MEV",
+					type: "item",
+					url: "/admin/workers/mev",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{
