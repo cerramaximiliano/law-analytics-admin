@@ -36,6 +36,7 @@ import {
 import { Causa } from "api/causasPjn";
 import { CausasPjnService } from "api/causasPjn";
 import CausasService from "api/causas";
+import { CausasMEVService, CausaMEV } from "api/causasMEV";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
 import {
 	CloseCircle,
@@ -56,9 +57,9 @@ import { useSnackbar } from "notistack";
 interface CausaDetalleModalProps {
 	open: boolean;
 	onClose: () => void;
-	causa: Causa | null;
+	causa: Causa | CausaMEV | null;
 	onCausaUpdated?: () => void;
-	apiService?: "pjn" | "workers"; // Especifica qué servicio usar
+	apiService?: "pjn" | "workers" | "mev"; // Especifica qué servicio usar
 }
 
 // Mapeo de fueros a nombres legibles
@@ -101,7 +102,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Seleccionar el servicio apropiado
-	const ServiceAPI = apiService === "pjn" ? CausasPjnService : CausasService;
+	const ServiceAPI = apiService === "pjn" ? CausasPjnService : apiService === "mev" ? CausasMEVService : CausasService;
 
 	// Estado para el tab activo
 	const [activeTab, setActiveTab] = useState(0);
@@ -383,7 +384,9 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 				}
 			}
 
-			const response = await ServiceAPI.updateCausa(fuero, causaId, dataToUpdate);
+			const response = apiService === "mev"
+				? await (ServiceAPI as typeof CausasMEVService).updateCausa(causaId, dataToUpdate as Partial<CausaMEV>)
+				: await (ServiceAPI as typeof CausasPjnService).updateCausa(fuero, causaId, dataToUpdate as Partial<Causa>);
 
 			if (response.success) {
 				enqueueSnackbar("Causa actualizada correctamente", {
@@ -427,7 +430,9 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			const causaId = getId(causa._id);
 			const fuero = normalizeFuero(causa.fuero);
 
-			const response = await ServiceAPI.deleteMovimiento(fuero, causaId, deleteMovConfirm.index);
+			const response = apiService === "mev"
+				? await (ServiceAPI as typeof CausasMEVService).deleteMovimiento(causaId, deleteMovConfirm.index)
+				: await (ServiceAPI as typeof CausasPjnService).deleteMovimiento(fuero, causaId, deleteMovConfirm.index);
 
 			if (response.success) {
 				enqueueSnackbar("Movimiento eliminado correctamente", {
@@ -508,13 +513,21 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			// Convertir fecha a formato ISO UTC
 			const fechaISO = new Date(newMovimiento.fecha).toISOString();
 
-			const response = await ServiceAPI.addMovimiento(fuero, causaId, {
-				fecha: fechaISO,
-				tipo: newMovimiento.tipo,
-				detalle: newMovimiento.detalle,
-				url: newMovimiento.url || null,
-				sendNotification,
-			});
+			const response = apiService === "mev"
+				? await (ServiceAPI as typeof CausasMEVService).addMovimiento(causaId, {
+					fecha: fechaISO,
+					tipo: newMovimiento.tipo,
+					detalle: newMovimiento.detalle,
+					url: newMovimiento.url || null,
+					sendNotification,
+				})
+				: await (ServiceAPI as typeof CausasPjnService).addMovimiento(fuero, causaId, {
+					fecha: fechaISO,
+					tipo: newMovimiento.tipo,
+					detalle: newMovimiento.detalle,
+					url: newMovimiento.url || null,
+					sendNotification,
+				});
 
 			if (response.success) {
 				let mensaje = "Movimiento agregado correctamente";
@@ -582,7 +595,9 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			const fuero = normalizeFuero(causa.fuero);
 
 			// Obtener usuarios habilitados para notificación
-			const response = await ServiceAPI.getNotificationUsers(fuero, causaId);
+			const response = apiService === "mev"
+				? await (ServiceAPI as typeof CausasMEVService).getNotificationUsers(causaId)
+				: await (ServiceAPI as typeof CausasPjnService).getNotificationUsers(fuero, causaId);
 
 			if (response.success && response.data.length > 0) {
 				setNotificationUsers(response.data);
@@ -623,7 +638,9 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			const causaId = getId(causa._id);
 			const fuero = normalizeFuero(causa.fuero);
 
-			const response = await ServiceAPI.notifyMovimiento(fuero, causaId, pendingMovimientoIndex);
+			const response = apiService === "mev"
+				? await (ServiceAPI as typeof CausasMEVService).notifyMovimiento(causaId, pendingMovimientoIndex)
+				: await (ServiceAPI as typeof CausasPjnService).notifyMovimiento(fuero, causaId, pendingMovimientoIndex);
 
 			if (response.success) {
 				const usersNotified = response.data?.usersNotified || 0;
@@ -675,7 +692,9 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			const causaId = getId(causa._id);
 			const fuero = normalizeFuero(causa.fuero);
 
-			const response = await ServiceAPI.clearUpdateHistory(fuero, causaId);
+			const response = apiService === "mev"
+				? await (ServiceAPI as typeof CausasMEVService).clearUpdateHistory(causaId)
+				: await (ServiceAPI as typeof CausasPjnService).clearUpdateHistory(fuero, causaId);
 
 			if (response.success) {
 				setUpdateHistory([]);
@@ -705,7 +724,9 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			const causaId = getId(causa._id);
 			const fuero = normalizeFuero(causa.fuero);
 
-			const response = await ServiceAPI.deleteUpdateHistoryEntry(fuero, causaId, entryIndex);
+			const response = apiService === "mev"
+				? await (ServiceAPI as typeof CausasMEVService).deleteUpdateHistoryEntry(causaId, entryIndex)
+				: await (ServiceAPI as typeof CausasPjnService).deleteUpdateHistoryEntry(fuero, causaId, entryIndex);
 
 			if (response.success) {
 				// Actualizar el estado local eliminando la entrada
