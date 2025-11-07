@@ -35,6 +35,7 @@ const StripeWebhooks = () => {
 	const [loading, setLoading] = useState(true);
 	const [data, setData] = useState<WebhooksStatus | null>(null);
 	const [error, setError] = useState<string | null>(null);
+	const [runningHealthCheck, setRunningHealthCheck] = useState(false);
 
 	const fetchWebhooksStatus = async () => {
 		try {
@@ -50,6 +51,30 @@ const StripeWebhooks = () => {
 			});
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	const handleHealthCheck = async () => {
+		try {
+			setRunningHealthCheck(true);
+			const response = await WebhooksService.runHealthCheck();
+
+			enqueueSnackbar(
+				response.message || "Health check completado exitosamente. Suscripciones actualizadas y webhooks reparados.",
+				{
+					variant: "success",
+				},
+			);
+
+			// Recargar el estado después del health check
+			await fetchWebhooksStatus();
+		} catch (error: any) {
+			const errorMessage = error.message || "Error al ejecutar health check";
+			enqueueSnackbar(errorMessage, {
+				variant: "error",
+			});
+		} finally {
+			setRunningHealthCheck(false);
 		}
 	};
 
@@ -144,6 +169,32 @@ const StripeWebhooks = () => {
 						</Typography>
 					</Alert>
 				)}
+
+				{/* Botón de Health Check */}
+				<Card variant="outlined" sx={{ backgroundColor: "primary.lighter", borderColor: "primary.main" }}>
+					<CardContent>
+						<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "center" }} justifyContent="space-between">
+							<Box>
+								<Typography variant="subtitle2" fontWeight="bold" color="primary.main" gutterBottom>
+									🔧 Actualizar Suscripciones y Reparar Webhooks
+								</Typography>
+								<Typography variant="body2" color="text.secondary">
+									Sincroniza todas las suscripciones con Stripe y repara webhooks fallados. Este proceso puede tardar algunos minutos.
+								</Typography>
+							</Box>
+							<Button
+								variant="contained"
+								color="primary"
+								onClick={handleHealthCheck}
+								disabled={runningHealthCheck}
+								startIcon={runningHealthCheck ? <CircularProgress size={16} color="inherit" /> : <Refresh size={16} />}
+								sx={{ minWidth: { xs: "100%", sm: "200px" } }}
+							>
+								{runningHealthCheck ? "Ejecutando..." : "Ejecutar Health Check"}
+							</Button>
+						</Stack>
+					</CardContent>
+				</Card>
 
 				{/* Indicadores clave */}
 				<Grid container spacing={3}>

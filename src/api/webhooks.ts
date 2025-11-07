@@ -74,6 +74,32 @@ class WebhooksService {
 			throw new Error(error.response?.data?.message || "Error al obtener el estado de webhooks");
 		}
 	}
+
+	async runHealthCheck(): Promise<any> {
+		try {
+			console.log("🔧 Running webhooks health check from:", import.meta.env.VITE_AUTH_URL + "/api/admin/webhooks/health-check");
+			const response = await authAxios.post("/api/admin/webhooks/health-check");
+			console.log("✅ Health check response:", response.data);
+			return response.data;
+		} catch (error: any) {
+			console.error("❌ Error running health check:", error);
+			console.error("❌ Error response:", error.response);
+			console.error("❌ Error status:", error.response?.status);
+			console.error("❌ Error data:", error.response?.data);
+
+			// Si es un error 404, el endpoint no existe
+			if (error.response?.status === 404) {
+				throw new Error("El endpoint /api/admin/webhooks/health-check no está disponible en el servidor");
+			}
+
+			// Si es un error 401, hay problema de autenticación
+			if (error.response?.status === 401) {
+				throw new Error("No autorizado. Por favor, inicie sesión nuevamente.");
+			}
+
+			throw new Error(error.response?.data?.message || "Error al ejecutar health check");
+		}
+	}
 }
 
 export default new WebhooksService();
