@@ -97,8 +97,9 @@ const MEVWorkers = () => {
 	const [passwordChangeDate, setPasswordChangeDate] = useState<Dayjs | null>(dayjs());
 	const [instructionsOpen, setInstructionsOpen] = useState(false);
 	const [workerGuideOpen, setWorkerGuideOpen] = useState(false);
-	const [workerInfoOpen, setWorkerInfoOpen] = useState(false);
-	const [eligibilityOpen, setEligibilityOpen] = useState(false);
+	const [workerInfoModalOpen, setWorkerInfoModalOpen] = useState(false);
+	const [guideModalOpen, setGuideModalOpen] = useState(false);
+	const [eligibilityModalOpen, setEligibilityModalOpen] = useState(false);
 
 	// Helper para obtener labels
 	const getVerificationModeLabel = (value: string) => {
@@ -433,54 +434,66 @@ const MEVWorkers = () => {
 			<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 				{/* Información del worker */}
 				<Grid item xs={12} md={4}>
-					<Card variant="outlined" sx={{ backgroundColor: "background.paper", height: "100%" }}>
-						<CardContent sx={{ pb: workerInfoOpen ? 2 : 1 }}>
-							<Box
-								display="flex"
-								justifyContent="space-between"
-								alignItems="center"
-								sx={{ cursor: "pointer" }}
-								onClick={() => setWorkerInfoOpen(!workerInfoOpen)}
-							>
-								<Stack direction="row" spacing={1} alignItems="center">
-									<InfoCircle size={20} color="#0288d1" />
-									<Typography variant="subtitle2" fontWeight="bold" color="info.main">
-										Worker de Verificación
-									</Typography>
-								</Stack>
-								<IconButton size="small">{workerInfoOpen ? <ArrowUp2 size={20} /> : <ArrowDown2 size={20} />}</IconButton>
-							</Box>
-
-							<Collapse in={workerInfoOpen}>
-								<Typography variant="body2" sx={{ mt: 2 }}>
-									Este worker se encarga de verificar automáticamente el estado de las causas judiciales MEV, validando su existencia
-									y actualizando la información en el sistema.
+					<Card
+						variant="outlined"
+						sx={{
+							backgroundColor: "background.paper",
+							height: "100%",
+							cursor: "pointer",
+							transition: "all 0.2s",
+							"&:hover": {
+								boxShadow: 2,
+								transform: "translateY(-2px)",
+							},
+						}}
+						onClick={() => setWorkerInfoModalOpen(true)}
+					>
+						<CardContent>
+							<Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+								<InfoCircle size={24} color="#0288d1" />
+								<Typography variant="subtitle2" fontWeight="bold" color="info.main">
+									Worker de Verificación
 								</Typography>
-							</Collapse>
+							</Stack>
+							<Typography variant="caption" color="text.secondary" align="center" display="block" sx={{ mt: 1 }}>
+								Click para ver detalles
+							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
 
 				{/* Guía de Uso del Worker */}
 				<Grid item xs={12} md={4}>
-					<Card variant="outlined" sx={{ backgroundColor: "background.paper", height: "100%" }}>
-				<CardContent sx={{ pb: workerGuideOpen ? 2 : 1 }}>
-					<Box
-						display="flex"
-						justifyContent="space-between"
-						alignItems="center"
-						sx={{ cursor: "pointer" }}
-						onClick={() => setWorkerGuideOpen(!workerGuideOpen)}
+					<Card
+						variant="outlined"
+						sx={{
+							backgroundColor: "background.paper",
+							height: "100%",
+							cursor: "pointer",
+							transition: "all 0.2s",
+							"&:hover": {
+								boxShadow: 2,
+								transform: "translateY(-2px)",
+							},
+						}}
+						onClick={() => setGuideModalOpen(true)}
 					>
-						<Stack direction="row" spacing={1} alignItems="center">
-							<InfoCircle size={20} color="#1976d2" />
-							<Typography variant="subtitle2" fontWeight="bold" color="primary">
-								Guía de Funcionamiento
+						<CardContent>
+							<Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+								<InfoCircle size={24} color="#1976d2" />
+								<Typography variant="subtitle2" fontWeight="bold" color="primary">
+									Guía de Funcionamiento
+								</Typography>
+							</Stack>
+							<Typography variant="caption" color="text.secondary" align="center" display="block" sx={{ mt: 1 }}>
+								Click para ver guía completa
 							</Typography>
-						</Stack>
-						<IconButton size="small">{workerGuideOpen ? <ArrowUp2 size={20} /> : <ArrowDown2 size={20} />}</IconButton>
-					</Box>
+						</CardContent>
+					</Card>
+				</Grid>
 
+				{/* Tercer card - Eligibility (oculto temporalmente, se moverá todo el contenido a modal) */}
+				<Grid item xs={12} md={4} sx={{ display: "none" }}>
 					<Collapse in={workerGuideOpen}>
 						<Stack spacing={2} sx={{ mt: 3 }}>
 							{/* Propósito del Worker */}
@@ -708,23 +721,38 @@ const MEVWorkers = () => {
 
 				{/* Información detallada del worker */}
 				<Grid item xs={12} md={4}>
-					<Card variant="outlined" sx={{ backgroundColor: "background.default", height: "100%" }}>
-						<CardContent sx={{ pb: eligibilityOpen ? 2 : 1 }}>
-							<Box
-								display="flex"
-								justifyContent="space-between"
-								alignItems="center"
-								sx={{ cursor: "pointer" }}
-								onClick={() => setEligibilityOpen(!eligibilityOpen)}
-							>
+					<Card
+						variant="outlined"
+						sx={{
+							backgroundColor: "background.default",
+							height: "100%",
+							cursor: "pointer",
+							transition: "all 0.2s",
+							"&:hover": {
+								boxShadow: 2,
+								transform: "translateY(-2px)",
+							},
+						}}
+						onClick={() => setEligibilityModalOpen(true)}
+					>
+						<CardContent>
+							<Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+								<InfoCircle size={24} color="#616161" />
 								<Typography variant="subtitle2" fontWeight="bold">
 									Elegibilidad de Documentos
 								</Typography>
-								<IconButton size="small">{eligibilityOpen ? <ArrowUp2 size={20} /> : <ArrowDown2 size={20} />}</IconButton>
-							</Box>
+							</Stack>
+							<Typography variant="caption" color="text.secondary" align="center" display="block" sx={{ mt: 1 }}>
+								Click para ver criterios
+							</Typography>
+						</CardContent>
+					</Card>
+				</Grid>
+			</Grid>
 
-					<Collapse in={eligibilityOpen}>
-						<Grid container spacing={1.5} sx={{ mt: 1 }}>
+			{/* Contenido guardado para modales - oculto */}
+			<Box sx={{ display: "none" }}>
+				<Grid container spacing={1.5} sx={{ mt: 1 }}>
 						<Grid item xs={6} sm={3}>
 							<Stack direction="row" spacing={1} alignItems="center">
 								<Typography variant="caption" color="text.secondary">
@@ -806,11 +834,7 @@ const MEVWorkers = () => {
 							</Stack>
 						</Grid>
 					</Grid>
-					</Collapse>
-				</CardContent>
-			</Card>
-				</Grid>
-			</Grid>
+			</Box>
 
 			{/* Tabla de configuraciones */}
 			{authError ? (
@@ -2245,6 +2269,177 @@ const MEVWorkers = () => {
 					</TabPanel>
 				</Box>
 			</MainCard>
+
+			{/* Modal de información del Worker */}
+			<Dialog open={workerInfoModalOpen} onClose={() => setWorkerInfoModalOpen(false)} maxWidth="sm" fullWidth>
+				<DialogTitle>
+					<Stack direction="row" spacing={1} alignItems="center">
+						<InfoCircle size={24} color="#0288d1" />
+						<Typography variant="h6">Worker de Verificación de Causas MEV</Typography>
+					</Stack>
+				</DialogTitle>
+				<DialogContent>
+					<Typography variant="body2">
+						Este worker se encarga de verificar automáticamente el estado de las causas judiciales MEV, validando su existencia y
+						actualizando la información en el sistema.
+					</Typography>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setWorkerInfoModalOpen(false)}>Cerrar</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Modal de Guía de Funcionamiento */}
+			<Dialog open={guideModalOpen} onClose={() => setGuideModalOpen(false)} maxWidth="md" fullWidth>
+				<DialogTitle>
+					<Stack direction="row" spacing={1} alignItems="center">
+						<InfoCircle size={24} color="#1976d2" />
+						<Typography variant="h6">Guía de Funcionamiento del Worker de Verificación</Typography>
+					</Stack>
+				</DialogTitle>
+				<DialogContent>
+					<Stack spacing={2} sx={{ mt: 2 }}>
+						{/* Propósito del Worker */}
+						<Box>
+							<Typography variant="subtitle2" fontWeight="bold" color="text.primary" gutterBottom>
+								🎯 Propósito del Worker
+							</Typography>
+							<Typography variant="body2" color="text.secondary">
+								El Worker de Verificación MEV es un proceso automatizado que se ejecuta periódicamente para validar la existencia y el
+								estado actual de las causas judiciales en el sistema MEV (Mesa de Entradas Virtual). Su función principal es mantener
+								actualizada la base de datos con información verificada directamente desde la fuente oficial.
+							</Typography>
+						</Box>
+
+						{/* Parámetros Técnicos */}
+						<Box>
+							<Typography variant="subtitle2" fontWeight="bold" color="text.primary" gutterBottom>
+								🔧 Parámetros Técnicos
+							</Typography>
+							<Stack spacing={1} sx={{ pl: 2 }}>
+								<Typography variant="body2" color="text.secondary">
+									• <strong>Tamaño de Lote:</strong> Cantidad de documentos procesados simultáneamente (recomendado: 10-50)
+								</Typography>
+								<Typography variant="body2" color="text.secondary">
+									• <strong>Delay entre búsquedas:</strong> Tiempo de espera en milisegundos entre verificaciones (evita sobrecarga)
+								</Typography>
+								<Typography variant="body2" color="text.secondary">
+									• <strong>Reintentos máximos:</strong> Número de intentos ante fallos de verificación (recomendado: 3)
+								</Typography>
+							</Stack>
+						</Box>
+
+						{/* Mejores Prácticas */}
+						<Box>
+							<Typography variant="subtitle2" fontWeight="bold" color="text.primary" gutterBottom>
+								✅ Mejores Prácticas
+							</Typography>
+							<Stack spacing={1} sx={{ pl: 2 }}>
+								<Typography variant="body2" color="text.secondary">
+									• Configure el <strong>delay entre búsquedas</strong> de al menos 1000ms para evitar bloqueos
+								</Typography>
+								<Typography variant="body2" color="text.secondary">
+									• Use <strong>tamaños de lote pequeños</strong> (10-20) para mejor control y debugging
+								</Typography>
+								<Typography variant="body2" color="text.secondary">
+									• Monitoree las <strong>estadísticas de errores</strong> regularmente
+								</Typography>
+							</Stack>
+						</Box>
+
+						{/* Nota importante */}
+						<Alert severity="warning">
+							<Typography variant="subtitle2" fontWeight="bold">
+								⚠️ Importante
+							</Typography>
+							<Typography variant="body2">
+								El Worker de Verificación realiza consultas directas al sistema MEV. Un mal uso o configuración incorrecta puede
+								resultar en bloqueos temporales. Siempre pruebe con configuraciones conservadoras antes de aumentar la velocidad o
+								volumen de procesamiento.
+							</Typography>
+						</Alert>
+					</Stack>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setGuideModalOpen(false)}>Cerrar</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Modal de Elegibilidad de Documentos */}
+			<Dialog open={eligibilityModalOpen} onClose={() => setEligibilityModalOpen(false)} maxWidth="md" fullWidth>
+				<DialogTitle>Elegibilidad de Documentos - Worker de Verificación MEV</DialogTitle>
+				<DialogContent>
+					<Grid container spacing={2} sx={{ mt: 1 }}>
+						<Grid item xs={6} sm={3}>
+							<Typography variant="caption" color="text.secondary">
+								Source:
+							</Typography>
+							<Typography variant="body2" fontWeight={500}>
+								"mev"
+							</Typography>
+						</Grid>
+						<Grid item xs={6} sm={3}>
+							<Typography variant="caption" color="text.secondary">
+								Verified (req):
+							</Typography>
+							<Typography variant="body2" fontWeight={500}>
+								false
+							</Typography>
+						</Grid>
+						<Grid item xs={6} sm={3}>
+							<Typography variant="caption" color="text.secondary">
+								isValid (req):
+							</Typography>
+							<Typography variant="body2" fontWeight={500}>
+								null
+							</Typography>
+						</Grid>
+						<Grid item xs={6} sm={3}>
+							<Typography variant="caption" color="text.secondary">
+								Update:
+							</Typography>
+							<Typography variant="body2" fontWeight={500}>
+								No importa
+							</Typography>
+						</Grid>
+						<Grid item xs={6} sm={3}>
+							<Typography variant="caption" color="text.secondary">
+								Función:
+							</Typography>
+							<Typography variant="body2" fontWeight={500} color="primary.main">
+								Verificación inicial
+							</Typography>
+						</Grid>
+						<Grid item xs={6} sm={3}>
+							<Typography variant="caption" color="text.secondary">
+								Modifica verified:
+							</Typography>
+							<Typography variant="body2" fontWeight={500} color="success.main">
+								SÍ
+							</Typography>
+						</Grid>
+						<Grid item xs={6} sm={3}>
+							<Typography variant="caption" color="text.secondary">
+								Modifica isValid:
+							</Typography>
+							<Typography variant="body2" fontWeight={500} color="success.main">
+								SÍ
+							</Typography>
+						</Grid>
+						<Grid item xs={6} sm={3}>
+							<Typography variant="caption" color="text.secondary">
+								Frecuencia:
+							</Typography>
+							<Typography variant="body2" fontWeight={500} color="warning.main">
+								Una sola vez
+							</Typography>
+						</Grid>
+					</Grid>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setEligibilityModalOpen(false)}>Cerrar</Button>
+				</DialogActions>
+			</Dialog>
 
 			{/* Modal para actualizar fecha de contraseña */}
 			<Dialog open={passwordModalOpen} onClose={handleClosePasswordModal} maxWidth="sm" fullWidth>
