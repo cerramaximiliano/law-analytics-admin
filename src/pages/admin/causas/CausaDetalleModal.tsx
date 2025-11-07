@@ -778,7 +778,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 					</Tabs>
 				</Box>
 
-				<DialogContent dividers sx={{ minHeight: "500px", maxHeight: "70vh", overflowY: "auto" }}>
+				<DialogContent dividers sx={{ height: "500px", overflowY: "auto" }}>
 					{/* Tab Panel 0: Información General */}
 					{activeTab === 0 && (
 						<Grid container spacing={2}>
