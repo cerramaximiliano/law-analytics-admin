@@ -429,36 +429,41 @@ const MEVWorkers = () => {
 				</Button>
 			</Box>
 
-			{/* Información del worker */}
-			<Card variant="outlined" sx={{ backgroundColor: "background.paper" }}>
-				<CardContent sx={{ pb: workerInfoOpen ? 2 : 1 }}>
-					<Box
-						display="flex"
-						justifyContent="space-between"
-						alignItems="center"
-						sx={{ cursor: "pointer" }}
-						onClick={() => setWorkerInfoOpen(!workerInfoOpen)}
-					>
-						<Stack direction="row" spacing={1} alignItems="center">
-							<InfoCircle size={20} color="#0288d1" />
-							<Typography variant="h6" color="info.main">
-								Worker de Verificación de Causas MEV
-							</Typography>
-						</Stack>
-						<IconButton size="small">{workerInfoOpen ? <ArrowUp2 size={20} /> : <ArrowDown2 size={20} />}</IconButton>
-					</Box>
+			{/* Cards de información en una sola línea */}
+			<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+				{/* Información del worker */}
+				<Grid item xs={12} md={4}>
+					<Card variant="outlined" sx={{ backgroundColor: "background.paper", height: "100%" }}>
+						<CardContent sx={{ pb: workerInfoOpen ? 2 : 1 }}>
+							<Box
+								display="flex"
+								justifyContent="space-between"
+								alignItems="center"
+								sx={{ cursor: "pointer" }}
+								onClick={() => setWorkerInfoOpen(!workerInfoOpen)}
+							>
+								<Stack direction="row" spacing={1} alignItems="center">
+									<InfoCircle size={20} color="#0288d1" />
+									<Typography variant="subtitle2" fontWeight="bold" color="info.main">
+										Worker de Verificación
+									</Typography>
+								</Stack>
+								<IconButton size="small">{workerInfoOpen ? <ArrowUp2 size={20} /> : <ArrowDown2 size={20} />}</IconButton>
+							</Box>
 
-					<Collapse in={workerInfoOpen}>
-						<Typography variant="body2" sx={{ mt: 2 }}>
-							Este worker se encarga de verificar automáticamente el estado de las causas judiciales MEV, validando su existencia y
-							actualizando la información en el sistema.
-						</Typography>
-					</Collapse>
-				</CardContent>
-			</Card>
+							<Collapse in={workerInfoOpen}>
+								<Typography variant="body2" sx={{ mt: 2 }}>
+									Este worker se encarga de verificar automáticamente el estado de las causas judiciales MEV, validando su existencia
+									y actualizando la información en el sistema.
+								</Typography>
+							</Collapse>
+						</CardContent>
+					</Card>
+				</Grid>
 
-			{/* Guía de Uso del Worker */}
-			<Card variant="outlined" sx={{ backgroundColor: "background.paper" }}>
+				{/* Guía de Uso del Worker */}
+				<Grid item xs={12} md={4}>
+					<Card variant="outlined" sx={{ backgroundColor: "background.paper", height: "100%" }}>
 				<CardContent sx={{ pb: workerGuideOpen ? 2 : 1 }}>
 					<Box
 						display="flex"
@@ -469,8 +474,8 @@ const MEVWorkers = () => {
 					>
 						<Stack direction="row" spacing={1} alignItems="center">
 							<InfoCircle size={20} color="#1976d2" />
-							<Typography variant="h6" color="primary">
-								Guía de Funcionamiento del Worker de Verificación
+							<Typography variant="subtitle2" fontWeight="bold" color="primary">
+								Guía de Funcionamiento
 							</Typography>
 						</Stack>
 						<IconButton size="small">{workerGuideOpen ? <ArrowUp2 size={20} /> : <ArrowDown2 size={20} />}</IconButton>
@@ -699,22 +704,24 @@ const MEVWorkers = () => {
 					</Collapse>
 				</CardContent>
 			</Card>
+				</Grid>
 
-			{/* Información detallada del worker */}
-			<Card variant="outlined" sx={{ backgroundColor: "background.default" }}>
-				<CardContent sx={{ pb: eligibilityOpen ? 2 : 1 }}>
-					<Box
-						display="flex"
-						justifyContent="space-between"
-						alignItems="center"
-						sx={{ cursor: "pointer" }}
-						onClick={() => setEligibilityOpen(!eligibilityOpen)}
-					>
-						<Typography variant="subtitle2" fontWeight="bold">
-							Elegibilidad de Documentos - Worker de Verificación MEV
-						</Typography>
-						<IconButton size="small">{eligibilityOpen ? <ArrowUp2 size={20} /> : <ArrowDown2 size={20} />}</IconButton>
-					</Box>
+				{/* Información detallada del worker */}
+				<Grid item xs={12} md={4}>
+					<Card variant="outlined" sx={{ backgroundColor: "background.default", height: "100%" }}>
+						<CardContent sx={{ pb: eligibilityOpen ? 2 : 1 }}>
+							<Box
+								display="flex"
+								justifyContent="space-between"
+								alignItems="center"
+								sx={{ cursor: "pointer" }}
+								onClick={() => setEligibilityOpen(!eligibilityOpen)}
+							>
+								<Typography variant="subtitle2" fontWeight="bold">
+									Elegibilidad de Documentos
+								</Typography>
+								<IconButton size="small">{eligibilityOpen ? <ArrowUp2 size={20} /> : <ArrowDown2 size={20} />}</IconButton>
+							</Box>
 
 					<Collapse in={eligibilityOpen}>
 						<Grid container spacing={1.5} sx={{ mt: 1 }}>
@@ -802,6 +809,8 @@ const MEVWorkers = () => {
 					</Collapse>
 				</CardContent>
 			</Card>
+				</Grid>
+			</Grid>
 
 			{/* Tabla de configuraciones */}
 			{authError ? (
