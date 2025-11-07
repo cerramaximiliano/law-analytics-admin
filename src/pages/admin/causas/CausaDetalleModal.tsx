@@ -143,12 +143,15 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 	const [updateHistory, setUpdateHistory] = useState<any[]>([]);
 	const [clearingHistory, setClearingHistory] = useState(false);
 	const [deletingHistoryEntry, setDeletingHistoryEntry] = useState<number | null>(null);
+	const [historyPage, setHistoryPage] = useState(0);
+	const [historyRowsPerPage, setHistoryRowsPerPage] = useState(10);
 
 	// Resetear estados cuando se abre el modal
 	useEffect(() => {
 		if (open && causa) {
 			setActiveTab(0);
 			setMovimientosPage(0);
+			setHistoryPage(0);
 			setIsEditing(false);
 			setEditedCausa({});
 			setCurrentMovimientos((causa as any).movimientos || []);
@@ -289,6 +292,18 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 	const handleChangeMovimientosRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setMovimientosRowsPerPage(parseInt(event.target.value, 10));
 		setMovimientosPage(0);
+	};
+
+	// Paginación para historial de actualizaciones
+	const paginatedHistory = updateHistory.slice(historyPage * historyRowsPerPage, historyPage * historyRowsPerPage + historyRowsPerPage);
+
+	const handleChangeHistoryPage = (_event: unknown, newPage: number) => {
+		setHistoryPage(newPage);
+	};
+
+	const handleChangeHistoryRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setHistoryRowsPerPage(parseInt(event.target.value, 10));
+		setHistoryPage(0);
 	};
 
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -639,6 +654,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 
 			if (response.success) {
 				setUpdateHistory([]);
+				setHistoryPage(0);
 				enqueueSnackbar(response.message, {
 					variant: "success",
 					anchorOrigin: { vertical: "bottom", horizontal: "right" },
@@ -668,7 +684,14 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 
 			if (response.success) {
 				// Actualizar el estado local eliminando la entrada
-				setUpdateHistory((prev) => prev.filter((_, index) => index !== entryIndex));
+				const newHistory = updateHistory.filter((_, index) => index !== entryIndex);
+				setUpdateHistory(newHistory);
+
+				// Ajustar la página si es necesario
+				if (historyPage > 0 && newHistory.length <= historyPage * historyRowsPerPage) {
+					setHistoryPage(historyPage - 1);
+				}
+
 				enqueueSnackbar("Entrada eliminada correctamente", {
 					variant: "success",
 					anchorOrigin: { vertical: "bottom", horizontal: "right" },
@@ -1073,29 +1096,32 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 							</Box>
 
 							{updateHistory.length > 0 ? (
-								<TableContainer>
-									<Table size="small">
-										<TableHead>
-											<TableRow>
-												<TableCell width="20%">Fecha/Hora</TableCell>
-												<TableCell width="15%">Tipo</TableCell>
-												<TableCell width="10%" align="center">
-													Estado
-												</TableCell>
-												<TableCell width="12%" align="center">
-													Mov. Added
-												</TableCell>
-												<TableCell width="12%" align="center">
-													Mov. Total
-												</TableCell>
-												<TableCell width="15%">Origen</TableCell>
-												<TableCell width="10%" align="center">
-													Acciones
-												</TableCell>
-											</TableRow>
-										</TableHead>
-										<TableBody>
-											{updateHistory.map((entry, index) => (
+								<>
+									<TableContainer>
+										<Table size="small">
+											<TableHead>
+												<TableRow>
+													<TableCell width="20%">Fecha/Hora</TableCell>
+													<TableCell width="15%">Tipo</TableCell>
+													<TableCell width="10%" align="center">
+														Estado
+													</TableCell>
+													<TableCell width="12%" align="center">
+														Mov. Added
+													</TableCell>
+													<TableCell width="12%" align="center">
+														Mov. Total
+													</TableCell>
+													<TableCell width="15%">Origen</TableCell>
+													<TableCell width="10%" align="center">
+														Acciones
+													</TableCell>
+												</TableRow>
+											</TableHead>
+											<TableBody>
+												{paginatedHistory.map((entry, index) => {
+													const actualIndex = historyPage * historyRowsPerPage + index;
+													return (
 													<TableRow key={index} hover>
 														<TableCell>
 															<Typography variant="caption">
@@ -1143,18 +1169,31 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 																<IconButton
 																	size="small"
 																	color="error"
-																	onClick={() => handleDeleteHistoryEntry(index)}
-																	disabled={deletingHistoryEntry === index}
+																	onClick={() => handleDeleteHistoryEntry(actualIndex)}
+																	disabled={deletingHistoryEntry === actualIndex}
 																>
 																	<Trash size={16} />
 																</IconButton>
 															</Tooltip>
 														</TableCell>
 													</TableRow>
-											))}
+												);
+											})}
 										</TableBody>
 									</Table>
 								</TableContainer>
+								<TablePagination
+									rowsPerPageOptions={[5, 10, 25, 50]}
+									component="div"
+									count={updateHistory.length}
+									rowsPerPage={historyRowsPerPage}
+									page={historyPage}
+									onPageChange={handleChangeHistoryPage}
+									onRowsPerPageChange={handleChangeHistoryRowsPerPage}
+									labelRowsPerPage="Filas por página:"
+									labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+								/>
+								</>
 							) : (
 								<Alert severity="info">No hay entradas en el historial de actualizaciones</Alert>
 							)}
