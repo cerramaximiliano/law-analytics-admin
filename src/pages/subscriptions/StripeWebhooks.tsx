@@ -196,6 +196,13 @@ const StripeWebhooks = () => {
 					</CardContent>
 				</Card>
 
+				{/* Información sobre el período de datos */}
+				<Alert severity="info">
+					<Typography variant="body2">
+						<strong>Período de datos:</strong> Los eventos y webhooks mostrados corresponden a los últimos 30 días de actividad en Stripe.
+					</Typography>
+				</Alert>
+
 				{/* Indicadores clave */}
 				<Grid container spacing={3}>
 					<Grid item xs={12} sm={6} md={3}>
@@ -349,7 +356,7 @@ const StripeWebhooks = () => {
 									{data.pending_details.map((webhook) => (
 										<TableRow key={webhook.id}>
 											<TableCell>
-												<Chip label={webhook.type} size="small" color="warning" />
+												<Chip label={webhook.type} size="small" color="warning" sx={{ color: "rgba(0, 0, 0, 0.87)" }} />
 											</TableCell>
 											<TableCell>
 												<Stack direction="row" spacing={1} alignItems="center">
