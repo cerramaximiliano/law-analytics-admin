@@ -11,7 +11,7 @@ const adminAxios: AxiosInstance = axios.create({
 	headers: {
 		"Content-Type": "application/json",
 	},
-	withCredentials: false, // No necesitamos cookies, usamos Authorization header
+	withCredentials: true, // Para manejar cookies httpOnly
 });
 
 // Helper function to get auth token
@@ -73,9 +73,15 @@ const getAuthToken = () => {
 adminAxios.interceptors.request.use(
 	(config: InternalAxiosRequestConfig) => {
 		const token = getAuthToken();
+		console.log("🔑 [adminAxios] Token found:", token ? `${token.substring(0, 20)}...` : "NO TOKEN");
+		console.log("🔑 [adminAxios] Request URL:", config.url);
+		console.log("🔑 [adminAxios] Request headers before:", config.headers);
 
 		if (token && config.headers) {
 			config.headers.Authorization = `Bearer ${token}`;
+			console.log("✅ [adminAxios] Authorization header set");
+		} else {
+			console.warn("⚠️ [adminAxios] No token available or headers missing");
 		}
 
 		return config;
