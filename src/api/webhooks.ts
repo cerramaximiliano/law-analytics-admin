@@ -51,8 +51,8 @@ export interface WebhooksStatusResponse {
 class WebhooksService {
 	async getWebhooksStatus(): Promise<WebhooksStatusResponse> {
 		try {
-			console.log("🔍 Requesting webhooks status from:", import.meta.env.VITE_ADMIN_URL + "/api/admin/webhooks/status");
-			const response = await adminAxios.get("/api/admin/webhooks/status");
+			console.log("🔍 Requesting webhooks status from:", import.meta.env.VITE_ADMIN_URL + "/api/webhooks/status");
+			const response = await adminAxios.get("/api/webhooks/status");
 			console.log("✅ Webhooks status response:", response.data);
 			return response.data;
 		} catch (error: any) {
@@ -63,7 +63,7 @@ class WebhooksService {
 
 			// Si es un error 404, el endpoint no existe
 			if (error.response?.status === 404) {
-				throw new Error("El endpoint /api/admin/webhooks/status no está disponible en el servidor");
+				throw new Error("El endpoint /api/webhooks/status no está disponible en el servidor");
 			}
 
 			// Si es un error 401, hay problema de autenticación
@@ -77,8 +77,8 @@ class WebhooksService {
 
 	async runHealthCheck(): Promise<any> {
 		try {
-			console.log("🔧 Running webhooks health check from:", import.meta.env.VITE_ADMIN_URL + "/api/admin/webhooks/health-check");
-			const response = await adminAxios.post("/api/admin/webhooks/health-check");
+			console.log("🔧 Running webhooks health check from:", import.meta.env.VITE_ADMIN_URL + "/api/webhooks/health-check");
+			const response = await adminAxios.post("/api/webhooks/health-check");
 			console.log("✅ Health check response:", response.data);
 			return response.data;
 		} catch (error: any) {
@@ -89,7 +89,7 @@ class WebhooksService {
 
 			// Si es un error 404, el endpoint no existe
 			if (error.response?.status === 404) {
-				throw new Error("El endpoint /api/admin/webhooks/health-check no está disponible en el servidor");
+				throw new Error("El endpoint /api/webhooks/health-check no está disponible en el servidor");
 			}
 
 			// Si es un error 401, hay problema de autenticación
