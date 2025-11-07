@@ -1,4 +1,4 @@
-import authAxios from "utils/authAxios";
+import adminAxios from "utils/adminAxios";
 
 export interface WebhookEndpoint {
 	id: string;
@@ -51,8 +51,8 @@ export interface WebhooksStatusResponse {
 class WebhooksService {
 	async getWebhooksStatus(): Promise<WebhooksStatusResponse> {
 		try {
-			console.log("🔍 Requesting webhooks status from:", import.meta.env.VITE_AUTH_URL + "/api/admin/webhooks/status");
-			const response = await authAxios.get("/api/admin/webhooks/status");
+			console.log("🔍 Requesting webhooks status from:", import.meta.env.VITE_ADMIN_URL + "/api/admin/webhooks/status");
+			const response = await adminAxios.get("/api/admin/webhooks/status");
 			console.log("✅ Webhooks status response:", response.data);
 			return response.data;
 		} catch (error: any) {
@@ -77,8 +77,8 @@ class WebhooksService {
 
 	async runHealthCheck(): Promise<any> {
 		try {
-			console.log("🔧 Running webhooks health check from:", import.meta.env.VITE_AUTH_URL + "/api/admin/webhooks/health-check");
-			const response = await authAxios.post("/api/admin/webhooks/health-check");
+			console.log("🔧 Running webhooks health check from:", import.meta.env.VITE_ADMIN_URL + "/api/admin/webhooks/health-check");
+			const response = await adminAxios.post("/api/admin/webhooks/health-check");
 			console.log("✅ Health check response:", response.data);
 			return response.data;
 		} catch (error: any) {
