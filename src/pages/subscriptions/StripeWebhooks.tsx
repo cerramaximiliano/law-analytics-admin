@@ -34,14 +34,18 @@ const StripeWebhooks = () => {
 	const { enqueueSnackbar } = useSnackbar();
 	const [loading, setLoading] = useState(true);
 	const [data, setData] = useState<WebhooksStatus | null>(null);
+	const [error, setError] = useState<string | null>(null);
 
 	const fetchWebhooksStatus = async () => {
 		try {
 			setLoading(true);
+			setError(null);
 			const response = await WebhooksService.getWebhooksStatus();
 			setData(response.data);
 		} catch (error: any) {
-			enqueueSnackbar(error.message || "Error al cargar el estado de webhooks", {
+			const errorMessage = error.message || "Error al cargar el estado de webhooks";
+			setError(errorMessage);
+			enqueueSnackbar(errorMessage, {
 				variant: "error",
 			});
 		} finally {
@@ -59,6 +63,38 @@ const StripeWebhooks = () => {
 				<Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
 					<CircularProgress />
 				</Box>
+			</MainCard>
+		);
+	}
+
+	if (error && !data) {
+		return (
+			<MainCard
+				title="Estado de Stripe Webhooks"
+				secondary={
+					<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchWebhooksStatus}>
+						Reintentar
+					</Button>
+				}
+			>
+				<Alert severity="error" sx={{ mb: 2 }}>
+					<Typography variant="subtitle2" fontWeight="bold">
+						Error al cargar información de webhooks
+					</Typography>
+					<Typography variant="body2" sx={{ mt: 1 }}>
+						{error}
+					</Typography>
+				</Alert>
+				<Alert severity="info">
+					<Typography variant="body2">
+						<strong>Posibles causas:</strong>
+					</Typography>
+					<ul style={{ marginTop: "8px", marginBottom: 0 }}>
+						<li>El endpoint no está disponible en el servidor ({import.meta.env.VITE_AUTH_URL})</li>
+						<li>Problemas de autenticación - intente cerrar sesión y volver a iniciar</li>
+						<li>El servidor está temporalmente fuera de servicio</li>
+					</ul>
+				</Alert>
 			</MainCard>
 		);
 	}
