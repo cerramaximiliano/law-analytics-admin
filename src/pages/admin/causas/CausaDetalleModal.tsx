@@ -760,7 +760,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 								{causa.caratula || "Sin carátula"}
 							</Typography>
 						</Box>
-						{!isEditing && (
+						{!isEditing && activeTab === 0 && (
 							<Tooltip title="Editar causa">
 								<IconButton onClick={handleEditClick} color="primary" size="small">
 									<Edit size={20} />
@@ -778,7 +778,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 					</Tabs>
 				</Box>
 
-				<DialogContent dividers>
+				<DialogContent dividers sx={{ minHeight: "500px", maxHeight: "70vh", overflowY: "auto" }}>
 					{/* Tab Panel 0: Información General */}
 					{activeTab === 0 && (
 						<Grid container spacing={2}>
