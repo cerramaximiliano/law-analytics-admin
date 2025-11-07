@@ -19,7 +19,7 @@ SERVER_USER="ubuntu"
 SERVER_IP="15.229.93.121"
 SSH_KEY="/home/mcerra/www/lawanalytics.app.pem"
 REMOTE_PATH="/var/www/${PROJECT_NAME}"
-BUILD_DIR="dist"
+BUILD_DIR="build"
 
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}  Despliegue de ${DOMAIN}${NC}"
@@ -46,14 +46,7 @@ fi
 
 # 2. Preparar directorio en el servidor
 echo -e "\n${YELLOW}[2/7] Preparando directorio en el servidor...${NC}"
-remote_sudo "
-	if [ -d ${REMOTE_PATH} ]; then
-		echo 'Directorio existente, haciendo backup...'
-		mv ${REMOTE_PATH} ${REMOTE_PATH}.backup.\$(date +%Y%m%d_%H%M%S)
-	fi
-	mkdir -p ${REMOTE_PATH}
-	chown -R ubuntu:ubuntu ${REMOTE_PATH}
-"
+remote_sudo "if [ -d ${REMOTE_PATH} ]; then echo Haciendo backup...; mv ${REMOTE_PATH} ${REMOTE_PATH}.backup.\$(date +%Y%m%d_%H%M%S); fi && mkdir -p ${REMOTE_PATH} && chown -R ubuntu:ubuntu ${REMOTE_PATH}"
 echo -e "${GREEN}✓ Directorio preparado${NC}"
 
 # 3. Clonar repositorio
@@ -66,19 +59,15 @@ remote_exec "
 "
 echo -e "${GREEN}✓ Repositorio clonado${NC}"
 
-# 4. Copiar variables de entorno
-echo -e "\n${YELLOW}[4/7] ¿Deseas copiar el archivo .env local al servidor? (s/n)${NC}"
-read -r copy_env
-if [ "$copy_env" = "s" ] || [ "$copy_env" = "S" ]; then
-	if [ -f ".env" ]; then
-		scp -i "${SSH_KEY}" .env "${SERVER_USER}@${SERVER_IP}:${REMOTE_PATH}/.env"
-		echo -e "${GREEN}✓ Archivo .env copiado${NC}"
-	else
-		echo -e "${RED}✗ No se encontró archivo .env local${NC}"
-		echo -e "${YELLOW}Deberás crear el archivo .env manualmente en el servidor${NC}"
-	fi
+# 4. Copiar variables de entorno de producción
+echo -e "\n${YELLOW}[4/7] Copiando variables de entorno de producción...${NC}"
+if [ -f ".env.production" ]; then
+	scp -i "${SSH_KEY}" .env.production "${SERVER_USER}@${SERVER_IP}:${REMOTE_PATH}/.env"
+	echo -e "${GREEN}✓ Archivo .env.production copiado como .env${NC}"
 else
-	echo -e "${YELLOW}⚠ Recuerda crear el archivo .env en el servidor manualmente${NC}"
+	echo -e "${RED}✗ No se encontró archivo .env.production${NC}"
+	echo -e "${YELLOW}⚠ Deberás crear el archivo .env manualmente en el servidor${NC}"
+	exit 1
 fi
 
 # 5. Instalar dependencias y hacer build
