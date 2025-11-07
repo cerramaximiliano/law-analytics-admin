@@ -115,7 +115,7 @@ const StripeWebhooks = () => {
 						<strong>Posibles causas:</strong>
 					</Typography>
 					<ul style={{ marginTop: "8px", marginBottom: 0 }}>
-						<li>El endpoint no está disponible en el servidor ({import.meta.env.VITE_AUTH_URL})</li>
+						<li>El endpoint no está disponible en el servidor ({import.meta.env.VITE_ADMIN_URL})</li>
 						<li>Problemas de autenticación - intente cerrar sesión y volver a iniciar</li>
 						<li>El servidor está temporalmente fuera de servicio</li>
 					</ul>
