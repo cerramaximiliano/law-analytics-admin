@@ -1,9 +1,8 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import { useGoogleLogin, CredentialResponse } from "@react-oauth/google";
 import { useState } from "react";
 // material-ui
-import { Grid, Stack, Alert, Typography, Box, LinearProgress } from "@mui/material";
+import { Grid, Alert, Typography, Box, LinearProgress } from "@mui/material";
 
 // project-imports
 import Logo from "components/logo";
@@ -105,22 +104,7 @@ const Login = () => {
 						<Logo />
 					</Grid>
 					<Grid item xs={12}>
-						<Stack direction="row" justifyContent="space-between" alignItems="baseline" sx={{ mb: { xs: -0.5, sm: 0.5 } }}>
-							<Typography variant="h3">Inicio</Typography>
-							<Typography
-								component={isAnyLoading ? Box : Link}
-								to={isAnyLoading ? undefined : "/register"}
-								variant="body1"
-								sx={{
-									textDecoration: "none",
-									color: isAnyLoading ? "text.disabled" : "primary.main",
-									cursor: isAnyLoading ? "not-allowed" : "pointer",
-									pointerEvents: isAnyLoading ? "none" : "auto",
-								}}
-							>
-								¿No tienes una cuenta?
-							</Typography>
-						</Stack>
+						<Typography variant="h3">Inicio</Typography>
 					</Grid>
 					<Grid item xs={12}>
 						{error && (
