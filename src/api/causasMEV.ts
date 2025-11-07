@@ -1,5 +1,15 @@
 import mevAxios from "utils/mevAxios";
 
+// Interface para movimientos MEV
+export interface MovimientoMEV {
+	_id?: { $oid: string };
+	fecha: { $date: string } | string;
+	detalle: string;
+	texto?: string;
+	tipo?: string;
+	url?: string;
+}
+
 // Interface para Causa MEV (hereda de Causa pero puede tener campos adicionales si es necesario)
 export interface CausaMEV {
 	_id: string | { $oid: string };
@@ -14,11 +24,13 @@ export interface CausaMEV {
 	update?: boolean;
 	folderIds?: string[];
 	userCausaIds?: string[];
+	movimiento?: MovimientoMEV[]; // MEV usa 'movimiento' (singular)
 	movimientosCount?: number;
 	lastUpdate?: { $date: string } | string;
 	fechaUltimoMovimiento?: { $date: string } | string;
 	createdAt?: { $date: string } | string;
 	updatedAt?: { $date: string } | string;
+	updateHistory?: any[];
 }
 
 export interface CausasMEVResponse {
