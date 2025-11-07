@@ -57,6 +57,29 @@ const admin: NavItemType = {
 				},
 			],
 		},
+		{
+			id: "carpetas-mev",
+			title: "Carpetas MEV",
+			type: "collapse",
+			icon: Folder2,
+			breadcrumbs: true,
+			children: [
+				{
+					id: "mev-verified-app",
+					title: "Carpetas Verificadas (App)",
+					type: "item",
+					url: "/admin/mev/verified-app",
+					breadcrumbs: true,
+				},
+				{
+					id: "mev-non-verified",
+					title: "Carpetas No Verificadas (App)",
+					type: "item",
+					url: "/admin/mev/non-verified",
+					breadcrumbs: true,
+				},
+			],
+		},
 	],
 };
 

@@ -20,6 +20,10 @@ const CarpetasVerificadas = Loadable(lazy(() => import("pages/admin/causas/Carpe
 const CarpetasVerificadasApp = Loadable(lazy(() => import("pages/admin/causas/CarpetasVerificadasApp")));
 const CarpetasNoVerificadas = Loadable(lazy(() => import("pages/admin/causas/CarpetasNoVerificadas")));
 
+// MEV pages
+const CarpetasMEVVerificadas = Loadable(lazy(() => import("pages/admin/mev/CarpetasMEVVerificadas")));
+const CarpetasMEVNoVerificadas = Loadable(lazy(() => import("pages/admin/mev/CarpetasMEVNoVerificadas")));
+
 // Placeholder pages
 const Dashboard = () => (
 	<div style={{ padding: "2rem", textAlign: "center" }}>
@@ -106,6 +110,22 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<CarpetasNoVerificadas />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "mev/verified-app",
+							element: (
+								<AdminRoleGuard>
+									<CarpetasMEVVerificadas />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "mev/non-verified",
+							element: (
+								<AdminRoleGuard>
+									<CarpetasMEVNoVerificadas />
 								</AdminRoleGuard>
 							),
 						},
