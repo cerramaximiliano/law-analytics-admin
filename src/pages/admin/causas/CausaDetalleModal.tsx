@@ -169,14 +169,18 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			setHistoryPage(0);
 			setIsEditing(false);
 			setEditedCausa({});
-			setCurrentMovimientos((causa as any).movimientos || []);
+			// MEV usa 'movimiento' (singular), otros servicios usan 'movimientos' (plural)
+			const movements = apiService === "mev"
+				? (causa as any).movimiento || []
+				: (causa as any).movimientos || [];
+			setCurrentMovimientos(movements);
 			const history = (causa as any).updateHistory || [];
 			console.log("UpdateHistory loaded:", history);
 			setUpdateHistory(history);
 			// Cargar notificaciones judiciales
 			loadJudicialMovements();
 		}
-	}, [open, causa]);
+	}, [open, causa, apiService]);
 
 	// Función para cargar notificaciones judiciales
 	const loadJudicialMovements = async () => {
