@@ -37,7 +37,20 @@ import { Causa } from "api/causasPjn";
 import { CausasPjnService } from "api/causasPjn";
 import CausasService from "api/causas";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
-import { CloseCircle, Link as LinkIcon, Trash, Edit, Save2, CloseSquare, TickCircle, AddCircle, Send2, Eye } from "iconsax-react";
+import {
+	CloseCircle,
+	Link as LinkIcon,
+	Trash,
+	Edit,
+	Save2,
+	CloseSquare,
+	TickCircle,
+	AddCircle,
+	Send2,
+	Eye,
+	ArrowDown2,
+	ArrowUp2,
+} from "iconsax-react";
 import { useSnackbar } from "notistack";
 
 interface CausaDetalleModalProps {
@@ -145,6 +158,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 	const [deletingHistoryEntry, setDeletingHistoryEntry] = useState<number | null>(null);
 	const [historyPage, setHistoryPage] = useState(0);
 	const [historyRowsPerPage, setHistoryRowsPerPage] = useState(10);
+	const [historyOrderBy, setHistoryOrderBy] = useState<"asc" | "desc">("desc");
 
 	// Resetear estados cuando se abre el modal
 	useEffect(() => {
@@ -294,8 +308,14 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 		setMovimientosPage(0);
 	};
 
-	// Paginación para historial de actualizaciones
-	const paginatedHistory = updateHistory.slice(historyPage * historyRowsPerPage, historyPage * historyRowsPerPage + historyRowsPerPage);
+	// Paginación y ordenamiento para historial de actualizaciones
+	const sortedHistory = [...updateHistory].sort((a, b) => {
+		const dateA = new Date(a.timestamp || a.date || a.createdAt || 0).getTime();
+		const dateB = new Date(b.timestamp || b.date || b.createdAt || 0).getTime();
+		return historyOrderBy === "desc" ? dateB - dateA : dateA - dateB;
+	});
+
+	const paginatedHistory = sortedHistory.slice(historyPage * historyRowsPerPage, historyPage * historyRowsPerPage + historyRowsPerPage);
 
 	const handleChangeHistoryPage = (_event: unknown, newPage: number) => {
 		setHistoryPage(newPage);
@@ -303,6 +323,11 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 
 	const handleChangeHistoryRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setHistoryRowsPerPage(parseInt(event.target.value, 10));
+		setHistoryPage(0);
+	};
+
+	const handleToggleHistoryOrder = () => {
+		setHistoryOrderBy((prev) => (prev === "desc" ? "asc" : "desc"));
 		setHistoryPage(0);
 	};
 
@@ -1082,16 +1107,27 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 							<Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
 								<Typography variant="h6">Historial de Actualizaciones</Typography>
 								{updateHistory.length > 0 && (
-									<Button
-										variant="outlined"
-										color="error"
-										size="small"
-										startIcon={<Trash size={18} />}
-										onClick={handleClearUpdateHistory}
-										disabled={clearingHistory}
-									>
-										{clearingHistory ? "Limpiando..." : "Limpiar Todo"}
-									</Button>
+									<Stack direction="row" spacing={1}>
+										<Button
+											variant="outlined"
+											color="primary"
+											size="small"
+											startIcon={historyOrderBy === "desc" ? <ArrowDown2 size={18} /> : <ArrowUp2 size={18} />}
+											onClick={handleToggleHistoryOrder}
+										>
+											{historyOrderBy === "desc" ? "Más recientes" : "Más antiguos"}
+										</Button>
+										<Button
+											variant="outlined"
+											color="error"
+											size="small"
+											startIcon={<Trash size={18} />}
+											onClick={handleClearUpdateHistory}
+											disabled={clearingHistory}
+										>
+											{clearingHistory ? "Limpiando..." : "Limpiar Todo"}
+										</Button>
+									</Stack>
 								)}
 							</Box>
 
