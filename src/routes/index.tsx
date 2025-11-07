@@ -25,6 +25,9 @@ const CarpetasNoVerificadas = Loadable(lazy(() => import("pages/admin/causas/Car
 const CarpetasMEVVerificadas = Loadable(lazy(() => import("pages/admin/mev/CarpetasMEVVerificadas")));
 const CarpetasMEVNoVerificadas = Loadable(lazy(() => import("pages/admin/mev/CarpetasMEVNoVerificadas")));
 
+// Subscriptions pages
+const StripeWebhooks = Loadable(lazy(() => import("pages/subscriptions/StripeWebhooks")));
+
 // Placeholder pages
 const Dashboard = () => (
 	<div style={{ padding: "2rem", textAlign: "center" }}>
@@ -135,6 +138,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<CarpetasMEVNoVerificadas />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "subscriptions/stripe-webhooks",
+							element: (
+								<AdminRoleGuard>
+									<StripeWebhooks />
 								</AdminRoleGuard>
 							),
 						},

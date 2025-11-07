@@ -1,5 +1,5 @@
 // assets
-import { Setting3, Folder2 } from "iconsax-react";
+import { Setting3, Folder2, MoneyRecive } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -83,6 +83,22 @@ const admin: NavItemType = {
 					title: "Carpetas No Verificadas (App)",
 					type: "item",
 					url: "/admin/mev/non-verified",
+					breadcrumbs: true,
+				},
+			],
+		},
+		{
+			id: "subscriptions",
+			title: "Suscripciones",
+			type: "collapse",
+			icon: MoneyRecive,
+			breadcrumbs: true,
+			children: [
+				{
+					id: "stripe-webhooks",
+					title: "Stripe Webhooks",
+					type: "item",
+					url: "/admin/subscriptions/stripe-webhooks",
 					breadcrumbs: true,
 				},
 			],
