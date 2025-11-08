@@ -12,12 +12,10 @@ dist
 
 # Misc
 .DS_Store
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.qa
+
+# Environment variables - ignore ALL .env files
+.env*
+!.env.example
 
 # Logs
 npm-debug.log*
