@@ -51,16 +51,9 @@ export interface WebhooksStatusResponse {
 class WebhooksService {
 	async getWebhooksStatus(): Promise<WebhooksStatusResponse> {
 		try {
-			console.log("🔍 Requesting webhooks status from:", import.meta.env.VITE_ADMIN_URL + "/api/webhooks/status");
 			const response = await adminAxios.get("/api/webhooks/status");
-			console.log("✅ Webhooks status response:", response.data);
 			return response.data;
 		} catch (error: any) {
-			console.error("❌ Error fetching webhooks status:", error);
-			console.error("❌ Error response:", error.response);
-			console.error("❌ Error status:", error.response?.status);
-			console.error("❌ Error data:", error.response?.data);
-
 			// Si es un error 404, el endpoint no existe
 			if (error.response?.status === 404) {
 				throw new Error("El endpoint /api/webhooks/status no está disponible en el servidor");
@@ -77,16 +70,9 @@ class WebhooksService {
 
 	async runHealthCheck(): Promise<any> {
 		try {
-			console.log("🔧 Running webhooks health check from:", import.meta.env.VITE_ADMIN_URL + "/api/webhooks/health-check");
 			const response = await adminAxios.post("/api/webhooks/health-check");
-			console.log("✅ Health check response:", response.data);
 			return response.data;
 		} catch (error: any) {
-			console.error("❌ Error running health check:", error);
-			console.error("❌ Error response:", error.response);
-			console.error("❌ Error status:", error.response?.status);
-			console.error("❌ Error data:", error.response?.data);
-
 			// Si es un error 404, el endpoint no existe
 			if (error.response?.status === 404) {
 				throw new Error("El endpoint /api/webhooks/health-check no está disponible en el servidor");
@@ -98,6 +84,29 @@ class WebhooksService {
 			}
 
 			throw new Error(error.response?.data?.message || "Error al ejecutar health check");
+		}
+	}
+
+	async updateGracePeriod(userId: string, expiresAt: string, adminEmail: string): Promise<any> {
+		try {
+			const response = await adminAxios.post("/api/webhooks/update-grace-period", {
+				userId,
+				expiresAt,
+				adminEmail,
+			});
+			return response.data;
+		} catch (error: any) {
+			// Si es un error 404, el endpoint no existe
+			if (error.response?.status === 404) {
+				throw new Error("El endpoint /api/webhooks/update-grace-period no está disponible en el servidor");
+			}
+
+			// Si es un error 401, hay problema de autenticación
+			if (error.response?.status === 401) {
+				throw new Error("No autorizado. Por favor, inicie sesión nuevamente.");
+			}
+
+			throw new Error(error.response?.data?.message || "Error al actualizar el período de gracia");
 		}
 	}
 }

@@ -28,6 +28,12 @@ const CarpetasMEVNoVerificadas = Loadable(lazy(() => import("pages/admin/mev/Car
 // Subscriptions pages
 const StripeWebhooks = Loadable(lazy(() => import("pages/subscriptions/StripeWebhooks")));
 
+// Usuarios pages
+const Suscripciones = Loadable(lazy(() => import("pages/usuarios/Suscripciones")));
+
+// Server Status
+const ServerStatus = Loadable(lazy(() => import("pages/admin/server-status")));
+
 // Placeholder pages
 const Dashboard = () => (
 	<div style={{ padding: "2rem", textAlign: "center" }}>
@@ -84,6 +90,14 @@ export default function Routes() {
 						{
 							path: "",
 							element: <Navigate to="/admin/causas/workers" replace />,
+						},
+						{
+							path: "usuarios/suscripciones",
+							element: (
+								<AdminRoleGuard>
+									<Suscripciones />
+								</AdminRoleGuard>
+							),
 						},
 						{
 							path: "causas/workers",
@@ -146,6 +160,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<StripeWebhooks />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "server-status",
+							element: (
+								<AdminRoleGuard>
+									<ServerStatus />
 								</AdminRoleGuard>
 							),
 						},

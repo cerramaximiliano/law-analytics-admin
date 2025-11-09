@@ -1,5 +1,5 @@
 // assets
-import { Setting3, Folder2, MoneyRecive } from "iconsax-react";
+import { Setting3, Folder2, MoneyRecive, Status } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -95,6 +95,13 @@ const admin: NavItemType = {
 			breadcrumbs: true,
 			children: [
 				{
+					id: "usuarios-suscripciones",
+					title: "Suscripciones de Usuarios",
+					type: "item",
+					url: "/admin/usuarios/suscripciones",
+					breadcrumbs: true,
+				},
+				{
 					id: "stripe-webhooks",
 					title: "Stripe Webhooks",
 					type: "item",
@@ -102,6 +109,14 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 			],
+		},
+		{
+			id: "server-status",
+			title: "Estado del Servidor",
+			type: "item",
+			icon: Status,
+			url: "/admin/server-status",
+			breadcrumbs: true,
 		},
 	],
 };
