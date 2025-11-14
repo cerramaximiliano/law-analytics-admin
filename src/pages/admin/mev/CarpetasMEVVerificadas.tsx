@@ -53,6 +53,7 @@ const CarpetasMEVVerificadas = () => {
 	const [searchObjeto, setSearchObjeto] = useState<string>("");
 	const [searchCaratula, setSearchCaratula] = useState<string>("");
 	const [searchFechaUltimoMovimiento, setSearchFechaUltimoMovimiento] = useState<Dayjs | null>(null);
+	const [searchLastUpdate, setSearchLastUpdate] = useState<Dayjs | null>(null);
 
 	// Ordenamiento
 	const [sortBy, setSortBy] = useState<string>("year");
@@ -80,6 +81,7 @@ const CarpetasMEVVerificadas = () => {
 		sortByParam?: string,
 		sortOrderParam?: "asc" | "desc",
 		fechaUltimoMovimiento?: Dayjs | null,
+		lastUpdate?: Dayjs | null,
 	) => {
 		try {
 			setLoading(true);
@@ -108,6 +110,10 @@ const CarpetasMEVVerificadas = () => {
 			if (fechaUltimoMovimiento) {
 				// Formatear fecha al formato requerido: "2022-11-29T00:00:00.000+00:00"
 				params.fechaUltimoMovimiento = fechaUltimoMovimiento.format("YYYY-MM-DD") + "T00:00:00.000+00:00";
+			}
+
+			if (lastUpdate) {
+				params.lastUpdate = lastUpdate.format("YYYY-MM-DD") + "T00:00:00.000+00:00";
 			}
 
 			// Agregar parámetros de ordenamiento
@@ -140,7 +146,7 @@ const CarpetasMEVVerificadas = () => {
 
 	// Efecto para cargar causas cuando cambian los filtros, paginación u ordenamiento
 	useEffect(() => {
-		fetchCausas(page, rowsPerPage, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder, searchFechaUltimoMovimiento);
+		fetchCausas(page, rowsPerPage, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder, searchFechaUltimoMovimiento, searchLastUpdate);
 	}, [page, rowsPerPage, sortBy, sortOrder]);
 
 	// Handlers de paginación
@@ -155,13 +161,13 @@ const CarpetasMEVVerificadas = () => {
 
 	// Handler de refresh
 	const handleRefresh = () => {
-		fetchCausas(page, rowsPerPage, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder, searchFechaUltimoMovimiento);
+		fetchCausas(page, rowsPerPage, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder, searchFechaUltimoMovimiento, searchLastUpdate);
 	};
 
 	// Handler de búsqueda
 	const handleSearch = () => {
 		setPage(0); // Resetear a página 1
-		fetchCausas(0, rowsPerPage, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder, searchFechaUltimoMovimiento);
+		fetchCausas(0, rowsPerPage, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder, searchFechaUltimoMovimiento, searchLastUpdate);
 	};
 
 	// Handler de limpiar búsqueda
@@ -171,13 +177,19 @@ const CarpetasMEVVerificadas = () => {
 		setSearchObjeto("");
 		setSearchCaratula("");
 		setSearchFechaUltimoMovimiento(null);
+		setSearchLastUpdate(null);
 		setPage(0);
-		fetchCausas(0, rowsPerPage, "", "", "", "", sortBy, sortOrder, null);
+		fetchCausas(0, rowsPerPage, "", "", "", "", sortBy, sortOrder, null, null);
 	};
 
 	// Handler para establecer fecha de hoy
 	const handleSetToday = () => {
 		setSearchFechaUltimoMovimiento(dayjs());
+	};
+
+	// Handler para establecer fecha de hoy en lastUpdate
+	const handleSetTodayLastUpdate = () => {
+		setSearchLastUpdate(dayjs());
 	};
 
 	// Handler de cambio de ordenamiento
@@ -360,6 +372,30 @@ const CarpetasMEVVerificadas = () => {
 									/>
 									<Tooltip title="Seleccionar fecha de hoy">
 										<Button variant="outlined" size="small" onClick={handleSetToday} sx={{ minWidth: "auto", px: 1.5 }}>
+											<Calendar size={18} />
+										</Button>
+									</Tooltip>
+								</Stack>
+							</LocalizationProvider>
+						</Grid>
+						<Grid item xs={12} md={6} lg={3}>
+							<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
+								<Stack direction="row" spacing={1}>
+									<DatePicker
+										label="Última Actualización"
+										value={searchLastUpdate}
+										onChange={(newValue) => setSearchLastUpdate(newValue)}
+										format="DD/MM/YYYY"
+										slotProps={{
+											textField: {
+												size: "small",
+												fullWidth: true,
+												placeholder: "Ej: 29/11/2022",
+											},
+										}}
+									/>
+									<Tooltip title="Seleccionar fecha de hoy">
+										<Button variant="outlined" size="small" onClick={handleSetTodayLastUpdate} sx={{ minWidth: "auto", px: 1.5 }}>
 											<Calendar size={18} />
 										</Button>
 									</Tooltip>
