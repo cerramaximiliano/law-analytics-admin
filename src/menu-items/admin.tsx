@@ -108,6 +108,13 @@ const admin: NavItemType = {
 					url: "/admin/subscriptions/stripe-webhooks",
 					breadcrumbs: true,
 				},
+				{
+					id: "cron-config",
+					title: "Configuración de Cron",
+					type: "item",
+					url: "/admin/subscriptions/cron-config",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{
