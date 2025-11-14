@@ -24,11 +24,16 @@ import {
 	TextField,
 	Button,
 } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs, { Dayjs } from "dayjs";
+import "dayjs/locale/es";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { CausasPjnService, Causa } from "api/causasPjn";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
-import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification } from "iconsax-react";
+import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification, Calendar } from "iconsax-react";
 import CausaDetalleModal from "./CausaDetalleModal";
 import JudicialMovementsModal from "./JudicialMovementsModal";
 
@@ -64,6 +69,7 @@ const CarpetasVerificadasApp = () => {
 	const [searchYear, setSearchYear] = useState<string>("");
 	const [searchObjeto, setSearchObjeto] = useState<string>("");
 	const [searchCaratula, setSearchCaratula] = useState<string>("");
+	const [searchFechaUltimoMovimiento, setSearchFechaUltimoMovimiento] = useState<Dayjs | null>(null);
 
 	// Ordenamiento
 	const [sortBy, setSortBy] = useState<string>("year");
@@ -91,6 +97,7 @@ const CarpetasVerificadasApp = () => {
 		caratula?: string,
 		sortByParam?: string,
 		sortOrderParam?: "asc" | "desc",
+		fechaUltimoMovimiento?: Dayjs | null,
 	) => {
 		try {
 			setLoading(true);
@@ -118,6 +125,11 @@ const CarpetasVerificadasApp = () => {
 
 			if (caratula && caratula.trim() !== "") {
 				params.caratula = caratula.trim();
+			}
+
+			if (fechaUltimoMovimiento) {
+				// Formatear fecha al formato requerido: "2022-11-29T00:00:00.000+00:00"
+				params.fechaUltimoMovimiento = fechaUltimoMovimiento.format("YYYY-MM-DD") + "T00:00:00.000+00:00";
 			}
 
 			// Agregar parámetros de ordenamiento
@@ -152,7 +164,18 @@ const CarpetasVerificadasApp = () => {
 	// Los filtros de búsqueda (searchNumber, etc.) NO están en las dependencias para evitar
 	// búsquedas automáticas mientras el usuario escribe. Se aplican al hacer clic en "Buscar"
 	useEffect(() => {
-		fetchCausas(page, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder);
+		fetchCausas(
+			page,
+			rowsPerPage,
+			fueroFilter,
+			searchNumber,
+			searchYear,
+			searchObjeto,
+			searchCaratula,
+			sortBy,
+			sortOrder,
+			searchFechaUltimoMovimiento,
+		);
 	}, [page, rowsPerPage, fueroFilter, sortBy, sortOrder]);
 
 	// Handlers de paginación
@@ -173,13 +196,35 @@ const CarpetasVerificadasApp = () => {
 
 	// Handler de refresh
 	const handleRefresh = () => {
-		fetchCausas(page, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder);
+		fetchCausas(
+			page,
+			rowsPerPage,
+			fueroFilter,
+			searchNumber,
+			searchYear,
+			searchObjeto,
+			searchCaratula,
+			sortBy,
+			sortOrder,
+			searchFechaUltimoMovimiento,
+		);
 	};
 
 	// Handler de búsqueda
 	const handleSearch = () => {
 		setPage(0); // Resetear a página 1
-		fetchCausas(0, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder);
+		fetchCausas(
+			0,
+			rowsPerPage,
+			fueroFilter,
+			searchNumber,
+			searchYear,
+			searchObjeto,
+			searchCaratula,
+			sortBy,
+			sortOrder,
+			searchFechaUltimoMovimiento,
+		);
 	};
 
 	// Handler de limpiar búsqueda
@@ -188,8 +233,14 @@ const CarpetasVerificadasApp = () => {
 		setSearchYear("");
 		setSearchObjeto("");
 		setSearchCaratula("");
+		setSearchFechaUltimoMovimiento(null);
 		setPage(0);
-		fetchCausas(0, rowsPerPage, fueroFilter, "", "", "", "", sortBy, sortOrder);
+		fetchCausas(0, rowsPerPage, fueroFilter, "", "", "", "", sortBy, sortOrder, null);
+	};
+
+	// Handler para establecer fecha de hoy
+	const handleSetToday = () => {
+		setSearchFechaUltimoMovimiento(dayjs());
 	};
 
 	// Handler de cambio de ordenamiento
@@ -348,7 +399,7 @@ const CarpetasVerificadasApp = () => {
 								placeholder="Ej: 2024"
 							/>
 						</Grid>
-						<Grid item xs={12} md={6} lg={3}>
+						<Grid item xs={12} md={6} lg={2}>
 							<TextField
 								fullWidth
 								label="Objeto"
@@ -358,7 +409,7 @@ const CarpetasVerificadasApp = () => {
 								placeholder="Ej: daños"
 							/>
 						</Grid>
-						<Grid item xs={12} md={6} lg={3}>
+						<Grid item xs={12} md={6} lg={2}>
 							<TextField
 								fullWidth
 								label="Carátula"
@@ -367,6 +418,30 @@ const CarpetasVerificadasApp = () => {
 								size="small"
 								placeholder="Ej: Pérez"
 							/>
+						</Grid>
+						<Grid item xs={12} md={6} lg={2}>
+							<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
+								<Stack direction="row" spacing={1}>
+									<DatePicker
+										label="Fecha Últ. Mov."
+										value={searchFechaUltimoMovimiento}
+										onChange={(newValue) => setSearchFechaUltimoMovimiento(newValue)}
+										format="DD/MM/YYYY"
+										slotProps={{
+											textField: {
+												size: "small",
+												fullWidth: true,
+												placeholder: "Ej: 29/11/2022",
+											},
+										}}
+									/>
+									<Tooltip title="Seleccionar fecha de hoy">
+										<Button variant="outlined" size="small" onClick={handleSetToday} sx={{ minWidth: "auto", px: 1.5 }}>
+											<Calendar size={18} />
+										</Button>
+									</Tooltip>
+								</Stack>
+							</LocalizationProvider>
 						</Grid>
 					</Grid>
 				</Grid>
