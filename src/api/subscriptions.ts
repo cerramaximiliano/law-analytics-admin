@@ -127,6 +127,7 @@ export interface GetSubscriptionsParams {
 	plan?: string;
 	sortBy?: string;
 	sortOrder?: "asc" | "desc";
+	testMode?: boolean;
 }
 
 class SubscriptionsService {
