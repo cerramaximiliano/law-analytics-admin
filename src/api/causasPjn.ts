@@ -25,6 +25,7 @@ export interface CausasResponse {
 	success: boolean;
 	message: string;
 	count: number;
+	totalInDatabase?: number;
 	pagination?: {
 		currentPage: number;
 		totalPages: number;
