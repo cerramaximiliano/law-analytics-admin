@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import {
 	Box,
 	Card,
+	CardContent,
 	Table,
 	TableBody,
 	TableCell,
@@ -62,6 +63,7 @@ const CarpetasVerificadasApp = () => {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [totalCount, setTotalCount] = useState(0);
+	const [totalInDatabase, setTotalInDatabase] = useState(0);
 	const [fueroFilter, setFueroFilter] = useState<string>("todos");
 
 	// Filtros de búsqueda
@@ -154,6 +156,7 @@ const CarpetasVerificadasApp = () => {
 			if (response.success) {
 				setCausas(response.data);
 				setTotalCount(response.count || 0);
+				setTotalInDatabase(response.totalInDatabase || 0);
 			}
 		} catch (error) {
 			enqueueSnackbar("Error al cargar las carpetas verificadas", {
@@ -376,6 +379,25 @@ const CarpetasVerificadasApp = () => {
 
 	return (
 		<MainCard title="Carpetas Verificadas (App)">
+			<Box sx={{ mb: 3 }}>
+				<Card sx={{ backgroundColor: "primary.lighter", border: 1, borderColor: "primary.main" }}>
+					<CardContent>
+						<Stack direction="row" justifyContent="space-between" alignItems="center">
+							<Typography variant="caption" color="text.secondary">
+								Resultados encontrados
+							</Typography>
+							<Typography variant="h4" color="primary.main" fontWeight="bold">
+								{totalCount}/{totalInDatabase}
+							</Typography>
+						</Stack>
+						<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
+							{totalCount === totalInDatabase
+								? "Mostrando todos los resultados"
+								: `Mostrando ${((totalCount / totalInDatabase) * 100).toFixed(1)}% del total`}
+						</Typography>
+					</CardContent>
+				</Card>
+			</Box>
 			<Grid container spacing={3}>
 				{/* Filtros */}
 				<Grid item xs={12}>
