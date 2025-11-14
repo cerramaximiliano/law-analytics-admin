@@ -59,6 +59,7 @@ const Suscripciones = () => {
 	const [total, setTotal] = useState(0);
 	const [statusFilter, setStatusFilter] = useState("");
 	const [planFilter, setPlanFilter] = useState("");
+	const [testMode, setTestMode] = useState(false); // false = LIVE (por defecto), true = TEST
 
 	// Modal de detalles
 	const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
@@ -79,6 +80,7 @@ const Suscripciones = () => {
 			const params: any = {
 				page,
 				limit,
+				testMode, // Enviar testMode a la API
 			};
 
 			if (statusFilter) {
@@ -106,7 +108,7 @@ const Suscripciones = () => {
 
 	useEffect(() => {
 		fetchSubscriptions();
-	}, [page, statusFilter, planFilter]);
+	}, [page, statusFilter, planFilter, testMode]);
 
 	const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
 		setPage(value);
@@ -359,7 +361,7 @@ const Suscripciones = () => {
 				<Card variant="outlined">
 					<CardContent>
 						<Grid container spacing={2} alignItems="center">
-							<Grid item xs={12} sm={6} md={4}>
+							<Grid item xs={12} sm={6} md={3}>
 								<TextField
 									select
 									fullWidth
@@ -378,7 +380,7 @@ const Suscripciones = () => {
 									<MenuItem value="past_due">Pago Vencido</MenuItem>
 								</TextField>
 							</Grid>
-							<Grid item xs={12} sm={6} md={4}>
+							<Grid item xs={12} sm={6} md={3}>
 								<TextField
 									select
 									fullWidth
@@ -396,7 +398,23 @@ const Suscripciones = () => {
 									<MenuItem value="premium">Premium</MenuItem>
 								</TextField>
 							</Grid>
-							<Grid item xs={12} sm={12} md={4}>
+							<Grid item xs={12} sm={6} md={3}>
+								<TextField
+									select
+									fullWidth
+									label="Modo"
+									value={testMode ? "test" : "live"}
+									onChange={(e) => {
+										setTestMode(e.target.value === "test");
+										setPage(1);
+									}}
+									size="small"
+								>
+									<MenuItem value="live">🟢 LIVE (Producción)</MenuItem>
+									<MenuItem value="test">🟡 TEST (Pruebas)</MenuItem>
+								</TextField>
+							</Grid>
+							<Grid item xs={12} sm={6} md={3}>
 								<Typography variant="body2" color="text.secondary">
 									Mostrando {subscriptions.length} de {total} suscripciones
 								</Typography>
