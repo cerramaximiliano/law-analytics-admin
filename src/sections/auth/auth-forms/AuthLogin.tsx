@@ -86,8 +86,23 @@ const AuthLogin = ({ forgot, isGoogleLoading = false, onLoadingChange }: AuthLog
 
 							// Handle specific error cases
 							if (err && err.response) {
+								// Handle 403 Insufficient Permissions
+								if (err.response.status === 403) {
+									const errorData = err.response.data;
+									if (errorData?.error?.code === "INSUFFICIENT_PERMISSIONS") {
+										errorMessage = "Acceso denegado: Solo administradores pueden iniciar sesión";
+										fullErrorMessage = errorData.message || errorMessage;
+
+										if (errorData.error.description) {
+											fullErrorMessage += `. ${errorData.error.description}`;
+										}
+									} else {
+										errorMessage = "No tienes permisos para acceder a este sistema";
+										fullErrorMessage = errorData.message || errorMessage;
+									}
+								}
 								// Handle 429 Too Many Requests
-								if (err.response.status === 429) {
+								else if (err.response.status === 429) {
 									const errorData = err.response.data;
 									errorMessage = "Has realizado demasiados intentos fallidos de inicio de sesión.";
 

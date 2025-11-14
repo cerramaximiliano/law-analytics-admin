@@ -121,6 +121,7 @@ authAxios.interceptors.response.use(
 			!originalRequest._retry &&
 			!originalRequest._queued &&
 			!url.includes("/login") &&
+			!url.includes("/admin-login") &&
 			!url.includes("/register") &&
 			!url.includes("/google") &&
 			!url.includes("/refresh-token") &&
