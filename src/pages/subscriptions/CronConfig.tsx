@@ -55,18 +55,45 @@ const CronConfigPage = () => {
 			setLoading(true);
 			setError(null);
 
+			console.log("🔍 [CronConfig] Fetching config for: grace-period-processor");
 			const response = await CronConfigService.getCronConfig("grace-period-processor", true);
+			console.log("📥 [CronConfig] Response received:", response);
+			console.log("📥 [CronConfig] Response.data:", response.data);
+			console.log("📥 [CronConfig] Is array?", Array.isArray(response.data));
 
-			if (response.success && !Array.isArray(response.data)) {
-				setConfig(response.data);
-				// Cargar valores en los estados editables
-				setCronExpression(response.data.cronExpression);
-				setEnabled(response.data.enabled);
-				setDefaultDays(response.data.config?.gracePeriod?.defaultDays || 30);
-				setReminderDays(response.data.config?.gracePeriod?.reminderDays?.join(",") || "7,3,1");
-				setEnableAutoArchive(response.data.config?.gracePeriod?.enableAutoArchive ?? true);
+			// Manejar respuesta cuando data es un array con un solo elemento
+			let configData: CronConfig | null = null;
+
+			if (response.success) {
+				if (Array.isArray(response.data)) {
+					// Si es un array, tomar el primer elemento
+					if (response.data.length > 0) {
+						configData = response.data[0];
+						console.log("✅ [CronConfig] Config data from array:", configData);
+					} else {
+						throw new Error("No se encontró configuración para grace-period-processor");
+					}
+				} else {
+					// Si no es array, usar directamente
+					configData = response.data;
+					console.log("✅ [CronConfig] Config data direct:", configData);
+				}
+
+				if (configData) {
+					setConfig(configData);
+					// Cargar valores en los estados editables
+					setCronExpression(configData.cronExpression);
+					setEnabled(configData.enabled);
+					setDefaultDays(configData.config?.gracePeriod?.defaultDays || 30);
+					setReminderDays(configData.config?.gracePeriod?.reminderDays?.join(",") || "7,3,1");
+					setEnableAutoArchive(configData.config?.gracePeriod?.enableAutoArchive ?? true);
+					console.log("✅ [CronConfig] State updated successfully");
+				}
+			} else {
+				throw new Error(response.message || "La respuesta no fue exitosa");
 			}
 		} catch (error: any) {
+			console.error("❌ [CronConfig] Error fetching config:", error);
 			const errorMessage = error.message || "Error al cargar la configuración";
 			setError(errorMessage);
 			enqueueSnackbar(errorMessage, {

@@ -107,11 +107,21 @@ class CronConfigService {
 	static async getCronConfig(taskName: string, includeHistory?: boolean): Promise<CronConfigResponse> {
 		try {
 			const params = includeHistory ? { includeHistory: true } : {};
+			console.log("🔍 [CronConfigService] Getting config for:", taskName);
+			console.log("🔍 [CronConfigService] Params:", { taskName, ...params });
+			console.log("🔍 [CronConfigService] adminAxios baseURL:", (adminAxios as any).defaults.baseURL);
+
 			const response = await adminAxios.get(`/api/cron-config`, {
 				params: { taskName, ...params },
 			});
+
+			console.log("✅ [CronConfigService] Response status:", response.status);
+			console.log("✅ [CronConfigService] Response data:", response.data);
+
 			return response.data;
 		} catch (error: any) {
+			console.error("❌ [CronConfigService] Error:", error);
+			console.error("❌ [CronConfigService] Error response:", error.response);
 			throw new Error(error.response?.data?.message || "Error al obtener configuración de cron");
 		}
 	}
