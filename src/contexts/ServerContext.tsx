@@ -131,7 +131,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 	// Función de login
 	const login = async (email: string, password: string, recaptchaToken?: string): Promise<void> => {
 		try {
-			const response = await authAxios.post<LoginResponse>("/api/auth/login", {
+			const response = await authAxios.post<LoginResponse>("/api/auth/admin-login", {
 				email,
 				password,
 				recaptchaToken,
@@ -465,6 +465,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 				if (
 					error.response?.status === 401 &&
 					!url.includes("/api/auth/login") &&
+					!url.includes("/api/auth/admin-login") &&
 					!url.includes("/api/auth/google") &&
 					!url.includes("/api/auth/refresh-token") &&
 					!url.includes("/api/auth/logout") &&
