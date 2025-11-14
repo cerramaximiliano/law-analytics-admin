@@ -1,62 +1,20 @@
 import React from "react";
-import { useGoogleLogin, CredentialResponse } from "@react-oauth/google";
 import { useState } from "react";
 // material-ui
 import { Grid, Alert, Typography, Box, LinearProgress } from "@mui/material";
 
 // project-imports
 import Logo from "components/logo";
-import useAuth from "hooks/useAuth";
-import AuthDivider from "sections/auth/AuthDivider";
 import AuthWrapper from "sections/auth/AuthWrapper";
 import AuthLogin from "sections/auth/auth-forms/AuthLogin";
-import CustomGoogleButton from "components/auth/CustomGoogleButton";
 
 // ================================|| LOGIN ||================================ //
 
 const Login = () => {
-	const { loginWithGoogle } = useAuth();
-	const [error, setError] = useState<string | null>(null);
-	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [isEmailLoading, setIsEmailLoading] = useState<boolean>(false);
-
-	// Estado combinado de loading
-	const isAnyLoading = isLoading || isEmailLoading;
 
 	// Verificar si el sitio está en modo mantenimiento
 	const isMaintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === "true";
-
-	const handleGoogleSuccess = async (tokenResponse: any) => {
-		setIsLoading(true);
-		setIsEmailLoading(true); // Bloquear también el formulario de email
-		try {
-			// Crear un objeto de credencial para mantener la compatibilidad con el sistema existente
-			const credentialResponse: CredentialResponse = {
-				clientId: tokenResponse.clientId || "",
-				credential: tokenResponse.access_token,
-				select_by: "user",
-			};
-
-			// Llamar a la función de login existente
-			await loginWithGoogle?.(credentialResponse);
-		} catch (error) {
-			setError("Error al autenticar con Google. Por favor, intenta nuevamente.");
-		} finally {
-			setIsLoading(false);
-			setIsEmailLoading(false);
-		}
-	};
-
-	// Hook para iniciar sesión con Google
-	const googleLogin = useGoogleLogin({
-		onSuccess: handleGoogleSuccess,
-		onError: () => {
-			setError("Error al iniciar sesión con Google. Intenta nuevamente.");
-			setIsLoading(false);
-		},
-		flow: "implicit",
-		scope: "email profile",
-	});
 
 	// Mostrar mensaje de mantenimiento si está activo
 	if (isMaintenanceMode) {
@@ -85,7 +43,7 @@ const Login = () => {
 		<AuthWrapper>
 			<Box sx={{ position: "relative" }}>
 				{/* Barra de progreso global */}
-				{isAnyLoading && (
+				{isEmailLoading && (
 					<Box
 						sx={{
 							position: "absolute",
@@ -107,27 +65,7 @@ const Login = () => {
 						<Typography variant="h3">Inicio</Typography>
 					</Grid>
 					<Grid item xs={12}>
-						{error && (
-							<Alert severity="error" sx={{ mb: 2 }}>
-								{error}
-							</Alert>
-						)}
-						<AuthLogin forgot="/auth/forgot-password" isGoogleLoading={isLoading} onLoadingChange={setIsEmailLoading} />
-					</Grid>
-					<Grid item xs={12}>
-						<AuthDivider>
-							<Typography variant="body1">O</Typography>
-						</AuthDivider>
-					</Grid>
-					<Grid item xs={12}>
-						{/* Botón personalizado que llama a googleLogin.login() */}
-						<CustomGoogleButton
-							onClick={() => googleLogin()}
-							disabled={isLoading || isEmailLoading}
-							text={isLoading ? "Iniciando sesión..." : "Iniciar sesión con Google"}
-							fullWidth
-							showLoader={isLoading}
-						/>
+						<AuthLogin forgot="/auth/forgot-password" isGoogleLoading={false} onLoadingChange={setIsEmailLoading} />
 					</Grid>
 				</Grid>
 			</Box>
