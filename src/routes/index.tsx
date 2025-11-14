@@ -34,6 +34,11 @@ const Suscripciones = Loadable(lazy(() => import("pages/usuarios/Suscripciones")
 // Server Status
 const ServerStatus = Loadable(lazy(() => import("pages/admin/server-status")));
 
+// Marketing pages
+const MailingCampaigns = Loadable(lazy(() => import("pages/admin/marketing/mailing")));
+const EmailTemplates = Loadable(lazy(() => import("pages/admin/marketing/templates")));
+const MarketingContacts = Loadable(lazy(() => import("pages/admin/marketing/contacts")));
+
 // Placeholder pages
 const Dashboard = () => (
 	<div style={{ padding: "2rem", textAlign: "center" }}>
@@ -168,6 +173,30 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<ServerStatus />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "marketing/mailing",
+							element: (
+								<AdminRoleGuard>
+									<MailingCampaigns />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "marketing/templates",
+							element: (
+								<AdminRoleGuard>
+									<EmailTemplates />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "marketing/contacts",
+							element: (
+								<AdminRoleGuard>
+									<MarketingContacts />
 								</AdminRoleGuard>
 							),
 						},

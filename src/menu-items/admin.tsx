@@ -1,5 +1,5 @@
 // assets
-import { Setting3, Folder2, MoneyRecive, Status } from "iconsax-react";
+import { Setting3, Folder2, MoneyRecive, Status, Sms } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -106,6 +106,36 @@ const admin: NavItemType = {
 					title: "Stripe Webhooks",
 					type: "item",
 					url: "/admin/subscriptions/stripe-webhooks",
+					breadcrumbs: true,
+				},
+			],
+		},
+		{
+			id: "marketing",
+			title: "Marketing",
+			type: "collapse",
+			icon: Sms,
+			breadcrumbs: true,
+			children: [
+				{
+					id: "mailing",
+					title: "Campañas de Email",
+					type: "item",
+					url: "/admin/marketing/mailing",
+					breadcrumbs: true,
+				},
+				{
+					id: "templates",
+					title: "Plantillas de Email",
+					type: "item",
+					url: "/admin/marketing/templates",
+					breadcrumbs: true,
+				},
+				{
+					id: "contacts",
+					title: "Contactos",
+					type: "item",
+					url: "/admin/marketing/contacts",
 					breadcrumbs: true,
 				},
 			],
