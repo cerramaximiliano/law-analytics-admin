@@ -27,6 +27,7 @@ const CarpetasMEVNoVerificadas = Loadable(lazy(() => import("pages/admin/mev/Car
 
 // Subscriptions pages
 const StripeWebhooks = Loadable(lazy(() => import("pages/subscriptions/StripeWebhooks")));
+const CronConfig = Loadable(lazy(() => import("pages/subscriptions/CronConfig")));
 
 // Usuarios pages
 const Suscripciones = Loadable(lazy(() => import("pages/usuarios/Suscripciones")));
@@ -165,6 +166,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<StripeWebhooks />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "subscriptions/cron-config",
+							element: (
+								<AdminRoleGuard>
+									<CronConfig />
 								</AdminRoleGuard>
 							),
 						},
