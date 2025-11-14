@@ -177,7 +177,8 @@ const Suscripciones = () => {
 		}
 	};
 
-	const getStatusColor = (status: string) => {
+	const getStatusColor = (status: string | undefined): "success" | "info" | "error" | "warning" | "default" => {
+		if (!status) return "default";
 		switch (status.toLowerCase()) {
 			case "active":
 				return "success";
@@ -193,7 +194,8 @@ const Suscripciones = () => {
 		}
 	};
 
-	const getStatusLabel = (status: string) => {
+	const getStatusLabel = (status: string | undefined): string => {
+		if (!status) return "Sin estado";
 		switch (status.toLowerCase()) {
 			case "active":
 				return "Activa";
@@ -209,7 +211,8 @@ const Suscripciones = () => {
 		}
 	};
 
-	const getPlanLabel = (plan: string) => {
+	const getPlanLabel = (plan: string | undefined): string => {
+		if (!plan) return "Sin plan";
 		switch (plan.toLowerCase()) {
 			case "free":
 				return "Gratis";
@@ -222,7 +225,8 @@ const Suscripciones = () => {
 		}
 	};
 
-	const getPlanColor = (plan: string) => {
+	const getPlanColor = (plan: string | undefined): "default" | "primary" | "secondary" => {
+		if (!plan) return "default";
 		switch (plan.toLowerCase()) {
 			case "free":
 				return "default";
@@ -311,7 +315,7 @@ const Suscripciones = () => {
 										Suscripciones Activas
 									</Typography>
 									<Typography variant="h3" color="success.main">
-										{subscriptions.filter((s) => s.status.toLowerCase() === "active").length}
+										{subscriptions.filter((s) => s.status?.toLowerCase() === "active").length}
 									</Typography>
 								</Stack>
 							</CardContent>
@@ -325,7 +329,7 @@ const Suscripciones = () => {
 										En Prueba
 									</Typography>
 									<Typography variant="h3" color="info.main">
-										{subscriptions.filter((s) => s.status.toLowerCase() === "trialing").length}
+										{subscriptions.filter((s) => s.status?.toLowerCase() === "trialing").length}
 									</Typography>
 								</Stack>
 							</CardContent>
@@ -339,7 +343,7 @@ const Suscripciones = () => {
 										Canceladas
 									</Typography>
 									<Typography variant="h3" color="error.main">
-										{subscriptions.filter((s) => s.status.toLowerCase() === "canceled" || s.status.toLowerCase() === "cancelled").length}
+										{subscriptions.filter((s) => s.status?.toLowerCase() === "canceled" || s.status?.toLowerCase() === "cancelled").length}
 									</Typography>
 								</Stack>
 							</CardContent>
@@ -437,11 +441,11 @@ const Suscripciones = () => {
 											color={getStatusColor(subscription.status)}
 											size="small"
 											icon={
-												subscription.status.toLowerCase() === "active" ? (
+												subscription.status?.toLowerCase() === "active" ? (
 													<TickCircle size={16} />
-												) : subscription.status.toLowerCase() === "canceled" || subscription.status.toLowerCase() === "cancelled" ? (
+												) : subscription.status?.toLowerCase() === "canceled" || subscription.status?.toLowerCase() === "cancelled" ? (
 													<CloseCircle size={16} />
-												) : subscription.status.toLowerCase() === "past_due" ? (
+												) : subscription.status?.toLowerCase() === "past_due" ? (
 													<Warning2 size={16} />
 												) : undefined
 											}
