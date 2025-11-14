@@ -37,9 +37,13 @@ import SubscriptionsService, { Subscription } from "api/subscriptions";
 import WebhooksService from "api/webhooks";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import "dayjs/locale/es";
 
 dayjs.extend(relativeTime);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 dayjs.locale("es");
 
 const Suscripciones = () => {
@@ -125,8 +129,8 @@ const Suscripciones = () => {
 
 	const handleOpenUpdateDialog = () => {
 		if (selectedSubscription?.downgradeGracePeriod) {
-			// Pre-cargar la fecha actual
-			setNewExpiresAt(dayjs(selectedSubscription.downgradeGracePeriod.expiresAt).format("YYYY-MM-DDTHH:mm"));
+			// Pre-cargar la fecha actual en zona horaria local
+			setNewExpiresAt(dayjs(selectedSubscription.downgradeGracePeriod.expiresAt).tz("America/Argentina/Buenos_Aires").format("YYYY-MM-DDTHH:mm"));
 		}
 		setOpenUpdateDialog(true);
 	};
@@ -561,7 +565,7 @@ const Suscripciones = () => {
 												<strong>{selectedSubscription.downgradeGracePeriod.targetPlan}</strong>.
 											</Typography>
 											<Typography variant="body2" sx={{ mt: 0.5 }}>
-												Expira: {dayjs(selectedSubscription.downgradeGracePeriod.expiresAt).format("DD/MM/YYYY HH:mm")}
+												Expira: {dayjs(selectedSubscription.downgradeGracePeriod.expiresAt).tz("America/Argentina/Buenos_Aires").format("DD/MM/YYYY HH:mm")} (Hora Argentina)
 											</Typography>
 										</Alert>
 									)}
@@ -835,10 +839,10 @@ const Suscripciones = () => {
 												</Grid>
 												<Grid item xs={12} sm={6}>
 													<Typography variant="caption" color="text.secondary">
-														Fecha de Expiración
+														Fecha de Expiración (Hora Argentina)
 													</Typography>
 													<Typography variant="body2" color="warning.main" fontWeight="bold">
-														{dayjs(selectedSubscription.downgradeGracePeriod.expiresAt).format("DD/MM/YYYY HH:mm")}
+														{dayjs(selectedSubscription.downgradeGracePeriod.expiresAt).tz("America/Argentina/Buenos_Aires").format("DD/MM/YYYY HH:mm")}
 													</Typography>
 													<Typography variant="caption" color="text.secondary">
 														{dayjs(selectedSubscription.downgradeGracePeriod.expiresAt).fromNow()}
@@ -1285,10 +1289,10 @@ const Suscripciones = () => {
 									</Grid>
 									<Grid item xs={12}>
 										<Typography variant="caption" color="text.secondary">
-											Fecha Actual de Expiración:
+											Fecha Actual de Expiración (Hora Argentina):
 										</Typography>
 										<Typography variant="body2" fontWeight="bold" color="warning.main">
-											{dayjs(selectedSubscription.downgradeGracePeriod.expiresAt).format("DD/MM/YYYY HH:mm")}
+											{dayjs(selectedSubscription.downgradeGracePeriod.expiresAt).tz("America/Argentina/Buenos_Aires").format("DD/MM/YYYY HH:mm")}
 										</Typography>
 										<Typography variant="caption" color="text.secondary">
 											({dayjs(selectedSubscription.downgradeGracePeriod.expiresAt).fromNow()})
