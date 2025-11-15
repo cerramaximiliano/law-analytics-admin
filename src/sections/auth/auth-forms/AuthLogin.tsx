@@ -352,6 +352,23 @@ const AuthLogin = ({ forgot, isGoogleLoading = false, onLoadingChange }: AuthLog
 										</Button>
 									</AnimateButton>
 								</Grid>
+								<Grid item xs={12}>
+									<AnimateButton>
+										<Button
+											disableElevation
+											fullWidth
+											size="large"
+											type="button"
+											variant="outlined"
+											color="secondary"
+											onClick={() => {
+												window.location.href = "https://www.lawanalytics.app";
+											}}
+										>
+											Ir al Sitio Principal
+										</Button>
+									</AnimateButton>
+								</Grid>
 							</Grid>
 						</form>
 					);
