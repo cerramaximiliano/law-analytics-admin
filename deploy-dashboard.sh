@@ -2,6 +2,12 @@
 
 # Script de despliegue para dashboard.lawanalytics.app
 # Este script configura el proyecto law-analytics-admin en el servidor
+#
+# IMPORTANTE: Este script es para DEPLOY INICIAL
+# Para actualizaciones del código, usa: ./update-dashboard.sh
+#
+# El script detectará automáticamente si ya existe configuración SSL
+# y la preservará en lugar de sobrescribirla.
 
 set -e  # Exit on error
 
@@ -80,9 +86,25 @@ remote_exec "
 "
 echo -e "${GREEN}✓ Aplicación compilada${NC}"
 
-# 6. Crear configuración de nginx
+# 6. Configurar nginx
 echo -e "\n${YELLOW}[6/7] Configurando nginx...${NC}"
-remote_sudo "
+
+# Verificar si ya existe configuración con SSL
+SSL_EXISTS=$(remote_exec "grep -q 'listen.*443.*ssl' /etc/nginx/sites-available/${DOMAIN} 2>/dev/null && echo 'yes' || echo 'no'")
+
+if [ "$SSL_EXISTS" = "yes" ]; then
+	echo -e "${YELLOW}⚠ Detectada configuración SSL existente${NC}"
+	echo -e "${YELLOW}⚠ Actualizando solo el root path sin modificar SSL${NC}"
+
+	# Solo actualizar el root path manteniendo el resto de la configuración
+	remote_sudo "sed -i 's|root .*|root ${REMOTE_PATH}/${BUILD_DIR};|g' /etc/nginx/sites-available/${DOMAIN}"
+	remote_sudo "nginx -t && systemctl reload nginx"
+	echo -e "${GREEN}✓ Nginx actualizado (SSL preservado)${NC}"
+else
+	echo -e "${YELLOW}⚠ No se detectó SSL, creando configuración básica HTTP${NC}"
+
+	# Crear configuración básica solo si no existe SSL
+	remote_sudo "
 cat > /etc/nginx/sites-available/${DOMAIN} << 'EOF'
 server {
 	listen 80;
@@ -117,27 +139,34 @@ server {
 	client_max_body_size 10M;
 }
 EOF
-"
+	"
 
-# Habilitar sitio
-remote_sudo "
-	ln -sf /etc/nginx/sites-available/${DOMAIN} /etc/nginx/sites-enabled/${DOMAIN}
-	nginx -t && systemctl reload nginx
-"
-echo -e "${GREEN}✓ Nginx configurado${NC}"
+	# Habilitar sitio
+	remote_sudo "
+		ln -sf /etc/nginx/sites-available/${DOMAIN} /etc/nginx/sites-enabled/${DOMAIN}
+		nginx -t && systemctl reload nginx
+	"
+	echo -e "${GREEN}✓ Nginx configurado${NC}"
+fi
 
 # 7. Configurar SSL con certbot
-echo -e "\n${YELLOW}[7/7] Configurando SSL con Let's Encrypt...${NC}"
-echo -e "${YELLOW}Nota: Asegúrate de que el DNS ${DOMAIN} apunte a ${SERVER_IP}${NC}"
-echo -e "${YELLOW}¿Deseas configurar SSL ahora? (s/n)${NC}"
-read -r setup_ssl
+echo -e "\n${YELLOW}[7/7] Verificando SSL con Let's Encrypt...${NC}"
 
-if [ "$setup_ssl" = "s" ] || [ "$setup_ssl" = "S" ]; then
-	remote_sudo "certbot --nginx -d ${DOMAIN} --non-interactive --agree-tos --email admin@lawanalytics.app --redirect"
-	echo -e "${GREEN}✓ SSL configurado${NC}"
+if [ "$SSL_EXISTS" = "yes" ]; then
+	echo -e "${GREEN}✓ SSL ya está configurado y ha sido preservado${NC}"
+	echo -e "${YELLOW}Tip: El certificado se renueva automáticamente vía certbot${NC}"
 else
-	echo -e "${YELLOW}⚠ Puedes configurar SSL manualmente ejecutando en el servidor:${NC}"
-	echo -e "${YELLOW}   sudo certbot --nginx -d ${DOMAIN}${NC}"
+	echo -e "${YELLOW}Nota: Asegúrate de que el DNS ${DOMAIN} apunte a ${SERVER_IP}${NC}"
+	echo -e "${YELLOW}¿Deseas configurar SSL ahora? (s/n)${NC}"
+	read -r setup_ssl
+
+	if [ "$setup_ssl" = "s" ] || [ "$setup_ssl" = "S" ]; then
+		remote_sudo "certbot --nginx -d ${DOMAIN} --non-interactive --agree-tos --email admin@lawanalytics.app --redirect"
+		echo -e "${GREEN}✓ SSL configurado${NC}"
+	else
+		echo -e "${YELLOW}⚠ Puedes configurar SSL manualmente ejecutando en el servidor:${NC}"
+		echo -e "${YELLOW}   sudo certbot --nginx -d ${DOMAIN}${NC}"
+	fi
 fi
 
 echo -e "\n${GREEN}========================================${NC}"
