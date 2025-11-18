@@ -130,6 +130,17 @@ export interface GetSubscriptionsParams {
 	testMode?: boolean;
 }
 
+export interface ResetSubscriptionParams {
+	userId: string;
+	cancelInStripe: boolean;
+}
+
+export interface ResetSubscriptionResponse {
+	success: boolean;
+	message: string;
+	data?: any;
+}
+
 class SubscriptionsService {
 	async getSubscriptions(params: GetSubscriptionsParams = {}): Promise<SubscriptionsResponse> {
 		try {
@@ -147,6 +158,30 @@ class SubscriptionsService {
 			}
 
 			throw new Error(error.response?.data?.message || "Error al obtener las suscripciones");
+		}
+	}
+
+	async resetUserSubscription(params: ResetSubscriptionParams): Promise<ResetSubscriptionResponse> {
+		try {
+			const response = await adminAxios.post("/api/subscriptions/reset-user", params);
+			return response.data;
+		} catch (error: any) {
+			// Si es un error 404, el endpoint no existe
+			if (error.response?.status === 404) {
+				throw new Error("El endpoint /api/subscriptions/reset-user no está disponible en el servidor");
+			}
+
+			// Si es un error 401, hay problema de autenticación
+			if (error.response?.status === 401) {
+				throw new Error("No autorizado. Por favor, inicie sesión nuevamente.");
+			}
+
+			// Si es un error 400, puede ser un problema con los parámetros
+			if (error.response?.status === 400) {
+				throw new Error(error.response?.data?.message || "Parámetros inválidos");
+			}
+
+			throw new Error(error.response?.data?.message || "Error al resetear la suscripción");
 		}
 	}
 }

@@ -30,7 +30,7 @@ import {
 	Tabs,
 	Tab,
 } from "@mui/material";
-import { Refresh, TickCircle, CloseCircle, Warning2, Calendar, Profile2User, Eye, CloseSquare, Edit } from "iconsax-react";
+import { Refresh, TickCircle, CloseCircle, Warning2, Calendar, Profile2User, Eye, CloseSquare, Edit, Trash } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import SubscriptionsService, { Subscription } from "api/subscriptions";
@@ -71,6 +71,11 @@ const Suscripciones = () => {
 	const [newExpiresAt, setNewExpiresAt] = useState("");
 	const [adminEmail, setAdminEmail] = useState("");
 	const [updatingGracePeriod, setUpdatingGracePeriod] = useState(false);
+
+	// Modal de resetear suscripción
+	const [openResetDialog, setOpenResetDialog] = useState(false);
+	const [cancelInStripe, setCancelInStripe] = useState(true);
+	const [resettingSubscription, setResettingSubscription] = useState(false);
 
 	const fetchSubscriptions = async () => {
 		try {
@@ -180,6 +185,41 @@ const Suscripciones = () => {
 			enqueueSnackbar(error.message || "Error al actualizar el período de gracia", { variant: "error" });
 		} finally {
 			setUpdatingGracePeriod(false);
+		}
+	};
+
+	const handleOpenResetDialog = () => {
+		setOpenResetDialog(true);
+	};
+
+	const handleCloseResetDialog = () => {
+		setOpenResetDialog(false);
+		setCancelInStripe(true);
+	};
+
+	const handleResetSubscription = async () => {
+		if (!selectedSubscription) {
+			enqueueSnackbar("No hay suscripción seleccionada", { variant: "warning" });
+			return;
+		}
+
+		try {
+			setResettingSubscription(true);
+
+			await SubscriptionsService.resetUserSubscription({
+				userId: selectedSubscription.user._id,
+				cancelInStripe,
+			});
+
+			enqueueSnackbar("Suscripción reseteada exitosamente", { variant: "success" });
+			handleCloseResetDialog();
+			handleCloseDialog();
+			// Recargar las suscripciones para ver los cambios
+			await fetchSubscriptions();
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al resetear la suscripción", { variant: "error" });
+		} finally {
+			setResettingSubscription(false);
 		}
 	};
 
@@ -564,6 +604,7 @@ const Suscripciones = () => {
 					<Tab label="Períodos" />
 					<Tab label="Plan" />
 					{selectedSubscription?.paymentFailures && selectedSubscription.paymentFailures.count > 0 && <Tab label="Fallos de Pago" />}
+					<Tab label="Acciones" />
 				</Tabs>
 				<DialogContent sx={{ minHeight: "500px", maxHeight: "500px", overflowY: "auto" }}>
 					{selectedSubscription && (
@@ -1196,6 +1237,54 @@ const Suscripciones = () => {
 								</Box>
 								</Stack>
 							)}
+
+							{/* Tab 5 (o 4 si no hay fallos de pago): Acciones */}
+							{((tabValue === 5 && selectedSubscription.paymentFailures && selectedSubscription.paymentFailures.count > 0) ||
+								(tabValue === 4 && (!selectedSubscription.paymentFailures || selectedSubscription.paymentFailures.count === 0))) && (
+								<Stack spacing={3} sx={{ mt: 1 }}>
+									<Alert severity="warning" icon={<Warning2 size={24} />}>
+										<Typography variant="subtitle2" fontWeight="bold">
+											Zona de Peligro - Acciones Administrativas
+										</Typography>
+										<Typography variant="body2" sx={{ mt: 1 }}>
+											Las acciones en esta sección son irreversibles y pueden afectar significativamente la experiencia del usuario.
+										</Typography>
+									</Alert>
+
+									{/* Resetear Suscripción */}
+									<Box>
+										<Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Trash size={20} color="#d32f2f" />
+											Resetear Suscripción
+										</Typography>
+										<Divider sx={{ mb: 2 }} />
+										<Stack spacing={2}>
+											<Typography variant="body2" color="text.secondary">
+												Esta acción reseteará completamente la suscripción del usuario, eliminando todos los datos de suscripción de la base de datos y opcionalmente cancelando la suscripción en Stripe.
+											</Typography>
+											<Alert severity="error">
+												<Typography variant="body2" fontWeight="bold">
+													⚠️ Esta acción es IRREVERSIBLE
+												</Typography>
+												<Typography variant="body2" sx={{ mt: 1 }}>
+													El usuario perderá:
+												</Typography>
+												<ul style={{ marginTop: "8px", marginBottom: 0 }}>
+													<li>Todo el historial de suscripción</li>
+													<li>Configuración de plan actual</li>
+													<li>Datos de períodos de gracia</li>
+													<li>Historial de pagos (si se cancela en Stripe)</li>
+												</ul>
+											</Alert>
+											<Box>
+												<Button variant="contained" color="error" startIcon={<Trash size={20} />} onClick={handleOpenResetDialog} fullWidth>
+													Resetear Suscripción
+												</Button>
+											</Box>
+										</Stack>
+									</Box>
+								</Stack>
+							)}
 						</>
 					)}
 				</DialogContent>
@@ -1333,6 +1422,134 @@ const Suscripciones = () => {
 						startIcon={updatingGracePeriod ? <CircularProgress size={16} color="inherit" /> : <Edit size={16} />}
 					>
 						{updatingGracePeriod ? "Actualizando..." : "Actualizar"}
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Modal de confirmación para resetear suscripción */}
+			<Dialog open={openResetDialog} onClose={handleCloseResetDialog} maxWidth="sm" fullWidth>
+				<DialogTitle>
+					<Stack direction="row" justifyContent="space-between" alignItems="center">
+						<Typography variant="h5" color="error">
+							Confirmar Reseteo de Suscripción
+						</Typography>
+						<IconButton onClick={handleCloseResetDialog} size="small">
+							<CloseSquare size={20} />
+						</IconButton>
+					</Stack>
+				</DialogTitle>
+				<DialogContent>
+					<Stack spacing={3} sx={{ mt: 2 }}>
+						<Alert severity="error" icon={<Warning2 size={24} />}>
+							<Typography variant="subtitle2" fontWeight="bold">
+								⚠️ ADVERTENCIA: Esta acción es IRREVERSIBLE
+							</Typography>
+							<Typography variant="body2" sx={{ mt: 1 }}>
+								Estás a punto de resetear completamente la suscripción del usuario{" "}
+								<strong>{selectedSubscription?.user.email}</strong>
+							</Typography>
+						</Alert>
+
+						<Box sx={{ p: 2, backgroundColor: "grey.100", borderRadius: 1 }}>
+							<Typography variant="caption" color="text.secondary" fontWeight="bold">
+								Información del Usuario
+							</Typography>
+							<Grid container spacing={1} sx={{ mt: 0.5 }}>
+								<Grid item xs={12}>
+									<Typography variant="caption" color="text.secondary">
+										Nombre:
+									</Typography>
+									<Typography variant="body2" fontWeight="bold">
+										{selectedSubscription?.user.name}
+									</Typography>
+								</Grid>
+								<Grid item xs={12}>
+									<Typography variant="caption" color="text.secondary">
+										Email:
+									</Typography>
+									<Typography variant="body2" fontWeight="bold">
+										{selectedSubscription?.user.email}
+									</Typography>
+								</Grid>
+								<Grid item xs={12}>
+									<Typography variant="caption" color="text.secondary">
+										Plan Actual:
+									</Typography>
+									<Typography variant="body2" fontWeight="bold">
+										{getPlanLabel(selectedSubscription?.plan)}
+									</Typography>
+								</Grid>
+								<Grid item xs={12}>
+									<Typography variant="caption" color="text.secondary">
+										Estado:
+									</Typography>
+									<Typography variant="body2" fontWeight="bold">
+										{getStatusLabel(selectedSubscription?.status)}
+									</Typography>
+								</Grid>
+							</Grid>
+						</Box>
+
+						<Box>
+							<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+								Opciones de Reseteo
+							</Typography>
+							<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
+								<input
+									type="checkbox"
+									id="cancelInStripe"
+									checked={cancelInStripe}
+									onChange={(e) => setCancelInStripe(e.target.checked)}
+									style={{ cursor: "pointer" }}
+								/>
+								<label htmlFor="cancelInStripe" style={{ cursor: "pointer" }}>
+									<Typography variant="body2">Cancelar también la suscripción en Stripe</Typography>
+								</label>
+							</Stack>
+							<Typography variant="caption" color="text.secondary" sx={{ ml: 3, display: "block", mt: 0.5 }}>
+								Si está marcado, se cancelará la suscripción en Stripe y se eliminará el customer. Si no está marcado, solo se eliminarán
+								los datos locales.
+							</Typography>
+						</Box>
+
+						<Alert severity="info">
+							<Typography variant="body2" fontWeight="bold">
+								Consecuencias de esta acción:
+							</Typography>
+							<ul style={{ marginTop: "8px", marginBottom: 0, paddingLeft: "20px" }}>
+								<li>Se eliminará toda la información de suscripción de la base de datos</li>
+								<li>Se perderá el historial de estados de la suscripción</li>
+								<li>Se eliminarán los datos de períodos de gracia</li>
+								<li>El usuario volverá al plan FREE por defecto</li>
+								{cancelInStripe && <li>Se cancelará la suscripción activa en Stripe</li>}
+								{cancelInStripe && <li>Se eliminará el customer en Stripe</li>}
+							</ul>
+						</Alert>
+
+						<Alert severity="warning">
+							<Typography variant="body2" fontWeight="bold">
+								¿Cuándo usar esta acción?
+							</Typography>
+							<ul style={{ marginTop: "8px", marginBottom: 0, paddingLeft: "20px" }}>
+								<li>Cuando un usuario tiene datos de suscripción corruptos o inconsistentes</li>
+								<li>Para resolver problemas de sincronización con Stripe</li>
+								<li>Como último recurso después de intentar otras soluciones</li>
+							</ul>
+						</Alert>
+					</Stack>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleCloseResetDialog} variant="outlined" disabled={resettingSubscription}>
+						Cancelar
+					</Button>
+					<Button
+						onClick={handleResetSubscription}
+						variant="contained"
+						color="error"
+						disabled={resettingSubscription}
+						startIcon={resettingSubscription ? <CircularProgress size={16} color="inherit" /> : <Trash size={16} />}
+					>
+						{resettingSubscription ? "Reseteando..." : "Confirmar Reseteo"}
 					</Button>
 				</DialogActions>
 			</Dialog>
