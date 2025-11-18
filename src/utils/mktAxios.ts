@@ -1,16 +1,28 @@
-import axios from "axios";
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from "axios";
 import Cookies from "js-cookie";
 import authTokenService from "services/authTokenService";
+import secureStorage from "services/secureStorage";
+import { requestQueueService } from "services/requestQueueService";
 
 // Create a dedicated axios instance for MKT API
-const mktAxios = axios.create({
+const mktAxios: AxiosInstance = axios.create({
 	baseURL: import.meta.env.VITE_MKT_URL || "https://mkt.lawanalytics.app",
+	timeout: 30000,
+	headers: {
+		"Content-Type": "application/json",
+	},
 	withCredentials: true,
 });
 
 // Helper function to get auth token
 const getAuthToken = () => {
-	// First try to get token from authTokenService (if captured from responses)
+	// First try to get token from secureStorage (this is the primary method)
+	const secureToken = secureStorage.getAuthToken();
+	if (secureToken) {
+		return secureToken;
+	}
+
+	// Then try authTokenService
 	const serviceToken = authTokenService.getToken();
 	if (serviceToken) {
 		return serviceToken;
@@ -20,45 +32,50 @@ const getAuthToken = () => {
 	const token =
 		Cookies.get("authToken") ||
 		Cookies.get("auth_token") ||
-		Cookies.get("auth_token_temp") ||
 		Cookies.get("token") ||
 		Cookies.get("access_token") ||
 		Cookies.get("jwt") ||
 		Cookies.get("session");
 
-	// If no token in cookies, check if we can get it from document.cookie directly
-	if (!token) {
-		const cookies = document.cookie.split(";");
-		for (const cookie of cookies) {
-			const [name, value] = cookie.trim().split("=");
-			if (["authToken", "auth_token", "token", "jwt", "session"].includes(name)) {
-				return decodeURIComponent(value);
-			}
+	if (token) {
+		return token;
+	}
+
+	// If no token in cookies, check document.cookie directly
+	const cookies = document.cookie.split(";");
+	for (const cookie of cookies) {
+		const [name, value] = cookie.trim().split("=");
+		if (["authToken", "auth_token", "token", "jwt", "session"].includes(name)) {
+			return decodeURIComponent(value);
 		}
 	}
 
-	return token;
+	// Also check localStorage and sessionStorage
+	const localToken =
+		localStorage.getItem("token") || localStorage.getItem("authToken") || localStorage.getItem("auth_token") || localStorage.getItem("jwt");
+	if (localToken) {
+		return localToken;
+	}
+
+	const sessionToken =
+		sessionStorage.getItem("token") ||
+		sessionStorage.getItem("authToken") ||
+		sessionStorage.getItem("auth_token") ||
+		sessionStorage.getItem("jwt");
+	if (sessionToken) {
+		return sessionToken;
+	}
+
+	return null;
 };
 
-// Request interceptor to ensure credentials are included
+// Request interceptor to add auth token
 mktAxios.interceptors.request.use(
-	(config) => {
-		// Ensure credentials are included in all requests
-		config.withCredentials = true;
-
-		// Debug: Log available cookies (remove in production)
-		if (import.meta.env.DEV) {
-			console.log("Available cookies:", document.cookie);
-			console.log("All cookie names:", Object.keys(Cookies.get()));
-		}
-
-		// Add Authorization header if token exists
+	(config: InternalAxiosRequestConfig) => {
 		const token = getAuthToken();
-		if (token) {
+
+		if (token && config.headers) {
 			config.headers.Authorization = `Bearer ${token}`;
-			console.log("Token found and added to MKT API request");
-		} else {
-			console.warn("No auth token found for MKT API request");
 		}
 
 		return config;
@@ -68,34 +85,67 @@ mktAxios.interceptors.request.use(
 	},
 );
 
-// Response interceptor for handling authentication errors
+// Response interceptor for error handling and token refresh
 mktAxios.interceptors.response.use(
-	(response) => response,
+	(response: AxiosResponse) => {
+		// Capturar token del header si viene (para mantener token actualizado)
+		const token = response.headers["authorization"] || response.headers["x-auth-token"];
+		if (token) {
+			const cleanToken = token.replace("Bearer ", "");
+			authTokenService.setToken(cleanToken);
+			secureStorage.setAuthToken(cleanToken);
+		}
+
+		// Si la respuesta contiene un token en el body
+		if (response.data?.token) {
+			authTokenService.setToken(response.data.token);
+			secureStorage.setAuthToken(response.data.token);
+		}
+
+		return response;
+	},
 	async (error) => {
 		const originalRequest = error.config;
 
-		// Handle 401 errors for MKT API
-		if (error.response?.status === 401 && !originalRequest._retry) {
+		// Si recibimos un 401 del servidor y no hemos intentado refrescar aún
+		if (error.response?.status === 401 && !originalRequest._retry && !originalRequest._queued) {
 			originalRequest._retry = true;
 
 			try {
-				// Try to refresh the token
-				await axios.post(`${import.meta.env.VITE_AUTH_URL}/api/auth/refresh-token`, {}, { withCredentials: true });
+				// Intentar refrescar el token usando la API de autenticación
+				const authBaseURL = import.meta.env.VITE_AUTH_URL || "https://api.lawanalytics.app";
+				const refreshResponse = await axios.post(`${authBaseURL}/api/auth/refresh-token`, {}, { withCredentials: true });
 
-				// Get the new token and retry the request
-				const newToken = getAuthToken();
+				// Capturar el nuevo token de la respuesta del refresh
+				const newToken =
+					refreshResponse.headers["authorization"]?.replace("Bearer ", "") ||
+					refreshResponse.headers["x-auth-token"] ||
+					refreshResponse.data?.token;
+
 				if (newToken) {
-					originalRequest.headers.Authorization = `Bearer ${newToken}`;
+					authTokenService.setToken(newToken);
+					secureStorage.setAuthToken(newToken);
+					if (originalRequest.headers) {
+						originalRequest.headers.Authorization = `Bearer ${newToken}`;
+					}
 				}
 
-				// Retry the original request with updated headers
+				// Reintentar la petición original con el nuevo token
 				return mktAxios(originalRequest);
 			} catch (refreshError) {
-				// If refresh fails, redirect to login
-				if (!window.location.href.includes("/login")) {
-					window.location.pathname = "/login";
-				}
-				return Promise.reject(refreshError);
+				// Si el refresh falla, encolar la petición y mostrar modal de autenticación
+				// en lugar de redirigir directamente al login
+
+				// Marcar como encolada para evitar reencolar
+				originalRequest._queued = true;
+
+				const queuedPromise = requestQueueService.enqueue(originalRequest);
+
+				// Emitir evento para que el contexto de autenticación muestre el modal
+				window.dispatchEvent(new CustomEvent("showUnauthorizedModal"));
+
+				// Retornar la Promise encolada que se resolverá después del login
+				return queuedPromise;
 			}
 		}
 
