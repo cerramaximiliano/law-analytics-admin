@@ -97,6 +97,18 @@ const Suscripciones = () => {
 			}
 
 			const response = await SubscriptionsService.getSubscriptions(params);
+
+			// Debug: Log para ver qué está devolviendo el backend
+			console.log("🔍 [fetchSubscriptions] API Response:", response);
+			console.log("🔍 [fetchSubscriptions] First subscription data:", response.data[0]);
+			if (response.data.length > 0) {
+				console.log("🔍 [fetchSubscriptions] testMode field in first subscription:", {
+					hasTestMode: "testMode" in response.data[0],
+					testModeValue: response.data[0].testMode,
+					testModeType: typeof response.data[0].testMode,
+				});
+			}
+
 			setSubscriptions(response.data);
 			setTotalPages(response.stats.totalPages);
 			setTotal(response.stats.total);
