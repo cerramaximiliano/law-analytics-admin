@@ -101,7 +101,7 @@ export interface Subscription {
 	limits: SubscriptionLimits;
 	features: SubscriptionFeatures;
 	lastPlanSync: string;
-	testMode: boolean;
+	testMode?: boolean;
 	createdAt: string;
 	updatedAt: string;
 }

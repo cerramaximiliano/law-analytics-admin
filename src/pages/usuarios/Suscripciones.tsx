@@ -286,32 +286,43 @@ const Suscripciones = () => {
 	};
 
 	const isTestMode = (subscription: Subscription): boolean => {
-		// Si el backend proporciona testMode, usarlo
-		if (subscription.testMode !== undefined && subscription.testMode !== null) {
+		// Prioridad 1: Si el backend proporciona testMode explícitamente, usarlo
+		if (typeof subscription.testMode === "boolean") {
 			return subscription.testMode;
 		}
 
-		// Fallback: detectar por IDs de Stripe
-		// En Stripe, los IDs de test tienen prefijos específicos que no tienen los de producción
-		const currentCustomerId = subscription.stripeCustomerId?.current || "";
-		const currentSubscriptionId = subscription.stripeSubscriptionId?.current || "";
-		const testCustomerId = subscription.stripeCustomerId?.test || "";
-		const testSubscriptionId = subscription.stripeSubscriptionId?.test || "";
+		// Prioridad 2: Fallback - detectar por IDs de Stripe cuando stripeCustomerId no es null
+		if (subscription.stripeCustomerId && typeof subscription.stripeCustomerId === "object") {
+			const currentCustomerId = subscription.stripeCustomerId.current || "";
+			const testCustomerId = subscription.stripeCustomerId.test || "";
+			const liveCustomerId = subscription.stripeCustomerId.live || "";
 
-		// Si current coincide con test, es modo TEST
-		if (currentCustomerId && currentCustomerId === testCustomerId) {
-			return true;
-		}
-		if (currentSubscriptionId && currentSubscriptionId === testSubscriptionId) {
-			return true;
+			// Si current coincide con test, es modo TEST
+			if (currentCustomerId && currentCustomerId === testCustomerId) {
+				return true;
+			}
+
+			// Si solo hay ID test y no hay ID live, es TEST
+			if (testCustomerId && !liveCustomerId) {
+				return true;
+			}
 		}
 
-		// Si solo hay IDs en test y no en live, es TEST
-		if (testCustomerId && !subscription.stripeCustomerId?.live) {
-			return true;
-		}
-		if (testSubscriptionId && !subscription.stripeSubscriptionId?.live) {
-			return true;
+		// Prioridad 3: Verificar por stripeSubscriptionId cuando stripeSubscriptionId no es null
+		if (subscription.stripeSubscriptionId && typeof subscription.stripeSubscriptionId === "object") {
+			const currentSubscriptionId = subscription.stripeSubscriptionId.current || "";
+			const testSubscriptionId = subscription.stripeSubscriptionId.test || "";
+			const liveSubscriptionId = subscription.stripeSubscriptionId.live || "";
+
+			// Si current coincide con test, es modo TEST
+			if (currentSubscriptionId && currentSubscriptionId === testSubscriptionId) {
+				return true;
+			}
+
+			// Si solo hay ID test y no hay ID live, es TEST
+			if (testSubscriptionId && !liveSubscriptionId) {
+				return true;
+			}
 		}
 
 		// Por defecto, asumir LIVE
