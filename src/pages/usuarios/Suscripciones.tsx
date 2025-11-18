@@ -608,8 +608,8 @@ const Suscripciones = () => {
 					<Tab label="Stripe" />
 					<Tab label="Períodos" />
 					<Tab label="Plan" />
-					{selectedSubscription?.paymentFailures && selectedSubscription.paymentFailures.count > 0 && <Tab label="Fallos de Pago" />}
 					<Tab label="Acciones" />
+					{selectedSubscription?.paymentFailures && selectedSubscription.paymentFailures.count > 0 && <Tab label="Fallos de Pago" />}
 				</Tabs>
 				<DialogContent sx={{ minHeight: "500px", maxHeight: "500px", overflowY: "auto" }}>
 					{selectedSubscription && (
@@ -1171,8 +1171,55 @@ const Suscripciones = () => {
 								</Stack>
 							)}
 
-							{/* Tab 4: Fallos de Pago */}
-							{tabValue === 4 && selectedSubscription.paymentFailures && selectedSubscription.paymentFailures.count > 0 && (
+							{/* Tab 4: Acciones */}
+							{tabValue === 4 && (
+								<Stack spacing={3} sx={{ mt: 1 }}>
+									<Alert severity="warning" icon={<Warning2 size={24} />}>
+										<Typography variant="subtitle2" fontWeight="bold">
+											Zona de Peligro - Acciones Administrativas
+										</Typography>
+										<Typography variant="body2" sx={{ mt: 1 }}>
+											Las acciones en esta sección son irreversibles y pueden afectar significativamente la experiencia del usuario.
+										</Typography>
+									</Alert>
+
+									{/* Resetear Suscripción */}
+									<Box>
+										<Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Trash size={20} color="#d32f2f" />
+											Resetear Suscripción
+										</Typography>
+										<Divider sx={{ mb: 2 }} />
+										<Stack spacing={2}>
+											<Typography variant="body2" color="text.secondary">
+												Esta acción reseteará completamente la suscripción del usuario, eliminando todos los datos de suscripción de la base de datos y opcionalmente cancelando la suscripción en Stripe.
+											</Typography>
+											<Alert severity="error">
+												<Typography variant="body2" fontWeight="bold">
+													⚠️ Esta acción es IRREVERSIBLE
+												</Typography>
+												<Typography variant="body2" sx={{ mt: 1 }}>
+													El usuario perderá:
+												</Typography>
+												<ul style={{ marginTop: "8px", marginBottom: 0 }}>
+													<li>Todo el historial de suscripción</li>
+													<li>Configuración de plan actual</li>
+													<li>Datos de períodos de gracia</li>
+													<li>Historial de pagos (si se cancela en Stripe)</li>
+												</ul>
+											</Alert>
+											<Box>
+												<Button variant="contained" color="error" startIcon={<Trash size={20} />} onClick={handleOpenResetDialog} fullWidth>
+													Resetear Suscripción
+												</Button>
+											</Box>
+										</Stack>
+									</Box>
+								</Stack>
+							)}
+
+							{/* Tab 5: Fallos de Pago */}
+							{tabValue === 5 && selectedSubscription.paymentFailures && selectedSubscription.paymentFailures.count > 0 && (
 								<Stack spacing={3} sx={{ mt: 1 }}>
 									{/* Fallos de Pago */}
 									<Box>
@@ -1240,54 +1287,6 @@ const Suscripciones = () => {
 										)}
 									</Grid>
 								</Box>
-								</Stack>
-							)}
-
-							{/* Tab 5 (o 4 si no hay fallos de pago): Acciones */}
-							{((tabValue === 5 && selectedSubscription.paymentFailures && selectedSubscription.paymentFailures.count > 0) ||
-								(tabValue === 4 && (!selectedSubscription.paymentFailures || selectedSubscription.paymentFailures.count === 0))) && (
-								<Stack spacing={3} sx={{ mt: 1 }}>
-									<Alert severity="warning" icon={<Warning2 size={24} />}>
-										<Typography variant="subtitle2" fontWeight="bold">
-											Zona de Peligro - Acciones Administrativas
-										</Typography>
-										<Typography variant="body2" sx={{ mt: 1 }}>
-											Las acciones en esta sección son irreversibles y pueden afectar significativamente la experiencia del usuario.
-										</Typography>
-									</Alert>
-
-									{/* Resetear Suscripción */}
-									<Box>
-										<Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-											<Trash size={20} color="#d32f2f" />
-											Resetear Suscripción
-										</Typography>
-										<Divider sx={{ mb: 2 }} />
-										<Stack spacing={2}>
-											<Typography variant="body2" color="text.secondary">
-												Esta acción reseteará completamente la suscripción del usuario, eliminando todos los datos de suscripción de la base de datos y opcionalmente cancelando la suscripción en Stripe.
-											</Typography>
-											<Alert severity="error">
-												<Typography variant="body2" fontWeight="bold">
-													⚠️ Esta acción es IRREVERSIBLE
-												</Typography>
-												<Typography variant="body2" sx={{ mt: 1 }}>
-													El usuario perderá:
-												</Typography>
-												<ul style={{ marginTop: "8px", marginBottom: 0 }}>
-													<li>Todo el historial de suscripción</li>
-													<li>Configuración de plan actual</li>
-													<li>Datos de períodos de gracia</li>
-													<li>Historial de pagos (si se cancela en Stripe)</li>
-												</ul>
-											</Alert>
-											<Box>
-												<Button variant="contained" color="error" startIcon={<Trash size={20} />} onClick={handleOpenResetDialog} fullWidth>
-													Resetear Suscripción
-												</Button>
-											</Box>
-										</Stack>
-									</Box>
 								</Stack>
 							)}
 						</>
