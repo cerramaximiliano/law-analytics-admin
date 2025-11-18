@@ -285,6 +285,39 @@ const Suscripciones = () => {
 		}
 	};
 
+	const isTestMode = (subscription: Subscription): boolean => {
+		// Si el backend proporciona testMode, usarlo
+		if (subscription.testMode !== undefined && subscription.testMode !== null) {
+			return subscription.testMode;
+		}
+
+		// Fallback: detectar por IDs de Stripe
+		// En Stripe, los IDs de test tienen prefijos específicos que no tienen los de producción
+		const currentCustomerId = subscription.stripeCustomerId?.current || "";
+		const currentSubscriptionId = subscription.stripeSubscriptionId?.current || "";
+		const testCustomerId = subscription.stripeCustomerId?.test || "";
+		const testSubscriptionId = subscription.stripeSubscriptionId?.test || "";
+
+		// Si current coincide con test, es modo TEST
+		if (currentCustomerId && currentCustomerId === testCustomerId) {
+			return true;
+		}
+		if (currentSubscriptionId && currentSubscriptionId === testSubscriptionId) {
+			return true;
+		}
+
+		// Si solo hay IDs en test y no en live, es TEST
+		if (testCustomerId && !subscription.stripeCustomerId?.live) {
+			return true;
+		}
+		if (testSubscriptionId && !subscription.stripeSubscriptionId?.live) {
+			return true;
+		}
+
+		// Por defecto, asumir LIVE
+		return false;
+	};
+
 	if (loading) {
 		return (
 			<MainCard>
@@ -516,10 +549,10 @@ const Suscripciones = () => {
 									</TableCell>
 									<TableCell>
 										<Chip
-											label={subscription.testMode ? "🟡 TEST" : "🟢 LIVE"}
-											color={subscription.testMode ? "warning" : "success"}
+											label={isTestMode(subscription) ? "🟡 TEST" : "🟢 LIVE"}
+											color={isTestMode(subscription) ? "warning" : "success"}
 											size="small"
-											sx={subscription.testMode ? { color: "rgba(0, 0, 0, 0.87)" } : undefined}
+											sx={isTestMode(subscription) ? { color: "rgba(0, 0, 0, 0.87)" } : undefined}
 										/>
 									</TableCell>
 									<TableCell>
