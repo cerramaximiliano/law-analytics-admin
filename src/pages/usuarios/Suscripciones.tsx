@@ -286,10 +286,22 @@ const Suscripciones = () => {
 	};
 
 	const isTestMode = (subscription: Subscription): boolean => {
+		console.log("🔍 [isTestMode] Checking subscription:", {
+			userId: subscription.user._id,
+			userEmail: subscription.user.email,
+			testMode: subscription.testMode,
+			testModeType: typeof subscription.testMode,
+			stripeCustomerId: subscription.stripeCustomerId,
+			stripeSubscriptionId: subscription.stripeSubscriptionId,
+		});
+
 		// Prioridad 1: Si el backend proporciona testMode explícitamente, usarlo
 		if (typeof subscription.testMode === "boolean") {
+			console.log("✅ [isTestMode] testMode is boolean:", subscription.testMode);
 			return subscription.testMode;
 		}
+
+		console.log("⚠️ [isTestMode] testMode is NOT boolean, checking Stripe IDs...");
 
 		// Prioridad 2: Fallback - detectar por IDs de Stripe cuando stripeCustomerId no es null
 		if (subscription.stripeCustomerId && typeof subscription.stripeCustomerId === "object") {
@@ -297,13 +309,21 @@ const Suscripciones = () => {
 			const testCustomerId = subscription.stripeCustomerId.test || "";
 			const liveCustomerId = subscription.stripeCustomerId.live || "";
 
+			console.log("🔍 [isTestMode] Customer IDs:", {
+				current: currentCustomerId,
+				test: testCustomerId,
+				live: liveCustomerId,
+			});
+
 			// Si current coincide con test, es modo TEST
 			if (currentCustomerId && currentCustomerId === testCustomerId) {
+				console.log("✅ [isTestMode] Current customer ID matches test ID");
 				return true;
 			}
 
 			// Si solo hay ID test y no hay ID live, es TEST
 			if (testCustomerId && !liveCustomerId) {
+				console.log("✅ [isTestMode] Only test customer ID exists");
 				return true;
 			}
 		}
@@ -314,18 +334,27 @@ const Suscripciones = () => {
 			const testSubscriptionId = subscription.stripeSubscriptionId.test || "";
 			const liveSubscriptionId = subscription.stripeSubscriptionId.live || "";
 
+			console.log("🔍 [isTestMode] Subscription IDs:", {
+				current: currentSubscriptionId,
+				test: testSubscriptionId,
+				live: liveSubscriptionId,
+			});
+
 			// Si current coincide con test, es modo TEST
 			if (currentSubscriptionId && currentSubscriptionId === testSubscriptionId) {
+				console.log("✅ [isTestMode] Current subscription ID matches test ID");
 				return true;
 			}
 
 			// Si solo hay ID test y no hay ID live, es TEST
 			if (testSubscriptionId && !liveSubscriptionId) {
+				console.log("✅ [isTestMode] Only test subscription ID exists");
 				return true;
 			}
 		}
 
 		// Por defecto, asumir LIVE
+		console.log("❌ [isTestMode] Defaulting to LIVE mode");
 		return false;
 	};
 
