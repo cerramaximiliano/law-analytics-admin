@@ -471,7 +471,7 @@ const Suscripciones = () => {
 								<TableCell>Usuario</TableCell>
 								<TableCell>Plan</TableCell>
 								<TableCell>Estado</TableCell>
-								<TableCell>Método de Pago</TableCell>
+								<TableCell>Modo</TableCell>
 								<TableCell>Período Actual</TableCell>
 								<TableCell>Creación</TableCell>
 								<TableCell>Detalles</TableCell>
@@ -515,7 +515,12 @@ const Suscripciones = () => {
 										/>
 									</TableCell>
 									<TableCell>
-										<Typography variant="body2">{subscription.paymentMethod || "-"}</Typography>
+										<Chip
+											label={subscription.testMode ? "🟡 TEST" : "🟢 LIVE"}
+											color={subscription.testMode ? "warning" : "success"}
+											size="small"
+											sx={subscription.testMode ? { color: "rgba(0, 0, 0, 0.87)" } : undefined}
+										/>
 									</TableCell>
 									<TableCell>
 										<Stack spacing={0.5}>
