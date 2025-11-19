@@ -652,6 +652,7 @@ const Suscripciones = () => {
 					<Tab label="Stripe" />
 					<Tab label="Períodos" />
 					<Tab label="Plan" />
+					<Tab label="Historial" />
 					<Tab label="Acciones" />
 					{selectedSubscription?.paymentFailures && selectedSubscription.paymentFailures.count > 0 && <Tab label="Fallos de Pago" />}
 				</Tabs>
@@ -1215,8 +1216,279 @@ const Suscripciones = () => {
 								</Stack>
 							)}
 
-							{/* Tab 4: Acciones */}
+							{/* Tab 4: Historial */}
 							{tabValue === 4 && (
+								<Stack spacing={3} sx={{ mt: 1 }}>
+									<Box>
+										<Typography variant="h6" gutterBottom>
+											Historial de Suscripción
+										</Typography>
+										<Divider sx={{ mb: 2 }} />
+										{selectedSubscription.subscriptionHistory && selectedSubscription.subscriptionHistory.length > 0 ? (
+											<Stack spacing={2}>
+												{selectedSubscription.subscriptionHistory
+													.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+													.map((event, index) => (
+														<Card key={index} variant="outlined" sx={{ p: 2 }}>
+															<Grid container spacing={2}>
+																{/* Encabezado del evento */}
+																<Grid item xs={12}>
+																	<Stack direction="row" justifyContent="space-between" alignItems="center">
+																		<Chip
+																			label={event.eventType.replace(/_/g, " ").toUpperCase()}
+																			color={
+																				event.eventType.includes("success") || event.eventType.includes("created") || event.eventType.includes("converted")
+																					? "success"
+																					: event.eventType.includes("failed") || event.eventType.includes("cancelled") || event.eventType.includes("expired")
+																					? "error"
+																					: event.eventType.includes("scheduled") || event.eventType.includes("pending")
+																					? "warning"
+																					: "default"
+																			}
+																			size="small"
+																			sx={
+																				event.eventType.includes("scheduled") || event.eventType.includes("pending")
+																					? { color: "rgba(0, 0, 0, 0.87)" }
+																					: undefined
+																			}
+																		/>
+																		<Typography variant="caption" color="text.secondary">
+																			{dayjs(event.timestamp).format("DD/MM/YYYY HH:mm:ss")}
+																		</Typography>
+																	</Stack>
+																</Grid>
+
+																{/* Origen del evento */}
+																<Grid item xs={12} sm={6}>
+																	<Typography variant="caption" color="text.secondary">
+																		Origen
+																	</Typography>
+																	<Typography variant="body2" fontWeight="bold">
+																		{event.triggeredBy.toUpperCase()}
+																	</Typography>
+																</Grid>
+
+																{/* Cambio de plan */}
+																{event.planChange && (
+																	<>
+																		<Grid item xs={12}>
+																			<Divider>
+																				<Typography variant="caption" color="text.secondary">
+																					Cambio de Plan
+																				</Typography>
+																			</Divider>
+																		</Grid>
+																		<Grid item xs={12} sm={6}>
+																			<Typography variant="caption" color="text.secondary">
+																				Plan Anterior
+																			</Typography>
+																			<Typography variant="body2">{getPlanLabel(event.planChange.fromPlan)}</Typography>
+																		</Grid>
+																		<Grid item xs={12} sm={6}>
+																			<Typography variant="caption" color="text.secondary">
+																				Plan Nuevo
+																			</Typography>
+																			<Typography variant="body2" fontWeight="bold">
+																				{getPlanLabel(event.planChange.toPlan)}
+																			</Typography>
+																		</Grid>
+																		<Grid item xs={12} sm={6}>
+																			<Typography variant="caption" color="text.secondary">
+																				Precio Anterior
+																			</Typography>
+																			<Typography variant="body2">${event.planChange.fromPrice}</Typography>
+																		</Grid>
+																		<Grid item xs={12} sm={6}>
+																			<Typography variant="caption" color="text.secondary">
+																				Precio Nuevo
+																			</Typography>
+																			<Typography variant="body2" fontWeight="bold">
+																				${event.planChange.toPrice}
+																			</Typography>
+																		</Grid>
+																	</>
+																)}
+
+																{/* Cambio de estado */}
+																{event.statusChange && (
+																	<>
+																		<Grid item xs={12}>
+																			<Divider>
+																				<Typography variant="caption" color="text.secondary">
+																					Cambio de Estado
+																				</Typography>
+																			</Divider>
+																		</Grid>
+																		<Grid item xs={12} sm={6}>
+																			<Typography variant="caption" color="text.secondary">
+																				Estado Anterior
+																			</Typography>
+																			<Typography variant="body2">{getStatusLabel(event.statusChange.fromStatus)}</Typography>
+																		</Grid>
+																		<Grid item xs={12} sm={6}>
+																			<Typography variant="caption" color="text.secondary">
+																				Estado Nuevo
+																			</Typography>
+																			<Typography variant="body2" fontWeight="bold">
+																				{getStatusLabel(event.statusChange.toStatus)}
+																			</Typography>
+																		</Grid>
+																	</>
+																)}
+
+																{/* Información de pago */}
+																{event.paymentInfo && (
+																	<>
+																		<Grid item xs={12}>
+																			<Divider>
+																				<Typography variant="caption" color="text.secondary">
+																					Información de Pago
+																				</Typography>
+																			</Divider>
+																		</Grid>
+																		<Grid item xs={12} sm={6}>
+																			<Typography variant="caption" color="text.secondary">
+																				Monto
+																			</Typography>
+																			<Typography variant="body2">
+																				{event.paymentInfo.amount} {event.paymentInfo.currency?.toUpperCase()}
+																			</Typography>
+																		</Grid>
+																		<Grid item xs={12} sm={6}>
+																			<Typography variant="caption" color="text.secondary">
+																				Método de Pago
+																			</Typography>
+																			<Typography variant="body2">{event.paymentInfo.paymentMethod}</Typography>
+																		</Grid>
+																		{event.paymentInfo.failureReason && (
+																			<Grid item xs={12}>
+																				<Typography variant="caption" color="text.secondary">
+																					Razón del Fallo
+																				</Typography>
+																				<Typography variant="body2" color="error">
+																					{event.paymentInfo.failureReason}
+																				</Typography>
+																			</Grid>
+																		)}
+																		{event.paymentInfo.failureCode && (
+																			<Grid item xs={12} sm={6}>
+																				<Typography variant="caption" color="text.secondary">
+																					Código de Error
+																				</Typography>
+																				<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+																					{event.paymentInfo.failureCode}
+																				</Typography>
+																			</Grid>
+																		)}
+																	</>
+																)}
+
+																{/* Datos de Stripe */}
+																{event.stripeData && (
+																	<>
+																		<Grid item xs={12}>
+																			<Divider>
+																				<Typography variant="caption" color="text.secondary">
+																					Datos de Stripe
+																				</Typography>
+																			</Divider>
+																		</Grid>
+																		{event.stripeData.eventId && (
+																			<Grid item xs={12}>
+																				<Typography variant="caption" color="text.secondary">
+																					Event ID
+																				</Typography>
+																				<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+																					{event.stripeData.eventId}
+																				</Typography>
+																			</Grid>
+																		)}
+																		{event.stripeData.invoiceId && (
+																			<Grid item xs={12}>
+																				<Typography variant="caption" color="text.secondary">
+																					Invoice ID
+																				</Typography>
+																				<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+																					{event.stripeData.invoiceId}
+																				</Typography>
+																			</Grid>
+																		)}
+																	</>
+																)}
+
+																{/* Metadatos */}
+																{event.metadata && Object.keys(event.metadata).length > 0 && (
+																	<>
+																		<Grid item xs={12}>
+																			<Divider>
+																				<Typography variant="caption" color="text.secondary">
+																					Metadatos
+																				</Typography>
+																			</Divider>
+																		</Grid>
+																		{event.metadata.reason && (
+																			<Grid item xs={12}>
+																				<Typography variant="caption" color="text.secondary">
+																					Razón
+																				</Typography>
+																				<Typography variant="body2">{event.metadata.reason}</Typography>
+																			</Grid>
+																		)}
+																		{event.metadata.couponCode && (
+																			<Grid item xs={12} sm={6}>
+																				<Typography variant="caption" color="text.secondary">
+																					Código de Cupón
+																				</Typography>
+																				<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+																					{event.metadata.couponCode}
+																				</Typography>
+																			</Grid>
+																		)}
+																		{event.metadata.discountPercentage && (
+																			<Grid item xs={12} sm={6}>
+																				<Typography variant="caption" color="text.secondary">
+																					Descuento
+																				</Typography>
+																				<Typography variant="body2">{event.metadata.discountPercentage}%</Typography>
+																			</Grid>
+																		)}
+																	</>
+																)}
+
+																{/* Notas */}
+																{event.notes && (
+																	<Grid item xs={12}>
+																		<Alert severity="info" sx={{ mt: 1 }}>
+																			<Typography variant="caption" color="text.secondary" fontWeight="bold">
+																				Notas
+																			</Typography>
+																			<Typography variant="body2">{event.notes}</Typography>
+																		</Alert>
+																	</Grid>
+																)}
+
+																{/* Flags */}
+																<Grid item xs={12}>
+																	<Stack direction="row" spacing={1} flexWrap="wrap">
+																		{event.requiresAttention && <Chip label="Requiere Atención" color="warning" size="small" sx={{ color: "rgba(0, 0, 0, 0.87)" }} />}
+																		{event.emailSent && <Chip label="Email Enviado" color="success" size="small" />}
+																	</Stack>
+																</Grid>
+															</Grid>
+														</Card>
+													))}
+											</Stack>
+										) : (
+											<Alert severity="info">
+												<Typography variant="body2">No hay eventos en el historial de esta suscripción.</Typography>
+											</Alert>
+										)}
+									</Box>
+								</Stack>
+							)}
+
+							{/* Tab 5: Acciones */}
+							{tabValue === 5 && (
 								<Stack spacing={3} sx={{ mt: 1 }}>
 									<Alert severity="warning" icon={<Warning2 size={24} />}>
 										<Typography variant="subtitle2" fontWeight="bold">
@@ -1262,8 +1534,8 @@ const Suscripciones = () => {
 								</Stack>
 							)}
 
-							{/* Tab 5: Fallos de Pago */}
-							{tabValue === 5 && selectedSubscription.paymentFailures && selectedSubscription.paymentFailures.count > 0 && (
+							{/* Tab 6: Fallos de Pago */}
+							{tabValue === 6 && selectedSubscription.paymentFailures && selectedSubscription.paymentFailures.count > 0 && (
 								<Stack spacing={3} sx={{ mt: 1 }}>
 									{/* Fallos de Pago */}
 									<Box>
