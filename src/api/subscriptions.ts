@@ -76,6 +76,62 @@ export interface DowngradeGracePeriod {
 	modifiedAt: string | null;
 }
 
+export interface SubscriptionHistoryEvent {
+	_id?: string;
+	eventType: string;
+	timestamp: string;
+	planChange?: {
+		fromPlan: string;
+		toPlan: string;
+		fromPrice: number;
+		toPrice: number;
+	};
+	statusChange?: {
+		fromStatus: string;
+		toStatus: string;
+	};
+	triggeredBy: string;
+	adminUser?: string;
+	stripeData?: {
+		eventId: string;
+		subscriptionId: string;
+		invoiceId: string;
+		paymentIntentId: string;
+		customerId: string;
+	};
+	paymentInfo?: {
+		amount: number;
+		currency: string;
+		paymentMethod: string;
+		failureReason: string;
+		failureCode: string;
+		attemptNumber: number;
+	};
+	metadata?: {
+		reason: string;
+		effectiveDate: string;
+		gracePeriodEnd: string;
+		cancellationDate: string;
+		couponCode: string;
+		discountPercentage: number;
+		billingCycle: string;
+		isScheduled: boolean;
+		executedScheduledChange: boolean;
+	};
+	snapshot?: {
+		plan: string;
+		status: string;
+		accountStatus: string;
+		cancelAtPeriodEnd: boolean;
+		currentPeriodStart: string;
+		currentPeriodEnd: string;
+	};
+	notes?: string;
+	requiresAttention?: boolean;
+	emailSent?: boolean;
+	emailTemplate?: string;
+}
+
 export interface Subscription {
 	_id: string;
 	user: UserInfo;
@@ -98,6 +154,7 @@ export interface Subscription {
 	accountStatus: string;
 	paymentRecovery: PaymentRecovery;
 	statusHistory: any[];
+	subscriptionHistory: SubscriptionHistoryEvent[];
 	limits: SubscriptionLimits;
 	features: SubscriptionFeatures;
 	lastPlanSync: string;
