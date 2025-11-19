@@ -207,7 +207,7 @@ const Suscripciones = () => {
 			setResettingSubscription(true);
 
 			await SubscriptionsService.resetUserSubscription({
-				userId: selectedSubscription.user._id,
+				subscriptionId: selectedSubscription._id,
 				cancelInStripe,
 			});
 

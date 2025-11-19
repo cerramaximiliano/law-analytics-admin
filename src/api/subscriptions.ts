@@ -189,7 +189,7 @@ export interface GetSubscriptionsParams {
 }
 
 export interface ResetSubscriptionParams {
-	userId: string;
+	subscriptionId: string;
 	cancelInStripe: boolean;
 }
 
