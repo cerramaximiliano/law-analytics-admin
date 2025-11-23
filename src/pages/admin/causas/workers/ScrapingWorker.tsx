@@ -35,10 +35,11 @@ import {
 	DialogActions,
 	TableSortLabel,
 } from "@mui/material";
-import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, Trash } from "iconsax-react";
+import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, Trash, AddCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig, ScrapingHistory } from "api/workers";
 import AdvancedConfigModal from "./AdvancedConfigModal";
+import CreateConfigModal from "./CreateConfigModal";
 
 // Enums para el worker de scraping
 const FUERO_OPTIONS = [
@@ -59,6 +60,7 @@ const ScrapingWorker = () => {
 	const [editValues, setEditValues] = useState<Partial<WorkerConfig>>({});
 	const [advancedConfigOpen, setAdvancedConfigOpen] = useState(false);
 	const [selectedConfig, setSelectedConfig] = useState<WorkerConfig | null>(null);
+	const [createConfigOpen, setCreateConfigOpen] = useState(false);
 	const [scrapingHistory, setScrapingHistory] = useState<ScrapingHistory[]>([]);
 	const [historyLoading, setHistoryLoading] = useState(false);
 	const [historyPage, setHistoryPage] = useState(1);
@@ -475,6 +477,21 @@ const ScrapingWorker = () => {
 		setSelectedConfig(null);
 	};
 
+	// Manejar modal de crear configuración
+	const handleOpenCreateConfig = () => {
+		setCreateConfigOpen(true);
+	};
+
+	const handleCloseCreateConfig = () => {
+		setCreateConfigOpen(false);
+	};
+
+	const handleCreateSuccess = () => {
+		setConfigTotalSnapshot(null);
+		setConfigPage(0);
+		fetchConfigs(0, configRowsPerPage, fueroFilter);
+	};
+
 	if (loading) {
 		return (
 			<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
@@ -511,6 +528,9 @@ const ScrapingWorker = () => {
 			<Box display="flex" justifyContent="space-between" alignItems="center">
 				<Typography variant="h5">Configuración del Worker de Scraping</Typography>
 				<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
+					<Button variant="contained" color="primary" size="small" startIcon={<AddCircle size={18} />} onClick={handleOpenCreateConfig}>
+						Nuevo Worker
+					</Button>
 					<FormControl size="small" sx={{ minWidth: 150 }}>
 						<Select value={fueroFilter} onChange={(e) => handleFueroFilterChange(e.target.value)} displayEmpty>
 							<MenuItem value="TODOS">Todos los Fueros</MenuItem>
@@ -1156,6 +1176,9 @@ const ScrapingWorker = () => {
 					workerType="scraping"
 				/>
 			)}
+
+			{/* Modal de crear nueva configuración */}
+			<CreateConfigModal open={createConfigOpen} onClose={handleCloseCreateConfig} onSuccess={handleCreateSuccess} />
 
 			{/* Diálogo de confirmación de eliminación */}
 			<Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog} maxWidth="sm" fullWidth>
