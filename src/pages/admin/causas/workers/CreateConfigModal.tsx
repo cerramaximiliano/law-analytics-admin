@@ -118,6 +118,7 @@ const CreateConfigModal: React.FC<CreateConfigModalProps> = ({ open, onClose, on
 				year,
 				range_start: rangeStart,
 				range_end: rangeEnd,
+				max_number: rangeEnd, // max_number es requerido y debe ser igual a range_end
 			};
 
 			// Agregar campos opcionales solo si tienen valor
