@@ -188,6 +188,15 @@ class WorkerConfigService {
 			throw WorkersService.handleError(error);
 		}
 	}
+
+	async createConfig(data: Partial<WorkerConfig>): Promise<WorkerConfigResponse> {
+		try {
+			const response = await workersAxios.post(this.endpoint, data);
+			return response.data;
+		} catch (error) {
+			throw WorkersService.handleError(error);
+		}
+	}
 }
 
 // Servicio principal de Workers
@@ -291,6 +300,10 @@ export class WorkersService {
 
 	static async deleteScrapingConfig(id: string): Promise<WorkerConfigResponse> {
 		return this.services["scraping"].deleteConfig(id);
+	}
+
+	static async createScrapingConfig(data: Partial<WorkerConfig>): Promise<WorkerConfigResponse> {
+		return this.services["scraping"].createConfig(data);
 	}
 
 	static async getAppUpdateConfigs(params?: { activo?: boolean; page?: number; limit?: number }): Promise<WorkerConfigResponse> {
