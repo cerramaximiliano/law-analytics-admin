@@ -40,6 +40,9 @@ const MailingCampaigns = Loadable(lazy(() => import("pages/admin/marketing/maili
 const EmailTemplates = Loadable(lazy(() => import("pages/admin/marketing/templates")));
 const MarketingContacts = Loadable(lazy(() => import("pages/admin/marketing/contacts")));
 
+// Recursos pages
+const Jurisprudencia = Loadable(lazy(() => import("pages/recursos/Jurisprudencia")));
+
 // Placeholder pages
 const Dashboard = () => (
 	<div style={{ padding: "2rem", textAlign: "center" }}>
@@ -206,6 +209,19 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<MarketingContacts />
+								</AdminRoleGuard>
+							),
+						},
+					],
+				},
+				{
+					path: "recursos",
+					children: [
+						{
+							path: "jurisprudencia",
+							element: (
+								<AdminRoleGuard>
+									<Jurisprudencia />
 								</AdminRoleGuard>
 							),
 						},
