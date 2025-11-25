@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
 	Box,
 	Card,
@@ -114,11 +114,11 @@ const DocumentosTab = () => {
 	const [loadingDetalles, setLoadingDetalles] = useState(false);
 
 	// Cargar códigos
-	const fetchCodigos = useCallback(async () => {
+	const fetchCodigos = async () => {
 		try {
 			setLoading(true);
 
-			const params: Record<string, string | number> = {
+			const params: any = {
 				page: page + 1,
 				limit: rowsPerPage,
 				ordenar: sortOrder === "desc" ? "-fechaDescubrimiento" : "fechaDescubrimiento",
@@ -144,12 +144,12 @@ const DocumentosTab = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [page, rowsPerPage, sortOrder, patronFilter, estadoFilter, enqueueSnackbar]);
+	};
 
 	// Efectos
 	useEffect(() => {
 		fetchCodigos();
-	}, [fetchCodigos]);
+	}, [page, rowsPerPage, sortOrder]);
 
 	// Handlers de paginación
 	const handleChangePage = (_event: unknown, newPage: number) => {
@@ -170,6 +170,7 @@ const DocumentosTab = () => {
 		setPatronFilter("");
 		setEstadoFilter("");
 		setPage(0);
+		setTimeout(() => fetchCodigos(), 100);
 	};
 
 	const handleSort = () => {
