@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, SyntheticEvent } from "react";
 import {
 	Box,
 	Card,
@@ -31,8 +31,11 @@ import {
 	ListItem,
 	ListItemText,
 	Divider,
+	Tab,
+	Tabs,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
+import DocumentosTab from "./components/DocumentosTab";
 import MainCard from "components/MainCard";
 import {
 	Refresh,
@@ -116,8 +119,38 @@ const JURISDICCION_COLORS: Record<string, "primary" | "success" | "info" | "warn
 	default: "warning",
 };
 
+// TabPanel component
+interface TabPanelProps {
+	children?: React.ReactNode;
+	index: number;
+	value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+	const { children, value, index, ...other } = props;
+	return (
+		<div role="tabpanel" hidden={value !== index} id={`jurisprudencia-tabpanel-${index}`} aria-labelledby={`jurisprudencia-tab-${index}`} {...other}>
+			{value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
+		</div>
+	);
+}
+
+function a11yProps(index: number) {
+	return {
+		id: `jurisprudencia-tab-${index}`,
+		"aria-controls": `jurisprudencia-tabpanel-${index}`,
+	};
+}
+
 const Jurisprudencia = () => {
 	const { enqueueSnackbar } = useSnackbar();
+
+	// Tab state
+	const [tabValue, setTabValue] = useState(0);
+
+	const handleTabChange = (_event: SyntheticEvent, newValue: number) => {
+		setTabValue(newValue);
+	};
 
 	// Estados
 	const [fallos, setFallos] = useState<Fallo[]>([]);
@@ -376,10 +409,19 @@ const Jurisprudencia = () => {
 
 	return (
 		<>
-			<MainCard title="Jurisprudencia" secondary={<Book size={24} />}>
-				<Stack spacing={3}>
-					{/* Filtros */}
-					<Card sx={{ p: 2 }}>
+			<MainCard title="Jurisprudencia - El Dial" secondary={<Book size={24} />}>
+				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+					<Tabs value={tabValue} onChange={handleTabChange} aria-label="Jurisprudencia tabs">
+						<Tab label="Fallos" {...a11yProps(0)} />
+						<Tab label="Documentos" {...a11yProps(1)} />
+					</Tabs>
+				</Box>
+
+				{/* Tab Fallos */}
+				<TabPanel value={tabValue} index={0}>
+					<Stack spacing={3}>
+						{/* Filtros */}
+						<Card sx={{ p: 2 }}>
 						<Typography variant="h6" gutterBottom>
 							Filtros de búsqueda
 						</Typography>
@@ -637,7 +679,13 @@ const Jurisprudencia = () => {
 							</>
 						)}
 					</TableContainer>
-				</Stack>
+					</Stack>
+				</TabPanel>
+
+				{/* Tab Documentos */}
+				<TabPanel value={tabValue} index={1}>
+					<DocumentosTab />
+				</TabPanel>
 			</MainCard>
 
 			{/* Modal de Edición */}
