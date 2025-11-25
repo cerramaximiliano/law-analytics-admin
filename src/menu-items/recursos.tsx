@@ -14,10 +14,18 @@ const recursos: NavItemType = {
 		{
 			id: "jurisprudencia",
 			title: "Jurisprudencia",
-			type: "item",
+			type: "collapse",
 			icon: Book,
-			url: "/recursos/jurisprudencia",
 			breadcrumbs: true,
+			children: [
+				{
+					id: "jurisprudencia-eldial",
+					title: "El Dial",
+					type: "item",
+					url: "/recursos/jurisprudencia",
+					breadcrumbs: true,
+				},
+			],
 		},
 	],
 };
