@@ -36,6 +36,7 @@ import {
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import DocumentosTab from "./components/DocumentosTab";
+import ConfiguracionTab from "./components/ConfiguracionTab";
 import MainCard from "components/MainCard";
 import {
 	Refresh,
@@ -414,6 +415,7 @@ const Jurisprudencia = () => {
 					<Tabs value={tabValue} onChange={handleTabChange} aria-label="Jurisprudencia tabs">
 						<Tab label="Fallos" {...a11yProps(0)} />
 						<Tab label="Documentos" {...a11yProps(1)} />
+						<Tab label="Configuración" {...a11yProps(2)} />
 					</Tabs>
 				</Box>
 
@@ -685,6 +687,11 @@ const Jurisprudencia = () => {
 				{/* Tab Documentos */}
 				<TabPanel value={tabValue} index={1}>
 					<DocumentosTab />
+				</TabPanel>
+
+				{/* Tab Configuración */}
+				<TabPanel value={tabValue} index={2}>
+					<ConfiguracionTab />
 				</TabPanel>
 			</MainCard>
 
