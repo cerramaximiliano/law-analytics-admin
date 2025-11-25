@@ -22,7 +22,7 @@ import {
 	Typography,
 	CircularProgress,
 } from "@mui/material";
-import { Edit, Trash, Eye, Add, Refresh2, Link1, ArrowDown2, ArrowUp2 } from "iconsax-react";
+import { Edit, Trash, Eye, Add, Refresh2, Link1, ArrowDown2, ArrowUp2, DollarCircle } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { useSnackbar } from "notistack";
 import { formatCurrency } from "utils/formatCurrency";
@@ -32,6 +32,7 @@ import authAxios from "utils/authAxios";
 import PlanFormModal from "./PlanFormModal";
 import DeletePlanDialog from "./DeletePlanDialog";
 import PlanDetailModal from "./PlanDetailModal";
+import UpdatePriceModal from "./UpdatePriceModal";
 
 const PlansManagement = () => {
 	const { enqueueSnackbar } = useSnackbar();
@@ -45,6 +46,7 @@ const PlansManagement = () => {
 	const [deleteLoading, setDeleteLoading] = useState(false);
 	const [syncLoading, setSyncLoading] = useState(false);
 	const [showDetailedInfo, setShowDetailedInfo] = useState(false);
+	const [updatePriceModalOpen, setUpdatePriceModalOpen] = useState(false);
 
 	const fetchPlans = async () => {
 		try {
@@ -81,6 +83,21 @@ const PlansManagement = () => {
 	const handleDetailClose = () => {
 		setDetailModalOpen(false);
 		setSelectedPlan(null);
+	};
+
+	const handleUpdatePrice = (plan: Plan) => {
+		setSelectedPlan(plan);
+		setUpdatePriceModalOpen(true);
+	};
+
+	const handleUpdatePriceClose = () => {
+		setUpdatePriceModalOpen(false);
+		setSelectedPlan(null);
+	};
+
+	const handleUpdatePriceSuccess = () => {
+		enqueueSnackbar("Precio actualizado correctamente en Stripe", { variant: "success" });
+		fetchPlans();
 	};
 
 	const handleAddNew = () => {
@@ -405,6 +422,11 @@ const PlansManagement = () => {
 															<Edit size={18} />
 														</IconButton>
 													</Tooltip>
+													<Tooltip title="Actualizar Precio en Stripe">
+														<IconButton size="small" color="warning" onClick={() => handleUpdatePrice(plan)}>
+															<DollarCircle size={18} />
+														</IconButton>
+													</Tooltip>
 													<Tooltip title="Eliminar">
 														<IconButton size="small" color="error" onClick={() => handleDelete(plan)} disabled={plan.isDefault}>
 															<Trash size={18} />
@@ -503,6 +525,14 @@ const PlansManagement = () => {
 
 			{/* Plan Detail Modal */}
 			<PlanDetailModal open={detailModalOpen} onClose={handleDetailClose} plan={selectedPlan} />
+
+			{/* Update Price Modal */}
+			<UpdatePriceModal
+				open={updatePriceModalOpen}
+				onClose={handleUpdatePriceClose}
+				plan={selectedPlan}
+				onSuccess={handleUpdatePriceSuccess}
+			/>
 		</>
 	);
 };
