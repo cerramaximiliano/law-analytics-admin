@@ -201,6 +201,11 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 						<Typography variant="h6" gutterBottom>
 							Información de Precio
 						</Typography>
+						{plan && (
+							<Typography variant="caption" color="text.secondary">
+								Para modificar el precio, utilice el botón "Actualizar Precio" en la lista de planes.
+							</Typography>
+						)}
 					</Grid>
 					<Grid item xs={12} sm={4}>
 						<TextField
@@ -210,33 +215,39 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 							value={formData.pricingInfo?.basePrice}
 							onChange={(e) => handlePricingChange("basePrice", Number(e.target.value))}
 							required
+							disabled={!!plan}
+							InputProps={{
+								readOnly: !!plan,
+							}}
 						/>
 					</Grid>
 					<Grid item xs={12} sm={4}>
-						<FormControl fullWidth>
-							<InputLabel>Moneda</InputLabel>
-							<Select
-								value={formData.pricingInfo?.currency}
-								onChange={(e) => handlePricingChange("currency", e.target.value)}
-								label="Moneda"
-							>
-								<MenuItem value="COP">COP</MenuItem>
-								<MenuItem value="USD">USD</MenuItem>
-							</Select>
-						</FormControl>
+						<TextField
+							fullWidth
+							label="Moneda"
+							value={formData.pricingInfo?.currency}
+							disabled={!!plan}
+							InputProps={{
+								readOnly: !!plan,
+							}}
+						/>
 					</Grid>
 					<Grid item xs={12} sm={4}>
-						<FormControl fullWidth>
-							<InputLabel>Período</InputLabel>
-							<Select
-								value={formData.pricingInfo?.billingPeriod}
-								onChange={(e) => handlePricingChange("billingPeriod", e.target.value)}
-								label="Período"
-							>
-								<MenuItem value="monthly">Mensual</MenuItem>
-								<MenuItem value="yearly">Anual</MenuItem>
-							</Select>
-						</FormControl>
+						<TextField
+							fullWidth
+							label="Período"
+							value={
+								formData.pricingInfo?.billingPeriod === "monthly"
+									? "Mensual"
+									: formData.pricingInfo?.billingPeriod === "yearly"
+										? "Anual"
+										: formData.pricingInfo?.billingPeriod
+							}
+							disabled={!!plan}
+							InputProps={{
+								readOnly: !!plan,
+							}}
+						/>
 					</Grid>
 
 					{/* Resource Limits */}
