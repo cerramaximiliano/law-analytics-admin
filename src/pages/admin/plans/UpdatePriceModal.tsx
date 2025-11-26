@@ -35,23 +35,28 @@ interface StripePriceInfo {
 	id: string;
 	active: boolean;
 	currency: string;
-	unit_amount: number;
-	recurring: {
-		interval: string;
-		interval_count: number;
+	amount: number;
+	billingPeriod: string;
+	stripeInterval: string;
+	created: string;
+	isDefault: boolean;
+	metadata?: {
+		environment?: string;
 	};
-	created: number;
-	nickname?: string;
+}
+
+interface StripePricesData {
+	planId: string;
+	environment: string;
+	stripeProductId: string;
+	productName: string;
+	defaultPriceId: string;
+	prices: StripePriceInfo[];
 }
 
 interface StripePricesResponse {
 	success: boolean;
-	data: {
-		planId: string;
-		environment: string;
-		productId: string;
-		prices: StripePriceInfo[];
-	};
+	data: StripePricesData;
 }
 
 interface UpdatePriceResponse {
@@ -108,14 +113,14 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 				`/api/plan-configs/${plan.planId}/stripe-prices?environment=${environment}`
 			);
 
-			if (response.data.success) {
+			if (response.data.success && response.data.data) {
 				setStripePrices(response.data.data.prices || []);
 
 				// Establecer precio actual como valor inicial
 				const activePrice = response.data.data.prices?.find((p) => p.active);
 				if (activePrice) {
-					setPrice(activePrice.unit_amount / 100);
-					setBillingPeriod(activePrice.recurring?.interval || "monthly");
+					setPrice(activePrice.amount);
+					setBillingPeriod(activePrice.billingPeriod || "monthly");
 				}
 			}
 		} catch (err: any) {
@@ -180,15 +185,20 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 	const formatInterval = (interval: string) => {
 		const intervals: Record<string, string> = {
 			day: "Diario",
+			daily: "Diario",
 			week: "Semanal",
+			weekly: "Semanal",
 			month: "Mensual",
+			monthly: "Mensual",
 			year: "Anual",
+			annual: "Anual",
 		};
 		return intervals[interval] || interval;
 	};
 
-	const formatDate = (timestamp: number) => {
-		return new Date(timestamp * 1000).toLocaleDateString("es-AR", {
+	const formatDate = (dateString: string) => {
+		if (!dateString) return "-";
+		return new Date(dateString).toLocaleDateString("es-AR", {
 			year: "numeric",
 			month: "short",
 			day: "numeric",
@@ -284,10 +294,10 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 												</TableCell>
 												<TableCell>
 													<Typography fontWeight={stripePrice.active ? 600 : 400}>
-														{formatCurrency(stripePrice.unit_amount / 100, stripePrice.currency.toUpperCase())}
+														{formatCurrency(stripePrice.amount, stripePrice.currency.toUpperCase())}
 													</Typography>
 												</TableCell>
-												<TableCell>{formatInterval(stripePrice.recurring?.interval)}</TableCell>
+												<TableCell>{formatInterval(stripePrice.billingPeriod)}</TableCell>
 												<TableCell>
 													<Chip
 														label={stripePrice.active ? "Activo" : "Inactivo"}
@@ -365,7 +375,7 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 								<strong>Entorno:</strong> {environment === "production" ? "Producción" : "Desarrollo"}
 							</Typography>
 							<Typography variant="body2">
-								<strong>Nuevo precio:</strong> ${price.toFixed(2)} / {BILLING_PERIODS.find((p) => p.value === billingPeriod)?.label}
+								<strong>Nuevo precio:</strong> ${price} / {BILLING_PERIODS.find((p) => p.value === billingPeriod)?.label}
 							</Typography>
 						</Paper>
 					</Grid>
