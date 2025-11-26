@@ -1,5 +1,5 @@
 // assets
-import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1 } from "iconsax-react";
+import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -153,6 +153,14 @@ const admin: NavItemType = {
 			type: "item",
 			icon: Receipt1,
 			url: "/admin/plans",
+			breadcrumbs: true,
+		},
+		{
+			id: "users",
+			title: "Usuarios",
+			type: "item",
+			icon: ProfileCircle,
+			url: "/admin/users",
 			breadcrumbs: true,
 		},
 		{

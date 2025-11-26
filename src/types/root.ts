@@ -54,4 +54,5 @@ export interface DefaultRootStateProps {
 	tasksReducer: any;
 	userStats: any;
 	users: any;
+	stripeSubscriptions: any;
 }

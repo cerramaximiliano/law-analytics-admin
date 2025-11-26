@@ -7,6 +7,8 @@ import snackbar from "./snackbar";
 import auth from "./auth";
 import alerts from "./alerts";
 import search from "./search";
+import users from "./users";
+import stripeSubscriptions from "./stripe-subscriptions";
 
 // ==============================|| COMBINE REDUCERS ||============================== //
 
@@ -16,6 +18,8 @@ const reducers = combineReducers({
 	auth,
 	alerts,
 	search,
+	users,
+	stripeSubscriptions,
 });
 
 export default reducers;
