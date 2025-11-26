@@ -101,6 +101,7 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState<string | null>(null);
 	const [stripePrices, setStripePrices] = useState<StripePriceInfo[]>([]);
+	const [defaultPriceId, setDefaultPriceId] = useState<string | null>(null);
 
 	// Cargar precios de Stripe al abrir el modal o cambiar entorno
 	const fetchStripePrices = async () => {
@@ -115,12 +116,13 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 
 			if (response.data.success && response.data.data) {
 				setStripePrices(response.data.data.prices || []);
+				setDefaultPriceId(response.data.data.defaultPriceId || null);
 
-				// Establecer precio actual como valor inicial
-				const activePrice = response.data.data.prices?.find((p) => p.active);
-				if (activePrice) {
-					setPrice(activePrice.amount);
-					setBillingPeriod(activePrice.billingPeriod || "monthly");
+				// Establecer precio actual como valor inicial (usar el precio predeterminado)
+				const defaultPrice = response.data.data.prices?.find((p) => p.id === response.data.data.defaultPriceId);
+				if (defaultPrice) {
+					setPrice(defaultPrice.amount);
+					setBillingPeriod(defaultPrice.billingPeriod || "monthly");
 				}
 			}
 		} catch (err: any) {
@@ -285,31 +287,42 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 										</TableRow>
 									</TableHead>
 									<TableBody>
-										{stripePrices.map((stripePrice) => (
-											<TableRow key={stripePrice.id} sx={{ bgcolor: stripePrice.active ? "success.lighter" : "inherit" }}>
-												<TableCell>
-													<Typography variant="caption" fontFamily="monospace">
-														{stripePrice.id.substring(0, 20)}...
-													</Typography>
-												</TableCell>
-												<TableCell>
-													<Typography fontWeight={stripePrice.active ? 600 : 400}>
-														{formatCurrency(stripePrice.amount, stripePrice.currency.toUpperCase())}
-													</Typography>
-												</TableCell>
-												<TableCell>{formatInterval(stripePrice.billingPeriod)}</TableCell>
-												<TableCell>
-													<Chip
-														label={stripePrice.active ? "Activo" : "Inactivo"}
-														size="small"
-														color={stripePrice.active ? "success" : "default"}
-													/>
-												</TableCell>
-												<TableCell>
-													<Typography variant="caption">{formatDate(stripePrice.created)}</Typography>
-												</TableCell>
-											</TableRow>
-										))}
+										{stripePrices.map((stripePrice) => {
+											const isDefault = stripePrice.id === defaultPriceId;
+											return (
+												<TableRow
+													key={stripePrice.id}
+													sx={{
+														bgcolor: isDefault ? "primary.lighter" : stripePrice.active ? "success.lighter" : "inherit",
+													}}
+												>
+													<TableCell>
+														<Box display="flex" alignItems="center" gap={1}>
+															<Typography variant="caption" fontFamily="monospace">
+																{stripePrice.id.substring(0, 20)}...
+															</Typography>
+															{isDefault && <Chip label="Predeterminado" size="small" color="primary" />}
+														</Box>
+													</TableCell>
+													<TableCell>
+														<Typography fontWeight={isDefault ? 600 : 400}>
+															{formatCurrency(stripePrice.amount, stripePrice.currency.toUpperCase())}
+														</Typography>
+													</TableCell>
+													<TableCell>{formatInterval(stripePrice.billingPeriod)}</TableCell>
+													<TableCell>
+														<Chip
+															label={stripePrice.active ? "Activo" : "Inactivo"}
+															size="small"
+															color={stripePrice.active ? "success" : "default"}
+														/>
+													</TableCell>
+													<TableCell>
+														<Typography variant="caption">{formatDate(stripePrice.created)}</Typography>
+													</TableCell>
+												</TableRow>
+											);
+										})}
 									</TableBody>
 								</Table>
 							</TableContainer>
