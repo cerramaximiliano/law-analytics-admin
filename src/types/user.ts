@@ -241,7 +241,8 @@ export interface User {
 	email: string;
 	name: string;
 	role: string;
-	status: string;
+	status?: string;
+	isActive?: boolean;
 	avatar?: string;
 	phone?: string;
 	lastLogin?: string;

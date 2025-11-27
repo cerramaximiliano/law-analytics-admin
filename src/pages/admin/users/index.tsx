@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { dispatch } from "store/index";
 
@@ -9,7 +9,13 @@ import {
 	Chip,
 	Dialog,
 	Divider,
+	FormControl,
 	IconButton,
+	InputAdornment,
+	InputLabel,
+	MenuItem,
+	Select,
+	SelectChangeEvent,
 	Stack,
 	Table,
 	TableBody,
@@ -18,6 +24,8 @@ import {
 	TableHead,
 	TablePagination,
 	TableRow,
+	TableSortLabel,
+	TextField,
 	Tooltip,
 	Typography,
 	useTheme,
@@ -28,7 +36,7 @@ import {
 // project imports
 import MainCard from "components/MainCard";
 import ScrollX from "components/ScrollX";
-import { getUsers } from "store/reducers/users";
+import { getUsers, searchUsers, SearchUsersParams } from "store/reducers/users";
 import { DefaultRootStateProps } from "types/root";
 import { User } from "types/user";
 import UserView from "./UserView";
@@ -40,7 +48,7 @@ import GenerateDataModal from "./GenerateDataModal";
 import StripeSubscriptionsTable from "./StripeSubscriptionsTable";
 
 // assets
-import { Eye, Trash, Edit, Add, Chart } from "iconsax-react";
+import { Eye, Trash, Edit, Add, Chart, SearchNormal1, CloseCircle } from "iconsax-react";
 
 // table sort
 function descendingComparator(a: any, b: any, orderBy: string) {
@@ -73,36 +81,49 @@ const headCells = [
 		numeric: false,
 		label: "Nombre",
 		align: "left",
+		sortable: true,
 	},
 	{
 		id: "email",
 		numeric: false,
 		label: "Email",
 		align: "left",
+		sortable: true,
 	},
 	{
 		id: "role",
 		numeric: false,
 		label: "Rol",
 		align: "left",
+		sortable: true,
 	},
 	{
-		id: "status",
+		id: "isActive",
 		numeric: false,
 		label: "Estado",
 		align: "left",
+		sortable: true,
 	},
 	{
 		id: "lastLogin",
 		numeric: false,
 		label: "Último Login",
 		align: "left",
+		sortable: true,
+	},
+	{
+		id: "createdAt",
+		numeric: false,
+		label: "Creado",
+		align: "left",
+		sortable: true,
 	},
 	{
 		id: "actions",
 		numeric: false,
 		label: "Acciones",
 		align: "center",
+		sortable: false,
 	},
 ];
 
@@ -121,8 +142,13 @@ const UsersList = () => {
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 
 	// Estado para ordenamiento
-	const [order, setOrder] = useState<"asc" | "desc">("asc");
-	const [orderBy, setOrderBy] = useState("name");
+	const [order, setOrder] = useState<"asc" | "desc">("desc");
+	const [orderBy, setOrderBy] = useState("createdAt");
+
+	// Estado para filtros
+	const [searchText, setSearchText] = useState("");
+	const [roleFilter, setRoleFilter] = useState<string>("");
+	const [statusFilter, setStatusFilter] = useState<string>("");
 
 	// Estado para el diálogo de detalles de usuario
 	const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -140,8 +166,73 @@ const UsersList = () => {
 
 	const handleRequestSort = (property: string) => {
 		const isAsc = orderBy === property && order === "asc";
-		setOrder(isAsc ? "desc" : "asc");
+		const newOrder = isAsc ? "desc" : "asc";
+		setOrder(newOrder);
 		setOrderBy(property);
+		// Realizar búsqueda con nuevo ordenamiento
+		fetchUsers({ sortBy: property, sortOrder: newOrder });
+	};
+
+	// Función para realizar la búsqueda con filtros
+	const fetchUsers = useCallback(
+		(overrideParams?: Partial<SearchUsersParams>) => {
+			const params: SearchUsersParams = {
+				search: searchText || undefined,
+				role: roleFilter || undefined,
+				isActive: statusFilter || undefined,
+				sortBy: orderBy,
+				sortOrder: order,
+				...overrideParams,
+			};
+
+			// Si no hay filtros ni búsqueda, usar getUsers simple
+			if (!params.search && !params.role && params.isActive === undefined && params.sortBy === "createdAt" && params.sortOrder === "desc") {
+				dispatch(getUsers());
+			} else {
+				dispatch(searchUsers(params));
+			}
+		},
+		[searchText, roleFilter, statusFilter, orderBy, order],
+	);
+
+	// Handlers para filtros
+	const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setSearchText(event.target.value);
+	};
+
+	const handleSearchSubmit = () => {
+		setPage(0);
+		fetchUsers();
+	};
+
+	const handleSearchKeyPress = (event: React.KeyboardEvent) => {
+		if (event.key === "Enter") {
+			handleSearchSubmit();
+		}
+	};
+
+	const handleRoleFilterChange = (event: SelectChangeEvent<string>) => {
+		const newRole = event.target.value;
+		setRoleFilter(newRole);
+		setPage(0);
+		fetchUsers({ role: newRole || undefined });
+	};
+
+	const handleStatusFilterChange = (event: SelectChangeEvent<string>) => {
+		const newStatus = event.target.value;
+		setStatusFilter(newStatus);
+		setPage(0);
+		fetchUsers({ isActive: newStatus || undefined });
+	};
+
+	const handleClearFilters = () => {
+		setSearchText("");
+		setRoleFilter("");
+		setStatusFilter("");
+		setOrderBy("createdAt");
+		setOrder("desc");
+		setPage(0);
+		dispatch(getUsers());
 	};
 
 	const handleChangePage = (_event: React.MouseEvent<HTMLButtonElement, MouseEvent> | null, newPage: number) => {
@@ -214,7 +305,26 @@ const UsersList = () => {
 		return stableSort<User>(users as User[], getComparator(order, orderBy)).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 	}, [users, order, orderBy, page, rowsPerPage]);
 
-	// Renderizado de chip de estado
+	// Renderizado de chip de estado basado en isActive (boolean)
+	const renderActiveStatusChip = (isActive: boolean | undefined | null) => {
+		const active = isActive === true;
+		return (
+			<Chip
+				label={active ? "Activo" : "Inactivo"}
+				size="small"
+				color={active ? "success" : "error"}
+				sx={{
+					borderRadius: "4px",
+					minWidth: 80,
+					"& .MuiChip-label": {
+						px: 1.5,
+					},
+				}}
+			/>
+		);
+	};
+
+	// Renderizado de chip de estado (string - legacy)
 	const renderStatusChip = (status: string | undefined | null) => {
 		let color;
 		let label;
@@ -385,6 +495,71 @@ const UsersList = () => {
 					</Stack>
 					<Divider />
 
+					{/* Filtros */}
+					<Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ p: 2, pb: 0 }} alignItems="center" flexWrap="wrap">
+						{/* Búsqueda por texto */}
+						<TextField
+							size="small"
+							placeholder="Buscar por nombre o email..."
+							value={searchText}
+							onChange={handleSearchChange}
+							onKeyPress={handleSearchKeyPress}
+							sx={{ minWidth: 250 }}
+							InputProps={{
+								startAdornment: (
+									<InputAdornment position="start">
+										<SearchNormal1 size={18} />
+									</InputAdornment>
+								),
+								endAdornment: searchText && (
+									<InputAdornment position="end">
+										<IconButton size="small" onClick={() => setSearchText("")}>
+											<CloseCircle size={16} />
+										</IconButton>
+									</InputAdornment>
+								),
+							}}
+						/>
+
+						{/* Filtro por rol */}
+						<FormControl size="small" sx={{ minWidth: 150 }}>
+							<InputLabel id="role-filter-label">Rol</InputLabel>
+							<Select labelId="role-filter-label" value={roleFilter} label="Rol" onChange={handleRoleFilterChange}>
+								<MenuItem value="">
+									<em>Todos</em>
+								</MenuItem>
+								<MenuItem value="ADMIN_ROLE">Administrador</MenuItem>
+								<MenuItem value="USER_ROLE">Usuario</MenuItem>
+							</Select>
+						</FormControl>
+
+						{/* Filtro por estado */}
+						<FormControl size="small" sx={{ minWidth: 150 }}>
+							<InputLabel id="status-filter-label">Estado</InputLabel>
+							<Select labelId="status-filter-label" value={statusFilter} label="Estado" onChange={handleStatusFilterChange}>
+								<MenuItem value="">
+									<em>Todos</em>
+								</MenuItem>
+								<MenuItem value="true">Activo</MenuItem>
+								<MenuItem value="false">Inactivo</MenuItem>
+							</Select>
+						</FormControl>
+
+						{/* Botón de buscar */}
+						<Button variant="contained" size="small" onClick={handleSearchSubmit} sx={{ height: 40 }}>
+							Buscar
+						</Button>
+
+						{/* Botón limpiar filtros */}
+						{(searchText || roleFilter || statusFilter) && (
+							<Button variant="outlined" size="small" onClick={handleClearFilters} color="secondary" sx={{ height: 40 }}>
+								Limpiar filtros
+							</Button>
+						)}
+					</Stack>
+
+					<Divider sx={{ mt: 2 }} />
+
 					<TableContainer>
 						<Table>
 							<TableHead>
@@ -396,13 +571,16 @@ const UsersList = () => {
 											sortDirection={orderBy === headCell.id ? order : false}
 											sx={{ py: 2 }}
 										>
-											{headCell.id === "actions" ? (
-												headCell.label
-											) : (
-												<Box component="span" onClick={() => handleRequestSort(headCell.id)} sx={{ cursor: "pointer" }}>
+											{headCell.sortable ? (
+												<TableSortLabel
+													active={orderBy === headCell.id}
+													direction={orderBy === headCell.id ? order : "asc"}
+													onClick={() => handleRequestSort(headCell.id)}
+												>
 													{headCell.label}
-													{orderBy === headCell.id ? <Box component="span">{order === "desc" ? " ▼" : " ▲"}</Box> : null}
-												</Box>
+												</TableSortLabel>
+											) : (
+												headCell.label
 											)}
 										</TableCell>
 									))}
@@ -529,8 +707,9 @@ const UsersList = () => {
 												</TableCell>
 												<TableCell>{user.email || "No disponible"}</TableCell>
 												<TableCell>{renderRoleChip(user.role)}</TableCell>
-												<TableCell>{renderStatusChip(user.status)}</TableCell>
+												<TableCell>{renderActiveStatusChip(user.isActive)}</TableCell>
 												<TableCell>{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : "Nunca"}</TableCell>
+												<TableCell>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}</TableCell>
 												<TableCell align="center">
 													<Stack direction="row" justifyContent="center" alignItems="center">
 														<Tooltip title="Ver detalles">
