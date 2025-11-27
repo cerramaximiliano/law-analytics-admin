@@ -144,6 +144,16 @@ const users = (state = initialState, action: any) => {
 export default users;
 
 // Actions
+export interface SearchUsersParams {
+	search?: string;
+	role?: string;
+	isActive?: boolean | string;
+	page?: number;
+	limit?: number;
+	sortBy?: string;
+	sortOrder?: "asc" | "desc";
+}
+
 export const getUsers = () => {
 	return async (dispatch: any) => {
 		try {
@@ -194,6 +204,79 @@ export const getUsers = () => {
 				type: SET_ERROR,
 				payload: error,
 			});
+		} finally {
+			dispatch({
+				type: SET_LOADING,
+				payload: false,
+			});
+		}
+	};
+};
+
+export const searchUsers = (params: SearchUsersParams) => {
+	return async (dispatch: any) => {
+		try {
+			dispatch({
+				type: SET_LOADING,
+				payload: true,
+			});
+			dispatch({
+				type: SET_ERROR,
+				payload: null,
+			});
+
+			// Construir query string con parámetros
+			const queryParams = new URLSearchParams();
+			if (params.search) queryParams.append("search", params.search);
+			if (params.role) queryParams.append("role", params.role);
+			if (params.isActive !== undefined && params.isActive !== "") {
+				queryParams.append("isActive", String(params.isActive));
+			}
+			if (params.page) queryParams.append("page", String(params.page));
+			if (params.limit) queryParams.append("limit", String(params.limit));
+			if (params.sortBy) queryParams.append("sortBy", params.sortBy);
+			if (params.sortOrder) queryParams.append("sortOrder", params.sortOrder);
+
+			const queryString = queryParams.toString();
+			const url = `/api/users/search${queryString ? `?${queryString}` : ""}`;
+
+			const response = await authAxios.get(url);
+
+			// Asegurarse de que estamos usando el formato correcto
+			// La respuesta del backend es: { success: true, data: { users: [...], pagination: {...} } }
+			let userData = Array.isArray(response.data)
+				? response.data
+				: response.data.data?.users
+				? response.data.data.users
+				: response.data.users
+				? response.data.users
+				: response.data.data
+				? response.data.data
+				: [];
+
+			// Si no hay datos, devolver array vacío (no mockUsers cuando se filtra)
+			if (!userData || !Array.isArray(userData)) {
+				userData = [];
+			} else {
+				// Asegurar que cada usuario tenga un id además de _id
+				userData = userData.map((user: any) => ({
+					...user,
+					id: user.id || user._id,
+				}));
+			}
+
+			dispatch({
+				type: SET_USERS,
+				payload: userData,
+			});
+
+			return response.data;
+		} catch (error) {
+			dispatch({
+				type: SET_ERROR,
+				payload: error,
+			});
+			throw error;
 		} finally {
 			dispatch({
 				type: SET_LOADING,
