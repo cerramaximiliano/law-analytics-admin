@@ -244,13 +244,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 	};
 
 	// Función de registro
-	const register = async (
-		email: string,
-		password: string,
-		firstName: string,
-		lastName: string,
-		recaptchaToken?: string,
-	): Promise<void> => {
+	const register = async (email: string, password: string, firstName: string, lastName: string, recaptchaToken?: string): Promise<void> => {
 		try {
 			const response = await authAxios.post<RegisterResponse>("/api/auth/register", {
 				email,

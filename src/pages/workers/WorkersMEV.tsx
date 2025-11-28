@@ -526,87 +526,87 @@ const MEVWorkers = () => {
 			{/* Contenido guardado para modales - oculto */}
 			<Box sx={{ display: "none" }}>
 				<Grid container spacing={1.5} sx={{ mt: 1 }}>
-						<Grid item xs={6} sm={3}>
-							<Stack direction="row" spacing={1} alignItems="center">
-								<Typography variant="caption" color="text.secondary">
-									Source:
-								</Typography>
-								<Typography variant="caption" fontWeight={500}>
-									"mev"
-								</Typography>
-							</Stack>
-						</Grid>
-						<Grid item xs={6} sm={3}>
-							<Stack direction="row" spacing={1} alignItems="center">
-								<Typography variant="caption" color="text.secondary">
-									Verified (req):
-								</Typography>
-								<Typography variant="caption" fontWeight={500}>
-									false
-								</Typography>
-							</Stack>
-						</Grid>
-						<Grid item xs={6} sm={3}>
-							<Stack direction="row" spacing={1} alignItems="center">
-								<Typography variant="caption" color="text.secondary">
-									isValid (req):
-								</Typography>
-								<Typography variant="caption" fontWeight={500}>
-									null
-								</Typography>
-							</Stack>
-						</Grid>
-						<Grid item xs={6} sm={3}>
-							<Stack direction="row" spacing={1} alignItems="center">
-								<Typography variant="caption" color="text.secondary">
-									Update:
-								</Typography>
-								<Typography variant="caption" fontWeight={500}>
-									No importa
-								</Typography>
-							</Stack>
-						</Grid>
-						<Grid item xs={6} sm={3}>
-							<Stack direction="row" spacing={1} alignItems="center">
-								<Typography variant="caption" color="text.secondary">
-									Función:
-								</Typography>
-								<Typography variant="caption" fontWeight={500} color="primary.main">
-									Verificación inicial
-								</Typography>
-							</Stack>
-						</Grid>
-						<Grid item xs={6} sm={3}>
-							<Stack direction="row" spacing={1} alignItems="center">
-								<Typography variant="caption" color="text.secondary">
-									Modifica verified:
-								</Typography>
-								<Typography variant="caption" fontWeight={500} color="success.main">
-									SÍ
-								</Typography>
-							</Stack>
-						</Grid>
-						<Grid item xs={6} sm={3}>
-							<Stack direction="row" spacing={1} alignItems="center">
-								<Typography variant="caption" color="text.secondary">
-									Modifica isValid:
-								</Typography>
-								<Typography variant="caption" fontWeight={500} color="success.main">
-									SÍ
-								</Typography>
-							</Stack>
-						</Grid>
-						<Grid item xs={6} sm={3}>
-							<Stack direction="row" spacing={1} alignItems="center">
-								<Typography variant="caption" color="text.secondary">
-									Frecuencia:
-								</Typography>
-								<Typography variant="caption" fontWeight={500} color="warning.main">
-									Una sola vez
-								</Typography>
-							</Stack>
-						</Grid>
+					<Grid item xs={6} sm={3}>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Typography variant="caption" color="text.secondary">
+								Source:
+							</Typography>
+							<Typography variant="caption" fontWeight={500}>
+								"mev"
+							</Typography>
+						</Stack>
 					</Grid>
+					<Grid item xs={6} sm={3}>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Typography variant="caption" color="text.secondary">
+								Verified (req):
+							</Typography>
+							<Typography variant="caption" fontWeight={500}>
+								false
+							</Typography>
+						</Stack>
+					</Grid>
+					<Grid item xs={6} sm={3}>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Typography variant="caption" color="text.secondary">
+								isValid (req):
+							</Typography>
+							<Typography variant="caption" fontWeight={500}>
+								null
+							</Typography>
+						</Stack>
+					</Grid>
+					<Grid item xs={6} sm={3}>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Typography variant="caption" color="text.secondary">
+								Update:
+							</Typography>
+							<Typography variant="caption" fontWeight={500}>
+								No importa
+							</Typography>
+						</Stack>
+					</Grid>
+					<Grid item xs={6} sm={3}>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Typography variant="caption" color="text.secondary">
+								Función:
+							</Typography>
+							<Typography variant="caption" fontWeight={500} color="primary.main">
+								Verificación inicial
+							</Typography>
+						</Stack>
+					</Grid>
+					<Grid item xs={6} sm={3}>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Typography variant="caption" color="text.secondary">
+								Modifica verified:
+							</Typography>
+							<Typography variant="caption" fontWeight={500} color="success.main">
+								SÍ
+							</Typography>
+						</Stack>
+					</Grid>
+					<Grid item xs={6} sm={3}>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Typography variant="caption" color="text.secondary">
+								Modifica isValid:
+							</Typography>
+							<Typography variant="caption" fontWeight={500} color="success.main">
+								SÍ
+							</Typography>
+						</Stack>
+					</Grid>
+					<Grid item xs={6} sm={3}>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Typography variant="caption" color="text.secondary">
+								Frecuencia:
+							</Typography>
+							<Typography variant="caption" fontWeight={500} color="warning.main">
+								Una sola vez
+							</Typography>
+						</Stack>
+					</Grid>
+				</Grid>
 			</Box>
 
 			{/* Tabla de configuraciones */}
@@ -2126,9 +2126,9 @@ const MEVWorkers = () => {
 								⚠️ Importante
 							</Typography>
 							<Typography variant="body2">
-								El Worker de Verificación realiza consultas directas al sistema MEV. Un mal uso o configuración incorrecta puede
-								resultar en bloqueos temporales. Siempre pruebe con configuraciones conservadoras antes de aumentar la velocidad o
-								volumen de procesamiento.
+								El Worker de Verificación realiza consultas directas al sistema MEV. Un mal uso o configuración incorrecta puede resultar en
+								bloqueos temporales. Siempre pruebe con configuraciones conservadoras antes de aumentar la velocidad o volumen de
+								procesamiento.
 							</Typography>
 						</Alert>
 					</Stack>

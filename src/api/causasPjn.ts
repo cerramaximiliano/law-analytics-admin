@@ -163,11 +163,7 @@ export class CausasPjnService {
 	/**
 	 * Actualizar campos de una causa
 	 */
-	static async updateCausa(
-		fuero: "CIV" | "COM" | "CSS" | "CNT",
-		id: string,
-		updateData: Partial<Causa>,
-	): Promise<CausasResponse> {
+	static async updateCausa(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string, updateData: Partial<Causa>): Promise<CausasResponse> {
 		try {
 			const response = await pjnAxios.patch(`/api/causas/${fuero}/${id}`, updateData);
 			return response.data;

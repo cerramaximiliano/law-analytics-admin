@@ -87,15 +87,15 @@ adminAxios.interceptors.request.use(
 			// Try without domain restriction first
 			Cookies.set("token", token, {
 				secure: true,
-				sameSite: "none"
+				sameSite: "none",
 			});
 			Cookies.set("authToken", token, {
 				secure: true,
-				sameSite: "none"
+				sameSite: "none",
 			});
 			Cookies.set("auth_token", token, {
 				secure: true,
-				sameSite: "none"
+				sameSite: "none",
 			});
 			console.log("🍪 [adminAxios] Set auth cookies without domain restriction");
 		}

@@ -171,9 +171,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			setIsEditing(false);
 			setEditedCausa({});
 			// MEV usa 'movimiento' (singular), otros servicios usan 'movimientos' (plural)
-			const movements = apiService === "mev"
-				? (causa as any).movimiento || []
-				: (causa as any).movimientos || [];
+			const movements = apiService === "mev" ? (causa as any).movimiento || [] : (causa as any).movimientos || [];
 			setCurrentMovimientos(movements);
 			const history = (causa as any).updateHistory || [];
 			console.log("UpdateHistory loaded:", history);
@@ -390,9 +388,10 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 				}
 			}
 
-			const response = apiService === "mev"
-				? await (ServiceAPI as typeof CausasMEVService).updateCausa(causaId, dataToUpdate as Partial<CausaMEV>)
-				: await (ServiceAPI as typeof CausasPjnService).updateCausa(fuero, causaId, dataToUpdate as Partial<Causa>);
+			const response =
+				apiService === "mev"
+					? await (ServiceAPI as typeof CausasMEVService).updateCausa(causaId, dataToUpdate as Partial<CausaMEV>)
+					: await (ServiceAPI as typeof CausasPjnService).updateCausa(fuero, causaId, dataToUpdate as Partial<Causa>);
 
 			if (response.success) {
 				enqueueSnackbar("Causa actualizada correctamente", {
@@ -436,9 +435,10 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			const causaId = getId(causa._id);
 			const fuero = normalizeFuero(causa.fuero);
 
-			const response = apiService === "mev"
-				? await (ServiceAPI as typeof CausasMEVService).deleteMovimiento(causaId, deleteMovConfirm.index)
-				: await (ServiceAPI as typeof CausasPjnService).deleteMovimiento(fuero, causaId, deleteMovConfirm.index);
+			const response =
+				apiService === "mev"
+					? await (ServiceAPI as typeof CausasMEVService).deleteMovimiento(causaId, deleteMovConfirm.index)
+					: await (ServiceAPI as typeof CausasPjnService).deleteMovimiento(fuero, causaId, deleteMovConfirm.index);
 
 			if (response.success) {
 				enqueueSnackbar("Movimiento eliminado correctamente", {
@@ -519,21 +519,22 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			// Convertir fecha a formato ISO UTC
 			const fechaISO = new Date(newMovimiento.fecha).toISOString();
 
-			const response = apiService === "mev"
-				? await (ServiceAPI as typeof CausasMEVService).addMovimiento(causaId, {
-					fecha: fechaISO,
-					tipo: newMovimiento.tipo,
-					detalle: newMovimiento.detalle,
-					url: newMovimiento.url || null,
-					sendNotification,
-				})
-				: await (ServiceAPI as typeof CausasPjnService).addMovimiento(fuero, causaId, {
-					fecha: fechaISO,
-					tipo: newMovimiento.tipo,
-					detalle: newMovimiento.detalle,
-					url: newMovimiento.url || null,
-					sendNotification,
-				});
+			const response =
+				apiService === "mev"
+					? await (ServiceAPI as typeof CausasMEVService).addMovimiento(causaId, {
+							fecha: fechaISO,
+							tipo: newMovimiento.tipo,
+							detalle: newMovimiento.detalle,
+							url: newMovimiento.url || null,
+							sendNotification,
+					  })
+					: await (ServiceAPI as typeof CausasPjnService).addMovimiento(fuero, causaId, {
+							fecha: fechaISO,
+							tipo: newMovimiento.tipo,
+							detalle: newMovimiento.detalle,
+							url: newMovimiento.url || null,
+							sendNotification,
+					  });
 
 			if (response.success) {
 				let mensaje = "Movimiento agregado correctamente";
@@ -601,9 +602,10 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			const fuero = normalizeFuero(causa.fuero);
 
 			// Obtener usuarios habilitados para notificación
-			const response = apiService === "mev"
-				? await (ServiceAPI as typeof CausasMEVService).getNotificationUsers(causaId)
-				: await (ServiceAPI as typeof CausasPjnService).getNotificationUsers(fuero, causaId);
+			const response =
+				apiService === "mev"
+					? await (ServiceAPI as typeof CausasMEVService).getNotificationUsers(causaId)
+					: await (ServiceAPI as typeof CausasPjnService).getNotificationUsers(fuero, causaId);
 
 			if (response.success && response.data.length > 0) {
 				setNotificationUsers(response.data);
@@ -644,9 +646,10 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			const causaId = getId(causa._id);
 			const fuero = normalizeFuero(causa.fuero);
 
-			const response = apiService === "mev"
-				? await (ServiceAPI as typeof CausasMEVService).notifyMovimiento(causaId, pendingMovimientoIndex)
-				: await (ServiceAPI as typeof CausasPjnService).notifyMovimiento(fuero, causaId, pendingMovimientoIndex);
+			const response =
+				apiService === "mev"
+					? await (ServiceAPI as typeof CausasMEVService).notifyMovimiento(causaId, pendingMovimientoIndex)
+					: await (ServiceAPI as typeof CausasPjnService).notifyMovimiento(fuero, causaId, pendingMovimientoIndex);
 
 			if (response.success) {
 				const usersNotified = response.data?.usersNotified || 0;
@@ -698,9 +701,10 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			const causaId = getId(causa._id);
 			const fuero = normalizeFuero(causa.fuero);
 
-			const response = apiService === "mev"
-				? await (ServiceAPI as typeof CausasMEVService).clearUpdateHistory(causaId)
-				: await (ServiceAPI as typeof CausasPjnService).clearUpdateHistory(fuero, causaId);
+			const response =
+				apiService === "mev"
+					? await (ServiceAPI as typeof CausasMEVService).clearUpdateHistory(causaId)
+					: await (ServiceAPI as typeof CausasPjnService).clearUpdateHistory(fuero, causaId);
 
 			if (response.success) {
 				setUpdateHistory([]);
@@ -730,9 +734,10 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			const causaId = getId(causa._id);
 			const fuero = normalizeFuero(causa.fuero);
 
-			const response = apiService === "mev"
-				? await (ServiceAPI as typeof CausasMEVService).deleteUpdateHistoryEntry(causaId, entryIndex)
-				: await (ServiceAPI as typeof CausasPjnService).deleteUpdateHistoryEntry(fuero, causaId, entryIndex);
+			const response =
+				apiService === "mev"
+					? await (ServiceAPI as typeof CausasMEVService).deleteUpdateHistoryEntry(causaId, entryIndex)
+					: await (ServiceAPI as typeof CausasPjnService).deleteUpdateHistoryEntry(fuero, causaId, entryIndex);
 
 			if (response.success) {
 				// Actualizar el estado local eliminando la entrada
@@ -865,12 +870,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 										/>
 									) : (
 										causa.update && (
-											<Chip
-												label="Con actualización"
-												color="warning"
-												size="small"
-												sx={{ mb: 0.5, color: "rgba(0, 0, 0, 0.87)" }}
-											/>
+											<Chip label="Con actualización" color="warning" size="small" sx={{ mb: 0.5, color: "rgba(0, 0, 0, 0.87)" }} />
 										)
 									)}
 								</Box>
@@ -1018,8 +1018,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 										</Grid>
 									) : null}
 
-									{(!causa.folderIds || causa.folderIds.length === 0) &&
-									(!causa.userCausaIds || causa.userCausaIds.length === 0) ? (
+									{(!causa.folderIds || causa.folderIds.length === 0) && (!causa.userCausaIds || causa.userCausaIds.length === 0) ? (
 										<Grid item xs={12}>
 											<Typography variant="body2" color="textSecondary">
 												Sin vínculos
@@ -1199,77 +1198,75 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 												{paginatedHistory.map((entry, index) => {
 													const actualIndex = historyPage * historyRowsPerPage + index;
 													return (
-													<TableRow key={index} hover>
-														<TableCell>
-															<Typography variant="caption">
-																{formatDate(entry.timestamp || entry.date || entry.createdAt)}
-															</Typography>
-														</TableCell>
-														<TableCell>
-															{entry.updateType && (
-																<Chip label={String(entry.updateType)} size="small" variant="outlined" color="primary" />
-															)}
-														</TableCell>
-														<TableCell align="center">
-															{entry.success !== undefined && (
-																<Tooltip title={entry.success ? "Exitoso" : "Fallido"}>
-																	{entry.success ? (
-																		<TickCircle size={20} color="#52c41a" variant="Bold" />
-																	) : (
-																		<CloseCircle size={20} color="#ff4d4f" variant="Bold" />
-																	)}
+														<TableRow key={index} hover>
+															<TableCell>
+																<Typography variant="caption">{formatDate(entry.timestamp || entry.date || entry.createdAt)}</Typography>
+															</TableCell>
+															<TableCell>
+																{entry.updateType && (
+																	<Chip label={String(entry.updateType)} size="small" variant="outlined" color="primary" />
+																)}
+															</TableCell>
+															<TableCell align="center">
+																{entry.success !== undefined && (
+																	<Tooltip title={entry.success ? "Exitoso" : "Fallido"}>
+																		{entry.success ? (
+																			<TickCircle size={20} color="#52c41a" variant="Bold" />
+																		) : (
+																			<CloseCircle size={20} color="#ff4d4f" variant="Bold" />
+																		)}
+																	</Tooltip>
+																)}
+															</TableCell>
+															<TableCell align="center">
+																{entry.movimientosAdded !== undefined && (
+																	<Chip
+																		label={entry.movimientosAdded > 0 ? `+${entry.movimientosAdded}` : entry.movimientosAdded}
+																		size="small"
+																		color={entry.movimientosAdded > 0 ? "success" : entry.movimientosAdded < 0 ? "error" : "default"}
+																		variant="filled"
+																	/>
+																)}
+															</TableCell>
+															<TableCell align="center">
+																{entry.movimientosTotal !== undefined && (
+																	<Typography variant="body2" fontWeight={600}>
+																		{entry.movimientosTotal}
+																	</Typography>
+																)}
+															</TableCell>
+															<TableCell>
+																<Typography variant="body2">{entry.source || "N/A"}</Typography>
+															</TableCell>
+															<TableCell align="center">
+																<Tooltip title="Eliminar entrada">
+																	<IconButton
+																		size="small"
+																		color="error"
+																		onClick={() => handleDeleteHistoryEntry(actualIndex)}
+																		disabled={deletingHistoryEntry === actualIndex}
+																	>
+																		<Trash size={16} />
+																	</IconButton>
 																</Tooltip>
-															)}
-														</TableCell>
-														<TableCell align="center">
-															{entry.movimientosAdded !== undefined && (
-																<Chip
-																	label={entry.movimientosAdded > 0 ? `+${entry.movimientosAdded}` : entry.movimientosAdded}
-																	size="small"
-																	color={entry.movimientosAdded > 0 ? "success" : entry.movimientosAdded < 0 ? "error" : "default"}
-																	variant="filled"
-																/>
-															)}
-														</TableCell>
-														<TableCell align="center">
-															{entry.movimientosTotal !== undefined && (
-																<Typography variant="body2" fontWeight={600}>
-																	{entry.movimientosTotal}
-																</Typography>
-															)}
-														</TableCell>
-														<TableCell>
-															<Typography variant="body2">{entry.source || "N/A"}</Typography>
-														</TableCell>
-														<TableCell align="center">
-															<Tooltip title="Eliminar entrada">
-																<IconButton
-																	size="small"
-																	color="error"
-																	onClick={() => handleDeleteHistoryEntry(actualIndex)}
-																	disabled={deletingHistoryEntry === actualIndex}
-																>
-																	<Trash size={16} />
-																</IconButton>
-															</Tooltip>
-														</TableCell>
-													</TableRow>
-												);
-											})}
-										</TableBody>
-									</Table>
-								</TableContainer>
-								<TablePagination
-									rowsPerPageOptions={[5, 10, 25, 50]}
-									component="div"
-									count={updateHistory.length}
-									rowsPerPage={historyRowsPerPage}
-									page={historyPage}
-									onPageChange={handleChangeHistoryPage}
-									onRowsPerPageChange={handleChangeHistoryRowsPerPage}
-									labelRowsPerPage="Filas por página:"
-									labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
-								/>
+															</TableCell>
+														</TableRow>
+													);
+												})}
+											</TableBody>
+										</Table>
+									</TableContainer>
+									<TablePagination
+										rowsPerPageOptions={[5, 10, 25, 50]}
+										component="div"
+										count={updateHistory.length}
+										rowsPerPage={historyRowsPerPage}
+										page={historyPage}
+										onPageChange={handleChangeHistoryPage}
+										onRowsPerPageChange={handleChangeHistoryRowsPerPage}
+										labelRowsPerPage="Filas por página:"
+										labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+									/>
 								</>
 							) : (
 								<Alert severity="info">No hay entradas en el historial de actualizaciones</Alert>
@@ -1458,7 +1455,11 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 											return (
 												<TableRow key={jmId} hover>
 													<TableCell>
-														<Chip label={getStatusLabel(jm.notificationStatus)} color={getStatusColor(jm.notificationStatus)} size="small" />
+														<Chip
+															label={getStatusLabel(jm.notificationStatus)}
+															color={getStatusColor(jm.notificationStatus)}
+															size="small"
+														/>
 													</TableCell>
 													<TableCell>
 														<Typography variant="caption">
@@ -1534,9 +1535,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 								{notificationUsers.map((user) => (
 									<Box key={user.id} mb={1}>
 										<FormControlLabel
-											control={
-												<Checkbox checked={selectedUsers.includes(user.id)} onChange={() => handleToggleUser(user.id)} />
-											}
+											control={<Checkbox checked={selectedUsers.includes(user.id)} onChange={() => handleToggleUser(user.id)} />}
 											label={
 												<Box>
 													<Typography variant="body2" fontWeight="medium">

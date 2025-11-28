@@ -155,16 +155,12 @@ const SupportModal = ({ open, onClose }: SupportModalProps) => {
 		if (validateForm()) {
 			setSubmitting(true);
 			try {
-				const response = await axios.post(
-					`${import.meta.env.VITE_AUTH_URL}/api/support-contacts`,
-					formData,
-					{
-						headers: {
-							"Content-Type": "application/json",
-						},
-						withCredentials: true,
+				const response = await axios.post(`${import.meta.env.VITE_AUTH_URL}/api/support-contacts`, formData, {
+					headers: {
+						"Content-Type": "application/json",
 					},
-				);
+					withCredentials: true,
+				});
 
 				// Si la solicitud es exitosa
 				if (response.data.success) {

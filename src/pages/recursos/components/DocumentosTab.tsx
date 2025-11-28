@@ -352,7 +352,14 @@ const DocumentosTab = () => {
 
 						<Grid item xs={12} md={4}>
 							<Stack direction="row" spacing={1}>
-								<Button fullWidth variant="contained" color="primary" startIcon={<SearchNormal1 />} onClick={handleSearch} sx={{ height: "56px" }}>
+								<Button
+									fullWidth
+									variant="contained"
+									color="primary"
+									startIcon={<SearchNormal1 />}
+									onClick={handleSearch}
+									sx={{ height: "56px" }}
+								>
 									Buscar
 								</Button>
 								<Tooltip title="Limpiar filtros">
@@ -374,9 +381,7 @@ const DocumentosTab = () => {
 				{selected.length > 0 && (
 					<Card sx={{ p: 2, bgcolor: "primary.lighter" }}>
 						<Stack direction="row" alignItems="center" justifyContent="space-between">
-							<Typography variant="body1">
-								{selected.length} código(s) seleccionado(s)
-							</Typography>
+							<Typography variant="body1">{selected.length} código(s) seleccionado(s)</Typography>
 							<Button variant="contained" color="error" startIcon={<Trash />} onClick={handleOpenBulkDeleteDialog}>
 								Eliminar seleccionados
 							</Button>
@@ -468,7 +473,14 @@ const DocumentosTab = () => {
 												<TableCell>{formatDate(codigo.fechaDescubrimiento)}</TableCell>
 												<TableCell align="center">
 													<Tooltip title="Abrir PDF">
-														<IconButton size="small" color="primary" component="a" href={codigo.urlPdf} target="_blank" rel="noopener noreferrer">
+														<IconButton
+															size="small"
+															color="primary"
+															component="a"
+															href={codigo.urlPdf}
+															target="_blank"
+															rel="noopener noreferrer"
+														>
 															<DocumentText size={20} />
 														</IconButton>
 													</Tooltip>

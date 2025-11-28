@@ -137,7 +137,9 @@ const Suscripciones = () => {
 	const handleOpenUpdateDialog = () => {
 		if (selectedSubscription?.downgradeGracePeriod) {
 			// Pre-cargar la fecha actual en zona horaria local
-			setNewExpiresAt(dayjs(selectedSubscription.downgradeGracePeriod.expiresAt).tz("America/Argentina/Buenos_Aires").format("YYYY-MM-DDTHH:mm"));
+			setNewExpiresAt(
+				dayjs(selectedSubscription.downgradeGracePeriod.expiresAt).tz("America/Argentina/Buenos_Aires").format("YYYY-MM-DDTHH:mm"),
+			);
 		}
 		setOpenUpdateDialog(true);
 	};
@@ -570,9 +572,7 @@ const Suscripciones = () => {
 										<Stack spacing={0.5}>
 											<Stack direction="row" spacing={1} alignItems="center">
 												<Calendar size={14} />
-												<Typography variant="caption">
-													{dayjs(subscription.currentPeriodStart).format("DD/MM/YYYY")}
-												</Typography>
+												<Typography variant="caption">{dayjs(subscription.currentPeriodStart).format("DD/MM/YYYY")}</Typography>
 											</Stack>
 											<Typography variant="caption" color="text.secondary">
 												hasta {dayjs(subscription.currentPeriodEnd).format("DD/MM/YYYY")}
@@ -608,12 +608,7 @@ const Suscripciones = () => {
 										</Stack>
 									</TableCell>
 									<TableCell>
-										<Button
-											variant="outlined"
-											size="small"
-											startIcon={<Eye size={16} />}
-											onClick={() => handleViewDetails(subscription)}
-										>
+										<Button variant="outlined" size="small" startIcon={<Eye size={16} />} onClick={() => handleViewDetails(subscription)}>
 											Ver
 										</Button>
 									</TableCell>
@@ -674,106 +669,114 @@ const Suscripciones = () => {
 												<strong>{selectedSubscription.downgradeGracePeriod.targetPlan}</strong>.
 											</Typography>
 											<Typography variant="body2" sx={{ mt: 0.5 }}>
-												Expira: {dayjs(selectedSubscription.downgradeGracePeriod.expiresAt).tz("America/Argentina/Buenos_Aires").format("DD/MM/YYYY HH:mm")} (Hora Argentina)
+												Expira:{" "}
+												{dayjs(selectedSubscription.downgradeGracePeriod.expiresAt)
+													.tz("America/Argentina/Buenos_Aires")
+													.format("DD/MM/YYYY HH:mm")}{" "}
+												(Hora Argentina)
 											</Typography>
 										</Alert>
 									)}
 
 									{/* Información del Usuario */}
 									<Box>
-								<Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Profile2User size={20} />
-									Información del Usuario
-								</Typography>
-								<Divider sx={{ mb: 2 }} />
-								<Grid container spacing={2}>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Nombre
+										<Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Profile2User size={20} />
+											Información del Usuario
 										</Typography>
-										<Typography variant="body2" fontWeight="bold">
-											{selectedSubscription.user.name}
-										</Typography>
-									</Grid>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Email
-										</Typography>
-										<Typography variant="body2" fontWeight="bold">
-											{selectedSubscription.user.email}
-										</Typography>
-									</Grid>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Rol
-										</Typography>
-										<Typography variant="body2">{selectedSubscription.user.role}</Typography>
-									</Grid>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											User ID
-										</Typography>
-										<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-											{selectedSubscription.user._id}
-										</Typography>
-									</Grid>
-								</Grid>
-							</Box>
+										<Divider sx={{ mb: 2 }} />
+										<Grid container spacing={2}>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Nombre
+												</Typography>
+												<Typography variant="body2" fontWeight="bold">
+													{selectedSubscription.user.name}
+												</Typography>
+											</Grid>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Email
+												</Typography>
+												<Typography variant="body2" fontWeight="bold">
+													{selectedSubscription.user.email}
+												</Typography>
+											</Grid>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Rol
+												</Typography>
+												<Typography variant="body2">{selectedSubscription.user.role}</Typography>
+											</Grid>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													User ID
+												</Typography>
+												<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+													{selectedSubscription.user._id}
+												</Typography>
+											</Grid>
+										</Grid>
+									</Box>
 
-							{/* Información de Suscripción */}
-							<Box>
-								<Typography variant="h6" gutterBottom>
-									Información de Suscripción
-								</Typography>
-								<Divider sx={{ mb: 2 }} />
-								<Grid container spacing={2}>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Plan
+									{/* Información de Suscripción */}
+									<Box>
+										<Typography variant="h6" gutterBottom>
+											Información de Suscripción
 										</Typography>
-										<Box sx={{ mt: 0.5 }}>
-											<Chip label={getPlanLabel(selectedSubscription.plan)} color={getPlanColor(selectedSubscription.plan)} size="small" />
-										</Box>
-									</Grid>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Estado
-										</Typography>
-										<Box sx={{ mt: 0.5 }}>
-											<Chip
-												label={getStatusLabel(selectedSubscription.status)}
-												color={getStatusColor(selectedSubscription.status)}
-												size="small"
-												sx={getStatusColor(selectedSubscription.status) === "warning" ? { color: "rgba(0, 0, 0, 0.87)" } : undefined}
-											/>
-										</Box>
-									</Grid>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Método de Pago
-										</Typography>
-										<Typography variant="body2">{selectedSubscription.paymentMethod || "-"}</Typography>
-									</Grid>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Estado de Cuenta
-										</Typography>
-										<Typography variant="body2">{selectedSubscription.accountStatus}</Typography>
-									</Grid>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Cancelar al final del período
-										</Typography>
-										<Typography variant="body2">{selectedSubscription.cancelAtPeriodEnd ? "Sí" : "No"}</Typography>
-									</Grid>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Cancelación notificada
-										</Typography>
-										<Typography variant="body2">{selectedSubscription.notifiedCancellation ? "Sí" : "No"}</Typography>
-									</Grid>
-								</Grid>
-							</Box>
+										<Divider sx={{ mb: 2 }} />
+										<Grid container spacing={2}>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Plan
+												</Typography>
+												<Box sx={{ mt: 0.5 }}>
+													<Chip
+														label={getPlanLabel(selectedSubscription.plan)}
+														color={getPlanColor(selectedSubscription.plan)}
+														size="small"
+													/>
+												</Box>
+											</Grid>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Estado
+												</Typography>
+												<Box sx={{ mt: 0.5 }}>
+													<Chip
+														label={getStatusLabel(selectedSubscription.status)}
+														color={getStatusColor(selectedSubscription.status)}
+														size="small"
+														sx={getStatusColor(selectedSubscription.status) === "warning" ? { color: "rgba(0, 0, 0, 0.87)" } : undefined}
+													/>
+												</Box>
+											</Grid>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Método de Pago
+												</Typography>
+												<Typography variant="body2">{selectedSubscription.paymentMethod || "-"}</Typography>
+											</Grid>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Estado de Cuenta
+												</Typography>
+												<Typography variant="body2">{selectedSubscription.accountStatus}</Typography>
+											</Grid>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Cancelar al final del período
+												</Typography>
+												<Typography variant="body2">{selectedSubscription.cancelAtPeriodEnd ? "Sí" : "No"}</Typography>
+											</Grid>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Cancelación notificada
+												</Typography>
+												<Typography variant="body2">{selectedSubscription.notifiedCancellation ? "Sí" : "No"}</Typography>
+											</Grid>
+										</Grid>
+									</Box>
 								</Stack>
 							)}
 
@@ -782,69 +785,69 @@ const Suscripciones = () => {
 								<Stack spacing={3} sx={{ mt: 1 }}>
 									{/* IDs de Stripe */}
 									<Box>
-								<Typography variant="h6" gutterBottom>
-									IDs de Stripe
-								</Typography>
-								<Divider sx={{ mb: 2 }} />
-								<Grid container spacing={2}>
-									<Grid item xs={12}>
-										<Typography variant="caption" color="text.secondary">
-											Customer ID (Actual)
+										<Typography variant="h6" gutterBottom>
+											IDs de Stripe
 										</Typography>
-										<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-											{selectedSubscription.stripeCustomerId?.current || "-"}
-										</Typography>
-									</Grid>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Customer ID (Test)
-										</Typography>
-										<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-											{selectedSubscription.stripeCustomerId?.test || "-"}
-										</Typography>
-									</Grid>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Customer ID (Live)
-										</Typography>
-										<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-											{selectedSubscription.stripeCustomerId?.live || "-"}
-										</Typography>
-									</Grid>
-									<Grid item xs={12}>
-										<Typography variant="caption" color="text.secondary">
-											Subscription ID (Actual)
-										</Typography>
-										<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-											{selectedSubscription.stripeSubscriptionId?.current || "-"}
-										</Typography>
-									</Grid>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Subscription ID (Test)
-										</Typography>
-										<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-											{selectedSubscription.stripeSubscriptionId?.test || "-"}
-										</Typography>
-									</Grid>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Subscription ID (Live)
-										</Typography>
-										<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-											{selectedSubscription.stripeSubscriptionId?.live || "-"}
-										</Typography>
-									</Grid>
-									<Grid item xs={12}>
-										<Typography variant="caption" color="text.secondary">
-											Price ID (Actual)
-										</Typography>
-										<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-											{selectedSubscription.stripePriceId?.current || "-"}
-										</Typography>
-									</Grid>
-								</Grid>
-							</Box>
+										<Divider sx={{ mb: 2 }} />
+										<Grid container spacing={2}>
+											<Grid item xs={12}>
+												<Typography variant="caption" color="text.secondary">
+													Customer ID (Actual)
+												</Typography>
+												<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+													{selectedSubscription.stripeCustomerId?.current || "-"}
+												</Typography>
+											</Grid>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Customer ID (Test)
+												</Typography>
+												<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+													{selectedSubscription.stripeCustomerId?.test || "-"}
+												</Typography>
+											</Grid>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Customer ID (Live)
+												</Typography>
+												<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+													{selectedSubscription.stripeCustomerId?.live || "-"}
+												</Typography>
+											</Grid>
+											<Grid item xs={12}>
+												<Typography variant="caption" color="text.secondary">
+													Subscription ID (Actual)
+												</Typography>
+												<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+													{selectedSubscription.stripeSubscriptionId?.current || "-"}
+												</Typography>
+											</Grid>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Subscription ID (Test)
+												</Typography>
+												<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+													{selectedSubscription.stripeSubscriptionId?.test || "-"}
+												</Typography>
+											</Grid>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Subscription ID (Live)
+												</Typography>
+												<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+													{selectedSubscription.stripeSubscriptionId?.live || "-"}
+												</Typography>
+											</Grid>
+											<Grid item xs={12}>
+												<Typography variant="caption" color="text.secondary">
+													Price ID (Actual)
+												</Typography>
+												<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+													{selectedSubscription.stripePriceId?.current || "-"}
+												</Typography>
+											</Grid>
+										</Grid>
+									</Box>
 								</Stack>
 							)}
 
@@ -853,68 +856,68 @@ const Suscripciones = () => {
 								<Stack spacing={3} sx={{ mt: 1 }}>
 									{/* Períodos */}
 									<Box>
-								<Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Calendar size={20} />
-									Períodos
-								</Typography>
-								<Divider sx={{ mb: 2 }} />
-								<Grid container spacing={2}>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Inicio del Período Actual
+										<Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Calendar size={20} />
+											Períodos
 										</Typography>
-										<Typography variant="body2">{dayjs(selectedSubscription.currentPeriodStart).format("DD/MM/YYYY HH:mm")}</Typography>
-									</Grid>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Fin del Período Actual
-										</Typography>
-										<Typography variant="body2">{dayjs(selectedSubscription.currentPeriodEnd).format("DD/MM/YYYY HH:mm")}</Typography>
-									</Grid>
-									{selectedSubscription.trialStart && (
-										<Grid item xs={12} sm={6}>
-											<Typography variant="caption" color="text.secondary">
-												Inicio de Prueba
-											</Typography>
-											<Typography variant="body2">{dayjs(selectedSubscription.trialStart).format("DD/MM/YYYY HH:mm")}</Typography>
+										<Divider sx={{ mb: 2 }} />
+										<Grid container spacing={2}>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Inicio del Período Actual
+												</Typography>
+												<Typography variant="body2">{dayjs(selectedSubscription.currentPeriodStart).format("DD/MM/YYYY HH:mm")}</Typography>
+											</Grid>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Fin del Período Actual
+												</Typography>
+												<Typography variant="body2">{dayjs(selectedSubscription.currentPeriodEnd).format("DD/MM/YYYY HH:mm")}</Typography>
+											</Grid>
+											{selectedSubscription.trialStart && (
+												<Grid item xs={12} sm={6}>
+													<Typography variant="caption" color="text.secondary">
+														Inicio de Prueba
+													</Typography>
+													<Typography variant="body2">{dayjs(selectedSubscription.trialStart).format("DD/MM/YYYY HH:mm")}</Typography>
+												</Grid>
+											)}
+											{selectedSubscription.trialEnd && (
+												<Grid item xs={12} sm={6}>
+													<Typography variant="caption" color="text.secondary">
+														Fin de Prueba
+													</Typography>
+													<Typography variant="body2">{dayjs(selectedSubscription.trialEnd).format("DD/MM/YYYY HH:mm")}</Typography>
+												</Grid>
+											)}
+											{selectedSubscription.canceledAt && (
+												<Grid item xs={12} sm={6}>
+													<Typography variant="caption" color="text.secondary">
+														Fecha de Cancelación
+													</Typography>
+													<Typography variant="body2">{dayjs(selectedSubscription.canceledAt).format("DD/MM/YYYY HH:mm")}</Typography>
+												</Grid>
+											)}
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Última Sincronización de Plan
+												</Typography>
+												<Typography variant="body2">{dayjs(selectedSubscription.lastPlanSync).format("DD/MM/YYYY HH:mm")}</Typography>
+											</Grid>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Creación
+												</Typography>
+												<Typography variant="body2">{dayjs(selectedSubscription.createdAt).format("DD/MM/YYYY HH:mm")}</Typography>
+											</Grid>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Última Actualización
+												</Typography>
+												<Typography variant="body2">{dayjs(selectedSubscription.updatedAt).format("DD/MM/YYYY HH:mm")}</Typography>
+											</Grid>
 										</Grid>
-									)}
-									{selectedSubscription.trialEnd && (
-										<Grid item xs={12} sm={6}>
-											<Typography variant="caption" color="text.secondary">
-												Fin de Prueba
-											</Typography>
-											<Typography variant="body2">{dayjs(selectedSubscription.trialEnd).format("DD/MM/YYYY HH:mm")}</Typography>
-										</Grid>
-									)}
-									{selectedSubscription.canceledAt && (
-										<Grid item xs={12} sm={6}>
-											<Typography variant="caption" color="text.secondary">
-												Fecha de Cancelación
-											</Typography>
-											<Typography variant="body2">{dayjs(selectedSubscription.canceledAt).format("DD/MM/YYYY HH:mm")}</Typography>
-										</Grid>
-									)}
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Última Sincronización de Plan
-										</Typography>
-										<Typography variant="body2">{dayjs(selectedSubscription.lastPlanSync).format("DD/MM/YYYY HH:mm")}</Typography>
-									</Grid>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Creación
-										</Typography>
-										<Typography variant="body2">{dayjs(selectedSubscription.createdAt).format("DD/MM/YYYY HH:mm")}</Typography>
-									</Grid>
-									<Grid item xs={12} sm={6}>
-										<Typography variant="caption" color="text.secondary">
-											Última Actualización
-										</Typography>
-										<Typography variant="body2">{dayjs(selectedSubscription.updatedAt).format("DD/MM/YYYY HH:mm")}</Typography>
-									</Grid>
-								</Grid>
-							</Box>
+									</Box>
 
 									{/* Downgrade Grace Period */}
 									{selectedSubscription.downgradeGracePeriod && (
@@ -951,7 +954,9 @@ const Suscripciones = () => {
 														Fecha de Expiración (Hora Argentina)
 													</Typography>
 													<Typography variant="body2" color="warning.main" fontWeight="bold">
-														{dayjs(selectedSubscription.downgradeGracePeriod.expiresAt).tz("America/Argentina/Buenos_Aires").format("DD/MM/YYYY HH:mm")}
+														{dayjs(selectedSubscription.downgradeGracePeriod.expiresAt)
+															.tz("America/Argentina/Buenos_Aires")
+															.format("DD/MM/YYYY HH:mm")}
 													</Typography>
 													<Typography variant="caption" color="text.secondary">
 														{dayjs(selectedSubscription.downgradeGracePeriod.expiresAt).fromNow()}
@@ -962,9 +967,7 @@ const Suscripciones = () => {
 														Calculado Desde
 													</Typography>
 													<Typography variant="body2">
-														{selectedSubscription.downgradeGracePeriod.calculatedFrom === "cancellation"
-															? "Cancelación"
-															: "Otro"}
+														{selectedSubscription.downgradeGracePeriod.calculatedFrom === "cancellation" ? "Cancelación" : "Otro"}
 													</Typography>
 												</Grid>
 												<Grid item xs={12} sm={6}>
@@ -1237,9 +1240,13 @@ const Suscripciones = () => {
 																		<Chip
 																			label={event.eventType.replace(/_/g, " ").toUpperCase()}
 																			color={
-																				event.eventType.includes("success") || event.eventType.includes("created") || event.eventType.includes("converted")
+																				event.eventType.includes("success") ||
+																				event.eventType.includes("created") ||
+																				event.eventType.includes("converted")
 																					? "success"
-																					: event.eventType.includes("failed") || event.eventType.includes("cancelled") || event.eventType.includes("expired")
+																					: event.eventType.includes("failed") ||
+																					  event.eventType.includes("cancelled") ||
+																					  event.eventType.includes("expired")
 																					? "error"
 																					: event.eventType.includes("scheduled") || event.eventType.includes("pending")
 																					? "warning"
@@ -1470,7 +1477,9 @@ const Suscripciones = () => {
 																{/* Flags */}
 																<Grid item xs={12}>
 																	<Stack direction="row" spacing={1} flexWrap="wrap">
-																		{event.requiresAttention && <Chip label="Requiere Atención" color="warning" size="small" sx={{ color: "rgba(0, 0, 0, 0.87)" }} />}
+																		{event.requiresAttention && (
+																			<Chip label="Requiere Atención" color="warning" size="small" sx={{ color: "rgba(0, 0, 0, 0.87)" }} />
+																		)}
 																		{event.emailSent && <Chip label="Email Enviado" color="success" size="small" />}
 																	</Stack>
 																</Grid>
@@ -1508,7 +1517,8 @@ const Suscripciones = () => {
 										<Divider sx={{ mb: 2 }} />
 										<Stack spacing={2}>
 											<Typography variant="body2" color="text.secondary">
-												Esta acción reseteará completamente la suscripción del usuario, eliminando todos los datos de suscripción de la base de datos y opcionalmente cancelando la suscripción en Stripe.
+												Esta acción reseteará completamente la suscripción del usuario, eliminando todos los datos de suscripción de la base
+												de datos y opcionalmente cancelando la suscripción en Stripe.
 											</Typography>
 											<Alert severity="error">
 												<Typography variant="body2" fontWeight="bold">
@@ -1539,70 +1549,70 @@ const Suscripciones = () => {
 								<Stack spacing={3} sx={{ mt: 1 }}>
 									{/* Fallos de Pago */}
 									<Box>
-									<Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-										<Warning2 size={20} color="#d32f2f" />
-										Fallos de Pago
-									</Typography>
-									<Divider sx={{ mb: 2 }} />
-									<Grid container spacing={2}>
-										<Grid item xs={12} sm={6}>
-											<Typography variant="caption" color="text.secondary">
-												Cantidad de Fallos
-											</Typography>
-											<Typography variant="body2" color="error">
-												{selectedSubscription.paymentFailures.count}
-											</Typography>
+										<Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Warning2 size={20} color="#d32f2f" />
+											Fallos de Pago
+										</Typography>
+										<Divider sx={{ mb: 2 }} />
+										<Grid container spacing={2}>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="caption" color="text.secondary">
+													Cantidad de Fallos
+												</Typography>
+												<Typography variant="body2" color="error">
+													{selectedSubscription.paymentFailures.count}
+												</Typography>
+											</Grid>
+											{selectedSubscription.paymentFailures.firstFailedAt && (
+												<Grid item xs={12} sm={6}>
+													<Typography variant="caption" color="text.secondary">
+														Primer Fallo
+													</Typography>
+													<Typography variant="body2">
+														{dayjs(selectedSubscription.paymentFailures.firstFailedAt).format("DD/MM/YYYY HH:mm")}
+													</Typography>
+												</Grid>
+											)}
+											{selectedSubscription.paymentFailures.lastFailedAt && (
+												<Grid item xs={12} sm={6}>
+													<Typography variant="caption" color="text.secondary">
+														Último Fallo
+													</Typography>
+													<Typography variant="body2">
+														{dayjs(selectedSubscription.paymentFailures.lastFailedAt).format("DD/MM/YYYY HH:mm")}
+													</Typography>
+												</Grid>
+											)}
+											{selectedSubscription.paymentFailures.lastFailureReason && (
+												<Grid item xs={12}>
+													<Typography variant="caption" color="text.secondary">
+														Razón del Último Fallo
+													</Typography>
+													<Typography variant="body2">{selectedSubscription.paymentFailures.lastFailureReason}</Typography>
+												</Grid>
+											)}
+											{selectedSubscription.paymentFailures.lastFailureCode && (
+												<Grid item xs={12} sm={6}>
+													<Typography variant="caption" color="text.secondary">
+														Código de Error
+													</Typography>
+													<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+														{selectedSubscription.paymentFailures.lastFailureCode}
+													</Typography>
+												</Grid>
+											)}
+											{selectedSubscription.paymentFailures.nextRetryAt && (
+												<Grid item xs={12} sm={6}>
+													<Typography variant="caption" color="text.secondary">
+														Próximo Reintento
+													</Typography>
+													<Typography variant="body2">
+														{dayjs(selectedSubscription.paymentFailures.nextRetryAt).format("DD/MM/YYYY HH:mm")}
+													</Typography>
+												</Grid>
+											)}
 										</Grid>
-										{selectedSubscription.paymentFailures.firstFailedAt && (
-											<Grid item xs={12} sm={6}>
-												<Typography variant="caption" color="text.secondary">
-													Primer Fallo
-												</Typography>
-												<Typography variant="body2">
-													{dayjs(selectedSubscription.paymentFailures.firstFailedAt).format("DD/MM/YYYY HH:mm")}
-												</Typography>
-											</Grid>
-										)}
-										{selectedSubscription.paymentFailures.lastFailedAt && (
-											<Grid item xs={12} sm={6}>
-												<Typography variant="caption" color="text.secondary">
-													Último Fallo
-												</Typography>
-												<Typography variant="body2">
-													{dayjs(selectedSubscription.paymentFailures.lastFailedAt).format("DD/MM/YYYY HH:mm")}
-												</Typography>
-											</Grid>
-										)}
-										{selectedSubscription.paymentFailures.lastFailureReason && (
-											<Grid item xs={12}>
-												<Typography variant="caption" color="text.secondary">
-													Razón del Último Fallo
-												</Typography>
-												<Typography variant="body2">{selectedSubscription.paymentFailures.lastFailureReason}</Typography>
-											</Grid>
-										)}
-										{selectedSubscription.paymentFailures.lastFailureCode && (
-											<Grid item xs={12} sm={6}>
-												<Typography variant="caption" color="text.secondary">
-													Código de Error
-												</Typography>
-												<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
-													{selectedSubscription.paymentFailures.lastFailureCode}
-												</Typography>
-											</Grid>
-										)}
-										{selectedSubscription.paymentFailures.nextRetryAt && (
-											<Grid item xs={12} sm={6}>
-												<Typography variant="caption" color="text.secondary">
-													Próximo Reintento
-												</Typography>
-												<Typography variant="body2">
-													{dayjs(selectedSubscription.paymentFailures.nextRetryAt).format("DD/MM/YYYY HH:mm")}
-												</Typography>
-											</Grid>
-										)}
-									</Grid>
-								</Box>
+									</Box>
 								</Stack>
 							)}
 						</>
@@ -1719,7 +1729,9 @@ const Suscripciones = () => {
 											Fecha Actual de Expiración (Hora Argentina):
 										</Typography>
 										<Typography variant="body2" fontWeight="bold" color="warning.main">
-											{dayjs(selectedSubscription.downgradeGracePeriod.expiresAt).tz("America/Argentina/Buenos_Aires").format("DD/MM/YYYY HH:mm")}
+											{dayjs(selectedSubscription.downgradeGracePeriod.expiresAt)
+												.tz("America/Argentina/Buenos_Aires")
+												.format("DD/MM/YYYY HH:mm")}
 										</Typography>
 										<Typography variant="caption" color="text.secondary">
 											({dayjs(selectedSubscription.downgradeGracePeriod.expiresAt).fromNow()})
@@ -1765,8 +1777,7 @@ const Suscripciones = () => {
 								⚠️ ADVERTENCIA: Esta acción es IRREVERSIBLE
 							</Typography>
 							<Typography variant="body2" sx={{ mt: 1 }}>
-								Estás a punto de resetear completamente la suscripción del usuario{" "}
-								<strong>{selectedSubscription?.user.email}</strong>
+								Estás a punto de resetear completamente la suscripción del usuario <strong>{selectedSubscription?.user.email}</strong>
 							</Typography>
 						</Alert>
 
