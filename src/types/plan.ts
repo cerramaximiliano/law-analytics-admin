@@ -33,6 +33,24 @@ export interface ChangeHistoryEntry {
 	newValue: any;
 }
 
+export interface ActiveDiscount {
+	code: string;
+	name: string;
+	discountType: "percentage" | "fixed";
+	discountValue: number;
+	validUntil: string;
+	badge: string;
+	promotionalMessage: string;
+	applicablePlans: string[];
+	applicableBillingPeriods: string[];
+	duration: "once" | "repeating" | "forever";
+	durationInMonths?: number;
+	originalPrice: number;
+	discountAmount: number;
+	finalPrice: number;
+	discountPercentage: number;
+}
+
 export interface Plan {
 	_id?: {
 		$oid: string;
@@ -66,6 +84,8 @@ export interface Plan {
 		[key: string]: any;
 	};
 	changeHistory?: ChangeHistoryEntry[];
+	hasEnvironments?: boolean;
+	activeDiscounts?: ActiveDiscount[];
 }
 
 export interface PlansResponse {
