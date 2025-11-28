@@ -242,7 +242,11 @@ const ConfiguracionTab = () => {
 							Estado Actual en BD
 						</Typography>
 						<Box>
-							<Chip label={config.estadoWorker?.activo ? "Activo" : "Inactivo"} size="small" color={config.estadoWorker?.activo ? "success" : "error"} />
+							<Chip
+								label={config.estadoWorker?.activo ? "Activo" : "Inactivo"}
+								size="small"
+								color={config.estadoWorker?.activo ? "success" : "error"}
+							/>
 						</Box>
 					</Grid>
 				</Grid>

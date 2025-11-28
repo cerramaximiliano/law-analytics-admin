@@ -111,7 +111,7 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 			setLoadingPrices(true);
 			setError(null);
 			const response = await authAxios.get<StripePricesResponse>(
-				`/api/plan-configs/${plan.planId}/stripe-prices?environment=${environment}`
+				`/api/plan-configs/${plan.planId}/stripe-prices?environment=${environment}`,
 			);
 
 			if (response.data.success && response.data.data) {
@@ -241,11 +241,7 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 					<Grid item xs={12}>
 						<FormControl fullWidth>
 							<InputLabel>Entorno</InputLabel>
-							<Select
-								value={environment}
-								onChange={(e) => setEnvironment(e.target.value as "production" | "development")}
-								label="Entorno"
-							>
+							<Select value={environment} onChange={(e) => setEnvironment(e.target.value as "production" | "development")} label="Entorno">
 								<MenuItem value="production">
 									<Box display="flex" alignItems="center" gap={1}>
 										Producción

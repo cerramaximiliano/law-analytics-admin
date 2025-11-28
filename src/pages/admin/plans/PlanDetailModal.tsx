@@ -143,10 +143,10 @@ const PlanDetailModal = ({ open, onClose, plan }: PlanDetailModalProps) => {
 										{plan.pricingInfo.billingPeriod === "monthly"
 											? "Mensual"
 											: plan.pricingInfo.billingPeriod === "yearly"
-												? "Anual"
-												: plan.pricingInfo.billingPeriod === "daily"
-													? "Diario"
-													: plan.pricingInfo.billingPeriod}
+											? "Anual"
+											: plan.pricingInfo.billingPeriod === "daily"
+											? "Diario"
+											: plan.pricingInfo.billingPeriod}
 									</Typography>
 								</Grid>
 								{plan.pricingInfo.stripePriceId && (

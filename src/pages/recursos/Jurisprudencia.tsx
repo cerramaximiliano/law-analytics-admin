@@ -130,7 +130,13 @@ interface TabPanelProps {
 function TabPanel(props: TabPanelProps) {
 	const { children, value, index, ...other } = props;
 	return (
-		<div role="tabpanel" hidden={value !== index} id={`jurisprudencia-tabpanel-${index}`} aria-labelledby={`jurisprudencia-tab-${index}`} {...other}>
+		<div
+			role="tabpanel"
+			hidden={value !== index}
+			id={`jurisprudencia-tabpanel-${index}`}
+			aria-labelledby={`jurisprudencia-tab-${index}`}
+			{...other}
+		>
 			{value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
 		</div>
 	);
@@ -424,263 +430,263 @@ const Jurisprudencia = () => {
 					<Stack spacing={3}>
 						{/* Filtros */}
 						<Card sx={{ p: 2 }}>
-						<Typography variant="h6" gutterBottom>
-							Filtros de búsqueda
-						</Typography>
-						<Grid container spacing={2}>
-							<Grid item xs={12} md={6} lg={3}>
-								<TextField
-									fullWidth
-									label="Buscar"
-									placeholder="Título, código, contenido..."
-									value={searchText}
-									onChange={(e) => setSearchText(e.target.value)}
-									onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-									InputProps={{
-										endAdornment: (
-											<IconButton size="small" onClick={() => setSearchText("")}>
-												<CloseCircle size={16} />
-											</IconButton>
-										),
-									}}
-								/>
-							</Grid>
-
-							<Grid item xs={12} md={6} lg={3}>
-								<FormControl fullWidth>
-									<InputLabel>Jurisdicción</InputLabel>
-									<Select value={jurisdiccionFilter} onChange={(e) => setJurisdiccionFilter(e.target.value)} label="Jurisdicción">
-										<MenuItem value="">Todas</MenuItem>
-										{jurisdicciones.map((j) => (
-											<MenuItem key={j} value={j}>
-												{j}
-											</MenuItem>
-										))}
-									</Select>
-								</FormControl>
-							</Grid>
-
-							<Grid item xs={12} md={6} lg={3}>
-								<FormControl fullWidth>
-									<InputLabel>Fuero</InputLabel>
-									<Select value={fueroFilter} onChange={(e) => setFueroFilter(e.target.value)} label="Fuero">
-										<MenuItem value="">Todos</MenuItem>
-										{fueros.map((f) => (
-											<MenuItem key={f} value={f}>
-												{f}
-											</MenuItem>
-										))}
-									</Select>
-								</FormControl>
-							</Grid>
-
-							<Grid item xs={12} md={6} lg={3}>
-								<FormControl fullWidth>
-									<InputLabel>Estado</InputLabel>
-									<Select value={estadoFilter} onChange={(e) => setEstadoFilter(e.target.value)} label="Estado">
-										<MenuItem value="">Todos</MenuItem>
-										<MenuItem value="procesado">Procesado</MenuItem>
-										<MenuItem value="pendiente">Pendiente</MenuItem>
-										<MenuItem value="error">Error</MenuItem>
-									</Select>
-								</FormControl>
-							</Grid>
-
-							<Grid item xs={12} md={6} lg={3}>
-								<TextField
-									fullWidth
-									label="Fecha desde"
-									type="date"
-									value={fechaDesde}
-									onChange={(e) => setFechaDesde(e.target.value)}
-									InputLabelProps={{ shrink: true }}
-								/>
-							</Grid>
-
-							<Grid item xs={12} md={6} lg={3}>
-								<TextField
-									fullWidth
-									label="Fecha hasta"
-									type="date"
-									value={fechaHasta}
-									onChange={(e) => setFechaHasta(e.target.value)}
-									InputLabelProps={{ shrink: true }}
-								/>
-							</Grid>
-
-							<Grid item xs={12} md={6} lg={3}>
-								<FormControl fullWidth>
-									<InputLabel>Tribunal</InputLabel>
-									<Select value={tribunalFilter} onChange={(e) => setTribunalFilter(e.target.value)} label="Tribunal">
-										<MenuItem value="">Todos</MenuItem>
-										{tribunales.map((t) => (
-											<MenuItem key={t} value={t}>
-												{t}
-											</MenuItem>
-										))}
-									</Select>
-								</FormControl>
-							</Grid>
-
-							<Grid item xs={12} md={6} lg={3}>
-								<Stack direction="row" spacing={1} sx={{ height: "100%" }}>
-									<Button
+							<Typography variant="h6" gutterBottom>
+								Filtros de búsqueda
+							</Typography>
+							<Grid container spacing={2}>
+								<Grid item xs={12} md={6} lg={3}>
+									<TextField
 										fullWidth
-										variant="contained"
-										color="primary"
-										startIcon={<SearchNormal1 />}
-										onClick={handleSearch}
-										sx={{ height: "56px" }}
-									>
-										Buscar
-									</Button>
-									<Tooltip title="Limpiar filtros">
-										<IconButton onClick={handleClearFilters} sx={{ height: "56px" }}>
-											<CloseCircle />
-										</IconButton>
-									</Tooltip>
-									<Tooltip title="Refrescar">
-										<IconButton onClick={fetchFallos} sx={{ height: "56px" }}>
-											<Refresh />
-										</IconButton>
-									</Tooltip>
-								</Stack>
-							</Grid>
-						</Grid>
-					</Card>
+										label="Buscar"
+										placeholder="Título, código, contenido..."
+										value={searchText}
+										onChange={(e) => setSearchText(e.target.value)}
+										onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+										InputProps={{
+											endAdornment: (
+												<IconButton size="small" onClick={() => setSearchText("")}>
+													<CloseCircle size={16} />
+												</IconButton>
+											),
+										}}
+									/>
+								</Grid>
 
-					{/* Tabla */}
-					<TableContainer component={Card}>
-						{loading ? (
-							<Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-								<CircularProgress />
-							</Box>
-						) : fallos.length === 0 ? (
-							<Box p={4}>
-								<Alert severity="info">No se encontraron fallos con los filtros aplicados.</Alert>
-							</Box>
-						) : (
-							<>
-								<Table>
-									<TableHead>
-										<TableRow>
-											<TableCell>
-												<Box display="flex" alignItems="center" gap={1}>
-													Código Cita
-													<IconButton size="small" onClick={() => handleSort("codigoCita")}>
-														{sortBy === "codigoCita" && sortOrder === "asc" ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
-													</IconButton>
-												</Box>
-											</TableCell>
-											<TableCell>Título</TableCell>
-											<TableCell>
-												<Box display="flex" alignItems="center" gap={1}>
-													Fecha Publicación
-													<IconButton size="small" onClick={() => handleSort("fechaPublicacion")}>
-														{sortBy === "fechaPublicacion" && sortOrder === "asc" ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
-													</IconButton>
-												</Box>
-											</TableCell>
-											<TableCell>Tribunal</TableCell>
-											<TableCell align="center">Documento</TableCell>
-											<TableCell align="center">Acciones</TableCell>
-										</TableRow>
-									</TableHead>
-									<TableBody>
-										{fallos.map((fallo) => (
-											<TableRow key={fallo._id} hover>
+								<Grid item xs={12} md={6} lg={3}>
+									<FormControl fullWidth>
+										<InputLabel>Jurisdicción</InputLabel>
+										<Select value={jurisdiccionFilter} onChange={(e) => setJurisdiccionFilter(e.target.value)} label="Jurisdicción">
+											<MenuItem value="">Todas</MenuItem>
+											{jurisdicciones.map((j) => (
+												<MenuItem key={j} value={j}>
+													{j}
+												</MenuItem>
+											))}
+										</Select>
+									</FormControl>
+								</Grid>
+
+								<Grid item xs={12} md={6} lg={3}>
+									<FormControl fullWidth>
+										<InputLabel>Fuero</InputLabel>
+										<Select value={fueroFilter} onChange={(e) => setFueroFilter(e.target.value)} label="Fuero">
+											<MenuItem value="">Todos</MenuItem>
+											{fueros.map((f) => (
+												<MenuItem key={f} value={f}>
+													{f}
+												</MenuItem>
+											))}
+										</Select>
+									</FormControl>
+								</Grid>
+
+								<Grid item xs={12} md={6} lg={3}>
+									<FormControl fullWidth>
+										<InputLabel>Estado</InputLabel>
+										<Select value={estadoFilter} onChange={(e) => setEstadoFilter(e.target.value)} label="Estado">
+											<MenuItem value="">Todos</MenuItem>
+											<MenuItem value="procesado">Procesado</MenuItem>
+											<MenuItem value="pendiente">Pendiente</MenuItem>
+											<MenuItem value="error">Error</MenuItem>
+										</Select>
+									</FormControl>
+								</Grid>
+
+								<Grid item xs={12} md={6} lg={3}>
+									<TextField
+										fullWidth
+										label="Fecha desde"
+										type="date"
+										value={fechaDesde}
+										onChange={(e) => setFechaDesde(e.target.value)}
+										InputLabelProps={{ shrink: true }}
+									/>
+								</Grid>
+
+								<Grid item xs={12} md={6} lg={3}>
+									<TextField
+										fullWidth
+										label="Fecha hasta"
+										type="date"
+										value={fechaHasta}
+										onChange={(e) => setFechaHasta(e.target.value)}
+										InputLabelProps={{ shrink: true }}
+									/>
+								</Grid>
+
+								<Grid item xs={12} md={6} lg={3}>
+									<FormControl fullWidth>
+										<InputLabel>Tribunal</InputLabel>
+										<Select value={tribunalFilter} onChange={(e) => setTribunalFilter(e.target.value)} label="Tribunal">
+											<MenuItem value="">Todos</MenuItem>
+											{tribunales.map((t) => (
+												<MenuItem key={t} value={t}>
+													{t}
+												</MenuItem>
+											))}
+										</Select>
+									</FormControl>
+								</Grid>
+
+								<Grid item xs={12} md={6} lg={3}>
+									<Stack direction="row" spacing={1} sx={{ height: "100%" }}>
+										<Button
+											fullWidth
+											variant="contained"
+											color="primary"
+											startIcon={<SearchNormal1 />}
+											onClick={handleSearch}
+											sx={{ height: "56px" }}
+										>
+											Buscar
+										</Button>
+										<Tooltip title="Limpiar filtros">
+											<IconButton onClick={handleClearFilters} sx={{ height: "56px" }}>
+												<CloseCircle />
+											</IconButton>
+										</Tooltip>
+										<Tooltip title="Refrescar">
+											<IconButton onClick={fetchFallos} sx={{ height: "56px" }}>
+												<Refresh />
+											</IconButton>
+										</Tooltip>
+									</Stack>
+								</Grid>
+							</Grid>
+						</Card>
+
+						{/* Tabla */}
+						<TableContainer component={Card}>
+							{loading ? (
+								<Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
+									<CircularProgress />
+								</Box>
+							) : fallos.length === 0 ? (
+								<Box p={4}>
+									<Alert severity="info">No se encontraron fallos con los filtros aplicados.</Alert>
+								</Box>
+							) : (
+								<>
+									<Table>
+										<TableHead>
+											<TableRow>
 												<TableCell>
-													<Typography variant="body2" fontWeight={600}>
-														{fallo.codigoCita}
-													</Typography>
-													<Typography variant="caption" color="text.secondary">
-														ID: {fallo.elDialId}
-													</Typography>
+													<Box display="flex" alignItems="center" gap={1}>
+														Código Cita
+														<IconButton size="small" onClick={() => handleSort("codigoCita")}>
+															{sortBy === "codigoCita" && sortOrder === "asc" ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
+														</IconButton>
+													</Box>
 												</TableCell>
+												<TableCell>Título</TableCell>
 												<TableCell>
-													<Typography
-														variant="body2"
-														sx={{
-															maxWidth: 400,
-															overflow: "hidden",
-															textOverflow: "ellipsis",
-															whiteSpace: "nowrap",
-														}}
-													>
-														{fallo.tituloCorto || "-"}
-													</Typography>
+													<Box display="flex" alignItems="center" gap={1}>
+														Fecha Publicación
+														<IconButton size="small" onClick={() => handleSort("fechaPublicacion")}>
+															{sortBy === "fechaPublicacion" && sortOrder === "asc" ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
+														</IconButton>
+													</Box>
 												</TableCell>
-												<TableCell>{formatDate(fallo.fechaPublicacion)}</TableCell>
-												<TableCell>
-													<Typography variant="body2">{fallo.tribunal.nombre}</Typography>
-													{fallo.tribunal.sala && (
-														<Typography variant="caption" color="text.secondary">
-															Sala: {fallo.tribunal.sala}
-														</Typography>
-													)}
-												</TableCell>
-												<TableCell align="center">
-													{fallo.urlPdf ? (
-														<Tooltip title="Abrir documento">
-															<IconButton
-																size="small"
-																color="primary"
-																component="a"
-																href={fallo.urlPdf}
-																target="_blank"
-																rel="noopener noreferrer"
-															>
-																<DocumentText size={20} />
-															</IconButton>
-														</Tooltip>
-													) : (
-														<Typography variant="caption" color="text.secondary">
-															-
-														</Typography>
-													)}
-												</TableCell>
-												<TableCell align="center">
-													<Stack direction="row" spacing={0.5} justifyContent="center">
-														<Tooltip title="Ver detalles">
-															<IconButton size="small" color="success" onClick={() => handleOpenDetallesModal(fallo)}>
-																<Eye size={18} />
-															</IconButton>
-														</Tooltip>
-														<Tooltip title="Editar">
-															<IconButton size="small" color="primary" onClick={() => handleOpenEditModal(fallo)}>
-																<Edit size={18} />
-															</IconButton>
-														</Tooltip>
-														<Tooltip title="Comentarios">
-															<IconButton size="small" color="info" onClick={() => handleOpenComentariosModal(fallo)}>
-																<MessageText size={18} />
-															</IconButton>
-														</Tooltip>
-														<Tooltip title="Eliminar">
-															<IconButton size="small" color="error" onClick={() => handleOpenDeleteDialog(fallo._id)}>
-																<Trash size={18} />
-															</IconButton>
-														</Tooltip>
-													</Stack>
-												</TableCell>
+												<TableCell>Tribunal</TableCell>
+												<TableCell align="center">Documento</TableCell>
+												<TableCell align="center">Acciones</TableCell>
 											</TableRow>
-										))}
-									</TableBody>
-								</Table>
-								<TablePagination
-									component="div"
-									count={totalCount}
-									page={page}
-									onPageChange={handleChangePage}
-									rowsPerPage={rowsPerPage}
-									onRowsPerPageChange={handleChangeRowsPerPage}
-									rowsPerPageOptions={[10, 20, 50, 100]}
-									labelRowsPerPage="Filas por página:"
-									labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
-								/>
-							</>
-						)}
-					</TableContainer>
+										</TableHead>
+										<TableBody>
+											{fallos.map((fallo) => (
+												<TableRow key={fallo._id} hover>
+													<TableCell>
+														<Typography variant="body2" fontWeight={600}>
+															{fallo.codigoCita}
+														</Typography>
+														<Typography variant="caption" color="text.secondary">
+															ID: {fallo.elDialId}
+														</Typography>
+													</TableCell>
+													<TableCell>
+														<Typography
+															variant="body2"
+															sx={{
+																maxWidth: 400,
+																overflow: "hidden",
+																textOverflow: "ellipsis",
+																whiteSpace: "nowrap",
+															}}
+														>
+															{fallo.tituloCorto || "-"}
+														</Typography>
+													</TableCell>
+													<TableCell>{formatDate(fallo.fechaPublicacion)}</TableCell>
+													<TableCell>
+														<Typography variant="body2">{fallo.tribunal.nombre}</Typography>
+														{fallo.tribunal.sala && (
+															<Typography variant="caption" color="text.secondary">
+																Sala: {fallo.tribunal.sala}
+															</Typography>
+														)}
+													</TableCell>
+													<TableCell align="center">
+														{fallo.urlPdf ? (
+															<Tooltip title="Abrir documento">
+																<IconButton
+																	size="small"
+																	color="primary"
+																	component="a"
+																	href={fallo.urlPdf}
+																	target="_blank"
+																	rel="noopener noreferrer"
+																>
+																	<DocumentText size={20} />
+																</IconButton>
+															</Tooltip>
+														) : (
+															<Typography variant="caption" color="text.secondary">
+																-
+															</Typography>
+														)}
+													</TableCell>
+													<TableCell align="center">
+														<Stack direction="row" spacing={0.5} justifyContent="center">
+															<Tooltip title="Ver detalles">
+																<IconButton size="small" color="success" onClick={() => handleOpenDetallesModal(fallo)}>
+																	<Eye size={18} />
+																</IconButton>
+															</Tooltip>
+															<Tooltip title="Editar">
+																<IconButton size="small" color="primary" onClick={() => handleOpenEditModal(fallo)}>
+																	<Edit size={18} />
+																</IconButton>
+															</Tooltip>
+															<Tooltip title="Comentarios">
+																<IconButton size="small" color="info" onClick={() => handleOpenComentariosModal(fallo)}>
+																	<MessageText size={18} />
+																</IconButton>
+															</Tooltip>
+															<Tooltip title="Eliminar">
+																<IconButton size="small" color="error" onClick={() => handleOpenDeleteDialog(fallo._id)}>
+																	<Trash size={18} />
+																</IconButton>
+															</Tooltip>
+														</Stack>
+													</TableCell>
+												</TableRow>
+											))}
+										</TableBody>
+									</Table>
+									<TablePagination
+										component="div"
+										count={totalCount}
+										page={page}
+										onPageChange={handleChangePage}
+										rowsPerPage={rowsPerPage}
+										onRowsPerPageChange={handleChangeRowsPerPage}
+										rowsPerPageOptions={[10, 20, 50, 100]}
+										labelRowsPerPage="Filas por página:"
+										labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+									/>
+								</>
+							)}
+						</TableContainer>
 					</Stack>
 				</TabPanel>
 

@@ -149,7 +149,18 @@ const CarpetasMEVVerificadas = () => {
 
 	// Efecto para cargar causas cuando cambian los filtros, paginación u ordenamiento
 	useEffect(() => {
-		fetchCausas(page, rowsPerPage, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder, searchFechaUltimoMovimiento, searchLastUpdate);
+		fetchCausas(
+			page,
+			rowsPerPage,
+			searchNumber,
+			searchYear,
+			searchObjeto,
+			searchCaratula,
+			sortBy,
+			sortOrder,
+			searchFechaUltimoMovimiento,
+			searchLastUpdate,
+		);
 	}, [page, rowsPerPage, sortBy, sortOrder]);
 
 	// Handlers de paginación
@@ -164,13 +175,35 @@ const CarpetasMEVVerificadas = () => {
 
 	// Handler de refresh
 	const handleRefresh = () => {
-		fetchCausas(page, rowsPerPage, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder, searchFechaUltimoMovimiento, searchLastUpdate);
+		fetchCausas(
+			page,
+			rowsPerPage,
+			searchNumber,
+			searchYear,
+			searchObjeto,
+			searchCaratula,
+			sortBy,
+			sortOrder,
+			searchFechaUltimoMovimiento,
+			searchLastUpdate,
+		);
 	};
 
 	// Handler de búsqueda
 	const handleSearch = () => {
 		setPage(0); // Resetear a página 1
-		fetchCausas(0, rowsPerPage, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder, searchFechaUltimoMovimiento, searchLastUpdate);
+		fetchCausas(
+			0,
+			rowsPerPage,
+			searchNumber,
+			searchYear,
+			searchObjeto,
+			searchCaratula,
+			sortBy,
+			sortOrder,
+			searchFechaUltimoMovimiento,
+			searchLastUpdate,
+		);
 	};
 
 	// Handler de limpiar búsqueda
@@ -459,13 +492,7 @@ const CarpetasMEVVerificadas = () => {
 						</Grid>
 						<Grid item xs={12} md={6} lg={7}>
 							<Stack direction="row" spacing={1}>
-								<Button
-									variant="contained"
-									startIcon={<SearchNormal1 size={18} />}
-									onClick={handleSearch}
-									disabled={loading}
-									size="small"
-								>
+								<Button variant="contained" startIcon={<SearchNormal1 size={18} />} onClick={handleSearch} disabled={loading} size="small">
 									Buscar
 								</Button>
 								<Button
@@ -606,7 +633,13 @@ const CarpetasMEVVerificadas = () => {
 			</Grid>
 
 			{/* Modal de detalles */}
-			<CausaDetalleModal open={detailModalOpen} onClose={handleCloseModal} causa={selectedCausa} onCausaUpdated={handleRefresh} apiService="mev" />
+			<CausaDetalleModal
+				open={detailModalOpen}
+				onClose={handleCloseModal}
+				causa={selectedCausa}
+				onCausaUpdated={handleRefresh}
+				apiService="mev"
+			/>
 
 			{/* Modal de movimientos judiciales */}
 			<JudicialMovementsModal

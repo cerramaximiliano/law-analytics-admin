@@ -88,11 +88,7 @@ class CronConfigService {
 	/**
 	 * Obtener todas las configuraciones de cron con filtros opcionales
 	 */
-	static async getCronConfigs(params?: {
-		taskName?: string;
-		enabled?: boolean;
-		includeHistory?: boolean;
-	}): Promise<CronConfigResponse> {
+	static async getCronConfigs(params?: { taskName?: string; enabled?: boolean; includeHistory?: boolean }): Promise<CronConfigResponse> {
 		try {
 			const response = await adminAxios.get("/api/cron-config", { params });
 			return response.data;

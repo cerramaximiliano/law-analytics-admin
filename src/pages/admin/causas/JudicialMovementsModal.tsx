@@ -164,9 +164,7 @@ const JudicialMovementsModal = ({ open, onClose, movements, loading, error }: Ju
 												</TableCell>
 												<TableCell>
 													<Typography variant="caption">
-														{movement.notificationSettings?.notifyAt
-															? formatDateTime(movement.notificationSettings.notifyAt)
-															: "N/A"}
+														{movement.notificationSettings?.notifyAt ? formatDateTime(movement.notificationSettings.notifyAt) : "N/A"}
 													</Typography>
 												</TableCell>
 												<TableCell>

@@ -59,12 +59,9 @@ const StripeWebhooks = () => {
 			setRunningHealthCheck(true);
 			const response = await WebhooksService.runHealthCheck();
 
-			enqueueSnackbar(
-				response.message || "Health check completado exitosamente. Suscripciones actualizadas y webhooks reparados.",
-				{
-					variant: "success",
-				},
-			);
+			enqueueSnackbar(response.message || "Health check completado exitosamente. Suscripciones actualizadas y webhooks reparados.", {
+				variant: "success",
+			});
 
 			// Recargar el estado después del health check
 			await fetchWebhooksStatus();
@@ -173,7 +170,12 @@ const StripeWebhooks = () => {
 				{/* Botón de Health Check */}
 				<Card variant="outlined" sx={{ backgroundColor: "primary.lighter", borderColor: "primary.main" }}>
 					<CardContent>
-						<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "center" }} justifyContent="space-between">
+						<Stack
+							direction={{ xs: "column", sm: "row" }}
+							spacing={2}
+							alignItems={{ xs: "stretch", sm: "center" }}
+							justifyContent="space-between"
+						>
 							<Box>
 								<Typography variant="subtitle2" fontWeight="bold" color="primary.main" gutterBottom>
 									🔧 Actualizar Suscripciones y Reparar Webhooks
@@ -298,19 +300,9 @@ const StripeWebhooks = () => {
 									<TableRow key={endpoint.id}>
 										<TableCell>
 											{endpoint.status === "enabled" ? (
-												<Chip
-													icon={<TickCircle size={16} />}
-													label="Habilitado"
-													color="success"
-													size="small"
-												/>
+												<Chip icon={<TickCircle size={16} />} label="Habilitado" color="success" size="small" />
 											) : (
-												<Chip
-													icon={<CloseCircle size={16} />}
-													label="Deshabilitado"
-													color="error"
-													size="small"
-												/>
+												<Chip icon={<CloseCircle size={16} />} label="Deshabilitado" color="error" size="small" />
 											)}
 										</TableCell>
 										<TableCell>

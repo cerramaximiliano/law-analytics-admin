@@ -406,7 +406,9 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 
 				let message = `Almacenamiento sincronizado para ${response.data?.user?.email || "el usuario"}`;
 				if (response.data?.changed) {
-					message += `. Antes: ${beforeMB.toFixed(2)} MB, Después: ${afterMB.toFixed(2)} MB (${difference > 0 ? "+" : ""}${difference.toFixed(2)} MB)`;
+					message += `. Antes: ${beforeMB.toFixed(2)} MB, Después: ${afterMB.toFixed(2)} MB (${
+						difference > 0 ? "+" : ""
+					}${difference.toFixed(2)} MB)`;
 				}
 
 				storeDispatch(

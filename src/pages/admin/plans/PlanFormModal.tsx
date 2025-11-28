@@ -240,8 +240,8 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 								formData.pricingInfo?.billingPeriod === "monthly"
 									? "Mensual"
 									: formData.pricingInfo?.billingPeriod === "yearly"
-										? "Anual"
-										: formData.pricingInfo?.billingPeriod
+									? "Anual"
+									: formData.pricingInfo?.billingPeriod
 							}
 							disabled={!!plan}
 							InputProps={{

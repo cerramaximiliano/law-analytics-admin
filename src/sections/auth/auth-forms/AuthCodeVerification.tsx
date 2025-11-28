@@ -37,7 +37,7 @@ const AuthCodeVerification = ({ mode = "register", email: propEmail, onVerificat
 
 	// Placeholder para funciones no implementadas en ServerContextType
 	const verifyResetCode = async (_email: string, _code: string): Promise<boolean> => {
-		console.warn('verifyResetCode not implemented');
+		console.warn("verifyResetCode not implemented");
 		return false;
 	};
 

@@ -359,13 +359,7 @@ const CarpetasMEVNoVerificadas = () => {
 						</Grid>
 						<Grid item xs={12} md={6} lg={7}>
 							<Stack direction="row" spacing={1}>
-								<Button
-									variant="contained"
-									startIcon={<SearchNormal1 size={18} />}
-									onClick={handleSearch}
-									disabled={loading}
-									size="small"
-								>
+								<Button variant="contained" startIcon={<SearchNormal1 size={18} />} onClick={handleSearch} disabled={loading} size="small">
 									Buscar
 								</Button>
 								<Button
@@ -506,7 +500,13 @@ const CarpetasMEVNoVerificadas = () => {
 			</Grid>
 
 			{/* Modal de detalles */}
-			<CausaDetalleModal open={detailModalOpen} onClose={handleCloseModal} causa={selectedCausa} onCausaUpdated={handleRefresh} apiService="mev" />
+			<CausaDetalleModal
+				open={detailModalOpen}
+				onClose={handleCloseModal}
+				causa={selectedCausa}
+				onCausaUpdated={handleRefresh}
+				apiService="mev"
+			/>
 
 			{/* Modal de movimientos judiciales */}
 			<JudicialMovementsModal

@@ -919,7 +919,9 @@ const ScrapingWorker = () => {
 				rowsPerPageOptions={[10, 20, 50, 100]}
 				labelRowsPerPage="Filas por página:"
 				labelDisplayedRows={({ from, to, count }) =>
-					`${from}-${to} de ${count !== -1 ? count : `más de ${to}`}${configTotalSnapshot !== null && configTotal !== configTotalSnapshot ? " (snapshot)" : ""}`
+					`${from}-${to} de ${count !== -1 ? count : `más de ${to}`}${
+						configTotalSnapshot !== null && configTotal !== configTotalSnapshot ? " (snapshot)" : ""
+					}`
 				}
 			/>
 
@@ -1203,7 +1205,13 @@ const ScrapingWorker = () => {
 					<Button onClick={handleCloseDeleteDialog} disabled={deleting}>
 						Cancelar
 					</Button>
-					<Button onClick={handleDeleteConfig} color="error" variant="contained" disabled={deleting} startIcon={deleting && <CircularProgress size={16} />}>
+					<Button
+						onClick={handleDeleteConfig}
+						color="error"
+						variant="contained"
+						disabled={deleting}
+						startIcon={deleting && <CircularProgress size={16} />}
+					>
 						{deleting ? "Eliminando..." : "Eliminar"}
 					</Button>
 				</DialogActions>
