@@ -26,7 +26,7 @@ class AuthTokenService {
 		this.tokenExpiry = null;
 	}
 
-	// Remove token (alias for clearToken)
+	// Alias for clearToken for compatibility
 	removeToken() {
 		this.clearToken();
 	}

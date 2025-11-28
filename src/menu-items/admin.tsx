@@ -1,5 +1,5 @@
 // assets
-import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle, DiscountShape } from "iconsax-react";
+import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle, DiscountShape, Notification } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -178,6 +178,29 @@ const admin: NavItemType = {
 			icon: ProfileCircle,
 			url: "/admin/users",
 			breadcrumbs: true,
+		},
+		{
+			id: "notifications",
+			title: "Notificaciones",
+			type: "collapse",
+			icon: Notification,
+			breadcrumbs: true,
+			children: [
+				{
+					id: "notifications-monitoring",
+					title: "Monitoreo",
+					type: "item",
+					url: "/admin/notifications",
+					breadcrumbs: true,
+				},
+				{
+					id: "notifications-judicial",
+					title: "Movimientos Judiciales",
+					type: "item",
+					url: "/admin/notifications/judicial-movements",
+					breadcrumbs: true,
+				},
+			],
 		},
 		{
 			id: "server-status",
