@@ -271,6 +271,7 @@ const PromotionsManagement = () => {
 								<TableCell>Código</TableCell>
 								<TableCell>Nombre</TableCell>
 								<TableCell align="center">Descuento</TableCell>
+								<TableCell align="center">Entorno</TableCell>
 								<TableCell align="center">Vigencia</TableCell>
 								<TableCell align="center">Público</TableCell>
 								<TableCell align="center">Usos</TableCell>
@@ -281,7 +282,7 @@ const PromotionsManagement = () => {
 						<TableBody>
 							{discounts.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={8} align="center">
+									<TableCell colSpan={9} align="center">
 										<Typography variant="body2" color="textSecondary" sx={{ py: 4 }}>
 											No hay promociones configuradas. Crea una nueva promoción para comenzar.
 										</Typography>
@@ -312,6 +313,15 @@ const PromotionsManagement = () => {
 														? "Siempre"
 														: `${discount.durationInMonths} meses`}
 											</Typography>
+										</TableCell>
+										<TableCell align="center">
+											{discount.targetEnvironment === "both" ? (
+												<Chip label="Ambos" size="small" color="default" />
+											) : discount.targetEnvironment === "production" ? (
+												<Chip label="Producción" size="small" color="success" />
+											) : (
+												<Chip label="Desarrollo" size="small" color="warning" />
+											)}
 										</TableCell>
 										<TableCell align="center">
 											<Typography variant="caption" display="block">

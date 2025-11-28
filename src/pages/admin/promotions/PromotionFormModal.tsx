@@ -22,7 +22,7 @@ import {
 	Typography,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
-import discountsService, { DiscountCode, CreateDiscountParams, UpdateDiscountParams } from "api/discounts";
+import discountsService, { DiscountCode, CreateDiscountParams, UpdateDiscountParams, StripeEnvironment } from "api/discounts";
 
 interface PromotionFormModalProps {
 	open: boolean;
@@ -58,6 +58,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 		promotionalMessage: "",
 		badge: "",
 		isActive: true,
+		environments: ["development", "production"] as StripeEnvironment[],
 	});
 
 	useEffect(() => {
@@ -86,6 +87,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					promotionalMessage: discount.activationRules.promotionalMessage || "",
 					badge: discount.activationRules.badge || "",
 					isActive: discount.isActive,
+					environments: (discount as any).environments || (["development", "production"] as StripeEnvironment[]),
 				});
 			} else {
 				// Create mode: reset form
@@ -115,6 +117,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					promotionalMessage: "",
 					badge: "",
 					isActive: true,
+					environments: ["development", "production"],
 				});
 			}
 		}
@@ -142,6 +145,13 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 		}));
 	};
 
+	const handleEnvironmentToggle = (env: StripeEnvironment) => {
+		setFormData((prev) => ({
+			...prev,
+			environments: prev.environments.includes(env) ? prev.environments.filter((e) => e !== env) : [...prev.environments, env],
+		}));
+	};
+
 	const handleSubmit = async () => {
 		// Validation
 		if (!formData.code.trim()) {
@@ -166,6 +176,10 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 		}
 		if (new Date(formData.validFrom) >= new Date(formData.validUntil)) {
 			enqueueSnackbar("La fecha de inicio debe ser anterior a la fecha de fin", { variant: "error" });
+			return;
+		}
+		if (!isEditing && formData.environments.length === 0) {
+			enqueueSnackbar("Debe seleccionar al menos un entorno de Stripe", { variant: "error" });
 			return;
 		}
 
@@ -222,10 +236,12 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					promotionalMessage: formData.promotionalMessage || undefined,
 					badge: formData.badge || undefined,
 					isActive: formData.isActive,
+					environments: formData.environments,
 				};
 
-				await discountsService.createDiscount(createData);
-				enqueueSnackbar("Promoción creada correctamente", { variant: "success" });
+				const response = await discountsService.createDiscount(createData);
+				const envNames = response.createdInEnvironments?.map((e) => (e === "development" ? "Desarrollo" : "Producción")).join(" y ") || "";
+				enqueueSnackbar(`Promoción creada correctamente en: ${envNames}`, { variant: "success" });
 			}
 
 			onSuccess();
@@ -275,6 +291,60 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 							rows={2}
 						/>
 					</Grid>
+
+					{/* Stripe Environments - Only for new discounts */}
+					{!isEditing && (
+						<>
+							<Grid item xs={12}>
+								<Divider sx={{ my: 1 }} />
+								<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
+									Entornos de Stripe
+								</Typography>
+								<Typography variant="caption" color="textSecondary">
+									Selecciona en qué entornos de Stripe se creará el cupón. Una vez creado, no se puede modificar.
+								</Typography>
+							</Grid>
+
+							<Grid item xs={12}>
+								<Stack direction="row" spacing={3}>
+									<FormControlLabel
+										control={
+											<Checkbox
+												checked={formData.environments.includes("development")}
+												onChange={() => handleEnvironmentToggle("development")}
+												color="warning"
+											/>
+										}
+										label={
+											<Box>
+												<Typography variant="body2">Desarrollo</Typography>
+												<Typography variant="caption" color="textSecondary">
+													Stripe Test Mode
+												</Typography>
+											</Box>
+										}
+									/>
+									<FormControlLabel
+										control={
+											<Checkbox
+												checked={formData.environments.includes("production")}
+												onChange={() => handleEnvironmentToggle("production")}
+												color="success"
+											/>
+										}
+										label={
+											<Box>
+												<Typography variant="body2">Producción</Typography>
+												<Typography variant="caption" color="textSecondary">
+													Stripe Live Mode
+												</Typography>
+											</Box>
+										}
+									/>
+								</Stack>
+							</Grid>
+						</>
+					)}
 
 					{/* Discount Configuration */}
 					<Grid item xs={12}>
