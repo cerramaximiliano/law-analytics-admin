@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import {
 	Box,
 	Chip,
+	CircularProgress,
 	Dialog,
 	DialogContent,
 	DialogTitle,
@@ -8,6 +10,8 @@ import {
 	Grid,
 	IconButton,
 	Stack,
+	Tab,
+	Tabs,
 	Table,
 	TableBody,
 	TableCell,
@@ -16,10 +20,29 @@ import {
 	TableRow,
 	Typography,
 	Paper,
+	Alert,
+	ToggleButton,
+	ToggleButtonGroup,
 } from "@mui/material";
-import { CloseCircle, Calendar, Chart, TickCircle, CloseSquare, Copy } from "iconsax-react";
-import { DiscountCode } from "api/discounts";
+import { CloseCircle, Calendar, Chart, TickCircle, CloseSquare, Copy, Cloud, People } from "iconsax-react";
+import { DiscountCode, FullDiscountInfoResponse } from "api/discounts";
+import discountsService from "api/discounts";
 import { useSnackbar } from "notistack";
+
+interface TabPanelProps {
+	children?: React.ReactNode;
+	index: number;
+	value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+	const { children, value, index, ...other } = props;
+	return (
+		<div role="tabpanel" hidden={value !== index} {...other}>
+			{value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
+		</div>
+	);
+}
 
 interface PromotionDetailModalProps {
 	open: boolean;
@@ -29,6 +52,40 @@ interface PromotionDetailModalProps {
 
 const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalProps) => {
 	const { enqueueSnackbar } = useSnackbar();
+	const [tabValue, setTabValue] = useState(0);
+	const [environment, setEnvironment] = useState<"development" | "production">("development");
+	const [stripeData, setStripeData] = useState<FullDiscountInfoResponse["data"] | null>(null);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		if (open && discount && tabValue === 1) {
+			fetchStripeInfo();
+		}
+	}, [open, discount, tabValue, environment]);
+
+	useEffect(() => {
+		if (!open) {
+			setTabValue(0);
+			setStripeData(null);
+			setError(null);
+		}
+	}, [open]);
+
+	const fetchStripeInfo = async () => {
+		if (!discount) return;
+
+		setLoading(true);
+		setError(null);
+		try {
+			const response = await discountsService.getFullInfo(discount._id, environment);
+			setStripeData(response.data);
+		} catch (err: any) {
+			setError(err.message || "Error al obtener información de Stripe");
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	if (!discount) return null;
 
@@ -42,7 +99,8 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 		});
 	};
 
-	const formatShortDate = (dateString: string) => {
+	const formatShortDate = (dateString: string | null) => {
+		if (!dateString) return "-";
 		return new Date(dateString).toLocaleDateString("es-AR", {
 			year: "numeric",
 			month: "short",
@@ -94,8 +152,613 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 		enqueueSnackbar("Código copiado al portapapeles", { variant: "success" });
 	};
 
+	const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
+		setTabValue(newValue);
+	};
+
+	const handleEnvironmentChange = (_: React.MouseEvent<HTMLElement>, newEnv: "development" | "production" | null) => {
+		if (newEnv !== null) {
+			setEnvironment(newEnv);
+		}
+	};
+
+	const getEnvironmentChips = () => {
+		const chips = [];
+		const hasDev = !!discount.stripe.development?.couponId;
+		const hasProd = !!discount.stripe.production?.couponId;
+
+		if (discount.targetEnvironment === "both" || discount.targetEnvironment === "development") {
+			chips.push(
+				<Chip
+					key="dev"
+					label={hasDev ? "Development (sincronizado)" : "Development (sin sincronizar)"}
+					color={hasDev ? "warning" : "default"}
+					variant={hasDev ? "filled" : "outlined"}
+					size="small"
+					icon={hasDev ? <TickCircle size={14} /> : <CloseSquare size={14} />}
+					sx={hasDev ? { color: "#000", "& .MuiChip-icon": { color: "#000" } } : {}}
+				/>
+			);
+		}
+		if (discount.targetEnvironment === "both" || discount.targetEnvironment === "production") {
+			chips.push(
+				<Chip
+					key="prod"
+					label={hasProd ? "Production (sincronizado)" : "Production (sin sincronizar)"}
+					color={hasProd ? "success" : "default"}
+					variant={hasProd ? "filled" : "outlined"}
+					size="small"
+					icon={hasProd ? <TickCircle size={14} /> : <CloseSquare size={14} />}
+				/>
+			);
+		}
+		return chips;
+	};
+
+	const renderDatabaseTab = () => (
+		<Grid container spacing={3}>
+			{/* Entornos */}
+			<Grid item xs={12}>
+				<Paper variant="outlined" sx={{ p: 2, bgcolor: "background.default" }}>
+					<Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
+						<Typography variant="subtitle2" color="textSecondary">
+							Entornos destino:
+						</Typography>
+						<Stack direction="row" spacing={1}>
+							{getEnvironmentChips()}
+						</Stack>
+					</Stack>
+				</Paper>
+			</Grid>
+
+			{/* Estadísticas */}
+			<Grid item xs={12}>
+				<Typography variant="h5" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+					<Chart size={20} />
+					Estadísticas de Uso
+				</Typography>
+				<Grid container spacing={2}>
+					<Grid item xs={6} sm={3}>
+						<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
+							<Typography variant="h3" color="primary">
+								{discount.stats.timesRedeemed}
+							</Typography>
+							<Typography variant="body2" color="textSecondary">
+								Veces Usado
+							</Typography>
+						</Paper>
+					</Grid>
+					<Grid item xs={6} sm={3}>
+						<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
+							<Typography variant="h3" color="success.main">
+								${discount.stats.totalAmountSaved.toFixed(2)}
+							</Typography>
+							<Typography variant="body2" color="textSecondary">
+								Total Ahorrado
+							</Typography>
+						</Paper>
+					</Grid>
+					<Grid item xs={6} sm={3}>
+						<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
+							<Typography variant="h3">{discount.restrictions.maxRedemptions || "∞"}</Typography>
+							<Typography variant="body2" color="textSecondary">
+								Límite Total
+							</Typography>
+						</Paper>
+					</Grid>
+					<Grid item xs={6} sm={3}>
+						<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
+							<Typography variant="h3">{discount.restrictions.maxRedemptionsPerUser}</Typography>
+							<Typography variant="body2" color="textSecondary">
+								Límite/Usuario
+							</Typography>
+						</Paper>
+					</Grid>
+				</Grid>
+			</Grid>
+
+			{/* Vigencia */}
+			<Grid item xs={12} md={6}>
+				<Typography variant="h5" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+					<Calendar size={20} />
+					Vigencia
+				</Typography>
+				<Paper variant="outlined" sx={{ p: 2 }}>
+					<Stack spacing={1}>
+						<Box display="flex" justifyContent="space-between">
+							<Typography variant="body2" color="textSecondary">
+								Válido desde:
+							</Typography>
+							<Typography variant="body2">{formatDate(discount.validFrom)}</Typography>
+						</Box>
+						<Box display="flex" justifyContent="space-between">
+							<Typography variant="body2" color="textSecondary">
+								Válido hasta:
+							</Typography>
+							<Typography variant="body2">{formatDate(discount.validUntil)}</Typography>
+						</Box>
+						<Divider sx={{ my: 1 }} />
+						<Box display="flex" justifyContent="space-between" alignItems="center">
+							<Typography variant="body2" color="textSecondary">
+								¿Válido ahora?
+							</Typography>
+							{isValidNow() ? (
+								<Chip icon={<TickCircle size={16} />} label="Sí" color="success" size="small" />
+							) : (
+								<Chip icon={<CloseSquare size={16} />} label="No" color="default" size="small" />
+							)}
+						</Box>
+						<Divider sx={{ my: 1 }} />
+						<Box display="flex" justifyContent="space-between" alignItems="center">
+							<Typography variant="body2" color="textSecondary">
+								Entorno:
+							</Typography>
+							{discount.targetEnvironment === "both" ? (
+								<Chip label="Ambos" size="small" color="default" />
+							) : discount.targetEnvironment === "production" ? (
+								<Chip label="Producción" size="small" color="success" />
+							) : (
+								<Chip label="Desarrollo" size="small" color="warning" sx={{ color: "#000" }} />
+							)}
+						</Box>
+					</Stack>
+				</Paper>
+			</Grid>
+
+			{/* Restricciones */}
+			<Grid item xs={12} md={6}>
+				<Typography variant="h5" gutterBottom>
+					Restricciones
+				</Typography>
+				<Paper variant="outlined" sx={{ p: 2 }}>
+					<Stack spacing={1}>
+						<Box display="flex" justifyContent="space-between">
+							<Typography variant="body2" color="textSecondary">
+								Planes aplicables:
+							</Typography>
+							<Typography variant="body2">
+								{discount.restrictions.applicablePlans.length === 0
+									? "Todos"
+									: discount.restrictions.applicablePlans.join(", ")}
+							</Typography>
+						</Box>
+						<Box display="flex" justifyContent="space-between">
+							<Typography variant="body2" color="textSecondary">
+								Períodos:
+							</Typography>
+							<Typography variant="body2">
+								{discount.restrictions.applicableBillingPeriods.length === 0
+									? "Todos"
+									: discount.restrictions.applicableBillingPeriods.join(", ")}
+							</Typography>
+						</Box>
+						<Box display="flex" justifyContent="space-between">
+							<Typography variant="body2" color="textSecondary">
+								Solo nuevos clientes:
+							</Typography>
+							<Typography variant="body2">{discount.restrictions.newCustomersOnly ? "Sí" : "No"}</Typography>
+						</Box>
+						{discount.restrictions.minimumAmount && (
+							<Box display="flex" justifyContent="space-between">
+								<Typography variant="body2" color="textSecondary">
+									Monto mínimo:
+								</Typography>
+								<Typography variant="body2">${discount.restrictions.minimumAmount}</Typography>
+							</Box>
+						)}
+					</Stack>
+				</Paper>
+			</Grid>
+
+			{/* Configuración de Visibilidad */}
+			<Grid item xs={12} md={6}>
+				<Typography variant="h5" gutterBottom>
+					Visibilidad
+				</Typography>
+				<Paper variant="outlined" sx={{ p: 2 }}>
+					<Stack spacing={1}>
+						<Box display="flex" justifyContent="space-between" alignItems="center">
+							<Typography variant="body2" color="textSecondary">
+								Público:
+							</Typography>
+							{discount.activationRules.isPublic ? (
+								<Chip label="Sí - visible en planes" color="info" size="small" />
+							) : (
+								<Chip label="No - solo por código" variant="outlined" size="small" />
+							)}
+						</Box>
+						<Box display="flex" justifyContent="space-between">
+							<Typography variant="body2" color="textSecondary">
+								Prioridad:
+							</Typography>
+							<Typography variant="body2">{discount.activationRules.priority}</Typography>
+						</Box>
+						{discount.activationRules.badge && (
+							<Box display="flex" justifyContent="space-between" alignItems="center">
+								<Typography variant="body2" color="textSecondary">
+									Badge:
+								</Typography>
+								<Chip label={discount.activationRules.badge} color="primary" size="small" />
+							</Box>
+						)}
+						{discount.activationRules.promotionalMessage && (
+							<Box>
+								<Typography variant="body2" color="textSecondary" gutterBottom>
+									Mensaje promocional:
+								</Typography>
+								<Typography variant="body2" sx={{ fontStyle: "italic" }}>
+									"{discount.activationRules.promotionalMessage}"
+								</Typography>
+							</Box>
+						)}
+					</Stack>
+				</Paper>
+			</Grid>
+
+			{/* Stripe Config */}
+			<Grid item xs={12} md={6}>
+				<Typography variant="h5" gutterBottom>
+					Configuración Stripe
+				</Typography>
+				<Paper variant="outlined" sx={{ p: 2 }}>
+					<Stack spacing={2}>
+						<Box>
+							<Typography variant="subtitle2" color="primary" gutterBottom>
+								Development
+							</Typography>
+							<Stack spacing={0.5}>
+								<Typography variant="caption" color="textSecondary">
+									Coupon ID: {discount.stripe.development?.couponId || "No sincronizado"}
+								</Typography>
+								<Typography variant="caption" color="textSecondary">
+									Promo Code ID: {discount.stripe.development?.promotionCodeId || "No sincronizado"}
+								</Typography>
+							</Stack>
+						</Box>
+						<Divider />
+						<Box>
+							<Typography variant="subtitle2" color="success.main" gutterBottom>
+								Production
+							</Typography>
+							<Stack spacing={0.5}>
+								<Typography variant="caption" color="textSecondary">
+									Coupon ID: {discount.stripe.production?.couponId || "No sincronizado"}
+								</Typography>
+								<Typography variant="caption" color="textSecondary">
+									Promo Code ID: {discount.stripe.production?.promotionCodeId || "No sincronizado"}
+								</Typography>
+							</Stack>
+						</Box>
+					</Stack>
+				</Paper>
+			</Grid>
+
+			{/* Historial de Uso */}
+			{discount.redemptionHistory && discount.redemptionHistory.length > 0 && (
+				<Grid item xs={12}>
+					<Typography variant="h5" gutterBottom>
+						Últimos Usos
+					</Typography>
+					<TableContainer component={Paper} variant="outlined">
+						<Table size="small">
+							<TableHead>
+								<TableRow>
+									<TableCell>Usuario</TableCell>
+									<TableCell>Fecha</TableCell>
+									<TableCell>Plan</TableCell>
+									<TableCell align="right">Ahorro</TableCell>
+								</TableRow>
+							</TableHead>
+							<TableBody>
+								{discount.redemptionHistory.slice(0, 10).map((item, index) => (
+									<TableRow key={index}>
+										<TableCell>
+											<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+												{item.userId.slice(0, 8)}...
+											</Typography>
+										</TableCell>
+										<TableCell>{formatShortDate(item.redeemedAt)}</TableCell>
+										<TableCell>{item.planId || "-"}</TableCell>
+										<TableCell align="right">${item.amountSaved?.toFixed(2) || "0.00"}</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
+					</TableContainer>
+					{discount.redemptionHistory.length > 10 && (
+						<Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: "block" }}>
+							Mostrando 10 de {discount.redemptionHistory.length} registros
+						</Typography>
+					)}
+				</Grid>
+			)}
+
+			{/* Metadatos */}
+			<Grid item xs={12}>
+				<Divider sx={{ my: 1 }} />
+				<Stack direction="row" spacing={3} justifyContent="flex-end">
+					<Typography variant="caption" color="textSecondary">
+						Creado: {formatDate(discount.createdAt)}
+					</Typography>
+					<Typography variant="caption" color="textSecondary">
+						Actualizado: {formatDate(discount.updatedAt)}
+					</Typography>
+				</Stack>
+			</Grid>
+		</Grid>
+	);
+
+	const renderStripeTab = () => {
+		if (loading) {
+			return (
+				<Box display="flex" justifyContent="center" alignItems="center" py={4}>
+					<CircularProgress />
+				</Box>
+			);
+		}
+
+		if (error) {
+			return (
+				<Alert severity="error" sx={{ mt: 2 }}>
+					{error}
+				</Alert>
+			);
+		}
+
+		if (!stripeData) {
+			return (
+				<Alert severity="info" sx={{ mt: 2 }}>
+					Selecciona un entorno para cargar la información de Stripe
+				</Alert>
+			);
+		}
+
+		const stripeInfo = stripeData.stripe;
+		const isStripeError = stripeInfo && "error" in stripeInfo;
+
+		return (
+			<Grid container spacing={3}>
+				{/* Selector de entorno */}
+				<Grid item xs={12}>
+					<Stack direction="row" justifyContent="flex-end">
+						<ToggleButtonGroup
+							value={environment}
+							exclusive
+							onChange={handleEnvironmentChange}
+							size="small"
+						>
+							<ToggleButton
+								value="development"
+								color="warning"
+								sx={{ "&.Mui-selected": { color: "#000" } }}
+							>
+								Development
+							</ToggleButton>
+							<ToggleButton value="production" color="success">
+								Production
+							</ToggleButton>
+						</ToggleButtonGroup>
+					</Stack>
+				</Grid>
+
+				{isStripeError ? (
+					<Grid item xs={12}>
+						<Alert severity="warning">
+							Error consultando Stripe: {(stripeInfo as { error: string }).error}
+						</Alert>
+					</Grid>
+				) : stripeInfo ? (
+					<>
+						{/* Información del Cupón en Stripe */}
+						<Grid item xs={12} md={6}>
+							<Typography variant="h5" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+								<Cloud size={20} />
+								Cupón en Stripe
+							</Typography>
+							<Paper variant="outlined" sx={{ p: 2 }}>
+								<Stack spacing={1.5}>
+									<Box display="flex" justifyContent="space-between" alignItems="center">
+										<Typography variant="body2" color="textSecondary">
+											Estado:
+										</Typography>
+										{(stripeInfo as any).coupon.valid ? (
+											<Chip label="Válido" color="success" size="small" />
+										) : (
+											<Chip label="Inválido" color="error" size="small" />
+										)}
+									</Box>
+									<Box display="flex" justifyContent="space-between">
+										<Typography variant="body2" color="textSecondary">
+											ID:
+										</Typography>
+										<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+											{(stripeInfo as any).coupon.id}
+										</Typography>
+									</Box>
+									<Box display="flex" justifyContent="space-between">
+										<Typography variant="body2" color="textSecondary">
+											Descuento:
+										</Typography>
+										<Typography variant="body2" fontWeight={600} color="primary">
+											{(stripeInfo as any).coupon.percent_off
+												? `${(stripeInfo as any).coupon.percent_off}%`
+												: `$${((stripeInfo as any).coupon.amount_off / 100).toFixed(2)}`}
+										</Typography>
+									</Box>
+									<Box display="flex" justifyContent="space-between">
+										<Typography variant="body2" color="textSecondary">
+											Duración:
+										</Typography>
+										<Typography variant="body2">
+											{(stripeInfo as any).coupon.duration === "once"
+												? "Una vez"
+												: (stripeInfo as any).coupon.duration === "forever"
+												? "Siempre"
+												: `${(stripeInfo as any).coupon.duration_in_months} meses`}
+										</Typography>
+									</Box>
+									<Divider />
+									<Box display="flex" justifyContent="space-between">
+										<Typography variant="body2" color="textSecondary">
+											Veces usado:
+										</Typography>
+										<Typography variant="h4" color="primary">
+											{(stripeInfo as any).coupon.times_redeemed}
+										</Typography>
+									</Box>
+									{(stripeInfo as any).coupon.max_redemptions && (
+										<Box display="flex" justifyContent="space-between">
+											<Typography variant="body2" color="textSecondary">
+												Límite máximo:
+											</Typography>
+											<Typography variant="body2">
+												{(stripeInfo as any).coupon.max_redemptions}
+											</Typography>
+										</Box>
+									)}
+									<Box display="flex" justifyContent="space-between">
+										<Typography variant="body2" color="textSecondary">
+											Creado en Stripe:
+										</Typography>
+										<Typography variant="body2">
+											{formatShortDate((stripeInfo as any).coupon.created)}
+										</Typography>
+									</Box>
+								</Stack>
+							</Paper>
+						</Grid>
+
+						{/* Promotion Codes */}
+						<Grid item xs={12} md={6}>
+							<Typography variant="h5" gutterBottom>
+								Promotion Codes
+							</Typography>
+							<Paper variant="outlined" sx={{ p: 2 }}>
+								{(stripeInfo as any).promotionCodes.length === 0 ? (
+									<Typography variant="body2" color="textSecondary">
+										No hay promotion codes asociados
+									</Typography>
+								) : (
+									<Stack spacing={1}>
+										{(stripeInfo as any).promotionCodes.map((pc: any) => (
+											<Box
+												key={pc.id}
+												sx={{
+													p: 1.5,
+													borderRadius: 1,
+													bgcolor: "background.default",
+												}}
+											>
+												<Stack direction="row" justifyContent="space-between" alignItems="center">
+													<Typography variant="body2" fontWeight={600} sx={{ fontFamily: "monospace" }}>
+														{pc.code}
+													</Typography>
+													<Chip
+														label={pc.active ? "Activo" : "Inactivo"}
+														color={pc.active ? "success" : "default"}
+														size="small"
+													/>
+												</Stack>
+												<Typography variant="caption" color="textSecondary">
+													Usado {pc.times_redeemed} veces
+												</Typography>
+											</Box>
+										))}
+									</Stack>
+								)}
+							</Paper>
+						</Grid>
+					</>
+				) : (
+					<Grid item xs={12}>
+						<Alert severity="info">
+							Este código no está sincronizado con Stripe en el entorno {environment}
+						</Alert>
+					</Grid>
+				)}
+
+				{/* Suscriptores */}
+				<Grid item xs={12}>
+					<Typography variant="h5" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+						<People size={20} />
+						Suscriptores Activos ({stripeData.subscribers.total})
+					</Typography>
+
+					{stripeData.subscribers.list.length === 0 ? (
+						<Paper variant="outlined" sx={{ p: 3, textAlign: "center" }}>
+							<Typography variant="body2" color="textSecondary">
+								No hay suscriptores activos con este descuento en {environment}
+							</Typography>
+						</Paper>
+					) : (
+						<TableContainer component={Paper} variant="outlined">
+							<Table size="small">
+								<TableHead>
+									<TableRow>
+										<TableCell>Cliente</TableCell>
+										<TableCell>Plan</TableCell>
+										<TableCell align="center">Inicio Descuento</TableCell>
+										<TableCell align="center">Fin Descuento</TableCell>
+										<TableCell align="center">Próximo Cobro</TableCell>
+										<TableCell align="center">Estado</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{stripeData.subscribers.list.map((sub) => (
+										<TableRow key={sub.subscriptionId}>
+											<TableCell>
+												<Typography variant="body2">{sub.customerEmail || "Sin email"}</Typography>
+												{sub.customerName && (
+													<Typography variant="caption" color="textSecondary">
+														{sub.customerName}
+													</Typography>
+												)}
+											</TableCell>
+											<TableCell>
+												<Typography variant="body2">
+													${sub.planAmount}/{sub.planInterval === "month" ? "mes" : "año"}
+												</Typography>
+											</TableCell>
+											<TableCell align="center">
+												<Typography variant="body2">{formatShortDate(sub.discountStart)}</Typography>
+											</TableCell>
+											<TableCell align="center">
+												<Chip
+													label={formatShortDate(sub.discountEnd)}
+													color={
+														sub.discountEnd && new Date(sub.discountEnd) > new Date()
+															? "success"
+															: "default"
+													}
+													size="small"
+													variant="outlined"
+												/>
+											</TableCell>
+											<TableCell align="center">
+												<Typography variant="body2">
+													{formatShortDate(sub.currentPeriodEnd)}
+												</Typography>
+											</TableCell>
+											<TableCell align="center">
+												<Chip
+													label={sub.status}
+													color={sub.status === "active" ? "success" : "default"}
+													size="small"
+												/>
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</TableContainer>
+					)}
+				</Grid>
+			</Grid>
+		);
+	};
+
 	return (
-		<Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+		<Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { height: "85vh", maxHeight: 800 } }}>
 			<DialogTitle>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Stack direction="row" spacing={2} alignItems="center">
@@ -107,321 +770,55 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 					</IconButton>
 				</Stack>
 			</DialogTitle>
-			<DialogContent dividers>
-				<Grid container spacing={3}>
-					{/* Información Principal */}
-					<Grid item xs={12}>
-						<Paper variant="outlined" sx={{ p: 2 }}>
-							<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-								<Box>
-									<Stack direction="row" spacing={1} alignItems="center">
-										<Typography variant="h3" sx={{ fontFamily: "monospace" }}>
-											{discount.code}
-										</Typography>
-										<IconButton size="small" onClick={handleCopyCode} title="Copiar código">
-											<Copy size={18} />
-										</IconButton>
-									</Stack>
-									<Typography variant="h5" color="textSecondary" sx={{ mt: 0.5 }}>
-										{discount.name}
-									</Typography>
-									{discount.description && (
-										<Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-											{discount.description}
-										</Typography>
-									)}
-								</Box>
-								<Box textAlign="right">
-									<Typography variant="h2" color="primary">
-										{getDiscountText()}
-									</Typography>
-									<Typography variant="body2" color="textSecondary">
-										{getDurationText()}
-									</Typography>
-								</Box>
+			<DialogContent dividers sx={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+				{/* Header con info principal */}
+				<Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+					<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+						<Box>
+							<Stack direction="row" spacing={1} alignItems="center">
+								<Typography variant="h3" sx={{ fontFamily: "monospace" }}>
+									{discount.code}
+								</Typography>
+								<IconButton size="small" onClick={handleCopyCode} title="Copiar código">
+									<Copy size={18} />
+								</IconButton>
 							</Stack>
-						</Paper>
-					</Grid>
-
-					{/* Estadísticas */}
-					<Grid item xs={12}>
-						<Typography variant="h5" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-							<Chart size={20} />
-							Estadísticas de Uso
-						</Typography>
-						<Grid container spacing={2}>
-							<Grid item xs={6} sm={3}>
-								<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
-									<Typography variant="h3" color="primary">
-										{discount.stats.timesRedeemed}
-									</Typography>
-									<Typography variant="body2" color="textSecondary">
-										Veces Usado
-									</Typography>
-								</Paper>
-							</Grid>
-							<Grid item xs={6} sm={3}>
-								<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
-									<Typography variant="h3" color="success.main">
-										${discount.stats.totalAmountSaved.toFixed(2)}
-									</Typography>
-									<Typography variant="body2" color="textSecondary">
-										Total Ahorrado
-									</Typography>
-								</Paper>
-							</Grid>
-							<Grid item xs={6} sm={3}>
-								<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
-									<Typography variant="h3">
-										{discount.restrictions.maxRedemptions || "∞"}
-									</Typography>
-									<Typography variant="body2" color="textSecondary">
-										Límite Total
-									</Typography>
-								</Paper>
-							</Grid>
-							<Grid item xs={6} sm={3}>
-								<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
-									<Typography variant="h3">
-										{discount.restrictions.maxRedemptionsPerUser}
-									</Typography>
-									<Typography variant="body2" color="textSecondary">
-										Límite/Usuario
-									</Typography>
-								</Paper>
-							</Grid>
-						</Grid>
-					</Grid>
-
-					{/* Vigencia */}
-					<Grid item xs={12} md={6}>
-						<Typography variant="h5" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-							<Calendar size={20} />
-							Vigencia
-						</Typography>
-						<Paper variant="outlined" sx={{ p: 2 }}>
-							<Stack spacing={1}>
-								<Box display="flex" justifyContent="space-between">
-									<Typography variant="body2" color="textSecondary">
-										Válido desde:
-									</Typography>
-									<Typography variant="body2">{formatDate(discount.validFrom)}</Typography>
-								</Box>
-								<Box display="flex" justifyContent="space-between">
-									<Typography variant="body2" color="textSecondary">
-										Válido hasta:
-									</Typography>
-									<Typography variant="body2">{formatDate(discount.validUntil)}</Typography>
-								</Box>
-								<Divider sx={{ my: 1 }} />
-								<Box display="flex" justifyContent="space-between" alignItems="center">
-									<Typography variant="body2" color="textSecondary">
-										¿Válido ahora?
-									</Typography>
-									{isValidNow() ? (
-										<Chip icon={<TickCircle size={16} />} label="Sí" color="success" size="small" />
-									) : (
-										<Chip icon={<CloseSquare size={16} />} label="No" color="default" size="small" />
-									)}
-								</Box>
-								<Divider sx={{ my: 1 }} />
-								<Box display="flex" justifyContent="space-between" alignItems="center">
-									<Typography variant="body2" color="textSecondary">
-										Entorno:
-									</Typography>
-									{discount.targetEnvironment === "both" ? (
-										<Chip label="Ambos" size="small" color="default" />
-									) : discount.targetEnvironment === "production" ? (
-										<Chip label="Producción" size="small" color="success" />
-									) : (
-										<Chip label="Desarrollo" size="small" color="warning" />
-									)}
-								</Box>
-							</Stack>
-						</Paper>
-					</Grid>
-
-					{/* Restricciones */}
-					<Grid item xs={12} md={6}>
-						<Typography variant="h5" gutterBottom>
-							Restricciones
-						</Typography>
-						<Paper variant="outlined" sx={{ p: 2 }}>
-							<Stack spacing={1}>
-								<Box display="flex" justifyContent="space-between">
-									<Typography variant="body2" color="textSecondary">
-										Planes aplicables:
-									</Typography>
-									<Typography variant="body2">
-										{discount.restrictions.applicablePlans.length === 0
-											? "Todos"
-											: discount.restrictions.applicablePlans.join(", ")}
-									</Typography>
-								</Box>
-								<Box display="flex" justifyContent="space-between">
-									<Typography variant="body2" color="textSecondary">
-										Períodos:
-									</Typography>
-									<Typography variant="body2">
-										{discount.restrictions.applicableBillingPeriods.length === 0
-											? "Todos"
-											: discount.restrictions.applicableBillingPeriods.join(", ")}
-									</Typography>
-								</Box>
-								<Box display="flex" justifyContent="space-between">
-									<Typography variant="body2" color="textSecondary">
-										Solo nuevos clientes:
-									</Typography>
-									<Typography variant="body2">{discount.restrictions.newCustomersOnly ? "Sí" : "No"}</Typography>
-								</Box>
-								{discount.restrictions.minimumAmount && (
-									<Box display="flex" justifyContent="space-between">
-										<Typography variant="body2" color="textSecondary">
-											Monto mínimo:
-										</Typography>
-										<Typography variant="body2">${discount.restrictions.minimumAmount}</Typography>
-									</Box>
-								)}
-							</Stack>
-						</Paper>
-					</Grid>
-
-					{/* Configuración de Visibilidad */}
-					<Grid item xs={12} md={6}>
-						<Typography variant="h5" gutterBottom>
-							Visibilidad
-						</Typography>
-						<Paper variant="outlined" sx={{ p: 2 }}>
-							<Stack spacing={1}>
-								<Box display="flex" justifyContent="space-between" alignItems="center">
-									<Typography variant="body2" color="textSecondary">
-										Público:
-									</Typography>
-									{discount.activationRules.isPublic ? (
-										<Chip label="Sí - visible en planes" color="info" size="small" />
-									) : (
-										<Chip label="No - solo por código" variant="outlined" size="small" />
-									)}
-								</Box>
-								<Box display="flex" justifyContent="space-between">
-									<Typography variant="body2" color="textSecondary">
-										Prioridad:
-									</Typography>
-									<Typography variant="body2">{discount.activationRules.priority}</Typography>
-								</Box>
-								{discount.activationRules.badge && (
-									<Box display="flex" justifyContent="space-between" alignItems="center">
-										<Typography variant="body2" color="textSecondary">
-											Badge:
-										</Typography>
-										<Chip label={discount.activationRules.badge} color="primary" size="small" />
-									</Box>
-								)}
-								{discount.activationRules.promotionalMessage && (
-									<Box>
-										<Typography variant="body2" color="textSecondary" gutterBottom>
-											Mensaje promocional:
-										</Typography>
-										<Typography variant="body2" sx={{ fontStyle: "italic" }}>
-											"{discount.activationRules.promotionalMessage}"
-										</Typography>
-									</Box>
-								)}
-							</Stack>
-						</Paper>
-					</Grid>
-
-					{/* Stripe Config */}
-					<Grid item xs={12} md={6}>
-						<Typography variant="h5" gutterBottom>
-							Configuración Stripe
-						</Typography>
-						<Paper variant="outlined" sx={{ p: 2 }}>
-							<Stack spacing={2}>
-								<Box>
-									<Typography variant="subtitle2" color="primary" gutterBottom>
-										Development
-									</Typography>
-									<Stack spacing={0.5}>
-										<Typography variant="caption" color="textSecondary">
-											Coupon ID: {discount.stripe.development?.couponId || "No sincronizado"}
-										</Typography>
-										<Typography variant="caption" color="textSecondary">
-											Promo Code ID: {discount.stripe.development?.promotionCodeId || "No sincronizado"}
-										</Typography>
-									</Stack>
-								</Box>
-								<Divider />
-								<Box>
-									<Typography variant="subtitle2" color="success.main" gutterBottom>
-										Production
-									</Typography>
-									<Stack spacing={0.5}>
-										<Typography variant="caption" color="textSecondary">
-											Coupon ID: {discount.stripe.production?.couponId || "No sincronizado"}
-										</Typography>
-										<Typography variant="caption" color="textSecondary">
-											Promo Code ID: {discount.stripe.production?.promotionCodeId || "No sincronizado"}
-										</Typography>
-									</Stack>
-								</Box>
-							</Stack>
-						</Paper>
-					</Grid>
-
-					{/* Historial de Uso */}
-					{discount.redemptionHistory && discount.redemptionHistory.length > 0 && (
-						<Grid item xs={12}>
-							<Typography variant="h5" gutterBottom>
-								Últimos Usos
+							<Typography variant="h5" color="textSecondary" sx={{ mt: 0.5 }}>
+								{discount.name}
 							</Typography>
-							<TableContainer component={Paper} variant="outlined">
-								<Table size="small">
-									<TableHead>
-										<TableRow>
-											<TableCell>Usuario</TableCell>
-											<TableCell>Fecha</TableCell>
-											<TableCell>Plan</TableCell>
-											<TableCell align="right">Ahorro</TableCell>
-										</TableRow>
-									</TableHead>
-									<TableBody>
-										{discount.redemptionHistory.slice(0, 10).map((item, index) => (
-											<TableRow key={index}>
-												<TableCell>
-													<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
-														{item.userId.slice(0, 8)}...
-													</Typography>
-												</TableCell>
-												<TableCell>{formatShortDate(item.redeemedAt)}</TableCell>
-												<TableCell>{item.planId || "-"}</TableCell>
-												<TableCell align="right">${item.amountSaved?.toFixed(2) || "0.00"}</TableCell>
-											</TableRow>
-										))}
-									</TableBody>
-								</Table>
-							</TableContainer>
-							{discount.redemptionHistory.length > 10 && (
-								<Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: "block" }}>
-									Mostrando 10 de {discount.redemptionHistory.length} registros
+							{discount.description && (
+								<Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+									{discount.description}
 								</Typography>
 							)}
-						</Grid>
-					)}
+						</Box>
+						<Box textAlign="right">
+							<Typography variant="h2" color="primary">
+								{getDiscountText()}
+							</Typography>
+							<Typography variant="body2" color="textSecondary">
+								{getDurationText()}
+							</Typography>
+						</Box>
+					</Stack>
+				</Paper>
 
-					{/* Metadatos */}
-					<Grid item xs={12}>
-						<Divider sx={{ my: 1 }} />
-						<Stack direction="row" spacing={3} justifyContent="flex-end">
-							<Typography variant="caption" color="textSecondary">
-								Creado: {formatDate(discount.createdAt)}
-							</Typography>
-							<Typography variant="caption" color="textSecondary">
-								Actualizado: {formatDate(discount.updatedAt)}
-							</Typography>
-						</Stack>
-					</Grid>
-				</Grid>
+				{/* Tabs */}
+				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+					<Tabs value={tabValue} onChange={handleTabChange}>
+						<Tab label="Base de Datos" icon={<Chart size={18} />} iconPosition="start" />
+						<Tab label="Stripe & Suscriptores" icon={<Cloud size={18} />} iconPosition="start" />
+					</Tabs>
+				</Box>
+
+				<Box sx={{ flex: 1, overflow: "auto", mt: 1 }}>
+					<TabPanel value={tabValue} index={0}>
+						{renderDatabaseTab()}
+					</TabPanel>
+					<TabPanel value={tabValue} index={1}>
+						{renderStripeTab()}
+					</TabPanel>
+				</Box>
 			</DialogContent>
 		</Dialog>
 	);
