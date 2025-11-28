@@ -53,6 +53,10 @@ const Jurisprudencia = Loadable(lazy(() => import("pages/recursos/Jurisprudencia
 // Documentation pages
 const LegalDocuments = Loadable(lazy(() => import("pages/documentation/legal-documents")));
 
+// Notifications pages
+const NotificationsMonitoring = Loadable(lazy(() => import("pages/admin/notifications")));
+const NotificationsJudicialMovements = Loadable(lazy(() => import("pages/admin/notifications/judicial-movements")));
+
 // Placeholder pages
 const Dashboard = () => (
 	<div style={{ padding: "2rem", textAlign: "center" }}>
@@ -243,6 +247,22 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<UsersManagement />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "notifications",
+							element: (
+								<AdminRoleGuard>
+									<NotificationsMonitoring />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "notifications/judicial-movements",
+							element: (
+								<AdminRoleGuard>
+									<NotificationsJudicialMovements />
 								</AdminRoleGuard>
 							),
 						},
