@@ -224,6 +224,19 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 										<Chip icon={<CloseSquare size={16} />} label="No" color="default" size="small" />
 									)}
 								</Box>
+								<Divider sx={{ my: 1 }} />
+								<Box display="flex" justifyContent="space-between" alignItems="center">
+									<Typography variant="body2" color="textSecondary">
+										Entorno:
+									</Typography>
+									{discount.targetEnvironment === "both" ? (
+										<Chip label="Ambos" size="small" color="default" />
+									) : discount.targetEnvironment === "production" ? (
+										<Chip label="Producción" size="small" color="success" />
+									) : (
+										<Chip label="Desarrollo" size="small" color="warning" />
+									)}
+								</Box>
 							</Stack>
 						</Paper>
 					</Grid>

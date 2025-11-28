@@ -38,6 +38,8 @@ export interface StripeConfig {
 	syncedAt?: string;
 }
 
+export type TargetEnvironment = "development" | "production" | "both";
+
 export interface DiscountCode {
 	_id: string;
 	code: string;
@@ -57,6 +59,7 @@ export interface DiscountCode {
 	restrictions: DiscountRestrictions;
 	activationRules: DiscountActivationRules;
 	isActive: boolean;
+	targetEnvironment: TargetEnvironment;
 	stats: DiscountStats;
 	redemptionHistory: RedemptionHistoryItem[];
 	createdBy?: string;
@@ -64,6 +67,8 @@ export interface DiscountCode {
 	createdAt: string;
 	updatedAt: string;
 }
+
+export type StripeEnvironment = "development" | "production";
 
 export interface CreateDiscountParams {
 	code: string;
@@ -87,6 +92,7 @@ export interface CreateDiscountParams {
 	promotionalMessage?: string;
 	badge?: string;
 	isActive?: boolean;
+	environments?: StripeEnvironment[];
 }
 
 export interface UpdateDiscountParams {
@@ -103,6 +109,7 @@ export interface DiscountResponse {
 	success: boolean;
 	message?: string;
 	data: DiscountCode;
+	createdInEnvironments?: StripeEnvironment[];
 }
 
 export interface DiscountsListResponse {
