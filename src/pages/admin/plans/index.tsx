@@ -22,7 +22,7 @@ import {
 	Typography,
 	CircularProgress,
 } from "@mui/material";
-import { Edit, Trash, Eye, Add, Refresh2, Link1, ArrowDown2, ArrowUp2, DollarCircle } from "iconsax-react";
+import { Edit, Trash, Eye, Add, Refresh2, Link1, ArrowDown2, ArrowUp2, DollarCircle, DiscountShape } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { useSnackbar } from "notistack";
 import { formatCurrency } from "utils/formatCurrency";
@@ -52,6 +52,7 @@ const PlansManagement = () => {
 		try {
 			setLoading(true);
 			const response = await authAxios.get<PlansResponse>("/api/plan-configs");
+			console.log("📋 GET /api/plan-configs response:", response.data);
 			setPlans(response.data.data || []);
 		} catch (error: any) {
 			console.error("Error al cargar planes:", error);
@@ -399,12 +400,43 @@ const PlansManagement = () => {
 												</Typography>
 											</TableCell>
 											<TableCell align="center">
-												<Typography variant="subtitle2">
-													{formatCurrency(getPlanPricing(plan).basePrice, getPlanPricing(plan).currency)}
-												</Typography>
-												<Typography variant="caption" color="textSecondary">
-													{getBillingPeriodText(getPlanPricing(plan).billingPeriod)}
-												</Typography>
+												{plan.activeDiscounts && plan.activeDiscounts.length > 0 ? (
+													<Box>
+														<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
+															<Typography
+																variant="body2"
+																sx={{
+																	textDecoration: "line-through",
+																	color: "text.disabled",
+																}}
+															>
+																{formatCurrency(plan.activeDiscounts[0].originalPrice, getPlanPricing(plan).currency)}
+															</Typography>
+															<Typography variant="subtitle2" color="success.main" fontWeight={700}>
+																{formatCurrency(plan.activeDiscounts[0].finalPrice, getPlanPricing(plan).currency)}
+															</Typography>
+														</Stack>
+														<Typography variant="caption" color="textSecondary">
+															{getBillingPeriodText(getPlanPricing(plan).billingPeriod)}
+														</Typography>
+														<Chip
+															icon={<DiscountShape size={12} />}
+															label={plan.activeDiscounts[0].badge}
+															size="small"
+															color="success"
+															sx={{ mt: 0.5, fontSize: "0.65rem", height: 20 }}
+														/>
+													</Box>
+												) : (
+													<>
+														<Typography variant="subtitle2">
+															{formatCurrency(getPlanPricing(plan).basePrice, getPlanPricing(plan).currency)}
+														</Typography>
+														<Typography variant="caption" color="textSecondary">
+															{getBillingPeriodText(getPlanPricing(plan).billingPeriod)}
+														</Typography>
+													</>
+												)}
 											</TableCell>
 											<TableCell align="center">
 												<Chip label={plan.isActive ? "Activo" : "Inactivo"} color={plan.isActive ? "success" : "error"} size="small" />
@@ -465,12 +497,56 @@ const PlansManagement = () => {
 													{plan.isDefault && <Chip label="Default" color="primary" size="small" sx={{ ml: 1 }} />}
 												</Box>
 
-												<Typography variant="h4" color="primary">
-													{formatCurrency(getPlanPricing(plan).basePrice, getPlanPricing(plan).currency)}
-													<Typography variant="body2" component="span" color="textSecondary">
-														{getBillingPeriodText(getPlanPricing(plan).billingPeriod)}
+												{plan.activeDiscounts && plan.activeDiscounts.length > 0 ? (
+													<Box>
+														<Stack direction="row" spacing={1} alignItems="baseline">
+															<Typography
+																variant="h6"
+																sx={{
+																	textDecoration: "line-through",
+																	color: "text.disabled",
+																}}
+															>
+																{formatCurrency(plan.activeDiscounts[0].originalPrice, getPlanPricing(plan).currency)}
+															</Typography>
+															<Typography variant="h4" color="success.main" fontWeight={700}>
+																{formatCurrency(plan.activeDiscounts[0].finalPrice, getPlanPricing(plan).currency)}
+															</Typography>
+															<Typography variant="body2" component="span" color="textSecondary">
+																{getBillingPeriodText(getPlanPricing(plan).billingPeriod)}
+															</Typography>
+														</Stack>
+														<Box
+															sx={{
+																mt: 1,
+																p: 1,
+																bgcolor: "success.lighter",
+																borderRadius: 1,
+																border: "1px solid",
+																borderColor: "success.light",
+															}}
+														>
+															<Stack direction="row" spacing={1} alignItems="center">
+																<DiscountShape size={16} color="var(--mui-palette-success-main)" />
+																<Typography variant="caption" color="success.dark" fontWeight={600}>
+																	{plan.activeDiscounts[0].promotionalMessage}
+																</Typography>
+															</Stack>
+															{plan.activeDiscounts[0].durationInMonths && (
+																<Typography variant="caption" color="success.dark" sx={{ display: "block", mt: 0.5 }}>
+																	Válido por {plan.activeDiscounts[0].durationInMonths} meses
+																</Typography>
+															)}
+														</Box>
+													</Box>
+												) : (
+													<Typography variant="h4" color="primary">
+														{formatCurrency(getPlanPricing(plan).basePrice, getPlanPricing(plan).currency)}
+														<Typography variant="body2" component="span" color="textSecondary">
+															{getBillingPeriodText(getPlanPricing(plan).billingPeriod)}
+														</Typography>
 													</Typography>
-												</Typography>
+												)}
 
 												<Box>
 													<Typography variant="subtitle2" gutterBottom>
