@@ -55,4 +55,5 @@ export interface DefaultRootStateProps {
 	userStats: any;
 	users: any;
 	stripeSubscriptions: any;
+	legalDocuments: any;
 }
