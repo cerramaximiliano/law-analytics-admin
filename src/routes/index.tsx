@@ -49,6 +49,9 @@ const UsersManagement = Loadable(lazy(() => import("pages/admin/users")));
 // Recursos pages
 const Jurisprudencia = Loadable(lazy(() => import("pages/recursos/Jurisprudencia")));
 
+// Documentation pages
+const LegalDocuments = Loadable(lazy(() => import("pages/documentation/legal-documents")));
+
 // Placeholder pages
 const Dashboard = () => (
 	<div style={{ padding: "2rem", textAlign: "center" }}>
@@ -244,6 +247,19 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<Jurisprudencia />
+								</AdminRoleGuard>
+							),
+						},
+					],
+				},
+				{
+					path: "documentation",
+					children: [
+						{
+							path: "legal-documents",
+							element: (
+								<AdminRoleGuard>
+									<LegalDocuments />
 								</AdminRoleGuard>
 							),
 						},
