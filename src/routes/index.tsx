@@ -42,6 +42,7 @@ const MarketingContacts = Loadable(lazy(() => import("pages/admin/marketing/cont
 
 // Plans page
 const PlansManagement = Loadable(lazy(() => import("pages/admin/plans")));
+const PromotionsManagement = Loadable(lazy(() => import("pages/admin/promotions")));
 
 // Users page
 const UsersManagement = Loadable(lazy(() => import("pages/admin/users")));
@@ -226,6 +227,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<PlansManagement />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "plans/promotions",
+							element: (
+								<AdminRoleGuard>
+									<PromotionsManagement />
 								</AdminRoleGuard>
 							),
 						},

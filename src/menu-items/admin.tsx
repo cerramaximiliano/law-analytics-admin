@@ -1,5 +1,5 @@
 // assets
-import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle } from "iconsax-react";
+import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle, DiscountShape } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -150,10 +150,26 @@ const admin: NavItemType = {
 		{
 			id: "plans",
 			title: "Planes",
-			type: "item",
+			type: "collapse",
 			icon: Receipt1,
-			url: "/admin/plans",
 			breadcrumbs: true,
+			children: [
+				{
+					id: "plans-config",
+					title: "Configuración de Planes",
+					type: "item",
+					url: "/admin/plans",
+					breadcrumbs: true,
+				},
+				{
+					id: "plans-promotions",
+					title: "Promociones",
+					type: "item",
+					url: "/admin/plans/promotions",
+					icon: DiscountShape,
+					breadcrumbs: true,
+				},
+			],
 		},
 		{
 			id: "users",
