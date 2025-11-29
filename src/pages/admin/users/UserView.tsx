@@ -132,12 +132,21 @@ const getStripeValue = (value: any): string => {
 };
 
 // Helper function to get Stripe value with environment indicator
-const getStripeValueWithIndicator = (value: any): { value: string; isTest?: boolean } => {
+const getStripeValueWithIndicator = (value: any, environment?: "test" | "live"): { value: string; isTest?: boolean } => {
 	if (typeof value === "string") {
+		// Si ya tenemos el entorno seleccionado, usarlo directamente
+		if (environment !== undefined) {
+			return { value, isTest: environment === "test" };
+		}
 		return { value };
 	}
 
 	if (typeof value === "object" && value !== null) {
+		// Si tenemos el entorno seleccionado, usar ese valor
+		if (environment && value[environment]) {
+			return { value: value[environment], isTest: environment === "test" };
+		}
+
 		const isDevelopment = import.meta.env.VITE_BASE_URL?.includes("localhost") || import.meta.env.MODE === "development";
 
 		if (isDevelopment && value.test) {
@@ -157,7 +166,9 @@ const getStripeValueWithIndicator = (value: any): { value: string; isTest?: bool
 const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 	const theme = useTheme();
 	const dispatch = useDispatch();
-	const { user: userDetails, lightData } = useSelector((state: DefaultRootStateProps) => state.users);
+	const { user: userDetails, lightData, subscriptions, stripeHistory: storeStripeHistory } = useSelector(
+		(state: DefaultRootStateProps) => state.users,
+	);
 
 	// Estados para los modales
 	const [editModalOpen, setEditModalOpen] = useState(false);
@@ -166,6 +177,9 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 	const [stripeHistory, setStripeHistory] = useState<StripeCustomerHistory | null>(null);
 	const [stripeHistoryLoading, setStripeHistoryLoading] = useState(false);
 	const [stripeHistoryError, setStripeHistoryError] = useState<string | null>(null);
+
+	// Estado para selección de entorno en suscripciones
+	const [selectedEnv, setSelectedEnv] = useState<"test" | "live">("test");
 
 	// Estados para editar el downgrade grace period
 	const [isEditingGracePeriod, setIsEditingGracePeriod] = useState(false);
@@ -178,6 +192,9 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 
 	// Estado para sincronización de almacenamiento
 	const [syncingStorage, setSyncingStorage] = useState(false);
+
+	// Obtener la suscripción del entorno seleccionado
+	const currentSubscription = subscriptions?.[selectedEnv] || null;
 
 	useEffect(() => {
 		const userId = user?.id || user?._id;
@@ -192,12 +209,12 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 
 	// Initialize grace period values when subscription data is available
 	useEffect(() => {
-		if (userDetails?.subscription?.downgradeGracePeriod) {
-			const gracePeriod = userDetails.subscription.downgradeGracePeriod;
+		if (currentSubscription?.downgradeGracePeriod) {
+			const gracePeriod = currentSubscription.downgradeGracePeriod;
 			setGracePeriodExpiresAt(gracePeriod.expiresAt ? new Date(gracePeriod.expiresAt) : null);
 			setAutoArchiveScheduled(gracePeriod.autoArchiveScheduled || false);
 		}
-	}, [userDetails?.subscription?.downgradeGracePeriod]);
+	}, [currentSubscription?.downgradeGracePeriod]);
 
 	// Información combinada
 	const userData = userDetails || user;
@@ -539,15 +556,42 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 		);
 	};
 
+	// Renderizar selector de entorno
+	const renderEnvironmentSelector = () => (
+		<Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+			<Chip
+				label="Test"
+				onClick={() => setSelectedEnv("test")}
+				color={selectedEnv === "test" ? "warning" : "default"}
+				variant={selectedEnv === "test" ? "filled" : "outlined"}
+				sx={{ cursor: "pointer" }}
+			/>
+			<Chip
+				label="Producción"
+				onClick={() => setSelectedEnv("live")}
+				color={selectedEnv === "live" ? "success" : "default"}
+				variant={selectedEnv === "live" ? "filled" : "outlined"}
+				sx={{ cursor: "pointer" }}
+			/>
+			{subscriptions?.test && subscriptions?.live && (
+				<Typography variant="caption" color="text.secondary" sx={{ alignSelf: "center", ml: 1 }}>
+					(Datos disponibles en ambos entornos)
+				</Typography>
+			)}
+		</Box>
+	);
+
 	// Renderizar información de la suscripción
 	const renderSubscriptionInfo = (subscription?: Subscription) => {
 		if (!subscription) {
 			return (
 				<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+					{renderEnvironmentSelector()}
 					<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
 						<Alert severity="info" sx={{ flex: 1, mr: 2 }}>
 							<Typography variant="body2">
-								<strong>Nota:</strong> La información mostrada corresponde a los datos del usuario dentro de la colección de suscripciones.
+								<strong>Nota:</strong> La información mostrada corresponde a los datos del usuario en el entorno{" "}
+								<strong>{selectedEnv === "test" ? "Test" : "Producción"}</strong>.
 							</Typography>
 						</Alert>
 						<Tooltip title="Sincronizar con Stripe para obtener información de suscripción">
@@ -580,10 +624,10 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 						}}
 					>
 						<Typography variant="body1" align="center">
-							El usuario no posee información sobre suscripción dentro de la colección de suscripciones.
+							El usuario no posee información sobre suscripción en el entorno {selectedEnv === "test" ? "Test" : "Producción"}.
 						</Typography>
 						<Typography variant="body2" align="center" sx={{ mt: 2, color: "text.secondary" }}>
-							Usa el botón "Sincronizar" para intentar obtener la información desde Stripe.
+							Usa el botón "Sincronizar" para intentar obtener la información desde Stripe o cambia de entorno.
 						</Typography>
 					</Paper>
 				</Stack>
@@ -592,10 +636,12 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 
 		return (
 			<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+				{renderEnvironmentSelector()}
 				<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
 					<Alert severity="info" sx={{ flex: 1, mr: 2 }}>
 						<Typography variant="body2">
-							<strong>Nota:</strong> La información mostrada corresponde a los datos del usuario dentro de la colección de suscripciones.
+							<strong>Nota:</strong> La información mostrada corresponde a los datos del usuario en el entorno{" "}
+							<strong>{selectedEnv === "test" ? "Test" : "Producción"}</strong>.
 						</Typography>
 					</Alert>
 					<Tooltip title="Sincronizar con Stripe para actualizar la información de suscripción">
@@ -644,12 +690,12 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 						<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
 							{(() => {
-								const stripeData = getStripeValueWithIndicator(subscription.stripeCustomerId);
+								const stripeData = getStripeValueWithIndicator(subscription.stripeCustomerId, selectedEnv);
 								return stripeData.value;
 							})()}
 						</Typography>
 						{(() => {
-							const stripeData = getStripeValueWithIndicator(subscription.stripeCustomerId);
+							const stripeData = getStripeValueWithIndicator(subscription.stripeCustomerId, selectedEnv);
 							if (stripeData.isTest !== undefined) {
 								return (
 									<Chip
@@ -675,12 +721,12 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 						<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 							<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
 								{(() => {
-									const stripeData = getStripeValueWithIndicator(subscription.stripeSubscriptionId);
+									const stripeData = getStripeValueWithIndicator(subscription.stripeSubscriptionId, selectedEnv);
 									return stripeData.value;
 								})()}
 							</Typography>
 							{(() => {
-								const stripeData = getStripeValueWithIndicator(subscription.stripeSubscriptionId);
+								const stripeData = getStripeValueWithIndicator(subscription.stripeSubscriptionId, selectedEnv);
 								if (stripeData.isTest !== undefined) {
 									return (
 										<Chip
@@ -935,18 +981,24 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 
 	// Renderizar límites de recursos
 	const renderResourceLimits = () => {
-		const subscription = userData?.subscription;
+		const subscription = currentSubscription;
 
 		if (!subscription) {
 			return (
-				<Alert severity="info">
-					<Typography variant="body2">No hay información de límites disponible para este usuario.</Typography>
-				</Alert>
+				<Stack spacing={2}>
+					{renderEnvironmentSelector()}
+					<Alert severity="info">
+						<Typography variant="body2">
+							No hay información de límites disponible para este usuario en el entorno {selectedEnv === "test" ? "Test" : "Producción"}.
+						</Typography>
+					</Alert>
+				</Stack>
 			);
 		}
 
 		return (
 			<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+				{renderEnvironmentSelector()}
 				{subscription.limits && Object.keys(subscription.limits).length > 0 && (
 					<>
 						<Typography variant="h6" sx={{ fontWeight: "bold" }}>
@@ -1737,7 +1789,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 							</TabPanel>
 
 							<TabPanel value={tabValue} index={1}>
-								{renderSubscriptionInfo(userData?.subscription)}
+								{renderSubscriptionInfo(currentSubscription)}
 							</TabPanel>
 
 							<TabPanel value={tabValue} index={2}>

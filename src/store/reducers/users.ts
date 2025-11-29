@@ -10,11 +10,21 @@ export const UPDATE_USER = "@users/UPDATE_USER";
 export const DELETE_USER = "@users/DELETE_USER";
 export const SET_LIGHT_DATA = "@users/SET_LIGHT_DATA";
 export const CLEAR_USER_DATA = "@users/CLEAR_USER_DATA";
+export const SET_SUBSCRIPTIONS = "@users/SET_SUBSCRIPTIONS";
+export const SET_STRIPE_HISTORY = "@users/SET_STRIPE_HISTORY";
 
 export interface UsersStateProps {
 	users: any[];
 	user: any | null;
 	lightData: any | null;
+	subscriptions: {
+		test?: any;
+		live?: any;
+	} | null;
+	stripeHistory: {
+		test?: any[];
+		live?: any[];
+	} | null;
 	loading: boolean;
 	error: object | string | null;
 }
@@ -23,6 +33,8 @@ export const initialState: UsersStateProps = {
 	users: [],
 	user: null,
 	lightData: null,
+	subscriptions: null,
+	stripeHistory: null,
 	loading: false,
 	error: null,
 };
@@ -130,11 +142,23 @@ const users = (state = initialState, action: any) => {
 				...state,
 				lightData: action.payload,
 			};
+		case SET_SUBSCRIPTIONS:
+			return {
+				...state,
+				subscriptions: action.payload,
+			};
+		case SET_STRIPE_HISTORY:
+			return {
+				...state,
+				stripeHistory: action.payload,
+			};
 		case CLEAR_USER_DATA:
 			return {
 				...state,
 				user: null,
 				lightData: null,
+				subscriptions: null,
+				stripeHistory: null,
 			};
 		default:
 			return state;
@@ -369,20 +393,42 @@ export const getUserById = (userId: string) => {
 				payload: null,
 			});
 
-			const response = await authAxios.get(`/api/users/${userId}?includeLightData=true`);
+			const url = `/api/users/${userId}?includeLightData=true`;
+			console.log("[getUserById] Calling:", url);
+			const response = await authAxios.get(url);
 
-			// La API devuelve success, user, subscription y lightData
+			console.log("[getUserById] API Response:", response.data);
+			console.log("[getUserById] user:", response.data.user);
+			console.log("[getUserById] subscriptions:", response.data.subscriptions);
+			console.log("[getUserById] stripeHistory:", response.data.stripeHistory);
+			console.log("[getUserById] lightData:", response.data.lightData);
+
+			// La API devuelve success, user, subscriptions (por entorno) y lightData
 			if (response.data.success && response.data.user) {
-				// Combinar user con subscription en un solo objeto
 				const userData = {
 					...response.data.user,
-					subscription: response.data.subscription || undefined,
 				};
 
 				dispatch({
 					type: SET_USER,
 					payload: userData,
 				});
+
+				// Guardar subscriptions por entorno (nueva estructura)
+				if (response.data.subscriptions) {
+					dispatch({
+						type: SET_SUBSCRIPTIONS,
+						payload: response.data.subscriptions,
+					});
+				}
+
+				// Guardar stripeHistory por entorno si viene incluido
+				if (response.data.stripeHistory) {
+					dispatch({
+						type: SET_STRIPE_HISTORY,
+						payload: response.data.stripeHistory,
+					});
+				}
 
 				// Guardar lightData por separado
 				if (response.data.lightData) {

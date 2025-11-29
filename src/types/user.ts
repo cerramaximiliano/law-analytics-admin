@@ -247,9 +247,21 @@ export interface User {
 	phone?: string;
 	lastLogin?: string;
 	subscription?: Subscription;
+	subscriptions?: SubscriptionsByEnvironment;
+	stripeHistory?: StripeHistoryByEnvironment;
 	lightData?: UserLightData;
 	createdAt: string;
 	updatedAt: string;
+}
+
+export interface SubscriptionsByEnvironment {
+	test?: Subscription;
+	live?: Subscription;
+}
+
+export interface StripeHistoryByEnvironment {
+	test?: any[];
+	live?: any[];
 }
 
 export interface UsersResponse {
@@ -260,5 +272,7 @@ export interface UsersResponse {
 export interface UserResponse {
 	user: User;
 	subscription?: Subscription;
+	subscriptions?: SubscriptionsByEnvironment;
+	stripeHistory?: StripeHistoryByEnvironment;
 	lightData?: UserLightData;
 }
