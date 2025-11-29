@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -19,23 +19,99 @@ import {
 	Card,
 	CardContent,
 	Grid,
+	IconButton,
+	Tooltip,
+	Dialog,
+	DialogTitle,
+	DialogContent,
+	DialogContentText,
+	DialogActions,
 } from "@mui/material";
+import { Trash } from "iconsax-react";
 import dayjs from "utils/dayjs-config";
-import { fetchStripeCustomers } from "store/reducers/stripe-subscriptions";
+import { fetchStripeCustomers, deleteStripeCustomer } from "store/reducers/stripe-subscriptions";
 import { StripeCustomer } from "types/stripe-subscription";
 
 const StripeSubscriptionsTable = () => {
 	const dispatch = useDispatch();
-	const { customers, stats, hasMore, nextCursor, loading, error } = useSelector((state: any) => state.stripeSubscriptions);
+	const { customers, stats: rawStats, pagination, loading, error, deleting } = useSelector((state: any) => state.stripeSubscriptions);
+
+	const stats = rawStats?.combined ?? {
+		totalCustomers: 0,
+		customersWithActiveSubscriptions: 0,
+		customersWithoutSubscriptions: 0,
+		customersWithCanceledSubscriptions: 0,
+	};
+
+	const hasMore = pagination?.test?.has_more || pagination?.live?.has_more;
+
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [customerToDelete, setCustomerToDelete] = useState<StripeCustomer | null>(null);
+	const [deleteResult, setDeleteResult] = useState<{ success: boolean; message: string } | null>(null);
 
 	useEffect(() => {
 		dispatch(fetchStripeCustomers() as any);
 	}, [dispatch]);
 
 	const handleLoadMore = () => {
-		if (hasMore && nextCursor) {
-			dispatch(fetchStripeCustomers(nextCursor) as any);
+		const testCursor = pagination?.test?.next_cursor;
+		const liveCursor = pagination?.live?.next_cursor;
+		const cursor = testCursor || liveCursor;
+		if (hasMore && cursor) {
+			dispatch(fetchStripeCustomers(cursor) as any);
 		}
+	};
+
+	const handleDeleteClick = (customer: StripeCustomer) => {
+		setCustomerToDelete(customer);
+		setDeleteDialogOpen(true);
+		setDeleteResult(null);
+	};
+
+	const handleDeleteConfirm = async () => {
+		if (!customerToDelete) return;
+
+		try {
+			const response = await dispatch(
+				deleteStripeCustomer(
+					{
+						customerId: customerToDelete.id,
+						environment: customerToDelete.environment,
+					},
+					customerToDelete.id,
+				) as any,
+			);
+
+			setDeleteResult({
+				success: response.success,
+				message: response.message || "Cliente eliminado exitosamente",
+			});
+
+			if (response.success) {
+				setTimeout(() => {
+					setDeleteDialogOpen(false);
+					setCustomerToDelete(null);
+					setDeleteResult(null);
+				}, 2000);
+			}
+		} catch (error) {
+			setDeleteResult({
+				success: false,
+				message: error instanceof Error ? error.message : "Error al eliminar el cliente",
+			});
+		}
+	};
+
+	const handleDeleteCancel = () => {
+		setDeleteDialogOpen(false);
+		setCustomerToDelete(null);
+		setDeleteResult(null);
+	};
+
+	const canDelete = (customer: StripeCustomer) => {
+		if (!customer.subscription) return true;
+		const activeStatuses = ["active", "trialing", "past_due"];
+		return !activeStatuses.includes(customer.subscription.status);
 	};
 
 	const getStatusColor = (status: string) => {
@@ -69,6 +145,28 @@ const StripeSubscriptionsTable = () => {
 				return "Impago";
 			default:
 				return status;
+		}
+	};
+
+	const getEnvironmentColor = (environment: string) => {
+		switch (environment) {
+			case "live":
+				return "success";
+			case "test":
+				return "warning";
+			default:
+				return "default";
+		}
+	};
+
+	const getEnvironmentLabel = (environment: string) => {
+		switch (environment) {
+			case "live":
+				return "Producción";
+			case "test":
+				return "Test";
+			default:
+				return environment;
 		}
 	};
 
@@ -218,6 +316,7 @@ const StripeSubscriptionsTable = () => {
 							<TableCell>Usuario ID</TableCell>
 							<TableCell>Cliente desde</TableCell>
 							<TableCell>Total Suscripciones</TableCell>
+							<TableCell align="center">Acciones</TableCell>
 						</TableRow>
 					</TableHead>
 					<TableBody>
@@ -260,8 +359,8 @@ const StripeSubscriptionsTable = () => {
 								</TableCell>
 								<TableCell>
 									<Chip
-										label={customer.metadata.environment || "production"}
-										color={customer.metadata.environment === "production" ? "success" : "warning"}
+										label={getEnvironmentLabel(customer.environment)}
+										color={getEnvironmentColor(customer.environment) as any}
 										size="small"
 										variant="outlined"
 									/>
@@ -277,6 +376,26 @@ const StripeSubscriptionsTable = () => {
 								<TableCell align="center">
 									<Typography variant="body2">{customer.totalSubscriptions}</Typography>
 								</TableCell>
+								<TableCell align="center">
+									<Tooltip
+										title={
+											canDelete(customer)
+												? "Eliminar cliente de Stripe"
+												: "No se puede eliminar: tiene suscripción activa"
+										}
+									>
+										<span>
+											<IconButton
+												color="error"
+												onClick={() => handleDeleteClick(customer)}
+												disabled={!canDelete(customer)}
+												size="small"
+											>
+												<Trash size={18} />
+											</IconButton>
+										</span>
+									</Tooltip>
+								</TableCell>
 							</TableRow>
 						))}
 					</TableBody>
@@ -291,6 +410,53 @@ const StripeSubscriptionsTable = () => {
 					</Button>
 				</Box>
 			)}
+
+			{/* Diálogo de confirmación de eliminación */}
+			<Dialog open={deleteDialogOpen} onClose={handleDeleteCancel} maxWidth="sm" fullWidth>
+				<DialogTitle>Eliminar cliente de Stripe</DialogTitle>
+				<DialogContent>
+					{deleteResult ? (
+						<Alert severity={deleteResult.success ? "success" : "error"} sx={{ mt: 1 }}>
+							{deleteResult.message}
+						</Alert>
+					) : (
+						<>
+							<DialogContentText>
+								¿Estás seguro de que deseas eliminar este cliente de Stripe?
+							</DialogContentText>
+							{customerToDelete && (
+								<Box sx={{ mt: 2, p: 2, bgcolor: "background.default", borderRadius: 1 }}>
+									<Typography variant="body2">
+										<strong>Cliente:</strong> {customerToDelete.name}
+									</Typography>
+									<Typography variant="body2">
+										<strong>Email:</strong> {customerToDelete.email}
+									</Typography>
+									<Typography variant="body2">
+										<strong>ID:</strong> {customerToDelete.id}
+									</Typography>
+									<Typography variant="body2">
+										<strong>Entorno:</strong> {getEnvironmentLabel(customerToDelete.environment)}
+									</Typography>
+								</Box>
+							)}
+							<Alert severity="warning" sx={{ mt: 2 }}>
+								Esta acción eliminará el cliente de Stripe. Esta operación no se puede deshacer.
+							</Alert>
+						</>
+					)}
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleDeleteCancel} disabled={deleting}>
+						{deleteResult ? "Cerrar" : "Cancelar"}
+					</Button>
+					{!deleteResult && (
+						<Button onClick={handleDeleteConfirm} color="error" variant="contained" disabled={deleting}>
+							{deleting ? <CircularProgress size={24} /> : "Eliminar"}
+						</Button>
+					)}
+				</DialogActions>
+			</Dialog>
 		</Box>
 	);
 };
