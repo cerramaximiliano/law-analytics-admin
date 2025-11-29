@@ -35,17 +35,69 @@ export interface StripeCustomer {
 	subscription: StripeSubscription | null;
 	hasActiveSubscription: boolean;
 	totalSubscriptions: number;
+	environment: "test" | "live";
+}
+
+export interface StripeStats {
+	totalCustomers: number;
+	customersWithActiveSubscriptions: number;
+	customersWithoutSubscriptions: number;
+	customersWithCanceledSubscriptions: number;
+}
+
+export interface StripePaginationEnv {
+	has_more: boolean;
+	next_cursor: string | null;
+	error: string | null;
 }
 
 export interface StripeCustomersResponse {
 	success: boolean;
 	customers: StripeCustomer[];
 	stats: {
-		totalCustomers: number;
-		customersWithActiveSubscriptions: number;
-		customersWithoutSubscriptions: number;
-		customersWithCanceledSubscriptions: number;
+		combined: StripeStats;
+		test: StripeStats;
+		live: StripeStats;
 	};
-	has_more: boolean;
-	next_cursor?: string;
+	pagination: {
+		test: StripePaginationEnv;
+		live: StripePaginationEnv;
+	};
+}
+
+export interface DeleteStripeCustomerRequest {
+	customerId?: string;
+	email?: string;
+	environment: "test" | "live" | "both";
+}
+
+export interface DeletedCustomerInfo {
+	customerId: string;
+	email: string;
+}
+
+export interface SkippedCustomerInfo {
+	customerId: string;
+	email: string;
+	reason: string;
+}
+
+export interface DeleteEnvironmentResult {
+	deleted: boolean;
+	deletedCount?: number;
+	deletedCustomers?: DeletedCustomerInfo[];
+	skippedCount?: number;
+	skippedCustomers?: SkippedCustomerInfo[];
+	reason?: string;
+}
+
+export interface DeleteStripeCustomerResponse {
+	success: boolean;
+	message: string;
+	environment: "test" | "live" | "both";
+	results: {
+		test?: DeleteEnvironmentResult;
+		live?: DeleteEnvironmentResult;
+		errors: string[];
+	};
 }

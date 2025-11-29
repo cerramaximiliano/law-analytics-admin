@@ -1,5 +1,6 @@
 import authAxios from "utils/authAxios";
-import { StripeCustomersResponse } from "types/stripe-subscription";
+import adminAxios from "utils/adminAxios";
+import { StripeCustomersResponse, DeleteStripeCustomerRequest, DeleteStripeCustomerResponse } from "types/stripe-subscription";
 import { StripeCustomerHistory } from "types/stripe-history";
 import { Subscription as UserSubscription } from "types/user";
 
@@ -93,7 +94,7 @@ class ApiService {
 	static async getStripeCustomers(cursor?: string): Promise<StripeCustomersResponse> {
 		try {
 			const params = cursor ? { cursor } : {};
-			const response = await authAxios.get<StripeCustomersResponse>("/api/subscriptions/stripe-subscriptions", {
+			const response = await adminAxios.get<StripeCustomersResponse>("/api/subscriptions/stripe-customers", {
 				params,
 			});
 			return response.data;
@@ -194,6 +195,21 @@ class ApiService {
 	static async updateUserSubscription(userId: string, subscriptionData: Partial<UserSubscription>): Promise<ApiResponse<UserSubscription>> {
 		try {
 			const response = await authAxios.patch<ApiResponse<UserSubscription>>(`/api/subscriptions/user/${userId}`, subscriptionData);
+			return response.data;
+		} catch (error) {
+			throw this.handleAxiosError(error);
+		}
+	}
+
+	/**
+	 * Elimina un cliente de Stripe
+	 * @param request - Datos del cliente a eliminar (customerId o email, y environment)
+	 */
+	static async deleteStripeCustomer(request: DeleteStripeCustomerRequest): Promise<DeleteStripeCustomerResponse> {
+		try {
+			const response = await adminAxios.delete<DeleteStripeCustomerResponse>("/api/subscriptions/customer", {
+				data: request,
+			});
 			return response.data;
 		} catch (error) {
 			throw this.handleAxiosError(error);
