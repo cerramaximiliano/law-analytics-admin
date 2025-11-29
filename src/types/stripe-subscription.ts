@@ -5,6 +5,10 @@ export interface StripeCustomerMetadata {
 	environment?: string;
 	app_version?: string;
 	initial_plan?: string;
+	consolidated?: string;
+	consolidation_date?: string;
+	reused_customer?: string;
+	updated_at?: string;
 }
 
 export interface StripeSubscription {

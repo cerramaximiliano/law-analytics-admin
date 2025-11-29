@@ -27,10 +27,11 @@ import {
 	DialogContentText,
 	DialogActions,
 } from "@mui/material";
-import { Trash } from "iconsax-react";
+import { Trash, Eye } from "iconsax-react";
 import dayjs from "utils/dayjs-config";
 import { fetchStripeCustomers, deleteStripeCustomer } from "store/reducers/stripe-subscriptions";
 import { StripeCustomer } from "types/stripe-subscription";
+import StripeCustomerDetailModal from "./StripeCustomerDetailModal";
 
 const StripeSubscriptionsTable = () => {
 	const dispatch = useDispatch();
@@ -48,6 +49,10 @@ const StripeSubscriptionsTable = () => {
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [customerToDelete, setCustomerToDelete] = useState<StripeCustomer | null>(null);
 	const [deleteResult, setDeleteResult] = useState<{ success: boolean; message: string } | null>(null);
+
+	// Estado para el modal de detalle
+	const [detailModalOpen, setDetailModalOpen] = useState(false);
+	const [selectedCustomer, setSelectedCustomer] = useState<StripeCustomer | null>(null);
 
 	useEffect(() => {
 		dispatch(fetchStripeCustomers() as any);
@@ -106,6 +111,16 @@ const StripeSubscriptionsTable = () => {
 		setDeleteDialogOpen(false);
 		setCustomerToDelete(null);
 		setDeleteResult(null);
+	};
+
+	const handleViewClick = (customer: StripeCustomer) => {
+		setSelectedCustomer(customer);
+		setDetailModalOpen(true);
+	};
+
+	const handleDetailModalClose = () => {
+		setDetailModalOpen(false);
+		setSelectedCustomer(null);
 	};
 
 	const canDelete = (customer: StripeCustomer) => {
@@ -377,24 +392,35 @@ const StripeSubscriptionsTable = () => {
 									<Typography variant="body2">{customer.totalSubscriptions}</Typography>
 								</TableCell>
 								<TableCell align="center">
-									<Tooltip
-										title={
-											canDelete(customer)
-												? "Eliminar cliente de Stripe"
-												: "No se puede eliminar: tiene suscripción activa"
-										}
-									>
-										<span>
+									<Stack direction="row" spacing={0.5} justifyContent="center">
+										<Tooltip title="Ver detalles del cliente">
 											<IconButton
-												color="error"
-												onClick={() => handleDeleteClick(customer)}
-												disabled={!canDelete(customer)}
+												color="primary"
+												onClick={() => handleViewClick(customer)}
 												size="small"
 											>
-												<Trash size={18} />
+												<Eye size={18} />
 											</IconButton>
-										</span>
-									</Tooltip>
+										</Tooltip>
+										<Tooltip
+											title={
+												canDelete(customer)
+													? "Eliminar cliente de Stripe"
+													: "No se puede eliminar: tiene suscripción activa"
+											}
+										>
+											<span>
+												<IconButton
+													color="error"
+													onClick={() => handleDeleteClick(customer)}
+													disabled={!canDelete(customer)}
+													size="small"
+												>
+													<Trash size={18} />
+												</IconButton>
+											</span>
+										</Tooltip>
+									</Stack>
 								</TableCell>
 							</TableRow>
 						))}
@@ -457,6 +483,9 @@ const StripeSubscriptionsTable = () => {
 					)}
 				</DialogActions>
 			</Dialog>
+
+			{/* Modal de detalle del cliente */}
+			<StripeCustomerDetailModal open={detailModalOpen} onClose={handleDetailModalClose} customer={selectedCustomer} />
 		</Box>
 	);
 };
