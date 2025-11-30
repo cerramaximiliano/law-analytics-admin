@@ -121,7 +121,8 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 				onClose();
 			}
 		} catch (error: any) {
-			enqueueSnackbar(error.message || "Error al actualizar la configuración", {
+			const errorMessage = error.response?.data?.message || error.message || "Error al actualizar la configuración";
+			enqueueSnackbar(errorMessage, {
 				variant: "error",
 				anchorOrigin: { vertical: "bottom", horizontal: "right" },
 			});
@@ -179,7 +180,8 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 				onClose();
 			}
 		} catch (error: any) {
-			enqueueSnackbar(error.message || "Error al actualizar el rango", {
+			const errorMessage = error.response?.data?.message || error.message || "Error al actualizar el rango";
+			enqueueSnackbar(errorMessage, {
 				variant: "error",
 				anchorOrigin: { vertical: "bottom", horizontal: "right" },
 			});
