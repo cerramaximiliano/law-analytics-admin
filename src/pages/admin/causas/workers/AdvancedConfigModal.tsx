@@ -54,6 +54,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 	const [rangeData, setRangeData] = useState({
 		range_start: config.range_start || 0,
 		range_end: config.range_end || 0,
+		year: config.year || new Date().getFullYear(),
 	});
 
 	// Actualizar estado cuando cambie la configuración
@@ -68,6 +69,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 		setRangeData({
 			range_start: config.range_start || 0,
 			range_end: config.range_end || 0,
+			year: config.year || new Date().getFullYear(),
 		});
 	}, [config]);
 
@@ -145,12 +147,18 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 		if (!rangeData.range_start || !rangeData.range_end) {
 			return false;
 		}
-		// El rango debe ser diferente al actual
-		if (rangeData.range_start === config.range_start && rangeData.range_end === config.range_end) {
+		// Al menos uno de los valores debe ser diferente al actual
+		const rangeChanged = rangeData.range_start !== config.range_start || rangeData.range_end !== config.range_end;
+		const yearChanged = rangeData.year !== config.year;
+		if (!rangeChanged && !yearChanged) {
 			return false;
 		}
 		// El rango final debe ser mayor que el inicial
 		if (rangeData.range_end <= rangeData.range_start) {
+			return false;
+		}
+		// Validar año si fue modificado
+		if (yearChanged && (!rangeData.year || rangeData.year < 2000 || rangeData.year > new Date().getFullYear() + 1)) {
 			return false;
 		}
 		return true;
@@ -396,6 +404,17 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 									/>
 								</Stack>
 
+								{/* Campo de año (opcional) */}
+								<TextField
+									label="Año"
+									type="number"
+									value={rangeData.year}
+									onChange={(e) => setRangeData({ ...rangeData, year: Number(e.target.value) })}
+									helperText={`Actual: ${config.year} (opcional modificar)`}
+									sx={{ maxWidth: 150 }}
+									inputProps={{ min: 2000, max: new Date().getFullYear() + 1 }}
+								/>
+
 								{/* Validación de rangos */}
 								{rangeData.range_start && rangeData.range_end && rangeData.range_end <= rangeData.range_start && (
 									<Alert severity="error" variant="outlined">
@@ -403,11 +422,13 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 									</Alert>
 								)}
 
-								{rangeData.range_start === config.range_start && rangeData.range_end === config.range_end && (
-									<Alert severity="warning" variant="outlined">
-										<Typography variant="body2">El nuevo rango debe ser diferente al actual.</Typography>
-									</Alert>
-								)}
+								{rangeData.range_start === config.range_start &&
+									rangeData.range_end === config.range_end &&
+									rangeData.year === config.year && (
+										<Alert severity="warning" variant="outlined">
+											<Typography variant="body2">Debe modificar al menos un valor (rango o año).</Typography>
+										</Alert>
+									)}
 
 								<Alert severity="info" variant="outlined">
 									<Typography variant="body2">
