@@ -35,11 +35,12 @@ import {
 	DialogActions,
 	TableSortLabel,
 } from "@mui/material";
-import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, Trash, AddCircle } from "iconsax-react";
+import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, Trash, AddCircle, Warning2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig, ScrapingHistory } from "api/workers";
 import AdvancedConfigModal from "./AdvancedConfigModal";
 import CreateConfigModal from "./CreateConfigModal";
+import TemporaryWorkersModal from "./TemporaryWorkersModal";
 
 // Enums para el worker de scraping
 const FUERO_OPTIONS = [
@@ -61,6 +62,7 @@ const ScrapingWorker = () => {
 	const [advancedConfigOpen, setAdvancedConfigOpen] = useState(false);
 	const [selectedConfig, setSelectedConfig] = useState<WorkerConfig | null>(null);
 	const [createConfigOpen, setCreateConfigOpen] = useState(false);
+	const [temporaryWorkersOpen, setTemporaryWorkersOpen] = useState(false);
 	const [scrapingHistory, setScrapingHistory] = useState<ScrapingHistory[]>([]);
 	const [historyLoading, setHistoryLoading] = useState(false);
 	const [historyPage, setHistoryPage] = useState(1);
@@ -531,6 +533,15 @@ const ScrapingWorker = () => {
 					<Button variant="contained" color="primary" size="small" startIcon={<AddCircle size={18} />} onClick={handleOpenCreateConfig}>
 						Nuevo Worker
 					</Button>
+					<Button
+						variant="outlined"
+						color="warning"
+						size="small"
+						startIcon={<Warning2 size={18} />}
+						onClick={() => setTemporaryWorkersOpen(true)}
+					>
+						Temporarios
+					</Button>
 					<FormControl size="small" sx={{ minWidth: 150 }}>
 						<Select value={fueroFilter} onChange={(e) => handleFueroFilterChange(e.target.value)} displayEmpty>
 							<MenuItem value="TODOS">Todos los Fueros</MenuItem>
@@ -715,9 +726,14 @@ const ScrapingWorker = () => {
 													fullWidth
 												/>
 											) : (
-												<Typography variant="body2" fontWeight={500}>
-													{config.worker_id}
-												</Typography>
+												<Stack spacing={0.5}>
+													<Typography variant="body2" fontWeight={500}>
+														{config.worker_id}
+													</Typography>
+													<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace", fontSize: "0.65rem" }}>
+														{configId}
+													</Typography>
+												</Stack>
 											)}
 										</TableCell>
 										<TableCell>
@@ -1181,6 +1197,13 @@ const ScrapingWorker = () => {
 
 			{/* Modal de crear nueva configuración */}
 			<CreateConfigModal open={createConfigOpen} onClose={handleCloseCreateConfig} onSuccess={handleCreateSuccess} />
+
+			{/* Modal de workers temporarios */}
+			<TemporaryWorkersModal
+				open={temporaryWorkersOpen}
+				onClose={() => setTemporaryWorkersOpen(false)}
+				onDeleteSuccess={handleRefresh}
+			/>
 
 			{/* Diálogo de confirmación de eliminación */}
 			<Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog} maxWidth="sm" fullWidth>
