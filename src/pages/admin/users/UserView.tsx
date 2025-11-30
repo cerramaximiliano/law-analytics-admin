@@ -1625,7 +1625,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 			<Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
 				<MainCard
 					title={<Typography variant="h5">Detalles del Usuario</Typography>}
-					sx={{ flex: 1, display: "flex", flexDirection: "column" }}
+					sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", "& .MuiCardContent-root": { pb: 0 } }}
 				>
 					<Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
 						{/* Header con info del usuario */}
@@ -1813,25 +1813,25 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 							</TabPanel>
 						</Box>
 
-						{/* Botones de acción */}
-						<Box sx={{ pt: 2 }}>
-							<Divider sx={{ mb: 2 }} />
-							<Stack direction="row" spacing={1} justifyContent="space-between">
-								<Button variant="outlined" color="error" onClick={handleDeleteClick}>
-									Eliminar Usuario
-								</Button>
-								<Stack direction="row" spacing={1}>
-									<Button variant="outlined" onClick={onClose}>
-										Cerrar
-									</Button>
-									<Button variant="contained" onClick={handleEditClick}>
-										Editar Usuario
-									</Button>
-								</Stack>
-							</Stack>
-						</Box>
 					</Box>
 				</MainCard>
+
+				{/* Botones de acción - fuera del MainCard */}
+				<Box sx={{ p: 2, pt: 1, borderTop: 1, borderColor: "divider" }}>
+					<Stack direction="row" spacing={1} justifyContent="space-between">
+						<Button variant="outlined" color="error" size="small" onClick={handleDeleteClick}>
+							Eliminar Usuario
+						</Button>
+						<Stack direction="row" spacing={1}>
+							<Button variant="outlined" size="small" onClick={onClose}>
+								Cerrar
+							</Button>
+							<Button variant="contained" size="small" onClick={handleEditClick}>
+								Editar Usuario
+							</Button>
+						</Stack>
+					</Stack>
+				</Box>
 			</Box>
 
 			{/* Modal para editar usuario */}
