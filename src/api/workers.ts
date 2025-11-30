@@ -74,6 +74,10 @@ export interface WorkerConfig {
 	number?: number;
 	max_number?: number;
 	consecutive_not_found?: number;
+	not_found_range?: {
+		start_number?: number;
+		end_number?: number;
+	};
 	range_start?: number;
 	range_end?: number;
 	proxy?: {
@@ -171,7 +175,7 @@ class WorkerConfigService {
 		}
 	}
 
-	async updateRange(id: string, data: { range_start: number; range_end: number }): Promise<WorkerConfigResponse> {
+	async updateRange(id: string, data: { range_start: number; range_end: number; year?: number }): Promise<WorkerConfigResponse> {
 		try {
 			const response = await workersAxios.put(`${this.endpoint}${id}/range`, data);
 			return response.data;
@@ -294,7 +298,7 @@ export class WorkersService {
 		return this.updateConfig("scraping", id, data);
 	}
 
-	static async updateScrapingRange(id: string, data: { range_start: number; range_end: number }): Promise<WorkerConfigResponse> {
+	static async updateScrapingRange(id: string, data: { range_start: number; range_end: number; year?: number }): Promise<WorkerConfigResponse> {
 		return this.services["scraping"].updateRange(id, data);
 	}
 

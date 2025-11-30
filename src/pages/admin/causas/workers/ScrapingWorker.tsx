@@ -667,6 +667,15 @@ const ScrapingWorker = () => {
 							</TableCell>
 							<TableCell align="center">
 								<TableSortLabel
+									active={sortBy === "consecutive_not_found"}
+									direction={sortBy === "consecutive_not_found" ? sortOrder : "asc"}
+									onClick={() => handleSort("consecutive_not_found")}
+								>
+									No Encontrados
+								</TableSortLabel>
+							</TableCell>
+							<TableCell align="center">
+								<TableSortLabel
 									active={sortBy === "progress"}
 									direction={sortBy === "progress" ? sortOrder : "asc"}
 									onClick={() => handleSort("progress")}
@@ -701,7 +710,7 @@ const ScrapingWorker = () => {
 					<TableBody>
 						{filteredConfigs.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={12} align="center">
+								<TableCell colSpan={13} align="center">
 									<Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
 										{fueroFilter === "TODOS"
 											? "No hay configuraciones disponibles"
@@ -774,14 +783,9 @@ const ScrapingWorker = () => {
 													sx={{ width: 100 }}
 												/>
 											) : (
-												<Stack alignItems="center" spacing={0.5}>
-													<Typography variant="body2" fontWeight={500}>
-														{config.number?.toLocaleString() || 0}
-													</Typography>
-													<Typography variant="caption" color="text.secondary">
-														No encontrados: {config.consecutive_not_found || 0}
-													</Typography>
-												</Stack>
+												<Typography variant="body2" fontWeight={500}>
+													{config.number?.toLocaleString() || 0}
+												</Typography>
 											)}
 										</TableCell>
 										<TableCell align="center">
@@ -812,6 +816,22 @@ const ScrapingWorker = () => {
 													{config.range_start?.toLocaleString()} - {config.range_end?.toLocaleString()}
 												</Typography>
 											)}
+										</TableCell>
+										<TableCell align="center">
+											<Stack alignItems="center" spacing={0.5}>
+												<Typography
+													variant="body2"
+													fontWeight={500}
+													color={config.consecutive_not_found && config.consecutive_not_found > 0 ? "warning.main" : "text.secondary"}
+												>
+													{config.consecutive_not_found || 0}
+												</Typography>
+												{config.not_found_range?.start_number && config.not_found_range?.end_number && (
+													<Typography variant="caption" color="text.secondary">
+														{config.not_found_range.start_number.toLocaleString()} - {config.not_found_range.end_number.toLocaleString()}
+													</Typography>
+												)}
+											</Stack>
 										</TableCell>
 										<TableCell align="center">
 											<Box sx={{ width: 100 }}>
