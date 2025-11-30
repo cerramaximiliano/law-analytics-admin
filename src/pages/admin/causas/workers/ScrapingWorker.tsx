@@ -822,7 +822,15 @@ const ScrapingWorker = () => {
 												<Typography
 													variant="body2"
 													fontWeight={500}
-													color={config.consecutive_not_found && config.consecutive_not_found > 0 ? "warning.main" : "text.secondary"}
+													color={
+														!config.consecutive_not_found || config.consecutive_not_found === 0
+															? "text.secondary"
+															: config.consecutive_not_found >= 50
+																? "error.main"
+																: config.consecutive_not_found >= 25
+																	? "warning.main"
+																	: "success.main"
+													}
 												>
 													{config.consecutive_not_found || 0}
 												</Typography>
