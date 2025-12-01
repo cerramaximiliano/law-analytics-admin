@@ -54,6 +54,7 @@ import {
 	CloseCircle,
 	RefreshCircle,
 	Setting2,
+	Sms,
 } from "iconsax-react";
 
 // API and types
@@ -62,6 +63,7 @@ import { StripeCustomerHistory } from "types/stripe-history";
 import { openSnackbar } from "store/reducers/snackbar";
 import { dispatch as storeDispatch } from "store/index";
 import dayjs from "dayjs";
+import adminAxios from "utils/adminAxios";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -178,6 +180,12 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 	const [stripeHistoryLoading, setStripeHistoryLoading] = useState(false);
 	const [stripeHistoryError, setStripeHistoryError] = useState<string | null>(null);
 
+	// Estados para marketing
+	const [marketingData, setMarketingData] = useState<any | null>(null);
+	const [marketingLoading, setMarketingLoading] = useState(false);
+	const [marketingError, setMarketingError] = useState<string | null>(null);
+	const [syncingMarketing, setSyncingMarketing] = useState(false);
+
 	// Estado para selección de entorno en suscripciones
 	const [selectedEnv, setSelectedEnv] = useState<"test" | "live">("test");
 
@@ -248,6 +256,14 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 				loadStripeHistory(userId);
 			}
 		}
+
+		// Cargar datos de marketing cuando se selecciona esa pestaña
+		if (newValue === 7 && !marketingData && !marketingLoading) {
+			const userId = userData?.id || userData?._id;
+			if (userId) {
+				loadMarketingData(userId);
+			}
+		}
 	};
 
 	const loadStripeHistory = async (userId: string) => {
@@ -265,6 +281,81 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 			setStripeHistoryError(errorMessage);
 		} finally {
 			setStripeHistoryLoading(false);
+		}
+	};
+
+	const loadMarketingData = async (userId: string) => {
+		setMarketingLoading(true);
+		setMarketingError(null);
+		try {
+			const response = await adminAxios.get(`/api/marketing/check/${userId}`);
+			if (response.data.success) {
+				setMarketingData(response.data);
+			} else {
+				setMarketingError("No se pudo cargar la información de marketing");
+			}
+		} catch (error: any) {
+			const errorMessage = error?.response?.data?.message || error?.message || "Error al cargar información de marketing";
+			setMarketingError(errorMessage);
+		} finally {
+			setMarketingLoading(false);
+		}
+	};
+
+	const syncMarketingData = async () => {
+		const userId = userData?.id || userData?._id;
+		if (!userId) {
+			storeDispatch(
+				openSnackbar({
+					open: true,
+					message: "No se pudo obtener el ID del usuario",
+					variant: "alert",
+					alert: { color: "error" },
+					close: true,
+				}),
+			);
+			return;
+		}
+
+		setSyncingMarketing(true);
+		try {
+			const response = await adminAxios.post(`/api/marketing/sync/${userId}`);
+			if (response.data.success) {
+				storeDispatch(
+					openSnackbar({
+						open: true,
+						message: response.data.message || "Usuario sincronizado correctamente con marketing",
+						variant: "alert",
+						alert: { color: "success" },
+						close: true,
+					}),
+				);
+				// Recargar datos de marketing
+				loadMarketingData(userId);
+			} else {
+				storeDispatch(
+					openSnackbar({
+						open: true,
+						message: response.data.message || "Error al sincronizar con marketing",
+						variant: "alert",
+						alert: { color: "error" },
+						close: true,
+					}),
+				);
+			}
+		} catch (error: any) {
+			const errorMessage = error?.response?.data?.message || error?.message || "Error al sincronizar con marketing";
+			storeDispatch(
+				openSnackbar({
+					open: true,
+					message: errorMessage,
+					variant: "alert",
+					alert: { color: "error" },
+					close: true,
+				}),
+			);
+		} finally {
+			setSyncingMarketing(false);
 		}
 	};
 
@@ -1620,6 +1711,281 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 		);
 	};
 
+	// Renderizar información de Marketing
+	const renderMarketingInfo = () => {
+		if (marketingLoading) {
+			return (
+				<Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "300px" }}>
+					<CircularProgress />
+				</Box>
+			);
+		}
+
+		if (marketingError) {
+			return (
+				<Alert severity="error" sx={{ mb: 2 }}>
+					{marketingError}
+				</Alert>
+			);
+		}
+
+		if (!marketingData) {
+			return (
+				<Alert severity="info" sx={{ mb: 2 }}>
+					Haz clic en la pestaña para cargar la información de marketing.
+				</Alert>
+			);
+		}
+
+		if (!marketingData.exists) {
+			return (
+				<Stack spacing={2}>
+					<Alert severity="warning">
+						<Typography variant="body2">
+							Este usuario no tiene un contacto de marketing asociado.
+						</Typography>
+					</Alert>
+					<Paper
+						elevation={0}
+						sx={{
+							p: 3,
+							backgroundColor: theme.palette.mode === "dark" ? "background.default" : "grey.100",
+							borderRadius: 2,
+						}}
+					>
+						<Typography variant="h6" sx={{ mb: 2 }}>
+							Información del Usuario
+						</Typography>
+						<Grid container spacing={2}>
+							<Grid item xs={12} md={6}>
+								<Stack spacing={1}>
+									<Typography variant="subtitle2" color="text.secondary">
+										Email
+									</Typography>
+									<Typography variant="body2">{marketingData.user?.email || "-"}</Typography>
+								</Stack>
+							</Grid>
+							<Grid item xs={12} md={6}>
+								<Stack spacing={1}>
+									<Typography variant="subtitle2" color="text.secondary">
+										Nombre
+									</Typography>
+									<Typography variant="body2">
+										{[marketingData.user?.firstName, marketingData.user?.lastName].filter(Boolean).join(" ") || "-"}
+									</Typography>
+								</Stack>
+							</Grid>
+						</Grid>
+					</Paper>
+					<Box sx={{ display: "flex", justifyContent: "center" }}>
+						<Button
+							variant="contained"
+							color="primary"
+							startIcon={syncingMarketing ? <CircularProgress size={16} color="inherit" /> : <RefreshCircle size={18} />}
+							onClick={syncMarketingData}
+							disabled={syncingMarketing}
+						>
+							{syncingMarketing ? "Sincronizando..." : "Sincronizar con Marketing"}
+						</Button>
+					</Box>
+				</Stack>
+			);
+		}
+
+		const contact = marketingData.marketingContact;
+
+		return (
+			<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+				{/* Información del Contacto */}
+				<Paper
+					elevation={0}
+					sx={{
+						p: 3,
+						backgroundColor: theme.palette.mode === "dark" ? "background.default" : "grey.100",
+						borderRadius: 2,
+					}}
+				>
+					<Typography variant="h6" sx={{ mb: 2 }}>
+						Información del Contacto
+					</Typography>
+					<Grid container spacing={2}>
+						<Grid item xs={12} md={6}>
+							<Stack spacing={1}>
+								<Typography variant="subtitle2" color="text.secondary">
+									Email
+								</Typography>
+								<Typography variant="body2">{contact?.email || "-"}</Typography>
+							</Stack>
+						</Grid>
+						<Grid item xs={12} md={6}>
+							<Stack spacing={1}>
+								<Typography variant="subtitle2" color="text.secondary">
+									Nombre
+								</Typography>
+								<Typography variant="body2">
+									{[contact?.firstName, contact?.lastName].filter(Boolean).join(" ") || "-"}
+								</Typography>
+							</Stack>
+						</Grid>
+						<Grid item xs={12} md={6}>
+							<Stack spacing={1}>
+								<Typography variant="subtitle2" color="text.secondary">
+									Estado
+								</Typography>
+								<Chip
+									label={contact?.status || "Desconocido"}
+									size="small"
+									color={contact?.status === "active" ? "success" : contact?.status === "unsubscribed" ? "error" : "default"}
+									sx={{ width: "fit-content" }}
+								/>
+							</Stack>
+						</Grid>
+						<Grid item xs={12} md={6}>
+							<Stack spacing={1}>
+								<Typography variant="subtitle2" color="text.secondary">
+									Tipo de Suscripción
+								</Typography>
+								<Typography variant="body2">{contact?.subscriptionType || "-"}</Typography>
+							</Stack>
+						</Grid>
+						<Grid item xs={12} md={6}>
+							<Stack spacing={1}>
+								<Typography variant="subtitle2" color="text.secondary">
+									Usuario de App
+								</Typography>
+								<Chip
+									label={contact?.isAppUser ? "Sí" : "No"}
+									size="small"
+									color={contact?.isAppUser ? "success" : "default"}
+									sx={{ width: "fit-content" }}
+								/>
+							</Stack>
+						</Grid>
+						<Grid item xs={12} md={6}>
+							<Stack spacing={1}>
+								<Typography variant="subtitle2" color="text.secondary">
+									Verificado
+								</Typography>
+								<Chip
+									label={contact?.isVerified ? "Sí" : "No"}
+									size="small"
+									color={contact?.isVerified ? "success" : "warning"}
+									sx={{ width: "fit-content" }}
+								/>
+							</Stack>
+						</Grid>
+					</Grid>
+				</Paper>
+
+				{/* Tags */}
+				{contact?.tags && contact.tags.length > 0 && (
+					<Paper
+						elevation={0}
+						sx={{
+							p: 3,
+							backgroundColor: theme.palette.mode === "dark" ? "background.default" : "grey.100",
+							borderRadius: 2,
+						}}
+					>
+						<Typography variant="h6" sx={{ mb: 2 }}>
+							Etiquetas
+						</Typography>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+							{contact.tags.map((tag: string, index: number) => (
+								<Chip key={index} label={tag} size="small" variant="outlined" />
+							))}
+						</Stack>
+					</Paper>
+				)}
+
+				{/* Campañas */}
+				{contact?.campaigns && contact.campaigns.length > 0 && (
+					<Paper
+						elevation={0}
+						sx={{
+							p: 3,
+							backgroundColor: theme.palette.mode === "dark" ? "background.default" : "grey.100",
+							borderRadius: 2,
+						}}
+					>
+						<Typography variant="h6" sx={{ mb: 2 }}>
+							Campañas ({contact.campaigns.length})
+						</Typography>
+						<Stack spacing={1}>
+							{contact.campaigns.slice(0, 5).map((campaign: any, index: number) => (
+								<Paper key={index} variant="outlined" sx={{ p: 1.5 }}>
+									<Typography variant="body2">{campaign.name || campaign._id || `Campaña ${index + 1}`}</Typography>
+								</Paper>
+							))}
+							{contact.campaigns.length > 5 && (
+								<Typography variant="caption" color="text.secondary">
+									Mostrando 5 de {contact.campaigns.length} campañas
+								</Typography>
+							)}
+						</Stack>
+					</Paper>
+				)}
+
+				{/* Segmentos */}
+				{contact?.segments && contact.segments.length > 0 && (
+					<Paper
+						elevation={0}
+						sx={{
+							p: 3,
+							backgroundColor: theme.palette.mode === "dark" ? "background.default" : "grey.100",
+							borderRadius: 2,
+						}}
+					>
+						<Typography variant="h6" sx={{ mb: 2 }}>
+							Segmentos ({contact.segments.length})
+						</Typography>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+							{contact.segments.map((segment: any, index: number) => (
+								<Chip key={index} label={segment.name || segment._id || `Segmento ${index + 1}`} size="small" color="primary" variant="outlined" />
+							))}
+						</Stack>
+					</Paper>
+				)}
+
+				{/* Fechas */}
+				<Paper
+					elevation={0}
+					sx={{
+						p: 3,
+						backgroundColor: theme.palette.mode === "dark" ? "background.default" : "grey.100",
+						borderRadius: 2,
+					}}
+				>
+					<Typography variant="h6" sx={{ mb: 2 }}>
+						Información de Auditoría
+					</Typography>
+					<Grid container spacing={2}>
+						<Grid item xs={12} md={6}>
+							<Stack spacing={1}>
+								<Typography variant="subtitle2" color="text.secondary">
+									Creado
+								</Typography>
+								<Typography variant="body2">
+									{contact?.createdAt ? new Date(contact.createdAt).toLocaleString() : "-"}
+								</Typography>
+							</Stack>
+						</Grid>
+						<Grid item xs={12} md={6}>
+							<Stack spacing={1}>
+								<Typography variant="subtitle2" color="text.secondary">
+									Última actualización
+								</Typography>
+								<Typography variant="body2">
+									{contact?.updatedAt ? new Date(contact.updatedAt).toLocaleString() : "-"}
+								</Typography>
+							</Stack>
+						</Grid>
+					</Grid>
+				</Paper>
+			</Stack>
+		);
+	};
+
 	return (
 		<>
 			<Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -1710,6 +2076,13 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 										label="Clientes de Stripe"
 										id="user-tab-6"
 										aria-controls="user-tabpanel-6"
+									/>
+									<Tab
+										icon={<Sms size={18} />}
+										iconPosition="start"
+										label="Marketing"
+										id="user-tab-7"
+										aria-controls="user-tabpanel-7"
 									/>
 								</Tabs>
 							</Box>
@@ -1810,6 +2183,10 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 
 							<TabPanel value={tabValue} index={6}>
 								{renderStripeHistory()}
+							</TabPanel>
+
+							<TabPanel value={tabValue} index={7}>
+								{renderMarketingInfo()}
 							</TabPanel>
 						</Box>
 
