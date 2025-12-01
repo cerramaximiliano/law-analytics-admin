@@ -53,9 +53,10 @@ const FIELD_OPTIONS = [
 	{ value: "status", label: "Estado" },
 	{ value: "tags", label: "Etiquetas" },
 	{ value: "subscriptionType", label: "Suscripción" },
-	{ value: "isAppUser", label: "Usuario" },
-	{ value: "isVerified", label: "Verificado" },
-	{ value: "isEmailVerified", label: "Email Válido" },
+	{ value: "isAppUser", label: "Usuario de la App" },
+	{ value: "isVerified", label: "Verificado en la App" },
+	{ value: "isEmailVerified", label: "Email Verificado" },
+	{ value: "emailVerification.result", label: "Resultado de verificación" },
 	{ value: "totalCampaigns", label: "Número de campañas" },
 	{ value: "openRate", label: "Tasa de apertura" },
 	{ value: "clickRate", label: "Tasa de clics" },
@@ -121,6 +122,7 @@ const DEFAULT_OPERATOR_BY_FIELD: { [key: string]: string } = {
 	isAppUser: "equals",
 	isVerified: "equals",
 	isEmailVerified: "equals",
+	"emailVerification.result": "equals",
 	totalCampaigns: "greater_than",
 	openRate: "greater_than",
 	clickRate: "greater_than",
@@ -153,6 +155,16 @@ const SUBSCRIPTION_OPTIONS = [
 const BOOLEAN_OPTIONS = [
 	{ value: "true", label: "Sí" },
 	{ value: "false", label: "No" },
+];
+
+// Valores para el campo resultado de validación de email
+const EMAIL_VERIFICATION_RESULT_OPTIONS = [
+	{ value: "valid", label: "Válido" },
+	{ value: "invalid", label: "Inválido" },
+	{ value: "disposable", label: "Desechable" },
+	{ value: "catchall", label: "Catchall" },
+	{ value: "unknown", label: "Desconocido" },
+	{ value: "null", label: "Sin verificar" },
 ];
 
 const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSave, segment }) => {
@@ -329,7 +341,7 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 			if (invalidFilters.length > 0) {
 				errors.filters = "Todas las condiciones deben estar completas";
 			}
-		} else if (type === "static" && contacts.length === 0) {
+		} else if (type === "static" && selectedContactIds.length === 0) {
 			errors.contacts = "Debe seleccionar al menos un contacto";
 		}
 
@@ -581,6 +593,7 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 	const getOperatorsForField = (fieldName: string): { value: FilterOperator; label: string }[] => {
 		if (fieldName === "status") return OPERATOR_OPTIONS.status;
 		if (fieldName === "subscriptionType") return OPERATOR_OPTIONS.status; // Usar los mismos operadores que status
+		if (fieldName === "emailVerification.result") return OPERATOR_OPTIONS.status; // Usar los mismos operadores que status
 		if (fieldName === "tags") return OPERATOR_OPTIONS.tags;
 		if (["isAppUser", "isVerified", "isEmailVerified"].includes(fieldName)) return OPERATOR_OPTIONS.boolean;
 		if (["totalCampaigns", "openRate", "clickRate"].includes(fieldName)) return OPERATOR_OPTIONS.number;
@@ -673,15 +686,36 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 			);
 		}
 
-		// Para campos booleanos (Usuario, Verificado, Email Válido)
+		// Para el campo de resultado de validación de email
+		if (filter.field === "emailVerification.result") {
+			return (
+				<FormControl fullWidth size="small">
+					<InputLabel>Resultado</InputLabel>
+					<Select
+						value={filter.value || ""}
+						label="Resultado"
+						onChange={(e) => handleFilterChange(index, "value", e.target.value)}
+						disabled={saving}
+					>
+						{EMAIL_VERIFICATION_RESULT_OPTIONS.map((option) => (
+							<MenuItem key={option.value} value={option.value}>
+								{option.label}
+							</MenuItem>
+						))}
+					</Select>
+				</FormControl>
+			);
+		}
+
+		// Para campos booleanos (Usuario de la App, Verificado en la App, Email Verificado)
 		if (filter.field === "isAppUser" || filter.field === "isVerified" || filter.field === "isEmailVerified") {
 			let fieldLabel = "";
 			if (filter.field === "isAppUser") {
-				fieldLabel = "Usuario";
+				fieldLabel = "Usuario de la App";
 			} else if (filter.field === "isVerified") {
-				fieldLabel = "Verificado";
+				fieldLabel = "Verificado en la App";
 			} else if (filter.field === "isEmailVerified") {
-				fieldLabel = "Email Válido";
+				fieldLabel = "Email Verificado";
 			}
 			return (
 				<FormControl fullWidth size="small">

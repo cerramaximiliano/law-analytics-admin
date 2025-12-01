@@ -24,6 +24,12 @@ import {
 	Checkbox,
 	CircularProgress,
 	Tooltip,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableHead,
+	TableRow,
 } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -55,6 +61,8 @@ import {
 	RefreshCircle,
 	Setting2,
 	Sms,
+	Add,
+	Trash,
 } from "iconsax-react";
 
 // API and types
@@ -64,6 +72,8 @@ import { openSnackbar } from "store/reducers/snackbar";
 import { dispatch as storeDispatch } from "store/index";
 import dayjs from "dayjs";
 import adminAxios from "utils/adminAxios";
+import { SegmentService } from "store/reducers/segments";
+import { Segment } from "types/segment";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -80,7 +90,9 @@ function TabPanel(props: TabPanelProps) {
 				<Box
 					sx={{
 						p: 3,
-						height: "400px",
+						height: "calc(100vh - 450px)",
+						minHeight: "300px",
+						maxHeight: "500px",
 						overflowY: "auto",
 						"&::-webkit-scrollbar": {
 							width: "8px",
@@ -186,6 +198,12 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 	const [marketingError, setMarketingError] = useState<string | null>(null);
 	const [syncingMarketing, setSyncingMarketing] = useState(false);
 
+	// Estados para segmentos
+	const [staticSegments, setStaticSegments] = useState<Segment[]>([]);
+	const [loadingSegments, setLoadingSegments] = useState(false);
+	const [addingToSegment, setAddingToSegment] = useState<string | null>(null);
+	const [removingFromSegment, setRemovingFromSegment] = useState<string | null>(null);
+
 	// Estado para selección de entorno en suscripciones
 	const [selectedEnv, setSelectedEnv] = useState<"test" | "live">("test");
 
@@ -262,6 +280,10 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 			const userId = userData?.id || userData?._id;
 			if (userId) {
 				loadMarketingData(userId);
+			}
+			// También cargar segmentos estáticos disponibles
+			if (staticSegments.length === 0 && !loadingSegments) {
+				loadStaticSegments();
 			}
 		}
 	};
@@ -356,6 +378,154 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 			);
 		} finally {
 			setSyncingMarketing(false);
+		}
+	};
+
+	const loadStaticSegments = async () => {
+		setLoadingSegments(true);
+		try {
+			// Cargar todos los segmentos estáticos activos
+			const response = await SegmentService.getSegments(1, 100, "name", "asc", { isActive: true });
+			// Filtrar solo los segmentos estáticos
+			const staticOnly = response.data.filter((segment) => segment.type === "static");
+			setStaticSegments(staticOnly);
+		} catch (error) {
+			console.warn("Error al cargar segmentos estáticos:", error);
+			setStaticSegments([]);
+		} finally {
+			setLoadingSegments(false);
+		}
+	};
+
+	const handleAddToSegment = async (segmentId: string) => {
+		const contactId = marketingData?.marketingContact?._id;
+		if (!contactId) {
+			storeDispatch(
+				openSnackbar({
+					open: true,
+					message: "No se encontró el contacto de marketing",
+					variant: "alert",
+					alert: { color: "error" },
+					close: true,
+				}),
+			);
+			return;
+		}
+
+		setAddingToSegment(segmentId);
+		try {
+			// Obtener el segmento actual para conseguir los contactos existentes
+			const segment = await SegmentService.getSegmentById(segmentId);
+			const currentContacts = segment.contacts || [];
+
+			// Verificar si el contacto ya está en el segmento
+			if (currentContacts.includes(contactId)) {
+				storeDispatch(
+					openSnackbar({
+						open: true,
+						message: "El contacto ya pertenece a este segmento",
+						variant: "alert",
+						alert: { color: "warning" },
+						close: true,
+					}),
+				);
+				return;
+			}
+
+			// Agregar el nuevo contacto al array
+			const updatedContacts = [...currentContacts, contactId];
+
+			// Actualizar el segmento con el nuevo array de contactos
+			await SegmentService.updateSegment(segmentId, { contacts: updatedContacts });
+
+			storeDispatch(
+				openSnackbar({
+					open: true,
+					message: "Contacto agregado al segmento exitosamente",
+					variant: "alert",
+					alert: { color: "success" },
+					close: true,
+				}),
+			);
+
+			// Recargar datos de marketing para actualizar la lista de segmentos
+			const userId = userData?.id || userData?._id;
+			if (userId) {
+				loadMarketingData(userId);
+			}
+		} catch (error: any) {
+			const errorMessage = error?.response?.data?.message || error?.message || "Error al agregar al segmento";
+			storeDispatch(
+				openSnackbar({
+					open: true,
+					message: errorMessage,
+					variant: "alert",
+					alert: { color: "error" },
+					close: true,
+				}),
+			);
+		} finally {
+			setAddingToSegment(null);
+		}
+	};
+
+	const handleRemoveFromSegment = async (segmentId: string) => {
+		const contactId = marketingData?.marketingContact?._id;
+		if (!contactId) {
+			storeDispatch(
+				openSnackbar({
+					open: true,
+					message: "No se encontró el contacto de marketing",
+					variant: "alert",
+					alert: { color: "error" },
+					close: true,
+				}),
+			);
+			return;
+		}
+
+		setRemovingFromSegment(segmentId);
+		try {
+			// Obtener el segmento actual para conseguir los contactos existentes
+			const segment = await SegmentService.getSegmentById(segmentId);
+			const currentContacts = segment.contacts || [];
+
+			// Filtrar el contacto a eliminar
+			const updatedContacts = currentContacts.filter((id: string) => id !== contactId);
+
+			// Actualizar el segmento con el nuevo array de contactos
+			await SegmentService.updateSegment(segmentId, { contacts: updatedContacts });
+
+			storeDispatch(
+				openSnackbar({
+					open: true,
+					message: "Contacto eliminado del segmento exitosamente",
+					variant: "alert",
+					alert: { color: "success" },
+					close: true,
+				}),
+			);
+
+			// Recargar datos de marketing para actualizar la lista de segmentos
+			const userId = userData?.id || userData?._id;
+			if (userId) {
+				loadMarketingData(userId);
+			}
+			// También recargar los segmentos estáticos disponibles
+			loadStaticSegments();
+		} catch (error: any) {
+			const errorMessage = error?.response?.data?.message || error?.message || "Error al eliminar del segmento";
+			storeDispatch(
+				openSnackbar({
+					open: true,
+					message: errorMessage,
+					variant: "alert",
+					alert: { color: "error" },
+					close: true,
+				}),
+			);
+		} finally {
+			setRemovingFromSegment(null);
 		}
 	};
 
@@ -1927,25 +2097,174 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 				)}
 
 				{/* Segmentos */}
-				{contact?.segments && contact.segments.length > 0 && (
-					<Paper
-						elevation={0}
-						sx={{
-							p: 3,
-							backgroundColor: theme.palette.mode === "dark" ? "background.default" : "grey.100",
-							borderRadius: 2,
-						}}
-					>
-						<Typography variant="h6" sx={{ mb: 2 }}>
-							Segmentos ({contact.segments.length})
-						</Typography>
-						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-							{contact.segments.map((segment: any, index: number) => (
-								<Chip key={index} label={segment.name || segment._id || `Segmento ${index + 1}`} size="small" color="primary" variant="outlined" />
-							))}
-						</Stack>
-					</Paper>
-				)}
+				<Paper
+					elevation={0}
+					sx={{
+						p: 3,
+						backgroundColor: theme.palette.mode === "dark" ? "background.default" : "grey.100",
+						borderRadius: 2,
+					}}
+				>
+					<Typography variant="h6" sx={{ mb: 2 }}>
+						Segmentos
+					</Typography>
+
+					{/* Segmentos actuales del contacto */}
+					{contact?.segments && contact.segments.length > 0 ? (
+						<Box sx={{ mb: 3 }}>
+							<Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+								Segmentos del contacto ({contact.segments.length})
+							</Typography>
+							<TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 250 }}>
+								<Table size="small" stickyHeader>
+									<TableHead>
+										<TableRow>
+											<TableCell>Nombre</TableCell>
+											<TableCell>Tipo</TableCell>
+											<TableCell>Estado</TableCell>
+											<TableCell align="center">Acciones</TableCell>
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{contact.segments.map((segment: any, index: number) => {
+											const segmentId = segment.segmentId || segment._id || segment;
+											const isStaticSegment = segment.type === "static";
+											const isActive = segment.status === "active";
+											const isRemoving = removingFromSegment === segmentId;
+											const canDelete = isStaticSegment && isActive;
+
+											return (
+												<TableRow
+													key={index}
+													sx={{ opacity: isActive ? 1 : 0.6 }}
+												>
+													<TableCell>
+														<Typography variant="body2">
+															{segment.name || segmentId || `Segmento ${index + 1}`}
+														</Typography>
+													</TableCell>
+													<TableCell>
+														<Chip
+															label={isStaticSegment ? "Estático" : "Dinámico"}
+															size="small"
+															color={isStaticSegment ? "primary" : "secondary"}
+														/>
+													</TableCell>
+													<TableCell>
+														<Chip
+															label={isActive ? "Activo" : "Inactivo"}
+															size="small"
+															color={isActive ? "success" : "default"}
+															variant={isActive ? "filled" : "outlined"}
+														/>
+													</TableCell>
+													<TableCell align="center">
+														{canDelete ? (
+															<Tooltip title="Eliminar del segmento">
+																<IconButton
+																	size="small"
+																	color="error"
+																	onClick={() => handleRemoveFromSegment(segmentId)}
+																	disabled={removingFromSegment !== null}
+																>
+																	{isRemoving ? (
+																		<CircularProgress size={16} color="inherit" />
+																	) : (
+																		<Trash size={16} />
+																	)}
+																</IconButton>
+															</Tooltip>
+														) : (
+															<Typography variant="caption" color="text.disabled">
+																-
+															</Typography>
+														)}
+													</TableCell>
+												</TableRow>
+											);
+										})}
+									</TableBody>
+								</Table>
+							</TableContainer>
+						</Box>
+					) : (
+						<Alert severity="info" sx={{ mb: 2 }}>
+							Este contacto no pertenece a ningún segmento.
+						</Alert>
+					)}
+
+					{/* Agregar a segmentos estáticos */}
+					<Divider sx={{ my: 2 }} />
+					<Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+						Agregar a segmento estático
+					</Typography>
+
+					{loadingSegments ? (
+						<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+							<CircularProgress size={20} />
+							<Typography variant="body2" color="text.secondary">
+								Cargando segmentos...
+							</Typography>
+						</Box>
+					) : (() => {
+						// Obtener IDs de segmentos donde el contacto está ACTIVO
+						const activeSegmentIds = (contact?.segments || [])
+							.filter((s: any) => s.status === "active")
+							.map((s: any) => s.segmentId || s._id || s);
+
+						if (staticSegments.length === 0) {
+							return (
+								<Typography variant="body2" color="text.secondary">
+									No hay segmentos estáticos disponibles.
+								</Typography>
+							);
+						}
+
+						return (
+							<Stack spacing={1}>
+								{staticSegments.map((segment) => {
+									const isAlreadyActive = activeSegmentIds.includes(segment._id);
+
+									return (
+										<Paper key={segment._id} variant="outlined" sx={{ p: 1.5 }}>
+											<Stack direction="row" justifyContent="space-between" alignItems="center">
+												<Box>
+													<Typography variant="body2" fontWeight={500}>
+														{segment.name}
+													</Typography>
+													{segment.description && (
+														<Typography variant="caption" color="text.secondary">
+															{segment.description}
+														</Typography>
+													)}
+												</Box>
+												{isAlreadyActive ? (
+													<Chip label="Ya pertenece" size="small" color="success" variant="outlined" />
+												) : (
+													<Button
+														size="small"
+														variant="outlined"
+														startIcon={
+															addingToSegment === segment._id ? (
+																<CircularProgress size={14} color="inherit" />
+															) : (
+																<Add size={14} />
+															)
+														}
+														onClick={() => handleAddToSegment(segment._id!)}
+														disabled={addingToSegment !== null}
+													>
+														{addingToSegment === segment._id ? "Agregando..." : "Agregar"}
+													</Button>
+												)}
+											</Stack>
+										</Paper>
+									);
+								})}
+							</Stack>
+						);
+					})()}
+				</Paper>
 
 				{/* Fechas */}
 				<Paper

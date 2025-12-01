@@ -261,7 +261,12 @@ const SegmentsPanel = () => {
 			<SegmentFormModal open={openSegmentModal} onClose={handleCloseSegmentModal} onSave={handleSegmentSaved} segment={editingSegment} />
 
 			{/* Segment Contacts Modal */}
-			<SegmentContactsModal open={contactsModalOpen} onClose={handleCloseContactsModal} segment={viewingContactsSegment} />
+			<SegmentContactsModal
+				open={contactsModalOpen}
+				onClose={handleCloseContactsModal}
+				segment={viewingContactsSegment}
+				onContactRemoved={fetchSegments}
+			/>
 
 			{/* Segment Deletion Modal */}
 			{deletingSegment && (

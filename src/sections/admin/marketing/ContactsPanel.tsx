@@ -51,8 +51,15 @@ const ContactsPanel = () => {
 	const [error, setError] = useState<string | null>(null);
 	const [searchTerm, setSearchTerm] = useState<string>("");
 	const [filterStatus, setFilterStatus] = useState<string>("");
+	const [filterTag, setFilterTag] = useState<string>("");
+	const [filterEmailVerified, setFilterEmailVerified] = useState<string>("");
+	const [filterVerificationResult, setFilterVerificationResult] = useState<string>("");
+	const [filterIsAppUser, setFilterIsAppUser] = useState<string>("");
 	const [sortBy, setSortBy] = useState<string>("createdAt");
 	const [sortDir, setSortDir] = useState<string>("desc");
+
+	// State for available tags
+	const [availableTags, setAvailableTags] = useState<string[]>([]);
 
 	// State for pagination
 	const [page, setPage] = useState(0);
@@ -84,7 +91,24 @@ const ContactsPanel = () => {
 	useEffect(() => {
 		fetchContacts();
 		fetchStats();
-	}, [page, rowsPerPage, filterStatus, sortBy, sortDir]);
+	}, [page, rowsPerPage, filterStatus, filterTag, filterEmailVerified, filterVerificationResult, filterIsAppUser, sortBy, sortDir]);
+
+	// Load available tags on mount
+	useEffect(() => {
+		fetchTags();
+	}, []);
+
+	// Function to fetch available tags
+	const fetchTags = async () => {
+		try {
+			const response = await MarketingContactService.getContactStats();
+			if (response.tags && Array.isArray(response.tags)) {
+				setAvailableTags(response.tags);
+			}
+		} catch (err) {
+			// Silently fail - tags are optional
+		}
+	};
 
 	// Function to fetch contacts from API
 	const fetchContacts = async () => {
@@ -96,6 +120,10 @@ const ContactsPanel = () => {
 			const filters: Record<string, any> = {};
 			if (searchTerm) filters.search = searchTerm;
 			if (filterStatus) filters.status = filterStatus;
+			if (filterTag) filters.tag = filterTag;
+			if (filterEmailVerified) filters.isEmailVerified = filterEmailVerified;
+			if (filterVerificationResult) filters.emailVerificationResult = filterVerificationResult;
+			if (filterIsAppUser) filters.isAppUser = filterIsAppUser;
 
 			const response = await MarketingContactService.getContacts(page + 1, rowsPerPage, sortBy, sortDir, filters);
 			setContacts(response.data);
@@ -153,6 +181,44 @@ const ContactsPanel = () => {
 		setPage(0);
 	};
 
+	const handleTagFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setFilterTag(event.target.value);
+		setPage(0);
+	};
+
+	const handleEmailVerifiedFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setFilterEmailVerified(event.target.value);
+		setPage(0);
+	};
+
+	const handleVerificationResultFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setFilterVerificationResult(event.target.value);
+		setPage(0);
+	};
+
+	const handleIsAppUserFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setFilterIsAppUser(event.target.value);
+		setPage(0);
+	};
+
+	// Clear all filters
+	const handleClearFilters = () => {
+		setSearchTerm("");
+		setFilterStatus("");
+		setFilterTag("");
+		setFilterEmailVerified("");
+		setFilterVerificationResult("");
+		setFilterIsAppUser("");
+		setSortBy("createdAt");
+		setSortDir("desc");
+		setPage(0);
+		// Trigger fetch after clearing
+		setTimeout(() => fetchContacts(), 0);
+	};
+
+	// Check if any filter is active
+	const hasActiveFilters = searchTerm || filterStatus || filterTag || filterEmailVerified || filterVerificationResult || filterIsAppUser;
+
 	// Sorting handlers
 	const handleSortChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSortBy(event.target.value);
@@ -209,7 +275,8 @@ const ContactsPanel = () => {
 			)}
 
 			<Box sx={{ p: 2 }}>
-				<Grid container spacing={2} alignItems="center">
+				{/* Primera fila: Búsqueda y botón nuevo */}
+				<Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
 					<Grid item xs={12} sm={6} md={4}>
 						<TextField
 							fullWidth
@@ -235,24 +302,7 @@ const ContactsPanel = () => {
 						/>
 					</Grid>
 					<Grid item xs={12} sm={6} md={8}>
-						<Stack direction={{ xs: "column", sm: "row" }} spacing={1} justifyContent="flex-end">
-							<TextField select size="small" label="Ordenar por" value={sortBy} onChange={handleSortChange} sx={{ minWidth: 120 }}>
-								<MenuItem value="email">Email</MenuItem>
-								<MenuItem value="firstName">Nombre</MenuItem>
-								<MenuItem value="lastName">Apellido</MenuItem>
-								<MenuItem value="createdAt">Fecha de creación</MenuItem>
-								<MenuItem value="status">Estado</MenuItem>
-							</TextField>
-							<Button variant="outlined" size="small" onClick={handleSortDirChange} sx={{ minWidth: 100, height: 40 }}>
-								{sortDir === "asc" ? "Ascendente" : "Descendente"}
-							</Button>
-							<TextField select size="small" label="Estado" value={filterStatus} onChange={handleStatusFilterChange} sx={{ minWidth: 120 }}>
-								<MenuItem value="">Todos</MenuItem>
-								<MenuItem value="active">Activo</MenuItem>
-								<MenuItem value="unsubscribed">Cancelado</MenuItem>
-								<MenuItem value="bounced">Rebotado</MenuItem>
-								<MenuItem value="inactive">Inactivo</MenuItem>
-							</TextField>
+						<Stack direction="row" spacing={1} justifyContent="flex-end">
 							<Button
 								variant="contained"
 								color="primary"
@@ -268,6 +318,204 @@ const ContactsPanel = () => {
 						</Stack>
 					</Grid>
 				</Grid>
+
+				{/* Segunda fila: Filtros */}
+				<Grid container spacing={2} alignItems="center">
+					<Grid item xs={6} sm={4} md={2}>
+						<TextField
+							select
+							fullWidth
+							size="small"
+							label="Estado"
+							value={filterStatus}
+							onChange={handleStatusFilterChange}
+						>
+							<MenuItem value="">Todos</MenuItem>
+							<MenuItem value="active">Activo</MenuItem>
+							<MenuItem value="unsubscribed">Desuscrito</MenuItem>
+							<MenuItem value="bounced">Rebotado</MenuItem>
+							<MenuItem value="complained">Queja</MenuItem>
+						</TextField>
+					</Grid>
+					<Grid item xs={6} sm={4} md={2}>
+						<TextField
+							select
+							fullWidth
+							size="small"
+							label="Email verificado"
+							value={filterEmailVerified}
+							onChange={handleEmailVerifiedFilterChange}
+						>
+							<MenuItem value="">Todos</MenuItem>
+							<MenuItem value="true">Verificado</MenuItem>
+							<MenuItem value="false">No verificado</MenuItem>
+						</TextField>
+					</Grid>
+					<Grid item xs={6} sm={4} md={2}>
+						<TextField
+							select
+							fullWidth
+							size="small"
+							label="Resultado verif."
+							value={filterVerificationResult}
+							onChange={handleVerificationResultFilterChange}
+						>
+							<MenuItem value="">Todos</MenuItem>
+							<MenuItem value="valid">Válido</MenuItem>
+							<MenuItem value="invalid">Inválido</MenuItem>
+							<MenuItem value="disposable">Desechable</MenuItem>
+							<MenuItem value="catchall">Catchall</MenuItem>
+							<MenuItem value="unknown">Desconocido</MenuItem>
+							<MenuItem value="null">Sin verificar</MenuItem>
+						</TextField>
+					</Grid>
+					<Grid item xs={6} sm={4} md={2}>
+						<TextField
+							select
+							fullWidth
+							size="small"
+							label="Usuario App"
+							value={filterIsAppUser}
+							onChange={handleIsAppUserFilterChange}
+						>
+							<MenuItem value="">Todos</MenuItem>
+							<MenuItem value="true">Es usuario</MenuItem>
+							<MenuItem value="false">No es usuario</MenuItem>
+						</TextField>
+					</Grid>
+					<Grid item xs={6} sm={4} md={2}>
+						<TextField
+							select
+							fullWidth
+							size="small"
+							label="Etiqueta"
+							value={filterTag}
+							onChange={handleTagFilterChange}
+						>
+							<MenuItem value="">Todas</MenuItem>
+							{availableTags.map((tag) => (
+								<MenuItem key={tag} value={tag}>
+									{tag}
+								</MenuItem>
+							))}
+						</TextField>
+					</Grid>
+					<Grid item xs={6} sm={4} md={2}>
+						{hasActiveFilters && (
+							<Button
+								fullWidth
+								variant="text"
+								color="error"
+								size="small"
+								onClick={handleClearFilters}
+								sx={{ height: 40 }}
+							>
+								Limpiar filtros
+							</Button>
+						)}
+					</Grid>
+				</Grid>
+
+				{/* Tercera fila: Ordenamiento */}
+				<Grid container spacing={2} alignItems="center" sx={{ mt: 1 }}>
+					<Grid item xs={6} sm={4} md={2}>
+						<TextField
+							select
+							fullWidth
+							size="small"
+							label="Ordenar por"
+							value={sortBy}
+							onChange={handleSortChange}
+						>
+							<MenuItem value="email">Email</MenuItem>
+							<MenuItem value="firstName">Nombre</MenuItem>
+							<MenuItem value="lastName">Apellido</MenuItem>
+							<MenuItem value="createdAt">Fecha de creación</MenuItem>
+							<MenuItem value="status">Estado</MenuItem>
+						</TextField>
+					</Grid>
+					<Grid item xs={6} sm={4} md={2}>
+						<Button
+							fullWidth
+							variant="outlined"
+							size="small"
+							onClick={handleSortDirChange}
+							sx={{ height: 40 }}
+						>
+							{sortDir === "asc" ? "↑ Ascendente" : "↓ Descendente"}
+						</Button>
+					</Grid>
+				</Grid>
+
+				{/* Indicador de filtros activos */}
+				{hasActiveFilters && (
+					<Box sx={{ mt: 2 }}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+							{searchTerm && (
+								<Chip
+									label={`Búsqueda: "${searchTerm}"`}
+									size="small"
+									onDelete={() => {
+										setSearchTerm("");
+										setTimeout(() => fetchContacts(), 0);
+									}}
+								/>
+							)}
+							{filterStatus && (
+								<Chip
+									label={`Estado: ${filterStatus === "active" ? "Activo" : filterStatus === "unsubscribed" ? "Desuscrito" : filterStatus === "bounced" ? "Rebotado" : filterStatus === "complained" ? "Queja" : filterStatus}`}
+									size="small"
+									color="primary"
+									onDelete={() => setFilterStatus("")}
+								/>
+							)}
+							{filterEmailVerified && (
+								<Chip
+									label={`Email: ${filterEmailVerified === "true" ? "Verificado" : "No verificado"}`}
+									size="small"
+									color={filterEmailVerified === "true" ? "success" : "warning"}
+									onDelete={() => setFilterEmailVerified("")}
+								/>
+							)}
+							{filterVerificationResult && (
+								<Chip
+									label={`Resultado: ${
+										filterVerificationResult === "valid" ? "Válido" :
+										filterVerificationResult === "invalid" ? "Inválido" :
+										filterVerificationResult === "disposable" ? "Desechable" :
+										filterVerificationResult === "catchall" ? "Catchall" :
+										filterVerificationResult === "unknown" ? "Desconocido" :
+										filterVerificationResult === "null" ? "Sin verificar" :
+										filterVerificationResult
+									}`}
+									size="small"
+									color={
+										filterVerificationResult === "valid" ? "success" :
+										filterVerificationResult === "invalid" ? "error" :
+										"default"
+									}
+									onDelete={() => setFilterVerificationResult("")}
+								/>
+							)}
+							{filterTag && (
+								<Chip
+									label={`Etiqueta: ${filterTag}`}
+									size="small"
+									color="secondary"
+									onDelete={() => setFilterTag("")}
+								/>
+							)}
+							{filterIsAppUser && (
+								<Chip
+									label={`Usuario App: ${filterIsAppUser === "true" ? "Sí" : "No"}`}
+									size="small"
+									color={filterIsAppUser === "true" ? "info" : "default"}
+									onDelete={() => setFilterIsAppUser("")}
+								/>
+							)}
+						</Stack>
+					</Box>
+				)}
 			</Box>
 
 			<TableContainer component={Paper} sx={{ boxShadow: "none" }}>
