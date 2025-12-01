@@ -18,20 +18,26 @@ import {
 	Alert,
 	Paper,
 	Divider,
+	Tooltip,
+	CircularProgress,
 } from "@mui/material";
-import { CloseCircle } from "iconsax-react";
+import { CloseCircle, Trash } from "iconsax-react";
 import { Segment } from "types/segment";
 import { MarketingContact } from "types/marketing-contact";
 import { SegmentService } from "store/reducers/segments";
 import TableSkeleton from "components/UI/TableSkeleton";
+import { useSnackbar } from "notistack";
 
 interface SegmentContactsModalProps {
 	open: boolean;
 	onClose: () => void;
 	segment: Segment | null;
+	onContactRemoved?: () => void;
 }
 
-const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClose, segment }) => {
+const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClose, segment, onContactRemoved }) => {
+	const { enqueueSnackbar } = useSnackbar();
+
 	// Estados para la paginación y carga
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -39,6 +45,7 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 	const [totalContacts, setTotalContacts] = useState(0);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [removingContactId, setRemovingContactId] = useState<string | null>(null);
 
 	// Cargar contactos cuando se abre el modal
 	useEffect(() => {
@@ -80,6 +87,38 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 		setPage(0);
 	};
 
+	// Función para eliminar un contacto del segmento (solo para segmentos estáticos)
+	const handleRemoveContact = async (contactId: string) => {
+		if (!segment?._id || segment.type !== "static") return;
+
+		setRemovingContactId(contactId);
+		try {
+			// Obtener el segmento actual para conseguir los contactos existentes
+			const currentSegment = await SegmentService.getSegmentById(segment._id);
+			const currentContacts = currentSegment.contacts || [];
+
+			// Filtrar el contacto a eliminar
+			const updatedContacts = currentContacts.filter((id: string) => id !== contactId);
+
+			// Actualizar el segmento con el nuevo array de contactos
+			await SegmentService.updateSegment(segment._id, { contacts: updatedContacts });
+
+			enqueueSnackbar("Contacto eliminado del segmento exitosamente", { variant: "success" });
+
+			// Recargar los contactos
+			fetchContacts();
+
+			// Notificar al padre para que actualice la lista de segmentos
+			if (onContactRemoved) {
+				onContactRemoved();
+			}
+		} catch (err: any) {
+			enqueueSnackbar(err?.message || "Error al eliminar el contacto del segmento", { variant: "error" });
+		} finally {
+			setRemovingContactId(null);
+		}
+	};
+
 	// Obtener etiqueta de estado para un contacto
 	const getStatusChip = (status: string) => {
 		let color: "success" | "error" | "warning" | "default" = "default";
@@ -117,6 +156,8 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 			sx={{
 				"& .MuiDialog-paper": {
 					borderRadius: 2,
+					height: "80vh",
+					maxHeight: "700px",
 				},
 			}}
 		>
@@ -133,7 +174,7 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 				</Grid>
 			</DialogTitle>
 
-			<DialogContent dividers>
+			<DialogContent dividers sx={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
 				{segment && (
 					<Box sx={{ mb: 3 }}>
 						<Typography variant="h6">{segment.name}</Typography>
@@ -161,8 +202,8 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 						{error}
 					</Alert>
 				) : (
-					<>
-						<TableContainer component={Paper} sx={{ boxShadow: "none" }}>
+					<Box sx={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
+						<TableContainer component={Paper} sx={{ boxShadow: "none", flex: 1, overflow: "auto" }}>
 							<Table>
 								<TableHead>
 									<TableRow>
@@ -171,14 +212,15 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 										<TableCell>Apellido</TableCell>
 										<TableCell>Estado</TableCell>
 										<TableCell>Empresa</TableCell>
+										{segment?.type === "static" && <TableCell align="center">Acciones</TableCell>}
 									</TableRow>
 								</TableHead>
 								<TableBody>
 									{loading ? (
-										<TableSkeleton columns={5} rows={10} />
+										<TableSkeleton columns={segment?.type === "static" ? 6 : 5} rows={10} />
 									) : contacts.length === 0 ? (
 										<TableRow>
-											<TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+											<TableCell colSpan={segment?.type === "static" ? 6 : 5} align="center" sx={{ py: 3 }}>
 												<Typography variant="body1">No hay contactos en este segmento</Typography>
 											</TableCell>
 										</TableRow>
@@ -198,6 +240,24 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 												<TableCell>
 													<Typography variant="body2">{contact.company || "-"}</Typography>
 												</TableCell>
+												{segment?.type === "static" && (
+													<TableCell align="center">
+														<Tooltip title="Eliminar del segmento">
+															<IconButton
+																size="small"
+																color="error"
+																onClick={() => handleRemoveContact(contact._id || "")}
+																disabled={removingContactId !== null}
+															>
+																{removingContactId === contact._id ? (
+																	<CircularProgress size={18} color="inherit" />
+																) : (
+																	<Trash size={18} />
+																)}
+															</IconButton>
+														</Tooltip>
+													</TableCell>
+												)}
 											</TableRow>
 										))
 									)}
@@ -215,9 +275,9 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 							onRowsPerPageChange={handleChangeRowsPerPage}
 							labelRowsPerPage="Filas por página:"
 							labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
-							sx={{ mt: 1 }}
+							sx={{ mt: 1, flexShrink: 0 }}
 						/>
-					</>
+					</Box>
 				)}
 			</DialogContent>
 		</Dialog>

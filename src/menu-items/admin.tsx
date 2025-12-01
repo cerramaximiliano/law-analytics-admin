@@ -140,7 +140,7 @@ const admin: NavItemType = {
 				},
 				{
 					id: "contacts",
-					title: "Contactos",
+					title: "Contactos y Segmentos",
 					type: "item",
 					url: "/admin/marketing/contacts",
 					breadcrumbs: true,
