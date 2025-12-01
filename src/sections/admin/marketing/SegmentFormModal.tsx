@@ -202,6 +202,8 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 	const [availableContacts, setAvailableContacts] = useState<MarketingContact[]>([]);
 	const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
 	const [contactSearchTerm, setContactSearchTerm] = useState<string>("");
+	const [searchingContacts, setSearchingContacts] = useState<boolean>(false);
+	const [contactSearchDebounceTimer, setContactSearchDebounceTimer] = useState<NodeJS.Timeout | null>(null);
 
 	// Reinicar formulario y cargar datos si es modo edición
 	useEffect(() => {
@@ -214,8 +216,8 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 					// Resetear formulario primero
 					resetForm();
 
-					// Cargar datos en paralelo
-					await Promise.all([fetchAvailableContacts(), fetchAvailableTags()]);
+					// Cargar solo etiquetas al inicio (los contactos se buscan bajo demanda)
+					await fetchAvailableTags();
 
 					// Si es modo edición, cargar los datos del segmento
 					if (isEditMode && segment) {
@@ -262,13 +264,19 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 		}
 	}, [type, filters, conditionOperator]);
 
-	// Obtener contactos disponibles para seleccionar en modo estático
-	const fetchAvailableContacts = async () => {
+	// Obtener contactos disponibles para seleccionar en modo estático (con búsqueda en servidor)
+	const fetchAvailableContacts = async (searchTerm: string = "") => {
 		try {
-			const response = await MarketingContactService.getContacts(1, 100);
+			setSearchingContacts(true);
+			const response = await MarketingContactService.getContacts(1, 50, "createdAt", "desc", {
+				search: searchTerm || undefined,
+			});
 			setAvailableContacts(response.data);
 		} catch (err: any) {
-			throw new Error(err?.message || "No se pudieron cargar los contactos");
+			console.warn("Error al buscar contactos:", err);
+			setAvailableContacts([]);
+		} finally {
+			setSearchingContacts(false);
 		}
 	};
 
@@ -432,20 +440,32 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 		setFilters(newFilters);
 	};
 
-	// Manejar búsqueda de contactos
+	// Manejar búsqueda de contactos con debounce
 	const handleContactSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setContactSearchTerm(event.target.value);
+		const value = event.target.value;
+		setContactSearchTerm(value);
+
+		// Cancelar el timer anterior si existe
+		if (contactSearchDebounceTimer) {
+			clearTimeout(contactSearchDebounceTimer);
+		}
+
+		// Crear nuevo timer para hacer la búsqueda después de 300ms
+		const timer = setTimeout(() => {
+			fetchAvailableContacts(value);
+		}, 300);
+
+		setContactSearchDebounceTimer(timer);
 	};
 
-	// Filtrar contactos disponibles según la búsqueda
-	const filteredContacts = contactSearchTerm
-		? availableContacts.filter(
-				(contact) =>
-					contact.email.toLowerCase().includes(contactSearchTerm.toLowerCase()) ||
-					(contact.firstName && contact.firstName.toLowerCase().includes(contactSearchTerm.toLowerCase())) ||
-					(contact.lastName && contact.lastName.toLowerCase().includes(contactSearchTerm.toLowerCase())),
-		  )
-		: availableContacts;
+	// Limpiar timer cuando se desmonte el componente
+	useEffect(() => {
+		return () => {
+			if (contactSearchDebounceTimer) {
+				clearTimeout(contactSearchDebounceTimer);
+			}
+		};
+	}, [contactSearchDebounceTimer]);
 
 	// Manejar selección de contactos
 	const handleContactSelect = (contactId: string) => {
@@ -1077,11 +1097,14 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 									<TextField
 										fullWidth
 										label="Buscar contactos"
-										placeholder="Buscar por email, nombre o apellido"
+										placeholder="Escriba para buscar por email, nombre o apellido..."
 										value={contactSearchTerm}
 										onChange={handleContactSearch}
 										sx={{ mb: 2 }}
 										disabled={saving}
+										InputProps={{
+											endAdornment: searchingContacts ? <CircularProgress size={20} /> : null,
+										}}
 									/>
 
 									<Paper
@@ -1093,15 +1116,28 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 											borderColor: "divider",
 										}}
 									>
-										{filteredContacts.length === 0 ? (
+										{searchingContacts ? (
+											<Box sx={{ p: 3, textAlign: "center" }}>
+												<CircularProgress size={24} />
+												<Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+													Buscando contactos...
+												</Typography>
+											</Box>
+										) : !contactSearchTerm ? (
+											<Box sx={{ p: 3, textAlign: "center" }}>
+												<Typography variant="body2" color="textSecondary">
+													Escriba en el campo de búsqueda para encontrar contactos
+												</Typography>
+											</Box>
+										) : availableContacts.length === 0 ? (
 											<Box sx={{ p: 2, textAlign: "center" }}>
 												<Typography variant="body2" color="textSecondary">
-													No se encontraron contactos
+													No se encontraron contactos para "{contactSearchTerm}"
 												</Typography>
 											</Box>
 										) : (
 											<Box component="ul" sx={{ p: 0, m: 0, listStyle: "none" }}>
-												{filteredContacts.map((contact) => (
+												{availableContacts.map((contact) => (
 													<Box
 														component="li"
 														key={contact._id}
