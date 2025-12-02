@@ -35,7 +35,7 @@ import {
 	DialogActions,
 	TableSortLabel,
 } from "@mui/material";
-import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, Trash, AddCircle, Warning2, SearchNormal1 } from "iconsax-react";
+import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, Trash, AddCircle, Warning2, SearchNormal1, Code1 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig, ScrapingHistory } from "api/workers";
 import AdvancedConfigModal from "./AdvancedConfigModal";
@@ -95,6 +95,10 @@ const ScrapingWorker = () => {
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [configToDelete, setConfigToDelete] = useState<WorkerConfig | null>(null);
 	const [deleting, setDeleting] = useState(false);
+
+	// Estados para vista raw JSON
+	const [rawViewOpen, setRawViewOpen] = useState(false);
+	const [rawViewConfig, setRawViewConfig] = useState<WorkerConfig | null>(null);
 
 	// Cargar configuraciones
 	const fetchConfigs = async (
@@ -501,6 +505,17 @@ const ScrapingWorker = () => {
 		setSelectedConfig(null);
 	};
 
+	// Manejar vista raw JSON
+	const handleOpenRawView = (config: WorkerConfig) => {
+		setRawViewConfig(config);
+		setRawViewOpen(true);
+	};
+
+	const handleCloseRawView = () => {
+		setRawViewOpen(false);
+		setRawViewConfig(null);
+	};
+
 	// Manejar modal de crear configuración
 	const handleOpenCreateConfig = () => {
 		setCreateConfigOpen(true);
@@ -548,10 +563,16 @@ const ScrapingWorker = () => {
 
 	return (
 		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-			{/* Header con acciones */}
-			<Box display="flex" justifyContent="space-between" alignItems="center">
+			{/* Header: Título y Acciones */}
+			<Box
+				display="flex"
+				flexDirection={{ xs: "column", sm: "row" }}
+				justifyContent="space-between"
+				alignItems={{ xs: "stretch", sm: "center" }}
+				gap={2}
+			>
 				<Typography variant="h5">Configuración del Worker de Scraping</Typography>
-				<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
+				<Stack direction="row" spacing={1.5} alignItems="center" justifyContent={{ xs: "flex-start", sm: "flex-end" }}>
 					<Button variant="contained" color="primary" size="small" startIcon={<AddCircle size={18} />} onClick={handleOpenCreateConfig}>
 						Nuevo Worker
 					</Button>
@@ -564,94 +585,145 @@ const ScrapingWorker = () => {
 					>
 						Temporarios
 					</Button>
-					<TextField
-						size="small"
-						placeholder="Buscar por Worker ID"
-						value={workerIdInput}
-						onChange={(e) => setWorkerIdInput(e.target.value)}
-						onKeyDown={(e) => {
-							if (e.key === "Enter") handleWorkerIdSearch();
-						}}
-						sx={{ minWidth: 200 }}
-						InputProps={{
-							sx: { fontSize: "0.875rem" },
-						}}
-					/>
-					<Button
-						variant="contained"
-						size="small"
-						startIcon={<SearchNormal1 size={16} />}
-						onClick={handleWorkerIdSearch}
-						disabled={loading}
-					>
-						Buscar
-					</Button>
-					{workerIdFilter && (
-						<Button variant="outlined" size="small" color="secondary" onClick={handleWorkerIdClear}>
-							Limpiar
-						</Button>
-					)}
-					<FormControl size="small" sx={{ minWidth: 150 }}>
-						<Select value={fueroFilter} onChange={(e) => handleFueroFilterChange(e.target.value)} displayEmpty>
-							<MenuItem value="TODOS">Todos los Fueros</MenuItem>
-							{FUERO_OPTIONS.map((option) => (
-								<MenuItem key={option.value} value={option.value}>
-									{option.label}
-								</MenuItem>
-							))}
-						</Select>
-					</FormControl>
-					<FormControl size="small" sx={{ minWidth: 120 }}>
-						<Select value={yearFilter} onChange={(e) => handleYearFilterChange(e.target.value)} displayEmpty>
-							<MenuItem value="TODOS">Todos los Años</MenuItem>
-							{YEAR_OPTIONS.map((year) => (
-								<MenuItem key={year} value={year}>
-									{year}
-								</MenuItem>
-							))}
-						</Select>
-					</FormControl>
-					<FormControl size="small" sx={{ minWidth: 140 }}>
-						<Select value={progresoFilter} onChange={(e) => handleProgresoFilterChange(e.target.value)} displayEmpty>
-							<MenuItem value="TODOS">Todos</MenuItem>
-							<MenuItem value="completo">
-								<Stack direction="row" spacing={1} alignItems="center">
-									<Typography variant="body2">Completo</Typography>
-									<Chip label="100%" size="small" color="success" />
-								</Stack>
-							</MenuItem>
-							<MenuItem value="incompleto">
-								<Stack direction="row" spacing={1} alignItems="center">
-									<Typography variant="body2">En Progreso</Typography>
-									<Chip label="<100%" size="small" color="warning" />
-								</Stack>
-							</MenuItem>
-						</Select>
-					</FormControl>
-					<FormControl size="small" sx={{ minWidth: 130 }}>
-						<Select value={estadoFilter} onChange={(e) => handleEstadoFilterChange(e.target.value)} displayEmpty>
-							<MenuItem value="TODOS">Todos los Estados</MenuItem>
-							<MenuItem value="activo">
-								<Stack direction="row" spacing={1} alignItems="center">
-									<Typography variant="body2">Activos</Typography>
-									<Chip label="ON" size="small" color="success" />
-								</Stack>
-							</MenuItem>
-							<MenuItem value="inactivo">
-								<Stack direction="row" spacing={1} alignItems="center">
-									<Typography variant="body2">Inactivos</Typography>
-									<Chip label="OFF" size="small" color="default" />
-								</Stack>
-							</MenuItem>
-						</Select>
-					</FormControl>
-					<Tooltip title="Refrescar datos y actualizar conteo total">
-						<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={handleRefresh}>
-							Actualizar
-						</Button>
-					</Tooltip>
 				</Stack>
 			</Box>
+
+			{/* Búsqueda y Filtros */}
+			<Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 } }}>
+				<Grid container spacing={2} alignItems="center">
+					{/* Búsqueda por Worker ID */}
+					<Grid item xs={12} md={5} lg={4}>
+						<Stack spacing={1}>
+							<Typography variant="caption" color="text.secondary" fontWeight={500}>
+								Búsqueda
+							</Typography>
+							<Stack direction="row" spacing={1} alignItems="center">
+								<TextField
+									size="small"
+									placeholder="Buscar por Worker ID"
+									value={workerIdInput}
+									onChange={(e) => setWorkerIdInput(e.target.value)}
+									onKeyDown={(e) => {
+										if (e.key === "Enter") handleWorkerIdSearch();
+									}}
+									fullWidth
+									InputProps={{
+										sx: { fontSize: "0.875rem" },
+									}}
+								/>
+								<Button
+									variant="contained"
+									size="small"
+									startIcon={<SearchNormal1 size={16} />}
+									onClick={handleWorkerIdSearch}
+									disabled={loading}
+									sx={{ minWidth: "auto", whiteSpace: "nowrap" }}
+								>
+									Buscar
+								</Button>
+								{workerIdFilter && (
+									<Button
+										variant="outlined"
+										size="small"
+										color="secondary"
+										onClick={handleWorkerIdClear}
+										sx={{ minWidth: "auto" }}
+									>
+										Limpiar
+									</Button>
+								)}
+							</Stack>
+						</Stack>
+					</Grid>
+
+					{/* Separador vertical en desktop */}
+					<Grid item xs={12} md="auto" sx={{ display: { xs: "none", md: "block" } }}>
+						<Box sx={{ borderLeft: 1, borderColor: "divider", height: 50, mx: 1 }} />
+					</Grid>
+
+					{/* Filtros */}
+					<Grid item xs={12} md>
+						<Stack spacing={1}>
+							<Typography variant="caption" color="text.secondary" fontWeight={500}>
+								Filtros
+							</Typography>
+							<Stack
+								direction={{ xs: "column", sm: "row" }}
+								spacing={1}
+								alignItems={{ xs: "stretch", sm: "center" }}
+								flexWrap="wrap"
+								useFlexGap
+							>
+								<FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 140 } }}>
+									<Select value={fueroFilter} onChange={(e) => handleFueroFilterChange(e.target.value)} displayEmpty>
+										<MenuItem value="TODOS">Todos los Fueros</MenuItem>
+										{FUERO_OPTIONS.map((option) => (
+											<MenuItem key={option.value} value={option.value}>
+												{option.label}
+											</MenuItem>
+										))}
+									</Select>
+								</FormControl>
+								<FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 120 } }}>
+									<Select value={yearFilter} onChange={(e) => handleYearFilterChange(e.target.value)} displayEmpty>
+										<MenuItem value="TODOS">Todos los Años</MenuItem>
+										{YEAR_OPTIONS.map((year) => (
+											<MenuItem key={year} value={year}>
+												{year}
+											</MenuItem>
+										))}
+									</Select>
+								</FormControl>
+								<FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 130 } }}>
+									<Select value={progresoFilter} onChange={(e) => handleProgresoFilterChange(e.target.value)} displayEmpty>
+										<MenuItem value="TODOS">Progreso</MenuItem>
+										<MenuItem value="completo">
+											<Stack direction="row" spacing={1} alignItems="center">
+												<Typography variant="body2">Completo</Typography>
+												<Chip label="100%" size="small" color="success" />
+											</Stack>
+										</MenuItem>
+										<MenuItem value="incompleto">
+											<Stack direction="row" spacing={1} alignItems="center">
+												<Typography variant="body2">En Progreso</Typography>
+												<Chip label="<100%" size="small" color="warning" />
+											</Stack>
+										</MenuItem>
+									</Select>
+								</FormControl>
+								<FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 120 } }}>
+									<Select value={estadoFilter} onChange={(e) => handleEstadoFilterChange(e.target.value)} displayEmpty>
+										<MenuItem value="TODOS">Estado</MenuItem>
+										<MenuItem value="activo">
+											<Stack direction="row" spacing={1} alignItems="center">
+												<Typography variant="body2">Activos</Typography>
+												<Chip label="ON" size="small" color="success" />
+											</Stack>
+										</MenuItem>
+										<MenuItem value="inactivo">
+											<Stack direction="row" spacing={1} alignItems="center">
+												<Typography variant="body2">Inactivos</Typography>
+												<Chip label="OFF" size="small" color="default" />
+											</Stack>
+										</MenuItem>
+									</Select>
+								</FormControl>
+								<Tooltip title="Refrescar datos y actualizar conteo total">
+									<Button
+										variant="outlined"
+										size="small"
+										startIcon={<Refresh size={16} />}
+										onClick={handleRefresh}
+										sx={{ minWidth: { xs: "100%", sm: "auto" } }}
+									>
+										Actualizar
+									</Button>
+								</Tooltip>
+							</Stack>
+						</Stack>
+					</Grid>
+				</Grid>
+			</Paper>
 
 			{/* Información del worker */}
 			<Alert severity="info" variant="outlined">
@@ -976,6 +1048,11 @@ const ScrapingWorker = () => {
 													<Tooltip title="Configuración avanzada">
 														<IconButton size="small" color="secondary" onClick={() => handleAdvancedConfig(config)}>
 															<Setting2 size={18} />
+														</IconButton>
+													</Tooltip>
+													<Tooltip title="Ver JSON">
+														<IconButton size="small" color="info" onClick={() => handleOpenRawView(config)}>
+															<Code1 size={18} />
 														</IconButton>
 													</Tooltip>
 													<Tooltip title={config.enabled ? "Desactive el worker antes de eliminar" : "Eliminar"}>
@@ -1313,6 +1390,59 @@ const ScrapingWorker = () => {
 						startIcon={deleting && <CircularProgress size={16} />}
 					>
 						{deleting ? "Eliminando..." : "Eliminar"}
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Diálogo de vista raw JSON */}
+			<Dialog open={rawViewOpen} onClose={handleCloseRawView} maxWidth="md" fullWidth>
+				<DialogTitle>
+					<Stack direction="row" alignItems="center" spacing={1}>
+						<Code1 size={20} />
+						<Typography variant="h6">Vista Raw JSON</Typography>
+					</Stack>
+					{rawViewConfig && (
+						<Typography variant="body2" color="text.secondary">
+							{rawViewConfig.worker_id || `${rawViewConfig.fuero} ${rawViewConfig.year}`}
+						</Typography>
+					)}
+				</DialogTitle>
+				<DialogContent>
+					<Box
+						sx={{
+							bgcolor: "grey.900",
+							color: "grey.100",
+							p: 2,
+							borderRadius: 1,
+							overflow: "auto",
+							maxHeight: "60vh",
+							fontFamily: "monospace",
+							fontSize: "0.75rem",
+							whiteSpace: "pre-wrap",
+							wordBreak: "break-word",
+						}}
+					>
+						{rawViewConfig && JSON.stringify(rawViewConfig, null, 2)}
+					</Box>
+				</DialogContent>
+				<DialogActions>
+					<Button
+						variant="outlined"
+						size="small"
+						onClick={() => {
+							if (rawViewConfig) {
+								navigator.clipboard.writeText(JSON.stringify(rawViewConfig, null, 2));
+								enqueueSnackbar("JSON copiado al portapapeles", {
+									variant: "success",
+									anchorOrigin: { vertical: "bottom", horizontal: "right" },
+								});
+							}
+						}}
+					>
+						Copiar JSON
+					</Button>
+					<Button onClick={handleCloseRawView} variant="contained">
+						Cerrar
 					</Button>
 				</DialogActions>
 			</Dialog>
