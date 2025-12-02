@@ -20,6 +20,7 @@ interface WorkerTab {
 	component: React.ReactNode;
 	description: string;
 	status?: "active" | "inactive" | "error";
+	badge?: string;
 }
 
 const WorkersConfig = () => {
@@ -34,12 +35,13 @@ const WorkersConfig = () => {
 	// Definición de las pestañas de workers
 	const workerTabs: WorkerTab[] = [
 		{
-			label: "Scraping",
+			label: "Scraping PJN",
 			value: "scraping",
 			icon: <SearchNormal1 size={20} />,
 			component: <ScrapingWorker />,
 			description: "Configura los workers que buscan y recopilan nuevas causas judiciales",
 			status: "active",
+			badge: "worker_01",
 		},
 		{
 			label: "Actualización (App)",
@@ -172,9 +174,31 @@ const WorkersConfig = () => {
 										<Stack direction="row" spacing={1.5} alignItems="center">
 											<Box sx={{ color: getStatusColor(tab.status) }}>{tab.icon}</Box>
 											<Box>
-												<Typography variant="body2" fontWeight={500}>
-													{tab.label}
-												</Typography>
+												<Stack direction="row" spacing={0.75} alignItems="center">
+													<Typography variant="body2" fontWeight={500}>
+														{tab.label}
+													</Typography>
+													{tab.badge && (
+														<Box
+															component="span"
+															sx={{
+																display: "inline-flex",
+																alignItems: "center",
+																px: 1,
+																py: 0.25,
+																borderRadius: 1,
+																bgcolor: theme.palette.grey[800],
+																color: theme.palette.common.white,
+																fontSize: "0.65rem",
+																fontWeight: 500,
+																fontFamily: "monospace",
+																letterSpacing: "0.5px",
+															}}
+														>
+															{tab.badge}
+														</Box>
+													)}
+												</Stack>
 												{tab.status && (
 													<Chip
 														label={tab.status === "active" ? "Activo" : tab.status === "inactive" ? "Inactivo" : "Error"}
