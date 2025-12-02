@@ -153,6 +153,7 @@ class WorkerConfigService {
 		fuero?: string;
 		year?: string;
 		progreso?: string;
+		worker_id?: string;
 		sortBy?: string;
 		sortOrder?: string;
 		page?: number;
@@ -225,6 +226,7 @@ export class WorkersService {
 			fuero?: string;
 			year?: string;
 			progreso?: string;
+			worker_id?: string;
 			sortBy?: string;
 			sortOrder?: string;
 			page?: number;
@@ -286,6 +288,7 @@ export class WorkersService {
 		fuero?: string;
 		year?: string;
 		progreso?: string;
+		worker_id?: string;
 		sortBy?: string;
 		sortOrder?: string;
 		page?: number;

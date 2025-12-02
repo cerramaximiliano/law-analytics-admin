@@ -35,7 +35,7 @@ import {
 	DialogActions,
 	TableSortLabel,
 } from "@mui/material";
-import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, Trash, AddCircle, Warning2 } from "iconsax-react";
+import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, Trash, AddCircle, Warning2, SearchNormal1 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig, ScrapingHistory } from "api/workers";
 import AdvancedConfigModal from "./AdvancedConfigModal";
@@ -78,6 +78,8 @@ const ScrapingWorker = () => {
 	const [yearFilter, setYearFilter] = useState<string>("TODOS");
 	const [progresoFilter, setProgresoFilter] = useState<string>("TODOS");
 	const [estadoFilter, setEstadoFilter] = useState<string>("TODOS");
+	const [workerIdInput, setWorkerIdInput] = useState<string>(""); // Valor del input
+	const [workerIdFilter, setWorkerIdFilter] = useState<string>(""); // Filtro aplicado
 
 	// Estados de ordenamiento
 	const [sortBy, setSortBy] = useState<string>("nombre");
@@ -104,6 +106,7 @@ const ScrapingWorker = () => {
 		estado = estadoFilter,
 		orderBy = sortBy,
 		order = sortOrder,
+		workerId = workerIdFilter,
 	) => {
 		try {
 			setLoading(true);
@@ -135,6 +138,9 @@ const ScrapingWorker = () => {
 			}
 			if (estado && estado !== "TODOS") {
 				params.enabled = estado === "activo";
+			}
+			if (workerId && workerId.trim() !== "") {
+				params.worker_id = workerId.trim();
 			}
 			// El backend filtra por isTemporary: false por defecto
 			// No es necesario enviar includeTemporary=false explícitamente
@@ -199,7 +205,7 @@ const ScrapingWorker = () => {
 	useEffect(() => {
 		// Si estamos ordenando por progreso, solo re-fetch cuando cambian filtros/sort, NO cuando cambia la página
 		// porque ya tenemos todos los datos y la paginación se hace client-side
-		fetchConfigs(configPage, configRowsPerPage, fueroFilter, yearFilter, progresoFilter, estadoFilter, sortBy, sortOrder);
+		fetchConfigs(configPage, configRowsPerPage, fueroFilter, yearFilter, progresoFilter, estadoFilter, sortBy, sortOrder, workerIdFilter);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [
 		// Solo incluir configPage en las dependencias si NO estamos ordenando por progreso
@@ -211,6 +217,7 @@ const ScrapingWorker = () => {
 		estadoFilter,
 		sortBy,
 		sortOrder,
+		workerIdFilter,
 	]);
 
 	useEffect(() => {
@@ -259,6 +266,21 @@ const ScrapingWorker = () => {
 	// Handler para cambio de filtro de estado
 	const handleEstadoFilterChange = (newEstado: string) => {
 		setEstadoFilter(newEstado);
+		setConfigTotalSnapshot(null);
+		setConfigPage(0);
+	};
+
+	// Handler para buscar por worker_id (se ejecuta con el botón)
+	const handleWorkerIdSearch = () => {
+		setWorkerIdFilter(workerIdInput.trim());
+		setConfigTotalSnapshot(null);
+		setConfigPage(0);
+	};
+
+	// Handler para limpiar la búsqueda de worker_id
+	const handleWorkerIdClear = () => {
+		setWorkerIdInput("");
+		setWorkerIdFilter("");
 		setConfigTotalSnapshot(null);
 		setConfigPage(0);
 	};
@@ -542,6 +564,33 @@ const ScrapingWorker = () => {
 					>
 						Temporarios
 					</Button>
+					<TextField
+						size="small"
+						placeholder="Buscar por Worker ID"
+						value={workerIdInput}
+						onChange={(e) => setWorkerIdInput(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") handleWorkerIdSearch();
+						}}
+						sx={{ minWidth: 200 }}
+						InputProps={{
+							sx: { fontSize: "0.875rem" },
+						}}
+					/>
+					<Button
+						variant="contained"
+						size="small"
+						startIcon={<SearchNormal1 size={16} />}
+						onClick={handleWorkerIdSearch}
+						disabled={loading}
+					>
+						Buscar
+					</Button>
+					{workerIdFilter && (
+						<Button variant="outlined" size="small" color="secondary" onClick={handleWorkerIdClear}>
+							Limpiar
+						</Button>
+					)}
 					<FormControl size="small" sx={{ minWidth: 150 }}>
 						<Select value={fueroFilter} onChange={(e) => handleFueroFilterChange(e.target.value)} displayEmpty>
 							<MenuItem value="TODOS">Todos los Fueros</MenuItem>
