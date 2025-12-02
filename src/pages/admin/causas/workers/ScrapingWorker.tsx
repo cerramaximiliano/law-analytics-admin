@@ -1137,24 +1137,29 @@ const ScrapingWorker = () => {
 										</TableCell>
 										{/* Columna Totales */}
 										<TableCell align="center">
-											<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
-												<Tooltip title="Válidos">
-													<Typography variant="caption" color="success.main" fontWeight={500}>
-														{config.total_found?.toLocaleString() || 0}
-													</Typography>
-												</Tooltip>
-												<Typography variant="caption" color="text.secondary">/</Typography>
-												<Tooltip title="Inválidos">
-													<Typography variant="caption" color="warning.main" fontWeight={500}>
-														{config.total_not_found?.toLocaleString() || 0}
-													</Typography>
-												</Tooltip>
-												<Typography variant="caption" color="text.secondary">/</Typography>
-												<Tooltip title="Errores">
-													<Typography variant="caption" color="error.main" fontWeight={500}>
-														{config.total_errors?.toLocaleString() || 0}
-													</Typography>
-												</Tooltip>
+											<Stack spacing={0.5} alignItems="center">
+												<Typography variant="body2" fontWeight={600} color="text.primary">
+													{((config.total_found || 0) + (config.total_not_found || 0) + (config.total_errors || 0)).toLocaleString()}
+												</Typography>
+												<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
+													<Tooltip title="Válidos">
+														<Typography variant="caption" color="success.main" fontWeight={500}>
+															{config.total_found?.toLocaleString() || 0}
+														</Typography>
+													</Tooltip>
+													<Typography variant="caption" color="text.secondary">/</Typography>
+													<Tooltip title="Inválidos">
+														<Typography variant="caption" color="warning.main" fontWeight={500}>
+															{config.total_not_found?.toLocaleString() || 0}
+														</Typography>
+													</Tooltip>
+													<Typography variant="caption" color="text.secondary">/</Typography>
+													<Tooltip title="Errores">
+														<Typography variant="caption" color="error.main" fontWeight={500}>
+															{config.total_errors?.toLocaleString() || 0}
+														</Typography>
+													</Tooltip>
+												</Stack>
 											</Stack>
 										</TableCell>
 										{/* Columna Inválidos Consecutivos */}
