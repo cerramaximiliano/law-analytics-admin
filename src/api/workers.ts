@@ -78,6 +78,16 @@ export interface WorkerConfig {
 		start_number?: number;
 		end_number?: number;
 	};
+	// Totales de scraping
+	total_found?: number;
+	total_not_found?: number;
+	total_errors?: number;
+	// Errores técnicos consecutivos
+	consecutive_errors?: number;
+	error_range?: {
+		start_number?: number;
+		end_number?: number;
+	};
 	range_start?: number;
 	range_end?: number;
 	proxy?: {

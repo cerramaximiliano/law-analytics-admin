@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
-import { Box, Tab, Tabs, Typography, Paper, Alert, Stack, Chip, useTheme, alpha } from "@mui/material";
-import { Setting2, Notification, Broom, TickSquare, Refresh2, SearchNormal1, DocumentUpload } from "iconsax-react";
+import { Box, Tab, Tabs, Typography, Paper, Stack, Chip, useTheme, alpha, IconButton, Tooltip, Popover } from "@mui/material";
+import { Setting2, Notification, Broom, TickSquare, Refresh2, SearchNormal1, DocumentUpload, InfoCircle } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import VerificationWorker from "./VerificationWorker";
@@ -25,6 +25,7 @@ interface WorkerTab {
 const WorkersConfig = () => {
 	const theme = useTheme();
 	const [activeTab, setActiveTab] = useState("scraping");
+	const [infoAnchorEl, setInfoAnchorEl] = useState<HTMLButtonElement | null>(null);
 
 	const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
 		setActiveTab(newValue);
@@ -108,24 +109,44 @@ const WorkersConfig = () => {
 			<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 				{/* Header */}
 				<Box>
-					<Typography variant="h3" gutterBottom>
-						Configuración de Workers
-					</Typography>
-					<Typography variant="body1" color="text.secondary">
+					<Stack direction="row" alignItems="center" spacing={1}>
+						<Typography variant="h3">Configuración de Workers</Typography>
+						<Tooltip title="Ver información">
+							<IconButton
+								size="small"
+								color="info"
+								onClick={(e) => setInfoAnchorEl(e.currentTarget)}
+							>
+								<InfoCircle size={22} />
+							</IconButton>
+						</Tooltip>
+						<Popover
+							open={Boolean(infoAnchorEl)}
+							anchorEl={infoAnchorEl}
+							onClose={() => setInfoAnchorEl(null)}
+							anchorOrigin={{
+								vertical: "bottom",
+								horizontal: "left",
+							}}
+							transformOrigin={{
+								vertical: "top",
+								horizontal: "left",
+							}}
+						>
+							<Box sx={{ p: 2, maxWidth: 400 }}>
+								<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+									Información sobre Workers
+								</Typography>
+								<Typography variant="body2" color="text.secondary">
+									Los workers son procesos automatizados que ejecutan tareas en segundo plano. Cada worker tiene su propia configuración y puede ser activado o desactivado según las necesidades del sistema.
+								</Typography>
+							</Box>
+						</Popover>
+					</Stack>
+					<Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
 						Gestiona y configura los diferentes workers del sistema de causas
 					</Typography>
 				</Box>
-
-				{/* Alert informativo */}
-				<Alert severity="info" variant="outlined">
-					<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-						Información sobre Workers
-					</Typography>
-					<Typography variant="body2">
-						Los workers son procesos automatizados que ejecutan tareas en segundo plano. Cada worker tiene su propia configuración y puede
-						ser activado o desactivado según las necesidades del sistema.
-					</Typography>
-				</Alert>
 
 				{/* Tabs de navegación */}
 				<Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
