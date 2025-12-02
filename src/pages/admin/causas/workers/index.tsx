@@ -201,12 +201,7 @@ const WorkersConfig = () => {
 					<Box sx={{ bgcolor: theme.palette.background.paper }}>
 						{workerTabs.map((tab) => (
 							<TabPanel key={tab.value} value={activeTab} index={tab.value}>
-								<Stack spacing={2}>
-									<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-										{tab.description}
-									</Typography>
-									{tab.component}
-								</Stack>
+								{tab.component}
 							</TabPanel>
 						))}
 					</Box>
