@@ -34,8 +34,9 @@ import {
 	DialogContentText,
 	DialogActions,
 	TableSortLabel,
+	Popover,
 } from "@mui/material";
-import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, Trash, AddCircle, Warning2, SearchNormal1, Code1 } from "iconsax-react";
+import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, Trash, AddCircle, Warning2, SearchNormal1, Code1, InfoCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig, ScrapingHistory } from "api/workers";
 import AdvancedConfigModal from "./AdvancedConfigModal";
@@ -99,6 +100,12 @@ const ScrapingWorker = () => {
 	// Estados para vista raw JSON
 	const [rawViewOpen, setRawViewOpen] = useState(false);
 	const [rawViewConfig, setRawViewConfig] = useState<WorkerConfig | null>(null);
+
+	// Estado para popovers de información
+	const [infoAnchorEl, setInfoAnchorEl] = useState<HTMLButtonElement | null>(null);
+	const [notFoundInfoAnchorEl, setNotFoundInfoAnchorEl] = useState<HTMLButtonElement | null>(null);
+	const [errorsInfoAnchorEl, setErrorsInfoAnchorEl] = useState<HTMLButtonElement | null>(null);
+	const [totalsInfoAnchorEl, setTotalsInfoAnchorEl] = useState<HTMLButtonElement | null>(null);
 
 	// Cargar configuraciones
 	const fetchConfigs = async (
@@ -571,7 +578,41 @@ const ScrapingWorker = () => {
 				alignItems={{ xs: "stretch", sm: "center" }}
 				gap={2}
 			>
-				<Typography variant="h5">Configuración del Worker de Scraping</Typography>
+				<Stack direction="row" alignItems="center" spacing={1}>
+					<Typography variant="h5">Configuración del Worker de Scraping</Typography>
+					<Tooltip title="Ver información">
+						<IconButton
+							size="small"
+							color="info"
+							onClick={(e) => setInfoAnchorEl(e.currentTarget)}
+						>
+							<InfoCircle size={20} />
+						</IconButton>
+					</Tooltip>
+					<Popover
+						open={Boolean(infoAnchorEl)}
+						anchorEl={infoAnchorEl}
+						onClose={() => setInfoAnchorEl(null)}
+						anchorOrigin={{
+							vertical: "bottom",
+							horizontal: "left",
+						}}
+						transformOrigin={{
+							vertical: "top",
+							horizontal: "left",
+						}}
+					>
+						<Box sx={{ p: 2, maxWidth: 400 }}>
+							<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+								Worker de Scraping de Causas
+							</Typography>
+							<Typography variant="body2" color="text.secondary">
+								Este worker se encarga de buscar y recopilar automáticamente nuevas causas judiciales desde los sistemas del Poder Judicial,
+								procesando rangos de números de expedientes por fuero y año.
+							</Typography>
+						</Box>
+					</Popover>
+				</Stack>
 				<Stack direction="row" spacing={1.5} alignItems="center" justifyContent={{ xs: "flex-start", sm: "flex-end" }}>
 					<Button variant="contained" color="primary" size="small" startIcon={<AddCircle size={18} />} onClick={handleOpenCreateConfig}>
 						Nuevo Worker
@@ -725,17 +766,6 @@ const ScrapingWorker = () => {
 				</Grid>
 			</Paper>
 
-			{/* Información del worker */}
-			<Alert severity="info" variant="outlined">
-				<Typography variant="subtitle2" fontWeight="bold">
-					Worker de Scraping de Causas
-				</Typography>
-				<Typography variant="body2" sx={{ mt: 1 }}>
-					Este worker se encarga de buscar y recopilar automáticamente nuevas causas judiciales desde los sistemas del Poder Judicial,
-					procesando rangos de números de expedientes por fuero y año.
-				</Typography>
-			</Alert>
-
 			{/* Tabla de configuraciones */}
 			<TableContainer component={Paper} variant="outlined">
 				<Table>
@@ -787,13 +817,180 @@ const ScrapingWorker = () => {
 								</TableSortLabel>
 							</TableCell>
 							<TableCell align="center">
-								<TableSortLabel
-									active={sortBy === "consecutive_not_found"}
-									direction={sortBy === "consecutive_not_found" ? sortOrder : "asc"}
-									onClick={() => handleSort("consecutive_not_found")}
-								>
-									No Encontrados
-								</TableSortLabel>
+								<Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
+									<Typography variant="body2" fontWeight={500}>
+										Totales
+									</Typography>
+									<Tooltip title="Ver información">
+										<IconButton
+											size="small"
+											color="info"
+											onClick={(e) => {
+												e.stopPropagation();
+												setTotalsInfoAnchorEl(e.currentTarget);
+											}}
+											sx={{ p: 0.25 }}
+										>
+											<InfoCircle size={16} />
+										</IconButton>
+									</Tooltip>
+									<Popover
+										open={Boolean(totalsInfoAnchorEl)}
+										anchorEl={totalsInfoAnchorEl}
+										onClose={() => setTotalsInfoAnchorEl(null)}
+										anchorOrigin={{
+											vertical: "bottom",
+											horizontal: "center",
+										}}
+										transformOrigin={{
+											vertical: "top",
+											horizontal: "center",
+										}}
+									>
+										<Box sx={{ p: 2, maxWidth: 350 }}>
+											<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+												Contadores totales del worker
+											</Typography>
+											<Stack spacing={1} sx={{ mt: 1 }}>
+												<Stack direction="row" spacing={1} alignItems="center">
+													<Chip label="V" size="small" color="success" sx={{ minWidth: 24 }} />
+													<Typography variant="body2" color="text.secondary">
+														<strong>Válidos:</strong> Expedientes encontrados y procesados exitosamente.
+													</Typography>
+												</Stack>
+												<Stack direction="row" spacing={1} alignItems="center">
+													<Chip label="I" size="small" color="warning" sx={{ minWidth: 24 }} />
+													<Typography variant="body2" color="text.secondary">
+														<strong>Inexistentes:</strong> Expedientes que el PJN reporta como no disponibles.
+													</Typography>
+												</Stack>
+												<Stack direction="row" spacing={1} alignItems="center">
+													<Chip label="E" size="small" color="error" sx={{ minWidth: 24 }} />
+													<Typography variant="body2" color="text.secondary">
+														<strong>Errores:</strong> Fallos técnicos (captcha, conexión, timeout).
+													</Typography>
+												</Stack>
+											</Stack>
+										</Box>
+									</Popover>
+								</Stack>
+							</TableCell>
+							<TableCell align="center">
+								<Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
+									<TableSortLabel
+										active={sortBy === "consecutive_not_found"}
+										direction={sortBy === "consecutive_not_found" ? sortOrder : "asc"}
+										onClick={() => handleSort("consecutive_not_found")}
+										sx={{ "& .MuiTableSortLabel-icon": { opacity: 1 } }}
+									>
+										<Typography variant="body2" fontWeight={500}>Inválidos Consecutivos</Typography>
+									</TableSortLabel>
+									<Tooltip title="Ver información">
+										<IconButton
+											size="small"
+											color="info"
+											onClick={(e) => {
+												e.stopPropagation();
+												setNotFoundInfoAnchorEl(e.currentTarget);
+											}}
+											sx={{ p: 0.25 }}
+										>
+											<InfoCircle size={16} />
+										</IconButton>
+									</Tooltip>
+									<Popover
+										open={Boolean(notFoundInfoAnchorEl)}
+										anchorEl={notFoundInfoAnchorEl}
+										onClose={() => setNotFoundInfoAnchorEl(null)}
+										anchorOrigin={{
+											vertical: "bottom",
+											horizontal: "center",
+										}}
+										transformOrigin={{
+											vertical: "top",
+											horizontal: "center",
+										}}
+									>
+										<Box sx={{ p: 2, maxWidth: 450 }}>
+											<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+												Contador de documentos no encontrados consecutivos
+											</Typography>
+											<Stack component="ul" spacing={1} sx={{ pl: 2, my: 1 }}>
+												<Typography component="li" variant="body2" color="text.secondary">
+													Se incrementa cuando el PJN responde que el expediente es inexistente o no está disponible para consulta pública.
+												</Typography>
+												<Typography component="li" variant="body2" color="text.secondary">
+													Se resetea a cero cuando se encuentra y procesa exitosamente un expediente válido.
+												</Typography>
+												<Typography component="li" variant="body2" color="text.secondary">
+													No se modifica cuando hay errores técnicos durante el scraping (fallos de captcha, errores de conexión, timeouts, etc.).
+												</Typography>
+											</Stack>
+											<Typography variant="subtitle2" fontWeight="bold" gutterBottom sx={{ mt: 2 }}>
+												Sobre el rango mostrado
+											</Typography>
+											<Typography variant="body2" color="text.secondary">
+												El rango indica el primer y último número de expediente marcados como "no encontrados" dentro de la secuencia actual. Si el número actual del worker es mayor al final del rango, significa que los números intermedios tuvieron errores técnicos y no fueron clasificados como existentes ni inexistentes.
+											</Typography>
+										</Box>
+									</Popover>
+								</Stack>
+							</TableCell>
+							<TableCell align="center">
+								<Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
+									<Typography variant="body2" fontWeight={600}>
+										Errores Consecutivos
+									</Typography>
+									<Tooltip title="Ver información">
+										<IconButton
+											size="small"
+											color="info"
+											onClick={(e) => {
+												e.stopPropagation();
+												setErrorsInfoAnchorEl(e.currentTarget);
+											}}
+											sx={{ p: 0.25 }}
+										>
+											<InfoCircle size={16} />
+										</IconButton>
+									</Tooltip>
+									<Popover
+										open={Boolean(errorsInfoAnchorEl)}
+										anchorEl={errorsInfoAnchorEl}
+										onClose={() => setErrorsInfoAnchorEl(null)}
+										anchorOrigin={{
+											vertical: "bottom",
+											horizontal: "center",
+										}}
+										transformOrigin={{
+											vertical: "top",
+											horizontal: "center",
+										}}
+									>
+										<Box sx={{ p: 2, maxWidth: 450 }}>
+											<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+												Contador de errores técnicos consecutivos
+											</Typography>
+											<Stack component="ul" spacing={1} sx={{ pl: 2, my: 1 }}>
+												<Typography component="li" variant="body2" color="text.secondary">
+													Se incrementa cuando ocurre un error técnico durante el scraping (fallos de captcha, errores de conexión, timeouts, etc.).
+												</Typography>
+												<Typography component="li" variant="body2" color="text.secondary">
+													Se resetea a cero cuando se procesa exitosamente un expediente (válido o inexistente).
+												</Typography>
+												<Typography component="li" variant="body2" color="text.secondary">
+													Un valor alto puede indicar problemas con el servicio de captcha, proxy o el servidor del PJN.
+												</Typography>
+											</Stack>
+											<Typography variant="subtitle2" fontWeight="bold" gutterBottom sx={{ mt: 2 }}>
+												Sobre el rango mostrado
+											</Typography>
+											<Typography variant="body2" color="text.secondary">
+												El rango indica el primer y último número de expediente donde ocurrieron errores técnicos consecutivos. Útil para identificar rangos problemáticos.
+											</Typography>
+										</Box>
+									</Popover>
+								</Stack>
 							</TableCell>
 							<TableCell align="center">
 								<TableSortLabel
@@ -831,7 +1028,7 @@ const ScrapingWorker = () => {
 					<TableBody>
 						{filteredConfigs.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={13} align="center">
+								<TableCell colSpan={15} align="center">
 									<Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
 										{fueroFilter === "TODOS"
 											? "No hay configuraciones disponibles"
@@ -938,6 +1135,29 @@ const ScrapingWorker = () => {
 												</Typography>
 											)}
 										</TableCell>
+										{/* Columna Totales */}
+										<TableCell align="center">
+											<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
+												<Tooltip title="Válidos">
+													<Typography variant="caption" color="success.main" fontWeight={500}>
+														{config.total_found?.toLocaleString() || 0}
+													</Typography>
+												</Tooltip>
+												<Typography variant="caption" color="text.secondary">/</Typography>
+												<Tooltip title="Inválidos">
+													<Typography variant="caption" color="warning.main" fontWeight={500}>
+														{config.total_not_found?.toLocaleString() || 0}
+													</Typography>
+												</Tooltip>
+												<Typography variant="caption" color="text.secondary">/</Typography>
+												<Tooltip title="Errores">
+													<Typography variant="caption" color="error.main" fontWeight={500}>
+														{config.total_errors?.toLocaleString() || 0}
+													</Typography>
+												</Tooltip>
+											</Stack>
+										</TableCell>
+										{/* Columna Inválidos Consecutivos */}
 										<TableCell align="center">
 											<Stack alignItems="center" spacing={0.5}>
 												<Typography
@@ -958,6 +1178,31 @@ const ScrapingWorker = () => {
 												{config.not_found_range?.start_number && config.not_found_range?.end_number && (
 													<Typography variant="caption" color="text.secondary">
 														{config.not_found_range.start_number.toLocaleString()} - {config.not_found_range.end_number.toLocaleString()}
+													</Typography>
+												)}
+											</Stack>
+										</TableCell>
+										{/* Columna Errores Consecutivos */}
+										<TableCell align="center">
+											<Stack alignItems="center" spacing={0.5}>
+												<Typography
+													variant="body2"
+													fontWeight={500}
+													color={
+														!config.consecutive_errors || config.consecutive_errors === 0
+															? "text.secondary"
+															: config.consecutive_errors >= 20
+																? "error.main"
+																: config.consecutive_errors >= 10
+																	? "warning.main"
+																	: "success.main"
+													}
+												>
+													{config.consecutive_errors || 0}
+												</Typography>
+												{config.error_range?.start_number && config.error_range?.end_number && (
+													<Typography variant="caption" color="text.secondary">
+														{config.error_range.start_number.toLocaleString()} - {config.error_range.end_number.toLocaleString()}
 													</Typography>
 												)}
 											</Stack>
