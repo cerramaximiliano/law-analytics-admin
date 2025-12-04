@@ -200,6 +200,7 @@ export interface LogsListParams {
 	skip?: number;
 	documentId?: string;
 	sort?: string;
+	hasMovimientos?: "true" | "false";
 }
 
 // Search logs parameters
