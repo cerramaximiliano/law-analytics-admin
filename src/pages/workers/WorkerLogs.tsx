@@ -1268,6 +1268,20 @@ const LogsTab: React.FC = () => {
 						</Grid>
 						<Grid item xs={12} sm={6} md={2}>
 							<FormControl fullWidth size="small">
+								<InputLabel>Movimientos</InputLabel>
+								<Select
+									value={filters.hasMovimientos || ""}
+									label="Movimientos"
+									onChange={(e) => handleFilterChange("hasMovimientos", e.target.value || undefined)}
+								>
+									<MenuItem value="">Todos</MenuItem>
+									<MenuItem value="true">Con movimientos</MenuItem>
+									<MenuItem value="false">Sin movimientos</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={12} sm={6} md={2}>
+							<FormControl fullWidth size="small">
 								<InputLabel>Período</InputLabel>
 								<Select
 									value={filters.hours || 24}
@@ -1284,7 +1298,7 @@ const LogsTab: React.FC = () => {
 								</Select>
 							</FormControl>
 						</Grid>
-						<Grid item xs={12} sm={6} md={4}>
+						<Grid item xs={12} sm={6} md={2}>
 							<TextField
 								fullWidth
 								size="small"
