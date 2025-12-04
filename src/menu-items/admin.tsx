@@ -1,5 +1,5 @@
 // assets
-import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle, DiscountShape, Notification } from "iconsax-react";
+import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle, DiscountShape, Notification, DocumentText } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -30,6 +30,14 @@ const admin: NavItemType = {
 					title: "Workers MEV",
 					type: "item",
 					url: "/admin/workers/mev",
+					breadcrumbs: true,
+				},
+				{
+					id: "workers-logs",
+					title: "Logs",
+					type: "item",
+					url: "/admin/workers/logs",
+					icon: DocumentText,
 					breadcrumbs: true,
 				},
 			],
