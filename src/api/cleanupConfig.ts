@@ -132,28 +132,48 @@ export class CleanupConfigService {
 
 	/**
 	 * GET /cleanup-config - Obtener configuración completa
+	 * API returns: { success, data: config }
 	 */
 	static async getConfig(): Promise<CleanupConfigResponse> {
 		const response = await pjnAxios.get(this.BASE_PATH);
-		return response.data;
+		// Map API response (data) to expected format (config)
+		return {
+			success: response.data.success,
+			config: response.data.data,
+		};
 	}
 
 	/**
 	 * GET /cleanup-config/status - Obtener estado actual
+	 * API returns: { success, data: statusObj }
 	 */
 	static async getStatus(): Promise<CleanupStatusResponse> {
 		const response = await pjnAxios.get(`${this.BASE_PATH}/status`);
-		return response.data;
+		// Map API response (data) to expected format (status)
+		return {
+			success: response.data.success,
+			status: response.data.data,
+		};
 	}
 
 	/**
 	 * GET /cleanup-config/history - Obtener historial de ejecuciones
+	 * API returns: { success, count, data: historyArray }
 	 */
 	static async getHistory(limit: number = 30, skip: number = 0): Promise<CleanupHistoryResponse> {
 		const response = await pjnAxios.get(`${this.BASE_PATH}/history`, {
 			params: { limit, skip },
 		});
-		return response.data;
+		// Map API response (data) to expected format (history)
+		return {
+			success: response.data.success,
+			history: response.data.data || [],
+			pagination: {
+				total: response.data.count || 0,
+				limit,
+				skip,
+			},
+		};
 	}
 
 	/**
