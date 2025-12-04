@@ -2389,7 +2389,7 @@ const CleanupConfigTab: React.FC = () => {
 													Logs detallados
 												</Typography>
 												<Typography variant="body1">
-													{config?.retention.detailedLogsDays} días
+													{config?.retention?.detailedLogsDays ?? "-"} días
 												</Typography>
 											</Box>
 											<Box>
@@ -2397,7 +2397,7 @@ const CleanupConfigTab: React.FC = () => {
 													Worker logs
 												</Typography>
 												<Typography variant="body1">
-													{config?.retention.workerLogsDays} días
+													{config?.retention?.workerLogsDays ?? "-"} días
 												</Typography>
 											</Box>
 										</Stack>
@@ -2488,20 +2488,20 @@ const CleanupConfigTab: React.FC = () => {
 													Expresión Cron
 												</Typography>
 												<Typography variant="body1" fontFamily="monospace">
-													{config?.schedule.cronExpression}
+													{config?.schedule?.cronExpression || "-"}
 												</Typography>
 											</Box>
 											<Box>
 												<Typography variant="caption" color="text.secondary">
 													Zona horaria
 												</Typography>
-												<Typography variant="body1">{config?.schedule.timezone}</Typography>
+												<Typography variant="body1">{config?.schedule?.timezone || "-"}</Typography>
 											</Box>
 											<Box>
 												<Typography variant="caption" color="text.secondary">
 													Descripción
 												</Typography>
-												<Typography variant="body1">{config?.schedule.description}</Typography>
+												<Typography variant="body1">{config?.schedule?.description || "-"}</Typography>
 											</Box>
 										</Stack>
 									)}
@@ -2523,7 +2523,7 @@ const CleanupConfigTab: React.FC = () => {
 													Max docs por ejecución
 												</Typography>
 												<Typography variant="body1">
-													{config?.limits.maxDocsPerRun?.toLocaleString()}
+													{config?.limits?.maxDocsPerRun?.toLocaleString() || "-"}
 												</Typography>
 											</Box>
 										</Grid>
@@ -2533,7 +2533,7 @@ const CleanupConfigTab: React.FC = () => {
 													Timeout
 												</Typography>
 												<Typography variant="body1">
-													{config?.limits.timeoutSeconds} seg
+													{config?.limits?.timeoutSeconds ?? "-"} seg
 												</Typography>
 											</Box>
 										</Grid>
@@ -2543,7 +2543,7 @@ const CleanupConfigTab: React.FC = () => {
 													Umbral de advertencia
 												</Typography>
 												<Typography variant="body1">
-													{config?.limits.warningThreshold?.toLocaleString()}
+													{config?.limits?.warningThreshold?.toLocaleString() || "-"}
 												</Typography>
 											</Box>
 										</Grid>
