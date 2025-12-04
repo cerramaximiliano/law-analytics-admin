@@ -2389,7 +2389,7 @@ const CleanupConfigTab: React.FC = () => {
 													Logs detallados
 												</Typography>
 												<Typography variant="body1">
-													{config?.retention?.detailedLogsDays ?? "-"} días
+													{retentionDays.detailed} días
 												</Typography>
 											</Box>
 											<Box>
@@ -2397,7 +2397,7 @@ const CleanupConfigTab: React.FC = () => {
 													Worker logs
 												</Typography>
 												<Typography variant="body1">
-													{config?.retention?.workerLogsDays ?? "-"} días
+													{retentionDays.workerLogs} días
 												</Typography>
 											</Box>
 										</Stack>
@@ -2488,20 +2488,20 @@ const CleanupConfigTab: React.FC = () => {
 													Expresión Cron
 												</Typography>
 												<Typography variant="body1" fontFamily="monospace">
-													{config?.schedule?.cronExpression || "-"}
+													{scheduleData.cron || "-"}
 												</Typography>
 											</Box>
 											<Box>
 												<Typography variant="caption" color="text.secondary">
 													Zona horaria
 												</Typography>
-												<Typography variant="body1">{config?.schedule?.timezone || "-"}</Typography>
+												<Typography variant="body1">{scheduleData.timezone || "-"}</Typography>
 											</Box>
 											<Box>
 												<Typography variant="caption" color="text.secondary">
 													Descripción
 												</Typography>
-												<Typography variant="body1">{config?.schedule?.description || "-"}</Typography>
+												<Typography variant="body1">{scheduleData.description || "-"}</Typography>
 											</Box>
 										</Stack>
 									)}
