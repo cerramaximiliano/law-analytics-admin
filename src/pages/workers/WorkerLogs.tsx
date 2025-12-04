@@ -51,6 +51,10 @@ import {
 	InfoCircle,
 	ArrowRight2,
 	Code1,
+	Timer1,
+	Play,
+	Pause,
+	Trash,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -70,6 +74,11 @@ import WorkerLogsService, {
 	LogLevel,
 	DetailedLogEntry,
 } from "api/workerLogs";
+import CleanupConfigService, {
+	CleanupConfig,
+	CleanupStatusResponse,
+	ExecutionHistoryItem,
+} from "api/cleanupConfig";
 
 // ======================== HELPER FUNCTIONS ========================
 
@@ -1927,6 +1936,739 @@ const SearchTab: React.FC = () => {
 	);
 };
 
+// ======================== CLEANUP CONFIG TAB ========================
+
+const CleanupConfigTab: React.FC = () => {
+	const theme = useTheme();
+	const { enqueueSnackbar } = useSnackbar();
+	const [loading, setLoading] = useState(true);
+	const [config, setConfig] = useState<CleanupConfig | null>(null);
+	const [status, setStatus] = useState<CleanupStatusResponse["status"] | null>(null);
+	const [history, setHistory] = useState<ExecutionHistoryItem[]>([]);
+	const [actionLoading, setActionLoading] = useState(false);
+
+	// Edit state
+	const [editRetention, setEditRetention] = useState(false);
+	const [editSchedule, setEditSchedule] = useState(false);
+	const [retentionDays, setRetentionDays] = useState({ detailed: 7, workerLogs: 30 });
+	const [scheduleData, setScheduleData] = useState({ cron: "", timezone: "", description: "" });
+
+	// Dialogs
+	const [confirmDialog, setConfirmDialog] = useState<{
+		open: boolean;
+		title: string;
+		message: string;
+		action: () => Promise<void>;
+	}>({ open: false, title: "", message: "", action: async () => {} });
+
+	const fetchData = useCallback(async () => {
+		try {
+			setLoading(true);
+			const [configRes, statusRes, historyRes] = await Promise.all([
+				CleanupConfigService.getConfig(),
+				CleanupConfigService.getStatus(),
+				CleanupConfigService.getHistory(10),
+			]);
+			setConfig(configRes.config);
+			setStatus(statusRes.status);
+			setHistory(historyRes.history);
+
+			// Set edit values
+			if (configRes.config) {
+				setRetentionDays({
+					detailed: configRes.config.retention.detailedLogsDays,
+					workerLogs: configRes.config.retention.workerLogsDays,
+				});
+				setScheduleData({
+					cron: configRes.config.schedule.cronExpression,
+					timezone: configRes.config.schedule.timezone,
+					description: configRes.config.schedule.description,
+				});
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al cargar configuración de limpieza", { variant: "error" });
+			console.error(error);
+		} finally {
+			setLoading(false);
+		}
+	}, [enqueueSnackbar]);
+
+	useEffect(() => {
+		fetchData();
+	}, [fetchData]);
+
+	const handleEnable = async () => {
+		try {
+			setActionLoading(true);
+			await CleanupConfigService.enable();
+			enqueueSnackbar("Limpieza automática habilitada", { variant: "success" });
+			fetchData();
+		} catch (error) {
+			enqueueSnackbar("Error al habilitar", { variant: "error" });
+		} finally {
+			setActionLoading(false);
+		}
+	};
+
+	const handleDisable = async () => {
+		try {
+			setActionLoading(true);
+			await CleanupConfigService.disable();
+			enqueueSnackbar("Limpieza automática deshabilitada", { variant: "warning" });
+			fetchData();
+		} catch (error) {
+			enqueueSnackbar("Error al deshabilitar", { variant: "error" });
+		} finally {
+			setActionLoading(false);
+		}
+	};
+
+	const handlePause = async () => {
+		try {
+			setActionLoading(true);
+			await CleanupConfigService.pause("Pausado desde panel admin");
+			enqueueSnackbar("Limpieza pausada", { variant: "info" });
+			fetchData();
+		} catch (error) {
+			enqueueSnackbar("Error al pausar", { variant: "error" });
+		} finally {
+			setActionLoading(false);
+		}
+	};
+
+	const handleResume = async () => {
+		try {
+			setActionLoading(true);
+			await CleanupConfigService.resume();
+			enqueueSnackbar("Limpieza reanudada", { variant: "success" });
+			fetchData();
+		} catch (error) {
+			enqueueSnackbar("Error al reanudar", { variant: "error" });
+		} finally {
+			setActionLoading(false);
+		}
+	};
+
+	const handleSaveRetention = async () => {
+		try {
+			setActionLoading(true);
+			await CleanupConfigService.updateRetention({
+				detailedLogsDays: retentionDays.detailed,
+				workerLogsDays: retentionDays.workerLogs,
+			});
+			enqueueSnackbar("Retención actualizada", { variant: "success" });
+			setEditRetention(false);
+			fetchData();
+		} catch (error) {
+			enqueueSnackbar("Error al actualizar retención", { variant: "error" });
+		} finally {
+			setActionLoading(false);
+		}
+	};
+
+	const handleSaveSchedule = async () => {
+		try {
+			setActionLoading(true);
+			await CleanupConfigService.updateSchedule({
+				cronExpression: scheduleData.cron,
+				timezone: scheduleData.timezone,
+				description: scheduleData.description,
+			});
+			enqueueSnackbar("Schedule actualizado", { variant: "success" });
+			setEditSchedule(false);
+			fetchData();
+		} catch (error) {
+			enqueueSnackbar("Error al actualizar schedule", { variant: "error" });
+		} finally {
+			setActionLoading(false);
+		}
+	};
+
+	const handleReset = async () => {
+		setConfirmDialog({
+			open: true,
+			title: "Resetear Configuración",
+			message: "¿Estás seguro de que quieres resetear la configuración a los valores por defecto?",
+			action: async () => {
+				try {
+					setActionLoading(true);
+					await CleanupConfigService.reset();
+					enqueueSnackbar("Configuración reseteada", { variant: "success" });
+					fetchData();
+				} catch (error) {
+					enqueueSnackbar("Error al resetear", { variant: "error" });
+				} finally {
+					setActionLoading(false);
+					setConfirmDialog((prev) => ({ ...prev, open: false }));
+				}
+			},
+		});
+	};
+
+	const getStatusColor = (s: string) => {
+		switch (s) {
+			case "success":
+				return theme.palette.success.main;
+			case "error":
+				return theme.palette.error.main;
+			case "partial":
+				return theme.palette.warning.main;
+			case "timeout":
+				return theme.palette.warning.main;
+			default:
+				return theme.palette.grey[500];
+		}
+	};
+
+	if (loading) {
+		return (
+			<Box sx={{ p: 3 }}>
+				<Stack spacing={3}>
+					<Skeleton variant="rectangular" height={150} sx={{ borderRadius: 2 }} />
+					<Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />
+					<Skeleton variant="rectangular" height={300} sx={{ borderRadius: 2 }} />
+				</Stack>
+			</Box>
+		);
+	}
+
+	return (
+		<Box sx={{ p: 3 }}>
+			<Stack spacing={3}>
+				{/* Header */}
+				<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Typography variant="h5">Configuración de Limpieza Automática</Typography>
+					<Stack direction="row" spacing={1}>
+						<Tooltip title="Actualizar">
+							<IconButton onClick={fetchData} disabled={actionLoading}>
+								<Refresh size={20} />
+							</IconButton>
+						</Tooltip>
+					</Stack>
+				</Stack>
+
+				{/* Status Card */}
+				<Card>
+					<CardContent>
+						<Stack spacing={2}>
+							<Stack direction="row" justifyContent="space-between" alignItems="center">
+								<Typography variant="h6">Estado Actual</Typography>
+								<Stack direction="row" spacing={1}>
+									{config?.enabled ? (
+										<Chip
+											icon={<TickCircle size={16} />}
+											label="Habilitado"
+											color="success"
+											size="small"
+										/>
+									) : (
+										<Chip
+											icon={<CloseCircle size={16} />}
+											label="Deshabilitado"
+											color="error"
+											size="small"
+										/>
+									)}
+									{config?.maintenance.isPaused && (
+										<Chip
+											icon={<Pause size={16} />}
+											label="Pausado"
+											color="warning"
+											size="small"
+										/>
+									)}
+								</Stack>
+							</Stack>
+
+							<Grid container spacing={2}>
+								<Grid item xs={12} sm={6} md={3}>
+									<Box>
+										<Typography variant="caption" color="text.secondary">
+											Próxima ejecución
+										</Typography>
+										<Typography variant="body1">
+											{status?.nextExecution
+												? new Date(status.nextExecution).toLocaleString("es-AR")
+												: "-"}
+										</Typography>
+									</Box>
+								</Grid>
+								<Grid item xs={12} sm={6} md={3}>
+									<Box>
+										<Typography variant="caption" color="text.secondary">
+											Última ejecución
+										</Typography>
+										<Typography variant="body1">
+											{config?.lastExecution?.timestamp
+												? new Date(config.lastExecution.timestamp).toLocaleString("es-AR")
+												: "Nunca"}
+										</Typography>
+									</Box>
+								</Grid>
+								<Grid item xs={12} sm={6} md={3}>
+									<Box>
+										<Typography variant="caption" color="text.secondary">
+											Último resultado
+										</Typography>
+										{config?.lastExecution?.status ? (
+											<Chip
+												label={config.lastExecution.status}
+												size="small"
+												sx={{
+													bgcolor: alpha(getStatusColor(config.lastExecution.status), 0.1),
+													color: getStatusColor(config.lastExecution.status),
+													textTransform: "capitalize",
+												}}
+											/>
+										) : (
+											<Typography variant="body1">-</Typography>
+										)}
+									</Box>
+								</Grid>
+								<Grid item xs={12} sm={6} md={3}>
+									<Box>
+										<Typography variant="caption" color="text.secondary">
+											Logs limpiados (última vez)
+										</Typography>
+										<Typography variant="body1">
+											{config?.lastExecution?.stats?.totalCleared?.toLocaleString() || 0}
+										</Typography>
+									</Box>
+								</Grid>
+							</Grid>
+
+							{/* Action Buttons */}
+							<Stack direction="row" spacing={1} flexWrap="wrap">
+								{config?.enabled ? (
+									<Button
+										variant="outlined"
+										color="error"
+										size="small"
+										onClick={handleDisable}
+										disabled={actionLoading}
+										startIcon={<CloseCircle size={16} />}
+									>
+										Deshabilitar
+									</Button>
+								) : (
+									<Button
+										variant="contained"
+										color="success"
+										size="small"
+										onClick={handleEnable}
+										disabled={actionLoading}
+										startIcon={<TickCircle size={16} />}
+									>
+										Habilitar
+									</Button>
+								)}
+
+								{config?.enabled && !config.maintenance.isPaused && (
+									<Button
+										variant="outlined"
+										color="warning"
+										size="small"
+										onClick={handlePause}
+										disabled={actionLoading}
+										startIcon={<Pause size={16} />}
+									>
+										Pausar
+									</Button>
+								)}
+
+								{config?.maintenance.isPaused && (
+									<Button
+										variant="contained"
+										color="primary"
+										size="small"
+										onClick={handleResume}
+										disabled={actionLoading}
+										startIcon={<Play size={16} />}
+									>
+										Reanudar
+									</Button>
+								)}
+
+								<Button
+									variant="outlined"
+									color="inherit"
+									size="small"
+									onClick={handleReset}
+									disabled={actionLoading}
+									startIcon={<Trash size={16} />}
+								>
+									Resetear
+								</Button>
+							</Stack>
+						</Stack>
+					</CardContent>
+				</Card>
+
+				{/* Configuration Cards */}
+				<Grid container spacing={3}>
+					{/* Retention Config */}
+					<Grid item xs={12} md={6}>
+						<Card>
+							<CardContent>
+								<Stack spacing={2}>
+									<Stack direction="row" justifyContent="space-between" alignItems="center">
+										<Typography variant="h6">Retención</Typography>
+										{!editRetention ? (
+											<Button size="small" onClick={() => setEditRetention(true)}>
+												Editar
+											</Button>
+										) : (
+											<Stack direction="row" spacing={1}>
+												<Button
+													size="small"
+													variant="contained"
+													onClick={handleSaveRetention}
+													disabled={actionLoading}
+												>
+													Guardar
+												</Button>
+												<Button
+													size="small"
+													onClick={() => {
+														setEditRetention(false);
+														if (config) {
+															setRetentionDays({
+																detailed: config.retention.detailedLogsDays,
+																workerLogs: config.retention.workerLogsDays,
+															});
+														}
+													}}
+												>
+													Cancelar
+												</Button>
+											</Stack>
+										)}
+									</Stack>
+
+									{editRetention ? (
+										<Stack spacing={2}>
+											<TextField
+												fullWidth
+												size="small"
+												type="number"
+												label="Logs detallados (días)"
+												value={retentionDays.detailed}
+												onChange={(e) =>
+													setRetentionDays((prev) => ({
+														...prev,
+														detailed: parseInt(e.target.value) || 0,
+													}))
+												}
+												inputProps={{ min: 1, max: 90 }}
+												helperText="Días a mantener los logs detallados"
+											/>
+											<TextField
+												fullWidth
+												size="small"
+												type="number"
+												label="Worker logs (días)"
+												value={retentionDays.workerLogs}
+												onChange={(e) =>
+													setRetentionDays((prev) => ({
+														...prev,
+														workerLogs: parseInt(e.target.value) || 0,
+													}))
+												}
+												inputProps={{ min: 1, max: 365 }}
+												helperText="Días a mantener los worker logs"
+											/>
+										</Stack>
+									) : (
+										<Stack spacing={1}>
+											<Box>
+												<Typography variant="caption" color="text.secondary">
+													Logs detallados
+												</Typography>
+												<Typography variant="body1">
+													{config?.retention.detailedLogsDays} días
+												</Typography>
+											</Box>
+											<Box>
+												<Typography variant="caption" color="text.secondary">
+													Worker logs
+												</Typography>
+												<Typography variant="body1">
+													{config?.retention.workerLogsDays} días
+												</Typography>
+											</Box>
+										</Stack>
+									)}
+								</Stack>
+							</CardContent>
+						</Card>
+					</Grid>
+
+					{/* Schedule Config */}
+					<Grid item xs={12} md={6}>
+						<Card>
+							<CardContent>
+								<Stack spacing={2}>
+									<Stack direction="row" justifyContent="space-between" alignItems="center">
+										<Typography variant="h6">Programación</Typography>
+										{!editSchedule ? (
+											<Button size="small" onClick={() => setEditSchedule(true)}>
+												Editar
+											</Button>
+										) : (
+											<Stack direction="row" spacing={1}>
+												<Button
+													size="small"
+													variant="contained"
+													onClick={handleSaveSchedule}
+													disabled={actionLoading}
+												>
+													Guardar
+												</Button>
+												<Button
+													size="small"
+													onClick={() => {
+														setEditSchedule(false);
+														if (config) {
+															setScheduleData({
+																cron: config.schedule.cronExpression,
+																timezone: config.schedule.timezone,
+																description: config.schedule.description,
+															});
+														}
+													}}
+												>
+													Cancelar
+												</Button>
+											</Stack>
+										)}
+									</Stack>
+
+									{editSchedule ? (
+										<Stack spacing={2}>
+											<TextField
+												fullWidth
+												size="small"
+												label="Expresión Cron"
+												value={scheduleData.cron}
+												onChange={(e) =>
+													setScheduleData((prev) => ({ ...prev, cron: e.target.value }))
+												}
+												placeholder="0 3 * * *"
+												helperText="Formato: minuto hora día mes díaSemana"
+											/>
+											<TextField
+												fullWidth
+												size="small"
+												label="Zona horaria"
+												value={scheduleData.timezone}
+												onChange={(e) =>
+													setScheduleData((prev) => ({ ...prev, timezone: e.target.value }))
+												}
+												placeholder="America/Argentina/Buenos_Aires"
+											/>
+											<TextField
+												fullWidth
+												size="small"
+												label="Descripción"
+												value={scheduleData.description}
+												onChange={(e) =>
+													setScheduleData((prev) => ({ ...prev, description: e.target.value }))
+												}
+												placeholder="Todos los días a las 3:00 AM"
+											/>
+										</Stack>
+									) : (
+										<Stack spacing={1}>
+											<Box>
+												<Typography variant="caption" color="text.secondary">
+													Expresión Cron
+												</Typography>
+												<Typography variant="body1" fontFamily="monospace">
+													{config?.schedule.cronExpression}
+												</Typography>
+											</Box>
+											<Box>
+												<Typography variant="caption" color="text.secondary">
+													Zona horaria
+												</Typography>
+												<Typography variant="body1">{config?.schedule.timezone}</Typography>
+											</Box>
+											<Box>
+												<Typography variant="caption" color="text.secondary">
+													Descripción
+												</Typography>
+												<Typography variant="body1">{config?.schedule.description}</Typography>
+											</Box>
+										</Stack>
+									)}
+								</Stack>
+							</CardContent>
+						</Card>
+					</Grid>
+
+					{/* Limits Config */}
+					<Grid item xs={12} md={6}>
+						<Card>
+							<CardContent>
+								<Stack spacing={2}>
+									<Typography variant="h6">Límites</Typography>
+									<Grid container spacing={2}>
+										<Grid item xs={6}>
+											<Box>
+												<Typography variant="caption" color="text.secondary">
+													Max docs por ejecución
+												</Typography>
+												<Typography variant="body1">
+													{config?.limits.maxDocsPerRun?.toLocaleString()}
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6}>
+											<Box>
+												<Typography variant="caption" color="text.secondary">
+													Timeout
+												</Typography>
+												<Typography variant="body1">
+													{config?.limits.timeoutSeconds} seg
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6}>
+											<Box>
+												<Typography variant="caption" color="text.secondary">
+													Umbral de advertencia
+												</Typography>
+												<Typography variant="body1">
+													{config?.limits.warningThreshold?.toLocaleString()}
+												</Typography>
+											</Box>
+										</Grid>
+									</Grid>
+								</Stack>
+							</CardContent>
+						</Card>
+					</Grid>
+
+					{/* Notifications Config */}
+					<Grid item xs={12} md={6}>
+						<Card>
+							<CardContent>
+								<Stack spacing={2}>
+									<Typography variant="h6">Notificaciones</Typography>
+									<Stack direction="row" spacing={2}>
+										<Chip
+											label="Email al completar"
+											size="small"
+											color={config?.notifications.emailOnComplete ? "success" : "default"}
+											variant={config?.notifications.emailOnComplete ? "filled" : "outlined"}
+										/>
+										<Chip
+											label="Email en error"
+											size="small"
+											color={config?.notifications.emailOnError ? "success" : "default"}
+											variant={config?.notifications.emailOnError ? "filled" : "outlined"}
+										/>
+									</Stack>
+									{config?.notifications.recipientEmails &&
+										config.notifications.recipientEmails.length > 0 && (
+											<Box>
+												<Typography variant="caption" color="text.secondary">
+													Destinatarios
+												</Typography>
+												<Typography variant="body2">
+													{config.notifications.recipientEmails.join(", ")}
+												</Typography>
+											</Box>
+										)}
+								</Stack>
+							</CardContent>
+						</Card>
+					</Grid>
+				</Grid>
+
+				{/* Execution History */}
+				<Card>
+					<CardContent>
+						<Typography variant="h6" gutterBottom>
+							Historial de Ejecuciones
+						</Typography>
+						{history.length > 0 ? (
+							<TableContainer>
+								<Table size="small">
+									<TableHead>
+										<TableRow>
+											<TableCell>Fecha</TableCell>
+											<TableCell>Estado</TableCell>
+											<TableCell align="right">Duración</TableCell>
+											<TableCell align="right">Logs limpiados</TableCell>
+											<TableCell>Error</TableCell>
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{history.map((item, index) => (
+											<TableRow key={index}>
+												<TableCell>
+													{new Date(item.timestamp).toLocaleString("es-AR")}
+												</TableCell>
+												<TableCell>
+													<Chip
+														label={item.status}
+														size="small"
+														sx={{
+															bgcolor: alpha(getStatusColor(item.status), 0.1),
+															color: getStatusColor(item.status),
+															textTransform: "capitalize",
+														}}
+													/>
+												</TableCell>
+												<TableCell align="right">
+													{item.duration ? `${(item.duration / 1000).toFixed(1)}s` : "-"}
+												</TableCell>
+												<TableCell align="right">
+													{item.totalCleared?.toLocaleString() || 0}
+												</TableCell>
+												<TableCell>
+													{item.error ? (
+														<Typography
+															variant="body2"
+															color="error"
+															sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis" }}
+														>
+															{item.error}
+														</Typography>
+													) : (
+														"-"
+													)}
+												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</TableContainer>
+						) : (
+							<Alert severity="info">No hay ejecuciones registradas</Alert>
+						)}
+					</CardContent>
+				</Card>
+			</Stack>
+
+			{/* Confirm Dialog */}
+			<Dialog open={confirmDialog.open} onClose={() => setConfirmDialog((prev) => ({ ...prev, open: false }))}>
+				<DialogTitle>{confirmDialog.title}</DialogTitle>
+				<DialogContent>
+					<Typography>{confirmDialog.message}</Typography>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setConfirmDialog((prev) => ({ ...prev, open: false }))}>Cancelar</Button>
+					<Button onClick={confirmDialog.action} color="error" variant="contained" disabled={actionLoading}>
+						{actionLoading ? <CircularProgress size={20} /> : "Confirmar"}
+					</Button>
+				</DialogActions>
+			</Dialog>
+		</Box>
+	);
+};
+
 // ======================== MAIN COMPONENT ========================
 
 interface WorkerLogsTab {
@@ -1992,6 +2734,13 @@ const WorkerLogs: React.FC = () => {
 			icon: <Warning2 size={20} />,
 			component: <ErrorsTab key={refreshKey} />,
 			description: "Errores y patrones de fallo",
+		},
+		{
+			label: "Limpieza",
+			value: "cleanup",
+			icon: <Timer1 size={20} />,
+			component: <CleanupConfigTab key={refreshKey} />,
+			description: "Configuración de limpieza automática",
 		},
 	];
 
