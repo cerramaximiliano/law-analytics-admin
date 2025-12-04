@@ -1969,25 +1969,29 @@ const CleanupConfigTab: React.FC = () => {
 				CleanupConfigService.getStatus(),
 				CleanupConfigService.getHistory(10),
 			]);
-			setConfig(configRes.config);
-			setStatus(statusRes.status);
-			setHistory(historyRes.history);
+			setConfig(configRes.config || null);
+			setStatus(statusRes.status || null);
+			setHistory(historyRes.history || []);
 
 			// Set edit values
 			if (configRes.config) {
 				setRetentionDays({
-					detailed: configRes.config.retention.detailedLogsDays,
-					workerLogs: configRes.config.retention.workerLogsDays,
+					detailed: configRes.config.retention?.detailedLogsDays || 7,
+					workerLogs: configRes.config.retention?.workerLogsDays || 30,
 				});
 				setScheduleData({
-					cron: configRes.config.schedule.cronExpression,
-					timezone: configRes.config.schedule.timezone,
-					description: configRes.config.schedule.description,
+					cron: configRes.config.schedule?.cronExpression || "",
+					timezone: configRes.config.schedule?.timezone || "",
+					description: configRes.config.schedule?.description || "",
 				});
 			}
 		} catch (error) {
 			enqueueSnackbar("Error al cargar configuración de limpieza", { variant: "error" });
 			console.error(error);
+			// Reset to safe defaults on error
+			setConfig(null);
+			setStatus(null);
+			setHistory([]);
 		} finally {
 			setLoading(false);
 		}
@@ -2592,7 +2596,7 @@ const CleanupConfigTab: React.FC = () => {
 						<Typography variant="h6" gutterBottom>
 							Historial de Ejecuciones
 						</Typography>
-						{history.length > 0 ? (
+						{history && history.length > 0 ? (
 							<TableContainer>
 								<Table size="small">
 									<TableHead>
