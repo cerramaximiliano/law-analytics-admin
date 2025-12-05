@@ -49,6 +49,8 @@ import {
 	Folder2,
 	Timer,
 	Notification,
+	ArrowUp,
+	ArrowDown,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -581,6 +583,8 @@ const FolderInactivity: React.FC = () => {
 		limit: 25,
 		type: "any",
 		archived: "false",
+		sortBy: "updatedAt",
+		sortOrder: "desc",
 	});
 	const [search, setSearch] = useState("");
 	const [selectedFolder, setSelectedFolder] = useState<FolderInactivityItem | null>(null);
@@ -783,8 +787,41 @@ const FolderInactivity: React.FC = () => {
 								</Select>
 							</FormControl>
 						</Grid>
+						<Grid item xs={12} sm={6} md={2}>
+							<FormControl fullWidth size="small">
+								<InputLabel>Ordenar por</InputLabel>
+								<Select
+									value={filters.sortBy || "updatedAt"}
+									label="Ordenar por"
+									onChange={(e) => handleFilterChange("sortBy", e.target.value)}
+								>
+									<MenuItem value="updatedAt">Última actualización</MenuItem>
+									<MenuItem value="folderName">Nombre carpeta</MenuItem>
+									<MenuItem value="userName">Usuario</MenuItem>
+									<MenuItem value="caducityDays">Días caducidad</MenuItem>
+									<MenuItem value="prescriptionDays">Días prescripción</MenuItem>
+									<MenuItem value="lastActivity">Última actividad</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs="auto">
+							<Tooltip title={filters.sortOrder === "asc" ? "Orden ascendente" : "Orden descendente"}>
+								<IconButton
+									onClick={() =>
+										handleFilterChange("sortOrder", filters.sortOrder === "asc" ? "desc" : "asc")
+									}
+									sx={{
+										border: 1,
+										borderColor: "divider",
+										borderRadius: 1,
+									}}
+								>
+									{filters.sortOrder === "asc" ? <ArrowUp size={20} /> : <ArrowDown size={20} />}
+								</IconButton>
+							</Tooltip>
+						</Grid>
 						{(filters.status || filters.type !== "any") && (
-							<Grid item xs={12} sm={6} md={3}>
+							<Grid item xs={12} sm={6} md="auto">
 								<Button
 									size="small"
 									onClick={() => setFilters((prev) => ({ ...prev, status: undefined, type: "any", page: 1 }))}
