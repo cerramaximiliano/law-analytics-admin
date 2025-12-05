@@ -910,7 +910,7 @@ const ActivityTab: React.FC = () => {
 	);
 };
 
-// ======================== LOGS TAB ========================
+// ======================== LOG DETAIL MODAL ========================
 
 interface LogDetailModalProps {
 	open: boolean;
@@ -920,236 +920,345 @@ interface LogDetailModalProps {
 
 const LogDetailModal: React.FC<LogDetailModalProps> = ({ open, onClose, log }) => {
 	const theme = useTheme();
+	const [activeTab, setActiveTab] = useState(0);
+
+	// Reset tab when modal opens with new log
+	useEffect(() => {
+		if (open) setActiveTab(0);
+	}, [open, log?._id]);
 
 	if (!log) return null;
 
+	const hasDetailedLogs = log.detailedLogs && log.detailedLogs.length > 0;
+
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-			<DialogTitle>
+			<DialogTitle sx={{ pb: 1 }}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Typography variant="h5">Detalle del Log</Typography>
-					<Chip
-						label={getStatusLabel(log.status)}
-						sx={{
-							bgcolor: alpha(getStatusColor(log.status, theme), 0.1),
-							color: getStatusColor(log.status, theme),
-						}}
-					/>
+					<Stack direction="row" alignItems="center" spacing={2}>
+						<Typography variant="h5">Detalle del Log</Typography>
+						<Chip
+							label={getStatusLabel(log.status)}
+							size="small"
+							sx={{
+								bgcolor: alpha(getStatusColor(log.status, theme), 0.1),
+								color: getStatusColor(log.status, theme),
+							}}
+						/>
+					</Stack>
+					<Typography variant="caption" color="text.secondary">
+						{log.startTime ? formatDate(log.startTime) : "-"}
+					</Typography>
 				</Stack>
 			</DialogTitle>
-			<DialogContent dividers>
-				<Stack spacing={3}>
-					<Grid container spacing={2}>
-						<Grid item xs={6}>
-							<Typography variant="subtitle2" color="text.secondary">
-								Worker ID
-							</Typography>
-							<Typography variant="body2" fontFamily="monospace">
-								{log.workerId}
-							</Typography>
-						</Grid>
-						<Grid item xs={6}>
-							<Typography variant="subtitle2" color="text.secondary">
-								Tipo
-							</Typography>
-							<Typography variant="body2">{getWorkerTypeLabel(log.workerType)}</Typography>
-						</Grid>
-						<Grid item xs={6}>
-							<Typography variant="subtitle2" color="text.secondary">
-								Documento
-							</Typography>
-							<Typography variant="body2">
-								{log.document.fuero} {log.document.number}/{log.document.year}
-							</Typography>
-						</Grid>
-						<Grid item xs={6}>
-							<Typography variant="subtitle2" color="text.secondary">
-								Duración
-							</Typography>
-							<Typography variant="body2">{log.duration ? formatDuration(log.duration) : "-"}</Typography>
-						</Grid>
-					</Grid>
 
-					{log.document.stateBefore && log.document.stateAfter && (
-						<Card variant="outlined">
-							<CardContent>
-								<Typography variant="subtitle2" gutterBottom>
-									Estado del Documento
-								</Typography>
-								<Stack direction="row" alignItems="center" spacing={2}>
-									<Box>
-										<Typography variant="caption" color="text.secondary">
-											Antes
-										</Typography>
-										<Typography>{log.document.stateBefore.movimientosCount} movimientos</Typography>
-									</Box>
-									<ArrowRight2 size={20} />
-									<Box>
-										<Typography variant="caption" color="text.secondary">
-											Después
-										</Typography>
-										<Typography>{log.document.stateAfter.movimientosCount} movimientos</Typography>
-									</Box>
-								</Stack>
-							</CardContent>
-						</Card>
-					)}
+			{/* Tabs */}
+			<Box sx={{ borderBottom: 1, borderColor: "divider", px: 2 }}>
+				<Tabs
+					value={activeTab}
+					onChange={(_e, v) => setActiveTab(v)}
+					variant="fullWidth"
+					sx={{
+						minHeight: 40,
+						"& .MuiTab-root": { minHeight: 40, textTransform: "none", fontSize: "0.875rem" },
+					}}
+				>
+					<Tab icon={<InfoCircle size={16} />} iconPosition="start" label="Resumen" />
+					<Tab
+						icon={<Clock size={16} />}
+						iconPosition="start"
+						label={`Logs ${hasDetailedLogs ? `(${log.detailedLogs!.length})` : ""}`}
+						disabled={!hasDetailedLogs}
+					/>
+					<Tab icon={<Code1 size={16} />} iconPosition="start" label="JSON" />
+				</Tabs>
+			</Box>
 
-					{log.changes && (
-						<Card variant="outlined">
-							<CardContent>
-								<Typography variant="subtitle2" gutterBottom>
-									Cambios
-								</Typography>
-								<Stack spacing={1}>
-									{log.changes.movimientosAdded !== undefined && (
-										<Typography variant="body2">
-											Movimientos agregados: {log.changes.movimientosAdded}
-										</Typography>
-									)}
-									{log.changes.fieldsUpdated && (
-										<Typography variant="body2">
-											Campos actualizados: {log.changes.fieldsUpdated.join(", ")}
-										</Typography>
-									)}
-								</Stack>
-							</CardContent>
-						</Card>
-					)}
+			<DialogContent sx={{ p: 0 }}>
+				{/* Tab 0: Resumen */}
+				{activeTab === 0 && (
+					<Box sx={{ p: 2 }}>
+						<Stack spacing={2}>
+							{/* Info Grid */}
+							<Card variant="outlined">
+								<CardContent>
+									<Grid container spacing={2}>
+										<Grid item xs={6} sm={3}>
+											<Typography variant="caption" color="text.secondary">
+												Worker ID
+											</Typography>
+											<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem">
+												{log.workerId}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Typography variant="caption" color="text.secondary">
+												Tipo
+											</Typography>
+											<Typography variant="body2">{getWorkerTypeLabel(log.workerType)}</Typography>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Typography variant="caption" color="text.secondary">
+												Documento
+											</Typography>
+											<Typography variant="body2">
+												{log.document.fuero} {log.document.number}/{log.document.year}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Typography variant="caption" color="text.secondary">
+												Duración
+											</Typography>
+											<Typography variant="body2">{log.duration ? formatDuration(log.duration) : "-"}</Typography>
+										</Grid>
+									</Grid>
+								</CardContent>
+							</Card>
 
-					{log.result && (
-						<Card variant="outlined">
-							<CardContent>
-								<Typography variant="subtitle2" gutterBottom>
-									Resultado
-								</Typography>
-								<Typography variant="body2">{log.result.message}</Typography>
-							</CardContent>
-						</Card>
-					)}
-
-					{log.error && (
-						<Alert severity="error">
-							<Typography variant="body2">{log.error}</Typography>
-						</Alert>
-					)}
-
-					{/* Detailed Logs Timeline */}
-					{log.detailedLogs && log.detailedLogs.length > 0 && (
-						<Card variant="outlined">
-							<CardContent>
-								<Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
-									<Stack direction="row" alignItems="center" spacing={1}>
-										<Clock size={16} />
-										<Typography variant="subtitle2">
-											Logs Detallados ({log.detailedLogs.length} entradas)
+							{/* Estado del Documento */}
+							{log.document.stateBefore && log.document.stateAfter && (
+								<Card variant="outlined">
+									<CardContent sx={{ py: 1.5 }}>
+										<Typography variant="subtitle2" gutterBottom>
+											Estado del Documento
 										</Typography>
-									</Stack>
-									{log.logsRetention?.detailedLogsExpireAt && (
-										<Typography variant="caption" color="text.secondary">
-											Expiran: {formatDate(log.logsRetention.detailedLogsExpireAt)}
+										<Stack direction="row" alignItems="center" spacing={2}>
+											<Box sx={{ textAlign: "center", flex: 1 }}>
+												<Typography variant="caption" color="text.secondary">
+													Antes
+												</Typography>
+												<Typography variant="h6">{log.document.stateBefore.movimientosCount}</Typography>
+												<Typography variant="caption" color="text.secondary">
+													movimientos
+												</Typography>
+											</Box>
+											<ArrowRight2 size={24} color={theme.palette.primary.main} />
+											<Box sx={{ textAlign: "center", flex: 1 }}>
+												<Typography variant="caption" color="text.secondary">
+													Después
+												</Typography>
+												<Typography variant="h6" color="primary">
+													{log.document.stateAfter.movimientosCount}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													movimientos
+												</Typography>
+											</Box>
+											{log.changes?.movimientosAdded !== undefined && log.changes.movimientosAdded > 0 && (
+												<Chip
+													label={`+${log.changes.movimientosAdded}`}
+													size="small"
+													color="success"
+													sx={{ fontWeight: 600 }}
+												/>
+											)}
+										</Stack>
+									</CardContent>
+								</Card>
+							)}
+
+							{/* Cambios */}
+							{log.changes && (log.changes.movimientosAdded !== undefined || log.changes.fieldsUpdated) && (
+								<Card variant="outlined">
+									<CardContent sx={{ py: 1.5 }}>
+										<Typography variant="subtitle2" gutterBottom>
+											Cambios
 										</Typography>
-									)}
-								</Stack>
-								<Box
-									sx={{
-										maxHeight: 300,
-										overflow: "auto",
-										bgcolor: theme.palette.grey[50],
-										borderRadius: 1,
-										p: 1,
-									}}
-								>
-									<Stack spacing={1}>
-										{log.detailedLogs.map((entry, index) => (
-											<Box
-												key={index}
-												sx={{
-													display: "flex",
-													gap: 1,
-													alignItems: "flex-start",
-													p: 1,
-													borderRadius: 1,
-													bgcolor: alpha(getLogLevelColor(entry.level, theme), 0.05),
-													borderLeft: `3px solid ${getLogLevelColor(entry.level, theme)}`,
-												}}
-											>
+										<Stack direction="row" spacing={1} flexWrap="wrap">
+											{log.changes.movimientosAdded !== undefined && (
+												<Chip
+													label={`${log.changes.movimientosAdded} movimientos agregados`}
+													size="small"
+													color={log.changes.movimientosAdded > 0 ? "success" : "default"}
+													variant="outlined"
+												/>
+											)}
+											{log.changes.fieldsUpdated?.map((field) => (
+												<Chip key={field} label={field} size="small" variant="outlined" />
+											))}
+										</Stack>
+									</CardContent>
+								</Card>
+							)}
+
+							{/* Resultado */}
+							{log.result && (
+								<Card variant="outlined">
+									<CardContent sx={{ py: 1.5 }}>
+										<Typography variant="subtitle2" gutterBottom>
+											Resultado
+										</Typography>
+										<Typography variant="body2">{log.result.message}</Typography>
+									</CardContent>
+								</Card>
+							)}
+
+							{/* Error */}
+							{log.error && (
+								<Alert severity="error" sx={{ "& .MuiAlert-message": { width: "100%" } }}>
+									<Typography variant="subtitle2" gutterBottom>
+										Error
+									</Typography>
+									<Typography variant="body2" sx={{ wordBreak: "break-word" }}>
+										{log.error}
+									</Typography>
+								</Alert>
+							)}
+
+							{/* Metadata */}
+							<Card variant="outlined" sx={{ bgcolor: alpha(theme.palette.grey[500], 0.05) }}>
+								<CardContent sx={{ py: 1.5 }}>
+									<Grid container spacing={2}>
+										<Grid item xs={6} sm={3}>
+											<Typography variant="caption" color="text.secondary">
+												Inicio
+											</Typography>
+											<Typography variant="body2" fontSize="0.8rem">
+												{log.startTime ? formatDate(log.startTime) : "-"}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Typography variant="caption" color="text.secondary">
+												Fin
+											</Typography>
+											<Typography variant="body2" fontSize="0.8rem">
+												{log.endTime ? formatDate(log.endTime) : "-"}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Typography variant="caption" color="text.secondary">
+												Document ID
+											</Typography>
+											<Typography variant="body2" fontFamily="monospace" fontSize="0.7rem">
+												{log.document.documentId || "-"}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Typography variant="caption" color="text.secondary">
+												Log ID
+											</Typography>
+											<Typography variant="body2" fontFamily="monospace" fontSize="0.7rem">
+												{log._id}
+											</Typography>
+										</Grid>
+									</Grid>
+								</CardContent>
+							</Card>
+						</Stack>
+					</Box>
+				)}
+
+				{/* Tab 1: Logs Detallados */}
+				{activeTab === 1 && hasDetailedLogs && (
+					<Box sx={{ p: 2 }}>
+						<Stack spacing={1}>
+							{log.logsRetention?.detailedLogsExpireAt && (
+								<Alert severity="info" sx={{ py: 0.5 }}>
+									Estos logs expiran el {formatDate(log.logsRetention.detailedLogsExpireAt)}
+								</Alert>
+							)}
+							<Box
+								sx={{
+									maxHeight: 400,
+									overflow: "auto",
+									bgcolor: theme.palette.mode === "dark" ? theme.palette.grey[900] : theme.palette.grey[50],
+									borderRadius: 1,
+									p: 1,
+								}}
+							>
+								<Stack spacing={0.5}>
+									{log.detailedLogs!.map((entry, index) => (
+										<Box
+											key={index}
+											sx={{
+												display: "flex",
+												gap: 1,
+												alignItems: "flex-start",
+												p: 1,
+												borderRadius: 1,
+												bgcolor: alpha(getLogLevelColor(entry.level, theme), 0.08),
+												borderLeft: `3px solid ${getLogLevelColor(entry.level, theme)}`,
+											}}
+										>
+											<Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 120 }}>
 												<Chip
 													label={getLogLevelLabel(entry.level)}
 													size="small"
 													sx={{
-														minWidth: 55,
-														height: 20,
-														fontSize: "0.65rem",
+														minWidth: 50,
+														height: 18,
+														fontSize: "0.6rem",
 														fontWeight: 600,
-														bgcolor: alpha(getLogLevelColor(entry.level, theme), 0.15),
+														bgcolor: alpha(getLogLevelColor(entry.level, theme), 0.2),
 														color: getLogLevelColor(entry.level, theme),
 													}}
 												/>
-												<Box flex={1}>
-													<Stack direction="row" justifyContent="space-between" alignItems="center">
-														<Typography variant="body2" fontWeight={500}>
-															{entry.message}
-														</Typography>
-														<Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap", ml: 1 }}>
-															{new Date(entry.timestamp).toLocaleTimeString("es-AR")}
-														</Typography>
-													</Stack>
-													{entry.data && Object.keys(entry.data).length > 0 && (
-														<Box
-															sx={{
-																mt: 0.5,
-																p: 0.5,
-																bgcolor: theme.palette.grey[100],
-																borderRadius: 0.5,
-																fontFamily: "monospace",
-																fontSize: "0.7rem",
-																overflow: "auto",
-															}}
-														>
-															<pre style={{ margin: 0 }}>{JSON.stringify(entry.data, null, 2)}</pre>
-														</Box>
-													)}
-												</Box>
+												<Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+													{new Date(entry.timestamp).toLocaleTimeString("es-AR", {
+														hour: "2-digit",
+														minute: "2-digit",
+														second: "2-digit",
+													})}
+												</Typography>
+											</Stack>
+											<Box flex={1}>
+												<Typography variant="body2" fontSize="0.8rem">
+													{entry.message}
+												</Typography>
+												{entry.data && Object.keys(entry.data).length > 0 && (
+													<Box
+														sx={{
+															mt: 0.5,
+															p: 0.5,
+															bgcolor: theme.palette.mode === "dark" ? theme.palette.grey[800] : theme.palette.grey[100],
+															borderRadius: 0.5,
+															fontFamily: "monospace",
+															fontSize: "0.65rem",
+															overflow: "auto",
+															maxHeight: 100,
+														}}
+													>
+														<pre style={{ margin: 0 }}>{JSON.stringify(entry.data, null, 2)}</pre>
+													</Box>
+												)}
 											</Box>
-										))}
-									</Stack>
-								</Box>
-							</CardContent>
-						</Card>
-					)}
-
-					{/* Raw JSON */}
-					<Card variant="outlined">
-						<CardContent>
-							<Stack direction="row" alignItems="center" spacing={1} mb={1}>
-								<Code1 size={16} />
-								<Typography variant="subtitle2">JSON Completo</Typography>
-							</Stack>
-							<Box
-								sx={{
-									bgcolor: theme.palette.grey[900],
-									color: theme.palette.grey[100],
-									p: 2,
-									borderRadius: 1,
-									overflow: "auto",
-									maxHeight: 300,
-									fontFamily: "monospace",
-									fontSize: "0.75rem",
-								}}
-							>
-								<pre style={{ margin: 0 }}>{JSON.stringify(log, null, 2)}</pre>
+										</Box>
+									))}
+								</Stack>
 							</Box>
-						</CardContent>
-					</Card>
-				</Stack>
+						</Stack>
+					</Box>
+				)}
+
+				{/* Tab 2: JSON */}
+				{activeTab === 2 && (
+					<Box sx={{ p: 2 }}>
+						<Box
+							sx={{
+								bgcolor: theme.palette.grey[900],
+								color: theme.palette.grey[100],
+								p: 2,
+								borderRadius: 1,
+								overflow: "auto",
+								maxHeight: 450,
+								fontFamily: "monospace",
+								fontSize: "0.75rem",
+							}}
+						>
+							<pre style={{ margin: 0 }}>{JSON.stringify(log, null, 2)}</pre>
+						</Box>
+					</Box>
+				)}
 			</DialogContent>
+
 			<DialogActions>
 				<Button onClick={onClose}>Cerrar</Button>
 			</DialogActions>
 		</Dialog>
 	);
 };
+
+// ======================== LOGS TAB ========================
 
 const LogsTab: React.FC = () => {
 	const theme = useTheme();
