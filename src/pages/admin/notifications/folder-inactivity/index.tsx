@@ -338,97 +338,123 @@ const DetailModal: React.FC<DetailModalProps> = ({ open, onClose, folder }) => {
 					<Grid container spacing={2}>
 						{/* Caducidad */}
 						<Grid item xs={12} md={6}>
-							<Card
-								variant="outlined"
-								sx={{
-									borderColor: alpha(getStatusColor(folder.alerts.caducity.status, theme), 0.5),
-									bgcolor: alpha(getStatusColor(folder.alerts.caducity.status, theme), 0.02),
-								}}
-							>
-								<CardContent>
-									<Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
-										<Typography variant="subtitle2">Caducidad</Typography>
-										<Chip
-											icon={getStatusIcon(folder.alerts.caducity.status)}
-											label={getStatusLabel(folder.alerts.caducity.status)}
-											size="small"
-											sx={{
-												bgcolor: alpha(getStatusColor(folder.alerts.caducity.status, theme), 0.1),
-												color: getStatusColor(folder.alerts.caducity.status, theme),
-											}}
-										/>
-									</Stack>
-									<Grid container spacing={1}>
-										<Grid item xs={6}>
-											<Typography variant="caption" color="text.secondary">
-												Fecha
-											</Typography>
-											<Typography variant="body2">{folder.alerts.caducity.dateFormatted}</Typography>
+							{folder.alerts?.caducity ? (
+								<Card
+									variant="outlined"
+									sx={{
+										borderColor: alpha(getStatusColor(folder.alerts.caducity.status, theme), 0.5),
+										bgcolor: alpha(getStatusColor(folder.alerts.caducity.status, theme), 0.02),
+									}}
+								>
+									<CardContent>
+										<Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
+											<Typography variant="subtitle2">Caducidad</Typography>
+											<Chip
+												icon={getStatusIcon(folder.alerts.caducity.status)}
+												label={getStatusLabel(folder.alerts.caducity.status)}
+												size="small"
+												sx={{
+													bgcolor: alpha(getStatusColor(folder.alerts.caducity.status, theme), 0.1),
+													color: getStatusColor(folder.alerts.caducity.status, theme),
+												}}
+											/>
+										</Stack>
+										<Grid container spacing={1}>
+											<Grid item xs={6}>
+												<Typography variant="caption" color="text.secondary">
+													Fecha
+												</Typography>
+												<Typography variant="body2">{folder.alerts.caducity.dateFormatted}</Typography>
+											</Grid>
+											<Grid item xs={6}>
+												<Typography variant="caption" color="text.secondary">
+													Días restantes
+												</Typography>
+												<Typography
+													variant="body2"
+													color={folder.alerts.caducity.daysRemaining < 0 ? "error" : "inherit"}
+												>
+													{formatDaysRemaining(folder.alerts.caducity.daysRemaining)}
+												</Typography>
+											</Grid>
 										</Grid>
-										<Grid item xs={6}>
-											<Typography variant="caption" color="text.secondary">
-												Días restantes
-											</Typography>
-											<Typography
-												variant="body2"
-												color={folder.alerts.caducity.daysRemaining < 0 ? "error" : "inherit"}
-											>
-												{formatDaysRemaining(folder.alerts.caducity.daysRemaining)}
-											</Typography>
-										</Grid>
-									</Grid>
-								</CardContent>
-							</Card>
+									</CardContent>
+								</Card>
+							) : (
+								<Card variant="outlined" sx={{ bgcolor: alpha(theme.palette.grey[500], 0.05) }}>
+									<CardContent>
+										<Typography variant="subtitle2" mb={1}>
+											Caducidad
+										</Typography>
+										<Typography variant="body2" color="text.secondary">
+											Sin datos de alerta
+										</Typography>
+									</CardContent>
+								</Card>
+							)}
 						</Grid>
 
 						{/* Prescripción */}
 						<Grid item xs={12} md={6}>
-							<Card
-								variant="outlined"
-								sx={{
-									borderColor: alpha(getStatusColor(folder.alerts.prescription.status, theme), 0.5),
-									bgcolor: alpha(getStatusColor(folder.alerts.prescription.status, theme), 0.02),
-								}}
-							>
-								<CardContent>
-									<Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
-										<Typography variant="subtitle2">Prescripción</Typography>
-										<Chip
-											icon={getStatusIcon(folder.alerts.prescription.status)}
-											label={getStatusLabel(folder.alerts.prescription.status)}
-											size="small"
-											sx={{
-												bgcolor: alpha(getStatusColor(folder.alerts.prescription.status, theme), 0.1),
-												color: getStatusColor(folder.alerts.prescription.status, theme),
-											}}
-										/>
-									</Stack>
-									<Grid container spacing={1}>
-										<Grid item xs={6}>
-											<Typography variant="caption" color="text.secondary">
-												Fecha
-											</Typography>
-											<Typography variant="body2">{folder.alerts.prescription.dateFormatted}</Typography>
+							{folder.alerts?.prescription ? (
+								<Card
+									variant="outlined"
+									sx={{
+										borderColor: alpha(getStatusColor(folder.alerts.prescription.status, theme), 0.5),
+										bgcolor: alpha(getStatusColor(folder.alerts.prescription.status, theme), 0.02),
+									}}
+								>
+									<CardContent>
+										<Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
+											<Typography variant="subtitle2">Prescripción</Typography>
+											<Chip
+												icon={getStatusIcon(folder.alerts.prescription.status)}
+												label={getStatusLabel(folder.alerts.prescription.status)}
+												size="small"
+												sx={{
+													bgcolor: alpha(getStatusColor(folder.alerts.prescription.status, theme), 0.1),
+													color: getStatusColor(folder.alerts.prescription.status, theme),
+												}}
+											/>
+										</Stack>
+										<Grid container spacing={1}>
+											<Grid item xs={6}>
+												<Typography variant="caption" color="text.secondary">
+													Fecha
+												</Typography>
+												<Typography variant="body2">{folder.alerts.prescription.dateFormatted}</Typography>
+											</Grid>
+											<Grid item xs={6}>
+												<Typography variant="caption" color="text.secondary">
+													Días restantes
+												</Typography>
+												<Typography
+													variant="body2"
+													color={folder.alerts.prescription.daysRemaining < 0 ? "error" : "inherit"}
+												>
+													{formatDaysRemaining(folder.alerts.prescription.daysRemaining)}
+												</Typography>
+											</Grid>
 										</Grid>
-										<Grid item xs={6}>
-											<Typography variant="caption" color="text.secondary">
-												Días restantes
-											</Typography>
-											<Typography
-												variant="body2"
-												color={folder.alerts.prescription.daysRemaining < 0 ? "error" : "inherit"}
-											>
-												{formatDaysRemaining(folder.alerts.prescription.daysRemaining)}
-											</Typography>
-										</Grid>
-									</Grid>
-								</CardContent>
-							</Card>
+									</CardContent>
+								</Card>
+							) : (
+								<Card variant="outlined" sx={{ bgcolor: alpha(theme.palette.grey[500], 0.05) }}>
+									<CardContent>
+										<Typography variant="subtitle2" mb={1}>
+											Prescripción
+										</Typography>
+										<Typography variant="body2" color="text.secondary">
+											Sin datos de alerta
+										</Typography>
+									</CardContent>
+								</Card>
+							)}
 						</Grid>
 					</Grid>
 
 					{/* Última actividad */}
-					{folder.alerts.hasData && (
+					{folder.alerts?.hasData && (
 						<Card variant="outlined">
 							<CardContent>
 								<Stack direction="row" alignItems="center" spacing={1} mb={1}>
@@ -440,13 +466,13 @@ const DetailModal: React.FC<DetailModalProps> = ({ open, onClose, folder }) => {
 										<Typography variant="caption" color="text.secondary">
 											Fecha
 										</Typography>
-										<Typography variant="body2">{folder.alerts.lastActivityFormatted || "-"}</Typography>
+										<Typography variant="body2">{folder.alerts?.lastActivityFormatted || "-"}</Typography>
 									</Grid>
 									<Grid item xs={6}>
 										<Typography variant="caption" color="text.secondary">
 											Días de inactividad
 										</Typography>
-										<Typography variant="body2">{folder.alerts.daysSinceLastActivity ?? "-"} días</Typography>
+										<Typography variant="body2">{folder.alerts?.daysSinceLastActivity ?? "-"} días</Typography>
 									</Grid>
 								</Grid>
 							</CardContent>
@@ -825,40 +851,52 @@ const FolderInactivity: React.FC = () => {
 												<Typography variant="body2">{folder.user.name}</Typography>
 											</TableCell>
 											<TableCell align="center">
-												<Chip
-													icon={getStatusIcon(folder.alerts.caducity.status)}
-													label={folder.alerts.caducity.dateFormatted}
-													size="small"
-													sx={{
-														bgcolor: alpha(getStatusColor(folder.alerts.caducity.status, theme), 0.1),
-														color: getStatusColor(folder.alerts.caducity.status, theme),
-														"& .MuiChip-icon": {
+												{folder.alerts?.caducity ? (
+													<Chip
+														icon={getStatusIcon(folder.alerts.caducity.status)}
+														label={folder.alerts.caducity.dateFormatted}
+														size="small"
+														sx={{
+															bgcolor: alpha(getStatusColor(folder.alerts.caducity.status, theme), 0.1),
 															color: getStatusColor(folder.alerts.caducity.status, theme),
-														},
-													}}
-												/>
+															"& .MuiChip-icon": {
+																color: getStatusColor(folder.alerts.caducity.status, theme),
+															},
+														}}
+													/>
+												) : (
+													<Typography variant="body2" color="text.secondary">
+														-
+													</Typography>
+												)}
 											</TableCell>
 											<TableCell align="center">
-												<Chip
-													icon={getStatusIcon(folder.alerts.prescription.status)}
-													label={folder.alerts.prescription.dateFormatted}
-													size="small"
-													sx={{
-														bgcolor: alpha(getStatusColor(folder.alerts.prescription.status, theme), 0.1),
-														color: getStatusColor(folder.alerts.prescription.status, theme),
-														"& .MuiChip-icon": {
+												{folder.alerts?.prescription ? (
+													<Chip
+														icon={getStatusIcon(folder.alerts.prescription.status)}
+														label={folder.alerts.prescription.dateFormatted}
+														size="small"
+														sx={{
+															bgcolor: alpha(getStatusColor(folder.alerts.prescription.status, theme), 0.1),
 															color: getStatusColor(folder.alerts.prescription.status, theme),
-														},
-													}}
-												/>
+															"& .MuiChip-icon": {
+																color: getStatusColor(folder.alerts.prescription.status, theme),
+															},
+														}}
+													/>
+												) : (
+													<Typography variant="body2" color="text.secondary">
+														-
+													</Typography>
+												)}
 											</TableCell>
 											<TableCell>
 												<Typography variant="body2">
-													{folder.alerts.lastActivityFormatted || "-"}
+													{folder.alerts?.lastActivityFormatted || "-"}
 												</Typography>
-												{folder.alerts.daysSinceLastActivity !== null && (
+												{folder.alerts?.daysSinceLastActivity !== null && folder.alerts?.daysSinceLastActivity !== undefined && (
 													<Typography variant="caption" color="text.secondary">
-														{folder.alerts.daysSinceLastActivity} días
+														{folder.alerts?.daysSinceLastActivity} días
 													</Typography>
 												)}
 											</TableCell>
