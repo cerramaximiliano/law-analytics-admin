@@ -974,10 +974,10 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ open, onClose, log }) =
 				</Tabs>
 			</Box>
 
-			<DialogContent sx={{ p: 0 }}>
+			<DialogContent sx={{ p: 0, height: 480, overflow: "hidden" }}>
 				{/* Tab 0: Resumen */}
 				{activeTab === 0 && (
-					<Box sx={{ p: 2 }}>
+					<Box sx={{ p: 2, height: "100%", overflow: "auto" }}>
 						<Stack spacing={2}>
 							{/* Info Grid */}
 							<Card variant="outlined">
@@ -1150,22 +1150,21 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ open, onClose, log }) =
 
 				{/* Tab 1: Logs Detallados */}
 				{activeTab === 1 && hasDetailedLogs && (
-					<Box sx={{ p: 2 }}>
-						<Stack spacing={1}>
-							{log.logsRetention?.detailedLogsExpireAt && (
-								<Alert severity="info" sx={{ py: 0.5 }}>
-									Estos logs expiran el {formatDate(log.logsRetention.detailedLogsExpireAt)}
-								</Alert>
-							)}
-							<Box
-								sx={{
-									maxHeight: 400,
-									overflow: "auto",
-									bgcolor: theme.palette.mode === "dark" ? theme.palette.grey[900] : theme.palette.grey[50],
-									borderRadius: 1,
-									p: 1,
-								}}
-							>
+					<Box sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
+						{log.logsRetention?.detailedLogsExpireAt && (
+							<Alert severity="info" sx={{ py: 0.5, mb: 1, flexShrink: 0 }}>
+								Estos logs expiran el {formatDate(log.logsRetention.detailedLogsExpireAt)}
+							</Alert>
+						)}
+						<Box
+							sx={{
+								flex: 1,
+								overflow: "auto",
+								bgcolor: theme.palette.mode === "dark" ? theme.palette.grey[900] : theme.palette.grey[50],
+								borderRadius: 1,
+								p: 1,
+							}}
+						>
 								<Stack spacing={0.5}>
 									{log.detailedLogs!.map((entry, index) => (
 										<Box
@@ -1226,13 +1225,12 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ open, onClose, log }) =
 									))}
 								</Stack>
 							</Box>
-						</Stack>
 					</Box>
 				)}
 
 				{/* Tab 2: JSON */}
 				{activeTab === 2 && (
-					<Box sx={{ p: 2 }}>
+					<Box sx={{ p: 2, height: "100%", overflow: "auto" }}>
 						<Box
 							sx={{
 								bgcolor: theme.palette.grey[900],
@@ -1240,7 +1238,7 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ open, onClose, log }) =
 								p: 2,
 								borderRadius: 1,
 								overflow: "auto",
-								maxHeight: 450,
+								height: "100%",
 								fontFamily: "monospace",
 								fontSize: "0.75rem",
 							}}
