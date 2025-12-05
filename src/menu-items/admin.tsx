@@ -208,6 +208,13 @@ const admin: NavItemType = {
 					url: "/admin/notifications/judicial-movements",
 					breadcrumbs: true,
 				},
+				{
+					id: "notifications-folder-inactivity",
+					title: "Caducidades y Prescripciones",
+					type: "item",
+					url: "/admin/notifications/folder-inactivity",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{
