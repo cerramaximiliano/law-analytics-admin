@@ -327,9 +327,9 @@ const DetailModal: React.FC<DetailModalProps> = ({ open, onClose, folder }) => {
 								<User size={16} />
 								<Typography variant="subtitle2">Usuario</Typography>
 							</Stack>
-							<Typography variant="body2">{folder.user.name}</Typography>
+							<Typography variant="body2">{folder.user?.name || "-"}</Typography>
 							<Typography variant="caption" color="text.secondary">
-								{folder.user.email}
+								{folder.user?.email || "-"}
 							</Typography>
 						</CardContent>
 					</Card>
@@ -848,7 +848,7 @@ const FolderInactivity: React.FC = () => {
 												</Box>
 											</TableCell>
 											<TableCell>
-												<Typography variant="body2">{folder.user.name}</Typography>
+												<Typography variant="body2">{folder.user?.name || "-"}</Typography>
 											</TableCell>
 											<TableCell align="center">
 												{folder.alerts?.caducity ? (
