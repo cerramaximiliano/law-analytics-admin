@@ -50,28 +50,28 @@ const ServerStatus = () => {
 			status: "checking",
 		},
 		{
-			name: "API de Causas",
+			name: "API de Causas PJN",
 			url: "https://api.lawanalytics.app/api",
 			ip: "15.229.93.121",
 			baseUrl: "https://api.lawanalytics.app",
 			status: "checking",
 		},
 		{
-			name: "Servidor de Marketing",
+			name: "API de Marketing",
 			url: "https://mkt.lawanalytics.app",
 			ip: "15.229.93.121",
 			baseUrl: "https://mkt.lawanalytics.app",
 			status: "checking",
 		},
 		{
-			name: "Servidor Principal",
+			name: "API Principal",
 			url: "https://server.lawanalytics.app",
 			ip: "15.229.93.121",
 			baseUrl: "https://server.lawanalytics.app",
 			status: "checking",
 		},
 		{
-			name: "Servidor de Suscripciones",
+			name: "API de Suscripciones",
 			url: "https://subscriptions.lawanalytics.app/health",
 			ip: "98.85.31.199",
 			baseUrl: "https://subscriptions.lawanalytics.app",
@@ -155,7 +155,7 @@ const ServerStatus = () => {
 					// Si es un error de red, podría ser CORS
 					if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
 						// Para servicios conocidos que sabemos que funcionan pero tienen CORS restrictivo
-						if (service.name === "Servidor de Suscripciones" || service.name === "API de Causas" || service.name === "API de Causas MEV") {
+						if (service.name === "API de Suscripciones" || service.name === "API de Causas PJN" || service.name === "API de Causas MEV") {
 							// Intentar verificar a través de nuestro backend
 							try {
 								const proxyUrl = `${import.meta.env.VITE_AUTH_URL}/api/server-status/check-external`;
