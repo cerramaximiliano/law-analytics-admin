@@ -23,6 +23,9 @@ import {
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import discountsService, { DiscountCode, CreateDiscountParams, UpdateDiscountParams, StripeEnvironment } from "api/discounts";
+import { SegmentService } from "store/reducers/segments";
+import { Segment } from "types/segment";
+import { Autocomplete, Chip } from "@mui/material";
 
 interface PromotionFormModalProps {
 	open: boolean;
@@ -36,6 +39,8 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 	const isEditing = !!discount;
 
 	const [loading, setLoading] = useState(false);
+	const [segments, setSegments] = useState<Segment[]>([]);
+	const [loadingSegments, setLoadingSegments] = useState(false);
 	const [formData, setFormData] = useState({
 		code: "",
 		name: "",
@@ -60,7 +65,29 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 		badge: "",
 		isActive: true,
 		environments: ["development", "production"] as StripeEnvironment[],
+		targetSegments: [] as string[],
 	});
+
+	// Cargar segmentos disponibles desde la API de Marketing
+	useEffect(() => {
+		const loadSegments = async () => {
+			try {
+				setLoadingSegments(true);
+				// Obtener solo segmentos activos, ordenados por nombre
+				const response = await SegmentService.getSegments(1, 100, "name", "asc", { isActive: true });
+				if (response.success && response.data) {
+					setSegments(response.data);
+				}
+			} catch (error) {
+				console.error("Error cargando segmentos:", error);
+			} finally {
+				setLoadingSegments(false);
+			}
+		};
+		if (open) {
+			loadSegments();
+		}
+	}, [open]);
 
 	useEffect(() => {
 		if (open) {
@@ -90,6 +117,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					badge: discount.activationRules.badge || "",
 					isActive: discount.isActive,
 					environments: (discount as any).environments || (["development", "production"] as StripeEnvironment[]),
+					targetSegments: discount.restrictions.targetSegments || [],
 				});
 			} else {
 				// Create mode: reset form
@@ -121,6 +149,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					badge: "",
 					isActive: true,
 					environments: ["development", "production"],
+					targetSegments: [],
 				});
 			}
 		}
@@ -204,6 +233,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 						newCustomersOnly: formData.newCustomersOnly,
 						excludeActiveSubscribers: formData.excludeActiveSubscribers,
 						minimumAmount: formData.minimumAmount,
+						targetSegments: formData.targetSegments,
 					},
 					activationRules: {
 						isPublic: formData.isPublic,
@@ -242,6 +272,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					badge: formData.badge || undefined,
 					isActive: formData.isActive,
 					environments: formData.environments,
+					targetSegments: formData.targetSegments.length > 0 ? formData.targetSegments : undefined,
 				};
 
 				const response = await discountsService.createDiscount(createData);
@@ -584,6 +615,54 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 								Ideal para promociones de "primera vez" para captar nuevos clientes.
 							</Typography>
 						</Box>
+					</Grid>
+
+					{/* Segment Targeting */}
+					<Grid item xs={12}>
+						<Divider sx={{ my: 1 }} />
+						<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
+							Segmentación de Audiencia
+						</Typography>
+						<Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 2 }}>
+							Selecciona segmentos de contactos que podrán ver y usar esta promoción.
+							Se combina con "Usuarios Objetivo" usando lógica OR (si está en usuarios O en segmentos).
+						</Typography>
+					</Grid>
+
+					<Grid item xs={12}>
+						<Autocomplete
+							multiple
+							options={segments.filter(s => s._id)} // Solo segmentos con _id válido
+							getOptionLabel={(option) => `${option.name} (${option.type === 'static' ? 'Estático' : 'Dinámico'} - ${option.estimatedCount} contactos)`}
+							value={segments.filter(s => s._id && formData.targetSegments.includes(s._id))}
+							onChange={(_, newValue) => {
+								handleChange("targetSegments", newValue.map(s => s._id!).filter(Boolean));
+							}}
+							loading={loadingSegments}
+							renderInput={(params) => (
+								<TextField
+									{...params}
+									label="Segmentos de Contactos"
+									placeholder={formData.targetSegments.length === 0 ? "Seleccionar segmentos..." : ""}
+									helperText={formData.targetSegments.length > 0
+										? `${formData.targetSegments.length} segmento(s) seleccionado(s)`
+										: "Dejar vacío para no restringir por segmentos"}
+								/>
+							)}
+							renderTags={(value, getTagProps) =>
+								value.map((option, index) => (
+									<Chip
+										{...getTagProps({ index })}
+										key={option._id || index}
+										label={option.name}
+										size="small"
+										color={option.type === 'static' ? 'primary' : 'secondary'}
+									/>
+								))
+							}
+							isOptionEqualToValue={(option, value) => option._id === value._id}
+							noOptionsText="No hay segmentos disponibles"
+						/>
 					</Grid>
 
 					{/* Visibility */}

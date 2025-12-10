@@ -12,6 +12,7 @@ export interface DiscountRestrictions {
 	excludeActiveSubscribers: boolean;
 	minimumAmount: number | null;
 	targetUsers?: string[]; // Array de IDs de usuarios específicos
+	targetSegments?: string[]; // Array de IDs de segmentos de contactos
 }
 
 // Types for Target Users management
@@ -69,6 +70,37 @@ export interface SetTargetUsersResponse {
 		newCount: number;
 		notFoundEmails: string[];
 		isUniversal: boolean;
+	};
+}
+
+// Types for Target Segments management
+export interface TargetSegment {
+	_id: string;
+	name: string;
+	description: string;
+	type: "static" | "dynamic";
+	estimatedCount: number;
+	isActive: boolean;
+}
+
+export interface TargetSegmentsResponse {
+	success: boolean;
+	data: {
+		discountId: string;
+		code: string;
+		name: string;
+		totalTargetSegments: number;
+		targetSegments: TargetSegment[];
+	};
+}
+
+export interface SetTargetSegmentsResponse {
+	success: boolean;
+	message: string;
+	data: {
+		previousCount: number;
+		newCount: number;
+		invalidIds: string[];
 	};
 }
 
@@ -165,6 +197,7 @@ export interface CreateDiscountParams {
 	isActive?: boolean;
 	environments?: StripeEnvironment[];
 	targetUsers?: string[]; // Array de IDs de usuarios específicos
+	targetSegments?: string[]; // Array de IDs de segmentos de contactos
 }
 
 export interface UpdateDiscountParams {
@@ -604,6 +637,46 @@ class DiscountsService {
 			throw new Error(error.response?.data?.message || "Error al configurar usuarios");
 		}
 	}
+
+	// ============================================
+	// Target Segments Methods
+	// ============================================
+
+	/**
+	 * Obtener segmentos objetivo de un código de descuento
+	 */
+	async getTargetSegments(discountId: string): Promise<TargetSegmentsResponse> {
+		try {
+			const response = await adminAxios.get<TargetSegmentsResponse>(
+				`/api/discounts/${discountId}/target-segments`
+			);
+			return response.data;
+		} catch (error: any) {
+			if (error.response?.status === 404) {
+				throw new Error("Código de descuento no encontrado");
+			}
+			throw new Error(error.response?.data?.message || "Error al obtener segmentos");
+		}
+	}
+
+	/**
+	 * Actualizar segmentos objetivo de un código de descuento
+	 */
+	async setTargetSegments(discountId: string, segmentIds: string[]): Promise<SetTargetSegmentsResponse> {
+		try {
+			const response = await adminAxios.put<SetTargetSegmentsResponse>(
+				`/api/discounts/${discountId}/target-segments`,
+				{ segmentIds }
+			);
+			return response.data;
+		} catch (error: any) {
+			if (error.response?.status === 404) {
+				throw new Error("Código de descuento no encontrado");
+			}
+			throw new Error(error.response?.data?.message || "Error al configurar segmentos");
+		}
+	}
+
 }
 
 export default new DiscountsService();

@@ -20,7 +20,7 @@ import {
 	Tooltip,
 	Typography,
 } from "@mui/material";
-import { Add, Edit, Trash, Eye, Refresh2, TickCircle, CloseCircle, Chart, UserTick } from "iconsax-react";
+import { Add, Edit, Trash, Eye, Refresh2, TickCircle, CloseCircle, Chart, UserTick, Category2 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { useSnackbar } from "notistack";
 import discountsService, { DiscountCode, GetDiscountsParams } from "api/discounts";
@@ -345,6 +345,20 @@ const PromotionsManagement = () => {
 															label={discount.restrictions.targetUsers.length}
 															size="small"
 															color="warning"
+															sx={{
+																"& .MuiChip-icon": { color: "#000" },
+																color: "#000"
+															}}
+														/>
+													</Tooltip>
+												)}
+												{discount.restrictions.targetSegments && discount.restrictions.targetSegments.length > 0 && (
+													<Tooltip title={`Restringido a ${discount.restrictions.targetSegments.length} segmento(s)`}>
+														<Chip
+															icon={<Category2 size={14} />}
+															label={discount.restrictions.targetSegments.length}
+															size="small"
+															color="secondary"
 															sx={{ "& .MuiChip-icon": { color: "inherit" } }}
 														/>
 													</Tooltip>
