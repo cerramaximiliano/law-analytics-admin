@@ -25,10 +25,14 @@ import {
 	Typography,
 	Alert,
 	Autocomplete,
+	Tabs,
+	Tab,
 } from "@mui/material";
-import { Add, CloseCircle, Trash, SearchNormal1, UserAdd, People, UserRemove } from "iconsax-react";
+import { Add, CloseCircle, Trash, SearchNormal1, UserAdd, People, UserRemove, Category2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import discountsService, { TargetUser } from "api/discounts";
+import discountsService, { TargetUser, TargetSegment } from "api/discounts";
+import { SegmentService } from "store/reducers/segments";
+import { Segment } from "types/segment";
 
 interface TargetUsersManagerProps {
 	discountId: string;
@@ -39,6 +43,7 @@ interface TargetUsersManagerProps {
 
 const TargetUsersManager = ({ discountId, discountCode, isPublic, onUpdate }: TargetUsersManagerProps) => {
 	const { enqueueSnackbar } = useSnackbar();
+	const [activeTab, setActiveTab] = useState(0);
 	const [loading, setLoading] = useState(true);
 	const [targetUsers, setTargetUsers] = useState<TargetUser[]>([]);
 	const [totalTargetUsers, setTotalTargetUsers] = useState(0);
@@ -51,6 +56,15 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, onUpdate }: Ta
 	const [emailsToAdd, setEmailsToAdd] = useState("");
 	const [addLoading, setAddLoading] = useState(false);
 	const [removeLoading, setRemoveLoading] = useState<string | null>(null);
+
+	// Segments state
+	const [targetSegments, setTargetSegments] = useState<TargetSegment[]>([]);
+	const [totalTargetSegments, setTotalTargetSegments] = useState(0);
+	const [availableSegments, setAvailableSegments] = useState<Segment[]>([]);
+	const [loadingSegments, setLoadingSegments] = useState(false);
+	const [segmentDialogOpen, setSegmentDialogOpen] = useState(false);
+	const [selectedSegments, setSelectedSegments] = useState<Segment[]>([]);
+	const [savingSegments, setSavingSegments] = useState(false);
 
 	const fetchTargetUsers = useCallback(async () => {
 		try {
@@ -66,9 +80,36 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, onUpdate }: Ta
 		}
 	}, [discountId, enqueueSnackbar]);
 
+	// Fetch target segments
+	const fetchTargetSegments = useCallback(async () => {
+		try {
+			const response = await discountsService.getTargetSegments(discountId);
+			setTargetSegments(response.data.targetSegments);
+			setTotalTargetSegments(response.data.totalTargetSegments);
+		} catch (error: any) {
+			console.error("Error fetching target segments:", error);
+		}
+	}, [discountId]);
+
+	// Load available segments from marketing API
+	const loadAvailableSegments = useCallback(async () => {
+		try {
+			setLoadingSegments(true);
+			const response = await SegmentService.getSegments(1, 100, "name", "asc", { isActive: true });
+			if (response.success && response.data) {
+				setAvailableSegments(response.data);
+			}
+		} catch (error) {
+			console.error("Error loading segments:", error);
+		} finally {
+			setLoadingSegments(false);
+		}
+	}, []);
+
 	useEffect(() => {
 		fetchTargetUsers();
-	}, [fetchTargetUsers]);
+		fetchTargetSegments();
+	}, [fetchTargetUsers, fetchTargetSegments]);
 
 	// Search users with debounce
 	useEffect(() => {
@@ -187,6 +228,47 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, onUpdate }: Ta
 		});
 	};
 
+	// Segment handlers
+	const handleOpenSegmentDialog = async () => {
+		setSegmentDialogOpen(true);
+		await loadAvailableSegments();
+		// Pre-select current segments
+		const currentIds = targetSegments.map((s) => s._id);
+		const preSelected = availableSegments.filter((s) => s._id && currentIds.includes(s._id));
+		setSelectedSegments(preSelected);
+	};
+
+	const handleSaveSegments = async () => {
+		setSavingSegments(true);
+		try {
+			const segmentIds = selectedSegments.map((s) => s._id!).filter(Boolean);
+			const response = await discountsService.setTargetSegments(discountId, segmentIds);
+			enqueueSnackbar(response.message, { variant: "success" });
+			setSegmentDialogOpen(false);
+			fetchTargetSegments();
+			onUpdate?.();
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al guardar segmentos", { variant: "error" });
+		} finally {
+			setSavingSegments(false);
+		}
+	};
+
+	const handleRemoveSegment = async (segmentId: string) => {
+		setSavingSegments(true);
+		try {
+			const newSegmentIds = targetSegments.filter((s) => s._id !== segmentId).map((s) => s._id);
+			const response = await discountsService.setTargetSegments(discountId, newSegmentIds);
+			enqueueSnackbar(response.message, { variant: "success" });
+			fetchTargetSegments();
+			onUpdate?.();
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al eliminar segmento", { variant: "error" });
+		} finally {
+			setSavingSegments(false);
+		}
+	};
+
 	if (loading) {
 		return (
 			<Box display="flex" justifyContent="center" alignItems="center" py={4}>
@@ -195,97 +277,212 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, onUpdate }: Ta
 		);
 	}
 
+	// Check if discount has any targeting configured
+	const hasTargeting = totalTargetUsers > 0 || totalTargetSegments > 0;
+
 	return (
 		<Box>
-			{/* Header */}
-			<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-				<Stack direction="row" spacing={1} alignItems="center">
-					<People size={24} />
-					<Typography variant="h5">Usuarios Objetivo</Typography>
-					<Chip
-						label={totalTargetUsers === 0 ? "Todos los usuarios" : `${totalTargetUsers} usuarios`}
-						color={totalTargetUsers === 0 ? "default" : "primary"}
-						size="small"
-					/>
-				</Stack>
-				<Stack direction="row" spacing={1}>
-					<Button variant="outlined" size="small" startIcon={<UserAdd size={18} />} onClick={() => setAddDialogOpen(true)}>
-						Buscar Usuario
-					</Button>
-					<Button variant="outlined" size="small" startIcon={<Add size={18} />} onClick={() => setAddByEmailDialogOpen(true)}>
-						Agregar por Email
-					</Button>
-					{totalTargetUsers > 0 && (
-						<Button
-							variant="outlined"
-							size="small"
-							color="warning"
-							startIcon={<UserRemove size={18} />}
-							onClick={handleClearAllUsers}
-							disabled={addLoading}
-						>
-							Limpiar Todos
-						</Button>
-					)}
-				</Stack>
-			</Stack>
-
-			{/* Info Alert */}
-			{totalTargetUsers === 0 ? (
+			{/* Summary Alert */}
+			{!hasTargeting ? (
 				<Alert severity="info" sx={{ mb: 2 }}>
-					Este descuento está disponible para <strong>todos los usuarios</strong>. Agrega usuarios específicos para restringir el
-					acceso.
+					Este descuento está disponible para <strong>todos los usuarios</strong>. Agrega usuarios específicos o segmentos para restringir el acceso.
 				</Alert>
 			) : (
 				<Alert severity="warning" sx={{ mb: 2 }}>
-					Este descuento está restringido a <strong>{totalTargetUsers} usuario(s) específico(s)</strong>. Solo ellos podrán ver y
-					usar el código <strong>{discountCode}</strong>.
+					Este descuento está restringido a{" "}
+					{totalTargetUsers > 0 && <strong>{totalTargetUsers} usuario(s)</strong>}
+					{totalTargetUsers > 0 && totalTargetSegments > 0 && " y "}
+					{totalTargetSegments > 0 && <strong>{totalTargetSegments} segmento(s)</strong>}
+					. Solo los usuarios que cumplan alguna de estas condiciones podrán ver el código <strong>{discountCode}</strong>.
 				</Alert>
 			)}
 
-			{/* Users Table */}
-			{targetUsers.length > 0 && (
-				<TableContainer component={Paper} variant="outlined">
-					<Table size="small">
-						<TableHead>
-							<TableRow>
-								<TableCell>Email</TableCell>
-								<TableCell>Nombre</TableCell>
-								<TableCell align="center">Registrado</TableCell>
-								<TableCell align="center" width={80}>
-									Acciones
-								</TableCell>
-							</TableRow>
-						</TableHead>
-						<TableBody>
-							{targetUsers.map((user) => (
-								<TableRow key={user._id} hover>
-									<TableCell>
-										<Typography variant="body2">{user.email}</Typography>
-									</TableCell>
-									<TableCell>
-										<Typography variant="body2">{user.fullName || "-"}</Typography>
-									</TableCell>
-									<TableCell align="center">
-										<Typography variant="caption">{formatDate(user.createdAt)}</Typography>
-									</TableCell>
-									<TableCell align="center">
-										<Tooltip title="Quitar del descuento">
-											<IconButton
-												size="small"
-												color="error"
-												onClick={() => handleRemoveUser(user)}
-												disabled={removeLoading === user._id}
-											>
-												{removeLoading === user._id ? <CircularProgress size={18} /> : <Trash size={18} />}
-											</IconButton>
-										</Tooltip>
-									</TableCell>
-								</TableRow>
-							))}
-						</TableBody>
-					</Table>
-				</TableContainer>
+			{/* Tabs */}
+			<Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}>
+				<Tab
+					label={
+						<Stack direction="row" spacing={1} alignItems="center">
+							<People size={18} />
+							<span>Usuarios</span>
+							{totalTargetUsers > 0 && <Chip label={totalTargetUsers} size="small" color="primary" />}
+						</Stack>
+					}
+				/>
+				<Tab
+					label={
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Category2 size={18} />
+							<span>Segmentos</span>
+							{totalTargetSegments > 0 && <Chip label={totalTargetSegments} size="small" color="secondary" />}
+						</Stack>
+					}
+				/>
+			</Tabs>
+
+			{/* Users Tab */}
+			{activeTab === 0 && (
+				<Box>
+					{/* Users Header */}
+					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+						<Typography variant="subtitle1" color="text.secondary">
+							Usuarios específicos que pueden ver este descuento
+						</Typography>
+						<Stack direction="row" spacing={1}>
+							<Button variant="outlined" size="small" startIcon={<UserAdd size={18} />} onClick={() => setAddDialogOpen(true)}>
+								Buscar Usuario
+							</Button>
+							<Button variant="outlined" size="small" startIcon={<Add size={18} />} onClick={() => setAddByEmailDialogOpen(true)}>
+								Agregar por Email
+							</Button>
+							{totalTargetUsers > 0 && (
+								<Button
+									variant="outlined"
+									size="small"
+									color="warning"
+									startIcon={<UserRemove size={18} />}
+									onClick={handleClearAllUsers}
+									disabled={addLoading}
+								>
+									Limpiar Todos
+								</Button>
+							)}
+						</Stack>
+					</Stack>
+
+					{/* Users Table */}
+					{targetUsers.length > 0 ? (
+						<TableContainer component={Paper} variant="outlined">
+							<Table size="small">
+								<TableHead>
+									<TableRow>
+										<TableCell>Email</TableCell>
+										<TableCell>Nombre</TableCell>
+										<TableCell align="center">Registrado</TableCell>
+										<TableCell align="center" width={80}>
+											Acciones
+										</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{targetUsers.map((user) => (
+										<TableRow key={user._id} hover>
+											<TableCell>
+												<Typography variant="body2">{user.email}</Typography>
+											</TableCell>
+											<TableCell>
+												<Typography variant="body2">{user.fullName || "-"}</Typography>
+											</TableCell>
+											<TableCell align="center">
+												<Typography variant="caption">{formatDate(user.createdAt)}</Typography>
+											</TableCell>
+											<TableCell align="center">
+												<Tooltip title="Quitar del descuento">
+													<IconButton
+														size="small"
+														color="error"
+														onClick={() => handleRemoveUser(user)}
+														disabled={removeLoading === user._id}
+													>
+														{removeLoading === user._id ? <CircularProgress size={18} /> : <Trash size={18} />}
+													</IconButton>
+												</Tooltip>
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</TableContainer>
+					) : (
+						<Paper variant="outlined" sx={{ p: 3, textAlign: "center" }}>
+							<Typography color="text.secondary">No hay usuarios específicos configurados</Typography>
+						</Paper>
+					)}
+				</Box>
+			)}
+
+			{/* Segments Tab */}
+			{activeTab === 1 && (
+				<Box>
+					{/* Segments Header */}
+					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+						<Typography variant="subtitle1" color="text.secondary">
+							Segmentos de contactos cuyos usuarios pueden ver este descuento
+						</Typography>
+						<Button variant="outlined" size="small" startIcon={<Add size={18} />} onClick={handleOpenSegmentDialog}>
+							Gestionar Segmentos
+						</Button>
+					</Stack>
+
+					{/* Segments List */}
+					{targetSegments.length > 0 ? (
+						<TableContainer component={Paper} variant="outlined">
+							<Table size="small">
+								<TableHead>
+									<TableRow>
+										<TableCell>Nombre</TableCell>
+										<TableCell>Tipo</TableCell>
+										<TableCell align="center">Contactos Est.</TableCell>
+										<TableCell align="center">Estado</TableCell>
+										<TableCell align="center" width={80}>
+											Acciones
+										</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{targetSegments.map((segment) => (
+										<TableRow key={segment._id} hover>
+											<TableCell>
+												<Typography variant="body2">{segment.name}</Typography>
+												{segment.description && (
+													<Typography variant="caption" color="text.secondary">
+														{segment.description}
+													</Typography>
+												)}
+											</TableCell>
+											<TableCell>
+												<Chip
+													label={segment.type === "static" ? "Estático" : "Dinámico"}
+													size="small"
+													color={segment.type === "static" ? "primary" : "secondary"}
+													variant="outlined"
+												/>
+											</TableCell>
+											<TableCell align="center">
+												<Typography variant="body2">{segment.estimatedCount}</Typography>
+											</TableCell>
+											<TableCell align="center">
+												<Chip
+													label={segment.isActive ? "Activo" : "Inactivo"}
+													size="small"
+													color={segment.isActive ? "success" : "default"}
+												/>
+											</TableCell>
+											<TableCell align="center">
+												<Tooltip title="Quitar segmento">
+													<IconButton
+														size="small"
+														color="error"
+														onClick={() => handleRemoveSegment(segment._id)}
+														disabled={savingSegments}
+													>
+														{savingSegments ? <CircularProgress size={18} /> : <Trash size={18} />}
+													</IconButton>
+												</Tooltip>
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</TableContainer>
+					) : (
+						<Paper variant="outlined" sx={{ p: 3, textAlign: "center" }}>
+							<Typography color="text.secondary">No hay segmentos configurados</Typography>
+							<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
+								Agrega segmentos para que los usuarios pertenecientes a ellos puedan ver el descuento
+							</Typography>
+						</Paper>
+					)}
+				</Box>
 			)}
 
 			{/* Add Users Dialog - Search */}
@@ -417,6 +614,84 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, onUpdate }: Ta
 						startIcon={addLoading ? <CircularProgress size={18} /> : <Add size={18} />}
 					>
 						Agregar
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Segments Dialog */}
+			<Dialog open={segmentDialogOpen} onClose={() => setSegmentDialogOpen(false)} maxWidth="sm" fullWidth>
+				<DialogTitle>
+					<Stack direction="row" justifyContent="space-between" alignItems="center">
+						<Typography variant="h5">Gestionar Segmentos</Typography>
+						<IconButton size="small" onClick={() => setSegmentDialogOpen(false)}>
+							<CloseCircle size={20} />
+						</IconButton>
+					</Stack>
+				</DialogTitle>
+				<DialogContent dividers>
+					<Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+						Selecciona los segmentos de contactos. Los usuarios cuyo email coincida con un contacto de estos segmentos podrán ver
+						el descuento.
+					</Typography>
+					<Autocomplete
+						multiple
+						options={availableSegments.filter((s) => s._id)}
+						value={selectedSegments}
+						onChange={(_, newValue) => setSelectedSegments(newValue)}
+						getOptionLabel={(option) =>
+							`${option.name} (${option.type === "static" ? "Estático" : "Dinámico"} - ${option.estimatedCount} contactos)`
+						}
+						isOptionEqualToValue={(option, value) => option._id === value._id}
+						loading={loadingSegments}
+						renderInput={(params) => (
+							<TextField
+								{...params}
+								label="Segmentos"
+								placeholder={selectedSegments.length === 0 ? "Seleccionar segmentos..." : ""}
+								InputProps={{
+									...params.InputProps,
+									endAdornment: (
+										<>
+											{loadingSegments ? <CircularProgress color="inherit" size={20} /> : null}
+											{params.InputProps.endAdornment}
+										</>
+									),
+								}}
+							/>
+						)}
+						renderTags={(value, getTagProps) =>
+							value.map((option, index) => (
+								<Chip
+									{...getTagProps({ index })}
+									key={option._id || index}
+									label={option.name}
+									size="small"
+									color={option.type === "static" ? "primary" : "secondary"}
+								/>
+							))
+						}
+						noOptionsText={loadingSegments ? "Cargando..." : "No hay segmentos disponibles"}
+					/>
+					{selectedSegments.length > 0 && (
+						<Box sx={{ mt: 2 }}>
+							<Typography variant="subtitle2" gutterBottom>
+								Segmentos seleccionados: {selectedSegments.length}
+							</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Total estimado: {selectedSegments.reduce((acc, s) => acc + s.estimatedCount, 0)} contactos
+							</Typography>
+						</Box>
+					)}
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setSegmentDialogOpen(false)}>Cancelar</Button>
+					<Button
+						variant="contained"
+						onClick={handleSaveSegments}
+						disabled={savingSegments}
+						startIcon={savingSegments ? <CircularProgress size={18} /> : <Category2 size={18} />}
+					>
+						Guardar Segmentos
 					</Button>
 				</DialogActions>
 			</Dialog>

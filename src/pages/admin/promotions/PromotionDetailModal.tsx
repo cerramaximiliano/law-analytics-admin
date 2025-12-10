@@ -406,6 +406,34 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 				</Grid>
 			</Grid>
 
+			{/* Segmentos de Audiencia */}
+			{discount.restrictions.targetSegments && discount.restrictions.targetSegments.length > 0 && (
+				<Grid item xs={12}>
+					<Typography variant="h5" gutterBottom>
+						Segmentos de Audiencia
+					</Typography>
+					<Paper variant="outlined" sx={{ p: 2, bgcolor: "secondary.lighter" }}>
+						<Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 1 }}>
+							Esta promoción está dirigida a los siguientes segmentos de contactos (lógica OR con usuarios objetivo):
+						</Typography>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+							{discount.restrictions.targetSegments.map((segmentId: string) => (
+								<Chip
+									key={segmentId}
+									label={segmentId}
+									size="small"
+									color="secondary"
+									variant="outlined"
+								/>
+							))}
+						</Stack>
+						<Typography variant="caption" color="textSecondary" display="block" sx={{ mt: 1 }}>
+							Total: {discount.restrictions.targetSegments.length} segmento(s)
+						</Typography>
+					</Paper>
+				</Grid>
+			)}
+
 			{/* Configuración de Visibilidad */}
 			<Grid item xs={12} md={6}>
 				<Typography variant="h5" gutterBottom>
