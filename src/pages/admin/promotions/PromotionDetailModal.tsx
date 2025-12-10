@@ -24,10 +24,11 @@ import {
 	ToggleButton,
 	ToggleButtonGroup,
 } from "@mui/material";
-import { CloseCircle, Calendar, Chart, TickCircle, CloseSquare, Copy, Cloud, People } from "iconsax-react";
+import { CloseCircle, Calendar, Chart, TickCircle, CloseSquare, Copy, Cloud, People, UserTick } from "iconsax-react";
 import { DiscountCode, FullDiscountInfoResponse } from "api/discounts";
 import discountsService from "api/discounts";
 import { useSnackbar } from "notistack";
+import TargetUsersManager from "./TargetUsersManager";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -332,12 +333,6 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 									: discount.restrictions.applicableBillingPeriods.join(", ")}
 							</Typography>
 						</Box>
-						<Box display="flex" justifyContent="space-between">
-							<Typography variant="body2" color="textSecondary">
-								Solo nuevos clientes:
-							</Typography>
-							<Typography variant="body2">{discount.restrictions.newCustomersOnly ? "Sí" : "No"}</Typography>
-						</Box>
 						{discount.restrictions.minimumAmount && (
 							<Box display="flex" justifyContent="space-between">
 								<Typography variant="body2" color="textSecondary">
@@ -348,6 +343,67 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 						)}
 					</Stack>
 				</Paper>
+			</Grid>
+
+			{/* Restricciones por Tipo de Cliente */}
+			<Grid item xs={12}>
+				<Typography variant="h5" gutterBottom>
+					Restricciones por Tipo de Cliente
+				</Typography>
+				<Grid container spacing={2}>
+					<Grid item xs={12} sm={6}>
+						<Paper
+							variant="outlined"
+							sx={{
+								p: 2,
+								bgcolor: discount.restrictions.excludeActiveSubscribers ? "warning.lighter" : "background.default",
+								borderColor: discount.restrictions.excludeActiveSubscribers ? "warning.main" : "divider",
+							}}
+						>
+							<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+								{discount.restrictions.excludeActiveSubscribers ? (
+									<TickCircle size={18} color="orange" />
+								) : (
+									<CloseSquare size={18} />
+								)}
+								<Typography variant="subtitle2" fontWeight={600}>
+									Excluir suscriptores activos
+								</Typography>
+							</Stack>
+							<Typography variant="caption" color="textSecondary" display="block">
+								{discount.restrictions.excludeActiveSubscribers
+									? "ACTIVO: No visible para usuarios con suscripción paga activa. SÍ visible para ex-suscriptores."
+									: "Inactivo: Visible para todos los usuarios."}
+							</Typography>
+						</Paper>
+					</Grid>
+					<Grid item xs={12} sm={6}>
+						<Paper
+							variant="outlined"
+							sx={{
+								p: 2,
+								bgcolor: discount.restrictions.newCustomersOnly ? "error.lighter" : "background.default",
+								borderColor: discount.restrictions.newCustomersOnly ? "error.main" : "divider",
+							}}
+						>
+							<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+								{discount.restrictions.newCustomersOnly ? (
+									<TickCircle size={18} color="red" />
+								) : (
+									<CloseSquare size={18} />
+								)}
+								<Typography variant="subtitle2" fontWeight={600}>
+									Solo clientes nuevos
+								</Typography>
+							</Stack>
+							<Typography variant="caption" color="textSecondary" display="block">
+								{discount.restrictions.newCustomersOnly
+									? "ACTIVO: Solo para usuarios que NUNCA tuvieron suscripción paga (ni activa ni cancelada)."
+									: "Inactivo: Visible para usuarios nuevos y ex-suscriptores."}
+							</Typography>
+						</Paper>
+					</Grid>
+				</Grid>
 			</Grid>
 
 			{/* Configuración de Visibilidad */}
@@ -808,6 +864,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 					<Tabs value={tabValue} onChange={handleTabChange}>
 						<Tab label="Base de Datos" icon={<Chart size={18} />} iconPosition="start" />
 						<Tab label="Stripe & Suscriptores" icon={<Cloud size={18} />} iconPosition="start" />
+						<Tab label="Usuarios Objetivo" icon={<UserTick size={18} />} iconPosition="start" />
 					</Tabs>
 				</Box>
 
@@ -817,6 +874,13 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 					</TabPanel>
 					<TabPanel value={tabValue} index={1}>
 						{renderStripeTab()}
+					</TabPanel>
+					<TabPanel value={tabValue} index={2}>
+						<TargetUsersManager
+							discountId={discount._id}
+							discountCode={discount.code}
+							isPublic={discount.activationRules.isPublic}
+						/>
 					</TabPanel>
 				</Box>
 			</DialogContent>

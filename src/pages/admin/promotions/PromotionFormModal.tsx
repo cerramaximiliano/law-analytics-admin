@@ -52,6 +52,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 		maxRedemptions: null as number | null,
 		maxRedemptionsPerUser: 1,
 		newCustomersOnly: false,
+		excludeActiveSubscribers: false,
 		minimumAmount: null as number | null,
 		isPublic: false,
 		priority: 0,
@@ -81,6 +82,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					maxRedemptions: discount.restrictions.maxRedemptions,
 					maxRedemptionsPerUser: discount.restrictions.maxRedemptionsPerUser,
 					newCustomersOnly: discount.restrictions.newCustomersOnly,
+					excludeActiveSubscribers: discount.restrictions.excludeActiveSubscribers || false,
 					minimumAmount: discount.restrictions.minimumAmount,
 					isPublic: discount.activationRules.isPublic,
 					priority: discount.activationRules.priority,
@@ -111,6 +113,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					maxRedemptions: null,
 					maxRedemptionsPerUser: 1,
 					newCustomersOnly: false,
+					excludeActiveSubscribers: false,
 					minimumAmount: null,
 					isPublic: false,
 					priority: 0,
@@ -199,6 +202,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 						maxRedemptions: formData.maxRedemptions,
 						maxRedemptionsPerUser: formData.maxRedemptionsPerUser,
 						newCustomersOnly: formData.newCustomersOnly,
+						excludeActiveSubscribers: formData.excludeActiveSubscribers,
 						minimumAmount: formData.minimumAmount,
 					},
 					activationRules: {
@@ -230,6 +234,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					maxRedemptions: formData.maxRedemptions,
 					maxRedemptionsPerUser: formData.maxRedemptionsPerUser,
 					newCustomersOnly: formData.newCustomersOnly,
+					excludeActiveSubscribers: formData.excludeActiveSubscribers,
 					minimumAmount: formData.minimumAmount,
 					isPublic: formData.isPublic,
 					priority: formData.priority,
@@ -522,13 +527,63 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 						/>
 					</Grid>
 
-					<Grid item xs={12} sm={4}>
-						<FormControlLabel
-							control={
-								<Switch checked={formData.newCustomersOnly} onChange={(e) => handleChange("newCustomersOnly", e.target.checked)} />
-							}
-							label="Solo nuevos clientes"
-						/>
+					{/* Customer Targeting Restrictions */}
+					<Grid item xs={12}>
+						<Divider sx={{ my: 1 }} />
+						<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
+							Restricciones por Tipo de Cliente
+						</Typography>
+						<Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 2 }}>
+							Estas opciones controlan qué usuarios pueden ver y usar este descuento basándose en su historial de suscripciones.
+						</Typography>
+					</Grid>
+
+					<Grid item xs={12} sm={6}>
+						<Box sx={{ p: 2, border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
+							<FormControlLabel
+								control={
+									<Switch
+										checked={formData.excludeActiveSubscribers}
+										onChange={(e) => handleChange("excludeActiveSubscribers", e.target.checked)}
+										color="warning"
+									/>
+								}
+								label={
+									<Typography variant="body2" fontWeight={500}>
+										Excluir suscriptores activos
+									</Typography>
+								}
+							/>
+							<Typography variant="caption" color="textSecondary" display="block" sx={{ ml: 4.5, mt: 0.5 }}>
+								No mostrar a usuarios con una suscripción paga <strong>actualmente activa</strong>.
+								Los usuarios que cancelaron su suscripción SÍ podrán ver y usar este descuento.
+								Ideal para promociones de "vuelve a suscribirte" o para usuarios en plan gratuito.
+							</Typography>
+						</Box>
+					</Grid>
+
+					<Grid item xs={12} sm={6}>
+						<Box sx={{ p: 2, border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
+							<FormControlLabel
+								control={
+									<Switch
+										checked={formData.newCustomersOnly}
+										onChange={(e) => handleChange("newCustomersOnly", e.target.checked)}
+										color="error"
+									/>
+								}
+								label={
+									<Typography variant="body2" fontWeight={500}>
+										Solo clientes nuevos
+									</Typography>
+								}
+							/>
+							<Typography variant="caption" color="textSecondary" display="block" sx={{ ml: 4.5, mt: 0.5 }}>
+								Solo para usuarios que <strong>nunca han tenido</strong> una suscripción paga (ni activa ni cancelada).
+								Más restrictivo que "Excluir suscriptores activos".
+								Ideal para promociones de "primera vez" para captar nuevos clientes.
+							</Typography>
+						</Box>
 					</Grid>
 
 					{/* Visibility */}
