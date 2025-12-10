@@ -20,7 +20,7 @@ import {
 	Tooltip,
 	Typography,
 } from "@mui/material";
-import { Add, Edit, Trash, Eye, Refresh2, TickCircle, CloseCircle, Chart } from "iconsax-react";
+import { Add, Edit, Trash, Eye, Refresh2, TickCircle, CloseCircle, Chart, UserTick } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { useSnackbar } from "notistack";
 import discountsService, { DiscountCode, GetDiscountsParams } from "api/discounts";
@@ -273,7 +273,7 @@ const PromotionsManagement = () => {
 								<TableCell align="center">Descuento</TableCell>
 								<TableCell align="center">Entorno</TableCell>
 								<TableCell align="center">Vigencia</TableCell>
-								<TableCell align="center">Público</TableCell>
+								<TableCell align="center">Visibilidad</TableCell>
 								<TableCell align="center">Usos</TableCell>
 								<TableCell align="center">Estado</TableCell>
 								<TableCell align="center">Acciones</TableCell>
@@ -332,11 +332,24 @@ const PromotionsManagement = () => {
 											</Typography>
 										</TableCell>
 										<TableCell align="center">
-											{discount.activationRules.isPublic ? (
-												<Chip label="Público" size="small" color="info" />
-											) : (
-												<Chip label="Privado" size="small" variant="outlined" />
-											)}
+											<Stack direction="column" spacing={0.5} alignItems="center">
+												{discount.activationRules.isPublic ? (
+													<Chip label="Público" size="small" color="info" />
+												) : (
+													<Chip label="Privado" size="small" variant="outlined" />
+												)}
+												{discount.restrictions.targetUsers && discount.restrictions.targetUsers.length > 0 && (
+													<Tooltip title={`Restringido a ${discount.restrictions.targetUsers.length} usuario(s)`}>
+														<Chip
+															icon={<UserTick size={14} />}
+															label={discount.restrictions.targetUsers.length}
+															size="small"
+															color="warning"
+															sx={{ "& .MuiChip-icon": { color: "inherit" } }}
+														/>
+													</Tooltip>
+												)}
+											</Stack>
 										</TableCell>
 										<TableCell align="center">
 											<Typography variant="body2">

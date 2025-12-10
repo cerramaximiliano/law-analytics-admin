@@ -6,8 +6,76 @@ export interface DiscountRestrictions {
 	applicableBillingPeriods: string[];
 	maxRedemptions: number | null;
 	maxRedemptionsPerUser: number;
+	/** Solo para nuevos clientes que NUNCA tuvieron suscripción paga (ni activa ni cancelada) */
 	newCustomersOnly: boolean;
+	/** Excluir usuarios con suscripción paga ACTUALMENTE activa (permite ex-suscriptores) */
+	excludeActiveSubscribers: boolean;
 	minimumAmount: number | null;
+	targetUsers?: string[]; // Array de IDs de usuarios específicos
+}
+
+// Types for Target Users management
+export interface TargetUser {
+	_id: string;
+	email: string;
+	name: string;
+	lastName: string;
+	fullName: string;
+	createdAt: string;
+}
+
+export interface TargetUsersResponse {
+	success: boolean;
+	data: {
+		discountId: string;
+		code: string;
+		name: string;
+		isPublic: boolean;
+		totalTargetUsers: number;
+		targetUsers: TargetUser[];
+	};
+}
+
+export interface AddTargetUsersParams {
+	userIds?: string[];
+	emails?: string[];
+}
+
+export interface AddTargetUsersResponse {
+	success: boolean;
+	message: string;
+	data: {
+		added: number;
+		alreadyExisted: number;
+		notFoundEmails?: string[];
+		totalTargetUsers: number;
+	};
+}
+
+export interface RemoveTargetUsersResponse {
+	success: boolean;
+	message: string;
+	data: {
+		removed: number;
+		totalTargetUsers: number;
+	};
+}
+
+export interface SetTargetUsersResponse {
+	success: boolean;
+	message: string;
+	data: {
+		previousCount: number;
+		newCount: number;
+		notFoundEmails: string[];
+		isUniversal: boolean;
+	};
+}
+
+export interface SearchUsersResponse {
+	success: boolean;
+	count: number;
+	data: TargetUser[];
 }
 
 export interface DiscountActivationRules {
@@ -85,7 +153,10 @@ export interface CreateDiscountParams {
 	applicableBillingPeriods?: string[];
 	maxRedemptions?: number | null;
 	maxRedemptionsPerUser?: number;
+	/** Solo para nuevos clientes que NUNCA tuvieron suscripción paga */
 	newCustomersOnly?: boolean;
+	/** Excluir usuarios con suscripción paga actualmente activa */
+	excludeActiveSubscribers?: boolean;
 	minimumAmount?: number | null;
 	isPublic?: boolean;
 	priority?: number;
@@ -93,6 +164,7 @@ export interface CreateDiscountParams {
 	badge?: string;
 	isActive?: boolean;
 	environments?: StripeEnvironment[];
+	targetUsers?: string[]; // Array de IDs de usuarios específicos
 }
 
 export interface UpdateDiscountParams {
@@ -441,6 +513,95 @@ class DiscountsService {
 				throw new Error(error.response?.data?.message || "Código de descuento no encontrado");
 			}
 			throw new Error(error.response?.data?.message || "Error al obtener información completa");
+		}
+	}
+
+	// ============================================
+	// Métodos para gestión de usuarios objetivo (targetUsers)
+	// ============================================
+
+	/**
+	 * Buscar usuarios para agregar como objetivo
+	 */
+	async searchUsers(query: string, limit: number = 20): Promise<SearchUsersResponse> {
+		try {
+			const response = await adminAxios.get<SearchUsersResponse>(
+				`/api/discounts/search-users?q=${encodeURIComponent(query)}&limit=${limit}`
+			);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al buscar usuarios");
+		}
+	}
+
+	/**
+	 * Obtener usuarios objetivo de un código de descuento
+	 */
+	async getTargetUsers(discountId: string): Promise<TargetUsersResponse> {
+		try {
+			const response = await adminAxios.get<TargetUsersResponse>(
+				`/api/discounts/${discountId}/target-users`
+			);
+			return response.data;
+		} catch (error: any) {
+			if (error.response?.status === 404) {
+				throw new Error("Código de descuento no encontrado");
+			}
+			throw new Error(error.response?.data?.message || "Error al obtener usuarios objetivo");
+		}
+	}
+
+	/**
+	 * Agregar usuarios objetivo a un código de descuento
+	 */
+	async addTargetUsers(discountId: string, params: AddTargetUsersParams): Promise<AddTargetUsersResponse> {
+		try {
+			const response = await adminAxios.post<AddTargetUsersResponse>(
+				`/api/discounts/${discountId}/target-users`,
+				params
+			);
+			return response.data;
+		} catch (error: any) {
+			if (error.response?.status === 404) {
+				throw new Error("Código de descuento no encontrado");
+			}
+			throw new Error(error.response?.data?.message || "Error al agregar usuarios");
+		}
+	}
+
+	/**
+	 * Eliminar usuarios objetivo de un código de descuento
+	 */
+	async removeTargetUsers(discountId: string, params: AddTargetUsersParams): Promise<RemoveTargetUsersResponse> {
+		try {
+			const response = await adminAxios.delete<RemoveTargetUsersResponse>(
+				`/api/discounts/${discountId}/target-users`,
+				{ data: params }
+			);
+			return response.data;
+		} catch (error: any) {
+			if (error.response?.status === 404) {
+				throw new Error("Código de descuento no encontrado");
+			}
+			throw new Error(error.response?.data?.message || "Error al eliminar usuarios");
+		}
+	}
+
+	/**
+	 * Reemplazar todos los usuarios objetivo de un código de descuento
+	 */
+	async setTargetUsers(discountId: string, params: AddTargetUsersParams): Promise<SetTargetUsersResponse> {
+		try {
+			const response = await adminAxios.put<SetTargetUsersResponse>(
+				`/api/discounts/${discountId}/target-users`,
+				params
+			);
+			return response.data;
+		} catch (error: any) {
+			if (error.response?.status === 404) {
+				throw new Error("Código de descuento no encontrado");
+			}
+			throw new Error(error.response?.data?.message || "Error al configurar usuarios");
 		}
 	}
 }
