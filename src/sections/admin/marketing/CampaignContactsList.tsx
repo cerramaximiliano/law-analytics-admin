@@ -25,7 +25,7 @@ import {
 } from "@mui/material";
 
 // project imports
-import { Add, SearchNormal1, Trash } from "iconsax-react";
+import { Add, SearchNormal1, Trash, Eye } from "iconsax-react";
 import { useSnackbar } from "notistack";
 
 // types
@@ -34,6 +34,7 @@ import { MarketingContact } from "types/marketing-contact";
 // import { MarketingContactService } from "store/reducers/marketing-contacts";
 import { CampaignService } from "store/reducers/campaign";
 import CampaignContactsModal from "./CampaignContactsModal";
+import ContactDetailModal from "./ContactDetailModal";
 import MainCard from "components/MainCard";
 import ScrollX from "components/ScrollX";
 
@@ -172,6 +173,10 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
 	const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState<boolean>(false);
 	const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
+
+	// State for contact detail modal
+	const [detailModalOpen, setDetailModalOpen] = useState<boolean>(false);
+	const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
 
 	// Estados para proceso asíncrono de eliminación
 	const [asyncDeletionProcessing, setAsyncDeletionProcessing] = useState<boolean>(false);
@@ -407,6 +412,17 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 	const handleSearch = () => {
 		setPage(0);
 		// El efecto se encargará de llamar a fetchCampaignContacts gracias a la dependencia en searchTerm
+	};
+
+	// Handlers para el modal de detalles
+	const handleViewDetails = (contactId: string) => {
+		setSelectedContactId(contactId);
+		setDetailModalOpen(true);
+	};
+
+	const handleCloseDetailModal = () => {
+		setDetailModalOpen(false);
+		setSelectedContactId(null);
 	};
 
 	return (
@@ -703,15 +719,26 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 																	{contact.metrics?.clickRate !== undefined ? `${(contact.metrics.clickRate * 100).toFixed(1)}%` : "N/A"}
 																</TableCell>
 																<TableCell align="center">
-																	<IconButton
-																		aria-label="eliminar"
-																		size="small"
-																		color="error"
-																		onClick={() => contact._id && handleOpenDeleteDialog([contact._id])}
-																		title="Eliminar contacto de la campaña"
-																	>
-																		<Trash size={18} />
-																	</IconButton>
+																	<Box sx={{ display: "flex", justifyContent: "center", gap: 0.5 }}>
+																		<IconButton
+																			aria-label="ver detalles"
+																			size="small"
+																			color="primary"
+																			onClick={() => contact._id && handleViewDetails(contact._id)}
+																			title="Ver detalles del contacto"
+																		>
+																			<Eye size={18} />
+																		</IconButton>
+																		<IconButton
+																			aria-label="eliminar"
+																			size="small"
+																			color="error"
+																			onClick={() => contact._id && handleOpenDeleteDialog([contact._id])}
+																			title="Eliminar contacto de la campaña"
+																		>
+																			<Trash size={18} />
+																		</IconButton>
+																	</Box>
 																</TableCell>
 															</TableRow>
 														))
@@ -780,6 +807,9 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 						campaignName={campaign.name}
 						totalContacts={totalCount}
 					/>
+
+					{/* Contact Detail Modal */}
+					<ContactDetailModal open={detailModalOpen} onClose={handleCloseDetailModal} contactId={selectedContactId} />
 				</Paper>
 			</Modal>
 		</>
