@@ -517,7 +517,7 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 					sx={{
 						width: "90%",
 						maxWidth: 1200,
-						maxHeight: "90vh",
+						height: "90vh",
 						borderRadius: 2,
 						display: "flex",
 						flexDirection: "column",
@@ -584,7 +584,7 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 					</Box>
 
 					{/* Contenido scrollable */}
-					<Box sx={{ flex: 1, overflow: "auto", px: 3, minHeight: 400, position: "relative" }}>
+					<Box sx={{ flex: 1, overflow: "auto", px: 3, position: "relative" }}>
 						{/* Overlay de carga */}
 						{loading && page > 0 && (
 							<Box
