@@ -1464,8 +1464,8 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 															Rol
 														</Typography>
 														<Chip
-															label={userData.role === "ADMIN_ROLE" ? "Administrador" : "Usuario"}
-															color={userData.role === "ADMIN_ROLE" ? "error" : "primary"}
+															label={typeof userData.role === "string" && userData.role === "ADMIN_ROLE" ? "Administrador" : "Usuario"}
+															color={typeof userData.role === "string" && userData.role === "ADMIN_ROLE" ? "error" : "primary"}
 															size="small"
 														/>
 													</Grid>
@@ -1491,7 +1491,9 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 														<Typography variant="body2" color="textSecondary">
 															Teléfono
 														</Typography>
-														<Typography variant="body1">{userData.contact || "-"}</Typography>
+														<Typography variant="body1">
+															{typeof userData.contact === "string" ? userData.contact || "-" : "-"}
+														</Typography>
 													</Grid>
 
 													<Grid item xs={12} sm={6}>
@@ -1537,7 +1539,7 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 																	Plan
 																</Typography>
 																<Chip
-																	label={userSubscription.plan.toUpperCase()}
+																	label={typeof userSubscription.plan === "string" ? userSubscription.plan.toUpperCase() : "N/A"}
 																	color={
 																		userSubscription.plan === "free"
 																			? "default"
@@ -1557,7 +1559,9 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 																</Typography>
 																<Chip
 																	label={
-																		userSubscription.status === "active"
+																		typeof userSubscription.status !== "string"
+																			? "N/A"
+																			: userSubscription.status === "active"
 																			? "Activa"
 																			: userSubscription.status === "canceled"
 																			? "Cancelada"
@@ -1586,7 +1590,7 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 																</Grid>
 															)}
 
-															{userSubscription.stripeCustomerId && (
+															{userSubscription.stripeCustomerId && typeof userSubscription.stripeCustomerId === "string" && (
 																<Grid item xs={12} sm={6}>
 																	<Typography variant="body2" color="textSecondary">
 																		ID de cliente Stripe
