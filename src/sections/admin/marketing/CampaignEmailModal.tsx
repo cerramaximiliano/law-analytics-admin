@@ -36,7 +36,7 @@ import {
 // project imports
 import { useSnackbar } from "notistack";
 import AnimateButton from "components/@extended/AnimateButton";
-import axios from "axios";
+import mktAxios from "utils/mktAxios";
 import { Add, Trash } from "iconsax-react";
 
 // types
@@ -138,7 +138,7 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 	const fetchTemplates = async () => {
 		setTemplatesLoading(true);
 		try {
-			const response = await axios.get(`${process.env.REACT_APP_BASE_URL}/api/email/templates`);
+			const response = await mktAxios.get("/api/templates");
 			if (response.data.success) {
 				// Only include active templates
 				const activeTemplates = response.data.data.filter((template: EmailTemplate) => template.isActive);
