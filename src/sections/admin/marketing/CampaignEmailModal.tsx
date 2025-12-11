@@ -512,7 +512,18 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 											</MenuItem>
 										)}
 										{Object.entries(groupedTemplates).map(([category, categoryTemplates]) => [
-											<ListSubheader key={`header-${category}`} sx={{ bgcolor: "background.paper", fontWeight: "bold" }}>
+											<ListSubheader
+												key={`header-${category}`}
+												sx={{
+													bgcolor: "primary.lighter",
+													color: "primary.dark",
+													fontWeight: "bold",
+													fontSize: "0.85rem",
+													lineHeight: "36px",
+													borderBottom: "1px solid",
+													borderColor: "divider",
+												}}
+											>
 												{category}
 											</ListSubheader>,
 											...categoryTemplates.map((template) => (
