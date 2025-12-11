@@ -21,12 +21,13 @@ import {
 	Tooltip,
 	CircularProgress,
 } from "@mui/material";
-import { CloseCircle, Trash } from "iconsax-react";
+import { CloseCircle, Trash, Eye } from "iconsax-react";
 import { Segment } from "types/segment";
 import { MarketingContact } from "types/marketing-contact";
 import { SegmentService } from "store/reducers/segments";
 import TableSkeleton from "components/UI/TableSkeleton";
 import { useSnackbar } from "notistack";
+import ContactDetailModal from "./ContactDetailModal";
 
 interface SegmentContactsModalProps {
 	open: boolean;
@@ -46,6 +47,22 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [removingContactId, setRemovingContactId] = useState<string | null>(null);
+
+	// Estado para el modal de detalles del contacto
+	const [detailModalOpen, setDetailModalOpen] = useState(false);
+	const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
+
+	// Handler para abrir el modal de detalles
+	const handleViewDetails = (contactId: string) => {
+		setSelectedContactId(contactId);
+		setDetailModalOpen(true);
+	};
+
+	// Handler para cerrar el modal de detalles
+	const handleCloseDetailModal = () => {
+		setDetailModalOpen(false);
+		setSelectedContactId(null);
+	};
 
 	// Cargar contactos cuando se abre el modal
 	useEffect(() => {
@@ -212,15 +229,15 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 										<TableCell>Apellido</TableCell>
 										<TableCell>Estado</TableCell>
 										<TableCell>Empresa</TableCell>
-										{segment?.type === "static" && <TableCell align="center">Acciones</TableCell>}
+										<TableCell align="center">Acciones</TableCell>
 									</TableRow>
 								</TableHead>
 								<TableBody>
 									{loading ? (
-										<TableSkeleton columns={segment?.type === "static" ? 6 : 5} rows={10} />
+										<TableSkeleton columns={6} rows={10} />
 									) : contacts.length === 0 ? (
 										<TableRow>
-											<TableCell colSpan={segment?.type === "static" ? 6 : 5} align="center" sx={{ py: 3 }}>
+											<TableCell colSpan={6} align="center" sx={{ py: 3 }}>
 												<Typography variant="body1">No hay contactos en este segmento</Typography>
 											</TableCell>
 										</TableRow>
@@ -240,24 +257,35 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 												<TableCell>
 													<Typography variant="body2">{contact.company || "-"}</Typography>
 												</TableCell>
-												{segment?.type === "static" && (
-													<TableCell align="center">
-														<Tooltip title="Eliminar del segmento">
+												<TableCell align="center">
+													<Box sx={{ display: "flex", justifyContent: "center", gap: 0.5 }}>
+														<Tooltip title="Ver detalles">
 															<IconButton
 																size="small"
-																color="error"
-																onClick={() => handleRemoveContact(contact._id || "")}
-																disabled={removingContactId !== null}
+																color="primary"
+																onClick={() => handleViewDetails(contact._id || "")}
 															>
-																{removingContactId === contact._id ? (
-																	<CircularProgress size={18} color="inherit" />
-																) : (
-																	<Trash size={18} />
-																)}
+																<Eye size={18} />
 															</IconButton>
 														</Tooltip>
-													</TableCell>
-												)}
+														{segment?.type === "static" && (
+															<Tooltip title="Eliminar del segmento">
+																<IconButton
+																	size="small"
+																	color="error"
+																	onClick={() => handleRemoveContact(contact._id || "")}
+																	disabled={removingContactId !== null}
+																>
+																	{removingContactId === contact._id ? (
+																		<CircularProgress size={18} color="inherit" />
+																	) : (
+																		<Trash size={18} />
+																	)}
+																</IconButton>
+															</Tooltip>
+														)}
+													</Box>
+												</TableCell>
 											</TableRow>
 										))
 									)}
@@ -280,6 +308,9 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 					</Box>
 				)}
 			</DialogContent>
+
+			{/* Modal de detalles del contacto */}
+			<ContactDetailModal open={detailModalOpen} onClose={handleCloseDetailModal} contactId={selectedContactId} />
 		</Dialog>
 	);
 };
