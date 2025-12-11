@@ -1,5 +1,4 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import * as Yup from "yup";
 import { useFormik } from "formik";
 
@@ -18,6 +17,7 @@ import {
 	FormHelperText,
 	Grid,
 	InputLabel,
+	ListSubheader,
 	MenuItem,
 	Select,
 	Stack,
@@ -103,6 +103,26 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 	const [templates, setTemplates] = useState<EmailTemplate[]>([]);
 	const [templatesLoading, setTemplatesLoading] = useState<boolean>(false);
 	const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
+
+	// Agrupar plantillas por categoría
+	const groupedTemplates = useMemo(() => {
+		const groups: Record<string, EmailTemplate[]> = {};
+		templates.forEach((template) => {
+			const category = template.category || "Sin categoría";
+			if (!groups[category]) {
+				groups[category] = [];
+			}
+			groups[category].push(template);
+		});
+		// Ordenar categorías alfabéticamente
+		const sortedGroups: Record<string, EmailTemplate[]> = {};
+		Object.keys(groups)
+			.sort()
+			.forEach((key) => {
+				sortedGroups[key] = groups[key].sort((a, b) => a.name.localeCompare(b.name));
+			});
+		return sortedGroups;
+	}, [templates]);
 
 	// State for A/B testing
 	const [abTestingEnabled, setAbTestingEnabled] = useState<boolean>(email?.abTesting?.enabled || false);
@@ -491,11 +511,16 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 												<em>Ninguna (usar contenido personalizado)</em>
 											</MenuItem>
 										)}
-										{templates.map((template) => (
-											<MenuItem key={template._id} value={template._id}>
-												{template.name} ({template.category})
-											</MenuItem>
-										))}
+										{Object.entries(groupedTemplates).map(([category, categoryTemplates]) => [
+											<ListSubheader key={`header-${category}`} sx={{ bgcolor: "background.paper", fontWeight: "bold" }}>
+												{category}
+											</ListSubheader>,
+											...categoryTemplates.map((template) => (
+												<MenuItem key={template._id} value={template._id} sx={{ pl: 4 }}>
+													{template.name}
+												</MenuItem>
+											)),
+										])}
 									</Select>
 									<FormHelperText>
 										{mode === "create" && formik.touched.templateId && formik.errors.templateId ? (
