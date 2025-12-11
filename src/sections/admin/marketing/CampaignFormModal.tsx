@@ -31,6 +31,7 @@ import { LoadingButton } from "@mui/lab";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/es";
 import { InfoCircle } from "iconsax-react";
 
@@ -54,8 +55,8 @@ interface FormValues {
 	type: CampaignType;
 	description: string;
 	status: string;
-	startDate: Date | null;
-	endDate: Date | null;
+	startDate: Dayjs | null;
+	endDate: Dayjs | null;
 	isPermanent: boolean;
 	category: string;
 	tags: string;
@@ -173,8 +174,8 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 						name: values.name,
 						status: values.status as any,
 						description: values.description || undefined,
-						startDate: values.startDate || undefined,
-						endDate: values.isPermanent ? undefined : values.endDate || undefined,
+						startDate: values.startDate ? values.startDate.toDate() : undefined,
+						endDate: values.isPermanent ? undefined : values.endDate ? values.endDate.toDate() : undefined,
 						isPermanent: values.isPermanent,
 						category: values.category || undefined,
 						tags: tagsArray.length > 0 ? tagsArray : undefined,
@@ -193,8 +194,8 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 						type: values.type,
 						status: values.status as any,
 						description: values.description || undefined,
-						startDate: values.startDate || undefined,
-						endDate: values.isPermanent ? undefined : values.endDate || undefined,
+						startDate: values.startDate ? values.startDate.toDate() : undefined,
+						endDate: values.isPermanent ? undefined : values.endDate ? values.endDate.toDate() : undefined,
 						isPermanent: values.isPermanent,
 						category: values.category || undefined,
 						tags: tagsArray.length > 0 ? tagsArray : undefined,
@@ -258,8 +259,8 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 				type: campaign.type || "onetime",
 				description: campaign.description || "",
 				status: campaign.status || "draft",
-				startDate: campaign.startDate ? new Date(campaign.startDate) : null,
-				endDate: campaign.endDate ? new Date(campaign.endDate) : null,
+				startDate: campaign.startDate ? dayjs(campaign.startDate) : null,
+				endDate: campaign.endDate ? dayjs(campaign.endDate) : null,
 				isPermanent: campaign.isPermanent || false,
 				category: campaign.category || "",
 				tags: tagsString,
