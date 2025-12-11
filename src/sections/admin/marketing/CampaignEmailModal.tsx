@@ -150,6 +150,12 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 				});
 			}
 		} catch (err: any) {
+			// Ignorar errores de autenticación que ya maneja el interceptor
+			if (err.response?.status === 401 || err.message?.includes("vuelva a iniciar sesión")) {
+				// El interceptor de mktAxios ya maneja estos errores mostrando el modal de autenticación
+				return;
+			}
+
 			// Mejorar el manejo de errores para proporcionar mensajes más amigables
 			let errorMessage = "Error al cargar las plantillas de email";
 
