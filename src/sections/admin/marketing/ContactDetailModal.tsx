@@ -33,7 +33,35 @@ import { MarketingContact } from "types/marketing-contact";
 import { MarketingContactService } from "store/reducers/marketing-contacts";
 import { CampaignService } from "store/reducers/campaign";
 import CampaignDetailModal from "./CampaignDetailModal";
-import { Refresh, ArrowDown2, ArrowUp2, Pause, Trash, Play, PauseCircle, PlayCircle } from "iconsax-react";
+import { Refresh, ArrowDown2, ArrowUp2, Pause, Trash, Play, PauseCircle, PlayCircle, User, UserTick } from "iconsax-react";
+import authAxios from "utils/authAxios";
+
+// Tipo para datos de usuario
+interface UserData {
+	_id: string;
+	name?: string;
+	firstName?: string;
+	lastName?: string;
+	email: string;
+	role?: string;
+	isActive?: boolean;
+	isVerified?: boolean;
+	createdAt?: string;
+	lastLogin?: string;
+	contact?: string;
+	avatar?: string;
+	googleCalendarConnected?: boolean;
+}
+
+interface SubscriptionData {
+	_id: string;
+	plan: string;
+	status: string;
+	currentPeriodStart?: string;
+	currentPeriodEnd?: string;
+	stripeCustomerId?: string;
+	stripeSubscriptionId?: string;
+}
 
 interface ContactDetailModalProps {
 	open: boolean;
@@ -59,6 +87,12 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 	const [globalActionLoading, setGlobalActionLoading] = useState<boolean>(false);
 	const [showAllActivities, setShowAllActivities] = useState<boolean>(false);
 	const [activeTab, setActiveTab] = useState<number>(0);
+
+	// Estados para datos de usuario
+	const [userData, setUserData] = useState<UserData | null>(null);
+	const [userSubscription, setUserSubscription] = useState<SubscriptionData | null>(null);
+	const [userLoading, setUserLoading] = useState<boolean>(false);
+	const [userSearched, setUserSearched] = useState<boolean>(false);
 
 	// Helper function to get user-friendly error messages
 	const getErrorMessage = (error: any): string => {
@@ -88,9 +122,67 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 			setProgressLoading({});
 			setShowAllActivities(false);
 			setActiveTab(0); // Reset to first tab
+			// Limpiar datos de usuario
+			setUserData(null);
+			setUserSubscription(null);
+			setUserSearched(false);
 			fetchContactDetails(contactId);
 		}
 	}, [open, contactId]);
+
+	// Función para buscar usuario por email
+	const searchUserByEmail = async (email: string) => {
+		if (!email || userSearched) return;
+
+		try {
+			setUserLoading(true);
+			const response = await authAxios.get("/api/users/search", {
+				params: {
+					search: email,
+					limit: 1,
+				},
+			});
+
+			if (response.data?.success && response.data?.data?.users?.length > 0) {
+				// Buscar el usuario que coincida exactamente con el email
+				const exactMatch = response.data.data.users.find(
+					(u: UserData) => u.email.toLowerCase() === email.toLowerCase()
+				);
+
+				if (exactMatch) {
+					setUserData(exactMatch);
+					// Obtener detalles completos del usuario incluyendo suscripción
+					try {
+						const userDetailsResponse = await authAxios.get(`/api/users/${exactMatch._id}`);
+						if (userDetailsResponse.data?.success) {
+							setUserData(userDetailsResponse.data.user);
+							// Obtener suscripción activa (priorizar live sobre test)
+							const subscriptions = userDetailsResponse.data.subscriptions;
+							if (subscriptions?.live) {
+								setUserSubscription(subscriptions.live);
+							} else if (subscriptions?.test) {
+								setUserSubscription(subscriptions.test);
+							}
+						}
+					} catch {
+						// Si falla obtener detalles, mantener datos básicos
+					}
+				}
+			}
+		} catch (error) {
+			console.error("Error buscando usuario por email:", error);
+		} finally {
+			setUserLoading(false);
+			setUserSearched(true);
+		}
+	};
+
+	// Efecto para buscar usuario cuando se abre la tab de Usuario
+	useEffect(() => {
+		if (activeTab === 6 && contact?.email && !userSearched) {
+			searchUserByEmail(contact.email);
+		}
+	}, [activeTab, contact?.email, userSearched]);
 
 	const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
 		setActiveTab(newValue);
@@ -490,6 +582,14 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 										}
 									/>
 									<Tab label="Métricas" />
+									<Tab
+										label={
+											<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+												{userData ? <UserTick size={16} /> : <User size={16} />}
+												Usuario
+											</Box>
+										}
+									/>
 								</Tabs>
 							</Box>
 
@@ -1315,6 +1415,218 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 										</Grid>
 									</Grid>
 								</TabPanel>
+
+								{/* Tab Panel 6 - Usuario */}
+								<TabPanel value={activeTab} index={6}>
+									<Grid container spacing={3}>
+										<Grid item xs={12}>
+											<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+												Información de Usuario
+											</Typography>
+											<Divider sx={{ mb: 2 }} />
+
+											{userLoading ? (
+												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", py: 4 }}>
+													<CircularProgress size={32} />
+													<Typography variant="body2" color="textSecondary" sx={{ ml: 2 }}>
+														Buscando usuario...
+													</Typography>
+												</Box>
+											) : userData ? (
+												<Grid container spacing={3}>
+													{/* Información básica del usuario */}
+													<Grid item xs={12}>
+														<Alert severity="success" sx={{ mb: 2 }}>
+															<Typography variant="body2">
+																Este contacto está asociado a una cuenta de usuario registrada en Law Analytics.
+															</Typography>
+														</Alert>
+													</Grid>
+
+													<Grid item xs={12} sm={6}>
+														<Typography variant="body2" color="textSecondary">
+															Nombre
+														</Typography>
+														<Typography variant="body1">
+															{userData.name || `${userData.firstName || ""} ${userData.lastName || ""}`.trim() || "-"}
+														</Typography>
+													</Grid>
+
+													<Grid item xs={12} sm={6}>
+														<Typography variant="body2" color="textSecondary">
+															Email
+														</Typography>
+														<Typography variant="body1">{userData.email}</Typography>
+													</Grid>
+
+													<Grid item xs={12} sm={6}>
+														<Typography variant="body2" color="textSecondary">
+															Rol
+														</Typography>
+														<Chip
+															label={userData.role === "ADMIN_ROLE" ? "Administrador" : "Usuario"}
+															color={userData.role === "ADMIN_ROLE" ? "error" : "primary"}
+															size="small"
+														/>
+													</Grid>
+
+													<Grid item xs={12} sm={6}>
+														<Typography variant="body2" color="textSecondary">
+															Estado de cuenta
+														</Typography>
+														<Stack direction="row" spacing={1}>
+															<Chip
+																label={userData.isActive ? "Activo" : "Inactivo"}
+																color={userData.isActive ? "success" : "default"}
+																size="small"
+																variant="outlined"
+															/>
+															{userData.isVerified && (
+																<Chip label="Verificado" color="info" size="small" variant="outlined" />
+															)}
+														</Stack>
+													</Grid>
+
+													<Grid item xs={12} sm={6}>
+														<Typography variant="body2" color="textSecondary">
+															Teléfono
+														</Typography>
+														<Typography variant="body1">{userData.contact || "-"}</Typography>
+													</Grid>
+
+													<Grid item xs={12} sm={6}>
+														<Typography variant="body2" color="textSecondary">
+															Google Calendar
+														</Typography>
+														<Chip
+															label={userData.googleCalendarConnected ? "Conectado" : "No conectado"}
+															color={userData.googleCalendarConnected ? "success" : "default"}
+															size="small"
+															variant="outlined"
+														/>
+													</Grid>
+
+													<Grid item xs={12} sm={6}>
+														<Typography variant="body2" color="textSecondary">
+															Fecha de registro
+														</Typography>
+														<Typography variant="body1">{formatDate(userData.createdAt)}</Typography>
+													</Grid>
+
+													<Grid item xs={12} sm={6}>
+														<Typography variant="body2" color="textSecondary">
+															Último acceso
+														</Typography>
+														<Typography variant="body1">
+															{userData.lastLogin ? formatDate(userData.lastLogin) : "Nunca"}
+														</Typography>
+													</Grid>
+
+													{/* Información de suscripción */}
+													{userSubscription && (
+														<>
+															<Grid item xs={12}>
+																<Divider sx={{ my: 1 }} />
+																<Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ mt: 2 }}>
+																	Suscripción
+																</Typography>
+															</Grid>
+
+															<Grid item xs={12} sm={6}>
+																<Typography variant="body2" color="textSecondary">
+																	Plan
+																</Typography>
+																<Chip
+																	label={userSubscription.plan.toUpperCase()}
+																	color={
+																		userSubscription.plan === "free"
+																			? "default"
+																			: userSubscription.plan === "basic"
+																			? "primary"
+																			: userSubscription.plan === "premium"
+																			? "secondary"
+																			: "success"
+																	}
+																	size="small"
+																/>
+															</Grid>
+
+															<Grid item xs={12} sm={6}>
+																<Typography variant="body2" color="textSecondary">
+																	Estado de suscripción
+																</Typography>
+																<Chip
+																	label={
+																		userSubscription.status === "active"
+																			? "Activa"
+																			: userSubscription.status === "canceled"
+																			? "Cancelada"
+																			: userSubscription.status === "past_due"
+																			? "Vencida"
+																			: userSubscription.status
+																	}
+																	color={
+																		userSubscription.status === "active"
+																			? "success"
+																			: userSubscription.status === "canceled"
+																			? "error"
+																			: "warning"
+																	}
+																	size="small"
+																	variant="outlined"
+																/>
+															</Grid>
+
+															{userSubscription.currentPeriodEnd && (
+																<Grid item xs={12} sm={6}>
+																	<Typography variant="body2" color="textSecondary">
+																		Vencimiento del período
+																	</Typography>
+																	<Typography variant="body1">{formatDate(userSubscription.currentPeriodEnd)}</Typography>
+																</Grid>
+															)}
+
+															{userSubscription.stripeCustomerId && (
+																<Grid item xs={12} sm={6}>
+																	<Typography variant="body2" color="textSecondary">
+																		ID de cliente Stripe
+																	</Typography>
+																	<Typography variant="body1" sx={{ fontSize: "0.85rem", fontFamily: "monospace" }}>
+																		{userSubscription.stripeCustomerId}
+																	</Typography>
+																</Grid>
+															)}
+														</>
+													)}
+
+													{/* ID de usuario */}
+													<Grid item xs={12}>
+														<Divider sx={{ my: 1 }} />
+														<Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
+															ID de Usuario
+														</Typography>
+														<Typography variant="body1" sx={{ fontSize: "0.85rem", fontFamily: "monospace" }}>
+															{userData._id}
+														</Typography>
+													</Grid>
+												</Grid>
+											) : userSearched ? (
+												<Alert severity="info">
+													<Typography variant="body2">
+														Este contacto no está asociado a ninguna cuenta de usuario registrada en Law Analytics.
+													</Typography>
+													<Typography variant="caption" color="textSecondary" sx={{ display: "block", mt: 1 }}>
+														Email buscado: {contact?.email}
+													</Typography>
+												</Alert>
+											) : (
+												<Typography variant="body2" color="textSecondary">
+													Haz clic en esta pestaña para buscar información de usuario asociada.
+												</Typography>
+											)}
+										</Grid>
+									</Grid>
+								</TabPanel>
 							</Box>
 						</Box>
 					) : (
@@ -1342,6 +1654,10 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 							setProgressLoading({});
 							setContact(null);
 							setError(null);
+							// Limpiar estados de usuario
+							setUserData(null);
+							setUserSubscription(null);
+							setUserSearched(false);
 							onClose();
 						}}
 						color="primary"
