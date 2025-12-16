@@ -28,11 +28,17 @@ import {
 	Typography,
 } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import "dayjs/locale/es";
+
+// Extend dayjs with timezone support
+dayjs.extend(utc);
+dayjs.extend(timezone);
 import { InfoCircle } from "iconsax-react";
 
 // project imports
@@ -168,14 +174,23 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 				// Convert tags string to array
 				const tagsArray = values.tags ? values.tags.split(",").map((tag) => tag.trim()) : [];
 
+				// Convert dates considering the selected timezone
+				// The date is interpreted as being in the selected timezone and converted to UTC for storage
+				const formatDateForTimezone = (date: Dayjs | null, tz: string): Date | undefined => {
+					if (!date) return undefined;
+					// Create a date in the selected timezone and convert to UTC
+					const dateInTz = dayjs.tz(date.format("YYYY-MM-DDTHH:mm:ss"), tz);
+					return dateInTz.toDate();
+				};
+
 				if (isEditMode && campaign?._id) {
 					// Prepare update payload - type is omitted as it can't be changed
 					const updateData: Partial<Campaign> = {
 						name: values.name,
 						status: values.status as any,
 						description: values.description || undefined,
-						startDate: values.startDate ? values.startDate.toDate() : undefined,
-						endDate: values.isPermanent ? undefined : values.endDate ? values.endDate.toDate() : undefined,
+						startDate: formatDateForTimezone(values.startDate, values.timezone),
+						endDate: values.isPermanent ? undefined : formatDateForTimezone(values.endDate, values.timezone),
 						isPermanent: values.isPermanent,
 						category: values.category || undefined,
 						tags: tagsArray.length > 0 ? tagsArray : undefined,
@@ -194,8 +209,8 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 						type: values.type,
 						status: values.status as any,
 						description: values.description || undefined,
-						startDate: values.startDate ? values.startDate.toDate() : undefined,
-						endDate: values.isPermanent ? undefined : values.endDate ? values.endDate.toDate() : undefined,
+						startDate: formatDateForTimezone(values.startDate, values.timezone),
+						endDate: values.isPermanent ? undefined : formatDateForTimezone(values.endDate, values.timezone),
 						isPermanent: values.isPermanent,
 						category: values.category || undefined,
 						tags: tagsArray.length > 0 ? tagsArray : undefined,
@@ -254,17 +269,27 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 			// Format tags as a comma-separated string
 			const tagsString = campaign.tags ? campaign.tags.join(", ") : "";
 
+			// Get the campaign's timezone
+			const campaignTimezone = campaign.settings?.timezone || "America/Argentina/Buenos_Aires";
+
+			// Convert UTC dates to the campaign's timezone for display
+			const parseUtcToTimezone = (dateString: string | Date | undefined, tz: string): Dayjs | null => {
+				if (!dateString) return null;
+				// Parse the UTC date and convert to the campaign's timezone
+				return dayjs.utc(dateString).tz(tz);
+			};
+
 			formik.setValues({
 				name: campaign.name || "",
 				type: campaign.type || "onetime",
 				description: campaign.description || "",
 				status: campaign.status || "draft",
-				startDate: campaign.startDate ? dayjs(campaign.startDate) : null,
-				endDate: campaign.endDate ? dayjs(campaign.endDate) : null,
+				startDate: parseUtcToTimezone(campaign.startDate, campaignTimezone),
+				endDate: parseUtcToTimezone(campaign.endDate, campaignTimezone),
 				isPermanent: campaign.isPermanent || false,
 				category: campaign.category || "",
 				tags: tagsString,
-				timezone: campaign.settings?.timezone || "America/Argentina/Buenos_Aires",
+				timezone: campaignTimezone,
 			});
 		} else {
 			// Reset to defaults for create mode
@@ -566,42 +591,50 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 							</Typography>
 						</Grid>
 
-						{/* Date pickers wrapped in LocalizationProvider */}
+						{/* DateTime pickers wrapped in LocalizationProvider */}
 						<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
-							{/* Start date */}
+							{/* Start date and time */}
 							<Grid item xs={12} md={6}>
 								<FormControl fullWidth error={formik.touched.startDate && Boolean(formik.errors.startDate)}>
-									<DatePicker
-										label="Fecha de inicio"
+									<DateTimePicker
+										label="Fecha y hora de inicio"
 										value={formik.values.startDate}
 										onChange={(date) => formik.setFieldValue("startDate", date)}
+										format="DD/MM/YYYY HH:mm"
+										ampm={false}
 										slotProps={{
 											textField: {
 												variant: "outlined",
 												fullWidth: true,
 												error: formik.touched.startDate && Boolean(formik.errors.startDate),
-												helperText: formik.touched.startDate && (formik.errors.startDate as string),
+												helperText:
+													(formik.touched.startDate && (formik.errors.startDate as string)) ||
+													`Hora en zona: ${formik.values.timezone.split("/").pop()?.replace(/_/g, " ")}`,
 											},
 										}}
 									/>
 								</FormControl>
 							</Grid>
 
-							{/* End date - only shows if not permanent */}
+							{/* End date and time - only shows if not permanent */}
 							<Grid item xs={12} md={6}>
 								<Stack spacing={2}>
 									<FormControl fullWidth error={formik.touched.endDate && Boolean(formik.errors.endDate)}>
-										<DatePicker
-											label="Fecha de fin"
+										<DateTimePicker
+											label="Fecha y hora de fin"
 											value={formik.values.endDate}
 											onChange={(date) => formik.setFieldValue("endDate", date)}
 											disabled={formik.values.isPermanent}
+											format="DD/MM/YYYY HH:mm"
+											ampm={false}
 											slotProps={{
 												textField: {
 													variant: "outlined",
 													fullWidth: true,
 													error: formik.touched.endDate && Boolean(formik.errors.endDate),
-													helperText: formik.touched.endDate && (formik.errors.endDate as string),
+													helperText:
+														(formik.touched.endDate && (formik.errors.endDate as string)) ||
+														(formik.values.isPermanent ? "Deshabilitado para campañas permanentes" : ""),
 												},
 											}}
 										/>
