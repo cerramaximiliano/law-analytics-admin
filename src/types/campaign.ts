@@ -106,3 +106,119 @@ export interface CampaignInput {
 	audience?: Partial<CampaignAudience>;
 	settings?: Partial<CampaignSettings>;
 }
+
+// Types for Campaign Send Logs
+export type SendLogStatus = "queued" | "sent" | "delivered" | "bounced" | "complained" | "failed";
+
+export interface CampaignSendLog {
+	_id: string;
+	campaignId: string;
+	campaignEmailId: {
+		_id: string;
+		name: string;
+		subject: string;
+		sequenceIndex: number;
+	};
+	contactId: {
+		_id: string;
+		email: string;
+		firstName?: string;
+		lastName?: string;
+	};
+	recipientEmail: string;
+	subject?: string;
+	messageId?: string;
+	status: SendLogStatus;
+	queuedAt?: string;
+	sentAt?: string;
+	deliveredAt?: string;
+	bouncedAt?: string;
+	complainedAt?: string;
+	opens: number;
+	firstOpenedAt?: string;
+	lastOpenedAt?: string;
+	clicks: number;
+	firstClickedAt?: string;
+	lastClickedAt?: string;
+	clickedLinks?: Array<{ url: string; clickedAt: string }>;
+	sequenceIndex: number;
+	bounce?: {
+		type: string;
+		subType: string;
+		diagnosticCode?: string;
+	};
+	complaint?: {
+		feedbackType: string;
+	};
+	error?: {
+		code: string;
+		message: string;
+	};
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface CampaignSendLogsResponse {
+	success: boolean;
+	data: CampaignSendLog[];
+	pagination: {
+		total: number;
+		page: number;
+		limit: number;
+		pages: number;
+	};
+}
+
+export interface CampaignSendStatsSummary {
+	total: number;
+	sent: number;
+	delivered: number;
+	bounced: number;
+	complained: number;
+	failed: number;
+	queued: number;
+	totalOpens: number;
+	totalClicks: number;
+	uniqueOpens: number;
+	uniqueClicks: number;
+	deliveryRate: number;
+	bounceRate: number;
+	openRate: number;
+	clickRate: number;
+}
+
+export interface StatusBreakdown {
+	_id: string;
+	count: number;
+}
+
+export interface EmailBreakdown {
+	_id: string;
+	count: number;
+	delivered: number;
+	bounced: number;
+	opens: number;
+	clicks: number;
+	name?: string;
+	subject?: string;
+	sequenceIndex?: number;
+}
+
+export interface DailyBreakdown {
+	_id: string; // Date in YYYY-MM-DD format
+	sent: number;
+	delivered: number;
+	bounced: number;
+	opens: number;
+	clicks: number;
+}
+
+export interface CampaignSendStatsResponse {
+	success: boolean;
+	data: {
+		summary: CampaignSendStatsSummary;
+		statusBreakdown: StatusBreakdown[];
+		emailBreakdown: EmailBreakdown[];
+		dailyBreakdown: DailyBreakdown[];
+	};
+}

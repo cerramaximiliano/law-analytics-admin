@@ -33,12 +33,13 @@ import { styled } from "@mui/material/styles";
 
 // project imports
 import MainCard from "components/MainCard";
-import { Add, Edit2, SearchNormal1, Trash, MessageText1, People, Refresh } from "iconsax-react";
+import { Add, Edit2, SearchNormal1, Trash, MessageText1, People, Refresh, Chart } from "iconsax-react";
 import CampaignFormModal from "sections/admin/marketing/CampaignFormModal";
 import DeleteCampaignDialog from "sections/admin/marketing/DeleteCampaignDialog";
 import CampaignEmailList from "sections/admin/marketing/CampaignEmailList";
 import CampaignContactsList from "sections/admin/marketing/CampaignContactsList";
 import CampaignDetailModal from "sections/admin/marketing/CampaignDetailModal";
+import CampaignSendStatsModal from "sections/admin/marketing/CampaignSendStatsModal";
 import TableSkeleton from "components/UI/TableSkeleton";
 import MarketingQuickNav from "components/admin/marketing/MarketingQuickNav";
 import { useRequestQueueRefresh } from "hooks/useRequestQueueRefresh";
@@ -106,6 +107,7 @@ const MailingCampaigns = () => {
 	const [emailListOpen, setEmailListOpen] = useState<boolean>(false);
 	const [contactsListOpen, setContactsListOpen] = useState<boolean>(false);
 	const [campaignDetailOpen, setCampaignDetailOpen] = useState<boolean>(false);
+	const [sendStatsOpen, setSendStatsOpen] = useState<boolean>(false);
 	const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
 
 	// State for pagination
@@ -373,6 +375,16 @@ const MailingCampaigns = () => {
 	const handleCloseCampaignDetail = () => {
 		setSelectedCampaignId(null);
 		setCampaignDetailOpen(false);
+	};
+
+	// Send stats modal handlers
+	const handleOpenSendStats = (campaign: Campaign) => {
+		setSelectedCampaign(campaign);
+		setSendStatsOpen(true);
+	};
+
+	const handleCloseSendStats = () => {
+		setSendStatsOpen(false);
 	};
 
 	// Success handlers
@@ -656,6 +668,19 @@ const MailingCampaigns = () => {
 															<People size={18} />
 														</IconButton>
 													</Tooltip>
+													<Tooltip title="Estadísticas de envío">
+														<IconButton
+															aria-label="estadísticas"
+															size="small"
+															color="success"
+															onClick={(e) => {
+																e.stopPropagation();
+																handleOpenSendStats(campaign);
+															}}
+														>
+															<Chart size={18} />
+														</IconButton>
+													</Tooltip>
 													<Tooltip title="Ver detalles">
 														<IconButton
 															aria-label="detalles"
@@ -820,6 +845,9 @@ const MailingCampaigns = () => {
 
 			{/* Campaign Detail Modal */}
 			<CampaignDetailModal open={campaignDetailOpen} onClose={handleCloseCampaignDetail} campaignId={selectedCampaignId} />
+
+			{/* Campaign Send Stats Modal */}
+			<CampaignSendStatsModal open={sendStatsOpen} onClose={handleCloseSendStats} campaign={selectedCampaign} />
 		</MainCard>
 	);
 };

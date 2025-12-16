@@ -1,5 +1,5 @@
 import mktAxios from "utils/mktAxios";
-import { Campaign, CampaignResponse, CampaignInput } from "types/campaign";
+import { Campaign, CampaignResponse, CampaignInput, CampaignSendLogsResponse, CampaignSendStatsResponse } from "types/campaign";
 import { CampaignEmailResponse, SingleCampaignEmailResponse, CampaignEmailInput } from "types/campaign-email";
 import { ContactResponse } from "types/marketing-contact";
 import {
@@ -264,6 +264,49 @@ export const CampaignService = {
 	): Promise<{ success: boolean; message: string }> => {
 		try {
 			const response = await mktAxios.post(`/api/campaigns/${campaignId}/contacts/${contactId}/resume`, data || {});
+			return response.data;
+		} catch (error) {
+			throw error;
+		}
+	},
+
+	// Get campaign send logs with pagination
+	getCampaignSendLogs: async (
+		campaignId: string,
+		page = 1,
+		limit = 20,
+		filters: {
+			status?: string;
+			email?: string;
+			startDate?: string;
+			endDate?: string;
+			sortBy?: string;
+			sortDir?: string;
+		} = {},
+	): Promise<CampaignSendLogsResponse> => {
+		try {
+			const response = await mktAxios.get(`/api/campaigns/${campaignId}/send-logs`, {
+				params: {
+					page,
+					limit,
+					...filters,
+				},
+			});
+			return response.data;
+		} catch (error) {
+			throw error;
+		}
+	},
+
+	// Get campaign send statistics
+	getCampaignSendStats: async (
+		campaignId: string,
+		filters: { startDate?: string; endDate?: string } = {},
+	): Promise<CampaignSendStatsResponse> => {
+		try {
+			const response = await mktAxios.get(`/api/campaigns/${campaignId}/send-logs/stats`, {
+				params: filters,
+			});
 			return response.data;
 		} catch (error) {
 			throw error;
