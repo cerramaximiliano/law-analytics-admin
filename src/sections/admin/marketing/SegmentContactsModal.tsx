@@ -20,8 +20,12 @@ import {
 	Divider,
 	Tooltip,
 	CircularProgress,
+	Tabs,
+	Tab,
+	Button,
+	useTheme,
 } from "@mui/material";
-import { CloseCircle, Trash, Eye } from "iconsax-react";
+import { CloseCircle, Trash, Eye, Copy, TickCircle } from "iconsax-react";
 import { Segment } from "types/segment";
 import { MarketingContact } from "types/marketing-contact";
 import { SegmentService } from "store/reducers/segments";
@@ -36,7 +40,24 @@ interface SegmentContactsModalProps {
 	onContactRemoved?: () => void;
 }
 
+// Tab panel component
+interface TabPanelProps {
+	children?: React.ReactNode;
+	index: number;
+	value: number;
+}
+
+const TabPanel = (props: TabPanelProps) => {
+	const { children, value, index, ...other } = props;
+	return (
+		<div role="tabpanel" hidden={value !== index} id={`segment-tabpanel-${index}`} aria-labelledby={`segment-tab-${index}`} {...other}>
+			{value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
+		</div>
+	);
+};
+
 const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClose, segment, onContactRemoved }) => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Estados para la paginación y carga
@@ -51,6 +72,26 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 	// Estado para el modal de detalles del contacto
 	const [detailModalOpen, setDetailModalOpen] = useState(false);
 	const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
+
+	// Estado para tabs y JSON copy
+	const [tabValue, setTabValue] = useState<number>(0);
+	const [jsonCopied, setJsonCopied] = useState<boolean>(false);
+
+	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+		setTabValue(newValue);
+	};
+
+	const handleCopyJson = async () => {
+		if (segment) {
+			try {
+				await navigator.clipboard.writeText(JSON.stringify(segment, null, 2));
+				setJsonCopied(true);
+				setTimeout(() => setJsonCopied(false), 2000);
+			} catch (err) {
+				console.error("Error copying to clipboard:", err);
+			}
+		}
+	};
 
 	// Handler para abrir el modal de detalles
 	const handleViewDetails = (contactId: string) => {
@@ -193,7 +234,7 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 
 			<DialogContent dividers sx={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
 				{segment && (
-					<Box sx={{ mb: 3 }}>
+					<Box sx={{ mb: 2 }}>
 						<Typography variant="h6">{segment.name}</Typography>
 						{segment.description && (
 							<Typography variant="body2" color="textSecondary">
@@ -210,103 +251,149 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 								{totalContacts} contacto{totalContacts !== 1 ? "s" : ""}
 							</Typography>
 						</Box>
-						<Divider sx={{ mt: 2 }} />
 					</Box>
 				)}
 
-				{error ? (
-					<Alert severity="error" sx={{ my: 2 }}>
-						{error}
-					</Alert>
-				) : (
-					<Box sx={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-						<TableContainer component={Paper} sx={{ boxShadow: "none", flex: 1, overflow: "auto" }}>
-							<Table>
-								<TableHead>
-									<TableRow>
-										<TableCell>Email</TableCell>
-										<TableCell>Nombre</TableCell>
-										<TableCell>Apellido</TableCell>
-										<TableCell>Estado</TableCell>
-										<TableCell>Empresa</TableCell>
-										<TableCell align="center">Acciones</TableCell>
-									</TableRow>
-								</TableHead>
-								<TableBody>
-									{loading ? (
-										<TableSkeleton columns={6} rows={10} />
-									) : contacts.length === 0 ? (
+				{/* Tabs */}
+				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+					<Tabs value={tabValue} onChange={handleTabChange} aria-label="segment tabs">
+						<Tab label="Contactos" id="segment-tab-0" aria-controls="segment-tabpanel-0" />
+						<Tab label="JSON Raw" id="segment-tab-1" aria-controls="segment-tabpanel-1" />
+					</Tabs>
+				</Box>
+
+				{/* Tab 0: Contactos */}
+				<TabPanel value={tabValue} index={0}>
+					{error ? (
+						<Alert severity="error" sx={{ my: 2 }}>
+							{error}
+						</Alert>
+					) : (
+						<Box sx={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
+							<TableContainer component={Paper} sx={{ boxShadow: "none", flex: 1, overflow: "auto" }}>
+								<Table>
+									<TableHead>
 										<TableRow>
-											<TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-												<Typography variant="body1">No hay contactos en este segmento</Typography>
-											</TableCell>
+											<TableCell>Email</TableCell>
+											<TableCell>Nombre</TableCell>
+											<TableCell>Apellido</TableCell>
+											<TableCell>Estado</TableCell>
+											<TableCell>Empresa</TableCell>
+											<TableCell align="center">Acciones</TableCell>
 										</TableRow>
-									) : (
-										contacts.map((contact) => (
-											<TableRow key={contact._id} hover>
-												<TableCell>
-													<Typography variant="body2">{contact.email}</Typography>
-												</TableCell>
-												<TableCell>
-													<Typography variant="body2">{contact.firstName || "-"}</Typography>
-												</TableCell>
-												<TableCell>
-													<Typography variant="body2">{contact.lastName || "-"}</Typography>
-												</TableCell>
-												<TableCell>{getStatusChip(contact.status || "unknown")}</TableCell>
-												<TableCell>
-													<Typography variant="body2">{contact.company || "-"}</Typography>
-												</TableCell>
-												<TableCell align="center">
-													<Box sx={{ display: "flex", justifyContent: "center", gap: 0.5 }}>
-														<Tooltip title="Ver detalles">
-															<IconButton
-																size="small"
-																color="primary"
-																onClick={() => handleViewDetails(contact._id || "")}
-															>
-																<Eye size={18} />
-															</IconButton>
-														</Tooltip>
-														{segment?.type === "static" && (
-															<Tooltip title="Eliminar del segmento">
-																<IconButton
-																	size="small"
-																	color="error"
-																	onClick={() => handleRemoveContact(contact._id || "")}
-																	disabled={removingContactId !== null}
-																>
-																	{removingContactId === contact._id ? (
-																		<CircularProgress size={18} color="inherit" />
-																	) : (
-																		<Trash size={18} />
-																	)}
-																</IconButton>
-															</Tooltip>
-														)}
-													</Box>
+									</TableHead>
+									<TableBody>
+										{loading ? (
+											<TableSkeleton columns={6} rows={10} />
+										) : contacts.length === 0 ? (
+											<TableRow>
+												<TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+													<Typography variant="body1">No hay contactos en este segmento</Typography>
 												</TableCell>
 											</TableRow>
-										))
-									)}
-								</TableBody>
-							</Table>
-						</TableContainer>
+										) : (
+											contacts.map((contact) => (
+												<TableRow key={contact._id} hover>
+													<TableCell>
+														<Typography variant="body2">{contact.email}</Typography>
+													</TableCell>
+													<TableCell>
+														<Typography variant="body2">{contact.firstName || "-"}</Typography>
+													</TableCell>
+													<TableCell>
+														<Typography variant="body2">{contact.lastName || "-"}</Typography>
+													</TableCell>
+													<TableCell>{getStatusChip(contact.status || "unknown")}</TableCell>
+													<TableCell>
+														<Typography variant="body2">{contact.company || "-"}</Typography>
+													</TableCell>
+													<TableCell align="center">
+														<Box sx={{ display: "flex", justifyContent: "center", gap: 0.5 }}>
+															<Tooltip title="Ver detalles">
+																<IconButton
+																	size="small"
+																	color="primary"
+																	onClick={() => handleViewDetails(contact._id || "")}
+																>
+																	<Eye size={18} />
+																</IconButton>
+															</Tooltip>
+															{segment?.type === "static" && (
+																<Tooltip title="Eliminar del segmento">
+																	<IconButton
+																		size="small"
+																		color="error"
+																		onClick={() => handleRemoveContact(contact._id || "")}
+																		disabled={removingContactId !== null}
+																	>
+																		{removingContactId === contact._id ? (
+																			<CircularProgress size={18} color="inherit" />
+																		) : (
+																			<Trash size={18} />
+																		)}
+																	</IconButton>
+																</Tooltip>
+															)}
+														</Box>
+													</TableCell>
+												</TableRow>
+											))
+										)}
+									</TableBody>
+								</Table>
+							</TableContainer>
 
-						<TablePagination
-							rowsPerPageOptions={[5, 10, 25, 50]}
-							component="div"
-							count={totalContacts}
-							rowsPerPage={rowsPerPage}
-							page={page}
-							onPageChange={handleChangePage}
-							onRowsPerPageChange={handleChangeRowsPerPage}
-							labelRowsPerPage="Filas por página:"
-							labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
-							sx={{ mt: 1, flexShrink: 0 }}
-						/>
+							<TablePagination
+								rowsPerPageOptions={[5, 10, 25, 50]}
+								component="div"
+								count={totalContacts}
+								rowsPerPage={rowsPerPage}
+								page={page}
+								onPageChange={handleChangePage}
+								onRowsPerPageChange={handleChangeRowsPerPage}
+								labelRowsPerPage="Filas por página:"
+								labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+								sx={{ mt: 1, flexShrink: 0 }}
+							/>
+						</Box>
+					)}
+				</TabPanel>
+
+				{/* Tab 1: JSON Raw */}
+				<TabPanel value={tabValue} index={1}>
+					<Box sx={{ position: "relative" }}>
+						<Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 1 }}>
+							<Button
+								variant="outlined"
+								size="small"
+								startIcon={jsonCopied ? <TickCircle size={16} /> : <Copy size={16} />}
+								onClick={handleCopyJson}
+								color={jsonCopied ? "success" : "primary"}
+							>
+								{jsonCopied ? "Copiado" : "Copiar"}
+							</Button>
+						</Box>
+						<Box
+							component="pre"
+							sx={{
+								bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+								p: 2,
+								pt: 5,
+								borderRadius: 1,
+								overflow: "auto",
+								maxHeight: 400,
+								fontSize: "0.75rem",
+								fontFamily: "monospace",
+								border: `1px solid ${theme.palette.divider}`,
+								"& code": {
+									color: theme.palette.mode === "dark" ? "grey.300" : "grey.800",
+								},
+							}}
+						>
+							<code>{JSON.stringify(segment, null, 2)}</code>
+						</Box>
 					</Box>
-				)}
+				</TabPanel>
 			</DialogContent>
 
 			{/* Modal de detalles del contacto */}

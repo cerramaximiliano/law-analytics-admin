@@ -28,12 +28,13 @@ import {
 	Tabs,
 	Tab,
 	Badge,
+	useTheme,
 } from "@mui/material";
 import { MarketingContact } from "types/marketing-contact";
 import { MarketingContactService } from "store/reducers/marketing-contacts";
 import { CampaignService } from "store/reducers/campaign";
 import CampaignDetailModal from "./CampaignDetailModal";
-import { Refresh, ArrowDown2, ArrowUp2, Pause, Trash, Play, PauseCircle, PlayCircle, User, UserTick } from "iconsax-react";
+import { Refresh, ArrowDown2, ArrowUp2, Pause, Trash, Play, PauseCircle, PlayCircle, User, UserTick, Copy, TickCircle } from "iconsax-react";
 import authAxios from "utils/authAxios";
 
 // Tipo para datos de usuario
@@ -70,6 +71,7 @@ interface ContactDetailModalProps {
 }
 
 const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, contactId }) => {
+	const theme = useTheme();
 	const [contact, setContact] = useState<MarketingContact | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
@@ -87,6 +89,20 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 	const [globalActionLoading, setGlobalActionLoading] = useState<boolean>(false);
 	const [showAllActivities, setShowAllActivities] = useState<boolean>(false);
 	const [activeTab, setActiveTab] = useState<number>(0);
+	const [jsonCopied, setJsonCopied] = useState<boolean>(false);
+
+	// Handler para copiar JSON
+	const handleCopyJson = async () => {
+		if (contact) {
+			try {
+				await navigator.clipboard.writeText(JSON.stringify(contact, null, 2));
+				setJsonCopied(true);
+				setTimeout(() => setJsonCopied(false), 2000);
+			} catch (err) {
+				console.error("Error copying to clipboard:", err);
+			}
+		}
+	};
 
 	// Estados para datos de usuario
 	const [userData, setUserData] = useState<UserData | null>(null);
@@ -590,6 +606,7 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 											</Box>
 										}
 									/>
+									<Tab label="JSON Raw" />
 								</Tabs>
 							</Box>
 
@@ -1630,6 +1647,42 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 											)}
 										</Grid>
 									</Grid>
+								</TabPanel>
+
+								{/* Tab Panel 7 - JSON Raw */}
+								<TabPanel value={activeTab} index={7}>
+									<Box sx={{ position: "relative" }}>
+										<Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 1 }}>
+											<Button
+												variant="outlined"
+												size="small"
+												startIcon={jsonCopied ? <TickCircle size={16} /> : <Copy size={16} />}
+												onClick={handleCopyJson}
+												color={jsonCopied ? "success" : "primary"}
+											>
+												{jsonCopied ? "Copiado" : "Copiar"}
+											</Button>
+										</Box>
+										<Box
+											component="pre"
+											sx={{
+												bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+												p: 2,
+												pt: 5,
+												borderRadius: 1,
+												overflow: "auto",
+												maxHeight: 500,
+												fontSize: "0.75rem",
+												fontFamily: "monospace",
+												border: `1px solid ${theme.palette.divider}`,
+												"& code": {
+													color: theme.palette.mode === "dark" ? "grey.300" : "grey.800",
+												},
+											}}
+										>
+											<code>{JSON.stringify(contact, null, 2)}</code>
+										</Box>
+									</Box>
 								</TabPanel>
 							</Box>
 						</Box>
