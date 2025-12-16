@@ -17,8 +17,11 @@ import {
 	TableCell,
 	TableRow,
 	Skeleton,
+	Tabs,
+	Tab,
+	useTheme,
 } from "@mui/material";
-import { CloseCircle } from "iconsax-react";
+import { CloseCircle, Copy, TickCircle } from "iconsax-react";
 import { CampaignService } from "store/reducers/campaign";
 import { Campaign as ImportedCampaign } from "types/campaign";
 
@@ -38,10 +41,45 @@ interface CampaignDetail extends ImportedCampaign {
 	};
 }
 
+// Tab panel component
+interface TabPanelProps {
+	children?: React.ReactNode;
+	index: number;
+	value: number;
+}
+
+const TabPanel = (props: TabPanelProps) => {
+	const { children, value, index, ...other } = props;
+	return (
+		<div role="tabpanel" hidden={value !== index} id={`campaign-tabpanel-${index}`} aria-labelledby={`campaign-tab-${index}`} {...other}>
+			{value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
+		</div>
+	);
+};
+
 const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose, campaignId }) => {
+	const theme = useTheme();
 	const [campaign, setCampaign] = useState<CampaignDetail | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
+	const [tabValue, setTabValue] = useState<number>(0);
+	const [copied, setCopied] = useState<boolean>(false);
+
+	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+		setTabValue(newValue);
+	};
+
+	const handleCopyJson = async () => {
+		if (campaign) {
+			try {
+				await navigator.clipboard.writeText(JSON.stringify(campaign, null, 2));
+				setCopied(true);
+				setTimeout(() => setCopied(false), 2000);
+			} catch (err) {
+				console.error("Error copying to clipboard:", err);
+			}
+		}
+	};
 
 	useEffect(() => {
 		if (open && campaignId) {
@@ -146,6 +184,14 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 			</DialogTitle>
 
 			<DialogContent dividers>
+				{/* Tabs */}
+				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+					<Tabs value={tabValue} onChange={handleTabChange} aria-label="campaign detail tabs">
+						<Tab label="Detalles" id="campaign-tab-0" aria-controls="campaign-tabpanel-0" />
+						<Tab label="JSON Raw" id="campaign-tab-1" aria-controls="campaign-tabpanel-1" />
+					</Tabs>
+				</Box>
+
 				{loading ? (
 					<Grid container spacing={3}>
 						{/* Información básica skeleton */}
@@ -236,8 +282,11 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 						{"Error al cargar la campaña. Intente nuevamente más tarde.	"}
 					</Alert>
 				) : campaign ? (
-					<Grid container spacing={3}>
-						{/* Información básica */}
+					<>
+						{/* Tab 0: Detalles */}
+						<TabPanel value={tabValue} index={0}>
+							<Grid container spacing={3}>
+								{/* Información básica */}
 						<Grid item xs={12}>
 							<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
 								Información Básica
@@ -536,7 +585,45 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 								</Grid>
 							</Grid>
 						</Grid>
-					</Grid>
+							</Grid>
+						</TabPanel>
+
+						{/* Tab 1: JSON Raw */}
+						<TabPanel value={tabValue} index={1}>
+							<Box sx={{ position: "relative" }}>
+								<Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 1 }}>
+									<Button
+										variant="outlined"
+										size="small"
+										startIcon={copied ? <TickCircle size={16} /> : <Copy size={16} />}
+										onClick={handleCopyJson}
+										color={copied ? "success" : "primary"}
+									>
+										{copied ? "Copiado" : "Copiar"}
+									</Button>
+								</Box>
+								<Box
+									component="pre"
+									sx={{
+										bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+										p: 2,
+										pt: 5,
+										borderRadius: 1,
+										overflow: "auto",
+										maxHeight: 500,
+										fontSize: "0.75rem",
+										fontFamily: "monospace",
+										border: `1px solid ${theme.palette.divider}`,
+										"& code": {
+											color: theme.palette.mode === "dark" ? "grey.300" : "grey.800",
+										},
+									}}
+								>
+									<code>{JSON.stringify(campaign, null, 2)}</code>
+								</Box>
+							</Box>
+						</TabPanel>
+					</>
 				) : (
 					<Typography variant="body1" color="textSecondary" align="center" sx={{ py: 3 }}>
 						No se ha seleccionado ninguna campaña
