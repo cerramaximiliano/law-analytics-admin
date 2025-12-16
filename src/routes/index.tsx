@@ -59,14 +59,8 @@ const NotificationsMonitoring = Loadable(lazy(() => import("pages/admin/notifica
 const NotificationsJudicialMovements = Loadable(lazy(() => import("pages/admin/notifications/judicial-movements")));
 const FolderInactivity = Loadable(lazy(() => import("pages/admin/notifications/folder-inactivity")));
 
-// Placeholder pages
-const Dashboard = () => (
-	<div style={{ padding: "2rem", textAlign: "center" }}>
-		<h1>Dashboard</h1>
-		<p>Panel de administración - Dashboard</p>
-		<p style={{ color: "#666", marginTop: "1rem" }}>✅ Proyecto Completado - Fase 4</p>
-	</div>
-);
+// Dashboard page
+const Dashboard = Loadable(lazy(() => import("pages/admin/dashboard")));
 
 // ==============================|| ROUTES ||============================== //
 
@@ -107,7 +101,11 @@ export default function Routes() {
 			children: [
 				{
 					path: "dashboard",
-					element: <Dashboard />,
+					element: (
+						<AdminRoleGuard>
+							<Dashboard />
+						</AdminRoleGuard>
+					),
 				},
 				{
 					path: "admin",
