@@ -47,6 +47,13 @@ import { useRequestQueueRefresh } from "hooks/useRequestQueueRefresh";
 // types
 import { Campaign, CampaignStatus, CampaignType } from "types/campaign";
 import { CampaignService } from "store/reducers/campaign";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+// Extend dayjs with timezone support
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 // Server Status Types
 interface ServiceStatus {
@@ -639,7 +646,31 @@ const MailingCampaigns = () => {
 											<TableCell align="right">{campaign.metrics?.totalContacts || 0}</TableCell>
 											<TableCell align="right">{campaign.metrics?.emailCount || 0}</TableCell>
 											<TableCell align="right">{`${openRate}%`}</TableCell>
-											<TableCell align="right">{campaign.startDate ? new Date(campaign.startDate).toLocaleDateString() : "-"}</TableCell>
+											<TableCell align="right">
+												{campaign.startDate ? (
+													<Tooltip
+														title={`Zona horaria: ${campaign.settings?.timezone || "UTC"}`}
+														arrow
+													>
+														<Box>
+															<Typography variant="body2">
+																{dayjs
+																	.utc(campaign.startDate)
+																	.tz(campaign.settings?.timezone || "UTC")
+																	.format("DD/MM/YYYY")}
+															</Typography>
+															<Typography variant="caption" color="textSecondary">
+																{dayjs
+																	.utc(campaign.startDate)
+																	.tz(campaign.settings?.timezone || "UTC")
+																	.format("HH:mm")}
+															</Typography>
+														</Box>
+													</Tooltip>
+												) : (
+													"-"
+												)}
+											</TableCell>
 											<TableCell align="center">
 												<Stack direction="row" spacing={1} justifyContent="center">
 													<Tooltip title="Gestionar emails">
