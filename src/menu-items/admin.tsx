@@ -182,10 +182,25 @@ const admin: NavItemType = {
 		{
 			id: "users",
 			title: "Usuarios",
-			type: "item",
+			type: "collapse",
 			icon: ProfileCircle,
-			url: "/admin/users",
 			breadcrumbs: true,
+			children: [
+				{
+					id: "users-management",
+					title: "Administracion de Usuarios",
+					type: "item",
+					url: "/admin/users",
+					breadcrumbs: true,
+				},
+				{
+					id: "users-config",
+					title: "Configuracion",
+					type: "item",
+					url: "/admin/users/config",
+					breadcrumbs: true,
+				},
+			],
 		},
 		{
 			id: "notifications",
