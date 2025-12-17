@@ -12,7 +12,9 @@ import {
 	TickCircle,
 	Clock,
 	Timer1,
+	ArrowRight2,
 } from "iconsax-react";
+import { useNavigate } from "react-router-dom";
 import MainCard from "components/MainCard";
 import { DashboardService } from "store/reducers/dashboard";
 import { DashboardSummary } from "types/dashboard";
@@ -31,6 +33,12 @@ const metricInfo: Record<string, string> = {
 	freePlan: "Usuarios con plan gratuito que tienen acceso limitado a funcionalidades.",
 	standardPlan: "Usuarios con plan Standard que tienen acceso a funcionalidades intermedias.",
 	premiumPlan: "Usuarios con plan Premium que tienen acceso completo a todas las funcionalidades.",
+	// Subscriptions - Live mode
+	liveSubscriptions: "Suscripciones en modo PRODUCCIÓN de Stripe. Estas son suscripciones reales con pagos reales.",
+	liveActive: "Suscripciones activas en modo producción.",
+	// Subscriptions - Test mode
+	testSubscriptions: "Suscripciones en modo TEST de Stripe. Usadas para desarrollo y pruebas, sin pagos reales.",
+	testActive: "Suscripciones activas en modo test.",
 	// Folders
 	totalFolders: "Total de carpetas/causas creadas por todos los usuarios en la plataforma.",
 	verifiedFolders: "Carpetas vinculadas y verificadas con fuentes externas (PJN, MEV, etc.).",
@@ -94,14 +102,27 @@ interface PrimaryKPICardProps {
 	loading?: boolean;
 	infoKey: string;
 	trend?: { value: number; label: string };
+	linkTo?: string;
+	onClick?: () => void;
 }
 
-const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, color, loading, infoKey, trend }) => {
+const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, color, loading, infoKey, trend, linkTo, onClick }) => {
 	const theme = useTheme();
+	const navigate = useNavigate();
+	const isClickable = linkTo || onClick;
+
+	const handleClick = () => {
+		if (onClick) {
+			onClick();
+		} else if (linkTo) {
+			navigate(linkTo);
+		}
+	};
 
 	return (
 		<Paper
 			elevation={0}
+			onClick={isClickable ? handleClick : undefined}
 			sx={{
 				p: 3,
 				borderRadius: 3,
@@ -110,6 +131,8 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, col
 				height: "100%",
 				position: "relative",
 				overflow: "hidden",
+				cursor: isClickable ? "pointer" : "default",
+				transition: "all 0.2s ease",
 				"&::before": {
 					content: '""',
 					position: "absolute",
@@ -119,6 +142,13 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, col
 					height: 4,
 					bgcolor: color,
 				},
+				...(isClickable && {
+					"&:hover": {
+						boxShadow: theme.shadows[4],
+						borderColor: alpha(color, 0.5),
+						transform: "translateY(-2px)",
+					},
+				}),
 			}}
 		>
 			<Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", mb: 2 }}>
@@ -135,7 +165,10 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, col
 				>
 					{icon}
 				</Box>
-				<InfoTooltip metricKey={infoKey} />
+				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+					<InfoTooltip metricKey={infoKey} />
+					{isClickable && <ArrowRight2 size={16} style={{ color: theme.palette.text.secondary, opacity: 0.5 }} />}
+				</Box>
 			</Box>
 			<Box>
 				{loading ? (
@@ -173,14 +206,27 @@ interface SecondaryStatCardProps {
 	color: string;
 	loading?: boolean;
 	infoKey: string;
+	linkTo?: string;
+	onClick?: () => void;
 }
 
-const SecondaryStatCard: React.FC<SecondaryStatCardProps> = ({ title, value, icon, color, loading, infoKey }) => {
+const SecondaryStatCard: React.FC<SecondaryStatCardProps> = ({ title, value, icon, color, loading, infoKey, linkTo, onClick }) => {
 	const theme = useTheme();
+	const navigate = useNavigate();
+	const isClickable = linkTo || onClick;
+
+	const handleClick = () => {
+		if (onClick) {
+			onClick();
+		} else if (linkTo) {
+			navigate(linkTo);
+		}
+	};
 
 	return (
 		<Paper
 			elevation={0}
+			onClick={isClickable ? handleClick : undefined}
 			sx={{
 				p: 2,
 				borderRadius: 2,
@@ -188,9 +234,14 @@ const SecondaryStatCard: React.FC<SecondaryStatCardProps> = ({ title, value, ico
 				border: `1px solid ${alpha(color, 0.15)}`,
 				height: "100%",
 				transition: "all 0.2s ease",
+				cursor: isClickable ? "pointer" : "default",
 				"&:hover": {
 					bgcolor: alpha(color, 0.08),
 					borderColor: alpha(color, 0.25),
+					...(isClickable && {
+						boxShadow: theme.shadows[2],
+						transform: "translateY(-1px)",
+					}),
 				},
 			}}
 		>
@@ -201,7 +252,10 @@ const SecondaryStatCard: React.FC<SecondaryStatCardProps> = ({ title, value, ico
 						{title}
 					</Typography>
 				</Box>
-				<InfoTooltip metricKey={infoKey} />
+				<Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
+					<InfoTooltip metricKey={infoKey} />
+					{isClickable && <ArrowRight2 size={14} style={{ color: theme.palette.text.secondary, opacity: 0.5 }} />}
+				</Box>
 			</Box>
 			{loading ? (
 				<Skeleton variant="text" width={50} height={32} />
@@ -277,27 +331,51 @@ interface GroupedCardProps {
 	title: string;
 	icon: React.ReactNode;
 	children: React.ReactNode;
+	linkTo?: string;
+	onClick?: () => void;
 }
 
-const GroupedCard: React.FC<GroupedCardProps> = ({ title, icon, children }) => {
+const GroupedCard: React.FC<GroupedCardProps> = ({ title, icon, children, linkTo, onClick }) => {
 	const theme = useTheme();
+	const navigate = useNavigate();
+	const isClickable = linkTo || onClick;
+
+	const handleClick = () => {
+		if (onClick) {
+			onClick();
+		} else if (linkTo) {
+			navigate(linkTo);
+		}
+	};
 
 	return (
 		<Paper
 			elevation={0}
+			onClick={isClickable ? handleClick : undefined}
 			sx={{
 				p: 2.5,
 				borderRadius: 2,
 				bgcolor: theme.palette.background.paper,
 				border: `1px solid ${theme.palette.divider}`,
 				height: "100%",
+				cursor: isClickable ? "pointer" : "default",
+				transition: "all 0.2s ease",
+				...(isClickable && {
+					"&:hover": {
+						boxShadow: theme.shadows[2],
+						borderColor: alpha(theme.palette.primary.main, 0.3),
+					},
+				}),
 			}}
 		>
-			<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2, pb: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
-				<Box sx={{ color: theme.palette.primary.main }}>{icon}</Box>
-				<Typography variant="subtitle1" fontWeight="bold">
-					{title}
-				</Typography>
+			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2, pb: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
+				<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+					<Box sx={{ color: theme.palette.primary.main }}>{icon}</Box>
+					<Typography variant="subtitle1" fontWeight="bold">
+						{title}
+					</Typography>
+				</Box>
+				{isClickable && <ArrowRight2 size={16} style={{ color: theme.palette.text.secondary, opacity: 0.5 }} />}
 			</Box>
 			{children}
 		</Paper>
@@ -386,6 +464,7 @@ const AdminDashboard = () => {
 								color={theme.palette.primary.main}
 								loading={loading}
 								infoKey="totalUsers"
+								linkTo="/admin/users"
 							/>
 						</Grid>
 						<Grid item xs={12} sm={6} md={3}>
@@ -396,6 +475,7 @@ const AdminDashboard = () => {
 								color={theme.palette.success.main}
 								loading={loading}
 								infoKey="activeSubscriptions"
+								linkTo="/admin/usuarios/suscripciones"
 							/>
 						</Grid>
 						<Grid item xs={12} sm={6} md={3}>
@@ -406,6 +486,7 @@ const AdminDashboard = () => {
 								color={theme.palette.info.main}
 								loading={loading}
 								infoKey="verifiedFolders"
+								linkTo="/admin/causas/verified"
 							/>
 						</Grid>
 						<Grid item xs={12} sm={6} md={3}>
@@ -416,6 +497,7 @@ const AdminDashboard = () => {
 								color={theme.palette.secondary.main}
 								loading={loading}
 								infoKey="totalContacts"
+								linkTo="/admin/marketing/contacts"
 							/>
 						</Grid>
 					</Grid>
@@ -428,7 +510,7 @@ const AdminDashboard = () => {
 						<SectionHeader title="Usuarios" subtitle="Estadísticas de usuarios registrados" icon={<UserSquare size={22} variant="Bold" />} />
 						<Grid container spacing={2}>
 							<Grid item xs={12}>
-								<GroupedCard title="Estado de Usuarios" icon={<TickCircle size={18} />}>
+								<GroupedCard title="Estado de Usuarios" icon={<TickCircle size={18} />} linkTo="/admin/users">
 									<Box sx={{ display: "flex", gap: 2 }}>
 										<MiniStat
 											label="Total"
@@ -461,12 +543,26 @@ const AdminDashboard = () => {
 					<Grid item xs={12} md={6}>
 						<SectionHeader
 							title="Suscripciones"
-							subtitle="Distribución por planes"
+							subtitle="Distribución por planes y modo"
 							icon={<ReceiptItem size={22} variant="Bold" />}
 						/>
 						<Grid container spacing={2}>
+							{/* LIVE Mode Subscriptions */}
 							<Grid item xs={12}>
-								<GroupedCard title="Distribución por Plan" icon={<ReceiptItem size={18} />}>
+								<GroupedCard title="Producción (Live)" icon={<TickCircle size={18} />} linkTo="/admin/usuarios/suscripciones">
+									<Box sx={{ mb: 1, display: "flex", alignItems: "center", gap: 1 }}>
+										<Chip
+											size="small"
+											label="LIVE"
+											sx={{
+												bgcolor: alpha(theme.palette.success.main, 0.15),
+												color: theme.palette.success.main,
+												fontWeight: 600,
+												fontSize: "0.65rem",
+											}}
+										/>
+										<InfoTooltip metricKey="liveSubscriptions" />
+									</Box>
 									<Grid container spacing={2}>
 										<Grid item xs={4}>
 											<Box sx={{ textAlign: "center" }}>
@@ -474,7 +570,7 @@ const AdminDashboard = () => {
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
 													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.grey[600] }}>
-														{(data?.subscriptions.byPlan?.free || 0).toLocaleString()}
+														{(data?.subscriptions.live?.byPlan?.free || 0).toLocaleString()}
 													</Typography>
 												)}
 												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
@@ -489,7 +585,7 @@ const AdminDashboard = () => {
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
 													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.warning.main }}>
-														{(data?.subscriptions.byPlan?.standard || 0).toLocaleString()}
+														{(data?.subscriptions.live?.byPlan?.standard || 0).toLocaleString()}
 													</Typography>
 												)}
 												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
@@ -508,7 +604,7 @@ const AdminDashboard = () => {
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
 													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.secondary.main }}>
-														{(data?.subscriptions.byPlan?.premium || 0).toLocaleString()}
+														{(data?.subscriptions.live?.byPlan?.premium || 0).toLocaleString()}
 													</Typography>
 												)}
 												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
@@ -540,21 +636,107 @@ const AdminDashboard = () => {
 												Total:
 											</Typography>
 											<Typography variant="subtitle2" fontWeight="bold">
-												{(data?.subscriptions.total || 0).toLocaleString()}
+												{(data?.subscriptions.live?.total || 0).toLocaleString()}
 											</Typography>
-											<InfoTooltip metricKey="totalSubscriptions" />
 										</Box>
 										<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
 											<Typography variant="body2" color="textSecondary">
 												Activas:
 											</Typography>
 											<Typography variant="subtitle2" fontWeight="bold" color="success.main">
-												{(data?.subscriptions.active || 0).toLocaleString()}
+												{(data?.subscriptions.live?.active || 0).toLocaleString()}
 											</Typography>
-											<InfoTooltip metricKey="activeSubscriptions" />
+											<InfoTooltip metricKey="liveActive" />
 										</Box>
 									</Box>
 								</GroupedCard>
+							</Grid>
+
+							{/* TEST Mode Subscriptions */}
+							<Grid item xs={12}>
+								<Paper
+									elevation={0}
+									sx={{
+										p: 2,
+										borderRadius: 2,
+										bgcolor: alpha(theme.palette.warning.main, 0.03),
+										border: `1px dashed ${alpha(theme.palette.warning.main, 0.3)}`,
+									}}
+								>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Chip
+												size="small"
+												label="TEST"
+												sx={{
+													bgcolor: alpha(theme.palette.warning.main, 0.15),
+													color: theme.palette.warning.dark,
+													fontWeight: 600,
+													fontSize: "0.65rem",
+												}}
+											/>
+											<Typography variant="body2" color="textSecondary" sx={{ fontStyle: "italic" }}>
+												Modo pruebas
+											</Typography>
+											<InfoTooltip metricKey="testSubscriptions" />
+										</Box>
+									</Box>
+									<Grid container spacing={2}>
+										<Grid item xs={4}>
+											<Box sx={{ textAlign: "center" }}>
+												{loading ? (
+													<Skeleton variant="text" width={30} height={28} sx={{ mx: "auto" }} />
+												) : (
+													<Typography variant="h5" sx={{ fontWeight: 600, color: theme.palette.grey[500] }}>
+														{(data?.subscriptions.test?.byPlan?.free || 0).toLocaleString()}
+													</Typography>
+												)}
+												<Typography variant="caption" color="textSecondary">
+													Free
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={4}>
+											<Box sx={{ textAlign: "center" }}>
+												{loading ? (
+													<Skeleton variant="text" width={30} height={28} sx={{ mx: "auto" }} />
+												) : (
+													<Typography variant="h5" sx={{ fontWeight: 600, color: alpha(theme.palette.warning.main, 0.7) }}>
+														{(data?.subscriptions.test?.byPlan?.standard || 0).toLocaleString()}
+													</Typography>
+												)}
+												<Typography variant="caption" color="textSecondary">
+													Standard
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={4}>
+											<Box sx={{ textAlign: "center" }}>
+												{loading ? (
+													<Skeleton variant="text" width={30} height={28} sx={{ mx: "auto" }} />
+												) : (
+													<Typography variant="h5" sx={{ fontWeight: 600, color: alpha(theme.palette.secondary.main, 0.7) }}>
+														{(data?.subscriptions.test?.byPlan?.premium || 0).toLocaleString()}
+													</Typography>
+												)}
+												<Typography variant="caption" color="textSecondary">
+													Premium
+												</Typography>
+											</Box>
+										</Grid>
+									</Grid>
+									<Box sx={{ mt: 1.5, display: "flex", justifyContent: "space-between" }}>
+										<Typography variant="caption" color="textSecondary">
+											Total: <strong>{(data?.subscriptions.test?.total || 0).toLocaleString()}</strong>
+										</Typography>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+											<Typography variant="caption" color="textSecondary">
+												Activas: <strong>{(data?.subscriptions.test?.active || 0).toLocaleString()}</strong>
+											</Typography>
+											<InfoTooltip metricKey="testActive" />
+										</Box>
+									</Box>
+								</Paper>
 							</Grid>
 						</Grid>
 					</Grid>
@@ -571,6 +753,7 @@ const AdminDashboard = () => {
 									color={theme.palette.primary.main}
 									loading={loading}
 									infoKey="totalFolders"
+									linkTo="/admin/causas/non-verified"
 								/>
 							</Grid>
 							<Grid item xs={6}>
@@ -581,6 +764,7 @@ const AdminDashboard = () => {
 									color={theme.palette.success.main}
 									loading={loading}
 									infoKey="verifiedFolders"
+									linkTo="/admin/causas/verified"
 								/>
 							</Grid>
 						</Grid>
@@ -592,7 +776,7 @@ const AdminDashboard = () => {
 						<Grid container spacing={2}>
 							{/* Campaigns */}
 							<Grid item xs={12} sm={6}>
-								<GroupedCard title="Campañas" icon={<Sms size={18} />}>
+								<GroupedCard title="Campañas" icon={<Sms size={18} />} linkTo="/admin/marketing/mailing">
 									<Grid container spacing={1.5}>
 										<Grid item xs={4}>
 											<Box sx={{ textAlign: "center" }}>
@@ -651,7 +835,7 @@ const AdminDashboard = () => {
 
 							{/* Contacts */}
 							<Grid item xs={12} sm={6}>
-								<GroupedCard title="Contactos" icon={<Profile2User size={18} />}>
+								<GroupedCard title="Contactos" icon={<Profile2User size={18} />} linkTo="/admin/marketing/contacts">
 									<Box sx={{ display: "flex", gap: 2 }}>
 										<MiniStat
 											label="Total"
@@ -673,7 +857,7 @@ const AdminDashboard = () => {
 
 							{/* Segments */}
 							<Grid item xs={12}>
-								<GroupedCard title="Segmentos" icon={<MessageProgramming size={18} />}>
+								<GroupedCard title="Segmentos" icon={<MessageProgramming size={18} />} linkTo="/admin/marketing/contacts">
 									<Grid container spacing={2}>
 										<Grid item xs={4}>
 											<Box sx={{ textAlign: "center" }}>
