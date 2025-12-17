@@ -26,9 +26,16 @@ export interface SubscriptionStats {
 	test: SubscriptionModeStats;
 }
 
+export interface FolderSourceStats {
+	total: number;
+	verified: number;
+}
+
 export interface FolderStats {
 	total: number;
 	verified: number;
+	pjn: FolderSourceStats;
+	mev: FolderSourceStats;
 }
 
 export interface MarketingCampaignStats {
