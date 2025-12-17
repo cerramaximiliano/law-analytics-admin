@@ -48,7 +48,7 @@ import GenerateDataModal from "./GenerateDataModal";
 import StripeSubscriptionsTable from "./StripeSubscriptionsTable";
 
 // assets
-import { Eye, Trash, Edit, Add, Chart, SearchNormal1, CloseCircle } from "iconsax-react";
+import { Eye, Trash, Edit, Add, Chart, SearchNormal1, CloseCircle, Refresh } from "iconsax-react";
 
 // table sort
 function descendingComparator(a: any, b: any, orderBy: string) {
@@ -489,9 +489,24 @@ const UsersList = () => {
 				<ScrollX>
 					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 3 }}>
 						<Typography variant="h5">Lista de Usuarios</Typography>
-						<Button variant="contained" color="primary" onClick={handleAddUser} startIcon={<Add />}>
-							Agregar Usuario
-						</Button>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Tooltip title="Actualizar datos">
+								<IconButton
+									color="primary"
+									onClick={() => fetchUsers()}
+									disabled={loading}
+									sx={{
+										border: 1,
+										borderColor: "divider",
+									}}
+								>
+									<Refresh size={20} />
+								</IconButton>
+							</Tooltip>
+							<Button variant="contained" color="primary" onClick={handleAddUser} startIcon={<Add />}>
+								Agregar Usuario
+							</Button>
+						</Stack>
 					</Stack>
 					<Divider />
 
