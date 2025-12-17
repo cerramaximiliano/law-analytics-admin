@@ -15,6 +15,19 @@ import {
 	ArrowRight2,
 } from "iconsax-react";
 import { useNavigate } from "react-router-dom";
+import {
+	PieChart,
+	Pie,
+	Cell,
+	ResponsiveContainer,
+	Legend,
+	Tooltip as RechartsTooltip,
+	BarChart,
+	Bar,
+	XAxis,
+	YAxis,
+	CartesianGrid,
+} from "recharts";
 import MainCard from "components/MainCard";
 import { DashboardService } from "store/reducers/dashboard";
 import { DashboardSummary } from "types/dashboard";
@@ -99,6 +112,35 @@ const InfoTooltip: React.FC<InfoTooltipProps> = ({ metricKey }) => {
 			</Box>
 		</Tooltip>
 	);
+};
+
+// Custom Tooltip for Charts
+interface CustomTooltipProps {
+	active?: boolean;
+	payload?: Array<{ name: string; value: number; payload: { color: string } }>;
+}
+
+const CustomChartTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
+	const theme = useTheme();
+
+	if (active && payload && payload.length) {
+		return (
+			<Paper
+				elevation={3}
+				sx={{
+					p: 1.5,
+					bgcolor: theme.palette.background.paper,
+					border: `1px solid ${theme.palette.divider}`,
+					borderRadius: 1,
+				}}
+			>
+				<Typography variant="body2" sx={{ fontWeight: 600, color: payload[0].payload.color }}>
+					{payload[0].name}: {payload[0].value.toLocaleString()}
+				</Typography>
+			</Paper>
+		);
+	}
+	return null;
 };
 
 // Primary KPI Card Component - For main metrics (larger)
@@ -206,107 +248,6 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, col
 	);
 };
 
-// Secondary Stat Card Component - For breakdown metrics (smaller)
-interface SecondaryStatCardProps {
-	title: string;
-	value: number;
-	icon: React.ReactNode;
-	color: string;
-	loading?: boolean;
-	infoKey: string;
-	linkTo?: string;
-	onClick?: () => void;
-}
-
-const SecondaryStatCard: React.FC<SecondaryStatCardProps> = ({ title, value, icon, color, loading, infoKey, linkTo, onClick }) => {
-	const theme = useTheme();
-	const navigate = useNavigate();
-	const isClickable = linkTo || onClick;
-
-	const handleClick = () => {
-		if (onClick) {
-			onClick();
-		} else if (linkTo) {
-			navigate(linkTo);
-		}
-	};
-
-	return (
-		<Paper
-			elevation={0}
-			onClick={isClickable ? handleClick : undefined}
-			sx={{
-				p: 2,
-				borderRadius: 2,
-				bgcolor: alpha(color, 0.05),
-				border: `1px solid ${alpha(color, 0.15)}`,
-				height: "100%",
-				transition: "all 0.2s ease",
-				cursor: isClickable ? "pointer" : "default",
-				"&:hover": {
-					bgcolor: alpha(color, 0.08),
-					borderColor: alpha(color, 0.25),
-					...(isClickable && {
-						boxShadow: theme.shadows[2],
-						transform: "translateY(-1px)",
-					}),
-				},
-			}}
-		>
-			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-				<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-					<Box sx={{ color: color, display: "flex" }}>{icon}</Box>
-					<Typography variant="body2" color="textSecondary" sx={{ fontWeight: 500 }}>
-						{title}
-					</Typography>
-				</Box>
-				<Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
-					<InfoTooltip metricKey={infoKey} />
-					{isClickable && <ArrowRight2 size={14} style={{ color: theme.palette.text.secondary, opacity: 0.5 }} />}
-				</Box>
-			</Box>
-			{loading ? (
-				<Skeleton variant="text" width={50} height={32} />
-			) : (
-				<Typography variant="h4" sx={{ color: color, fontWeight: 600 }}>
-					{value.toLocaleString()}
-				</Typography>
-			)}
-		</Paper>
-	);
-};
-
-// Mini Stat Component - For inline stats in grouped cards
-interface MiniStatProps {
-	label: string;
-	value: number;
-	color?: string;
-	loading?: boolean;
-	infoKey: string;
-}
-
-const MiniStat: React.FC<MiniStatProps> = ({ label, value, color, loading, infoKey }) => {
-	const theme = useTheme();
-
-	return (
-		<Box sx={{ textAlign: "center", flex: 1 }}>
-			{loading ? (
-				<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
-			) : (
-				<Typography variant="h4" sx={{ fontWeight: 600, color: color || theme.palette.text.primary }}>
-					{value.toLocaleString()}
-				</Typography>
-			)}
-			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-				<Typography variant="caption" color="textSecondary">
-					{label}
-				</Typography>
-				<InfoTooltip metricKey={infoKey} />
-			</Box>
-		</Box>
-	);
-};
-
 // Section Header Component
 interface SectionHeaderProps {
 	title: string;
@@ -330,6 +271,104 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, subtitle, icon }) 
 					{subtitle}
 				</Typography>
 			)}
+		</Box>
+	);
+};
+
+// Chart Card Component
+interface ChartCardProps {
+	title: string;
+	icon: React.ReactNode;
+	children: React.ReactNode;
+	linkTo?: string;
+	height?: number;
+}
+
+const ChartCard: React.FC<ChartCardProps> = ({ title, icon, children, linkTo, height = 280 }) => {
+	const theme = useTheme();
+	const navigate = useNavigate();
+
+	const handleClick = () => {
+		if (linkTo) {
+			navigate(linkTo);
+		}
+	};
+
+	return (
+		<Paper
+			elevation={0}
+			sx={{
+				p: 2.5,
+				borderRadius: 2,
+				bgcolor: theme.palette.background.paper,
+				border: `1px solid ${theme.palette.divider}`,
+				height: "100%",
+				cursor: linkTo ? "pointer" : "default",
+				transition: "all 0.2s ease",
+				...(linkTo && {
+					"&:hover": {
+						boxShadow: theme.shadows[2],
+						borderColor: alpha(theme.palette.primary.main, 0.3),
+					},
+				}),
+			}}
+			onClick={linkTo ? handleClick : undefined}
+		>
+			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2, pb: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
+				<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+					<Box sx={{ color: theme.palette.primary.main }}>{icon}</Box>
+					<Typography variant="subtitle1" fontWeight="bold">
+						{title}
+					</Typography>
+				</Box>
+				{linkTo && <ArrowRight2 size={16} style={{ color: theme.palette.text.secondary, opacity: 0.5 }} />}
+			</Box>
+			<Box sx={{ height }}>
+				{children}
+			</Box>
+		</Paper>
+	);
+};
+
+// Stats Legend Component for charts
+interface StatsLegendProps {
+	items: Array<{ label: string; value: number; color: string; infoKey?: string }>;
+	loading?: boolean;
+}
+
+const StatsLegend: React.FC<StatsLegendProps> = ({ items, loading }) => {
+	const theme = useTheme();
+
+	return (
+		<Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, justifyContent: "center", height: "100%" }}>
+			{items.map((item, index) => (
+				<Box key={index} sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+					<Box
+						sx={{
+							width: 12,
+							height: 12,
+							borderRadius: "50%",
+							bgcolor: item.color,
+							flexShrink: 0,
+						}}
+					/>
+					<Box sx={{ flex: 1, minWidth: 0 }}>
+						<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+							<Typography variant="body2" color="textSecondary" noWrap>
+								{item.label}
+							</Typography>
+							{item.infoKey && <InfoTooltip metricKey={item.infoKey} />}
+						</Box>
+						{loading ? (
+							<Skeleton variant="text" width={40} height={24} />
+						) : (
+							<Typography variant="h6" sx={{ fontWeight: 600, color: item.color }}>
+								{item.value.toLocaleString()}
+							</Typography>
+						)}
+					</Box>
+				</Box>
+			))}
 		</Box>
 	);
 };
@@ -390,8 +429,40 @@ const GroupedCard: React.FC<GroupedCardProps> = ({ title, icon, children, linkTo
 	);
 };
 
+// Mini Stat Component - For inline stats
+interface MiniStatProps {
+	label: string;
+	value: number;
+	color?: string;
+	loading?: boolean;
+	infoKey: string;
+}
+
+const MiniStat: React.FC<MiniStatProps> = ({ label, value, color, loading, infoKey }) => {
+	const theme = useTheme();
+
+	return (
+		<Box sx={{ textAlign: "center", flex: 1 }}>
+			{loading ? (
+				<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
+			) : (
+				<Typography variant="h4" sx={{ fontWeight: 600, color: color || theme.palette.text.primary }}>
+					{value.toLocaleString()}
+				</Typography>
+			)}
+			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
+				<Typography variant="caption" color="textSecondary">
+					{label}
+				</Typography>
+				<InfoTooltip metricKey={infoKey} />
+			</Box>
+		</Box>
+	);
+};
+
 const AdminDashboard = () => {
 	const theme = useTheme();
+	const navigate = useNavigate();
 	const { enqueueSnackbar } = useSnackbar();
 	const [loading, setLoading] = useState(true);
 	const [data, setData] = useState<DashboardSummary | null>(null);
@@ -421,6 +492,60 @@ const AdminDashboard = () => {
 
 	const handleRefresh = () => {
 		fetchData();
+	};
+
+	// Chart data preparations
+	const userStatusData = data ? [
+		{ name: "Activos", value: data.users.active, color: theme.palette.success.main },
+		{ name: "Inactivos", value: data.users.total - data.users.active, color: theme.palette.grey[400] },
+	] : [];
+
+	const userVerificationData = data ? [
+		{ name: "Verificados", value: data.users.verified, color: theme.palette.info.main },
+		{ name: "Sin verificar", value: data.users.total - data.users.verified, color: theme.palette.grey[400] },
+	] : [];
+
+	const subscriptionPlanData = data ? [
+		{ name: "Free", value: data.subscriptions.live?.byPlan?.free || 0, color: theme.palette.grey[500] },
+		{ name: "Standard", value: data.subscriptions.live?.byPlan?.standard || 0, color: theme.palette.warning.main },
+		{ name: "Premium", value: data.subscriptions.live?.byPlan?.premium || 0, color: theme.palette.secondary.main },
+	].filter(item => item.value > 0) : [];
+
+	const foldersComparisonData = data ? [
+		{
+			name: "PJN",
+			verificadas: data.folders.pjn?.verified || 0,
+			noVerificadas: data.folders.pjn?.nonVerified || 0,
+		},
+		{
+			name: "MEV",
+			verificadas: data.folders.mev?.verified || 0,
+			noVerificadas: data.folders.mev?.nonVerified || 0,
+		},
+	] : [];
+
+	const marketingContactsData = data ? [
+		{ name: "Activos", value: data.marketing.contacts.active, color: theme.palette.success.main },
+		{ name: "Inactivos", value: data.marketing.contacts.total - data.marketing.contacts.active, color: theme.palette.grey[400] },
+	] : [];
+
+	const segmentsData = data ? [
+		{ name: "Dinámicos", value: data.marketing.segments.dynamic, color: theme.palette.secondary.main },
+		{ name: "Estáticos", value: data.marketing.segments.static, color: theme.palette.info.main },
+	].filter(item => item.value > 0) : [];
+
+	const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+		if (percent < 0.05) return null;
+		const RADIAN = Math.PI / 180;
+		const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+		const x = cx + radius * Math.cos(-midAngle * RADIAN);
+		const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+		return (
+			<text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight="bold">
+				{`${(percent * 100).toFixed(0)}%`}
+			</text>
+		);
 	};
 
 	return (
@@ -511,274 +636,413 @@ const AdminDashboard = () => {
 					</Grid>
 				</Box>
 
-				{/* Detailed Sections */}
+				{/* Detailed Sections with Charts */}
 				<Grid container spacing={3}>
-					{/* Users Section */}
-					<Grid item xs={12} md={6}>
+					{/* Users Section with Charts */}
+					<Grid item xs={12} lg={6}>
 						<SectionHeader title="Usuarios" subtitle="Estadísticas de usuarios registrados" icon={<UserSquare size={22} variant="Bold" />} />
 						<Grid container spacing={2}>
-							<Grid item xs={12}>
-								<GroupedCard title="Estado de Usuarios" icon={<TickCircle size={18} />} linkTo="/admin/users">
-									<Box sx={{ display: "flex", gap: 2 }}>
-										<MiniStat
-											label="Total"
-											value={data?.users.total || 0}
-											color={theme.palette.primary.main}
-											loading={loading}
-											infoKey="totalUsers"
-										/>
-										<MiniStat
-											label="Activos"
-											value={data?.users.active || 0}
-											color={theme.palette.success.main}
-											loading={loading}
-											infoKey="activeUsers"
-										/>
-										<MiniStat
-											label="Verificados"
-											value={data?.users.verified || 0}
-											color={theme.palette.info.main}
-											loading={loading}
-											infoKey="verifiedUsers"
-										/>
-									</Box>
-								</GroupedCard>
+							{/* User Status Donut Chart */}
+							<Grid item xs={12} sm={6}>
+								<ChartCard title="Estado de Usuarios" icon={<TickCircle size={18} />} linkTo="/admin/users" height={200}>
+									{loading ? (
+										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+											<Skeleton variant="circular" width={150} height={150} />
+										</Box>
+									) : (
+										<Grid container sx={{ height: "100%" }}>
+											<Grid item xs={7}>
+												<ResponsiveContainer width="100%" height="100%">
+													<PieChart>
+														<Pie
+															data={userStatusData}
+															cx="50%"
+															cy="50%"
+															innerRadius={40}
+															outerRadius={70}
+															paddingAngle={2}
+															dataKey="value"
+															labelLine={false}
+															label={renderCustomLabel}
+														>
+															{userStatusData.map((entry, index) => (
+																<Cell key={`cell-${index}`} fill={entry.color} />
+															))}
+														</Pie>
+														<RechartsTooltip content={<CustomChartTooltip />} />
+													</PieChart>
+												</ResponsiveContainer>
+											</Grid>
+											<Grid item xs={5}>
+												<StatsLegend
+													items={[
+														{ label: "Activos", value: data?.users.active || 0, color: theme.palette.success.main, infoKey: "activeUsers" },
+														{ label: "Inactivos", value: (data?.users.total || 0) - (data?.users.active || 0), color: theme.palette.grey[400] },
+													]}
+													loading={loading}
+												/>
+											</Grid>
+										</Grid>
+									)}
+								</ChartCard>
+							</Grid>
+
+							{/* User Verification Donut Chart */}
+							<Grid item xs={12} sm={6}>
+								<ChartCard title="Verificación de Email" icon={<TickCircle size={18} />} linkTo="/admin/users" height={200}>
+									{loading ? (
+										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+											<Skeleton variant="circular" width={150} height={150} />
+										</Box>
+									) : (
+										<Grid container sx={{ height: "100%" }}>
+											<Grid item xs={7}>
+												<ResponsiveContainer width="100%" height="100%">
+													<PieChart>
+														<Pie
+															data={userVerificationData}
+															cx="50%"
+															cy="50%"
+															innerRadius={40}
+															outerRadius={70}
+															paddingAngle={2}
+															dataKey="value"
+															labelLine={false}
+															label={renderCustomLabel}
+														>
+															{userVerificationData.map((entry, index) => (
+																<Cell key={`cell-${index}`} fill={entry.color} />
+															))}
+														</Pie>
+														<RechartsTooltip content={<CustomChartTooltip />} />
+													</PieChart>
+												</ResponsiveContainer>
+											</Grid>
+											<Grid item xs={5}>
+												<StatsLegend
+													items={[
+														{ label: "Verificados", value: data?.users.verified || 0, color: theme.palette.info.main, infoKey: "verifiedUsers" },
+														{ label: "Sin verificar", value: (data?.users.total || 0) - (data?.users.verified || 0), color: theme.palette.grey[400] },
+													]}
+													loading={loading}
+												/>
+											</Grid>
+										</Grid>
+									)}
+								</ChartCard>
 							</Grid>
 						</Grid>
 					</Grid>
 
-					{/* Subscriptions Section */}
-					<Grid item xs={12} md={6}>
+					{/* Subscriptions Section with Charts */}
+					<Grid item xs={12} lg={6}>
 						<SectionHeader
 							title="Suscripciones"
 							subtitle="Distribución por planes y modo"
 							icon={<ReceiptItem size={22} variant="Bold" />}
 						/>
 						<Grid container spacing={2}>
-							{/* LIVE Mode Subscriptions */}
-							<Grid item xs={12}>
-								<GroupedCard title="Producción (Live)" icon={<TickCircle size={18} />} linkTo="/admin/usuarios/suscripciones">
-									<Box sx={{ mb: 1, display: "flex", alignItems: "center", gap: 1 }}>
+							{/* Plan Distribution Pie Chart - Live Mode */}
+							<Grid item xs={12} sm={6}>
+								<ChartCard title="Distribución por Plan (Live)" icon={<TickCircle size={18} />} linkTo="/admin/usuarios/suscripciones" height={200}>
+									{loading ? (
+										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+											<Skeleton variant="circular" width={150} height={150} />
+										</Box>
+									) : subscriptionPlanData.length > 0 ? (
+										<Grid container sx={{ height: "100%" }}>
+											<Grid item xs={7}>
+												<ResponsiveContainer width="100%" height="100%">
+													<PieChart>
+														<Pie
+															data={subscriptionPlanData}
+															cx="50%"
+															cy="50%"
+															innerRadius={40}
+															outerRadius={70}
+															paddingAngle={2}
+															dataKey="value"
+															labelLine={false}
+															label={renderCustomLabel}
+														>
+															{subscriptionPlanData.map((entry, index) => (
+																<Cell key={`cell-${index}`} fill={entry.color} />
+															))}
+														</Pie>
+														<RechartsTooltip content={<CustomChartTooltip />} />
+													</PieChart>
+												</ResponsiveContainer>
+											</Grid>
+											<Grid item xs={5}>
+												<StatsLegend
+													items={[
+														{ label: "Free", value: data?.subscriptions.live?.byPlan?.free || 0, color: theme.palette.grey[500], infoKey: "freePlan" },
+														{ label: "Standard", value: data?.subscriptions.live?.byPlan?.standard || 0, color: theme.palette.warning.main, infoKey: "standardPlan" },
+														{ label: "Premium", value: data?.subscriptions.live?.byPlan?.premium || 0, color: theme.palette.secondary.main, infoKey: "premiumPlan" },
+													]}
+													loading={loading}
+												/>
+											</Grid>
+										</Grid>
+									) : (
+										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+											<Typography variant="body2" color="textSecondary">Sin datos</Typography>
+										</Box>
+									)}
+								</ChartCard>
+							</Grid>
+
+							{/* Test Mode Stats */}
+							<Grid item xs={12} sm={6}>
+								<Paper
+									elevation={0}
+									sx={{
+										p: 2.5,
+										borderRadius: 2,
+										bgcolor: alpha(theme.palette.warning.main, 0.03),
+										border: `1px dashed ${alpha(theme.palette.warning.main, 0.3)}`,
+										height: "100%",
+									}}
+								>
+									<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
 										<Chip
 											size="small"
-											label="LIVE"
+											label="TEST MODE"
 											sx={{
-												bgcolor: alpha(theme.palette.success.main, 0.15),
-												color: theme.palette.success.main,
+												bgcolor: alpha(theme.palette.warning.main, 0.15),
+												color: theme.palette.warning.dark,
 												fontWeight: 600,
 												fontSize: "0.65rem",
 											}}
 										/>
-										<InfoTooltip metricKey="liveSubscriptions" />
+										<InfoTooltip metricKey="testSubscriptions" />
 									</Box>
 									<Grid container spacing={2}>
 										<Grid item xs={4}>
 											<Box sx={{ textAlign: "center" }}>
 												{loading ? (
-													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
+													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.grey[600] }}>
-														{(data?.subscriptions.live?.byPlan?.free || 0).toLocaleString()}
+													<Typography variant="h5" sx={{ fontWeight: 600, color: theme.palette.grey[500] }}>
+														{(data?.subscriptions.test?.byPlan?.free || 0).toLocaleString()}
 													</Typography>
 												)}
-												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Chip size="small" label="Free" sx={{ bgcolor: alpha(theme.palette.grey[600], 0.1), fontSize: "0.7rem" }} />
-													<InfoTooltip metricKey="freePlan" />
-												</Box>
+												<Typography variant="caption" color="textSecondary">Free</Typography>
 											</Box>
 										</Grid>
 										<Grid item xs={4}>
 											<Box sx={{ textAlign: "center" }}>
 												{loading ? (
-													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
+													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.warning.main }}>
-														{(data?.subscriptions.live?.byPlan?.standard || 0).toLocaleString()}
+													<Typography variant="h5" sx={{ fontWeight: 600, color: alpha(theme.palette.warning.main, 0.7) }}>
+														{(data?.subscriptions.test?.byPlan?.standard || 0).toLocaleString()}
 													</Typography>
 												)}
-												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Chip
-														size="small"
-														label="Standard"
-														sx={{ bgcolor: alpha(theme.palette.warning.main, 0.1), color: theme.palette.warning.main, fontSize: "0.7rem" }}
-													/>
-													<InfoTooltip metricKey="standardPlan" />
-												</Box>
+												<Typography variant="caption" color="textSecondary">Standard</Typography>
 											</Box>
 										</Grid>
 										<Grid item xs={4}>
 											<Box sx={{ textAlign: "center" }}>
 												{loading ? (
-													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
+													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.secondary.main }}>
-														{(data?.subscriptions.live?.byPlan?.premium || 0).toLocaleString()}
+													<Typography variant="h5" sx={{ fontWeight: 600, color: alpha(theme.palette.secondary.main, 0.7) }}>
+														{(data?.subscriptions.test?.byPlan?.premium || 0).toLocaleString()}
 													</Typography>
 												)}
-												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Chip
-														size="small"
-														label="Premium"
-														sx={{
-															bgcolor: alpha(theme.palette.secondary.main, 0.1),
-															color: theme.palette.secondary.main,
-															fontSize: "0.7rem",
-														}}
-													/>
-													<InfoTooltip metricKey="premiumPlan" />
-												</Box>
+												<Typography variant="caption" color="textSecondary">Premium</Typography>
 											</Box>
 										</Grid>
 									</Grid>
-									<Box
-										sx={{
-											mt: 2,
-											pt: 2,
-											borderTop: `1px dashed ${theme.palette.divider}`,
-											display: "flex",
-											justifyContent: "space-between",
-										}}
-									>
-										<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-											<Typography variant="body2" color="textSecondary">
-												Total:
-											</Typography>
-											<Typography variant="subtitle2" fontWeight="bold">
-												{(data?.subscriptions.live?.total || 0).toLocaleString()}
-											</Typography>
-										</Box>
-										<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-											<Typography variant="body2" color="textSecondary">
-												Activas:
-											</Typography>
-											<Typography variant="subtitle2" fontWeight="bold" color="success.main">
-												{(data?.subscriptions.live?.active || 0).toLocaleString()}
-											</Typography>
-											<InfoTooltip metricKey="liveActive" />
-										</Box>
+									<Box sx={{ mt: 2, pt: 2, borderTop: `1px dashed ${theme.palette.divider}`, display: "flex", justifyContent: "space-between" }}>
+										<Typography variant="body2" color="textSecondary">
+											Total: <strong>{(data?.subscriptions.test?.total || 0).toLocaleString()}</strong>
+										</Typography>
+										<Typography variant="body2" color="textSecondary">
+											Activas: <strong style={{ color: theme.palette.success.main }}>{(data?.subscriptions.test?.active || 0).toLocaleString()}</strong>
+										</Typography>
 									</Box>
-								</GroupedCard>
+								</Paper>
 							</Grid>
 
-							{/* TEST Mode Subscriptions */}
+							{/* Live Mode Summary */}
 							<Grid item xs={12}>
 								<Paper
 									elevation={0}
 									sx={{
 										p: 2,
 										borderRadius: 2,
-										bgcolor: alpha(theme.palette.warning.main, 0.03),
-										border: `1px dashed ${alpha(theme.palette.warning.main, 0.3)}`,
+										bgcolor: alpha(theme.palette.success.main, 0.05),
+										border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
 									}}
 								>
-									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-											<Chip
-												size="small"
-												label="TEST"
-												sx={{
-													bgcolor: alpha(theme.palette.warning.main, 0.15),
-													color: theme.palette.warning.dark,
-													fontWeight: 600,
-													fontSize: "0.65rem",
-												}}
-											/>
-											<Typography variant="body2" color="textSecondary" sx={{ fontStyle: "italic" }}>
-												Modo pruebas
-											</Typography>
-											<InfoTooltip metricKey="testSubscriptions" />
-										</Box>
-									</Box>
-									<Grid container spacing={2}>
-										<Grid item xs={4}>
-											<Box sx={{ textAlign: "center" }}>
-												{loading ? (
-													<Skeleton variant="text" width={30} height={28} sx={{ mx: "auto" }} />
-												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: theme.palette.grey[500] }}>
-														{(data?.subscriptions.test?.byPlan?.free || 0).toLocaleString()}
-													</Typography>
-												)}
-												<Typography variant="caption" color="textSecondary">
-													Free
-												</Typography>
+									<Grid container spacing={2} alignItems="center">
+										<Grid item xs={12} sm={6}>
+											<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+												<Chip
+													size="small"
+													label="LIVE MODE"
+													sx={{
+														bgcolor: alpha(theme.palette.success.main, 0.15),
+														color: theme.palette.success.main,
+														fontWeight: 600,
+														fontSize: "0.65rem",
+													}}
+												/>
+												<InfoTooltip metricKey="liveSubscriptions" />
 											</Box>
 										</Grid>
-										<Grid item xs={4}>
+										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
 												{loading ? (
-													<Skeleton variant="text" width={30} height={28} sx={{ mx: "auto" }} />
+													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: alpha(theme.palette.warning.main, 0.7) }}>
-														{(data?.subscriptions.test?.byPlan?.standard || 0).toLocaleString()}
+													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
+														{(data?.subscriptions.live?.total || 0).toLocaleString()}
 													</Typography>
 												)}
-												<Typography variant="caption" color="textSecondary">
-													Standard
-												</Typography>
+												<Typography variant="caption" color="textSecondary">Total</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={4}>
+										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
 												{loading ? (
-													<Skeleton variant="text" width={30} height={28} sx={{ mx: "auto" }} />
+													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: alpha(theme.palette.secondary.main, 0.7) }}>
-														{(data?.subscriptions.test?.byPlan?.premium || 0).toLocaleString()}
+													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.success.main }}>
+														{(data?.subscriptions.live?.active || 0).toLocaleString()}
 													</Typography>
 												)}
-												<Typography variant="caption" color="textSecondary">
-													Premium
-												</Typography>
+												<Typography variant="caption" color="textSecondary">Activas</Typography>
 											</Box>
 										</Grid>
 									</Grid>
-									<Box sx={{ mt: 1.5, display: "flex", justifyContent: "space-between" }}>
-										<Typography variant="caption" color="textSecondary">
-											Total: <strong>{(data?.subscriptions.test?.total || 0).toLocaleString()}</strong>
-										</Typography>
-										<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-											<Typography variant="caption" color="textSecondary">
-												Activas: <strong>{(data?.subscriptions.test?.active || 0).toLocaleString()}</strong>
-											</Typography>
-											<InfoTooltip metricKey="testActive" />
+								</Paper>
+							</Grid>
+						</Grid>
+					</Grid>
+
+					{/* Folders Section with Bar Chart */}
+					<Grid item xs={12} md={6}>
+						<SectionHeader title="Carpetas / Causas" subtitle="Comparación PJN vs MEV" icon={<Folder size={22} variant="Bold" />} />
+						<Grid container spacing={2}>
+							{/* Bar Chart comparing PJN vs MEV */}
+							<Grid item xs={12}>
+								<ChartCard title="Comparación por Fuente" icon={<Folder size={18} />} height={220}>
+									{loading ? (
+										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+											<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
 										</Box>
+									) : (
+										<ResponsiveContainer width="100%" height="100%">
+											<BarChart data={foldersComparisonData} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
+												<CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} />
+												<XAxis dataKey="name" tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} />
+												<YAxis tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} />
+												<RechartsTooltip
+													contentStyle={{
+														backgroundColor: theme.palette.background.paper,
+														border: `1px solid ${theme.palette.divider}`,
+														borderRadius: 8,
+													}}
+												/>
+												<Legend />
+												<Bar dataKey="verificadas" name="Verificadas" fill={theme.palette.success.main} radius={[4, 4, 0, 0]} />
+												<Bar dataKey="noVerificadas" name="No Verificadas" fill={theme.palette.warning.main} radius={[4, 4, 0, 0]} />
+											</BarChart>
+										</ResponsiveContainer>
+									)}
+								</ChartCard>
+							</Grid>
+
+							{/* Quick Stats Row */}
+							<Grid item xs={6}>
+								<Paper
+									elevation={0}
+									onClick={() => navigate("/admin/causas/verified-app")}
+									sx={{
+										p: 2,
+										borderRadius: 2,
+										bgcolor: alpha(theme.palette.primary.main, 0.05),
+										border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+										cursor: "pointer",
+										transition: "all 0.2s ease",
+										"&:hover": {
+											boxShadow: theme.shadows[2],
+											transform: "translateY(-2px)",
+										},
+									}}
+								>
+									<Typography variant="overline" color="textSecondary">PJN</Typography>
+									<Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+										{loading ? (
+											<Skeleton variant="text" width={60} height={40} />
+										) : (
+											<Typography variant="h3" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
+												{(data?.folders.pjn?.total || 0).toLocaleString()}
+											</Typography>
+										)}
+										<Typography variant="body2" color="textSecondary">total</Typography>
+									</Box>
+									<Box sx={{ display: "flex", gap: 2, mt: 1 }}>
+										<Typography variant="caption" sx={{ color: theme.palette.success.main }}>
+											✓ {(data?.folders.pjn?.verified || 0).toLocaleString()} verif.
+										</Typography>
+										<Typography variant="caption" sx={{ color: theme.palette.warning.main }}>
+											○ {(data?.folders.pjn?.nonVerified || 0).toLocaleString()} no verif.
+										</Typography>
+									</Box>
+								</Paper>
+							</Grid>
+							<Grid item xs={6}>
+								<Paper
+									elevation={0}
+									onClick={() => navigate("/admin/mev/verified-app")}
+									sx={{
+										p: 2,
+										borderRadius: 2,
+										bgcolor: alpha(theme.palette.info.main, 0.05),
+										border: `1px solid ${alpha(theme.palette.info.main, 0.15)}`,
+										cursor: "pointer",
+										transition: "all 0.2s ease",
+										"&:hover": {
+											boxShadow: theme.shadows[2],
+											transform: "translateY(-2px)",
+										},
+									}}
+								>
+									<Typography variant="overline" color="textSecondary">MEV</Typography>
+									<Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+										{loading ? (
+											<Skeleton variant="text" width={60} height={40} />
+										) : (
+											<Typography variant="h3" sx={{ fontWeight: 700, color: theme.palette.info.main }}>
+												{(data?.folders.mev?.total || 0).toLocaleString()}
+											</Typography>
+										)}
+										<Typography variant="body2" color="textSecondary">total</Typography>
+									</Box>
+									<Box sx={{ display: "flex", gap: 2, mt: 1 }}>
+										<Typography variant="caption" sx={{ color: theme.palette.success.main }}>
+											✓ {(data?.folders.mev?.verified || 0).toLocaleString()} verif.
+										</Typography>
+										<Typography variant="caption" sx={{ color: theme.palette.warning.main }}>
+											○ {(data?.folders.mev?.nonVerified || 0).toLocaleString()} no verif.
+										</Typography>
 									</Box>
 								</Paper>
 							</Grid>
 						</Grid>
 					</Grid>
 
-					{/* Folders Section */}
-					<Grid item xs={12} md={4}>
-						<SectionHeader title="Carpetas" subtitle="Causas vinculadas por fuente" icon={<Folder size={22} variant="Bold" />} />
+					{/* Marketing Section with Charts */}
+					<Grid item xs={12} md={6}>
+						<SectionHeader title="Marketing" subtitle="Email marketing y segmentación" icon={<Sms size={22} variant="Bold" />} />
 						<Grid container spacing={2}>
-							{/* Summary Row */}
-							<Grid item xs={6}>
-								<SecondaryStatCard
-									title="Total Carpetas"
-									value={data?.folders.total || 0}
-									icon={<Folder size={18} />}
-									color={theme.palette.primary.main}
-									loading={loading}
-									infoKey="totalFolders"
-									linkTo="/admin/causas/non-verified"
-								/>
-							</Grid>
-							<Grid item xs={6}>
-								<SecondaryStatCard
-									title="Verificadas"
-									value={data?.folders.verified || 0}
-									icon={<TickCircle size={18} />}
-									color={theme.palette.success.main}
-									loading={loading}
-									infoKey="verifiedFolders"
-									linkTo="/admin/causas/verified"
-								/>
-							</Grid>
-							{/* PJN Card */}
+							{/* Campaigns Stats */}
 							<Grid item xs={12}>
-								<GroupedCard title="PJN (Poder Judicial de la Nación)" icon={<Folder size={18} />}>
+								<GroupedCard title="Campañas" icon={<Sms size={18} />} linkTo="/admin/marketing/mailing">
 									<Grid container spacing={2}>
 										<Grid item xs={4}>
 											<Box sx={{ textAlign: "center" }}>
@@ -786,172 +1050,11 @@ const AdminDashboard = () => {
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
 													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
-														{(data?.folders.pjn?.total || 0).toLocaleString()}
-													</Typography>
-												)}
-												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Typography variant="caption" color="textSecondary">
-														Total
-													</Typography>
-													<InfoTooltip metricKey="pjnTotal" />
-												</Box>
-											</Box>
-										</Grid>
-										<Grid item xs={4}>
-											<Box
-												sx={{ textAlign: "center", cursor: "pointer" }}
-												onClick={() => window.location.href = "/admin/causas/verified-app"}
-											>
-												{loading ? (
-													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
-												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.success.main }}>
-														{(data?.folders.pjn?.verified || 0).toLocaleString()}
-													</Typography>
-												)}
-												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Chip
-														size="small"
-														label="Verificadas"
-														sx={{
-															bgcolor: alpha(theme.palette.success.main, 0.1),
-															color: theme.palette.success.main,
-															fontSize: "0.65rem",
-														}}
-													/>
-													<InfoTooltip metricKey="pjnVerified" />
-												</Box>
-											</Box>
-										</Grid>
-										<Grid item xs={4}>
-											<Box
-												sx={{ textAlign: "center", cursor: "pointer" }}
-												onClick={() => window.location.href = "/admin/causas/non-verified"}
-											>
-												{loading ? (
-													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
-												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.warning.main }}>
-														{(data?.folders.pjn?.nonVerified || 0).toLocaleString()}
-													</Typography>
-												)}
-												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Chip
-														size="small"
-														label="No Verif."
-														sx={{
-															bgcolor: alpha(theme.palette.warning.main, 0.1),
-															color: theme.palette.warning.main,
-															fontSize: "0.65rem",
-														}}
-													/>
-													<InfoTooltip metricKey="pjnNonVerified" />
-												</Box>
-											</Box>
-										</Grid>
-									</Grid>
-								</GroupedCard>
-							</Grid>
-							{/* MEV Card */}
-							<Grid item xs={12}>
-								<GroupedCard title="MEV (Mesa de Entradas Virtual)" icon={<Folder size={18} />}>
-									<Grid container spacing={2}>
-										<Grid item xs={4}>
-											<Box sx={{ textAlign: "center" }}>
-												{loading ? (
-													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
-												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.info.main }}>
-														{(data?.folders.mev?.total || 0).toLocaleString()}
-													</Typography>
-												)}
-												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Typography variant="caption" color="textSecondary">
-														Total
-													</Typography>
-													<InfoTooltip metricKey="mevTotal" />
-												</Box>
-											</Box>
-										</Grid>
-										<Grid item xs={4}>
-											<Box
-												sx={{ textAlign: "center", cursor: "pointer" }}
-												onClick={() => window.location.href = "/admin/mev/verified-app"}
-											>
-												{loading ? (
-													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
-												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.success.main }}>
-														{(data?.folders.mev?.verified || 0).toLocaleString()}
-													</Typography>
-												)}
-												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Chip
-														size="small"
-														label="Verificadas"
-														sx={{
-															bgcolor: alpha(theme.palette.success.main, 0.1),
-															color: theme.palette.success.main,
-															fontSize: "0.65rem",
-														}}
-													/>
-													<InfoTooltip metricKey="mevVerified" />
-												</Box>
-											</Box>
-										</Grid>
-										<Grid item xs={4}>
-											<Box
-												sx={{ textAlign: "center", cursor: "pointer" }}
-												onClick={() => window.location.href = "/admin/mev/non-verified"}
-											>
-												{loading ? (
-													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
-												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.warning.main }}>
-														{(data?.folders.mev?.nonVerified || 0).toLocaleString()}
-													</Typography>
-												)}
-												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Chip
-														size="small"
-														label="No Verif."
-														sx={{
-															bgcolor: alpha(theme.palette.warning.main, 0.1),
-															color: theme.palette.warning.main,
-															fontSize: "0.65rem",
-														}}
-													/>
-													<InfoTooltip metricKey="mevNonVerified" />
-												</Box>
-											</Box>
-										</Grid>
-									</Grid>
-								</GroupedCard>
-							</Grid>
-						</Grid>
-					</Grid>
-
-					{/* Marketing Section */}
-					<Grid item xs={12} md={8}>
-						<SectionHeader title="Marketing" subtitle="Email marketing y segmentación" icon={<Sms size={22} variant="Bold" />} />
-						<Grid container spacing={2}>
-							{/* Campaigns */}
-							<Grid item xs={12} sm={6}>
-								<GroupedCard title="Campañas" icon={<Sms size={18} />} linkTo="/admin/marketing/mailing">
-									<Grid container spacing={1.5}>
-										<Grid item xs={4}>
-											<Box sx={{ textAlign: "center" }}>
-												{loading ? (
-													<Skeleton variant="text" width={30} height={28} sx={{ mx: "auto" }} />
-												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
 														{(data?.marketing.campaigns.total || 0).toLocaleString()}
 													</Typography>
 												)}
 												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Typography variant="caption" color="textSecondary">
-														Total
-													</Typography>
+													<Typography variant="caption" color="textSecondary">Total</Typography>
 													<InfoTooltip metricKey="totalCampaigns" />
 												</Box>
 											</Box>
@@ -959,16 +1062,14 @@ const AdminDashboard = () => {
 										<Grid item xs={4}>
 											<Box sx={{ textAlign: "center" }}>
 												{loading ? (
-													<Skeleton variant="text" width={30} height={28} sx={{ mx: "auto" }} />
+													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: theme.palette.success.main }}>
+													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.success.main }}>
 														{(data?.marketing.campaigns.active || 0).toLocaleString()}
 													</Typography>
 												)}
 												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Typography variant="caption" color="textSecondary">
-														Activas
-													</Typography>
+													<Typography variant="caption" color="textSecondary">Activas</Typography>
 													<InfoTooltip metricKey="activeCampaigns" />
 												</Box>
 											</Box>
@@ -976,16 +1077,14 @@ const AdminDashboard = () => {
 										<Grid item xs={4}>
 											<Box sx={{ textAlign: "center" }}>
 												{loading ? (
-													<Skeleton variant="text" width={30} height={28} sx={{ mx: "auto" }} />
+													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: theme.palette.warning.main }}>
+													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.warning.main }}>
 														{(data?.marketing.campaigns.scheduled || 0).toLocaleString()}
 													</Typography>
 												)}
 												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Typography variant="caption" color="textSecondary">
-														Programadas
-													</Typography>
+													<Typography variant="caption" color="textSecondary">Programadas</Typography>
 													<InfoTooltip metricKey="scheduledCampaigns" />
 												</Box>
 											</Box>
@@ -994,99 +1093,101 @@ const AdminDashboard = () => {
 								</GroupedCard>
 							</Grid>
 
-							{/* Contacts */}
+							{/* Contacts Pie Chart */}
 							<Grid item xs={12} sm={6}>
-								<GroupedCard title="Contactos" icon={<Profile2User size={18} />} linkTo="/admin/marketing/contacts">
-									<Box sx={{ display: "flex", gap: 2 }}>
-										<MiniStat
-											label="Total"
-											value={data?.marketing.contacts.total || 0}
-											color={theme.palette.primary.main}
-											loading={loading}
-											infoKey="totalContacts"
-										/>
-										<MiniStat
-											label="Activos"
-											value={data?.marketing.contacts.active || 0}
-											color={theme.palette.success.main}
-											loading={loading}
-											infoKey="activeContacts"
-										/>
-									</Box>
-								</GroupedCard>
+								<ChartCard title="Contactos" icon={<Profile2User size={18} />} linkTo="/admin/marketing/contacts" height={180}>
+									{loading ? (
+										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+											<Skeleton variant="circular" width={120} height={120} />
+										</Box>
+									) : (
+										<Grid container sx={{ height: "100%" }}>
+											<Grid item xs={6}>
+												<ResponsiveContainer width="100%" height="100%">
+													<PieChart>
+														<Pie
+															data={marketingContactsData}
+															cx="50%"
+															cy="50%"
+															innerRadius={35}
+															outerRadius={60}
+															paddingAngle={2}
+															dataKey="value"
+															labelLine={false}
+															label={renderCustomLabel}
+														>
+															{marketingContactsData.map((entry, index) => (
+																<Cell key={`cell-${index}`} fill={entry.color} />
+															))}
+														</Pie>
+														<RechartsTooltip content={<CustomChartTooltip />} />
+													</PieChart>
+												</ResponsiveContainer>
+											</Grid>
+											<Grid item xs={6}>
+												<StatsLegend
+													items={[
+														{ label: "Activos", value: data?.marketing.contacts.active || 0, color: theme.palette.success.main, infoKey: "activeContacts" },
+														{ label: "Inactivos", value: (data?.marketing.contacts.total || 0) - (data?.marketing.contacts.active || 0), color: theme.palette.grey[400] },
+													]}
+													loading={loading}
+												/>
+											</Grid>
+										</Grid>
+									)}
+								</ChartCard>
 							</Grid>
 
-							{/* Segments */}
-							<Grid item xs={12}>
-								<GroupedCard title="Segmentos" icon={<MessageProgramming size={18} />} linkTo="/admin/marketing/contacts">
-									<Grid container spacing={2}>
-										<Grid item xs={4}>
-											<Box sx={{ textAlign: "center" }}>
-												{loading ? (
-													<Skeleton variant="text" width={30} height={28} sx={{ mx: "auto" }} />
-												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
-														{(data?.marketing.segments.total || 0).toLocaleString()}
-													</Typography>
-												)}
-												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Typography variant="caption" color="textSecondary">
-														Total
-													</Typography>
-													<InfoTooltip metricKey="totalSegments" />
-												</Box>
-											</Box>
+							{/* Segments Pie Chart */}
+							<Grid item xs={12} sm={6}>
+								<ChartCard title="Segmentos" icon={<MessageProgramming size={18} />} linkTo="/admin/marketing/contacts" height={180}>
+									{loading ? (
+										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+											<Skeleton variant="circular" width={120} height={120} />
+										</Box>
+									) : segmentsData.length > 0 ? (
+										<Grid container sx={{ height: "100%" }}>
+											<Grid item xs={6}>
+												<ResponsiveContainer width="100%" height="100%">
+													<PieChart>
+														<Pie
+															data={segmentsData}
+															cx="50%"
+															cy="50%"
+															innerRadius={35}
+															outerRadius={60}
+															paddingAngle={2}
+															dataKey="value"
+															labelLine={false}
+															label={renderCustomLabel}
+														>
+															{segmentsData.map((entry, index) => (
+																<Cell key={`cell-${index}`} fill={entry.color} />
+															))}
+														</Pie>
+														<RechartsTooltip content={<CustomChartTooltip />} />
+													</PieChart>
+												</ResponsiveContainer>
+											</Grid>
+											<Grid item xs={6}>
+												<StatsLegend
+													items={[
+														{ label: "Dinámicos", value: data?.marketing.segments.dynamic || 0, color: theme.palette.secondary.main, infoKey: "dynamicSegments" },
+														{ label: "Estáticos", value: data?.marketing.segments.static || 0, color: theme.palette.info.main, infoKey: "staticSegments" },
+													]}
+													loading={loading}
+												/>
+											</Grid>
 										</Grid>
-										<Grid item xs={4}>
-											<Box sx={{ textAlign: "center" }}>
-												{loading ? (
-													<Skeleton variant="text" width={30} height={28} sx={{ mx: "auto" }} />
-												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: theme.palette.secondary.main }}>
-														{(data?.marketing.segments.dynamic || 0).toLocaleString()}
-													</Typography>
-												)}
-												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Chip
-														size="small"
-														icon={<Timer1 size={12} />}
-														label="Dinámicos"
-														sx={{
-															bgcolor: alpha(theme.palette.secondary.main, 0.1),
-															color: theme.palette.secondary.main,
-															fontSize: "0.65rem",
-															"& .MuiChip-icon": { color: "inherit" },
-														}}
-													/>
-													<InfoTooltip metricKey="dynamicSegments" />
-												</Box>
-											</Box>
-										</Grid>
-										<Grid item xs={4}>
-											<Box sx={{ textAlign: "center" }}>
-												{loading ? (
-													<Skeleton variant="text" width={30} height={28} sx={{ mx: "auto" }} />
-												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: theme.palette.info.main }}>
-														{(data?.marketing.segments.static || 0).toLocaleString()}
-													</Typography>
-												)}
-												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Chip
-														size="small"
-														label="Estáticos"
-														sx={{
-															bgcolor: alpha(theme.palette.info.main, 0.1),
-															color: theme.palette.info.main,
-															fontSize: "0.65rem",
-														}}
-													/>
-													<InfoTooltip metricKey="staticSegments" />
-												</Box>
-											</Box>
-										</Grid>
-									</Grid>
-								</GroupedCard>
+									) : (
+										<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
+											<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
+												{(data?.marketing.segments.total || 0).toLocaleString()}
+											</Typography>
+											<Typography variant="body2" color="textSecondary">Total segmentos</Typography>
+										</Box>
+									)}
+								</ChartCard>
 							</Grid>
 						</Grid>
 					</Grid>
