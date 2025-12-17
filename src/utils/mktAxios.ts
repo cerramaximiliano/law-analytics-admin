@@ -85,6 +85,24 @@ mktAxios.interceptors.request.use(
 	},
 );
 
+// Helper to check if error indicates auth issue
+const isAuthError = (error: any): boolean => {
+	const status = error.response?.status;
+	const message = error.response?.data?.message?.toLowerCase() || "";
+	const errorCode = error.response?.data?.error?.toLowerCase() || "";
+
+	// 401 is always an auth error
+	if (status === 401) return true;
+
+	// 400 can also indicate auth issues if the message suggests it
+	if (status === 400) {
+		const authKeywords = ["token", "unauthorized", "authentication", "expired", "invalid token", "jwt", "auth"];
+		return authKeywords.some((keyword) => message.includes(keyword) || errorCode.includes(keyword));
+	}
+
+	return false;
+};
+
 // Response interceptor for error handling and token refresh
 mktAxios.interceptors.response.use(
 	(response: AxiosResponse) => {
@@ -106,15 +124,21 @@ mktAxios.interceptors.response.use(
 	},
 	async (error) => {
 		const originalRequest = error.config;
+		const status = error.response?.status;
 
-		// Si recibimos un 401 del servidor y no hemos intentado refrescar aún
-		if (error.response?.status === 401 && !originalRequest._retry && !originalRequest._queued) {
+		console.log(`🔴 [mktAxios] Error ${status} en ${originalRequest?.url}:`, error.response?.data);
+
+		// Si recibimos un error de autenticación y no hemos intentado refrescar aún
+		if (isAuthError(error) && !originalRequest._retry && !originalRequest._queued) {
+			console.log("🔄 [mktAxios] Detectado error de autenticación, intentando refresh...");
 			originalRequest._retry = true;
 
 			try {
 				// Intentar refrescar el token usando la API de autenticación
 				const authBaseURL = import.meta.env.VITE_AUTH_URL || "https://api.lawanalytics.app";
+				console.log("🔄 [mktAxios] Llamando a refresh-token...");
 				const refreshResponse = await axios.post(`${authBaseURL}/api/auth/refresh-token`, {}, { withCredentials: true });
+				console.log("✅ [mktAxios] Refresh exitoso:", refreshResponse.status);
 
 				// Capturar el nuevo token de la respuesta del refresh
 				const newToken =
@@ -123,18 +147,22 @@ mktAxios.interceptors.response.use(
 					refreshResponse.data?.token;
 
 				if (newToken) {
+					console.log("✅ [mktAxios] Nuevo token obtenido");
 					authTokenService.setToken(newToken);
 					secureStorage.setAuthToken(newToken);
 					if (originalRequest.headers) {
 						originalRequest.headers.Authorization = `Bearer ${newToken}`;
 					}
+				} else {
+					console.warn("⚠️ [mktAxios] Refresh exitoso pero no se obtuvo nuevo token");
 				}
 
 				// Reintentar la petición original con el nuevo token
 				return mktAxios(originalRequest);
-			} catch (refreshError) {
+			} catch (refreshError: any) {
 				// Si el refresh falla, encolar la petición y mostrar modal de autenticación
-				// en lugar de redirigir directamente al login
+				console.log("❌ [mktAxios] Refresh fallido:", refreshError.response?.status, refreshError.response?.data);
+				console.log("🔓 [mktAxios] Mostrando modal de sesión expirada...");
 
 				// Marcar como encolada para evitar reencolar
 				originalRequest._queued = true;
@@ -143,6 +171,7 @@ mktAxios.interceptors.response.use(
 
 				// Emitir evento para que el contexto de autenticación muestre el modal
 				window.dispatchEvent(new CustomEvent("showUnauthorizedModal"));
+				console.log("📢 [mktAxios] Evento showUnauthorizedModal emitido");
 
 				// Retornar la Promise encolada que se resolverá después del login
 				return queuedPromise;
