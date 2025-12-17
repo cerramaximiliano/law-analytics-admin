@@ -41,7 +41,13 @@ const metricInfo: Record<string, string> = {
 	testActive: "Suscripciones activas en modo test.",
 	// Folders
 	totalFolders: "Total de carpetas/causas creadas por todos los usuarios en la plataforma.",
-	verifiedFolders: "Carpetas vinculadas y verificadas con fuentes externas (PJN, MEV, etc.).",
+	verifiedFolders: "Carpetas vinculadas y verificadas con fuentes externas (PJN + MEV).",
+	// PJN Folders
+	pjnTotal: "Total de carpetas vinculadas al Poder Judicial de la Nación (PJN).",
+	pjnVerified: "Carpetas PJN verificadas y sincronizadas correctamente.",
+	// MEV Folders
+	mevTotal: "Total de carpetas vinculadas a la Mesa de Entradas Virtual (MEV) de la Provincia de Buenos Aires.",
+	mevVerified: "Carpetas MEV verificadas y sincronizadas correctamente.",
 	// Marketing - Campaigns
 	totalCampaigns: "Total de campañas de email marketing creadas.",
 	activeCampaigns: "Campañas que están actualmente en ejecución enviando correos.",
@@ -743,11 +749,12 @@ const AdminDashboard = () => {
 
 					{/* Folders Section */}
 					<Grid item xs={12} md={4}>
-						<SectionHeader title="Carpetas" subtitle="Causas en el sistema" icon={<Folder size={22} variant="Bold" />} />
+						<SectionHeader title="Carpetas" subtitle="Causas vinculadas por fuente" icon={<Folder size={22} variant="Bold" />} />
 						<Grid container spacing={2}>
+							{/* Summary Row */}
 							<Grid item xs={6}>
 								<SecondaryStatCard
-									title="Total"
+									title="Total Carpetas"
 									value={data?.folders.total || 0}
 									icon={<Folder size={18} />}
 									color={theme.palette.primary.main}
@@ -766,6 +773,100 @@ const AdminDashboard = () => {
 									infoKey="verifiedFolders"
 									linkTo="/admin/causas/verified"
 								/>
+							</Grid>
+							{/* PJN Card */}
+							<Grid item xs={12}>
+								<GroupedCard title="PJN (Poder Judicial de la Nación)" icon={<Folder size={18} />} linkTo="/admin/causas/verified">
+									<Grid container spacing={2}>
+										<Grid item xs={6}>
+											<Box sx={{ textAlign: "center" }}>
+												{loading ? (
+													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
+												) : (
+													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
+														{(data?.folders.pjn?.total || 0).toLocaleString()}
+													</Typography>
+												)}
+												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
+													<Typography variant="caption" color="textSecondary">
+														Total
+													</Typography>
+													<InfoTooltip metricKey="pjnTotal" />
+												</Box>
+											</Box>
+										</Grid>
+										<Grid item xs={6}>
+											<Box sx={{ textAlign: "center" }}>
+												{loading ? (
+													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
+												) : (
+													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.success.main }}>
+														{(data?.folders.pjn?.verified || 0).toLocaleString()}
+													</Typography>
+												)}
+												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
+													<Chip
+														size="small"
+														label="Verificadas"
+														sx={{
+															bgcolor: alpha(theme.palette.success.main, 0.1),
+															color: theme.palette.success.main,
+															fontSize: "0.65rem",
+														}}
+													/>
+													<InfoTooltip metricKey="pjnVerified" />
+												</Box>
+											</Box>
+										</Grid>
+									</Grid>
+								</GroupedCard>
+							</Grid>
+							{/* MEV Card */}
+							<Grid item xs={12}>
+								<GroupedCard title="MEV (Mesa de Entradas Virtual)" icon={<Folder size={18} />} linkTo="/admin/mev/verified-app">
+									<Grid container spacing={2}>
+										<Grid item xs={6}>
+											<Box sx={{ textAlign: "center" }}>
+												{loading ? (
+													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
+												) : (
+													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.info.main }}>
+														{(data?.folders.mev?.total || 0).toLocaleString()}
+													</Typography>
+												)}
+												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
+													<Typography variant="caption" color="textSecondary">
+														Total
+													</Typography>
+													<InfoTooltip metricKey="mevTotal" />
+												</Box>
+											</Box>
+										</Grid>
+										<Grid item xs={6}>
+											<Box sx={{ textAlign: "center" }}>
+												{loading ? (
+													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
+												) : (
+													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.success.main }}>
+														{(data?.folders.mev?.verified || 0).toLocaleString()}
+													</Typography>
+												)}
+												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
+													<Chip
+														size="small"
+														label="Verificadas"
+														sx={{
+															bgcolor: alpha(theme.palette.success.main, 0.1),
+															color: theme.palette.success.main,
+															fontSize: "0.65rem",
+														}}
+													/>
+													<InfoTooltip metricKey="mevVerified" />
+												</Box>
+											</Box>
+										</Grid>
+									</Grid>
+								</GroupedCard>
 							</Grid>
 						</Grid>
 					</Grid>
