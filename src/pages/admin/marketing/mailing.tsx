@@ -9,10 +9,20 @@ import {
 	CardContent,
 	CardHeader,
 	Chip,
+	CircularProgress,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
 	Divider,
 	Grid,
 	IconButton,
 	InputAdornment,
+	List,
+	ListItem,
+	ListItemIcon,
+	ListItemText,
+	Menu,
 	MenuItem,
 	Paper,
 	Stack,
@@ -29,11 +39,13 @@ import {
 	useTheme,
 	Alert,
 } from "@mui/material";
+import { InfoCircle, TickCircle, More } from "iconsax-react";
+import { useSnackbar } from "notistack";
 import { styled } from "@mui/material/styles";
 
 // project imports
 import MainCard from "components/MainCard";
-import { Add, Edit2, SearchNormal1, Trash, MessageText1, People, Refresh, Chart } from "iconsax-react";
+import { Add, Edit2, SearchNormal1, Trash, MessageText1, People, Refresh, Chart, Copy } from "iconsax-react";
 import CampaignFormModal from "sections/admin/marketing/CampaignFormModal";
 import DeleteCampaignDialog from "sections/admin/marketing/DeleteCampaignDialog";
 import CampaignEmailList from "sections/admin/marketing/CampaignEmailList";
@@ -116,6 +128,15 @@ const MailingCampaigns = () => {
 	const [campaignDetailOpen, setCampaignDetailOpen] = useState<boolean>(false);
 	const [sendStatsOpen, setSendStatsOpen] = useState<boolean>(false);
 	const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+	const [duplicateDialogOpen, setDuplicateDialogOpen] = useState<boolean>(false);
+	const [duplicating, setDuplicating] = useState<boolean>(false);
+
+	// State for actions menu
+	const [actionsMenuAnchor, setActionsMenuAnchor] = useState<null | HTMLElement>(null);
+	const [menuCampaign, setMenuCampaign] = useState<Campaign | null>(null);
+
+	// Snackbar for notifications
+	const { enqueueSnackbar } = useSnackbar();
 
 	// State for pagination
 	const [page, setPage] = useState(0);
@@ -418,6 +439,71 @@ const MailingCampaigns = () => {
 		fetchStats();
 	};
 
+	// Duplicate campaign handlers
+	const handleOpenDuplicateDialog = (campaign: Campaign) => {
+		setSelectedCampaign(campaign);
+		setDuplicateDialogOpen(true);
+	};
+
+	const handleCloseDuplicateDialog = () => {
+		setSelectedCampaign(null);
+		setDuplicateDialogOpen(false);
+	};
+
+	const handleDuplicateCampaign = async () => {
+		if (!selectedCampaign?._id) return;
+
+		try {
+			setDuplicating(true);
+			const response = await CampaignService.duplicateCampaign(selectedCampaign._id);
+
+			if (response.success) {
+				enqueueSnackbar(`Campaña duplicada: "${response.data.name}"`, { variant: "success" });
+				handleCloseDuplicateDialog();
+				// Refresh campaigns and stats
+				fetchCampaigns();
+				fetchStats();
+			}
+		} catch (error: any) {
+			const errorMessage = error?.response?.data?.error || error?.message || "Error al duplicar la campaña";
+			enqueueSnackbar(errorMessage, { variant: "error" });
+		} finally {
+			setDuplicating(false);
+		}
+	};
+
+	// Actions menu handlers
+	const handleOpenActionsMenu = (event: React.MouseEvent<HTMLElement>, campaign: Campaign) => {
+		event.stopPropagation();
+		setActionsMenuAnchor(event.currentTarget);
+		setMenuCampaign(campaign);
+	};
+
+	const handleCloseActionsMenu = () => {
+		setActionsMenuAnchor(null);
+		setMenuCampaign(null);
+	};
+
+	const handleMenuAction = (action: string) => {
+		if (!menuCampaign) return;
+
+		switch (action) {
+			case "emails":
+				handleOpenEmailList(menuCampaign);
+				break;
+			case "contacts":
+				handleOpenContactsList(menuCampaign);
+				break;
+			case "stats":
+				handleOpenSendStats(menuCampaign);
+				break;
+			case "duplicate":
+				handleOpenDuplicateDialog(menuCampaign);
+				break;
+		}
+		handleCloseActionsMenu();
+	};
+
 	// Status chip color mapping
 	const getStatusColor = (status: CampaignStatus) => {
 		switch (status) {
@@ -672,46 +758,7 @@ const MailingCampaigns = () => {
 												)}
 											</TableCell>
 											<TableCell align="center">
-												<Stack direction="row" spacing={1} justifyContent="center">
-													<Tooltip title="Gestionar emails">
-														<IconButton
-															aria-label="emails"
-															size="small"
-															color="secondary"
-															onClick={(e) => {
-																e.stopPropagation();
-																handleOpenEmailList(campaign);
-															}}
-														>
-															<MessageText1 size={18} />
-														</IconButton>
-													</Tooltip>
-													<Tooltip title="Gestionar contactos">
-														<IconButton
-															aria-label="contacts"
-															size="small"
-															color="info"
-															onClick={(e) => {
-																e.stopPropagation();
-																handleOpenContactsList(campaign);
-															}}
-														>
-															<People size={18} />
-														</IconButton>
-													</Tooltip>
-													<Tooltip title="Estadísticas de envío">
-														<IconButton
-															aria-label="estadísticas"
-															size="small"
-															color="success"
-															onClick={(e) => {
-																e.stopPropagation();
-																handleOpenSendStats(campaign);
-															}}
-														>
-															<Chart size={18} />
-														</IconButton>
-													</Tooltip>
+												<Stack direction="row" spacing={0.5} justifyContent="center">
 													<Tooltip title="Ver detalles">
 														<IconButton
 															aria-label="detalles"
@@ -750,6 +797,15 @@ const MailingCampaigns = () => {
 															}}
 														>
 															<Trash size={18} />
+														</IconButton>
+													</Tooltip>
+													<Tooltip title="Más acciones">
+														<IconButton
+															aria-label="más acciones"
+															size="small"
+															onClick={(e) => handleOpenActionsMenu(e, campaign)}
+														>
+															<More size={18} />
 														</IconButton>
 													</Tooltip>
 												</Stack>
@@ -879,6 +935,112 @@ const MailingCampaigns = () => {
 
 			{/* Campaign Send Stats Modal */}
 			<CampaignSendStatsModal open={sendStatsOpen} onClose={handleCloseSendStats} campaign={selectedCampaign} />
+
+			{/* Actions Menu */}
+			<Menu
+				anchorEl={actionsMenuAnchor}
+				open={Boolean(actionsMenuAnchor)}
+				onClose={handleCloseActionsMenu}
+				anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+				transformOrigin={{ vertical: "top", horizontal: "right" }}
+			>
+				<MenuItem onClick={() => handleMenuAction("emails")}>
+					<ListItemIcon>
+						<MessageText1 size={18} />
+					</ListItemIcon>
+					<ListItemText primary="Gestionar emails" />
+				</MenuItem>
+				<MenuItem onClick={() => handleMenuAction("contacts")}>
+					<ListItemIcon>
+						<People size={18} />
+					</ListItemIcon>
+					<ListItemText primary="Gestionar contactos" />
+				</MenuItem>
+				<MenuItem onClick={() => handleMenuAction("stats")}>
+					<ListItemIcon>
+						<Chart size={18} />
+					</ListItemIcon>
+					<ListItemText primary="Estadísticas de envío" />
+				</MenuItem>
+				<Divider />
+				<MenuItem onClick={() => handleMenuAction("duplicate")}>
+					<ListItemIcon>
+						<Copy size={18} />
+					</ListItemIcon>
+					<ListItemText
+						primary="Duplicar campaña"
+						secondary="Crea copia en borrador sin contactos"
+					/>
+				</MenuItem>
+			</Menu>
+
+			{/* Duplicate Campaign Dialog */}
+			<Dialog open={duplicateDialogOpen} onClose={handleCloseDuplicateDialog} maxWidth="sm" fullWidth>
+				<DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+					<Copy size={24} />
+					Duplicar campaña
+				</DialogTitle>
+				<DialogContent>
+					<Box sx={{ mb: 2 }}>
+						<Typography variant="body1" gutterBottom>
+							¿Deseas duplicar la campaña <strong>"{selectedCampaign?.name}"</strong>?
+						</Typography>
+					</Box>
+
+					<Alert severity="info" icon={<InfoCircle size={20} />} sx={{ mb: 2 }}>
+						<Typography variant="subtitle2" gutterBottom>
+							La copia se creará en modo BORRADOR
+						</Typography>
+						<Typography variant="body2">
+							Podrás modificar el público objetivo, fechas y contenido antes de activarla.
+						</Typography>
+					</Alert>
+
+					<Typography variant="subtitle2" color="textSecondary" gutterBottom>
+						Lo que se copiará:
+					</Typography>
+					<List dense disablePadding>
+						<ListItem disableGutters>
+							<ListItemIcon sx={{ minWidth: 32 }}>
+								<TickCircle size={16} color={theme.palette.success.main} variant="Bold" />
+							</ListItemIcon>
+							<ListItemText primary="Configuración completa de la campaña" />
+						</ListItem>
+						<ListItem disableGutters>
+							<ListItemIcon sx={{ minWidth: 32 }}>
+								<TickCircle size={16} color={theme.palette.success.main} variant="Bold" />
+							</ListItemIcon>
+							<ListItemText primary="Todos los emails de la secuencia" />
+						</ListItem>
+						<ListItem disableGutters>
+							<ListItemIcon sx={{ minWidth: 32 }}>
+								<TickCircle size={16} color={theme.palette.success.main} variant="Bold" />
+							</ListItemIcon>
+							<ListItemText primary="Segmento de audiencia asociado" />
+						</ListItem>
+					</List>
+
+					<Alert severity="warning" sx={{ mt: 2 }}>
+						<Typography variant="body2">
+							<strong>Nota:</strong> Los contactos y métricas NO se copiarán. Deberás agregar los contactos manualmente a la nueva campaña.
+						</Typography>
+					</Alert>
+				</DialogContent>
+				<DialogActions sx={{ px: 3, pb: 2 }}>
+					<Button onClick={handleCloseDuplicateDialog} disabled={duplicating}>
+						Cancelar
+					</Button>
+					<Button
+						variant="contained"
+						color="primary"
+						onClick={handleDuplicateCampaign}
+						disabled={duplicating}
+						startIcon={duplicating ? <CircularProgress size={16} color="inherit" /> : <Copy size={18} />}
+					>
+						{duplicating ? "Duplicando..." : "Duplicar campaña"}
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</MainCard>
 	);
 };

@@ -69,6 +69,27 @@ export const CampaignService = {
 		}
 	},
 
+	// Duplicate a campaign (creates a draft copy)
+	duplicateCampaign: async (
+		id: string,
+		newName?: string,
+	): Promise<{
+		success: boolean;
+		message: string;
+		data: Campaign;
+		emailsCopied: number;
+		notes: string[];
+	}> => {
+		try {
+			const response = await mktAxios.post(`/api/campaigns/${id}/duplicate`, {
+				newName,
+			});
+			return response.data;
+		} catch (error) {
+			throw error;
+		}
+	},
+
 	// Get campaign statistics
 	getCampaignStats: async (): Promise<any> => {
 		try {
