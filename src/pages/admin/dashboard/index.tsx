@@ -43,11 +43,13 @@ const metricInfo: Record<string, string> = {
 	totalFolders: "Total de carpetas/causas creadas por todos los usuarios en la plataforma.",
 	verifiedFolders: "Carpetas vinculadas y verificadas con fuentes externas (PJN + MEV).",
 	// PJN Folders
-	pjnTotal: "Total de carpetas vinculadas al Poder Judicial de la Nación (PJN).",
-	pjnVerified: "Carpetas PJN verificadas y sincronizadas correctamente.",
+	pjnTotal: "Total de causas PJN (Poder Judicial de la Nación) = Verificadas + No Verificadas.",
+	pjnVerified: "Causas PJN verificadas y válidas (verified: true, isValid: true). Corresponde a la ruta 'Carpetas Verificadas (App)'.",
+	pjnNonVerified: "Causas PJN verificadas pero no válidas (verified: true, isValid: false). Corresponde a la ruta 'Carpetas No Verificadas'.",
 	// MEV Folders
-	mevTotal: "Total de carpetas vinculadas a la Mesa de Entradas Virtual (MEV) de la Provincia de Buenos Aires.",
-	mevVerified: "Carpetas MEV verificadas y sincronizadas correctamente.",
+	mevTotal: "Total de causas MEV (Mesa de Entradas Virtual de la Provincia de Buenos Aires) = Verificadas + No Verificadas.",
+	mevVerified: "Causas MEV verificadas y válidas (verified: true, isValid: true). Corresponde a la ruta 'MEV Verificadas (App)'.",
+	mevNonVerified: "Causas MEV verificadas pero no válidas (verified: true, isValid: false). Corresponde a la ruta 'MEV No Verificadas'.",
 	// Marketing - Campaigns
 	totalCampaigns: "Total de campañas de email marketing creadas.",
 	activeCampaigns: "Campañas que están actualmente en ejecución enviando correos.",
@@ -776,9 +778,9 @@ const AdminDashboard = () => {
 							</Grid>
 							{/* PJN Card */}
 							<Grid item xs={12}>
-								<GroupedCard title="PJN (Poder Judicial de la Nación)" icon={<Folder size={18} />} linkTo="/admin/causas/verified">
+								<GroupedCard title="PJN (Poder Judicial de la Nación)" icon={<Folder size={18} />}>
 									<Grid container spacing={2}>
-										<Grid item xs={6}>
+										<Grid item xs={4}>
 											<Box sx={{ textAlign: "center" }}>
 												{loading ? (
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
@@ -795,8 +797,11 @@ const AdminDashboard = () => {
 												</Box>
 											</Box>
 										</Grid>
-										<Grid item xs={6}>
-											<Box sx={{ textAlign: "center" }}>
+										<Grid item xs={4}>
+											<Box
+												sx={{ textAlign: "center", cursor: "pointer" }}
+												onClick={() => window.location.href = "/admin/causas/verified-app"}
+											>
 												{loading ? (
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
@@ -818,14 +823,40 @@ const AdminDashboard = () => {
 												</Box>
 											</Box>
 										</Grid>
+										<Grid item xs={4}>
+											<Box
+												sx={{ textAlign: "center", cursor: "pointer" }}
+												onClick={() => window.location.href = "/admin/causas/non-verified"}
+											>
+												{loading ? (
+													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
+												) : (
+													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.warning.main }}>
+														{(data?.folders.pjn?.nonVerified || 0).toLocaleString()}
+													</Typography>
+												)}
+												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
+													<Chip
+														size="small"
+														label="No Verif."
+														sx={{
+															bgcolor: alpha(theme.palette.warning.main, 0.1),
+															color: theme.palette.warning.main,
+															fontSize: "0.65rem",
+														}}
+													/>
+													<InfoTooltip metricKey="pjnNonVerified" />
+												</Box>
+											</Box>
+										</Grid>
 									</Grid>
 								</GroupedCard>
 							</Grid>
 							{/* MEV Card */}
 							<Grid item xs={12}>
-								<GroupedCard title="MEV (Mesa de Entradas Virtual)" icon={<Folder size={18} />} linkTo="/admin/mev/verified-app">
+								<GroupedCard title="MEV (Mesa de Entradas Virtual)" icon={<Folder size={18} />}>
 									<Grid container spacing={2}>
-										<Grid item xs={6}>
+										<Grid item xs={4}>
 											<Box sx={{ textAlign: "center" }}>
 												{loading ? (
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
@@ -842,8 +873,11 @@ const AdminDashboard = () => {
 												</Box>
 											</Box>
 										</Grid>
-										<Grid item xs={6}>
-											<Box sx={{ textAlign: "center" }}>
+										<Grid item xs={4}>
+											<Box
+												sx={{ textAlign: "center", cursor: "pointer" }}
+												onClick={() => window.location.href = "/admin/mev/verified-app"}
+											>
 												{loading ? (
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
@@ -862,6 +896,32 @@ const AdminDashboard = () => {
 														}}
 													/>
 													<InfoTooltip metricKey="mevVerified" />
+												</Box>
+											</Box>
+										</Grid>
+										<Grid item xs={4}>
+											<Box
+												sx={{ textAlign: "center", cursor: "pointer" }}
+												onClick={() => window.location.href = "/admin/mev/non-verified"}
+											>
+												{loading ? (
+													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
+												) : (
+													<Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.warning.main }}>
+														{(data?.folders.mev?.nonVerified || 0).toLocaleString()}
+													</Typography>
+												)}
+												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
+													<Chip
+														size="small"
+														label="No Verif."
+														sx={{
+															bgcolor: alpha(theme.palette.warning.main, 0.1),
+															color: theme.palette.warning.main,
+															fontSize: "0.65rem",
+														}}
+													/>
+													<InfoTooltip metricKey="mevNonVerified" />
 												</Box>
 											</Box>
 										</Grid>

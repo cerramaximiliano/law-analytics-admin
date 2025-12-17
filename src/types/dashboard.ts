@@ -29,6 +29,7 @@ export interface SubscriptionStats {
 export interface FolderSourceStats {
 	total: number;
 	verified: number;
+	nonVerified: number;
 }
 
 export interface FolderStats {
