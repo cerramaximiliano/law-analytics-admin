@@ -47,6 +47,7 @@ const PromotionsManagement = Loadable(lazy(() => import("pages/admin/promotions"
 
 // Users page
 const UsersManagement = Loadable(lazy(() => import("pages/admin/users")));
+const TokenConfig = Loadable(lazy(() => import("pages/admin/users/TokenConfig")));
 
 // Recursos pages
 const Jurisprudencia = Loadable(lazy(() => import("pages/recursos/Jurisprudencia")));
@@ -255,6 +256,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<UsersManagement />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "users/config",
+							element: (
+								<AdminRoleGuard>
+									<TokenConfig />
 								</AdminRoleGuard>
 							),
 						},
