@@ -243,6 +243,7 @@ export interface User {
 	role: string;
 	status?: string;
 	isActive?: boolean;
+	isVerified?: boolean;
 	avatar?: string;
 	phone?: string;
 	lastLogin?: string;

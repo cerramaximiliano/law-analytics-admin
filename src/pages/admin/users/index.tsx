@@ -105,6 +105,13 @@ const headCells = [
 		sortable: true,
 	},
 	{
+		id: "isVerified",
+		numeric: false,
+		label: "Verificado",
+		align: "left",
+		sortable: true,
+	},
+	{
 		id: "lastLogin",
 		numeric: false,
 		label: "Último Login",
@@ -723,6 +730,20 @@ const UsersList = () => {
 												<TableCell>{user.email || "No disponible"}</TableCell>
 												<TableCell>{renderRoleChip(user.role)}</TableCell>
 												<TableCell>{renderActiveStatusChip(user.isActive)}</TableCell>
+												<TableCell>
+													<Chip
+														label={user.isVerified ? "Sí" : "No"}
+														size="small"
+														color={user.isVerified ? "success" : "warning"}
+														sx={{
+															borderRadius: "4px",
+															minWidth: 50,
+															"& .MuiChip-label": {
+																px: 1.5,
+															},
+														}}
+													/>
+												</TableCell>
 												<TableCell>{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : "Nunca"}</TableCell>
 												<TableCell>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}</TableCell>
 												<TableCell align="center">

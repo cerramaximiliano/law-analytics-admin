@@ -63,6 +63,8 @@ import {
 	Sms,
 	Add,
 	Trash,
+	Copy,
+	DocumentCode,
 } from "iconsax-react";
 
 // API and types
@@ -2403,6 +2405,13 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 										id="user-tab-7"
 										aria-controls="user-tabpanel-7"
 									/>
+									<Tab
+										icon={<DocumentCode size={18} />}
+										iconPosition="start"
+										label="JSON Raw"
+										id="user-tab-8"
+										aria-controls="user-tabpanel-8"
+									/>
 								</Tabs>
 							</Box>
 
@@ -2506,6 +2515,62 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 
 							<TabPanel value={tabValue} index={7}>
 								{renderMarketingInfo()}
+							</TabPanel>
+
+							<TabPanel value={tabValue} index={8}>
+								{/* Raw JSON View */}
+								<Box sx={{ position: "relative" }}>
+									<Tooltip title="Copiar JSON">
+										<IconButton
+											onClick={() => {
+												if (userData) {
+													navigator.clipboard.writeText(JSON.stringify(userData, null, 2));
+													storeDispatch(
+														openSnackbar({
+															open: true,
+															message: "JSON copiado al portapapeles",
+															variant: "alert",
+															alert: { color: "success" },
+															close: true,
+														}),
+													);
+												}
+											}}
+											size="small"
+											sx={{
+												position: "absolute",
+												top: 8,
+												right: 8,
+												bgcolor: theme.palette.mode === "dark" ? theme.palette.grey[700] : theme.palette.grey[200],
+												"&:hover": {
+													bgcolor: theme.palette.mode === "dark" ? theme.palette.grey[600] : theme.palette.grey[300],
+												},
+												zIndex: 1,
+											}}
+										>
+											<Copy size={18} />
+										</IconButton>
+									</Tooltip>
+									<Box
+										component="pre"
+										sx={{
+											p: 2,
+											borderRadius: 1,
+											bgcolor: theme.palette.mode === "dark" ? theme.palette.grey[900] : theme.palette.grey[100],
+											border: 1,
+											borderColor: "divider",
+											overflow: "auto",
+											maxHeight: 500,
+											fontFamily: "monospace",
+											fontSize: "0.875rem",
+											lineHeight: 1.5,
+											whiteSpace: "pre-wrap",
+											wordBreak: "break-word",
+										}}
+									>
+										{JSON.stringify(userData, null, 2)}
+									</Box>
+								</Box>
 							</TabPanel>
 						</Box>
 
