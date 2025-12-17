@@ -6,14 +6,24 @@ export interface UserStats {
 	verified: number;
 }
 
+export interface SubscriptionPlanBreakdown {
+	free: number;
+	standard: number;
+	premium: number;
+}
+
+export interface SubscriptionModeStats {
+	total: number;
+	active: number;
+	byPlan: SubscriptionPlanBreakdown;
+}
+
 export interface SubscriptionStats {
 	total: number;
 	active: number;
-	byPlan: {
-		free: number;
-		standard: number;
-		premium: number;
-	};
+	byPlan: SubscriptionPlanBreakdown;
+	live: SubscriptionModeStats;
+	test: SubscriptionModeStats;
 }
 
 export interface FolderStats {
