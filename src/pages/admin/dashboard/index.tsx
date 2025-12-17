@@ -34,53 +34,39 @@ import { DashboardSummary } from "types/dashboard";
 import { useRequestQueueRefresh } from "hooks/useRequestQueueRefresh";
 import { useSnackbar } from "notistack";
 
-// Harmonious color palette for the dashboard
-const DASHBOARD_COLORS = {
-	// Primary palette - Blues (for main metrics and totals)
+// Simplified color palette with clear hierarchy
+// Rule: 1 primary + 2 semantic + 1 premium-only
+const COLORS = {
+	// Primary - Blue/Indigo: Navigation, highlights, main metrics
 	primary: {
-		main: "#4F46E5", // Indigo
-		light: "#818CF8",
-		dark: "#3730A3",
+		main: "#4F46E5",
+		light: "#6366F1",
+		lighter: "#EEF2FF",
 	},
-	// Secondary palette - Teals (for secondary metrics)
-	secondary: {
-		main: "#0891B2", // Cyan
-		light: "#22D3EE",
-		dark: "#0E7490",
-	},
-	// Positive states - Emerald (active, verified, success)
-	positive: {
+	// Success - Green: Active, verified, live mode
+	success: {
 		main: "#10B981",
 		light: "#34D399",
-		dark: "#059669",
+		lighter: "#ECFDF5",
 	},
-	// Attention states - Amber (pending, scheduled, warnings)
-	attention: {
+	// Warning - Orange: ONLY for test mode and pending states
+	warning: {
 		main: "#F59E0B",
 		light: "#FBBF24",
-		dark: "#D97706",
+		lighter: "#FFFBEB",
 	},
-	// Premium/Special - Violet
+	// Neutral - Gray: Inactive, unverified, secondary info
+	neutral: {
+		main: "#64748B",
+		light: "#94A3B8",
+		lighter: "#F1F5F9",
+		text: "#475569",
+	},
+	// Premium - Violet: ONLY for Premium plan (upsell)
 	premium: {
 		main: "#8B5CF6",
 		light: "#A78BFA",
-		dark: "#7C3AED",
-	},
-	// Neutral states - Slate (inactive, unverified)
-	neutral: {
-		main: "#94A3B8",
-		light: "#CBD5E1",
-		dark: "#64748B",
-	},
-	// Chart specific colors - harmonious set
-	chart: {
-		blue: "#6366F1",
-		teal: "#14B8A6",
-		emerald: "#10B981",
-		amber: "#F59E0B",
-		violet: "#8B5CF6",
-		rose: "#F43F5E",
-		slate: "#94A3B8",
+		lighter: "#F5F3FF",
 	},
 };
 
@@ -193,20 +179,19 @@ const CustomChartTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) =
 	return null;
 };
 
-// Primary KPI Card Component - For main metrics (larger)
+// Primary KPI Card Component - Clean, number-focused design
 interface PrimaryKPICardProps {
 	title: string;
 	value: number;
 	icon: React.ReactNode;
-	color: string;
+	valueColor: string;
 	loading?: boolean;
 	infoKey: string;
-	trend?: { value: number; label: string };
 	linkTo?: string;
 	onClick?: () => void;
 }
 
-const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, color, loading, infoKey, trend, linkTo, onClick }) => {
+const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, valueColor, loading, infoKey, linkTo, onClick }) => {
 	const theme = useTheme();
 	const navigate = useNavigate();
 	const isClickable = linkTo || onClick;
@@ -224,76 +209,44 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, col
 			elevation={0}
 			onClick={isClickable ? handleClick : undefined}
 			sx={{
-				p: 3,
-				borderRadius: 3,
+				p: 2.5,
+				borderRadius: 2,
 				bgcolor: theme.palette.background.paper,
 				border: `1px solid ${theme.palette.divider}`,
 				height: "100%",
-				position: "relative",
-				overflow: "hidden",
 				cursor: isClickable ? "pointer" : "default",
 				transition: "all 0.2s ease",
-				"&::before": {
-					content: '""',
-					position: "absolute",
-					top: 0,
-					left: 0,
-					right: 0,
-					height: 4,
-					bgcolor: color,
-				},
 				...(isClickable && {
 					"&:hover": {
-						boxShadow: theme.shadows[4],
-						borderColor: alpha(color, 0.5),
-						transform: "translateY(-2px)",
+						boxShadow: theme.shadows[2],
+						borderColor: COLORS.primary.light,
 					},
 				}),
 			}}
 		>
-			<Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", mb: 2 }}>
-				<Box
-					sx={{
-						p: 1.5,
-						borderRadius: 2,
-						bgcolor: alpha(color, 0.1),
-						color: color,
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-					}}
-				>
-					{icon}
+			{/* Header: Icon + Title + Info */}
+			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+				<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+					<Box sx={{ color: COLORS.neutral.light, display: "flex" }}>
+						{icon}
+					</Box>
+					<Typography variant="body2" sx={{ color: COLORS.neutral.text, fontWeight: 500 }}>
+						{title}
+					</Typography>
 				</Box>
 				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
 					<InfoTooltip metricKey={infoKey} />
-					{isClickable && <ArrowRight2 size={16} style={{ color: theme.palette.text.secondary, opacity: 0.5 }} />}
+					{isClickable && <ArrowRight2 size={14} style={{ color: COLORS.neutral.light }} />}
 				</Box>
 			</Box>
-			<Box>
-				{loading ? (
-					<Skeleton variant="text" width={80} height={50} />
-				) : (
-					<Typography variant="h2" sx={{ fontWeight: 700, color: theme.palette.text.primary, lineHeight: 1.2 }}>
-						{value.toLocaleString()}
-					</Typography>
-				)}
-				<Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
-					{title}
+			{/* Value - The hero */}
+			{loading ? (
+				<Skeleton variant="text" width={80} height={48} />
+			) : (
+				<Typography variant="h3" sx={{ fontWeight: 700, color: valueColor, lineHeight: 1 }}>
+					{value.toLocaleString()}
 				</Typography>
-				{trend && (
-					<Chip
-						size="small"
-						label={trend.label}
-						sx={{
-							mt: 1,
-							bgcolor: trend.value >= 0 ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.error.main, 0.1),
-							color: trend.value >= 0 ? theme.palette.success.main : theme.palette.error.main,
-							fontWeight: 500,
-						}}
-					/>
-				)}
-			</Box>
+			)}
 		</Paper>
 	);
 };
@@ -544,21 +497,22 @@ const AdminDashboard = () => {
 		fetchData();
 	};
 
-	// Chart data preparations with harmonious color palette
+	// Chart data - Consistent colors: Green=Active/Verified, Gray=Inactive/Unverified
 	const userStatusData = useMemo(() => data ? [
-		{ name: "Activos", value: data.users.active, color: DASHBOARD_COLORS.positive.main },
-		{ name: "Inactivos", value: data.users.total - data.users.active, color: DASHBOARD_COLORS.neutral.light },
+		{ name: "Activos", value: data.users.active, color: COLORS.success.main },
+		{ name: "Inactivos", value: data.users.total - data.users.active, color: COLORS.neutral.light },
 	] : [], [data]);
 
 	const userVerificationData = useMemo(() => data ? [
-		{ name: "Verificados", value: data.users.verified, color: DASHBOARD_COLORS.secondary.main },
-		{ name: "Sin verificar", value: data.users.total - data.users.verified, color: DASHBOARD_COLORS.neutral.light },
+		{ name: "Verificados", value: data.users.verified, color: COLORS.success.main },
+		{ name: "Sin verificar", value: data.users.total - data.users.verified, color: COLORS.neutral.light },
 	] : [], [data]);
 
+	// Subscription plans: Gray=Free, Primary=Standard, Premium=Violet (only place for violet)
 	const subscriptionPlanData = useMemo(() => data ? [
-		{ name: "Free", value: data.subscriptions.live?.byPlan?.free || 0, color: DASHBOARD_COLORS.neutral.main },
-		{ name: "Standard", value: data.subscriptions.live?.byPlan?.standard || 0, color: DASHBOARD_COLORS.attention.main },
-		{ name: "Premium", value: data.subscriptions.live?.byPlan?.premium || 0, color: DASHBOARD_COLORS.premium.main },
+		{ name: "Free", value: data.subscriptions.live?.byPlan?.free || 0, color: COLORS.neutral.main },
+		{ name: "Standard", value: data.subscriptions.live?.byPlan?.standard || 0, color: COLORS.primary.main },
+		{ name: "Premium", value: data.subscriptions.live?.byPlan?.premium || 0, color: COLORS.premium.main },
 	].filter(item => item.value > 0) : [], [data]);
 
 	const foldersComparisonData = useMemo(() => data ? [
@@ -574,14 +528,16 @@ const AdminDashboard = () => {
 		},
 	] : [], [data]);
 
+	// Marketing - consistent: Green=Active, Gray=Inactive
 	const marketingContactsData = useMemo(() => data ? [
-		{ name: "Activos", value: data.marketing.contacts.active, color: DASHBOARD_COLORS.positive.main },
-		{ name: "Inactivos", value: data.marketing.contacts.total - data.marketing.contacts.active, color: DASHBOARD_COLORS.neutral.light },
+		{ name: "Activos", value: data.marketing.contacts.active, color: COLORS.success.main },
+		{ name: "Inactivos", value: data.marketing.contacts.total - data.marketing.contacts.active, color: COLORS.neutral.light },
 	] : [], [data]);
 
+	// Segments - use primary blue tones (no violet - not premium)
 	const segmentsData = useMemo(() => data ? [
-		{ name: "Dinámicos", value: data.marketing.segments.dynamic, color: DASHBOARD_COLORS.chart.violet },
-		{ name: "Estáticos", value: data.marketing.segments.static, color: DASHBOARD_COLORS.chart.teal },
+		{ name: "Dinámicos", value: data.marketing.segments.dynamic, color: COLORS.primary.main },
+		{ name: "Estáticos", value: data.marketing.segments.static, color: COLORS.primary.light },
 	].filter(item => item.value > 0) : [], [data]);
 
 	const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
@@ -638,13 +594,13 @@ const AdminDashboard = () => {
 					<Typography variant="overline" color="textSecondary" sx={{ mb: 2, display: "block", letterSpacing: 1.5 }}>
 						Resumen General
 					</Typography>
-					<Grid container spacing={3}>
+					<Grid container spacing={2}>
 						<Grid item xs={12} sm={6} md={3}>
 							<PrimaryKPICard
 								title="Total Usuarios"
 								value={data?.users.total || 0}
-								icon={<UserSquare size={28} variant="Bold" />}
-								color={DASHBOARD_COLORS.primary.main}
+								icon={<UserSquare size={20} />}
+								valueColor={COLORS.primary.main}
 								loading={loading}
 								infoKey="totalUsers"
 								linkTo="/admin/users"
@@ -654,8 +610,8 @@ const AdminDashboard = () => {
 							<PrimaryKPICard
 								title="Suscripciones Activas"
 								value={data?.subscriptions.active || 0}
-								icon={<ReceiptItem size={28} variant="Bold" />}
-								color={DASHBOARD_COLORS.positive.main}
+								icon={<ReceiptItem size={20} />}
+								valueColor={COLORS.success.main}
 								loading={loading}
 								infoKey="activeSubscriptions"
 								linkTo="/admin/usuarios/suscripciones"
@@ -665,8 +621,8 @@ const AdminDashboard = () => {
 							<PrimaryKPICard
 								title="Carpetas Verificadas"
 								value={data?.folders.verified || 0}
-								icon={<Folder size={28} variant="Bold" />}
-								color={DASHBOARD_COLORS.secondary.main}
+								icon={<Folder size={20} />}
+								valueColor={COLORS.success.main}
 								loading={loading}
 								infoKey="verifiedFolders"
 								linkTo="/admin/causas/verified"
@@ -676,8 +632,8 @@ const AdminDashboard = () => {
 							<PrimaryKPICard
 								title="Contactos Marketing"
 								value={data?.marketing.contacts.total || 0}
-								icon={<Profile2User size={28} variant="Bold" />}
-								color={DASHBOARD_COLORS.premium.main}
+								icon={<Profile2User size={20} />}
+								valueColor={COLORS.primary.main}
 								loading={loading}
 								infoKey="totalContacts"
 								linkTo="/admin/marketing/contacts"
@@ -726,8 +682,8 @@ const AdminDashboard = () => {
 											<Grid item xs={5}>
 												<StatsLegend
 													items={[
-														{ label: "Activos", value: data?.users.active || 0, color: DASHBOARD_COLORS.positive.main, infoKey: "activeUsers" },
-														{ label: "Inactivos", value: (data?.users.total || 0) - (data?.users.active || 0), color: DASHBOARD_COLORS.neutral.light },
+														{ label: "Activos", value: data?.users.active || 0, color: COLORS.success.main, infoKey: "activeUsers" },
+														{ label: "Inactivos", value: (data?.users.total || 0) - (data?.users.active || 0), color: COLORS.neutral.light },
 													]}
 													loading={loading}
 												/>
@@ -771,8 +727,8 @@ const AdminDashboard = () => {
 											<Grid item xs={5}>
 												<StatsLegend
 													items={[
-														{ label: "Verificados", value: data?.users.verified || 0, color: DASHBOARD_COLORS.secondary.main, infoKey: "verifiedUsers" },
-														{ label: "Sin verificar", value: (data?.users.total || 0) - (data?.users.verified || 0), color: DASHBOARD_COLORS.neutral.light },
+														{ label: "Verificados", value: data?.users.verified || 0, color: COLORS.success.main, infoKey: "verifiedUsers" },
+														{ label: "Sin verificar", value: (data?.users.total || 0) - (data?.users.verified || 0), color: COLORS.neutral.light },
 													]}
 													loading={loading}
 												/>
@@ -826,9 +782,9 @@ const AdminDashboard = () => {
 											<Grid item xs={5}>
 												<StatsLegend
 													items={[
-														{ label: "Free", value: data?.subscriptions.live?.byPlan?.free || 0, color: DASHBOARD_COLORS.neutral.main, infoKey: "freePlan" },
-														{ label: "Standard", value: data?.subscriptions.live?.byPlan?.standard || 0, color: DASHBOARD_COLORS.attention.main, infoKey: "standardPlan" },
-														{ label: "Premium", value: data?.subscriptions.live?.byPlan?.premium || 0, color: DASHBOARD_COLORS.premium.main, infoKey: "premiumPlan" },
+														{ label: "Free", value: data?.subscriptions.live?.byPlan?.free || 0, color: COLORS.neutral.main, infoKey: "freePlan" },
+														{ label: "Standard", value: data?.subscriptions.live?.byPlan?.standard || 0, color: COLORS.primary.main, infoKey: "standardPlan" },
+														{ label: "Premium", value: data?.subscriptions.live?.byPlan?.premium || 0, color: COLORS.premium.main, infoKey: "premiumPlan" },
 													]}
 													loading={loading}
 												/>
@@ -849,8 +805,8 @@ const AdminDashboard = () => {
 									sx={{
 										p: 2.5,
 										borderRadius: 2,
-										bgcolor: alpha(DASHBOARD_COLORS.attention.main, 0.04),
-										border: `1px dashed ${alpha(DASHBOARD_COLORS.attention.main, 0.3)}`,
+										bgcolor: alpha(COLORS.warning.main, 0.04),
+										border: `1px dashed ${alpha(COLORS.warning.main, 0.3)}`,
 										height: "100%",
 									}}
 								>
@@ -859,8 +815,8 @@ const AdminDashboard = () => {
 											size="small"
 											label="TEST MODE"
 											sx={{
-												bgcolor: alpha(DASHBOARD_COLORS.attention.main, 0.15),
-												color: DASHBOARD_COLORS.attention.dark,
+												bgcolor: alpha(COLORS.warning.main, 0.15),
+												color: COLORS.warning.main,
 												fontWeight: 600,
 												fontSize: "0.65rem",
 											}}
@@ -873,7 +829,7 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: DASHBOARD_COLORS.neutral.main }}>
+													<Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.neutral.main }}>
 														{(data?.subscriptions.test?.byPlan?.free || 0).toLocaleString()}
 													</Typography>
 												)}
@@ -885,7 +841,7 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: alpha(DASHBOARD_COLORS.attention.main, 0.8) }}>
+													<Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.neutral.main }}>
 														{(data?.subscriptions.test?.byPlan?.standard || 0).toLocaleString()}
 													</Typography>
 												)}
@@ -897,7 +853,7 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: alpha(DASHBOARD_COLORS.premium.main, 0.8) }}>
+													<Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.neutral.main }}>
 														{(data?.subscriptions.test?.byPlan?.premium || 0).toLocaleString()}
 													</Typography>
 												)}
@@ -910,7 +866,7 @@ const AdminDashboard = () => {
 											Total: <strong>{(data?.subscriptions.test?.total || 0).toLocaleString()}</strong>
 										</Typography>
 										<Typography variant="body2" color="textSecondary">
-											Activas: <strong style={{ color: DASHBOARD_COLORS.positive.main }}>{(data?.subscriptions.test?.active || 0).toLocaleString()}</strong>
+											Activas: <strong style={{ color: COLORS.warning.main }}>{(data?.subscriptions.test?.active || 0).toLocaleString()}</strong>
 										</Typography>
 									</Box>
 								</Paper>
@@ -923,8 +879,8 @@ const AdminDashboard = () => {
 									sx={{
 										p: 2,
 										borderRadius: 2,
-										bgcolor: alpha(DASHBOARD_COLORS.positive.main, 0.05),
-										border: `1px solid ${alpha(DASHBOARD_COLORS.positive.main, 0.2)}`,
+										bgcolor: alpha(COLORS.success.main, 0.05),
+										border: `1px solid ${alpha(COLORS.success.main, 0.2)}`,
 									}}
 								>
 									<Grid container spacing={2} alignItems="center">
@@ -934,8 +890,8 @@ const AdminDashboard = () => {
 													size="small"
 													label="LIVE MODE"
 													sx={{
-														bgcolor: alpha(DASHBOARD_COLORS.positive.main, 0.15),
-														color: DASHBOARD_COLORS.positive.main,
+														bgcolor: alpha(COLORS.success.main, 0.15),
+														color: COLORS.success.main,
 														fontWeight: 600,
 														fontSize: "0.65rem",
 													}}
@@ -948,7 +904,7 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: DASHBOARD_COLORS.primary.main }}>
+													<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.primary.main }}>
 														{(data?.subscriptions.live?.total || 0).toLocaleString()}
 													</Typography>
 												)}
@@ -960,7 +916,7 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: DASHBOARD_COLORS.positive.main }}>
+													<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.success.main }}>
 														{(data?.subscriptions.live?.active || 0).toLocaleString()}
 													</Typography>
 												)}
@@ -998,8 +954,8 @@ const AdminDashboard = () => {
 													}}
 												/>
 												<Legend />
-												<Bar dataKey="verificadas" name="Verificadas" fill={DASHBOARD_COLORS.positive.main} radius={[4, 4, 0, 0]} />
-												<Bar dataKey="noVerificadas" name="No Verificadas" fill={DASHBOARD_COLORS.attention.main} radius={[4, 4, 0, 0]} />
+												<Bar dataKey="verificadas" name="Verificadas" fill={COLORS.success.main} radius={[4, 4, 0, 0]} />
+												<Bar dataKey="noVerificadas" name="No Verificadas" fill={COLORS.neutral.light} radius={[4, 4, 0, 0]} />
 											</BarChart>
 										</ResponsiveContainer>
 									)}
@@ -1014,8 +970,8 @@ const AdminDashboard = () => {
 									sx={{
 										p: 2,
 										borderRadius: 2,
-										bgcolor: alpha(DASHBOARD_COLORS.primary.main, 0.05),
-										border: `1px solid ${alpha(DASHBOARD_COLORS.primary.main, 0.15)}`,
+										bgcolor: alpha(COLORS.primary.main, 0.05),
+										border: `1px solid ${alpha(COLORS.primary.main, 0.15)}`,
 										cursor: "pointer",
 										transition: "all 0.2s ease",
 										"&:hover": {
@@ -1029,17 +985,17 @@ const AdminDashboard = () => {
 										{loading ? (
 											<Skeleton variant="text" width={60} height={40} />
 										) : (
-											<Typography variant="h3" sx={{ fontWeight: 700, color: DASHBOARD_COLORS.primary.main }}>
+											<Typography variant="h3" sx={{ fontWeight: 700, color: COLORS.primary.main }}>
 												{(data?.folders.pjn?.total || 0).toLocaleString()}
 											</Typography>
 										)}
 										<Typography variant="body2" color="textSecondary">total</Typography>
 									</Box>
 									<Box sx={{ display: "flex", gap: 2, mt: 1 }}>
-										<Typography variant="caption" sx={{ color: DASHBOARD_COLORS.positive.main }}>
+										<Typography variant="caption" sx={{ color: COLORS.success.main }}>
 											✓ {(data?.folders.pjn?.verified || 0).toLocaleString()} verif.
 										</Typography>
-										<Typography variant="caption" sx={{ color: DASHBOARD_COLORS.attention.main }}>
+										<Typography variant="caption" sx={{ color: COLORS.neutral.main }}>
 											○ {(data?.folders.pjn?.nonVerified || 0).toLocaleString()} no verif.
 										</Typography>
 									</Box>
@@ -1052,8 +1008,8 @@ const AdminDashboard = () => {
 									sx={{
 										p: 2,
 										borderRadius: 2,
-										bgcolor: alpha(DASHBOARD_COLORS.secondary.main, 0.05),
-										border: `1px solid ${alpha(DASHBOARD_COLORS.secondary.main, 0.15)}`,
+										bgcolor: alpha(COLORS.primary.main, 0.05),
+										border: `1px solid ${alpha(COLORS.primary.main, 0.15)}`,
 										cursor: "pointer",
 										transition: "all 0.2s ease",
 										"&:hover": {
@@ -1067,17 +1023,17 @@ const AdminDashboard = () => {
 										{loading ? (
 											<Skeleton variant="text" width={60} height={40} />
 										) : (
-											<Typography variant="h3" sx={{ fontWeight: 700, color: DASHBOARD_COLORS.secondary.main }}>
+											<Typography variant="h3" sx={{ fontWeight: 700, color: COLORS.primary.main }}>
 												{(data?.folders.mev?.total || 0).toLocaleString()}
 											</Typography>
 										)}
 										<Typography variant="body2" color="textSecondary">total</Typography>
 									</Box>
 									<Box sx={{ display: "flex", gap: 2, mt: 1 }}>
-										<Typography variant="caption" sx={{ color: DASHBOARD_COLORS.positive.main }}>
+										<Typography variant="caption" sx={{ color: COLORS.success.main }}>
 											✓ {(data?.folders.mev?.verified || 0).toLocaleString()} verif.
 										</Typography>
-										<Typography variant="caption" sx={{ color: DASHBOARD_COLORS.attention.main }}>
+										<Typography variant="caption" sx={{ color: COLORS.neutral.main }}>
 											○ {(data?.folders.mev?.nonVerified || 0).toLocaleString()} no verif.
 										</Typography>
 									</Box>
@@ -1099,7 +1055,7 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: DASHBOARD_COLORS.primary.main }}>
+													<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.primary.main }}>
 														{(data?.marketing.campaigns.total || 0).toLocaleString()}
 													</Typography>
 												)}
@@ -1114,7 +1070,7 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: DASHBOARD_COLORS.positive.main }}>
+													<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.success.main }}>
 														{(data?.marketing.campaigns.active || 0).toLocaleString()}
 													</Typography>
 												)}
@@ -1129,7 +1085,7 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: DASHBOARD_COLORS.attention.main }}>
+													<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.primary.light }}>
 														{(data?.marketing.campaigns.scheduled || 0).toLocaleString()}
 													</Typography>
 												)}
@@ -1177,8 +1133,8 @@ const AdminDashboard = () => {
 											<Grid item xs={6}>
 												<StatsLegend
 													items={[
-														{ label: "Activos", value: data?.marketing.contacts.active || 0, color: DASHBOARD_COLORS.positive.main, infoKey: "activeContacts" },
-														{ label: "Inactivos", value: (data?.marketing.contacts.total || 0) - (data?.marketing.contacts.active || 0), color: DASHBOARD_COLORS.neutral.light },
+														{ label: "Activos", value: data?.marketing.contacts.active || 0, color: COLORS.success.main, infoKey: "activeContacts" },
+														{ label: "Inactivos", value: (data?.marketing.contacts.total || 0) - (data?.marketing.contacts.active || 0), color: COLORS.neutral.light },
 													]}
 													loading={loading}
 												/>
@@ -1222,8 +1178,8 @@ const AdminDashboard = () => {
 											<Grid item xs={6}>
 												<StatsLegend
 													items={[
-														{ label: "Dinámicos", value: data?.marketing.segments.dynamic || 0, color: DASHBOARD_COLORS.chart.violet, infoKey: "dynamicSegments" },
-														{ label: "Estáticos", value: data?.marketing.segments.static || 0, color: DASHBOARD_COLORS.chart.teal, infoKey: "staticSegments" },
+														{ label: "Dinámicos", value: data?.marketing.segments.dynamic || 0, color: COLORS.primary.main, infoKey: "dynamicSegments" },
+														{ label: "Estáticos", value: data?.marketing.segments.static || 0, color: COLORS.primary.light, infoKey: "staticSegments" },
 													]}
 													loading={loading}
 												/>
@@ -1231,7 +1187,7 @@ const AdminDashboard = () => {
 										</Grid>
 									) : (
 										<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
-											<Typography variant="h4" sx={{ fontWeight: 600, color: DASHBOARD_COLORS.primary.main }}>
+											<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.primary.main }}>
 												{(data?.marketing.segments.total || 0).toLocaleString()}
 											</Typography>
 											<Typography variant="body2" color="textSecondary">Total segmentos</Typography>
