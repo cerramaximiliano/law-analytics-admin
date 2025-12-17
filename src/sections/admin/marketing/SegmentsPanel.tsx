@@ -34,9 +34,10 @@ import TableSkeleton from "components/UI/TableSkeleton";
 import SegmentFormModal from "./SegmentFormModal";
 import DeleteSegmentDialog from "./DeleteSegmentDialog";
 import SegmentContactsModal from "./SegmentContactsModal";
+import SegmentDetailModal from "./SegmentDetailModal";
 
 // project imports
-import { Add, Edit2, SearchNormal1, Trash, People } from "iconsax-react";
+import { Add, Edit2, SearchNormal1, Trash, People, Eye } from "iconsax-react";
 import { Segment } from "types/segment";
 import { SegmentService } from "store/reducers/segments";
 
@@ -66,6 +67,10 @@ const SegmentsPanel = () => {
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
 	const [deletingSegment, setDeletingSegment] = useState<Segment | null>(null);
 	const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
+
+	// State for segment detail modal
+	const [detailModalOpen, setDetailModalOpen] = useState<boolean>(false);
+	const [viewingDetailSegment, setViewingDetailSegment] = useState<Segment | null>(null);
 
 	// State for pagination
 	const [page, setPage] = useState(0);
@@ -221,6 +226,18 @@ const SegmentsPanel = () => {
 		setViewingContactsSegment(null);
 	};
 
+	// Handler for viewing segment details
+	const handleViewDetails = (segment: Segment) => {
+		setViewingDetailSegment(segment);
+		setDetailModalOpen(true);
+	};
+
+	// Handler for closing detail modal
+	const handleCloseDetailModal = () => {
+		setDetailModalOpen(false);
+		setViewingDetailSegment(null);
+	};
+
 	// Handlers for segment deletion
 	const handleOpenDeleteDialog = (segment: Segment) => {
 		setDeletingSegment(segment);
@@ -267,6 +284,9 @@ const SegmentsPanel = () => {
 				segment={viewingContactsSegment}
 				onContactRemoved={fetchSegments}
 			/>
+
+			{/* Segment Detail Modal */}
+			<SegmentDetailModal open={detailModalOpen} onClose={handleCloseDetailModal} segment={viewingDetailSegment} />
 
 			{/* Segment Deletion Modal */}
 			{deletingSegment && (
@@ -409,7 +429,12 @@ const SegmentsPanel = () => {
 											<Typography variant="body2">{segment.updatedAt ? new Date(segment.updatedAt).toLocaleDateString() : "-"}</Typography>
 										</TableCell>
 										<TableCell align="center">
-											<Stack direction="row" spacing={1} justifyContent="center">
+											<Stack direction="row" spacing={0.5} justifyContent="center">
+												<Tooltip title="Ver detalles">
+													<IconButton aria-label="detalles" size="small" color="info" onClick={() => handleViewDetails(segment)}>
+														<Eye size={18} />
+													</IconButton>
+												</Tooltip>
 												<Tooltip title="Ver contactos">
 													<IconButton aria-label="contacts" size="small" color="primary" onClick={() => handleViewContacts(segment)}>
 														<People size={18} />
