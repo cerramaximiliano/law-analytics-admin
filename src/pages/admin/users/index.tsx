@@ -189,6 +189,7 @@ const UsersList = () => {
 				isActive: statusFilter || undefined,
 				sortBy: orderBy,
 				sortOrder: order,
+				limit: 1000, // Obtener todos los usuarios para la página de administración
 				...overrideParams,
 			};
 
