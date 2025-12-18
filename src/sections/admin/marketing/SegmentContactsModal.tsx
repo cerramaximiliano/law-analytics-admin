@@ -50,8 +50,15 @@ interface TabPanelProps {
 const TabPanel = (props: TabPanelProps) => {
 	const { children, value, index, ...other } = props;
 	return (
-		<div role="tabpanel" hidden={value !== index} id={`segment-tabpanel-${index}`} aria-labelledby={`segment-tab-${index}`} {...other}>
-			{value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
+		<div
+			role="tabpanel"
+			hidden={value !== index}
+			id={`segment-tabpanel-${index}`}
+			aria-labelledby={`segment-tab-${index}`}
+			style={{ display: value === index ? "flex" : "none", flexDirection: "column", flex: 1, overflow: "hidden" }}
+			{...other}
+		>
+			{value === index && <Box sx={{ pt: 2, display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>{children}</Box>}
 		</div>
 	);
 };
@@ -232,7 +239,7 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 				</Grid>
 			</DialogTitle>
 
-			<DialogContent dividers sx={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+			<DialogContent dividers sx={{ display: "flex", flexDirection: "column", overflow: "hidden", p: 2 }}>
 				{segment && (
 					<Box sx={{ mb: 2 }}>
 						<Typography variant="h6">{segment.name}</Typography>
@@ -269,8 +276,8 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 							{error}
 						</Alert>
 					) : (
-						<Box sx={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-							<TableContainer component={Paper} sx={{ boxShadow: "none", flex: 1, overflow: "auto" }}>
+						<Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+							<TableContainer component={Paper} sx={{ boxShadow: "none", flex: 1, overflow: "auto", minHeight: 0 }}>
 								<Table>
 									<TableHead>
 										<TableRow>
@@ -361,7 +368,7 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 
 				{/* Tab 1: JSON Raw */}
 				<TabPanel value={tabValue} index={1}>
-					<Box sx={{ position: "relative" }}>
+					<Box sx={{ position: "relative", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
 						<Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 1 }}>
 							<Button
 								variant="outlined"
@@ -381,7 +388,8 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 								pt: 5,
 								borderRadius: 1,
 								overflow: "auto",
-								maxHeight: 400,
+								flex: 1,
+								minHeight: 0,
 								fontSize: "0.75rem",
 								fontFamily: "monospace",
 								border: `1px solid ${theme.palette.divider}`,
