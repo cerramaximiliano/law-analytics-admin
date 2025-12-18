@@ -1,5 +1,5 @@
 // assets
-import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle, DiscountShape, Notification, DocumentText } from "iconsax-react";
+import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle, DiscountShape, Notification, DocumentText, Messages2 } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -205,6 +205,14 @@ const admin: NavItemType = {
 					title: "Configuracion",
 					type: "item",
 					url: "/admin/users/config",
+					breadcrumbs: true,
+				},
+				{
+					id: "users-email-logs",
+					title: "Logs de Correos",
+					type: "item",
+					url: "/admin/users/email-logs",
+					icon: Messages2,
 					breadcrumbs: true,
 				},
 			],
