@@ -510,6 +510,36 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 									<TableRow>
 										<TableCell>
 											<Typography variant="body2" color="textSecondary">
+												Días permitidos
+											</Typography>
+										</TableCell>
+										<TableCell>
+											<Typography variant="body1">
+												{campaign.settings.sendingRestrictions?.allowedDays
+													? campaign.settings.sendingRestrictions.allowedDays
+															.map((day) => ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"][day])
+															.join(", ")
+													: "Lun, Mar, Mié, Jue, Vie"}
+											</Typography>
+										</TableCell>
+									</TableRow>
+									<TableRow>
+										<TableCell>
+											<Typography variant="body2" color="textSecondary">
+												Horario de envío
+											</Typography>
+										</TableCell>
+										<TableCell>
+											<Typography variant="body1">
+												{campaign.settings.sendingRestrictions?.timeWindow
+													? `${campaign.settings.sendingRestrictions.timeWindow.start} - ${campaign.settings.sendingRestrictions.timeWindow.end}`
+													: "09:00 - 18:00"}
+											</Typography>
+										</TableCell>
+									</TableRow>
+									<TableRow>
+										<TableCell>
+											<Typography variant="body2" color="textSecondary">
 												Seguimiento de aperturas
 											</Typography>
 										</TableCell>
