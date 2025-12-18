@@ -153,6 +153,13 @@ const admin: NavItemType = {
 					url: "/admin/marketing/contacts",
 					breadcrumbs: true,
 				},
+				{
+					id: "suppression",
+					title: "Bounces y Rebotes",
+					type: "item",
+					url: "/admin/marketing/suppression",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{
