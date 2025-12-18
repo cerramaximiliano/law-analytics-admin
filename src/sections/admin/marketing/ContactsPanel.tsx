@@ -308,7 +308,7 @@ const ContactsPanel = () => {
 								color="primary"
 								startIcon={<Add />}
 								onClick={() => {
-									setSelectedContactId("");
+									setSelectedContactId(null);
 									setEditModalOpen(true);
 								}}
 								sx={{ textTransform: "none" }}

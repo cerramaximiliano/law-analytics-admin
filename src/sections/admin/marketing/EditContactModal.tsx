@@ -33,6 +33,9 @@ interface EditContactModalProps {
 }
 
 const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, contactId, onSave }) => {
+	// Determinar si es modo creación o edición
+	const isEditMode = Boolean(contactId);
+
 	// Controlamos solo el estado de la carga
 	const [loading, setLoading] = useState<boolean>(false);
 	const [saving, setSaving] = useState<boolean>(false);
@@ -122,17 +125,13 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 		return Object.keys(errors).length === 0;
 	};
 
-	// Guardar cambios
+	// Guardar cambios (crear o actualizar)
 	const handleSave = async () => {
 		if (!validateForm()) return;
 
 		try {
 			setSaving(true);
 			setError(null);
-
-			if (!contactId) {
-				throw new Error("ID de contacto no disponible");
-			}
 
 			const contactData = {
 				email,
@@ -147,13 +146,22 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 				isVerified,
 			};
 
-			await MarketingContactService.updateContact(contactId, contactData);
+			if (isEditMode && contactId) {
+				// Modo edición: actualizar contacto existente
+				await MarketingContactService.updateContact(contactId, contactData);
+			} else {
+				// Modo creación: crear nuevo contacto
+				await MarketingContactService.createContact(contactData);
+			}
 
 			// Éxito - cerrar modal y actualizar lista
 			onSave();
 			onClose();
 		} catch (err: any) {
-			setError(err?.message || "No se pudo guardar la información del contacto");
+			const errorMessage = isEditMode
+				? "No se pudo guardar la información del contacto"
+				: "No se pudo crear el contacto";
+			setError(err?.message || errorMessage);
 		} finally {
 			setSaving(false);
 		}
@@ -193,7 +201,7 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 			<DialogTitle>
 				<Grid container alignItems="center" justifyContent="space-between">
 					<Grid item>
-						<Typography variant="h5">Editar Contacto</Typography>
+						<Typography variant="h5">{isEditMode ? "Editar Contacto" : "Nuevo Contacto"}</Typography>
 					</Grid>
 					<Grid item>
 						<IconButton onClick={onClose} size="small">
@@ -403,7 +411,7 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 					disabled={loading || saving || !email}
 					startIcon={saving && <CircularProgress size={20} color="inherit" />}
 				>
-					{saving ? "Guardando..." : "Guardar Cambios"}
+					{saving ? "Guardando..." : isEditMode ? "Guardar Cambios" : "Crear Contacto"}
 				</Button>
 			</DialogActions>
 		</Dialog>
