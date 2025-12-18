@@ -89,7 +89,7 @@ const validationSchema = Yup.object({
 	category: Yup.string(),
 	tags: Yup.string(),
 	timezone: Yup.string().required("La zona horaria es requerida"),
-	throttleRate: Yup.number().min(1, "Mínimo 1 email/hora").max(1000, "Máximo 1000 emails/hora"),
+	throttleRate: Yup.number().min(1, "Mínimo 1 email por batch").max(1000, "Máximo 1000 emails por batch"),
 });
 
 // Campaign types with labels
@@ -576,7 +576,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 								<TextField
 									id="throttleRate"
 									name="throttleRate"
-									label="Tasa de envío (emails/hora)"
+									label="Tasa de envío (emails/batch)"
 									type="number"
 									value={formik.values.throttleRate}
 									onChange={formik.handleChange}
@@ -584,7 +584,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 									error={formik.touched.throttleRate && Boolean(formik.errors.throttleRate)}
 									helperText={
 										(formik.touched.throttleRate && formik.errors.throttleRate) ||
-										"Cantidad máxima de emails a enviar por hora"
+										"Cantidad máxima de emails a enviar por batch"
 									}
 									inputProps={{ min: 1, max: 1000 }}
 								/>
