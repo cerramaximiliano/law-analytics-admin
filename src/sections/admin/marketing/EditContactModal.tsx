@@ -18,6 +18,8 @@ import {
 	Select,
 	MenuItem,
 	Divider,
+	FormControlLabel,
+	Switch,
 } from "@mui/material";
 import { Add, CloseCircle } from "iconsax-react";
 import { ContactStatus } from "types/marketing-contact";
@@ -47,6 +49,8 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 	const [status, setStatus] = useState<ContactStatus>("active");
 	const [tagInput, setTagInput] = useState<string>("");
 	const [tags, setTags] = useState<string[]>([]);
+	const [isAppUser, setIsAppUser] = useState<boolean>(false);
+	const [isVerified, setIsVerified] = useState<boolean>(false);
 
 	// Cargar datos del contacto cuando cambie el ID
 	useEffect(() => {
@@ -76,6 +80,10 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 			// Procesar etiquetas
 			const contactTags = data.tags || [];
 			setTags(contactTags.map((tag: any) => (typeof tag === "string" ? tag : tag.name)));
+
+			// Cargar campos booleanos
+			setIsAppUser(data.isAppUser || false);
+			setIsVerified(data.isVerified || false);
 		} catch (err: any) {
 			setError(err?.message || "No se pudo cargar la información del contacto");
 		} finally {
@@ -95,6 +103,8 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 		setTags([]);
 		setTagInput("");
 		setFormError({});
+		setIsAppUser(false);
+		setIsVerified(false);
 	};
 
 	// Validar formulario
@@ -133,6 +143,8 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 				position: position.trim() || undefined,
 				tags: tags.length > 0 ? tags : undefined,
 				status,
+				isAppUser,
+				isVerified,
 			};
 
 			await MarketingContactService.updateContact(contactId, contactData);
@@ -293,6 +305,40 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 								value={position}
 								onChange={(e) => setPosition(e.target.value)}
 								disabled={saving}
+							/>
+						</Grid>
+
+						{/* Opciones de usuario */}
+						<Grid item xs={12}>
+							<Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ mt: 2 }}>
+								Opciones de Usuario
+							</Typography>
+							<Divider sx={{ mb: 2 }} />
+						</Grid>
+
+						<Grid item xs={12} sm={6}>
+							<FormControlLabel
+								control={
+									<Switch
+										checked={isAppUser}
+										onChange={(e) => setIsAppUser(e.target.checked)}
+										disabled={saving}
+									/>
+								}
+								label="Usuario de la App"
+							/>
+						</Grid>
+
+						<Grid item xs={12} sm={6}>
+							<FormControlLabel
+								control={
+									<Switch
+										checked={isVerified}
+										onChange={(e) => setIsVerified(e.target.checked)}
+										disabled={saving}
+									/>
+								}
+								label="Verificado"
 							/>
 						</Grid>
 
