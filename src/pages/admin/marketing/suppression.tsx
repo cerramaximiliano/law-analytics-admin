@@ -16,6 +16,7 @@ import {
 	TableHead,
 	TableRow,
 	TablePagination,
+	TableSortLabel,
 	Paper,
 	Chip,
 	CircularProgress,
@@ -93,6 +94,11 @@ const MarketingSuppression = () => {
 	// Pagination state
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(25);
+
+	// Sorting state
+	type SortField = "email" | "reason" | "date";
+	const [orderBy, setOrderBy] = useState<SortField>("date");
+	const [order, setOrder] = useState<"asc" | "desc">("desc");
 
 	// Sync state
 	const [syncing, setSyncing] = useState(false);
@@ -216,8 +222,25 @@ const MarketingSuppression = () => {
 	// Filter emails by search term
 	const filteredEmails = suppressedEmails.filter((email) => email.EmailAddress.toLowerCase().includes(searchTerm.toLowerCase()));
 
+	// Sort emails
+	const sortedEmails = [...filteredEmails].sort((a, b) => {
+		let comparison = 0;
+		switch (orderBy) {
+			case "email":
+				comparison = a.EmailAddress.localeCompare(b.EmailAddress);
+				break;
+			case "reason":
+				comparison = a.Reason.localeCompare(b.Reason);
+				break;
+			case "date":
+				comparison = new Date(a.LastUpdateTime).getTime() - new Date(b.LastUpdateTime).getTime();
+				break;
+		}
+		return order === "asc" ? comparison : -comparison;
+	});
+
 	// Paginated emails
-	const paginatedEmails = filteredEmails.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+	const paginatedEmails = sortedEmails.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
 	// Pagination handlers
 	const handleChangePage = (_event: unknown, newPage: number) => {
@@ -226,6 +249,14 @@ const MarketingSuppression = () => {
 
 	const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setRowsPerPage(parseInt(event.target.value, 10));
+		setPage(0);
+	};
+
+	// Sorting handler
+	const handleSort = (field: SortField) => {
+		const isAsc = orderBy === field && order === "asc";
+		setOrder(isAsc ? "desc" : "asc");
+		setOrderBy(field);
 		setPage(0);
 	};
 
@@ -446,9 +477,33 @@ const MarketingSuppression = () => {
 					<Table>
 						<TableHead>
 							<TableRow>
-								<TableCell>Email</TableCell>
-								<TableCell>Razón</TableCell>
-								<TableCell>Fecha</TableCell>
+								<TableCell sortDirection={orderBy === "email" ? order : false}>
+									<TableSortLabel
+										active={orderBy === "email"}
+										direction={orderBy === "email" ? order : "asc"}
+										onClick={() => handleSort("email")}
+									>
+										Email
+									</TableSortLabel>
+								</TableCell>
+								<TableCell sortDirection={orderBy === "reason" ? order : false}>
+									<TableSortLabel
+										active={orderBy === "reason"}
+										direction={orderBy === "reason" ? order : "asc"}
+										onClick={() => handleSort("reason")}
+									>
+										Razón
+									</TableSortLabel>
+								</TableCell>
+								<TableCell sortDirection={orderBy === "date" ? order : false}>
+									<TableSortLabel
+										active={orderBy === "date"}
+										direction={orderBy === "date" ? order : "asc"}
+										onClick={() => handleSort("date")}
+									>
+										Fecha
+									</TableSortLabel>
+								</TableCell>
 							</TableRow>
 						</TableHead>
 						<TableBody>
