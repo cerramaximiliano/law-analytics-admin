@@ -38,7 +38,7 @@ import {
 } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { es } from "date-fns/locale/es";
+import { es } from "date-fns/locale";
 
 // project imports
 import MainCard from "components/MainCard";
@@ -319,8 +319,7 @@ const EmailLogsPage = () => {
 	};
 
 	return (
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		<LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es as any}>
+		<LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
 			<MainCard
 				title="Logs de Correos Electrónicos"
 				secondary={
