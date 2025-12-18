@@ -40,6 +40,7 @@ const ServerStatus = Loadable(lazy(() => import("pages/admin/server-status")));
 const MailingCampaigns = Loadable(lazy(() => import("pages/admin/marketing/mailing")));
 const EmailTemplates = Loadable(lazy(() => import("pages/admin/marketing/templates")));
 const MarketingContacts = Loadable(lazy(() => import("pages/admin/marketing/contacts")));
+const MarketingSuppression = Loadable(lazy(() => import("pages/admin/marketing/suppression")));
 
 // Plans page
 const PlansManagement = Loadable(lazy(() => import("pages/admin/plans")));
@@ -232,6 +233,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<MarketingContacts />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "marketing/suppression",
+							element: (
+								<AdminRoleGuard>
+									<MarketingSuppression />
 								</AdminRoleGuard>
 							),
 						},

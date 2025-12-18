@@ -8,6 +8,12 @@ import {
 	RemoveAllContactsResponse,
 	RemoveAllContactsStatusResponse,
 } from "types/campaign-contacts-status";
+import {
+	SuppressionListResponse,
+	SuppressionCheckResponse,
+	SuppressionSyncResponse,
+	SuppressionCheckAndUpdateResponse,
+} from "types/suppression";
 
 // Campaign API Service
 export const CampaignService = {
@@ -440,6 +446,59 @@ export const CampaignEmailService = {
 	deleteEmail: async (emailId: string): Promise<{ success: boolean; message: string }> => {
 		try {
 			const response = await mktAxios.delete(`/api/campaign-emails/${emailId}`);
+			return response.data;
+		} catch (error) {
+			throw error;
+		}
+	},
+};
+
+// AWS SES Suppression List Service
+export const SuppressionService = {
+	// Get all suppressed emails from AWS SES
+	getSuppressionList: async (filters: {
+		startDate?: string;
+		endDate?: string;
+		reasons?: string; // 'BOUNCE', 'COMPLAINT' or both comma-separated
+	} = {}): Promise<SuppressionListResponse> => {
+		try {
+			const response = await mktAxios.get("/api/suppression/list", {
+				params: filters,
+			});
+			return response.data;
+		} catch (error) {
+			throw error;
+		}
+	},
+
+	// Check if a specific email is in the suppression list
+	checkEmail: async (email: string): Promise<SuppressionCheckResponse> => {
+		try {
+			const response = await mktAxios.get(`/api/suppression/check/${encodeURIComponent(email)}`);
+			return response.data;
+		} catch (error) {
+			throw error;
+		}
+	},
+
+	// Check and update a contact if suppressed
+	checkAndUpdateContact: async (email: string): Promise<SuppressionCheckAndUpdateResponse> => {
+		try {
+			const response = await mktAxios.post("/api/suppression/check-and-update", { email });
+			return response.data;
+		} catch (error) {
+			throw error;
+		}
+	},
+
+	// Sync AWS SES suppression list with contacts
+	syncWithContacts: async (options: {
+		startDate?: string;
+		endDate?: string;
+		dryRun?: boolean;
+	} = {}): Promise<SuppressionSyncResponse> => {
+		try {
+			const response = await mktAxios.post("/api/suppression/sync", options);
 			return response.data;
 		} catch (error) {
 			throw error;
