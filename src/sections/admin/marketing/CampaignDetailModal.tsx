@@ -539,12 +539,12 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 											</Typography>
 										</TableCell>
 										<TableCell>
-											<Typography variant="body1">
+											<Typography variant="body1" color={campaign.settings.sendingRestrictions?.allowedDays ? "textPrimary" : "textSecondary"}>
 												{campaign.settings.sendingRestrictions?.allowedDays
 													? campaign.settings.sendingRestrictions.allowedDays
 															.map((day) => ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"][day])
 															.join(", ")
-													: "Lun, Mar, Mié, Jue, Vie"}
+													: "No configurado"}
 											</Typography>
 										</TableCell>
 									</TableRow>
@@ -555,10 +555,10 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 											</Typography>
 										</TableCell>
 										<TableCell>
-											<Typography variant="body1">
+											<Typography variant="body1" color={campaign.settings.sendingRestrictions?.timeWindow ? "textPrimary" : "textSecondary"}>
 												{campaign.settings.sendingRestrictions?.timeWindow
 													? `${campaign.settings.sendingRestrictions.timeWindow.start} - ${campaign.settings.sendingRestrictions.timeWindow.end}`
-													: "09:00 - 18:00"}
+													: "No configurado"}
 											</Typography>
 										</TableCell>
 									</TableRow>
