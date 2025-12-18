@@ -112,6 +112,13 @@ const headCells = [
 		sortable: true,
 	},
 	{
+		id: "authProvider",
+		numeric: false,
+		label: "Registro",
+		align: "left",
+		sortable: true,
+	},
+	{
 		id: "lastLogin",
 		numeric: false,
 		label: "Último Login",
@@ -481,6 +488,59 @@ const UsersList = () => {
 		);
 	};
 
+	// Renderizado de chip de método de registro (authProvider)
+	const renderAuthProviderChip = (authProvider: string | undefined | null, authProviderUpdatedAt: string | undefined | null) => {
+		let backgroundColor;
+		let textColor;
+		let label;
+
+		switch (authProvider) {
+			case "google":
+				backgroundColor = "#4285F4"; // Google blue
+				textColor = "#FFFFFF";
+				label = "Google";
+				break;
+			case "email":
+				backgroundColor = theme.palette.info.main;
+				textColor = theme.palette.info.contrastText;
+				label = "Email";
+				break;
+			case "legacy":
+				backgroundColor = theme.palette.grey[500];
+				textColor = theme.palette.grey[100];
+				label = "Legacy";
+				break;
+			default:
+				// Si no tiene authProvider, es un usuario legacy (antes del cambio)
+				backgroundColor = theme.palette.grey[400];
+				textColor = theme.palette.grey[800];
+				label = "Sin datos";
+		}
+
+		const tooltipContent = authProviderUpdatedAt
+			? `Último uso: ${new Date(authProviderUpdatedAt).toLocaleString()}`
+			: "Usuario registrado antes de implementar este campo";
+
+		return (
+			<Tooltip title={tooltipContent}>
+				<Chip
+					label={label}
+					size="small"
+					sx={{
+						borderRadius: "4px",
+						minWidth: 70,
+						backgroundColor,
+						color: textColor,
+						fontWeight: 500,
+						"& .MuiChip-label": {
+							px: 1.5,
+						},
+					}}
+				/>
+			</Tooltip>
+		);
+	};
+
 	// Obtener string de error
 	const errorMessage = error ? (typeof error === "string" ? error : JSON.stringify(error)) : "";
 
@@ -745,6 +805,7 @@ const UsersList = () => {
 														}}
 													/>
 												</TableCell>
+												<TableCell>{renderAuthProviderChip(user.authProvider, user.authProviderUpdatedAt)}</TableCell>
 												<TableCell>{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : "Nunca"}</TableCell>
 												<TableCell>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}</TableCell>
 												<TableCell align="center">

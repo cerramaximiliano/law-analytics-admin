@@ -247,6 +247,8 @@ export interface User {
 	avatar?: string;
 	phone?: string;
 	lastLogin?: string;
+	authProvider?: 'email' | 'google' | 'legacy';
+	authProviderUpdatedAt?: string;
 	subscription?: Subscription;
 	subscriptions?: SubscriptionsByEnvironment;
 	stripeHistory?: StripeHistoryByEnvironment;
