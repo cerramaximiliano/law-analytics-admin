@@ -67,6 +67,7 @@ interface FormValues {
 	category: string;
 	tags: string;
 	timezone: string;
+	throttleRate: number;
 }
 
 // validation schema
@@ -88,6 +89,7 @@ const validationSchema = Yup.object({
 	category: Yup.string(),
 	tags: Yup.string(),
 	timezone: Yup.string().required("La zona horaria es requerida"),
+	throttleRate: Yup.number().min(1, "Mínimo 1 email/hora").max(1000, "Máximo 1000 emails/hora"),
 });
 
 // Campaign types with labels
@@ -160,6 +162,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 		category: "",
 		tags: "",
 		timezone: "America/Argentina/Buenos_Aires", // Default timezone
+		throttleRate: 100, // Default: 100 emails per hour
 	};
 
 	// Formik setup
@@ -197,6 +200,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 						settings: {
 							...campaign.settings,
 							timezone: values.timezone,
+							throttleRate: values.throttleRate,
 						},
 					};
 
@@ -216,6 +220,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 						tags: tagsArray.length > 0 ? tagsArray : undefined,
 						settings: {
 							timezone: values.timezone,
+							throttleRate: values.throttleRate,
 						},
 					};
 
@@ -290,6 +295,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 				category: campaign.category || "",
 				tags: tagsString,
 				timezone: campaignTimezone,
+				throttleRate: campaign.settings?.throttleRate || 100,
 			});
 		} else {
 			// Reset to defaults for create mode
@@ -561,6 +567,27 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 									))}
 								</Select>
 								{formik.touched.timezone && formik.errors.timezone && <FormHelperText>{formik.errors.timezone}</FormHelperText>}
+							</FormControl>
+						</Grid>
+
+						{/* Throttle Rate */}
+						<Grid item xs={12} md={6}>
+							<FormControl fullWidth error={formik.touched.throttleRate && Boolean(formik.errors.throttleRate)}>
+								<TextField
+									id="throttleRate"
+									name="throttleRate"
+									label="Tasa de envío (emails/hora)"
+									type="number"
+									value={formik.values.throttleRate}
+									onChange={formik.handleChange}
+									onBlur={formik.handleBlur}
+									error={formik.touched.throttleRate && Boolean(formik.errors.throttleRate)}
+									helperText={
+										(formik.touched.throttleRate && formik.errors.throttleRate) ||
+										"Cantidad máxima de emails a enviar por hora"
+									}
+									inputProps={{ min: 1, max: 1000 }}
+								/>
 							</FormControl>
 						</Grid>
 
