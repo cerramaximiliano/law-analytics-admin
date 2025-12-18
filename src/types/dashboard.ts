@@ -48,6 +48,12 @@ export interface MarketingCampaignStats {
 export interface MarketingContactStats {
 	total: number;
 	active: number;
+	// Email verification stats (isEmailVerified field)
+	emailVerified?: number;
+	emailNotVerified?: number;
+	// Verification result stats (emailVerification.verified field)
+	verificationValid?: number;
+	verificationNotValid?: number;
 }
 
 export interface MarketingSegmentStats {

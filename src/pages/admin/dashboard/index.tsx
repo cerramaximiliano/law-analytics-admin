@@ -106,6 +106,11 @@ const metricInfo: Record<string, string> = {
 	// Marketing - Contacts
 	totalContacts: "Total de contactos en la base de datos de marketing.",
 	activeContacts: "Contactos activos que pueden recibir correos (no desuscritos ni rebotados).",
+	// Marketing - Email Verification
+	emailVerifiedContacts: "Contactos cuyo email ha sido verificado a través del sistema de validación.",
+	emailNotVerifiedContacts: "Contactos cuyo email aún no ha sido verificado.",
+	verificationValidContacts: "Contactos verificados con resultado VÁLIDO (el email existe y puede recibir correos).",
+	verificationNotValidContacts: "Contactos verificados pero con resultado NO VÁLIDO o pendiente de verificación.",
 	// Marketing - Segments
 	totalSegments: "Total de segmentos creados para organizar contactos.",
 	dynamicSegments: "Segmentos que se actualizan automáticamente según criterios definidos.",
@@ -532,6 +537,18 @@ const AdminDashboard = () => {
 	const marketingContactsData = useMemo(() => data ? [
 		{ name: "Activos", value: data.marketing.contacts.active, color: COLORS.success.main },
 		{ name: "Inactivos", value: data.marketing.contacts.total - data.marketing.contacts.active, color: COLORS.neutral.light },
+	] : [], [data]);
+
+	// Marketing - Email verification (isEmailVerified field)
+	const emailVerificationData = useMemo(() => data ? [
+		{ name: "Verificados", value: data.marketing.contacts.emailVerified || 0, color: COLORS.success.main },
+		{ name: "No Verificados", value: data.marketing.contacts.emailNotVerified || 0, color: COLORS.neutral.light },
+	] : [], [data]);
+
+	// Marketing - Verification result (emailVerification.verified field - within verified emails)
+	const verificationResultData = useMemo(() => data ? [
+		{ name: "Válidos", value: data.marketing.contacts.verificationValid || 0, color: COLORS.success.main },
+		{ name: "No Válidos", value: data.marketing.contacts.verificationNotValid || 0, color: COLORS.neutral.light },
 	] : [], [data]);
 
 	// Segments - use primary blue tones (no violet - not premium)
@@ -1191,6 +1208,104 @@ const AdminDashboard = () => {
 												{(data?.marketing.segments.total || 0).toLocaleString()}
 											</Typography>
 											<Typography variant="body2" color="textSecondary">Total segmentos</Typography>
+										</Box>
+									)}
+								</ChartCard>
+							</Grid>
+
+							{/* Email Verification Pie Chart (isEmailVerified) */}
+							<Grid item xs={12} sm={6}>
+								<ChartCard title="Verificación de Email" icon={<TickCircle size={18} />} linkTo="/admin/marketing/contacts" height={180}>
+									{loading ? (
+										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+											<Skeleton variant="circular" width={120} height={120} />
+										</Box>
+									) : emailVerificationData.some(item => item.value > 0) ? (
+										<Grid container sx={{ height: "100%" }}>
+											<Grid item xs={6}>
+												<ResponsiveContainer width="100%" height="100%">
+													<PieChart>
+														<Pie
+															data={emailVerificationData}
+															cx="50%"
+															cy="50%"
+															innerRadius={35}
+															outerRadius={60}
+															paddingAngle={2}
+															dataKey="value"
+															labelLine={false}
+															label={renderCustomLabel}
+														>
+															{emailVerificationData.map((entry, index) => (
+																<Cell key={`cell-${index}`} fill={entry.color} />
+															))}
+														</Pie>
+														<RechartsTooltip content={<CustomChartTooltip />} />
+													</PieChart>
+												</ResponsiveContainer>
+											</Grid>
+											<Grid item xs={6}>
+												<StatsLegend
+													items={[
+														{ label: "Verificados", value: data?.marketing.contacts.emailVerified || 0, color: COLORS.success.main, infoKey: "emailVerifiedContacts" },
+														{ label: "No Verificados", value: data?.marketing.contacts.emailNotVerified || 0, color: COLORS.neutral.light, infoKey: "emailNotVerifiedContacts" },
+													]}
+													loading={loading}
+												/>
+											</Grid>
+										</Grid>
+									) : (
+										<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
+											<Typography variant="body2" color="textSecondary">Sin datos de verificación</Typography>
+										</Box>
+									)}
+								</ChartCard>
+							</Grid>
+
+							{/* Verification Result Pie Chart (emailVerification.verified - within verified emails) */}
+							<Grid item xs={12} sm={6}>
+								<ChartCard title="Resultado de Verificación" icon={<TickCircle size={18} />} linkTo="/admin/marketing/contacts" height={180}>
+									{loading ? (
+										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+											<Skeleton variant="circular" width={120} height={120} />
+										</Box>
+									) : verificationResultData.some(item => item.value > 0) ? (
+										<Grid container sx={{ height: "100%" }}>
+											<Grid item xs={6}>
+												<ResponsiveContainer width="100%" height="100%">
+													<PieChart>
+														<Pie
+															data={verificationResultData}
+															cx="50%"
+															cy="50%"
+															innerRadius={35}
+															outerRadius={60}
+															paddingAngle={2}
+															dataKey="value"
+															labelLine={false}
+															label={renderCustomLabel}
+														>
+															{verificationResultData.map((entry, index) => (
+																<Cell key={`cell-${index}`} fill={entry.color} />
+															))}
+														</Pie>
+														<RechartsTooltip content={<CustomChartTooltip />} />
+													</PieChart>
+												</ResponsiveContainer>
+											</Grid>
+											<Grid item xs={6}>
+												<StatsLegend
+													items={[
+														{ label: "Válidos", value: data?.marketing.contacts.verificationValid || 0, color: COLORS.success.main, infoKey: "verificationValidContacts" },
+														{ label: "No Válidos", value: data?.marketing.contacts.verificationNotValid || 0, color: COLORS.neutral.light, infoKey: "verificationNotValidContacts" },
+													]}
+													loading={loading}
+												/>
+											</Grid>
+										</Grid>
+									) : (
+										<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
+											<Typography variant="body2" color="textSecondary">Sin datos de resultado</Typography>
 										</Box>
 									)}
 								</ChartCard>
