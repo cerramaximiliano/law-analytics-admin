@@ -51,8 +51,23 @@ interface TabPanelProps {
 const TabPanel = (props: TabPanelProps) => {
 	const { children, value, index, ...other } = props;
 	return (
-		<div role="tabpanel" hidden={value !== index} id={`campaign-tabpanel-${index}`} aria-labelledby={`campaign-tab-${index}`} {...other}>
-			{value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
+		<div
+			role="tabpanel"
+			hidden={value !== index}
+			id={`campaign-tabpanel-${index}`}
+			aria-labelledby={`campaign-tab-${index}`}
+			style={{
+				display: value === index ? "flex" : "none",
+				flexDirection: "column",
+				flex: 1,
+				minHeight: 0,
+				overflow: "hidden",
+			}}
+			{...other}
+		>
+			{value === index && (
+				<Box sx={{ pt: 2, flex: 1, overflow: "auto", minHeight: 0 }}>{children}</Box>
+			)}
 		</div>
 	);
 };
@@ -167,6 +182,10 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 			sx={{
 				"& .MuiDialog-paper": {
 					borderRadius: 2,
+					height: "80vh",
+					maxHeight: "800px",
+					display: "flex",
+					flexDirection: "column",
 				},
 			}}
 		>
@@ -183,16 +202,19 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 				</Grid>
 			</DialogTitle>
 
-			<DialogContent dividers>
+			<DialogContent dividers sx={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden", p: 2 }}>
 				{/* Tabs */}
-				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2, flexShrink: 0 }}>
 					<Tabs value={tabValue} onChange={handleTabChange} aria-label="campaign detail tabs">
 						<Tab label="Detalles" id="campaign-tab-0" aria-controls="campaign-tabpanel-0" />
 						<Tab label="JSON Raw" id="campaign-tab-1" aria-controls="campaign-tabpanel-1" />
 					</Tabs>
 				</Box>
 
+				{/* Content container with flex: 1 for consistent height */}
+				<Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
 				{loading ? (
+					<Box sx={{ flex: 1, overflow: "auto" }}>
 					<Grid container spacing={3}>
 						{/* Información básica skeleton */}
 						<Grid item xs={12}>
@@ -277,10 +299,13 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 							</Grid>
 						</Grid>
 					</Grid>
+					</Box>
 				) : error ? (
-					<Alert severity="error" sx={{ my: 2 }}>
+					<Box sx={{ flex: 1, display: "flex", alignItems: "flex-start", pt: 2 }}>
+					<Alert severity="error" sx={{ width: "100%" }}>
 						{"Error al cargar la campaña. Intente nuevamente más tarde.	"}
 					</Alert>
+					</Box>
 				) : campaign ? (
 					<>
 						{/* Tab 0: Detalles */}
@@ -655,10 +680,13 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 						</TabPanel>
 					</>
 				) : (
+					<Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
 					<Typography variant="body1" color="textSecondary" align="center" sx={{ py: 3 }}>
 						No se ha seleccionado ninguna campaña
 					</Typography>
+					</Box>
 				)}
+				</Box>
 			</DialogContent>
 
 			<DialogActions sx={{ px: 3, py: 2 }}>
