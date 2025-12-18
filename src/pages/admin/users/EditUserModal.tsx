@@ -10,11 +10,13 @@ import {
 	DialogContent,
 	DialogTitle,
 	FormControl,
+	FormControlLabel,
 	FormHelperText,
 	Grid,
 	InputLabel,
 	MenuItem,
 	Select,
+	Switch,
 	TextField,
 } from "@mui/material";
 import ResponsiveDialog from "components/@extended/ResponsiveDialog";
@@ -55,6 +57,7 @@ interface FormValues {
 	role: string;
 	status: string;
 	phone: string;
+	isVerified: boolean;
 }
 
 const EditUserModal: React.FC<EditUserModalProps> = ({ user, open, onClose }) => {
@@ -68,6 +71,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, open, onClose }) =>
 		role: user?.role || "USER_ROLE",
 		status: user?.status || "active",
 		phone: user?.phone || "",
+		isVerified: user?.isVerified || false,
 	};
 
 	// Esquema de validación
@@ -77,6 +81,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, open, onClose }) =>
 		role: Yup.string().required("El rol es requerido"),
 		status: Yup.string().required("El estado es requerido"),
 		phone: Yup.string(),
+		isVerified: Yup.boolean(),
 	});
 
 	// Función para manejar el envío del formulario
@@ -168,7 +173,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, open, onClose }) =>
 		<ResponsiveDialog open={open} onClose={onClose} maxWidth="sm">
 			<DialogTitle>Editar Usuario</DialogTitle>
 			<Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-				{({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
+				{({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values, setFieldValue }) => (
 					<form noValidate onSubmit={handleSubmit}>
 						<DialogContent>
 							<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
@@ -251,6 +256,18 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, open, onClose }) =>
 										onBlur={handleBlur}
 										error={Boolean(touched.phone && errors.phone)}
 										helperText={touched.phone && errors.phone}
+									/>
+								</Grid>
+								<Grid item xs={12}>
+									<FormControlLabel
+										control={
+											<Switch
+												checked={values.isVerified}
+												onChange={(e) => setFieldValue("isVerified", e.target.checked)}
+												name="isVerified"
+											/>
+										}
+										label="Usuario Verificado"
 									/>
 								</Grid>
 								{error && (
