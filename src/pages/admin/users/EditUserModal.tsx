@@ -51,6 +51,13 @@ const availableStatuses = [
 	{ value: "pending", label: "Pendiente" },
 ];
 
+// Los métodos de autenticación disponibles
+const availableAuthProviders = [
+	{ value: "", label: "Sin datos (Legacy)" },
+	{ value: "email", label: "Email" },
+	{ value: "google", label: "Google" },
+];
+
 interface FormValues {
 	name: string;
 	email: string;
@@ -58,6 +65,7 @@ interface FormValues {
 	status: string;
 	phone: string;
 	isVerified: boolean;
+	authProvider: string;
 }
 
 const EditUserModal: React.FC<EditUserModalProps> = ({ user, open, onClose }) => {
@@ -72,6 +80,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, open, onClose }) =>
 		status: user?.status || "active",
 		phone: user?.phone || "",
 		isVerified: user?.isVerified || false,
+		authProvider: user?.authProvider || "",
 	};
 
 	// Esquema de validación
@@ -82,6 +91,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, open, onClose }) =>
 		status: Yup.string().required("El estado es requerido"),
 		phone: Yup.string(),
 		isVerified: Yup.boolean(),
+		authProvider: Yup.string(),
 	});
 
 	// Función para manejar el envío del formulario
@@ -269,6 +279,26 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, open, onClose }) =>
 										}
 										label="Usuario Verificado"
 									/>
+								</Grid>
+								<Grid item xs={12}>
+									<FormControl fullWidth>
+										<InputLabel id="authProvider-label">Método de Registro</InputLabel>
+										<Select
+											labelId="authProvider-label"
+											id="authProvider"
+											name="authProvider"
+											value={values.authProvider}
+											label="Método de Registro"
+											onChange={handleChange}
+											onBlur={handleBlur}
+										>
+											{availableAuthProviders.map((provider) => (
+												<MenuItem key={provider.value} value={provider.value}>
+													{provider.label}
+												</MenuItem>
+											))}
+										</Select>
+									</FormControl>
 								</Grid>
 								{error && (
 									<Grid item xs={12}>

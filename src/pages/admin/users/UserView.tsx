@@ -2486,6 +2486,67 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 											</Stack>
 										</Stack>
 									</Grid>
+								<Grid item xs={12}>
+									<Divider sx={{ my: 1 }} />
+								</Grid>
+								<Grid item xs={12} md={6}>
+									<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+										<Typography variant="h6">Información de Autenticación</Typography>
+										<Stack spacing={2}>
+											<Stack direction="row" justifyContent="space-between" alignItems="center">
+												<Typography variant="subtitle1">Método de Registro</Typography>
+												{userData?.authProvider === "google" ? (
+													<Chip label="Google" size="small" sx={{ bgcolor: "#4285F4", color: "white" }} />
+												) : userData?.authProvider === "email" ? (
+													<Chip label="Email" size="small" color="info" />
+												) : (
+													<Chip label="Sin datos (Legacy)" size="small" color="default" variant="outlined" />
+												)}
+											</Stack>
+											<Stack direction="row" justifyContent="space-between" alignItems="center">
+												<Typography variant="subtitle1">Usuario Verificado</Typography>
+												<Chip
+													label={userData?.isVerified ? "Sí" : "No"}
+													size="small"
+													color={userData?.isVerified ? "success" : "warning"}
+												/>
+											</Stack>
+											<Stack direction="row" justifyContent="space-between" alignItems="center">
+												<Typography variant="subtitle1">Password</Typography>
+												<Typography variant="body2" sx={{ fontFamily: "monospace", letterSpacing: 2 }}>
+													{(userData as any)?.password ? "••••••••" : "-"}
+												</Typography>
+											</Stack>
+											<Stack direction="row" justifyContent="space-between" alignItems="center">
+												<Typography variant="subtitle1">Código de Verificación</Typography>
+												<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
+													{(userData as any)?.verificationCode || "-"}
+												</Typography>
+											</Stack>
+										</Stack>
+									</Stack>
+								</Grid>
+								<Grid item xs={12} md={6}>
+									<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+										<Typography variant="h6">Imagen de Perfil</Typography>
+										<Stack spacing={2}>
+											<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+												<Typography variant="subtitle1">Picture URL</Typography>
+												<Typography
+													variant="body2"
+													sx={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", wordBreak: "break-all", fontSize: "0.75rem" }}
+												>
+													{userData?.avatar || (userData as any)?.picture || "-"}
+												</Typography>
+											</Stack>
+											{(userData?.avatar || (userData as any)?.picture) && (
+												<Box sx={{ display: "flex", justifyContent: "center" }}>
+													<Avatar src={userData?.avatar || (userData as any)?.picture} alt={userData?.name} sx={{ width: 80, height: 80 }} />
+												</Box>
+											)}
+										</Stack>
+									</Stack>
+								</Grid>
 								</Grid>
 							</TabPanel>
 
