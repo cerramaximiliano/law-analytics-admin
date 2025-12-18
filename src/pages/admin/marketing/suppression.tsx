@@ -15,6 +15,7 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
+	TablePagination,
 	Paper,
 	Chip,
 	CircularProgress,
@@ -88,6 +89,10 @@ const MarketingSuppression = () => {
 	// Search state
 	const [searchTerm, setSearchTerm] = useState("");
 	const [filterReason, setFilterReason] = useState<"all" | "BOUNCE" | "COMPLAINT">("all");
+
+	// Pagination state
+	const [page, setPage] = useState(0);
+	const [rowsPerPage, setRowsPerPage] = useState(25);
 
 	// Sync state
 	const [syncing, setSyncing] = useState(false);
@@ -210,6 +215,30 @@ const MarketingSuppression = () => {
 
 	// Filter emails by search term
 	const filteredEmails = suppressedEmails.filter((email) => email.EmailAddress.toLowerCase().includes(searchTerm.toLowerCase()));
+
+	// Paginated emails
+	const paginatedEmails = filteredEmails.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+	// Pagination handlers
+	const handleChangePage = (_event: unknown, newPage: number) => {
+		setPage(newPage);
+	};
+
+	const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setRowsPerPage(parseInt(event.target.value, 10));
+		setPage(0);
+	};
+
+	// Reset page when filters change
+	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setSearchTerm(e.target.value);
+		setPage(0);
+	};
+
+	const handleFilterChange = (reason: "all" | "BOUNCE" | "COMPLAINT") => {
+		setFilterReason(reason);
+		setPage(0);
+	};
 
 	// Stats
 	const bounceCount = suppressedEmails.filter((e) => e.Reason === "BOUNCE").length;
@@ -354,7 +383,7 @@ const MarketingSuppression = () => {
 					size="small"
 					placeholder="Buscar email..."
 					value={searchTerm}
-					onChange={(e) => setSearchTerm(e.target.value)}
+					onChange={handleSearchChange}
 					InputProps={{
 						startAdornment: (
 							<InputAdornment position="start">
@@ -369,19 +398,19 @@ const MarketingSuppression = () => {
 					<Chip
 						label="Todos"
 						color={filterReason === "all" ? "primary" : "default"}
-						onClick={() => setFilterReason("all")}
+						onClick={() => handleFilterChange("all")}
 						variant={filterReason === "all" ? "filled" : "outlined"}
 					/>
 					<Chip
 						label="Bounces"
 						color={filterReason === "BOUNCE" ? "error" : "default"}
-						onClick={() => setFilterReason("BOUNCE")}
+						onClick={() => handleFilterChange("BOUNCE")}
 						variant={filterReason === "BOUNCE" ? "filled" : "outlined"}
 					/>
 					<Chip
 						label="Complaints"
 						color={filterReason === "COMPLAINT" ? "warning" : "default"}
-						onClick={() => setFilterReason("COMPLAINT")}
+						onClick={() => handleFilterChange("COMPLAINT")}
 						variant={filterReason === "COMPLAINT" ? "filled" : "outlined"}
 					/>
 				</Box>
@@ -423,15 +452,15 @@ const MarketingSuppression = () => {
 							</TableRow>
 						</TableHead>
 						<TableBody>
-							{filteredEmails.length === 0 ? (
+							{paginatedEmails.length === 0 ? (
 								<TableRow>
 									<TableCell colSpan={3} align="center">
 										{loading ? "Cargando..." : "No hay emails suprimidos"}
 									</TableCell>
 								</TableRow>
 							) : (
-								filteredEmails.map((email, index) => (
-									<TableRow key={index} hover>
+								paginatedEmails.map((email, index) => (
+									<TableRow key={`${email.EmailAddress}-${index}`} hover>
 										<TableCell>{email.EmailAddress}</TableCell>
 										<TableCell>
 											<Chip
@@ -456,6 +485,17 @@ const MarketingSuppression = () => {
 						</TableBody>
 					</Table>
 				</TableContainer>
+				<TablePagination
+					component="div"
+					count={filteredEmails.length}
+					page={page}
+					onPageChange={handleChangePage}
+					rowsPerPage={rowsPerPage}
+					onRowsPerPageChange={handleChangeRowsPerPage}
+					rowsPerPageOptions={[10, 25, 50, 100]}
+					labelRowsPerPage="Filas por página:"
+					labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+				/>
 			</MainCard>
 
 			{/* Sync Confirmation Dialog */}
