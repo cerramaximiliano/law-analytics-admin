@@ -505,13 +505,8 @@ const UsersList = () => {
 				textColor = theme.palette.info.contrastText;
 				label = "Email";
 				break;
-			case "legacy":
-				backgroundColor = theme.palette.grey[500];
-				textColor = theme.palette.grey[100];
-				label = "Legacy";
-				break;
 			default:
-				// Si no tiene authProvider, es un usuario legacy (antes del cambio)
+				// null, undefined = usuario legacy (antes del cambio)
 				backgroundColor = theme.palette.grey[400];
 				textColor = theme.palette.grey[800];
 				label = "Sin datos";
