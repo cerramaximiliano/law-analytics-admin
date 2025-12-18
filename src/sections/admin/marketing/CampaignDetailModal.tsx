@@ -504,7 +504,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 											</Typography>
 										</TableCell>
 										<TableCell>
-											<Typography variant="body1">{campaign.settings.throttleRate} emails/hora</Typography>
+											<Typography variant="body1">{campaign.settings.throttleRate} emails/batch</Typography>
 										</TableCell>
 									</TableRow>
 									<TableRow>
