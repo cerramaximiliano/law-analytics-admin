@@ -93,7 +93,7 @@ const MarketingSuppression = () => {
 
 	// Pagination state
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(25);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 
 	// Sorting state
 	type SortField = "email" | "reason" | "date";
