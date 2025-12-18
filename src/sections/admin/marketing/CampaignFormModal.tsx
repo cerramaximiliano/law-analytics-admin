@@ -8,6 +8,8 @@ import {
 	Alert,
 	Box,
 	Button,
+	Checkbox,
+	Chip,
 	Dialog,
 	DialogActions,
 	DialogContent,
@@ -68,6 +70,10 @@ interface FormValues {
 	tags: string;
 	timezone: string;
 	throttleRate: number;
+	// Sending restrictions
+	allowedDays: number[];
+	timeWindowStart: string;
+	timeWindowEnd: string;
 }
 
 // validation schema
@@ -90,6 +96,9 @@ const validationSchema = Yup.object({
 	tags: Yup.string(),
 	timezone: Yup.string().required("La zona horaria es requerida"),
 	throttleRate: Yup.number().min(1, "Mínimo 1 email por batch").max(1000, "Máximo 1000 emails por batch"),
+	allowedDays: Yup.array().of(Yup.number()).min(1, "Debe seleccionar al menos un día"),
+	timeWindowStart: Yup.string().matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "Formato inválido (HH:MM)"),
+	timeWindowEnd: Yup.string().matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "Formato inválido (HH:MM)"),
 });
 
 // Campaign types with labels
@@ -143,6 +152,17 @@ const timezoneOptions = [
 	{ value: "UTC", label: "UTC (Tiempo Universal Coordinado)" },
 ];
 
+// Days of week options
+const daysOfWeek = [
+	{ value: 0, label: "Domingo", short: "Dom" },
+	{ value: 1, label: "Lunes", short: "Lun" },
+	{ value: 2, label: "Martes", short: "Mar" },
+	{ value: 3, label: "Miércoles", short: "Mié" },
+	{ value: 4, label: "Jueves", short: "Jue" },
+	{ value: 5, label: "Viernes", short: "Vie" },
+	{ value: 6, label: "Sábado", short: "Sáb" },
+];
+
 const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: CampaignFormModalProps) => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -162,7 +182,11 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 		category: "",
 		tags: "",
 		timezone: "America/Argentina/Buenos_Aires", // Default timezone
-		throttleRate: 100, // Default: 100 emails per hour
+		throttleRate: 100, // Default: 100 emails per batch
+		// Sending restrictions defaults
+		allowedDays: [1, 2, 3, 4, 5], // Monday to Friday
+		timeWindowStart: "09:00",
+		timeWindowEnd: "18:00",
 	};
 
 	// Formik setup
@@ -201,6 +225,13 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 							...campaign.settings,
 							timezone: values.timezone,
 							throttleRate: values.throttleRate,
+							sendingRestrictions: {
+								allowedDays: values.allowedDays,
+								timeWindow: {
+									start: values.timeWindowStart,
+									end: values.timeWindowEnd,
+								},
+							},
 						},
 					};
 
@@ -221,6 +252,13 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 						settings: {
 							timezone: values.timezone,
 							throttleRate: values.throttleRate,
+							sendingRestrictions: {
+								allowedDays: values.allowedDays,
+								timeWindow: {
+									start: values.timeWindowStart,
+									end: values.timeWindowEnd,
+								},
+							},
 						},
 					};
 
@@ -296,6 +334,10 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 				tags: tagsString,
 				timezone: campaignTimezone,
 				throttleRate: campaign.settings?.throttleRate || 100,
+				// Sending restrictions
+				allowedDays: campaign.settings?.sendingRestrictions?.allowedDays || [1, 2, 3, 4, 5],
+				timeWindowStart: campaign.settings?.sendingRestrictions?.timeWindow?.start || "09:00",
+				timeWindowEnd: campaign.settings?.sendingRestrictions?.timeWindow?.end || "18:00",
 			});
 		} else {
 			// Reset to defaults for create mode
@@ -603,6 +645,94 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 									onBlur={formik.handleBlur}
 									placeholder="Etiquetas separadas por comas (ej: verano, descuentos, 2025)"
 									helperText="Añade etiquetas separadas por comas para organizar tus campañas"
+								/>
+							</FormControl>
+						</Grid>
+
+						<Grid item xs={12}>
+							<Divider />
+						</Grid>
+
+						{/* Sending Restrictions section */}
+						<Grid item xs={12}>
+							<Typography variant="h5" gutterBottom>
+								Restricciones de Envío
+							</Typography>
+							<Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+								Define los días y horarios en que se permite enviar correos
+							</Typography>
+						</Grid>
+
+						{/* Allowed Days */}
+						<Grid item xs={12}>
+							<FormControl
+								fullWidth
+								error={formik.touched.allowedDays && Boolean(formik.errors.allowedDays)}
+							>
+								<Typography variant="subtitle2" gutterBottom>
+									Días permitidos
+								</Typography>
+								<Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+									{daysOfWeek.map((day) => (
+										<Chip
+											key={day.value}
+											label={day.short}
+											onClick={() => {
+												const currentDays = formik.values.allowedDays;
+												const newDays = currentDays.includes(day.value)
+													? currentDays.filter((d) => d !== day.value)
+													: [...currentDays, day.value].sort((a, b) => a - b);
+												formik.setFieldValue("allowedDays", newDays);
+											}}
+											color={formik.values.allowedDays.includes(day.value) ? "primary" : "default"}
+											variant={formik.values.allowedDays.includes(day.value) ? "filled" : "outlined"}
+											sx={{ cursor: "pointer" }}
+										/>
+									))}
+								</Box>
+								{formik.touched.allowedDays && formik.errors.allowedDays && (
+									<FormHelperText>{formik.errors.allowedDays}</FormHelperText>
+								)}
+							</FormControl>
+						</Grid>
+
+						{/* Time Window */}
+						<Grid item xs={12} md={6}>
+							<FormControl fullWidth error={formik.touched.timeWindowStart && Boolean(formik.errors.timeWindowStart)}>
+								<TextField
+									id="timeWindowStart"
+									name="timeWindowStart"
+									label="Hora de inicio"
+									type="time"
+									value={formik.values.timeWindowStart}
+									onChange={formik.handleChange}
+									onBlur={formik.handleBlur}
+									error={formik.touched.timeWindowStart && Boolean(formik.errors.timeWindowStart)}
+									helperText={
+										(formik.touched.timeWindowStart && formik.errors.timeWindowStart) ||
+										"Hora desde la cual se permite enviar (zona horaria de la campaña)"
+									}
+									InputLabelProps={{ shrink: true }}
+								/>
+							</FormControl>
+						</Grid>
+
+						<Grid item xs={12} md={6}>
+							<FormControl fullWidth error={formik.touched.timeWindowEnd && Boolean(formik.errors.timeWindowEnd)}>
+								<TextField
+									id="timeWindowEnd"
+									name="timeWindowEnd"
+									label="Hora de fin"
+									type="time"
+									value={formik.values.timeWindowEnd}
+									onChange={formik.handleChange}
+									onBlur={formik.handleBlur}
+									error={formik.touched.timeWindowEnd && Boolean(formik.errors.timeWindowEnd)}
+									helperText={
+										(formik.touched.timeWindowEnd && formik.errors.timeWindowEnd) ||
+										"Hora hasta la cual se permite enviar (zona horaria de la campaña)"
+									}
+									InputLabelProps={{ shrink: true }}
 								/>
 							</FormControl>
 						</Grid>

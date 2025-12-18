@@ -18,6 +18,14 @@ export interface RetryConfig {
 	retryInterval: number;
 }
 
+export interface SendingRestrictions {
+	allowedDays: number[]; // 0=Sunday, 1=Monday, ..., 6=Saturday
+	timeWindow: {
+		start: string; // Format "HH:MM"
+		end: string; // Format "HH:MM"
+	};
+}
+
 export interface CampaignSettings {
 	throttleRate: number;
 	timezone: string;
@@ -26,6 +34,7 @@ export interface CampaignSettings {
 		defaultValues: Record<string, any>;
 	};
 	retryConfig: RetryConfig;
+	sendingRestrictions?: SendingRestrictions;
 }
 
 export interface CampaignMetrics {
