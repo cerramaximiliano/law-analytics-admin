@@ -589,7 +589,17 @@ const ContactsPanel = () => {
 											)}
 										</TableCell>
 										<TableCell>
-											<Typography variant="body2">{contact.createdAt ? new Date(contact.createdAt).toLocaleDateString() : "-"}</Typography>
+											<Typography variant="body2">
+												{contact.createdAt
+													? new Date(contact.createdAt).toLocaleString("es-AR", {
+															year: "numeric",
+															month: "2-digit",
+															day: "2-digit",
+															hour: "2-digit",
+															minute: "2-digit",
+													  })
+													: "-"}
+											</Typography>
 										</TableCell>
 										<TableCell align="center">
 											<Stack direction="row" spacing={1} justifyContent="center">
