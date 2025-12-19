@@ -377,6 +377,7 @@ const SegmentsPanel = () => {
 							<TableCell>Descripción</TableCell>
 							<TableCell align="right">Contactos</TableCell>
 							<TableCell>Estado</TableCell>
+							<TableCell>Auto-actualización</TableCell>
 							<TableCell>Creado</TableCell>
 							<TableCell>Última actualización</TableCell>
 							<TableCell align="center">Acciones</TableCell>
@@ -384,10 +385,10 @@ const SegmentsPanel = () => {
 					</TableHead>
 					<TableBody>
 						{loading ? (
-							<TableSkeleton columns={8} rows={10} />
+							<TableSkeleton columns={9} rows={10} />
 						) : segments.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={8} align="center" sx={{ py: 3 }}>
+								<TableCell colSpan={9} align="center" sx={{ py: 3 }}>
 									<Typography variant="subtitle1">No hay segmentos disponibles</Typography>
 								</TableCell>
 							</TableRow>
@@ -421,6 +422,26 @@ const SegmentsPanel = () => {
 												color={segment.isActive ? "success" : "default"}
 												size="small"
 											/>
+										</TableCell>
+										<TableCell>
+											{segment.autoUpdate?.enabled ? (
+												<Chip
+													label={`${segment.autoUpdate.frequency?.value || "?"} ${
+														segment.autoUpdate.frequency?.unit === "minutes"
+															? "min"
+															: segment.autoUpdate.frequency?.unit === "hours"
+															? "hs"
+															: segment.autoUpdate.frequency?.unit === "days"
+															? "días"
+															: "?"
+													}`}
+													color="info"
+													size="small"
+													variant="outlined"
+												/>
+											) : (
+												<Chip label="Desactivado" size="small" variant="outlined" />
+											)}
 										</TableCell>
 										<TableCell>
 											<Typography variant="body2">{segment.createdAt ? new Date(segment.createdAt).toLocaleDateString() : "-"}</Typography>
