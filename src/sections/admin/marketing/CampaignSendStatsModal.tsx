@@ -481,6 +481,16 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 
 			<DialogActions sx={{ px: 3, py: 2, justifyContent: "space-between" }}>
 				<Stack direction="row" spacing={2} alignItems="center">
+					<Button
+						variant="outlined"
+						size="small"
+						onClick={() => campaign?._id && fetchStats(campaign._id)}
+						disabled={loading}
+						startIcon={<Chart size={16} />}
+					>
+						Actualizar
+					</Button>
+					<Divider orientation="vertical" flexItem />
 					<FormControlLabel
 						control={
 							<Checkbox
