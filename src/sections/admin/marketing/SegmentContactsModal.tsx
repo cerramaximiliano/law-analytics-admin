@@ -258,6 +258,27 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 								{totalContacts} contacto{totalContacts !== 1 ? "s" : ""}
 							</Typography>
 						</Box>
+
+						{/* Advertencia de sincronización para segmentos dinámicos */}
+						{segment.type === "dynamic" && (
+							<Alert severity="info" sx={{ mt: 2 }}>
+								<Typography variant="subtitle2" fontWeight="bold">
+									Sincronización de contactos
+								</Typography>
+								<Typography variant="body2">
+									Los contactos de este segmento dinámico se calculan en tiempo real, pero se sincronizan con la campaña cada{" "}
+									{segment.autoUpdate?.frequency?.value || "?"}{" "}
+									{segment.autoUpdate?.frequency?.unit === "minutes"
+										? "minutos"
+										: segment.autoUpdate?.frequency?.unit === "hours"
+										? "horas"
+										: segment.autoUpdate?.frequency?.unit === "days"
+										? "días"
+										: "?"}{" "}
+									según la frecuencia configurada.
+								</Typography>
+							</Alert>
+						)}
 					</Box>
 				)}
 
