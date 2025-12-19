@@ -424,24 +424,19 @@ const SegmentsPanel = () => {
 											/>
 										</TableCell>
 										<TableCell>
-											{segment.autoUpdate?.enabled ? (
-												<Chip
-													label={`${segment.autoUpdate.frequency?.value || "?"} ${
-														segment.autoUpdate.frequency?.unit === "minutes"
-															? "min"
-															: segment.autoUpdate.frequency?.unit === "hours"
-															? "hs"
-															: segment.autoUpdate.frequency?.unit === "days"
-															? "días"
-															: "?"
-													}`}
-													color="info"
-													size="small"
-													variant="outlined"
-												/>
-											) : (
-												<Chip label="Desactivado" size="small" variant="outlined" />
-											)}
+											<Typography variant="body2">
+												{segment.autoUpdate?.enabled
+													? `${segment.autoUpdate.frequency?.value || "?"} ${
+															segment.autoUpdate.frequency?.unit === "minutes"
+																? "minutos"
+																: segment.autoUpdate.frequency?.unit === "hours"
+																? "horas"
+																: segment.autoUpdate.frequency?.unit === "days"
+																? "días"
+																: "?"
+													  }`
+													: "Desactivado"}
+											</Typography>
 										</TableCell>
 										<TableCell>
 											<Typography variant="body2">{segment.createdAt ? new Date(segment.createdAt).toLocaleDateString() : "-"}</Typography>
