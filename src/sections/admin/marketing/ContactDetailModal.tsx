@@ -701,6 +701,95 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 												</Grid>
 											</Grid>
 										</Grid>
+
+										{/* Verificación de Email */}
+										<Grid item xs={12}>
+											<Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ mt: 2 }}>
+												Verificación de Email
+											</Typography>
+											<Divider sx={{ mb: 2 }} />
+
+											<Grid container spacing={2}>
+												<Grid item xs={12} sm={6}>
+													<Typography variant="body2" color="textSecondary">
+														Email Verificado
+													</Typography>
+													<Chip
+														label={contact.isEmailVerified ? "Verificado" : "No verificado"}
+														color={contact.isEmailVerified ? "success" : "warning"}
+														size="small"
+													/>
+												</Grid>
+												<Grid item xs={12} sm={6}>
+													<Typography variant="body2" color="textSecondary">
+														Resultado
+													</Typography>
+													<Chip
+														label={
+															contact.emailVerification?.result === "valid"
+																? "Válido"
+																: contact.emailVerification?.result === "invalid"
+																? "Inválido"
+																: contact.emailVerification?.result === "disposable"
+																? "Desechable"
+																: contact.emailVerification?.result === "catchall"
+																? "Catch-all"
+																: contact.emailVerification?.result === "unknown"
+																? "Desconocido"
+																: "Sin verificar"
+														}
+														color={
+															contact.emailVerification?.result === "valid"
+																? "success"
+																: contact.emailVerification?.result === "invalid"
+																? "error"
+																: contact.emailVerification?.result === "disposable"
+																? "warning"
+																: "default"
+														}
+														size="small"
+														variant="outlined"
+													/>
+												</Grid>
+												<Grid item xs={12} sm={6}>
+													<Typography variant="body2" color="textSecondary">
+														Proveedor
+													</Typography>
+													<Typography variant="body1">
+														{contact.emailVerification?.provider || "-"}
+													</Typography>
+												</Grid>
+												<Grid item xs={12} sm={6}>
+													<Typography variant="body2" color="textSecondary">
+														Última verificación
+													</Typography>
+													<Typography variant="body1">
+														{contact.emailVerification?.lastCheckedAt
+															? formatDate(contact.emailVerification.lastCheckedAt)
+															: "-"}
+													</Typography>
+												</Grid>
+												{contact.emailVerification?.rawResponse?.flags && contact.emailVerification.rawResponse.flags.length > 0 && (
+													<Grid item xs={12}>
+														<Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+															Flags de verificación
+														</Typography>
+														<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+															{contact.emailVerification.rawResponse.flags.map((flag: string, index: number) => (
+																<Chip
+																	key={index}
+																	label={flag.replace(/_/g, " ")}
+																	size="small"
+																	variant="outlined"
+																	color="primary"
+																	sx={{ fontSize: "0.7rem" }}
+																/>
+															))}
+														</Box>
+													</Grid>
+												)}
+											</Grid>
+										</Grid>
 									</Grid>
 								</TabPanel>
 

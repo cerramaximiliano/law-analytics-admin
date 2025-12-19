@@ -100,6 +100,11 @@ export interface MarketingContact {
 		result?: string;
 		provider?: string;
 		lastCheckedAt?: Date | string;
+		rawResponse?: {
+			email?: string;
+			result?: string;
+			flags?: string[];
+		};
 	};
 	isEmailVerified?: boolean;
 	fullName?: string;
