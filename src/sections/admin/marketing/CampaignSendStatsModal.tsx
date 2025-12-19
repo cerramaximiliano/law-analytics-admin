@@ -23,6 +23,10 @@ import {
 	Paper,
 	useTheme,
 	alpha,
+	FormControlLabel,
+	Checkbox,
+	TextField,
+	Stack,
 } from "@mui/material";
 import { CloseCircle, Chart, Sms, TickCircle, CloseCircle as CloseIcon, Warning2, Mouse } from "iconsax-react";
 import { CampaignService } from "store/reducers/campaign";
@@ -45,12 +49,32 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
 	const [stats, setStats] = useState<StatsData | null>(null);
+	const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
+	const [refreshInterval, setRefreshInterval] = useState<number>(1);
+	const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
 	useEffect(() => {
 		if (open && campaign?._id) {
 			fetchStats(campaign._id);
 		}
 	}, [open, campaign]);
+
+	// Auto-refresh effect
+	useEffect(() => {
+		let intervalId: NodeJS.Timeout | null = null;
+
+		if (open && autoRefresh && campaign?._id && refreshInterval > 0) {
+			intervalId = setInterval(() => {
+				fetchStats(campaign._id!);
+			}, refreshInterval * 60 * 1000); // Convertir minutos a milisegundos
+		}
+
+		return () => {
+			if (intervalId) {
+				clearInterval(intervalId);
+			}
+		};
+	}, [open, autoRefresh, refreshInterval, campaign]);
 
 	const fetchStats = async (campaignId: string) => {
 		try {
@@ -61,6 +85,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 
 			if (response.success) {
 				setStats(response.data);
+				setLastRefresh(new Date());
 			} else {
 				setError("No se pudieron obtener las estadísticas");
 			}
@@ -88,6 +113,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 					emailBreakdown: [],
 					dailyBreakdown: [],
 				});
+				setLastRefresh(new Date());
 			} else {
 				setError(err?.response?.data?.error || err?.message || "Error al cargar estadísticas");
 			}
@@ -202,6 +228,8 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 			sx={{
 				"& .MuiDialog-paper": {
 					borderRadius: 2,
+					height: "85vh",
+					maxHeight: "85vh",
 				},
 			}}
 		>
@@ -226,7 +254,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 				</Grid>
 			</DialogTitle>
 
-			<DialogContent dividers>
+			<DialogContent dividers sx={{ flex: 1, overflow: "auto" }}>
 				{loading ? (
 					<Grid container spacing={3}>
 						{/* Skeleton for stats cards */}
@@ -451,7 +479,38 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 				)}
 			</DialogContent>
 
-			<DialogActions sx={{ px: 3, py: 2 }}>
+			<DialogActions sx={{ px: 3, py: 2, justifyContent: "space-between" }}>
+				<Stack direction="row" spacing={2} alignItems="center">
+					<FormControlLabel
+						control={
+							<Checkbox
+								checked={autoRefresh}
+								onChange={(e) => setAutoRefresh(e.target.checked)}
+								size="small"
+							/>
+						}
+						label="Auto-actualizar"
+					/>
+					{autoRefresh && (
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Typography variant="body2">cada</Typography>
+							<TextField
+								type="number"
+								size="small"
+								value={refreshInterval}
+								onChange={(e) => setRefreshInterval(Math.max(1, parseInt(e.target.value) || 1))}
+								inputProps={{ min: 1, max: 60, style: { width: 50, textAlign: "center" } }}
+								sx={{ width: 70 }}
+							/>
+							<Typography variant="body2">minuto(s)</Typography>
+						</Stack>
+					)}
+					{lastRefresh && (
+						<Typography variant="caption" color="textSecondary">
+							Última actualización: {lastRefresh.toLocaleTimeString("es-AR")}
+						</Typography>
+					)}
+				</Stack>
 				<Button onClick={onClose} color="primary" variant="outlined">
 					Cerrar
 				</Button>
