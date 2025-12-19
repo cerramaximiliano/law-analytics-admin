@@ -671,6 +671,34 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 													</Typography>
 													<Typography variant="body1">{contact.source || "-"}</Typography>
 												</Grid>
+												<Grid item xs={12} sm={6}>
+													<Typography variant="body2" color="textSecondary">
+														Usuario de la App
+													</Typography>
+													<Chip
+														label={contact.isAppUser ? "Sí" : "No"}
+														color={contact.isAppUser ? "success" : "default"}
+														size="small"
+														variant="outlined"
+													/>
+												</Grid>
+												<Grid item xs={12} sm={6}>
+													<Typography variant="body2" color="textSecondary">
+														Verificado
+													</Typography>
+													<Chip
+														label={contact.isVerified ? "Sí" : "No"}
+														color={contact.isVerified ? "info" : "default"}
+														size="small"
+														variant="outlined"
+													/>
+												</Grid>
+												<Grid item xs={12} sm={6}>
+													<Typography variant="body2" color="textSecondary">
+														Tipo de Suscripción
+													</Typography>
+													<Typography variant="body1">{contact.subscriptionType || "-"}</Typography>
+												</Grid>
 											</Grid>
 										</Grid>
 									</Grid>
