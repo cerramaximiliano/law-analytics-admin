@@ -426,7 +426,17 @@ const SegmentsPanel = () => {
 											<Typography variant="body2">{segment.createdAt ? new Date(segment.createdAt).toLocaleDateString() : "-"}</Typography>
 										</TableCell>
 										<TableCell>
-											<Typography variant="body2">{segment.updatedAt ? new Date(segment.updatedAt).toLocaleDateString() : "-"}</Typography>
+											<Typography variant="body2">
+												{segment.updatedAt
+													? new Date(segment.updatedAt).toLocaleString("es-AR", {
+															year: "numeric",
+															month: "2-digit",
+															day: "2-digit",
+															hour: "2-digit",
+															minute: "2-digit",
+													  })
+													: "-"}
+											</Typography>
 										</TableCell>
 										<TableCell align="center">
 											<Stack direction="row" spacing={0.5} justifyContent="center">
