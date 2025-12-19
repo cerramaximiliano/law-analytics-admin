@@ -34,7 +34,7 @@ import { MarketingContact } from "types/marketing-contact";
 import { MarketingContactService } from "store/reducers/marketing-contacts";
 import { CampaignService } from "store/reducers/campaign";
 import CampaignDetailModal from "./CampaignDetailModal";
-import { Refresh, ArrowDown2, ArrowUp2, Pause, Trash, Play, PauseCircle, PlayCircle, User, UserTick, Copy, TickCircle } from "iconsax-react";
+import { Refresh, ArrowDown2, ArrowUp2, Pause, Trash, Play, PauseCircle, PlayCircle, User, UserTick, Copy, TickCircle, CloseCircle } from "iconsax-react";
 import authAxios from "utils/authAxios";
 
 // Tipo para datos de usuario
@@ -675,23 +675,25 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 													<Typography variant="body2" color="textSecondary">
 														Usuario de la App
 													</Typography>
-													<Chip
-														label={contact.isAppUser ? "Sí" : "No"}
-														color={contact.isAppUser ? "success" : "default"}
-														size="small"
-														variant="outlined"
-													/>
+													<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+														{contact.isAppUser ? (
+															<TickCircle size={20} color="#4caf50" variant="Bold" />
+														) : (
+															<CloseCircle size={20} color="#f44336" variant="Bold" />
+														)}
+													</Box>
 												</Grid>
 												<Grid item xs={12} sm={6}>
 													<Typography variant="body2" color="textSecondary">
 														Verificado
 													</Typography>
-													<Chip
-														label={contact.isVerified ? "Sí" : "No"}
-														color={contact.isVerified ? "info" : "default"}
-														size="small"
-														variant="outlined"
-													/>
+													<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+														{contact.isVerified ? (
+															<TickCircle size={20} color="#4caf50" variant="Bold" />
+														) : (
+															<CloseCircle size={20} color="#f44336" variant="Bold" />
+														)}
+													</Box>
 												</Grid>
 												<Grid item xs={12} sm={6}>
 													<Typography variant="body2" color="textSecondary">
@@ -714,11 +716,13 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 													<Typography variant="body2" color="textSecondary">
 														Email Verificado
 													</Typography>
-													<Chip
-														label={contact.isEmailVerified ? "Verificado" : "No verificado"}
-														color={contact.isEmailVerified ? "success" : "warning"}
-														size="small"
-													/>
+													<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+														{contact.isEmailVerified ? (
+															<TickCircle size={20} color="#4caf50" variant="Bold" />
+														) : (
+															<CloseCircle size={20} color="#f44336" variant="Bold" />
+														)}
+													</Box>
 												</Grid>
 												<Grid item xs={12} sm={6}>
 													<Typography variant="body2" color="textSecondary">
