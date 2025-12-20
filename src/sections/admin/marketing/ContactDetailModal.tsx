@@ -1056,24 +1056,42 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 																						</Tooltip>
 																					</>
 																				) : campaign.status === "paused" ? (
-																					<Tooltip title="Reactivar contacto en la campaña">
-																						<IconButton
-																							size="small"
-																							onClick={() => handleActionClick(campaign.campaignId, "resume")}
-																							color="success"
-																						>
-																							<Play size={18} />
-																						</IconButton>
+																					<Tooltip
+																						title={
+																							contact?.status !== "active"
+																								? `No se puede reactivar: el contacto está ${contact?.status}`
+																								: "Reactivar contacto en la campaña"
+																						}
+																					>
+																						<span>
+																							<IconButton
+																								size="small"
+																								onClick={() => handleActionClick(campaign.campaignId, "resume")}
+																								color="success"
+																								disabled={contact?.status !== "active"}
+																							>
+																								<Play size={18} />
+																							</IconButton>
+																						</span>
 																					</Tooltip>
 																				) : campaign.status === "completed" ? (
-																					<Tooltip title="Reactivar campaña completada (reiniciar secuencia de emails)">
-																						<IconButton
-																							size="small"
-																							onClick={() => handleActionClick(campaign.campaignId, "resume")}
-																							color="info"
-																						>
-																							<Play size={18} />
-																						</IconButton>
+																					<Tooltip
+																						title={
+																							contact?.status !== "active"
+																								? `No se puede reactivar: el contacto está ${contact?.status}`
+																								: "Reactivar campaña completada (reiniciar secuencia de emails)"
+																						}
+																					>
+																						<span>
+																							<IconButton
+																								size="small"
+																								onClick={() => handleActionClick(campaign.campaignId, "resume")}
+																								color="info"
+																								disabled={contact?.status !== "active"}
+																							>
+																								<Play size={18} />
+																							</IconButton>
+																						</span>
 																					</Tooltip>
 																				) : null}
 																			</Stack>
