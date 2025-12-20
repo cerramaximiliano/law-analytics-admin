@@ -74,9 +74,11 @@ export const MarketingContactService = {
 	},
 
 	// Delete a contact
-	deleteContact: async (id: string): Promise<{ success: boolean; message: string }> => {
+	deleteContact: async (id: string, permanent: boolean = false): Promise<{ success: boolean; message: string }> => {
 		try {
-			const response = await mktAxios.delete(`/api/contacts/${id}`);
+			const response = await mktAxios.delete(`/api/contacts/${id}`, {
+				params: permanent ? { permanent: "true" } : {},
+			});
 			return response.data;
 		} catch (error) {
 			throw error;
