@@ -117,7 +117,7 @@ export interface CampaignInput {
 }
 
 // Types for Campaign Send Logs
-export type SendLogStatus = "queued" | "sent" | "delivered" | "bounced" | "complained" | "failed";
+export type SendLogStatus = "queued" | "sent" | "delivered" | "bounced" | "complained" | "failed" | "unsubscribed";
 
 export interface CampaignSendLog {
 	_id: string;
@@ -143,6 +143,7 @@ export interface CampaignSendLog {
 	deliveredAt?: string;
 	bouncedAt?: string;
 	complainedAt?: string;
+	unsubscribedAt?: string;
 	opens: number;
 	firstOpenedAt?: string;
 	lastOpenedAt?: string;
@@ -186,6 +187,7 @@ export interface CampaignSendStatsSummary {
 	complained: number;
 	failed: number;
 	queued: number;
+	unsubscribed: number;
 	totalOpens: number;
 	totalClicks: number;
 	uniqueOpens: number;
@@ -194,6 +196,7 @@ export interface CampaignSendStatsSummary {
 	bounceRate: number;
 	openRate: number;
 	clickRate: number;
+	unsubscribeRate: number;
 }
 
 export interface StatusBreakdown {
@@ -206,6 +209,7 @@ export interface EmailBreakdown {
 	count: number;
 	delivered: number;
 	bounced: number;
+	unsubscribed: number;
 	opens: number;
 	clicks: number;
 	name?: string;
@@ -218,6 +222,7 @@ export interface DailyBreakdown {
 	sent: number;
 	delivered: number;
 	bounced: number;
+	unsubscribed: number;
 	opens: number;
 	clicks: number;
 }

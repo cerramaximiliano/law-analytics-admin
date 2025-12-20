@@ -28,7 +28,7 @@ import {
 	TextField,
 	Stack,
 } from "@mui/material";
-import { CloseCircle, Chart, Sms, TickCircle, CloseCircle as CloseIcon, Warning2, Mouse } from "iconsax-react";
+import { CloseCircle, Chart, Sms, TickCircle, CloseCircle as CloseIcon, Warning2, Mouse, UserRemove } from "iconsax-react";
 import { CampaignService } from "store/reducers/campaign";
 import { Campaign, CampaignSendStatsSummary, EmailBreakdown, DailyBreakdown } from "types/campaign";
 
@@ -101,6 +101,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 						complained: 0,
 						failed: 0,
 						queued: 0,
+						unsubscribed: 0,
 						totalOpens: 0,
 						totalClicks: 0,
 						uniqueOpens: 0,
@@ -109,6 +110,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 						bounceRate: 0,
 						openRate: 0,
 						clickRate: 0,
+						unsubscribeRate: 0,
 					},
 					emailBreakdown: [],
 					dailyBreakdown: [],
@@ -138,6 +140,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 			bounced: "Rebotado",
 			complained: "Queja",
 			failed: "Fallido",
+			unsubscribed: "Desuscrito",
 		};
 		return labels[status] || status;
 	};
@@ -150,6 +153,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 			bounced: "error",
 			complained: "warning",
 			failed: "error",
+			unsubscribed: "warning",
 		};
 		return colors[status] || "default";
 	};
@@ -289,7 +293,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 							<Divider sx={{ mb: 2 }} />
 
 							<Grid container spacing={2}>
-								<Grid item xs={6} sm={3}>
+								<Grid item xs={6} sm={2.4}>
 									<StatCard
 										title="Total Enviados"
 										value={stats.summary.total}
@@ -297,7 +301,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 										color={theme.palette.primary.main}
 									/>
 								</Grid>
-								<Grid item xs={6} sm={3}>
+								<Grid item xs={6} sm={2.4}>
 									<StatCard
 										title="Entregados"
 										value={stats.summary.delivered}
@@ -306,7 +310,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 										color={theme.palette.success.main}
 									/>
 								</Grid>
-								<Grid item xs={6} sm={3}>
+								<Grid item xs={6} sm={2.4}>
 									<StatCard
 										title="Rebotados"
 										value={stats.summary.bounced}
@@ -315,12 +319,21 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 										color={theme.palette.error.main}
 									/>
 								</Grid>
-								<Grid item xs={6} sm={3}>
+								<Grid item xs={6} sm={2.4}>
 									<StatCard
 										title="Quejas"
 										value={stats.summary.complained}
 										icon={<Warning2 size={20} />}
 										color={theme.palette.warning.main}
+									/>
+								</Grid>
+								<Grid item xs={6} sm={2.4}>
+									<StatCard
+										title="Desuscripciones"
+										value={stats.summary.unsubscribed}
+										subtitle={`${stats.summary.unsubscribeRate}% tasa`}
+										icon={<UserRemove size={20} />}
+										color={theme.palette.warning.dark}
 									/>
 								</Grid>
 							</Grid>
@@ -367,6 +380,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 								<RateProgress label="Tasa de Apertura" value={stats.summary.openRate} color={theme.palette.info.main} />
 								<RateProgress label="Tasa de Clics" value={stats.summary.clickRate} color={theme.palette.secondary.main} />
 								<RateProgress label="Tasa de Rebote" value={stats.summary.bounceRate} color={theme.palette.error.main} />
+								<RateProgress label="Tasa de Desuscripción" value={stats.summary.unsubscribeRate} color={theme.palette.warning.dark} />
 							</Box>
 						</Grid>
 
@@ -387,6 +401,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 												<TableCell align="right">Enviados</TableCell>
 												<TableCell align="right">Entregados</TableCell>
 												<TableCell align="right">Rebotados</TableCell>
+												<TableCell align="right">Desuscrip.</TableCell>
 												<TableCell align="right">Aperturas</TableCell>
 												<TableCell align="right">Clics</TableCell>
 											</TableRow>
@@ -412,6 +427,13 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 													<TableCell align="right">
 														{email.bounced > 0 ? (
 															<Chip label={email.bounced} size="small" color="error" variant="outlined" />
+														) : (
+															0
+														)}
+													</TableCell>
+													<TableCell align="right">
+														{email.unsubscribed > 0 ? (
+															<Chip label={email.unsubscribed} size="small" color="warning" variant="outlined" />
 														) : (
 															0
 														)}
@@ -442,6 +464,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 												<TableCell align="right">Enviados</TableCell>
 												<TableCell align="right">Entregados</TableCell>
 												<TableCell align="right">Rebotados</TableCell>
+												<TableCell align="right">Desuscrip.</TableCell>
 												<TableCell align="right">Aperturas</TableCell>
 												<TableCell align="right">Clics</TableCell>
 											</TableRow>
@@ -453,6 +476,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 													<TableCell align="right">{day.sent}</TableCell>
 													<TableCell align="right">{day.delivered}</TableCell>
 													<TableCell align="right">{day.bounced}</TableCell>
+													<TableCell align="right">{day.unsubscribed}</TableCell>
 													<TableCell align="right">{day.opens}</TableCell>
 													<TableCell align="right">{day.clicks}</TableCell>
 												</TableRow>
