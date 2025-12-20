@@ -976,20 +976,54 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 																			</Button>
 																		</TableCell>
 																		<TableCell>
-																			<Chip
-																				label={campaign.status}
-																				color={
-																					campaign.status === "active"
-																						? "success"
-																						: campaign.status === "completed"
-																						? "info"
-																						: campaign.status === "paused"
-																						? "warning"
-																						: "default"
-																				}
-																				size="small"
-																				variant="outlined"
-																			/>
+																			<Box>
+																				<Chip
+																					label={campaign.status}
+																					color={
+																						campaign.status === "active"
+																							? "success"
+																							: campaign.status === "completed"
+																							? "info"
+																							: campaign.status === "paused"
+																							? "warning"
+																							: "default"
+																					}
+																					size="small"
+																					variant="outlined"
+																				/>
+																				{/* Mostrar razón de completado */}
+																				{campaign.status === "completed" && (
+																					<Typography
+																						variant="caption"
+																						color={
+																							campaign.completionReason === "finished"
+																								? "success.main"
+																								: campaign.completionReason === "unsubscribed"
+																								? "warning.main"
+																								: campaign.completionReason === "bounced" || campaign.completionReason === "complained"
+																								? "error.main"
+																								: "textSecondary"
+																						}
+																						display="block"
+																						sx={{ mt: 0.5 }}
+																					>
+																						{campaign.completionReason === "finished"
+																							? `Completado: ${formatDate(campaign.completedAt)}`
+																							: campaign.completionReason === "unsubscribed"
+																							? "Desuscripción"
+																							: campaign.completionReason === "bounced"
+																							? "Email rebotado"
+																							: campaign.completionReason === "complained"
+																							? "Marcado como spam"
+																							: campaign.completionReason === "manual"
+																							? "Completado manualmente"
+																							: campaign.completedAt
+																							? `Completado: ${formatDate(campaign.completedAt)}`
+																							: "Sin información"
+																						}
+																					</Typography>
+																				)}
+																			</Box>
 																		</TableCell>
 																		<TableCell>{campaign.currentStep !== undefined ? campaign.currentStep : "-"}</TableCell>
 																		<TableCell>{formatDate(campaign.joinedAt)}</TableCell>
@@ -1027,6 +1061,16 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 																							size="small"
 																							onClick={() => handleActionClick(campaign.campaignId, "resume")}
 																							color="success"
+																						>
+																							<Play size={18} />
+																						</IconButton>
+																					</Tooltip>
+																				) : campaign.status === "completed" ? (
+																					<Tooltip title="Reactivar campaña completada (reiniciar secuencia de emails)">
+																						<IconButton
+																							size="small"
+																							onClick={() => handleActionClick(campaign.campaignId, "resume")}
+																							color="info"
 																						>
 																							<Play size={18} />
 																						</IconButton>
