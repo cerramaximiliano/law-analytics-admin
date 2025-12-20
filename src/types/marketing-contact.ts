@@ -31,13 +31,17 @@ export interface ContactActivity {
 	};
 }
 
+export type CampaignCompletionReason = "finished" | "unsubscribed" | "bounced" | "complained" | "manual";
+
 export interface CampaignMembership {
 	campaignId: string;
 	status: string;
 	currentStep?: number;
 	joinedAt: Date | string;
 	completedAt?: Date | string;
+	completionReason?: CampaignCompletionReason;
 	campaignName?: string;
+	metadata?: Record<string, any>;
 }
 
 export interface SegmentMembership {
