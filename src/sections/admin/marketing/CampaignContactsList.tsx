@@ -25,7 +25,7 @@ import {
 } from "@mui/material";
 
 // project imports
-import { Add, SearchNormal1, Trash, Eye } from "iconsax-react";
+import { Add, SearchNormal1, Trash, Eye, Edit2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 
 // types
@@ -35,6 +35,7 @@ import { MarketingContact } from "types/marketing-contact";
 import { CampaignService } from "store/reducers/campaign";
 import CampaignContactsModal from "./CampaignContactsModal";
 import ContactDetailModal from "./ContactDetailModal";
+import EditContactModal from "./EditContactModal";
 import MainCard from "components/MainCard";
 import ScrollX from "components/ScrollX";
 
@@ -177,6 +178,10 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 	// State for contact detail modal
 	const [detailModalOpen, setDetailModalOpen] = useState<boolean>(false);
 	const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
+
+	// State for edit contact modal
+	const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
+	const [editContactId, setEditContactId] = useState<string | null>(null);
 
 	// Estados para proceso asíncrono de eliminación
 	const [asyncDeletionProcessing, setAsyncDeletionProcessing] = useState<boolean>(false);
@@ -423,6 +428,24 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 	const handleCloseDetailModal = () => {
 		setDetailModalOpen(false);
 		setSelectedContactId(null);
+	};
+
+	// Handlers para el modal de edición
+	const handleEditContact = (contactId: string) => {
+		setEditContactId(contactId);
+		setEditModalOpen(true);
+	};
+
+	const handleCloseEditModal = () => {
+		setEditModalOpen(false);
+		setEditContactId(null);
+	};
+
+	const handleEditSave = () => {
+		fetchCampaignContacts(); // Refresh the list after editing
+		if (onContactsChange) {
+			onContactsChange();
+		}
 	};
 
 	return (
@@ -723,11 +746,20 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 																		<IconButton
 																			aria-label="ver detalles"
 																			size="small"
-																			color="primary"
+																			color="secondary"
 																			onClick={() => contact._id && handleViewDetails(contact._id)}
 																			title="Ver detalles del contacto"
 																		>
 																			<Eye size={18} />
+																		</IconButton>
+																		<IconButton
+																			aria-label="editar"
+																			size="small"
+																			color="primary"
+																			onClick={() => contact._id && handleEditContact(contact._id)}
+																			title="Editar contacto"
+																		>
+																			<Edit2 size={18} />
 																		</IconButton>
 																		<IconButton
 																			aria-label="eliminar"
@@ -810,6 +842,9 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 
 					{/* Contact Detail Modal */}
 					<ContactDetailModal open={detailModalOpen} onClose={handleCloseDetailModal} contactId={selectedContactId} />
+
+					{/* Edit Contact Modal */}
+					<EditContactModal open={editModalOpen} onClose={handleCloseEditModal} contactId={editContactId} onSave={handleEditSave} />
 				</Paper>
 			</Modal>
 		</>
