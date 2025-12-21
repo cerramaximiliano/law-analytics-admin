@@ -268,6 +268,19 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 					name: Yup.string().required("El nombre es obligatorio"),
 					subject: Yup.string().required("El asunto es obligatorio"),
 			  }),
+		sendingRestrictions: Yup.object({
+			allowedDays: Yup.array().of(Yup.number().min(0).max(6)),
+			timeWindow: Yup.object({
+				start: Yup.string(),
+				end: Yup.string(),
+			}).test("valid-time-window", "La hora de inicio debe ser anterior a la hora de fin", function (value) {
+				if (!value || !value.start || !value.end) return true;
+				// Permitir 00:00-00:00 (será sanitizado en el backend)
+				if (value.start === "00:00" && value.end === "00:00") return true;
+				if (value.start === value.end) return false;
+				return value.start < value.end;
+			}),
+		}).nullable(),
 	});
 
 	// Initial sending restrictions - solo usar datos existentes
@@ -854,6 +867,13 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 												/>
 											</Grid>
 										</Grid>
+										{formik.touched.sendingRestrictions?.timeWindow && formik.errors.sendingRestrictions?.timeWindow && (
+											<Typography variant="caption" color="error" sx={{ mt: 1, display: "block" }}>
+												{typeof formik.errors.sendingRestrictions.timeWindow === "string"
+													? formik.errors.sendingRestrictions.timeWindow
+													: "Configuración de horario inválida"}
+											</Typography>
+										)}
 										<Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
 											La zona horaria se configura a nivel de campaña
 										</Typography>

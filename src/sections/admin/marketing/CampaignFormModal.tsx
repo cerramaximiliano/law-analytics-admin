@@ -98,7 +98,14 @@ const validationSchema = Yup.object({
 	throttleRate: Yup.number().min(1, "Mínimo 1 email por batch").max(1000, "Máximo 1000 emails por batch"),
 	allowedDays: Yup.array().of(Yup.number()).min(1, "Debe seleccionar al menos un día"),
 	timeWindowStart: Yup.string().matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "Formato inválido (HH:MM)"),
-	timeWindowEnd: Yup.string().matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "Formato inválido (HH:MM)"),
+	timeWindowEnd: Yup.string()
+		.matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "Formato inválido (HH:MM)")
+		.test("end-after-start", "La hora de fin debe ser posterior a la hora de inicio", function (value) {
+			const { timeWindowStart } = this.parent;
+			if (!timeWindowStart || !value) return true;
+			if (timeWindowStart === value) return false;
+			return value > timeWindowStart;
+		}),
 });
 
 // Campaign types with labels

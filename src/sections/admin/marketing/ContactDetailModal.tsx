@@ -1366,6 +1366,15 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 																																después
 																															</Typography>
 																														)}
+																													{/* Mostrar origen de las restricciones */}
+																													{campaignProgress[campaign.campaignId].progress.nextEmail.restrictionsSource && (
+																														<Typography variant="caption" color="textSecondary">
+																															• Horario:{" "}
+																															{campaignProgress[campaign.campaignId].progress.nextEmail.restrictionsSource === "email"
+																																? "📧 del email"
+																																: "📅 de campaña"}
+																														</Typography>
+																													)}
 																												</Box>
 																											</Box>
 																										</Alert>
