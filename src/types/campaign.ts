@@ -28,6 +28,7 @@ export interface SendingRestrictions {
 
 export interface CampaignSettings {
 	throttleRate: number;
+	dailyLimit?: number; // Límite de emails por día (0 = sin límite)
 	timezone: string;
 	tracking: TrackingSettings;
 	personalization: {
