@@ -690,6 +690,7 @@ const MailingCampaigns = () => {
 								<TableCell>Categoría</TableCell>
 								<TableCell align="right">Contactos</TableCell>
 								<TableCell align="right">Emails</TableCell>
+								<TableCell align="right">Límite diario</TableCell>
 								<TableCell align="right">Tasa apertura</TableCell>
 								<TableCell align="right">Fecha inicio</TableCell>
 								<TableCell align="center">Acciones</TableCell>
@@ -697,10 +698,10 @@ const MailingCampaigns = () => {
 						</TableHead>
 						<TableBody>
 							{loading ? (
-								<TableSkeleton columns={9} rows={10} />
+								<TableSkeleton columns={10} rows={10} />
 							) : campaigns.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={9} align="center" sx={{ py: 3 }}>
+									<TableCell colSpan={10} align="center" sx={{ py: 3 }}>
 										<Typography variant="subtitle1">No hay campañas disponibles</Typography>
 									</TableCell>
 								</TableRow>
@@ -731,6 +732,19 @@ const MailingCampaigns = () => {
 											<TableCell>{campaign.category || "-"}</TableCell>
 											<TableCell align="right">{campaign.metrics?.totalContacts || 0}</TableCell>
 											<TableCell align="right">{campaign.metrics?.emailCount || 0}</TableCell>
+											<TableCell align="right">
+												{campaign.settings?.dailyLimit && campaign.settings.dailyLimit > 0 ? (
+													<Tooltip title="Límite de emails por día">
+														<Typography variant="body2">
+															{campaign.settings.dailyLimit.toLocaleString()}
+														</Typography>
+													</Tooltip>
+												) : (
+													<Typography variant="body2" color="textSecondary">
+														Sin límite
+													</Typography>
+												)}
+											</TableCell>
 											<TableCell align="right">{`${openRate}%`}</TableCell>
 											<TableCell align="right">
 												{campaign.startDate ? (
