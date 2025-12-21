@@ -1366,15 +1366,15 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 																																después
 																															</Typography>
 																														)}
-																													{/* Mostrar origen de las restricciones */}
-																													{campaignProgress[campaign.campaignId].progress.nextEmail.restrictionsSource && (
-																														<Typography variant="caption" color="textSecondary">
-																															• Horario:{" "}
-																															{campaignProgress[campaign.campaignId].progress.nextEmail.restrictionsSource === "email"
-																																? "📧 del email"
-																																: "📅 de campaña"}
-																														</Typography>
-																													)}
+																													{/* Mostrar origen de las restricciones o indicar que no hay */}
+																													<Typography variant="caption" color="textSecondary">
+																														•{" "}
+																														{campaignProgress[campaign.campaignId].progress.nextEmail.restrictionsSource === "email"
+																															? "Horario: 📧 del email"
+																															: campaignProgress[campaign.campaignId].progress.nextEmail.restrictionsSource === "campaign"
+																															? "Horario: 📅 de campaña"
+																															: "🕐 Sin restricción horaria"}
+																													</Typography>
 																												</Box>
 																											</Box>
 																										</Alert>
