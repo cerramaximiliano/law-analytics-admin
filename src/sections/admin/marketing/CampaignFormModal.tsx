@@ -70,6 +70,7 @@ interface FormValues {
 	tags: string;
 	timezone: string;
 	throttleRate: number;
+	dailyLimit: number;
 	// Sending restrictions
 	allowedDays: number[];
 	timeWindowStart: string;
@@ -96,6 +97,7 @@ const validationSchema = Yup.object({
 	tags: Yup.string(),
 	timezone: Yup.string().required("La zona horaria es requerida"),
 	throttleRate: Yup.number().min(1, "Mínimo 1 email por batch").max(1000, "Máximo 1000 emails por batch"),
+	dailyLimit: Yup.number().min(0, "El límite debe ser 0 o mayor").max(100000, "Máximo 100000 emails por día"),
 	allowedDays: Yup.array().of(Yup.number()).min(1, "Debe seleccionar al menos un día"),
 	timeWindowStart: Yup.string().matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "Formato inválido (HH:MM)"),
 	timeWindowEnd: Yup.string()
@@ -190,6 +192,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 		tags: "",
 		timezone: "America/Argentina/Buenos_Aires", // Default timezone
 		throttleRate: 100, // Default: 100 emails per batch
+		dailyLimit: 0, // Default: 0 = sin límite diario
 		// Sending restrictions defaults
 		allowedDays: [1, 2, 3, 4, 5], // Monday to Friday
 		timeWindowStart: "09:00",
@@ -232,6 +235,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 							...campaign.settings,
 							timezone: values.timezone,
 							throttleRate: values.throttleRate,
+							dailyLimit: values.dailyLimit,
 							sendingRestrictions: {
 								allowedDays: values.allowedDays,
 								timeWindow: {
@@ -259,6 +263,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 						settings: {
 							timezone: values.timezone,
 							throttleRate: values.throttleRate,
+							dailyLimit: values.dailyLimit,
 							sendingRestrictions: {
 								allowedDays: values.allowedDays,
 								timeWindow: {
@@ -341,6 +346,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 				tags: tagsString,
 				timezone: campaignTimezone,
 				throttleRate: campaign.settings?.throttleRate || 100,
+				dailyLimit: campaign.settings?.dailyLimit || 0,
 				// Sending restrictions
 				allowedDays: campaign.settings?.sendingRestrictions?.allowedDays || [1, 2, 3, 4, 5],
 				timeWindowStart: campaign.settings?.sendingRestrictions?.timeWindow?.start || "09:00",
@@ -636,6 +642,27 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 										"Cantidad máxima de emails a enviar por batch"
 									}
 									inputProps={{ min: 1, max: 1000 }}
+								/>
+							</FormControl>
+						</Grid>
+
+						{/* Daily Limit */}
+						<Grid item xs={12} md={6}>
+							<FormControl fullWidth error={formik.touched.dailyLimit && Boolean(formik.errors.dailyLimit)}>
+								<TextField
+									id="dailyLimit"
+									name="dailyLimit"
+									label="Límite diario de envío"
+									type="number"
+									value={formik.values.dailyLimit}
+									onChange={formik.handleChange}
+									onBlur={formik.handleBlur}
+									error={formik.touched.dailyLimit && Boolean(formik.errors.dailyLimit)}
+									helperText={
+										(formik.touched.dailyLimit && formik.errors.dailyLimit) ||
+										"Máximo de emails por día (0 = sin límite)"
+									}
+									inputProps={{ min: 0, max: 100000 }}
 								/>
 							</FormControl>
 						</Grid>
