@@ -5,15 +5,23 @@ import {
 	Alert,
 	Box,
 	Button,
+	ButtonGroup,
 	Card,
 	CardContent,
 	Chip,
+	CircularProgress,
 	Collapse,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
 	Divider,
 	IconButton,
 	Modal,
 	Paper,
 	Stack,
+	Tab,
+	Tabs,
 	Table,
 	TableBody,
 	TableCell,
@@ -21,6 +29,7 @@ import {
 	TableHead,
 	TablePagination,
 	TableRow,
+	Tooltip,
 	Typography,
 	useTheme,
 	Grid,
@@ -30,7 +39,8 @@ import {
 } from "@mui/material";
 
 // project imports
-import { Add, Edit2, Eye, Trash, ArrowDown2, ArrowUp2 } from "iconsax-react";
+import { Add, Edit2, Eye, Trash, ArrowDown2, ArrowUp2, Mobile, Monitor, MouseSquare, Copy } from "iconsax-react";
+import mktAxios from "utils/mktAxios";
 import { useSnackbar } from "notistack";
 import TableSkeleton from "components/UI/TableSkeleton";
 
@@ -44,6 +54,56 @@ interface CampaignEmailListProps {
 	campaign: Campaign;
 	open: boolean;
 	onClose: () => void;
+}
+
+// Interface para el template
+interface EmailTemplate {
+	_id: string;
+	category: string;
+	name: string;
+	subject: string;
+	htmlBody: string;
+	textBody: string;
+	description: string;
+	variables: string[];
+	isActive: boolean;
+}
+
+// Device type enum
+enum DeviceType {
+	Desktop = "desktop",
+	Tablet = "tablet",
+	Mobile = "mobile",
+}
+
+// Device dimensions (in px)
+const deviceDimensions = {
+	[DeviceType.Desktop]: { width: "100%", height: "100%" },
+	[DeviceType.Tablet]: { width: "768px", height: "1024px" },
+	[DeviceType.Mobile]: { width: "375px", height: "667px" },
+};
+
+// TabPanel component
+interface TabPanelProps {
+	children?: React.ReactNode;
+	index: number;
+	value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+	const { children, value, index, ...other } = props;
+	return (
+		<div
+			role="tabpanel"
+			hidden={value !== index}
+			id={`template-tabpanel-${index}`}
+			aria-labelledby={`template-tab-${index}`}
+			style={{ height: "100%" }}
+			{...other}
+		>
+			{value === index && <Box sx={{ p: 0, height: "100%" }}>{children}</Box>}
+		</div>
+	);
 }
 
 const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) => {
@@ -71,6 +131,14 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 
 	// State for expanded email details
 	const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null);
+
+	// State for template preview modal
+	const [templatePreviewOpen, setTemplatePreviewOpen] = useState<boolean>(false);
+	const [selectedEmailForPreview, setSelectedEmailForPreview] = useState<CampaignEmail | null>(null);
+	const [previewTemplate, setPreviewTemplate] = useState<EmailTemplate | null>(null);
+	const [loadingTemplate, setLoadingTemplate] = useState<boolean>(false);
+	const [viewTab, setViewTab] = useState<number>(0);
+	const [deviceType, setDeviceType] = useState<DeviceType>(DeviceType.Desktop);
 
 	// Fetch campaign emails
 	useEffect(() => {
@@ -210,6 +278,51 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 				anchorOrigin: { vertical: "bottom", horizontal: "right" },
 			});
 		}
+	};
+
+	// Template preview modal handlers
+	const handleOpenTemplatePreview = async (email: CampaignEmail) => {
+		setSelectedEmailForPreview(email);
+		setTemplatePreviewOpen(true);
+		setViewTab(0);
+		setDeviceType(DeviceType.Desktop);
+
+		if (email.templateId) {
+			setLoadingTemplate(true);
+			try {
+				const response = await mktAxios.get(`/api/templates/${email.templateId}`);
+				if (response.data.success) {
+					setPreviewTemplate(response.data.data);
+				} else {
+					enqueueSnackbar("Error al cargar la plantilla", {
+						variant: "error",
+						anchorOrigin: { vertical: "bottom", horizontal: "right" },
+					});
+				}
+			} catch (err: any) {
+				console.error("Error fetching template:", err);
+				enqueueSnackbar(err.message || "Error al cargar la plantilla", {
+					variant: "error",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+			} finally {
+				setLoadingTemplate(false);
+			}
+		}
+	};
+
+	const handleCloseTemplatePreview = () => {
+		setTemplatePreviewOpen(false);
+		setSelectedEmailForPreview(null);
+		setPreviewTemplate(null);
+	};
+
+	const handleChangeTab = (_event: React.SyntheticEvent, newValue: number) => {
+		setViewTab(newValue);
+	};
+
+	const handleDeviceTypeChange = (type: DeviceType) => {
+		setDeviceType(type);
 	};
 
 	// Status chip color mapping
@@ -458,10 +571,19 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 																			aria-label="ver"
 																			size="small"
 																			color="info"
-																			onClick={() => setExpandedEmailId(expandedEmailId === email._id ? null : email._id || null)}
-																			title={expandedEmailId === email._id ? "Ocultar detalles" : "Ver detalles del email"}
+																			onClick={() => handleOpenTemplatePreview(email)}
+																			title="Ver detalles del email"
 																		>
-																			{expandedEmailId === email._id ? <ArrowUp2 size={18} /> : <Eye size={18} />}
+																			<Eye size={18} />
+																		</IconButton>
+																		<IconButton
+																			aria-label="expandir"
+																			size="small"
+																			color="secondary"
+																			onClick={() => setExpandedEmailId(expandedEmailId === email._id ? null : email._id || null)}
+																			title={expandedEmailId === email._id ? "Ocultar detalles" : "Expandir configuración"}
+																		>
+																			{expandedEmailId === email._id ? <ArrowUp2 size={18} /> : <ArrowDown2 size={18} />}
 																		</IconButton>
 																		<IconButton
 																			aria-label="editar"
@@ -830,6 +952,272 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 					</Box>
 				</Paper>
 			</Modal>
+
+			{/* Template Preview Dialog */}
+			<Dialog open={templatePreviewOpen} onClose={handleCloseTemplatePreview} maxWidth="lg" fullWidth>
+				{selectedEmailForPreview && (
+					<>
+						<DialogTitle>
+							{selectedEmailForPreview.name}
+							<Typography variant="body2" color="textSecondary">
+								{selectedEmailForPreview.subject}
+							</Typography>
+						</DialogTitle>
+						<Divider />
+						<Box sx={{ borderBottom: 1, borderColor: "divider", px: 3 }}>
+							<Tabs value={viewTab} onChange={handleChangeTab} aria-label="template view tabs">
+								<Tab label="Vista renderizada" id="template-tab-0" aria-controls="template-tabpanel-0" />
+								<Tab label="Código HTML" id="template-tab-1" aria-controls="template-tabpanel-1" />
+								<Tab label="Texto plano" id="template-tab-2" aria-controls="template-tabpanel-2" />
+								<Tab label="Información" id="template-tab-3" aria-controls="template-tabpanel-3" />
+							</Tabs>
+						</Box>
+						<DialogContent sx={{ p: 0, height: 500 }}>
+							{loadingTemplate ? (
+								<Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+									<CircularProgress />
+								</Box>
+							) : !previewTemplate && selectedEmailForPreview.templateId ? (
+								<Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+									<Typography color="textSecondary">No se pudo cargar la plantilla</Typography>
+								</Box>
+							) : !selectedEmailForPreview.templateId ? (
+								<Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+									<Typography color="textSecondary">Este email no tiene una plantilla asociada</Typography>
+								</Box>
+							) : (
+								<>
+									<TabPanel value={viewTab} index={0}>
+										<Box sx={{ p: 2, height: "100%", overflow: "auto" }}>
+											<Box sx={{ mb: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+												<Box>
+													<Typography variant="subtitle1">Asunto:</Typography>
+													<Typography variant="body1">{previewTemplate?.subject}</Typography>
+												</Box>
+
+												{/* Device selector */}
+												<Box>
+													<ButtonGroup aria-label="device view selector">
+														<Tooltip title="Vista Desktop">
+															<Button
+																variant={deviceType === DeviceType.Desktop ? "contained" : "outlined"}
+																onClick={() => handleDeviceTypeChange(DeviceType.Desktop)}
+																aria-label="desktop view"
+															>
+																<Monitor size={18} />
+															</Button>
+														</Tooltip>
+														<Tooltip title="Vista Tablet">
+															<Button
+																variant={deviceType === DeviceType.Tablet ? "contained" : "outlined"}
+																onClick={() => handleDeviceTypeChange(DeviceType.Tablet)}
+																aria-label="tablet view"
+															>
+																<MouseSquare size={18} />
+															</Button>
+														</Tooltip>
+														<Tooltip title="Vista Móvil">
+															<Button
+																variant={deviceType === DeviceType.Mobile ? "contained" : "outlined"}
+																onClick={() => handleDeviceTypeChange(DeviceType.Mobile)}
+																aria-label="mobile view"
+															>
+																<Mobile size={18} />
+															</Button>
+														</Tooltip>
+													</ButtonGroup>
+												</Box>
+											</Box>
+											<Typography variant="subtitle1">Contenido:</Typography>
+											<Box
+												sx={{
+													mt: 1,
+													border: 1,
+													borderColor: "divider",
+													borderRadius: 1,
+													p: 2,
+													height: "calc(100% - 120px)",
+													overflow: "auto",
+													display: "flex",
+													justifyContent: "center",
+													"& .preview-container": {
+														width: deviceDimensions[deviceType].width,
+														height: deviceDimensions[deviceType].height,
+														transition: "width 0.3s, height 0.3s",
+														transform: deviceType !== DeviceType.Desktop ? "scale(0.8)" : "none",
+														transformOrigin: "top center",
+														boxShadow: deviceType !== DeviceType.Desktop ? "0 0 10px rgba(0,0,0,0.1)" : "none",
+														overflow: "hidden",
+														borderRadius: deviceType !== DeviceType.Desktop ? "8px" : "0",
+													},
+													"& iframe": {
+														border: "none",
+														width: "100%",
+														height: "100%",
+													},
+												}}
+											>
+												<Box className="preview-container">
+													<iframe
+														title="Email Preview"
+														srcDoc={`
+														<!DOCTYPE html>
+														<html>
+															<head>
+																<meta http-equiv="Content-Security-Policy"
+																	content="default-src 'self';
+																	img-src * data: https:;
+																	style-src 'unsafe-inline' 'self';">
+																<meta name="viewport" content="width=device-width, initial-scale=1.0">
+																<style>
+																	body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+																</style>
+															</head>
+															<body>${previewTemplate?.htmlBody || ""}</body>
+														</html>
+													`}
+														sandbox="allow-same-origin allow-scripts"
+														referrerPolicy="no-referrer"
+													></iframe>
+												</Box>
+											</Box>
+										</Box>
+									</TabPanel>
+									<TabPanel value={viewTab} index={1}>
+										<Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2, mr: 2, mt: 2 }}>
+											<IconButton
+												onClick={() => {
+													navigator.clipboard.writeText(previewTemplate?.htmlBody || "");
+													enqueueSnackbar("Código HTML copiado al portapapeles", {
+														variant: "success",
+														anchorOrigin: { vertical: "bottom", horizontal: "right" },
+													});
+												}}
+											>
+												<Copy />
+											</IconButton>
+										</Box>
+										<Box
+											component="pre"
+											sx={{
+												p: 2,
+												m: 0,
+												height: "calc(100% - 60px)",
+												overflow: "auto",
+												bgcolor: theme.palette.mode === "dark" ? theme.palette.grey[900] : theme.palette.grey[100],
+												borderRadius: 0,
+												"& code": {
+													fontFamily: "monospace",
+													fontSize: "0.875rem",
+													display: "block",
+												},
+											}}
+										>
+											<code>{previewTemplate?.htmlBody}</code>
+										</Box>
+									</TabPanel>
+									<TabPanel value={viewTab} index={2}>
+										<Box
+											component="pre"
+											sx={{
+												p: 2,
+												m: 0,
+												height: "100%",
+												overflow: "auto",
+												bgcolor: theme.palette.mode === "dark" ? theme.palette.grey[900] : theme.palette.grey[100],
+												borderRadius: 0,
+												"& code": {
+													fontFamily: "monospace",
+													fontSize: "0.875rem",
+													display: "block",
+												},
+											}}
+										>
+											<code>{previewTemplate?.textBody}</code>
+										</Box>
+									</TabPanel>
+									<TabPanel value={viewTab} index={3}>
+										<Box sx={{ p: 3 }}>
+											<Grid container spacing={3}>
+												<Grid item xs={12} md={6}>
+													<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+														Información del Email
+													</Typography>
+													<List dense>
+														<ListItem>
+															<ListItemText primary="Nombre" secondary={selectedEmailForPreview.name} />
+														</ListItem>
+														<ListItem>
+															<ListItemText primary="Asunto" secondary={selectedEmailForPreview.subject} />
+														</ListItem>
+														<ListItem>
+															<ListItemText
+																primary="Posición en secuencia"
+																secondary={`Email #${selectedEmailForPreview.sequenceIndex}${selectedEmailForPreview.isFinal ? " (Final)" : ""}`}
+															/>
+														</ListItem>
+														{selectedEmailForPreview.sender && (
+															<ListItem>
+																<ListItemText
+																	primary="Remitente"
+																	secondary={`${selectedEmailForPreview.sender.name} <${selectedEmailForPreview.sender.email}>`}
+																/>
+															</ListItem>
+														)}
+													</List>
+												</Grid>
+												<Grid item xs={12} md={6}>
+													<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+														Información de la Plantilla
+													</Typography>
+													<List dense>
+														<ListItem>
+															<ListItemText primary="Nombre" secondary={previewTemplate?.name} />
+														</ListItem>
+														<ListItem>
+															<ListItemText primary="Categoría" secondary={previewTemplate?.category} />
+														</ListItem>
+														<ListItem>
+															<ListItemText primary="Descripción" secondary={previewTemplate?.description || "Sin descripción"} />
+														</ListItem>
+														{previewTemplate?.variables && previewTemplate.variables.length > 0 && (
+															<ListItem>
+																<ListItemText primary="Variables" secondary={previewTemplate.variables.join(", ")} />
+															</ListItem>
+														)}
+													</List>
+												</Grid>
+											</Grid>
+										</Box>
+									</TabPanel>
+								</>
+							)}
+						</DialogContent>
+						<DialogActions>
+							{previewTemplate?.variables && previewTemplate.variables.length > 0 && (
+								<Box sx={{ mr: "auto", pl: 2 }}>
+									<Typography variant="caption" color="textSecondary">
+										Variables: {previewTemplate.variables.join(", ")}
+									</Typography>
+								</Box>
+							)}
+							<Button onClick={handleCloseTemplatePreview}>Cerrar</Button>
+							<Button
+								color="primary"
+								startIcon={<Edit2 />}
+								onClick={() => {
+									handleCloseTemplatePreview();
+									if (selectedEmailForPreview) {
+										handleOpenEditModal(selectedEmailForPreview);
+									}
+								}}
+							>
+								Editar Email
+							</Button>
+						</DialogActions>
+					</>
+				)}
+			</Dialog>
 		</>
 	);
 };
