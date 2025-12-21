@@ -867,13 +867,17 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 												/>
 											</Grid>
 										</Grid>
-										{formik.touched.sendingRestrictions?.timeWindow && formik.errors.sendingRestrictions?.timeWindow && (
-											<Typography variant="caption" color="error" sx={{ mt: 1, display: "block" }}>
-												{typeof formik.errors.sendingRestrictions.timeWindow === "string"
-													? formik.errors.sendingRestrictions.timeWindow
-													: "Configuración de horario inválida"}
-											</Typography>
-										)}
+										{(() => {
+											const errors = formik.errors.sendingRestrictions as { timeWindow?: string } | undefined;
+											if (errors && typeof errors === "object" && errors.timeWindow) {
+												return (
+													<Typography variant="caption" color="error" sx={{ mt: 1, display: "block" }}>
+														{errors.timeWindow}
+													</Typography>
+												);
+											}
+											return null;
+										})()}
 										<Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
 											La zona horaria se configura a nivel de campaña
 										</Typography>
