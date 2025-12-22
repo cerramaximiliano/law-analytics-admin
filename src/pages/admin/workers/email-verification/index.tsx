@@ -22,6 +22,7 @@ import {
 	DialogTitle,
 	DialogContent,
 	DialogActions,
+	CircularProgress,
 } from "@mui/material";
 import {
 	Edit2,
@@ -50,6 +51,7 @@ const EmailVerificationWorker = () => {
 	const [editValues, setEditValues] = useState<Partial<EmailVerificationConfig>>({});
 	const [guideExpanded, setGuideExpanded] = useState(false);
 	const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; action: string }>({ open: false, action: "" });
+	const [refreshingCredits, setRefreshingCredits] = useState(false);
 
 	// Cargar configuración
 	const fetchConfig = async () => {
@@ -214,6 +216,30 @@ const EmailVerificationWorker = () => {
 		setConfirmDialog({ open: false, action: "" });
 	};
 
+	const handleRefreshCredits = async () => {
+		if (!config) return;
+		const id = getConfigId(config);
+
+		try {
+			setRefreshingCredits(true);
+			const response = await WorkersService.refreshEmailVerificationCredits(id);
+			if (response.success) {
+				enqueueSnackbar("Créditos actualizados desde NeverBounce", {
+					variant: "success",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+				await fetchConfig();
+			}
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al actualizar créditos", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+		} finally {
+			setRefreshingCredits(false);
+		}
+	};
+
 	if (loading) {
 		return (
 			<MainCard title="Worker de Verificación de Emails">
@@ -370,10 +396,20 @@ const EmailVerificationWorker = () => {
 					<Grid item xs={12} md={6}>
 						<Card variant="outlined">
 							<CardContent>
-								<Typography variant="h6" gutterBottom>
-									Créditos NeverBounce
-								</Typography>
-								<Typography variant="h3" color="primary.main">
+								<Stack direction="row" justifyContent="space-between" alignItems="center">
+									<Typography variant="h6">Créditos NeverBounce</Typography>
+									<Tooltip title="Actualizar créditos desde NeverBounce">
+										<IconButton
+											size="small"
+											onClick={handleRefreshCredits}
+											disabled={refreshingCredits}
+											color="primary"
+										>
+											{refreshingCredits ? <CircularProgress size={18} /> : <Refresh size={18} />}
+										</IconButton>
+									</Tooltip>
+								</Stack>
+								<Typography variant="h3" color="primary.main" sx={{ mt: 1 }}>
 									{config.neverBounceCredits?.toLocaleString() || "N/A"}
 								</Typography>
 							</CardContent>
