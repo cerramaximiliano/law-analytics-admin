@@ -27,8 +27,10 @@ import {
 	Checkbox,
 	TextField,
 	Stack,
+	Tabs,
+	Tab,
 } from "@mui/material";
-import { CloseCircle, Chart, Sms, TickCircle, CloseCircle as CloseIcon, Warning2, Mouse, UserRemove } from "iconsax-react";
+import { CloseCircle, Chart, Sms, TickCircle, CloseCircle as CloseIcon, Warning2, Mouse, UserRemove, Code1 } from "iconsax-react";
 import { CampaignService } from "store/reducers/campaign";
 import { Campaign, CampaignSendStatsSummary, EmailBreakdown, DailyBreakdown } from "types/campaign";
 
@@ -52,6 +54,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 	const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
 	const [refreshInterval, setRefreshInterval] = useState<number>(1);
 	const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+	const [activeTab, setActiveTab] = useState<number>(0);
 
 	useEffect(() => {
 		if (open && campaign?._id) {
@@ -258,32 +261,41 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 				</Grid>
 			</DialogTitle>
 
-			<DialogContent dividers sx={{ flex: 1, overflow: "auto" }}>
-				{loading ? (
-					<Grid container spacing={3}>
-						{/* Skeleton for stats cards */}
-						<Grid item xs={12}>
-							<Grid container spacing={2}>
-								{[1, 2, 3, 4].map((item) => (
-									<Grid item xs={6} md={3} key={item}>
-										<Skeleton variant="rounded" height={100} />
+			<DialogContent dividers sx={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}>
+				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+					<Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
+						<Tab icon={<Chart size={18} />} iconPosition="start" label="Estadísticas" />
+						<Tab icon={<Code1 size={18} />} iconPosition="start" label="JSON Raw" />
+					</Tabs>
+				</Box>
+
+				{activeTab === 0 && (
+					<>
+						{loading ? (
+							<Grid container spacing={3}>
+								{/* Skeleton for stats cards */}
+								<Grid item xs={12}>
+									<Grid container spacing={2}>
+										{[1, 2, 3, 4].map((item) => (
+											<Grid item xs={6} md={3} key={item}>
+												<Skeleton variant="rounded" height={100} />
+											</Grid>
+										))}
 									</Grid>
-								))}
+								</Grid>
+								{/* Skeleton for rates */}
+								<Grid item xs={12} md={6}>
+									<Skeleton variant="rounded" height={200} />
+								</Grid>
+								<Grid item xs={12} md={6}>
+									<Skeleton variant="rounded" height={200} />
+								</Grid>
 							</Grid>
-						</Grid>
-						{/* Skeleton for rates */}
-						<Grid item xs={12} md={6}>
-							<Skeleton variant="rounded" height={200} />
-						</Grid>
-						<Grid item xs={12} md={6}>
-							<Skeleton variant="rounded" height={200} />
-						</Grid>
-					</Grid>
-				) : error ? (
-					<Alert severity="error" sx={{ my: 2 }}>
-						{error}
-					</Alert>
-				) : stats ? (
+						) : error ? (
+							<Alert severity="error" sx={{ my: 2 }}>
+								{error}
+							</Alert>
+						) : stats ? (
 					<Grid container spacing={3}>
 						{/* Summary Stats */}
 						<Grid item xs={12}>
@@ -487,19 +499,55 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 							</Grid>
 						)}
 
-						{/* No data message */}
-						{stats.summary.total === 0 && (
-							<Grid item xs={12}>
-								<Alert severity="info">
-									No hay datos de envío disponibles para esta campaña. Los datos aparecerán una vez que se envíen emails.
-								</Alert>
-							</Grid>
+							{/* No data message */}
+							{stats.summary.total === 0 && (
+								<Grid item xs={12}>
+									<Alert severity="info">
+										No hay datos de envío disponibles para esta campaña. Los datos aparecerán una vez que se envíen emails.
+									</Alert>
+								</Grid>
+							)}
+						</Grid>
+						) : (
+							<Typography variant="body1" color="textSecondary" align="center" sx={{ py: 3 }}>
+								No se ha seleccionado ninguna campaña
+							</Typography>
 						)}
-					</Grid>
-				) : (
-					<Typography variant="body1" color="textSecondary" align="center" sx={{ py: 3 }}>
-						No se ha seleccionado ninguna campaña
-					</Typography>
+					</>
+				)}
+
+				{activeTab === 1 && (
+					<Box sx={{ flex: 1, overflow: "auto" }}>
+						{loading ? (
+							<Skeleton variant="rounded" height={400} />
+						) : error ? (
+							<Alert severity="error" sx={{ my: 2 }}>
+								{error}
+							</Alert>
+						) : stats ? (
+							<Box
+								component="pre"
+								sx={{
+									p: 2,
+									borderRadius: 1,
+									bgcolor: alpha(theme.palette.grey[900], 0.05),
+									border: `1px solid ${theme.palette.divider}`,
+									overflow: "auto",
+									fontSize: "0.85rem",
+									fontFamily: "monospace",
+									whiteSpace: "pre-wrap",
+									wordBreak: "break-word",
+									m: 0,
+								}}
+							>
+								{JSON.stringify(stats, null, 2)}
+							</Box>
+						) : (
+							<Typography variant="body1" color="textSecondary" align="center" sx={{ py: 3 }}>
+								No se ha seleccionado ninguna campaña
+							</Typography>
+						)}
+					</Box>
 				)}
 			</DialogContent>
 
