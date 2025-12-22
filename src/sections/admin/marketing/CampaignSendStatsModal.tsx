@@ -30,7 +30,7 @@ import {
 	Tabs,
 	Tab,
 } from "@mui/material";
-import { CloseCircle, Chart, Sms, TickCircle, CloseCircle as CloseIcon, Warning2, Mouse, UserRemove, Code1 } from "iconsax-react";
+import { CloseCircle, Chart, Sms, TickCircle, CloseCircle as CloseIcon, Warning2, Mouse, UserRemove, Code1, Copy } from "iconsax-react";
 import { CampaignService } from "store/reducers/campaign";
 import { Campaign, CampaignSendStatsSummary, EmailBreakdown, DailyBreakdown } from "types/campaign";
 
@@ -55,6 +55,15 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 	const [refreshInterval, setRefreshInterval] = useState<number>(1);
 	const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 	const [activeTab, setActiveTab] = useState<number>(0);
+	const [copied, setCopied] = useState<boolean>(false);
+
+	const handleCopyJson = () => {
+		if (stats) {
+			navigator.clipboard.writeText(JSON.stringify(stats, null, 2));
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000);
+		}
+	};
 
 	useEffect(() => {
 		if (open && campaign?._id) {
@@ -517,7 +526,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 				)}
 
 				{activeTab === 1 && (
-					<Box sx={{ flex: 1, overflow: "auto" }}>
+					<Box sx={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}>
 						{loading ? (
 							<Skeleton variant="rounded" height={400} />
 						) : error ? (
@@ -525,23 +534,37 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 								{error}
 							</Alert>
 						) : stats ? (
-							<Box
-								component="pre"
-								sx={{
-									p: 2,
-									borderRadius: 1,
-									bgcolor: alpha(theme.palette.grey[900], 0.05),
-									border: `1px solid ${theme.palette.divider}`,
-									overflow: "auto",
-									fontSize: "0.85rem",
-									fontFamily: "monospace",
-									whiteSpace: "pre-wrap",
-									wordBreak: "break-word",
-									m: 0,
-								}}
-							>
-								{JSON.stringify(stats, null, 2)}
-							</Box>
+							<>
+								<Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
+									<Button
+										variant="outlined"
+										size="small"
+										startIcon={<Copy size={16} />}
+										onClick={handleCopyJson}
+										color={copied ? "success" : "primary"}
+									>
+										{copied ? "Copiado" : "Copiar JSON"}
+									</Button>
+								</Box>
+								<Box
+									component="pre"
+									sx={{
+										p: 2,
+										borderRadius: 1,
+										bgcolor: alpha(theme.palette.grey[900], 0.05),
+										border: `1px solid ${theme.palette.divider}`,
+										overflow: "auto",
+										fontSize: "0.85rem",
+										fontFamily: "monospace",
+										whiteSpace: "pre-wrap",
+										wordBreak: "break-word",
+										m: 0,
+										flex: 1,
+									}}
+								>
+									{JSON.stringify(stats, null, 2)}
+								</Box>
+							</>
 						) : (
 							<Typography variant="body1" color="textSecondary" align="center" sx={{ py: 3 }}>
 								No se ha seleccionado ninguna campaña
