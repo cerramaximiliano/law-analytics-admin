@@ -430,6 +430,15 @@ export class WorkersService {
 		}
 	}
 
+	static async refreshEmailVerificationCredits(id: string): Promise<EmailVerificationConfigResponse> {
+		try {
+			const response = await workersAxios.post(`/api/configuracion-email-verification/${id}/refresh-credits`);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
 	// Manejo de errores
 	static handleError(error: any): Error {
 		// Si es un error de axios, re-lanzarlo tal cual para que el interceptor pueda manejarlo
