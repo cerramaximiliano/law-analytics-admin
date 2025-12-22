@@ -539,38 +539,59 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 													{expandedDays.has(day._id) && day.stepBreakdown && day.stepBreakdown.length > 0 && (
 														<TableRow>
 															<TableCell colSpan={8} sx={{ py: 0, bgcolor: alpha(theme.palette.grey[500], 0.05) }}>
-																<Box sx={{ py: 1.5, px: 2 }}>
-																	<Typography variant="caption" color="textSecondary" sx={{ mb: 1, display: 'block' }}>
-																		Distribución por Step:
-																	</Typography>
-																	<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-																		{day.stepBreakdown.map((step) => (
-																			<Chip
-																				key={step.step}
-																				size="small"
-																				label={
-																					<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-																						<Typography variant="caption" fontWeight="bold">
-																							Step {step.step}:
+																<Box sx={{ py: 1.5, px: 2, pl: 6 }}>
+																	<Table size="small" sx={{ bgcolor: 'background.paper', borderRadius: 1 }}>
+																		<TableHead>
+																			<TableRow>
+																				<TableCell sx={{ py: 0.5, fontWeight: 'bold', fontSize: '0.75rem' }}>Step</TableCell>
+																				<TableCell sx={{ py: 0.5, fontWeight: 'bold', fontSize: '0.75rem' }}>Nombre</TableCell>
+																				<TableCell align="right" sx={{ py: 0.5, fontWeight: 'bold', fontSize: '0.75rem' }}>Enviados</TableCell>
+																				<TableCell align="right" sx={{ py: 0.5, fontWeight: 'bold', fontSize: '0.75rem' }}>Entregados</TableCell>
+																				<TableCell align="right" sx={{ py: 0.5, fontWeight: 'bold', fontSize: '0.75rem' }}>Rebotados</TableCell>
+																				<TableCell align="right" sx={{ py: 0.5, fontWeight: 'bold', fontSize: '0.75rem' }}>% del día</TableCell>
+																			</TableRow>
+																		</TableHead>
+																		<TableBody>
+																			{day.stepBreakdown.map((stepItem) => (
+																				<TableRow key={stepItem.step} sx={{ '&:last-child td': { borderBottom: 0 } }}>
+																					<TableCell sx={{ py: 0.5 }}>
+																						<Chip
+																							label={stepItem.step}
+																							size="small"
+																							color="primary"
+																							variant="outlined"
+																							sx={{ minWidth: 32, '& .MuiChip-label': { px: 1 } }}
+																						/>
+																					</TableCell>
+																					<TableCell sx={{ py: 0.5, fontSize: '0.8rem' }}>
+																						{stepItem.name}
+																					</TableCell>
+																					<TableCell align="right" sx={{ py: 0.5, fontSize: '0.8rem' }}>
+																						{stepItem.sent}
+																					</TableCell>
+																					<TableCell align="right" sx={{ py: 0.5 }}>
+																						<Typography variant="caption" color="success.main" fontWeight="medium">
+																							{stepItem.delivered}
 																						</Typography>
-																						<Typography variant="caption">
-																							{step.sent} env.
-																						</Typography>
-																						{step.delivered > 0 && (
-																							<Typography variant="caption" color="success.main">
-																								({step.delivered} ent.)
+																					</TableCell>
+																					<TableCell align="right" sx={{ py: 0.5 }}>
+																						{stepItem.bounced > 0 ? (
+																							<Typography variant="caption" color="error.main" fontWeight="medium">
+																								{stepItem.bounced}
 																							</Typography>
+																						) : (
+																							<Typography variant="caption" color="textSecondary">0</Typography>
 																						)}
-																					</Box>
-																				}
-																				variant="outlined"
-																				sx={{
-																					borderColor: alpha(theme.palette.primary.main, 0.3),
-																					'& .MuiChip-label': { px: 1 }
-																				}}
-																			/>
-																		))}
-																	</Stack>
+																					</TableCell>
+																					<TableCell align="right" sx={{ py: 0.5 }}>
+																						<Typography variant="caption" color="textSecondary">
+																							{((stepItem.sent / day.sent) * 100).toFixed(1)}%
+																						</Typography>
+																					</TableCell>
+																				</TableRow>
+																			))}
+																		</TableBody>
+																	</Table>
 																</Box>
 															</TableCell>
 														</TableRow>
