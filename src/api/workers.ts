@@ -182,6 +182,7 @@ export interface EmailVerificationConfig {
 		startedAt?: { $date: string } | string;
 		completedAt?: { $date: string } | string;
 	};
+	contactsDatabase?: "local" | "remote";
 	createdAt?: { $date: string } | string;
 	updatedAt?: { $date: string } | string;
 }

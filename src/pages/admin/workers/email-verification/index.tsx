@@ -23,6 +23,11 @@ import {
 	DialogContent,
 	DialogActions,
 	CircularProgress,
+	Select,
+	MenuItem,
+	FormControl,
+	InputLabel,
+	FormHelperText,
 } from "@mui/material";
 import {
 	Edit2,
@@ -122,6 +127,7 @@ const EmailVerificationWorker = () => {
 			retryDelay: config.retryDelay,
 			neverBouncePollingInterval: config.neverBouncePollingInterval,
 			neverBounceMaxPollingAttempts: config.neverBounceMaxPollingAttempts,
+			contactsDatabase: config.contactsDatabase || "remote",
 		});
 	};
 
@@ -684,6 +690,20 @@ const EmailVerificationWorker = () => {
 									size="small"
 									helperText="Máximo intentos de polling"
 								/>
+							</Grid>
+							<Grid item xs={12} sm={6} md={4}>
+								<FormControl fullWidth size="small" disabled={!editing}>
+									<InputLabel>Base de Datos de Contactos</InputLabel>
+									<Select
+										value={editing ? (editValues.contactsDatabase || "remote") : (config.contactsDatabase || "remote")}
+										label="Base de Datos de Contactos"
+										onChange={(e) => setEditValues({ ...editValues, contactsDatabase: e.target.value as "local" | "remote" })}
+									>
+										<MenuItem value="local">Local (URLDB_LOCAL)</MenuItem>
+										<MenuItem value="remote">Remota (URLDB)</MenuItem>
+									</Select>
+									<FormHelperText>Origen de EmailContacts</FormHelperText>
+								</FormControl>
 							</Grid>
 						</Grid>
 					</CardContent>
