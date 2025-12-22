@@ -218,6 +218,14 @@ export interface EmailBreakdown {
 	sequenceIndex?: number;
 }
 
+export interface StepBreakdownItem {
+	step: number;
+	name: string;
+	sent: number;
+	delivered: number;
+	bounced: number;
+}
+
 export interface DailyBreakdown {
 	_id: string; // Date in YYYY-MM-DD format
 	sent: number;
@@ -226,6 +234,7 @@ export interface DailyBreakdown {
 	unsubscribed: number;
 	opens: number;
 	clicks: number;
+	stepBreakdown?: StepBreakdownItem[];
 }
 
 export interface CampaignSendStatsResponse {

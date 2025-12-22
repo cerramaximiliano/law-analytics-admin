@@ -32,7 +32,8 @@ import {
 } from "@mui/material";
 import { CloseCircle, Chart, Sms, TickCircle, CloseCircle as CloseIcon, Warning2, Mouse, UserRemove, Code1, Copy } from "iconsax-react";
 import { CampaignService } from "store/reducers/campaign";
-import { Campaign, CampaignSendStatsSummary, EmailBreakdown, DailyBreakdown } from "types/campaign";
+import { Campaign, CampaignSendStatsSummary, EmailBreakdown, DailyBreakdown, StepBreakdownItem } from "types/campaign";
+import { ArrowDown2, ArrowUp2 } from "iconsax-react";
 
 interface CampaignSendStatsModalProps {
 	open: boolean;
@@ -56,6 +57,19 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 	const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 	const [activeTab, setActiveTab] = useState<number>(0);
 	const [copied, setCopied] = useState<boolean>(false);
+	const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
+
+	const toggleDayExpansion = (dayId: string) => {
+		setExpandedDays((prev) => {
+			const newSet = new Set(prev);
+			if (newSet.has(dayId)) {
+				newSet.delete(dayId);
+			} else {
+				newSet.add(dayId);
+			}
+			return newSet;
+		});
+	};
 
 	const handleCopyJson = () => {
 		if (stats) {
@@ -477,10 +491,11 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 								</Typography>
 								<Divider sx={{ mb: 2 }} />
 
-								<TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 300 }}>
+								<TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 400 }}>
 									<Table size="small" stickyHeader>
 										<TableHead>
 											<TableRow>
+												<TableCell width={40}></TableCell>
 												<TableCell>Fecha</TableCell>
 												<TableCell align="right">Enviados</TableCell>
 												<TableCell align="right">Entregados</TableCell>
@@ -492,15 +507,75 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 										</TableHead>
 										<TableBody>
 											{stats.dailyBreakdown.map((day) => (
-												<TableRow key={day._id} hover>
-													<TableCell>{formatDate(day._id)}</TableCell>
-													<TableCell align="right">{day.sent}</TableCell>
-													<TableCell align="right">{day.delivered}</TableCell>
-													<TableCell align="right">{day.bounced}</TableCell>
-													<TableCell align="right">{day.unsubscribed}</TableCell>
-													<TableCell align="right">{day.opens}</TableCell>
-													<TableCell align="right">{day.clicks}</TableCell>
-												</TableRow>
+												<React.Fragment key={day._id}>
+													<TableRow
+														hover
+														onClick={() => day.stepBreakdown && day.stepBreakdown.length > 0 && toggleDayExpansion(day._id)}
+														sx={{
+															cursor: day.stepBreakdown && day.stepBreakdown.length > 0 ? 'pointer' : 'default',
+															'&:hover': day.stepBreakdown && day.stepBreakdown.length > 0 ? { bgcolor: alpha(theme.palette.primary.main, 0.08) } : {}
+														}}
+													>
+														<TableCell>
+															{day.stepBreakdown && day.stepBreakdown.length > 0 && (
+																<IconButton size="small" sx={{ p: 0.5 }}>
+																	{expandedDays.has(day._id) ? (
+																		<ArrowUp2 size={16} />
+																	) : (
+																		<ArrowDown2 size={16} />
+																	)}
+																</IconButton>
+															)}
+														</TableCell>
+														<TableCell>{formatDate(day._id)}</TableCell>
+														<TableCell align="right">{day.sent}</TableCell>
+														<TableCell align="right">{day.delivered}</TableCell>
+														<TableCell align="right">{day.bounced}</TableCell>
+														<TableCell align="right">{day.unsubscribed}</TableCell>
+														<TableCell align="right">{day.opens}</TableCell>
+														<TableCell align="right">{day.clicks}</TableCell>
+													</TableRow>
+													{/* Step Breakdown expandible */}
+													{expandedDays.has(day._id) && day.stepBreakdown && day.stepBreakdown.length > 0 && (
+														<TableRow>
+															<TableCell colSpan={8} sx={{ py: 0, bgcolor: alpha(theme.palette.grey[500], 0.05) }}>
+																<Box sx={{ py: 1.5, px: 2 }}>
+																	<Typography variant="caption" color="textSecondary" sx={{ mb: 1, display: 'block' }}>
+																		Distribución por Step:
+																	</Typography>
+																	<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+																		{day.stepBreakdown.map((step) => (
+																			<Chip
+																				key={step.step}
+																				size="small"
+																				label={
+																					<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+																						<Typography variant="caption" fontWeight="bold">
+																							Step {step.step}:
+																						</Typography>
+																						<Typography variant="caption">
+																							{step.sent} env.
+																						</Typography>
+																						{step.delivered > 0 && (
+																							<Typography variant="caption" color="success.main">
+																								({step.delivered} ent.)
+																							</Typography>
+																						)}
+																					</Box>
+																				}
+																				variant="outlined"
+																				sx={{
+																					borderColor: alpha(theme.palette.primary.main, 0.3),
+																					'& .MuiChip-label': { px: 1 }
+																				}}
+																			/>
+																		))}
+																	</Stack>
+																</Box>
+															</TableCell>
+														</TableRow>
+													)}
+												</React.Fragment>
 											))}
 										</TableBody>
 									</Table>
