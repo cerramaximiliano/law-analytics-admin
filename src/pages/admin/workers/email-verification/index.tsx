@@ -38,6 +38,8 @@ import {
 	CloseSquare,
 	Danger,
 	Clock,
+	Code1,
+	Copy,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -52,6 +54,7 @@ const EmailVerificationWorker = () => {
 	const [guideExpanded, setGuideExpanded] = useState(false);
 	const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; action: string }>({ open: false, action: "" });
 	const [refreshingCredits, setRefreshingCredits] = useState(false);
+	const [jsonDialogOpen, setJsonDialogOpen] = useState(false);
 
 	// Cargar configuración
 	const fetchConfig = async () => {
@@ -240,6 +243,22 @@ const EmailVerificationWorker = () => {
 		}
 	};
 
+	const handleCopyJson = async () => {
+		if (!config) return;
+		try {
+			await navigator.clipboard.writeText(JSON.stringify(config, null, 2));
+			enqueueSnackbar("JSON copiado al portapapeles", {
+				variant: "success",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+		} catch (error) {
+			enqueueSnackbar("Error al copiar al portapapeles", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+		}
+	};
+
 	if (loading) {
 		return (
 			<MainCard title="Worker de Verificación de Emails">
@@ -273,6 +292,9 @@ const EmailVerificationWorker = () => {
 			title="Worker de Verificación de Emails (NeverBounce)"
 			secondary={
 				<Stack direction="row" spacing={1}>
+					<Button variant="outlined" size="small" startIcon={<Code1 size={16} />} onClick={() => setJsonDialogOpen(true)}>
+						Ver JSON
+					</Button>
 					<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchConfig}>
 						Actualizar
 					</Button>
@@ -777,6 +799,52 @@ const EmailVerificationWorker = () => {
 							onClick={confirmDialog.action === "reset" ? handleResetDailyCounters : handleClearProcessing}
 						>
 							Confirmar
+						</Button>
+					</DialogActions>
+				</Dialog>
+
+				{/* Dialog de JSON Raw */}
+				<Dialog open={jsonDialogOpen} onClose={() => setJsonDialogOpen(false)} maxWidth="md" fullWidth>
+					<DialogTitle>
+						<Stack direction="row" justifyContent="space-between" alignItems="center">
+							<Typography variant="h6">Configuración JSON</Typography>
+							<Tooltip title="Copiar JSON">
+								<IconButton onClick={handleCopyJson} color="primary">
+									<Copy size={20} />
+								</IconButton>
+							</Tooltip>
+						</Stack>
+					</DialogTitle>
+					<DialogContent>
+						<Paper
+							variant="outlined"
+							sx={{
+								p: 2,
+								backgroundColor: "grey.900",
+								maxHeight: "60vh",
+								overflow: "auto",
+							}}
+						>
+							<pre
+								style={{
+									margin: 0,
+									whiteSpace: "pre-wrap",
+									wordBreak: "break-word",
+									color: "#e0e0e0",
+									fontFamily: "monospace",
+									fontSize: "13px",
+								}}
+							>
+								{JSON.stringify(config, null, 2)}
+							</pre>
+						</Paper>
+					</DialogContent>
+					<DialogActions>
+						<Button onClick={handleCopyJson} startIcon={<Copy size={16} />} variant="outlined">
+							Copiar
+						</Button>
+						<Button onClick={() => setJsonDialogOpen(false)} variant="contained">
+							Cerrar
 						</Button>
 					</DialogActions>
 				</Dialog>
