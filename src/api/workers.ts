@@ -147,7 +147,50 @@ export interface WorkerConfigResponse {
 }
 
 // Tipos de workers disponibles
-export type WorkerType = "verificacion" | "sincronizacion" | "procesamiento" | "notificaciones" | "limpieza" | "scraping" | "app-update";
+export type WorkerType = "verificacion" | "sincronizacion" | "procesamiento" | "notificaciones" | "limpieza" | "scraping" | "app-update" | "email-verification";
+
+// Interface para configuración de email verification
+export interface EmailVerificationConfig {
+	_id: string | { $oid: string };
+	worker_id: string;
+	enabled: boolean;
+	dailyLimit: number;
+	batchSize: number;
+	schedule: string;
+	lastRun?: { $date: string } | string;
+	todayVerified: number;
+	todayJobs: number;
+	dailyJobsLimit: number;
+	todayDate?: { $date: string } | string;
+	totalVerified: number;
+	totalFailed: number;
+	neverBounceCredits?: number;
+	priorityTags: string[];
+	retryAttempts: number;
+	retryDelay: number;
+	neverBouncePollingInterval: number;
+	neverBounceMaxPollingAttempts: number;
+	stats: {
+		valid: number;
+		invalid: number;
+		disposable: number;
+		catchall: number;
+		unknown: number;
+	};
+	processing: {
+		isRunning: boolean;
+		startedAt?: { $date: string } | string;
+		completedAt?: { $date: string } | string;
+	};
+	createdAt?: { $date: string } | string;
+	updatedAt?: { $date: string } | string;
+}
+
+export interface EmailVerificationConfigResponse {
+	success: boolean;
+	message: string;
+	data: EmailVerificationConfig | null;
+}
 
 // Clase base genérica para configuraciones de workers
 class WorkerConfigService {
@@ -225,6 +268,7 @@ export class WorkersService {
 		limpieza: new WorkerConfigService("limpieza"),
 		scraping: new WorkerConfigService("scraping"),
 		"app-update": new WorkerConfigService("app-update"),
+		"email-verification": new WorkerConfigService("email-verification"),
 	};
 
 	// Método genérico para obtener configuraciones
@@ -343,6 +387,43 @@ export class WorkersService {
 	}): Promise<ScrapingHistoryResponse> {
 		try {
 			const response = await workersAxios.get("/api/configuracion-scraping-history/", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	// Métodos para Email Verification (NeverBounce)
+	static async getEmailVerificationConfig(): Promise<EmailVerificationConfigResponse> {
+		try {
+			const response = await workersAxios.get("/api/configuracion-email-verification/");
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	static async updateEmailVerificationConfig(id: string, data: Partial<EmailVerificationConfig>): Promise<EmailVerificationConfigResponse> {
+		try {
+			const response = await workersAxios.put(`/api/configuracion-email-verification/${id}`, data);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	static async resetEmailVerificationDailyCounters(id: string): Promise<EmailVerificationConfigResponse> {
+		try {
+			const response = await workersAxios.post(`/api/configuracion-email-verification/${id}/reset-daily`);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	static async clearEmailVerificationProcessing(id: string): Promise<EmailVerificationConfigResponse> {
+		try {
+			const response = await workersAxios.post(`/api/configuracion-email-verification/${id}/clear-processing`);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);

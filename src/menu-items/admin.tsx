@@ -40,6 +40,14 @@ const admin: NavItemType = {
 					icon: DocumentText,
 					breadcrumbs: true,
 				},
+				{
+					id: "workers-email-verification",
+					title: "Worker de Emails",
+					type: "item",
+					url: "/admin/workers/email-verification",
+					icon: Sms,
+					breadcrumbs: true,
+				},
 			],
 		},
 		{
