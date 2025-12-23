@@ -66,6 +66,9 @@ const FolderInactivity = Loadable(lazy(() => import("pages/admin/notifications/f
 // Dashboard page
 const Dashboard = Loadable(lazy(() => import("pages/admin/dashboard")));
 
+// GA4 Analytics page
+const GA4Analytics = Loadable(lazy(() => import("pages/admin/ga4-analytics")));
+
 // ==============================|| ROUTES ||============================== //
 
 export default function Routes() {
@@ -315,6 +318,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<FolderInactivity />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "ga4-analytics",
+							element: (
+								<AdminRoleGuard>
+									<GA4Analytics />
 								</AdminRoleGuard>
 							),
 						},
