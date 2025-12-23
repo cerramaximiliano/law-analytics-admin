@@ -188,7 +188,7 @@ export interface GA4AllEventsData {
 	};
 }
 
-export interface GA4FunnelStep {
+export interface GA4CustomFunnelStep {
 	step: number;
 	eventName: string;
 	count: number;
@@ -198,7 +198,7 @@ export interface GA4FunnelStep {
 }
 
 export interface GA4CustomFunnelData {
-	steps: GA4FunnelStep[];
+	steps: GA4CustomFunnelStep[];
 	summary: {
 		totalSteps: number;
 		startUsers: number;
