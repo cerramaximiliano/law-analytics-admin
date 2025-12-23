@@ -360,6 +360,7 @@ export const UnauthorizedModal: FC<UnauthorizedModalProps> = ({ open, onClose, o
 											)}
 										</Button>
 
+										{/* Google Login deshabilitado temporalmente - mantener lógica para futuro uso
 										<Divider>
 											<Typography variant="caption" color="textSecondary">
 												O
@@ -375,6 +376,7 @@ export const UnauthorizedModal: FC<UnauthorizedModalProps> = ({ open, onClose, o
 												showLoader={isSubmitting}
 											/>
 										</Box>
+										*/}
 
 										<Button
 											variant="outlined"
