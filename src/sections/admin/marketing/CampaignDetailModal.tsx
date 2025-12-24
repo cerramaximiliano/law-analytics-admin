@@ -21,9 +21,12 @@ import {
 	Tab,
 	useTheme,
 } from "@mui/material";
-import { CloseCircle, Copy, TickCircle } from "iconsax-react";
+import { CloseCircle, Copy, TickCircle, Clock } from "iconsax-react";
 import { CampaignService } from "store/reducers/campaign";
+import { SegmentSyncLogService } from "store/reducers/segmentSyncLog";
 import { Campaign as ImportedCampaign } from "types/campaign";
+import { SegmentSyncLog } from "types/segment-sync-log";
+import SyncHistoryList from "./SyncHistoryList";
 
 interface CampaignDetailModalProps {
 	open: boolean;
@@ -80,8 +83,58 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 	const [tabValue, setTabValue] = useState<number>(0);
 	const [copied, setCopied] = useState<boolean>(false);
 
+	// Sync history state
+	const [syncLogs, setSyncLogs] = useState<SegmentSyncLog[]>([]);
+	const [syncLogsLoading, setSyncLogsLoading] = useState(false);
+	const [syncLogsError, setSyncLogsError] = useState<string | null>(null);
+	const [syncLogsPagination, setSyncLogsPagination] = useState({
+		total: 0,
+		page: 1,
+		limit: 10,
+		pages: 0,
+	});
+
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
 		setTabValue(newValue);
+	};
+
+	// Load sync history when tab 2 is selected
+	useEffect(() => {
+		if (tabValue === 2 && campaignId && syncLogs.length === 0) {
+			loadSyncHistory(1);
+		}
+	}, [tabValue, campaignId]);
+
+	// Reset state when modal closes
+	useEffect(() => {
+		if (!open) {
+			setTabValue(0);
+			setSyncLogs([]);
+			setSyncLogsError(null);
+		}
+	}, [open]);
+
+	const loadSyncHistory = async (page: number) => {
+		if (!campaignId) return;
+
+		setSyncLogsLoading(true);
+		setSyncLogsError(null);
+
+		try {
+			const response = await SegmentSyncLogService.getCampaignHistory(campaignId, page, 10);
+			if (response.success) {
+				setSyncLogs(response.data);
+				setSyncLogsPagination(response.pagination);
+			}
+		} catch (err: any) {
+			setSyncLogsError(err?.message || "Error al cargar el historial de sincronización");
+		} finally {
+			setSyncLogsLoading(false);
+		}
+	};
+
+	const handleSyncLogsPageChange = (page: number) => {
+		loadSyncHistory(page);
 	};
 
 	const handleCopyJson = async () => {
@@ -207,7 +260,8 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2, flexShrink: 0 }}>
 					<Tabs value={tabValue} onChange={handleTabChange} aria-label="campaign detail tabs">
 						<Tab label="Detalles" id="campaign-tab-0" aria-controls="campaign-tabpanel-0" />
-						<Tab label="JSON Raw" id="campaign-tab-1" aria-controls="campaign-tabpanel-1" />
+						<Tab icon={<Clock size={18} />} iconPosition="start" label="Historial Sync" id="campaign-tab-1" aria-controls="campaign-tabpanel-1" />
+						<Tab label="JSON Raw" id="campaign-tab-2" aria-controls="campaign-tabpanel-2" />
 					</Tabs>
 				</Box>
 
@@ -654,8 +708,28 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 							</Grid>
 						</TabPanel>
 
-						{/* Tab 1: JSON Raw */}
+						{/* Tab 1: Sync History */}
 						<TabPanel value={tabValue} index={1}>
+							<Box>
+								<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+									Historial de Sincronización
+								</Typography>
+								<Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+									Registro de las sincronizaciones automáticas de esta campaña con su segmento dinámico.
+								</Typography>
+								<SyncHistoryList
+									logs={syncLogs}
+									loading={syncLogsLoading}
+									error={syncLogsError}
+									pagination={syncLogsPagination}
+									onPageChange={handleSyncLogsPageChange}
+									type="campaign"
+								/>
+							</Box>
+						</TabPanel>
+
+						{/* Tab 2: JSON Raw */}
+						<TabPanel value={tabValue} index={2}>
 							<Box sx={{ position: "relative" }}>
 								<Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 1 }}>
 									<Button
