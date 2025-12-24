@@ -426,6 +426,17 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 										</Typography>
 										<Typography variant="body1">{campaign.segmentInfo.estimatedCount.toLocaleString()}</Typography>
 									</Grid>
+									<Grid item xs={12} sm={6}>
+										<Typography variant="body2" color="textSecondary">
+											Sincronización automática
+										</Typography>
+										<Chip
+											label={campaign.audience?.syncWithSegment !== false ? "Habilitada" : "Deshabilitada"}
+											color={campaign.audience?.syncWithSegment !== false ? "success" : "default"}
+											size="small"
+											variant={campaign.audience?.syncWithSegment !== false ? "filled" : "outlined"}
+										/>
+									</Grid>
 								</Grid>
 							</Grid>
 						)}
