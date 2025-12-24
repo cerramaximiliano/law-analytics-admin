@@ -1039,6 +1039,18 @@ const MailingCampaigns = () => {
 							<strong>Nota:</strong> Los contactos y métricas NO se copiarán. Deberás agregar los contactos manualmente a la nueva campaña.
 						</Typography>
 					</Alert>
+
+					{selectedCampaign?.audience?.segmentId && (
+						<Alert severity="info" sx={{ mt: 2 }} icon={<InfoCircle size={20} />}>
+							<Typography variant="subtitle2" gutterBottom>
+								Sincronización de segmento DESHABILITADA
+							</Typography>
+							<Typography variant="body2">
+								La campaña duplicada <strong>NO sincronizará contactos automáticamente</strong> con el segmento heredado.
+								Esto evita que se agreguen contactos no deseados. Puedes habilitar la sincronización desde la edición de la campaña si lo necesitas.
+							</Typography>
+						</Alert>
+					)}
 				</DialogContent>
 				<DialogActions sx={{ px: 3, pb: 2 }}>
 					<Button onClick={handleCloseDuplicateDialog} disabled={duplicating}>

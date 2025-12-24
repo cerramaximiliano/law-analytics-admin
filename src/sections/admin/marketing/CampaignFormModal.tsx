@@ -75,6 +75,8 @@ interface FormValues {
 	allowedDays: number[];
 	timeWindowStart: string;
 	timeWindowEnd: string;
+	// Sincronización con segmento
+	syncWithSegment: boolean;
 }
 
 // validation schema
@@ -197,6 +199,8 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 		allowedDays: [1, 2, 3, 4, 5], // Monday to Friday
 		timeWindowStart: "09:00",
 		timeWindowEnd: "18:00",
+		// Sincronización con segmento (por defecto habilitada)
+		syncWithSegment: true,
 	};
 
 	// Formik setup
@@ -231,6 +235,10 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 						isPermanent: values.isPermanent,
 						category: values.category || undefined,
 						tags: tagsArray.length > 0 ? tagsArray : undefined,
+						audience: {
+							...campaign.audience,
+							syncWithSegment: values.syncWithSegment,
+						},
 						settings: {
 							...campaign.settings,
 							timezone: values.timezone,
@@ -351,6 +359,8 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 				allowedDays: campaign.settings?.sendingRestrictions?.allowedDays || [1, 2, 3, 4, 5],
 				timeWindowStart: campaign.settings?.sendingRestrictions?.timeWindow?.start || "09:00",
 				timeWindowEnd: campaign.settings?.sendingRestrictions?.timeWindow?.end || "18:00",
+				// Sincronización con segmento (si no está definido, por defecto true)
+				syncWithSegment: campaign.audience?.syncWithSegment !== false,
 			});
 		} else {
 			// Reset to defaults for create mode
@@ -841,6 +851,45 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 								label="Campaña permanente (sin fecha de finalización)"
 							/>
 						</Grid>
+
+						{/* Sincronización con segmento - solo en modo edición y si hay segmento */}
+						{isEditMode && campaign?.audience?.segmentId && (
+							<>
+								<Grid item xs={12}>
+									<Divider />
+								</Grid>
+
+								<Grid item xs={12}>
+									<Typography variant="h5" gutterBottom>
+										Sincronización de Segmento
+									</Typography>
+								</Grid>
+
+								<Grid item xs={12}>
+									<FormControlLabel
+										control={
+											<Switch
+												checked={formik.values.syncWithSegment}
+												onChange={(e) => formik.setFieldValue("syncWithSegment", e.target.checked)}
+												name="syncWithSegment"
+												color="primary"
+											/>
+										}
+										label="Sincronizar contactos automáticamente con el segmento"
+									/>
+									<FormHelperText sx={{ ml: 0 }}>
+										{formik.values.syncWithSegment
+											? "Los contactos del segmento dinámico se agregarán automáticamente a esta campaña."
+											: "Los contactos NO se sincronizarán automáticamente. Deberás agregarlos manualmente."}
+									</FormHelperText>
+									{!formik.values.syncWithSegment && (
+										<Alert severity="info" sx={{ mt: 1 }}>
+											La sincronización está deshabilitada. Esto es útil para campañas duplicadas donde quieres controlar manualmente los contactos.
+										</Alert>
+									)}
+								</Grid>
+							</>
+						)}
 					</Grid>
 				</DialogContent>
 
