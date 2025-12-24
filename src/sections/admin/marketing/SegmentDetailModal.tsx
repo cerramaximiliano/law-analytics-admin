@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 // material-ui
 import {
@@ -22,8 +22,11 @@ import {
 
 // project imports
 import { Segment, SegmentFilter, FilterOperator } from "types/segment";
-import { CloseCircle, Copy, Eye, DocumentCode } from "iconsax-react";
+import { SegmentSyncLog } from "types/segment-sync-log";
+import { CloseCircle, Copy, Eye, DocumentCode, Clock } from "iconsax-react";
 import { useSnackbar } from "notistack";
+import { SegmentSyncLogService } from "store/reducers/segmentSyncLog";
+import SyncHistoryList from "./SyncHistoryList";
 
 // ==============================|| SEGMENT DETAIL MODAL ||============================== //
 
@@ -54,8 +57,58 @@ const SegmentDetailModal = ({ open, onClose, segment }: SegmentDetailModalProps)
 	const { enqueueSnackbar } = useSnackbar();
 	const [tabValue, setTabValue] = useState(0);
 
+	// Sync history state
+	const [syncLogs, setSyncLogs] = useState<SegmentSyncLog[]>([]);
+	const [syncLogsLoading, setSyncLogsLoading] = useState(false);
+	const [syncLogsError, setSyncLogsError] = useState<string | null>(null);
+	const [syncLogsPagination, setSyncLogsPagination] = useState({
+		total: 0,
+		page: 1,
+		limit: 10,
+		pages: 0,
+	});
+
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
 		setTabValue(newValue);
+	};
+
+	// Load sync history when tab 2 is selected
+	useEffect(() => {
+		if (tabValue === 2 && segment?._id && syncLogs.length === 0) {
+			loadSyncHistory(1);
+		}
+	}, [tabValue, segment?._id]);
+
+	// Reset state when modal closes
+	useEffect(() => {
+		if (!open) {
+			setTabValue(0);
+			setSyncLogs([]);
+			setSyncLogsError(null);
+		}
+	}, [open]);
+
+	const loadSyncHistory = async (page: number) => {
+		if (!segment?._id) return;
+
+		setSyncLogsLoading(true);
+		setSyncLogsError(null);
+
+		try {
+			const response = await SegmentSyncLogService.getSegmentHistory(segment._id, page, 10);
+			if (response.success) {
+				setSyncLogs(response.data);
+				setSyncLogsPagination(response.pagination);
+			}
+		} catch (error: any) {
+			setSyncLogsError(error?.message || "Error al cargar el historial de sincronización");
+		} finally {
+			setSyncLogsLoading(false);
+		}
+	};
+
+	const handleSyncLogsPageChange = (page: number) => {
+		loadSyncHistory(page);
 	};
 
 	const handleCopyJson = () => {
@@ -163,6 +216,7 @@ const SegmentDetailModal = ({ open, onClose, segment }: SegmentDetailModalProps)
 			<Box sx={{ borderBottom: 1, borderColor: "divider", px: 3 }}>
 				<Tabs value={tabValue} onChange={handleTabChange} aria-label="segment detail tabs">
 					<Tab icon={<Eye size={18} />} iconPosition="start" label="Detalles" />
+					<Tab icon={<Clock size={18} />} iconPosition="start" label="Historial Sync" />
 					<Tab icon={<DocumentCode size={18} />} iconPosition="start" label="JSON (Raw)" />
 				</Tabs>
 			</Box>
@@ -384,6 +438,26 @@ const SegmentDetailModal = ({ open, onClose, segment }: SegmentDetailModalProps)
 				</TabPanel>
 
 				<TabPanel value={tabValue} index={1}>
+					{/* Sync History View */}
+					<Box>
+						<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+							Historial de Sincronización
+						</Typography>
+						<Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+							Registro de las últimas sincronizaciones automáticas de este segmento con sus campañas asociadas.
+						</Typography>
+						<SyncHistoryList
+							logs={syncLogs}
+							loading={syncLogsLoading}
+							error={syncLogsError}
+							pagination={syncLogsPagination}
+							onPageChange={handleSyncLogsPageChange}
+							type="segment"
+						/>
+					</Box>
+				</TabPanel>
+
+				<TabPanel value={tabValue} index={2}>
 					{/* Raw JSON View */}
 					<Box sx={{ position: "relative" }}>
 						<Tooltip title="Copiar JSON">
