@@ -2184,8 +2184,16 @@ const GA4Dashboard = () => {
 
 									{Object.keys(eventDetails.parameters).length === 0 && (
 										<Alert severity="info">
-											No se detectaron parámetros personalizados para este evento.
-											Asegúrate de que los parámetros estén configurados como <strong>custom dimensions</strong> en GA4.
+											<strong>No hay datos de parámetros disponibles aún.</strong>
+											<br />
+											Esto puede ocurrir porque:
+											<ul style={{ margin: "8px 0 0 0", paddingLeft: "20px" }}>
+												<li>El evento es reciente (GA4 Data API tiene latencia de 24-48 horas)</li>
+												<li>Los parámetros no están configurados como <strong>Custom Dimensions</strong> en GA4</li>
+											</ul>
+											<Typography variant="caption" sx={{ display: "block", mt: 1 }}>
+												Usa el endpoint <code>/api/ga4/diagnostics/custom-dimensions</code> para verificar la configuración.
+											</Typography>
 										</Alert>
 									)}
 								</Stack>
