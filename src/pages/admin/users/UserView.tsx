@@ -42,6 +42,7 @@ import { DefaultRootStateProps } from "types/root";
 import { User, Subscription, UserLightData } from "types/user";
 import DeleteUserDialog from "./DeleteUserDialog";
 import EditUserModal from "./EditUserModal";
+import UserResourcesTab from "./UserResourcesTab";
 import { formatCurrency } from "utils/formatCurrency";
 
 // assets
@@ -65,6 +66,7 @@ import {
 	Trash,
 	Copy,
 	DocumentCode,
+	Box1,
 } from "iconsax-react";
 
 // API and types
@@ -2412,6 +2414,13 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 										id="user-tab-8"
 										aria-controls="user-tabpanel-8"
 									/>
+								<Tab
+									icon={<Box1 size={18} />}
+									iconPosition="start"
+									label="Recursos"
+									id="user-tab-9"
+									aria-controls="user-tabpanel-9"
+								/>
 								</Tabs>
 							</Box>
 
@@ -2632,6 +2641,10 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 										{JSON.stringify(userData, null, 2)}
 									</Box>
 								</Box>
+							</TabPanel>
+
+							<TabPanel value={tabValue} index={9}>
+								<UserResourcesTab userId={userData?._id || userData?.id || ""} />
 							</TabPanel>
 						</Box>
 
