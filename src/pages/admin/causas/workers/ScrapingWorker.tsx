@@ -36,7 +36,7 @@ import {
 	TableSortLabel,
 	Popover,
 } from "@mui/material";
-import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, Trash, AddCircle, Warning2, SearchNormal1, Code1, InfoCircle } from "iconsax-react";
+import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, Trash, AddCircle, Warning2, SearchNormal1, Code1, InfoCircle, Eye, EyeSlash } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig, ScrapingHistory } from "api/workers";
 import AdvancedConfigModal from "./AdvancedConfigModal";
@@ -106,6 +106,9 @@ const ScrapingWorker = () => {
 	const [notFoundInfoAnchorEl, setNotFoundInfoAnchorEl] = useState<HTMLButtonElement | null>(null);
 	const [errorsInfoAnchorEl, setErrorsInfoAnchorEl] = useState<HTMLButtonElement | null>(null);
 	const [totalsInfoAnchorEl, setTotalsInfoAnchorEl] = useState<HTMLButtonElement | null>(null);
+
+	// Estado para mostrar/ocultar columnas extra (Balance, Captchas, Proxy)
+	const [showExtraColumns, setShowExtraColumns] = useState<boolean>(false);
 
 	// Cargar configuraciones
 	const fetchConfigs = async (
@@ -760,6 +763,18 @@ const ScrapingWorker = () => {
 										Actualizar
 									</Button>
 								</Tooltip>
+								<Tooltip title={showExtraColumns ? "Ocultar columnas extra" : "Mostrar Balance, Captchas y Proxy"}>
+									<Button
+										variant={showExtraColumns ? "contained" : "outlined"}
+										size="small"
+										color="secondary"
+										startIcon={showExtraColumns ? <EyeSlash size={16} /> : <Eye size={16} />}
+										onClick={() => setShowExtraColumns(!showExtraColumns)}
+										sx={{ minWidth: { xs: "100%", sm: "auto" } }}
+									>
+										{showExtraColumns ? "Menos columnas" : "Más columnas"}
+									</Button>
+								</Tooltip>
 							</Stack>
 						</Stack>
 					</Grid>
@@ -1001,9 +1016,9 @@ const ScrapingWorker = () => {
 									Progreso
 								</TableSortLabel>
 							</TableCell>
-							<TableCell align="center">Balance</TableCell>
-							<TableCell align="center">Captchas</TableCell>
-							<TableCell align="center">Proxy</TableCell>
+							{showExtraColumns && <TableCell align="center">Balance</TableCell>}
+							{showExtraColumns && <TableCell align="center">Captchas</TableCell>}
+							{showExtraColumns && <TableCell align="center">Proxy</TableCell>}
 							<TableCell align="center">
 								<TableSortLabel
 									active={sortBy === "enabled"}
@@ -1028,7 +1043,7 @@ const ScrapingWorker = () => {
 					<TableBody>
 						{filteredConfigs.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={15} align="center">
+								<TableCell colSpan={showExtraColumns ? 15 : 12} align="center">
 									<Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
 										{fueroFilter === "TODOS"
 											? "No hay configuraciones disponibles"
@@ -1225,36 +1240,42 @@ const ScrapingWorker = () => {
 												</Typography>
 											</Box>
 										</TableCell>
-										<TableCell align="center">
-											<Stack alignItems="center" spacing={0.5}>
-												<Typography
-													variant="body2"
-													fontWeight={500}
-													color={config.balance?.current && config.balance.current > 1 ? "success.main" : "warning.main"}
-												>
-													${config.balance?.current?.toFixed(2) || "0.00"}
-												</Typography>
-												<Typography variant="caption" color="text.secondary">
-													{config.balance?.provider || "N/A"}
-												</Typography>
-											</Stack>
-										</TableCell>
-										<TableCell align="center">
-											<Stack alignItems="center" spacing={0.5}>
-												<Typography variant="body2" fontWeight={500}>
-													{config.capsolver?.totalCaptchas?.toLocaleString() || 0}
-												</Typography>
-												<Chip label={config.captcha?.defaultProvider || "2captcha"} size="small" color="secondary" variant="outlined" />
-											</Stack>
-										</TableCell>
-										<TableCell align="center">
-											<Chip
-												label={config.proxy?.enabled ? "Activo" : "Inactivo"}
-												size="small"
-												color={config.proxy?.enabled ? "success" : "default"}
-												variant="outlined"
-											/>
-										</TableCell>
+										{showExtraColumns && (
+											<TableCell align="center">
+												<Stack alignItems="center" spacing={0.5}>
+													<Typography
+														variant="body2"
+														fontWeight={500}
+														color={config.balance?.current && config.balance.current > 1 ? "success.main" : "warning.main"}
+													>
+														${config.balance?.current?.toFixed(2) || "0.00"}
+													</Typography>
+													<Typography variant="caption" color="text.secondary">
+														{config.balance?.provider || "N/A"}
+													</Typography>
+												</Stack>
+											</TableCell>
+										)}
+										{showExtraColumns && (
+											<TableCell align="center">
+												<Stack alignItems="center" spacing={0.5}>
+													<Typography variant="body2" fontWeight={500}>
+														{config.capsolver?.totalCaptchas?.toLocaleString() || 0}
+													</Typography>
+													<Chip label={config.captcha?.defaultProvider || "2captcha"} size="small" color="secondary" variant="outlined" />
+												</Stack>
+											</TableCell>
+										)}
+										{showExtraColumns && (
+											<TableCell align="center">
+												<Chip
+													label={config.proxy?.enabled ? "Activo" : "Inactivo"}
+													size="small"
+													color={config.proxy?.enabled ? "success" : "default"}
+													variant="outlined"
+												/>
+											</TableCell>
+										)}
 										<TableCell align="center">
 											<Switch
 												checked={isEditing ? editValues.enabled : config.enabled}
