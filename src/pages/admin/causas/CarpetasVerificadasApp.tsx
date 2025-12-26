@@ -34,7 +34,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { CausasPjnService, Causa } from "api/causasPjn";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
-import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification, Calendar } from "iconsax-react";
+import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification, Calendar, TickCircle, CloseSquare } from "iconsax-react";
 import CausaDetalleModal from "./CausaDetalleModal";
 import JudicialMovementsModal from "./JudicialMovementsModal";
 
@@ -584,6 +584,7 @@ const CarpetasVerificadasApp = () => {
 											<TableCell align="center">Movimientos</TableCell>
 											<TableCell>Última Act.</TableCell>
 											<TableCell>Fecha Últ. Mov.</TableCell>
+											<TableCell align="center">Actualizable</TableCell>
 											<TableCell align="center">Acciones</TableCell>
 										</TableRow>
 									</TableHead>
@@ -651,6 +652,13 @@ const CarpetasVerificadasApp = () => {
 													>
 														{formatDateUTC(causa.fechaUltimoMovimiento)}
 													</Typography>
+												</TableCell>
+												<TableCell align="center">
+													{causa.update ? (
+														<TickCircle size={20} color="#2e7d32" variant="Bold" />
+													) : (
+														<CloseSquare size={20} color="#d32f2f" variant="Bold" />
+													)}
 												</TableCell>
 												<TableCell align="center">
 													<Stack direction="row" spacing={0.5} justifyContent="center">
