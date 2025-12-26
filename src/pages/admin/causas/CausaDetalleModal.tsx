@@ -893,6 +893,17 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 								</Box>
 							</Grid>
 
+							{(causa as any).source && (
+								<Grid item xs={12} sm={6} md={3}>
+									<Typography variant="caption" color="textSecondary">
+										Origen
+									</Typography>
+									<Box>
+										<Chip label={(causa as any).source} size="small" variant="outlined" color="secondary" />
+									</Box>
+								</Grid>
+							)}
+
 							<Grid item xs={12}>
 								<Typography variant="caption" color="textSecondary">
 									Carátula
