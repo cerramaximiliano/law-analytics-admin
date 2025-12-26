@@ -807,6 +807,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 						<Tab label="Información General" />
 						<Tab label={`Movimientos (${currentMovimientos.length})`} />
 						<Tab label={`Historial (${updateHistory.length})`} />
+						<Tab label="JSON" />
 					</Tabs>
 				</Box>
 
@@ -1287,6 +1288,28 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 							) : (
 								<Alert severity="info">No hay entradas en el historial de actualizaciones</Alert>
 							)}
+						</Box>
+					)}
+
+					{/* Tab Panel 3: JSON Raw */}
+					{activeTab === 3 && (
+						<Box>
+							<Box
+								component="pre"
+								sx={{
+									backgroundColor: "grey.100",
+									p: 2,
+									borderRadius: 1,
+									overflow: "auto",
+									fontSize: "0.75rem",
+									fontFamily: "monospace",
+									whiteSpace: "pre-wrap",
+									wordBreak: "break-word",
+									maxHeight: "100%",
+								}}
+							>
+								{JSON.stringify(causa, null, 2)}
+							</Box>
 						</Box>
 					)}
 				</DialogContent>
