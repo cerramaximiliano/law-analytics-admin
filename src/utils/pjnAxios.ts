@@ -106,9 +106,11 @@ pjnAxios.interceptors.response.use(
 	},
 	async (error) => {
 		const originalRequest = error.config;
+		const status = error.response?.status;
 
-		// Si recibimos un 401 del servidor y no hemos intentado refrescar aún
-		if (error.response?.status === 401 && !originalRequest._retry && !originalRequest._queued) {
+		// Si recibimos un 401 o 403 del servidor y no hemos intentado refrescar aún
+		// 401 = No autenticado, 403 = Forbidden (puede ser token expirado o sin permisos)
+		if ((status === 401 || status === 403) && !originalRequest._retry && !originalRequest._queued) {
 			originalRequest._retry = true;
 
 			try {
