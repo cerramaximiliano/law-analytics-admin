@@ -854,13 +854,25 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 									Estado
 								</Typography>
 								<Box>
-									{causa.verified && <Chip label="Verificada" color="success" size="small" sx={{ mr: 0.5, mb: 0.5 }} />}
-									{causa.isValid && <Chip label="Válida" color="primary" size="small" sx={{ mr: 0.5, mb: 0.5 }} />}
+									<Chip
+										label={causa.verified ? "Verificada" : "No verificada"}
+										color={causa.verified ? "success" : "default"}
+										size="small"
+										variant={causa.verified ? "filled" : "outlined"}
+										sx={{ mr: 0.5, mb: 0.5 }}
+									/>
+									<Chip
+										label={causa.isValid ? "Válida" : "No válida"}
+										color={causa.isValid ? "primary" : "default"}
+										size="small"
+										variant={causa.isValid ? "filled" : "outlined"}
+										sx={{ mr: 0.5, mb: 0.5 }}
+									/>
 									{isEditing ? (
 										<FormControlLabel
 											control={
 												<Switch
-													checked={editedCausa.update || false}
+													checked={editedCausa.update ?? causa.update ?? false}
 													onChange={(e) => setEditedCausa({ ...editedCausa, update: e.target.checked })}
 													color="warning"
 													size="small"
@@ -869,9 +881,13 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 											label="Con actualización"
 										/>
 									) : (
-										causa.update && (
-											<Chip label="Con actualización" color="warning" size="small" sx={{ mb: 0.5, color: "rgba(0, 0, 0, 0.87)" }} />
-										)
+										<Chip
+											label={causa.update ? "Con actualización" : "Sin actualización"}
+											color={causa.update ? "warning" : "default"}
+											size="small"
+											variant={causa.update ? "filled" : "outlined"}
+											sx={{ mb: 0.5, ...(causa.update && { color: "rgba(0, 0, 0, 0.87)" }) }}
+										/>
 									)}
 								</Box>
 							</Grid>
