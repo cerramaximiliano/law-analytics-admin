@@ -13,6 +13,7 @@ import {
 	Clock,
 	Timer1,
 	ArrowRight2,
+	Wallet2,
 } from "iconsax-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -33,6 +34,7 @@ import { DashboardService } from "store/reducers/dashboard";
 import { DashboardSummary } from "types/dashboard";
 import { useRequestQueueRefresh } from "hooks/useRequestQueueRefresh";
 import { useSnackbar } from "notistack";
+import { WorkersService } from "api/workers";
 
 // Simplified color palette with clear hierarchy
 // Rule: 1 primary + 2 semantic + 1 premium-only
@@ -115,6 +117,8 @@ const metricInfo: Record<string, string> = {
 	totalSegments: "Total de segmentos creados para organizar contactos.",
 	dynamicSegments: "Segmentos que se actualizan automáticamente según criterios definidos.",
 	staticSegments: "Segmentos con lista fija de contactos agregados manualmente.",
+	// Services
+	neverBounceCredits: "Créditos disponibles en NeverBounce para verificación de emails. Se consumen al verificar direcciones de correo.",
 };
 
 // Info Tooltip Component
@@ -475,6 +479,22 @@ const AdminDashboard = () => {
 	const [loading, setLoading] = useState(true);
 	const [data, setData] = useState<DashboardSummary | null>(null);
 	const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+	const [neverBounceCredits, setNeverBounceCredits] = useState<number | null>(null);
+	const [loadingCredits, setLoadingCredits] = useState(false);
+
+	const fetchNeverBounceCredits = useCallback(async () => {
+		try {
+			setLoadingCredits(true);
+			const response = await WorkersService.getEmailVerificationConfig();
+			if (response.success && response.data) {
+				setNeverBounceCredits(response.data.neverBounceCredits || 0);
+			}
+		} catch (error: any) {
+			console.error("Error fetching NeverBounce credits:", error);
+		} finally {
+			setLoadingCredits(false);
+		}
+	}, []);
 
 	const fetchData = useCallback(async () => {
 		try {
@@ -494,12 +514,14 @@ const AdminDashboard = () => {
 
 	useEffect(() => {
 		fetchData();
-	}, [fetchData]);
+		fetchNeverBounceCredits();
+	}, [fetchData, fetchNeverBounceCredits]);
 
 	useRequestQueueRefresh(fetchData);
 
 	const handleRefresh = () => {
 		fetchData();
+		fetchNeverBounceCredits();
 	};
 
 	// Chart data - Consistent colors: Green=Active/Verified, Gray=Inactive/Unverified
@@ -654,6 +676,17 @@ const AdminDashboard = () => {
 								loading={loading}
 								infoKey="totalContacts"
 								linkTo="/admin/marketing/contacts"
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6} md={3}>
+							<PrimaryKPICard
+								title="Créditos NeverBounce"
+								value={neverBounceCredits || 0}
+								icon={<Wallet2 size={20} />}
+								valueColor={COLORS.primary.main}
+								loading={loadingCredits}
+								infoKey="neverBounceCredits"
+								linkTo="/admin/workers/email-verification"
 							/>
 						</Grid>
 					</Grid>
