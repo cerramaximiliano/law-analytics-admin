@@ -35,6 +35,7 @@ import { DashboardSummary } from "types/dashboard";
 import { useRequestQueueRefresh } from "hooks/useRequestQueueRefresh";
 import { useSnackbar } from "notistack";
 import { WorkersService } from "api/workers";
+import adminAxios from "utils/adminAxios";
 
 // Simplified color palette with clear hierarchy
 // Rule: 1 primary + 2 semantic + 1 premium-only
@@ -119,6 +120,7 @@ const metricInfo: Record<string, string> = {
 	staticSegments: "Segmentos con lista fija de contactos agregados manualmente.",
 	// Services
 	neverBounceCredits: "Créditos disponibles en NeverBounce para verificación de emails. Se consumen al verificar direcciones de correo.",
+	capsolverBalance: "Saldo disponible en Capsolver para resolución de captchas. Se consume al resolver captchas en los workers de scraping.",
 };
 
 // Info Tooltip Component
@@ -481,6 +483,8 @@ const AdminDashboard = () => {
 	const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 	const [neverBounceCredits, setNeverBounceCredits] = useState<number | null>(null);
 	const [loadingCredits, setLoadingCredits] = useState(false);
+	const [capsolverBalance, setCapsolverBalance] = useState<number | null>(null);
+	const [loadingCapsolver, setLoadingCapsolver] = useState(false);
 
 	const fetchNeverBounceCredits = useCallback(async () => {
 		try {
@@ -493,6 +497,20 @@ const AdminDashboard = () => {
 			console.error("Error fetching NeverBounce credits:", error);
 		} finally {
 			setLoadingCredits(false);
+		}
+	}, []);
+
+	const fetchCapsolverBalance = useCallback(async () => {
+		try {
+			setLoadingCapsolver(true);
+			const response = await adminAxios.get("/api/capsolver/balance");
+			if (response.data.success && response.data.data) {
+				setCapsolverBalance(response.data.data.balance || 0);
+			}
+		} catch (error: any) {
+			console.error("Error fetching Capsolver balance:", error);
+		} finally {
+			setLoadingCapsolver(false);
 		}
 	}, []);
 
@@ -515,13 +533,15 @@ const AdminDashboard = () => {
 	useEffect(() => {
 		fetchData();
 		fetchNeverBounceCredits();
-	}, [fetchData, fetchNeverBounceCredits]);
+		fetchCapsolverBalance();
+	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance]);
 
 	useRequestQueueRefresh(fetchData);
 
 	const handleRefresh = () => {
 		fetchData();
 		fetchNeverBounceCredits();
+		fetchCapsolverBalance();
 	};
 
 	// Chart data - Consistent colors: Green=Active/Verified, Gray=Inactive/Unverified
@@ -687,6 +707,17 @@ const AdminDashboard = () => {
 								loading={loadingCredits}
 								infoKey="neverBounceCredits"
 								linkTo="/admin/workers/email-verification"
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6} md={3}>
+							<PrimaryKPICard
+								title="Saldo Capsolver"
+								value={capsolverBalance !== null ? Number(capsolverBalance.toFixed(2)) : 0}
+								icon={<Wallet2 size={20} />}
+								valueColor={COLORS.primary.main}
+								loading={loadingCapsolver}
+								infoKey="capsolverBalance"
+								linkTo="/admin/causas/workers"
 							/>
 						</Grid>
 					</Grid>
