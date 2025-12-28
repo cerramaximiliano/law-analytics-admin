@@ -69,6 +69,9 @@ const Dashboard = Loadable(lazy(() => import("pages/admin/dashboard")));
 // GA4 Analytics page
 const GA4Analytics = Loadable(lazy(() => import("pages/admin/ga4-analytics")));
 
+// Expenses page
+const ExpensesPage = Loadable(lazy(() => import("pages/admin/expenses")));
+
 // ==============================|| ROUTES ||============================== //
 
 export default function Routes() {
@@ -326,6 +329,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<GA4Analytics />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "expenses",
+							element: (
+								<AdminRoleGuard>
+									<ExpensesPage />
 								</AdminRoleGuard>
 							),
 						},
