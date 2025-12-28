@@ -805,22 +805,18 @@ const ScrapingWorker = () => {
 								</TableSortLabel>
 							</TableCell>
 							<TableCell align="center">
-								<TableSortLabel
-									active={sortBy === "year"}
-									direction={sortBy === "year" ? sortOrder : "asc"}
-									onClick={() => handleSort("year")}
-								>
-									Año
-								</TableSortLabel>
-							</TableCell>
-							<TableCell align="center">
-								<TableSortLabel
-									active={sortBy === "number"}
-									direction={sortBy === "number" ? sortOrder : "asc"}
-									onClick={() => handleSort("number")}
-								>
-									Número Actual
-								</TableSortLabel>
+								<Stack spacing={0}>
+									<TableSortLabel
+										active={sortBy === "number"}
+										direction={sortBy === "number" ? sortOrder : "asc"}
+										onClick={() => handleSort("number")}
+									>
+										Expediente
+									</TableSortLabel>
+									<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.65rem" }}>
+										Número / Año
+									</Typography>
+								</Stack>
 							</TableCell>
 							<TableCell align="center">
 								<TableSortLabel
@@ -1043,7 +1039,7 @@ const ScrapingWorker = () => {
 					<TableBody>
 						{filteredConfigs.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={showExtraColumns ? 15 : 12} align="center">
+								<TableCell colSpan={showExtraColumns ? 14 : 11} align="center">
 									<Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
 										{fueroFilter === "TODOS"
 											? "No hay configuraciones disponibles"
@@ -1095,30 +1091,33 @@ const ScrapingWorker = () => {
 										</TableCell>
 										<TableCell align="center">
 											{isEditing ? (
-												<TextField
-													size="small"
-													type="number"
-													value={editValues.year || ""}
-													onChange={(e) => setEditValues({ ...editValues, year: Number(e.target.value) })}
-													sx={{ width: 80 }}
-												/>
+												<Stack spacing={1}>
+													<TextField
+														size="small"
+														type="number"
+														value={editValues.number || ""}
+														onChange={(e) => setEditValues({ ...editValues, number: Number(e.target.value) })}
+														sx={{ width: 100 }}
+														placeholder="Número"
+													/>
+													<TextField
+														size="small"
+														type="number"
+														value={editValues.year || ""}
+														onChange={(e) => setEditValues({ ...editValues, year: Number(e.target.value) })}
+														sx={{ width: 100 }}
+														placeholder="Año"
+													/>
+												</Stack>
 											) : (
-												<Typography variant="body2">{config.year}</Typography>
-											)}
-										</TableCell>
-										<TableCell align="center">
-											{isEditing ? (
-												<TextField
-													size="small"
-													type="number"
-													value={editValues.number || ""}
-													onChange={(e) => setEditValues({ ...editValues, number: Number(e.target.value) })}
-													sx={{ width: 100 }}
-												/>
-											) : (
-												<Typography variant="body2" fontWeight={500}>
-													{config.number?.toLocaleString() || 0}
-												</Typography>
+												<Stack spacing={0} alignItems="center">
+													<Typography variant="body2" fontWeight={600} fontSize="1rem">
+														{config.number?.toLocaleString() || 0}
+													</Typography>
+													<Typography variant="caption" color="text.secondary">
+														{config.year}
+													</Typography>
+												</Stack>
 											)}
 										</TableCell>
 										<TableCell align="center">
