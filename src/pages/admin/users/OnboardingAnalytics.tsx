@@ -437,13 +437,13 @@ const OnboardingAnalytics: React.FC = () => {
 										<ResponsiveContainer width="100%" height={200}>
 											<PieChart>
 												<Pie
-													data={timeData.distribution}
+													data={timeData.distribution as any[]}
 													dataKey="count"
 													nameKey="range"
 													cx="50%"
 													cy="50%"
 													outerRadius={80}
-													label={({ range, count }) => `${range}: ${count}`}
+													label={({ name, value }) => `${name}: ${value}`}
 												>
 													{timeData.distribution.map((_entry, index) => (
 														<Cell key={`cell-${index}`} fill={TIME_COLORS[index % TIME_COLORS.length]} />
