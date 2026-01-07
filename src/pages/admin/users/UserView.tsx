@@ -223,6 +223,9 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 	// Estado para sincronización de almacenamiento
 	const [syncingStorage, setSyncingStorage] = useState(false);
 
+	// Estado para resetear onboarding
+	const [resettingOnboarding, setResettingOnboarding] = useState(false);
+
 	// Obtener la suscripción del entorno seleccionado
 	const currentSubscription = subscriptions?.[selectedEnv] || null;
 
@@ -265,6 +268,40 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 		setDeleteDialogOpen(false);
 		if (!userDetails) {
 			onClose();
+		}
+	};
+
+	const handleResetOnboarding = async () => {
+		const userId = userData?.id || userData?._id;
+		if (!userId) return;
+
+		setResettingOnboarding(true);
+		try {
+			await adminAxios.delete(`/api/user-resources/${userId}/onboarding`);
+			storeDispatch(
+				openSnackbar({
+					open: true,
+					message: "Onboarding reseteado correctamente",
+					variant: "alert",
+					alert: { color: "success" },
+					close: true,
+				}),
+			);
+			// Recargar datos del usuario
+			dispatch(getUserById(userId) as any);
+		} catch (error: any) {
+			console.error("Error resetting onboarding:", error);
+			storeDispatch(
+				openSnackbar({
+					open: true,
+					message: error.response?.data?.error || "Error al resetear onboarding",
+					variant: "alert",
+					alert: { color: "error" },
+					close: true,
+				}),
+			);
+		} finally {
+			setResettingOnboarding(false);
 		}
 	};
 
@@ -2654,9 +2691,21 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 				{/* Botones de acción - fuera del MainCard */}
 				<Box sx={{ p: 2, pt: 1, borderTop: 1, borderColor: "divider" }}>
 					<Stack direction="row" spacing={1} justifyContent="space-between">
-						<Button variant="outlined" color="error" size="small" onClick={handleDeleteClick}>
-							Eliminar Usuario
-						</Button>
+						<Stack direction="row" spacing={1}>
+							<Button variant="outlined" color="error" size="small" onClick={handleDeleteClick}>
+								Eliminar Usuario
+							</Button>
+							<Button
+								variant="outlined"
+								color="warning"
+								size="small"
+								onClick={handleResetOnboarding}
+								disabled={resettingOnboarding}
+								startIcon={resettingOnboarding ? <CircularProgress size={16} /> : <RefreshCircle size={16} />}
+							>
+								{resettingOnboarding ? "Reseteando..." : "Resetear Onboarding"}
+							</Button>
+						</Stack>
 						<Stack direction="row" spacing={1}>
 							<Button variant="outlined" size="small" onClick={onClose}>
 								Cerrar
