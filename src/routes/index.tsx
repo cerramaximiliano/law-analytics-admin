@@ -51,6 +51,7 @@ const PromotionsManagement = Loadable(lazy(() => import("pages/admin/promotions"
 const UsersManagement = Loadable(lazy(() => import("pages/admin/users")));
 const TokenConfig = Loadable(lazy(() => import("pages/admin/users/TokenConfig")));
 const EmailLogs = Loadable(lazy(() => import("pages/admin/users/EmailLogs")));
+const OnboardingAnalytics = Loadable(lazy(() => import("pages/admin/users/OnboardingAnalytics")));
 
 // Recursos pages
 const Jurisprudencia = Loadable(lazy(() => import("pages/recursos/Jurisprudencia")));
@@ -297,6 +298,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<EmailLogs />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "users/onboarding",
+							element: (
+								<AdminRoleGuard>
+									<OnboardingAnalytics />
 								</AdminRoleGuard>
 							),
 						},

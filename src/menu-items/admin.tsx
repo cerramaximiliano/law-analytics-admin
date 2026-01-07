@@ -1,5 +1,5 @@
 // assets
-import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle, DiscountShape, Notification, DocumentText, Messages2, Wallet2 } from "iconsax-react";
+import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle, DiscountShape, Notification, DocumentText, Messages2, Wallet2, Chart } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -221,6 +221,14 @@ const admin: NavItemType = {
 					type: "item",
 					url: "/admin/users/email-logs",
 					icon: Messages2,
+					breadcrumbs: true,
+				},
+				{
+					id: "users-onboarding",
+					title: "Onboarding",
+					type: "item",
+					url: "/admin/users/onboarding",
+					icon: Chart,
 					breadcrumbs: true,
 				},
 			],
