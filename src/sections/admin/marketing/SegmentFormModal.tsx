@@ -28,6 +28,7 @@ import {
 	Autocomplete,
 	Switch,
 	Skeleton,
+	ListSubheader,
 } from "@mui/material";
 import { AddCircle, CloseCircle, Information, Trash } from "iconsax-react";
 import { SegmentInput, FilterOperator, SegmentFilter, ConditionOperator, SegmentType, Segment } from "types/segment";
@@ -43,26 +44,81 @@ interface SegmentFormModalProps {
 	segment?: Segment | null; // Segmento a editar, null para crear uno nuevo
 }
 
-// Opciones de campos para condiciones
-const FIELD_OPTIONS = [
-	{ value: "email", label: "Email" },
-	{ value: "firstName", label: "Nombre" },
-	{ value: "lastName", label: "Apellido" },
-	{ value: "company", label: "Empresa" },
-	{ value: "position", label: "Cargo" },
-	{ value: "status", label: "Estado" },
-	{ value: "tags", label: "Etiquetas" },
-	{ value: "subscriptionType", label: "Suscripción" },
-	{ value: "isAppUser", label: "Usuario de la App" },
-	{ value: "isVerified", label: "Verificado en la App" },
-	{ value: "isEmailVerified", label: "Email Verificado" },
-	{ value: "emailVerification.result", label: "Resultado de verificación" },
-	{ value: "totalCampaigns", label: "Número de campañas" },
-	{ value: "openRate", label: "Tasa de apertura" },
-	{ value: "clickRate", label: "Tasa de clics" },
-	{ value: "lastActivity", label: "Última actividad" },
-	{ value: "createdAt", label: "Creado (fecha)" },
+// Opciones de campos para condiciones organizadas por categorías
+const FIELD_OPTIONS_GROUPED = [
+	{
+		category: "Información de Contacto",
+		fields: [
+			{ value: "email", label: "Email" },
+			{ value: "firstName", label: "Nombre" },
+			{ value: "lastName", label: "Apellido" },
+			{ value: "company", label: "Empresa" },
+			{ value: "position", label: "Cargo" },
+			{ value: "tags", label: "Etiquetas" },
+		],
+	},
+	{
+		category: "Estado y Verificación",
+		fields: [
+			{ value: "status", label: "Estado del contacto" },
+			{ value: "isAppUser", label: "Es usuario de la App" },
+			{ value: "isVerified", label: "Usuario verificado en la App" },
+			{ value: "isEmailVerified", label: "Email verificado" },
+			{ value: "emailVerification.result", label: "Resultado de verificación de email" },
+		],
+	},
+	{
+		category: "Suscripción y Engagement",
+		fields: [
+			{ value: "subscriptionType", label: "Tipo de suscripción" },
+			{ value: "totalCampaigns", label: "Número de campañas" },
+			{ value: "openRate", label: "Tasa de apertura (%)" },
+			{ value: "clickRate", label: "Tasa de clics (%)" },
+		],
+	},
+	{
+		category: "Recursos de la App - Activos",
+		fields: [
+			{ value: "customFields.activeFolders", label: "Carpetas activas" },
+			{ value: "customFields.activeCalculators", label: "Calculadoras activas" },
+			{ value: "customFields.activeContacts", label: "Contactos activos" },
+		],
+	},
+	{
+		category: "Recursos de la App - Totales",
+		fields: [
+			{ value: "customFields.totalFolders", label: "Total de carpetas" },
+			{ value: "customFields.totalCalculators", label: "Total de calculadoras" },
+			{ value: "customFields.totalContacts", label: "Total de contactos" },
+		],
+	},
+	{
+		category: "Recursos de la App - Archivados",
+		fields: [
+			{ value: "customFields.archivedFolders", label: "Carpetas archivadas" },
+			{ value: "customFields.archivedCalculators", label: "Calculadoras archivadas" },
+			{ value: "customFields.archivedContacts", label: "Contactos archivados" },
+		],
+	},
+	{
+		category: "Almacenamiento",
+		fields: [
+			{ value: "customFields.storageUsedMB", label: "Almacenamiento usado (MB)" },
+			{ value: "customFields.storageUsedBytes", label: "Almacenamiento usado (Bytes)" },
+		],
+	},
+	{
+		category: "Fechas",
+		fields: [
+			{ value: "createdAt", label: "Fecha de creación del contacto" },
+			{ value: "lastActivity", label: "Última actividad" },
+			{ value: "customFields.statsLastUpdated", label: "Última actualización de estadísticas" },
+		],
+	},
 ];
+
+// Array plano de opciones para compatibilidad (usado en validaciones)
+const FIELD_OPTIONS = FIELD_OPTIONS_GROUPED.flatMap((group) => group.fields);
 
 // Opciones de operadores para condiciones
 const OPERATOR_OPTIONS: { [key: string]: { value: FilterOperator; label: string }[] } = {
@@ -128,6 +184,23 @@ const DEFAULT_OPERATOR_BY_FIELD: { [key: string]: string } = {
 	clickRate: "greater_than",
 	lastActivity: "greater_than",
 	createdAt: "greater_than",
+	// Recursos de la App - Activos
+	"customFields.activeFolders": "greater_than",
+	"customFields.activeCalculators": "greater_than",
+	"customFields.activeContacts": "greater_than",
+	// Recursos de la App - Totales
+	"customFields.totalFolders": "greater_than",
+	"customFields.totalCalculators": "greater_than",
+	"customFields.totalContacts": "greater_than",
+	// Recursos de la App - Archivados
+	"customFields.archivedFolders": "greater_than",
+	"customFields.archivedCalculators": "greater_than",
+	"customFields.archivedContacts": "greater_than",
+	// Almacenamiento
+	"customFields.storageUsedMB": "greater_than",
+	"customFields.storageUsedBytes": "greater_than",
+	// Fechas
+	"customFields.statsLastUpdated": "greater_than",
 };
 
 // Operadores que no necesitan valor
@@ -596,8 +669,16 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 		if (fieldName === "emailVerification.result") return OPERATOR_OPTIONS.status; // Usar los mismos operadores que status
 		if (fieldName === "tags") return OPERATOR_OPTIONS.tags;
 		if (["isAppUser", "isVerified", "isEmailVerified"].includes(fieldName)) return OPERATOR_OPTIONS.boolean;
-		if (["totalCampaigns", "openRate", "clickRate"].includes(fieldName)) return OPERATOR_OPTIONS.number;
-		if (["lastActivity", "createdAt"].includes(fieldName)) return OPERATOR_OPTIONS.date;
+		// Campos numéricos: campañas, tasas, y recursos de la app
+		if ([
+			"totalCampaigns", "openRate", "clickRate",
+			"customFields.activeFolders", "customFields.activeCalculators", "customFields.activeContacts",
+			"customFields.totalFolders", "customFields.totalCalculators", "customFields.totalContacts",
+			"customFields.archivedFolders", "customFields.archivedCalculators", "customFields.archivedContacts",
+			"customFields.storageUsedMB", "customFields.storageUsedBytes"
+		].includes(fieldName)) return OPERATOR_OPTIONS.number;
+		// Campos de fecha
+		if (["lastActivity", "createdAt", "customFields.statsLastUpdated"].includes(fieldName)) return OPERATOR_OPTIONS.date;
 		return OPERATOR_OPTIONS.default;
 	};
 
@@ -1046,11 +1127,27 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 															onChange={(e) => handleFilterChange(index, "field", e.target.value)}
 															disabled={saving}
 														>
-															{FIELD_OPTIONS.map((option) => (
-																<MenuItem key={option.value} value={option.value}>
-																	{option.label}
-																</MenuItem>
-															))}
+															{FIELD_OPTIONS_GROUPED.map((group) => [
+																<ListSubheader
+																	key={group.category}
+																	sx={{
+																		bgcolor: "action.hover",
+																		fontWeight: 600,
+																		fontSize: "0.75rem",
+																		textTransform: "uppercase",
+																		letterSpacing: "0.5px",
+																		color: "text.secondary",
+																		lineHeight: "32px"
+																	}}
+																>
+																	{group.category}
+																</ListSubheader>,
+																...group.fields.map((option) => (
+																	<MenuItem key={option.value} value={option.value} sx={{ pl: 3 }}>
+																		{option.label}
+																	</MenuItem>
+																)),
+															])}
 														</Select>
 													</FormControl>
 												</Grid>
