@@ -54,7 +54,7 @@ import {
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import SupportContactsService, { SupportContact, SupportContactFilters } from "api/supportContacts";
+import SupportContactsService, { SupportContact, SupportContactFilters, UpdateSupportContactData } from "api/supportContacts";
 
 // Status configuration
 const STATUS_CONFIG: Record<string, { color: "warning" | "info" | "success" | "default"; label: string; icon: React.ReactNode }> = {
@@ -102,7 +102,7 @@ const SupportContactsPage = () => {
 
 	// State for update dialog
 	const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
-	const [updateData, setUpdateData] = useState<{ status?: string; priority?: string }>({});
+	const [updateData, setUpdateData] = useState<UpdateSupportContactData>({});
 	const [updating, setUpdating] = useState(false);
 
 	// State for delete confirmation
@@ -776,7 +776,7 @@ const SupportContactsPage = () => {
 								<Select
 									value={updateData.status || ""}
 									label="Estado"
-									onChange={(e) => setUpdateData({ ...updateData, status: e.target.value })}
+									onChange={(e) => setUpdateData({ ...updateData, status: e.target.value as UpdateSupportContactData["status"] })}
 								>
 									<MenuItem value="pending">Pendiente</MenuItem>
 									<MenuItem value="in-progress">En Progreso</MenuItem>
@@ -789,7 +789,7 @@ const SupportContactsPage = () => {
 								<Select
 									value={updateData.priority || ""}
 									label="Prioridad"
-									onChange={(e) => setUpdateData({ ...updateData, priority: e.target.value })}
+									onChange={(e) => setUpdateData({ ...updateData, priority: e.target.value as UpdateSupportContactData["priority"] })}
 								>
 									<MenuItem value="low">Baja</MenuItem>
 									<MenuItem value="medium">Media</MenuItem>
