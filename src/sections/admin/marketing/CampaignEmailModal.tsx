@@ -1180,6 +1180,7 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 											onChange={formik.handleChange}
 											placeholder="<p>Contenido HTML del email</p>"
 											sx={{ mb: 2 }}
+											helperText="Use variables con formato {{variable}} o ${variable}"
 										/>
 
 										<TextField
@@ -1194,6 +1195,33 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 											placeholder="Contenido en texto plano del email"
 											sx={{ mb: 2 }}
 										/>
+
+										{/* Información sobre variables disponibles */}
+										<Box
+											sx={{
+												bgcolor: "primary.lighter",
+												p: 2,
+												borderRadius: 1,
+												border: "1px solid",
+												borderColor: "primary.light",
+											}}
+										>
+											<Typography variant="subtitle2" color="primary.dark" gutterBottom>
+												Variables disponibles para personalización:
+											</Typography>
+											<Typography variant="caption" component="div" color="text.secondary">
+												<strong>Contacto:</strong> {"{{firstName}}"}, {"{{lastName}}"}, {"{{email}}"}, {"{{fullName}}"}
+												<br />
+												<strong>Campaña:</strong> {"{{campaignName}}"}, {"{{campaignId}}"}
+												<br />
+												<strong>Fechas:</strong> {"{{today}}"}, {"{{currentDate}}"}, {"{{currentDateTime}}"}
+												<br />
+												<strong>Recursos del usuario:</strong> {"{{userResourcesSummary}}"} (tabla HTML con carpetas, calculadoras,
+												contactos y almacenamiento)
+												<br />
+												<strong>Campos personalizados:</strong> {"{{contact.customFields.nombreCampo}}"}
+											</Typography>
+										</Box>
 									</Grid>
 								)}
 							</Grid>
