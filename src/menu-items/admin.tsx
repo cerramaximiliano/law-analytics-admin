@@ -1,5 +1,5 @@
 // assets
-import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle, DiscountShape, Notification, DocumentText, Messages2, Wallet2, Chart, MessageQuestion } from "iconsax-react";
+import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle, DiscountShape, Notification, DocumentText, Messages2, Wallet2, Chart, MessageQuestion, Layer } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -236,6 +236,14 @@ const admin: NavItemType = {
 					type: "item",
 					url: "/admin/users/onboarding",
 					icon: Chart,
+					breadcrumbs: true,
+				},
+				{
+					id: "users-resources",
+					title: "Recursos",
+					type: "item",
+					url: "/admin/users/resources",
+					icon: Layer,
 					breadcrumbs: true,
 				},
 			],
