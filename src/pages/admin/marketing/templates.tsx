@@ -5,6 +5,7 @@ import { useRequestQueueRefresh } from "hooks/useRequestQueueRefresh";
 
 // material-ui
 import {
+	Autocomplete,
 	Box,
 	Button,
 	ButtonGroup,
@@ -24,6 +25,8 @@ import {
 	IconButton,
 	InputLabel,
 	InputAdornment,
+	ListSubheader,
+	Menu,
 	MenuItem,
 	Paper,
 	Select,
@@ -61,6 +64,7 @@ import {
 	ArrowUp2,
 	ArrowDown2,
 	TextBlock,
+	Code,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import AnimateButton from "components/@extended/AnimateButton";
@@ -140,6 +144,59 @@ const categoryDisplay: Record<string, string> = {
 	improved: "Mejorado",
 	"ab-test": "Test A/B",
 };
+
+// Available system variables organized by category
+interface VariableOption {
+	name: string;
+	description: string;
+	category: string;
+}
+
+const AVAILABLE_VARIABLES: VariableOption[] = [
+	// Contact variables
+	{ name: "firstName", description: "Nombre del contacto", category: "Contacto" },
+	{ name: "lastName", description: "Apellido del contacto", category: "Contacto" },
+	{ name: "email", description: "Email del contacto", category: "Contacto" },
+	{ name: "fullName", description: "Nombre completo del contacto", category: "Contacto" },
+	{ name: "nombre", description: "Nombre del contacto (alias)", category: "Contacto" },
+
+	// Campaign variables
+	{ name: "campaignName", description: "Nombre de la campaña", category: "Campaña" },
+	{ name: "campaignId", description: "ID de la campaña", category: "Campaña" },
+
+	// Date variables
+	{ name: "today", description: "Fecha actual (DD/MM/YYYY)", category: "Fechas" },
+	{ name: "currentDate", description: "Fecha actual formateada", category: "Fechas" },
+	{ name: "currentDateTime", description: "Fecha y hora actual", category: "Fechas" },
+	{ name: "now", description: "Timestamp actual", category: "Fechas" },
+	{ name: "year", description: "Año actual", category: "Fechas" },
+
+	// Resource summary variables
+	{ name: "userResourcesSummary", description: "Tabla HTML con resumen de recursos del usuario", category: "Recursos" },
+
+	// Environment variables
+	{ name: "process.env.BASE_URL", description: "URL base de la aplicación", category: "Entorno" },
+
+	// Custom fields - common ones
+	{ name: "contact.customFields.activeFolders", description: "Carpetas activas del usuario", category: "Campos personalizados" },
+	{ name: "contact.customFields.archivedFolders", description: "Carpetas archivadas del usuario", category: "Campos personalizados" },
+	{ name: "contact.customFields.totalFolders", description: "Total de carpetas del usuario", category: "Campos personalizados" },
+	{ name: "contact.customFields.activeCalculators", description: "Calculadoras activas del usuario", category: "Campos personalizados" },
+	{ name: "contact.customFields.archivedCalculators", description: "Calculadoras archivadas del usuario", category: "Campos personalizados" },
+	{ name: "contact.customFields.totalCalculators", description: "Total de calculadoras del usuario", category: "Campos personalizados" },
+	{ name: "contact.customFields.activeContacts", description: "Contactos activos del usuario", category: "Campos personalizados" },
+	{ name: "contact.customFields.archivedContacts", description: "Contactos archivados del usuario", category: "Campos personalizados" },
+	{ name: "contact.customFields.totalContacts", description: "Total de contactos del usuario", category: "Campos personalizados" },
+	{ name: "contact.customFields.storageUsedMB", description: "Almacenamiento usado (MB)", category: "Campos personalizados" },
+
+	// Legacy/Other common variables
+	{ name: "direccion", description: "Dirección (legado)", category: "Otros" },
+	{ name: "unsubscribeUrl", description: "URL para cancelar suscripción", category: "Otros" },
+	{ name: "preferencesUrl", description: "URL de preferencias", category: "Otros" },
+];
+
+// Get unique categories for grouping
+const VARIABLE_CATEGORIES = [...new Set(AVAILABLE_VARIABLES.map((v) => v.category))];
 
 // Default blank template HTML
 const defaultHtmlTemplate = `<!DOCTYPE html>
@@ -286,6 +343,12 @@ const EmailTemplates = () => {
 	const [htmlSearchResults, setHtmlSearchResults] = useState<number[]>([]);
 	const [currentSearchIndex, setCurrentSearchIndex] = useState<number>(0);
 	const htmlTextFieldRef = useRef<HTMLTextAreaElement>(null);
+
+	// Ref for create modal HTML textarea
+	const createHtmlTextFieldRef = useRef<HTMLTextAreaElement>(null);
+
+	// State for variable insertion menu (create modal)
+	const [variableMenuAnchor, setVariableMenuAnchor] = useState<null | HTMLElement>(null);
 
 	// State for pagination
 	const [page, setPage] = useState(0);
@@ -738,27 +801,23 @@ const EmailTemplates = () => {
 	};
 
 	// Handle variable changes
-	const handleAddVariable = () => {
-		const variableName = document.getElementById("new-variable") as HTMLInputElement;
-		if (variableName && variableName.value) {
-			// Check if variable already exists
-			if (newTemplate.variables.includes(variableName.value)) {
-				enqueueSnackbar("Esta variable ya existe", {
-					variant: "warning",
-					anchorOrigin: { vertical: "bottom", horizontal: "right" },
-				});
-				return;
-			}
+	const handleAddVariable = (variableName: string | null) => {
+		if (!variableName) return;
 
-			// Add variable
-			setNewTemplate({
-				...newTemplate,
-				variables: [...newTemplate.variables, variableName.value],
+		// Check if variable already exists
+		if (newTemplate.variables.includes(variableName)) {
+			enqueueSnackbar("Esta variable ya existe", {
+				variant: "warning",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
 			});
-
-			// Clear input
-			variableName.value = "";
+			return;
 		}
+
+		// Add variable
+		setNewTemplate({
+			...newTemplate,
+			variables: [...newTemplate.variables, variableName],
+		});
 	};
 
 	const handleRemoveVariable = (variable: string) => {
@@ -766,6 +825,45 @@ const EmailTemplates = () => {
 			...newTemplate,
 			variables: newTemplate.variables.filter((v) => v !== variable),
 		});
+	};
+
+	// Handle variable insertion menu
+	const handleOpenVariableMenu = (event: React.MouseEvent<HTMLElement>) => {
+		setVariableMenuAnchor(event.currentTarget);
+	};
+
+	const handleCloseVariableMenu = () => {
+		setVariableMenuAnchor(null);
+	};
+
+	// Insert variable at cursor position in HTML editor
+	const handleInsertVariable = (variableName: string) => {
+		const textarea = createHtmlTextFieldRef.current;
+		if (!textarea) {
+			// Fallback: just append to the end
+			handleTemplateChange("htmlBody", newTemplate.htmlBody + `\${${variableName}}`);
+			handleCloseVariableMenu();
+			return;
+		}
+
+		const start = textarea.selectionStart;
+		const end = textarea.selectionEnd;
+		const text = newTemplate.htmlBody;
+		const variableText = `\${${variableName}}`;
+
+		// Insert at cursor position
+		const newText = text.substring(0, start) + variableText + text.substring(end);
+		handleTemplateChange("htmlBody", newText);
+
+		// Close menu
+		handleCloseVariableMenu();
+
+		// Focus and set cursor after inserted variable
+		setTimeout(() => {
+			textarea.focus();
+			const newPosition = start + variableText.length;
+			textarea.setSelectionRange(newPosition, newPosition);
+		}, 50);
 	};
 
 	// Validate form
@@ -1865,33 +1963,95 @@ const EmailTemplates = () => {
 							{/* Variables section */}
 							<Box sx={{ mt: 2 }}>
 								<Typography variant="subtitle1" sx={{ mb: 1 }}>
-									Variables
+									Variables del sistema
 								</Typography>
 								<Typography variant="caption" color="textSecondary" sx={{ mb: 2, display: "block" }}>
-									Ingrese las variables que se pueden usar en la plantilla con la sintaxis ${"{"}variable{"}"}
+									Seleccione las variables que se usarán en esta plantilla. Use la sintaxis {"$"}{"{"}variable{"}"} o {"{"}
+									{"{"}variable{"}"}
+									{"}"} en el código HTML.
 								</Typography>
 
-								<Grid container spacing={1} alignItems="center">
-									<Grid item xs>
-										<TextField id="new-variable" label="Nueva variable" size="small" fullWidth />
-									</Grid>
-									<Grid item>
-										<Button variant="contained" size="small" color="primary" onClick={handleAddVariable} startIcon={<AddCircle />}>
-											Agregar
-										</Button>
-									</Grid>
-								</Grid>
+								<Autocomplete
+									options={AVAILABLE_VARIABLES.filter((v) => !newTemplate.variables.includes(v.name))}
+									groupBy={(option) => option.category}
+									getOptionLabel={(option) => option.name}
+									renderOption={(props, option) => (
+										<Box component="li" {...props} sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start !important" }}>
+											<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+												{option.name}
+											</Typography>
+											<Typography variant="caption" color="textSecondary">
+												{option.description}
+											</Typography>
+										</Box>
+									)}
+									renderGroup={(params) => (
+										<li key={params.key}>
+											<ListSubheader
+												sx={{
+													fontWeight: "bold",
+													backgroundColor: theme.palette.mode === "dark" ? theme.palette.grey[800] : theme.palette.grey[100],
+												}}
+											>
+												{params.group}
+											</ListSubheader>
+											<ul style={{ padding: 0 }}>{params.children}</ul>
+										</li>
+									)}
+									onChange={(_, value) => {
+										if (value) {
+											handleAddVariable(value.name);
+										}
+									}}
+									renderInput={(params) => <TextField {...params} label="Agregar variable" size="small" placeholder="Buscar variable..." />}
+									size="small"
+									fullWidth
+									blurOnSelect
+									clearOnBlur
+									value={null}
+								/>
 
-								<Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
-									{newTemplate.variables.map((variable) => (
-										<Chip
-											key={variable}
-											label={variable}
-											onDelete={() => handleRemoveVariable(variable)}
-											color="primary"
-											variant="outlined"
-										/>
-									))}
+								<Box sx={{ mt: 2 }}>
+									<Typography variant="caption" color="textSecondary" sx={{ mb: 1, display: "block" }}>
+										Variables seleccionadas ({newTemplate.variables.length}):
+									</Typography>
+									<Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+										{newTemplate.variables.map((variable) => {
+											const variableInfo = AVAILABLE_VARIABLES.find((v) => v.name === variable);
+											return (
+												<Tooltip key={variable} title={variableInfo?.description || "Variable personalizada"} arrow>
+													<Chip
+														label={variable}
+														onDelete={() => handleRemoveVariable(variable)}
+														color="primary"
+														variant="outlined"
+														size="small"
+													/>
+												</Tooltip>
+											);
+										})}
+									</Box>
+								</Box>
+
+								{/* Info box about fallback syntax */}
+								<Box
+									sx={{
+										mt: 2,
+										p: 1.5,
+										backgroundColor: theme.palette.mode === "dark" ? theme.palette.grey[800] : theme.palette.info.lighter,
+										borderRadius: 1,
+										border: `1px solid ${theme.palette.info.main}`,
+									}}
+								>
+									<Typography variant="caption" color="textSecondary" sx={{ display: "block" }}>
+										<strong>Sintaxis con valor por defecto:</strong>
+									</Typography>
+									<Typography variant="caption" color="textSecondary" component="div" sx={{ fontFamily: "monospace", mt: 0.5 }}>
+										{"$"}{"{"}firstName || "Suscriptor"{"}"} - Usa "Suscriptor" si firstName no existe
+									</Typography>
+									<Typography variant="caption" color="textSecondary" component="div" sx={{ fontFamily: "monospace" }}>
+										{"$"}{"{"}firstName || email{"}"} - Usa email como fallback
+									</Typography>
 								</Box>
 							</Box>
 						</Grid>
@@ -1954,11 +2114,60 @@ const EmailTemplates = () => {
 							</TabPanel>
 
 							<TabPanel value={createViewTab} index={1}>
-								<Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+									<Button
+										variant="outlined"
+										color="primary"
+										startIcon={<Code />}
+										onClick={handleOpenVariableMenu}
+										size="small"
+									>
+										Insertar variable
+									</Button>
+									<Menu
+										anchorEl={variableMenuAnchor}
+										open={Boolean(variableMenuAnchor)}
+										onClose={handleCloseVariableMenu}
+										PaperProps={{
+											style: {
+												maxHeight: 400,
+												width: 320,
+											},
+										}}
+									>
+										{VARIABLE_CATEGORIES.map((category) => [
+											<ListSubheader
+												key={`header-${category}`}
+												sx={{
+													fontWeight: "bold",
+													backgroundColor: theme.palette.mode === "dark" ? theme.palette.grey[800] : theme.palette.grey[100],
+												}}
+											>
+												{category}
+											</ListSubheader>,
+											...AVAILABLE_VARIABLES.filter((v) => v.category === category).map((variable) => (
+												<MenuItem
+													key={variable.name}
+													onClick={() => handleInsertVariable(variable.name)}
+													sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}
+												>
+													<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+														{"$"}{"{"}
+														{variable.name}
+														{"}"}
+													</Typography>
+													<Typography variant="caption" color="textSecondary">
+														{variable.description}
+													</Typography>
+												</MenuItem>
+											)),
+										])}
+									</Menu>
 									<Button
 										variant="contained"
 										color="secondary"
 										startIcon={<Copy />}
+										size="small"
 										onClick={() => {
 											navigator.clipboard.writeText(newTemplate.htmlBody);
 											enqueueSnackbar("Código HTML copiado al portapapeles", {
@@ -1970,15 +2179,56 @@ const EmailTemplates = () => {
 										Copiar al portapapeles
 									</Button>
 								</Box>
+
+								{/* Show detected variables in the HTML */}
+								{(() => {
+									const detectedVars = newTemplate.htmlBody.match(/\$\{[\w.]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.]+))?\}|\{\{[\w.]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.]+))?\}\}/g) || [];
+									const uniqueVars = [...new Set(detectedVars)];
+									if (uniqueVars.length > 0) {
+										return (
+											<Box
+												sx={{
+													mb: 2,
+													p: 1,
+													backgroundColor: theme.palette.mode === "dark" ? theme.palette.grey[800] : theme.palette.grey[50],
+													borderRadius: 1,
+													border: `1px solid ${theme.palette.divider}`,
+												}}
+											>
+												<Typography variant="caption" color="textSecondary" sx={{ display: "block", mb: 0.5 }}>
+													Variables detectadas en el código:
+												</Typography>
+												<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+													{uniqueVars.map((v, i) => (
+														<Chip
+															key={i}
+															label={v}
+															size="small"
+															sx={{
+																fontFamily: "monospace",
+																fontSize: "0.75rem",
+																backgroundColor: theme.palette.mode === "dark" ? theme.palette.primary.dark : theme.palette.primary.lighter,
+																color: theme.palette.mode === "dark" ? theme.palette.primary.lighter : theme.palette.primary.dark,
+															}}
+														/>
+													))}
+												</Box>
+											</Box>
+										);
+									}
+									return null;
+								})()}
+
 								<TextField
 									label="Código HTML"
 									fullWidth
 									multiline
-									rows={18}
+									rows={16}
 									value={newTemplate.htmlBody}
 									onChange={(e) => handleTemplateChange("htmlBody", e.target.value)}
 									error={!!errors.htmlBody}
 									helperText={errors.htmlBody}
+									inputRef={createHtmlTextFieldRef}
 									sx={{
 										fontFamily: "monospace",
 										"& .MuiInputBase-input": {
