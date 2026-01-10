@@ -102,6 +102,21 @@ export interface BulkStatusUpdateResponse {
 	};
 }
 
+export interface ReplyData {
+	replyMessage: string;
+	changeStatus?: boolean;
+}
+
+export interface ReplyResponse {
+	success: boolean;
+	message: string;
+	data: {
+		contactId: string;
+		email: string;
+		status: string;
+	};
+}
+
 // Service
 class SupportContactsService {
 	/**
@@ -194,6 +209,18 @@ class SupportContactsService {
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al actualizar estado de contactos");
+		}
+	}
+
+	/**
+	 * Responder a un contacto de soporte por email
+	 */
+	static async replySupportContact(id: string, data: ReplyData): Promise<ReplyResponse> {
+		try {
+			const response = await adminAxios.post<ReplyResponse>(`/api/support-contacts/${id}/reply`, data);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al enviar respuesta");
 		}
 	}
 }
