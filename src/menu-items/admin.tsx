@@ -155,6 +155,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "modules",
+					title: "Módulos de Email",
+					type: "item",
+					url: "/admin/marketing/modules",
+					breadcrumbs: true,
+				},
+				{
 					id: "contacts",
 					title: "Contactos y Segmentos",
 					type: "item",
