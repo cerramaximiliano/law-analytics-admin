@@ -53,6 +53,7 @@ const UsersManagement = Loadable(lazy(() => import("pages/admin/users")));
 const TokenConfig = Loadable(lazy(() => import("pages/admin/users/TokenConfig")));
 const EmailLogs = Loadable(lazy(() => import("pages/admin/users/EmailLogs")));
 const OnboardingAnalytics = Loadable(lazy(() => import("pages/admin/users/OnboardingAnalytics")));
+const UserResources = Loadable(lazy(() => import("pages/admin/users/resources")));
 
 // Recursos pages
 const Jurisprudencia = Loadable(lazy(() => import("pages/recursos/Jurisprudencia")));
@@ -318,6 +319,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<OnboardingAnalytics />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "users/resources",
+							element: (
+								<AdminRoleGuard>
+									<UserResources />
 								</AdminRoleGuard>
 							),
 						},
