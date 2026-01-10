@@ -31,6 +31,7 @@ import {
 	Alert,
 	InputAdornment,
 	Checkbox,
+	FormControlLabel,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -51,6 +52,7 @@ import {
 	Warning2,
 	Danger,
 	UserRemove,
+	Send2,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -118,6 +120,12 @@ const SupportContactsPage = () => {
 	const [bulkStatusDialogOpen, setBulkStatusDialogOpen] = useState(false);
 	const [bulkStatus, setBulkStatus] = useState("");
 	const [bulkUpdating, setBulkUpdating] = useState(false);
+
+	// State for reply dialog
+	const [replyDialogOpen, setReplyDialogOpen] = useState(false);
+	const [replyMessage, setReplyMessage] = useState("");
+	const [replyChangeStatus, setReplyChangeStatus] = useState(true);
+	const [replying, setReplying] = useState(false);
 
 	// Fetch contacts
 	const fetchContacts = useCallback(async () => {
@@ -211,6 +219,34 @@ const SupportContactsPage = () => {
 		setSelectedContact(contact);
 		setUpdateData({ status: contact.status, priority: contact.priority });
 		setUpdateDialogOpen(true);
+	};
+
+	// Open reply dialog
+	const handleOpenReply = (contact: SupportContact) => {
+		setSelectedContact(contact);
+		setReplyMessage("");
+		setReplyChangeStatus(contact.status === "pending");
+		setReplyDialogOpen(true);
+	};
+
+	// Handle reply
+	const handleReply = async () => {
+		if (!selectedContact || !replyMessage.trim()) return;
+		try {
+			setReplying(true);
+			await SupportContactsService.replySupportContact(selectedContact._id, {
+				replyMessage: replyMessage.trim(),
+				changeStatus: replyChangeStatus,
+			});
+			enqueueSnackbar("Respuesta enviada exitosamente", { variant: "success" });
+			setReplyDialogOpen(false);
+			setReplyMessage("");
+			fetchContacts();
+		} catch (error: any) {
+			enqueueSnackbar(error?.message || "Error al enviar la respuesta", { variant: "error" });
+		} finally {
+			setReplying(false);
+		}
 	};
 
 	// Handle update
@@ -637,6 +673,11 @@ const SupportContactsPage = () => {
 															<MessageQuestion size={16} />
 														</IconButton>
 													</Tooltip>
+													<Tooltip title="Responder">
+														<IconButton size="small" color="success" onClick={() => handleOpenReply(contact)}>
+															<Send2 size={16} />
+														</IconButton>
+													</Tooltip>
 													<Tooltip title="Eliminar">
 														<IconButton size="small" color="error" onClick={() => handleDeleteClick(contact)}>
 															<Trash size={16} />
@@ -882,6 +923,93 @@ const SupportContactsPage = () => {
 						</Button>
 						<Button variant="contained" onClick={handleBulkStatusUpdate} disabled={bulkUpdating || !bulkStatus}>
 							{bulkUpdating ? "Actualizando..." : "Actualizar"}
+						</Button>
+					</DialogActions>
+				</Dialog>
+
+				{/* Reply Dialog */}
+				<Dialog open={replyDialogOpen} onClose={() => setReplyDialogOpen(false)} maxWidth="md" fullWidth>
+					<DialogTitle>Responder al Contacto</DialogTitle>
+					<DialogContent dividers>
+						{selectedContact && (
+							<Stack spacing={3}>
+								<Box>
+									<Typography variant="subtitle2" color="textSecondary" gutterBottom>
+										Datos del contacto
+									</Typography>
+									<Paper variant="outlined" sx={{ p: 2 }}>
+										<Grid container spacing={2}>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="body2">
+													<strong>Nombre:</strong> {selectedContact.name}
+												</Typography>
+											</Grid>
+											<Grid item xs={12} sm={6}>
+												<Typography variant="body2">
+													<strong>Email:</strong> {selectedContact.email}
+												</Typography>
+											</Grid>
+											<Grid item xs={12}>
+												<Typography variant="body2">
+													<strong>Asunto:</strong> {selectedContact.subject}
+												</Typography>
+											</Grid>
+										</Grid>
+									</Paper>
+								</Box>
+
+								<Box>
+									<Typography variant="subtitle2" color="textSecondary" gutterBottom>
+										Mensaje original
+									</Typography>
+									<Paper variant="outlined" sx={{ p: 2, bgcolor: "grey.50", maxHeight: 150, overflow: "auto" }}>
+										<Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
+											{selectedContact.message}
+										</Typography>
+									</Paper>
+								</Box>
+
+								<Box>
+									<Typography variant="subtitle2" color="textSecondary" gutterBottom>
+										Tu respuesta
+									</Typography>
+									<TextField
+										fullWidth
+										multiline
+										rows={6}
+										placeholder="Escribe tu respuesta aqui..."
+										value={replyMessage}
+										onChange={(e) => setReplyMessage(e.target.value)}
+										variant="outlined"
+									/>
+								</Box>
+
+								{selectedContact.status === "pending" && (
+									<FormControlLabel
+										control={
+											<Checkbox
+												checked={replyChangeStatus}
+												onChange={(e) => setReplyChangeStatus(e.target.checked)}
+											/>
+										}
+										label="Cambiar estado a 'En Progreso' automaticamente"
+									/>
+								)}
+							</Stack>
+						)}
+					</DialogContent>
+					<DialogActions>
+						<Button onClick={() => setReplyDialogOpen(false)} disabled={replying}>
+							Cancelar
+						</Button>
+						<Button
+							variant="contained"
+							color="success"
+							startIcon={<Send2 size={18} />}
+							onClick={handleReply}
+							disabled={replying || !replyMessage.trim()}
+						>
+							{replying ? "Enviando..." : "Enviar Respuesta"}
 						</Button>
 					</DialogActions>
 				</Dialog>
