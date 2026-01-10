@@ -193,6 +193,10 @@ const AVAILABLE_VARIABLES: VariableOption[] = [
 	{ name: "direccion", description: "Dirección (legado)", category: "Otros" },
 	{ name: "unsubscribeUrl", description: "URL para cancelar suscripción", category: "Otros" },
 	{ name: "preferencesUrl", description: "URL de preferencias", category: "Otros" },
+
+	// Module syntax examples
+	{ name: "module:footer_default", description: "Módulo de footer por defecto (ejemplo)", category: "Módulos" },
+	{ name: "module:header_logo", description: "Módulo de header con logo (ejemplo)", category: "Módulos" },
 ];
 
 // Get unique categories for grouping
@@ -207,13 +211,15 @@ const isValidVariable = (varName: string): boolean => {
 	if (VALID_VARIABLE_NAMES.has(varName)) return true;
 	// Check if it starts with contact.customFields. (custom fields are dynamic)
 	if (varName.startsWith("contact.customFields.")) return true;
+	// Check if it's a module reference (module:name pattern)
+	if (varName.startsWith("module:") && /^module:[a-z0-9_]+$/.test(varName)) return true;
 	return false;
 };
 
 // Helper function to parse and highlight variables in HTML code
 const highlightVariables = (code: string, theme: any): React.ReactNode[] => {
-	// Regex to match variables: ${var}, ${var || "fallback"}, ${var || otherVar}, {{var}}, {{var || "fallback"}}, {{var || otherVar}}
-	const variableRegex = /(\$\{[\w.]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.]+))?\}|\{\{[\w.]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.]+))?\}\})/g;
+	// Regex to match variables: ${var}, ${var || "fallback"}, ${var || otherVar}, {{var}}, {{var || "fallback"}}, {{var || otherVar}}, {{module:name}}
+	const variableRegex = /(\$\{[\w.:]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.:]+))?\}|\{\{[\w.:]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.:]+))?\}\})/g;
 
 	const parts: React.ReactNode[] = [];
 	let lastIndex = 0;
@@ -2203,6 +2209,12 @@ const EmailTemplates = () => {
 									</Typography>
 									<Typography variant="caption" color="textSecondary" component="div" sx={{ fontFamily: "monospace" }}>
 										{"$"}{"{"}firstName || email{"}"} - Usa email como fallback
+									</Typography>
+									<Typography variant="caption" color="textSecondary" sx={{ display: "block", mt: 1.5 }}>
+										<strong>Módulos reutilizables:</strong>
+									</Typography>
+									<Typography variant="caption" color="textSecondary" component="div" sx={{ fontFamily: "monospace", mt: 0.5 }}>
+										{"{{"} module:footer_default {"}}"} - Inserta módulo de footer
 									</Typography>
 								</Box>
 							</Box>
