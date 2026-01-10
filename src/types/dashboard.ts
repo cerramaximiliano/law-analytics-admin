@@ -68,11 +68,21 @@ export interface MarketingStats {
 	segments: MarketingSegmentStats;
 }
 
+export interface ContactStats {
+	total: number;
+}
+
+export interface CalculatorStats {
+	total: number;
+}
+
 export interface DashboardSummary {
 	users: UserStats;
 	subscriptions: SubscriptionStats;
 	folders: FolderStats;
 	marketing: MarketingStats;
+	contacts?: ContactStats;
+	calculators?: CalculatorStats;
 }
 
 export interface DashboardSummaryResponse {

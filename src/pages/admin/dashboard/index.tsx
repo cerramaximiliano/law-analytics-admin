@@ -14,6 +14,8 @@ import {
 	Timer1,
 	ArrowRight2,
 	Wallet2,
+	People,
+	Calculator,
 } from "iconsax-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -121,6 +123,9 @@ const metricInfo: Record<string, string> = {
 	// Services
 	neverBounceCredits: "Créditos disponibles en NeverBounce para verificación de emails. Se consumen al verificar direcciones de correo.",
 	capsolverBalance: "Saldo disponible en Capsolver para resolución de captchas. Se consume al resolver captchas en los workers de scraping.",
+	// User data
+	userContacts: "Total de contactos creados por todos los usuarios en la plataforma (agenda de contactos).",
+	userCalculators: "Total de cálculos realizados por todos los usuarios en la plataforma.",
 };
 
 // Info Tooltip Component
@@ -685,6 +690,36 @@ const AdminDashboard = () => {
 								loading={loading}
 								infoKey="verifiedFolders"
 								linkTo="/admin/causas/verified"
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6} md={3}>
+							<PrimaryKPICard
+								title="Carpetas Totales"
+								value={data?.folders.total || 0}
+								icon={<Folder size={20} />}
+								valueColor={COLORS.neutral.main}
+								loading={loading}
+								infoKey="totalFolders"
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6} md={3}>
+							<PrimaryKPICard
+								title="Contactos Totales"
+								value={data?.contacts?.total || 0}
+								icon={<People size={20} />}
+								valueColor={COLORS.primary.main}
+								loading={loading}
+								infoKey="userContacts"
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6} md={3}>
+							<PrimaryKPICard
+								title="Calculadores Totales"
+								value={data?.calculators?.total || 0}
+								icon={<Calculator size={20} />}
+								valueColor={COLORS.primary.main}
+								loading={loading}
+								infoKey="userCalculators"
 							/>
 						</Grid>
 						<Grid item xs={12} sm={6} md={3}>
