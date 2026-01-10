@@ -98,6 +98,14 @@ interface NewEmailTemplate {
 	isActive: boolean;
 }
 
+interface EmailModule {
+	_id: string;
+	name: string;
+	displayName: string;
+	htmlContent: string;
+	isActive: boolean;
+}
+
 interface TabPanelProps {
 	children?: React.ReactNode;
 	index: any;
@@ -449,6 +457,47 @@ const EmailTemplates = () => {
 	const [filter, setFilter] = useState<string>("");
 	const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
+	// State for email modules (for preview expansion)
+	const [modules, setModules] = useState<EmailModule[]>([]);
+
+	// Fetch email modules for preview expansion
+	const fetchModules = useCallback(async () => {
+		try {
+			const response = await mktAxios.get("/api/modules");
+			if (response.data.success) {
+				setModules(response.data.data);
+			}
+		} catch (err: any) {
+			console.error("Error fetching modules:", err);
+		}
+	}, []);
+
+	// Helper function to expand modules in HTML content for preview
+	const expandModulesInHtml = useCallback(
+		(html: string): string => {
+			if (!html || modules.length === 0) return html;
+
+			let result = html;
+			const modulePattern = /\{\{\s*module:(\w+)\s*\}\}/g;
+
+			let match;
+			while ((match = modulePattern.exec(html)) !== null) {
+				const fullMatch = match[0];
+				const moduleName = match[1].toLowerCase();
+				const module = modules.find((m) => m.name === moduleName);
+
+				if (module) {
+					result = result.replace(fullMatch, module.htmlContent);
+				} else {
+					result = result.replace(fullMatch, `<span style="color: red; font-style: italic;">[Módulo no encontrado: ${moduleName}]</span>`);
+				}
+			}
+
+			return result;
+		},
+		[modules],
+	);
+
 	// Fetch email templates - convertido a callback para reutilizar
 	const fetchTemplates = useCallback(async () => {
 		try {
@@ -470,10 +519,11 @@ const EmailTemplates = () => {
 		}
 	}, []);
 
-	// Cargar templates al montar el componente
+	// Cargar templates y módulos al montar el componente
 	useEffect(() => {
 		fetchTemplates();
-	}, [fetchTemplates]);
+		fetchModules();
+	}, [fetchTemplates, fetchModules]);
 
 	// Refrescar templates cuando se procesen las peticiones encoladas
 	useRequestQueueRefresh(() => {
@@ -1519,7 +1569,7 @@ const EmailTemplates = () => {
 																body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
 															</style>
 														</head>
-														<body>${selectedTemplate.htmlBody}</body>
+														<body>${expandModulesInHtml(selectedTemplate.htmlBody)}</body>
 													</html>
 												`}
 														sandbox="allow-same-origin allow-scripts"
@@ -1783,7 +1833,7 @@ const EmailTemplates = () => {
 																	body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
 																</style>
 															</head>
-															<body>${editTemplate.htmlBody}</body>
+															<body>${expandModulesInHtml(editTemplate.htmlBody)}</body>
 														</html>
 													`}
 														sandbox="allow-same-origin allow-scripts"
@@ -2267,7 +2317,7 @@ const EmailTemplates = () => {
 															body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
 														</style>
 													</head>
-													<body>${newTemplate.htmlBody}</body>
+													<body>${expandModulesInHtml(newTemplate.htmlBody)}</body>
 												</html>
 											`}
 											sandbox="allow-same-origin allow-scripts"
