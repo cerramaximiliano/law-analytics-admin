@@ -290,6 +290,7 @@ const StripeWebhooks = () => {
 							<TableHead>
 								<TableRow>
 									<TableCell>Estado</TableCell>
+									<TableCell>Servicio</TableCell>
 									<TableCell>URL</TableCell>
 									<TableCell>Modo</TableCell>
 									<TableCell>Eventos Habilitados</TableCell>
@@ -304,6 +305,21 @@ const StripeWebhooks = () => {
 											) : (
 												<Chip icon={<CloseCircle size={16} />} label="Deshabilitado" color="error" size="small" />
 											)}
+										</TableCell>
+										<TableCell>
+											<Stack spacing={0.5}>
+												<Chip
+													label={endpoint.service?.name || "Desconocido"}
+													color={endpoint.service?.id === "la-subscriptions" ? "warning" : endpoint.service?.id === "law-analytics-server" ? "info" : "default"}
+													size="small"
+													sx={{ fontWeight: "bold" }}
+												/>
+												{endpoint.service?.description && (
+													<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.7rem" }}>
+														{endpoint.service.description}
+													</Typography>
+												)}
+											</Stack>
 										</TableCell>
 										<TableCell>
 											<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
@@ -338,6 +354,7 @@ const StripeWebhooks = () => {
 								<TableHead>
 									<TableRow>
 										<TableCell>Tipo de Evento</TableCell>
+										<TableCell>Endpoint(s) Fallido(s)</TableCell>
 										<TableCell>Fecha</TableCell>
 										<TableCell>Pendientes</TableCell>
 										<TableCell>Subscription ID</TableCell>
@@ -349,6 +366,29 @@ const StripeWebhooks = () => {
 										<TableRow key={webhook.id}>
 											<TableCell>
 												<Chip label={webhook.type} size="small" color="warning" sx={{ color: "rgba(0, 0, 0, 0.87)" }} />
+											</TableCell>
+											<TableCell>
+												{webhook.probable_failed_endpoints && webhook.probable_failed_endpoints.length > 0 ? (
+													<Stack spacing={0.5}>
+														{webhook.probable_failed_endpoints.map((ep) => (
+															<Stack key={ep.endpoint_id} spacing={0.25}>
+																<Chip
+																	label={ep.service_name}
+																	size="small"
+																	color={ep.service_id === "la-subscriptions" ? "warning" : ep.service_id === "law-analytics-server" ? "info" : "default"}
+																	sx={{ fontWeight: "bold", fontSize: "0.7rem" }}
+																/>
+																<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace", fontSize: "0.65rem" }}>
+																	{ep.endpoint_url.length > 40 ? `...${ep.endpoint_url.slice(-40)}` : ep.endpoint_url}
+																</Typography>
+															</Stack>
+														))}
+													</Stack>
+												) : (
+													<Typography variant="caption" color="text.secondary">
+														No identificado
+													</Typography>
+												)}
 											</TableCell>
 											<TableCell>
 												<Stack direction="row" spacing={1} alignItems="center">

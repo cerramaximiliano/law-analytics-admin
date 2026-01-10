@@ -1,11 +1,26 @@
 import adminAxios from "utils/adminAxios";
 
+export interface ServiceInfo {
+	id: string;
+	name: string;
+	description: string;
+	handledEvents: string[];
+}
+
 export interface WebhookEndpoint {
 	id: string;
 	url: string;
 	status: "enabled" | "disabled";
 	enabled_events: string[];
 	livemode: boolean;
+	service?: ServiceInfo;
+}
+
+export interface FailedEndpoint {
+	endpoint_id: string;
+	endpoint_url: string;
+	service_id: string;
+	service_name: string;
 }
 
 export interface PendingWebhook {
@@ -17,6 +32,16 @@ export interface PendingWebhook {
 		subscription_id?: string;
 		customer_id?: string;
 		[key: string]: any;
+	};
+	probable_failed_endpoints?: FailedEndpoint[];
+}
+
+export interface ServiceConfig {
+	[key: string]: {
+		displayName: string;
+		description: string;
+		events: string[];
+		urlPatterns: string[];
 	};
 }
 
@@ -30,7 +55,8 @@ export interface WebhooksStatus {
 	webhooks: {
 		pending_total: number;
 		pending_last_24h: number;
-		total_events_week: number;
+		total_events_week?: number;
+		total_events_30days?: number;
 		total_events_24h: number;
 	};
 	pending_details: PendingWebhook[];
@@ -41,6 +67,7 @@ export interface WebhooksStatus {
 	event_types: {
 		[key: string]: number;
 	};
+	service_config?: ServiceConfig;
 }
 
 export interface WebhooksStatusResponse {
