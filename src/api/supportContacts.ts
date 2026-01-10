@@ -1,6 +1,21 @@
 import adminAxios from "utils/adminAxios";
 
 // Interfaces
+export interface SupportContactReply {
+	_id?: string;
+	message: string;
+	createdBy: {
+		_id: string;
+		email: string;
+		name?: string;
+		firstName?: string;
+		lastName?: string;
+	} | null;
+	createdByName: string;
+	emailSent: boolean;
+	createdAt: string;
+}
+
 export interface SupportContact {
 	_id: string;
 	name: string;
@@ -16,6 +31,7 @@ export interface SupportContact {
 		firstName?: string;
 		lastName?: string;
 	} | null;
+	replies?: SupportContactReply[];
 	createdAt: string;
 	updatedAt: string;
 }
@@ -110,11 +126,8 @@ export interface ReplyData {
 export interface ReplyResponse {
 	success: boolean;
 	message: string;
-	data: {
-		contactId: string;
-		email: string;
-		status: string;
-	};
+	data: SupportContact;
+	emailSent: boolean;
 }
 
 // Service
