@@ -951,6 +951,35 @@ const EmailTemplates = () => {
 		}, 50);
 	};
 
+	// Helper function to extract and validate variables from content
+	const getInvalidVariables = (content: string): string[] => {
+		const variableRegex = /\$\{[\w.]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.]+))?\}|\{\{[\w.]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.]+))?\}\}/g;
+		const matches = content.match(variableRegex) || [];
+		const invalidVars: string[] = [];
+
+		matches.forEach((match) => {
+			let varName = match;
+			// Remove ${ } or {{ }}
+			if (varName.startsWith("${")) {
+				varName = varName.slice(2, -1);
+			} else if (varName.startsWith("{{")) {
+				varName = varName.slice(2, -2);
+			}
+			// Remove fallback part if exists
+			const pipeIndex = varName.indexOf("||");
+			if (pipeIndex > -1) {
+				varName = varName.substring(0, pipeIndex).trim();
+			}
+			varName = varName.trim();
+
+			if (!isValidVariable(varName) && !invalidVars.includes(match)) {
+				invalidVars.push(match);
+			}
+		});
+
+		return invalidVars;
+	};
+
 	// Validate form
 	const validateForm = (): boolean => {
 		const newErrors: Record<string, string> = {};
@@ -965,10 +994,28 @@ const EmailTemplates = () => {
 
 		if (!newTemplate.htmlBody.trim()) {
 			newErrors.htmlBody = "El cuerpo HTML es obligatorio";
+		} else {
+			// Check for invalid variables in HTML body
+			const invalidVarsHtml = getInvalidVariables(newTemplate.htmlBody);
+			if (invalidVarsHtml.length > 0) {
+				newErrors.htmlBody = `El HTML contiene variables no válidas: ${invalidVarsHtml.join(", ")}`;
+			}
 		}
 
 		if (!newTemplate.textBody.trim()) {
 			newErrors.textBody = "El cuerpo de texto es obligatorio";
+		} else {
+			// Check for invalid variables in text body
+			const invalidVarsText = getInvalidVariables(newTemplate.textBody);
+			if (invalidVarsText.length > 0) {
+				newErrors.textBody = `El texto contiene variables no válidas: ${invalidVarsText.join(", ")}`;
+			}
+		}
+
+		// Check for invalid variables in subject
+		const invalidVarsSubject = getInvalidVariables(newTemplate.subject);
+		if (invalidVarsSubject.length > 0) {
+			newErrors.subject = `El asunto contiene variables no válidas: ${invalidVarsSubject.join(", ")}`;
 		}
 
 		setErrors(newErrors);
@@ -1040,10 +1087,30 @@ const EmailTemplates = () => {
 
 		if (!editTemplate.subject.trim()) {
 			newErrors.subject = "El asunto es obligatorio";
+		} else {
+			// Check for invalid variables in subject
+			const invalidVarsSubject = getInvalidVariables(editTemplate.subject);
+			if (invalidVarsSubject.length > 0) {
+				newErrors.subject = `El asunto contiene variables no válidas: ${invalidVarsSubject.join(", ")}`;
+			}
 		}
 
 		if (!editTemplate.htmlBody.trim()) {
 			newErrors.htmlBody = "El cuerpo HTML es obligatorio";
+		} else {
+			// Check for invalid variables in HTML body
+			const invalidVarsHtml = getInvalidVariables(editTemplate.htmlBody);
+			if (invalidVarsHtml.length > 0) {
+				newErrors.htmlBody = `El HTML contiene variables no válidas: ${invalidVarsHtml.join(", ")}`;
+			}
+		}
+
+		// Check for invalid variables in text body if it exists
+		if (editTemplate.textBody) {
+			const invalidVarsText = getInvalidVariables(editTemplate.textBody);
+			if (invalidVarsText.length > 0) {
+				newErrors.textBody = `El texto contiene variables no válidas: ${invalidVarsText.join(", ")}`;
+			}
 		}
 
 		setErrors(newErrors);
