@@ -22,7 +22,7 @@ import {
 	useTheme,
 	alpha,
 } from "@mui/material";
-import { SearchNormal1, CloseCircle, Folder, People, Calculator, Task, Calendar } from "iconsax-react";
+import { SearchNormal1, CloseCircle, Folder, People, Calculator, Task, Calendar, ProfileCircle, CloudConnection } from "iconsax-react";
 import MainCard from "components/MainCard";
 import AdminResourcesService, {
 	ResourceType,
@@ -33,12 +33,13 @@ import AdminResourcesService, {
 	TaskResource,
 	EventResource,
 	ResourceUser,
+	UserWithResources,
 } from "api/adminResources";
 import dayjs from "dayjs";
 
 // Tab configuration
 interface TabConfig {
-	type: ResourceType;
+	type: ResourceType | "users";
 	label: string;
 	icon: React.ReactElement;
 }
@@ -49,6 +50,7 @@ const tabs: TabConfig[] = [
 	{ type: "calculator", label: "Calculadores", icon: <Calculator size={18} /> },
 	{ type: "task", label: "Tareas", icon: <Task size={18} /> },
 	{ type: "event", label: "Eventos", icon: <Calendar size={18} /> },
+	{ type: "users", label: "Usuarios", icon: <ProfileCircle size={18} /> },
 ];
 
 // Column definitions per type
@@ -73,6 +75,14 @@ const formatDate = (date: string | undefined): string => {
 const formatCurrency = (amount: number | undefined): string => {
 	if (amount === undefined || amount === null) return "-";
 	return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(amount);
+};
+
+const formatBytes = (bytes: number): string => {
+	if (bytes === 0) return "0 B";
+	const k = 1024;
+	const sizes = ["B", "KB", "MB", "GB"];
+	const i = Math.floor(Math.log(bytes) / Math.log(k));
+	return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
 const getColumnsByType = (type: ResourceType, theme: any): ColumnDef[] => {
@@ -262,6 +272,7 @@ const UserResources: React.FC = () => {
 	const [activeTab, setActiveTab] = useState(0);
 	const [loading, setLoading] = useState(true);
 	const [resources, setResources] = useState<Resource[]>([]);
+	const [users, setUsers] = useState<UserWithResources[]>([]);
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [total, setTotal] = useState(0);
@@ -273,7 +284,8 @@ const UserResources: React.FC = () => {
 	const [statsLoading, setStatsLoading] = useState(true);
 
 	const currentType = tabs[activeTab].type;
-	const columns = getColumnsByType(currentType, theme);
+	const isUsersTab = currentType === "users";
+	const columns = isUsersTab ? [] : getColumnsByType(currentType as ResourceType, theme);
 
 	// Fetch stats
 	const fetchStats = useCallback(async () => {
@@ -292,10 +304,11 @@ const UserResources: React.FC = () => {
 
 	// Fetch resources
 	const fetchResources = useCallback(async () => {
+		if (isUsersTab) return;
 		setLoading(true);
 		try {
 			const response = await AdminResourcesService.getResources({
-				type: currentType,
+				type: currentType as ResourceType,
 				page: page + 1,
 				limit: rowsPerPage,
 				search: search || undefined,
@@ -311,15 +324,42 @@ const UserResources: React.FC = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [currentType, page, rowsPerPage, search, sortBy, sortOrder]);
+	}, [currentType, page, rowsPerPage, search, sortBy, sortOrder, isUsersTab]);
+
+	// Fetch users with resources
+	const fetchUsers = useCallback(async () => {
+		if (!isUsersTab) return;
+		setLoading(true);
+		try {
+			const response = await AdminResourcesService.getUsersSummary({
+				page: page + 1,
+				limit: rowsPerPage,
+				search: search || undefined,
+				sortBy,
+				sortOrder,
+			});
+			if (response.success) {
+				setUsers(response.data);
+				setTotal(response.pagination.total);
+			}
+		} catch (error) {
+			console.error("Error fetching users:", error);
+		} finally {
+			setLoading(false);
+		}
+	}, [page, rowsPerPage, search, sortBy, sortOrder, isUsersTab]);
 
 	useEffect(() => {
 		fetchStats();
 	}, [fetchStats]);
 
 	useEffect(() => {
-		fetchResources();
-	}, [fetchResources]);
+		if (isUsersTab) {
+			fetchUsers();
+		} else {
+			fetchResources();
+		}
+	}, [fetchResources, fetchUsers, isUsersTab]);
 
 	// Handlers
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -429,30 +469,118 @@ const UserResources: React.FC = () => {
 				<Table size="small">
 					<TableHead>
 						<TableRow>
-							{columns.map((column) => (
-								<TableCell key={column.id}>
-									{column.sortable ? (
-										<TableSortLabel active={sortBy === column.id} direction={sortBy === column.id ? sortOrder : "asc"} onClick={() => handleSort(column.id)}>
-											{column.label}
+							{isUsersTab ? (
+								<>
+									<TableCell>
+										<TableSortLabel active={sortBy === "email"} direction={sortBy === "email" ? sortOrder : "asc"} onClick={() => handleSort("email")}>
+											Usuario
 										</TableSortLabel>
-									) : (
-										column.label
-									)}
-								</TableCell>
-							))}
+									</TableCell>
+									<TableCell align="center">Carpetas</TableCell>
+									<TableCell align="center">Contactos</TableCell>
+									<TableCell align="center">Calculadores</TableCell>
+									<TableCell align="center">Tareas</TableCell>
+									<TableCell align="center">Eventos</TableCell>
+									<TableCell align="center">Total</TableCell>
+									<TableCell align="right">
+										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.5 }}>
+											<CloudConnection size={16} />
+											Storage
+										</Box>
+									</TableCell>
+									<TableCell>
+										<TableSortLabel active={sortBy === "createdAt"} direction={sortBy === "createdAt" ? sortOrder : "asc"} onClick={() => handleSort("createdAt")}>
+											Registrado
+										</TableSortLabel>
+									</TableCell>
+								</>
+							) : (
+								columns.map((column) => (
+									<TableCell key={column.id}>
+										{column.sortable ? (
+											<TableSortLabel active={sortBy === column.id} direction={sortBy === column.id ? sortOrder : "asc"} onClick={() => handleSort(column.id)}>
+												{column.label}
+											</TableSortLabel>
+										) : (
+											column.label
+										)}
+									</TableCell>
+								))
+							)}
 						</TableRow>
 					</TableHead>
 					<TableBody>
 						{loading ? (
 							Array.from({ length: rowsPerPage }).map((_, index) => (
 								<TableRow key={index}>
-									{columns.map((column) => (
-										<TableCell key={column.id}>
-											<Skeleton variant="text" />
-										</TableCell>
-									))}
+									{isUsersTab ? (
+										<>
+											{Array.from({ length: 9 }).map((_, i) => (
+												<TableCell key={i}>
+													<Skeleton variant="text" />
+												</TableCell>
+											))}
+										</>
+									) : (
+										columns.map((column) => (
+											<TableCell key={column.id}>
+												<Skeleton variant="text" />
+											</TableCell>
+										))
+									)}
 								</TableRow>
 							))
+						) : isUsersTab ? (
+							users.length === 0 ? (
+								<TableRow>
+									<TableCell colSpan={9} align="center">
+										<Typography color="textSecondary" sx={{ py: 4 }}>
+											No se encontraron usuarios
+										</Typography>
+									</TableCell>
+								</TableRow>
+							) : (
+								users.map((user) => (
+									<TableRow key={user._id} hover>
+										<TableCell>
+											<Box>
+												<Typography variant="body2" fontWeight="medium">
+													{user.email}
+												</Typography>
+												{user.name && user.name !== "-" && (
+													<Typography variant="caption" color="textSecondary">
+														{user.name}
+													</Typography>
+												)}
+											</Box>
+										</TableCell>
+										<TableCell align="center">
+											<Chip label={user.resources.folders} size="small" sx={{ minWidth: 40 }} />
+										</TableCell>
+										<TableCell align="center">
+											<Chip label={user.resources.contacts} size="small" sx={{ minWidth: 40 }} />
+										</TableCell>
+										<TableCell align="center">
+											<Chip label={user.resources.calculators} size="small" sx={{ minWidth: 40 }} />
+										</TableCell>
+										<TableCell align="center">
+											<Chip label={user.resources.tasks} size="small" sx={{ minWidth: 40 }} />
+										</TableCell>
+										<TableCell align="center">
+											<Chip label={user.resources.events} size="small" sx={{ minWidth: 40 }} />
+										</TableCell>
+										<TableCell align="center">
+											<Chip label={user.resources.total} size="small" color="primary" sx={{ minWidth: 40 }} />
+										</TableCell>
+										<TableCell align="right">
+											<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+												{formatBytes(user.storage.total)}
+											</Typography>
+										</TableCell>
+										<TableCell>{formatDate(user.createdAt)}</TableCell>
+									</TableRow>
+								))
+							)
 						) : resources.length === 0 ? (
 							<TableRow>
 								<TableCell colSpan={columns.length} align="center">

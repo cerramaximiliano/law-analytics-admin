@@ -104,6 +104,47 @@ export interface ResourcesStatsResponse {
 	};
 }
 
+export interface UserResourceCounts {
+	folders: number;
+	contacts: number;
+	calculators: number;
+	tasks: number;
+	events: number;
+	total: number;
+}
+
+export interface UserStorageInfo {
+	total: number;
+	folders: number;
+	contacts: number;
+	calculators: number;
+	files: number;
+	fileCount: number;
+}
+
+export interface UserWithResources {
+	_id: string;
+	email: string;
+	name: string;
+	createdAt: string;
+	resources: UserResourceCounts;
+	storage: UserStorageInfo;
+}
+
+export interface UsersSummaryFilters {
+	page?: number;
+	limit?: number;
+	search?: string;
+	sortBy?: string;
+	sortOrder?: "asc" | "desc";
+}
+
+export interface UsersSummaryResponse {
+	success: boolean;
+	data: UserWithResources[];
+	pagination: PaginationInfo;
+}
+
 class AdminResourcesService {
 	/**
 	 * Get resources of a specific type with pagination
@@ -128,6 +169,22 @@ class AdminResourcesService {
 	 */
 	static async getResourcesStats(): Promise<ResourcesStatsResponse> {
 		const response = await adminAxios.get<ResourcesStatsResponse>("/api/user-resources/stats");
+		return response.data;
+	}
+
+	/**
+	 * Get all users with their resource counts and storage usage
+	 */
+	static async getUsersSummary(filters: UsersSummaryFilters = {}): Promise<UsersSummaryResponse> {
+		const params = new URLSearchParams();
+
+		if (filters.page) params.append("page", String(filters.page));
+		if (filters.limit) params.append("limit", String(filters.limit));
+		if (filters.search) params.append("search", filters.search);
+		if (filters.sortBy) params.append("sortBy", filters.sortBy);
+		if (filters.sortOrder) params.append("sortOrder", filters.sortOrder);
+
+		const response = await adminAxios.get<UsersSummaryResponse>(`/api/user-resources/users-summary?${params.toString()}`);
 		return response.data;
 	}
 }
