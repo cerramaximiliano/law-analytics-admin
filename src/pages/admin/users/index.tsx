@@ -46,6 +46,7 @@ import EditUserModal from "./EditUserModal";
 import DeleteUserDialog from "./DeleteUserDialog";
 import GenerateDataModal from "./GenerateDataModal";
 import StripeSubscriptionsTable from "./StripeSubscriptionsTable";
+import UsersTimelineChart from "./UsersTimelineChart";
 
 // assets
 import { Eye, Trash, Edit, Add, Chart, SearchNormal1, CloseCircle, Refresh } from "iconsax-react";
@@ -545,6 +546,7 @@ const UsersList = () => {
 				<Tabs value={tabValue} onChange={handleTabChange} aria-label="users admin tabs">
 					<Tab label="Usuarios del Sistema" />
 					<Tab label="Suscripciones de Stripe" />
+					<Tab label="Estadísticas" />
 				</Tabs>
 			</Box>
 
@@ -854,6 +856,12 @@ const UsersList = () => {
 			{tabValue === 1 && (
 				<Box sx={{ p: 3 }}>
 					<StripeSubscriptionsTable />
+				</Box>
+			)}
+
+			{tabValue === 2 && (
+				<Box>
+					<UsersTimelineChart />
 				</Box>
 			)}
 
