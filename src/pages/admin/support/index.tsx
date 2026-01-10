@@ -32,6 +32,8 @@ import {
 	InputAdornment,
 	Checkbox,
 	FormControlLabel,
+	Divider,
+	Avatar,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -53,10 +55,13 @@ import {
 	Danger,
 	UserRemove,
 	Send2,
+	Message,
+	TickSquare,
+	CloseSquare as CloseSquareIcon,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import SupportContactsService, { SupportContact, SupportContactFilters, UpdateSupportContactData } from "api/supportContacts";
+import SupportContactsService, { SupportContact, SupportContactFilters, UpdateSupportContactData, SupportContactReply } from "api/supportContacts";
 
 // Status configuration
 const STATUS_CONFIG: Record<string, { color: "warning" | "info" | "success" | "default"; label: string; icon: React.ReactNode }> = {
@@ -234,11 +239,19 @@ const SupportContactsPage = () => {
 		if (!selectedContact || !replyMessage.trim()) return;
 		try {
 			setReplying(true);
-			await SupportContactsService.replySupportContact(selectedContact._id, {
+			const response = await SupportContactsService.replySupportContact(selectedContact._id, {
 				replyMessage: replyMessage.trim(),
 				changeStatus: replyChangeStatus,
 			});
-			enqueueSnackbar("Respuesta enviada exitosamente", { variant: "success" });
+
+			if (response.emailSent) {
+				enqueueSnackbar("Respuesta enviada y guardada exitosamente", { variant: "success" });
+			} else {
+				enqueueSnackbar("Respuesta guardada (el email no pudo ser enviado)", { variant: "warning" });
+			}
+
+			// Update the selected contact with the new data
+			setSelectedContact(response.data);
 			setReplyDialogOpen(false);
 			setReplyMessage("");
 			fetchContacts();
@@ -705,96 +718,209 @@ const SupportContactsPage = () => {
 				</Stack>
 
 				{/* Detail Dialog */}
-				<Dialog open={detailDialogOpen} onClose={() => setDetailDialogOpen(false)} maxWidth="sm" fullWidth>
+				<Dialog open={detailDialogOpen} onClose={() => setDetailDialogOpen(false)} maxWidth="md" fullWidth>
 					<DialogTitle>Detalle del Contacto</DialogTitle>
 					<DialogContent dividers>
 						{selectedContact && (
-							<Stack spacing={2}>
-								<Box>
-									<Typography variant="caption" color="textSecondary">
-										Nombre
-									</Typography>
-									<Typography variant="body1" fontWeight={500}>
-										{selectedContact.name}
-									</Typography>
-								</Box>
-								<Box>
-									<Typography variant="caption" color="textSecondary">
-										Email
-									</Typography>
-									<Typography variant="body1">{selectedContact.email}</Typography>
-								</Box>
-								<Box>
-									<Typography variant="caption" color="textSecondary">
-										Asunto
-									</Typography>
-									<Typography variant="body1">{selectedContact.subject}</Typography>
-								</Box>
-								<Box>
-									<Typography variant="caption" color="textSecondary">
-										Mensaje
-									</Typography>
-									<Paper variant="outlined" sx={{ p: 2, mt: 0.5, bgcolor: "grey.50" }}>
-										<Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
-											{selectedContact.message}
-										</Typography>
-									</Paper>
-								</Box>
-								<Grid container spacing={2}>
-									<Grid item xs={6}>
-										<Typography variant="caption" color="textSecondary">
-											Prioridad
-										</Typography>
-										<Box mt={0.5}>
-											<Chip
-												label={PRIORITY_CONFIG[selectedContact.priority]?.label}
-												size="small"
-												color={PRIORITY_CONFIG[selectedContact.priority]?.color}
-											/>
-										</Box>
+							<Stack spacing={3}>
+								{/* Contact Info */}
+								<Paper variant="outlined" sx={{ p: 2 }}>
+									<Grid container spacing={2}>
+										<Grid item xs={12} sm={6}>
+											<Typography variant="caption" color="textSecondary">
+												Nombre
+											</Typography>
+											<Typography variant="body1" fontWeight={500}>
+												{selectedContact.name}
+											</Typography>
+										</Grid>
+										<Grid item xs={12} sm={6}>
+											<Typography variant="caption" color="textSecondary">
+												Email
+											</Typography>
+											<Typography variant="body1">{selectedContact.email}</Typography>
+										</Grid>
+										<Grid item xs={12}>
+											<Typography variant="caption" color="textSecondary">
+												Asunto
+											</Typography>
+											<Typography variant="body1">{selectedContact.subject}</Typography>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Typography variant="caption" color="textSecondary">
+												Prioridad
+											</Typography>
+											<Box mt={0.5}>
+												<Chip
+													label={PRIORITY_CONFIG[selectedContact.priority]?.label}
+													size="small"
+													color={PRIORITY_CONFIG[selectedContact.priority]?.color}
+												/>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Typography variant="caption" color="textSecondary">
+												Estado
+											</Typography>
+											<Box mt={0.5}>
+												<Chip
+													label={STATUS_CONFIG[selectedContact.status]?.label}
+													size="small"
+													color={STATUS_CONFIG[selectedContact.status]?.color}
+												/>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Typography variant="caption" color="textSecondary">
+												Fecha de creacion
+											</Typography>
+											<Typography variant="body2">{formatDate(selectedContact.createdAt)}</Typography>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Typography variant="caption" color="textSecondary">
+												Ultima actualizacion
+											</Typography>
+											<Typography variant="body2">{formatDate(selectedContact.updatedAt)}</Typography>
+										</Grid>
+										{selectedContact.assignedTo && (
+											<Grid item xs={12}>
+												<Typography variant="caption" color="textSecondary">
+													Asignado a
+												</Typography>
+												<Typography variant="body2">
+													{selectedContact.assignedTo.firstName || selectedContact.assignedTo.name || selectedContact.assignedTo.email}
+												</Typography>
+											</Grid>
+										)}
 									</Grid>
-									<Grid item xs={6}>
-										<Typography variant="caption" color="textSecondary">
-											Estado
+								</Paper>
+
+								{/* Conversation History */}
+								<Box>
+									<Stack direction="row" spacing={1} alignItems="center" mb={2}>
+										<Message size={20} />
+										<Typography variant="subtitle1" fontWeight={600}>
+											Historial de Conversacion
 										</Typography>
-										<Box mt={0.5}>
-											<Chip
-												label={STATUS_CONFIG[selectedContact.status]?.label}
-												size="small"
-												color={STATUS_CONFIG[selectedContact.status]?.color}
-											/>
-										</Box>
-									</Grid>
-								</Grid>
-								<Grid container spacing={2}>
-									<Grid item xs={6}>
-										<Typography variant="caption" color="textSecondary">
-											Fecha de creacion
-										</Typography>
-										<Typography variant="body2">{formatDate(selectedContact.createdAt)}</Typography>
-									</Grid>
-									<Grid item xs={6}>
-										<Typography variant="caption" color="textSecondary">
-											Ultima actualizacion
-										</Typography>
-										<Typography variant="body2">{formatDate(selectedContact.updatedAt)}</Typography>
-									</Grid>
-								</Grid>
-								{selectedContact.assignedTo && (
-									<Box>
-										<Typography variant="caption" color="textSecondary">
-											Asignado a
-										</Typography>
-										<Typography variant="body2">
-											{selectedContact.assignedTo.firstName || selectedContact.assignedTo.name || selectedContact.assignedTo.email}
-										</Typography>
-									</Box>
-								)}
+										<Chip
+											label={`${1 + (selectedContact.replies?.length || 0)} mensajes`}
+											size="small"
+											variant="outlined"
+										/>
+									</Stack>
+
+									<Stack spacing={2}>
+										{/* Original Message */}
+										<Paper
+											variant="outlined"
+											sx={{
+												p: 2,
+												bgcolor: "primary.50",
+												borderColor: "primary.200",
+												borderLeft: 4,
+												borderLeftColor: "primary.main"
+											}}
+										>
+											<Stack direction="row" spacing={2} alignItems="flex-start">
+												<Avatar sx={{ bgcolor: "primary.main", width: 36, height: 36 }}>
+													{selectedContact.name.charAt(0).toUpperCase()}
+												</Avatar>
+												<Box flex={1}>
+													<Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+														<Typography variant="subtitle2" fontWeight={600}>
+															{selectedContact.name}
+														</Typography>
+														<Typography variant="caption" color="textSecondary">
+															{formatDate(selectedContact.createdAt)}
+														</Typography>
+													</Stack>
+													<Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
+														{selectedContact.message}
+													</Typography>
+												</Box>
+											</Stack>
+										</Paper>
+
+										{/* Replies */}
+										{selectedContact.replies && selectedContact.replies.length > 0 && (
+											<>
+												{selectedContact.replies.map((reply, index) => (
+													<Paper
+														key={reply._id || index}
+														variant="outlined"
+														sx={{
+															p: 2,
+															bgcolor: "success.50",
+															borderColor: "success.200",
+															borderLeft: 4,
+															borderLeftColor: "success.main",
+															ml: 3
+														}}
+													>
+														<Stack direction="row" spacing={2} alignItems="flex-start">
+															<Avatar sx={{ bgcolor: "success.main", width: 36, height: 36 }}>
+																{(reply.createdByName || "A").charAt(0).toUpperCase()}
+															</Avatar>
+															<Box flex={1}>
+																<Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+																	<Stack direction="row" spacing={1} alignItems="center">
+																		<Typography variant="subtitle2" fontWeight={600}>
+																			{reply.createdByName || reply.createdBy?.name || reply.createdBy?.email || "Administrador"}
+																		</Typography>
+																		<Chip
+																			label="Soporte"
+																			size="small"
+																			color="success"
+																			sx={{ height: 20, fontSize: "0.7rem" }}
+																		/>
+																		{reply.emailSent ? (
+																			<Tooltip title="Email enviado">
+																				<TickSquare size={16} color="#10B981" />
+																			</Tooltip>
+																		) : (
+																			<Tooltip title="Email no enviado">
+																				<CloseSquareIcon size={16} color="#EF4444" />
+																			</Tooltip>
+																		)}
+																	</Stack>
+																	<Typography variant="caption" color="textSecondary">
+																		{formatDate(reply.createdAt)}
+																	</Typography>
+																</Stack>
+																<Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
+																	{reply.message}
+																</Typography>
+															</Box>
+														</Stack>
+													</Paper>
+												))}
+											</>
+										)}
+
+										{/* No replies message */}
+										{(!selectedContact.replies || selectedContact.replies.length === 0) && (
+											<Alert severity="info" sx={{ mt: 1 }}>
+												No hay respuestas registradas para este ticket.
+											</Alert>
+										)}
+									</Stack>
+								</Box>
 							</Stack>
 						)}
 					</DialogContent>
 					<DialogActions>
 						<Button onClick={() => setDetailDialogOpen(false)}>Cerrar</Button>
+						<Button
+							variant="outlined"
+							color="success"
+							startIcon={<Send2 size={16} />}
+							onClick={() => {
+								setDetailDialogOpen(false);
+								if (selectedContact) handleOpenReply(selectedContact);
+							}}
+						>
+							Responder
+						</Button>
 						<Button
 							variant="contained"
 							onClick={() => {
@@ -933,42 +1059,85 @@ const SupportContactsPage = () => {
 					<DialogContent dividers>
 						{selectedContact && (
 							<Stack spacing={3}>
-								<Box>
-									<Typography variant="subtitle2" color="textSecondary" gutterBottom>
-										Datos del contacto
-									</Typography>
-									<Paper variant="outlined" sx={{ p: 2 }}>
-										<Grid container spacing={2}>
-											<Grid item xs={12} sm={6}>
-												<Typography variant="body2">
-													<strong>Nombre:</strong> {selectedContact.name}
-												</Typography>
-											</Grid>
-											<Grid item xs={12} sm={6}>
-												<Typography variant="body2">
-													<strong>Email:</strong> {selectedContact.email}
-												</Typography>
-											</Grid>
-											<Grid item xs={12}>
-												<Typography variant="body2">
-													<strong>Asunto:</strong> {selectedContact.subject}
-												</Typography>
-											</Grid>
+								{/* Contact Info */}
+								<Paper variant="outlined" sx={{ p: 2 }}>
+									<Grid container spacing={2}>
+										<Grid item xs={12} sm={6}>
+											<Typography variant="body2">
+												<strong>Nombre:</strong> {selectedContact.name}
+											</Typography>
 										</Grid>
-									</Paper>
-								</Box>
+										<Grid item xs={12} sm={6}>
+											<Typography variant="body2">
+												<strong>Email:</strong> {selectedContact.email}
+											</Typography>
+										</Grid>
+										<Grid item xs={12}>
+											<Typography variant="body2">
+												<strong>Asunto:</strong> {selectedContact.subject}
+											</Typography>
+										</Grid>
+									</Grid>
+								</Paper>
 
+								{/* Conversation History */}
 								<Box>
-									<Typography variant="subtitle2" color="textSecondary" gutterBottom>
-										Mensaje original
-									</Typography>
-									<Paper variant="outlined" sx={{ p: 2, bgcolor: "grey.50", maxHeight: 150, overflow: "auto" }}>
-										<Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
-											{selectedContact.message}
+									<Stack direction="row" spacing={1} alignItems="center" mb={1}>
+										<Message size={18} />
+										<Typography variant="subtitle2" color="textSecondary">
+											Historial de conversacion
 										</Typography>
+									</Stack>
+									<Paper variant="outlined" sx={{ p: 2, maxHeight: 250, overflow: "auto", bgcolor: "grey.50" }}>
+										<Stack spacing={2}>
+											{/* Original Message */}
+											<Box sx={{ borderLeft: 3, borderColor: "primary.main", pl: 2 }}>
+												<Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.5}>
+													<Typography variant="caption" fontWeight={600} color="primary">
+														{selectedContact.name}
+													</Typography>
+													<Typography variant="caption" color="textSecondary">
+														{formatDate(selectedContact.createdAt)}
+													</Typography>
+												</Stack>
+												<Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
+													{selectedContact.message}
+												</Typography>
+											</Box>
+
+											{/* Previous Replies */}
+											{selectedContact.replies && selectedContact.replies.length > 0 && (
+												<>
+													<Divider />
+													{selectedContact.replies.map((reply, index) => (
+														<Box key={reply._id || index} sx={{ borderLeft: 3, borderColor: "success.main", pl: 2 }}>
+															<Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.5}>
+																<Stack direction="row" spacing={1} alignItems="center">
+																	<Typography variant="caption" fontWeight={600} color="success.main">
+																		{reply.createdByName || "Soporte"}
+																	</Typography>
+																	{reply.emailSent ? (
+																		<TickSquare size={12} color="#10B981" />
+																	) : (
+																		<CloseSquareIcon size={12} color="#EF4444" />
+																	)}
+																</Stack>
+																<Typography variant="caption" color="textSecondary">
+																	{formatDate(reply.createdAt)}
+																</Typography>
+															</Stack>
+															<Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
+																{reply.message}
+															</Typography>
+														</Box>
+													))}
+												</>
+											)}
+										</Stack>
 									</Paper>
 								</Box>
 
+								{/* Reply Input */}
 								<Box>
 									<Typography variant="subtitle2" color="textSecondary" gutterBottom>
 										Tu respuesta
@@ -976,7 +1145,7 @@ const SupportContactsPage = () => {
 									<TextField
 										fullWidth
 										multiline
-										rows={6}
+										rows={5}
 										placeholder="Escribe tu respuesta aqui..."
 										value={replyMessage}
 										onChange={(e) => setReplyMessage(e.target.value)}
