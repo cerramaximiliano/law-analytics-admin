@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Button, ButtonGroup } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
-import { People, Sms, DocumentText1 } from "iconsax-react";
+import { People, Sms, DocumentText1, Component } from "iconsax-react";
 
 const MarketingQuickNav: React.FC = () => {
 	const navigate = useNavigate();
@@ -22,6 +22,11 @@ const MarketingQuickNav: React.FC = () => {
 			path: "/admin/marketing/templates",
 			label: "Plantillas",
 			icon: <DocumentText1 size={18} />,
+		},
+		{
+			path: "/admin/marketing/modules",
+			label: "Módulos",
+			icon: <Component size={18} />,
 		},
 	];
 
