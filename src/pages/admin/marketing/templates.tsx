@@ -198,6 +198,91 @@ const AVAILABLE_VARIABLES: VariableOption[] = [
 // Get unique categories for grouping
 const VARIABLE_CATEGORIES = [...new Set(AVAILABLE_VARIABLES.map((v) => v.category))];
 
+// Get all valid variable names for validation
+const VALID_VARIABLE_NAMES = new Set(AVAILABLE_VARIABLES.map((v) => v.name));
+
+// Helper function to check if a variable name is valid
+const isValidVariable = (varName: string): boolean => {
+	// Direct match
+	if (VALID_VARIABLE_NAMES.has(varName)) return true;
+	// Check if it starts with contact.customFields. (custom fields are dynamic)
+	if (varName.startsWith("contact.customFields.")) return true;
+	return false;
+};
+
+// Helper function to parse and highlight variables in HTML code
+const highlightVariables = (code: string, theme: any): React.ReactNode[] => {
+	// Regex to match variables: ${var}, ${var || "fallback"}, ${var || otherVar}, {{var}}, {{var || "fallback"}}, {{var || otherVar}}
+	const variableRegex = /(\$\{[\w.]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.]+))?\}|\{\{[\w.]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.]+))?\}\})/g;
+
+	const parts: React.ReactNode[] = [];
+	let lastIndex = 0;
+	let match;
+
+	while ((match = variableRegex.exec(code)) !== null) {
+		// Add text before the match
+		if (match.index > lastIndex) {
+			parts.push(code.substring(lastIndex, match.index));
+		}
+
+		const fullMatch = match[0];
+		// Extract the variable name (without ${ } or {{ }} and without fallback)
+		let varName = fullMatch;
+		// Remove ${ } or {{ }}
+		if (varName.startsWith("${")) {
+			varName = varName.slice(2, -1);
+		} else if (varName.startsWith("{{")) {
+			varName = varName.slice(2, -2);
+		}
+		// Remove fallback part if exists
+		const pipeIndex = varName.indexOf("||");
+		if (pipeIndex > -1) {
+			varName = varName.substring(0, pipeIndex).trim();
+		}
+		varName = varName.trim();
+
+		const isValid = isValidVariable(varName);
+
+		// Add highlighted variable
+		parts.push(
+			<span
+				key={`var-${match.index}`}
+				style={{
+					backgroundColor: isValid
+						? theme.palette.mode === "dark"
+							? "rgba(46, 125, 50, 0.3)"
+							: "rgba(76, 175, 80, 0.2)"
+						: theme.palette.mode === "dark"
+						? "rgba(211, 47, 47, 0.3)"
+						: "rgba(244, 67, 54, 0.2)",
+					color: isValid
+						? theme.palette.mode === "dark"
+							? "#81c784"
+							: "#2e7d32"
+						: theme.palette.mode === "dark"
+						? "#ef5350"
+						: "#c62828",
+					borderRadius: "3px",
+					padding: "1px 4px",
+					fontWeight: 500,
+					border: `1px solid ${isValid ? (theme.palette.mode === "dark" ? "#4caf50" : "#81c784") : theme.palette.mode === "dark" ? "#f44336" : "#ef5350"}`,
+				}}
+			>
+				{fullMatch}
+			</span>,
+		);
+
+		lastIndex = match.index + fullMatch.length;
+	}
+
+	// Add remaining text
+	if (lastIndex < code.length) {
+		parts.push(code.substring(lastIndex));
+	}
+
+	return parts;
+};
+
 // Default blank template HTML
 const defaultHtmlTemplate = `<!DOCTYPE html>
 <html>
@@ -2180,63 +2265,195 @@ const EmailTemplates = () => {
 									</Button>
 								</Box>
 
-								{/* Show detected variables in the HTML */}
+								{/* Show detected variables in the HTML with validation */}
 								{(() => {
 									const detectedVars = newTemplate.htmlBody.match(/\$\{[\w.]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.]+))?\}|\{\{[\w.]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.]+))?\}\}/g) || [];
 									const uniqueVars = [...new Set(detectedVars)];
+
+									// Separate valid and invalid variables
+									const validVars: string[] = [];
+									const invalidVars: string[] = [];
+
+									uniqueVars.forEach((v) => {
+										let varName = v;
+										if (varName.startsWith("${")) {
+											varName = varName.slice(2, -1);
+										} else if (varName.startsWith("{{")) {
+											varName = varName.slice(2, -2);
+										}
+										const pipeIndex = varName.indexOf("||");
+										if (pipeIndex > -1) {
+											varName = varName.substring(0, pipeIndex).trim();
+										}
+										varName = varName.trim();
+
+										if (isValidVariable(varName)) {
+											validVars.push(v);
+										} else {
+											invalidVars.push(v);
+										}
+									});
+
 									if (uniqueVars.length > 0) {
 										return (
 											<Box
 												sx={{
 													mb: 2,
-													p: 1,
+													p: 1.5,
 													backgroundColor: theme.palette.mode === "dark" ? theme.palette.grey[800] : theme.palette.grey[50],
 													borderRadius: 1,
 													border: `1px solid ${theme.palette.divider}`,
 												}}
 											>
-												<Typography variant="caption" color="textSecondary" sx={{ display: "block", mb: 0.5 }}>
-													Variables detectadas en el código:
-												</Typography>
-												<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-													{uniqueVars.map((v, i) => (
-														<Chip
-															key={i}
-															label={v}
-															size="small"
-															sx={{
-																fontFamily: "monospace",
-																fontSize: "0.75rem",
-																backgroundColor: theme.palette.mode === "dark" ? theme.palette.primary.dark : theme.palette.primary.lighter,
-																color: theme.palette.mode === "dark" ? theme.palette.primary.lighter : theme.palette.primary.dark,
-															}}
-														/>
-													))}
-												</Box>
+												{validVars.length > 0 && (
+													<Box sx={{ mb: invalidVars.length > 0 ? 1.5 : 0 }}>
+														<Typography variant="caption" color="success.main" sx={{ display: "flex", alignItems: "center", mb: 0.5, fontWeight: 500 }}>
+															Variables válidas ({validVars.length}):
+														</Typography>
+														<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+															{validVars.map((v, i) => (
+																<Chip
+																	key={i}
+																	label={v}
+																	size="small"
+																	sx={{
+																		fontFamily: "monospace",
+																		fontSize: "0.7rem",
+																		backgroundColor: theme.palette.mode === "dark" ? "rgba(46, 125, 50, 0.3)" : "rgba(76, 175, 80, 0.15)",
+																		color: theme.palette.mode === "dark" ? "#81c784" : "#2e7d32",
+																		border: `1px solid ${theme.palette.mode === "dark" ? "#4caf50" : "#81c784"}`,
+																	}}
+																/>
+															))}
+														</Box>
+													</Box>
+												)}
+												{invalidVars.length > 0 && (
+													<Box>
+														<Typography variant="caption" color="error.main" sx={{ display: "flex", alignItems: "center", mb: 0.5, fontWeight: 500 }}>
+															Variables no reconocidas ({invalidVars.length}):
+														</Typography>
+														<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+															{invalidVars.map((v, i) => (
+																<Tooltip key={i} title="Esta variable no está definida en el sistema y no será reemplazada" arrow>
+																	<Chip
+																		label={v}
+																		size="small"
+																		sx={{
+																			fontFamily: "monospace",
+																			fontSize: "0.7rem",
+																			backgroundColor: theme.palette.mode === "dark" ? "rgba(211, 47, 47, 0.3)" : "rgba(244, 67, 54, 0.15)",
+																			color: theme.palette.mode === "dark" ? "#ef5350" : "#c62828",
+																			border: `1px solid ${theme.palette.mode === "dark" ? "#f44336" : "#ef5350"}`,
+																		}}
+																	/>
+																</Tooltip>
+															))}
+														</Box>
+													</Box>
+												)}
 											</Box>
 										);
 									}
 									return null;
 								})()}
 
-								<TextField
-									label="Código HTML"
-									fullWidth
-									multiline
-									rows={16}
-									value={newTemplate.htmlBody}
-									onChange={(e) => handleTemplateChange("htmlBody", e.target.value)}
-									error={!!errors.htmlBody}
-									helperText={errors.htmlBody}
-									inputRef={createHtmlTextFieldRef}
-									sx={{
-										fontFamily: "monospace",
-										"& .MuiInputBase-input": {
+								{/* Syntax-highlighted HTML editor with overlay technique */}
+								<Box sx={{ position: "relative", height: "400px" }}>
+									<Typography variant="caption" sx={{ position: "absolute", top: -20, left: 0, color: "text.secondary" }}>
+										Código HTML (las variables se resaltan automáticamente)
+									</Typography>
+
+									{/* Highlighted code overlay (read-only, behind textarea) */}
+									<Box
+										sx={{
+											position: "absolute",
+											top: 0,
+											left: 0,
+											right: 0,
+											bottom: 0,
+											padding: "16.5px 14px",
 											fontFamily: "monospace",
 											fontSize: "0.875rem",
-										},
-									}}
-								/>
+											lineHeight: 1.5,
+											whiteSpace: "pre-wrap",
+											wordWrap: "break-word",
+											overflow: "auto",
+											backgroundColor: theme.palette.mode === "dark" ? theme.palette.grey[900] : theme.palette.grey[50],
+											border: `1px solid ${errors.htmlBody ? theme.palette.error.main : theme.palette.divider}`,
+											borderRadius: 1,
+											color: theme.palette.text.primary,
+											pointerEvents: "none",
+											zIndex: 1,
+										}}
+									>
+										{highlightVariables(newTemplate.htmlBody, theme)}
+									</Box>
+
+									{/* Actual textarea (transparent, on top for editing) */}
+									<textarea
+										ref={createHtmlTextFieldRef}
+										value={newTemplate.htmlBody}
+										onChange={(e) => handleTemplateChange("htmlBody", e.target.value)}
+										style={{
+											position: "absolute",
+											top: 0,
+											left: 0,
+											right: 0,
+											bottom: 0,
+											width: "100%",
+											height: "100%",
+											padding: "16.5px 14px",
+											fontFamily: "monospace",
+											fontSize: "0.875rem",
+											lineHeight: 1.5,
+											backgroundColor: "transparent",
+											color: "transparent",
+											caretColor: theme.palette.text.primary,
+											border: `1px solid transparent`,
+											borderRadius: "4px",
+											resize: "none",
+											outline: "none",
+											overflow: "auto",
+											zIndex: 2,
+										}}
+										onFocus={(e) => {
+											const parent = e.target.parentElement;
+											if (parent) {
+												const overlay = parent.querySelector("div") as HTMLElement;
+												if (overlay) {
+													overlay.style.borderColor = theme.palette.primary.main;
+												}
+											}
+										}}
+										onBlur={(e) => {
+											const parent = e.target.parentElement;
+											if (parent) {
+												const overlay = parent.querySelector("div") as HTMLElement;
+												if (overlay) {
+													overlay.style.borderColor = errors.htmlBody ? theme.palette.error.main : theme.palette.divider;
+												}
+											}
+										}}
+										onScroll={(e) => {
+											// Sync scroll between textarea and overlay
+											const target = e.target as HTMLTextAreaElement;
+											const parent = target.parentElement;
+											if (parent) {
+												const overlay = parent.querySelector("div") as HTMLElement;
+												if (overlay) {
+													overlay.scrollTop = target.scrollTop;
+													overlay.scrollLeft = target.scrollLeft;
+												}
+											}
+										}}
+									/>
+								</Box>
+								{errors.htmlBody && (
+									<Typography variant="caption" color="error" sx={{ mt: 0.5, display: "block" }}>
+										{errors.htmlBody}
+									</Typography>
+								)}
 							</TabPanel>
 
 							<TabPanel value={createViewTab} index={2}>
