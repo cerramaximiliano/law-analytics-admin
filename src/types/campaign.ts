@@ -26,6 +26,16 @@ export interface SendingRestrictions {
 	};
 }
 
+export interface RecurringSchedule {
+	enabled: boolean;
+	frequency: "daily" | "weekly" | "monthly" | "yearly";
+	dayOfMonth: number; // 1-31, -1 for last day of month
+	dayOfWeek: number; // 0=Sunday, 1=Monday, ..., 6=Saturday
+	monthOfYear: number; // 1-12
+	time: string; // Format "HH:MM"
+	lastExecutedAt?: Date | string;
+}
+
 export interface CampaignSettings {
 	throttleRate: number;
 	dailyLimit?: number; // Límite de emails por día (0 = sin límite)
@@ -36,6 +46,7 @@ export interface CampaignSettings {
 	};
 	retryConfig: RetryConfig;
 	sendingRestrictions?: SendingRestrictions;
+	recurringSchedule?: RecurringSchedule; // For recurring campaigns with fixed dates
 }
 
 export interface CampaignMetrics {

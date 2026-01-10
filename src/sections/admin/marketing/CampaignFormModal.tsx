@@ -77,6 +77,13 @@ interface FormValues {
 	timeWindowEnd: string;
 	// Sincronización con segmento
 	syncWithSegment: boolean;
+	// Recurring schedule (for type='recurring')
+	recurringEnabled: boolean;
+	recurringFrequency: "daily" | "weekly" | "monthly" | "yearly";
+	recurringDayOfMonth: number;
+	recurringDayOfWeek: number;
+	recurringMonthOfYear: number;
+	recurringTime: string;
 }
 
 // validation schema
@@ -201,6 +208,13 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 		timeWindowEnd: "18:00",
 		// Sincronización con segmento (por defecto habilitada)
 		syncWithSegment: true,
+		// Recurring schedule defaults
+		recurringEnabled: false,
+		recurringFrequency: "monthly",
+		recurringDayOfMonth: 1,
+		recurringDayOfWeek: 1,
+		recurringMonthOfYear: 1,
+		recurringTime: "09:00",
 	};
 
 	// Formik setup
@@ -251,6 +265,15 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 									end: values.timeWindowEnd,
 								},
 							},
+							// Recurring schedule (only for recurring campaigns)
+							recurringSchedule: values.type === "recurring" ? {
+								enabled: values.recurringEnabled,
+								frequency: values.recurringFrequency,
+								dayOfMonth: values.recurringDayOfMonth,
+								dayOfWeek: values.recurringDayOfWeek,
+								monthOfYear: values.recurringMonthOfYear,
+								time: values.recurringTime,
+							} : undefined,
 						},
 					};
 
@@ -279,6 +302,15 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 									end: values.timeWindowEnd,
 								},
 							},
+							// Recurring schedule (only for recurring campaigns)
+							recurringSchedule: values.type === "recurring" ? {
+								enabled: values.recurringEnabled,
+								frequency: values.recurringFrequency,
+								dayOfMonth: values.recurringDayOfMonth,
+								dayOfWeek: values.recurringDayOfWeek,
+								monthOfYear: values.recurringMonthOfYear,
+								time: values.recurringTime,
+							} : undefined,
 						},
 					};
 
@@ -361,6 +393,13 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 				timeWindowEnd: campaign.settings?.sendingRestrictions?.timeWindow?.end || "18:00",
 				// Sincronización con segmento (si no está definido, por defecto true)
 				syncWithSegment: campaign.audience?.syncWithSegment !== false,
+				// Recurring schedule
+				recurringEnabled: (campaign.settings as any)?.recurringSchedule?.enabled || false,
+				recurringFrequency: (campaign.settings as any)?.recurringSchedule?.frequency || "monthly",
+				recurringDayOfMonth: (campaign.settings as any)?.recurringSchedule?.dayOfMonth || 1,
+				recurringDayOfWeek: (campaign.settings as any)?.recurringSchedule?.dayOfWeek || 1,
+				recurringMonthOfYear: (campaign.settings as any)?.recurringSchedule?.monthOfYear || 1,
+				recurringTime: (campaign.settings as any)?.recurringSchedule?.time || "09:00",
 			});
 		} else {
 			// Reset to defaults for create mode
@@ -888,6 +927,163 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 										</Alert>
 									)}
 								</Grid>
+							</>
+						)}
+
+						{/* Recurring Schedule Configuration - Only for recurring campaigns */}
+						{formik.values.type === "recurring" && (
+							<>
+								<Grid item xs={12}>
+									<Divider sx={{ my: 2 }} />
+									<Typography variant="subtitle1" fontWeight={600} gutterBottom>
+										Configuración de Envío Recurrente
+									</Typography>
+									<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+										Configura cuándo se enviará el email de forma recurrente. Si no habilitas esta opción, la campaña funcionará como una secuencia tradicional.
+									</Typography>
+								</Grid>
+
+								<Grid item xs={12}>
+									<FormControlLabel
+										control={
+											<Switch
+												checked={formik.values.recurringEnabled}
+												onChange={(e) => formik.setFieldValue("recurringEnabled", e.target.checked)}
+												name="recurringEnabled"
+												color="primary"
+											/>
+										}
+										label="Habilitar envío por fecha fija"
+									/>
+									<FormHelperText sx={{ ml: 0 }}>
+										{formik.values.recurringEnabled
+											? "El email se enviará automáticamente según la frecuencia configurada."
+											: "La campaña funcionará como una secuencia tradicional basada en delays."}
+									</FormHelperText>
+								</Grid>
+
+								{formik.values.recurringEnabled && (
+									<>
+										<Grid item xs={12} sm={6}>
+											<FormControl fullWidth>
+												<InputLabel>Frecuencia</InputLabel>
+												<Select
+													name="recurringFrequency"
+													value={formik.values.recurringFrequency}
+													onChange={formik.handleChange}
+													label="Frecuencia"
+												>
+													<MenuItem value="daily">Diario</MenuItem>
+													<MenuItem value="weekly">Semanal</MenuItem>
+													<MenuItem value="monthly">Mensual</MenuItem>
+													<MenuItem value="yearly">Anual</MenuItem>
+												</Select>
+											</FormControl>
+										</Grid>
+
+										<Grid item xs={12} sm={6}>
+											<TextField
+												fullWidth
+												label="Hora de envío"
+												name="recurringTime"
+												type="time"
+												value={formik.values.recurringTime}
+												onChange={formik.handleChange}
+												InputLabelProps={{ shrink: true }}
+												inputProps={{ step: 300 }}
+											/>
+										</Grid>
+
+										{formik.values.recurringFrequency === "weekly" && (
+											<Grid item xs={12} sm={6}>
+												<FormControl fullWidth>
+													<InputLabel>Día de la semana</InputLabel>
+													<Select
+														name="recurringDayOfWeek"
+														value={formik.values.recurringDayOfWeek}
+														onChange={formik.handleChange}
+														label="Día de la semana"
+													>
+														{daysOfWeek.map((day) => (
+															<MenuItem key={day.value} value={day.value}>
+																{day.label}
+															</MenuItem>
+														))}
+													</Select>
+												</FormControl>
+											</Grid>
+										)}
+
+										{(formik.values.recurringFrequency === "monthly" || formik.values.recurringFrequency === "yearly") && (
+											<Grid item xs={12} sm={6}>
+												<FormControl fullWidth>
+													<InputLabel>Día del mes</InputLabel>
+													<Select
+														name="recurringDayOfMonth"
+														value={formik.values.recurringDayOfMonth}
+														onChange={formik.handleChange}
+														label="Día del mes"
+													>
+														<MenuItem value={-1}>Último día del mes</MenuItem>
+														{Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+															<MenuItem key={day} value={day}>
+																{day}
+															</MenuItem>
+														))}
+													</Select>
+												</FormControl>
+											</Grid>
+										)}
+
+										{formik.values.recurringFrequency === "yearly" && (
+											<Grid item xs={12} sm={6}>
+												<FormControl fullWidth>
+													<InputLabel>Mes del año</InputLabel>
+													<Select
+														name="recurringMonthOfYear"
+														value={formik.values.recurringMonthOfYear}
+														onChange={formik.handleChange}
+														label="Mes del año"
+													>
+														<MenuItem value={1}>Enero</MenuItem>
+														<MenuItem value={2}>Febrero</MenuItem>
+														<MenuItem value={3}>Marzo</MenuItem>
+														<MenuItem value={4}>Abril</MenuItem>
+														<MenuItem value={5}>Mayo</MenuItem>
+														<MenuItem value={6}>Junio</MenuItem>
+														<MenuItem value={7}>Julio</MenuItem>
+														<MenuItem value={8}>Agosto</MenuItem>
+														<MenuItem value={9}>Septiembre</MenuItem>
+														<MenuItem value={10}>Octubre</MenuItem>
+														<MenuItem value={11}>Noviembre</MenuItem>
+														<MenuItem value={12}>Diciembre</MenuItem>
+													</Select>
+												</FormControl>
+											</Grid>
+										)}
+
+										<Grid item xs={12}>
+											<Alert severity="info">
+												{formik.values.recurringFrequency === "daily" && (
+													<>El email se enviará todos los días a las {formik.values.recurringTime}hs.</>
+												)}
+												{formik.values.recurringFrequency === "weekly" && (
+													<>El email se enviará todos los {daysOfWeek.find(d => d.value === formik.values.recurringDayOfWeek)?.label} a las {formik.values.recurringTime}hs.</>
+												)}
+												{formik.values.recurringFrequency === "monthly" && (
+													<>
+														El email se enviará el {formik.values.recurringDayOfMonth === -1 ? "último día" : `día ${formik.values.recurringDayOfMonth}`} de cada mes a las {formik.values.recurringTime}hs.
+													</>
+												)}
+												{formik.values.recurringFrequency === "yearly" && (
+													<>
+														El email se enviará el {formik.values.recurringDayOfMonth === -1 ? "último día" : `día ${formik.values.recurringDayOfMonth}`} de {["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"][formik.values.recurringMonthOfYear]} a las {formik.values.recurringTime}hs.
+													</>
+												)}
+											</Alert>
+										</Grid>
+									</>
+								)}
 							</>
 						)}
 					</Grid>
