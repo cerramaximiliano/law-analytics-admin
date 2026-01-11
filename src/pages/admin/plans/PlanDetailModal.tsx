@@ -19,8 +19,40 @@ import {
 	TableRow,
 } from "@mui/material";
 import { CloseCircle } from "iconsax-react";
-import { Plan } from "types/plan";
+import { Plan, VisibilityType } from "types/plan";
 import { formatCurrency } from "utils/formatCurrency";
+
+// Helper para mostrar el label de visibilidad
+const getVisibilityLabel = (visibility?: VisibilityType): string => {
+	switch (visibility) {
+		case "all":
+			return "Todos los ambientes";
+		case "development":
+			return "Solo desarrollo";
+		case "production":
+			return "Solo producción";
+		case "none":
+			return "Oculto";
+		default:
+			return "Todos los ambientes";
+	}
+};
+
+// Helper para obtener el color del chip de visibilidad
+const getVisibilityColor = (visibility?: VisibilityType): "default" | "primary" | "secondary" | "warning" => {
+	switch (visibility) {
+		case "all":
+			return "primary";
+		case "development":
+			return "warning";
+		case "production":
+			return "secondary";
+		case "none":
+			return "default";
+		default:
+			return "primary";
+	}
+};
 
 interface PlanDetailModalProps {
 	open: boolean;
@@ -172,9 +204,11 @@ const PlanDetailModal = ({ open, onClose, plan }: PlanDetailModalProps) => {
 							<Table size="small">
 								<TableHead>
 									<TableRow>
-										<TableCell>Recurso</TableCell>
+										<TableCell>Recurso (ID)</TableCell>
+										<TableCell>Nombre UI</TableCell>
 										<TableCell align="center">Límite</TableCell>
 										<TableCell>Descripción</TableCell>
+										<TableCell align="center">Visibilidad</TableCell>
 									</TableRow>
 								</TableHead>
 								<TableBody>
@@ -183,6 +217,11 @@ const PlanDetailModal = ({ open, onClose, plan }: PlanDetailModalProps) => {
 											<TableCell>
 												<Typography variant="body2" fontWeight="medium">
 													{limit.name}
+												</Typography>
+											</TableCell>
+											<TableCell>
+												<Typography variant="body2" color="text.secondary">
+													{limit.displayName || "-"}
 												</Typography>
 											</TableCell>
 											<TableCell align="center">
@@ -197,6 +236,14 @@ const PlanDetailModal = ({ open, onClose, plan }: PlanDetailModalProps) => {
 												<Typography variant="body2" color="text.secondary">
 													{limit.description}
 												</Typography>
+											</TableCell>
+											<TableCell align="center">
+												<Chip
+													label={getVisibilityLabel(limit.visibility)}
+													size="small"
+													color={getVisibilityColor(limit.visibility)}
+													variant="outlined"
+												/>
 											</TableCell>
 										</TableRow>
 									))}
@@ -214,9 +261,11 @@ const PlanDetailModal = ({ open, onClose, plan }: PlanDetailModalProps) => {
 							<Table size="small">
 								<TableHead>
 									<TableRow>
-										<TableCell>Característica</TableCell>
+										<TableCell>Característica (ID)</TableCell>
+										<TableCell>Nombre UI</TableCell>
 										<TableCell align="center">Estado</TableCell>
 										<TableCell>Descripción</TableCell>
+										<TableCell align="center">Visibilidad</TableCell>
 									</TableRow>
 								</TableHead>
 								<TableBody>
@@ -225,6 +274,11 @@ const PlanDetailModal = ({ open, onClose, plan }: PlanDetailModalProps) => {
 											<TableCell>
 												<Typography variant="body2" fontWeight="medium">
 													{feature.name}
+												</Typography>
+											</TableCell>
+											<TableCell>
+												<Typography variant="body2" color="text.secondary">
+													{feature.displayName || "-"}
 												</Typography>
 											</TableCell>
 											<TableCell align="center">
@@ -238,6 +292,14 @@ const PlanDetailModal = ({ open, onClose, plan }: PlanDetailModalProps) => {
 												<Typography variant="body2" color="text.secondary">
 													{feature.description}
 												</Typography>
+											</TableCell>
+											<TableCell align="center">
+												<Chip
+													label={getVisibilityLabel(feature.visibility)}
+													size="small"
+													color={getVisibilityColor(feature.visibility)}
+													variant="outlined"
+												/>
 											</TableCell>
 										</TableRow>
 									))}

@@ -19,7 +19,15 @@ import {
 	Alert,
 } from "@mui/material";
 import { CloseCircle, Add, Trash } from "iconsax-react";
-import { Plan, PlanPricingInfo, ResourceLimit, PlanFeature } from "types/plan";
+import { Plan, PlanPricingInfo, ResourceLimit, PlanFeature, VisibilityType } from "types/plan";
+
+// Opciones de visibilidad para features y resourceLimits
+const VISIBILITY_OPTIONS: { value: VisibilityType; label: string }[] = [
+	{ value: "all", label: "Todos los ambientes" },
+	{ value: "development", label: "Solo desarrollo" },
+	{ value: "production", label: "Solo producción" },
+	{ value: "none", label: "Oculto" },
+];
 
 interface PlanFormModalProps {
 	open: boolean;
@@ -89,7 +97,7 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 	const addResourceLimit = () => {
 		setFormData((prev) => ({
 			...prev,
-			resourceLimits: [...prev.resourceLimits!, { name: "", limit: 0, description: "" }],
+			resourceLimits: [...prev.resourceLimits!, { name: "", limit: 0, description: "", displayName: "", visibility: "all" }],
 		}));
 	};
 
@@ -113,7 +121,7 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 	const addFeature = () => {
 		setFormData((prev) => ({
 			...prev,
-			features: [...prev.features!, { name: "", enabled: true, description: "" }],
+			features: [...prev.features!, { name: "", enabled: true, description: "", displayName: "", visibility: "all" }],
 		}));
 	};
 
@@ -261,13 +269,13 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 					</Grid>
 					{formData.resourceLimits?.map((limit, index) => (
 						<Grid item xs={12} key={index}>
-							<Box display="flex" gap={2} alignItems="center">
+							<Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
 								<TextField
-									label="Nombre"
+									label="Nombre (ID)"
 									value={limit.name}
 									onChange={(e) => updateResourceLimit(index, "name", e.target.value)}
 									size="small"
-									style={{ flex: 1 }}
+									style={{ flex: 1, minWidth: 120 }}
 								/>
 								<TextField
 									label="Límite"
@@ -275,15 +283,37 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 									value={limit.limit}
 									onChange={(e) => updateResourceLimit(index, "limit", Number(e.target.value))}
 									size="small"
-									style={{ width: 100 }}
+									style={{ width: 80 }}
+								/>
+								<TextField
+									label="Nombre UI"
+									value={limit.displayName || ""}
+									onChange={(e) => updateResourceLimit(index, "displayName", e.target.value)}
+									size="small"
+									style={{ flex: 1, minWidth: 120 }}
+									placeholder="Nombre para mostrar"
 								/>
 								<TextField
 									label="Descripción"
 									value={limit.description}
 									onChange={(e) => updateResourceLimit(index, "description", e.target.value)}
 									size="small"
-									style={{ flex: 2 }}
+									style={{ flex: 1.5, minWidth: 150 }}
 								/>
+								<FormControl size="small" style={{ minWidth: 140 }}>
+									<InputLabel>Visibilidad</InputLabel>
+									<Select
+										value={limit.visibility || "all"}
+										label="Visibilidad"
+										onChange={(e) => updateResourceLimit(index, "visibility", e.target.value)}
+									>
+										{VISIBILITY_OPTIONS.map((opt) => (
+											<MenuItem key={opt.value} value={opt.value}>
+												{opt.label}
+											</MenuItem>
+										))}
+									</Select>
+								</FormControl>
 								<IconButton onClick={() => removeResourceLimit(index)} size="small">
 									<Trash size={20} />
 								</IconButton>
@@ -302,24 +332,46 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 					</Grid>
 					{formData.features?.map((feature, index) => (
 						<Grid item xs={12} key={index}>
-							<Box display="flex" gap={2} alignItems="center">
+							<Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
 								<TextField
-									label="Nombre"
+									label="Nombre (ID)"
 									value={feature.name}
 									onChange={(e) => updateFeature(index, "name", e.target.value)}
 									size="small"
-									style={{ flex: 1 }}
+									style={{ flex: 1, minWidth: 120 }}
+								/>
+								<TextField
+									label="Nombre UI"
+									value={feature.displayName || ""}
+									onChange={(e) => updateFeature(index, "displayName", e.target.value)}
+									size="small"
+									style={{ flex: 1, minWidth: 120 }}
+									placeholder="Nombre para mostrar"
 								/>
 								<TextField
 									label="Descripción"
 									value={feature.description}
 									onChange={(e) => updateFeature(index, "description", e.target.value)}
 									size="small"
-									style={{ flex: 2 }}
+									style={{ flex: 1.5, minWidth: 150 }}
 								/>
+								<FormControl size="small" style={{ minWidth: 140 }}>
+									<InputLabel>Visibilidad</InputLabel>
+									<Select
+										value={feature.visibility || "all"}
+										label="Visibilidad"
+										onChange={(e) => updateFeature(index, "visibility", e.target.value)}
+									>
+										{VISIBILITY_OPTIONS.map((opt) => (
+											<MenuItem key={opt.value} value={opt.value}>
+												{opt.label}
+											</MenuItem>
+										))}
+									</Select>
+								</FormControl>
 								<FormControlLabel
 									control={<Switch checked={feature.enabled} onChange={(e) => updateFeature(index, "enabled", e.target.checked)} />}
-									label="Habilitado"
+									label="Activo"
 								/>
 								<IconButton onClick={() => removeFeature(index)} size="small">
 									<Trash size={20} />
