@@ -1,13 +1,20 @@
+// Tipo para la visibilidad de features y resourceLimits
+export type VisibilityType = 'all' | 'development' | 'production' | 'none';
+
 export interface ResourceLimit {
 	name: string;
 	limit: number;
 	description: string;
+	displayName?: string;
+	visibility?: VisibilityType;
 }
 
 export interface PlanFeature {
 	name: string;
 	enabled: boolean;
 	description: string;
+	displayName?: string;
+	visibility?: VisibilityType;
 }
 
 export interface PlanPricingInfo {
