@@ -225,7 +225,7 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 			elevation={0}
 			onClick={isClickable ? handleClick : undefined}
 			sx={{
-				p: 2.5,
+				p: { xs: 1.5, sm: 2.5 },
 				borderRadius: 2,
 				bgcolor: theme.palette.background.paper,
 				border: `1px solid ${theme.palette.divider}`,
@@ -241,16 +241,26 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 			}}
 		>
 			{/* Header: Icon + Title + Info */}
-			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-				<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-					<Box sx={{ color: COLORS.neutral.light, display: "flex" }}>
+			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 1, sm: 1.5 } }}>
+				<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 }, minWidth: 0 }}>
+					<Box sx={{ color: COLORS.neutral.light, display: "flex", flexShrink: 0 }}>
 						{icon}
 					</Box>
-					<Typography variant="body2" sx={{ color: COLORS.neutral.text, fontWeight: 500 }}>
+					<Typography
+						variant="body2"
+						sx={{
+							color: COLORS.neutral.text,
+							fontWeight: 500,
+							fontSize: { xs: "0.75rem", sm: "0.875rem" },
+							overflow: "hidden",
+							textOverflow: "ellipsis",
+							whiteSpace: "nowrap",
+						}}
+					>
 						{title}
 					</Typography>
 				</Box>
-				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0 }}>
 					<InfoTooltip metricKey={infoKey} />
 					{isClickable && <ArrowRight2 size={14} style={{ color: COLORS.neutral.light }} />}
 				</Box>
@@ -259,7 +269,15 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 			{loading ? (
 				<Skeleton variant="text" width={80} height={48} />
 			) : (
-				<Typography variant="h3" sx={{ fontWeight: 700, color: valueColor, lineHeight: 1 }}>
+				<Typography
+					variant="h3"
+					sx={{
+						fontWeight: 700,
+						color: valueColor,
+						lineHeight: 1,
+						fontSize: { xs: "1.5rem", sm: "2rem" },
+					}}
+				>
 					{value.toLocaleString()}
 				</Typography>
 			)}
@@ -278,15 +296,24 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, subtitle, icon }) 
 	const theme = useTheme();
 
 	return (
-		<Box sx={{ mb: 2.5 }}>
-			<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+		<Box sx={{ mb: { xs: 1.5, sm: 2.5 } }}>
+			<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 } }}>
 				<Box sx={{ color: theme.palette.primary.main }}>{icon}</Box>
-				<Typography variant="h5" fontWeight="bold">
+				<Typography variant="h5" fontWeight="bold" sx={{ fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>
 					{title}
 				</Typography>
 			</Box>
 			{subtitle && (
-				<Typography variant="body2" color="textSecondary" sx={{ mt: 0.5, ml: 4 }}>
+				<Typography
+					variant="body2"
+					color="textSecondary"
+					sx={{
+						mt: 0.5,
+						ml: { xs: 3, sm: 4 },
+						fontSize: { xs: "0.75rem", sm: "0.875rem" },
+						display: { xs: "none", sm: "block" },
+					}}
+				>
 					{subtitle}
 				</Typography>
 			)}
@@ -301,9 +328,10 @@ interface ChartCardProps {
 	children: React.ReactNode;
 	linkTo?: string;
 	height?: number;
+	mobileHeight?: number;
 }
 
-const ChartCard: React.FC<ChartCardProps> = ({ title, icon, children, linkTo, height = 280 }) => {
+const ChartCard: React.FC<ChartCardProps> = ({ title, icon, children, linkTo, height = 280, mobileHeight }) => {
 	const theme = useTheme();
 	const navigate = useNavigate();
 
@@ -317,7 +345,7 @@ const ChartCard: React.FC<ChartCardProps> = ({ title, icon, children, linkTo, he
 		<Paper
 			elevation={0}
 			sx={{
-				p: 2.5,
+				p: { xs: 1.5, sm: 2.5 },
 				borderRadius: 2,
 				bgcolor: theme.palette.background.paper,
 				border: `1px solid ${theme.palette.divider}`,
@@ -333,16 +361,25 @@ const ChartCard: React.FC<ChartCardProps> = ({ title, icon, children, linkTo, he
 			}}
 			onClick={linkTo ? handleClick : undefined}
 		>
-			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2, pb: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
-				<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+			<Box
+				sx={{
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "space-between",
+					mb: { xs: 1.5, sm: 2 },
+					pb: { xs: 1, sm: 1.5 },
+					borderBottom: `1px solid ${theme.palette.divider}`,
+				}}
+			>
+				<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 } }}>
 					<Box sx={{ color: theme.palette.primary.main }}>{icon}</Box>
-					<Typography variant="subtitle1" fontWeight="bold">
+					<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>
 						{title}
 					</Typography>
 				</Box>
 				{linkTo && <ArrowRight2 size={16} style={{ color: theme.palette.text.secondary, opacity: 0.5 }} />}
 			</Box>
-			<Box sx={{ height }}>
+			<Box sx={{ height: { xs: mobileHeight || height * 0.8, sm: height } }}>
 				{children}
 			</Box>
 		</Paper>
@@ -419,7 +456,7 @@ const GroupedCard: React.FC<GroupedCardProps> = ({ title, icon, children, linkTo
 			elevation={0}
 			onClick={isClickable ? handleClick : undefined}
 			sx={{
-				p: 2.5,
+				p: { xs: 1.5, sm: 2.5 },
 				borderRadius: 2,
 				bgcolor: theme.palette.background.paper,
 				border: `1px solid ${theme.palette.divider}`,
@@ -434,10 +471,19 @@ const GroupedCard: React.FC<GroupedCardProps> = ({ title, icon, children, linkTo
 				}),
 			}}
 		>
-			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2, pb: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
-				<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+			<Box
+				sx={{
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "space-between",
+					mb: { xs: 1.5, sm: 2 },
+					pb: { xs: 1, sm: 1.5 },
+					borderBottom: `1px solid ${theme.palette.divider}`,
+				}}
+			>
+				<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 } }}>
 					<Box sx={{ color: theme.palette.primary.main }}>{icon}</Box>
-					<Typography variant="subtitle1" fontWeight="bold">
+					<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>
 						{title}
 					</Typography>
 				</Box>
@@ -623,14 +669,17 @@ const AdminDashboard = () => {
 			<MainCard
 				title="Dashboard"
 				secondary={
-					<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+					<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 2 }, flexWrap: "wrap", justifyContent: "flex-end" }}>
 						{lastUpdated && (
 							<Chip
 								size="small"
 								icon={<Clock size={14} />}
-								label={`Actualizado: ${new Date(lastUpdated).toLocaleString("es-ES")}`}
+								label={`${new Date(lastUpdated).toLocaleString("es-ES")}`}
 								variant="outlined"
-								sx={{ borderRadius: 1.5 }}
+								sx={{
+									borderRadius: 1.5,
+									display: { xs: "none", sm: "flex" },
+								}}
 							/>
 						)}
 						<Tooltip title="Actualizar datos">
@@ -654,12 +703,16 @@ const AdminDashboard = () => {
 				`}</style>
 
 				{/* Primary KPIs Row - Most Important Metrics */}
-				<Box sx={{ mb: 4 }}>
-					<Typography variant="overline" color="textSecondary" sx={{ mb: 2, display: "block", letterSpacing: 1.5 }}>
+				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
+					<Typography
+						variant="overline"
+						color="textSecondary"
+						sx={{ mb: { xs: 1, sm: 2 }, display: "block", letterSpacing: 1.5, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}
+					>
 						Resumen General
 					</Typography>
-					<Grid container spacing={2}>
-						<Grid item xs={12} sm={6} md={3}>
+					<Grid container spacing={{ xs: 1, sm: 2 }}>
+						<Grid item xs={6} sm={6} md={3}>
 							<PrimaryKPICard
 								title="Total Usuarios"
 								value={data?.users.total || 0}
@@ -670,7 +723,7 @@ const AdminDashboard = () => {
 								linkTo="/admin/users"
 							/>
 						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
+						<Grid item xs={6} sm={6} md={3}>
 							<PrimaryKPICard
 								title="Suscripciones Activas"
 								value={data?.subscriptions.active || 0}
@@ -681,7 +734,7 @@ const AdminDashboard = () => {
 								linkTo="/admin/usuarios/suscripciones"
 							/>
 						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
+						<Grid item xs={6} sm={6} md={3}>
 							<PrimaryKPICard
 								title="Carpetas Verificadas"
 								value={data?.folders.verified || 0}
@@ -692,7 +745,7 @@ const AdminDashboard = () => {
 								linkTo="/admin/causas/verified"
 							/>
 						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
+						<Grid item xs={6} sm={6} md={3}>
 							<PrimaryKPICard
 								title="Carpetas Totales"
 								value={data?.folders.total || 0}
@@ -702,7 +755,7 @@ const AdminDashboard = () => {
 								infoKey="totalFolders"
 							/>
 						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
+						<Grid item xs={6} sm={6} md={3}>
 							<PrimaryKPICard
 								title="Contactos Totales"
 								value={data?.contacts?.total || 0}
@@ -712,7 +765,7 @@ const AdminDashboard = () => {
 								infoKey="userContacts"
 							/>
 						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
+						<Grid item xs={6} sm={6} md={3}>
 							<PrimaryKPICard
 								title="Calculadores Totales"
 								value={data?.calculators?.total || 0}
@@ -722,7 +775,7 @@ const AdminDashboard = () => {
 								infoKey="userCalculators"
 							/>
 						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
+						<Grid item xs={6} sm={6} md={3}>
 							<PrimaryKPICard
 								title="Contactos Marketing"
 								value={data?.marketing.contacts.total || 0}
@@ -733,7 +786,7 @@ const AdminDashboard = () => {
 								linkTo="/admin/marketing/contacts"
 							/>
 						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
+						<Grid item xs={6} sm={6} md={3}>
 							<PrimaryKPICard
 								title="Créditos NeverBounce"
 								value={neverBounceCredits || 0}
@@ -744,7 +797,7 @@ const AdminDashboard = () => {
 								linkTo="/admin/workers/email-verification"
 							/>
 						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
+						<Grid item xs={6} sm={6} md={3}>
 							<PrimaryKPICard
 								title="Saldo Capsolver"
 								value={capsolverBalance !== null ? Number(capsolverBalance.toFixed(2)) : 0}
@@ -759,11 +812,11 @@ const AdminDashboard = () => {
 				</Box>
 
 				{/* Detailed Sections with Charts */}
-				<Grid container spacing={3}>
+				<Grid container spacing={{ xs: 2, sm: 3 }}>
 					{/* Users Section with Charts */}
 					<Grid item xs={12} lg={6}>
 						<SectionHeader title="Usuarios" subtitle="Estadísticas de usuarios registrados" icon={<UserSquare size={22} variant="Bold" />} />
-						<Grid container spacing={2}>
+						<Grid container spacing={{ xs: 1.5, sm: 2 }}>
 							{/* User Status Donut Chart */}
 							<Grid item xs={12} sm={6}>
 								<ChartCard title="Estado de Usuarios" icon={<TickCircle size={18} />} linkTo="/admin/users" height={200}>
@@ -863,7 +916,7 @@ const AdminDashboard = () => {
 							subtitle="Distribución por planes y modo"
 							icon={<ReceiptItem size={22} variant="Bold" />}
 						/>
-						<Grid container spacing={2}>
+						<Grid container spacing={{ xs: 1.5, sm: 2 }}>
 							{/* Plan Distribution Pie Chart - Live Mode */}
 							<Grid item xs={12} sm={6}>
 								<ChartCard title="Distribución por Plan (Live)" icon={<TickCircle size={18} />} linkTo="/admin/usuarios/suscripciones" height={200}>
@@ -919,14 +972,14 @@ const AdminDashboard = () => {
 								<Paper
 									elevation={0}
 									sx={{
-										p: 2.5,
+										p: { xs: 1.5, sm: 2.5 },
 										borderRadius: 2,
 										bgcolor: alpha(COLORS.warning.main, 0.04),
 										border: `1px dashed ${alpha(COLORS.warning.main, 0.3)}`,
 										height: "100%",
 									}}
 								>
-									<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+									<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: { xs: 1.5, sm: 2 } }}>
 										<Chip
 											size="small"
 											label="TEST MODE"
@@ -934,22 +987,24 @@ const AdminDashboard = () => {
 												bgcolor: alpha(COLORS.warning.main, 0.15),
 												color: COLORS.warning.main,
 												fontWeight: 600,
-												fontSize: "0.65rem",
+												fontSize: { xs: "0.6rem", sm: "0.65rem" },
 											}}
 										/>
 										<InfoTooltip metricKey="testSubscriptions" />
 									</Box>
-									<Grid container spacing={2}>
+									<Grid container spacing={{ xs: 1, sm: 2 }}>
 										<Grid item xs={4}>
 											<Box sx={{ textAlign: "center" }}>
 												{loading ? (
 													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.neutral.main }}>
+													<Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}>
 														{(data?.subscriptions.test?.byPlan?.free || 0).toLocaleString()}
 													</Typography>
 												)}
-												<Typography variant="caption" color="textSecondary">Free</Typography>
+												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+													Free
+												</Typography>
 											</Box>
 										</Grid>
 										<Grid item xs={4}>
@@ -957,11 +1012,13 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.neutral.main }}>
+													<Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}>
 														{(data?.subscriptions.test?.byPlan?.standard || 0).toLocaleString()}
 													</Typography>
 												)}
-												<Typography variant="caption" color="textSecondary">Standard</Typography>
+												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+													Standard
+												</Typography>
 											</Box>
 										</Grid>
 										<Grid item xs={4}>
@@ -969,19 +1026,31 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.neutral.main }}>
+													<Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}>
 														{(data?.subscriptions.test?.byPlan?.premium || 0).toLocaleString()}
 													</Typography>
 												)}
-												<Typography variant="caption" color="textSecondary">Premium</Typography>
+												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+													Premium
+												</Typography>
 											</Box>
 										</Grid>
 									</Grid>
-									<Box sx={{ mt: 2, pt: 2, borderTop: `1px dashed ${theme.palette.divider}`, display: "flex", justifyContent: "space-between" }}>
-										<Typography variant="body2" color="textSecondary">
+									<Box
+										sx={{
+											mt: { xs: 1.5, sm: 2 },
+											pt: { xs: 1.5, sm: 2 },
+											borderTop: `1px dashed ${theme.palette.divider}`,
+											display: "flex",
+											justifyContent: "space-between",
+											flexWrap: "wrap",
+											gap: 1,
+										}}
+									>
+										<Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}>
 											Total: <strong>{(data?.subscriptions.test?.total || 0).toLocaleString()}</strong>
 										</Typography>
-										<Typography variant="body2" color="textSecondary">
+										<Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}>
 											Activas: <strong style={{ color: COLORS.warning.main }}>{(data?.subscriptions.test?.active || 0).toLocaleString()}</strong>
 										</Typography>
 									</Box>
@@ -993,15 +1062,15 @@ const AdminDashboard = () => {
 								<Paper
 									elevation={0}
 									sx={{
-										p: 2,
+										p: { xs: 1.5, sm: 2 },
 										borderRadius: 2,
 										bgcolor: alpha(COLORS.success.main, 0.05),
 										border: `1px solid ${alpha(COLORS.success.main, 0.2)}`,
 									}}
 								>
-									<Grid container spacing={2} alignItems="center">
+									<Grid container spacing={{ xs: 1, sm: 2 }} alignItems="center">
 										<Grid item xs={12} sm={6}>
-											<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Box sx={{ display: "flex", alignItems: "center", gap: 1, justifyContent: { xs: "center", sm: "flex-start" } }}>
 												<Chip
 													size="small"
 													label="LIVE MODE"
@@ -1009,7 +1078,7 @@ const AdminDashboard = () => {
 														bgcolor: alpha(COLORS.success.main, 0.15),
 														color: COLORS.success.main,
 														fontWeight: 600,
-														fontSize: "0.65rem",
+														fontSize: { xs: "0.6rem", sm: "0.65rem" },
 													}}
 												/>
 												<InfoTooltip metricKey="liveSubscriptions" />
@@ -1020,11 +1089,13 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.primary.main }}>
+													<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.primary.main, fontSize: { xs: "1.25rem", sm: "1.5rem" } }}>
 														{(data?.subscriptions.live?.total || 0).toLocaleString()}
 													</Typography>
 												)}
-												<Typography variant="caption" color="textSecondary">Total</Typography>
+												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+													Total
+												</Typography>
 											</Box>
 										</Grid>
 										<Grid item xs={6} sm={3}>
@@ -1032,11 +1103,13 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.success.main }}>
+													<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.success.main, fontSize: { xs: "1.25rem", sm: "1.5rem" } }}>
 														{(data?.subscriptions.live?.active || 0).toLocaleString()}
 													</Typography>
 												)}
-												<Typography variant="caption" color="textSecondary">Activas</Typography>
+												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+													Activas
+												</Typography>
 											</Box>
 										</Grid>
 									</Grid>
@@ -1048,7 +1121,7 @@ const AdminDashboard = () => {
 					{/* Folders Section with Bar Chart */}
 					<Grid item xs={12} md={6}>
 						<SectionHeader title="Carpetas / Causas" subtitle="Comparación PJN vs MEV" icon={<Folder size={22} variant="Bold" />} />
-						<Grid container spacing={2}>
+						<Grid container spacing={{ xs: 1.5, sm: 2 }}>
 							{/* Bar Chart comparing PJN vs MEV */}
 							<Grid item xs={12}>
 								<ChartCard title="Comparación por Fuente" icon={<Folder size={18} />} height={220}>
@@ -1084,7 +1157,7 @@ const AdminDashboard = () => {
 									elevation={0}
 									onClick={() => navigate("/admin/causas/verified-app")}
 									sx={{
-										p: 2,
+										p: { xs: 1.5, sm: 2 },
 										borderRadius: 2,
 										bgcolor: alpha(COLORS.primary.main, 0.05),
 										border: `1px solid ${alpha(COLORS.primary.main, 0.15)}`,
@@ -1096,23 +1169,27 @@ const AdminDashboard = () => {
 										},
 									}}
 								>
-									<Typography variant="overline" color="textSecondary">PJN</Typography>
-									<Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+									<Typography variant="overline" color="textSecondary" sx={{ fontSize: { xs: "0.6rem", sm: "0.75rem" } }}>
+										PJN
+									</Typography>
+									<Box sx={{ display: "flex", alignItems: "baseline", gap: { xs: 0.5, sm: 1 }, flexWrap: "wrap" }}>
 										{loading ? (
 											<Skeleton variant="text" width={60} height={40} />
 										) : (
-											<Typography variant="h3" sx={{ fontWeight: 700, color: COLORS.primary.main }}>
+											<Typography variant="h3" sx={{ fontWeight: 700, color: COLORS.primary.main, fontSize: { xs: "1.5rem", sm: "2rem" } }}>
 												{(data?.folders.pjn?.total || 0).toLocaleString()}
 											</Typography>
 										)}
-										<Typography variant="body2" color="textSecondary">total</Typography>
-									</Box>
-									<Box sx={{ display: "flex", gap: 2, mt: 1 }}>
-										<Typography variant="caption" sx={{ color: COLORS.success.main }}>
-											✓ {(data?.folders.pjn?.verified || 0).toLocaleString()} verif.
+										<Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}>
+											total
 										</Typography>
-										<Typography variant="caption" sx={{ color: COLORS.neutral.main }}>
-											○ {(data?.folders.pjn?.nonVerified || 0).toLocaleString()} no verif.
+									</Box>
+									<Box sx={{ display: "flex", gap: { xs: 1, sm: 2 }, mt: 1, flexWrap: "wrap" }}>
+										<Typography variant="caption" sx={{ color: COLORS.success.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+											✓ {(data?.folders.pjn?.verified || 0).toLocaleString()}
+										</Typography>
+										<Typography variant="caption" sx={{ color: COLORS.neutral.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+											○ {(data?.folders.pjn?.nonVerified || 0).toLocaleString()}
 										</Typography>
 									</Box>
 								</Paper>
@@ -1122,7 +1199,7 @@ const AdminDashboard = () => {
 									elevation={0}
 									onClick={() => navigate("/admin/mev/verified-app")}
 									sx={{
-										p: 2,
+										p: { xs: 1.5, sm: 2 },
 										borderRadius: 2,
 										bgcolor: alpha(COLORS.primary.main, 0.05),
 										border: `1px solid ${alpha(COLORS.primary.main, 0.15)}`,
@@ -1134,23 +1211,27 @@ const AdminDashboard = () => {
 										},
 									}}
 								>
-									<Typography variant="overline" color="textSecondary">MEV</Typography>
-									<Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+									<Typography variant="overline" color="textSecondary" sx={{ fontSize: { xs: "0.6rem", sm: "0.75rem" } }}>
+										MEV
+									</Typography>
+									<Box sx={{ display: "flex", alignItems: "baseline", gap: { xs: 0.5, sm: 1 }, flexWrap: "wrap" }}>
 										{loading ? (
 											<Skeleton variant="text" width={60} height={40} />
 										) : (
-											<Typography variant="h3" sx={{ fontWeight: 700, color: COLORS.primary.main }}>
+											<Typography variant="h3" sx={{ fontWeight: 700, color: COLORS.primary.main, fontSize: { xs: "1.5rem", sm: "2rem" } }}>
 												{(data?.folders.mev?.total || 0).toLocaleString()}
 											</Typography>
 										)}
-										<Typography variant="body2" color="textSecondary">total</Typography>
-									</Box>
-									<Box sx={{ display: "flex", gap: 2, mt: 1 }}>
-										<Typography variant="caption" sx={{ color: COLORS.success.main }}>
-											✓ {(data?.folders.mev?.verified || 0).toLocaleString()} verif.
+										<Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}>
+											total
 										</Typography>
-										<Typography variant="caption" sx={{ color: COLORS.neutral.main }}>
-											○ {(data?.folders.mev?.nonVerified || 0).toLocaleString()} no verif.
+									</Box>
+									<Box sx={{ display: "flex", gap: { xs: 1, sm: 2 }, mt: 1, flexWrap: "wrap" }}>
+										<Typography variant="caption" sx={{ color: COLORS.success.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+											✓ {(data?.folders.mev?.verified || 0).toLocaleString()}
+										</Typography>
+										<Typography variant="caption" sx={{ color: COLORS.neutral.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+											○ {(data?.folders.mev?.nonVerified || 0).toLocaleString()}
 										</Typography>
 									</Box>
 								</Paper>
@@ -1161,7 +1242,7 @@ const AdminDashboard = () => {
 					{/* Marketing Section with Charts */}
 					<Grid item xs={12} md={6}>
 						<SectionHeader title="Marketing" subtitle="Email marketing y segmentación" icon={<Sms size={22} variant="Bold" />} />
-						<Grid container spacing={2}>
+						<Grid container spacing={{ xs: 1.5, sm: 2 }}>
 							{/* Campaigns Stats */}
 							<Grid item xs={12}>
 								<GroupedCard title="Campañas" icon={<Sms size={18} />} linkTo="/admin/marketing/mailing">
