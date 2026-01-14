@@ -248,19 +248,38 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color, loading 
 		<Paper
 			elevation={0}
 			sx={{
-				p: 2,
+				p: { xs: 1.5, sm: 2 },
 				borderRadius: 2,
 				bgcolor: theme.palette.background.paper,
 				border: `1px solid ${theme.palette.divider}`,
+				height: "100%",
 			}}
 		>
-			<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-				<Box sx={{ p: 1, borderRadius: 1.5, bgcolor: alpha(color, 0.1), color: color }}>{icon}</Box>
-				<Box>
-					<Typography variant="body2" color="textSecondary">
+			<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 1.5 } }}>
+				<Box
+					sx={{
+						p: { xs: 0.75, sm: 1 },
+						borderRadius: 1.5,
+						bgcolor: alpha(color, 0.1),
+						color: color,
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+					}}
+				>
+					{icon}
+				</Box>
+				<Box sx={{ minWidth: 0 }}>
+					<Typography variant="body2" color="textSecondary" noWrap sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
 						{label}
 					</Typography>
-					{loading ? <Skeleton variant="text" width={40} height={28} /> : <Typography variant="h5" fontWeight="bold">{value.toLocaleString()}</Typography>}
+					{loading ? (
+						<Skeleton variant="text" width={40} height={28} />
+					) : (
+						<Typography variant="h5" fontWeight="bold" sx={{ fontSize: { xs: "1rem", sm: "1.25rem" } }}>
+							{value.toLocaleString()}
+						</Typography>
+					)}
 				</Box>
 			</Box>
 		</Paper>
@@ -406,8 +425,8 @@ const UserResources: React.FC = () => {
 	return (
 		<MainCard title="Recursos de Usuarios" content={false}>
 			{/* Stats Cards */}
-			<Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
-				<Grid container spacing={2}>
+			<Box sx={{ p: { xs: 1.5, sm: 2 }, borderBottom: 1, borderColor: "divider" }}>
+				<Grid container spacing={{ xs: 1, sm: 2 }}>
 					<Grid item xs={6} sm={4} md={2}>
 						<StatCard label="Carpetas" value={stats.folders} icon={<Folder size={20} />} color={theme.palette.primary.main} loading={statsLoading} />
 					</Grid>
@@ -431,22 +450,37 @@ const UserResources: React.FC = () => {
 
 			{/* Tabs */}
 			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-				<Tabs value={activeTab} onChange={handleTabChange} aria-label="resource tabs">
+				<Tabs
+					value={activeTab}
+					onChange={handleTabChange}
+					aria-label="resource tabs"
+					variant="scrollable"
+					scrollButtons="auto"
+					allowScrollButtonsMobile
+				>
 					{tabs.map((tab, index) => (
-						<Tab key={tab.type} icon={tab.icon} iconPosition="start" label={tab.label} id={`resource-tab-${index}`} />
+						<Tab
+							key={tab.type}
+							icon={tab.icon}
+							iconPosition="start"
+							label={tab.label}
+							id={`resource-tab-${index}`}
+							sx={{ minHeight: { xs: 48, sm: 64 }, px: { xs: 1.5, sm: 2 } }}
+						/>
 					))}
 				</Tabs>
 			</Box>
 
 			{/* Search */}
-			<Box sx={{ p: 2, display: "flex", gap: 2 }}>
+			<Box sx={{ p: { xs: 1.5, sm: 2 }, display: "flex", gap: 2 }}>
 				<TextField
 					size="small"
 					placeholder="Buscar..."
 					value={searchInput}
 					onChange={(e) => setSearchInput(e.target.value)}
 					onKeyPress={handleKeyPress}
-					sx={{ minWidth: 300 }}
+					fullWidth
+					sx={{ maxWidth: { xs: "100%", sm: 300 } }}
 					InputProps={{
 						startAdornment: (
 							<InputAdornment position="start">
@@ -465,8 +499,8 @@ const UserResources: React.FC = () => {
 			</Box>
 
 			{/* Table */}
-			<TableContainer>
-				<Table size="small">
+			<TableContainer sx={{ overflowX: "auto", maxWidth: "100%" }}>
+				<Table size="small" sx={{ minWidth: { xs: 800, md: "100%" } }}>
 					<TableHead>
 						<TableRow>
 							{isUsersTab ? (
@@ -613,6 +647,20 @@ const UserResources: React.FC = () => {
 				rowsPerPageOptions={[10, 25, 50, 100]}
 				labelRowsPerPage="Filas por página:"
 				labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+				sx={{
+					".MuiTablePagination-toolbar": {
+						flexWrap: { xs: "wrap", sm: "nowrap" },
+						justifyContent: { xs: "center", sm: "flex-end" },
+						gap: { xs: 1, sm: 0 },
+						py: { xs: 1, sm: 0 },
+					},
+					".MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows": {
+						fontSize: { xs: "0.75rem", sm: "0.875rem" },
+					},
+					".MuiTablePagination-actions": {
+						ml: { xs: 0, sm: 2 },
+					},
+				}}
 			/>
 		</MainCard>
 	);
