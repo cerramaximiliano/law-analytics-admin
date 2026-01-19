@@ -30,11 +30,13 @@ export interface FolderSourceStats {
 	total: number;
 	verified: number;
 	nonVerified: number;
+	pending: number;
 }
 
 export interface FolderStats {
 	total: number;
 	verified: number;
+	pending: number;
 	pjn: FolderSourceStats;
 	mev: FolderSourceStats;
 }

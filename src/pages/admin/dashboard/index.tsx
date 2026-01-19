@@ -96,14 +96,17 @@ const metricInfo: Record<string, string> = {
 	// Folders
 	totalFolders: "Total de carpetas/causas creadas por todos los usuarios en la plataforma.",
 	verifiedFolders: "Carpetas vinculadas y verificadas con fuentes externas (PJN + MEV).",
+	pendingFolders: "Carpetas pendientes de verificación (aún no han sido procesadas por el sistema de verificación).",
 	// PJN Folders
-	pjnTotal: "Total de causas PJN (Poder Judicial de la Nación) = Verificadas + No Verificadas.",
+	pjnTotal: "Total de causas PJN (Poder Judicial de la Nación) = Verificadas + No Verificadas + Pendientes.",
 	pjnVerified: "Causas PJN verificadas y válidas (verified: true, isValid: true). Corresponde a la ruta 'Carpetas Verificadas (App)'.",
 	pjnNonVerified: "Causas PJN verificadas pero no válidas (verified: true, isValid: false). Corresponde a la ruta 'Carpetas No Verificadas'.",
+	pjnPending: "Causas PJN pendientes de verificación (verified: false). Aún no han sido procesadas.",
 	// MEV Folders
-	mevTotal: "Total de causas MEV (Mesa de Entradas Virtual de la Provincia de Buenos Aires) = Verificadas + No Verificadas.",
+	mevTotal: "Total de causas MEV (Mesa de Entradas Virtual de la Provincia de Buenos Aires) = Verificadas + No Verificadas + Pendientes.",
 	mevVerified: "Causas MEV verificadas y válidas (verified: true, isValid: true). Corresponde a la ruta 'MEV Verificadas (App)'.",
 	mevNonVerified: "Causas MEV verificadas pero no válidas (verified: true, isValid: false). Corresponde a la ruta 'MEV No Verificadas'.",
+	mevPending: "Causas MEV pendientes de verificación (verified: false). Aún no han sido procesadas.",
 	// Marketing - Campaigns
 	totalCampaigns: "Total de campañas de email marketing creadas.",
 	activeCampaigns: "Campañas que están actualmente en ejecución enviando correos.",
@@ -618,11 +621,13 @@ const AdminDashboard = () => {
 			name: "PJN",
 			verificadas: data.folders.pjn?.verified || 0,
 			noVerificadas: data.folders.pjn?.nonVerified || 0,
+			pendientes: data.folders.pjn?.pending || 0,
 		},
 		{
 			name: "MEV",
 			verificadas: data.folders.mev?.verified || 0,
 			noVerificadas: data.folders.mev?.nonVerified || 0,
+			pendientes: data.folders.mev?.pending || 0,
 		},
 	] : [], [data]);
 
@@ -743,6 +748,16 @@ const AdminDashboard = () => {
 								loading={loading}
 								infoKey="verifiedFolders"
 								linkTo="/admin/causas/verified"
+							/>
+						</Grid>
+						<Grid item xs={6} sm={6} md={3}>
+							<PrimaryKPICard
+								title="Carpetas Pendientes"
+								value={data?.folders.pending || 0}
+								icon={<Folder size={20} />}
+								valueColor={COLORS.warning.main}
+								loading={loading}
+								infoKey="pendingFolders"
 							/>
 						</Grid>
 						<Grid item xs={6} sm={6} md={3}>
@@ -1145,6 +1160,7 @@ const AdminDashboard = () => {
 												<Legend />
 												<Bar dataKey="verificadas" name="Verificadas" fill={COLORS.success.main} radius={[4, 4, 0, 0]} />
 												<Bar dataKey="noVerificadas" name="No Verificadas" fill={COLORS.neutral.light} radius={[4, 4, 0, 0]} />
+												<Bar dataKey="pendientes" name="Pendientes" fill={COLORS.warning.main} radius={[4, 4, 0, 0]} />
 											</BarChart>
 										</ResponsiveContainer>
 									)}
@@ -1191,6 +1207,9 @@ const AdminDashboard = () => {
 										<Typography variant="caption" sx={{ color: COLORS.neutral.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
 											○ {(data?.folders.pjn?.nonVerified || 0).toLocaleString()}
 										</Typography>
+										<Typography variant="caption" sx={{ color: COLORS.warning.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+											◇ {(data?.folders.pjn?.pending || 0).toLocaleString()}
+										</Typography>
 									</Box>
 								</Paper>
 							</Grid>
@@ -1232,6 +1251,9 @@ const AdminDashboard = () => {
 										</Typography>
 										<Typography variant="caption" sx={{ color: COLORS.neutral.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
 											○ {(data?.folders.mev?.nonVerified || 0).toLocaleString()}
+										</Typography>
+										<Typography variant="caption" sx={{ color: COLORS.warning.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+											◇ {(data?.folders.mev?.pending || 0).toLocaleString()}
 										</Typography>
 									</Box>
 								</Paper>
