@@ -32,6 +32,16 @@ export interface MEVWorkerConfig {
 		last_success_date?: string;
 	};
 	settings?: {
+		environments?: {
+			development?: {
+				headless?: boolean;
+				log_level?: "debug" | "info" | "warn" | "error";
+			};
+			production?: {
+				headless?: boolean;
+				log_level?: "debug" | "info" | "warn" | "error";
+			};
+		};
 		headless?: boolean;
 		timeout_seconds?: number;
 		navigation_timeout?: number;
