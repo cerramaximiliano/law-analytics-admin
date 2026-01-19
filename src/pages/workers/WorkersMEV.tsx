@@ -33,7 +33,7 @@ import {
 	DialogActions,
 	Collapse,
 } from "@mui/material";
-import { Edit2, TickCircle, CloseCircle, Refresh, Calendar, ArrowDown2, ArrowUp2, InfoCircle } from "iconsax-react";
+import { Edit2, TickCircle, CloseCircle, Refresh, Calendar, ArrowDown2, ArrowUp2, InfoCircle, Eye, EyeSlash } from "iconsax-react";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -100,6 +100,7 @@ const MEVWorkers = () => {
 	const [workerInfoModalOpen, setWorkerInfoModalOpen] = useState(false);
 	const [guideModalOpen, setGuideModalOpen] = useState(false);
 	const [eligibilityModalOpen, setEligibilityModalOpen] = useState(false);
+	const [showPassword, setShowPassword] = useState(false);
 
 	// Helper para obtener labels
 	const getVerificationModeLabel = (value: string) => {
@@ -874,6 +875,266 @@ const MEVWorkers = () => {
 											</TableBody>
 										</Table>
 									</TableContainer>
+
+									{/* Configuración de Credenciales MEV */}
+									<Card variant="outlined" sx={{ mt: 3, backgroundColor: "background.default" }}>
+										<CardContent>
+											<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+												🔐 Credenciales de Acceso MEV
+											</Typography>
+											<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+												Credenciales utilizadas para acceder al sistema MEV. Estos datos son sensibles.
+											</Typography>
+											<Grid container spacing={2}>
+												<Grid item xs={12} sm={6}>
+													<TextField
+														fullWidth
+														size="small"
+														label="Usuario MEV"
+														value={
+															editingId === sharedWorker._id
+																? editValues.login?.username ?? ""
+																: sharedWorker.login?.username ?? ""
+														}
+														onChange={(e) => {
+															if (editingId === sharedWorker._id) {
+																setEditValues({
+																	...editValues,
+																	login: {
+																		...editValues.login,
+																		username: e.target.value,
+																	},
+																});
+															}
+														}}
+														disabled={editingId !== sharedWorker._id}
+														InputProps={{
+															readOnly: editingId !== sharedWorker._id,
+														}}
+													/>
+												</Grid>
+												<Grid item xs={12} sm={6}>
+													<TextField
+														fullWidth
+														size="small"
+														label="Contraseña MEV"
+														type={showPassword ? "text" : "password"}
+														value={
+															editingId === sharedWorker._id
+																? editValues.login?.password ?? ""
+																: sharedWorker.login?.password ?? ""
+														}
+														onChange={(e) => {
+															if (editingId === sharedWorker._id) {
+																setEditValues({
+																	...editValues,
+																	login: {
+																		...editValues.login,
+																		password: e.target.value,
+																	},
+																});
+															}
+														}}
+														disabled={editingId !== sharedWorker._id}
+														InputProps={{
+															readOnly: editingId !== sharedWorker._id,
+															endAdornment: (
+																<IconButton
+																	size="small"
+																	onClick={() => setShowPassword(!showPassword)}
+																	edge="end"
+																>
+																	{showPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
+																</IconButton>
+															),
+														}}
+													/>
+												</Grid>
+											</Grid>
+											{sharedWorker.login?.lastPasswordChange && (
+												<Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+													Último cambio de contraseña: {new Date(sharedWorker.login.lastPasswordChange).toLocaleDateString("es-AR")}
+												</Typography>
+											)}
+										</CardContent>
+									</Card>
+
+									{/* Configuración de Headless por Ambiente */}
+									<Card variant="outlined" sx={{ mt: 3, backgroundColor: "background.default" }}>
+										<CardContent>
+											<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+												🌍 Configuración de Headless por Ambiente
+											</Typography>
+											<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+												Controla si el navegador se ejecuta en modo headless (sin interfaz gráfica) según el ambiente.
+												En producción debería estar activado para mejor rendimiento.
+											</Typography>
+											<Grid container spacing={3}>
+												<Grid item xs={12} sm={6}>
+													<Card variant="outlined" sx={{ backgroundColor: "warning.lighter" }}>
+														<CardContent>
+															<Stack direction="row" justifyContent="space-between" alignItems="center">
+																<Box>
+																	<Typography variant="subtitle2" fontWeight="bold" color="warning.dark">
+																		🛠️ DEVELOPMENT
+																	</Typography>
+																	<Typography variant="caption" color="text.secondary">
+																		Modo desarrollo - Browser visible para debug
+																	</Typography>
+																</Box>
+																<Switch
+																	checked={
+																		editingId === sharedWorker._id
+																			? editValues.settings?.environments?.development?.headless ?? false
+																			: sharedWorker.settings?.environments?.development?.headless ?? false
+																	}
+																	onChange={() => {
+																		if (editingId === sharedWorker._id) {
+																			setEditValues({
+																				...editValues,
+																				settings: {
+																					...editValues.settings,
+																					environments: {
+																						...editValues.settings?.environments,
+																						development: {
+																							...editValues.settings?.environments?.development,
+																							headless: !editValues.settings?.environments?.development?.headless,
+																						},
+																					},
+																				},
+																			});
+																		} else {
+																			handleEdit(sharedWorker);
+																			setTimeout(() => {
+																				setEditValues((prev) => ({
+																					...prev,
+																					settings: {
+																						...prev.settings,
+																						environments: {
+																							...prev.settings?.environments,
+																							development: {
+																								...prev.settings?.environments?.development,
+																								headless: !sharedWorker.settings?.environments?.development?.headless,
+																							},
+																						},
+																					},
+																				}));
+																			}, 0);
+																		}
+																	}}
+																	color="warning"
+																/>
+															</Stack>
+															<Chip
+																label={
+																	(editingId === sharedWorker._id
+																		? editValues.settings?.environments?.development?.headless
+																		: sharedWorker.settings?.environments?.development?.headless) ?? false
+																		? "Headless: ON"
+																		: "Headless: OFF"
+																}
+																size="small"
+																color={
+																	(editingId === sharedWorker._id
+																		? editValues.settings?.environments?.development?.headless
+																		: sharedWorker.settings?.environments?.development?.headless) ?? false
+																		? "success"
+																		: "warning"
+																}
+																sx={{ mt: 1 }}
+															/>
+														</CardContent>
+													</Card>
+												</Grid>
+												<Grid item xs={12} sm={6}>
+													<Card variant="outlined" sx={{ backgroundColor: "success.lighter" }}>
+														<CardContent>
+															<Stack direction="row" justifyContent="space-between" alignItems="center">
+																<Box>
+																	<Typography variant="subtitle2" fontWeight="bold" color="success.dark">
+																		🚀 PRODUCTION
+																	</Typography>
+																	<Typography variant="caption" color="text.secondary">
+																		Modo producción - Sin interfaz gráfica
+																	</Typography>
+																</Box>
+																<Switch
+																	checked={
+																		editingId === sharedWorker._id
+																			? editValues.settings?.environments?.production?.headless ?? true
+																			: sharedWorker.settings?.environments?.production?.headless ?? true
+																	}
+																	onChange={() => {
+																		if (editingId === sharedWorker._id) {
+																			setEditValues({
+																				...editValues,
+																				settings: {
+																					...editValues.settings,
+																					environments: {
+																						...editValues.settings?.environments,
+																						production: {
+																							...editValues.settings?.environments?.production,
+																							headless: !editValues.settings?.environments?.production?.headless,
+																						},
+																					},
+																				},
+																			});
+																		} else {
+																			handleEdit(sharedWorker);
+																			setTimeout(() => {
+																				setEditValues((prev) => ({
+																					...prev,
+																					settings: {
+																						...prev.settings,
+																						environments: {
+																							...prev.settings?.environments,
+																							production: {
+																								...prev.settings?.environments?.production,
+																								headless: !(sharedWorker.settings?.environments?.production?.headless ?? true),
+																							},
+																						},
+																					},
+																				}));
+																			}, 0);
+																		}
+																	}}
+																	color="success"
+																/>
+															</Stack>
+															<Chip
+																label={
+																	(editingId === sharedWorker._id
+																		? editValues.settings?.environments?.production?.headless
+																		: sharedWorker.settings?.environments?.production?.headless) ?? true
+																		? "Headless: ON"
+																		: "Headless: OFF"
+																}
+																size="small"
+																color={
+																	(editingId === sharedWorker._id
+																		? editValues.settings?.environments?.production?.headless
+																		: sharedWorker.settings?.environments?.production?.headless) ?? true
+																		? "success"
+																		: "error"
+																}
+																sx={{ mt: 1 }}
+															/>
+														</CardContent>
+													</Card>
+												</Grid>
+											</Grid>
+											{editingId === sharedWorker._id && (
+												<Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end", gap: 1 }}>
+													<Button size="small" variant="outlined" color="error" onClick={handleCancelEdit}>
+														Cancelar
+													</Button>
+													<Button size="small" variant="contained" color="primary" onClick={handleSave}>
+														Guardar Cambios
+													</Button>
+												</Box>
+											)}
+										</CardContent>
+									</Card>
 								</>
 							);
 						}
