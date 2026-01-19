@@ -1,7 +1,9 @@
+import { useState } from "react";
 import {
 	Dialog,
 	DialogTitle,
 	DialogContent,
+	DialogActions,
 	IconButton,
 	Table,
 	TableBody,
@@ -17,9 +19,11 @@ import {
 	Stack,
 	Alert,
 	CircularProgress,
+	Tooltip,
+	Button,
 } from "@mui/material";
-import { CloseCircle, Link as LinkIcon } from "iconsax-react";
-import { JudicialMovement } from "api/judicialMovements";
+import { CloseCircle, Link as LinkIcon, Trash } from "iconsax-react";
+import { JudicialMovement, JudicialMovementsService } from "api/judicialMovements";
 
 interface JudicialMovementsModalProps {
 	open: boolean;
@@ -27,9 +31,52 @@ interface JudicialMovementsModalProps {
 	movements: JudicialMovement[];
 	loading: boolean;
 	error?: string;
+	onMovementDeleted?: () => void;
 }
 
-const JudicialMovementsModal = ({ open, onClose, movements, loading, error }: JudicialMovementsModalProps) => {
+const JudicialMovementsModal = ({ open, onClose, movements, loading, error, onMovementDeleted }: JudicialMovementsModalProps) => {
+	const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+	const [movementToDelete, setMovementToDelete] = useState<JudicialMovement | null>(null);
+	const [deleting, setDeleting] = useState(false);
+	const [deleteError, setDeleteError] = useState<string | null>(null);
+
+	// Manejar click en eliminar
+	const handleDeleteClick = (movement: JudicialMovement) => {
+		setMovementToDelete(movement);
+		setDeleteConfirmOpen(true);
+		setDeleteError(null);
+	};
+
+	// Confirmar eliminación
+	const handleDeleteConfirm = async () => {
+		if (!movementToDelete) return;
+
+		const movementId = typeof movementToDelete._id === "string" ? movementToDelete._id : movementToDelete._id.$oid;
+
+		setDeleting(true);
+		setDeleteError(null);
+
+		try {
+			await JudicialMovementsService.deleteMovement(movementId);
+			setDeleteConfirmOpen(false);
+			setMovementToDelete(null);
+			if (onMovementDeleted) {
+				onMovementDeleted();
+			}
+		} catch (err: any) {
+			setDeleteError(err.response?.data?.message || "Error al eliminar el movimiento");
+		} finally {
+			setDeleting(false);
+		}
+	};
+
+	// Cancelar eliminación
+	const handleDeleteCancel = () => {
+		setDeleteConfirmOpen(false);
+		setMovementToDelete(null);
+		setDeleteError(null);
+	};
+
 	// Formatear fecha UTC sin conversión a hora local
 	const formatDateUTC = (date: { $date: string } | string | undefined): string => {
 		if (!date) return "N/A";
@@ -132,6 +179,7 @@ const JudicialMovementsModal = ({ open, onClose, movements, loading, error }: Ju
 										<TableCell>Canales</TableCell>
 										<TableCell>Destinatarios</TableCell>
 										<TableCell align="center">Enlace</TableCell>
+										<TableCell align="center">Acciones</TableCell>
 									</TableRow>
 								</TableHead>
 								<TableBody>
@@ -206,6 +254,13 @@ const JudicialMovementsModal = ({ open, onClose, movements, loading, error }: Ju
 														</Typography>
 													)}
 												</TableCell>
+												<TableCell align="center">
+													<Tooltip title="Eliminar movimiento">
+														<IconButton size="small" color="error" onClick={() => handleDeleteClick(movement)}>
+															<Trash size={18} />
+														</IconButton>
+													</Tooltip>
+												</TableCell>
 											</TableRow>
 										);
 									})}
@@ -215,6 +270,41 @@ const JudicialMovementsModal = ({ open, onClose, movements, loading, error }: Ju
 					</>
 				)}
 			</DialogContent>
+
+			{/* Diálogo de confirmación de eliminación */}
+			<Dialog open={deleteConfirmOpen} onClose={handleDeleteCancel} maxWidth="xs" fullWidth>
+				<DialogTitle>Confirmar eliminación</DialogTitle>
+				<DialogContent>
+					<Typography>¿Está seguro que desea eliminar este movimiento judicial?</Typography>
+					{movementToDelete && (
+						<Box mt={2} p={2} bgcolor="grey.100" borderRadius={1}>
+							<Typography variant="body2">
+								<strong>Tipo:</strong> {movementToDelete.movimiento.tipo}
+							</Typography>
+							<Typography variant="body2">
+								<strong>Fecha:</strong> {formatDateUTC(movementToDelete.movimiento.fecha)}
+							</Typography>
+							<Typography variant="body2" sx={{ mt: 1 }}>
+								<strong>Detalle:</strong> {movementToDelete.movimiento.detalle.substring(0, 100)}
+								{movementToDelete.movimiento.detalle.length > 100 && "..."}
+							</Typography>
+						</Box>
+					)}
+					{deleteError && (
+						<Alert severity="error" sx={{ mt: 2 }}>
+							{deleteError}
+						</Alert>
+					)}
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleDeleteCancel} disabled={deleting}>
+						Cancelar
+					</Button>
+					<Button onClick={handleDeleteConfirm} color="error" variant="contained" disabled={deleting}>
+						{deleting ? <CircularProgress size={20} /> : "Eliminar"}
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</Dialog>
 	);
 };
