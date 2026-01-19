@@ -125,3 +125,25 @@ export interface UpdateEmailStatusParams {
 	status: "sent" | "failed" | "bounced" | "complained" | "delivered";
 	metadata?: Record<string, any>;
 }
+
+export interface DeleteEmailLogResponse {
+	success: boolean;
+	message: string;
+}
+
+export interface DeleteMultipleEmailLogsResponse {
+	success: boolean;
+	message: string;
+	data: {
+		deletedCount: number;
+		requestedCount: number;
+	};
+}
+
+export interface DeleteAllEmailLogsResponse {
+	success: boolean;
+	message: string;
+	data: {
+		deletedCount: number;
+	};
+}

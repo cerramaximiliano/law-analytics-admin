@@ -6,6 +6,7 @@ import {
 	Button,
 	Card,
 	CardContent,
+	Checkbox,
 	Chip,
 	FormControl,
 	Grid,
@@ -35,6 +36,7 @@ import {
 	DialogTitle,
 	DialogContent,
 	DialogActions,
+	DialogContentText,
 } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -58,14 +60,13 @@ import {
 	CloseCircle,
 	Refresh,
 	Filter,
-	Chart,
 	Sms,
 	TickCircle,
 	CloseSquare,
 	Warning2,
-	InfoCircle,
 	Copy,
 	Eye,
+	Trash,
 } from "iconsax-react";
 
 // Status chip colors
@@ -105,13 +106,14 @@ const getStatusLabel = (status: string) => {
 
 // Table headers
 const headCells = [
+	{ id: "checkbox", label: "", sortable: false, width: 50 },
 	{ id: "createdAt", label: "Fecha", sortable: true, width: 160 },
 	{ id: "to", label: "Destinatario", sortable: true, width: 200 },
 	{ id: "subject", label: "Asunto", sortable: false, width: 250 },
 	{ id: "templateCategory", label: "Categoria", sortable: true, width: 120 },
 	{ id: "templateName", label: "Plantilla", sortable: true, width: 150 },
 	{ id: "status", label: "Estado", sortable: true, width: 100 },
-	{ id: "actions", label: "Acciones", sortable: false, width: 100 },
+	{ id: "actions", label: "Acciones", sortable: false, width: 120 },
 ];
 
 // ==============================|| EMAIL LOGS PAGE ||============================== //
@@ -150,6 +152,15 @@ const EmailLogsPage = () => {
 	// Detail modal state
 	const [selectedLog, setSelectedLog] = useState<EmailLog | null>(null);
 	const [detailModalOpen, setDetailModalOpen] = useState(false);
+
+	// Selection state
+	const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+	// Delete dialog state
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [deleteType, setDeleteType] = useState<"single" | "multiple" | "all">("single");
+	const [logToDelete, setLogToDelete] = useState<EmailLog | null>(null);
+	const [deleting, setDeleting] = useState(false);
 
 	// Fetch logs
 	const fetchLogs = useCallback(async () => {
@@ -256,6 +267,75 @@ const EmailLogsPage = () => {
 		setDetailModalOpen(true);
 	};
 
+	// Selection handlers
+	const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+		if (event.target.checked) {
+			setSelectedIds(logs.map((log) => log._id));
+		} else {
+			setSelectedIds([]);
+		}
+	};
+
+	const handleSelectOne = (id: string) => {
+		const selectedIndex = selectedIds.indexOf(id);
+		let newSelected: string[] = [];
+
+		if (selectedIndex === -1) {
+			newSelected = [...selectedIds, id];
+		} else {
+			newSelected = selectedIds.filter((selectedId) => selectedId !== id);
+		}
+
+		setSelectedIds(newSelected);
+	};
+
+	const isSelected = (id: string) => selectedIds.indexOf(id) !== -1;
+
+	// Delete handlers
+	const handleOpenDeleteDialog = (type: "single" | "multiple" | "all", log?: EmailLog) => {
+		setDeleteType(type);
+		setLogToDelete(log || null);
+		setDeleteDialogOpen(true);
+	};
+
+	const handleCloseDeleteDialog = () => {
+		setDeleteDialogOpen(false);
+		setLogToDelete(null);
+	};
+
+	const handleConfirmDelete = async () => {
+		setDeleting(true);
+		try {
+			if (deleteType === "single" && logToDelete) {
+				await EmailLogsService.deleteEmailLog(logToDelete._id);
+			} else if (deleteType === "multiple") {
+				await EmailLogsService.deleteMultipleEmailLogs(selectedIds);
+				setSelectedIds([]);
+			} else if (deleteType === "all") {
+				await EmailLogsService.deleteAllEmailLogs();
+				setSelectedIds([]);
+			}
+			handleCloseDeleteDialog();
+			fetchLogs();
+			fetchStats();
+		} catch (err: any) {
+			setError(err.message || "Error al eliminar logs");
+		} finally {
+			setDeleting(false);
+		}
+	};
+
+	const getDeleteDialogMessage = () => {
+		if (deleteType === "single" && logToDelete) {
+			return `¿Está seguro que desea eliminar el log de correo enviado a "${logToDelete.to}"?`;
+		} else if (deleteType === "multiple") {
+			return `¿Está seguro que desea eliminar ${selectedIds.length} logs de correo seleccionados?`;
+		} else if (deleteType === "all") {
+			return `¿Está seguro que desea eliminar TODOS los logs de correo? Esta acción no se puede deshacer.`;
+		}
+		return "";
+	};
+
 	const formatDate = (dateString: string) => {
 		const date = new Date(dateString);
 		return date.toLocaleString("es-AR", {
@@ -324,6 +404,22 @@ const EmailLogsPage = () => {
 				title="Logs de Correos Electrónicos"
 				secondary={
 					<Stack direction="row" spacing={1}>
+						{selectedIds.length > 0 && (
+							<Button
+								variant="contained"
+								color="error"
+								size="small"
+								startIcon={<Trash size={18} />}
+								onClick={() => handleOpenDeleteDialog("multiple")}
+							>
+								Eliminar ({selectedIds.length})
+							</Button>
+						)}
+						<Tooltip title="Eliminar todos los logs">
+							<IconButton color="error" onClick={() => handleOpenDeleteDialog("all")}>
+								<Trash size={20} />
+							</IconButton>
+						</Tooltip>
 						<Tooltip title="Filtros">
 							<IconButton color={showFilters ? "primary" : "default"} onClick={() => setShowFilters(!showFilters)}>
 								<Filter size={20} />
@@ -482,25 +578,34 @@ const EmailLogsPage = () => {
 						<Table>
 							<TableHead>
 								<TableRow>
-									{headCells.map((cell) => (
-										<TableCell
-											key={cell.id}
-											sx={{ width: cell.width }}
-											sortDirection={orderBy === cell.id ? order : false}
-										>
-											{cell.sortable ? (
-												<TableSortLabel
-													active={orderBy === cell.id}
-													direction={orderBy === cell.id ? order : "asc"}
-													onClick={() => handleSort(cell.id)}
-												>
-													{cell.label}
-												</TableSortLabel>
-											) : (
-												cell.label
-											)}
-										</TableCell>
-									))}
+									<TableCell padding="checkbox" sx={{ width: 50 }}>
+										<Checkbox
+											indeterminate={selectedIds.length > 0 && selectedIds.length < logs.length}
+											checked={logs.length > 0 && selectedIds.length === logs.length}
+											onChange={handleSelectAll}
+										/>
+									</TableCell>
+									{headCells
+										.filter((cell) => cell.id !== "checkbox")
+										.map((cell) => (
+											<TableCell
+												key={cell.id}
+												sx={{ width: cell.width }}
+												sortDirection={orderBy === cell.id ? order : false}
+											>
+												{cell.sortable ? (
+													<TableSortLabel
+														active={orderBy === cell.id}
+														direction={orderBy === cell.id ? order : "asc"}
+														onClick={() => handleSort(cell.id)}
+													>
+														{cell.label}
+													</TableSortLabel>
+												) : (
+													cell.label
+												)}
+											</TableCell>
+										))}
 								</TableRow>
 							</TableHead>
 							<TableBody>
@@ -517,68 +622,86 @@ const EmailLogsPage = () => {
 										</TableCell>
 									</TableRow>
 								) : (
-									logs.map((log) => (
-										<TableRow key={log._id} hover>
-											<TableCell>
-												<Typography variant="body2">{formatDate(log.createdAt)}</Typography>
-											</TableCell>
-											<TableCell>
-												<Stack>
-													<Typography variant="body2" noWrap sx={{ maxWidth: 180 }}>
-														{log.to}
-													</Typography>
-													{log.userId && typeof log.userId === "object" && (
-														<Typography variant="caption" color="textSecondary">
-															{log.userId.name || log.userId.firstName}
+									logs.map((log) => {
+										const isItemSelected = isSelected(log._id);
+										return (
+											<TableRow key={log._id} hover selected={isItemSelected}>
+												<TableCell padding="checkbox">
+													<Checkbox
+														checked={isItemSelected}
+														onChange={() => handleSelectOne(log._id)}
+													/>
+												</TableCell>
+												<TableCell>
+													<Typography variant="body2">{formatDate(log.createdAt)}</Typography>
+												</TableCell>
+												<TableCell>
+													<Stack>
+														<Typography variant="body2" noWrap sx={{ maxWidth: 180 }}>
+															{log.to}
 														</Typography>
-													)}
-												</Stack>
-											</TableCell>
-											<TableCell>
-												<Tooltip title={log.subject}>
-													<Typography variant="body2" noWrap sx={{ maxWidth: 230 }}>
-														{log.subject}
-													</Typography>
-												</Tooltip>
-											</TableCell>
-											<TableCell>
-												<Chip
-													label={log.templateCategory || "-"}
-													size="small"
-													variant="outlined"
-												/>
-											</TableCell>
-											<TableCell>
-												<Typography variant="body2">{log.templateName || "-"}</Typography>
-											</TableCell>
-											<TableCell>
-												<Chip
-													label={getStatusLabel(log.status)}
-													size="small"
-													color={getStatusColor(log.status) as any}
-												/>
-											</TableCell>
-											<TableCell>
-												<Stack direction="row" spacing={0.5}>
-													<Tooltip title="Ver detalle">
-														<IconButton size="small" onClick={() => handleViewDetail(log)}>
-															<Eye size={18} />
-														</IconButton>
+														{log.userId && typeof log.userId === "object" && (
+															<Typography variant="caption" color="textSecondary">
+																{log.userId.name || log.userId.firstName}
+															</Typography>
+														)}
+													</Stack>
+												</TableCell>
+												<TableCell>
+													<Tooltip title={log.subject}>
+														<Typography variant="body2" noWrap sx={{ maxWidth: 230 }}>
+															{log.subject}
+														</Typography>
 													</Tooltip>
-													{log.sesMessageId && (
-														<Tooltip title="Copiar SES ID">
-															<IconButton
-																size="small"
-																onClick={() => handleCopyToClipboard(log.sesMessageId!)}
-															>
-																<Copy size={18} />
+												</TableCell>
+												<TableCell>
+													<Chip
+														label={log.templateCategory || "-"}
+														size="small"
+														variant="outlined"
+													/>
+												</TableCell>
+												<TableCell>
+													<Typography variant="body2">{log.templateName || "-"}</Typography>
+												</TableCell>
+												<TableCell>
+													<Chip
+														label={getStatusLabel(log.status)}
+														size="small"
+														color={getStatusColor(log.status) as any}
+													/>
+												</TableCell>
+												<TableCell>
+													<Stack direction="row" spacing={0.5}>
+														<Tooltip title="Ver detalle">
+															<IconButton size="small" onClick={() => handleViewDetail(log)}>
+																<Eye size={18} />
 															</IconButton>
 														</Tooltip>
-													)}
-												</Stack>
-											</TableCell>
-										</TableRow>
-									))
+														{log.sesMessageId && (
+															<Tooltip title="Copiar SES ID">
+																<IconButton
+																	size="small"
+																	onClick={() => handleCopyToClipboard(log.sesMessageId!)}
+																>
+																	<Copy size={18} />
+																</IconButton>
+															</Tooltip>
+														)}
+														<Tooltip title="Eliminar">
+															<IconButton
+																size="small"
+																color="error"
+																onClick={() => handleOpenDeleteDialog("single", log)}
+															>
+																<Trash size={18} />
+															</IconButton>
+														</Tooltip>
+													</Stack>
+												</TableCell>
+											</TableRow>
+										);
+									})
 								)}
 							</TableBody>
 						</Table>
@@ -725,6 +848,36 @@ const EmailLogsPage = () => {
 					</DialogContent>
 					<DialogActions>
 						<Button onClick={() => setDetailModalOpen(false)}>Cerrar</Button>
+					</DialogActions>
+				</Dialog>
+
+				{/* Delete Confirmation Dialog */}
+				<Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog} maxWidth="sm" fullWidth>
+					<DialogTitle>
+						{deleteType === "all" ? "Eliminar todos los logs" : "Confirmar eliminación"}
+					</DialogTitle>
+					<DialogContent>
+						<DialogContentText>{getDeleteDialogMessage()}</DialogContentText>
+						{deleteType === "all" && (
+							<Alert severity="warning" sx={{ mt: 2 }}>
+								Esta acción eliminará permanentemente todos los registros de logs de correo. Esta operación no
+								se puede deshacer.
+							</Alert>
+						)}
+					</DialogContent>
+					<DialogActions>
+						<Button onClick={handleCloseDeleteDialog} disabled={deleting}>
+							Cancelar
+						</Button>
+						<Button
+							onClick={handleConfirmDelete}
+							color="error"
+							variant="contained"
+							disabled={deleting}
+							startIcon={deleting ? <CircularProgress size={16} color="inherit" /> : <Trash size={16} />}
+						>
+							{deleting ? "Eliminando..." : "Eliminar"}
+						</Button>
 					</DialogActions>
 				</Dialog>
 			</MainCard>

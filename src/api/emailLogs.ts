@@ -6,6 +6,9 @@ import {
 	EmailLogTemplatesResponse,
 	EmailLogsQueryParams,
 	UpdateEmailStatusParams,
+	DeleteEmailLogResponse,
+	DeleteMultipleEmailLogsResponse,
+	DeleteAllEmailLogsResponse,
 } from "types/email-log";
 
 /**
@@ -88,6 +91,42 @@ class EmailLogsService {
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al actualizar estado del correo");
+		}
+	}
+
+	/**
+	 * Eliminar un log de correo por ID
+	 */
+	static async deleteEmailLog(id: string): Promise<DeleteEmailLogResponse> {
+		try {
+			const response = await adminAxios.delete<DeleteEmailLogResponse>(`/api/email-logs/${id}`);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al eliminar log de correo");
+		}
+	}
+
+	/**
+	 * Eliminar múltiples logs de correo por IDs
+	 */
+	static async deleteMultipleEmailLogs(ids: string[]): Promise<DeleteMultipleEmailLogsResponse> {
+		try {
+			const response = await adminAxios.post<DeleteMultipleEmailLogsResponse>("/api/email-logs/delete-multiple", { ids });
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al eliminar logs de correo");
+		}
+	}
+
+	/**
+	 * Eliminar todos los logs de correo
+	 */
+	static async deleteAllEmailLogs(): Promise<DeleteAllEmailLogsResponse> {
+		try {
+			const response = await adminAxios.delete<DeleteAllEmailLogsResponse>("/api/email-logs/all");
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al eliminar todos los logs de correo");
 		}
 	}
 }
