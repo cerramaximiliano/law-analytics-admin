@@ -137,6 +137,18 @@ class JudicialMovementsService {
 		}
 	}
 
+	async deleteMultipleMovements(ids: string[]): Promise<{ success: boolean; message: string; data: { deletedCount: number; requestedCount: number } }> {
+		try {
+			const apiBase = import.meta.env.VITE_NOTIFICATION_URL || import.meta.env.VITE_API_PJN || "";
+			const baseUrl = `${apiBase}/api/judicial-movements`;
+			const response = await axios.post(`${baseUrl}/delete-multiple`, { ids });
+			return response.data;
+		} catch (error: any) {
+			console.error("Error deleting multiple judicial movements:", error);
+			throw error;
+		}
+	}
+
 	async retryNotification(id: string): Promise<void> {
 		try {
 			const apiBase = import.meta.env.VITE_NOTIFICATION_URL || import.meta.env.VITE_API_PJN || "";

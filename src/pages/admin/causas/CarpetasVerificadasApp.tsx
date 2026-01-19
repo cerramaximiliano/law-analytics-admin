@@ -88,6 +88,7 @@ const CarpetasVerificadasApp = () => {
 	const [movementsModalOpen, setMovementsModalOpen] = useState(false);
 	const [loadingMovements, setLoadingMovements] = useState(false);
 	const [movementsError, setMovementsError] = useState<string>("");
+	const [selectedExpedienteId, setSelectedExpedienteId] = useState<string>("");
 
 	// Cargar causas verificadas
 	const fetchCausas = async (
@@ -351,6 +352,7 @@ const CarpetasVerificadasApp = () => {
 			setLoadingMovements(true);
 			setMovementsError("");
 			const causaId = getId(causa._id);
+			setSelectedExpedienteId(causaId);
 
 			const response = await JudicialMovementsService.getMovementsByExpedienteId(causaId);
 
@@ -365,6 +367,23 @@ const CarpetasVerificadasApp = () => {
 			console.error("Error al cargar notificaciones:", error);
 			setMovementsError("Error al cargar las notificaciones de movimientos judiciales");
 			setMovementsModalOpen(true);
+		} finally {
+			setLoadingMovements(false);
+		}
+	};
+
+	// Handler para recargar movimientos después de eliminar
+	const handleMovementDeleted = async () => {
+		if (!selectedExpedienteId) return;
+
+		try {
+			setLoadingMovements(true);
+			const response = await JudicialMovementsService.getMovementsByExpedienteId(selectedExpedienteId);
+			if (response.success) {
+				setJudicialMovements(response.data);
+			}
+		} catch (error) {
+			console.error("Error al recargar movimientos:", error);
 		} finally {
 			setLoadingMovements(false);
 		}
@@ -716,6 +735,7 @@ const CarpetasVerificadasApp = () => {
 				movements={judicialMovements}
 				loading={loadingMovements}
 				error={movementsError}
+				onMovementDeleted={handleMovementDeleted}
 			/>
 		</MainCard>
 	);

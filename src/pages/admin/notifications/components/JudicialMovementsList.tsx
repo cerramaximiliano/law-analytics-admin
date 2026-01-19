@@ -28,6 +28,7 @@ import {
 	DialogContent,
 	DialogContentText,
 	DialogActions,
+	Checkbox,
 } from "@mui/material";
 import {
 	RefreshSquare,
@@ -67,6 +68,11 @@ const JudicialMovementsList = () => {
 		movementInfo: null,
 	});
 	const [showRetentionInfo, setShowRetentionInfo] = useState(false);
+
+	// Estado para selección múltiple
+	const [selectedIds, setSelectedIds] = useState<string[]>([]);
+	const [deleteMultipleDialog, setDeleteMultipleDialog] = useState(false);
+	const [deletingMultiple, setDeletingMultiple] = useState(false);
 
 	// Filters state
 	const [filters, setFilters] = useState<JudicialMovementFilters>({
@@ -197,7 +203,7 @@ const JudicialMovementsList = () => {
 		if (!deleteDialog.movementId) return;
 
 		try {
-			const response = await judicialMovementsService.deleteMovement(deleteDialog.movementId);
+			await judicialMovementsService.deleteMovement(deleteDialog.movementId);
 			dispatch(
 				openSnackbar({
 					open: true,
@@ -223,6 +229,64 @@ const JudicialMovementsList = () => {
 			handleCloseDeleteDialog();
 		}
 	};
+
+	// Funciones para selección múltiple
+	const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+		if (event.target.checked) {
+			setSelectedIds(movements.map((m) => m._id));
+		} else {
+			setSelectedIds([]);
+		}
+	};
+
+	const handleSelectOne = (id: string) => {
+		setSelectedIds((prev) => (prev.includes(id) ? prev.filter((selectedId) => selectedId !== id) : [...prev, id]));
+	};
+
+	const handleOpenDeleteMultipleDialog = () => {
+		setDeleteMultipleDialog(true);
+	};
+
+	const handleCloseDeleteMultipleDialog = () => {
+		setDeleteMultipleDialog(false);
+	};
+
+	const handleConfirmDeleteMultiple = async () => {
+		if (selectedIds.length === 0) return;
+
+		setDeletingMultiple(true);
+		try {
+			const response = await judicialMovementsService.deleteMultipleMovements(selectedIds);
+			dispatch(
+				openSnackbar({
+					open: true,
+					message: `${response.data.deletedCount} movimientos judiciales eliminados exitosamente`,
+					variant: "success",
+					alert: { color: "success" },
+					close: false,
+				}),
+			);
+			setSelectedIds([]);
+			handleCloseDeleteMultipleDialog();
+			fetchMovements();
+		} catch (error: any) {
+			const errorMessage = error.response?.data?.message || "Error al eliminar los movimientos judiciales";
+			dispatch(
+				openSnackbar({
+					open: true,
+					message: errorMessage,
+					variant: "error",
+					alert: { color: "error" },
+					close: false,
+				}),
+			);
+		} finally {
+			setDeletingMultiple(false);
+		}
+	};
+
+	const isAllSelected = movements.length > 0 && selectedIds.length === movements.length;
+	const isSomeSelected = selectedIds.length > 0 && selectedIds.length < movements.length;
 
 	const getStatusColor = (status: string) => {
 		switch (status) {
@@ -402,9 +466,16 @@ const JudicialMovementsList = () => {
 
 			{/* Filters */}
 			<Box sx={{ mb: 2 }}>
-				<Button startIcon={<FilterSearch />} onClick={() => setShowFilters(!showFilters)} variant="outlined" sx={{ mb: 2 }}>
-					{showFilters ? "Ocultar Filtros" : "Mostrar Filtros"}
-				</Button>
+				<Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+					<Button startIcon={<FilterSearch />} onClick={() => setShowFilters(!showFilters)} variant="outlined">
+						{showFilters ? "Ocultar Filtros" : "Mostrar Filtros"}
+					</Button>
+					{selectedIds.length > 0 && (
+						<Button startIcon={<Trash />} onClick={handleOpenDeleteMultipleDialog} variant="contained" color="error">
+							Eliminar seleccionados ({selectedIds.length})
+						</Button>
+					)}
+				</Stack>
 
 				<Collapse in={showFilters}>
 					<Paper sx={{ p: 2, mb: 2 }}>
@@ -500,6 +571,13 @@ const JudicialMovementsList = () => {
 					<Table>
 						<TableHead>
 							<TableRow>
+								<TableCell padding="checkbox">
+									<Checkbox
+										indeterminate={isSomeSelected}
+										checked={isAllSelected}
+										onChange={handleSelectAll}
+									/>
+								</TableCell>
 								<TableCell />
 								<TableCell>Usuario</TableCell>
 								<TableCell>Expediente</TableCell>
@@ -513,7 +591,13 @@ const JudicialMovementsList = () => {
 						<TableBody>
 							{movements.map((movement) => (
 								<React.Fragment key={movement._id}>
-									<TableRow hover>
+									<TableRow hover selected={selectedIds.includes(movement._id)}>
+										<TableCell padding="checkbox">
+											<Checkbox
+												checked={selectedIds.includes(movement._id)}
+												onChange={() => handleSelectOne(movement._id)}
+											/>
+										</TableCell>
 										<TableCell>
 											<IconButton size="small" onClick={() => setExpandedRow(expandedRow === movement._id ? null : movement._id)}>
 												{expandedRow === movement._id ? <ArrowUp2 /> : <ArrowDown2 />}
@@ -592,7 +676,7 @@ const JudicialMovementsList = () => {
 										</TableCell>
 									</TableRow>
 									<TableRow>
-										<TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={8}>
+										<TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={9}>
 											<Collapse in={expandedRow === movement._id} timeout="auto" unmountOnExit>
 												<Box sx={{ margin: 2 }}>
 													<Typography variant="h6" gutterBottom>
@@ -728,6 +812,37 @@ const JudicialMovementsList = () => {
 					</Button>
 					<Button onClick={handleConfirmDelete} color="error" variant="contained" autoFocus>
 						Eliminar
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Dialog de confirmación para eliminar múltiples */}
+			<Dialog open={deleteMultipleDialog} onClose={handleCloseDeleteMultipleDialog} maxWidth="sm" fullWidth>
+				<DialogTitle>Confirmar Eliminación Múltiple</DialogTitle>
+				<DialogContent>
+					<DialogContentText>
+						<Typography variant="body1" paragraph>
+							¿Está seguro que desea eliminar <strong>{selectedIds.length}</strong> movimientos judiciales seleccionados?
+						</Typography>
+						<Alert severity="warning" sx={{ mb: 2 }}>
+							<Typography variant="body2">
+								<strong>Advertencia:</strong> Los movimientos eliminados no se podrán notificar si aún no han sido notificados. Esta acción no
+								se puede deshacer.
+							</Typography>
+						</Alert>
+						<Alert severity="info">
+							<Typography variant="body2">
+								<strong>Nota:</strong> Se eliminarán máximo 100 movimientos a la vez.
+							</Typography>
+						</Alert>
+					</DialogContentText>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleCloseDeleteMultipleDialog} color="primary" disabled={deletingMultiple}>
+						Cancelar
+					</Button>
+					<Button onClick={handleConfirmDeleteMultiple} color="error" variant="contained" disabled={deletingMultiple} autoFocus>
+						{deletingMultiple ? <CircularProgress size={24} /> : `Eliminar ${selectedIds.length} movimientos`}
 					</Button>
 				</DialogActions>
 			</Dialog>

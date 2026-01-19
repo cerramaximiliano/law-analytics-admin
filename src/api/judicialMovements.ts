@@ -58,6 +58,18 @@ export class JudicialMovementsService {
 		}
 	}
 
+	/**
+	 * Eliminar un movimiento judicial por ID
+	 */
+	static async deleteMovement(movementId: string): Promise<{ success: boolean; message: string }> {
+		try {
+			const response = await pjnAxios.delete(`/api/judicial-movements/${movementId}`);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
 	// Manejo de errores
 	static handleError(error: any): Error {
 		// Re-throw axios errors for interceptor handling
