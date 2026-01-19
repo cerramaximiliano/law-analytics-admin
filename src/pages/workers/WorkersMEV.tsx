@@ -901,8 +901,10 @@ const MEVWorkers = () => {
 																setEditValues({
 																	...editValues,
 																	login: {
-																		...editValues.login,
 																		username: e.target.value,
+																		password: editValues.login?.password ?? "",
+																		lastPasswordChange: editValues.login?.lastPasswordChange,
+																		passwordExpiryWarningShown: editValues.login?.passwordExpiryWarningShown,
 																	},
 																});
 															}
@@ -929,8 +931,10 @@ const MEVWorkers = () => {
 																setEditValues({
 																	...editValues,
 																	login: {
-																		...editValues.login,
+																		username: editValues.login?.username ?? "",
 																		password: e.target.value,
+																		lastPasswordChange: editValues.login?.lastPasswordChange,
+																		passwordExpiryWarningShown: editValues.login?.passwordExpiryWarningShown,
 																	},
 																});
 															}
