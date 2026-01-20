@@ -1,7 +1,7 @@
 import adminAxios from "utils/adminAxios";
 
 // Types
-export type ResourceType = "folder" | "contact" | "calculator" | "task" | "event";
+export type ResourceType = "folder" | "contact" | "calculator" | "task" | "event" | "movement";
 
 export interface ResourceUser {
 	_id: string;
@@ -62,7 +62,18 @@ export interface EventResource extends BaseResource {
 	allDay?: boolean;
 }
 
-export type Resource = FolderResource | ContactResource | CalculatorResource | TaskResource | EventResource;
+export interface MovementResource extends BaseResource {
+	title: string;
+	movement: string;
+	description?: string;
+	time: string;
+	dateExpiration?: string;
+	completed?: boolean;
+	folderId?: string;
+	link?: string;
+}
+
+export type Resource = FolderResource | ContactResource | CalculatorResource | TaskResource | EventResource | MovementResource;
 
 export interface ResourceFilters {
 	type: ResourceType;
@@ -100,6 +111,7 @@ export interface ResourcesStatsResponse {
 		calculators: number;
 		tasks: number;
 		events: number;
+		movements: number;
 		total: number;
 	};
 }
@@ -110,6 +122,7 @@ export interface UserResourceCounts {
 	calculators: number;
 	tasks: number;
 	events: number;
+	movements: number;
 	total: number;
 }
 

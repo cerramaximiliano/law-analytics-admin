@@ -22,7 +22,7 @@ import {
 	useTheme,
 	alpha,
 } from "@mui/material";
-import { SearchNormal1, CloseCircle, Folder, People, Calculator, Task, Calendar, ProfileCircle, CloudConnection } from "iconsax-react";
+import { SearchNormal1, CloseCircle, Folder, People, Calculator, Task, Calendar, ProfileCircle, CloudConnection, Activity } from "iconsax-react";
 import MainCard from "components/MainCard";
 import AdminResourcesService, {
 	ResourceType,
@@ -32,6 +32,7 @@ import AdminResourcesService, {
 	CalculatorResource,
 	TaskResource,
 	EventResource,
+	MovementResource,
 	ResourceUser,
 	UserWithResources,
 } from "api/adminResources";
@@ -50,6 +51,7 @@ const tabs: TabConfig[] = [
 	{ type: "calculator", label: "Calculadores", icon: <Calculator size={18} /> },
 	{ type: "task", label: "Tareas", icon: <Task size={18} /> },
 	{ type: "event", label: "Eventos", icon: <Calendar size={18} /> },
+	{ type: "movement", label: "Movimientos", icon: <Activity size={18} /> },
 	{ type: "users", label: "Usuarios", icon: <ProfileCircle size={18} /> },
 ];
 
@@ -228,6 +230,22 @@ const getColumnsByType = (type: ResourceType, theme: any): ColumnDef[] => {
 				createdAtColumn,
 			];
 
+		case "movement":
+			return [
+				...commonColumns,
+				{ id: "title", label: "Título", sortable: true, render: (r) => (r as MovementResource).title || "-" },
+				{ id: "movement", label: "Movimiento", sortable: true, render: (r) => (r as MovementResource).movement || "-" },
+				{ id: "time", label: "Fecha", sortable: true, render: (r) => formatDate((r as MovementResource).time) },
+				{ id: "dateExpiration", label: "Vencimiento", sortable: true, render: (r) => formatDate((r as MovementResource).dateExpiration) },
+				{
+					id: "completed",
+					label: "Completado",
+					sortable: true,
+					render: (r) => ((r as MovementResource).completed ? <Chip label="Sí" size="small" color="success" /> : <Chip label="No" size="small" variant="outlined" />),
+				},
+				createdAtColumn,
+			];
+
 		default:
 			return [...commonColumns, createdAtColumn];
 	}
@@ -299,7 +317,7 @@ const UserResources: React.FC = () => {
 	const [searchInput, setSearchInput] = useState("");
 	const [sortBy, setSortBy] = useState("createdAt");
 	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-	const [stats, setStats] = useState({ folders: 0, contacts: 0, calculators: 0, tasks: 0, events: 0, total: 0 });
+	const [stats, setStats] = useState({ folders: 0, contacts: 0, calculators: 0, tasks: 0, events: 0, movements: 0, total: 0 });
 	const [statsLoading, setStatsLoading] = useState(true);
 
 	const currentType = tabs[activeTab].type;
@@ -427,22 +445,25 @@ const UserResources: React.FC = () => {
 			{/* Stats Cards */}
 			<Box sx={{ p: { xs: 1.5, sm: 2 }, borderBottom: 1, borderColor: "divider" }}>
 				<Grid container spacing={{ xs: 1, sm: 2 }}>
-					<Grid item xs={6} sm={4} md={2}>
+					<Grid item xs={6} sm={4} md>
 						<StatCard label="Carpetas" value={stats.folders} icon={<Folder size={20} />} color={theme.palette.primary.main} loading={statsLoading} />
 					</Grid>
-					<Grid item xs={6} sm={4} md={2}>
+					<Grid item xs={6} sm={4} md>
 						<StatCard label="Contactos" value={stats.contacts} icon={<People size={20} />} color={theme.palette.info.main} loading={statsLoading} />
 					</Grid>
-					<Grid item xs={6} sm={4} md={2}>
+					<Grid item xs={6} sm={4} md>
 						<StatCard label="Calculadores" value={stats.calculators} icon={<Calculator size={20} />} color={theme.palette.success.main} loading={statsLoading} />
 					</Grid>
-					<Grid item xs={6} sm={4} md={2}>
+					<Grid item xs={6} sm={4} md>
 						<StatCard label="Tareas" value={stats.tasks} icon={<Task size={20} />} color={theme.palette.warning.main} loading={statsLoading} />
 					</Grid>
-					<Grid item xs={6} sm={4} md={2}>
+					<Grid item xs={6} sm={4} md>
 						<StatCard label="Eventos" value={stats.events} icon={<Calendar size={20} />} color={theme.palette.secondary.main} loading={statsLoading} />
 					</Grid>
-					<Grid item xs={6} sm={4} md={2}>
+					<Grid item xs={6} sm={4} md>
+						<StatCard label="Movimientos" value={stats.movements} icon={<Activity size={20} />} color={theme.palette.error.main} loading={statsLoading} />
+					</Grid>
+					<Grid item xs={6} sm={4} md>
 						<StatCard label="Total" value={stats.total} icon={<Folder size={20} />} color={theme.palette.text.primary} loading={statsLoading} />
 					</Grid>
 				</Grid>
@@ -510,17 +531,48 @@ const UserResources: React.FC = () => {
 											Usuario
 										</TableSortLabel>
 									</TableCell>
-									<TableCell align="center">Carpetas</TableCell>
-									<TableCell align="center">Contactos</TableCell>
-									<TableCell align="center">Calculadores</TableCell>
-									<TableCell align="center">Tareas</TableCell>
-									<TableCell align="center">Eventos</TableCell>
-									<TableCell align="center">Total</TableCell>
+									<TableCell align="center">
+										<TableSortLabel active={sortBy === "folders"} direction={sortBy === "folders" ? sortOrder : "asc"} onClick={() => handleSort("folders")}>
+											Carpetas
+										</TableSortLabel>
+									</TableCell>
+									<TableCell align="center">
+										<TableSortLabel active={sortBy === "contacts"} direction={sortBy === "contacts" ? sortOrder : "asc"} onClick={() => handleSort("contacts")}>
+											Contactos
+										</TableSortLabel>
+									</TableCell>
+									<TableCell align="center">
+										<TableSortLabel active={sortBy === "calculators"} direction={sortBy === "calculators" ? sortOrder : "asc"} onClick={() => handleSort("calculators")}>
+											Calculadores
+										</TableSortLabel>
+									</TableCell>
+									<TableCell align="center">
+										<TableSortLabel active={sortBy === "tasks"} direction={sortBy === "tasks" ? sortOrder : "asc"} onClick={() => handleSort("tasks")}>
+											Tareas
+										</TableSortLabel>
+									</TableCell>
+									<TableCell align="center">
+										<TableSortLabel active={sortBy === "events"} direction={sortBy === "events" ? sortOrder : "asc"} onClick={() => handleSort("events")}>
+											Eventos
+										</TableSortLabel>
+									</TableCell>
+									<TableCell align="center">
+										<TableSortLabel active={sortBy === "movements"} direction={sortBy === "movements" ? sortOrder : "asc"} onClick={() => handleSort("movements")}>
+											Movimientos
+										</TableSortLabel>
+									</TableCell>
+									<TableCell align="center">
+										<TableSortLabel active={sortBy === "total"} direction={sortBy === "total" ? sortOrder : "asc"} onClick={() => handleSort("total")}>
+											Total
+										</TableSortLabel>
+									</TableCell>
 									<TableCell align="right">
-										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.5 }}>
-											<CloudConnection size={16} />
-											Storage
-										</Box>
+										<TableSortLabel active={sortBy === "storage"} direction={sortBy === "storage" ? sortOrder : "asc"} onClick={() => handleSort("storage")}>
+											<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+												<CloudConnection size={16} />
+												Storage
+											</Box>
+										</TableSortLabel>
 									</TableCell>
 									<TableCell>
 										<TableSortLabel active={sortBy === "createdAt"} direction={sortBy === "createdAt" ? sortOrder : "asc"} onClick={() => handleSort("createdAt")}>
@@ -549,7 +601,7 @@ const UserResources: React.FC = () => {
 								<TableRow key={index}>
 									{isUsersTab ? (
 										<>
-											{Array.from({ length: 9 }).map((_, i) => (
+											{Array.from({ length: 11 }).map((_, i) => (
 												<TableCell key={i}>
 													<Skeleton variant="text" />
 												</TableCell>
@@ -567,7 +619,7 @@ const UserResources: React.FC = () => {
 						) : isUsersTab ? (
 							users.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={9} align="center">
+									<TableCell colSpan={11} align="center">
 										<Typography color="textSecondary" sx={{ py: 4 }}>
 											No se encontraron usuarios
 										</Typography>
@@ -602,6 +654,9 @@ const UserResources: React.FC = () => {
 										</TableCell>
 										<TableCell align="center">
 											<Chip label={user.resources.events} size="small" sx={{ minWidth: 40 }} />
+										</TableCell>
+										<TableCell align="center">
+											<Chip label={user.resources.movements} size="small" sx={{ minWidth: 40 }} />
 										</TableCell>
 										<TableCell align="center">
 											<Chip label={user.resources.total} size="small" color="primary" sx={{ minWidth: 40 }} />
