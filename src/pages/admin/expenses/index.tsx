@@ -38,10 +38,11 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/es";
-import { Add, Refresh, Edit2, Trash, SearchNormal1, DollarCircle, Calendar, Filter, CloseCircle } from "iconsax-react";
+import { Add, Refresh, Edit2, Trash, SearchNormal1, DollarCircle, Calendar, Filter, CloseCircle, Setting2, Wallet2, RefreshCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { ExpensesService, Expense, ExpenseType, CreateExpenseData } from "api/expenses";
+import OpenAIService, { OpenAIBalanceResponse } from "api/openai";
 
 // Status colors and labels
 const STATUS_CONFIG: Record<string, { color: "success" | "warning" | "error" | "default"; label: string }> = {
@@ -107,6 +108,17 @@ const ExpensesPage = () => {
 		tags: [],
 	});
 
+	// OpenAI Balance State
+	const [openaiBalance, setOpenaiBalance] = useState<OpenAIBalanceResponse["data"] | null>(null);
+	const [loadingOpenai, setLoadingOpenai] = useState(false);
+	const [openaiConfigOpen, setOpenaiConfigOpen] = useState(false);
+	const [savingOpenaiConfig, setSavingOpenaiConfig] = useState(false);
+	const [syncingOpenai, setSyncingOpenai] = useState(false);
+	const [openaiConfigForm, setOpenaiConfigForm] = useState({
+		initialBalance: 0,
+		initialBalanceDate: dayjs().format("YYYY-MM-DD"),
+	});
+
 	// Fetch expense types
 	const fetchExpenseTypes = useCallback(async () => {
 		try {
@@ -160,11 +172,67 @@ const ExpensesPage = () => {
 		}
 	}, []);
 
+	// Fetch OpenAI balance
+	const fetchOpenaiBalance = useCallback(async () => {
+		try {
+			setLoadingOpenai(true);
+			const response = await OpenAIService.getBalance();
+			if (response.success) {
+				setOpenaiBalance(response.data);
+				if (response.data.configured) {
+					setOpenaiConfigForm({
+						initialBalance: response.data.initialBalance,
+						initialBalanceDate: dayjs(response.data.initialBalanceDate).format("YYYY-MM-DD"),
+					});
+				}
+			}
+		} catch (error) {
+			console.error("Error fetching OpenAI balance:", error);
+		} finally {
+			setLoadingOpenai(false);
+		}
+	}, []);
+
+	// Save OpenAI config
+	const handleSaveOpenaiConfig = async () => {
+		try {
+			setSavingOpenaiConfig(true);
+			await OpenAIService.updateConfig({
+				initialBalance: openaiConfigForm.initialBalance,
+				initialBalanceDate: openaiConfigForm.initialBalanceDate,
+			});
+			enqueueSnackbar("Configuración de OpenAI actualizada", { variant: "success" });
+			setOpenaiConfigOpen(false);
+			fetchOpenaiBalance();
+		} catch (error: any) {
+			enqueueSnackbar(error?.message || "Error al guardar configuración", { variant: "error" });
+		} finally {
+			setSavingOpenaiConfig(false);
+		}
+	};
+
+	// Sync OpenAI costs
+	const handleSyncOpenai = async () => {
+		try {
+			setSyncingOpenai(true);
+			const response = await OpenAIService.syncCosts();
+			if (response.success) {
+				enqueueSnackbar("Costos de OpenAI sincronizados", { variant: "success" });
+				fetchOpenaiBalance();
+			}
+		} catch (error: any) {
+			enqueueSnackbar(error?.message || "Error al sincronizar", { variant: "error" });
+		} finally {
+			setSyncingOpenai(false);
+		}
+	};
+
 	// Initial load
 	useEffect(() => {
 		fetchExpenseTypes();
 		fetchStats();
-	}, [fetchExpenseTypes, fetchStats]);
+		fetchOpenaiBalance();
+	}, [fetchExpenseTypes, fetchStats, fetchOpenaiBalance]);
 
 	// Fetch expenses when filters change
 	useEffect(() => {
@@ -399,6 +467,97 @@ const ExpensesPage = () => {
 							</Card>
 						</Grid>
 					</Grid>
+
+					{/* OpenAI Balance Section */}
+					<Paper variant="outlined" sx={{ p: 2 }}>
+						<Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" mb={2}>
+							<Stack direction="row" spacing={1} alignItems="center">
+								<Wallet2 size={20} color="#10B981" />
+								<Typography variant="subtitle1" fontWeight={600}>Saldo OpenAI</Typography>
+							</Stack>
+							<Stack direction="row" spacing={1}>
+								<Tooltip title="Sincronizar costos">
+									<IconButton size="small" onClick={handleSyncOpenai} disabled={syncingOpenai || !openaiBalance?.configured}>
+										<RefreshCircle size={18} className={syncingOpenai ? "rotating" : ""} />
+									</IconButton>
+								</Tooltip>
+								<Tooltip title="Configurar saldo inicial">
+									<IconButton size="small" onClick={() => setOpenaiConfigOpen(true)}>
+										<Setting2 size={18} />
+									</IconButton>
+								</Tooltip>
+							</Stack>
+						</Stack>
+						<Grid container spacing={2}>
+							<Grid item xs={12} sm={6} md={3}>
+								<Box>
+									<Typography variant="body2" color="textSecondary" gutterBottom>
+										Saldo Inicial
+									</Typography>
+									{loadingOpenai ? (
+										<Skeleton variant="text" width={80} height={32} />
+									) : (
+										<Typography variant="h5" color="primary">
+											${openaiBalance?.initialBalance?.toFixed(2) || "0.00"}
+										</Typography>
+									)}
+								</Box>
+							</Grid>
+							<Grid item xs={12} sm={6} md={3}>
+								<Box>
+									<Typography variant="body2" color="textSecondary" gutterBottom>
+										Costos Consumidos
+									</Typography>
+									{loadingOpenai ? (
+										<Skeleton variant="text" width={80} height={32} />
+									) : (
+										<Typography variant="h5" color="error.main">
+											${openaiBalance?.totalCosts?.toFixed(2) || "0.00"}
+										</Typography>
+									)}
+								</Box>
+							</Grid>
+							<Grid item xs={12} sm={6} md={3}>
+								<Box>
+									<Typography variant="body2" color="textSecondary" gutterBottom>
+										Saldo Estimado
+									</Typography>
+									{loadingOpenai ? (
+										<Skeleton variant="text" width={80} height={32} />
+									) : (
+										<Typography
+											variant="h5"
+											color={openaiBalance?.estimatedBalance && openaiBalance.estimatedBalance > 0 ? "success.main" : "warning.main"}
+										>
+											${openaiBalance?.estimatedBalance?.toFixed(2) || "0.00"}
+										</Typography>
+									)}
+								</Box>
+							</Grid>
+							<Grid item xs={12} sm={6} md={3}>
+								<Box>
+									<Typography variant="body2" color="textSecondary" gutterBottom>
+										Última Sincronización
+									</Typography>
+									{loadingOpenai ? (
+										<Skeleton variant="text" width={120} height={32} />
+									) : (
+										<Typography variant="body1">
+											{openaiBalance?.lastSyncAt ? dayjs(openaiBalance.lastSyncAt).format("DD/MM/YYYY HH:mm") : "Nunca"}
+										</Typography>
+									)}
+								</Box>
+							</Grid>
+						</Grid>
+						{!openaiBalance?.configured && !loadingOpenai && (
+							<Alert severity="info" sx={{ mt: 2 }}>
+								Configura un saldo inicial para comenzar a trackear los costos de OpenAI.
+								<Button size="small" onClick={() => setOpenaiConfigOpen(true)} sx={{ ml: 1 }}>
+									Configurar
+								</Button>
+							</Alert>
+						)}
+					</Paper>
 
 					{/* Filters */}
 					<Paper variant="outlined" sx={{ p: 2 }}>
@@ -752,6 +911,49 @@ const ExpensesPage = () => {
 						</Button>
 						<Button variant="contained" color="error" onClick={handleConfirmDelete} disabled={deleting}>
 							{deleting ? "Eliminando..." : "Eliminar"}
+						</Button>
+					</DialogActions>
+				</Dialog>
+
+				{/* OpenAI Config Dialog */}
+				<Dialog open={openaiConfigOpen} onClose={() => setOpenaiConfigOpen(false)} maxWidth="sm" fullWidth>
+					<DialogTitle>Configurar Saldo OpenAI</DialogTitle>
+					<DialogContent>
+						<Stack spacing={3} sx={{ mt: 1 }}>
+							<Alert severity="info">
+								Configura el saldo inicial y la fecha desde la cual comenzar a trackear los costos.
+								El sistema calculará automáticamente el saldo restante basado en los costos reportados por la API de OpenAI.
+							</Alert>
+							<TextField
+								label="Saldo Inicial (USD)"
+								type="number"
+								fullWidth
+								value={openaiConfigForm.initialBalance}
+								onChange={(e) => setOpenaiConfigForm({ ...openaiConfigForm, initialBalance: parseFloat(e.target.value) || 0 })}
+								InputProps={{
+									startAdornment: <InputAdornment position="start">$</InputAdornment>,
+								}}
+								helperText="Ingresa el monto que cargaste en tu cuenta de OpenAI"
+							/>
+							<DatePicker
+								label="Fecha de Inicio"
+								value={dayjs(openaiConfigForm.initialBalanceDate)}
+								onChange={(date) => setOpenaiConfigForm({ ...openaiConfigForm, initialBalanceDate: date?.format("YYYY-MM-DD") || dayjs().format("YYYY-MM-DD") })}
+								slotProps={{
+									textField: {
+										fullWidth: true,
+										helperText: "Fecha desde la cual calcular los costos consumidos",
+									},
+								}}
+							/>
+						</Stack>
+					</DialogContent>
+					<DialogActions>
+						<Button onClick={() => setOpenaiConfigOpen(false)} disabled={savingOpenaiConfig}>
+							Cancelar
+						</Button>
+						<Button variant="contained" onClick={handleSaveOpenaiConfig} disabled={savingOpenaiConfig}>
+							{savingOpenaiConfig ? "Guardando..." : "Guardar"}
 						</Button>
 					</DialogActions>
 				</Dialog>
