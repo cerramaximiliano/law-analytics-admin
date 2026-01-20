@@ -62,6 +62,7 @@ export class CausasMEVService {
 		caratula?: string;
 		fechaUltimoMovimiento?: string;
 		lastUpdate?: string;
+		update?: boolean;
 		sortBy?: "number" | "year" | "caratula" | "juzgado" | "objeto" | "movimientosCount" | "lastUpdate" | "fechaUltimoMovimiento";
 		sortOrder?: "asc" | "desc";
 	}): Promise<CausasMEVResponse> {

@@ -34,7 +34,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { CausasMEVService, CausaMEV } from "api/causasMEV";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
-import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification, Calendar } from "iconsax-react";
+import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification, Calendar, TickCircle, CloseSquare } from "iconsax-react";
 import CausaDetalleModal from "../causas/CausaDetalleModal";
 import JudicialMovementsModal from "../causas/JudicialMovementsModal";
 
@@ -48,6 +48,7 @@ const CarpetasMEVVerificadas = () => {
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [totalCount, setTotalCount] = useState(0);
 	const [totalInDatabase, setTotalInDatabase] = useState(0);
+	const [actualizableFilter, setActualizableFilter] = useState<string>("todos");
 
 	// Filtros de búsqueda
 	const [searchNumber, setSearchNumber] = useState<string>("");
@@ -84,6 +85,7 @@ const CarpetasMEVVerificadas = () => {
 		sortOrderParam?: "asc" | "desc",
 		fechaUltimoMovimiento?: Dayjs | null,
 		lastUpdate?: Dayjs | null,
+		actualizable?: string,
 	) => {
 		try {
 			setLoading(true);
@@ -116,6 +118,10 @@ const CarpetasMEVVerificadas = () => {
 
 			if (lastUpdate) {
 				params.lastUpdate = lastUpdate.format("YYYY-MM-DD") + "T00:00:00.000+00:00";
+			}
+
+			if (actualizable && actualizable !== "todos") {
+				params.update = actualizable === "true";
 			}
 
 			// Agregar parámetros de ordenamiento
@@ -160,8 +166,9 @@ const CarpetasMEVVerificadas = () => {
 			sortOrder,
 			searchFechaUltimoMovimiento,
 			searchLastUpdate,
+			actualizableFilter,
 		);
-	}, [page, rowsPerPage, sortBy, sortOrder]);
+	}, [page, rowsPerPage, sortBy, sortOrder, actualizableFilter]);
 
 	// Handlers de paginación
 	const handleChangePage = (_event: unknown, newPage: number) => {
@@ -186,7 +193,14 @@ const CarpetasMEVVerificadas = () => {
 			sortOrder,
 			searchFechaUltimoMovimiento,
 			searchLastUpdate,
+			actualizableFilter,
 		);
+	};
+
+	// Handler de cambio de filtro actualizable
+	const handleActualizableChange = (event: any) => {
+		setActualizableFilter(event.target.value);
+		setPage(0);
 	};
 
 	// Handler de búsqueda
@@ -203,6 +217,7 @@ const CarpetasMEVVerificadas = () => {
 			sortOrder,
 			searchFechaUltimoMovimiento,
 			searchLastUpdate,
+			actualizableFilter,
 		);
 	};
 
@@ -214,8 +229,9 @@ const CarpetasMEVVerificadas = () => {
 		setSearchCaratula("");
 		setSearchFechaUltimoMovimiento(null);
 		setSearchLastUpdate(null);
+		setActualizableFilter("todos");
 		setPage(0);
-		fetchCausas(0, rowsPerPage, "", "", "", "", sortBy, sortOrder, null, null);
+		fetchCausas(0, rowsPerPage, "", "", "", "", sortBy, sortOrder, null, null, "todos");
 	};
 
 	// Handler para establecer fecha de hoy
@@ -367,7 +383,17 @@ const CarpetasMEVVerificadas = () => {
 				{/* Filtros */}
 				<Grid item xs={12}>
 					<Grid container spacing={2}>
-						<Grid item xs={12} md={6} lg={3}>
+						<Grid item xs={12} md={6} lg={2}>
+							<FormControl fullWidth>
+								<InputLabel>Actualizable</InputLabel>
+								<Select value={actualizableFilter} onChange={handleActualizableChange} label="Actualizable" size="small">
+									<MenuItem value="todos">Todos</MenuItem>
+									<MenuItem value="true">Actualizable</MenuItem>
+									<MenuItem value="false">No actualizable</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={12} md={6} lg={2}>
 							<TextField
 								fullWidth
 								label="Número"
@@ -536,6 +562,7 @@ const CarpetasMEVVerificadas = () => {
 											<TableCell align="center">Movimientos</TableCell>
 											<TableCell>Última Act.</TableCell>
 											<TableCell>Fecha Últ. Mov.</TableCell>
+											<TableCell align="center">Actualizable</TableCell>
 											<TableCell align="center">Acciones</TableCell>
 										</TableRow>
 									</TableHead>
@@ -591,6 +618,13 @@ const CarpetasMEVVerificadas = () => {
 													>
 														{formatDateUTC(causa.fechaUltimoMovimiento)}
 													</Typography>
+												</TableCell>
+												<TableCell align="center">
+													{causa.update ? (
+														<TickCircle size={20} color="#2e7d32" variant="Bold" />
+													) : (
+														<CloseSquare size={20} color="#d32f2f" variant="Bold" />
+													)}
 												</TableCell>
 												<TableCell align="center">
 													<Stack direction="row" spacing={0.5} justifyContent="center">

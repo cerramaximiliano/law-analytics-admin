@@ -65,6 +65,7 @@ const CarpetasVerificadasApp = () => {
 	const [totalCount, setTotalCount] = useState(0);
 	const [totalInDatabase, setTotalInDatabase] = useState(0);
 	const [fueroFilter, setFueroFilter] = useState<string>("todos");
+	const [actualizableFilter, setActualizableFilter] = useState<string>("todos");
 
 	// Filtros de búsqueda
 	const [searchNumber, setSearchNumber] = useState<string>("");
@@ -103,6 +104,7 @@ const CarpetasVerificadasApp = () => {
 		sortOrderParam?: "asc" | "desc",
 		fechaUltimoMovimiento?: Dayjs | null,
 		lastUpdate?: Dayjs | null,
+		actualizable?: string,
 	) => {
 		try {
 			setLoading(true);
@@ -139,6 +141,10 @@ const CarpetasVerificadasApp = () => {
 
 			if (lastUpdate) {
 				params.lastUpdate = lastUpdate.format("YYYY-MM-DD") + "T00:00:00.000+00:00";
+			}
+
+			if (actualizable && actualizable !== "todos") {
+				params.update = actualizable === "true";
 			}
 
 			// Agregar parámetros de ordenamiento
@@ -186,8 +192,9 @@ const CarpetasVerificadasApp = () => {
 			sortOrder,
 			searchFechaUltimoMovimiento,
 			searchLastUpdate,
+			actualizableFilter,
 		);
-	}, [page, rowsPerPage, fueroFilter, sortBy, sortOrder]);
+	}, [page, rowsPerPage, fueroFilter, sortBy, sortOrder, actualizableFilter]);
 
 	// Handlers de paginación
 	const handleChangePage = (_event: unknown, newPage: number) => {
@@ -205,6 +212,12 @@ const CarpetasVerificadasApp = () => {
 		setPage(0);
 	};
 
+	// Handler de cambio de filtro actualizable
+	const handleActualizableChange = (event: any) => {
+		setActualizableFilter(event.target.value);
+		setPage(0);
+	};
+
 	// Handler de refresh
 	const handleRefresh = () => {
 		fetchCausas(
@@ -219,6 +232,7 @@ const CarpetasVerificadasApp = () => {
 			sortOrder,
 			searchFechaUltimoMovimiento,
 			searchLastUpdate,
+			actualizableFilter,
 		);
 	};
 
@@ -237,6 +251,7 @@ const CarpetasVerificadasApp = () => {
 			sortOrder,
 			searchFechaUltimoMovimiento,
 			searchLastUpdate,
+			actualizableFilter,
 		);
 	};
 
@@ -248,8 +263,9 @@ const CarpetasVerificadasApp = () => {
 		setSearchCaratula("");
 		setSearchFechaUltimoMovimiento(null);
 		setSearchLastUpdate(null);
+		setActualizableFilter("todos");
 		setPage(0);
-		fetchCausas(0, rowsPerPage, fueroFilter, "", "", "", "", sortBy, sortOrder, null, null);
+		fetchCausas(0, rowsPerPage, fueroFilter, "", "", "", "", sortBy, sortOrder, null, null, "todos");
 	};
 
 	// Handler para establecer fecha de hoy
@@ -430,6 +446,16 @@ const CarpetasVerificadasApp = () => {
 									<MenuItem value="COM">Comercial</MenuItem>
 									<MenuItem value="CSS">Seg. Social</MenuItem>
 									<MenuItem value="CNT">Trabajo</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={12} md={6} lg={2}>
+							<FormControl fullWidth>
+								<InputLabel>Actualizable</InputLabel>
+								<Select value={actualizableFilter} onChange={handleActualizableChange} label="Actualizable" size="small">
+									<MenuItem value="todos">Todos</MenuItem>
+									<MenuItem value="true">Actualizable</MenuItem>
+									<MenuItem value="false">No actualizable</MenuItem>
 								</Select>
 							</FormControl>
 						</Grid>
