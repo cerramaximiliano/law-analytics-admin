@@ -126,6 +126,7 @@ const metricInfo: Record<string, string> = {
 	// Services
 	neverBounceCredits: "Créditos disponibles en NeverBounce para verificación de emails. Se consumen al verificar direcciones de correo.",
 	capsolverBalance: "Saldo disponible en Capsolver para resolución de captchas. Se consume al resolver captchas en los workers de scraping.",
+	openaiBalance: "Saldo estimado de OpenAI calculado como: Saldo inicial configurado - Costos consumidos desde la fecha inicial. Configurable en la sección de Gastos.",
 	// User data
 	userContacts: "Total de contactos creados por todos los usuarios en la plataforma (agenda de contactos).",
 	userCalculators: "Total de cálculos realizados por todos los usuarios en la plataforma.",
@@ -539,6 +540,8 @@ const AdminDashboard = () => {
 	const [loadingCredits, setLoadingCredits] = useState(false);
 	const [capsolverBalance, setCapsolverBalance] = useState<number | null>(null);
 	const [loadingCapsolver, setLoadingCapsolver] = useState(false);
+	const [openaiBalance, setOpenaiBalance] = useState<number | null>(null);
+	const [loadingOpenai, setLoadingOpenai] = useState(false);
 
 	const fetchNeverBounceCredits = useCallback(async () => {
 		try {
@@ -568,6 +571,25 @@ const AdminDashboard = () => {
 		}
 	}, []);
 
+	const fetchOpenaiBalance = useCallback(async () => {
+		try {
+			setLoadingOpenai(true);
+			const response = await adminAxios.get("/api/openai/balance");
+			if (response.data.success && response.data.data) {
+				// Solo mostrar si está configurado
+				if (response.data.data.configured) {
+					setOpenaiBalance(response.data.data.estimatedBalance);
+				} else {
+					setOpenaiBalance(null);
+				}
+			}
+		} catch (error: any) {
+			console.error("Error fetching OpenAI balance:", error);
+		} finally {
+			setLoadingOpenai(false);
+		}
+	}, []);
+
 	const fetchData = useCallback(async () => {
 		try {
 			setLoading(true);
@@ -588,7 +610,8 @@ const AdminDashboard = () => {
 		fetchData();
 		fetchNeverBounceCredits();
 		fetchCapsolverBalance();
-	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance]);
+		fetchOpenaiBalance();
+	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance, fetchOpenaiBalance]);
 
 	useRequestQueueRefresh(fetchData);
 
@@ -596,6 +619,7 @@ const AdminDashboard = () => {
 		fetchData();
 		fetchNeverBounceCredits();
 		fetchCapsolverBalance();
+		fetchOpenaiBalance();
 	};
 
 	// Chart data - Consistent colors: Green=Active/Verified, Gray=Inactive/Unverified
@@ -821,6 +845,17 @@ const AdminDashboard = () => {
 								loading={loadingCapsolver}
 								infoKey="capsolverBalance"
 								linkTo="/admin/causas/workers"
+							/>
+						</Grid>
+						<Grid item xs={6} sm={6} md={3}>
+							<PrimaryKPICard
+								title={openaiBalance !== null ? "Saldo OpenAI" : "OpenAI (sin config)"}
+								value={openaiBalance !== null ? Number(openaiBalance.toFixed(2)) : 0}
+								icon={<Wallet2 size={20} />}
+								valueColor={openaiBalance !== null && openaiBalance > 0 ? COLORS.success.main : COLORS.neutral.main}
+								loading={loadingOpenai}
+								infoKey="openaiBalance"
+								linkTo="/admin/expenses"
 							/>
 						</Grid>
 					</Grid>
