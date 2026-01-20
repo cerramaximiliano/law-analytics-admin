@@ -1,5 +1,5 @@
 // assets
-import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle, DiscountShape, Notification, DocumentText, Messages2, Wallet2, Chart, MessageQuestion, Layer } from "iconsax-react";
+import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle, DiscountShape, Notification, DocumentText, Messages2, Wallet2, Chart, MessageQuestion, Layer, TaskSquare } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -300,6 +300,14 @@ const admin: NavItemType = {
 			type: "item",
 			icon: Status,
 			url: "/admin/server-status",
+			breadcrumbs: true,
+		},
+		{
+			id: "admin-tasks",
+			title: "Tareas",
+			type: "item",
+			icon: TaskSquare,
+			url: "/admin/tasks",
 			breadcrumbs: true,
 		},
 	],
