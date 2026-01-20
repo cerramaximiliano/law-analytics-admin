@@ -22,7 +22,7 @@ import {
 	useTheme,
 	alpha,
 } from "@mui/material";
-import { SearchNormal1, CloseCircle, Folder, People, Calculator, Task, Calendar, ProfileCircle, CloudConnection, Activity } from "iconsax-react";
+import { SearchNormal1, CloseCircle, Folder, People, Calculator, Task, Calendar, ProfileCircle, CloudConnection, Activity, Login, Chart } from "iconsax-react";
 import MainCard from "components/MainCard";
 import AdminResourcesService, {
 	ResourceType,
@@ -36,11 +36,18 @@ import AdminResourcesService, {
 	ResourceUser,
 	UserWithResources,
 } from "api/adminResources";
+import UserSessionsService from "api/userSessions";
+import { UserSessionMetrics, SessionStats, UserWithSessionMetrics } from "types/user-session";
 import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import "dayjs/locale/es";
+
+dayjs.extend(relativeTime);
+dayjs.locale("es");
 
 // Tab configuration
 interface TabConfig {
-	type: ResourceType | "users";
+	type: ResourceType | "users" | "activity";
 	label: string;
 	icon: React.ReactElement;
 }
@@ -53,6 +60,7 @@ const tabs: TabConfig[] = [
 	{ type: "event", label: "Eventos", icon: <Calendar size={18} /> },
 	{ type: "movement", label: "Movimientos", icon: <Activity size={18} /> },
 	{ type: "users", label: "Usuarios", icon: <ProfileCircle size={18} /> },
+	{ type: "activity", label: "Actividad", icon: <Login size={18} /> },
 ];
 
 // Column definitions per type
@@ -310,6 +318,7 @@ const UserResources: React.FC = () => {
 	const [loading, setLoading] = useState(true);
 	const [resources, setResources] = useState<Resource[]>([]);
 	const [users, setUsers] = useState<UserWithResources[]>([]);
+	const [sessionMetrics, setSessionMetrics] = useState<Record<string, UserSessionMetrics>>({});
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [total, setTotal] = useState(0);
@@ -320,9 +329,15 @@ const UserResources: React.FC = () => {
 	const [stats, setStats] = useState({ folders: 0, contacts: 0, calculators: 0, tasks: 0, events: 0, movements: 0, total: 0 });
 	const [statsLoading, setStatsLoading] = useState(true);
 
+	// Activity tab states
+	const [activityStats, setActivityStats] = useState<SessionStats | null>(null);
+	const [activityUsers, setActivityUsers] = useState<UserWithSessionMetrics[]>([]);
+	const [activityLoading, setActivityLoading] = useState(true);
+
 	const currentType = tabs[activeTab].type;
 	const isUsersTab = currentType === "users";
-	const columns = isUsersTab ? [] : getColumnsByType(currentType as ResourceType, theme);
+	const isActivityTab = currentType === "activity";
+	const columns = isUsersTab || isActivityTab ? [] : getColumnsByType(currentType as ResourceType, theme);
 
 	// Fetch stats
 	const fetchStats = useCallback(async () => {
@@ -378,6 +393,19 @@ const UserResources: React.FC = () => {
 			if (response.success) {
 				setUsers(response.data);
 				setTotal(response.pagination.total);
+
+				// Fetch session metrics for these users
+				if (response.data.length > 0) {
+					const userIds = response.data.map((u) => u._id).join(",");
+					try {
+						const metricsResponse = await UserSessionsService.getUsersSessionMetrics({ userIds, days: 30 });
+						if (metricsResponse.success) {
+							setSessionMetrics(metricsResponse.data);
+						}
+					} catch (metricsError) {
+						console.error("Error fetching session metrics:", metricsError);
+					}
+				}
 			}
 		} catch (error) {
 			console.error("Error fetching users:", error);
@@ -386,6 +414,37 @@ const UserResources: React.FC = () => {
 		}
 	}, [page, rowsPerPage, search, sortBy, sortOrder, isUsersTab]);
 
+	// Fetch activity data
+	const fetchActivityData = useCallback(async () => {
+		if (!isActivityTab) return;
+		setActivityLoading(true);
+		try {
+			const [statsResponse, usersResponse] = await Promise.all([
+				UserSessionsService.getSessionStats(30),
+				UserSessionsService.getUsersWithSessionMetrics({
+					page: page + 1,
+					limit: rowsPerPage,
+					search: search || undefined,
+					sortBy: sortBy as "lastLogin" | "activeDays" | "totalLogins" | "email" | "createdAt",
+					sortOrder,
+					days: 30,
+				}),
+			]);
+
+			if (statsResponse.success) {
+				setActivityStats(statsResponse.data);
+			}
+			if (usersResponse.success) {
+				setActivityUsers(usersResponse.data);
+				setTotal(usersResponse.pagination.total);
+			}
+		} catch (error) {
+			console.error("Error fetching activity data:", error);
+		} finally {
+			setActivityLoading(false);
+		}
+	}, [isActivityTab, page, rowsPerPage, search, sortBy, sortOrder]);
+
 	useEffect(() => {
 		fetchStats();
 	}, [fetchStats]);
@@ -393,10 +452,12 @@ const UserResources: React.FC = () => {
 	useEffect(() => {
 		if (isUsersTab) {
 			fetchUsers();
+		} else if (isActivityTab) {
+			fetchActivityData();
 		} else {
 			fetchResources();
 		}
-	}, [fetchResources, fetchUsers, isUsersTab]);
+	}, [fetchResources, fetchUsers, fetchActivityData, isUsersTab, isActivityTab]);
 
 	// Handlers
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -519,12 +580,203 @@ const UserResources: React.FC = () => {
 				/>
 			</Box>
 
-			{/* Table */}
-			<TableContainer sx={{ overflowX: "auto", maxWidth: "100%" }}>
-				<Table size="small" sx={{ minWidth: { xs: 800, md: "100%" } }}>
-					<TableHead>
-						<TableRow>
-							{isUsersTab ? (
+			{/* Activity Tab Content */}
+			{isActivityTab ? (
+				<>
+					{/* Activity Stats Cards */}
+					<Box sx={{ p: { xs: 1.5, sm: 2 }, borderBottom: 1, borderColor: "divider" }}>
+						<Grid container spacing={{ xs: 1, sm: 2 }}>
+							<Grid item xs={6} sm={3}>
+								<Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
+									<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+										<Box sx={{ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main }}>
+											<Login size={20} />
+										</Box>
+										<Box>
+											<Typography variant="body2" color="textSecondary">Logins Exitosos</Typography>
+											{activityLoading ? (
+												<Skeleton variant="text" width={40} height={28} />
+											) : (
+												<Typography variant="h5" fontWeight="bold">
+													{activityStats?.summary.successfulLogins.toLocaleString() || 0}
+												</Typography>
+											)}
+										</Box>
+									</Box>
+								</Paper>
+							</Grid>
+							<Grid item xs={6} sm={3}>
+								<Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
+									<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+										<Box sx={{ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette.info.main, 0.1), color: theme.palette.info.main }}>
+											<ProfileCircle size={20} />
+										</Box>
+										<Box>
+											<Typography variant="body2" color="textSecondary">Usuarios Activos</Typography>
+											{activityLoading ? (
+												<Skeleton variant="text" width={40} height={28} />
+											) : (
+												<Typography variant="h5" fontWeight="bold">
+													{activityStats?.summary.uniqueUsers.toLocaleString() || 0}
+												</Typography>
+											)}
+										</Box>
+									</Box>
+								</Paper>
+							</Grid>
+							<Grid item xs={6} sm={3}>
+								<Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
+									<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+										<Box sx={{ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.1), color: theme.palette.warning.main }}>
+											<Chart size={20} />
+										</Box>
+										<Box>
+											<Typography variant="body2" color="textSecondary">Por Google</Typography>
+											{activityLoading ? (
+												<Skeleton variant="text" width={40} height={28} />
+											) : (
+												<Typography variant="h5" fontWeight="bold">
+													{activityStats?.byLoginMethod?.google?.toLocaleString() || 0}
+												</Typography>
+											)}
+										</Box>
+									</Box>
+								</Paper>
+							</Grid>
+							<Grid item xs={6} sm={3}>
+								<Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
+									<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+										<Box sx={{ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette.secondary.main, 0.1), color: theme.palette.secondary.main }}>
+											<Calculator size={20} />
+										</Box>
+										<Box>
+											<Typography variant="body2" color="textSecondary">Por Password</Typography>
+											{activityLoading ? (
+												<Skeleton variant="text" width={40} height={28} />
+											) : (
+												<Typography variant="h5" fontWeight="bold">
+													{activityStats?.byLoginMethod?.password?.toLocaleString() || 0}
+												</Typography>
+											)}
+										</Box>
+									</Box>
+								</Paper>
+							</Grid>
+						</Grid>
+					</Box>
+
+					{/* Activity Users Table */}
+					<TableContainer sx={{ overflowX: "auto", maxWidth: "100%" }}>
+						<Table size="small" sx={{ minWidth: { xs: 600, md: "100%" } }}>
+							<TableHead>
+								<TableRow>
+									<TableCell>
+										<TableSortLabel active={sortBy === "email"} direction={sortBy === "email" ? sortOrder : "asc"} onClick={() => handleSort("email")}>
+											Usuario
+										</TableSortLabel>
+									</TableCell>
+									<TableCell>
+										<TableSortLabel active={sortBy === "lastLogin"} direction={sortBy === "lastLogin" ? sortOrder : "asc"} onClick={() => handleSort("lastLogin")}>
+											Último Login
+										</TableSortLabel>
+									</TableCell>
+									<TableCell align="center">
+										<TableSortLabel active={sortBy === "totalLogins"} direction={sortBy === "totalLogins" ? sortOrder : "asc"} onClick={() => handleSort("totalLogins")}>
+											Total Logins
+										</TableSortLabel>
+									</TableCell>
+									<TableCell align="center">
+										<TableSortLabel active={sortBy === "activeDays"} direction={sortBy === "activeDays" ? sortOrder : "asc"} onClick={() => handleSort("activeDays")}>
+											Días Activos
+										</TableSortLabel>
+									</TableCell>
+									<TableCell>
+										<TableSortLabel active={sortBy === "createdAt"} direction={sortBy === "createdAt" ? sortOrder : "asc"} onClick={() => handleSort("createdAt")}>
+											Registrado
+										</TableSortLabel>
+									</TableCell>
+								</TableRow>
+							</TableHead>
+							<TableBody>
+								{activityLoading ? (
+									Array.from({ length: rowsPerPage }).map((_, index) => (
+										<TableRow key={index}>
+											{Array.from({ length: 5 }).map((_, i) => (
+												<TableCell key={i}>
+													<Skeleton variant="text" />
+												</TableCell>
+											))}
+										</TableRow>
+									))
+								) : activityUsers.length === 0 ? (
+									<TableRow>
+										<TableCell colSpan={5} align="center">
+											<Typography color="textSecondary" sx={{ py: 4 }}>
+												No se encontraron usuarios con actividad
+											</Typography>
+										</TableCell>
+									</TableRow>
+								) : (
+									activityUsers.map((user) => (
+										<TableRow key={user._id} hover>
+											<TableCell>
+												<Box>
+													<Typography variant="body2" fontWeight="medium">
+														{user.email}
+													</Typography>
+													{user.name && (
+														<Typography variant="caption" color="textSecondary">
+															{user.name}
+														</Typography>
+													)}
+												</Box>
+											</TableCell>
+											<TableCell>
+												{user.lastLogin ? (
+													<Box>
+														<Typography variant="body2">
+															{dayjs(user.lastLogin).fromNow()}
+														</Typography>
+														<Typography variant="caption" color="textSecondary">
+															{dayjs(user.lastLogin).format("DD/MM/YY HH:mm")}
+														</Typography>
+													</Box>
+												) : (
+													<Typography variant="body2" color="textSecondary">-</Typography>
+												)}
+											</TableCell>
+											<TableCell align="center">
+												<Chip
+													label={user.totalLogins}
+													size="small"
+													color={user.totalLogins >= 30 ? "success" : user.totalLogins >= 10 ? "warning" : "default"}
+													sx={{ minWidth: 40 }}
+												/>
+											</TableCell>
+											<TableCell align="center">
+												<Chip
+													label={user.activeDays}
+													size="small"
+													color={user.activeDays >= 20 ? "success" : user.activeDays >= 10 ? "warning" : "default"}
+													sx={{ minWidth: 40 }}
+												/>
+											</TableCell>
+											<TableCell>{formatDate(user.createdAt)}</TableCell>
+										</TableRow>
+									))
+								)}
+							</TableBody>
+						</Table>
+					</TableContainer>
+				</>
+			) : (
+				<>
+					{/* Table */}
+					<TableContainer sx={{ overflowX: "auto", maxWidth: "100%" }}>
+						<Table size="small" sx={{ minWidth: { xs: 800, md: "100%" } }}>
+							<TableHead>
+								<TableRow>
+									{isUsersTab ? (
 								<>
 									<TableCell>
 										<TableSortLabel active={sortBy === "email"} direction={sortBy === "email" ? sortOrder : "asc"} onClick={() => handleSort("email")}>
@@ -574,6 +826,8 @@ const UserResources: React.FC = () => {
 											</Box>
 										</TableSortLabel>
 									</TableCell>
+									<TableCell>Último Login</TableCell>
+									<TableCell align="center">Días Activos</TableCell>
 									<TableCell>
 										<TableSortLabel active={sortBy === "createdAt"} direction={sortBy === "createdAt" ? sortOrder : "asc"} onClick={() => handleSort("createdAt")}>
 											Registrado
@@ -601,7 +855,7 @@ const UserResources: React.FC = () => {
 								<TableRow key={index}>
 									{isUsersTab ? (
 										<>
-											{Array.from({ length: 11 }).map((_, i) => (
+											{Array.from({ length: 13 }).map((_, i) => (
 												<TableCell key={i}>
 													<Skeleton variant="text" />
 												</TableCell>
@@ -619,7 +873,7 @@ const UserResources: React.FC = () => {
 						) : isUsersTab ? (
 							users.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={11} align="center">
+									<TableCell colSpan={13} align="center">
 										<Typography color="textSecondary" sx={{ py: 4 }}>
 											No se encontraron usuarios
 										</Typography>
@@ -666,6 +920,36 @@ const UserResources: React.FC = () => {
 												{formatBytes(user.storage.total)}
 											</Typography>
 										</TableCell>
+										<TableCell>
+											{sessionMetrics[user._id]?.lastLogin ? (
+												<Box>
+													<Typography variant="body2">
+														{dayjs(sessionMetrics[user._id].lastLogin).fromNow()}
+													</Typography>
+													<Typography variant="caption" color="textSecondary">
+														{dayjs(sessionMetrics[user._id].lastLogin).format("DD/MM/YY HH:mm")}
+													</Typography>
+												</Box>
+											) : (
+												<Typography variant="body2" color="textSecondary">
+													-
+												</Typography>
+											)}
+										</TableCell>
+										<TableCell align="center">
+											<Chip
+												label={sessionMetrics[user._id]?.activeDays || 0}
+												size="small"
+												color={
+													(sessionMetrics[user._id]?.activeDays || 0) >= 20
+														? "success"
+														: (sessionMetrics[user._id]?.activeDays || 0) >= 10
+															? "warning"
+															: "default"
+												}
+												sx={{ minWidth: 40 }}
+											/>
+										</TableCell>
 										<TableCell>{formatDate(user.createdAt)}</TableCell>
 									</TableRow>
 								))
@@ -689,7 +973,9 @@ const UserResources: React.FC = () => {
 						)}
 					</TableBody>
 				</Table>
-			</TableContainer>
+				</TableContainer>
+				</>
+			)}
 
 			{/* Pagination */}
 			<TablePagination
