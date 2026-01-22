@@ -34,9 +34,11 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { CausasPjnService, Causa } from "api/causasPjn";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
-import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification, Calendar, TickCircle, CloseSquare } from "iconsax-react";
+import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification, Calendar, TickCircle, CloseSquare, UserSquare } from "iconsax-react";
 import CausaDetalleModal from "./CausaDetalleModal";
 import JudicialMovementsModal from "./JudicialMovementsModal";
+import IntervinientesModal from "./IntervinientesModal";
+import { IntervinientesService, Interviniente } from "../../../api/intervinientes";
 
 // Mapeo de fueros a nombres legibles
 const FUERO_LABELS: Record<string, string> = {
@@ -90,6 +92,17 @@ const CarpetasVerificadasApp = () => {
 	const [loadingMovements, setLoadingMovements] = useState(false);
 	const [movementsError, setMovementsError] = useState<string>("");
 	const [selectedExpedienteId, setSelectedExpedienteId] = useState<string>("");
+
+	// Modal de intervinientes
+	const [intervinientesModalOpen, setIntervinientesModalOpen] = useState(false);
+	const [intervinientes, setIntervinientes] = useState<{
+		partes: Interviniente[];
+		letrados: Interviniente[];
+		all: Interviniente[];
+	} | null>(null);
+	const [loadingIntervinientes, setLoadingIntervinientes] = useState(false);
+	const [intervinientesError, setIntervinientesError] = useState<string>("");
+	const [selectedCausaIntervinientes, setSelectedCausaIntervinientes] = useState<Causa | null>(null);
 
 	// Cargar causas verificadas
 	const fetchCausas = async (
@@ -412,6 +425,38 @@ const CarpetasVerificadasApp = () => {
 		setMovementsError("");
 	};
 
+	// Handler para ver intervinientes
+	const handleVerIntervinientes = async (causa: Causa) => {
+		try {
+			setLoadingIntervinientes(true);
+			setIntervinientesError("");
+			setSelectedCausaIntervinientes(causa);
+			setIntervinientesModalOpen(true);
+
+			const causaId = getId(causa._id);
+			const response = await IntervinientesService.getByCausaId(causaId);
+
+			if (response.success) {
+				setIntervinientes(response.data);
+			} else {
+				setIntervinientesError(response.message || "Error al cargar los intervinientes");
+			}
+		} catch (error) {
+			console.error("Error al cargar intervinientes:", error);
+			setIntervinientesError("Error al cargar los intervinientes de la causa");
+		} finally {
+			setLoadingIntervinientes(false);
+		}
+	};
+
+	// Handler para cerrar modal de intervinientes
+	const handleCloseIntervinientesModal = () => {
+		setIntervinientesModalOpen(false);
+		setIntervinientes(null);
+		setIntervinientesError("");
+		setSelectedCausaIntervinientes(null);
+	};
+
 	return (
 		<MainCard title="Carpetas Verificadas (App)">
 			<Box sx={{ mb: 3 }}>
@@ -712,6 +757,16 @@ const CarpetasVerificadasApp = () => {
 																<Eye size={18} />
 															</IconButton>
 														</Tooltip>
+														<Tooltip title="Ver intervinientes">
+															<IconButton
+																size="small"
+																color="info"
+																onClick={() => handleVerIntervinientes(causa)}
+																disabled={loadingIntervinientes}
+															>
+																<UserSquare size={18} />
+															</IconButton>
+														</Tooltip>
 														<Tooltip title="Verificar notificaciones">
 															<IconButton
 																size="small"
@@ -762,6 +817,16 @@ const CarpetasVerificadasApp = () => {
 				loading={loadingMovements}
 				error={movementsError}
 				onMovementDeleted={handleMovementDeleted}
+			/>
+
+			{/* Modal de intervinientes */}
+			<IntervinientesModal
+				open={intervinientesModalOpen}
+				onClose={handleCloseIntervinientesModal}
+				causa={selectedCausaIntervinientes}
+				intervinientes={intervinientes}
+				loading={loadingIntervinientes}
+				error={intervinientesError}
 			/>
 		</MainCard>
 	);
