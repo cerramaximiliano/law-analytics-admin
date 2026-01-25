@@ -58,6 +58,13 @@ const admin: NavItemType = {
 			breadcrumbs: true,
 			children: [
 				{
+					id: "causas-credentials",
+					title: "Credenciales PJN",
+					type: "item",
+					url: "/admin/causas/credentials",
+					breadcrumbs: true,
+				},
+				{
 					id: "causas-verified-worker",
 					title: "Carpetas Verificadas (Worker)",
 					type: "item",
