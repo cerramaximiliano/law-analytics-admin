@@ -65,6 +65,8 @@ import {
 	ArrowDown2,
 	TextBlock,
 	Code,
+	Link21,
+	Image,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import AnimateButton from "components/@extended/AnimateButton";
@@ -96,6 +98,12 @@ interface NewEmailTemplate {
 	description: string;
 	variables: string[];
 	isActive: boolean;
+}
+
+interface TemplateLink {
+	type: "link" | "image";
+	url: string;
+	text: string | null;
 }
 
 interface EmailModule {
@@ -400,6 +408,7 @@ const EmailTemplates = () => {
 	const [viewTab, setViewTab] = useState<number>(0);
 	const [deviceType, setDeviceType] = useState<DeviceType>(DeviceType.Desktop);
 	const [loadingDetails, setLoadingDetails] = useState<boolean>(false);
+	const [templateLinks, setTemplateLinks] = useState<TemplateLink[]>([]);
 
 	// State for create template modal
 	const [createOpen, setCreateOpen] = useState<boolean>(false);
@@ -551,6 +560,12 @@ const EmailTemplates = () => {
 		try {
 			const response = await mktAxios.get(`/api/templates/${templateId}`);
 			if (response.data.success) {
+				// Capture links from response if available
+				if (response.data.links) {
+					setTemplateLinks(response.data.links);
+				} else {
+					setTemplateLinks([]);
+				}
 				return response.data.data;
 			} else {
 				throw new Error("Error fetching template details");
@@ -561,6 +576,7 @@ const EmailTemplates = () => {
 				variant: "error",
 				anchorOrigin: { vertical: "bottom", horizontal: "right" },
 			});
+			setTemplateLinks([]);
 			return null;
 		}
 	};
@@ -587,6 +603,7 @@ const EmailTemplates = () => {
 	const handleCloseDetail = () => {
 		setDetailOpen(false);
 		setSelectedTemplate(null);
+		setTemplateLinks([]);
 	};
 
 	const handleChangeTab = (event: React.SyntheticEvent, newValue: number) => {
@@ -1571,6 +1588,13 @@ const EmailTemplates = () => {
 								<Tab label="Código HTML" id="template-tab-1" aria-controls="template-tabpanel-1" />
 								<Tab label="Texto plano" id="template-tab-2" aria-controls="template-tabpanel-2" />
 								<Tab label="JSON" id="template-tab-3" aria-controls="template-tabpanel-3" />
+								<Tab
+									label={`Enlaces (${templateLinks.length})`}
+									id="template-tab-4"
+									aria-controls="template-tabpanel-4"
+									icon={<Link21 size={16} />}
+									iconPosition="start"
+								/>
 							</Tabs>
 						</Box>
 						<DialogContent sx={{ p: 0, height: 500 }}>
@@ -1816,6 +1840,72 @@ const EmailTemplates = () => {
 											>
 												<code>{JSON.stringify(selectedTemplate, null, 2)}</code>
 											</Box>
+										</Box>
+									</TabPanel>
+									<TabPanel value={viewTab} index={4}>
+										<Box sx={{ p: 2, height: "100%", overflow: "auto" }}>
+											{templateLinks.length === 0 ? (
+												<Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+													<Typography color="textSecondary">No se encontraron enlaces en este template</Typography>
+												</Box>
+											) : (
+												<>
+													<Typography variant="subtitle2" sx={{ mb: 2 }}>
+														Se encontraron {templateLinks.length} enlace(s) en el template:
+													</Typography>
+													<TableContainer component={Paper} variant="outlined">
+														<Table size="small">
+															<TableHead>
+																<TableRow>
+																	<TableCell width={50}>Tipo</TableCell>
+																	<TableCell>URL / Ruta</TableCell>
+																	<TableCell>Texto del enlace</TableCell>
+																</TableRow>
+															</TableHead>
+															<TableBody>
+																{templateLinks.map((link, index) => (
+																	<TableRow key={index} hover>
+																		<TableCell>
+																			<Tooltip title={link.type === "link" ? "Enlace" : "Imagen"}>
+																				{link.type === "link" ? (
+																					<Link21 size={20} color={theme.palette.primary.main} />
+																				) : (
+																					<Image size={20} color={theme.palette.secondary.main} />
+																				)}
+																			</Tooltip>
+																		</TableCell>
+																		<TableCell>
+																			<Typography
+																				variant="body2"
+																				sx={{
+																					fontFamily: "monospace",
+																					fontSize: "0.8rem",
+																					wordBreak: "break-all",
+																					color: link.url.includes("${")
+																						? theme.palette.warning.main
+																						: "inherit",
+																				}}
+																			>
+																				{link.url}
+																			</Typography>
+																		</TableCell>
+																		<TableCell>
+																			<Typography variant="body2" color="textSecondary">
+																				{link.text || "-"}
+																			</Typography>
+																		</TableCell>
+																	</TableRow>
+																))}
+															</TableBody>
+														</Table>
+													</TableContainer>
+													<Box sx={{ mt: 2 }}>
+														<Typography variant="caption" color="textSecondary">
+															Los enlaces con variables (${"{"}...{"}"}) se resaltan en naranja ya que su valor se define dinámicamente.
+														</Typography>
+													</Box>
+												</>
+											)}
 										</Box>
 									</TabPanel>
 								</>
