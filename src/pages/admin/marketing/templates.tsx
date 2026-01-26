@@ -1012,11 +1012,12 @@ const EmailTemplates = () => {
 		}
 	}, [selectedTemplate]);
 
-	// Get highlighted HTML for view modal
+	// Get highlighted HTML for view modal (escaped to show as code, not rendered)
 	const getHighlightedViewHtml = useCallback(() => {
 		if (!selectedTemplate) return "";
 		if (!viewHtmlSearchQuery || viewHtmlSearchResults.length === 0) {
-			return selectedTemplate.htmlBody;
+			// Escape HTML to show as code
+			return selectedTemplate.htmlBody.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 		}
 
 		const html = selectedTemplate.htmlBody;
