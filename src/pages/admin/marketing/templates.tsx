@@ -443,6 +443,12 @@ const EmailTemplates = () => {
 	const [currentSearchIndex, setCurrentSearchIndex] = useState<number>(0);
 	const htmlTextFieldRef = useRef<HTMLTextAreaElement>(null);
 
+	// State for HTML search in view modal
+	const [viewHtmlSearchQuery, setViewHtmlSearchQuery] = useState<string>("");
+	const [viewHtmlSearchResults, setViewHtmlSearchResults] = useState<number[]>([]);
+	const [viewCurrentSearchIndex, setViewCurrentSearchIndex] = useState<number>(0);
+	const viewHtmlCodeRef = useRef<HTMLElement>(null);
+
 	// Ref for create modal HTML textarea
 	const createHtmlTextFieldRef = useRef<HTMLTextAreaElement>(null);
 
@@ -924,6 +930,97 @@ const EmailTemplates = () => {
 			}, 50); // Small delay to ensure selection is set first
 		}
 	}, [currentSearchIndex, htmlSearchResults, htmlSearchQuery, editTemplate]);
+
+	// Handle HTML search in view modal
+	const handleViewHtmlSearch = useCallback(() => {
+		if (!selectedTemplate || !viewHtmlSearchQuery) {
+			setViewHtmlSearchResults([]);
+			setViewCurrentSearchIndex(0);
+			return;
+		}
+
+		const searchText = viewHtmlSearchQuery.toLowerCase();
+		const htmlText = selectedTemplate.htmlBody.toLowerCase();
+		const results: number[] = [];
+		let index = htmlText.indexOf(searchText);
+		while (index !== -1) {
+			results.push(index);
+			index = htmlText.indexOf(searchText, index + 1);
+		}
+		setViewHtmlSearchResults(results);
+		setViewCurrentSearchIndex(0);
+
+		// Scroll to first result
+		if (results.length > 0 && viewHtmlCodeRef.current) {
+			setTimeout(() => {
+				const mark = viewHtmlCodeRef.current?.querySelector("mark.current");
+				if (mark) {
+					mark.scrollIntoView({ behavior: "smooth", block: "center" });
+				}
+			}, 100);
+		}
+	}, [selectedTemplate, viewHtmlSearchQuery]);
+
+	// Navigate view search results
+	const navigateViewSearchResult = (direction: "next" | "prev") => {
+		if (viewHtmlSearchResults.length === 0) return;
+
+		let newIndex = viewCurrentSearchIndex;
+		if (direction === "next") {
+			newIndex = (viewCurrentSearchIndex + 1) % viewHtmlSearchResults.length;
+		} else {
+			newIndex = viewCurrentSearchIndex === 0 ? viewHtmlSearchResults.length - 1 : viewCurrentSearchIndex - 1;
+		}
+		setViewCurrentSearchIndex(newIndex);
+	};
+
+	// Scroll to current match in view modal
+	useEffect(() => {
+		if (viewHtmlSearchResults.length > 0 && viewHtmlCodeRef.current) {
+			setTimeout(() => {
+				const mark = viewHtmlCodeRef.current?.querySelector("mark.current");
+				if (mark) {
+					mark.scrollIntoView({ behavior: "smooth", block: "center" });
+				}
+			}, 50);
+		}
+	}, [viewCurrentSearchIndex, viewHtmlSearchResults]);
+
+	// Reset view search when modal closes or template changes
+	useEffect(() => {
+		if (!selectedTemplate) {
+			setViewHtmlSearchQuery("");
+			setViewHtmlSearchResults([]);
+			setViewCurrentSearchIndex(0);
+		}
+	}, [selectedTemplate]);
+
+	// Get highlighted HTML for view modal
+	const getHighlightedViewHtml = useCallback(() => {
+		if (!selectedTemplate) return "";
+		if (!viewHtmlSearchQuery || viewHtmlSearchResults.length === 0) {
+			return selectedTemplate.htmlBody;
+		}
+
+		const html = selectedTemplate.htmlBody;
+		const searchLen = viewHtmlSearchQuery.length;
+		let result = "";
+		let lastIndex = 0;
+
+		viewHtmlSearchResults.forEach((pos, idx) => {
+			// Escape HTML between matches
+			const textBefore = html.substring(lastIndex, pos).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+			const matchText = html.substring(pos, pos + searchLen).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+			const isCurrent = idx === viewCurrentSearchIndex;
+			result += textBefore;
+			result += `<mark class="${isCurrent ? "current" : ""}" style="background-color: ${isCurrent ? "#FFEB3B" : "#FFF59D"}; color: #000;">${matchText}</mark>`;
+			lastIndex = pos + searchLen;
+		});
+
+		// Add remaining text
+		result += html.substring(lastIndex).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+		return result;
+	}, [selectedTemplate, viewHtmlSearchQuery, viewHtmlSearchResults, viewCurrentSearchIndex]);
 
 	// Handle template field changes
 	const handleTemplateChange = (field: keyof NewEmailTemplate, value: string | boolean | string[]) => {
@@ -1580,25 +1677,71 @@ const EmailTemplates = () => {
 										</Box>
 									</TabPanel>
 									<TabPanel value={viewTab} index={1}>
-										<Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2, mr: 2, mt: 2 }}>
-											<IconButton
-												onClick={() => {
-													navigator.clipboard.writeText(selectedTemplate.htmlBody);
-													enqueueSnackbar("Código HTML copiado al portapapeles", {
-														variant: "success",
-														anchorOrigin: { vertical: "bottom", horizontal: "right" },
-													});
-												}}
-											>
-												<Copy />
-											</IconButton>
+										<Box sx={{ p: 2, pb: 0 }}>
+											<Grid container spacing={2} alignItems="center">
+												<Grid item xs={12} sm={6}>
+													<TextField
+														size="small"
+														fullWidth
+														placeholder="Buscar en el código HTML..."
+														value={viewHtmlSearchQuery}
+														onChange={(e) => setViewHtmlSearchQuery(e.target.value)}
+														onKeyDown={(e) => {
+															if (e.key === "Enter") {
+																handleViewHtmlSearch();
+															}
+														}}
+														InputProps={{
+															startAdornment: (
+																<InputAdornment position="start">
+																	<SearchNormal1 size={20} />
+																</InputAdornment>
+															),
+														}}
+													/>
+												</Grid>
+												<Grid item xs={12} sm={6}>
+													<Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+														<Button size="small" variant="outlined" onClick={handleViewHtmlSearch} startIcon={<SearchNormal1 size={16} />}>
+															Buscar
+														</Button>
+														{viewHtmlSearchResults.length > 0 && (
+															<>
+																<Typography variant="body2" color="textSecondary">
+																	{viewCurrentSearchIndex + 1} de {viewHtmlSearchResults.length}
+																</Typography>
+																<IconButton size="small" onClick={() => navigateViewSearchResult("prev")} title="Anterior">
+																	<ArrowUp2 size={18} />
+																</IconButton>
+																<IconButton size="small" onClick={() => navigateViewSearchResult("next")} title="Siguiente">
+																	<ArrowDown2 size={18} />
+																</IconButton>
+															</>
+														)}
+														<Box sx={{ ml: "auto" }}>
+															<IconButton
+																onClick={() => {
+																	navigator.clipboard.writeText(selectedTemplate.htmlBody);
+																	enqueueSnackbar("Código HTML copiado al portapapeles", {
+																		variant: "success",
+																		anchorOrigin: { vertical: "bottom", horizontal: "right" },
+																	});
+																}}
+																title="Copiar código"
+															>
+																<Copy />
+															</IconButton>
+														</Box>
+													</Box>
+												</Grid>
+											</Grid>
 										</Box>
 										<Box
 											component="pre"
 											sx={{
 												p: 2,
 												m: 0,
-												height: "calc(100% - 60px)",
+												height: "calc(100% - 80px)",
 												overflow: "auto",
 												bgcolor: theme.palette.mode === "dark" ? theme.palette.grey[900] : theme.palette.grey[100],
 												borderRadius: 0,
@@ -1606,10 +1749,15 @@ const EmailTemplates = () => {
 													fontFamily: "monospace",
 													fontSize: "0.875rem",
 													display: "block",
+													whiteSpace: "pre-wrap",
+													wordBreak: "break-word",
 												},
 											}}
 										>
-											<code>{selectedTemplate.htmlBody}</code>
+											<code
+												ref={viewHtmlCodeRef}
+												dangerouslySetInnerHTML={{ __html: getHighlightedViewHtml() }}
+											/>
 										</Box>
 									</TabPanel>
 									<TabPanel value={viewTab} index={2}>
