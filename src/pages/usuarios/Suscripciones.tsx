@@ -30,7 +30,7 @@ import {
 	Tabs,
 	Tab,
 } from "@mui/material";
-import { Refresh, TickCircle, CloseCircle, Warning2, Calendar, Profile2User, Eye, CloseSquare, Edit, Trash } from "iconsax-react";
+import { Refresh, TickCircle, CloseCircle, Warning2, Calendar, Profile2User, Eye, CloseSquare, Edit, Trash, RefreshCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import SubscriptionsService, { Subscription } from "api/subscriptions";
@@ -76,6 +76,11 @@ const Suscripciones = () => {
 	const [openResetDialog, setOpenResetDialog] = useState(false);
 	const [cancelInStripe, setCancelInStripe] = useState(true);
 	const [resettingSubscription, setResettingSubscription] = useState(false);
+
+	// Modal de sincronizar con Stripe
+	const [openSyncDialog, setOpenSyncDialog] = useState(false);
+	const [syncMode, setSyncMode] = useState<"test" | "live">("live");
+	const [syncingWithStripe, setSyncingWithStripe] = useState(false);
 
 	const fetchSubscriptions = async () => {
 		try {
@@ -197,6 +202,50 @@ const Suscripciones = () => {
 	const handleCloseResetDialog = () => {
 		setOpenResetDialog(false);
 		setCancelInStripe(true);
+	};
+
+	const handleOpenSyncDialog = () => {
+		// Pre-seleccionar el modo basado en la suscripción actual
+		if (selectedSubscription) {
+			setSyncMode(isTestMode(selectedSubscription) ? "test" : "live");
+		}
+		setOpenSyncDialog(true);
+	};
+
+	const handleCloseSyncDialog = () => {
+		setOpenSyncDialog(false);
+	};
+
+	const handleSyncWithStripe = async () => {
+		if (!selectedSubscription) {
+			enqueueSnackbar("No hay suscripción seleccionada", { variant: "warning" });
+			return;
+		}
+
+		try {
+			setSyncingWithStripe(true);
+
+			const response = await SubscriptionsService.syncWithStripe({
+				userId: selectedSubscription.user._id,
+				mode: syncMode,
+			});
+
+			// Mostrar resultado detallado
+			const actions = response.log.actions.map((a) => a.action).join(", ");
+			enqueueSnackbar(`Sincronización completada: ${response.result.plan} (${response.result.status}). Acciones: ${actions}`, {
+				variant: "success",
+				autoHideDuration: 6000,
+			});
+
+			handleCloseSyncDialog();
+			handleCloseDialog();
+			// Recargar las suscripciones para ver los cambios
+			await fetchSubscriptions();
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al sincronizar con Stripe", { variant: "error" });
+		} finally {
+			setSyncingWithStripe(false);
+		}
 	};
 
 	const handleResetSubscription = async () => {
@@ -1499,12 +1548,51 @@ const Suscripciones = () => {
 							{/* Tab 5: Acciones */}
 							{tabValue === 5 && (
 								<Stack spacing={3} sx={{ mt: 1 }}>
+									{/* Sincronizar con Stripe */}
+									<Box>
+										<Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<RefreshCircle size={20} color="#1976d2" />
+											Sincronizar con Stripe
+										</Typography>
+										<Divider sx={{ mb: 2 }} />
+										<Stack spacing={2}>
+											<Typography variant="body2" color="text.secondary">
+												Esta acción sincronizará la suscripción de la base de datos con el estado real en Stripe. Es útil cuando hay
+												inconsistencias entre lo que muestra la app y lo que hay realmente en Stripe.
+											</Typography>
+											<Alert severity="info">
+												<Typography variant="body2" fontWeight="bold">
+													¿Qué hace esta acción?
+												</Typography>
+												<ul style={{ marginTop: "8px", marginBottom: 0, paddingLeft: "20px" }}>
+													<li>Busca la suscripción del usuario en Stripe (por customerId o email)</li>
+													<li>Si no hay suscripción activa en Stripe → resetea a plan FREE</li>
+													<li>Si hay suscripción activa/trialing → actualiza el plan y estado</li>
+													<li>Si la suscripción está en estado inválido (incomplete, past_due, etc.) → resetea a FREE</li>
+												</ul>
+											</Alert>
+											<Box>
+												<Button
+													variant="contained"
+													color="primary"
+													startIcon={<RefreshCircle size={20} />}
+													onClick={handleOpenSyncDialog}
+													fullWidth
+												>
+													Sincronizar con Stripe
+												</Button>
+											</Box>
+										</Stack>
+									</Box>
+
+									<Divider />
+
 									<Alert severity="warning" icon={<Warning2 size={24} />}>
 										<Typography variant="subtitle2" fontWeight="bold">
-											Zona de Peligro - Acciones Administrativas
+											Zona de Peligro - Acciones Destructivas
 										</Typography>
 										<Typography variant="body2" sx={{ mt: 1 }}>
-											Las acciones en esta sección son irreversibles y pueden afectar significativamente la experiencia del usuario.
+											Las acciones a continuación son irreversibles y pueden afectar significativamente la experiencia del usuario.
 										</Typography>
 									</Alert>
 
@@ -1881,6 +1969,116 @@ const Suscripciones = () => {
 						startIcon={resettingSubscription ? <CircularProgress size={16} color="inherit" /> : <Trash size={16} />}
 					>
 						{resettingSubscription ? "Reseteando..." : "Confirmar Reseteo"}
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Modal de confirmación para sincronizar con Stripe */}
+			<Dialog open={openSyncDialog} onClose={handleCloseSyncDialog} maxWidth="sm" fullWidth>
+				<DialogTitle>
+					<Stack direction="row" justifyContent="space-between" alignItems="center">
+						<Typography variant="h5">Sincronizar con Stripe</Typography>
+						<IconButton onClick={handleCloseSyncDialog} size="small">
+							<CloseSquare size={20} />
+						</IconButton>
+					</Stack>
+				</DialogTitle>
+				<DialogContent>
+					<Stack spacing={3} sx={{ mt: 2 }}>
+						<Alert severity="info" icon={<RefreshCircle size={24} />}>
+							<Typography variant="subtitle2" fontWeight="bold">
+								Sincronización de Suscripción
+							</Typography>
+							<Typography variant="body2" sx={{ mt: 1 }}>
+								Esta acción sincronizará la suscripción del usuario <strong>{selectedSubscription?.user.email}</strong> con el estado real
+								en Stripe.
+							</Typography>
+						</Alert>
+
+						<Box sx={{ p: 2, backgroundColor: "grey.100", borderRadius: 1 }}>
+							<Typography variant="caption" color="text.secondary" fontWeight="bold">
+								Información Actual en BD
+							</Typography>
+							<Grid container spacing={1} sx={{ mt: 0.5 }}>
+								<Grid item xs={12}>
+									<Typography variant="caption" color="text.secondary">
+										Usuario:
+									</Typography>
+									<Typography variant="body2" fontWeight="bold">
+										{selectedSubscription?.user.name} ({selectedSubscription?.user.email})
+									</Typography>
+								</Grid>
+								<Grid item xs={6}>
+									<Typography variant="caption" color="text.secondary">
+										Plan Actual:
+									</Typography>
+									<Typography variant="body2" fontWeight="bold">
+										{getPlanLabel(selectedSubscription?.plan)}
+									</Typography>
+								</Grid>
+								<Grid item xs={6}>
+									<Typography variant="caption" color="text.secondary">
+										Estado Actual:
+									</Typography>
+									<Typography variant="body2" fontWeight="bold">
+										{getStatusLabel(selectedSubscription?.status)}
+									</Typography>
+								</Grid>
+								<Grid item xs={12}>
+									<Typography variant="caption" color="text.secondary">
+										Stripe Customer ID:
+									</Typography>
+									<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+										{selectedSubscription?.stripeCustomerId?.current || "No disponible"}
+									</Typography>
+								</Grid>
+							</Grid>
+						</Box>
+
+						<Box>
+							<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+								Modo de Stripe a Sincronizar
+							</Typography>
+							<TextField
+								select
+								fullWidth
+								value={syncMode}
+								onChange={(e) => setSyncMode(e.target.value as "test" | "live")}
+								size="small"
+							>
+								<MenuItem value="live">🟢 LIVE (Producción)</MenuItem>
+								<MenuItem value="test">🟡 TEST (Pruebas)</MenuItem>
+							</TextField>
+							<Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+								Selecciona el modo de Stripe donde quieres buscar y sincronizar la suscripción del usuario.
+							</Typography>
+						</Box>
+
+						<Alert severity="warning">
+							<Typography variant="body2" fontWeight="bold">
+								¿Qué sucederá?
+							</Typography>
+							<ul style={{ marginTop: "8px", marginBottom: 0, paddingLeft: "20px" }}>
+								<li>Se buscará la suscripción del usuario en Stripe {syncMode === "live" ? "LIVE" : "TEST"}</li>
+								<li>Si hay suscripción activa: se actualizará el plan y estado en la BD</li>
+								<li>Si no hay suscripción activa o está en estado inválido: se reseteará a plan FREE</li>
+								<li>Se registrará la acción en el historial de la suscripción</li>
+							</ul>
+						</Alert>
+					</Stack>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleCloseSyncDialog} variant="outlined" disabled={syncingWithStripe}>
+						Cancelar
+					</Button>
+					<Button
+						onClick={handleSyncWithStripe}
+						variant="contained"
+						color="primary"
+						disabled={syncingWithStripe}
+						startIcon={syncingWithStripe ? <CircularProgress size={16} color="inherit" /> : <RefreshCircle size={16} />}
+					>
+						{syncingWithStripe ? "Sincronizando..." : "Sincronizar"}
 					</Button>
 				</DialogActions>
 			</Dialog>

@@ -199,6 +199,52 @@ export interface ResetSubscriptionResponse {
 	data?: any;
 }
 
+export interface SyncWithStripeParams {
+	userId: string;
+	mode: "test" | "live";
+}
+
+export interface SyncWithStripeResponse {
+	success: boolean;
+	message: string;
+	mode: string;
+	log: {
+		userId: string;
+		userEmail: string;
+		mode: string;
+		timestamp: string;
+		mongoSubscriptionBefore: {
+			id: string;
+			plan: string;
+			status: string;
+			stripeCustomerId: string | null;
+			stripeSubscriptionId: string | null;
+		} | null;
+		stripeData: {
+			customerId: string | null;
+			customerEmail: string | null;
+			subscriptionId: string | null;
+			subscriptionStatus: string | null;
+			productId: string | null;
+		} | null;
+		actions: Array<{
+			action: string;
+			[key: string]: any;
+		}>;
+		errors: Array<{
+			action: string;
+			error: string;
+		}>;
+	};
+	result: {
+		subscriptionId: string;
+		plan: string;
+		status: string;
+		stripeSubscriptionId: string | null;
+		stripeSubscriptionStatus: string | null;
+	};
+}
+
 class SubscriptionsService {
 	async getSubscriptions(params: GetSubscriptionsParams = {}): Promise<SubscriptionsResponse> {
 		try {
@@ -240,6 +286,30 @@ class SubscriptionsService {
 			}
 
 			throw new Error(error.response?.data?.message || "Error al resetear la suscripción");
+		}
+	}
+
+	async syncWithStripe(params: SyncWithStripeParams): Promise<SyncWithStripeResponse> {
+		try {
+			const response = await adminAxios.post("/api/subscriptions/sync-with-stripe", params);
+			return response.data;
+		} catch (error: any) {
+			// Si es un error 404, el endpoint no existe
+			if (error.response?.status === 404) {
+				throw new Error("El endpoint /api/subscriptions/sync-with-stripe no está disponible en el servidor");
+			}
+
+			// Si es un error 401, hay problema de autenticación
+			if (error.response?.status === 401) {
+				throw new Error("No autorizado. Por favor, inicie sesión nuevamente.");
+			}
+
+			// Si es un error 400, puede ser un problema con los parámetros
+			if (error.response?.status === 400) {
+				throw new Error(error.response?.data?.message || "Parámetros inválidos");
+			}
+
+			throw new Error(error.response?.data?.message || "Error al sincronizar con Stripe");
 		}
 	}
 }
