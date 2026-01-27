@@ -11,6 +11,7 @@ export interface Causa {
 	fuero?: "CIV" | "COM" | "CSS" | "CNT";
 	verified?: boolean;
 	isValid?: boolean;
+	isPrivate?: boolean | null;
 	update?: boolean;
 	folderIds?: string[];
 	userCausaIds?: string[];
