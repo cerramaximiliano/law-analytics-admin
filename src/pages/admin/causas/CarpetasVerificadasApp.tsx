@@ -641,6 +641,7 @@ const CarpetasVerificadasApp = () => {
 									<MenuItem value="juzgado">Juzgado</MenuItem>
 									<MenuItem value="objeto">Objeto</MenuItem>
 									<MenuItem value="movimientosCount">Movimientos</MenuItem>
+									<MenuItem value="createdAt">Fecha Creación</MenuItem>
 									<MenuItem value="lastUpdate">Última Act.</MenuItem>
 									<MenuItem value="fechaUltimoMovimiento">Fecha Últ. Mov.</MenuItem>
 								</Select>

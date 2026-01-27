@@ -771,7 +771,7 @@ const AdminDashboard = () => {
 								valueColor={COLORS.success.main}
 								loading={loading}
 								infoKey="verifiedFolders"
-								linkTo="/admin/causas/verified"
+								linkTo="/admin/causas/verified-app"
 							/>
 						</Grid>
 						<Grid item xs={6} sm={6} md={3}>
