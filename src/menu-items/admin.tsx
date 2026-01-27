@@ -317,14 +317,6 @@ const admin: NavItemType = {
 			url: "/admin/tasks",
 			breadcrumbs: true,
 		},
-		{
-			id: "manager-config",
-			title: "Manager Config",
-			type: "item",
-			icon: Setting3,
-			url: "/admin/manager-config",
-			breadcrumbs: true,
-		},
 	],
 };
 
