@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import { Box, Tab, Tabs, Typography, Paper, Stack, Chip, useTheme, alpha, IconButton, Tooltip, Popover } from "@mui/material";
-import { Setting2, Notification, Broom, TickSquare, Refresh2, SearchNormal1, DocumentUpload, InfoCircle, Chart } from "iconsax-react";
+import { Setting2, Notification, Broom, TickSquare, Refresh2, SearchNormal1, DocumentUpload, InfoCircle } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import VerificationWorker from "./VerificationWorker";
@@ -11,7 +11,6 @@ import SyncWorker from "./SyncWorker";
 import ProcessingWorker from "./ProcessingWorker";
 import NotificationWorker from "./NotificationWorker";
 import CleanupWorker from "./CleanupWorker";
-import WorkerStatistics from "./WorkerStatistics";
 
 // Interfaz para los tabs
 interface WorkerTab {
@@ -51,15 +50,6 @@ const WorkersConfig = () => {
 			component: <AppUpdateWorker />,
 			description: "Mantiene actualizados los documentos de causas judiciales (API de PJN)",
 			status: "active",
-		},
-		{
-			label: "Estadísticas",
-			value: "statistics",
-			icon: <Chart size={20} />,
-			component: <WorkerStatistics />,
-			description: "Monitoreo en tiempo real del rendimiento de workers por fuero",
-			status: "active",
-			badge: "nuevo",
 		},
 		{
 			label: "Verificación",
