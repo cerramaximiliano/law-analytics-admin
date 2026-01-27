@@ -68,6 +68,7 @@ const CarpetasVerificadasApp = () => {
 	const [totalInDatabase, setTotalInDatabase] = useState(0);
 	const [fueroFilter, setFueroFilter] = useState<string>("todos");
 	const [actualizableFilter, setActualizableFilter] = useState<string>("todos");
+	const [privadaFilter, setPrivadaFilter] = useState<string>("todos");
 
 	// Filtros de búsqueda
 	const [searchNumber, setSearchNumber] = useState<string>("");
@@ -118,6 +119,7 @@ const CarpetasVerificadasApp = () => {
 		fechaUltimoMovimiento?: Dayjs | null,
 		lastUpdate?: Dayjs | null,
 		actualizable?: string,
+		privada?: string,
 	) => {
 		try {
 			setLoading(true);
@@ -158,6 +160,14 @@ const CarpetasVerificadasApp = () => {
 
 			if (actualizable && actualizable !== "todos") {
 				params.update = actualizable === "true";
+			}
+
+			if (privada && privada !== "todos") {
+				if (privada === "null") {
+					params.isPrivate = "null";
+				} else {
+					params.isPrivate = privada === "true";
+				}
 			}
 
 			// Agregar parámetros de ordenamiento
@@ -206,8 +216,9 @@ const CarpetasVerificadasApp = () => {
 			searchFechaUltimoMovimiento,
 			searchLastUpdate,
 			actualizableFilter,
+			privadaFilter,
 		);
-	}, [page, rowsPerPage, fueroFilter, sortBy, sortOrder, actualizableFilter]);
+	}, [page, rowsPerPage, fueroFilter, sortBy, sortOrder, actualizableFilter, privadaFilter]);
 
 	// Handlers de paginación
 	const handleChangePage = (_event: unknown, newPage: number) => {
@@ -231,6 +242,12 @@ const CarpetasVerificadasApp = () => {
 		setPage(0);
 	};
 
+	// Handler de cambio de filtro privada
+	const handlePrivadaChange = (event: any) => {
+		setPrivadaFilter(event.target.value);
+		setPage(0);
+	};
+
 	// Handler de refresh
 	const handleRefresh = () => {
 		fetchCausas(
@@ -246,6 +263,7 @@ const CarpetasVerificadasApp = () => {
 			searchFechaUltimoMovimiento,
 			searchLastUpdate,
 			actualizableFilter,
+			privadaFilter,
 		);
 	};
 
@@ -265,6 +283,7 @@ const CarpetasVerificadasApp = () => {
 			searchFechaUltimoMovimiento,
 			searchLastUpdate,
 			actualizableFilter,
+			privadaFilter,
 		);
 	};
 
@@ -277,8 +296,9 @@ const CarpetasVerificadasApp = () => {
 		setSearchFechaUltimoMovimiento(null);
 		setSearchLastUpdate(null);
 		setActualizableFilter("todos");
+		setPrivadaFilter("todos");
 		setPage(0);
-		fetchCausas(0, rowsPerPage, fueroFilter, "", "", "", "", sortBy, sortOrder, null, null, "todos");
+		fetchCausas(0, rowsPerPage, fueroFilter, "", "", "", "", sortBy, sortOrder, null, null, "todos", "todos");
 	};
 
 	// Handler para establecer fecha de hoy
@@ -501,6 +521,17 @@ const CarpetasVerificadasApp = () => {
 									<MenuItem value="todos">Todos</MenuItem>
 									<MenuItem value="true">Actualizable</MenuItem>
 									<MenuItem value="false">No actualizable</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={12} md={6} lg={2}>
+							<FormControl fullWidth>
+								<InputLabel>Privada</InputLabel>
+								<Select value={privadaFilter} onChange={handlePrivadaChange} label="Privada" size="small">
+									<MenuItem value="todos">Todos</MenuItem>
+									<MenuItem value="true">Privada</MenuItem>
+									<MenuItem value="false">Pública</MenuItem>
+									<MenuItem value="null">Pendiente</MenuItem>
 								</Select>
 							</FormControl>
 						</Grid>

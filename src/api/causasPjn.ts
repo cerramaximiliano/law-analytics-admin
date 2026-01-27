@@ -62,6 +62,7 @@ export class CausasPjnService {
 		fechaUltimoMovimiento?: string;
 		lastUpdate?: string;
 		update?: boolean;
+		isPrivate?: boolean | "null";
 		sortBy?: "number" | "year" | "caratula" | "juzgado" | "objeto" | "movimientosCount" | "lastUpdate" | "fechaUltimoMovimiento";
 		sortOrder?: "asc" | "desc";
 	}): Promise<CausasResponse> {
