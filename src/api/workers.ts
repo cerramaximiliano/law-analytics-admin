@@ -1,5 +1,164 @@
 import workersAxios from "utils/workersAxios";
 
+// ========================================
+// Interfaces para Worker Daily Stats
+// ========================================
+
+export interface WorkerDailyStatsRun {
+	runId: string;
+	startedAt: string;
+	finishedAt?: string;
+	status: "running" | "completed" | "failed" | "interrupted";
+	documentsProcessed: number;
+	documentsSuccessful: number;
+	documentsFailed: number;
+	movimientosFound: number;
+	errorMessage?: string;
+}
+
+export interface WorkerDailyStatsError {
+	timestamp: string;
+	causaId?: string;
+	number?: number;
+	year?: number;
+	errorType: string;
+	message: string;
+	stack?: string;
+	retryCount?: number;
+}
+
+export interface WorkerDailyStatsAlert {
+	type: string;
+	message: string;
+	createdAt: string;
+	acknowledged: boolean;
+	acknowledgedAt?: string;
+}
+
+export interface WorkerDailyStats {
+	_id: string;
+	date: string;
+	fuero: string;
+	workerType: string;
+	status: "idle" | "running" | "completed" | "failed";
+	stats: {
+		totalToProcess: number;
+		processed: number;
+		successful: number;
+		failed: number;
+		skipped: number;
+		movimientosFound: number;
+		privateCausas: number;
+		publicCausas: number;
+		captchaAttempts: number;
+		captchaSuccessful: number;
+		captchaFailed: number;
+	};
+	runs: WorkerDailyStatsRun[];
+	errors: WorkerDailyStatsError[];
+	alerts: WorkerDailyStatsAlert[];
+	lastUpdate: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface WorkerStatsTodayResponse {
+	success: boolean;
+	message: string;
+	date: string;
+	totals: {
+		totalToProcess: number;
+		processed: number;
+		successful: number;
+		failed: number;
+		skipped: number;
+		movimientosFound: number;
+		privateCausas: number;
+		publicCausas: number;
+		captchaAttempts: number;
+		captchaSuccessful: number;
+		captchaFailed: number;
+		successRate: string;
+		captchaSuccessRate: string;
+	};
+	byFuero: Array<{
+		fuero: string;
+		status: string;
+		stats: WorkerDailyStats["stats"];
+		runsCount: number;
+		errorsCount: number;
+		alerts: WorkerDailyStatsAlert[];
+		lastUpdate: string;
+	}>;
+	fueroCount: number;
+}
+
+export interface WorkerStatsRangeResponse {
+	success: boolean;
+	message: string;
+	from: string;
+	to: string;
+	daysCount: number;
+	summary: Array<{
+		date: string;
+		totalProcessed: number;
+		totalSuccessful: number;
+		totalFailed: number;
+		totalMovimientos: number;
+		fueros: string[];
+	}>;
+	data: WorkerDailyStats[];
+}
+
+export interface WorkerStatsByDateResponse {
+	success: boolean;
+	message: string;
+	date: string;
+	count: number;
+	data: WorkerDailyStats[];
+}
+
+export interface WorkerFueroStatusResponse {
+	success: boolean;
+	message: string;
+	data: {
+		fuero: string;
+		date: string;
+		status: string;
+		stats: WorkerDailyStats["stats"];
+		runs: WorkerDailyStatsRun[];
+		recentErrors: WorkerDailyStatsError[];
+		alerts: WorkerDailyStatsAlert[];
+		lastUpdate: string;
+		health: "healthy" | "warning" | "critical" | "idle";
+		errorRate: string;
+	} | null;
+}
+
+export interface WorkerAlertsResponse {
+	success: boolean;
+	message: string;
+	count: number;
+	data: Array<{
+		fuero: string;
+		workerType: string;
+		type: string;
+		message: string;
+		createdAt: string;
+		status: string;
+	}>;
+}
+
+export interface WorkerFueroErrorsResponse {
+	success: boolean;
+	message: string;
+	fuero: string;
+	date: string;
+	totalErrors: number;
+	byType: Record<string, number>;
+	data: Array<WorkerDailyStatsError & { workerType: string }>;
+}
+
 // Interface para historial de scraping
 export interface ScrapingHistory {
 	_id: string | { $oid: string };
@@ -434,6 +593,122 @@ export class WorkersService {
 	static async refreshEmailVerificationCredits(id: string): Promise<EmailVerificationConfigResponse> {
 		try {
 			const response = await workersAxios.post(`/api/configuracion-email-verification/${id}/refresh-credits`);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	// ========================================
+	// Métodos para Worker Daily Stats
+	// ========================================
+
+	/**
+	 * Obtener resumen de estadísticas del día actual
+	 */
+	static async getWorkerStatsTodaySummary(workerType?: string): Promise<WorkerStatsTodayResponse> {
+		try {
+			const params: Record<string, string> = {};
+			if (workerType) params.workerType = workerType;
+			const response = await workersAxios.get("/api/workers/stats/today", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener estadísticas de un día específico
+	 */
+	static async getWorkerStatsByDate(
+		date: string,
+		params?: { workerType?: string; fuero?: string }
+	): Promise<WorkerStatsByDateResponse> {
+		try {
+			const response = await workersAxios.get(`/api/workers/stats/${date}`, { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener estadísticas por rango de fechas
+	 */
+	static async getWorkerStatsByRange(params: {
+		from: string;
+		to: string;
+		workerType?: string;
+		fuero?: string;
+	}): Promise<WorkerStatsRangeResponse> {
+		try {
+			const response = await workersAxios.get("/api/workers/stats/range", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener estado actual de un fuero específico
+	 */
+	static async getWorkerFueroStatus(
+		fuero: string,
+		workerType?: string
+	): Promise<WorkerFueroStatusResponse> {
+		try {
+			const params: Record<string, string> = {};
+			if (workerType) params.workerType = workerType;
+			const response = await workersAxios.get(`/api/workers/fuero/${fuero}/status`, { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener errores recientes de un fuero
+	 */
+	static async getWorkerFueroErrors(
+		fuero: string,
+		params?: { workerType?: string; limit?: number }
+	): Promise<WorkerFueroErrorsResponse> {
+		try {
+			const response = await workersAxios.get(`/api/workers/fuero/${fuero}/errors`, { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener alertas activas
+	 */
+	static async getWorkerAlerts(): Promise<WorkerAlertsResponse> {
+		try {
+			const response = await workersAxios.get("/api/workers/alerts");
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Reconocer (acknowledge) una alerta
+	 */
+	static async acknowledgeWorkerAlert(
+		fuero: string,
+		alertType: string,
+		workerType?: string
+	): Promise<{ success: boolean; message: string; modifiedCount: number }> {
+		try {
+			const params: Record<string, string> = {};
+			if (workerType) params.workerType = workerType;
+			const response = await workersAxios.post(
+				`/api/workers/alerts/${fuero}/${alertType}/acknowledge`,
+				{},
+				{ params }
+			);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
