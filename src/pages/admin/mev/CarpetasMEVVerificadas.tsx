@@ -560,6 +560,7 @@ const CarpetasMEVVerificadas = () => {
 											<TableCell>Juzgado</TableCell>
 											<TableCell>Objeto</TableCell>
 											<TableCell align="center">Movimientos</TableCell>
+											<TableCell>Fecha Creación</TableCell>
 											<TableCell>Última Act.</TableCell>
 											<TableCell>Fecha Últ. Mov.</TableCell>
 											<TableCell align="center">Actualizable</TableCell>
@@ -592,6 +593,11 @@ const CarpetasMEVVerificadas = () => {
 												</TableCell>
 												<TableCell align="center">
 													<Chip label={causa.movimientosCount || 0} size="small" variant="outlined" />
+												</TableCell>
+												<TableCell>
+													<Typography variant="caption">
+														{formatDate(causa.createdAt)}
+													</Typography>
 												</TableCell>
 												<TableCell>
 													<Typography
