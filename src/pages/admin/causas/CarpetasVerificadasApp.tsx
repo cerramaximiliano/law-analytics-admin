@@ -675,6 +675,7 @@ const CarpetasVerificadasApp = () => {
 											<TableCell>Última Act.</TableCell>
 											<TableCell>Fecha Últ. Mov.</TableCell>
 											<TableCell align="center">Actualizable</TableCell>
+											<TableCell align="center">Privada</TableCell>
 											<TableCell align="center">Acciones</TableCell>
 										</TableRow>
 									</TableHead>
@@ -748,6 +749,15 @@ const CarpetasVerificadasApp = () => {
 														<TickCircle size={20} color="#2e7d32" variant="Bold" />
 													) : (
 														<CloseSquare size={20} color="#d32f2f" variant="Bold" />
+													)}
+												</TableCell>
+												<TableCell align="center">
+													{causa.isPrivate === true ? (
+														<TickCircle size={20} color="#2e7d32" variant="Bold" />
+													) : causa.isPrivate === false ? (
+														<CloseSquare size={20} color="#d32f2f" variant="Bold" />
+													) : (
+														<Typography variant="caption" color="text.secondary">—</Typography>
 													)}
 												</TableCell>
 												<TableCell align="center">
