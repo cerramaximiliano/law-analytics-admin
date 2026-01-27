@@ -82,9 +82,6 @@ const SupportContactsPage = Loadable(lazy(() => import("pages/admin/support")));
 // Tasks page
 const AdminTasksPage = Loadable(lazy(() => import("pages/admin/tasks")));
 
-// Manager Config page
-const ManagerConfigPage = Loadable(lazy(() => import("pages/admin/manager-config")));
-
 // ==============================|| ROUTES ||============================== //
 
 export default function Routes() {
@@ -398,14 +395,6 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<AdminTasksPage />
-								</AdminRoleGuard>
-							),
-						},
-						{
-							path: "manager-config",
-							element: (
-								<AdminRoleGuard>
-									<ManagerConfigPage />
 								</AdminRoleGuard>
 							),
 						},

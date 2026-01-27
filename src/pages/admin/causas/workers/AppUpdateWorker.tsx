@@ -30,6 +30,7 @@ import { useSnackbar } from "notistack";
 import { WorkerConfig } from "api/workers";
 import WorkersPjnService from "api/workersPjn";
 import AdvancedConfigModal from "./AdvancedConfigModal";
+import ManagerConfigPanel from "./ManagerConfigPanel";
 
 // Enums para el worker de actualización
 const UPDATE_MODE_OPTIONS = [
@@ -200,6 +201,9 @@ const AppUpdateWorker = () => {
 					expedientes y sincronizando la información más reciente.
 				</Typography>
 			</Alert>
+
+			{/* Panel de configuración del Manager */}
+			<ManagerConfigPanel />
 
 			{/* Guía de Funcionamiento - Colapsable */}
 			<Card variant="outlined" sx={{ backgroundColor: "background.default" }}>
