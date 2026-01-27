@@ -1,4 +1,5 @@
 import workersAxios from "utils/workersAxios";
+import pjnAxios from "utils/pjnAxios";
 
 // ========================================
 // Interfaces para Worker Daily Stats
@@ -610,7 +611,7 @@ export class WorkersService {
 		try {
 			const params: Record<string, string> = {};
 			if (workerType) params.workerType = workerType;
-			const response = await workersAxios.get("/api/workers/stats/today", { params });
+			const response = await pjnAxios.get("/api/workers/stats/today", { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -625,7 +626,7 @@ export class WorkersService {
 		params?: { workerType?: string; fuero?: string }
 	): Promise<WorkerStatsByDateResponse> {
 		try {
-			const response = await workersAxios.get(`/api/workers/stats/${date}`, { params });
+			const response = await pjnAxios.get(`/api/workers/stats/${date}`, { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -642,7 +643,7 @@ export class WorkersService {
 		fuero?: string;
 	}): Promise<WorkerStatsRangeResponse> {
 		try {
-			const response = await workersAxios.get("/api/workers/stats/range", { params });
+			const response = await pjnAxios.get("/api/workers/stats/range", { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -659,7 +660,7 @@ export class WorkersService {
 		try {
 			const params: Record<string, string> = {};
 			if (workerType) params.workerType = workerType;
-			const response = await workersAxios.get(`/api/workers/fuero/${fuero}/status`, { params });
+			const response = await pjnAxios.get(`/api/workers/fuero/${fuero}/status`, { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -674,7 +675,7 @@ export class WorkersService {
 		params?: { workerType?: string; limit?: number }
 	): Promise<WorkerFueroErrorsResponse> {
 		try {
-			const response = await workersAxios.get(`/api/workers/fuero/${fuero}/errors`, { params });
+			const response = await pjnAxios.get(`/api/workers/fuero/${fuero}/errors`, { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -686,7 +687,7 @@ export class WorkersService {
 	 */
 	static async getWorkerAlerts(): Promise<WorkerAlertsResponse> {
 		try {
-			const response = await workersAxios.get("/api/workers/alerts");
+			const response = await pjnAxios.get("/api/workers/alerts");
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -704,7 +705,7 @@ export class WorkersService {
 		try {
 			const params: Record<string, string> = {};
 			if (workerType) params.workerType = workerType;
-			const response = await workersAxios.post(
+			const response = await pjnAxios.post(
 				`/api/workers/alerts/${fuero}/${alertType}/acknowledge`,
 				{},
 				{ params }
