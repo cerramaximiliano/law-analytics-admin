@@ -22,6 +22,10 @@ import {
 	Collapse,
 	Skeleton,
 	useTheme,
+	Select,
+	MenuItem,
+	FormControl,
+	InputLabel,
 	alpha,
 	Divider,
 	Badge,
@@ -58,6 +62,7 @@ import {
 	WorkerDailyStats,
 	WorkerDailyStatsError,
 	WorkerAlertsResponse,
+	WorkerAvailableDate,
 } from "api/workers";
 
 // Fueros disponibles
@@ -192,9 +197,28 @@ const WorkerStatistics: React.FC = () => {
 
 	// Estados para filtro de fechas
 	const [dateMode, setDateMode] = useState<"today" | "specific" | "range">("today");
-	const [specificDate, setSpecificDate] = useState<Dayjs | null>(dayjs());
+	const [specificDate, setSpecificDate] = useState<string>("");
 	const [dateFrom, setDateFrom] = useState<Dayjs | null>(dayjs().subtract(7, "day"));
 	const [dateTo, setDateTo] = useState<Dayjs | null>(dayjs());
+	const [availableDates, setAvailableDates] = useState<WorkerAvailableDate[]>([]);
+	const [loadingDates, setLoadingDates] = useState(false);
+
+	// Cargar fechas disponibles
+	const fetchAvailableDates = useCallback(async () => {
+		try {
+			setLoadingDates(true);
+			const response = await WorkersService.getWorkerStatsAvailableDates(workerTypeFilter);
+			setAvailableDates(response.data || []);
+			// Si hay fechas disponibles y no hay fecha seleccionada, seleccionar la más reciente
+			if (response.data && response.data.length > 0 && !specificDate) {
+				setSpecificDate(response.data[0].date);
+			}
+		} catch (error: any) {
+			console.error("Error cargando fechas disponibles:", error);
+		} finally {
+			setLoadingDates(false);
+		}
+	}, [workerTypeFilter, specificDate]);
 
 	// Cargar datos iniciales
 	const fetchData = useCallback(async () => {
@@ -210,7 +234,7 @@ const WorkerStatistics: React.FC = () => {
 				statsResponse = await WorkersService.getWorkerStatsTodaySummary(workerTypeFilter);
 			} else if (dateMode === "specific" && specificDate) {
 				// Obtener estadísticas de una fecha específica
-				const dateStr = specificDate.format("YYYY-MM-DD");
+				const dateStr = specificDate;
 				const response = await WorkersService.getWorkerStatsByDate(dateStr, { workerType: workerTypeFilter });
 
 				// Convertir la respuesta de fecha específica al formato de todayStats
@@ -397,6 +421,11 @@ const WorkerStatistics: React.FC = () => {
 		}
 	};
 
+	// Efecto para cargar fechas disponibles
+	useEffect(() => {
+		fetchAvailableDates();
+	}, [fetchAvailableDates]);
+
 	// Efecto para cargar datos
 	useEffect(() => {
 		fetchData();
@@ -495,24 +524,39 @@ const WorkerStatistics: React.FC = () => {
 							</ToggleButtonGroup>
 
 							{dateMode === "specific" && (
-								<DatePicker
-									label="Fecha"
-									value={specificDate}
-									onChange={(newValue) => setSpecificDate(newValue)}
-									format="DD/MM/YYYY"
-									maxDate={dayjs()}
-									views={["year", "month", "day"]}
-									openTo="day"
-									slotProps={{
-										textField: {
-											size: "small",
-											sx: { minWidth: 160 },
-										},
-										actionBar: {
-											actions: ["today", "clear"],
-										},
-									}}
-								/>
+								<FormControl size="small" sx={{ minWidth: 200 }}>
+									<InputLabel>Fecha</InputLabel>
+									<Select
+										value={specificDate}
+										label="Fecha"
+										onChange={(e) => setSpecificDate(e.target.value)}
+										disabled={loadingDates}
+									>
+										{availableDates.map((dateInfo) => (
+											<MenuItem key={dateInfo.date} value={dateInfo.date}>
+												<Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" sx={{ width: "100%" }}>
+													<Typography variant="body2">
+														{dayjs(dateInfo.date).format("DD/MM/YYYY")}
+													</Typography>
+													<Stack direction="row" spacing={0.5}>
+														<Chip
+															label={`${dateInfo.totalProcessed}`}
+															size="small"
+															sx={{ height: 18, fontSize: "0.7rem" }}
+														/>
+													</Stack>
+												</Stack>
+											</MenuItem>
+										))}
+										{availableDates.length === 0 && (
+											<MenuItem disabled>
+												<Typography variant="body2" color="text.secondary">
+													{loadingDates ? "Cargando..." : "Sin datos disponibles"}
+												</Typography>
+											</MenuItem>
+										)}
+									</Select>
+								</FormControl>
 							)}
 
 							{dateMode === "range" && (
