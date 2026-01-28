@@ -20,10 +20,6 @@ import {
 	Tooltip,
 	Button,
 	Collapse,
-	Select,
-	MenuItem,
-	FormControl,
-	InputLabel,
 	Skeleton,
 	useTheme,
 	alpha,
@@ -189,8 +185,10 @@ const WorkerStatistics: React.FC = () => {
 	const [fueroDetails, setFueroDetails] = useState<any>(null);
 	const [fueroErrors, setFueroErrors] = useState<WorkerDailyStatsError[]>([]);
 	const [loadingDetails, setLoadingDetails] = useState(false);
-	const [workerTypeFilter, setWorkerTypeFilter] = useState<string>("app-update");
 	const [expandedFuero, setExpandedFuero] = useState<string | null>(null);
+
+	// Tipo de worker fijo (antes era configurable)
+	const workerTypeFilter = "app-update";
 
 	// Estados para filtro de fechas
 	const [dateMode, setDateMode] = useState<"today" | "specific" | "range">("today");
@@ -451,25 +449,11 @@ const WorkerStatistics: React.FC = () => {
 								Monitoreo del rendimiento de los workers de actualización
 							</Typography>
 						</Box>
-						<Stack direction="row" spacing={2} alignItems="center">
-							<FormControl size="small" sx={{ minWidth: 180 }}>
-								<InputLabel>Tipo de Worker</InputLabel>
-								<Select
-									value={workerTypeFilter}
-									label="Tipo de Worker"
-									onChange={(e) => setWorkerTypeFilter(e.target.value)}
-								>
-									<MenuItem value="app-update">App Update</MenuItem>
-									<MenuItem value="verify">Verificación</MenuItem>
-									<MenuItem value="scraping">Scraping</MenuItem>
-								</Select>
-							</FormControl>
-							<Tooltip title="Actualizar datos">
-								<IconButton onClick={handleRefresh} disabled={refreshing}>
-									<Refresh2 size={20} className={refreshing ? "spin" : ""} />
-								</IconButton>
-							</Tooltip>
-						</Stack>
+						<Tooltip title="Actualizar datos">
+							<IconButton onClick={handleRefresh} disabled={refreshing}>
+								<Refresh2 size={20} className={refreshing ? "spin" : ""} />
+							</IconButton>
+						</Tooltip>
 					</Stack>
 				</Box>
 
@@ -517,10 +501,15 @@ const WorkerStatistics: React.FC = () => {
 									onChange={(newValue) => setSpecificDate(newValue)}
 									format="DD/MM/YYYY"
 									maxDate={dayjs()}
+									views={["year", "month", "day"]}
+									openTo="day"
 									slotProps={{
 										textField: {
 											size: "small",
 											sx: { minWidth: 160 },
+										},
+										actionBar: {
+											actions: ["today", "clear"],
 										},
 									}}
 								/>
@@ -534,10 +523,15 @@ const WorkerStatistics: React.FC = () => {
 										onChange={(newValue) => setDateFrom(newValue)}
 										format="DD/MM/YYYY"
 										maxDate={dateTo || dayjs()}
+										views={["year", "month", "day"]}
+										openTo="day"
 										slotProps={{
 											textField: {
 												size: "small",
 												sx: { minWidth: 140 },
+											},
+											actionBar: {
+												actions: ["today", "clear"],
 											},
 										}}
 									/>
@@ -551,10 +545,15 @@ const WorkerStatistics: React.FC = () => {
 										format="DD/MM/YYYY"
 										minDate={dateFrom || undefined}
 										maxDate={dayjs()}
+										views={["year", "month", "day"]}
+										openTo="day"
 										slotProps={{
 											textField: {
 												size: "small",
 												sx: { minWidth: 140 },
+											},
+											actionBar: {
+												actions: ["today", "clear"],
 											},
 										}}
 									/>
