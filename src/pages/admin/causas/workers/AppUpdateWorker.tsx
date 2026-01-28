@@ -23,13 +23,10 @@ import {
 	Skeleton,
 	Chip,
 	LinearProgress,
-	Collapse,
 	Tabs,
 	Tab,
-	useTheme,
-	alpha,
 } from "@mui/material";
-import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, InfoCircle, ArrowDown2, ArrowUp2, Chart, DocumentText, Activity } from "iconsax-react";
+import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, InfoCircle, Chart, People, MessageQuestion } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkerConfig } from "api/workers";
 import WorkersPjnService from "api/workersPjn";
@@ -68,7 +65,6 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const AppUpdateWorker = () => {
-	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 	const [configs, setConfigs] = useState<WorkerConfig[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -76,7 +72,6 @@ const AppUpdateWorker = () => {
 	const [editValues, setEditValues] = useState<Partial<WorkerConfig>>({});
 	const [advancedConfigOpen, setAdvancedConfigOpen] = useState(false);
 	const [selectedConfig, setSelectedConfig] = useState<WorkerConfig | null>(null);
-	const [guideExpanded, setGuideExpanded] = useState(false);
 	const [activeTab, setActiveTab] = useState(0);
 
 	// Helper para obtener label del modo de actualización
@@ -204,87 +199,16 @@ const AppUpdateWorker = () => {
 		setActiveTab(newValue);
 	};
 
-	// Contenido del tab de Configuración
-	const ConfigurationContent = () => (
+	// Contenido del tab de Manager
+	const ManagerContent = () => (
 		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-			{/* Panel de configuración del Manager */}
 			<ManagerConfigPanel />
+		</Stack>
+	);
 
-			{/* Guía de Funcionamiento - Colapsable */}
-			<Card variant="outlined" sx={{ backgroundColor: "background.default" }}>
-				<CardContent sx={{ pb: guideExpanded ? 2 : 1 }}>
-					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: guideExpanded ? 2 : 0 }}>
-						<Stack direction="row" spacing={1} alignItems="center">
-							<InfoCircle size={20} color="#1890ff" />
-							<Typography variant="h6">Guía de Funcionamiento del Worker</Typography>
-						</Stack>
-						<Button
-							size="small"
-							onClick={() => setGuideExpanded(!guideExpanded)}
-							endIcon={guideExpanded ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}
-							sx={{ minWidth: "auto" }}
-						>
-							{guideExpanded ? "Ocultar" : "Ver guía"}
-						</Button>
-					</Stack>
-
-					<Collapse in={guideExpanded} timeout="auto" unmountOnExit>
-						{/* Descripción General */}
-						<Box sx={{ mt: 3 }}>
-							<Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-								Descripcion General
-							</Typography>
-							<Typography variant="body2" paragraph>
-								El Worker de Actualización es un proceso automatizado que mantiene actualizados los expedientes judiciales verificando
-								periódicamente si existen nuevos movimientos o cambios en el sistema del Poder Judicial de la Nación.
-							</Typography>
-						</Box>
-
-						{/* Horario de Operación */}
-						<Box sx={{ mt: 3 }}>
-							<Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-								Horario de Operacion
-							</Typography>
-							<Box sx={{ pl: 2 }}>
-								<Typography variant="body2">• Días laborables: Lunes a Viernes</Typography>
-								<Typography variant="body2">• Horario: 10:00 a 20:00 (hora Argentina)</Typography>
-								<Typography variant="body2">• Frecuencia de ejecución: Cada 2 minutos durante el horario activo</Typography>
-							</Box>
-						</Box>
-
-						{/* Ciclo de Actualización */}
-						<Box sx={{ mt: 3 }}>
-							<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-								Ciclo de Actualizacion
-							</Typography>
-							<Box sx={{ mt: 2 }}>
-								<Typography variant="subtitle2" fontWeight="bold" color="success.main" gutterBottom>
-									Actualización Exitosa
-								</Typography>
-								<Box sx={{ pl: 2 }}>
-									<Typography variant="body2">• Período de espera: Según threshold configurado</Typography>
-									<Typography variant="body2">• Aplica tanto si se encontraron nuevos movimientos como si no hubo cambios</Typography>
-								</Box>
-							</Box>
-							<Box sx={{ mt: 2 }}>
-								<Typography variant="subtitle2" fontWeight="bold" color="error.main" gutterBottom>
-									Errores y Reintentos
-								</Typography>
-								<Box sx={{ pl: 2 }}>
-									<Typography variant="body2">• Error de Captcha, expediente no encontrado, balance insuficiente: Reintento automático cada 2 minutos</Typography>
-								</Box>
-							</Box>
-						</Box>
-
-						<Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: "divider" }}>
-							<Typography variant="body2" color="text.secondary">
-								Esta configuración asegura un balance óptimo entre mantener la información actualizada y el uso eficiente de recursos.
-							</Typography>
-						</Box>
-					</Collapse>
-				</CardContent>
-			</Card>
-
+	// Contenido del tab de Workers
+	const WorkersContent = () => (
+		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 			{/* Información detallada del worker */}
 			<Card variant="outlined" sx={{ backgroundColor: "background.default" }}>
 				<CardContent sx={{ py: 2 }}>
@@ -516,6 +440,74 @@ const AppUpdateWorker = () => {
 		</Stack>
 	);
 
+	// Contenido del tab de Ayuda
+	const HelpContent = () => (
+		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+			{/* Guía de Funcionamiento */}
+			<Card variant="outlined" sx={{ backgroundColor: "background.default" }}>
+				<CardContent>
+					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+						<InfoCircle size={20} color="#1890ff" />
+						<Typography variant="h6">Guía de Funcionamiento del Worker</Typography>
+					</Stack>
+
+					{/* Descripción General */}
+					<Box sx={{ mt: 2 }}>
+						<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+							Descripción General
+						</Typography>
+						<Typography variant="body2" paragraph>
+							El Worker de Actualización es un proceso automatizado que mantiene actualizados los expedientes judiciales verificando
+							periódicamente si existen nuevos movimientos o cambios en el sistema del Poder Judicial de la Nación.
+						</Typography>
+					</Box>
+
+					{/* Horario de Operación */}
+					<Box sx={{ mt: 3 }}>
+						<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+							Horario de Operación
+						</Typography>
+						<Box sx={{ pl: 2 }}>
+							<Typography variant="body2">• Días laborables: Lunes a Viernes</Typography>
+							<Typography variant="body2">• Horario: 10:00 a 20:00 (hora Argentina)</Typography>
+							<Typography variant="body2">• Frecuencia de ejecución: Cada 2 minutos durante el horario activo</Typography>
+						</Box>
+					</Box>
+
+					{/* Ciclo de Actualización */}
+					<Box sx={{ mt: 3 }}>
+						<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+							Ciclo de Actualización
+						</Typography>
+						<Box sx={{ mt: 2 }}>
+							<Typography variant="subtitle2" fontWeight="bold" color="success.main" gutterBottom>
+								Actualización Exitosa
+							</Typography>
+							<Box sx={{ pl: 2 }}>
+								<Typography variant="body2">• Período de espera: Según threshold configurado</Typography>
+								<Typography variant="body2">• Aplica tanto si se encontraron nuevos movimientos como si no hubo cambios</Typography>
+							</Box>
+						</Box>
+						<Box sx={{ mt: 2 }}>
+							<Typography variant="subtitle2" fontWeight="bold" color="error.main" gutterBottom>
+								Errores y Reintentos
+							</Typography>
+							<Box sx={{ pl: 2 }}>
+								<Typography variant="body2">• Error de Captcha, expediente no encontrado, balance insuficiente: Reintento automático cada 2 minutos</Typography>
+							</Box>
+						</Box>
+					</Box>
+
+					<Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: "divider" }}>
+						<Typography variant="body2" color="text.secondary">
+							Esta configuración asegura un balance óptimo entre mantener la información actualizada y el uso eficiente de recursos.
+						</Typography>
+					</Box>
+				</CardContent>
+			</Card>
+		</Stack>
+	);
+
 	if (loading) {
 		return (
 			<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
@@ -571,8 +563,20 @@ const AppUpdateWorker = () => {
 							<Stack direction="row" spacing={1.5} alignItems="center">
 								<Setting2 size={20} />
 								<Box>
-									<Typography variant="body2" fontWeight={500}>Configuración</Typography>
-									<Typography variant="caption" color="text.secondary">Workers y Manager</Typography>
+									<Typography variant="body2" fontWeight={500}>Manager</Typography>
+									<Typography variant="caption" color="text.secondary">Config. general</Typography>
+								</Box>
+							</Stack>
+						}
+						sx={{ textTransform: "none" }}
+					/>
+					<Tab
+						label={
+							<Stack direction="row" spacing={1.5} alignItems="center">
+								<People size={20} />
+								<Box>
+									<Typography variant="body2" fontWeight={500}>Workers</Typography>
+									<Typography variant="caption" color="text.secondary">Config. workers</Typography>
 								</Box>
 							</Stack>
 						}
@@ -590,14 +594,32 @@ const AppUpdateWorker = () => {
 						}
 						sx={{ textTransform: "none" }}
 					/>
+					<Tab
+						label={
+							<Stack direction="row" spacing={1.5} alignItems="center">
+								<MessageQuestion size={20} />
+								<Box>
+									<Typography variant="body2" fontWeight={500}>Ayuda</Typography>
+									<Typography variant="caption" color="text.secondary">Guía de uso</Typography>
+								</Box>
+							</Stack>
+						}
+						sx={{ textTransform: "none" }}
+					/>
 				</Tabs>
 
 				{/* Contenido de los tabs */}
 				<TabPanel value={activeTab} index={0}>
-					<ConfigurationContent />
+					<ManagerContent />
 				</TabPanel>
 				<TabPanel value={activeTab} index={1}>
+					<WorkersContent />
+				</TabPanel>
+				<TabPanel value={activeTab} index={2}>
 					<WorkerStatistics />
+				</TabPanel>
+				<TabPanel value={activeTab} index={3}>
+					<HelpContent />
 				</TabPanel>
 			</Box>
 
