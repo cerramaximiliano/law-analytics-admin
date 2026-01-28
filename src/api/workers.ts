@@ -160,6 +160,22 @@ export interface WorkerFueroErrorsResponse {
 	data: Array<WorkerDailyStatsError & { workerType: string }>;
 }
 
+export interface WorkerAvailableDate {
+	date: string;
+	fuerosCount: number;
+	totalProcessed: number;
+	totalSuccessful: number;
+	totalFailed: number;
+	hasData: boolean;
+}
+
+export interface WorkerAvailableDatesResponse {
+	success: boolean;
+	message: string;
+	count: number;
+	data: WorkerAvailableDate[];
+}
+
 // Interface para historial de scraping
 export interface ScrapingHistory {
 	_id: string | { $oid: string };
@@ -603,6 +619,20 @@ export class WorkersService {
 	// ========================================
 	// Métodos para Worker Daily Stats
 	// ========================================
+
+	/**
+	 * Obtener fechas disponibles con estadísticas
+	 */
+	static async getWorkerStatsAvailableDates(workerType?: string): Promise<WorkerAvailableDatesResponse> {
+		try {
+			const params: Record<string, string> = {};
+			if (workerType) params.workerType = workerType;
+			const response = await pjnAxios.get("/api/workers/stats/available-dates", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
 
 	/**
 	 * Obtener resumen de estadísticas del día actual
