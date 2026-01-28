@@ -20,7 +20,6 @@ import {
 	Tooltip,
 	Button,
 	Collapse,
-	LinearProgress,
 	Select,
 	MenuItem,
 	FormControl,
@@ -30,7 +29,14 @@ import {
 	alpha,
 	Divider,
 	Badge,
+	ToggleButton,
+	ToggleButtonGroup,
 } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs, { Dayjs } from "dayjs";
+import "dayjs/locale/es";
 import {
 	Refresh2,
 	Warning2,
@@ -43,11 +49,16 @@ import {
 	Document,
 	Activity,
 	Chart,
+	Calendar,
+	Calendar2,
+	CalendarTick,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import {
 	WorkersService,
 	WorkerStatsTodayResponse,
+	WorkerStatsRangeResponse,
+	WorkerStatsByDateResponse,
 	WorkerDailyStats,
 	WorkerDailyStatsError,
 	WorkerAlertsResponse,
@@ -172,6 +183,7 @@ const WorkerStatistics: React.FC = () => {
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
 	const [todayStats, setTodayStats] = useState<WorkerStatsTodayResponse | null>(null);
+	const [rangeStats, setRangeStats] = useState<WorkerStatsRangeResponse | null>(null);
 	const [alerts, setAlerts] = useState<WorkerAlertsResponse | null>(null);
 	const [selectedFuero, setSelectedFuero] = useState<string | null>(null);
 	const [fueroDetails, setFueroDetails] = useState<any>(null);
@@ -180,15 +192,137 @@ const WorkerStatistics: React.FC = () => {
 	const [workerTypeFilter, setWorkerTypeFilter] = useState<string>("app-update");
 	const [expandedFuero, setExpandedFuero] = useState<string | null>(null);
 
+	// Estados para filtro de fechas
+	const [dateMode, setDateMode] = useState<"today" | "specific" | "range">("today");
+	const [specificDate, setSpecificDate] = useState<Dayjs | null>(dayjs());
+	const [dateFrom, setDateFrom] = useState<Dayjs | null>(dayjs().subtract(7, "day"));
+	const [dateTo, setDateTo] = useState<Dayjs | null>(dayjs());
+
 	// Cargar datos iniciales
 	const fetchData = useCallback(async () => {
 		try {
 			setLoading(true);
+			setRangeStats(null);
 
-			const [statsResponse, alertsResponse] = await Promise.all([
-				WorkersService.getWorkerStatsTodaySummary(workerTypeFilter),
-				WorkersService.getWorkerAlerts(),
-			]);
+			let statsResponse: WorkerStatsTodayResponse | null = null;
+			let rangeResponse: WorkerStatsRangeResponse | null = null;
+
+			if (dateMode === "today") {
+				// Obtener estadísticas del día actual
+				statsResponse = await WorkersService.getWorkerStatsTodaySummary(workerTypeFilter);
+			} else if (dateMode === "specific" && specificDate) {
+				// Obtener estadísticas de una fecha específica
+				const dateStr = specificDate.format("YYYY-MM-DD");
+				const response = await WorkersService.getWorkerStatsByDate(dateStr, { workerType: workerTypeFilter });
+
+				// Convertir la respuesta de fecha específica al formato de todayStats
+				if (response.success && response.data) {
+					const totals = {
+						totalToProcess: 0,
+						processed: 0,
+						successful: 0,
+						failed: 0,
+						skipped: 0,
+						movimientosFound: 0,
+						privateCausas: 0,
+						publicCausas: 0,
+						captchaAttempts: 0,
+						captchaSuccessful: 0,
+						captchaFailed: 0,
+						successRate: "0%",
+						captchaSuccessRate: "0%",
+					};
+
+					const byFuero: WorkerStatsTodayResponse["byFuero"] = [];
+
+					for (const stat of response.data) {
+						if (stat.stats) {
+							Object.keys(totals).forEach((key) => {
+								if (key !== "successRate" && key !== "captchaSuccessRate" && stat.stats[key as keyof typeof stat.stats]) {
+									(totals as any)[key] += stat.stats[key as keyof typeof stat.stats];
+								}
+							});
+						}
+
+						byFuero.push({
+							fuero: stat.fuero,
+							status: stat.status,
+							stats: stat.stats,
+							runsCount: stat.runs?.length || 0,
+							errorsCount: stat.errors?.length || 0,
+							alerts: stat.alerts?.filter((a) => !a.acknowledged) || [],
+							lastUpdate: stat.lastUpdate,
+						});
+					}
+
+					// Calcular tasas de éxito
+					totals.successRate = totals.processed > 0 ? `${((totals.successful / totals.processed) * 100).toFixed(1)}%` : "0%";
+					totals.captchaSuccessRate =
+						totals.captchaAttempts > 0 ? `${((totals.captchaSuccessful / totals.captchaAttempts) * 100).toFixed(1)}%` : "0%";
+
+					statsResponse = {
+						success: true,
+						message: `Estadísticas del ${dateStr}`,
+						date: dateStr,
+						totals,
+						byFuero,
+						fueroCount: byFuero.length,
+					};
+				}
+			} else if (dateMode === "range" && dateFrom && dateTo) {
+				// Obtener estadísticas por rango de fechas
+				rangeResponse = await WorkersService.getWorkerStatsByRange({
+					from: dateFrom.format("YYYY-MM-DD"),
+					to: dateTo.format("YYYY-MM-DD"),
+					workerType: workerTypeFilter,
+				});
+
+				// También calcular totales para las tarjetas de resumen
+				if (rangeResponse.success && rangeResponse.data) {
+					const totals = {
+						totalToProcess: 0,
+						processed: 0,
+						successful: 0,
+						failed: 0,
+						skipped: 0,
+						movimientosFound: 0,
+						privateCausas: 0,
+						publicCausas: 0,
+						captchaAttempts: 0,
+						captchaSuccessful: 0,
+						captchaFailed: 0,
+						successRate: "0%",
+						captchaSuccessRate: "0%",
+					};
+
+					for (const stat of rangeResponse.data) {
+						if (stat.stats) {
+							Object.keys(totals).forEach((key) => {
+								if (key !== "successRate" && key !== "captchaSuccessRate" && stat.stats[key as keyof typeof stat.stats]) {
+									(totals as any)[key] += stat.stats[key as keyof typeof stat.stats];
+								}
+							});
+						}
+					}
+
+					totals.successRate = totals.processed > 0 ? `${((totals.successful / totals.processed) * 100).toFixed(1)}%` : "0%";
+					totals.captchaSuccessRate =
+						totals.captchaAttempts > 0 ? `${((totals.captchaSuccessful / totals.captchaAttempts) * 100).toFixed(1)}%` : "0%";
+
+					statsResponse = {
+						success: true,
+						message: `Estadísticas del ${dateFrom.format("YYYY-MM-DD")} al ${dateTo.format("YYYY-MM-DD")}`,
+						date: `${dateFrom.format("YYYY-MM-DD")} - ${dateTo.format("YYYY-MM-DD")}`,
+						totals,
+						byFuero: [],
+						fueroCount: 0,
+					};
+
+					setRangeStats(rangeResponse);
+				}
+			}
+
+			const alertsResponse = await WorkersService.getWorkerAlerts();
 
 			setTodayStats(statsResponse);
 			setAlerts(alertsResponse);
@@ -200,7 +334,7 @@ const WorkerStatistics: React.FC = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [workerTypeFilter, enqueueSnackbar]);
+	}, [workerTypeFilter, dateMode, specificDate, dateFrom, dateTo, enqueueSnackbar]);
 
 	// Refrescar datos
 	const handleRefresh = async () => {
@@ -296,40 +430,143 @@ const WorkerStatistics: React.FC = () => {
 		return new Intl.NumberFormat("es-AR").format(num);
 	};
 
+	// Handler para cambio de modo de fecha
+	const handleDateModeChange = (_event: React.MouseEvent<HTMLElement>, newMode: "today" | "specific" | "range" | null) => {
+		if (newMode !== null) {
+			setDateMode(newMode);
+		}
+	};
+
 	return (
-		<Stack spacing={3}>
-			{/* Header */}
-			<Box>
-				<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
-					<Box>
-						<Typography variant="h5" fontWeight="bold">
-							Estadísticas de Workers
-						</Typography>
-						<Typography variant="body2" color="text.secondary">
-							Monitoreo en tiempo real del rendimiento de los workers de actualización
-						</Typography>
-					</Box>
-					<Stack direction="row" spacing={2} alignItems="center">
-						<FormControl size="small" sx={{ minWidth: 180 }}>
-							<InputLabel>Tipo de Worker</InputLabel>
-							<Select
-								value={workerTypeFilter}
-								label="Tipo de Worker"
-								onChange={(e) => setWorkerTypeFilter(e.target.value)}
-							>
-								<MenuItem value="app-update">App Update</MenuItem>
-								<MenuItem value="verify">Verificación</MenuItem>
-								<MenuItem value="scraping">Scraping</MenuItem>
-							</Select>
-						</FormControl>
-						<Tooltip title="Actualizar datos">
-							<IconButton onClick={handleRefresh} disabled={refreshing}>
-								<Refresh2 size={20} className={refreshing ? "spin" : ""} />
-							</IconButton>
-						</Tooltip>
+		<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
+			<Stack spacing={3}>
+				{/* Header */}
+				<Box>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+						<Box>
+							<Typography variant="h5" fontWeight="bold">
+								Estadísticas de Workers
+							</Typography>
+							<Typography variant="body2" color="text.secondary">
+								Monitoreo del rendimiento de los workers de actualización
+							</Typography>
+						</Box>
+						<Stack direction="row" spacing={2} alignItems="center">
+							<FormControl size="small" sx={{ minWidth: 180 }}>
+								<InputLabel>Tipo de Worker</InputLabel>
+								<Select
+									value={workerTypeFilter}
+									label="Tipo de Worker"
+									onChange={(e) => setWorkerTypeFilter(e.target.value)}
+								>
+									<MenuItem value="app-update">App Update</MenuItem>
+									<MenuItem value="verify">Verificación</MenuItem>
+									<MenuItem value="scraping">Scraping</MenuItem>
+								</Select>
+							</FormControl>
+							<Tooltip title="Actualizar datos">
+								<IconButton onClick={handleRefresh} disabled={refreshing}>
+									<Refresh2 size={20} className={refreshing ? "spin" : ""} />
+								</IconButton>
+							</Tooltip>
+						</Stack>
 					</Stack>
-				</Stack>
-			</Box>
+				</Box>
+
+				{/* Filtro de fechas */}
+				<Paper sx={{ p: 2, borderRadius: 2 }}>
+					<Stack spacing={2}>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Calendar size={20} color={theme.palette.primary.main} />
+							<Typography variant="subtitle2" fontWeight="bold">
+								Período de consulta
+							</Typography>
+						</Stack>
+						<Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems={{ xs: "stretch", md: "center" }}>
+							<ToggleButtonGroup
+								value={dateMode}
+								exclusive
+								onChange={handleDateModeChange}
+								size="small"
+								sx={{ flexShrink: 0 }}
+							>
+								<ToggleButton value="today" sx={{ px: 2 }}>
+									<Stack direction="row" spacing={1} alignItems="center">
+										<CalendarTick size={16} />
+										<span>Hoy</span>
+									</Stack>
+								</ToggleButton>
+								<ToggleButton value="specific" sx={{ px: 2 }}>
+									<Stack direction="row" spacing={1} alignItems="center">
+										<Calendar2 size={16} />
+										<span>Fecha</span>
+									</Stack>
+								</ToggleButton>
+								<ToggleButton value="range" sx={{ px: 2 }}>
+									<Stack direction="row" spacing={1} alignItems="center">
+										<Calendar size={16} />
+										<span>Rango</span>
+									</Stack>
+								</ToggleButton>
+							</ToggleButtonGroup>
+
+							{dateMode === "specific" && (
+								<DatePicker
+									label="Fecha"
+									value={specificDate}
+									onChange={(newValue) => setSpecificDate(newValue)}
+									format="DD/MM/YYYY"
+									maxDate={dayjs()}
+									slotProps={{
+										textField: {
+											size: "small",
+											sx: { minWidth: 160 },
+										},
+									}}
+								/>
+							)}
+
+							{dateMode === "range" && (
+								<Stack direction="row" spacing={1} alignItems="center">
+									<DatePicker
+										label="Desde"
+										value={dateFrom}
+										onChange={(newValue) => setDateFrom(newValue)}
+										format="DD/MM/YYYY"
+										maxDate={dateTo || dayjs()}
+										slotProps={{
+											textField: {
+												size: "small",
+												sx: { minWidth: 140 },
+											},
+										}}
+									/>
+									<Typography variant="body2" color="text.secondary">
+										—
+									</Typography>
+									<DatePicker
+										label="Hasta"
+										value={dateTo}
+										onChange={(newValue) => setDateTo(newValue)}
+										format="DD/MM/YYYY"
+										minDate={dateFrom || undefined}
+										maxDate={dayjs()}
+										slotProps={{
+											textField: {
+												size: "small",
+												sx: { minWidth: 140 },
+											},
+										}}
+									/>
+								</Stack>
+							)}
+
+							<Button variant="contained" size="small" onClick={fetchData} disabled={loading} sx={{ minWidth: 100 }}>
+								Consultar
+							</Button>
+						</Stack>
+					</Stack>
+				</Paper>
 
 			{/* Alertas activas */}
 			{alerts && alerts.count > 0 && (
@@ -757,14 +994,93 @@ const WorkerStatistics: React.FC = () => {
 				)}
 			</Paper>
 
+			{/* Tabla de resumen por día (solo para modo rango) */}
+			{dateMode === "range" && rangeStats && rangeStats.summary && rangeStats.summary.length > 0 && (
+				<Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
+					<Box sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.05), borderBottom: 1, borderColor: "divider" }}>
+						<Stack direction="row" justifyContent="space-between" alignItems="center">
+							<Typography variant="h6">Resumen por Día</Typography>
+							<Typography variant="body2" color="text.secondary">
+								{rangeStats.daysCount} día(s) con datos
+							</Typography>
+						</Stack>
+					</Box>
+					<TableContainer>
+						<Table size="small">
+							<TableHead>
+								<TableRow>
+									<TableCell>Fecha</TableCell>
+									<TableCell align="right">Procesados</TableCell>
+									<TableCell align="right">Exitosos</TableCell>
+									<TableCell align="right">Fallidos</TableCell>
+									<TableCell align="right">Movimientos</TableCell>
+									<TableCell align="right">Tasa Éxito</TableCell>
+									<TableCell>Fueros</TableCell>
+								</TableRow>
+							</TableHead>
+							<TableBody>
+								{rangeStats.summary.map((day) => {
+									const successRate = day.totalProcessed > 0 ? ((day.totalSuccessful / day.totalProcessed) * 100).toFixed(1) : "0";
+									return (
+										<TableRow key={day.date} hover>
+											<TableCell>
+												<Typography variant="body2" fontWeight={500}>
+													{dayjs(day.date).format("DD/MM/YYYY")}
+												</Typography>
+											</TableCell>
+											<TableCell align="right">
+												<Typography variant="body2">{formatNumber(day.totalProcessed)}</Typography>
+											</TableCell>
+											<TableCell align="right">
+												<Typography variant="body2" color="success.main">
+													{formatNumber(day.totalSuccessful)}
+												</Typography>
+											</TableCell>
+											<TableCell align="right">
+												<Typography variant="body2" color={day.totalFailed > 0 ? "error.main" : "text.secondary"}>
+													{formatNumber(day.totalFailed)}
+												</Typography>
+											</TableCell>
+											<TableCell align="right">
+												<Typography variant="body2" color="info.main">
+													{formatNumber(day.totalMovimientos)}
+												</Typography>
+											</TableCell>
+											<TableCell align="right">
+												<Chip
+													label={`${successRate}%`}
+													size="small"
+													color={Number(successRate) >= 80 ? "success" : Number(successRate) >= 50 ? "warning" : "error"}
+													variant="outlined"
+												/>
+											</TableCell>
+											<TableCell>
+												<Stack direction="row" spacing={0.5} flexWrap="wrap">
+													{day.fueros.map((fuero) => (
+														<Chip key={fuero} label={fuero} size="small" variant="outlined" sx={{ fontSize: "0.7rem" }} />
+													))}
+												</Stack>
+											</TableCell>
+										</TableRow>
+									);
+								})}
+							</TableBody>
+						</Table>
+					</TableContainer>
+				</Paper>
+			)}
+
 			{/* Información adicional */}
 			<Alert severity="info" icon={<InfoCircle size={20} />}>
 				<Typography variant="body2">
-					Las estadísticas se actualizan automáticamente cada 60 segundos. Haz clic en una fila de fuero para ver
-					detalles adicionales como errores recientes y alertas.
+					{dateMode === "today"
+						? "Las estadísticas se actualizan automáticamente cada 60 segundos."
+						: "Selecciona una fecha o rango para consultar estadísticas históricas."}
+					{" "}Haz clic en una fila de fuero para ver detalles adicionales como errores recientes y alertas.
 				</Typography>
 			</Alert>
 		</Stack>
+		</LocalizationProvider>
 	);
 };
 
