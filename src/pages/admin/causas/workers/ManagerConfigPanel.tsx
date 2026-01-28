@@ -15,14 +15,12 @@ import {
 	Tooltip,
 	Divider,
 	Slider,
-	Collapse,
 	Table,
 	TableBody,
 	TableCell,
 	TableContainer,
 	TableHead,
 	TableRow,
-	Skeleton,
 	useTheme,
 	alpha,
 	Dialog,
@@ -42,10 +40,7 @@ import {
 	Refresh2,
 	Warning2,
 	TickCircle,
-	CloseCircle,
 	ArrowRotateRight,
-	ArrowDown2,
-	ArrowUp2,
 	Cpu,
 	Timer,
 	People,
@@ -84,7 +79,6 @@ const ManagerConfigPanel: React.FC = () => {
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Estados
-	const [expanded, setExpanded] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
 	const [settings, setSettings] = useState<ManagerConfigSettings | null>(null);
@@ -124,17 +118,15 @@ const ManagerConfigPanel: React.FC = () => {
 		}
 	}, [hoursBack, enqueueSnackbar]);
 
-	// Cargar datos cuando se expande
+	// Cargar datos al montar
 	useEffect(() => {
-		if (expanded && !settings) {
+		if (!settings) {
 			fetchData();
 		}
-	}, [expanded, settings, fetchData]);
+	}, [settings, fetchData]);
 
-	// Auto-refresh cada 30 segundos cuando está expandido
+	// Auto-refresh cada 30 segundos
 	useEffect(() => {
-		if (!expanded) return;
-
 		const interval = setInterval(async () => {
 			try {
 				const statusRes = await ManagerConfigService.getCurrentStatus();
@@ -145,7 +137,7 @@ const ManagerConfigPanel: React.FC = () => {
 		}, 30000);
 
 		return () => clearInterval(interval);
-	}, [expanded]);
+	}, []);
 
 	// Guardar cambios
 	const handleSave = async () => {
@@ -239,9 +231,9 @@ const ManagerConfigPanel: React.FC = () => {
 
 	return (
 		<Card variant="outlined" sx={{ backgroundColor: "background.default" }}>
-			<CardContent sx={{ pb: expanded ? 2 : 1 }}>
-				{/* Header colapsable */}
-				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: expanded ? 2 : 0 }}>
+			<CardContent>
+				{/* Header */}
+				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
 					<Stack direction="row" spacing={1} alignItems="center">
 						<Setting2 size={20} color={theme.palette.primary.main} />
 						<Typography variant="h6">Configuracion del Manager de Workers</Typography>
@@ -261,17 +253,14 @@ const ManagerConfigPanel: React.FC = () => {
 							/>
 						)}
 					</Stack>
-					<Button
-						size="small"
-						onClick={() => setExpanded(!expanded)}
-						endIcon={expanded ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}
-					>
-						{expanded ? "Ocultar" : "Configurar"}
-					</Button>
+					<Tooltip title="Recargar datos">
+						<IconButton size="small" onClick={fetchData} disabled={loading}>
+							<Refresh2 size={18} />
+						</IconButton>
+					</Tooltip>
 				</Stack>
 
-				<Collapse in={expanded} timeout="auto" unmountOnExit>
-					{loading ? (
+				{loading ? (
 						<Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
 							<CircularProgress />
 						</Box>
@@ -607,7 +596,6 @@ const ManagerConfigPanel: React.FC = () => {
 							)}
 						</Stack>
 					)}
-				</Collapse>
 			</CardContent>
 
 			{/* Dialog de reset */}
