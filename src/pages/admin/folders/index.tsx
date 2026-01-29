@@ -28,8 +28,9 @@ import {
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import FoldersService, { Folder, FolderStats } from "api/folders";
-import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Folder2, Archive } from "iconsax-react";
+import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Folder2, Archive, Edit2 } from "iconsax-react";
 import CausaDetalleModal from "../causas/CausaDetalleModal";
+import FolderEditModal from "./FolderEditModal";
 
 // Mapeo de fueros a nombres legibles
 const FUERO_LABELS: Record<string, string> = {
@@ -89,6 +90,10 @@ const FoldersPage = () => {
 	const [selectedCausa, setSelectedCausa] = useState<any>(null);
 	const [causaModalOpen, setCausaModalOpen] = useState(false);
 	const [loadingCausa, setLoadingCausa] = useState(false);
+
+	// Modal de edición de folder
+	const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
+	const [editModalOpen, setEditModalOpen] = useState(false);
 
 	// Cargar carpetas
 	const fetchFolders = async () => {
@@ -240,6 +245,18 @@ const FoldersPage = () => {
 	const handleCloseCausaModal = () => {
 		setCausaModalOpen(false);
 		setSelectedCausa(null);
+	};
+
+	// Abrir modal de edición
+	const handleEditFolder = (folder: Folder) => {
+		setSelectedFolder(folder);
+		setEditModalOpen(true);
+	};
+
+	// Cerrar modal de edición
+	const handleCloseEditModal = () => {
+		setEditModalOpen(false);
+		setSelectedFolder(null);
 	};
 
 	// Obtener tipo de sistema (PJN, MEV, Manual)
@@ -582,16 +599,13 @@ const FoldersPage = () => {
 														<Typography variant="caption">{formatDate(folder.updatedAt)}</Typography>
 													</TableCell>
 													<TableCell align="center">
-														<Tooltip title="Ver detalles">
+														<Tooltip title="Editar carpeta">
 															<IconButton
 																size="small"
-																color="info"
-																onClick={() => {
-																	// Aquí podrías abrir un modal de detalles de folder
-																	enqueueSnackbar("Función en desarrollo", { variant: "info" });
-																}}
+																color="warning"
+																onClick={() => handleEditFolder(folder)}
 															>
-																<Folder2 size={18} />
+																<Edit2 size={18} />
 															</IconButton>
 														</Tooltip>
 													</TableCell>
@@ -627,6 +641,14 @@ const FoldersPage = () => {
 					apiService={selectedCausa?.fuero ? "pjn" : "pjn"}
 				/>
 			)}
+
+			{/* Modal de Edición de Folder */}
+			<FolderEditModal
+				open={editModalOpen}
+				onClose={handleCloseEditModal}
+				folder={selectedFolder}
+				onFolderUpdated={handleRefresh}
+			/>
 		</MainCard>
 	);
 };
