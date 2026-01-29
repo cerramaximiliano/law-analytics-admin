@@ -52,6 +52,7 @@ import {
 	Eye,
 	ArrowDown2,
 	ArrowUp2,
+	Copy,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 
@@ -1304,7 +1305,22 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 
 					{/* Tab Panel 3: JSON Raw */}
 					{activeTab === 3 && (
-						<Box>
+						<Box sx={{ position: "relative", height: "100%" }}>
+							<Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 1 }}>
+								<Tooltip title="Copiar JSON">
+									<IconButton
+										onClick={() => {
+											navigator.clipboard.writeText(JSON.stringify(causa, null, 2));
+											enqueueSnackbar("JSON copiado al portapapeles", {
+												variant: "success",
+												anchorOrigin: { vertical: "bottom", horizontal: "right" },
+											});
+										}}
+									>
+										<Copy size={20} />
+									</IconButton>
+								</Tooltip>
+							</Box>
 							<Box
 								component="pre"
 								sx={{
