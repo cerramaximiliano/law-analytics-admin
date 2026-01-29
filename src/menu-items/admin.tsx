@@ -317,6 +317,14 @@ const admin: NavItemType = {
 			url: "/admin/tasks",
 			breadcrumbs: true,
 		},
+		{
+			id: "app-folders",
+			title: "Carpetas (App)",
+			type: "item",
+			icon: Folder2,
+			url: "/admin/folders",
+			breadcrumbs: true,
+		},
 	],
 };
 

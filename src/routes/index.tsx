@@ -82,6 +82,9 @@ const SupportContactsPage = Loadable(lazy(() => import("pages/admin/support")));
 // Tasks page
 const AdminTasksPage = Loadable(lazy(() => import("pages/admin/tasks")));
 
+// Folders page
+const FoldersPage = Loadable(lazy(() => import("pages/admin/folders")));
+
 // ==============================|| ROUTES ||============================== //
 
 export default function Routes() {
@@ -395,6 +398,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<AdminTasksPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "folders",
+							element: (
+								<AdminRoleGuard>
+									<FoldersPage />
 								</AdminRoleGuard>
 							),
 						},
