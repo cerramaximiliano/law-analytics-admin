@@ -34,7 +34,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { CausasPjnService, Causa } from "api/causasPjn";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
-import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification, Calendar, TickCircle, CloseSquare, UserSquare } from "iconsax-react";
+import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification, Calendar, TickCircle, CloseSquare, UserSquare, Archive, Timer } from "iconsax-react";
 import CausaDetalleModal from "./CausaDetalleModal";
 import JudicialMovementsModal from "./JudicialMovementsModal";
 import IntervinientesModal from "./IntervinientesModal";
@@ -360,6 +360,35 @@ const CarpetasVerificadasApp = () => {
 	// Obtener ID como string
 	const getId = (id: string | { $oid: string }): string => {
 		return typeof id === "string" ? id : id.$oid;
+	};
+
+	// Verificar estado de cooldown
+	const getCooldownStatus = (causa: Causa): { isActive: boolean; timeRemaining: string | null; errorsCount: number } => {
+		const sp = causa.scrapingProgress;
+		if (!sp || !sp.skipUntil) {
+			return { isActive: false, timeRemaining: null, errorsCount: sp?.consecutiveErrors || 0 };
+		}
+
+		const skipUntilStr = typeof sp.skipUntil === "string" ? sp.skipUntil : sp.skipUntil.$date;
+		const skipUntil = new Date(skipUntilStr);
+		const now = new Date();
+
+		if (skipUntil <= now) {
+			return { isActive: false, timeRemaining: null, errorsCount: sp.consecutiveErrors || 0 };
+		}
+
+		const diffMs = skipUntil.getTime() - now.getTime();
+		const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+		const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+		let timeRemaining = "";
+		if (diffHours > 0) {
+			timeRemaining = `${diffHours}h ${diffMins}m`;
+		} else {
+			timeRemaining = `${diffMins}m`;
+		}
+
+		return { isActive: true, timeRemaining, errorsCount: sp.consecutiveErrors || 0 };
 	};
 
 	// Handler para ver detalles
@@ -709,6 +738,8 @@ const CarpetasVerificadasApp = () => {
 											<TableCell>Fecha Últ. Mov.</TableCell>
 											<TableCell align="center">Actualizable</TableCell>
 											<TableCell align="center">Privada</TableCell>
+											<TableCell align="center">Archivada</TableCell>
+											<TableCell align="center">Cooldown</TableCell>
 											<TableCell align="center">Acciones</TableCell>
 										</TableRow>
 									</TableHead>
@@ -797,6 +828,46 @@ const CarpetasVerificadasApp = () => {
 													) : (
 														<Typography variant="caption" color="text.secondary">—</Typography>
 													)}
+												</TableCell>
+												<TableCell align="center">
+													{causa.isArchived ? (
+														<Tooltip title="Causa archivada - Movimientos solo en históricas">
+															<Archive size={20} color="#1976d2" variant="Bold" />
+														</Tooltip>
+													) : (
+														<Typography variant="caption" color="text.secondary">—</Typography>
+													)}
+												</TableCell>
+												<TableCell align="center">
+													{(() => {
+														const cooldown = getCooldownStatus(causa);
+														if (cooldown.isActive) {
+															return (
+																<Tooltip title={`Cooldown activo - ${cooldown.errorsCount} errores consecutivos. Reintento en ${cooldown.timeRemaining}`}>
+																	<Chip
+																		icon={<Timer size={14} />}
+																		label={cooldown.timeRemaining}
+																		size="small"
+																		color="warning"
+																		sx={{ fontSize: "0.7rem" }}
+																	/>
+																</Tooltip>
+															);
+														} else if (cooldown.errorsCount > 0) {
+															return (
+																<Tooltip title={`${cooldown.errorsCount} errores consecutivos (sin cooldown)`}>
+																	<Chip
+																		label={`${cooldown.errorsCount} err`}
+																		size="small"
+																		color="error"
+																		variant="outlined"
+																		sx={{ fontSize: "0.7rem" }}
+																	/>
+																</Tooltip>
+															);
+														}
+														return <Typography variant="caption" color="text.secondary">—</Typography>;
+													})()}
 												</TableCell>
 												<TableCell align="center">
 													<Stack direction="row" spacing={0.5} justifyContent="center">
