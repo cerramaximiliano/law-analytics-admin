@@ -28,9 +28,10 @@ import {
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import FoldersService, { Folder, FolderStats } from "api/folders";
-import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Folder2, Archive, Edit2 } from "iconsax-react";
+import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Archive, Edit2 } from "iconsax-react";
 import CausaDetalleModal from "../causas/CausaDetalleModal";
 import FolderEditModal from "./FolderEditModal";
+import CausaEditModal from "./CausaEditModal";
 
 // Mapeo de fueros a nombres legibles
 const FUERO_LABELS: Record<string, string> = {
@@ -94,6 +95,10 @@ const FoldersPage = () => {
 	// Modal de edición de folder
 	const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
 	const [editModalOpen, setEditModalOpen] = useState(false);
+
+	// Modal de edición de causa
+	const [causaEditModalOpen, setCausaEditModalOpen] = useState(false);
+	const [selectedFolderForCausaEdit, setSelectedFolderForCausaEdit] = useState<Folder | null>(null);
 
 	// Cargar carpetas
 	const fetchFolders = async () => {
@@ -257,6 +262,43 @@ const FoldersPage = () => {
 	const handleCloseEditModal = () => {
 		setEditModalOpen(false);
 		setSelectedFolder(null);
+	};
+
+	// Abrir modal de edición de causa
+	const handleEditCausa = async (folder: Folder) => {
+		if (!folder.causaId) {
+			enqueueSnackbar("Esta carpeta no tiene una causa vinculada", {
+				variant: "info",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			return;
+		}
+
+		try {
+			setLoadingCausa(true);
+			const response = await FoldersService.getFolderCausa(folder._id);
+
+			if (response.success && response.data) {
+				setSelectedCausa(response.data);
+				setSelectedFolderForCausaEdit(folder);
+				setCausaEditModalOpen(true);
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al cargar los detalles de la causa", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			console.error(error);
+		} finally {
+			setLoadingCausa(false);
+		}
+	};
+
+	// Cerrar modal de edición de causa
+	const handleCloseCausaEditModal = () => {
+		setCausaEditModalOpen(false);
+		setSelectedFolderForCausaEdit(null);
+		setSelectedCausa(null);
 	};
 
 	// Obtener tipo de sistema (PJN, MEV, Manual)
@@ -567,11 +609,18 @@ const FoldersPage = () => {
 													</TableCell>
 													<TableCell align="center">
 														{folder.causaId ? (
-															<Tooltip title="Ver causa vinculada">
-																<IconButton size="small" color="primary" onClick={() => handleViewCausa(folder)} disabled={loadingCausa}>
-																	<Eye size={18} />
-																</IconButton>
-															</Tooltip>
+															<Stack direction="row" spacing={0} justifyContent="center">
+																<Tooltip title="Ver causa">
+																	<IconButton size="small" color="primary" onClick={() => handleViewCausa(folder)} disabled={loadingCausa}>
+																		<Eye size={16} />
+																	</IconButton>
+																</Tooltip>
+																<Tooltip title="Editar causa (sincroniza con carpeta)">
+																	<IconButton size="small" color="warning" onClick={() => handleEditCausa(folder)} disabled={loadingCausa}>
+																		<Edit2 size={16} />
+																	</IconButton>
+																</Tooltip>
+															</Stack>
 														) : (
 															<Typography variant="caption" color="text.secondary">
 																-
@@ -649,6 +698,18 @@ const FoldersPage = () => {
 				folder={selectedFolder}
 				onFolderUpdated={handleRefresh}
 			/>
+
+			{/* Modal de Edición de Causa */}
+			{selectedCausa && selectedFolderForCausaEdit && (
+				<CausaEditModal
+					open={causaEditModalOpen}
+					onClose={handleCloseCausaEditModal}
+					causa={selectedCausa}
+					causaType={selectedFolderForCausaEdit.causaType || ""}
+					folderId={selectedFolderForCausaEdit._id}
+					onCausaUpdated={handleRefresh}
+				/>
+			)}
 		</MainCard>
 	);
 };
