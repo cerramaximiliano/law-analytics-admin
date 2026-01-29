@@ -208,6 +208,33 @@ class FoldersService {
 		const response = await adminAxios.get<FolderStatsResponse>("/api/folders/stats");
 		return response.data;
 	}
+
+	/**
+	 * Update a causa and sync changes to linked folders
+	 */
+	static async updateCausaAndSync(
+		causaId: string,
+		causaType: string,
+		data: Partial<Causa>
+	): Promise<{
+		success: boolean;
+		message: string;
+		data: {
+			causa: Causa;
+			sync: {
+				foldersFound: number;
+				foldersUpdated: number;
+				updatedFolderIds: string[];
+				syncedFields: string[];
+			};
+		};
+	}> {
+		const response = await adminAxios.put(`/api/folders/causa/${causaId}`, {
+			causaType,
+			...data,
+		});
+		return response.data;
+	}
 }
 
 export default FoldersService;
