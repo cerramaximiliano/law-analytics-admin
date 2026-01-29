@@ -53,6 +53,10 @@ export interface Folder {
 	causaVerified?: boolean;
 	causaIsValid?: boolean;
 	causaUpdateEnabled?: boolean;
+	causaAssociationStatus?: string;
+	causaAssociationError?: string;
+	causaLastSyncDate?: string;
+	lastMovementDate?: string;
 	scrapingProgress?: ScrapingProgress;
 	createdAt: string;
 	updatedAt: string;
@@ -71,6 +75,7 @@ export interface Causa {
 	verified?: boolean;
 	isValid?: boolean;
 	update?: boolean;
+	fechaInicio?: string;
 	fechaUltimoMovimiento?: string;
 	movimientosCount?: number;
 	source?: string;
