@@ -167,15 +167,15 @@ const CausaEditModal = ({ open, onClose, causa, causaType, folderId, onCausaUpda
 				<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
 					{/* Sync Warning */}
 					<Alert
-						severity="warning"
+						severity="info"
 						icon={<Refresh2 size={20} />}
-						sx={{ mb: 3 }}
+						sx={{ mb: 2 }}
 					>
 						<Typography variant="subtitle2" fontWeight="bold">
-							Sincronización automática
+							Sincronización manual Causa → Carpeta
 						</Typography>
 						<Typography variant="body2">
-							Los cambios en esta causa se sincronizarán automáticamente con todas las carpetas vinculadas.
+							Los cambios en esta causa se sincronizarán inmediatamente con todas las carpetas vinculadas.
 						</Typography>
 						<Box sx={{ mt: 1 }}>
 							<Typography variant="caption" color="text.secondary">
@@ -188,12 +188,30 @@ const CausaEditModal = ({ open, onClose, causa, causaType, folderId, onCausaUpda
 										label={sf.label}
 										size="small"
 										variant={changedFields.includes(sf.causa) ? "filled" : "outlined"}
-										color={changedFields.includes(sf.causa) ? "warning" : "default"}
+										color={changedFields.includes(sf.causa) ? "info" : "default"}
 										sx={{ fontSize: "0.7rem" }}
 									/>
 								))}
 							</Box>
 						</Box>
+					</Alert>
+
+					{/* Worker update notice */}
+					<Alert
+						severity="warning"
+						icon={<Warning2 size={20} />}
+						sx={{ mb: 3 }}
+					>
+						<Typography variant="subtitle2" fontWeight="bold">
+							Actualización automática por Worker
+						</Typography>
+						<Typography variant="body2" sx={{ mb: 1 }}>
+							Estos datos se actualizarán automáticamente en el próximo ciclo del worker de actualización (PJN).
+							Los cambios manuales sirven para correcciones inmediatas hasta que el worker sincronice nuevamente con el sistema judicial.
+						</Typography>
+						<Typography variant="caption" color="text.secondary">
+							El worker mantiene los datos sincronizados con PJN. Usa esta función para corregir datos temporalmente o forzar una sincronización inmediata con las carpetas.
+						</Typography>
 					</Alert>
 
 					{/* Preview of changes */}
@@ -394,7 +412,7 @@ const CausaEditModal = ({ open, onClose, causa, causaType, folderId, onCausaUpda
 					color="warning"
 					disabled={isSaving || changedFields.length === 0}
 				>
-					{isSaving ? "Guardando..." : "Guardar y Sincronizar"}
+					{isSaving ? "Sincronizando..." : "Aplicar Cambios"}
 				</Button>
 			</DialogActions>
 		</Dialog>
