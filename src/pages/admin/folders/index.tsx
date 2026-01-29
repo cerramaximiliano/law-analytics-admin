@@ -544,6 +544,7 @@ const FoldersPage = () => {
 											<TableCell>Fuero</TableCell>
 											<TableCell>Jurisdicción</TableCell>
 											<TableCell>Juzgado</TableCell>
+											<TableCell>Secretaría</TableCell>
 											<TableCell>Expediente</TableCell>
 											<TableCell align="center">Causa</TableCell>
 											<TableCell align="center">Verificada</TableCell>
@@ -603,6 +604,9 @@ const FoldersPage = () => {
 													</TableCell>
 													<TableCell>
 														<Typography variant="caption">{folder.judFolder?.courtNumber || folder.judFolder?.statusJudFolder || "-"}</Typography>
+													</TableCell>
+													<TableCell>
+														<Typography variant="caption">{folder.judFolder?.secretaryNumber || "-"}</Typography>
 													</TableCell>
 													<TableCell>
 														<Typography variant="caption">{folder.judFolder?.numberJudFolder || "-"}</Typography>
