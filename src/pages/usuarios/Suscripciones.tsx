@@ -30,7 +30,7 @@ import {
 	Tabs,
 	Tab,
 } from "@mui/material";
-import { Refresh, TickCircle, CloseCircle, Warning2, Calendar, Profile2User, Eye, CloseSquare, Edit, Trash, RefreshCircle } from "iconsax-react";
+import { Refresh, TickCircle, CloseCircle, Warning2, Calendar, Profile2User, Eye, CloseSquare, Edit, Trash, RefreshCircle, Copy } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import SubscriptionsService, { Subscription } from "api/subscriptions";
@@ -698,6 +698,7 @@ const Suscripciones = () => {
 					<Tab label="Plan" />
 					<Tab label="Historial" />
 					<Tab label="Acciones" />
+					<Tab label="JSON" />
 					{selectedSubscription?.paymentFailures && selectedSubscription.paymentFailures.count > 0 && <Tab label="Fallos de Pago" />}
 				</Tabs>
 				<DialogContent sx={{ minHeight: "500px", maxHeight: "500px", overflowY: "auto" }}>
@@ -1632,8 +1633,49 @@ const Suscripciones = () => {
 								</Stack>
 							)}
 
-							{/* Tab 6: Fallos de Pago */}
-							{tabValue === 6 && selectedSubscription.paymentFailures && selectedSubscription.paymentFailures.count > 0 && (
+							{/* Tab 6: JSON */}
+							{tabValue === 6 && (
+								<Box sx={{ position: "relative", height: "100%" }}>
+									<Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 1 }}>
+										<Tooltip title="Copiar JSON">
+											<IconButton
+												onClick={() => {
+													navigator.clipboard.writeText(JSON.stringify(selectedSubscription, null, 2));
+													enqueueSnackbar("JSON copiado al portapapeles", {
+														variant: "success",
+														anchorOrigin: { vertical: "bottom", horizontal: "right" },
+													});
+												}}
+											>
+												<Copy size={20} />
+											</IconButton>
+										</Tooltip>
+									</Box>
+									<Box
+										component="pre"
+										sx={{
+											p: 2,
+											m: 0,
+											height: "100%",
+											overflow: "auto",
+											bgcolor: (theme) => (theme.palette.mode === "dark" ? theme.palette.grey[900] : theme.palette.grey[100]),
+											borderRadius: 1,
+											"& code": {
+												fontFamily: "monospace",
+												fontSize: "0.75rem",
+												display: "block",
+												whiteSpace: "pre-wrap",
+												wordBreak: "break-word",
+											},
+										}}
+									>
+										<code>{JSON.stringify(selectedSubscription, null, 2)}</code>
+									</Box>
+								</Box>
+							)}
+
+							{/* Tab 7: Fallos de Pago */}
+							{tabValue === 7 && selectedSubscription.paymentFailures && selectedSubscription.paymentFailures.count > 0 && (
 								<Stack spacing={3} sx={{ mt: 1 }}>
 									{/* Fallos de Pago */}
 									<Box>
