@@ -1,5 +1,16 @@
 import pjnAxios from "utils/pjnAxios";
 
+// Interface para ScrapingProgress
+export interface ScrapingProgress {
+	status?: string;
+	isComplete?: boolean;
+	lastProcessedAt?: { $date: string } | string;
+	consecutiveErrors?: number;
+	lastErrorType?: string;
+	lastErrorAt?: { $date: string } | string;
+	skipUntil?: { $date: string } | string;
+}
+
 // Interface para Causa
 export interface Causa {
 	_id: string | { $oid: string };
@@ -12,6 +23,8 @@ export interface Causa {
 	verified?: boolean;
 	isValid?: boolean;
 	isPrivate?: boolean | null;
+	isArchived?: boolean;
+	archivedDetectedAt?: { $date: string } | string;
 	update?: boolean;
 	folderIds?: string[];
 	userCausaIds?: string[];
@@ -20,6 +33,7 @@ export interface Causa {
 	fechaUltimoMovimiento?: { $date: string } | string;
 	createdAt?: { $date: string } | string;
 	updatedAt?: { $date: string } | string;
+	scrapingProgress?: ScrapingProgress;
 }
 
 export interface CausasResponse {
