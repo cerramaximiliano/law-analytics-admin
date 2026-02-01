@@ -416,7 +416,7 @@ const CarpetasVerificadasApp = () => {
 
 	// Obtener información de actualizaciones de hoy
 	const getTodayUpdateInfo = (causa: Causa): { isToday: boolean; count: number; hours: number[] } => {
-		const stats = causa.appUpdateStats?.today;
+		const stats = causa.updateStats?.today;
 		if (!stats || !stats.date) {
 			return { isToday: false, count: 0, hours: [] };
 		}
