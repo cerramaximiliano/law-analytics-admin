@@ -251,7 +251,7 @@ const CarpetasVerificadasApp = () => {
 			setLoadingStats(true);
 			const response = await CausasPjnService.getEligibilityStats({
 				fuero: fueroFilter === "todos" ? undefined : (fueroFilter as "CIV" | "COM" | "CSS" | "CNT"),
-				thresholdHours: 12,
+				thresholdHours: 2,
 			});
 			if (response.success) {
 				setEligibilityStats(response.data.totals);
