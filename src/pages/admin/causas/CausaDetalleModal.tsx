@@ -357,6 +357,8 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			lastUpdate: causa.lastUpdate,
 			fechaUltimoMovimiento: causa.fechaUltimoMovimiento,
 			update: causa.update,
+			isValid: causa.isValid,
+			isPrivate: causa.isPrivate,
 		});
 		setIsEditing(true);
 	};
@@ -926,13 +928,28 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 										variant={causa.verified ? "filled" : "outlined"}
 										sx={{ mr: 0.5, mb: 0.5 }}
 									/>
-									<Chip
-										label={causa.isValid ? "Válida" : "No válida"}
-										color={causa.isValid ? "primary" : "default"}
-										size="small"
-										variant={causa.isValid ? "filled" : "outlined"}
-										sx={{ mr: 0.5, mb: 0.5 }}
-									/>
+									{isEditing ? (
+										<FormControlLabel
+											control={
+												<Switch
+													checked={editedCausa.isValid ?? causa.isValid ?? false}
+													onChange={(e) => setEditedCausa({ ...editedCausa, isValid: e.target.checked })}
+													color="primary"
+													size="small"
+												/>
+											}
+											label="Válida"
+											sx={{ mr: 1 }}
+										/>
+									) : (
+										<Chip
+											label={causa.isValid ? "Válida" : "No válida"}
+											color={causa.isValid ? "primary" : "default"}
+											size="small"
+											variant={causa.isValid ? "filled" : "outlined"}
+											sx={{ mr: 0.5, mb: 0.5 }}
+										/>
+									)}
 									{isEditing ? (
 										<FormControlLabel
 											control={
@@ -962,6 +979,34 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 											variant="outlined"
 											sx={{ mr: 0.5, mb: 0.5 }}
 											icon={<Archive size={14} />}
+										/>
+									)}
+								</Box>
+							</Grid>
+
+							<Grid item xs={12} sm={6} md={4}>
+								<Typography variant="caption" color="textSecondary">
+									Privacidad
+								</Typography>
+								<Box>
+									{isEditing ? (
+										<FormControlLabel
+											control={
+												<Switch
+													checked={editedCausa.isPrivate ?? causa.isPrivate ?? false}
+													onChange={(e) => setEditedCausa({ ...editedCausa, isPrivate: e.target.checked })}
+													color="error"
+													size="small"
+												/>
+											}
+											label="Expediente privado"
+										/>
+									) : (
+										<Chip
+											label={causa.isPrivate === true ? "Privada" : causa.isPrivate === false ? "Pública" : "Sin determinar"}
+											color={causa.isPrivate === true ? "error" : causa.isPrivate === false ? "success" : "default"}
+											size="small"
+											variant={causa.isPrivate !== null && causa.isPrivate !== undefined ? "filled" : "outlined"}
 										/>
 									)}
 								</Box>
