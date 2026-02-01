@@ -11,6 +11,20 @@ export interface ScrapingProgress {
 	skipUntil?: { $date: string } | string;
 }
 
+// Interface para estadísticas de actualización de app
+export interface AppUpdateStats {
+	count?: number;        // Total actualizaciones (all time)
+	errors?: number;       // Total errores
+	newMovs?: number;      // Total movimientos encontrados
+	avgMs?: number;        // Duración promedio en ms
+	last?: { $date: string } | string;  // Última actualización
+	today?: {
+		date?: string;       // "2026-02-01"
+		count?: number;      // Veces actualizado hoy
+		hours?: number[];    // Horas de cada actualización [8, 11, 14]
+	};
+}
+
 // Interface para Causa
 export interface Causa {
 	_id: string | { $oid: string };
@@ -34,6 +48,7 @@ export interface Causa {
 	createdAt?: { $date: string } | string;
 	updatedAt?: { $date: string } | string;
 	scrapingProgress?: ScrapingProgress;
+	appUpdateStats?: AppUpdateStats;
 }
 
 export interface CausasResponse {
