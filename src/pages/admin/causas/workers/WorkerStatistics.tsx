@@ -70,6 +70,7 @@ import {
 } from "api/workers";
 import HourlyStatsPanel from "./HourlyStatsPanel";
 import DailySummaryPanel from "./DailySummaryPanel";
+import CapacityStatsWidget from "../../dashboard/CapacityStatsWidget";
 
 // Fueros disponibles
 const FUEROS = ["CIV", "COM", "CNT", "CSS", "CAF", "CCF", "CNE", "CPE", "CFP", "CCC", "CSJ"];
@@ -517,6 +518,9 @@ const WorkerStatistics: React.FC = () => {
 						</Box>
 					</Stack>
 				</Box>
+
+				{/* Capacity Stats Widget - Simulador de capacidad */}
+				<CapacityStatsWidget />
 
 				{/* Tabs Navigation */}
 				<Paper sx={{ borderRadius: 2 }}>
