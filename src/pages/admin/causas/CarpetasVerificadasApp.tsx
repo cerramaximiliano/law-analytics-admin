@@ -1002,20 +1002,23 @@ const CarpetasVerificadasApp = () => {
 																{todayInfo.isToday && todayInfo.count > 0 && (
 																	<Tooltip title={formatHoursTooltip(todayInfo.hours)}>
 																		<Chip
-																			icon={<Repeat size={12} />}
-																			label={`${todayInfo.count}×`}
+																			icon={<Repeat size={14} />}
+																			label={todayInfo.count}
 																			size="small"
-																			color="info"
 																			sx={{
-																				height: 18,
-																				fontSize: "0.65rem",
+																				height: 22,
+																				minWidth: 40,
+																				fontSize: "0.75rem",
+																				fontWeight: 700,
+																				backgroundColor: "success.main",
+																				color: "white",
 																				"& .MuiChip-icon": {
-																					fontSize: 12,
-																					marginLeft: "4px",
+																					color: "white",
+																					marginLeft: "6px",
 																				},
 																				"& .MuiChip-label": {
-																					paddingLeft: "2px",
-																					paddingRight: "6px",
+																					paddingLeft: "4px",
+																					paddingRight: "8px",
 																				},
 																			}}
 																		/>
