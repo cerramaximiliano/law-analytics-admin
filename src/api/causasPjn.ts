@@ -116,6 +116,7 @@ export class CausasPjnService {
 		lastUpdate?: string;
 		update?: boolean;
 		isPrivate?: boolean | "null";
+		soloElegibles?: boolean;
 		estadoActualizacion?: "todos" | "actualizados" | "pendientes" | "errores";
 		sortBy?: "number" | "year" | "caratula" | "juzgado" | "objeto" | "movimientosCount" | "lastUpdate" | "fechaUltimoMovimiento";
 		sortOrder?: "asc" | "desc";
