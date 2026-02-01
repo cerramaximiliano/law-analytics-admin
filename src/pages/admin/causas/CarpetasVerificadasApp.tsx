@@ -34,7 +34,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { CausasPjnService, Causa } from "api/causasPjn";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
-import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification, Calendar, TickCircle, CloseSquare, UserSquare, Archive, Timer } from "iconsax-react";
+import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification, Calendar, TickCircle, CloseSquare, UserSquare, Archive, Timer, Repeat } from "iconsax-react";
 import CausaDetalleModal from "./CausaDetalleModal";
 import JudicialMovementsModal from "./JudicialMovementsModal";
 import IntervinientesModal from "./IntervinientesModal";
@@ -360,6 +360,32 @@ const CarpetasVerificadasApp = () => {
 	// Obtener ID como string
 	const getId = (id: string | { $oid: string }): string => {
 		return typeof id === "string" ? id : id.$oid;
+	};
+
+	// Obtener información de actualizaciones de hoy
+	const getTodayUpdateInfo = (causa: Causa): { isToday: boolean; count: number; hours: number[] } => {
+		const stats = causa.appUpdateStats?.today;
+		if (!stats || !stats.date) {
+			return { isToday: false, count: 0, hours: [] };
+		}
+
+		// Comparar con fecha actual (formato: "2026-02-01")
+		const today = new Date().toISOString().split("T")[0];
+		const isToday = stats.date === today;
+
+		return {
+			isToday,
+			count: isToday ? (stats.count || 0) : 0,
+			hours: isToday ? (stats.hours || []) : [],
+		};
+	};
+
+	// Formatear horas para tooltip
+	const formatHoursTooltip = (hours: number[]): string => {
+		if (hours.length === 0) return "";
+		const sortedHours = [...hours].sort((a, b) => a - b);
+		const formatted = sortedHours.map((h) => `${h.toString().padStart(2, "0")}:00`);
+		return `Actualizado a las ${formatted.join(", ")}`;
 	};
 
 	// Verificar estado de cooldown
@@ -788,17 +814,47 @@ const CarpetasVerificadasApp = () => {
 													</Typography>
 												</TableCell>
 												<TableCell>
-													<Typography
-														variant="caption"
-														sx={{
-															...(datesMatchUTC(causa.lastUpdate, causa.fechaUltimoMovimiento) && {
-																color: "success.main",
-																fontWeight: 600,
-															}),
-														}}
-													>
-														{formatDate(causa.lastUpdate)}
-													</Typography>
+													{(() => {
+														const todayInfo = getTodayUpdateInfo(causa);
+														const dateMatch = datesMatchUTC(causa.lastUpdate, causa.fechaUltimoMovimiento);
+														return (
+															<Stack direction="row" alignItems="center" spacing={0.5}>
+																<Typography
+																	variant="caption"
+																	sx={{
+																		...(dateMatch && {
+																			color: "success.main",
+																			fontWeight: 600,
+																		}),
+																	}}
+																>
+																	{formatDate(causa.lastUpdate)}
+																</Typography>
+																{todayInfo.isToday && todayInfo.count > 0 && (
+																	<Tooltip title={formatHoursTooltip(todayInfo.hours)}>
+																		<Chip
+																			icon={<Repeat size={12} />}
+																			label={`${todayInfo.count}×`}
+																			size="small"
+																			color="info"
+																			sx={{
+																				height: 18,
+																				fontSize: "0.65rem",
+																				"& .MuiChip-icon": {
+																					fontSize: 12,
+																					marginLeft: "4px",
+																				},
+																				"& .MuiChip-label": {
+																					paddingLeft: "2px",
+																					paddingRight: "6px",
+																				},
+																			}}
+																		/>
+																	</Tooltip>
+																)}
+															</Stack>
+														);
+													})()}
 												</TableCell>
 												<TableCell>
 													<Typography
