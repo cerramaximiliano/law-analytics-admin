@@ -917,7 +917,7 @@ const AdminDashboard = () => {
 							<>
 								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
 									<Typography variant="body2" color="text.secondary">
-										Cobertura de actualización
+										Cobertura hoy
 									</Typography>
 									<Typography variant="h6" fontWeight="bold" color="primary.main">
 										{eligibilityStats.coveragePercent}%
@@ -946,20 +946,20 @@ const AdminDashboard = () => {
 									<Grid item xs={6} sm={3}>
 										<Box sx={{ textAlign: "center" }}>
 											<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
-												{eligibilityStats.eligibleUpdated.toLocaleString()}
+												{eligibilityStats.updatedToday.toLocaleString()}
 											</Typography>
 											<Typography variant="caption" color="text.secondary">
-												✅ Actualizados
+												✅ Actualizados hoy
 											</Typography>
 										</Box>
 									</Grid>
 									<Grid item xs={6} sm={3}>
 										<Box sx={{ textAlign: "center" }}>
 											<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
-												{eligibilityStats.eligiblePending.toLocaleString()}
+												{(eligibilityStats.pendingToday ?? (eligibilityStats.eligible - eligibilityStats.updatedToday - eligibilityStats.eligibleWithErrors)).toLocaleString()}
 											</Typography>
 											<Typography variant="caption" color="text.secondary">
-												⚠️ Pendientes
+												⚠️ Pendientes hoy
 											</Typography>
 										</Box>
 									</Grid>

@@ -586,105 +586,116 @@ const CarpetasVerificadasApp = () => {
 
 	return (
 		<MainCard title="Carpetas Verificadas (App)">
-			{/* Widget de Cobertura de Actualización */}
-			<Box sx={{ mb: 3 }}>
-				<Card sx={{ border: 1, borderColor: "divider" }}>
-					<CardContent sx={{ py: 2 }}>
-						{loadingStats ? (
-							<Box display="flex" justifyContent="center" py={2}>
-								<CircularProgress size={24} />
-							</Box>
-						) : eligibilityStats ? (
-							<>
-								<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-									<Typography variant="subtitle2" color="text.secondary">
-										Cobertura de actualización
+			{/* Header: Resultados + Cobertura compacta */}
+			<Box sx={{ mb: 2 }}>
+				<Grid container spacing={2} alignItems="center">
+					{/* Resultados - Prominente */}
+					<Grid item xs={12} md={4}>
+						<Card sx={{ backgroundColor: "primary.lighter", border: 1, borderColor: "primary.main" }}>
+							<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
+								<Stack direction="row" justifyContent="space-between" alignItems="center">
+									<Typography variant="body2" color="text.secondary">
+										Resultados
 									</Typography>
-									<Typography variant="h5" color="primary.main" fontWeight="bold">
-										{eligibilityStats.coveragePercent}% ({eligibilityStats.eligibleUpdated.toLocaleString()} / {eligibilityStats.eligible.toLocaleString()} elegibles)
+									<Typography variant="h4" color="primary.main" fontWeight="bold">
+										{totalCount.toLocaleString()}
+										<Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
+											/ {totalInDatabase.toLocaleString()}
+										</Typography>
 									</Typography>
 								</Stack>
-								<LinearProgress
-									variant="determinate"
-									value={eligibilityStats.coveragePercent || 0}
-									sx={{
-										height: 10,
-										borderRadius: 5,
-										mb: 1.5,
-										backgroundColor: "grey.200",
-										"& .MuiLinearProgress-bar": {
-											borderRadius: 5,
-											backgroundColor: (eligibilityStats.coveragePercent || 0) > 90 ? "success.main" : (eligibilityStats.coveragePercent || 0) > 70 ? "warning.main" : "error.main",
-										},
-									}}
-								/>
-								<Stack direction="row" spacing={3} justifyContent="center" flexWrap="wrap">
-									<Tooltip title="Causas actualizadas dentro del umbral de 12 horas">
-										<Chip
-											icon={<TickCircle size={16} variant="Bold" />}
-											label={`Actualizados: ${eligibilityStats.eligibleUpdated.toLocaleString()}`}
-											size="small"
-											color="success"
-											variant="outlined"
-										/>
-									</Tooltip>
-									<Tooltip title="Causas elegibles pendientes de actualización (> 12h)">
-										<Chip
-											icon={<Timer size={16} />}
-											label={`Pendientes: ${eligibilityStats.eligiblePending.toLocaleString()}`}
-											size="small"
-											color="warning"
-											variant="outlined"
-										/>
-									</Tooltip>
-									<Tooltip title="Causas elegibles con errores (en cooldown)">
-										<Chip
-											icon={<CloseSquare size={16} variant="Bold" />}
-											label={`Con errores: ${eligibilityStats.eligibleWithErrors.toLocaleString()}`}
-											size="small"
-											color="error"
-											variant="outlined"
-										/>
-									</Tooltip>
-									<Tooltip title="Causas no elegibles (privadas, archivadas, o update=false)">
-										<Chip
-											label={`No elegibles: ${eligibilityStats.notEligible.toLocaleString()}`}
-											size="small"
-											variant="outlined"
-										/>
-									</Tooltip>
-									<Tooltip title="Causas actualizadas hoy">
-										<Chip
-											icon={<Repeat size={16} />}
-											label={`Hoy: ${eligibilityStats.updatedToday.toLocaleString()}`}
-											size="small"
-											color="info"
-											variant="outlined"
-										/>
-									</Tooltip>
-								</Stack>
-							</>
-						) : (
-							<Typography variant="body2" color="text.secondary" textAlign="center">
-								No se pudieron cargar las estadísticas
-							</Typography>
-						)}
-					</CardContent>
-				</Card>
+							</CardContent>
+						</Card>
+					</Grid>
+
+					{/* Widget de Cobertura - Compacto */}
+					<Grid item xs={12} md={8}>
+						<Card sx={{ border: 1, borderColor: "divider" }}>
+							<CardContent sx={{ py: 1, "&:last-child": { pb: 1 } }}>
+								{loadingStats ? (
+									<Box display="flex" justifyContent="center" py={1}>
+										<CircularProgress size={20} />
+									</Box>
+								) : eligibilityStats ? (
+									<Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap">
+										{/* Barra de progreso compacta */}
+										<Box sx={{ flex: 1, minWidth: 150 }}>
+											<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+												<Typography variant="caption" color="text.secondary">
+													Cobertura hoy
+												</Typography>
+												<Typography variant="body2" color="primary.main" fontWeight="bold">
+													{eligibilityStats.coveragePercent}%
+												</Typography>
+											</Stack>
+											<LinearProgress
+												variant="determinate"
+												value={eligibilityStats.coveragePercent || 0}
+												sx={{
+													height: 6,
+													borderRadius: 3,
+													backgroundColor: "grey.200",
+													"& .MuiLinearProgress-bar": {
+														borderRadius: 3,
+														backgroundColor: (eligibilityStats.coveragePercent || 0) > 90 ? "success.main" : (eligibilityStats.coveragePercent || 0) > 70 ? "warning.main" : "error.main",
+													},
+												}}
+											/>
+										</Box>
+										{/* Chips compactos */}
+										<Stack direction="row" spacing={1} flexWrap="wrap" sx={{ "& > *": { my: 0.25 } }}>
+											<Tooltip title="Causas actualizadas hoy">
+												<Chip
+													icon={<TickCircle size={14} variant="Bold" />}
+													label={eligibilityStats.updatedToday.toLocaleString()}
+													size="small"
+													color="success"
+													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
+												/>
+											</Tooltip>
+											<Tooltip title="Causas pendientes de actualizar hoy">
+												<Chip
+													icon={<Timer size={14} />}
+													label={eligibilityStats.pendingToday?.toLocaleString() || (eligibilityStats.eligible - eligibilityStats.updatedToday - eligibilityStats.eligibleWithErrors).toLocaleString()}
+													size="small"
+													color="warning"
+													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
+												/>
+											</Tooltip>
+											<Tooltip title="Causas con errores (en cooldown)">
+												<Chip
+													icon={<CloseSquare size={14} variant="Bold" />}
+													label={eligibilityStats.eligibleWithErrors.toLocaleString()}
+													size="small"
+													color="error"
+													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
+												/>
+											</Tooltip>
+											<Tooltip title={`Total elegibles: ${eligibilityStats.eligible.toLocaleString()}`}>
+												<Chip
+													label={`${eligibilityStats.eligible.toLocaleString()} elegibles`}
+													size="small"
+													variant="outlined"
+													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
+												/>
+											</Tooltip>
+										</Stack>
+									</Stack>
+								) : (
+									<Typography variant="caption" color="text.secondary" textAlign="center">
+										Error cargando estadísticas
+									</Typography>
+								)}
+							</CardContent>
+						</Card>
+					</Grid>
+				</Grid>
 			</Box>
 
-			{/* Resumen de resultados */}
-			<Box sx={{ mb: 2 }}>
-				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Typography variant="body2" color="text.secondary">
-						Resultados: <strong>{totalCount.toLocaleString()}</strong> / {totalInDatabase.toLocaleString()}
-					</Typography>
-				</Stack>
-			</Box>
 			<Grid container spacing={3}>
-				{/* Filtros de elegibilidad */}
+				{/* Filtros de elegibilidad - en línea */}
 				<Grid item xs={12}>
-					<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" sx={{ mb: 1 }}>
+					<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
 						<FormControlLabel
 							control={
 								<Checkbox
