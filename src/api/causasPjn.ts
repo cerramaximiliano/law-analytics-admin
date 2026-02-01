@@ -34,6 +34,7 @@ export interface Causa {
 	juzgado?: string;
 	objeto?: string;
 	fuero?: "CIV" | "COM" | "CSS" | "CNT";
+	source?: "app" | "pjn-login" | "cache" | string;
 	verified?: boolean;
 	isValid?: boolean;
 	isPrivate?: boolean | null;
@@ -175,6 +176,7 @@ export class CausasPjnService {
 		lastUpdate?: string;
 		update?: boolean;
 		isPrivate?: boolean | "null";
+		source?: "app" | "pjn-login" | "cache" | string;
 		soloElegibles?: boolean;
 		estadoActualizacion?: "todos" | "actualizados" | "pendientes" | "errores";
 		sortBy?: "number" | "year" | "caratula" | "juzgado" | "objeto" | "movimientosCount" | "lastUpdate" | "fechaUltimoMovimiento";

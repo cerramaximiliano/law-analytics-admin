@@ -42,7 +42,6 @@ import { CausasPjnService, EligibilityStats } from "api/causasPjn";
 import { StuckDocumentsService, StuckDocumentsStats } from "api/stuckDocuments";
 import LinearProgress from "@mui/material/LinearProgress";
 import { Warning2 } from "iconsax-react";
-import CapacityStatsWidget from "./CapacityStatsWidget";
 
 // Simplified color palette with clear hierarchy
 // Rule: 1 primary + 2 semantic + 1 premium-only
@@ -1012,11 +1011,6 @@ const AdminDashboard = () => {
 							</Typography>
 						)}
 					</Paper>
-				</Box>
-
-				{/* Capacity Stats Widget - Simulador de capacidad */}
-				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
-					<CapacityStatsWidget />
 				</Box>
 
 				{/* Stuck Documents Worker Widget */}
