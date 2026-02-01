@@ -60,6 +60,7 @@ export interface EligibilityStats {
 	eligibleWithErrors: number;
 	notEligible: number;
 	updatedToday: number;
+	pendingToday?: number;
 	coveragePercent?: number;
 }
 
