@@ -369,6 +369,17 @@ const ManagerConfigPanel: React.FC = () => {
 														</TableCell>
 													</TableRow>
 												))}
+												<TableRow sx={{ "& td": { fontWeight: "bold", borderTop: 2, borderColor: "divider" } }}>
+													<TableCell>Total</TableCell>
+													<TableCell align="center">
+														{Object.values(status.workers).reduce((sum, count) => sum + count, 0)}
+													</TableCell>
+													<TableCell align="center">
+														{status.pending
+															? Object.values(status.pending).reduce((sum, count) => sum + count, 0)
+															: 0}
+													</TableCell>
+												</TableRow>
 											</TableBody>
 										</Table>
 									</TableContainer>
