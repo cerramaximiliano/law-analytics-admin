@@ -53,6 +53,8 @@ import {
 	ArrowDown2,
 	ArrowUp2,
 	Copy,
+	Archive,
+	ArchiveRestore,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 
@@ -163,6 +165,10 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 	const [historyRowsPerPage, setHistoryRowsPerPage] = useState(10);
 	const [historyOrderBy, setHistoryOrderBy] = useState<"asc" | "desc">("desc");
 
+	// Estados para archivar/desarchivar
+	const [isArchiving, setIsArchiving] = useState(false);
+	const [isArchived, setIsArchived] = useState(false);
+
 	// Resetear estados cuando se abre el modal
 	useEffect(() => {
 		if (open && causa) {
@@ -177,6 +183,8 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			const history = (causa as any).updateHistory || [];
 			console.log("UpdateHistory loaded:", history);
 			setUpdateHistory(history);
+			// Inicializar estado de archivo
+			setIsArchived((causa as any).isArchived || false);
 			// Cargar notificaciones judiciales
 			loadJudicialMovements();
 		}
@@ -768,6 +776,41 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 		}
 	};
 
+	// Archivar/desarchivar causa (excluir/incluir del stuck documents worker)
+	const handleToggleArchive = async () => {
+		try {
+			setIsArchiving(true);
+			const causaId = getId(causa._id);
+			const fuero = normalizeFuero(causa.fuero);
+
+			let response;
+			if (isArchived) {
+				// Desarchivar
+				response = await CausasPjnService.unarchiveCausa(fuero, causaId);
+			} else {
+				// Archivar
+				response = await CausasPjnService.archiveCausa(fuero, causaId, "Archivado manualmente desde panel de administración");
+			}
+
+			if (response.success) {
+				setIsArchived(!isArchived);
+				enqueueSnackbar(response.message, {
+					variant: "success",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+				if (onCausaUpdated) onCausaUpdated();
+			}
+		} catch (error) {
+			enqueueSnackbar(`Error al ${isArchived ? "desarchivar" : "archivar"} la causa`, {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			console.error(error);
+		} finally {
+			setIsArchiving(false);
+		}
+	};
+
 	return (
 		<>
 			<Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
@@ -794,11 +837,31 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 							</Typography>
 						</Box>
 						{!isEditing && activeTab === 0 && (
-							<Tooltip title="Editar causa">
-								<IconButton onClick={handleEditClick} color="primary" size="small">
-									<Edit size={20} />
-								</IconButton>
-							</Tooltip>
+							<Stack direction="row" spacing={0.5}>
+								{apiService === "pjn" && (
+									<Tooltip title={isArchived ? "Desarchivar (incluir en stuck documents worker)" : "Archivar (excluir del stuck documents worker)"}>
+										<IconButton
+											onClick={handleToggleArchive}
+											color={isArchived ? "warning" : "default"}
+											size="small"
+											disabled={isArchiving}
+										>
+											{isArchiving ? (
+												<CircularProgress size={20} />
+											) : isArchived ? (
+												<ArchiveRestore size={20} />
+											) : (
+												<Archive size={20} />
+											)}
+										</IconButton>
+									</Tooltip>
+								)}
+								<Tooltip title="Editar causa">
+									<IconButton onClick={handleEditClick} color="primary" size="small">
+										<Edit size={20} />
+									</IconButton>
+								</Tooltip>
+							</Stack>
 						)}
 					</Stack>
 				</DialogTitle>
@@ -889,6 +952,16 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 											size="small"
 											variant={causa.update ? "filled" : "outlined"}
 											sx={{ mb: 0.5, ...(causa.update && { color: "rgba(0, 0, 0, 0.87)" }) }}
+										/>
+									)}
+									{isArchived && (
+										<Chip
+											label="Archivada"
+											color="error"
+											size="small"
+											variant="outlined"
+											sx={{ mr: 0.5, mb: 0.5 }}
+											icon={<Archive size={14} />}
 										/>
 									)}
 								</Box>
