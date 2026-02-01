@@ -131,6 +131,7 @@ const CarpetasVerificadasApp = () => {
 		lastUpdate?: Dayjs | null,
 		actualizable?: string,
 		privada?: string,
+		estadoAct?: string,
 	) => {
 		try {
 			setLoading(true);
@@ -190,6 +191,11 @@ const CarpetasVerificadasApp = () => {
 				params.sortOrder = sortOrderParam;
 			}
 
+			// Filtro por estado de actualización (solo si está activo "Solo elegibles")
+			if (estadoAct && estadoAct !== "todos") {
+				params.estadoActualizacion = estadoAct;
+			}
+
 			console.log("🔍 Parámetros enviados a API:", params);
 
 			const response = await CausasPjnService.getVerifiedCausas(params);
@@ -228,8 +234,9 @@ const CarpetasVerificadasApp = () => {
 			searchLastUpdate,
 			actualizableFilter,
 			privadaFilter,
+			estadoActualizacion,
 		);
-	}, [page, rowsPerPage, fueroFilter, sortBy, sortOrder, actualizableFilter, privadaFilter]);
+	}, [page, rowsPerPage, fueroFilter, sortBy, sortOrder, actualizableFilter, privadaFilter, estadoActualizacion]);
 
 	// Efecto para cargar estadísticas de elegibilidad
 	const fetchEligibilityStats = async () => {
@@ -315,6 +322,7 @@ const CarpetasVerificadasApp = () => {
 			searchLastUpdate,
 			actualizableFilter,
 			privadaFilter,
+			estadoActualizacion,
 		);
 		fetchEligibilityStats();
 	};
@@ -336,6 +344,7 @@ const CarpetasVerificadasApp = () => {
 			searchLastUpdate,
 			actualizableFilter,
 			privadaFilter,
+			estadoActualizacion,
 		);
 	};
 
@@ -349,8 +358,10 @@ const CarpetasVerificadasApp = () => {
 		setSearchLastUpdate(null);
 		setActualizableFilter("todos");
 		setPrivadaFilter("todos");
+		setSoloElegibles(false);
+		setEstadoActualizacion("todos");
 		setPage(0);
-		fetchCausas(0, rowsPerPage, fueroFilter, "", "", "", "", sortBy, sortOrder, null, null, "todos", "todos");
+		fetchCausas(0, rowsPerPage, fueroFilter, "", "", "", "", sortBy, sortOrder, null, null, "todos", "todos", "todos");
 	};
 
 	// Handler para establecer fecha de hoy
