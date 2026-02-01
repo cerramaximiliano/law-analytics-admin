@@ -176,6 +176,218 @@ export interface WorkerAvailableDatesResponse {
 	data: WorkerAvailableDate[];
 }
 
+// ========================================
+// Interfaces para Worker Hourly Stats
+// ========================================
+
+export interface WorkerHourlyStatsScalingEvent {
+	timestamp: string;
+	type: "scale_up" | "scale_down";
+	reason: string;
+	from: number;
+	to: number;
+	pending: number;
+}
+
+export interface WorkerHourlyStatsData {
+	_id: string;
+	date: string;
+	hour: number;
+	fuero: string;
+	workerType: string;
+	managerCycles: number;
+	stats: {
+		processed: number;
+		successful: number;
+		failed: number;
+		movimientosFound: number;
+		avgActiveWorkers: number;
+		maxActiveWorkers: number;
+		pendingAtStart: number;
+		pendingAtEnd: number;
+		tiempos?: {
+			min: number;
+			max: number;
+			avg: number;
+			sum: number;
+			count: number;
+		};
+	};
+	scalingEvents: WorkerHourlyStatsScalingEvent[];
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface WorkerHourlyLastNResponse {
+	success: boolean;
+	message: string;
+	count: number;
+	data: WorkerHourlyStatsData[];
+}
+
+export interface WorkerHourlyDaySummaryResponse {
+	success: boolean;
+	message: string;
+	data: {
+		date: string;
+		totals: {
+			processed: number;
+			successful: number;
+			failed: number;
+			movimientosFound: number;
+			activeHours: number;
+		};
+		byHour: Record<string, {
+			processed: number;
+			successful: number;
+			failed: number;
+			movimientosFound: number;
+		}>;
+	};
+}
+
+export interface WorkerHourlyCurrentResponse {
+	success: boolean;
+	message: string;
+	data: {
+		date: string;
+		hour: number;
+		totals: {
+			processed: number;
+			successful: number;
+			failed: number;
+			movimientosFound: number;
+			managerCycles: number;
+		};
+		byFuero: Record<string, {
+			processed: number;
+			successful: number;
+			failed: number;
+			movimientosFound: number;
+			avgWorkers: number;
+			maxWorkers: number;
+			pendingAtEnd: number;
+			scalingEvents: number;
+		}>;
+	};
+}
+
+export interface WorkerHourlyScalingEventsResponse {
+	success: boolean;
+	message: string;
+	count: number;
+	data: Array<{
+		date: string;
+		hour: number;
+		fuero: string;
+		timestamp: string;
+		type: "scale_up" | "scale_down";
+		reason: string;
+		from: number;
+		to: number;
+		pending: number;
+	}>;
+}
+
+// ========================================
+// Interfaces para Worker Daily Summary
+// ========================================
+
+export interface WorkerDailySummaryFueroStats {
+	processed: number;
+	successful: number;
+	failed: number;
+	movimientosFound: number;
+	successRate: number;
+	avgProcessingTime: number;
+	peakHour: number;
+	peakProcessed: number;
+}
+
+export interface WorkerDailySummaryData {
+	_id: string;
+	date: string;
+	workerType: string;
+	totals: {
+		processed: number;
+		successful: number;
+		failed: number;
+		movimientosFound: number;
+		successRate: number;
+		avgProcessingTime: number;
+		totalScalingEvents: number;
+	};
+	byFuero: Record<string, WorkerDailySummaryFueroStats>;
+	hourlyDistribution: Array<{
+		hour: number;
+		processed: number;
+		successful: number;
+		failed: number;
+	}>;
+	comparison?: {
+		processed: number;
+		successful: number;
+		failed: number;
+		movimientosFound: number;
+	};
+	generatedAt: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface WorkerDailySummaryResponse {
+	success: boolean;
+	message: string;
+	data: WorkerDailySummaryData;
+}
+
+export interface WorkerDailySummaryLastNDaysResponse {
+	success: boolean;
+	message: string;
+	count: number;
+	data: WorkerDailySummaryData[];
+}
+
+export interface WorkerDailySummaryChartResponse {
+	success: boolean;
+	message: string;
+	count: number;
+	data: Array<{
+		date: string;
+		processed: number;
+		successful: number;
+		failed: number;
+		movimientosFound: number;
+		successRate: number;
+	}>;
+}
+
+export interface WorkerDailySummaryCompareResponse {
+	success: boolean;
+	message: string;
+	data: {
+		date1: {
+			date: string;
+			totals: WorkerDailySummaryData["totals"];
+		};
+		date2: {
+			date: string;
+			totals: WorkerDailySummaryData["totals"];
+		};
+		differences: {
+			processed: number;
+			successful: number;
+			failed: number;
+			movimientosFound: number;
+			successRate: number;
+		};
+		percentageChanges: {
+			processed: number;
+			movimientosFound: number;
+		};
+	};
+}
+
 // Interface para historial de scraping
 export interface ScrapingHistory {
 	_id: string | { $oid: string };
@@ -740,6 +952,173 @@ export class WorkersService {
 				{},
 				{ params }
 			);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	// ========================================
+	// Métodos para Worker Hourly Stats
+	// ========================================
+
+	/**
+	 * Obtener estadísticas de las últimas N horas
+	 */
+	static async getWorkerHourlyLastN(
+		hours: number,
+		params?: { fuero?: string; workerType?: string }
+	): Promise<WorkerHourlyLastNResponse> {
+		try {
+			const response = await pjnAxios.get(`/api/workers/hourly/last/${hours}`, { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener resumen del día agrupado por hora
+	 */
+	static async getWorkerHourlyDaySummary(
+		date: string,
+		params?: { fuero?: string; workerType?: string }
+	): Promise<WorkerHourlyDaySummaryResponse> {
+		try {
+			const response = await pjnAxios.get(`/api/workers/hourly/day/${date}`, { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener estadísticas de la hora actual
+	 */
+	static async getWorkerHourlyCurrent(
+		workerType?: string
+	): Promise<WorkerHourlyCurrentResponse> {
+		try {
+			const params: Record<string, string> = {};
+			if (workerType) params.workerType = workerType;
+			const response = await pjnAxios.get("/api/workers/hourly/current", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener eventos de escalado recientes
+	 */
+	static async getWorkerHourlyScalingEvents(
+		params?: { hours?: number; fuero?: string; workerType?: string }
+	): Promise<WorkerHourlyScalingEventsResponse> {
+		try {
+			const response = await pjnAxios.get("/api/workers/hourly/scaling-events", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	// ========================================
+	// Métodos para Worker Daily Summary
+	// ========================================
+
+	/**
+	 * Obtener resumen del día actual (consolidado)
+	 */
+	static async getWorkerDailySummaryToday(
+		workerType?: string
+	): Promise<WorkerDailySummaryResponse> {
+		try {
+			const params: Record<string, string> = {};
+			if (workerType) params.workerType = workerType;
+			const response = await pjnAxios.get("/api/workers/summary/today", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener resumen de un día específico
+	 */
+	static async getWorkerDailySummaryByDate(
+		date: string,
+		workerType?: string
+	): Promise<WorkerDailySummaryResponse> {
+		try {
+			const params: Record<string, string> = {};
+			if (workerType) params.workerType = workerType;
+			const response = await pjnAxios.get(`/api/workers/summary/date/${date}`, { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener resúmenes de los últimos N días
+	 */
+	static async getWorkerDailySummaryLastN(
+		days: number,
+		workerType?: string
+	): Promise<WorkerDailySummaryLastNDaysResponse> {
+		try {
+			const params: Record<string, string> = {};
+			if (workerType) params.workerType = workerType;
+			const response = await pjnAxios.get(`/api/workers/summary/last/${days}`, { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener datos para gráficos
+	 */
+	static async getWorkerDailySummaryChart(
+		params?: { days?: number; workerType?: string }
+	): Promise<WorkerDailySummaryChartResponse> {
+		try {
+			const response = await pjnAxios.get("/api/workers/summary/chart", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Comparar dos días
+	 */
+	static async getWorkerDailySummaryCompare(
+		date1: string,
+		date2: string,
+		workerType?: string
+	): Promise<WorkerDailySummaryCompareResponse> {
+		try {
+			const params: Record<string, string> = { date1, date2 };
+			if (workerType) params.workerType = workerType;
+			const response = await pjnAxios.get("/api/workers/summary/compare", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Regenerar resumen de un día
+	 */
+	static async regenerateWorkerDailySummary(
+		date: string,
+		workerType?: string
+	): Promise<WorkerDailySummaryResponse> {
+		try {
+			const params: Record<string, string> = {};
+			if (workerType) params.workerType = workerType;
+			const response = await pjnAxios.post(`/api/workers/summary/regenerate/${date}`, {}, { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);

@@ -31,6 +31,8 @@ import {
 	Badge,
 	ToggleButton,
 	ToggleButtonGroup,
+	Tabs,
+	Tab,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -52,6 +54,8 @@ import {
 	Calendar,
 	Calendar2,
 	CalendarTick,
+	Timer1,
+	TrendUp,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import {
@@ -64,6 +68,8 @@ import {
 	WorkerAlertsResponse,
 	WorkerAvailableDate,
 } from "api/workers";
+import HourlyStatsPanel from "./HourlyStatsPanel";
+import DailySummaryPanel from "./DailySummaryPanel";
 
 // Fueros disponibles
 const FUEROS = ["CIV", "COM", "CNT", "CSS", "CAF", "CCF", "CNE", "CPE", "CFP", "CCC", "CSJ"];
@@ -175,10 +181,36 @@ const HealthIndicator: React.FC<{ health: string }> = ({ health }) => {
 	);
 };
 
+// Tab panel component
+interface TabPanelProps {
+	children?: React.ReactNode;
+	index: number;
+	value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+	const { children, value, index, ...other } = props;
+
+	return (
+		<div
+			role="tabpanel"
+			hidden={value !== index}
+			id={`stats-tabpanel-${index}`}
+			aria-labelledby={`stats-tab-${index}`}
+			{...other}
+		>
+			{value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
+		</div>
+	);
+}
+
 // Componente principal
 const WorkerStatistics: React.FC = () => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
+
+	// Tab state
+	const [activeTab, setActiveTab] = useState(0);
 
 	// Estados
 	const [loading, setLoading] = useState(true);
@@ -194,6 +226,11 @@ const WorkerStatistics: React.FC = () => {
 
 	// Tipo de worker fijo (antes era configurable)
 	const workerTypeFilter = "app-update";
+
+	// Tab change handler
+	const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+		setActiveTab(newValue);
+	};
 
 	// Estados para filtro de fechas
 	const [dateMode, setDateMode] = useState<"today" | "specific" | "range">("today");
@@ -478,22 +515,66 @@ const WorkerStatistics: React.FC = () => {
 								Monitoreo del rendimiento de los workers de actualización
 							</Typography>
 						</Box>
-						<Tooltip title="Actualizar datos">
-							<IconButton onClick={handleRefresh} disabled={refreshing}>
-								<Refresh2 size={20} className={refreshing ? "spin" : ""} />
-							</IconButton>
-						</Tooltip>
 					</Stack>
 				</Box>
 
+				{/* Tabs Navigation */}
+				<Paper sx={{ borderRadius: 2 }}>
+					<Tabs
+						value={activeTab}
+						onChange={handleTabChange}
+						variant="scrollable"
+						scrollButtons="auto"
+						sx={{ borderBottom: 1, borderColor: "divider" }}
+					>
+						<Tab
+							label={
+								<Stack direction="row" spacing={1} alignItems="center">
+									<Chart size={18} />
+									<span>Por Fuero</span>
+								</Stack>
+							}
+							sx={{ textTransform: "none" }}
+						/>
+						<Tab
+							label={
+								<Stack direction="row" spacing={1} alignItems="center">
+									<Timer1 size={18} />
+									<span>Por Hora</span>
+								</Stack>
+							}
+							sx={{ textTransform: "none" }}
+						/>
+						<Tab
+							label={
+								<Stack direction="row" spacing={1} alignItems="center">
+									<TrendUp size={18} />
+									<span>Tendencias</span>
+								</Stack>
+							}
+							sx={{ textTransform: "none" }}
+						/>
+					</Tabs>
+				</Paper>
+
+				{/* Tab: Por Fuero (original content) */}
+				<TabPanel value={activeTab} index={0}>
+					<Stack spacing={3}>
 				{/* Filtro de fechas */}
 				<Paper sx={{ p: 2, borderRadius: 2 }}>
 					<Stack spacing={2}>
-						<Stack direction="row" spacing={1} alignItems="center">
-							<Calendar size={20} color={theme.palette.primary.main} />
-							<Typography variant="subtitle2" fontWeight="bold">
-								Período de consulta
-							</Typography>
+						<Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+							<Stack direction="row" spacing={1} alignItems="center">
+								<Calendar size={20} color={theme.palette.primary.main} />
+								<Typography variant="subtitle2" fontWeight="bold">
+									Período de consulta
+								</Typography>
+							</Stack>
+							<Tooltip title="Actualizar datos">
+								<IconButton onClick={handleRefresh} disabled={refreshing} size="small">
+									<Refresh2 size={18} className={refreshing ? "spin" : ""} />
+								</IconButton>
+							</Tooltip>
 						</Stack>
 						<Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems={{ xs: "stretch", md: "center" }}>
 							<ToggleButtonGroup
@@ -1122,6 +1203,18 @@ const WorkerStatistics: React.FC = () => {
 					{" "}Haz clic en una fila de fuero para ver detalles adicionales como errores recientes y alertas.
 				</Typography>
 			</Alert>
+					</Stack>
+				</TabPanel>
+
+				{/* Tab: Por Hora (hourly stats) */}
+				<TabPanel value={activeTab} index={1}>
+					<HourlyStatsPanel workerType={workerTypeFilter} />
+				</TabPanel>
+
+				{/* Tab: Tendencias (daily summary) */}
+				<TabPanel value={activeTab} index={2}>
+					<DailySummaryPanel workerType={workerTypeFilter} />
+				</TabPanel>
 		</Stack>
 		</LocalizationProvider>
 	);
