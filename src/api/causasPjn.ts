@@ -11,8 +11,8 @@ export interface ScrapingProgress {
 	skipUntil?: { $date: string } | string;
 }
 
-// Interface para estadísticas de actualización de app
-export interface AppUpdateStats {
+// Interface para estadísticas de actualización (updateStats en el modelo)
+export interface UpdateStats {
 	count?: number;        // Total actualizaciones (all time)
 	errors?: number;       // Total errores
 	newMovs?: number;      // Total movimientos encontrados
@@ -48,7 +48,7 @@ export interface Causa {
 	createdAt?: { $date: string } | string;
 	updatedAt?: { $date: string } | string;
 	scrapingProgress?: ScrapingProgress;
-	appUpdateStats?: AppUpdateStats;
+	updateStats?: UpdateStats;
 }
 
 // Interface para estadísticas de elegibilidad
