@@ -51,6 +51,29 @@ export interface Causa {
 	appUpdateStats?: AppUpdateStats;
 }
 
+// Interface para estadísticas de elegibilidad
+export interface EligibilityStats {
+	total: number;
+	eligible: number;
+	eligibleUpdated: number;
+	eligiblePending: number;
+	eligibleWithErrors: number;
+	notEligible: number;
+	updatedToday: number;
+	coveragePercent?: number;
+}
+
+export interface EligibilityStatsResponse {
+	success: boolean;
+	message: string;
+	data: {
+		thresholdHours: number;
+		timestamp: string;
+		totals: EligibilityStats;
+		byFuero: Record<string, EligibilityStats>;
+	};
+}
+
 export interface CausasResponse {
 	success: boolean;
 	message: string;
@@ -280,6 +303,23 @@ export class CausasPjnService {
 	static async deleteUpdateHistoryEntry(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string, entryIndex: number): Promise<any> {
 		try {
 			const response = await pjnAxios.delete(`/api/causas/${fuero}/${id}/update-history/${entryIndex}`);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener estadísticas de elegibilidad para actualización
+	 * @param fuero - Fuero específico o 'todos'
+	 * @param thresholdHours - Umbral en horas para considerar actualizado (default: 12)
+	 */
+	static async getEligibilityStats(params?: {
+		fuero?: "CIV" | "COM" | "CSS" | "CNT" | "todos";
+		thresholdHours?: number;
+	}): Promise<EligibilityStatsResponse> {
+		try {
+			const response = await pjnAxios.get("/api/causas/stats/eligibility", { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
