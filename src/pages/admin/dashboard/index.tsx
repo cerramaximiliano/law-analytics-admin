@@ -554,7 +554,7 @@ const AdminDashboard = () => {
 	const fetchEligibilityStats = useCallback(async () => {
 		try {
 			setLoadingEligibility(true);
-			const response = await CausasPjnService.getEligibilityStats({ thresholdHours: 12 });
+			const response = await CausasPjnService.getEligibilityStats({ thresholdHours: 2 });
 			if (response.success) {
 				setEligibilityStats(response.data.totals);
 			}

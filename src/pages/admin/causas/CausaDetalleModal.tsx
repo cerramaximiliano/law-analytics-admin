@@ -54,7 +54,7 @@ import {
 	ArrowUp2,
 	Copy,
 	Archive,
-	ArchiveRestore,
+	ArchiveSlash,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 
@@ -849,7 +849,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 											{isArchiving ? (
 												<CircularProgress size={20} />
 											) : isArchived ? (
-												<ArchiveRestore size={20} />
+												<ArchiveSlash size={20} />
 											) : (
 												<Archive size={20} />
 											)}
