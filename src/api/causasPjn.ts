@@ -75,6 +75,65 @@ export interface EligibilityStatsResponse {
 	};
 }
 
+// Interface para estadísticas de capacidad de procesamiento
+export interface CapacityStatsFuero {
+	fuero: string;
+	fueroKey: string;
+	eligible: number;
+	updatedToday: number;
+	processing: {
+		avgSeconds: number;
+		avgMs: number;
+		totalUpdates: number;
+		totalErrors: number;
+		successRate: number;
+	};
+	capacity: {
+		docsPerHourPerWorker: number;
+		docsPerHourTotal: number;
+		docsPerDayTotal: number;
+		workers: number;
+	};
+	projections: {
+		maxUpdatesPerDocPerDay: number;
+		actualUpdatesPerDocPerDay: number;
+		timeToProcessAllOnce: number; // minutos
+		dailyCoveragePercent: number;
+	};
+}
+
+export interface CapacityStatsTotals {
+	eligible: number;
+	updatedToday: number;
+	avgSeconds: number;
+	avgMs: number;
+	successRate: number;
+	docsPerHourPerWorker: number;
+	docsPerDayAllFueros: number;
+	maxUpdatesPerDocPerDay: number;
+	timeToProcessAllOnce: number;
+	dailyCoveragePercent: number;
+}
+
+export interface CapacityStatsResponse {
+	success: boolean;
+	message: string;
+	data: {
+		config: {
+			thresholdHours: number;
+			workersPerFuero: number;
+			workHoursPerDay: number;
+		};
+		totals: CapacityStatsTotals;
+		byFuero: Record<string, CapacityStatsFuero>;
+		simulation: {
+			description: string;
+			parameters: Record<string, string>;
+			example: string;
+		};
+	};
+}
+
 export interface CausasResponse {
 	success: boolean;
 	message: string;
@@ -315,7 +374,7 @@ export class CausasPjnService {
 	/**
 	 * Obtener estadísticas de elegibilidad para actualización
 	 * @param fuero - Fuero específico o 'todos'
-	 * @param thresholdHours - Umbral en horas para considerar actualizado (default: 12)
+	 * @param thresholdHours - Umbral en horas para considerar actualizado (default: 2)
 	 */
 	static async getEligibilityStats(params?: {
 		fuero?: "CIV" | "COM" | "CSS" | "CNT" | "todos";
@@ -323,6 +382,25 @@ export class CausasPjnService {
 	}): Promise<EligibilityStatsResponse> {
 		try {
 			const response = await pjnAxios.get("/api/causas/stats/eligibility", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener estadísticas de capacidad de procesamiento
+	 * @param thresholdHours - Tiempo mínimo entre actualizaciones (default: 2)
+	 * @param workersPerFuero - Cantidad de workers por fuero (default: 3)
+	 * @param workHoursPerDay - Horas de trabajo por día (default: 14)
+	 */
+	static async getCapacityStats(params?: {
+		thresholdHours?: number;
+		workersPerFuero?: number;
+		workHoursPerDay?: number;
+	}): Promise<CapacityStatsResponse> {
+		try {
+			const response = await pjnAxios.get("/api/causas/stats/capacity", { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
