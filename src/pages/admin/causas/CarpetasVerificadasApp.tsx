@@ -132,6 +132,7 @@ const CarpetasVerificadasApp = () => {
 		actualizable?: string,
 		privada?: string,
 		estadoAct?: string,
+		elegibles?: boolean,
 	) => {
 		try {
 			setLoading(true);
@@ -196,6 +197,11 @@ const CarpetasVerificadasApp = () => {
 				params.estadoActualizacion = estadoAct;
 			}
 
+			// Filtro soloElegibles: aplica criterios completos del worker
+			if (elegibles) {
+				params.soloElegibles = true;
+			}
+
 			console.log("🔍 Parámetros enviados a API:", params);
 
 			const response = await CausasPjnService.getVerifiedCausas(params);
@@ -235,8 +241,9 @@ const CarpetasVerificadasApp = () => {
 			actualizableFilter,
 			privadaFilter,
 			estadoActualizacion,
+			soloElegibles,
 		);
-	}, [page, rowsPerPage, fueroFilter, sortBy, sortOrder, actualizableFilter, privadaFilter, estadoActualizacion]);
+	}, [page, rowsPerPage, fueroFilter, sortBy, sortOrder, actualizableFilter, privadaFilter, estadoActualizacion, soloElegibles]);
 
 	// Efecto para cargar estadísticas de elegibilidad
 	const fetchEligibilityStats = async () => {
@@ -323,6 +330,7 @@ const CarpetasVerificadasApp = () => {
 			actualizableFilter,
 			privadaFilter,
 			estadoActualizacion,
+			soloElegibles,
 		);
 		fetchEligibilityStats();
 	};
@@ -345,6 +353,7 @@ const CarpetasVerificadasApp = () => {
 			actualizableFilter,
 			privadaFilter,
 			estadoActualizacion,
+			soloElegibles,
 		);
 	};
 
@@ -361,7 +370,7 @@ const CarpetasVerificadasApp = () => {
 		setSoloElegibles(false);
 		setEstadoActualizacion("todos");
 		setPage(0);
-		fetchCausas(0, rowsPerPage, fueroFilter, "", "", "", "", sortBy, sortOrder, null, null, "todos", "todos", "todos");
+		fetchCausas(0, rowsPerPage, fueroFilter, "", "", "", "", sortBy, sortOrder, null, null, "todos", "todos", "todos", false);
 	};
 
 	// Handler para establecer fecha de hoy
