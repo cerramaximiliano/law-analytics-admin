@@ -21,6 +21,7 @@ export interface CausaMEV {
 	fuero?: "MEV";
 	verified?: boolean;
 	isValid?: boolean;
+	isPrivate?: boolean | null;
 	update?: boolean;
 	folderIds?: string[];
 	userCausaIds?: string[];
