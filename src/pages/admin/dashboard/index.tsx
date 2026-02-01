@@ -38,6 +38,8 @@ import { useRequestQueueRefresh } from "hooks/useRequestQueueRefresh";
 import { useSnackbar } from "notistack";
 import { WorkersService } from "api/workers";
 import adminAxios from "utils/adminAxios";
+import { CausasPjnService, EligibilityStats } from "api/causasPjn";
+import LinearProgress from "@mui/material/LinearProgress";
 
 // Simplified color palette with clear hierarchy
 // Rule: 1 primary + 2 semantic + 1 premium-only
@@ -542,6 +544,22 @@ const AdminDashboard = () => {
 	const [loadingCapsolver, setLoadingCapsolver] = useState(false);
 	const [openaiBalance, setOpenaiBalance] = useState<number | null>(null);
 	const [loadingOpenai, setLoadingOpenai] = useState(false);
+	const [eligibilityStats, setEligibilityStats] = useState<EligibilityStats | null>(null);
+	const [loadingEligibility, setLoadingEligibility] = useState(false);
+
+	const fetchEligibilityStats = useCallback(async () => {
+		try {
+			setLoadingEligibility(true);
+			const response = await CausasPjnService.getEligibilityStats({ thresholdHours: 12 });
+			if (response.success) {
+				setEligibilityStats(response.data.totals);
+			}
+		} catch (error: any) {
+			console.error("Error fetching eligibility stats:", error);
+		} finally {
+			setLoadingEligibility(false);
+		}
+	}, []);
 
 	const fetchNeverBounceCredits = useCallback(async () => {
 		try {
@@ -611,7 +629,8 @@ const AdminDashboard = () => {
 		fetchNeverBounceCredits();
 		fetchCapsolverBalance();
 		fetchOpenaiBalance();
-	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance, fetchOpenaiBalance]);
+		fetchEligibilityStats();
+	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance, fetchOpenaiBalance, fetchEligibilityStats]);
 
 	useRequestQueueRefresh(fetchData);
 
@@ -620,6 +639,7 @@ const AdminDashboard = () => {
 		fetchNeverBounceCredits();
 		fetchCapsolverBalance();
 		fetchOpenaiBalance();
+		fetchEligibilityStats();
 	};
 
 	// Chart data - Consistent colors: Green=Active/Verified, Gray=Inactive/Unverified
@@ -859,6 +879,118 @@ const AdminDashboard = () => {
 							/>
 						</Grid>
 					</Grid>
+				</Box>
+
+				{/* Update System Health Widget */}
+				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
+					<Paper
+						elevation={0}
+						onClick={() => navigate("/admin/causas/verified-app")}
+						sx={{
+							p: { xs: 1.5, sm: 2.5 },
+							borderRadius: 2,
+							bgcolor: theme.palette.background.paper,
+							border: `1px solid ${theme.palette.divider}`,
+							cursor: "pointer",
+							transition: "all 0.2s ease",
+							"&:hover": {
+								boxShadow: theme.shadows[2],
+								borderColor: COLORS.primary.light,
+							},
+						}}
+					>
+						<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+							<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+								<Refresh size={20} style={{ color: COLORS.primary.main }} />
+								<Typography variant="subtitle1" fontWeight="bold">
+									Salud del Sistema de Actualización
+								</Typography>
+							</Box>
+							<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
+						</Box>
+
+						{loadingEligibility ? (
+							<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+								<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
+							</Box>
+						) : eligibilityStats ? (
+							<>
+								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+									<Typography variant="body2" color="text.secondary">
+										Cobertura de actualización
+									</Typography>
+									<Typography variant="h6" fontWeight="bold" color="primary.main">
+										{eligibilityStats.coveragePercent}%
+									</Typography>
+								</Box>
+								<LinearProgress
+									variant="determinate"
+									value={eligibilityStats.coveragePercent || 0}
+									sx={{
+										height: 8,
+										borderRadius: 4,
+										mb: 2,
+										backgroundColor: alpha(COLORS.neutral.light, 0.3),
+										"& .MuiLinearProgress-bar": {
+											borderRadius: 4,
+											backgroundColor:
+												(eligibilityStats.coveragePercent || 0) > 90
+													? COLORS.success.main
+													: (eligibilityStats.coveragePercent || 0) > 70
+													? COLORS.warning.main
+													: "#EF4444",
+										},
+									}}
+								/>
+								<Grid container spacing={2}>
+									<Grid item xs={6} sm={3}>
+										<Box sx={{ textAlign: "center" }}>
+											<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
+												{eligibilityStats.eligibleUpdated.toLocaleString()}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												✅ Actualizados
+											</Typography>
+										</Box>
+									</Grid>
+									<Grid item xs={6} sm={3}>
+										<Box sx={{ textAlign: "center" }}>
+											<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
+												{eligibilityStats.eligiblePending.toLocaleString()}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												⚠️ Pendientes
+											</Typography>
+										</Box>
+									</Grid>
+									<Grid item xs={6} sm={3}>
+										<Box sx={{ textAlign: "center" }}>
+											<Typography variant="h5" fontWeight="bold" color="#EF4444">
+												{eligibilityStats.eligibleWithErrors.toLocaleString()}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												🔴 Con errores
+											</Typography>
+										</Box>
+									</Grid>
+									<Grid item xs={6} sm={3}>
+										<Box sx={{ textAlign: "center" }}>
+											<Typography variant="h5" fontWeight="bold" color={COLORS.primary.main}>
+												{eligibilityStats.eligible.toLocaleString()}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												Total elegibles
+											</Typography>
+										</Box>
+									</Grid>
+								</Grid>
+							</>
+						) : (
+							<Typography variant="body2" color="text.secondary" textAlign="center">
+								No se pudieron cargar las estadísticas
+							</Typography>
+						)}
+					</Paper>
 				</Box>
 
 				{/* Detailed Sections with Charts */}

@@ -24,6 +24,9 @@ import {
 	IconButton,
 	TextField,
 	Button,
+	LinearProgress,
+	FormControlLabel,
+	Checkbox,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -32,7 +35,7 @@ import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/es";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { CausasPjnService, Causa } from "api/causasPjn";
+import { CausasPjnService, Causa, EligibilityStats } from "api/causasPjn";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
 import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification, Calendar, TickCircle, CloseSquare, UserSquare, Archive, Timer, Repeat } from "iconsax-react";
 import CausaDetalleModal from "./CausaDetalleModal";
@@ -69,6 +72,14 @@ const CarpetasVerificadasApp = () => {
 	const [fueroFilter, setFueroFilter] = useState<string>("todos");
 	const [actualizableFilter, setActualizableFilter] = useState<string>("todos");
 	const [privadaFilter, setPrivadaFilter] = useState<string>("todos");
+
+	// Filtros de elegibilidad
+	const [soloElegibles, setSoloElegibles] = useState<boolean>(false);
+	const [estadoActualizacion, setEstadoActualizacion] = useState<string>("todos");
+
+	// Estadísticas de elegibilidad
+	const [eligibilityStats, setEligibilityStats] = useState<EligibilityStats | null>(null);
+	const [loadingStats, setLoadingStats] = useState(false);
 
 	// Filtros de búsqueda
 	const [searchNumber, setSearchNumber] = useState<string>("");
@@ -220,6 +231,28 @@ const CarpetasVerificadasApp = () => {
 		);
 	}, [page, rowsPerPage, fueroFilter, sortBy, sortOrder, actualizableFilter, privadaFilter]);
 
+	// Efecto para cargar estadísticas de elegibilidad
+	const fetchEligibilityStats = async () => {
+		try {
+			setLoadingStats(true);
+			const response = await CausasPjnService.getEligibilityStats({
+				fuero: fueroFilter === "todos" ? undefined : (fueroFilter as "CIV" | "COM" | "CSS" | "CNT"),
+				thresholdHours: 12,
+			});
+			if (response.success) {
+				setEligibilityStats(response.data.totals);
+			}
+		} catch (error) {
+			console.error("Error fetching eligibility stats:", error);
+		} finally {
+			setLoadingStats(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchEligibilityStats();
+	}, [fueroFilter]);
+
 	// Handlers de paginación
 	const handleChangePage = (_event: unknown, newPage: number) => {
 		setPage(newPage);
@@ -248,6 +281,24 @@ const CarpetasVerificadasApp = () => {
 		setPage(0);
 	};
 
+	// Handler de cambio de checkbox solo elegibles
+	const handleSoloElegiblesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const checked = event.target.checked;
+		setSoloElegibles(checked);
+		if (checked) {
+			// Cuando se activa, forzar filtros de elegibilidad
+			setActualizableFilter("true");
+			setPrivadaFilter("false");
+		}
+		setPage(0);
+	};
+
+	// Handler de cambio de estado de actualización
+	const handleEstadoActualizacionChange = (event: any) => {
+		setEstadoActualizacion(event.target.value);
+		setPage(0);
+	};
+
 	// Handler de refresh
 	const handleRefresh = () => {
 		fetchCausas(
@@ -265,6 +316,7 @@ const CarpetasVerificadasApp = () => {
 			actualizableFilter,
 			privadaFilter,
 		);
+		fetchEligibilityStats();
 	};
 
 	// Handler de búsqueda
@@ -534,27 +586,133 @@ const CarpetasVerificadasApp = () => {
 
 	return (
 		<MainCard title="Carpetas Verificadas (App)">
+			{/* Widget de Cobertura de Actualización */}
 			<Box sx={{ mb: 3 }}>
-				<Card sx={{ backgroundColor: "primary.lighter", border: 1, borderColor: "primary.main" }}>
-					<CardContent>
-						<Stack direction="row" justifyContent="space-between" alignItems="center">
-							<Typography variant="caption" color="text.secondary">
-								Resultados encontrados
+				<Card sx={{ border: 1, borderColor: "divider" }}>
+					<CardContent sx={{ py: 2 }}>
+						{loadingStats ? (
+							<Box display="flex" justifyContent="center" py={2}>
+								<CircularProgress size={24} />
+							</Box>
+						) : eligibilityStats ? (
+							<>
+								<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+									<Typography variant="subtitle2" color="text.secondary">
+										Cobertura de actualización
+									</Typography>
+									<Typography variant="h5" color="primary.main" fontWeight="bold">
+										{eligibilityStats.coveragePercent}% ({eligibilityStats.eligibleUpdated.toLocaleString()} / {eligibilityStats.eligible.toLocaleString()} elegibles)
+									</Typography>
+								</Stack>
+								<LinearProgress
+									variant="determinate"
+									value={eligibilityStats.coveragePercent || 0}
+									sx={{
+										height: 10,
+										borderRadius: 5,
+										mb: 1.5,
+										backgroundColor: "grey.200",
+										"& .MuiLinearProgress-bar": {
+											borderRadius: 5,
+											backgroundColor: (eligibilityStats.coveragePercent || 0) > 90 ? "success.main" : (eligibilityStats.coveragePercent || 0) > 70 ? "warning.main" : "error.main",
+										},
+									}}
+								/>
+								<Stack direction="row" spacing={3} justifyContent="center" flexWrap="wrap">
+									<Tooltip title="Causas actualizadas dentro del umbral de 12 horas">
+										<Chip
+											icon={<TickCircle size={16} variant="Bold" />}
+											label={`Actualizados: ${eligibilityStats.eligibleUpdated.toLocaleString()}`}
+											size="small"
+											color="success"
+											variant="outlined"
+										/>
+									</Tooltip>
+									<Tooltip title="Causas elegibles pendientes de actualización (> 12h)">
+										<Chip
+											icon={<Timer size={16} />}
+											label={`Pendientes: ${eligibilityStats.eligiblePending.toLocaleString()}`}
+											size="small"
+											color="warning"
+											variant="outlined"
+										/>
+									</Tooltip>
+									<Tooltip title="Causas elegibles con errores (en cooldown)">
+										<Chip
+											icon={<CloseSquare size={16} variant="Bold" />}
+											label={`Con errores: ${eligibilityStats.eligibleWithErrors.toLocaleString()}`}
+											size="small"
+											color="error"
+											variant="outlined"
+										/>
+									</Tooltip>
+									<Tooltip title="Causas no elegibles (privadas, archivadas, o update=false)">
+										<Chip
+											label={`No elegibles: ${eligibilityStats.notEligible.toLocaleString()}`}
+											size="small"
+											variant="outlined"
+										/>
+									</Tooltip>
+									<Tooltip title="Causas actualizadas hoy">
+										<Chip
+											icon={<Repeat size={16} />}
+											label={`Hoy: ${eligibilityStats.updatedToday.toLocaleString()}`}
+											size="small"
+											color="info"
+											variant="outlined"
+										/>
+									</Tooltip>
+								</Stack>
+							</>
+						) : (
+							<Typography variant="body2" color="text.secondary" textAlign="center">
+								No se pudieron cargar las estadísticas
 							</Typography>
-							<Typography variant="h4" color="primary.main" fontWeight="bold">
-								{totalCount}/{totalInDatabase}
-							</Typography>
-						</Stack>
-						<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
-							{totalCount === totalInDatabase
-								? "Mostrando todos los resultados"
-								: `Mostrando ${((totalCount / totalInDatabase) * 100).toFixed(1)}% del total`}
-						</Typography>
+						)}
 					</CardContent>
 				</Card>
 			</Box>
+
+			{/* Resumen de resultados */}
+			<Box sx={{ mb: 2 }}>
+				<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Typography variant="body2" color="text.secondary">
+						Resultados: <strong>{totalCount.toLocaleString()}</strong> / {totalInDatabase.toLocaleString()}
+					</Typography>
+				</Stack>
+			</Box>
 			<Grid container spacing={3}>
-				{/* Filtros */}
+				{/* Filtros de elegibilidad */}
+				<Grid item xs={12}>
+					<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" sx={{ mb: 1 }}>
+						<FormControlLabel
+							control={
+								<Checkbox
+									checked={soloElegibles}
+									onChange={handleSoloElegiblesChange}
+									size="small"
+								/>
+							}
+							label={<Typography variant="body2">Solo elegibles para actualización</Typography>}
+						/>
+						<FormControl size="small" sx={{ minWidth: 200 }}>
+							<InputLabel>Estado actualización</InputLabel>
+							<Select
+								value={estadoActualizacion}
+								onChange={handleEstadoActualizacionChange}
+								label="Estado actualización"
+								disabled={!soloElegibles}
+							>
+								<MenuItem value="todos">Todos los estados</MenuItem>
+								<MenuItem value="actualizados">✅ Actualizados ({"<"}12h)</MenuItem>
+								<MenuItem value="pendientes">⚠️ Pendientes ({">"}12h)</MenuItem>
+								<MenuItem value="errores">🔴 Con errores/cooldown</MenuItem>
+							</Select>
+						</FormControl>
+					</Stack>
+				</Grid>
+
+				{/* Filtros principales */}
 				<Grid item xs={12}>
 					<Grid container spacing={2}>
 						<Grid item xs={12} md={6} lg={2}>
@@ -570,7 +728,7 @@ const CarpetasVerificadasApp = () => {
 							</FormControl>
 						</Grid>
 						<Grid item xs={12} md={6} lg={2}>
-							<FormControl fullWidth>
+							<FormControl fullWidth disabled={soloElegibles}>
 								<InputLabel>Actualizable</InputLabel>
 								<Select value={actualizableFilter} onChange={handleActualizableChange} label="Actualizable" size="small">
 									<MenuItem value="todos">Todos</MenuItem>
@@ -580,7 +738,7 @@ const CarpetasVerificadasApp = () => {
 							</FormControl>
 						</Grid>
 						<Grid item xs={12} md={6} lg={2}>
-							<FormControl fullWidth>
+							<FormControl fullWidth disabled={soloElegibles}>
 								<InputLabel>Privada</InputLabel>
 								<Select value={privadaFilter} onChange={handlePrivadaChange} label="Privada" size="small">
 									<MenuItem value="todos">Todos</MenuItem>
