@@ -519,9 +519,6 @@ const WorkerStatistics: React.FC = () => {
 					</Stack>
 				</Box>
 
-				{/* Capacity Stats Widget - Simulador de capacidad */}
-				<CapacityStatsWidget />
-
 				{/* Tabs Navigation */}
 				<Paper sx={{ borderRadius: 2 }}>
 					<Tabs
@@ -554,6 +551,15 @@ const WorkerStatistics: React.FC = () => {
 								<Stack direction="row" spacing={1} alignItems="center">
 									<TrendUp size={18} />
 									<span>Tendencias</span>
+								</Stack>
+							}
+							sx={{ textTransform: "none" }}
+						/>
+						<Tab
+							label={
+								<Stack direction="row" spacing={1} alignItems="center">
+									<Activity size={18} />
+									<span>Capacidad</span>
 								</Stack>
 							}
 							sx={{ textTransform: "none" }}
@@ -1218,6 +1224,11 @@ const WorkerStatistics: React.FC = () => {
 				{/* Tab: Tendencias (daily summary) */}
 				<TabPanel value={activeTab} index={2}>
 					<DailySummaryPanel workerType={workerTypeFilter} />
+				</TabPanel>
+
+				{/* Tab: Capacidad (capacity stats simulator) */}
+				<TabPanel value={activeTab} index={3}>
+					<CapacityStatsWidget />
 				</TabPanel>
 		</Stack>
 		</LocalizationProvider>

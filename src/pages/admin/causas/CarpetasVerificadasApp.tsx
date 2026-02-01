@@ -72,6 +72,7 @@ const CarpetasVerificadasApp = () => {
 	const [fueroFilter, setFueroFilter] = useState<string>("todos");
 	const [actualizableFilter, setActualizableFilter] = useState<string>("todos");
 	const [privadaFilter, setPrivadaFilter] = useState<string>("todos");
+	const [sourceFilter, setSourceFilter] = useState<string>("todos");
 
 	// Filtros de elegibilidad
 	const [soloElegibles, setSoloElegibles] = useState<boolean>(false);
@@ -133,6 +134,7 @@ const CarpetasVerificadasApp = () => {
 		privada?: string,
 		estadoAct?: string,
 		elegibles?: boolean,
+		source?: string,
 	) => {
 		try {
 			setLoading(true);
@@ -202,6 +204,11 @@ const CarpetasVerificadasApp = () => {
 				params.soloElegibles = true;
 			}
 
+			// Filtro por source (origen del documento)
+			if (source && source !== "todos") {
+				params.source = source;
+			}
+
 			console.log("🔍 Parámetros enviados a API:", params);
 
 			const response = await CausasPjnService.getVerifiedCausas(params);
@@ -242,8 +249,9 @@ const CarpetasVerificadasApp = () => {
 			privadaFilter,
 			estadoActualizacion,
 			soloElegibles,
+			sourceFilter,
 		);
-	}, [page, rowsPerPage, fueroFilter, sortBy, sortOrder, actualizableFilter, privadaFilter, estadoActualizacion, soloElegibles]);
+	}, [page, rowsPerPage, fueroFilter, sortBy, sortOrder, actualizableFilter, privadaFilter, estadoActualizacion, soloElegibles, sourceFilter]);
 
 	// Efecto para cargar estadísticas de elegibilidad
 	const fetchEligibilityStats = async () => {
@@ -313,6 +321,12 @@ const CarpetasVerificadasApp = () => {
 		setPage(0);
 	};
 
+	// Handler de cambio de filtro source
+	const handleSourceChange = (event: any) => {
+		setSourceFilter(event.target.value);
+		setPage(0);
+	};
+
 	// Handler de refresh
 	const handleRefresh = () => {
 		fetchCausas(
@@ -331,6 +345,7 @@ const CarpetasVerificadasApp = () => {
 			privadaFilter,
 			estadoActualizacion,
 			soloElegibles,
+			sourceFilter,
 		);
 		fetchEligibilityStats();
 	};
@@ -354,6 +369,7 @@ const CarpetasVerificadasApp = () => {
 			privadaFilter,
 			estadoActualizacion,
 			soloElegibles,
+			sourceFilter,
 		);
 	};
 
@@ -367,10 +383,11 @@ const CarpetasVerificadasApp = () => {
 		setSearchLastUpdate(null);
 		setActualizableFilter("todos");
 		setPrivadaFilter("todos");
+		setSourceFilter("todos");
 		setSoloElegibles(false);
 		setEstadoActualizacion("todos");
 		setPage(0);
-		fetchCausas(0, rowsPerPage, fueroFilter, "", "", "", "", sortBy, sortOrder, null, null, "todos", "todos", "todos", false);
+		fetchCausas(0, rowsPerPage, fueroFilter, "", "", "", "", sortBy, sortOrder, null, null, "todos", "todos", "todos", false, "todos");
 	};
 
 	// Handler para establecer fecha de hoy
@@ -786,6 +803,17 @@ const CarpetasVerificadasApp = () => {
 							</FormControl>
 						</Grid>
 						<Grid item xs={12} md={6} lg={2}>
+							<FormControl fullWidth>
+								<InputLabel>Source</InputLabel>
+								<Select value={sourceFilter} onChange={handleSourceChange} label="Source" size="small">
+									<MenuItem value="todos">Todos</MenuItem>
+									<MenuItem value="app">App</MenuItem>
+									<MenuItem value="pjn-login">PJN Login</MenuItem>
+									<MenuItem value="cache">Cache</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={12} md={6} lg={2}>
 							<TextField
 								fullWidth
 								label="Número"
@@ -948,8 +976,8 @@ const CarpetasVerificadasApp = () => {
 									<TableHead>
 										<TableRow>
 											<TableCell>Fuero</TableCell>
-											<TableCell>Número</TableCell>
-											<TableCell>Año</TableCell>
+											<TableCell>Expediente</TableCell>
+											<TableCell>Source</TableCell>
 											<TableCell>Carátula</TableCell>
 											<TableCell>Juzgado</TableCell>
 											<TableCell>Objeto</TableCell>
@@ -981,10 +1009,17 @@ const CarpetasVerificadasApp = () => {
 												</TableCell>
 												<TableCell>
 													<Typography variant="body2" fontWeight="bold">
-														{causa.number}
+														{causa.number}/{causa.year}
 													</Typography>
 												</TableCell>
-												<TableCell>{causa.year}</TableCell>
+												<TableCell>
+													<Chip
+														label={(causa as any).source || "N/A"}
+														size="small"
+														variant="outlined"
+														color={(causa as any).source === "app" ? "primary" : (causa as any).source === "pjn-login" ? "secondary" : "default"}
+													/>
+												</TableCell>
 												<TableCell sx={{ maxWidth: 250 }}>
 													<Typography variant="body2" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
 														{causa.caratula || "Sin carátula"}
