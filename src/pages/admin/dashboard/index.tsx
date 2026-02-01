@@ -39,7 +39,9 @@ import { useSnackbar } from "notistack";
 import { WorkersService } from "api/workers";
 import adminAxios from "utils/adminAxios";
 import { CausasPjnService, EligibilityStats } from "api/causasPjn";
+import { StuckDocumentsService, StuckDocumentsStats } from "api/stuckDocuments";
 import LinearProgress from "@mui/material/LinearProgress";
+import { Warning2 } from "iconsax-react";
 
 // Simplified color palette with clear hierarchy
 // Rule: 1 primary + 2 semantic + 1 premium-only
@@ -546,6 +548,8 @@ const AdminDashboard = () => {
 	const [loadingOpenai, setLoadingOpenai] = useState(false);
 	const [eligibilityStats, setEligibilityStats] = useState<EligibilityStats | null>(null);
 	const [loadingEligibility, setLoadingEligibility] = useState(false);
+	const [stuckDocumentsStats, setStuckDocumentsStats] = useState<StuckDocumentsStats | null>(null);
+	const [loadingStuckDocuments, setLoadingStuckDocuments] = useState(false);
 
 	const fetchEligibilityStats = useCallback(async () => {
 		try {
@@ -558,6 +562,20 @@ const AdminDashboard = () => {
 			console.error("Error fetching eligibility stats:", error);
 		} finally {
 			setLoadingEligibility(false);
+		}
+	}, []);
+
+	const fetchStuckDocumentsStats = useCallback(async () => {
+		try {
+			setLoadingStuckDocuments(true);
+			const response = await StuckDocumentsService.getStats(24);
+			if (response.success) {
+				setStuckDocumentsStats(response.data);
+			}
+		} catch (error: any) {
+			console.error("Error fetching stuck documents stats:", error);
+		} finally {
+			setLoadingStuckDocuments(false);
 		}
 	}, []);
 
@@ -630,7 +648,8 @@ const AdminDashboard = () => {
 		fetchCapsolverBalance();
 		fetchOpenaiBalance();
 		fetchEligibilityStats();
-	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance, fetchOpenaiBalance, fetchEligibilityStats]);
+		fetchStuckDocumentsStats();
+	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance, fetchOpenaiBalance, fetchEligibilityStats, fetchStuckDocumentsStats]);
 
 	useRequestQueueRefresh(fetchData);
 
@@ -640,6 +659,7 @@ const AdminDashboard = () => {
 		fetchCapsolverBalance();
 		fetchOpenaiBalance();
 		fetchEligibilityStats();
+		fetchStuckDocumentsStats();
 	};
 
 	// Chart data - Consistent colors: Green=Active/Verified, Gray=Inactive/Unverified
@@ -984,6 +1004,137 @@ const AdminDashboard = () => {
 										</Box>
 									</Grid>
 								</Grid>
+							</>
+						) : (
+							<Typography variant="body2" color="text.secondary" textAlign="center">
+								No se pudieron cargar las estadísticas
+							</Typography>
+						)}
+					</Paper>
+				</Box>
+
+				{/* Stuck Documents Worker Widget */}
+				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
+					<Paper
+						elevation={0}
+						onClick={() => navigate("/admin/causas/verified-app")}
+						sx={{
+							p: { xs: 1.5, sm: 2.5 },
+							borderRadius: 2,
+							bgcolor: theme.palette.background.paper,
+							border: `1px solid ${theme.palette.divider}`,
+							cursor: "pointer",
+							transition: "all 0.2s ease",
+							"&:hover": {
+								boxShadow: theme.shadows[2],
+								borderColor: COLORS.warning.light,
+							},
+						}}
+					>
+						<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+							<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+								<Warning2 size={20} style={{ color: COLORS.warning.main }} />
+								<Typography variant="subtitle1" fontWeight="bold">
+									Stuck Documents Worker
+								</Typography>
+								{stuckDocumentsStats?.worker && (
+									<Chip
+										size="small"
+										label={stuckDocumentsStats.worker.enabled ? "Activo" : "Deshabilitado"}
+										sx={{
+											bgcolor: stuckDocumentsStats.worker.enabled ? alpha(COLORS.success.main, 0.15) : alpha(COLORS.neutral.main, 0.15),
+											color: stuckDocumentsStats.worker.enabled ? COLORS.success.main : COLORS.neutral.main,
+											fontWeight: 600,
+											fontSize: "0.65rem",
+										}}
+									/>
+								)}
+							</Box>
+							<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
+						</Box>
+
+						{loadingStuckDocuments ? (
+							<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+								<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
+							</Box>
+						) : stuckDocumentsStats ? (
+							<>
+								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+									<Typography variant="body2" color="text.secondary">
+										Tasa de éxito (últimas 24h)
+									</Typography>
+									<Typography variant="h6" fontWeight="bold" color="primary.main">
+										{stuckDocumentsStats.recent.successRate}
+									</Typography>
+								</Box>
+								<LinearProgress
+									variant="determinate"
+									value={parseFloat(stuckDocumentsStats.recent.successRate) || 0}
+									sx={{
+										height: 8,
+										borderRadius: 4,
+										mb: 2,
+										backgroundColor: alpha(COLORS.neutral.light, 0.3),
+										"& .MuiLinearProgress-bar": {
+											borderRadius: 4,
+											backgroundColor:
+												parseFloat(stuckDocumentsStats.recent.successRate) > 50
+													? COLORS.success.main
+													: parseFloat(stuckDocumentsStats.recent.successRate) > 20
+													? COLORS.warning.main
+													: "#EF4444",
+										},
+									}}
+								/>
+								<Grid container spacing={2}>
+									<Grid item xs={6} sm={3}>
+										<Box sx={{ textAlign: "center" }}>
+											<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
+												{stuckDocumentsStats.pending.total.toLocaleString()}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												⏳ Pendientes
+											</Typography>
+										</Box>
+									</Grid>
+									<Grid item xs={6} sm={3}>
+										<Box sx={{ textAlign: "center" }}>
+											<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
+												{stuckDocumentsStats.totals.fixed.toLocaleString()}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												✅ Reparados
+											</Typography>
+										</Box>
+									</Grid>
+									<Grid item xs={6} sm={3}>
+										<Box sx={{ textAlign: "center" }}>
+											<Typography variant="h5" fontWeight="bold" color="#EF4444">
+												{stuckDocumentsStats.totals.failed.toLocaleString()}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												🔴 Fallidos
+											</Typography>
+										</Box>
+									</Grid>
+									<Grid item xs={6} sm={3}>
+										<Box sx={{ textAlign: "center" }}>
+											<Typography variant="h5" fontWeight="bold" color={COLORS.primary.main}>
+												{stuckDocumentsStats.totals.processed.toLocaleString()}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												Total procesados
+											</Typography>
+										</Box>
+									</Grid>
+								</Grid>
+								{stuckDocumentsStats.repeatedFailures && stuckDocumentsStats.repeatedFailures.length > 0 && (
+									<Box sx={{ mt: 2, pt: 2, borderTop: `1px dashed ${theme.palette.divider}` }}>
+										<Typography variant="caption" color="error.main" fontWeight="bold">
+											⚠️ {stuckDocumentsStats.repeatedFailures.length} documento(s) con fallos repetidos
+										</Typography>
+									</Box>
+								)}
 							</>
 						) : (
 							<Typography variant="body2" color="text.secondary" textAlign="center">

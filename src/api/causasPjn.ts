@@ -329,6 +329,30 @@ export class CausasPjnService {
 		}
 	}
 
+	/**
+	 * Marcar causa como archivada (excluir del procesamiento de stuck documents)
+	 */
+	static async archiveCausa(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string, reason?: string): Promise<{ success: boolean; message: string }> {
+		try {
+			const response = await pjnAxios.post(`/api/workers/stuck-documents/archive/${fuero}/${id}`, { reason });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Desarchivar causa (volver a incluir en procesamiento)
+	 */
+	static async unarchiveCausa(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string): Promise<{ success: boolean; message: string }> {
+		try {
+			const response = await pjnAxios.post(`/api/workers/stuck-documents/unarchive/${fuero}/${id}`);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
 	// Manejo de errores
 	static handleError(error: any): Error {
 		// Re-throw axios errors for interceptor handling
