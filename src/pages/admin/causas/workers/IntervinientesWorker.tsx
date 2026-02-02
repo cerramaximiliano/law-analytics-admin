@@ -1,5 +1,5 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
 	Box,
 	Card,
@@ -21,8 +21,26 @@ import {
 	Divider,
 	useTheme,
 	alpha,
+	Switch,
+	Button,
+	Skeleton,
+	TextField,
+	FormControlLabel,
+	Checkbox,
+	IconButton,
+	Tooltip,
+	LinearProgress,
 } from "@mui/material";
-import { Setting2, InfoCircle, Chart, MessageQuestion, TickCircle, CloseCircle, DocumentText } from "iconsax-react";
+import { Setting2, InfoCircle, Chart, MessageQuestion, TickCircle, CloseCircle, DocumentText, Refresh, People, Edit2 } from "iconsax-react";
+import { useSnackbar } from "notistack";
+import ExtraInfoConfigService, {
+	ExtraInfoConfig,
+	ExtraInfoStatus,
+	ExtraInfoStatsSummary,
+	UsersWithSyncResponse,
+	EligibleCountResponse,
+	IntervinientesStatsResponse,
+} from "api/extraInfoConfig";
 
 // Interfaz para tabs laterales
 interface TabPanelProps {
@@ -48,21 +66,144 @@ function TabPanel(props: TabPanelProps) {
 	);
 }
 
+// Helper para formatear fecha
+const formatDate = (dateStr?: string): string => {
+	if (!dateStr) return "N/A";
+	return new Date(dateStr).toLocaleString("es-AR", {
+		day: "2-digit",
+		month: "2-digit",
+		year: "numeric",
+		hour: "2-digit",
+		minute: "2-digit",
+	});
+};
+
+// Helper para nombres de días
+const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
 const IntervinientesWorker = () => {
 	const theme = useTheme();
+	const { enqueueSnackbar } = useSnackbar();
 	const [activeTab, setActiveTab] = useState(0);
+	const [loading, setLoading] = useState(true);
+	const [refreshing, setRefreshing] = useState(false);
+
+	// Estados de datos
+	const [config, setConfig] = useState<ExtraInfoConfig | null>(null);
+	const [status, setStatus] = useState<ExtraInfoStatus | null>(null);
+	const [stats, setStats] = useState<ExtraInfoStatsSummary | null>(null);
+	const [usersWithSync, setUsersWithSync] = useState<UsersWithSyncResponse | null>(null);
+	const [eligibleCount, setEligibleCount] = useState<EligibleCountResponse | null>(null);
+	const [intervinientesStats, setIntervinientesStats] = useState<IntervinientesStatsResponse | null>(null);
+
+	// Estado de edición
+	const [editing, setEditing] = useState(false);
+	const [editValues, setEditValues] = useState<Partial<ExtraInfoConfig>>({});
 
 	const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
 		setActiveTab(newValue);
 	};
 
+	// Cargar datos
+	const fetchData = async (showRefreshing = false) => {
+		try {
+			if (showRefreshing) setRefreshing(true);
+			else setLoading(true);
+
+			const [configRes, statusRes, statsRes] = await Promise.all([
+				ExtraInfoConfigService.getConfig(),
+				ExtraInfoConfigService.getStatus(),
+				ExtraInfoConfigService.getStats(),
+			]);
+
+			if (configRes.success) setConfig(configRes.data);
+			if (statusRes.success) setStatus(statusRes.data);
+			if (statsRes.success) setStats(statsRes.data);
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al cargar datos", { variant: "error" });
+		} finally {
+			setLoading(false);
+			setRefreshing(false);
+		}
+	};
+
+	// Cargar datos de estadísticas (tab específico)
+	const fetchStatsData = async () => {
+		try {
+			const [usersRes, eligibleRes, intervRes] = await Promise.all([
+				ExtraInfoConfigService.getUsersWithSync(),
+				ExtraInfoConfigService.getEligibleCount(),
+				ExtraInfoConfigService.getIntervinientesStats(),
+			]);
+
+			if (usersRes.success) setUsersWithSync(usersRes.data);
+			if (eligibleRes.success) setEligibleCount(eligibleRes.data);
+			if (intervRes.success) setIntervinientesStats(intervRes.data);
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al cargar estadísticas", { variant: "error" });
+		}
+	};
+
+	useEffect(() => {
+		fetchData();
+	}, []);
+
+	// Cargar estadísticas cuando se selecciona el tab
+	useEffect(() => {
+		if (activeTab === 2 && !usersWithSync) {
+			fetchStatsData();
+		}
+	}, [activeTab]);
+
+	// Toggle enabled
+	const handleToggleEnabled = async () => {
+		try {
+			const response = await ExtraInfoConfigService.toggleEnabled();
+			if (response.success) {
+				enqueueSnackbar(`Worker ${response.data.enabled ? "habilitado" : "deshabilitado"}`, { variant: "success" });
+				fetchData(true);
+			}
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al cambiar estado", { variant: "error" });
+		}
+	};
+
+	// Guardar configuración
+	const handleSaveConfig = async () => {
+		try {
+			const response = await ExtraInfoConfigService.updateConfig(editValues);
+			if (response.success) {
+				enqueueSnackbar("Configuración actualizada", { variant: "success" });
+				setEditing(false);
+				setEditValues({});
+				fetchData(true);
+			}
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al guardar", { variant: "error" });
+		}
+	};
+
+	// Resetear estadísticas
+	const handleResetStats = async () => {
+		try {
+			const response = await ExtraInfoConfigService.resetStats();
+			if (response.success) {
+				enqueueSnackbar("Estadísticas reseteadas", { variant: "success" });
+				fetchData(true);
+				fetchStatsData();
+			}
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al resetear", { variant: "error" });
+		}
+	};
+
 	// Criterios de elegibilidad
 	const eligibilityCriteria = [
-		{ field: "verified", condition: "=== true", description: "Documento verificado en PJN", required: true },
-		{ field: "isValid", condition: "=== true", description: "Expediente existe y es accesible", required: true },
-		{ field: "isPrivate", condition: "!== true", description: "No es documento privado", required: true },
-		{ field: "lastUpdate", condition: "exists", description: "Tiene actualización registrada", required: true },
-		{ field: "detailsLoaded", condition: "false/null/undefined", description: "No procesado por extra-info", required: true },
+		{ field: "verified", condition: "=== true", description: "Documento verificado en PJN", active: config?.eligibility?.requireVerified },
+		{ field: "isValid", condition: "=== true", description: "Expediente existe y es accesible", active: config?.eligibility?.requireValid },
+		{ field: "isPrivate", condition: "!== true", description: "No es documento privado", active: config?.eligibility?.excludePrivate },
+		{ field: "lastUpdate", condition: "exists", description: "Tiene actualización registrada", active: config?.eligibility?.requireLastUpdate },
+		{ field: "detailsLoaded", condition: "false/null/undefined", description: "No procesado por extra-info", active: true },
 	];
 
 	// Flujo del worker
@@ -103,43 +244,119 @@ const IntervinientesWorker = () => {
 		},
 	];
 
-	// Contenido del tab de Información
-	const InfoContent = () => (
+	// Contenido del tab de Información/Configuración
+	const ConfigContent = () => (
 		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-			{/* Descripción general */}
-			<Card variant="outlined" sx={{ backgroundColor: alpha(theme.palette.primary.main, 0.02) }}>
+			{/* Estado actual */}
+			<Card variant="outlined" sx={{ backgroundColor: alpha(status?.isRunning ? theme.palette.success.main : theme.palette.grey[500], 0.05) }}>
 				<CardContent>
-					<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-						Descripción General
-					</Typography>
-					<Typography variant="body2" paragraph>
-						El <strong>Extra-Info Worker</strong> es el proceso encargado de extraer información adicional de los expedientes
-						desde el sitio web del PJN. Su principal función es obtener los <strong>intervinientes</strong> (partes y letrados)
-						de cada causa judicial.
-					</Typography>
-					<Typography variant="body2">
-						Los intervinientes extraídos se guardan en la colección <code>intervinientes</code> y opcionalmente se sincronizan
-						como contactos en los folders de los usuarios que tienen habilitada esta funcionalidad.
-					</Typography>
+					<Stack direction="row" justifyContent="space-between" alignItems="center">
+						<Stack direction="row" spacing={2} alignItems="center">
+							<Box
+								sx={{
+									width: 12,
+									height: 12,
+									borderRadius: "50%",
+									backgroundColor: status?.isRunning ? theme.palette.success.main : theme.palette.grey[400],
+									animation: status?.isRunning ? "pulse 2s infinite" : "none",
+									"@keyframes pulse": {
+										"0%": { opacity: 1 },
+										"50%": { opacity: 0.5 },
+										"100%": { opacity: 1 },
+									},
+								}}
+							/>
+							<Box>
+								<Typography variant="subtitle1" fontWeight="bold">
+									Estado del Worker
+								</Typography>
+								<Typography variant="body2" color="text.secondary">
+									{status?.isRunning ? "Ejecutando" : "Detenido"} • Ciclos: {status?.cycleCount || 0}
+								</Typography>
+							</Box>
+						</Stack>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<FormControlLabel
+								control={<Switch checked={config?.enabled || false} onChange={handleToggleEnabled} color="primary" />}
+								label={config?.enabled ? "Habilitado" : "Deshabilitado"}
+							/>
+							<Tooltip title="Actualizar">
+								<IconButton size="small" onClick={() => fetchData(true)} disabled={refreshing}>
+									<Refresh size={18} className={refreshing ? "spin" : ""} />
+								</IconButton>
+							</Tooltip>
+						</Stack>
+					</Stack>
+					{status?.lastCycleAt && (
+						<Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+							Último ciclo: {formatDate(status.lastCycleAt)}
+						</Typography>
+					)}
+					{status?.lastError && (
+						<Alert severity="error" sx={{ mt: 1 }}>
+							<Typography variant="body2">
+								<strong>Último error:</strong> {status.lastError.message}
+							</Typography>
+							<Typography variant="caption">{formatDate(status.lastError.timestamp)}</Typography>
+						</Alert>
+					)}
 				</CardContent>
 			</Card>
 
 			{/* Configuración del worker */}
 			<Card variant="outlined">
 				<CardContent>
-					<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-						Configuración del Worker
-					</Typography>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+						<Typography variant="subtitle1" fontWeight="bold">
+							Configuración del Worker
+						</Typography>
+						{!editing ? (
+							<Button size="small" startIcon={<Edit2 size={16} />} onClick={() => setEditing(true)}>
+								Editar
+							</Button>
+						) : (
+							<Stack direction="row" spacing={1}>
+								<Button size="small" variant="contained" onClick={handleSaveConfig}>
+									Guardar
+								</Button>
+								<Button
+									size="small"
+									onClick={() => {
+										setEditing(false);
+										setEditValues({});
+									}}
+								>
+									Cancelar
+								</Button>
+							</Stack>
+						)}
+					</Stack>
+
 					<Grid container spacing={2}>
 						<Grid item xs={6} sm={3}>
 							<Stack spacing={0.5}>
 								<Typography variant="caption" color="text.secondary">
 									Cron Schedule
 								</Typography>
-								<Chip label="*/30 * * * *" size="small" sx={{ fontFamily: "monospace" }} />
-								<Typography variant="caption" color="text.secondary">
-									Cada 30 minutos
-								</Typography>
+								{editing ? (
+									<TextField
+										size="small"
+										value={editValues.schedule?.cronExpression ?? config?.schedule?.cronExpression ?? ""}
+										onChange={(e) =>
+											setEditValues({
+												...editValues,
+												schedule: { ...editValues.schedule, cronExpression: e.target.value } as any,
+											})
+										}
+									/>
+								) : (
+									<>
+										<Chip label={config?.schedule?.cronExpression || "*/30 * * * *"} size="small" sx={{ fontFamily: "monospace" }} />
+										<Typography variant="caption" color="text.secondary">
+											Cada 30 minutos
+										</Typography>
+									</>
+								)}
 							</Stack>
 						</Grid>
 						<Grid item xs={6} sm={3}>
@@ -147,32 +364,119 @@ const IntervinientesWorker = () => {
 								<Typography variant="caption" color="text.secondary">
 									Batch Size
 								</Typography>
-								<Chip label="5" size="small" color="primary" />
-								<Typography variant="caption" color="text.secondary">
-									Documentos por ciclo
-								</Typography>
+								{editing ? (
+									<TextField
+										size="small"
+										type="number"
+										value={editValues.batch_size ?? config?.batch_size ?? 5}
+										onChange={(e) => setEditValues({ ...editValues, batch_size: parseInt(e.target.value) })}
+										inputProps={{ min: 1, max: 20 }}
+									/>
+								) : (
+									<>
+										<Chip label={config?.batch_size || 5} size="small" color="primary" />
+										<Typography variant="caption" color="text.secondary">
+											Documentos por ciclo
+										</Typography>
+									</>
+								)}
 							</Stack>
 						</Grid>
 						<Grid item xs={6} sm={3}>
 							<Stack spacing={0.5}>
 								<Typography variant="caption" color="text.secondary">
-									Modos disponibles
+									Modo de procesamiento
+								</Typography>
+								<Chip label={config?.processing_mode || "all"} size="small" variant="outlined" />
+							</Stack>
+						</Grid>
+						<Grid item xs={6} sm={3}>
+							<Stack spacing={0.5}>
+								<Typography variant="caption" color="text.secondary">
+									Sync Contactos
+								</Typography>
+								<Chip
+									label={config?.syncContactsEnabled ? "Habilitado" : "Deshabilitado"}
+									size="small"
+									color={config?.syncContactsEnabled ? "success" : "default"}
+								/>
+							</Stack>
+						</Grid>
+					</Grid>
+
+					<Divider sx={{ my: 2 }} />
+
+					{/* Horario de trabajo */}
+					<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+						Horario de Trabajo
+					</Typography>
+					<Grid container spacing={2}>
+						<Grid item xs={6} sm={3}>
+							<Stack spacing={0.5}>
+								<Typography variant="caption" color="text.secondary">
+									Hora inicio
+								</Typography>
+								{editing ? (
+									<TextField
+										size="small"
+										type="number"
+										value={editValues.schedule?.workStartHour ?? config?.schedule?.workStartHour ?? 8}
+										onChange={(e) =>
+											setEditValues({
+												...editValues,
+												schedule: { ...editValues.schedule, workStartHour: parseInt(e.target.value) } as any,
+											})
+										}
+										inputProps={{ min: 0, max: 23 }}
+									/>
+								) : (
+									<Typography variant="body2">{config?.schedule?.workStartHour || 8}:00</Typography>
+								)}
+							</Stack>
+						</Grid>
+						<Grid item xs={6} sm={3}>
+							<Stack spacing={0.5}>
+								<Typography variant="caption" color="text.secondary">
+									Hora fin
+								</Typography>
+								{editing ? (
+									<TextField
+										size="small"
+										type="number"
+										value={editValues.schedule?.workEndHour ?? config?.schedule?.workEndHour ?? 22}
+										onChange={(e) =>
+											setEditValues({
+												...editValues,
+												schedule: { ...editValues.schedule, workEndHour: parseInt(e.target.value) } as any,
+											})
+										}
+										inputProps={{ min: 0, max: 24 }}
+									/>
+								) : (
+									<Typography variant="body2">{config?.schedule?.workEndHour || 22}:00</Typography>
+								)}
+							</Stack>
+						</Grid>
+						<Grid item xs={6} sm={3}>
+							<Stack spacing={0.5}>
+								<Typography variant="caption" color="text.secondary">
+									Días de trabajo
 								</Typography>
 								<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-									<Chip label="civil" size="small" variant="outlined" />
-									<Chip label="ss" size="small" variant="outlined" />
-									<Chip label="trabajo" size="small" variant="outlined" />
-									<Chip label="comercial" size="small" variant="outlined" />
-									<Chip label="all" size="small" variant="outlined" />
+									{(config?.schedule?.workDays || [1, 2, 3, 4, 5]).map((day) => (
+										<Chip key={day} label={dayNames[day]} size="small" variant="outlined" />
+									))}
 								</Stack>
 							</Stack>
 						</Grid>
 						<Grid item xs={6} sm={3}>
 							<Stack spacing={0.5}>
 								<Typography variant="caption" color="text.secondary">
-									Captcha Provider
+									Zona horaria
 								</Typography>
-								<Chip label="2Captcha" size="small" color="secondary" />
+								<Typography variant="body2" sx={{ fontSize: "0.75rem" }}>
+									{config?.schedule?.timezone || "America/Argentina/Buenos_Aires"}
+								</Typography>
 							</Stack>
 						</Grid>
 					</Grid>
@@ -195,7 +499,7 @@ const IntervinientesWorker = () => {
 									<TableCell>Campo</TableCell>
 									<TableCell>Condición</TableCell>
 									<TableCell>Descripción</TableCell>
-									<TableCell align="center">Requerido</TableCell>
+									<TableCell align="center">Activo</TableCell>
 								</TableRow>
 							</TableHead>
 							<TableBody>
@@ -213,7 +517,7 @@ const IntervinientesWorker = () => {
 											<Typography variant="body2">{criteria.description}</Typography>
 										</TableCell>
 										<TableCell align="center">
-											{criteria.required ? (
+											{criteria.active ? (
 												<TickCircle size={18} color={theme.palette.success.main} />
 											) : (
 												<CloseCircle size={18} color={theme.palette.grey[400]} />
@@ -224,6 +528,15 @@ const IntervinientesWorker = () => {
 							</TableBody>
 						</Table>
 					</TableContainer>
+
+					{config?.eligibility?.testMode?.enabled && (
+						<Alert severity="warning" sx={{ mt: 2 }}>
+							<Typography variant="body2">
+								<strong>Modo de prueba activo:</strong> Solo se procesan causas de{" "}
+								{config.eligibility.testMode.testUserIds?.length || 0} usuario(s) de prueba.
+							</Typography>
+						</Alert>
+					)}
 				</CardContent>
 			</Card>
 		</Stack>
@@ -232,7 +545,6 @@ const IntervinientesWorker = () => {
 	// Contenido del tab de Flujo
 	const FlowContent = () => (
 		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-			{/* Diagrama del flujo */}
 			<Card variant="outlined">
 				<CardContent>
 					<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
@@ -267,13 +579,7 @@ const IntervinientesWorker = () => {
 								</Box>
 							</Stack>
 
-							<Box
-								sx={{
-									ml: 2,
-									pl: 3,
-									borderLeft: `2px solid ${alpha(phase.color, 0.3)}`,
-								}}
-							>
+							<Box sx={{ ml: 2, pl: 3, borderLeft: `2px solid ${alpha(phase.color, 0.3)}` }}>
 								{phase.steps.map((step, stepIndex) => (
 									<Stack key={stepIndex} direction="row" spacing={1} alignItems="flex-start" sx={{ mb: 0.75 }}>
 										<Box
@@ -299,35 +605,37 @@ const IntervinientesWorker = () => {
 				</CardContent>
 			</Card>
 
-			{/* Nota sobre sincronización */}
 			<Alert severity="info" variant="outlined">
 				<Typography variant="body2">
-					<strong>Importante:</strong> La extracción de intervinientes <strong>siempre ocurre</strong> y se guardan en la
-					colección <code>intervinientes</code>. Solo la sincronización a contactos está condicionada a la preferencia
-					del usuario (<code>preferences.pjn.syncContactsFromIntervinientes === true</code>).
+					<strong>Importante:</strong> La extracción de intervinientes <strong>siempre ocurre</strong>. Solo la sincronización a
+					contactos está condicionada a <code>preferences.pjn.syncContactsFromIntervinientes === true</code>.
 				</Typography>
 			</Alert>
 		</Stack>
 	);
 
-	// Contenido del tab de Estadísticas (placeholder)
+	// Contenido del tab de Estadísticas
 	const StatsContent = () => (
 		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-			<Alert severity="warning" variant="outlined">
-				<Typography variant="body2">
-					Las estadísticas del worker extra-info estarán disponibles próximamente.
-				</Typography>
-			</Alert>
-
-			{/* Placeholder para estadísticas futuras */}
+			{/* Estadísticas globales */}
 			<Grid container spacing={2}>
 				<Grid item xs={6} sm={3}>
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5 }}>
 							<Typography variant="caption" color="text.secondary">
-								Documentos Procesados
+								Docs Procesados
 							</Typography>
-							<Typography variant="h5">-</Typography>
+							<Typography variant="h5">{stats?.global?.documentsProcessed?.toLocaleString() || 0}</Typography>
+							<LinearProgress
+								variant="determinate"
+								value={
+									stats?.global?.documentsProcessed && stats?.global?.documentsSuccess
+										? (stats.global.documentsSuccess / stats.global.documentsProcessed) * 100
+										: 0
+								}
+								color="success"
+								sx={{ mt: 1, height: 4, borderRadius: 2 }}
+							/>
 						</CardContent>
 					</Card>
 				</Grid>
@@ -337,7 +645,13 @@ const IntervinientesWorker = () => {
 							<Typography variant="caption" color="text.secondary">
 								Intervinientes Extraídos
 							</Typography>
-							<Typography variant="h5">-</Typography>
+							<Typography variant="h5" color="info.main">
+								{intervinientesStats?.totalIntervinientes?.toLocaleString() || 0}
+							</Typography>
+							<Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+								<Chip label={`P: ${intervinientesStats?.byTipo?.PARTE || 0}`} size="small" variant="outlined" />
+								<Chip label={`L: ${intervinientesStats?.byTipo?.LETRADO || 0}`} size="small" variant="outlined" />
+							</Stack>
 						</CardContent>
 					</Card>
 				</Grid>
@@ -347,7 +661,9 @@ const IntervinientesWorker = () => {
 							<Typography variant="caption" color="text.secondary">
 								Contactos Sincronizados
 							</Typography>
-							<Typography variant="h5">-</Typography>
+							<Typography variant="h5" color="success.main">
+								{stats?.global?.contactsSynced?.toLocaleString() || 0}
+							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
@@ -355,13 +671,139 @@ const IntervinientesWorker = () => {
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5 }}>
 							<Typography variant="caption" color="text.secondary">
-								Usuarios con Sync Habilitado
+								Errores
 							</Typography>
-							<Typography variant="h5">-</Typography>
+							<Typography variant="h5" color="error.main">
+								{stats?.global?.documentsError?.toLocaleString() || 0}
+							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
 			</Grid>
+
+			{/* Usuarios con sync */}
+			<Card variant="outlined">
+				<CardContent>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<People size={20} />
+							<Typography variant="subtitle1" fontWeight="bold">
+								Usuarios con Sincronización Habilitada
+							</Typography>
+						</Stack>
+						<Button size="small" startIcon={<Refresh size={16} />} onClick={fetchStatsData}>
+							Actualizar
+						</Button>
+					</Stack>
+
+					{usersWithSync ? (
+						<>
+							<Grid container spacing={2} sx={{ mb: 2 }}>
+								<Grid item xs={4}>
+									<Typography variant="caption" color="text.secondary">
+										Total Usuarios
+									</Typography>
+									<Typography variant="h6">{usersWithSync.totalUsers}</Typography>
+								</Grid>
+								<Grid item xs={4}>
+									<Typography variant="caption" color="text.secondary">
+										Con Sync Habilitado
+									</Typography>
+									<Typography variant="h6" color="success.main">
+										{usersWithSync.usersWithSyncEnabled}
+									</Typography>
+								</Grid>
+								<Grid item xs={4}>
+									<Typography variant="caption" color="text.secondary">
+										Porcentaje
+									</Typography>
+									<Typography variant="h6">{usersWithSync.percentage}%</Typography>
+								</Grid>
+							</Grid>
+
+							{usersWithSync.users.length > 0 && (
+								<TableContainer component={Paper} variant="outlined">
+									<Table size="small">
+										<TableHead>
+											<TableRow>
+												<TableCell>Email</TableCell>
+												<TableCell>Nombre</TableCell>
+												<TableCell align="center">Sync</TableCell>
+											</TableRow>
+										</TableHead>
+										<TableBody>
+											{usersWithSync.users.slice(0, 10).map((user) => (
+												<TableRow key={user._id}>
+													<TableCell>{user.email}</TableCell>
+													<TableCell>{user.name || "-"}</TableCell>
+													<TableCell align="center">
+														<TickCircle size={16} color={theme.palette.success.main} />
+													</TableCell>
+												</TableRow>
+											))}
+										</TableBody>
+									</Table>
+								</TableContainer>
+							)}
+						</>
+					) : (
+						<Skeleton variant="rectangular" height={100} />
+					)}
+				</CardContent>
+			</Card>
+
+			{/* Documentos elegibles */}
+			<Card variant="outlined">
+				<CardContent>
+					<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+						Documentos Elegibles para Procesar
+					</Typography>
+
+					{eligibleCount ? (
+						<Grid container spacing={2}>
+							<Grid item xs={12} sm={3}>
+								<Card variant="outlined" sx={{ backgroundColor: alpha(theme.palette.primary.main, 0.05) }}>
+									<CardContent sx={{ py: 1.5 }}>
+										<Typography variant="caption" color="text.secondary">
+											Total Elegibles
+										</Typography>
+										<Typography variant="h4" color="primary.main">
+											{eligibleCount.total.toLocaleString()}
+										</Typography>
+									</CardContent>
+								</Card>
+							</Grid>
+							{Object.entries(eligibleCount.byFuero || {}).map(([fuero, count]) => (
+								<Grid item xs={6} sm={2.25} key={fuero}>
+									<Card variant="outlined">
+										<CardContent sx={{ py: 1.5 }}>
+											<Typography variant="caption" color="text.secondary" sx={{ textTransform: "capitalize" }}>
+												{fuero}
+											</Typography>
+											<Typography variant="h6">{(count as number)?.toLocaleString() || 0}</Typography>
+										</CardContent>
+									</Card>
+								</Grid>
+							))}
+						</Grid>
+					) : (
+						<Skeleton variant="rectangular" height={80} />
+					)}
+
+					{eligibleCount?.testMode && (
+						<Alert severity="warning" sx={{ mt: 2 }}>
+							Modo de prueba: {eligibleCount.testUserCausasCount} causas de usuarios de prueba
+						</Alert>
+					)}
+				</CardContent>
+			</Card>
+
+			{/* Botón reset stats */}
+			<Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+				<Button variant="outlined" color="warning" onClick={handleResetStats}>
+					Resetear Estadísticas
+				</Button>
+			</Box>
 		</Stack>
 	);
 
@@ -375,7 +817,6 @@ const IntervinientesWorker = () => {
 						<Typography variant="h6">Guía del Extra-Info Worker</Typography>
 					</Stack>
 
-					{/* Archivos principales */}
 					<Box sx={{ mt: 2 }}>
 						<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
 							Archivos Principales
@@ -389,60 +830,33 @@ const IntervinientesWorker = () => {
 									</TableRow>
 								</TableHead>
 								<TableBody>
-									<TableRow>
-										<TableCell>
-											<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-												extra-info-worker.js
-											</Typography>
-										</TableCell>
-										<TableCell>Worker principal, orquesta el proceso</TableCell>
-									</TableRow>
-									<TableRow>
-										<TableCell>
-											<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-												extra-info-navigation.js
-											</Typography>
-										</TableCell>
-										<TableCell>Navegación a PJN y resolución de captcha</TableCell>
-									</TableRow>
-									<TableRow>
-										<TableCell>
-											<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-												extra-info-extraction.js
-											</Typography>
-										</TableCell>
-										<TableCell>Extracción de datos de la tabla de intervinientes</TableCell>
-									</TableRow>
-									<TableRow>
-										<TableCell>
-											<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-												intervinientes-contact-sync.js
-											</Typography>
-										</TableCell>
-										<TableCell>Sincronización a contactos</TableCell>
-									</TableRow>
-									<TableRow>
-										<TableCell>
-											<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-												nombre-normalization.js
-											</Typography>
-										</TableCell>
-										<TableCell>Normalización de nombres para deduplicación</TableCell>
-									</TableRow>
+									{[
+										["extra-info-worker.js", "Worker principal, orquesta el proceso"],
+										["extra-info-navigation.js", "Navegación a PJN y resolución de captcha"],
+										["extra-info-extraction.js", "Extracción de datos de la tabla"],
+										["intervinientes-contact-sync.js", "Sincronización a contactos"],
+										["nombre-normalization.js", "Normalización para deduplicación"],
+									].map(([file, desc]) => (
+										<TableRow key={file}>
+											<TableCell>
+												<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+													{file}
+												</Typography>
+											</TableCell>
+											<TableCell>{desc}</TableCell>
+										</TableRow>
+									))}
 								</TableBody>
 							</Table>
 						</TableContainer>
 					</Box>
 
-					{/* Preferencia del usuario */}
 					<Box sx={{ mt: 3 }}>
 						<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
 							Preferencia del Usuario
 						</Typography>
 						<Alert severity="info" sx={{ mb: 2 }}>
-							<Typography variant="body2">
-								Los usuarios deben habilitar explícitamente la sincronización de contactos.
-							</Typography>
+							Los usuarios deben habilitar explícitamente la sincronización de contactos.
 						</Alert>
 						<Paper variant="outlined" sx={{ p: 2, backgroundColor: alpha(theme.palette.grey[500], 0.05) }}>
 							<Typography variant="body2" sx={{ fontFamily: "monospace", whiteSpace: "pre-wrap" }}>
@@ -454,41 +868,22 @@ const IntervinientesWorker = () => {
 }`}
 							</Typography>
 						</Paper>
-						<Box sx={{ mt: 2 }}>
-							<Typography variant="body2" gutterBottom>
-								<strong>Comportamiento:</strong>
-							</Typography>
-							<Box sx={{ pl: 2 }}>
-								<Typography variant="body2">
-									• <code>true</code> → Sincroniza contactos
-								</Typography>
-								<Typography variant="body2">
-									• <code>false</code> / <code>undefined</code> / no existe → NO sincroniza
-								</Typography>
-							</Box>
-						</Box>
 					</Box>
 
-					{/* Ejecución manual */}
 					<Box sx={{ mt: 3 }}>
 						<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
 							Ejecución Manual
 						</Typography>
 						<Paper variant="outlined" sx={{ p: 2, backgroundColor: alpha(theme.palette.grey[500], 0.05) }}>
 							<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
-								# Ejecutar una vez (modo testing)
-								<br />
 								SINGLE_RUN=true node src/tasks/extra-info-worker.js
 							</Typography>
 						</Paper>
 					</Box>
 
-					{/* Documentación */}
 					<Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: "divider" }}>
 						<Typography variant="body2" color="text.secondary">
-							Para más información, consultar la documentación completa en:
-							<br />
-							<code>pjn-workers/docs/SINCRONIZACION_INTERVINIENTES_CONTACTOS.md</code>
+							Documentación completa: <code>pjn-workers/docs/SINCRONIZACION_INTERVINIENTES_CONTACTOS.md</code>
 						</Typography>
 					</Box>
 				</CardContent>
@@ -496,25 +891,41 @@ const IntervinientesWorker = () => {
 		</Stack>
 	);
 
+	if (loading) {
+		return (
+			<Stack spacing={2}>
+				<Skeleton variant="rectangular" height={60} />
+				<Skeleton variant="rectangular" height={200} />
+				<Skeleton variant="rectangular" height={150} />
+			</Stack>
+		);
+	}
+
 	return (
 		<Stack spacing={2}>
 			{/* Header */}
 			<Box display="flex" justifyContent="space-between" alignItems="center">
 				<Typography variant="h5">Worker de Intervinientes (Extra-Info)</Typography>
-				<Chip label="En desarrollo" color="warning" size="small" />
+				<Stack direction="row" spacing={1}>
+					<Chip
+						label={status?.isWithinWorkingHours ? "En horario" : "Fuera de horario"}
+						size="small"
+						color={status?.isWithinWorkingHours ? "success" : "default"}
+					/>
+					<Chip label={config?.enabled ? "Habilitado" : "Deshabilitado"} size="small" color={config?.enabled ? "primary" : "default"} />
+				</Stack>
 			</Box>
 
-			{/* Información del worker */}
+			{/* Info alert */}
 			<Alert severity="info" variant="outlined" sx={{ py: 1 }}>
 				<Typography variant="body2">
-					Este worker extrae los intervinientes (partes y letrados) de las causas judiciales desde el sitio web del PJN
-					y opcionalmente los sincroniza como contactos en los folders de los usuarios.
+					Este worker extrae los intervinientes (partes y letrados) de las causas judiciales desde el sitio web del PJN y opcionalmente
+					los sincroniza como contactos en los folders de los usuarios.
 				</Typography>
 			</Alert>
 
-			{/* Layout con tabs laterales */}
+			{/* Layout con tabs */}
 			<Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" } }}>
-				{/* Tabs laterales */}
 				<Tabs
 					orientation="vertical"
 					variant="scrollable"
@@ -525,12 +936,7 @@ const IntervinientesWorker = () => {
 						borderBottom: { xs: 1, md: 0 },
 						borderColor: "divider",
 						minWidth: { md: 200 },
-						"& .MuiTab-root": {
-							alignItems: "flex-start",
-							textAlign: "left",
-							minHeight: 60,
-							px: 2,
-						},
+						"& .MuiTab-root": { alignItems: "flex-start", textAlign: "left", minHeight: 60, px: 2 },
 					}}
 				>
 					<Tab
@@ -539,10 +945,10 @@ const IntervinientesWorker = () => {
 								<Setting2 size={20} />
 								<Box>
 									<Typography variant="body2" fontWeight={500}>
-										Información
+										Configuración
 									</Typography>
 									<Typography variant="caption" color="text.secondary">
-										Config. y elegibilidad
+										Estado y ajustes
 									</Typography>
 								</Box>
 							</Stack>
@@ -574,7 +980,7 @@ const IntervinientesWorker = () => {
 										Estadísticas
 									</Typography>
 									<Typography variant="caption" color="text.secondary">
-										Métricas del worker
+										Métricas y usuarios
 									</Typography>
 								</Box>
 							</Stack>
@@ -599,9 +1005,8 @@ const IntervinientesWorker = () => {
 					/>
 				</Tabs>
 
-				{/* Contenido de los tabs */}
 				<TabPanel value={activeTab} index={0}>
-					<InfoContent />
+					<ConfigContent />
 				</TabPanel>
 				<TabPanel value={activeTab} index={1}>
 					<FlowContent />
