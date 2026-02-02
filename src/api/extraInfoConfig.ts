@@ -114,6 +114,7 @@ export interface UserWithSync {
 	email: string;
 	name: string;
 	syncEnabled: boolean;
+	createdAt?: string;
 }
 
 export interface UsersWithSyncResponse {
@@ -121,6 +122,31 @@ export interface UsersWithSyncResponse {
 	usersWithSyncEnabled: number;
 	percentage: string;
 	users: UserWithSync[];
+}
+
+export interface UsersPagination {
+	page: number;
+	limit: number;
+	totalUsers: number;
+	totalPages: number;
+	hasMore: boolean;
+}
+
+export interface UsersSummary {
+	totalUsersInSystem: number;
+	usersWithSyncEnabled: number;
+	usersWithSyncDisabled: number;
+}
+
+export interface AllUsersResponse {
+	users: UserWithSync[];
+	pagination: UsersPagination;
+	summary: UsersSummary;
+}
+
+export interface BulkUpdateResponse {
+	matched: number;
+	modified: number;
 }
 
 export interface EligibleCountResponse {
@@ -243,11 +269,64 @@ export class ExtraInfoConfigService {
 	}
 
 	/**
-	 * Obtiene usuarios con sincronización habilitada
+	 * Obtiene usuarios con sincronización habilitada (solo habilitados)
 	 */
 	static async getUsersWithSync(): Promise<ApiResponse<UsersWithSyncResponse>> {
 		try {
 			const response = await pjnAxios.get("/api/extra-info-config/users-with-sync");
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtiene todos los usuarios con paginación y filtros
+	 */
+	static async getAllUsers(params?: {
+		page?: number;
+		limit?: number;
+		search?: string;
+		filterSync?: "all" | "enabled" | "disabled";
+	}): Promise<ApiResponse<AllUsersResponse>> {
+		try {
+			const response = await pjnAxios.get("/api/extra-info-config/users", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Actualiza preferencia de sincronización de un usuario
+	 */
+	static async updateUserSyncPreference(
+		userId: string,
+		syncEnabled: boolean
+	): Promise<ApiResponse<UserWithSync>> {
+		try {
+			const response = await pjnAxios.patch(
+				`/api/extra-info-config/users/${userId}/sync`,
+				{ syncEnabled }
+			);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Actualiza preferencia de sincronización para múltiples usuarios
+	 */
+	static async bulkUpdateUserSyncPreference(
+		userIds: string[],
+		syncEnabled: boolean
+	): Promise<ApiResponse<BulkUpdateResponse>> {
+		try {
+			const response = await pjnAxios.patch("/api/extra-info-config/users/bulk-sync", {
+				userIds,
+				syncEnabled,
+			});
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);

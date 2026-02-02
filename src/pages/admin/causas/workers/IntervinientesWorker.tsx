@@ -30,8 +30,15 @@ import {
 	IconButton,
 	Tooltip,
 	LinearProgress,
+	InputAdornment,
+	Select,
+	MenuItem,
+	FormControl,
+	InputLabel,
+	Pagination,
+	CircularProgress,
 } from "@mui/material";
-import { Setting2, InfoCircle, Chart, MessageQuestion, TickCircle, CloseCircle, DocumentText, Refresh, People, Edit2 } from "iconsax-react";
+import { Setting2, InfoCircle, Chart, MessageQuestion, TickCircle, CloseCircle, DocumentText, Refresh, People, Edit2, SearchNormal1 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import ExtraInfoConfigService, {
 	ExtraInfoConfig,
@@ -40,6 +47,8 @@ import ExtraInfoConfigService, {
 	UsersWithSyncResponse,
 	EligibleCountResponse,
 	IntervinientesStatsResponse,
+	AllUsersResponse,
+	UserWithSync,
 } from "api/extraInfoConfig";
 
 // Interfaz para tabs laterales
@@ -100,6 +109,16 @@ const IntervinientesWorker = () => {
 	const [editing, setEditing] = useState(false);
 	const [editValues, setEditValues] = useState<Partial<ExtraInfoConfig>>({});
 
+	// Estados para gestión de usuarios
+	const [allUsers, setAllUsers] = useState<AllUsersResponse | null>(null);
+	const [usersLoading, setUsersLoading] = useState(false);
+	const [usersPage, setUsersPage] = useState(1);
+	const [usersSearch, setUsersSearch] = useState("");
+	const [usersFilter, setUsersFilter] = useState<"all" | "enabled" | "disabled">("all");
+	const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+	const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+	const [bulkUpdating, setBulkUpdating] = useState(false);
+
 	const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
 		setActiveTab(newValue);
 	};
@@ -154,6 +173,111 @@ const IntervinientesWorker = () => {
 			fetchStatsData();
 		}
 	}, [activeTab]);
+
+	// Cargar usuarios cuando se selecciona el tab de usuarios
+	useEffect(() => {
+		if (activeTab === 4) {
+			fetchUsers();
+		}
+	}, [activeTab, usersPage, usersFilter]);
+
+	// Debounce para búsqueda
+	useEffect(() => {
+		if (activeTab === 4) {
+			const timer = setTimeout(() => {
+				setUsersPage(1);
+				fetchUsers();
+			}, 500);
+			return () => clearTimeout(timer);
+		}
+	}, [usersSearch]);
+
+	// Cargar usuarios
+	const fetchUsers = async () => {
+		try {
+			setUsersLoading(true);
+			const response = await ExtraInfoConfigService.getAllUsers({
+				page: usersPage,
+				limit: 15,
+				search: usersSearch,
+				filterSync: usersFilter,
+			});
+			if (response.success) {
+				setAllUsers(response.data);
+			}
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al cargar usuarios", { variant: "error" });
+		} finally {
+			setUsersLoading(false);
+		}
+	};
+
+	// Actualizar preferencia de un usuario
+	const handleUpdateUserSync = async (userId: string, syncEnabled: boolean) => {
+		try {
+			setUpdatingUserId(userId);
+			const response = await ExtraInfoConfigService.updateUserSyncPreference(userId, syncEnabled);
+			if (response.success) {
+				enqueueSnackbar(`Sincronización ${syncEnabled ? "habilitada" : "deshabilitada"} para el usuario`, { variant: "success" });
+				// Actualizar estado local
+				if (allUsers) {
+					setAllUsers({
+						...allUsers,
+						users: allUsers.users.map((u) => (u._id === userId ? { ...u, syncEnabled } : u)),
+						summary: {
+							...allUsers.summary,
+							usersWithSyncEnabled: allUsers.summary.usersWithSyncEnabled + (syncEnabled ? 1 : -1),
+							usersWithSyncDisabled: allUsers.summary.usersWithSyncDisabled + (syncEnabled ? -1 : 1),
+						},
+					});
+				}
+			}
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al actualizar", { variant: "error" });
+		} finally {
+			setUpdatingUserId(null);
+		}
+	};
+
+	// Actualización masiva
+	const handleBulkUpdate = async (syncEnabled: boolean) => {
+		if (selectedUsers.length === 0) {
+			enqueueSnackbar("Seleccione al menos un usuario", { variant: "warning" });
+			return;
+		}
+		try {
+			setBulkUpdating(true);
+			const response = await ExtraInfoConfigService.bulkUpdateUserSyncPreference(selectedUsers, syncEnabled);
+			if (response.success) {
+				enqueueSnackbar(`Sincronización ${syncEnabled ? "habilitada" : "deshabilitada"} para ${response.data.modified} usuarios`, {
+					variant: "success",
+				});
+				setSelectedUsers([]);
+				fetchUsers();
+			}
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error en actualización masiva", { variant: "error" });
+		} finally {
+			setBulkUpdating(false);
+		}
+	};
+
+	// Seleccionar/deseleccionar usuario
+	const handleSelectUser = (userId: string) => {
+		setSelectedUsers((prev) => (prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]));
+	};
+
+	// Seleccionar todos los usuarios de la página actual
+	const handleSelectAll = () => {
+		if (!allUsers) return;
+		const pageUserIds = allUsers.users.map((u) => u._id);
+		const allSelected = pageUserIds.every((id) => selectedUsers.includes(id));
+		if (allSelected) {
+			setSelectedUsers((prev) => prev.filter((id) => !pageUserIds.includes(id)));
+		} else {
+			setSelectedUsers((prev) => [...new Set([...prev, ...pageUserIds])]);
+		}
+	};
 
 	// Toggle enabled
 	const handleToggleEnabled = async () => {
@@ -891,6 +1015,233 @@ const IntervinientesWorker = () => {
 		</Stack>
 	);
 
+	// Contenido del tab de Usuarios
+	const UsersContent = () => {
+		const allPageSelected = allUsers ? allUsers.users.every((u) => selectedUsers.includes(u._id)) : false;
+		const someSelected = selectedUsers.length > 0;
+
+		return (
+			<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+				{/* Resumen */}
+				<Grid container spacing={2}>
+					<Grid item xs={6} sm={4}>
+						<Card variant="outlined">
+							<CardContent sx={{ py: 1.5 }}>
+								<Typography variant="caption" color="text.secondary">
+									Total Usuarios
+								</Typography>
+								<Typography variant="h5">{allUsers?.summary?.totalUsersInSystem?.toLocaleString() || 0}</Typography>
+							</CardContent>
+						</Card>
+					</Grid>
+					<Grid item xs={6} sm={4}>
+						<Card variant="outlined" sx={{ backgroundColor: alpha(theme.palette.success.main, 0.05) }}>
+							<CardContent sx={{ py: 1.5 }}>
+								<Typography variant="caption" color="text.secondary">
+									Sync Habilitado
+								</Typography>
+								<Typography variant="h5" color="success.main">
+									{allUsers?.summary?.usersWithSyncEnabled?.toLocaleString() || 0}
+								</Typography>
+							</CardContent>
+						</Card>
+					</Grid>
+					<Grid item xs={12} sm={4}>
+						<Card variant="outlined">
+							<CardContent sx={{ py: 1.5 }}>
+								<Typography variant="caption" color="text.secondary">
+									Sync Deshabilitado
+								</Typography>
+								<Typography variant="h5" color="text.secondary">
+									{allUsers?.summary?.usersWithSyncDisabled?.toLocaleString() || 0}
+								</Typography>
+							</CardContent>
+						</Card>
+					</Grid>
+				</Grid>
+
+				{/* Filtros y búsqueda */}
+				<Card variant="outlined">
+					<CardContent>
+						<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
+							<Stack direction={{ xs: "column", sm: "row" }} spacing={2} flex={1}>
+								<TextField
+									size="small"
+									placeholder="Buscar por email o nombre..."
+									value={usersSearch}
+									onChange={(e) => setUsersSearch(e.target.value)}
+									sx={{ minWidth: 250 }}
+									InputProps={{
+										startAdornment: (
+											<InputAdornment position="start">
+												<SearchNormal1 size={18} />
+											</InputAdornment>
+										),
+									}}
+								/>
+								<FormControl size="small" sx={{ minWidth: 180 }}>
+									<InputLabel>Filtrar por estado</InputLabel>
+									<Select
+										value={usersFilter}
+										label="Filtrar por estado"
+										onChange={(e) => {
+											setUsersFilter(e.target.value as any);
+											setUsersPage(1);
+										}}
+									>
+										<MenuItem value="all">Todos</MenuItem>
+										<MenuItem value="enabled">Sync Habilitado</MenuItem>
+										<MenuItem value="disabled">Sync Deshabilitado</MenuItem>
+									</Select>
+								</FormControl>
+							</Stack>
+							<Button size="small" startIcon={<Refresh size={16} />} onClick={fetchUsers} disabled={usersLoading}>
+								Actualizar
+							</Button>
+						</Stack>
+
+						{/* Acciones masivas */}
+						{someSelected && (
+							<Box sx={{ mt: 2, p: 1.5, backgroundColor: alpha(theme.palette.primary.main, 0.05), borderRadius: 1 }}>
+								<Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
+									<Typography variant="body2">
+										<strong>{selectedUsers.length}</strong> usuario(s) seleccionado(s)
+									</Typography>
+									<Stack direction="row" spacing={1}>
+										<Button
+											size="small"
+											variant="contained"
+											color="success"
+											onClick={() => handleBulkUpdate(true)}
+											disabled={bulkUpdating}
+											startIcon={bulkUpdating ? <CircularProgress size={14} /> : <TickCircle size={16} />}
+										>
+											Habilitar Sync
+										</Button>
+										<Button
+											size="small"
+											variant="outlined"
+											color="error"
+											onClick={() => handleBulkUpdate(false)}
+											disabled={bulkUpdating}
+											startIcon={bulkUpdating ? <CircularProgress size={14} /> : <CloseCircle size={16} />}
+										>
+											Deshabilitar Sync
+										</Button>
+										<Button size="small" onClick={() => setSelectedUsers([])}>
+											Limpiar selección
+										</Button>
+									</Stack>
+								</Stack>
+							</Box>
+						)}
+					</CardContent>
+				</Card>
+
+				{/* Tabla de usuarios */}
+				<Card variant="outlined">
+					<TableContainer>
+						<Table size="small">
+							<TableHead>
+								<TableRow>
+									<TableCell padding="checkbox">
+										<Checkbox
+											checked={allPageSelected && allUsers?.users && allUsers.users.length > 0}
+											indeterminate={someSelected && !allPageSelected}
+											onChange={handleSelectAll}
+											disabled={!allUsers?.users?.length}
+										/>
+									</TableCell>
+									<TableCell>Email</TableCell>
+									<TableCell>Nombre</TableCell>
+									<TableCell align="center">Sync Contactos</TableCell>
+									<TableCell align="center">Acciones</TableCell>
+								</TableRow>
+							</TableHead>
+							<TableBody>
+								{usersLoading ? (
+									<TableRow>
+										<TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+											<CircularProgress size={24} />
+											<Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+												Cargando usuarios...
+											</Typography>
+										</TableCell>
+									</TableRow>
+								) : allUsers?.users && allUsers.users.length > 0 ? (
+									allUsers.users.map((user) => (
+										<TableRow key={user._id} hover selected={selectedUsers.includes(user._id)}>
+											<TableCell padding="checkbox">
+												<Checkbox checked={selectedUsers.includes(user._id)} onChange={() => handleSelectUser(user._id)} />
+											</TableCell>
+											<TableCell>
+												<Typography variant="body2">{user.email}</Typography>
+											</TableCell>
+											<TableCell>
+												<Typography variant="body2" color="text.secondary">
+													{user.name || "-"}
+												</Typography>
+											</TableCell>
+											<TableCell align="center">
+												<Chip
+													label={user.syncEnabled ? "Habilitado" : "Deshabilitado"}
+													size="small"
+													color={user.syncEnabled ? "success" : "default"}
+													variant={user.syncEnabled ? "filled" : "outlined"}
+												/>
+											</TableCell>
+											<TableCell align="center">
+												{updatingUserId === user._id ? (
+													<CircularProgress size={20} />
+												) : (
+													<Switch
+														size="small"
+														checked={user.syncEnabled}
+														onChange={(e) => handleUpdateUserSync(user._id, e.target.checked)}
+														color="success"
+													/>
+												)}
+											</TableCell>
+										</TableRow>
+									))
+								) : (
+									<TableRow>
+										<TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+											<Typography variant="body2" color="text.secondary">
+												No se encontraron usuarios
+											</Typography>
+										</TableCell>
+									</TableRow>
+								)}
+							</TableBody>
+						</Table>
+					</TableContainer>
+
+					{/* Paginación */}
+					{allUsers?.pagination && allUsers.pagination.totalPages > 1 && (
+						<Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
+							<Pagination
+								count={allUsers.pagination.totalPages}
+								page={usersPage}
+								onChange={(e, page) => setUsersPage(page)}
+								color="primary"
+								size="small"
+							/>
+						</Box>
+					)}
+				</Card>
+
+				{/* Info */}
+				<Alert severity="info" variant="outlined">
+					<Typography variant="body2">
+						<strong>Nota:</strong> Solo los usuarios con sincronización habilitada tendrán sus intervinientes sincronizados como contactos
+						en sus carpetas. La extracción de intervinientes siempre ocurre para todos los documentos elegibles.
+					</Typography>
+				</Alert>
+			</Stack>
+		);
+	};
+
 	if (loading) {
 		return (
 			<Stack spacing={2}>
@@ -1003,6 +1354,22 @@ const IntervinientesWorker = () => {
 						}
 						sx={{ textTransform: "none" }}
 					/>
+					<Tab
+						label={
+							<Stack direction="row" spacing={1.5} alignItems="center">
+								<People size={20} />
+								<Box>
+									<Typography variant="body2" fontWeight={500}>
+										Usuarios
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Gestión de sync
+									</Typography>
+								</Box>
+							</Stack>
+						}
+						sx={{ textTransform: "none" }}
+					/>
 				</Tabs>
 
 				<TabPanel value={activeTab} index={0}>
@@ -1016,6 +1383,9 @@ const IntervinientesWorker = () => {
 				</TabPanel>
 				<TabPanel value={activeTab} index={3}>
 					<HelpContent />
+				</TabPanel>
+				<TabPanel value={activeTab} index={4}>
+					<UsersContent />
 				</TabPanel>
 			</Box>
 		</Stack>
