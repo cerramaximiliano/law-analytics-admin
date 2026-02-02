@@ -502,16 +502,11 @@ const CarpetasVerificadasApp = () => {
 		};
 	};
 
-	// Formatear horas para tooltip (convierte de UTC a hora local)
+	// Formatear horas para tooltip (las horas ya vienen en timezone Argentina desde el worker)
 	const formatHoursTooltip = (hours: number[]): string => {
 		if (hours.length === 0) return "";
-		// Convertir horas UTC a hora local
-		const localHours = hours.map((utcHour) => {
-			const now = new Date();
-			const utcDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), utcHour, 0, 0));
-			return utcDate.getHours(); // Devuelve la hora local
-		});
-		const sortedHours = [...localHours].sort((a, b) => a - b);
+		// Las horas ya están en timezone Argentina (UTC-3), no necesitan conversión
+		const sortedHours = [...hours].sort((a, b) => a - b);
 		const formatted = sortedHours.map((h) => `${h.toString().padStart(2, "0")}:00`);
 		return `Actualizado a las ${formatted.join(", ")}`;
 	};
