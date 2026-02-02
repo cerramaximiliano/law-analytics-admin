@@ -59,6 +59,38 @@ const FUERO_COLORS: Record<string, "primary" | "success" | "warning" | "error"> 
 	CNT: "error",
 };
 
+/**
+ * Helper para obtener fecha en zona horaria de Argentina (UTC-3)
+ * Esto es necesario porque updateStats.today.date se guarda con la fecha de Argentina
+ */
+const getArgentinaDate = (): string => {
+	const now = new Date();
+	// Argentina es UTC-3 (no tiene horario de verano actualmente)
+	const argentinaOffset = -3 * 60; // -180 minutos
+	const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+	const argentinaMinutes = utcMinutes + argentinaOffset;
+
+	// Calcular si estamos en un día diferente en Argentina
+	let argentinaHour = Math.floor(argentinaMinutes / 60);
+	let dayOffset = 0;
+
+	if (argentinaHour < 0) {
+		dayOffset = -1; // Día anterior en Argentina
+	} else if (argentinaHour >= 24) {
+		dayOffset = 1; // Día siguiente en Argentina
+	}
+
+	// Crear fecha ajustada
+	const argentinaDate = new Date(now);
+	argentinaDate.setUTCDate(argentinaDate.getUTCDate() + dayOffset);
+
+	// Formatear fecha como YYYY-MM-DD
+	const year = argentinaDate.getUTCFullYear();
+	const month = String(argentinaDate.getUTCMonth() + 1).padStart(2, "0");
+	const day = String(argentinaDate.getUTCDate()).padStart(2, "0");
+	return `${year}-${month}-${day}`;
+};
+
 const CarpetasVerificadasApp = () => {
 	const { enqueueSnackbar } = useSnackbar();
 
@@ -458,8 +490,9 @@ const CarpetasVerificadasApp = () => {
 			return { isToday: false, count: 0, hours: [] };
 		}
 
-		// Comparar con fecha actual (formato: "2026-02-01")
-		const today = new Date().toISOString().split("T")[0];
+		// Comparar con fecha actual en zona horaria de Argentina (formato: "2026-02-01")
+		// Esto coincide con cómo el worker guarda updateStats.today.date
+		const today = getArgentinaDate();
 		const isToday = stats.date === today;
 
 		return {
