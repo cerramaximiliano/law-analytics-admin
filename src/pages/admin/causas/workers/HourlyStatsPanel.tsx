@@ -39,7 +39,7 @@ import {
 	ComposedChart,
 	Line,
 } from "recharts";
-import dayjs from "dayjs";
+import dayjs, { todayInTimezone, currentHourInTimezone, formatInTimezone } from "utils/dayjs-config";
 import {
 	WorkersService,
 	WorkerHourlyCurrentResponse,
@@ -136,7 +136,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 
 			const [currentRes, todayRes, eventsRes] = await Promise.all([
 				WorkersService.getWorkerHourlyCurrent(workerType),
-				WorkersService.getWorkerHourlyDaySummary(dayjs().format("YYYY-MM-DD"), { workerType }),
+				WorkersService.getWorkerHourlyDaySummary(todayInTimezone(), { workerType }),
 				WorkersService.getWorkerHourlyScalingEvents({ hours: 24, workerType }),
 			]);
 
@@ -198,7 +198,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 		: [];
 
 	// Get current hour stats for display
-	const currentHour = dayjs().hour();
+	const currentHour = currentHourInTimezone();
 
 	return (
 		<Stack spacing={3}>
@@ -518,7 +518,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 										<TableRow key={idx}>
 											<TableCell>
 												<Typography variant="caption">
-													{dayjs(event.timestamp).format("HH:mm")}
+													{formatInTimezone(event.timestamp, "HH:mm")}
 												</Typography>
 											</TableCell>
 											<TableCell>

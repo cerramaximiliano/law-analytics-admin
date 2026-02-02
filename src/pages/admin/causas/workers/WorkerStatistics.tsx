@@ -37,8 +37,8 @@ import {
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs, { Dayjs } from "dayjs";
-import "dayjs/locale/es";
+import dayjs, { nowInTimezone, formatInTimezone } from "utils/dayjs-config";
+import type { Dayjs } from "dayjs";
 import {
 	Refresh2,
 	Warning2,
@@ -236,8 +236,8 @@ const WorkerStatistics: React.FC = () => {
 	// Estados para filtro de fechas
 	const [dateMode, setDateMode] = useState<"today" | "specific" | "range">("today");
 	const [specificDate, setSpecificDate] = useState<string>("");
-	const [dateFrom, setDateFrom] = useState<Dayjs | null>(dayjs().subtract(7, "day"));
-	const [dateTo, setDateTo] = useState<Dayjs | null>(dayjs());
+	const [dateFrom, setDateFrom] = useState<Dayjs | null>(nowInTimezone().subtract(7, "day"));
+	const [dateTo, setDateTo] = useState<Dayjs | null>(nowInTimezone());
 	const [availableDates, setAvailableDates] = useState<WorkerAvailableDate[]>([]);
 	const [loadingDates, setLoadingDates] = useState(false);
 
@@ -627,7 +627,7 @@ const WorkerStatistics: React.FC = () => {
 											<MenuItem key={dateInfo.date} value={dateInfo.date}>
 												<Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" sx={{ width: "100%" }}>
 													<Typography variant="body2">
-														{dayjs(dateInfo.date).format("DD/MM/YYYY")}
+														{formatInTimezone(dateInfo.date, "DD/MM/YYYY")}
 													</Typography>
 													<Stack direction="row" spacing={0.5}>
 														<Chip
@@ -657,7 +657,7 @@ const WorkerStatistics: React.FC = () => {
 										value={dateFrom}
 										onChange={(newValue) => setDateFrom(newValue)}
 										format="DD/MM/YYYY"
-										maxDate={dateTo || dayjs()}
+										maxDate={dateTo || nowInTimezone()}
 										views={["year", "month", "day"]}
 										openTo="day"
 										slotProps={{
@@ -679,7 +679,7 @@ const WorkerStatistics: React.FC = () => {
 										onChange={(newValue) => setDateTo(newValue)}
 										format="DD/MM/YYYY"
 										minDate={dateFrom || undefined}
-										maxDate={dayjs()}
+										maxDate={nowInTimezone()}
 										views={["year", "month", "day"]}
 										openTo="day"
 										slotProps={{
@@ -1159,7 +1159,7 @@ const WorkerStatistics: React.FC = () => {
 										<TableRow key={day.date} hover>
 											<TableCell>
 												<Typography variant="body2" fontWeight={500}>
-													{dayjs(day.date).format("DD/MM/YYYY")}
+													{formatInTimezone(day.date, "DD/MM/YYYY")}
 												</Typography>
 											</TableCell>
 											<TableCell align="right">

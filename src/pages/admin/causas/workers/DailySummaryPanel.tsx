@@ -43,8 +43,8 @@ import { useSnackbar } from "notistack";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs, { Dayjs } from "dayjs";
-import "dayjs/locale/es";
+import dayjs, { nowInTimezone, formatInTimezone } from "utils/dayjs-config";
+import type { Dayjs } from "dayjs";
 import {
 	AreaChart,
 	Area,
@@ -161,8 +161,8 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 	const [comparison, setComparison] = useState<WorkerDailySummaryCompareResponse["data"] | null>(null);
 
 	// Comparison dates
-	const [compareDate1, setCompareDate1] = useState<Dayjs | null>(dayjs().subtract(1, "day"));
-	const [compareDate2, setCompareDate2] = useState<Dayjs | null>(dayjs());
+	const [compareDate1, setCompareDate1] = useState<Dayjs | null>(nowInTimezone().subtract(1, "day"));
+	const [compareDate2, setCompareDate2] = useState<Dayjs | null>(nowInTimezone());
 	const [showComparison, setShowComparison] = useState(false);
 
 	// Fetch data
@@ -240,7 +240,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 	// Format chart data for display
 	const formattedChartData = chartData.map((d) => ({
 		...d,
-		dateLabel: dayjs(d.date).format("DD/MM"),
+		dateLabel: formatInTimezone(d.date, "DD/MM"),
 		successRateNum: parseFloat(String(d.successRate)) || 0,
 	}));
 
@@ -557,7 +557,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 										value={compareDate1}
 										onChange={(v) => setCompareDate1(v)}
 										format="DD/MM/YYYY"
-										maxDate={dayjs()}
+										maxDate={nowInTimezone()}
 										slotProps={{ textField: { size: "small", sx: { width: 160 } } }}
 									/>
 									<Typography color="text.secondary">vs</Typography>
@@ -566,7 +566,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 										value={compareDate2}
 										onChange={(v) => setCompareDate2(v)}
 										format="DD/MM/YYYY"
-										maxDate={dayjs()}
+										maxDate={nowInTimezone()}
 										slotProps={{ textField: { size: "small", sx: { width: 160 } } }}
 									/>
 									<Button variant="contained" size="small" onClick={fetchComparison}>
