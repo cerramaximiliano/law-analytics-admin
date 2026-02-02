@@ -186,6 +186,65 @@ export interface ApiResponse<T> {
 	data: T;
 }
 
+// ===== ESTADÍSTICAS DIARIAS (HISTORIAL) =====
+
+export interface DailyStatByFuero {
+	civil: number;
+	comercial: number;
+	segsocial: number;
+	trabajo: number;
+}
+
+export interface DailyStat {
+	date: string;
+	totalEligible: number;
+	processed: number;
+	success: number;
+	errors: number;
+	pending: number;
+	intervinientesExtracted: number;
+	contactsSynced: number;
+	byFuero: DailyStatByFuero;
+	cyclesRun: number;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface DailyStatsResponse {
+	stats: DailyStat[];
+	count: number;
+	filters: {
+		startDate: string | null;
+		endDate: string | null;
+		limit: number;
+		sort: string;
+	};
+}
+
+export interface DailyStatsSummaryAverages {
+	processedPerDay: number;
+	successRate: number;
+	intervinientesPerDoc: number;
+}
+
+export interface DailyStatsSummaryTotals {
+	processed: number;
+	success: number;
+	errors: number;
+	intervinientesExtracted: number;
+	contactsSynced: number;
+	cyclesRun: number;
+}
+
+export interface DailyStatsSummary {
+	period: number;
+	daysWithActivity: number;
+	totals: DailyStatsSummaryTotals;
+	averages: DailyStatsSummaryAverages;
+	byFuero: DailyStatByFuero;
+	latestDate: string | null;
+}
+
 // Servicio de Extra-Info Config
 export class ExtraInfoConfigService {
 	/**
@@ -351,6 +410,65 @@ export class ExtraInfoConfigService {
 	static async getIntervinientesStats(): Promise<ApiResponse<IntervinientesStatsResponse>> {
 		try {
 			const response = await pjnAxios.get("/api/extra-info-config/intervinientes-stats");
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	// ===== ESTADÍSTICAS DIARIAS (HISTORIAL) =====
+
+	/**
+	 * Obtiene el historial de estadísticas diarias
+	 */
+	static async getDailyStats(params?: {
+		startDate?: string;
+		endDate?: string;
+		limit?: number;
+		sort?: "asc" | "desc";
+	}): Promise<ApiResponse<DailyStatsResponse>> {
+		try {
+			const response = await pjnAxios.get("/api/extra-info-config/daily-stats", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtiene resumen de estadísticas por período
+	 */
+	static async getDailyStatsSummary(days?: number): Promise<ApiResponse<DailyStatsSummary>> {
+		try {
+			const response = await pjnAxios.get("/api/extra-info-config/daily-stats/summary", {
+				params: days ? { days } : undefined,
+			});
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtiene estadísticas del día actual
+	 */
+	static async getTodayStats(): Promise<ApiResponse<DailyStat | null>> {
+		try {
+			const response = await pjnAxios.get("/api/extra-info-config/daily-stats/today");
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Limpia estadísticas antiguas
+	 */
+	static async cleanupDailyStats(keepDays?: number): Promise<ApiResponse<void>> {
+		try {
+			const response = await pjnAxios.post("/api/extra-info-config/daily-stats/cleanup", {
+				keepDays: keepDays || 90,
+			});
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
