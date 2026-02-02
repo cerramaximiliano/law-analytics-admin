@@ -38,7 +38,7 @@ import {
 	Pagination,
 	CircularProgress,
 } from "@mui/material";
-import { Setting2, InfoCircle, Chart, MessageQuestion, TickCircle, CloseCircle, DocumentText, Refresh, People, Edit2, SearchNormal1 } from "iconsax-react";
+import { Setting2, InfoCircle, Chart, MessageQuestion, TickCircle, CloseCircle, DocumentText, Refresh, People, Edit2, SearchNormal1, Calendar } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import ExtraInfoConfigService, {
 	ExtraInfoConfig,
@@ -49,6 +49,8 @@ import ExtraInfoConfigService, {
 	IntervinientesStatsResponse,
 	AllUsersResponse,
 	UserWithSync,
+	DailyStat,
+	DailyStatsSummary,
 } from "api/extraInfoConfig";
 
 // Interfaz para tabs laterales
@@ -118,6 +120,12 @@ const IntervinientesWorker = () => {
 	const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
 	const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 	const [bulkUpdating, setBulkUpdating] = useState(false);
+
+	// Estados para estadísticas diarias (historial)
+	const [dailyStats, setDailyStats] = useState<DailyStat[]>([]);
+	const [dailySummary, setDailySummary] = useState<DailyStatsSummary | null>(null);
+	const [dailyStatsLoading, setDailyStatsLoading] = useState(false);
+	const [summaryPeriod, setSummaryPeriod] = useState<7 | 30 | 90>(30);
 
 	const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
 		setActiveTab(newValue);
@@ -276,6 +284,30 @@ const IntervinientesWorker = () => {
 			setSelectedUsers((prev) => prev.filter((id) => !pageUserIds.includes(id)));
 		} else {
 			setSelectedUsers((prev) => [...new Set([...prev, ...pageUserIds])]);
+		}
+	};
+
+	// Cargar estadísticas diarias cuando se selecciona el tab de historial
+	useEffect(() => {
+		if (activeTab === 5) {
+			fetchDailyStats();
+		}
+	}, [activeTab, summaryPeriod]);
+
+	// Cargar estadísticas diarias
+	const fetchDailyStats = async () => {
+		try {
+			setDailyStatsLoading(true);
+			const [statsRes, summaryRes] = await Promise.all([
+				ExtraInfoConfigService.getDailyStats({ limit: 30, sort: "desc" }),
+				ExtraInfoConfigService.getDailyStatsSummary(summaryPeriod),
+			]);
+			if (statsRes.success) setDailyStats(statsRes.data.stats);
+			if (summaryRes.success) setDailySummary(summaryRes.data);
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al cargar historial", { variant: "error" });
+		} finally {
+			setDailyStatsLoading(false);
 		}
 	};
 
@@ -1242,6 +1274,279 @@ const IntervinientesWorker = () => {
 		);
 	};
 
+	// Contenido del tab de Historial
+	const HistoryContent = () => {
+		// Helper para formatear fecha corta
+		const formatShortDate = (dateStr: string): string => {
+			return new Date(dateStr).toLocaleDateString("es-AR", {
+				day: "2-digit",
+				month: "2-digit",
+			});
+		};
+
+		return (
+			<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+				{/* Selector de período y botón refresh */}
+				<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Stack direction="row" spacing={1}>
+						{[7, 30, 90].map((days) => (
+							<Chip
+								key={days}
+								label={`${days} días`}
+								onClick={() => setSummaryPeriod(days as 7 | 30 | 90)}
+								color={summaryPeriod === days ? "primary" : "default"}
+								variant={summaryPeriod === days ? "filled" : "outlined"}
+								size="small"
+							/>
+						))}
+					</Stack>
+					<Button size="small" startIcon={<Refresh size={16} />} onClick={fetchDailyStats} disabled={dailyStatsLoading}>
+						Actualizar
+					</Button>
+				</Stack>
+
+				{dailyStatsLoading ? (
+					<Stack spacing={2}>
+						<Skeleton variant="rectangular" height={100} />
+						<Skeleton variant="rectangular" height={200} />
+					</Stack>
+				) : (
+					<>
+						{/* Resumen del período */}
+						{dailySummary && (
+							<Card variant="outlined">
+								<CardContent>
+									<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+										Resumen últimos {dailySummary.period} días
+									</Typography>
+									<Grid container spacing={2}>
+										<Grid item xs={6} sm={3}>
+											<Stack spacing={0.5}>
+												<Typography variant="caption" color="text.secondary">
+													Días con actividad
+												</Typography>
+												<Typography variant="h5">{dailySummary.daysWithActivity}</Typography>
+											</Stack>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Stack spacing={0.5}>
+												<Typography variant="caption" color="text.secondary">
+													Total procesados
+												</Typography>
+												<Typography variant="h5" color="primary.main">
+													{dailySummary.totals.processed.toLocaleString()}
+												</Typography>
+											</Stack>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Stack spacing={0.5}>
+												<Typography variant="caption" color="text.secondary">
+													Tasa de éxito
+												</Typography>
+												<Typography variant="h5" color="success.main">
+													{dailySummary.averages.successRate}%
+												</Typography>
+											</Stack>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Stack spacing={0.5}>
+												<Typography variant="caption" color="text.secondary">
+													Promedio/día
+												</Typography>
+												<Typography variant="h5">{dailySummary.averages.processedPerDay}</Typography>
+											</Stack>
+										</Grid>
+									</Grid>
+
+									<Divider sx={{ my: 2 }} />
+
+									<Grid container spacing={2}>
+										<Grid item xs={6} sm={3}>
+											<Stack spacing={0.5}>
+												<Typography variant="caption" color="text.secondary">
+													Intervinientes extraídos
+												</Typography>
+												<Typography variant="h6" color="info.main">
+													{dailySummary.totals.intervinientesExtracted.toLocaleString()}
+												</Typography>
+											</Stack>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Stack spacing={0.5}>
+												<Typography variant="caption" color="text.secondary">
+													Contactos sincronizados
+												</Typography>
+												<Typography variant="h6" color="success.main">
+													{dailySummary.totals.contactsSynced.toLocaleString()}
+												</Typography>
+											</Stack>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Stack spacing={0.5}>
+												<Typography variant="caption" color="text.secondary">
+													Errores
+												</Typography>
+												<Typography variant="h6" color="error.main">
+													{dailySummary.totals.errors.toLocaleString()}
+												</Typography>
+											</Stack>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Stack spacing={0.5}>
+												<Typography variant="caption" color="text.secondary">
+													Ciclos ejecutados
+												</Typography>
+												<Typography variant="h6">{dailySummary.totals.cyclesRun.toLocaleString()}</Typography>
+											</Stack>
+										</Grid>
+									</Grid>
+
+									{/* Por fuero */}
+									<Box sx={{ mt: 2 }}>
+										<Typography variant="caption" color="text.secondary" gutterBottom display="block">
+											Procesados por fuero
+										</Typography>
+										<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+											{Object.entries(dailySummary.byFuero).map(([fuero, count]) => (
+												<Chip
+													key={fuero}
+													label={`${fuero}: ${count}`}
+													size="small"
+													variant="outlined"
+													sx={{ textTransform: "capitalize" }}
+												/>
+											))}
+										</Stack>
+									</Box>
+								</CardContent>
+							</Card>
+						)}
+
+						{/* Tabla de historial */}
+						<Card variant="outlined">
+							<CardContent>
+								<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+									Historial por día
+								</Typography>
+								<TableContainer>
+									<Table size="small">
+										<TableHead>
+											<TableRow>
+												<TableCell>Fecha</TableCell>
+												<TableCell align="right">Elegibles</TableCell>
+												<TableCell align="right">Procesados</TableCell>
+												<TableCell align="right">Éxito</TableCell>
+												<TableCell align="right">Errores</TableCell>
+												<TableCell align="right">Pendientes</TableCell>
+												<TableCell align="right">Interv.</TableCell>
+												<TableCell align="right">Ciclos</TableCell>
+											</TableRow>
+										</TableHead>
+										<TableBody>
+											{dailyStats.length > 0 ? (
+												dailyStats.map((stat, index) => (
+													<TableRow key={stat.date} hover>
+														<TableCell>
+															<Typography variant="body2" fontWeight={index === 0 ? "bold" : "normal"}>
+																{formatShortDate(stat.date)}
+																{index === 0 && (
+																	<Chip label="Hoy" size="small" color="primary" sx={{ ml: 1, height: 18 }} />
+																)}
+															</Typography>
+														</TableCell>
+														<TableCell align="right">{stat.totalEligible.toLocaleString()}</TableCell>
+														<TableCell align="right">
+															<Typography variant="body2" color="primary.main" fontWeight="medium">
+																{stat.processed.toLocaleString()}
+															</Typography>
+														</TableCell>
+														<TableCell align="right">
+															<Typography variant="body2" color="success.main">
+																{stat.success.toLocaleString()}
+															</Typography>
+														</TableCell>
+														<TableCell align="right">
+															<Typography variant="body2" color={stat.errors > 0 ? "error.main" : "text.secondary"}>
+																{stat.errors.toLocaleString()}
+															</Typography>
+														</TableCell>
+														<TableCell align="right">
+															<Typography variant="body2" color={stat.pending > 0 ? "warning.main" : "success.main"}>
+																{stat.pending.toLocaleString()}
+															</Typography>
+														</TableCell>
+														<TableCell align="right">{stat.intervinientesExtracted.toLocaleString()}</TableCell>
+														<TableCell align="right">{stat.cyclesRun}</TableCell>
+													</TableRow>
+												))
+											) : (
+												<TableRow>
+													<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+														<Typography variant="body2" color="text.secondary">
+															No hay datos de historial disponibles
+														</Typography>
+													</TableCell>
+												</TableRow>
+											)}
+										</TableBody>
+									</Table>
+								</TableContainer>
+							</CardContent>
+						</Card>
+
+						{/* Gráfico de progreso (simple) */}
+						{dailyStats.length > 0 && (
+							<Card variant="outlined">
+								<CardContent>
+									<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+										Progreso de procesamiento
+									</Typography>
+									<Box sx={{ display: "flex", gap: 0.5, alignItems: "flex-end", height: 100 }}>
+										{dailyStats
+											.slice(0, 14)
+											.reverse()
+											.map((stat, index) => {
+												const maxProcessed = Math.max(...dailyStats.slice(0, 14).map((s) => s.processed), 1);
+												const height = stat.processed > 0 ? Math.max((stat.processed / maxProcessed) * 100, 5) : 2;
+												return (
+													<Tooltip
+														key={stat.date}
+														title={`${formatShortDate(stat.date)}: ${stat.processed} procesados`}
+														arrow
+													>
+														<Box
+															sx={{
+																flex: 1,
+																height: `${height}%`,
+																backgroundColor:
+																	stat.processed > 0
+																		? alpha(theme.palette.primary.main, 0.7)
+																		: alpha(theme.palette.grey[400], 0.3),
+																borderRadius: 0.5,
+																minWidth: 8,
+																cursor: "pointer",
+																transition: "all 0.2s",
+																"&:hover": {
+																	backgroundColor: theme.palette.primary.main,
+																},
+															}}
+														/>
+													</Tooltip>
+												);
+											})}
+									</Box>
+									<Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block", textAlign: "center" }}>
+										Últimos 14 días (documentos procesados por día)
+									</Typography>
+								</CardContent>
+							</Card>
+						)}
+					</>
+				)}
+			</Stack>
+		);
+	};
+
 	if (loading) {
 		return (
 			<Stack spacing={2}>
@@ -1370,6 +1675,22 @@ const IntervinientesWorker = () => {
 						}
 						sx={{ textTransform: "none" }}
 					/>
+					<Tab
+						label={
+							<Stack direction="row" spacing={1.5} alignItems="center">
+								<Calendar size={20} />
+								<Box>
+									<Typography variant="body2" fontWeight={500}>
+										Historial
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Estadísticas diarias
+									</Typography>
+								</Box>
+							</Stack>
+						}
+						sx={{ textTransform: "none" }}
+					/>
 				</Tabs>
 
 				<TabPanel value={activeTab} index={0}>
@@ -1386,6 +1707,9 @@ const IntervinientesWorker = () => {
 				</TabPanel>
 				<TabPanel value={activeTab} index={4}>
 					<UsersContent />
+				</TabPanel>
+				<TabPanel value={activeTab} index={5}>
+					<HistoryContent />
 				</TabPanel>
 			</Box>
 		</Stack>
