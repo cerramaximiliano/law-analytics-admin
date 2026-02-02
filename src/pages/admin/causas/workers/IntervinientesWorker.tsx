@@ -781,12 +781,19 @@ const IntervinientesWorker = () => {
 							<Typography variant="caption" color="text.secondary">
 								Docs Procesados
 							</Typography>
-							<Typography variant="h5">{stats?.global?.documentsProcessed?.toLocaleString() || 0}</Typography>
+							<Typography variant="h5">
+								{stats?.global?.documentsProcessed?.toLocaleString() || 0}
+								{eligibleCount?.total ? (
+									<Typography component="span" variant="body2" color="text.secondary">
+										{" / "}{eligibleCount.total.toLocaleString()}
+									</Typography>
+								) : null}
+							</Typography>
 							<LinearProgress
 								variant="determinate"
 								value={
-									stats?.global?.documentsProcessed && stats?.global?.documentsSuccess
-										? (stats.global.documentsSuccess / stats.global.documentsProcessed) * 100
+									stats?.global?.documentsProcessed && eligibleCount?.total
+										? Math.min((stats.global.documentsProcessed / (stats.global.documentsProcessed + eligibleCount.total)) * 100, 100)
 										: 0
 								}
 								color="success"
