@@ -1,12 +1,13 @@
 import React from "react";
 import { useState } from "react";
 import { Box, Tab, Tabs, Typography, Paper, Stack, Chip, useTheme, alpha, IconButton, Tooltip, Popover } from "@mui/material";
-import { Setting2, Notification, Broom, TickSquare, Refresh2, SearchNormal1, DocumentUpload, InfoCircle } from "iconsax-react";
+import { Setting2, Notification, Broom, TickSquare, Refresh2, SearchNormal1, DocumentUpload, InfoCircle, People } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import VerificationWorker from "./VerificationWorker";
 import ScrapingWorker from "./ScrapingWorker";
 import AppUpdateWorker from "./AppUpdateWorker";
+import IntervinientesWorker from "./IntervinientesWorker";
 import SyncWorker from "./SyncWorker";
 import ProcessingWorker from "./ProcessingWorker";
 import NotificationWorker from "./NotificationWorker";
@@ -49,6 +50,14 @@ const WorkersConfig = () => {
 			icon: <DocumentUpload size={20} />,
 			component: <AppUpdateWorker />,
 			description: "Mantiene actualizados los documentos de causas judiciales (API de PJN)",
+			status: "active",
+		},
+		{
+			label: "Intervinientes",
+			value: "intervinientes",
+			icon: <People size={20} />,
+			component: <IntervinientesWorker />,
+			description: "Extrae intervinientes (partes y letrados) de las causas desde PJN",
 			status: "active",
 		},
 		{
