@@ -1,0 +1,692 @@
+import { useState, useEffect } from "react";
+import {
+	Box,
+	Card,
+	CardContent,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableHead,
+	TableRow,
+	TablePagination,
+	Typography,
+	Chip,
+	FormControl,
+	InputLabel,
+	Select,
+	MenuItem,
+	Stack,
+	Grid,
+	CircularProgress,
+	Alert,
+	Tooltip,
+	IconButton,
+	TextField,
+	Button,
+} from "@mui/material";
+import { useSnackbar } from "notistack";
+import MainCard from "components/MainCard";
+import { CausasEjeService, CausaEje, WorkerStatsResponse } from "api/causasEje";
+import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Lock1 } from "iconsax-react";
+
+// Helper para formatear fechas
+const formatDate = (date: { $date: string } | string | undefined): string => {
+	if (!date) return "N/A";
+	const dateStr = typeof date === "string" ? date : date.$date;
+	const d = new Date(dateStr);
+	return d.toLocaleDateString("es-AR", {
+		day: "2-digit",
+		month: "2-digit",
+		year: "numeric",
+		hour: "2-digit",
+		minute: "2-digit",
+	});
+};
+
+// Helper para formatear montos
+const formatMonto = (monto: number | undefined, moneda: string = "ARS"): string => {
+	if (!monto) return "N/A";
+	return new Intl.NumberFormat("es-AR", {
+		style: "currency",
+		currency: moneda,
+	}).format(monto);
+};
+
+// Helper para extraer ID
+const getId = (id: string | { $oid: string }): string => {
+	return typeof id === "string" ? id : id.$oid;
+};
+
+const CarpetasVerificadasEje = () => {
+	const { enqueueSnackbar } = useSnackbar();
+
+	// Estados
+	const [causas, setCausas] = useState<CausaEje[]>([]);
+	const [loading, setLoading] = useState(false);
+	const [page, setPage] = useState(0);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
+	const [totalCount, setTotalCount] = useState(0);
+	const [totalInDatabase, setTotalInDatabase] = useState(0);
+
+	// Filtros
+	const [privadaFilter, setPrivadaFilter] = useState<string>("todos");
+	const [sourceFilter, setSourceFilter] = useState<string>("todos");
+	const [updateFilter, setUpdateFilter] = useState<string>("todos");
+	const [detailsLoadedFilter, setDetailsLoadedFilter] = useState<string>("todos");
+
+	// Filtros de búsqueda
+	const [searchNumero, setSearchNumero] = useState<string>("");
+	const [searchAnio, setSearchAnio] = useState<string>("");
+	const [searchCuij, setSearchCuij] = useState<string>("");
+	const [searchCaratula, setSearchCaratula] = useState<string>("");
+
+	// Ordenamiento
+	const [sortBy, setSortBy] = useState<string>("anio");
+	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+	// Estadísticas de workers
+	const [workerStats, setWorkerStats] = useState<WorkerStatsResponse["data"] | null>(null);
+	const [loadingStats, setLoadingStats] = useState(false);
+
+	// Modal de detalles
+	const [selectedCausa, setSelectedCausa] = useState<CausaEje | null>(null);
+	const [detailModalOpen, setDetailModalOpen] = useState(false);
+	const [loadingDetail, setLoadingDetail] = useState(false);
+
+	// Cargar causas verificadas
+	const fetchCausas = async (
+		currentPage: number,
+		limit: number,
+		numero?: string,
+		anio?: string,
+		cuij?: string,
+		caratula?: string,
+		sortByParam?: string,
+		sortOrderParam?: "asc" | "desc",
+		isPrivate?: string,
+		update?: string,
+		source?: string,
+		detailsLoaded?: string,
+	) => {
+		try {
+			setLoading(true);
+
+			const params: any = {
+				page: currentPage + 1,
+				limit,
+			};
+
+			if (numero && numero.trim() !== "") {
+				params.numero = parseInt(numero);
+			}
+
+			if (anio && anio.trim() !== "") {
+				params.anio = parseInt(anio);
+			}
+
+			if (cuij && cuij.trim() !== "") {
+				params.cuij = cuij.trim();
+			}
+
+			if (caratula && caratula.trim() !== "") {
+				params.caratula = caratula.trim();
+			}
+
+			if (sortByParam) {
+				params.sortBy = sortByParam;
+			}
+
+			if (sortOrderParam) {
+				params.sortOrder = sortOrderParam;
+			}
+
+			// Filtros booleanos
+			if (isPrivate !== "todos") {
+				params.isPrivate = isPrivate === "true";
+			}
+
+			if (update !== "todos") {
+				params.update = update === "true";
+			}
+
+			if (source !== "todos") {
+				params.source = source;
+			}
+
+			if (detailsLoaded !== "todos") {
+				params.detailsLoaded = detailsLoaded === "true";
+			}
+
+			console.log("Params enviados a API:", params);
+
+			const response = await CausasEjeService.getVerifiedCausas(params);
+
+			if (response.success) {
+				setCausas(Array.isArray(response.data) ? response.data : [response.data]);
+				setTotalCount(response.count || 0);
+				setTotalInDatabase(response.totalInDatabase || 0);
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al cargar las carpetas verificadas EJE", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			console.error(error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	// Cargar estadísticas de workers
+	const fetchWorkerStats = async () => {
+		try {
+			setLoadingStats(true);
+			const response = await CausasEjeService.getWorkerStats();
+			if (response.success) {
+				setWorkerStats(response.data);
+			}
+		} catch (error) {
+			console.error("Error al cargar estadísticas:", error);
+		} finally {
+			setLoadingStats(false);
+		}
+	};
+
+	// Efecto inicial
+	useEffect(() => {
+		fetchCausas(page, rowsPerPage, searchNumero, searchAnio, searchCuij, searchCaratula, sortBy, sortOrder, privadaFilter, updateFilter, sourceFilter, detailsLoadedFilter);
+		fetchWorkerStats();
+	}, []);
+
+	// Efecto para cambios de filtros que disparan fetch automático
+	useEffect(() => {
+		fetchCausas(page, rowsPerPage, searchNumero, searchAnio, searchCuij, searchCaratula, sortBy, sortOrder, privadaFilter, updateFilter, sourceFilter, detailsLoadedFilter);
+	}, [page, rowsPerPage, sortBy, sortOrder, privadaFilter, updateFilter, sourceFilter, detailsLoadedFilter]);
+
+	// Handlers
+	const handleChangePage = (_event: unknown, newPage: number) => {
+		setPage(newPage);
+	};
+
+	const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setRowsPerPage(parseInt(event.target.value, 10));
+		setPage(0);
+	};
+
+	const handleSortChange = (event: any) => {
+		setSortBy(event.target.value);
+		setPage(0);
+	};
+
+	const handleSortOrderChange = () => {
+		setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+		setPage(0);
+	};
+
+	const handleSearch = () => {
+		setPage(0);
+		fetchCausas(0, rowsPerPage, searchNumero, searchAnio, searchCuij, searchCaratula, sortBy, sortOrder, privadaFilter, updateFilter, sourceFilter, detailsLoadedFilter);
+	};
+
+	const handleClearSearch = () => {
+		setSearchNumero("");
+		setSearchAnio("");
+		setSearchCuij("");
+		setSearchCaratula("");
+		setPrivadaFilter("todos");
+		setUpdateFilter("todos");
+		setSourceFilter("todos");
+		setDetailsLoadedFilter("todos");
+		setPage(0);
+		fetchCausas(0, rowsPerPage, "", "", "", "", sortBy, sortOrder, "todos", "todos", "todos", "todos");
+	};
+
+	const handleRefresh = () => {
+		fetchCausas(page, rowsPerPage, searchNumero, searchAnio, searchCuij, searchCaratula, sortBy, sortOrder, privadaFilter, updateFilter, sourceFilter, detailsLoadedFilter);
+		fetchWorkerStats();
+	};
+
+	// Handler para ver detalles
+	const handleVerDetalles = async (causa: CausaEje) => {
+		try {
+			setLoadingDetail(true);
+			const causaId = getId(causa._id);
+
+			const response = await CausasEjeService.getCausaById(causaId);
+
+			if (response.success && response.data) {
+				const causaCompleta = Array.isArray(response.data) ? response.data[0] : response.data;
+				setSelectedCausa(causaCompleta);
+				setDetailModalOpen(true);
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al cargar los detalles de la causa", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			console.error(error);
+		} finally {
+			setLoadingDetail(false);
+		}
+	};
+
+	const handleCloseModal = () => {
+		setDetailModalOpen(false);
+		setSelectedCausa(null);
+	};
+
+	return (
+		<MainCard title="Carpetas Verificadas EJE (App)">
+			{/* Header: Resultados + Estadísticas */}
+			<Box sx={{ mb: 2 }}>
+				<Grid container spacing={2} alignItems="center">
+					{/* Resultados */}
+					<Grid item xs={12} md={4}>
+						<Card sx={{ backgroundColor: "primary.lighter", border: 1, borderColor: "primary.main" }}>
+							<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
+								<Stack direction="row" justifyContent="space-between" alignItems="center">
+									<Typography variant="body2" color="text.secondary">
+										Resultados
+									</Typography>
+									<Typography variant="h4" color="primary.main" fontWeight="bold">
+										{totalCount.toLocaleString()}
+										<Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
+											/ {totalInDatabase.toLocaleString()}
+										</Typography>
+									</Typography>
+								</Stack>
+							</CardContent>
+						</Card>
+					</Grid>
+
+					{/* Estadísticas de Workers */}
+					<Grid item xs={12} md={8}>
+						<Card sx={{ border: 1, borderColor: "divider" }}>
+							<CardContent sx={{ py: 1, "&:last-child": { pb: 1 } }}>
+								{loadingStats ? (
+									<Box display="flex" justifyContent="center" py={1}>
+										<CircularProgress size={20} />
+									</Box>
+								) : workerStats ? (
+									<Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap">
+										<Tooltip title="Verificación completada">
+											<Chip
+												icon={<TickCircle size={14} variant="Bold" />}
+												label={`${workerStats.verification.rate}% verificados`}
+												size="small"
+												color="success"
+												sx={{ height: 24 }}
+											/>
+										</Tooltip>
+										<Tooltip title="Detalles cargados">
+											<Chip
+												icon={<TickCircle size={14} variant="Bold" />}
+												label={`${workerStats.details.rate}% con detalles`}
+												size="small"
+												color="info"
+												sx={{ height: 24 }}
+											/>
+										</Tooltip>
+										<Tooltip title="Expedientes privados">
+											<Chip
+												icon={<Lock1 size={14} />}
+												label={`${workerStats.status.private} privados`}
+												size="small"
+												color="warning"
+												sx={{ height: 24 }}
+											/>
+										</Tooltip>
+										<Tooltip title="Con errores">
+											<Chip
+												icon={<CloseSquare size={14} variant="Bold" />}
+												label={`${workerStats.errors.total} errores`}
+												size="small"
+												color="error"
+												sx={{ height: 24 }}
+											/>
+										</Tooltip>
+										<Chip
+											label={`${workerStats.total} total`}
+											size="small"
+											variant="outlined"
+											sx={{ height: 24 }}
+										/>
+									</Stack>
+								) : (
+									<Typography variant="caption" color="text.secondary" textAlign="center">
+										Error cargando estadísticas
+									</Typography>
+								)}
+							</CardContent>
+						</Card>
+					</Grid>
+				</Grid>
+			</Box>
+
+			<Grid container spacing={3}>
+				{/* Filtros principales */}
+				<Grid item xs={12}>
+					<Grid container spacing={2}>
+						<Grid item xs={12} md={6} lg={2}>
+							<TextField
+								fullWidth
+								label="Número"
+								value={searchNumero}
+								onChange={(e) => setSearchNumero(e.target.value)}
+								size="small"
+								placeholder="Ej: 15050"
+							/>
+						</Grid>
+						<Grid item xs={12} md={6} lg={2}>
+							<TextField
+								fullWidth
+								label="Año"
+								value={searchAnio}
+								onChange={(e) => setSearchAnio(e.target.value)}
+								size="small"
+								placeholder="Ej: 2021"
+							/>
+						</Grid>
+						<Grid item xs={12} md={6} lg={3}>
+							<TextField
+								fullWidth
+								label="CUIJ"
+								value={searchCuij}
+								onChange={(e) => setSearchCuij(e.target.value)}
+								size="small"
+								placeholder="Ej: J-01-00015050-5/2021-0"
+							/>
+						</Grid>
+						<Grid item xs={12} md={6} lg={5}>
+							<TextField
+								fullWidth
+								label="Carátula"
+								value={searchCaratula}
+								onChange={(e) => setSearchCaratula(e.target.value)}
+								size="small"
+								placeholder="Buscar en carátula..."
+							/>
+						</Grid>
+					</Grid>
+				</Grid>
+
+				{/* Filtros secundarios */}
+				<Grid item xs={12}>
+					<Grid container spacing={2}>
+						<Grid item xs={12} md={6} lg={2}>
+							<FormControl fullWidth size="small">
+								<InputLabel>Privado</InputLabel>
+								<Select
+									value={privadaFilter}
+									onChange={(e) => {
+										setPrivadaFilter(e.target.value);
+										setPage(0);
+									}}
+									label="Privado"
+								>
+									<MenuItem value="todos">Todos</MenuItem>
+									<MenuItem value="true">Sí</MenuItem>
+									<MenuItem value="false">No</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={12} md={6} lg={2}>
+							<FormControl fullWidth size="small">
+								<InputLabel>Actualizable</InputLabel>
+								<Select
+									value={updateFilter}
+									onChange={(e) => {
+										setUpdateFilter(e.target.value);
+										setPage(0);
+									}}
+									label="Actualizable"
+								>
+									<MenuItem value="todos">Todos</MenuItem>
+									<MenuItem value="true">Sí</MenuItem>
+									<MenuItem value="false">No</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={12} md={6} lg={2}>
+							<FormControl fullWidth size="small">
+								<InputLabel>Source</InputLabel>
+								<Select
+									value={sourceFilter}
+									onChange={(e) => {
+										setSourceFilter(e.target.value);
+										setPage(0);
+									}}
+									label="Source"
+								>
+									<MenuItem value="todos">Todos</MenuItem>
+									<MenuItem value="app">App</MenuItem>
+									<MenuItem value="import">Import</MenuItem>
+									<MenuItem value="scraping">Scraping</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={12} md={6} lg={2}>
+							<FormControl fullWidth size="small">
+								<InputLabel>Detalles</InputLabel>
+								<Select
+									value={detailsLoadedFilter}
+									onChange={(e) => {
+										setDetailsLoadedFilter(e.target.value);
+										setPage(0);
+									}}
+									label="Detalles"
+								>
+									<MenuItem value="todos">Todos</MenuItem>
+									<MenuItem value="true">Cargados</MenuItem>
+									<MenuItem value="false">Pendientes</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
+					</Grid>
+				</Grid>
+
+				{/* Ordenamiento */}
+				<Grid item xs={12}>
+					<Grid container spacing={2} alignItems="center">
+						<Grid item xs={12} md={4} lg={3}>
+							<FormControl fullWidth>
+								<InputLabel>Ordenar por</InputLabel>
+								<Select value={sortBy} onChange={handleSortChange} label="Ordenar por" size="small">
+									<MenuItem value="anio">Año</MenuItem>
+									<MenuItem value="numero">Número</MenuItem>
+									<MenuItem value="caratula">Carátula</MenuItem>
+									<MenuItem value="juzgado">Juzgado</MenuItem>
+									<MenuItem value="movimientosCount">Movimientos</MenuItem>
+									<MenuItem value="createdAt">Fecha Creación</MenuItem>
+									<MenuItem value="lastUpdate">Última Act.</MenuItem>
+									<MenuItem value="ultimoMovimiento">Fecha Últ. Mov.</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={12} md={2} lg={2}>
+							<Button
+								fullWidth
+								variant="outlined"
+								startIcon={sortOrder === "asc" ? <ArrowUp size={18} /> : <ArrowDown size={18} />}
+								onClick={handleSortOrderChange}
+								disabled={loading}
+								size="small"
+							>
+								{sortOrder === "asc" ? "Ascendente" : "Descendente"}
+							</Button>
+						</Grid>
+						<Grid item xs={12} md={6} lg={7}>
+							<Stack direction="row" spacing={1}>
+								<Button variant="contained" startIcon={<SearchNormal1 size={18} />} onClick={handleSearch} disabled={loading} size="small">
+									Buscar
+								</Button>
+								<Button
+									variant="outlined"
+									startIcon={<CloseCircle size={18} />}
+									onClick={handleClearSearch}
+									disabled={loading}
+									size="small"
+								>
+									Limpiar
+								</Button>
+								<Tooltip title="Actualizar">
+									<IconButton onClick={handleRefresh} disabled={loading} size="small">
+										<Refresh />
+									</IconButton>
+								</Tooltip>
+							</Stack>
+						</Grid>
+					</Grid>
+				</Grid>
+
+				{/* Tabla */}
+				<Grid item xs={12}>
+					{loading ? (
+						<Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+							<CircularProgress />
+						</Box>
+					) : causas.length === 0 ? (
+						<Alert severity="info">No se encontraron carpetas verificadas EJE con los filtros seleccionados</Alert>
+					) : (
+						<Card>
+							<TableContainer>
+								<Table>
+									<TableHead>
+										<TableRow>
+											<TableCell>Expediente</TableCell>
+											<TableCell>CUIJ</TableCell>
+											<TableCell>Source</TableCell>
+											<TableCell>Carátula</TableCell>
+											<TableCell>Juzgado</TableCell>
+											<TableCell>Objeto</TableCell>
+											<TableCell align="right">Monto</TableCell>
+											<TableCell>Estado</TableCell>
+											<TableCell align="center">Movs.</TableCell>
+											<TableCell>Fecha Creación</TableCell>
+											<TableCell>Última Act.</TableCell>
+											<TableCell>Últ. Movimiento</TableCell>
+											<TableCell align="center">Actualizable</TableCell>
+											<TableCell align="center">Privado</TableCell>
+											<TableCell align="center">Detalles</TableCell>
+											<TableCell align="center">Acciones</TableCell>
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{causas.map((causa) => (
+											<TableRow key={getId(causa._id)} hover>
+												<TableCell>
+													<Typography variant="body2" fontWeight="bold">
+														{causa.numero}/{causa.anio}
+													</Typography>
+												</TableCell>
+												<TableCell>
+													<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+														{causa.cuij}
+													</Typography>
+												</TableCell>
+												<TableCell>
+													<Chip
+														label={causa.source || "N/A"}
+														size="small"
+														variant="outlined"
+														color={causa.source === "app" ? "primary" : causa.source === "import" ? "secondary" : "default"}
+													/>
+												</TableCell>
+												<TableCell sx={{ maxWidth: 250 }}>
+													<Typography variant="body2" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
+														{causa.caratula || "Sin carátula"}
+													</Typography>
+												</TableCell>
+												<TableCell>
+													<Typography variant="body2" noWrap sx={{ maxWidth: 150 }}>
+														{causa.juzgado || "N/A"}
+													</Typography>
+												</TableCell>
+												<TableCell sx={{ maxWidth: 150 }}>
+													<Typography variant="body2" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
+														{causa.objeto || "N/A"}
+													</Typography>
+												</TableCell>
+												<TableCell align="right">
+													<Typography variant="body2">
+														{formatMonto(causa.monto, causa.montoMoneda)}
+													</Typography>
+												</TableCell>
+												<TableCell>
+													{causa.estado && (
+														<Chip
+															label={causa.estado}
+															size="small"
+															color="info"
+															variant="outlined"
+														/>
+													)}
+												</TableCell>
+												<TableCell align="center">
+													<Chip label={causa.movimientosCount || 0} size="small" variant="outlined" />
+												</TableCell>
+												<TableCell>
+													<Typography variant="caption">{formatDate(causa.createdAt)}</Typography>
+												</TableCell>
+												<TableCell>
+													<Typography variant="caption">{formatDate(causa.lastUpdate)}</Typography>
+												</TableCell>
+												<TableCell>
+													<Typography variant="caption">{formatDate(causa.ultimoMovimiento)}</Typography>
+												</TableCell>
+												<TableCell align="center">
+													{causa.update ? (
+														<TickCircle size={20} color="#2e7d32" variant="Bold" />
+													) : (
+														<CloseSquare size={20} color="#d32f2f" variant="Bold" />
+													)}
+												</TableCell>
+												<TableCell align="center">
+													{causa.isPrivate ? (
+														<Lock1 size={20} color="#ed6c02" variant="Bold" />
+													) : (
+														<Typography variant="caption" color="text.secondary">—</Typography>
+													)}
+												</TableCell>
+												<TableCell align="center">
+													{causa.detailsLoaded ? (
+														<TickCircle size={20} color="#2e7d32" variant="Bold" />
+													) : (
+														<CloseSquare size={20} color="#d32f2f" variant="Bold" />
+													)}
+												</TableCell>
+												<TableCell align="center">
+													<Tooltip title="Ver detalles">
+														<IconButton size="small" color="primary" onClick={() => handleVerDetalles(causa)} disabled={loadingDetail}>
+															<Eye size={18} />
+														</IconButton>
+													</Tooltip>
+												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</TableContainer>
+							<TablePagination
+								rowsPerPageOptions={[10, 25, 50, 100]}
+								component="div"
+								count={totalCount}
+								rowsPerPage={rowsPerPage}
+								page={page}
+								onPageChange={handleChangePage}
+								onRowsPerPageChange={handleChangeRowsPerPage}
+								labelRowsPerPage="Filas por página:"
+								labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+							/>
+						</Card>
+					)}
+				</Grid>
+			</Grid>
+
+			{/* TODO: Modal de detalles EJE - Por implementar */}
+		</MainCard>
+	);
+};
+
+export default CarpetasVerificadasEje;
