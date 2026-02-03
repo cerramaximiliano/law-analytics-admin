@@ -354,6 +354,7 @@ const IntervinientesWorker = () => {
 	};
 
 	// Criterios de elegibilidad
+	const reextractDays = config?.eligibility?.reextractAfterDays;
 	const eligibilityCriteria = [
 		{ field: "source", condition: "in ['app', 'cache']", description: "Causa importada desde la app (no pjn-login)", active: true },
 		{ field: "verified", condition: "=== true", description: "Documento verificado en PJN", active: config?.eligibility?.requireVerified },
@@ -361,6 +362,14 @@ const IntervinientesWorker = () => {
 		{ field: "isPrivate", condition: "!== true", description: "No es documento privado", active: config?.eligibility?.excludePrivate },
 		{ field: "lastUpdate", condition: "exists", description: "Tiene actualización registrada", active: config?.eligibility?.requireLastUpdate },
 		{ field: "detailsLoaded", condition: "false/null/undefined", description: "No procesado por extra-info", active: true },
+		{
+			field: "detailsLastUpdate",
+			condition: reextractDays ? `< ${reextractDays} días` : "N/A",
+			description: reextractDays
+				? `Re-extrae si fue procesado hace más de ${reextractDays} días`
+				: "Re-extracción deshabilitada (no se vuelven a procesar)",
+			active: !!reextractDays
+		},
 	];
 
 	// Flujo del worker
@@ -404,11 +413,15 @@ const IntervinientesWorker = () => {
 				"  ✓ lastUpdate existe",
 				"     Tiene al menos una actualización registrada",
 				"",
-				"  ✓ detailsLoaded !== true",
+				"  ✓ detailsLoaded !== true (O re-extracción)",
 				"     Aún no fue procesado por este worker",
+				"     O si está configurado reextractAfterDays > 0:",
+				"     detailsLastUpdate tiene más de N días",
 				"",
 				"IMPORTANTE: La elegibilidad NO depende de usuarios ni folders.",
 				"Se procesan TODAS las causas que cumplan estos criterios.",
+				"",
+				"NOTA: Por defecto reextractAfterDays = null (sin re-extracción).",
 			],
 			color: theme.palette.primary.main,
 		},
