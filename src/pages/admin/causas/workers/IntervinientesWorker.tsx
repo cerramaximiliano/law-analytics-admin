@@ -355,6 +355,7 @@ const IntervinientesWorker = () => {
 
 	// Criterios de elegibilidad
 	const eligibilityCriteria = [
+		{ field: "source", condition: "in ['app', 'cache']", description: "Causa importada desde la app (no pjn-login)", active: true },
 		{ field: "verified", condition: "=== true", description: "Documento verificado en PJN", active: config?.eligibility?.requireVerified },
 		{ field: "isValid", condition: "=== true", description: "Expediente existe y es accesible", active: config?.eligibility?.requireValid },
 		{ field: "isPrivate", condition: "!== true", description: "No es documento privado", active: config?.eligibility?.excludePrivate },
@@ -387,6 +388,9 @@ const IntervinientesWorker = () => {
 			steps: [
 				"Se consultan TODAS las colecciones: civil, ss, trabajo, comercial",
 				"Una causa es ELEGIBLE si cumple TODOS estos criterios:",
+				"",
+				"  ✓ source in ['app', 'cache']",
+				"     Causa importada desde la app (excluye pjn-login)",
 				"",
 				"  ✓ verified === true",
 				"     La causa fue verificada previamente en PJN",
