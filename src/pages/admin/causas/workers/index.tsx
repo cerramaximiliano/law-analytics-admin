@@ -1,17 +1,13 @@
 import React from "react";
 import { useState } from "react";
 import { Box, Tab, Tabs, Typography, Paper, Stack, Chip, useTheme, alpha, IconButton, Tooltip, Popover } from "@mui/material";
-import { Setting2, Notification, Broom, TickSquare, Refresh2, SearchNormal1, DocumentUpload, InfoCircle, People } from "iconsax-react";
+import { TickSquare, SearchNormal1, DocumentUpload, InfoCircle, People } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import VerificationWorker from "./VerificationWorker";
 import ScrapingWorker from "./ScrapingWorker";
 import AppUpdateWorker from "./AppUpdateWorker";
 import IntervinientesWorker from "./IntervinientesWorker";
-import SyncWorker from "./SyncWorker";
-import ProcessingWorker from "./ProcessingWorker";
-import NotificationWorker from "./NotificationWorker";
-import CleanupWorker from "./CleanupWorker";
 
 // Interfaz para los tabs
 interface WorkerTab {
@@ -45,12 +41,22 @@ const WorkersConfig = () => {
 			badge: "worker_01",
 		},
 		{
-			label: "Actualización (App)",
+			label: "Verificación",
+			value: "verification",
+			icon: <TickSquare size={20} />,
+			component: <VerificationWorker />,
+			description: "Configura los parámetros del worker de verificación de causas",
+			status: "active",
+			badge: "app",
+		},
+		{
+			label: "Actualización",
 			value: "app-update",
 			icon: <DocumentUpload size={20} />,
 			component: <AppUpdateWorker />,
 			description: "Mantiene actualizados los documentos de causas judiciales (API de PJN)",
 			status: "active",
+			badge: "app",
 		},
 		{
 			label: "Intervinientes",
@@ -59,46 +65,7 @@ const WorkersConfig = () => {
 			component: <IntervinientesWorker />,
 			description: "Extrae intervinientes (partes y letrados) de las causas desde PJN",
 			status: "active",
-		},
-		{
-			label: "Verificación",
-			value: "verification",
-			icon: <TickSquare size={20} />,
-			component: <VerificationWorker />,
-			description: "Configura los parámetros del worker de verificación de causas",
-			status: "active",
-		},
-		{
-			label: "Sincronización",
-			value: "sync",
-			icon: <Refresh2 size={20} />,
-			component: <SyncWorker />,
-			description: "Gestiona la sincronización de datos con sistemas externos",
-			status: "inactive",
-		},
-		{
-			label: "Procesamiento",
-			value: "processing",
-			icon: <Setting2 size={20} />,
-			component: <ProcessingWorker />,
-			description: "Controla el procesamiento automático de documentos",
-			status: "inactive",
-		},
-		{
-			label: "Notificaciones",
-			value: "notifications",
-			icon: <Notification size={20} />,
-			component: <NotificationWorker />,
-			description: "Administra el envío de notificaciones y alertas",
-			status: "active",
-		},
-		{
-			label: "Limpieza",
-			value: "cleanup",
-			icon: <Broom size={20} />,
-			component: <CleanupWorker />,
-			description: "Configura las tareas de mantenimiento y limpieza",
-			status: "inactive",
+			badge: "app",
 		},
 	];
 
