@@ -18,6 +18,7 @@ interface WorkerTab {
 	description: string;
 	status?: "active" | "inactive" | "error";
 	badge?: string;
+	ip?: string;
 }
 
 const WorkersConfig = () => {
@@ -39,6 +40,7 @@ const WorkersConfig = () => {
 			description: "Configura los workers que buscan y recopilan nuevas causas judiciales",
 			status: "active",
 			badge: "worker_01",
+			ip: "100.111.73.56",
 		},
 		{
 			label: "Verificación",
@@ -48,6 +50,7 @@ const WorkersConfig = () => {
 			description: "Configura los parámetros del worker de verificación de causas",
 			status: "active",
 			badge: "app",
+			ip: "18.228.63.73",
 		},
 		{
 			label: "Actualización",
@@ -57,6 +60,7 @@ const WorkersConfig = () => {
 			description: "Mantiene actualizados los documentos de causas judiciales (API de PJN)",
 			status: "active",
 			badge: "app",
+			ip: "18.228.63.73",
 		},
 		{
 			label: "Intervinientes",
@@ -66,6 +70,7 @@ const WorkersConfig = () => {
 			description: "Extrae intervinientes (partes y letrados) de las causas desde PJN",
 			status: "active",
 			badge: "app",
+			ip: "18.228.63.73",
 		},
 	];
 
@@ -172,6 +177,25 @@ const WorkersConfig = () => {
 															}}
 														>
 															{tab.badge}
+														</Box>
+													)}
+													{tab.ip && (
+														<Box
+															component="span"
+															sx={{
+																display: "inline-flex",
+																alignItems: "center",
+																px: 0.75,
+																py: 0.25,
+																borderRadius: 1,
+																bgcolor: alpha(theme.palette.info.main, 0.1),
+																color: theme.palette.info.main,
+																fontSize: "0.6rem",
+																fontWeight: 500,
+																fontFamily: "monospace",
+															}}
+														>
+															{tab.ip}
 														</Box>
 													)}
 												</Stack>
