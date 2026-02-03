@@ -84,6 +84,13 @@ const ServerStatus = () => {
 			baseUrl: import.meta.env.VITE_API_MEV || "https://mev.lawanalytics.app",
 			status: "checking",
 		},
+		{
+			name: "API de Causas EJE",
+			url: `${import.meta.env.VITE_API_EJE || "https://eje.lawanalytics.app"}/api/health`,
+			ip: "15.229.93.121",
+			baseUrl: import.meta.env.VITE_API_EJE || "https://eje.lawanalytics.app",
+			status: "checking",
+		},
 	]);
 
 	const checkServices = useCallback(async () => {
@@ -155,7 +162,7 @@ const ServerStatus = () => {
 					// Si es un error de red, podría ser CORS
 					if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
 						// Para servicios conocidos que sabemos que funcionan pero tienen CORS restrictivo
-						if (service.name === "API de Suscripciones" || service.name === "API de Causas PJN" || service.name === "API de Causas MEV") {
+						if (service.name === "API de Suscripciones" || service.name === "API de Causas PJN" || service.name === "API de Causas MEV" || service.name === "API de Causas EJE") {
 							// Intentar verificar a través de nuestro backend
 							try {
 								const proxyUrl = `${import.meta.env.VITE_AUTH_URL}/api/server-status/check-external`;

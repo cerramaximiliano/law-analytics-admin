@@ -28,6 +28,11 @@ const CredencialesPJN = Loadable(lazy(() => import("pages/admin/causas/Credencia
 const CarpetasMEVVerificadas = Loadable(lazy(() => import("pages/admin/mev/CarpetasMEVVerificadas")));
 const CarpetasMEVNoVerificadas = Loadable(lazy(() => import("pages/admin/mev/CarpetasMEVNoVerificadas")));
 
+// EJE pages
+const CarpetasVerificadasEje = Loadable(lazy(() => import("pages/admin/eje/CarpetasVerificadasEje")));
+const CarpetasNoVerificadasEje = Loadable(lazy(() => import("pages/admin/eje/CarpetasNoVerificadasEje")));
+const EjeWorkersConfig = Loadable(lazy(() => import("pages/admin/eje/workers")));
+
 // Subscriptions pages
 const StripeWebhooks = Loadable(lazy(() => import("pages/subscriptions/StripeWebhooks")));
 const CronConfig = Loadable(lazy(() => import("pages/subscriptions/CronConfig")));
@@ -222,6 +227,30 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<CarpetasMEVNoVerificadas />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "eje/verified-app",
+							element: (
+								<AdminRoleGuard>
+									<CarpetasVerificadasEje />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "eje/non-verified",
+							element: (
+								<AdminRoleGuard>
+									<CarpetasNoVerificadasEje />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "eje/workers",
+							element: (
+								<AdminRoleGuard>
+									<EjeWorkersConfig />
 								</AdminRoleGuard>
 							),
 						},

@@ -33,6 +33,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "workers-eje",
+					title: "Workers EJE",
+					type: "item",
+					url: "/admin/eje/workers",
+					breadcrumbs: true,
+				},
+				{
 					id: "workers-logs",
 					title: "Logs",
 					type: "item",
@@ -106,6 +113,29 @@ const admin: NavItemType = {
 					title: "Carpetas No Verificadas (App)",
 					type: "item",
 					url: "/admin/mev/non-verified",
+					breadcrumbs: true,
+				},
+			],
+		},
+		{
+			id: "carpetas-eje",
+			title: "Carpetas EJE",
+			type: "collapse",
+			icon: Folder2,
+			breadcrumbs: true,
+			children: [
+				{
+					id: "eje-verified-app",
+					title: "Carpetas Verificadas (App)",
+					type: "item",
+					url: "/admin/eje/verified-app",
+					breadcrumbs: true,
+				},
+				{
+					id: "eje-non-verified",
+					title: "Carpetas No Verificadas (App)",
+					type: "item",
+					url: "/admin/eje/non-verified",
 					breadcrumbs: true,
 				},
 			],
