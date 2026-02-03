@@ -20,6 +20,8 @@ export interface ExtraInfoEligibility {
 		enabled: boolean;
 		testUserIds: string[];
 	};
+	// Re-extracción: null o 0 = nunca, > 0 = después de N días
+	reextractAfterDays?: number | null;
 }
 
 export interface ExtraInfoStats {
