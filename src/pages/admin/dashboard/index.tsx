@@ -846,10 +846,10 @@ const AdminDashboard = () => {
 									<Skeleton variant="text" width={80} height={48} />
 								) : (
 									<>
-										<Typography variant="h3" sx={{ fontWeight: 700, color: COLORS.success.main, mb: 0.5 }}>
+										<Typography variant="h3" sx={{ fontWeight: 700, color: COLORS.success.main, mb: 0.5, textAlign: "center" }}>
 											{((data?.folders.pjn?.verified || 0) + (data?.folders.mev?.verified || 0) + (ejeStats?.status.valid || 0)).toLocaleString()}
 										</Typography>
-										<Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+										<Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", justifyContent: "center" }}>
 											<Chip
 												label={`PJN: ${(data?.folders.pjn?.verified || 0).toLocaleString()}`}
 												size="small"
