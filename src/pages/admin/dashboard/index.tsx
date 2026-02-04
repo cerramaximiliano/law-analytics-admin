@@ -40,6 +40,7 @@ import { WorkersService } from "api/workers";
 import adminAxios from "utils/adminAxios";
 import { CausasPjnService, EligibilityStats } from "api/causasPjn";
 import { StuckDocumentsService, StuckDocumentsStats } from "api/stuckDocuments";
+import { CausasEjeService, WorkerStatsResponse } from "api/causasEje";
 import LinearProgress from "@mui/material/LinearProgress";
 import { Warning2 } from "iconsax-react";
 
@@ -111,6 +112,8 @@ const metricInfo: Record<string, string> = {
 	mevVerified: "Causas MEV verificadas y válidas (verified: true, isValid: true). Corresponde a la ruta 'MEV Verificadas (App)'.",
 	mevNonVerified: "Causas MEV verificadas pero no válidas (verified: true, isValid: false). Corresponde a la ruta 'MEV No Verificadas'.",
 	mevPending: "Causas MEV pendientes de verificación (verified: false). Aún no han sido procesadas.",
+	// EJE Folders
+	ejeVerified: "Causas EJE (Expediente Judicial Electrónico - CABA) verificadas y válidas. Corresponde a la ruta 'EJE Verificadas (App)'.",
 	// Marketing - Campaigns
 	totalCampaigns: "Total de campañas de email marketing creadas.",
 	activeCampaigns: "Campañas que están actualmente en ejecución enviando correos.",
@@ -550,6 +553,22 @@ const AdminDashboard = () => {
 	const [loadingEligibility, setLoadingEligibility] = useState(false);
 	const [stuckDocumentsStats, setStuckDocumentsStats] = useState<StuckDocumentsStats | null>(null);
 	const [loadingStuckDocuments, setLoadingStuckDocuments] = useState(false);
+	const [ejeStats, setEjeStats] = useState<WorkerStatsResponse["data"] | null>(null);
+	const [loadingEjeStats, setLoadingEjeStats] = useState(false);
+
+	const fetchEjeStats = useCallback(async () => {
+		try {
+			setLoadingEjeStats(true);
+			const response = await CausasEjeService.getWorkerStats();
+			if (response.success) {
+				setEjeStats(response.data);
+			}
+		} catch (error: any) {
+			console.error("Error fetching EJE stats:", error);
+		} finally {
+			setLoadingEjeStats(false);
+		}
+	}, []);
 
 	const fetchEligibilityStats = useCallback(async () => {
 		try {
@@ -649,7 +668,8 @@ const AdminDashboard = () => {
 		fetchOpenaiBalance();
 		fetchEligibilityStats();
 		fetchStuckDocumentsStats();
-	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance, fetchOpenaiBalance, fetchEligibilityStats, fetchStuckDocumentsStats]);
+		fetchEjeStats();
+	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance, fetchOpenaiBalance, fetchEligibilityStats, fetchStuckDocumentsStats, fetchEjeStats]);
 
 	useRequestQueueRefresh(fetchData);
 
@@ -660,6 +680,7 @@ const AdminDashboard = () => {
 		fetchOpenaiBalance();
 		fetchEligibilityStats();
 		fetchStuckDocumentsStats();
+		fetchEjeStats();
 	};
 
 	// Chart data - Consistent colors: Green=Active/Verified, Gray=Inactive/Unverified
@@ -804,15 +825,74 @@ const AdminDashboard = () => {
 							/>
 						</Grid>
 						<Grid item xs={6} sm={6} md={3}>
-							<PrimaryKPICard
-								title="Carpetas Verificadas"
-								value={data?.folders.verified || 0}
-								icon={<Folder size={20} />}
-								valueColor={COLORS.success.main}
-								loading={loading}
-								infoKey="verifiedFolders"
-								linkTo="/admin/causas/verified-app"
-							/>
+							<Paper
+								elevation={0}
+								sx={{
+									p: { xs: 1.5, sm: 2.5 },
+									borderRadius: 2,
+									bgcolor: theme.palette.background.paper,
+									border: `1px solid ${theme.palette.divider}`,
+									height: "100%",
+								}}
+							>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+									<Box sx={{ color: COLORS.success.main }}><Folder size={20} /></Box>
+									<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>
+										Carpetas Verificadas
+									</Typography>
+									<InfoTooltip metricKey="verifiedFolders" />
+								</Box>
+								{loading || loadingEjeStats ? (
+									<Skeleton variant="text" width={80} height={48} />
+								) : (
+									<>
+										<Typography variant="h3" sx={{ fontWeight: 700, color: COLORS.success.main, mb: 0.5 }}>
+											{((data?.folders.pjn?.verified || 0) + (data?.folders.mev?.verified || 0) + (ejeStats?.status.valid || 0)).toLocaleString()}
+										</Typography>
+										<Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+											<Chip
+												label={`PJN: ${(data?.folders.pjn?.verified || 0).toLocaleString()}`}
+												size="small"
+												onClick={() => navigate("/admin/causas/verified-app")}
+												sx={{
+													bgcolor: alpha(COLORS.primary.main, 0.1),
+													color: COLORS.primary.main,
+													fontWeight: 500,
+													fontSize: "0.65rem",
+													cursor: "pointer",
+													"&:hover": { bgcolor: alpha(COLORS.primary.main, 0.2) }
+												}}
+											/>
+											<Chip
+												label={`MEV: ${(data?.folders.mev?.verified || 0).toLocaleString()}`}
+												size="small"
+												onClick={() => navigate("/admin/mev/verified-app")}
+												sx={{
+													bgcolor: alpha(COLORS.neutral.main, 0.1),
+													color: COLORS.neutral.main,
+													fontWeight: 500,
+													fontSize: "0.65rem",
+													cursor: "pointer",
+													"&:hover": { bgcolor: alpha(COLORS.neutral.main, 0.2) }
+												}}
+											/>
+											<Chip
+												label={`EJE: ${(ejeStats?.status.valid || 0).toLocaleString()}`}
+												size="small"
+												onClick={() => navigate("/admin/eje/verified-app")}
+												sx={{
+													bgcolor: alpha(COLORS.success.main, 0.1),
+													color: COLORS.success.main,
+													fontWeight: 500,
+													fontSize: "0.65rem",
+													cursor: "pointer",
+													"&:hover": { bgcolor: alpha(COLORS.success.main, 0.2) }
+												}}
+											/>
+										</Box>
+									</>
+								)}
+							</Paper>
 						</Grid>
 						<Grid item xs={6} sm={6} md={3}>
 							<PrimaryKPICard
