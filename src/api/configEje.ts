@@ -302,6 +302,97 @@ export const getRunHistory = async (
   return response.data.data;
 };
 
+// Individual Worker Management
+export interface IManagerWorkerConfig {
+  enabled: boolean;
+  minWorkers: number;
+  maxWorkers: number;
+  scaleUpThreshold: number;
+  scaleDownThreshold: number;
+  batchSize: number;
+  delayBetweenRequests: number;
+  maxRetries: number;
+  cronExpression: string;
+  workerName: string;
+  workerScript: string;
+  maxMemoryRestart: string;
+}
+
+export interface IWorkerStatusDetail {
+  activeInstances: number;
+  pendingDocuments: number;
+  optimalInstances: number;
+  lastProcessedAt?: string;
+  processedThisCycle: number;
+  errorsThisCycle: number;
+}
+
+export interface IGlobalSettings {
+  checkInterval?: number;
+  workStartHour?: number;
+  workEndHour?: number;
+  workDays?: number[];
+  timezone?: string;
+  cpuThreshold?: number;
+  memoryThreshold?: number;
+  lockTimeoutMinutes?: number;
+  updateThresholdHours?: number;
+}
+
+export interface IWorkerData {
+  workerType: 'verification' | 'update' | 'stuck';
+  config: IManagerWorkerConfig;
+  status: IWorkerStatusDetail;
+}
+
+export interface IAllWorkersResponse {
+  workers: IWorkerData[];
+  globalSettings: IGlobalSettings;
+  managerState: {
+    isRunning: boolean;
+    isPaused: boolean;
+    lastCycleAt?: string;
+    cycleCount: number;
+    systemResources: ISystemResources;
+  };
+}
+
+export const getAllWorkersConfig = async (): Promise<IAllWorkersResponse> => {
+  const response = await ejeAxios.get('/config/manager/workers');
+  return response.data.data;
+};
+
+export const getWorkerConfig = async (workerType: 'verification' | 'update' | 'stuck'): Promise<{
+  workerType: string;
+  config: IManagerWorkerConfig;
+  status: IWorkerStatusDetail;
+  globalSettings: IGlobalSettings;
+}> => {
+  const response = await ejeAxios.get(`/config/manager/worker/${workerType}`);
+  return response.data.data;
+};
+
+export const updateWorkerConfig = async (
+  workerType: 'verification' | 'update' | 'stuck',
+  updates: Partial<IManagerWorkerConfig>
+): Promise<IManagerWorkerConfig> => {
+  const response = await ejeAxios.patch(`/config/manager/worker/${workerType}`, updates);
+  return response.data.data;
+};
+
+export const toggleWorker = async (workerType: 'verification' | 'update' | 'stuck'): Promise<{
+  workerType: string;
+  enabled: boolean;
+}> => {
+  const response = await ejeAxios.post(`/config/manager/worker/${workerType}/toggle`);
+  return response.data;
+};
+
+export const updateGlobalSettings = async (updates: Partial<IGlobalSettings>): Promise<IGlobalSettings> => {
+  const response = await ejeAxios.patch('/config/manager/settings', updates);
+  return response.data.data;
+};
+
 export default {
   getConfig,
   updateConfig,
@@ -317,5 +408,11 @@ export default {
   getDailyStats,
   getWorkerStats,
   getTodaySummary,
-  getRunHistory
+  getRunHistory,
+  // Individual worker management
+  getAllWorkersConfig,
+  getWorkerConfig,
+  updateWorkerConfig,
+  toggleWorker,
+  updateGlobalSettings
 };
