@@ -24,6 +24,23 @@ export interface CausaRelacionada {
 	relacion: string;
 }
 
+// Interface para estadísticas de actualización del día
+export interface UpdateStatsToday {
+	date: string;
+	count: number;
+	hours: number[];
+}
+
+// Interface para estadísticas de actualización
+export interface UpdateStats {
+	avgMs: number;
+	count: number;
+	errors: number;
+	newMovs: number;
+	today?: UpdateStatsToday;
+	last?: { $date: string } | string;
+}
+
 // Interface para historial de actualizaciones
 export interface UpdateHistoryEntry {
 	timestamp: { $date: string } | string;
@@ -79,6 +96,7 @@ export interface CausaEje {
 	intervinientes?: IntervinienteEje[];
 	causasRelacionadas?: CausaRelacionada[];
 	updateHistory?: UpdateHistoryEntry[];
+	updateStats?: UpdateStats;
 	createdAt?: { $date: string } | string;
 	updatedAt?: { $date: string } | string;
 }
@@ -128,6 +146,20 @@ export interface WorkerStatsResponse {
 			total: number;
 			distribution: Array<{ count: number; docs: number }>;
 		};
+	};
+}
+
+// Interface para estadísticas de elegibilidad
+export interface EligibilityStatsResponse {
+	success: boolean;
+	data: {
+		elegibles: number;
+		noElegibles: number;
+		totalElegibles: number;
+		actualizadosHoy: number;
+		pendientesHoy: number;
+		coveragePercent: number;
+		thresholdHours: number;
 	};
 }
 
@@ -347,6 +379,18 @@ export class CausasEjeService {
 	static async getWorkerStats(): Promise<WorkerStatsResponse> {
 		try {
 			const response = await ejeAxios.get("/worker-stats");
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener estadísticas de elegibilidad para actualización
+	 */
+	static async getEligibilityStats(): Promise<EligibilityStatsResponse> {
+		try {
+			const response = await ejeAxios.get("/worker-stats/eligibility");
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
