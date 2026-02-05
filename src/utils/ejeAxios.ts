@@ -6,7 +6,7 @@ import { requestQueueService } from "services/requestQueueService";
 
 // Instancia de Axios para la API de EJE (Expediente Judicial Electrónico)
 const ejeAxios: AxiosInstance = axios.create({
-	baseURL: import.meta.env.VITE_API_EJE || "https://eje.lawanalytics.app",
+	baseURL: import.meta.env.VITE_API_EJE || "https://eje.lawanalytics.app/api",
 	timeout: 30000,
 	headers: {
 		"Content-Type": "application/json",
