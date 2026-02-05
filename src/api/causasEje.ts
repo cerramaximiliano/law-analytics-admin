@@ -185,7 +185,7 @@ export class CausasEjeService {
 			queryParams.verified = true;
 			queryParams.isValid = true;
 
-			const response = await ejeAxios.get("/api/causas-eje/search", { params: queryParams });
+			const response = await ejeAxios.get("/causas-eje/search", { params: queryParams });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -224,7 +224,7 @@ export class CausasEjeService {
 				queryParams.source = params.source;
 			}
 
-			const response = await ejeAxios.get("/api/causas-eje/search", { params: queryParams });
+			const response = await ejeAxios.get("/causas-eje/search", { params: queryParams });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -236,7 +236,7 @@ export class CausasEjeService {
 	 */
 	static async getCausaById(id: string): Promise<CausasEjeResponse> {
 		try {
-			const response = await ejeAxios.get(`/api/causas-eje/id/${id}`);
+			const response = await ejeAxios.get(`/causas-eje/id/${id}`);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -248,7 +248,7 @@ export class CausasEjeService {
 	 */
 	static async getCausaByCuij(cuij: string): Promise<CausasEjeResponse> {
 		try {
-			const response = await ejeAxios.get(`/api/causas-eje/cuij/${encodeURIComponent(cuij)}`);
+			const response = await ejeAxios.get(`/causas-eje/cuij/${encodeURIComponent(cuij)}`);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -260,7 +260,7 @@ export class CausasEjeService {
 	 */
 	static async getCausaByNumeroAnio(numero: number, anio: number): Promise<CausasEjeResponse> {
 		try {
-			const response = await ejeAxios.get(`/api/causas-eje/${numero}/${anio}`);
+			const response = await ejeAxios.get(`/causas-eje/${numero}/${anio}`);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -272,7 +272,7 @@ export class CausasEjeService {
 	 */
 	static async getMovimientos(id: string): Promise<{ success: boolean; data: MovimientoEje[]; count: number }> {
 		try {
-			const response = await ejeAxios.get(`/api/causas-eje/${id}/movimientos`);
+			const response = await ejeAxios.get(`/causas-eje/${id}/movimientos`);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -284,7 +284,7 @@ export class CausasEjeService {
 	 */
 	static async getIntervinientes(id: string): Promise<{ success: boolean; data: IntervinienteEje[]; count: number }> {
 		try {
-			const response = await ejeAxios.get(`/api/causas-eje/${id}/intervinientes`);
+			const response = await ejeAxios.get(`/causas-eje/${id}/intervinientes`);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -296,7 +296,7 @@ export class CausasEjeService {
 	 */
 	static async getCausasRelacionadas(id: string): Promise<{ success: boolean; data: CausaRelacionada[]; count: number }> {
 		try {
-			const response = await ejeAxios.get(`/api/causas-eje/${id}/relacionadas`);
+			const response = await ejeAxios.get(`/causas-eje/${id}/relacionadas`);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -308,7 +308,7 @@ export class CausasEjeService {
 	 */
 	static async getStats(): Promise<{ success: boolean; data: any }> {
 		try {
-			const response = await ejeAxios.get("/api/causas-eje/stats");
+			const response = await ejeAxios.get("/causas-eje/stats");
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -320,7 +320,7 @@ export class CausasEjeService {
 	 */
 	static async updateCausa(id: string, updateData: Partial<CausaEje>): Promise<CausasEjeResponse> {
 		try {
-			const response = await ejeAxios.put(`/api/causas-eje/${id}`, updateData);
+			const response = await ejeAxios.put(`/causas-eje/${id}`, updateData);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -332,7 +332,7 @@ export class CausasEjeService {
 	 */
 	static async deleteCausa(id: string): Promise<{ success: boolean; message: string }> {
 		try {
-			const response = await ejeAxios.delete(`/api/causas-eje/${id}`);
+			const response = await ejeAxios.delete(`/causas-eje/${id}`);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -346,7 +346,7 @@ export class CausasEjeService {
 	 */
 	static async getWorkerStats(): Promise<WorkerStatsResponse> {
 		try {
-			const response = await ejeAxios.get("/api/worker-stats");
+			const response = await ejeAxios.get("/worker-stats");
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -358,7 +358,7 @@ export class CausasEjeService {
 	 */
 	static async getErrorDocuments(params?: { limit?: number }): Promise<CausasEjeResponse> {
 		try {
-			const response = await ejeAxios.get("/api/worker-stats/errors", { params });
+			const response = await ejeAxios.get("/worker-stats/errors", { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -370,7 +370,7 @@ export class CausasEjeService {
 	 */
 	static async getStuckDocuments(params?: { thresholdMinutes?: number }): Promise<CausasEjeResponse> {
 		try {
-			const response = await ejeAxios.get("/api/worker-stats/stuck", { params });
+			const response = await ejeAxios.get("/worker-stats/stuck", { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -382,7 +382,7 @@ export class CausasEjeService {
 	 */
 	static async clearStuckLocks(params?: { thresholdMinutes?: number }): Promise<{ success: boolean; message: string; clearedCount: number }> {
 		try {
-			const response = await ejeAxios.post("/api/worker-stats/clear-stuck", params);
+			const response = await ejeAxios.post("/worker-stats/clear-stuck", params);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -394,7 +394,7 @@ export class CausasEjeService {
 	 */
 	static async resetErrorCount(id: string): Promise<{ success: boolean; message: string }> {
 		try {
-			const response = await ejeAxios.post(`/api/worker-stats/reset-error/${id}`);
+			const response = await ejeAxios.post(`/worker-stats/reset-error/${id}`);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -406,7 +406,7 @@ export class CausasEjeService {
 	 */
 	static async getRecentActivity(params?: { hours?: number; limit?: number }): Promise<CausasEjeResponse> {
 		try {
-			const response = await ejeAxios.get("/api/worker-stats/recent-activity", { params });
+			const response = await ejeAxios.get("/worker-stats/recent-activity", { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
