@@ -86,9 +86,9 @@ const ServerStatus = () => {
 		},
 		{
 			name: "API de Causas EJE",
-			url: `${import.meta.env.VITE_API_EJE || "https://eje.lawanalytics.app"}/api/health`,
+			url: `${import.meta.env.VITE_API_EJE || "https://eje.lawanalytics.app/api"}/health`,
 			ip: "15.229.93.121",
-			baseUrl: import.meta.env.VITE_API_EJE || "https://eje.lawanalytics.app",
+			baseUrl: import.meta.env.VITE_API_EJE || "https://eje.lawanalytics.app/api",
 			status: "checking",
 		},
 	]);
