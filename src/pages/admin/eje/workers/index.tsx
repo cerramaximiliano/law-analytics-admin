@@ -1778,6 +1778,333 @@ const EjeWorkersConfig: React.FC = () => {
                     </CardContent>
                   </Card>
                 </Grid>
+
+                {/* Flujo de Verificación */}
+                <Grid item xs={12}>
+                  <Card variant="outlined" sx={{ borderColor: theme.palette.info.main }}>
+                    <CardHeader
+                      title="Flujo del Worker de Verificación"
+                      subheader="Ciclo de vida de un documento desde su creación hasta su verificación"
+                      avatar={<SearchNormal1 size={24} color={theme.palette.info.main} />}
+                    />
+                    <CardContent>
+                      <Stack spacing={3}>
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Criterios de Selección (Documentos Pendientes)
+                          </Typography>
+                          <Alert severity="info" sx={{ mb: 2 }}>
+                            El worker selecciona documentos que cumplan TODOS estos criterios:
+                          </Alert>
+                          <TableContainer>
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Campo</TableCell>
+                                  <TableCell>Condición</TableCell>
+                                  <TableCell>Descripción</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                <TableRow>
+                                  <TableCell><code>verified</code></TableCell>
+                                  <TableCell><Chip label="false" size="small" color="warning" /></TableCell>
+                                  <TableCell>Aún no ha sido verificado en EJE</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><code>isValid</code></TableCell>
+                                  <TableCell><Chip label="true" size="small" color="success" /></TableCell>
+                                  <TableCell>No ha sido marcado como inválido previamente</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><code>errorCount</code></TableCell>
+                                  <TableCell><Chip label="< 3" size="small" color="info" /></TableCell>
+                                  <TableCell>Menos de 3 errores de procesamiento</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><code>lockedBy</code></TableCell>
+                                  <TableCell><Chip label="null o expirado" size="small" /></TableCell>
+                                  <TableCell>No bloqueado por otro worker (lock expira en 5 min)</TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Box>
+
+                        <Divider />
+
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Resultado de la Verificación
+                          </Typography>
+                          <Grid container spacing={2}>
+                            <Grid item xs={12} md={6}>
+                              <Box sx={{ p: 2, borderRadius: 1, bgcolor: alpha(theme.palette.success.main, 0.1), border: `1px solid ${theme.palette.success.main}` }}>
+                                <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                                  <TickCircle size={20} color={theme.palette.success.main} />
+                                  <Typography variant="subtitle2" color="success.main">Expediente Existe</Typography>
+                                </Stack>
+                                <Typography variant="body2" gutterBottom>Se actualizan los siguientes campos:</Typography>
+                                <Stack spacing={0.5}>
+                                  <Typography variant="caption"><code>verified: true</code></Typography>
+                                  <Typography variant="caption"><code>verifiedAt: fecha actual</code></Typography>
+                                  <Typography variant="caption" sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}><code>update: true</code> (habilita actualización automática)</Typography>
+                                  <Typography variant="caption"><code>lastError: null</code></Typography>
+                                </Stack>
+                              </Box>
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                              <Box sx={{ p: 2, borderRadius: 1, bgcolor: alpha(theme.palette.error.main, 0.1), border: `1px solid ${theme.palette.error.main}` }}>
+                                <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                                  <CloseCircle size={20} color={theme.palette.error.main} />
+                                  <Typography variant="subtitle2" color="error.main">Expediente No Existe</Typography>
+                                </Stack>
+                                <Typography variant="body2" gutterBottom>Se actualizan los siguientes campos:</Typography>
+                                <Stack spacing={0.5}>
+                                  <Typography variant="caption"><code>isValid: false</code></Typography>
+                                  <Typography variant="caption"><code>lastError: "mensaje de error"</code></Typography>
+                                  <Typography variant="caption"><code>errorCount: +1</code></Typography>
+                                </Stack>
+                              </Box>
+                            </Grid>
+                          </Grid>
+                        </Box>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Flujo de Actualización */}
+                <Grid item xs={12}>
+                  <Card variant="outlined" sx={{ borderColor: theme.palette.success.main }}>
+                    <CardHeader
+                      title="Flujo del Worker de Actualización"
+                      subheader="Criterios de elegibilidad y ciclo de actualización de expedientes"
+                      avatar={<Refresh size={24} color={theme.palette.success.main} />}
+                    />
+                    <CardContent>
+                      <Stack spacing={3}>
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Criterios de Elegibilidad para Actualización
+                          </Typography>
+                          <Alert severity="success" sx={{ mb: 2 }}>
+                            Un documento es "elegible para actualización" si cumple TODOS estos criterios:
+                          </Alert>
+                          <TableContainer>
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Campo</TableCell>
+                                  <TableCell>Condición</TableCell>
+                                  <TableCell>Descripción</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                <TableRow>
+                                  <TableCell><code>verified</code></TableCell>
+                                  <TableCell><Chip label="true" size="small" color="success" /></TableCell>
+                                  <TableCell>Fue verificado exitosamente en EJE</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><code>isValid</code></TableCell>
+                                  <TableCell><Chip label="true" size="small" color="success" /></TableCell>
+                                  <TableCell>El expediente existe y es válido</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><code>isPrivate</code></TableCell>
+                                  <TableCell><Chip label="false" size="small" color="info" /></TableCell>
+                                  <TableCell>No es un expediente privado/reservado</TableCell>
+                                </TableRow>
+                                <TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+                                  <TableCell><code>update</code></TableCell>
+                                  <TableCell><Chip label="true" size="small" color="primary" /></TableCell>
+                                  <TableCell><strong>Tiene habilitada la actualización automática</strong></TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Box>
+
+                        <Divider />
+
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Criterios de Priorización (Documentos a Procesar)
+                          </Typography>
+                          <Alert severity="warning" sx={{ mb: 2 }}>
+                            De los documentos elegibles, se procesan primero los que cumplen estas condiciones adicionales:
+                          </Alert>
+                          <TableContainer>
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Campo</TableCell>
+                                  <TableCell>Condición</TableCell>
+                                  <TableCell>Descripción</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                <TableRow>
+                                  <TableCell><code>lastUpdate</code></TableCell>
+                                  <TableCell><Chip label={`> ${getWorkerData("update")?.config?.updateThresholdHours || 4}h`} size="small" color="warning" /></TableCell>
+                                  <TableCell>Última actualización hace más de X horas (umbral configurable)</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><code>errorCount</code></TableCell>
+                                  <TableCell><Chip label="< 3" size="small" color="info" /></TableCell>
+                                  <TableCell>Menos de 3 errores consecutivos</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><code>lockedBy</code></TableCell>
+                                  <TableCell><Chip label="null o expirado" size="small" /></TableCell>
+                                  <TableCell>No bloqueado por otro worker</TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Box>
+
+                        <Divider />
+
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Resultado de la Actualización
+                          </Typography>
+                          <Grid container spacing={2}>
+                            <Grid item xs={12} md={6}>
+                              <Box sx={{ p: 2, borderRadius: 1, bgcolor: alpha(theme.palette.success.main, 0.1), border: `1px solid ${theme.palette.success.main}` }}>
+                                <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                                  <TickCircle size={20} color={theme.palette.success.main} />
+                                  <Typography variant="subtitle2" color="success.main">Actualización Exitosa</Typography>
+                                </Stack>
+                                <Typography variant="body2" gutterBottom>Se actualizan los siguientes campos:</Typography>
+                                <Stack spacing={0.5}>
+                                  <Typography variant="caption"><code>lastUpdate: fecha actual</code></Typography>
+                                  <Typography variant="caption"><code>movimientos: [array actualizado]</code></Typography>
+                                  <Typography variant="caption"><code>movimientosCount: cantidad total</code></Typography>
+                                  <Typography variant="caption"><code>ultimoMovimiento: fecha del último</code></Typography>
+                                  <Typography variant="caption"><code>detailsLoaded: true</code></Typography>
+                                  <Typography variant="caption"><code>errorCount: 0</code></Typography>
+                                </Stack>
+                              </Box>
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                              <Box sx={{ p: 2, borderRadius: 1, bgcolor: alpha(theme.palette.info.main, 0.1), border: `1px solid ${theme.palette.info.main}` }}>
+                                <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                                  <Chart size={20} color={theme.palette.info.main} />
+                                  <Typography variant="subtitle2" color="info.main">Estadísticas de Actualización</Typography>
+                                </Stack>
+                                <Typography variant="body2" gutterBottom>Se registran en <code>updateStats</code>:</Typography>
+                                <Stack spacing={0.5}>
+                                  <Typography variant="caption"><code>count: +1</code> (total de actualizaciones)</Typography>
+                                  <Typography variant="caption"><code>last: fecha/hora</code></Typography>
+                                  <Typography variant="caption"><code>avgMs: promedio de tiempo</code></Typography>
+                                  <Typography variant="caption"><code>today.date: "YYYY-MM-DD"</code></Typography>
+                                  <Typography variant="caption"><code>today.count: actualizaciones hoy</code></Typography>
+                                  <Typography variant="caption"><code>today.hours: [horas del día]</code></Typography>
+                                </Stack>
+                              </Box>
+                            </Grid>
+                          </Grid>
+                        </Box>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Widget de Cobertura */}
+                <Grid item xs={12}>
+                  <Card variant="outlined" sx={{ borderColor: theme.palette.warning.main }}>
+                    <CardHeader
+                      title="Widget de Cobertura de Actualización"
+                      subheader="Explicación de las métricas mostradas en Carpetas Verificadas EJE"
+                      avatar={<Chart size={24} color={theme.palette.warning.main} />}
+                    />
+                    <CardContent>
+                      <Stack spacing={3}>
+                        <Alert severity="info">
+                          El widget de cobertura en la vista de Carpetas Verificadas muestra el progreso diario de actualización de documentos elegibles.
+                        </Alert>
+
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Métricas del Widget
+                          </Typography>
+                          <TableContainer>
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Métrica</TableCell>
+                                  <TableCell>Cálculo</TableCell>
+                                  <TableCell>Descripción</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                <TableRow>
+                                  <TableCell><Chip label="X elegibles" size="small" variant="outlined" /></TableCell>
+                                  <TableCell><code>verified=true AND isValid=true AND isPrivate=false AND update=true</code></TableCell>
+                                  <TableCell>Total de documentos que pueden recibir actualizaciones</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><Chip label="X actualizados" size="small" color="success" variant="outlined" /></TableCell>
+                                  <TableCell><code>elegibles WHERE updateStats.today.date = hoy</code></TableCell>
+                                  <TableCell>Documentos elegibles actualizados hoy</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><Chip label="X pendientes" size="small" color="warning" variant="outlined" /></TableCell>
+                                  <TableCell><code>elegibles - actualizadosHoy</code></TableCell>
+                                  <TableCell>Documentos elegibles que faltan actualizar hoy</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><strong>Barra de progreso</strong></TableCell>
+                                  <TableCell><code>(actualizadosHoy / elegibles) * 100</code></TableCell>
+                                  <TableCell>Porcentaje de cobertura diaria</TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Box>
+
+                        <Divider />
+
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Filtro "Solo Elegibles para Actualización"
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" paragraph>
+                            Al activar este checkbox, la tabla muestra únicamente documentos que cumplen los criterios de elegibilidad:
+                          </Typography>
+                          <Stack direction="row" spacing={1} flexWrap="wrap">
+                            <Chip label="verified = true" size="small" color="success" />
+                            <Chip label="isValid = true" size="small" color="success" />
+                            <Chip label="isPrivate = false" size="small" color="info" />
+                            <Chip label="update = true" size="small" color="primary" />
+                          </Stack>
+                        </Box>
+
+                        <Divider />
+
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Columna "Última Act." con Chip de Conteo
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" paragraph>
+                            Cuando un documento fue actualizado hoy, se muestra un chip verde junto a la fecha con:
+                          </Typography>
+                          <Stack spacing={1}>
+                            <Typography variant="body2">
+                              • <strong>Número en el chip:</strong> Cantidad de veces actualizado hoy
+                            </Typography>
+                            <Typography variant="body2">
+                              • <strong>Tooltip:</strong> Horas del día en que fue actualizado (ej: "Actualizado a las 08:00, 12:00, 16:00")
+                            </Typography>
+                          </Stack>
+                        </Box>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
               </Grid>
             </TabPanel>
           </MainCard>
