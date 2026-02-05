@@ -1779,12 +1779,528 @@ const EjeWorkersConfig: React.FC = () => {
                   </Card>
                 </Grid>
 
+                {/* Flujo Completo: Creación de Folder a CausaEje */}
+                <Grid item xs={12}>
+                  <Card variant="outlined" sx={{ borderColor: theme.palette.primary.main, borderWidth: 2 }}>
+                    <CardHeader
+                      title="Flujo Completo: Desde Creación de Folder hasta Verificación"
+                      subheader="Arquitectura del sistema y puntos de integración entre servicios"
+                      avatar={<Briefcase size={24} color={theme.palette.primary.main} />}
+                    />
+                    <CardContent>
+                      <Stack spacing={3}>
+                        {/* Diagrama de Arquitectura */}
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Arquitectura de Servicios
+                          </Typography>
+                          <Box sx={{
+                            p: 2,
+                            bgcolor: alpha(theme.palette.grey[500], 0.1),
+                            borderRadius: 1,
+                            fontFamily: 'monospace',
+                            fontSize: '0.85rem',
+                            overflowX: 'auto'
+                          }}>
+                            <pre style={{ margin: 0 }}>
+{`┌─────────────────────┐     ┌─────────────────────┐     ┌─────────────────────┐
+│   law-analytics-    │     │                     │     │                     │
+│       admin         │────▶│  law-analytics-     │────▶│      eje-api        │
+│     (Frontend)      │     │      server         │     │   (Microservicio)   │
+└─────────────────────┘     └─────────────────────┘     └─────────────────────┘
+                                                                   │
+                                                                   ▼
+┌─────────────────────┐     ┌─────────────────────┐     ┌─────────────────────┐
+│                     │     │                     │     │                     │
+│    eje-workers      │◀────│     MongoDB         │◀────│    eje-models       │
+│  (Verificación)     │     │   (causas-eje)      │     │    (Schemas)        │
+└─────────────────────┘     └─────────────────────┘     └─────────────────────┘`}
+                            </pre>
+                          </Box>
+                        </Box>
+
+                        <Divider />
+
+                        {/* Paso 1: Usuario crea/vincula folder */}
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Paso 1: Usuario Vincula Expediente EJE a Folder
+                          </Typography>
+                          <Alert severity="info" sx={{ mb: 2 }}>
+                            El usuario ingresa número/año o CUIJ del expediente en la UI de folders
+                          </Alert>
+                          <TableContainer>
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Servicio</TableCell>
+                                  <TableCell>Endpoint/Archivo</TableCell>
+                                  <TableCell>Descripción</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                <TableRow>
+                                  <TableCell><Chip label="Frontend" size="small" color="primary" /></TableCell>
+                                  <TableCell><code>law-analytics-admin</code></TableCell>
+                                  <TableCell>UI donde usuario ingresa datos del expediente</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><Chip label="API" size="small" color="secondary" /></TableCell>
+                                  <TableCell><code>PUT /api/folders/link-causa/:folderId</code></TableCell>
+                                  <TableCell>Endpoint en law-analytics-server</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><Chip label="Controller" size="small" /></TableCell>
+                                  <TableCell><code>folderController.js → linkFolderToCausa()</code></TableCell>
+                                  <TableCell>Orquesta la búsqueda y vinculación</TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Box>
+
+                        <Divider />
+
+                        {/* Paso 2: Llamada a eje-api */}
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Paso 2: law-analytics-server → eje-api
+                          </Typography>
+                          <Alert severity="warning" sx={{ mb: 2 }}>
+                            <strong>PENDIENTE DE IMPLEMENTAR:</strong> Actualmente no hay llamada directa a eje-api para búsqueda/creación
+                          </Alert>
+                          <TableContainer>
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Servicio</TableCell>
+                                  <TableCell>Endpoint</TableCell>
+                                  <TableCell>Descripción</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                <TableRow>
+                                  <TableCell><Chip label="eje-api" size="small" color="info" /></TableCell>
+                                  <TableCell><code>POST /causas-eje-service/associate-folder</code></TableCell>
+                                  <TableCell>Busca o crea CausaEje y vincula folder</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><Chip label="Service" size="small" /></TableCell>
+                                  <TableCell><code>causasEjeService.js → associateFolderToCausa()</code></TableCell>
+                                  <TableCell>Lógica de creación/vinculación</TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                          <Box sx={{ mt: 2, p: 2, bgcolor: alpha(theme.palette.warning.main, 0.1), borderRadius: 1 }}>
+                            <Typography variant="body2" fontWeight="bold" color="warning.main">
+                              Parámetros de entrada:
+                            </Typography>
+                            <Typography variant="caption" component="pre" sx={{ fontFamily: 'monospace' }}>
+{`{
+  causaId?: string,      // Si ya existe
+  cuij?: string,         // CUIJ del expediente
+  numero: number,        // Número del expediente
+  anio: number,          // Año del expediente
+  folderId: string,      // ID del folder a vincular
+  userId: string,        // ID del usuario
+  searchTerm: string     // Término de búsqueda original
+}`}
+                            </Typography>
+                          </Box>
+                        </Box>
+
+                        <Divider />
+
+                        {/* Escenarios posibles */}
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Escenarios Posibles
+                          </Typography>
+                          <Grid container spacing={2}>
+                            {/* Escenario A: CausaEje existe */}
+                            <Grid item xs={12} md={6}>
+                              <Box sx={{
+                                p: 2,
+                                borderRadius: 1,
+                                bgcolor: alpha(theme.palette.success.main, 0.1),
+                                border: `1px solid ${theme.palette.success.main}`,
+                                height: '100%'
+                              }}>
+                                <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                                  <TickCircle size={20} color={theme.palette.success.main} />
+                                  <Typography variant="subtitle2" color="success.main">
+                                    Escenario A: CausaEje Ya Existe
+                                  </Typography>
+                                </Stack>
+                                <Typography variant="body2" gutterBottom>
+                                  Se encontró por CUIJ o número/año en la BD:
+                                </Typography>
+                                <Stack spacing={0.5}>
+                                  <Typography variant="caption">• <code>$addToSet: folderIds, userCausaIds</code></Typography>
+                                  <Typography variant="caption">• Registra en <code>updateHistory</code></Typography>
+                                  <Typography variant="caption">• Retorna <code>created: false</code></Typography>
+                                </Stack>
+                                <Chip
+                                  label="Folder vinculado inmediatamente"
+                                  size="small"
+                                  color="success"
+                                  sx={{ mt: 1 }}
+                                />
+                              </Box>
+                            </Grid>
+
+                            {/* Escenario B: CausaEje no existe */}
+                            <Grid item xs={12} md={6}>
+                              <Box sx={{
+                                p: 2,
+                                borderRadius: 1,
+                                bgcolor: alpha(theme.palette.info.main, 0.1),
+                                border: `1px solid ${theme.palette.info.main}`,
+                                height: '100%'
+                              }}>
+                                <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                                  <DocumentText1 size={20} color={theme.palette.info.main} />
+                                  <Typography variant="subtitle2" color="info.main">
+                                    Escenario B: CausaEje No Existe
+                                  </Typography>
+                                </Stack>
+                                <Typography variant="body2" gutterBottom>
+                                  Se crea un nuevo documento con datos mínimos:
+                                </Typography>
+                                <Stack spacing={0.5}>
+                                  <Typography variant="caption">• <code>cuij: "PENDING-numero/anio"</code></Typography>
+                                  <Typography variant="caption">• <code>caratula: "Pendiente de verificación"</code></Typography>
+                                  <Typography variant="caption">• <code>verified: false</code></Typography>
+                                  <Typography variant="caption">• <code>isValid: null</code> (pendiente)</Typography>
+                                  <Typography variant="caption">• <code>source: 'app'</code></Typography>
+                                </Stack>
+                                <Chip
+                                  label="Espera verificación por worker"
+                                  size="small"
+                                  color="warning"
+                                  sx={{ mt: 1 }}
+                                />
+                              </Box>
+                            </Grid>
+                          </Grid>
+                        </Box>
+
+                        <Divider />
+
+                        {/* Estados del Folder */}
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Estados de Asociación del Folder
+                          </Typography>
+                          <Alert severity="info" sx={{ mb: 2 }}>
+                            Campo <code>folder.causaAssociationStatus</code> en law-analytics-server
+                          </Alert>
+                          <TableContainer>
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Estado</TableCell>
+                                  <TableCell>Descripción</TableCell>
+                                  <TableCell>Acción Requerida</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                <TableRow>
+                                  <TableCell><Chip label="not_attempted" size="small" /></TableCell>
+                                  <TableCell>No se ha intentado vincular</TableCell>
+                                  <TableCell>Usuario debe iniciar vinculación</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><Chip label="pending" size="small" color="warning" /></TableCell>
+                                  <TableCell>Vinculación en progreso</TableCell>
+                                  <TableCell>Esperar respuesta del servidor</TableCell>
+                                </TableRow>
+                                <TableRow sx={{ bgcolor: alpha(theme.palette.warning.main, 0.1) }}>
+                                  <TableCell><Chip label="pending_selection" size="small" color="warning" /></TableCell>
+                                  <TableCell>Múltiples resultados encontrados</TableCell>
+                                  <TableCell><strong>Usuario debe seleccionar uno</strong></TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><Chip label="success" size="small" color="success" /></TableCell>
+                                  <TableCell>Vinculación exitosa</TableCell>
+                                  <TableCell>Ninguna - folder vinculado a CausaEje</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><Chip label="failed" size="small" color="error" /></TableCell>
+                                  <TableCell>Error en vinculación</TableCell>
+                                  <TableCell>Revisar error y reintentar</TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Box>
+
+                        <Divider />
+
+                        {/* Flujo de selección múltiple */}
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Flujo de Selección Múltiple (pending_selection)
+                          </Typography>
+                          <Alert severity="warning" sx={{ mb: 2 }}>
+                            Cuando la búsqueda en EJE retorna múltiples expedientes
+                          </Alert>
+                          <Box sx={{
+                            p: 2,
+                            bgcolor: alpha(theme.palette.grey[500], 0.1),
+                            borderRadius: 1,
+                            fontFamily: 'monospace',
+                            fontSize: '0.8rem',
+                            overflowX: 'auto'
+                          }}>
+                            <pre style={{ margin: 0 }}>
+{`1. Búsqueda retorna N resultados
+   │
+   ▼
+2. Se crean N documentos CausasEje (todos con verified: false, isValid: null)
+   │
+   ▼
+3. Se almacenan IDs en folder:
+   ├─ pendingCausaIds: [id1, id2, id3, ...]
+   ├─ pendingCausaType: 'CausasEje'
+   ├─ searchTerm: "término original"
+   └─ causaAssociationStatus: 'pending_selection'
+   │
+   ▼
+4. UI muestra selector al usuario
+   │
+   ▼
+5. Usuario selecciona uno → PUT /api/folders/select-causa/:folderId
+   │
+   ▼
+6. Se completa vinculación:
+   ├─ folder.causaId = selectedId
+   ├─ folder.causaType = 'CausasEje'
+   ├─ folder.causaAssociationStatus = 'success'
+   ├─ folder.pendingCausaIds = [] (limpiado)
+   └─ CausaEje seleccionada: $addToSet { folderIds, userCausaIds }`}
+                            </pre>
+                          </Box>
+                          <Alert severity="info" sx={{ mt: 2 }}>
+                            <strong>Nota:</strong> Los CausasEje no seleccionados permanecen en BD y serán verificados por el worker,
+                            pero no estarán vinculados a ningún folder.
+                          </Alert>
+                        </Box>
+
+                        <Divider />
+
+                        {/* Campos del Folder relacionados con EJE */}
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Campos del Folder Relacionados con EJE
+                          </Typography>
+                          <TableContainer>
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Campo</TableCell>
+                                  <TableCell>Tipo</TableCell>
+                                  <TableCell>Descripción</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                <TableRow>
+                                  <TableCell><code>eje</code></TableCell>
+                                  <TableCell>Boolean</TableCell>
+                                  <TableCell>Flag que indica si es expediente EJE</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><code>causaId</code></TableCell>
+                                  <TableCell>ObjectId</TableCell>
+                                  <TableCell>Referencia a CausasEje vinculada</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><code>causaType</code></TableCell>
+                                  <TableCell>String</TableCell>
+                                  <TableCell>'CausasEje' para expedientes EJE</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><code>causaVerified</code></TableCell>
+                                  <TableCell>Boolean</TableCell>
+                                  <TableCell>Si la causa fue verificada</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><code>causaIsValid</code></TableCell>
+                                  <TableCell>Boolean</TableCell>
+                                  <TableCell>Si la causa es válida (existe)</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><code>causaAssociationStatus</code></TableCell>
+                                  <TableCell>String</TableCell>
+                                  <TableCell>Estado de la vinculación</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><code>pendingCausaIds</code></TableCell>
+                                  <TableCell>[ObjectId]</TableCell>
+                                  <TableCell>IDs cuando hay selección múltiple</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><code>pendingCausaType</code></TableCell>
+                                  <TableCell>String</TableCell>
+                                  <TableCell>'CausasEje' cuando hay selección pendiente</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><code>searchTerm</code></TableCell>
+                                  <TableCell>String</TableCell>
+                                  <TableCell>Término de búsqueda original</TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Box>
+
+                        <Divider />
+
+                        {/* Transición a Workers */}
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Transición a Workers
+                          </Typography>
+                          <Box sx={{
+                            p: 2,
+                            bgcolor: alpha(theme.palette.grey[500], 0.1),
+                            borderRadius: 1,
+                            fontFamily: 'monospace',
+                            fontSize: '0.8rem',
+                            overflowX: 'auto'
+                          }}>
+                            <pre style={{ margin: 0 }}>
+{`CausaEje creada con:
+├─ verified: false
+├─ isValid: null
+├─ source: 'app'
+└─ folderIds: [folderId]
+        │
+        ▼
+┌───────────────────────────────────────────────────────────────┐
+│           VERIFICATION WORKER (cada 2 minutos)                │
+│  Query: { verified: false, isValid: null, errorCount < 3 }    │
+└───────────────────────────────────────────────────────────────┘
+        │
+        ├─── Si EXISTE en EJE ───▶ verified: true, isValid: true, update: true
+        │                                    │
+        │                                    ▼
+        │                         ┌─────────────────────────────┐
+        │                         │      UPDATE WORKER          │
+        │                         │  Carga detalles completos   │
+        │                         │  (movimientos, partes, etc) │
+        │                         └─────────────────────────────┘
+        │
+        └─── Si NO EXISTE ───▶ verified: true, isValid: false, errorCount++`}
+                            </pre>
+                          </Box>
+                        </Box>
+
+                        <Divider />
+
+                        {/* Endpoints Resumen */}
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Endpoints API Involucrados
+                          </Typography>
+                          <TableContainer>
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Servicio</TableCell>
+                                  <TableCell>Método</TableCell>
+                                  <TableCell>Endpoint</TableCell>
+                                  <TableCell>Descripción</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                <TableRow>
+                                  <TableCell><Chip label="server" size="small" color="secondary" /></TableCell>
+                                  <TableCell>PUT</TableCell>
+                                  <TableCell><code>/api/folders/link-causa/:folderId</code></TableCell>
+                                  <TableCell>Iniciar vinculación</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><Chip label="server" size="small" color="secondary" /></TableCell>
+                                  <TableCell>GET</TableCell>
+                                  <TableCell><code>/api/folders/pending-causas/:folderId</code></TableCell>
+                                  <TableCell>Obtener causas pendientes de selección</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><Chip label="server" size="small" color="secondary" /></TableCell>
+                                  <TableCell>PUT</TableCell>
+                                  <TableCell><code>/api/folders/select-causa/:folderId</code></TableCell>
+                                  <TableCell>Seleccionar una causa</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><Chip label="server" size="small" color="secondary" /></TableCell>
+                                  <TableCell>DELETE</TableCell>
+                                  <TableCell><code>/api/folders/pending-causas/:folderId</code></TableCell>
+                                  <TableCell>Cancelar selección</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><Chip label="eje-api" size="small" color="info" /></TableCell>
+                                  <TableCell>POST</TableCell>
+                                  <TableCell><code>/causas-eje-service/associate-folder</code></TableCell>
+                                  <TableCell>Crear/vincular CausaEje</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><Chip label="eje-api" size="small" color="info" /></TableCell>
+                                  <TableCell>GET</TableCell>
+                                  <TableCell><code>/causas-eje-service/pending-verification</code></TableCell>
+                                  <TableCell>Documentos para verification worker</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell><Chip label="eje-api" size="small" color="info" /></TableCell>
+                                  <TableCell>GET</TableCell>
+                                  <TableCell><code>/causas-eje-service/pending-update</code></TableCell>
+                                  <TableCell>Documentos para update worker</TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Box>
+
+                        <Divider />
+
+                        {/* Puntos pendientes de implementación */}
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom color="warning.main">
+                            Puntos Pendientes de Implementación
+                          </Typography>
+                          <Alert severity="warning">
+                            <Stack spacing={1}>
+                              <Typography variant="body2">
+                                <strong>1. Integración law-analytics-server → eje-api:</strong> El controlador <code>linkFolderToCausa</code>
+                                debe llamar al endpoint <code>/causas-eje-service/associate-folder</code> para crear documentos CausasEje.
+                              </Typography>
+                              <Typography variant="body2">
+                                <strong>2. Búsqueda previa en EJE:</strong> Opcionalmente, realizar scraping antes de crear el documento
+                                para obtener datos reales (CUIJ, carátula, estado) en lugar de datos pendientes.
+                              </Typography>
+                              <Typography variant="body2">
+                                <strong>3. Sincronización de estado:</strong> Actualizar <code>folder.causaVerified</code> y
+                                <code>folder.causaIsValid</code> cuando el worker verifique el documento.
+                              </Typography>
+                              <Typography variant="body2">
+                                <strong>4. Manejo de errores:</strong> Cuando un expediente no existe (isValid: false),
+                                notificar al usuario y permitir corrección.
+                              </Typography>
+                            </Stack>
+                          </Alert>
+                        </Box>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
                 {/* Flujo de Verificación */}
                 <Grid item xs={12}>
                   <Card variant="outlined" sx={{ borderColor: theme.palette.info.main }}>
                     <CardHeader
                       title="Flujo del Worker de Verificación"
-                      subheader="Ciclo de vida de un documento desde su creación hasta su verificación"
+                      subheader="Criterios de selección y resultados de verificación"
                       avatar={<SearchNormal1 size={24} color={theme.palette.info.main} />}
                     />
                     <CardContent>
