@@ -303,15 +303,32 @@ export const getRunHistory = async (
 };
 
 // Individual Worker Management
+export interface IWorkerSchedule {
+  workStartHour?: number;
+  workEndHour?: number;
+  workDays?: number[];
+  useGlobalSchedule?: boolean;
+}
+
+export interface IEffectiveSchedule {
+  workStartHour?: number;
+  workEndHour?: number;
+  workDays?: number[];
+  useGlobalSchedule?: boolean;
+  source?: 'global' | 'worker-specific';
+}
+
 export interface IManagerWorkerConfig {
   enabled: boolean;
   minWorkers: number;
   maxWorkers: number;
   scaleUpThreshold: number;
   scaleDownThreshold: number;
+  updateThresholdHours?: number;
   batchSize: number;
   delayBetweenRequests: number;
   maxRetries: number;
+  schedule?: IWorkerSchedule;
   cronExpression: string;
   workerName: string;
   workerScript: string;
@@ -343,6 +360,7 @@ export interface IWorkerData {
   workerType: 'verification' | 'update' | 'stuck';
   config: IManagerWorkerConfig;
   status: IWorkerStatusDetail;
+  effectiveSchedule?: IEffectiveSchedule;
 }
 
 export interface IAllWorkersResponse {
@@ -366,6 +384,7 @@ export const getWorkerConfig = async (workerType: 'verification' | 'update' | 's
   workerType: string;
   config: IManagerWorkerConfig;
   status: IWorkerStatusDetail;
+  effectiveSchedule: IEffectiveSchedule;
   globalSettings: IGlobalSettings;
 }> => {
   const response = await ejeAxios.get(`/config/manager/worker/${workerType}`);
@@ -374,7 +393,7 @@ export const getWorkerConfig = async (workerType: 'verification' | 'update' | 's
 
 export const updateWorkerConfig = async (
   workerType: 'verification' | 'update' | 'stuck',
-  updates: Partial<IManagerWorkerConfig>
+  updates: Partial<IManagerWorkerConfig> & { schedule?: Partial<IWorkerSchedule> }
 ): Promise<IManagerWorkerConfig> => {
   const response = await ejeAxios.patch(`/config/manager/worker/${workerType}`, updates);
   return response.data.data;

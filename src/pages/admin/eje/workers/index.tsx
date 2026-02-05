@@ -58,6 +58,8 @@ import configEje, {
   IWorkerStatusDetail,
   IDailyWorkerStats,
   IAlert,
+  IEffectiveSchedule,
+  IWorkerSchedule,
 } from "api/configEje";
 
 // ========== INTERFACES ==========
@@ -72,6 +74,7 @@ interface WorkerCardProps {
   workerType: "verification" | "update" | "stuck";
   config: IManagerWorkerConfig;
   status: IWorkerStatusDetail;
+  effectiveSchedule?: IEffectiveSchedule;
   onToggle: () => void;
   onEdit: () => void;
   loading?: boolean;
@@ -103,11 +106,20 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
+// Helper function to format days
+const formatWorkDays = (days: number[] = []): string => {
+  const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  if (days.length === 7) return "Todos los días";
+  if (days.length === 5 && !days.includes(0) && !days.includes(6)) return "Lun-Vie";
+  return days.map(d => dayNames[d]).join(", ");
+};
+
 // Worker Card Component
 const WorkerCard: React.FC<WorkerCardProps> = ({
   workerType,
   config,
   status,
+  effectiveSchedule,
   onToggle,
   onEdit,
   loading,
@@ -233,10 +245,24 @@ const WorkerCard: React.FC<WorkerCardProps> = ({
                   {config?.batchSize || 0}
                 </Typography>
               </Box>
+              {workerType === "update" && (
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                  <Typography variant="body2">Re-actualizar cada:</Typography>
+                  <Typography variant="body2" fontWeight="bold">
+                    {config?.updateThresholdHours || 24}h
+                  </Typography>
+                </Box>
+              )}
               <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography variant="body2">Cron:</Typography>
-                <Typography variant="body2" fontWeight="bold" fontFamily="monospace">
-                  {config?.cronExpression || "-"}
+                <Typography variant="body2">Horario:</Typography>
+                <Typography variant="body2" fontWeight="bold">
+                  {effectiveSchedule ? (
+                    effectiveSchedule.useGlobalSchedule ? (
+                      <Chip label="Global" size="small" variant="outlined" />
+                    ) : (
+                      `${effectiveSchedule.workStartHour}:00-${effectiveSchedule.workEndHour}:00`
+                    )
+                  ) : "-"}
                 </Typography>
               </Box>
             </Stack>
@@ -289,7 +315,7 @@ const EditWorkerDialog: React.FC<EditDialogProps> = ({
   onSave,
   loading,
 }) => {
-  const [formData, setFormData] = useState<Partial<IManagerWorkerConfig>>({});
+  const [formData, setFormData] = useState<Partial<IManagerWorkerConfig> & { schedule?: Partial<IWorkerSchedule> }>({});
 
   useEffect(() => {
     if (config) {
@@ -298,10 +324,17 @@ const EditWorkerDialog: React.FC<EditDialogProps> = ({
         maxWorkers: config.maxWorkers,
         scaleUpThreshold: config.scaleUpThreshold,
         scaleDownThreshold: config.scaleDownThreshold,
+        updateThresholdHours: config.updateThresholdHours,
         batchSize: config.batchSize,
         delayBetweenRequests: config.delayBetweenRequests,
         maxRetries: config.maxRetries,
         cronExpression: config.cronExpression,
+        schedule: {
+          useGlobalSchedule: config.schedule?.useGlobalSchedule ?? true,
+          workStartHour: config.schedule?.workStartHour ?? 0,
+          workEndHour: config.schedule?.workEndHour ?? 23,
+          workDays: config.schedule?.workDays ?? [0, 1, 2, 3, 4, 5, 6],
+        },
       });
     }
   }, [config]);
@@ -313,17 +346,41 @@ const EditWorkerDialog: React.FC<EditDialogProps> = ({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleScheduleChange = (field: keyof IWorkerSchedule) => (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.type === "number" ? Number(e.target.value) : e.target.checked;
+    setFormData((prev) => ({
+      ...prev,
+      schedule: { ...prev.schedule, [field]: value },
+    }));
+  };
+
+  const handleDaysChange = (day: number) => {
+    const currentDays = formData.schedule?.workDays || [];
+    const newDays = currentDays.includes(day)
+      ? currentDays.filter((d) => d !== day)
+      : [...currentDays, day].sort((a, b) => a - b);
+    setFormData((prev) => ({
+      ...prev,
+      schedule: { ...prev.schedule, workDays: newDays },
+    }));
+  };
+
   const workerLabels: Record<string, string> = {
     verification: "Verificación",
     update: "Actualización",
     stuck: "Recuperación",
   };
 
+  const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Configurar Worker de {workerType ? workerLabels[workerType] : ""}</DialogTitle>
       <DialogContent>
         <Grid container spacing={2} sx={{ mt: 1 }}>
+          {/* Workers */}
           <Grid item xs={6}>
             <TextField
               label="Workers mínimos"
@@ -346,6 +403,8 @@ const EditWorkerDialog: React.FC<EditDialogProps> = ({
               InputProps={{ inputProps: { min: 1, max: 10 } }}
             />
           </Grid>
+
+          {/* Scaling thresholds */}
           <Grid item xs={6}>
             <TextField
               label="Umbral escalar UP"
@@ -368,6 +427,27 @@ const EditWorkerDialog: React.FC<EditDialogProps> = ({
               helperText="Docs pendientes para reducir"
             />
           </Grid>
+
+          {/* Update threshold - only for update worker */}
+          {workerType === "update" && (
+            <Grid item xs={12}>
+              <TextField
+                label="Re-actualizar después de"
+                type="number"
+                fullWidth
+                size="small"
+                value={formData.updateThresholdHours || 24}
+                onChange={handleChange("updateThresholdHours")}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">horas</InputAdornment>,
+                  inputProps: { min: 1, max: 168 },
+                }}
+                helperText="Horas antes de volver a actualizar un expediente"
+              />
+            </Grid>
+          )}
+
+          {/* Batch and delay */}
           <Grid item xs={6}>
             <TextField
               label="Batch size"
@@ -392,6 +472,8 @@ const EditWorkerDialog: React.FC<EditDialogProps> = ({
               }}
             />
           </Grid>
+
+          {/* Retries and cron */}
           <Grid item xs={6}>
             <TextField
               label="Reintentos máximos"
@@ -413,6 +495,79 @@ const EditWorkerDialog: React.FC<EditDialogProps> = ({
               helperText="Ej: */2 * * * *"
             />
           </Grid>
+
+          {/* Schedule section */}
+          <Grid item xs={12}>
+            <Divider sx={{ my: 1 }} />
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Horario de Trabajo
+            </Typography>
+          </Grid>
+
+          <Grid item xs={12}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between">
+              <Typography variant="body2">Usar horario global</Typography>
+              <Switch
+                checked={formData.schedule?.useGlobalSchedule ?? true}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    schedule: { ...prev.schedule, useGlobalSchedule: e.target.checked },
+                  }))
+                }
+              />
+            </Stack>
+          </Grid>
+
+          {!formData.schedule?.useGlobalSchedule && (
+            <>
+              <Grid item xs={6}>
+                <TextField
+                  label="Hora inicio"
+                  type="number"
+                  fullWidth
+                  size="small"
+                  value={formData.schedule?.workStartHour ?? 0}
+                  onChange={handleScheduleChange("workStartHour")}
+                  InputProps={{
+                    endAdornment: <InputAdornment position="end">:00</InputAdornment>,
+                    inputProps: { min: 0, max: 23 },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  label="Hora fin"
+                  type="number"
+                  fullWidth
+                  size="small"
+                  value={formData.schedule?.workEndHour ?? 23}
+                  onChange={handleScheduleChange("workEndHour")}
+                  InputProps={{
+                    endAdornment: <InputAdornment position="end">:00</InputAdornment>,
+                    inputProps: { min: 0, max: 23 },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                  Días de trabajo
+                </Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  {dayNames.map((day, i) => (
+                    <Chip
+                      key={day}
+                      label={day}
+                      onClick={() => handleDaysChange(i)}
+                      color={formData.schedule?.workDays?.includes(i) ? "primary" : "default"}
+                      variant={formData.schedule?.workDays?.includes(i) ? "filled" : "outlined"}
+                      sx={{ cursor: "pointer" }}
+                    />
+                  ))}
+                </Stack>
+              </Grid>
+            </>
+          )}
         </Grid>
       </DialogContent>
       <DialogActions>
@@ -818,6 +973,7 @@ const EjeWorkersConfig: React.FC = () => {
                     workerType="verification"
                     config={getWorkerData("verification")?.config || ({} as IManagerWorkerConfig)}
                     status={getWorkerData("verification")?.status || ({} as IWorkerStatusDetail)}
+                    effectiveSchedule={getWorkerData("verification")?.effectiveSchedule}
                     onToggle={() => handleToggleWorker("verification")}
                     onEdit={() => handleEditWorker("verification")}
                     loading={actionLoading}
@@ -902,6 +1058,20 @@ const EjeWorkersConfig: React.FC = () => {
                                 {getWorkerData("verification")?.config?.maxRetries || 0}
                               </TableCell>
                             </TableRow>
+                            <TableRow>
+                              <TableCell>Horario</TableCell>
+                              <TableCell align="right">
+                                {getWorkerData("verification")?.effectiveSchedule?.useGlobalSchedule
+                                  ? "Usa horario global"
+                                  : `${getWorkerData("verification")?.effectiveSchedule?.workStartHour}:00 - ${getWorkerData("verification")?.effectiveSchedule?.workEndHour}:00`}
+                              </TableCell>
+                            </TableRow>
+                            <TableRow>
+                              <TableCell>Días</TableCell>
+                              <TableCell align="right">
+                                {formatWorkDays(getWorkerData("verification")?.effectiveSchedule?.workDays)}
+                              </TableCell>
+                            </TableRow>
                           </TableBody>
                         </Table>
                       </TableContainer>
@@ -919,6 +1089,7 @@ const EjeWorkersConfig: React.FC = () => {
                     workerType="update"
                     config={getWorkerData("update")?.config || ({} as IManagerWorkerConfig)}
                     status={getWorkerData("update")?.status || ({} as IWorkerStatusDetail)}
+                    effectiveSchedule={getWorkerData("update")?.effectiveSchedule}
                     onToggle={() => handleToggleWorker("update")}
                     onEdit={() => handleEditWorker("update")}
                     loading={actionLoading}
@@ -998,6 +1169,12 @@ const EjeWorkersConfig: React.FC = () => {
                               </TableCell>
                             </TableRow>
                             <TableRow>
+                              <TableCell>Re-actualizar cada</TableCell>
+                              <TableCell align="right">
+                                {getWorkerData("update")?.config?.updateThresholdHours || 24} horas
+                              </TableCell>
+                            </TableRow>
+                            <TableRow>
                               <TableCell>Delay entre requests</TableCell>
                               <TableCell align="right">
                                 {getWorkerData("update")?.config?.delayBetweenRequests || 0} ms
@@ -1007,6 +1184,20 @@ const EjeWorkersConfig: React.FC = () => {
                               <TableCell>Reintentos máximos</TableCell>
                               <TableCell align="right">
                                 {getWorkerData("update")?.config?.maxRetries || 0}
+                              </TableCell>
+                            </TableRow>
+                            <TableRow>
+                              <TableCell>Horario</TableCell>
+                              <TableCell align="right">
+                                {getWorkerData("update")?.effectiveSchedule?.useGlobalSchedule
+                                  ? "Usa horario global"
+                                  : `${getWorkerData("update")?.effectiveSchedule?.workStartHour}:00 - ${getWorkerData("update")?.effectiveSchedule?.workEndHour}:00`}
+                              </TableCell>
+                            </TableRow>
+                            <TableRow>
+                              <TableCell>Días</TableCell>
+                              <TableCell align="right">
+                                {formatWorkDays(getWorkerData("update")?.effectiveSchedule?.workDays)}
                               </TableCell>
                             </TableRow>
                           </TableBody>
@@ -1165,10 +1356,10 @@ const EjeWorkersConfig: React.FC = () => {
                 {/* Working Days */}
                 <Grid item xs={12} md={6}>
                   <Card variant="outlined">
-                    <CardHeader title="Días de Trabajo" />
+                    <CardHeader title="Días de Trabajo (Global)" />
                     <CardContent>
                       <Stack direction="row" spacing={1} justifyContent="center">
-                        {["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"].map((day, i) => (
+                        {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((day, i) => (
                           <Chip
                             key={day}
                             label={day}
@@ -1183,6 +1374,19 @@ const EjeWorkersConfig: React.FC = () => {
                       </Stack>
                     </CardContent>
                   </Card>
+                </Grid>
+
+                {/* Stuck Worker */}
+                <Grid item xs={12}>
+                  <WorkerCard
+                    workerType="stuck"
+                    config={getWorkerData("stuck")?.config || ({} as IManagerWorkerConfig)}
+                    status={getWorkerData("stuck")?.status || ({} as IWorkerStatusDetail)}
+                    effectiveSchedule={getWorkerData("stuck")?.effectiveSchedule}
+                    onToggle={() => handleToggleWorker("stuck")}
+                    onEdit={() => handleEditWorker("stuck")}
+                    loading={actionLoading}
+                  />
                 </Grid>
               </Grid>
             </TabPanel>
