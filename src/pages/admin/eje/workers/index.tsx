@@ -49,6 +49,7 @@ import {
   Edit2,
   SearchNormal1,
   Briefcase,
+  Book1,
 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { useTheme, alpha } from "@mui/material/styles";
@@ -963,6 +964,7 @@ const EjeWorkersConfig: React.FC = () => {
               <Tab label="Actualización" icon={<Refresh size={18} />} iconPosition="start" />
               <Tab label="Sistema" icon={<Cpu size={18} />} iconPosition="start" />
               <Tab label="Estadísticas" icon={<Chart size={18} />} iconPosition="start" />
+              <Tab label="Documentación" icon={<Book1 size={18} />} iconPosition="start" />
             </Tabs>
 
             {/* Tab 0: Verification Worker */}
@@ -1521,6 +1523,257 @@ const EjeWorkersConfig: React.FC = () => {
                             </Typography>
                           </Box>
                         ))}
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </TabPanel>
+
+            {/* Tab 4: Documentation */}
+            <TabPanel value={tabValue} index={4}>
+              <Grid container spacing={3}>
+                {/* Control Hierarchy */}
+                <Grid item xs={12}>
+                  <Card variant="outlined" sx={{ borderColor: theme.palette.primary.main }}>
+                    <CardHeader
+                      title="Jerarquía de Control"
+                      subheader="Sistema de control maestro/individual para los workers"
+                    />
+                    <CardContent>
+                      <Stack spacing={3}>
+                        <Alert severity="info" sx={{ mb: 2 }}>
+                          El sistema implementa una jerarquía de control de dos niveles que permite
+                          detener todos los workers con un solo interruptor o controlarlos individualmente.
+                        </Alert>
+
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Niveles de Control
+                          </Typography>
+                          <Stack spacing={2}>
+                            <Box
+                              sx={{
+                                p: 2,
+                                borderRadius: 1,
+                                bgcolor: alpha(theme.palette.primary.main, 0.05),
+                                border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                              }}
+                            >
+                              <Stack direction="row" spacing={2} alignItems="center">
+                                <Chip label="MAESTRO" color="primary" size="small" />
+                                <Box>
+                                  <Typography variant="body2" fontWeight="bold">
+                                    Manager isRunning
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Interruptor maestro que controla TODOS los workers simultáneamente.
+                                    Si está apagado, ningún worker procesará documentos.
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Box>
+
+                            <Box
+                              sx={{
+                                p: 2,
+                                borderRadius: 1,
+                                bgcolor: alpha(theme.palette.success.main, 0.05),
+                                border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
+                              }}
+                            >
+                              <Stack direction="row" spacing={2} alignItems="center">
+                                <Chip label="INDIVIDUAL" color="success" size="small" />
+                                <Box>
+                                  <Typography variant="body2" fontWeight="bold">
+                                    Worker enabled
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Interruptor individual para cada worker. Permite controlar workers
+                                    específicos sin afectar a los demás.
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Box>
+                          </Stack>
+                        </Box>
+
+                        <Divider />
+
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                            Matriz de Estados
+                          </Typography>
+                          <TableContainer>
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Manager</TableCell>
+                                  <TableCell>Worker</TableCell>
+                                  <TableCell align="center">Resultado</TableCell>
+                                  <TableCell>Descripción</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                <TableRow>
+                                  <TableCell>
+                                    <Chip label="ON" color="success" size="small" />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Chip label="ON" color="success" size="small" />
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <TickCircle size={20} color={theme.palette.success.main} />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Typography variant="body2" color="success.main">
+                                      Worker ejecuta normalmente
+                                    </Typography>
+                                  </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell>
+                                    <Chip label="ON" color="success" size="small" />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Chip label="OFF" color="default" size="small" />
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <CloseCircle size={20} color={theme.palette.error.main} />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Typography variant="body2" color="text.secondary">
+                                      Worker individual deshabilitado
+                                    </Typography>
+                                  </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell>
+                                    <Chip label="OFF" color="error" size="small" />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Chip label="ON" color="success" size="small" />
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <CloseCircle size={20} color={theme.palette.error.main} />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Typography variant="body2" color="error.main">
+                                      Manager detenido - Worker NO ejecuta
+                                    </Typography>
+                                  </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell>
+                                    <Chip label="OFF" color="error" size="small" />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Chip label="OFF" color="default" size="small" />
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <CloseCircle size={20} color={theme.palette.error.main} />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Typography variant="body2" color="text.secondary">
+                                      Ambos deshabilitados
+                                    </Typography>
+                                  </TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Box>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Workers Description */}
+                <Grid item xs={12} md={6}>
+                  <Card variant="outlined">
+                    <CardHeader title="Workers Disponibles" />
+                    <CardContent>
+                      <Stack spacing={2}>
+                        <Box>
+                          <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
+                            <SearchNormal1 size={18} color={theme.palette.primary.main} />
+                            <Typography variant="subtitle2">Worker de Verificación</Typography>
+                          </Stack>
+                          <Typography variant="body2" color="text.secondary">
+                            Verifica que los expedientes existan en el sistema EJE antes de intentar
+                            obtener sus detalles. Marca como inválidos los que no existen.
+                          </Typography>
+                        </Box>
+
+                        <Divider />
+
+                        <Box>
+                          <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
+                            <Refresh size={18} color={theme.palette.info.main} />
+                            <Typography variant="subtitle2">Worker de Actualización</Typography>
+                          </Stack>
+                          <Typography variant="body2" color="text.secondary">
+                            Actualiza los expedientes verificados con sus movimientos y detalles.
+                            Re-actualiza periódicamente según el umbral configurado.
+                          </Typography>
+                        </Box>
+
+                        <Divider />
+
+                        <Box>
+                          <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
+                            <Briefcase size={18} color={theme.palette.warning.main} />
+                            <Typography variant="subtitle2">Worker de Recuperación</Typography>
+                          </Stack>
+                          <Typography variant="body2" color="text.secondary">
+                            Detecta y recupera expedientes trabados o con errores. Limpia locks
+                            huérfanos y resetea documentos para reintento.
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Uso recomendado */}
+                <Grid item xs={12} md={6}>
+                  <Card variant="outlined">
+                    <CardHeader title="Uso Recomendado" />
+                    <CardContent>
+                      <Stack spacing={2}>
+                        <Box>
+                          <Typography variant="subtitle2" color="primary.main" gutterBottom>
+                            Detener todo el sistema
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Usa el botón de pausa del Manager en el encabezado. Esto detendrá todos
+                            los workers inmediatamente sin cambiar sus configuraciones individuales.
+                          </Typography>
+                        </Box>
+
+                        <Divider />
+
+                        <Box>
+                          <Typography variant="subtitle2" color="primary.main" gutterBottom>
+                            Mantenimiento de un worker específico
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Desactiva solo el worker que necesitas mantener usando su switch individual.
+                            Los demás workers continuarán operando normalmente.
+                          </Typography>
+                        </Box>
+
+                        <Divider />
+
+                        <Box>
+                          <Typography variant="subtitle2" color="primary.main" gutterBottom>
+                            Arranque progresivo
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Puedes iniciar el Manager con algunos workers deshabilitados e ir
+                            activándolos progresivamente para monitorear el impacto en el sistema.
+                          </Typography>
+                        </Box>
                       </Stack>
                     </CardContent>
                   </Card>
