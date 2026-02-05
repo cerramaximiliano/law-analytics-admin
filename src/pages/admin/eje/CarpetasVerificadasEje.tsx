@@ -326,6 +326,11 @@ const CarpetasVerificadasEje = () => {
 			// Cuando se activa, forzar filtros de elegibilidad
 			setUpdateFilter("true");
 			setPrivadaFilter("false");
+		} else {
+			// Cuando se desactiva, restaurar filtros a "todos"
+			setUpdateFilter("todos");
+			setPrivadaFilter("todos");
+			setEstadoActualizacion("todos");
 		}
 		setPage(0);
 	};
