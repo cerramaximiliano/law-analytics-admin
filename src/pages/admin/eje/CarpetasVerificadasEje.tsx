@@ -32,6 +32,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { CausasEjeService, CausaEje, WorkerStatsResponse, EligibilityStatsResponse } from "api/causasEje";
 import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Lock1, Repeat } from "iconsax-react";
+import CausaDetalleModalEje from "./CausaDetalleModalEje";
 
 // Helper para formatear fechas
 const formatDate = (date: { $date: string } | string | undefined): string => {
@@ -914,7 +915,13 @@ const CarpetasVerificadasEje = () => {
 				</Grid>
 			</Grid>
 
-			{/* TODO: Modal de detalles EJE - Por implementar */}
+			{/* Modal de detalles EJE */}
+			<CausaDetalleModalEje
+				open={detailModalOpen}
+				onClose={handleCloseModal}
+				causa={selectedCausa}
+				onCausaUpdated={handleRefresh}
+			/>
 		</MainCard>
 	);
 };
