@@ -1796,6 +1796,9 @@ const EjeWorkersConfig: React.FC = () => {
                           <Alert severity="info" sx={{ mb: 2 }}>
                             El worker selecciona documentos que cumplan TODOS estos criterios:
                           </Alert>
+                          <Alert severity="warning" sx={{ mb: 2 }}>
+                            <strong>Valores de isValid:</strong> <code>null</code> = pendiente de verificación, <code>true</code> = existe en EJE, <code>false</code> = no existe en EJE
+                          </Alert>
                           <TableContainer>
                             <Table size="small">
                               <TableHead>
@@ -1813,8 +1816,8 @@ const EjeWorkersConfig: React.FC = () => {
                                 </TableRow>
                                 <TableRow>
                                   <TableCell><code>isValid</code></TableCell>
-                                  <TableCell><Chip label="true" size="small" color="success" /></TableCell>
-                                  <TableCell>No ha sido marcado como inválido previamente</TableCell>
+                                  <TableCell><Chip label="null" size="small" color="warning" /></TableCell>
+                                  <TableCell>Pendiente de verificación (estado desconocido)</TableCell>
                                 </TableRow>
                                 <TableRow>
                                   <TableCell><code>errorCount</code></TableCell>
@@ -1847,6 +1850,7 @@ const EjeWorkersConfig: React.FC = () => {
                                 <Typography variant="body2" gutterBottom>Se actualizan los siguientes campos:</Typography>
                                 <Stack spacing={0.5}>
                                   <Typography variant="caption"><code>verified: true</code></Typography>
+                                  <Typography variant="caption" sx={{ color: theme.palette.success.main, fontWeight: 'bold' }}><code>isValid: true</code> (confirmado que existe)</Typography>
                                   <Typography variant="caption"><code>verifiedAt: fecha actual</code></Typography>
                                   <Typography variant="caption" sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}><code>update: true</code> (habilita actualización automática)</Typography>
                                   <Typography variant="caption"><code>lastError: null</code></Typography>
@@ -1861,7 +1865,9 @@ const EjeWorkersConfig: React.FC = () => {
                                 </Stack>
                                 <Typography variant="body2" gutterBottom>Se actualizan los siguientes campos:</Typography>
                                 <Stack spacing={0.5}>
-                                  <Typography variant="caption"><code>isValid: false</code></Typography>
+                                  <Typography variant="caption"><code>verified: true</code> (se verificó)</Typography>
+                                  <Typography variant="caption" sx={{ color: theme.palette.error.main, fontWeight: 'bold' }}><code>isValid: false</code> (no existe)</Typography>
+                                  <Typography variant="caption"><code>verifiedAt: fecha actual</code></Typography>
                                   <Typography variant="caption"><code>lastError: "mensaje de error"</code></Typography>
                                   <Typography variant="caption"><code>errorCount: +1</code></Typography>
                                 </Stack>
