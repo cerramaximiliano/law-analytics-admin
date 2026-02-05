@@ -24,11 +24,14 @@ import {
 	IconButton,
 	TextField,
 	Button,
+	Checkbox,
+	FormControlLabel,
+	LinearProgress,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { CausasEjeService, CausaEje, WorkerStatsResponse } from "api/causasEje";
-import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Lock1 } from "iconsax-react";
+import { CausasEjeService, CausaEje, WorkerStatsResponse, EligibilityStatsResponse } from "api/causasEje";
+import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Lock1, Repeat } from "iconsax-react";
 
 // Helper para formatear fechas
 const formatDate = (date: { $date: string } | string | undefined): string => {
@@ -51,6 +54,49 @@ const formatMonto = (monto: number | undefined, moneda: string = "ARS"): string 
 		style: "currency",
 		currency: moneda,
 	}).format(monto);
+};
+
+// Helper para obtener fecha en Argentina (UTC-3)
+const getArgentinaDate = (): string => {
+	const now = new Date();
+	const argentinaOffset = -3 * 60;
+	const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+	const argentinaMinutes = utcMinutes + argentinaOffset;
+	let dayOffset = 0;
+	if (argentinaMinutes < 0) {
+		dayOffset = -1;
+	} else if (argentinaMinutes >= 24 * 60) {
+		dayOffset = 1;
+	}
+	const argentinaDate = new Date(now);
+	argentinaDate.setUTCDate(argentinaDate.getUTCDate() + dayOffset);
+	const year = argentinaDate.getUTCFullYear();
+	const month = String(argentinaDate.getUTCMonth() + 1).padStart(2, "0");
+	const day = String(argentinaDate.getUTCDate()).padStart(2, "0");
+	return `${year}-${month}-${day}`;
+};
+
+// Helper para obtener información de actualización del día
+const getTodayUpdateInfo = (causa: CausaEje): { isToday: boolean; count: number; hours: number[] } => {
+	const stats = causa.updateStats?.today;
+	if (!stats || !stats.date) {
+		return { isToday: false, count: 0, hours: [] };
+	}
+	const today = getArgentinaDate();
+	const isToday = stats.date === today;
+	return {
+		isToday,
+		count: isToday ? (stats.count || 0) : 0,
+		hours: isToday ? (stats.hours || []) : [],
+	};
+};
+
+// Helper para formatear tooltip de horas
+const formatHoursTooltip = (hours: number[]): string => {
+	if (hours.length === 0) return "";
+	const sortedHours = [...hours].sort((a, b) => a - b);
+	const formatted = sortedHours.map((h) => `${h.toString().padStart(2, "0")}:00`);
+	return `Actualizado a las ${formatted.join(", ")}`;
 };
 
 // Helper para extraer ID
@@ -88,6 +134,14 @@ const CarpetasVerificadasEje = () => {
 	// Estadísticas de workers
 	const [workerStats, setWorkerStats] = useState<WorkerStatsResponse["data"] | null>(null);
 	const [loadingStats, setLoadingStats] = useState(false);
+
+	// Estadísticas de elegibilidad
+	const [eligibilityStats, setEligibilityStats] = useState<EligibilityStatsResponse["data"] | null>(null);
+	const [loadingEligibility, setLoadingEligibility] = useState(false);
+
+	// Filtros de elegibilidad
+	const [soloElegibles, setSoloElegibles] = useState(false);
+	const [estadoActualizacion, setEstadoActualizacion] = useState<string>("todos");
 
 	// Modal de detalles
 	const [selectedCausa, setSelectedCausa] = useState<CausaEje | null>(null);
@@ -193,10 +247,26 @@ const CarpetasVerificadasEje = () => {
 		}
 	};
 
+	// Cargar estadísticas de elegibilidad
+	const fetchEligibilityStats = async () => {
+		try {
+			setLoadingEligibility(true);
+			const response = await CausasEjeService.getEligibilityStats();
+			if (response.success) {
+				setEligibilityStats(response.data);
+			}
+		} catch (error) {
+			console.error("Error al cargar estadísticas de elegibilidad:", error);
+		} finally {
+			setLoadingEligibility(false);
+		}
+	};
+
 	// Efecto inicial
 	useEffect(() => {
 		fetchCausas(page, rowsPerPage, searchNumero, searchAnio, searchCuij, searchCaratula, sortBy, sortOrder, privadaFilter, updateFilter, sourceFilter, detailsLoadedFilter);
 		fetchWorkerStats();
+		fetchEligibilityStats();
 	}, []);
 
 	// Efecto para cambios de filtros que disparan fetch automático
@@ -245,6 +315,25 @@ const CarpetasVerificadasEje = () => {
 	const handleRefresh = () => {
 		fetchCausas(page, rowsPerPage, searchNumero, searchAnio, searchCuij, searchCaratula, sortBy, sortOrder, privadaFilter, updateFilter, sourceFilter, detailsLoadedFilter);
 		fetchWorkerStats();
+		fetchEligibilityStats();
+	};
+
+	// Handler para checkbox "Solo elegibles"
+	const handleSoloElegiblesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const checked = event.target.checked;
+		setSoloElegibles(checked);
+		if (checked) {
+			// Cuando se activa, forzar filtros de elegibilidad
+			setUpdateFilter("true");
+			setPrivadaFilter("false");
+		}
+		setPage(0);
+	};
+
+	// Handler para select de estado de actualización
+	const handleEstadoActualizacionChange = (event: any) => {
+		setEstadoActualizacion(event.target.value);
+		setPage(0);
 	};
 
 	// Handler para ver detalles
@@ -486,6 +575,119 @@ const CarpetasVerificadasEje = () => {
 					</Grid>
 				</Grid>
 
+				{/* Filtros de elegibilidad y barra de progreso */}
+				<Grid item xs={12}>
+					<Grid container spacing={2} alignItems="center">
+						<Grid item xs={12} md={3} lg={2}>
+							<FormControlLabel
+								control={
+									<Checkbox
+										checked={soloElegibles}
+										onChange={handleSoloElegiblesChange}
+										size="small"
+									/>
+								}
+								label={
+									<Typography variant="body2">
+										Solo elegibles para actualización
+									</Typography>
+								}
+							/>
+						</Grid>
+						<Grid item xs={12} md={3} lg={2}>
+							<FormControl fullWidth size="small">
+								<InputLabel>Estado Actualización</InputLabel>
+								<Select
+									value={estadoActualizacion}
+									onChange={handleEstadoActualizacionChange}
+									label="Estado Actualización"
+									disabled={!soloElegibles}
+								>
+									<MenuItem value="todos">Todos</MenuItem>
+									<MenuItem value="actualizados">Actualizados hoy</MenuItem>
+									<MenuItem value="pendientes">Pendientes</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
+						{/* Barra de progreso de elegibilidad */}
+						<Grid item xs={12} md={6} lg={8}>
+							{loadingEligibility ? (
+								<Box display="flex" alignItems="center" gap={1}>
+									<CircularProgress size={16} />
+									<Typography variant="caption" color="text.secondary">
+										Cargando estadísticas...
+									</Typography>
+								</Box>
+							) : eligibilityStats ? (
+								<Box>
+									<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+										<Stack direction="row" spacing={1} alignItems="center">
+											<Repeat size={16} color="#1976d2" />
+											<Typography variant="caption" fontWeight="bold">
+												Cobertura de actualización:
+											</Typography>
+										</Stack>
+										<Stack direction="row" spacing={2}>
+											<Tooltip title="Documentos elegibles actualizados hoy">
+												<Chip
+													label={`${eligibilityStats.actualizadosHoy} actualizados`}
+													size="small"
+													color="success"
+													variant="outlined"
+													sx={{ height: 20, fontSize: '0.7rem' }}
+												/>
+											</Tooltip>
+											<Tooltip title="Documentos elegibles pendientes de actualizar hoy">
+												<Chip
+													label={`${eligibilityStats.pendientesHoy} pendientes`}
+													size="small"
+													color="warning"
+													variant="outlined"
+													sx={{ height: 20, fontSize: '0.7rem' }}
+												/>
+											</Tooltip>
+											<Tooltip title={`Umbral de actualización: ${eligibilityStats.thresholdHours}h`}>
+												<Chip
+													label={`${eligibilityStats.totalElegibles} elegibles`}
+													size="small"
+													variant="outlined"
+													sx={{ height: 20, fontSize: '0.7rem' }}
+												/>
+											</Tooltip>
+										</Stack>
+									</Stack>
+									<Tooltip title={`${eligibilityStats.coveragePercent.toFixed(1)}% de documentos elegibles actualizados hoy`}>
+										<LinearProgress
+											variant="determinate"
+											value={eligibilityStats.coveragePercent}
+											sx={{
+												height: 8,
+												borderRadius: 4,
+												backgroundColor: 'rgba(0, 0, 0, 0.1)',
+												'& .MuiLinearProgress-bar': {
+													borderRadius: 4,
+													backgroundColor: eligibilityStats.coveragePercent >= 80
+														? '#2e7d32'
+														: eligibilityStats.coveragePercent >= 50
+															? '#ed6c02'
+															: '#d32f2f',
+												},
+											}}
+										/>
+									</Tooltip>
+									<Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, textAlign: 'right' }}>
+										{eligibilityStats.coveragePercent.toFixed(1)}% cobertura
+									</Typography>
+								</Box>
+							) : (
+								<Typography variant="caption" color="text.secondary">
+									No hay estadísticas de elegibilidad disponibles
+								</Typography>
+							)}
+						</Grid>
+					</Grid>
+				</Grid>
+
 				{/* Ordenamiento */}
 				<Grid item xs={12}>
 					<Grid container spacing={2} alignItems="center">
@@ -630,7 +832,30 @@ const CarpetasVerificadasEje = () => {
 													<Typography variant="caption">{formatDate(causa.createdAt)}</Typography>
 												</TableCell>
 												<TableCell>
-													<Typography variant="caption">{formatDate(causa.lastUpdate)}</Typography>
+													{(() => {
+														const updateInfo = getTodayUpdateInfo(causa);
+														return (
+															<Stack direction="row" spacing={0.5} alignItems="center">
+																<Typography variant="caption">{formatDate(causa.lastUpdate)}</Typography>
+																{updateInfo.isToday && updateInfo.count > 0 && (
+																	<Tooltip title={formatHoursTooltip(updateInfo.hours)}>
+																		<Chip
+																			icon={<Repeat size={12} />}
+																			label={updateInfo.count}
+																			size="small"
+																			color="success"
+																			sx={{
+																				height: 18,
+																				fontSize: '0.65rem',
+																				'& .MuiChip-icon': { fontSize: '0.75rem' },
+																				'& .MuiChip-label': { px: 0.5 }
+																			}}
+																		/>
+																	</Tooltip>
+																)}
+															</Stack>
+														);
+													})()}
 												</TableCell>
 												<TableCell>
 													<Typography variant="caption">{formatDate(causa.ultimoMovimiento)}</Typography>
