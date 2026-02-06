@@ -1097,7 +1097,7 @@ const AdminDashboard = () => {
 				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
 					<Paper
 						elevation={0}
-						onClick={() => navigate("/admin/causas/verified-app")}
+						onClick={() => navigate("/admin/causas/workers")}
 						sx={{
 							p: { xs: 1.5, sm: 2.5 },
 							borderRadius: 2,
@@ -1212,6 +1212,18 @@ const AdminDashboard = () => {
 									<Box sx={{ mt: 2, pt: 2, borderTop: `1px dashed ${theme.palette.divider}` }}>
 										<Typography variant="caption" color="error.main" fontWeight="bold">
 											⚠️ {stuckDocumentsStats.repeatedFailures.length} documento(s) con fallos repetidos
+										</Typography>
+									</Box>
+								)}
+								{stuckDocumentsStats.chronicStuck && stuckDocumentsStats.chronicStuck.length > 0 && (
+									<Box sx={{ mt: stuckDocumentsStats.repeatedFailures?.length ? 1 : 2, pt: stuckDocumentsStats.repeatedFailures?.length ? 0 : 2, borderTop: stuckDocumentsStats.repeatedFailures?.length ? 'none' : `1px dashed ${theme.palette.divider}` }}>
+										<Typography variant="caption" color="error.main" fontWeight="bold">
+											🔴 {stuckDocumentsStats.chronicStuck.length} documento(s) crónicamente atorados
+											{stuckDocumentsStats.chronicStuck.some(d => d.daysSinceFirst && d.daysSinceFirst >= 7) && (
+												<span style={{ marginLeft: 4 }}>
+													(algunos por más de 7 días)
+												</span>
+											)}
 										</Typography>
 									</Box>
 								)}
