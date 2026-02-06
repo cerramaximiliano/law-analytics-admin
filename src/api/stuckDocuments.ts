@@ -19,6 +19,20 @@ export interface StuckDocumentsRepeatedFailure {
 	lastMessage?: string;
 }
 
+export interface ChronicStuckDocument {
+	documentId: string;
+	expediente: string;
+	fuero: string;
+	caratula?: string;
+	hasFolders: boolean;
+	foldersCount: number;
+	attemptCount: number;
+	firstAttempt: string | null;
+	lastAttempt: string | null;
+	daysSinceFirst: number | null;
+	hasDateDiscordance: boolean;
+}
+
 export interface StuckDocumentsStats {
 	worker: {
 		enabled: boolean;
@@ -50,6 +64,7 @@ export interface StuckDocumentsStats {
 		successRate: string;
 	};
 	repeatedFailures: StuckDocumentsRepeatedFailure[];
+	chronicStuck: ChronicStuckDocument[];
 }
 
 export interface StuckDocumentsStatsResponse {
