@@ -44,6 +44,7 @@ import StuckDocumentsService, {
 	StuckDocumentsStats,
 	StuckDocumentsLog,
 	StuckDocument,
+	ChronicStuckDocument,
 } from "api/stuckDocuments";
 
 // Interfaz para tabs laterales
@@ -697,6 +698,129 @@ const StuckDocumentsWorker = () => {
 												<Tooltip title={doc.lastMessage || ""}>
 													<Chip label={doc.lastStatus} size="small" variant="outlined" />
 												</Tooltip>
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</TableContainer>
+					</CardContent>
+				</Card>
+			)}
+
+			{/* Documentos crónicamente atorados */}
+			{stats?.chronicStuck && stats.chronicStuck.length > 0 && (
+				<Card variant="outlined" sx={{ borderColor: theme.palette.error.main, borderWidth: 2 }}>
+					<CardContent>
+						<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+							<CloseCircle size={20} color={theme.palette.error.main} />
+							<Typography variant="subtitle1" fontWeight="bold" color="error.main">
+								Documentos Crónicamente Atorados
+							</Typography>
+							<Chip
+								label={`${stats.chronicStuck.length} docs`}
+								size="small"
+								color="error"
+								variant="outlined"
+							/>
+						</Stack>
+						<Alert severity="error" variant="outlined" sx={{ mb: 2 }}>
+							<Typography variant="body2">
+								Estos documentos llevan mucho tiempo atorados con múltiples intentos fallidos.
+								Pueden requerir intervención manual o tienen discordancia de datos.
+							</Typography>
+						</Alert>
+						<TableContainer>
+							<Table size="small">
+								<TableHead>
+									<TableRow>
+										<TableCell>Expediente</TableCell>
+										<TableCell>Fuero</TableCell>
+										<TableCell align="center">Intentos</TableCell>
+										<TableCell align="center">Días atorado</TableCell>
+										<TableCell>Primer intento</TableCell>
+										<TableCell>Último intento</TableCell>
+										<TableCell align="center">Alertas</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{stats.chronicStuck.map((doc) => (
+										<TableRow key={doc.documentId} hover>
+											<TableCell>
+												<Stack spacing={0.5}>
+													<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+														{doc.expediente}
+													</Typography>
+													{doc.caratula && (
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{
+																maxWidth: 180,
+																overflow: "hidden",
+																textOverflow: "ellipsis",
+																whiteSpace: "nowrap",
+																display: "block"
+															}}
+														>
+															{doc.caratula}
+														</Typography>
+													)}
+												</Stack>
+											</TableCell>
+											<TableCell>
+												<Chip label={doc.fuero} size="small" variant="outlined" />
+											</TableCell>
+											<TableCell align="center">
+												<Chip
+													label={doc.attemptCount}
+													size="small"
+													color="error"
+												/>
+											</TableCell>
+											<TableCell align="center">
+												<Typography
+													variant="body2"
+													fontWeight="bold"
+													color={doc.daysSinceFirst && doc.daysSinceFirst >= 7 ? "error.main" : "warning.main"}
+												>
+													{doc.daysSinceFirst !== null ? `${doc.daysSinceFirst}d` : "-"}
+												</Typography>
+											</TableCell>
+											<TableCell>
+												<Typography variant="caption">
+													{formatDate(doc.firstAttempt)}
+												</Typography>
+											</TableCell>
+											<TableCell>
+												<Typography variant="caption">
+													{formatDate(doc.lastAttempt)}
+												</Typography>
+											</TableCell>
+											<TableCell align="center">
+												<Stack direction="row" spacing={0.5} justifyContent="center">
+													{doc.hasFolders && (
+														<Tooltip title={`Tiene ${doc.foldersCount} carpetas asociadas`}>
+															<Chip
+																label="📁"
+																size="small"
+																variant="outlined"
+																sx={{ minWidth: 'auto', px: 0.5 }}
+															/>
+														</Tooltip>
+													)}
+													{doc.hasDateDiscordance && (
+														<Tooltip title="Discordancia: tiene fechaUltimoMovimiento pero movimientosCount=0">
+															<Chip
+																label="⚠️"
+																size="small"
+																color="warning"
+																variant="outlined"
+																sx={{ minWidth: 'auto', px: 0.5 }}
+															/>
+														</Tooltip>
+													)}
+												</Stack>
 											</TableCell>
 										</TableRow>
 									))}
