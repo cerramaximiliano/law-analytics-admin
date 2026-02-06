@@ -981,33 +981,48 @@ const AdminDashboard = () => {
 					</Grid>
 				</Box>
 
-				{/* Update System Health Widget */}
-				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
-					<Paper
-						elevation={0}
-						onClick={() => navigate("/admin/causas/verified-app")}
-						sx={{
-							p: { xs: 1.5, sm: 2.5 },
-							borderRadius: 2,
-							bgcolor: theme.palette.background.paper,
-							border: `1px solid ${theme.palette.divider}`,
-							cursor: "pointer",
-							transition: "all 0.2s ease",
-							"&:hover": {
-								boxShadow: theme.shadows[2],
-								borderColor: COLORS.primary.light,
-							},
-						}}
-					>
-						<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-							<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-								<Refresh size={20} style={{ color: COLORS.primary.main }} />
-								<Typography variant="subtitle1" fontWeight="bold">
-									Salud del Sistema de Actualización
-								</Typography>
+				{/* Worker Widgets Row */}
+				<Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: { xs: 2, sm: 4 } }}>
+					{/* Update System Health Widget */}
+					<Grid item xs={12} md={6}>
+						<Paper
+							elevation={0}
+							onClick={() => navigate("/admin/causas/verified-app")}
+							sx={{
+								p: { xs: 1.5, sm: 2.5 },
+								borderRadius: 2,
+								bgcolor: theme.palette.background.paper,
+								border: `1px solid ${theme.palette.divider}`,
+								cursor: "pointer",
+								transition: "all 0.2s ease",
+								height: "100%",
+								"&:hover": {
+									boxShadow: theme.shadows[2],
+									borderColor: COLORS.primary.light,
+								},
+							}}
+						>
+							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									<Refresh size={20} style={{ color: COLORS.primary.main }} />
+									<Typography variant="subtitle1" fontWeight="bold">
+										Salud del Sistema de Actualización
+									</Typography>
+								</Box>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									<Chip
+										label="PJN"
+										size="small"
+										sx={{
+											bgcolor: alpha(COLORS.primary.main, 0.1),
+											color: COLORS.primary.main,
+											fontWeight: 500,
+											fontSize: "0.65rem",
+										}}
+									/>
+									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
+								</Box>
 							</Box>
-							<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
-						</Box>
 
 						{loadingEligibility ? (
 							<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
@@ -1090,48 +1105,61 @@ const AdminDashboard = () => {
 								No se pudieron cargar las estadísticas
 							</Typography>
 						)}
-					</Paper>
-				</Box>
+						</Paper>
+					</Grid>
 
-				{/* Stuck Documents Worker Widget */}
-				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
-					<Paper
-						elevation={0}
-						onClick={() => navigate("/admin/causas/workers")}
-						sx={{
-							p: { xs: 1.5, sm: 2.5 },
-							borderRadius: 2,
-							bgcolor: theme.palette.background.paper,
-							border: `1px solid ${theme.palette.divider}`,
-							cursor: "pointer",
-							transition: "all 0.2s ease",
-							"&:hover": {
-								boxShadow: theme.shadows[2],
-								borderColor: COLORS.warning.light,
-							},
-						}}
-					>
-						<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-							<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-								<Warning2 size={20} style={{ color: COLORS.warning.main }} />
-								<Typography variant="subtitle1" fontWeight="bold">
-									Stuck Documents Worker
-								</Typography>
-								{stuckDocumentsStats?.worker && (
+					{/* Stuck Documents Worker Widget */}
+					<Grid item xs={12} md={6}>
+						<Paper
+							elevation={0}
+							onClick={() => navigate("/admin/causas/workers")}
+							sx={{
+								p: { xs: 1.5, sm: 2.5 },
+								borderRadius: 2,
+								bgcolor: theme.palette.background.paper,
+								border: `1px solid ${theme.palette.divider}`,
+								cursor: "pointer",
+								transition: "all 0.2s ease",
+								height: "100%",
+								"&:hover": {
+									boxShadow: theme.shadows[2],
+									borderColor: COLORS.warning.light,
+								},
+							}}
+						>
+							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									<Warning2 size={20} style={{ color: COLORS.warning.main }} />
+									<Typography variant="subtitle1" fontWeight="bold">
+										Stuck Documents Worker
+									</Typography>
+									{stuckDocumentsStats?.worker && (
+										<Chip
+											size="small"
+											label={stuckDocumentsStats.worker.enabled ? "Activo" : "Deshabilitado"}
+											sx={{
+												bgcolor: stuckDocumentsStats.worker.enabled ? alpha(COLORS.success.main, 0.15) : alpha(COLORS.neutral.main, 0.15),
+												color: stuckDocumentsStats.worker.enabled ? COLORS.success.main : COLORS.neutral.main,
+												fontWeight: 600,
+												fontSize: "0.65rem",
+											}}
+										/>
+									)}
+								</Box>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 									<Chip
+										label="PJN"
 										size="small"
-										label={stuckDocumentsStats.worker.enabled ? "Activo" : "Deshabilitado"}
 										sx={{
-											bgcolor: stuckDocumentsStats.worker.enabled ? alpha(COLORS.success.main, 0.15) : alpha(COLORS.neutral.main, 0.15),
-											color: stuckDocumentsStats.worker.enabled ? COLORS.success.main : COLORS.neutral.main,
-											fontWeight: 600,
+											bgcolor: alpha(COLORS.primary.main, 0.1),
+											color: COLORS.primary.main,
+											fontWeight: 500,
 											fontSize: "0.65rem",
 										}}
 									/>
-								)}
+									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
+								</Box>
 							</Box>
-							<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
-						</Box>
 
 						{loadingStuckDocuments ? (
 							<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
@@ -1233,8 +1261,9 @@ const AdminDashboard = () => {
 								No se pudieron cargar las estadísticas
 							</Typography>
 						)}
-					</Paper>
-				</Box>
+						</Paper>
+					</Grid>
+				</Grid>
 
 				{/* Detailed Sections with Charts */}
 				<Grid container spacing={{ xs: 2, sm: 3 }}>
