@@ -38,6 +38,7 @@ import {
   Chart,
   Warning2,
   CommandSquare,
+  Clock,
 } from 'iconsax-react';
 
 // Tab Panel Component
@@ -410,8 +411,8 @@ npx ts-node scripts/test-verification-flow.ts 162321/2020 162512/2020`}
           </Stack>
         </ScriptTabPanel>
 
-        {/* Script 2: fix-linked-causas-history.ts */}
-        <ScriptTabPanel value={scriptTab} index={2}>
+        {/* Script 3: fix-linked-causas-history.ts */}
+        <ScriptTabPanel value={scriptTab} index={3}>
           <Stack spacing={2}>
             <Box>
               <Typography variant="subtitle1" fontWeight="bold" color="primary.main">fix-linked-causas-history.ts</Typography>
@@ -508,8 +509,9 @@ const DocumentationTabs = () => {
         <Tab label="Flujo de Actualización" icon={<Refresh size={18} />} iconPosition="start" {...a11yProps(2)} />
         <Tab label="Arquitectura" icon={<Briefcase size={18} />} iconPosition="start" {...a11yProps(3)} />
         <Tab label="Campos y Estados" icon={<DocumentText1 size={18} />} iconPosition="start" {...a11yProps(4)} />
-        <Tab label="Métricas" icon={<Chart size={18} />} iconPosition="start" {...a11yProps(5)} />
-        <Tab label="Scripts de Prueba" icon={<CommandSquare size={18} />} iconPosition="start" {...a11yProps(6)} />
+        <Tab label="Historial Asociación" icon={<Clock size={18} />} iconPosition="start" {...a11yProps(5)} />
+        <Tab label="Métricas" icon={<Chart size={18} />} iconPosition="start" {...a11yProps(6)} />
+        <Tab label="Scripts de Prueba" icon={<CommandSquare size={18} />} iconPosition="start" {...a11yProps(7)} />
       </Tabs>
 
       {/* Tab 0: Control de Workers */}
@@ -1186,8 +1188,304 @@ const DocumentationTabs = () => {
         </Stack>
       </TabPanel>
 
-      {/* Tab 5: Métricas */}
+      {/* Tab 5: Historial de Asociación */}
       <TabPanel value={tabValue} index={5}>
+        <Stack spacing={3}>
+          <Typography variant="h6" fontWeight="bold">Historial de Asociación (causaAssociationHistory)</Typography>
+
+          <Alert severity="info">
+            El sistema trackea todos los cambios de estado en la vinculación de causas EJE,
+            permitiendo auditar el ciclo de vida completo de cada asociación.
+          </Alert>
+
+          <Box>
+            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>Estructura del Historial</Typography>
+            <Box sx={{
+              p: 2,
+              bgcolor: alpha(theme.palette.grey[500], 0.1),
+              borderRadius: 1,
+              fontFamily: 'monospace',
+              fontSize: '0.8rem',
+              overflowX: 'auto'
+            }}>
+              <pre style={{ margin: 0 }}>
+{`causaAssociationHistory: [{
+  status: String,      // 'pending', 'pending_selection', 'success', 'failed', 'not_attempted'
+  timestamp: Date,     // Momento del cambio
+  source: String,      // 'user', 'worker', 'api', 'system'
+  details: String,     // Descripción del cambio
+  causaId: ObjectId,   // ID de la causa (si aplica)
+  searchTerm: String   // Término de búsqueda usado
+}]`}
+              </pre>
+            </Box>
+          </Box>
+
+          <Divider />
+
+          <Box>
+            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>Campos del Historial</Typography>
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Campo</TableCell>
+                    <TableCell>Tipo</TableCell>
+                    <TableCell>Descripción</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <TableRow>
+                    <TableCell><code>status</code></TableCell>
+                    <TableCell>String (enum)</TableCell>
+                    <TableCell>Estado de asociación en ese momento</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><code>timestamp</code></TableCell>
+                    <TableCell>Date</TableCell>
+                    <TableCell>Fecha y hora del cambio</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><code>source</code></TableCell>
+                    <TableCell>String (enum)</TableCell>
+                    <TableCell>Origen del cambio: user, worker, api, system</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><code>details</code></TableCell>
+                    <TableCell>String</TableCell>
+                    <TableCell>Descripción legible del cambio</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><code>causaId</code></TableCell>
+                    <TableCell>ObjectId</TableCell>
+                    <TableCell>ID de la causa asociada (opcional)</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><code>searchTerm</code></TableCell>
+                    <TableCell>String</TableCell>
+                    <TableCell>Término de búsqueda usado (CUIJ o número/año)</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+
+          <Divider />
+
+          <Box>
+            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>Valores de Source</Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={3}>
+                <Box sx={{ p: 2, borderRadius: 1, bgcolor: alpha(theme.palette.primary.main, 0.1), border: `1px solid ${theme.palette.primary.main}` }}>
+                  <Typography variant="subtitle2" color="primary.main" fontWeight="bold">user</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Acción iniciada por el usuario (vinculación manual, selección de causa)
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Box sx={{ p: 2, borderRadius: 1, bgcolor: alpha(theme.palette.warning.main, 0.1), border: `1px solid ${theme.palette.warning.main}` }}>
+                  <Typography variant="subtitle2" color="warning.main" fontWeight="bold">worker</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Cambio realizado por verification-worker (verificación automática)
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Box sx={{ p: 2, borderRadius: 1, bgcolor: alpha(theme.palette.info.main, 0.1), border: `1px solid ${theme.palette.info.main}` }}>
+                  <Typography variant="subtitle2" color="info.main" fontWeight="bold">api</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Cambio desde eje-api o causaService (múltiples resultados)
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Box sx={{ p: 2, borderRadius: 1, bgcolor: alpha(theme.palette.grey[500], 0.1), border: `1px solid ${theme.palette.grey[500]}` }}>
+                  <Typography variant="subtitle2" fontWeight="bold">system</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Error o proceso automático del sistema
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
+          </Box>
+
+          <Divider />
+
+          <Box>
+            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>Flujo de Estados Trackeados</Typography>
+            <Box sx={{
+              p: 2,
+              bgcolor: alpha(theme.palette.grey[500], 0.1),
+              borderRadius: 1,
+              fontFamily: 'monospace',
+              fontSize: '0.75rem',
+              overflowX: 'auto'
+            }}>
+              <pre style={{ margin: 0 }}>
+{`┌──────────────────────────────────────────────────────────────────────────────┐
+│                    FLUJO DE ESTADOS TRACKEADOS                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Usuario inicia vinculación
+        │
+        ▼
+┌───────────────────┐
+│  pending          │ ◄─── source: 'user'
+│  "Causa EJE       │      details: "Causa EJE pendiente de verificación"
+│   pendiente..."   │
+└─────────┬─────────┘
+          │
+          ▼
+    ┌─────────────────────────────────────────────────────────┐
+    │                  VERIFICATION WORKER                      │
+    └─────────────────────────────────────────────────────────┘
+          │
+    ┌─────┼─────────────────────────────────────┐
+    │     │                                     │
+    ▼     ▼                                     ▼
+┌─────────────┐  ┌─────────────────────┐  ┌─────────────────┐
+│   failed    │  │  pending_selection  │  │     success     │
+│             │  │                     │  │                 │
+│ source:     │  │ source: 'worker'    │  │ source: 'worker'│
+│  'worker'   │  │ details: "Múltiples │  │ details: "Causa │
+│ details:    │  │  resultados: N      │  │  verificada:    │
+│  "No        │  │  causas"            │  │  [carátula]"    │
+│  encontrado"│  └──────────┬──────────┘  └─────────────────┘
+└─────────────┘              │
+                             ▼
+                   ┌─────────────────────┐
+                   │  Usuario selecciona │
+                   │                     │
+                   │ source: 'user'      │
+                   │ details: "Causa     │
+                   │  seleccionada: X"   │
+                   └──────────┬──────────┘
+                              │
+                              ▼
+                   ┌─────────────────────┐
+                   │      success        │
+                   └─────────────────────┘`}
+              </pre>
+            </Box>
+          </Box>
+
+          <Divider />
+
+          <Box>
+            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>Ejemplos de Entradas de Historial</Typography>
+            <Stack spacing={2}>
+              <Card variant="outlined">
+                <CardHeader
+                  title="Verificación Exitosa (1 resultado)"
+                  subheader="Worker encuentra expediente único"
+                  avatar={<TickCircle size={20} color={theme.palette.success.main} />}
+                />
+                <CardContent>
+                  <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.grey[500], 0.1), borderRadius: 1, fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                    <pre style={{ margin: 0 }}>
+{`{
+  status: "success",
+  timestamp: "2024-02-06T15:30:00Z",
+  source: "worker",
+  details: "Causa verificada: PEREZ JUAN C/ GARCIA MARIA S/ DAÑOS",
+  causaId: ObjectId("..."),
+  searchTerm: "J-01-00053687-9/2020-0"
+}`}
+                    </pre>
+                  </Box>
+                </CardContent>
+              </Card>
+
+              <Card variant="outlined">
+                <CardHeader
+                  title="Múltiples Resultados (Pivot)"
+                  subheader="Worker encuentra varios expedientes"
+                  avatar={<Warning2 size={20} color={theme.palette.warning.main} />}
+                />
+                <CardContent>
+                  <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.grey[500], 0.1), borderRadius: 1, fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                    <pre style={{ margin: 0 }}>
+{`{
+  status: "pending_selection",
+  timestamp: "2024-02-06T15:30:00Z",
+  source: "worker",
+  details: "Múltiples resultados encontrados: 3 causas",
+  causaId: ObjectId("..."),  // ID del PIVOTE
+  searchTerm: "162321/2020"
+}`}
+                    </pre>
+                  </Box>
+                </CardContent>
+              </Card>
+
+              <Card variant="outlined">
+                <CardHeader
+                  title="Selección de Usuario"
+                  subheader="Usuario elige causa correcta"
+                  avatar={<TickCircle size={20} color={theme.palette.primary.main} />}
+                />
+                <CardContent>
+                  <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.grey[500], 0.1), borderRadius: 1, fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                    <pre style={{ margin: 0 }}>
+{`{
+  status: "success",
+  timestamp: "2024-02-06T16:45:00Z",
+  source: "user",
+  details: "Causa seleccionada: LOPEZ MARIA C/ BANCO X S/ COBRO",
+  causaId: ObjectId("..."),  // ID de la causa elegida
+  searchTerm: "162321/2020"
+}`}
+                    </pre>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Stack>
+          </Box>
+
+          <Divider />
+
+          <Box>
+            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>Repositorios Actualizados</Typography>
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Repositorio</TableCell>
+                    <TableCell>Archivo</TableCell>
+                    <TableCell>Cambios</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <TableRow>
+                    <TableCell><Chip label="law-analytics-server" size="small" color="secondary" /></TableCell>
+                    <TableCell><code>models/Folder.js</code></TableCell>
+                    <TableCell>Nuevo campo causaAssociationHistory</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><Chip label="law-analytics-server" size="small" color="secondary" /></TableCell>
+                    <TableCell><code>controllers/folderController.js</code></TableCell>
+                    <TableCell>Tracking en vinculación EJE</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><Chip label="law-analytics-server" size="small" color="secondary" /></TableCell>
+                    <TableCell><code>services/causaService.js</code></TableCell>
+                    <TableCell>Tracking en selección múltiple</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><Chip label="eje-workers" size="small" color="warning" /></TableCell>
+                    <TableCell><code>verification-worker.ts</code></TableCell>
+                    <TableCell>Tracking en 4 escenarios de verificación</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        </Stack>
+      </TabPanel>
+
+      {/* Tab 6: Métricas */}
+      <TabPanel value={tabValue} index={6}>
         <Stack spacing={3}>
           <Typography variant="h6" fontWeight="bold">Métricas y Filtros</Typography>
 
@@ -1274,8 +1572,8 @@ const DocumentationTabs = () => {
         </Stack>
       </TabPanel>
 
-      {/* Tab 6: Scripts de Prueba - Con sub-tabs verticales */}
-      <TabPanel value={tabValue} index={6}>
+      {/* Tab 7: Scripts de Prueba - Con sub-tabs verticales */}
+      <TabPanel value={tabValue} index={7}>
         <ScriptsDocumentation />
       </TabPanel>
     </Box>
