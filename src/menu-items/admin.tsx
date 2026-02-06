@@ -138,6 +138,13 @@ const admin: NavItemType = {
 					url: "/admin/eje/non-verified",
 					breadcrumbs: true,
 				},
+				{
+					id: "eje-pivots",
+					title: "Pivots (Múltiples Resultados)",
+					type: "item",
+					url: "/admin/eje/pivots",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{
