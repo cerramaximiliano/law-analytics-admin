@@ -116,6 +116,42 @@ export interface StuckDocumentsLogsResponse {
 	data: StuckDocumentsLog[];
 }
 
+// Interfaces para configuración del worker
+export interface StuckDocumentsSchedule {
+	cronPattern: string;
+	workingDays: number[];
+	workingHoursStart: number;
+	workingHoursEnd: number;
+	timezone: string;
+	pauseOnWeekends: boolean;
+	pauseOnHolidays: boolean;
+}
+
+export interface StuckDocumentsConfig {
+	_id: string;
+	worker_id: string;
+	fuero: string;
+	processing_mode: string;
+	enabled: boolean;
+	schedule: StuckDocumentsSchedule;
+	batch_size: number;
+	lock_timeout_minutes: number;
+	captcha_provider: string;
+	documents_processed: number;
+	documents_fixed: number;
+	documents_failed: number;
+	last_check: string | null;
+	createdAt: string;
+	updatedAt: string;
+	scheduleSummary?: string;
+}
+
+export interface StuckDocumentsConfigResponse {
+	success: boolean;
+	message: string;
+	data: StuckDocumentsConfig;
+}
+
 // Servicio de Stuck Documents
 export class StuckDocumentsService {
 	/**
@@ -204,6 +240,48 @@ export class StuckDocumentsService {
 	static async toggleWorker(enabled: boolean): Promise<{ success: boolean; message: string }> {
 		try {
 			const response = await pjnAxios.post("/api/workers/stuck-documents/toggle", { enabled });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener configuración completa del worker
+	 */
+	static async getConfig(): Promise<StuckDocumentsConfigResponse> {
+		try {
+			const response = await pjnAxios.get("/api/workers/stuck-documents/config");
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Actualizar configuración del worker
+	 */
+	static async updateConfig(updates: Partial<{
+		enabled: boolean;
+		processing_mode: string;
+		batch_size: number;
+		lock_timeout_minutes: number;
+		schedule: Partial<StuckDocumentsSchedule>;
+	}>): Promise<StuckDocumentsConfigResponse> {
+		try {
+			const response = await pjnAxios.patch("/api/workers/stuck-documents/config", updates);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Resetear estadísticas del worker
+	 */
+	static async resetStats(): Promise<{ success: boolean; message: string }> {
+		try {
+			const response = await pjnAxios.post("/api/workers/stuck-documents/reset-stats");
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);

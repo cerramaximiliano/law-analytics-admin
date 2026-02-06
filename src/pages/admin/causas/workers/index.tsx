@@ -1,13 +1,14 @@
 import React from "react";
 import { useState } from "react";
 import { Box, Tab, Tabs, Typography, Paper, Stack, Chip, useTheme, alpha, IconButton, Tooltip, Popover } from "@mui/material";
-import { TickSquare, SearchNormal1, DocumentUpload, InfoCircle, People } from "iconsax-react";
+import { TickSquare, SearchNormal1, DocumentUpload, InfoCircle, People, Warning2 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import VerificationWorker from "./VerificationWorker";
 import ScrapingWorker from "./ScrapingWorker";
 import AppUpdateWorker from "./AppUpdateWorker";
 import IntervinientesWorker from "./IntervinientesWorker";
+import StuckDocumentsWorker from "./StuckDocumentsWorker";
 
 // Interfaz para los tabs
 interface WorkerTab {
@@ -68,6 +69,16 @@ const WorkersConfig = () => {
 			icon: <People size={20} />,
 			component: <IntervinientesWorker />,
 			description: "Extrae intervinientes (partes y letrados) de las causas desde PJN",
+			status: "active",
+			badge: "app",
+			ip: "18.228.63.73",
+		},
+		{
+			label: "Stuck Documents",
+			value: "stuck-documents",
+			icon: <Warning2 size={20} />,
+			component: <StuckDocumentsWorker />,
+			description: "Procesa documentos verificados sin movimientos guardados",
 			status: "active",
 			badge: "app",
 			ip: "18.228.63.73",
