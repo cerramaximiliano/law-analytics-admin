@@ -133,13 +133,105 @@ const ScriptsDocumentation = () => {
             },
           }}
         >
-          <Tab label="Test Verificación" icon={<SearchNormal1 size={16} />} iconPosition="start" {...scriptA11yProps(0)} />
-          <Tab label="Limpiar CUIJ" icon={<CloseCircle size={16} />} iconPosition="start" {...scriptA11yProps(1)} />
-          <Tab label="Fix Historial" icon={<Refresh size={16} />} iconPosition="start" {...scriptA11yProps(2)} />
+          <Tab label="Test Flujo Completo" icon={<HierarchySquare size={16} />} iconPosition="start" {...scriptA11yProps(0)} />
+          <Tab label="Test Verificación" icon={<SearchNormal1 size={16} />} iconPosition="start" {...scriptA11yProps(1)} />
+          <Tab label="Limpiar CUIJ" icon={<CloseCircle size={16} />} iconPosition="start" {...scriptA11yProps(2)} />
+          <Tab label="Fix Historial" icon={<Refresh size={16} />} iconPosition="start" {...scriptA11yProps(3)} />
         </Tabs>
 
-        {/* Script 0: test-verification-flow.ts */}
+        {/* Script 0: test-full-flow.ts (END-TO-END) */}
         <ScriptTabPanel value={scriptTab} index={0}>
+          <Stack spacing={2}>
+            <Box>
+              <Typography variant="subtitle1" fontWeight="bold" color="primary.main">test-full-flow.ts</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Script END-TO-END que simula el flujo completo desde la creación del Folder.
+              </Typography>
+            </Box>
+
+            <Alert severity="success" sx={{ py: 0.5 }}>
+              <strong>Recomendado:</strong> Este script prueba el flujo real de producción.
+            </Alert>
+
+            <Box>
+              <Typography variant="subtitle2" fontWeight="bold" gutterBottom>Ubicación</Typography>
+              <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.grey[500], 0.1), borderRadius: 1, fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                <code>eje-workers/scripts/test-full-flow.ts</code>
+              </Box>
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle2" fontWeight="bold" gutterBottom>Configuración (.env)</Typography>
+              <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.grey[900], 0.9), borderRadius: 1, fontFamily: 'monospace', fontSize: '0.8rem', color: '#fff' }}>
+                <pre style={{ margin: 0 }}>
+{`MONGODB_URI=mongodb://...
+API_KEY=tu-api-key
+EJE_API_URL=https://eje.lawanalytics.app
+TEST_USER_ID=<ObjectId de usuario para pruebas>`}
+                </pre>
+              </Box>
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle2" fontWeight="bold" gutterBottom>Uso</Typography>
+              <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.grey[900], 0.9), borderRadius: 1, fontFamily: 'monospace', fontSize: '0.8rem', color: '#fff' }}>
+                <pre style={{ margin: 0 }}>
+{`# Modo interactivo
+npx ts-node scripts/test-full-flow.ts
+
+# Con argumentos
+npx ts-node scripts/test-full-flow.ts 162321/2020`}
+                </pre>
+              </Box>
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle2" fontWeight="bold" gutterBottom>Flujo del Script</Typography>
+              <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.grey[500], 0.1), borderRadius: 1, fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                <pre style={{ margin: 0 }}>
+{`1. Crea Folder de prueba en MongoDB
+2. Llama a eje-api /associate-folder (con API key)
+3. Espera que el verification worker procese
+4. Muestra resultado (causa + folder actualizados)
+5. Opción de limpiar documentos de prueba`}
+                </pre>
+              </Box>
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle2" fontWeight="bold" gutterBottom>Diferencia con test-verification-flow.ts</Typography>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Script</TableCell>
+                      <TableCell>Folder</TableCell>
+                      <TableCell>eje-api</TableCell>
+                      <TableCell>Worker</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    <TableRow sx={{ bgcolor: alpha(theme.palette.success.main, 0.1) }}>
+                      <TableCell><strong>test-full-flow</strong></TableCell>
+                      <TableCell><TickCircle size={16} color={theme.palette.success.main} /></TableCell>
+                      <TableCell><TickCircle size={16} color={theme.palette.success.main} /></TableCell>
+                      <TableCell><TickCircle size={16} color={theme.palette.success.main} /></TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>test-verification-flow</TableCell>
+                      <TableCell><CloseCircle size={16} color={theme.palette.error.main} /></TableCell>
+                      <TableCell><CloseCircle size={16} color={theme.palette.error.main} /></TableCell>
+                      <TableCell><TickCircle size={16} color={theme.palette.success.main} /></TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          </Stack>
+        </ScriptTabPanel>
+
+        {/* Script 1: test-verification-flow.ts */}
+        <ScriptTabPanel value={scriptTab} index={1}>
           <Stack spacing={2}>
             <Box>
               <Typography variant="subtitle1" fontWeight="bold" color="primary.main">test-verification-flow.ts</Typography>
@@ -246,8 +338,8 @@ npx ts-node scripts/test-verification-flow.ts 162321/2020 162512/2020`}
           </Stack>
         </ScriptTabPanel>
 
-        {/* Script 1: clean-cuij-prefixes.ts */}
-        <ScriptTabPanel value={scriptTab} index={1}>
+        {/* Script 2: clean-cuij-prefixes.ts */}
+        <ScriptTabPanel value={scriptTab} index={2}>
           <Stack spacing={2}>
             <Box>
               <Typography variant="subtitle1" fontWeight="bold" color="primary.main">clean-cuij-prefixes.ts</Typography>
