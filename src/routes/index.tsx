@@ -31,6 +31,7 @@ const CarpetasMEVNoVerificadas = Loadable(lazy(() => import("pages/admin/mev/Car
 // EJE pages
 const CarpetasVerificadasEje = Loadable(lazy(() => import("pages/admin/eje/CarpetasVerificadasEje")));
 const CarpetasNoVerificadasEje = Loadable(lazy(() => import("pages/admin/eje/CarpetasNoVerificadasEje")));
+const CarpetasPivotsEje = Loadable(lazy(() => import("pages/admin/eje/CarpetasPivotsEje")));
 const EjeWorkersConfig = Loadable(lazy(() => import("pages/admin/eje/workers")));
 
 // Subscriptions pages
@@ -243,6 +244,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<CarpetasNoVerificadasEje />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "eje/pivots",
+							element: (
+								<AdminRoleGuard>
+									<CarpetasPivotsEje />
 								</AdminRoleGuard>
 							),
 						},

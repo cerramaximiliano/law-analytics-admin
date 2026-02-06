@@ -77,7 +77,13 @@ export interface CausaEje {
 	isPrivate: boolean;
 	source: "app" | "import" | "scraping";
 	verified: boolean;
-	isValid: boolean;
+	isValid: boolean | null;
+	// Campos de pivot
+	isPivot?: boolean;
+	pivotCausaIds?: (string | { $oid: string })[];
+	searchTerm?: string;
+	resolved?: boolean;
+	// Otros campos
 	lastUpdate?: { $date: string } | string;
 	verifiedAt?: { $date: string } | string;
 	detailsLoaded: boolean;
@@ -218,6 +224,67 @@ export class CausasEjeService {
 			queryParams.isValid = true;
 
 			const response = await ejeAxios.get("/causas-eje/search", { params: queryParams });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener pivots (documentos con múltiples resultados pendientes de selección)
+	 */
+	static async getPivotCausas(params?: {
+		page?: number;
+		limit?: number;
+		numero?: number;
+		anio?: number;
+		searchTerm?: string;
+		resolved?: boolean | "todos";
+		sortBy?: "numero" | "anio" | "searchTerm" | "createdAt";
+		sortOrder?: "asc" | "desc";
+	}): Promise<CausasEjeResponse> {
+		try {
+			const queryParams: Record<string, any> = {
+				isPivot: true,
+			};
+
+			if (params?.page) queryParams.page = params.page;
+			if (params?.limit) queryParams.limit = params.limit;
+			if (params?.numero) queryParams.numero = params.numero;
+			if (params?.anio) queryParams.anio = params.anio;
+			if (params?.searchTerm) queryParams.searchTerm = params.searchTerm;
+			if (params?.sortBy) queryParams.sortBy = params.sortBy;
+			if (params?.sortOrder) queryParams.sortOrder = params.sortOrder;
+
+			if (params?.resolved !== undefined && params?.resolved !== "todos") {
+				queryParams.resolved = params.resolved;
+			}
+
+			const response = await ejeAxios.get("/causas-eje/search", { params: queryParams });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener causas vinculadas a un pivot
+	 */
+	static async getPivotLinkedCausas(pivotId: string): Promise<CausasEjeResponse> {
+		try {
+			const response = await ejeAxios.get(`/causas-eje/${pivotId}/linked-causas`);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Resolver un pivot seleccionando una causa
+	 */
+	static async resolvePivot(pivotId: string, selectedCausaId: string): Promise<{ success: boolean; message: string }> {
+		try {
+			const response = await ejeAxios.post(`/causas-eje/${pivotId}/resolve`, { selectedCausaId });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
