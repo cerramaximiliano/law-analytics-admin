@@ -201,17 +201,18 @@ const StuckDocumentsWorker = () => {
 				updates.lock_timeout_minutes = editValues.lock_timeout_minutes;
 			}
 			if (editValues.schedule) {
+				updates.schedule = {};
 				if (editValues.schedule.cronPattern !== undefined) {
-					updates["schedule.cronPattern"] = editValues.schedule.cronPattern;
+					updates.schedule.cronPattern = editValues.schedule.cronPattern;
 				}
 				if (editValues.schedule.workingHoursStart !== undefined) {
-					updates["schedule.workingHoursStart"] = editValues.schedule.workingHoursStart;
+					updates.schedule.workingHoursStart = editValues.schedule.workingHoursStart;
 				}
 				if (editValues.schedule.workingHoursEnd !== undefined) {
-					updates["schedule.workingHoursEnd"] = editValues.schedule.workingHoursEnd;
+					updates.schedule.workingHoursEnd = editValues.schedule.workingHoursEnd;
 				}
 				if (editValues.schedule.workingDays !== undefined) {
-					updates["schedule.workingDays"] = editValues.schedule.workingDays;
+					updates.schedule.workingDays = editValues.schedule.workingDays;
 				}
 			}
 
