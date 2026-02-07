@@ -228,6 +228,10 @@ const ManagerConfigPanel: React.FC = () => {
 	};
 
 	const hasChanges = Object.keys(editedSettings).length > 0;
+	const hasScheduleChanges =
+		editedSettings.workDays !== undefined ||
+		editedSettings.workStartHour !== undefined ||
+		editedSettings.workEndHour !== undefined;
 
 	return (
 		<Card variant="outlined" sx={{ backgroundColor: "background.default" }}>
@@ -534,7 +538,24 @@ const ManagerConfigPanel: React.FC = () => {
 										</FormControl>
 									</Grid>
 
-									{/* Umbrales de recursos */}
+										{/* Advertencia de demora en cambios de horario */}
+									{hasScheduleChanges && (
+										<Grid item xs={12}>
+											<Alert severity="warning" variant="outlined" icon={<Warning2 size={20} />}>
+												<Typography variant="body2" fontWeight="bold" gutterBottom>
+													Los cambios de horario no se aplican de forma inmediata
+												</Typography>
+												<Typography variant="body2">
+													El manager recarga la configuracion cada 10 ciclos. Fuera del horario laboral, cada ciclo
+													dura 5 minutos, por lo que los cambios pueden demorar hasta <strong>50 minutos</strong> en
+													aplicarse. Para que los cambios tomen efecto de inmediato, reinicia el proceso del manager
+													en PM2 despues de guardar.
+												</Typography>
+											</Alert>
+										</Grid>
+									)}
+
+								{/* Umbrales de recursos */}
 									<Grid item xs={12} sm={3}>
 										<Typography variant="caption" color="text.secondary">
 											Umbral CPU: {((getValue("cpuThreshold") || 0) * 100).toFixed(0)}%

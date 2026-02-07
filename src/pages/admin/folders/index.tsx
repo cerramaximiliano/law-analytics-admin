@@ -32,6 +32,7 @@ import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircl
 import CausaDetalleModal from "../causas/CausaDetalleModal";
 import FolderEditModal from "./FolderEditModal";
 import CausaEditModal from "./CausaEditModal";
+import FolderDetalleModal from "./FolderDetalleModal";
 
 // Mapeo de fueros a nombres legibles
 const FUERO_LABELS: Record<string, string> = {
@@ -99,6 +100,10 @@ const FoldersPage = () => {
 	// Modal de edición de causa
 	const [causaEditModalOpen, setCausaEditModalOpen] = useState(false);
 	const [selectedFolderForCausaEdit, setSelectedFolderForCausaEdit] = useState<Folder | null>(null);
+
+	// Modal de detalle de folder
+	const [detailModalOpen, setDetailModalOpen] = useState(false);
+	const [selectedFolderForDetail, setSelectedFolderForDetail] = useState<Folder | null>(null);
 
 	// Cargar carpetas
 	const fetchFolders = async () => {
@@ -299,6 +304,17 @@ const FoldersPage = () => {
 		setCausaEditModalOpen(false);
 		setSelectedFolderForCausaEdit(null);
 		setSelectedCausa(null);
+	};
+
+	// Ver detalle de folder
+	const handleViewDetail = (folder: Folder) => {
+		setSelectedFolderForDetail(folder);
+		setDetailModalOpen(true);
+	};
+
+	const handleCloseDetailModal = () => {
+		setDetailModalOpen(false);
+		setSelectedFolderForDetail(null);
 	};
 
 	// Obtener tipo de sistema (PJN, MEV, Manual)
@@ -656,15 +672,26 @@ const FoldersPage = () => {
 														<Typography variant="caption">{formatDate(folder.updatedAt)}</Typography>
 													</TableCell>
 													<TableCell align="center">
-														<Tooltip title="Editar carpeta">
-															<IconButton
-																size="small"
-																color="warning"
-																onClick={() => handleEditFolder(folder)}
-															>
-																<Edit2 size={18} />
-															</IconButton>
-														</Tooltip>
+														<Stack direction="row" spacing={0} justifyContent="center">
+															<Tooltip title="Ver detalles">
+																<IconButton
+																	size="small"
+																	color="primary"
+																	onClick={() => handleViewDetail(folder)}
+																>
+																	<Eye size={18} />
+																</IconButton>
+															</Tooltip>
+															<Tooltip title="Editar carpeta">
+																<IconButton
+																	size="small"
+																	color="warning"
+																	onClick={() => handleEditFolder(folder)}
+																>
+																	<Edit2 size={18} />
+																</IconButton>
+															</Tooltip>
+														</Stack>
 													</TableCell>
 												</TableRow>
 											);
@@ -718,6 +745,12 @@ const FoldersPage = () => {
 					onCausaUpdated={handleRefresh}
 				/>
 			)}
+			{/* Modal de Detalle de Folder */}
+			<FolderDetalleModal
+				open={detailModalOpen}
+				onClose={handleCloseDetailModal}
+				folder={selectedFolderForDetail}
+			/>
 		</MainCard>
 	);
 };
