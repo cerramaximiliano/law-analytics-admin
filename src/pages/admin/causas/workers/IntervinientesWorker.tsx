@@ -1228,6 +1228,42 @@ const IntervinientesWorker = () => {
 						</Paper>
 					</Box>
 
+					<Box sx={{ mt: 3 }}>
+						<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+							Usuarios de Test (TEST_USER_IDS)
+						</Typography>
+						<Alert severity="warning" sx={{ mb: 2 }}>
+							Estos usuarios tienen hardcodeados sus IDs en <code>intervinientes-contact-sync.js</code> para usar suscripciones con <code>testMode: true</code>.
+						</Alert>
+						<TableContainer component={Paper} variant="outlined">
+							<Table size="small">
+								<TableHead>
+									<TableRow>
+										<TableCell>User ID</TableCell>
+										<TableCell>Email</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{[
+										["685056f7153bccaac42b39cc", "soporte@lawanalytics.app"],
+										["6850300d153bccaac42b37db", "maximilian@rumba-dev.com"],
+										["69631a52e15a4b77a652500d", "iubilareprevisional@gmail.com"],
+										["696910da45b9709fe87db266", "cerramaximiliano@protonmail.com"],
+									].map(([id, email]) => (
+										<TableRow key={id}>
+											<TableCell>
+												<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+													{id}
+												</Typography>
+											</TableCell>
+											<TableCell>{email}</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</TableContainer>
+					</Box>
+
 					<Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: "divider" }}>
 						<Typography variant="body2" color="text.secondary">
 							Documentación completa: <code>pjn-workers/docs/SINCRONIZACION_INTERVINIENTES_CONTACTOS.md</code>
