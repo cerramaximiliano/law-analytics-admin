@@ -385,9 +385,15 @@ const IntervinientesWorker = () => {
 				"  → Esto evita que se solapen dos ciclos de scraping",
 				"",
 				"B) ¿Estamos dentro del horario permitido?",
-				"  → Verifica schedule.enabled en la configuración",
-				"  → Si enabled: revisa días (schedule.days) y horas (startHour/endHour)",
+				"  → Verifica schedule.respectWorkingHours en la configuración",
+				"  → Si activo: revisa días (schedule.workDays) y horas (workStartHour/workEndHour)",
+				"  → Si respectWorkingHours=false: trabaja 24/7 sin restricción",
 				"  → Fuera de horario: no ejecuta, espera al próximo cron",
+				"",
+				"C) ¿Cambió la configuración?",
+				"  → Cada 5 ciclos verifica si cronExpression cambió en MongoDB",
+				"  → Si cambió: reinicia el cron con la nueva expresión",
+				"  → Cambios desde la UI se aplican sin reiniciar el worker",
 			],
 			color: theme.palette.grey[600],
 		},
@@ -661,9 +667,39 @@ const IntervinientesWorker = () => {
 					<Divider sx={{ my: 2 }} />
 
 					{/* Horario de trabajo */}
-					<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-						Horario de Trabajo
-					</Typography>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+						<Typography variant="subtitle2" fontWeight="bold">
+							Horario de Trabajo
+						</Typography>
+						{editing ? (
+							<FormControlLabel
+								control={
+									<Switch
+										size="small"
+										checked={editValues.schedule?.respectWorkingHours ?? config?.schedule?.respectWorkingHours ?? true}
+										onChange={(e) =>
+											setEditValues({
+												...editValues,
+												schedule: { ...editValues.schedule, respectWorkingHours: e.target.checked } as any,
+											})
+										}
+									/>
+								}
+								label={
+									<Typography variant="caption">
+										Respetar horario
+									</Typography>
+								}
+							/>
+						) : (
+							<Chip
+								label={config?.schedule?.respectWorkingHours !== false ? "Activo" : "24/7"}
+								size="small"
+								color={config?.schedule?.respectWorkingHours !== false ? "info" : "warning"}
+								variant="outlined"
+							/>
+						)}
+					</Stack>
 					<Grid container spacing={2}>
 						<Grid item xs={6} sm={3}>
 							<Stack spacing={0.5}>
@@ -716,11 +752,39 @@ const IntervinientesWorker = () => {
 								<Typography variant="caption" color="text.secondary">
 									Días de trabajo
 								</Typography>
-								<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-									{(config?.schedule?.workDays || [1, 2, 3, 4, 5]).map((day) => (
-										<Chip key={day} label={dayNames[day]} size="small" variant="outlined" />
-									))}
-								</Stack>
+								{editing ? (
+									<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+										{[0, 1, 2, 3, 4, 5, 6].map((day) => {
+											const currentDays = editValues.schedule?.workDays ?? config?.schedule?.workDays ?? [1, 2, 3, 4, 5];
+											const isActive = currentDays.includes(day);
+											return (
+												<Chip
+													key={day}
+													label={dayNames[day]}
+													size="small"
+													color={isActive ? "primary" : "default"}
+													variant={isActive ? "filled" : "outlined"}
+													onClick={() => {
+														const newDays = isActive
+															? currentDays.filter((d: number) => d !== day)
+															: [...currentDays, day].sort();
+														setEditValues({
+															...editValues,
+															schedule: { ...editValues.schedule, workDays: newDays } as any,
+														});
+													}}
+													sx={{ cursor: "pointer" }}
+												/>
+											);
+										})}
+									</Stack>
+								) : (
+									<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+										{(config?.schedule?.workDays || [1, 2, 3, 4, 5]).map((day) => (
+											<Chip key={day} label={dayNames[day]} size="small" variant="outlined" />
+										))}
+									</Stack>
+								)}
 							</Stack>
 						</Grid>
 						<Grid item xs={6} sm={3}>
@@ -734,6 +798,17 @@ const IntervinientesWorker = () => {
 							</Stack>
 						</Grid>
 					</Grid>
+
+					{/* Indicador de recarga dinámica */}
+					<Alert severity="info" variant="outlined" sx={{ mt: 2 }} icon={<Refresh size={18} />}>
+						<Typography variant="caption">
+							Los cambios de configuración se aplican automáticamente sin reiniciar el worker.
+							El worker verifica cambios en MongoDB cada <strong>5 ciclos</strong> del cron
+							{config?.schedule?.cronExpression ? (
+								<> (cron actual: <code>{config.schedule.cronExpression}</code>)</>
+							) : null}.
+						</Typography>
+					</Alert>
 				</CardContent>
 			</Card>
 
