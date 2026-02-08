@@ -9,7 +9,6 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
-	TablePagination,
 	Typography,
 	Chip,
 	FormControl,
@@ -28,6 +27,7 @@ import {
 	FormControlLabel,
 	LinearProgress,
 } from "@mui/material";
+import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { CausasEjeService, CausaEje, WorkerStatsResponse, EligibilityStatsResponse } from "api/causasEje";
@@ -899,16 +899,13 @@ const CarpetasVerificadasEje = () => {
 									</TableBody>
 								</Table>
 							</TableContainer>
-							<TablePagination
+							<EnhancedTablePagination
 								rowsPerPageOptions={[10, 25, 50, 100]}
-								component="div"
 								count={totalCount}
 								rowsPerPage={rowsPerPage}
 								page={page}
 								onPageChange={handleChangePage}
 								onRowsPerPageChange={handleChangeRowsPerPage}
-								labelRowsPerPage="Filas por página:"
-								labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
 							/>
 						</Card>
 					)}
