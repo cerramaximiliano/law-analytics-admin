@@ -42,6 +42,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import MEVWorkersService, { MEVWorkerConfig, SystemConfig } from "api/workersMEV";
 import SyncCheckTab from "./SyncCheckTab";
+import WorkerManagerTab from "./WorkerManagerTab";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -2473,6 +2474,7 @@ const MEVWorkers = () => {
 							<Tab label="Worker de Actualización" />
 							<Tab label="Configuración del Sistema" />
 							<Tab label="Sync Check" />
+							<Tab label="Worker Manager" />
 						</Tabs>
 					</Box>
 					<TabPanel value={activeTab} index={0}>
@@ -2486,6 +2488,9 @@ const MEVWorkers = () => {
 					</TabPanel>
 					<TabPanel value={activeTab} index={3}>
 						<SyncCheckTab />
+					</TabPanel>
+					<TabPanel value={activeTab} index={4}>
+						<WorkerManagerTab />
 					</TabPanel>
 				</Box>
 			</MainCard>

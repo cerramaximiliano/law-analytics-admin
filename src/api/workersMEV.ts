@@ -200,6 +200,97 @@ export interface SyncCheckConfig {
 	updatedAt?: string;
 }
 
+// ========== Worker Manager Types ==========
+
+export interface MEVManagerConfigSettings {
+	checkInterval: number;
+	maxWorkers: { verify: number; update: number };
+	minWorkers: { verify: number; update: number };
+	scaleThreshold: { verify: number; update: number };
+	scaleDownThreshold: { verify: number; update: number };
+	docsPerWorker: { verify: number; update: number };
+	cpuThreshold: number;
+	memoryThreshold: number;
+	workStartHour: number;
+	workEndHour: number;
+	workDays: number[];
+	workerNames: { verify: string; update: string };
+}
+
+export interface MEVManagerCurrentState {
+	workers: { verify: number; update: number };
+	pending: { verify: number; update: number };
+	optimalWorkers: { verify: number; update: number };
+	systemResources: {
+		cpuUsage: number;
+		memoryUsage: number;
+		freeMemoryMB: number;
+		totalMemoryMB: number;
+	};
+	isRunning: boolean;
+	isWithinWorkingHours: boolean;
+	lastCycleAt?: string;
+	cycleCount: number;
+}
+
+export interface MEVManagerAlert {
+	type: string;
+	message: string;
+	workerType?: string;
+	createdAt: string;
+	acknowledged: boolean;
+}
+
+export interface MEVManagerStateSnapshot {
+	timestamp: string;
+	workers: { verify: number; update: number };
+	pending: { verify: number; update: number };
+	systemResources: { cpuUsage: number; memoryUsage: number; freeMemoryMB: number };
+}
+
+export interface MEVManagerConfig {
+	_id: string;
+	name: string;
+	config: MEVManagerConfigSettings;
+	currentState: MEVManagerCurrentState;
+	history: MEVManagerStateSnapshot[];
+	alerts: MEVManagerAlert[];
+	createdAt?: string;
+	updatedAt?: string;
+}
+
+export interface MEVManagerStatusResponse {
+	success: boolean;
+	data: MEVManagerCurrentState & {
+		staleness: "active" | "delayed" | "stale" | "unknown";
+		lastCycleAgo: string | null;
+	};
+}
+
+export interface MEVManagerStatsEntry {
+	date: string;
+	hour: number;
+	workerType: "verify" | "update";
+	stats: {
+		processed: number;
+		successful: number;
+		failed: number;
+		skipped: number;
+		maxActiveWorkers: number;
+		avgActiveWorkers: number;
+		pendingAtStart?: number;
+		pendingAtEnd?: number;
+	};
+	managerCycles: number;
+	scalingEvents: Array<{
+		timestamp: string;
+		action: string;
+		from: number;
+		to: number;
+		reason: string;
+	}>;
+}
+
 class MEVWorkersService {
 	async getVerificationConfigs(): Promise<MEVWorkersResponse> {
 		try {
@@ -368,6 +459,82 @@ class MEVWorkersService {
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al obtener navigation codes");
+		}
+	}
+
+	// ========== Worker Manager ==========
+
+	async getManagerConfig(): Promise<{ success: boolean; data: MEVManagerConfig }> {
+		try {
+			const response = await mevAxios.get("/api/worker-manager");
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al obtener configuracion del manager");
+		}
+	}
+
+	async getManagerStatus(): Promise<MEVManagerStatusResponse> {
+		try {
+			const response = await mevAxios.get("/api/worker-manager/status");
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al obtener estado del manager");
+		}
+	}
+
+	async updateManagerSettings(settings: Partial<MEVManagerConfigSettings>): Promise<any> {
+		try {
+			const response = await mevAxios.patch("/api/worker-manager/settings", settings);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al actualizar configuracion del manager");
+		}
+	}
+
+	async getManagerHistory(hours: number = 24): Promise<{ success: boolean; data: MEVManagerStateSnapshot[]; count: number }> {
+		try {
+			const response = await mevAxios.get("/api/worker-manager/history", { params: { hours } });
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al obtener historial del manager");
+		}
+	}
+
+	async getManagerAlerts(): Promise<{ success: boolean; data: MEVManagerAlert[]; count: number }> {
+		try {
+			const response = await mevAxios.get("/api/worker-manager/alerts");
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al obtener alertas del manager");
+		}
+	}
+
+	async acknowledgeManagerAlert(index: number): Promise<any> {
+		try {
+			const response = await mevAxios.post(`/api/worker-manager/alerts/${index}/acknowledge`);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al reconocer alerta");
+		}
+	}
+
+	async resetManagerToDefaults(): Promise<any> {
+		try {
+			const response = await mevAxios.post("/api/worker-manager/reset");
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al resetear configuracion del manager");
+		}
+	}
+
+	async getManagerStats(hours: number = 24, type?: string): Promise<{ success: boolean; data: MEVManagerStatsEntry[]; count: number }> {
+		try {
+			const params: any = { hours };
+			if (type) params.type = type;
+			const response = await mevAxios.get("/api/worker-manager/stats", { params });
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al obtener estadisticas del manager");
 		}
 	}
 }
