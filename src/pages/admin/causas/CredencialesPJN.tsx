@@ -9,7 +9,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination,
   Paper,
   Chip,
   IconButton,
@@ -30,6 +29,7 @@ import {
   DialogContentText,
   DialogActions,
 } from "@mui/material";
+import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useTheme } from "@mui/material/styles";
 import {
   Eye,
@@ -575,8 +575,7 @@ const CredencialesPJN = () => {
               </TableBody>
             </Table>
           </TableContainer>
-          <TablePagination
-            component="div"
+          <EnhancedTablePagination
             count={totalCount}
             page={page}
             onPageChange={(_, newPage) => setPage(newPage)}
@@ -586,10 +585,6 @@ const CredencialesPJN = () => {
               setPage(0);
             }}
             rowsPerPageOptions={[10, 25, 50, 100]}
-            labelRowsPerPage="Filas por página:"
-            labelDisplayedRows={({ from, to, count }) =>
-              `${from}-${to} de ${count}`
-            }
           />
         </Grid>
       </Grid>
