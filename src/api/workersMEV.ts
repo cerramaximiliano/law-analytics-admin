@@ -118,6 +118,7 @@ export interface SyncCheckReport {
 		codigo: string;
 		nombre: string;
 		organismosCount: number;
+		organismos?: Array<{ codigo: string; nombre: string }>;
 	}>;
 	missing_organisms?: Array<{
 		jurisdiccion: string;
@@ -132,6 +133,38 @@ export interface SyncCheckReport {
 		organismoNombre: string;
 	}>;
 	error_message?: string;
+	screenshots_dir?: string;
+}
+
+export interface ScreenshotInfo {
+	filename: string;
+	size: number;
+	index: string;
+	jurisdiccionCodigo: string | null;
+}
+
+export interface NavigationCodeDoc {
+	_id: string;
+	code: string;
+	jurisdiccion: { codigo: string; nombre: string };
+	organismo: { codigo: string; nombre: string };
+	tipo: string;
+	descripcion: string;
+	navegacion: {
+		requiresRadio: boolean;
+		radioValue?: string;
+		jurisdiccionValue: string;
+		organismoValue: string;
+	};
+	activo: boolean;
+	fechaCreacion?: string;
+	fechaActualizacion?: string;
+	stats?: {
+		vecesUsado: number;
+		ultimoUso?: string;
+		exitosos: number;
+		fallidos: number;
+	};
 }
 
 export interface SyncCheckConfig {
@@ -142,6 +175,10 @@ export interface SyncCheckConfig {
 		cron_pattern: string;
 		timezone: string;
 		active_days: number[];
+	};
+	settings?: {
+		screenshots_enabled?: boolean;
+		screenshots_detailed?: boolean;
 	};
 	last_report: SyncCheckReport;
 	statistics: {
@@ -158,6 +195,7 @@ export interface SyncCheckConfig {
 		send_on_alert: boolean;
 		send_on_ok: boolean;
 	};
+	report_history?: SyncCheckReport[];
 	createdAt?: string;
 	updatedAt?: string;
 }
@@ -260,6 +298,76 @@ class MEVWorkersService {
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al obtener estadisticas de navigation codes");
+		}
+	}
+
+	async addOrganism(data: {
+		jurisdiccionCodigo: string;
+		jurisdiccionNombre: string;
+		organismoCodigo: string;
+		organismoNombre: string;
+		tipo?: string;
+	}): Promise<any> {
+		try {
+			const response = await mevAxios.post("/api/config/sync-check/fix/add-organism", data);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al agregar organismo");
+		}
+	}
+
+	async removeOrganism(data: {
+		jurisdiccionCodigo: string;
+		organismoCodigo: string;
+		jurisdiccionNombre?: string;
+		organismoNombre?: string;
+	}): Promise<any> {
+		try {
+			const response = await mevAxios.post("/api/config/sync-check/fix/remove-organism", data);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al desactivar organismo");
+		}
+	}
+
+	async addJurisdiction(data: {
+		jurisdiccionCodigo: string;
+		jurisdiccionNombre: string;
+		organismos: Array<{ codigo: string; nombre: string }>;
+	}): Promise<any> {
+		try {
+			const response = await mevAxios.post("/api/config/sync-check/fix/add-jurisdiction", data);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al agregar jurisdiccion");
+		}
+	}
+
+	getScreenshotUrl(dir: string, filename: string): string {
+		const base = (mevAxios.defaults.baseURL || "").replace(/\/$/, "");
+		return `${base}/api/config/sync-check/screenshot/${dir}/${filename}`;
+	}
+
+	async listScreenshots(dir: string): Promise<{ success: boolean; data: ScreenshotInfo[] }> {
+		try {
+			const response = await mevAxios.get(`/api/config/sync-check/screenshots/${dir}`);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al listar screenshots");
+		}
+	}
+
+	async getNavigationCodes(params?: {
+		page?: number;
+		limit?: number;
+		jurisdiccion?: string;
+		activo?: boolean;
+	}): Promise<{ success: boolean; data: NavigationCodeDoc[]; pagination?: any }> {
+		try {
+			const response = await mevAxios.get("/api/navigation-codes/", { params: { limit: 1000, ...params } });
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al obtener navigation codes");
 		}
 	}
 }
