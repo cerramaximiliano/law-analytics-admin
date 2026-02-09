@@ -10,7 +10,44 @@ export interface MovimientoMEV {
 	url?: string;
 }
 
-// Interface para Causa MEV (hereda de Causa pero puede tener campos adicionales si es necesario)
+// Interface para estadísticas de actualización (patrón PJN)
+export interface UpdateStatsMEV {
+	count?: number;
+	errors?: number;
+	newMovs?: number;
+	avgMs?: number;
+	last?: { $date: string } | string;
+	today?: {
+		date?: string;
+		count?: number;
+		hours?: number[];
+	};
+}
+
+// Interface para estadísticas de elegibilidad MEV
+export interface EligibilityStatsMEV {
+	total: number;
+	eligible: number;
+	eligibleUpdated: number;
+	eligiblePending: number;
+	eligibleWithErrors: number;
+	notEligible: number;
+	updatedToday: number;
+	pendingToday?: number;
+	coveragePercent?: number;
+}
+
+export interface EligibilityStatsMEVResponse {
+	success: boolean;
+	message?: string;
+	data: {
+		thresholdHours: number;
+		timestamp: string;
+		totals: EligibilityStatsMEV;
+	};
+}
+
+// Interface para Causa MEV
 export interface CausaMEV {
 	_id: string | { $oid: string };
 	number: number;
@@ -23,15 +60,17 @@ export interface CausaMEV {
 	isValid?: boolean;
 	isPrivate?: boolean | null;
 	update?: boolean;
+	source?: string;
 	folderIds?: string[];
 	userCausaIds?: string[];
-	movimiento?: MovimientoMEV[]; // MEV usa 'movimiento' (singular)
+	movimiento?: MovimientoMEV[];
 	movimientosCount?: number;
 	lastUpdate?: { $date: string } | string;
 	fechaUltimoMovimiento?: { $date: string } | string;
 	createdAt?: { $date: string } | string;
 	updatedAt?: { $date: string } | string;
 	updateHistory?: any[];
+	updateStats?: UpdateStatsMEV;
 }
 
 export interface CausasMEVResponse {
@@ -64,6 +103,8 @@ export class CausasMEVService {
 		fechaUltimoMovimiento?: string;
 		lastUpdate?: string;
 		update?: boolean;
+		soloElegibles?: boolean;
+		estadoActualizacion?: "todos" | "actualizados" | "pendientes" | "errores";
 		sortBy?: "number" | "year" | "caratula" | "juzgado" | "objeto" | "movimientosCount" | "lastUpdate" | "fechaUltimoMovimiento";
 		sortOrder?: "asc" | "desc";
 	}): Promise<CausasMEVResponse> {
@@ -211,6 +252,20 @@ export class CausasMEVService {
 	static async deleteUpdateHistoryEntry(id: string, entryIndex: number): Promise<any> {
 		try {
 			const response = await mevAxios.delete(`/api/causas/${id}/update-history/${entryIndex}`);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtener estadísticas de elegibilidad para actualización MEV
+	 */
+	static async getEligibilityStats(params?: {
+		thresholdHours?: number;
+	}): Promise<EligibilityStatsMEVResponse> {
+		try {
+			const response = await mevAxios.get("/api/causas/stats/eligibility", { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
