@@ -22,9 +22,6 @@ import {
 	Paper,
 	Skeleton,
 	Chip,
-	Select,
-	MenuItem,
-	FormControl,
 	Tabs,
 	Tab,
 	Dialog,
@@ -60,26 +57,6 @@ function TabPanel(props: TabPanelProps) {
 	);
 }
 
-const VERIFICATION_MODE_OPTIONS = [
-	{ value: "all", label: "Todos" },
-	{ value: "civil", label: "Civil" },
-	{ value: "ss", label: "Seguridad Social" },
-	{ value: "trabajo", label: "Trabajo" },
-];
-
-const JURISDICCION_OPTIONS = [
-	{ value: "all", label: "Todas" },
-	{ value: "nacional", label: "Nacional" },
-	{ value: "federal", label: "Federal" },
-];
-
-const TIPO_ORGANISMO_OPTIONS = [
-	{ value: "all", label: "Todos" },
-	{ value: "juzgado", label: "Juzgado" },
-	{ value: "tribunal", label: "Tribunal" },
-	{ value: "camara", label: "Cámara" },
-];
-
 const MEVWorkers = () => {
 	const { enqueueSnackbar } = useSnackbar();
 	const [activeTab, setActiveTab] = useState(0);
@@ -103,19 +80,8 @@ const MEVWorkers = () => {
 	const [guideModalOpen, setGuideModalOpen] = useState(false);
 	const [eligibilityModalOpen, setEligibilityModalOpen] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
-
-	// Helper para obtener labels
-	const getVerificationModeLabel = (value: string) => {
-		return VERIFICATION_MODE_OPTIONS.find((opt) => opt.value === value)?.label || value;
-	};
-
-	const getJurisdiccionLabel = (value: string) => {
-		return JURISDICCION_OPTIONS.find((opt) => opt.value === value)?.label || value;
-	};
-
-	const getTipoOrganismoLabel = (value: string) => {
-		return TIPO_ORGANISMO_OPTIONS.find((opt) => opt.value === value)?.label || value;
-	};
+	const [editingCredentials, setEditingCredentials] = useState(false);
+	const [credentialForm, setCredentialForm] = useState({ username: "", password: "" });
 
 	// Cargar configuraciones del sistema
 	const fetchSystemConfigs = async () => {
@@ -399,6 +365,44 @@ const MEVWorkers = () => {
 		}
 	};
 
+	const handleStartEditCredentials = () => {
+		const sharedWorker = configs.find((c) => c.worker_id === "shared");
+		if (sharedWorker) {
+			setCredentialForm({
+				username: sharedWorker.login?.username ?? "",
+				password: sharedWorker.login?.password ?? "",
+			});
+			setEditingCredentials(true);
+		}
+	};
+
+	const handleSaveCredentials = async () => {
+		const sharedWorker = configs.find((c) => c.worker_id === "shared");
+		if (!sharedWorker) return;
+		try {
+			const response = await MEVWorkersService.updateVerificationConfig(sharedWorker._id, {
+				login: {
+					...sharedWorker.login,
+					username: credentialForm.username,
+					password: credentialForm.password,
+				},
+			} as any);
+			if (response.success) {
+				enqueueSnackbar("Credenciales actualizadas exitosamente", {
+					variant: "success",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+				await fetchConfigs();
+				setEditingCredentials(false);
+			}
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al actualizar credenciales", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+		}
+	};
+
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
 		setActiveTab(newValue);
 	};
@@ -651,9 +655,6 @@ const MEVWorkers = () => {
 											<TableHead>
 												<TableRow>
 													<TableCell>Worker ID</TableCell>
-													<TableCell>Jurisdicción</TableCell>
-													<TableCell>Tipo Organismo</TableCell>
-													<TableCell>Modo Verificación</TableCell>
 													<TableCell align="center">Tamaño Lote</TableCell>
 													<TableCell align="center">Delay (ms)</TableCell>
 													<TableCell align="center">Reintentos</TableCell>
@@ -683,60 +684,6 @@ const MEVWorkers = () => {
 																	/>
 																) : (
 																	<Chip label={config.worker_id} color="primary" variant="filled" size="small" />
-																)}
-															</TableCell>
-															<TableCell>
-																{isEditing ? (
-																	<FormControl size="small" fullWidth>
-																		<Select
-																			value={editValues.jurisdiccion || ""}
-																			onChange={(e) => setEditValues({ ...editValues, jurisdiccion: e.target.value })}
-																		>
-																			{JURISDICCION_OPTIONS.map((option) => (
-																				<MenuItem key={option.value} value={option.value}>
-																					{option.label}
-																				</MenuItem>
-																			))}
-																		</Select>
-																	</FormControl>
-																) : (
-																	<Typography variant="body2">{getJurisdiccionLabel(config.jurisdiccion)}</Typography>
-																)}
-															</TableCell>
-															<TableCell>
-																{isEditing ? (
-																	<FormControl size="small" fullWidth>
-																		<Select
-																			value={editValues.tipo_organismo || ""}
-																			onChange={(e) => setEditValues({ ...editValues, tipo_organismo: e.target.value })}
-																		>
-																			{TIPO_ORGANISMO_OPTIONS.map((option) => (
-																				<MenuItem key={option.value} value={option.value}>
-																					{option.label}
-																				</MenuItem>
-																			))}
-																		</Select>
-																	</FormControl>
-																) : (
-																	<Typography variant="body2">{getTipoOrganismoLabel(config.tipo_organismo)}</Typography>
-																)}
-															</TableCell>
-															<TableCell>
-																{isEditing ? (
-																	<FormControl size="small" fullWidth>
-																		<Select
-																			value={editValues.verification_mode || ""}
-																			onChange={(e) => setEditValues({ ...editValues, verification_mode: e.target.value })}
-																		>
-																			{VERIFICATION_MODE_OPTIONS.map((option) => (
-																				<MenuItem key={option.value} value={option.value}>
-																					{option.label}
-																				</MenuItem>
-																			))}
-																		</Select>
-																	</FormControl>
-																) : (
-																	<Typography variant="body2">{getVerificationModeLabel(config.verification_mode)}</Typography>
 																)}
 															</TableCell>
 															<TableCell align="center">
@@ -877,93 +824,6 @@ const MEVWorkers = () => {
 											</TableBody>
 										</Table>
 									</TableContainer>
-
-									{/* Configuración de Credenciales MEV */}
-									<Card variant="outlined" sx={{ mt: 3, backgroundColor: "background.default" }}>
-										<CardContent>
-											<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-												🔐 Credenciales de Acceso MEV
-											</Typography>
-											<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-												Credenciales utilizadas para acceder al sistema MEV. Estos datos son sensibles.
-											</Typography>
-											<Grid container spacing={2}>
-												<Grid item xs={12} sm={6}>
-													<TextField
-														fullWidth
-														size="small"
-														label="Usuario MEV"
-														value={
-															editingId === sharedWorker._id
-																? editValues.login?.username ?? ""
-																: sharedWorker.login?.username ?? ""
-														}
-														onChange={(e) => {
-															if (editingId === sharedWorker._id) {
-																setEditValues({
-																	...editValues,
-																	login: {
-																		username: e.target.value,
-																		password: editValues.login?.password ?? "",
-																		lastPasswordChange: editValues.login?.lastPasswordChange,
-																		passwordExpiryWarningShown: editValues.login?.passwordExpiryWarningShown,
-																	},
-																});
-															}
-														}}
-														disabled={editingId !== sharedWorker._id}
-														InputProps={{
-															readOnly: editingId !== sharedWorker._id,
-														}}
-													/>
-												</Grid>
-												<Grid item xs={12} sm={6}>
-													<TextField
-														fullWidth
-														size="small"
-														label="Contraseña MEV"
-														type={showPassword ? "text" : "password"}
-														value={
-															editingId === sharedWorker._id
-																? editValues.login?.password ?? ""
-																: sharedWorker.login?.password ?? ""
-														}
-														onChange={(e) => {
-															if (editingId === sharedWorker._id) {
-																setEditValues({
-																	...editValues,
-																	login: {
-																		username: editValues.login?.username ?? "",
-																		password: e.target.value,
-																		lastPasswordChange: editValues.login?.lastPasswordChange,
-																		passwordExpiryWarningShown: editValues.login?.passwordExpiryWarningShown,
-																	},
-																});
-															}
-														}}
-														disabled={editingId !== sharedWorker._id}
-														InputProps={{
-															readOnly: editingId !== sharedWorker._id,
-															endAdornment: (
-																<IconButton
-																	size="small"
-																	onClick={() => setShowPassword(!showPassword)}
-																	edge="end"
-																>
-																	{showPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
-																</IconButton>
-															),
-														}}
-													/>
-												</Grid>
-											</Grid>
-											{sharedWorker.login?.lastPasswordChange && (
-												<Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-													Último cambio de contraseña: {new Date(sharedWorker.login.lastPasswordChange).toLocaleDateString("es-AR")}
-												</Typography>
-											)}
-										</CardContent>
-									</Card>
 
 									{/* Configuración de Headless por Ambiente */}
 									<Card variant="outlined" sx={{ mt: 3, backgroundColor: "background.default" }}>
@@ -1370,22 +1230,7 @@ const MEVWorkers = () => {
 				</Card>
 			)}
 
-			{/* Información de configuración del worker */}
-			{verificationConfigs.length > 0 && verificationConfigs[0].schedule && (
-				<Alert severity="info" variant="outlined">
-					<Typography variant="subtitle2">
-						Programación: <strong>{verificationConfigs[0].schedule.cron_pattern}</strong> ({verificationConfigs[0].schedule.timezone})
-						{verificationConfigs[0].schedule.active_hours && (
-							<>
-								{" "}
-								- Activo de {verificationConfigs[0].schedule.active_hours.start}:00 a {verificationConfigs[0].schedule.active_hours.end}:00
-							</>
-						)}
-						{verificationConfigs[0].schedule.skip_weekends && <> - Sin fines de semana</>}
-					</Typography>
-				</Alert>
-			)}
-		</Stack>
+			</Stack>
 	);
 
 	// Componente de Worker de Actualización
@@ -1510,9 +1355,6 @@ const MEVWorkers = () => {
 											<TableHead>
 												<TableRow>
 													<TableCell>Worker ID</TableCell>
-													<TableCell>Jurisdicción</TableCell>
-													<TableCell>Tipo Organismo</TableCell>
-													<TableCell>Modo Verificación</TableCell>
 													<TableCell align="center">Tamaño Lote</TableCell>
 													<TableCell align="center">Delay (ms)</TableCell>
 													<TableCell align="center">Reintentos</TableCell>
@@ -1543,60 +1385,6 @@ const MEVWorkers = () => {
 																	/>
 																) : (
 																	<Chip label={config.worker_id} color="secondary" variant="filled" size="small" />
-																)}
-															</TableCell>
-															<TableCell>
-																{isEditing ? (
-																	<FormControl size="small" fullWidth>
-																		<Select
-																			value={editValues.jurisdiccion || ""}
-																			onChange={(e) => setEditValues({ ...editValues, jurisdiccion: e.target.value })}
-																		>
-																			{JURISDICCION_OPTIONS.map((option) => (
-																				<MenuItem key={option.value} value={option.value}>
-																					{option.label}
-																				</MenuItem>
-																			))}
-																		</Select>
-																	</FormControl>
-																) : (
-																	<Typography variant="body2">{getJurisdiccionLabel(config.jurisdiccion)}</Typography>
-																)}
-															</TableCell>
-															<TableCell>
-																{isEditing ? (
-																	<FormControl size="small" fullWidth>
-																		<Select
-																			value={editValues.tipo_organismo || ""}
-																			onChange={(e) => setEditValues({ ...editValues, tipo_organismo: e.target.value })}
-																		>
-																			{TIPO_ORGANISMO_OPTIONS.map((option) => (
-																				<MenuItem key={option.value} value={option.value}>
-																					{option.label}
-																				</MenuItem>
-																			))}
-																		</Select>
-																	</FormControl>
-																) : (
-																	<Typography variant="body2">{getTipoOrganismoLabel(config.tipo_organismo)}</Typography>
-																)}
-															</TableCell>
-															<TableCell>
-																{isEditing ? (
-																	<FormControl size="small" fullWidth>
-																		<Select
-																			value={editValues.verification_mode || ""}
-																			onChange={(e) => setEditValues({ ...editValues, verification_mode: e.target.value })}
-																		>
-																			{VERIFICATION_MODE_OPTIONS.map((option) => (
-																				<MenuItem key={option.value} value={option.value}>
-																					{option.label}
-																				</MenuItem>
-																			))}
-																		</Select>
-																	</FormControl>
-																) : (
-																	<Typography variant="body2">{getVerificationModeLabel(config.verification_mode)}</Typography>
 																)}
 															</TableCell>
 															<TableCell align="center">
@@ -2115,6 +1903,89 @@ const MEVWorkers = () => {
 					Gestiona las configuraciones del sistema MEV incluyendo parámetros de seguridad, scraping y notificaciones.
 				</Typography>
 			</Alert>
+
+			{/* Credenciales de Acceso MEV */}
+			{(() => {
+				const sharedWorker = configs.find((c) => c.worker_id === "shared");
+				if (!sharedWorker) return null;
+				return (
+					<Card variant="outlined" sx={{ backgroundColor: "background.default" }}>
+						<CardContent>
+							<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+								Credenciales de Acceso MEV
+							</Typography>
+							<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+								Credenciales compartidas por todos los workers (verificación y actualización).
+							</Typography>
+							<Grid container spacing={2}>
+								<Grid item xs={12} sm={6}>
+									<TextField
+										fullWidth
+										size="small"
+										label="Usuario MEV"
+										value={editingCredentials ? credentialForm.username : sharedWorker.login?.username ?? ""}
+										onChange={(e) => {
+											if (editingCredentials) {
+												setCredentialForm({ ...credentialForm, username: e.target.value });
+											}
+										}}
+										disabled={!editingCredentials}
+										InputProps={{ readOnly: !editingCredentials }}
+									/>
+								</Grid>
+								<Grid item xs={12} sm={6}>
+									<TextField
+										fullWidth
+										size="small"
+										label="Contraseña MEV"
+										type={showPassword ? "text" : "password"}
+										value={editingCredentials ? credentialForm.password : sharedWorker.login?.password ?? ""}
+										onChange={(e) => {
+											if (editingCredentials) {
+												setCredentialForm({ ...credentialForm, password: e.target.value });
+											}
+										}}
+										disabled={!editingCredentials}
+										InputProps={{
+											readOnly: !editingCredentials,
+											endAdornment: (
+												<IconButton size="small" onClick={() => setShowPassword(!showPassword)} edge="end">
+													{showPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
+												</IconButton>
+											),
+										}}
+									/>
+								</Grid>
+							</Grid>
+							{sharedWorker.login?.lastPasswordChange && (
+								<Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+									Último cambio de contraseña: {new Date(sharedWorker.login.lastPasswordChange).toLocaleDateString("es-AR")}
+								</Typography>
+							)}
+							<Box sx={{ mt: 2, display: "flex", gap: 1 }}>
+								{editingCredentials ? (
+									<>
+										<Button variant="contained" size="small" onClick={handleSaveCredentials}>
+											Guardar
+										</Button>
+										<Button
+											variant="outlined"
+											size="small"
+											onClick={() => setEditingCredentials(false)}
+										>
+											Cancelar
+										</Button>
+									</>
+								) : (
+									<Button variant="outlined" size="small" startIcon={<Edit2 size={16} />} onClick={handleStartEditCredentials}>
+										Editar Credenciales
+									</Button>
+								)}
+							</Box>
+						</CardContent>
+					</Card>
+				);
+			})()}
 
 			{/* Instructivo de Uso */}
 			<Card variant="outlined" sx={{ backgroundColor: "background.paper" }}>

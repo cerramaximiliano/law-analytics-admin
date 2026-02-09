@@ -23,6 +23,7 @@ import {
 	IconButton,
 	TextField,
 	Button,
+	LinearProgress,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -32,11 +33,44 @@ import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/es";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { CausasMEVService, CausaMEV } from "api/causasMEV";
+import { CausasMEVService, CausaMEV, EligibilityStatsMEV } from "api/causasMEV";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
-import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification, Calendar, TickCircle, CloseSquare } from "iconsax-react";
+import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification, Calendar, TickCircle, CloseSquare, Timer, Repeat } from "iconsax-react";
 import CausaDetalleModal from "../causas/CausaDetalleModal";
 import JudicialMovementsModal from "../causas/JudicialMovementsModal";
+
+// Helper: fecha actual en Argentina (UTC-3)
+const getArgentinaDate = (): string => {
+	const now = new Date();
+	const argentinaOffset = -3 * 60;
+	const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+	const argentinaMinutes = utcMinutes + argentinaOffset;
+
+	let argentinaHour = Math.floor(argentinaMinutes / 60);
+	let dayOffset = 0;
+
+	if (argentinaHour < 0) {
+		dayOffset = -1;
+	} else if (argentinaHour >= 24) {
+		dayOffset = 1;
+	}
+
+	const argentinaDate = new Date(now);
+	argentinaDate.setUTCDate(argentinaDate.getUTCDate() + dayOffset);
+
+	const year = argentinaDate.getUTCFullYear();
+	const month = String(argentinaDate.getUTCMonth() + 1).padStart(2, "0");
+	const day = String(argentinaDate.getUTCDate()).padStart(2, "0");
+	return `${year}-${month}-${day}`;
+};
+
+// Helper: formatear horas para tooltip
+const formatHoursTooltip = (hours: number[]): string => {
+	if (hours.length === 0) return "";
+	const sortedHours = [...hours].sort((a, b) => a - b);
+	const formatted = sortedHours.map((h) => `${h.toString().padStart(2, "0")}:00`);
+	return `Actualizado a las ${formatted.join(", ")}`;
+};
 
 const CarpetasMEVVerificadas = () => {
 	const { enqueueSnackbar } = useSnackbar();
@@ -58,6 +92,14 @@ const CarpetasMEVVerificadas = () => {
 	const [searchFechaUltimoMovimiento, setSearchFechaUltimoMovimiento] = useState<Dayjs | null>(null);
 	const [searchLastUpdate, setSearchLastUpdate] = useState<Dayjs | null>(null);
 
+	// Filtros de elegibilidad
+	const [soloElegibles, setSoloElegibles] = useState<boolean>(false);
+	const [estadoActualizacion, setEstadoActualizacion] = useState<string>("todos");
+
+	// Estadísticas de elegibilidad
+	const [eligibilityStats, setEligibilityStats] = useState<EligibilityStatsMEV | null>(null);
+	const [loadingStats, setLoadingStats] = useState(false);
+
 	// Ordenamiento
 	const [sortBy, setSortBy] = useState<string>("year");
 	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -73,6 +115,36 @@ const CarpetasMEVVerificadas = () => {
 	const [loadingMovements, setLoadingMovements] = useState(false);
 	const [movementsError, setMovementsError] = useState<string>("");
 
+	// Helper: info de actualización de hoy
+	const getTodayUpdateInfo = (causa: CausaMEV): { isToday: boolean; count: number; hours: number[] } => {
+		const stats = causa.updateStats?.today;
+		if (!stats || !stats.date) {
+			return { isToday: false, count: 0, hours: [] };
+		}
+		const today = getArgentinaDate();
+		const isToday = stats.date === today;
+		return {
+			isToday,
+			count: isToday ? (stats.count || 0) : 0,
+			hours: isToday ? (stats.hours || []) : [],
+		};
+	};
+
+	// Fetch elegibility stats
+	const fetchEligibilityStats = async () => {
+		try {
+			setLoadingStats(true);
+			const response = await CausasMEVService.getEligibilityStats({ thresholdHours: 24 });
+			if (response.success) {
+				setEligibilityStats(response.data.totals);
+			}
+		} catch (error) {
+			console.error("Error fetching MEV eligibility stats:", error);
+		} finally {
+			setLoadingStats(false);
+		}
+	};
+
 	// Cargar causas MEV verificadas
 	const fetchCausas = async (
 		currentPage: number,
@@ -86,12 +158,14 @@ const CarpetasMEVVerificadas = () => {
 		fechaUltimoMovimiento?: Dayjs | null,
 		lastUpdate?: Dayjs | null,
 		actualizable?: string,
+		elegibles?: boolean,
+		estadoAct?: string,
 	) => {
 		try {
 			setLoading(true);
 
 			const params: any = {
-				page: currentPage + 1, // Backend usa base 1
+				page: currentPage + 1,
 				limit,
 			};
 
@@ -112,7 +186,6 @@ const CarpetasMEVVerificadas = () => {
 			}
 
 			if (fechaUltimoMovimiento) {
-				// Formatear fecha al formato requerido: "2022-11-29T00:00:00.000+00:00"
 				params.fechaUltimoMovimiento = fechaUltimoMovimiento.format("YYYY-MM-DD") + "T00:00:00.000+00:00";
 			}
 
@@ -124,7 +197,14 @@ const CarpetasMEVVerificadas = () => {
 				params.update = actualizable === "true";
 			}
 
-			// Agregar parámetros de ordenamiento
+			if (elegibles) {
+				params.soloElegibles = true;
+			}
+
+			if (estadoAct && estadoAct !== "todos") {
+				params.estadoActualizacion = estadoAct;
+			}
+
 			if (sortByParam) {
 				params.sortBy = sortByParam;
 			}
@@ -132,8 +212,6 @@ const CarpetasMEVVerificadas = () => {
 			if (sortOrderParam) {
 				params.sortOrder = sortOrderParam;
 			}
-
-			console.log("🔍 Parámetros enviados a API (MEV Verificadas):", params);
 
 			const response = await CausasMEVService.getVerifiedCausas(params);
 
@@ -153,6 +231,11 @@ const CarpetasMEVVerificadas = () => {
 		}
 	};
 
+	// Efecto inicial para estadísticas
+	useEffect(() => {
+		fetchEligibilityStats();
+	}, []);
+
 	// Efecto para cargar causas cuando cambian los filtros, paginación u ordenamiento
 	useEffect(() => {
 		fetchCausas(
@@ -167,8 +250,10 @@ const CarpetasMEVVerificadas = () => {
 			searchFechaUltimoMovimiento,
 			searchLastUpdate,
 			actualizableFilter,
+			soloElegibles,
+			estadoActualizacion,
 		);
-	}, [page, rowsPerPage, sortBy, sortOrder, actualizableFilter]);
+	}, [page, rowsPerPage, sortBy, sortOrder, actualizableFilter, soloElegibles, estadoActualizacion]);
 
 	// Handlers de paginación
 	const handleChangePage = (_event: unknown, newPage: number) => {
@@ -182,6 +267,7 @@ const CarpetasMEVVerificadas = () => {
 
 	// Handler de refresh
 	const handleRefresh = () => {
+		fetchEligibilityStats();
 		fetchCausas(
 			page,
 			rowsPerPage,
@@ -194,6 +280,8 @@ const CarpetasMEVVerificadas = () => {
 			searchFechaUltimoMovimiento,
 			searchLastUpdate,
 			actualizableFilter,
+			soloElegibles,
+			estadoActualizacion,
 		);
 	};
 
@@ -205,7 +293,7 @@ const CarpetasMEVVerificadas = () => {
 
 	// Handler de búsqueda
 	const handleSearch = () => {
-		setPage(0); // Resetear a página 1
+		setPage(0);
 		fetchCausas(
 			0,
 			rowsPerPage,
@@ -218,6 +306,8 @@ const CarpetasMEVVerificadas = () => {
 			searchFechaUltimoMovimiento,
 			searchLastUpdate,
 			actualizableFilter,
+			soloElegibles,
+			estadoActualizacion,
 		);
 	};
 
@@ -230,8 +320,10 @@ const CarpetasMEVVerificadas = () => {
 		setSearchFechaUltimoMovimiento(null);
 		setSearchLastUpdate(null);
 		setActualizableFilter("todos");
+		setSoloElegibles(false);
+		setEstadoActualizacion("todos");
 		setPage(0);
-		fetchCausas(0, rowsPerPage, "", "", "", "", sortBy, sortOrder, null, null, "todos");
+		fetchCausas(0, rowsPerPage, "", "", "", "", sortBy, sortOrder, null, null, "todos", false, "todos");
 	};
 
 	// Handler para establecer fecha de hoy
@@ -300,11 +392,9 @@ const CarpetasMEVVerificadas = () => {
 			setLoadingDetail(true);
 			const causaId = getId(causa._id);
 
-			// Obtener causa completa con movimientos
 			const response = await CausasMEVService.getCausaById(causaId);
 
 			if (response.success && response.data) {
-				// response.data puede ser un array o un objeto único
 				const causaCompleta = Array.isArray(response.data) ? response.data[0] : response.data;
 				setSelectedCausa(causaCompleta);
 				setDetailModalOpen(true);
@@ -360,25 +450,120 @@ const CarpetasMEVVerificadas = () => {
 
 	return (
 		<MainCard title="Carpetas MEV Verificadas (App)">
-			<Box sx={{ mb: 3 }}>
-				<Card sx={{ backgroundColor: "primary.lighter", border: 1, borderColor: "primary.main" }}>
-					<CardContent>
-						<Stack direction="row" justifyContent="space-between" alignItems="center">
-							<Typography variant="caption" color="text.secondary">
-								Resultados encontrados
-							</Typography>
-							<Typography variant="h4" color="primary.main" fontWeight="bold">
-								{totalCount}/{totalInDatabase}
-							</Typography>
-						</Stack>
-						<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
-							{totalCount === totalInDatabase
-								? "Mostrando todos los resultados"
-								: `Mostrando ${((totalCount / totalInDatabase) * 100).toFixed(1)}% del total`}
-						</Typography>
-					</CardContent>
-				</Card>
+			{/* Header: Resultados + Cobertura */}
+			<Box sx={{ mb: 2 }}>
+				<Grid container spacing={2} alignItems="center">
+					{/* Resultados */}
+					<Grid item xs={12} md={4}>
+						<Card sx={{ backgroundColor: "primary.lighter", border: 1, borderColor: "primary.main" }}>
+							<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
+								<Stack direction="row" justifyContent="space-between" alignItems="center">
+									<Typography variant="body2" color="text.secondary">
+										Resultados
+									</Typography>
+									<Typography variant="h4" color="primary.main" fontWeight="bold">
+										{totalCount.toLocaleString()}
+										<Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
+											/ {totalInDatabase.toLocaleString()}
+										</Typography>
+									</Typography>
+								</Stack>
+							</CardContent>
+						</Card>
+					</Grid>
+
+					{/* Widget de Cobertura */}
+					<Grid item xs={12} md={8}>
+						<Card sx={{ border: 1, borderColor: "divider" }}>
+							<CardContent sx={{ py: 1, "&:last-child": { pb: 1 } }}>
+								{loadingStats ? (
+									<Box display="flex" justifyContent="center" py={1}>
+										<CircularProgress size={20} />
+									</Box>
+								) : eligibilityStats ? (
+									<Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap">
+										{/* Barra de progreso */}
+										<Box sx={{ flex: 1, minWidth: 150 }}>
+											<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+												<Typography variant="caption" color="text.secondary">
+													Cobertura hoy
+												</Typography>
+												<Typography variant="body2" color="primary.main" fontWeight="bold">
+													{eligibilityStats.coveragePercent}%
+												</Typography>
+											</Stack>
+											<LinearProgress
+												variant="determinate"
+												value={eligibilityStats.coveragePercent || 0}
+												sx={{
+													height: 6,
+													borderRadius: 3,
+													backgroundColor: "grey.200",
+													"& .MuiLinearProgress-bar": {
+														borderRadius: 3,
+														backgroundColor:
+															(eligibilityStats.coveragePercent || 0) > 90
+																? "success.main"
+																: (eligibilityStats.coveragePercent || 0) > 70
+																	? "warning.main"
+																	: "error.main",
+													},
+												}}
+											/>
+										</Box>
+										{/* Chips */}
+										<Stack direction="row" spacing={1} flexWrap="wrap" sx={{ "& > *": { my: 0.25 } }}>
+											<Tooltip title="Causas actualizadas hoy">
+												<Chip
+													icon={<TickCircle size={14} variant="Bold" />}
+													label={eligibilityStats.updatedToday.toLocaleString()}
+													size="small"
+													color="success"
+													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
+												/>
+											</Tooltip>
+											<Tooltip title="Causas pendientes de actualizar hoy">
+												<Chip
+													icon={<Timer size={14} />}
+													label={
+														eligibilityStats.pendingToday?.toLocaleString() ||
+														(eligibilityStats.eligible - eligibilityStats.updatedToday - eligibilityStats.eligibleWithErrors).toLocaleString()
+													}
+													size="small"
+													color="warning"
+													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
+												/>
+											</Tooltip>
+											<Tooltip title="Causas con errores">
+												<Chip
+													icon={<CloseSquare size={14} variant="Bold" />}
+													label={eligibilityStats.eligibleWithErrors.toLocaleString()}
+													size="small"
+													color="error"
+													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
+												/>
+											</Tooltip>
+											<Tooltip title={`Total elegibles: ${eligibilityStats.eligible.toLocaleString()}`}>
+												<Chip
+													label={`${eligibilityStats.eligible.toLocaleString()} elegibles`}
+													size="small"
+													variant="outlined"
+													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
+												/>
+											</Tooltip>
+										</Stack>
+									</Stack>
+								) : (
+									<Typography variant="caption" color="text.secondary" textAlign="center">
+										Error cargando estadísticas
+									</Typography>
+								)}
+							</CardContent>
+						</Card>
+					</Grid>
+				</Grid>
 			</Box>
+
 			<Grid container spacing={3}>
 				{/* Filtros */}
 				<Grid item xs={12}>
@@ -390,6 +575,25 @@ const CarpetasMEVVerificadas = () => {
 									<MenuItem value="todos">Todos</MenuItem>
 									<MenuItem value="true">Actualizable</MenuItem>
 									<MenuItem value="false">No actualizable</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={12} md={6} lg={2}>
+							<FormControl fullWidth>
+								<InputLabel>Estado Act.</InputLabel>
+								<Select
+									value={estadoActualizacion}
+									onChange={(e) => {
+										setEstadoActualizacion(e.target.value);
+										setPage(0);
+									}}
+									label="Estado Act."
+									size="small"
+								>
+									<MenuItem value="todos">Todos</MenuItem>
+									<MenuItem value="actualizados">Actualizados hoy</MenuItem>
+									<MenuItem value="pendientes">Pendientes</MenuItem>
+									<MenuItem value="errores">Con errores</MenuItem>
 								</Select>
 							</FormControl>
 						</Grid>
@@ -600,17 +804,50 @@ const CarpetasMEVVerificadas = () => {
 													</Typography>
 												</TableCell>
 												<TableCell>
-													<Typography
-														variant="caption"
-														sx={{
-															...(datesMatchUTC(causa.lastUpdate, causa.fechaUltimoMovimiento) && {
-																color: "success.main",
-																fontWeight: 600,
-															}),
-														}}
-													>
-														{formatDate(causa.lastUpdate)}
-													</Typography>
+													{(() => {
+														const todayInfo = getTodayUpdateInfo(causa);
+														const dateMatch = datesMatchUTC(causa.lastUpdate, causa.fechaUltimoMovimiento);
+														return (
+															<Stack direction="row" alignItems="center" spacing={0.5}>
+																<Typography
+																	variant="caption"
+																	sx={{
+																		...(dateMatch && {
+																			color: "success.main",
+																			fontWeight: 600,
+																		}),
+																	}}
+																>
+																	{formatDate(causa.lastUpdate)}
+																</Typography>
+																{todayInfo.isToday && todayInfo.count > 0 && (
+																	<Tooltip title={formatHoursTooltip(todayInfo.hours)}>
+																		<Chip
+																			icon={<Repeat size={14} />}
+																			label={todayInfo.count}
+																			size="small"
+																			sx={{
+																				height: 22,
+																				minWidth: 40,
+																				fontSize: "0.75rem",
+																				fontWeight: 700,
+																				backgroundColor: "success.main",
+																				color: "white",
+																				"& .MuiChip-icon": {
+																					color: "white",
+																					marginLeft: "6px",
+																				},
+																				"& .MuiChip-label": {
+																					paddingLeft: "4px",
+																					paddingRight: "8px",
+																				},
+																			}}
+																		/>
+																	</Tooltip>
+																)}
+															</Stack>
+														);
+													})()}
 												</TableCell>
 												<TableCell>
 													<Typography
