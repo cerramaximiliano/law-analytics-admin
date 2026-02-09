@@ -40,7 +40,7 @@ import { WorkersService } from "api/workers";
 import adminAxios from "utils/adminAxios";
 import { CausasPjnService, EligibilityStats } from "api/causasPjn";
 import { StuckDocumentsService, StuckDocumentsStats } from "api/stuckDocuments";
-import { CausasEjeService, WorkerStatsResponse } from "api/causasEje";
+import { CausasEjeService, WorkerStatsResponse, EligibilityStatsResponse as EjeEligibilityStatsResponse } from "api/causasEje";
 import { CausasMEVService, EligibilityStatsMEV } from "api/causasMEV";
 import LinearProgress from "@mui/material/LinearProgress";
 import { Warning2 } from "iconsax-react";
@@ -554,6 +554,8 @@ const AdminDashboard = () => {
 	const [loadingEligibility, setLoadingEligibility] = useState(false);
 	const [mevEligibilityStats, setMevEligibilityStats] = useState<EligibilityStatsMEV | null>(null);
 	const [loadingMevEligibility, setLoadingMevEligibility] = useState(false);
+	const [ejeEligibilityStats, setEjeEligibilityStats] = useState<EjeEligibilityStatsResponse["data"] | null>(null);
+	const [loadingEjeEligibility, setLoadingEjeEligibility] = useState(false);
 	const [stuckDocumentsStats, setStuckDocumentsStats] = useState<StuckDocumentsStats | null>(null);
 	const [loadingStuckDocuments, setLoadingStuckDocuments] = useState(false);
 	const [ejeStats, setEjeStats] = useState<WorkerStatsResponse["data"] | null>(null);
@@ -598,6 +600,20 @@ const AdminDashboard = () => {
 			console.error("Error fetching MEV eligibility stats:", error);
 		} finally {
 			setLoadingMevEligibility(false);
+		}
+	}, []);
+
+	const fetchEjeEligibilityStats = useCallback(async () => {
+		try {
+			setLoadingEjeEligibility(true);
+			const response = await CausasEjeService.getEligibilityStats();
+			if (response.success) {
+				setEjeEligibilityStats(response.data);
+			}
+		} catch (error: any) {
+			console.error("Error fetching EJE eligibility stats:", error);
+		} finally {
+			setLoadingEjeEligibility(false);
 		}
 	}, []);
 
@@ -685,9 +701,10 @@ const AdminDashboard = () => {
 		fetchOpenaiBalance();
 		fetchEligibilityStats();
 		fetchMevEligibilityStats();
+		fetchEjeEligibilityStats();
 		fetchStuckDocumentsStats();
 		fetchEjeStats();
-	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance, fetchOpenaiBalance, fetchEligibilityStats, fetchMevEligibilityStats, fetchStuckDocumentsStats, fetchEjeStats]);
+	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance, fetchOpenaiBalance, fetchEligibilityStats, fetchMevEligibilityStats, fetchEjeEligibilityStats, fetchStuckDocumentsStats, fetchEjeStats]);
 
 	useRequestQueueRefresh(fetchData);
 
@@ -698,6 +715,7 @@ const AdminDashboard = () => {
 		fetchOpenaiBalance();
 		fetchEligibilityStats();
 		fetchMevEligibilityStats();
+		fetchEjeEligibilityStats();
 		fetchStuckDocumentsStats();
 		fetchEjeStats();
 	};
@@ -1002,8 +1020,8 @@ const AdminDashboard = () => {
 
 				{/* Worker Widgets Row */}
 				<Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: { xs: 2, sm: 4 } }}>
-					{/* Update System Health Widget */}
-					<Grid item xs={12} md={4}>
+					{/* PJN Update Coverage Widget */}
+					<Grid item xs={12} sm={6} md={3}>
 						<Paper
 							elevation={0}
 							onClick={() => navigate("/admin/causas/verified-app")}
@@ -1024,8 +1042,8 @@ const AdminDashboard = () => {
 							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 									<Refresh size={20} style={{ color: COLORS.primary.main }} />
-									<Typography variant="subtitle1" fontWeight="bold">
-										Salud del Sistema de Actualización
+									<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}>
+										Cobertura Actualización PJN
 									</Typography>
 								</Box>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -1128,7 +1146,7 @@ const AdminDashboard = () => {
 					</Grid>
 
 					{/* MEV Update Coverage Widget */}
-					<Grid item xs={12} md={4}>
+					<Grid item xs={12} sm={6} md={3}>
 						<Paper
 							elevation={0}
 							onClick={() => navigate("/admin/mev/verified-app")}
@@ -1149,7 +1167,7 @@ const AdminDashboard = () => {
 							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 									<Refresh size={20} style={{ color: COLORS.neutral.main }} />
-									<Typography variant="subtitle1" fontWeight="bold">
+									<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}>
 										Cobertura Actualización MEV
 									</Typography>
 								</Box>
@@ -1252,8 +1270,133 @@ const AdminDashboard = () => {
 						</Paper>
 					</Grid>
 
+					{/* EJE Update Coverage Widget */}
+					<Grid item xs={12} sm={6} md={3}>
+						<Paper
+							elevation={0}
+							onClick={() => navigate("/admin/eje/verified-app")}
+							sx={{
+								p: { xs: 1.5, sm: 2.5 },
+								borderRadius: 2,
+								bgcolor: theme.palette.background.paper,
+								border: `1px solid ${theme.palette.divider}`,
+								cursor: "pointer",
+								transition: "all 0.2s ease",
+								height: "100%",
+								"&:hover": {
+									boxShadow: theme.shadows[2],
+									borderColor: COLORS.success.light,
+								},
+							}}
+						>
+							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									<Refresh size={20} style={{ color: COLORS.success.main }} />
+									<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}>
+										Cobertura Actualización EJE
+									</Typography>
+								</Box>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									<Chip
+										label="EJE"
+										size="small"
+										sx={{
+											bgcolor: alpha(COLORS.success.main, 0.1),
+											color: COLORS.success.main,
+											fontWeight: 500,
+											fontSize: "0.65rem",
+										}}
+									/>
+									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
+								</Box>
+							</Box>
+
+						{loadingEjeEligibility ? (
+							<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+								<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
+							</Box>
+						) : ejeEligibilityStats ? (
+							<>
+								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+									<Typography variant="body2" color="text.secondary">
+										Cobertura hoy
+									</Typography>
+									<Typography variant="h6" fontWeight="bold" sx={{ color: COLORS.success.main }}>
+										{ejeEligibilityStats.coveragePercent.toFixed(1)}%
+									</Typography>
+								</Box>
+								<LinearProgress
+									variant="determinate"
+									value={ejeEligibilityStats.coveragePercent || 0}
+									sx={{
+										height: 8,
+										borderRadius: 4,
+										mb: 2,
+										backgroundColor: alpha(COLORS.neutral.light, 0.3),
+										"& .MuiLinearProgress-bar": {
+											borderRadius: 4,
+											backgroundColor:
+												(ejeEligibilityStats.coveragePercent || 0) > 90
+													? COLORS.success.main
+													: (ejeEligibilityStats.coveragePercent || 0) > 70
+													? COLORS.warning.main
+													: "#EF4444",
+										},
+									}}
+								/>
+								<Grid container spacing={2}>
+									<Grid item xs={6} sm={3}>
+										<Box sx={{ textAlign: "center" }}>
+											<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
+												{ejeEligibilityStats.actualizadosHoy.toLocaleString()}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												Actualizados hoy
+											</Typography>
+										</Box>
+									</Grid>
+									<Grid item xs={6} sm={3}>
+										<Box sx={{ textAlign: "center" }}>
+											<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
+												{ejeEligibilityStats.pendientesHoy.toLocaleString()}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												Pendientes hoy
+											</Typography>
+										</Box>
+									</Grid>
+									<Grid item xs={6} sm={3}>
+										<Box sx={{ textAlign: "center" }}>
+											<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
+												{ejeEligibilityStats.totalElegibles.toLocaleString()}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												Total elegibles
+											</Typography>
+										</Box>
+									</Grid>
+									<Grid item xs={6} sm={3}>
+										<Box sx={{ textAlign: "center" }}>
+											<Typography variant="h5" fontWeight="bold" color={COLORS.neutral.main}>
+												{ejeEligibilityStats.noElegibles.toLocaleString()}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												No elegibles
+											</Typography>
+										</Box>
+									</Grid>
+								</Grid>
+							</>
+						) : (
+							<Typography variant="body2" color="text.secondary" textAlign="center">
+								No se pudieron cargar las estadísticas
+							</Typography>
+						)}
+						</Paper>
+					</Grid>
+
 					{/* Stuck Documents Worker Widget */}
-					<Grid item xs={12} md={4}>
+					<Grid item xs={12} sm={6} md={3}>
 						<Paper
 							elevation={0}
 							onClick={() => navigate("/admin/causas/workers")}
