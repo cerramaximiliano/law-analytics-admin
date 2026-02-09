@@ -211,9 +211,9 @@ export interface MEVManagerConfigSettings {
 	docsPerWorker: { verify: number; update: number };
 	cpuThreshold: number;
 	memoryThreshold: number;
-	workStartHour: number;
-	workEndHour: number;
-	workDays: number[];
+	workStartHour: { verify: number; update: number };
+	workEndHour: { verify: number; update: number };
+	workDays: { verify: number[]; update: number[] };
 	workerNames: { verify: string; update: string };
 }
 
@@ -228,7 +228,7 @@ export interface MEVManagerCurrentState {
 		totalMemoryMB: number;
 	};
 	isRunning: boolean;
-	isWithinWorkingHours: boolean;
+	isWithinWorkingHours: { verify: boolean; update: boolean };
 	lastCycleAt?: string;
 	cycleCount: number;
 }

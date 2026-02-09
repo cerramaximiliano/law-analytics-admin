@@ -213,13 +213,18 @@ export default function WorkerManagerTab() {
 								<Typography variant="caption" color="text.secondary">
 									Horario laboral
 								</Typography>
-								<Typography variant="body2">
-									{status.isWithinWorkingHours ? (
-										<Chip size="small" color="success" label="Dentro" />
-									) : (
-										<Chip size="small" color="default" label="Fuera" />
-									)}
-								</Typography>
+								<Stack direction="row" spacing={0.5}>
+									<Chip
+										size="small"
+										color={(status.isWithinWorkingHours as any)?.verify ? "success" : "default"}
+										label={`V: ${(status.isWithinWorkingHours as any)?.verify ? "Dentro" : "Fuera"}`}
+									/>
+									<Chip
+										size="small"
+										color={(status.isWithinWorkingHours as any)?.update ? "success" : "default"}
+										label={`A: ${(status.isWithinWorkingHours as any)?.update ? "Dentro" : "Fuera"}`}
+									/>
+								</Stack>
 							</Grid>
 							<Grid item xs={6} sm={3}>
 								<Typography variant="caption" color="text.secondary">
@@ -319,28 +324,6 @@ export default function WorkerManagerTab() {
 									/>
 								</Grid>
 								<Grid item xs={6} sm={3}>
-									<TextField
-										size="small"
-										fullWidth
-										label="Hora inicio"
-										type="number"
-										inputProps={{ min: 0, max: 23 }}
-										value={(editConfig as any)?.workStartHour ?? 6}
-										onChange={(e) => updateNestedConfig("workStartHour", parseInt(e.target.value) || 0)}
-									/>
-								</Grid>
-								<Grid item xs={6} sm={3}>
-									<TextField
-										size="small"
-										fullWidth
-										label="Hora fin"
-										type="number"
-										inputProps={{ min: 0, max: 24 }}
-										value={(editConfig as any)?.workEndHour ?? 22}
-										onChange={(e) => updateNestedConfig("workEndHour", parseInt(e.target.value) || 0)}
-									/>
-								</Grid>
-								<Grid item xs={6} sm={3}>
 									<Stack direction="row" spacing={0.5} alignItems="center">
 										<Typography variant="caption" sx={{ mr: 0.5 }}>
 											CPU:
@@ -357,30 +340,6 @@ export default function WorkerManagerTab() {
 								</Grid>
 							</Grid>
 
-							{/* Dias laborales */}
-							<Typography variant="subtitle2" sx={{ mb: 1 }}>
-								Dias laborales
-							</Typography>
-							<FormGroup row sx={{ mb: 3 }}>
-								{DAY_LABELS.map((label, i) => (
-									<FormControlLabel
-										key={i}
-										control={
-											<Checkbox
-												size="small"
-												checked={((editConfig as any)?.workDays || [1, 2, 3, 4, 5]).includes(i)}
-												onChange={(e) => {
-													const current = (editConfig as any)?.workDays || [1, 2, 3, 4, 5];
-													const updated = e.target.checked ? [...current, i].sort() : current.filter((d: number) => d !== i);
-													updateNestedConfig("workDays", updated);
-												}}
-											/>
-										}
-										label={label}
-									/>
-								))}
-							</FormGroup>
-
 							{/* Tabla de configuracion por tipo de worker */}
 							<Typography variant="subtitle2" sx={{ mb: 1 }}>
 								Configuracion por Worker
@@ -395,6 +354,8 @@ export default function WorkerManagerTab() {
 											<TableCell align="center">Scale Up</TableCell>
 											<TableCell align="center">Scale Down</TableCell>
 											<TableCell align="center">Docs/Worker</TableCell>
+											<TableCell align="center">Hora Inicio</TableCell>
+											<TableCell align="center">Hora Fin</TableCell>
 										</TableRow>
 									</TableHead>
 									<TableBody>
@@ -416,11 +377,68 @@ export default function WorkerManagerTab() {
 														/>
 													</TableCell>
 												))}
+												<TableCell align="center">
+													<TextField
+														size="small"
+														type="number"
+														inputProps={{ min: 0, max: 23 }}
+														sx={{ width: 70 }}
+														value={(editConfig as any)?.workStartHour?.[type] ?? ""}
+														onChange={(e) => updateNestedConfig(`workStartHour.${type}`, parseInt(e.target.value) || 0)}
+													/>
+												</TableCell>
+												<TableCell align="center">
+													<TextField
+														size="small"
+														type="number"
+														inputProps={{ min: 0, max: 24 }}
+														sx={{ width: 70 }}
+														value={(editConfig as any)?.workEndHour?.[type] ?? ""}
+														onChange={(e) => updateNestedConfig(`workEndHour.${type}`, parseInt(e.target.value) || 0)}
+													/>
+												</TableCell>
 											</TableRow>
 										))}
 									</TableBody>
 								</Table>
 							</TableContainer>
+
+							{/* Dias laborales por tipo de worker */}
+							<Typography variant="subtitle2" sx={{ mb: 1 }}>
+								Dias laborales por Worker
+							</Typography>
+							{WORKER_TYPES.map((type) => (
+								<Box key={type} sx={{ mb: 1 }}>
+									<Typography variant="caption" fontWeight={600}>
+										{WORKER_LABELS[type]}
+									</Typography>
+									<FormGroup row>
+										{DAY_LABELS.map((label, i) => (
+											<FormControlLabel
+												key={i}
+												control={
+													<Checkbox
+														size="small"
+														checked={(
+															(editConfig as any)?.workDays?.[type] ||
+															(type === "verify" ? [0, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5])
+														).includes(i)}
+														onChange={(e) => {
+															const defaults = type === "verify" ? [0, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5];
+															const current = (editConfig as any)?.workDays?.[type] || defaults;
+															const updated = e.target.checked
+																? [...current, i].sort()
+																: current.filter((d: number) => d !== i);
+															updateNestedConfig(`workDays.${type}`, updated);
+														}}
+													/>
+												}
+												label={label}
+											/>
+										))}
+									</FormGroup>
+								</Box>
+							))}
 
 							<Stack direction="row" spacing={2}>
 								<Button variant="contained" size="small" onClick={handleSave} disabled={saving}>
