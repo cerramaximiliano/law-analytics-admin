@@ -29,37 +29,36 @@ import {
 	DialogContent,
 	DialogActions,
 	Collapse,
+	useTheme,
+	alpha,
 } from "@mui/material";
-import { Edit2, TickCircle, CloseCircle, Refresh, Calendar, ArrowDown2, ArrowUp2, InfoCircle, Eye, EyeSlash } from "iconsax-react";
+import { Edit2, TickCircle, CloseCircle, Refresh, Calendar, ArrowDown2, ArrowUp2, InfoCircle, Eye, EyeSlash, Setting2, TickSquare, DocumentUpload, Refresh2, Setting } from "iconsax-react";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import { TabPanel } from "components/ui-component/TabPanel";
 import MEVWorkersService, { MEVWorkerConfig, SystemConfig } from "api/workersMEV";
 import SyncCheckTab from "./SyncCheckTab";
 import WorkerManagerTab from "./WorkerManagerTab";
 
-interface TabPanelProps {
-	children?: React.ReactNode;
-	index: number;
-	value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-	const { children, value, index, ...other } = props;
-
-	return (
-		<div role="tabpanel" hidden={value !== index} id={`worker-tabpanel-${index}`} aria-labelledby={`worker-tab-${index}`} {...other}>
-			{value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
-		</div>
-	);
+interface WorkerTab {
+	label: string;
+	value: string;
+	icon: React.ReactNode;
+	component: React.ReactNode;
+	description: string;
+	status?: "active" | "inactive" | "error";
+	badge?: string;
+	ip?: string;
 }
 
 const MEVWorkers = () => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
-	const [activeTab, setActiveTab] = useState(0);
+	const [activeTab, setActiveTab] = useState("manager");
 	const [configs, setConfigs] = useState<MEVWorkerConfig[]>([]);
 	const [systemConfigs, setSystemConfigs] = useState<SystemConfig[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -166,7 +165,7 @@ const MEVWorkers = () => {
 
 	// Cargar configuraciones del sistema cuando se cambie a esa tab
 	useEffect(() => {
-		if (activeTab === 2 && systemConfigs.length === 0) {
+		if (activeTab === "system-config" && systemConfigs.length === 0) {
 			fetchSystemConfigs();
 		}
 	}, [activeTab]);
@@ -403,8 +402,21 @@ const MEVWorkers = () => {
 		}
 	};
 
-	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+	const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
 		setActiveTab(newValue);
+	};
+
+	const getStatusColor = (status?: string) => {
+		switch (status) {
+			case "active":
+				return theme.palette.success.main;
+			case "inactive":
+				return theme.palette.warning.main;
+			case "error":
+				return theme.palette.error.main;
+			default:
+				return theme.palette.grey[500];
+		}
 	};
 
 	if (loading) {
@@ -2335,35 +2347,168 @@ const MEVWorkers = () => {
 		</Stack>
 	);
 
+	const workerTabs: WorkerTab[] = [
+		{
+			label: "Manager",
+			value: "manager",
+			icon: <Setting2 size={20} />,
+			component: <WorkerManagerTab />,
+			description: "Gestiona y escala los workers automaticamente",
+			status: "active",
+			badge: "app",
+			ip: "56.125.115.51",
+		},
+		{
+			label: "Verificacion",
+			value: "verification",
+			icon: <TickSquare size={20} />,
+			component: <VerificationWorkerContent />,
+			description: "Verifica existencia de causas MEV",
+			status: "active",
+			badge: "app",
+			ip: "56.125.115.51",
+		},
+		{
+			label: "Actualizacion",
+			value: "update",
+			icon: <DocumentUpload size={20} />,
+			component: <UpdateWorkerContent />,
+			description: "Actualiza causas MEV verificadas",
+			status: "active",
+			badge: "app",
+			ip: "56.125.115.51",
+		},
+		{
+			label: "Sync Check",
+			value: "sync-check",
+			icon: <Refresh2 size={20} />,
+			component: <SyncCheckTab />,
+			description: "Verifica sincronizacion de jurisdicciones y organismos",
+			status: "active",
+			badge: "app",
+			ip: "56.125.115.51",
+		},
+		{
+			label: "Config Sistema",
+			value: "system-config",
+			icon: <Setting size={20} />,
+			component: <SystemConfigContent />,
+			description: "Configuracion general del sistema MEV",
+			status: "active",
+			badge: "app",
+			ip: "56.125.115.51",
+		},
+	];
+
 	return (
 		<>
-			<MainCard title="Workers MEV">
-				<Box sx={{ width: "100%" }}>
-					<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-						<Tabs value={activeTab} onChange={handleTabChange} aria-label="workers mev tabs">
-							<Tab label="Worker de Verificación" />
-							<Tab label="Worker de Actualización" />
-							<Tab label="Configuración del Sistema" />
-							<Tab label="Sync Check" />
-							<Tab label="Worker Manager" />
-						</Tabs>
+			<MainCard>
+				<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+					<Box>
+						<Typography variant="h3">Workers MEV</Typography>
+						<Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
+							Gestiona y configura los workers del sistema MEV
+						</Typography>
 					</Box>
-					<TabPanel value={activeTab} index={0}>
-						<VerificationWorkerContent />
-					</TabPanel>
-					<TabPanel value={activeTab} index={1}>
-						<UpdateWorkerContent />
-					</TabPanel>
-					<TabPanel value={activeTab} index={2}>
-						<SystemConfigContent />
-					</TabPanel>
-					<TabPanel value={activeTab} index={3}>
-						<SyncCheckTab />
-					</TabPanel>
-					<TabPanel value={activeTab} index={4}>
-						<WorkerManagerTab />
-					</TabPanel>
-				</Box>
+
+					<Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
+						<Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+							<Tabs
+								value={activeTab}
+								onChange={handleTabChange}
+								variant="scrollable"
+								scrollButtons="auto"
+								sx={{
+									"& .MuiTab-root": {
+										minHeight: 64,
+										textTransform: "none",
+										fontSize: "0.875rem",
+										fontWeight: 500,
+									},
+								}}
+							>
+								{workerTabs.map((tab) => (
+									<Tab
+										key={tab.value}
+										label={
+											<Stack direction="row" spacing={1.5} alignItems="center">
+												<Box sx={{ color: getStatusColor(tab.status) }}>{tab.icon}</Box>
+												<Box>
+													<Stack direction="row" spacing={0.75} alignItems="center">
+														<Typography variant="body2" fontWeight={500}>
+															{tab.label}
+														</Typography>
+														{tab.badge && (
+															<Box
+																component="span"
+																sx={{
+																	display: "inline-flex",
+																	alignItems: "center",
+																	px: 1,
+																	py: 0.25,
+																	borderRadius: 1,
+																	bgcolor: theme.palette.grey[800],
+																	color: theme.palette.common.white,
+																	fontSize: "0.65rem",
+																	fontWeight: 500,
+																	fontFamily: "monospace",
+																	letterSpacing: "0.5px",
+																}}
+															>
+																{tab.badge}
+															</Box>
+														)}
+														{tab.ip && (
+															<Box
+																component="span"
+																sx={{
+																	display: "inline-flex",
+																	alignItems: "center",
+																	px: 0.75,
+																	py: 0.25,
+																	borderRadius: 1,
+																	bgcolor: alpha(theme.palette.info.main, 0.1),
+																	color: theme.palette.info.main,
+																	fontSize: "0.6rem",
+																	fontWeight: 500,
+																	fontFamily: "monospace",
+																}}
+															>
+																{tab.ip}
+															</Box>
+														)}
+													</Stack>
+													{tab.status && (
+														<Chip
+															label={tab.status === "active" ? "Activo" : tab.status === "inactive" ? "Inactivo" : "Error"}
+															size="small"
+															sx={{
+																height: 16,
+																fontSize: "0.7rem",
+																mt: 0.5,
+																bgcolor: alpha(getStatusColor(tab.status), 0.1),
+																color: getStatusColor(tab.status),
+															}}
+														/>
+													)}
+												</Box>
+											</Stack>
+										}
+										value={tab.value}
+									/>
+								))}
+							</Tabs>
+						</Box>
+
+						<Box sx={{ bgcolor: theme.palette.background.paper }}>
+							{workerTabs.map((tab) => (
+								<TabPanel key={tab.value} value={activeTab} index={tab.value}>
+									{tab.component}
+								</TabPanel>
+							))}
+						</Box>
+					</Paper>
+				</Stack>
 			</MainCard>
 
 			{/* Modal de información del Worker */}
