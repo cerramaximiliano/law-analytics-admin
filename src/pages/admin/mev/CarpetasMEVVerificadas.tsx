@@ -24,6 +24,8 @@ import {
 	TextField,
 	Button,
 	LinearProgress,
+	Checkbox,
+	FormControlLabel,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -288,6 +290,22 @@ const CarpetasMEVVerificadas = () => {
 	// Handler de cambio de filtro actualizable
 	const handleActualizableChange = (event: any) => {
 		setActualizableFilter(event.target.value);
+		setPage(0);
+	};
+
+	// Handler de cambio de checkbox solo elegibles
+	const handleSoloElegiblesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const checked = event.target.checked;
+		setSoloElegibles(checked);
+		if (checked) {
+			setActualizableFilter("true");
+		}
+		setPage(0);
+	};
+
+	// Handler de cambio de estado de actualización
+	const handleEstadoActualizacionChange = (event: any) => {
+		setEstadoActualizacion(event.target.value);
 		setPage(0);
 	};
 
@@ -565,35 +583,46 @@ const CarpetasMEVVerificadas = () => {
 			</Box>
 
 			<Grid container spacing={3}>
+				{/* Filtros de elegibilidad - en línea */}
+				<Grid item xs={12}>
+					<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
+						<FormControlLabel
+							control={
+								<Checkbox
+									checked={soloElegibles}
+									onChange={handleSoloElegiblesChange}
+									size="small"
+								/>
+							}
+							label={<Typography variant="body2">Solo elegibles para actualización</Typography>}
+						/>
+						<FormControl size="small" sx={{ minWidth: 200 }}>
+							<InputLabel>Estado actualización</InputLabel>
+							<Select
+								value={estadoActualizacion}
+								onChange={handleEstadoActualizacionChange}
+								label="Estado actualización"
+								disabled={!soloElegibles}
+							>
+								<MenuItem value="todos">Todos los estados</MenuItem>
+								<MenuItem value="actualizados">Actualizados hoy</MenuItem>
+								<MenuItem value="pendientes">Pendientes</MenuItem>
+								<MenuItem value="errores">Con errores/cooldown</MenuItem>
+							</Select>
+						</FormControl>
+					</Stack>
+				</Grid>
+
 				{/* Filtros */}
 				<Grid item xs={12}>
 					<Grid container spacing={2}>
 						<Grid item xs={12} md={6} lg={2}>
-							<FormControl fullWidth>
+							<FormControl fullWidth disabled={soloElegibles}>
 								<InputLabel>Actualizable</InputLabel>
 								<Select value={actualizableFilter} onChange={handleActualizableChange} label="Actualizable" size="small">
 									<MenuItem value="todos">Todos</MenuItem>
 									<MenuItem value="true">Actualizable</MenuItem>
 									<MenuItem value="false">No actualizable</MenuItem>
-								</Select>
-							</FormControl>
-						</Grid>
-						<Grid item xs={12} md={6} lg={2}>
-							<FormControl fullWidth>
-								<InputLabel>Estado Act.</InputLabel>
-								<Select
-									value={estadoActualizacion}
-									onChange={(e) => {
-										setEstadoActualizacion(e.target.value);
-										setPage(0);
-									}}
-									label="Estado Act."
-									size="small"
-								>
-									<MenuItem value="todos">Todos</MenuItem>
-									<MenuItem value="actualizados">Actualizados hoy</MenuItem>
-									<MenuItem value="pendientes">Pendientes</MenuItem>
-									<MenuItem value="errores">Con errores</MenuItem>
 								</Select>
 							</FormControl>
 						</Grid>
