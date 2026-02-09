@@ -371,6 +371,71 @@ export interface FullDiscountInfoResponse {
 	};
 }
 
+// Types for User Promotions endpoint
+export interface UserPromotionRedemption {
+	redeemedAt: string;
+	planId?: string;
+	billingPeriod?: string;
+	amountSaved?: number;
+}
+
+export interface UserPromotion {
+	_id: string;
+	code: string;
+	name: string;
+	discountType: "percentage" | "fixed_amount";
+	discountValue: number;
+	badge: string | null;
+	promotionalMessage: string | null;
+	// Estado
+	isActive: boolean;
+	isExpired: boolean;
+	isNotYetValid: boolean;
+	validFrom: string;
+	validUntil: string;
+	// Entornos
+	targetEnvironment: "both" | "development" | "production";
+	availableInDevelopment: boolean;
+	availableInProduction: boolean;
+	hasStripeDevSync: boolean;
+	hasStripeProdSync: boolean;
+	// Uso por el usuario
+	redeemedByUser: boolean;
+	userRedemptionCount: number;
+	maxRedemptionsPerUser: number;
+	canStillUse: boolean;
+	userRedemptions: UserPromotionRedemption[];
+	// Elegibilidad
+	eligibilityReason: "targetUser" | "segment" | "public";
+	segmentNames: string[];
+	// Descuento
+	duration: "once" | "repeating" | "forever";
+	durationInMonths?: number;
+	applicablePlans: string[];
+}
+
+export interface UserPromotionsSummary {
+	total: number;
+	active: number;
+	expired: number;
+	redeemed: number;
+	canUse: number;
+}
+
+export interface UserPromotionsResponse {
+	success: boolean;
+	data: {
+		user: {
+			_id: string;
+			email: string;
+			firstName: string;
+			lastName: string;
+		};
+		promotions: UserPromotion[];
+		summary: UserPromotionsSummary;
+	};
+}
+
 class DiscountsService {
 	/**
 	 * Listar todos los códigos de descuento
@@ -674,6 +739,30 @@ class DiscountsService {
 				throw new Error("Código de descuento no encontrado");
 			}
 			throw new Error(error.response?.data?.message || "Error al configurar segmentos");
+		}
+	}
+
+	// ============================================
+	// User Promotions lookup
+	// ============================================
+
+	/**
+	 * Obtener todas las promociones que aplican a un usuario específico
+	 */
+	async getUserPromotions(userId: string): Promise<UserPromotionsResponse> {
+		try {
+			const response = await adminAxios.get<UserPromotionsResponse>(
+				`/api/discounts/user/${userId}/promotions`
+			);
+			return response.data;
+		} catch (error: any) {
+			if (error.response?.status === 404) {
+				throw new Error("Usuario no encontrado");
+			}
+			if (error.response?.status === 400) {
+				throw new Error("ID de usuario inválido");
+			}
+			throw new Error(error.response?.data?.message || "Error al obtener promociones del usuario");
 		}
 	}
 
