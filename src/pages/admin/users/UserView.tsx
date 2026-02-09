@@ -67,6 +67,7 @@ import {
 	Copy,
 	DocumentCode,
 	Box1,
+	DiscountShape,
 } from "iconsax-react";
 
 // API and types
@@ -78,6 +79,7 @@ import dayjs from "dayjs";
 import adminAxios from "utils/adminAxios";
 import { SegmentService } from "store/reducers/segments";
 import { Segment } from "types/segment";
+import discountsService, { UserPromotion, UserPromotionsSummary } from "api/discounts";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -223,6 +225,12 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 	// Estado para sincronización de almacenamiento
 	const [syncingStorage, setSyncingStorage] = useState(false);
 
+	// Estados para promociones
+	const [promotionsData, setPromotionsData] = useState<UserPromotion[] | null>(null);
+	const [promotionsSummary, setPromotionsSummary] = useState<UserPromotionsSummary | null>(null);
+	const [promotionsLoading, setPromotionsLoading] = useState(false);
+	const [promotionsError, setPromotionsError] = useState<string | null>(null);
+
 	// Estado para resetear onboarding
 	const [resettingOnboarding, setResettingOnboarding] = useState(false);
 
@@ -325,6 +333,14 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 			// También cargar segmentos estáticos disponibles
 			if (staticSegments.length === 0 && !loadingSegments) {
 				loadStaticSegments();
+			}
+		}
+
+		// Cargar promociones cuando se selecciona esa pestaña
+		if (newValue === 10 && !promotionsData && !promotionsLoading) {
+			const userId = userData?.id || userData?._id;
+			if (userId) {
+				loadPromotions(userId);
 			}
 		}
 	};
@@ -436,6 +452,200 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 		} finally {
 			setLoadingSegments(false);
 		}
+	};
+
+	const loadPromotions = async (userId: string) => {
+		setPromotionsLoading(true);
+		setPromotionsError(null);
+		try {
+			const response = await discountsService.getUserPromotions(userId);
+			setPromotionsData(response.data.promotions);
+			setPromotionsSummary(response.data.summary);
+		} catch (error: any) {
+			setPromotionsError(error.message || "Error al cargar promociones");
+		} finally {
+			setPromotionsLoading(false);
+		}
+	};
+
+	const getPromotionStatusChip = (promo: UserPromotion) => {
+		if (!promo.isActive) return <Chip label="Inactiva" size="small" color="default" />;
+		if (promo.isExpired) return <Chip label="Expirada" size="small" color="error" />;
+		if (promo.isNotYetValid) return <Chip label="Pendiente" size="small" color="warning" />;
+		return <Chip label="Activa" size="small" color="success" />;
+	};
+
+	const getEligibilityLabel = (reason: string) => {
+		switch (reason) {
+			case "targetUser": return "Usuario directo";
+			case "segment": return "Segmento";
+			case "public": return "Pública";
+			default: return reason;
+		}
+	};
+
+	const renderPromotions = () => {
+		if (promotionsLoading) {
+			return (
+				<Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "300px" }}>
+					<CircularProgress />
+				</Box>
+			);
+		}
+
+		if (promotionsError) {
+			return (
+				<Alert severity="error" sx={{ mb: 2 }}>
+					{promotionsError}
+				</Alert>
+			);
+		}
+
+		if (!promotionsData || promotionsData.length === 0) {
+			return (
+				<Alert severity="info">Este usuario no tiene promociones disponibles.</Alert>
+			);
+		}
+
+		return (
+			<Box sx={{ maxHeight: "500px", overflowY: "auto" }}>
+				{/* Summary */}
+				{promotionsSummary && (
+					<Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: "wrap", gap: 1 }}>
+						<Chip label={`Total: ${promotionsSummary.total}`} size="small" variant="outlined" />
+						<Chip label={`Activas: ${promotionsSummary.active}`} size="small" color="success" variant="outlined" />
+						<Chip label={`Expiradas: ${promotionsSummary.expired}`} size="small" color="error" variant="outlined" />
+						<Chip label={`Usadas: ${promotionsSummary.redeemed}`} size="small" color="info" variant="outlined" />
+						<Chip label={`Puede usar: ${promotionsSummary.canUse}`} size="small" color="primary" variant="outlined" />
+					</Stack>
+				)}
+
+				{/* Promotions table */}
+				<TableContainer component={Paper} variant="outlined">
+					<Table size="small">
+						<TableHead>
+							<TableRow>
+								<TableCell>Código</TableCell>
+								<TableCell>Descuento</TableCell>
+								<TableCell>Estado</TableCell>
+								<TableCell>Entornos</TableCell>
+								<TableCell>Elegibilidad</TableCell>
+								<TableCell>Uso</TableCell>
+								<TableCell>Vigencia</TableCell>
+							</TableRow>
+						</TableHead>
+						<TableBody>
+							{promotionsData.map((promo) => (
+								<TableRow key={promo._id} sx={{ opacity: promo.isExpired || !promo.isActive ? 0.6 : 1 }}>
+									<TableCell>
+										<Stack spacing={0.5}>
+											<Typography variant="body2" fontWeight={600}>{promo.code}</Typography>
+											<Typography variant="caption" color="text.secondary">{promo.name}</Typography>
+											{promo.badge && (
+												<Chip label={promo.badge} size="small" color="success" sx={{ width: "fit-content", fontSize: "0.65rem", height: 20 }} />
+											)}
+										</Stack>
+									</TableCell>
+									<TableCell>
+										<Stack spacing={0.25}>
+											<Typography variant="body2" fontWeight={600}>
+												{promo.discountType === "percentage" ? `${promo.discountValue}%` : `$${promo.discountValue}`}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												{promo.duration === "once" ? "Una vez" : promo.duration === "forever" ? "Para siempre" : `${promo.durationInMonths} meses`}
+											</Typography>
+											{promo.applicablePlans.length > 0 && (
+												<Typography variant="caption" color="text.secondary">
+													Planes: {promo.applicablePlans.join(", ")}
+												</Typography>
+											)}
+										</Stack>
+									</TableCell>
+									<TableCell>{getPromotionStatusChip(promo)}</TableCell>
+									<TableCell>
+										<Stack spacing={0.5}>
+											{promo.availableInDevelopment && (
+												<Chip
+													label="Dev"
+													size="small"
+													color={promo.hasStripeDevSync ? "info" : "default"}
+													variant={promo.hasStripeDevSync ? "filled" : "outlined"}
+													sx={{ fontSize: "0.65rem", height: 20 }}
+												/>
+											)}
+											{promo.availableInProduction && (
+												<Chip
+													label="Prod"
+													size="small"
+													color={promo.hasStripeProdSync ? "primary" : "default"}
+													variant={promo.hasStripeProdSync ? "filled" : "outlined"}
+													sx={{ fontSize: "0.65rem", height: 20 }}
+												/>
+											)}
+										</Stack>
+									</TableCell>
+									<TableCell>
+										<Stack spacing={0.25}>
+											<Typography variant="caption">{getEligibilityLabel(promo.eligibilityReason)}</Typography>
+											{promo.segmentNames.length > 0 && (
+												<Typography variant="caption" color="text.secondary">
+													{promo.segmentNames.join(", ")}
+												</Typography>
+											)}
+										</Stack>
+									</TableCell>
+									<TableCell>
+										{promo.redeemedByUser ? (
+											<Stack spacing={0.25}>
+												<Chip label={`Usada (${promo.userRedemptionCount}/${promo.maxRedemptionsPerUser})`} size="small" color="info" sx={{ fontSize: "0.65rem", height: 20 }} />
+												{promo.userRedemptions.map((r, i) => (
+													<Typography key={i} variant="caption" color="text.secondary">
+														{new Date(r.redeemedAt).toLocaleDateString("es-AR")}
+														{r.planId && ` - ${r.planId}`}
+													</Typography>
+												))}
+											</Stack>
+										) : (
+											<Chip
+												label={promo.canStillUse ? "Sin usar" : "No disponible"}
+												size="small"
+												color={promo.canStillUse ? "success" : "default"}
+												variant="outlined"
+												sx={{ fontSize: "0.65rem", height: 20 }}
+											/>
+										)}
+									</TableCell>
+									<TableCell>
+										<Stack spacing={0.25}>
+											<Typography variant="caption">
+												{new Date(promo.validFrom).toLocaleDateString("es-AR")}
+											</Typography>
+											<Typography variant="caption">
+												{new Date(promo.validUntil).toLocaleDateString("es-AR")}
+											</Typography>
+										</Stack>
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</TableContainer>
+
+				{/* Promotional messages */}
+				{promotionsData.some(p => p.promotionalMessage) && (
+					<Box sx={{ mt: 2 }}>
+						<Typography variant="subtitle2" sx={{ mb: 1 }}>Mensajes promocionales</Typography>
+						<Stack spacing={1}>
+							{promotionsData.filter(p => p.promotionalMessage).map((p) => (
+								<Alert key={p._id} severity="info" icon={<DiscountShape size={18} />}>
+									<strong>{p.code}:</strong> {p.promotionalMessage}
+								</Alert>
+							))}
+						</Stack>
+					</Box>
+				)}
+			</Box>
+		);
 	};
 
 	const handleAddToSegment = async (segmentId: string) => {
@@ -2458,6 +2668,13 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 									id="user-tab-9"
 									aria-controls="user-tabpanel-9"
 								/>
+								<Tab
+									icon={<DiscountShape size={18} />}
+									iconPosition="start"
+									label="Promociones"
+									id="user-tab-10"
+									aria-controls="user-tabpanel-10"
+								/>
 								</Tabs>
 							</Box>
 
@@ -2682,6 +2899,10 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 
 							<TabPanel value={tabValue} index={9}>
 								<UserResourcesTab userId={userData?._id || userData?.id || ""} />
+							</TabPanel>
+
+							<TabPanel value={tabValue} index={10}>
+								{renderPromotions()}
 							</TabPanel>
 						</Box>
 
