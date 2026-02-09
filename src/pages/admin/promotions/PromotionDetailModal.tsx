@@ -93,6 +93,68 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 		}
 	};
 
+	const highlightedJson = useMemo(() => {
+		if (!discount) return "";
+		const isDark = theme.palette.mode === "dark";
+		const colors = {
+			key: isDark ? "#9CDCFE" : "#0451A5",
+			string: isDark ? "#CE9178" : "#A31515",
+			number: isDark ? "#B5CEA8" : "#098658",
+			boolean: isDark ? "#569CD6" : "#0000FF",
+			null: isDark ? "#569CD6" : "#0000FF",
+		};
+
+		const json = JSON.stringify(discount, null, 2);
+		const tokenRegex = /("(?:\\.|[^"\\])*")\s*:|("(?:\\.|[^"\\])*")|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|(\btrue\b|\bfalse\b)|(\bnull\b)/g;
+
+		const parts: { start: number; end: number; html: string }[] = [];
+		let match;
+		while ((match = tokenRegex.exec(json)) !== null) {
+			if (match[1] !== undefined) {
+				const keyEnd = match.index + match[1].length;
+				parts.push({ start: match.index, end: keyEnd, html: `<span style="color:${colors.key}">${match[1]}</span>` });
+			} else if (match[2] !== undefined) {
+				parts.push({
+					start: match.index,
+					end: match.index + match[2].length,
+					html: `<span style="color:${colors.string}">${match[2]}</span>`,
+				});
+			} else if (match[3] !== undefined) {
+				parts.push({
+					start: match.index,
+					end: match.index + match[3].length,
+					html: `<span style="color:${colors.number}">${match[3]}</span>`,
+				});
+			} else if (match[4] !== undefined) {
+				parts.push({
+					start: match.index,
+					end: match.index + match[4].length,
+					html: `<span style="color:${colors.boolean}">${match[4]}</span>`,
+				});
+			} else if (match[5] !== undefined) {
+				parts.push({
+					start: match.index,
+					end: match.index + match[5].length,
+					html: `<span style="color:${colors.null}">${match[5]}</span>`,
+				});
+			}
+		}
+
+		let result = "";
+		let cursor = 0;
+		for (const part of parts) {
+			if (part.start > cursor) {
+				result += escapeHtml(json.slice(cursor, part.start));
+			}
+			result += part.html;
+			cursor = part.end;
+		}
+		if (cursor < json.length) {
+			result += escapeHtml(json.slice(cursor));
+		}
+		return result;
+	}, [discount, theme.palette.mode]);
+
 	if (!discount) return null;
 
 	const formatDate = (dateString: string) => {
@@ -162,79 +224,6 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 		navigator.clipboard.writeText(JSON.stringify(discount, null, 2));
 		enqueueSnackbar("JSON copiado al portapapeles", { variant: "success" });
 	};
-
-	const highlightedJson = useMemo(() => {
-		const isDark = theme.palette.mode === "dark";
-		const colors = {
-			key: isDark ? "#9CDCFE" : "#0451A5",
-			string: isDark ? "#CE9178" : "#A31515",
-			number: isDark ? "#B5CEA8" : "#098658",
-			boolean: isDark ? "#569CD6" : "#0000FF",
-			null: isDark ? "#569CD6" : "#0000FF",
-			brace: isDark ? "#D4D4D4" : "#333333",
-		};
-
-		const json = JSON.stringify(discount, null, 2);
-		// Match JSON tokens: strings, numbers, booleans, null, and structural chars
-		const tokenRegex = /("(?:\\.|[^"\\])*")\s*:|("(?:\\.|[^"\\])*")|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|(\btrue\b|\bfalse\b)|(\bnull\b)/g;
-
-		const parts: { start: number; end: number; html: string }[] = [];
-		let match;
-		while ((match = tokenRegex.exec(json)) !== null) {
-			if (match[1] !== undefined) {
-				// Key (captured group 1 = key string before colon)
-				const keyEnd = match.index + match[1].length;
-				parts.push({
-					start: match.index,
-					end: keyEnd,
-					html: `<span style="color:${colors.key}">${match[1]}</span>`,
-				});
-			} else if (match[2] !== undefined) {
-				// String value
-				parts.push({
-					start: match.index,
-					end: match.index + match[2].length,
-					html: `<span style="color:${colors.string}">${match[2]}</span>`,
-				});
-			} else if (match[3] !== undefined) {
-				// Number
-				parts.push({
-					start: match.index,
-					end: match.index + match[3].length,
-					html: `<span style="color:${colors.number}">${match[3]}</span>`,
-				});
-			} else if (match[4] !== undefined) {
-				// Boolean
-				parts.push({
-					start: match.index,
-					end: match.index + match[4].length,
-					html: `<span style="color:${colors.boolean}">${match[4]}</span>`,
-				});
-			} else if (match[5] !== undefined) {
-				// Null
-				parts.push({
-					start: match.index,
-					end: match.index + match[5].length,
-					html: `<span style="color:${colors.null}">${match[5]}</span>`,
-				});
-			}
-		}
-
-		// Build the final HTML by interleaving plain text with highlighted tokens
-		let result = "";
-		let cursor = 0;
-		for (const part of parts) {
-			if (part.start > cursor) {
-				result += escapeHtml(json.slice(cursor, part.start));
-			}
-			result += part.html;
-			cursor = part.end;
-		}
-		if (cursor < json.length) {
-			result += escapeHtml(json.slice(cursor));
-		}
-		return result;
-	}, [discount, theme.palette.mode]);
 
 	const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
 		setTabValue(newValue);
