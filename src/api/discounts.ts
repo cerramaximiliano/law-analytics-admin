@@ -412,6 +412,8 @@ export interface UserPromotion {
 	duration: "once" | "repeating" | "forever";
 	durationInMonths?: number;
 	applicablePlans: string[];
+	// Prioridad
+	priority: number;
 }
 
 export interface UserPromotionsSummary {

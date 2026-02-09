@@ -528,6 +528,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 								<TableCell>Código</TableCell>
 								<TableCell>Descuento</TableCell>
 								<TableCell>Estado</TableCell>
+								<TableCell>Prioridad</TableCell>
 								<TableCell>Entornos</TableCell>
 								<TableCell>Elegibilidad</TableCell>
 								<TableCell>Uso</TableCell>
@@ -562,6 +563,15 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 										</Stack>
 									</TableCell>
 									<TableCell>{getPromotionStatusChip(promo)}</TableCell>
+									<TableCell align="center">
+										<Chip
+											label={promo.priority}
+											size="small"
+											color={promo.priority > 0 ? "primary" : "default"}
+											variant={promo.priority > 0 ? "filled" : "outlined"}
+											sx={{ fontSize: "0.7rem", height: 22, minWidth: 30 }}
+										/>
+									</TableCell>
 									<TableCell>
 										<Stack spacing={0.5}>
 											{promo.availableInDevelopment && (
