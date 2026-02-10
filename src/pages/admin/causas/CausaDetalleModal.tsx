@@ -60,6 +60,7 @@ import {
 	Copy,
 	Archive,
 	ArchiveSlash,
+	Refresh2,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 
@@ -177,6 +178,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 	// Estados para tab de navegación MEV
 	const [navigationCodeData, setNavigationCodeData] = useState<NavigationCodeDoc | null>(null);
 	const [loadingNavCode, setLoadingNavCode] = useState(false);
+	const [isReVerifying, setIsReVerifying] = useState(false);
 
 	// Resetear estados cuando se abre el modal
 	useEffect(() => {
@@ -236,6 +238,35 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			console.error("Error al cargar navigation code:", error);
 		} finally {
 			setLoadingNavCode(false);
+		}
+	};
+
+	// Re-encolar causa para verificación
+	const handleReVerify = async () => {
+		if (!causa) return;
+		if (!window.confirm("¿Re-encolar esta causa para verificación? El worker la procesará en su próximo ciclo.")) return;
+
+		try {
+			setIsReVerifying(true);
+			const causaId = typeof causa._id === "string" ? causa._id : causa._id.$oid;
+			const response = await CausasMEVService.reVerifyCausa(causaId);
+
+			if (response.success) {
+				enqueueSnackbar("Causa re-encolada para verificación exitosamente", {
+					variant: "success",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+				if (onCausaUpdated) onCausaUpdated();
+				onClose();
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al re-encolar causa para verificación", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			console.error(error);
+		} finally {
+			setIsReVerifying(false);
 		}
 	};
 
@@ -1715,6 +1746,23 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 										</Grid>
 									)}
 								</Grid>
+
+								{/* Botón Re-verificar */}
+								<Box sx={{ mb: 3, mt: 1 }}>
+									<Button
+										variant="outlined"
+										color="warning"
+										size="small"
+										startIcon={isReVerifying ? <CircularProgress size={16} /> : <Refresh2 size={18} />}
+										onClick={handleReVerify}
+										disabled={isReVerifying}
+									>
+										{isReVerifying ? "Re-encolando..." : "Re-verificar"}
+									</Button>
+									<Typography variant="caption" color="textSecondary" sx={{ ml: 1 }}>
+										Re-encola el expediente para que el worker lo verifique en su próximo ciclo
+									</Typography>
+								</Box>
 
 								{/* Sección 2: Ruta de navegación del worker */}
 								<Typography variant="subtitle2" color="primary" gutterBottom>
