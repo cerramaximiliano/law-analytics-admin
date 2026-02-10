@@ -448,6 +448,15 @@ class MEVWorkersService {
 		}
 	}
 
+	async getNavigationCodeByCode(code: string): Promise<{ success: boolean; data: NavigationCodeDoc }> {
+		try {
+			const response = await mevAxios.get(`/api/navigation-codes/code/${code}`);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al obtener navigation code");
+		}
+	}
+
 	async getNavigationCodes(params?: {
 		page?: number;
 		limit?: number;

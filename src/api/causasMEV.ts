@@ -71,6 +71,19 @@ export interface CausaMEV {
 	updatedAt?: { $date: string } | string;
 	updateHistory?: any[];
 	updateStats?: UpdateStatsMEV;
+	navigationCode?: string;
+	jurisdiccion?: string;
+	jurisdiccionNombre?: string;
+	organismo?: string;
+	organismoNombre?: string;
+	tipoOrganismo?: string;
+	verificacion?: {
+		verificado?: boolean;
+		estadoVerificacion?: 'pendiente' | 'en_proceso' | 'verificado' | 'error' | 'no_encontrado';
+		error?: { tipo?: string; mensaje?: string; fecha?: string };
+		intentosVerificacion?: number;
+		ultimoIntento?: string;
+	};
 }
 
 export interface CausasMEVResponse {
