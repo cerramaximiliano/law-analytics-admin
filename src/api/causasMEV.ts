@@ -272,6 +272,18 @@ export class CausasMEVService {
 	}
 
 	/**
+	 * Re-encolar causa para verificación por el worker
+	 */
+	static async reVerifyCausa(id: string): Promise<CausasMEVResponse> {
+		try {
+			const response = await mevAxios.patch(`/api/causas/${id}/re-verify`);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
 	 * Obtener estadísticas de elegibilidad para actualización MEV
 	 */
 	static async getEligibilityStats(params?: {
