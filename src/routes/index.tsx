@@ -27,6 +27,7 @@ const CredencialesPJN = Loadable(lazy(() => import("pages/admin/causas/Credencia
 // MEV pages
 const CarpetasMEVVerificadas = Loadable(lazy(() => import("pages/admin/mev/CarpetasMEVVerificadas")));
 const CarpetasMEVNoVerificadas = Loadable(lazy(() => import("pages/admin/mev/CarpetasMEVNoVerificadas")));
+const CredencialesSCBA = Loadable(lazy(() => import("pages/admin/mev/CredencialesSCBA")));
 
 // EJE pages
 const CarpetasVerificadasEje = Loadable(lazy(() => import("pages/admin/eje/CarpetasVerificadasEje")));
@@ -212,6 +213,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<CarpetasNoVerificadas />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "mev/scba-credentials",
+							element: (
+								<AdminRoleGuard>
+									<CredencialesSCBA />
 								</AdminRoleGuard>
 							),
 						},
