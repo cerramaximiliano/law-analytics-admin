@@ -102,6 +102,13 @@ const admin: NavItemType = {
 			breadcrumbs: true,
 			children: [
 				{
+					id: "mev-scba-credentials",
+					title: "Credenciales SCBA",
+					type: "item",
+					url: "/admin/mev/scba-credentials",
+					breadcrumbs: true,
+				},
+				{
 					id: "mev-verified-app",
 					title: "Carpetas Verificadas (App)",
 					type: "item",
