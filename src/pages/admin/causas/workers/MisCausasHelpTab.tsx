@@ -60,8 +60,8 @@ const MisCausasHelpTab: React.FC = () => {
 						workers automáticamente.
 					</Typography>
 					<Typography variant="body2" paragraph>
-						Toda la configuración se gestiona desde un único archivo JSON (<code>scraping-manager.config.json</code>) que soporta
-						hot-reload: los cambios se aplican sin necesidad de reiniciar el manager.
+						Toda la configuración se gestiona desde MongoDB (colección <code>scraping-manager-state</code>, documento <code>config</code>) y se
+						recarga periódicamente: los cambios se aplican sin necesidad de reiniciar el manager.
 					</Typography>
 
 					<Section title="Arquitectura">
