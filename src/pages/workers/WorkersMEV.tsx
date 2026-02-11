@@ -32,7 +32,7 @@ import {
 	useTheme,
 	alpha,
 } from "@mui/material";
-import { Edit2, TickCircle, CloseCircle, Refresh, Calendar, ArrowDown2, ArrowUp2, InfoCircle, Eye, EyeSlash, Setting2, TickSquare, DocumentUpload, Refresh2, Setting } from "iconsax-react";
+import { Edit2, TickCircle, CloseCircle, Refresh, Calendar, ArrowDown2, ArrowUp2, InfoCircle, Eye, EyeSlash, Setting2, TickSquare, DocumentUpload, Refresh2, Setting, People } from "iconsax-react";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -43,6 +43,7 @@ import { TabPanel } from "components/ui-component/TabPanel";
 import MEVWorkersService, { MEVWorkerConfig, SystemConfig } from "api/workersMEV";
 import SyncCheckTab from "./SyncCheckTab";
 import WorkerManagerTab from "./WorkerManagerTab";
+import ScbaManagerTab from "./ScbaManagerTab";
 
 interface WorkerTab {
 	label: string;
@@ -2396,6 +2397,16 @@ const MEVWorkers = () => {
 			description: "Configuracion general del sistema MEV",
 			status: "active",
 			badge: "app",
+			ip: "56.125.115.51",
+		},
+		{
+			label: "Mis Causas SCBA",
+			value: "scba",
+			icon: <People size={20} />,
+			component: <ScbaManagerTab />,
+			description: "Configuracion del scraper SCBA (notificaciones)",
+			status: "active",
+			badge: "scba",
 			ip: "56.125.115.51",
 		},
 	];
