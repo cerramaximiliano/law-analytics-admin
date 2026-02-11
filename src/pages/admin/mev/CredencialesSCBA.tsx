@@ -44,6 +44,7 @@ import {
 } from "iconsax-react";
 import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import { AddCircle } from "iconsax-react";
 import scbaCredentialsService, { ScbaCredential, ScbaCredentialsFilters } from "api/scbaCredentials";
 
 // Colores para estados
@@ -112,6 +113,9 @@ const CredencialesSCBA = () => {
 		open: false,
 		credential: null,
 	});
+	const [createDialog, setCreateDialog] = useState(false);
+	const [createForm, setCreateForm] = useState({ userId: "", username: "", password: "", description: "" });
+	const [creating, setCreating] = useState(false);
 
 	// Cargar datos
 	const fetchCredentials = async () => {
@@ -229,6 +233,29 @@ const CredencialesSCBA = () => {
 			}
 		} catch (error) {
 			enqueueSnackbar("Error al eliminar credencial", { variant: "error" });
+		}
+	};
+
+	const handleCreate = async () => {
+		if (!createForm.userId || !createForm.username || !createForm.password) {
+			enqueueSnackbar("Todos los campos son requeridos", { variant: "warning" });
+			return;
+		}
+		try {
+			setCreating(true);
+			const response = await scbaCredentialsService.createCredential(createForm);
+			if (response.success) {
+				enqueueSnackbar(response.message || "Credencial creada correctamente", { variant: "success" });
+				setCreateDialog(false);
+				setCreateForm({ userId: "", username: "", password: "", description: "" });
+				fetchCredentials();
+				fetchStats();
+			}
+		} catch (error: any) {
+			const msg = error.response?.data?.message || "Error al crear credencial";
+			enqueueSnackbar(msg, { variant: "error" });
+		} finally {
+			setCreating(false);
 		}
 	};
 
@@ -414,6 +441,15 @@ const CredencialesSCBA = () => {
 										<Refresh size={18} />
 									</IconButton>
 								</Tooltip>
+								<Button
+									variant="contained"
+									size="small"
+									color="success"
+									onClick={() => setCreateDialog(true)}
+									startIcon={<AddCircle size={16} />}
+								>
+									Nueva
+								</Button>
 							</Stack>
 						</Grid>
 					</Grid>
@@ -663,6 +699,83 @@ const CredencialesSCBA = () => {
 					<Button onClick={() => setCleanDialog({ open: false, credential: null })}>Cancelar</Button>
 					<Button onClick={handleResetAndClean} color="warning" variant="contained">
 						Resetear y limpiar
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Dialog de creación de credencial */}
+			<Dialog
+				open={createDialog}
+				onClose={() => {
+					if (!creating) {
+						setCreateDialog(false);
+						setCreateForm({ userId: "", username: "", password: "", description: "" });
+					}
+				}}
+				maxWidth="sm"
+				fullWidth
+			>
+				<DialogTitle>Nueva credencial SCBA</DialogTitle>
+				<DialogContent>
+					<DialogContentText sx={{ mb: 2 }}>
+						Ingresá los datos de la credencial SCBA para vincular a un usuario.
+					</DialogContentText>
+					<Stack spacing={2} sx={{ mt: 1 }}>
+						<TextField
+							fullWidth
+							label="User ID"
+							placeholder="ObjectId del usuario"
+							value={createForm.userId}
+							onChange={(e) => setCreateForm({ ...createForm, userId: e.target.value })}
+							disabled={creating}
+							required
+						/>
+						<TextField
+							fullWidth
+							label="Domicilio electrónico"
+							placeholder="Usuario SCBA (ej: 20XXXXXXXX3)"
+							value={createForm.username}
+							onChange={(e) => setCreateForm({ ...createForm, username: e.target.value })}
+							disabled={creating}
+							required
+						/>
+						<TextField
+							fullWidth
+							label="Contraseña"
+							type="password"
+							value={createForm.password}
+							onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+							disabled={creating}
+							required
+						/>
+						<TextField
+							fullWidth
+							label="Descripción (opcional)"
+							placeholder="Nota o descripción"
+							value={createForm.description}
+							onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+							disabled={creating}
+						/>
+					</Stack>
+				</DialogContent>
+				<DialogActions>
+					<Button
+						onClick={() => {
+							setCreateDialog(false);
+							setCreateForm({ userId: "", username: "", password: "", description: "" });
+						}}
+						disabled={creating}
+					>
+						Cancelar
+					</Button>
+					<Button
+						onClick={handleCreate}
+						variant="contained"
+						color="success"
+						disabled={creating || !createForm.userId || !createForm.username || !createForm.password}
+						startIcon={creating ? <CircularProgress size={16} /> : undefined}
+					>
+						{creating ? "Creando..." : "Crear"}
 					</Button>
 				</DialogActions>
 			</Dialog>

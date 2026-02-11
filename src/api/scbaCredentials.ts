@@ -112,8 +112,23 @@ export interface GenericResponse {
 	data?: any;
 }
 
+export interface CreateCredentialPayload {
+	userId: string;
+	username: string;
+	password: string;
+	description?: string;
+}
+
 // Servicio de Credenciales SCBA (Admin)
 class ScbaCredentialsService {
+	/**
+	 * Crear credenciales SCBA para un usuario
+	 */
+	async createCredential(payload: CreateCredentialPayload): Promise<GenericResponse> {
+		const response = await adminAxios.post("/api/scba-credentials", payload);
+		return response.data;
+	}
+
 	/**
 	 * Obtener lista de credenciales con paginación y filtros
 	 */
