@@ -41,6 +41,7 @@ import {
   ToggleOnCircle,
   ToggleOffCircle,
   RefreshCircle,
+  AddCircle,
 } from "iconsax-react";
 import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -111,6 +112,9 @@ const CredencialesPJN = () => {
     open: boolean;
     credential: PjnCredential | null;
   }>({ open: false, credential: null });
+  const [createDialog, setCreateDialog] = useState(false);
+  const [createForm, setCreateForm] = useState({ userId: "", cuil: "", password: "" });
+  const [creating, setCreating] = useState(false);
 
   // Cargar datos
   const fetchCredentials = async () => {
@@ -218,6 +222,29 @@ const CredencialesPJN = () => {
       }
     } catch (error) {
       enqueueSnackbar("Error al eliminar credencial", { variant: "error" });
+    }
+  };
+
+  const handleCreate = async () => {
+    if (!createForm.userId || !createForm.cuil || !createForm.password) {
+      enqueueSnackbar("Todos los campos son requeridos", { variant: "warning" });
+      return;
+    }
+    try {
+      setCreating(true);
+      const response = await pjnCredentialsService.createCredential(createForm);
+      if (response.success) {
+        enqueueSnackbar(response.message || "Credencial creada correctamente", { variant: "success" });
+        setCreateDialog(false);
+        setCreateForm({ userId: "", cuil: "", password: "" });
+        fetchCredentials();
+        fetchStats();
+      }
+    } catch (error: any) {
+      const msg = error.response?.data?.message || "Error al crear credencial";
+      enqueueSnackbar(msg, { variant: "error" });
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -403,6 +430,15 @@ const CredencialesPJN = () => {
                     <Refresh size={18} />
                   </IconButton>
                 </Tooltip>
+                <Button
+                  variant="contained"
+                  size="small"
+                  color="success"
+                  onClick={() => setCreateDialog(true)}
+                  startIcon={<AddCircle size={16} />}
+                >
+                  Nueva
+                </Button>
               </Stack>
             </Grid>
           </Grid>
@@ -613,6 +649,75 @@ const CredencialesPJN = () => {
           </Button>
           <Button onClick={handleDelete} color="error" variant="contained">
             Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog de creación de credencial */}
+      <Dialog
+        open={createDialog}
+        onClose={() => {
+          if (!creating) {
+            setCreateDialog(false);
+            setCreateForm({ userId: "", cuil: "", password: "" });
+          }
+        }}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Nueva credencial PJN</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Ingresá los datos de la credencial PJN para vincular a un usuario.
+          </DialogContentText>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField
+              fullWidth
+              label="User ID"
+              placeholder="ObjectId del usuario"
+              value={createForm.userId}
+              onChange={(e) => setCreateForm({ ...createForm, userId: e.target.value })}
+              disabled={creating}
+              required
+            />
+            <TextField
+              fullWidth
+              label="CUIL"
+              placeholder="Ej: 20123456789"
+              value={createForm.cuil}
+              onChange={(e) => setCreateForm({ ...createForm, cuil: e.target.value })}
+              disabled={creating}
+              required
+            />
+            <TextField
+              fullWidth
+              label="Contraseña"
+              type="password"
+              value={createForm.password}
+              onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+              disabled={creating}
+              required
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setCreateDialog(false);
+              setCreateForm({ userId: "", cuil: "", password: "" });
+            }}
+            disabled={creating}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleCreate}
+            variant="contained"
+            color="success"
+            disabled={creating || !createForm.userId || !createForm.cuil || !createForm.password}
+            startIcon={creating ? <CircularProgress size={16} /> : undefined}
+          >
+            {creating ? "Creando..." : "Crear"}
           </Button>
         </DialogActions>
       </Dialog>
