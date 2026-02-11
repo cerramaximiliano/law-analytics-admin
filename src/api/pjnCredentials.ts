@@ -111,8 +111,22 @@ export interface GenericResponse {
   data?: any;
 }
 
+export interface CreatePjnCredentialPayload {
+  userId: string;
+  cuil: string;
+  password: string;
+}
+
 // Servicio de Credenciales PJN
 class PjnCredentialsService {
+  /**
+   * Crear credenciales PJN para un usuario
+   */
+  async createCredential(payload: CreatePjnCredentialPayload): Promise<GenericResponse> {
+    const response = await adminAxios.post("/api/pjn-credentials", payload);
+    return response.data;
+  }
+
   /**
    * Obtener lista de credenciales con paginación y filtros
    */
