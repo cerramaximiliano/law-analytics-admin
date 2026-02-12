@@ -168,6 +168,14 @@ class PjnCredentialsService {
   }
 
   /**
+   * Resetear sincronización completa (folders, causas, syncs, credencial)
+   */
+  async resetSyncData(id: string, dryRun: boolean = true): Promise<GenericResponse> {
+    const response = await adminAxios.post(`/api/pjn-credentials/${id}/reset-sync`, { dryRun });
+    return response.data;
+  }
+
+  /**
    * Eliminar credencial
    */
   async deleteCredential(id: string): Promise<GenericResponse> {

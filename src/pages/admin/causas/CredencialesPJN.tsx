@@ -42,6 +42,7 @@ import {
   ToggleOffCircle,
   RefreshCircle,
   AddCircle,
+  Broom,
 } from "iconsax-react";
 import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -115,6 +116,13 @@ const CredencialesPJN = () => {
   const [createDialog, setCreateDialog] = useState(false);
   const [createForm, setCreateForm] = useState({ userId: "", cuil: "", password: "" });
   const [creating, setCreating] = useState(false);
+  const [resetSyncDialog, setResetSyncDialog] = useState<{
+    open: boolean;
+    credential: PjnCredential | null;
+    preview: any | null;
+    loading: boolean;
+    executing: boolean;
+  }>({ open: false, credential: null, preview: null, loading: false, executing: false });
 
   // Cargar datos
   const fetchCredentials = async () => {
@@ -245,6 +253,36 @@ const CredencialesPJN = () => {
       enqueueSnackbar(msg, { variant: "error" });
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleOpenResetSync = async (credential: PjnCredential) => {
+    setResetSyncDialog({ open: true, credential, preview: null, loading: true, executing: false });
+    try {
+      const response = await pjnCredentialsService.resetSyncData(credential._id, true);
+      if (response.success) {
+        setResetSyncDialog((prev) => ({ ...prev, preview: response.data, loading: false }));
+      }
+    } catch (error) {
+      enqueueSnackbar("Error al obtener preview del reset", { variant: "error" });
+      setResetSyncDialog((prev) => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleConfirmResetSync = async () => {
+    if (!resetSyncDialog.credential) return;
+    setResetSyncDialog((prev) => ({ ...prev, executing: true }));
+    try {
+      const response = await pjnCredentialsService.resetSyncData(resetSyncDialog.credential._id, false);
+      if (response.success) {
+        enqueueSnackbar(response.message || "Sincronización reseteada correctamente", { variant: "success" });
+        setResetSyncDialog({ open: false, credential: null, preview: null, loading: false, executing: false });
+        fetchCredentials();
+        fetchStats();
+      }
+    } catch (error) {
+      enqueueSnackbar("Error al resetear sincronización", { variant: "error" });
+      setResetSyncDialog((prev) => ({ ...prev, executing: false }));
     }
   };
 
@@ -592,6 +630,15 @@ const CredencialesPJN = () => {
                               <RefreshCircle size={18} />
                             </IconButton>
                           </Tooltip>
+                          <Tooltip title="Resetear sincronización">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleOpenResetSync(cred)}
+                              color="warning"
+                            >
+                              <Broom size={18} />
+                            </IconButton>
+                          </Tooltip>
                           <Tooltip title="Eliminar">
                             <IconButton
                               size="small"
@@ -649,6 +696,92 @@ const CredencialesPJN = () => {
           </Button>
           <Button onClick={handleDelete} color="error" variant="contained">
             Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog de confirmación de reset de sincronización */}
+      <Dialog
+        open={resetSyncDialog.open}
+        onClose={() => {
+          if (!resetSyncDialog.executing) {
+            setResetSyncDialog({ open: false, credential: null, preview: null, loading: false, executing: false });
+          }
+        }}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Resetear sincronización</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿Estás seguro de resetear la sincronización de{" "}
+            <strong>{resetSyncDialog.credential?.userName}</strong> (
+            {resetSyncDialog.credential?.userEmail})?
+          </DialogContentText>
+          <Box component="ul" sx={{ mt: 1, pl: 2 }}>
+            <li>
+              <Typography variant="body2">
+                Eliminará los folders creados por la sincronización PJN
+              </Typography>
+            </li>
+            <li>
+              <Typography variant="body2">
+                Eliminará las causas creadas exclusivamente por esta sincronización
+              </Typography>
+            </li>
+            <li>
+              <Typography variant="body2">
+                Desvinculará al usuario de causas compartidas
+              </Typography>
+            </li>
+            <li>
+              <Typography variant="body2">
+                Reseteará el estado de sincronización
+              </Typography>
+            </li>
+          </Box>
+          {resetSyncDialog.loading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : resetSyncDialog.preview ? (
+            <Box sx={{ mt: 2, p: 1.5, bgcolor: "action.hover", borderRadius: 1 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                Datos afectados:
+              </Typography>
+              <Typography variant="body2">
+                Folders a eliminar: <strong>{resetSyncDialog.preview.folders?.total || 0}</strong>
+                {" "}({resetSyncDialog.preview.folders?.active || 0} activos, {resetSyncDialog.preview.folders?.archived || 0} archivados)
+              </Typography>
+              <Typography variant="body2">
+                Causas a eliminar: <strong>{resetSyncDialog.preview.causas?.toDelete || 0}</strong>
+              </Typography>
+              <Typography variant="body2">
+                Causas a desvincular: <strong>{resetSyncDialog.preview.causas?.toUnlink || 0}</strong>
+              </Typography>
+              <Typography variant="body2">
+                Registros de sync: <strong>{resetSyncDialog.preview.syncsToDelete || 0}</strong>
+              </Typography>
+            </Box>
+          ) : null}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() =>
+              setResetSyncDialog({ open: false, credential: null, preview: null, loading: false, executing: false })
+            }
+            disabled={resetSyncDialog.executing}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleConfirmResetSync}
+            color="warning"
+            variant="contained"
+            disabled={resetSyncDialog.loading || resetSyncDialog.executing}
+            startIcon={resetSyncDialog.executing ? <CircularProgress size={16} /> : undefined}
+          >
+            {resetSyncDialog.executing ? "Reseteando..." : "Resetear sincronización"}
           </Button>
         </DialogActions>
       </Dialog>
