@@ -92,7 +92,7 @@ const WorkersConfig = () => {
 			description: "Gestión del scraping de Mis Causas PJN (login SSO)",
 			status: "inactive",
 			badge: "worker_02",
-			ip: "100.111.73.56",
+			ip: "100.98.180.101",
 		},
 	];
 

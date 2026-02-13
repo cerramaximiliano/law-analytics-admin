@@ -2406,8 +2406,8 @@ const MEVWorkers = () => {
 			component: <ScbaManagerTab />,
 			description: "Configuracion del scraper SCBA (notificaciones)",
 			status: "active",
-			badge: "scba",
-			ip: "56.125.115.51",
+			badge: "worker_02",
+			ip: "100.98.180.101",
 		},
 	];
 
