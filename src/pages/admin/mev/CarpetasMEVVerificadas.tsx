@@ -531,7 +531,7 @@ const CarpetasMEVVerificadas = () => {
 										</Box>
 										{/* Chips */}
 										<Stack direction="row" spacing={1} flexWrap="wrap" sx={{ "& > *": { my: 0.25 } }}>
-											<Tooltip title="Actualizadas hoy sin errores (scraping exitoso)">
+											<Tooltip title="Actualizadas hoy: causas scrapeadas con éxito hoy (aunque después hayan tenido un error, mantienen este estado)">
 												<Chip
 													icon={<TickCircle size={14} variant="Bold" />}
 													label={eligibilityStats.updatedToday.toLocaleString()}
@@ -540,7 +540,7 @@ const CarpetasMEVVerificadas = () => {
 													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
 												/>
 											</Tooltip>
-											<Tooltip title="Pendientes: elegibles aún no actualizadas hoy y sin errores">
+											<Tooltip title="Pendientes: elegibles que aún no fueron actualizadas hoy ni tienen errores">
 												<Chip
 													icon={<Timer size={14} />}
 													label={
@@ -552,7 +552,7 @@ const CarpetasMEVVerificadas = () => {
 													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
 												/>
 											</Tooltip>
-											<Tooltip title="Con error en el último scraping (cooldown 30 min, se reintentan automáticamente)">
+											<Tooltip title="Con error: fallaron en el scraping y NO tuvieron éxito hoy (cooldown 30 min, se reintentan automáticamente)">
 												<Chip
 													icon={<CloseSquare size={14} variant="Bold" />}
 													label={eligibilityStats.eligibleWithErrors.toLocaleString()}
