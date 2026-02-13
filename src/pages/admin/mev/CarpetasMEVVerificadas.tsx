@@ -797,6 +797,7 @@ const CarpetasMEVVerificadas = () => {
 											<TableCell>Última Act.</TableCell>
 											<TableCell>Fecha Últ. Mov.</TableCell>
 											<TableCell align="center">Actualizable</TableCell>
+											<TableCell align="center">Estado</TableCell>
 											<TableCell align="center">Acciones</TableCell>
 										</TableRow>
 									</TableHead>
@@ -897,6 +898,47 @@ const CarpetasMEVVerificadas = () => {
 													) : (
 														<CloseSquare size={20} color="#d32f2f" variant="Bold" />
 													)}
+												</TableCell>
+												<TableCell align="center">
+													{(() => {
+														const estado = causa.verificacion?.estadoVerificacion || "pendiente";
+														const colorMap: Record<string, "success" | "error" | "warning" | "info"> = {
+															verificado: "success",
+															error: "error",
+															no_encontrado: "error",
+															pendiente: "warning",
+															en_proceso: "info",
+														};
+														const labelMap: Record<string, string> = {
+															verificado: "Verificado",
+															error: "Error",
+															no_encontrado: "No encontrado",
+															pendiente: "Pendiente",
+															en_proceso: "En proceso",
+														};
+														const iconMap: Record<string, JSX.Element> = {
+															verificado: <TickCircle size={14} variant="Bold" />,
+															error: <CloseSquare size={14} variant="Bold" />,
+															no_encontrado: <CloseSquare size={14} variant="Bold" />,
+															pendiente: <Timer size={14} />,
+															en_proceso: <Timer size={14} />,
+														};
+														const errorMsg = causa.verificacion?.error;
+														const tooltipText = errorMsg?.mensaje
+															? `${errorMsg.mensaje}${errorMsg.fecha ? ` (${new Date(errorMsg.fecha).toLocaleString("es-AR")})` : ""}`
+															: "";
+														return (
+															<Tooltip title={tooltipText} arrow disableHoverListener={!tooltipText}>
+																<Chip
+																	icon={iconMap[estado]}
+																	label={labelMap[estado] || estado}
+																	color={colorMap[estado] || "default"}
+																	size="small"
+																	sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
+																/>
+															</Tooltip>
+														);
+													})()}
 												</TableCell>
 												<TableCell align="center">
 													<Stack direction="row" spacing={0.5} justifyContent="center">
