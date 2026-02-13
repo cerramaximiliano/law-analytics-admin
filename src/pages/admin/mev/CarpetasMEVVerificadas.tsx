@@ -531,7 +531,7 @@ const CarpetasMEVVerificadas = () => {
 										</Box>
 										{/* Chips */}
 										<Stack direction="row" spacing={1} flexWrap="wrap" sx={{ "& > *": { my: 0.25 } }}>
-											<Tooltip title="Causas actualizadas hoy">
+											<Tooltip title="Actualizadas hoy sin errores (scraping exitoso)">
 												<Chip
 													icon={<TickCircle size={14} variant="Bold" />}
 													label={eligibilityStats.updatedToday.toLocaleString()}
@@ -540,7 +540,7 @@ const CarpetasMEVVerificadas = () => {
 													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
 												/>
 											</Tooltip>
-											<Tooltip title="Causas pendientes de actualizar hoy">
+											<Tooltip title="Pendientes: elegibles aún no actualizadas hoy y sin errores">
 												<Chip
 													icon={<Timer size={14} />}
 													label={
@@ -552,7 +552,7 @@ const CarpetasMEVVerificadas = () => {
 													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
 												/>
 											</Tooltip>
-											<Tooltip title="Causas con errores">
+											<Tooltip title="Con error en el último scraping (cooldown 30 min, se reintentan automáticamente)">
 												<Chip
 													icon={<CloseSquare size={14} variant="Bold" />}
 													label={eligibilityStats.eligibleWithErrors.toLocaleString()}
@@ -561,7 +561,7 @@ const CarpetasMEVVerificadas = () => {
 													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
 												/>
 											</Tooltip>
-											<Tooltip title={`Total elegibles: ${eligibilityStats.eligible.toLocaleString()}`}>
+											<Tooltip title="Total elegibles para actualización (actualizables, verificadas, source app). Suma de actualizadas + pendientes + con errores">
 												<Chip
 													label={`${eligibilityStats.eligible.toLocaleString()} elegibles`}
 													size="small"
