@@ -348,7 +348,7 @@ const CronConfigPage = () => {
 									<Typography variant="caption" color="text.secondary">
 										Recordatorios
 									</Typography>
-									<Typography variant="h3" color="warning.main" sx={{ color: "rgba(0, 0, 0, 0.87)" }}>
+									<Typography variant="h3" color="warning.main" sx={{ color: "text.primary" }}>
 										{config?.config?.gracePeriod?.reminderDays?.length || 0}
 									</Typography>
 								</Stack>

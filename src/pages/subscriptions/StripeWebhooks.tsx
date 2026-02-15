@@ -365,7 +365,7 @@ const StripeWebhooks = () => {
 									{data.pending_details.map((webhook) => (
 										<TableRow key={webhook.id}>
 											<TableCell>
-												<Chip label={webhook.type} size="small" color="warning" sx={{ color: "rgba(0, 0, 0, 0.87)" }} />
+												<Chip label={webhook.type} size="small" color="warning" sx={{ color: "text.primary" }} />
 											</TableCell>
 											<TableCell>
 												{webhook.probable_failed_endpoints && webhook.probable_failed_endpoints.length > 0 ? (

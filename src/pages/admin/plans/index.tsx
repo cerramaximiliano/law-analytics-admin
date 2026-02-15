@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTheme } from "@mui/material/styles";
 import {
 	Alert,
 	Box,
@@ -35,6 +36,7 @@ import PlanDetailModal from "./PlanDetailModal";
 import UpdatePriceModal from "./UpdatePriceModal";
 
 const PlansManagement = () => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
 	const [plans, setPlans] = useState<Plan[]>([]);
@@ -256,7 +258,7 @@ const PlansManagement = () => {
 								<Typography variant="body2" paragraph sx={{ fontSize: "0.875rem" }}>
 									<strong>1. Primera instalación:</strong>
 									<br />• Ejecutar:{" "}
-									<code style={{ backgroundColor: "rgba(0,0,0,0.1)", padding: "2px 4px", borderRadius: "3px", fontSize: "0.8rem" }}>
+									<code style={{ backgroundColor: theme.palette.action.hover, padding: "2px 4px", borderRadius: "3px", fontSize: "0.8rem" }}>
 										node scripts/initializePlanConfigs.js
 									</code>
 									<br />• Crea productos iniciales en Stripe y MongoDB

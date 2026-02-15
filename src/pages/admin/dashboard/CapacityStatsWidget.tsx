@@ -293,7 +293,7 @@ const CapacityStatsWidget: React.FC<CapacityStatsWidgetProps> = ({ onRefresh }) 
 						disabled={loading}
 						sx={{
 							bgcolor: COLORS.primary.main,
-							color: "white",
+							color: "common.white",
 							fontWeight: "bold",
 							"&:hover": { bgcolor: COLORS.primary.light },
 							cursor: "pointer",

@@ -864,9 +864,9 @@ const CarpetasMEVVerificadas = () => {
 																				fontSize: "0.75rem",
 																				fontWeight: 700,
 																				backgroundColor: "success.main",
-																				color: "white",
+																				color: "common.white",
 																				"& .MuiChip-icon": {
-																					color: "white",
+																					color: "common.white",
 																					marginLeft: "6px",
 																				},
 																				"& .MuiChip-label": {

@@ -391,7 +391,7 @@ const CarpetasVerificadas = () => {
 														size="small"
 														sx={{
 															...(causa.fuero === "CSS" && {
-																color: "rgba(0, 0, 0, 0.87)",
+																color: "text.primary",
 															}),
 														}}
 													/>
