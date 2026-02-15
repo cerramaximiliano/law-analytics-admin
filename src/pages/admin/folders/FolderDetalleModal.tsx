@@ -57,10 +57,12 @@ const STATUS_COLORS: Record<string, "primary" | "success" | "warning" | "error" 
 };
 
 import { useState } from "react";
+import { useTheme } from "@mui/material/styles";
 
 const FolderDetalleModal = ({ open, onClose, folder }: FolderDetalleModalProps) => {
 	const { enqueueSnackbar } = useSnackbar();
 	const [activeTab, setActiveTab] = useState(0);
+	const theme = useTheme();
 
 	if (!folder) return null;
 
@@ -253,9 +255,9 @@ const FolderDetalleModal = ({ open, onClose, folder }: FolderDetalleModalProps) 
 										</Typography>
 										<Box>
 											{folder.causaVerified ? (
-												<TickCircle size={20} color="#2e7d32" variant="Bold" />
+												<TickCircle size={20} color={theme.palette.success.dark} variant="Bold" />
 											) : (
-												<CloseSquare size={20} color="#d32f2f" variant="Bold" />
+												<CloseSquare size={20} color={theme.palette.error.main} variant="Bold" />
 											)}
 										</Box>
 									</Grid>
@@ -265,9 +267,9 @@ const FolderDetalleModal = ({ open, onClose, folder }: FolderDetalleModalProps) 
 										</Typography>
 										<Box>
 											{folder.causaIsValid ? (
-												<TickCircle size={20} color="#2e7d32" variant="Bold" />
+												<TickCircle size={20} color={theme.palette.success.dark} variant="Bold" />
 											) : (
-												<CloseSquare size={20} color="#d32f2f" variant="Bold" />
+												<CloseSquare size={20} color={theme.palette.error.main} variant="Bold" />
 											)}
 										</Box>
 									</Grid>
@@ -277,9 +279,9 @@ const FolderDetalleModal = ({ open, onClose, folder }: FolderDetalleModalProps) 
 										</Typography>
 										<Box>
 											{folder.causaUpdateEnabled ? (
-												<TickCircle size={20} color="#2e7d32" variant="Bold" />
+												<TickCircle size={20} color={theme.palette.success.dark} variant="Bold" />
 											) : (
-												<CloseSquare size={20} color="#d32f2f" variant="Bold" />
+												<CloseSquare size={20} color={theme.palette.error.main} variant="Bold" />
 											)}
 										</Box>
 									</Grid>

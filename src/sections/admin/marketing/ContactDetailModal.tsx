@@ -677,9 +677,9 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 													</Typography>
 													<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
 														{contact.isAppUser ? (
-															<TickCircle size={20} color="#4caf50" variant="Bold" />
+															<TickCircle size={20} color={theme.palette.success.main} variant="Bold" />
 														) : (
-															<CloseCircle size={20} color="#f44336" variant="Bold" />
+															<CloseCircle size={20} color={theme.palette.error.main} variant="Bold" />
 														)}
 													</Box>
 												</Grid>
@@ -689,9 +689,9 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 													</Typography>
 													<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
 														{contact.isVerified ? (
-															<TickCircle size={20} color="#4caf50" variant="Bold" />
+															<TickCircle size={20} color={theme.palette.success.main} variant="Bold" />
 														) : (
-															<CloseCircle size={20} color="#f44336" variant="Bold" />
+															<CloseCircle size={20} color={theme.palette.error.main} variant="Bold" />
 														)}
 													</Box>
 												</Grid>
@@ -718,9 +718,9 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 													</Typography>
 													<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
 														{contact.isEmailVerified ? (
-															<TickCircle size={20} color="#4caf50" variant="Bold" />
+															<TickCircle size={20} color={theme.palette.success.main} variant="Bold" />
 														) : (
-															<CloseCircle size={20} color="#f44336" variant="Bold" />
+															<CloseCircle size={20} color={theme.palette.error.main} variant="Bold" />
 														)}
 													</Box>
 												</Grid>

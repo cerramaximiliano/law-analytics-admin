@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTheme } from "@mui/material/styles";
 import {
 	Alert,
 	Box,
@@ -29,6 +30,7 @@ import PromotionDetailModal from "./PromotionDetailModal";
 import DeletePromotionDialog from "./DeletePromotionDialog";
 
 const PromotionsManagement = () => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
 	const [discounts, setDiscounts] = useState<DiscountCode[]>([]);
@@ -346,8 +348,8 @@ const PromotionsManagement = () => {
 															size="small"
 															color="warning"
 															sx={{
-																"& .MuiChip-icon": { color: "#000" },
-																color: "#000"
+																"& .MuiChip-icon": { color: theme.palette.text.primary },
+																color: theme.palette.text.primary
 															}}
 														/>
 													</Tooltip>

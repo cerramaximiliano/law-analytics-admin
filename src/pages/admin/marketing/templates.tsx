@@ -272,22 +272,22 @@ const highlightVariables = (code: string, theme: any): React.ReactNode[] => {
 				style={{
 					backgroundColor: isValid
 						? theme.palette.mode === "dark"
-							? "rgba(46, 125, 50, 0.3)"
-							: "rgba(76, 175, 80, 0.2)"
+							? `${theme.palette.success.dark}4D`
+							: `${theme.palette.success.main}33`
 						: theme.palette.mode === "dark"
-						? "rgba(211, 47, 47, 0.3)"
-						: "rgba(244, 67, 54, 0.2)",
+						? `${theme.palette.error.dark}4D`
+						: `${theme.palette.error.main}33`,
 					color: isValid
 						? theme.palette.mode === "dark"
-							? "#81c784"
-							: "#2e7d32"
+							? theme.palette.success.light
+							: theme.palette.success.dark
 						: theme.palette.mode === "dark"
-						? "#ef5350"
-						: "#c62828",
+						? theme.palette.error.light
+						: theme.palette.error.dark,
 					borderRadius: "3px",
 					padding: "1px 4px",
 					fontWeight: 500,
-					border: `1px solid ${isValid ? (theme.palette.mode === "dark" ? "#4caf50" : "#81c784") : theme.palette.mode === "dark" ? "#f44336" : "#ef5350"}`,
+					border: `1px solid ${isValid ? (theme.palette.mode === "dark" ? theme.palette.success.main : theme.palette.success.light) : theme.palette.mode === "dark" ? theme.palette.error.main : theme.palette.error.light}`,
 				}}
 			>
 				{fullMatch}
@@ -1031,14 +1031,14 @@ const EmailTemplates = () => {
 			const matchText = html.substring(pos, pos + searchLen).replace(/</g, "&lt;").replace(/>/g, "&gt;");
 			const isCurrent = idx === viewCurrentSearchIndex;
 			result += textBefore;
-			result += `<mark class="${isCurrent ? "current" : ""}" style="background-color: ${isCurrent ? "#FFEB3B" : "#FFF59D"}; color: #000;">${matchText}</mark>`;
+			result += `<mark class="${isCurrent ? "current" : ""}" style="background-color: ${isCurrent ? theme.palette.warning.light : theme.palette.warning.lighter}; color: ${theme.palette.text.primary};">${matchText}</mark>`;
 			lastIndex = pos + searchLen;
 		});
 
 		// Add remaining text
 		result += html.substring(lastIndex).replace(/</g, "&lt;").replace(/>/g, "&gt;");
 		return result;
-	}, [selectedTemplate, viewHtmlSearchQuery, viewHtmlSearchResults, viewCurrentSearchIndex]);
+	}, [selectedTemplate, viewHtmlSearchQuery, viewHtmlSearchResults, viewCurrentSearchIndex, theme]);
 
 	// Handle template field changes
 	const handleTemplateChange = (field: keyof NewEmailTemplate, value: string | boolean | string[]) => {
@@ -2173,12 +2173,12 @@ const EmailTemplates = () => {
 														fontFamily: "monospace",
 														fontSize: "0.875rem",
 														"&::selection": {
-															backgroundColor: "#FFEB3B",
-															color: "#000",
+															backgroundColor: "warning.light",
+															color: "text.primary",
 														},
 														"&::-moz-selection": {
-															backgroundColor: "#FFEB3B",
-															color: "#000",
+															backgroundColor: "warning.light",
+															color: "text.primary",
 														},
 													},
 												}}
@@ -2687,9 +2687,9 @@ const EmailTemplates = () => {
 																	sx={{
 																		fontFamily: "monospace",
 																		fontSize: "0.7rem",
-																		backgroundColor: theme.palette.mode === "dark" ? "rgba(46, 125, 50, 0.3)" : "rgba(76, 175, 80, 0.15)",
-																		color: theme.palette.mode === "dark" ? "#81c784" : "#2e7d32",
-																		border: `1px solid ${theme.palette.mode === "dark" ? "#4caf50" : "#81c784"}`,
+																		backgroundColor: theme.palette.mode === "dark" ? `${theme.palette.success.dark}4D` : `${theme.palette.success.main}26`,
+																		color: theme.palette.mode === "dark" ? theme.palette.success.light : theme.palette.success.dark,
+																		border: `1px solid ${theme.palette.mode === "dark" ? theme.palette.success.main : theme.palette.success.light}`,
 																	}}
 																/>
 															))}
@@ -2710,9 +2710,9 @@ const EmailTemplates = () => {
 																		sx={{
 																			fontFamily: "monospace",
 																			fontSize: "0.7rem",
-																			backgroundColor: theme.palette.mode === "dark" ? "rgba(211, 47, 47, 0.3)" : "rgba(244, 67, 54, 0.15)",
-																			color: theme.palette.mode === "dark" ? "#ef5350" : "#c62828",
-																			border: `1px solid ${theme.palette.mode === "dark" ? "#f44336" : "#ef5350"}`,
+																			backgroundColor: theme.palette.mode === "dark" ? `${theme.palette.error.dark}4D` : `${theme.palette.error.main}26`,
+																			color: theme.palette.mode === "dark" ? theme.palette.error.light : theme.palette.error.dark,
+																			border: `1px solid ${theme.palette.mode === "dark" ? theme.palette.error.main : theme.palette.error.light}`,
 																		}}
 																	/>
 																</Tooltip>

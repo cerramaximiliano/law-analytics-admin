@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { alpha, useTheme } from "@mui/material/styles";
 
 // material-ui
 import {
@@ -160,7 +161,7 @@ interface CampaignContactsListProps {
 }
 
 const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: CampaignContactsListProps) => {
-	// const theme = useTheme();
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
 	// State for contacts data
@@ -617,7 +618,7 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 									left: 0,
 									right: 0,
 									bottom: 0,
-									backgroundColor: "rgba(255, 255, 255, 0.7)",
+									backgroundColor: alpha(theme.palette.background.paper, 0.7),
 									display: "flex",
 									alignItems: "center",
 									justifyContent: "center",

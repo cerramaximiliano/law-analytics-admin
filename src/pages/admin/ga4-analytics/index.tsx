@@ -201,20 +201,23 @@ const DocTableCell: React.FC<{ children: React.ReactNode; tooltip?: string; alig
 	children,
 	tooltip,
 	align = "left",
-}) => (
-	<TableCell align={align}>
-		<Box sx={{ display: "flex", alignItems: "center", gap: 0.5, justifyContent: align === "right" ? "flex-end" : align === "center" ? "center" : "flex-start" }}>
-			{children}
-			{tooltip && (
-				<Tooltip title={tooltip} arrow placement="top">
-					<Box sx={{ display: "flex", cursor: "help" }}>
-						<InfoCircle size={14} color={COLORS.neutral.light} />
-					</Box>
-				</Tooltip>
-			)}
-		</Box>
-	</TableCell>
-);
+}) => {
+	const theme = useTheme();
+	return (
+		<TableCell align={align}>
+			<Box sx={{ display: "flex", alignItems: "center", gap: 0.5, justifyContent: align === "right" ? "flex-end" : align === "center" ? "center" : "flex-start" }}>
+				{children}
+				{tooltip && (
+					<Tooltip title={tooltip} arrow placement="top">
+						<Box sx={{ display: "flex", cursor: "help" }}>
+							<InfoCircle size={14} color={theme.palette.text.secondary} />
+						</Box>
+					</Tooltip>
+				)}
+			</Box>
+		</TableCell>
+	);
+};
 
 // Descripciones de eventos
 const EVENT_DESCRIPTIONS: Record<string, string> = {
@@ -326,8 +329,9 @@ interface MetricCardProps {
 	metricKey?: keyof typeof METRIC_DESCRIPTIONS;
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, loading, color = COLORS.primary.main, subtitle, metricKey }) => {
+const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, loading, color, subtitle, metricKey }) => {
 	const theme = useTheme();
+	const resolvedColor = color || theme.palette.primary.main;
 	const metricInfo = metricKey ? METRIC_DESCRIPTIONS[metricKey] : null;
 
 	const cardContent = (
@@ -341,12 +345,12 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, loading, co
 				height: "100%",
 				cursor: metricInfo ? "help" : "default",
 				transition: "border-color 0.2s",
-				"&:hover": metricInfo ? { borderColor: alpha(COLORS.primary.main, 0.5) } : {},
+				"&:hover": metricInfo ? { borderColor: alpha(theme.palette.primary.main, 0.5) } : {},
 			}}
 		>
 			<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-				<Box sx={{ color: COLORS.neutral.light, display: "flex" }}>{icon}</Box>
-				<Typography variant="body2" sx={{ color: COLORS.neutral.text, fontWeight: 500 }}>
+				<Box sx={{ color: theme.palette.text.secondary, display: "flex" }}>{icon}</Box>
+				<Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontWeight: 500 }}>
 					{title}
 				</Typography>
 			</Box>
@@ -354,7 +358,7 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, loading, co
 				<Skeleton variant="text" width={80} height={48} />
 			) : (
 				<>
-					<Typography variant="h3" sx={{ fontWeight: 700, color, lineHeight: 1 }}>
+					<Typography variant="h3" sx={{ fontWeight: 700, color: resolvedColor, lineHeight: 1 }}>
 						{typeof value === "number" ? value.toLocaleString() : value}
 					</Typography>
 					{subtitle && (
@@ -449,8 +453,8 @@ const ChartCard: React.FC<ChartCardProps> = ({ title, icon, children, height = 2
 								width: 20,
 								height: 20,
 								borderRadius: "50%",
-								bgcolor: alpha(COLORS.primary.main, 0.1),
-								color: COLORS.primary.main,
+								bgcolor: alpha(theme.palette.primary.main, 0.1),
+								color: theme.palette.primary.main,
 								fontSize: 12,
 								fontWeight: 600,
 								cursor: "help",
@@ -499,14 +503,14 @@ const RealtimeCard: React.FC<RealtimeCardProps> = ({ activeUsers, loading }) => 
 				sx={{
 					p: 2.5,
 					borderRadius: 2,
-					bgcolor: alpha(COLORS.success.main, 0.05),
-					border: `1px solid ${alpha(COLORS.success.main, 0.2)}`,
+					bgcolor: alpha(theme.palette.success.main, 0.05),
+					border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
 					height: "100%",
 					position: "relative",
 					overflow: "hidden",
 					cursor: "help",
 					transition: "border-color 0.2s",
-					"&:hover": { borderColor: alpha(COLORS.success.main, 0.5) },
+					"&:hover": { borderColor: alpha(theme.palette.success.main, 0.5) },
 				}}
 			>
 				<Box
@@ -517,7 +521,7 @@ const RealtimeCard: React.FC<RealtimeCardProps> = ({ activeUsers, loading }) => 
 						width: 8,
 						height: 8,
 						borderRadius: "50%",
-						bgcolor: COLORS.success.main,
+						bgcolor: theme.palette.success.main,
 						animation: "pulse 2s infinite",
 						"@keyframes pulse": {
 							"0%": { opacity: 1, transform: "scale(1)" },
@@ -527,15 +531,15 @@ const RealtimeCard: React.FC<RealtimeCardProps> = ({ activeUsers, loading }) => 
 					}}
 				/>
 				<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-					<Activity size={20} color={COLORS.success.main} variant="Bold" />
-					<Typography variant="body2" sx={{ color: COLORS.neutral.text, fontWeight: 500 }}>
+					<Activity size={20} color={theme.palette.success.main} variant="Bold" />
+					<Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontWeight: 500 }}>
 						Usuarios Activos Ahora
 					</Typography>
 				</Box>
 				{loading ? (
 					<Skeleton variant="text" width={60} height={64} />
 				) : (
-					<Typography variant="h2" sx={{ fontWeight: 700, color: COLORS.success.main }}>
+					<Typography variant="h2" sx={{ fontWeight: 700, color: theme.palette.success.main }}>
 						{activeUsers}
 					</Typography>
 				)}
@@ -583,9 +587,9 @@ const FunnelStep: React.FC<FunnelStepProps> = ({ step, users, conversionRate, is
 			</Box>
 			{!isLast && (
 				<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 60 }}>
-					<ArrowDown size={20} color={COLORS.neutral.light} />
+					<ArrowDown size={20} color={theme.palette.text.secondary} />
 					{!loading && (
-						<Typography variant="caption" sx={{ color: conversionRate >= 50 ? COLORS.success.main : COLORS.warning.main, fontWeight: 600 }}>
+						<Typography variant="caption" sx={{ color: conversionRate >= 50 ? theme.palette.success.main : theme.palette.warning.main, fontWeight: 600 }}>
 							{conversionRate}%
 						</Typography>
 					)}
@@ -867,11 +871,11 @@ const GA4Dashboard = () => {
 					p: 2,
 					mb: 3,
 					borderRadius: 2,
-					bgcolor: alpha(COLORS.primary.main, 0.05),
-					border: `1px solid ${alpha(COLORS.primary.main, 0.1)}`,
+					bgcolor: alpha(theme.palette.primary.main, 0.05),
+					border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
 				}}
 			>
-				<Typography variant="subtitle2" sx={{ color: COLORS.primary.main, mb: 1 }}>
+				<Typography variant="subtitle2" sx={{ color: theme.palette.primary.main, mb: 1 }}>
 					Guía de Métricas - Pasa el cursor sobre cualquier tarjeta o gráfico para ver su descripción
 				</Typography>
 				<Grid container spacing={2}>
@@ -910,7 +914,7 @@ const GA4Dashboard = () => {
 						value={data?.overview.newUsers || 0}
 						icon={<People size={20} />}
 						loading={loading}
-						color={COLORS.success.main}
+						color={theme.palette.success.main}
 						metricKey="newUsers"
 					/>
 				</Grid>
@@ -937,7 +941,7 @@ const GA4Dashboard = () => {
 						value={`${((data?.overview.bounceRate || 0) * 100).toFixed(1)}%`}
 						icon={<ArrowRight size={20} />}
 						loading={loading}
-						color={COLORS.warning.main}
+						color={theme.palette.warning.main}
 						metricKey="bounceRate"
 					/>
 				</Grid>
@@ -947,7 +951,7 @@ const GA4Dashboard = () => {
 						value={data?.overview.engagedSessions || 0}
 						icon={<Mouse size={20} />}
 						loading={loading}
-						color={COLORS.success.main}
+						color={theme.palette.success.main}
 						metricKey="engagedSessions"
 					/>
 				</Grid>
@@ -1253,11 +1257,11 @@ const GA4Dashboard = () => {
 								sx={{
 									p: 2,
 									borderRadius: 2,
-									bgcolor: alpha(COLORS.primary.main, 0.05),
-									border: `1px solid ${alpha(COLORS.primary.main, 0.1)}`,
+									bgcolor: alpha(theme.palette.primary.main, 0.05),
+									border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
 								}}
 							>
-								<Typography variant="subtitle2" sx={{ color: COLORS.primary.main, mb: 1 }}>
+								<Typography variant="subtitle2" sx={{ color: theme.palette.primary.main, mb: 1 }}>
 									¿Cómo interpretar estos datos?
 								</Typography>
 								<Grid container spacing={2}>
@@ -1433,11 +1437,11 @@ const GA4Dashboard = () => {
 								sx={{
 									p: 2,
 									borderRadius: 2,
-									bgcolor: alpha(COLORS.primary.main, 0.05),
-									border: `1px solid ${alpha(COLORS.primary.main, 0.1)}`,
+									bgcolor: alpha(theme.palette.primary.main, 0.05),
+									border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
 								}}
 							>
-								<Typography variant="subtitle2" sx={{ color: COLORS.primary.main, mb: 1 }}>
+								<Typography variant="subtitle2" sx={{ color: theme.palette.primary.main, mb: 1 }}>
 									¿Cómo interpretar estos datos?
 								</Typography>
 								<Grid container spacing={2}>
@@ -1526,7 +1530,7 @@ const GA4Dashboard = () => {
 														</Tooltip>
 													</TableCell>
 													<TableCell align="center">
-														<ArrowRight size={16} color={COLORS.primary.main} />
+														<ArrowRight size={16} color={theme.palette.primary.main} />
 													</TableCell>
 													<TableCell sx={{ maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
 														<Tooltip title={flow?.toPage || ""}>
@@ -1622,11 +1626,11 @@ const GA4Dashboard = () => {
 								sx={{
 									p: 2,
 									borderRadius: 2,
-									bgcolor: alpha(COLORS.primary.main, 0.05),
-									border: `1px solid ${alpha(COLORS.primary.main, 0.1)}`,
+									bgcolor: alpha(theme.palette.primary.main, 0.05),
+									border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
 								}}
 							>
-								<Typography variant="subtitle2" sx={{ color: COLORS.primary.main, mb: 1 }}>
+								<Typography variant="subtitle2" sx={{ color: theme.palette.primary.main, mb: 1 }}>
 									Constructor de Funnels Personalizado
 								</Typography>
 								<Typography variant="body2" color="textSecondary">
@@ -1802,25 +1806,25 @@ const GA4Dashboard = () => {
 										{/* Summary */}
 										<Grid container spacing={2} sx={{ mb: 3 }}>
 											<Grid item xs={6} sm={3}>
-												<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(COLORS.primary.main, 0.05), borderRadius: 1, textAlign: "center" }}>
+												<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 1, textAlign: "center" }}>
 													<Typography variant="caption" color="textSecondary">Usuarios Inicio</Typography>
 													<Typography variant="h6" fontWeight={600}>{funnelData.summary.startUsers.toLocaleString()}</Typography>
 												</Paper>
 											</Grid>
 											<Grid item xs={6} sm={3}>
-												<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(COLORS.success.main, 0.05), borderRadius: 1, textAlign: "center" }}>
+												<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.success.main, 0.05), borderRadius: 1, textAlign: "center" }}>
 													<Typography variant="caption" color="textSecondary">Usuarios Final</Typography>
 													<Typography variant="h6" fontWeight={600} color="success.main">{funnelData.summary.endUsers.toLocaleString()}</Typography>
 												</Paper>
 											</Grid>
 											<Grid item xs={6} sm={3}>
-												<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(COLORS.warning.main, 0.05), borderRadius: 1, textAlign: "center" }}>
+												<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.05), borderRadius: 1, textAlign: "center" }}>
 													<Typography variant="caption" color="textSecondary">Conversión Total</Typography>
 													<Typography variant="h6" fontWeight={600} color="warning.main">{funnelData.summary.overallConversionRate}%</Typography>
 												</Paper>
 											</Grid>
 											<Grid item xs={6} sm={3}>
-												<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(COLORS.neutral.main, 0.05), borderRadius: 1, textAlign: "center" }}>
+												<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.text.secondary, 0.05), borderRadius: 1, textAlign: "center" }}>
 													<Typography variant="caption" color="textSecondary">Dropoff Total</Typography>
 													<Typography variant="h6" fontWeight={600}>{funnelData.summary.totalDropoff.toLocaleString()}</Typography>
 												</Paper>
@@ -1878,7 +1882,7 @@ const GA4Dashboard = () => {
 														</Tooltip>
 														{!isLast && (
 															<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: 0.5 }}>
-																<ArrowDown size={20} color={COLORS.neutral.light} />
+																<ArrowDown size={20} color={theme.palette.text.secondary} />
 																<Chip
 																	size="small"
 																	label={`${step.conversionRate}%`}
@@ -1899,7 +1903,7 @@ const GA4Dashboard = () => {
 									</>
 								) : (
 									<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 350 }}>
-										<Filter size={48} color={COLORS.neutral.light} />
+										<Filter size={48} color={theme.palette.text.secondary} />
 										<Typography variant="body1" color="textSecondary" sx={{ mt: 2 }}>
 											Selecciona eventos y haz click en "Generar Funnel"
 										</Typography>
@@ -1998,11 +2002,11 @@ const GA4Dashboard = () => {
 								sx={{
 									p: 2,
 									borderRadius: 2,
-									bgcolor: alpha(COLORS.primary.main, 0.05),
-									border: `1px solid ${alpha(COLORS.primary.main, 0.1)}`,
+									bgcolor: alpha(theme.palette.primary.main, 0.05),
+									border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
 								}}
 							>
-								<Typography variant="subtitle2" sx={{ color: COLORS.primary.main, mb: 1 }}>
+								<Typography variant="subtitle2" sx={{ color: theme.palette.primary.main, mb: 1 }}>
 									Explorador de Eventos
 								</Typography>
 								<Typography variant="body2" color="textSecondary">
@@ -2059,15 +2063,15 @@ const GA4Dashboard = () => {
 											Resumen del Evento
 										</Typography>
 										<Stack spacing={1.5}>
-											<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(COLORS.primary.main, 0.05), borderRadius: 1 }}>
+											<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 1 }}>
 												<Typography variant="caption" color="textSecondary">Total de Eventos</Typography>
 												<Typography variant="h6" fontWeight={600}>{eventDetails.summary.totalCount.toLocaleString()}</Typography>
 											</Paper>
-											<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(COLORS.success.main, 0.05), borderRadius: 1 }}>
+											<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.success.main, 0.05), borderRadius: 1 }}>
 												<Typography variant="caption" color="textSecondary">Usuarios Únicos</Typography>
 												<Typography variant="h6" fontWeight={600} color="success.main">{eventDetails.summary.totalUsers.toLocaleString()}</Typography>
 											</Paper>
-											<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(COLORS.warning.main, 0.05), borderRadius: 1 }}>
+											<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.05), borderRadius: 1 }}>
 												<Typography variant="caption" color="textSecondary">Eventos por Sesión</Typography>
 												<Typography variant="h6" fontWeight={600} color="warning.main">{eventDetails.summary.eventsPerSession}</Typography>
 											</Paper>
@@ -2199,7 +2203,7 @@ const GA4Dashboard = () => {
 								</Stack>
 							) : (
 								<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 400 }}>
-									<SearchNormal1 size={48} color={COLORS.neutral.light} />
+									<SearchNormal1 size={48} color={theme.palette.text.secondary} />
 									<Typography variant="body1" color="textSecondary" sx={{ mt: 2 }}>
 										Selecciona un evento para explorar sus detalles
 									</Typography>

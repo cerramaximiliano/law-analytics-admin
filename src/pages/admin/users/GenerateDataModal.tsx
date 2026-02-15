@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTheme } from "@mui/material/styles";
 import { dispatch } from "store/index";
 
 // material-ui
@@ -52,6 +53,7 @@ interface FormValues {
 }
 
 const GenerateDataModal: React.FC<GenerateDataModalProps> = ({ user, open, onClose }) => {
+	const theme = useTheme();
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState<string | null>(null);
@@ -247,15 +249,15 @@ const GenerateDataModal: React.FC<GenerateDataModalProps> = ({ user, open, onClo
 										width: "8px",
 									},
 									"&::-webkit-scrollbar-track": {
-										background: "#f1f1f1",
+										background: theme.palette.grey[100],
 										borderRadius: "4px",
 									},
 									"&::-webkit-scrollbar-thumb": {
-										background: "#888",
+										background: theme.palette.grey[500],
 										borderRadius: "4px",
 									},
 									"&::-webkit-scrollbar-thumb:hover": {
-										background: "#555",
+										background: theme.palette.grey[700],
 									},
 								}}
 							>

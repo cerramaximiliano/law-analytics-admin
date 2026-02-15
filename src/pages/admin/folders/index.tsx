@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTheme } from "@mui/material/styles";
 import {
 	Box,
 	Card,
@@ -67,6 +68,7 @@ const STATUS_COLORS: Record<string, "primary" | "success" | "warning" | "error" 
 };
 
 const FoldersPage = () => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Estados
@@ -578,7 +580,7 @@ const FoldersPage = () => {
 														<Stack direction="row" alignItems="center" spacing={1}>
 															{folder.archived && (
 																<Tooltip title="Archivada">
-																	<Archive size={16} color="#9e9e9e" />
+																	<Archive size={16} color={theme.palette.text.secondary} />
 																</Tooltip>
 															)}
 															<Typography variant="body2" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
@@ -655,11 +657,11 @@ const FoldersPage = () => {
 														{folder.causaId ? (
 															folder.causaVerified ? (
 																<Tooltip title="Causa verificada">
-																	<TickCircle size={20} color="#2e7d32" variant="Bold" />
+																	<TickCircle size={20} color={theme.palette.success.dark} variant="Bold" />
 																</Tooltip>
 															) : (
 																<Tooltip title="Causa no verificada">
-																	<CloseSquare size={20} color="#d32f2f" variant="Bold" />
+																	<CloseSquare size={20} color={theme.palette.error.main} variant="Bold" />
 																</Tooltip>
 															)
 														) : (

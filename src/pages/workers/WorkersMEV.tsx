@@ -470,7 +470,7 @@ const MEVWorkers = () => {
 					>
 						<CardContent>
 							<Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
-								<InfoCircle size={24} color="#0288d1" />
+								<InfoCircle size={24} color={theme.palette.info.main} />
 								<Typography variant="subtitle2" fontWeight="bold" color="info.main">
 									Worker de Verificación
 								</Typography>
@@ -500,7 +500,7 @@ const MEVWorkers = () => {
 					>
 						<CardContent>
 							<Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
-								<InfoCircle size={24} color="#1976d2" />
+								<InfoCircle size={24} color={theme.palette.info.main} />
 								<Typography variant="subtitle2" fontWeight="bold" color="primary">
 									Guía de Funcionamiento
 								</Typography>
@@ -530,7 +530,7 @@ const MEVWorkers = () => {
 					>
 						<CardContent>
 							<Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
-								<InfoCircle size={24} color="#616161" />
+								<InfoCircle size={24} color={theme.palette.text.secondary} />
 								<Typography variant="subtitle2" fontWeight="bold">
 									Elegibilidad de Documentos
 								</Typography>
@@ -2011,7 +2011,7 @@ const MEVWorkers = () => {
 						onClick={() => setInstructionsOpen(!instructionsOpen)}
 					>
 						<Stack direction="row" spacing={1} alignItems="center">
-							<InfoCircle size={20} color="#1976d2" />
+							<InfoCircle size={20} color={theme.palette.info.main} />
 							<Typography variant="h6" color="primary">
 								Instructivo de Uso - Configuración del Sistema MEV
 							</Typography>
@@ -2526,7 +2526,7 @@ const MEVWorkers = () => {
 			<Dialog open={workerInfoModalOpen} onClose={() => setWorkerInfoModalOpen(false)} maxWidth="sm" fullWidth>
 				<DialogTitle>
 					<Stack direction="row" spacing={1} alignItems="center">
-						<InfoCircle size={24} color="#0288d1" />
+						<InfoCircle size={24} color={theme.palette.info.main} />
 						<Typography variant="h6">Worker de Verificación de Causas MEV</Typography>
 					</Stack>
 				</DialogTitle>
@@ -2545,7 +2545,7 @@ const MEVWorkers = () => {
 			<Dialog open={guideModalOpen} onClose={() => setGuideModalOpen(false)} maxWidth="md" fullWidth>
 				<DialogTitle>
 					<Stack direction="row" spacing={1} alignItems="center">
-						<InfoCircle size={24} color="#1976d2" />
+						<InfoCircle size={24} color={theme.palette.info.main} />
 						<Typography variant="h6">Guía de Funcionamiento del Worker de Verificación</Typography>
 					</Stack>
 				</DialogTitle>

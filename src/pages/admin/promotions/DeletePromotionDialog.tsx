@@ -9,6 +9,7 @@ import {
 	Stack,
 	Typography,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { Warning2 } from "iconsax-react";
 import { DiscountCode } from "api/discounts";
 
@@ -21,6 +22,8 @@ interface DeletePromotionDialogProps {
 }
 
 const DeletePromotionDialog = ({ open, onClose, onConfirm, discount, loading }: DeletePromotionDialogProps) => {
+	const theme = useTheme();
+
 	if (!discount) return null;
 
 	const hasBeenUsed = discount.stats.timesRedeemed > 0;
@@ -29,7 +32,7 @@ const DeletePromotionDialog = ({ open, onClose, onConfirm, discount, loading }: 
 		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
 			<DialogTitle>
 				<Stack direction="row" spacing={1} alignItems="center">
-					<Warning2 color="#ff4d4f" />
+					<Warning2 color={theme.palette.error.main} />
 					<Typography variant="h5">Eliminar Promoción</Typography>
 				</Stack>
 			</DialogTitle>

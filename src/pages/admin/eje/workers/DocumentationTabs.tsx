@@ -163,7 +163,7 @@ const ScriptsDocumentation = () => {
 
             <Box>
               <Typography variant="subtitle2" fontWeight="bold" gutterBottom>Configuración (.env)</Typography>
-              <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.grey[900], 0.9), borderRadius: 1, fontFamily: 'monospace', fontSize: '0.8rem', color: '#fff' }}>
+              <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.grey[900], 0.9), borderRadius: 1, fontFamily: 'monospace', fontSize: '0.8rem', color: "common.white" }}>
                 <pre style={{ margin: 0 }}>
 {`MONGODB_URI=mongodb://...
 API_KEY=tu-api-key
@@ -175,7 +175,7 @@ TEST_USER_ID=<ObjectId de usuario para pruebas>`}
 
             <Box>
               <Typography variant="subtitle2" fontWeight="bold" gutterBottom>Uso</Typography>
-              <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.grey[900], 0.9), borderRadius: 1, fontFamily: 'monospace', fontSize: '0.8rem', color: '#fff' }}>
+              <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.grey[900], 0.9), borderRadius: 1, fontFamily: 'monospace', fontSize: '0.8rem', color: "common.white" }}>
                 <pre style={{ margin: 0 }}>
 {`# Modo interactivo
 npx ts-node scripts/test-full-flow.ts
@@ -250,7 +250,7 @@ npx ts-node scripts/test-full-flow.ts 162321/2020`}
 
             <Box>
               <Typography variant="subtitle2" fontWeight="bold" gutterBottom>Uso</Typography>
-              <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.grey[900], 0.9), borderRadius: 1, fontFamily: 'monospace', fontSize: '0.8rem', color: '#fff' }}>
+              <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.grey[900], 0.9), borderRadius: 1, fontFamily: 'monospace', fontSize: '0.8rem', color: "common.white" }}>
                 <pre style={{ margin: 0 }}>
 {`# Modo interactivo
 npx ts-node scripts/test-verification-flow.ts
@@ -358,7 +358,7 @@ npx ts-node scripts/test-verification-flow.ts 162321/2020 162512/2020`}
 
             <Box>
               <Typography variant="subtitle2" fontWeight="bold" gutterBottom>Uso</Typography>
-              <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.grey[900], 0.9), borderRadius: 1, fontFamily: 'monospace', fontSize: '0.8rem', color: '#fff' }}>
+              <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.grey[900], 0.9), borderRadius: 1, fontFamily: 'monospace', fontSize: '0.8rem', color: "common.white" }}>
                 <pre style={{ margin: 0 }}>
 {`npx ts-node scripts/clean-cuij-prefixes.ts`}
                 </pre>
@@ -430,7 +430,7 @@ npx ts-node scripts/test-verification-flow.ts 162321/2020 162512/2020`}
 
             <Box>
               <Typography variant="subtitle2" fontWeight="bold" gutterBottom>Uso</Typography>
-              <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.grey[900], 0.9), borderRadius: 1, fontFamily: 'monospace', fontSize: '0.8rem', color: '#fff' }}>
+              <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.grey[900], 0.9), borderRadius: 1, fontFamily: 'monospace', fontSize: '0.8rem', color: "common.white" }}>
                 <pre style={{ margin: 0 }}>
 {`npx ts-node scripts/fix-linked-causas-history.ts`}
                 </pre>

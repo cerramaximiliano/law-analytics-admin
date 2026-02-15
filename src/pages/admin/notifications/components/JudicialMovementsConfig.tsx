@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTheme } from "@mui/material/styles";
 import {
 	Box,
 	Card,
@@ -110,6 +111,7 @@ interface JudicialNotificationConfig {
 const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
 const JudicialMovementsConfig: React.FC = () => {
+	const theme = useTheme();
 	const [config, setConfig] = useState<JudicialNotificationConfig | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
@@ -347,7 +349,7 @@ const JudicialMovementsConfig: React.FC = () => {
 					<Grid container spacing={2} alignItems="center">
 						<Grid item xs={12} md={6}>
 							<Stack direction="row" spacing={2} alignItems="center">
-								<NotificationBing size={32} color="#1890ff" />
+								<NotificationBing size={32} color={theme.palette.info.main} />
 								<Box>
 									<Typography variant="h5">Configuración de Notificaciones de Movimientos Judiciales</Typography>
 									<Typography variant="body2" color="text.secondary">

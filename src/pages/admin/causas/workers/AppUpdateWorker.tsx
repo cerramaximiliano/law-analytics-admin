@@ -26,6 +26,7 @@ import {
 	Tabs,
 	Tab,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, InfoCircle, Chart, People, MessageQuestion } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkerConfig } from "api/workers";
@@ -65,6 +66,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const AppUpdateWorker = () => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 	const [configs, setConfigs] = useState<WorkerConfig[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -447,7 +449,7 @@ const AppUpdateWorker = () => {
 			<Card variant="outlined" sx={{ backgroundColor: "background.default" }}>
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-						<InfoCircle size={20} color="#1890ff" />
+						<InfoCircle size={20} color={theme.palette.info.main} />
 						<Typography variant="h6">Guía de Funcionamiento del Worker</Typography>
 					</Stack>
 

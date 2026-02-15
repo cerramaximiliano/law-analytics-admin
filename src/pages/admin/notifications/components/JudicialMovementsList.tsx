@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTheme } from "@mui/material/styles";
 import {
 	Box,
 	Table,
@@ -54,6 +55,7 @@ import { dispatch } from "store";
 import { openSnackbar } from "store/reducers/snackbar";
 
 const JudicialMovementsList = () => {
+	const theme = useTheme();
 	const [movements, setMovements] = useState<JudicialMovement[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [page, setPage] = useState(0);
@@ -334,7 +336,7 @@ const JudicialMovementsList = () => {
 										</Typography>
 										<Typography variant="h4">{stats.totalPending}</Typography>
 									</Box>
-									<NotificationBing size={32} color="#fa8c16" />
+									<NotificationBing size={32} color={theme.palette.warning.main} />
 								</Stack>
 							</CardContent>
 						</Card>
@@ -349,7 +351,7 @@ const JudicialMovementsList = () => {
 										</Typography>
 										<Typography variant="h4">{stats.totalSent}</Typography>
 									</Box>
-									<NotificationBing size={32} color="#52c41a" />
+									<NotificationBing size={32} color={theme.palette.success.main} />
 								</Stack>
 							</CardContent>
 						</Card>
@@ -364,7 +366,7 @@ const JudicialMovementsList = () => {
 										</Typography>
 										<Typography variant="h4">{stats.totalFailed}</Typography>
 									</Box>
-									<NotificationBing size={32} color="#ff4d4f" />
+									<NotificationBing size={32} color={theme.palette.error.main} />
 								</Stack>
 							</CardContent>
 						</Card>
@@ -388,7 +390,7 @@ const JudicialMovementsList = () => {
 					<Paper sx={{ p: 3, backgroundColor: "action.hover" }}>
 						<Stack spacing={2}>
 							<Stack direction="row" alignItems="center" spacing={1}>
-								<Clock size={24} color="#1890ff" />
+								<Clock size={24} color={theme.palette.info.main} />
 								<Typography variant="h6" color="primary">
 									Política de Retención de Movimientos Judiciales
 								</Typography>
