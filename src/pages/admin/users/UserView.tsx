@@ -2770,7 +2770,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 											<Stack direction="row" justifyContent="space-between" alignItems="center">
 												<Typography variant="subtitle1">Método de Registro</Typography>
 												{userData?.authProvider === "google" ? (
-													<Chip label="Google" size="small" sx={{ bgcolor: "#4285F4", color: "white" }} />
+													<Chip label="Google" size="small" sx={{ bgcolor: "#4285F4", color: "common.white" }} />
 												) : userData?.authProvider === "email" ? (
 													<Chip label="Email" size="small" color="info" />
 												) : (

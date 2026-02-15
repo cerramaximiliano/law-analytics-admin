@@ -498,7 +498,7 @@ const UsersList = () => {
 		switch (authProvider) {
 			case "google":
 				backgroundColor = "#4285F4"; // Google blue
-				textColor = "#FFFFFF";
+				textColor = theme.palette.common.white;
 				label = "Google";
 				break;
 			case "email":

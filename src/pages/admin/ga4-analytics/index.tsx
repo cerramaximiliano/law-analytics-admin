@@ -382,7 +382,7 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, loading, co
 						<Typography variant="caption" sx={{ display: "block", mb: 1 }}>
 							{metricInfo.description}
 						</Typography>
-						<Typography variant="caption" sx={{ display: "block", color: alpha("#fff", 0.8), fontStyle: "italic" }}>
+						<Typography variant="caption" sx={{ display: "block", color: alpha(theme.palette.common.white, 0.8), fontStyle: "italic" }}>
 							{metricInfo.interpretation}
 						</Typography>
 					</Box>
@@ -437,7 +437,7 @@ const ChartCard: React.FC<ChartCardProps> = ({ title, icon, children, height = 2
 								<Typography variant="caption" sx={{ display: "block", mb: 1 }}>
 									{chartInfo.description}
 								</Typography>
-								<Typography variant="caption" sx={{ display: "block", color: alpha("#fff", 0.8), fontStyle: "italic" }}>
+								<Typography variant="caption" sx={{ display: "block", color: alpha(theme.palette.common.white, 0.8), fontStyle: "italic" }}>
 									{chartInfo.howToRead}
 								</Typography>
 							</Box>
@@ -490,7 +490,7 @@ const RealtimeCard: React.FC<RealtimeCardProps> = ({ activeUsers, loading }) => 
 					<Typography variant="caption" sx={{ display: "block", mb: 1 }}>
 						{metricInfo.description}
 					</Typography>
-					<Typography variant="caption" sx={{ display: "block", color: alpha("#fff", 0.8), fontStyle: "italic" }}>
+					<Typography variant="caption" sx={{ display: "block", color: alpha(theme.palette.common.white, 0.8), fontStyle: "italic" }}>
 						{metricInfo.interpretation}
 					</Typography>
 				</Box>
@@ -1738,7 +1738,7 @@ const GA4Dashboard = () => {
 															label={index + 1}
 															sx={{
 																bgcolor: COLORS.funnel[index % COLORS.funnel.length],
-																color: "white",
+																color: "common.white",
 																fontWeight: 600,
 																minWidth: 28,
 															}}
@@ -1861,7 +1861,7 @@ const GA4Dashboard = () => {
 																			label={step.step}
 																			sx={{
 																				bgcolor: COLORS.funnel[index % COLORS.funnel.length],
-																				color: "white",
+																				color: "common.white",
 																				fontWeight: 600,
 																				flexShrink: 0,
 																			}}
