@@ -1835,7 +1835,7 @@ const Suscripciones = () => {
 						/>
 
 						{selectedSubscription?.downgradeGracePeriod && (
-							<Box sx={{ p: 2, backgroundColor: "grey.100", borderRadius: 1 }}>
+							<Box sx={{ p: 2, backgroundColor: "background.default", borderRadius: 1 }}>
 								<Typography variant="caption" color="text.secondary" fontWeight="bold">
 									Información Actual
 								</Typography>
@@ -1913,7 +1913,7 @@ const Suscripciones = () => {
 							</Typography>
 						</Alert>
 
-						<Box sx={{ p: 2, backgroundColor: "grey.100", borderRadius: 1 }}>
+						<Box sx={{ p: 2, backgroundColor: "background.default", borderRadius: 1 }}>
 							<Typography variant="caption" color="text.secondary" fontWeight="bold">
 								Información del Usuario
 							</Typography>
@@ -2039,7 +2039,7 @@ const Suscripciones = () => {
 							</Typography>
 						</Alert>
 
-						<Box sx={{ p: 2, backgroundColor: "grey.100", borderRadius: 1 }}>
+						<Box sx={{ p: 2, backgroundColor: "background.default", borderRadius: 1 }}>
 							<Typography variant="caption" color="text.secondary" fontWeight="bold">
 								Información Actual en BD
 							</Typography>

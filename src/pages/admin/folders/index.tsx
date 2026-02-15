@@ -399,7 +399,7 @@ const FoldersPage = () => {
 							</Card>
 						</Grid>
 						<Grid item xs={6} sm={4} md={2}>
-							<Card sx={{ backgroundColor: "grey.100", border: 1, borderColor: "grey.300" }}>
+							<Card sx={{ backgroundColor: "background.default", border: 1, borderColor: "divider" }}>
 								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
 									<Typography variant="caption" color="text.secondary">
 										Archivadas

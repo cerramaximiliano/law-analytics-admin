@@ -613,7 +613,7 @@ const FolderEditModal = ({ open, onClose, folder, onFolderUpdated }: FolderEditM
 							<Box
 								component="pre"
 								sx={{
-									backgroundColor: "grey.100",
+									backgroundColor: "background.default",
 									p: 2,
 									borderRadius: 1,
 									overflow: "auto",

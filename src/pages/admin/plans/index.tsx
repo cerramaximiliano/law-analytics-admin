@@ -287,7 +287,7 @@ const PlansManagement = () => {
 								<Typography variant="body2" sx={{ fontSize: "0.875rem", mb: 1 }}>
 									<strong>Variables de entorno:</strong>
 								</Typography>
-								<Box sx={{ bgcolor: "grey.100", p: 1, borderRadius: 1, mb: 2 }}>
+								<Box sx={{ bgcolor: "background.default", p: 1, borderRadius: 1, mb: 2 }}>
 									<code style={{ fontSize: "0.75rem" }}>
 										STRIPE_SECRET_KEY=sk_live_xxxxx...
 										<br />
@@ -298,7 +298,7 @@ const PlansManagement = () => {
 								<Typography variant="body2" sx={{ fontSize: "0.875rem", mb: 1 }}>
 									<strong>Crear productos iniciales:</strong>
 								</Typography>
-								<Box sx={{ bgcolor: "grey.100", p: 1, borderRadius: 1, mb: 2 }}>
+								<Box sx={{ bgcolor: "background.default", p: 1, borderRadius: 1, mb: 2 }}>
 									<code style={{ fontSize: "0.75rem" }}>NODE_ENV=production node scripts/initializePlanConfigs.js</code>
 								</Box>
 
