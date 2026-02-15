@@ -5,6 +5,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import ThemeCustomization from "./themes";
 import Routes from "./routes";
 import { AuthProvider } from "./contexts/ServerContext";
+import { ConfigProvider } from "./contexts/ConfigContext";
 
 // Google OAuth Client ID
 const googleClientId = import.meta.env.VITE_AUTH0_GOOGLE_ID;
@@ -47,20 +48,22 @@ const App = () => {
 	return (
 		<HelmetProvider>
 			<GoogleOAuthProvider key={googleProviderKey} clientId={googleClientId}>
-				<ThemeCustomization>
-					<SnackbarProvider
-						maxSnack={3}
-						anchorOrigin={{
-							vertical: "top",
-							horizontal: "right",
-						}}
-						autoHideDuration={3000}
-					>
-						<AuthProvider>
-							<Routes />
-						</AuthProvider>
-					</SnackbarProvider>
-				</ThemeCustomization>
+				<ConfigProvider>
+					<ThemeCustomization>
+						<SnackbarProvider
+							maxSnack={3}
+							anchorOrigin={{
+								vertical: "top",
+								horizontal: "right",
+							}}
+							autoHideDuration={3000}
+						>
+							<AuthProvider>
+								<Routes />
+							</AuthProvider>
+						</SnackbarProvider>
+					</ThemeCustomization>
+				</ConfigProvider>
 			</GoogleOAuthProvider>
 		</HelmetProvider>
 	);
