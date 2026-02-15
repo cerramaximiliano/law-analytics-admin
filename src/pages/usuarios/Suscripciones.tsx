@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTheme } from "@mui/material/styles";
 import {
 	Box,
 	Grid,
@@ -47,6 +48,7 @@ dayjs.extend(timezone);
 dayjs.locale("es");
 
 const Suscripciones = () => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 	const [loading, setLoading] = useState(true);
 	const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -606,7 +608,7 @@ const Suscripciones = () => {
 													<Warning2 size={16} />
 												) : undefined
 											}
-											sx={getStatusColor(subscription.status) === "warning" ? { color: "rgba(0, 0, 0, 0.87)" } : undefined}
+											sx={getStatusColor(subscription.status) === "warning" ? { color: "text.primary" } : undefined}
 										/>
 									</TableCell>
 									<TableCell>
@@ -614,7 +616,7 @@ const Suscripciones = () => {
 											label={isTestMode(subscription) ? "🟡 TEST" : "🟢 LIVE"}
 											color={isTestMode(subscription) ? "warning" : "success"}
 											size="small"
-											sx={isTestMode(subscription) ? { color: "rgba(0, 0, 0, 0.87)" } : undefined}
+											sx={isTestMode(subscription) ? { color: "text.primary" } : undefined}
 										/>
 									</TableCell>
 									<TableCell>
@@ -627,7 +629,7 @@ const Suscripciones = () => {
 												hasta {dayjs(subscription.currentPeriodEnd).format("DD/MM/YYYY")}
 											</Typography>
 											{subscription.cancelAtPeriodEnd && (
-												<Chip label="Se cancelará" color="warning" size="small" sx={{ mt: 0.5, color: "rgba(0, 0, 0, 0.87)" }} />
+												<Chip label="Se cancelará" color="warning" size="small" sx={{ mt: 0.5, color: "text.primary" }} />
 											)}
 										</Stack>
 									</TableCell>
@@ -652,7 +654,7 @@ const Suscripciones = () => {
 												</Tooltip>
 											)}
 											{subscription.accountStatus !== "active" && (
-												<Chip label={subscription.accountStatus} color="warning" size="small" sx={{ color: "rgba(0, 0, 0, 0.87)" }} />
+												<Chip label={subscription.accountStatus} color="warning" size="small" sx={{ color: "text.primary" }} />
 											)}
 										</Stack>
 									</TableCell>
@@ -797,7 +799,7 @@ const Suscripciones = () => {
 														label={getStatusLabel(selectedSubscription.status)}
 														color={getStatusColor(selectedSubscription.status)}
 														size="small"
-														sx={getStatusColor(selectedSubscription.status) === "warning" ? { color: "rgba(0, 0, 0, 0.87)" } : undefined}
+														sx={getStatusColor(selectedSubscription.status) === "warning" ? { color: "text.primary" } : undefined}
 													/>
 												</Box>
 											</Grid>
@@ -974,7 +976,7 @@ const Suscripciones = () => {
 										<Box>
 											<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
 												<Typography variant="h6" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-													<Warning2 size={20} color="#ed6c02" />
+													<Warning2 size={20} color={theme.palette.warning.main} />
 													Período de Gracia de Downgrade
 												</Typography>
 												<Button variant="outlined" size="small" startIcon={<Edit size={16} />} onClick={handleOpenUpdateDialog}>
@@ -1027,12 +1029,12 @@ const Suscripciones = () => {
 													<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
 														{selectedSubscription.downgradeGracePeriod.autoArchiveScheduled ? (
 															<>
-																<TickCircle size={16} color="#2e7d32" />
+																<TickCircle size={16} color={theme.palette.success.dark} />
 																<Typography variant="body2">Sí</Typography>
 															</>
 														) : (
 															<>
-																<CloseCircle size={16} color="#d32f2f" />
+																<CloseCircle size={16} color={theme.palette.error.main} />
 																<Typography variant="body2">No</Typography>
 															</>
 														)}
@@ -1045,12 +1047,12 @@ const Suscripciones = () => {
 													<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
 														{selectedSubscription.downgradeGracePeriod.immediateCancel ? (
 															<>
-																<TickCircle size={16} color="#2e7d32" />
+																<TickCircle size={16} color={theme.palette.success.dark} />
 																<Typography variant="body2">Sí</Typography>
 															</>
 														) : (
 															<>
-																<CloseCircle size={16} color="#d32f2f" />
+																<CloseCircle size={16} color={theme.palette.error.main} />
 																<Typography variant="body2">No</Typography>
 															</>
 														)}
@@ -1066,9 +1068,9 @@ const Suscripciones = () => {
 												<Grid item xs={12} sm={4}>
 													<Stack direction="row" spacing={1} alignItems="center">
 														{selectedSubscription.downgradeGracePeriod.reminderSent ? (
-															<TickCircle size={16} color="#2e7d32" />
+															<TickCircle size={16} color={theme.palette.success.dark} />
 														) : (
-															<CloseCircle size={16} color="#d32f2f" />
+															<CloseCircle size={16} color={theme.palette.error.main} />
 														)}
 														<Typography variant="body2">Recordatorio Inicial</Typography>
 													</Stack>
@@ -1076,9 +1078,9 @@ const Suscripciones = () => {
 												<Grid item xs={12} sm={4}>
 													<Stack direction="row" spacing={1} alignItems="center">
 														{selectedSubscription.downgradeGracePeriod.reminder3DaysSent ? (
-															<TickCircle size={16} color="#2e7d32" />
+															<TickCircle size={16} color={theme.palette.success.dark} />
 														) : (
-															<CloseCircle size={16} color="#d32f2f" />
+															<CloseCircle size={16} color={theme.palette.error.main} />
 														)}
 														<Typography variant="body2">Recordatorio 3 Días</Typography>
 													</Stack>
@@ -1086,9 +1088,9 @@ const Suscripciones = () => {
 												<Grid item xs={12} sm={4}>
 													<Stack direction="row" spacing={1} alignItems="center">
 														{selectedSubscription.downgradeGracePeriod.reminder1DaySent ? (
-															<TickCircle size={16} color="#2e7d32" />
+															<TickCircle size={16} color={theme.palette.success.dark} />
 														) : (
-															<CloseCircle size={16} color="#d32f2f" />
+															<CloseCircle size={16} color={theme.palette.error.main} />
 														)}
 														<Typography variant="body2">Recordatorio 1 Día</Typography>
 													</Stack>
@@ -1196,9 +1198,9 @@ const Suscripciones = () => {
 												<Grid item xs={12} sm={6}>
 													<Stack direction="row" spacing={1} alignItems="center">
 														{selectedSubscription.features.advancedAnalytics ? (
-															<TickCircle size={16} color="#2e7d32" />
+															<TickCircle size={16} color={theme.palette.success.dark} />
 														) : (
-															<CloseCircle size={16} color="#d32f2f" />
+															<CloseCircle size={16} color={theme.palette.error.main} />
 														)}
 														<Typography variant="body2">Análisis Avanzado</Typography>
 													</Stack>
@@ -1206,9 +1208,9 @@ const Suscripciones = () => {
 												<Grid item xs={12} sm={6}>
 													<Stack direction="row" spacing={1} alignItems="center">
 														{selectedSubscription.features.exportReports ? (
-															<TickCircle size={16} color="#2e7d32" />
+															<TickCircle size={16} color={theme.palette.success.dark} />
 														) : (
-															<CloseCircle size={16} color="#d32f2f" />
+															<CloseCircle size={16} color={theme.palette.error.main} />
 														)}
 														<Typography variant="body2">Exportar Reportes</Typography>
 													</Stack>
@@ -1216,9 +1218,9 @@ const Suscripciones = () => {
 												<Grid item xs={12} sm={6}>
 													<Stack direction="row" spacing={1} alignItems="center">
 														{selectedSubscription.features.taskAutomation ? (
-															<TickCircle size={16} color="#2e7d32" />
+															<TickCircle size={16} color={theme.palette.success.dark} />
 														) : (
-															<CloseCircle size={16} color="#d32f2f" />
+															<CloseCircle size={16} color={theme.palette.error.main} />
 														)}
 														<Typography variant="body2">Automatización de Tareas</Typography>
 													</Stack>
@@ -1226,9 +1228,9 @@ const Suscripciones = () => {
 												<Grid item xs={12} sm={6}>
 													<Stack direction="row" spacing={1} alignItems="center">
 														{selectedSubscription.features.bulkOperations ? (
-															<TickCircle size={16} color="#2e7d32" />
+															<TickCircle size={16} color={theme.palette.success.dark} />
 														) : (
-															<CloseCircle size={16} color="#d32f2f" />
+															<CloseCircle size={16} color={theme.palette.error.main} />
 														)}
 														<Typography variant="body2">Operaciones Masivas</Typography>
 													</Stack>
@@ -1236,9 +1238,9 @@ const Suscripciones = () => {
 												<Grid item xs={12} sm={6}>
 													<Stack direction="row" spacing={1} alignItems="center">
 														{selectedSubscription.features.prioritySupport ? (
-															<TickCircle size={16} color="#2e7d32" />
+															<TickCircle size={16} color={theme.palette.success.dark} />
 														) : (
-															<CloseCircle size={16} color="#d32f2f" />
+															<CloseCircle size={16} color={theme.palette.error.main} />
 														)}
 														<Typography variant="body2">Soporte Prioritario</Typography>
 													</Stack>
@@ -1246,9 +1248,9 @@ const Suscripciones = () => {
 												<Grid item xs={12} sm={6}>
 													<Stack direction="row" spacing={1} alignItems="center">
 														{selectedSubscription.features.vinculateFolders ? (
-															<TickCircle size={16} color="#2e7d32" />
+															<TickCircle size={16} color={theme.palette.success.dark} />
 														) : (
-															<CloseCircle size={16} color="#d32f2f" />
+															<CloseCircle size={16} color={theme.palette.error.main} />
 														)}
 														<Typography variant="body2">Vincular Carpetas</Typography>
 													</Stack>
@@ -1256,9 +1258,9 @@ const Suscripciones = () => {
 												<Grid item xs={12} sm={6}>
 													<Stack direction="row" spacing={1} alignItems="center">
 														{selectedSubscription.features.booking ? (
-															<TickCircle size={16} color="#2e7d32" />
+															<TickCircle size={16} color={theme.palette.success.dark} />
 														) : (
-															<CloseCircle size={16} color="#d32f2f" />
+															<CloseCircle size={16} color={theme.palette.error.main} />
 														)}
 														<Typography variant="body2">Reservas</Typography>
 													</Stack>
@@ -1305,7 +1307,7 @@ const Suscripciones = () => {
 																			size="small"
 																			sx={
 																				event.eventType.includes("scheduled") || event.eventType.includes("pending")
-																					? { color: "rgba(0, 0, 0, 0.87)" }
+																					? { color: "text.primary" }
 																					: undefined
 																			}
 																		/>
@@ -1528,7 +1530,7 @@ const Suscripciones = () => {
 																<Grid item xs={12}>
 																	<Stack direction="row" spacing={1} flexWrap="wrap">
 																		{event.requiresAttention && (
-																			<Chip label="Requiere Atención" color="warning" size="small" sx={{ color: "rgba(0, 0, 0, 0.87)" }} />
+																			<Chip label="Requiere Atención" color="warning" size="small" sx={{ color: "text.primary" }} />
 																		)}
 																		{event.emailSent && <Chip label="Email Enviado" color="success" size="small" />}
 																	</Stack>
@@ -1552,7 +1554,7 @@ const Suscripciones = () => {
 									{/* Sincronizar con Stripe */}
 									<Box>
 										<Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-											<RefreshCircle size={20} color="#1976d2" />
+											<RefreshCircle size={20} color={theme.palette.info.main} />
 											Sincronizar con Stripe
 										</Typography>
 										<Divider sx={{ mb: 2 }} />
@@ -1600,7 +1602,7 @@ const Suscripciones = () => {
 									{/* Resetear Suscripción */}
 									<Box>
 										<Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-											<Trash size={20} color="#d32f2f" />
+											<Trash size={20} color={theme.palette.error.main} />
 											Resetear Suscripción
 										</Typography>
 										<Divider sx={{ mb: 2 }} />
@@ -1680,7 +1682,7 @@ const Suscripciones = () => {
 									{/* Fallos de Pago */}
 									<Box>
 										<Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-											<Warning2 size={20} color="#d32f2f" />
+											<Warning2 size={20} color={theme.palette.error.main} />
 											Fallos de Pago
 										</Typography>
 										<Divider sx={{ mb: 2 }} />

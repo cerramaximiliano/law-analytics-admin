@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTheme } from "@mui/material/styles";
 import {
 	Dialog,
 	DialogTitle,
@@ -51,6 +52,7 @@ interface CausaDetalleModalEjeProps {
 }
 
 const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDetalleModalEjeProps) => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Estado para el tab activo
@@ -458,7 +460,7 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 											color={causa.update ? "warning" : "default"}
 											size="small"
 											variant={causa.update ? "filled" : "outlined"}
-											sx={{ mb: 0.5, ...(causa.update && { color: "rgba(0, 0, 0, 0.87)" }) }}
+											sx={{ mb: 0.5, ...(causa.update && { color: "text.primary" }) }}
 										/>
 									)}
 								</Box>
@@ -1022,9 +1024,9 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 														<TableCell align="center">
 															<Tooltip title={entry.success ? "Exitoso" : "Fallido"}>
 																{entry.success ? (
-																	<TickCircle size={20} color="#52c41a" variant="Bold" />
+																	<TickCircle size={20} color={theme.palette.success.main} variant="Bold" />
 																) : (
-																	<CloseCircle size={20} color="#ff4d4f" variant="Bold" />
+																	<CloseCircle size={20} color={theme.palette.error.main} variant="Bold" />
 																)}
 															</Tooltip>
 														</TableCell>

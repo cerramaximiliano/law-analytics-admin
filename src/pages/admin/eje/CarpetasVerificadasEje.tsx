@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTheme } from "@mui/material/styles";
 import {
 	Box,
 	Card,
@@ -106,6 +107,7 @@ const getId = (id: string | { $oid: string }): string => {
 };
 
 const CarpetasVerificadasEje = () => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Estados
@@ -628,7 +630,7 @@ const CarpetasVerificadasEje = () => {
 								<Box>
 									<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
 										<Stack direction="row" spacing={1} alignItems="center">
-											<Repeat size={16} color="#1976d2" />
+											<Repeat size={16} color={theme.palette.info.main} />
 											<Typography variant="caption" fontWeight="bold">
 												Cobertura de actualización:
 											</Typography>
@@ -669,14 +671,14 @@ const CarpetasVerificadasEje = () => {
 											sx={{
 												height: 8,
 												borderRadius: 4,
-												backgroundColor: 'rgba(0, 0, 0, 0.1)',
+												backgroundColor: theme.palette.action.hover,
 												'& .MuiLinearProgress-bar': {
 													borderRadius: 4,
 													backgroundColor: eligibilityStats.coveragePercent >= 80
-														? '#2e7d32'
+														? theme.palette.success.dark
 														: eligibilityStats.coveragePercent >= 50
-															? '#ed6c02'
-															: '#d32f2f',
+															? theme.palette.warning.main
+															: theme.palette.error.main,
 												},
 											}}
 										/>
@@ -868,23 +870,23 @@ const CarpetasVerificadasEje = () => {
 												</TableCell>
 												<TableCell align="center">
 													{causa.update ? (
-														<TickCircle size={20} color="#2e7d32" variant="Bold" />
+														<TickCircle size={20} color={theme.palette.success.dark} variant="Bold" />
 													) : (
-														<CloseSquare size={20} color="#d32f2f" variant="Bold" />
+														<CloseSquare size={20} color={theme.palette.error.main} variant="Bold" />
 													)}
 												</TableCell>
 												<TableCell align="center">
 													{causa.isPrivate ? (
-														<Lock1 size={20} color="#ed6c02" variant="Bold" />
+														<Lock1 size={20} color={theme.palette.warning.main} variant="Bold" />
 													) : (
 														<Typography variant="caption" color="text.secondary">—</Typography>
 													)}
 												</TableCell>
 												<TableCell align="center">
 													{causa.detailsLoaded ? (
-														<TickCircle size={20} color="#2e7d32" variant="Bold" />
+														<TickCircle size={20} color={theme.palette.success.dark} variant="Bold" />
 													) : (
-														<CloseSquare size={20} color="#d32f2f" variant="Bold" />
+														<CloseSquare size={20} color={theme.palette.error.main} variant="Bold" />
 													)}
 												</TableCell>
 												<TableCell align="center">

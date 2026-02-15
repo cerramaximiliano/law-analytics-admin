@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { Grid, Typography, Box, Skeleton, IconButton, Tooltip, useTheme, alpha, Paper, Chip } from "@mui/material";
+import { Grid, Typography, Box, Skeleton, IconButton, Tooltip, useTheme, alpha, Paper, Chip, Theme } from "@mui/material";
 import {
 	Refresh,
 	UserSquare,
@@ -45,41 +45,40 @@ import { CausasMEVService, EligibilityStatsMEV } from "api/causasMEV";
 import LinearProgress from "@mui/material/LinearProgress";
 import { Warning2 } from "iconsax-react";
 
-// Simplified color palette with clear hierarchy
-// Rule: 1 primary + 2 semantic + 1 premium-only
-const COLORS = {
-	// Primary - Blue/Indigo: Navigation, highlights, main metrics
+// Theme-aware color helper - maps semantic roles to MUI theme palette tokens
+// Usage: const COLORS = getThemeColors(theme) inside any component with useTheme()
+const getThemeColors = (theme: Theme) => ({
+	// Primary - Navigation, highlights, main metrics
 	primary: {
-		main: "#4F46E5",
-		light: "#6366F1",
-		lighter: "#EEF2FF",
+		main: theme.palette.primary.main,
+		light: theme.palette.primary.light,
 	},
-	// Success - Green: Active, verified, live mode
+	// Success - Active, verified, live mode
 	success: {
-		main: "#10B981",
-		light: "#34D399",
-		lighter: "#ECFDF5",
+		main: theme.palette.success.main,
+		light: theme.palette.success.light,
 	},
-	// Warning - Orange: ONLY for test mode and pending states
+	// Warning - ONLY for test mode and pending states
 	warning: {
-		main: "#F59E0B",
-		light: "#FBBF24",
-		lighter: "#FFFBEB",
+		main: theme.palette.warning.main,
+		light: theme.palette.warning.light,
 	},
-	// Neutral - Gray: Inactive, unverified, secondary info
+	// Neutral - Inactive, unverified, secondary info
 	neutral: {
-		main: "#64748B",
-		light: "#94A3B8",
-		lighter: "#F1F5F9",
-		text: "#475569",
+		main: theme.palette.text.secondary,
+		light: theme.palette.grey[400],
+		text: theme.palette.text.secondary,
+	},
+	// Error - Failures, critical issues
+	error: {
+		main: theme.palette.error.main,
 	},
 	// Premium - Violet: ONLY for Premium plan (upsell)
 	premium: {
-		main: "#8B5CF6",
-		light: "#A78BFA",
-		lighter: "#F5F3FF",
+		main: theme.palette.secondary.main,
+		light: theme.palette.secondary.light,
 	},
-};
+});
 
 // Metric info descriptions
 const metricInfo: Record<string, string> = {
@@ -221,6 +220,7 @@ interface PrimaryKPICardProps {
 
 const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, valueColor, loading, infoKey, linkTo, onClick }) => {
 	const theme = useTheme();
+	const COLORS = getThemeColors(theme);
 	const navigate = useNavigate();
 	const isClickable = linkTo || onClick;
 
@@ -539,6 +539,7 @@ const MiniStat: React.FC<MiniStatProps> = ({ label, value, color, loading, infoK
 
 const AdminDashboard = () => {
 	const theme = useTheme();
+	const COLORS = getThemeColors(theme);
 	const navigate = useNavigate();
 	const { enqueueSnackbar } = useSnackbar();
 	const [loading, setLoading] = useState(true);
@@ -1090,7 +1091,7 @@ const AdminDashboard = () => {
 													? COLORS.success.main
 													: (eligibilityStats.coveragePercent || 0) > 70
 													? COLORS.warning.main
-													: "#EF4444",
+													: COLORS.error.main,
 										},
 									}}
 								/>
@@ -1117,7 +1118,7 @@ const AdminDashboard = () => {
 									</Grid>
 									<Grid item xs={6} sm={3}>
 										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color="#EF4444">
+											<Typography variant="h5" fontWeight="bold" color={COLORS.error.main}>
 												{eligibilityStats.eligibleWithErrors.toLocaleString()}
 											</Typography>
 											<Typography variant="caption" color="text.secondary">
@@ -1215,7 +1216,7 @@ const AdminDashboard = () => {
 													? COLORS.success.main
 													: (mevEligibilityStats.coveragePercent || 0) > 70
 													? COLORS.warning.main
-													: "#EF4444",
+													: COLORS.error.main,
 										},
 									}}
 								/>
@@ -1242,7 +1243,7 @@ const AdminDashboard = () => {
 									</Grid>
 									<Grid item xs={6} sm={3}>
 										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color="#EF4444">
+											<Typography variant="h5" fontWeight="bold" color={COLORS.error.main}>
 												{mevEligibilityStats.eligibleWithErrors.toLocaleString()}
 											</Typography>
 											<Typography variant="caption" color="text.secondary">
@@ -1340,7 +1341,7 @@ const AdminDashboard = () => {
 													? COLORS.success.main
 													: (ejeEligibilityStats.coveragePercent || 0) > 70
 													? COLORS.warning.main
-													: "#EF4444",
+													: COLORS.error.main,
 										},
 									}}
 								/>
@@ -1477,7 +1478,7 @@ const AdminDashboard = () => {
 													? COLORS.success.main
 													: parseFloat(stuckDocumentsStats.recent.successRate) > 20
 													? COLORS.warning.main
-													: "#EF4444",
+													: COLORS.error.main,
 										},
 									}}
 								/>
@@ -1504,7 +1505,7 @@ const AdminDashboard = () => {
 									</Grid>
 									<Grid item xs={6} sm={3}>
 										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color="#EF4444">
+											<Typography variant="h5" fontWeight="bold" color={COLORS.error.main}>
 												{stuckDocumentsStats.totals.failed.toLocaleString()}
 											</Typography>
 											<Typography variant="caption" color="text.secondary">

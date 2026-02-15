@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTheme } from "@mui/material/styles";
 import {
 	Box,
 	Grid,
@@ -59,6 +60,7 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 };
 
 const ExpensesPage = () => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
 	// State for expenses list
@@ -394,7 +396,7 @@ const ExpensesPage = () => {
 							<Card variant="outlined">
 								<CardContent>
 									<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-										<DollarCircle size={20} color="#4F46E5" />
+										<DollarCircle size={20} color={theme.palette.primary.main} />
 										<Typography variant="body2" color="textSecondary">
 											Total Gastos ({dayjs().year()})
 										</Typography>
@@ -413,7 +415,7 @@ const ExpensesPage = () => {
 							<Card variant="outlined">
 								<CardContent>
 									<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-										<Calendar size={20} color="#10B981" />
+										<Calendar size={20} color={theme.palette.success.main} />
 										<Typography variant="body2" color="textSecondary">
 											Cantidad de Gastos
 										</Typography>
@@ -432,7 +434,7 @@ const ExpensesPage = () => {
 							<Card variant="outlined">
 								<CardContent>
 									<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-										<DollarCircle size={20} color="#F59E0B" />
+										<DollarCircle size={20} color={theme.palette.warning.main} />
 										<Typography variant="body2" color="textSecondary">
 											Promedio por Gasto
 										</Typography>
@@ -451,7 +453,7 @@ const ExpensesPage = () => {
 							<Card variant="outlined">
 								<CardContent>
 									<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-										<DollarCircle size={20} color="#EF4444" />
+										<DollarCircle size={20} color={theme.palette.error.main} />
 										<Typography variant="body2" color="textSecondary">
 											Gasto Máximo
 										</Typography>
@@ -472,7 +474,7 @@ const ExpensesPage = () => {
 					<Paper variant="outlined" sx={{ p: 2 }}>
 						<Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" mb={2}>
 							<Stack direction="row" spacing={1} alignItems="center">
-								<Wallet2 size={20} color="#10B981" />
+								<Wallet2 size={20} color={theme.palette.success.main} />
 								<Typography variant="subtitle1" fontWeight={600}>Saldo OpenAI</Typography>
 							</Stack>
 							<Stack direction="row" spacing={1}>

@@ -31,22 +31,7 @@ import {
 } from "recharts";
 import adminAxios from "utils/adminAxios";
 
-// Color palette matching the project style
-const COLORS = {
-	primary: {
-		main: "#4F46E5",
-		light: "#6366F1",
-	},
-	success: {
-		main: "#10B981",
-		light: "#34D399",
-	},
-	neutral: {
-		main: "#64748B",
-		light: "#94A3B8",
-		text: "#475569",
-	},
-};
+// Colors are now derived from the theme inside the component
 
 interface TimelineDataPoint {
 	date: string;
@@ -132,6 +117,22 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, loading 
 
 const UsersTimelineChart: React.FC = () => {
 	const theme = useTheme();
+
+	const COLORS = {
+		primary: {
+			main: theme.palette.primary.main,
+			light: theme.palette.primary.light,
+		},
+		success: {
+			main: theme.palette.success.main,
+			light: theme.palette.success.light,
+		},
+		neutral: {
+			main: theme.palette.text.secondary,
+			light: theme.palette.grey[400],
+			text: theme.palette.text.secondary,
+		},
+	};
 
 	// State
 	const [loading, setLoading] = useState(true);

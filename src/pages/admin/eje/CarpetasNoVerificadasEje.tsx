@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTheme } from "@mui/material/styles";
 import {
 	Box,
 	Card,
@@ -50,6 +51,7 @@ const getId = (id: string | { $oid: string }): string => {
 };
 
 const CarpetasNoVerificadasEje = () => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Estados
@@ -196,7 +198,7 @@ const CarpetasNoVerificadasEje = () => {
 							<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
 								<Stack direction="row" justifyContent="space-between" alignItems="center">
 									<Stack direction="row" alignItems="center" spacing={1}>
-										<Warning2 size={20} color="#ed6c02" />
+										<Warning2 size={20} color={theme.palette.warning.main} />
 										<Typography variant="body2" color="text.secondary">
 											Pendientes de Verificación
 										</Typography>
@@ -382,16 +384,16 @@ const CarpetasNoVerificadasEje = () => {
 												</TableCell>
 												<TableCell align="center">
 													{causa.verified ? (
-														<TickCircle size={20} color="#2e7d32" variant="Bold" />
+														<TickCircle size={20} color={theme.palette.success.dark} variant="Bold" />
 													) : (
-														<CloseSquare size={20} color="#d32f2f" variant="Bold" />
+														<CloseSquare size={20} color={theme.palette.error.main} variant="Bold" />
 													)}
 												</TableCell>
 												<TableCell align="center">
 													{causa.isValid ? (
-														<TickCircle size={20} color="#2e7d32" variant="Bold" />
+														<TickCircle size={20} color={theme.palette.success.dark} variant="Bold" />
 													) : (
-														<CloseSquare size={20} color="#d32f2f" variant="Bold" />
+														<CloseSquare size={20} color={theme.palette.error.main} variant="Bold" />
 													)}
 												</TableCell>
 												<TableCell align="center">

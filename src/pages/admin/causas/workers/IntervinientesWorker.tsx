@@ -1160,7 +1160,7 @@ const IntervinientesWorker = () => {
 			<Card variant="outlined" sx={{ backgroundColor: "background.default" }}>
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-						<InfoCircle size={20} color="#1890ff" />
+						<InfoCircle size={20} color={theme.palette.info.main} />
 						<Typography variant="h6">Guía del Extra-Info Worker</Typography>
 					</Stack>
 

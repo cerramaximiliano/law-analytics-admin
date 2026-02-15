@@ -89,6 +89,7 @@ interface TabPanelProps {
 
 function TabPanel(props: TabPanelProps) {
 	const { children, value, index, ...other } = props;
+	const theme = useTheme();
 
 	return (
 		<div role="tabpanel" hidden={value !== index} id={`user-tabpanel-${index}`} aria-labelledby={`user-tab-${index}`} {...other}>
@@ -104,15 +105,15 @@ function TabPanel(props: TabPanelProps) {
 							width: "8px",
 						},
 						"&::-webkit-scrollbar-track": {
-							background: "#f1f1f1",
+							background: theme.palette.grey[100],
 							borderRadius: "4px",
 						},
 						"&::-webkit-scrollbar-thumb": {
-							background: "#888",
+							background: theme.palette.grey[500],
 							borderRadius: "4px",
 						},
 						"&::-webkit-scrollbar-thumb:hover": {
-							background: "#555",
+							background: theme.palette.grey[700],
 						},
 					}}
 				>

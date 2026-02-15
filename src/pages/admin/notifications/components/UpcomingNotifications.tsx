@@ -1,5 +1,6 @@
 import React from "react";
 import { useState } from "react";
+import { useTheme } from "@mui/material/styles";
 import { useSelector } from "react-redux";
 import {
 	Grid,
@@ -37,6 +38,7 @@ interface Props {
 type NotificationType = "all" | "events" | "tasks" | "movements" | "alerts";
 
 const UpcomingNotifications = ({ onRefresh }: Props) => {
+	const theme = useTheme();
 	const [filterType, setFilterType] = useState<NotificationType>("all");
 	const [filterDays, setFilterDays] = useState<number>(7);
 	const [expandedSections, setExpandedSections] = useState({
@@ -164,7 +166,7 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 							<Card>
 								<CardContent>
 									<Box sx={{ display: "flex", alignItems: "center", mb: 2, cursor: "pointer" }} onClick={() => toggleSection("events")}>
-										<Calendar size={24} color="#1976d2" />
+										<Calendar size={24} color={theme.palette.info.main} />
 										<Typography variant="h6" sx={{ ml: 1, flexGrow: 1 }}>
 											Eventos Próximos ({upcomingEvents.data.length})
 										</Typography>
@@ -234,7 +236,7 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 							<Card>
 								<CardContent>
 									<Box sx={{ display: "flex", alignItems: "center", mb: 2, cursor: "pointer" }} onClick={() => toggleSection("tasks")}>
-										<Timer1 size={24} color="#ff9800" />
+										<Timer1 size={24} color={theme.palette.warning.main} />
 										<Typography variant="h6" sx={{ ml: 1, flexGrow: 1 }}>
 											Tareas Próximas ({upcomingTasks.data.length})
 										</Typography>
@@ -312,7 +314,7 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 							<Card>
 								<CardContent>
 									<Box sx={{ display: "flex", alignItems: "center", mb: 2, cursor: "pointer" }} onClick={() => toggleSection("movements")}>
-										<DollarCircle size={24} color="#4caf50" />
+										<DollarCircle size={24} color={theme.palette.success.main} />
 										<Typography variant="h6" sx={{ ml: 1, flexGrow: 1 }}>
 											Movimientos Próximos ({upcomingMovements.data.length})
 										</Typography>
@@ -406,7 +408,7 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 							<Card>
 								<CardContent>
 									<Box sx={{ display: "flex", alignItems: "center", mb: 2, cursor: "pointer" }} onClick={() => toggleSection("alerts")}>
-										<Notification size={24} color="#f44336" />
+										<Notification size={24} color={theme.palette.error.main} />
 										<Typography variant="h6" sx={{ ml: 1, flexGrow: 1 }}>
 											Alertas Pendientes ({pendingAlerts.data.length})
 										</Typography>

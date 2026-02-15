@@ -23,6 +23,7 @@ import {
 	Checkbox,
 	LinearProgress,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { Trash, Refresh, Warning2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig } from "api/workers";
@@ -34,6 +35,7 @@ interface TemporaryWorkersModalProps {
 }
 
 const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onClose, onDeleteSuccess }) => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 	const [loading, setLoading] = useState(false);
 	const [deleting, setDeleting] = useState<string | null>(null);
@@ -179,7 +181,7 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 		<Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
 			<DialogTitle>
 				<Stack direction="row" alignItems="center" spacing={1}>
-					<Warning2 size={24} color="#f44336" />
+					<Warning2 size={24} color={theme.palette.error.main} />
 					<Typography variant="h4">Workers Temporarios</Typography>
 				</Stack>
 			</DialogTitle>

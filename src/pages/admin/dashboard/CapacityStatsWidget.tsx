@@ -12,17 +12,18 @@ import {
 	alpha,
 	Tooltip,
 	IconButton,
+	Theme,
 } from "@mui/material";
 import { Calculator, Timer1, Refresh, Clock, Activity, Chart } from "iconsax-react";
 import { CausasPjnService, CapacityStatsResponse, CapacityStatsTotals } from "api/causasPjn";
 
-// Colores consistentes con el dashboard
-const COLORS = {
-	primary: { main: "#4F46E5", light: "#6366F1", lighter: "#EEF2FF" },
-	success: { main: "#10B981", light: "#34D399", lighter: "#ECFDF5" },
-	warning: { main: "#F59E0B", light: "#FBBF24", lighter: "#FFFBEB" },
-	neutral: { main: "#64748B", light: "#94A3B8", lighter: "#F1F5F9", text: "#475569" },
-};
+// Helper para obtener colores del tema
+const getThemeColors = (theme: Theme) => ({
+	primary: { main: theme.palette.primary.main, light: theme.palette.primary.light, lighter: alpha(theme.palette.primary.light, 0.15) },
+	success: { main: theme.palette.success.main, light: theme.palette.success.light, lighter: alpha(theme.palette.success.light, 0.15) },
+	warning: { main: theme.palette.warning.main, light: theme.palette.warning.light, lighter: alpha(theme.palette.warning.light, 0.15) },
+	neutral: { main: theme.palette.grey[600], light: theme.palette.grey[400], lighter: theme.palette.grey[100], text: theme.palette.text.secondary },
+});
 
 interface CapacityStatsWidgetProps {
 	onRefresh?: () => void;
@@ -30,6 +31,7 @@ interface CapacityStatsWidgetProps {
 
 const CapacityStatsWidget: React.FC<CapacityStatsWidgetProps> = ({ onRefresh }) => {
 	const theme = useTheme();
+	const COLORS = getThemeColors(theme);
 	const [loading, setLoading] = useState(true);
 	const [stats, setStats] = useState<CapacityStatsResponse["data"] | null>(null);
 	const [error, setError] = useState<string | null>(null);

@@ -66,16 +66,6 @@ import {
 	WorkerDailySummaryCompareResponse,
 } from "api/workers";
 
-// Color palette
-const COLORS = {
-	primary: "#4F46E5",
-	success: "#10B981",
-	error: "#EF4444",
-	warning: "#F59E0B",
-	info: "#3B82F6",
-	neutral: "#64748B",
-};
-
 // Stat Card Component
 interface StatCardProps {
 	title: string;
@@ -297,7 +287,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 							title="Procesados Hoy"
 							value={todaySummary?.totals.processed || 0}
 							icon={<Activity size={18} />}
-							color={COLORS.primary}
+							color={theme.palette.primary.main}
 							loading={loading}
 							trend={todaySummary?.comparison ? getTrend(todaySummary.totals.processed, todaySummary.totals.processed - (todaySummary.comparison.processed || 0)) : undefined}
 						/>
@@ -307,7 +297,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 							title="Exitosos"
 							value={todaySummary?.totals.successful || 0}
 							icon={<TickCircle size={18} />}
-							color={COLORS.success}
+							color={theme.palette.success.main}
 							loading={loading}
 						/>
 					</Grid>
@@ -316,7 +306,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 							title="Fallidos"
 							value={todaySummary?.totals.failed || 0}
 							icon={<CloseCircle size={18} />}
-							color={COLORS.error}
+							color={theme.palette.error.main}
 							loading={loading}
 						/>
 					</Grid>
@@ -325,7 +315,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 							title="Tasa Éxito"
 							value={`${(todaySummary?.totals.successRate || 0).toFixed(1)}%`}
 							icon={<Chart size={18} />}
-							color={COLORS.info}
+							color={theme.palette.info.main}
 							loading={loading}
 						/>
 					</Grid>
@@ -334,7 +324,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 							title="Movimientos"
 							value={todaySummary?.totals.movimientosFound || 0}
 							icon={<Activity size={18} />}
-							color={COLORS.warning}
+							color={theme.palette.warning.main}
 							loading={loading}
 						/>
 					</Grid>
@@ -343,7 +333,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 							title="Escalados"
 							value={todaySummary?.totals.totalScalingEvents || 0}
 							icon={<TrendUp size={18} />}
-							color={COLORS.neutral}
+							color={theme.palette.grey[600]}
 							loading={loading}
 						/>
 					</Grid>
@@ -366,12 +356,12 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 								<ComposedChart data={formattedChartData} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
 									<defs>
 										<linearGradient id="colorProcessed" x1="0" y1="0" x2="0" y2="1">
-											<stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.3} />
-											<stop offset="95%" stopColor={COLORS.primary} stopOpacity={0} />
+											<stop offset="5%" stopColor={theme.palette.primary.main} stopOpacity={0.3} />
+											<stop offset="95%" stopColor={theme.palette.primary.main} stopOpacity={0} />
 										</linearGradient>
 										<linearGradient id="colorSuccess" x1="0" y1="0" x2="0" y2="1">
-											<stop offset="5%" stopColor={COLORS.success} stopOpacity={0.3} />
-											<stop offset="95%" stopColor={COLORS.success} stopOpacity={0} />
+											<stop offset="5%" stopColor={theme.palette.success.main} stopOpacity={0.3} />
+											<stop offset="95%" stopColor={theme.palette.success.main} stopOpacity={0} />
 										</linearGradient>
 									</defs>
 									<CartesianGrid
@@ -429,7 +419,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 										yAxisId="left"
 										type="monotone"
 										dataKey="processed"
-										stroke={COLORS.primary}
+										stroke={theme.palette.primary.main}
 										strokeWidth={2}
 										fill="url(#colorProcessed)"
 									/>
@@ -437,7 +427,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 										yAxisId="left"
 										type="monotone"
 										dataKey="successful"
-										stroke={COLORS.success}
+										stroke={theme.palette.success.main}
 										strokeWidth={2}
 										fill="url(#colorSuccess)"
 									/>
@@ -445,7 +435,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 										yAxisId="right"
 										type="monotone"
 										dataKey="successRateNum"
-										stroke={COLORS.info}
+										stroke={theme.palette.info.main}
 										strokeWidth={2}
 										dot={false}
 									/>

@@ -47,16 +47,6 @@ import {
 	WorkerHourlyScalingEventsResponse,
 } from "api/workers";
 
-// Color palette
-const COLORS = {
-	primary: "#4F46E5",
-	success: "#10B981",
-	error: "#EF4444",
-	warning: "#F59E0B",
-	info: "#3B82F6",
-	neutral: "#64748B",
-};
-
 // Stat Card Component
 interface StatCardProps {
 	title: string;
@@ -261,7 +251,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 									title="Procesados"
 									value={currentHourData.totals.processed}
 									icon={<Activity size={18} />}
-									color={COLORS.primary}
+									color={theme.palette.primary.main}
 									loading={loading}
 								/>
 							</Grid>
@@ -270,7 +260,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 									title="Exitosos"
 									value={currentHourData.totals.successful}
 									icon={<Activity size={18} />}
-									color={COLORS.success}
+									color={theme.palette.success.main}
 									loading={loading}
 								/>
 							</Grid>
@@ -279,7 +269,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 									title="Fallidos"
 									value={currentHourData.totals.failed}
 									icon={<Activity size={18} />}
-									color={COLORS.error}
+									color={theme.palette.error.main}
 									loading={loading}
 								/>
 							</Grid>
@@ -288,7 +278,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 									title="Movimientos"
 									value={currentHourData.totals.movimientosFound}
 									icon={<Activity size={18} />}
-									color={COLORS.info}
+									color={theme.palette.info.main}
 									loading={loading}
 								/>
 							</Grid>
@@ -353,7 +343,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 								title="Procesados Hoy"
 								value={todaySummary?.totals.processed || 0}
 								icon={<Activity size={18} />}
-								color={COLORS.primary}
+								color={theme.palette.primary.main}
 								loading={loading}
 							/>
 						</Grid>
@@ -362,7 +352,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 								title="Exitosos"
 								value={todaySummary?.totals.successful || 0}
 								icon={<Activity size={18} />}
-								color={COLORS.success}
+								color={theme.palette.success.main}
 								loading={loading}
 							/>
 						</Grid>
@@ -371,7 +361,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 								title="Fallidos"
 								value={todaySummary?.totals.failed || 0}
 								icon={<Activity size={18} />}
-								color={COLORS.error}
+								color={theme.palette.error.main}
 								loading={loading}
 							/>
 						</Grid>
@@ -380,7 +370,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 								title="Movimientos"
 								value={todaySummary?.totals.movimientosFound || 0}
 								icon={<Activity size={18} />}
-								color={COLORS.info}
+								color={theme.palette.info.main}
 								loading={loading}
 							/>
 						</Grid>
@@ -390,7 +380,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 								value={todaySummary?.totals.activeHours || 0}
 								subtitle={`de ${currentHour + 1} transcurridas`}
 								icon={<Timer size={18} />}
-								color={COLORS.neutral}
+								color={theme.palette.grey[600]}
 								loading={loading}
 							/>
 						</Grid>
@@ -413,8 +403,8 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 									<ComposedChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
 										<defs>
 											<linearGradient id="colorSuccessful" x1="0" y1="0" x2="0" y2="1">
-												<stop offset="5%" stopColor={COLORS.success} stopOpacity={0.8} />
-												<stop offset="95%" stopColor={COLORS.success} stopOpacity={0.3} />
+												<stop offset="5%" stopColor={theme.palette.success.main} stopOpacity={0.8} />
+												<stop offset="95%" stopColor={theme.palette.success.main} stopOpacity={0.3} />
 											</linearGradient>
 										</defs>
 										<CartesianGrid
@@ -472,12 +462,12 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 											}
 										/>
 										<Bar yAxisId="left" dataKey="successful" fill="url(#colorSuccessful)" radius={[4, 4, 0, 0]} />
-										<Bar yAxisId="left" dataKey="failed" fill={COLORS.error} radius={[4, 4, 0, 0]} />
+										<Bar yAxisId="left" dataKey="failed" fill={theme.palette.error.main} radius={[4, 4, 0, 0]} />
 										<Line
 											yAxisId="right"
 											type="monotone"
 											dataKey="movimientos"
-											stroke={COLORS.info}
+											stroke={theme.palette.info.main}
 											strokeWidth={2}
 											dot={{ r: 3 }}
 										/>

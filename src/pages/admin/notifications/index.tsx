@@ -1,6 +1,7 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { useTheme } from "@mui/material/styles";
 import {
 	Grid,
 	Tab,
@@ -71,6 +72,7 @@ function a11yProps(index: number) {
 }
 
 const NotificationMonitoring = () => {
+	const theme = useTheme();
 	const [activeTab, setActiveTab] = useState(0);
 	const [refreshKey, setRefreshKey] = useState(0);
 	const [cronDialog, setCronDialog] = useState<{ open: boolean; type: string | null }>({ open: false, type: null });
@@ -257,7 +259,7 @@ const NotificationMonitoring = () => {
 							<Grid item xs={12} md={6} lg={3}>
 								<MainCard>
 									<Stack spacing={2} alignItems="center">
-										<Calendar size={48} color="#1890ff" />
+										<Calendar size={48} color={theme.palette.info.main} />
 										<Typography variant="h5" align="center">
 											Sincronizar Calendario
 										</Typography>
@@ -280,7 +282,7 @@ const NotificationMonitoring = () => {
 							<Grid item xs={12} md={6} lg={3}>
 								<MainCard>
 									<Stack spacing={2} alignItems="center">
-										<TaskSquare size={48} color="#52c41a" />
+										<TaskSquare size={48} color={theme.palette.success.main} />
 										<Typography variant="h5" align="center">
 											Sincronizar Tareas
 										</Typography>
@@ -303,7 +305,7 @@ const NotificationMonitoring = () => {
 							<Grid item xs={12} md={6} lg={3}>
 								<MainCard>
 									<Stack spacing={2} alignItems="center">
-										<DocumentText size={48} color="#fa8c16" />
+										<DocumentText size={48} color={theme.palette.warning.main} />
 										<Typography variant="h5" align="center">
 											Sincronizar Movimientos
 										</Typography>
@@ -326,7 +328,7 @@ const NotificationMonitoring = () => {
 							<Grid item xs={12} md={6} lg={3}>
 								<MainCard>
 									<Stack spacing={2} alignItems="center">
-										<Trash size={48} color="#ff4d4f" />
+										<Trash size={48} color={theme.palette.error.main} />
 										<Typography variant="h5" align="center">
 											Limpiar Logs
 										</Typography>

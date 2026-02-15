@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTheme } from "@mui/material/styles";
 import {
 	Box,
 	Card,
@@ -92,6 +93,7 @@ const getArgentinaDate = (): string => {
 };
 
 const CarpetasVerificadasApp = () => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Estados
@@ -1030,7 +1032,7 @@ const CarpetasVerificadasApp = () => {
 														size="small"
 														sx={{
 															...(causa.fuero === "CSS" && {
-																color: "rgba(0, 0, 0, 0.87)",
+																color: "text.primary",
 															}),
 														}}
 													/>
@@ -1132,16 +1134,16 @@ const CarpetasVerificadasApp = () => {
 												</TableCell>
 												<TableCell align="center">
 													{causa.update ? (
-														<TickCircle size={20} color="#2e7d32" variant="Bold" />
+														<TickCircle size={20} color={theme.palette.success.dark} variant="Bold" />
 													) : (
-														<CloseSquare size={20} color="#d32f2f" variant="Bold" />
+														<CloseSquare size={20} color={theme.palette.error.main} variant="Bold" />
 													)}
 												</TableCell>
 												<TableCell align="center">
 													{causa.isPrivate === true ? (
-														<TickCircle size={20} color="#2e7d32" variant="Bold" />
+														<TickCircle size={20} color={theme.palette.success.dark} variant="Bold" />
 													) : causa.isPrivate === false ? (
-														<CloseSquare size={20} color="#d32f2f" variant="Bold" />
+														<CloseSquare size={20} color={theme.palette.error.main} variant="Bold" />
 													) : (
 														<Typography variant="caption" color="text.secondary">—</Typography>
 													)}
@@ -1149,7 +1151,7 @@ const CarpetasVerificadasApp = () => {
 												<TableCell align="center">
 													{causa.isArchived ? (
 														<Tooltip title="Causa archivada - Movimientos solo en históricas">
-															<Archive size={20} color="#1976d2" variant="Bold" />
+															<Archive size={20} color={theme.palette.info.main} variant="Bold" />
 														</Tooltip>
 													) : (
 														<Typography variant="caption" color="text.secondary">—</Typography>

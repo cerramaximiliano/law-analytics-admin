@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTheme } from "@mui/material/styles";
 import {
 	Box,
 	Card,
@@ -181,6 +182,7 @@ const LinkedCausasRow = ({
 };
 
 const CarpetasPivotsEje = () => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Estados
@@ -376,7 +378,7 @@ const CarpetasPivotsEje = () => {
 							<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
 								<Stack direction="row" justifyContent="space-between" alignItems="center">
 									<Stack direction="row" alignItems="center" spacing={1}>
-										<Layer size={20} color="#0288d1" />
+										<Layer size={20} color={theme.palette.info.main} />
 										<Typography variant="body2" color="text.secondary">
 											Pivots Pendientes
 										</Typography>

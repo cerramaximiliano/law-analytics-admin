@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTheme } from "@mui/material/styles";
 import {
 	Box,
 	Card,
@@ -75,6 +76,7 @@ const formatHoursTooltip = (hours: number[]): string => {
 };
 
 const CarpetasMEVVerificadas = () => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Estados
@@ -894,9 +896,9 @@ const CarpetasMEVVerificadas = () => {
 												</TableCell>
 												<TableCell align="center">
 													{causa.update ? (
-														<TickCircle size={20} color="#2e7d32" variant="Bold" />
+														<TickCircle size={20} color={theme.palette.success.dark} variant="Bold" />
 													) : (
-														<CloseSquare size={20} color="#d32f2f" variant="Bold" />
+														<CloseSquare size={20} color={theme.palette.error.main} variant="Bold" />
 													)}
 												</TableCell>
 												<TableCell align="center">

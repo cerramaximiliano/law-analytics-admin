@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTheme } from "@mui/material/styles";
 import {
 	Box,
 	Card,
@@ -51,6 +52,7 @@ import MainCard from "components/MainCard";
 import { WorkersService, EmailVerificationConfig } from "api/workers";
 
 const EmailVerificationWorker = () => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 	const [config, setConfig] = useState<EmailVerificationConfig | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -324,7 +326,7 @@ const EmailVerificationWorker = () => {
 					<CardContent sx={{ pb: guideExpanded ? 2 : 1 }}>
 						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: guideExpanded ? 2 : 0 }}>
 							<Stack direction="row" spacing={1} alignItems="center">
-								<InfoCircle size={20} color="#1890ff" />
+								<InfoCircle size={20} color={theme.palette.info.main} />
 								<Typography variant="h6">Guía de Funcionamiento</Typography>
 							</Stack>
 							<Button
@@ -507,7 +509,7 @@ const EmailVerificationWorker = () => {
 						<Grid container spacing={2}>
 							<Grid item xs={6} sm={4} md={2}>
 								<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
-									<TickSquare size={24} color="#52c41a" />
+									<TickSquare size={24} color={theme.palette.success.dark} />
 									<Typography variant="h4" color="success.main">
 										{config.stats?.valid?.toLocaleString() || 0}
 									</Typography>
@@ -518,7 +520,7 @@ const EmailVerificationWorker = () => {
 							</Grid>
 							<Grid item xs={6} sm={4} md={2}>
 								<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
-									<CloseSquare size={24} color="#ff4d4f" />
+									<CloseSquare size={24} color={theme.palette.error.main} />
 									<Typography variant="h4" color="error.main">
 										{config.stats?.invalid?.toLocaleString() || 0}
 									</Typography>
@@ -529,7 +531,7 @@ const EmailVerificationWorker = () => {
 							</Grid>
 							<Grid item xs={6} sm={4} md={2}>
 								<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
-									<Danger size={24} color="#faad14" />
+									<Danger size={24} color={theme.palette.warning.main} />
 									<Typography variant="h4" color="warning.main">
 										{config.stats?.disposable?.toLocaleString() || 0}
 									</Typography>
@@ -540,7 +542,7 @@ const EmailVerificationWorker = () => {
 							</Grid>
 							<Grid item xs={6} sm={4} md={2}>
 								<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
-									<Sms size={24} color="#1890ff" />
+									<Sms size={24} color={theme.palette.info.main} />
 									<Typography variant="h4" color="info.main">
 										{config.stats?.catchall?.toLocaleString() || 0}
 									</Typography>
@@ -551,7 +553,7 @@ const EmailVerificationWorker = () => {
 							</Grid>
 							<Grid item xs={6} sm={4} md={2}>
 								<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
-									<InfoCircle size={24} color="#8c8c8c" />
+									<InfoCircle size={24} color={theme.palette.text.secondary} />
 									<Typography variant="h4" color="text.secondary">
 										{config.stats?.unknown?.toLocaleString() || 0}
 									</Typography>
@@ -730,7 +732,7 @@ const EmailVerificationWorker = () => {
 						<Card variant="outlined">
 							<CardContent>
 								<Stack direction="row" spacing={1} alignItems="center">
-									<TickCircle size={20} color="#52c41a" />
+									<TickCircle size={20} color={theme.palette.success.dark} />
 									<Typography variant="body2" color="text.secondary">
 										Total Verificados
 									</Typography>
@@ -745,7 +747,7 @@ const EmailVerificationWorker = () => {
 						<Card variant="outlined">
 							<CardContent>
 								<Stack direction="row" spacing={1} alignItems="center">
-									<CloseCircle size={20} color="#ff4d4f" />
+									<CloseCircle size={20} color={theme.palette.error.main} />
 									<Typography variant="body2" color="text.secondary">
 										Total Fallidos
 									</Typography>
@@ -850,7 +852,7 @@ const EmailVerificationWorker = () => {
 									margin: 0,
 									whiteSpace: "pre-wrap",
 									wordBreak: "break-word",
-									color: "#e0e0e0",
+									color: theme.palette.grey[300],
 									fontFamily: "monospace",
 									fontSize: "13px",
 								}}

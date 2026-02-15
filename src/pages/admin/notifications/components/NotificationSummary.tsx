@@ -2,6 +2,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Grid, Card, CardContent, Typography, Box, CircularProgress, Alert, LinearProgress } from "@mui/material";
+import { alpha, useTheme } from "@mui/material/styles";
 import { Calendar, Timer1, DollarCircle, Notification } from "iconsax-react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import dayjs from "utils/dayjs-config";
@@ -11,16 +12,18 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers";
 
-const COLORS = {
-	events: "#1976d2",
-	tasks: "#ff9800",
-	movements: "#4caf50",
-	alerts: "#f44336",
-	email: "#673ab7",
-	browser: "#009688",
-};
-
 const NotificationSummary = () => {
+	const theme = useTheme();
+
+	const COLORS = {
+		events: theme.palette.info.main,
+		tasks: theme.palette.warning.main,
+		movements: theme.palette.success.main,
+		alerts: theme.palette.error.main,
+		email: "#673ab7",
+		browser: "#009688",
+	};
+
 	const [startDate, setStartDate] = useState<Date | null>(null);
 	const [endDate, setEndDate] = useState<Date | null>(null);
 
@@ -105,7 +108,7 @@ const NotificationSummary = () => {
 						sx={{
 							p: 1.5,
 							borderRadius: 2,
-							bgcolor: `${color}15`,
+							bgcolor: alpha(color, 0.08),
 							display: "flex",
 							alignItems: "center",
 							justifyContent: "center",

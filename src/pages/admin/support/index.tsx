@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTheme } from "@mui/material/styles";
 import {
 	Box,
 	Grid,
@@ -80,6 +81,7 @@ const PRIORITY_CONFIG: Record<string, { color: "default" | "info" | "warning" | 
 };
 
 const SupportContactsPage = () => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
 	// State for contacts list
@@ -402,7 +404,7 @@ const SupportContactsPage = () => {
 							<Card variant="outlined">
 								<CardContent>
 									<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-										<MessageQuestion size={20} color="#6366F1" />
+										<MessageQuestion size={20} color={theme.palette.primary.main} />
 										<Typography variant="body2" color="textSecondary">
 											Total
 										</Typography>
@@ -421,7 +423,7 @@ const SupportContactsPage = () => {
 							<Card variant="outlined">
 								<CardContent>
 									<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-										<Clock size={20} color="#F59E0B" />
+										<Clock size={20} color={theme.palette.warning.main} />
 										<Typography variant="body2" color="textSecondary">
 											Pendientes
 										</Typography>
@@ -440,7 +442,7 @@ const SupportContactsPage = () => {
 							<Card variant="outlined">
 								<CardContent>
 									<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-										<Danger size={20} color="#EF4444" />
+										<Danger size={20} color={theme.palette.error.main} />
 										<Typography variant="body2" color="textSecondary">
 											Urgentes Pendientes
 										</Typography>
@@ -459,7 +461,7 @@ const SupportContactsPage = () => {
 							<Card variant="outlined">
 								<CardContent>
 									<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-										<UserRemove size={20} color="#8B5CF6" />
+										<UserRemove size={20} color={theme.palette.secondary.main} />
 										<Typography variant="body2" color="textSecondary">
 											Sin Asignar
 										</Typography>
@@ -478,7 +480,7 @@ const SupportContactsPage = () => {
 							<Card variant="outlined">
 								<CardContent>
 									<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-										<TickCircle size={20} color="#10B981" />
+										<TickCircle size={20} color={theme.palette.success.dark} />
 										<Typography variant="body2" color="textSecondary">
 											Resueltos
 										</Typography>
@@ -875,11 +877,11 @@ const SupportContactsPage = () => {
 																		/>
 																		{reply.emailSent ? (
 																			<Tooltip title="Email enviado">
-																				<TickSquare size={16} color="#10B981" />
+																				<TickSquare size={16} color={theme.palette.success.dark} />
 																			</Tooltip>
 																		) : (
 																			<Tooltip title="Email no enviado">
-																				<CloseSquareIcon size={16} color="#EF4444" />
+																				<CloseSquareIcon size={16} color={theme.palette.error.main} />
 																			</Tooltip>
 																		)}
 																	</Stack>
@@ -1117,9 +1119,9 @@ const SupportContactsPage = () => {
 																		{reply.createdByName || "Soporte"}
 																	</Typography>
 																	{reply.emailSent ? (
-																		<TickSquare size={12} color="#10B981" />
+																		<TickSquare size={12} color={theme.palette.success.dark} />
 																	) : (
-																		<CloseSquareIcon size={12} color="#EF4444" />
+																		<CloseSquareIcon size={12} color={theme.palette.error.main} />
 																	)}
 																</Stack>
 																<Typography variant="caption" color="textSecondary">

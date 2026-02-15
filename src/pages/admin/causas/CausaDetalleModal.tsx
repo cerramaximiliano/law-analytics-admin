@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTheme } from "@mui/material/styles";
 import {
 	Dialog,
 	DialogTitle,
@@ -109,6 +110,7 @@ const normalizeFuero = (fuero: string | undefined): "CIV" | "COM" | "CSS" | "CNT
 };
 
 const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = "pjn" }: CausaDetalleModalProps) => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Seleccionar el servicio apropiado
@@ -894,7 +896,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 									size="small"
 									sx={{
 										...(normalizeFuero(causa.fuero) === "CSS" && {
-											color: "rgba(0, 0, 0, 0.87)",
+											color: "text.primary",
 										}),
 									}}
 								/>
@@ -1034,7 +1036,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 											color={causa.update ? "warning" : "default"}
 											size="small"
 											variant={causa.update ? "filled" : "outlined"}
-											sx={{ mb: 0.5, ...(causa.update && { color: "rgba(0, 0, 0, 0.87)" }) }}
+											sx={{ mb: 0.5, ...(causa.update && { color: "text.primary" }) }}
 										/>
 									)}
 									{isArchived && (
@@ -1424,9 +1426,9 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 																{entry.success !== undefined && (
 																	<Tooltip title={entry.success ? "Exitoso" : "Fallido"}>
 																		{entry.success ? (
-																			<TickCircle size={20} color="#52c41a" variant="Bold" />
+																			<TickCircle size={20} color={theme.palette.success.main} variant="Bold" />
 																		) : (
-																			<CloseCircle size={20} color="#ff4d4f" variant="Bold" />
+																			<CloseCircle size={20} color={theme.palette.error.main} variant="Bold" />
 																		)}
 																	</Tooltip>
 																)}

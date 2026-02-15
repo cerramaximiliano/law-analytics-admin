@@ -249,7 +249,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 					variant={hasDev ? "filled" : "outlined"}
 					size="small"
 					icon={hasDev ? <TickCircle size={14} /> : <CloseSquare size={14} />}
-					sx={hasDev ? { color: "#000", "& .MuiChip-icon": { color: "#000" } } : {}}
+					sx={hasDev ? { color: theme.palette.text.primary, "& .MuiChip-icon": { color: theme.palette.text.primary } } : {}}
 				/>
 			);
 		}
@@ -371,7 +371,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 							) : discount.targetEnvironment === "production" ? (
 								<Chip label="Producción" size="small" color="success" />
 							) : (
-								<Chip label="Desarrollo" size="small" color="warning" sx={{ color: "#000" }} />
+								<Chip label="Desarrollo" size="small" color="warning" sx={{ color: theme.palette.text.primary }} />
 							)}
 						</Box>
 					</Stack>
@@ -686,7 +686,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 							<ToggleButton
 								value="development"
 								color="warning"
-								sx={{ "&.Mui-selected": { color: "#000" } }}
+								sx={{ "&.Mui-selected": { color: theme.palette.text.primary } }}
 							>
 								Development
 							</ToggleButton>
