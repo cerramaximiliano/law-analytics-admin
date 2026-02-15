@@ -785,7 +785,7 @@ const EmailLogsPage = () => {
 												variant="body2"
 												sx={{
 													fontFamily: "monospace",
-													bgcolor: "grey.100",
+													bgcolor: "background.default",
 													px: 1,
 													py: 0.5,
 													borderRadius: 1,
@@ -827,7 +827,7 @@ const EmailLogsPage = () => {
 										</Typography>
 										<Box
 											sx={{
-												bgcolor: "grey.100",
+												bgcolor: "background.default",
 												p: 1.5,
 												borderRadius: 1,
 												mt: 0.5,

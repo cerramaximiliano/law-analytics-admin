@@ -484,7 +484,7 @@ const SyncCheckTab = () => {
 							<Typography variant="subtitle2" sx={{ mt: 3 }} gutterBottom>
 								Comandos PM2:
 							</Typography>
-							<Box component="pre" sx={{ bgcolor: "grey.100", p: 1.5, borderRadius: 1, overflow: "auto", fontSize: "0.8rem" }}>
+							<Box component="pre" sx={{ bgcolor: "background.default", p: 1.5, borderRadius: 1, overflow: "auto", fontSize: "0.8rem" }}>
 								{`# Iniciar el worker
 pm2 start ecosystem-sync-check.config.js
 
@@ -1042,7 +1042,7 @@ pm2 save`}
 												<Box
 													component="pre"
 													sx={{
-														bgcolor: "grey.100",
+														bgcolor: "background.default",
 														p: 1.5,
 														borderRadius: 1,
 														overflow: "auto",

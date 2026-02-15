@@ -270,7 +270,7 @@ const FailedNotifications = () => {
 								<strong>Error:</strong> <span style={{ color: "red" }}>{selectedNotification.notification?.delivery?.error}</span>
 							</Typography>
 							{selectedNotification.notification?.delivery?.errorDetails && (
-								<Box sx={{ mt: 2, p: 2, bgcolor: "grey.100", borderRadius: 1 }}>
+								<Box sx={{ mt: 2, p: 2, bgcolor: "background.default", borderRadius: 1 }}>
 									<Typography variant="caption" component="pre" sx={{ fontFamily: "monospace" }}>
 										{JSON.stringify(selectedNotification.notification.delivery.errorDetails, null, 2)}
 									</Typography>

@@ -891,7 +891,7 @@ const ExpensesPage = () => {
 							¿Estás seguro de que querés eliminar este gasto?
 						</Typography>
 						{expenseToDelete && (
-							<Box sx={{ mt: 2, p: 2, bgcolor: "grey.100", borderRadius: 1 }}>
+							<Box sx={{ mt: 2, p: 2, bgcolor: "background.default", borderRadius: 1 }}>
 								<Typography variant="body2">
 									<strong>Fecha:</strong> {formatDate(expenseToDelete.date)}
 								</Typography>

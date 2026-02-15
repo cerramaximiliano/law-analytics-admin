@@ -375,7 +375,7 @@ const FolderDetalleModal = ({ open, onClose, folder }: FolderDetalleModalProps) 
 						<Box
 							component="pre"
 							sx={{
-								backgroundColor: "grey.100",
+								backgroundColor: "background.default",
 								p: 2,
 								borderRadius: 1,
 								overflow: "auto",

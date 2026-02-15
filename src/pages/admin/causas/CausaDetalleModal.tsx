@@ -1510,7 +1510,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 							<Box
 								component="pre"
 								sx={{
-									backgroundColor: "grey.100",
+									backgroundColor: "background.default",
 									p: 2,
 									borderRadius: 1,
 									overflow: "auto",

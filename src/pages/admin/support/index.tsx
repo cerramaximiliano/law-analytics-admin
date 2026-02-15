@@ -984,7 +984,7 @@ const SupportContactsPage = () => {
 					<DialogContent>
 						<Typography>Estas seguro de que queres eliminar este contacto de soporte?</Typography>
 						{contactToDelete && (
-							<Box sx={{ mt: 2, p: 2, bgcolor: "grey.100", borderRadius: 1 }}>
+							<Box sx={{ mt: 2, p: 2, bgcolor: "background.default", borderRadius: 1 }}>
 								<Typography variant="body2">
 									<strong>Nombre:</strong> {contactToDelete.name}
 								</Typography>
