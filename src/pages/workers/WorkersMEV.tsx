@@ -1330,6 +1330,64 @@ const MEVWorkers = () => {
 				</CardContent>
 			</Card>
 
+			{/* Cooldown por Jurisdicción No Disponible */}
+			<Card variant="outlined" sx={{ backgroundColor: "background.default" }}>
+				<CardContent sx={{ py: 2 }}>
+					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+						<Warning2 size={20} />
+						<Typography variant="subtitle2" fontWeight="bold">
+							Cooldown por Jurisdicción No Disponible
+						</Typography>
+						<Chip label="1 hora" size="small" color="warning" variant="outlined" />
+					</Stack>
+					<Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+						Cuando el worker detecta que una jurisdicción no está disponible en el MEV, aplica un cooldown de <strong>1 hora</strong> al
+						expediente para evitar reintentos inútiles mientras la jurisdicción permanece caída.
+					</Typography>
+					<Grid container spacing={2}>
+						<Grid item xs={12} sm={4}>
+							<Card variant="outlined" sx={{ height: '100%' }}>
+								<CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+									<Typography variant="caption" color="error.main" fontWeight="bold" gutterBottom display="block">
+										Detección
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Un solo <code>JurisdictionUnavailableError</code> confirma que la jurisdicción entera está caída. No se
+										acumulan errores como en PJN.
+									</Typography>
+								</CardContent>
+							</Card>
+						</Grid>
+						<Grid item xs={12} sm={4}>
+							<Card variant="outlined" sx={{ height: '100%' }}>
+								<CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+									<Typography variant="caption" color="warning.main" fontWeight="bold" gutterBottom display="block">
+										Cooldown
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Se setea <code>jurisdictionCooldown.skipUntil</code> con fecha futura (1h). La query excluye expedientes con
+										cooldown activo.
+									</Typography>
+								</CardContent>
+							</Card>
+						</Grid>
+						<Grid item xs={12} sm={4}>
+							<Card variant="outlined" sx={{ height: '100%' }}>
+								<CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+									<Typography variant="caption" color="success.main" fontWeight="bold" gutterBottom display="block">
+										Auto-limpieza
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Al procesar exitosamente, el campo <code>jurisdictionCooldown</code> se elimina automáticamente.
+										También aplica en el worker de verificación.
+									</Typography>
+								</CardContent>
+							</Card>
+						</Grid>
+					</Grid>
+				</CardContent>
+			</Card>
+
 			{/* Tabla de configuraciones */}
 			{authError ? (
 				<Alert severity="error" icon={<InfoCircle size={24} />}>
