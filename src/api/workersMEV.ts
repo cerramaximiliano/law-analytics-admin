@@ -200,6 +200,28 @@ export interface SyncCheckConfig {
 	updatedAt?: string;
 }
 
+// ========== Jurisdiction Status Types ==========
+
+export interface JurisdictionStatusDoc {
+	_id: string;
+	jurisdictionValue: string;
+	nombre: string | null;
+	disponible: boolean;
+	lastUnavailableAt: string | null;
+	lastAvailableAt: string | null;
+	unavailableCount: number;
+	currentStreak: number;
+	lastCheckedAt: string | null;
+	updatedAt?: string;
+}
+
+export interface JurisdictionStatusSummary {
+	total: number;
+	disponibles: number;
+	noDisponibles: number;
+	lastUpdate: string | null;
+}
+
 // ========== Worker Manager Types ==========
 
 export interface MEVManagerConfigSettings {
@@ -468,6 +490,29 @@ class MEVWorkersService {
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al obtener navigation codes");
+		}
+	}
+
+	// ========== Jurisdiction Status ==========
+
+	async getJurisdictionStatus(): Promise<{ success: boolean; data: JurisdictionStatusDoc[] }> {
+		try {
+			const response = await mevAxios.get("/api/config/jurisdiction-status");
+			return response.data;
+		} catch (error: any) {
+			if (error.response?.status === 401) {
+				throw new Error("Error de autenticacion. Por favor, inicie sesion nuevamente.");
+			}
+			throw new Error(error.response?.data?.message || "Error al obtener estado de jurisdicciones");
+		}
+	}
+
+	async getJurisdictionStatusSummary(): Promise<{ success: boolean; data: JurisdictionStatusSummary }> {
+		try {
+			const response = await mevAxios.get("/api/config/jurisdiction-status/summary");
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al obtener resumen de jurisdicciones");
 		}
 	}
 
