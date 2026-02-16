@@ -32,7 +32,7 @@ import {
 	useTheme,
 	alpha,
 } from "@mui/material";
-import { Edit2, TickCircle, CloseCircle, Refresh, Calendar, ArrowDown2, ArrowUp2, InfoCircle, Eye, EyeSlash, Setting2, TickSquare, DocumentUpload, Refresh2, Setting, People } from "iconsax-react";
+import { Edit2, TickCircle, CloseCircle, Refresh, Calendar, ArrowDown2, ArrowUp2, InfoCircle, Eye, EyeSlash, Setting2, TickSquare, DocumentUpload, Refresh2, Setting, People, Warning2 } from "iconsax-react";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -44,6 +44,7 @@ import MEVWorkersService, { MEVWorkerConfig, SystemConfig } from "api/workersMEV
 import SyncCheckTab from "./SyncCheckTab";
 import WorkerManagerTab from "./WorkerManagerTab";
 import ScbaManagerTab from "./ScbaManagerTab";
+import JurisdictionStatusTab from "./JurisdictionStatusTab";
 
 interface WorkerTab {
 	label: string;
@@ -2385,6 +2386,16 @@ const MEVWorkers = () => {
 			icon: <Refresh2 size={20} />,
 			component: <SyncCheckTab />,
 			description: "Verifica sincronizacion de jurisdicciones y organismos",
+			status: "active",
+			badge: "app",
+			ip: "56.125.115.51",
+		},
+		{
+			label: "Jurisdicciones",
+			value: "jurisdiction-status",
+			icon: <Warning2 size={20} />,
+			component: <JurisdictionStatusTab />,
+			description: "Estado de disponibilidad de jurisdicciones MEV",
 			status: "active",
 			badge: "app",
 			ip: "56.125.115.51",
