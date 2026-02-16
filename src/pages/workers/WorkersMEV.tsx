@@ -44,7 +44,6 @@ import MEVWorkersService, { MEVWorkerConfig, SystemConfig } from "api/workersMEV
 import SyncCheckTab from "./SyncCheckTab";
 import WorkerManagerTab from "./WorkerManagerTab";
 import ScbaManagerTab from "./ScbaManagerTab";
-import JurisdictionStatusTab from "./JurisdictionStatusTab";
 
 interface WorkerTab {
 	label: string;
@@ -2444,16 +2443,6 @@ const MEVWorkers = () => {
 			icon: <Refresh2 size={20} />,
 			component: <SyncCheckTab />,
 			description: "Verifica sincronizacion de jurisdicciones y organismos",
-			status: "active",
-			badge: "app",
-			ip: "56.125.115.51",
-		},
-		{
-			label: "Jurisdicciones",
-			value: "jurisdiction-status",
-			icon: <Warning2 size={20} />,
-			component: <JurisdictionStatusTab />,
-			description: "Estado de disponibilidad de jurisdicciones MEV",
 			status: "active",
 			badge: "app",
 			ip: "56.125.115.51",
