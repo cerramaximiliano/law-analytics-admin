@@ -134,6 +134,19 @@ const CarpetasMEVVerificadas = () => {
 		};
 	};
 
+	// Helper: estado de cooldown
+	const getCooldownStatus = (causa: CausaMEV): { isActive: boolean; timeRemaining: string | null } => {
+		const skipUntil = causa.jurisdictionCooldown?.skipUntil;
+		if (!skipUntil) return { isActive: false, timeRemaining: null };
+		const skipDate = new Date(typeof skipUntil === "string" ? skipUntil : skipUntil.$date);
+		const now = new Date();
+		if (skipDate <= now) return { isActive: false, timeRemaining: null };
+		const diffMs = skipDate.getTime() - now.getTime();
+		const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+		const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+		return { isActive: true, timeRemaining: diffHours > 0 ? `${diffHours}h ${diffMins}m` : `${diffMins}m` };
+	};
+
 	// Fetch elegibility stats
 	const fetchEligibilityStats = async () => {
 		try {
@@ -800,6 +813,7 @@ const CarpetasMEVVerificadas = () => {
 											<TableCell>Fecha Últ. Mov.</TableCell>
 											<TableCell align="center">Actualizable</TableCell>
 											<TableCell align="center">Estado</TableCell>
+											<TableCell align="center">Cooldown</TableCell>
 											<TableCell align="center">Acciones</TableCell>
 										</TableRow>
 									</TableHead>
@@ -940,6 +954,25 @@ const CarpetasMEVVerificadas = () => {
 																/>
 															</Tooltip>
 														);
+													})()}
+												</TableCell>
+												<TableCell align="center">
+													{(() => {
+														const cooldown = getCooldownStatus(causa);
+														if (cooldown.isActive) {
+															return (
+																<Tooltip title={`Cooldown activo. Reintento en ${cooldown.timeRemaining}`}>
+																	<Chip
+																		icon={<Timer size={14} />}
+																		label={cooldown.timeRemaining}
+																		size="small"
+																		color="warning"
+																		sx={{ fontSize: "0.7rem" }}
+																	/>
+																</Tooltip>
+															);
+														}
+														return <Typography variant="caption" color="text.secondary">—</Typography>;
 													})()}
 												</TableCell>
 												<TableCell align="center">

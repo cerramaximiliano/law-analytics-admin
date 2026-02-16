@@ -84,6 +84,9 @@ export interface CausaMEV {
 		intentosVerificacion?: number;
 		ultimoIntento?: string;
 	};
+	jurisdictionCooldown?: {
+		skipUntil?: { $date: string } | string;
+	};
 }
 
 export interface CausasMEVResponse {

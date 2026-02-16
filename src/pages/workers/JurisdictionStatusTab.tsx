@@ -22,7 +22,10 @@ import {
 import { Refresh, TickCircle, CloseCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 import MEVWorkersService, { JurisdictionStatusDoc, JurisdictionStatusSummary } from "api/workersMEV";
+
+dayjs.extend(relativeTime);
 
 export default function JurisdictionStatusTab() {
 	const { enqueueSnackbar } = useSnackbar();
