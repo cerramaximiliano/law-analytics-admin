@@ -342,17 +342,19 @@ const CredencialesPJN = () => {
     <MainCard title="Credenciales PJN">
       <Grid container spacing={3}>
         {/* Estadísticas */}
-        <Grid item xs={12}>
-          {statsLoading && (
+        {statsLoading && (
+          <Grid item xs={12}>
             <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
               <CircularProgress size={24} />
               <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
                 Cargando estadísticas...
               </Typography>
             </Box>
-          )}
-          {statsError && !statsLoading && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 1, px: 2, bgcolor: "error.lighter", borderRadius: 1 }}>
+          </Grid>
+        )}
+        {statsError && !statsLoading && (
+          <Grid item xs={12}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 1, px: 2, border: "1px solid", borderColor: "error.main", borderRadius: 1 }}>
               <Typography variant="body2" color="error.main">
                 Error al cargar estadísticas: {statsError}
               </Typography>
@@ -360,57 +362,53 @@ const CredencialesPJN = () => {
                 Reintentar
               </Button>
             </Box>
-          )}
-          {stats && !statsLoading && (
-            <>
-              <Grid container spacing={1.5}>
-                {[
-                  { value: stats.total, label: "Total", color: "primary.main" },
-                  { value: stats.enabled, label: "Habilitadas", color: "success.main" },
-                  { value: stats.verified, label: "Verificadas", color: "info.main" },
-                  { value: stats.isValid, label: "Válidas", color: "success.dark" },
-                  { value: stats.syncStatus.pending, label: "Pendientes", color: "warning.main" },
-                  { value: stats.syncStatus.error, label: "Errores", color: "error.main" },
-                  { value: stats.syncStatus.inProgress, label: "En progreso", color: "info.dark" },
-                  { value: stats.syncStatus.neverSynced, label: "Sin sincronizar", color: "text.disabled" },
-                ].map((stat, idx) => (
-                  <Grid item xs={6} sm={3} md={1.5} key={idx}>
-                    <Card variant="outlined">
-                      <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
-                        <Typography variant="h4" color={stat.color}>
-                          {stat.value}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" noWrap>
-                          {stat.label}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
+          </Grid>
+        )}
+        {stats && !statsLoading && (
+          <>
+            {[
+              { value: stats.total, label: "Total", color: "primary.main" },
+              { value: stats.enabled, label: "Habilitadas", color: "success.main" },
+              { value: stats.verified, label: "Verificadas", color: "info.main" },
+              { value: stats.isValid, label: "Válidas", color: "success.dark" },
+              { value: stats.syncStatus.pending, label: "Pendientes", color: "warning.main" },
+              { value: stats.syncStatus.error, label: "Errores", color: "error.main" },
+              { value: stats.syncStatus.inProgress, label: "En progreso", color: "info.dark" },
+              { value: stats.syncStatus.neverSynced, label: "Sin sincronizar", color: "text.disabled" },
+            ].map((stat, idx) => (
+              <Grid item xs={6} sm={3} md={1.5} key={idx}>
+                <Card variant="outlined">
+                  <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
+                    <Typography variant="h4" color={stat.color}>
+                      {stat.value}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" noWrap>
+                      {stat.label}
+                    </Typography>
+                  </CardContent>
+                </Card>
               </Grid>
-              <Grid container spacing={1.5} sx={{ mt: 0.5 }}>
-                {[
-                  { value: stats.totals.causas, label: "Total Causas", color: "info.main" },
-                  { value: stats.totals.folders, label: "Total Carpetas", color: "secondary.main" },
-                  { value: stats.totals.avgCausasPerUser, label: "Promedio Causas/Usuario", color: "text.primary" },
-                ].map((stat, idx) => (
-                  <Grid item xs={4} key={idx}>
-                    <Card variant="outlined">
-                      <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
-                        <Typography variant="h4" color={stat.color}>
-                          {stat.value}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {stat.label}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
+            ))}
+            {[
+              { value: stats.totals.causas, label: "Total Causas", color: "info.main" },
+              { value: stats.totals.folders, label: "Total Carpetas", color: "secondary.main" },
+              { value: stats.totals.avgCausasPerUser, label: "Promedio Causas/Usuario", color: "text.primary" },
+            ].map((stat, idx) => (
+              <Grid item xs={4} key={`total-${idx}`}>
+                <Card variant="outlined">
+                  <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
+                    <Typography variant="h4" color={stat.color}>
+                      {stat.value}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {stat.label}
+                    </Typography>
+                  </CardContent>
+                </Card>
               </Grid>
-            </>
-          )}
-        </Grid>
+            ))}
+          </>
+        )}
 
         {/* Filtros */}
         <Grid item xs={12}>
