@@ -92,7 +92,7 @@ const ScrapingWorker = () => {
 
 	// Estados de paginación para configuraciones
 	const [configPage, setConfigPage] = useState(0); // MUI TablePagination usa índice 0
-	const [configRowsPerPage, setConfigRowsPerPage] = useState(20);
+	const [configRowsPerPage, setConfigRowsPerPage] = useState(10);
 	const [configTotal, setConfigTotal] = useState(0);
 	const [configTotalSnapshot, setConfigTotalSnapshot] = useState<number | null>(null); // Snapshot para mantener paginación estable
 

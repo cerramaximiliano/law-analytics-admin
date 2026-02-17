@@ -83,7 +83,7 @@ const RangeHistoryPanel: React.FC = () => {
 
 	// Pagination
 	const [page, setPage] = useState(1);
-	const [rowsPerPage, setRowsPerPage] = useState(20);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 
 	// Sorting
 	const [sortBy, setSortBy] = useState<string>("completedAt");
