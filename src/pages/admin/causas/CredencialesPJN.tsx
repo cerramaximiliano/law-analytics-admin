@@ -166,14 +166,18 @@ const CredencialesPJN = () => {
     try {
       setStatsLoading(true);
       setStatsError(null);
+      console.log("[PJN Stats] Fetching stats...");
       const response = await pjnCredentialsService.getStats();
+      console.log("[PJN Stats] Response:", JSON.stringify(response));
       if (response.success) {
+        console.log("[PJN Stats] Setting stats data:", JSON.stringify(response.data));
         setStats(response.data);
       } else {
+        console.warn("[PJN Stats] Response success is falsy:", response);
         setStatsError("El servidor respondió sin éxito");
       }
     } catch (error: any) {
-      console.error("Error fetching stats:", error);
+      console.error("[PJN Stats] Error:", error);
       const msg = error?.response?.data?.message || error?.message || "Error desconocido";
       setStatsError(msg);
     } finally {
