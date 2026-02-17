@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Stack, Tabs, Tab, Alert, Button, Skeleton, useTheme } from "@mui/material";
-import { Setting2, People, Chart, MessageQuestion, Refresh } from "iconsax-react";
+import { Box, Typography, Stack, Tabs, Tab, Alert, Button, Skeleton, Divider, useTheme } from "@mui/material";
+import { Setting2, People, Chart, MessageQuestion, Refresh, Clock, RefreshSquare } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { ScrapingManagerConfig, ScrapingManagerService } from "api/scrapingManager";
+import { CausasUpdateConfig, CausasUpdateService } from "api/causasUpdate";
 import MisCausasManagerTab from "./MisCausasManagerTab";
 import MisCausasWorkersTab from "./MisCausasWorkersTab";
 import MisCausasStatsTab from "./MisCausasStatsTab";
 import MisCausasHelpTab from "./MisCausasHelpTab";
+import CausasUpdateConfigTab from "./CausasUpdateConfigTab";
+import CausasUpdateHistoryTab from "./CausasUpdateHistoryTab";
+import CausasUpdateStatsTab from "./CausasUpdateStatsTab";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -37,21 +41,39 @@ const MisCausasWorker: React.FC = () => {
 	const [config, setConfig] = useState<ScrapingManagerConfig | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [activeTab, setActiveTab] = useState(0);
+	const [updateConfig, setUpdateConfig] = useState<CausasUpdateConfig | null>(null);
+	const [updateConfigLoading, setUpdateConfigLoading] = useState(true);
 
 	const fetchConfig = async () => {
 		try {
 			setLoading(true);
-			const response = await ScrapingManagerService.getConfig();
-			if (response.success) {
-				setConfig(response.data);
-			}
+			setUpdateConfigLoading(true);
+			const [managerRes, updateRes] = await Promise.all([
+				ScrapingManagerService.getConfig(),
+				CausasUpdateService.getConfig(),
+			]);
+			if (managerRes.success) setConfig(managerRes.data);
+			if (updateRes.success) setUpdateConfig(updateRes.data);
 		} catch (error: any) {
-			enqueueSnackbar("Error al obtener configuración del Scraping Manager", {
+			enqueueSnackbar("Error al obtener configuración", {
 				variant: "error",
 				anchorOrigin: { vertical: "bottom", horizontal: "right" },
 			});
 		} finally {
 			setLoading(false);
+			setUpdateConfigLoading(false);
+		}
+	};
+
+	const fetchUpdateConfig = async () => {
+		try {
+			const response = await CausasUpdateService.getConfig();
+			if (response.success) setUpdateConfig(response.data);
+		} catch (error: any) {
+			enqueueSnackbar("Error cargando configuración de updates", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
 		}
 	};
 
@@ -90,7 +112,7 @@ const MisCausasWorker: React.FC = () => {
 				<Box>
 					<Typography variant="h4">Scraping Worker Manager</Typography>
 					<Typography variant="body2" color="text.secondary">
-						Gestión de workers de scraping del sistema Mis Causas (PJN)
+						Gestión de workers de scraping y actualización del sistema Mis Causas (PJN)
 					</Typography>
 				</Box>
 				<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchConfig}>
@@ -161,10 +183,34 @@ const MisCausasWorker: React.FC = () => {
 					<Tab
 						label={
 							<Stack direction="row" spacing={1.5} alignItems="center">
+								<RefreshSquare size={20} />
+								<Box>
+									<Typography variant="body2" fontWeight={500}>Config. Updates</Typography>
+									<Typography variant="caption" color="text.secondary">Thresholds y resume</Typography>
+								</Box>
+							</Stack>
+						}
+						sx={{ textTransform: "none" }}
+					/>
+					<Tab
+						label={
+							<Stack direction="row" spacing={1.5} alignItems="center">
+								<Clock size={20} />
+								<Box>
+									<Typography variant="body2" fontWeight={500}>Historial</Typography>
+									<Typography variant="caption" color="text.secondary">Runs de updates</Typography>
+								</Box>
+							</Stack>
+						}
+						sx={{ textTransform: "none" }}
+					/>
+					<Tab
+						label={
+							<Stack direction="row" spacing={1.5} alignItems="center">
 								<Chart size={20} />
 								<Box>
 									<Typography variant="body2" fontWeight={500}>Estadísticas</Typography>
-									<Typography variant="caption" color="text.secondary">Estado en vivo</Typography>
+									<Typography variant="caption" color="text.secondary">Estado y métricas</Typography>
 								</Box>
 							</Stack>
 						}
@@ -191,9 +237,28 @@ const MisCausasWorker: React.FC = () => {
 					<MisCausasWorkersTab config={config} onConfigUpdate={fetchConfig} />
 				</TabPanel>
 				<TabPanel value={activeTab} index={2}>
-					<MisCausasStatsTab />
+					{updateConfigLoading ? (
+						<Stack spacing={2}>
+							<Skeleton variant="rectangular" height={40} sx={{ borderRadius: 1 }} />
+							<Skeleton variant="rectangular" height={200} sx={{ borderRadius: 1 }} />
+						</Stack>
+					) : updateConfig ? (
+						<CausasUpdateConfigTab config={updateConfig} onConfigUpdate={fetchUpdateConfig} />
+					) : (
+						<Alert severity="error" variant="outlined">
+							<Typography variant="body2">No se pudo cargar la configuración de updates</Typography>
+						</Alert>
+					)}
 				</TabPanel>
 				<TabPanel value={activeTab} index={3}>
+					<CausasUpdateHistoryTab />
+				</TabPanel>
+				<TabPanel value={activeTab} index={4}>
+					<MisCausasStatsTab />
+					<Divider sx={{ my: 3 }} />
+					<CausasUpdateStatsTab />
+				</TabPanel>
+				<TabPanel value={activeTab} index={5}>
 					<MisCausasHelpTab />
 				</TabPanel>
 			</Box>
