@@ -34,6 +34,10 @@ export interface PjnCredential {
   };
   successfulSyncs: number;
   firstSync: string | null;
+  totalMovements: number;
+  lastMovementDate: string | null;
+  lastSyncDuration: number | null;
+  byFuero: Record<string, number>;
   currentSyncProgress?: {
     startedAt: string;
     currentPage: number;
@@ -104,6 +108,25 @@ export interface PjnCredentialsStatsResponse {
       folders: number;
       avgCausasPerUser: number;
     };
+    syncActivity: {
+      syncsLast24h: number;
+      syncsLast7d: number;
+      successRate: number;
+      avgDurationMs: number;
+    };
+    updateActivity: {
+      runsLast24h: number;
+      runsLast7d: number;
+      newMovements24h: number;
+      newMovements7d: number;
+    };
+    movementTotals: {
+      totalMovements: number;
+      avgPerFolder: number;
+      foldersWithMovements: number;
+      lastGlobalMovement: string | null;
+    };
+    byFuero: Array<{ fuero: string; total: number }>;
   };
 }
 

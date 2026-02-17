@@ -166,18 +166,14 @@ const CredencialesPJN = () => {
     try {
       setStatsLoading(true);
       setStatsError(null);
-      console.log("[PJN Stats] Fetching stats...");
       const response = await pjnCredentialsService.getStats();
-      console.log("[PJN Stats] Response:", JSON.stringify(response));
       if (response.success) {
-        console.log("[PJN Stats] Setting stats data:", JSON.stringify(response.data));
         setStats(response.data);
       } else {
-        console.warn("[PJN Stats] Response success is falsy:", response);
         setStatsError("El servidor respondió sin éxito");
       }
     } catch (error: any) {
-      console.error("[PJN Stats] Error:", error);
+      console.error("Error fetching stats:", error);
       const msg = error?.response?.data?.message || error?.message || "Error desconocido";
       setStatsError(msg);
     } finally {
@@ -407,6 +403,83 @@ const CredencialesPJN = () => {
                 </Card>
               </Grid>
             ))}
+            {/* Sync Activity */}
+            {stats.syncActivity && [
+              { value: stats.syncActivity.syncsLast24h, label: "Syncs (24h)", color: "info.main" },
+              { value: stats.syncActivity.syncsLast7d, label: "Syncs (7d)", color: "info.dark" },
+              { value: `${stats.syncActivity.successRate}%`, label: "Tasa Éxito", color: stats.syncActivity.successRate >= 90 ? "success.main" : "warning.main" },
+              { value: stats.syncActivity.avgDurationMs > 0 ? `${Math.round(stats.syncActivity.avgDurationMs / 1000)}s` : "-", label: "Duración Prom.", color: "text.primary" },
+            ].map((stat, idx) => (
+              <Grid item xs={6} sm={3} key={`sync-${idx}`}>
+                <Card variant="outlined">
+                  <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
+                    <Typography variant="h4" color={stat.color}>
+                      {stat.value}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" noWrap>
+                      {stat.label}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+            {/* Update Activity */}
+            {stats.updateActivity && [
+              { value: stats.updateActivity.runsLast24h, label: "Updates (24h)", color: "secondary.main" },
+              { value: stats.updateActivity.runsLast7d, label: "Updates (7d)", color: "secondary.dark" },
+              { value: stats.updateActivity.newMovements24h, label: "Mov. Nuevos (24h)", color: "success.main" },
+              { value: stats.updateActivity.newMovements7d, label: "Mov. Nuevos (7d)", color: "success.dark" },
+            ].map((stat, idx) => (
+              <Grid item xs={6} sm={3} key={`update-${idx}`}>
+                <Card variant="outlined">
+                  <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
+                    <Typography variant="h4" color={stat.color}>
+                      {stat.value}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" noWrap>
+                      {stat.label}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+            {/* Movement Totals */}
+            {stats.movementTotals && [
+              { value: stats.movementTotals.totalMovements.toLocaleString(), label: "Total Movimientos", color: "primary.main" },
+              { value: stats.movementTotals.avgPerFolder, label: "Prom. Mov/Carpeta", color: "text.primary" },
+              { value: stats.movementTotals.foldersWithMovements, label: "Carpetas c/ Mov.", color: "info.main" },
+              { value: stats.movementTotals.lastGlobalMovement ? formatDate(stats.movementTotals.lastGlobalMovement) : "-", label: "Último Movimiento", color: "text.primary" },
+            ].map((stat, idx) => (
+              <Grid item xs={6} sm={3} key={`mov-${idx}`}>
+                <Card variant="outlined">
+                  <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
+                    <Typography variant="h4" color={stat.color} sx={idx === 3 ? { fontSize: "0.9rem" } : undefined}>
+                      {stat.value}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" noWrap>
+                      {stat.label}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+            {/* ByFuero Distribution */}
+            {stats.byFuero && stats.byFuero.length > 0 && (
+              <Grid item xs={12}>
+                <Card variant="outlined">
+                  <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: "block" }}>
+                      Distribución por Fuero
+                    </Typography>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      {stats.byFuero.map((f: { fuero: string; total: number }) => (
+                        <Chip key={f.fuero} label={`${f.fuero}: ${f.total}`} size="small" variant="outlined" color="primary" />
+                      ))}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Grid>
+            )}
           </>
         )}
 
@@ -526,6 +599,9 @@ const CredencialesPJN = () => {
                   <TableCell align="center">Habilitado</TableCell>
                   <TableCell align="right">Causas</TableCell>
                   <TableCell align="right">Carpetas</TableCell>
+                  <TableCell align="right">Movimientos</TableCell>
+                  <TableCell>Último Mov.</TableCell>
+                  <TableCell align="right">Dur. Sync</TableCell>
                   <TableCell align="right">Syncs</TableCell>
                   <TableCell align="center">Errores</TableCell>
                   <TableCell>Última Sync</TableCell>
@@ -535,13 +611,13 @@ const CredencialesPJN = () => {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={12} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={15} align="center" sx={{ py: 4 }}>
                       <CircularProgress size={32} />
                     </TableCell>
                   </TableRow>
                 ) : credentials.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={12} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={15} align="center" sx={{ py: 4 }}>
                       <Typography color="text.secondary">
                         No se encontraron credenciales
                       </Typography>
@@ -629,6 +705,29 @@ const CredencialesPJN = () => {
                       <TableCell align="right">
                         <Typography variant="body2">
                           {cred.foldersCreatedCount || 0}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Tooltip
+                          title={
+                            cred.byFuero && Object.keys(cred.byFuero).length > 0
+                              ? Object.entries(cred.byFuero).map(([fuero, count]) => `${fuero}: ${count}`).join(", ")
+                              : "Sin datos de fuero"
+                          }
+                        >
+                          <Typography variant="body2" sx={{ cursor: "help" }}>
+                            {cred.totalMovements || 0}
+                          </Typography>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="caption">
+                          {formatDate(cred.lastMovementDate)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography variant="body2">
+                          {cred.lastSyncDuration != null ? `${cred.lastSyncDuration}s` : "-"}
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
