@@ -110,7 +110,7 @@ const ScrapingManagerPanel: React.FC = () => {
 	const [fueroFilter, setFueroFilter] = useState<string>("");
 	const [enabledFilter, setEnabledFilter] = useState<string>("");
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(20);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 
 	// Selection
 	const [selected, setSelected] = useState<string[]>([]);
