@@ -43,6 +43,7 @@ import {
   RefreshCircle,
   AddCircle,
   Broom,
+  Copy,
 } from "iconsax-react";
 import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -123,6 +124,12 @@ const CredencialesPJN = () => {
     loading: boolean;
     executing: boolean;
   }>({ open: false, credential: null, preview: null, loading: false, executing: false });
+  const [rawDialog, setRawDialog] = useState<{
+    open: boolean;
+    data: any;
+    loading: boolean;
+    userName: string;
+  }>({ open: false, data: null, loading: false, userName: "" });
 
   // Cargar datos
   const fetchCredentials = async () => {
@@ -286,6 +293,26 @@ const CredencialesPJN = () => {
     }
   };
 
+  const handleViewRaw = async (cred: PjnCredential) => {
+    setRawDialog({ open: true, data: null, loading: true, userName: cred.userName });
+    try {
+      const response = await pjnCredentialsService.getRawCredential(cred._id);
+      if (response.success) {
+        setRawDialog((prev) => ({ ...prev, data: response.data, loading: false }));
+      }
+    } catch (error) {
+      enqueueSnackbar("Error al obtener datos raw", { variant: "error" });
+      setRawDialog((prev) => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleCopyRaw = () => {
+    if (rawDialog.data) {
+      navigator.clipboard.writeText(JSON.stringify(rawDialog.data, null, 2));
+      enqueueSnackbar("JSON copiado al portapapeles", { variant: "success" });
+    }
+  };
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "-";
     return new Date(dateString).toLocaleString("es-AR", {
@@ -303,79 +330,50 @@ const CredencialesPJN = () => {
         {/* Estadísticas */}
         {stats && (
           <Grid item xs={12}>
-            <Grid container spacing={2}>
-              <Grid item xs={6} sm={3} md={2}>
-                <Card variant="outlined">
-                  <CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
-                    <Typography variant="h4" color="primary">
-                      {stats.total}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Total
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={6} sm={3} md={2}>
-                <Card variant="outlined">
-                  <CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
-                    <Typography variant="h4" color="success.main">
-                      {stats.isValid}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Válidas
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={6} sm={3} md={2}>
-                <Card variant="outlined">
-                  <CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
-                    <Typography variant="h4" color="warning.main">
-                      {stats.syncStatus.pending}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Pendientes
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={6} sm={3} md={2}>
-                <Card variant="outlined">
-                  <CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
-                    <Typography variant="h4" color="error.main">
-                      {stats.syncStatus.error}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Con errores
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={6} sm={3} md={2}>
-                <Card variant="outlined">
-                  <CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
-                    <Typography variant="h4" color="info.main">
-                      {stats.totals.causas}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Causas
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={6} sm={3} md={2}>
-                <Card variant="outlined">
-                  <CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
-                    <Typography variant="h4" color="secondary.main">
-                      {stats.totals.folders}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Carpetas
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
+            <Grid container spacing={1.5}>
+              {[
+                { value: stats.total, label: "Total", color: "primary.main" },
+                { value: stats.enabled, label: "Habilitadas", color: "success.main" },
+                { value: stats.verified, label: "Verificadas", color: "info.main" },
+                { value: stats.isValid, label: "Válidas", color: "success.dark" },
+                { value: stats.syncStatus.pending, label: "Pendientes", color: "warning.main" },
+                { value: stats.syncStatus.error, label: "Errores", color: "error.main" },
+                { value: stats.syncStatus.inProgress, label: "En progreso", color: "info.dark" },
+                { value: stats.syncStatus.neverSynced, label: "Sin sincronizar", color: "text.disabled" },
+              ].map((stat, idx) => (
+                <Grid item xs={6} sm={3} md={1.5} key={idx}>
+                  <Card variant="outlined">
+                    <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
+                      <Typography variant="h4" color={stat.color}>
+                        {stat.value}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" noWrap>
+                        {stat.label}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+            <Grid container spacing={1.5} sx={{ mt: 0.5 }}>
+              {[
+                { value: stats.totals.causas, label: "Total Causas", color: "info.main" },
+                { value: stats.totals.folders, label: "Total Carpetas", color: "secondary.main" },
+                { value: stats.totals.avgCausasPerUser, label: "Promedio Causas/Usuario", color: "text.primary" },
+              ].map((stat, idx) => (
+                <Grid item xs={4} key={idx}>
+                  <Card variant="outlined">
+                    <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
+                      <Typography variant="h4" color={stat.color}>
+                        {stat.value}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {stat.label}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
             </Grid>
           </Grid>
         )}
@@ -496,6 +494,8 @@ const CredencialesPJN = () => {
                   <TableCell align="center">Habilitado</TableCell>
                   <TableCell align="right">Causas</TableCell>
                   <TableCell align="right">Carpetas</TableCell>
+                  <TableCell align="right">Syncs</TableCell>
+                  <TableCell align="center">Errores</TableCell>
                   <TableCell>Última Sync</TableCell>
                   <TableCell align="center">Acciones</TableCell>
                 </TableRow>
@@ -503,13 +503,13 @@ const CredencialesPJN = () => {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={12} align="center" sx={{ py: 4 }}>
                       <CircularProgress size={32} />
                     </TableCell>
                   </TableRow>
                 ) : credentials.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={12} align="center" sx={{ py: 4 }}>
                       <Typography color="text.secondary">
                         No se encontraron credenciales
                       </Typography>
@@ -591,13 +591,30 @@ const CredencialesPJN = () => {
                       </TableCell>
                       <TableCell align="right">
                         <Typography variant="body2">
-                          {cred.expectedCausasCount || 0}
+                          {cred.processedCausasCount || 0}/{cred.expectedCausasCount || 0}
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
                         <Typography variant="body2">
                           {cred.foldersCreatedCount || 0}
                         </Typography>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography variant="body2">
+                          {cred.successfulSyncs || 0}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        {cred.consecutiveErrors > 0 ? (
+                          <Chip
+                            label={cred.consecutiveErrors}
+                            color="error"
+                            size="small"
+                            sx={{ minWidth: 32 }}
+                          />
+                        ) : (
+                          <Typography variant="body2" color="text.disabled">0</Typography>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Typography variant="caption">
@@ -606,6 +623,15 @@ const CredencialesPJN = () => {
                       </TableCell>
                       <TableCell align="center">
                         <Stack direction="row" spacing={0.5} justifyContent="center">
+                          <Tooltip title="Ver JSON">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleViewRaw(cred)}
+                              color="default"
+                            >
+                              <Eye size={18} />
+                            </IconButton>
+                          </Tooltip>
                           <Tooltip
                             title={cred.enabled ? "Deshabilitar" : "Habilitar"}
                           >
@@ -851,6 +877,59 @@ const CredencialesPJN = () => {
             startIcon={creating ? <CircularProgress size={16} /> : undefined}
           >
             {creating ? "Creando..." : "Crear"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* Dialog de raw JSON */}
+      <Dialog
+        open={rawDialog.open}
+        onClose={() => setRawDialog({ open: false, data: null, loading: false, userName: "" })}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Typography variant="h5">Raw JSON - {rawDialog.userName}</Typography>
+            {rawDialog.data && (
+              <Tooltip title="Copiar JSON">
+                <IconButton size="small" onClick={handleCopyRaw}>
+                  <Copy size={18} />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Stack>
+        </DialogTitle>
+        <DialogContent>
+          {rawDialog.loading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+              <CircularProgress size={32} />
+            </Box>
+          ) : rawDialog.data ? (
+            <Box
+              component="pre"
+              sx={{
+                bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+                color: theme.palette.mode === "dark" ? "grey.300" : "grey.800",
+                p: 2,
+                borderRadius: 1,
+                fontSize: "0.75rem",
+                fontFamily: "monospace",
+                overflow: "auto",
+                maxHeight: "70vh",
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                m: 0,
+              }}
+            >
+              {JSON.stringify(rawDialog.data, null, 2)}
+            </Box>
+          ) : (
+            <Typography color="text.secondary">No se pudieron cargar los datos</Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRawDialog({ open: false, data: null, loading: false, userName: "" })}>
+            Cerrar
           </Button>
         </DialogActions>
       </Dialog>

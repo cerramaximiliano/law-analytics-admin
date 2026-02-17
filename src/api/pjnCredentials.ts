@@ -32,6 +32,8 @@ export interface PjnCredential {
     lastCausasCount: number;
     byFuero: Record<string, number>;
   };
+  successfulSyncs: number;
+  firstSync: string | null;
   currentSyncProgress?: {
     startedAt: string;
     currentPage: number;
@@ -172,6 +174,14 @@ class PjnCredentialsService {
    */
   async resetSyncData(id: string, dryRun: boolean = true): Promise<GenericResponse> {
     const response = await adminAxios.post(`/api/pjn-credentials/${id}/reset-sync`, { dryRun });
+    return response.data;
+  }
+
+  /**
+   * Obtener documento raw de una credencial (sin datos sensibles)
+   */
+  async getRawCredential(id: string): Promise<GenericResponse> {
+    const response = await adminAxios.get(`/api/pjn-credentials/${id}`, { params: { raw: true } });
     return response.data;
   }
 
