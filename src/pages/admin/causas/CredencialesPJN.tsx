@@ -93,6 +93,8 @@ const CredencialesPJN = () => {
   const [credentials, setCredentials] = useState<PjnCredential[]>([]);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<any>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsError, setStatsError] = useState<string | null>(null);
 
   // Paginación
   const [page, setPage] = useState(0);
@@ -162,12 +164,20 @@ const CredencialesPJN = () => {
 
   const fetchStats = async () => {
     try {
+      setStatsLoading(true);
+      setStatsError(null);
       const response = await pjnCredentialsService.getStats();
       if (response.success) {
         setStats(response.data);
+      } else {
+        setStatsError("El servidor respondió sin éxito");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching stats:", error);
+      const msg = error?.response?.data?.message || error?.message || "Error desconocido";
+      setStatsError(msg);
+    } finally {
+      setStatsLoading(false);
     }
   };
 
@@ -328,55 +338,75 @@ const CredencialesPJN = () => {
     <MainCard title="Credenciales PJN">
       <Grid container spacing={3}>
         {/* Estadísticas */}
-        {stats && (
-          <Grid item xs={12}>
-            <Grid container spacing={1.5}>
-              {[
-                { value: stats.total, label: "Total", color: "primary.main" },
-                { value: stats.enabled, label: "Habilitadas", color: "success.main" },
-                { value: stats.verified, label: "Verificadas", color: "info.main" },
-                { value: stats.isValid, label: "Válidas", color: "success.dark" },
-                { value: stats.syncStatus.pending, label: "Pendientes", color: "warning.main" },
-                { value: stats.syncStatus.error, label: "Errores", color: "error.main" },
-                { value: stats.syncStatus.inProgress, label: "En progreso", color: "info.dark" },
-                { value: stats.syncStatus.neverSynced, label: "Sin sincronizar", color: "text.disabled" },
-              ].map((stat, idx) => (
-                <Grid item xs={6} sm={3} md={1.5} key={idx}>
-                  <Card variant="outlined">
-                    <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
-                      <Typography variant="h4" color={stat.color}>
-                        {stat.value}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" noWrap>
-                        {stat.label}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-            <Grid container spacing={1.5} sx={{ mt: 0.5 }}>
-              {[
-                { value: stats.totals.causas, label: "Total Causas", color: "info.main" },
-                { value: stats.totals.folders, label: "Total Carpetas", color: "secondary.main" },
-                { value: stats.totals.avgCausasPerUser, label: "Promedio Causas/Usuario", color: "text.primary" },
-              ].map((stat, idx) => (
-                <Grid item xs={4} key={idx}>
-                  <Card variant="outlined">
-                    <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
-                      <Typography variant="h4" color={stat.color}>
-                        {stat.value}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {stat.label}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Grid>
-        )}
+        <Grid item xs={12}>
+          {statsLoading && (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+              <CircularProgress size={24} />
+              <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                Cargando estadísticas...
+              </Typography>
+            </Box>
+          )}
+          {statsError && !statsLoading && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 1, px: 2, bgcolor: "error.lighter", borderRadius: 1 }}>
+              <Typography variant="body2" color="error.main">
+                Error al cargar estadísticas: {statsError}
+              </Typography>
+              <Button size="small" variant="outlined" color="error" onClick={fetchStats} startIcon={<Refresh size={16} />}>
+                Reintentar
+              </Button>
+            </Box>
+          )}
+          {stats && !statsLoading && (
+            <>
+              <Grid container spacing={1.5}>
+                {[
+                  { value: stats.total, label: "Total", color: "primary.main" },
+                  { value: stats.enabled, label: "Habilitadas", color: "success.main" },
+                  { value: stats.verified, label: "Verificadas", color: "info.main" },
+                  { value: stats.isValid, label: "Válidas", color: "success.dark" },
+                  { value: stats.syncStatus.pending, label: "Pendientes", color: "warning.main" },
+                  { value: stats.syncStatus.error, label: "Errores", color: "error.main" },
+                  { value: stats.syncStatus.inProgress, label: "En progreso", color: "info.dark" },
+                  { value: stats.syncStatus.neverSynced, label: "Sin sincronizar", color: "text.disabled" },
+                ].map((stat, idx) => (
+                  <Grid item xs={6} sm={3} md={1.5} key={idx}>
+                    <Card variant="outlined">
+                      <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
+                        <Typography variant="h4" color={stat.color}>
+                          {stat.value}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" noWrap>
+                          {stat.label}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+              <Grid container spacing={1.5} sx={{ mt: 0.5 }}>
+                {[
+                  { value: stats.totals.causas, label: "Total Causas", color: "info.main" },
+                  { value: stats.totals.folders, label: "Total Carpetas", color: "secondary.main" },
+                  { value: stats.totals.avgCausasPerUser, label: "Promedio Causas/Usuario", color: "text.primary" },
+                ].map((stat, idx) => (
+                  <Grid item xs={4} key={idx}>
+                    <Card variant="outlined">
+                      <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
+                        <Typography variant="h4" color={stat.color}>
+                          {stat.value}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {stat.label}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </>
+          )}
+        </Grid>
 
         {/* Filtros */}
         <Grid item xs={12}>
