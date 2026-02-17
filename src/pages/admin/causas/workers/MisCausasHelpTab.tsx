@@ -301,7 +301,57 @@ Credenciales donde:
 				</CardContent>
 			</Card>
 
-			{/* Configuración del Manager */}
+			{/* Worker: causas-update */}
+		<Card variant="outlined" sx={{ bgcolor: "background.default" }}>
+			<CardContent>
+				<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+					<Chip label="causas-update" size="small" color="success" sx={{ fontFamily: "monospace" }} />
+					<Typography variant="h6">Actualización de Movimientos (Causas Update)</Typography>
+				</Stack>
+
+				<Section title="Función">
+					<Typography variant="body2">
+						Actualiza los movimientos de TODAS las causas vinculadas a credenciales de usuario mediante login SSO
+						al portal PJN. Usa un algoritmo de comparación por cantidad para detectar movimientos nuevos de forma eficiente.
+					</Typography>
+				</Section>
+
+				<Section title="Flujo de Ejecución">
+					<BulletList
+						items={[
+							"1. Resume de runs interrumpidos anteriores",
+							"2. Buscar causas con credenciales vinculadas agrupadas por credencial",
+							"3. Por cada credencial: verificar threshold, esperar concurrencia, login SSO",
+							"4. Por cada causa: buscar en portal, comparar movimientos, actualizar BD",
+							"5. Registrar detalle del run para tracking y resume futuro",
+						]}
+					/>
+				</Section>
+
+				<Section title="Configuración">
+					<BulletList
+						items={[
+							"Thresholds: updateThresholdHours define horas mínimas antes de reprocesar una causa. minTimeBetweenRunsMinutes controla intervalo entre runs de la misma credencial.",
+							"Concurrencia: waitForCausaCreation hace que el worker espere al worker de creación de causas antes de procesar una credencial.",
+							"Resume: Si un run es interrumpido (error, shutdown), se retoma automáticamente en la próxima ejecución procesando solo las causas faltantes.",
+						]}
+					/>
+				</Section>
+
+				<Section title="Elegibilidad">
+					<CodeBlock>{`Causas donde:
+  linkedCredentials: tiene al menos una credencial vinculada
+  lastUpdate: anterior a updateThresholdHours o no existe
+
+Credenciales donde:
+  enabled: true
+  isValid: true
+  última ejecución: hace más de minTimeBetweenRunsMinutes`}</CodeBlock>
+				</Section>
+			</CardContent>
+		</Card>
+
+		{/* Configuración del Manager */}
 			<Card variant="outlined" sx={{ bgcolor: "background.default" }}>
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>

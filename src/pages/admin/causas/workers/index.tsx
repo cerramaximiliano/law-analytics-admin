@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import { Box, Tab, Tabs, Typography, Paper, Stack, Chip, useTheme, alpha, IconButton, Tooltip, Popover } from "@mui/material";
-import { TickSquare, SearchNormal1, DocumentUpload, InfoCircle, People, Warning2, SecurityUser, RefreshSquare } from "iconsax-react";
+import { TickSquare, SearchNormal1, DocumentUpload, InfoCircle, People, Warning2, SecurityUser } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import VerificationWorker from "./VerificationWorker";
@@ -10,7 +10,6 @@ import AppUpdateWorker from "./AppUpdateWorker";
 import IntervinientesWorker from "./IntervinientesWorker";
 import StuckDocumentsWorker from "./StuckDocumentsWorker";
 import MisCausasWorker from "./MisCausasWorker";
-import CausasUpdateWorker from "./CausasUpdateWorker";
 
 // Interfaz para los tabs
 interface WorkerTab {
@@ -90,17 +89,7 @@ const WorkersConfig = () => {
 			value: "mis-causas",
 			icon: <SecurityUser size={20} />,
 			component: <MisCausasWorker />,
-			description: "Gestión del scraping de Mis Causas PJN (login SSO)",
-			status: "inactive",
-			badge: "worker_02",
-			ip: "100.98.180.101",
-		},
-		{
-			label: "Causas Update",
-			value: "causas-update",
-			icon: <RefreshSquare size={20} />,
-			component: <CausasUpdateWorker />,
-			description: "Actualización de movimientos de causas vinculadas a credenciales (SSO)",
+			description: "Gestión del scraping y actualización de causas PJN (login SSO)",
 			status: "active",
 			badge: "worker_02",
 			ip: "100.98.180.101",
