@@ -46,6 +46,7 @@ import {
 	Timer1,
 	Cpu,
 	StatusUp,
+	Repeat,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import {
@@ -56,6 +57,7 @@ import {
 import CreateManagedWorkerModal from "./CreateManagedWorkerModal";
 import BatchCreateWorkersModal from "./BatchCreateWorkersModal";
 import LinkExistingConfigModal from "./LinkExistingConfigModal";
+import UpdateRangeModal from "./UpdateRangeModal";
 
 const getId = (id: string | { $oid: string }): string => (typeof id === "string" ? id : id.$oid);
 
@@ -120,6 +122,8 @@ const ScrapingManagerPanel: React.FC = () => {
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [workerToDelete, setWorkerToDelete] = useState<ManagedWorker | null>(null);
 	const [deleteDoc, setDeleteDoc] = useState(false);
+	const [updateRangeOpen, setUpdateRangeOpen] = useState(false);
+	const [workerToUpdateRange, setWorkerToUpdateRange] = useState<ManagedWorker | null>(null);
 
 	// Action loading
 	const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -589,6 +593,21 @@ const ScrapingManagerPanel: React.FC = () => {
 											</TableCell>
 											<TableCell align="right">
 												<Stack direction="row" spacing={0.5} justifyContent="flex-end">
+													{isStopped && !worker.enabled && (worker.number || 0) >= (worker.range_end || 0) && (
+														<Tooltip title="Actualizar Rango">
+															<IconButton
+																size="small"
+																color="primary"
+																onClick={() => {
+																	setWorkerToUpdateRange(worker);
+																	setUpdateRangeOpen(true);
+																}}
+																disabled={isActionLoading}
+															>
+																<Repeat size={16} />
+															</IconButton>
+														</Tooltip>
+													)}
 													{isStopped && (
 														<Tooltip title="Iniciar">
 															<IconButton
@@ -700,6 +719,12 @@ const ScrapingManagerPanel: React.FC = () => {
 			<CreateManagedWorkerModal open={createOpen} onClose={() => setCreateOpen(false)} onSuccess={() => fetchData(false)} />
 			<BatchCreateWorkersModal open={batchCreateOpen} onClose={() => setBatchCreateOpen(false)} onSuccess={() => fetchData(false)} />
 			<LinkExistingConfigModal open={linkOpen} onClose={() => setLinkOpen(false)} onSuccess={() => fetchData(false)} />
+			<UpdateRangeModal
+				open={updateRangeOpen}
+				onClose={() => { setUpdateRangeOpen(false); setWorkerToUpdateRange(null); }}
+				onSuccess={() => fetchData(false)}
+				worker={workerToUpdateRange}
+			/>
 		</Box>
 	);
 };
