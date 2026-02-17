@@ -130,6 +130,69 @@ export interface PjnCredentialsStatsResponse {
   };
 }
 
+export interface SyncRun {
+  _id: string;
+  userName: string;
+  userEmail: string;
+  status: string;
+  startedAt: string;
+  completedAt: string | null;
+  results: {
+    totalCausasInPJN: number;
+    causasNuevas: number;
+    foldersCreados: number;
+    errores: number;
+  };
+  metadata: { tiempoEjecucionMs: number; triggeredBy: string };
+  error: { message: string; code: string } | null;
+  createdAt: string;
+}
+
+export interface UpdateRun {
+  _id: string;
+  userName: string;
+  userEmail: string;
+  status: string;
+  startedAt: string;
+  completedAt: string | null;
+  durationSeconds: number | null;
+  results: {
+    totalCausas: number;
+    causasProcessed: number;
+    causasUpdated: number;
+    newMovimientos: number;
+    causasError: number;
+  };
+  metadata: { triggeredBy: string; isResumedRun: boolean };
+  error: { message: string; code: string; phase: string } | null;
+  createdAt: string;
+}
+
+export interface SyncError {
+  type: "sync" | "update";
+  userName: string;
+  userEmail: string;
+  status: string;
+  error: { message: string; code?: string; phase?: string } | null;
+  errorCount: number;
+  createdAt: string;
+}
+
+export interface SyncActivityResponse {
+  success: boolean;
+  data: {
+    additionalMetrics: {
+      syncStatusBreakdown7d: Record<string, number>;
+      avgCausasPerSync: number;
+      cacheVsScraping: { cache: number; scraping: number };
+      updateStatusBreakdown7d: Record<string, number>;
+    };
+    recentSyncs: SyncRun[];
+    recentUpdateRuns: UpdateRun[];
+    recentErrors: SyncError[];
+  };
+}
+
 export interface GenericResponse {
   success: boolean;
   message?: string;
@@ -197,6 +260,14 @@ class PjnCredentialsService {
    */
   async resetSyncData(id: string, dryRun: boolean = true): Promise<GenericResponse> {
     const response = await adminAxios.post(`/api/pjn-credentials/${id}/reset-sync`, { dryRun });
+    return response.data;
+  }
+
+  /**
+   * Obtener actividad detallada de syncs y updates
+   */
+  async getSyncActivity(): Promise<SyncActivityResponse> {
+    const response = await adminAxios.get("/api/pjn-credentials/sync-activity");
     return response.data;
   }
 
