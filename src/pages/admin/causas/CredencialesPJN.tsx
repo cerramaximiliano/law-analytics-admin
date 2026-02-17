@@ -52,6 +52,7 @@ import MainCard from "components/MainCard";
 import pjnCredentialsService, {
   PjnCredential,
   PjnCredentialsFilters,
+  SyncActivityResponse,
 } from "api/pjnCredentials";
 
 // Colores para estados
@@ -102,6 +103,38 @@ const StatCard = ({ value, label, color, sx }: { value: string | number; label: 
   </Card>
 );
 
+// Helper: formato de duración (ms → "Xs" o "Xm Ys")
+const formatDuration = (ms: number | null | undefined) => {
+  if (!ms || ms <= 0) return "-";
+  const totalSecs = Math.round(ms / 1000);
+  if (totalSecs < 60) return `${totalSecs}s`;
+  const mins = Math.floor(totalSecs / 60);
+  const secs = totalSecs % 60;
+  return `${mins}m ${secs}s`;
+};
+
+// Helper: formato de duración en segundos
+const formatDurationSecs = (secs: number | null | undefined) => {
+  if (!secs || secs <= 0) return "-";
+  const rounded = Math.round(secs);
+  if (rounded < 60) return `${rounded}s`;
+  const mins = Math.floor(rounded / 60);
+  const s = rounded % 60;
+  return `${mins}m ${s}s`;
+};
+
+// Colores para status de actividad
+const getActivityStatusColor = (status: string): "success" | "warning" | "error" | "default" | "info" => {
+  switch (status) {
+    case "completed": return "success";
+    case "partial": return "warning";
+    case "error": return "error";
+    case "interrupted": return "default";
+    case "running": return "info";
+    default: return "default";
+  }
+};
+
 const CredencialesPJN = () => {
   const theme = useTheme();
 
@@ -114,6 +147,8 @@ const CredencialesPJN = () => {
   const [stats, setStats] = useState<any>(null);
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState<string | null>(null);
+  const [syncActivity, setSyncActivity] = useState<SyncActivityResponse["data"] | null>(null);
+  const [syncActivityLoading, setSyncActivityLoading] = useState(false);
 
   // Paginación
   const [page, setPage] = useState(0);
@@ -200,6 +235,21 @@ const CredencialesPJN = () => {
     }
   };
 
+  const fetchSyncActivity = async () => {
+    try {
+      setSyncActivityLoading(true);
+      const response = await pjnCredentialsService.getSyncActivity();
+      if (response.success) {
+        setSyncActivity(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching sync activity:", error);
+      enqueueSnackbar("Error al cargar actividad de sync", { variant: "error" });
+    } finally {
+      setSyncActivityLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchCredentials();
   }, [page, rowsPerPage, sortBy, sortOrder]);
@@ -207,6 +257,13 @@ const CredencialesPJN = () => {
   useEffect(() => {
     fetchStats();
   }, []);
+
+  // Lazy load: cargar sync activity solo cuando se activa el tab 1
+  useEffect(() => {
+    if (tabValue === 1 && !syncActivity && !syncActivityLoading) {
+      fetchSyncActivity();
+    }
+  }, [tabValue]);
 
   // Handlers
   const handleSearch = () => {
@@ -639,7 +696,17 @@ const CredencialesPJN = () => {
       {/* Tab 1: Actividad Sync */}
       {tabValue === 1 && (
         <Grid container spacing={2}>
-          {stats?.syncActivity ? (
+          {/* Botón refrescar */}
+          <Grid item xs={12} sx={{ display: "flex", justifyContent: "flex-end" }}>
+            <Tooltip title="Refrescar actividad">
+              <IconButton size="small" onClick={() => { fetchStats(); fetchSyncActivity(); }}>
+                <Refresh size={18} />
+              </IconButton>
+            </Tooltip>
+          </Grid>
+
+          {/* Fila 1: Sync cards (existentes + nuevas) */}
+          {stats?.syncActivity && (
             <>
               <Grid item xs={12}>
                 <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
@@ -650,20 +717,19 @@ const CredencialesPJN = () => {
                 { value: stats.syncActivity.syncsLast24h, label: "Syncs (24h)", color: "info.main" },
                 { value: stats.syncActivity.syncsLast7d, label: "Syncs (7d)", color: "info.dark" },
                 { value: `${stats.syncActivity.successRate}%`, label: "Tasa de Éxito (7d)", color: stats.syncActivity.successRate >= 90 ? "success.main" : "warning.main" },
-                { value: stats.syncActivity.avgDurationMs > 0 ? `${Math.round(stats.syncActivity.avgDurationMs / 1000)}s` : "-", label: "Duración Promedio (7d)", color: "text.primary" },
+                { value: stats.syncActivity.avgDurationMs > 0 ? `${Math.round(stats.syncActivity.avgDurationMs / 1000)}s` : "-", label: "Duración Promedio", color: "text.primary" },
+                { value: syncActivity?.additionalMetrics?.avgCausasPerSync ?? "-", label: "Prom Causas/Sync", color: "primary.main" },
+                { value: syncActivity?.additionalMetrics?.cacheVsScraping ? `${syncActivity.additionalMetrics.cacheVsScraping.cache}/${syncActivity.additionalMetrics.cacheVsScraping.scraping}` : "-", label: "Cache/Scraping", color: "secondary.main" },
               ].map((stat, idx) => (
-                <Grid item xs={6} sm={3} key={`sync-${idx}`}>
+                <Grid item xs={6} sm={3} md={2} key={`sync-${idx}`}>
                   <StatCard {...stat} />
                 </Grid>
               ))}
             </>
-          ) : (
-            <Grid item xs={12}>
-              <Typography color="text.secondary">Sin datos de actividad de sync</Typography>
-            </Grid>
           )}
 
-          {stats?.updateActivity ? (
+          {/* Fila 2: Update cards (existentes) */}
+          {stats?.updateActivity && (
             <>
               <Grid item xs={12} sx={{ mt: 1 }}>
                 <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
@@ -681,10 +747,265 @@ const CredencialesPJN = () => {
                 </Grid>
               ))}
             </>
-          ) : (
+          )}
+
+          {/* Fila 3: Status breakdown (chips) */}
+          {syncActivity?.additionalMetrics && (
+            <>
+              <Grid item xs={12} sm={6}>
+                <Card variant="outlined">
+                  <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
+                    <Typography variant="caption" color="text.secondary" gutterBottom>Status Sync (7d)</Typography>
+                    <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
+                      {Object.entries(syncActivity.additionalMetrics.syncStatusBreakdown7d).map(([status, count]) => (
+                        <Chip key={status} label={`${status}: ${count}`} size="small" color={getActivityStatusColor(status)} variant="outlined" />
+                      ))}
+                      {Object.keys(syncActivity.additionalMetrics.syncStatusBreakdown7d).length === 0 && (
+                        <Typography variant="caption" color="text.disabled">Sin datos</Typography>
+                      )}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card variant="outlined">
+                  <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
+                    <Typography variant="caption" color="text.secondary" gutterBottom>Status Updates (7d)</Typography>
+                    <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
+                      {Object.entries(syncActivity.additionalMetrics.updateStatusBreakdown7d).map(([status, count]) => (
+                        <Chip key={status} label={`${status}: ${count}`} size="small" color={getActivityStatusColor(status)} variant="outlined" />
+                      ))}
+                      {Object.keys(syncActivity.additionalMetrics.updateStatusBreakdown7d).length === 0 && (
+                        <Typography variant="caption" color="text.disabled">Sin datos</Typography>
+                      )}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </>
+          )}
+
+          {/* Loading para syncActivity */}
+          {syncActivityLoading && (
             <Grid item xs={12}>
-              <Typography color="text.secondary">Sin datos de actividad de updates</Typography>
+              <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+                <CircularProgress size={28} />
+                <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                  Cargando actividad detallada...
+                </Typography>
+              </Box>
             </Grid>
+          )}
+
+          {/* Tabla: Últimas Sincronizaciones */}
+          {syncActivity?.recentSyncs && (
+            <>
+              <Grid item xs={12} sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  Últimas Sincronizaciones ({syncActivity.recentSyncs.length})
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Usuario</TableCell>
+                        <TableCell align="center">Estado</TableCell>
+                        <TableCell align="right">Causas PJN</TableCell>
+                        <TableCell align="right">Nuevas</TableCell>
+                        <TableCell align="right">Folders</TableCell>
+                        <TableCell align="right">Errores</TableCell>
+                        <TableCell align="right">Duración</TableCell>
+                        <TableCell>Trigger</TableCell>
+                        <TableCell>Fecha</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {syncActivity.recentSyncs.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={9} align="center">
+                            <Typography variant="body2" color="text.secondary">Sin sincronizaciones recientes</Typography>
+                          </TableCell>
+                        </TableRow>
+                      ) : syncActivity.recentSyncs.map((sync: any, idx: number) => (
+                        <TableRow key={sync._id || idx} hover>
+                          <TableCell>
+                            <Stack>
+                              <Typography variant="body2" fontWeight={500}>{sync.userName}</Typography>
+                              <Typography variant="caption" color="text.secondary">{sync.userEmail}</Typography>
+                            </Stack>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Chip label={sync.status} size="small" color={getActivityStatusColor(sync.status)} />
+                          </TableCell>
+                          <TableCell align="right">{sync.results?.totalCausasInPJN ?? "-"}</TableCell>
+                          <TableCell align="right">{sync.results?.causasNuevas ?? "-"}</TableCell>
+                          <TableCell align="right">{sync.results?.foldersCreados ?? "-"}</TableCell>
+                          <TableCell align="right">
+                            {(sync.results?.errores || 0) > 0 ? (
+                              <Chip label={sync.results.errores} color="error" size="small" sx={{ minWidth: 28 }} />
+                            ) : "0"}
+                          </TableCell>
+                          <TableCell align="right">{formatDuration(sync.metadata?.tiempoEjecucionMs)}</TableCell>
+                          <TableCell>
+                            <Typography variant="caption">{sync.metadata?.triggeredBy || "-"}</Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="caption">{formatDate(sync.createdAt)}</Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Grid>
+            </>
+          )}
+
+          {/* Tabla: Últimos Updates de Movimientos */}
+          {syncActivity?.recentUpdateRuns && (
+            <>
+              <Grid item xs={12} sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  Últimos Updates de Movimientos ({syncActivity.recentUpdateRuns.length})
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Usuario</TableCell>
+                        <TableCell align="center">Estado</TableCell>
+                        <TableCell align="right">Causas</TableCell>
+                        <TableCell align="right">Procesadas</TableCell>
+                        <TableCell align="right">Actualizadas</TableCell>
+                        <TableCell align="right">Mov. Nuevos</TableCell>
+                        <TableCell align="right">Errores</TableCell>
+                        <TableCell align="right">Duración</TableCell>
+                        <TableCell>Trigger</TableCell>
+                        <TableCell>Fecha</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {syncActivity.recentUpdateRuns.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={10} align="center">
+                            <Typography variant="body2" color="text.secondary">Sin updates recientes</Typography>
+                          </TableCell>
+                        </TableRow>
+                      ) : syncActivity.recentUpdateRuns.map((run: any, idx: number) => (
+                        <TableRow key={run._id || idx} hover>
+                          <TableCell>
+                            <Stack>
+                              <Typography variant="body2" fontWeight={500}>{run.userName}</Typography>
+                              <Typography variant="caption" color="text.secondary">{run.userEmail}</Typography>
+                            </Stack>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Chip label={run.status} size="small" color={getActivityStatusColor(run.status)} />
+                          </TableCell>
+                          <TableCell align="right">{run.results?.totalCausas ?? "-"}</TableCell>
+                          <TableCell align="right">{run.results?.causasProcessed ?? "-"}</TableCell>
+                          <TableCell align="right">{run.results?.causasUpdated ?? "-"}</TableCell>
+                          <TableCell align="right">
+                            {(run.results?.newMovimientos || 0) > 0 ? (
+                              <Chip label={run.results.newMovimientos} color="success" size="small" sx={{ minWidth: 28 }} />
+                            ) : "0"}
+                          </TableCell>
+                          <TableCell align="right">
+                            {(run.results?.causasError || 0) > 0 ? (
+                              <Chip label={run.results.causasError} color="error" size="small" sx={{ minWidth: 28 }} />
+                            ) : "0"}
+                          </TableCell>
+                          <TableCell align="right">{formatDurationSecs(run.durationSeconds)}</TableCell>
+                          <TableCell>
+                            <Stack>
+                              <Typography variant="caption">{run.metadata?.triggeredBy || "-"}</Typography>
+                              {run.metadata?.isResumedRun && (
+                                <Chip label="Resumed" size="small" variant="outlined" color="info" sx={{ height: 18, fontSize: "0.65rem" }} />
+                              )}
+                            </Stack>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="caption">{formatDate(run.createdAt)}</Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Grid>
+            </>
+          )}
+
+          {/* Tabla: Errores Recientes */}
+          {syncActivity?.recentErrors && syncActivity.recentErrors.length > 0 && (
+            <>
+              <Grid item xs={12} sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" color="error.main" sx={{ mb: 0.5 }}>
+                  Errores Recientes ({syncActivity.recentErrors.length})
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Tipo</TableCell>
+                        <TableCell>Usuario</TableCell>
+                        <TableCell align="center">Estado</TableCell>
+                        <TableCell>Error</TableCell>
+                        <TableCell>Fase</TableCell>
+                        <TableCell align="right">Cant.</TableCell>
+                        <TableCell>Fecha</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {syncActivity.recentErrors.map((err: any, idx: number) => (
+                        <TableRow key={idx} hover>
+                          <TableCell>
+                            <Chip
+                              label={err.type === "sync" ? "Sync" : "Update"}
+                              size="small"
+                              color={err.type === "sync" ? "info" : "secondary"}
+                              variant="outlined"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Stack>
+                              <Typography variant="body2" fontWeight={500}>{err.userName}</Typography>
+                              <Typography variant="caption" color="text.secondary">{err.userEmail}</Typography>
+                            </Stack>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Chip label={err.status} size="small" color={getActivityStatusColor(err.status)} />
+                          </TableCell>
+                          <TableCell>
+                            <Tooltip title={err.error?.message || "Sin mensaje"}>
+                              <Typography variant="caption" sx={{ maxWidth: 250, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {err.error?.message || "Sin detalle"}
+                              </Typography>
+                            </Tooltip>
+                            {err.error?.code && (
+                              <Typography variant="caption" color="text.disabled">[{err.error.code}]</Typography>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="caption">{err.error?.phase || "-"}</Typography>
+                          </TableCell>
+                          <TableCell align="right">{err.errorCount || 0}</TableCell>
+                          <TableCell>
+                            <Typography variant="caption">{formatDate(err.createdAt)}</Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Grid>
+            </>
           )}
         </Grid>
       )}
