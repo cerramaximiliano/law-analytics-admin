@@ -502,6 +502,10 @@ export interface WorkerConfig {
 	notification?: {
 		startupEmail?: boolean;
 	};
+	// Campos de control de worker
+	isRetryWorker?: boolean;
+	isTemporary?: boolean;
+	pendingRestart?: boolean;
 	// Campos específicos de app-update
 	update_mode?: "all" | "single" | string;
 	documents_updated?: number;
@@ -1137,3 +1141,193 @@ export class WorkersService {
 }
 
 export default WorkersService;
+
+// ========================================
+// Interfaces for Scraping Worker Manager
+// ========================================
+
+export interface PM2Status {
+	status: string; // 'online' | 'stopped' | 'errored'
+	pid: number;
+	cpu: number;
+	memoryMB: number;
+	uptime: number;
+	restarts: number;
+}
+
+export interface ManagedWorker extends WorkerConfig {
+	pm2WorkerName: string;
+	pm2Status: PM2Status | null;
+}
+
+export interface ManagerHealth {
+	lastReconcile: string;
+	cycleCount: number;
+	reconcileDurationMs: number;
+	lastActions: Record<string, number>;
+	pid: number;
+	uptime: number;
+	updatedAt: string;
+}
+
+export interface ManagerStatusData {
+	manager: ManagerHealth | null;
+	pm2: {
+		totalProcesses: number;
+		online: number;
+		stopped: number;
+		lastUpdate: string | null;
+	};
+	configSummary: Record<string, { total: number; enabled: number; disabled: number }>;
+	totalConfigs: number;
+	totalEnabled: number;
+}
+
+export interface ManagerStatusResponse {
+	success: boolean;
+	message: string;
+	data: ManagerStatusData;
+}
+
+export interface ManagedWorkersResponse {
+	success: boolean;
+	message: string;
+	count: number;
+	total: number;
+	page: number;
+	pages: number;
+	data: ManagedWorker[];
+}
+
+export interface ManagerSummaryData {
+	total: number;
+	byFuero: Record<
+		string,
+		{
+			workers: number;
+			enabled: number;
+			disabled: number;
+			totalFound: number;
+			totalNotFound: number;
+			totalErrors: number;
+			pm2Online: number;
+		}
+	>;
+}
+
+export interface ManagerSummaryResponse {
+	success: boolean;
+	message: string;
+	data: ManagerSummaryData;
+}
+
+// ========================================
+// Scraping Worker Manager Service
+// ========================================
+
+export class ScrapingWorkerManagerService {
+	// Manager status
+	static async getStatus(): Promise<ManagerStatusResponse> {
+		const response = await workersAxios.get("/api/scraping-worker-manager/status");
+		return response.data;
+	}
+
+	static async getSummary(): Promise<ManagerSummaryResponse> {
+		const response = await workersAxios.get("/api/scraping-worker-manager/summary");
+		return response.data;
+	}
+
+	// Worker listing
+	static async listWorkers(params?: {
+		fuero?: string;
+		enabled?: string;
+		page?: number;
+		limit?: number;
+	}): Promise<ManagedWorkersResponse> {
+		const response = await workersAxios.get("/api/scraping-worker-manager/workers", { params });
+		return response.data;
+	}
+
+	static async getWorker(id: string): Promise<{ success: boolean; data: ManagedWorker }> {
+		const response = await workersAxios.get(`/api/scraping-worker-manager/workers/${id}`);
+		return response.data;
+	}
+
+	// Worker creation
+	static async createWorker(data: {
+		fuero: string;
+		year: number;
+		max_number: number;
+		range_start: number;
+		range_end: number;
+		worker_id?: string;
+		enabled?: boolean;
+		delay_seconds?: number;
+		captcha?: Partial<WorkerConfig["captcha"]>;
+		proxy?: Partial<WorkerConfig["proxy"]>;
+	}): Promise<{ success: boolean; message: string; data: ManagedWorker }> {
+		const response = await workersAxios.post("/api/scraping-worker-manager/workers", data);
+		return response.data;
+	}
+
+	static async startFromExisting(id: string): Promise<{ success: boolean; message: string; data: WorkerConfig }> {
+		const response = await workersAxios.post(`/api/scraping-worker-manager/workers/from-existing/${id}`);
+		return response.data;
+	}
+
+	static async batchCreate(data: {
+		fuero: string;
+		workers: number;
+		year: number;
+		max_number: number;
+		ranges: Array<{ start: number; end: number }>;
+		enabled?: boolean;
+		delay_increment?: number;
+	}): Promise<{ success: boolean; message: string; data: { created: number; errors: number; workers: ManagedWorker[] } }> {
+		const response = await workersAxios.post("/api/scraping-worker-manager/workers/batch", data);
+		return response.data;
+	}
+
+	// Worker lifecycle
+	static async startWorker(id: string): Promise<{ success: boolean; message: string; data: WorkerConfig }> {
+		const response = await workersAxios.put(`/api/scraping-worker-manager/workers/${id}/start`);
+		return response.data;
+	}
+
+	static async stopWorker(id: string): Promise<{ success: boolean; message: string; data: WorkerConfig }> {
+		const response = await workersAxios.put(`/api/scraping-worker-manager/workers/${id}/stop`);
+		return response.data;
+	}
+
+	static async restartWorker(id: string): Promise<{ success: boolean; message: string }> {
+		const response = await workersAxios.put(`/api/scraping-worker-manager/workers/${id}/restart`);
+		return response.data;
+	}
+
+	static async deleteWorker(id: string, deleteDoc?: boolean): Promise<{ success: boolean; message: string }> {
+		const params = deleteDoc ? { deleteDoc: "true" } : {};
+		const response = await workersAxios.delete(`/api/scraping-worker-manager/workers/${id}`, { params });
+		return response.data;
+	}
+
+	// Batch operations
+	static async batchStart(ids: string[]): Promise<{ success: boolean; message: string; data: { modifiedCount: number } }> {
+		const response = await workersAxios.put("/api/scraping-worker-manager/workers/batch/start", { ids });
+		return response.data;
+	}
+
+	static async batchStop(ids: string[]): Promise<{ success: boolean; message: string; data: { modifiedCount: number } }> {
+		const response = await workersAxios.put("/api/scraping-worker-manager/workers/batch/stop", { ids });
+		return response.data;
+	}
+
+	static async startAllByFuero(fuero: string): Promise<{ success: boolean; message: string; data: { modifiedCount: number } }> {
+		const response = await workersAxios.put(`/api/scraping-worker-manager/workers/fuero/${fuero}/start-all`);
+		return response.data;
+	}
+
+	static async stopAllByFuero(fuero: string): Promise<{ success: boolean; message: string; data: { modifiedCount: number } }> {
+		const response = await workersAxios.put(`/api/scraping-worker-manager/workers/fuero/${fuero}/stop-all`);
+		return response.data;
+	}
+}
