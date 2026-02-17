@@ -38,13 +38,14 @@ import {
 	Tabs,
 	Tab,
 } from "@mui/material";
-import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, Trash, AddCircle, Warning2, SearchNormal1, Code1, InfoCircle, Eye, EyeSlash, Cpu, Setting4 } from "iconsax-react";
+import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, Trash, AddCircle, Warning2, SearchNormal1, Code1, InfoCircle, Eye, EyeSlash, Cpu, Setting4, Clock } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig, ScrapingHistory } from "api/workers";
 import AdvancedConfigModal from "./AdvancedConfigModal";
 import CreateConfigModal from "./CreateConfigModal";
 import TemporaryWorkersModal from "./TemporaryWorkersModal";
 import ScrapingManagerPanel from "./ScrapingManagerPanel";
+import RangeHistoryPanel from "./RangeHistoryPanel";
 
 // Enums para el worker de scraping
 const FUERO_OPTIONS = [
@@ -584,10 +585,13 @@ const ScrapingWorker = () => {
 				<Tabs value={subTab} onChange={(_, v) => setSubTab(v)} variant="scrollable" scrollButtons="auto">
 					<Tab icon={<Setting4 size={18} />} iconPosition="start" label="Configuraciones" />
 					<Tab icon={<Cpu size={18} />} iconPosition="start" label="Manager PM2" />
+					<Tab icon={<Clock size={18} />} iconPosition="start" label="Historial de Rangos" />
 				</Tabs>
 			</Box>
 
 			{subTab === 1 && <ScrapingManagerPanel />}
+
+			{subTab === 2 && <RangeHistoryPanel />}
 
 			{subTab === 0 && <>
 			{/* Header: Título y Acciones */}
