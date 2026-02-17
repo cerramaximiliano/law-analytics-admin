@@ -28,6 +28,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useTheme } from "@mui/material/styles";
@@ -86,8 +88,25 @@ const getSyncStatusLabel = (status: string) => {
   }
 };
 
+// Stat card helper
+const StatCard = ({ value, label, color, sx }: { value: string | number; label: string; color: string; sx?: any }) => (
+  <Card variant="outlined">
+    <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
+      <Typography variant="h4" color={color} sx={sx}>
+        {value}
+      </Typography>
+      <Typography variant="caption" color="text.secondary" noWrap>
+        {label}
+      </Typography>
+    </CardContent>
+  </Card>
+);
+
 const CredencialesPJN = () => {
   const theme = useTheme();
+
+  // Tab activo
+  const [tabValue, setTabValue] = useState(0);
 
   // Estado de datos
   const [credentials, setCredentials] = useState<PjnCredential[]>([]);
@@ -336,141 +355,377 @@ const CredencialesPJN = () => {
 
   return (
     <MainCard title="Credenciales PJN">
-      <Grid container spacing={3}>
-        {/* Estadísticas */}
-        {statsLoading && (
+      {/* Stats loading/error */}
+      {statsLoading && (
+        <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+          <CircularProgress size={24} />
+          <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+            Cargando estadísticas...
+          </Typography>
+        </Box>
+      )}
+      {statsError && !statsLoading && (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 1, px: 2, mb: 2, border: "1px solid", borderColor: "error.main", borderRadius: 1 }}>
+          <Typography variant="body2" color="error.main">
+            Error al cargar estadísticas: {statsError}
+          </Typography>
+          <Button size="small" variant="outlined" color="error" onClick={fetchStats} startIcon={<Refresh size={16} />}>
+            Reintentar
+          </Button>
+        </Box>
+      )}
+
+      {/* Tabs */}
+      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+        <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)}>
+          <Tab label="Credenciales" />
+          <Tab label="Actividad Sync" />
+          <Tab label="Movimientos" />
+        </Tabs>
+      </Box>
+
+      {/* Tab 0: Credenciales */}
+      {tabValue === 0 && (
+        <Grid container spacing={3}>
+          {/* Stat cards de credenciales */}
+          {stats && (
+            <>
+              {[
+                { value: stats.total, label: "Total", color: "primary.main" },
+                { value: stats.enabled, label: "Habilitadas", color: "success.main" },
+                { value: stats.verified, label: "Verificadas", color: "info.main" },
+                { value: stats.isValid, label: "Válidas", color: "success.dark" },
+                { value: stats.syncStatus.pending, label: "Pendientes", color: "warning.main" },
+                { value: stats.syncStatus.error, label: "Errores", color: "error.main" },
+                { value: stats.syncStatus.inProgress, label: "En progreso", color: "info.dark" },
+                { value: stats.syncStatus.neverSynced, label: "Sin sincronizar", color: "text.disabled" },
+              ].map((stat, idx) => (
+                <Grid item xs={6} sm={3} md={1.5} key={idx}>
+                  <StatCard {...stat} />
+                </Grid>
+              ))}
+              {[
+                { value: stats.totals.causas, label: "Total Causas", color: "info.main" },
+                { value: stats.totals.folders, label: "Total Carpetas", color: "secondary.main" },
+                { value: stats.totals.avgCausasPerUser, label: "Prom. Causas/Usuario", color: "text.primary" },
+              ].map((stat, idx) => (
+                <Grid item xs={4} key={`total-${idx}`}>
+                  <StatCard {...stat} />
+                </Grid>
+              ))}
+            </>
+          )}
+
+          {/* Filtros */}
           <Grid item xs={12}>
-            <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-              <CircularProgress size={24} />
-              <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                Cargando estadísticas...
-              </Typography>
-            </Box>
+            <Grid container spacing={2} alignItems="flex-end">
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Buscar usuario"
+                  placeholder="Nombre o email..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                />
+              </Grid>
+              <Grid item xs={6} sm={3} md={2}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Estado Sync</InputLabel>
+                  <Select
+                    value={syncStatusFilter}
+                    label="Estado Sync"
+                    onChange={(e) => setSyncStatusFilter(e.target.value)}
+                  >
+                    <MenuItem value="todos">Todos</MenuItem>
+                    <MenuItem value="completed">Completado</MenuItem>
+                    <MenuItem value="in_progress">En progreso</MenuItem>
+                    <MenuItem value="pending">Pendiente</MenuItem>
+                    <MenuItem value="error">Error</MenuItem>
+                    <MenuItem value="never_synced">Sin sincronizar</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={6} sm={3} md={2}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Verificado</InputLabel>
+                  <Select
+                    value={verifiedFilter}
+                    label="Verificado"
+                    onChange={(e) => setVerifiedFilter(e.target.value)}
+                  >
+                    <MenuItem value="todos">Todos</MenuItem>
+                    <MenuItem value="true">Sí</MenuItem>
+                    <MenuItem value="false">No</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={6} sm={3} md={2}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Habilitado</InputLabel>
+                  <Select
+                    value={enabledFilter}
+                    label="Habilitado"
+                    onChange={(e) => setEnabledFilter(e.target.value)}
+                  >
+                    <MenuItem value="todos">Todos</MenuItem>
+                    <MenuItem value="true">Sí</MenuItem>
+                    <MenuItem value="false">No</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={6} sm={6} md={3}>
+                <Stack direction="row" spacing={1}>
+                  <Button variant="contained" size="small" onClick={handleSearch} startIcon={<SearchNormal1 size={16} />}>
+                    Buscar
+                  </Button>
+                  <Button variant="outlined" size="small" onClick={handleClearFilters} startIcon={<CloseCircle size={16} />}>
+                    Limpiar
+                  </Button>
+                  <Tooltip title="Refrescar">
+                    <IconButton size="small" onClick={() => { fetchCredentials(); fetchStats(); }}>
+                      <Refresh size={18} />
+                    </IconButton>
+                  </Tooltip>
+                  <Button variant="contained" size="small" color="success" onClick={() => setCreateDialog(true)} startIcon={<AddCircle size={16} />}>
+                    Nueva
+                  </Button>
+                </Stack>
+              </Grid>
+            </Grid>
           </Grid>
-        )}
-        {statsError && !statsLoading && (
+
+          {/* Tabla */}
           <Grid item xs={12}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 1, px: 2, border: "1px solid", borderColor: "error.main", borderRadius: 1 }}>
-              <Typography variant="body2" color="error.main">
-                Error al cargar estadísticas: {statsError}
-              </Typography>
-              <Button size="small" variant="outlined" color="error" onClick={fetchStats} startIcon={<Refresh size={16} />}>
-                Reintentar
-              </Button>
-            </Box>
+            <TableContainer component={Paper} variant="outlined">
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Usuario</TableCell>
+                    <TableCell>CUIL</TableCell>
+                    <TableCell align="center">Estado</TableCell>
+                    <TableCell align="center">Verificado</TableCell>
+                    <TableCell align="center">Válido</TableCell>
+                    <TableCell align="center">Habilitado</TableCell>
+                    <TableCell align="right">Causas</TableCell>
+                    <TableCell align="right">Carpetas</TableCell>
+                    <TableCell align="right">Movimientos</TableCell>
+                    <TableCell>Último Mov.</TableCell>
+                    <TableCell align="right">Dur. Sync</TableCell>
+                    <TableCell align="right">Syncs</TableCell>
+                    <TableCell align="center">Errores</TableCell>
+                    <TableCell>Última Sync</TableCell>
+                    <TableCell align="center">Acciones</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={15} align="center" sx={{ py: 4 }}>
+                        <CircularProgress size={32} />
+                      </TableCell>
+                    </TableRow>
+                  ) : credentials.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={15} align="center" sx={{ py: 4 }}>
+                        <Typography color="text.secondary">
+                          No se encontraron credenciales
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    credentials.map((cred) => (
+                      <TableRow key={cred._id} hover sx={{ "&:hover": { bgcolor: "action.hover" } }}>
+                        <TableCell>
+                          <Stack>
+                            <Typography variant="body2" fontWeight={500}>{cred.userName}</Typography>
+                            <Typography variant="caption" color="text.secondary">{cred.userEmail}</Typography>
+                          </Stack>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" fontFamily="monospace">{cred.cuilMasked}</Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Chip label={getSyncStatusLabel(cred.syncStatus)} color={getSyncStatusColor(cred.syncStatus) as any} size="small" />
+                        </TableCell>
+                        <TableCell align="center">
+                          {cred.verified ? <TickCircle size={20} color={theme.palette.success.main} variant="Bold" /> : <CloseCircle size={20} color={theme.palette.error.main} variant="Bold" />}
+                        </TableCell>
+                        <TableCell align="center">
+                          {cred.isValid ? <TickCircle size={20} color={theme.palette.success.main} variant="Bold" /> : <CloseCircle size={20} color={theme.palette.error.main} variant="Bold" />}
+                        </TableCell>
+                        <TableCell align="center">
+                          {cred.enabled ? <TickCircle size={20} color={theme.palette.success.main} variant="Bold" /> : <CloseCircle size={20} color={theme.palette.warning.main} variant="Bold" />}
+                        </TableCell>
+                        <TableCell align="right">
+                          <Typography variant="body2">{cred.processedCausasCount || 0}/{cred.expectedCausasCount || 0}</Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Typography variant="body2">{cred.foldersCreatedCount || 0}</Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Tooltip
+                            title={
+                              cred.byFuero && Object.keys(cred.byFuero).length > 0
+                                ? Object.entries(cred.byFuero).map(([fuero, count]) => `${fuero}: ${count}`).join(", ")
+                                : "Sin datos de fuero"
+                            }
+                          >
+                            <Typography variant="body2" sx={{ cursor: "help" }}>{cred.totalMovements || 0}</Typography>
+                          </Tooltip>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="caption">{formatDate(cred.lastMovementDate)}</Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Typography variant="body2">{cred.lastSyncDuration != null ? `${cred.lastSyncDuration}s` : "-"}</Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Typography variant="body2">{cred.successfulSyncs || 0}</Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          {cred.consecutiveErrors > 0 ? (
+                            <Chip label={cred.consecutiveErrors} color="error" size="small" sx={{ minWidth: 32 }} />
+                          ) : (
+                            <Typography variant="body2" color="text.disabled">0</Typography>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="caption">{formatDate(cred.lastSync)}</Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Stack direction="row" spacing={0.5} justifyContent="center">
+                            <Tooltip title="Ver JSON">
+                              <IconButton size="small" onClick={() => handleViewRaw(cred)} color="default"><Eye size={18} /></IconButton>
+                            </Tooltip>
+                            <Tooltip title={cred.enabled ? "Deshabilitar" : "Habilitar"}>
+                              <IconButton size="small" onClick={() => handleToggleEnabled(cred)} color={cred.enabled ? "success" : "warning"}>
+                                {cred.enabled ? <ToggleOnCircle size={18} /> : <ToggleOffCircle size={18} />}
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Resetear para re-sync">
+                              <IconButton size="small" onClick={() => handleReset(cred)} color="info"><RefreshCircle size={18} /></IconButton>
+                            </Tooltip>
+                            <Tooltip title="Resetear sincronización">
+                              <IconButton size="small" onClick={() => handleOpenResetSync(cred)} color="warning"><Broom size={18} /></IconButton>
+                            </Tooltip>
+                            <Tooltip title="Eliminar">
+                              <IconButton size="small" onClick={() => setDeleteDialog({ open: true, credential: cred })} color="error"><Trash size={18} /></IconButton>
+                            </Tooltip>
+                          </Stack>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <EnhancedTablePagination
+              count={totalCount}
+              page={page}
+              onPageChange={(_, newPage) => setPage(newPage)}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={(e) => {
+                setRowsPerPage(parseInt(e.target.value, 10));
+                setPage(0);
+              }}
+              rowsPerPageOptions={[10, 25, 50, 100]}
+            />
           </Grid>
-        )}
-        {stats && !statsLoading && (
-          <>
-            {[
-              { value: stats.total, label: "Total", color: "primary.main" },
-              { value: stats.enabled, label: "Habilitadas", color: "success.main" },
-              { value: stats.verified, label: "Verificadas", color: "info.main" },
-              { value: stats.isValid, label: "Válidas", color: "success.dark" },
-              { value: stats.syncStatus.pending, label: "Pendientes", color: "warning.main" },
-              { value: stats.syncStatus.error, label: "Errores", color: "error.main" },
-              { value: stats.syncStatus.inProgress, label: "En progreso", color: "info.dark" },
-              { value: stats.syncStatus.neverSynced, label: "Sin sincronizar", color: "text.disabled" },
-            ].map((stat, idx) => (
-              <Grid item xs={6} sm={3} md={1.5} key={idx}>
-                <Card variant="outlined">
-                  <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
-                    <Typography variant="h4" color={stat.color}>
-                      {stat.value}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" noWrap>
-                      {stat.label}
-                    </Typography>
-                  </CardContent>
-                </Card>
+        </Grid>
+      )}
+
+      {/* Tab 1: Actividad Sync */}
+      {tabValue === 1 && (
+        <Grid container spacing={2}>
+          {stats?.syncActivity ? (
+            <>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  Sincronización de Causas
+                </Typography>
               </Grid>
-            ))}
-            {[
-              { value: stats.totals.causas, label: "Total Causas", color: "info.main" },
-              { value: stats.totals.folders, label: "Total Carpetas", color: "secondary.main" },
-              { value: stats.totals.avgCausasPerUser, label: "Promedio Causas/Usuario", color: "text.primary" },
-            ].map((stat, idx) => (
-              <Grid item xs={4} key={`total-${idx}`}>
-                <Card variant="outlined">
-                  <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
-                    <Typography variant="h4" color={stat.color}>
-                      {stat.value}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {stat.label}
-                    </Typography>
-                  </CardContent>
-                </Card>
+              {[
+                { value: stats.syncActivity.syncsLast24h, label: "Syncs (24h)", color: "info.main" },
+                { value: stats.syncActivity.syncsLast7d, label: "Syncs (7d)", color: "info.dark" },
+                { value: `${stats.syncActivity.successRate}%`, label: "Tasa de Éxito (7d)", color: stats.syncActivity.successRate >= 90 ? "success.main" : "warning.main" },
+                { value: stats.syncActivity.avgDurationMs > 0 ? `${Math.round(stats.syncActivity.avgDurationMs / 1000)}s` : "-", label: "Duración Promedio (7d)", color: "text.primary" },
+              ].map((stat, idx) => (
+                <Grid item xs={6} sm={3} key={`sync-${idx}`}>
+                  <StatCard {...stat} />
+                </Grid>
+              ))}
+            </>
+          ) : (
+            <Grid item xs={12}>
+              <Typography color="text.secondary">Sin datos de actividad de sync</Typography>
+            </Grid>
+          )}
+
+          {stats?.updateActivity ? (
+            <>
+              <Grid item xs={12} sx={{ mt: 1 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  Actualización de Movimientos
+                </Typography>
               </Grid>
-            ))}
-            {/* Sync Activity */}
-            {stats.syncActivity && [
-              { value: stats.syncActivity.syncsLast24h, label: "Syncs (24h)", color: "info.main" },
-              { value: stats.syncActivity.syncsLast7d, label: "Syncs (7d)", color: "info.dark" },
-              { value: `${stats.syncActivity.successRate}%`, label: "Tasa Éxito", color: stats.syncActivity.successRate >= 90 ? "success.main" : "warning.main" },
-              { value: stats.syncActivity.avgDurationMs > 0 ? `${Math.round(stats.syncActivity.avgDurationMs / 1000)}s` : "-", label: "Duración Prom.", color: "text.primary" },
-            ].map((stat, idx) => (
-              <Grid item xs={6} sm={3} key={`sync-${idx}`}>
-                <Card variant="outlined">
-                  <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
-                    <Typography variant="h4" color={stat.color}>
-                      {stat.value}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" noWrap>
-                      {stat.label}
-                    </Typography>
-                  </CardContent>
-                </Card>
+              {[
+                { value: stats.updateActivity.runsLast24h, label: "Updates (24h)", color: "secondary.main" },
+                { value: stats.updateActivity.runsLast7d, label: "Updates (7d)", color: "secondary.dark" },
+                { value: stats.updateActivity.newMovements24h, label: "Mov. Nuevos (24h)", color: "success.main" },
+                { value: stats.updateActivity.newMovements7d, label: "Mov. Nuevos (7d)", color: "success.dark" },
+              ].map((stat, idx) => (
+                <Grid item xs={6} sm={3} key={`update-${idx}`}>
+                  <StatCard {...stat} />
+                </Grid>
+              ))}
+            </>
+          ) : (
+            <Grid item xs={12}>
+              <Typography color="text.secondary">Sin datos de actividad de updates</Typography>
+            </Grid>
+          )}
+        </Grid>
+      )}
+
+      {/* Tab 2: Movimientos */}
+      {tabValue === 2 && (
+        <Grid container spacing={2}>
+          {stats?.movementTotals ? (
+            <>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  Totales de Movimientos
+                </Typography>
               </Grid>
-            ))}
-            {/* Update Activity */}
-            {stats.updateActivity && [
-              { value: stats.updateActivity.runsLast24h, label: "Updates (24h)", color: "secondary.main" },
-              { value: stats.updateActivity.runsLast7d, label: "Updates (7d)", color: "secondary.dark" },
-              { value: stats.updateActivity.newMovements24h, label: "Mov. Nuevos (24h)", color: "success.main" },
-              { value: stats.updateActivity.newMovements7d, label: "Mov. Nuevos (7d)", color: "success.dark" },
-            ].map((stat, idx) => (
-              <Grid item xs={6} sm={3} key={`update-${idx}`}>
-                <Card variant="outlined">
-                  <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
-                    <Typography variant="h4" color={stat.color}>
-                      {stat.value}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" noWrap>
-                      {stat.label}
-                    </Typography>
-                  </CardContent>
-                </Card>
+              {[
+                { value: stats.movementTotals.totalMovements.toLocaleString(), label: "Total Movimientos", color: "primary.main" },
+                { value: stats.movementTotals.avgPerFolder, label: "Prom. Mov/Carpeta", color: "text.primary" },
+                { value: stats.movementTotals.foldersWithMovements, label: "Carpetas con Movimientos", color: "info.main" },
+                { value: stats.movementTotals.lastGlobalMovement ? formatDate(stats.movementTotals.lastGlobalMovement) : "-", label: "Último Movimiento Global", color: "text.primary" },
+              ].map((stat, idx) => (
+                <Grid item xs={6} sm={3} key={`mov-${idx}`}>
+                  <StatCard {...stat} sx={idx === 3 ? { fontSize: "0.9rem" } : undefined} />
+                </Grid>
+              ))}
+            </>
+          ) : (
+            <Grid item xs={12}>
+              <Typography color="text.secondary">Sin datos de movimientos</Typography>
+            </Grid>
+          )}
+
+          {stats?.byFuero && stats.byFuero.length > 0 && (
+            <>
+              <Grid item xs={12} sx={{ mt: 1 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  Distribución por Fuero
+                </Typography>
               </Grid>
-            ))}
-            {/* Movement Totals */}
-            {stats.movementTotals && [
-              { value: stats.movementTotals.totalMovements.toLocaleString(), label: "Total Movimientos", color: "primary.main" },
-              { value: stats.movementTotals.avgPerFolder, label: "Prom. Mov/Carpeta", color: "text.primary" },
-              { value: stats.movementTotals.foldersWithMovements, label: "Carpetas c/ Mov.", color: "info.main" },
-              { value: stats.movementTotals.lastGlobalMovement ? formatDate(stats.movementTotals.lastGlobalMovement) : "-", label: "Último Movimiento", color: "text.primary" },
-            ].map((stat, idx) => (
-              <Grid item xs={6} sm={3} key={`mov-${idx}`}>
-                <Card variant="outlined">
-                  <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
-                    <Typography variant="h4" color={stat.color} sx={idx === 3 ? { fontSize: "0.9rem" } : undefined}>
-                      {stat.value}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" noWrap>
-                      {stat.label}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-            {/* ByFuero Distribution */}
-            {stats.byFuero && stats.byFuero.length > 0 && (
               <Grid item xs={12}>
                 <Card variant="outlined">
-                  <CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
-                    <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: "block" }}>
-                      Distribución por Fuero
-                    </Typography>
+                  <CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
                     <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                       {stats.byFuero.map((f: { fuero: string; total: number }) => (
                         <Chip key={f.fuero} label={`${f.fuero}: ${f.total}`} size="small" variant="outlined" color="primary" />
@@ -479,355 +734,10 @@ const CredencialesPJN = () => {
                   </CardContent>
                 </Card>
               </Grid>
-            )}
-          </>
-        )}
-
-        {/* Filtros */}
-        <Grid item xs={12}>
-          <Grid container spacing={2} alignItems="flex-end">
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Buscar usuario"
-                placeholder="Nombre o email..."
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-              />
-            </Grid>
-            <Grid item xs={6} sm={3} md={2}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Estado Sync</InputLabel>
-                <Select
-                  value={syncStatusFilter}
-                  label="Estado Sync"
-                  onChange={(e) => setSyncStatusFilter(e.target.value)}
-                >
-                  <MenuItem value="todos">Todos</MenuItem>
-                  <MenuItem value="completed">Completado</MenuItem>
-                  <MenuItem value="in_progress">En progreso</MenuItem>
-                  <MenuItem value="pending">Pendiente</MenuItem>
-                  <MenuItem value="error">Error</MenuItem>
-                  <MenuItem value="never_synced">Sin sincronizar</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={6} sm={3} md={2}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Verificado</InputLabel>
-                <Select
-                  value={verifiedFilter}
-                  label="Verificado"
-                  onChange={(e) => setVerifiedFilter(e.target.value)}
-                >
-                  <MenuItem value="todos">Todos</MenuItem>
-                  <MenuItem value="true">Sí</MenuItem>
-                  <MenuItem value="false">No</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={6} sm={3} md={2}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Habilitado</InputLabel>
-                <Select
-                  value={enabledFilter}
-                  label="Habilitado"
-                  onChange={(e) => setEnabledFilter(e.target.value)}
-                >
-                  <MenuItem value="todos">Todos</MenuItem>
-                  <MenuItem value="true">Sí</MenuItem>
-                  <MenuItem value="false">No</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={6} sm={6} md={3}>
-              <Stack direction="row" spacing={1}>
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={handleSearch}
-                  startIcon={<SearchNormal1 size={16} />}
-                >
-                  Buscar
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={handleClearFilters}
-                  startIcon={<CloseCircle size={16} />}
-                >
-                  Limpiar
-                </Button>
-                <Tooltip title="Refrescar">
-                  <IconButton
-                    size="small"
-                    onClick={() => {
-                      fetchCredentials();
-                      fetchStats();
-                    }}
-                  >
-                    <Refresh size={18} />
-                  </IconButton>
-                </Tooltip>
-                <Button
-                  variant="contained"
-                  size="small"
-                  color="success"
-                  onClick={() => setCreateDialog(true)}
-                  startIcon={<AddCircle size={16} />}
-                >
-                  Nueva
-                </Button>
-              </Stack>
-            </Grid>
-          </Grid>
+            </>
+          )}
         </Grid>
-
-        {/* Tabla */}
-        <Grid item xs={12}>
-          <TableContainer component={Paper} variant="outlined">
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Usuario</TableCell>
-                  <TableCell>CUIL</TableCell>
-                  <TableCell align="center">Estado</TableCell>
-                  <TableCell align="center">Verificado</TableCell>
-                  <TableCell align="center">Válido</TableCell>
-                  <TableCell align="center">Habilitado</TableCell>
-                  <TableCell align="right">Causas</TableCell>
-                  <TableCell align="right">Carpetas</TableCell>
-                  <TableCell align="right">Movimientos</TableCell>
-                  <TableCell>Último Mov.</TableCell>
-                  <TableCell align="right">Dur. Sync</TableCell>
-                  <TableCell align="right">Syncs</TableCell>
-                  <TableCell align="center">Errores</TableCell>
-                  <TableCell>Última Sync</TableCell>
-                  <TableCell align="center">Acciones</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={15} align="center" sx={{ py: 4 }}>
-                      <CircularProgress size={32} />
-                    </TableCell>
-                  </TableRow>
-                ) : credentials.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={15} align="center" sx={{ py: 4 }}>
-                      <Typography color="text.secondary">
-                        No se encontraron credenciales
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  credentials.map((cred) => (
-                    <TableRow
-                      key={cred._id}
-                      hover
-                      sx={{ "&:hover": { bgcolor: "action.hover" } }}
-                    >
-                      <TableCell>
-                        <Stack>
-                          <Typography variant="body2" fontWeight={500}>
-                            {cred.userName}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {cred.userEmail}
-                          </Typography>
-                        </Stack>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" fontFamily="monospace">
-                          {cred.cuilMasked}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip
-                          label={getSyncStatusLabel(cred.syncStatus)}
-                          color={getSyncStatusColor(cred.syncStatus) as any}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        {cred.verified ? (
-                          <TickCircle
-                            size={20}
-                            color={theme.palette.success.main}
-                            variant="Bold"
-                          />
-                        ) : (
-                          <CloseCircle
-                            size={20}
-                            color={theme.palette.error.main}
-                            variant="Bold"
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell align="center">
-                        {cred.isValid ? (
-                          <TickCircle
-                            size={20}
-                            color={theme.palette.success.main}
-                            variant="Bold"
-                          />
-                        ) : (
-                          <CloseCircle
-                            size={20}
-                            color={theme.palette.error.main}
-                            variant="Bold"
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell align="center">
-                        {cred.enabled ? (
-                          <TickCircle
-                            size={20}
-                            color={theme.palette.success.main}
-                            variant="Bold"
-                          />
-                        ) : (
-                          <CloseCircle
-                            size={20}
-                            color={theme.palette.warning.main}
-                            variant="Bold"
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body2">
-                          {cred.processedCausasCount || 0}/{cred.expectedCausasCount || 0}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body2">
-                          {cred.foldersCreatedCount || 0}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Tooltip
-                          title={
-                            cred.byFuero && Object.keys(cred.byFuero).length > 0
-                              ? Object.entries(cred.byFuero).map(([fuero, count]) => `${fuero}: ${count}`).join(", ")
-                              : "Sin datos de fuero"
-                          }
-                        >
-                          <Typography variant="body2" sx={{ cursor: "help" }}>
-                            {cred.totalMovements || 0}
-                          </Typography>
-                        </Tooltip>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="caption">
-                          {formatDate(cred.lastMovementDate)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body2">
-                          {cred.lastSyncDuration != null ? `${cred.lastSyncDuration}s` : "-"}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body2">
-                          {cred.successfulSyncs || 0}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        {cred.consecutiveErrors > 0 ? (
-                          <Chip
-                            label={cred.consecutiveErrors}
-                            color="error"
-                            size="small"
-                            sx={{ minWidth: 32 }}
-                          />
-                        ) : (
-                          <Typography variant="body2" color="text.disabled">0</Typography>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="caption">
-                          {formatDate(cred.lastSync)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Stack direction="row" spacing={0.5} justifyContent="center">
-                          <Tooltip title="Ver JSON">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleViewRaw(cred)}
-                              color="default"
-                            >
-                              <Eye size={18} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip
-                            title={cred.enabled ? "Deshabilitar" : "Habilitar"}
-                          >
-                            <IconButton
-                              size="small"
-                              onClick={() => handleToggleEnabled(cred)}
-                              color={cred.enabled ? "success" : "warning"}
-                            >
-                              {cred.enabled ? (
-                                <ToggleOnCircle size={18} />
-                              ) : (
-                                <ToggleOffCircle size={18} />
-                              )}
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Resetear para re-sync">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleReset(cred)}
-                              color="info"
-                            >
-                              <RefreshCircle size={18} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Resetear sincronización">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleOpenResetSync(cred)}
-                              color="warning"
-                            >
-                              <Broom size={18} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Eliminar">
-                            <IconButton
-                              size="small"
-                              onClick={() =>
-                                setDeleteDialog({ open: true, credential: cred })
-                              }
-                              color="error"
-                            >
-                              <Trash size={18} />
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <EnhancedTablePagination
-            count={totalCount}
-            page={page}
-            onPageChange={(_, newPage) => setPage(newPage)}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10));
-              setPage(0);
-            }}
-            rowsPerPageOptions={[10, 25, 50, 100]}
-          />
-        </Grid>
-      </Grid>
+      )}
 
       {/* Dialog de confirmación de eliminación */}
       <Dialog
@@ -846,9 +756,7 @@ const CredencialesPJN = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={() => setDeleteDialog({ open: false, credential: null })}
-          >
+          <Button onClick={() => setDeleteDialog({ open: false, credential: null })}>
             Cancelar
           </Button>
           <Button onClick={handleDelete} color="error" variant="contained">
@@ -876,26 +784,10 @@ const CredencialesPJN = () => {
             {resetSyncDialog.credential?.userEmail})?
           </DialogContentText>
           <Box component="ul" sx={{ mt: 1, pl: 2 }}>
-            <li>
-              <Typography variant="body2">
-                Eliminará los folders creados por la sincronización PJN
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                Eliminará las causas creadas exclusivamente por esta sincronización
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                Desvinculará al usuario de causas compartidas
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                Reseteará el estado de sincronización
-              </Typography>
-            </li>
+            <li><Typography variant="body2">Eliminará los folders creados por la sincronización PJN</Typography></li>
+            <li><Typography variant="body2">Eliminará las causas creadas exclusivamente por esta sincronización</Typography></li>
+            <li><Typography variant="body2">Desvinculará al usuario de causas compartidas</Typography></li>
+            <li><Typography variant="body2">Reseteará el estado de sincronización</Typography></li>
           </Box>
           {resetSyncDialog.loading ? (
             <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
@@ -903,30 +795,20 @@ const CredencialesPJN = () => {
             </Box>
           ) : resetSyncDialog.preview ? (
             <Box sx={{ mt: 2, p: 1.5, bgcolor: "action.hover", borderRadius: 1 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Datos afectados:
-              </Typography>
+              <Typography variant="subtitle2" gutterBottom>Datos afectados:</Typography>
               <Typography variant="body2">
                 Folders a eliminar: <strong>{resetSyncDialog.preview.folders?.total || 0}</strong>
                 {" "}({resetSyncDialog.preview.folders?.active || 0} activos, {resetSyncDialog.preview.folders?.archived || 0} archivados)
               </Typography>
-              <Typography variant="body2">
-                Causas a eliminar: <strong>{resetSyncDialog.preview.causas?.toDelete || 0}</strong>
-              </Typography>
-              <Typography variant="body2">
-                Causas a desvincular: <strong>{resetSyncDialog.preview.causas?.toUnlink || 0}</strong>
-              </Typography>
-              <Typography variant="body2">
-                Registros de sync: <strong>{resetSyncDialog.preview.syncsToDelete || 0}</strong>
-              </Typography>
+              <Typography variant="body2">Causas a eliminar: <strong>{resetSyncDialog.preview.causas?.toDelete || 0}</strong></Typography>
+              <Typography variant="body2">Causas a desvincular: <strong>{resetSyncDialog.preview.causas?.toUnlink || 0}</strong></Typography>
+              <Typography variant="body2">Registros de sync: <strong>{resetSyncDialog.preview.syncsToDelete || 0}</strong></Typography>
             </Box>
           ) : null}
         </DialogContent>
         <DialogActions>
           <Button
-            onClick={() =>
-              setResetSyncDialog({ open: false, credential: null, preview: null, loading: false, executing: false })
-            }
+            onClick={() => setResetSyncDialog({ open: false, credential: null, preview: null, loading: false, executing: false })}
             disabled={resetSyncDialog.executing}
           >
             Cancelar
@@ -961,43 +843,13 @@ const CredencialesPJN = () => {
             Ingresá los datos de la credencial PJN para vincular a un usuario.
           </DialogContentText>
           <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField
-              fullWidth
-              label="User ID"
-              placeholder="ObjectId del usuario"
-              value={createForm.userId}
-              onChange={(e) => setCreateForm({ ...createForm, userId: e.target.value })}
-              disabled={creating}
-              required
-            />
-            <TextField
-              fullWidth
-              label="CUIL"
-              placeholder="Ej: 20123456789"
-              value={createForm.cuil}
-              onChange={(e) => setCreateForm({ ...createForm, cuil: e.target.value })}
-              disabled={creating}
-              required
-            />
-            <TextField
-              fullWidth
-              label="Contraseña"
-              type="password"
-              value={createForm.password}
-              onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
-              disabled={creating}
-              required
-            />
+            <TextField fullWidth label="User ID" placeholder="ObjectId del usuario" value={createForm.userId} onChange={(e) => setCreateForm({ ...createForm, userId: e.target.value })} disabled={creating} required />
+            <TextField fullWidth label="CUIL" placeholder="Ej: 20123456789" value={createForm.cuil} onChange={(e) => setCreateForm({ ...createForm, cuil: e.target.value })} disabled={creating} required />
+            <TextField fullWidth label="Contraseña" type="password" value={createForm.password} onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })} disabled={creating} required />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={() => {
-              setCreateDialog(false);
-              setCreateForm({ userId: "", cuil: "", password: "" });
-            }}
-            disabled={creating}
-          >
+          <Button onClick={() => { setCreateDialog(false); setCreateForm({ userId: "", cuil: "", password: "" }); }} disabled={creating}>
             Cancelar
           </Button>
           <Button
@@ -1011,6 +863,7 @@ const CredencialesPJN = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
       {/* Dialog de raw JSON */}
       <Dialog
         open={rawDialog.open}
@@ -1023,9 +876,7 @@ const CredencialesPJN = () => {
             <Typography variant="h5">Raw JSON - {rawDialog.userName}</Typography>
             {rawDialog.data && (
               <Tooltip title="Copiar JSON">
-                <IconButton size="small" onClick={handleCopyRaw}>
-                  <Copy size={18} />
-                </IconButton>
+                <IconButton size="small" onClick={handleCopyRaw}><Copy size={18} /></IconButton>
               </Tooltip>
             )}
           </Stack>
