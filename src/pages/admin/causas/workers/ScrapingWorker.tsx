@@ -35,13 +35,16 @@ import {
 	DialogActions,
 	TableSortLabel,
 	Popover,
+	Tabs,
+	Tab,
 } from "@mui/material";
-import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, Trash, AddCircle, Warning2, SearchNormal1, Code1, InfoCircle, Eye, EyeSlash } from "iconsax-react";
+import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, Trash, AddCircle, Warning2, SearchNormal1, Code1, InfoCircle, Eye, EyeSlash, Cpu, Setting4 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig, ScrapingHistory } from "api/workers";
 import AdvancedConfigModal from "./AdvancedConfigModal";
 import CreateConfigModal from "./CreateConfigModal";
 import TemporaryWorkersModal from "./TemporaryWorkersModal";
+import ScrapingManagerPanel from "./ScrapingManagerPanel";
 
 // Enums para el worker de scraping
 const FUERO_OPTIONS = [
@@ -109,6 +112,9 @@ const ScrapingWorker = () => {
 
 	// Estado para mostrar/ocultar columnas extra (Balance, Captchas, Proxy)
 	const [showExtraColumns, setShowExtraColumns] = useState<boolean>(false);
+
+	// Sub-tabs: Configuraciones vs Manager PM2
+	const [subTab, setSubTab] = useState<number>(0);
 
 	// Cargar configuraciones
 	const fetchConfigs = async (
@@ -573,6 +579,17 @@ const ScrapingWorker = () => {
 
 	return (
 		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+			{/* Sub-tabs: Configuraciones / Manager PM2 */}
+			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+				<Tabs value={subTab} onChange={(_, v) => setSubTab(v)} variant="scrollable" scrollButtons="auto">
+					<Tab icon={<Setting4 size={18} />} iconPosition="start" label="Configuraciones" />
+					<Tab icon={<Cpu size={18} />} iconPosition="start" label="Manager PM2" />
+				</Tabs>
+			</Box>
+
+			{subTab === 1 && <ScrapingManagerPanel />}
+
+			{subTab === 0 && <>
 			{/* Header: Título y Acciones */}
 			<Box
 				display="flex"
@@ -1716,6 +1733,7 @@ const ScrapingWorker = () => {
 					</Button>
 				</DialogActions>
 			</Dialog>
+			</>}
 		</Stack>
 	);
 };
