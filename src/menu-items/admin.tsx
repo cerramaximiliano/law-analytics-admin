@@ -92,6 +92,13 @@ const admin: NavItemType = {
 					url: "/admin/causas/non-verified",
 					breadcrumbs: true,
 				},
+				{
+					id: "causas-synced-credentials",
+					title: "Causas por Credencial",
+					type: "item",
+					url: "/admin/causas/synced-credentials",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{

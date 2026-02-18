@@ -193,6 +193,72 @@ export interface SyncActivityResponse {
   };
 }
 
+// Interfaces para causas sincronizadas por credenciales
+export interface SyncedCausa {
+  _id: string;
+  number: number;
+  year: number;
+  incidente?: string | null;
+  fuero: string;
+  caratula: string;
+  objeto: string;
+  juzgado: string;
+  secretaria: string;
+  source: string;
+  movimientosCount: number;
+  fechaUltimoMovimiento: string | null;
+  lastUpdate: string | null;
+  updateStats?: {
+    count?: number;
+    last?: string;
+    today?: { date: string; count: number; hours: number[] };
+  };
+  createdAt: string;
+  credential: {
+    credentialId?: string;
+    userName: string;
+    userEmail: string;
+    initialMovementsSync: string | null;
+    initialMovementsSyncAt: string | null;
+  };
+}
+
+export interface SyncedCausasSummary {
+  totalCausas: number;
+  withMovements: number;
+  withoutMovements: number;
+  byFuero: Record<string, { total: number; withMovements: number }>;
+  credentialsCount: number;
+  initialSyncStatus: {
+    pending: number;
+    in_progress: number;
+    completed: number;
+    none: number;
+  };
+}
+
+export interface SyncedCausasFilters {
+  credentialId?: string;
+  fuero?: string;
+  hasMovements?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+export interface SyncedCausasResponse {
+  success: boolean;
+  data: SyncedCausa[];
+  summary: SyncedCausasSummary;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
 export interface GenericResponse {
   success: boolean;
   message?: string;
@@ -268,6 +334,14 @@ class PjnCredentialsService {
    */
   async getSyncActivity(): Promise<SyncActivityResponse> {
     const response = await adminAxios.get("/api/pjn-credentials/sync-activity");
+    return response.data;
+  }
+
+  /**
+   * Obtener causas sincronizadas por credenciales PJN
+   */
+  async getSyncedCausas(filters: SyncedCausasFilters = {}): Promise<SyncedCausasResponse> {
+    const response = await adminAxios.get("/api/pjn-credentials/synced-causas", { params: filters });
     return response.data;
   }
 
