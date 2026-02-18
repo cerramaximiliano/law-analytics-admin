@@ -34,6 +34,7 @@ const CausasUpdateConfigTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 	const [maxCausasPerCredential, setMaxCausasPerCredential] = useState(config.worker?.maxCausasPerCredential ?? 0);
 	const [delayBetweenCausas, setDelayBetweenCausas] = useState(config.worker?.delayBetweenCausas ?? 2000);
 	const [delayBetweenCredentials, setDelayBetweenCredentials] = useState(config.worker?.delayBetweenCredentials ?? 5000);
+	const [paginationDelay, setPaginationDelay] = useState(config.worker?.paginationDelay ?? 500);
 
 	// Thresholds
 	const [updateThresholdHours, setUpdateThresholdHours] = useState(config.thresholds?.updateThresholdHours ?? 3);
@@ -54,6 +55,7 @@ const CausasUpdateConfigTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 		maxCausasPerCredential !== (config.worker?.maxCausasPerCredential ?? 0) ||
 		delayBetweenCausas !== (config.worker?.delayBetweenCausas ?? 2000) ||
 		delayBetweenCredentials !== (config.worker?.delayBetweenCredentials ?? 5000) ||
+		paginationDelay !== (config.worker?.paginationDelay ?? 500) ||
 		updateThresholdHours !== (config.thresholds?.updateThresholdHours ?? 3) ||
 		minTimeBetweenRunsMinutes !== (config.thresholds?.minTimeBetweenRunsMinutes ?? 120) ||
 		maxRunsPerDay !== (config.thresholds?.maxRunsPerDay ?? 8) ||
@@ -66,7 +68,7 @@ const CausasUpdateConfigTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 		try {
 			setSaving(true);
 			await CausasUpdateService.updateConfig({
-				worker: { enabled, maxCredentialsPerRun, maxCausasPerCredential, delayBetweenCausas, delayBetweenCredentials },
+				worker: { enabled, maxCredentialsPerRun, maxCausasPerCredential, delayBetweenCausas, delayBetweenCredentials, paginationDelay },
 				thresholds: { updateThresholdHours, minTimeBetweenRunsMinutes, maxRunsPerDay },
 				concurrency: { waitForCausaCreation, checkIntervalMs: config.concurrency?.checkIntervalMs ?? 30000, maxWaitMinutes },
 				resume: { enabled: resumeEnabled, maxResumeAttempts, resumeDelayMinutes: config.resume?.resumeDelayMinutes ?? 5 },
@@ -156,6 +158,17 @@ const CausasUpdateConfigTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 								value={delayBetweenCredentials}
 								onChange={(e) => setDelayBetweenCredentials(Number(e.target.value))}
 								helperText="Pausa entre procesamiento de cada credencial"
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6}>
+							<TextField
+								fullWidth
+								size="small"
+								label="Delay paginación (ms)"
+								type="number"
+								value={paginationDelay}
+								onChange={(e) => setPaginationDelay(Number(e.target.value))}
+								helperText="Pausa entre requests de paginación al portal PJN"
 							/>
 						</Grid>
 					</Grid>
