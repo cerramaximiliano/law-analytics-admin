@@ -2,7 +2,7 @@
  * API Service para Causas Update Worker
  * Config y Runs del worker de actualización de causas (pjn-mis-causas)
  */
-import pjnAxios from "utils/pjnAxios";
+import adminAxios from "utils/adminAxios";
 
 // ====== Interfaces ======
 
@@ -23,6 +23,7 @@ export interface CausasUpdateConfig {
 		maxCausasPerCredential: number;
 		delayBetweenCausas: number;
 		delayBetweenCredentials: number;
+		paginationDelay: number;
 	};
 	thresholds: {
 		updateThresholdHours: number;
@@ -146,7 +147,7 @@ export class CausasUpdateService {
 	// Config
 	static async getConfig(): Promise<ApiResponse<CausasUpdateConfig>> {
 		try {
-			const response = await pjnAxios.get("/api/causas-update/config");
+			const response = await adminAxios.get("/api/causas-update/config");
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -155,7 +156,7 @@ export class CausasUpdateService {
 
 	static async updateConfig(data: Partial<CausasUpdateConfig>): Promise<ApiResponse<CausasUpdateConfig>> {
 		try {
-			const response = await pjnAxios.patch("/api/causas-update/config", data);
+			const response = await adminAxios.patch("/api/causas-update/config", data);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -164,7 +165,7 @@ export class CausasUpdateService {
 
 	static async resetConfig(): Promise<ApiResponse<CausasUpdateConfig>> {
 		try {
-			const response = await pjnAxios.post("/api/causas-update/config/reset");
+			const response = await adminAxios.post("/api/causas-update/config/reset");
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -174,7 +175,7 @@ export class CausasUpdateService {
 	// Runs
 	static async getRuns(params?: RunsQueryParams): Promise<ApiResponse<CausasUpdateRun[]>> {
 		try {
-			const response = await pjnAxios.get("/api/causas-update/runs", { params });
+			const response = await adminAxios.get("/api/causas-update/runs", { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -183,7 +184,7 @@ export class CausasUpdateService {
 
 	static async getRunDetail(id: string): Promise<ApiResponse<CausasUpdateRun>> {
 		try {
-			const response = await pjnAxios.get(`/api/causas-update/runs/${id}`);
+			const response = await adminAxios.get(`/api/causas-update/runs/${id}`);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -192,7 +193,7 @@ export class CausasUpdateService {
 
 	static async getStats(): Promise<ApiResponse<RunsStats>> {
 		try {
-			const response = await pjnAxios.get("/api/causas-update/runs/stats");
+			const response = await adminAxios.get("/api/causas-update/runs/stats");
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -201,7 +202,7 @@ export class CausasUpdateService {
 
 	static async getIncompleteRuns(): Promise<ApiResponse<CausasUpdateRun[]>> {
 		try {
-			const response = await pjnAxios.get("/api/causas-update/runs/incomplete");
+			const response = await adminAxios.get("/api/causas-update/runs/incomplete");
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -210,7 +211,7 @@ export class CausasUpdateService {
 
 	static async getCredentialRuns(credId: string, params?: { page?: number; limit?: number }): Promise<ApiResponse<CausasUpdateRun[]>> {
 		try {
-			const response = await pjnAxios.get(`/api/causas-update/runs/credential/${credId}`, { params });
+			const response = await adminAxios.get(`/api/causas-update/runs/credential/${credId}`, { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
