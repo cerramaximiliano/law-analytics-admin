@@ -115,6 +115,8 @@ const MisCausasHelpTab: React.FC = () => {
 								"8. Cerrar sesión PJN y navegador",
 								"9. Procesar causas: crear/vincular folders en BD (modo production) o simular (modo development)",
 								"10. Marcar credencial como isValid: true",
+								"11. Setear initialMovementsSync: 'pending' (solo en production) para que causas-update descargue movimientos inmediatamente",
+								"12. Registrar éxito con recordSuccess()",
 							]}
 						/>
 					</Section>
@@ -313,40 +315,102 @@ Credenciales donde:
 					<Typography variant="body2">
 						Actualiza los movimientos de TODAS las causas vinculadas a credenciales de usuario mediante login SSO
 						al portal PJN. Usa un algoritmo de comparación por cantidad para detectar movimientos nuevos de forma eficiente.
+						Opera en 3 fases con prioridad decreciente.
 					</Typography>
 				</Section>
 
-				<Section title="Flujo de Ejecución">
+				<Section title="Fases de Ejecución">
+					<Typography variant="subtitle2" fontWeight="bold" sx={{ mt: 1 }}>
+						Fase 0 — Sync Inicial de Movimientos (prioridad máxima)
+					</Typography>
+					<Typography variant="body2" sx={{ mb: 0.5 }}>
+						Cuando el <code>credentials-processor</code> termina de verificar una credencial y crear causas/folders,
+						las causas quedan sin movimientos. Esta fase los descarga inmediatamente.
+					</Typography>
 					<BulletList
 						items={[
-							"1. Resume de runs interrumpidos anteriores",
-							"2. Buscar causas con credenciales vinculadas agrupadas por credencial",
-							"3. Por cada credencial: verificar threshold, esperar concurrencia, login SSO",
-							"4. Por cada causa: buscar en portal, comparar movimientos, actualizar BD",
-							"5. Registrar detalle del run para tracking y resume futuro",
+							"• Busca credenciales con initialMovementsSync: 'pending' o 'in_progress'",
+							"• Obtiene TODAS las causas de la credencial SIN filtro de lastUpdate (threshold bypass)",
+							"• Marca la credencial como 'in_progress' durante el procesamiento",
+							"• Login SSO, scrape de movimientos para cada causa, actualización de folders",
+							"• Si completa: marca initialMovementsSync: 'completed'",
+							"• Si falla o se interrumpe: queda en 'in_progress' para reintentar en próxima ejecución",
 						]}
 					/>
+
+					<Typography variant="subtitle2" fontWeight="bold" sx={{ mt: 2 }}>
+						Fase 1 — Resume de Runs Interrumpidos
+					</Typography>
+					<BulletList
+						items={[
+							"• Busca CausasUpdateRun con status 'in_progress', 'error' o 'interrupted'",
+							"• Filtra causas ya procesadas exitosamente del run anterior",
+							"• Continúa procesando solo las causas restantes",
+							"• Máximo de reintentos configurable (maxResumeAttempts, default 3)",
+						]}
+					/>
+
+					<Typography variant="subtitle2" fontWeight="bold" sx={{ mt: 2 }}>
+						Fase 2 — Actualización Regular
+					</Typography>
+					<BulletList
+						items={[
+							"• Busca causas con linkedCredentials y lastUpdate anterior al threshold (default 3h)",
+							"• Agrupa por credencial, verifica thresholds por credencial (minTimeBetweenRunsMinutes)",
+							"• Login SSO, búsqueda en portal, comparación de movimientos, actualización en BD",
+							"• Registra detalle del run en CausasUpdateRun para tracking y resume futuro",
+						]}
+					/>
+				</Section>
+
+				<Section title="Sync Inicial — Detalle">
+					<Alert severity="info" variant="outlined" sx={{ mt: 1 }}>
+						<Typography variant="body2">
+							El campo <code>initialMovementsSync</code> en PjnCredentials funciona como flag de estado:
+							<code> null</code> (no aplica) → <code>pending</code> (espera descarga) → <code>in_progress</code> (descargando)
+							→ <code>completed</code> (listo). El manager bypasea el schedule cuando hay syncs iniciales pendientes,
+							permitiendo que el worker arranque fuera de horario.
+						</Typography>
+					</Alert>
+					<CodeBlock>{`Flujo completo:
+1. credentials-processor verifica credencial → crea causas + folders
+2. credentials-processor setea initialMovementsSync = 'pending'
+3. scraping-manager detecta initialSyncPending > 0 en queue depth
+4. scraping-manager bypasea schedule → arranca causas-update worker
+5. causas-update Fase 0: procesa credencial sin threshold
+6. causas-update marca initialMovementsSync = 'completed'
+7. Siguiente poll: initialSyncPending = 0, schedule normal aplica`}</CodeBlock>
 				</Section>
 
 				<Section title="Configuración">
 					<BulletList
 						items={[
-							"Thresholds: updateThresholdHours define horas mínimas antes de reprocesar una causa. minTimeBetweenRunsMinutes controla intervalo entre runs de la misma credencial.",
+							"Thresholds: updateThresholdHours define horas mínimas antes de reprocesar una causa (NO aplica en Fase 0). minTimeBetweenRunsMinutes controla intervalo entre runs de la misma credencial.",
 							"Concurrencia: waitForCausaCreation hace que el worker espere al worker de creación de causas antes de procesar una credencial.",
-							"Resume: Si un run es interrumpido (error, shutdown), se retoma automáticamente en la próxima ejecución procesando solo las causas faltantes.",
+							"Resume: Si un run es interrumpido (error, shutdown), se retoma automáticamente en Fase 1 procesando solo las causas faltantes.",
 						]}
 					/>
 				</Section>
 
 				<Section title="Elegibilidad">
-					<CodeBlock>{`Causas donde:
-  linkedCredentials: tiene al menos una credencial vinculada
-  lastUpdate: anterior a updateThresholdHours o no existe
+					<CodeBlock>{`Fase 0 (sync inicial):
+  PjnCredentials donde:
+    enabled: true, isValid: true
+    initialMovementsSync: 'pending' o 'in_progress'
+  → Obtiene TODAS las causas (sin filtro de lastUpdate)
 
-Credenciales donde:
-  enabled: true
-  isValid: true
-  última ejecución: hace más de minTimeBetweenRunsMinutes`}</CodeBlock>
+Fase 1 (resume):
+  CausasUpdateRun donde:
+    status: 'in_progress', 'error' o 'interrupted'
+    resumeAttempts < maxResumeAttempts
+
+Fase 2 (regular):
+  Causas donde:
+    linkedCredentials: tiene al menos una
+    lastUpdate: anterior a updateThresholdHours o no existe
+  Credenciales donde:
+    enabled: true, isValid: true
+    última ejecución: hace más de minTimeBetweenRunsMinutes`}</CodeBlock>
 				</Section>
 			</CardContent>
 		</Card>
@@ -394,6 +458,7 @@ Credenciales donde:
 								"workingDays usa ISO weekday: 1=Lunes, 2=Martes, ..., 7=Domingo",
 								"Timezone configurable por worker (default: America/Argentina/Buenos_Aires)",
 								"Fuera de horario: el manager reduce instancias a 0",
+								"Excepción: si hay syncs iniciales pendientes (initialMovementsSync = 'pending'), el worker causas-update bypasea el schedule y arranca igualmente para descargar movimientos de credenciales recién verificadas",
 							]}
 						/>
 					</Section>
