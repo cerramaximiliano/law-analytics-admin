@@ -102,15 +102,6 @@ export interface ApiResponse<T> {
 	data: T;
 }
 
-export interface MisCausasCoverage {
-	total: number;
-	updatedToday: number;
-	pending: number;
-	withErrors: number;
-	coveragePercent: number;
-	byFuero: Array<{ fuero: string; total: number; updatedToday: number; withErrors: number }>;
-}
-
 // ====== Service ======
 
 export class ScrapingManagerService {
@@ -153,15 +144,6 @@ export class ScrapingManagerService {
 	static async getManagerState(): Promise<ApiResponse<ManagerState>> {
 		try {
 			const response = await pjnAxios.get("/api/scraping-manager/state");
-			return response.data;
-		} catch (error) {
-			throw this.handleError(error);
-		}
-	}
-
-	static async getMisCausasCoverage(): Promise<ApiResponse<MisCausasCoverage>> {
-		try {
-			const response = await pjnAxios.get("/api/pjn-credentials/update-coverage");
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);

@@ -259,6 +259,15 @@ export interface SyncedCausasResponse {
   };
 }
 
+export interface MisCausasCoverage {
+  total: number;
+  updatedToday: number;
+  pending: number;
+  withErrors: number;
+  coveragePercent: number;
+  byFuero: Array<{ fuero: string; total: number; updatedToday: number; withErrors: number }>;
+}
+
 export interface GenericResponse {
   success: boolean;
   message?: string;
@@ -358,6 +367,14 @@ class PjnCredentialsService {
    */
   async deleteCredential(id: string): Promise<GenericResponse> {
     const response = await adminAxios.delete(`/api/pjn-credentials/${id}`);
+    return response.data;
+  }
+
+  /**
+   * Obtener cobertura de actualización de causas vinculadas (private-causas-update)
+   */
+  async getUpdateCoverage(): Promise<{ success: boolean; data: MisCausasCoverage }> {
+    const response = await adminAxios.get("/api/pjn-credentials/update-coverage");
     return response.data;
   }
 }

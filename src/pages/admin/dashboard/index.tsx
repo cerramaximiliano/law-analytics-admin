@@ -42,7 +42,7 @@ import { CausasPjnService, EligibilityStats } from "api/causasPjn";
 import { StuckDocumentsService, StuckDocumentsStats } from "api/stuckDocuments";
 import { CausasEjeService, WorkerStatsResponse, EligibilityStatsResponse as EjeEligibilityStatsResponse } from "api/causasEje";
 import { CausasMEVService, EligibilityStatsMEV } from "api/causasMEV";
-import { ScrapingManagerService, MisCausasCoverage } from "api/scrapingManager";
+import pjnCredentialsService, { MisCausasCoverage } from "api/pjnCredentials";
 import LinearProgress from "@mui/material/LinearProgress";
 import { Warning2 } from "iconsax-react";
 
@@ -596,7 +596,7 @@ const AdminDashboard = () => {
 	const fetchMisCausasCoverage = useCallback(async () => {
 		try {
 			setLoadingMisCausasCoverage(true);
-			const response = await ScrapingManagerService.getMisCausasCoverage();
+			const response = await pjnCredentialsService.getUpdateCoverage();
 			if (response.success) {
 				setMisCausasCoverage(response.data);
 			}
