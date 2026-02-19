@@ -260,6 +260,37 @@ export interface SyncedCausasResponse {
   };
 }
 
+export interface PortalIncidentErrorSample {
+  code: string;
+  message: string;
+  timestamp: string;
+  credentialId?: string;
+}
+
+export interface PortalIncident {
+  _id: string;
+  type: "portal_down" | "portal_degraded" | "login_service_error";
+  status: "active" | "resolved";
+  startedAt: string;
+  resolvedAt?: string | null;
+  durationMinutes?: number | null;
+  detectedBy: string;
+  affectedWorkers: string[];
+  affectedCredentialsCount: number;
+  errorSamples: PortalIncidentErrorSample[];
+  totalErrors: number;
+}
+
+export interface PortalStatusResponse {
+  success: boolean;
+  data: {
+    activeIncident: PortalIncident | null;
+    recentIncidents: PortalIncident[];
+    credentialsWithPortalErrors: number;
+    portalHealthy: boolean;
+  };
+}
+
 export interface MisCausasCoverage {
   total: number;
   updatedToday: number;
@@ -368,6 +399,14 @@ class PjnCredentialsService {
    */
   async deleteCredential(id: string): Promise<GenericResponse> {
     const response = await adminAxios.delete(`/api/pjn-credentials/${id}`);
+    return response.data;
+  }
+
+  /**
+   * Obtener estado del portal PJN (incidentes activos y recientes)
+   */
+  async getPortalStatus(): Promise<PortalStatusResponse> {
+    const response = await adminAxios.get("/api/pjn-credentials/portal-status");
     return response.data;
   }
 

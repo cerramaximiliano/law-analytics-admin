@@ -30,6 +30,8 @@ import {
   DialogActions,
   Tabs,
   Tab,
+  Alert,
+  AlertTitle,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useTheme } from "@mui/material/styles";
@@ -53,6 +55,7 @@ import pjnCredentialsService, {
   PjnCredential,
   PjnCredentialsFilters,
   SyncActivityResponse,
+  PortalStatusResponse,
 } from "api/pjnCredentials";
 
 // Colores para estados
@@ -149,6 +152,7 @@ const CredencialesPJN = () => {
   const [statsError, setStatsError] = useState<string | null>(null);
   const [syncActivity, setSyncActivity] = useState<SyncActivityResponse["data"] | null>(null);
   const [syncActivityLoading, setSyncActivityLoading] = useState(false);
+  const [portalStatus, setPortalStatus] = useState<PortalStatusResponse["data"] | null>(null);
 
   // Paginación
   const [page, setPage] = useState(0);
@@ -235,6 +239,17 @@ const CredencialesPJN = () => {
     }
   };
 
+  const fetchPortalStatus = async () => {
+    try {
+      const response = await pjnCredentialsService.getPortalStatus();
+      if (response.success) {
+        setPortalStatus(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching portal status:", error);
+    }
+  };
+
   const fetchSyncActivity = async () => {
     try {
       setSyncActivityLoading(true);
@@ -256,12 +271,14 @@ const CredencialesPJN = () => {
 
   useEffect(() => {
     fetchStats();
+    fetchPortalStatus();
   }, []);
 
-  // Lazy load: cargar sync activity solo cuando se activa el tab 1
+  // Lazy load: cargar sync activity y portal status solo cuando se activa el tab 1
   useEffect(() => {
     if (tabValue === 1 && !syncActivity && !syncActivityLoading) {
       fetchSyncActivity();
+      fetchPortalStatus();
     }
   }, [tabValue]);
 
@@ -430,6 +447,32 @@ const CredencialesPJN = () => {
             Reintentar
           </Button>
         </Box>
+      )}
+
+      {/* Banner de incidente de portal */}
+      {portalStatus?.activeIncident && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          <AlertTitle>
+            Portal PJN -{" "}
+            {portalStatus.activeIncident.type === "portal_down"
+              ? "Caido"
+              : portalStatus.activeIncident.type === "portal_degraded"
+              ? "Degradado"
+              : "Error de Login"}
+          </AlertTitle>
+          <Typography variant="body2">
+            Detectado por: <strong>{portalStatus.activeIncident.detectedBy}</strong>
+            {" | "}
+            Desde: <strong>{formatDate(portalStatus.activeIncident.startedAt)}</strong>
+            {" | "}
+            Credenciales afectadas: <strong>{portalStatus.activeIncident.affectedCredentialsCount}</strong>
+            {" | "}
+            Errores totales: <strong>{portalStatus.activeIncident.totalErrors}</strong>
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Las credenciales no son penalizadas durante incidentes del portal.
+          </Typography>
+        </Alert>
       )}
 
       {/* Tabs */}
@@ -642,8 +685,26 @@ const CredencialesPJN = () => {
                           <Typography variant="body2">{cred.successfulSyncs || 0}</Typography>
                         </TableCell>
                         <TableCell align="center">
-                          {cred.consecutiveErrors > 0 ? (
-                            <Chip label={cred.consecutiveErrors} color="error" size="small" sx={{ minWidth: 32 }} />
+                          {cred.consecutiveErrors > 0 || cred.lastError ? (
+                            <Tooltip
+                              title={
+                                cred.lastError
+                                  ? `${cred.lastError.message}${cred.lastError.code ? ` [${cred.lastError.code}]` : ""} - ${formatDate(cred.lastError.timestamp)}`
+                                  : "Sin detalle"
+                              }
+                            >
+                              <Chip
+                                label={cred.consecutiveErrors}
+                                color={
+                                  cred.lastError?.code &&
+                                  ["PORTAL_TIMEOUT", "NETWORK_ERROR", "PORTAL_ERROR", "LOGIN_SERVICE_ERROR"].includes(cred.lastError.code)
+                                    ? "warning"
+                                    : "error"
+                                }
+                                size="small"
+                                sx={{ minWidth: 32, cursor: "help" }}
+                              />
+                            </Tooltip>
                           ) : (
                             <Typography variant="body2" color="text.disabled">0</Typography>
                           )}
@@ -998,6 +1059,78 @@ const CredencialesPJN = () => {
                           <TableCell align="right">{err.errorCount || 0}</TableCell>
                           <TableCell>
                             <Typography variant="caption">{formatDate(err.createdAt)}</Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Grid>
+            </>
+          )}
+
+          {/* Historial de Incidentes del Portal */}
+          {portalStatus?.recentIncidents && portalStatus.recentIncidents.length > 0 && (
+            <>
+              <Grid item xs={12} sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" color="warning.main" sx={{ mb: 0.5 }}>
+                  Historial de Incidentes del Portal ({portalStatus.recentIncidents.length})
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Tipo</TableCell>
+                        <TableCell>Inicio</TableCell>
+                        <TableCell align="right">Duracion</TableCell>
+                        <TableCell align="right">Errores</TableCell>
+                        <TableCell align="right">Credenciales</TableCell>
+                        <TableCell>Detectado por</TableCell>
+                        <TableCell>Workers</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {portalStatus.recentIncidents.map((incident: any) => (
+                        <TableRow key={incident._id} hover>
+                          <TableCell>
+                            <Chip
+                              label={
+                                incident.type === "portal_down"
+                                  ? "Caida"
+                                  : incident.type === "portal_degraded"
+                                  ? "Degradado"
+                                  : "Login"
+                              }
+                              size="small"
+                              color={incident.type === "portal_down" ? "error" : "warning"}
+                              variant="outlined"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="caption">{formatDate(incident.startedAt)}</Typography>
+                          </TableCell>
+                          <TableCell align="right">
+                            <Typography variant="body2">
+                              {incident.durationMinutes != null ? `${incident.durationMinutes} min` : "-"}
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="right">
+                            <Typography variant="body2">{incident.totalErrors || 0}</Typography>
+                          </TableCell>
+                          <TableCell align="right">
+                            <Typography variant="body2">{incident.affectedCredentialsCount || 0}</Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="caption">{incident.detectedBy || "-"}</Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                              {(incident.affectedWorkers || []).map((w: string) => (
+                                <Chip key={w} label={w.replace("pjn-", "")} size="small" variant="outlined" sx={{ height: 20, fontSize: "0.65rem" }} />
+                              ))}
+                            </Stack>
                           </TableCell>
                         </TableRow>
                       ))}
