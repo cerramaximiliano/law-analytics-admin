@@ -22,6 +22,8 @@ import {
 	Tooltip,
 	IconButton,
 	Button,
+	Checkbox,
+	FormControlLabel,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import dayjs from "dayjs";
@@ -117,6 +119,7 @@ const CausasSyncCredentials = () => {
 	const [movementsFilter, setMovementsFilter] = useState<string>("");
 	const [sortBy, setSortBy] = useState<string>("year");
 	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+	const [soloElegibles, setSoloElegibles] = useState<boolean>(false);
 
 	// Credenciales para el dropdown
 	const [credentialsList, setCredentialsList] = useState<PjnCredential[]>([]);
@@ -149,6 +152,7 @@ const CausasSyncCredentials = () => {
 			if (credentialId) params.credentialId = credentialId;
 			if (fueroFilter) params.fuero = fueroFilter;
 			if (movementsFilter) params.hasMovements = movementsFilter;
+			if (soloElegibles) params.soloElegibles = true;
 
 			const response = await pjnCredentialsService.getSyncedCausas(params);
 
@@ -170,7 +174,7 @@ const CausasSyncCredentials = () => {
 
 	useEffect(() => {
 		fetchCausas();
-	}, [page, rowsPerPage, sortBy, sortOrder]);
+	}, [page, rowsPerPage, sortBy, sortOrder, soloElegibles]);
 
 	// Handlers
 	const handleChangePage = (_event: unknown, newPage: number) => {
@@ -191,6 +195,7 @@ const CausasSyncCredentials = () => {
 		setCredentialId("");
 		setFueroFilter("");
 		setMovementsFilter("");
+		setSoloElegibles(false);
 		setPage(0);
 	};
 
@@ -351,6 +356,19 @@ const CausasSyncCredentials = () => {
 							<Refresh size={20} />
 						</IconButton>
 					</Tooltip>
+					<FormControlLabel
+						control={
+							<Checkbox
+								checked={soloElegibles}
+								onChange={(e) => {
+									setSoloElegibles(e.target.checked);
+									setPage(0);
+								}}
+								size="small"
+							/>
+						}
+						label={<Typography variant="body2">Solo elegibles para actualización</Typography>}
+					/>
 				</Stack>
 			</Box>
 
