@@ -42,6 +42,7 @@ import { CausasPjnService, EligibilityStats } from "api/causasPjn";
 import { StuckDocumentsService, StuckDocumentsStats } from "api/stuckDocuments";
 import { CausasEjeService, WorkerStatsResponse, EligibilityStatsResponse as EjeEligibilityStatsResponse } from "api/causasEje";
 import { CausasMEVService, EligibilityStatsMEV } from "api/causasMEV";
+import { ScrapingManagerService, MisCausasCoverage } from "api/scrapingManager";
 import LinearProgress from "@mui/material/LinearProgress";
 import { Warning2 } from "iconsax-react";
 
@@ -561,6 +562,8 @@ const AdminDashboard = () => {
 	const [loadingStuckDocuments, setLoadingStuckDocuments] = useState(false);
 	const [ejeStats, setEjeStats] = useState<WorkerStatsResponse["data"] | null>(null);
 	const [loadingEjeStats, setLoadingEjeStats] = useState(false);
+	const [misCausasCoverage, setMisCausasCoverage] = useState<MisCausasCoverage | null>(null);
+	const [loadingMisCausasCoverage, setLoadingMisCausasCoverage] = useState(false);
 
 	const fetchEjeStats = useCallback(async () => {
 		try {
@@ -587,6 +590,20 @@ const AdminDashboard = () => {
 			console.error("Error fetching eligibility stats:", error);
 		} finally {
 			setLoadingEligibility(false);
+		}
+	}, []);
+
+	const fetchMisCausasCoverage = useCallback(async () => {
+		try {
+			setLoadingMisCausasCoverage(true);
+			const response = await ScrapingManagerService.getMisCausasCoverage();
+			if (response.success) {
+				setMisCausasCoverage(response.data);
+			}
+		} catch (error: any) {
+			console.error("Error fetching mis causas coverage:", error);
+		} finally {
+			setLoadingMisCausasCoverage(false);
 		}
 	}, []);
 
@@ -701,11 +718,12 @@ const AdminDashboard = () => {
 		fetchCapsolverBalance();
 		fetchOpenaiBalance();
 		fetchEligibilityStats();
+		fetchMisCausasCoverage();
 		fetchMevEligibilityStats();
 		fetchEjeEligibilityStats();
 		fetchStuckDocumentsStats();
 		fetchEjeStats();
-	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance, fetchOpenaiBalance, fetchEligibilityStats, fetchMevEligibilityStats, fetchEjeEligibilityStats, fetchStuckDocumentsStats, fetchEjeStats]);
+	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance, fetchOpenaiBalance, fetchEligibilityStats, fetchMisCausasCoverage, fetchMevEligibilityStats, fetchEjeEligibilityStats, fetchStuckDocumentsStats, fetchEjeStats]);
 
 	useRequestQueueRefresh(fetchData);
 
@@ -715,6 +733,7 @@ const AdminDashboard = () => {
 		fetchCapsolverBalance();
 		fetchOpenaiBalance();
 		fetchEligibilityStats();
+		fetchMisCausasCoverage();
 		fetchMevEligibilityStats();
 		fetchEjeEligibilityStats();
 		fetchStuckDocumentsStats();
@@ -1543,6 +1562,131 @@ const AdminDashboard = () => {
 										</Typography>
 									</Box>
 								)}
+							</>
+						) : (
+							<Typography variant="body2" color="text.secondary" textAlign="center">
+								No se pudieron cargar las estadísticas
+							</Typography>
+						)}
+						</Paper>
+					</Grid>
+
+					{/* Mis Causas (SSO) Update Coverage Widget */}
+					<Grid item xs={12} sm={6} md={3}>
+						<Paper
+							elevation={0}
+							onClick={() => navigate("/admin/causas/synced-credentials")}
+							sx={{
+								p: { xs: 1.5, sm: 2.5 },
+								borderRadius: 2,
+								bgcolor: theme.palette.background.paper,
+								border: `1px solid ${theme.palette.divider}`,
+								cursor: "pointer",
+								transition: "all 0.2s ease",
+								height: "100%",
+								"&:hover": {
+									boxShadow: theme.shadows[2],
+									borderColor: COLORS.primary.light,
+								},
+							}}
+						>
+							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									<Refresh size={20} style={{ color: COLORS.primary.main }} />
+									<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}>
+										Cobertura Mis Causas
+									</Typography>
+								</Box>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									<Chip
+										label="SSO"
+										size="small"
+										sx={{
+											bgcolor: alpha(COLORS.primary.main, 0.1),
+											color: COLORS.primary.main,
+											fontWeight: 500,
+											fontSize: "0.65rem",
+										}}
+									/>
+									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
+								</Box>
+							</Box>
+
+						{loadingMisCausasCoverage ? (
+							<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+								<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
+							</Box>
+						) : misCausasCoverage ? (
+							<>
+								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+									<Typography variant="body2" color="text.secondary">
+										Cobertura hoy
+									</Typography>
+									<Typography variant="h6" fontWeight="bold" color="primary.main">
+										{misCausasCoverage.coveragePercent}%
+									</Typography>
+								</Box>
+								<LinearProgress
+									variant="determinate"
+									value={misCausasCoverage.coveragePercent || 0}
+									sx={{
+										height: 8,
+										borderRadius: 4,
+										mb: 2,
+										backgroundColor: alpha(COLORS.neutral.light, 0.3),
+										"& .MuiLinearProgress-bar": {
+											borderRadius: 4,
+											backgroundColor:
+												(misCausasCoverage.coveragePercent || 0) > 90
+													? COLORS.success.main
+													: (misCausasCoverage.coveragePercent || 0) > 70
+													? COLORS.warning.main
+													: COLORS.error.main,
+										},
+									}}
+								/>
+								<Grid container spacing={2}>
+									<Grid item xs={6} sm={3}>
+										<Box sx={{ textAlign: "center" }}>
+											<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
+												{misCausasCoverage.updatedToday.toLocaleString()}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												Actualizados hoy
+											</Typography>
+										</Box>
+									</Grid>
+									<Grid item xs={6} sm={3}>
+										<Box sx={{ textAlign: "center" }}>
+											<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
+												{misCausasCoverage.pending.toLocaleString()}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												Pendientes
+											</Typography>
+										</Box>
+									</Grid>
+									<Grid item xs={6} sm={3}>
+										<Box sx={{ textAlign: "center" }}>
+											<Typography variant="h5" fontWeight="bold" color={COLORS.error.main}>
+												{misCausasCoverage.withErrors.toLocaleString()}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												Con errores
+											</Typography>
+										</Box>
+									</Grid>
+									<Grid item xs={6} sm={3}>
+										<Box sx={{ textAlign: "center" }}>
+											<Typography variant="h5" fontWeight="bold" color={COLORS.primary.main}>
+												{misCausasCoverage.total.toLocaleString()}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												Total
+											</Typography>
+										</Box>
+									</Grid>
+								</Grid>
 							</>
 						) : (
 							<Typography variant="body2" color="text.secondary" textAlign="center">

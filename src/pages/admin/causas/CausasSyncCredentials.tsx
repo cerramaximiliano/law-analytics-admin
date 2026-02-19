@@ -33,7 +33,7 @@ import pjnCredentialsService, {
 	SyncedCausasSummary,
 	PjnCredential,
 } from "api/pjnCredentials";
-import { Refresh, SearchNormal1, CloseCircle, ArrowUp, ArrowDown } from "iconsax-react";
+import { Refresh, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Repeat } from "iconsax-react";
 
 dayjs.locale("es");
 
@@ -61,6 +61,43 @@ const INITIAL_SYNC_LABELS: Record<string, string> = {
 	completed: "Completado",
 	in_progress: "En progreso",
 	pending: "Pendiente",
+};
+
+const getArgentinaDate = (): string => {
+	const now = new Date();
+	const argentinaOffset = -3 * 60;
+	const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+	let argentinaHour = Math.floor((utcMinutes + argentinaOffset) / 60);
+	let dayOffset = 0;
+	if (argentinaHour < 0) dayOffset = -1;
+	else if (argentinaHour >= 24) dayOffset = 1;
+	const argentinaDate = new Date(now);
+	argentinaDate.setUTCDate(argentinaDate.getUTCDate() + dayOffset);
+	const year = argentinaDate.getUTCFullYear();
+	const month = String(argentinaDate.getUTCMonth() + 1).padStart(2, "0");
+	const day = String(argentinaDate.getUTCDate()).padStart(2, "0");
+	return `${year}-${month}-${day}`;
+};
+
+const getTodayUpdateInfo = (causa: SyncedCausa): { isToday: boolean; count: number; hours: number[] } => {
+	const stats = causa.updateStats?.today;
+	if (!stats || !stats.date) {
+		return { isToday: false, count: 0, hours: [] };
+	}
+	const today = getArgentinaDate();
+	const isToday = stats.date === today;
+	return {
+		isToday,
+		count: isToday ? (stats.count || 0) : 0,
+		hours: isToday ? (stats.hours || []) : [],
+	};
+};
+
+const formatHoursTooltip = (hours: number[]): string => {
+	if (hours.length === 0) return "";
+	const sortedHours = [...hours].sort((a, b) => a - b);
+	const formatted = sortedHours.map((h) => `${h.toString().padStart(2, "0")}:00`);
+	return `Actualizado a las ${formatted.join(", ")}`;
 };
 
 const CausasSyncCredentials = () => {
@@ -380,9 +417,41 @@ const CausasSyncCredentials = () => {
 											/>
 										</TableCell>
 										<TableCell>
-											<Typography variant="caption">
-												{formatDate(causa.lastUpdate)}
-											</Typography>
+											{(() => {
+												const todayInfo = getTodayUpdateInfo(causa);
+												return (
+													<Stack direction="row" alignItems="center" spacing={0.5}>
+														<Typography variant="caption">
+															{formatDate(causa.lastUpdate)}
+														</Typography>
+														{todayInfo.isToday && todayInfo.count > 0 && (
+															<Tooltip title={formatHoursTooltip(todayInfo.hours)}>
+																<Chip
+																	icon={<Repeat size={14} />}
+																	label={todayInfo.count}
+																	size="small"
+																	sx={{
+																		height: 22,
+																		minWidth: 40,
+																		fontSize: "0.75rem",
+																		fontWeight: 700,
+																		backgroundColor: "success.main",
+																		color: "common.white",
+																		"& .MuiChip-icon": {
+																			color: "common.white",
+																			marginLeft: "6px",
+																		},
+																		"& .MuiChip-label": {
+																			paddingLeft: "4px",
+																			paddingRight: "8px",
+																		},
+																	}}
+																/>
+															</Tooltip>
+														)}
+													</Stack>
+												);
+											})()}
 										</TableCell>
 										<TableCell>
 											<Typography variant="caption">
