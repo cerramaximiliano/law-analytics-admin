@@ -150,6 +150,7 @@ export interface SyncRun {
 
 export interface UpdateRun {
   _id: string;
+  credentialsId?: string;
   userName: string;
   userEmail: string;
   status: string;
@@ -163,7 +164,12 @@ export interface UpdateRun {
     newMovimientos: number;
     causasError: number;
   };
-  metadata: { triggeredBy: string; isResumedRun: boolean };
+  metadata: {
+    triggeredBy: string;
+    isResumedRun: boolean;
+    previousRunId?: string;
+    resumeAttempts?: number;
+  };
   error: { message: string; code: string; phase: string } | null;
   createdAt: string;
 }
