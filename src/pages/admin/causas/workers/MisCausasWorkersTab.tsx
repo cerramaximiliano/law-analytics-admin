@@ -18,6 +18,12 @@ import {
 	FormControlLabel,
 	useTheme,
 	alpha,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableHead,
+	TableRow,
 } from "@mui/material";
 import { ArrowDown2, ArrowUp2, TickCircle, Timer1, Setting2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
@@ -130,6 +136,65 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 
 	return (
 		<Stack spacing={2}>
+			{/* Tabla resumen */}
+			<Card variant="outlined">
+				<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
+					<Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
+						Resumen de Workers
+					</Typography>
+					<TableContainer>
+						<Table size="small">
+							<TableHead>
+								<TableRow>
+									<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Worker</TableCell>
+									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Estado</TableCell>
+									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Horario</TableCell>
+									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Instancias</TableCell>
+									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Scale Up</TableCell>
+									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Scale Down</TableCell>
+								</TableRow>
+							</TableHead>
+							<TableBody>
+								{Object.entries(config.workers).map(([name, w]) => (
+									<TableRow key={name} sx={{ "&:last-child td": { borderBottom: 0 } }}>
+										<TableCell sx={{ fontSize: "0.8rem" }}>
+											<Stack direction="row" spacing={0.5} alignItems="center">
+												<Typography variant="body2" fontWeight={500}>{WORKER_LABELS[name] || name}</Typography>
+												<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
+													({name})
+												</Typography>
+											</Stack>
+										</TableCell>
+										<TableCell align="center">
+											<Chip
+												label={w.enabled ? "ON" : "OFF"}
+												size="small"
+												color={w.enabled ? "success" : "default"}
+												sx={{ fontSize: "0.65rem", height: 20 }}
+											/>
+										</TableCell>
+										<TableCell align="center" sx={{ fontSize: "0.8rem", fontFamily: "monospace" }}>
+											{w.schedule.enabled
+												? `${w.schedule.workingHoursStart} - ${w.schedule.workingHoursEnd}`
+												: "24/7"}
+										</TableCell>
+										<TableCell align="center" sx={{ fontSize: "0.8rem" }}>
+											{w.scaling.minInstances} - {w.scaling.maxInstances}
+										</TableCell>
+										<TableCell align="center" sx={{ fontSize: "0.8rem" }}>
+											{w.scaling.scaleUpThreshold}
+										</TableCell>
+										<TableCell align="center" sx={{ fontSize: "0.8rem" }}>
+											{w.scaling.scaleDownThreshold}
+										</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
+					</TableContainer>
+				</CardContent>
+			</Card>
+
 			{Object.entries(config.workers).map(([workerName, workerConfig]) => {
 				const worker = getEditValue(workerName);
 				const isExpanded = expandedWorker === workerName;
