@@ -241,6 +241,7 @@ export interface SyncedCausasFilters {
   credentialId?: string;
   fuero?: string;
   hasMovements?: string;
+  soloElegibles?: boolean;
   page?: number;
   limit?: number;
   sortBy?: string;
