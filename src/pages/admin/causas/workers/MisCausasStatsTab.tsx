@@ -18,10 +18,10 @@ import { useSnackbar } from "notistack";
 import { ScrapingManagerService, ManagerState, WorkerStateInfo } from "api/scrapingManager";
 
 const WORKER_LABELS: Record<string, string> = {
-	"credentials-processor": "Verificación Inicial",
-	"mis-causas": "Sincronización Completa",
-	"update-sync": "Actualización Incremental",
-	"private-causas-update": "Causas Privadas",
+	"credentials-processor": "Verificación de Credenciales",
+	"mis-causas": "Sync Completa (on-demand)",
+	"update-sync": "Detección de Nuevas Causas",
+	"private-causas-update": "Actualización de Movimientos",
 };
 
 const MisCausasStatsTab: React.FC = () => {
