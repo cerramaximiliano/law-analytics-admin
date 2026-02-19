@@ -92,7 +92,7 @@ const MisCausasHelpTab: React.FC = () => {
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<Chip label="credentials-processor" size="small" color="primary" sx={{ fontFamily: "monospace" }} />
-						<Typography variant="h6">Verificación Inicial</Typography>
+						<Typography variant="h6">Verificación de Credenciales</Typography>
 					</Stack>
 
 					<Section title="Función">
@@ -157,7 +157,7 @@ const MisCausasHelpTab: React.FC = () => {
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<Chip label="mis-causas" size="small" color="secondary" sx={{ fontFamily: "monospace" }} />
-						<Typography variant="h6">Sincronización Completa</Typography>
+						<Typography variant="h6">Sync Completa (on-demand)</Typography>
 					</Stack>
 
 					<Section title="Función">
@@ -203,7 +203,7 @@ const MisCausasHelpTab: React.FC = () => {
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<Chip label="update-sync" size="small" color="info" sx={{ fontFamily: "monospace" }} />
-						<Typography variant="h6">Actualización Incremental</Typography>
+						<Typography variant="h6">Detección de Nuevas Causas</Typography>
 					</Stack>
 
 					<Section title="Función">
@@ -254,7 +254,7 @@ const MisCausasHelpTab: React.FC = () => {
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<Chip label="private-causas-update" size="small" color="warning" sx={{ fontFamily: "monospace" }} />
-						<Typography variant="h6">Actualización de Causas Privadas</Typography>
+						<Typography variant="h6">Actualización de Movimientos</Typography>
 					</Stack>
 
 					<Section title="Función">
