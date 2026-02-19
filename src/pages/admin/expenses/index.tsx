@@ -54,8 +54,8 @@ const STATUS_CONFIG: Record<string, { color: "success" | "warning" | "error" | "
 
 // Currency symbols
 const CURRENCY_SYMBOLS: Record<string, string> = {
-	USD: "$",
-	ARS: "$",
+	USD: "US$",
+	ARS: "AR$",
 	EUR: "€",
 };
 
@@ -363,6 +363,16 @@ const ExpensesPage = () => {
 		return `${CURRENCY_SYMBOLS[currency] || "$"}${amount.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 	};
 
+	// Get color for currency
+	const getCurrencyColor = (currency: string): string => {
+		const colorMap: Record<string, string> = {
+			USD: theme.palette.primary.main,
+			ARS: theme.palette.warning.main,
+			EUR: theme.palette.info.main,
+		};
+		return colorMap[currency] || theme.palette.secondary.main;
+	};
+
 	// Format date
 	const formatDate = (dateString: string) => {
 		return dayjs(dateString).format("DD/MM/YYYY");
@@ -392,25 +402,44 @@ const ExpensesPage = () => {
 				<Stack spacing={3}>
 					{/* Stats Cards */}
 					<Grid container spacing={2}>
-						<Grid item xs={12} sm={6} md={3}>
-							<Card variant="outlined">
-								<CardContent>
-									<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-										<DollarCircle size={20} color={theme.palette.primary.main} />
-										<Typography variant="body2" color="textSecondary">
-											Total Gastos ({dayjs().year()})
-										</Typography>
-									</Stack>
-									{loadingStats ? (
-										<Skeleton variant="text" width={100} height={40} />
-									) : (
-										<Typography variant="h4" color="primary">
-											{formatCurrency(stats?.totals?.totalAmount || 0, "USD")}
-										</Typography>
-									)}
-								</CardContent>
-							</Card>
-						</Grid>
+						{/* Totales por moneda - dinámico */}
+						{loadingStats ? (
+							<>
+								{[0, 1, 2].map((i) => (
+									<Grid item xs={12} sm={6} md={3} key={i}>
+										<Card variant="outlined">
+											<CardContent>
+												<Skeleton variant="text" width={140} height={24} sx={{ mb: 1 }} />
+												<Skeleton variant="text" width={120} height={40} />
+												<Skeleton variant="text" width={80} height={18} />
+											</CardContent>
+										</Card>
+									</Grid>
+								))}
+							</>
+						) : (
+							(stats?.byCurrency || []).map((item: { _id: string; total: number; count: number }) => (
+								<Grid item xs={12} sm={6} md={3} key={item._id}>
+									<Card variant="outlined">
+										<CardContent>
+											<Stack direction="row" spacing={1} alignItems="center" mb={1}>
+												<DollarCircle size={20} color={getCurrencyColor(item._id)} />
+												<Typography variant="body2" color="textSecondary">
+													Total {item._id} ({dayjs().year()})
+												</Typography>
+											</Stack>
+											<Typography variant="h4" sx={{ color: getCurrencyColor(item._id) }}>
+												{formatCurrency(item.total, item._id)}
+											</Typography>
+											<Typography variant="caption" color="textSecondary">
+												{item.count} {item.count === 1 ? "gasto" : "gastos"}
+											</Typography>
+										</CardContent>
+									</Card>
+								</Grid>
+							))
+						)}
+						{/* Cantidad total de gastos */}
 						<Grid item xs={12} sm={6} md={3}>
 							<Card variant="outlined">
 								<CardContent>
@@ -423,53 +452,21 @@ const ExpensesPage = () => {
 									{loadingStats ? (
 										<Skeleton variant="text" width={60} height={40} />
 									) : (
-										<Typography variant="h4" color="success.main">
-											{stats?.totals?.totalCount || 0}
-										</Typography>
-									)}
-								</CardContent>
-							</Card>
-						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
-							<Card variant="outlined">
-								<CardContent>
-									<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-										<DollarCircle size={20} color={theme.palette.warning.main} />
-										<Typography variant="body2" color="textSecondary">
-											Promedio por Gasto
-										</Typography>
-									</Stack>
-									{loadingStats ? (
-										<Skeleton variant="text" width={80} height={40} />
-									) : (
-										<Typography variant="h4" color="warning.main">
-											{formatCurrency(stats?.totals?.avgAmount || 0, "USD")}
-										</Typography>
-									)}
-								</CardContent>
-							</Card>
-						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
-							<Card variant="outlined">
-								<CardContent>
-									<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-										<DollarCircle size={20} color={theme.palette.error.main} />
-										<Typography variant="body2" color="textSecondary">
-											Gasto Máximo
-										</Typography>
-									</Stack>
-									{loadingStats ? (
-										<Skeleton variant="text" width={80} height={40} />
-									) : (
-										<Typography variant="h4" color="error.main">
-											{formatCurrency(stats?.totals?.maxAmount || 0, "USD")}
-										</Typography>
+										<>
+											<Typography variant="h4" color="success.main">
+												{stats?.totals?.totalCount || 0}
+											</Typography>
+											<Typography variant="caption" color="textSecondary">
+												{(stats?.byCurrency || []).length > 1
+													? `en ${(stats?.byCurrency || []).length} monedas`
+													: "gastos totales"}
+											</Typography>
+										</>
 									)}
 								</CardContent>
 							</Card>
 						</Grid>
 					</Grid>
-
 					{/* OpenAI Balance Section */}
 					<Paper variant="outlined" sx={{ p: 2 }}>
 						<Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" mb={2}>
@@ -689,6 +686,9 @@ const ExpensesPage = () => {
 											<TableCell align="right">
 												<Typography variant="body2" fontWeight={600}>
 													{formatCurrency(expense.amount, expense.currency)}
+												</Typography>
+												<Typography variant="caption" color="textSecondary">
+													{expense.currency}
 												</Typography>
 											</TableCell>
 											<TableCell align="center">
