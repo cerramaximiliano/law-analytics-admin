@@ -56,6 +56,7 @@ import pjnCredentialsService, {
   PjnCredentialsFilters,
   SyncActivityResponse,
   PortalStatusResponse,
+  UpdateRun,
 } from "api/pjnCredentials";
 
 // Colores para estados
@@ -137,6 +138,87 @@ const getActivityStatusColor = (status: string): "success" | "warning" | "error"
     default: return "default";
   }
 };
+
+// Colores para distinguir ciclos adyacentes
+const CYCLE_COLORS = ["#1976d2", "#ed6c02", "#2e7d32", "#9c27b0"];
+
+// Agrupa runs que pertenecen al mismo ciclo de ejecución del worker
+// (misma credencial + dentro de una ventana de 30 min)
+interface RunWithCycle extends UpdateRun {
+  cycleId: string;
+  cycleSize: number;
+  cycleIndex: number; // 0-based dentro del ciclo
+  cycleColorIdx: number;
+}
+
+function groupRunsIntoCycles(runs: UpdateRun[]): RunWithCycle[] {
+  if (!runs || runs.length === 0) return [];
+
+  const TIME_WINDOW = 30 * 60 * 1000; // 30 min
+
+  // Procesar cronológicamente (los runs vienen desc)
+  const chrono = [...runs].reverse();
+  const assignments: { run: UpdateRun; cycleId: string }[] = [];
+  const credCycles = new Map<string, { cycleId: string; lastTime: number }>();
+
+  for (const run of chrono) {
+    const credId = run.credentialsId;
+    const runTime = new Date(run.startedAt || run.createdAt).getTime();
+
+    if (!credId) {
+      assignments.push({ run, cycleId: run._id });
+      continue;
+    }
+
+    const existing = credCycles.get(credId);
+    if (existing && runTime - existing.lastTime < TIME_WINDOW) {
+      assignments.push({ run, cycleId: existing.cycleId });
+      existing.lastTime = runTime;
+    } else {
+      const cycleId = `cycle-${run._id}`;
+      credCycles.set(credId, { cycleId, lastTime: runTime });
+      assignments.push({ run, cycleId });
+    }
+  }
+
+  // Volver a orden desc
+  assignments.reverse();
+
+  // Contar tamaño de cada ciclo
+  const cycleSizes = new Map<string, number>();
+  for (const a of assignments) {
+    cycleSizes.set(a.cycleId, (cycleSizes.get(a.cycleId) || 0) + 1);
+  }
+
+  // Asignar color a cada ciclo multi-run (solo los que tienen >1 run)
+  const cycleColorMap = new Map<string, number>();
+  let colorCounter = 0;
+  // Recorrer en orden para asignar colores consistentes
+  const seen = new Set<string>();
+  for (const a of assignments) {
+    const size = cycleSizes.get(a.cycleId) || 1;
+    if (size > 1 && !seen.has(a.cycleId)) {
+      seen.add(a.cycleId);
+      cycleColorMap.set(a.cycleId, colorCounter % CYCLE_COLORS.length);
+      colorCounter++;
+    }
+  }
+
+  // Asignar índice dentro de cada ciclo
+  const counters = new Map<string, number>();
+  return assignments.map((a) => {
+    const size = cycleSizes.get(a.cycleId) || 1;
+    const idx = counters.get(a.cycleId) || 0;
+    counters.set(a.cycleId, idx + 1);
+    return {
+      ...a.run,
+      cycleId: a.cycleId,
+      cycleSize: size,
+      cycleIndex: idx,
+      cycleColorIdx: cycleColorMap.get(a.cycleId) ?? -1,
+    } as RunWithCycle;
+  });
+}
 
 const CredencialesPJN = () => {
   const theme = useTheme();
@@ -956,44 +1038,122 @@ const CredencialesPJN = () => {
                             <Typography variant="body2" color="text.secondary">Sin updates recientes</Typography>
                           </TableCell>
                         </TableRow>
-                      ) : syncActivity.recentUpdateRuns.map((run: any, idx: number) => (
-                        <TableRow key={run._id || idx} hover>
-                          <TableCell>
-                            <Stack>
-                              <Typography variant="body2" fontWeight={500}>{run.userName}</Typography>
-                              <Typography variant="caption" color="text.secondary">{run.userEmail}</Typography>
-                            </Stack>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip label={run.status} size="small" color={getActivityStatusColor(run.status)} />
-                          </TableCell>
-                          <TableCell align="right">{run.results?.totalCausas ?? "-"}</TableCell>
-                          <TableCell align="right">{run.results?.causasProcessed ?? "-"}</TableCell>
-                          <TableCell align="right">{run.results?.causasUpdated ?? "-"}</TableCell>
-                          <TableCell align="right">
-                            {(run.results?.newMovimientos || 0) > 0 ? (
-                              <Chip label={run.results.newMovimientos} color="success" size="small" sx={{ minWidth: 28 }} />
-                            ) : "0"}
-                          </TableCell>
-                          <TableCell align="right">
-                            {(run.results?.causasError || 0) > 0 ? (
-                              <Chip label={run.results.causasError} color="error" size="small" sx={{ minWidth: 28 }} />
-                            ) : "0"}
-                          </TableCell>
-                          <TableCell align="right">{formatDurationSecs(run.durationSeconds)}</TableCell>
-                          <TableCell>
-                            <Stack>
-                              <Typography variant="caption">{run.metadata?.triggeredBy || "-"}</Typography>
-                              {run.metadata?.isResumedRun && (
-                                <Chip label="Resumed" size="small" variant="outlined" color="info" sx={{ height: 18, fontSize: "0.65rem" }} />
-                              )}
-                            </Stack>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="caption">{formatDate(run.createdAt)}</Typography>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      ) : (() => {
+                        const grouped = groupRunsIntoCycles(syncActivity.recentUpdateRuns as UpdateRun[]);
+                        const rows: React.ReactNode[] = [];
+
+                        for (let i = 0; i < grouped.length; i++) {
+                          const run = grouped[i];
+                          const isMulti = run.cycleSize > 1;
+                          const isFirstInCycle = run.cycleIndex === 0;
+                          const cycleColor = isMulti ? CYCLE_COLORS[run.cycleColorIdx] : undefined;
+
+                          // Fila resumen del ciclo (antes del primer run de un ciclo multi-run)
+                          if (isMulti && isFirstInCycle) {
+                            const cycleRuns = grouped.filter((r) => r.cycleId === run.cycleId);
+                            const totals = cycleRuns.reduce(
+                              (acc, r) => ({
+                                causas: acc.causas + (r.results?.totalCausas || 0),
+                                processed: acc.processed + (r.results?.causasProcessed || 0),
+                                updated: acc.updated + (r.results?.causasUpdated || 0),
+                                newMovs: acc.newMovs + (r.results?.newMovimientos || 0),
+                                errors: acc.errors + (r.results?.causasError || 0),
+                                duration: acc.duration + (r.durationSeconds || 0),
+                              }),
+                              { causas: 0, processed: 0, updated: 0, newMovs: 0, errors: 0, duration: 0 }
+                            );
+
+                            rows.push(
+                              <TableRow key={`cycle-${run.cycleId}`} sx={{ backgroundColor: theme.palette.mode === "dark" ? `${cycleColor}22` : `${cycleColor}0C` }}>
+                                <TableCell
+                                  colSpan={10}
+                                  sx={{ borderLeft: `4px solid ${cycleColor}`, py: 0.5 }}
+                                >
+                                  <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                                    <Chip
+                                      label={`Ciclo · ${run.cycleSize} runs`}
+                                      size="small"
+                                      sx={{
+                                        backgroundColor: cycleColor,
+                                        color: "#fff",
+                                        fontWeight: 600,
+                                        fontSize: "0.7rem",
+                                        height: 22,
+                                      }}
+                                    />
+                                    <Typography variant="caption" color="text.secondary">
+                                      {run.userName}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">·</Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      Totales: {totals.processed}/{totals.causas} causas · {totals.updated} actualizadas · {totals.newMovs} mov. nuevos · {totals.errors} errores · {formatDurationSecs(totals.duration)}
+                                    </Typography>
+                                  </Stack>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          }
+
+                          // Fila individual del run
+                          rows.push(
+                            <TableRow
+                              key={run._id || i}
+                              hover
+                              sx={isMulti ? {
+                                backgroundColor: theme.palette.mode === "dark" ? `${cycleColor}14` : `${cycleColor}06`,
+                                "&:hover": { backgroundColor: theme.palette.mode === "dark" ? `${cycleColor}28` : `${cycleColor}12` },
+                              } : undefined}
+                            >
+                              <TableCell sx={isMulti ? { borderLeft: `4px solid ${cycleColor}` } : undefined}>
+                                <Stack>
+                                  <Stack direction="row" spacing={0.5} alignItems="center">
+                                    {isMulti && !isFirstInCycle && (
+                                      <Typography variant="caption" sx={{ color: cycleColor, fontWeight: 700, mr: 0.5 }}>↳</Typography>
+                                    )}
+                                    <Typography variant="body2" fontWeight={500}>{run.userName}</Typography>
+                                  </Stack>
+                                  <Typography variant="caption" color="text.secondary">{run.userEmail}</Typography>
+                                </Stack>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip label={run.status} size="small" color={getActivityStatusColor(run.status)} />
+                              </TableCell>
+                              <TableCell align="right">{run.results?.totalCausas ?? "-"}</TableCell>
+                              <TableCell align="right">{run.results?.causasProcessed ?? "-"}</TableCell>
+                              <TableCell align="right">{run.results?.causasUpdated ?? "-"}</TableCell>
+                              <TableCell align="right">
+                                {(run.results?.newMovimientos || 0) > 0 ? (
+                                  <Chip label={run.results.newMovimientos} color="success" size="small" sx={{ minWidth: 28 }} />
+                                ) : "0"}
+                              </TableCell>
+                              <TableCell align="right">
+                                {(run.results?.causasError || 0) > 0 ? (
+                                  <Chip label={run.results.causasError} color="error" size="small" sx={{ minWidth: 28 }} />
+                                ) : "0"}
+                              </TableCell>
+                              <TableCell align="right">{formatDurationSecs(run.durationSeconds)}</TableCell>
+                              <TableCell>
+                                <Stack>
+                                  <Typography variant="caption">{run.metadata?.triggeredBy || "-"}</Typography>
+                                  {run.metadata?.isResumedRun && (
+                                    <Chip label="Resume" size="small" variant="outlined" color="info" sx={{ height: 18, fontSize: "0.65rem" }} />
+                                  )}
+                                  {isMulti && (
+                                    <Typography variant="caption" sx={{ color: cycleColor, fontWeight: 600, fontSize: "0.65rem" }}>
+                                      {run.cycleIndex + 1}/{run.cycleSize}
+                                    </Typography>
+                                  )}
+                                </Stack>
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="caption">{formatDate(run.createdAt)}</Typography>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        }
+
+                        return rows;
+                      })()}
                     </TableBody>
                   </Table>
                 </TableContainer>
