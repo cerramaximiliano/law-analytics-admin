@@ -49,7 +49,7 @@ import StripeSubscriptionsTable from "./StripeSubscriptionsTable";
 import UsersTimelineChart from "./UsersTimelineChart";
 
 // assets
-import { Eye, Trash, Edit, Add, Chart, SearchNormal1, CloseCircle, Refresh } from "iconsax-react";
+import { Eye, Trash, Edit, Add, Chart, SearchNormal1, CloseCircle, Refresh, Copy, CopySuccess } from "iconsax-react";
 
 // table sort
 function descendingComparator(a: any, b: any, orderBy: string) {
@@ -77,6 +77,13 @@ function stableSort<T>(array: T[], comparator: (a: T, b: T) => number) {
 
 // table header options
 const headCells = [
+	{
+		id: "_id",
+		numeric: false,
+		label: "ID",
+		align: "left",
+		sortable: false,
+	},
 	{
 		id: "name",
 		numeric: false,
@@ -151,6 +158,19 @@ const UsersList = () => {
 
 	// Estado para los tabs
 	const [tabValue, setTabValue] = useState(0);
+
+	// Estado para feedback de copia de ID
+	const [copiedId, setCopiedId] = useState<string | null>(null);
+
+	const handleCopyId = async (id: string) => {
+		try {
+			await navigator.clipboard.writeText(id);
+			setCopiedId(id);
+			setTimeout(() => setCopiedId(null), 2000);
+		} catch {
+			// fallback ignorado
+		}
+	};
 
 	// Estado para la paginación
 	const [page, setPage] = useState(0);
@@ -778,6 +798,26 @@ const UsersList = () => {
 										const user = userItem as User;
 										return (
 											<TableRow hover role="checkbox" tabIndex={-1} key={user._id || user.id || `user-row-${index}`}>
+												<TableCell sx={{ whiteSpace: "nowrap" }}>
+													<Tooltip title={copiedId === (user._id || user.id) ? "¡Copiado!" : (user._id || user.id || "")}>
+														<Stack direction="row" alignItems="center" spacing={0.5}>
+															<Typography variant="caption" color="textSecondary" sx={{ fontFamily: "monospace" }}>
+																{(user._id || user.id || "").slice(0, 8)}…
+															</Typography>
+															<IconButton
+																size="small"
+																onClick={() => handleCopyId(user._id || user.id || "")}
+																sx={{ p: 0.25 }}
+															>
+																{copiedId === (user._id || user.id) ? (
+																	<CopySuccess size={14} color="green" />
+																) : (
+																	<Copy size={14} />
+																)}
+															</IconButton>
+														</Stack>
+													</Tooltip>
+												</TableCell>
 												<TableCell>
 													<Stack direction="row" alignItems="center" spacing={1.5}>
 														<Stack>
