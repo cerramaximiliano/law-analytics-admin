@@ -294,6 +294,8 @@ export interface PortalStatusResponse {
     recentIncidents: PortalIncident[];
     credentialsWithPortalErrors: number;
     portalHealthy: boolean;
+    lastSuccessfulConnection: string | null;
+    lastResolvedIncident: PortalIncident | null;
   };
 }
 

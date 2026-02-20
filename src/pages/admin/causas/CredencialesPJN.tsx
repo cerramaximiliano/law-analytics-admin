@@ -531,8 +531,8 @@ const CredencialesPJN = () => {
         </Box>
       )}
 
-      {/* Banner de incidente de portal */}
-      {portalStatus?.activeIncident && (
+      {/* Banner de estado del portal */}
+      {portalStatus?.activeIncident ? (
         <Alert severity="error" sx={{ mb: 2 }}>
           <AlertTitle>
             Portal PJN -{" "}
@@ -553,6 +553,24 @@ const CredencialesPJN = () => {
           </Typography>
           <Typography variant="caption" color="text.secondary">
             Las credenciales no son penalizadas durante incidentes del portal.
+          </Typography>
+        </Alert>
+      ) : portalStatus && (
+        <Alert severity="success" sx={{ mb: 2 }} variant="outlined">
+          <AlertTitle>Portal PJN - Operativo</AlertTitle>
+          <Typography variant="body2">
+            {portalStatus.lastSuccessfulConnection
+              ? <>Ultima verificacion exitosa: <strong>{formatDate(portalStatus.lastSuccessfulConnection)}</strong></>
+              : "Sin datos de verificacion"}
+            {portalStatus.lastResolvedIncident && (
+              <>
+                {" | "}
+                Ultimo incidente: {portalStatus.lastResolvedIncident.type === "portal_down" ? "Caida" : portalStatus.lastResolvedIncident.type === "portal_degraded" ? "Degradacion" : "Error Login"}
+                {" resuelto el "}
+                <strong>{formatDate(portalStatus.lastResolvedIncident.resolvedAt || portalStatus.lastResolvedIncident.startedAt)}</strong>
+                {portalStatus.lastResolvedIncident.durationMinutes != null && <> (duro {portalStatus.lastResolvedIncident.durationMinutes} min)</>}
+              </>
+            )}
           </Typography>
         </Alert>
       )}
@@ -1225,6 +1243,44 @@ const CredencialesPJN = () => {
                     </TableBody>
                   </Table>
                 </TableContainer>
+              </Grid>
+            </>
+          )}
+
+          {/* Estado del Portal */}
+          {portalStatus && (
+            <>
+              <Grid item xs={12} sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" color={portalStatus.portalHealthy ? "success.main" : "error.main"} sx={{ mb: 0.5 }}>
+                  Estado del Portal PJN
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Alert
+                  severity={portalStatus.activeIncident ? "error" : "success"}
+                  variant="outlined"
+                >
+                  {portalStatus.activeIncident ? (
+                    <Typography variant="body2">
+                      Incidente activo: <strong>
+                        {portalStatus.activeIncident.type === "portal_down" ? "Portal Caido" : portalStatus.activeIncident.type === "portal_degraded" ? "Portal Degradado" : "Error de Login"}
+                      </strong>
+                      {" | Desde: "}<strong>{formatDate(portalStatus.activeIncident.startedAt)}</strong>
+                      {" | Errores: "}<strong>{portalStatus.activeIncident.totalErrors}</strong>
+                      {" | Credenciales afectadas: "}<strong>{portalStatus.activeIncident.affectedCredentialsCount}</strong>
+                    </Typography>
+                  ) : (
+                    <Typography variant="body2">
+                      Servicio operativo
+                      {portalStatus.lastSuccessfulConnection && (
+                        <> — Ultima conexion exitosa: <strong>{formatDate(portalStatus.lastSuccessfulConnection)}</strong></>
+                      )}
+                      {portalStatus.credentialsWithPortalErrors > 0 && (
+                        <> | <strong>{portalStatus.credentialsWithPortalErrors}</strong> credencial(es) con errores de portal en ultimos 30 min</>
+                      )}
+                    </Typography>
+                  )}
+                </Alert>
               </Grid>
             </>
           )}
