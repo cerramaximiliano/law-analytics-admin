@@ -90,6 +90,8 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 	const [showAllActivities, setShowAllActivities] = useState<boolean>(false);
 	const [activeTab, setActiveTab] = useState<number>(0);
 	const [jsonCopied, setJsonCopied] = useState<boolean>(false);
+	const [contactIdCopied, setContactIdCopied] = useState<boolean>(false);
+	const [userIdCopied, setUserIdCopied] = useState<boolean>(false);
 
 	// Handler para copiar JSON
 	const handleCopyJson = async () => {
@@ -101,6 +103,26 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 			} catch (err) {
 				console.error("Error copying to clipboard:", err);
 			}
+		}
+	};
+
+	const handleCopyContactId = async () => {
+		if (contact?._id) {
+			try {
+				await navigator.clipboard.writeText(contact._id);
+				setContactIdCopied(true);
+				setTimeout(() => setContactIdCopied(false), 2000);
+			} catch {}
+		}
+	};
+
+	const handleCopyUserId = async () => {
+		if (userData?._id) {
+			try {
+				await navigator.clipboard.writeText(userData._id);
+				setUserIdCopied(true);
+				setTimeout(() => setUserIdCopied(false), 2000);
+			} catch {}
 		}
 	};
 
@@ -700,6 +722,21 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 														Tipo de Suscripción
 													</Typography>
 													<Typography variant="body1">{contact.subscriptionType || "-"}</Typography>
+												</Grid>
+												<Grid item xs={12} sm={6}>
+													<Typography variant="body2" color="textSecondary">
+														ID del Contacto
+													</Typography>
+													<Stack direction="row" alignItems="center" spacing={0.5}>
+														<Typography variant="body1" sx={{ fontSize: "0.85rem", fontFamily: "monospace" }}>
+															{contact._id}
+														</Typography>
+														<Tooltip title={contactIdCopied ? "¡Copiado!" : "Copiar ID"}>
+															<IconButton size="small" onClick={handleCopyContactId} sx={{ p: 0.25 }}>
+																{contactIdCopied ? <TickCircle size={16} color="green" /> : <Copy size={16} />}
+															</IconButton>
+														</Tooltip>
+													</Stack>
 												</Grid>
 											</Grid>
 										</Grid>
@@ -1808,9 +1845,16 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 														<Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
 															ID de Usuario
 														</Typography>
-														<Typography variant="body1" sx={{ fontSize: "0.85rem", fontFamily: "monospace" }}>
-															{userData._id}
-														</Typography>
+														<Stack direction="row" alignItems="center" spacing={0.5}>
+															<Typography variant="body1" sx={{ fontSize: "0.85rem", fontFamily: "monospace" }}>
+																{userData._id}
+															</Typography>
+															<Tooltip title={userIdCopied ? "¡Copiado!" : "Copiar ID"}>
+																<IconButton size="small" onClick={handleCopyUserId} sx={{ p: 0.25 }}>
+																	{userIdCopied ? <TickCircle size={16} color="green" /> : <Copy size={16} />}
+																</IconButton>
+															</Tooltip>
+														</Stack>
 													</Grid>
 												</Grid>
 											) : userSearched ? (

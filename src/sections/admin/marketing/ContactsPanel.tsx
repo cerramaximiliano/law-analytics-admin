@@ -36,7 +36,7 @@ import EditContactModal from "./EditContactModal";
 import DeleteContactDialog from "./DeleteContactDialog";
 
 // project imports
-import { Add, Edit2, SearchNormal1, Trash, Eye } from "iconsax-react";
+import { Add, Edit2, SearchNormal1, Trash, Eye, Copy, CopySuccess } from "iconsax-react";
 import { MarketingContact } from "types/marketing-contact";
 import { MarketingContactService } from "store/reducers/marketing-contacts";
 
@@ -60,6 +60,17 @@ const ContactsPanel = () => {
 
 	// State for available tags
 	const [availableTags, setAvailableTags] = useState<string[]>([]);
+
+	// State for clipboard copy feedback
+	const [copiedContactId, setCopiedContactId] = useState<string | null>(null);
+
+	const handleCopyId = async (id: string) => {
+		try {
+			await navigator.clipboard.writeText(id);
+			setCopiedContactId(id);
+			setTimeout(() => setCopiedContactId(null), 2000);
+		} catch {}
+	};
 
 	// State for pagination
 	const [page, setPage] = useState(0);
@@ -550,6 +561,16 @@ const ContactsPanel = () => {
 									<TableRow hover key={contact._id} tabIndex={-1}>
 										<TableCell>
 											<Typography variant="body2">{contact.email}</Typography>
+											<Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.25 }}>
+												<Typography variant="caption" color="textSecondary" sx={{ fontFamily: "monospace" }}>
+													{(contact._id || "").slice(0, 8)}…
+												</Typography>
+												<Tooltip title={copiedContactId === contact._id ? "¡Copiado!" : (contact._id || "")}>
+													<IconButton size="small" onClick={() => handleCopyId(contact._id || "")} sx={{ p: 0.25 }}>
+														{copiedContactId === contact._id ? <CopySuccess size={13} color="green" /> : <Copy size={13} />}
+													</IconButton>
+												</Tooltip>
+											</Stack>
 										</TableCell>
 										<TableCell>
 											<Typography variant="body2">{contact.firstName || "-"}</Typography>
