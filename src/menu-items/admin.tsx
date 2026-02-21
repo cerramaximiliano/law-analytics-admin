@@ -55,6 +55,13 @@ const admin: NavItemType = {
 					icon: Sms,
 					breadcrumbs: true,
 				},
+				{
+					id: "workers-rag",
+					title: "Workers IA",
+					type: "item",
+					url: "/admin/workers/rag",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{
