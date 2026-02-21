@@ -35,6 +35,7 @@ const CarpetasVerificadasEje = Loadable(lazy(() => import("pages/admin/eje/Carpe
 const CarpetasNoVerificadasEje = Loadable(lazy(() => import("pages/admin/eje/CarpetasNoVerificadasEje")));
 const CarpetasPivotsEje = Loadable(lazy(() => import("pages/admin/eje/CarpetasPivotsEje")));
 const EjeWorkersConfig = Loadable(lazy(() => import("pages/admin/eje/workers")));
+const RagWorkersPage = Loadable(lazy(() => import("pages/admin/rag-workers")));
 
 // Subscriptions pages
 const StripeWebhooks = Loadable(lazy(() => import("pages/subscriptions/StripeWebhooks")));
@@ -182,6 +183,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<EmailVerificationWorkerPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "workers/rag",
+							element: (
+								<AdminRoleGuard>
+									<RagWorkersPage />
 								</AdminRoleGuard>
 							),
 						},
