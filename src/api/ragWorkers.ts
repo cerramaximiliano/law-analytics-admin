@@ -86,6 +86,40 @@ export interface CostPricing {
 	notes?: string;
 }
 
+export interface IndexationSummary {
+	totalVerifiedCausas: number;
+	totalWithRagIndex: number;
+	neverIndexed: number;
+	byStatus: Record<string, number>;
+	upToDate: number;
+	outdated: number;
+	causaCountsByType: Record<string, number>;
+}
+
+export interface IndexationCausa {
+	causaId: string;
+	causaType: string;
+	caratula: string;
+	fuero: string;
+	juzgado: string;
+	year?: number;
+	number?: string;
+	ragStatus: "indexed" | "indexing" | "pending" | "error" | "outdated" | "never";
+	movimientosCount: number;
+	movimientosIndexed: number;
+	documentsTotal?: number;
+	documentsProcessed?: number;
+	chunksTotal?: number;
+	lastIndexedAt?: string;
+	triggeredBy?: string;
+	error?: string | null;
+}
+
+export interface IndexationCausasResponse {
+	causas: IndexationCausa[];
+	pagination: { page: number; limit: number; total: number };
+}
+
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 const BASE = "/rag/admin";
@@ -150,6 +184,20 @@ class RagWorkersService {
 
 	static async updatePricing(modelName: string, data: Partial<Pick<CostPricing, "inputPricePer1M" | "outputPricePer1M" | "notes">>): Promise<CostPricing> {
 		const res = await ragAxios.put(`${BASE}/pricing/${modelName}`, data);
+		return res.data.data;
+	}
+
+	// ── Indexation ──────────────────────────────────────────────────────────
+
+	static async getIndexationSummary(): Promise<IndexationSummary> {
+		const res = await ragAxios.get(`${BASE}/indexation/summary`);
+		return res.data.data;
+	}
+
+	static async getIndexationCausas(filter = "all", page = 1, limit = 50, causaType?: string): Promise<IndexationCausasResponse> {
+		const params: Record<string, string | number> = { filter, page, limit };
+		if (causaType) params.causaType = causaType;
+		const res = await ragAxios.get(`${BASE}/indexation/causas`, { params });
 		return res.data.data;
 	}
 }

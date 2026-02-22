@@ -27,7 +27,8 @@ import {
 } from "@mui/material";
 import { Refresh, Play, Pause, Setting2, Flash } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import RagWorkersService, { WorkerConfig } from "api/ragWorkers";
+import { Edit2 } from "iconsax-react";
+import RagWorkersService, { WorkerConfig, AutoIndexSettings } from "api/ragWorkers";
 
 const WORKER_LABELS: Record<string, { label: string; description: string }> = {
 	indexCausa: { label: "Index Causa", description: "Indexa causas completas y crea documentos RAG" },
@@ -44,6 +45,8 @@ const WorkerControlTab = () => {
 	const [loading, setLoading] = useState(true);
 	const [editWorker, setEditWorker] = useState<WorkerConfig | null>(null);
 	const [editConcurrency, setEditConcurrency] = useState(1);
+	const [editAutoIndex, setEditAutoIndex] = useState(false);
+	const [aiSettings, setAiSettings] = useState<AutoIndexSettings>({ intervalMs: 300000, batchSize: 50, maxConcurrentJobs: 10, errorRetryAfterMs: 3600000 });
 
 	const fetchWorkers = useCallback(async () => {
 		try {
@@ -113,6 +116,25 @@ const WorkerControlTab = () => {
 			enqueueSnackbar("Escaneo de auto-index disparado", { variant: "success" });
 		} catch (err: any) {
 			enqueueSnackbar(err?.response?.data?.error || "Error al disparar auto-index", { variant: "error" });
+		}
+	};
+
+	const handleOpenAutoIndexSettings = () => {
+		const ai = workers.find((w) => w.workerName === "autoIndex");
+		if (ai?.autoIndexSettings) {
+			setAiSettings({ ...ai.autoIndexSettings });
+		}
+		setEditAutoIndex(true);
+	};
+
+	const handleSaveAutoIndexSettings = async () => {
+		try {
+			const { data } = await RagWorkersService.updateWorker("autoIndex", { autoIndexSettings: aiSettings });
+			setWorkers((prev) => prev.map((w) => (w.workerName === "autoIndex" ? { ...w, ...data } : w)));
+			enqueueSnackbar("Configuracion de Auto-Index actualizada", { variant: "success" });
+			setEditAutoIndex(false);
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.error || "Error al actualizar configuracion", { variant: "error" });
 		}
 	};
 
@@ -231,9 +253,14 @@ const WorkerControlTab = () => {
 
 			{workers.some((w) => w.workerName === "autoIndex" && w.autoIndexSettings) && (
 				<Box sx={{ mt: 2, p: 2, borderRadius: 2, bgcolor: alpha(theme.palette.info.main, 0.04), border: `1px solid ${alpha(theme.palette.info.main, 0.15)}` }}>
-					<Typography variant="subtitle2" gutterBottom>
-						Configuracion Auto-Index
-					</Typography>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+						<Typography variant="subtitle2">Configuracion Auto-Index</Typography>
+						<Tooltip title="Editar configuracion">
+							<IconButton size="small" onClick={handleOpenAutoIndexSettings}>
+								<Edit2 size={16} />
+							</IconButton>
+						</Tooltip>
+					</Stack>
 					{(() => {
 						const ai = workers.find((w) => w.workerName === "autoIndex");
 						const s = ai?.autoIndexSettings;
@@ -289,6 +316,61 @@ const WorkerControlTab = () => {
 				<DialogActions>
 					<Button onClick={() => setEditWorker(null)}>Cancelar</Button>
 					<Button variant="contained" onClick={handleSaveConcurrency}>
+						Guardar
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Auto-Index settings edit dialog */}
+			<Dialog open={editAutoIndex} onClose={() => setEditAutoIndex(false)} maxWidth="xs" fullWidth>
+				<DialogTitle>Configuracion Auto-Index</DialogTitle>
+				<DialogContent>
+					<Stack spacing={2} sx={{ mt: 1 }}>
+						<TextField
+							label="Intervalo de escaneo (minutos)"
+							type="number"
+							value={Math.round(aiSettings.intervalMs / 60000)}
+							onChange={(e) => setAiSettings((prev) => ({ ...prev, intervalMs: Math.max(1, parseInt(e.target.value) || 1) * 60000 }))}
+							inputProps={{ min: 1 }}
+							size="small"
+							fullWidth
+							helperText="Cada cuantos minutos se ejecuta el escaneo automatico"
+						/>
+						<TextField
+							label="Batch size"
+							type="number"
+							value={aiSettings.batchSize}
+							onChange={(e) => setAiSettings((prev) => ({ ...prev, batchSize: Math.max(1, parseInt(e.target.value) || 1) }))}
+							inputProps={{ min: 1, max: 200 }}
+							size="small"
+							fullWidth
+							helperText="Cantidad maxima de causas a encolar por ciclo de escaneo"
+						/>
+						<TextField
+							label="Max jobs concurrentes"
+							type="number"
+							value={aiSettings.maxConcurrentJobs}
+							onChange={(e) => setAiSettings((prev) => ({ ...prev, maxConcurrentJobs: Math.max(1, parseInt(e.target.value) || 1) }))}
+							inputProps={{ min: 1, max: 50 }}
+							size="small"
+							fullWidth
+							helperText="Tope total de jobs activos + esperando en la cola de indexacion"
+						/>
+						<TextField
+							label="Retry de errores despues de (horas)"
+							type="number"
+							value={Math.round(aiSettings.errorRetryAfterMs / 3600000)}
+							onChange={(e) => setAiSettings((prev) => ({ ...prev, errorRetryAfterMs: Math.max(1, parseInt(e.target.value) || 1) * 3600000 }))}
+							inputProps={{ min: 1 }}
+							size="small"
+							fullWidth
+							helperText="Tiempo de espera antes de reintentar una causa que fallo"
+						/>
+					</Stack>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setEditAutoIndex(false)}>Cancelar</Button>
+					<Button variant="contained" onClick={handleSaveAutoIndexSettings}>
 						Guardar
 					</Button>
 				</DialogActions>
