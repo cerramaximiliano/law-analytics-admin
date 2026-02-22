@@ -18,6 +18,7 @@ import {
 	Skeleton,
 	LinearProgress,
 	useTheme,
+	useMediaQuery,
 	alpha,
 } from "@mui/material";
 import { Refresh } from "iconsax-react";
@@ -46,6 +47,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: "success" | "warning
 
 const WorkerIndexationTab = () => {
 	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 	const { enqueueSnackbar } = useSnackbar();
 	const [summary, setSummary] = useState<IndexationSummary | null>(null);
 	const [causas, setCausas] = useState<IndexationCausa[]>([]);
@@ -98,6 +100,8 @@ const WorkerIndexationTab = () => {
 	};
 
 	const coveragePercent = summary ? Math.round((summary.totalWithRagIndex / Math.max(summary.totalVerifiedCausas, 1)) * 100) : 0;
+	const indexedCount = summary ? (summary.byStatus.indexed || 0) : 0;
+	const indexedPercent = summary ? Math.round((indexedCount / Math.max(summary.totalVerifiedCausas, 1)) * 100) : 0;
 
 	return (
 		<Stack spacing={3}>
@@ -118,33 +122,62 @@ const WorkerIndexationTab = () => {
 						</Tooltip>
 					</Stack>
 
-					{/* Progress bar */}
+					{/* Progress bars */}
 					<Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
-						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-							<Typography variant="subtitle2">Cobertura de indexacion</Typography>
-							<Typography variant="subtitle2" sx={{ fontFamily: "monospace", fontWeight: 700 }}>
-								{summary.totalWithRagIndex} / {summary.totalVerifiedCausas} ({coveragePercent}%)
-							</Typography>
+						<Stack spacing={2.5}>
+							<Box>
+								<Stack direction={isMobile ? "column" : "row"} justifyContent="space-between" alignItems={isMobile ? "flex-start" : "center"} spacing={isMobile ? 0 : undefined} sx={{ mb: 0.5 }}>
+									<Stack direction="row" spacing={1} alignItems="baseline">
+										<Typography variant="subtitle2">Cobertura de indexacion</Typography>
+										{!isMobile && <Typography variant="caption" color="text.secondary">autoIndex → indexCausa</Typography>}
+									</Stack>
+									<Typography variant="subtitle2" sx={{ fontFamily: "monospace", fontWeight: 700 }}>
+										{summary.totalWithRagIndex} / {summary.totalVerifiedCausas} ({coveragePercent}%)
+									</Typography>
+								</Stack>
+								<LinearProgress
+									variant="determinate"
+									value={Math.min(coveragePercent, 100)}
+									sx={{
+										height: 10,
+										borderRadius: 5,
+										bgcolor: alpha(theme.palette.primary.main, 0.1),
+										"& .MuiLinearProgress-bar": { borderRadius: 5 },
+									}}
+								/>
+							</Box>
+							<Box>
+								<Stack direction={isMobile ? "column" : "row"} justifyContent="space-between" alignItems={isMobile ? "flex-start" : "center"} spacing={isMobile ? 0 : undefined} sx={{ mb: 0.5 }}>
+									<Stack direction="row" spacing={1} alignItems="baseline">
+										<Typography variant="subtitle2">Causas completadas</Typography>
+										{!isMobile && <Typography variant="caption" color="text.secondary">indexDocument (pipeline completo)</Typography>}
+									</Stack>
+									<Typography variant="subtitle2" sx={{ fontFamily: "monospace", fontWeight: 700, color: theme.palette.success.main }}>
+										{indexedCount} / {summary.totalVerifiedCausas} ({indexedPercent}%)
+									</Typography>
+								</Stack>
+								<LinearProgress
+									variant="determinate"
+									value={Math.min(indexedPercent, 100)}
+									color="success"
+									sx={{
+										height: 10,
+										borderRadius: 5,
+										bgcolor: alpha(theme.palette.success.main, 0.1),
+										"& .MuiLinearProgress-bar": { borderRadius: 5 },
+									}}
+								/>
+							</Box>
 						</Stack>
-						<LinearProgress
-							variant="determinate"
-							value={coveragePercent}
-							sx={{
-								height: 10,
-								borderRadius: 5,
-								bgcolor: alpha(theme.palette.primary.main, 0.1),
-								"& .MuiLinearProgress-bar": { borderRadius: 5 },
-							}}
-						/>
 					</Box>
 
 					{/* Stat chips */}
-					<Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
-						<StatChip label="Indexados al dia" value={summary.upToDate} color="success" theme={theme} />
-						<StatChip label="Desactualizados" value={summary.outdated} color="warning" theme={theme} />
-						<StatChip label="Pendientes" value={(summary.byStatus.pending || 0) + (summary.byStatus.indexing || 0)} color="info" theme={theme} />
-						<StatChip label="Con error" value={summary.byStatus.error || 0} color="error" theme={theme} />
-						<StatChip label="Sin indexar" value={summary.neverIndexed} color="default" theme={theme} />
+					<Stack direction="row" spacing={isMobile ? 1 : 1.5} flexWrap="wrap" useFlexGap>
+						<StatChip label="Indexados al dia" value={summary.upToDate} color="success" theme={theme} compact={isMobile} />
+						<StatChip label="Desactualizados" value={summary.outdated} color="warning" theme={theme} compact={isMobile} />
+						<StatChip label="Pendientes" value={(summary.byStatus.pending || 0) + (summary.byStatus.indexing || 0)} color="info" theme={theme} compact={isMobile} />
+						<StatChip label="Con error" value={summary.byStatus.error || 0} color="error" theme={theme} compact={isMobile} />
+						<StatChip label="Sin indexar" value={summary.neverIndexed} color="default" theme={theme} compact={isMobile} />
 					</Stack>
 				</>
 			) : (
@@ -155,33 +188,34 @@ const WorkerIndexationTab = () => {
 			)}
 
 			{/* Filter */}
-			<ToggleButtonGroup value={filter} exclusive onChange={handleFilterChange} size="small">
-				{(Object.keys(FILTER_LABELS) as FilterType[]).map((f) => (
-					<ToggleButton key={f} value={f}>
-						{FILTER_LABELS[f]}
-					</ToggleButton>
-				))}
-			</ToggleButtonGroup>
+			<Box sx={{ overflowX: "auto", pb: 0.5 }}>
+				<ToggleButtonGroup value={filter} exclusive onChange={handleFilterChange} size="small" sx={{ flexWrap: isMobile ? "nowrap" : undefined }}>
+					{(Object.keys(FILTER_LABELS) as FilterType[]).map((f) => (
+						<ToggleButton key={f} value={f} sx={{ whiteSpace: "nowrap", fontSize: isMobile ? "0.7rem" : undefined }}>
+							{FILTER_LABELS[f]}
+						</ToggleButton>
+					))}
+				</ToggleButtonGroup>
+			</Box>
 
 			{/* Table */}
-			<TableContainer>
-				<Table size="small" sx={{ tableLayout: "fixed" }}>
+			<TableContainer sx={{ overflowX: "auto" }}>
+				<Table size="small" sx={{ tableLayout: "fixed", minWidth: isMobile ? 360 : undefined }}>
 					<TableHead>
 						<TableRow>
-							<TableCell sx={{ width: "40%" }}>Caratula</TableCell>
-							<TableCell sx={{ width: "7%" }}>Fuero</TableCell>
-							<TableCell sx={{ width: "10%" }}>Tipo</TableCell>
-							<TableCell sx={{ width: "12%" }} align="center">Estado</TableCell>
-							<TableCell sx={{ width: "11%" }} align="right">Movimientos</TableCell>
-							<TableCell sx={{ width: "8%" }} align="right">Docs</TableCell>
-							<TableCell sx={{ width: "12%" }}>Ultima indexacion</TableCell>
+							<TableCell sx={{ width: isMobile ? "50%" : "45%" }}>Caratula</TableCell>
+							<TableCell sx={{ width: "7%", display: { xs: "none", md: "table-cell" } }}>Fuero</TableCell>
+							<TableCell sx={{ width: isMobile ? "25%" : "12%" }} align="center">Estado</TableCell>
+							<TableCell sx={{ width: isMobile ? "25%" : "12%" }} align="right">Movimientos</TableCell>
+							<TableCell sx={{ width: "10%", display: { xs: "none", md: "table-cell" } }} align="right">Docs</TableCell>
+							<TableCell sx={{ width: "14%", display: { xs: "none", md: "table-cell" } }}>Ultima indexacion</TableCell>
 						</TableRow>
 					</TableHead>
 					<TableBody>
 						{loading ? (
 							[...Array(5)].map((_, i) => (
 								<TableRow key={i}>
-									{[...Array(7)].map((__, j) => (
+									{[...Array(isMobile ? 3 : 6)].map((__, j) => (
 										<TableCell key={j}>
 											<Skeleton variant="text" />
 										</TableCell>
@@ -190,7 +224,7 @@ const WorkerIndexationTab = () => {
 							))
 						) : causas.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+								<TableCell colSpan={isMobile ? 3 : 6} align="center" sx={{ py: 4 }}>
 									<Typography variant="body2" color="text.secondary">
 										No hay causas para el filtro seleccionado
 									</Typography>
@@ -208,14 +242,9 @@ const WorkerIndexationTab = () => {
 												{c.caratula || "-"}
 											</Typography>
 										</TableCell>
-										<TableCell>
+										<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
 											<Typography variant="caption" color="text.secondary">
 												{c.fuero || "-"}
-											</Typography>
-										</TableCell>
-										<TableCell>
-											<Typography variant="caption" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}>
-												{c.causaType.replace("Causas", "")}
 											</Typography>
 										</TableCell>
 										<TableCell align="center">
@@ -226,12 +255,12 @@ const WorkerIndexationTab = () => {
 												{movLabel}
 											</Typography>
 										</TableCell>
-										<TableCell align="right">
+										<TableCell align="right" sx={{ display: { xs: "none", md: "table-cell" } }}>
 											<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
 												{c.documentsProcessed !== undefined ? `${c.documentsProcessed}/${c.documentsTotal || 0}` : "-"}
 											</Typography>
 										</TableCell>
-										<TableCell>
+										<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
 											<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
 												{c.lastIndexedAt ? new Date(c.lastIndexedAt).toLocaleDateString("es-AR") : "-"}
 											</Typography>
@@ -264,23 +293,23 @@ const WorkerIndexationTab = () => {
 
 // ── Stat chip component ──────────────────────────────────────────────────────
 
-const StatChip: React.FC<{ label: string; value: number; color: string; theme: any }> = ({ label, value, color, theme }) => {
+const StatChip: React.FC<{ label: string; value: number; color: string; theme: any; compact?: boolean }> = ({ label, value, color, theme, compact }) => {
 	const paletteColor = (theme.palette as any)[color]?.main || theme.palette.text.secondary;
 	return (
 		<Box
 			sx={{
-				px: 2,
-				py: 1,
+				px: compact ? 1.5 : 2,
+				py: compact ? 0.75 : 1,
 				borderRadius: 1.5,
 				border: `1px solid ${alpha(paletteColor, 0.3)}`,
 				bgcolor: alpha(paletteColor, 0.04),
-				minWidth: 100,
+				minWidth: compact ? 70 : 100,
 			}}
 		>
-			<Typography variant="h4" fontWeight={700} sx={{ fontFamily: "monospace", color: paletteColor }}>
+			<Typography variant={compact ? "h5" : "h4"} fontWeight={700} sx={{ fontFamily: "monospace", color: paletteColor }}>
 				{value}
 			</Typography>
-			<Typography variant="caption" color="text.secondary">
+			<Typography variant="caption" color="text.secondary" sx={compact ? { fontSize: "0.65rem" } : undefined}>
 				{label}
 			</Typography>
 		</Box>
