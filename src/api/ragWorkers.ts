@@ -38,6 +38,20 @@ export interface ScalingConfig {
 	lastQueueDepth?: number;
 }
 
+export interface InstanceScalingConfig {
+	enabled: boolean;
+	minInstances: number;
+	maxInstances: number;
+	scaleUpThreshold: number;
+	scaleDownThreshold: number;
+	scaleUpStep: number;
+	scaleDownStep: number;
+	cooldownMs: number;
+	lastInstanceCount?: number;
+	lastScaledAt?: string;
+	lastQueueDepth?: number;
+}
+
 export interface WorkerConfig {
 	_id: string;
 	workerName: string;
@@ -49,6 +63,7 @@ export interface WorkerConfig {
 	autoIndexSettings?: AutoIndexSettings;
 	recoverySettings?: RecoverySettings;
 	scaling?: ScalingConfig;
+	instanceScaling?: InstanceScalingConfig;
 	lastAppliedAt?: string;
 	description?: string;
 	createdAt: string;
@@ -165,7 +180,7 @@ class RagWorkersService {
 
 	static async updateWorker(
 		workerName: string,
-		data: Partial<Pick<WorkerConfig, "enabled" | "concurrency" | "paused" | "rateLimiter" | "autoIndexSettings" | "recoverySettings" | "scaling" | "description">>,
+		data: Partial<Pick<WorkerConfig, "enabled" | "concurrency" | "paused" | "rateLimiter" | "autoIndexSettings" | "recoverySettings" | "scaling" | "instanceScaling" | "description">>,
 	): Promise<{ data: WorkerConfig; requiresRestart: boolean }> {
 		const res = await ragAxios.put(`${BASE}/workers/${workerName}`, data);
 		return { data: res.data.data, requiresRestart: res.data.requiresRestart };

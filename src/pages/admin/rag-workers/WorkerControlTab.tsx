@@ -26,10 +26,10 @@ import {
 	alpha,
 	Divider,
 } from "@mui/material";
-import { Refresh, Play, Pause, Setting2, Flash } from "iconsax-react";
+import { Refresh, Play, Pause, Flash } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { Edit2 } from "iconsax-react";
-import RagWorkersService, { WorkerConfig, AutoIndexSettings, RecoverySettings, ScalingConfig } from "api/ragWorkers";
+import RagWorkersService, { WorkerConfig, AutoIndexSettings, RecoverySettings, ScalingConfig, InstanceScalingConfig } from "api/ragWorkers";
 
 const WORKER_LABELS: Record<string, { label: string; description: string }> = {
 	indexCausa: { label: "Index Causa", description: "Indexa causas completas y crea documentos RAG" },
@@ -61,6 +61,17 @@ const DEFAULT_SCALING: ScalingConfig = {
 	cooldownMs: 60000,
 };
 
+const DEFAULT_INSTANCE_SCALING: InstanceScalingConfig = {
+	enabled: false,
+	minInstances: 1,
+	maxInstances: 3,
+	scaleUpThreshold: 50,
+	scaleDownThreshold: 5,
+	scaleUpStep: 1,
+	scaleDownStep: 1,
+	cooldownMs: 120000,
+};
+
 const WorkerControlTab = () => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
@@ -74,6 +85,8 @@ const WorkerControlTab = () => {
 	const [rcSettings, setRcSettings] = useState<RecoverySettings>(DEFAULT_RECOVERY);
 	const [editScalingWorker, setEditScalingWorker] = useState<WorkerConfig | null>(null);
 	const [scSettings, setScSettings] = useState<ScalingConfig>(DEFAULT_SCALING);
+	const [editInstScalingWorker, setEditInstScalingWorker] = useState<WorkerConfig | null>(null);
+	const [isSettings, setIsSettings] = useState<InstanceScalingConfig>(DEFAULT_INSTANCE_SCALING);
 
 	const fetchWorkers = useCallback(async () => {
 		try {
@@ -213,6 +226,29 @@ const WorkerControlTab = () => {
 		}
 	};
 
+	// Instance Scaling settings
+	const handleOpenInstScaling = (worker: WorkerConfig) => {
+		setEditInstScalingWorker(worker);
+		if (worker.instanceScaling) {
+			const { lastInstanceCount, lastScaledAt, lastQueueDepth, ...editable } = worker.instanceScaling;
+			setIsSettings({ ...DEFAULT_INSTANCE_SCALING, ...editable });
+		} else {
+			setIsSettings({ ...DEFAULT_INSTANCE_SCALING });
+		}
+	};
+
+	const handleSaveInstScaling = async () => {
+		if (!editInstScalingWorker) return;
+		try {
+			const { data } = await RagWorkersService.updateWorker(editInstScalingWorker.workerName, { instanceScaling: isSettings });
+			setWorkers((prev) => prev.map((w) => (w.workerName === editInstScalingWorker.workerName ? { ...w, ...data } : w)));
+			enqueueSnackbar(`Escalado de instancias de ${editInstScalingWorker.workerName} actualizado`, { variant: "success" });
+			setEditInstScalingWorker(null);
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.error || "Error al actualizar escalado de instancias", { variant: "error" });
+		}
+	};
+
 	// ── Helpers ───────────────────────────────────────────────────────────────
 
 	const getStatusChip = (worker: WorkerConfig) => {
@@ -272,6 +308,8 @@ const WorkerControlTab = () => {
 							<TableCell>Habilitado</TableCell>
 							<TableCell align="center">Concurrency</TableCell>
 							<TableCell>Rate Limiter</TableCell>
+							<TableCell align="center">Escalado</TableCell>
+							<TableCell align="center">Instancias</TableCell>
 							<TableCell>Cola</TableCell>
 							<TableCell align="center">Acciones</TableCell>
 						</TableRow>
@@ -309,26 +347,69 @@ const WorkerControlTab = () => {
 											{worker.rateLimiter?.max || "-"}/{((worker.rateLimiter?.duration || 60000) / 1000).toFixed(0)}s
 										</Typography>
 									</TableCell>
+									<TableCell align="center">
+										{worker.scaling ? (
+											<Tooltip
+												title={
+													worker.scaling.enabled
+														? `Concurrency: ${worker.scaling.minConcurrency}-${worker.scaling.maxConcurrency} · Scale up: >${worker.scaling.scaleUpThreshold} jobs · Scale down: <${worker.scaling.scaleDownThreshold} jobs` +
+															(worker.scaling.lastScaledConcurrency != null ? ` · Ultima: ${worker.scaling.lastScaledConcurrency} conc` : "")
+														: "Auto-escalado deshabilitado — click para configurar"
+												}
+											>
+												<Chip
+													label={worker.scaling.enabled ? "On" : "Off"}
+													size="small"
+													variant="outlined"
+													color={worker.scaling.enabled ? "primary" : "default"}
+													onClick={() => handleOpenScaling(worker)}
+													sx={{ cursor: "pointer", fontWeight: 600, minWidth: 40 }}
+												/>
+											</Tooltip>
+										) : (
+											<Typography variant="caption" color="text.disabled">—</Typography>
+										)}
+									</TableCell>
+									<TableCell align="center">
+										{worker.instanceScaling ? (
+											<Tooltip
+												title={
+													worker.instanceScaling.enabled
+														? `Instancias: ${worker.instanceScaling.minInstances}-${worker.instanceScaling.maxInstances} · Scale up: >${worker.instanceScaling.scaleUpThreshold} jobs · Scale down: <${worker.instanceScaling.scaleDownThreshold} jobs` +
+															(worker.instanceScaling.lastInstanceCount != null ? ` · Actual: ${worker.instanceScaling.lastInstanceCount}` : "")
+														: "Escalado de instancias deshabilitado — click para configurar"
+												}
+											>
+												<Chip
+													label={
+														worker.instanceScaling.enabled
+															? worker.instanceScaling.lastInstanceCount != null
+																? String(worker.instanceScaling.lastInstanceCount)
+																: "On"
+															: "Off"
+													}
+													size="small"
+													variant="outlined"
+													color={worker.instanceScaling.enabled ? "secondary" : "default"}
+													onClick={() => handleOpenInstScaling(worker)}
+													sx={{ cursor: "pointer", fontWeight: 600, minWidth: 40 }}
+												/>
+											</Tooltip>
+										) : (
+											<Typography variant="caption" color="text.disabled">—</Typography>
+										)}
+									</TableCell>
 									<TableCell>
 										<Typography variant="caption" color="text.secondary">
 											{getQueueSummary(worker.queueCounts)}
 										</Typography>
 									</TableCell>
 									<TableCell align="center">
-										<Stack direction="row" spacing={0} justifyContent="center">
-											<Tooltip title={worker.paused ? "Reanudar" : "Pausar"}>
-												<IconButton size="small" color={worker.paused ? "success" : "warning"} onClick={() => handlePauseResume(worker)} disabled={!worker.enabled}>
-													{worker.paused ? <Play size={16} /> : <Pause size={16} />}
-												</IconButton>
-											</Tooltip>
-											{worker.scaling && (
-												<Tooltip title="Configurar escalado">
-													<IconButton size="small" onClick={() => handleOpenScaling(worker)}>
-														<Setting2 size={16} />
-													</IconButton>
-												</Tooltip>
-											)}
-										</Stack>
+										<Tooltip title={worker.paused ? "Reanudar" : "Pausar"}>
+											<IconButton size="small" color={worker.paused ? "success" : "warning"} onClick={() => handlePauseResume(worker)} disabled={!worker.enabled}>
+												{worker.paused ? <Play size={16} /> : <Pause size={16} />}
+											</IconButton>
+										</Tooltip>
 									</TableCell>
 								</TableRow>
 							);
@@ -709,6 +790,127 @@ const WorkerControlTab = () => {
 				<DialogActions>
 					<Button onClick={() => setEditScalingWorker(null)}>Cancelar</Button>
 					<Button variant="contained" onClick={handleSaveScaling}>
+						Guardar
+					</Button>
+				</DialogActions>
+			</Dialog>
+			{/* ── Instance Scaling settings edit dialog ──────────────────────── */}
+			<Dialog open={!!editInstScalingWorker} onClose={() => setEditInstScalingWorker(null)} maxWidth="xs" fullWidth>
+				<DialogTitle>Instancias — {editInstScalingWorker && (WORKER_LABELS[editInstScalingWorker.workerName]?.label || editInstScalingWorker.workerName)}</DialogTitle>
+				<DialogContent>
+					<Stack spacing={2} sx={{ mt: 1 }}>
+						<Stack direction="row" alignItems="center" justifyContent="space-between">
+							<Typography variant="body2">Escalado de instancias habilitado</Typography>
+							<Switch checked={isSettings.enabled} onChange={(_, checked) => setIsSettings((prev) => ({ ...prev, enabled: checked }))} size="small" />
+						</Stack>
+						<Divider />
+						<Stack direction="row" spacing={2}>
+							<TextField
+								label="Min instancias"
+								type="number"
+								value={isSettings.minInstances}
+								onChange={(e) => setIsSettings((prev) => ({ ...prev, minInstances: Math.max(1, parseInt(e.target.value) || 1) }))}
+								inputProps={{ min: 1, max: 10 }}
+								size="small"
+								fullWidth
+								disabled={!isSettings.enabled}
+							/>
+							<TextField
+								label="Max instancias"
+								type="number"
+								value={isSettings.maxInstances}
+								onChange={(e) => setIsSettings((prev) => ({ ...prev, maxInstances: Math.max(1, parseInt(e.target.value) || 1) }))}
+								inputProps={{ min: 1, max: 10 }}
+								size="small"
+								fullWidth
+								disabled={!isSettings.enabled}
+							/>
+						</Stack>
+						<Stack direction="row" spacing={2}>
+							<TextField
+								label="Umbral scale up"
+								type="number"
+								value={isSettings.scaleUpThreshold}
+								onChange={(e) => setIsSettings((prev) => ({ ...prev, scaleUpThreshold: Math.max(1, parseInt(e.target.value) || 1) }))}
+								inputProps={{ min: 1 }}
+								size="small"
+								fullWidth
+								disabled={!isSettings.enabled}
+								helperText="Jobs en cola para agregar instancias"
+							/>
+							<TextField
+								label="Umbral scale down"
+								type="number"
+								value={isSettings.scaleDownThreshold}
+								onChange={(e) => setIsSettings((prev) => ({ ...prev, scaleDownThreshold: Math.max(0, parseInt(e.target.value) || 0) }))}
+								inputProps={{ min: 0 }}
+								size="small"
+								fullWidth
+								disabled={!isSettings.enabled}
+								helperText="Jobs en cola para quitar instancias"
+							/>
+						</Stack>
+						<Stack direction="row" spacing={2}>
+							<TextField
+								label="Step up"
+								type="number"
+								value={isSettings.scaleUpStep}
+								onChange={(e) => setIsSettings((prev) => ({ ...prev, scaleUpStep: Math.max(1, parseInt(e.target.value) || 1) }))}
+								inputProps={{ min: 1, max: 5 }}
+								size="small"
+								fullWidth
+								disabled={!isSettings.enabled}
+							/>
+							<TextField
+								label="Step down"
+								type="number"
+								value={isSettings.scaleDownStep}
+								onChange={(e) => setIsSettings((prev) => ({ ...prev, scaleDownStep: Math.max(1, parseInt(e.target.value) || 1) }))}
+								inputProps={{ min: 1, max: 5 }}
+								size="small"
+								fullWidth
+								disabled={!isSettings.enabled}
+							/>
+						</Stack>
+						<TextField
+							label="Cooldown (segundos)"
+							type="number"
+							value={Math.round(isSettings.cooldownMs / 1000)}
+							onChange={(e) => setIsSettings((prev) => ({ ...prev, cooldownMs: Math.max(10, parseInt(e.target.value) || 10) * 1000 }))}
+							inputProps={{ min: 10 }}
+							size="small"
+							fullWidth
+							disabled={!isSettings.enabled}
+							helperText="Tiempo minimo entre cambios de escala de instancias"
+						/>
+
+						{editInstScalingWorker?.instanceScaling?.lastScaledAt && (
+							<>
+								<Divider />
+								<Alert severity="info" variant="outlined" sx={{ "& .MuiAlert-message": { width: "100%" } }}>
+									<Stack spacing={0.5}>
+										<Typography variant="caption">
+											Ultima escala: <strong>{new Date(editInstScalingWorker.instanceScaling.lastScaledAt).toLocaleString("es-AR")}</strong>
+										</Typography>
+										{editInstScalingWorker.instanceScaling.lastInstanceCount != null && (
+											<Typography variant="caption">
+												Instancias actuales: <strong>{editInstScalingWorker.instanceScaling.lastInstanceCount}</strong>
+											</Typography>
+										)}
+										{editInstScalingWorker.instanceScaling.lastQueueDepth != null && (
+											<Typography variant="caption">
+												Queue depth al escalar: <strong>{editInstScalingWorker.instanceScaling.lastQueueDepth}</strong>
+											</Typography>
+										)}
+									</Stack>
+								</Alert>
+							</>
+						)}
+					</Stack>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setEditInstScalingWorker(null)}>Cancelar</Button>
+					<Button variant="contained" onClick={handleSaveInstScaling}>
 						Guardar
 					</Button>
 				</DialogActions>
