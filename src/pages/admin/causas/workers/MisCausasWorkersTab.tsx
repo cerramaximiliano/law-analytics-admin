@@ -152,6 +152,7 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Instancias</TableCell>
 									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Scale Up</TableCell>
 									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Scale Down</TableCell>
+									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Fast</TableCell>
 								</TableRow>
 							</TableHead>
 							<TableBody>
@@ -186,6 +187,13 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 										</TableCell>
 										<TableCell align="center" sx={{ fontSize: "0.8rem" }}>
 											{w.scaling.scaleDownThreshold}
+										</TableCell>
+										<TableCell align="center" sx={{ fontSize: "0.8rem" }}>
+											{w.scaling.fastScalingEnabled !== false ? (
+												<Chip label={`1:1 ≤${w.scaling.fastScalingThreshold || 5}`} size="small" color="info" sx={{ fontSize: "0.65rem", height: 20 }} />
+											) : (
+												<Chip label="OFF" size="small" variant="outlined" sx={{ fontSize: "0.65rem", height: 20 }} />
+											)}
 										</TableCell>
 									</TableRow>
 								))}
@@ -323,6 +331,45 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 												helperText="Espera entre escalados"
 											/>
 										</Grid>
+										<Grid item xs={6} sm={4}>
+											<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ height: "100%" }}>
+												<Box>
+													<Typography variant="body2" fontWeight={500}>
+														Fast Scaling
+													</Typography>
+													<Typography variant="caption" color="text.secondary">
+														1 worker por item en colas chicas
+													</Typography>
+												</Box>
+												<Switch
+													checked={worker.scaling.fastScalingEnabled !== false}
+													onChange={(e) =>
+														setWorkerEdit(workerName, {
+															scaling: { ...worker.scaling, fastScalingEnabled: e.target.checked },
+														})
+													}
+													size="small"
+												/>
+											</Stack>
+										</Grid>
+										{worker.scaling.fastScalingEnabled !== false && (
+											<Grid item xs={6} sm={4}>
+												<TextField
+													label="Umbral Fast Scaling"
+													type="number"
+													size="small"
+													fullWidth
+													value={worker.scaling.fastScalingThreshold || 5}
+													onChange={(e) =>
+														setWorkerEdit(workerName, {
+															scaling: { ...worker.scaling, fastScalingThreshold: Number(e.target.value) },
+														})
+													}
+													helperText="Cola <= umbral = 1 worker por item"
+													inputProps={{ min: 1, max: 20 }}
+												/>
+											</Grid>
+										)}
 									</Grid>
 								</Box>
 

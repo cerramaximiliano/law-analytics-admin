@@ -32,6 +32,7 @@ import {
   Tab,
   Alert,
   AlertTitle,
+  Divider,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useTheme } from "@mui/material/styles";
@@ -509,6 +510,20 @@ const CredencialesPJN = () => {
     });
   };
 
+  const calcDelay = (from: string | null | undefined, to: string | null | undefined): string => {
+    if (!from || !to) return "-";
+    const diff = new Date(to).getTime() - new Date(from).getTime();
+    if (diff < 0) return "-";
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours < 24) return `${hours}h ${mins}m`;
+    const days = Math.floor(hours / 24);
+    const hrs = hours % 24;
+    return `${days}d ${hrs}h`;
+  };
+
   return (
     <MainCard title="Credenciales PJN">
       {/* Stats loading/error */}
@@ -716,19 +731,20 @@ const CredencialesPJN = () => {
                     <TableCell align="right">Syncs</TableCell>
                     <TableCell align="center">Errores</TableCell>
                     <TableCell>Última Sync</TableCell>
+                    <TableCell>Creado</TableCell>
                     <TableCell align="center">Acciones</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={15} align="center" sx={{ py: 4 }}>
+                      <TableCell colSpan={16} align="center" sx={{ py: 4 }}>
                         <CircularProgress size={32} />
                       </TableCell>
                     </TableRow>
                   ) : credentials.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={15} align="center" sx={{ py: 4 }}>
+                      <TableCell colSpan={16} align="center" sx={{ py: 4 }}>
                         <Typography color="text.secondary">
                           No se encontraron credenciales
                         </Typography>
@@ -811,6 +827,9 @@ const CredencialesPJN = () => {
                         </TableCell>
                         <TableCell>
                           <Typography variant="caption">{formatDate(cred.lastSync)}</Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="caption">{formatDate(cred.createdAt)}</Typography>
                         </TableCell>
                         <TableCell align="center">
                           <Stack direction="row" spacing={0.5} justifyContent="center">
@@ -1557,24 +1576,58 @@ const CredencialesPJN = () => {
               <CircularProgress size={32} />
             </Box>
           ) : rawDialog.data ? (
-            <Box
-              component="pre"
-              sx={{
-                bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.100",
-                color: theme.palette.mode === "dark" ? "grey.300" : "grey.800",
-                p: 2,
-                borderRadius: 1,
-                fontSize: "0.75rem",
-                fontFamily: "monospace",
-                overflow: "auto",
-                maxHeight: "70vh",
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-                m: 0,
-              }}
-            >
-              {JSON.stringify(rawDialog.data, null, 2)}
-            </Box>
+            <>
+              {/* Tiempos de procesamiento */}
+              <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
+                Tiempos de procesamiento
+              </Typography>
+              <Box sx={{ mb: 2 }}>
+                {[
+                  { label: "Creacion", value: formatDate(rawDialog.data.createdAt), delay: null },
+                  { label: "Verificacion", value: formatDate(rawDialog.data.verifiedAt), delay: calcDelay(rawDialog.data.createdAt, rawDialog.data.verifiedAt) },
+                  { label: "Sync de carpetas", value: rawDialog.data.firstSync?.date ? formatDate(rawDialog.data.firstSync.date) : "-", delay: rawDialog.data.firstSync?.date ? calcDelay(rawDialog.data.createdAt, rawDialog.data.firstSync.date) : null },
+                  { label: "Sync de movimientos", value: formatDate(rawDialog.data.initialMovementsSyncAt), delay: calcDelay(rawDialog.data.createdAt, rawDialog.data.initialMovementsSyncAt) },
+                  { label: "Estado movimientos", value: rawDialog.data.initialMovementsSync || "sin iniciar", delay: null },
+                ].map((row, idx) => (
+                  <Stack key={idx} direction="row" spacing={2} sx={{ py: 0.5, borderBottom: "1px solid", borderColor: "divider" }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ minWidth: 160 }}>
+                      {row.label}:
+                    </Typography>
+                    <Typography variant="body2" fontFamily="monospace">
+                      {row.value}
+                    </Typography>
+                    {row.delay && (
+                      <Chip label={`+${row.delay}`} size="small" variant="outlined" color="info" sx={{ fontSize: "0.7rem", height: 20 }} />
+                    )}
+                  </Stack>
+                ))}
+              </Box>
+
+              <Divider sx={{ my: 2 }} />
+
+              {/* Raw JSON */}
+              <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
+                Raw JSON
+              </Typography>
+              <Box
+                component="pre"
+                sx={{
+                  bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+                  color: theme.palette.mode === "dark" ? "grey.300" : "grey.800",
+                  p: 2,
+                  borderRadius: 1,
+                  fontSize: "0.75rem",
+                  fontFamily: "monospace",
+                  overflow: "auto",
+                  maxHeight: "50vh",
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                  m: 0,
+                }}
+              >
+                {JSON.stringify(rawDialog.data, null, 2)}
+              </Box>
+            </>
           ) : (
             <Typography color="text.secondary">No se pudieron cargar los datos</Typography>
           )}

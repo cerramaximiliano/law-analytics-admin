@@ -10,6 +10,8 @@ export interface ScalingConfig {
 	scaleUpStep: number;
 	scaleDownStep: number;
 	cooldownMs: number;
+	fastScalingEnabled: boolean;
+	fastScalingThreshold: number;
 }
 
 export interface ScheduleConfig {
