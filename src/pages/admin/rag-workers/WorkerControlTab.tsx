@@ -24,11 +24,12 @@ import {
 	Alert,
 	useTheme,
 	alpha,
+	Divider,
 } from "@mui/material";
 import { Refresh, Play, Pause, Setting2, Flash } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { Edit2 } from "iconsax-react";
-import RagWorkersService, { WorkerConfig, AutoIndexSettings } from "api/ragWorkers";
+import RagWorkersService, { WorkerConfig, AutoIndexSettings, RecoverySettings, ScalingConfig } from "api/ragWorkers";
 
 const WORKER_LABELS: Record<string, { label: string; description: string }> = {
 	indexCausa: { label: "Index Causa", description: "Indexa causas completas y crea documentos RAG" },
@@ -36,6 +37,28 @@ const WORKER_LABELS: Record<string, { label: string; description: string }> = {
 	generateSummary: { label: "Generate Summary", description: "Genera o actualiza resumenes via LLM" },
 	ocrDocument: { label: "OCR Document", description: "Procesamiento OCR para PDFs escaneados" },
 	autoIndex: { label: "Auto Index", description: "Escaneo periodico de causas que necesitan indexacion" },
+	recovery: { label: "Recovery", description: "Recuperacion automatica de documentos fallidos/estancados" },
+};
+
+const DEFAULT_RECOVERY: RecoverySettings = {
+	intervalMs: 120000,
+	batchSize: 30,
+	maxQueueLoad: 100,
+	docErrorCooldownMs: 900000,
+	docMaxRetries: 5,
+	stalledThresholdMs: 600000,
+	cleanFailedAfterMs: 3600000,
+};
+
+const DEFAULT_SCALING: ScalingConfig = {
+	enabled: false,
+	minConcurrency: 1,
+	maxConcurrency: 10,
+	scaleUpThreshold: 20,
+	scaleDownThreshold: 5,
+	scaleUpStep: 2,
+	scaleDownStep: 1,
+	cooldownMs: 60000,
 };
 
 const WorkerControlTab = () => {
@@ -47,6 +70,10 @@ const WorkerControlTab = () => {
 	const [editConcurrency, setEditConcurrency] = useState(1);
 	const [editAutoIndex, setEditAutoIndex] = useState(false);
 	const [aiSettings, setAiSettings] = useState<AutoIndexSettings>({ intervalMs: 300000, batchSize: 50, maxConcurrentJobs: 10, errorRetryAfterMs: 3600000 });
+	const [editRecovery, setEditRecovery] = useState(false);
+	const [rcSettings, setRcSettings] = useState<RecoverySettings>(DEFAULT_RECOVERY);
+	const [editScalingWorker, setEditScalingWorker] = useState<WorkerConfig | null>(null);
+	const [scSettings, setScSettings] = useState<ScalingConfig>(DEFAULT_SCALING);
 
 	const fetchWorkers = useCallback(async () => {
 		try {
@@ -63,6 +90,8 @@ const WorkerControlTab = () => {
 	useEffect(() => {
 		fetchWorkers();
 	}, [fetchWorkers]);
+
+	// ── Handlers ──────────────────────────────────────────────────────────────
 
 	const handleToggleEnabled = async (worker: WorkerConfig) => {
 		try {
@@ -119,6 +148,7 @@ const WorkerControlTab = () => {
 		}
 	};
 
+	// Auto-Index settings
 	const handleOpenAutoIndexSettings = () => {
 		const ai = workers.find((w) => w.workerName === "autoIndex");
 		if (ai?.autoIndexSettings) {
@@ -137,6 +167,53 @@ const WorkerControlTab = () => {
 			enqueueSnackbar(err?.response?.data?.error || "Error al actualizar configuracion", { variant: "error" });
 		}
 	};
+
+	// Recovery settings
+	const handleOpenRecoverySettings = () => {
+		const rc = workers.find((w) => w.workerName === "recovery");
+		if (rc?.recoverySettings) {
+			setRcSettings({ ...rc.recoverySettings });
+		} else {
+			setRcSettings({ ...DEFAULT_RECOVERY });
+		}
+		setEditRecovery(true);
+	};
+
+	const handleSaveRecoverySettings = async () => {
+		try {
+			const { data } = await RagWorkersService.updateWorker("recovery", { recoverySettings: rcSettings });
+			setWorkers((prev) => prev.map((w) => (w.workerName === "recovery" ? { ...w, ...data } : w)));
+			enqueueSnackbar("Configuracion de Recovery actualizada", { variant: "success" });
+			setEditRecovery(false);
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.error || "Error al actualizar configuracion", { variant: "error" });
+		}
+	};
+
+	// Scaling settings
+	const handleOpenScaling = (worker: WorkerConfig) => {
+		setEditScalingWorker(worker);
+		if (worker.scaling) {
+			const { lastScaledConcurrency, lastScaledAt, lastQueueDepth, ...editable } = worker.scaling;
+			setScSettings({ ...DEFAULT_SCALING, ...editable });
+		} else {
+			setScSettings({ ...DEFAULT_SCALING });
+		}
+	};
+
+	const handleSaveScaling = async () => {
+		if (!editScalingWorker) return;
+		try {
+			const { data } = await RagWorkersService.updateWorker(editScalingWorker.workerName, { scaling: scSettings });
+			setWorkers((prev) => prev.map((w) => (w.workerName === editScalingWorker.workerName ? { ...w, ...data } : w)));
+			enqueueSnackbar(`Escalado de ${editScalingWorker.workerName} actualizado`, { variant: "success" });
+			setEditScalingWorker(null);
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.error || "Error al actualizar escalado", { variant: "error" });
+		}
+	};
+
+	// ── Helpers ───────────────────────────────────────────────────────────────
 
 	const getStatusChip = (worker: WorkerConfig) => {
 		if (!worker.enabled) return <Chip label="Deshabilitado" size="small" color="default" />;
@@ -161,7 +238,7 @@ const WorkerControlTab = () => {
 	if (loading) {
 		return (
 			<Stack spacing={2}>
-				{[...Array(5)].map((_, i) => (
+				{[...Array(6)].map((_, i) => (
 					<Skeleton key={i} variant="rectangular" height={56} sx={{ borderRadius: 1 }} />
 				))}
 			</Stack>
@@ -238,11 +315,20 @@ const WorkerControlTab = () => {
 										</Typography>
 									</TableCell>
 									<TableCell align="center">
-										<Tooltip title={worker.paused ? "Reanudar" : "Pausar"}>
-											<IconButton size="small" color={worker.paused ? "success" : "warning"} onClick={() => handlePauseResume(worker)} disabled={!worker.enabled}>
-												{worker.paused ? <Play size={16} /> : <Pause size={16} />}
-											</IconButton>
-										</Tooltip>
+										<Stack direction="row" spacing={0} justifyContent="center">
+											<Tooltip title={worker.paused ? "Reanudar" : "Pausar"}>
+												<IconButton size="small" color={worker.paused ? "success" : "warning"} onClick={() => handlePauseResume(worker)} disabled={!worker.enabled}>
+													{worker.paused ? <Play size={16} /> : <Pause size={16} />}
+												</IconButton>
+											</Tooltip>
+											{worker.scaling && (
+												<Tooltip title="Configurar escalado">
+													<IconButton size="small" onClick={() => handleOpenScaling(worker)}>
+														<Setting2 size={16} />
+													</IconButton>
+												</Tooltip>
+											)}
+										</Stack>
 									</TableCell>
 								</TableRow>
 							);
@@ -251,6 +337,7 @@ const WorkerControlTab = () => {
 				</Table>
 			</TableContainer>
 
+			{/* ── Auto-Index settings info box ────────────────────────────────── */}
 			{workers.some((w) => w.workerName === "autoIndex" && w.autoIndexSettings) && (
 				<Box sx={{ mt: 2, p: 2, borderRadius: 2, bgcolor: alpha(theme.palette.info.main, 0.04), border: `1px solid ${alpha(theme.palette.info.main, 0.15)}` }}>
 					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
@@ -285,7 +372,51 @@ const WorkerControlTab = () => {
 				</Box>
 			)}
 
-			{/* Concurrency edit dialog */}
+			{/* ── Recovery settings info box ──────────────────────────────────── */}
+			{workers.some((w) => w.workerName === "recovery") && (
+				<Box sx={{ p: 2, borderRadius: 2, bgcolor: alpha(theme.palette.warning.main, 0.04), border: `1px solid ${alpha(theme.palette.warning.main, 0.15)}` }}>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+						<Typography variant="subtitle2">Configuracion Recovery</Typography>
+						<Tooltip title="Editar configuracion">
+							<IconButton size="small" onClick={handleOpenRecoverySettings}>
+								<Edit2 size={16} />
+							</IconButton>
+						</Tooltip>
+					</Stack>
+					{(() => {
+						const rc = workers.find((w) => w.workerName === "recovery");
+						const s = rc?.recoverySettings;
+						if (!s) return null;
+						return (
+							<Stack direction="row" spacing={3} flexWrap="wrap" useFlexGap>
+								<Typography variant="caption">
+									Intervalo: <strong>{(s.intervalMs / 60000).toFixed(1)} min</strong>
+								</Typography>
+								<Typography variant="caption">
+									Batch: <strong>{s.batchSize}</strong>
+								</Typography>
+								<Typography variant="caption">
+									Max carga colas: <strong>{s.maxQueueLoad}</strong>
+								</Typography>
+								<Typography variant="caption">
+									Cooldown errores: <strong>{(s.docErrorCooldownMs / 60000).toFixed(0)} min</strong>
+								</Typography>
+								<Typography variant="caption">
+									Max reintentos: <strong>{s.docMaxRetries}</strong>
+								</Typography>
+								<Typography variant="caption">
+									Umbral stalled: <strong>{(s.stalledThresholdMs / 60000).toFixed(0)} min</strong>
+								</Typography>
+								<Typography variant="caption">
+									Limpiar failed: <strong>{(s.cleanFailedAfterMs / 3600000).toFixed(1)} hs</strong>
+								</Typography>
+							</Stack>
+						);
+					})()}
+				</Box>
+			)}
+
+			{/* ── Concurrency edit dialog ─────────────────────────────────────── */}
 			<Dialog open={!!editWorker} onClose={() => setEditWorker(null)} maxWidth="xs" fullWidth>
 				<DialogTitle>Concurrency — {editWorker && (WORKER_LABELS[editWorker.workerName]?.label || editWorker.workerName)}</DialogTitle>
 				<DialogContent>
@@ -321,7 +452,7 @@ const WorkerControlTab = () => {
 				</DialogActions>
 			</Dialog>
 
-			{/* Auto-Index settings edit dialog */}
+			{/* ── Auto-Index settings edit dialog ─────────────────────────────── */}
 			<Dialog open={editAutoIndex} onClose={() => setEditAutoIndex(false)} maxWidth="xs" fullWidth>
 				<DialogTitle>Configuracion Auto-Index</DialogTitle>
 				<DialogContent>
@@ -371,6 +502,213 @@ const WorkerControlTab = () => {
 				<DialogActions>
 					<Button onClick={() => setEditAutoIndex(false)}>Cancelar</Button>
 					<Button variant="contained" onClick={handleSaveAutoIndexSettings}>
+						Guardar
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* ── Recovery settings edit dialog ───────────────────────────────── */}
+			<Dialog open={editRecovery} onClose={() => setEditRecovery(false)} maxWidth="xs" fullWidth>
+				<DialogTitle>Configuracion Recovery</DialogTitle>
+				<DialogContent>
+					<Stack spacing={2} sx={{ mt: 1 }}>
+						<TextField
+							label="Intervalo de escaneo (minutos)"
+							type="number"
+							value={Math.round(rcSettings.intervalMs / 60000)}
+							onChange={(e) => setRcSettings((prev) => ({ ...prev, intervalMs: Math.max(1, parseInt(e.target.value) || 1) * 60000 }))}
+							inputProps={{ min: 1 }}
+							size="small"
+							fullWidth
+							helperText="Cada cuantos minutos se ejecuta el escaneo de recovery"
+						/>
+						<TextField
+							label="Batch size"
+							type="number"
+							value={rcSettings.batchSize}
+							onChange={(e) => setRcSettings((prev) => ({ ...prev, batchSize: Math.max(1, parseInt(e.target.value) || 1) }))}
+							inputProps={{ min: 1, max: 200 }}
+							size="small"
+							fullWidth
+							helperText="Cantidad maxima de documentos a recuperar por ciclo"
+						/>
+						<TextField
+							label="Max carga de colas"
+							type="number"
+							value={rcSettings.maxQueueLoad}
+							onChange={(e) => setRcSettings((prev) => ({ ...prev, maxQueueLoad: Math.max(1, parseInt(e.target.value) || 1) }))}
+							inputProps={{ min: 1, max: 500 }}
+							size="small"
+							fullWidth
+							helperText="Si las colas de documentos superan este valor, el ciclo se omite"
+						/>
+						<TextField
+							label="Cooldown de errores (minutos)"
+							type="number"
+							value={Math.round(rcSettings.docErrorCooldownMs / 60000)}
+							onChange={(e) => setRcSettings((prev) => ({ ...prev, docErrorCooldownMs: Math.max(1, parseInt(e.target.value) || 1) * 60000 }))}
+							inputProps={{ min: 1 }}
+							size="small"
+							fullWidth
+							helperText="Tiempo de espera antes de reintentar un documento con error"
+						/>
+						<TextField
+							label="Max reintentos por documento"
+							type="number"
+							value={rcSettings.docMaxRetries}
+							onChange={(e) => setRcSettings((prev) => ({ ...prev, docMaxRetries: Math.max(1, parseInt(e.target.value) || 1) }))}
+							inputProps={{ min: 1, max: 20 }}
+							size="small"
+							fullWidth
+							helperText="Cantidad maxima de intentos de recuperacion por documento"
+						/>
+						<TextField
+							label="Umbral stalled (minutos)"
+							type="number"
+							value={Math.round(rcSettings.stalledThresholdMs / 60000)}
+							onChange={(e) => setRcSettings((prev) => ({ ...prev, stalledThresholdMs: Math.max(1, parseInt(e.target.value) || 1) * 60000 }))}
+							inputProps={{ min: 1 }}
+							size="small"
+							fullWidth
+							helperText="Tiempo en estado intermedio para considerar un documento estancado"
+						/>
+						<TextField
+							label="Limpiar failed jobs despues de (horas)"
+							type="number"
+							value={Math.round(rcSettings.cleanFailedAfterMs / 3600000)}
+							onChange={(e) => setRcSettings((prev) => ({ ...prev, cleanFailedAfterMs: Math.max(1, parseInt(e.target.value) || 1) * 3600000 }))}
+							inputProps={{ min: 1 }}
+							size="small"
+							fullWidth
+							helperText="Eliminar jobs fallidos de BullMQ despues de este tiempo"
+						/>
+					</Stack>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setEditRecovery(false)}>Cancelar</Button>
+					<Button variant="contained" onClick={handleSaveRecoverySettings}>
+						Guardar
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* ── Scaling settings edit dialog ────────────────────────────────── */}
+			<Dialog open={!!editScalingWorker} onClose={() => setEditScalingWorker(null)} maxWidth="xs" fullWidth>
+				<DialogTitle>Escalado — {editScalingWorker && (WORKER_LABELS[editScalingWorker.workerName]?.label || editScalingWorker.workerName)}</DialogTitle>
+				<DialogContent>
+					<Stack spacing={2} sx={{ mt: 1 }}>
+						<Stack direction="row" alignItems="center" justifyContent="space-between">
+							<Typography variant="body2">Auto-escalado habilitado</Typography>
+							<Switch checked={scSettings.enabled} onChange={(_, checked) => setScSettings((prev) => ({ ...prev, enabled: checked }))} size="small" />
+						</Stack>
+						<Divider />
+						<Stack direction="row" spacing={2}>
+							<TextField
+								label="Min concurrency"
+								type="number"
+								value={scSettings.minConcurrency}
+								onChange={(e) => setScSettings((prev) => ({ ...prev, minConcurrency: Math.max(1, parseInt(e.target.value) || 1) }))}
+								inputProps={{ min: 1, max: 50 }}
+								size="small"
+								fullWidth
+								disabled={!scSettings.enabled}
+							/>
+							<TextField
+								label="Max concurrency"
+								type="number"
+								value={scSettings.maxConcurrency}
+								onChange={(e) => setScSettings((prev) => ({ ...prev, maxConcurrency: Math.max(1, parseInt(e.target.value) || 1) }))}
+								inputProps={{ min: 1, max: 50 }}
+								size="small"
+								fullWidth
+								disabled={!scSettings.enabled}
+							/>
+						</Stack>
+						<Stack direction="row" spacing={2}>
+							<TextField
+								label="Umbral scale up"
+								type="number"
+								value={scSettings.scaleUpThreshold}
+								onChange={(e) => setScSettings((prev) => ({ ...prev, scaleUpThreshold: Math.max(1, parseInt(e.target.value) || 1) }))}
+								inputProps={{ min: 1 }}
+								size="small"
+								fullWidth
+								disabled={!scSettings.enabled}
+								helperText="Jobs en cola para escalar"
+							/>
+							<TextField
+								label="Umbral scale down"
+								type="number"
+								value={scSettings.scaleDownThreshold}
+								onChange={(e) => setScSettings((prev) => ({ ...prev, scaleDownThreshold: Math.max(0, parseInt(e.target.value) || 0) }))}
+								inputProps={{ min: 0 }}
+								size="small"
+								fullWidth
+								disabled={!scSettings.enabled}
+								helperText="Jobs en cola para reducir"
+							/>
+						</Stack>
+						<Stack direction="row" spacing={2}>
+							<TextField
+								label="Step up"
+								type="number"
+								value={scSettings.scaleUpStep}
+								onChange={(e) => setScSettings((prev) => ({ ...prev, scaleUpStep: Math.max(1, parseInt(e.target.value) || 1) }))}
+								inputProps={{ min: 1, max: 10 }}
+								size="small"
+								fullWidth
+								disabled={!scSettings.enabled}
+							/>
+							<TextField
+								label="Step down"
+								type="number"
+								value={scSettings.scaleDownStep}
+								onChange={(e) => setScSettings((prev) => ({ ...prev, scaleDownStep: Math.max(1, parseInt(e.target.value) || 1) }))}
+								inputProps={{ min: 1, max: 10 }}
+								size="small"
+								fullWidth
+								disabled={!scSettings.enabled}
+							/>
+						</Stack>
+						<TextField
+							label="Cooldown (segundos)"
+							type="number"
+							value={Math.round(scSettings.cooldownMs / 1000)}
+							onChange={(e) => setScSettings((prev) => ({ ...prev, cooldownMs: Math.max(10, parseInt(e.target.value) || 10) * 1000 }))}
+							inputProps={{ min: 10 }}
+							size="small"
+							fullWidth
+							disabled={!scSettings.enabled}
+							helperText="Tiempo minimo entre cambios de escala"
+						/>
+
+						{editScalingWorker?.scaling?.lastScaledAt && (
+							<>
+								<Divider />
+								<Alert severity="info" variant="outlined" sx={{ "& .MuiAlert-message": { width: "100%" } }}>
+									<Stack spacing={0.5}>
+										<Typography variant="caption">
+											Ultima escala: <strong>{new Date(editScalingWorker.scaling.lastScaledAt).toLocaleString("es-AR")}</strong>
+										</Typography>
+										{editScalingWorker.scaling.lastScaledConcurrency != null && (
+											<Typography variant="caption">
+												Concurrency escalada: <strong>{editScalingWorker.scaling.lastScaledConcurrency}</strong>
+											</Typography>
+										)}
+										{editScalingWorker.scaling.lastQueueDepth != null && (
+											<Typography variant="caption">
+												Queue depth al escalar: <strong>{editScalingWorker.scaling.lastQueueDepth}</strong>
+											</Typography>
+										)}
+									</Stack>
+								</Alert>
+							</>
+						)}
+					</Stack>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setEditScalingWorker(null)}>Cancelar</Button>
+					<Button variant="contained" onClick={handleSaveScaling}>
 						Guardar
 					</Button>
 				</DialogActions>

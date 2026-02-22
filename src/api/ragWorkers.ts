@@ -14,6 +14,30 @@ export interface AutoIndexSettings {
 	errorRetryAfterMs: number;
 }
 
+export interface RecoverySettings {
+	intervalMs: number;
+	batchSize: number;
+	maxQueueLoad: number;
+	docErrorCooldownMs: number;
+	docMaxRetries: number;
+	stalledThresholdMs: number;
+	cleanFailedAfterMs: number;
+}
+
+export interface ScalingConfig {
+	enabled: boolean;
+	minConcurrency: number;
+	maxConcurrency: number;
+	scaleUpThreshold: number;
+	scaleDownThreshold: number;
+	scaleUpStep: number;
+	scaleDownStep: number;
+	cooldownMs: number;
+	lastScaledConcurrency?: number;
+	lastScaledAt?: string;
+	lastQueueDepth?: number;
+}
+
 export interface WorkerConfig {
 	_id: string;
 	workerName: string;
@@ -23,6 +47,8 @@ export interface WorkerConfig {
 	concurrency: number;
 	rateLimiter: RateLimiter;
 	autoIndexSettings?: AutoIndexSettings;
+	recoverySettings?: RecoverySettings;
+	scaling?: ScalingConfig;
 	lastAppliedAt?: string;
 	description?: string;
 	createdAt: string;
@@ -139,7 +165,7 @@ class RagWorkersService {
 
 	static async updateWorker(
 		workerName: string,
-		data: Partial<Pick<WorkerConfig, "enabled" | "concurrency" | "paused" | "rateLimiter" | "autoIndexSettings" | "description">>,
+		data: Partial<Pick<WorkerConfig, "enabled" | "concurrency" | "paused" | "rateLimiter" | "autoIndexSettings" | "recoverySettings" | "scaling" | "description">>,
 	): Promise<{ data: WorkerConfig; requiresRestart: boolean }> {
 		const res = await ragAxios.put(`${BASE}/workers/${workerName}`, data);
 		return { data: res.data.data, requiresRestart: res.data.requiresRestart };
