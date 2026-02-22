@@ -34,6 +34,8 @@ export interface PjnCredential {
   };
   successfulSyncs: number;
   firstSync: string | null;
+  initialMovementsSync: string | null;
+  initialMovementsSyncAt: string | null;
   totalMovements: number;
   lastMovementDate: string | null;
   lastSyncDuration: number | null;
