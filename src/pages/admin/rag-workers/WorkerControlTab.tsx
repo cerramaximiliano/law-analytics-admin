@@ -29,7 +29,7 @@ import {
 import { Refresh, Play, Pause, Flash } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { Edit2 } from "iconsax-react";
-import RagWorkersService, { WorkerConfig, AutoIndexSettings, RecoverySettings, ScalingConfig, InstanceScalingConfig } from "api/ragWorkers";
+import RagWorkersService, { WorkerConfig, AutoIndexSettings, RecoverySettings, ScalingConfig, InstanceScalingConfig, RateLimiter } from "api/ragWorkers";
 
 const WORKER_LABELS: Record<string, { label: string; description: string }> = {
 	indexCausa: { label: "Index Causa", description: "Indexa causas completas y crea documentos RAG" },
@@ -87,6 +87,8 @@ const WorkerControlTab = () => {
 	const [scSettings, setScSettings] = useState<ScalingConfig>(DEFAULT_SCALING);
 	const [editInstScalingWorker, setEditInstScalingWorker] = useState<WorkerConfig | null>(null);
 	const [isSettings, setIsSettings] = useState<InstanceScalingConfig>(DEFAULT_INSTANCE_SCALING);
+	const [editRateLimiterWorker, setEditRateLimiterWorker] = useState<WorkerConfig | null>(null);
+	const [rlSettings, setRlSettings] = useState<RateLimiter>({ max: 1, duration: 60000 });
 
 	const fetchWorkers = useCallback(async () => {
 		try {
@@ -249,6 +251,28 @@ const WorkerControlTab = () => {
 		}
 	};
 
+	// Rate Limiter settings
+	const handleOpenRateLimiter = (worker: WorkerConfig) => {
+		setEditRateLimiterWorker(worker);
+		setRlSettings({
+			max: worker.rateLimiter?.max || 1,
+			duration: worker.rateLimiter?.duration || 60000,
+		});
+	};
+
+	const handleSaveRateLimiter = async () => {
+		if (!editRateLimiterWorker) return;
+		try {
+			const { data, requiresRestart } = await RagWorkersService.updateWorker(editRateLimiterWorker.workerName, { rateLimiter: rlSettings });
+			setWorkers((prev) => prev.map((w) => (w.workerName === editRateLimiterWorker.workerName ? { ...w, ...data } : w)));
+			enqueueSnackbar(`Rate limiter de ${editRateLimiterWorker.workerName} actualizado`, { variant: "success" });
+			if (requiresRestart) enqueueSnackbar("Cambios en rate limiter requieren reinicio del worker via PM2", { variant: "warning" });
+			setEditRateLimiterWorker(null);
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.error || "Error al actualizar rate limiter", { variant: "error" });
+		}
+	};
+
 	// ── Helpers ───────────────────────────────────────────────────────────────
 
 	const getStatusChip = (worker: WorkerConfig) => {
@@ -343,9 +367,13 @@ const WorkerControlTab = () => {
 										/>
 									</TableCell>
 									<TableCell>
-										<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
-											{worker.rateLimiter?.max || "-"}/{((worker.rateLimiter?.duration || 60000) / 1000).toFixed(0)}s
-										</Typography>
+										<Chip
+											label={`${worker.rateLimiter?.max || "-"}/${((worker.rateLimiter?.duration || 60000) / 1000).toFixed(0)}s`}
+											size="small"
+											variant="outlined"
+											onClick={() => handleOpenRateLimiter(worker)}
+											sx={{ cursor: "pointer", fontWeight: 600, fontFamily: "monospace" }}
+										/>
 									</TableCell>
 									<TableCell align="center">
 										{worker.scaling ? (
@@ -911,6 +939,43 @@ const WorkerControlTab = () => {
 				<DialogActions>
 					<Button onClick={() => setEditInstScalingWorker(null)}>Cancelar</Button>
 					<Button variant="contained" onClick={handleSaveInstScaling}>
+						Guardar
+					</Button>
+				</DialogActions>
+			</Dialog>
+			{/* ── Rate Limiter edit dialog ───────────────────────────────────── */}
+			<Dialog open={!!editRateLimiterWorker} onClose={() => setEditRateLimiterWorker(null)} maxWidth="xs" fullWidth>
+				<DialogTitle>Rate Limiter — {editRateLimiterWorker && (WORKER_LABELS[editRateLimiterWorker.workerName]?.label || editRateLimiterWorker.workerName)}</DialogTitle>
+				<DialogContent>
+					<Stack spacing={2} sx={{ mt: 1 }}>
+						<TextField
+							label="Max (jobs por periodo)"
+							type="number"
+							value={rlSettings.max}
+							onChange={(e) => setRlSettings((prev) => ({ ...prev, max: Math.min(100, Math.max(1, parseInt(e.target.value) || 1)) }))}
+							inputProps={{ min: 1, max: 100 }}
+							size="small"
+							fullWidth
+							helperText="Cantidad maxima de jobs permitidos por periodo"
+						/>
+						<TextField
+							label="Duration (segundos)"
+							type="number"
+							value={Math.round(rlSettings.duration / 1000)}
+							onChange={(e) => setRlSettings((prev) => ({ ...prev, duration: Math.min(300, Math.max(1, parseInt(e.target.value) || 1)) * 1000 }))}
+							inputProps={{ min: 1, max: 300 }}
+							size="small"
+							fullWidth
+							helperText="Periodo del rate limiter en segundos"
+						/>
+						<Alert severity="info" variant="outlined">
+							Cambios en rate limiter requieren reinicio del worker via PM2
+						</Alert>
+					</Stack>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setEditRateLimiterWorker(null)}>Cancelar</Button>
+					<Button variant="contained" onClick={handleSaveRateLimiter}>
 						Guardar
 					</Button>
 				</DialogActions>
