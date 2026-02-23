@@ -31,13 +31,16 @@ import { useSnackbar } from "notistack";
 import { Edit2 } from "iconsax-react";
 import RagWorkersService, { WorkerConfig, AutoIndexSettings, RecoverySettings, ScalingConfig, InstanceScalingConfig, RateLimiter } from "api/ragWorkers";
 
+// Orden segun flujo del pipeline: autoIndex → indexCausa → indexDocument → ocrDocument → generateSummary → recovery
+const WORKER_ORDER = ["autoIndex", "indexCausa", "indexDocument", "ocrDocument", "generateSummary", "recovery"];
+
 const WORKER_LABELS: Record<string, { label: string; description: string }> = {
-	indexCausa: { label: "Index Causa", description: "Indexa causas completas y crea documentos RAG" },
-	indexDocument: { label: "Index Document", description: "Pipeline completo: descarga, extraccion, chunks, embeddings, vectores" },
-	generateSummary: { label: "Generate Summary", description: "Genera o actualiza resumenes via LLM" },
-	ocrDocument: { label: "OCR Document", description: "Procesamiento OCR para PDFs escaneados" },
-	autoIndex: { label: "Auto Index", description: "Escaneo periodico de causas que necesitan indexacion" },
-	recovery: { label: "Recovery", description: "Recuperacion automatica de documentos fallidos/estancados" },
+	autoIndex: { label: "Auto Index", description: "1. Escaneo periodico — encola causas que necesitan indexacion" },
+	indexCausa: { label: "Index Causa", description: "2. Indexa causa — crea docs RAG y los encola a indexDocument" },
+	indexDocument: { label: "Index Document", description: "3. Pipeline por doc — descarga, extraccion, chunks, embeddings, vectores" },
+	ocrDocument: { label: "OCR Document", description: "4. OCR — procesa PDFs escaneados y reencola a indexDocument" },
+	generateSummary: { label: "Generate Summary", description: "5. Resumenes — genera o actualiza resumenes via LLM" },
+	recovery: { label: "Recovery", description: "6. Recuperacion — reintenta documentos fallidos o estancados" },
 };
 
 const DEFAULT_RECOVERY: RecoverySettings = {
@@ -45,7 +48,7 @@ const DEFAULT_RECOVERY: RecoverySettings = {
 	batchSize: 30,
 	maxQueueLoad: 100,
 	docErrorCooldownMs: 900000,
-	docMaxRetries: 5,
+	docMaxRetries: 3,
 	stalledThresholdMs: 600000,
 	cleanFailedAfterMs: 3600000,
 };
@@ -80,7 +83,7 @@ const WorkerControlTab = () => {
 	const [editWorker, setEditWorker] = useState<WorkerConfig | null>(null);
 	const [editConcurrency, setEditConcurrency] = useState(1);
 	const [editAutoIndex, setEditAutoIndex] = useState(false);
-	const [aiSettings, setAiSettings] = useState<AutoIndexSettings>({ intervalMs: 300000, batchSize: 50, maxConcurrentJobs: 10, errorRetryAfterMs: 3600000 });
+	const [aiSettings, setAiSettings] = useState<AutoIndexSettings>({ intervalMs: 300000, batchSize: 50, maxConcurrentJobs: 10, errorRetryAfterMs: 3600000, errorMaxRetries: 3 });
 	const [editRecovery, setEditRecovery] = useState(false);
 	const [rcSettings, setRcSettings] = useState<RecoverySettings>(DEFAULT_RECOVERY);
 	const [editScalingWorker, setEditScalingWorker] = useState<WorkerConfig | null>(null);
@@ -94,6 +97,11 @@ const WorkerControlTab = () => {
 		try {
 			setLoading(true);
 			const data = await RagWorkersService.getWorkers();
+			data.sort((a, b) => {
+				const ia = WORKER_ORDER.indexOf(a.workerName);
+				const ib = WORKER_ORDER.indexOf(b.workerName);
+				return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+			});
 			setWorkers(data);
 		} catch (err: any) {
 			enqueueSnackbar(err?.response?.data?.error || "Error al cargar workers", { variant: "error" });
@@ -475,6 +483,9 @@ const WorkerControlTab = () => {
 								<Typography variant="caption">
 									Retry errores despues de: <strong>{(s.errorRetryAfterMs / 3600000).toFixed(1)} hs</strong>
 								</Typography>
+								<Typography variant="caption">
+									Max reintentos causa: <strong>{s.errorMaxRetries}</strong>
+								</Typography>
 							</Stack>
 						);
 					})()}
@@ -605,6 +616,16 @@ const WorkerControlTab = () => {
 							size="small"
 							fullWidth
 							helperText="Tiempo de espera antes de reintentar una causa que fallo"
+						/>
+						<TextField
+							label="Max reintentos por causa con error"
+							type="number"
+							value={aiSettings.errorMaxRetries}
+							onChange={(e) => setAiSettings((prev) => ({ ...prev, errorMaxRetries: Math.max(1, Math.min(10, parseInt(e.target.value) || 1)) }))}
+							inputProps={{ min: 1, max: 10 }}
+							size="small"
+							fullWidth
+							helperText="Cantidad maxima de reintentos para causas con error (Tier 3)"
 						/>
 					</Stack>
 				</DialogContent>

@@ -12,6 +12,7 @@ export interface AutoIndexSettings {
 	batchSize: number;
 	maxConcurrentJobs: number;
 	errorRetryAfterMs: number;
+	errorMaxRetries: number;
 }
 
 export interface RecoverySettings {
