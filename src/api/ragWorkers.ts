@@ -194,6 +194,79 @@ export interface IndexationCausasResponse {
 	pagination: { page: number; limit: number; total: number };
 }
 
+export interface StageBreakdown {
+	pending?: number;
+	downloading?: number;
+	downloaded?: number;
+	extracting?: number;
+	extracted?: number;
+	chunking?: number;
+	chunked?: number;
+	embedding?: number;
+	embedded?: number;
+	error?: number;
+}
+
+export interface ActiveCausa {
+	ragIndexId: string;
+	causaId: string;
+	causaType: string;
+	caratula: string;
+	fuero: string;
+	juzgado?: number | null;
+	documentsTotal: number;
+	documentsProcessed: number;
+	documentsWithError: number;
+	indexStartedAt: string;
+	stageBreakdown: StageBreakdown;
+}
+
+export interface RecentlyCompletedCausa {
+	ragIndexId: string;
+	causaId: string;
+	causaType: string;
+	caratula: string;
+	fuero: string;
+	documentsTotal: number;
+	documentsProcessed: number;
+	documentsWithError: number;
+	lastIndexedAt: string;
+	durationMs: number | null;
+}
+
+export interface QueueCounts {
+	active: number;
+	waiting: number;
+	delayed: number;
+	failed: number;
+}
+
+export interface ProcessingStats {
+	avgMs: number | null;
+	minMs: number | null;
+	maxMs: number | null;
+	avgDocs: number | null;
+	minDocs: number | null;
+	maxDocs: number | null;
+	avgMsPerDoc: number | null;
+	sampleSize: number;
+}
+
+export interface WorkerConfigSnapshot {
+	concurrency: number;
+	rateLimiter: { max: number; duration: number } | null;
+	enabled: boolean;
+	paused: boolean;
+}
+
+export interface IndexationActivity {
+	activeCausas: ActiveCausa[];
+	recentlyCompleted: RecentlyCompletedCausa[];
+	queues: Record<string, QueueCounts | null>;
+	processingStats: ProcessingStats;
+	currentConfig: Record<string, WorkerConfigSnapshot>;
+}
+
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 const BASE = "/rag/admin";
@@ -283,6 +356,11 @@ class RagWorkersService {
 
 	static async getIndexationSummary(): Promise<IndexationSummary> {
 		const res = await ragAxios.get(`${BASE}/indexation/summary`);
+		return res.data.data;
+	}
+
+	static async getIndexationActivity(): Promise<IndexationActivity> {
+		const res = await ragAxios.get(`${BASE}/indexation/activity`);
 		return res.data.data;
 	}
 
