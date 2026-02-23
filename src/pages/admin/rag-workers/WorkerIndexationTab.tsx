@@ -172,7 +172,7 @@ const WorkerIndexationTab = () => {
 					</Box>
 
 					{/* Stat chips */}
-					<Stack direction="row" spacing={isMobile ? 1 : 1.5} flexWrap="wrap" useFlexGap>
+					<Stack direction="row" spacing={isMobile ? 0.75 : 1.5} flexWrap="wrap" useFlexGap>
 						<StatChip label="Indexados al dia" value={summary.upToDate} color="success" theme={theme} compact={isMobile} />
 						<StatChip label="Desactualizados" value={summary.outdated} color="warning" theme={theme} compact={isMobile} />
 						<StatChip label="Pendientes" value={(summary.byStatus.pending || 0) + (summary.byStatus.indexing || 0)} color="info" theme={theme} compact={isMobile} />
@@ -298,18 +298,18 @@ const StatChip: React.FC<{ label: string; value: number; color: string; theme: a
 	return (
 		<Box
 			sx={{
-				px: compact ? 1.5 : 2,
-				py: compact ? 0.75 : 1,
-				borderRadius: 1.5,
+				px: compact ? 1 : 2,
+				py: compact ? 0.5 : 1,
+				borderRadius: compact ? 1 : 1.5,
 				border: `1px solid ${alpha(paletteColor, 0.3)}`,
 				bgcolor: alpha(paletteColor, 0.04),
-				minWidth: compact ? 70 : 100,
+				minWidth: compact ? 56 : 100,
 			}}
 		>
-			<Typography variant={compact ? "h5" : "h4"} fontWeight={700} sx={{ fontFamily: "monospace", color: paletteColor }}>
+			<Typography variant={compact ? "h6" : "h4"} fontWeight={700} sx={{ fontFamily: "monospace", color: paletteColor, lineHeight: compact ? 1.3 : undefined }}>
 				{value}
 			</Typography>
-			<Typography variant="caption" color="text.secondary" sx={compact ? { fontSize: "0.65rem" } : undefined}>
+			<Typography variant="caption" color="text.secondary" sx={compact ? { fontSize: "0.6rem", lineHeight: 1.2 } : undefined}>
 				{label}
 			</Typography>
 		</Box>

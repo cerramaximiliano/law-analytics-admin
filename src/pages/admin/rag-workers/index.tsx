@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { Box, Tab, Tabs, Typography, Paper, Stack, useTheme, alpha } from "@mui/material";
-import { Setting3, Chart, DollarSquare, InfoCircle, DocumentText } from "iconsax-react";
+import { Setting3, Chart, DollarSquare, InfoCircle, DocumentText, CpuSetting } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import WorkerControlTab from "./WorkerControlTab";
 import WorkerStatsTab from "./WorkerStatsTab";
 import WorkerPricingTab from "./WorkerPricingTab";
 import WorkerIndexationTab from "./WorkerIndexationTab";
+import WorkerPipelineTab from "./WorkerPipelineTab";
 import WorkerHelpTab from "./WorkerHelpTab";
 
 interface RagWorkerTab {
@@ -48,6 +49,12 @@ const RagWorkersPage = () => {
 			value: "indexation",
 			icon: <DocumentText size={20} />,
 			component: <WorkerIndexationTab />,
+		},
+		{
+			label: "Pipeline",
+			value: "pipeline",
+			icon: <CpuSetting size={20} />,
+			component: <WorkerPipelineTab />,
 		},
 		{
 			label: "Ayuda",
