@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Box, Tab, Tabs, Typography, Paper, Stack, useTheme, alpha } from "@mui/material";
-import { Setting3, Chart, DollarSquare, InfoCircle, DocumentText, CpuSetting } from "iconsax-react";
+import { Setting3, Chart, DollarSquare, InfoCircle, DocumentText, CpuSetting, Activity } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import WorkerControlTab from "./WorkerControlTab";
@@ -8,6 +8,7 @@ import WorkerStatsTab from "./WorkerStatsTab";
 import WorkerPricingTab from "./WorkerPricingTab";
 import WorkerIndexationTab from "./WorkerIndexationTab";
 import WorkerPipelineTab from "./WorkerPipelineTab";
+import WorkerAnalyticsTab from "./WorkerAnalyticsTab";
 import WorkerHelpTab from "./WorkerHelpTab";
 
 interface RagWorkerTab {
@@ -37,6 +38,12 @@ const RagWorkersPage = () => {
 			value: "stats",
 			icon: <Chart size={20} />,
 			component: <WorkerStatsTab />,
+		},
+		{
+			label: "Analytics",
+			value: "analytics",
+			icon: <Activity size={20} />,
+			component: <WorkerAnalyticsTab />,
 		},
 		{
 			label: "Costos y Precios",

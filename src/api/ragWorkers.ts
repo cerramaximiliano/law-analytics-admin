@@ -273,6 +273,158 @@ export interface IndexationActivity {
 	currentConfig: Record<string, WorkerConfigSnapshot>;
 }
 
+// ─── Analytics types ─────────────────────────────────────────────────────────
+
+export interface StageAvgMs {
+	download: number;
+	extract: number;
+	chunking: number;
+	embedding: number;
+	upsert: number;
+	overhead: number;
+	queueWait: number;
+	pipelineTotal: number;
+	minTotalMs?: number;
+	maxTotalMs?: number;
+}
+
+export interface S3Averages {
+	avgPutMs: number;
+	avgGetMs: number;
+	avgPutBytes: number;
+	avgGetBytes: number;
+	totalPutBytes: number;
+	totalGetBytes: number;
+}
+
+export interface ErrorRates {
+	jobFailureRate: number;
+	downloadErrors: number;
+	downloadRetries: number;
+	downloadErrorRate: number;
+	embeddingRetries: number;
+	embeddingHttpErrors: number;
+	embeddingBackoffMs: number;
+	upsertRetries: number;
+	scannedPdfsDetected: number;
+	emptyTextPagesTotal: number;
+}
+
+export interface QueueAnalytics {
+	avgWaitMs: number;
+	avgAttempts: number;
+}
+
+export interface Throughput {
+	totalDocs: number;
+	totalChunks: number;
+	totalVectors: number;
+	totalTokens: number;
+	totalPages: number;
+	docsPerDay: number;
+	chunksPerDay: number;
+	vectorsPerDay: number;
+	tokensPerDay: number;
+	pagesPerDay: number;
+	jobsCompleted: number;
+	jobsFailed: number;
+	days: number;
+}
+
+export interface PipelineDailyEntry {
+	date: string;
+	jobsCompleted: number;
+	jobsFailed: number;
+	avgDownloadMs: number;
+	avgExtractMs: number;
+	avgChunkingMs: number;
+	avgEmbeddingMs: number;
+	avgUpsertMs: number;
+	avgPipelineTotalMs: number;
+	avgQueueWaitMs: number;
+	embeddingTokens: number;
+	documentsProcessed: number;
+	chunksCreated: number;
+	vectorsUpserted: number;
+	downloadErrors: number;
+	embeddingRetries: number;
+	scannedPdfsDetected: number;
+}
+
+export interface PipelineAnalytics {
+	period: { from: string; to: string };
+	hasData: boolean;
+	stageAvgMs: StageAvgMs | null;
+	s3Averages: S3Averages | null;
+	errorRates: ErrorRates | null;
+	queueStats: QueueAnalytics | null;
+	throughput: Throughput | null;
+	daily: PipelineDailyEntry[];
+}
+
+export interface PercentileSet {
+	p50: number;
+	p90: number;
+	p95: number;
+	p99: number;
+}
+
+export interface DocumentPercentiles {
+	totalMs: PercentileSet;
+	downloadMs: PercentileSet;
+	extractMs: PercentileSet;
+	chunkingMs: PercentileSet;
+	embeddingMs: PercentileSet;
+	upsertMs: PercentileSet;
+	overheadMs: PercentileSet;
+}
+
+export interface SlowestDocument {
+	_id: string;
+	causaId: string;
+	causaType: string;
+	sourceType: string;
+	sourceId: string;
+	pagesCount: number;
+	chunksCount: number;
+	embeddedAt: string;
+	metrics: {
+		totalMs: number;
+		download: { ms: number; bytes: number };
+		extract: { ms: number; isScannedLikely: boolean };
+		chunking: { ms: number };
+		embedding: { ms: number; tokensTotal: number };
+		upsert: { ms: number; vectorsCount: number };
+		queue: { waitMs: number };
+	};
+}
+
+export interface ScannedPdfRatio {
+	scanned: number;
+	total: number;
+	percentage: number;
+}
+
+export interface AvgConfigSnapshot {
+	chunkSizeTokens: number;
+	chunkOverlapTokens: number;
+	maxBatchSize: number;
+	concurrency: number;
+	embeddingModels: string[];
+}
+
+export interface DocumentAnalytics {
+	period: { from: string; to: string };
+	hasData: boolean;
+	total: number;
+	stageAvgMs: StageAvgMs | null;
+	s3Averages: S3Averages | null;
+	percentiles: DocumentPercentiles | null;
+	slowest: SlowestDocument[];
+	scannedPdfRatio: ScannedPdfRatio | null;
+	avgConfig: AvgConfigSnapshot | null;
+}
+
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 const BASE = "/rag/admin";
@@ -374,6 +526,18 @@ class RagWorkersService {
 		const params: Record<string, string | number> = { filter, page, limit };
 		if (causaType) params.causaType = causaType;
 		const res = await ragAxios.get(`${BASE}/indexation/causas`, { params });
+		return res.data.data;
+	}
+
+	// ── Analytics ──────────────────────────────────────────────────────────
+
+	static async getPipelineAnalytics(period = "week"): Promise<PipelineAnalytics> {
+		const res = await ragAxios.get(`${BASE}/analytics/pipeline`, { params: { period } });
+		return res.data.data;
+	}
+
+	static async getDocumentAnalytics(period = "week", limit = 10): Promise<DocumentAnalytics> {
+		const res = await ragAxios.get(`${BASE}/analytics/documents`, { params: { period, limit } });
 		return res.data.data;
 	}
 }
