@@ -25,7 +25,7 @@ interface ConfigVar {
 	label: string;
 	description: string;
 	editable: boolean;
-	section: "chunker" | "embedding" | "batcher" | "modelLimits";
+	section: "chunker" | "embedding" | "batcher" | "modelLimits" | "pinecone";
 	field: string;
 	suffix?: string;
 	type?: "int" | "float";
@@ -49,12 +49,15 @@ const CONFIG_VARS: ConfigVar[] = [
 	{ key: "batcher.flushIntervalMs", label: "Flush Interval", section: "batcher", field: "flushIntervalMs", editable: true, suffix: "ms", type: "int", min: 100, max: 30000, description: "Tiempo maximo de espera antes de enviar un lote parcial." },
 	// Model Limits
 	{ key: "modelLimits.maxTokensPerInput", label: "Max Tokens por Input", section: "modelLimits", field: "maxTokensPerInput", editable: false, description: "Limite hard de OpenAI por input (8191 tokens para text-embedding-3-small). No es configurable." },
+	// Pinecone
+	{ key: "pinecone.upsertBatchSize", label: "Upsert Batch Size", section: "pinecone", field: "upsertBatchSize", editable: true, suffix: "vectors", type: "int", min: 10, max: 1000, description: "Cantidad de vectores por request de upsert a Pinecone. Maximo recomendado por Pinecone: 100." },
 ];
 
 const SECTION_LABELS: Record<string, { title: string; description: string }> = {
 	chunker: { title: "Chunker", description: "Configuracion del particionado de texto en fragmentos" },
 	embedding: { title: "Embedding", description: "Configuracion del modelo de embeddings de OpenAI" },
 	batcher: { title: "Batcher + Limites del modelo", description: "Configuracion del batching y limites del modelo" },
+	pinecone: { title: "Pinecone", description: "Configuracion de upsert de vectores a Pinecone" },
 };
 
 // ── Component ───────────────────────────────────────────────────────────────
@@ -168,6 +171,7 @@ const WorkerPipelineTab = () => {
 		{ key: "chunker", vars: CONFIG_VARS.filter((v) => v.section === "chunker") },
 		{ key: "embedding", vars: CONFIG_VARS.filter((v) => v.section === "embedding") },
 		{ key: "batcher", vars: CONFIG_VARS.filter((v) => v.section === "batcher" || v.section === "modelLimits") },
+		{ key: "pinecone", vars: CONFIG_VARS.filter((v) => v.section === "pinecone") },
 	];
 
 	return (
