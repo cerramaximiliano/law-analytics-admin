@@ -127,6 +127,39 @@ export interface CostPricing {
 	notes?: string;
 }
 
+export interface PipelineChunkerConfig {
+	chunkSizeTokens: number;
+	chunkOverlapTokens: number;
+	charsPerToken: number;
+	maxEmbeddingTokens: number;
+}
+
+export interface PipelineEmbeddingConfig {
+	model: string;
+	dimensions: number;
+	maxInputChars: number;
+	maxRetries: number;
+}
+
+export interface PipelineBatcherConfig {
+	maxBatchSize: number;
+	flushIntervalMs: number;
+}
+
+export interface PipelineModelLimits {
+	maxTokensPerInput: number;
+}
+
+export interface PipelineConfig {
+	_id: string;
+	chunker: PipelineChunkerConfig;
+	embedding: PipelineEmbeddingConfig;
+	batcher: PipelineBatcherConfig;
+	modelLimits: PipelineModelLimits;
+	createdAt: string;
+	updatedAt: string;
+}
+
 export interface IndexationSummary {
 	totalVerifiedCausas: number;
 	totalWithRagIndex: number;
@@ -226,6 +259,24 @@ class RagWorkersService {
 	static async updatePricing(modelName: string, data: Partial<Pick<CostPricing, "inputPricePer1M" | "outputPricePer1M" | "notes">>): Promise<CostPricing> {
 		const res = await ragAxios.put(`${BASE}/pricing/${modelName}`, data);
 		return res.data.data;
+	}
+
+	// ── Pipeline Config ─────────────────────────────────────────────────────
+
+	static async getPipelineConfig(): Promise<PipelineConfig> {
+		const res = await ragAxios.get(`${BASE}/pipeline`);
+		return res.data.data;
+	}
+
+	static async updatePipelineConfig(
+		data: {
+			chunker?: Partial<PipelineChunkerConfig>;
+			embedding?: Partial<Pick<PipelineEmbeddingConfig, "maxInputChars" | "maxRetries">>;
+			batcher?: Partial<PipelineBatcherConfig>;
+		},
+	): Promise<{ data: PipelineConfig; requiresRestart: boolean }> {
+		const res = await ragAxios.put(`${BASE}/pipeline`, data);
+		return { data: res.data.data, requiresRestart: res.data.requiresRestart };
 	}
 
 	// ── Indexation ──────────────────────────────────────────────────────────
