@@ -151,12 +151,17 @@ export interface PipelineModelLimits {
 	maxTokensPerInput: number;
 }
 
+export interface PipelinePineconeConfig {
+	upsertBatchSize: number;
+}
+
 export interface PipelineConfig {
 	_id: string;
 	chunker: PipelineChunkerConfig;
 	embedding: PipelineEmbeddingConfig;
 	batcher: PipelineBatcherConfig;
 	modelLimits: PipelineModelLimits;
+	pinecone: PipelinePineconeConfig;
 	createdAt: string;
 	updatedAt: string;
 }
