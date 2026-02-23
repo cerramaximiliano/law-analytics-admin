@@ -14,7 +14,7 @@ import {
 	useMediaQuery,
 	alpha,
 } from "@mui/material";
-import { Refresh, TickCircle, Edit2 } from "iconsax-react";
+import { Refresh, TickCircle, Edit2, Copy } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import RagWorkersService, { PipelineConfig } from "api/ragWorkers";
 
@@ -143,6 +143,28 @@ const WorkerPipelineTab = () => {
 		}
 	};
 
+	const handleCopyConfig = () => {
+		if (!config) return;
+		const lines: string[] = [];
+		const sectionsList = [
+			{ key: "chunker", vars: CONFIG_VARS.filter((v) => v.section === "chunker") },
+			{ key: "embedding", vars: CONFIG_VARS.filter((v) => v.section === "embedding") },
+			{ key: "batcher", vars: CONFIG_VARS.filter((v) => v.section === "batcher" || v.section === "modelLimits") },
+			{ key: "pinecone", vars: CONFIG_VARS.filter((v) => v.section === "pinecone") },
+		];
+		for (const section of sectionsList) {
+			const meta = SECTION_LABELS[section.key];
+			lines.push(`── ${meta.title} ──`);
+			for (const v of section.vars) {
+				const val = getFieldValue(v);
+				lines.push(`  ${v.label}: ${val}${v.suffix ? ` ${v.suffix}` : ""}`);
+			}
+			lines.push("");
+		}
+		navigator.clipboard.writeText(lines.join("\n").trim());
+		enqueueSnackbar("Configuracion copiada al portapapeles", { variant: "success" });
+	};
+
 	const handleKeyDown = (e: React.KeyboardEvent, v: ConfigVar) => {
 		if (e.key === "Enter") handleSave(v);
 		if (e.key === "Escape") handleCancelEdit();
@@ -183,11 +205,18 @@ const WorkerPipelineTab = () => {
 						Parametros de chunking, embedding y batching para el procesamiento de documentos
 					</Typography>
 				</Stack>
-				<Tooltip title="Refrescar">
-					<IconButton onClick={fetchConfig} size="small">
-						<Refresh size={18} />
-					</IconButton>
-				</Tooltip>
+				<Stack direction="row" spacing={0.5}>
+					<Tooltip title="Copiar configuracion">
+						<IconButton onClick={handleCopyConfig} size="small">
+							<Copy size={18} />
+						</IconButton>
+					</Tooltip>
+					<Tooltip title="Refrescar">
+						<IconButton onClick={fetchConfig} size="small">
+							<Refresh size={18} />
+						</IconButton>
+					</Tooltip>
+				</Stack>
 			</Stack>
 
 			<Alert severity="info" sx={{ borderRadius: 1.5 }}>
