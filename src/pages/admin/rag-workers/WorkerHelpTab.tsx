@@ -833,12 +833,364 @@ Ejemplo con 7 causas activas (~3500 docs) y concurrency=2:
 	);
 };
 
+// ── Sub-tab: Infrastructure ──────────────────────────────────────────────────
+
+const HelpInfrastructureSection: React.FC = () => {
+	const theme = useTheme();
+
+	return (
+		<Stack spacing={4}>
+			<Stack>
+				<Typography variant="h5">Infraestructura y Capacidad</Typography>
+				<Typography variant="body2" color="text.secondary">
+					Servidor dedicado para workers y estimaciones de throughput segun configuracion
+				</Typography>
+			</Stack>
+
+			{/* ── Server specs ────────────────────────────────────────────── */}
+			<SectionBox theme={theme}>
+				<SectionTitle>Servidor worker_02</SectionTitle>
+
+				<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
+					Servidor dedicado 100% al procesamiento de workers RAG. Sin otros servicios corriendo.
+				</Typography>
+
+				<Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 2 }}>
+					<Box sx={{ flex: 1, p: 2, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}`, textAlign: "center" }}>
+						<Typography variant="caption" color="text.secondary" display="block">CPU</Typography>
+						<Typography variant="h6" fontWeight={700}>AMD Ryzen 7 5700X</Typography>
+						<Typography variant="caption" color="text.secondary">8 cores / 16 threads</Typography>
+					</Box>
+					<Box sx={{ flex: 1, p: 2, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}`, textAlign: "center" }}>
+						<Typography variant="caption" color="text.secondary" display="block">RAM</Typography>
+						<Typography variant="h6" fontWeight={700}>32 GB</Typography>
+						<Typography variant="caption" color="text.secondary">~30 GB disponibles</Typography>
+					</Box>
+					<Box sx={{ flex: 1, p: 2, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}`, textAlign: "center" }}>
+						<Typography variant="caption" color="text.secondary" display="block">Swap</Typography>
+						<Typography variant="h6" fontWeight={700}>8 GB</Typography>
+						<Typography variant="caption" color="text.secondary">Respaldo de emergencia</Typography>
+					</Box>
+				</Stack>
+
+				<Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.info.main, 0.04), border: `1px solid ${alpha(theme.palette.info.main, 0.15)}` }}>
+					<Typography variant="caption" color="text.secondary">
+						IP: <strong>100.98.180.101</strong> · Usuario: <strong>worker_02</strong> · Ryzen 5700X tiene buen rendimiento single-thread que beneficia a Tesseract OCR
+					</Typography>
+				</Box>
+			</SectionBox>
+
+			{/* ── Recommended config ─────────────────────────────────────── */}
+			<SectionBox theme={theme}>
+				<SectionTitle>Configuracion recomendada de workers</SectionTitle>
+
+				<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
+					Distribucion optima de recursos del servidor entre los workers, con margen de seguridad:
+				</Typography>
+
+				<Box sx={{ overflowX: "auto" }}>
+					<Box component="table" sx={{ width: "100%", borderCollapse: "collapse", "& th, & td": { px: 1.5, py: 1, fontSize: "0.75rem", borderBottom: `1px solid ${theme.palette.divider}`, textAlign: "left" }, "& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.primary.main, 0.04) } }}>
+						<thead>
+							<tr>
+								<th>Worker</th>
+								<th>Concurrency</th>
+								<th>CPU estimado</th>
+								<th>RAM estimada</th>
+								<th>Perfil</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><strong>indexDocument</strong></td>
+								<td><Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700, color: theme.palette.success.main }}>15</Typography></td>
+								<td>~1 core (I/O bound)</td>
+								<td>~1.8 GB</td>
+								<td>Red-bound — espera APIs</td>
+							</tr>
+							<tr>
+								<td><strong>ocrDocument</strong></td>
+								<td><Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700, color: theme.palette.warning.main }}>4</Typography></td>
+								<td>~8 cores</td>
+								<td>~4 GB</td>
+								<td>CPU-intensivo (Tesseract)</td>
+							</tr>
+							<tr>
+								<td><strong>indexCausa</strong></td>
+								<td><Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>2</Typography></td>
+								<td>despreciable</td>
+								<td>~200 MB</td>
+								<td>Liviano — solo encola docs</td>
+							</tr>
+							<tr>
+								<td><strong>autoIndex</strong></td>
+								<td><Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>1</Typography></td>
+								<td>despreciable</td>
+								<td>~120 MB</td>
+								<td>Cron — escaneo periodico</td>
+							</tr>
+							<tr>
+								<td><strong>recovery</strong></td>
+								<td><Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>1</Typography></td>
+								<td>despreciable</td>
+								<td>~120 MB</td>
+								<td>Cron — escaneo periodico</td>
+							</tr>
+							<tr>
+								<td><strong>generateSummary</strong></td>
+								<td><Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>2</Typography></td>
+								<td>despreciable</td>
+								<td>~200 MB</td>
+								<td>API-bound (OpenAI LLM)</td>
+							</tr>
+							<tr style={{ fontWeight: 700 }}>
+								<td><strong>TOTAL</strong></td>
+								<td></td>
+								<td><strong>~10 cores pico</strong></td>
+								<td><strong>~6.5 GB</strong></td>
+								<td>Margen: ~6 cores, ~24 GB RAM</td>
+							</tr>
+						</tbody>
+					</Box>
+				</Box>
+
+				<Stack spacing={0.5} sx={{ mt: 2 }}>
+					<Typography variant="caption" color="text.secondary" sx={{ pl: 1, borderLeft: `2px solid ${theme.palette.info.main}` }}>
+						El rate limiter de indexDocument tambien debe ajustarse: subir de 60/min a ~200/min para no frenar la concurrency=15
+					</Typography>
+					<Typography variant="caption" color="text.secondary" sx={{ pl: 1, borderLeft: `2px solid ${theme.palette.warning.main}` }}>
+						OCR es el mas demandante: ~2 cores y ~1 GB por instancia concurrente. Con concurrency=4 ocupa la mitad de la CPU
+					</Typography>
+					<Typography variant="caption" color="text.secondary" sx={{ pl: 1, borderLeft: `2px solid ${theme.palette.success.main}` }}>
+						Sobran recursos para aumentar si se necesita. El servidor soportaria indexDocument hasta ~20 y ocrDocument hasta ~6
+					</Typography>
+				</Stack>
+			</SectionBox>
+
+			{/* ── Throughput estimates ────────────────────────────────────── */}
+			<SectionBox theme={theme}>
+				<SectionTitle>Estimacion de throughput</SectionTitle>
+
+				<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
+					Basado en datos reales: 89 causas completadas en 48 horas con config actual (indexDoc=2, ocr=1). Promedio 170 docs/causa.
+				</Typography>
+
+				{/* Real throughput */}
+				<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+					Throughput real observado
+				</Typography>
+
+				<Box sx={{ overflowX: "auto", mb: 3 }}>
+					<Box component="table" sx={{ width: "100%", borderCollapse: "collapse", "& th, & td": { px: 1.5, py: 0.75, fontSize: "0.75rem", borderBottom: `1px solid ${theme.palette.divider}`, textAlign: "left" }, "& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.success.main, 0.04) } }}>
+						<thead>
+							<tr>
+								<th>Escenario</th>
+								<th>Causas/dia</th>
+								<th>Docs/hora</th>
+								<th>Avg por causa</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Config actual (indexDoc=2, ocr=1)</td>
+								<td>~44</td>
+								<td>~315</td>
+								<td>~17h (wall-clock con contention)</td>
+							</tr>
+							<tr style={{ fontWeight: 700 }}>
+								<td><Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.success.main }}>worker_02 (indexDoc=15, ocr=4)</Typography></td>
+								<td><strong>~330</strong></td>
+								<td><strong>~2,300</strong></td>
+								<td><strong>~2.5h</strong></td>
+							</tr>
+						</tbody>
+					</Box>
+				</Box>
+
+				<Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.info.main, 0.04), border: `1px solid ${alpha(theme.palette.info.main, 0.15)}`, mb: 3 }}>
+					<Typography variant="caption" color="text.secondary">
+						<strong>Nota:</strong> el avg de 17h por causa es wall-clock (incluye espera en cola compartida con otras causas). El throughput real es alto porque multiples causas avanzan en paralelo — sus docs se intercalan en la cola FIFO.
+					</Typography>
+				</Box>
+
+				{/* Backlog example */}
+				<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+					Ejemplo: backlog pendiente (101 causas + 7 activas)
+				</Typography>
+
+				<Box sx={{ overflowX: "auto", mb: 2 }}>
+					<Box component="table" sx={{ width: "100%", borderCollapse: "collapse", "& th, & td": { px: 1.5, py: 0.75, fontSize: "0.75rem", borderBottom: `1px solid ${theme.palette.divider}`, textAlign: "left" }, "& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.error.main, 0.04) } }}>
+						<thead>
+							<tr>
+								<th>Configuracion</th>
+								<th>Causas pendientes</th>
+								<th>Tiempo estimado</th>
+								<th>Mejora</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Config actual (indexDoc=2, ocr=1)</td>
+								<td>~108</td>
+								<td>~2.5 dias</td>
+								<td>—</td>
+							</tr>
+							<tr style={{ fontWeight: 700 }}>
+								<td><Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.success.main }}>worker_02 (indexDoc=15, ocr=4)</Typography></td>
+								<td>~108</td>
+								<td><strong>~8 horas</strong></td>
+								<td><Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.success.main }}>~7x mas rapido</Typography></td>
+							</tr>
+						</tbody>
+					</Box>
+				</Box>
+
+				<Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.info.main, 0.04), border: `1px solid ${alpha(theme.palette.info.main, 0.15)}` }}>
+					<Typography variant="caption" color="text.secondary">
+						Estimaciones basadas en datos reales (89 causas/48h). La mejora ~7x surge de escalar indexDocument de 2 a 15 (7.5x) y OCR de 1 a 4 (4x). El factor OCR reduce la mejora neta si hay alto porcentaje de PDFs escaneados.
+					</Typography>
+				</Box>
+			</SectionBox>
+
+			{/* ── Resource usage by worker type ───────────────────────────── */}
+			<SectionBox theme={theme}>
+				<SectionTitle>Perfil de consumo por tipo de worker</SectionTitle>
+
+				<Stack spacing={2}>
+					<Box sx={{ p: 2, borderRadius: 1.5, border: `2px solid ${theme.palette.success.main}`, bgcolor: alpha(theme.palette.success.main, 0.04) }}>
+						<Typography variant="subtitle2" fontWeight={700} color="success.main" gutterBottom>
+							indexDocument — I/O bound (red)
+						</Typography>
+						<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+							El trabajo real lo hacen servicios externos. El worker solo coordina las llamadas.
+						</Typography>
+						<Stack spacing={0.5}>
+							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}>
+								Descarga PDF: espera red (PJN/S3) — ~10 MB RAM por descarga
+							</Typography>
+							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}>
+								Extraccion texto (pdf-parse): CPU minimo, ~50 MB RAM por PDF grande
+							</Typography>
+							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}>
+								Chunking: CPU minimo, memoria proporcional al texto
+							</Typography>
+							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}>
+								Embeddings (OpenAI API): espera red — sin consumo local
+							</Typography>
+							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}>
+								Upsert (Pinecone): espera red — sin consumo local
+							</Typography>
+							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.info.main, 0.5)}`, color: "text.secondary", fontWeight: 600 }}>
+								~120 MB RAM por slot de concurrency. Con concurrency=15: ~1.8 GB total
+							</Typography>
+						</Stack>
+					</Box>
+
+					<Box sx={{ p: 2, borderRadius: 1.5, border: `2px solid ${theme.palette.error.main}`, bgcolor: alpha(theme.palette.error.main, 0.04) }}>
+						<Typography variant="subtitle2" fontWeight={700} color="error.main" gutterBottom>
+							ocrDocument — CPU bound (Tesseract)
+						</Typography>
+						<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+							El mas demandante. Convierte imagenes de PDF a texto usando OCR local.
+						</Typography>
+						<Stack spacing={0.5}>
+							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.error.main, 0.3)}`, color: "text.secondary" }}>
+								Consume ~2 cores por instancia (multiples threads por pagina)
+							</Typography>
+							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.error.main, 0.3)}`, color: "text.secondary" }}>
+								~1 GB RAM por instancia (imagenes descomprimidas en memoria)
+							</Typography>
+							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.error.main, 0.3)}`, color: "text.secondary" }}>
+								Genera doble pasada por indexDocument (falla extraccion → OCR → re-encola)
+							</Typography>
+							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.info.main, 0.5)}`, color: "text.secondary", fontWeight: 600 }}>
+								Con concurrency=4: ~8 cores + ~4 GB RAM — mitad de la CPU del servidor
+							</Typography>
+						</Stack>
+					</Box>
+
+					<Box sx={{ p: 2, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}>
+						<Typography variant="subtitle2" fontWeight={600} gutterBottom>
+							Otros workers — livianos
+						</Typography>
+						<Typography variant="caption" color="text.secondary">
+							indexCausa, autoIndex, recovery y generateSummary consumen recursos minimos (queries MongoDB y llamadas API). En conjunto: ~1 core y ~640 MB RAM. No requieren optimizacion.
+						</Typography>
+					</Box>
+				</Stack>
+			</SectionBox>
+
+			{/* ── Scaling guidelines ─────────────────────────────────────── */}
+			<SectionBox theme={theme}>
+				<SectionTitle>Guia de escalado por cada 100 docs</SectionTitle>
+
+				<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
+					Requerimientos estimados de infraestructura para procesar lotes de 100 documentos, segun el porcentaje de documentos que requieren OCR:
+				</Typography>
+
+				<Box sx={{ overflowX: "auto" }}>
+					<Box component="table" sx={{ width: "100%", borderCollapse: "collapse", "& th, & td": { px: 1.5, py: 0.75, fontSize: "0.75rem", borderBottom: `1px solid ${theme.palette.divider}`, textAlign: "left" }, "& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.primary.main, 0.04) } }}>
+						<thead>
+							<tr>
+								<th>Perfil</th>
+								<th>CPU</th>
+								<th>RAM</th>
+								<th>indexDoc conc.</th>
+								<th>OCR conc.</th>
+								<th>Caso de uso</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Economico</td>
+								<td>4 vCPU</td>
+								<td>4 GB</td>
+								<td>5</td>
+								<td>1</td>
+								<td>Bajo volumen, poco OCR</td>
+							</tr>
+							<tr>
+								<td>Balanceado</td>
+								<td>8 vCPU</td>
+								<td>8 GB</td>
+								<td>10</td>
+								<td>2</td>
+								<td>Volumen medio, OCR moderado</td>
+							</tr>
+							<tr>
+								<td><Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.success.main }}>Agresivo</Typography></td>
+								<td>16 vCPU</td>
+								<td>16 GB</td>
+								<td>15</td>
+								<td>4</td>
+								<td>Alto volumen, mucho OCR</td>
+							</tr>
+						</tbody>
+					</Box>
+				</Box>
+
+				<Stack spacing={0.5} sx={{ mt: 2 }}>
+					<Typography variant="caption" color="text.secondary" sx={{ pl: 1, borderLeft: `2px solid ${theme.palette.info.main}` }}>
+						El factor que mas mueve la aguja es el ratio de docs con OCR. Sin OCR, 4 vCPU y 4 GB procesan 100 docs comodamente
+					</Typography>
+					<Typography variant="caption" color="text.secondary" sx={{ pl: 1, borderLeft: `2px solid ${theme.palette.warning.main}` }}>
+						Con alto porcentaje de OCR (&gt;30%), priorizar mas cores sobre mas RAM — Tesseract es CPU-bound
+					</Typography>
+					<Typography variant="caption" color="text.secondary" sx={{ pl: 1, borderLeft: `2px solid ${theme.palette.success.main}` }}>
+						worker_02 (16 threads, 32 GB) se ubica en el perfil "Agresivo" con margen de sobra (~6 cores y ~24 GB libres)
+					</Typography>
+				</Stack>
+			</SectionBox>
+		</Stack>
+	);
+};
+
 // ── Main component with internal tabs ────────────────────────────────────────
 
 const HELP_TABS = [
 	{ label: "Pipeline", value: "pipeline" },
 	{ label: "Controles y costos", value: "control" },
 	{ label: "Rendimiento", value: "performance" },
+	{ label: "Infraestructura", value: "infrastructure" },
 ] as const;
 
 const WorkerHelpTab = () => {
@@ -873,6 +1225,7 @@ const WorkerHelpTab = () => {
 			{subTab === "pipeline" && <HelpPipelineSection />}
 			{subTab === "control" && <HelpControlSection />}
 			{subTab === "performance" && <HelpPerformanceSection />}
+			{subTab === "infrastructure" && <HelpInfrastructureSection />}
 		</Stack>
 	);
 };
