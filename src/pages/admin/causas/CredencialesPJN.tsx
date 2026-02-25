@@ -33,6 +33,7 @@ import {
   Alert,
   AlertTitle,
   Divider,
+  LinearProgress,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useTheme } from "@mui/material/styles";
@@ -364,6 +365,38 @@ const CredencialesPJN = () => {
       fetchPortalStatus();
     }
   }, [tabValue]);
+
+  // Polling silencioso cada 5s cuando hay credenciales en progreso
+  const hasInProgress = credentials.some(c => c.syncStatus === "in_progress");
+
+  useEffect(() => {
+    if (!hasInProgress) return;
+
+    const silentFetch = async () => {
+      try {
+        const params: PjnCredentialsFilters = {
+          page: page + 1,
+          limit: rowsPerPage,
+          sortBy,
+          sortOrder,
+        };
+        if (syncStatusFilter !== "todos") params.syncStatus = syncStatusFilter;
+        if (verifiedFilter !== "todos") params.verified = verifiedFilter;
+        if (enabledFilter !== "todos") params.enabled = enabledFilter;
+        if (searchText.trim()) params.search = searchText.trim();
+
+        const response = await pjnCredentialsService.getCredentials(params);
+        if (response.success) {
+          setCredentials(response.data);
+          setTotalCount(response.pagination.total);
+        }
+      } catch {}
+    };
+
+    const interval = setInterval(silentFetch, 5000);
+    return () => clearInterval(interval);
+  }, [hasInProgress, page, rowsPerPage, sortBy, sortOrder,
+      syncStatusFilter, verifiedFilter, enabledFilter, searchText]);
 
   // Handlers
   const handleSearch = () => {
@@ -763,7 +796,25 @@ const CredencialesPJN = () => {
                           <Typography variant="body2" fontFamily="monospace">{cred.cuilMasked}</Typography>
                         </TableCell>
                         <TableCell align="center">
-                          <Chip label={getSyncStatusLabel(cred.syncStatus)} color={getSyncStatusColor(cred.syncStatus) as any} size="small" />
+                          {cred.syncStatus === "in_progress" ? (
+                            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0.3 }}>
+                              <Chip
+                                label={getSyncStatusLabel(cred.syncStatus)}
+                                color="info"
+                                size="small"
+                                icon={<CircularProgress size={10} color="inherit" sx={{ ml: "4px !important" }} />}
+                              />
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.65rem", lineHeight: 1 }}>
+                                {cred.extractionStatus === "completed" ? "Procesando cola" : "Extrayendo..."}
+                              </Typography>
+                            </Box>
+                          ) : (
+                            <Chip
+                              label={getSyncStatusLabel(cred.syncStatus)}
+                              color={getSyncStatusColor(cred.syncStatus) as any}
+                              size="small"
+                            />
+                          )}
                         </TableCell>
                         <TableCell align="center">
                           {cred.verified ? <TickCircle size={20} color={theme.palette.success.main} variant="Bold" /> : <CloseCircle size={20} color={theme.palette.error.main} variant="Bold" />}
@@ -775,7 +826,43 @@ const CredencialesPJN = () => {
                           {cred.enabled ? <TickCircle size={20} color={theme.palette.success.main} variant="Bold" /> : <CloseCircle size={20} color={theme.palette.warning.main} variant="Bold" />}
                         </TableCell>
                         <TableCell align="right">
-                          <Typography variant="body2">{cred.processedCausasCount || 0}/{cred.expectedCausasCount || 0}</Typography>
+                          <Box sx={{ minWidth: 70 }}>
+                            <Typography variant="body2">
+                              {cred.processedCausasCount || 0}/{cred.expectedCausasCount || 0}
+                            </Typography>
+                            {cred.syncStatus === "in_progress" && (cred.expectedCausasCount || 0) > 0 && (
+                              <LinearProgress
+                                variant="determinate"
+                                value={Math.min(100, ((cred.processedCausasCount || 0) / (cred.expectedCausasCount || 1)) * 100)}
+                                sx={{ mt: 0.5, height: 3, borderRadius: 2 }}
+                              />
+                            )}
+                            {cred.syncStatus === "in_progress" &&
+                              cred.extractionStatus === "completed" &&
+                              (cred.currentSyncProgress?.lastBatchSample?.length ?? 0) > 0 && (
+                                <Box sx={{ mt: 0.5 }}>
+                                  {cred.currentSyncProgress!.lastBatchSample!.map((caratula, idx) => (
+                                    <Typography
+                                      key={idx}
+                                      variant="caption"
+                                      display="block"
+                                      color="text.secondary"
+                                      sx={{
+                                        fontSize: "0.6rem",
+                                        lineHeight: 1.3,
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                        maxWidth: 180,
+                                        opacity: 1 - idx * 0.15,
+                                      }}
+                                    >
+                                      ↓ {caratula}
+                                    </Typography>
+                                  ))}
+                                </Box>
+                              )}
+                          </Box>
                         </TableCell>
                         <TableCell align="right">
                           <Typography variant="body2">{cred.foldersCreatedCount || 0}</Typography>
