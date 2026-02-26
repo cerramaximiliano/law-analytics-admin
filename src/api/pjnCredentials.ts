@@ -25,6 +25,7 @@ export interface PjnCredential {
   expectedCausasCount: number;
   processedCausasCount: number;
   foldersCreatedCount: number;
+  totalFoldersLinked?: number;
   extractionStatus?: "idle" | "completed";
   extractedCausasCount?: number;
   stats?: {
