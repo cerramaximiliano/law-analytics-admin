@@ -805,7 +805,11 @@ const CredencialesPJN = () => {
                                 icon={<CircularProgress size={10} color="inherit" sx={{ ml: "4px !important" }} />}
                               />
                               <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.65rem", lineHeight: 1 }}>
-                                {cred.extractionStatus === "completed" ? "Procesando cola" : "Extrayendo..."}
+                                {cred.extractionStatus === "completed"
+                                  ? (cred.processedCausasCount || 0) >= (cred.expectedCausasCount || 1)
+                                    ? "Finalizando..."
+                                    : "Procesando cola"
+                                  : "Extrayendo..."}
                               </Typography>
                             </Box>
                           ) : (
@@ -834,6 +838,7 @@ const CredencialesPJN = () => {
                               <LinearProgress
                                 variant="determinate"
                                 value={Math.min(100, ((cred.processedCausasCount || 0) / (cred.expectedCausasCount || 1)) * 100)}
+                                color={(cred.processedCausasCount || 0) >= (cred.expectedCausasCount || 1) ? "success" : "primary"}
                                 sx={{ mt: 0.5, height: 3, borderRadius: 2 }}
                               />
                             )}
