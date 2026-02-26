@@ -408,7 +408,9 @@ const CredencialesPJN = () => {
   useEffect(() => {
     if (!hasInProgress) return;
 
-    const interval = setInterval(silentFetch, 5000);
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") silentFetch();
+    }, 5000);
     return () => clearInterval(interval);
   }, [hasInProgress, page, rowsPerPage, sortBy, sortOrder,
       syncStatusFilter, verifiedFilter, enabledFilter, searchText]);
@@ -417,7 +419,9 @@ const CredencialesPJN = () => {
   useEffect(() => {
     if (hasInProgress) return;
 
-    const interval = setInterval(silentFetch, 30000);
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") silentFetch();
+    }, 30000);
     return () => clearInterval(interval);
   }, [hasInProgress, page, rowsPerPage, sortBy, sortOrder,
       syncStatusFilter, verifiedFilter, enabledFilter, searchText]);
