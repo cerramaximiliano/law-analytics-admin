@@ -870,7 +870,15 @@ const CredencialesPJN = () => {
                           </Box>
                         </TableCell>
                         <TableCell align="right">
-                          <Typography variant="body2">{cred.foldersCreatedCount || 0}</Typography>
+                          {(cred.totalFoldersLinked ?? 0) > 0 ? (
+                            <Tooltip title={`${cred.foldersCreatedCount || 0} nuevas / ${cred.totalFoldersLinked} totales`}>
+                              <Typography variant="body2">
+                                {cred.foldersCreatedCount || 0}/{cred.totalFoldersLinked}
+                              </Typography>
+                            </Tooltip>
+                          ) : (
+                            <Typography variant="body2">{cred.foldersCreatedCount || 0}</Typography>
+                          )}
                         </TableCell>
                         <TableCell align="right">
                           <Tooltip
