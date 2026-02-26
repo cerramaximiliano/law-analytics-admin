@@ -409,6 +409,14 @@ class PjnCredentialsService {
   }
 
   /**
+   * Obtener folders vinculados a una credencial (source=pjn-login)
+   */
+  async getCredentialFolders(id: string, page = 1, limit = 100): Promise<GenericResponse> {
+    const response = await adminAxios.get(`/api/pjn-credentials/${id}/folders`, { params: { page, limit } });
+    return response.data;
+  }
+
+  /**
    * Eliminar credencial
    */
   async deleteCredential(id: string): Promise<GenericResponse> {

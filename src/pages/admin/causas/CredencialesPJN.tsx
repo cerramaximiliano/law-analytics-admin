@@ -59,6 +59,7 @@ import pjnCredentialsService, {
   SyncActivityResponse,
   PortalStatusResponse,
   UpdateRun,
+  SyncedCausa,
 } from "api/pjnCredentials";
 
 // Colores para estados
@@ -268,12 +269,25 @@ const CredencialesPJN = () => {
     loading: boolean;
     executing: boolean;
   }>({ open: false, credential: null, preview: null, loading: false, executing: false });
-  const [rawDialog, setRawDialog] = useState<{
+  const [detailDialog, setDetailDialog] = useState<{
     open: boolean;
-    data: any;
-    loading: boolean;
+    credentialId: string;
     userName: string;
-  }>({ open: false, data: null, loading: false, userName: "" });
+    activeTab: number;
+    jsonData: any;
+    jsonLoading: boolean;
+    folders: any[];
+    foldersLoading: boolean;
+    foldersFetched: boolean;
+    causas: SyncedCausa[];
+    causasLoading: boolean;
+    causasFetched: boolean;
+  }>({
+    open: false, credentialId: "", userName: "", activeTab: 0,
+    jsonData: null, jsonLoading: false,
+    folders: [], foldersLoading: false, foldersFetched: false,
+    causas: [], causasLoading: false, causasFetched: false,
+  });
 
   // Cargar datos
   const fetchCredentials = async () => {
@@ -512,23 +526,69 @@ const CredencialesPJN = () => {
     }
   };
 
+  const closeDetailDialog = () => setDetailDialog({
+    open: false, credentialId: "", userName: "", activeTab: 0,
+    jsonData: null, jsonLoading: false,
+    folders: [], foldersLoading: false, foldersFetched: false,
+    causas: [], causasLoading: false, causasFetched: false,
+  });
+
   const handleViewRaw = async (cred: PjnCredential) => {
-    setRawDialog({ open: true, data: null, loading: true, userName: cred.userName });
+    setDetailDialog({
+      open: true, credentialId: cred._id, userName: cred.userName, activeTab: 0,
+      jsonData: null, jsonLoading: true,
+      folders: [], foldersLoading: false, foldersFetched: false,
+      causas: [], causasLoading: false, causasFetched: false,
+    });
     try {
       const response = await pjnCredentialsService.getRawCredential(cred._id);
       if (response.success) {
-        setRawDialog((prev) => ({ ...prev, data: response.data, loading: false }));
+        setDetailDialog((prev) => ({ ...prev, jsonData: response.data, jsonLoading: false }));
       }
     } catch (error) {
       enqueueSnackbar("Error al obtener datos raw", { variant: "error" });
-      setRawDialog((prev) => ({ ...prev, loading: false }));
+      setDetailDialog((prev) => ({ ...prev, jsonLoading: false }));
     }
   };
 
   const handleCopyRaw = () => {
-    if (rawDialog.data) {
-      navigator.clipboard.writeText(JSON.stringify(rawDialog.data, null, 2));
+    if (detailDialog.jsonData) {
+      navigator.clipboard.writeText(JSON.stringify(detailDialog.jsonData, null, 2));
       enqueueSnackbar("JSON copiado al portapapeles", { variant: "success" });
+    }
+  };
+
+  const handleDetailTabChange = async (_: React.SyntheticEvent, newTab: number) => {
+    setDetailDialog((prev) => ({ ...prev, activeTab: newTab }));
+
+    if (newTab === 1 && !detailDialog.foldersFetched) {
+      setDetailDialog((prev) => ({ ...prev, foldersLoading: true }));
+      try {
+        const response = await pjnCredentialsService.getCredentialFolders(detailDialog.credentialId);
+        setDetailDialog((prev) => ({
+          ...prev,
+          folders: response.success ? response.data : [],
+          foldersLoading: false,
+          foldersFetched: true,
+        }));
+      } catch {
+        setDetailDialog((prev) => ({ ...prev, foldersLoading: false, foldersFetched: true }));
+      }
+    }
+
+    if (newTab === 2 && !detailDialog.causasFetched) {
+      setDetailDialog((prev) => ({ ...prev, causasLoading: true }));
+      try {
+        const response = await pjnCredentialsService.getSyncedCausas({ credentialId: detailDialog.credentialId, limit: 200 });
+        setDetailDialog((prev) => ({
+          ...prev,
+          causas: response.success ? response.data : [],
+          causasLoading: false,
+          causasFetched: true,
+        }));
+      } catch {
+        setDetailDialog((prev) => ({ ...prev, causasLoading: false, causasFetched: true }));
+      }
     }
   };
 
@@ -1653,89 +1713,172 @@ const CredencialesPJN = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Dialog de raw JSON */}
+      {/* Dialog de detalle: JSON / Carpetas / Causas */}
       <Dialog
-        open={rawDialog.open}
-        onClose={() => setRawDialog({ open: false, data: null, loading: false, userName: "" })}
-        maxWidth="md"
+        open={detailDialog.open}
+        onClose={closeDetailDialog}
+        maxWidth="lg"
         fullWidth
+        PaperProps={{ sx: { height: "85vh" } }}
       >
         <DialogTitle>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Typography variant="h5">Raw JSON - {rawDialog.userName}</Typography>
-            {rawDialog.data && (
+            <Typography variant="h5">{detailDialog.userName}</Typography>
+            {detailDialog.activeTab === 0 && detailDialog.jsonData && (
               <Tooltip title="Copiar JSON">
                 <IconButton size="small" onClick={handleCopyRaw}><Copy size={18} /></IconButton>
               </Tooltip>
             )}
           </Stack>
+          <Tabs value={detailDialog.activeTab} onChange={handleDetailTabChange} sx={{ mt: 1 }}>
+            <Tab label="JSON" />
+            <Tab label={`Carpetas${detailDialog.foldersFetched ? ` (${detailDialog.folders.length})` : ""}`} />
+            <Tab label={`Causas${detailDialog.causasFetched ? ` (${detailDialog.causas.length})` : ""}`} />
+          </Tabs>
         </DialogTitle>
-        <DialogContent>
-          {rawDialog.loading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-              <CircularProgress size={32} />
+
+        <DialogContent dividers sx={{ p: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+
+          {/* Tab 0: JSON */}
+          {detailDialog.activeTab === 0 && (
+            <Box sx={{ p: 2, overflow: "auto", flex: 1 }}>
+              {detailDialog.jsonLoading ? (
+                <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                  <CircularProgress size={32} />
+                </Box>
+              ) : detailDialog.jsonData ? (
+                <>
+                  <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
+                    Tiempos de procesamiento
+                  </Typography>
+                  <Box sx={{ mb: 2 }}>
+                    {[
+                      { label: "Creacion", value: formatDate(detailDialog.jsonData.createdAt), delay: null },
+                      { label: "Verificacion", value: formatDate(detailDialog.jsonData.verifiedAt), delay: calcDelay(detailDialog.jsonData.createdAt, detailDialog.jsonData.verifiedAt) },
+                      { label: "Sync de carpetas", value: detailDialog.jsonData.firstSync?.date ? formatDate(detailDialog.jsonData.firstSync.date) : "-", delay: detailDialog.jsonData.firstSync?.date ? calcDelay(detailDialog.jsonData.createdAt, detailDialog.jsonData.firstSync.date) : null },
+                      { label: "Sync de movimientos", value: formatDate(detailDialog.jsonData.initialMovementsSyncAt), delay: calcDelay(detailDialog.jsonData.createdAt, detailDialog.jsonData.initialMovementsSyncAt) },
+                      { label: "Estado movimientos", value: detailDialog.jsonData.initialMovementsSync || "sin iniciar", delay: null },
+                    ].map((row, idx) => (
+                      <Stack key={idx} direction="row" spacing={2} sx={{ py: 0.5, borderBottom: "1px solid", borderColor: "divider" }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ minWidth: 160 }}>{row.label}:</Typography>
+                        <Typography variant="body2" fontFamily="monospace">{row.value}</Typography>
+                        {row.delay && <Chip label={`+${row.delay}`} size="small" variant="outlined" color="info" sx={{ fontSize: "0.7rem", height: 20 }} />}
+                      </Stack>
+                    ))}
+                  </Box>
+                  <Divider sx={{ my: 2 }} />
+                  <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>Raw JSON</Typography>
+                  <Box component="pre" sx={{ bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.100", color: theme.palette.mode === "dark" ? "grey.300" : "grey.800", p: 2, borderRadius: 1, fontSize: "0.75rem", fontFamily: "monospace", overflow: "auto", whiteSpace: "pre-wrap", wordBreak: "break-word", m: 0 }}>
+                    {JSON.stringify(detailDialog.jsonData, null, 2)}
+                  </Box>
+                </>
+              ) : (
+                <Typography color="text.secondary">No se pudieron cargar los datos</Typography>
+              )}
             </Box>
-          ) : rawDialog.data ? (
-            <>
-              {/* Tiempos de procesamiento */}
-              <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
-                Tiempos de procesamiento
-              </Typography>
-              <Box sx={{ mb: 2 }}>
-                {[
-                  { label: "Creacion", value: formatDate(rawDialog.data.createdAt), delay: null },
-                  { label: "Verificacion", value: formatDate(rawDialog.data.verifiedAt), delay: calcDelay(rawDialog.data.createdAt, rawDialog.data.verifiedAt) },
-                  { label: "Sync de carpetas", value: rawDialog.data.firstSync?.date ? formatDate(rawDialog.data.firstSync.date) : "-", delay: rawDialog.data.firstSync?.date ? calcDelay(rawDialog.data.createdAt, rawDialog.data.firstSync.date) : null },
-                  { label: "Sync de movimientos", value: formatDate(rawDialog.data.initialMovementsSyncAt), delay: calcDelay(rawDialog.data.createdAt, rawDialog.data.initialMovementsSyncAt) },
-                  { label: "Estado movimientos", value: rawDialog.data.initialMovementsSync || "sin iniciar", delay: null },
-                ].map((row, idx) => (
-                  <Stack key={idx} direction="row" spacing={2} sx={{ py: 0.5, borderBottom: "1px solid", borderColor: "divider" }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ minWidth: 160 }}>
-                      {row.label}:
-                    </Typography>
-                    <Typography variant="body2" fontFamily="monospace">
-                      {row.value}
-                    </Typography>
-                    {row.delay && (
-                      <Chip label={`+${row.delay}`} size="small" variant="outlined" color="info" sx={{ fontSize: "0.7rem", height: 20 }} />
-                    )}
-                  </Stack>
-                ))}
-              </Box>
-
-              <Divider sx={{ my: 2 }} />
-
-              {/* Raw JSON */}
-              <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
-                Raw JSON
-              </Typography>
-              <Box
-                component="pre"
-                sx={{
-                  bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.100",
-                  color: theme.palette.mode === "dark" ? "grey.300" : "grey.800",
-                  p: 2,
-                  borderRadius: 1,
-                  fontSize: "0.75rem",
-                  fontFamily: "monospace",
-                  overflow: "auto",
-                  maxHeight: "50vh",
-                  whiteSpace: "pre-wrap",
-                  wordBreak: "break-word",
-                  m: 0,
-                }}
-              >
-                {JSON.stringify(rawDialog.data, null, 2)}
-              </Box>
-            </>
-          ) : (
-            <Typography color="text.secondary">No se pudieron cargar los datos</Typography>
           )}
+
+          {/* Tab 1: Carpetas */}
+          {detailDialog.activeTab === 1 && (
+            <Box sx={{ overflow: "auto", flex: 1 }}>
+              {detailDialog.foldersLoading ? (
+                <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                  <CircularProgress size={32} />
+                </Box>
+              ) : detailDialog.folders.length === 0 ? (
+                <Box sx={{ p: 3, textAlign: "center" }}>
+                  <Typography color="text.secondary">Sin carpetas pjn-login</Typography>
+                </Box>
+              ) : (
+                <Table size="small" stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Nombre</TableCell>
+                      <TableCell>Materia</TableCell>
+                      <TableCell>Expediente</TableCell>
+                      <TableCell>Tipo</TableCell>
+                      <TableCell align="center">Estado</TableCell>
+                      <TableCell align="center">Archivado</TableCell>
+                      <TableCell>Creado</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {detailDialog.folders.map((f: any) => (
+                      <TableRow key={f._id} hover>
+                        <TableCell sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <Tooltip title={f.folderName}><span>{f.folderName}</span></Tooltip>
+                        </TableCell>
+                        <TableCell sx={{ maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <Tooltip title={f.materia}><span>{f.materia || "-"}</span></Tooltip>
+                        </TableCell>
+                        <TableCell><Typography variant="body2" fontFamily="monospace">{f.judFolder?.numberJudFolder || "-"}</Typography></TableCell>
+                        <TableCell><Chip label={f.causaType || "-"} size="small" variant="outlined" /></TableCell>
+                        <TableCell align="center">
+                          <Chip label={f.causaAssociationStatus || "-"} size="small" color={f.causaAssociationStatus === "success" ? "success" : f.causaAssociationStatus === "pending" ? "warning" : "default"} />
+                        </TableCell>
+                        <TableCell align="center">
+                          {f.archived ? <TickCircle size={16} color={theme.palette.warning.main} /> : <CloseCircle size={16} color={theme.palette.grey[400]} />}
+                        </TableCell>
+                        <TableCell><Typography variant="caption">{formatDate(f.createdAt)}</Typography></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </Box>
+          )}
+
+          {/* Tab 2: Causas */}
+          {detailDialog.activeTab === 2 && (
+            <Box sx={{ overflow: "auto", flex: 1 }}>
+              {detailDialog.causasLoading ? (
+                <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                  <CircularProgress size={32} />
+                </Box>
+              ) : detailDialog.causas.length === 0 ? (
+                <Box sx={{ p: 3, textAlign: "center" }}>
+                  <Typography color="text.secondary">Sin causas sincronizadas</Typography>
+                </Box>
+              ) : (
+                <Table size="small" stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Expediente</TableCell>
+                      <TableCell>Fuero</TableCell>
+                      <TableCell>Carátula</TableCell>
+                      <TableCell>Objeto</TableCell>
+                      <TableCell align="center">Source</TableCell>
+                      <TableCell align="right">Movimientos</TableCell>
+                      <TableCell>Último mov.</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {detailDialog.causas.map((c) => (
+                      <TableRow key={c._id} hover>
+                        <TableCell><Typography variant="body2" fontFamily="monospace">{c.number}/{c.year}{c.incidente ? `/${c.incidente}` : ""}</Typography></TableCell>
+                        <TableCell><Chip label={c.fuero} size="small" variant="outlined" /></TableCell>
+                        <TableCell sx={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <Tooltip title={c.caratula}><span>{c.caratula}</span></Tooltip>
+                        </TableCell>
+                        <TableCell sx={{ maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <Tooltip title={c.objeto}><span>{c.objeto || "-"}</span></Tooltip>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Chip label={c.source} size="small" color={c.source === "pjn-login" ? "primary" : "default"} variant={c.source === "pjn-login" ? "filled" : "outlined"} />
+                        </TableCell>
+                        <TableCell align="right">{c.movimientosCount ?? "-"}</TableCell>
+                        <TableCell><Typography variant="caption">{c.fechaUltimoMovimiento ? formatDate(c.fechaUltimoMovimiento) : "-"}</Typography></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </Box>
+          )}
+
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setRawDialog({ open: false, data: null, loading: false, userName: "" })}>
-            Cerrar
-          </Button>
+          <Button onClick={closeDetailDialog}>Cerrar</Button>
         </DialogActions>
       </Dialog>
     </MainCard>
