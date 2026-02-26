@@ -383,31 +383,41 @@ const CredencialesPJN = () => {
   // Polling silencioso cada 5s cuando hay credenciales en progreso
   const hasInProgress = credentials.some(c => c.syncStatus === "in_progress");
 
+  const silentFetch = async () => {
+    try {
+      const params: PjnCredentialsFilters = {
+        page: page + 1,
+        limit: rowsPerPage,
+        sortBy,
+        sortOrder,
+      };
+      if (syncStatusFilter !== "todos") params.syncStatus = syncStatusFilter;
+      if (verifiedFilter !== "todos") params.verified = verifiedFilter;
+      if (enabledFilter !== "todos") params.enabled = enabledFilter;
+      if (searchText.trim()) params.search = searchText.trim();
+
+      const response = await pjnCredentialsService.getCredentials(params);
+      if (response.success) {
+        setCredentials(response.data);
+        setTotalCount(response.pagination.total);
+      }
+    } catch {}
+  };
+
+  // Poll rápido (5s) mientras hay syncs activas
   useEffect(() => {
     if (!hasInProgress) return;
 
-    const silentFetch = async () => {
-      try {
-        const params: PjnCredentialsFilters = {
-          page: page + 1,
-          limit: rowsPerPage,
-          sortBy,
-          sortOrder,
-        };
-        if (syncStatusFilter !== "todos") params.syncStatus = syncStatusFilter;
-        if (verifiedFilter !== "todos") params.verified = verifiedFilter;
-        if (enabledFilter !== "todos") params.enabled = enabledFilter;
-        if (searchText.trim()) params.search = searchText.trim();
-
-        const response = await pjnCredentialsService.getCredentials(params);
-        if (response.success) {
-          setCredentials(response.data);
-          setTotalCount(response.pagination.total);
-        }
-      } catch {}
-    };
-
     const interval = setInterval(silentFetch, 5000);
+    return () => clearInterval(interval);
+  }, [hasInProgress, page, rowsPerPage, sortBy, sortOrder,
+      syncStatusFilter, verifiedFilter, enabledFilter, searchText]);
+
+  // Poll lento (30s) siempre activo — detecta cuando una sync arranca mientras la página ya está abierta
+  useEffect(() => {
+    if (hasInProgress) return;
+
+    const interval = setInterval(silentFetch, 30000);
     return () => clearInterval(interval);
   }, [hasInProgress, page, rowsPerPage, sortBy, sortOrder,
       syncStatusFilter, verifiedFilter, enabledFilter, searchText]);
