@@ -396,10 +396,16 @@ const CredencialesPJN = () => {
       if (enabledFilter !== "todos") params.enabled = enabledFilter;
       if (searchText.trim()) params.search = searchText.trim();
 
-      const response = await pjnCredentialsService.getCredentials(params);
-      if (response.success) {
-        setCredentials(response.data);
-        setTotalCount(response.pagination.total);
+      const [credsResponse, statsResponse] = await Promise.all([
+        pjnCredentialsService.getCredentials(params),
+        pjnCredentialsService.getStats(),
+      ]);
+      if (credsResponse.success) {
+        setCredentials(credsResponse.data);
+        setTotalCount(credsResponse.pagination.total);
+      }
+      if (statsResponse.success) {
+        setStats(statsResponse.data);
       }
     } catch {}
   };
