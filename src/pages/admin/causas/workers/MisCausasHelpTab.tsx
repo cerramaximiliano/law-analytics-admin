@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Card, CardContent, Typography, Stack, Chip, Divider, Alert, useTheme, alpha } from "@mui/material";
-import { InfoCircle, Setting2, Timer1, Warning2 } from "iconsax-react";
+import { InfoCircle, Setting2, Timer1, Warning2, Folder2, CloseCircle, MinusCirlce } from "iconsax-react";
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
 	<Box sx={{ mt: 3 }}>
@@ -414,6 +414,510 @@ Fase 2 (regular):
 				</Section>
 			</CardContent>
 		</Card>
+
+		{/* Ciclo de vida: causas y carpetas */}
+		<Card variant="outlined" sx={{ bgcolor: "background.default" }}>
+			<CardContent>
+				<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+					<Folder2 size={20} color={theme.palette.info.main} />
+					<Typography variant="h6">Ciclo de vida: causas y carpetas</Typography>
+				</Stack>
+
+				<Section title="Conceptos clave">
+					<Box sx={{ overflowX: "auto", mt: 1 }}>
+						<table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+							<thead>
+								<tr style={{ backgroundColor: alpha(theme.palette.primary.main, 0.08) }}>
+									<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Término</th>
+									<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Colección MongoDB</th>
+									<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Descripción</th>
+								</tr>
+							</thead>
+							<tbody>
+								{[
+									["Causa", "causas-civil, causas-segsocial, etc.", "Documento del expediente judicial. Puede existir independientemente de cualquier usuario."],
+									["Carpeta", "folders", "Vínculo entre un usuario y una causa. Siempre pertenece a un único userId."],
+									["source en causa", "—", "'pjn-login' = creado por el sync. 'scraping' = encontrado por búsqueda. 'cache' = desde caché PJN."],
+									["source en carpeta", "—", "'pjn-login' = creada por el sync. Otros valores = creada manualmente por el usuario."],
+									["linkedCredentials", "campo en causa", "Array de credenciales que vincularon esa causa. Permite saber qué usuarios/syncs la crearon."],
+									["folderIds", "campo en causa", "Array de IDs de carpetas que apuntan a esa causa (de cualquier usuario)."],
+								].map(([term, coll, desc], i) => (
+									<tr key={i} style={{ backgroundColor: i % 2 === 0 ? "transparent" : alpha(theme.palette.primary.main, 0.03) }}>
+										<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", whiteSpace: "nowrap" }}>{term}</td>
+										<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", whiteSpace: "nowrap", fontSize: "0.72rem" }}>{coll}</td>
+										<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}` }}>{desc}</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</Box>
+				</Section>
+
+				<Section title="Flujo de creación (sync PJN)">
+					<Typography variant="body2" sx={{ mb: 1 }}>
+						El proceso tiene dos fases ejecutadas por workers distintos:
+					</Typography>
+					<BulletList
+						items={[
+							"1. credentials-processor extrae expedientes por página → escribe docs en pjn-sync-queue",
+							"2. sync-queue-processor lee la cola y ejecuta upsertCausa + ensureFolder por cada expediente",
+						]}
+					/>
+					<CodeBlock>{`upsertCausa:
+  Si la causa NO existe en DB → Crear con source='pjn-login', linkedCredentials=[credA]
+  Si la causa YA existe en DB → Mantiene source original, agrega credA a linkedCredentials
+
+ensureFolder:
+  Búsqueda 1: busca carpeta por causaId exacto
+    → Encontrada: retorna existente (isNew=false)
+  Búsqueda 2: busca carpeta por número de expediente
+    → Sin causaId: vincula causaId a esa carpeta (isNew=false)
+    → Con causaId distinto (mismo nro, otro fuero): crea nueva carpeta (isNew=true)
+    → No encontrada: crea nueva carpeta source='pjn-login' (isNew=true)`}</CodeBlock>
+				</Section>
+
+				<Alert severity="info" variant="outlined" sx={{ mt: 2, mb: 1 }}>
+					<Typography variant="body2">
+						<strong>Regla de propiedad:</strong> una causa con <code>source: 'pjn-login'</code> fue{" "}
+						<strong>creada</strong> por el sync. Una causa con otro <code>source</code> fue{" "}
+						<strong>vinculada</strong> por el sync (ya existía; el sync solo la encontró y la referencia). Esta
+						distinción es crítica en el proceso de limpieza.
+					</Typography>
+				</Alert>
+
+				<Section title="Tabla de decisiones de limpieza">
+					<Box sx={{ overflowX: "auto", mt: 1 }}>
+						<table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+							<thead>
+								<tr style={{ backgroundColor: alpha(theme.palette.primary.main, 0.08) }}>
+									<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>source de la causa</th>
+									<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Otros vínculos externos</th>
+									<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Acción</th>
+								</tr>
+							</thead>
+							<tbody>
+								{[
+									["pjn-login", "No", "Eliminar documento completo"],
+									["pjn-login", "Sí (otro usuario o credencial)", "Desvincular — quitar referencia a esta credencial"],
+									["scraping / cache / otro", "No", "Desvincular — el sync no es dueño de esta causa"],
+									["scraping / cache / otro", "Sí", "Desvincular"],
+								].map(([source, otros, accion], i) => (
+									<tr key={i} style={{ backgroundColor: i % 2 === 0 ? "transparent" : alpha(theme.palette.primary.main, 0.03) }}>
+										<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}`, fontFamily: "monospace" }}>{source}</td>
+										<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}` }}>{otros}</td>
+										<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}`, fontWeight: i === 0 ? 600 : 400 }}>{accion}</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</Box>
+				</Section>
+
+				<Section title="Bloque A vs. Bloque B en el análisis de impacto">
+					<Box sx={{ overflowX: "auto", mt: 1 }}>
+						<table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+							<thead>
+								<tr style={{ backgroundColor: alpha(theme.palette.primary.main, 0.08) }}>
+									<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}></th>
+									<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Bloque A</th>
+									<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Bloque B</th>
+								</tr>
+							</thead>
+							<tbody>
+								{[
+									["Punto de entrada", "Carpetas pjn-login del usuario", "linkedCredentials.credentialsId en causas"],
+									["Causas cubiertas", "Las que tienen carpeta activa", "Las que quedaron sin carpeta (syncs parciales, cleanups previos)"],
+									["Por qué existe", "Ruta principal de análisis", "Una causa puede quedar 'huérfana' si su carpeta fue eliminada sin limpiar linkedCredentials. Sin el Bloque B quedaría en DB para siempre."],
+								].map(([label, a, b], i) => (
+									<tr key={i} style={{ backgroundColor: i % 2 === 0 ? "transparent" : alpha(theme.palette.primary.main, 0.03) }}>
+										<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}`, fontWeight: 600 }}>{label}</td>
+										<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}` }}>{a}</td>
+										<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}` }}>{b}</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</Box>
+				</Section>
+
+				<Section title="Ejemplo">
+					<CodeBlock>{`Antes del cleanup (credencial: credX):
+  Causa A: source='pjn-login', linkedCredentials=[credX],        folderIds=[carpeta1]
+  Causa B: source='pjn-login', linkedCredentials=[credX, credY], folderIds=[carpeta2, carpeta3]
+  Causa C: source='scraping',  linkedCredentials=[credX],        folderIds=[carpeta4]
+  Causa D: source='pjn-login', linkedCredentials=[credX],        folderIds=[]  ← huérfana
+  Carpetas del usuario: carpeta1 (pjn-login), carpeta4 (pjn-login)
+  Carpetas de otro usuario: carpeta2, carpeta3
+
+Clasificación:
+  Causa A → toDelete          (pjn-login, sin otros vínculos)
+  Causa B → toUnlink          (pjn-login, pero credY también la usa)
+  Causa C → toUnlink          (source != pjn-login, el sync no la creó)
+  Causa D → orphanedToDelete  (pjn-login, huérfana, sin otros vínculos)
+
+Después:
+  Causa A → ELIMINADA
+  Causa B → linkedCredentials=[credY], folderIds=[carpeta2, carpeta3]
+  Causa C → linkedCredentials=[],      folderIds=[]
+  Causa D → ELIMINADA
+  Carpeta1, Carpeta4 → ELIMINADAS`}</CodeBlock>
+				</Section>
+			</CardContent>
+		</Card>
+
+		{/* Desvinculación de cuenta PJN */}
+		<Card variant="outlined" sx={{ bgcolor: "background.default" }}>
+			<CardContent>
+				<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+					<CloseCircle size={20} color={theme.palette.error.main} />
+					<Typography variant="h6">Desvinculación de cuenta PJN</Typography>
+				</Stack>
+
+				<Alert severity="warning" variant="outlined" sx={{ mb: 2 }}>
+					<Typography variant="body2">
+						La credencial <strong>no se elimina</strong> — se desactiva (<code>enabled: false</code>). Los workers
+						filtran por <code>enabled: true</code> al buscar credenciales, por lo que dejan de procesar esas causas
+						en el próximo ciclo <strong>sin necesidad de cambios en pjn-mis-causas</strong>.
+					</Typography>
+				</Alert>
+
+				<Section title="Modos disponibles">
+					<Stack spacing={1.5} sx={{ mt: 1 }}>
+						<Box sx={{ p: 1.5, border: `1px solid ${theme.palette.warning.light}`, borderRadius: 1, bgcolor: alpha(theme.palette.warning.main, 0.04) }}>
+							<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+								<Chip label="keep" size="small" color="warning" sx={{ fontFamily: "monospace" }} />
+								<Typography variant="subtitle2">Conservar sin sincronización</Typography>
+							</Stack>
+							<BulletList
+								items={[
+									"Carpetas pjn-login → source='manual', pjn=false, causaId=null, judFolder=null, causaAssociationStatus=null",
+									"Las causas vinculadas NO se tocan (linkedCredentials permanece intacto)",
+									"Se limpian: mis-causas-syncs, causas-update-runs, pjn-sync-queue",
+									"Los datos quedan accesibles para el usuario como carpetas manuales",
+								]}
+							/>
+						</Box>
+						<Box sx={{ p: 1.5, border: `1px solid ${theme.palette.error.light}`, borderRadius: 1, bgcolor: alpha(theme.palette.error.main, 0.04) }}>
+							<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+								<Chip label="delete" size="small" color="error" sx={{ fontFamily: "monospace" }} />
+								<Typography variant="subtitle2">Eliminar carpetas y causas</Typography>
+							</Stack>
+							<BulletList
+								items={[
+									"$pull linkedCredentials y folderIds de causas en todas las colecciones",
+									"Elimina causas source='pjn-login' sin otros vínculos (Bloque A + Bloque B)",
+									"Elimina carpetas source='pjn-login' del usuario",
+									"Se limpian: mis-causas-syncs, causas-update-runs, pjn-sync-queue",
+									"Ajusta userstats: counts.folders, counts.foldersTotal, storage.total, storage.folders",
+								]}
+							/>
+						</Box>
+					</Stack>
+				</Section>
+
+				<Section title="Flujo de ejecución (ambos modos)">
+					<CodeBlock>{`DELETE /api/pjn-credentials { mode: "keep" | "delete" }
+
+1. analyzePjnImpact()   → clasifica carpetas y causas en toDelete / toUnlink / orphanedToDelete
+2. executeKeepMode()    → updateMany folders (source→manual) + deleteMany historial
+   o executeDeleteMode() → $pull en causas + deleteMany causas/carpetas/historial + userstats
+3. PjnCredentials.updateOne → enabled: false, syncStatus: "idle", verified: false, isValid: false
+4. Frontend: setHasCredentials(false) + dispatch(getFoldersByUserId(userId, true))`}</CodeBlock>
+				</Section>
+
+				<Section title="Comportamiento post-desvinculación">
+					<BulletList
+						items={[
+							"GET /api/pjn-credentials → 404 (el handler verifica !credentials.enabled)",
+							"La UI muestra el formulario de vinculación (hasCredentials=false)",
+							"El usuario puede re-vincular: POST /api/pjn-credentials encuentra el documento desactivado y lo actualiza con enabled=true",
+							"Workers: dejan de encontrar la credencial porque filtran por enabled:true — sin cambios en pjn-mis-causas",
+							"Las causas en modo 'keep' conservan linkedCredentials.credentialsId apuntando al documento desactivado (referencia válida, sin huérfanos en DB)",
+						]}
+					/>
+				</Section>
+
+				<Alert severity="info" variant="outlined" sx={{ mt: 2 }}>
+					<Typography variant="body2">
+						Para hacer un reset completo desde el admin (equivalente al script <code>cleanup-pjn-data.js</code>),
+						usar la sección de Credenciales PJN → detalle de credencial → botón Reset Sync. Esa operación
+						resetea la credencial pero la mantiene activa (<code>enabled: true</code>), a diferencia de la
+						desvinculación que la desactiva.
+					</Typography>
+				</Alert>
+			</CardContent>
+		</Card>
+
+		{/* Exclusión manual de causas */}
+		<Card variant="outlined" sx={{ bgcolor: "background.default" }}>
+			<CardContent>
+				<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+					<MinusCirlce size={20} color={theme.palette.warning.main} />
+					<Typography variant="h6">Exclusión manual de causas (<code>excludedCausas</code>)</Typography>
+				</Stack>
+
+				<Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
+					<Typography variant="body2">
+						<strong>Problema:</strong> cuando un usuario elimina una carpeta PJN desde la UI, el worker la
+						recreaba en el próximo sync porque <code>ensureFolder()</code> no tenía forma de distinguir "carpeta
+						eliminada intencionalmente" de "carpeta que aún no existe". El campo <code>excludedCausas</code> en{" "}
+						<code>PjnCredentials</code> resuelve esto.
+					</Typography>
+				</Alert>
+
+				<Section title="Flujo al eliminar una carpeta PJN">
+					<CodeBlock>{`DELETE /api/folders/:id  (folder.source === "pjn-login")
+
+1. dissociateFolderFromCausa()
+   → $pull folderIds, userCausaIds, userUpdatesEnabled de la causa
+
+2. PjnCredentials.updateOne
+   → $addToSet excludedCausas: { causaId, causaType, excludedAt }
+
+3. CausaModel.updateOne
+   → $pull linkedCredentials where credentialsId === pjnCred._id
+     (private-causas-update deja de rastrear la causa para este usuario)
+
+4. Folder.findByIdAndDelete(id) + actualización de userstats`}</CodeBlock>
+				</Section>
+
+				<Section title="Cómo el worker respeta la exclusión">
+					<Typography variant="body2" sx={{ mb: 1 }}>
+						Al inicio de cada batch, <code>processCausasBatch</code> construye un <code>Set</code> con los IDs
+						excluidos. Si <code>existingCausa._id</code> está en el Set, la causa se salta sin crear carpeta
+						ni vincular <code>linkedCredentials</code>.
+					</Typography>
+					<CodeBlock>{`// processCausasBatch — inicio del batch
+const excludedSet = new Set(
+  credentialsInfo.excludedCausas.map(e => e.causaId.toString())
+);
+
+// Para cada causa de la lista PJN
+if (existingCausa && excludedSet.has(existingCausa._id.toString())) {
+  stats.processed++;
+  continue;  // sin carpeta, sin linkedCredentials
+}`}</CodeBlock>
+				</Section>
+
+				<Section title="Tabla de escenarios">
+					<Box sx={{ overflowX: "auto", mt: 1 }}>
+						<table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+							<thead>
+								<tr style={{ backgroundColor: alpha(theme.palette.warning.main, 0.08) }}>
+									<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Escenario</th>
+									<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Comportamiento</th>
+								</tr>
+							</thead>
+							<tbody>
+								{[
+									["Usuario elimina carpeta PJN → próximo sync", "Causa en excludedSet → continue, no se recrea la carpeta"],
+									["Otro usuario tiene la misma causa", "Cada credencial tiene su propia lista de exclusiones → no afecta a otros"],
+									["Usuario re-vincula la misma cuenta PJN", "excludedCausas persiste → las causas eliminadas siguen excluidas (comportamiento esperado)"],
+									["Usuario quiere volver a ver la causa", "Eliminar la entrada en excludedCausas directamente en MongoDB (no hay UI aún)"],
+									["Eliminación en bulk (hasta 50 carpetas)", "Carga credenciales PJN antes del loop, aplica exclusiones en batch al final"],
+								].map(([esc, comp], i) => (
+									<tr key={i} style={{ backgroundColor: i % 2 === 0 ? "transparent" : alpha(theme.palette.warning.main, 0.03) }}>
+										<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", fontSize: "0.72rem" }}>{esc}</td>
+										<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}` }}>{comp}</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</Box>
+				</Section>
+
+				<Section title="Diferencia con la desvinculación de cuenta">
+					<Box sx={{ overflowX: "auto", mt: 1 }}>
+						<table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+							<thead>
+								<tr style={{ backgroundColor: alpha(theme.palette.primary.main, 0.08) }}>
+									<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Mecanismo</th>
+									<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Trigger</th>
+									<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Scope</th>
+									<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Estado credencial</th>
+								</tr>
+							</thead>
+							<tbody>
+								{[
+									["Desvinculación de cuenta", "Usuario desvincula cuenta completa", "Todas las carpetas PJN", "enabled: false"],
+									["Exclusión manual", "Usuario elimina una carpeta PJN", "Una causa específica", "Credencial sigue activa"],
+								].map(([mec, trig, scope, estado], i) => (
+									<tr key={i} style={{ backgroundColor: i % 2 === 0 ? "transparent" : alpha(theme.palette.primary.main, 0.03) }}>
+										<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}`, fontWeight: 600 }}>{mec}</td>
+										<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}` }}>{trig}</td>
+										<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}` }}>{scope}</td>
+										<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", fontSize: "0.72rem" }}>{estado}</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</Box>
+				</Section>
+
+				<Alert severity="warning" variant="outlined" sx={{ mt: 2 }}>
+					<Typography variant="body2">
+						Para revertir una exclusión (que el sync vuelva a crear la carpeta), eliminar la entrada en MongoDB:
+						<code style={{ display: "block", marginTop: 4 }}>
+							{"db['pjn-credentials'].updateOne({ userId }, { $pull: { excludedCausas: { causaId: ObjectId('...') } } })"}
+						</code>
+					</Typography>
+				</Alert>
+			</CardContent>
+		</Card>
+
+
+	{/* Causas no encontradas en el portal */}
+	<Card variant="outlined" sx={{ bgcolor: "background.default" }}>
+		<CardContent>
+			<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+				<Warning2 size={20} color={theme.palette.warning.main} />
+				<Typography variant="h6">Causas no encontradas en el portal (<code>pjnNotFound</code>)</Typography>
+			</Stack>
+
+			<Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
+				<Typography variant="body2">
+					Cuando una causa desaparece del portal "Mis Causas" del PJN (archivada, desvinculada por el tribunal, etc.),
+					el usuario tiene un folder activo sin correspondencia en el portal. El campo <code>pjnNotFound</code> en{" "}
+					<code>Folder</code> permite detectarlo y mostrarlo en la UI con un indicador ámbar.
+				</Typography>
+			</Alert>
+
+			<Section title="Cuándo se activa la detección">
+				<Typography variant="body2" sx={{ mb: 1 }}>
+					La detección ocurre en el worker <code>update-sync</code> únicamente cuando{" "}
+					<strong>el total de causas en el portal disminuye</strong> (<code>currentTotal &lt; previousTotal</code>).
+					En ese caso, el loop de escaneo elimina su condición de early-stop y recorre{" "}
+					<strong>todas las páginas</strong>, acumulando las claves de todas las causas visibles.
+					El sync inicial (<code>processFromSyncQueue</code>) también llama automáticamente a{" "}
+					<code>syncPjnNotFoundStatus</code> al finalizar con la lista completa de la cola.
+				</Typography>
+				<CodeBlock>{`// update-sync-worker.js
+const countDropped = currentTotal < previousTotal;
+const allScrapedKeys = countDropped ? new Set() : null;
+
+// Loop sin early-stop cuando el total bajó
+while (currentPage <= maxPages && (countDropped || consecutiveKnownPages < 3)) {
+  for (const causa of pageSnapshot.causas) {
+    if (allScrapedKeys) {
+      allScrapedKeys.add(\`\${causa.fuero}/\${causa.numero}/\${causa.anio}/\${causa.incidente || ''}\`);
+    }
+  }
+}
+
+// Tras el escaneo completo
+if (allScrapedKeys) {
+  await causaSyncService.syncPjnNotFoundStatus(userId, allScrapedKeys);
+}`}</CodeBlock>
+			</Section>
+
+			<Section title="Función syncPjnNotFoundStatus">
+				<CodeBlock>{`// causa-sync-service.js — scrapedCausaKeys: Set<"fuero/numero/anio/incidente">
+1. Obtiene todos los folders PJN del usuario con causaId set
+2. Batch-lookup de causas por tipo → construye mapa causaId → clave
+3. Compara cada folder contra scrapedCausaKeys:
+   - causa NO en portal y pjnNotFound=false → $set { pjnNotFound: true }
+   - causa SÍ en portal y pjnNotFound=true  → $unset { pjnNotFound }
+4. Aplica todas las actualizaciones en un único bulkWrite`}</CodeBlock>
+				<Alert severity="warning" variant="outlined" sx={{ mt: 1 }}>
+					<Typography variant="body2">
+						<code>scrapedCausaKeys</code> debe ser la lista <strong>completa</strong> del portal.
+						Llamar con listas parciales marcaría incorrectamente como "no encontradas" las causas
+						de páginas no escaneadas.
+					</Typography>
+				</Alert>
+			</Section>
+
+			<Section title="Tabla de escenarios">
+				<Box sx={{ overflowX: "auto", mt: 1 }}>
+					<table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+						<thead>
+							<tr style={{ backgroundColor: alpha(theme.palette.warning.main, 0.08) }}>
+								<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Escenario</th>
+								<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Worker</th>
+								<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>pjnNotFound resultante</th>
+							</tr>
+						</thead>
+						<tbody>
+							{[
+								["Total baja, causa desapareció del portal", "update-sync: escaneo completo", "true (marcado)"],
+								["Total baja, causa reapareció (temporal)", "update-sync: escaneo completo", "false (limpiado)"],
+								["Total igual o sube", "update-sync: sin escaneo completo", "Sin cambio"],
+								["Re-vinculación (sync desde queue)", "sync-queue-processor: lista completa", "Marca/limpia correctamente"],
+								["Causa en excludedCausas (sin folder)", "N/A", "No aplica"],
+							].map(([esc, worker, result], i) => (
+								<tr key={i} style={{ backgroundColor: i % 2 === 0 ? "transparent" : alpha(theme.palette.warning.main, 0.03) }}>
+									<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}`, fontSize: "0.72rem" }}>{esc}</td>
+									<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", fontSize: "0.72rem" }}>{worker}</td>
+									<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}`, fontWeight: i < 2 ? 600 : 400 }}>{result}</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</Box>
+			</Section>
+
+			<Section title="Indicadores en la UI del usuario">
+				<Box sx={{ overflowX: "auto", mt: 1 }}>
+					<table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+						<thead>
+							<tr style={{ backgroundColor: alpha(theme.palette.primary.main, 0.08) }}>
+								<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Vista</th>
+								<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Indicador</th>
+							</tr>
+						</thead>
+						<tbody>
+							{[
+								["Tabla de carpetas (Carátula)", "Warning2 ámbar al final de la fila con tooltip explicativo"],
+								["Vista detalle (FolderView)", "Badge 'Vinculado con PJN' en ámbar + ícono Warning2 en esquina inferior"],
+							].map(([vista, ind], i) => (
+								<tr key={i} style={{ backgroundColor: i % 2 === 0 ? "transparent" : alpha(theme.palette.primary.main, 0.03) }}>
+									<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", whiteSpace: "nowrap", fontSize: "0.72rem" }}>{vista}</td>
+									<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}` }}>{ind}</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</Box>
+			</Section>
+
+			<Section title="Diferencia con excludedCausas">
+				<Box sx={{ overflowX: "auto", mt: 1 }}>
+					<table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+						<thead>
+							<tr style={{ backgroundColor: alpha(theme.palette.primary.main, 0.08) }}>
+								<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Mecanismo</th>
+								<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Trigger</th>
+								<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Quién actúa</th>
+								<th style={{ padding: "6px 12px", textAlign: "left", border: `1px solid ${theme.palette.divider}` }}>Reversión</th>
+							</tr>
+						</thead>
+						<tbody>
+							{[
+								["excludedCausas", "Usuario elimina carpeta PJN", "Worker omite la causa en el próximo sync", "Admin/MongoDB: $pull excludedCausas"],
+								["pjnNotFound", "Causa desaparece del portal", "Worker marca el folder (no lo borra)", "Automática en el próximo escaneo completo"],
+							].map(([mec, trig, quien, rev], i) => (
+								<tr key={i} style={{ backgroundColor: i % 2 === 0 ? "transparent" : alpha(theme.palette.primary.main, 0.03) }}>
+									<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", fontWeight: 600 }}>{mec}</td>
+									<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}` }}>{trig}</td>
+									<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}` }}>{quien}</td>
+									<td style={{ padding: "6px 12px", border: `1px solid ${theme.palette.divider}` }}>{rev}</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</Box>
+			</Section>
+
+			<Alert severity="info" variant="outlined" sx={{ mt: 2 }}>
+				<Typography variant="body2">
+					Para limpiar el flag manualmente sin esperar al próximo sync:
+					<code style={{ display: "block", marginTop: 4 }}>
+						{"db.folders.updateOne({ _id: ObjectId('...') }, { $unset: { pjnNotFound: 1 } })"}
+					</code>
+				</Typography>
+			</Alert>
+		</CardContent>
+	</Card>
 
 		{/* Configuración del Manager */}
 			<Card variant="outlined" sx={{ bgcolor: "background.default" }}>
