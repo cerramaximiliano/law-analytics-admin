@@ -50,6 +50,7 @@ import {
   AddCircle,
   Broom,
   Copy,
+  InfoCircle,
 } from "iconsax-react";
 import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -830,22 +831,134 @@ const CredencialesPJN = () => {
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Usuario</TableCell>
-                    <TableCell>CUIL</TableCell>
-                    <TableCell align="center">Estado</TableCell>
-                    <TableCell align="center">Verificado</TableCell>
-                    <TableCell align="center">Válido</TableCell>
-                    <TableCell align="center">Habilitado</TableCell>
-                    <TableCell align="right">Causas</TableCell>
-                    <TableCell align="right">Carpetas</TableCell>
-                    <TableCell align="right">Movimientos</TableCell>
-                    <TableCell>Último Mov.</TableCell>
-                    <TableCell align="right">Dur. Sync</TableCell>
-                    <TableCell align="right">Syncs</TableCell>
-                    <TableCell align="center">Errores</TableCell>
-                    <TableCell>Última Sync</TableCell>
-                    <TableCell>Creado</TableCell>
-                    <TableCell align="center">Acciones</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                        Usuario
+                        <Tooltip title="Nombre y email del usuario propietario de la credencial PJN." arrow placement="top">
+                          <Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}><InfoCircle size={13} /></Box>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                        CUIL
+                        <Tooltip title="CUIL del titular de la credencial PJN (enmascarado por seguridad)." arrow placement="top">
+                          <Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}><InfoCircle size={13} /></Box>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+                        Estado
+                        <Tooltip title="Estado del ciclo de sincronización: pending (en espera), in_progress (procesando), completed (exitoso), error (con fallas), never_synced (nunca ejecutado)." arrow placement="top">
+                          <Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}><InfoCircle size={13} /></Box>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+                        Verificado
+                        <Tooltip title="El login al portal PJN fue exitoso y se confirmó el número total de causas disponibles para este CUIL." arrow placement="top">
+                          <Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}><InfoCircle size={13} /></Box>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+                        Válido
+                        <Tooltip title="Todas las carpetas PJN fueron descargadas correctamente al menos una vez." arrow placement="top">
+                          <Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}><InfoCircle size={13} /></Box>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+                        Habilitado
+                        <Tooltip title="El worker incluirá esta credencial en el próximo ciclo de actualización. No indica si el usuario tiene carpetas PJN activas en la aplicación." arrow placement="top">
+                          <Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}><InfoCircle size={13} /></Box>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.5 }}>
+                        Causas
+                        <Tooltip title="Causas procesadas / Causas esperadas según el portal PJN en el último ciclo de sincronización." arrow placement="top">
+                          <Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}><InfoCircle size={13} /></Box>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.5 }}>
+                        Carpetas
+                        <Tooltip title="Carpetas nuevas creadas en el último ciclo / Total de carpetas con fuente PJN actualmente en la base de datos." arrow placement="top">
+                          <Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}><InfoCircle size={13} /></Box>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.5 }}>
+                        Movimientos
+                        <Tooltip title="Total de movimientos judiciales en carpetas con fuente PJN (suma de movementsCount)." arrow placement="top">
+                          <Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}><InfoCircle size={13} /></Box>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                        Último Mov.
+                        <Tooltip title="Fecha del movimiento judicial más reciente registrado en carpetas PJN del usuario." arrow placement="top">
+                          <Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}><InfoCircle size={13} /></Box>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.5 }}>
+                        Dur. Sync
+                        <Tooltip title="Duración en segundos del último ciclo de sincronización completado." arrow placement="top">
+                          <Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}><InfoCircle size={13} /></Box>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.5 }}>
+                        Syncs
+                        <Tooltip title="Cantidad de sincronizaciones exitosas completadas históricamente para esta credencial." arrow placement="top">
+                          <Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}><InfoCircle size={13} /></Box>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+                        Errores
+                        <Tooltip title="Errores consecutivos acumulados desde la última sincronización exitosa. Se resetea al completar un ciclo sin errores." arrow placement="top">
+                          <Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}><InfoCircle size={13} /></Box>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                        Última Sync
+                        <Tooltip title="Fecha y hora de la última sincronización completada (exitosa o con errores)." arrow placement="top">
+                          <Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}><InfoCircle size={13} /></Box>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                        Creado
+                        <Tooltip title="Fecha en que el usuario registró sus credenciales PJN en el sistema." arrow placement="top">
+                          <Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}><InfoCircle size={13} /></Box>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+                        Acciones
+                        <Tooltip title="Ver JSON completo · Activar/Desactivar · Resetear verificación (mantiene carpetas) · Resetear sync completo (elimina carpetas y causas) · Eliminar credencial." arrow placement="top">
+                          <Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}><InfoCircle size={13} /></Box>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
