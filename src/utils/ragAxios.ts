@@ -15,7 +15,7 @@ const ragAxios: AxiosInstance = axios.create({
 });
 
 // Helper function to get auth token
-const getAuthToken = () => {
+export const getAuthToken = () => {
 	const secureToken = secureStorage.getAuthToken();
 	if (secureToken) return secureToken;
 
@@ -53,6 +53,18 @@ const getAuthToken = () => {
 	return null;
 };
 
+// Refresh del access token usando el refresh_token cookie (httpOnly)
+export const refreshAuthToken = async (): Promise<string | null> => {
+	const authBaseURL = import.meta.env.VITE_AUTH_URL || "https://api.lawanalytics.app";
+	const response = await axios.post(`${authBaseURL}/api/auth/refresh-token`, {}, { withCredentials: true });
+	if (response.data?.token) {
+		authTokenService.setToken(response.data.token);
+		secureStorage.setAuthToken(response.data.token);
+		return response.data.token;
+	}
+	return getAuthToken() || null;
+};
+
 // Request interceptor to add auth token
 ragAxios.interceptors.request.use(
 	(config: InternalAxiosRequestConfig) => {
@@ -87,10 +99,7 @@ ragAxios.interceptors.response.use(
 			originalRequest._retry = true;
 
 			try {
-				const authBaseURL = import.meta.env.VITE_AUTH_URL || "https://api.lawanalytics.app";
-				await axios.post(`${authBaseURL}/api/auth/refresh-token`, {}, { withCredentials: true });
-
-				const newToken = getAuthToken();
+				const newToken = await refreshAuthToken();
 				if (newToken && originalRequest.headers) {
 					originalRequest.headers.Authorization = `Bearer ${newToken}`;
 				}
