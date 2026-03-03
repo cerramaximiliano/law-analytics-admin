@@ -155,6 +155,15 @@ export interface PipelinePineconeConfig {
 	upsertBatchSize: number;
 }
 
+export interface PipelineLlmConfig {
+	chatModel: string;
+	chatMaxTokens: number;
+	chatTemperature: number;
+	generationModel: string;
+	generationMaxTokens: number;
+	generationTemperature: number;
+}
+
 export interface PipelineConfig {
 	_id: string;
 	chunker: PipelineChunkerConfig;
@@ -162,6 +171,7 @@ export interface PipelineConfig {
 	batcher: PipelineBatcherConfig;
 	modelLimits: PipelineModelLimits;
 	pinecone: PipelinePineconeConfig;
+	llm: PipelineLlmConfig;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -425,6 +435,33 @@ export interface DocumentAnalytics {
 	avgConfig: AvgConfigSnapshot | null;
 }
 
+// ─── Chat types ──────────────────────────────────────────────────────────────
+
+export interface CausaSummaryData {
+	_id: string;
+	causaId: string;
+	causaType: string;
+	summary: {
+		estadoActual?: string;
+		partes?: {
+			actor?: string;
+			demandado?: string;
+			terceros?: string[];
+			letrados?: { nombre: string; parte: string; matricula?: string }[];
+		};
+		pretensiones?: string;
+		decisionesJudiciales?: { fecha: string; tipo: string; resumen: string }[];
+		pendientes?: string[];
+		objeto?: string;
+		instanciaActual?: string;
+		fuero?: string;
+		juzgado?: string;
+		timeline?: { fecha: string; evento: string; relevancia: string }[];
+	};
+	generatedAt: string;
+	version: number;
+}
+
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 const BASE = "/rag/admin";
@@ -492,6 +529,15 @@ class RagWorkersService {
 		return res.data.data;
 	}
 
+	static async createPricing(data: Omit<CostPricing, "_id" | "effectiveDate">): Promise<CostPricing> {
+		const res = await ragAxios.post(`${BASE}/pricing`, data);
+		return res.data.data;
+	}
+
+	static async deletePricing(modelName: string): Promise<void> {
+		await ragAxios.delete(`${BASE}/pricing/${modelName}`);
+	}
+
 	// ── Pipeline Config ─────────────────────────────────────────────────────
 
 	static async getPipelineConfig(): Promise<PipelineConfig> {
@@ -504,6 +550,7 @@ class RagWorkersService {
 			chunker?: Partial<PipelineChunkerConfig>;
 			embedding?: Partial<Pick<PipelineEmbeddingConfig, "maxInputChars" | "maxRetries">>;
 			batcher?: Partial<PipelineBatcherConfig>;
+			llm?: Partial<PipelineLlmConfig>;
 		},
 	): Promise<{ data: PipelineConfig; requiresRestart: boolean }> {
 		const res = await ragAxios.put(`${BASE}/pipeline`, data);
@@ -527,6 +574,23 @@ class RagWorkersService {
 		if (causaType) params.causaType = causaType;
 		const res = await ragAxios.get(`${BASE}/indexation/causas`, { params });
 		return res.data.data;
+	}
+
+	// ── Chat ───────────────────────────────────────────────────────────────
+
+	static async getChatConversations(causaId: string) {
+		const res = await ragAxios.get("/rag/chat/conversations", { params: { causaId } });
+		return res.data.data;
+	}
+
+	static async getChatSummary(causaId: string): Promise<CausaSummaryData | null> {
+		const res = await ragAxios.get(`${BASE}/chat/summary/${causaId}`);
+		return res.data.data;
+	}
+
+	static async getChatSuggestions(causaId: string): Promise<string[]> {
+		const res = await ragAxios.get(`${BASE}/chat/suggestions/${causaId}`);
+		return res.data.data || [];
 	}
 
 	// ── Analytics ──────────────────────────────────────────────────────────
