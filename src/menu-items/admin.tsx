@@ -1,5 +1,5 @@
 // assets
-import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle, DiscountShape, Notification, DocumentText, Messages2, Wallet2, Chart, MessageQuestion, Layer, TaskSquare } from "iconsax-react";
+import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle, DiscountShape, Notification, DocumentText, Messages2, Wallet2, Chart, MessageQuestion, Layer, TaskSquare, Cloud } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -60,6 +60,14 @@ const admin: NavItemType = {
 					title: "Workers IA",
 					type: "item",
 					url: "/admin/workers/rag",
+					breadcrumbs: true,
+				},
+				{
+					id: "infrastructure",
+					title: "Infraestructura",
+					type: "item",
+					url: "/admin/infrastructure",
+					icon: Cloud,
 					breadcrumbs: true,
 				},
 			],
