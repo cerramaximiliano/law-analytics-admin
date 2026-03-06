@@ -1143,6 +1143,37 @@ export class WorkersService {
 export default WorkersService;
 
 // ========================================
+// Interfaces y servicio para Cloud Failover
+// ========================================
+
+export interface FailoverStatus {
+	cloudActive: boolean;
+	activatedAt: string | null;
+	deactivatedAt: string | null;
+	reason: string | null;
+	updatedAt: string | null;
+	leaderLock: { lockedBy: string; acquiredAt: string; expiresAt: string; priority: number } | null;
+	heartbeat: { lastPoll: string | null; msSinceLastPoll: number | null; alive: boolean };
+	cloudTasks: Array<{ worker: string; taskArn: string; startedAt: string }>;
+	cloudTasksTotal: number;
+	cloudStatusUpdatedAt: string | null;
+}
+
+export interface FailoverHistoryEntry {
+	event: "activated" | "deactivated";
+	at: string;
+	reason: string;
+	durationMin?: number;
+}
+
+export const FailoverService = {
+	getStatus: (): Promise<{ data: { success: boolean; data: FailoverStatus } }> =>
+		pjnAxios.get("/api/failover/status"),
+	getHistory: (): Promise<{ data: { success: boolean; data: FailoverHistoryEntry[] } }> =>
+		pjnAxios.get("/api/failover/history"),
+};
+
+// ========================================
 // Interfaces for Scraping Worker Manager
 // ========================================
 
