@@ -1148,6 +1148,8 @@ export default WorkersService;
 
 export interface FailoverStatus {
 	cloudActive: boolean;
+	draining: boolean;
+	drainingStartedAt: string | null;
 	activatedAt: string | null;
 	deactivatedAt: string | null;
 	reason: string | null;
