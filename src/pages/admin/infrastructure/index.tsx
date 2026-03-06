@@ -100,14 +100,15 @@ const InfrastructurePage = () => {
 	}, [fetchData]);
 
 	const cloudActive = status?.cloudActive ?? false;
+	const draining = status?.draining ?? false;
 
 	return (
 		<Grid container spacing={3}>
 			{/* Banner de estado */}
 			<Grid item xs={12}>
 				<Alert
-					severity={cloudActive ? "error" : "success"}
-					icon={cloudActive ? <Warning2 /> : <Activity />}
+					severity={draining ? "warning" : cloudActive ? "error" : "success"}
+					icon={draining ? <Timer1 /> : cloudActive ? <Warning2 /> : <Activity />}
 					sx={{ fontSize: "1rem", fontWeight: 600, alignItems: "center" }}
 					action={
 						<Tooltip title="Actualizar">
@@ -117,7 +118,13 @@ const InfrastructurePage = () => {
 						</Tooltip>
 					}
 				>
-					{cloudActive ? (
+					{draining ? (
+						<>
+							<strong>CLOUD DRENANDO — On-prem recuperado</strong>
+							{status?.drainingStartedAt && ` — Drain iniciado hace ${formatDuration(status.drainingStartedAt)}`}
+							{` — ${status?.cloudTasksTotal ?? 0} task(s) activa(s)`}
+						</>
+					) : cloudActive ? (
 						<>
 							<strong>CLOUD FAILOVER ACTIVO</strong>
 							{status?.activatedAt && ` — Activado hace ${formatDuration(status.activatedAt)}`}
