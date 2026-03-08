@@ -1,4 +1,4 @@
-import { useState, useEffect, SyntheticEvent } from "react";
+import { useState, useEffect, useMemo, SyntheticEvent } from "react";
 import {
 	Box,
 	Card,
@@ -111,6 +111,22 @@ const CoverageDetail = ({ tasa }: { tasa: TasaConfig }) => {
 	);
 };
 
+// ─── Fuente chip ──────────────────────────────────────────────────────────────
+
+const FUENTE_COLORS: Record<string, "primary" | "secondary" | "success" | "warning" | "info" | "default"> = {
+	"BCRA API": "info",
+	"BNA Web": "primary",
+	"BNA PDF": "secondary",
+	"CPACF": "success",
+	"Admin Manual": "warning",
+};
+
+const FuenteChip = ({ fuente }: { fuente: string | null | undefined }) => {
+	if (!fuente) return <Typography variant="caption" color="text.disabled">—</Typography>;
+	const color = FUENTE_COLORS[fuente] ?? "default";
+	return <Chip label={fuente} color={color} size="small" variant="outlined" />;
+};
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 const TasasInteres = () => {
@@ -131,6 +147,9 @@ const TasasInteres = () => {
 	const [loadingConsulta, setLoadingConsulta] = useState(false);
 	const [resultados, setResultados] = useState<TasaResultItem[]>([]);
 	const [hasSearched, setHasSearched] = useState(false);
+
+	// Fuente filter
+	const [fuenteFilter, setFuenteFilter] = useState<string>("all");
 
 	// Inline editing
 	const [editingRow, setEditingRow] = useState<string | null>(null);
@@ -187,6 +206,7 @@ const TasasInteres = () => {
 			setLoadingConsulta(true);
 			setHasSearched(true);
 			setEditingRow(null);
+			setFuenteFilter("all");
 			const data = await consultarTasas({ fechaDesde, fechaHasta, campo, completo });
 			setResultados(data);
 		} catch (error: unknown) {
@@ -218,7 +238,7 @@ const TasasInteres = () => {
 		try {
 			setSavingRow(item.fecha);
 			await actualizarValorTasa(toYYYYMMDD(item.fecha), campo, nuevoValor);
-			setResultados((prev) => prev.map((r) => (r.fecha === item.fecha ? { ...r, valor: nuevoValor } : r)));
+			setResultados((prev) => prev.map((r) => (r.fecha === item.fecha ? { ...r, valor: nuevoValor, fuente: "Admin Manual" } : r)));
 			enqueueSnackbar("Valor actualizado correctamente", { variant: "success" });
 			setEditingRow(null);
 			setEditValue("");
@@ -231,6 +251,21 @@ const TasasInteres = () => {
 	};
 
 	const selectedTasaLabel = listado.find((t) => t.value === campo)?.label || campo;
+
+	// Fuente stats: count by source
+	const fuenteStats = useMemo(() => {
+		const counts: Record<string, number> = {};
+		for (const r of resultados) {
+			const key = r.fuente ?? "Sin fuente";
+			counts[key] = (counts[key] ?? 0) + 1;
+		}
+		return counts;
+	}, [resultados]);
+
+	const filteredResultados = useMemo(
+		() => (fuenteFilter === "all" ? resultados : resultados.filter((r) => (r.fuente ?? "Sin fuente") === fuenteFilter)),
+		[resultados, fuenteFilter],
+	);
 
 	// ── Render ───────────────────────────────────────────────────────────────
 
@@ -385,22 +420,50 @@ const TasasInteres = () => {
 					) : resultados.length > 0 ? (
 						<TableContainer component={Card}>
 							<Box sx={{ px: 2, py: 1.5, borderBottom: "1px solid", borderColor: "divider" }}>
-								<Typography variant="h6">
-									{selectedTasaLabel} — {resultados.length} registro{resultados.length !== 1 ? "s" : ""}
-								</Typography>
+								<Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1}>
+									<Typography variant="h6">
+										{selectedTasaLabel} — {resultados.length} registro{resultados.length !== 1 ? "s" : ""}
+									</Typography>
+									{/* Fuente stats + filter */}
+									<Stack direction="row" spacing={1} flexWrap="wrap">
+										<Tooltip title="Mostrar todos">
+											<Chip
+												label={`Todos (${resultados.length})`}
+												size="small"
+												variant={fuenteFilter === "all" ? "filled" : "outlined"}
+												color={fuenteFilter === "all" ? "primary" : "default"}
+												onClick={() => setFuenteFilter("all")}
+												sx={{ cursor: "pointer" }}
+											/>
+										</Tooltip>
+										{Object.entries(fuenteStats).map(([fuente, count]) => (
+											<Tooltip key={fuente} title={`Filtrar por: ${fuente}`}>
+												<Chip
+													label={`${fuente} (${count})`}
+													size="small"
+													variant={fuenteFilter === fuente ? "filled" : "outlined"}
+													color={fuenteFilter === fuente ? (FUENTE_COLORS[fuente] ?? "default") : "default"}
+													onClick={() => setFuenteFilter(fuente === fuenteFilter ? "all" : fuente)}
+													sx={{ cursor: "pointer" }}
+												/>
+											</Tooltip>
+										))}
+									</Stack>
+								</Stack>
 							</Box>
 							<Table>
 								<TableHead>
 									<TableRow>
 										<TableCell>Fecha</TableCell>
 										<TableCell>Valor</TableCell>
+										<TableCell>Fuente</TableCell>
 										<TableCell align="center" sx={{ width: 100 }}>
 											Acciones
 										</TableCell>
 									</TableRow>
 								</TableHead>
 								<TableBody>
-									{resultados.map((item) => {
+									{filteredResultados.map((item) => {
 										const isEditing = editingRow === item.fecha;
 										const isSaving = savingRow === item.fecha;
 										return (
@@ -426,6 +489,9 @@ const TasasInteres = () => {
 															{item.valor != null ? item.valor.toFixed(6) : "—"}
 														</Typography>
 													)}
+												</TableCell>
+												<TableCell>
+													<FuenteChip fuente={item.fuente} />
 												</TableCell>
 												<TableCell align="center">
 													{isEditing ? (
