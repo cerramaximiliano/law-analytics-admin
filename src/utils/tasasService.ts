@@ -1,4 +1,4 @@
-import adminAxios from "utils/adminAxios";
+import tasasAxios from "utils/tasasAxios";
 
 export interface TasaConfig {
 	value: string;
@@ -21,12 +21,12 @@ export interface ConsultaParams {
 }
 
 export const getTasasListado = async (): Promise<TasaConfig[]> => {
-	const response = await adminAxios.get<TasaConfig[]>("/api/tasas/listado");
+	const response = await tasasAxios.get<TasaConfig[]>("/api/tasas/listado");
 	return response.data;
 };
 
 export const consultarTasas = async (params: ConsultaParams): Promise<TasaResultItem[]> => {
-	const response = await adminAxios.get("/api/tasas/consulta", {
+	const response = await tasasAxios.get("/api/tasas/consulta", {
 		params: {
 			fechaDesde: params.fechaDesde,
 			fechaHasta: params.fechaHasta,
@@ -60,5 +60,5 @@ export const consultarTasas = async (params: ConsultaParams): Promise<TasaResult
 };
 
 export const actualizarValorTasa = async (fecha: string, campo: string, valor: number): Promise<void> => {
-	await adminAxios.put("/api/tasas/valor", { fecha, campo, valor });
+	await tasasAxios.put("/api/tasas/valor", { fecha, campo, valor });
 };
