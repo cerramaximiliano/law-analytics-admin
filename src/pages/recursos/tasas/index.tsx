@@ -144,14 +144,31 @@ const TasasInteres = () => {
 			setLoadingListado(true);
 			const data = await getTasasListado();
 			setListado(data);
+			// Pre-seleccionar la primera tasa y rellenar su rango de fechas
 			if (data.length > 0 && !campo) {
-				setCampo(data[0].value);
+				const primera = data[0];
+				setCampo(primera.value);
+				if (primera.fechaInicio) setFechaDesde(toYYYYMMDD(primera.fechaInicio));
+				if (primera.fechaUltima) setFechaHasta(toYYYYMMDD(primera.fechaUltima));
 			}
 		} catch (error: unknown) {
 			const err = error as { response?: { data?: { mensaje?: string } } };
 			enqueueSnackbar(err?.response?.data?.mensaje || "Error al cargar las tasas", { variant: "error" });
 		} finally {
 			setLoadingListado(false);
+		}
+	};
+
+	// Al cambiar el tipo de tasa, actualizar fechas con el rango conocido de esa tasa
+	const handleCampoChange = (value: string) => {
+		setCampo(value);
+		setResultados([]);
+		setHasSearched(false);
+		setEditingRow(null);
+		const tasa = listado.find((t) => t.value === value);
+		if (tasa) {
+			if (tasa.fechaInicio) setFechaDesde(toYYYYMMDD(tasa.fechaInicio));
+			if (tasa.fechaUltima) setFechaHasta(toYYYYMMDD(tasa.fechaUltima));
 		}
 	};
 
@@ -299,9 +316,13 @@ const TasasInteres = () => {
 						</Typography>
 						<Grid container spacing={2} alignItems="flex-end">
 							<Grid item xs={12} md={3}>
-								<FormControl fullWidth>
+								<FormControl fullWidth disabled={loadingListado}>
 									<InputLabel>Tipo de Tasa</InputLabel>
-									<Select value={campo} onChange={(e) => setCampo(e.target.value)} label="Tipo de Tasa">
+									<Select
+										value={campo}
+										onChange={(e) => handleCampoChange(e.target.value)}
+										label="Tipo de Tasa"
+									>
 										{listado.map((t) => (
 											<MenuItem key={t.value} value={t.value}>
 												{t.label}
@@ -318,6 +339,7 @@ const TasasInteres = () => {
 									value={fechaDesde}
 									onChange={(e) => setFechaDesde(e.target.value)}
 									InputLabelProps={{ shrink: true }}
+									helperText={listado.find((t) => t.value === campo)?.fechaInicio ? `Inicio: ${formatDate(listado.find((t) => t.value === campo)!.fechaInicio)}` : ""}
 								/>
 							</Grid>
 							<Grid item xs={12} md={3}>
@@ -328,6 +350,7 @@ const TasasInteres = () => {
 									value={fechaHasta}
 									onChange={(e) => setFechaHasta(e.target.value)}
 									InputLabelProps={{ shrink: true }}
+									helperText={listado.find((t) => t.value === campo)?.fechaUltima ? `Último dato: ${formatDate(listado.find((t) => t.value === campo)!.fechaUltima)}` : ""}
 								/>
 							</Grid>
 							<Grid item xs={12} md={2}>
