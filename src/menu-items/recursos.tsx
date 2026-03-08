@@ -1,5 +1,5 @@
 // assets
-import { Book, HierarchySquare3 } from "iconsax-react";
+import { Book, HierarchySquare3, Chart } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -26,6 +26,14 @@ const recursos: NavItemType = {
 					breadcrumbs: true,
 				},
 			],
+		},
+		{
+			id: "tasas-interes",
+			title: "Tasas de Interés",
+			type: "item",
+			icon: Chart,
+			url: "/recursos/tasas",
+			breadcrumbs: true,
 		},
 	],
 };
