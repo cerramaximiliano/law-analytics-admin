@@ -479,7 +479,7 @@ const ScrapingWorker = () => {
 					variant: "success",
 					anchorOrigin: { vertical: "bottom", horizontal: "right" },
 				});
-				await fetchConfigs();
+				await fetchConfigs(configPage, configRowsPerPage, fueroFilter, yearFilter, progresoFilter, estadoFilter, sortBy, sortOrder, workerIdFilter);
 				handleCancelEdit();
 			}
 		} catch (error: any) {
@@ -501,7 +501,7 @@ const ScrapingWorker = () => {
 					variant: "success",
 					anchorOrigin: { vertical: "bottom", horizontal: "right" },
 				});
-				await fetchConfigs();
+				await fetchConfigs(configPage, configRowsPerPage, fueroFilter, yearFilter, progresoFilter, estadoFilter, sortBy, sortOrder, workerIdFilter);
 			}
 		} catch (error: any) {
 			enqueueSnackbar(error.message || "Error al cambiar el estado", {
