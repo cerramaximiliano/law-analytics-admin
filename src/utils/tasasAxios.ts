@@ -55,12 +55,14 @@ tasasAxios.interceptors.request.use(
 	(config: InternalAxiosRequestConfig) => {
 		const token = getAuthToken();
 		if (token) {
-			Cookies.set("token", token, { secure: true, sameSite: "none" });
-			Cookies.set("authToken", token, { secure: true, sameSite: "none" });
-			Cookies.set("auth_token", token, { secure: true, sameSite: "none" });
-			if (config.headers) {
-				config.headers.Authorization = `Bearer ${token}`;
-			}
+			// En producción setear la cookie con domain .lawanalytics.app para que sea
+			// accesible desde admin.lawanalytics.app (el servidor lee req.cookies.access_token)
+			const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+			const cookieOptions = isLocalhost
+				? { secure: false, sameSite: "lax" as const }
+				: { domain: ".lawanalytics.app", secure: true, sameSite: "none" as const };
+
+			Cookies.set("access_token", token, cookieOptions);
 		}
 		return config;
 	},
