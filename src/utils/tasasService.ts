@@ -11,6 +11,7 @@ export interface TasaConfig {
 export interface TasaResultItem {
 	fecha: string;
 	valor: number | null;
+	fuente?: string | null;
 }
 
 export interface ConsultaParams {
@@ -45,16 +46,25 @@ export const consultarTasas = async (params: ConsultaParams): Promise<TasaResult
 		return datos.map((item: Record<string, unknown>) => ({
 			fecha: item.fecha as string,
 			valor: item[params.campo] != null ? (item[params.campo] as number) : null,
+			fuente: ((item.fuentes as Record<string, string> | undefined)?.[params.campo]) ?? null,
 		}));
 	}
 
 	// completo=false → { inicio, fin }
 	const result: TasaResultItem[] = [];
 	if (datos.inicio) {
-		result.push({ fecha: datos.inicio.fecha, valor: datos.inicio[params.campo] ?? null });
+		result.push({
+			fecha: datos.inicio.fecha,
+			valor: datos.inicio[params.campo] ?? null,
+			fuente: datos.inicio.fuentes?.[params.campo] ?? null,
+		});
 	}
 	if (datos.fin && datos.fin.fecha !== datos.inicio?.fecha) {
-		result.push({ fecha: datos.fin.fecha, valor: datos.fin[params.campo] ?? null });
+		result.push({
+			fecha: datos.fin.fecha,
+			valor: datos.fin[params.campo] ?? null,
+			fuente: datos.fin.fuentes?.[params.campo] ?? null,
+		});
 	}
 	return result;
 };
