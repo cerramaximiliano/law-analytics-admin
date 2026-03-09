@@ -639,6 +639,13 @@ const DatosPrevisionales = () => {
 		fetchYears();
 	}, [fetchStats, fetchYears]);
 
+	const nextMonthDate = useMemo(() => {
+		if (!stats?.fechaUltima) return null;
+		const d = new Date(stats.fechaUltima);
+		const next = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1));
+		return next.toISOString().split("T")[0];
+	}, [stats?.fechaUltima]);
+
 	useEffect(() => {
 		if (tabValue === 0) fetchList(1);
 	}, [tabValue, filterAnio, filterMoneda, sortField, sortDir]);
@@ -784,6 +791,22 @@ const DatosPrevisionales = () => {
 							</FormControl>
 						</Stack>
 						<Stack direction="row" spacing={1}>
+							{nextMonthDate && (
+								<Tooltip title={`Agregar ${formatMonthYear(nextMonthDate)} (mes siguiente al último registro)`}>
+									<Button
+										variant="contained"
+										size="small"
+										color="success"
+										startIcon={<Add size={15} />}
+										onClick={() => {
+											setMissingDate(nextMonthDate);
+											setCreateOpen(true);
+										}}
+									>
+										{formatMonthYear(nextMonthDate)}
+									</Button>
+								</Tooltip>
+							)}
 							<Button
 								variant="outlined"
 								size="small"
