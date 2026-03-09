@@ -960,7 +960,9 @@ const DatosPrevisionales = () => {
 													</TableCell>
 													{["maximoImponible", "haberMinimoJubilacion", "haberMaximoJubilacion", "pbu", "salarioMVM", "topePC", "movilidadGeneral"].map((f) => (
 														<TableCell key={f} align="right" sx={{ fontFamily: "monospace", fontSize: "0.78rem" }}>
-															{formatNum(row[f as keyof DatoPrevisional] as number)}
+															{f === "movilidadGeneral"
+																? ((row[f as keyof DatoPrevisional] as number) ?? 0).toLocaleString("es-AR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })
+																: formatNum(row[f as keyof DatoPrevisional] as number)}
 														</TableCell>
 													))}
 													<TableCell align="center">
