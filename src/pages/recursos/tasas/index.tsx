@@ -726,14 +726,17 @@ const TasasInteres = () => {
 							</TableHead>
 							<TableBody>
 								{[
-									{ tipo: "tasaActivaBNA",      fuente: "BNA Web",  rateId: "1",  historico: "Solo día actual" },
-									{ tipo: "tasaActivaTnaBNA",   fuente: "BNA Web",  rateId: "25", historico: "Solo día actual" },
-									{ tipo: "tasaActivaCNAT2658", fuente: "BNA Web",  rateId: "22", historico: "Solo día actual" },
-									{ tipo: "tasaActivaCNAT2764", fuente: "BNA Web",  rateId: "23", historico: "Solo día actual" },
-									{ tipo: "tasaPasivaBNA",      fuente: "CPACF",    rateId: "2",  historico: "Desde 1991 via CPACF" },
-									{ tipo: "tasaPasivaBCRA",     fuente: "BCRA API", rateId: "—",  historico: "Cualquier rango (idVar=43)" },
-									{ tipo: "cer",                fuente: "BCRA API", rateId: "—",  historico: "Cualquier rango (idVar=30)" },
-									{ tipo: "icl",                fuente: "BCRA API", rateId: "—",  historico: "Cualquier rango (idVar=40)" },
+									{ tipo: "tasaActivaBNA",       fuente: "BNA Web",  rateId: "1",  historico: "Solo día actual" },
+									{ tipo: "tasaActivaTnaBNA",    fuente: "BNA Web",  rateId: "25", historico: "Solo día actual" },
+									{ tipo: "tasaActivaCNAT2658",  fuente: "BNA Web",  rateId: "22", historico: "Solo día actual" },
+									{ tipo: "tasaActivaCNAT2764",  fuente: "BNA Web",  rateId: "23", historico: "Solo día actual" },
+									{ tipo: "tasaPasivaBNA",       fuente: "CPACF",    rateId: "2",  historico: "Desde 1991 via CPACF" },
+									{ tipo: "tasaPasivaBP",        fuente: "CPACF",    rateId: "4",  historico: "Desde 01/04/1991 via CPACF" },
+									{ tipo: "tasaActivaBPDolares", fuente: "CPACF",    rateId: "14", historico: "Desde 13/10/1992 via CPACF" },
+									{ tipo: "tasaPasivaBPDolares", fuente: "CPACF",    rateId: "15", historico: "Desde 02/11/1992 via CPACF" },
+									{ tipo: "tasaPasivaBCRA",      fuente: "BCRA API", rateId: "—",  historico: "Cualquier rango (idVar=43)" },
+									{ tipo: "cer",                 fuente: "BCRA API", rateId: "—",  historico: "Cualquier rango (idVar=30)" },
+									{ tipo: "icl",                 fuente: "BCRA API", rateId: "—",  historico: "Cualquier rango (idVar=40)" },
 								].map((r) => (
 									<TableRow key={r.tipo} hover>
 										<TableCell><code>{r.tipo}</code></TableCell>
@@ -813,6 +816,9 @@ const TasasInteres = () => {
 						<Chip label="POST /api/tasas/rellenar-gaps" color="info" size="small" variant="outlined" />
 						<Chip label="?tipoTasa= (opcional)" color="default" size="small" variant="outlined" />
 					</Stack>
+					<Alert severity="info" sx={{ mb: 2 }}>
+						<strong>Banco Provincia (BP):</strong> además del gap filler, corre un cron de <strong>rectificación diaria</strong> que re-fetchea los últimos 5 días para detectar correcciones retroactivas que CPACF publica con posterioridad.
+					</Alert>
 					<Box sx={{ p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
 						<Typography variant="caption" fontFamily="monospace" component="pre" sx={{ whiteSpace: "pre-wrap" }}>
 							{"fillGapsForTasa(tipoTasa):\n\n  1. \u00bfEs tasa BCRA? (tasaPasivaBCRA / cer / icl)\n       \u2192 findMissingDataServiceBcra()   [BCRA API \u2014 hist\u00f3rico completo]\n       \u2192 FIN\n\n  2. \u00bfEst\u00e1 en CPACF_TASA_MAP?\n       a. Si bnaCompatible=true:\n            \u2192 actualizarTasaEspecifica()   [BNA Web \u2014 dato del d\u00eda]\n       b. \u00bfQuedan gaps?\n            \u2192 findMissingDataColegio()     [CPACF Puppeteer \u2014 hist\u00f3rico]\n       \u2192 FIN\n\n  3. Tasa no soportada \u2192 omite"}
@@ -833,9 +839,10 @@ const TasasInteres = () => {
 							</TableHead>
 							<TableBody>
 								{[
-									{ tasa: "tasaActivaBNA / tasaPasivaBNA",          modelo: "M1", diario: true, mensual: true,  anual: true },
-									{ tasa: "tasaActivaCNAT2764",                     modelo: "M2", diario: true, mensual: false, anual: true },
-									{ tasa: "tasaActivaCNAT2658 / tasaActivaTnaBNA",  modelo: "M3", diario: true, mensual: false, anual: true },
+									{ tasa: "tasaActivaBNA / tasaPasivaBNA / tasaPasivaBP", modelo: "M1", diario: true, mensual: true,  anual: true },
+									{ tasa: "tasaActivaCNAT2764",                           modelo: "M2", diario: true, mensual: false, anual: true },
+									{ tasa: "tasaActivaCNAT2658 / tasaActivaTnaBNA",        modelo: "M3", diario: true, mensual: false, anual: true },
+									{ tasa: "tasaActivaBPDolares / tasaPasivaBPDolares",    modelo: "M1", diario: true, mensual: true,  anual: true },
 								].map((r) => (
 									<TableRow key={r.tasa} hover>
 										<TableCell><code>{r.tasa}</code></TableCell>
@@ -872,10 +879,16 @@ const TasasInteres = () => {
 							</TableHead>
 							<TableBody>
 								{[
-									{ id: "bna-tasa-activa",               hora: "06:00 AM", desc: "Scraping diario BNA — tasas activas BNA/CNAT" },
-									{ id: "bcra-tasa-pasiva-faltantes",     hora: "variable", desc: "Gap filler BCRA — tasaPasivaBCRA via API" },
-									{ id: "cpacf-gap-filler",               hora: "03:00 AM", desc: "Gap filler global — nativo primero, CPACF fallback" },
-									{ id: "verificacion-tasas-actualizadas",hora: "09:00 AM", desc: "Verificación y alerta email si tasas desactualizadas" },
+									{ id: "bna-tasa-activa",                    hora: "06:00 AM",       desc: "Scraping diario BNA — tasas activas BNA/CNAT" },
+									{ id: "bcra-tasa-pasiva-faltantes",         hora: "variable",       desc: "Gap filler BCRA — tasaPasivaBCRA via API" },
+									{ id: "cpacf-gap-filler",                   hora: "03:00 AM",       desc: "Gap filler global — nativo primero, CPACF fallback" },
+									{ id: "busqueda-fechas-tasaPasivaBP",       hora: "07:57 / 18:57 / 21:57", desc: "Gap filler CPACF — Tasa Pasiva Banco Provincia" },
+									{ id: "rectificacion-tasaPasivaBP",         hora: "08:00 AM",       desc: "Rectificación últimos 5 días — Tasa Pasiva Banco Provincia" },
+									{ id: "busqueda-fechas-tasaActivaBPDolares",hora: "07:59 / 18:59 / 21:59", desc: "Gap filler CPACF — Tasa Activa Banco Provincia en Dólares" },
+									{ id: "rectificacion-tasaActivaBPDolares",  hora: "08:05 AM",       desc: "Rectificación últimos 5 días — Tasa Activa BP en Dólares" },
+									{ id: "busqueda-fechas-tasaPasivaBPDolares",hora: "08:01 / 19:01 / 22:01", desc: "Gap filler CPACF — Tasa Pasiva Banco Provincia en Dólares" },
+									{ id: "rectificacion-tasaPasivaBPDolares",  hora: "08:10 AM",       desc: "Rectificación últimos 5 días — Tasa Pasiva BP en Dólares" },
+									{ id: "verificacion-tasas-actualizadas",    hora: "09:00 AM",       desc: "Verificación y alerta email si tasas desactualizadas" },
 								].map((r) => (
 									<TableRow key={r.id} hover>
 										<TableCell><code>{r.id}</code></TableCell>
