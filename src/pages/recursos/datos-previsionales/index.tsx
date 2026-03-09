@@ -53,6 +53,8 @@ import {
 	ArrowDown2,
 	ArrowUp2,
 	Warning2,
+	Trash,
+	Link1,
 } from "iconsax-react";
 import {
 	getListado,
@@ -320,6 +322,62 @@ const EditDialog = ({ open, doc, missingDate, onClose, onSave }: EditDialogProps
 							</Grid>
 						);
 					})}
+				</Grid>
+
+				{/* Norma y Links */}
+				<Divider sx={{ my: 2 }} />
+				<Grid container spacing={2}>
+					<Grid item xs={12}>
+						<TextField
+							fullWidth
+							size="small"
+							label="Norma"
+							placeholder="Ej: Ley 27.426, Resolución 01/2023"
+							value={form.norma ?? ""}
+							onChange={(e) => setForm((f) => ({ ...f, norma: e.target.value }))}
+						/>
+					</Grid>
+					<Grid item xs={12}>
+						<Typography variant="body2" color="text.secondary" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+							<Link1 size={15} /> Links
+						</Typography>
+						<Stack spacing={1}>
+							{(form.links ?? []).map((link, idx) => (
+								<Stack key={idx} direction="row" spacing={1} alignItems="center">
+									<TextField
+										fullWidth
+										size="small"
+										placeholder="https://..."
+										value={link}
+										onChange={(e) => {
+											const updated = [...(form.links ?? [])];
+											updated[idx] = e.target.value;
+											setForm((f) => ({ ...f, links: updated }));
+										}}
+									/>
+									<IconButton
+										size="small"
+										color="error"
+										onClick={() => {
+											const updated = (form.links ?? []).filter((_, i) => i !== idx);
+											setForm((f) => ({ ...f, links: updated }));
+										}}
+									>
+										<Trash size={15} />
+									</IconButton>
+								</Stack>
+							))}
+							<Button
+								size="small"
+								variant="outlined"
+								startIcon={<Add size={14} />}
+								onClick={() => setForm((f) => ({ ...f, links: [...(f.links ?? []), ""] }))}
+								sx={{ alignSelf: "flex-start" }}
+							>
+								Agregar link
+							</Button>
+						</Stack>
+					</Grid>
 				</Grid>
 			</DialogContent>
 			<DialogActions>
@@ -975,6 +1033,43 @@ const DatosPrevisionales = () => {
 																			/>
 																		</Stack>
 																	</Grid>
+																	{row.norma && (
+																		<Grid item xs={12} sm={8} md={6}>
+																			<Stack>
+																				<Typography variant="caption" color="text.secondary">
+																					Norma
+																				</Typography>
+																				<Typography variant="body2" fontWeight={600}>
+																					{row.norma}
+																				</Typography>
+																			</Stack>
+																		</Grid>
+																	)}
+																	{row.links && row.links.length > 0 && (
+																		<Grid item xs={12}>
+																			<Stack>
+																				<Typography variant="caption" color="text.secondary" sx={{ mb: 0.5 }}>
+																					Links
+																				</Typography>
+																				<Stack direction="row" spacing={1} flexWrap="wrap">
+																					{row.links.map((link, i) => (
+																						<Chip
+																							key={i}
+																							label={link}
+																							size="small"
+																							icon={<Link1 size={12} />}
+																							component="a"
+																							href={link}
+																							target="_blank"
+																							rel="noopener noreferrer"
+																							clickable
+																							sx={{ maxWidth: 300, fontSize: "0.7rem" }}
+																						/>
+																					))}
+																				</Stack>
+																			</Stack>
+																		</Grid>
+																	)}
 																</Grid>
 															</Box>
 														</Collapse>
