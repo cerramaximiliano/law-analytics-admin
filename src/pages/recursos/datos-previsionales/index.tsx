@@ -258,47 +258,45 @@ const EditDialog = ({ open, doc, missingDate, onClose, onSave }: EditDialogProps
 						</FormControl>
 					</Grid>
 
-					{/* Recálculo automático — solo para nuevos registros */}
-					{isNew && (
-						<Grid item xs={12}>
-							<Divider sx={{ mb: 1 }} />
-							<Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap">
-								<FormControlLabel
-									control={
-										<Switch
-											checked={autoCalc}
-											onChange={(e) => handleAutoCalcToggle(e.target.checked)}
-											disabled={loadingPrev || !form.fecha}
-											size="small"
-										/>
-									}
-									label={
-										<Typography variant="body2">
-											Recalcular desde mes anterior{form.fecha ? ` (${prevMesLabel})` : ""}
-										</Typography>
-									}
-								/>
-								{loadingPrev && <CircularProgress size={16} />}
-								{autoCalc && !prevDoc && !loadingPrev && (
-									<Typography variant="caption" color="error">
-										No se encontró registro para {prevMesLabel}
+					{/* Recálculo automático */}
+					<Grid item xs={12}>
+						<Divider sx={{ mb: 1 }} />
+						<Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap">
+							<FormControlLabel
+								control={
+									<Switch
+										checked={autoCalc}
+										onChange={(e) => handleAutoCalcToggle(e.target.checked)}
+										disabled={loadingPrev || !form.fecha}
+										size="small"
+									/>
+								}
+								label={
+									<Typography variant="body2">
+										Recalcular desde mes anterior{form.fecha ? ` (${prevMesLabel})` : ""}
 									</Typography>
-								)}
-								{autoCalc && prevDoc && (
-									<Chip label={`Base: ${prevMesLabel}`} size="small" color="info" variant="outlined" />
-								)}
-							</Stack>
-							{autoCalc && prevDoc && (
-								<Alert severity="info" sx={{ mt: 1, py: 0.5, fontSize: "0.78rem" }}>
-									Los campos marcados <strong>✦</strong> se calculan como{" "}
-									<strong>valor anterior × Movilidad General</strong>. Podés editarlos manualmente.
-								</Alert>
+								}
+							/>
+							{loadingPrev && <CircularProgress size={16} />}
+							{autoCalc && !prevDoc && !loadingPrev && (
+								<Typography variant="caption" color="error">
+									No se encontró registro para {prevMesLabel}
+								</Typography>
 							)}
-						</Grid>
-					)}
+							{autoCalc && prevDoc && (
+								<Chip label={`Base: ${prevMesLabel}`} size="small" color="info" variant="outlined" />
+							)}
+						</Stack>
+						{autoCalc && prevDoc && (
+							<Alert severity="info" sx={{ mt: 1, py: 0.5, fontSize: "0.78rem" }}>
+								Los campos marcados <strong>✦</strong> se calculan como{" "}
+								<strong>valor anterior × Movilidad General</strong>. Podés editarlos manualmente.
+							</Alert>
+						)}
+					</Grid>
 
 					{CAMPOS_NUMERICOS.map(({ key, label }) => {
-						const isCalculable = isNew && autoCalc && prevDoc && CAMPOS_CALCULABLES.includes(key as keyof DatoPrevisional);
+						const isCalculable = autoCalc && prevDoc && CAMPOS_CALCULABLES.includes(key as keyof DatoPrevisional);
 						const isMovilidad = key === "movilidadGeneral";
 						return (
 							<Grid item xs={12} sm={6} md={4} key={key}>
