@@ -35,6 +35,9 @@ import {
 	alpha,
 	Paper,
 	Skeleton,
+	Switch,
+	FormControlLabel,
+	Divider,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -101,6 +104,18 @@ const CAMPOS_NUMERICOS: { key: keyof DatoPrevisional; label: string }[] = [
 	{ key: "adicionales", label: "Adicionales" },
 ];
 
+const CAMPOS_CALCULABLES: (keyof DatoPrevisional)[] = [
+	"maximoImponible",
+	"haberMaximoJubilacion",
+	"haberMaximoPension",
+	"haberMinimoJubilacion",
+	"haberMinimoPension",
+	"suplemento82SMVM",
+	"salarioMVM",
+	"pbu",
+	"topePC",
+];
+
 const formatDate = (dateStr: string | null): string => {
 	if (!dateStr) return "—";
 	const d = new Date(dateStr);
@@ -129,8 +144,12 @@ interface EditDialogProps {
 
 const EditDialog = ({ open, doc, missingDate, onClose, onSave }: EditDialogProps) => {
 	const isNew = !doc;
+	const theme = useTheme();
 	const [form, setForm] = useState<Partial<DatoPrevisional>>({});
 	const [saving, setSaving] = useState(false);
+	const [autoCalc, setAutoCalc] = useState(false);
+	const [prevDoc, setPrevDoc] = useState<DatoPrevisional | null>(null);
+	const [loadingPrev, setLoadingPrev] = useState(false);
 
 	useEffect(() => {
 		if (doc) {
@@ -140,7 +159,65 @@ const EditDialog = ({ open, doc, missingDate, onClose, onSave }: EditDialogProps
 		} else {
 			setForm({ estado: true, moneda: "pesos", movilidadGeneral: 1, movilidadDiferencial: 1 });
 		}
+		setAutoCalc(false);
+		setPrevDoc(null);
 	}, [doc, missingDate, open]);
+
+	const prevMesLabel = useMemo(() => {
+		if (!form.fecha) return "";
+		const d = new Date(form.fecha);
+		const prev = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1));
+		return `${MESES[prev.getUTCMonth()]} ${prev.getUTCFullYear()}`;
+	}, [form.fecha]);
+
+	const fetchPrevDoc = async (fecha: string): Promise<DatoPrevisional | null> => {
+		const d = new Date(fecha);
+		const prev = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1));
+		const prevAnio = prev.getUTCFullYear();
+		const prevMes = prev.getUTCMonth();
+		setLoadingPrev(true);
+		try {
+			const { data } = await getListado({ anio: prevAnio, limit: 12, sortField: "fecha", sortDir: "asc" });
+			const match = data.find((r) => {
+				const fd = new Date(r.fecha);
+				return fd.getUTCFullYear() === prevAnio && fd.getUTCMonth() === prevMes;
+			}) ?? null;
+			setPrevDoc(match);
+			return match;
+		} finally {
+			setLoadingPrev(false);
+		}
+	};
+
+	const calcularDesde = (prev: DatoPrevisional, movilidad: number): Partial<DatoPrevisional> => {
+		const updates: Record<string, number> = {};
+		for (const campo of CAMPOS_CALCULABLES) {
+			const prevVal = prev[campo] as number | undefined;
+			if (prevVal != null && prevVal !== 0) {
+				updates[campo] = Math.round(prevVal * movilidad * 100) / 100;
+			}
+		}
+		return updates as Partial<DatoPrevisional>;
+	};
+
+	const handleAutoCalcToggle = async (checked: boolean) => {
+		setAutoCalc(checked);
+		if (checked && form.fecha) {
+			const prev = await fetchPrevDoc(form.fecha);
+			if (prev && form.movilidadGeneral && form.movilidadGeneral !== 1) {
+				setForm((f) => ({ ...f, ...calcularDesde(prev, form.movilidadGeneral!) }));
+			}
+		}
+	};
+
+	const handleMovilidadChange = (rawValue: string) => {
+		const value = parseFloat(rawValue) || 0;
+		if (autoCalc && prevDoc && value !== 0) {
+			setForm((f) => ({ ...f, movilidadGeneral: value, ...calcularDesde(prevDoc, value) }));
+		} else {
+			setForm((f) => ({ ...f, movilidadGeneral: value }));
+		}
+	};
 
 	const handleSave = async () => {
 		setSaving(true);
@@ -182,19 +259,71 @@ const EditDialog = ({ open, doc, missingDate, onClose, onSave }: EditDialogProps
 							</Select>
 						</FormControl>
 					</Grid>
-					{CAMPOS_NUMERICOS.map(({ key, label }) => (
-						<Grid item xs={12} sm={6} md={4} key={key}>
-							<TextField
-								fullWidth
-								size="small"
-								label={label}
-								type="number"
-								inputProps={{ step: "any" }}
-								value={form[key] ?? ""}
-								onChange={(e) => setForm((f) => ({ ...f, [key]: parseFloat(e.target.value) || 0 }))}
-							/>
+
+					{/* Recálculo automático — solo para nuevos registros */}
+					{isNew && (
+						<Grid item xs={12}>
+							<Divider sx={{ mb: 1 }} />
+							<Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap">
+								<FormControlLabel
+									control={
+										<Switch
+											checked={autoCalc}
+											onChange={(e) => handleAutoCalcToggle(e.target.checked)}
+											disabled={loadingPrev || !form.fecha}
+											size="small"
+										/>
+									}
+									label={
+										<Typography variant="body2">
+											Recalcular desde mes anterior{form.fecha ? ` (${prevMesLabel})` : ""}
+										</Typography>
+									}
+								/>
+								{loadingPrev && <CircularProgress size={16} />}
+								{autoCalc && !prevDoc && !loadingPrev && (
+									<Typography variant="caption" color="error">
+										No se encontró registro para {prevMesLabel}
+									</Typography>
+								)}
+								{autoCalc && prevDoc && (
+									<Chip label={`Base: ${prevMesLabel}`} size="small" color="info" variant="outlined" />
+								)}
+							</Stack>
+							{autoCalc && prevDoc && (
+								<Alert severity="info" sx={{ mt: 1, py: 0.5, fontSize: "0.78rem" }}>
+									Los campos marcados <strong>✦</strong> se calculan como{" "}
+									<strong>valor anterior × Movilidad General</strong>. Podés editarlos manualmente.
+								</Alert>
+							)}
 						</Grid>
-					))}
+					)}
+
+					{CAMPOS_NUMERICOS.map(({ key, label }) => {
+						const isCalculable = isNew && autoCalc && prevDoc && CAMPOS_CALCULABLES.includes(key as keyof DatoPrevisional);
+						const isMovilidad = key === "movilidadGeneral";
+						return (
+							<Grid item xs={12} sm={6} md={4} key={key}>
+								<TextField
+									fullWidth
+									size="small"
+									label={isCalculable ? `${label} ✦` : isMovilidad && autoCalc ? `${label} ★` : label}
+									type="number"
+									inputProps={{ step: "any" }}
+									value={form[key] ?? ""}
+									onChange={(e) => {
+										if (isMovilidad) {
+											handleMovilidadChange(e.target.value);
+										} else {
+											setForm((f) => ({ ...f, [key]: parseFloat(e.target.value) || 0 }));
+										}
+									}}
+									sx={isCalculable ? { "& .MuiOutlinedInput-root": { bgcolor: alpha(theme.palette.info.main, 0.05) } } : undefined}
+									helperText={isCalculable && prevDoc ? `Anterior: ${formatNum(prevDoc[key as keyof DatoPrevisional] as number)}` : undefined}
+								/>
+							</Grid>
+						);
+					})}
 				</Grid>
 			</DialogContent>
 			<DialogActions>
