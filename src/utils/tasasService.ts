@@ -6,6 +6,7 @@ export interface TasaConfig {
 	fechaInicio: string | null;
 	fechaUltima: string | null;
 	fechaUltimaCompleta: string | null;
+	fechasFaltantes: string[];
 }
 
 export interface TasaResultItem {
