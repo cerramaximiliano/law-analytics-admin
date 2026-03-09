@@ -17,6 +17,7 @@ import {
 	People,
 	Calculator,
 	Chart,
+	DocumentText,
 } from "iconsax-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -47,6 +48,7 @@ import pjnCredentialsService, { MisCausasCoverage } from "api/pjnCredentials";
 import LinearProgress from "@mui/material/LinearProgress";
 import { Warning2 } from "iconsax-react";
 import { getTasasStatus, TasasStatus } from "utils/tasasService";
+import { getStats as getDatosPrevisionales, Stats as DatosPrevsStats } from "utils/datosPrevsionalesService";
 
 // Theme-aware color helper - maps semantic roles to MUI theme palette tokens
 // Usage: const COLORS = getThemeColors(theme) inside any component with useTheme()
@@ -568,6 +570,8 @@ const AdminDashboard = () => {
 	const [loadingMisCausasCoverage, setLoadingMisCausasCoverage] = useState(false);
 	const [tasasStatus, setTasasStatus] = useState<TasasStatus | null>(null);
 	const [loadingTasasStatus, setLoadingTasasStatus] = useState(false);
+	const [datosPrevsStats, setDatosPrevsStats] = useState<DatosPrevsStats | null>(null);
+	const [loadingDatosPrevsStats, setLoadingDatosPrevsStats] = useState(false);
 
 	const fetchTasasStatus = useCallback(async () => {
 		try {
@@ -578,6 +582,18 @@ const AdminDashboard = () => {
 			console.error("Error fetching tasas status:", error);
 		} finally {
 			setLoadingTasasStatus(false);
+		}
+	}, []);
+
+	const fetchDatosPrevsStats = useCallback(async () => {
+		try {
+			setLoadingDatosPrevsStats(true);
+			const data = await getDatosPrevisionales();
+			setDatosPrevsStats(data);
+		} catch (error: any) {
+			console.error("Error fetching datos previsionales stats:", error);
+		} finally {
+			setLoadingDatosPrevsStats(false);
 		}
 	}, []);
 
@@ -740,7 +756,8 @@ const AdminDashboard = () => {
 		fetchStuckDocumentsStats();
 		fetchEjeStats();
 		fetchTasasStatus();
-	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance, fetchOpenaiBalance, fetchEligibilityStats, fetchMisCausasCoverage, fetchMevEligibilityStats, fetchEjeEligibilityStats, fetchStuckDocumentsStats, fetchEjeStats, fetchTasasStatus]);
+		fetchDatosPrevsStats();
+	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance, fetchOpenaiBalance, fetchEligibilityStats, fetchMisCausasCoverage, fetchMevEligibilityStats, fetchEjeEligibilityStats, fetchStuckDocumentsStats, fetchEjeStats, fetchTasasStatus, fetchDatosPrevsStats]);
 
 	useRequestQueueRefresh(fetchData);
 
@@ -756,6 +773,7 @@ const AdminDashboard = () => {
 		fetchStuckDocumentsStats();
 		fetchEjeStats();
 		fetchTasasStatus();
+		fetchDatosPrevsStats();
 	};
 
 	// Chart data - Consistent colors: Green=Active/Verified, Gray=Inactive/Unverified
@@ -1144,6 +1162,81 @@ const AdminDashboard = () => {
 													sx={{ fontSize: "0.65rem", cursor: "pointer" }}
 												/>
 											</Tooltip>
+										)}
+									</>
+								)}
+							</Paper>
+						</Grid>
+						{/* Datos Previsionales widget */}
+						<Grid item xs={6} sm={6} md={3}>
+							<Paper
+								elevation={0}
+								onClick={() => navigate("/recursos/datos-previsionales")}
+								sx={{
+									p: { xs: 1.5, sm: 2.5 },
+									borderRadius: 2,
+									bgcolor: theme.palette.background.paper,
+									border: `1px solid ${datosPrevsStats && datosPrevsStats.mesesFaltantes > 0 ? theme.palette.warning.main : theme.palette.divider}`,
+									height: "100%",
+									cursor: "pointer",
+									transition: "all 0.2s ease",
+									"&:hover": {
+										boxShadow: theme.shadows[2],
+										borderColor: datosPrevsStats && datosPrevsStats.mesesFaltantes > 0 ? theme.palette.warning.dark : COLORS.primary.light,
+									},
+								}}
+							>
+								{/* Header */}
+								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 1, sm: 1.5 } }}>
+									<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 }, minWidth: 0 }}>
+										<Box sx={{ color: COLORS.neutral.light, display: "flex", flexShrink: 0 }}>
+											<DocumentText size={20} />
+										</Box>
+										<Typography
+											variant="body2"
+											sx={{
+												color: COLORS.neutral.text,
+												fontWeight: 500,
+												fontSize: { xs: "0.75rem", sm: "0.875rem" },
+												overflow: "hidden",
+												textOverflow: "ellipsis",
+												whiteSpace: "nowrap",
+											}}
+										>
+											Datos Previsionales
+										</Typography>
+									</Box>
+									<ArrowRight2 size={14} style={{ color: COLORS.neutral.light }} />
+								</Box>
+								{/* Value */}
+								{loadingDatosPrevsStats ? (
+									<Skeleton variant="text" width={80} height={48} />
+								) : (
+									<>
+										<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5, mb: 0.5 }}>
+											<Typography
+												variant="h3"
+												sx={{
+													fontWeight: 700,
+													color: COLORS.success.main,
+													lineHeight: 1,
+													fontSize: { xs: "1.5rem", sm: "2rem" },
+												}}
+											>
+												{datosPrevsStats?.total ?? 0}
+											</Typography>
+											<Typography variant="body2" color="text.secondary">
+												registros
+											</Typography>
+										</Box>
+										{datosPrevsStats && datosPrevsStats.mesesFaltantes > 0 && (
+											<Chip
+												label={`${datosPrevsStats.mesesFaltantes} meses faltantes`}
+												size="small"
+												color="warning"
+												variant="outlined"
+												sx={{ fontSize: "0.65rem", cursor: "pointer" }}
+											/>
 										)}
 									</>
 								)}

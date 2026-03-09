@@ -71,6 +71,7 @@ const UserResources = Loadable(lazy(() => import("pages/admin/users/resources"))
 // Recursos pages
 const Jurisprudencia = Loadable(lazy(() => import("pages/recursos/Jurisprudencia")));
 const TasasInteres = Loadable(lazy(() => import("pages/recursos/tasas")));
+const DatosPrevisionales = Loadable(lazy(() => import("pages/recursos/datos-previsionales")));
 
 // Documentation pages
 const LegalDocuments = Loadable(lazy(() => import("pages/documentation/legal-documents")));
@@ -504,6 +505,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<TasasInteres />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "datos-previsionales",
+							element: (
+								<AdminRoleGuard>
+									<DatosPrevisionales />
 								</AdminRoleGuard>
 							),
 						},
