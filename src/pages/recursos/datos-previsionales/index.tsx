@@ -204,7 +204,7 @@ const EditDialog = ({ open, doc, missingDate, onClose, onSave }: EditDialogProps
 		setAutoCalc(checked);
 		if (checked && form.fecha) {
 			const prev = await fetchPrevDoc(form.fecha);
-			if (prev && form.movilidadGeneral && form.movilidadGeneral !== 1) {
+			if (prev && form.movilidadGeneral != null) {
 				setForm((f) => ({ ...f, ...calcularDesde(prev, form.movilidadGeneral!) }));
 			}
 		}
