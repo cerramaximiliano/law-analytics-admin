@@ -38,6 +38,11 @@ import {
 	Switch,
 	FormControlLabel,
 	Divider,
+	Popover,
+	List,
+	ListItem,
+	ListItemText,
+	Badge,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -633,6 +638,7 @@ const DatosPrevisionales = () => {
 	const [jsonOpen, setJsonOpen] = useState(false);
 	const [missingDate, setMissingDate] = useState<string | null>(null);
 	const [createOpen, setCreateOpen] = useState(false);
+	const [linksAnchor, setLinksAnchor] = useState<{ el: HTMLElement; links: string[] } | null>(null);
 
 	// ── Fetch ────────────────────────────────────────────────────────────────
 
@@ -1000,6 +1006,19 @@ const DatosPrevisionales = () => {
 																	<DocumentText size={15} />
 																</IconButton>
 															</Tooltip>
+															{row.links && row.links.length > 0 && (
+																<Tooltip title={`${row.links.length} link${row.links.length !== 1 ? "s" : ""}`}>
+																	<IconButton
+																		size="small"
+																		color="info"
+																		onClick={(e) => setLinksAnchor({ el: e.currentTarget, links: row.links! })}
+																	>
+																		<Badge badgeContent={row.links.length} color="info" sx={{ "& .MuiBadge-badge": { fontSize: "0.6rem", minWidth: 14, height: 14 } }}>
+																			<Link1 size={15} />
+																		</Badge>
+																	</IconButton>
+																</Tooltip>
+															)}
 														</Stack>
 													</TableCell>
 												</TableRow>
@@ -1208,6 +1227,40 @@ const DatosPrevisionales = () => {
 					</Grid>
 				</Grid>
 			</TabPanel>
+
+			{/* ── Links popover ─────────────────────────────────────────── */}
+			<Popover
+				open={!!linksAnchor}
+				anchorEl={linksAnchor?.el}
+				onClose={() => setLinksAnchor(null)}
+				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+				transformOrigin={{ vertical: "top", horizontal: "center" }}
+			>
+				<Box sx={{ p: 1, minWidth: 200, maxWidth: 360 }}>
+					<Typography variant="caption" color="text.secondary" sx={{ px: 1, display: "block", mb: 0.5 }}>
+						Links
+					</Typography>
+					<List dense disablePadding>
+						{linksAnchor?.links.map((link, i) => (
+							<ListItem
+								key={i}
+								component="a"
+								href={link}
+								target="_blank"
+								rel="noopener noreferrer"
+								onClick={() => setLinksAnchor(null)}
+								sx={{ borderRadius: 1, "&:hover": { bgcolor: "action.hover" }, color: "primary.main", cursor: "pointer" }}
+							>
+								<Link1 size={14} style={{ marginRight: 8, flexShrink: 0 }} />
+								<ListItemText
+									primary={link}
+									primaryTypographyProps={{ variant: "caption", sx: { wordBreak: "break-all" } }}
+								/>
+							</ListItem>
+						))}
+					</List>
+				</Box>
+			</Popover>
 
 			{/* ── Dialogs ───────────────────────────────────────────────── */}
 			<EditDialog
