@@ -72,3 +72,21 @@ export const consultarTasas = async (params: ConsultaParams): Promise<TasaResult
 export const actualizarValorTasa = async (fecha: string, campo: string, valor: number): Promise<void> => {
 	await tasasAxios.put("/api/tasas/valor", { fecha, campo, valor });
 };
+
+export interface TasasStatusItem {
+	tipoTasa: string;
+	fechaUltima: string | null;
+}
+
+export interface TasasStatus {
+	total: number;
+	actualizadas: number;
+	noActualizadas: number;
+	desactualizadas: TasasStatusItem[];
+	fechaHoy: string;
+}
+
+export const getTasasStatus = async (): Promise<TasasStatus> => {
+	const response = await tasasAxios.get<{ success: boolean; data: TasasStatus }>("/api/tasas/status");
+	return response.data.data;
+};

@@ -16,6 +16,7 @@ import {
 	Wallet2,
 	People,
 	Calculator,
+	Chart,
 } from "iconsax-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -45,6 +46,7 @@ import { CausasMEVService, EligibilityStatsMEV } from "api/causasMEV";
 import pjnCredentialsService, { MisCausasCoverage } from "api/pjnCredentials";
 import LinearProgress from "@mui/material/LinearProgress";
 import { Warning2 } from "iconsax-react";
+import { getTasasStatus, TasasStatus } from "utils/tasasService";
 
 // Theme-aware color helper - maps semantic roles to MUI theme palette tokens
 // Usage: const COLORS = getThemeColors(theme) inside any component with useTheme()
@@ -564,6 +566,20 @@ const AdminDashboard = () => {
 	const [loadingEjeStats, setLoadingEjeStats] = useState(false);
 	const [misCausasCoverage, setMisCausasCoverage] = useState<MisCausasCoverage | null>(null);
 	const [loadingMisCausasCoverage, setLoadingMisCausasCoverage] = useState(false);
+	const [tasasStatus, setTasasStatus] = useState<TasasStatus | null>(null);
+	const [loadingTasasStatus, setLoadingTasasStatus] = useState(false);
+
+	const fetchTasasStatus = useCallback(async () => {
+		try {
+			setLoadingTasasStatus(true);
+			const data = await getTasasStatus();
+			setTasasStatus(data);
+		} catch (error: any) {
+			console.error("Error fetching tasas status:", error);
+		} finally {
+			setLoadingTasasStatus(false);
+		}
+	}, []);
 
 	const fetchEjeStats = useCallback(async () => {
 		try {
@@ -723,7 +739,8 @@ const AdminDashboard = () => {
 		fetchEjeEligibilityStats();
 		fetchStuckDocumentsStats();
 		fetchEjeStats();
-	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance, fetchOpenaiBalance, fetchEligibilityStats, fetchMisCausasCoverage, fetchMevEligibilityStats, fetchEjeEligibilityStats, fetchStuckDocumentsStats, fetchEjeStats]);
+		fetchTasasStatus();
+	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance, fetchOpenaiBalance, fetchEligibilityStats, fetchMisCausasCoverage, fetchMevEligibilityStats, fetchEjeEligibilityStats, fetchStuckDocumentsStats, fetchEjeStats, fetchTasasStatus]);
 
 	useRequestQueueRefresh(fetchData);
 
@@ -738,6 +755,7 @@ const AdminDashboard = () => {
 		fetchEjeEligibilityStats();
 		fetchStuckDocumentsStats();
 		fetchEjeStats();
+		fetchTasasStatus();
 	};
 
 	// Chart data - Consistent colors: Green=Active/Verified, Gray=Inactive/Unverified
@@ -1034,6 +1052,102 @@ const AdminDashboard = () => {
 								infoKey="openaiBalance"
 								linkTo="/admin/expenses"
 							/>
+						</Grid>
+						{/* Tasas de Interés widget */}
+						<Grid item xs={6} sm={6} md={3}>
+							<Paper
+								elevation={0}
+								onClick={() => navigate("/recursos/tasas")}
+								sx={{
+									p: { xs: 1.5, sm: 2.5 },
+									borderRadius: 2,
+									bgcolor: theme.palette.background.paper,
+									border: `1px solid ${
+										tasasStatus && tasasStatus.noActualizadas > 0
+											? theme.palette.error.main
+											: theme.palette.divider
+									}`,
+									height: "100%",
+									cursor: "pointer",
+									transition: "all 0.2s ease",
+									"&:hover": {
+										boxShadow: theme.shadows[2],
+										borderColor: tasasStatus && tasasStatus.noActualizadas > 0
+											? theme.palette.error.dark
+											: COLORS.primary.light,
+									},
+								}}
+							>
+								{/* Header */}
+								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 1, sm: 1.5 } }}>
+									<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 }, minWidth: 0 }}>
+										<Box sx={{ color: tasasStatus && tasasStatus.noActualizadas > 0 ? COLORS.error.main : COLORS.neutral.light, display: "flex", flexShrink: 0 }}>
+											{tasasStatus && tasasStatus.noActualizadas > 0 ? <Warning2 size={20} /> : <Chart size={20} />}
+										</Box>
+										<Typography
+											variant="body2"
+											sx={{
+												color: COLORS.neutral.text,
+												fontWeight: 500,
+												fontSize: { xs: "0.75rem", sm: "0.875rem" },
+												overflow: "hidden",
+												textOverflow: "ellipsis",
+												whiteSpace: "nowrap",
+											}}
+										>
+											Tasas de Interés
+										</Typography>
+									</Box>
+									<ArrowRight2 size={14} style={{ color: COLORS.neutral.light }} />
+								</Box>
+								{/* Value */}
+								{loadingTasasStatus ? (
+									<Skeleton variant="text" width={80} height={48} />
+								) : (
+									<>
+										<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5, mb: 0.5 }}>
+											<Typography
+												variant="h3"
+												sx={{
+													fontWeight: 700,
+													color: tasasStatus && tasasStatus.noActualizadas > 0 ? COLORS.error.main : COLORS.success.main,
+													lineHeight: 1,
+													fontSize: { xs: "1.5rem", sm: "2rem" },
+												}}
+											>
+												{tasasStatus?.actualizadas ?? 0}
+											</Typography>
+											<Typography variant="body2" color="text.secondary">
+												/ {tasasStatus?.total ?? 0} al día
+											</Typography>
+										</Box>
+										{tasasStatus && tasasStatus.noActualizadas > 0 && (
+											<Tooltip
+												title={
+													<Box>
+														<Typography variant="caption" fontWeight={600}>Sin actualizar:</Typography>
+														{tasasStatus.desactualizadas.map((d) => (
+															<Typography key={d.tipoTasa} variant="caption" display="block">
+																• {d.tipoTasa}{d.fechaUltima ? ` (${d.fechaUltima})` : ""}
+															</Typography>
+														))}
+													</Box>
+												}
+												arrow
+												placement="top"
+											>
+												<Chip
+													label={`${tasasStatus.noActualizadas} sin actualizar`}
+													size="small"
+													color="error"
+													variant="outlined"
+													sx={{ fontSize: "0.65rem", cursor: "pointer" }}
+												/>
+											</Tooltip>
+										)}
+									</>
+								)}
+							</Paper>
 						</Grid>
 					</Grid>
 				</Box>
