@@ -117,7 +117,8 @@ const FUENTE_COLORS: Record<string, "primary" | "secondary" | "success" | "warni
 	"BCRA API": "info",
 	"BNA Web": "primary",
 	"BNA PDF": "secondary",
-	"CPACF": "success",
+	"Consejo": "success",
+	"Colegio": "success",
 	"Admin Manual": "warning",
 };
 
