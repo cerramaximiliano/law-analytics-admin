@@ -1,5 +1,5 @@
 // assets
-import { Book, HierarchySquare3, Chart } from "iconsax-react";
+import { Book, HierarchySquare3, Chart, DocumentText } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -33,6 +33,14 @@ const recursos: NavItemType = {
 			type: "item",
 			icon: Chart,
 			url: "/recursos/tasas",
+			breadcrumbs: true,
+		},
+		{
+			id: "datos-previsionales",
+			title: "Datos Previsionales",
+			type: "item",
+			icon: DocumentText,
+			url: "/recursos/datos-previsionales",
 			breadcrumbs: true,
 		},
 	],
