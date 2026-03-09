@@ -33,7 +33,7 @@ import {
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { Refresh, SearchNormal1, Edit, CloseCircle, TickCircle, Chart, ArrowDown2, ArrowUp2 } from "iconsax-react";
-import { getTasasListado, consultarTasas, actualizarValorTasa, TasaConfig, TasaResultItem } from "utils/tasasService";
+import { getTasasListado, consultarTasas, actualizarValorTasa, rellenarGaps, TasaConfig, TasaResultItem } from "utils/tasasService";
 
 // ─── Tab panel ────────────────────────────────────────────────────────────────
 
@@ -114,43 +114,31 @@ const CoverageDetail = ({ tasa }: { tasa: TasaConfig }) => {
 	);
 };
 
-// ─── Fechas faltantes: agrupar en rangos consecutivos ─────────────────────────
-
-interface Rango {
-	desde: string;
-	hasta: string;
-	dias: number;
-}
-
-function agruparEnRangos(fechas: string[]): Rango[] {
-	if (!fechas || fechas.length === 0) return [];
-	const sorted = [...fechas].map((f) => new Date(f).getTime()).sort((a, b) => a - b);
-	const DAY = 86400000;
-	const rangos: Rango[] = [];
-	let inicio = sorted[0];
-	let prev = sorted[0];
-
-	for (let i = 1; i < sorted.length; i++) {
-		const curr = sorted[i];
-		if (curr - prev > DAY) {
-			rangos.push({ desde: new Date(inicio).toISOString(), hasta: new Date(prev).toISOString(), dias: Math.round((prev - inicio) / DAY) + 1 });
-			inicio = curr;
-		}
-		prev = curr;
-	}
-	rangos.push({ desde: new Date(inicio).toISOString(), hasta: new Date(prev).toISOString(), dias: Math.round((prev - inicio) / DAY) + 1 });
-	return rangos;
-}
-
 // ─── Fila expandible con fechas faltantes ─────────────────────────────────────
 
-const FechasFaltantesRow = ({ tasa, colSpan }: { tasa: TasaConfig; colSpan: number }) => {
+const MAX_VISIBLE_DATES = 60;
+
+interface FechasFaltantesRowProps {
+	tasa: TasaConfig;
+	colSpan: number;
+	onRellenar: () => void;
+	loading: boolean;
+}
+
+const FechasFaltantesRow = ({ tasa, colSpan, onRellenar, loading }: FechasFaltantesRowProps) => {
 	const theme = useTheme();
 	const [open, setOpen] = useState(false);
-	const rangos = useMemo(() => agruparEnRangos(tasa.fechasFaltantes), [tasa.fechasFaltantes]);
-	const total = tasa.fechasFaltantes?.length ?? 0;
+
+	const sortedDates = useMemo(
+		() => [...(tasa.fechasFaltantes ?? [])].sort((a, b) => new Date(a).getTime() - new Date(b).getTime()),
+		[tasa.fechasFaltantes],
+	);
+	const total = sortedDates.length;
 
 	if (total === 0) return null;
+
+	const visible = sortedDates.slice(0, MAX_VISIBLE_DATES);
+	const hidden = total - visible.length;
 
 	return (
 		<>
@@ -160,13 +148,33 @@ const FechasFaltantesRow = ({ tasa, colSpan }: { tasa: TasaConfig; colSpan: numb
 				sx={{ cursor: "pointer", bgcolor: open ? alpha(theme.palette.warning.main, 0.04) : undefined }}
 			>
 				<TableCell colSpan={colSpan} sx={{ py: 0.5, borderBottom: open ? "none" : undefined }}>
-					<Stack direction="row" alignItems="center" spacing={1}>
-						<IconButton size="small" sx={{ color: theme.palette.warning.main }}>
-							{open ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
-						</IconButton>
-						<Typography variant="caption" color="warning.main" fontWeight={600}>
-							{total} fecha{total !== 1 ? "s" : ""} faltante{total !== 1 ? "s" : ""} en {rangos.length} rango{rangos.length !== 1 ? "s" : ""}
-						</Typography>
+					<Stack direction="row" alignItems="center" justifyContent="space-between">
+						<Stack direction="row" alignItems="center" spacing={1}>
+							<IconButton size="small" sx={{ color: theme.palette.warning.main }}>
+								{open ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
+							</IconButton>
+							<Typography variant="caption" color="warning.main" fontWeight={600}>
+								{total} fecha{total !== 1 ? "s" : ""} faltante{total !== 1 ? "s" : ""}
+							</Typography>
+						</Stack>
+						<Tooltip title={`Rellenar gaps de ${tasa.label} usando servicio nativo + CPACF`}>
+							<span>
+								<Button
+									size="small"
+									variant="outlined"
+									color="warning"
+									disabled={loading}
+									onClick={(e) => {
+										e.stopPropagation();
+										onRellenar();
+									}}
+									startIcon={loading ? <CircularProgress size={12} /> : undefined}
+									sx={{ fontSize: "0.7rem", py: 0.25, minWidth: 90 }}
+								>
+									{loading ? "Iniciando..." : "Rellenar"}
+								</Button>
+							</span>
+						</Tooltip>
 					</Stack>
 				</TableCell>
 			</TableRow>
@@ -175,20 +183,25 @@ const FechasFaltantesRow = ({ tasa, colSpan }: { tasa: TasaConfig; colSpan: numb
 					<Collapse in={open} unmountOnExit>
 						<Box sx={{ px: 4, py: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.04) }}>
 							<Stack direction="row" flexWrap="wrap" gap={0.75}>
-								{rangos.map((r, i) => (
+								{visible.map((f) => (
 									<Chip
-										key={i}
+										key={f}
 										size="small"
 										variant="outlined"
 										color="warning"
-										label={
-											r.dias === 1
-												? formatDate(r.desde)
-												: `${formatDate(r.desde)} → ${formatDate(r.hasta)} (${r.dias}d)`
-										}
+										label={formatDate(f)}
 										sx={{ fontSize: "0.7rem" }}
 									/>
 								))}
+								{hidden > 0 && (
+									<Chip
+										size="small"
+										variant="filled"
+										color="warning"
+										label={`+${hidden} más`}
+										sx={{ fontSize: "0.7rem" }}
+									/>
+								)}
 							</Stack>
 						</Box>
 					</Collapse>
@@ -243,6 +256,10 @@ const TasasInteres = () => {
 	const [editingRow, setEditingRow] = useState<string | null>(null);
 	const [editValue, setEditValue] = useState<string>("");
 	const [savingRow, setSavingRow] = useState<string | null>(null);
+
+	// Gap filling
+	const [loadingRellenar, setLoadingRellenar] = useState(false);
+	const [loadingRellenarTasa, setLoadingRellenarTasa] = useState<Record<string, boolean>>({});
 
 	// ── Load listado on mount ────────────────────────────────────────────────
 
@@ -338,6 +355,33 @@ const TasasInteres = () => {
 		}
 	};
 
+	const handleRellenarTodos = async () => {
+		try {
+			setLoadingRellenar(true);
+			await rellenarGaps();
+			enqueueSnackbar("Relleno de gaps iniciado en el servidor (todas las tasas). Los datos se actualizarán en segundo plano.", { variant: "info" });
+		} catch (error: unknown) {
+			const err = error as { response?: { data?: { message?: string } } };
+			enqueueSnackbar(err?.response?.data?.message || "Error al iniciar el relleno de gaps", { variant: "error" });
+		} finally {
+			setLoadingRellenar(false);
+		}
+	};
+
+	const handleRellenarTasa = async (tipoTasa: string) => {
+		try {
+			setLoadingRellenarTasa((prev) => ({ ...prev, [tipoTasa]: true }));
+			await rellenarGaps(tipoTasa);
+			const label = listado.find((t) => t.value === tipoTasa)?.label ?? tipoTasa;
+			enqueueSnackbar(`Relleno iniciado para ${label}. Los datos se actualizarán en segundo plano.`, { variant: "info" });
+		} catch (error: unknown) {
+			const err = error as { response?: { data?: { message?: string } } };
+			enqueueSnackbar(err?.response?.data?.message || "Error al iniciar el relleno", { variant: "error" });
+		} finally {
+			setLoadingRellenarTasa((prev) => ({ ...prev, [tipoTasa]: false }));
+		}
+	};
+
 	const selectedTasaLabel = listado.find((t) => t.value === campo)?.label || campo;
 
 	// Fuente stats: count by source
@@ -371,7 +415,21 @@ const TasasInteres = () => {
 			══════════════════════════════════════════════════════════════════ */}
 			<TabPanel value={tabValue} index={0}>
 				<Stack spacing={2}>
-					<Box display="flex" justifyContent="flex-end">
+					<Box display="flex" justifyContent="flex-end" gap={1} alignItems="center">
+						<Tooltip title="Rellena automáticamente las fechas faltantes de todas las tasas usando CPACF. El proceso corre en segundo plano.">
+							<span>
+								<Button
+									variant="outlined"
+									color="warning"
+									size="small"
+									disabled={loadingRellenar}
+									onClick={handleRellenarTodos}
+									startIcon={loadingRellenar ? <CircularProgress size={14} /> : undefined}
+								>
+									{loadingRellenar ? "Iniciando..." : "Rellenar Gaps"}
+								</Button>
+							</span>
+						</Tooltip>
 						<Tooltip title="Refrescar">
 							<IconButton onClick={fetchListado} disabled={loadingListado}>
 								<Refresh size={20} />
@@ -420,7 +478,13 @@ const TasasInteres = () => {
 													<CoverageDetail tasa={tasa} />
 												</TableCell>
 											</TableRow>
-											<FechasFaltantesRow key={`gaps-${tasa.value}`} tasa={tasa} colSpan={6} />
+											<FechasFaltantesRow
+											key={`gaps-${tasa.value}`}
+											tasa={tasa}
+											colSpan={6}
+											onRellenar={() => handleRellenarTasa(tasa.value)}
+											loading={!!loadingRellenarTasa[tasa.value]}
+										/>
 										</>
 									))}
 								</TableBody>
