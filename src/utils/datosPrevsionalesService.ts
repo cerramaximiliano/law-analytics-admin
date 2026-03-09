@@ -26,6 +26,8 @@ export interface DatoPrevisional {
 	movilidadDiferencial: number;
 	adicionales: number;
 	SupMovilidad: boolean;
+	norma?: string;
+	links?: string[];
 }
 
 export interface Pagination {
