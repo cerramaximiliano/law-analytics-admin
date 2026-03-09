@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, SyntheticEvent } from "react";
 import {
 	Box,
 	Card,
+	Collapse,
 	Table,
 	TableBody,
 	TableCell,
@@ -26,10 +27,12 @@ import {
 	Tabs,
 	Switch,
 	FormControlLabel,
+	useTheme,
+	alpha,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { Refresh, SearchNormal1, Edit, CloseCircle, TickCircle, Chart } from "iconsax-react";
+import { Refresh, SearchNormal1, Edit, CloseCircle, TickCircle, Chart, ArrowDown2, ArrowUp2 } from "iconsax-react";
 import { getTasasListado, consultarTasas, actualizarValorTasa, TasaConfig, TasaResultItem } from "utils/tasasService";
 
 // ─── Tab panel ────────────────────────────────────────────────────────────────
@@ -108,6 +111,90 @@ const CoverageDetail = ({ tasa }: { tasa: TasaConfig }) => {
 			Inicio: {formatDate(tasa.fechaInicio)} · Completo hasta: {formatDate(tasa.fechaUltimaCompleta)} · Fechas faltantes hasta{" "}
 			{formatDate(tasa.fechaUltima)}
 		</Typography>
+	);
+};
+
+// ─── Fechas faltantes: agrupar en rangos consecutivos ─────────────────────────
+
+interface Rango {
+	desde: string;
+	hasta: string;
+	dias: number;
+}
+
+function agruparEnRangos(fechas: string[]): Rango[] {
+	if (!fechas || fechas.length === 0) return [];
+	const sorted = [...fechas].map((f) => new Date(f).getTime()).sort((a, b) => a - b);
+	const DAY = 86400000;
+	const rangos: Rango[] = [];
+	let inicio = sorted[0];
+	let prev = sorted[0];
+
+	for (let i = 1; i < sorted.length; i++) {
+		const curr = sorted[i];
+		if (curr - prev > DAY) {
+			rangos.push({ desde: new Date(inicio).toISOString(), hasta: new Date(prev).toISOString(), dias: Math.round((prev - inicio) / DAY) + 1 });
+			inicio = curr;
+		}
+		prev = curr;
+	}
+	rangos.push({ desde: new Date(inicio).toISOString(), hasta: new Date(prev).toISOString(), dias: Math.round((prev - inicio) / DAY) + 1 });
+	return rangos;
+}
+
+// ─── Fila expandible con fechas faltantes ─────────────────────────────────────
+
+const FechasFaltantesRow = ({ tasa, colSpan }: { tasa: TasaConfig; colSpan: number }) => {
+	const theme = useTheme();
+	const [open, setOpen] = useState(false);
+	const rangos = useMemo(() => agruparEnRangos(tasa.fechasFaltantes), [tasa.fechasFaltantes]);
+	const total = tasa.fechasFaltantes?.length ?? 0;
+
+	if (total === 0) return null;
+
+	return (
+		<>
+			<TableRow
+				hover
+				onClick={() => setOpen((v) => !v)}
+				sx={{ cursor: "pointer", bgcolor: open ? alpha(theme.palette.warning.main, 0.04) : undefined }}
+			>
+				<TableCell colSpan={colSpan} sx={{ py: 0.5, borderBottom: open ? "none" : undefined }}>
+					<Stack direction="row" alignItems="center" spacing={1}>
+						<IconButton size="small" sx={{ color: theme.palette.warning.main }}>
+							{open ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
+						</IconButton>
+						<Typography variant="caption" color="warning.main" fontWeight={600}>
+							{total} fecha{total !== 1 ? "s" : ""} faltante{total !== 1 ? "s" : ""} en {rangos.length} rango{rangos.length !== 1 ? "s" : ""}
+						</Typography>
+					</Stack>
+				</TableCell>
+			</TableRow>
+			<TableRow>
+				<TableCell colSpan={colSpan} sx={{ py: 0, border: open ? undefined : "none" }}>
+					<Collapse in={open} unmountOnExit>
+						<Box sx={{ px: 4, py: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.04) }}>
+							<Stack direction="row" flexWrap="wrap" gap={0.75}>
+								{rangos.map((r, i) => (
+									<Chip
+										key={i}
+										size="small"
+										variant="outlined"
+										color="warning"
+										label={
+											r.dias === 1
+												? formatDate(r.desde)
+												: `${formatDate(r.desde)} → ${formatDate(r.hasta)} (${r.dias}d)`
+										}
+										sx={{ fontSize: "0.7rem" }}
+									/>
+								))}
+							</Stack>
+						</Box>
+					</Collapse>
+				</TableCell>
+			</TableRow>
+		</>
 	);
 };
 
@@ -313,25 +400,28 @@ const TasasInteres = () => {
 								</TableHead>
 								<TableBody>
 									{listado.map((tasa) => (
-										<TableRow key={tasa.value} hover>
-											<TableCell>
-												<Typography variant="body2" fontWeight={600}>
-													{tasa.label}
-												</Typography>
-												<Typography variant="caption" color="text.secondary">
-													{tasa.value}
-												</Typography>
-											</TableCell>
-											<TableCell>{formatDate(tasa.fechaInicio)}</TableCell>
-											<TableCell>{formatDate(tasa.fechaUltima)}</TableCell>
-											<TableCell>{formatDate(tasa.fechaUltimaCompleta)}</TableCell>
-											<TableCell align="center">
-												<StatusChip tasa={tasa} />
-											</TableCell>
-											<TableCell>
-												<CoverageDetail tasa={tasa} />
-											</TableCell>
-										</TableRow>
+										<>
+											<TableRow key={tasa.value} hover sx={{ "& td": { borderBottom: (tasa.fechasFaltantes?.length ?? 0) > 0 ? "none" : undefined } }}>
+												<TableCell>
+													<Typography variant="body2" fontWeight={600}>
+														{tasa.label}
+													</Typography>
+													<Typography variant="caption" color="text.secondary">
+														{tasa.value}
+													</Typography>
+												</TableCell>
+												<TableCell>{formatDate(tasa.fechaInicio)}</TableCell>
+												<TableCell>{formatDate(tasa.fechaUltima)}</TableCell>
+												<TableCell>{formatDate(tasa.fechaUltimaCompleta)}</TableCell>
+												<TableCell align="center">
+													<StatusChip tasa={tasa} />
+												</TableCell>
+												<TableCell>
+													<CoverageDetail tasa={tasa} />
+												</TableCell>
+											</TableRow>
+											<FechasFaltantesRow key={`gaps-${tasa.value}`} tasa={tasa} colSpan={6} />
+										</>
 									))}
 								</TableBody>
 							</Table>
