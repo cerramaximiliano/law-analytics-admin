@@ -94,5 +94,5 @@ export const getTasasStatus = async (): Promise<TasasStatus> => {
 
 export const rellenarGaps = async (tipoTasa?: string): Promise<void> => {
 	const params = tipoTasa ? { tipoTasa } : {};
-	await tasasAxios.post("/api/tasas/rellenar-gaps", null, { params });
+	await tasasAxios.post("/api/tasas/rellenar-gaps", undefined, { params });
 };
