@@ -826,7 +826,7 @@ const DatosPrevisionales = () => {
 												</TableSortLabel>
 											</TableCell>
 											<TableCell>Moneda</TableCell>
-											{["maximoImponible", "haberMinimoJubilacion", "haberMaximoJubilacion", "pbu", "salarioMVM", "movilidadGeneral"].map((f) => {
+											{["maximoImponible", "haberMinimoJubilacion", "haberMaximoJubilacion", "pbu", "salarioMVM", "topePC", "movilidadGeneral"].map((f) => {
 												const meta = CAMPOS_NUMERICOS.find((c) => c.key === f)!;
 												return (
 													<TableCell key={f} align="right">
@@ -877,7 +877,7 @@ const DatosPrevisionales = () => {
 															sx={{ fontSize: "0.7rem" }}
 														/>
 													</TableCell>
-													{["maximoImponible", "haberMinimoJubilacion", "haberMaximoJubilacion", "pbu", "salarioMVM", "movilidadGeneral"].map((f) => (
+													{["maximoImponible", "haberMinimoJubilacion", "haberMaximoJubilacion", "pbu", "salarioMVM", "topePC", "movilidadGeneral"].map((f) => (
 														<TableCell key={f} align="right" sx={{ fontFamily: "monospace", fontSize: "0.78rem" }}>
 															{formatNum(row[f as keyof DatoPrevisional] as number)}
 														</TableCell>
