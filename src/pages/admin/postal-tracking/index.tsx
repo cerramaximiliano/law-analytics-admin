@@ -46,6 +46,7 @@ const PROCESSING_STATUS_CONFIG: Record<string, { color: "default" | "warning" | 
 	paused: { color: "default", label: "Pausado" },
 	completed: { color: "success", label: "Completado" },
 	error: { color: "error", label: "Error" },
+	not_found: { color: "default", label: "No encontrado" },
 };
 
 const formatDate = (dateString?: string) => {
@@ -427,6 +428,7 @@ const PostalTrackingPage = () => {
 									<MenuItem value="paused">Pausado</MenuItem>
 									<MenuItem value="completed">Completado</MenuItem>
 									<MenuItem value="error">Error</MenuItem>
+									<MenuItem value="not_found">No encontrado</MenuItem>
 								</Select>
 							</FormControl>
 						</Grid>
@@ -760,6 +762,13 @@ const PostalTrackingPage = () => {
 														Estado de rastreo
 													</Typography>
 													<Typography variant="body2">{detailTracking.trackingStatus}</Typography>
+												</Grid>
+											)}
+											{detailTracking.notFoundAt && (
+												<Grid item xs={12}>
+													<Alert severity="warning">
+														Pieza no encontrada en Correo Argentino desde {formatDate(detailTracking.notFoundAt)}
+													</Alert>
 												</Grid>
 											)}
 											{detailTracking.lastError && (

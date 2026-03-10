@@ -131,7 +131,7 @@ export interface PostalTracking {
 	_id: string;
 	codeId: string;
 	numberId: string;
-	processingStatus: "pending" | "active" | "paused" | "completed" | "error";
+	processingStatus: "pending" | "active" | "paused" | "completed" | "error" | "not_found";
 	trackingStatus?: string;
 	isFinalStatus: boolean;
 	consecutiveErrors: number;
@@ -148,6 +148,7 @@ export interface PostalTracking {
 	startDate?: string;
 	notificationDate?: string;
 	deadlineDays?: number;
+	notFoundAt?: string;
 	label?: string;
 	tags?: string[];
 	createdAt: string;
