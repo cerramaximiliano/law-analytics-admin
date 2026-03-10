@@ -100,6 +100,12 @@ const AdminTasksPage = Loadable(lazy(() => import("pages/admin/tasks")));
 // Folders page
 const FoldersPage = Loadable(lazy(() => import("pages/admin/folders")));
 
+// Scraper worker page
+const ScraperWorkerPage = Loadable(lazy(() => import("pages/admin/scraper")));
+
+// Postal tracking page
+const PostalTrackingPage = Loadable(lazy(() => import("pages/admin/postal-tracking")));
+
 // ==============================|| ROUTES ||============================== //
 
 export default function Routes() {
@@ -232,7 +238,7 @@ export default function Routes() {
 								</AdminRoleGuard>
 							),
 						},
-				{
+						{
 							path: "causas/pending",
 							element: (
 								<AdminRoleGuard>
@@ -493,6 +499,22 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<InfrastructurePage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "workers/scraper",
+							element: (
+								<AdminRoleGuard>
+									<ScraperWorkerPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "postal-tracking",
+							element: (
+								<AdminRoleGuard>
+									<PostalTrackingPage />
 								</AdminRoleGuard>
 							),
 						},
