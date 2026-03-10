@@ -47,7 +47,7 @@ export const consultarTasas = async (params: ConsultaParams): Promise<TasaResult
 		return datos.map((item: Record<string, unknown>) => ({
 			fecha: item.fecha as string,
 			valor: item[params.campo] != null ? (item[params.campo] as number) : null,
-			fuente: ((item.fuentes as Record<string, string> | undefined)?.[params.campo]) ?? null,
+			fuente: (item.fuentes as Record<string, string> | undefined)?.[params.campo] ?? null,
 		}));
 	}
 

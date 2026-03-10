@@ -46,28 +46,10 @@ import { es } from "date-fns/locale";
 import MainCard from "components/MainCard";
 import ScrollX from "components/ScrollX";
 import EmailLogsService from "api/emailLogs";
-import {
-	EmailLog,
-	EmailLogPagination,
-	EmailLogsQueryParams,
-	EmailLogGeneralStats,
-	EmailLogTemplateOption,
-} from "types/email-log";
+import { EmailLog, EmailLogPagination, EmailLogsQueryParams, EmailLogGeneralStats, EmailLogTemplateOption } from "types/email-log";
 
 // assets
-import {
-	SearchNormal1,
-	CloseCircle,
-	Refresh,
-	Filter,
-	Sms,
-	TickCircle,
-	CloseSquare,
-	Warning2,
-	Copy,
-	Eye,
-	Trash,
-} from "iconsax-react";
+import { SearchNormal1, CloseCircle, Refresh, Filter, Sms, TickCircle, CloseSquare, Warning2, Copy, Eye, Trash } from "iconsax-react";
 
 // Status chip colors
 const getStatusColor = (status: string) => {
@@ -484,11 +466,7 @@ const EmailLogsPage = () => {
 							<Grid item xs={12} sm={6} md={2}>
 								<FormControl fullWidth size="small">
 									<InputLabel>Estado</InputLabel>
-									<Select
-										value={statusFilter}
-										label="Estado"
-										onChange={(e: SelectChangeEvent) => setStatusFilter(e.target.value)}
-									>
+									<Select value={statusFilter} label="Estado" onChange={(e: SelectChangeEvent) => setStatusFilter(e.target.value)}>
 										<MenuItem value="">Todos</MenuItem>
 										<MenuItem value="sent">Enviado</MenuItem>
 										<MenuItem value="delivered">Entregado</MenuItem>
@@ -501,11 +479,7 @@ const EmailLogsPage = () => {
 							<Grid item xs={12} sm={6} md={2}>
 								<FormControl fullWidth size="small">
 									<InputLabel>Categoria</InputLabel>
-									<Select
-										value={categoryFilter}
-										label="Categoria"
-										onChange={(e: SelectChangeEvent) => setCategoryFilter(e.target.value)}
-									>
+									<Select value={categoryFilter} label="Categoria" onChange={(e: SelectChangeEvent) => setCategoryFilter(e.target.value)}>
 										<MenuItem value="">Todas</MenuItem>
 										{categories.map((cat) => (
 											<MenuItem key={cat} value={cat}>
@@ -518,11 +492,7 @@ const EmailLogsPage = () => {
 							<Grid item xs={12} sm={6} md={2}>
 								<FormControl fullWidth size="small">
 									<InputLabel>Plantilla</InputLabel>
-									<Select
-										value={templateFilter}
-										label="Plantilla"
-										onChange={(e: SelectChangeEvent) => setTemplateFilter(e.target.value)}
-									>
+									<Select value={templateFilter} label="Plantilla" onChange={(e: SelectChangeEvent) => setTemplateFilter(e.target.value)}>
 										<MenuItem value="">Todas</MenuItem>
 										{templates
 											.filter((t) => !categoryFilter || t.category === categoryFilter)
@@ -551,13 +521,7 @@ const EmailLogsPage = () => {
 								/>
 							</Grid>
 							<Grid item xs={12} sm={6} md={2}>
-								<Button
-									fullWidth
-									variant="outlined"
-									color="secondary"
-									onClick={handleClearFilters}
-									startIcon={<CloseCircle size={18} />}
-								>
+								<Button fullWidth variant="outlined" color="secondary" onClick={handleClearFilters} startIcon={<CloseCircle size={18} />}>
 									Limpiar
 								</Button>
 							</Grid>
@@ -588,11 +552,7 @@ const EmailLogsPage = () => {
 									{headCells
 										.filter((cell) => cell.id !== "checkbox")
 										.map((cell) => (
-											<TableCell
-												key={cell.id}
-												sx={{ width: cell.width }}
-												sortDirection={orderBy === cell.id ? order : false}
-											>
+											<TableCell key={cell.id} sx={{ width: cell.width }} sortDirection={orderBy === cell.id ? order : false}>
 												{cell.sortable ? (
 													<TableSortLabel
 														active={orderBy === cell.id}
@@ -627,10 +587,7 @@ const EmailLogsPage = () => {
 										return (
 											<TableRow key={log._id} hover selected={isItemSelected}>
 												<TableCell padding="checkbox">
-													<Checkbox
-														checked={isItemSelected}
-														onChange={() => handleSelectOne(log._id)}
-													/>
+													<Checkbox checked={isItemSelected} onChange={() => handleSelectOne(log._id)} />
 												</TableCell>
 												<TableCell>
 													<Typography variant="body2">{formatDate(log.createdAt)}</Typography>
@@ -655,21 +612,13 @@ const EmailLogsPage = () => {
 													</Tooltip>
 												</TableCell>
 												<TableCell>
-													<Chip
-														label={log.templateCategory || "-"}
-														size="small"
-														variant="outlined"
-													/>
+													<Chip label={log.templateCategory || "-"} size="small" variant="outlined" />
 												</TableCell>
 												<TableCell>
 													<Typography variant="body2">{log.templateName || "-"}</Typography>
 												</TableCell>
 												<TableCell>
-													<Chip
-														label={getStatusLabel(log.status)}
-														size="small"
-														color={getStatusColor(log.status) as any}
-													/>
+													<Chip label={getStatusLabel(log.status)} size="small" color={getStatusColor(log.status) as any} />
 												</TableCell>
 												<TableCell>
 													<Stack direction="row" spacing={0.5}>
@@ -680,20 +629,13 @@ const EmailLogsPage = () => {
 														</Tooltip>
 														{log.sesMessageId && (
 															<Tooltip title="Copiar SES ID">
-																<IconButton
-																	size="small"
-																	onClick={() => handleCopyToClipboard(log.sesMessageId!)}
-																>
+																<IconButton size="small" onClick={() => handleCopyToClipboard(log.sesMessageId!)}>
 																	<Copy size={18} />
 																</IconButton>
 															</Tooltip>
 														)}
 														<Tooltip title="Eliminar">
-															<IconButton
-																size="small"
-																color="error"
-																onClick={() => handleOpenDeleteDialog("single", log)}
-															>
+															<IconButton size="small" color="error" onClick={() => handleOpenDeleteDialog("single", log)}>
 																<Trash size={18} />
 															</IconButton>
 														</Tooltip>
@@ -763,11 +705,7 @@ const EmailLogsPage = () => {
 									<Typography variant="subtitle2" color="textSecondary">
 										Estado
 									</Typography>
-									<Chip
-										label={getStatusLabel(selectedLog.status)}
-										size="small"
-										color={getStatusColor(selectedLog.status) as any}
-									/>
+									<Chip label={getStatusLabel(selectedLog.status)} size="small" color={getStatusColor(selectedLog.status) as any} />
 								</Grid>
 								<Grid item xs={12} sm={6}>
 									<Typography variant="subtitle2" color="textSecondary">
@@ -793,10 +731,7 @@ const EmailLogsPage = () => {
 											>
 												{selectedLog.sesMessageId}
 											</Typography>
-											<IconButton
-												size="small"
-												onClick={() => handleCopyToClipboard(selectedLog.sesMessageId!)}
-											>
+											<IconButton size="small" onClick={() => handleCopyToClipboard(selectedLog.sesMessageId!)}>
 												<Copy size={16} />
 											</IconButton>
 										</Stack>
@@ -837,9 +772,7 @@ const EmailLogsPage = () => {
 												maxHeight: 200,
 											}}
 										>
-											<pre style={{ margin: 0 }}>
-												{JSON.stringify(selectedLog.metadata, null, 2)}
-											</pre>
+											<pre style={{ margin: 0 }}>{JSON.stringify(selectedLog.metadata, null, 2)}</pre>
 										</Box>
 									</Grid>
 								)}
@@ -853,15 +786,12 @@ const EmailLogsPage = () => {
 
 				{/* Delete Confirmation Dialog */}
 				<Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog} maxWidth="sm" fullWidth>
-					<DialogTitle>
-						{deleteType === "all" ? "Eliminar todos los logs" : "Confirmar eliminación"}
-					</DialogTitle>
+					<DialogTitle>{deleteType === "all" ? "Eliminar todos los logs" : "Confirmar eliminación"}</DialogTitle>
 					<DialogContent>
 						<DialogContentText>{getDeleteDialogMessage()}</DialogContentText>
 						{deleteType === "all" && (
 							<Alert severity="warning" sx={{ mt: 2 }}>
-								Esta acción eliminará permanentemente todos los registros de logs de correo. Esta operación no
-								se puede deshacer.
+								Esta acción eliminará permanentemente todos los registros de logs de correo. Esta operación no se puede deshacer.
 							</Alert>
 						)}
 					</DialogContent>

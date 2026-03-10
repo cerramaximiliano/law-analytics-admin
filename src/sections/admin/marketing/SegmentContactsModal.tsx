@@ -338,11 +338,7 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 													<TableCell align="center">
 														<Box sx={{ display: "flex", justifyContent: "center", gap: 0.5 }}>
 															<Tooltip title="Ver detalles">
-																<IconButton
-																	size="small"
-																	color="primary"
-																	onClick={() => handleViewDetails(contact._id || "")}
-																>
+																<IconButton size="small" color="primary" onClick={() => handleViewDetails(contact._id || "")}>
 																	<Eye size={18} />
 																</IconButton>
 															</Tooltip>

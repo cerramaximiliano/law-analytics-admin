@@ -187,9 +187,12 @@ const getStripeValueWithIndicator = (value: any, environment?: "test" | "live"):
 const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 	const theme = useTheme();
 	const dispatch = useDispatch();
-	const { user: userDetails, lightData, subscriptions, stripeHistory: storeStripeHistory } = useSelector(
-		(state: DefaultRootStateProps) => state.users,
-	);
+	const {
+		user: userDetails,
+		lightData,
+		subscriptions,
+		stripeHistory: storeStripeHistory,
+	} = useSelector((state: DefaultRootStateProps) => state.users);
 
 	// Estados para los modales
 	const [editModalOpen, setEditModalOpen] = useState(false);
@@ -478,10 +481,14 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 
 	const getEligibilityLabel = (reason: string) => {
 		switch (reason) {
-			case "targetUser": return "Usuario directo";
-			case "segment": return "Segmento";
-			case "public": return "Pública";
-			default: return reason;
+			case "targetUser":
+				return "Usuario directo";
+			case "segment":
+				return "Segmento";
+			case "public":
+				return "Pública";
+			default:
+				return reason;
 		}
 	};
 
@@ -503,9 +510,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 		}
 
 		if (!promotionsData || promotionsData.length === 0) {
-			return (
-				<Alert severity="info">Este usuario no tiene promociones disponibles.</Alert>
-			);
+			return <Alert severity="info">Este usuario no tiene promociones disponibles.</Alert>;
 		}
 
 		return (
@@ -541,10 +546,19 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 								<TableRow key={promo._id} sx={{ opacity: promo.isExpired || !promo.isActive ? 0.6 : 1 }}>
 									<TableCell>
 										<Stack spacing={0.5}>
-											<Typography variant="body2" fontWeight={600}>{promo.code}</Typography>
-											<Typography variant="caption" color="text.secondary">{promo.name}</Typography>
+											<Typography variant="body2" fontWeight={600}>
+												{promo.code}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												{promo.name}
+											</Typography>
 											{promo.badge && (
-												<Chip label={promo.badge} size="small" color="success" sx={{ width: "fit-content", fontSize: "0.65rem", height: 20 }} />
+												<Chip
+													label={promo.badge}
+													size="small"
+													color="success"
+													sx={{ width: "fit-content", fontSize: "0.65rem", height: 20 }}
+												/>
 											)}
 										</Stack>
 									</TableCell>
@@ -554,7 +568,11 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 												{promo.discountType === "percentage" ? `${promo.discountValue}%` : `$${promo.discountValue}`}
 											</Typography>
 											<Typography variant="caption" color="text.secondary">
-												{promo.duration === "once" ? "Una vez" : promo.duration === "forever" ? "Para siempre" : `${promo.durationInMonths} meses`}
+												{promo.duration === "once"
+													? "Una vez"
+													: promo.duration === "forever"
+													? "Para siempre"
+													: `${promo.durationInMonths} meses`}
 											</Typography>
 											{promo.applicablePlans.length > 0 && (
 												<Typography variant="caption" color="text.secondary">
@@ -608,7 +626,12 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 									<TableCell>
 										{promo.redeemedByUser ? (
 											<Stack spacing={0.25}>
-												<Chip label={`Usada (${promo.userRedemptionCount}/${promo.maxRedemptionsPerUser})`} size="small" color="info" sx={{ fontSize: "0.65rem", height: 20 }} />
+												<Chip
+													label={`Usada (${promo.userRedemptionCount}/${promo.maxRedemptionsPerUser})`}
+													size="small"
+													color="info"
+													sx={{ fontSize: "0.65rem", height: 20 }}
+												/>
 												{promo.userRedemptions.map((r, i) => (
 													<Typography key={i} variant="caption" color="text.secondary">
 														{new Date(r.redeemedAt).toLocaleDateString("es-AR")}
@@ -628,12 +651,8 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 									</TableCell>
 									<TableCell>
 										<Stack spacing={0.25}>
-											<Typography variant="caption">
-												{new Date(promo.validFrom).toLocaleDateString("es-AR")}
-											</Typography>
-											<Typography variant="caption">
-												{new Date(promo.validUntil).toLocaleDateString("es-AR")}
-											</Typography>
+											<Typography variant="caption">{new Date(promo.validFrom).toLocaleDateString("es-AR")}</Typography>
+											<Typography variant="caption">{new Date(promo.validUntil).toLocaleDateString("es-AR")}</Typography>
 										</Stack>
 									</TableCell>
 								</TableRow>
@@ -643,15 +662,19 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 				</TableContainer>
 
 				{/* Promotional messages */}
-				{promotionsData.some(p => p.promotionalMessage) && (
+				{promotionsData.some((p) => p.promotionalMessage) && (
 					<Box sx={{ mt: 2 }}>
-						<Typography variant="subtitle2" sx={{ mb: 1 }}>Mensajes promocionales</Typography>
+						<Typography variant="subtitle2" sx={{ mb: 1 }}>
+							Mensajes promocionales
+						</Typography>
 						<Stack spacing={1}>
-							{promotionsData.filter(p => p.promotionalMessage).map((p) => (
-								<Alert key={p._id} severity="info" icon={<DiscountShape size={18} />}>
-									<strong>{p.code}:</strong> {p.promotionalMessage}
-								</Alert>
-							))}
+							{promotionsData
+								.filter((p) => p.promotionalMessage)
+								.map((p) => (
+									<Alert key={p._id} severity="info" icon={<DiscountShape size={18} />}>
+										<strong>{p.code}:</strong> {p.promotionalMessage}
+									</Alert>
+								))}
 						</Stack>
 					</Box>
 				)}
@@ -2173,9 +2196,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 			return (
 				<Stack spacing={2}>
 					<Alert severity="warning">
-						<Typography variant="body2">
-							Este usuario no tiene un contacto de marketing asociado.
-						</Typography>
+						<Typography variant="body2">Este usuario no tiene un contacto de marketing asociado.</Typography>
 					</Alert>
 					<Paper
 						elevation={0}
@@ -2254,9 +2275,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 								<Typography variant="subtitle2" color="text.secondary">
 									Nombre
 								</Typography>
-								<Typography variant="body2">
-									{[contact?.firstName, contact?.lastName].filter(Boolean).join(" ") || "-"}
-								</Typography>
+								<Typography variant="body2">{[contact?.firstName, contact?.lastName].filter(Boolean).join(" ") || "-"}</Typography>
 							</Stack>
 						</Grid>
 						<Grid item xs={12} md={6}>
@@ -2396,14 +2415,9 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 											const canDelete = isStaticSegment && isActive;
 
 											return (
-												<TableRow
-													key={index}
-													sx={{ opacity: isActive ? 1 : 0.6 }}
-												>
+												<TableRow key={index} sx={{ opacity: isActive ? 1 : 0.6 }}>
 													<TableCell>
-														<Typography variant="body2">
-															{segment.name || segmentId || `Segmento ${index + 1}`}
-														</Typography>
+														<Typography variant="body2">{segment.name || segmentId || `Segmento ${index + 1}`}</Typography>
 													</TableCell>
 													<TableCell>
 														<Chip
@@ -2429,11 +2443,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 																	onClick={() => handleRemoveFromSegment(segmentId)}
 																	disabled={removingFromSegment !== null}
 																>
-																	{isRemoving ? (
-																		<CircularProgress size={16} color="inherit" />
-																	) : (
-																		<Trash size={16} />
-																	)}
+																	{isRemoving ? <CircularProgress size={16} color="inherit" /> : <Trash size={16} />}
 																</IconButton>
 															</Tooltip>
 														) : (
@@ -2468,64 +2478,62 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 								Cargando segmentos...
 							</Typography>
 						</Box>
-					) : (() => {
-						// Obtener IDs de segmentos donde el contacto está ACTIVO
-						const activeSegmentIds = (contact?.segments || [])
-							.filter((s: any) => s.status === "active")
-							.map((s: any) => s.segmentId || s._id || s);
+					) : (
+						(() => {
+							// Obtener IDs de segmentos donde el contacto está ACTIVO
+							const activeSegmentIds = (contact?.segments || [])
+								.filter((s: any) => s.status === "active")
+								.map((s: any) => s.segmentId || s._id || s);
 
-						if (staticSegments.length === 0) {
+							if (staticSegments.length === 0) {
+								return (
+									<Typography variant="body2" color="text.secondary">
+										No hay segmentos estáticos disponibles.
+									</Typography>
+								);
+							}
+
 							return (
-								<Typography variant="body2" color="text.secondary">
-									No hay segmentos estáticos disponibles.
-								</Typography>
-							);
-						}
+								<Stack spacing={1}>
+									{staticSegments.map((segment) => {
+										const isAlreadyActive = activeSegmentIds.includes(segment._id);
 
-						return (
-							<Stack spacing={1}>
-								{staticSegments.map((segment) => {
-									const isAlreadyActive = activeSegmentIds.includes(segment._id);
-
-									return (
-										<Paper key={segment._id} variant="outlined" sx={{ p: 1.5 }}>
-											<Stack direction="row" justifyContent="space-between" alignItems="center">
-												<Box>
-													<Typography variant="body2" fontWeight={500}>
-														{segment.name}
-													</Typography>
-													{segment.description && (
-														<Typography variant="caption" color="text.secondary">
-															{segment.description}
+										return (
+											<Paper key={segment._id} variant="outlined" sx={{ p: 1.5 }}>
+												<Stack direction="row" justifyContent="space-between" alignItems="center">
+													<Box>
+														<Typography variant="body2" fontWeight={500}>
+															{segment.name}
 														</Typography>
+														{segment.description && (
+															<Typography variant="caption" color="text.secondary">
+																{segment.description}
+															</Typography>
+														)}
+													</Box>
+													{isAlreadyActive ? (
+														<Chip label="Ya pertenece" size="small" color="success" variant="outlined" />
+													) : (
+														<Button
+															size="small"
+															variant="outlined"
+															startIcon={
+																addingToSegment === segment._id ? <CircularProgress size={14} color="inherit" /> : <Add size={14} />
+															}
+															onClick={() => handleAddToSegment(segment._id!)}
+															disabled={addingToSegment !== null}
+														>
+															{addingToSegment === segment._id ? "Agregando..." : "Agregar"}
+														</Button>
 													)}
-												</Box>
-												{isAlreadyActive ? (
-													<Chip label="Ya pertenece" size="small" color="success" variant="outlined" />
-												) : (
-													<Button
-														size="small"
-														variant="outlined"
-														startIcon={
-															addingToSegment === segment._id ? (
-																<CircularProgress size={14} color="inherit" />
-															) : (
-																<Add size={14} />
-															)
-														}
-														onClick={() => handleAddToSegment(segment._id!)}
-														disabled={addingToSegment !== null}
-													>
-														{addingToSegment === segment._id ? "Agregando..." : "Agregar"}
-													</Button>
-												)}
-											</Stack>
-										</Paper>
-									);
-								})}
-							</Stack>
-						);
-					})()}
+												</Stack>
+											</Paper>
+										);
+									})}
+								</Stack>
+							);
+						})()
+					)}
 				</Paper>
 
 				{/* Fechas */}
@@ -2546,9 +2554,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 								<Typography variant="subtitle2" color="text.secondary">
 									Creado
 								</Typography>
-								<Typography variant="body2">
-									{contact?.createdAt ? new Date(contact.createdAt).toLocaleString() : "-"}
-								</Typography>
+								<Typography variant="body2">{contact?.createdAt ? new Date(contact.createdAt).toLocaleString() : "-"}</Typography>
 							</Stack>
 						</Grid>
 						<Grid item xs={12} md={6}>
@@ -2556,9 +2562,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 								<Typography variant="subtitle2" color="text.secondary">
 									Última actualización
 								</Typography>
-								<Typography variant="body2">
-									{contact?.updatedAt ? new Date(contact.updatedAt).toLocaleString() : "-"}
-								</Typography>
+								<Typography variant="body2">{contact?.updatedAt ? new Date(contact.updatedAt).toLocaleString() : "-"}</Typography>
 							</Stack>
 						</Grid>
 					</Grid>
@@ -2658,13 +2662,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 										id="user-tab-6"
 										aria-controls="user-tabpanel-6"
 									/>
-									<Tab
-										icon={<Sms size={18} />}
-										iconPosition="start"
-										label="Marketing"
-										id="user-tab-7"
-										aria-controls="user-tabpanel-7"
-									/>
+									<Tab icon={<Sms size={18} />} iconPosition="start" label="Marketing" id="user-tab-7" aria-controls="user-tabpanel-7" />
 									<Tab
 										icon={<DocumentCode size={18} />}
 										iconPosition="start"
@@ -2672,20 +2670,14 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 										id="user-tab-8"
 										aria-controls="user-tabpanel-8"
 									/>
-								<Tab
-									icon={<Box1 size={18} />}
-									iconPosition="start"
-									label="Recursos"
-									id="user-tab-9"
-									aria-controls="user-tabpanel-9"
-								/>
-								<Tab
-									icon={<DiscountShape size={18} />}
-									iconPosition="start"
-									label="Promociones"
-									id="user-tab-10"
-									aria-controls="user-tabpanel-10"
-								/>
+									<Tab icon={<Box1 size={18} />} iconPosition="start" label="Recursos" id="user-tab-9" aria-controls="user-tabpanel-9" />
+									<Tab
+										icon={<DiscountShape size={18} />}
+										iconPosition="start"
+										label="Promociones"
+										id="user-tab-10"
+										aria-controls="user-tabpanel-10"
+									/>
 								</Tabs>
 							</Box>
 
@@ -2760,67 +2752,77 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 											</Stack>
 										</Stack>
 									</Grid>
-								<Grid item xs={12}>
-									<Divider sx={{ my: 1 }} />
-								</Grid>
-								<Grid item xs={12} md={6}>
-									<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-										<Typography variant="h6">Información de Autenticación</Typography>
-										<Stack spacing={2}>
-											<Stack direction="row" justifyContent="space-between" alignItems="center">
-												<Typography variant="subtitle1">Método de Registro</Typography>
-												{userData?.authProvider === "google" ? (
-													<Chip label="Google" size="small" sx={{ bgcolor: "#4285F4", color: "common.white" }} />
-												) : userData?.authProvider === "email" ? (
-													<Chip label="Email" size="small" color="info" />
-												) : (
-													<Chip label="Sin datos (Legacy)" size="small" color="default" variant="outlined" />
+									<Grid item xs={12}>
+										<Divider sx={{ my: 1 }} />
+									</Grid>
+									<Grid item xs={12} md={6}>
+										<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+											<Typography variant="h6">Información de Autenticación</Typography>
+											<Stack spacing={2}>
+												<Stack direction="row" justifyContent="space-between" alignItems="center">
+													<Typography variant="subtitle1">Método de Registro</Typography>
+													{userData?.authProvider === "google" ? (
+														<Chip label="Google" size="small" sx={{ bgcolor: "#4285F4", color: "common.white" }} />
+													) : userData?.authProvider === "email" ? (
+														<Chip label="Email" size="small" color="info" />
+													) : (
+														<Chip label="Sin datos (Legacy)" size="small" color="default" variant="outlined" />
+													)}
+												</Stack>
+												<Stack direction="row" justifyContent="space-between" alignItems="center">
+													<Typography variant="subtitle1">Usuario Verificado</Typography>
+													<Chip
+														label={userData?.isVerified ? "Sí" : "No"}
+														size="small"
+														color={userData?.isVerified ? "success" : "warning"}
+													/>
+												</Stack>
+												<Stack direction="row" justifyContent="space-between" alignItems="center">
+													<Typography variant="subtitle1">Password</Typography>
+													<Typography variant="body2" sx={{ fontFamily: "monospace", letterSpacing: 2 }}>
+														{(userData as any)?.password ? "••••••••" : "-"}
+													</Typography>
+												</Stack>
+												<Stack direction="row" justifyContent="space-between" alignItems="center">
+													<Typography variant="subtitle1">Código de Verificación</Typography>
+													<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
+														{(userData as any)?.verificationCode || "-"}
+													</Typography>
+												</Stack>
+											</Stack>
+										</Stack>
+									</Grid>
+									<Grid item xs={12} md={6}>
+										<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+											<Typography variant="h6">Imagen de Perfil</Typography>
+											<Stack spacing={2}>
+												<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+													<Typography variant="subtitle1">Picture URL</Typography>
+													<Typography
+														variant="body2"
+														sx={{
+															maxWidth: "200px",
+															overflow: "hidden",
+															textOverflow: "ellipsis",
+															wordBreak: "break-all",
+															fontSize: "0.75rem",
+														}}
+													>
+														{userData?.avatar || (userData as any)?.picture || "-"}
+													</Typography>
+												</Stack>
+												{(userData?.avatar || (userData as any)?.picture) && (
+													<Box sx={{ display: "flex", justifyContent: "center" }}>
+														<Avatar
+															src={userData?.avatar || (userData as any)?.picture}
+															alt={userData?.name}
+															sx={{ width: 80, height: 80 }}
+														/>
+													</Box>
 												)}
 											</Stack>
-											<Stack direction="row" justifyContent="space-between" alignItems="center">
-												<Typography variant="subtitle1">Usuario Verificado</Typography>
-												<Chip
-													label={userData?.isVerified ? "Sí" : "No"}
-													size="small"
-													color={userData?.isVerified ? "success" : "warning"}
-												/>
-											</Stack>
-											<Stack direction="row" justifyContent="space-between" alignItems="center">
-												<Typography variant="subtitle1">Password</Typography>
-												<Typography variant="body2" sx={{ fontFamily: "monospace", letterSpacing: 2 }}>
-													{(userData as any)?.password ? "••••••••" : "-"}
-												</Typography>
-											</Stack>
-											<Stack direction="row" justifyContent="space-between" alignItems="center">
-												<Typography variant="subtitle1">Código de Verificación</Typography>
-												<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
-													{(userData as any)?.verificationCode || "-"}
-												</Typography>
-											</Stack>
 										</Stack>
-									</Stack>
-								</Grid>
-								<Grid item xs={12} md={6}>
-									<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-										<Typography variant="h6">Imagen de Perfil</Typography>
-										<Stack spacing={2}>
-											<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-												<Typography variant="subtitle1">Picture URL</Typography>
-												<Typography
-													variant="body2"
-													sx={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", wordBreak: "break-all", fontSize: "0.75rem" }}
-												>
-													{userData?.avatar || (userData as any)?.picture || "-"}
-												</Typography>
-											</Stack>
-											{(userData?.avatar || (userData as any)?.picture) && (
-												<Box sx={{ display: "flex", justifyContent: "center" }}>
-													<Avatar src={userData?.avatar || (userData as any)?.picture} alt={userData?.name} sx={{ width: 80, height: 80 }} />
-												</Box>
-											)}
-										</Stack>
-									</Stack>
-								</Grid>
+									</Grid>
 								</Grid>
 							</TabPanel>
 
@@ -2916,7 +2918,6 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 								{renderPromotions()}
 							</TabPanel>
 						</Box>
-
 					</Box>
 				</MainCard>
 

@@ -495,15 +495,11 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 						</Typography>
 						<Stack direction="row" spacing={1}>
 							<FormControlLabel
-								control={
-									<Checkbox checked={formData.applicablePlans.includes("standard")} onChange={() => handlePlanToggle("standard")} />
-								}
+								control={<Checkbox checked={formData.applicablePlans.includes("standard")} onChange={() => handlePlanToggle("standard")} />}
 								label="Standard"
 							/>
 							<FormControlLabel
-								control={
-									<Checkbox checked={formData.applicablePlans.includes("premium")} onChange={() => handlePlanToggle("premium")} />
-								}
+								control={<Checkbox checked={formData.applicablePlans.includes("premium")} onChange={() => handlePlanToggle("premium")} />}
 								label="Premium"
 							/>
 						</Stack>
@@ -586,9 +582,9 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 								}
 							/>
 							<Typography variant="caption" color="textSecondary" display="block" sx={{ ml: 4.5, mt: 0.5 }}>
-								No mostrar a usuarios con una suscripción paga <strong>actualmente activa</strong>.
-								Los usuarios que cancelaron su suscripción SÍ podrán ver y usar este descuento.
-								Ideal para promociones de "vuelve a suscribirte" o para usuarios en plan gratuito.
+								No mostrar a usuarios con una suscripción paga <strong>actualmente activa</strong>. Los usuarios que cancelaron su
+								suscripción SÍ podrán ver y usar este descuento. Ideal para promociones de "vuelve a suscribirte" o para usuarios en plan
+								gratuito.
 							</Typography>
 						</Box>
 					</Grid>
@@ -610,9 +606,8 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 								}
 							/>
 							<Typography variant="caption" color="textSecondary" display="block" sx={{ ml: 4.5, mt: 0.5 }}>
-								Solo para usuarios que <strong>nunca han tenido</strong> una suscripción paga (ni activa ni cancelada).
-								Más restrictivo que "Excluir suscriptores activos".
-								Ideal para promociones de "primera vez" para captar nuevos clientes.
+								Solo para usuarios que <strong>nunca han tenido</strong> una suscripción paga (ni activa ni cancelada). Más restrictivo que
+								"Excluir suscriptores activos". Ideal para promociones de "primera vez" para captar nuevos clientes.
 							</Typography>
 						</Box>
 					</Grid>
@@ -624,19 +619,21 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 							Segmentación de Audiencia
 						</Typography>
 						<Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 2 }}>
-							Selecciona segmentos de contactos que podrán ver y usar esta promoción.
-							Se combina con "Usuarios Objetivo" usando lógica OR (si está en usuarios O en segmentos).
+							Selecciona segmentos de contactos que podrán ver y usar esta promoción. Se combina con "Usuarios Objetivo" usando lógica OR
+							(si está en usuarios O en segmentos).
 						</Typography>
 					</Grid>
 
 					<Grid item xs={12}>
 						<Autocomplete
 							multiple
-							options={segments.filter(s => s._id)} // Solo segmentos con _id válido
-							getOptionLabel={(option) => `${option.name} (${option.type === 'static' ? 'Estático' : 'Dinámico'} - ${option.estimatedCount} contactos)`}
-							value={segments.filter(s => s._id && formData.targetSegments.includes(s._id))}
+							options={segments.filter((s) => s._id)} // Solo segmentos con _id válido
+							getOptionLabel={(option) =>
+								`${option.name} (${option.type === "static" ? "Estático" : "Dinámico"} - ${option.estimatedCount} contactos)`
+							}
+							value={segments.filter((s) => s._id && formData.targetSegments.includes(s._id))}
 							onChange={(_, newValue) => {
-								handleChange("targetSegments", newValue.map(s => s._id!).filter(Boolean));
+								handleChange("targetSegments", newValue.map((s) => s._id!).filter(Boolean));
 							}}
 							loading={loadingSegments}
 							renderInput={(params) => (
@@ -644,9 +641,11 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 									{...params}
 									label="Segmentos de Contactos"
 									placeholder={formData.targetSegments.length === 0 ? "Seleccionar segmentos..." : ""}
-									helperText={formData.targetSegments.length > 0
-										? `${formData.targetSegments.length} segmento(s) seleccionado(s)`
-										: "Dejar vacío para no restringir por segmentos"}
+									helperText={
+										formData.targetSegments.length > 0
+											? `${formData.targetSegments.length} segmento(s) seleccionado(s)`
+											: "Dejar vacío para no restringir por segmentos"
+									}
 								/>
 							)}
 							renderTags={(value, getTagProps) =>
@@ -656,7 +655,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 										key={option._id || index}
 										label={option.name}
 										size="small"
-										color={option.type === 'static' ? 'primary' : 'secondary'}
+										color={option.type === "static" ? "primary" : "secondary"}
 									/>
 								))
 							}

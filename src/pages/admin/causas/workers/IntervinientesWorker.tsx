@@ -38,7 +38,20 @@ import {
 	Pagination,
 	CircularProgress,
 } from "@mui/material";
-import { Setting2, InfoCircle, Chart, MessageQuestion, TickCircle, CloseCircle, DocumentText, Refresh, People, Edit2, SearchNormal1, Calendar } from "iconsax-react";
+import {
+	Setting2,
+	InfoCircle,
+	Chart,
+	MessageQuestion,
+	TickCircle,
+	CloseCircle,
+	DocumentText,
+	Refresh,
+	People,
+	Edit2,
+	SearchNormal1,
+	Calendar,
+} from "iconsax-react";
 import { useSnackbar } from "notistack";
 import ExtraInfoConfigService, {
 	ExtraInfoConfig,
@@ -360,7 +373,12 @@ const IntervinientesWorker = () => {
 		{ field: "verified", condition: "=== true", description: "Documento verificado en PJN", active: config?.eligibility?.requireVerified },
 		{ field: "isValid", condition: "=== true", description: "Expediente existe y es accesible", active: config?.eligibility?.requireValid },
 		{ field: "isPrivate", condition: "!== true", description: "No es documento privado", active: config?.eligibility?.excludePrivate },
-		{ field: "lastUpdate", condition: "exists", description: "Tiene actualización registrada", active: config?.eligibility?.requireLastUpdate },
+		{
+			field: "lastUpdate",
+			condition: "exists",
+			description: "Tiene actualización registrada",
+			active: config?.eligibility?.requireLastUpdate,
+		},
 		{ field: "detailsLoaded", condition: "false/null/undefined", description: "No procesado por extra-info", active: true },
 		{
 			field: "detailsLastUpdate",
@@ -368,7 +386,7 @@ const IntervinientesWorker = () => {
 			description: reextractDays
 				? `Re-extrae si fue procesado hace más de ${reextractDays} días`
 				: "Re-extracción deshabilitada (no se vuelven a procesar)",
-			active: !!reextractDays
+			active: !!reextractDays,
 		},
 	];
 
@@ -508,7 +526,10 @@ const IntervinientesWorker = () => {
 	const ConfigContent = () => (
 		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 			{/* Estado actual */}
-			<Card variant="outlined" sx={{ backgroundColor: alpha(status?.isRunning ? theme.palette.success.main : theme.palette.grey[500], 0.05) }}>
+			<Card
+				variant="outlined"
+				sx={{ backgroundColor: alpha(status?.isRunning ? theme.palette.success.main : theme.palette.grey[500], 0.05) }}
+			>
 				<CardContent>
 					<Stack direction="row" justifyContent="space-between" alignItems="center">
 						<Stack direction="row" spacing={2} alignItems="center">
@@ -685,11 +706,7 @@ const IntervinientesWorker = () => {
 										}
 									/>
 								}
-								label={
-									<Typography variant="caption">
-										Respetar horario
-									</Typography>
-								}
+								label={<Typography variant="caption">Respetar horario</Typography>}
 							/>
 						) : (
 							<Chip
@@ -765,9 +782,7 @@ const IntervinientesWorker = () => {
 													color={isActive ? "primary" : "default"}
 													variant={isActive ? "filled" : "outlined"}
 													onClick={() => {
-														const newDays = isActive
-															? currentDays.filter((d: number) => d !== day)
-															: [...currentDays, day].sort();
+														const newDays = isActive ? currentDays.filter((d: number) => d !== day) : [...currentDays, day].sort();
 														setEditValues({
 															...editValues,
 															schedule: { ...editValues.schedule, workDays: newDays } as any,
@@ -802,11 +817,15 @@ const IntervinientesWorker = () => {
 					{/* Indicador de recarga dinámica */}
 					<Alert severity="info" variant="outlined" sx={{ mt: 2 }} icon={<Refresh size={18} />}>
 						<Typography variant="caption">
-							Los cambios de configuración se aplican automáticamente sin reiniciar el worker.
-							El worker verifica cambios en MongoDB cada <strong>5 ciclos</strong> del cron
+							Los cambios de configuración se aplican automáticamente sin reiniciar el worker. El worker verifica cambios en MongoDB cada{" "}
+							<strong>5 ciclos</strong> del cron
 							{config?.schedule?.cronExpression ? (
-								<> (cron actual: <code>{config.schedule.cronExpression}</code>)</>
-							) : null}.
+								<>
+									{" "}
+									(cron actual: <code>{config.schedule.cronExpression}</code>)
+								</>
+							) : null}
+							.
 						</Typography>
 					</Alert>
 				</CardContent>
@@ -861,8 +880,8 @@ const IntervinientesWorker = () => {
 					{config?.eligibility?.testMode?.enabled && (
 						<Alert severity="warning" sx={{ mt: 2 }}>
 							<Typography variant="body2">
-								<strong>Modo de prueba activo:</strong> Solo se procesan causas de{" "}
-								{config.eligibility.testMode.testUserIds?.length || 0} usuario(s) de prueba.
+								<strong>Modo de prueba activo:</strong> Solo se procesan causas de {config.eligibility.testMode.testUserIds?.length || 0}{" "}
+								usuario(s) de prueba.
 							</Typography>
 						</Alert>
 					)}
@@ -936,9 +955,9 @@ const IntervinientesWorker = () => {
 
 			<Alert severity="warning" variant="outlined" sx={{ mb: 2 }}>
 				<Typography variant="body2">
-					<strong>Resumen de elegibilidad:</strong> La extracción de intervinientes ocurre para TODAS las causas que cumplan los
-					criterios técnicos (verificadas, válidas, no privadas, con updates, no procesadas). La sincronización a contactos es un
-					paso adicional que SOLO ocurre para usuarios que habilitaron la preferencia.
+					<strong>Resumen de elegibilidad:</strong> La extracción de intervinientes ocurre para TODAS las causas que cumplan los criterios
+					técnicos (verificadas, válidas, no privadas, con updates, no procesadas). La sincronización a contactos es un paso adicional que
+					SOLO ocurre para usuarios que habilitaron la preferencia.
 				</Typography>
 			</Alert>
 			<Alert severity="info" variant="outlined">
@@ -969,7 +988,8 @@ const IntervinientesWorker = () => {
 								{stats?.global?.documentsProcessed?.toLocaleString() || 0}
 								{eligibleCount?.total ? (
 									<Typography component="span" variant="body2" color="text.secondary">
-										{" / "}{eligibleCount.total.toLocaleString()}
+										{" / "}
+										{eligibleCount.total.toLocaleString()}
 									</Typography>
 								) : null}
 							</Typography>
@@ -1233,7 +1253,8 @@ const IntervinientesWorker = () => {
 							Usuarios de Test (TEST_USER_IDS)
 						</Typography>
 						<Alert severity="warning" sx={{ mb: 2 }}>
-							Estos usuarios tienen hardcodeados sus IDs en <code>intervinientes-contact-sync.js</code> para usar suscripciones con <code>testMode: true</code>.
+							Estos usuarios tienen hardcodeados sus IDs en <code>intervinientes-contact-sync.js</code> para usar suscripciones con{" "}
+							<code>testMode: true</code>.
 						</Alert>
 						<TableContainer component={Paper} variant="outlined">
 							<Table size="small">
@@ -1676,9 +1697,7 @@ const IntervinientesWorker = () => {
 														<TableCell>
 															<Typography variant="body2" fontWeight={index === 0 ? "bold" : "normal"}>
 																{formatShortDate(stat.date)}
-																{index === 0 && (
-																	<Chip label="Hoy" size="small" color="primary" sx={{ ml: 1, height: 18 }} />
-																)}
+																{index === 0 && <Chip label="Hoy" size="small" color="primary" sx={{ ml: 1, height: 18 }} />}
 															</Typography>
 														</TableCell>
 														<TableCell align="right">{stat.totalEligible.toLocaleString()}</TableCell>
@@ -1736,19 +1755,13 @@ const IntervinientesWorker = () => {
 												const maxProcessed = Math.max(...dailyStats.slice(0, 14).map((s) => s.processed), 1);
 												const height = stat.processed > 0 ? Math.max((stat.processed / maxProcessed) * 100, 5) : 2;
 												return (
-													<Tooltip
-														key={stat.date}
-														title={`${formatShortDate(stat.date)}: ${stat.processed} procesados`}
-														arrow
-													>
+													<Tooltip key={stat.date} title={`${formatShortDate(stat.date)}: ${stat.processed} procesados`} arrow>
 														<Box
 															sx={{
 																flex: 1,
 																height: `${height}%`,
 																backgroundColor:
-																	stat.processed > 0
-																		? alpha(theme.palette.primary.main, 0.7)
-																		: alpha(theme.palette.grey[400], 0.3),
+																	stat.processed > 0 ? alpha(theme.palette.primary.main, 0.7) : alpha(theme.palette.grey[400], 0.3),
 																borderRadius: 0.5,
 																minWidth: 8,
 																cursor: "pointer",
@@ -1802,8 +1815,8 @@ const IntervinientesWorker = () => {
 			{/* Info alert */}
 			<Alert severity="info" variant="outlined" sx={{ py: 1 }}>
 				<Typography variant="body2">
-					Este worker extrae los intervinientes (partes y letrados) de las causas judiciales desde el sitio web del PJN y opcionalmente
-					los sincroniza como contactos en los folders de los usuarios.
+					Este worker extrae los intervinientes (partes y letrados) de las causas judiciales desde el sitio web del PJN y opcionalmente los
+					sincroniza como contactos en los folders de los usuarios.
 				</Typography>
 			</Alert>
 

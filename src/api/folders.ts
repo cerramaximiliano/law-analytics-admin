@@ -220,7 +220,7 @@ class FoldersService {
 	static async updateCausaAndSync(
 		causaId: string,
 		causaType: string,
-		data: Partial<Causa>
+		data: Partial<Causa>,
 	): Promise<{
 		success: boolean;
 		message: string;

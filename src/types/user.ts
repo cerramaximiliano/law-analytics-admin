@@ -247,7 +247,7 @@ export interface User {
 	avatar?: string;
 	phone?: string;
 	lastLogin?: string;
-	authProvider?: 'email' | 'google' | null;
+	authProvider?: "email" | "google" | null;
 	authProviderUpdatedAt?: string | null;
 	subscription?: Subscription;
 	subscriptions?: SubscriptionsByEnvironment;

@@ -62,7 +62,12 @@ import {
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import SupportContactsService, { SupportContact, SupportContactFilters, UpdateSupportContactData, SupportContactReply } from "api/supportContacts";
+import SupportContactsService, {
+	SupportContact,
+	SupportContactFilters,
+	UpdateSupportContactData,
+	SupportContactReply,
+} from "api/supportContacts";
 
 // Status configuration
 const STATUS_CONFIG: Record<string, { color: "warning" | "info" | "success" | "default"; label: string; icon: React.ReactNode }> = {
@@ -364,12 +369,7 @@ const SupportContactsPage = () => {
 					<Stack direction="row" spacing={1}>
 						{selectedIds.length > 0 && (
 							<>
-								<Button
-									variant="outlined"
-									color="primary"
-									size="small"
-									onClick={() => setBulkStatusDialogOpen(true)}
-								>
+								<Button variant="outlined" color="primary" size="small" onClick={() => setBulkStatusDialogOpen(true)}>
 									Cambiar Estado ({selectedIds.length})
 								</Button>
 								<Button
@@ -637,10 +637,7 @@ const SupportContactsPage = () => {
 									contacts.map((contact) => (
 										<TableRow key={contact._id} hover selected={selectedIds.includes(contact._id)}>
 											<TableCell padding="checkbox">
-												<Checkbox
-													checked={selectedIds.includes(contact._id)}
-													onChange={() => handleSelectOne(contact._id)}
-												/>
+												<Checkbox checked={selectedIds.includes(contact._id)} onChange={() => handleSelectOne(contact._id)} />
 											</TableCell>
 											<TableCell>
 												<Typography variant="body2">{formatDate(contact.createdAt)}</Typography>
@@ -804,11 +801,7 @@ const SupportContactsPage = () => {
 										<Typography variant="subtitle1" fontWeight={600}>
 											Historial de Conversacion
 										</Typography>
-										<Chip
-											label={`${1 + (selectedContact.replies?.length || 0)} mensajes`}
-											size="small"
-											variant="outlined"
-										/>
+										<Chip label={`${1 + (selectedContact.replies?.length || 0)} mensajes`} size="small" variant="outlined" />
 									</Stack>
 
 									<Stack spacing={2}>
@@ -820,7 +813,7 @@ const SupportContactsPage = () => {
 												bgcolor: "primary.50",
 												borderColor: "primary.200",
 												borderLeft: 4,
-												borderLeftColor: "primary.main"
+												borderLeftColor: "primary.main",
 											}}
 										>
 											<Stack direction="row" spacing={2} alignItems="flex-start">
@@ -856,7 +849,7 @@ const SupportContactsPage = () => {
 															borderColor: "success.200",
 															borderLeft: 4,
 															borderLeftColor: "success.main",
-															ml: 3
+															ml: 3,
 														}}
 													>
 														<Stack direction="row" spacing={2} alignItems="flex-start">
@@ -869,12 +862,7 @@ const SupportContactsPage = () => {
 																		<Typography variant="subtitle2" fontWeight={600}>
 																			{reply.createdByName || reply.createdBy?.name || reply.createdBy?.email || "Administrador"}
 																		</Typography>
-																		<Chip
-																			label="Soporte"
-																			size="small"
-																			color="success"
-																			sx={{ height: 20, fontSize: "0.7rem" }}
-																		/>
+																		<Chip label="Soporte" size="small" color="success" sx={{ height: 20, fontSize: "0.7rem" }} />
 																		{reply.emailSent ? (
 																			<Tooltip title="Email enviado">
 																				<TickSquare size={16} color={theme.palette.success.dark} />
@@ -1157,12 +1145,7 @@ const SupportContactsPage = () => {
 
 								{selectedContact.status === "pending" && (
 									<FormControlLabel
-										control={
-											<Checkbox
-												checked={replyChangeStatus}
-												onChange={(e) => setReplyChangeStatus(e.target.checked)}
-											/>
-										}
+										control={<Checkbox checked={replyChangeStatus} onChange={(e) => setReplyChangeStatus(e.target.checked)} />}
 										label="Cambiar estado a 'En Progreso' automaticamente"
 									/>
 								)}

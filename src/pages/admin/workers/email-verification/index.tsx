@@ -285,8 +285,8 @@ const EmailVerificationWorker = () => {
 		return (
 			<MainCard title="Worker de Verificación de Emails">
 				<Alert severity="warning">
-					No se encontró configuración para el worker de verificación de emails. Asegurate de que el documento de configuración
-					exista en la base de datos.
+					No se encontró configuración para el worker de verificación de emails. Asegurate de que el documento de configuración exista en la
+					base de datos.
 				</Alert>
 			</MainCard>
 		);
@@ -316,8 +316,8 @@ const EmailVerificationWorker = () => {
 						Worker de Verificación de Emails con NeverBounce
 					</Typography>
 					<Typography variant="body2" sx={{ mt: 1 }}>
-						Este worker verifica la validez de direcciones de email utilizando la API de NeverBounce. Procesa emails de la
-						colección EmailContact y actualiza su estado según los resultados de verificación.
+						Este worker verifica la validez de direcciones de email utilizando la API de NeverBounce. Procesa emails de la colección
+						EmailContact y actualiza su estado según los resultados de verificación.
 					</Typography>
 				</Alert>
 
@@ -411,14 +411,8 @@ const EmailVerificationWorker = () => {
 									/>
 								</Stack>
 								<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
-									<Chip
-										label={config.enabled ? "Activo" : "Inactivo"}
-										color={config.enabled ? "success" : "default"}
-										size="small"
-									/>
-									{config.processing?.isRunning && (
-										<Chip label="Procesando..." color="warning" size="small" icon={<Timer1 size={14} />} />
-									)}
+									<Chip label={config.enabled ? "Activo" : "Inactivo"} color={config.enabled ? "success" : "default"} size="small" />
+									{config.processing?.isRunning && <Chip label="Procesando..." color="warning" size="small" icon={<Timer1 size={14} />} />}
 								</Stack>
 							</CardContent>
 						</Card>
@@ -429,12 +423,7 @@ const EmailVerificationWorker = () => {
 								<Stack direction="row" justifyContent="space-between" alignItems="center">
 									<Typography variant="h6">Créditos NeverBounce</Typography>
 									<Tooltip title="Actualizar créditos desde NeverBounce">
-										<IconButton
-											size="small"
-											onClick={handleRefreshCredits}
-											disabled={refreshingCredits}
-											color="primary"
-										>
+										<IconButton size="small" onClick={handleRefreshCredits} disabled={refreshingCredits} color="primary">
 											{refreshingCredits ? <CircularProgress size={18} /> : <Refresh size={18} />}
 										</IconButton>
 									</Tooltip>
@@ -489,8 +478,8 @@ const EmailVerificationWorker = () => {
 											config.todayJobs >= config.dailyJobsLimit
 												? "error"
 												: config.todayJobs >= config.dailyJobsLimit * 0.75
-													? "warning"
-													: "secondary"
+												? "warning"
+												: "secondary"
 										}
 										sx={{ height: 10, borderRadius: 5 }}
 									/>
@@ -697,7 +686,7 @@ const EmailVerificationWorker = () => {
 								<FormControl fullWidth size="small" disabled={!editing}>
 									<InputLabel>Base de Datos de Contactos</InputLabel>
 									<Select
-										value={editing ? (editValues.contactsDatabase || "remote") : (config.contactsDatabase || "remote")}
+										value={editing ? editValues.contactsDatabase || "remote" : config.contactsDatabase || "remote"}
 										label="Base de Datos de Contactos"
 										onChange={(e) => setEditValues({ ...editValues, contactsDatabase: e.target.value as "local" | "remote" })}
 									>

@@ -30,11 +30,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/es";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import pjnCredentialsService, {
-	SyncedCausa,
-	SyncedCausasSummary,
-	PjnCredential,
-} from "api/pjnCredentials";
+import pjnCredentialsService, { SyncedCausa, SyncedCausasSummary, PjnCredential } from "api/pjnCredentials";
 import { Refresh, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Repeat } from "iconsax-react";
 
 dayjs.locale("es");
@@ -90,8 +86,8 @@ const getTodayUpdateInfo = (causa: SyncedCausa): { isToday: boolean; count: numb
 	const isToday = stats.date === today;
 	return {
 		isToday,
-		count: isToday ? (stats.count || 0) : 0,
-		hours: isToday ? (stats.hours || []) : [],
+		count: isToday ? stats.count || 0 : 0,
+		hours: isToday ? stats.hours || [] : [],
 	};
 };
 
@@ -218,7 +214,9 @@ const CausasSyncCredentials = () => {
 						<Grid item xs={12} sm={6} md={2.4}>
 							<Card sx={{ backgroundColor: "primary.lighter", border: 1, borderColor: "primary.main" }}>
 								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-									<Typography variant="body2" color="text.secondary">Total Causas</Typography>
+									<Typography variant="body2" color="text.secondary">
+										Total Causas
+									</Typography>
 									<Typography variant="h4" color="primary.main" fontWeight="bold">
 										{summary.totalCausas.toLocaleString()}
 									</Typography>
@@ -228,7 +226,9 @@ const CausasSyncCredentials = () => {
 						<Grid item xs={12} sm={6} md={2.4}>
 							<Card sx={{ backgroundColor: "success.lighter", border: 1, borderColor: "success.main" }}>
 								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-									<Typography variant="body2" color="text.secondary">Con Movimientos</Typography>
+									<Typography variant="body2" color="text.secondary">
+										Con Movimientos
+									</Typography>
 									<Typography variant="h4" color="success.main" fontWeight="bold">
 										{summary.withMovements.toLocaleString()}
 									</Typography>
@@ -238,7 +238,9 @@ const CausasSyncCredentials = () => {
 						<Grid item xs={12} sm={6} md={2.4}>
 							<Card sx={{ backgroundColor: "warning.lighter", border: 1, borderColor: "warning.main" }}>
 								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-									<Typography variant="body2" color="text.secondary">Sin Movimientos</Typography>
+									<Typography variant="body2" color="text.secondary">
+										Sin Movimientos
+									</Typography>
 									<Typography variant="h4" color="warning.main" fontWeight="bold">
 										{summary.withoutMovements.toLocaleString()}
 									</Typography>
@@ -248,7 +250,9 @@ const CausasSyncCredentials = () => {
 						<Grid item xs={12} sm={6} md={2.4}>
 							<Card sx={{ border: 1, borderColor: "divider" }}>
 								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-									<Typography variant="body2" color="text.secondary">Credenciales</Typography>
+									<Typography variant="body2" color="text.secondary">
+										Credenciales
+									</Typography>
 									<Typography variant="h4" fontWeight="bold">
 										{summary.credentialsCount}
 									</Typography>
@@ -258,7 +262,9 @@ const CausasSyncCredentials = () => {
 						<Grid item xs={12} sm={6} md={2.4}>
 							<Card sx={{ border: 1, borderColor: "divider" }}>
 								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-									<Typography variant="body2" color="text.secondary">Initial Sync</Typography>
+									<Typography variant="body2" color="text.secondary">
+										Initial Sync
+									</Typography>
 									<Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }}>
 										{summary.initialSyncStatus.completed > 0 && (
 											<Chip label={`${summary.initialSyncStatus.completed} ok`} size="small" color="success" sx={{ height: 22 }} />
@@ -285,11 +291,7 @@ const CausasSyncCredentials = () => {
 				<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" sx={{ "& > *": { my: 0.5 } }}>
 					<FormControl size="small" sx={{ minWidth: 220 }}>
 						<InputLabel>Credencial</InputLabel>
-						<Select
-							value={credentialId}
-							onChange={(e) => setCredentialId(e.target.value)}
-							label="Credencial"
-						>
+						<Select value={credentialId} onChange={(e) => setCredentialId(e.target.value)} label="Credencial">
 							<MenuItem value="">Todas</MenuItem>
 							{credentialsList.map((cred) => (
 								<MenuItem key={cred._id} value={cred._id}>
@@ -301,11 +303,7 @@ const CausasSyncCredentials = () => {
 
 					<FormControl size="small" sx={{ minWidth: 140 }}>
 						<InputLabel>Fuero</InputLabel>
-						<Select
-							value={fueroFilter}
-							onChange={(e) => setFueroFilter(e.target.value)}
-							label="Fuero"
-						>
+						<Select value={fueroFilter} onChange={(e) => setFueroFilter(e.target.value)} label="Fuero">
 							<MenuItem value="">Todos</MenuItem>
 							<MenuItem value="CIV">Civil</MenuItem>
 							<MenuItem value="COM">Comercial</MenuItem>
@@ -316,11 +314,7 @@ const CausasSyncCredentials = () => {
 
 					<FormControl size="small" sx={{ minWidth: 160 }}>
 						<InputLabel>Movimientos</InputLabel>
-						<Select
-							value={movementsFilter}
-							onChange={(e) => setMovementsFilter(e.target.value)}
-							label="Movimientos"
-						>
+						<Select value={movementsFilter} onChange={(e) => setMovementsFilter(e.target.value)} label="Movimientos">
 							<MenuItem value="">Todos</MenuItem>
 							<MenuItem value="true">Con movimientos</MenuItem>
 							<MenuItem value="false">Sin movimientos</MenuItem>
@@ -333,22 +327,10 @@ const CausasSyncCredentials = () => {
 						</IconButton>
 					</Tooltip>
 
-					<Button
-						variant="contained"
-						startIcon={<SearchNormal1 size={18} />}
-						onClick={handleSearch}
-						disabled={loading}
-						size="small"
-					>
+					<Button variant="contained" startIcon={<SearchNormal1 size={18} />} onClick={handleSearch} disabled={loading} size="small">
 						Buscar
 					</Button>
-					<Button
-						variant="outlined"
-						startIcon={<CloseCircle size={18} />}
-						onClick={handleClear}
-						disabled={loading}
-						size="small"
-					>
+					<Button variant="outlined" startIcon={<CloseCircle size={18} />} onClick={handleClear} disabled={loading} size="small">
 						Limpiar
 					</Button>
 					<Tooltip title="Actualizar">
@@ -420,11 +402,7 @@ const CausasSyncCredentials = () => {
 											</Typography>
 										</TableCell>
 										<TableCell>
-											<Chip
-												label={causa.source || "N/A"}
-												size="small"
-												variant="outlined"
-											/>
+											<Chip label={causa.source || "N/A"} size="small" variant="outlined" />
 										</TableCell>
 										<TableCell align="center">
 											<Chip
@@ -439,9 +417,7 @@ const CausasSyncCredentials = () => {
 												const todayInfo = getTodayUpdateInfo(causa);
 												return (
 													<Stack direction="row" alignItems="center" spacing={0.5}>
-														<Typography variant="caption">
-															{formatDate(causa.lastUpdate)}
-														</Typography>
+														<Typography variant="caption">{formatDate(causa.lastUpdate)}</Typography>
 														{todayInfo.isToday && todayInfo.count > 0 && (
 															<Tooltip title={formatHoursTooltip(todayInfo.hours)}>
 																<Chip
@@ -472,9 +448,7 @@ const CausasSyncCredentials = () => {
 											})()}
 										</TableCell>
 										<TableCell>
-											<Typography variant="caption">
-												{formatDate(causa.fechaUltimoMovimiento)}
-											</Typography>
+											<Typography variant="caption">{formatDate(causa.fechaUltimoMovimiento)}</Typography>
 										</TableCell>
 										<TableCell>
 											<Stack>

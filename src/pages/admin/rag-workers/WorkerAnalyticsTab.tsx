@@ -232,7 +232,11 @@ const WorkerAnalyticsTab = () => {
 			for (const [key, label] of Object.entries(STAGE_LABELS)) {
 				const pSet = (d.percentiles as any)[key];
 				if (pSet) {
-					lines.push(`  ${label.padEnd(18)} ${formatMs(pSet.p50).padStart(10)} ${formatMs(pSet.p90).padStart(10)} ${formatMs(pSet.p95).padStart(10)} ${formatMs(pSet.p99).padStart(10)}`);
+					lines.push(
+						`  ${label.padEnd(18)} ${formatMs(pSet.p50).padStart(10)} ${formatMs(pSet.p90).padStart(10)} ${formatMs(pSet.p95).padStart(
+							10,
+						)} ${formatMs(pSet.p99).padStart(10)}`,
+					);
 				}
 			}
 		}
@@ -242,7 +246,11 @@ const WorkerAnalyticsTab = () => {
 			lines.push(`\nDOCUMENTOS MAS LENTOS (top ${d.slowest.length})`);
 			for (const doc of d.slowest) {
 				const m = doc.metrics;
-				lines.push(`  ${doc._id.slice(-8)} | ${formatMs(m?.totalMs || 0)} total | DL:${formatMs(m?.download?.ms || 0)} EX:${formatMs(m?.extract?.ms || 0)} EM:${formatMs(m?.embedding?.ms || 0)} UP:${formatMs(m?.upsert?.ms || 0)} | ${doc.pagesCount || 0}p ${doc.chunksCount || 0}ch`);
+				lines.push(
+					`  ${doc._id.slice(-8)} | ${formatMs(m?.totalMs || 0)} total | DL:${formatMs(m?.download?.ms || 0)} EX:${formatMs(
+						m?.extract?.ms || 0,
+					)} EM:${formatMs(m?.embedding?.ms || 0)} UP:${formatMs(m?.upsert?.ms || 0)} | ${doc.pagesCount || 0}p ${doc.chunksCount || 0}ch`,
+				);
 			}
 		}
 
@@ -260,10 +268,18 @@ const WorkerAnalyticsTab = () => {
 		// Daily
 		if (p.daily && p.daily.length > 0) {
 			lines.push(`\nDESGLOSE DIARIO`);
-			lines.push(`  ${"Fecha".padEnd(12)} ${"Jobs".padStart(7)} ${"Fail".padStart(6)} ${"Avg ms".padStart(8)} ${"Docs".padStart(7)} ${"Tokens".padStart(10)}`);
+			lines.push(
+				`  ${"Fecha".padEnd(12)} ${"Jobs".padStart(7)} ${"Fail".padStart(6)} ${"Avg ms".padStart(8)} ${"Docs".padStart(
+					7,
+				)} ${"Tokens".padStart(10)}`,
+			);
 			lines.push(`  ${"─".repeat(54)}`);
 			for (const day of p.daily) {
-				lines.push(`  ${day.date.padEnd(12)} ${day.jobsCompleted.toString().padStart(7)} ${day.jobsFailed.toString().padStart(6)} ${formatMs(day.avgPipelineTotalMs).padStart(8)} ${day.documentsProcessed.toString().padStart(7)} ${formatNumber(day.embeddingTokens).padStart(10)}`);
+				lines.push(
+					`  ${day.date.padEnd(12)} ${day.jobsCompleted.toString().padStart(7)} ${day.jobsFailed.toString().padStart(6)} ${formatMs(
+						day.avgPipelineTotalMs,
+					).padStart(8)} ${day.documentsProcessed.toString().padStart(7)} ${formatNumber(day.embeddingTokens).padStart(10)}`,
+				);
 			}
 		}
 
@@ -360,7 +376,12 @@ const WorkerAnalyticsTab = () => {
 					<ThroughputSection throughput={pipelineData.throughput!} queueStats={pipelineData.queueStats!} theme={theme} />
 
 					{/* ── Section 3: Stage detail cards (real per-doc avgs) ──── */}
-					<StageDetailCards stageAvgMs={documentData?.stageAvgMs} s3Averages={documentData?.s3Averages} errorRates={pipelineData.errorRates} theme={theme} />
+					<StageDetailCards
+						stageAvgMs={documentData?.stageAvgMs}
+						s3Averages={documentData?.s3Averages}
+						errorRates={pipelineData.errorRates}
+						theme={theme}
+					/>
 
 					{/* ── Section 4: Trends ──────────────────────────────────── */}
 					{pipelineData.daily.length > 1 && <TrendCharts daily={pipelineData.daily} theme={theme} />}
@@ -452,9 +473,10 @@ const ThroughputSection: React.FC<{
 	queueStats: NonNullable<PipelineAnalytics["queueStats"]>;
 	theme: any;
 }> = ({ throughput, queueStats, theme }) => {
-	const failRate = throughput.jobsCompleted + throughput.jobsFailed > 0
-		? ((throughput.jobsFailed / (throughput.jobsCompleted + throughput.jobsFailed)) * 100).toFixed(1)
-		: "0";
+	const failRate =
+		throughput.jobsCompleted + throughput.jobsFailed > 0
+			? ((throughput.jobsFailed / (throughput.jobsCompleted + throughput.jobsFailed)) * 100).toFixed(1)
+			: "0";
 
 	const items = [
 		{ label: "Docs/dia", value: formatNumber(throughput.docsPerDay) },
@@ -462,7 +484,11 @@ const ThroughputSection: React.FC<{
 		{ label: "Vectores/dia", value: formatNumber(throughput.vectorsPerDay) },
 		{ label: "Tokens/dia", value: formatNumber(throughput.tokensPerDay) },
 		{ label: "Jobs OK", value: formatNumber(throughput.jobsCompleted), color: "success.main" },
-		{ label: "Jobs fallidos", value: formatNumber(throughput.jobsFailed), color: throughput.jobsFailed > 0 ? "error.main" : "text.secondary" },
+		{
+			label: "Jobs fallidos",
+			value: formatNumber(throughput.jobsFailed),
+			color: throughput.jobsFailed > 0 ? "error.main" : "text.secondary",
+		},
 		{ label: "Tasa de fallo", value: `${failRate}%`, color: parseFloat(failRate) > 5 ? "error.main" : "text.secondary" },
 		{ label: "Queue wait avg", value: formatMs(queueStats.avgWaitMs) },
 		{ label: "Intentos avg", value: queueStats.avgAttempts.toFixed(2) },
@@ -514,7 +540,11 @@ const StageDetailCards: React.FC<{
 							<StatItem label="Avg ms" value={formatMs(stageAvgMs.download)} />
 							{errorRates && (
 								<>
-									<StatItem label="Errores" value={errorRates.downloadErrors.toString()} color={errorRates.downloadErrors > 0 ? "error.main" : undefined} />
+									<StatItem
+										label="Errores"
+										value={errorRates.downloadErrors.toString()}
+										color={errorRates.downloadErrors > 0 ? "error.main" : undefined}
+									/>
 									<StatItem label="Reintentos" value={errorRates.downloadRetries.toString()} />
 									<StatItem label="Error rate" value={`${errorRates.downloadErrorRate}%`} />
 								</>
@@ -581,7 +611,11 @@ const StageDetailCards: React.FC<{
 							{errorRates && (
 								<>
 									<StatItem label="Reintentos" value={errorRates.embeddingRetries.toString()} />
-									<StatItem label="HTTP errors" value={errorRates.embeddingHttpErrors.toString()} color={errorRates.embeddingHttpErrors > 0 ? "error.main" : undefined} />
+									<StatItem
+										label="HTTP errors"
+										value={errorRates.embeddingHttpErrors.toString()}
+										color={errorRates.embeddingHttpErrors > 0 ? "error.main" : undefined}
+									/>
 									<StatItem label="Backoff total" value={formatMs(errorRates.embeddingBackoffMs)} />
 								</>
 							)}
@@ -653,7 +687,14 @@ const TrendCharts: React.FC<{ daily: PipelineDailyEntry[]; theme: any }> = ({ da
 						<XAxis dataKey="dateLabel" tick={{ fontSize: 11 }} />
 						<YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => formatMs(v)} />
 						<RechartsTooltip content={<ChartTooltip formatter={formatMs} />} />
-						<Line type="monotone" dataKey="avgPipelineTotalMs" name="Pipeline Total" stroke={theme.palette.primary.main} strokeWidth={2} dot={{ r: 3 }} />
+						<Line
+							type="monotone"
+							dataKey="avgPipelineTotalMs"
+							name="Pipeline Total"
+							stroke={theme.palette.primary.main}
+							strokeWidth={2}
+							dot={{ r: 3 }}
+						/>
 					</LineChart>
 				</ResponsiveContainer>
 			</Box>
@@ -669,11 +710,51 @@ const TrendCharts: React.FC<{ daily: PipelineDailyEntry[]; theme: any }> = ({ da
 						<XAxis dataKey="dateLabel" tick={{ fontSize: 11 }} />
 						<YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => formatMs(v)} />
 						<RechartsTooltip content={<ChartTooltip formatter={formatMs} />} />
-						<Area type="monotone" dataKey="avgDownloadMs" name="Download" stackId="1" fill={STAGE_COLORS.download} stroke={STAGE_COLORS.download} fillOpacity={0.6} />
-						<Area type="monotone" dataKey="avgExtractMs" name="Extraccion" stackId="1" fill={STAGE_COLORS.extract} stroke={STAGE_COLORS.extract} fillOpacity={0.6} />
-						<Area type="monotone" dataKey="avgChunkingMs" name="Chunking" stackId="1" fill={STAGE_COLORS.chunking} stroke={STAGE_COLORS.chunking} fillOpacity={0.6} />
-						<Area type="monotone" dataKey="avgEmbeddingMs" name="Embedding" stackId="1" fill={STAGE_COLORS.embedding} stroke={STAGE_COLORS.embedding} fillOpacity={0.6} />
-						<Area type="monotone" dataKey="avgUpsertMs" name="Upsert" stackId="1" fill={STAGE_COLORS.upsert} stroke={STAGE_COLORS.upsert} fillOpacity={0.6} />
+						<Area
+							type="monotone"
+							dataKey="avgDownloadMs"
+							name="Download"
+							stackId="1"
+							fill={STAGE_COLORS.download}
+							stroke={STAGE_COLORS.download}
+							fillOpacity={0.6}
+						/>
+						<Area
+							type="monotone"
+							dataKey="avgExtractMs"
+							name="Extraccion"
+							stackId="1"
+							fill={STAGE_COLORS.extract}
+							stroke={STAGE_COLORS.extract}
+							fillOpacity={0.6}
+						/>
+						<Area
+							type="monotone"
+							dataKey="avgChunkingMs"
+							name="Chunking"
+							stackId="1"
+							fill={STAGE_COLORS.chunking}
+							stroke={STAGE_COLORS.chunking}
+							fillOpacity={0.6}
+						/>
+						<Area
+							type="monotone"
+							dataKey="avgEmbeddingMs"
+							name="Embedding"
+							stackId="1"
+							fill={STAGE_COLORS.embedding}
+							stroke={STAGE_COLORS.embedding}
+							fillOpacity={0.6}
+						/>
+						<Area
+							type="monotone"
+							dataKey="avgUpsertMs"
+							name="Upsert"
+							stackId="1"
+							fill={STAGE_COLORS.upsert}
+							stroke={STAGE_COLORS.upsert}
+							fillOpacity={0.6}
+						/>
 					</AreaChart>
 				</ResponsiveContainer>
 			</Box>
@@ -690,8 +771,24 @@ const TrendCharts: React.FC<{ daily: PipelineDailyEntry[]; theme: any }> = ({ da
 						<YAxis yAxisId="left" tick={{ fontSize: 11 }} />
 						<YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickFormatter={(v: number) => formatNumber(v)} />
 						<RechartsTooltip content={<ChartTooltip />} />
-						<Line yAxisId="left" type="monotone" dataKey="documentsProcessed" name="Documentos" stroke={theme.palette.primary.main} strokeWidth={2} dot={{ r: 2 }} />
-						<Line yAxisId="right" type="monotone" dataKey="embeddingTokens" name="Tokens" stroke={STAGE_COLORS.embedding} strokeWidth={2} dot={{ r: 2 }} />
+						<Line
+							yAxisId="left"
+							type="monotone"
+							dataKey="documentsProcessed"
+							name="Documentos"
+							stroke={theme.palette.primary.main}
+							strokeWidth={2}
+							dot={{ r: 2 }}
+						/>
+						<Line
+							yAxisId="right"
+							type="monotone"
+							dataKey="embeddingTokens"
+							name="Tokens"
+							stroke={STAGE_COLORS.embedding}
+							strokeWidth={2}
+							dot={{ r: 2 }}
+						/>
 					</LineChart>
 				</ResponsiveContainer>
 			</Box>

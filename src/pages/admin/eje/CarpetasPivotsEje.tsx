@@ -229,7 +229,7 @@ const CarpetasPivotsEje = () => {
 		term?: string,
 		sortByParam?: string,
 		sortOrderParam?: "asc" | "desc",
-		resolved?: string
+		resolved?: string,
 	) => {
 		try {
 			setLoading(true);
@@ -392,8 +392,8 @@ const CarpetasPivotsEje = () => {
 					</Grid>
 					<Grid item xs={12} md={8}>
 						<Alert severity="info" icon={<DocumentText size={20} />}>
-							Los pivots son búsquedas que encontraron múltiples resultados en EJE. Expande cada fila para ver las opciones y seleccionar la causa
-							correcta.
+							Los pivots son búsquedas que encontraron múltiples resultados en EJE. Expande cada fila para ver las opciones y seleccionar la
+							causa correcta.
 						</Alert>
 					</Grid>
 				</Grid>
@@ -483,7 +483,13 @@ const CarpetasPivotsEje = () => {
 								<Button variant="contained" startIcon={<SearchNormal1 size={18} />} onClick={handleSearch} disabled={loading} size="small">
 									Buscar
 								</Button>
-								<Button variant="outlined" startIcon={<CloseCircle size={18} />} onClick={handleClearSearch} disabled={loading} size="small">
+								<Button
+									variant="outlined"
+									startIcon={<CloseCircle size={18} />}
+									onClick={handleClearSearch}
+									disabled={loading}
+									size="small"
+								>
 									Limpiar
 								</Button>
 								<Tooltip title="Actualizar">
@@ -526,9 +532,7 @@ const CarpetasPivotsEje = () => {
 												<>
 													<TableRow key={id} hover sx={{ cursor: "pointer" }} onClick={() => toggleRowExpansion(id)}>
 														<TableCell>
-															<IconButton size="small">
-																{isExpanded ? <ArrowUp2 size={18} /> : <ArrowDown2 size={18} />}
-															</IconButton>
+															<IconButton size="small">{isExpanded ? <ArrowUp2 size={18} /> : <ArrowDown2 size={18} />}</IconButton>
 														</TableCell>
 														<TableCell>
 															<Typography variant="body2" fontWeight="bold" sx={{ fontFamily: "monospace" }}>

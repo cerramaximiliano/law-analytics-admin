@@ -39,7 +39,20 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/es";
-import { Add, Refresh, Edit2, Trash, SearchNormal1, DollarCircle, Calendar, Filter, CloseCircle, Setting2, Wallet2, RefreshCircle } from "iconsax-react";
+import {
+	Add,
+	Refresh,
+	Edit2,
+	Trash,
+	SearchNormal1,
+	DollarCircle,
+	Calendar,
+	Filter,
+	CloseCircle,
+	Setting2,
+	Wallet2,
+	RefreshCircle,
+} from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { ExpensesService, Expense, ExpenseType, CreateExpenseData } from "api/expenses";
@@ -390,7 +403,15 @@ const ExpensesPage = () => {
 				title="Gestión de Gastos"
 				secondary={
 					<Stack direction="row" spacing={1}>
-						<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={() => { fetchExpenses(); fetchStats(); }}>
+						<Button
+							variant="outlined"
+							size="small"
+							startIcon={<Refresh size={16} />}
+							onClick={() => {
+								fetchExpenses();
+								fetchStats();
+							}}
+						>
 							Actualizar
 						</Button>
 						<Button variant="contained" size="small" startIcon={<Add size={16} />} onClick={() => handleOpenDialog()}>
@@ -457,9 +478,7 @@ const ExpensesPage = () => {
 												{stats?.totals?.totalCount || 0}
 											</Typography>
 											<Typography variant="caption" color="textSecondary">
-												{(stats?.byCurrency || []).length > 1
-													? `en ${(stats?.byCurrency || []).length} monedas`
-													: "gastos totales"}
+												{(stats?.byCurrency || []).length > 1 ? `en ${(stats?.byCurrency || []).length} monedas` : "gastos totales"}
 											</Typography>
 										</>
 									)}
@@ -472,7 +491,9 @@ const ExpensesPage = () => {
 						<Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" mb={2}>
 							<Stack direction="row" spacing={1} alignItems="center">
 								<Wallet2 size={20} color={theme.palette.success.main} />
-								<Typography variant="subtitle1" fontWeight={600}>Saldo OpenAI</Typography>
+								<Typography variant="subtitle1" fontWeight={600}>
+									Saldo OpenAI
+								</Typography>
 							</Stack>
 							<Stack direction="row" spacing={1}>
 								<Tooltip title="Sincronizar costos">
@@ -568,7 +589,14 @@ const ExpensesPage = () => {
 							<Grid item xs={12} sm={6} md={2}>
 								<FormControl fullWidth size="small">
 									<InputLabel>Tipo</InputLabel>
-									<Select value={filterType} label="Tipo" onChange={(e) => { setFilterType(e.target.value); setPage(0); }}>
+									<Select
+										value={filterType}
+										label="Tipo"
+										onChange={(e) => {
+											setFilterType(e.target.value);
+											setPage(0);
+										}}
+									>
 										<MenuItem value="">Todos</MenuItem>
 										{expenseTypes.map((type) => (
 											<MenuItem key={type.value} value={type.value}>
@@ -581,7 +609,14 @@ const ExpensesPage = () => {
 							<Grid item xs={12} sm={6} md={2}>
 								<FormControl fullWidth size="small">
 									<InputLabel>Estado</InputLabel>
-									<Select value={filterStatus} label="Estado" onChange={(e) => { setFilterStatus(e.target.value); setPage(0); }}>
+									<Select
+										value={filterStatus}
+										label="Estado"
+										onChange={(e) => {
+											setFilterStatus(e.target.value);
+											setPage(0);
+										}}
+									>
 										<MenuItem value="">Todos</MenuItem>
 										<MenuItem value="paid">Pagado</MenuItem>
 										<MenuItem value="pending">Pendiente</MenuItem>
@@ -593,7 +628,10 @@ const ExpensesPage = () => {
 								<DatePicker
 									label="Desde"
 									value={filterStartDate}
-									onChange={(date) => { setFilterStartDate(date); setPage(0); }}
+									onChange={(date) => {
+										setFilterStartDate(date);
+										setPage(0);
+									}}
 									slotProps={{ textField: { size: "small", fullWidth: true } }}
 								/>
 							</Grid>
@@ -601,7 +639,10 @@ const ExpensesPage = () => {
 								<DatePicker
 									label="Hasta"
 									value={filterEndDate}
-									onChange={(date) => { setFilterEndDate(date); setPage(0); }}
+									onChange={(date) => {
+										setFilterEndDate(date);
+										setPage(0);
+									}}
 									slotProps={{ textField: { size: "small", fullWidth: true } }}
 								/>
 							</Grid>
@@ -611,7 +652,10 @@ const ExpensesPage = () => {
 									size="small"
 									placeholder="Buscar..."
 									value={searchTerm}
-									onChange={(e) => { setSearchTerm(e.target.value); setPage(0); }}
+									onChange={(e) => {
+										setSearchTerm(e.target.value);
+										setPage(0);
+									}}
 									InputProps={{
 										startAdornment: (
 											<InputAdornment position="start">
@@ -748,11 +792,7 @@ const ExpensesPage = () => {
 								<Grid item xs={12} sm={6}>
 									<FormControl fullWidth size="small" required>
 										<InputLabel>Tipo *</InputLabel>
-										<Select
-											value={formData.type}
-											label="Tipo *"
-											onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-										>
+										<Select value={formData.type} label="Tipo *" onChange={(e) => setFormData({ ...formData, type: e.target.value })}>
 											{expenseTypes.map((type) => (
 												<MenuItem key={type.value} value={type.value}>
 													{type.label}
@@ -804,11 +844,7 @@ const ExpensesPage = () => {
 								<Grid item xs={12} sm={4}>
 									<FormControl fullWidth size="small">
 										<InputLabel>Estado</InputLabel>
-										<Select
-											value={formData.status}
-											label="Estado"
-											onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-										>
+										<Select value={formData.status} label="Estado" onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
 											<MenuItem value="paid">Pagado</MenuItem>
 											<MenuItem value="pending">Pendiente</MenuItem>
 											<MenuItem value="cancelled">Cancelado</MenuItem>
@@ -847,10 +883,7 @@ const ExpensesPage = () => {
 
 							<FormControlLabel
 								control={
-									<Switch
-										checked={formData.isRecurring}
-										onChange={(e) => setFormData({ ...formData, isRecurring: e.target.checked })}
-									/>
+									<Switch checked={formData.isRecurring} onChange={(e) => setFormData({ ...formData, isRecurring: e.target.checked })} />
 								}
 								label="Gasto recurrente"
 							/>
@@ -887,9 +920,7 @@ const ExpensesPage = () => {
 				<Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
 					<DialogTitle>Confirmar Eliminación</DialogTitle>
 					<DialogContent>
-						<Typography>
-							¿Estás seguro de que querés eliminar este gasto?
-						</Typography>
+						<Typography>¿Estás seguro de que querés eliminar este gasto?</Typography>
 						{expenseToDelete && (
 							<Box sx={{ mt: 2, p: 2, bgcolor: "background.default", borderRadius: 1 }}>
 								<Typography variant="body2">
@@ -923,8 +954,8 @@ const ExpensesPage = () => {
 					<DialogContent>
 						<Stack spacing={3} sx={{ mt: 1 }}>
 							<Alert severity="info">
-								Configura el saldo inicial y la fecha desde la cual comenzar a trackear los costos.
-								El sistema calculará automáticamente el saldo restante basado en los costos reportados por la API de OpenAI.
+								Configura el saldo inicial y la fecha desde la cual comenzar a trackear los costos. El sistema calculará automáticamente el
+								saldo restante basado en los costos reportados por la API de OpenAI.
 							</Alert>
 							<TextField
 								label="Saldo Inicial (USD)"
@@ -940,7 +971,12 @@ const ExpensesPage = () => {
 							<DatePicker
 								label="Fecha de Inicio"
 								value={dayjs(openaiConfigForm.initialBalanceDate)}
-								onChange={(date) => setOpenaiConfigForm({ ...openaiConfigForm, initialBalanceDate: date?.format("YYYY-MM-DD") || dayjs().format("YYYY-MM-DD") })}
+								onChange={(date) =>
+									setOpenaiConfigForm({
+										...openaiConfigForm,
+										initialBalanceDate: date?.format("YYYY-MM-DD") || dayjs().format("YYYY-MM-DD"),
+									})
+								}
 								slotProps={{
 									textField: {
 										fullWidth: true,

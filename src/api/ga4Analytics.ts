@@ -335,9 +335,16 @@ class GA4AnalyticsService {
 	/**
 	 * Obtiene los valores de un parámetro específico de un evento
 	 */
-	static async getEventParameters(eventName: string, parameterName: string, params?: QueryParams): Promise<GA4ApiResponse<GA4ParameterValue[]>> {
+	static async getEventParameters(
+		eventName: string,
+		parameterName: string,
+		params?: QueryParams,
+	): Promise<GA4ApiResponse<GA4ParameterValue[]>> {
 		try {
-			const response = await adminAxios.get(`/api/ga4/events/${encodeURIComponent(eventName)}/parameters/${encodeURIComponent(parameterName)}`, { params });
+			const response = await adminAxios.get(
+				`/api/ga4/events/${encodeURIComponent(eventName)}/parameters/${encodeURIComponent(parameterName)}`,
+				{ params },
+			);
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al obtener parámetros del evento");

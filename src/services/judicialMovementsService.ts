@@ -137,7 +137,9 @@ class JudicialMovementsService {
 		}
 	}
 
-	async deleteMultipleMovements(ids: string[]): Promise<{ success: boolean; message: string; data: { deletedCount: number; requestedCount: number } }> {
+	async deleteMultipleMovements(
+		ids: string[],
+	): Promise<{ success: boolean; message: string; data: { deletedCount: number; requestedCount: number } }> {
 		try {
 			const apiBase = import.meta.env.VITE_NOTIFICATION_URL || import.meta.env.VITE_API_PJN || "";
 			const baseUrl = `${apiBase}/api/judicial-movements`;

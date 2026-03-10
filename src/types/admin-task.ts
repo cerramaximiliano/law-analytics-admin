@@ -2,16 +2,7 @@
 
 export type TaskStatus = "backlog" | "todo" | "in_progress" | "review" | "completed" | "cancelled" | "blocked";
 export type TaskPriority = "low" | "medium" | "high" | "urgent";
-export type TaskCategory =
-	| "bug"
-	| "feature"
-	| "improvement"
-	| "maintenance"
-	| "documentation"
-	| "research"
-	| "meeting"
-	| "admin"
-	| "other";
+export type TaskCategory = "bug" | "feature" | "improvement" | "maintenance" | "documentation" | "research" | "meeting" | "admin" | "other";
 export type RecurringPattern = "daily" | "weekly" | "biweekly" | "monthly" | "quarterly" | "yearly";
 export type RelatedEntityType = "user" | "folder" | "subscription" | "support" | "other";
 

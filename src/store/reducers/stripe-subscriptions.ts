@@ -126,8 +126,7 @@ export const fetchStripeCustomers = (cursor?: string) => async () => {
 };
 
 export const deleteStripeCustomer =
-	(request: DeleteStripeCustomerRequest, customerId: string) =>
-	async (): Promise<DeleteStripeCustomerResponse> => {
+	(request: DeleteStripeCustomerRequest, customerId: string) => async (): Promise<DeleteStripeCustomerResponse> => {
 		dispatch(setDeleting(true));
 		dispatch(setDeleteError(null));
 		try {

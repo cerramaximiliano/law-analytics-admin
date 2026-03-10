@@ -171,8 +171,8 @@ const BatchCreateWorkersModal: React.FC<BatchCreateWorkersModalProps> = ({ open,
 				<Stack spacing={2.5} sx={{ mt: 2 }}>
 					<Alert severity="info" variant="outlined">
 						<Typography variant="body2">
-							Crea múltiples workers a la vez con distribución automática de rangos. Los rangos se calculan automáticamente
-							pero pueden editarse manualmente.
+							Crea múltiples workers a la vez con distribución automática de rangos. Los rangos se calculan automáticamente pero pueden
+							editarse manualmente.
 						</Typography>
 					</Alert>
 

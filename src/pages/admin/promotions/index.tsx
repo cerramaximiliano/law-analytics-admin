@@ -200,8 +200,8 @@ const PromotionsManagement = () => {
 			>
 				<Alert severity="info" sx={{ mb: 3 }}>
 					<Typography variant="body2">
-						Las promociones se sincronizan automáticamente con Stripe al crearlas. Los códigos públicos aparecerán automáticamente en
-						la página de planes y se aplicarán en el checkout.
+						Las promociones se sincronizan automáticamente con Stripe al crearlas. Los códigos públicos aparecerán automáticamente en la
+						página de planes y se aplicarán en el checkout.
 					</Typography>
 				</Alert>
 
@@ -312,8 +312,8 @@ const PromotionsManagement = () => {
 												{discount.duration === "once"
 													? "Una vez"
 													: discount.duration === "forever"
-														? "Siempre"
-														: `${discount.durationInMonths} meses`}
+													? "Siempre"
+													: `${discount.durationInMonths} meses`}
 											</Typography>
 										</TableCell>
 										<TableCell align="center">
@@ -349,7 +349,7 @@ const PromotionsManagement = () => {
 															color="warning"
 															sx={{
 																"& .MuiChip-icon": { color: theme.palette.text.primary },
-																color: theme.palette.text.primary
+																color: theme.palette.text.primary,
 															}}
 														/>
 													</Tooltip>

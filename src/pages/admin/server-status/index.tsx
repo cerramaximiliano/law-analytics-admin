@@ -162,7 +162,12 @@ const ServerStatus = () => {
 					// Si es un error de red, podría ser CORS
 					if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
 						// Para servicios conocidos que sabemos que funcionan pero tienen CORS restrictivo
-						if (service.name === "API de Suscripciones" || service.name === "API de Causas PJN" || service.name === "API de Causas MEV" || service.name === "API de Causas EJE") {
+						if (
+							service.name === "API de Suscripciones" ||
+							service.name === "API de Causas PJN" ||
+							service.name === "API de Causas MEV" ||
+							service.name === "API de Causas EJE"
+						) {
 							// Intentar verificar a través de nuestro backend
 							try {
 								const proxyUrl = `${import.meta.env.VITE_AUTH_URL}/api/server-status/check-external`;

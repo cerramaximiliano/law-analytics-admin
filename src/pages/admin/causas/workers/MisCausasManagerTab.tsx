@@ -97,7 +97,11 @@ const MisCausasManagerTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 								<CardContent sx={{ py: 2 }}>
 									<Stack direction="row" justifyContent="space-between" alignItems="center">
 										<Stack direction="row" spacing={1.5} alignItems="center">
-											{globalEnabled ? <TickCircle size={24} color={theme.palette.success.main} /> : <CloseCircle size={24} color={theme.palette.error.main} />}
+											{globalEnabled ? (
+												<TickCircle size={24} color={theme.palette.success.main} />
+											) : (
+												<CloseCircle size={24} color={theme.palette.error.main} />
+											)}
 											<Box>
 												<Typography variant="subtitle2" fontWeight="bold">
 													Manager
@@ -125,7 +129,11 @@ const MisCausasManagerTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 								<CardContent sx={{ py: 2 }}>
 									<Stack direction="row" justifyContent="space-between" alignItems="center">
 										<Stack direction="row" spacing={1.5} alignItems="center">
-											{serviceAvailable ? <TickCircle size={24} color={theme.palette.info.main} /> : <CloseCircle size={24} color={theme.palette.warning.main} />}
+											{serviceAvailable ? (
+												<TickCircle size={24} color={theme.palette.info.main} />
+											) : (
+												<CloseCircle size={24} color={theme.palette.warning.main} />
+											)}
 											<Box>
 												<Typography variant="subtitle2" fontWeight="bold">
 													Servicio a Usuarios
@@ -153,7 +161,8 @@ const MisCausasManagerTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 					{globalEnabled && !serviceAvailable && (
 						<Alert severity="warning" variant="outlined" sx={{ mt: 2 }}>
 							<Typography variant="body2">
-								<strong>Servicio no disponible para usuarios:</strong> Los workers pueden seguir ejecutándose, pero la API indicará a los usuarios que el servicio no está disponible.
+								<strong>Servicio no disponible para usuarios:</strong> Los workers pueden seguir ejecutándose, pero la API indicará a los
+								usuarios que el servicio no está disponible.
 							</Typography>
 						</Alert>
 					)}
@@ -244,16 +253,22 @@ const MisCausasManagerTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 				<CardContent sx={{ py: 1.5 }}>
 					<Stack direction="row" spacing={3} flexWrap="wrap">
 						<Stack direction="row" spacing={0.5} alignItems="center">
-							<Typography variant="caption" color="text.secondary">Versión:</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Versión:
+							</Typography>
 							<Chip label={config._version} size="small" variant="outlined" />
 						</Stack>
 						<Stack direction="row" spacing={0.5} alignItems="center">
-							<Typography variant="caption" color="text.secondary">Última modificación:</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Última modificación:
+							</Typography>
 							<Typography variant="caption">{new Date(config._lastModified).toLocaleString("es-AR")}</Typography>
 						</Stack>
 						{config._createdBy && (
 							<Stack direction="row" spacing={0.5} alignItems="center">
-								<Typography variant="caption" color="text.secondary">Creado por:</Typography>
+								<Typography variant="caption" color="text.secondary">
+									Creado por:
+								</Typography>
 								<Typography variant="caption">{config._createdBy}</Typography>
 							</Stack>
 						)}

@@ -29,7 +29,14 @@ import {
 import { Refresh, Play, Pause, Flash } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { Edit2 } from "iconsax-react";
-import RagWorkersService, { WorkerConfig, AutoIndexSettings, RecoverySettings, ScalingConfig, InstanceScalingConfig, RateLimiter } from "api/ragWorkers";
+import RagWorkersService, {
+	WorkerConfig,
+	AutoIndexSettings,
+	RecoverySettings,
+	ScalingConfig,
+	InstanceScalingConfig,
+	RateLimiter,
+} from "api/ragWorkers";
 
 // Orden segun flujo del pipeline: autoIndex → indexCausa → indexDocument → ocrDocument → generateSummary → recovery
 const WORKER_ORDER = ["autoIndex", "indexCausa", "indexDocument", "ocrDocument", "generateSummary", "recovery"];
@@ -83,7 +90,13 @@ const WorkerControlTab = () => {
 	const [editWorker, setEditWorker] = useState<WorkerConfig | null>(null);
 	const [editConcurrency, setEditConcurrency] = useState(1);
 	const [editAutoIndex, setEditAutoIndex] = useState(false);
-	const [aiSettings, setAiSettings] = useState<AutoIndexSettings>({ intervalMs: 300000, batchSize: 50, maxConcurrentJobs: 10, errorRetryAfterMs: 3600000, errorMaxRetries: 3 });
+	const [aiSettings, setAiSettings] = useState<AutoIndexSettings>({
+		intervalMs: 300000,
+		batchSize: 50,
+		maxConcurrentJobs: 10,
+		errorRetryAfterMs: 3600000,
+		errorMaxRetries: 3,
+	});
 	const [editRecovery, setEditRecovery] = useState(false);
 	const [rcSettings, setRcSettings] = useState<RecoverySettings>(DEFAULT_RECOVERY);
 	const [editScalingWorker, setEditScalingWorker] = useState<WorkerConfig | null>(null);
@@ -389,7 +402,9 @@ const WorkerControlTab = () => {
 												title={
 													worker.scaling.enabled
 														? `Concurrency: ${worker.scaling.minConcurrency}-${worker.scaling.maxConcurrency} · Scale up: >${worker.scaling.scaleUpThreshold} jobs · Scale down: <${worker.scaling.scaleDownThreshold} jobs` +
-															(worker.scaling.lastScaledConcurrency != null ? ` · Ultima: ${worker.scaling.lastScaledConcurrency} conc` : "")
+														  (worker.scaling.lastScaledConcurrency != null
+																? ` · Ultima: ${worker.scaling.lastScaledConcurrency} conc`
+																: "")
 														: "Auto-escalado deshabilitado — click para configurar"
 												}
 											>
@@ -403,7 +418,9 @@ const WorkerControlTab = () => {
 												/>
 											</Tooltip>
 										) : (
-											<Typography variant="caption" color="text.disabled">—</Typography>
+											<Typography variant="caption" color="text.disabled">
+												—
+											</Typography>
 										)}
 									</TableCell>
 									<TableCell align="center">
@@ -412,7 +429,9 @@ const WorkerControlTab = () => {
 												title={
 													worker.instanceScaling.enabled
 														? `Instancias: ${worker.instanceScaling.minInstances}-${worker.instanceScaling.maxInstances} · Scale up: >${worker.instanceScaling.scaleUpThreshold} jobs · Scale down: <${worker.instanceScaling.scaleDownThreshold} jobs` +
-															(worker.instanceScaling.lastInstanceCount != null ? ` · Actual: ${worker.instanceScaling.lastInstanceCount}` : "")
+														  (worker.instanceScaling.lastInstanceCount != null
+																? ` · Actual: ${worker.instanceScaling.lastInstanceCount}`
+																: "")
 														: "Escalado de instancias deshabilitado — click para configurar"
 												}
 											>
@@ -432,7 +451,9 @@ const WorkerControlTab = () => {
 												/>
 											</Tooltip>
 										) : (
-											<Typography variant="caption" color="text.disabled">—</Typography>
+											<Typography variant="caption" color="text.disabled">
+												—
+											</Typography>
 										)}
 									</TableCell>
 									<TableCell>
@@ -442,7 +463,12 @@ const WorkerControlTab = () => {
 									</TableCell>
 									<TableCell align="center">
 										<Tooltip title={worker.paused ? "Reanudar" : "Pausar"}>
-											<IconButton size="small" color={worker.paused ? "success" : "warning"} onClick={() => handlePauseResume(worker)} disabled={!worker.enabled}>
+											<IconButton
+												size="small"
+												color={worker.paused ? "success" : "warning"}
+												onClick={() => handlePauseResume(worker)}
+												disabled={!worker.enabled}
+											>
 												{worker.paused ? <Play size={16} /> : <Pause size={16} />}
 											</IconButton>
 										</Tooltip>
@@ -456,7 +482,15 @@ const WorkerControlTab = () => {
 
 			{/* ── Auto-Index settings info box ────────────────────────────────── */}
 			{workers.some((w) => w.workerName === "autoIndex" && w.autoIndexSettings) && (
-				<Box sx={{ mt: 2, p: 2, borderRadius: 2, bgcolor: alpha(theme.palette.info.main, 0.04), border: `1px solid ${alpha(theme.palette.info.main, 0.15)}` }}>
+				<Box
+					sx={{
+						mt: 2,
+						p: 2,
+						borderRadius: 2,
+						bgcolor: alpha(theme.palette.info.main, 0.04),
+						border: `1px solid ${alpha(theme.palette.info.main, 0.15)}`,
+					}}
+				>
 					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
 						<Typography variant="subtitle2">Configuracion Auto-Index</Typography>
 						<Tooltip title="Editar configuracion">
@@ -494,7 +528,14 @@ const WorkerControlTab = () => {
 
 			{/* ── Recovery settings info box ──────────────────────────────────── */}
 			{workers.some((w) => w.workerName === "recovery") && (
-				<Box sx={{ p: 2, borderRadius: 2, bgcolor: alpha(theme.palette.warning.main, 0.04), border: `1px solid ${alpha(theme.palette.warning.main, 0.15)}` }}>
+				<Box
+					sx={{
+						p: 2,
+						borderRadius: 2,
+						bgcolor: alpha(theme.palette.warning.main, 0.04),
+						border: `1px solid ${alpha(theme.palette.warning.main, 0.15)}`,
+					}}
+				>
 					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
 						<Typography variant="subtitle2">Configuracion Recovery</Typography>
 						<Tooltip title="Editar configuracion">
@@ -611,7 +652,9 @@ const WorkerControlTab = () => {
 							label="Retry de errores despues de (horas)"
 							type="number"
 							value={Math.round(aiSettings.errorRetryAfterMs / 3600000)}
-							onChange={(e) => setAiSettings((prev) => ({ ...prev, errorRetryAfterMs: Math.max(1, parseInt(e.target.value) || 1) * 3600000 }))}
+							onChange={(e) =>
+								setAiSettings((prev) => ({ ...prev, errorRetryAfterMs: Math.max(1, parseInt(e.target.value) || 1) * 3600000 }))
+							}
 							inputProps={{ min: 1 }}
 							size="small"
 							fullWidth
@@ -621,7 +664,9 @@ const WorkerControlTab = () => {
 							label="Max reintentos por causa con error"
 							type="number"
 							value={aiSettings.errorMaxRetries}
-							onChange={(e) => setAiSettings((prev) => ({ ...prev, errorMaxRetries: Math.max(1, Math.min(10, parseInt(e.target.value) || 1)) }))}
+							onChange={(e) =>
+								setAiSettings((prev) => ({ ...prev, errorMaxRetries: Math.max(1, Math.min(10, parseInt(e.target.value) || 1)) }))
+							}
 							inputProps={{ min: 1, max: 10 }}
 							size="small"
 							fullWidth
@@ -676,7 +721,9 @@ const WorkerControlTab = () => {
 							label="Cooldown de errores (minutos)"
 							type="number"
 							value={Math.round(rcSettings.docErrorCooldownMs / 60000)}
-							onChange={(e) => setRcSettings((prev) => ({ ...prev, docErrorCooldownMs: Math.max(1, parseInt(e.target.value) || 1) * 60000 }))}
+							onChange={(e) =>
+								setRcSettings((prev) => ({ ...prev, docErrorCooldownMs: Math.max(1, parseInt(e.target.value) || 1) * 60000 }))
+							}
 							inputProps={{ min: 1 }}
 							size="small"
 							fullWidth
@@ -696,7 +743,9 @@ const WorkerControlTab = () => {
 							label="Umbral stalled (minutos)"
 							type="number"
 							value={Math.round(rcSettings.stalledThresholdMs / 60000)}
-							onChange={(e) => setRcSettings((prev) => ({ ...prev, stalledThresholdMs: Math.max(1, parseInt(e.target.value) || 1) * 60000 }))}
+							onChange={(e) =>
+								setRcSettings((prev) => ({ ...prev, stalledThresholdMs: Math.max(1, parseInt(e.target.value) || 1) * 60000 }))
+							}
 							inputProps={{ min: 1 }}
 							size="small"
 							fullWidth
@@ -706,7 +755,9 @@ const WorkerControlTab = () => {
 							label="Limpiar failed jobs despues de (horas)"
 							type="number"
 							value={Math.round(rcSettings.cleanFailedAfterMs / 3600000)}
-							onChange={(e) => setRcSettings((prev) => ({ ...prev, cleanFailedAfterMs: Math.max(1, parseInt(e.target.value) || 1) * 3600000 }))}
+							onChange={(e) =>
+								setRcSettings((prev) => ({ ...prev, cleanFailedAfterMs: Math.max(1, parseInt(e.target.value) || 1) * 3600000 }))
+							}
 							inputProps={{ min: 1 }}
 							size="small"
 							fullWidth
@@ -724,12 +775,18 @@ const WorkerControlTab = () => {
 
 			{/* ── Scaling settings edit dialog ────────────────────────────────── */}
 			<Dialog open={!!editScalingWorker} onClose={() => setEditScalingWorker(null)} maxWidth="xs" fullWidth>
-				<DialogTitle>Escalado — {editScalingWorker && (WORKER_LABELS[editScalingWorker.workerName]?.label || editScalingWorker.workerName)}</DialogTitle>
+				<DialogTitle>
+					Escalado — {editScalingWorker && (WORKER_LABELS[editScalingWorker.workerName]?.label || editScalingWorker.workerName)}
+				</DialogTitle>
 				<DialogContent>
 					<Stack spacing={2} sx={{ mt: 1 }}>
 						<Stack direction="row" alignItems="center" justifyContent="space-between">
 							<Typography variant="body2">Auto-escalado habilitado</Typography>
-							<Switch checked={scSettings.enabled} onChange={(_, checked) => setScSettings((prev) => ({ ...prev, enabled: checked }))} size="small" />
+							<Switch
+								checked={scSettings.enabled}
+								onChange={(_, checked) => setScSettings((prev) => ({ ...prev, enabled: checked }))}
+								size="small"
+							/>
 						</Stack>
 						<Divider />
 						<Stack direction="row" spacing={2}>
@@ -845,12 +902,19 @@ const WorkerControlTab = () => {
 			</Dialog>
 			{/* ── Instance Scaling settings edit dialog ──────────────────────── */}
 			<Dialog open={!!editInstScalingWorker} onClose={() => setEditInstScalingWorker(null)} maxWidth="xs" fullWidth>
-				<DialogTitle>Instancias — {editInstScalingWorker && (WORKER_LABELS[editInstScalingWorker.workerName]?.label || editInstScalingWorker.workerName)}</DialogTitle>
+				<DialogTitle>
+					Instancias —{" "}
+					{editInstScalingWorker && (WORKER_LABELS[editInstScalingWorker.workerName]?.label || editInstScalingWorker.workerName)}
+				</DialogTitle>
 				<DialogContent>
 					<Stack spacing={2} sx={{ mt: 1 }}>
 						<Stack direction="row" alignItems="center" justifyContent="space-between">
 							<Typography variant="body2">Escalado de instancias habilitado</Typography>
-							<Switch checked={isSettings.enabled} onChange={(_, checked) => setIsSettings((prev) => ({ ...prev, enabled: checked }))} size="small" />
+							<Switch
+								checked={isSettings.enabled}
+								onChange={(_, checked) => setIsSettings((prev) => ({ ...prev, enabled: checked }))}
+								size="small"
+							/>
 						</Stack>
 						<Divider />
 						<Stack direction="row" spacing={2}>
@@ -966,7 +1030,10 @@ const WorkerControlTab = () => {
 			</Dialog>
 			{/* ── Rate Limiter edit dialog ───────────────────────────────────── */}
 			<Dialog open={!!editRateLimiterWorker} onClose={() => setEditRateLimiterWorker(null)} maxWidth="xs" fullWidth>
-				<DialogTitle>Rate Limiter — {editRateLimiterWorker && (WORKER_LABELS[editRateLimiterWorker.workerName]?.label || editRateLimiterWorker.workerName)}</DialogTitle>
+				<DialogTitle>
+					Rate Limiter —{" "}
+					{editRateLimiterWorker && (WORKER_LABELS[editRateLimiterWorker.workerName]?.label || editRateLimiterWorker.workerName)}
+				</DialogTitle>
 				<DialogContent>
 					<Stack spacing={2} sx={{ mt: 1 }}>
 						<TextField
@@ -983,7 +1050,9 @@ const WorkerControlTab = () => {
 							label="Duration (segundos)"
 							type="number"
 							value={Math.round(rlSettings.duration / 1000)}
-							onChange={(e) => setRlSettings((prev) => ({ ...prev, duration: Math.min(300, Math.max(1, parseInt(e.target.value) || 1)) * 1000 }))}
+							onChange={(e) =>
+								setRlSettings((prev) => ({ ...prev, duration: Math.min(300, Math.max(1, parseInt(e.target.value) || 1)) * 1000 }))
+							}
 							inputProps={{ min: 1, max: 300 }}
 							size="small"
 							fullWidth

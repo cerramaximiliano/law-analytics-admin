@@ -74,11 +74,7 @@ import WorkerLogsService, {
 	LogLevel,
 	DetailedLogEntry,
 } from "api/workerLogs";
-import CleanupConfigService, {
-	CleanupConfig,
-	CleanupStatusResponse,
-	ExecutionHistoryItem,
-} from "api/cleanupConfig";
+import CleanupConfigService, { CleanupConfig, CleanupStatusResponse, ExecutionHistoryItem } from "api/cleanupConfig";
 
 // ======================== HELPER FUNCTIONS ========================
 
@@ -257,11 +253,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 					<Stack direction="row" spacing={2} alignItems="center">
 						<FormControl size="small" sx={{ minWidth: 120 }}>
 							<InputLabel>Período</InputLabel>
-							<Select
-								value={hoursFilter}
-								label="Período"
-								onChange={(e) => setHoursFilter(Number(e.target.value))}
-							>
+							<Select value={hoursFilter} label="Período" onChange={(e) => setHoursFilter(Number(e.target.value))}>
 								<MenuItem value={1}>1 hora</MenuItem>
 								<MenuItem value={6}>6 horas</MenuItem>
 								<MenuItem value={12}>12 horas</MenuItem>
@@ -271,7 +263,12 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 							</Select>
 						</FormControl>
 						<Tooltip title="Actualizar">
-							<IconButton onClick={() => { fetchData(); onRefresh(); }}>
+							<IconButton
+								onClick={() => {
+									fetchData();
+									onRefresh();
+								}}
+							>
 								<Refresh size={20} />
 							</IconButton>
 						</Tooltip>
@@ -462,9 +459,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 											<Typography variant="subtitle2" color="text.secondary">
 												Docs con Logs
 											</Typography>
-											<Typography variant="h4">
-												{logsStats.statistics.documentsWithLogs.toLocaleString()}
-											</Typography>
+											<Typography variant="h4">{logsStats.statistics.documentsWithLogs.toLocaleString()}</Typography>
 										</Stack>
 									</CardContent>
 								</Card>
@@ -476,9 +471,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 											<Typography variant="subtitle2" color="text.secondary">
 												Docs sin Logs
 											</Typography>
-											<Typography variant="h4">
-												{logsStats.statistics.documentsWithoutLogs.toLocaleString()}
-											</Typography>
+											<Typography variant="h4">{logsStats.statistics.documentsWithoutLogs.toLocaleString()}</Typography>
 										</Stack>
 									</CardContent>
 								</Card>
@@ -490,9 +483,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 											<Typography variant="subtitle2" color="text.secondary">
 												Total Entradas
 											</Typography>
-											<Typography variant="h4">
-												{logsStats.statistics.totalLogEntries.toLocaleString()}
-											</Typography>
+											<Typography variant="h4">{logsStats.statistics.totalLogEntries.toLocaleString()}</Typography>
 										</Stack>
 									</CardContent>
 								</Card>
@@ -543,8 +534,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 				<DialogContent>
 					<Stack spacing={2} sx={{ mt: 1 }}>
 						<Typography variant="body2" color="text.secondary">
-							Esta acción eliminará los logs detallados expirados y antiguos. Los logs más recientes
-							que el período de retención se mantendrán.
+							Esta acción eliminará los logs detallados expirados y antiguos. Los logs más recientes que el período de retención se
+							mantendrán.
 						</Typography>
 						<TextField
 							fullWidth
@@ -555,19 +546,12 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 							inputProps={{ min: 1, max: 30 }}
 							helperText="Logs más antiguos que este período serán eliminados"
 						/>
-						<Alert severity="warning">
-							Esta acción no se puede deshacer. Los logs eliminados no podrán ser recuperados.
-						</Alert>
+						<Alert severity="warning">Esta acción no se puede deshacer. Los logs eliminados no podrán ser recuperados.</Alert>
 					</Stack>
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setCleanupDialogOpen(false)}>Cancelar</Button>
-					<Button
-						onClick={handleCleanup}
-						color="warning"
-						variant="contained"
-						disabled={cleanupLoading}
-					>
+					<Button onClick={handleCleanup} color="warning" variant="contained" disabled={cleanupLoading}>
 						{cleanupLoading ? <CircularProgress size={20} /> : "Ejecutar Limpieza"}
 					</Button>
 				</DialogActions>
@@ -610,11 +594,7 @@ const WorkersTab: React.FC = () => {
 					<Stack direction="row" spacing={2} alignItems="center">
 						<FormControl size="small" sx={{ minWidth: 120 }}>
 							<InputLabel>Período</InputLabel>
-							<Select
-								value={hoursFilter}
-								label="Período"
-								onChange={(e) => setHoursFilter(Number(e.target.value))}
-							>
+							<Select value={hoursFilter} label="Período" onChange={(e) => setHoursFilter(Number(e.target.value))}>
 								<MenuItem value={1}>1 hora</MenuItem>
 								<MenuItem value={6}>6 horas</MenuItem>
 								<MenuItem value={12}>12 horas</MenuItem>
@@ -658,12 +638,7 @@ const WorkersTab: React.FC = () => {
 											</Typography>
 										</TableCell>
 										<TableCell>
-											<Chip
-												label={getWorkerTypeLabel(worker.workerType)}
-												size="small"
-												color="primary"
-												variant="outlined"
-											/>
+											<Chip label={getWorkerTypeLabel(worker.workerType)} size="small" color="primary" variant="outlined" />
 										</TableCell>
 										<TableCell>
 											<Typography variant="body2" fontSize="0.8rem">
@@ -756,11 +731,7 @@ const ActivityTab: React.FC = () => {
 					<Stack direction="row" spacing={2} alignItems="center">
 						<FormControl size="small" sx={{ minWidth: 120 }}>
 							<InputLabel>Período</InputLabel>
-							<Select
-								value={minutesFilter}
-								label="Período"
-								onChange={(e) => setMinutesFilter(Number(e.target.value))}
-							>
+							<Select value={minutesFilter} label="Período" onChange={(e) => setMinutesFilter(Number(e.target.value))}>
 								<MenuItem value={1}>1 min</MenuItem>
 								<MenuItem value={5}>5 min</MenuItem>
 								<MenuItem value={15}>15 min</MenuItem>
@@ -768,11 +739,7 @@ const ActivityTab: React.FC = () => {
 								<MenuItem value={60}>1 hora</MenuItem>
 							</Select>
 						</FormControl>
-						<Button
-							variant={autoRefresh ? "contained" : "outlined"}
-							size="small"
-							onClick={() => setAutoRefresh(!autoRefresh)}
-						>
+						<Button variant={autoRefresh ? "contained" : "outlined"} size="small" onClick={() => setAutoRefresh(!autoRefresh)}>
 							{autoRefresh ? "Auto ON" : "Auto OFF"}
 						</Button>
 						<Tooltip title="Actualizar">
@@ -854,11 +821,7 @@ const ActivityTab: React.FC = () => {
 															{getWorkerTypeLabel(type)}
 														</Typography>
 														<Stack direction="row" spacing={1}>
-															<Chip
-																label={`Total: ${activity.total}`}
-																size="small"
-																variant="outlined"
-															/>
+															<Chip label={`Total: ${activity.total}`} size="small" variant="outlined" />
 															{activity.success > 0 && (
 																<Chip
 																	label={`OK: ${activity.success}`}
@@ -1045,12 +1008,7 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ open, onClose, log }) =
 												</Typography>
 											</Box>
 											{log.changes?.movimientosAdded !== undefined && log.changes.movimientosAdded > 0 && (
-												<Chip
-													label={`+${log.changes.movimientosAdded}`}
-													size="small"
-													color="success"
-													sx={{ fontWeight: 600 }}
-												/>
+												<Chip label={`+${log.changes.movimientosAdded}`} size="small" color="success" sx={{ fontWeight: 600 }} />
 											)}
 										</Stack>
 									</CardContent>
@@ -1165,66 +1123,66 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ open, onClose, log }) =
 								p: 1,
 							}}
 						>
-								<Stack spacing={0.5}>
-									{log.detailedLogs!.map((entry, index) => (
-										<Box
-											key={index}
-											sx={{
-												display: "flex",
-												gap: 1,
-												alignItems: "flex-start",
-												p: 1,
-												borderRadius: 1,
-												bgcolor: alpha(getLogLevelColor(entry.level, theme), 0.08),
-												borderLeft: `3px solid ${getLogLevelColor(entry.level, theme)}`,
-											}}
-										>
-											<Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 120 }}>
-												<Chip
-													label={getLogLevelLabel(entry.level)}
-													size="small"
+							<Stack spacing={0.5}>
+								{log.detailedLogs!.map((entry, index) => (
+									<Box
+										key={index}
+										sx={{
+											display: "flex",
+											gap: 1,
+											alignItems: "flex-start",
+											p: 1,
+											borderRadius: 1,
+											bgcolor: alpha(getLogLevelColor(entry.level, theme), 0.08),
+											borderLeft: `3px solid ${getLogLevelColor(entry.level, theme)}`,
+										}}
+									>
+										<Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 120 }}>
+											<Chip
+												label={getLogLevelLabel(entry.level)}
+												size="small"
+												sx={{
+													minWidth: 50,
+													height: 18,
+													fontSize: "0.6rem",
+													fontWeight: 600,
+													bgcolor: alpha(getLogLevelColor(entry.level, theme), 0.2),
+													color: getLogLevelColor(entry.level, theme),
+												}}
+											/>
+											<Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+												{new Date(entry.timestamp).toLocaleTimeString("es-AR", {
+													hour: "2-digit",
+													minute: "2-digit",
+													second: "2-digit",
+												})}
+											</Typography>
+										</Stack>
+										<Box flex={1}>
+											<Typography variant="body2" fontSize="0.8rem">
+												{entry.message}
+											</Typography>
+											{entry.data && Object.keys(entry.data).length > 0 && (
+												<Box
 													sx={{
-														minWidth: 50,
-														height: 18,
-														fontSize: "0.6rem",
-														fontWeight: 600,
-														bgcolor: alpha(getLogLevelColor(entry.level, theme), 0.2),
-														color: getLogLevelColor(entry.level, theme),
+														mt: 0.5,
+														p: 0.5,
+														bgcolor: theme.palette.mode === "dark" ? theme.palette.grey[800] : theme.palette.grey[100],
+														borderRadius: 0.5,
+														fontFamily: "monospace",
+														fontSize: "0.65rem",
+														overflow: "auto",
+														maxHeight: 100,
 													}}
-												/>
-												<Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
-													{new Date(entry.timestamp).toLocaleTimeString("es-AR", {
-														hour: "2-digit",
-														minute: "2-digit",
-														second: "2-digit",
-													})}
-												</Typography>
-											</Stack>
-											<Box flex={1}>
-												<Typography variant="body2" fontSize="0.8rem">
-													{entry.message}
-												</Typography>
-												{entry.data && Object.keys(entry.data).length > 0 && (
-													<Box
-														sx={{
-															mt: 0.5,
-															p: 0.5,
-															bgcolor: theme.palette.mode === "dark" ? theme.palette.grey[800] : theme.palette.grey[100],
-															borderRadius: 0.5,
-															fontFamily: "monospace",
-															fontSize: "0.65rem",
-															overflow: "auto",
-															maxHeight: 100,
-														}}
-													>
-														<pre style={{ margin: 0 }}>{JSON.stringify(entry.data, null, 2)}</pre>
-													</Box>
-												)}
-											</Box>
+												>
+													<pre style={{ margin: 0 }}>{JSON.stringify(entry.data, null, 2)}</pre>
+												</Box>
+											)}
 										</Box>
-									))}
-								</Stack>
-							</Box>
+									</Box>
+								))}
+							</Stack>
+						</Box>
 					</Box>
 				)}
 
@@ -1399,11 +1357,7 @@ const LogsTab: React.FC = () => {
 						<Grid item xs={12} sm={6} md={2}>
 							<FormControl fullWidth size="small">
 								<InputLabel>Período</InputLabel>
-								<Select
-									value={filters.hours || 24}
-									label="Período"
-									onChange={(e) => handleFilterChange("hours", e.target.value)}
-								>
+								<Select value={filters.hours || 24} label="Período" onChange={(e) => handleFilterChange("hours", e.target.value)}>
 									<MenuItem value={1}>1 hora</MenuItem>
 									<MenuItem value={6}>6 horas</MenuItem>
 									<MenuItem value={12}>12 horas</MenuItem>
@@ -1447,12 +1401,7 @@ const LogsTab: React.FC = () => {
 								</TableHead>
 								<TableBody>
 									{data?.data.map((log) => (
-										<TableRow
-											key={log._id}
-											hover
-											sx={{ cursor: "pointer" }}
-											onClick={() => handleLogClick(log)}
-										>
+										<TableRow key={log._id} hover sx={{ cursor: "pointer" }} onClick={() => handleLogClick(log)}>
 											<TableCell>
 												<Typography variant="body2" fontSize="0.8rem">
 													{log.startTime ? formatDate(log.startTime) : "-"}
@@ -1464,11 +1413,7 @@ const LogsTab: React.FC = () => {
 												</Typography>
 											</TableCell>
 											<TableCell>
-												<Chip
-													label={getWorkerTypeLabel(log.workerType)}
-													size="small"
-													variant="outlined"
-												/>
+												<Chip label={getWorkerTypeLabel(log.workerType)} size="small" variant="outlined" />
 											</TableCell>
 											<TableCell>
 												<Typography variant="body2" fontSize="0.8rem">
@@ -1485,9 +1430,7 @@ const LogsTab: React.FC = () => {
 													}}
 												/>
 											</TableCell>
-											<TableCell align="right">
-												{log.duration ? formatDuration(log.duration) : "-"}
-											</TableCell>
+											<TableCell align="right">{log.duration ? formatDuration(log.duration) : "-"}</TableCell>
 											<TableCell align="right">{log.changes?.movimientosAdded || 0}</TableCell>
 										</TableRow>
 									))}
@@ -1561,21 +1504,13 @@ const ErrorsTab: React.FC = () => {
 					<Stack direction="row" spacing={2} alignItems="center">
 						<Typography variant="h5">Errores y Fallos</Typography>
 						{data && (
-							<Chip
-								icon={<Warning2 size={16} />}
-								label={`${data.total} en ${data.period}`}
-								color={data.total > 0 ? "error" : "default"}
-							/>
+							<Chip icon={<Warning2 size={16} />} label={`${data.total} en ${data.period}`} color={data.total > 0 ? "error" : "default"} />
 						)}
 					</Stack>
 					<Stack direction="row" spacing={2} alignItems="center">
 						<FormControl size="small" sx={{ minWidth: 120 }}>
 							<InputLabel>Período</InputLabel>
-							<Select
-								value={hoursFilter}
-								label="Período"
-								onChange={(e) => setHoursFilter(Number(e.target.value))}
-							>
+							<Select value={hoursFilter} label="Período" onChange={(e) => setHoursFilter(Number(e.target.value))}>
 								<MenuItem value={1}>1 hora</MenuItem>
 								<MenuItem value={6}>6 horas</MenuItem>
 								<MenuItem value={12}>12 horas</MenuItem>
@@ -1619,21 +1554,14 @@ const ErrorsTab: React.FC = () => {
 														justifyContent="space-between"
 														alignItems="flex-start"
 														sx={{ cursor: "pointer" }}
-														onClick={() =>
-															setExpandedPattern(expandedPattern === pattern ? null : pattern)
-														}
+														onClick={() => setExpandedPattern(expandedPattern === pattern ? null : pattern)}
 													>
 														<Box flex={1}>
 															<Typography variant="subtitle1" fontWeight={500} color="error.main">
 																{pattern}
 															</Typography>
 															<Stack direction="row" spacing={2} mt={1}>
-																<Chip
-																	label={`${info.count} ocurrencias`}
-																	size="small"
-																	color="error"
-																	variant="outlined"
-																/>
+																<Chip label={`${info.count} ocurrencias`} size="small" color="error" variant="outlined" />
 																<Typography variant="caption" color="text.secondary">
 																	Última: {formatDate(info.lastOccurrence)}
 																</Typography>
@@ -1672,12 +1600,7 @@ const ErrorsTab: React.FC = () => {
 																	</Typography>
 																	<Stack spacing={1}>
 																		{info.examples.map((ex) => (
-																			<Typography
-																				key={ex.logId}
-																				variant="body2"
-																				fontFamily="monospace"
-																				fontSize="0.75rem"
-																			>
+																			<Typography key={ex.logId} variant="body2" fontFamily="monospace" fontSize="0.75rem">
 																				Doc: {ex.number}/{ex.year} - Log: {ex.logId}
 																			</Typography>
 																		))}
@@ -1714,9 +1637,7 @@ const ErrorsTab: React.FC = () => {
 											<TableBody>
 												{data.logs.map((log) => (
 													<TableRow key={log._id}>
-														<TableCell>
-															{log.startTime ? formatDate(log.startTime) : "-"}
-														</TableCell>
+														<TableCell>{log.startTime ? formatDate(log.startTime) : "-"}</TableCell>
 														<TableCell>
 															<Typography variant="body2" fontFamily="monospace" fontSize="0.7rem">
 																{log.workerId}
@@ -1936,9 +1857,7 @@ const SearchTab: React.FC = () => {
 						{data.filters.workerType && (
 							<Chip label={`Tipo: ${getWorkerTypeLabel(data.filters.workerType)}`} size="small" variant="outlined" />
 						)}
-						{data.filters.status && (
-							<Chip label={`Estado: ${getStatusLabel(data.filters.status)}`} size="small" variant="outlined" />
-						)}
+						{data.filters.status && <Chip label={`Estado: ${getStatusLabel(data.filters.status)}`} size="small" variant="outlined" />}
 						{data.filters.level && (
 							<Chip label={`Nivel: ${getLogLevelLabel(data.filters.level as LogLevel)}`} size="small" variant="outlined" />
 						)}
@@ -1964,12 +1883,7 @@ const SearchTab: React.FC = () => {
 								</TableHead>
 								<TableBody>
 									{data.results.map((log) => (
-										<TableRow
-											key={log._id}
-											hover
-											sx={{ cursor: "pointer" }}
-											onClick={() => handleLogClick(log)}
-										>
+										<TableRow key={log._id} hover sx={{ cursor: "pointer" }} onClick={() => handleLogClick(log)}>
 											<TableCell>
 												<Typography variant="body2" fontSize="0.8rem">
 													{log.startTime ? formatDate(log.startTime) : "-"}
@@ -1981,11 +1895,7 @@ const SearchTab: React.FC = () => {
 												</Typography>
 											</TableCell>
 											<TableCell>
-												<Chip
-													label={getWorkerTypeLabel(log.workerType)}
-													size="small"
-													variant="outlined"
-												/>
+												<Chip label={getWorkerTypeLabel(log.workerType)} size="small" variant="outlined" />
 											</TableCell>
 											<TableCell>
 												<Typography variant="body2" fontSize="0.8rem">
@@ -2002,15 +1912,7 @@ const SearchTab: React.FC = () => {
 													}}
 												/>
 											</TableCell>
-											<TableCell align="right">
-												{log.matchCount && (
-													<Chip
-														label={log.matchCount}
-														size="small"
-														color="primary"
-													/>
-												)}
-											</TableCell>
+											<TableCell align="right">{log.matchCount && <Chip label={log.matchCount} size="small" color="primary" />}</TableCell>
 										</TableRow>
 									))}
 								</TableBody>
@@ -2032,8 +1934,7 @@ const SearchTab: React.FC = () => {
 					<Alert severity="info">No se encontraron resultados para "{data.searchText}"</Alert>
 				) : (
 					<Alert severity="info">
-						Ingresa un texto para buscar en los mensajes de los logs detallados.
-						La búsqueda es case-insensitive.
+						Ingresa un texto para buscar en los mensajes de los logs detallados. La búsqueda es case-insensitive.
 					</Alert>
 				)}
 			</Stack>
@@ -2266,28 +2167,11 @@ const CleanupConfigTab: React.FC = () => {
 								<Typography variant="h6">Estado Actual</Typography>
 								<Stack direction="row" spacing={1}>
 									{config?.enabled ? (
-										<Chip
-											icon={<TickCircle size={16} />}
-											label="Habilitado"
-											color="success"
-											size="small"
-										/>
+										<Chip icon={<TickCircle size={16} />} label="Habilitado" color="success" size="small" />
 									) : (
-										<Chip
-											icon={<CloseCircle size={16} />}
-											label="Deshabilitado"
-											color="error"
-											size="small"
-										/>
+										<Chip icon={<CloseCircle size={16} />} label="Deshabilitado" color="error" size="small" />
 									)}
-									{config?.maintenance.isPaused && (
-										<Chip
-											icon={<Pause size={16} />}
-											label="Pausado"
-											color="warning"
-											size="small"
-										/>
-									)}
+									{config?.maintenance.isPaused && <Chip icon={<Pause size={16} />} label="Pausado" color="warning" size="small" />}
 								</Stack>
 							</Stack>
 
@@ -2298,9 +2182,7 @@ const CleanupConfigTab: React.FC = () => {
 											Próxima ejecución
 										</Typography>
 										<Typography variant="body1">
-											{status?.nextExecution
-												? new Date(status.nextExecution).toLocaleString("es-AR")
-												: "-"}
+											{status?.nextExecution ? new Date(status.nextExecution).toLocaleString("es-AR") : "-"}
 										</Typography>
 									</Box>
 								</Grid>
@@ -2310,9 +2192,7 @@ const CleanupConfigTab: React.FC = () => {
 											Última ejecución
 										</Typography>
 										<Typography variant="body1">
-											{config?.lastExecution?.timestamp
-												? new Date(config.lastExecution.timestamp).toLocaleString("es-AR")
-												: "Nunca"}
+											{config?.lastExecution?.timestamp ? new Date(config.lastExecution.timestamp).toLocaleString("es-AR") : "Nunca"}
 										</Typography>
 									</Box>
 								</Grid>
@@ -2341,9 +2221,7 @@ const CleanupConfigTab: React.FC = () => {
 										<Typography variant="caption" color="text.secondary">
 											Logs limpiados (última vez)
 										</Typography>
-										<Typography variant="body1">
-											{config?.lastExecution?.stats?.totalCleared?.toLocaleString() || 0}
-										</Typography>
+										<Typography variant="body1">{config?.lastExecution?.stats?.totalCleared?.toLocaleString() || 0}</Typography>
 									</Box>
 								</Grid>
 							</Grid>
@@ -2430,12 +2308,7 @@ const CleanupConfigTab: React.FC = () => {
 											</Button>
 										) : (
 											<Stack direction="row" spacing={1}>
-												<Button
-													size="small"
-													variant="contained"
-													onClick={handleSaveRetention}
-													disabled={actionLoading}
-												>
+												<Button size="small" variant="contained" onClick={handleSaveRetention} disabled={actionLoading}>
 													Guardar
 												</Button>
 												<Button
@@ -2495,17 +2368,13 @@ const CleanupConfigTab: React.FC = () => {
 												<Typography variant="caption" color="text.secondary">
 													Logs detallados
 												</Typography>
-												<Typography variant="body1">
-													{retentionDays.detailed} días
-												</Typography>
+												<Typography variant="body1">{retentionDays.detailed} días</Typography>
 											</Box>
 											<Box>
 												<Typography variant="caption" color="text.secondary">
 													Worker logs
 												</Typography>
-												<Typography variant="body1">
-													{retentionDays.workerLogs} días
-												</Typography>
+												<Typography variant="body1">{retentionDays.workerLogs} días</Typography>
 											</Box>
 										</Stack>
 									)}
@@ -2527,12 +2396,7 @@ const CleanupConfigTab: React.FC = () => {
 											</Button>
 										) : (
 											<Stack direction="row" spacing={1}>
-												<Button
-													size="small"
-													variant="contained"
-													onClick={handleSaveSchedule}
-													disabled={actionLoading}
-												>
+												<Button size="small" variant="contained" onClick={handleSaveSchedule} disabled={actionLoading}>
 													Guardar
 												</Button>
 												<Button
@@ -2561,9 +2425,7 @@ const CleanupConfigTab: React.FC = () => {
 												size="small"
 												label="Expresión Cron"
 												value={scheduleData.cron}
-												onChange={(e) =>
-													setScheduleData((prev) => ({ ...prev, cron: e.target.value }))
-												}
+												onChange={(e) => setScheduleData((prev) => ({ ...prev, cron: e.target.value }))}
 												placeholder="0 3 * * *"
 												helperText="Formato: minuto hora día mes díaSemana"
 											/>
@@ -2572,9 +2434,7 @@ const CleanupConfigTab: React.FC = () => {
 												size="small"
 												label="Zona horaria"
 												value={scheduleData.timezone}
-												onChange={(e) =>
-													setScheduleData((prev) => ({ ...prev, timezone: e.target.value }))
-												}
+												onChange={(e) => setScheduleData((prev) => ({ ...prev, timezone: e.target.value }))}
 												placeholder="America/Argentina/Buenos_Aires"
 											/>
 											<TextField
@@ -2582,9 +2442,7 @@ const CleanupConfigTab: React.FC = () => {
 												size="small"
 												label="Descripción"
 												value={scheduleData.description}
-												onChange={(e) =>
-													setScheduleData((prev) => ({ ...prev, description: e.target.value }))
-												}
+												onChange={(e) => setScheduleData((prev) => ({ ...prev, description: e.target.value }))}
 												placeholder="Todos los días a las 3:00 AM"
 											/>
 										</Stack>
@@ -2629,9 +2487,7 @@ const CleanupConfigTab: React.FC = () => {
 												<Typography variant="caption" color="text.secondary">
 													Max docs por ejecución
 												</Typography>
-												<Typography variant="body1">
-													{config?.limits?.maxDocsPerRun?.toLocaleString() || "-"}
-												</Typography>
+												<Typography variant="body1">{config?.limits?.maxDocsPerRun?.toLocaleString() || "-"}</Typography>
 											</Box>
 										</Grid>
 										<Grid item xs={6}>
@@ -2639,9 +2495,7 @@ const CleanupConfigTab: React.FC = () => {
 												<Typography variant="caption" color="text.secondary">
 													Timeout
 												</Typography>
-												<Typography variant="body1">
-													{config?.limits?.timeoutSeconds ?? "-"} seg
-												</Typography>
+												<Typography variant="body1">{config?.limits?.timeoutSeconds ?? "-"} seg</Typography>
 											</Box>
 										</Grid>
 										<Grid item xs={6}>
@@ -2649,9 +2503,7 @@ const CleanupConfigTab: React.FC = () => {
 												<Typography variant="caption" color="text.secondary">
 													Umbral de advertencia
 												</Typography>
-												<Typography variant="body1">
-													{config?.limits?.warningThreshold?.toLocaleString() || "-"}
-												</Typography>
+												<Typography variant="body1">{config?.limits?.warningThreshold?.toLocaleString() || "-"}</Typography>
 											</Box>
 										</Grid>
 									</Grid>
@@ -2680,17 +2532,14 @@ const CleanupConfigTab: React.FC = () => {
 											variant={config?.notifications.emailOnError ? "filled" : "outlined"}
 										/>
 									</Stack>
-									{config?.notifications.recipientEmails &&
-										config.notifications.recipientEmails.length > 0 && (
-											<Box>
-												<Typography variant="caption" color="text.secondary">
-													Destinatarios
-												</Typography>
-												<Typography variant="body2">
-													{config.notifications.recipientEmails.join(", ")}
-												</Typography>
-											</Box>
-										)}
+									{config?.notifications.recipientEmails && config.notifications.recipientEmails.length > 0 && (
+										<Box>
+											<Typography variant="caption" color="text.secondary">
+												Destinatarios
+											</Typography>
+											<Typography variant="body2">{config.notifications.recipientEmails.join(", ")}</Typography>
+										</Box>
+									)}
 								</Stack>
 							</CardContent>
 						</Card>
@@ -2718,9 +2567,7 @@ const CleanupConfigTab: React.FC = () => {
 									<TableBody>
 										{history.map((item, index) => (
 											<TableRow key={index}>
-												<TableCell>
-													{new Date(item.timestamp).toLocaleString("es-AR")}
-												</TableCell>
+												<TableCell>{new Date(item.timestamp).toLocaleString("es-AR")}</TableCell>
 												<TableCell>
 													<Chip
 														label={item.status}
@@ -2732,19 +2579,11 @@ const CleanupConfigTab: React.FC = () => {
 														}}
 													/>
 												</TableCell>
-												<TableCell align="right">
-													{item.duration ? `${(item.duration / 1000).toFixed(1)}s` : "-"}
-												</TableCell>
-												<TableCell align="right">
-													{item.totalCleared?.toLocaleString() || 0}
-												</TableCell>
+												<TableCell align="right">{item.duration ? `${(item.duration / 1000).toFixed(1)}s` : "-"}</TableCell>
+												<TableCell align="right">{item.totalCleared?.toLocaleString() || 0}</TableCell>
 												<TableCell>
 													{item.error ? (
-														<Typography
-															variant="body2"
-															color="error"
-															sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis" }}
-														>
+														<Typography variant="body2" color="error" sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis" }}>
 															{item.error}
 														</Typography>
 													) : (

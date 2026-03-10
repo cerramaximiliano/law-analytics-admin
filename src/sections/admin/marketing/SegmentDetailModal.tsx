@@ -40,7 +40,13 @@ function TabPanel(props: TabPanelProps) {
 	const { children, value, index, ...other } = props;
 
 	return (
-		<div role="tabpanel" hidden={value !== index} id={`segment-detail-tabpanel-${index}`} aria-labelledby={`segment-detail-tab-${index}`} {...other}>
+		<div
+			role="tabpanel"
+			hidden={value !== index}
+			id={`segment-detail-tabpanel-${index}`}
+			aria-labelledby={`segment-detail-tab-${index}`}
+			{...other}
+		>
 			{value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
 		</div>
 	);
@@ -273,7 +279,11 @@ const SegmentDetailModal = ({ open, onClose, segment }: SegmentDetailModalProps)
 											Estado
 										</Typography>
 										<Box sx={{ mt: 0.5 }}>
-											<Chip label={segment.isActive ? "Activo" : "Inactivo"} color={segment.isActive ? "success" : "default"} size="small" />
+											<Chip
+												label={segment.isActive ? "Activo" : "Inactivo"}
+												color={segment.isActive ? "success" : "default"}
+												size="small"
+											/>
 										</Box>
 									</Grid>
 									<Grid item xs={6} sm={3}>

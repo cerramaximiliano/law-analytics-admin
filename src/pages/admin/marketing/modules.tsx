@@ -493,11 +493,19 @@ const EmailModules = () => {
 													<Chip label={`{{module:${module.name}}}`} size="small" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }} />
 												</TableCell>
 												<TableCell>
-													<Chip label={categoryDisplay[module.category] || module.category} color={categoryColors[module.category] || "default"} size="small" />
+													<Chip
+														label={categoryDisplay[module.category] || module.category}
+														color={categoryColors[module.category] || "default"}
+														size="small"
+													/>
 												</TableCell>
 												<TableCell>{module.description || "-"}</TableCell>
 												<TableCell>
-													<Chip label={module.isActive ? "Activo" : "Inactivo"} color={module.isActive ? "success" : "default"} size="small" />
+													<Chip
+														label={module.isActive ? "Activo" : "Inactivo"}
+														color={module.isActive ? "success" : "default"}
+														size="small"
+													/>
 												</TableCell>
 												<TableCell align="center">
 													<Stack direction="row" spacing={1} justifyContent="center">
@@ -614,8 +622,17 @@ const EmailModules = () => {
 						<DialogContent sx={{ minHeight: 300 }}>
 							<TabPanel value={viewTab} index={0}>
 								<Box sx={{ mb: 2 }}>
-									<Chip label={categoryDisplay[selectedModule.category]} color={categoryColors[selectedModule.category]} size="small" sx={{ mr: 1 }} />
-									<Chip label={selectedModule.isActive ? "Activo" : "Inactivo"} color={selectedModule.isActive ? "success" : "default"} size="small" />
+									<Chip
+										label={categoryDisplay[selectedModule.category]}
+										color={categoryColors[selectedModule.category]}
+										size="small"
+										sx={{ mr: 1 }}
+									/>
+									<Chip
+										label={selectedModule.isActive ? "Activo" : "Inactivo"}
+										color={selectedModule.isActive ? "success" : "default"}
+										size="small"
+									/>
 								</Box>
 								{selectedModule.description && (
 									<Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
@@ -727,7 +744,14 @@ const EmailModules = () => {
 								label="Activo"
 							/>
 
-							<Box sx={{ mt: 2, p: 2, bgcolor: theme.palette.mode === "dark" ? theme.palette.grey[800] : theme.palette.info.lighter, borderRadius: 1 }}>
+							<Box
+								sx={{
+									mt: 2,
+									p: 2,
+									bgcolor: theme.palette.mode === "dark" ? theme.palette.grey[800] : theme.palette.info.lighter,
+									borderRadius: 1,
+								}}
+							>
 								<Typography variant="caption" color="textSecondary">
 									<strong>Sintaxis de uso:</strong>
 								</Typography>
@@ -818,7 +842,11 @@ const EmailModules = () => {
 
 									<FormControl fullWidth sx={{ mb: 2 }}>
 										<InputLabel>Categoría</InputLabel>
-										<Select value={editModule.category} label="Categoría" onChange={(e) => handleEditModuleChange("category", e.target.value)}>
+										<Select
+											value={editModule.category}
+											label="Categoría"
+											onChange={(e) => handleEditModuleChange("category", e.target.value)}
+										>
 											{categories.map((cat) => (
 												<MenuItem key={cat.value} value={cat.value}>
 													{cat.label}
@@ -838,7 +866,9 @@ const EmailModules = () => {
 									/>
 
 									<FormControlLabel
-										control={<Switch checked={editModule.isActive} onChange={(e) => handleEditModuleChange("isActive", e.target.checked)} />}
+										control={
+											<Switch checked={editModule.isActive} onChange={(e) => handleEditModuleChange("isActive", e.target.checked)} />
+										}
 										label="Activo"
 									/>
 								</Grid>
@@ -904,8 +934,8 @@ const EmailModules = () => {
 								<strong>Módulo:</strong> {moduleToDelete.displayName}
 							</Typography>
 							<Typography variant="caption" color="textSecondary">
-								Al desactivar este módulo, no estará disponible para nuevos templates. Los templates existentes que lo usen mostrarán un comentario HTML indicando que el módulo
-								no fue encontrado.
+								Al desactivar este módulo, no estará disponible para nuevos templates. Los templates existentes que lo usen mostrarán un
+								comentario HTML indicando que el módulo no fue encontrado.
 							</Typography>
 						</DialogContent>
 						<DialogActions>

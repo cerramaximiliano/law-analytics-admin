@@ -211,13 +211,7 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 									Eliminar seleccionados ({selectedIds.length})
 								</Button>
 							)}
-							<Button
-								variant="outlined"
-								size="small"
-								startIcon={<Refresh size={16} />}
-								onClick={fetchTemporaryWorkers}
-								disabled={loading}
-							>
+							<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchTemporaryWorkers} disabled={loading}>
 								Actualizar
 							</Button>
 						</Stack>
@@ -276,11 +270,7 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 														<Typography variant="body2" fontWeight={500}>
 															{config.worker_id || "Sin nombre"}
 														</Typography>
-														<Typography
-															variant="caption"
-															color="text.secondary"
-															sx={{ fontFamily: "monospace", fontSize: "0.65rem" }}
-														>
+														<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace", fontSize: "0.65rem" }}>
 															{configId}
 														</Typography>
 													</Stack>

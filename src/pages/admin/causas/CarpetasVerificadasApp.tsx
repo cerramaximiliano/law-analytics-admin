@@ -38,7 +38,22 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { CausasPjnService, Causa, EligibilityStats } from "api/causasPjn";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
-import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification, Calendar, TickCircle, CloseSquare, UserSquare, Archive, Timer, Repeat } from "iconsax-react";
+import {
+	Refresh,
+	Eye,
+	SearchNormal1,
+	CloseCircle,
+	ArrowUp,
+	ArrowDown,
+	Notification,
+	Calendar,
+	TickCircle,
+	CloseSquare,
+	UserSquare,
+	Archive,
+	Timer,
+	Repeat,
+} from "iconsax-react";
 import CausaDetalleModal from "./CausaDetalleModal";
 import JudicialMovementsModal from "./JudicialMovementsModal";
 import IntervinientesModal from "./IntervinientesModal";
@@ -285,7 +300,18 @@ const CarpetasVerificadasApp = () => {
 			soloElegibles,
 			sourceFilter,
 		);
-	}, [page, rowsPerPage, fueroFilter, sortBy, sortOrder, actualizableFilter, privadaFilter, estadoActualizacion, soloElegibles, sourceFilter]);
+	}, [
+		page,
+		rowsPerPage,
+		fueroFilter,
+		sortBy,
+		sortOrder,
+		actualizableFilter,
+		privadaFilter,
+		estadoActualizacion,
+		soloElegibles,
+		sourceFilter,
+	]);
 
 	// Efecto para cargar estadísticas de elegibilidad
 	const fetchEligibilityStats = async () => {
@@ -499,8 +525,8 @@ const CarpetasVerificadasApp = () => {
 
 		return {
 			isToday,
-			count: isToday ? (stats.count || 0) : 0,
-			hours: isToday ? (stats.hours || []) : [],
+			count: isToday ? stats.count || 0 : 0,
+			hours: isToday ? stats.hours || [] : [],
 		};
 	};
 
@@ -710,7 +736,12 @@ const CarpetasVerificadasApp = () => {
 													backgroundColor: "grey.200",
 													"& .MuiLinearProgress-bar": {
 														borderRadius: 3,
-														backgroundColor: (eligibilityStats.coveragePercent || 0) > 90 ? "success.main" : (eligibilityStats.coveragePercent || 0) > 70 ? "warning.main" : "error.main",
+														backgroundColor:
+															(eligibilityStats.coveragePercent || 0) > 90
+																? "success.main"
+																: (eligibilityStats.coveragePercent || 0) > 70
+																? "warning.main"
+																: "error.main",
 													},
 												}}
 											/>
@@ -729,7 +760,14 @@ const CarpetasVerificadasApp = () => {
 											<Tooltip title="Causas pendientes de actualizar hoy">
 												<Chip
 													icon={<Timer size={14} />}
-													label={eligibilityStats.pendingToday?.toLocaleString() || (eligibilityStats.eligible - eligibilityStats.updatedToday - eligibilityStats.eligibleWithErrors).toLocaleString()}
+													label={
+														eligibilityStats.pendingToday?.toLocaleString() ||
+														(
+															eligibilityStats.eligible -
+															eligibilityStats.updatedToday -
+															eligibilityStats.eligibleWithErrors
+														).toLocaleString()
+													}
 													size="small"
 													color="warning"
 													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
@@ -770,13 +808,7 @@ const CarpetasVerificadasApp = () => {
 				<Grid item xs={12}>
 					<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
 						<FormControlLabel
-							control={
-								<Checkbox
-									checked={soloElegibles}
-									onChange={handleSoloElegiblesChange}
-									size="small"
-								/>
-							}
+							control={<Checkbox checked={soloElegibles} onChange={handleSoloElegiblesChange} size="small" />}
 							label={<Typography variant="body2">Solo elegibles para actualización</Typography>}
 						/>
 						<FormControl size="small" sx={{ minWidth: 200 }}>
@@ -1047,7 +1079,9 @@ const CarpetasVerificadasApp = () => {
 														label={(causa as any).source || "N/A"}
 														size="small"
 														variant="outlined"
-														color={(causa as any).source === "app" ? "primary" : (causa as any).source === "pjn-login" ? "secondary" : "default"}
+														color={
+															(causa as any).source === "app" ? "primary" : (causa as any).source === "pjn-login" ? "secondary" : "default"
+														}
 													/>
 												</TableCell>
 												<TableCell sx={{ maxWidth: 250 }}>
@@ -1069,9 +1103,7 @@ const CarpetasVerificadasApp = () => {
 													<Chip label={causa.movimientosCount || 0} size="small" variant="outlined" />
 												</TableCell>
 												<TableCell>
-													<Typography variant="caption">
-														{formatDate(causa.createdAt)}
-													</Typography>
+													<Typography variant="caption">{formatDate(causa.createdAt)}</Typography>
 												</TableCell>
 												<TableCell>
 													{(() => {
@@ -1145,7 +1177,9 @@ const CarpetasVerificadasApp = () => {
 													) : causa.isPrivate === false ? (
 														<CloseSquare size={20} color={theme.palette.error.main} variant="Bold" />
 													) : (
-														<Typography variant="caption" color="text.secondary">—</Typography>
+														<Typography variant="caption" color="text.secondary">
+															—
+														</Typography>
 													)}
 												</TableCell>
 												<TableCell align="center">
@@ -1154,7 +1188,9 @@ const CarpetasVerificadasApp = () => {
 															<Archive size={20} color={theme.palette.info.main} variant="Bold" />
 														</Tooltip>
 													) : (
-														<Typography variant="caption" color="text.secondary">—</Typography>
+														<Typography variant="caption" color="text.secondary">
+															—
+														</Typography>
 													)}
 												</TableCell>
 												<TableCell align="center">
@@ -1162,7 +1198,9 @@ const CarpetasVerificadasApp = () => {
 														const cooldown = getCooldownStatus(causa);
 														if (cooldown.isActive) {
 															return (
-																<Tooltip title={`Cooldown activo - ${cooldown.errorsCount} errores consecutivos. Reintento en ${cooldown.timeRemaining}`}>
+																<Tooltip
+																	title={`Cooldown activo - ${cooldown.errorsCount} errores consecutivos. Reintento en ${cooldown.timeRemaining}`}
+																>
 																	<Chip
 																		icon={<Timer size={14} />}
 																		label={cooldown.timeRemaining}
@@ -1185,7 +1223,11 @@ const CarpetasVerificadasApp = () => {
 																</Tooltip>
 															);
 														}
-														return <Typography variant="caption" color="text.secondary">—</Typography>;
+														return (
+															<Typography variant="caption" color="text.secondary">
+																—
+															</Typography>
+														);
 													})()}
 												</TableCell>
 												<TableCell align="center">

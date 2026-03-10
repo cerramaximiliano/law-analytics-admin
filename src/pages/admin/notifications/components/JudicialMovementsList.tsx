@@ -574,11 +574,7 @@ const JudicialMovementsList = () => {
 						<TableHead>
 							<TableRow>
 								<TableCell padding="checkbox">
-									<Checkbox
-										indeterminate={isSomeSelected}
-										checked={isAllSelected}
-										onChange={handleSelectAll}
-									/>
+									<Checkbox indeterminate={isSomeSelected} checked={isAllSelected} onChange={handleSelectAll} />
 								</TableCell>
 								<TableCell />
 								<TableCell>Usuario</TableCell>
@@ -595,10 +591,7 @@ const JudicialMovementsList = () => {
 								<React.Fragment key={movement._id}>
 									<TableRow hover selected={selectedIds.includes(movement._id)}>
 										<TableCell padding="checkbox">
-											<Checkbox
-												checked={selectedIds.includes(movement._id)}
-												onChange={() => handleSelectOne(movement._id)}
-											/>
+											<Checkbox checked={selectedIds.includes(movement._id)} onChange={() => handleSelectOne(movement._id)} />
 										</TableCell>
 										<TableCell>
 											<IconButton size="small" onClick={() => setExpandedRow(expandedRow === movement._id ? null : movement._id)}>
@@ -828,8 +821,8 @@ const JudicialMovementsList = () => {
 						</Typography>
 						<Alert severity="warning" sx={{ mb: 2 }}>
 							<Typography variant="body2">
-								<strong>Advertencia:</strong> Los movimientos eliminados no se podrán notificar si aún no han sido notificados. Esta acción no
-								se puede deshacer.
+								<strong>Advertencia:</strong> Los movimientos eliminados no se podrán notificar si aún no han sido notificados. Esta acción
+								no se puede deshacer.
 							</Typography>
 						</Alert>
 						<Alert severity="info">

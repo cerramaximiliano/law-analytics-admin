@@ -57,7 +57,9 @@ const DeleteContactDialog: React.FC<DeleteContactDialogProps> = ({ open, onClose
 			onDelete(); // Notificar éxito para actualizar la lista
 			onClose(); // Cerrar diálogo
 		} catch (err: any) {
-			setError(err?.message || (permanentDelete ? "Ha ocurrido un error al eliminar el contacto" : "Ha ocurrido un error al cancelar el contacto"));
+			setError(
+				err?.message || (permanentDelete ? "Ha ocurrido un error al eliminar el contacto" : "Ha ocurrido un error al cancelar el contacto"),
+			);
 		} finally {
 			setLoading(false);
 		}
@@ -102,12 +104,7 @@ const DeleteContactDialog: React.FC<DeleteContactDialogProps> = ({ open, onClose
 
 				<FormControlLabel
 					control={
-						<Checkbox
-							checked={permanentDelete}
-							onChange={(e) => setPermanentDelete(e.target.checked)}
-							color="error"
-							disabled={loading}
-						/>
+						<Checkbox checked={permanentDelete} onChange={(e) => setPermanentDelete(e.target.checked)} color="error" disabled={loading} />
 					}
 					label={
 						<Typography variant="body2" color={permanentDelete ? "error" : "textSecondary"}>

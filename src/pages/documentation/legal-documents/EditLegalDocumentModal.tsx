@@ -77,7 +77,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 					email: "",
 					phone: "",
 					registrationNumber: "",
-				}
+				},
 			);
 		}
 	}, [open, document]);
@@ -233,11 +233,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 							<Grid item xs={12} md={4}>
 								<FormControl fullWidth>
 									<InputLabel>Idioma</InputLabel>
-									<Select
-										value={formData.language || ""}
-										label="Idioma"
-										onChange={(e) => handleInputChange("language", e.target.value)}
-									>
+									<Select value={formData.language || ""} label="Idioma" onChange={(e) => handleInputChange("language", e.target.value)}>
 										<MenuItem value="es">Espanol</MenuItem>
 										<MenuItem value="en">Ingles</MenuItem>
 										<MenuItem value="pt">Portugues</MenuItem>
@@ -323,18 +319,10 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 											Seccion {section.order}
 										</Typography>
 										<Stack direction="row" spacing={0.5}>
-											<IconButton
-												size="small"
-												onClick={() => handleMoveSection(index, "up")}
-												disabled={index === 0}
-											>
+											<IconButton size="small" onClick={() => handleMoveSection(index, "up")} disabled={index === 0}>
 												<ArrowUp2 size={16} />
 											</IconButton>
-											<IconButton
-												size="small"
-												onClick={() => handleMoveSection(index, "down")}
-												disabled={index === sections.length - 1}
-											>
+											<IconButton size="small" onClick={() => handleMoveSection(index, "down")} disabled={index === sections.length - 1}>
 												<ArrowDown2 size={16} />
 											</IconButton>
 											<IconButton size="small" color="error" onClick={() => handleRemoveSection(index)}>

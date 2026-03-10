@@ -200,8 +200,12 @@ const ProcessingMonitor: React.FC = () => {
 				const isIdle = parts.length === 0;
 				return (
 					<Stack key={name} direction="row" spacing={1} alignItems="center">
-						<Typography variant="caption" sx={{ fontWeight: 600, minWidth: isMobile ? 70 : 90 }}>{label}</Typography>
-						<Typography variant="caption" color={isIdle ? "text.disabled" : "text.secondary"}>[{summary}]</Typography>
+						<Typography variant="caption" sx={{ fontWeight: 600, minWidth: isMobile ? 70 : 90 }}>
+							{label}
+						</Typography>
+						<Typography variant="caption" color={isIdle ? "text.disabled" : "text.secondary"}>
+							[{summary}]
+						</Typography>
 					</Stack>
 				);
 			})}
@@ -274,7 +278,10 @@ const ProcessingMonitor: React.FC = () => {
 						</Typography>
 						<Stack direction="row" spacing={1} alignItems="center">
 							{elapsedStr && (
-								<Typography variant="caption" sx={{ fontFamily: "monospace", whiteSpace: "nowrap", color: theme.palette.info.main, fontWeight: 700 }}>
+								<Typography
+									variant="caption"
+									sx={{ fontFamily: "monospace", whiteSpace: "nowrap", color: theme.palette.info.main, fontWeight: 700 }}
+								>
 									{elapsedStr}
 								</Typography>
 							)}
@@ -308,13 +315,26 @@ const ProcessingMonitor: React.FC = () => {
 	};
 
 	return (
-		<Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.default, 0.5) }}>
+		<Box
+			sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.default, 0.5) }}
+		>
 			{/* Header */}
 			<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
 				<Stack direction="row" spacing={1} alignItems="center">
-					<Typography variant="subtitle1" fontWeight={700}>Monitor en vivo</Typography>
+					<Typography variant="subtitle1" fontWeight={700}>
+						Monitor en vivo
+					</Typography>
 					{hasActivity && (
-						<Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "success.main", animation: "pulse 2s infinite", "@keyframes pulse": { "0%, 100%": { opacity: 1 }, "50%": { opacity: 0.4 } } }} />
+						<Box
+							sx={{
+								width: 8,
+								height: 8,
+								borderRadius: "50%",
+								bgcolor: "success.main",
+								animation: "pulse 2s infinite",
+								"@keyframes pulse": { "0%, 100%": { opacity: 1 }, "50%": { opacity: 0.4 } },
+							}}
+						/>
 					)}
 				</Stack>
 				<Stack direction="row" spacing={0.5} alignItems="center">
@@ -333,14 +353,18 @@ const ProcessingMonitor: React.FC = () => {
 
 			{/* Queues */}
 			{(hasQueueJobs || hasActivity) && (
-				<Box sx={{ mb: 1.5, pb: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
-					{renderQueues()}
-				</Box>
+				<Box sx={{ mb: 1.5, pb: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>{renderQueues()}</Box>
 			)}
 
 			{/* Processing stats + worker config */}
 			{(processingStats.sampleSize > 0 || Object.keys(currentConfig).length > 0) && (
-				<Box sx={{ mb: 1.5, pb: 1.5, borderBottom: activeCausas.length > 0 || recentlyCompleted.length > 0 ? `1px solid ${theme.palette.divider}` : undefined }}>
+				<Box
+					sx={{
+						mb: 1.5,
+						pb: 1.5,
+						borderBottom: activeCausas.length > 0 || recentlyCompleted.length > 0 ? `1px solid ${theme.palette.divider}` : undefined,
+					}}
+				>
 					{processingStats.sampleSize > 0 && (
 						<>
 							<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.6rem", display: "block", mb: 0.5 }}>
@@ -348,28 +372,50 @@ const ProcessingMonitor: React.FC = () => {
 							</Typography>
 							<Stack direction="row" spacing={isMobile ? 1 : 2} flexWrap="wrap" useFlexGap sx={{ mb: 1 }}>
 								<Stack>
-									<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.6rem", lineHeight: 1 }}>Tiempo prom.</Typography>
-									<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>{formatDuration(processingStats.avgMs)}</Typography>
-								</Stack>
-								<Stack>
-									<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.6rem", lineHeight: 1 }}>Min / Max</Typography>
-									<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
-										<Typography component="span" variant="caption" sx={{ fontFamily: "monospace", color: "success.main" }}>{formatDuration(processingStats.minMs)}</Typography>
-										{" / "}
-										<Typography component="span" variant="caption" sx={{ fontFamily: "monospace", color: "warning.main" }}>{formatDuration(processingStats.maxMs)}</Typography>
+									<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.6rem", lineHeight: 1 }}>
+										Tiempo prom.
+									</Typography>
+									<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>
+										{formatDuration(processingStats.avgMs)}
 									</Typography>
 								</Stack>
 								<Stack>
-									<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.6rem", lineHeight: 1 }}>Movs. prom.</Typography>
-									<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>{processingStats.avgDocs ?? "-"} docs</Typography>
+									<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.6rem", lineHeight: 1 }}>
+										Min / Max
+									</Typography>
+									<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+										<Typography component="span" variant="caption" sx={{ fontFamily: "monospace", color: "success.main" }}>
+											{formatDuration(processingStats.minMs)}
+										</Typography>
+										{" / "}
+										<Typography component="span" variant="caption" sx={{ fontFamily: "monospace", color: "warning.main" }}>
+											{formatDuration(processingStats.maxMs)}
+										</Typography>
+									</Typography>
 								</Stack>
 								<Stack>
-									<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.6rem", lineHeight: 1 }}>Min / Max docs</Typography>
-									<Typography variant="caption" sx={{ fontFamily: "monospace" }}>{processingStats.minDocs ?? "-"} / {processingStats.maxDocs ?? "-"}</Typography>
+									<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.6rem", lineHeight: 1 }}>
+										Movs. prom.
+									</Typography>
+									<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>
+										{processingStats.avgDocs ?? "-"} docs
+									</Typography>
 								</Stack>
 								<Stack>
-									<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.6rem", lineHeight: 1 }}>Prom. por doc</Typography>
-									<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>{formatDuration(processingStats.avgMsPerDoc)}</Typography>
+									<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.6rem", lineHeight: 1 }}>
+										Min / Max docs
+									</Typography>
+									<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+										{processingStats.minDocs ?? "-"} / {processingStats.maxDocs ?? "-"}
+									</Typography>
+								</Stack>
+								<Stack>
+									<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.6rem", lineHeight: 1 }}>
+										Prom. por doc
+									</Typography>
+									<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>
+										{formatDuration(processingStats.avgMsPerDoc)}
+									</Typography>
 								</Stack>
 							</Stack>
 						</>
@@ -381,11 +427,25 @@ const ProcessingMonitor: React.FC = () => {
 								const rl = cfg.rateLimiter;
 								const statusColor = !cfg.enabled ? "text.disabled" : cfg.paused ? "warning.main" : "success.main";
 								return (
-									<Stack key={name} direction="row" spacing={0.5} alignItems="center" sx={{ px: 1, py: 0.25, borderRadius: 1, bgcolor: alpha(theme.palette.divider, 0.3) }}>
+									<Stack
+										key={name}
+										direction="row"
+										spacing={0.5}
+										alignItems="center"
+										sx={{ px: 1, py: 0.25, borderRadius: 1, bgcolor: alpha(theme.palette.divider, 0.3) }}
+									>
 										<Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: statusColor, flexShrink: 0 }} />
-										<Typography variant="caption" sx={{ fontWeight: 600, fontSize: "0.65rem" }}>{label}</Typography>
-										<Typography variant="caption" sx={{ fontFamily: "monospace", fontSize: "0.65rem" }}>c={cfg.concurrency}</Typography>
-										{rl && <Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.6rem" }}>{rl.max}/{Math.round(rl.duration / 1000)}s</Typography>}
+										<Typography variant="caption" sx={{ fontWeight: 600, fontSize: "0.65rem" }}>
+											{label}
+										</Typography>
+										<Typography variant="caption" sx={{ fontFamily: "monospace", fontSize: "0.65rem" }}>
+											c={cfg.concurrency}
+										</Typography>
+										{rl && (
+											<Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.6rem" }}>
+												{rl.max}/{Math.round(rl.duration / 1000)}s
+											</Typography>
+										)}
 									</Stack>
 								);
 							})}
@@ -395,58 +455,59 @@ const ProcessingMonitor: React.FC = () => {
 			)}
 
 			{/* Active causas */}
-			{activeCausas.length > 0 && (() => {
-				const withProgress = activeCausas.filter((c) => c.documentsTotal > 0 && c.documentsProcessed > 0);
-				const waiting = activeCausas.filter((c) => c.documentsTotal === 0 || c.documentsProcessed === 0);
+			{activeCausas.length > 0 &&
+				(() => {
+					const withProgress = activeCausas.filter((c) => c.documentsTotal > 0 && c.documentsProcessed > 0);
+					const waiting = activeCausas.filter((c) => c.documentsTotal === 0 || c.documentsProcessed === 0);
 
-				return (
-					<Box sx={{ mb: recentlyCompleted.length > 0 ? 1.5 : 0 }}>
-						<Stack spacing={1}>
-							{withProgress.length === 1 && waiting.length === 0
-								? renderActiveCausa(withProgress[0], true)
-								: withProgress.map((c) => renderActiveCausa(c, false))}
-							{waiting.length > 0 && (
-								<Box
-									sx={{
-										px: 1.5,
-										py: 1,
-										borderRadius: 1,
-										bgcolor: alpha(theme.palette.grey[500], 0.04),
-										border: `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
-										cursor: "pointer",
-										"&:hover": { bgcolor: alpha(theme.palette.grey[500], 0.08) },
-									}}
-									onClick={() => setExpandedId(expandedId === "__waiting__" ? null : "__waiting__")}
-								>
-									<Stack direction="row" justifyContent="space-between" alignItems="center">
-										<Typography variant="caption" fontWeight={600} color="text.secondary">
-											{waiting.length} causa{waiting.length > 1 ? "s" : ""} en espera (0%)
-										</Typography>
-										<Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.65rem" }}>
-											{expandedId === "__waiting__" ? "▲ Ocultar" : "▼ Mostrar"}
-										</Typography>
-									</Stack>
-									<Collapse in={expandedId === "__waiting__"}>
-										<Stack spacing={0.75} sx={{ mt: 1 }}>
-											{waiting.map((c) => (
-												<Stack key={c.ragIndexId} direction="row" spacing={1} alignItems="center" sx={{ pl: 0.5 }}>
-													<Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: "grey.400", flexShrink: 0 }} />
-													<Typography variant="caption" noWrap sx={{ flex: 1, minWidth: 0 }} title={c.caratula}>
-														{c.caratula} ({c.fuero})
-													</Typography>
-													<Typography variant="caption" sx={{ fontFamily: "monospace", whiteSpace: "nowrap", color: "text.disabled" }}>
-														{c.documentsProcessed}/{c.documentsTotal}
-													</Typography>
-												</Stack>
-											))}
+					return (
+						<Box sx={{ mb: recentlyCompleted.length > 0 ? 1.5 : 0 }}>
+							<Stack spacing={1}>
+								{withProgress.length === 1 && waiting.length === 0
+									? renderActiveCausa(withProgress[0], true)
+									: withProgress.map((c) => renderActiveCausa(c, false))}
+								{waiting.length > 0 && (
+									<Box
+										sx={{
+											px: 1.5,
+											py: 1,
+											borderRadius: 1,
+											bgcolor: alpha(theme.palette.grey[500], 0.04),
+											border: `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
+											cursor: "pointer",
+											"&:hover": { bgcolor: alpha(theme.palette.grey[500], 0.08) },
+										}}
+										onClick={() => setExpandedId(expandedId === "__waiting__" ? null : "__waiting__")}
+									>
+										<Stack direction="row" justifyContent="space-between" alignItems="center">
+											<Typography variant="caption" fontWeight={600} color="text.secondary">
+												{waiting.length} causa{waiting.length > 1 ? "s" : ""} en espera (0%)
+											</Typography>
+											<Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.65rem" }}>
+												{expandedId === "__waiting__" ? "▲ Ocultar" : "▼ Mostrar"}
+											</Typography>
 										</Stack>
-									</Collapse>
-								</Box>
-							)}
-						</Stack>
-					</Box>
-				);
-			})()}
+										<Collapse in={expandedId === "__waiting__"}>
+											<Stack spacing={0.75} sx={{ mt: 1 }}>
+												{waiting.map((c) => (
+													<Stack key={c.ragIndexId} direction="row" spacing={1} alignItems="center" sx={{ pl: 0.5 }}>
+														<Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: "grey.400", flexShrink: 0 }} />
+														<Typography variant="caption" noWrap sx={{ flex: 1, minWidth: 0 }} title={c.caratula}>
+															{c.caratula} ({c.fuero})
+														</Typography>
+														<Typography variant="caption" sx={{ fontFamily: "monospace", whiteSpace: "nowrap", color: "text.disabled" }}>
+															{c.documentsProcessed}/{c.documentsTotal}
+														</Typography>
+													</Stack>
+												))}
+											</Stack>
+										</Collapse>
+									</Box>
+								)}
+							</Stack>
+						</Box>
+					);
+				})()}
 
 			{/* Recently completed */}
 			{recentlyCompleted.length > 0 && (
@@ -457,7 +518,9 @@ const ProcessingMonitor: React.FC = () => {
 					<Stack spacing={0.5}>
 						{recentlyCompleted.map((c) => (
 							<Stack key={c.ragIndexId} direction="row" spacing={1} alignItems="center" sx={{ pl: 0.5 }}>
-								<Typography variant="caption" color="success.main" sx={{ fontWeight: 700 }}>&#10003;</Typography>
+								<Typography variant="caption" color="success.main" sx={{ fontWeight: 700 }}>
+									&#10003;
+								</Typography>
 								<Typography variant="caption" noWrap sx={{ flex: 1, minWidth: 0 }} title={c.caratula}>
 									{c.caratula} ({c.fuero})
 								</Typography>
@@ -540,7 +603,7 @@ const WorkerIndexationTab = () => {
 	};
 
 	const coveragePercent = summary ? Math.round((summary.totalWithRagIndex / Math.max(summary.totalVerifiedCausas, 1)) * 100) : 0;
-	const indexedCount = summary ? (summary.byStatus.indexed || 0) : 0;
+	const indexedCount = summary ? summary.byStatus.indexed || 0 : 0;
 	const indexedPercent = summary ? Math.round((indexedCount / Math.max(summary.totalVerifiedCausas, 1)) * 100) : 0;
 
 	return (
@@ -569,10 +632,20 @@ const WorkerIndexationTab = () => {
 					<Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
 						<Stack spacing={2.5}>
 							<Box>
-								<Stack direction={isMobile ? "column" : "row"} justifyContent="space-between" alignItems={isMobile ? "flex-start" : "center"} spacing={isMobile ? 0 : undefined} sx={{ mb: 0.5 }}>
+								<Stack
+									direction={isMobile ? "column" : "row"}
+									justifyContent="space-between"
+									alignItems={isMobile ? "flex-start" : "center"}
+									spacing={isMobile ? 0 : undefined}
+									sx={{ mb: 0.5 }}
+								>
 									<Stack direction="row" spacing={1} alignItems="baseline">
 										<Typography variant="subtitle2">Cobertura de indexacion</Typography>
-										{!isMobile && <Typography variant="caption" color="text.secondary">autoIndex → indexCausa</Typography>}
+										{!isMobile && (
+											<Typography variant="caption" color="text.secondary">
+												autoIndex → indexCausa
+											</Typography>
+										)}
 									</Stack>
 									<Typography variant="subtitle2" sx={{ fontFamily: "monospace", fontWeight: 700 }}>
 										{summary.totalWithRagIndex} / {summary.totalVerifiedCausas} ({coveragePercent}%)
@@ -590,10 +663,20 @@ const WorkerIndexationTab = () => {
 								/>
 							</Box>
 							<Box>
-								<Stack direction={isMobile ? "column" : "row"} justifyContent="space-between" alignItems={isMobile ? "flex-start" : "center"} spacing={isMobile ? 0 : undefined} sx={{ mb: 0.5 }}>
+								<Stack
+									direction={isMobile ? "column" : "row"}
+									justifyContent="space-between"
+									alignItems={isMobile ? "flex-start" : "center"}
+									spacing={isMobile ? 0 : undefined}
+									sx={{ mb: 0.5 }}
+								>
 									<Stack direction="row" spacing={1} alignItems="baseline">
 										<Typography variant="subtitle2">Causas completadas</Typography>
-										{!isMobile && <Typography variant="caption" color="text.secondary">indexDocument (pipeline completo)</Typography>}
+										{!isMobile && (
+											<Typography variant="caption" color="text.secondary">
+												indexDocument (pipeline completo)
+											</Typography>
+										)}
 									</Stack>
 									<Typography variant="subtitle2" sx={{ fontFamily: "monospace", fontWeight: 700, color: theme.palette.success.main }}>
 										{indexedCount} / {summary.totalVerifiedCausas} ({indexedPercent}%)
@@ -618,7 +701,13 @@ const WorkerIndexationTab = () => {
 					<Stack direction="row" spacing={isMobile ? 0.75 : 1.5} flexWrap="wrap" useFlexGap>
 						<StatChip label="Indexados al dia" value={summary.upToDate} color="success" theme={theme} compact={isMobile} />
 						<StatChip label="Desactualizados" value={summary.outdated} color="warning" theme={theme} compact={isMobile} />
-						<StatChip label="Pendientes" value={(summary.byStatus.pending || 0) + (summary.byStatus.indexing || 0)} color="info" theme={theme} compact={isMobile} />
+						<StatChip
+							label="Pendientes"
+							value={(summary.byStatus.pending || 0) + (summary.byStatus.indexing || 0)}
+							color="info"
+							theme={theme}
+							compact={isMobile}
+						/>
 						<StatChip label="Con error" value={summary.byStatus.error || 0} color="error" theme={theme} compact={isMobile} />
 						<StatChip label="Sin indexar" value={summary.neverIndexed} color="default" theme={theme} compact={isMobile} />
 					</Stack>
@@ -632,7 +721,13 @@ const WorkerIndexationTab = () => {
 
 			{/* Filter */}
 			<Box sx={{ overflowX: "auto", pb: 0.5 }}>
-				<ToggleButtonGroup value={filter} exclusive onChange={handleFilterChange} size="small" sx={{ flexWrap: isMobile ? "nowrap" : undefined }}>
+				<ToggleButtonGroup
+					value={filter}
+					exclusive
+					onChange={handleFilterChange}
+					size="small"
+					sx={{ flexWrap: isMobile ? "nowrap" : undefined }}
+				>
 					{(Object.keys(FILTER_LABELS) as FilterType[]).map((f) => (
 						<ToggleButton key={f} value={f} sx={{ whiteSpace: "nowrap", fontSize: isMobile ? "0.7rem" : undefined }}>
 							{FILTER_LABELS[f]}
@@ -648,9 +743,15 @@ const WorkerIndexationTab = () => {
 						<TableRow>
 							<TableCell sx={{ width: isMobile ? "50%" : "45%" }}>Caratula</TableCell>
 							<TableCell sx={{ width: "7%", display: { xs: "none", md: "table-cell" } }}>Fuero</TableCell>
-							<TableCell sx={{ width: isMobile ? "25%" : "12%" }} align="center">Estado</TableCell>
-							<TableCell sx={{ width: isMobile ? "25%" : "12%" }} align="right">Movimientos</TableCell>
-							<TableCell sx={{ width: "10%", display: { xs: "none", md: "table-cell" } }} align="right">Docs</TableCell>
+							<TableCell sx={{ width: isMobile ? "25%" : "12%" }} align="center">
+								Estado
+							</TableCell>
+							<TableCell sx={{ width: isMobile ? "25%" : "12%" }} align="right">
+								Movimientos
+							</TableCell>
+							<TableCell sx={{ width: "10%", display: { xs: "none", md: "table-cell" } }} align="right">
+								Docs
+							</TableCell>
 							<TableCell sx={{ width: "14%", display: { xs: "none", md: "table-cell" } }}>Ultima indexacion</TableCell>
 						</TableRow>
 					</TableHead>
@@ -694,7 +795,14 @@ const WorkerIndexationTab = () => {
 											<Chip label={statusCfg.label} size="small" color={statusCfg.color} variant="outlined" />
 										</TableCell>
 										<TableCell align="right">
-											<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: isOutdated ? 700 : 400, color: isOutdated ? theme.palette.warning.main : "inherit" }}>
+											<Typography
+												variant="caption"
+												sx={{
+													fontFamily: "monospace",
+													fontWeight: isOutdated ? 700 : 400,
+													color: isOutdated ? theme.palette.warning.main : "inherit",
+												}}
+											>
 												{movLabel}
 											</Typography>
 										</TableCell>
@@ -736,7 +844,13 @@ const WorkerIndexationTab = () => {
 
 // ── Stat chip component ──────────────────────────────────────────────────────
 
-const StatChip: React.FC<{ label: string; value: number; color: string; theme: any; compact?: boolean }> = ({ label, value, color, theme, compact }) => {
+const StatChip: React.FC<{ label: string; value: number; color: string; theme: any; compact?: boolean }> = ({
+	label,
+	value,
+	color,
+	theme,
+	compact,
+}) => {
 	const paletteColor = (theme.palette as any)[color]?.main || theme.palette.text.secondary;
 	return (
 		<Box
@@ -749,7 +863,11 @@ const StatChip: React.FC<{ label: string; value: number; color: string; theme: a
 				minWidth: compact ? 56 : 100,
 			}}
 		>
-			<Typography variant={compact ? "h6" : "h4"} fontWeight={700} sx={{ fontFamily: "monospace", color: paletteColor, lineHeight: compact ? 1.3 : undefined }}>
+			<Typography
+				variant={compact ? "h6" : "h4"}
+				fontWeight={700}
+				sx={{ fontFamily: "monospace", color: paletteColor, lineHeight: compact ? 1.3 : undefined }}
+			>
 				{value}
 			</Typography>
 			<Typography variant="caption" color="text.secondary" sx={compact ? { fontSize: "0.6rem", lineHeight: 1.2 } : undefined}>

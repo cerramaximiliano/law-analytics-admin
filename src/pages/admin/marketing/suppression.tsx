@@ -335,7 +335,8 @@ const MarketingSuppression = () => {
 							{serverStatus.name}
 						</Typography>
 						<Typography variant="body2">
-							Estado: {serverStatus.status === "online" ? "En línea" : serverStatus.status === "offline" ? "Fuera de línea" : "Verificando..."}
+							Estado:{" "}
+							{serverStatus.status === "online" ? "En línea" : serverStatus.status === "offline" ? "Fuera de línea" : "Verificando..."}
 						</Typography>
 					</Box>
 				</Alert>
@@ -381,12 +382,7 @@ const MarketingSuppression = () => {
 
 			{/* Sync Results Alert */}
 			{syncResults && (
-				<Alert
-					severity="success"
-					sx={{ mb: 2 }}
-					onClose={() => setSyncResults(null)}
-					icon={<TickCircle size={20} />}
-				>
+				<Alert severity="success" sx={{ mb: 2 }} onClose={() => setSyncResults(null)} icon={<TickCircle size={20} />}>
 					<Typography variant="subtitle2" fontWeight="bold">
 						Sincronización completada
 					</Typography>
@@ -448,12 +444,7 @@ const MarketingSuppression = () => {
 
 				<Box sx={{ flexGrow: 1 }} />
 
-				<Button
-					variant="outlined"
-					startIcon={<Refresh size={18} />}
-					onClick={loadSuppressionList}
-					disabled={loading}
-				>
+				<Button variant="outlined" startIcon={<Refresh size={18} />} onClick={loadSuppressionList} disabled={loading}>
 					Recargar
 				</Button>
 
@@ -559,9 +550,7 @@ const MarketingSuppression = () => {
 				<DialogContent>
 					{dryRunResults && (
 						<>
-							<DialogContentText sx={{ mb: 2 }}>
-								Se encontraron los siguientes datos en la Suppression List de AWS SES:
-							</DialogContentText>
+							<DialogContentText sx={{ mb: 2 }}>Se encontraron los siguientes datos en la Suppression List de AWS SES:</DialogContentText>
 
 							<Box sx={{ mb: 2 }}>
 								<Grid container spacing={2}>
@@ -602,12 +591,8 @@ const MarketingSuppression = () => {
 								<Typography variant="body2">
 									Se actualizarán <strong>{dryRunResults.contactsUpdated}</strong> contactos:
 								</Typography>
-								<Typography variant="body2">
-									• {dryRunResults.bounces} con estado "bounced" (rebote)
-								</Typography>
-								<Typography variant="body2">
-									• {dryRunResults.complaints} con estado "complained" (spam)
-								</Typography>
+								<Typography variant="body2">• {dryRunResults.bounces} con estado "bounced" (rebote)</Typography>
+								<Typography variant="body2">• {dryRunResults.complaints} con estado "complained" (spam)</Typography>
 							</Alert>
 						</>
 					)}

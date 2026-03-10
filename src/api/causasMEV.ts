@@ -79,7 +79,7 @@ export interface CausaMEV {
 	tipoOrganismo?: string;
 	verificacion?: {
 		verificado?: boolean;
-		estadoVerificacion?: 'pendiente' | 'en_proceso' | 'verificado' | 'error' | 'no_encontrado';
+		estadoVerificacion?: "pendiente" | "en_proceso" | "verificado" | "error" | "no_encontrado";
 		error?: { tipo?: string; mensaje?: string; fecha?: string };
 		intentosVerificacion?: number;
 		ultimoIntento?: string;
@@ -289,9 +289,7 @@ export class CausasMEVService {
 	/**
 	 * Obtener estadísticas de elegibilidad para actualización MEV
 	 */
-	static async getEligibilityStats(params?: {
-		thresholdHours?: number;
-	}): Promise<EligibilityStatsMEVResponse> {
+	static async getEligibilityStats(params?: { thresholdHours?: number }): Promise<EligibilityStatsMEVResponse> {
 		try {
 			const response = await mevAxios.get("/api/causas/stats/eligibility", { params });
 			return response.data;

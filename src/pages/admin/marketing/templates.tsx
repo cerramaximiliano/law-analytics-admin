@@ -198,7 +198,11 @@ const AVAILABLE_VARIABLES: VariableOption[] = [
 	{ name: "contact.customFields.archivedFolders", description: "Carpetas archivadas del usuario", category: "Campos personalizados" },
 	{ name: "contact.customFields.totalFolders", description: "Total de carpetas del usuario", category: "Campos personalizados" },
 	{ name: "contact.customFields.activeCalculators", description: "Calculadoras activas del usuario", category: "Campos personalizados" },
-	{ name: "contact.customFields.archivedCalculators", description: "Calculadoras archivadas del usuario", category: "Campos personalizados" },
+	{
+		name: "contact.customFields.archivedCalculators",
+		description: "Calculadoras archivadas del usuario",
+		category: "Campos personalizados",
+	},
 	{ name: "contact.customFields.totalCalculators", description: "Total de calculadoras del usuario", category: "Campos personalizados" },
 	{ name: "contact.customFields.activeContacts", description: "Contactos activos del usuario", category: "Campos personalizados" },
 	{ name: "contact.customFields.archivedContacts", description: "Contactos archivados del usuario", category: "Campos personalizados" },
@@ -235,7 +239,8 @@ const isValidVariable = (varName: string): boolean => {
 // Helper function to parse and highlight variables in HTML code
 const highlightVariables = (code: string, theme: any): React.ReactNode[] => {
 	// Regex to match variables: ${var}, ${var || "fallback"}, ${var || otherVar}, {{var}}, {{var || "fallback"}}, {{var || otherVar}}, {{module:name}}
-	const variableRegex = /(\$\{[\w.:]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.:]+))?\}|\{\{[\w.:]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.:]+))?\}\})/g;
+	const variableRegex =
+		/(\$\{[\w.:]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.:]+))?\}|\{\{[\w.:]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.:]+))?\}\})/g;
 
 	const parts: React.ReactNode[] = [];
 	let lastIndex = 0;
@@ -287,7 +292,15 @@ const highlightVariables = (code: string, theme: any): React.ReactNode[] => {
 					borderRadius: "3px",
 					padding: "1px 4px",
 					fontWeight: 500,
-					border: `1px solid ${isValid ? (theme.palette.mode === "dark" ? theme.palette.success.main : theme.palette.success.light) : theme.palette.mode === "dark" ? theme.palette.error.main : theme.palette.error.light}`,
+					border: `1px solid ${
+						isValid
+							? theme.palette.mode === "dark"
+								? theme.palette.success.main
+								: theme.palette.success.light
+							: theme.palette.mode === "dark"
+							? theme.palette.error.main
+							: theme.palette.error.light
+					}`,
 				}}
 			>
 				{fullMatch}
@@ -1028,10 +1041,15 @@ const EmailTemplates = () => {
 		viewHtmlSearchResults.forEach((pos, idx) => {
 			// Escape HTML between matches
 			const textBefore = html.substring(lastIndex, pos).replace(/</g, "&lt;").replace(/>/g, "&gt;");
-			const matchText = html.substring(pos, pos + searchLen).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+			const matchText = html
+				.substring(pos, pos + searchLen)
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;");
 			const isCurrent = idx === viewCurrentSearchIndex;
 			result += textBefore;
-			result += `<mark class="${isCurrent ? "current" : ""}" style="background-color: ${isCurrent ? theme.palette.warning.light : theme.palette.warning.lighter}; color: ${theme.palette.text.primary};">${matchText}</mark>`;
+			result += `<mark class="${isCurrent ? "current" : ""}" style="background-color: ${
+				isCurrent ? theme.palette.warning.light : theme.palette.warning.lighter
+			}; color: ${theme.palette.text.primary};">${matchText}</mark>`;
 			lastIndex = pos + searchLen;
 		});
 
@@ -1779,10 +1797,7 @@ const EmailTemplates = () => {
 												},
 											}}
 										>
-											<code
-												ref={viewHtmlCodeRef}
-												dangerouslySetInnerHTML={{ __html: getHighlightedViewHtml() }}
-											/>
+											<code ref={viewHtmlCodeRef} dangerouslySetInnerHTML={{ __html: getHighlightedViewHtml() }} />
 										</Box>
 									</TabPanel>
 									<TabPanel value={viewTab} index={2}>
@@ -1882,9 +1897,7 @@ const EmailTemplates = () => {
 																					fontFamily: "monospace",
 																					fontSize: "0.8rem",
 																					wordBreak: "break-all",
-																					color: link.url.includes("${")
-																						? theme.palette.warning.main
-																						: "inherit",
+																					color: link.url.includes("${") ? theme.palette.warning.main : "inherit",
 																				}}
 																			>
 																				{link.url}
@@ -2413,7 +2426,8 @@ const EmailTemplates = () => {
 									Variables del sistema
 								</Typography>
 								<Typography variant="caption" color="textSecondary" sx={{ mb: 2, display: "block" }}>
-									Seleccione las variables que se usarán en esta plantilla. Use la sintaxis {"$"}{"{"}variable{"}"} o {"{"}
+									Seleccione las variables que se usarán en esta plantilla. Use la sintaxis {"$"}
+									{"{"}variable{"}"} o {"{"}
 									{"{"}variable{"}"}
 									{"}"} en el código HTML.
 								</Typography>
@@ -2494,10 +2508,12 @@ const EmailTemplates = () => {
 										<strong>Sintaxis con valor por defecto:</strong>
 									</Typography>
 									<Typography variant="caption" color="textSecondary" component="div" sx={{ fontFamily: "monospace", mt: 0.5 }}>
-										{"$"}{"{"}firstName || "Suscriptor"{"}"} - Usa "Suscriptor" si firstName no existe
+										{"$"}
+										{"{"}firstName || "Suscriptor"{"}"} - Usa "Suscriptor" si firstName no existe
 									</Typography>
 									<Typography variant="caption" color="textSecondary" component="div" sx={{ fontFamily: "monospace" }}>
-										{"$"}{"{"}firstName || email{"}"} - Usa email como fallback
+										{"$"}
+										{"{"}firstName || email{"}"} - Usa email como fallback
 									</Typography>
 									<Typography variant="caption" color="textSecondary" sx={{ display: "block", mt: 1.5 }}>
 										<strong>Módulos reutilizables:</strong>
@@ -2568,13 +2584,7 @@ const EmailTemplates = () => {
 
 							<TabPanel value={createViewTab} index={1}>
 								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-									<Button
-										variant="outlined"
-										color="primary"
-										startIcon={<Code />}
-										onClick={handleOpenVariableMenu}
-										size="small"
-									>
+									<Button variant="outlined" color="primary" startIcon={<Code />} onClick={handleOpenVariableMenu} size="small">
 										Insertar variable
 									</Button>
 									<Menu
@@ -2605,7 +2615,8 @@ const EmailTemplates = () => {
 													sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}
 												>
 													<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
-														{"$"}{"{"}
+														{"$"}
+														{"{"}
 														{variable.name}
 														{"}"}
 													</Typography>
@@ -2635,7 +2646,10 @@ const EmailTemplates = () => {
 
 								{/* Show detected variables in the HTML with validation */}
 								{(() => {
-									const detectedVars = newTemplate.htmlBody.match(/\$\{[\w.]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.]+))?\}|\{\{[\w.]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.]+))?\}\}/g) || [];
+									const detectedVars =
+										newTemplate.htmlBody.match(
+											/\$\{[\w.]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.]+))?\}|\{\{[\w.]+(?:\s*\|\|\s*(?:["'][^"']+["']|[\w.]+))?\}\}/g,
+										) || [];
 									const uniqueVars = [...new Set(detectedVars)];
 
 									// Separate valid and invalid variables
@@ -2675,7 +2689,11 @@ const EmailTemplates = () => {
 											>
 												{validVars.length > 0 && (
 													<Box sx={{ mb: invalidVars.length > 0 ? 1.5 : 0 }}>
-														<Typography variant="caption" color="success.main" sx={{ display: "flex", alignItems: "center", mb: 0.5, fontWeight: 500 }}>
+														<Typography
+															variant="caption"
+															color="success.main"
+															sx={{ display: "flex", alignItems: "center", mb: 0.5, fontWeight: 500 }}
+														>
 															Variables válidas ({validVars.length}):
 														</Typography>
 														<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
@@ -2687,9 +2705,12 @@ const EmailTemplates = () => {
 																	sx={{
 																		fontFamily: "monospace",
 																		fontSize: "0.7rem",
-																		backgroundColor: theme.palette.mode === "dark" ? `${theme.palette.success.dark}4D` : `${theme.palette.success.main}26`,
+																		backgroundColor:
+																			theme.palette.mode === "dark" ? `${theme.palette.success.dark}4D` : `${theme.palette.success.main}26`,
 																		color: theme.palette.mode === "dark" ? theme.palette.success.light : theme.palette.success.dark,
-																		border: `1px solid ${theme.palette.mode === "dark" ? theme.palette.success.main : theme.palette.success.light}`,
+																		border: `1px solid ${
+																			theme.palette.mode === "dark" ? theme.palette.success.main : theme.palette.success.light
+																		}`,
 																	}}
 																/>
 															))}
@@ -2698,7 +2719,11 @@ const EmailTemplates = () => {
 												)}
 												{invalidVars.length > 0 && (
 													<Box>
-														<Typography variant="caption" color="error.main" sx={{ display: "flex", alignItems: "center", mb: 0.5, fontWeight: 500 }}>
+														<Typography
+															variant="caption"
+															color="error.main"
+															sx={{ display: "flex", alignItems: "center", mb: 0.5, fontWeight: 500 }}
+														>
 															Variables no reconocidas ({invalidVars.length}):
 														</Typography>
 														<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
@@ -2710,9 +2735,12 @@ const EmailTemplates = () => {
 																		sx={{
 																			fontFamily: "monospace",
 																			fontSize: "0.7rem",
-																			backgroundColor: theme.palette.mode === "dark" ? `${theme.palette.error.dark}4D` : `${theme.palette.error.main}26`,
+																			backgroundColor:
+																				theme.palette.mode === "dark" ? `${theme.palette.error.dark}4D` : `${theme.palette.error.main}26`,
 																			color: theme.palette.mode === "dark" ? theme.palette.error.light : theme.palette.error.dark,
-																			border: `1px solid ${theme.palette.mode === "dark" ? theme.palette.error.main : theme.palette.error.light}`,
+																			border: `1px solid ${
+																				theme.palette.mode === "dark" ? theme.palette.error.main : theme.palette.error.light
+																			}`,
 																		}}
 																	/>
 																</Tooltip>

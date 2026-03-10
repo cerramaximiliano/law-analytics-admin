@@ -142,11 +142,13 @@ const CausasUpdateWorker: React.FC = () => {
 							<Typography variant="h6">Guía del Worker de Actualización de Causas</Typography>
 							<Alert severity="info" variant="outlined">
 								<Typography variant="body2">
-									Este worker actualiza los movimientos de TODAS las causas vinculadas a credenciales de usuario mediante login SSO al portal PJN.
-									Usa un algoritmo de comparación por cantidad para detectar movimientos nuevos de forma eficiente.
+									Este worker actualiza los movimientos de TODAS las causas vinculadas a credenciales de usuario mediante login SSO al
+									portal PJN. Usa un algoritmo de comparación por cantidad para detectar movimientos nuevos de forma eficiente.
 								</Typography>
 							</Alert>
-							<Typography variant="subtitle1" fontWeight={600}>Flujo de ejecución</Typography>
+							<Typography variant="subtitle1" fontWeight={600}>
+								Flujo de ejecución
+							</Typography>
 							<Typography variant="body2" component="div">
 								<ol style={{ margin: 0, paddingLeft: 20 }}>
 									<li>Resume de runs interrumpidos anteriores</li>
@@ -156,15 +158,21 @@ const CausasUpdateWorker: React.FC = () => {
 									<li>Registrar detalle del run para tracking y resume futuro</li>
 								</ol>
 							</Typography>
-							<Typography variant="subtitle1" fontWeight={600}>Configuración</Typography>
-							<Typography variant="body2">
-								<strong>Thresholds:</strong> Controlan la frecuencia de actualización por causa y por credencial. El updateThresholdHours define cuántas horas deben pasar antes de volver a procesar una causa. minTimeBetweenRunsMinutes controla el intervalo mínimo entre runs de la misma credencial.
+							<Typography variant="subtitle1" fontWeight={600}>
+								Configuración
 							</Typography>
 							<Typography variant="body2">
-								<strong>Concurrencia:</strong> Si waitForCausaCreation está habilitado, el worker espera a que termine el worker de creación de causas antes de procesar una credencial.
+								<strong>Thresholds:</strong> Controlan la frecuencia de actualización por causa y por credencial. El updateThresholdHours
+								define cuántas horas deben pasar antes de volver a procesar una causa. minTimeBetweenRunsMinutes controla el intervalo
+								mínimo entre runs de la misma credencial.
 							</Typography>
 							<Typography variant="body2">
-								<strong>Resume:</strong> Si un run es interrumpido (error, shutdown), se retoma automáticamente en la próxima ejecución, procesando solo las causas que faltaron.
+								<strong>Concurrencia:</strong> Si waitForCausaCreation está habilitado, el worker espera a que termine el worker de creación
+								de causas antes de procesar una credencial.
+							</Typography>
+							<Typography variant="body2">
+								<strong>Resume:</strong> Si un run es interrumpido (error, shutdown), se retoma automáticamente en la próxima ejecución,
+								procesando solo las causas que faltaron.
 							</Typography>
 						</Stack>
 					</TabPanel>

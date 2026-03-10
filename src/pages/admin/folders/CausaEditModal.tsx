@@ -107,7 +107,7 @@ const CausaEditModal = ({ open, onClose, causa, causaType, folderId, onCausaUpda
 						variant: "success",
 						anchorOrigin: { vertical: "bottom", horizontal: "right" },
 						autoHideDuration: 5000,
-					}
+					},
 				);
 				if (onCausaUpdated) {
 					onCausaUpdated();
@@ -166,11 +166,7 @@ const CausaEditModal = ({ open, onClose, causa, causaType, folderId, onCausaUpda
 			<DialogContent dividers>
 				<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
 					{/* Sync Warning */}
-					<Alert
-						severity="info"
-						icon={<Refresh2 size={20} />}
-						sx={{ mb: 2 }}
-					>
+					<Alert severity="info" icon={<Refresh2 size={20} />} sx={{ mb: 2 }}>
 						<Typography variant="subtitle2" fontWeight="bold">
 							Sincronización manual Causa → Carpeta
 						</Typography>
@@ -197,29 +193,24 @@ const CausaEditModal = ({ open, onClose, causa, causaType, folderId, onCausaUpda
 					</Alert>
 
 					{/* Worker update notice */}
-					<Alert
-						severity="warning"
-						icon={<Warning2 size={20} />}
-						sx={{ mb: 3 }}
-					>
+					<Alert severity="warning" icon={<Warning2 size={20} />} sx={{ mb: 3 }}>
 						<Typography variant="subtitle2" fontWeight="bold">
 							Actualización automática por Worker
 						</Typography>
 						<Typography variant="body2" sx={{ mb: 1 }}>
-							Estos datos se actualizarán automáticamente en el próximo ciclo del worker de actualización (PJN).
-							Los cambios manuales sirven para correcciones inmediatas hasta que el worker sincronice nuevamente con el sistema judicial.
+							Estos datos se actualizarán automáticamente en el próximo ciclo del worker de actualización (PJN). Los cambios manuales sirven
+							para correcciones inmediatas hasta que el worker sincronice nuevamente con el sistema judicial.
 						</Typography>
 						<Typography variant="caption" color="text.secondary">
-							El worker mantiene los datos sincronizados con PJN. Usa esta función para corregir datos temporalmente o forzar una sincronización inmediata con las carpetas.
+							El worker mantiene los datos sincronizados con PJN. Usa esta función para corregir datos temporalmente o forzar una
+							sincronización inmediata con las carpetas.
 						</Typography>
 					</Alert>
 
 					{/* Preview of changes */}
 					{changedFields.length > 0 && (
 						<Alert severity="info" sx={{ mb: 3 }}>
-							<Typography variant="subtitle2">
-								{changedFields.length} campo(s) modificado(s):
-							</Typography>
+							<Typography variant="subtitle2">{changedFields.length} campo(s) modificado(s):</Typography>
 							<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.5 }}>
 								{getSyncedFieldsPreview().map((sf) => (
 									<Chip key={sf.causa} label={sf.label} size="small" color="info" />
@@ -327,12 +318,7 @@ const CausaEditModal = ({ open, onClose, causa, causaType, folderId, onCausaUpda
 
 						<Grid item xs={6}>
 							<FormControlLabel
-								control={
-									<Switch
-										checked={formData.verified || false}
-										onChange={(e) => handleChange("verified", e.target.checked)}
-									/>
-								}
+								control={<Switch checked={formData.verified || false} onChange={(e) => handleChange("verified", e.target.checked)} />}
 								label={
 									<Box>
 										<Typography variant="body2">Verificada</Typography>
@@ -346,12 +332,7 @@ const CausaEditModal = ({ open, onClose, causa, causaType, folderId, onCausaUpda
 
 						<Grid item xs={6}>
 							<FormControlLabel
-								control={
-									<Switch
-										checked={formData.isValid || false}
-										onChange={(e) => handleChange("isValid", e.target.checked)}
-									/>
-								}
+								control={<Switch checked={formData.isValid || false} onChange={(e) => handleChange("isValid", e.target.checked)} />}
 								label={
 									<Box>
 										<Typography variant="body2">Válida (Pública)</Typography>

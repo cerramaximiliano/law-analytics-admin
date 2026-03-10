@@ -30,7 +30,27 @@ import {
 	Divider,
 	Alert,
 } from "@mui/material";
-import { Refresh, Activity, Chart, People, Global, Mouse, Mobile, Monitor, Send2, ArrowRight, ArrowDown, Login, Logout, Routing, Filter, Add, Trash, Play, InfoCircle } from "iconsax-react";
+import {
+	Refresh,
+	Activity,
+	Chart,
+	People,
+	Global,
+	Mouse,
+	Mobile,
+	Monitor,
+	Send2,
+	ArrowRight,
+	ArrowDown,
+	Login,
+	Logout,
+	Routing,
+	Filter,
+	Add,
+	Trash,
+	Play,
+	InfoCircle,
+} from "iconsax-react";
 import {
 	LineChart,
 	Line,
@@ -50,7 +70,15 @@ import {
 } from "recharts";
 import MainCard from "components/MainCard";
 import GA4AnalyticsService from "api/ga4Analytics";
-import { GA4AllData, GA4PeriodOption, GA4NavigationData, GA4AllEventsData, GA4CustomFunnelData, GA4PredefinedFunnel, GA4EventDetails } from "types/ga4-analytics";
+import {
+	GA4AllData,
+	GA4PeriodOption,
+	GA4NavigationData,
+	GA4AllEventsData,
+	GA4CustomFunnelData,
+	GA4PredefinedFunnel,
+	GA4EventDetails,
+} from "types/ga4-analytics";
 import { useSnackbar } from "notistack";
 import { SearchNormal1 } from "iconsax-react";
 
@@ -205,7 +233,14 @@ const DocTableCell: React.FC<{ children: React.ReactNode; tooltip?: string; alig
 	const theme = useTheme();
 	return (
 		<TableCell align={align}>
-			<Box sx={{ display: "flex", alignItems: "center", gap: 0.5, justifyContent: align === "right" ? "flex-end" : align === "center" ? "center" : "flex-start" }}>
+			<Box
+				sx={{
+					display: "flex",
+					alignItems: "center",
+					gap: 0.5,
+					justifyContent: align === "right" ? "flex-end" : align === "center" ? "center" : "flex-start",
+				}}
+			>
 				{children}
 				{tooltip && (
 					<Tooltip title={tooltip} arrow placement="top">
@@ -589,7 +624,10 @@ const FunnelStep: React.FC<FunnelStepProps> = ({ step, users, conversionRate, is
 				<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 60 }}>
 					<ArrowDown size={20} color={theme.palette.text.secondary} />
 					{!loading && (
-						<Typography variant="caption" sx={{ color: conversionRate >= 50 ? theme.palette.success.main : theme.palette.warning.main, fontWeight: 600 }}>
+						<Typography
+							variant="caption"
+							sx={{ color: conversionRate >= 50 ? theme.palette.success.main : theme.palette.warning.main, fontWeight: 600 }}
+						>
 							{conversionRate}%
 						</Typography>
 					)}
@@ -757,21 +795,24 @@ const GA4Dashboard = () => {
 	};
 
 	// Event Explorer functions
-	const fetchEventDetails = useCallback(async (eventName: string) => {
-		if (!eventName) return;
-		try {
-			setEventExplorerLoading(true);
-			const response = await GA4AnalyticsService.getEventDetails(eventName, { period });
-			if (response.success) {
-				setEventDetails(response.data);
+	const fetchEventDetails = useCallback(
+		async (eventName: string) => {
+			if (!eventName) return;
+			try {
+				setEventExplorerLoading(true);
+				const response = await GA4AnalyticsService.getEventDetails(eventName, { period });
+				if (response.success) {
+					setEventDetails(response.data);
+				}
+			} catch (error: any) {
+				console.error("Error fetching event details:", error);
+				enqueueSnackbar(error?.message || "Error al cargar detalles del evento", { variant: "error" });
+			} finally {
+				setEventExplorerLoading(false);
 			}
-		} catch (error: any) {
-			console.error("Error fetching event details:", error);
-			enqueueSnackbar(error?.message || "Error al cargar detalles del evento", { variant: "error" });
-		} finally {
-			setEventExplorerLoading(false);
-		}
-	}, [period, enqueueSnackbar]);
+		},
+		[period, enqueueSnackbar],
+	);
 
 	const handleSelectEventForExplorer = (eventName: string) => {
 		setSelectedEventForExplorer(eventName);
@@ -818,7 +859,13 @@ const GA4Dashboard = () => {
 			title="Analytics GA4"
 			secondary={
 				<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-					<ToggleButtonGroup value={period} exclusive onChange={handlePeriodChange} size="small" sx={{ bgcolor: theme.palette.background.paper }}>
+					<ToggleButtonGroup
+						value={period}
+						exclusive
+						onChange={handlePeriodChange}
+						size="small"
+						sx={{ bgcolor: theme.palette.background.paper }}
+					>
 						<ToggleButton value="7d">7d</ToggleButton>
 						<ToggleButton value="30d">30d</ToggleButton>
 						<ToggleButton value="90d">90d</ToggleButton>
@@ -864,379 +911,407 @@ const GA4Dashboard = () => {
 
 			{/* TAB 0: Overview */}
 			<TabPanel value={tabValue} index={0}>
-			{/* Info Card */}
-			<Paper
-				elevation={0}
-				sx={{
-					p: 2,
-					mb: 3,
-					borderRadius: 2,
-					bgcolor: alpha(theme.palette.primary.main, 0.05),
-					border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-				}}
-			>
-				<Typography variant="subtitle2" sx={{ color: theme.palette.primary.main, mb: 1 }}>
-					Guía de Métricas - Pasa el cursor sobre cualquier tarjeta o gráfico para ver su descripción
-				</Typography>
-				<Grid container spacing={2}>
-					<Grid item xs={12} md={4}>
-						<Typography variant="body2" color="textSecondary">
-							<strong>Métricas de Audiencia:</strong> Usuarios totales, nuevos y sesiones miden el alcance y crecimiento de tu sitio.
-							Un ratio de Sesiones/Usuarios mayor a 1.2 indica buena retención.
-						</Typography>
+				{/* Info Card */}
+				<Paper
+					elevation={0}
+					sx={{
+						p: 2,
+						mb: 3,
+						borderRadius: 2,
+						bgcolor: alpha(theme.palette.primary.main, 0.05),
+						border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+					}}
+				>
+					<Typography variant="subtitle2" sx={{ color: theme.palette.primary.main, mb: 1 }}>
+						Guía de Métricas - Pasa el cursor sobre cualquier tarjeta o gráfico para ver su descripción
+					</Typography>
+					<Grid container spacing={2}>
+						<Grid item xs={12} md={4}>
+							<Typography variant="body2" color="textSecondary">
+								<strong>Métricas de Audiencia:</strong> Usuarios totales, nuevos y sesiones miden el alcance y crecimiento de tu sitio. Un
+								ratio de Sesiones/Usuarios mayor a 1.2 indica buena retención.
+							</Typography>
+						</Grid>
+						<Grid item xs={12} md={4}>
+							<Typography variant="body2" color="textSecondary">
+								<strong>Métricas de Engagement:</strong> Bounce rate, sesiones engaged y tiempo de engagement miden la calidad de la
+								interacción. Bounce rate menor a 40% es excelente.
+							</Typography>
+						</Grid>
+						<Grid item xs={12} md={4}>
+							<Typography variant="body2" color="textSecondary">
+								<strong>Métricas de Conversión:</strong> El funnel y eventos personalizados muestran el progreso hacia objetivos. Identifica
+								pasos con alta caída para optimizar.
+							</Typography>
+						</Grid>
 					</Grid>
-					<Grid item xs={12} md={4}>
-						<Typography variant="body2" color="textSecondary">
-							<strong>Métricas de Engagement:</strong> Bounce rate, sesiones engaged y tiempo de engagement miden la calidad de la interacción.
-							Bounce rate menor a 40% es excelente.
-						</Typography>
+				</Paper>
+
+				{/* Top Row: Realtime + Key Metrics */}
+				<Grid container spacing={2} sx={{ mb: 3 }}>
+					<Grid item xs={12} sm={6} md={3}>
+						<RealtimeCard activeUsers={data?.realtime.activeUsers || 0} loading={loading} />
 					</Grid>
-					<Grid item xs={12} md={4}>
-						<Typography variant="body2" color="textSecondary">
-							<strong>Métricas de Conversión:</strong> El funnel y eventos personalizados muestran el progreso hacia objetivos.
-							Identifica pasos con alta caída para optimizar.
-						</Typography>
+					<Grid item xs={12} sm={6} md={3}>
+						<MetricCard
+							title="Usuarios Totales"
+							value={data?.overview.totalUsers || 0}
+							icon={<People size={20} />}
+							loading={loading}
+							metricKey="totalUsers"
+						/>
+					</Grid>
+					<Grid item xs={12} sm={6} md={3}>
+						<MetricCard
+							title="Usuarios Nuevos"
+							value={data?.overview.newUsers || 0}
+							icon={<People size={20} />}
+							loading={loading}
+							color={theme.palette.success.main}
+							metricKey="newUsers"
+						/>
+					</Grid>
+					<Grid item xs={12} sm={6} md={3}>
+						<MetricCard
+							title="Sesiones"
+							value={data?.overview.sessions || 0}
+							icon={<Activity size={20} />}
+							loading={loading}
+							subtitle={`Duración prom: ${formatDuration(data?.overview.avgSessionDuration || 0)}`}
+							metricKey="sessions"
+						/>
 					</Grid>
 				</Grid>
-			</Paper>
 
-			{/* Top Row: Realtime + Key Metrics */}
-			<Grid container spacing={2} sx={{ mb: 3 }}>
-				<Grid item xs={12} sm={6} md={3}>
-					<RealtimeCard activeUsers={data?.realtime.activeUsers || 0} loading={loading} />
-				</Grid>
-				<Grid item xs={12} sm={6} md={3}>
-					<MetricCard title="Usuarios Totales" value={data?.overview.totalUsers || 0} icon={<People size={20} />} loading={loading} metricKey="totalUsers" />
-				</Grid>
-				<Grid item xs={12} sm={6} md={3}>
-					<MetricCard
-						title="Usuarios Nuevos"
-						value={data?.overview.newUsers || 0}
-						icon={<People size={20} />}
-						loading={loading}
-						color={theme.palette.success.main}
-						metricKey="newUsers"
-					/>
-				</Grid>
-				<Grid item xs={12} sm={6} md={3}>
-					<MetricCard
-						title="Sesiones"
-						value={data?.overview.sessions || 0}
-						icon={<Activity size={20} />}
-						loading={loading}
-						subtitle={`Duración prom: ${formatDuration(data?.overview.avgSessionDuration || 0)}`}
-						metricKey="sessions"
-					/>
-				</Grid>
-			</Grid>
-
-			{/* Second Row: More Metrics */}
-			<Grid container spacing={2} sx={{ mb: 3 }}>
-				<Grid item xs={12} sm={6} md={3}>
-					<MetricCard title="Páginas Vistas" value={data?.overview.pageViews || 0} icon={<Global size={20} />} loading={loading} metricKey="pageViews" />
-				</Grid>
-				<Grid item xs={12} sm={6} md={3}>
-					<MetricCard
-						title="Tasa de Rebote"
-						value={`${((data?.overview.bounceRate || 0) * 100).toFixed(1)}%`}
-						icon={<ArrowRight size={20} />}
-						loading={loading}
-						color={theme.palette.warning.main}
-						metricKey="bounceRate"
-					/>
-				</Grid>
-				<Grid item xs={12} sm={6} md={3}>
-					<MetricCard
-						title="Sesiones Engaged"
-						value={data?.overview.engagedSessions || 0}
-						icon={<Mouse size={20} />}
-						loading={loading}
-						color={theme.palette.success.main}
-						metricKey="engagedSessions"
-					/>
-				</Grid>
-				<Grid item xs={12} sm={6} md={3}>
-					<MetricCard
-						title="Tiempo Engagement"
-						value={formatDuration(data?.overview.engagementDuration || 0)}
-						icon={<Activity size={20} />}
-						loading={loading}
-						metricKey="engagementDuration"
-					/>
-				</Grid>
-			</Grid>
-
-			{/* Charts Row */}
-			<Grid container spacing={3}>
-				{/* Users Trend Chart */}
-				<Grid item xs={12} lg={8}>
-					<ChartCard title="Tendencia de Usuarios" icon={<Chart size={18} />} height={300} chartKey="usersTrend">
-						{loading ? (
-							<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
-						) : (
-							<ResponsiveContainer width="100%" height="100%">
-								<LineChart data={usersTrendData} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
-									<CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} />
-									<XAxis dataKey="date" tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} />
-									<YAxis tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} />
-									<RechartsTooltip
-										contentStyle={{
-											backgroundColor: theme.palette.background.paper,
-											border: `1px solid ${theme.palette.divider}`,
-											borderRadius: 8,
-										}}
-									/>
-									<Line type="monotone" dataKey="totalUsers" stroke={COLORS.primary.main} strokeWidth={2} name="Usuarios" dot={false} />
-									<Line type="monotone" dataKey="newUsers" stroke={COLORS.success.main} strokeWidth={2} name="Nuevos" dot={false} />
-									<Line type="monotone" dataKey="sessions" stroke={COLORS.warning.main} strokeWidth={2} name="Sesiones" dot={false} />
-								</LineChart>
-							</ResponsiveContainer>
-						)}
-					</ChartCard>
+				{/* Second Row: More Metrics */}
+				<Grid container spacing={2} sx={{ mb: 3 }}>
+					<Grid item xs={12} sm={6} md={3}>
+						<MetricCard
+							title="Páginas Vistas"
+							value={data?.overview.pageViews || 0}
+							icon={<Global size={20} />}
+							loading={loading}
+							metricKey="pageViews"
+						/>
+					</Grid>
+					<Grid item xs={12} sm={6} md={3}>
+						<MetricCard
+							title="Tasa de Rebote"
+							value={`${((data?.overview.bounceRate || 0) * 100).toFixed(1)}%`}
+							icon={<ArrowRight size={20} />}
+							loading={loading}
+							color={theme.palette.warning.main}
+							metricKey="bounceRate"
+						/>
+					</Grid>
+					<Grid item xs={12} sm={6} md={3}>
+						<MetricCard
+							title="Sesiones Engaged"
+							value={data?.overview.engagedSessions || 0}
+							icon={<Mouse size={20} />}
+							loading={loading}
+							color={theme.palette.success.main}
+							metricKey="engagedSessions"
+						/>
+					</Grid>
+					<Grid item xs={12} sm={6} md={3}>
+						<MetricCard
+							title="Tiempo Engagement"
+							value={formatDuration(data?.overview.engagementDuration || 0)}
+							icon={<Activity size={20} />}
+							loading={loading}
+							metricKey="engagementDuration"
+						/>
+					</Grid>
 				</Grid>
 
-				{/* Conversion Funnel */}
-				<Grid item xs={12} lg={4}>
-					<ChartCard title="Funnel de Conversión" icon={<Send2 size={18} />} height={300} chartKey="conversionFunnel">
-						{loading ? (
-							<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-								{[1, 2, 3, 4].map((i) => (
-									<Skeleton key={i} variant="rectangular" height={50} sx={{ borderRadius: 1 }} />
-								))}
-							</Box>
-						) : (
-							<Box sx={{ display: "flex", flexDirection: "column", gap: 1, height: "100%", justifyContent: "center" }}>
-								{data?.funnel.map((step, index) => (
-									<FunnelStep
-										key={step.event}
-										step={step.step}
-										users={step.users}
-										conversionRate={step.conversionRate}
-										isLast={index === data.funnel.length - 1}
-										color={COLORS.funnel[index % COLORS.funnel.length]}
-									/>
-								))}
-							</Box>
-						)}
-					</ChartCard>
-				</Grid>
+				{/* Charts Row */}
+				<Grid container spacing={3}>
+					{/* Users Trend Chart */}
+					<Grid item xs={12} lg={8}>
+						<ChartCard title="Tendencia de Usuarios" icon={<Chart size={18} />} height={300} chartKey="usersTrend">
+							{loading ? (
+								<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
+							) : (
+								<ResponsiveContainer width="100%" height="100%">
+									<LineChart data={usersTrendData} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
+										<CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} />
+										<XAxis dataKey="date" tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} />
+										<YAxis tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} />
+										<RechartsTooltip
+											contentStyle={{
+												backgroundColor: theme.palette.background.paper,
+												border: `1px solid ${theme.palette.divider}`,
+												borderRadius: 8,
+											}}
+										/>
+										<Line type="monotone" dataKey="totalUsers" stroke={COLORS.primary.main} strokeWidth={2} name="Usuarios" dot={false} />
+										<Line type="monotone" dataKey="newUsers" stroke={COLORS.success.main} strokeWidth={2} name="Nuevos" dot={false} />
+										<Line type="monotone" dataKey="sessions" stroke={COLORS.warning.main} strokeWidth={2} name="Sesiones" dot={false} />
+									</LineChart>
+								</ResponsiveContainer>
+							)}
+						</ChartCard>
+					</Grid>
 
-				{/* Traffic Sources */}
-				<Grid item xs={12} md={6}>
-					<ChartCard title="Fuentes de Tráfico" icon={<Global size={18} />} height={250} chartKey="trafficSources">
-						{loading ? (
-							<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
-						) : (
-							<Grid container sx={{ height: "100%" }}>
-								<Grid item xs={6}>
-									<ResponsiveContainer width="100%" height="100%">
-										<PieChart>
-											<Pie data={trafficSourcesData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="sessions">
-												{trafficSourcesData?.map((entry, index) => (
-													<Cell key={`cell-${index}`} fill={entry.color} />
-												))}
-											</Pie>
-											<RechartsTooltip />
-										</PieChart>
-									</ResponsiveContainer>
+					{/* Conversion Funnel */}
+					<Grid item xs={12} lg={4}>
+						<ChartCard title="Funnel de Conversión" icon={<Send2 size={18} />} height={300} chartKey="conversionFunnel">
+							{loading ? (
+								<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+									{[1, 2, 3, 4].map((i) => (
+										<Skeleton key={i} variant="rectangular" height={50} sx={{ borderRadius: 1 }} />
+									))}
+								</Box>
+							) : (
+								<Box sx={{ display: "flex", flexDirection: "column", gap: 1, height: "100%", justifyContent: "center" }}>
+									{data?.funnel.map((step, index) => (
+										<FunnelStep
+											key={step.event}
+											step={step.step}
+											users={step.users}
+											conversionRate={step.conversionRate}
+											isLast={index === data.funnel.length - 1}
+											color={COLORS.funnel[index % COLORS.funnel.length]}
+										/>
+									))}
+								</Box>
+							)}
+						</ChartCard>
+					</Grid>
+
+					{/* Traffic Sources */}
+					<Grid item xs={12} md={6}>
+						<ChartCard title="Fuentes de Tráfico" icon={<Global size={18} />} height={250} chartKey="trafficSources">
+							{loading ? (
+								<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
+							) : (
+								<Grid container sx={{ height: "100%" }}>
+									<Grid item xs={6}>
+										<ResponsiveContainer width="100%" height="100%">
+											<PieChart>
+												<Pie
+													data={trafficSourcesData}
+													cx="50%"
+													cy="50%"
+													innerRadius={50}
+													outerRadius={80}
+													paddingAngle={2}
+													dataKey="sessions"
+												>
+													{trafficSourcesData?.map((entry, index) => (
+														<Cell key={`cell-${index}`} fill={entry.color} />
+													))}
+												</Pie>
+												<RechartsTooltip />
+											</PieChart>
+										</ResponsiveContainer>
+									</Grid>
+									<Grid item xs={6}>
+										<Box sx={{ display: "flex", flexDirection: "column", gap: 1, justifyContent: "center", height: "100%" }}>
+											{trafficSourcesData?.slice(0, 5).map((item, index) => (
+												<Box key={index} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+													<Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: item.color }} />
+													<Typography variant="caption" sx={{ flex: 1 }} noWrap>
+														{item.channel}
+													</Typography>
+													<Typography variant="caption" fontWeight={600}>
+														{item.sessions}
+													</Typography>
+												</Box>
+											))}
+										</Box>
+									</Grid>
 								</Grid>
-								<Grid item xs={6}>
-									<Box sx={{ display: "flex", flexDirection: "column", gap: 1, justifyContent: "center", height: "100%" }}>
-										{trafficSourcesData?.slice(0, 5).map((item, index) => (
-											<Box key={index} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-												<Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: item.color }} />
-												<Typography variant="caption" sx={{ flex: 1 }} noWrap>
-													{item.channel}
-												</Typography>
-												<Typography variant="caption" fontWeight={600}>
-													{item.sessions}
-												</Typography>
-											</Box>
-										))}
-									</Box>
-								</Grid>
-							</Grid>
-						)}
-					</ChartCard>
-				</Grid>
+							)}
+						</ChartCard>
+					</Grid>
 
-				{/* Devices */}
-				<Grid item xs={12} md={6}>
-					<ChartCard title="Dispositivos" icon={<Mobile size={18} />} height={250} chartKey="devices">
-						{loading ? (
-							<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
-						) : (
-							<Grid container sx={{ height: "100%" }}>
-								<Grid item xs={6}>
-									<ResponsiveContainer width="100%" height="100%">
-										<PieChart>
-											<Pie data={devicesData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="sessions">
-												{devicesData?.map((entry, index) => (
-													<Cell key={`cell-${index}`} fill={entry.color} />
-												))}
-											</Pie>
-											<RechartsTooltip />
-										</PieChart>
-									</ResponsiveContainer>
+					{/* Devices */}
+					<Grid item xs={12} md={6}>
+						<ChartCard title="Dispositivos" icon={<Mobile size={18} />} height={250} chartKey="devices">
+							{loading ? (
+								<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
+							) : (
+								<Grid container sx={{ height: "100%" }}>
+									<Grid item xs={6}>
+										<ResponsiveContainer width="100%" height="100%">
+											<PieChart>
+												<Pie data={devicesData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="sessions">
+													{devicesData?.map((entry, index) => (
+														<Cell key={`cell-${index}`} fill={entry.color} />
+													))}
+												</Pie>
+												<RechartsTooltip />
+											</PieChart>
+										</ResponsiveContainer>
+									</Grid>
+									<Grid item xs={6}>
+										<Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, justifyContent: "center", height: "100%" }}>
+											{devicesData?.map((item, index) => (
+												<Box key={index} sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+													{item.device === "desktop" ? (
+														<Monitor size={18} color={item.color} />
+													) : item.device === "mobile" ? (
+														<Mobile size={18} color={item.color} />
+													) : (
+														<Monitor size={18} color={item.color} />
+													)}
+													<Typography variant="body2" sx={{ flex: 1, textTransform: "capitalize" }}>
+														{item.device}
+													</Typography>
+													<Typography variant="body2" fontWeight={600}>
+														{item.sessions}
+													</Typography>
+												</Box>
+											))}
+										</Box>
+									</Grid>
 								</Grid>
-								<Grid item xs={6}>
-									<Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, justifyContent: "center", height: "100%" }}>
-										{devicesData?.map((item, index) => (
-											<Box key={index} sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-												{item.device === "desktop" ? (
-													<Monitor size={18} color={item.color} />
-												) : item.device === "mobile" ? (
-													<Mobile size={18} color={item.color} />
-												) : (
-													<Monitor size={18} color={item.color} />
-												)}
-												<Typography variant="body2" sx={{ flex: 1, textTransform: "capitalize" }}>
-													{item.device}
-												</Typography>
-												<Typography variant="body2" fontWeight={600}>
-													{item.sessions}
-												</Typography>
-											</Box>
-										))}
-									</Box>
-								</Grid>
-							</Grid>
-						)}
-					</ChartCard>
-				</Grid>
+							)}
+						</ChartCard>
+					</Grid>
 
-				{/* Top Pages Table */}
-				<Grid item xs={12} md={6}>
-					<ChartCard title="Páginas más Visitadas" icon={<Global size={18} />} height={280} chartKey="topPages">
-						{loading ? (
-							<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
-						) : (
-							<TableContainer sx={{ maxHeight: 280 }}>
-								<Table size="small" stickyHeader>
-									<TableHead>
-										<TableRow>
-											<DocTableCell tooltip={TABLE_COLUMN_DOCS.topPages.pagePath}>Página</DocTableCell>
-											<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.topPages.pageViews}>Vistas</DocTableCell>
-											<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.topPages.users}>Usuarios</DocTableCell>
-										</TableRow>
-									</TableHead>
-									<TableBody>
-										{data?.topPages.map((page, index) => (
-											<TableRow key={index} hover>
-												<TableCell sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-													{page.pagePath}
-												</TableCell>
-												<TableCell align="right">{page.pageViews.toLocaleString()}</TableCell>
-												<TableCell align="right">{page.users.toLocaleString()}</TableCell>
+					{/* Top Pages Table */}
+					<Grid item xs={12} md={6}>
+						<ChartCard title="Páginas más Visitadas" icon={<Global size={18} />} height={280} chartKey="topPages">
+							{loading ? (
+								<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
+							) : (
+								<TableContainer sx={{ maxHeight: 280 }}>
+									<Table size="small" stickyHeader>
+										<TableHead>
+											<TableRow>
+												<DocTableCell tooltip={TABLE_COLUMN_DOCS.topPages.pagePath}>Página</DocTableCell>
+												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.topPages.pageViews}>
+													Vistas
+												</DocTableCell>
+												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.topPages.users}>
+													Usuarios
+												</DocTableCell>
 											</TableRow>
-										))}
-									</TableBody>
-								</Table>
-							</TableContainer>
-						)}
-					</ChartCard>
-				</Grid>
+										</TableHead>
+										<TableBody>
+											{data?.topPages.map((page, index) => (
+												<TableRow key={index} hover>
+													<TableCell sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+														{page.pagePath}
+													</TableCell>
+													<TableCell align="right">{page.pageViews.toLocaleString()}</TableCell>
+													<TableCell align="right">{page.users.toLocaleString()}</TableCell>
+												</TableRow>
+											))}
+										</TableBody>
+									</Table>
+								</TableContainer>
+							)}
+						</ChartCard>
+					</Grid>
 
-				{/* Custom Events Table */}
-				<Grid item xs={12} md={6}>
-					<ChartCard title="Eventos Personalizados" icon={<Mouse size={18} />} height={280} chartKey="customEvents">
-						{loading ? (
-							<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
-						) : (
-							<TableContainer sx={{ maxHeight: 280 }}>
-								<Table size="small" stickyHeader>
-									<TableHead>
-										<TableRow>
-											<DocTableCell tooltip={TABLE_COLUMN_DOCS.customEvents.eventName}>Evento</DocTableCell>
-											<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.customEvents.count}>Cantidad</DocTableCell>
-											<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.customEvents.users}>Usuarios</DocTableCell>
-										</TableRow>
-									</TableHead>
-									<TableBody>
-										{data?.customEvents.map((event, index) => (
-											<TableRow key={index} hover>
-												<TableCell>{event.eventName}</TableCell>
-												<TableCell align="right">{event.count.toLocaleString()}</TableCell>
-												<TableCell align="right">{event.users.toLocaleString()}</TableCell>
+					{/* Custom Events Table */}
+					<Grid item xs={12} md={6}>
+						<ChartCard title="Eventos Personalizados" icon={<Mouse size={18} />} height={280} chartKey="customEvents">
+							{loading ? (
+								<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
+							) : (
+								<TableContainer sx={{ maxHeight: 280 }}>
+									<Table size="small" stickyHeader>
+										<TableHead>
+											<TableRow>
+												<DocTableCell tooltip={TABLE_COLUMN_DOCS.customEvents.eventName}>Evento</DocTableCell>
+												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.customEvents.count}>
+													Cantidad
+												</DocTableCell>
+												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.customEvents.users}>
+													Usuarios
+												</DocTableCell>
 											</TableRow>
-										))}
-									</TableBody>
-								</Table>
-							</TableContainer>
-						)}
-					</ChartCard>
-				</Grid>
+										</TableHead>
+										<TableBody>
+											{data?.customEvents.map((event, index) => (
+												<TableRow key={index} hover>
+													<TableCell>{event.eventName}</TableCell>
+													<TableCell align="right">{event.count.toLocaleString()}</TableCell>
+													<TableCell align="right">{event.users.toLocaleString()}</TableCell>
+												</TableRow>
+											))}
+										</TableBody>
+									</Table>
+								</TableContainer>
+							)}
+						</ChartCard>
+					</Grid>
 
-				{/* CTA Clicks */}
-				<Grid item xs={12} md={6}>
-					<ChartCard title="Clicks en CTAs" icon={<Mouse size={18} />} height={250} chartKey="ctaClicks">
-						{loading ? (
-							<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
-						) : data?.ctaClicks && data.ctaClicks.length > 0 ? (
-							<ResponsiveContainer width="100%" height="100%">
-								<BarChart data={data.ctaClicks} layout="vertical" margin={{ top: 5, right: 30, left: 80, bottom: 5 }}>
-									<CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} />
-									<XAxis type="number" tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} />
-									<YAxis type="category" dataKey="ctaType" tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} width={80} />
-									<RechartsTooltip />
-									<Bar dataKey="clicks" fill={COLORS.primary.main} radius={[0, 4, 4, 0]} />
-								</BarChart>
-							</ResponsiveContainer>
-						) : (
-							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-								<Typography variant="body2" color="textSecondary">
-									Sin datos de CTA clicks
-								</Typography>
-							</Box>
-						)}
-					</ChartCard>
-				</Grid>
+					{/* CTA Clicks */}
+					<Grid item xs={12} md={6}>
+						<ChartCard title="Clicks en CTAs" icon={<Mouse size={18} />} height={250} chartKey="ctaClicks">
+							{loading ? (
+								<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
+							) : data?.ctaClicks && data.ctaClicks.length > 0 ? (
+								<ResponsiveContainer width="100%" height="100%">
+									<BarChart data={data.ctaClicks} layout="vertical" margin={{ top: 5, right: 30, left: 80, bottom: 5 }}>
+										<CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} />
+										<XAxis type="number" tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} />
+										<YAxis type="category" dataKey="ctaType" tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} width={80} />
+										<RechartsTooltip />
+										<Bar dataKey="clicks" fill={COLORS.primary.main} radius={[0, 4, 4, 0]} />
+									</BarChart>
+								</ResponsiveContainer>
+							) : (
+								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+									<Typography variant="body2" color="textSecondary">
+										Sin datos de CTA clicks
+									</Typography>
+								</Box>
+							)}
+						</ChartCard>
+					</Grid>
 
-				{/* Feature Interest */}
-				<Grid item xs={12} md={6}>
-					<ChartCard title="Interés en Features" icon={<Chart size={18} />} height={250} chartKey="featureInterest">
-						{loading ? (
-							<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
-						) : data?.featureInterest && data.featureInterest.length > 0 ? (
-							<ResponsiveContainer width="100%" height="100%">
-								<BarChart data={data.featureInterest} layout="vertical" margin={{ top: 5, right: 30, left: 80, bottom: 5 }}>
-									<CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} />
-									<XAxis type="number" tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} />
-									<YAxis type="category" dataKey="feature" tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} width={80} />
-									<RechartsTooltip />
-									<Bar dataKey="views" fill={COLORS.success.main} radius={[0, 4, 4, 0]} />
-								</BarChart>
-							</ResponsiveContainer>
-						) : (
-							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-								<Typography variant="body2" color="textSecondary">
-									Sin datos de features
-								</Typography>
-							</Box>
-						)}
-					</ChartCard>
-				</Grid>
+					{/* Feature Interest */}
+					<Grid item xs={12} md={6}>
+						<ChartCard title="Interés en Features" icon={<Chart size={18} />} height={250} chartKey="featureInterest">
+							{loading ? (
+								<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
+							) : data?.featureInterest && data.featureInterest.length > 0 ? (
+								<ResponsiveContainer width="100%" height="100%">
+									<BarChart data={data.featureInterest} layout="vertical" margin={{ top: 5, right: 30, left: 80, bottom: 5 }}>
+										<CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} />
+										<XAxis type="number" tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} />
+										<YAxis type="category" dataKey="feature" tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} width={80} />
+										<RechartsTooltip />
+										<Bar dataKey="views" fill={COLORS.success.main} radius={[0, 4, 4, 0]} />
+									</BarChart>
+								</ResponsiveContainer>
+							) : (
+								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+									<Typography variant="body2" color="textSecondary">
+										Sin datos de features
+									</Typography>
+								</Box>
+							)}
+						</ChartCard>
+					</Grid>
 
-				{/* Countries */}
-				<Grid item xs={12}>
-					<ChartCard title="Países de Origen" icon={<Global size={18} />} height={200} chartKey="countries">
-						{loading ? (
-							<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
-						) : (
-							<ResponsiveContainer width="100%" height="100%">
-								<BarChart data={data?.countries} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-									<CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} />
-									<XAxis dataKey="country" tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} />
-									<YAxis tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} />
-									<RechartsTooltip />
-									<Bar dataKey="sessions" fill={COLORS.primary.main} radius={[4, 4, 0, 0]} name="Sesiones" />
-									<Bar dataKey="users" fill={COLORS.success.main} radius={[4, 4, 0, 0]} name="Usuarios" />
-								</BarChart>
-							</ResponsiveContainer>
-						)}
-					</ChartCard>
+					{/* Countries */}
+					<Grid item xs={12}>
+						<ChartCard title="Países de Origen" icon={<Global size={18} />} height={200} chartKey="countries">
+							{loading ? (
+								<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
+							) : (
+								<ResponsiveContainer width="100%" height="100%">
+									<BarChart data={data?.countries} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+										<CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} />
+										<XAxis dataKey="country" tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} />
+										<YAxis tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} />
+										<RechartsTooltip />
+										<Bar dataKey="sessions" fill={COLORS.primary.main} radius={[4, 4, 0, 0]} name="Sesiones" />
+										<Bar dataKey="users" fill={COLORS.success.main} radius={[4, 4, 0, 0]} name="Usuarios" />
+									</BarChart>
+								</ResponsiveContainer>
+							)}
+						</ChartCard>
+					</Grid>
 				</Grid>
-			</Grid>
 			</TabPanel>
 
 			{/* TAB 1: Landing & Exit Pages */}
@@ -1267,16 +1342,16 @@ const GA4Dashboard = () => {
 								<Grid container spacing={2}>
 									<Grid item xs={12} md={6}>
 										<Typography variant="body2" color="textSecondary">
-											<strong>Páginas de Entrada (Landing):</strong> Son las primeras páginas que ven los usuarios al entrar al sitio.
-											Un <strong>Bounce Rate bajo (&lt;40%)</strong> indica que los usuarios continúan navegando después de llegar.
-											Páginas con alto bounce rate pueden necesitar mejoras en contenido o llamados a la acción.
+											<strong>Páginas de Entrada (Landing):</strong> Son las primeras páginas que ven los usuarios al entrar al sitio. Un{" "}
+											<strong>Bounce Rate bajo (&lt;40%)</strong> indica que los usuarios continúan navegando después de llegar. Páginas con
+											alto bounce rate pueden necesitar mejoras en contenido o llamados a la acción.
 										</Typography>
 									</Grid>
 									<Grid item xs={12} md={6}>
 										<Typography variant="body2" color="textSecondary">
-											<strong>Páginas de Salida (Exit):</strong> Son las últimas páginas antes de abandonar el sitio.
-											Un <strong>Exit Rate alto</strong> en páginas de conversión (checkout, registro) puede indicar problemas.
-											En páginas finales como "gracias" o confirmación, un exit rate alto es normal.
+											<strong>Páginas de Salida (Exit):</strong> Son las últimas páginas antes de abandonar el sitio. Un{" "}
+											<strong>Exit Rate alto</strong> en páginas de conversión (checkout, registro) puede indicar problemas. En páginas
+											finales como "gracias" o confirmación, un exit rate alto es normal.
 										</Typography>
 									</Grid>
 								</Grid>
@@ -1291,9 +1366,15 @@ const GA4Dashboard = () => {
 										<TableHead>
 											<TableRow>
 												<DocTableCell tooltip={TABLE_COLUMN_DOCS.landingPages.page}>Página</DocTableCell>
-												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.landingPages.sessions}>Sesiones</DocTableCell>
-												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.landingPages.users}>Usuarios</DocTableCell>
-												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.landingPages.bounceRate}>Bounce Rate</DocTableCell>
+												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.landingPages.sessions}>
+													Sesiones
+												</DocTableCell>
+												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.landingPages.users}>
+													Usuarios
+												</DocTableCell>
+												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.landingPages.bounceRate}>
+													Bounce Rate
+												</DocTableCell>
 											</TableRow>
 										</TableHead>
 										<TableBody>
@@ -1339,9 +1420,15 @@ const GA4Dashboard = () => {
 										<TableHead>
 											<TableRow>
 												<DocTableCell tooltip={TABLE_COLUMN_DOCS.exitPages.page}>Página</DocTableCell>
-												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.exitPages.exits}>Salidas</DocTableCell>
-												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.exitPages.pageViews}>Vistas</DocTableCell>
-												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.exitPages.exitRate}>Exit Rate</DocTableCell>
+												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.exitPages.exits}>
+													Salidas
+												</DocTableCell>
+												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.exitPages.pageViews}>
+													Vistas
+												</DocTableCell>
+												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.exitPages.exitRate}>
+													Exit Rate
+												</DocTableCell>
 											</TableRow>
 										</TableHead>
 										<TableBody>
@@ -1447,20 +1534,20 @@ const GA4Dashboard = () => {
 								<Grid container spacing={2}>
 									<Grid item xs={12} md={4}>
 										<Typography variant="body2" color="textSecondary">
-											<strong>Rutas de Navegación:</strong> Muestran los caminos completos que siguen los usuarios.
-											Identifica las rutas más populares hacia conversión y detecta patrones de comportamiento comunes.
+											<strong>Rutas de Navegación:</strong> Muestran los caminos completos que siguen los usuarios. Identifica las rutas más
+											populares hacia conversión y detecta patrones de comportamiento comunes.
 										</Typography>
 									</Grid>
 									<Grid item xs={12} md={4}>
 										<Typography variant="body2" color="textSecondary">
-											<strong>Flujo entre Páginas:</strong> Muestra las transiciones directas de una página a otra.
-											Útil para entender qué contenido lleva a los usuarios a otras secciones del sitio.
+											<strong>Flujo entre Páginas:</strong> Muestra las transiciones directas de una página a otra. Útil para entender qué
+											contenido lleva a los usuarios a otras secciones del sitio.
 										</Typography>
 									</Grid>
 									<Grid item xs={12} md={4}>
 										<Typography variant="body2" color="textSecondary">
-											<strong>Top Transiciones:</strong> Las conexiones más frecuentes entre páginas.
-											Ayuda a optimizar la arquitectura del sitio y mejorar el flujo de usuario hacia objetivos clave.
+											<strong>Top Transiciones:</strong> Las conexiones más frecuentes entre páginas. Ayuda a optimizar la arquitectura del
+											sitio y mejorar el flujo de usuario hacia objetivos clave.
 										</Typography>
 									</Grid>
 								</Grid>
@@ -1475,9 +1562,15 @@ const GA4Dashboard = () => {
 										<TableHead>
 											<TableRow>
 												<DocTableCell tooltip={TABLE_COLUMN_DOCS.navigationPaths.path}>Ruta</DocTableCell>
-												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.navigationPaths.sessions}>Sesiones</DocTableCell>
-												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.navigationPaths.users}>Usuarios</DocTableCell>
-												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.navigationPaths.avgDuration}>Duración Prom.</DocTableCell>
+												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.navigationPaths.sessions}>
+													Sesiones
+												</DocTableCell>
+												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.navigationPaths.users}>
+													Usuarios
+												</DocTableCell>
+												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.navigationPaths.avgDuration}>
+													Duración Prom.
+												</DocTableCell>
 											</TableRow>
 										</TableHead>
 										<TableBody>
@@ -1518,7 +1611,9 @@ const GA4Dashboard = () => {
 												<DocTableCell tooltip={TABLE_COLUMN_DOCS.pageFlow.fromPage}>Página Origen</DocTableCell>
 												<TableCell align="center">→</TableCell>
 												<DocTableCell tooltip={TABLE_COLUMN_DOCS.pageFlow.toPage}>Página Destino</DocTableCell>
-												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.pageFlow.transitions}>Transiciones</DocTableCell>
+												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.pageFlow.transitions}>
+													Transiciones
+												</DocTableCell>
 											</TableRow>
 										</TableHead>
 										<TableBody>
@@ -1634,8 +1729,8 @@ const GA4Dashboard = () => {
 									Constructor de Funnels Personalizado
 								</Typography>
 								<Typography variant="body2" color="textSecondary">
-									Selecciona eventos en orden para crear un funnel y analizar las tasas de conversión entre cada paso.
-									Puedes usar un <strong>funnel predefinido</strong> o <strong>crear uno personalizado</strong> seleccionando eventos individuales.
+									Selecciona eventos en orden para crear un funnel y analizar las tasas de conversión entre cada paso. Puedes usar un{" "}
+									<strong>funnel predefinido</strong> o <strong>crear uno personalizado</strong> seleccionando eventos individuales.
 								</Typography>
 							</Paper>
 						</Grid>
@@ -1684,18 +1779,16 @@ const GA4Dashboard = () => {
 								{/* Event Selector */}
 								<FormControl fullWidth size="small" sx={{ mb: 2 }}>
 									<InputLabel>Agregar Evento</InputLabel>
-									<Select
-										value=""
-										label="Agregar Evento"
-										onChange={(e) => handleAddEvent(e.target.value)}
-									>
+									<Select value="" label="Agregar Evento" onChange={(e) => handleAddEvent(e.target.value)}>
 										{eventsData?.allEvents
 											?.filter((event) => !selectedEvents.includes(event.eventName))
 											.map((event) => (
 												<MenuItem key={event.eventName} value={event.eventName}>
 													<Box sx={{ width: "100%" }}>
 														<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-															<Typography variant="body2" fontWeight={500}>{event.eventName}</Typography>
+															<Typography variant="body2" fontWeight={500}>
+																{event.eventName}
+															</Typography>
 															<Chip size="small" label={event.count.toLocaleString()} sx={{ ml: 1 }} />
 														</Box>
 														<Typography variant="caption" color="textSecondary" sx={{ display: "block" }}>
@@ -1744,7 +1837,9 @@ const GA4Dashboard = () => {
 															}}
 														/>
 														<Box>
-															<Typography variant="body2" fontWeight={500}>{event}</Typography>
+															<Typography variant="body2" fontWeight={500}>
+																{event}
+															</Typography>
 															<Typography variant="caption" color="textSecondary" sx={{ display: { xs: "none", sm: "block" } }}>
 																{getEventDescription(event).substring(0, 40)}...
 															</Typography>
@@ -1770,12 +1865,7 @@ const GA4Dashboard = () => {
 									>
 										{funnelLoading ? "Generando..." : "Generar Funnel"}
 									</Button>
-									<Button
-										variant="outlined"
-										color="error"
-										onClick={handleClearFunnel}
-										disabled={selectedEvents.length === 0}
-									>
+									<Button variant="outlined" color="error" onClick={handleClearFunnel} disabled={selectedEvents.length === 0}>
 										<Trash size={18} />
 									</Button>
 								</Stack>
@@ -1806,27 +1896,55 @@ const GA4Dashboard = () => {
 										{/* Summary */}
 										<Grid container spacing={2} sx={{ mb: 3 }}>
 											<Grid item xs={6} sm={3}>
-												<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 1, textAlign: "center" }}>
-													<Typography variant="caption" color="textSecondary">Usuarios Inicio</Typography>
-													<Typography variant="h6" fontWeight={600}>{funnelData.summary.startUsers.toLocaleString()}</Typography>
+												<Paper
+													elevation={0}
+													sx={{ p: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 1, textAlign: "center" }}
+												>
+													<Typography variant="caption" color="textSecondary">
+														Usuarios Inicio
+													</Typography>
+													<Typography variant="h6" fontWeight={600}>
+														{funnelData.summary.startUsers.toLocaleString()}
+													</Typography>
 												</Paper>
 											</Grid>
 											<Grid item xs={6} sm={3}>
-												<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.success.main, 0.05), borderRadius: 1, textAlign: "center" }}>
-													<Typography variant="caption" color="textSecondary">Usuarios Final</Typography>
-													<Typography variant="h6" fontWeight={600} color="success.main">{funnelData.summary.endUsers.toLocaleString()}</Typography>
+												<Paper
+													elevation={0}
+													sx={{ p: 1.5, bgcolor: alpha(theme.palette.success.main, 0.05), borderRadius: 1, textAlign: "center" }}
+												>
+													<Typography variant="caption" color="textSecondary">
+														Usuarios Final
+													</Typography>
+													<Typography variant="h6" fontWeight={600} color="success.main">
+														{funnelData.summary.endUsers.toLocaleString()}
+													</Typography>
 												</Paper>
 											</Grid>
 											<Grid item xs={6} sm={3}>
-												<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.05), borderRadius: 1, textAlign: "center" }}>
-													<Typography variant="caption" color="textSecondary">Conversión Total</Typography>
-													<Typography variant="h6" fontWeight={600} color="warning.main">{funnelData.summary.overallConversionRate}%</Typography>
+												<Paper
+													elevation={0}
+													sx={{ p: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.05), borderRadius: 1, textAlign: "center" }}
+												>
+													<Typography variant="caption" color="textSecondary">
+														Conversión Total
+													</Typography>
+													<Typography variant="h6" fontWeight={600} color="warning.main">
+														{funnelData.summary.overallConversionRate}%
+													</Typography>
 												</Paper>
 											</Grid>
 											<Grid item xs={6} sm={3}>
-												<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.text.secondary, 0.05), borderRadius: 1, textAlign: "center" }}>
-													<Typography variant="caption" color="textSecondary">Dropoff Total</Typography>
-													<Typography variant="h6" fontWeight={600}>{funnelData.summary.totalDropoff.toLocaleString()}</Typography>
+												<Paper
+													elevation={0}
+													sx={{ p: 1.5, bgcolor: alpha(theme.palette.text.secondary, 0.05), borderRadius: 1, textAlign: "center" }}
+												>
+													<Typography variant="caption" color="textSecondary">
+														Dropoff Total
+													</Typography>
+													<Typography variant="h6" fontWeight={600}>
+														{funnelData.summary.totalDropoff.toLocaleString()}
+													</Typography>
 												</Paper>
 											</Grid>
 										</Grid>
@@ -1835,9 +1953,8 @@ const GA4Dashboard = () => {
 										<Stack spacing={1}>
 											{funnelData.steps.map((step, index) => {
 												const isLast = index === funnelData.steps.length - 1;
-												const widthPercent = funnelData.summary.startUsers > 0
-													? Math.max(20, (step.users / funnelData.summary.startUsers) * 100)
-													: 100;
+												const widthPercent =
+													funnelData.summary.startUsers > 0 ? Math.max(20, (step.users / funnelData.summary.startUsers) * 100) : 100;
 
 												return (
 													<Box key={index}>
@@ -1867,15 +1984,21 @@ const GA4Dashboard = () => {
 																			}}
 																		/>
 																		<Box sx={{ minWidth: 0 }}>
-																			<Typography variant="body2" fontWeight={500}>{step.eventName}</Typography>
+																			<Typography variant="body2" fontWeight={500}>
+																				{step.eventName}
+																			</Typography>
 																			<Typography variant="caption" color="textSecondary" noWrap>
 																				{getEventDescription(step.eventName)}
 																			</Typography>
 																		</Box>
 																	</Box>
 																	<Box sx={{ textAlign: "right", flexShrink: 0, ml: 1 }}>
-																		<Typography variant="body2" fontWeight={600}>{step.users.toLocaleString()} usuarios</Typography>
-																		<Typography variant="caption" color="textSecondary">{step.count.toLocaleString()} eventos</Typography>
+																		<Typography variant="body2" fontWeight={600}>
+																			{step.users.toLocaleString()} usuarios
+																		</Typography>
+																		<Typography variant="caption" color="textSecondary">
+																			{step.count.toLocaleString()} eventos
+																		</Typography>
 																	</Box>
 																</Box>
 															</Box>
@@ -1924,9 +2047,15 @@ const GA4Dashboard = () => {
 											<TableRow>
 												<DocTableCell tooltip={TABLE_COLUMN_DOCS.funnelEvents.eventName}>Evento</DocTableCell>
 												<DocTableCell tooltip={TABLE_COLUMN_DOCS.funnelEvents.description}>Descripción</DocTableCell>
-												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.funnelEvents.count}>Conteo</DocTableCell>
-												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.funnelEvents.users}>Usuarios</DocTableCell>
-												<DocTableCell align="center" tooltip={TABLE_COLUMN_DOCS.funnelEvents.status}>Estado</DocTableCell>
+												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.funnelEvents.count}>
+													Conteo
+												</DocTableCell>
+												<DocTableCell align="right" tooltip={TABLE_COLUMN_DOCS.funnelEvents.users}>
+													Usuarios
+												</DocTableCell>
+												<DocTableCell align="center" tooltip={TABLE_COLUMN_DOCS.funnelEvents.status}>
+													Estado
+												</DocTableCell>
 												<TableCell align="center">Acción</TableCell>
 											</TableRow>
 										</TableHead>
@@ -2010,8 +2139,9 @@ const GA4Dashboard = () => {
 									Explorador de Eventos
 								</Typography>
 								<Typography variant="body2" color="textSecondary">
-									Selecciona un evento para ver su <strong>tendencia temporal</strong>, <strong>resumen</strong> y <strong>valores de parámetros</strong> asociados.
-									Los parámetros se detectan automáticamente si están configurados como custom dimensions en GA4.
+									Selecciona un evento para ver su <strong>tendencia temporal</strong>, <strong>resumen</strong> y{" "}
+									<strong>valores de parámetros</strong> asociados. Los parámetros se detectan automáticamente si están configurados como
+									custom dimensions en GA4.
 								</Typography>
 							</Paper>
 						</Grid>
@@ -2044,7 +2174,9 @@ const GA4Dashboard = () => {
 											<MenuItem key={event.eventName} value={event.eventName}>
 												<Box sx={{ width: "100%" }}>
 													<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-														<Typography variant="body2" fontWeight={500}>{event.eventName}</Typography>
+														<Typography variant="body2" fontWeight={500}>
+															{event.eventName}
+														</Typography>
 														<Chip size="small" label={event.count.toLocaleString()} sx={{ ml: 1 }} />
 													</Box>
 													<Typography variant="caption" color="textSecondary" sx={{ display: "block" }}>
@@ -2064,16 +2196,28 @@ const GA4Dashboard = () => {
 										</Typography>
 										<Stack spacing={1.5}>
 											<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 1 }}>
-												<Typography variant="caption" color="textSecondary">Total de Eventos</Typography>
-												<Typography variant="h6" fontWeight={600}>{eventDetails.summary.totalCount.toLocaleString()}</Typography>
+												<Typography variant="caption" color="textSecondary">
+													Total de Eventos
+												</Typography>
+												<Typography variant="h6" fontWeight={600}>
+													{eventDetails.summary.totalCount.toLocaleString()}
+												</Typography>
 											</Paper>
 											<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.success.main, 0.05), borderRadius: 1 }}>
-												<Typography variant="caption" color="textSecondary">Usuarios Únicos</Typography>
-												<Typography variant="h6" fontWeight={600} color="success.main">{eventDetails.summary.totalUsers.toLocaleString()}</Typography>
+												<Typography variant="caption" color="textSecondary">
+													Usuarios Únicos
+												</Typography>
+												<Typography variant="h6" fontWeight={600} color="success.main">
+													{eventDetails.summary.totalUsers.toLocaleString()}
+												</Typography>
 											</Paper>
 											<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.05), borderRadius: 1 }}>
-												<Typography variant="caption" color="textSecondary">Eventos por Sesión</Typography>
-												<Typography variant="h6" fontWeight={600} color="warning.main">{eventDetails.summary.eventsPerSession}</Typography>
+												<Typography variant="caption" color="textSecondary">
+													Eventos por Sesión
+												</Typography>
+												<Typography variant="h6" fontWeight={600} color="warning.main">
+													{eventDetails.summary.eventsPerSession}
+												</Typography>
 											</Paper>
 										</Stack>
 
@@ -2113,7 +2257,10 @@ const GA4Dashboard = () => {
 									<ChartCard title={`Tendencia de "${selectedEventForExplorer}"`} icon={<Chart size={18} />} height={250}>
 										{eventDetails.trend.length > 0 ? (
 											<ResponsiveContainer width="100%" height="100%">
-												<LineChart data={eventDetails.trend.map((item) => ({ ...item, date: formatDate(item.date) }))} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
+												<LineChart
+													data={eventDetails.trend.map((item) => ({ ...item, date: formatDate(item.date) }))}
+													margin={{ top: 10, right: 30, left: 0, bottom: 5 }}
+												>
 													<CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} />
 													<XAxis dataKey="date" tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} />
 													<YAxis tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} />
@@ -2130,7 +2277,9 @@ const GA4Dashboard = () => {
 											</ResponsiveContainer>
 										) : (
 											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-												<Typography variant="body2" color="textSecondary">Sin datos de tendencia</Typography>
+												<Typography variant="body2" color="textSecondary">
+													Sin datos de tendencia
+												</Typography>
 											</Box>
 										)}
 									</ChartCard>
@@ -2175,7 +2324,7 @@ const GA4Dashboard = () => {
 																dataKey="value"
 																tick={{ fill: theme.palette.text.secondary, fontSize: 10 }}
 																width={55}
-																tickFormatter={(val: string) => val.length > 8 ? `${val.substring(0, 8)}...` : val}
+																tickFormatter={(val: string) => (val.length > 8 ? `${val.substring(0, 8)}...` : val)}
 															/>
 															<RechartsTooltip />
 															<Bar dataKey="count" fill={COLORS.primary.main} radius={[0, 4, 4, 0]} name="Eventos" />
@@ -2193,7 +2342,9 @@ const GA4Dashboard = () => {
 											Esto puede ocurrir porque:
 											<ul style={{ margin: "8px 0 0 0", paddingLeft: "20px" }}>
 												<li>El evento es reciente (GA4 Data API tiene latencia de 24-48 horas)</li>
-												<li>Los parámetros no están configurados como <strong>Custom Dimensions</strong> en GA4</li>
+												<li>
+													Los parámetros no están configurados como <strong>Custom Dimensions</strong> en GA4
+												</li>
 											</ul>
 											<Typography variant="caption" sx={{ display: "block", mt: 1 }}>
 												Usa el endpoint <code>/api/ga4/diagnostics/custom-dimensions</code> para verificar la configuración.

@@ -366,9 +366,7 @@ const ScbaManagerTab: React.FC = () => {
 							label={
 								<Stack direction="row" spacing={0.5} alignItems="center">
 									<span>Alertas</span>
-									{alerts.length > 0 && (
-										<Chip size="small" label={alerts.length} color="error" sx={{ height: 20, fontSize: "0.7rem" }} />
-									)}
+									{alerts.length > 0 && <Chip size="small" label={alerts.length} color="error" sx={{ height: 20, fontSize: "0.7rem" }} />}
 								</Stack>
 							}
 							sx={{ textTransform: "none" }}
@@ -405,10 +403,7 @@ const ScbaManagerTab: React.FC = () => {
 											fullWidth
 											size="small"
 											label="Mensaje de mantenimiento"
-											value={getVal(
-												"maintenanceMessage",
-												"El servicio de sincronización SCBA se encuentra en configuración inicial.",
-											)}
+											value={getVal("maintenanceMessage", "El servicio de sincronización SCBA se encuentra en configuración inicial.")}
 											onChange={(e) => updateField("maintenanceMessage", e.target.value)}
 											multiline
 											rows={2}
@@ -647,9 +642,7 @@ const ScbaManagerTab: React.FC = () => {
 													type="number"
 													label="Delay (ms)"
 													value={getWorkerVal(workerType, "delayBetweenRequests", 2000)}
-													onChange={(e) =>
-														updateWorkerField(workerType, "delayBetweenRequests", parseInt(e.target.value) || 2000)
-													}
+													onChange={(e) => updateWorkerField(workerType, "delayBetweenRequests", parseInt(e.target.value) || 2000)}
 													inputProps={{ min: 500 }}
 												/>
 											</Grid>
@@ -660,9 +653,7 @@ const ScbaManagerTab: React.FC = () => {
 													type="number"
 													label="Scale Up Threshold"
 													value={getWorkerVal(workerType, "scaleUpThreshold", 100)}
-													onChange={(e) =>
-														updateWorkerField(workerType, "scaleUpThreshold", parseInt(e.target.value) || 100)
-													}
+													onChange={(e) => updateWorkerField(workerType, "scaleUpThreshold", parseInt(e.target.value) || 100)}
 												/>
 											</Grid>
 											<Grid item xs={6} sm={3}>
@@ -672,9 +663,7 @@ const ScbaManagerTab: React.FC = () => {
 													type="number"
 													label="Scale Down Threshold"
 													value={getWorkerVal(workerType, "scaleDownThreshold", 10)}
-													onChange={(e) =>
-														updateWorkerField(workerType, "scaleDownThreshold", parseInt(e.target.value) || 10)
-													}
+													onChange={(e) => updateWorkerField(workerType, "scaleDownThreshold", parseInt(e.target.value) || 10)}
 												/>
 											</Grid>
 											<Grid item xs={6} sm={3}>
@@ -744,9 +733,7 @@ const ScbaManagerTab: React.FC = () => {
 													<Chip
 														size="small"
 														label={alert.type}
-														color={
-															alert.type.includes("high") || alert.type.includes("error") ? "error" : "warning"
-														}
+														color={alert.type.includes("high") || alert.type.includes("error") ? "error" : "warning"}
 													/>
 												</TableCell>
 												<TableCell>{alert.workerType || "-"}</TableCell>
@@ -821,20 +808,14 @@ const ScbaManagerTab: React.FC = () => {
 													{day.byWorker.verification.processed}
 												</TableCell>
 												<TableCell align="right">{day.byWorker.verification.success}</TableCell>
-												<TableCell
-													align="right"
-													sx={{ color: day.byWorker.verification.errors > 0 ? "error.main" : "inherit" }}
-												>
+												<TableCell align="right" sx={{ color: day.byWorker.verification.errors > 0 ? "error.main" : "inherit" }}>
 													{day.byWorker.verification.errors}
 												</TableCell>
 												<TableCell align="right" sx={{ borderLeft: 1, borderColor: "divider" }}>
 													{day.byWorker.update.processed}
 												</TableCell>
 												<TableCell align="right">{day.byWorker.update.success}</TableCell>
-												<TableCell
-													align="right"
-													sx={{ color: day.byWorker.update.errors > 0 ? "error.main" : "inherit" }}
-												>
+												<TableCell align="right" sx={{ color: day.byWorker.update.errors > 0 ? "error.main" : "inherit" }}>
 													{day.byWorker.update.errors}
 												</TableCell>
 												<TableCell align="right">{day.byWorker.update.movimientosFound}</TableCell>
@@ -874,9 +855,9 @@ const ScbaManagerTab: React.FC = () => {
 											Verification Worker
 										</Typography>
 										<Typography variant="body2" color="text.secondary">
-											Se conecta con las credenciales SCBA del usuario, navega a "Mis Causas", extrae todos los expedientes,
-											mapea jurisdicción/organismo a MEV, deduplica contra causas existentes, y crea o vincula documentos.
-											Extrae también todos los trámites/movimientos de cada causa.
+											Se conecta con las credenciales SCBA del usuario, navega a "Mis Causas", extrae todos los expedientes, mapea
+											jurisdicción/organismo a MEV, deduplica contra causas existentes, y crea o vincula documentos. Extrae también todos
+											los trámites/movimientos de cada causa.
 										</Typography>
 									</Box>
 									<Divider />
@@ -885,8 +866,8 @@ const ScbaManagerTab: React.FC = () => {
 											Update Worker
 										</Typography>
 										<Typography variant="body2" color="text.secondary">
-											Busca causas que ya tienen scbaData y necesitan actualización de trámites. Navega a la página de
-											trámites de cada causa y extrae los movimientos nuevos.
+											Busca causas que ya tienen scbaData y necesitan actualización de trámites. Navega a la página de trámites de cada
+											causa y extrae los movimientos nuevos.
 										</Typography>
 									</Box>
 								</Stack>
@@ -910,8 +891,8 @@ const ScbaManagerTab: React.FC = () => {
 											<strong>Parseo</strong>: Cheerio extrae número, carátula, juzgado, IDs de cada causa
 										</li>
 										<li>
-											<strong>Mapeo</strong>: Jurisdicción (departamento → código MEV), Organismo (búsqueda flexible en
-											navigation-codes), Juzgados de Paz (búsqueda especial con extracción de jurisdicción real)
+											<strong>Mapeo</strong>: Jurisdicción (departamento → código MEV), Organismo (búsqueda flexible en navigation-codes),
+											Juzgados de Paz (búsqueda especial con extracción de jurisdicción real)
 										</li>
 										<li>
 											<strong>Deduplicación</strong>: 3 niveles (exacto → número+jurisdicción → solo número)
@@ -1012,8 +993,7 @@ const ScbaManagerTab: React.FC = () => {
 				<DialogTitle>Resetear Configuración</DialogTitle>
 				<DialogContent>
 					<Typography>
-						¿Estás seguro de que quieres resetear toda la configuración SCBA a los valores por defecto? Esta acción no se puede
-						deshacer.
+						¿Estás seguro de que quieres resetear toda la configuración SCBA a los valores por defecto? Esta acción no se puede deshacer.
 					</Typography>
 				</DialogContent>
 				<DialogActions>

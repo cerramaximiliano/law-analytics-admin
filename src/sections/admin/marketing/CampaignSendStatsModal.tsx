@@ -320,300 +320,303 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 								{error}
 							</Alert>
 						) : stats ? (
-					<Grid container spacing={3}>
-						{/* Summary Stats */}
-						<Grid item xs={12}>
-							<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-								Resumen de Envíos
-							</Typography>
-							<Divider sx={{ mb: 2 }} />
-
-							<Grid container spacing={2}>
-								<Grid item xs={6} sm={2.4}>
-									<StatCard
-										title="Total Enviados"
-										value={stats.summary.total}
-										icon={<Sms size={20} />}
-										color={theme.palette.primary.main}
-									/>
-								</Grid>
-								<Grid item xs={6} sm={2.4}>
-									<StatCard
-										title="Entregados"
-										value={stats.summary.delivered}
-										subtitle={`${stats.summary.deliveryRate}% tasa de entrega`}
-										icon={<TickCircle size={20} />}
-										color={theme.palette.success.main}
-									/>
-								</Grid>
-								<Grid item xs={6} sm={2.4}>
-									<StatCard
-										title="Rebotados"
-										value={stats.summary.bounced}
-										subtitle={`${stats.summary.bounceRate}% tasa de rebote`}
-										icon={<CloseIcon size={20} />}
-										color={theme.palette.error.main}
-									/>
-								</Grid>
-								<Grid item xs={6} sm={2.4}>
-									<StatCard
-										title="Quejas"
-										value={stats.summary.complained}
-										icon={<Warning2 size={20} />}
-										color={theme.palette.warning.main}
-									/>
-								</Grid>
-								<Grid item xs={6} sm={2.4}>
-									<StatCard
-										title="Desuscripciones"
-										value={stats.summary.unsubscribed}
-										subtitle={`${stats.summary.unsubscribeRate}% tasa`}
-										icon={<UserRemove size={20} />}
-										color={theme.palette.warning.dark}
-									/>
-								</Grid>
-							</Grid>
-						</Grid>
-
-						{/* Engagement Stats */}
-						<Grid item xs={12} md={6}>
-							<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-								Engagement
-							</Typography>
-							<Divider sx={{ mb: 2 }} />
-
-							<Grid container spacing={2} sx={{ mb: 2 }}>
-								<Grid item xs={6}>
-									<StatCard
-										title="Aperturas Únicas"
-										value={stats.summary.uniqueOpens}
-										subtitle={`${stats.summary.totalOpens} totales`}
-										icon={<Sms size={20} variant="Bold" />}
-										color={theme.palette.info.main}
-									/>
-								</Grid>
-								<Grid item xs={6}>
-									<StatCard
-										title="Clics Únicos"
-										value={stats.summary.uniqueClicks}
-										subtitle={`${stats.summary.totalClicks} totales`}
-										icon={<Mouse size={20} />}
-										color={theme.palette.secondary.main}
-									/>
-								</Grid>
-							</Grid>
-						</Grid>
-
-						{/* Rates */}
-						<Grid item xs={12} md={6}>
-							<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-								Tasas de Rendimiento
-							</Typography>
-							<Divider sx={{ mb: 2 }} />
-
-							<Box sx={{ p: 2, bgcolor: "background.default", borderRadius: 2 }}>
-								<RateProgress label="Tasa de Entrega" value={stats.summary.deliveryRate} color={theme.palette.success.main} />
-								<RateProgress label="Tasa de Apertura" value={stats.summary.openRate} color={theme.palette.info.main} />
-								<RateProgress label="Tasa de Clics" value={stats.summary.clickRate} color={theme.palette.secondary.main} />
-								<RateProgress label="Tasa de Rebote" value={stats.summary.bounceRate} color={theme.palette.error.main} />
-								<RateProgress label="Tasa de Desuscripción" value={stats.summary.unsubscribeRate} color={theme.palette.warning.dark} />
-							</Box>
-						</Grid>
-
-						{/* Email Breakdown */}
-						{stats.emailBreakdown.length > 0 && (
-							<Grid item xs={12}>
-								<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-									Desglose por Email
-								</Typography>
-								<Divider sx={{ mb: 2 }} />
-
-								<TableContainer component={Paper} variant="outlined">
-									<Table size="small">
-										<TableHead>
-											<TableRow>
-												<TableCell>#</TableCell>
-												<TableCell>Email</TableCell>
-												<TableCell align="right">Enviados</TableCell>
-												<TableCell align="right">Entregados</TableCell>
-												<TableCell align="right">Rebotados</TableCell>
-												<TableCell align="right">Desuscrip.</TableCell>
-												<TableCell align="right">Aperturas</TableCell>
-												<TableCell align="right">Clics</TableCell>
-											</TableRow>
-										</TableHead>
-										<TableBody>
-											{stats.emailBreakdown.map((email, index) => (
-												<TableRow key={email._id} hover>
-													<TableCell>{email.sequenceIndex !== undefined ? email.sequenceIndex + 1 : index + 1}</TableCell>
-													<TableCell>
-														<Typography variant="body2" fontWeight="medium">
-															{email.name || "Sin nombre"}
-														</Typography>
-														{email.subject && (
-															<Typography variant="caption" color="textSecondary">
-																{email.subject.length > 40 ? `${email.subject.substring(0, 40)}...` : email.subject}
-															</Typography>
-														)}
-													</TableCell>
-													<TableCell align="right">{email.count}</TableCell>
-													<TableCell align="right">
-														<Chip label={email.delivered} size="small" color="success" variant="outlined" />
-													</TableCell>
-													<TableCell align="right">
-														{email.bounced > 0 ? (
-															<Chip label={email.bounced} size="small" color="error" variant="outlined" />
-														) : (
-															0
-														)}
-													</TableCell>
-													<TableCell align="right">
-														{email.unsubscribed > 0 ? (
-															<Chip label={email.unsubscribed} size="small" color="warning" variant="outlined" />
-														) : (
-															0
-														)}
-													</TableCell>
-													<TableCell align="right">{email.opens}</TableCell>
-													<TableCell align="right">{email.clicks}</TableCell>
-												</TableRow>
-											))}
-										</TableBody>
-									</Table>
-								</TableContainer>
-							</Grid>
-						)}
-
-						{/* Daily Breakdown */}
-						{stats.dailyBreakdown.length > 0 && (
-							<Grid item xs={12}>
-								<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-									Actividad Diaria (Últimos 30 días)
-								</Typography>
-								<Divider sx={{ mb: 2 }} />
-
-								<TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 400 }}>
-									<Table size="small" stickyHeader>
-										<TableHead>
-											<TableRow>
-												<TableCell width={40}></TableCell>
-												<TableCell>Fecha</TableCell>
-												<TableCell align="right">Enviados</TableCell>
-												<TableCell align="right">Entregados</TableCell>
-												<TableCell align="right">Rebotados</TableCell>
-												<TableCell align="right">Desuscrip.</TableCell>
-												<TableCell align="right">Aperturas</TableCell>
-												<TableCell align="right">Clics</TableCell>
-											</TableRow>
-										</TableHead>
-										<TableBody>
-											{stats.dailyBreakdown.map((day) => (
-												<React.Fragment key={day._id}>
-													<TableRow
-														hover
-														onClick={() => day.stepBreakdown && day.stepBreakdown.length > 0 && toggleDayExpansion(day._id)}
-														sx={{
-															cursor: day.stepBreakdown && day.stepBreakdown.length > 0 ? 'pointer' : 'default',
-															'&:hover': day.stepBreakdown && day.stepBreakdown.length > 0 ? { bgcolor: alpha(theme.palette.primary.main, 0.08) } : {}
-														}}
-													>
-														<TableCell>
-															{day.stepBreakdown && day.stepBreakdown.length > 0 && (
-																<IconButton size="small" sx={{ p: 0.5 }}>
-																	{expandedDays.has(day._id) ? (
-																		<ArrowUp2 size={16} />
-																	) : (
-																		<ArrowDown2 size={16} />
-																	)}
-																</IconButton>
-															)}
-														</TableCell>
-														<TableCell>{formatDate(day._id)}</TableCell>
-														<TableCell align="right">{day.sent}</TableCell>
-														<TableCell align="right">{day.delivered}</TableCell>
-														<TableCell align="right">{day.bounced}</TableCell>
-														<TableCell align="right">{day.unsubscribed}</TableCell>
-														<TableCell align="right">{day.opens}</TableCell>
-														<TableCell align="right">{day.clicks}</TableCell>
-													</TableRow>
-													{/* Step Breakdown expandible */}
-													{expandedDays.has(day._id) && day.stepBreakdown && day.stepBreakdown.length > 0 && (
-														<TableRow>
-															<TableCell colSpan={8} sx={{ py: 0, bgcolor: alpha(theme.palette.grey[500], 0.05) }}>
-																<Box sx={{ py: 1.5, px: 2, pl: 6 }}>
-																	<Table size="small" sx={{ bgcolor: 'background.paper', borderRadius: 1 }}>
-																		<TableHead>
-																			<TableRow>
-																				<TableCell sx={{ py: 0.5, fontWeight: 'bold', fontSize: '0.75rem' }}>Step</TableCell>
-																				<TableCell sx={{ py: 0.5, fontWeight: 'bold', fontSize: '0.75rem' }}>Nombre</TableCell>
-																				<TableCell align="right" sx={{ py: 0.5, fontWeight: 'bold', fontSize: '0.75rem' }}>Enviados</TableCell>
-																				<TableCell align="right" sx={{ py: 0.5, fontWeight: 'bold', fontSize: '0.75rem' }}>Entregados</TableCell>
-																				<TableCell align="right" sx={{ py: 0.5, fontWeight: 'bold', fontSize: '0.75rem' }}>Rebotados</TableCell>
-																				<TableCell align="right" sx={{ py: 0.5, fontWeight: 'bold', fontSize: '0.75rem' }}>% del día</TableCell>
-																			</TableRow>
-																		</TableHead>
-																		<TableBody>
-																			{day.stepBreakdown.map((stepItem) => (
-																				<TableRow key={stepItem.step} sx={{ '&:last-child td': { borderBottom: 0 } }}>
-																					<TableCell sx={{ py: 0.5 }}>
-																						<Chip
-																							label={stepItem.step}
-																							size="small"
-																							color="primary"
-																							variant="outlined"
-																							sx={{ minWidth: 32, '& .MuiChip-label': { px: 1 } }}
-																						/>
-																					</TableCell>
-																					<TableCell sx={{ py: 0.5, fontSize: '0.8rem' }}>
-																						{stepItem.name}
-																					</TableCell>
-																					<TableCell align="right" sx={{ py: 0.5, fontSize: '0.8rem' }}>
-																						{stepItem.sent}
-																					</TableCell>
-																					<TableCell align="right" sx={{ py: 0.5 }}>
-																						<Typography variant="caption" color="success.main" fontWeight="medium">
-																							{stepItem.delivered}
-																						</Typography>
-																					</TableCell>
-																					<TableCell align="right" sx={{ py: 0.5 }}>
-																						{stepItem.bounced > 0 ? (
-																							<Typography variant="caption" color="error.main" fontWeight="medium">
-																								{stepItem.bounced}
-																							</Typography>
-																						) : (
-																							<Typography variant="caption" color="textSecondary">0</Typography>
-																						)}
-																					</TableCell>
-																					<TableCell align="right" sx={{ py: 0.5 }}>
-																						<Typography variant="caption" color="textSecondary">
-																							{((stepItem.sent / day.sent) * 100).toFixed(1)}%
-																						</Typography>
-																					</TableCell>
-																				</TableRow>
-																			))}
-																		</TableBody>
-																	</Table>
-																</Box>
-															</TableCell>
-														</TableRow>
-													)}
-												</React.Fragment>
-											))}
-										</TableBody>
-									</Table>
-								</TableContainer>
-							</Grid>
-						)}
-
-							{/* No data message */}
-							{stats.summary.total === 0 && (
+							<Grid container spacing={3}>
+								{/* Summary Stats */}
 								<Grid item xs={12}>
-									<Alert severity="info">
-										No hay datos de envío disponibles para esta campaña. Los datos aparecerán una vez que se envíen emails.
-									</Alert>
+									<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+										Resumen de Envíos
+									</Typography>
+									<Divider sx={{ mb: 2 }} />
+
+									<Grid container spacing={2}>
+										<Grid item xs={6} sm={2.4}>
+											<StatCard
+												title="Total Enviados"
+												value={stats.summary.total}
+												icon={<Sms size={20} />}
+												color={theme.palette.primary.main}
+											/>
+										</Grid>
+										<Grid item xs={6} sm={2.4}>
+											<StatCard
+												title="Entregados"
+												value={stats.summary.delivered}
+												subtitle={`${stats.summary.deliveryRate}% tasa de entrega`}
+												icon={<TickCircle size={20} />}
+												color={theme.palette.success.main}
+											/>
+										</Grid>
+										<Grid item xs={6} sm={2.4}>
+											<StatCard
+												title="Rebotados"
+												value={stats.summary.bounced}
+												subtitle={`${stats.summary.bounceRate}% tasa de rebote`}
+												icon={<CloseIcon size={20} />}
+												color={theme.palette.error.main}
+											/>
+										</Grid>
+										<Grid item xs={6} sm={2.4}>
+											<StatCard
+												title="Quejas"
+												value={stats.summary.complained}
+												icon={<Warning2 size={20} />}
+												color={theme.palette.warning.main}
+											/>
+										</Grid>
+										<Grid item xs={6} sm={2.4}>
+											<StatCard
+												title="Desuscripciones"
+												value={stats.summary.unsubscribed}
+												subtitle={`${stats.summary.unsubscribeRate}% tasa`}
+												icon={<UserRemove size={20} />}
+												color={theme.palette.warning.dark}
+											/>
+										</Grid>
+									</Grid>
 								</Grid>
-							)}
-						</Grid>
+
+								{/* Engagement Stats */}
+								<Grid item xs={12} md={6}>
+									<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+										Engagement
+									</Typography>
+									<Divider sx={{ mb: 2 }} />
+
+									<Grid container spacing={2} sx={{ mb: 2 }}>
+										<Grid item xs={6}>
+											<StatCard
+												title="Aperturas Únicas"
+												value={stats.summary.uniqueOpens}
+												subtitle={`${stats.summary.totalOpens} totales`}
+												icon={<Sms size={20} variant="Bold" />}
+												color={theme.palette.info.main}
+											/>
+										</Grid>
+										<Grid item xs={6}>
+											<StatCard
+												title="Clics Únicos"
+												value={stats.summary.uniqueClicks}
+												subtitle={`${stats.summary.totalClicks} totales`}
+												icon={<Mouse size={20} />}
+												color={theme.palette.secondary.main}
+											/>
+										</Grid>
+									</Grid>
+								</Grid>
+
+								{/* Rates */}
+								<Grid item xs={12} md={6}>
+									<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+										Tasas de Rendimiento
+									</Typography>
+									<Divider sx={{ mb: 2 }} />
+
+									<Box sx={{ p: 2, bgcolor: "background.default", borderRadius: 2 }}>
+										<RateProgress label="Tasa de Entrega" value={stats.summary.deliveryRate} color={theme.palette.success.main} />
+										<RateProgress label="Tasa de Apertura" value={stats.summary.openRate} color={theme.palette.info.main} />
+										<RateProgress label="Tasa de Clics" value={stats.summary.clickRate} color={theme.palette.secondary.main} />
+										<RateProgress label="Tasa de Rebote" value={stats.summary.bounceRate} color={theme.palette.error.main} />
+										<RateProgress label="Tasa de Desuscripción" value={stats.summary.unsubscribeRate} color={theme.palette.warning.dark} />
+									</Box>
+								</Grid>
+
+								{/* Email Breakdown */}
+								{stats.emailBreakdown.length > 0 && (
+									<Grid item xs={12}>
+										<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+											Desglose por Email
+										</Typography>
+										<Divider sx={{ mb: 2 }} />
+
+										<TableContainer component={Paper} variant="outlined">
+											<Table size="small">
+												<TableHead>
+													<TableRow>
+														<TableCell>#</TableCell>
+														<TableCell>Email</TableCell>
+														<TableCell align="right">Enviados</TableCell>
+														<TableCell align="right">Entregados</TableCell>
+														<TableCell align="right">Rebotados</TableCell>
+														<TableCell align="right">Desuscrip.</TableCell>
+														<TableCell align="right">Aperturas</TableCell>
+														<TableCell align="right">Clics</TableCell>
+													</TableRow>
+												</TableHead>
+												<TableBody>
+													{stats.emailBreakdown.map((email, index) => (
+														<TableRow key={email._id} hover>
+															<TableCell>{email.sequenceIndex !== undefined ? email.sequenceIndex + 1 : index + 1}</TableCell>
+															<TableCell>
+																<Typography variant="body2" fontWeight="medium">
+																	{email.name || "Sin nombre"}
+																</Typography>
+																{email.subject && (
+																	<Typography variant="caption" color="textSecondary">
+																		{email.subject.length > 40 ? `${email.subject.substring(0, 40)}...` : email.subject}
+																	</Typography>
+																)}
+															</TableCell>
+															<TableCell align="right">{email.count}</TableCell>
+															<TableCell align="right">
+																<Chip label={email.delivered} size="small" color="success" variant="outlined" />
+															</TableCell>
+															<TableCell align="right">
+																{email.bounced > 0 ? <Chip label={email.bounced} size="small" color="error" variant="outlined" /> : 0}
+															</TableCell>
+															<TableCell align="right">
+																{email.unsubscribed > 0 ? (
+																	<Chip label={email.unsubscribed} size="small" color="warning" variant="outlined" />
+																) : (
+																	0
+																)}
+															</TableCell>
+															<TableCell align="right">{email.opens}</TableCell>
+															<TableCell align="right">{email.clicks}</TableCell>
+														</TableRow>
+													))}
+												</TableBody>
+											</Table>
+										</TableContainer>
+									</Grid>
+								)}
+
+								{/* Daily Breakdown */}
+								{stats.dailyBreakdown.length > 0 && (
+									<Grid item xs={12}>
+										<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+											Actividad Diaria (Últimos 30 días)
+										</Typography>
+										<Divider sx={{ mb: 2 }} />
+
+										<TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 400 }}>
+											<Table size="small" stickyHeader>
+												<TableHead>
+													<TableRow>
+														<TableCell width={40}></TableCell>
+														<TableCell>Fecha</TableCell>
+														<TableCell align="right">Enviados</TableCell>
+														<TableCell align="right">Entregados</TableCell>
+														<TableCell align="right">Rebotados</TableCell>
+														<TableCell align="right">Desuscrip.</TableCell>
+														<TableCell align="right">Aperturas</TableCell>
+														<TableCell align="right">Clics</TableCell>
+													</TableRow>
+												</TableHead>
+												<TableBody>
+													{stats.dailyBreakdown.map((day) => (
+														<React.Fragment key={day._id}>
+															<TableRow
+																hover
+																onClick={() => day.stepBreakdown && day.stepBreakdown.length > 0 && toggleDayExpansion(day._id)}
+																sx={{
+																	cursor: day.stepBreakdown && day.stepBreakdown.length > 0 ? "pointer" : "default",
+																	"&:hover":
+																		day.stepBreakdown && day.stepBreakdown.length > 0
+																			? { bgcolor: alpha(theme.palette.primary.main, 0.08) }
+																			: {},
+																}}
+															>
+																<TableCell>
+																	{day.stepBreakdown && day.stepBreakdown.length > 0 && (
+																		<IconButton size="small" sx={{ p: 0.5 }}>
+																			{expandedDays.has(day._id) ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}
+																		</IconButton>
+																	)}
+																</TableCell>
+																<TableCell>{formatDate(day._id)}</TableCell>
+																<TableCell align="right">{day.sent}</TableCell>
+																<TableCell align="right">{day.delivered}</TableCell>
+																<TableCell align="right">{day.bounced}</TableCell>
+																<TableCell align="right">{day.unsubscribed}</TableCell>
+																<TableCell align="right">{day.opens}</TableCell>
+																<TableCell align="right">{day.clicks}</TableCell>
+															</TableRow>
+															{/* Step Breakdown expandible */}
+															{expandedDays.has(day._id) && day.stepBreakdown && day.stepBreakdown.length > 0 && (
+																<TableRow>
+																	<TableCell colSpan={8} sx={{ py: 0, bgcolor: alpha(theme.palette.grey[500], 0.05) }}>
+																		<Box sx={{ py: 1.5, px: 2, pl: 6 }}>
+																			<Table size="small" sx={{ bgcolor: "background.paper", borderRadius: 1 }}>
+																				<TableHead>
+																					<TableRow>
+																						<TableCell sx={{ py: 0.5, fontWeight: "bold", fontSize: "0.75rem" }}>Step</TableCell>
+																						<TableCell sx={{ py: 0.5, fontWeight: "bold", fontSize: "0.75rem" }}>Nombre</TableCell>
+																						<TableCell align="right" sx={{ py: 0.5, fontWeight: "bold", fontSize: "0.75rem" }}>
+																							Enviados
+																						</TableCell>
+																						<TableCell align="right" sx={{ py: 0.5, fontWeight: "bold", fontSize: "0.75rem" }}>
+																							Entregados
+																						</TableCell>
+																						<TableCell align="right" sx={{ py: 0.5, fontWeight: "bold", fontSize: "0.75rem" }}>
+																							Rebotados
+																						</TableCell>
+																						<TableCell align="right" sx={{ py: 0.5, fontWeight: "bold", fontSize: "0.75rem" }}>
+																							% del día
+																						</TableCell>
+																					</TableRow>
+																				</TableHead>
+																				<TableBody>
+																					{day.stepBreakdown.map((stepItem) => (
+																						<TableRow key={stepItem.step} sx={{ "&:last-child td": { borderBottom: 0 } }}>
+																							<TableCell sx={{ py: 0.5 }}>
+																								<Chip
+																									label={stepItem.step}
+																									size="small"
+																									color="primary"
+																									variant="outlined"
+																									sx={{ minWidth: 32, "& .MuiChip-label": { px: 1 } }}
+																								/>
+																							</TableCell>
+																							<TableCell sx={{ py: 0.5, fontSize: "0.8rem" }}>{stepItem.name}</TableCell>
+																							<TableCell align="right" sx={{ py: 0.5, fontSize: "0.8rem" }}>
+																								{stepItem.sent}
+																							</TableCell>
+																							<TableCell align="right" sx={{ py: 0.5 }}>
+																								<Typography variant="caption" color="success.main" fontWeight="medium">
+																									{stepItem.delivered}
+																								</Typography>
+																							</TableCell>
+																							<TableCell align="right" sx={{ py: 0.5 }}>
+																								{stepItem.bounced > 0 ? (
+																									<Typography variant="caption" color="error.main" fontWeight="medium">
+																										{stepItem.bounced}
+																									</Typography>
+																								) : (
+																									<Typography variant="caption" color="textSecondary">
+																										0
+																									</Typography>
+																								)}
+																							</TableCell>
+																							<TableCell align="right" sx={{ py: 0.5 }}>
+																								<Typography variant="caption" color="textSecondary">
+																									{((stepItem.sent / day.sent) * 100).toFixed(1)}%
+																								</Typography>
+																							</TableCell>
+																						</TableRow>
+																					))}
+																				</TableBody>
+																			</Table>
+																		</Box>
+																	</TableCell>
+																</TableRow>
+															)}
+														</React.Fragment>
+													))}
+												</TableBody>
+											</Table>
+										</TableContainer>
+									</Grid>
+								)}
+
+								{/* No data message */}
+								{stats.summary.total === 0 && (
+									<Grid item xs={12}>
+										<Alert severity="info">
+											No hay datos de envío disponibles para esta campaña. Los datos aparecerán una vez que se envíen emails.
+										</Alert>
+									</Grid>
+								)}
+							</Grid>
 						) : (
 							<Typography variant="body1" color="textSecondary" align="center" sx={{ py: 3 }}>
 								No se ha seleccionado ninguna campaña
@@ -684,13 +687,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 					</Button>
 					<Divider orientation="vertical" flexItem />
 					<FormControlLabel
-						control={
-							<Checkbox
-								checked={autoRefresh}
-								onChange={(e) => setAutoRefresh(e.target.checked)}
-								size="small"
-							/>
-						}
+						control={<Checkbox checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} size="small" />}
 						label="Auto-actualizar"
 					/>
 					{autoRefresh && (

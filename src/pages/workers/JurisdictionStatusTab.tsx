@@ -161,7 +161,8 @@ export default function JurisdictionStatusTab() {
 			{/* Alerta si hay jurisdicciones caídas */}
 			{summary && summary.noDisponibles > 0 && (
 				<Alert severity="warning">
-					{summary.noDisponibles} jurisdicci{summary.noDisponibles === 1 ? "on" : "ones"} no disponible{summary.noDisponibles === 1 ? "" : "s"} actualmente
+					{summary.noDisponibles} jurisdicci{summary.noDisponibles === 1 ? "on" : "ones"} no disponible
+					{summary.noDisponibles === 1 ? "" : "s"} actualmente
 				</Alert>
 			)}
 

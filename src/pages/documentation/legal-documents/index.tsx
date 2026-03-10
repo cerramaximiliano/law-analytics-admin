@@ -117,7 +117,7 @@ const LegalDocumentsPage = () => {
 	const dispatch = useDispatch();
 
 	const { documents, selectedDocument, loading, loadingDetail, error } = useSelector(
-		(state: DefaultRootStateProps) => state.legalDocuments
+		(state: DefaultRootStateProps) => state.legalDocuments,
 	);
 
 	const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -353,12 +353,7 @@ const LegalDocumentsPage = () => {
 													<CircularProgress size={20} />
 												) : (
 													<Tooltip title={doc.isActive ? "Desactivar documento" : "Activar documento"}>
-														<Switch
-															checked={doc.isActive}
-															onChange={() => handleToggleDocument(doc)}
-															size="small"
-															color="success"
-														/>
+														<Switch checked={doc.isActive} onChange={() => handleToggleDocument(doc)} size="small" color="success" />
 													</Tooltip>
 												)}
 											</Stack>
@@ -576,8 +571,8 @@ const LegalDocumentsPage = () => {
 				<DialogTitle>Confirmar eliminacion</DialogTitle>
 				<DialogContent>
 					<DialogContentText>
-						¿Estas seguro de que deseas eliminar el documento <strong>"{documentToDelete?.title}"</strong>? Esta accion no se
-						puede deshacer.
+						¿Estas seguro de que deseas eliminar el documento <strong>"{documentToDelete?.title}"</strong>? Esta accion no se puede
+						deshacer.
 					</DialogContentText>
 				</DialogContent>
 				<DialogActions>

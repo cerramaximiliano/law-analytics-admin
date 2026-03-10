@@ -59,9 +59,7 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 		}
 	}, [open, worker]);
 
-	const isCompleted = worker
-		? !worker.enabled && (worker.number || 0) >= (worker.range_end || 0)
-		: false;
+	const isCompleted = worker ? !worker.enabled && (worker.number || 0) >= (worker.range_end || 0) : false;
 
 	const getProgress = (): number => {
 		if (!worker?.range_start || !worker?.range_end || worker.range_end <= worker.range_start) return 0;
@@ -144,27 +142,41 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 						</Typography>
 						<Stack direction="row" spacing={3} flexWrap="wrap">
 							<Box>
-								<Typography variant="caption" color="text.secondary">Rango</Typography>
+								<Typography variant="caption" color="text.secondary">
+									Rango
+								</Typography>
 								<Typography variant="body2" fontWeight={600}>
 									{worker.range_start?.toLocaleString()} - {worker.range_end?.toLocaleString()}
 								</Typography>
 							</Box>
 							<Box>
-								<Typography variant="caption" color="text.secondary">Número Actual</Typography>
+								<Typography variant="caption" color="text.secondary">
+									Número Actual
+								</Typography>
 								<Typography variant="body2" fontWeight={600}>
 									{worker.number?.toLocaleString()}
 								</Typography>
 							</Box>
 							<Box>
-								<Typography variant="caption" color="text.secondary">Año</Typography>
-								<Typography variant="body2" fontWeight={600}>{worker.year}</Typography>
+								<Typography variant="caption" color="text.secondary">
+									Año
+								</Typography>
+								<Typography variant="body2" fontWeight={600}>
+									{worker.year}
+								</Typography>
 							</Box>
 							<Box>
-								<Typography variant="caption" color="text.secondary">Progreso</Typography>
-								<Typography variant="body2" fontWeight={600}>{getProgress()}%</Typography>
+								<Typography variant="caption" color="text.secondary">
+									Progreso
+								</Typography>
+								<Typography variant="body2" fontWeight={600}>
+									{getProgress()}%
+								</Typography>
 							</Box>
 							<Box>
-								<Typography variant="caption" color="text.secondary">Estado</Typography>
+								<Typography variant="caption" color="text.secondary">
+									Estado
+								</Typography>
 								<Chip
 									label={worker.enabled ? "Activo" : "Detenido"}
 									size="small"
@@ -204,7 +216,9 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 							<InputLabel>Año</InputLabel>
 							<Select value={year} onChange={(e) => setYear(Number(e.target.value))} label="Año">
 								{YEAR_OPTIONS.map((y) => (
-									<MenuItem key={y} value={y}>{y}</MenuItem>
+									<MenuItem key={y} value={y}>
+										{y}
+									</MenuItem>
 								))}
 							</Select>
 						</FormControl>
@@ -220,9 +234,7 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 					{sortedHistory.length > 0 && (
 						<>
 							<Divider />
-							<Typography variant="subtitle2">
-								Historial de Rangos ({sortedHistory.length})
-							</Typography>
+							<Typography variant="subtitle2">Historial de Rangos ({sortedHistory.length})</Typography>
 							<TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 250 }}>
 								<Table size="small" stickyHeader>
 									<TableHead>
@@ -249,7 +261,9 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 													</Typography>
 												</TableCell>
 												<TableCell>
-													<Typography variant="body2" fontSize="0.75rem">{entry.year}</Typography>
+													<Typography variant="body2" fontSize="0.75rem">
+														{entry.year}
+													</Typography>
 												</TableCell>
 												<TableCell>
 													<Typography variant="body2" fontSize="0.75rem">
@@ -264,7 +278,9 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 												<TableCell>
 													<Typography variant="body2" fontSize="0.75rem">
 														{entry.completedAt
-															? new Date(typeof entry.completedAt === "string" ? entry.completedAt : (entry.completedAt as any).$date).toLocaleDateString()
+															? new Date(
+																	typeof entry.completedAt === "string" ? entry.completedAt : (entry.completedAt as any).$date,
+															  ).toLocaleDateString()
 															: "-"}
 													</Typography>
 												</TableCell>

@@ -88,8 +88,8 @@ const getTodayUpdateInfo = (causa: CausaEje): { isToday: boolean; count: number;
 	const isToday = stats.date === today;
 	return {
 		isToday,
-		count: isToday ? (stats.count || 0) : 0,
-		hours: isToday ? (stats.hours || []) : [],
+		count: isToday ? stats.count || 0 : 0,
+		hours: isToday ? stats.hours || [] : [],
 	};
 };
 
@@ -267,14 +267,40 @@ const CarpetasVerificadasEje = () => {
 
 	// Efecto inicial
 	useEffect(() => {
-		fetchCausas(page, rowsPerPage, searchNumero, searchAnio, searchCuij, searchCaratula, sortBy, sortOrder, privadaFilter, updateFilter, sourceFilter, detailsLoadedFilter);
+		fetchCausas(
+			page,
+			rowsPerPage,
+			searchNumero,
+			searchAnio,
+			searchCuij,
+			searchCaratula,
+			sortBy,
+			sortOrder,
+			privadaFilter,
+			updateFilter,
+			sourceFilter,
+			detailsLoadedFilter,
+		);
 		fetchWorkerStats();
 		fetchEligibilityStats();
 	}, []);
 
 	// Efecto para cambios de filtros que disparan fetch automático
 	useEffect(() => {
-		fetchCausas(page, rowsPerPage, searchNumero, searchAnio, searchCuij, searchCaratula, sortBy, sortOrder, privadaFilter, updateFilter, sourceFilter, detailsLoadedFilter);
+		fetchCausas(
+			page,
+			rowsPerPage,
+			searchNumero,
+			searchAnio,
+			searchCuij,
+			searchCaratula,
+			sortBy,
+			sortOrder,
+			privadaFilter,
+			updateFilter,
+			sourceFilter,
+			detailsLoadedFilter,
+		);
 	}, [page, rowsPerPage, sortBy, sortOrder, privadaFilter, updateFilter, sourceFilter, detailsLoadedFilter]);
 
 	// Handlers
@@ -299,7 +325,20 @@ const CarpetasVerificadasEje = () => {
 
 	const handleSearch = () => {
 		setPage(0);
-		fetchCausas(0, rowsPerPage, searchNumero, searchAnio, searchCuij, searchCaratula, sortBy, sortOrder, privadaFilter, updateFilter, sourceFilter, detailsLoadedFilter);
+		fetchCausas(
+			0,
+			rowsPerPage,
+			searchNumero,
+			searchAnio,
+			searchCuij,
+			searchCaratula,
+			sortBy,
+			sortOrder,
+			privadaFilter,
+			updateFilter,
+			sourceFilter,
+			detailsLoadedFilter,
+		);
 	};
 
 	const handleClearSearch = () => {
@@ -316,7 +355,20 @@ const CarpetasVerificadasEje = () => {
 	};
 
 	const handleRefresh = () => {
-		fetchCausas(page, rowsPerPage, searchNumero, searchAnio, searchCuij, searchCaratula, sortBy, sortOrder, privadaFilter, updateFilter, sourceFilter, detailsLoadedFilter);
+		fetchCausas(
+			page,
+			rowsPerPage,
+			searchNumero,
+			searchAnio,
+			searchCuij,
+			searchCaratula,
+			sortBy,
+			sortOrder,
+			privadaFilter,
+			updateFilter,
+			sourceFilter,
+			detailsLoadedFilter,
+		);
 		fetchWorkerStats();
 		fetchEligibilityStats();
 	};
@@ -443,12 +495,7 @@ const CarpetasVerificadasEje = () => {
 												sx={{ height: 24 }}
 											/>
 										</Tooltip>
-										<Chip
-											label={`${workerStats.total} total`}
-											size="small"
-											variant="outlined"
-											sx={{ height: 24 }}
-										/>
+										<Chip label={`${workerStats.total} total`} size="small" variant="outlined" sx={{ height: 24 }} />
 									</Stack>
 								) : (
 									<Typography variant="caption" color="text.secondary" textAlign="center">
@@ -588,18 +635,8 @@ const CarpetasVerificadasEje = () => {
 					<Grid container spacing={2} alignItems="center">
 						<Grid item xs={12} md={3} lg={2}>
 							<FormControlLabel
-								control={
-									<Checkbox
-										checked={soloElegibles}
-										onChange={handleSoloElegiblesChange}
-										size="small"
-									/>
-								}
-								label={
-									<Typography variant="body2">
-										Solo elegibles para actualización
-									</Typography>
-								}
+								control={<Checkbox checked={soloElegibles} onChange={handleSoloElegiblesChange} size="small" />}
+								label={<Typography variant="body2">Solo elegibles para actualización</Typography>}
 							/>
 						</Grid>
 						<Grid item xs={12} md={3} lg={2}>
@@ -642,7 +679,7 @@ const CarpetasVerificadasEje = () => {
 													size="small"
 													color="success"
 													variant="outlined"
-													sx={{ height: 20, fontSize: '0.7rem' }}
+													sx={{ height: 20, fontSize: "0.7rem" }}
 												/>
 											</Tooltip>
 											<Tooltip title="Documentos elegibles pendientes de actualizar hoy">
@@ -651,7 +688,7 @@ const CarpetasVerificadasEje = () => {
 													size="small"
 													color="warning"
 													variant="outlined"
-													sx={{ height: 20, fontSize: '0.7rem' }}
+													sx={{ height: 20, fontSize: "0.7rem" }}
 												/>
 											</Tooltip>
 											<Tooltip title={`Umbral de actualización: ${eligibilityStats.thresholdHours}h`}>
@@ -659,7 +696,7 @@ const CarpetasVerificadasEje = () => {
 													label={`${eligibilityStats.totalElegibles} elegibles`}
 													size="small"
 													variant="outlined"
-													sx={{ height: 20, fontSize: '0.7rem' }}
+													sx={{ height: 20, fontSize: "0.7rem" }}
 												/>
 											</Tooltip>
 										</Stack>
@@ -672,18 +709,19 @@ const CarpetasVerificadasEje = () => {
 												height: 8,
 												borderRadius: 4,
 												backgroundColor: theme.palette.action.hover,
-												'& .MuiLinearProgress-bar': {
+												"& .MuiLinearProgress-bar": {
 													borderRadius: 4,
-													backgroundColor: eligibilityStats.coveragePercent >= 80
-														? theme.palette.success.dark
-														: eligibilityStats.coveragePercent >= 50
+													backgroundColor:
+														eligibilityStats.coveragePercent >= 80
+															? theme.palette.success.dark
+															: eligibilityStats.coveragePercent >= 50
 															? theme.palette.warning.main
 															: theme.palette.error.main,
 												},
 											}}
 										/>
 									</Tooltip>
-									<Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, textAlign: 'right' }}>
+									<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5, textAlign: "right" }}>
 										{eligibilityStats.coveragePercent.toFixed(1)}% cobertura
 									</Typography>
 								</Box>
@@ -819,20 +857,9 @@ const CarpetasVerificadasEje = () => {
 													</Typography>
 												</TableCell>
 												<TableCell align="right">
-													<Typography variant="body2">
-														{formatMonto(causa.monto, causa.montoMoneda)}
-													</Typography>
+													<Typography variant="body2">{formatMonto(causa.monto, causa.montoMoneda)}</Typography>
 												</TableCell>
-												<TableCell>
-													{causa.estado && (
-														<Chip
-															label={causa.estado}
-															size="small"
-															color="info"
-															variant="outlined"
-														/>
-													)}
-												</TableCell>
+												<TableCell>{causa.estado && <Chip label={causa.estado} size="small" color="info" variant="outlined" />}</TableCell>
 												<TableCell align="center">
 													<Chip label={causa.movimientosCount || 0} size="small" variant="outlined" />
 												</TableCell>
@@ -854,9 +881,9 @@ const CarpetasVerificadasEje = () => {
 																			color="success"
 																			sx={{
 																				height: 18,
-																				fontSize: '0.65rem',
-																				'& .MuiChip-icon': { fontSize: '0.75rem' },
-																				'& .MuiChip-label': { px: 0.5 }
+																				fontSize: "0.65rem",
+																				"& .MuiChip-icon": { fontSize: "0.75rem" },
+																				"& .MuiChip-label": { px: 0.5 },
 																			}}
 																		/>
 																	</Tooltip>
@@ -879,7 +906,9 @@ const CarpetasVerificadasEje = () => {
 													{causa.isPrivate ? (
 														<Lock1 size={20} color={theme.palette.warning.main} variant="Bold" />
 													) : (
-														<Typography variant="caption" color="text.secondary">—</Typography>
+														<Typography variant="caption" color="text.secondary">
+															—
+														</Typography>
 													)}
 												</TableCell>
 												<TableCell align="center">
@@ -915,12 +944,7 @@ const CarpetasVerificadasEje = () => {
 			</Grid>
 
 			{/* Modal de detalles EJE */}
-			<CausaDetalleModalEje
-				open={detailModalOpen}
-				onClose={handleCloseModal}
-				causa={selectedCausa}
-				onCausaUpdated={handleRefresh}
-			/>
+			<CausaDetalleModalEje open={detailModalOpen} onClose={handleCloseModal} causa={selectedCausa} onCausaUpdated={handleRefresh} />
 		</MainCard>
 	);
 };

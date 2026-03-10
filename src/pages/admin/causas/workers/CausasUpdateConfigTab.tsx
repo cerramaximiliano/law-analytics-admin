@@ -1,19 +1,5 @@
 import React, { useState } from "react";
-import {
-	Box,
-	Card,
-	CardContent,
-	Grid,
-	Typography,
-	Switch,
-	TextField,
-	Button,
-	Stack,
-	Chip,
-	Divider,
-	useTheme,
-	alpha,
-} from "@mui/material";
+import { Box, Card, CardContent, Grid, Typography, Switch, TextField, Button, Stack, Chip, Divider, useTheme, alpha } from "@mui/material";
 import { TickCircle, CloseCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { CausasUpdateConfig, CausasUpdateService } from "api/causasUpdate";

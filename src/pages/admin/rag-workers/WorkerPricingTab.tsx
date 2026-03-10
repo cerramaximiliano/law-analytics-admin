@@ -40,8 +40,12 @@ const WorkerPricingTab = () => {
 
 	// LLM config state
 	const [llmConfig, setLlmConfig] = useState<PipelineLlmConfig>({
-		chatModel: "gpt-4o-mini", chatMaxTokens: 2000, chatTemperature: 0.3,
-		generationModel: "gpt-4o", generationMaxTokens: 4000, generationTemperature: 0.4,
+		chatModel: "gpt-4o-mini",
+		chatMaxTokens: 2000,
+		chatTemperature: 0.3,
+		generationModel: "gpt-4o",
+		generationMaxTokens: 4000,
+		generationTemperature: 0.4,
 	});
 	const [savingLlm, setSavingLlm] = useState(false);
 
@@ -60,10 +64,7 @@ const WorkerPricingTab = () => {
 	const fetchData = useCallback(async () => {
 		try {
 			setLoading(true);
-			const [pricingData, pipelineData] = await Promise.all([
-				RagWorkersService.getPricing(),
-				RagWorkersService.getPipelineConfig(),
-			]);
+			const [pricingData, pipelineData] = await Promise.all([RagWorkersService.getPricing(), RagWorkersService.getPipelineConfig()]);
 			setPricing(pricingData);
 			if (pipelineData.llm) {
 				setLlmConfig(pipelineData.llm);
@@ -189,7 +190,9 @@ const WorkerPricingTab = () => {
 						Modelo usado por el sistema para chat/resúmenes y generación de documentos. El cambio aplica en tiempo real.
 					</Typography>
 					{/* Chat / Resúmenes */}
-					<Typography variant="subtitle2" sx={{ mt: 1 }}>Chat / Resúmenes</Typography>
+					<Typography variant="subtitle2" sx={{ mt: 1 }}>
+						Chat / Resúmenes
+					</Typography>
 					<Stack direction="row" spacing={2}>
 						<FormControl size="small" sx={{ minWidth: 200 }}>
 							<InputLabel>Modelo</InputLabel>
@@ -377,7 +380,15 @@ const WorkerPricingTab = () => {
 							size="small"
 							fullWidth
 						/>
-						<TextField label="Notas" value={editNotes} onChange={(e) => setEditNotes(e.target.value)} size="small" fullWidth multiline rows={2} />
+						<TextField
+							label="Notas"
+							value={editNotes}
+							onChange={(e) => setEditNotes(e.target.value)}
+							size="small"
+							fullWidth
+							multiline
+							rows={2}
+						/>
 					</Stack>
 				</DialogContent>
 				<DialogActions>
@@ -426,7 +437,15 @@ const WorkerPricingTab = () => {
 							size="small"
 							fullWidth
 						/>
-						<TextField label="Notas" value={addNotes} onChange={(e) => setAddNotes(e.target.value)} size="small" fullWidth multiline rows={2} />
+						<TextField
+							label="Notas"
+							value={addNotes}
+							onChange={(e) => setAddNotes(e.target.value)}
+							size="small"
+							fullWidth
+							multiline
+							rows={2}
+						/>
 					</Stack>
 				</DialogContent>
 				<DialogActions>

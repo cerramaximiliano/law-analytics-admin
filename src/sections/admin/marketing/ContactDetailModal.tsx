@@ -34,7 +34,21 @@ import { MarketingContact } from "types/marketing-contact";
 import { MarketingContactService } from "store/reducers/marketing-contacts";
 import { CampaignService } from "store/reducers/campaign";
 import CampaignDetailModal from "./CampaignDetailModal";
-import { Refresh, ArrowDown2, ArrowUp2, Pause, Trash, Play, PauseCircle, PlayCircle, User, UserTick, Copy, TickCircle, CloseCircle } from "iconsax-react";
+import {
+	Refresh,
+	ArrowDown2,
+	ArrowUp2,
+	Pause,
+	Trash,
+	Play,
+	PauseCircle,
+	PlayCircle,
+	User,
+	UserTick,
+	Copy,
+	TickCircle,
+	CloseCircle,
+} from "iconsax-react";
 import authAxios from "utils/authAxios";
 
 // Tipo para datos de usuario
@@ -183,9 +197,7 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 
 			if (response.data?.success && response.data?.data?.users?.length > 0) {
 				// Buscar el usuario que coincida exactamente con el email
-				const exactMatch = response.data.data.users.find(
-					(u: UserData) => u.email.toLowerCase() === email.toLowerCase()
-				);
+				const exactMatch = response.data.data.users.find((u: UserData) => u.email.toLowerCase() === email.toLowerCase());
 
 				if (exactMatch) {
 					setUserData(exactMatch);
@@ -796,18 +808,14 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 													<Typography variant="body2" color="textSecondary">
 														Proveedor
 													</Typography>
-													<Typography variant="body1">
-														{contact.emailVerification?.provider || "-"}
-													</Typography>
+													<Typography variant="body1">{contact.emailVerification?.provider || "-"}</Typography>
 												</Grid>
 												<Grid item xs={12} sm={6}>
 													<Typography variant="body2" color="textSecondary">
 														Última verificación
 													</Typography>
 													<Typography variant="body1">
-														{contact.emailVerification?.lastCheckedAt
-															? formatDate(contact.emailVerification.lastCheckedAt)
-															: "-"}
+														{contact.emailVerification?.lastCheckedAt ? formatDate(contact.emailVerification.lastCheckedAt) : "-"}
 													</Typography>
 												</Grid>
 												{contact.emailVerification?.rawResponse?.flags && contact.emailVerification.rawResponse.flags.length > 0 && (
@@ -975,8 +983,8 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 											{/* Aviso si el contacto no está activo */}
 											{contact.status !== "active" && (
 												<Alert severity="warning" sx={{ mb: 2 }}>
-													El contacto está <strong>{contact.status}</strong>. Las campañas pausadas o completadas no pueden
-													reactivarse hasta que el contacto vuelva a estar activo.
+													El contacto está <strong>{contact.status}</strong>. Las campañas pausadas o completadas no pueden reactivarse
+													hasta que el contacto vuelva a estar activo.
 												</Alert>
 											)}
 
@@ -1064,8 +1072,7 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 																							? "Completado manualmente"
 																							: campaign.completedAt
 																							? `Completado: ${formatDate(campaign.completedAt)}`
-																							: "Sin información"
-																						}
+																							: "Sin información"}
 																					</Typography>
 																				)}
 																			</Box>
@@ -1406,9 +1413,11 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 																													{/* Mostrar origen de las restricciones o indicar que no hay */}
 																													<Typography variant="caption" color="textSecondary">
 																														•{" "}
-																														{campaignProgress[campaign.campaignId].progress.nextEmail.restrictionsSource === "email"
+																														{campaignProgress[campaign.campaignId].progress.nextEmail.restrictionsSource ===
+																														"email"
 																															? "Horario: 📧 del email"
-																															: campaignProgress[campaign.campaignId].progress.nextEmail.restrictionsSource === "campaign"
+																															: campaignProgress[campaign.campaignId].progress.nextEmail
+																																	.restrictionsSource === "campaign"
 																															? "Horario: 📅 de campaña"
 																															: "🕐 Sin restricción horaria"}
 																													</Typography>
@@ -1717,9 +1726,7 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 																size="small"
 																variant="outlined"
 															/>
-															{userData.isVerified && (
-																<Chip label="Verificado" color="info" size="small" variant="outlined" />
-															)}
+															{userData.isVerified && <Chip label="Verificado" color="info" size="small" variant="outlined" />}
 														</Stack>
 													</Grid>
 
@@ -1727,9 +1734,7 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 														<Typography variant="body2" color="textSecondary">
 															Teléfono
 														</Typography>
-														<Typography variant="body1">
-															{typeof userData.contact === "string" ? userData.contact || "-" : "-"}
-														</Typography>
+														<Typography variant="body1">{typeof userData.contact === "string" ? userData.contact || "-" : "-"}</Typography>
 													</Grid>
 
 													<Grid item xs={12} sm={6}>
@@ -1755,9 +1760,7 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 														<Typography variant="body2" color="textSecondary">
 															Último acceso
 														</Typography>
-														<Typography variant="body1">
-															{userData.lastLogin ? formatDate(userData.lastLogin) : "Nunca"}
-														</Typography>
+														<Typography variant="body1">{userData.lastLogin ? formatDate(userData.lastLogin) : "Nunca"}</Typography>
 													</Grid>
 
 													{/* Información de suscripción */}

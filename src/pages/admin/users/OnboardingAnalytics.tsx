@@ -27,7 +27,21 @@ import {
 	TextField,
 } from "@mui/material";
 import { Refresh, Chart, People, Activity, Timer1, Warning2, TickCircle, CloseCircle, ArrowDown } from "iconsax-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, FunnelChart, Funnel, LabelList, Cell, PieChart, Pie } from "recharts";
+import {
+	BarChart,
+	Bar,
+	XAxis,
+	YAxis,
+	CartesianGrid,
+	Tooltip as RechartsTooltip,
+	ResponsiveContainer,
+	FunnelChart,
+	Funnel,
+	LabelList,
+	Cell,
+	PieChart,
+	Pie,
+} from "recharts";
 import MainCard from "components/MainCard";
 import OnboardingService from "api/onboarding";
 import {
@@ -222,12 +236,7 @@ const OnboardingAnalytics: React.FC = () => {
 	};
 
 	// Funnel chart colors
-	const FUNNEL_COLORS = [
-		theme.palette.primary.main,
-		theme.palette.info.main,
-		theme.palette.warning.main,
-		theme.palette.success.main,
-	];
+	const FUNNEL_COLORS = [theme.palette.primary.main, theme.palette.info.main, theme.palette.warning.main, theme.palette.success.main];
 
 	// Time distribution colors
 	const TIME_COLORS = [
@@ -362,19 +371,12 @@ const OnboardingAnalytics: React.FC = () => {
 									<Skeleton variant="rectangular" height={300} />
 								) : funnelData ? (
 									<ResponsiveContainer width="100%" height={320}>
-										<BarChart
-											data={funnelData.funnel}
-											layout="vertical"
-											margin={{ top: 10, right: 30, left: 100, bottom: 10 }}
-										>
+										<BarChart data={funnelData.funnel} layout="vertical" margin={{ top: 10, right: 30, left: 100, bottom: 10 }}>
 											<CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
 											<XAxis type="number" />
 											<YAxis type="category" dataKey="step" tick={{ fontSize: 12 }} width={90} />
 											<RechartsTooltip
-												formatter={(value: number, _name: string, props: any) => [
-													`${value} usuarios (${props.payload.rate}%)`,
-													"",
-												]}
+												formatter={(value: number, _name: string, props: any) => [`${value} usuarios (${props.payload.rate}%)`, ""]}
 											/>
 											<Bar dataKey="count" radius={[0, 4, 4, 0]}>
 												{funnelData.funnel.map((_entry, index) => (
@@ -388,11 +390,7 @@ const OnboardingAnalytics: React.FC = () => {
 								)}
 								{funnelData && (
 									<Box sx={{ mt: 2, textAlign: "center" }}>
-										<Chip
-											label={`Tasa de conversion: ${funnelData.conversionRate}%`}
-											color="success"
-											variant="outlined"
-										/>
+										<Chip label={`Tasa de conversion: ${funnelData.conversionRate}%`} color="success" variant="outlined" />
 									</Box>
 								)}
 							</Paper>
@@ -572,12 +570,8 @@ const OnboardingAnalytics: React.FC = () => {
 												</Typography>
 											</TableCell>
 											<TableCell>
-												{event.metadata?.timeToComplete && (
-													<Chip label={event.metadata.timeToComplete} size="small" variant="outlined" />
-												)}
-												{event.metadata?.source && (
-													<Chip label={event.metadata.source} size="small" variant="outlined" sx={{ ml: 0.5 }} />
-												)}
+												{event.metadata?.timeToComplete && <Chip label={event.metadata.timeToComplete} size="small" variant="outlined" />}
+												{event.metadata?.source && <Chip label={event.metadata.source} size="small" variant="outlined" sx={{ ml: 0.5 }} />}
 											</TableCell>
 										</TableRow>
 									))
@@ -653,13 +647,7 @@ const OnboardingAnalytics: React.FC = () => {
 												<Chip
 													label={`${user.daysSinceRegistration} dias`}
 													size="small"
-													color={
-														user.daysSinceRegistration > 14
-															? "error"
-															: user.daysSinceRegistration > 7
-															? "warning"
-															: "default"
-													}
+													color={user.daysSinceRegistration > 14 ? "error" : user.daysSinceRegistration > 7 ? "warning" : "default"}
 												/>
 											</TableCell>
 										</TableRow>

@@ -32,14 +32,7 @@ interface SyncHistoryListProps {
 	type: "segment" | "campaign";
 }
 
-const SyncHistoryList: React.FC<SyncHistoryListProps> = ({
-	logs,
-	loading,
-	error,
-	pagination,
-	onPageChange,
-	type,
-}) => {
+const SyncHistoryList: React.FC<SyncHistoryListProps> = ({ logs, loading, error, pagination, onPageChange, type }) => {
 	const theme = useTheme();
 
 	// Format date
@@ -139,10 +132,7 @@ const SyncHistoryList: React.FC<SyncHistoryListProps> = ({
 									key={log._id}
 									sx={{
 										"&:hover": {
-											bgcolor:
-												theme.palette.mode === "dark"
-													? theme.palette.grey[800]
-													: theme.palette.grey[50],
+											bgcolor: theme.palette.mode === "dark" ? theme.palette.grey[800] : theme.palette.grey[50],
 										},
 									}}
 								>
@@ -176,26 +166,11 @@ const SyncHistoryList: React.FC<SyncHistoryListProps> = ({
 										</TableCell>
 									)}
 									<TableCell align="center">
-										{log.metrics?.contactsAdded !== undefined ||
-										log.metrics?.contactsMatched !== undefined ? (
-											<Stack
-												direction="row"
-												spacing={0.5}
-												alignItems="center"
-												justifyContent="center"
-											>
-												<Add
-													size={14}
-													color={theme.palette.success.main}
-												/>
-												<Typography
-													variant="body2"
-													color="success.main"
-													fontWeight="medium"
-												>
-													{log.type === "segment"
-														? log.metrics?.contactsMatched || 0
-														: log.metrics?.contactsAdded || 0}
+										{log.metrics?.contactsAdded !== undefined || log.metrics?.contactsMatched !== undefined ? (
+											<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
+												<Add size={14} color={theme.palette.success.main} />
+												<Typography variant="body2" color="success.main" fontWeight="medium">
+													{log.type === "segment" ? log.metrics?.contactsMatched || 0 : log.metrics?.contactsAdded || 0}
 												</Typography>
 											</Stack>
 										) : (
@@ -206,21 +181,9 @@ const SyncHistoryList: React.FC<SyncHistoryListProps> = ({
 									</TableCell>
 									<TableCell align="center">
 										{log.metrics?.contactsRemoved !== undefined ? (
-											<Stack
-												direction="row"
-												spacing={0.5}
-												alignItems="center"
-												justifyContent="center"
-											>
-												<Minus
-													size={14}
-													color={theme.palette.error.main}
-												/>
-												<Typography
-													variant="body2"
-													color="error.main"
-													fontWeight="medium"
-												>
+											<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
+												<Minus size={14} color={theme.palette.error.main} />
+												<Typography variant="body2" color="error.main" fontWeight="medium">
 													{log.metrics?.contactsRemoved || 0}
 												</Typography>
 											</Stack>
@@ -231,13 +194,7 @@ const SyncHistoryList: React.FC<SyncHistoryListProps> = ({
 										)}
 									</TableCell>
 									<TableCell align="center">
-										<Chip
-											icon={statusInfo.icon}
-											label={statusInfo.label}
-											size="small"
-											color={statusInfo.color}
-											variant="outlined"
-										/>
+										<Chip icon={statusInfo.icon} label={statusInfo.label} size="small" color={statusInfo.color} variant="outlined" />
 									</TableCell>
 								</TableRow>
 							);

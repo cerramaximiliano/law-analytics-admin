@@ -79,10 +79,7 @@ const InfrastructurePage = () => {
 	const fetchData = useCallback(async () => {
 		setLoading(true);
 		try {
-			const [statusRes, historyRes] = await Promise.all([
-				FailoverService.getStatus(),
-				FailoverService.getHistory(),
-			]);
+			const [statusRes, historyRes] = await Promise.all([FailoverService.getStatus(), FailoverService.getHistory()]);
 			if (statusRes.data.success) setStatus(statusRes.data.data);
 			if (historyRes.data.success) setHistory(historyRes.data.data);
 			setLastRefresh(new Date());
@@ -272,9 +269,7 @@ const InfrastructurePage = () => {
 												</TableCell>
 												<TableCell>
 													<Typography variant="caption">
-														{task.startedAt
-															? formatElapsed(Date.now() - new Date(task.startedAt).getTime())
-															: "N/A"}
+														{task.startedAt ? formatElapsed(Date.now() - new Date(task.startedAt).getTime()) : "N/A"}
 													</Typography>
 												</TableCell>
 											</TableRow>
@@ -327,9 +322,7 @@ const InfrastructurePage = () => {
 												<Typography variant="caption">{entry.reason}</Typography>
 											</TableCell>
 											<TableCell>
-												<Typography variant="caption">
-													{entry.durationMin !== undefined ? `${entry.durationMin} min` : "—"}
-												</Typography>
+												<Typography variant="caption">{entry.durationMin !== undefined ? `${entry.durationMin} min` : "—"}</Typography>
 											</TableCell>
 										</TableRow>
 									))}

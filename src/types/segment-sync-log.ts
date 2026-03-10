@@ -1,8 +1,8 @@
 // types/segment-sync-log.ts
 
-export type SegmentSyncLogType = 'execution' | 'segment' | 'campaign' | 'error';
-export type SegmentSyncLogStatus = 'started' | 'completed' | 'failed' | 'skipped';
-export type SegmentSyncLogTriggeredBy = 'cron' | 'manual' | 'api';
+export type SegmentSyncLogType = "execution" | "segment" | "campaign" | "error";
+export type SegmentSyncLogStatus = "started" | "completed" | "failed" | "skipped";
+export type SegmentSyncLogTriggeredBy = "cron" | "manual" | "api";
 
 export interface SegmentSyncLogMetrics {
 	// Para type='execution' (resumen global)

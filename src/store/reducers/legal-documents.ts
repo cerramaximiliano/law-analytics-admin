@@ -52,7 +52,7 @@ export const updateLegalDocument = createAsyncThunk(
 			const message = error.response?.data?.message || error.message || "Error al actualizar documento legal";
 			return rejectWithValue(message);
 		}
-	}
+	},
 );
 
 // Async thunk para activar/desactivar un documento legal

@@ -288,15 +288,17 @@ export class ExtraInfoConfigService {
 	/**
 	 * Actualiza configuración del worker
 	 */
-	static async updateConfig(updates: Partial<{
-		enabled: boolean;
-		syncContactsEnabled: boolean;
-		processing_mode: string;
-		batch_size: number;
-		documentDelay: number;
-		schedule: Partial<ExtraInfoSchedule>;
-		eligibility: Partial<ExtraInfoEligibility>;
-	}>): Promise<ApiResponse<ExtraInfoConfig>> {
+	static async updateConfig(
+		updates: Partial<{
+			enabled: boolean;
+			syncContactsEnabled: boolean;
+			processing_mode: string;
+			batch_size: number;
+			documentDelay: number;
+			schedule: Partial<ExtraInfoSchedule>;
+			eligibility: Partial<ExtraInfoEligibility>;
+		}>,
+	): Promise<ApiResponse<ExtraInfoConfig>> {
 		try {
 			const response = await pjnAxios.patch("/api/extra-info-config", updates);
 			return response.data;
@@ -361,15 +363,9 @@ export class ExtraInfoConfigService {
 	/**
 	 * Actualiza preferencia de sincronización de un usuario
 	 */
-	static async updateUserSyncPreference(
-		userId: string,
-		syncEnabled: boolean
-	): Promise<ApiResponse<UserWithSync>> {
+	static async updateUserSyncPreference(userId: string, syncEnabled: boolean): Promise<ApiResponse<UserWithSync>> {
 		try {
-			const response = await pjnAxios.patch(
-				`/api/extra-info-config/users/${userId}/sync`,
-				{ syncEnabled }
-			);
+			const response = await pjnAxios.patch(`/api/extra-info-config/users/${userId}/sync`, { syncEnabled });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -379,10 +375,7 @@ export class ExtraInfoConfigService {
 	/**
 	 * Actualiza preferencia de sincronización para múltiples usuarios
 	 */
-	static async bulkUpdateUserSyncPreference(
-		userIds: string[],
-		syncEnabled: boolean
-	): Promise<ApiResponse<BulkUpdateResponse>> {
+	static async bulkUpdateUserSyncPreference(userIds: string[], syncEnabled: boolean): Promise<ApiResponse<BulkUpdateResponse>> {
 		try {
 			const response = await pjnAxios.patch("/api/extra-info-config/users/bulk-sync", {
 				userIds,

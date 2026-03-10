@@ -20,6 +20,9 @@ import { useSnackbar } from "notistack";
 import { CloseCircle, Copy, TickCircle, CloseSquare } from "iconsax-react";
 import { Folder } from "api/folders";
 
+import { useState } from "react";
+import { useTheme } from "@mui/material/styles";
+
 interface FolderDetalleModalProps {
 	open: boolean;
 	onClose: () => void;
@@ -55,9 +58,6 @@ const STATUS_COLORS: Record<string, "primary" | "success" | "warning" | "error" 
 	Cerrada: "success",
 	Pendiente: "error",
 };
-
-import { useState } from "react";
-import { useTheme } from "@mui/material/styles";
 
 const FolderDetalleModal = ({ open, onClose, folder }: FolderDetalleModalProps) => {
 	const { enqueueSnackbar } = useSnackbar();
@@ -144,12 +144,7 @@ const FolderDetalleModal = ({ open, onClose, folder }: FolderDetalleModalProps) 
 										Estado
 									</Typography>
 									<Box>
-										<Chip
-											label={folder.status}
-											color={STATUS_COLORS[folder.status] || "default"}
-											size="small"
-											variant="outlined"
-										/>
+										<Chip label={folder.status} color={STATUS_COLORS[folder.status] || "default"} size="small" variant="outlined" />
 									</Box>
 								</Grid>
 								<Grid item xs={6} md={3}>
@@ -297,8 +292,8 @@ const FolderDetalleModal = ({ open, onClose, folder }: FolderDetalleModalProps) 
 													(folder as any).causaAssociationStatus === "success"
 														? "success"
 														: (folder as any).causaAssociationStatus === "failed"
-															? "error"
-															: "default"
+														? "error"
+														: "default"
 												}
 												variant="outlined"
 											/>

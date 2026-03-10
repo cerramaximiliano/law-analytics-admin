@@ -183,10 +183,11 @@ const EditDialog = ({ open, doc, missingDate, onClose, onSave }: EditDialogProps
 		setLoadingPrev(true);
 		try {
 			const { data } = await getListado({ anio: prevAnio, limit: 12, sortField: "fecha", sortDir: "asc" });
-			const match = data.find((r) => {
-				const fd = new Date(r.fecha);
-				return fd.getUTCFullYear() === prevAnio && fd.getUTCMonth() === prevMes;
-			}) ?? null;
+			const match =
+				data.find((r) => {
+					const fd = new Date(r.fecha);
+					return fd.getUTCFullYear() === prevAnio && fd.getUTCMonth() === prevMes;
+				}) ?? null;
 			setPrevDoc(match);
 			return match;
 		} finally {
@@ -278,11 +279,7 @@ const EditDialog = ({ open, doc, missingDate, onClose, onSave }: EditDialogProps
 										size="small"
 									/>
 								}
-								label={
-									<Typography variant="body2">
-										Recalcular desde mes anterior{form.fecha ? ` (${prevMesLabel})` : ""}
-									</Typography>
-								}
+								label={<Typography variant="body2">Recalcular desde mes anterior{form.fecha ? ` (${prevMesLabel})` : ""}</Typography>}
 							/>
 							{loadingPrev && <CircularProgress size={16} />}
 							{autoCalc && !prevDoc && !loadingPrev && (
@@ -290,14 +287,12 @@ const EditDialog = ({ open, doc, missingDate, onClose, onSave }: EditDialogProps
 									No se encontró registro para {prevMesLabel}
 								</Typography>
 							)}
-							{autoCalc && prevDoc && (
-								<Chip label={`Base: ${prevMesLabel}`} size="small" color="info" variant="outlined" />
-							)}
+							{autoCalc && prevDoc && <Chip label={`Base: ${prevMesLabel}`} size="small" color="info" variant="outlined" />}
 						</Stack>
 						{autoCalc && prevDoc && (
 							<Alert severity="info" sx={{ mt: 1, py: 0.5, fontSize: "0.78rem" }}>
-								Los campos marcados <strong>✦</strong> se calculan como{" "}
-								<strong>valor anterior × Movilidad General</strong>. Podés editarlos manualmente.
+								Los campos marcados <strong>✦</strong> se calculan como <strong>valor anterior × Movilidad General</strong>. Podés editarlos
+								manualmente.
 							</Alert>
 						)}
 					</Grid>
@@ -322,7 +317,9 @@ const EditDialog = ({ open, doc, missingDate, onClose, onSave }: EditDialogProps
 										}
 									}}
 									sx={isCalculable ? { "& .MuiOutlinedInput-root": { bgcolor: alpha(theme.palette.info.main, 0.05) } } : undefined}
-									helperText={isCalculable && prevDoc ? `Anterior: ${formatNum(prevDoc[key as keyof DatoPrevisional] as number)}` : undefined}
+									helperText={
+										isCalculable && prevDoc ? `Anterior: ${formatNum(prevDoc[key as keyof DatoPrevisional] as number)}` : undefined
+									}
 								/>
 							</Grid>
 						);
@@ -499,7 +496,11 @@ const CoverageGrid = ({
 					Ver todo
 				</Button>
 				{totalFaltantes > 0 && (
-					<Chip label={`${totalFaltantes} mes${totalFaltantes !== 1 ? "es" : ""} faltante${totalFaltantes !== 1 ? "s" : ""}`} color="error" size="small" />
+					<Chip
+						label={`${totalFaltantes} mes${totalFaltantes !== 1 ? "es" : ""} faltante${totalFaltantes !== 1 ? "s" : ""}`}
+						color="error"
+						size="small"
+					/>
 				)}
 			</Stack>
 
@@ -812,12 +813,7 @@ const DatosPrevisionales = () => {
 			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
 				<Tabs value={tabValue} onChange={(_e: SyntheticEvent, v: number) => setTabValue(v)}>
 					<Tab label="Listado" icon={<DocumentText size={16} />} iconPosition="start" />
-					<Tab
-						label="Cobertura"
-						icon={<Calendar size={16} />}
-						iconPosition="start"
-						sx={{ "& .MuiTab-iconWrapper": { mr: 0.5 } }}
-					/>
+					<Tab label="Cobertura" icon={<Calendar size={16} />} iconPosition="start" sx={{ "& .MuiTab-iconWrapper": { mr: 0.5 } }} />
 					<Tab label="Estadísticas" icon={<Chart size={16} />} iconPosition="start" />
 				</Tabs>
 			</Box>
@@ -832,11 +828,7 @@ const DatosPrevisionales = () => {
 						<Stack direction="row" spacing={1.5} flexWrap="wrap" alignItems="center">
 							<FormControl size="small" sx={{ minWidth: 120 }}>
 								<InputLabel>Año</InputLabel>
-								<Select
-									value={filterAnio}
-									label="Año"
-									onChange={(e) => setFilterAnio(e.target.value === "" ? "" : Number(e.target.value))}
-								>
+								<Select value={filterAnio} label="Año" onChange={(e) => setFilterAnio(e.target.value === "" ? "" : Number(e.target.value))}>
 									<MenuItem value="">Todos</MenuItem>
 									{years.map((y) => (
 										<MenuItem key={y.anio} value={y.anio}>
@@ -883,7 +875,14 @@ const DatosPrevisionales = () => {
 								Nuevo
 							</Button>
 							<Tooltip title="Refrescar">
-								<IconButton size="small" onClick={() => { fetchList(1); fetchStats(); }} disabled={loadingList}>
+								<IconButton
+									size="small"
+									onClick={() => {
+										fetchList(1);
+										fetchStats();
+									}}
+									disabled={loadingList}
+								>
 									<Refresh size={18} />
 								</IconButton>
 							</Tooltip>
@@ -913,7 +912,15 @@ const DatosPrevisionales = () => {
 												</TableSortLabel>
 											</TableCell>
 											<TableCell>Moneda</TableCell>
-											{["maximoImponible", "haberMinimoJubilacion", "haberMaximoJubilacion", "pbu", "salarioMVM", "topePC", "movilidadGeneral"].map((f) => {
+											{[
+												"maximoImponible",
+												"haberMinimoJubilacion",
+												"haberMaximoJubilacion",
+												"pbu",
+												"salarioMVM",
+												"topePC",
+												"movilidadGeneral",
+											].map((f) => {
 												const meta = CAMPOS_NUMERICOS.find((c) => c.key === f)!;
 												return (
 													<TableCell key={f} align="right">
@@ -934,16 +941,9 @@ const DatosPrevisionales = () => {
 									<TableBody>
 										{rows.map((row) => (
 											<>
-												<TableRow
-													key={row._id}
-													hover
-													sx={{ "& td": { borderBottom: expandedRow === row._id ? "none" : undefined } }}
-												>
+												<TableRow key={row._id} hover sx={{ "& td": { borderBottom: expandedRow === row._id ? "none" : undefined } }}>
 													<TableCell sx={{ py: 0 }}>
-														<IconButton
-															size="small"
-															onClick={() => setExpandedRow((v) => (v === row._id ? null : row._id))}
-														>
+														<IconButton size="small" onClick={() => setExpandedRow((v) => (v === row._id ? null : row._id))}>
 															{expandedRow === row._id ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
 														</IconButton>
 													</TableCell>
@@ -964,10 +964,21 @@ const DatosPrevisionales = () => {
 															sx={{ fontSize: "0.7rem" }}
 														/>
 													</TableCell>
-													{["maximoImponible", "haberMinimoJubilacion", "haberMaximoJubilacion", "pbu", "salarioMVM", "topePC", "movilidadGeneral"].map((f) => (
+													{[
+														"maximoImponible",
+														"haberMinimoJubilacion",
+														"haberMaximoJubilacion",
+														"pbu",
+														"salarioMVM",
+														"topePC",
+														"movilidadGeneral",
+													].map((f) => (
 														<TableCell key={f} align="right" sx={{ fontFamily: "monospace", fontSize: "0.78rem" }}>
 															{f === "movilidadGeneral"
-																? ((row[f as keyof DatoPrevisional] as number) ?? 0).toLocaleString("es-AR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })
+																? ((row[f as keyof DatoPrevisional] as number) ?? 0).toLocaleString("es-AR", {
+																		minimumFractionDigits: 4,
+																		maximumFractionDigits: 4,
+																  })
 																: formatNum(row[f as keyof DatoPrevisional] as number)}
 														</TableCell>
 													))}
@@ -1013,7 +1024,11 @@ const DatosPrevisionales = () => {
 																		color="info"
 																		onClick={(e) => setLinksAnchor({ el: e.currentTarget, links: row.links! })}
 																	>
-																		<Badge badgeContent={row.links.length} color="info" sx={{ "& .MuiBadge-badge": { fontSize: "0.6rem", minWidth: 14, height: 14 } }}>
+																		<Badge
+																			badgeContent={row.links.length}
+																			color="info"
+																			sx={{ "& .MuiBadge-badge": { fontSize: "0.6rem", minWidth: 14, height: 14 } }}
+																		>
 																			<Link1 size={15} />
 																		</Badge>
 																	</IconButton>
@@ -1252,10 +1267,7 @@ const DatosPrevisionales = () => {
 								sx={{ borderRadius: 1, "&:hover": { bgcolor: "action.hover" }, color: "primary.main", cursor: "pointer" }}
 							>
 								<Link1 size={14} style={{ marginRight: 8, flexShrink: 0 }} />
-								<ListItemText
-									primary={link}
-									primaryTypographyProps={{ variant: "caption", sx: { wordBreak: "break-all" } }}
-								/>
+								<ListItemText primary={link} primaryTypographyProps={{ variant: "caption", sx: { wordBreak: "break-all" } }} />
 							</ListItem>
 						))}
 					</List>

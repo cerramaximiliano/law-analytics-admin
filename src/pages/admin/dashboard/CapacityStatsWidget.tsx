@@ -1,19 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import {
-	Box,
-	Typography,
-	Paper,
-	Grid,
-	Skeleton,
-	Slider,
-	Divider,
-	Chip,
-	useTheme,
-	alpha,
-	Tooltip,
-	IconButton,
-	Theme,
-} from "@mui/material";
+import { Box, Typography, Paper, Grid, Skeleton, Slider, Divider, Chip, useTheme, alpha, Tooltip, IconButton, Theme } from "@mui/material";
 import { Calculator, Timer1, Refresh, Clock, Activity, Chart } from "iconsax-react";
 import { CausasPjnService, CapacityStatsResponse, CapacityStatsTotals } from "api/causasPjn";
 
@@ -22,7 +8,12 @@ const getThemeColors = (theme: Theme) => ({
 	primary: { main: theme.palette.primary.main, light: theme.palette.primary.light, lighter: alpha(theme.palette.primary.light, 0.15) },
 	success: { main: theme.palette.success.main, light: theme.palette.success.light, lighter: alpha(theme.palette.success.light, 0.15) },
 	warning: { main: theme.palette.warning.main, light: theme.palette.warning.light, lighter: alpha(theme.palette.warning.light, 0.15) },
-	neutral: { main: theme.palette.grey[600], light: theme.palette.grey[400], lighter: theme.palette.grey[100], text: theme.palette.text.secondary },
+	neutral: {
+		main: theme.palette.grey[600],
+		light: theme.palette.grey[400],
+		lighter: theme.palette.grey[100],
+		text: theme.palette.text.secondary,
+	},
 });
 
 interface CapacityStatsWidgetProps {
@@ -42,31 +33,34 @@ const CapacityStatsWidget: React.FC<CapacityStatsWidgetProps> = ({ onRefresh }) 
 	const [workHoursPerDay, setWorkHoursPerDay] = useState(14);
 	const [simulating, setSimulating] = useState(false);
 
-	const fetchStats = useCallback(async (threshold?: number, workers?: number, workHours?: number) => {
-		try {
-			setLoading(true);
-			setError(null);
-			const response = await CausasPjnService.getCapacityStats({
-				thresholdHours: threshold ?? thresholdHours,
-				workersPerFuero: workers ?? workersPerFuero,
-				workHoursPerDay: workHours ?? workHoursPerDay,
-			});
-			if (response.success) {
-				setStats(response.data);
-				// Actualizar los sliders con los valores de la respuesta
-				if (!simulating) {
-					setThresholdHours(response.data.config.thresholdHours);
-					setWorkersPerFuero(response.data.config.workersPerFuero);
-					setWorkHoursPerDay(response.data.config.workHoursPerDay);
+	const fetchStats = useCallback(
+		async (threshold?: number, workers?: number, workHours?: number) => {
+			try {
+				setLoading(true);
+				setError(null);
+				const response = await CausasPjnService.getCapacityStats({
+					thresholdHours: threshold ?? thresholdHours,
+					workersPerFuero: workers ?? workersPerFuero,
+					workHoursPerDay: workHours ?? workHoursPerDay,
+				});
+				if (response.success) {
+					setStats(response.data);
+					// Actualizar los sliders con los valores de la respuesta
+					if (!simulating) {
+						setThresholdHours(response.data.config.thresholdHours);
+						setWorkersPerFuero(response.data.config.workersPerFuero);
+						setWorkHoursPerDay(response.data.config.workHoursPerDay);
+					}
 				}
+			} catch (err: any) {
+				setError(err.message || "Error al cargar estadísticas");
+			} finally {
+				setLoading(false);
+				setSimulating(false);
 			}
-		} catch (err: any) {
-			setError(err.message || "Error al cargar estadísticas");
-		} finally {
-			setLoading(false);
-			setSimulating(false);
-		}
-	}, [thresholdHours, workersPerFuero, workHoursPerDay, simulating]);
+		},
+		[thresholdHours, workersPerFuero, workHoursPerDay, simulating],
+	);
 
 	useEffect(() => {
 		fetchStats();
@@ -203,9 +197,11 @@ const CapacityStatsWidget: React.FC<CapacityStatsWidgetProps> = ({ onRefresh }) 
 						<Typography variant="body2" color="text.secondary">
 							Cobertura diaria
 						</Typography>
-						<Typography variant="h6" fontWeight="bold" color={
-							(totals?.dailyCoveragePercent || 0) >= 100 ? COLORS.success.main : COLORS.warning.main
-						}>
+						<Typography
+							variant="h6"
+							fontWeight="bold"
+							color={(totals?.dailyCoveragePercent || 0) >= 100 ? COLORS.success.main : COLORS.warning.main}
+						>
 							{totals?.dailyCoveragePercent || 0}%
 						</Typography>
 					</Grid>

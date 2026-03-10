@@ -125,7 +125,9 @@ export class ScrapingManagerService {
 		}
 	}
 
-	static async updateGlobal(data: Partial<GlobalConfig> & { manager?: Partial<ManagerSettings> }): Promise<ApiResponse<ScrapingManagerConfig>> {
+	static async updateGlobal(
+		data: Partial<GlobalConfig> & { manager?: Partial<ManagerSettings> },
+	): Promise<ApiResponse<ScrapingManagerConfig>> {
 		try {
 			const response = await pjnAxios.patch("/api/scraping-manager/global", data);
 			return response.data;

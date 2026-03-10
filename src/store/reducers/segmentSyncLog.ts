@@ -12,7 +12,7 @@ export const SegmentSyncLogService = {
 	getExecutions: async (
 		page = 1,
 		limit = 20,
-		filters: { status?: string; startDate?: string; endDate?: string } = {}
+		filters: { status?: string; startDate?: string; endDate?: string } = {},
 	): Promise<SegmentSyncLogPaginatedResponse> => {
 		try {
 			const response = await mktAxios.get("/api/segment-sync-logs", {
@@ -39,11 +39,7 @@ export const SegmentSyncLogService = {
 	},
 
 	// Get segment sync history
-	getSegmentHistory: async (
-		segmentId: string,
-		page = 1,
-		limit = 50
-	): Promise<SegmentSyncLogPaginatedResponse> => {
+	getSegmentHistory: async (segmentId: string, page = 1, limit = 50): Promise<SegmentSyncLogPaginatedResponse> => {
 		try {
 			const response = await mktAxios.get(`/api/segment-sync-logs/segment/${segmentId}`, {
 				params: {
@@ -58,11 +54,7 @@ export const SegmentSyncLogService = {
 	},
 
 	// Get campaign sync history
-	getCampaignHistory: async (
-		campaignId: string,
-		page = 1,
-		limit = 50
-	): Promise<SegmentSyncLogPaginatedResponse> => {
+	getCampaignHistory: async (campaignId: string, page = 1, limit = 50): Promise<SegmentSyncLogPaginatedResponse> => {
 		try {
 			const response = await mktAxios.get(`/api/segment-sync-logs/campaign/${campaignId}`, {
 				params: {

@@ -220,26 +220,42 @@ const AppUpdateWorker = () => {
 					<Grid container spacing={1.5}>
 						<Grid item xs={6} sm={3}>
 							<Stack direction="row" spacing={1} alignItems="center">
-								<Typography variant="caption" color="text.secondary">Source:</Typography>
-								<Typography variant="caption" fontWeight={500}>"app"</Typography>
+								<Typography variant="caption" color="text.secondary">
+									Source:
+								</Typography>
+								<Typography variant="caption" fontWeight={500}>
+									"app"
+								</Typography>
 							</Stack>
 						</Grid>
 						<Grid item xs={6} sm={3}>
 							<Stack direction="row" spacing={1} alignItems="center">
-								<Typography variant="caption" color="text.secondary">Verified (req):</Typography>
-								<Typography variant="caption" fontWeight={500}>true</Typography>
+								<Typography variant="caption" color="text.secondary">
+									Verified (req):
+								</Typography>
+								<Typography variant="caption" fontWeight={500}>
+									true
+								</Typography>
 							</Stack>
 						</Grid>
 						<Grid item xs={6} sm={3}>
 							<Stack direction="row" spacing={1} alignItems="center">
-								<Typography variant="caption" color="text.secondary">isValid (req):</Typography>
-								<Typography variant="caption" fontWeight={500}>true</Typography>
+								<Typography variant="caption" color="text.secondary">
+									isValid (req):
+								</Typography>
+								<Typography variant="caption" fontWeight={500}>
+									true
+								</Typography>
 							</Stack>
 						</Grid>
 						<Grid item xs={6} sm={3}>
 							<Stack direction="row" spacing={1} alignItems="center">
-								<Typography variant="caption" color="text.secondary">Update:</Typography>
-								<Typography variant="caption" fontWeight={500}>true</Typography>
+								<Typography variant="caption" color="text.secondary">
+									Update:
+								</Typography>
+								<Typography variant="caption" fontWeight={500}>
+									true
+								</Typography>
 							</Stack>
 						</Grid>
 					</Grid>
@@ -281,7 +297,9 @@ const AppUpdateWorker = () => {
 												fullWidth
 											/>
 										) : (
-											<Typography variant="body2" fontWeight={500}>{config.worker_id}</Typography>
+											<Typography variant="body2" fontWeight={500}>
+												{config.worker_id}
+											</Typography>
 										)}
 									</TableCell>
 									<TableCell>
@@ -319,13 +337,19 @@ const AppUpdateWorker = () => {
 										)}
 									</TableCell>
 									<TableCell align="center">
-										<Typography variant="body2" fontWeight={500}>{config.documents_checked?.toLocaleString() || 0}</Typography>
+										<Typography variant="body2" fontWeight={500}>
+											{config.documents_checked?.toLocaleString() || 0}
+										</Typography>
 									</TableCell>
 									<TableCell align="center">
-										<Typography variant="body2" color="success.main" fontWeight={500}>{config.documents_updated?.toLocaleString() || 0}</Typography>
+										<Typography variant="body2" color="success.main" fontWeight={500}>
+											{config.documents_updated?.toLocaleString() || 0}
+										</Typography>
 									</TableCell>
 									<TableCell align="center">
-										<Typography variant="body2" color="error.main" fontWeight={500}>{config.documents_failed?.toLocaleString() || 0}</Typography>
+										<Typography variant="body2" color="error.main" fontWeight={500}>
+											{config.documents_failed?.toLocaleString() || 0}
+										</Typography>
 									</TableCell>
 									<TableCell align="center">
 										<Box sx={{ width: 80 }}>
@@ -335,7 +359,9 @@ const AppUpdateWorker = () => {
 												color={successRate > 50 ? "success" : successRate > 25 ? "warning" : "error"}
 												sx={{ height: 6, borderRadius: 3 }}
 											/>
-											<Typography variant="caption" color="text.secondary">{successRate.toFixed(1)}%</Typography>
+											<Typography variant="caption" color="text.secondary">
+												{successRate.toFixed(1)}%
+											</Typography>
 										</Box>
 									</TableCell>
 									<TableCell align="center">
@@ -396,7 +422,9 @@ const AppUpdateWorker = () => {
 				<Grid item xs={6} sm={3}>
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5 }}>
-							<Typography variant="caption" color="text.secondary">Total Workers</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Total Workers
+							</Typography>
 							<Typography variant="h5">{configs.length}</Typography>
 						</CardContent>
 					</Card>
@@ -404,23 +432,33 @@ const AppUpdateWorker = () => {
 				<Grid item xs={6} sm={3}>
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5 }}>
-							<Typography variant="caption" color="text.secondary">Activos</Typography>
-							<Typography variant="h5" color="success.main">{configs.filter((c) => c.enabled).length}</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Activos
+							</Typography>
+							<Typography variant="h5" color="success.main">
+								{configs.filter((c) => c.enabled).length}
+							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
 				<Grid item xs={6} sm={3}>
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5 }}>
-							<Typography variant="caption" color="text.secondary">Actualizados</Typography>
-							<Typography variant="h5" color="info.main">{configs.reduce((acc, c) => acc + (c.documents_updated || 0), 0).toLocaleString()}</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Actualizados
+							</Typography>
+							<Typography variant="h5" color="info.main">
+								{configs.reduce((acc, c) => acc + (c.documents_updated || 0), 0).toLocaleString()}
+							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
 				<Grid item xs={6} sm={3}>
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5 }}>
-							<Typography variant="caption" color="text.secondary">Tasa Global</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Tasa Global
+							</Typography>
 							<Typography variant="h5" color="warning.main">
 								{(() => {
 									const totalChecked = configs.reduce((acc, c) => acc + (c.documents_checked || 0), 0);
@@ -436,7 +474,8 @@ const AppUpdateWorker = () => {
 			{/* Nota */}
 			<Alert severity="warning" variant="outlined">
 				<Typography variant="body2">
-					<strong>Umbral de actualización:</strong> Define cuántas horas deben pasar desde la última actualización antes de verificar nuevamente. Un valor más bajo = verificaciones más frecuentes pero mayor consumo de recursos.
+					<strong>Umbral de actualización:</strong> Define cuántas horas deben pasar desde la última actualización antes de verificar
+					nuevamente. Un valor más bajo = verificaciones más frecuentes pero mayor consumo de recursos.
 				</Typography>
 			</Alert>
 		</Stack>
@@ -495,7 +534,9 @@ const AppUpdateWorker = () => {
 								Errores y Reintentos
 							</Typography>
 							<Box sx={{ pl: 2 }}>
-								<Typography variant="body2">• Error de Captcha, expediente no encontrado, balance insuficiente: Reintento automático cada 2 minutos</Typography>
+								<Typography variant="body2">
+									• Error de Captcha, expediente no encontrado, balance insuficiente: Reintento automático cada 2 minutos
+								</Typography>
 							</Box>
 						</Box>
 					</Box>
@@ -565,8 +606,12 @@ const AppUpdateWorker = () => {
 							<Stack direction="row" spacing={1.5} alignItems="center">
 								<Setting2 size={20} />
 								<Box>
-									<Typography variant="body2" fontWeight={500}>Manager</Typography>
-									<Typography variant="caption" color="text.secondary">Config. general</Typography>
+									<Typography variant="body2" fontWeight={500}>
+										Manager
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Config. general
+									</Typography>
 								</Box>
 							</Stack>
 						}
@@ -577,8 +622,12 @@ const AppUpdateWorker = () => {
 							<Stack direction="row" spacing={1.5} alignItems="center">
 								<People size={20} />
 								<Box>
-									<Typography variant="body2" fontWeight={500}>Workers</Typography>
-									<Typography variant="caption" color="text.secondary">Config. workers</Typography>
+									<Typography variant="body2" fontWeight={500}>
+										Workers
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Config. workers
+									</Typography>
 								</Box>
 							</Stack>
 						}
@@ -589,8 +638,12 @@ const AppUpdateWorker = () => {
 							<Stack direction="row" spacing={1.5} alignItems="center">
 								<Chart size={20} />
 								<Box>
-									<Typography variant="body2" fontWeight={500}>Estadísticas</Typography>
-									<Typography variant="caption" color="text.secondary">Por fuero y día</Typography>
+									<Typography variant="body2" fontWeight={500}>
+										Estadísticas
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Por fuero y día
+									</Typography>
 								</Box>
 							</Stack>
 						}
@@ -601,8 +654,12 @@ const AppUpdateWorker = () => {
 							<Stack direction="row" spacing={1.5} alignItems="center">
 								<MessageQuestion size={20} />
 								<Box>
-									<Typography variant="body2" fontWeight={500}>Ayuda</Typography>
-									<Typography variant="caption" color="text.secondary">Guía de uso</Typography>
+									<Typography variant="body2" fontWeight={500}>
+										Ayuda
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Guía de uso
+									</Typography>
 								</Box>
 							</Stack>
 						}

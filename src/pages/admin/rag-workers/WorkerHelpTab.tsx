@@ -103,7 +103,13 @@ const ControlCard: React.FC<{ title: string; description: string; theme: any }> 
 	</Box>
 );
 
-const CostCard: React.FC<{ title: string; model: string; worker: string; description: string; theme: any }> = ({ title, model, worker, description, theme }) => (
+const CostCard: React.FC<{ title: string; model: string; worker: string; description: string; theme: any }> = ({
+	title,
+	model,
+	worker,
+	description,
+	theme,
+}) => (
 	<Box sx={{ flex: 1, p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}>
 		<Typography variant="subtitle2" fontWeight={600}>
 			{title}
@@ -121,7 +127,9 @@ const CostCard: React.FC<{ title: string; model: string; worker: string; descrip
 );
 
 const SectionBox: React.FC<{ children: React.ReactNode; theme: any }> = ({ children, theme }) => (
-	<Box sx={{ p: 2.5, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.default, 0.5) }}>
+	<Box
+		sx={{ p: 2.5, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.default, 0.5) }}
+	>
 		{children}
 	</Box>
 );
@@ -287,10 +295,7 @@ const HelpPipelineSection: React.FC = () => {
 							title="OCR Document"
 							subtitle="Si el doc requiere OCR pendiente"
 							color={colors.ocrDocument}
-							items={[
-								"Docs que necesitan OCR se re-encolan aqui",
-								"Solo si requiresOcr=true y ocrCompleted=false",
-							]}
+							items={["Docs que necesitan OCR se re-encolan aqui", "Solo si requiresOcr=true y ocrCompleted=false"]}
 						/>
 					</Stack>
 				</Stack>
@@ -310,7 +315,8 @@ const HelpPipelineSection: React.FC = () => {
 						Error permanente
 					</Typography>
 					<Typography variant="caption" color="text.secondary">
-						El documento queda en status 'error' definitivo y ya no se reintenta automaticamente. Se puede ver en el tab Indexacion filtrando por "Con error".
+						El documento queda en status 'error' definitivo y ya no se reintenta automaticamente. Se puede ver en el tab Indexacion
+						filtrando por "Con error".
 					</Typography>
 				</Box>
 			</SectionBox>
@@ -325,16 +331,40 @@ const HelpPipelineSection: React.FC = () => {
 
 				<Stack spacing={2}>
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-						<ControlCard title="docErrorCooldownMs" description="Tiempo minimo de espera antes de reintentar un documento con error. Default: 15 minutos (900.000 ms). Evita reintentos inmediatos que podrian fallar por el mismo motivo." theme={theme} />
-						<ControlCard title="docMaxRetries" description="Cantidad maxima de reintentos automaticos por documento. Default: 5. Despues de este limite el documento queda en error permanente." theme={theme} />
+						<ControlCard
+							title="docErrorCooldownMs"
+							description="Tiempo minimo de espera antes de reintentar un documento con error. Default: 15 minutos (900.000 ms). Evita reintentos inmediatos que podrian fallar por el mismo motivo."
+							theme={theme}
+						/>
+						<ControlCard
+							title="docMaxRetries"
+							description="Cantidad maxima de reintentos automaticos por documento. Default: 5. Despues de este limite el documento queda en error permanente."
+							theme={theme}
+						/>
 					</Stack>
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-						<ControlCard title="stalledThresholdMs" description="Tiempo maximo que un documento puede estar en un estado intermedio (downloading, extracting, chunking, embedding) antes de considerarse trabado. Default: 10 minutos (600.000 ms)." theme={theme} />
-						<ControlCard title="maxQueueLoad" description="Si las colas indexDocument + ocrDocument tienen mas de este total de jobs (activos + esperando), Recovery no encola mas hasta que se liberen. Default: 100." theme={theme} />
+						<ControlCard
+							title="stalledThresholdMs"
+							description="Tiempo maximo que un documento puede estar en un estado intermedio (downloading, extracting, chunking, embedding) antes de considerarse trabado. Default: 10 minutos (600.000 ms)."
+							theme={theme}
+						/>
+						<ControlCard
+							title="maxQueueLoad"
+							description="Si las colas indexDocument + ocrDocument tienen mas de este total de jobs (activos + esperando), Recovery no encola mas hasta que se liberen. Default: 100."
+							theme={theme}
+						/>
 					</Stack>
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-						<ControlCard title="batchSize" description="Maximo de documentos que Recovery puede re-encolar por ciclo de escaneo. Prioriza errores primero, luego stalled con el remanente. Default: 30." theme={theme} />
-						<ControlCard title="cleanFailedAfterMs" description="Tiempo despues del cual se limpian los jobs fallidos de las colas BullMQ. Default: 1 hora (3.600.000 ms). Mantiene las colas limpias sin perder informacion reciente." theme={theme} />
+						<ControlCard
+							title="batchSize"
+							description="Maximo de documentos que Recovery puede re-encolar por ciclo de escaneo. Prioriza errores primero, luego stalled con el remanente. Default: 30."
+							theme={theme}
+						/>
+						<ControlCard
+							title="cleanFailedAfterMs"
+							description="Tiempo despues del cual se limpian los jobs fallidos de las colas BullMQ. Default: 1 hora (3.600.000 ms). Mantiene las colas limpias sin perder informacion reciente."
+							theme={theme}
+						/>
 					</Stack>
 				</Stack>
 			</SectionBox>
@@ -360,16 +390,40 @@ const HelpControlSection: React.FC = () => {
 				<SectionTitle>Controles generales</SectionTitle>
 				<Stack spacing={2}>
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-						<ControlCard title="Concurrency" description="Cantidad de jobs que un worker procesa en paralelo. Ajustable en caliente desde el tab Control (1-20)." theme={theme} />
-						<ControlCard title="Rate Limiter" description="Limita cuantos jobs se procesan por intervalo de tiempo (ej: 20 jobs cada 60s). Cambios requieren reinicio del servicio." theme={theme} />
+						<ControlCard
+							title="Concurrency"
+							description="Cantidad de jobs que un worker procesa en paralelo. Ajustable en caliente desde el tab Control (1-20)."
+							theme={theme}
+						/>
+						<ControlCard
+							title="Rate Limiter"
+							description="Limita cuantos jobs se procesan por intervalo de tiempo (ej: 20 jobs cada 60s). Cambios requieren reinicio del servicio."
+							theme={theme}
+						/>
 					</Stack>
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-						<ControlCard title="Batch Size (Auto-Index)" description="Maximo de causas que Auto-Index encola por ciclo de escaneo. Editable desde el icono de configuracion en la caja de Auto-Index." theme={theme} />
-						<ControlCard title="Max Concurrent Jobs" description="Tope total de jobs activos + esperando en la cola de Index Causa. Si se alcanza, Auto-Index no encola mas hasta que se liberen slots." theme={theme} />
+						<ControlCard
+							title="Batch Size (Auto-Index)"
+							description="Maximo de causas que Auto-Index encola por ciclo de escaneo. Editable desde el icono de configuracion en la caja de Auto-Index."
+							theme={theme}
+						/>
+						<ControlCard
+							title="Max Concurrent Jobs"
+							description="Tope total de jobs activos + esperando en la cola de Index Causa. Si se alcanza, Auto-Index no encola mas hasta que se liberen slots."
+							theme={theme}
+						/>
 					</Stack>
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-						<ControlCard title="Pause / Resume" description="Pausa o reanuda un worker sin deshabilitarlo. El worker deja de tomar jobs nuevos pero termina los que esta procesando." theme={theme} />
-						<ControlCard title="Enable / Disable" description="Habilita o deshabilita un worker completamente. Un worker deshabilitado no procesa jobs aunque haya en la cola." theme={theme} />
+						<ControlCard
+							title="Pause / Resume"
+							description="Pausa o reanuda un worker sin deshabilitarlo. El worker deja de tomar jobs nuevos pero termina los que esta procesando."
+							theme={theme}
+						/>
+						<ControlCard
+							title="Enable / Disable"
+							description="Habilita o deshabilita un worker completamente. Un worker deshabilitado no procesa jobs aunque haya en la cola."
+							theme={theme}
+						/>
 					</Stack>
 				</Stack>
 			</SectionBox>
@@ -378,12 +432,31 @@ const HelpControlSection: React.FC = () => {
 				<SectionTitle>Tracking de costos</SectionTitle>
 				<Stack spacing={1}>
 					<Typography variant="body2" color="text.secondary">
-						El sistema trackea automaticamente el consumo de tokens de OpenAI y calcula costos en USD usando la tabla de precios configurable:
+						El sistema trackea automaticamente el consumo de tokens de OpenAI y calcula costos en USD usando la tabla de precios
+						configurable:
 					</Typography>
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mt: 1 }}>
-						<CostCard title="Embeddings" model="text-embedding-3-small" worker="Index Document" description="Tokens usados para vectorizar chunks de texto" theme={theme} />
-						<CostCard title="LLM (Prompt)" model="gpt-4o-mini" worker="Generate Summary" description="Tokens de entrada enviados al modelo para generar resumenes" theme={theme} />
-						<CostCard title="LLM (Completion)" model="gpt-4o-mini" worker="Generate Summary" description="Tokens de salida generados por el modelo en los resumenes" theme={theme} />
+						<CostCard
+							title="Embeddings"
+							model="text-embedding-3-small"
+							worker="Index Document"
+							description="Tokens usados para vectorizar chunks de texto"
+							theme={theme}
+						/>
+						<CostCard
+							title="LLM (Prompt)"
+							model="gpt-4o-mini"
+							worker="Generate Summary"
+							description="Tokens de entrada enviados al modelo para generar resumenes"
+							theme={theme}
+						/>
+						<CostCard
+							title="LLM (Completion)"
+							model="gpt-4o-mini"
+							worker="Generate Summary"
+							description="Tokens de salida generados por el modelo en los resumenes"
+							theme={theme}
+						/>
 					</Stack>
 				</Stack>
 			</SectionBox>
@@ -467,10 +540,21 @@ const HelpPerformanceSection: React.FC = () => {
 				<SectionTitle>El cuello de botella: cola compartida</SectionTitle>
 
 				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-					Todas las causas activas depositan sus documentos en la misma cola de Index Document. Esto significa que el tiempo de procesamiento por causa no depende solo de sus propios documentos, sino de cuantas otras causas estan compitiendo por los mismos workers.
+					Todas las causas activas depositan sus documentos en la misma cola de Index Document. Esto significa que el tiempo de
+					procesamiento por causa no depende solo de sus propios documentos, sino de cuantas otras causas estan compitiendo por los mismos
+					workers.
 				</Typography>
 
-				<Box sx={{ p: 2, borderRadius: 1.5, bgcolor: alpha(theme.palette.background.default, 0.8), border: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", fontSize: "0.75rem" }}>
+				<Box
+					sx={{
+						p: 2,
+						borderRadius: 1.5,
+						bgcolor: alpha(theme.palette.background.default, 0.8),
+						border: `1px solid ${theme.palette.divider}`,
+						fontFamily: "monospace",
+						fontSize: "0.75rem",
+					}}
+				>
 					<Typography variant="caption" sx={{ fontFamily: "monospace", whiteSpace: "pre-line", display: "block" }}>
 						{`Causa A (800 movimientos) ──┐
 Causa B (560 movimientos) ──┼──▸ cola indexDocument ──▸ [ concurrency workers ]
@@ -500,7 +584,15 @@ Ejemplo con 7 causas activas (~3500 docs) y concurrency=2:
 
 				<Stack spacing={2}>
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-						<Box sx={{ flex: 1, p: 2, borderRadius: 1.5, border: `2px solid ${theme.palette.success.main}`, bgcolor: alpha(theme.palette.success.main, 0.04) }}>
+						<Box
+							sx={{
+								flex: 1,
+								p: 2,
+								borderRadius: 1.5,
+								border: `2px solid ${theme.palette.success.main}`,
+								bgcolor: alpha(theme.palette.success.main, 0.04),
+							}}
+						>
 							<Typography variant="subtitle2" fontWeight={700} color="success.main" gutterBottom>
 								indexDocument.concurrency
 							</Typography>
@@ -508,16 +600,30 @@ Ejemplo con 7 causas activas (~3500 docs) y concurrency=2:
 								Cantidad de documentos que se procesan en paralelo entre todas las causas.
 							</Typography>
 							<Stack spacing={0.5}>
-								<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}>
+								<Typography
+									variant="caption"
+									sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}
+								>
 									Subir = mas docs en paralelo = cada causa termina mas rapido
 								</Typography>
-								<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.error.main, 0.3)}`, color: "text.secondary" }}>
+								<Typography
+									variant="caption"
+									sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.error.main, 0.3)}`, color: "text.secondary" }}
+								>
 									Limite: rate limits de OpenAI (embeddings), rate limits de Pinecone, RAM del servidor
 								</Typography>
 							</Stack>
 						</Box>
 
-						<Box sx={{ flex: 1, p: 2, borderRadius: 1.5, border: `2px solid ${theme.palette.primary.main}`, bgcolor: alpha(theme.palette.primary.main, 0.04) }}>
+						<Box
+							sx={{
+								flex: 1,
+								p: 2,
+								borderRadius: 1.5,
+								border: `2px solid ${theme.palette.primary.main}`,
+								bgcolor: alpha(theme.palette.primary.main, 0.04),
+							}}
+						>
 							<Typography variant="subtitle2" fontWeight={700} color="primary.main" gutterBottom>
 								indexCausa.concurrency
 							</Typography>
@@ -525,10 +631,16 @@ Ejemplo con 7 causas activas (~3500 docs) y concurrency=2:
 								Cantidad de causas que se procesan simultaneamente.
 							</Typography>
 							<Stack spacing={0.5}>
-								<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.warning.main, 0.3)}`, color: "text.secondary" }}>
+								<Typography
+									variant="caption"
+									sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.warning.main, 0.3)}`, color: "text.secondary" }}
+								>
 									Subir = mas causas activas = mas docs compitiendo = mas lento por causa
 								</Typography>
-								<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}>
+								<Typography
+									variant="caption"
+									sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}
+								>
 									Bajar = menos contention = cada causa individual mas rapida
 								</Typography>
 							</Stack>
@@ -536,7 +648,15 @@ Ejemplo con 7 causas activas (~3500 docs) y concurrency=2:
 					</Stack>
 
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-						<Box sx={{ flex: 1, p: 2, borderRadius: 1.5, border: `2px solid ${theme.palette.info.main}`, bgcolor: alpha(theme.palette.info.main, 0.04) }}>
+						<Box
+							sx={{
+								flex: 1,
+								p: 2,
+								borderRadius: 1.5,
+								border: `2px solid ${theme.palette.info.main}`,
+								bgcolor: alpha(theme.palette.info.main, 0.04),
+							}}
+						>
 							<Typography variant="subtitle2" fontWeight={700} color="info.main" gutterBottom>
 								autoIndex.batchSize
 							</Typography>
@@ -544,16 +664,30 @@ Ejemplo con 7 causas activas (~3500 docs) y concurrency=2:
 								Cuantas causas encola Auto-Index por ciclo de escaneo.
 							</Typography>
 							<Stack spacing={0.5}>
-								<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.warning.main, 0.3)}`, color: "text.secondary" }}>
+								<Typography
+									variant="caption"
+									sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.warning.main, 0.3)}`, color: "text.secondary" }}
+								>
 									Subir = mas causas encoladas por ciclo = cola mas cargada
 								</Typography>
-								<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}>
+								<Typography
+									variant="caption"
+									sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}
+								>
 									Bajar = menos presion en la cola = procesamiento mas predecible
 								</Typography>
 							</Stack>
 						</Box>
 
-						<Box sx={{ flex: 1, p: 2, borderRadius: 1.5, border: `2px solid ${theme.palette.warning.main}`, bgcolor: alpha(theme.palette.warning.main, 0.04) }}>
+						<Box
+							sx={{
+								flex: 1,
+								p: 2,
+								borderRadius: 1.5,
+								border: `2px solid ${theme.palette.warning.main}`,
+								bgcolor: alpha(theme.palette.warning.main, 0.04),
+							}}
+						>
 							<Typography variant="subtitle2" fontWeight={700} color="warning.main" gutterBottom>
 								Rate Limiter (indexDocument)
 							</Typography>
@@ -561,10 +695,16 @@ Ejemplo con 7 causas activas (~3500 docs) y concurrency=2:
 								Maximo de jobs por intervalo de tiempo (ej: 20 cada 60s).
 							</Typography>
 							<Stack spacing={0.5}>
-								<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}>
+								<Typography
+									variant="caption"
+									sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}
+								>
 									Protege servicios externos de sobrecarga (OpenAI, Pinecone)
 								</Typography>
-								<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.warning.main, 0.3)}`, color: "text.secondary" }}>
+								<Typography
+									variant="caption"
+									sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.warning.main, 0.3)}`, color: "text.secondary" }}
+								>
 									Puede ser el cuello de botella real si es muy restrictivo
 								</Typography>
 							</Stack>
@@ -642,7 +782,8 @@ Ejemplo con 7 causas activas (~3500 docs) y concurrency=2:
 				<SectionTitle>Rate limits de servicios externos</SectionTitle>
 
 				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-					El pipeline depende de servicios externos con limites propios. Estos limites determinan hasta donde se puede escalar la concurrencia antes de recibir errores 429 (Too Many Requests).
+					El pipeline depende de servicios externos con limites propios. Estos limites determinan hasta donde se puede escalar la
+					concurrencia antes de recibir errores 429 (Too Many Requests).
 				</Typography>
 
 				{/* OpenAI */}
@@ -659,7 +800,21 @@ Ejemplo con 7 causas activas (~3500 docs) y concurrency=2:
 					</Typography>
 
 					<Box sx={{ overflowX: "auto" }}>
-						<Box component="table" sx={{ width: "100%", borderCollapse: "collapse", "& th, & td": { px: 1.5, py: 0.75, fontSize: "0.75rem", borderBottom: `1px solid ${theme.palette.divider}`, textAlign: "left" }, "& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.primary.main, 0.04) } }}>
+						<Box
+							component="table"
+							sx={{
+								width: "100%",
+								borderCollapse: "collapse",
+								"& th, & td": {
+									px: 1.5,
+									py: 0.75,
+									fontSize: "0.75rem",
+									borderBottom: `1px solid ${theme.palette.divider}`,
+									textAlign: "left",
+								},
+								"& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.primary.main, 0.04) },
+							}}
+						>
 							<thead>
 								<tr>
 									<th>Tier</th>
@@ -670,17 +825,48 @@ Ejemplo con 7 causas activas (~3500 docs) y concurrency=2:
 								</tr>
 							</thead>
 							<tbody>
-								<tr><td>Tier 1</td><td>$5 pagados</td><td>~500</td><td>~1,000,000</td><td>~2,000</td></tr>
-								<tr><td>Tier 2</td><td>$50 + 7 dias</td><td>~500</td><td>~1,000,000</td><td>~2,000</td></tr>
-								<tr><td>Tier 3</td><td>Mayor spend</td><td>~1,000</td><td>~5,000,000</td><td>~10,000</td></tr>
-								<tr><td>Tier 4</td><td>Mayor spend</td><td>~5,000</td><td>~5,000,000</td><td>~10,000</td></tr>
-								<tr><td>Tier 5</td><td>Mayor spend</td><td>~10,000</td><td>~10,000,000</td><td>~20,000</td></tr>
+								<tr>
+									<td>Tier 1</td>
+									<td>$5 pagados</td>
+									<td>~500</td>
+									<td>~1,000,000</td>
+									<td>~2,000</td>
+								</tr>
+								<tr>
+									<td>Tier 2</td>
+									<td>$50 + 7 dias</td>
+									<td>~500</td>
+									<td>~1,000,000</td>
+									<td>~2,000</td>
+								</tr>
+								<tr>
+									<td>Tier 3</td>
+									<td>Mayor spend</td>
+									<td>~1,000</td>
+									<td>~5,000,000</td>
+									<td>~10,000</td>
+								</tr>
+								<tr>
+									<td>Tier 4</td>
+									<td>Mayor spend</td>
+									<td>~5,000</td>
+									<td>~5,000,000</td>
+									<td>~10,000</td>
+								</tr>
+								<tr>
+									<td>Tier 5</td>
+									<td>Mayor spend</td>
+									<td>~10,000</td>
+									<td>~10,000,000</td>
+									<td>~20,000</td>
+								</tr>
 							</tbody>
 						</Box>
 					</Box>
 
 					<Typography variant="caption" color="text.disabled" display="block" sx={{ mt: 1 }}>
-						* Chunks/min estimado asumiendo ~500 tokens por chunk. Valores aproximados basados en datos historicos de la documentacion de OpenAI.
+						* Chunks/min estimado asumiendo ~500 tokens por chunk. Valores aproximados basados en datos historicos de la documentacion de
+						OpenAI.
 					</Typography>
 
 					<Stack spacing={0.5} sx={{ mt: 1.5 }}>
@@ -706,7 +892,21 @@ Ejemplo con 7 causas activas (~3500 docs) y concurrency=2:
 					</Typography>
 
 					<Box sx={{ overflowX: "auto" }}>
-						<Box component="table" sx={{ width: "100%", borderCollapse: "collapse", "& th, & td": { px: 1.5, py: 0.75, fontSize: "0.75rem", borderBottom: `1px solid ${theme.palette.divider}`, textAlign: "left" }, "& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.warning.main, 0.04) } }}>
+						<Box
+							component="table"
+							sx={{
+								width: "100%",
+								borderCollapse: "collapse",
+								"& th, & td": {
+									px: 1.5,
+									py: 0.75,
+									fontSize: "0.75rem",
+									borderBottom: `1px solid ${theme.palette.divider}`,
+									textAlign: "left",
+								},
+								"& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.warning.main, 0.04) },
+							}}
+						>
 							<thead>
 								<tr>
 									<th>Limite</th>
@@ -715,11 +915,31 @@ Ejemplo con 7 causas activas (~3500 docs) y concurrency=2:
 								</tr>
 							</thead>
 							<tbody>
-								<tr><td>Upsert requests</td><td>100 req/s</td><td>Por namespace</td></tr>
-								<tr><td>Upsert data</td><td>50 MB/s</td><td>Por namespace</td></tr>
-								<tr><td>Max batch</td><td>1,000 vectores o 2 MB</td><td>Por request</td></tr>
-								<tr><td>Query requests</td><td>100 req/s</td><td>Por namespace</td></tr>
-								<tr><td>Metadata por vector</td><td>40 KB max</td><td>Por record</td></tr>
+								<tr>
+									<td>Upsert requests</td>
+									<td>100 req/s</td>
+									<td>Por namespace</td>
+								</tr>
+								<tr>
+									<td>Upsert data</td>
+									<td>50 MB/s</td>
+									<td>Por namespace</td>
+								</tr>
+								<tr>
+									<td>Max batch</td>
+									<td>1,000 vectores o 2 MB</td>
+									<td>Por request</td>
+								</tr>
+								<tr>
+									<td>Query requests</td>
+									<td>100 req/s</td>
+									<td>Por namespace</td>
+								</tr>
+								<tr>
+									<td>Metadata por vector</td>
+									<td>40 KB max</td>
+									<td>Por record</td>
+								</tr>
 							</tbody>
 						</Box>
 					</Box>
@@ -744,7 +964,21 @@ Ejemplo con 7 causas activas (~3500 docs) y concurrency=2:
 					</Typography>
 
 					<Box sx={{ overflowX: "auto" }}>
-						<Box component="table" sx={{ width: "100%", borderCollapse: "collapse", "& th, & td": { px: 1.5, py: 0.75, fontSize: "0.75rem", borderBottom: `1px solid ${theme.palette.divider}`, textAlign: "left" }, "& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.warning.main, 0.04) } }}>
+						<Box
+							component="table"
+							sx={{
+								width: "100%",
+								borderCollapse: "collapse",
+								"& th, & td": {
+									px: 1.5,
+									py: 0.75,
+									fontSize: "0.75rem",
+									borderBottom: `1px solid ${theme.palette.divider}`,
+									textAlign: "left",
+								},
+								"& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.warning.main, 0.04) },
+							}}
+						>
 							<thead>
 								<tr>
 									<th>Plan</th>
@@ -756,9 +990,30 @@ Ejemplo con 7 causas activas (~3500 docs) y concurrency=2:
 								</tr>
 							</thead>
 							<tbody>
-								<tr><td>Starter</td><td>Gratis</td><td>2M</td><td>5</td><td>100</td><td>2 GB</td></tr>
-								<tr><td>Standard</td><td>$50/mes</td><td>Ilimitado</td><td>100</td><td>10,000</td><td>Ilimitado</td></tr>
-								<tr><td>Enterprise</td><td>$500/mes</td><td>Ilimitado</td><td>200</td><td>100,000</td><td>Ilimitado</td></tr>
+								<tr>
+									<td>Starter</td>
+									<td>Gratis</td>
+									<td>2M</td>
+									<td>5</td>
+									<td>100</td>
+									<td>2 GB</td>
+								</tr>
+								<tr>
+									<td>Standard</td>
+									<td>$50/mes</td>
+									<td>Ilimitado</td>
+									<td>100</td>
+									<td>10,000</td>
+									<td>Ilimitado</td>
+								</tr>
+								<tr>
+									<td>Enterprise</td>
+									<td>$500/mes</td>
+									<td>Ilimitado</td>
+									<td>200</td>
+									<td>100,000</td>
+									<td>Ilimitado</td>
+								</tr>
 							</tbody>
 						</Box>
 					</Box>
@@ -782,46 +1037,87 @@ Ejemplo con 7 causas activas (~3500 docs) y concurrency=2:
 				<SectionTitle>Donde esta el cuello de botella real</SectionTitle>
 
 				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-					Con la configuracion actual (indexDocument.concurrency=2), el sistema esta lejos de los limites de OpenAI y Pinecone.
-					El factor limitante es la baja concurrencia combinada con la cola compartida entre multiples causas.
+					Con la configuracion actual (indexDocument.concurrency=2), el sistema esta lejos de los limites de OpenAI y Pinecone. El factor
+					limitante es la baja concurrencia combinada con la cola compartida entre multiples causas.
 				</Typography>
 
 				<Stack spacing={1.5}>
-					<Box sx={{ p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.success.main, 0.03) }}>
+					<Box
+						sx={{
+							p: 1.5,
+							borderRadius: 1.5,
+							border: `1px solid ${theme.palette.divider}`,
+							bgcolor: alpha(theme.palette.success.main, 0.03),
+						}}
+					>
 						<Stack direction="row" spacing={1} alignItems="center">
-							<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.success.main, minWidth: 80 }}>Holgado</Typography>
+							<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.success.main, minWidth: 80 }}>
+								Holgado
+							</Typography>
 							<Typography variant="caption" color="text.secondary">
 								OpenAI embeddings — Tier 1 permite ~2,000 chunks/min, con concurrency=10 se usarian ~50-100 chunks/min
 							</Typography>
 						</Stack>
 					</Box>
-					<Box sx={{ p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.success.main, 0.03) }}>
+					<Box
+						sx={{
+							p: 1.5,
+							borderRadius: 1.5,
+							border: `1px solid ${theme.palette.divider}`,
+							bgcolor: alpha(theme.palette.success.main, 0.03),
+						}}
+					>
 						<Stack direction="row" spacing={1} alignItems="center">
-							<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.success.main, minWidth: 80 }}>Holgado</Typography>
+							<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.success.main, minWidth: 80 }}>
+								Holgado
+							</Typography>
 							<Typography variant="caption" color="text.secondary">
 								Pinecone upserts — 100 req/s por namespace, con concurrency=10 se usarian ~10 req/s max
 							</Typography>
 						</Stack>
 					</Box>
-					<Box sx={{ p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.warning.main, 0.03) }}>
+					<Box
+						sx={{
+							p: 1.5,
+							borderRadius: 1.5,
+							border: `1px solid ${theme.palette.divider}`,
+							bgcolor: alpha(theme.palette.warning.main, 0.03),
+						}}
+					>
 						<Stack direction="row" spacing={1} alignItems="center">
-							<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.warning.main, minWidth: 80 }}>Moderado</Typography>
+							<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.warning.main, minWidth: 80 }}>
+								Moderado
+							</Typography>
 							<Typography variant="caption" color="text.secondary">
 								RAM del servidor — cada worker carga PDFs en memoria (~10-50 MB por doc grande). Monitorear con concurrency alta
 							</Typography>
 						</Stack>
 					</Box>
-					<Box sx={{ p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.warning.main, 0.03) }}>
+					<Box
+						sx={{
+							p: 1.5,
+							borderRadius: 1.5,
+							border: `1px solid ${theme.palette.divider}`,
+							bgcolor: alpha(theme.palette.warning.main, 0.03),
+						}}
+					>
 						<Stack direction="row" spacing={1} alignItems="center">
-							<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.warning.main, minWidth: 80 }}>Moderado</Typography>
+							<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.warning.main, minWidth: 80 }}>
+								Moderado
+							</Typography>
 							<Typography variant="caption" color="text.secondary">
-								OCR local (Tesseract) — concurrency=1, rate limit 3 jobs/min, CPU-intensivo (~1.2 GB RAM). Los docs con OCR hacen doble pasada por indexDocument
+								OCR local (Tesseract) — concurrency=1, rate limit 3 jobs/min, CPU-intensivo (~1.2 GB RAM). Los docs con OCR hacen doble
+								pasada por indexDocument
 							</Typography>
 						</Stack>
 					</Box>
-					<Box sx={{ p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.error.main, 0.03) }}>
+					<Box
+						sx={{ p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.error.main, 0.03) }}
+					>
 						<Stack direction="row" spacing={1} alignItems="center">
-							<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.error.main, minWidth: 80 }}>Limitante</Typography>
+							<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.error.main, minWidth: 80 }}>
+								Limitante
+							</Typography>
 							<Typography variant="caption" color="text.secondary">
 								indexDocument.concurrency=2 + cola compartida entre 7 causas — la cola es el cuello de botella principal
 							</Typography>
@@ -857,25 +1153,51 @@ const HelpInfrastructureSection: React.FC = () => {
 
 				<Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 2 }}>
 					<Box sx={{ flex: 1, p: 2, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}`, textAlign: "center" }}>
-						<Typography variant="caption" color="text.secondary" display="block">CPU</Typography>
-						<Typography variant="h6" fontWeight={700}>AMD Ryzen 7 5700X</Typography>
-						<Typography variant="caption" color="text.secondary">8 cores / 16 threads</Typography>
+						<Typography variant="caption" color="text.secondary" display="block">
+							CPU
+						</Typography>
+						<Typography variant="h6" fontWeight={700}>
+							AMD Ryzen 7 5700X
+						</Typography>
+						<Typography variant="caption" color="text.secondary">
+							8 cores / 16 threads
+						</Typography>
 					</Box>
 					<Box sx={{ flex: 1, p: 2, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}`, textAlign: "center" }}>
-						<Typography variant="caption" color="text.secondary" display="block">RAM</Typography>
-						<Typography variant="h6" fontWeight={700}>32 GB</Typography>
-						<Typography variant="caption" color="text.secondary">~30 GB disponibles</Typography>
+						<Typography variant="caption" color="text.secondary" display="block">
+							RAM
+						</Typography>
+						<Typography variant="h6" fontWeight={700}>
+							32 GB
+						</Typography>
+						<Typography variant="caption" color="text.secondary">
+							~30 GB disponibles
+						</Typography>
 					</Box>
 					<Box sx={{ flex: 1, p: 2, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}`, textAlign: "center" }}>
-						<Typography variant="caption" color="text.secondary" display="block">Swap</Typography>
-						<Typography variant="h6" fontWeight={700}>8 GB</Typography>
-						<Typography variant="caption" color="text.secondary">Respaldo de emergencia</Typography>
+						<Typography variant="caption" color="text.secondary" display="block">
+							Swap
+						</Typography>
+						<Typography variant="h6" fontWeight={700}>
+							8 GB
+						</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Respaldo de emergencia
+						</Typography>
 					</Box>
 				</Stack>
 
-				<Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.info.main, 0.04), border: `1px solid ${alpha(theme.palette.info.main, 0.15)}` }}>
+				<Box
+					sx={{
+						p: 1.5,
+						borderRadius: 1.5,
+						bgcolor: alpha(theme.palette.info.main, 0.04),
+						border: `1px solid ${alpha(theme.palette.info.main, 0.15)}`,
+					}}
+				>
 					<Typography variant="caption" color="text.secondary">
-						IP: <strong>100.98.180.101</strong> · Usuario: <strong>worker_02</strong> · Ryzen 5700X tiene buen rendimiento single-thread que beneficia a Tesseract OCR
+						IP: <strong>100.98.180.101</strong> · Usuario: <strong>worker_02</strong> · Ryzen 5700X tiene buen rendimiento single-thread que
+						beneficia a Tesseract OCR
 					</Typography>
 				</Box>
 			</SectionBox>
@@ -889,7 +1211,15 @@ const HelpInfrastructureSection: React.FC = () => {
 				</Typography>
 
 				<Box sx={{ overflowX: "auto" }}>
-					<Box component="table" sx={{ width: "100%", borderCollapse: "collapse", "& th, & td": { px: 1.5, py: 1, fontSize: "0.75rem", borderBottom: `1px solid ${theme.palette.divider}`, textAlign: "left" }, "& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.primary.main, 0.04) } }}>
+					<Box
+						component="table"
+						sx={{
+							width: "100%",
+							borderCollapse: "collapse",
+							"& th, & td": { px: 1.5, py: 1, fontSize: "0.75rem", borderBottom: `1px solid ${theme.palette.divider}`, textAlign: "left" },
+							"& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.primary.main, 0.04) },
+						}}
+					>
 						<thead>
 							<tr>
 								<th>Worker</th>
@@ -901,52 +1231,94 @@ const HelpInfrastructureSection: React.FC = () => {
 						</thead>
 						<tbody>
 							<tr>
-								<td><strong>indexDocument</strong></td>
-								<td><Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700, color: theme.palette.success.main }}>15</Typography></td>
+								<td>
+									<strong>indexDocument</strong>
+								</td>
+								<td>
+									<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700, color: theme.palette.success.main }}>
+										15
+									</Typography>
+								</td>
 								<td>~1 core (I/O bound)</td>
 								<td>~1.8 GB</td>
 								<td>Red-bound — espera APIs</td>
 							</tr>
 							<tr>
-								<td><strong>ocrDocument</strong></td>
-								<td><Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700, color: theme.palette.warning.main }}>4</Typography></td>
+								<td>
+									<strong>ocrDocument</strong>
+								</td>
+								<td>
+									<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700, color: theme.palette.warning.main }}>
+										4
+									</Typography>
+								</td>
 								<td>~8 cores</td>
 								<td>~4 GB</td>
 								<td>CPU-intensivo (Tesseract)</td>
 							</tr>
 							<tr>
-								<td><strong>indexCausa</strong></td>
-								<td><Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>2</Typography></td>
+								<td>
+									<strong>indexCausa</strong>
+								</td>
+								<td>
+									<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>
+										2
+									</Typography>
+								</td>
 								<td>despreciable</td>
 								<td>~200 MB</td>
 								<td>Liviano — solo encola docs</td>
 							</tr>
 							<tr>
-								<td><strong>autoIndex</strong></td>
-								<td><Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>1</Typography></td>
+								<td>
+									<strong>autoIndex</strong>
+								</td>
+								<td>
+									<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>
+										1
+									</Typography>
+								</td>
 								<td>despreciable</td>
 								<td>~120 MB</td>
 								<td>Cron — escaneo periodico</td>
 							</tr>
 							<tr>
-								<td><strong>recovery</strong></td>
-								<td><Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>1</Typography></td>
+								<td>
+									<strong>recovery</strong>
+								</td>
+								<td>
+									<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>
+										1
+									</Typography>
+								</td>
 								<td>despreciable</td>
 								<td>~120 MB</td>
 								<td>Cron — escaneo periodico</td>
 							</tr>
 							<tr>
-								<td><strong>generateSummary</strong></td>
-								<td><Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>2</Typography></td>
+								<td>
+									<strong>generateSummary</strong>
+								</td>
+								<td>
+									<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700 }}>
+										2
+									</Typography>
+								</td>
 								<td>despreciable</td>
 								<td>~200 MB</td>
 								<td>API-bound (OpenAI LLM)</td>
 							</tr>
 							<tr style={{ fontWeight: 700 }}>
-								<td><strong>TOTAL</strong></td>
+								<td>
+									<strong>TOTAL</strong>
+								</td>
 								<td></td>
-								<td><strong>~10 cores pico</strong></td>
-								<td><strong>~6.5 GB</strong></td>
+								<td>
+									<strong>~10 cores pico</strong>
+								</td>
+								<td>
+									<strong>~6.5 GB</strong>
+								</td>
 								<td>Margen: ~6 cores, ~24 GB RAM</td>
 							</tr>
 						</tbody>
@@ -980,7 +1352,21 @@ const HelpInfrastructureSection: React.FC = () => {
 				</Typography>
 
 				<Box sx={{ overflowX: "auto", mb: 3 }}>
-					<Box component="table" sx={{ width: "100%", borderCollapse: "collapse", "& th, & td": { px: 1.5, py: 0.75, fontSize: "0.75rem", borderBottom: `1px solid ${theme.palette.divider}`, textAlign: "left" }, "& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.success.main, 0.04) } }}>
+					<Box
+						component="table"
+						sx={{
+							width: "100%",
+							borderCollapse: "collapse",
+							"& th, & td": {
+								px: 1.5,
+								py: 0.75,
+								fontSize: "0.75rem",
+								borderBottom: `1px solid ${theme.palette.divider}`,
+								textAlign: "left",
+							},
+							"& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.success.main, 0.04) },
+						}}
+					>
 						<thead>
 							<tr>
 								<th>Escenario</th>
@@ -997,18 +1383,37 @@ const HelpInfrastructureSection: React.FC = () => {
 								<td>~17h (wall-clock con contention)</td>
 							</tr>
 							<tr style={{ fontWeight: 700 }}>
-								<td><Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.success.main }}>worker_02 (indexDoc=15, ocr=4)</Typography></td>
-								<td><strong>~330</strong></td>
-								<td><strong>~2,300</strong></td>
-								<td><strong>~2.5h</strong></td>
+								<td>
+									<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.success.main }}>
+										worker_02 (indexDoc=15, ocr=4)
+									</Typography>
+								</td>
+								<td>
+									<strong>~330</strong>
+								</td>
+								<td>
+									<strong>~2,300</strong>
+								</td>
+								<td>
+									<strong>~2.5h</strong>
+								</td>
 							</tr>
 						</tbody>
 					</Box>
 				</Box>
 
-				<Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.info.main, 0.04), border: `1px solid ${alpha(theme.palette.info.main, 0.15)}`, mb: 3 }}>
+				<Box
+					sx={{
+						p: 1.5,
+						borderRadius: 1.5,
+						bgcolor: alpha(theme.palette.info.main, 0.04),
+						border: `1px solid ${alpha(theme.palette.info.main, 0.15)}`,
+						mb: 3,
+					}}
+				>
 					<Typography variant="caption" color="text.secondary">
-						<strong>Nota:</strong> el avg de 17h por causa es wall-clock (incluye espera en cola compartida con otras causas). El throughput real es alto porque multiples causas avanzan en paralelo — sus docs se intercalan en la cola FIFO.
+						<strong>Nota:</strong> el avg de 17h por causa es wall-clock (incluye espera en cola compartida con otras causas). El throughput
+						real es alto porque multiples causas avanzan en paralelo — sus docs se intercalan en la cola FIFO.
 					</Typography>
 				</Box>
 
@@ -1018,7 +1423,21 @@ const HelpInfrastructureSection: React.FC = () => {
 				</Typography>
 
 				<Box sx={{ overflowX: "auto", mb: 2 }}>
-					<Box component="table" sx={{ width: "100%", borderCollapse: "collapse", "& th, & td": { px: 1.5, py: 0.75, fontSize: "0.75rem", borderBottom: `1px solid ${theme.palette.divider}`, textAlign: "left" }, "& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.error.main, 0.04) } }}>
+					<Box
+						component="table"
+						sx={{
+							width: "100%",
+							borderCollapse: "collapse",
+							"& th, & td": {
+								px: 1.5,
+								py: 0.75,
+								fontSize: "0.75rem",
+								borderBottom: `1px solid ${theme.palette.divider}`,
+								textAlign: "left",
+							},
+							"& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.error.main, 0.04) },
+						}}
+					>
 						<thead>
 							<tr>
 								<th>Configuracion</th>
@@ -1035,18 +1454,36 @@ const HelpInfrastructureSection: React.FC = () => {
 								<td>—</td>
 							</tr>
 							<tr style={{ fontWeight: 700 }}>
-								<td><Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.success.main }}>worker_02 (indexDoc=15, ocr=4)</Typography></td>
+								<td>
+									<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.success.main }}>
+										worker_02 (indexDoc=15, ocr=4)
+									</Typography>
+								</td>
 								<td>~108</td>
-								<td><strong>~8 horas</strong></td>
-								<td><Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.success.main }}>~7x mas rapido</Typography></td>
+								<td>
+									<strong>~8 horas</strong>
+								</td>
+								<td>
+									<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.success.main }}>
+										~7x mas rapido
+									</Typography>
+								</td>
 							</tr>
 						</tbody>
 					</Box>
 				</Box>
 
-				<Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.info.main, 0.04), border: `1px solid ${alpha(theme.palette.info.main, 0.15)}` }}>
+				<Box
+					sx={{
+						p: 1.5,
+						borderRadius: 1.5,
+						bgcolor: alpha(theme.palette.info.main, 0.04),
+						border: `1px solid ${alpha(theme.palette.info.main, 0.15)}`,
+					}}
+				>
 					<Typography variant="caption" color="text.secondary">
-						Estimaciones basadas en datos reales (89 causas/48h). La mejora ~7x surge de escalar indexDocument de 2 a 15 (7.5x) y OCR de 1 a 4 (4x). El factor OCR reduce la mejora neta si hay alto porcentaje de PDFs escaneados.
+						Estimaciones basadas en datos reales (89 causas/48h). La mejora ~7x surge de escalar indexDocument de 2 a 15 (7.5x) y OCR de 1 a
+						4 (4x). El factor OCR reduce la mejora neta si hay alto porcentaje de PDFs escaneados.
 					</Typography>
 				</Box>
 			</SectionBox>
@@ -1056,7 +1493,14 @@ const HelpInfrastructureSection: React.FC = () => {
 				<SectionTitle>Perfil de consumo por tipo de worker</SectionTitle>
 
 				<Stack spacing={2}>
-					<Box sx={{ p: 2, borderRadius: 1.5, border: `2px solid ${theme.palette.success.main}`, bgcolor: alpha(theme.palette.success.main, 0.04) }}>
+					<Box
+						sx={{
+							p: 2,
+							borderRadius: 1.5,
+							border: `2px solid ${theme.palette.success.main}`,
+							bgcolor: alpha(theme.palette.success.main, 0.04),
+						}}
+					>
 						<Typography variant="subtitle2" fontWeight={700} color="success.main" gutterBottom>
 							indexDocument — I/O bound (red)
 						</Typography>
@@ -1064,28 +1508,53 @@ const HelpInfrastructureSection: React.FC = () => {
 							El trabajo real lo hacen servicios externos. El worker solo coordina las llamadas.
 						</Typography>
 						<Stack spacing={0.5}>
-							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}>
+							<Typography
+								variant="caption"
+								sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}
+							>
 								Descarga PDF: espera red (PJN/S3) — ~10 MB RAM por descarga
 							</Typography>
-							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}>
+							<Typography
+								variant="caption"
+								sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}
+							>
 								Extraccion texto (pdf-parse): CPU minimo, ~50 MB RAM por PDF grande
 							</Typography>
-							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}>
+							<Typography
+								variant="caption"
+								sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}
+							>
 								Chunking: CPU minimo, memoria proporcional al texto
 							</Typography>
-							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}>
+							<Typography
+								variant="caption"
+								sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}
+							>
 								Embeddings (OpenAI API): espera red — sin consumo local
 							</Typography>
-							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}>
+							<Typography
+								variant="caption"
+								sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, color: "text.secondary" }}
+							>
 								Upsert (Pinecone): espera red — sin consumo local
 							</Typography>
-							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.info.main, 0.5)}`, color: "text.secondary", fontWeight: 600 }}>
+							<Typography
+								variant="caption"
+								sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.info.main, 0.5)}`, color: "text.secondary", fontWeight: 600 }}
+							>
 								~120 MB RAM por slot de concurrency. Con concurrency=15: ~1.8 GB total
 							</Typography>
 						</Stack>
 					</Box>
 
-					<Box sx={{ p: 2, borderRadius: 1.5, border: `2px solid ${theme.palette.error.main}`, bgcolor: alpha(theme.palette.error.main, 0.04) }}>
+					<Box
+						sx={{
+							p: 2,
+							borderRadius: 1.5,
+							border: `2px solid ${theme.palette.error.main}`,
+							bgcolor: alpha(theme.palette.error.main, 0.04),
+						}}
+					>
 						<Typography variant="subtitle2" fontWeight={700} color="error.main" gutterBottom>
 							ocrDocument — CPU bound (Tesseract)
 						</Typography>
@@ -1093,16 +1562,28 @@ const HelpInfrastructureSection: React.FC = () => {
 							El mas demandante. Convierte imagenes de PDF a texto usando OCR local.
 						</Typography>
 						<Stack spacing={0.5}>
-							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.error.main, 0.3)}`, color: "text.secondary" }}>
+							<Typography
+								variant="caption"
+								sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.error.main, 0.3)}`, color: "text.secondary" }}
+							>
 								Consume ~2 cores por instancia (multiples threads por pagina)
 							</Typography>
-							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.error.main, 0.3)}`, color: "text.secondary" }}>
+							<Typography
+								variant="caption"
+								sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.error.main, 0.3)}`, color: "text.secondary" }}
+							>
 								~1 GB RAM por instancia (imagenes descomprimidas en memoria)
 							</Typography>
-							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.error.main, 0.3)}`, color: "text.secondary" }}>
+							<Typography
+								variant="caption"
+								sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.error.main, 0.3)}`, color: "text.secondary" }}
+							>
 								Genera doble pasada por indexDocument (falla extraccion → OCR → re-encola)
 							</Typography>
-							<Typography variant="caption" sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.info.main, 0.5)}`, color: "text.secondary", fontWeight: 600 }}>
+							<Typography
+								variant="caption"
+								sx={{ pl: 1, borderLeft: `2px solid ${alpha(theme.palette.info.main, 0.5)}`, color: "text.secondary", fontWeight: 600 }}
+							>
 								Con concurrency=4: ~8 cores + ~4 GB RAM — mitad de la CPU del servidor
 							</Typography>
 						</Stack>
@@ -1113,7 +1594,8 @@ const HelpInfrastructureSection: React.FC = () => {
 							Otros workers — livianos
 						</Typography>
 						<Typography variant="caption" color="text.secondary">
-							indexCausa, autoIndex, recovery y generateSummary consumen recursos minimos (queries MongoDB y llamadas API). En conjunto: ~1 core y ~640 MB RAM. No requieren optimizacion.
+							indexCausa, autoIndex, recovery y generateSummary consumen recursos minimos (queries MongoDB y llamadas API). En conjunto: ~1
+							core y ~640 MB RAM. No requieren optimizacion.
 						</Typography>
 					</Box>
 				</Stack>
@@ -1124,11 +1606,26 @@ const HelpInfrastructureSection: React.FC = () => {
 				<SectionTitle>Guia de escalado por cada 100 docs</SectionTitle>
 
 				<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
-					Requerimientos estimados de infraestructura para procesar lotes de 100 documentos, segun el porcentaje de documentos que requieren OCR:
+					Requerimientos estimados de infraestructura para procesar lotes de 100 documentos, segun el porcentaje de documentos que requieren
+					OCR:
 				</Typography>
 
 				<Box sx={{ overflowX: "auto" }}>
-					<Box component="table" sx={{ width: "100%", borderCollapse: "collapse", "& th, & td": { px: 1.5, py: 0.75, fontSize: "0.75rem", borderBottom: `1px solid ${theme.palette.divider}`, textAlign: "left" }, "& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.primary.main, 0.04) } }}>
+					<Box
+						component="table"
+						sx={{
+							width: "100%",
+							borderCollapse: "collapse",
+							"& th, & td": {
+								px: 1.5,
+								py: 0.75,
+								fontSize: "0.75rem",
+								borderBottom: `1px solid ${theme.palette.divider}`,
+								textAlign: "left",
+							},
+							"& th": { fontWeight: 700, color: "text.secondary", bgcolor: alpha(theme.palette.primary.main, 0.04) },
+						}}
+					>
 						<thead>
 							<tr>
 								<th>Perfil</th>
@@ -1157,7 +1654,11 @@ const HelpInfrastructureSection: React.FC = () => {
 								<td>Volumen medio, OCR moderado</td>
 							</tr>
 							<tr>
-								<td><Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.success.main }}>Agresivo</Typography></td>
+								<td>
+									<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.success.main }}>
+										Agresivo
+									</Typography>
+								</td>
 								<td>16 vCPU</td>
 								<td>16 GB</td>
 								<td>15</td>

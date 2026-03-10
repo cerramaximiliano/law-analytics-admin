@@ -1,18 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-	Box,
-	Card,
-	CardContent,
-	Grid,
-	Typography,
-	Stack,
-	Chip,
-	Alert,
-	Skeleton,
-	Button,
-	useTheme,
-	alpha,
-} from "@mui/material";
+import { Box, Card, CardContent, Grid, Typography, Stack, Chip, Alert, Skeleton, Button, useTheme, alpha } from "@mui/material";
 import { Refresh, TickCircle, CloseCircle, Timer1, Warning2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { ScrapingManagerService, ManagerState, WorkerStateInfo } from "api/scrapingManager";
@@ -67,9 +54,7 @@ const MisCausasStatsTab: React.FC = () => {
 	if (!managerStatus) {
 		return (
 			<Alert severity="info" variant="outlined">
-				<Typography variant="body2">
-					No hay datos de estado disponibles. El Scraping Manager puede no haber sido ejecutado aún.
-				</Typography>
+				<Typography variant="body2">No hay datos de estado disponibles. El Scraping Manager puede no haber sido ejecutado aún.</Typography>
 			</Alert>
 		);
 	}
@@ -92,7 +77,9 @@ const MisCausasStatsTab: React.FC = () => {
 				<Grid item xs={6} sm={3}>
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5 }}>
-							<Typography variant="caption" color="text.secondary">Manager</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Manager
+							</Typography>
 							<Stack direction="row" spacing={1} alignItems="center">
 								{managerStatus.isRunning ? (
 									<TickCircle size={18} color={theme.palette.success.main} />
@@ -109,7 +96,9 @@ const MisCausasStatsTab: React.FC = () => {
 				<Grid item xs={6} sm={3}>
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5 }}>
-							<Typography variant="caption" color="text.secondary">Servicio</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Servicio
+							</Typography>
 							<Stack direction="row" spacing={1} alignItems="center">
 								<Typography variant="h6" color={managerStatus.serviceAvailable ? "info.main" : "warning.main"}>
 									{managerStatus.serviceAvailable ? "Disponible" : "No disponible"}
@@ -121,7 +110,9 @@ const MisCausasStatsTab: React.FC = () => {
 				<Grid item xs={6} sm={3}>
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5 }}>
-							<Typography variant="caption" color="text.secondary">Config Version</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Config Version
+							</Typography>
 							<Typography variant="h6">{managerStatus.configVersion || "N/A"}</Typography>
 						</CardContent>
 					</Card>
@@ -129,13 +120,11 @@ const MisCausasStatsTab: React.FC = () => {
 				<Grid item xs={6} sm={3}>
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5 }}>
-							<Typography variant="caption" color="text.secondary">Último Poll</Typography>
-							<Typography variant="body2">
-								{lastPoll ? lastPoll.toLocaleString("es-AR") : "N/A"}
+							<Typography variant="caption" color="text.secondary">
+								Último Poll
 							</Typography>
-							{isStale && (
-								<Chip label="Desactualizado" size="small" color="warning" sx={{ mt: 0.5, fontSize: "0.6rem" }} />
-							)}
+							<Typography variant="body2">{lastPoll ? lastPoll.toLocaleString("es-AR") : "N/A"}</Typography>
+							{isStale && <Chip label="Desactualizado" size="small" color="warning" sx={{ mt: 0.5, fontSize: "0.6rem" }} />}
 						</CardContent>
 					</Card>
 				</Grid>
@@ -185,31 +174,40 @@ const MisCausasStatsTab: React.FC = () => {
 										) : (
 											<Grid container spacing={1}>
 												<Grid item xs={6}>
-													<Typography variant="caption" color="text.secondary">Cola</Typography>
+													<Typography variant="caption" color="text.secondary">
+														Cola
+													</Typography>
 													<Typography variant="h6">{ws.queueDepth}</Typography>
 												</Grid>
 												<Grid item xs={6}>
-													<Typography variant="caption" color="text.secondary">Instancias</Typography>
+													<Typography variant="caption" color="text.secondary">
+														Instancias
+													</Typography>
 													<Typography variant="h6">
 														{ws.currentInstances}
-														<Typography component="span" variant="caption" color="text.secondary"> / {ws.desiredInstances}</Typography>
+														<Typography component="span" variant="caption" color="text.secondary">
+															{" "}
+															/ {ws.desiredInstances}
+														</Typography>
 													</Typography>
 												</Grid>
 												<Grid item xs={6}>
-													<Typography variant="caption" color="text.secondary">Horario</Typography>
+													<Typography variant="caption" color="text.secondary">
+														Horario
+													</Typography>
 													<Stack direction="row" spacing={0.5} alignItems="center">
 														{ws.withinSchedule ? (
 															<TickCircle size={14} color={theme.palette.success.main} />
 														) : (
 															<Timer1 size={14} color={theme.palette.warning.main} />
 														)}
-														<Typography variant="body2">
-															{ws.withinSchedule ? "Dentro" : "Fuera"}
-														</Typography>
+														<Typography variant="body2">{ws.withinSchedule ? "Dentro" : "Fuera"}</Typography>
 													</Stack>
 												</Grid>
 												<Grid item xs={6}>
-													<Typography variant="caption" color="text.secondary">Razón</Typography>
+													<Typography variant="caption" color="text.secondary">
+														Razón
+													</Typography>
 													<Typography variant="caption" display="block" sx={{ wordBreak: "break-word" }}>
 														{ws.reason}
 													</Typography>
@@ -225,13 +223,7 @@ const MisCausasStatsTab: React.FC = () => {
 												</Typography>
 												<Stack direction="row" spacing={1} flexWrap="wrap">
 													{Object.entries(ws.queueBreakdown).map(([key, val]) => (
-														<Chip
-															key={key}
-															label={`${key}: ${val}`}
-															size="small"
-															variant="outlined"
-															sx={{ fontSize: "0.6rem" }}
-														/>
+														<Chip key={key} label={`${key}: ${val}`} size="small" variant="outlined" sx={{ fontSize: "0.6rem" }} />
 													))}
 												</Stack>
 											</Box>

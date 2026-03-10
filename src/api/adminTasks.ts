@@ -127,11 +127,7 @@ class AdminTasksService {
 	/**
 	 * Actualizar subtarea
 	 */
-	static async updateSubtask(
-		taskId: string,
-		subtaskId: string,
-		data: { title?: string; completed?: boolean }
-	): Promise<TaskResponse> {
+	static async updateSubtask(taskId: string, subtaskId: string, data: { title?: string; completed?: boolean }): Promise<TaskResponse> {
 		try {
 			const response = await adminAxios.patch<TaskResponse>(`/api/admin-tasks/${taskId}/subtasks/${subtaskId}`, data);
 			return response.data;
