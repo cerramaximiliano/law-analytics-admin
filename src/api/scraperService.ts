@@ -86,10 +86,11 @@ export interface ScraperJob {
 }
 
 export interface ScraperJobStats {
-	byStatus: Array<{ _id: string; count: number }>;
-	byType: Array<{ _id: string; count: number }>;
-	today: { total: number; completed: number; failed: number };
-	oldestPending?: { scheduledAt: string; jobType: string };
+	byStatus: Record<string, number>;
+	total: number;
+	byType: Array<{ _id: string; count: number; pending: number }>;
+	today: Record<string, number>;
+	oldestPendingJob?: { scheduledAt: string; jobType: string };
 }
 
 // ─── Scraper Runs ─────────────────────────────────────────────────────────────
@@ -271,6 +272,15 @@ class ScraperService {
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al obtener estadisticas de runs");
+		}
+	}
+
+	async clearRuns(olderThanDays = 7): Promise<{ success: boolean; data: { deleted: number } }> {
+		try {
+			const response = await adminAxios.post("/api/scraper/runs/clear", { olderThanDays });
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al limpiar runs");
 		}
 	}
 

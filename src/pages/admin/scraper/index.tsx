@@ -562,10 +562,10 @@ const JobsTab = () => {
 		}
 	};
 
-	const pendingCount = stats?.byStatus?.find((s) => s._id === "pending")?.count || 0;
-	const inProgressCount = stats?.byStatus?.find((s) => s._id === "in_progress")?.count || 0;
-	const completedCount = stats?.byStatus?.find((s) => s._id === "completed")?.count || 0;
-	const failedCount = stats?.byStatus?.find((s) => s._id === "failed")?.count || 0;
+	const pendingCount = stats?.byStatus?.["pending"] || 0;
+	const inProgressCount = stats?.byStatus?.["in_progress"] || 0;
+	const completedCount = stats?.byStatus?.["completed"] || 0;
+	const failedCount = stats?.byStatus?.["failed"] || 0;
 
 	return (
 		<Stack spacing={3}>
@@ -760,11 +760,13 @@ const RunsTab = () => {
 	const [loading, setLoading] = useState(true);
 	const [loadingStats, setLoadingStats] = useState(true);
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(20);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [total, setTotal] = useState(0);
 	const [filterStatus, setFilterStatus] = useState("");
 	const [detailRun, setDetailRun] = useState<ScraperRun | null>(null);
 	const [detailOpen, setDetailOpen] = useState(false);
+	const [clearDialogOpen, setClearDialogOpen] = useState(false);
+	const [clearing, setClearing] = useState(false);
 
 	const fetchRuns = useCallback(async () => {
 		try {
@@ -775,7 +777,7 @@ const RunsTab = () => {
 				...(filterStatus && { status: filterStatus }),
 			});
 			setRuns(response.data);
-			setTotal(response.pagination?.total || 0);
+			setTotal((response as any).count || response.pagination?.total || 0);
 		} catch (error: any) {
 			enqueueSnackbar(error?.message || "Error al cargar los runs", { variant: "error" });
 		} finally {
@@ -802,6 +804,21 @@ const RunsTab = () => {
 	useEffect(() => {
 		fetchStats();
 	}, [fetchStats]);
+
+	const handleClearRuns = async () => {
+		try {
+			setClearing(true);
+			const response = await ScraperService.clearRuns(7);
+			enqueueSnackbar(`${response.data.deleted} runs eliminados`, { variant: "success" });
+			setClearDialogOpen(false);
+			fetchRuns();
+			fetchStats();
+		} catch (error: any) {
+			enqueueSnackbar(error?.message || "Error al limpiar runs", { variant: "error" });
+		} finally {
+			setClearing(false);
+		}
+	};
 
 	const handleViewDetail = async (run: ScraperRun) => {
 		try {
@@ -862,6 +879,15 @@ const RunsTab = () => {
 					</Select>
 				</FormControl>
 				<Box flex={1} />
+				<Button
+					variant="outlined"
+					size="small"
+					color="error"
+					startIcon={<Trash size={16} />}
+					onClick={() => setClearDialogOpen(true)}
+				>
+					Limpiar runs
+				</Button>
 				<Button
 					variant="outlined"
 					size="small"
@@ -1051,6 +1077,21 @@ const RunsTab = () => {
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setDetailOpen(false)}>Cerrar</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Clear Runs Dialog */}
+			<Dialog open={clearDialogOpen} onClose={() => setClearDialogOpen(false)}>
+				<DialogTitle>Limpiar Runs</DialogTitle>
+				<DialogContent>
+					<Typography>Eliminar todos los runs completados, fallidos y detenidos con más de 7 días de antigüedad?</Typography>
+					<Alert severity="warning" sx={{ mt: 2 }}>Esta acción no se puede deshacer.</Alert>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setClearDialogOpen(false)} disabled={clearing}>Cancelar</Button>
+					<Button variant="contained" color="error" onClick={handleClearRuns} disabled={clearing}>
+						{clearing ? "Limpiando..." : "Limpiar"}
+					</Button>
 				</DialogActions>
 			</Dialog>
 		</Stack>
