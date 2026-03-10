@@ -39,6 +39,10 @@ export interface ScraperConfigScraping {
 	schedule: ScraperConfigSchedule;
 	checkIntervalHours: number;
 	finalStatuses: string[];
+	notificationPatterns: {
+		statusMatches: string[];
+		descriptionMatches: string[];
+	};
 }
 
 export interface ScraperConfig {
@@ -138,6 +142,11 @@ export interface PostalTracking {
 	folderId?: string;
 	movementId?: string;
 	notificationId?: string;
+	documentId?: string;
+	attachment?: string;
+	startDate?: string;
+	notificationDate?: string;
+	deadlineDays?: number;
 	label?: string;
 	tags?: string[];
 	createdAt: string;
@@ -309,6 +318,10 @@ class ScraperService {
 		tags?: string[];
 		userId?: string;
 		folderId?: string;
+		documentId?: string;
+		attachment?: string;
+		notificationDate?: string;
+		deadlineDays?: number;
 	}): Promise<{ success: boolean; data: PostalTracking }> {
 		try {
 			const response = await adminAxios.post("/api/postal-tracking", data);
