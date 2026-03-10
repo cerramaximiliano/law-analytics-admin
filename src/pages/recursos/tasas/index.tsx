@@ -4,6 +4,7 @@ import {
 	Card,
 	Collapse,
 	Dialog,
+	Popover,
 	DialogActions,
 	DialogContent,
 	DialogTitle,
@@ -37,7 +38,7 @@ import {
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { Refresh, SearchNormal1, Edit, CloseCircle, TickCircle, Chart, ArrowDown2, ArrowUp2, Code } from "iconsax-react";
+import { Refresh, SearchNormal1, Edit, CloseCircle, TickCircle, Chart, ArrowDown2, ArrowUp2, Code, Link1, InfoCircle } from "iconsax-react";
 import { getTasasListado, consultarTasas, actualizarValorTasa, rellenarGaps, TasaConfig, TasaResultItem } from "utils/tasasService";
 
 // ─── Tab panel ────────────────────────────────────────────────────────────────
@@ -216,6 +217,113 @@ const FechasFaltantesRow = ({ tasa, colSpan, onRellenar, loading }: FechasFaltan
 	);
 };
 
+// ─── Mapa de información de fuentes por tipoTasa ─────────────────────────────
+
+interface FuenteDetails {
+	tipo: "bcra" | "bna" | "cpacf";
+	label: string;
+	url: string;
+	selector?: string;
+	campo?: string;
+	formula?: string;
+	rateId?: string;
+	extra?: string;
+}
+
+const TASA_FUENTE_INFO: Record<string, FuenteDetails> = {
+	tasaActivaBNA: {
+		tipo: "bna",
+		label: "BNA Web",
+		url: "https://www.bna.com.ar/home/informacionalusuariofinanciero",
+		selector: ".plazoTable h3  →  siguiente sibling UL  →  LI",
+		campo: 'li con texto "Tasa Efectiva Mensual Vencida"  →  regex T\\.E\\.M\\.\\s*\\(\\d+ días\\)\\s*=\\s*(\\d+[.,]\\d+)%',
+		formula: "valor = TEM / 30  (porcentaje diario)",
+	},
+	tasaActivaTnaBNA: {
+		tipo: "bna",
+		label: "BNA Web",
+		url: "https://www.bna.com.ar/home/informacionalusuariofinanciero",
+		selector: ".plazoTable h3  →  siguiente sibling UL  →  LI",
+		campo: 'li con texto "Tasa Nominal Anual Vencida con capitalización cada 30 días"  →  regex T\\.N\\.A\\.\\s*\\(\\d+ días\\)\\s*=\\s*(\\d+[.,]\\d+)%',
+		formula: "valor = TNA / 365  (porcentaje diario)",
+	},
+	tasaActivaCNAT2658: {
+		tipo: "bna",
+		label: "BNA Web",
+		url: "https://www.bna.com.ar/home/informacionalusuariofinanciero",
+		selector: ".plazoTable h3  →  siguiente sibling UL  →  LI",
+		campo: 'li con texto "Tasa Efectiva Anual Vencida"  →  regex T\\.E\\.A\\.\\s*=\\s*(\\d+[.,]\\d+)%',
+		formula: "valor = TEA / 365  (porcentaje diario)",
+	},
+	tasaActivaCNAT2764: {
+		tipo: "bna",
+		label: "BNA Web",
+		url: "https://www.bna.com.ar/home/informacionalusuariofinanciero",
+		selector: ".plazoTable h3  →  siguiente sibling UL  →  LI",
+		campo: 'li con texto "Tasa Efectiva Anual Vencida"  →  regex T\\.E\\.A\\.\\s*=\\s*(\\d+[.,]\\d+)%',
+		formula: "valor = TEA / 365  (porcentaje diario)",
+	},
+	tasaPasivaBNA: {
+		tipo: "cpacf",
+		label: "CPACF",
+		url: "https://tasas.cpacf.org.ar",
+		rateId: "2",
+		selector: 'select[name="rate"]  →  option value="2"',
+		formula: "Porcentaje diario directo (campo % Diario de la tabla de resultados)",
+	},
+	tasaPasivaBP: {
+		tipo: "cpacf",
+		label: "CPACF",
+		url: "https://tasas.cpacf.org.ar",
+		rateId: "4",
+		selector: 'select[name="rate"]  →  option value="4"',
+		formula: "Porcentaje diario directo (campo % Diario de la tabla de resultados)",
+	},
+	tasaActivaBPDolares: {
+		tipo: "cpacf",
+		label: "CPACF",
+		url: "https://tasas.cpacf.org.ar",
+		rateId: "14",
+		selector: 'select[name="rate"]  →  option value="14"',
+		formula: "Porcentaje diario directo (campo % Diario de la tabla de resultados)",
+	},
+	tasaPasivaBPDolares: {
+		tipo: "cpacf",
+		label: "CPACF",
+		url: "https://tasas.cpacf.org.ar",
+		rateId: "15",
+		selector: 'select[name="rate"]  →  option value="15"',
+		formula: "Porcentaje diario directo (campo % Diario de la tabla de resultados)",
+	},
+	tasaPasivaBCRA: {
+		tipo: "bcra",
+		label: "BCRA API",
+		url: "https://api.bcra.gob.ar/estadisticas/v4.0/monetarias/43",
+		extra: "idVariable=43 — Tasa de interés de pases pasivos (referencia diaria BCRA)",
+		formula: "Valor anual publicado / 365 → porcentaje diario",
+	},
+	cer: {
+		tipo: "bcra",
+		label: "BCRA API",
+		url: "https://api.bcra.gob.ar/estadisticas/v4.0/monetarias/30",
+		extra: "idVariable=30 — CER (Coeficiente de Estabilización de Referencia)",
+		formula: "Índice directo — se almacena como publicado por BCRA",
+	},
+	icl: {
+		tipo: "bcra",
+		label: "BCRA API",
+		url: "https://api.bcra.gob.ar/estadisticas/v4.0/monetarias/40",
+		extra: "idVariable=40 — ICL (Índice para Contratos de Locación)",
+		formula: "Índice directo — se almacena como publicado por BCRA",
+	},
+};
+
+const TIPO_COLOR: Record<string, "info" | "primary" | "success"> = {
+	bcra: "info",
+	bna: "primary",
+	cpacf: "success",
+};
+
 // ─── Fuente chip ──────────────────────────────────────────────────────────────
 
 const FUENTE_COLORS: Record<string, "primary" | "secondary" | "success" | "warning" | "info" | "default"> = {
@@ -270,6 +378,9 @@ const TasasInteres = () => {
 	const [jsonDialog, setJsonDialog] = useState<{ open: boolean; data: unknown; title: string }>({ open: false, data: null, title: "" });
 	const openJsonDialog = (title: string, data: unknown) => setJsonDialog({ open: true, data, title });
 	const closeJsonDialog = () => setJsonDialog((prev) => ({ ...prev, open: false }));
+
+	// Fuente info popover
+	const [fuentePopover, setFuentePopover] = useState<{ anchor: HTMLElement; tipoTasa: string } | null>(null);
 
 	// ── Load listado on mount ────────────────────────────────────────────────
 
@@ -490,11 +601,24 @@ const TasasInteres = () => {
 													<CoverageDetail tasa={tasa} />
 												</TableCell>
 										<TableCell align="center">
-											<Tooltip title="Ver JSON del documento">
-												<IconButton size="small" color="default" onClick={() => openJsonDialog(tasa.label, tasa)}>
-													<Code size={18} />
-												</IconButton>
-											</Tooltip>
+											<Stack direction="row" spacing={0.5} justifyContent="center">
+												{TASA_FUENTE_INFO[tasa.value] && (
+													<Tooltip title="Ver fuente de datos">
+														<IconButton
+															size="small"
+															color={TIPO_COLOR[TASA_FUENTE_INFO[tasa.value].tipo]}
+															onClick={(e) => setFuentePopover({ anchor: e.currentTarget, tipoTasa: tasa.value })}
+														>
+															<InfoCircle size={18} />
+														</IconButton>
+													</Tooltip>
+												)}
+												<Tooltip title="Ver JSON del documento">
+													<IconButton size="small" color="default" onClick={() => openJsonDialog(tasa.label, tasa)}>
+														<Code size={18} />
+													</IconButton>
+												</Tooltip>
+											</Stack>
 										</TableCell>
 											</TableRow>
 											<FechasFaltantesRow
@@ -933,6 +1057,80 @@ const TasasInteres = () => {
 			</Stack>
 		</TabPanel>
 		</MainCard>
+
+		{/* ═══════ Fuente info popover ═══════ */}
+		{(() => {
+			const info = fuentePopover ? TASA_FUENTE_INFO[fuentePopover.tipoTasa] : null;
+			return (
+				<Popover
+					open={!!fuentePopover}
+					anchorEl={fuentePopover?.anchor}
+					onClose={() => setFuentePopover(null)}
+					anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+					transformOrigin={{ vertical: "top", horizontal: "right" }}
+				>
+					<Box sx={{ p: 2, maxWidth: 520 }}>
+						{info && (
+							<Stack spacing={1.5}>
+								<Stack direction="row" alignItems="center" spacing={1}>
+									<Chip label={info.label} color={TIPO_COLOR[info.tipo]} size="small" />
+									<Typography variant="subtitle2">{fuentePopover?.tipoTasa}</Typography>
+								</Stack>
+								<Divider />
+								<Stack spacing={0.5}>
+									<Typography variant="caption" color="text.secondary" fontWeight={600}>URL</Typography>
+									<Stack direction="row" alignItems="center" spacing={0.5}>
+										<Link1 size={13} />
+										<Typography
+											variant="caption"
+											component="a"
+											href={info.url}
+											target="_blank"
+											rel="noopener noreferrer"
+											sx={{ fontFamily: "monospace", wordBreak: "break-all", color: "primary.main" }}
+										>
+											{info.url}
+										</Typography>
+									</Stack>
+								</Stack>
+								{info.rateId && (
+									<Stack spacing={0.5}>
+										<Typography variant="caption" color="text.secondary" fontWeight={600}>Rate ID</Typography>
+										<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+											select[name="rate"] → option value="{info.rateId}"
+										</Typography>
+									</Stack>
+								)}
+								{info.selector && (
+									<Stack spacing={0.5}>
+										<Typography variant="caption" color="text.secondary" fontWeight={600}>Selector DOM</Typography>
+										<Typography variant="caption" sx={{ fontFamily: "monospace", whiteSpace: "pre-wrap" }}>{info.selector}</Typography>
+									</Stack>
+								)}
+								{info.campo && (
+									<Stack spacing={0.5}>
+										<Typography variant="caption" color="text.secondary" fontWeight={600}>Campo / Texto a buscar</Typography>
+										<Typography variant="caption" sx={{ fontFamily: "monospace", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>{info.campo}</Typography>
+									</Stack>
+								)}
+								{info.extra && (
+									<Stack spacing={0.5}>
+										<Typography variant="caption" color="text.secondary" fontWeight={600}>Detalle</Typography>
+										<Typography variant="caption" sx={{ fontFamily: "monospace" }}>{info.extra}</Typography>
+									</Stack>
+								)}
+								{info.formula && (
+									<Stack spacing={0.5}>
+										<Typography variant="caption" color="text.secondary" fontWeight={600}>Fórmula / Conversión</Typography>
+										<Typography variant="caption" sx={{ fontFamily: "monospace" }}>{info.formula}</Typography>
+									</Stack>
+								)}
+							</Stack>
+						)}
+					</Box>
+				</Popover>
+			);
+		})()}
 
 		{/* ═══════ JSON viewer dialog ═══════ */}
 		<Dialog open={jsonDialog.open} onClose={closeJsonDialog} maxWidth="md" fullWidth>
