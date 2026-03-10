@@ -1,5 +1,24 @@
 // assets
-import { Setting3, Folder2, MoneyRecive, Status, Sms, Receipt1, ProfileCircle, DiscountShape, Notification, DocumentText, Messages2, Wallet2, Chart, MessageQuestion, Layer, TaskSquare, Cloud } from "iconsax-react";
+import {
+	Setting3,
+	Folder2,
+	MoneyRecive,
+	Status,
+	Sms,
+	Receipt1,
+	ProfileCircle,
+	DiscountShape,
+	Notification,
+	DocumentText,
+	Messages2,
+	Wallet2,
+	Chart,
+	MessageQuestion,
+	Layer,
+	TaskSquare,
+	Cloud,
+	Box1,
+} from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -68,6 +87,14 @@ const admin: NavItemType = {
 					type: "item",
 					url: "/admin/infrastructure",
 					icon: Cloud,
+					breadcrumbs: true,
+				},
+				{
+					id: "workers-scraper-postal",
+					title: "Scraper Postal",
+					type: "item",
+					url: "/admin/workers/scraper",
+					icon: Box1,
 					breadcrumbs: true,
 				},
 			],
@@ -190,6 +217,14 @@ const admin: NavItemType = {
 			type: "item",
 			icon: Folder2,
 			url: "/admin/folders",
+			breadcrumbs: true,
+		},
+		{
+			id: "postal-tracking",
+			title: "Seguimientos Postales",
+			type: "item",
+			icon: Box1,
+			url: "/admin/postal-tracking",
 			breadcrumbs: true,
 		},
 		{
