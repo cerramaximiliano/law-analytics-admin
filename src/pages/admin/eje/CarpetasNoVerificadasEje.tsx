@@ -398,13 +398,11 @@ const CarpetasNoVerificadasEje = () => {
 												</TableCell>
 												<TableCell align="center">
 													{causa.errorCount > 0 ? (
-														<Chip
-															label={causa.errorCount}
-															size="small"
-															color="error"
-														/>
+														<Chip label={causa.errorCount} size="small" color="error" />
 													) : (
-														<Typography variant="caption" color="text.secondary">0</Typography>
+														<Typography variant="caption" color="text.secondary">
+															0
+														</Typography>
 													)}
 												</TableCell>
 												<TableCell sx={{ maxWidth: 200 }}>

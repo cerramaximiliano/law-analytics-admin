@@ -48,10 +48,7 @@ const MisCausasWorker: React.FC = () => {
 		try {
 			setLoading(true);
 			setUpdateConfigLoading(true);
-			const [managerRes, updateRes] = await Promise.all([
-				ScrapingManagerService.getConfig(),
-				CausasUpdateService.getConfig(),
-			]);
+			const [managerRes, updateRes] = await Promise.all([ScrapingManagerService.getConfig(), CausasUpdateService.getConfig()]);
 			if (managerRes.success) setConfig(managerRes.data);
 			if (updateRes.success) setUpdateConfig(updateRes.data);
 		} catch (error: any) {
@@ -161,8 +158,12 @@ const MisCausasWorker: React.FC = () => {
 							<Stack direction="row" spacing={1.5} alignItems="center">
 								<Setting2 size={20} />
 								<Box>
-									<Typography variant="body2" fontWeight={500}>Manager</Typography>
-									<Typography variant="caption" color="text.secondary">Config. global</Typography>
+									<Typography variant="body2" fontWeight={500}>
+										Manager
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Config. global
+									</Typography>
 								</Box>
 							</Stack>
 						}
@@ -173,8 +174,12 @@ const MisCausasWorker: React.FC = () => {
 							<Stack direction="row" spacing={1.5} alignItems="center">
 								<People size={20} />
 								<Box>
-									<Typography variant="body2" fontWeight={500}>Workers</Typography>
-									<Typography variant="caption" color="text.secondary">Config. por worker</Typography>
+									<Typography variant="body2" fontWeight={500}>
+										Workers
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Config. por worker
+									</Typography>
 								</Box>
 							</Stack>
 						}
@@ -185,8 +190,12 @@ const MisCausasWorker: React.FC = () => {
 							<Stack direction="row" spacing={1.5} alignItems="center">
 								<RefreshSquare size={20} />
 								<Box>
-									<Typography variant="body2" fontWeight={500}>Config. Updates</Typography>
-									<Typography variant="caption" color="text.secondary">Thresholds y resume</Typography>
+									<Typography variant="body2" fontWeight={500}>
+										Config. Updates
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Thresholds y resume
+									</Typography>
 								</Box>
 							</Stack>
 						}
@@ -197,8 +206,12 @@ const MisCausasWorker: React.FC = () => {
 							<Stack direction="row" spacing={1.5} alignItems="center">
 								<Clock size={20} />
 								<Box>
-									<Typography variant="body2" fontWeight={500}>Historial</Typography>
-									<Typography variant="caption" color="text.secondary">Runs de updates</Typography>
+									<Typography variant="body2" fontWeight={500}>
+										Historial
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Runs de updates
+									</Typography>
 								</Box>
 							</Stack>
 						}
@@ -209,8 +222,12 @@ const MisCausasWorker: React.FC = () => {
 							<Stack direction="row" spacing={1.5} alignItems="center">
 								<Chart size={20} />
 								<Box>
-									<Typography variant="body2" fontWeight={500}>Estadísticas</Typography>
-									<Typography variant="caption" color="text.secondary">Estado y métricas</Typography>
+									<Typography variant="body2" fontWeight={500}>
+										Estadísticas
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Estado y métricas
+									</Typography>
 								</Box>
 							</Stack>
 						}
@@ -221,8 +238,12 @@ const MisCausasWorker: React.FC = () => {
 							<Stack direction="row" spacing={1.5} alignItems="center">
 								<MessageQuestion size={20} />
 								<Box>
-									<Typography variant="body2" fontWeight={500}>Ayuda</Typography>
-									<Typography variant="caption" color="text.secondary">Guía de uso</Typography>
+									<Typography variant="body2" fontWeight={500}>
+										Ayuda
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Guía de uso
+									</Typography>
 								</Box>
 							</Stack>
 						}

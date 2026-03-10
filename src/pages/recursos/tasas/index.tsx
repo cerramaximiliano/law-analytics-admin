@@ -190,24 +190,9 @@ const FechasFaltantesRow = ({ tasa, colSpan, onRellenar, loading }: FechasFaltan
 						<Box sx={{ px: 4, py: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.04) }}>
 							<Stack direction="row" flexWrap="wrap" gap={0.75}>
 								{visible.map((f) => (
-									<Chip
-										key={f}
-										size="small"
-										variant="outlined"
-										color="warning"
-										label={formatDate(f)}
-										sx={{ fontSize: "0.7rem" }}
-									/>
+									<Chip key={f} size="small" variant="outlined" color="warning" label={formatDate(f)} sx={{ fontSize: "0.7rem" }} />
 								))}
-								{hidden > 0 && (
-									<Chip
-										size="small"
-										variant="filled"
-										color="warning"
-										label={`+${hidden} más`}
-										sx={{ fontSize: "0.7rem" }}
-									/>
-								)}
+								{hidden > 0 && <Chip size="small" variant="filled" color="warning" label={`+${hidden} más`} sx={{ fontSize: "0.7rem" }} />}
 							</Stack>
 						</Box>
 					</Collapse>
@@ -244,7 +229,8 @@ const TASA_FUENTE_INFO: Record<string, FuenteDetails> = {
 		label: "BNA Web",
 		url: "https://www.bna.com.ar/home/informacionalusuariofinanciero",
 		selector: ".plazoTable h3  →  siguiente sibling UL  →  LI",
-		campo: 'li con texto "Tasa Nominal Anual Vencida con capitalización cada 30 días"  →  regex T\\.N\\.A\\.\\s*\\(\\d+ días\\)\\s*=\\s*(\\d+[.,]\\d+)%',
+		campo:
+			'li con texto "Tasa Nominal Anual Vencida con capitalización cada 30 días"  →  regex T\\.N\\.A\\.\\s*\\(\\d+ días\\)\\s*=\\s*(\\d+[.,]\\d+)%',
 		formula: "valor = TNA / 365  (porcentaje diario)",
 	},
 	tasaActivaCNAT2658: {
@@ -330,13 +316,18 @@ const FUENTE_COLORS: Record<string, "primary" | "secondary" | "success" | "warni
 	"BCRA API": "info",
 	"BNA Web": "primary",
 	"BNA PDF": "secondary",
-	"Consejo": "success",
-	"Colegio": "success",
+	Consejo: "success",
+	Colegio: "success",
 	"Admin Manual": "warning",
 };
 
 const FuenteChip = ({ fuente }: { fuente: string | null | undefined }) => {
-	if (!fuente) return <Typography variant="caption" color="text.disabled">—</Typography>;
+	if (!fuente)
+		return (
+			<Typography variant="caption" color="text.disabled">
+				—
+			</Typography>
+		);
 	const color = FUENTE_COLORS[fuente] ?? "default";
 	return <Chip label={fuente} color={color} size="small" variant="outlined" />;
 };
@@ -480,7 +471,9 @@ const TasasInteres = () => {
 		try {
 			setLoadingRellenar(true);
 			await rellenarGaps();
-			enqueueSnackbar("Relleno de gaps iniciado en el servidor (todas las tasas). Los datos se actualizarán en segundo plano.", { variant: "info" });
+			enqueueSnackbar("Relleno de gaps iniciado en el servidor (todas las tasas). Los datos se actualizarán en segundo plano.", {
+				variant: "info",
+			});
 		} catch (error: unknown) {
 			const err = error as { response?: { data?: { message?: string } } };
 			enqueueSnackbar(err?.response?.data?.message || "Error al iniciar el relleno de gaps", { variant: "error" });
@@ -524,645 +517,756 @@ const TasasInteres = () => {
 
 	return (
 		<>
-		<MainCard title="Tasas de Interés" secondary={<Chart size={24} />}>
-			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-				<Tabs value={tabValue} onChange={(_e: SyntheticEvent, v: number) => setTabValue(v)}>
-					<Tab label="Estado Actual" />
-	\t\t\t\t<Tab label="Consulta por Fecha" />\n\t\t\t\t<Tab label="Documentación" />
-				</Tabs>
-			</Box>
+			<MainCard title="Tasas de Interés" secondary={<Chart size={24} />}>
+				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+					<Tabs value={tabValue} onChange={(_e: SyntheticEvent, v: number) => setTabValue(v)}>
+						<Tab label="Estado Actual" />
+						\t\t\t\t
+						<Tab label="Consulta por Fecha" />
+						\n\t\t\t\t
+						<Tab label="Documentación" />
+					</Tabs>
+				</Box>
 
-			{/* ═══════════════════════════════════════════════════════════════
+				{/* ═══════════════════════════════════════════════════════════════
 			    TAB 0 — Estado actual
 			══════════════════════════════════════════════════════════════════ */}
-			<TabPanel value={tabValue} index={0}>
-				<Stack spacing={2}>
-					<Box display="flex" justifyContent="flex-end" gap={1} alignItems="center">
-						<Tooltip title="Rellena automáticamente las fechas faltantes de todas las tasas usando CPACF. El proceso corre en segundo plano.">
-							<span>
-								<Button
-									variant="outlined"
-									color="warning"
-									size="small"
-									disabled={loadingRellenar}
-									onClick={handleRellenarTodos}
-									startIcon={loadingRellenar ? <CircularProgress size={14} /> : undefined}
-								>
-									{loadingRellenar ? "Iniciando..." : "Rellenar Gaps"}
-								</Button>
-							</span>
-						</Tooltip>
-						<Tooltip title="Refrescar">
-							<IconButton onClick={fetchListado} disabled={loadingListado}>
-								<Refresh size={20} />
-							</IconButton>
-						</Tooltip>
-					</Box>
-
-					{loadingListado ? (
-						<Box display="flex" justifyContent="center" py={6}>
-							<CircularProgress />
-						</Box>
-					) : listado.length === 0 ? (
-						<Alert severity="info">No se encontraron tasas configuradas.</Alert>
-					) : (
-						<TableContainer component={Card}>
-							<Table>
-								<TableHead>
-									<TableRow>
-										<TableCell>Tipo de Tasa</TableCell>
-										<TableCell>Fecha Inicio</TableCell>
-										<TableCell>Última Fecha</TableCell>
-										<TableCell>Última Completa</TableCell>
-										<TableCell align="center">Estado</TableCell>
-										<TableCell>Detalle de cobertura</TableCell>
-										<TableCell align="center" sx={{ width: 80 }}>Acciones</TableCell>
-									</TableRow>
-								</TableHead>
-								<TableBody>
-									{listado.map((tasa) => (
-										<>
-											<TableRow key={tasa.value} hover sx={{ "& td": { borderBottom: (tasa.fechasFaltantes?.length ?? 0) > 0 ? "none" : undefined } }}>
-												<TableCell>
-													<Typography variant="body2" fontWeight={600}>
-														{tasa.label}
-													</Typography>
-													<Typography variant="caption" color="text.secondary">
-														{tasa.value}
-													</Typography>
-												</TableCell>
-												<TableCell>{formatDate(tasa.fechaInicio)}</TableCell>
-												<TableCell>{formatDate(tasa.fechaUltima)}</TableCell>
-												<TableCell>{formatDate(tasa.fechaUltimaCompleta)}</TableCell>
-												<TableCell align="center">
-													<StatusChip tasa={tasa} />
-												</TableCell>
-												<TableCell>
-													<CoverageDetail tasa={tasa} />
-												</TableCell>
-										<TableCell align="center">
-											<Stack direction="row" spacing={0.5} justifyContent="center">
-												{TASA_FUENTE_INFO[tasa.value] && (
-													<Tooltip title="Ver fuente de datos">
-														<IconButton
-															size="small"
-															color={TIPO_COLOR[TASA_FUENTE_INFO[tasa.value].tipo]}
-															onClick={(e) => setFuentePopover({ anchor: e.currentTarget, tipoTasa: tasa.value })}
-														>
-															<InfoCircle size={18} />
-														</IconButton>
-													</Tooltip>
-												)}
-												<Tooltip title="Ver JSON del documento">
-													<IconButton size="small" color="default" onClick={() => openJsonDialog(tasa.label, tasa)}>
-														<Code size={18} />
-													</IconButton>
-												</Tooltip>
-											</Stack>
-										</TableCell>
-											</TableRow>
-											<FechasFaltantesRow
-											key={`gaps-${tasa.value}`}
-											tasa={tasa}
-											colSpan={7}
-											onRellenar={() => handleRellenarTasa(tasa.value)}
-											loading={!!loadingRellenarTasa[tasa.value]}
-										/>
-										</>
-									))}
-								</TableBody>
-							</Table>
-						</TableContainer>
-					)}
-				</Stack>
-			</TabPanel>
-
-			{/* ═══════════════════════════════════════════════════════════════
-			    TAB 1 — Consulta y edición por fecha
-			══════════════════════════════════════════════════════════════════ */}
-			<TabPanel value={tabValue} index={1}>
-				<Stack spacing={3}>
-					{/* Formulario de búsqueda */}
-					<Card sx={{ p: 2 }}>
-						<Typography variant="h6" gutterBottom>
-							Parámetros de búsqueda
-						</Typography>
-						<Grid container spacing={2} alignItems="flex-end">
-							<Grid item xs={12} md={3}>
-								<FormControl fullWidth disabled={loadingListado}>
-									<InputLabel>Tipo de Tasa</InputLabel>
-									<Select
-										value={campo}
-										onChange={(e) => handleCampoChange(e.target.value)}
-										label="Tipo de Tasa"
+				<TabPanel value={tabValue} index={0}>
+					<Stack spacing={2}>
+						<Box display="flex" justifyContent="flex-end" gap={1} alignItems="center">
+							<Tooltip title="Rellena automáticamente las fechas faltantes de todas las tasas usando CPACF. El proceso corre en segundo plano.">
+								<span>
+									<Button
+										variant="outlined"
+										color="warning"
+										size="small"
+										disabled={loadingRellenar}
+										onClick={handleRellenarTodos}
+										startIcon={loadingRellenar ? <CircularProgress size={14} /> : undefined}
 									>
-										{listado.map((t) => (
-											<MenuItem key={t.value} value={t.value}>
-												{t.label}
-											</MenuItem>
-										))}
-									</Select>
-								</FormControl>
-							</Grid>
-							<Grid item xs={12} md={3}>
-								<TextField
-									fullWidth
-									label="Fecha desde"
-									type="date"
-									value={fechaDesde}
-									onChange={(e) => setFechaDesde(e.target.value)}
-									InputLabelProps={{ shrink: true }}
-									helperText={listado.find((t) => t.value === campo)?.fechaInicio ? `Inicio: ${formatDate(listado.find((t) => t.value === campo)!.fechaInicio)}` : ""}
-								/>
-							</Grid>
-							<Grid item xs={12} md={3}>
-								<TextField
-									fullWidth
-									label="Fecha hasta"
-									type="date"
-									value={fechaHasta}
-									onChange={(e) => setFechaHasta(e.target.value)}
-									InputLabelProps={{ shrink: true }}
-									helperText={listado.find((t) => t.value === campo)?.fechaUltima ? `Último dato: ${formatDate(listado.find((t) => t.value === campo)!.fechaUltima)}` : ""}
-								/>
-							</Grid>
-							<Grid item xs={12} md={2}>
-								<FormControlLabel
-									control={<Switch checked={completo} onChange={(e) => setCompleto(e.target.checked)} />}
-									label="Rango completo"
-									sx={{ ml: 0.5 }}
-								/>
-							</Grid>
-							<Grid item xs={12} md={1}>
-								<Button
-									fullWidth
-									variant="contained"
-									startIcon={<SearchNormal1 size={16} />}
-									onClick={handleSearch}
-									disabled={loadingConsulta}
-									sx={{ height: "56px" }}
-								>
-									Buscar
-								</Button>
-							</Grid>
-						</Grid>
-					</Card>
-
-					{/* Resultados */}
-					{loadingConsulta ? (
-						<Box display="flex" justifyContent="center" py={6}>
-							<CircularProgress />
+										{loadingRellenar ? "Iniciando..." : "Rellenar Gaps"}
+									</Button>
+								</span>
+							</Tooltip>
+							<Tooltip title="Refrescar">
+								<IconButton onClick={fetchListado} disabled={loadingListado}>
+									<Refresh size={20} />
+								</IconButton>
+							</Tooltip>
 						</Box>
-					) : hasSearched && resultados.length === 0 ? (
-						<Alert severity="info">No se encontraron registros para los parámetros seleccionados.</Alert>
-					) : resultados.length > 0 ? (
-						<TableContainer component={Card}>
-							<Box sx={{ px: 2, py: 1.5, borderBottom: "1px solid", borderColor: "divider" }}>
-								<Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1}>
-									<Typography variant="h6">
-										{selectedTasaLabel} — {resultados.length} registro{resultados.length !== 1 ? "s" : ""}
-									</Typography>
-									{/* Fuente stats + filter */}
-									<Stack direction="row" spacing={1} flexWrap="wrap">
-										<Tooltip title="Mostrar todos">
-											<Chip
-												label={`Todos (${resultados.length})`}
-												size="small"
-												variant={fuenteFilter === "all" ? "filled" : "outlined"}
-												color={fuenteFilter === "all" ? "primary" : "default"}
-												onClick={() => setFuenteFilter("all")}
-												sx={{ cursor: "pointer" }}
-											/>
-										</Tooltip>
-										{Object.entries(fuenteStats).map(([fuente, count]) => (
-											<Tooltip key={fuente} title={`Filtrar por: ${fuente}`}>
-												<Chip
-													label={`${fuente} (${count})`}
-													size="small"
-													variant={fuenteFilter === fuente ? "filled" : "outlined"}
-													color={fuenteFilter === fuente ? (FUENTE_COLORS[fuente] ?? "default") : "default"}
-													onClick={() => setFuenteFilter(fuente === fuenteFilter ? "all" : fuente)}
-													sx={{ cursor: "pointer" }}
-												/>
-											</Tooltip>
-										))}
-									</Stack>
-								</Stack>
+
+						{loadingListado ? (
+							<Box display="flex" justifyContent="center" py={6}>
+								<CircularProgress />
 							</Box>
-							<Table>
-								<TableHead>
-									<TableRow>
-										<TableCell>Fecha</TableCell>
-										<TableCell>Valor</TableCell>
-										<TableCell>Fuente</TableCell>
-										<TableCell align="center" sx={{ width: 100 }}>
-											Acciones
-										</TableCell>
-									</TableRow>
-								</TableHead>
-								<TableBody>
-									{filteredResultados.map((item) => {
-										const isEditing = editingRow === item.fecha;
-										const isSaving = savingRow === item.fecha;
-										return (
-											<TableRow key={item.fecha} hover>
-												<TableCell>{formatDate(item.fecha)}</TableCell>
-												<TableCell>
-													{isEditing ? (
-														<TextField
-															size="small"
-															value={editValue}
-															onChange={(e) => setEditValue(e.target.value)}
-															type="number"
-															inputProps={{ step: "any" }}
-															sx={{ width: 160 }}
-															autoFocus
-															onKeyDown={(e) => {
-																if (e.key === "Enter") handleSaveEdit(item);
-																if (e.key === "Escape") handleCancelEdit();
-															}}
-														/>
-													) : (
-														<Typography variant="body2" fontFamily="monospace">
-															{item.valor != null ? item.valor.toFixed(6) : "—"}
+						) : listado.length === 0 ? (
+							<Alert severity="info">No se encontraron tasas configuradas.</Alert>
+						) : (
+							<TableContainer component={Card}>
+								<Table>
+									<TableHead>
+										<TableRow>
+											<TableCell>Tipo de Tasa</TableCell>
+											<TableCell>Fecha Inicio</TableCell>
+											<TableCell>Última Fecha</TableCell>
+											<TableCell>Última Completa</TableCell>
+											<TableCell align="center">Estado</TableCell>
+											<TableCell>Detalle de cobertura</TableCell>
+											<TableCell align="center" sx={{ width: 80 }}>
+												Acciones
+											</TableCell>
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{listado.map((tasa) => (
+											<>
+												<TableRow
+													key={tasa.value}
+													hover
+													sx={{ "& td": { borderBottom: (tasa.fechasFaltantes?.length ?? 0) > 0 ? "none" : undefined } }}
+												>
+													<TableCell>
+														<Typography variant="body2" fontWeight={600}>
+															{tasa.label}
 														</Typography>
-													)}
-												</TableCell>
-												<TableCell>
-													<FuenteChip fuente={item.fuente} />
-												</TableCell>
-												<TableCell align="center">
-													{isEditing ? (
+														<Typography variant="caption" color="text.secondary">
+															{tasa.value}
+														</Typography>
+													</TableCell>
+													<TableCell>{formatDate(tasa.fechaInicio)}</TableCell>
+													<TableCell>{formatDate(tasa.fechaUltima)}</TableCell>
+													<TableCell>{formatDate(tasa.fechaUltimaCompleta)}</TableCell>
+													<TableCell align="center">
+														<StatusChip tasa={tasa} />
+													</TableCell>
+													<TableCell>
+														<CoverageDetail tasa={tasa} />
+													</TableCell>
+													<TableCell align="center">
 														<Stack direction="row" spacing={0.5} justifyContent="center">
-															<Tooltip title="Guardar (Enter)">
-																<span>
+															{TASA_FUENTE_INFO[tasa.value] && (
+																<Tooltip title="Ver fuente de datos">
 																	<IconButton
 																		size="small"
-																		color="success"
-																		onClick={() => handleSaveEdit(item)}
-																		disabled={isSaving}
+																		color={TIPO_COLOR[TASA_FUENTE_INFO[tasa.value].tipo]}
+																		onClick={(e) => setFuentePopover({ anchor: e.currentTarget, tipoTasa: tasa.value })}
 																	>
-																		{isSaving ? <CircularProgress size={16} /> : <TickCircle size={18} />}
+																		<InfoCircle size={18} />
 																	</IconButton>
-																</span>
-															</Tooltip>
-															<Tooltip title="Cancelar (Esc)">
-																<IconButton size="small" color="error" onClick={handleCancelEdit} disabled={isSaving}>
-																	<CloseCircle size={18} />
-																</IconButton>
-															</Tooltip>
-														</Stack>
-													) : (
-														<Stack direction="row" spacing={0.5} justifyContent="center">
-															<Tooltip title="Editar valor">
-																<IconButton size="small" color="primary" onClick={() => handleStartEdit(item)}>
-																	<Edit size={18} />
-																</IconButton>
-															</Tooltip>
+																</Tooltip>
+															)}
 															<Tooltip title="Ver JSON del documento">
-																<IconButton size="small" color="default" onClick={() => openJsonDialog(`${selectedTasaLabel} — ${formatDate(item.fecha)}`, item)}>
+																<IconButton size="small" color="default" onClick={() => openJsonDialog(tasa.label, tasa)}>
 																	<Code size={18} />
 																</IconButton>
 															</Tooltip>
 														</Stack>
-													)}
+													</TableCell>
+												</TableRow>
+												<FechasFaltantesRow
+													key={`gaps-${tasa.value}`}
+													tasa={tasa}
+													colSpan={7}
+													onRellenar={() => handleRellenarTasa(tasa.value)}
+													loading={!!loadingRellenarTasa[tasa.value]}
+												/>
+											</>
+										))}
+									</TableBody>
+								</Table>
+							</TableContainer>
+						)}
+					</Stack>
+				</TabPanel>
+
+				{/* ═══════════════════════════════════════════════════════════════
+			    TAB 1 — Consulta y edición por fecha
+			══════════════════════════════════════════════════════════════════ */}
+				<TabPanel value={tabValue} index={1}>
+					<Stack spacing={3}>
+						{/* Formulario de búsqueda */}
+						<Card sx={{ p: 2 }}>
+							<Typography variant="h6" gutterBottom>
+								Parámetros de búsqueda
+							</Typography>
+							<Grid container spacing={2} alignItems="flex-end">
+								<Grid item xs={12} md={3}>
+									<FormControl fullWidth disabled={loadingListado}>
+										<InputLabel>Tipo de Tasa</InputLabel>
+										<Select value={campo} onChange={(e) => handleCampoChange(e.target.value)} label="Tipo de Tasa">
+											{listado.map((t) => (
+												<MenuItem key={t.value} value={t.value}>
+													{t.label}
+												</MenuItem>
+											))}
+										</Select>
+									</FormControl>
+								</Grid>
+								<Grid item xs={12} md={3}>
+									<TextField
+										fullWidth
+										label="Fecha desde"
+										type="date"
+										value={fechaDesde}
+										onChange={(e) => setFechaDesde(e.target.value)}
+										InputLabelProps={{ shrink: true }}
+										helperText={
+											listado.find((t) => t.value === campo)?.fechaInicio
+												? `Inicio: ${formatDate(listado.find((t) => t.value === campo)!.fechaInicio)}`
+												: ""
+										}
+									/>
+								</Grid>
+								<Grid item xs={12} md={3}>
+									<TextField
+										fullWidth
+										label="Fecha hasta"
+										type="date"
+										value={fechaHasta}
+										onChange={(e) => setFechaHasta(e.target.value)}
+										InputLabelProps={{ shrink: true }}
+										helperText={
+											listado.find((t) => t.value === campo)?.fechaUltima
+												? `Último dato: ${formatDate(listado.find((t) => t.value === campo)!.fechaUltima)}`
+												: ""
+										}
+									/>
+								</Grid>
+								<Grid item xs={12} md={2}>
+									<FormControlLabel
+										control={<Switch checked={completo} onChange={(e) => setCompleto(e.target.checked)} />}
+										label="Rango completo"
+										sx={{ ml: 0.5 }}
+									/>
+								</Grid>
+								<Grid item xs={12} md={1}>
+									<Button
+										fullWidth
+										variant="contained"
+										startIcon={<SearchNormal1 size={16} />}
+										onClick={handleSearch}
+										disabled={loadingConsulta}
+										sx={{ height: "56px" }}
+									>
+										Buscar
+									</Button>
+								</Grid>
+							</Grid>
+						</Card>
+
+						{/* Resultados */}
+						{loadingConsulta ? (
+							<Box display="flex" justifyContent="center" py={6}>
+								<CircularProgress />
+							</Box>
+						) : hasSearched && resultados.length === 0 ? (
+							<Alert severity="info">No se encontraron registros para los parámetros seleccionados.</Alert>
+						) : resultados.length > 0 ? (
+							<TableContainer component={Card}>
+								<Box sx={{ px: 2, py: 1.5, borderBottom: "1px solid", borderColor: "divider" }}>
+									<Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1}>
+										<Typography variant="h6">
+											{selectedTasaLabel} — {resultados.length} registro{resultados.length !== 1 ? "s" : ""}
+										</Typography>
+										{/* Fuente stats + filter */}
+										<Stack direction="row" spacing={1} flexWrap="wrap">
+											<Tooltip title="Mostrar todos">
+												<Chip
+													label={`Todos (${resultados.length})`}
+													size="small"
+													variant={fuenteFilter === "all" ? "filled" : "outlined"}
+													color={fuenteFilter === "all" ? "primary" : "default"}
+													onClick={() => setFuenteFilter("all")}
+													sx={{ cursor: "pointer" }}
+												/>
+											</Tooltip>
+											{Object.entries(fuenteStats).map(([fuente, count]) => (
+												<Tooltip key={fuente} title={`Filtrar por: ${fuente}`}>
+													<Chip
+														label={`${fuente} (${count})`}
+														size="small"
+														variant={fuenteFilter === fuente ? "filled" : "outlined"}
+														color={fuenteFilter === fuente ? FUENTE_COLORS[fuente] ?? "default" : "default"}
+														onClick={() => setFuenteFilter(fuente === fuenteFilter ? "all" : fuente)}
+														sx={{ cursor: "pointer" }}
+													/>
+												</Tooltip>
+											))}
+										</Stack>
+									</Stack>
+								</Box>
+								<Table>
+									<TableHead>
+										<TableRow>
+											<TableCell>Fecha</TableCell>
+											<TableCell>Valor</TableCell>
+											<TableCell>Fuente</TableCell>
+											<TableCell align="center" sx={{ width: 100 }}>
+												Acciones
+											</TableCell>
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{filteredResultados.map((item) => {
+											const isEditing = editingRow === item.fecha;
+											const isSaving = savingRow === item.fecha;
+											return (
+												<TableRow key={item.fecha} hover>
+													<TableCell>{formatDate(item.fecha)}</TableCell>
+													<TableCell>
+														{isEditing ? (
+															<TextField
+																size="small"
+																value={editValue}
+																onChange={(e) => setEditValue(e.target.value)}
+																type="number"
+																inputProps={{ step: "any" }}
+																sx={{ width: 160 }}
+																autoFocus
+																onKeyDown={(e) => {
+																	if (e.key === "Enter") handleSaveEdit(item);
+																	if (e.key === "Escape") handleCancelEdit();
+																}}
+															/>
+														) : (
+															<Typography variant="body2" fontFamily="monospace">
+																{item.valor != null ? item.valor.toFixed(6) : "—"}
+															</Typography>
+														)}
+													</TableCell>
+													<TableCell>
+														<FuenteChip fuente={item.fuente} />
+													</TableCell>
+													<TableCell align="center">
+														{isEditing ? (
+															<Stack direction="row" spacing={0.5} justifyContent="center">
+																<Tooltip title="Guardar (Enter)">
+																	<span>
+																		<IconButton size="small" color="success" onClick={() => handleSaveEdit(item)} disabled={isSaving}>
+																			{isSaving ? <CircularProgress size={16} /> : <TickCircle size={18} />}
+																		</IconButton>
+																	</span>
+																</Tooltip>
+																<Tooltip title="Cancelar (Esc)">
+																	<IconButton size="small" color="error" onClick={handleCancelEdit} disabled={isSaving}>
+																		<CloseCircle size={18} />
+																	</IconButton>
+																</Tooltip>
+															</Stack>
+														) : (
+															<Stack direction="row" spacing={0.5} justifyContent="center">
+																<Tooltip title="Editar valor">
+																	<IconButton size="small" color="primary" onClick={() => handleStartEdit(item)}>
+																		<Edit size={18} />
+																	</IconButton>
+																</Tooltip>
+																<Tooltip title="Ver JSON del documento">
+																	<IconButton
+																		size="small"
+																		color="default"
+																		onClick={() => openJsonDialog(`${selectedTasaLabel} — ${formatDate(item.fecha)}`, item)}
+																	>
+																		<Code size={18} />
+																	</IconButton>
+																</Tooltip>
+															</Stack>
+														)}
+													</TableCell>
+												</TableRow>
+											);
+										})}
+									</TableBody>
+								</Table>
+							</TableContainer>
+						) : null}
+					</Stack>
+				</TabPanel>
+
+				{/* TAB 2 — Documentación */}
+				<TabPanel value={tabValue} index={2}>
+					<Stack spacing={3}>
+						<Card sx={{ p: 3 }}>
+							<Typography variant="h6" gutterBottom>
+								Arquitectura de fuentes
+							</Typography>
+							<Typography variant="body2" color="text.secondary" gutterBottom>
+								Los valores se almacenan como porcentaje de interés <strong>diario</strong> en la colección <code>Tasas</code>. La prioridad
+								de obtención es siempre: servicio nativo primero, CPACF/Consejo como fallback.
+							</Typography>
+							<Stack spacing={1.5} mt={2}>
+								{[
+									{ label: "1° Servicio nativo", desc: "BNA Web scraping · BCRA API REST", color: "success" as const },
+									{
+										label: "2° CPACF / Consejo",
+										desc: "tasas.cpacf.org.ar — cubre cualquier rango histórico desde 1991",
+										color: "warning" as const,
+									},
+									{ label: "3° Edición manual", desc: "Corrección puntual via UI — fuente: Admin Manual", color: "default" as const },
+								].map((row) => (
+									<Stack key={row.label} direction="row" alignItems="center" spacing={2}>
+										<Chip label={row.label} color={row.color} size="small" sx={{ minWidth: 160 }} />
+										<Typography variant="body2" color="text.secondary">
+											{row.desc}
+										</Typography>
+									</Stack>
+								))}
+							</Stack>
+						</Card>
+
+						<Card sx={{ p: 3 }}>
+							<Typography variant="h6" gutterBottom>
+								Fuentes por tipo de tasa
+							</Typography>
+							<TableContainer>
+								<Table size="small">
+									<TableHead>
+										<TableRow>
+											<TableCell>tipoTasa</TableCell>
+											<TableCell>Fuente primaria</TableCell>
+											<TableCell>Fallback CPACF rateId</TableCell>
+											<TableCell>Histórico disponible</TableCell>
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{[
+											{ tipo: "tasaActivaBNA", fuente: "BNA Web", rateId: "1", historico: "Solo día actual" },
+											{ tipo: "tasaActivaTnaBNA", fuente: "BNA Web", rateId: "25", historico: "Solo día actual" },
+											{ tipo: "tasaActivaCNAT2658", fuente: "BNA Web", rateId: "22", historico: "Solo día actual" },
+											{ tipo: "tasaActivaCNAT2764", fuente: "BNA Web", rateId: "23", historico: "Solo día actual" },
+											{ tipo: "tasaPasivaBNA", fuente: "CPACF", rateId: "2", historico: "Desde 1991 via CPACF" },
+											{ tipo: "tasaPasivaBP", fuente: "CPACF", rateId: "4", historico: "Desde 01/04/1991 via CPACF" },
+											{ tipo: "tasaActivaBPDolares", fuente: "CPACF", rateId: "14", historico: "Desde 13/10/1992 via CPACF" },
+											{ tipo: "tasaPasivaBPDolares", fuente: "CPACF", rateId: "15", historico: "Desde 02/11/1992 via CPACF" },
+											{ tipo: "tasaPasivaBCRA", fuente: "BCRA API", rateId: "—", historico: "Cualquier rango (idVar=43)" },
+											{ tipo: "cer", fuente: "BCRA API", rateId: "—", historico: "Cualquier rango (idVar=30)" },
+											{ tipo: "icl", fuente: "BCRA API", rateId: "—", historico: "Cualquier rango (idVar=40)" },
+										].map((r) => (
+											<TableRow key={r.tipo} hover>
+												<TableCell>
+													<code>{r.tipo}</code>
+												</TableCell>
+												<TableCell>
+													<Chip
+														label={r.fuente}
+														size="small"
+														color={r.fuente === "BNA Web" ? "primary" : r.fuente === "BCRA API" ? "info" : "success"}
+														variant="outlined"
+													/>
+												</TableCell>
+												<TableCell>{r.rateId}</TableCell>
+												<TableCell>
+													<Typography variant="caption" color="text.secondary">
+														{r.historico}
+													</Typography>
 												</TableCell>
 											</TableRow>
-										);
-									})}
-								</TableBody>
-							</Table>
-						</TableContainer>
-					) : null}
-				</Stack>
-			</TabPanel>
+										))}
+									</TableBody>
+								</Table>
+							</TableContainer>
+						</Card>
 
-		{/* TAB 2 — Documentación */}
-		<TabPanel value={tabValue} index={2}>
-			<Stack spacing={3}>
+						<Card sx={{ p: 3 }}>
+							<Typography variant="h6" gutterBottom>
+								Comportamiento BNA — Carry-forward
+							</Typography>
+							<Typography variant="body2" color="text.secondary" gutterBottom>
+								BNA publica tasas con <strong>fecha de vigencia futura</strong> (fines de semana y feriados). El sistema rellena los días
+								intermedios con el último valor registrado.
+							</Typography>
+							<Box sx={{ mt: 1.5, p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
+								<Typography variant="caption" fontFamily="monospace" component="pre" sx={{ whiteSpace: "pre-wrap" }}>
+									{
+										'Hoy: viernes 07/03  →  BNA publica con vigencia 10/03 (lunes)\n\ndiaHastaVigencia = [08/03, 09/03]\n  \u21b3 Busca \u00faltimo registro real en Tasas (anterior a hoy)\n  \u21b3 Copia ese valor para 08/03 y 09/03\n  \u21b3 origenDato = "completado_automaticamente"\n  \u21b3 Limpia esas fechas de fechasFaltantes en TasasConfig\n\nCPACF tambi\u00e9n agrupa estos per\u00edodos nativamente:\n  06/03 \u2192 08/03  (misma tasa \u2192 un registro expandido a 3 d\u00edas)'
+									}
+								</Typography>
+							</Box>
+						</Card>
 
-				<Card sx={{ p: 3 }}>
-					<Typography variant="h6" gutterBottom>Arquitectura de fuentes</Typography>
-					<Typography variant="body2" color="text.secondary" gutterBottom>
-						Los valores se almacenan como porcentaje de interés <strong>diario</strong> en la colección{" "}
-						<code>Tasas</code>. La prioridad de obtención es siempre: servicio nativo primero, CPACF/Consejo como fallback.
-					</Typography>
-					<Stack spacing={1.5} mt={2}>
-						{[
-							{ label: "1° Servicio nativo", desc: "BNA Web scraping · BCRA API REST", color: "success" as const },
-							{ label: "2° CPACF / Consejo", desc: "tasas.cpacf.org.ar — cubre cualquier rango histórico desde 1991", color: "warning" as const },
-							{ label: "3° Edición manual", desc: "Corrección puntual via UI — fuente: Admin Manual", color: "default" as const },
-						].map((row) => (
-							<Stack key={row.label} direction="row" alignItems="center" spacing={2}>
-								<Chip label={row.label} color={row.color} size="small" sx={{ minWidth: 160 }} />
-								<Typography variant="body2" color="text.secondary">{row.desc}</Typography>
+						<Card sx={{ p: 3 }}>
+							<Typography variant="h6" gutterBottom>
+								Seguimiento de cobertura — TasasConfig
+							</Typography>
+							<TableContainer>
+								<Table size="small">
+									<TableHead>
+										<TableRow>
+											<TableCell>Campo</TableCell>
+											<TableCell>Descripción</TableCell>
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{[
+											{ campo: "fechaInicio", desc: "Primera fecha con datos en la colección Tasas" },
+											{ campo: "fechaUltima", desc: "Última fecha registrada (puede ser futura en BNA)" },
+											{
+												campo: "fechaUltimaCompleta",
+												desc: "Último día sin gaps desde fechaInicio. Si hay faltantes, es el día anterior al primero.",
+											},
+											{
+												campo: "fechasFaltantes",
+												desc: "Array de fechas con datos ausentes. El gap filler las lee para determinar qué rangos consultar.",
+											},
+											{ campo: "ultimaVerificacion", desc: "Timestamp del último scraping exitoso" },
+										].map((r) => (
+											<TableRow key={r.campo} hover>
+												<TableCell>
+													<code>{r.campo}</code>
+												</TableCell>
+												<TableCell>
+													<Typography variant="body2" color="text.secondary">
+														{r.desc}
+													</Typography>
+												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</TableContainer>
+							<Divider sx={{ my: 2 }} />
+							<Typography variant="subtitle2" gutterBottom>
+								Lógica de actualizarConfigTasa
+							</Typography>
+							<Box sx={{ p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
+								<Typography variant="caption" fontFamily="monospace" component="pre" sx={{ whiteSpace: "pre-wrap" }}>
+									{
+										"Si fechasFaltantes no est\u00e1 vac\u00edo:\n  \u2192 Elimina la fecha reci\u00e9n guardada de fechasFaltantes\n  \u2192 Recalcula fechaUltimaCompleta (d\u00eda anterior al primer faltante)\n\nSi fechasFaltantes est\u00e1 vac\u00edo:\n  Si diff(nuevaFecha, fechaUltimaCompleta) \u2264 1 d\u00eda:\n    \u2192 Avanza fechaUltimaCompleta (per\u00edodo continuo \u2705)\n  Si diff > 1 d\u00eda:\n    \u2192 Gap impl\u00edcito detectado\n    \u2192 Agrega d\u00edas intermedios a fechasFaltantes \u26a0\ufe0f\n    \u2192 No avanza fechaUltimaCompleta"
+									}
+								</Typography>
+							</Box>
+						</Card>
+
+						<Card sx={{ p: 3 }}>
+							<Typography variant="h6" gutterBottom>
+								Gap Filler — Relleno automático de fechas faltantes
+							</Typography>
+							<Stack direction="row" spacing={2} flexWrap="wrap" mb={2}>
+								<Chip label="Cron: 3:00 AM diario" color="info" size="small" />
+								<Chip label="POST /api/tasas/rellenar-gaps" color="info" size="small" variant="outlined" />
+								<Chip label="?tipoTasa= (opcional)" color="default" size="small" variant="outlined" />
 							</Stack>
-						))}
+							<Alert severity="info" sx={{ mb: 2 }}>
+								<strong>Banco Provincia (BP):</strong> además del gap filler, corre un cron de <strong>rectificación diaria</strong> que
+								re-fetchea los últimos 5 días para detectar correcciones retroactivas que CPACF publica con posterioridad.
+							</Alert>
+							<Box sx={{ p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
+								<Typography variant="caption" fontFamily="monospace" component="pre" sx={{ whiteSpace: "pre-wrap" }}>
+									{
+										"fillGapsForTasa(tipoTasa):\n\n  1. \u00bfEs tasa BCRA? (tasaPasivaBCRA / cer / icl)\n       \u2192 findMissingDataServiceBcra()   [BCRA API \u2014 hist\u00f3rico completo]\n       \u2192 FIN\n\n  2. \u00bfEst\u00e1 en CPACF_TASA_MAP?\n       a. Si bnaCompatible=true:\n            \u2192 actualizarTasaEspecifica()   [BNA Web \u2014 dato del d\u00eda]\n       b. \u00bfQuedan gaps?\n            \u2192 findMissingDataColegio()     [CPACF Puppeteer \u2014 hist\u00f3rico]\n       \u2192 FIN\n\n  3. Tasa no soportada \u2192 omite"
+									}
+								</Typography>
+							</Box>
+							<Divider sx={{ my: 2 }} />
+							<Typography variant="subtitle2" gutterBottom>
+								Extracción CPACF — campos disponibles por tasa
+							</Typography>
+							<TableContainer>
+								<Table size="small">
+									<TableHead>
+										<TableRow>
+											<TableCell>Tasa</TableCell>
+											<TableCell>Modelo</TableCell>
+											<TableCell align="center">% Diario</TableCell>
+											<TableCell align="center">% Mensual</TableCell>
+											<TableCell align="center">% Anual</TableCell>
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{[
+											{ tasa: "tasaActivaBNA / tasaPasivaBNA / tasaPasivaBP", modelo: "M1", diario: true, mensual: true, anual: true },
+											{ tasa: "tasaActivaCNAT2764", modelo: "M2", diario: true, mensual: false, anual: true },
+											{ tasa: "tasaActivaCNAT2658 / tasaActivaTnaBNA", modelo: "M3", diario: true, mensual: false, anual: true },
+											{ tasa: "tasaActivaBPDolares / tasaPasivaBPDolares", modelo: "M1", diario: true, mensual: true, anual: true },
+										].map((r) => (
+											<TableRow key={r.tasa} hover>
+												<TableCell>
+													<code>{r.tasa}</code>
+												</TableCell>
+												<TableCell>{r.modelo}</TableCell>
+												<TableCell align="center">
+													<Chip label={r.diario ? "✓" : "✗"} color={r.diario ? "success" : "error"} size="small" />
+												</TableCell>
+												<TableCell align="center">
+													<Chip label={r.mensual ? "✓" : "✗"} color={r.mensual ? "success" : "default"} size="small" />
+												</TableCell>
+												<TableCell align="center">
+													<Chip label={r.anual ? "✓" : "✗"} color={r.anual ? "success" : "error"} size="small" />
+												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</TableContainer>
+							<Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+								Fallback de valor diario: porcentaje_diario → mensual / 30.4167 → anual / 365
+							</Typography>
+						</Card>
+
+						<Card sx={{ p: 3 }}>
+							<Typography variant="h6" gutterBottom>
+								Crons registrados
+							</Typography>
+							<TableContainer>
+								<Table size="small">
+									<TableHead>
+										<TableRow>
+											<TableCell>Task ID</TableCell>
+											<TableCell>Horario</TableCell>
+											<TableCell>Descripción</TableCell>
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{[
+											{ id: "bna-tasa-activa", hora: "06:00 AM", desc: "Scraping diario BNA — tasas activas BNA/CNAT" },
+											{ id: "bcra-tasa-pasiva-faltantes", hora: "variable", desc: "Gap filler BCRA — tasaPasivaBCRA via API" },
+											{ id: "cpacf-gap-filler", hora: "03:00 AM", desc: "Gap filler global — nativo primero, CPACF fallback" },
+											{
+												id: "busqueda-fechas-tasaPasivaBP",
+												hora: "07:57 / 18:57 / 21:57",
+												desc: "Gap filler CPACF — Tasa Pasiva Banco Provincia",
+											},
+											{
+												id: "rectificacion-tasaPasivaBP",
+												hora: "08:00 AM",
+												desc: "Rectificación últimos 5 días — Tasa Pasiva Banco Provincia",
+											},
+											{
+												id: "busqueda-fechas-tasaActivaBPDolares",
+												hora: "07:59 / 18:59 / 21:59",
+												desc: "Gap filler CPACF — Tasa Activa Banco Provincia en Dólares",
+											},
+											{
+												id: "rectificacion-tasaActivaBPDolares",
+												hora: "08:05 AM",
+												desc: "Rectificación últimos 5 días — Tasa Activa BP en Dólares",
+											},
+											{
+												id: "busqueda-fechas-tasaPasivaBPDolares",
+												hora: "08:01 / 19:01 / 22:01",
+												desc: "Gap filler CPACF — Tasa Pasiva Banco Provincia en Dólares",
+											},
+											{
+												id: "rectificacion-tasaPasivaBPDolares",
+												hora: "08:10 AM",
+												desc: "Rectificación últimos 5 días — Tasa Pasiva BP en Dólares",
+											},
+											{
+												id: "verificacion-tasas-actualizadas",
+												hora: "09:00 AM",
+												desc: "Verificación y alerta email si tasas desactualizadas",
+											},
+										].map((r) => (
+											<TableRow key={r.id} hover>
+												<TableCell>
+													<code>{r.id}</code>
+												</TableCell>
+												<TableCell>
+													<Chip label={r.hora} size="small" color="info" variant="outlined" />
+												</TableCell>
+												<TableCell>
+													<Typography variant="body2" color="text.secondary">
+														{r.desc}
+													</Typography>
+												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</TableContainer>
+						</Card>
 					</Stack>
-				</Card>
+				</TabPanel>
+			</MainCard>
 
-				<Card sx={{ p: 3 }}>
-					<Typography variant="h6" gutterBottom>Fuentes por tipo de tasa</Typography>
-					<TableContainer>
-						<Table size="small">
-							<TableHead>
-								<TableRow>
-									<TableCell>tipoTasa</TableCell>
-									<TableCell>Fuente primaria</TableCell>
-									<TableCell>Fallback CPACF rateId</TableCell>
-									<TableCell>Histórico disponible</TableCell>
-								</TableRow>
-							</TableHead>
-							<TableBody>
-								{[
-									{ tipo: "tasaActivaBNA",       fuente: "BNA Web",  rateId: "1",  historico: "Solo día actual" },
-									{ tipo: "tasaActivaTnaBNA",    fuente: "BNA Web",  rateId: "25", historico: "Solo día actual" },
-									{ tipo: "tasaActivaCNAT2658",  fuente: "BNA Web",  rateId: "22", historico: "Solo día actual" },
-									{ tipo: "tasaActivaCNAT2764",  fuente: "BNA Web",  rateId: "23", historico: "Solo día actual" },
-									{ tipo: "tasaPasivaBNA",       fuente: "CPACF",    rateId: "2",  historico: "Desde 1991 via CPACF" },
-									{ tipo: "tasaPasivaBP",        fuente: "CPACF",    rateId: "4",  historico: "Desde 01/04/1991 via CPACF" },
-									{ tipo: "tasaActivaBPDolares", fuente: "CPACF",    rateId: "14", historico: "Desde 13/10/1992 via CPACF" },
-									{ tipo: "tasaPasivaBPDolares", fuente: "CPACF",    rateId: "15", historico: "Desde 02/11/1992 via CPACF" },
-									{ tipo: "tasaPasivaBCRA",      fuente: "BCRA API", rateId: "—",  historico: "Cualquier rango (idVar=43)" },
-									{ tipo: "cer",                 fuente: "BCRA API", rateId: "—",  historico: "Cualquier rango (idVar=30)" },
-									{ tipo: "icl",                 fuente: "BCRA API", rateId: "—",  historico: "Cualquier rango (idVar=40)" },
-								].map((r) => (
-									<TableRow key={r.tipo} hover>
-										<TableCell><code>{r.tipo}</code></TableCell>
-										<TableCell>
-											<Chip
-												label={r.fuente}
-												size="small"
-												color={r.fuente === "BNA Web" ? "primary" : r.fuente === "BCRA API" ? "info" : "success"}
-												variant="outlined"
-											/>
-										</TableCell>
-										<TableCell>{r.rateId}</TableCell>
-										<TableCell>
-											<Typography variant="caption" color="text.secondary">{r.historico}</Typography>
-										</TableCell>
-									</TableRow>
-								))}
-							</TableBody>
-						</Table>
-					</TableContainer>
-				</Card>
+			{/* ═══════ Fuente info popover ═══════ */}
+			{(() => {
+				const info = fuentePopover ? TASA_FUENTE_INFO[fuentePopover.tipoTasa] : null;
+				return (
+					<Popover
+						open={!!fuentePopover}
+						anchorEl={fuentePopover?.anchor}
+						onClose={() => setFuentePopover(null)}
+						anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+						transformOrigin={{ vertical: "top", horizontal: "right" }}
+					>
+						<Box sx={{ p: 2, maxWidth: 520 }}>
+							{info && (
+								<Stack spacing={1.5}>
+									<Stack direction="row" alignItems="center" spacing={1}>
+										<Chip label={info.label} color={TIPO_COLOR[info.tipo]} size="small" />
+										<Typography variant="subtitle2">{fuentePopover?.tipoTasa}</Typography>
+									</Stack>
+									<Divider />
+									<Stack spacing={0.5}>
+										<Typography variant="caption" color="text.secondary" fontWeight={600}>
+											URL
+										</Typography>
+										<Stack direction="row" alignItems="center" spacing={0.5}>
+											<Link1 size={13} />
+											<Typography
+												variant="caption"
+												component="a"
+												href={info.url}
+												target="_blank"
+												rel="noopener noreferrer"
+												sx={{ fontFamily: "monospace", wordBreak: "break-all", color: "primary.main" }}
+											>
+												{info.url}
+											</Typography>
+										</Stack>
+									</Stack>
+									{info.rateId && (
+										<Stack spacing={0.5}>
+											<Typography variant="caption" color="text.secondary" fontWeight={600}>
+												Rate ID
+											</Typography>
+											<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+												select[name="rate"] → option value="{info.rateId}"
+											</Typography>
+										</Stack>
+									)}
+									{info.selector && (
+										<Stack spacing={0.5}>
+											<Typography variant="caption" color="text.secondary" fontWeight={600}>
+												Selector DOM
+											</Typography>
+											<Typography variant="caption" sx={{ fontFamily: "monospace", whiteSpace: "pre-wrap" }}>
+												{info.selector}
+											</Typography>
+										</Stack>
+									)}
+									{info.campo && (
+										<Stack spacing={0.5}>
+											<Typography variant="caption" color="text.secondary" fontWeight={600}>
+												Campo / Texto a buscar
+											</Typography>
+											<Typography variant="caption" sx={{ fontFamily: "monospace", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
+												{info.campo}
+											</Typography>
+										</Stack>
+									)}
+									{info.extra && (
+										<Stack spacing={0.5}>
+											<Typography variant="caption" color="text.secondary" fontWeight={600}>
+												Detalle
+											</Typography>
+											<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+												{info.extra}
+											</Typography>
+										</Stack>
+									)}
+									{info.formula && (
+										<Stack spacing={0.5}>
+											<Typography variant="caption" color="text.secondary" fontWeight={600}>
+												Fórmula / Conversión
+											</Typography>
+											<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+												{info.formula}
+											</Typography>
+										</Stack>
+									)}
+								</Stack>
+							)}
+						</Box>
+					</Popover>
+				);
+			})()}
 
-				<Card sx={{ p: 3 }}>
-					<Typography variant="h6" gutterBottom>Comportamiento BNA — Carry-forward</Typography>
-					<Typography variant="body2" color="text.secondary" gutterBottom>
-						BNA publica tasas con <strong>fecha de vigencia futura</strong> (fines de semana y feriados). El sistema
-						rellena los días intermedios con el último valor registrado.
-					</Typography>
-					<Box sx={{ mt: 1.5, p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
-						<Typography variant="caption" fontFamily="monospace" component="pre" sx={{ whiteSpace: "pre-wrap" }}>
-							{"Hoy: viernes 07/03  →  BNA publica con vigencia 10/03 (lunes)\n\ndiaHastaVigencia = [08/03, 09/03]\n  \u21b3 Busca \u00faltimo registro real en Tasas (anterior a hoy)\n  \u21b3 Copia ese valor para 08/03 y 09/03\n  \u21b3 origenDato = \"completado_automaticamente\"\n  \u21b3 Limpia esas fechas de fechasFaltantes en TasasConfig\n\nCPACF tambi\u00e9n agrupa estos per\u00edodos nativamente:\n  06/03 \u2192 08/03  (misma tasa \u2192 un registro expandido a 3 d\u00edas)"}
+			{/* ═══════ JSON viewer dialog ═══════ */}
+			<Dialog open={jsonDialog.open} onClose={closeJsonDialog} maxWidth="md" fullWidth>
+				<DialogTitle>
+					<Stack direction="row" alignItems="center" justifyContent="space-between">
+						<Typography variant="h6" sx={{ fontFamily: "monospace", fontSize: "0.95rem" }}>
+							{jsonDialog.title}
 						</Typography>
-					</Box>
-				</Card>
-
-				<Card sx={{ p: 3 }}>
-					<Typography variant="h6" gutterBottom>Seguimiento de cobertura — TasasConfig</Typography>
-					<TableContainer>
-						<Table size="small">
-							<TableHead>
-								<TableRow>
-									<TableCell>Campo</TableCell>
-									<TableCell>Descripción</TableCell>
-								</TableRow>
-							</TableHead>
-							<TableBody>
-								{[
-									{ campo: "fechaInicio",        desc: "Primera fecha con datos en la colección Tasas" },
-									{ campo: "fechaUltima",        desc: "Última fecha registrada (puede ser futura en BNA)" },
-									{ campo: "fechaUltimaCompleta",desc: "Último día sin gaps desde fechaInicio. Si hay faltantes, es el día anterior al primero." },
-									{ campo: "fechasFaltantes",    desc: "Array de fechas con datos ausentes. El gap filler las lee para determinar qué rangos consultar." },
-									{ campo: "ultimaVerificacion", desc: "Timestamp del último scraping exitoso" },
-								].map((r) => (
-									<TableRow key={r.campo} hover>
-										<TableCell><code>{r.campo}</code></TableCell>
-										<TableCell>
-											<Typography variant="body2" color="text.secondary">{r.desc}</Typography>
-										</TableCell>
-									</TableRow>
-								))}
-							</TableBody>
-						</Table>
-					</TableContainer>
-					<Divider sx={{ my: 2 }} />
-					<Typography variant="subtitle2" gutterBottom>Lógica de actualizarConfigTasa</Typography>
-					<Box sx={{ p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
-						<Typography variant="caption" fontFamily="monospace" component="pre" sx={{ whiteSpace: "pre-wrap" }}>
-							{"Si fechasFaltantes no est\u00e1 vac\u00edo:\n  \u2192 Elimina la fecha reci\u00e9n guardada de fechasFaltantes\n  \u2192 Recalcula fechaUltimaCompleta (d\u00eda anterior al primer faltante)\n\nSi fechasFaltantes est\u00e1 vac\u00edo:\n  Si diff(nuevaFecha, fechaUltimaCompleta) \u2264 1 d\u00eda:\n    \u2192 Avanza fechaUltimaCompleta (per\u00edodo continuo \u2705)\n  Si diff > 1 d\u00eda:\n    \u2192 Gap impl\u00edcito detectado\n    \u2192 Agrega d\u00edas intermedios a fechasFaltantes \u26a0\ufe0f\n    \u2192 No avanza fechaUltimaCompleta"}
-						</Typography>
-					</Box>
-				</Card>
-
-				<Card sx={{ p: 3 }}>
-					<Typography variant="h6" gutterBottom>Gap Filler — Relleno automático de fechas faltantes</Typography>
-					<Stack direction="row" spacing={2} flexWrap="wrap" mb={2}>
-						<Chip label="Cron: 3:00 AM diario" color="info" size="small" />
-						<Chip label="POST /api/tasas/rellenar-gaps" color="info" size="small" variant="outlined" />
-						<Chip label="?tipoTasa= (opcional)" color="default" size="small" variant="outlined" />
+						<IconButton size="small" onClick={closeJsonDialog}>
+							<CloseCircle size={18} />
+						</IconButton>
 					</Stack>
-					<Alert severity="info" sx={{ mb: 2 }}>
-						<strong>Banco Provincia (BP):</strong> además del gap filler, corre un cron de <strong>rectificación diaria</strong> que re-fetchea los últimos 5 días para detectar correcciones retroactivas que CPACF publica con posterioridad.
-					</Alert>
-					<Box sx={{ p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
-						<Typography variant="caption" fontFamily="monospace" component="pre" sx={{ whiteSpace: "pre-wrap" }}>
-							{"fillGapsForTasa(tipoTasa):\n\n  1. \u00bfEs tasa BCRA? (tasaPasivaBCRA / cer / icl)\n       \u2192 findMissingDataServiceBcra()   [BCRA API \u2014 hist\u00f3rico completo]\n       \u2192 FIN\n\n  2. \u00bfEst\u00e1 en CPACF_TASA_MAP?\n       a. Si bnaCompatible=true:\n            \u2192 actualizarTasaEspecifica()   [BNA Web \u2014 dato del d\u00eda]\n       b. \u00bfQuedan gaps?\n            \u2192 findMissingDataColegio()     [CPACF Puppeteer \u2014 hist\u00f3rico]\n       \u2192 FIN\n\n  3. Tasa no soportada \u2192 omite"}
-						</Typography>
+				</DialogTitle>
+				<DialogContent dividers sx={{ p: 0 }}>
+					<Box
+						component="pre"
+						sx={{
+							fontFamily: "monospace",
+							fontSize: "0.78rem",
+							overflowX: "auto",
+							whiteSpace: "pre-wrap",
+							wordBreak: "break-all",
+							m: 0,
+							p: 2,
+							bgcolor: "action.hover",
+						}}
+					>
+						{JSON.stringify(jsonDialog.data, null, 2)}
 					</Box>
-					<Divider sx={{ my: 2 }} />
-					<Typography variant="subtitle2" gutterBottom>Extracción CPACF — campos disponibles por tasa</Typography>
-					<TableContainer>
-						<Table size="small">
-							<TableHead>
-								<TableRow>
-									<TableCell>Tasa</TableCell>
-									<TableCell>Modelo</TableCell>
-									<TableCell align="center">% Diario</TableCell>
-									<TableCell align="center">% Mensual</TableCell>
-									<TableCell align="center">% Anual</TableCell>
-								</TableRow>
-							</TableHead>
-							<TableBody>
-								{[
-									{ tasa: "tasaActivaBNA / tasaPasivaBNA / tasaPasivaBP", modelo: "M1", diario: true, mensual: true,  anual: true },
-									{ tasa: "tasaActivaCNAT2764",                           modelo: "M2", diario: true, mensual: false, anual: true },
-									{ tasa: "tasaActivaCNAT2658 / tasaActivaTnaBNA",        modelo: "M3", diario: true, mensual: false, anual: true },
-									{ tasa: "tasaActivaBPDolares / tasaPasivaBPDolares",    modelo: "M1", diario: true, mensual: true,  anual: true },
-								].map((r) => (
-									<TableRow key={r.tasa} hover>
-										<TableCell><code>{r.tasa}</code></TableCell>
-										<TableCell>{r.modelo}</TableCell>
-										<TableCell align="center">
-											<Chip label={r.diario ? "✓" : "✗"} color={r.diario ? "success" : "error"} size="small" />
-										</TableCell>
-										<TableCell align="center">
-											<Chip label={r.mensual ? "✓" : "✗"} color={r.mensual ? "success" : "default"} size="small" />
-										</TableCell>
-										<TableCell align="center">
-											<Chip label={r.anual ? "✓" : "✗"} color={r.anual ? "success" : "error"} size="small" />
-										</TableCell>
-									</TableRow>
-								))}
-							</TableBody>
-						</Table>
-					</TableContainer>
-					<Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-						Fallback de valor diario: porcentaje_diario → mensual / 30.4167 → anual / 365
-					</Typography>
-				</Card>
-
-				<Card sx={{ p: 3 }}>
-					<Typography variant="h6" gutterBottom>Crons registrados</Typography>
-					<TableContainer>
-						<Table size="small">
-							<TableHead>
-								<TableRow>
-									<TableCell>Task ID</TableCell>
-									<TableCell>Horario</TableCell>
-									<TableCell>Descripción</TableCell>
-								</TableRow>
-							</TableHead>
-							<TableBody>
-								{[
-									{ id: "bna-tasa-activa",                    hora: "06:00 AM",       desc: "Scraping diario BNA — tasas activas BNA/CNAT" },
-									{ id: "bcra-tasa-pasiva-faltantes",         hora: "variable",       desc: "Gap filler BCRA — tasaPasivaBCRA via API" },
-									{ id: "cpacf-gap-filler",                   hora: "03:00 AM",       desc: "Gap filler global — nativo primero, CPACF fallback" },
-									{ id: "busqueda-fechas-tasaPasivaBP",       hora: "07:57 / 18:57 / 21:57", desc: "Gap filler CPACF — Tasa Pasiva Banco Provincia" },
-									{ id: "rectificacion-tasaPasivaBP",         hora: "08:00 AM",       desc: "Rectificación últimos 5 días — Tasa Pasiva Banco Provincia" },
-									{ id: "busqueda-fechas-tasaActivaBPDolares",hora: "07:59 / 18:59 / 21:59", desc: "Gap filler CPACF — Tasa Activa Banco Provincia en Dólares" },
-									{ id: "rectificacion-tasaActivaBPDolares",  hora: "08:05 AM",       desc: "Rectificación últimos 5 días — Tasa Activa BP en Dólares" },
-									{ id: "busqueda-fechas-tasaPasivaBPDolares",hora: "08:01 / 19:01 / 22:01", desc: "Gap filler CPACF — Tasa Pasiva Banco Provincia en Dólares" },
-									{ id: "rectificacion-tasaPasivaBPDolares",  hora: "08:10 AM",       desc: "Rectificación últimos 5 días — Tasa Pasiva BP en Dólares" },
-									{ id: "verificacion-tasas-actualizadas",    hora: "09:00 AM",       desc: "Verificación y alerta email si tasas desactualizadas" },
-								].map((r) => (
-									<TableRow key={r.id} hover>
-										<TableCell><code>{r.id}</code></TableCell>
-										<TableCell>
-											<Chip label={r.hora} size="small" color="info" variant="outlined" />
-										</TableCell>
-										<TableCell>
-											<Typography variant="body2" color="text.secondary">{r.desc}</Typography>
-										</TableCell>
-									</TableRow>
-								))}
-							</TableBody>
-						</Table>
-					</TableContainer>
-				</Card>
-
-			</Stack>
-		</TabPanel>
-		</MainCard>
-
-		{/* ═══════ Fuente info popover ═══════ */}
-		{(() => {
-			const info = fuentePopover ? TASA_FUENTE_INFO[fuentePopover.tipoTasa] : null;
-			return (
-				<Popover
-					open={!!fuentePopover}
-					anchorEl={fuentePopover?.anchor}
-					onClose={() => setFuentePopover(null)}
-					anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-					transformOrigin={{ vertical: "top", horizontal: "right" }}
-				>
-					<Box sx={{ p: 2, maxWidth: 520 }}>
-						{info && (
-							<Stack spacing={1.5}>
-								<Stack direction="row" alignItems="center" spacing={1}>
-									<Chip label={info.label} color={TIPO_COLOR[info.tipo]} size="small" />
-									<Typography variant="subtitle2">{fuentePopover?.tipoTasa}</Typography>
-								</Stack>
-								<Divider />
-								<Stack spacing={0.5}>
-									<Typography variant="caption" color="text.secondary" fontWeight={600}>URL</Typography>
-									<Stack direction="row" alignItems="center" spacing={0.5}>
-										<Link1 size={13} />
-										<Typography
-											variant="caption"
-											component="a"
-											href={info.url}
-											target="_blank"
-											rel="noopener noreferrer"
-											sx={{ fontFamily: "monospace", wordBreak: "break-all", color: "primary.main" }}
-										>
-											{info.url}
-										</Typography>
-									</Stack>
-								</Stack>
-								{info.rateId && (
-									<Stack spacing={0.5}>
-										<Typography variant="caption" color="text.secondary" fontWeight={600}>Rate ID</Typography>
-										<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
-											select[name="rate"] → option value="{info.rateId}"
-										</Typography>
-									</Stack>
-								)}
-								{info.selector && (
-									<Stack spacing={0.5}>
-										<Typography variant="caption" color="text.secondary" fontWeight={600}>Selector DOM</Typography>
-										<Typography variant="caption" sx={{ fontFamily: "monospace", whiteSpace: "pre-wrap" }}>{info.selector}</Typography>
-									</Stack>
-								)}
-								{info.campo && (
-									<Stack spacing={0.5}>
-										<Typography variant="caption" color="text.secondary" fontWeight={600}>Campo / Texto a buscar</Typography>
-										<Typography variant="caption" sx={{ fontFamily: "monospace", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>{info.campo}</Typography>
-									</Stack>
-								)}
-								{info.extra && (
-									<Stack spacing={0.5}>
-										<Typography variant="caption" color="text.secondary" fontWeight={600}>Detalle</Typography>
-										<Typography variant="caption" sx={{ fontFamily: "monospace" }}>{info.extra}</Typography>
-									</Stack>
-								)}
-								{info.formula && (
-									<Stack spacing={0.5}>
-										<Typography variant="caption" color="text.secondary" fontWeight={600}>Fórmula / Conversión</Typography>
-										<Typography variant="caption" sx={{ fontFamily: "monospace" }}>{info.formula}</Typography>
-									</Stack>
-								)}
-							</Stack>
-						)}
-					</Box>
-				</Popover>
-			);
-		})()}
-
-		{/* ═══════ JSON viewer dialog ═══════ */}
-		<Dialog open={jsonDialog.open} onClose={closeJsonDialog} maxWidth="md" fullWidth>
-			<DialogTitle>
-				<Stack direction="row" alignItems="center" justifyContent="space-between">
-					<Typography variant="h6" sx={{ fontFamily: "monospace", fontSize: "0.95rem" }}>{jsonDialog.title}</Typography>
-					<IconButton size="small" onClick={closeJsonDialog}>
-						<CloseCircle size={18} />
-					</IconButton>
-				</Stack>
-			</DialogTitle>
-			<DialogContent dividers sx={{ p: 0 }}>
-				<Box
-					component="pre"
-					sx={{
-						fontFamily: "monospace",
-						fontSize: "0.78rem",
-						overflowX: "auto",
-						whiteSpace: "pre-wrap",
-						wordBreak: "break-all",
-						m: 0,
-						p: 2,
-						bgcolor: "action.hover",
-					}}
-				>
-					{JSON.stringify(jsonDialog.data, null, 2)}
-				</Box>
-			</DialogContent>
-			<DialogActions>
-				<Button size="small" onClick={closeJsonDialog}>Cerrar</Button>
-			</DialogActions>
-		</Dialog>
+				</DialogContent>
+				<DialogActions>
+					<Button size="small" onClick={closeJsonDialog}>
+						Cerrar
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</>
 	);
 };

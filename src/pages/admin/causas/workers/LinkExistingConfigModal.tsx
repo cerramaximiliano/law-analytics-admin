@@ -58,9 +58,7 @@ const LinkExistingConfigModal: React.FC<LinkExistingConfigModalProps> = ({ open,
 			});
 			// Filter out temporary and retry workers
 			const data = Array.isArray(response.data) ? response.data : [response.data];
-			const available = data.filter(
-				(c: WorkerConfig) => !c.isRetryWorker && !c.isTemporary
-			);
+			const available = data.filter((c: WorkerConfig) => !c.isRetryWorker && !c.isTemporary);
 			setConfigs(available);
 		} catch (error: any) {
 			enqueueSnackbar("Error al cargar configuraciones", {
@@ -134,8 +132,8 @@ const LinkExistingConfigModal: React.FC<LinkExistingConfigModalProps> = ({ open,
 				<Stack spacing={2} sx={{ mt: 1 }}>
 					<Alert severity="info" variant="outlined">
 						<Typography variant="body2">
-							Selecciona configuraciones deshabilitadas para vincularlas como workers administrados. El manager las
-							habilitará e iniciará el proceso PM2 correspondiente.
+							Selecciona configuraciones deshabilitadas para vincularlas como workers administrados. El manager las habilitará e iniciará el
+							proceso PM2 correspondiente.
 						</Typography>
 					</Alert>
 
@@ -172,12 +170,7 @@ const LinkExistingConfigModal: React.FC<LinkExistingConfigModalProps> = ({ open,
 										{configs.map((config) => {
 											const progress = getProgress(config);
 											return (
-												<TableRow
-													key={getId(config._id)}
-													hover
-													onClick={() => handleToggle(getId(config._id))}
-													sx={{ cursor: "pointer" }}
-												>
+												<TableRow key={getId(config._id)} hover onClick={() => handleToggle(getId(config._id))} sx={{ cursor: "pointer" }}>
 													<TableCell padding="checkbox">
 														<Checkbox checked={selected.includes(getId(config._id))} />
 													</TableCell>

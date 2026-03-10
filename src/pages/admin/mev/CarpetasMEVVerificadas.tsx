@@ -38,7 +38,20 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { CausasMEVService, CausaMEV, EligibilityStatsMEV } from "api/causasMEV";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
-import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification, Calendar, TickCircle, CloseSquare, Timer, Repeat } from "iconsax-react";
+import {
+	Refresh,
+	Eye,
+	SearchNormal1,
+	CloseCircle,
+	ArrowUp,
+	ArrowDown,
+	Notification,
+	Calendar,
+	TickCircle,
+	CloseSquare,
+	Timer,
+	Repeat,
+} from "iconsax-react";
 import CausaDetalleModal from "../causas/CausaDetalleModal";
 import JudicialMovementsModal from "../causas/JudicialMovementsModal";
 
@@ -129,8 +142,8 @@ const CarpetasMEVVerificadas = () => {
 		const isToday = stats.date === today;
 		return {
 			isToday,
-			count: isToday ? (stats.count || 0) : 0,
-			hours: isToday ? (stats.hours || []) : [],
+			count: isToday ? stats.count || 0 : 0,
+			hours: isToday ? stats.hours || [] : [],
 		};
 	};
 
@@ -538,8 +551,8 @@ const CarpetasMEVVerificadas = () => {
 															(eligibilityStats.coveragePercent || 0) > 90
 																? "success.main"
 																: (eligibilityStats.coveragePercent || 0) > 70
-																	? "warning.main"
-																	: "error.main",
+																? "warning.main"
+																: "error.main",
 													},
 												}}
 											/>
@@ -560,7 +573,11 @@ const CarpetasMEVVerificadas = () => {
 													icon={<Timer size={14} />}
 													label={
 														eligibilityStats.pendingToday?.toLocaleString() ||
-														(eligibilityStats.eligible - eligibilityStats.updatedToday - eligibilityStats.eligibleWithErrors).toLocaleString()
+														(
+															eligibilityStats.eligible -
+															eligibilityStats.updatedToday -
+															eligibilityStats.eligibleWithErrors
+														).toLocaleString()
 													}
 													size="small"
 													color="warning"
@@ -602,13 +619,7 @@ const CarpetasMEVVerificadas = () => {
 				<Grid item xs={12}>
 					<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
 						<FormControlLabel
-							control={
-								<Checkbox
-									checked={soloElegibles}
-									onChange={handleSoloElegiblesChange}
-									size="small"
-								/>
-							}
+							control={<Checkbox checked={soloElegibles} onChange={handleSoloElegiblesChange} size="small" />}
 							label={<Typography variant="body2">Solo elegibles para actualización</Typography>}
 						/>
 						<FormControl size="small" sx={{ minWidth: 200 }}>
@@ -845,9 +856,7 @@ const CarpetasMEVVerificadas = () => {
 													<Chip label={causa.movimientosCount || 0} size="small" variant="outlined" />
 												</TableCell>
 												<TableCell>
-													<Typography variant="caption">
-														{formatDate(causa.createdAt)}
-													</Typography>
+													<Typography variant="caption">{formatDate(causa.createdAt)}</Typography>
 												</TableCell>
 												<TableCell>
 													{(() => {
@@ -972,7 +981,11 @@ const CarpetasMEVVerificadas = () => {
 																</Tooltip>
 															);
 														}
-														return <Typography variant="caption" color="text.secondary">—</Typography>;
+														return (
+															<Typography variant="caption" color="text.secondary">
+																—
+															</Typography>
+														);
 													})()}
 												</TableCell>
 												<TableCell align="center">

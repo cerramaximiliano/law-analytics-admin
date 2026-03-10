@@ -491,7 +491,9 @@ export class CausasEjeService {
 	/**
 	 * Limpiar locks de documentos stuck
 	 */
-	static async clearStuckLocks(params?: { thresholdMinutes?: number }): Promise<{ success: boolean; message: string; clearedCount: number }> {
+	static async clearStuckLocks(params?: {
+		thresholdMinutes?: number;
+	}): Promise<{ success: boolean; message: string; clearedCount: number }> {
 		try {
 			const response = await ejeAxios.post("/worker-stats/clear-stuck", params);
 			return response.data;

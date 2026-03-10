@@ -670,13 +670,25 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 		if (fieldName === "tags") return OPERATOR_OPTIONS.tags;
 		if (["isAppUser", "isVerified", "isEmailVerified"].includes(fieldName)) return OPERATOR_OPTIONS.boolean;
 		// Campos numéricos: campañas, tasas, y recursos de la app
-		if ([
-			"totalCampaigns", "openRate", "clickRate",
-			"customFields.activeFolders", "customFields.activeCalculators", "customFields.activeContacts",
-			"customFields.totalFolders", "customFields.totalCalculators", "customFields.totalContacts",
-			"customFields.archivedFolders", "customFields.archivedCalculators", "customFields.archivedContacts",
-			"customFields.storageUsedMB", "customFields.storageUsedBytes"
-		].includes(fieldName)) return OPERATOR_OPTIONS.number;
+		if (
+			[
+				"totalCampaigns",
+				"openRate",
+				"clickRate",
+				"customFields.activeFolders",
+				"customFields.activeCalculators",
+				"customFields.activeContacts",
+				"customFields.totalFolders",
+				"customFields.totalCalculators",
+				"customFields.totalContacts",
+				"customFields.archivedFolders",
+				"customFields.archivedCalculators",
+				"customFields.archivedContacts",
+				"customFields.storageUsedMB",
+				"customFields.storageUsedBytes",
+			].includes(fieldName)
+		)
+			return OPERATOR_OPTIONS.number;
 		// Campos de fecha
 		if (["lastActivity", "createdAt", "customFields.statsLastUpdated"].includes(fieldName)) return OPERATOR_OPTIONS.date;
 		return OPERATOR_OPTIONS.default;
@@ -1137,7 +1149,7 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 																		textTransform: "uppercase",
 																		letterSpacing: "0.5px",
 																		color: "text.secondary",
-																		lineHeight: "32px"
+																		lineHeight: "32px",
 																	}}
 																>
 																	{group.category}

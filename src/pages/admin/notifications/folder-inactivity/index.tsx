@@ -240,10 +240,7 @@ const ProximasNotificaciones: React.FC<ProximasNotificacionesProps> = ({ caducit
 							sx={{
 								p: 1,
 								borderRadius: 1,
-								bgcolor: alpha(
-									item.type === "caducity" ? theme.palette.warning.main : theme.palette.info.main,
-									0.08
-								),
+								bgcolor: alpha(item.type === "caducity" ? theme.palette.warning.main : theme.palette.info.main, 0.08),
 								borderLeft: `3px solid ${item.type === "caducity" ? theme.palette.warning.main : theme.palette.info.main}`,
 							}}
 						>
@@ -259,10 +256,7 @@ const ProximasNotificaciones: React.FC<ProximasNotificacionesProps> = ({ caducit
 											sx={{
 												height: 18,
 												fontSize: "0.65rem",
-												bgcolor: alpha(
-													item.type === "caducity" ? theme.palette.warning.main : theme.palette.info.main,
-													0.2
-												),
+												bgcolor: alpha(item.type === "caducity" ? theme.palette.warning.main : theme.palette.info.main, 0.2),
 											}}
 										/>
 									</Stack>
@@ -278,8 +272,8 @@ const ProximasNotificaciones: React.FC<ProximasNotificacionesProps> = ({ caducit
 												item.daysRemaining <= 1
 													? theme.palette.error.main
 													: item.daysRemaining <= 3
-														? theme.palette.warning.main
-														: theme.palette.text.secondary,
+													? theme.palette.warning.main
+													: theme.palette.text.secondary,
 										}}
 									>
 										{formatDaysRemaining(item.daysRemaining)}
@@ -372,10 +366,7 @@ const DetailModal: React.FC<DetailModalProps> = ({ open, onClose, folder }) => {
 												<Typography variant="caption" color="text.secondary">
 													Días restantes
 												</Typography>
-												<Typography
-													variant="body2"
-													color={folder.alerts.caducity.daysRemaining < 0 ? "error" : "inherit"}
-												>
+												<Typography variant="body2" color={folder.alerts.caducity.daysRemaining < 0 ? "error" : "inherit"}>
 													{formatDaysRemaining(folder.alerts.caducity.daysRemaining)}
 												</Typography>
 											</Grid>
@@ -430,10 +421,7 @@ const DetailModal: React.FC<DetailModalProps> = ({ open, onClose, folder }) => {
 												<Typography variant="caption" color="text.secondary">
 													Días restantes
 												</Typography>
-												<Typography
-													variant="body2"
-													color={folder.alerts.prescription.daysRemaining < 0 ? "error" : "inherit"}
-												>
+												<Typography variant="body2" color={folder.alerts.prescription.daysRemaining < 0 ? "error" : "inherit"}>
 													{formatDaysRemaining(folder.alerts.prescription.daysRemaining)}
 												</Typography>
 											</Grid>
@@ -517,9 +505,7 @@ const DetailModal: React.FC<DetailModalProps> = ({ open, onClose, folder }) => {
 							<CardContent>
 								<Stack direction="row" alignItems="center" spacing={1} mb={1}>
 									<Notification size={16} />
-									<Typography variant="subtitle2">
-										Notificaciones Enviadas ({folder.notifications.length})
-									</Typography>
+									<Typography variant="subtitle2">Notificaciones Enviadas ({folder.notifications.length})</Typography>
 								</Stack>
 								<Stack spacing={1} sx={{ maxHeight: 150, overflow: "auto" }}>
 									{folder.notifications.map((notif, index) => (
@@ -528,9 +514,7 @@ const DetailModal: React.FC<DetailModalProps> = ({ open, onClose, folder }) => {
 											sx={{
 												p: 1,
 												borderRadius: 1,
-												bgcolor: notif.success
-													? alpha(theme.palette.success.main, 0.08)
-													: alpha(theme.palette.error.main, 0.08),
+												bgcolor: notif.success ? alpha(theme.palette.success.main, 0.08) : alpha(theme.palette.error.main, 0.08),
 											}}
 										>
 											<Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -746,11 +730,7 @@ const FolderInactivity: React.FC = () => {
 						<Grid item xs={12} sm={6} md={2}>
 							<FormControl fullWidth size="small">
 								<InputLabel>Tipo</InputLabel>
-								<Select
-									value={filters.type || "any"}
-									label="Tipo"
-									onChange={(e) => handleFilterChange("type", e.target.value)}
-								>
+								<Select value={filters.type || "any"} label="Tipo" onChange={(e) => handleFilterChange("type", e.target.value)}>
 									<MenuItem value="any">Todos</MenuItem>
 									<MenuItem value="caducity">Caducidad</MenuItem>
 									<MenuItem value="prescription">Prescripción</MenuItem>
@@ -807,9 +787,7 @@ const FolderInactivity: React.FC = () => {
 						<Grid item xs="auto">
 							<Tooltip title={filters.sortOrder === "asc" ? "Orden ascendente" : "Orden descendente"}>
 								<IconButton
-									onClick={() =>
-										handleFilterChange("sortOrder", filters.sortOrder === "asc" ? "desc" : "asc")
-									}
+									onClick={() => handleFilterChange("sortOrder", filters.sortOrder === "asc" ? "desc" : "asc")}
 									sx={{
 										border: 1,
 										borderColor: "divider",
@@ -822,10 +800,7 @@ const FolderInactivity: React.FC = () => {
 						</Grid>
 						{(filters.status || filters.type !== "any") && (
 							<Grid item xs={12} sm={6} md="auto">
-								<Button
-									size="small"
-									onClick={() => setFilters((prev) => ({ ...prev, status: undefined, type: "any", page: 1 }))}
-								>
+								<Button size="small" onClick={() => setFilters((prev) => ({ ...prev, status: undefined, type: "any", page: 1 }))}>
 									Limpiar filtros
 								</Button>
 							</Grid>
@@ -868,12 +843,7 @@ const FolderInactivity: React.FC = () => {
 									</TableRow>
 								) : (
 									folders.map((folder) => (
-										<TableRow
-											key={folder._id}
-											hover
-											sx={{ cursor: "pointer" }}
-											onClick={() => handleViewDetail(folder)}
-										>
+										<TableRow key={folder._id} hover sx={{ cursor: "pointer" }} onClick={() => handleViewDetail(folder)}>
 											<TableCell>
 												<Box>
 													<Typography variant="body2" fontWeight={500}>
@@ -928,9 +898,7 @@ const FolderInactivity: React.FC = () => {
 												)}
 											</TableCell>
 											<TableCell>
-												<Typography variant="body2">
-													{folder.alerts?.lastActivityFormatted || "-"}
-												</Typography>
+												<Typography variant="body2">{folder.alerts?.lastActivityFormatted || "-"}</Typography>
 												{folder.alerts?.daysSinceLastActivity !== null && folder.alerts?.daysSinceLastActivity !== undefined && (
 													<Typography variant="caption" color="text.secondary">
 														{folder.alerts?.daysSinceLastActivity} días

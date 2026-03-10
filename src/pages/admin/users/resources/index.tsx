@@ -22,7 +22,20 @@ import {
 	useTheme,
 	alpha,
 } from "@mui/material";
-import { SearchNormal1, CloseCircle, Folder, People, Calculator, Task, Calendar, ProfileCircle, CloudConnection, Activity, Login, Chart } from "iconsax-react";
+import {
+	SearchNormal1,
+	CloseCircle,
+	Folder,
+	People,
+	Calculator,
+	Task,
+	Calendar,
+	ProfileCircle,
+	CloudConnection,
+	Activity,
+	Login,
+	Chart,
+} from "iconsax-react";
 import MainCard from "components/MainCard";
 import AdminResourcesService, {
 	ResourceType,
@@ -130,14 +143,30 @@ const getColumnsByType = (type: ResourceType, theme: any): ColumnDef[] => {
 							Cerrada: theme.palette.success.main,
 							Pendiente: theme.palette.error.main,
 						};
-						return status ? <Chip label={status} size="small" sx={{ bgcolor: alpha(colorMap[status] || theme.palette.grey[500], 0.1), color: colorMap[status] || theme.palette.grey[500] }} /> : "-";
+						return status ? (
+							<Chip
+								label={status}
+								size="small"
+								sx={{
+									bgcolor: alpha(colorMap[status] || theme.palette.grey[500], 0.1),
+									color: colorMap[status] || theme.palette.grey[500],
+								}}
+							/>
+						) : (
+							"-"
+						);
 					},
 				},
 				{
 					id: "causaVerified",
 					label: "Verificada",
 					sortable: true,
-					render: (r) => ((r as FolderResource).causaVerified ? <Chip label="Sí" size="small" color="success" /> : <Chip label="No" size="small" variant="outlined" />),
+					render: (r) =>
+						(r as FolderResource).causaVerified ? (
+							<Chip label="Sí" size="small" color="success" />
+						) : (
+							<Chip label="No" size="small" variant="outlined" />
+						),
 				},
 				{ id: "amount", label: "Monto", sortable: true, render: (r) => formatCurrency((r as FolderResource).amount) },
 				createdAtColumn,
@@ -172,7 +201,12 @@ const getColumnsByType = (type: ResourceType, theme: any): ColumnDef[] => {
 					id: "isVerified",
 					label: "Verificado",
 					sortable: true,
-					render: (r) => ((r as CalculatorResource).isVerified ? <Chip label="Sí" size="small" color="success" /> : <Chip label="No" size="small" variant="outlined" />),
+					render: (r) =>
+						(r as CalculatorResource).isVerified ? (
+							<Chip label="Sí" size="small" color="success" />
+						) : (
+							<Chip label="No" size="small" variant="outlined" />
+						),
 				},
 				{ id: "folderName", label: "Carpeta", sortable: false, render: (r) => (r as CalculatorResource).folderName || "-" },
 				createdAtColumn,
@@ -195,7 +229,18 @@ const getColumnsByType = (type: ResourceType, theme: any): ColumnDef[] => {
 							completada: theme.palette.success.main,
 							cancelada: theme.palette.error.main,
 						};
-						return status ? <Chip label={status.replace("_", " ")} size="small" sx={{ bgcolor: alpha(colorMap[status] || theme.palette.grey[500], 0.1), color: colorMap[status] || theme.palette.grey[500] }} /> : "-";
+						return status ? (
+							<Chip
+								label={status.replace("_", " ")}
+								size="small"
+								sx={{
+									bgcolor: alpha(colorMap[status] || theme.palette.grey[500], 0.1),
+									color: colorMap[status] || theme.palette.grey[500],
+								}}
+							/>
+						) : (
+							"-"
+						);
 					},
 				},
 				{
@@ -209,7 +254,18 @@ const getColumnsByType = (type: ResourceType, theme: any): ColumnDef[] => {
 							media: theme.palette.warning.main,
 							alta: theme.palette.error.main,
 						};
-						return priority ? <Chip label={priority} size="small" sx={{ bgcolor: alpha(colorMap[priority] || theme.palette.grey[500], 0.1), color: colorMap[priority] || theme.palette.grey[500] }} /> : "-";
+						return priority ? (
+							<Chip
+								label={priority}
+								size="small"
+								sx={{
+									bgcolor: alpha(colorMap[priority] || theme.palette.grey[500], 0.1),
+									color: colorMap[priority] || theme.palette.grey[500],
+								}}
+							/>
+						) : (
+							"-"
+						);
 					},
 				},
 				{ id: "dueDate", label: "Vencimiento", sortable: true, render: (r) => formatDate((r as TaskResource).dueDate) },
@@ -217,7 +273,12 @@ const getColumnsByType = (type: ResourceType, theme: any): ColumnDef[] => {
 					id: "checked",
 					label: "Completada",
 					sortable: true,
-					render: (r) => ((r as TaskResource).checked ? <Chip label="Sí" size="small" color="success" /> : <Chip label="No" size="small" variant="outlined" />),
+					render: (r) =>
+						(r as TaskResource).checked ? (
+							<Chip label="Sí" size="small" color="success" />
+						) : (
+							<Chip label="No" size="small" variant="outlined" />
+						),
 				},
 				createdAtColumn,
 			];
@@ -233,7 +294,12 @@ const getColumnsByType = (type: ResourceType, theme: any): ColumnDef[] => {
 					id: "allDay",
 					label: "Todo el día",
 					sortable: false,
-					render: (r) => ((r as EventResource).allDay ? <Chip label="Sí" size="small" color="info" /> : <Chip label="No" size="small" variant="outlined" />),
+					render: (r) =>
+						(r as EventResource).allDay ? (
+							<Chip label="Sí" size="small" color="info" />
+						) : (
+							<Chip label="No" size="small" variant="outlined" />
+						),
 				},
 				createdAtColumn,
 			];
@@ -249,7 +315,12 @@ const getColumnsByType = (type: ResourceType, theme: any): ColumnDef[] => {
 					id: "completed",
 					label: "Completado",
 					sortable: true,
-					render: (r) => ((r as MovementResource).completed ? <Chip label="Sí" size="small" color="success" /> : <Chip label="No" size="small" variant="outlined" />),
+					render: (r) =>
+						(r as MovementResource).completed ? (
+							<Chip label="Sí" size="small" color="success" />
+						) : (
+							<Chip label="No" size="small" variant="outlined" />
+						),
 				},
 				createdAtColumn,
 			];
@@ -507,25 +578,67 @@ const UserResources: React.FC = () => {
 			<Box sx={{ p: { xs: 1.5, sm: 2 }, borderBottom: 1, borderColor: "divider" }}>
 				<Grid container spacing={{ xs: 1, sm: 2 }}>
 					<Grid item xs={6} sm={4} md>
-						<StatCard label="Carpetas" value={stats.folders} icon={<Folder size={20} />} color={theme.palette.primary.main} loading={statsLoading} />
+						<StatCard
+							label="Carpetas"
+							value={stats.folders}
+							icon={<Folder size={20} />}
+							color={theme.palette.primary.main}
+							loading={statsLoading}
+						/>
 					</Grid>
 					<Grid item xs={6} sm={4} md>
-						<StatCard label="Contactos" value={stats.contacts} icon={<People size={20} />} color={theme.palette.info.main} loading={statsLoading} />
+						<StatCard
+							label="Contactos"
+							value={stats.contacts}
+							icon={<People size={20} />}
+							color={theme.palette.info.main}
+							loading={statsLoading}
+						/>
 					</Grid>
 					<Grid item xs={6} sm={4} md>
-						<StatCard label="Calculadores" value={stats.calculators} icon={<Calculator size={20} />} color={theme.palette.success.main} loading={statsLoading} />
+						<StatCard
+							label="Calculadores"
+							value={stats.calculators}
+							icon={<Calculator size={20} />}
+							color={theme.palette.success.main}
+							loading={statsLoading}
+						/>
 					</Grid>
 					<Grid item xs={6} sm={4} md>
-						<StatCard label="Tareas" value={stats.tasks} icon={<Task size={20} />} color={theme.palette.warning.main} loading={statsLoading} />
+						<StatCard
+							label="Tareas"
+							value={stats.tasks}
+							icon={<Task size={20} />}
+							color={theme.palette.warning.main}
+							loading={statsLoading}
+						/>
 					</Grid>
 					<Grid item xs={6} sm={4} md>
-						<StatCard label="Eventos" value={stats.events} icon={<Calendar size={20} />} color={theme.palette.secondary.main} loading={statsLoading} />
+						<StatCard
+							label="Eventos"
+							value={stats.events}
+							icon={<Calendar size={20} />}
+							color={theme.palette.secondary.main}
+							loading={statsLoading}
+						/>
 					</Grid>
 					<Grid item xs={6} sm={4} md>
-						<StatCard label="Movimientos" value={stats.movements} icon={<Activity size={20} />} color={theme.palette.error.main} loading={statsLoading} />
+						<StatCard
+							label="Movimientos"
+							value={stats.movements}
+							icon={<Activity size={20} />}
+							color={theme.palette.error.main}
+							loading={statsLoading}
+						/>
 					</Grid>
 					<Grid item xs={6} sm={4} md>
-						<StatCard label="Total" value={stats.total} icon={<Folder size={20} />} color={theme.palette.text.primary} loading={statsLoading} />
+						<StatCard
+							label="Total"
+							value={stats.total}
+							icon={<Folder size={20} />}
+							color={theme.palette.text.primary}
+							loading={statsLoading}
+						/>
 					</Grid>
 				</Grid>
 			</Box>
@@ -589,11 +702,15 @@ const UserResources: React.FC = () => {
 							<Grid item xs={6} sm={3}>
 								<Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
 									<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-										<Box sx={{ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main }}>
+										<Box
+											sx={{ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main }}
+										>
 											<Login size={20} />
 										</Box>
 										<Box>
-											<Typography variant="body2" color="textSecondary">Logins Exitosos</Typography>
+											<Typography variant="body2" color="textSecondary">
+												Logins Exitosos
+											</Typography>
 											{activityLoading ? (
 												<Skeleton variant="text" width={40} height={28} />
 											) : (
@@ -612,7 +729,9 @@ const UserResources: React.FC = () => {
 											<ProfileCircle size={20} />
 										</Box>
 										<Box>
-											<Typography variant="body2" color="textSecondary">Usuarios Activos</Typography>
+											<Typography variant="body2" color="textSecondary">
+												Usuarios Activos
+											</Typography>
 											{activityLoading ? (
 												<Skeleton variant="text" width={40} height={28} />
 											) : (
@@ -627,11 +746,15 @@ const UserResources: React.FC = () => {
 							<Grid item xs={6} sm={3}>
 								<Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
 									<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-										<Box sx={{ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.1), color: theme.palette.warning.main }}>
+										<Box
+											sx={{ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.1), color: theme.palette.warning.main }}
+										>
 											<Chart size={20} />
 										</Box>
 										<Box>
-											<Typography variant="body2" color="textSecondary">Por Google</Typography>
+											<Typography variant="body2" color="textSecondary">
+												Por Google
+											</Typography>
 											{activityLoading ? (
 												<Skeleton variant="text" width={40} height={28} />
 											) : (
@@ -646,11 +769,20 @@ const UserResources: React.FC = () => {
 							<Grid item xs={6} sm={3}>
 								<Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
 									<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-										<Box sx={{ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette.secondary.main, 0.1), color: theme.palette.secondary.main }}>
+										<Box
+											sx={{
+												p: 1,
+												borderRadius: 1.5,
+												bgcolor: alpha(theme.palette.secondary.main, 0.1),
+												color: theme.palette.secondary.main,
+											}}
+										>
 											<Calculator size={20} />
 										</Box>
 										<Box>
-											<Typography variant="body2" color="textSecondary">Por Password</Typography>
+											<Typography variant="body2" color="textSecondary">
+												Por Password
+											</Typography>
 											{activityLoading ? (
 												<Skeleton variant="text" width={40} height={28} />
 											) : (
@@ -671,27 +803,47 @@ const UserResources: React.FC = () => {
 							<TableHead>
 								<TableRow>
 									<TableCell>
-										<TableSortLabel active={sortBy === "email"} direction={sortBy === "email" ? sortOrder : "asc"} onClick={() => handleSort("email")}>
+										<TableSortLabel
+											active={sortBy === "email"}
+											direction={sortBy === "email" ? sortOrder : "asc"}
+											onClick={() => handleSort("email")}
+										>
 											Usuario
 										</TableSortLabel>
 									</TableCell>
 									<TableCell>
-										<TableSortLabel active={sortBy === "lastLogin"} direction={sortBy === "lastLogin" ? sortOrder : "asc"} onClick={() => handleSort("lastLogin")}>
+										<TableSortLabel
+											active={sortBy === "lastLogin"}
+											direction={sortBy === "lastLogin" ? sortOrder : "asc"}
+											onClick={() => handleSort("lastLogin")}
+										>
 											Último Login
 										</TableSortLabel>
 									</TableCell>
 									<TableCell align="center">
-										<TableSortLabel active={sortBy === "totalLogins"} direction={sortBy === "totalLogins" ? sortOrder : "asc"} onClick={() => handleSort("totalLogins")}>
+										<TableSortLabel
+											active={sortBy === "totalLogins"}
+											direction={sortBy === "totalLogins" ? sortOrder : "asc"}
+											onClick={() => handleSort("totalLogins")}
+										>
 											Total Logins
 										</TableSortLabel>
 									</TableCell>
 									<TableCell align="center">
-										<TableSortLabel active={sortBy === "activeDays"} direction={sortBy === "activeDays" ? sortOrder : "asc"} onClick={() => handleSort("activeDays")}>
+										<TableSortLabel
+											active={sortBy === "activeDays"}
+											direction={sortBy === "activeDays" ? sortOrder : "asc"}
+											onClick={() => handleSort("activeDays")}
+										>
 											Días Activos
 										</TableSortLabel>
 									</TableCell>
 									<TableCell>
-										<TableSortLabel active={sortBy === "createdAt"} direction={sortBy === "createdAt" ? sortOrder : "asc"} onClick={() => handleSort("createdAt")}>
+										<TableSortLabel
+											active={sortBy === "createdAt"}
+											direction={sortBy === "createdAt" ? sortOrder : "asc"}
+											onClick={() => handleSort("createdAt")}
+										>
 											Registrado
 										</TableSortLabel>
 									</TableCell>
@@ -734,15 +886,15 @@ const UserResources: React.FC = () => {
 											<TableCell>
 												{user.lastLogin ? (
 													<Box>
-														<Typography variant="body2">
-															{dayjs(user.lastLogin).fromNow()}
-														</Typography>
+														<Typography variant="body2">{dayjs(user.lastLogin).fromNow()}</Typography>
 														<Typography variant="caption" color="textSecondary">
 															{dayjs(user.lastLogin).format("DD/MM/YY HH:mm")}
 														</Typography>
 													</Box>
 												) : (
-													<Typography variant="body2" color="textSecondary">-</Typography>
+													<Typography variant="body2" color="textSecondary">
+														-
+													</Typography>
 												)}
 											</TableCell>
 											<TableCell align="center">
@@ -777,203 +929,245 @@ const UserResources: React.FC = () => {
 							<TableHead>
 								<TableRow>
 									{isUsersTab ? (
-								<>
-									<TableCell>
-										<TableSortLabel active={sortBy === "email"} direction={sortBy === "email" ? sortOrder : "asc"} onClick={() => handleSort("email")}>
-											Usuario
-										</TableSortLabel>
-									</TableCell>
-									<TableCell align="center">
-										<TableSortLabel active={sortBy === "folders"} direction={sortBy === "folders" ? sortOrder : "asc"} onClick={() => handleSort("folders")}>
-											Carpetas
-										</TableSortLabel>
-									</TableCell>
-									<TableCell align="center">
-										<TableSortLabel active={sortBy === "contacts"} direction={sortBy === "contacts" ? sortOrder : "asc"} onClick={() => handleSort("contacts")}>
-											Contactos
-										</TableSortLabel>
-									</TableCell>
-									<TableCell align="center">
-										<TableSortLabel active={sortBy === "calculators"} direction={sortBy === "calculators" ? sortOrder : "asc"} onClick={() => handleSort("calculators")}>
-											Calculadores
-										</TableSortLabel>
-									</TableCell>
-									<TableCell align="center">
-										<TableSortLabel active={sortBy === "tasks"} direction={sortBy === "tasks" ? sortOrder : "asc"} onClick={() => handleSort("tasks")}>
-											Tareas
-										</TableSortLabel>
-									</TableCell>
-									<TableCell align="center">
-										<TableSortLabel active={sortBy === "events"} direction={sortBy === "events" ? sortOrder : "asc"} onClick={() => handleSort("events")}>
-											Eventos
-										</TableSortLabel>
-									</TableCell>
-									<TableCell align="center">
-										<TableSortLabel active={sortBy === "movements"} direction={sortBy === "movements" ? sortOrder : "asc"} onClick={() => handleSort("movements")}>
-											Movimientos
-										</TableSortLabel>
-									</TableCell>
-									<TableCell align="center">
-										<TableSortLabel active={sortBy === "total"} direction={sortBy === "total" ? sortOrder : "asc"} onClick={() => handleSort("total")}>
-											Total
-										</TableSortLabel>
-									</TableCell>
-									<TableCell align="right">
-										<TableSortLabel active={sortBy === "storage"} direction={sortBy === "storage" ? sortOrder : "asc"} onClick={() => handleSort("storage")}>
-											<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-												<CloudConnection size={16} />
-												Storage
-											</Box>
-										</TableSortLabel>
-									</TableCell>
-									<TableCell>Último Login</TableCell>
-									<TableCell align="center">Días Activos</TableCell>
-									<TableCell>
-										<TableSortLabel active={sortBy === "createdAt"} direction={sortBy === "createdAt" ? sortOrder : "asc"} onClick={() => handleSort("createdAt")}>
-											Registrado
-										</TableSortLabel>
-									</TableCell>
-								</>
-							) : (
-								columns.map((column) => (
-									<TableCell key={column.id}>
-										{column.sortable ? (
-											<TableSortLabel active={sortBy === column.id} direction={sortBy === column.id ? sortOrder : "asc"} onClick={() => handleSort(column.id)}>
-												{column.label}
-											</TableSortLabel>
-										) : (
-											column.label
-										)}
-									</TableCell>
-								))
-							)}
-						</TableRow>
-					</TableHead>
-					<TableBody>
-						{loading ? (
-							Array.from({ length: rowsPerPage }).map((_, index) => (
-								<TableRow key={index}>
-									{isUsersTab ? (
 										<>
-											{Array.from({ length: 13 }).map((_, i) => (
-												<TableCell key={i}>
-													<Skeleton variant="text" />
-												</TableCell>
-											))}
+											<TableCell>
+												<TableSortLabel
+													active={sortBy === "email"}
+													direction={sortBy === "email" ? sortOrder : "asc"}
+													onClick={() => handleSort("email")}
+												>
+													Usuario
+												</TableSortLabel>
+											</TableCell>
+											<TableCell align="center">
+												<TableSortLabel
+													active={sortBy === "folders"}
+													direction={sortBy === "folders" ? sortOrder : "asc"}
+													onClick={() => handleSort("folders")}
+												>
+													Carpetas
+												</TableSortLabel>
+											</TableCell>
+											<TableCell align="center">
+												<TableSortLabel
+													active={sortBy === "contacts"}
+													direction={sortBy === "contacts" ? sortOrder : "asc"}
+													onClick={() => handleSort("contacts")}
+												>
+													Contactos
+												</TableSortLabel>
+											</TableCell>
+											<TableCell align="center">
+												<TableSortLabel
+													active={sortBy === "calculators"}
+													direction={sortBy === "calculators" ? sortOrder : "asc"}
+													onClick={() => handleSort("calculators")}
+												>
+													Calculadores
+												</TableSortLabel>
+											</TableCell>
+											<TableCell align="center">
+												<TableSortLabel
+													active={sortBy === "tasks"}
+													direction={sortBy === "tasks" ? sortOrder : "asc"}
+													onClick={() => handleSort("tasks")}
+												>
+													Tareas
+												</TableSortLabel>
+											</TableCell>
+											<TableCell align="center">
+												<TableSortLabel
+													active={sortBy === "events"}
+													direction={sortBy === "events" ? sortOrder : "asc"}
+													onClick={() => handleSort("events")}
+												>
+													Eventos
+												</TableSortLabel>
+											</TableCell>
+											<TableCell align="center">
+												<TableSortLabel
+													active={sortBy === "movements"}
+													direction={sortBy === "movements" ? sortOrder : "asc"}
+													onClick={() => handleSort("movements")}
+												>
+													Movimientos
+												</TableSortLabel>
+											</TableCell>
+											<TableCell align="center">
+												<TableSortLabel
+													active={sortBy === "total"}
+													direction={sortBy === "total" ? sortOrder : "asc"}
+													onClick={() => handleSort("total")}
+												>
+													Total
+												</TableSortLabel>
+											</TableCell>
+											<TableCell align="right">
+												<TableSortLabel
+													active={sortBy === "storage"}
+													direction={sortBy === "storage" ? sortOrder : "asc"}
+													onClick={() => handleSort("storage")}
+												>
+													<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+														<CloudConnection size={16} />
+														Storage
+													</Box>
+												</TableSortLabel>
+											</TableCell>
+											<TableCell>Último Login</TableCell>
+											<TableCell align="center">Días Activos</TableCell>
+											<TableCell>
+												<TableSortLabel
+													active={sortBy === "createdAt"}
+													direction={sortBy === "createdAt" ? sortOrder : "asc"}
+													onClick={() => handleSort("createdAt")}
+												>
+													Registrado
+												</TableSortLabel>
+											</TableCell>
 										</>
 									) : (
 										columns.map((column) => (
 											<TableCell key={column.id}>
-												<Skeleton variant="text" />
+												{column.sortable ? (
+													<TableSortLabel
+														active={sortBy === column.id}
+														direction={sortBy === column.id ? sortOrder : "asc"}
+														onClick={() => handleSort(column.id)}
+													>
+														{column.label}
+													</TableSortLabel>
+												) : (
+													column.label
+												)}
 											</TableCell>
 										))
 									)}
 								</TableRow>
-							))
-						) : isUsersTab ? (
-							users.length === 0 ? (
-								<TableRow>
-									<TableCell colSpan={13} align="center">
-										<Typography color="textSecondary" sx={{ py: 4 }}>
-											No se encontraron usuarios
-										</Typography>
-									</TableCell>
-								</TableRow>
-							) : (
-								users.map((user) => (
-									<TableRow key={user._id} hover>
-										<TableCell>
-											<Box>
-												<Typography variant="body2" fontWeight="medium">
-													{user.email}
+							</TableHead>
+							<TableBody>
+								{loading ? (
+									Array.from({ length: rowsPerPage }).map((_, index) => (
+										<TableRow key={index}>
+											{isUsersTab ? (
+												<>
+													{Array.from({ length: 13 }).map((_, i) => (
+														<TableCell key={i}>
+															<Skeleton variant="text" />
+														</TableCell>
+													))}
+												</>
+											) : (
+												columns.map((column) => (
+													<TableCell key={column.id}>
+														<Skeleton variant="text" />
+													</TableCell>
+												))
+											)}
+										</TableRow>
+									))
+								) : isUsersTab ? (
+									users.length === 0 ? (
+										<TableRow>
+											<TableCell colSpan={13} align="center">
+												<Typography color="textSecondary" sx={{ py: 4 }}>
+													No se encontraron usuarios
 												</Typography>
-												{user.name && user.name !== "-" && (
-													<Typography variant="caption" color="textSecondary">
-														{user.name}
+											</TableCell>
+										</TableRow>
+									) : (
+										users.map((user) => (
+											<TableRow key={user._id} hover>
+												<TableCell>
+													<Box>
+														<Typography variant="body2" fontWeight="medium">
+															{user.email}
+														</Typography>
+														{user.name && user.name !== "-" && (
+															<Typography variant="caption" color="textSecondary">
+																{user.name}
+															</Typography>
+														)}
+													</Box>
+												</TableCell>
+												<TableCell align="center">
+													<Chip label={user.resources.folders} size="small" sx={{ minWidth: 40 }} />
+												</TableCell>
+												<TableCell align="center">
+													<Chip label={user.resources.contacts} size="small" sx={{ minWidth: 40 }} />
+												</TableCell>
+												<TableCell align="center">
+													<Chip label={user.resources.calculators} size="small" sx={{ minWidth: 40 }} />
+												</TableCell>
+												<TableCell align="center">
+													<Chip label={user.resources.tasks} size="small" sx={{ minWidth: 40 }} />
+												</TableCell>
+												<TableCell align="center">
+													<Chip label={user.resources.events} size="small" sx={{ minWidth: 40 }} />
+												</TableCell>
+												<TableCell align="center">
+													<Chip label={user.resources.movements} size="small" sx={{ minWidth: 40 }} />
+												</TableCell>
+												<TableCell align="center">
+													<Chip label={user.resources.total} size="small" color="primary" sx={{ minWidth: 40 }} />
+												</TableCell>
+												<TableCell align="right">
+													<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+														{formatBytes(user.storage.total)}
 													</Typography>
-												)}
-											</Box>
-										</TableCell>
-										<TableCell align="center">
-											<Chip label={user.resources.folders} size="small" sx={{ minWidth: 40 }} />
-										</TableCell>
-										<TableCell align="center">
-											<Chip label={user.resources.contacts} size="small" sx={{ minWidth: 40 }} />
-										</TableCell>
-										<TableCell align="center">
-											<Chip label={user.resources.calculators} size="small" sx={{ minWidth: 40 }} />
-										</TableCell>
-										<TableCell align="center">
-											<Chip label={user.resources.tasks} size="small" sx={{ minWidth: 40 }} />
-										</TableCell>
-										<TableCell align="center">
-											<Chip label={user.resources.events} size="small" sx={{ minWidth: 40 }} />
-										</TableCell>
-										<TableCell align="center">
-											<Chip label={user.resources.movements} size="small" sx={{ minWidth: 40 }} />
-										</TableCell>
-										<TableCell align="center">
-											<Chip label={user.resources.total} size="small" color="primary" sx={{ minWidth: 40 }} />
-										</TableCell>
-										<TableCell align="right">
-											<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
-												{formatBytes(user.storage.total)}
+												</TableCell>
+												<TableCell>
+													{sessionMetrics[user._id]?.lastLogin ? (
+														<Box>
+															<Typography variant="body2">{dayjs(sessionMetrics[user._id].lastLogin).fromNow()}</Typography>
+															<Typography variant="caption" color="textSecondary">
+																{dayjs(sessionMetrics[user._id].lastLogin).format("DD/MM/YY HH:mm")}
+															</Typography>
+														</Box>
+													) : (
+														<Typography variant="body2" color="textSecondary">
+															-
+														</Typography>
+													)}
+												</TableCell>
+												<TableCell align="center">
+													<Chip
+														label={sessionMetrics[user._id]?.activeDays || 0}
+														size="small"
+														color={
+															(sessionMetrics[user._id]?.activeDays || 0) >= 20
+																? "success"
+																: (sessionMetrics[user._id]?.activeDays || 0) >= 10
+																? "warning"
+																: "default"
+														}
+														sx={{ minWidth: 40 }}
+													/>
+												</TableCell>
+												<TableCell>{formatDate(user.createdAt)}</TableCell>
+											</TableRow>
+										))
+									)
+								) : resources.length === 0 ? (
+									<TableRow>
+										<TableCell colSpan={columns.length} align="center">
+											<Typography color="textSecondary" sx={{ py: 4 }}>
+												No se encontraron recursos
 											</Typography>
 										</TableCell>
-										<TableCell>
-											{sessionMetrics[user._id]?.lastLogin ? (
-												<Box>
-													<Typography variant="body2">
-														{dayjs(sessionMetrics[user._id].lastLogin).fromNow()}
-													</Typography>
-													<Typography variant="caption" color="textSecondary">
-														{dayjs(sessionMetrics[user._id].lastLogin).format("DD/MM/YY HH:mm")}
-													</Typography>
-												</Box>
-											) : (
-												<Typography variant="body2" color="textSecondary">
-													-
-												</Typography>
-											)}
-										</TableCell>
-										<TableCell align="center">
-											<Chip
-												label={sessionMetrics[user._id]?.activeDays || 0}
-												size="small"
-												color={
-													(sessionMetrics[user._id]?.activeDays || 0) >= 20
-														? "success"
-														: (sessionMetrics[user._id]?.activeDays || 0) >= 10
-															? "warning"
-															: "default"
-												}
-												sx={{ minWidth: 40 }}
-											/>
-										</TableCell>
-										<TableCell>{formatDate(user.createdAt)}</TableCell>
 									</TableRow>
-								))
-							)
-						) : resources.length === 0 ? (
-							<TableRow>
-								<TableCell colSpan={columns.length} align="center">
-									<Typography color="textSecondary" sx={{ py: 4 }}>
-										No se encontraron recursos
-									</Typography>
-								</TableCell>
-							</TableRow>
-						) : (
-							resources.map((resource) => (
-								<TableRow key={resource._id} hover>
-									{columns.map((column) => (
-										<TableCell key={column.id}>{column.render(resource)}</TableCell>
-									))}
-								</TableRow>
-							))
-						)}
-					</TableBody>
-				</Table>
-				</TableContainer>
+								) : (
+									resources.map((resource) => (
+										<TableRow key={resource._id} hover>
+											{columns.map((column) => (
+												<TableCell key={column.id}>{column.render(resource)}</TableCell>
+											))}
+										</TableRow>
+									))
+								)}
+							</TableBody>
+						</Table>
+					</TableContainer>
 				</>
 			)}
 

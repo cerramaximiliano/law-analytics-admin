@@ -30,18 +30,7 @@ import {
 	CircularProgress,
 } from "@mui/material";
 import { CausaEje, CausasEjeService, MovimientoEje, IntervinienteEje, CausaRelacionada, UpdateHistoryEntry } from "api/causasEje";
-import {
-	CloseCircle,
-	CloseSquare,
-	TickCircle,
-	ArrowDown2,
-	ArrowUp2,
-	Copy,
-	Edit,
-	Save2,
-	Lock1,
-	Repeat,
-} from "iconsax-react";
+import { CloseCircle, CloseSquare, TickCircle, ArrowDown2, ArrowUp2, Copy, Edit, Save2, Lock1, Repeat } from "iconsax-react";
 import { useSnackbar } from "notistack";
 
 interface CausaDetalleModalEjeProps {
@@ -273,35 +262,14 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 		return (
 			<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 				{stats.count !== undefined && (
-					<Chip
-						icon={<Repeat size={14} />}
-						label={`${stats.count} actualizaciones`}
-						size="small"
-						variant="outlined"
-					/>
+					<Chip icon={<Repeat size={14} />} label={`${stats.count} actualizaciones`} size="small" variant="outlined" />
 				)}
-				{stats.avgMs !== undefined && (
-					<Chip
-						label={`Promedio: ${(stats.avgMs / 1000).toFixed(1)}s`}
-						size="small"
-						variant="outlined"
-					/>
-				)}
+				{stats.avgMs !== undefined && <Chip label={`Promedio: ${(stats.avgMs / 1000).toFixed(1)}s`} size="small" variant="outlined" />}
 				{stats.newMovs !== undefined && stats.newMovs > 0 && (
-					<Chip
-						label={`+${stats.newMovs} movimientos`}
-						size="small"
-						color="success"
-						variant="outlined"
-					/>
+					<Chip label={`+${stats.newMovs} movimientos`} size="small" color="success" variant="outlined" />
 				)}
 				{stats.errors !== undefined && stats.errors > 0 && (
-					<Chip
-						label={`${stats.errors} errores`}
-						size="small"
-						color="error"
-						variant="outlined"
-					/>
+					<Chip label={`${stats.errors} errores`} size="small" color="error" variant="outlined" />
 				)}
 			</Stack>
 		);
@@ -317,19 +285,8 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 								<Typography variant="h5">
 									Expediente: {causa.numero}/{causa.anio}
 								</Typography>
-								<Chip
-									label="EJE"
-									color="primary"
-									size="small"
-								/>
-								{causa.isPrivate && (
-									<Chip
-										icon={<Lock1 size={14} />}
-										label="Privado"
-										color="warning"
-										size="small"
-									/>
-								)}
+								<Chip label="EJE" color="primary" size="small" />
+								{causa.isPrivate && <Chip icon={<Lock1 size={14} />} label="Privado" color="warning" size="small" />}
 							</Stack>
 							<Typography variant="body2" color="textSecondary" sx={{ fontFamily: "monospace" }}>
 								CUIJ: {causa.cuij}
@@ -611,12 +568,10 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 										onChange={(e) => setEditedCausa({ ...editedCausa, estado: e.target.value })}
 										sx={{ mt: 0.5 }}
 									/>
+								) : causa.estado ? (
+									<Chip label={causa.estado} size="small" color="info" variant="outlined" />
 								) : (
-									causa.estado ? (
-										<Chip label={causa.estado} size="small" color="info" variant="outlined" />
-									) : (
-										<Typography variant="body2">N/A</Typography>
-									)
+									<Typography variant="body2">N/A</Typography>
 								)}
 							</Grid>
 
@@ -740,15 +695,10 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 												Hoy ({causa.updateStats.today.date})
 											</Typography>
 											<Stack direction="row" spacing={1} alignItems="center">
-												<Chip
-													label={`${causa.updateStats.today.count} actualizaciones`}
-													size="small"
-													color="success"
-													variant="outlined"
-												/>
+												<Chip label={`${causa.updateStats.today.count} actualizaciones`} size="small" color="success" variant="outlined" />
 												{causa.updateStats.today.hours && causa.updateStats.today.hours.length > 0 && (
 													<Typography variant="caption" color="textSecondary">
-														Horas: {causa.updateStats.today.hours.map(h => `${h}:00`).join(", ")}
+														Horas: {causa.updateStats.today.hours.map((h) => `${h}:00`).join(", ")}
 													</Typography>
 												)}
 											</Stack>
@@ -773,7 +723,9 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 									{causa.folderIds && causa.folderIds.length > 0 ? (
 										<Chip label={`${causa.folderIds.length} carpetas`} size="small" />
 									) : (
-										<Typography variant="body2" color="textSecondary">Sin carpetas</Typography>
+										<Typography variant="body2" color="textSecondary">
+											Sin carpetas
+										</Typography>
 									)}
 								</Box>
 							</Grid>
@@ -786,7 +738,9 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 									{causa.userCausaIds && causa.userCausaIds.length > 0 ? (
 										<Chip label={`${causa.userCausaIds.length} usuarios`} size="small" />
 									) : (
-										<Typography variant="body2" color="textSecondary">Sin usuarios</Typography>
+										<Typography variant="body2" color="textSecondary">
+											Sin usuarios
+										</Typography>
 									)}
 								</Box>
 							</Grid>
@@ -899,9 +853,7 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 														<TableCell>
 															<Typography variant="caption">{formatDateOnly(mov.fecha)}</Typography>
 														</TableCell>
-														<TableCell>
-															{mov.tipo && <Chip label={mov.tipo} size="small" variant="outlined" />}
-														</TableCell>
+														<TableCell>{mov.tipo && <Chip label={mov.tipo} size="small" variant="outlined" />}</TableCell>
 														<TableCell>
 															<Typography variant="body2" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
 																{mov.descripcion || "Sin descripción"}
@@ -1003,9 +955,15 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 												<TableRow>
 													<TableCell width="20%">Fecha/Hora</TableCell>
 													<TableCell width="15%">Tipo</TableCell>
-													<TableCell width="10%" align="center">Estado</TableCell>
-													<TableCell width="12%" align="center">Mov. Added</TableCell>
-													<TableCell width="12%" align="center">Mov. Total</TableCell>
+													<TableCell width="10%" align="center">
+														Estado
+													</TableCell>
+													<TableCell width="12%" align="center">
+														Mov. Added
+													</TableCell>
+													<TableCell width="12%" align="center">
+														Mov. Total
+													</TableCell>
 													<TableCell width="15%">Origen</TableCell>
 													<TableCell>Detalles</TableCell>
 												</TableRow>
@@ -1017,9 +975,7 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 															<Typography variant="caption">{formatDate(entry.timestamp)}</Typography>
 														</TableCell>
 														<TableCell>
-															{entry.updateType && (
-																<Chip label={entry.updateType} size="small" variant="outlined" color="primary" />
-															)}
+															{entry.updateType && <Chip label={entry.updateType} size="small" variant="outlined" color="primary" />}
 														</TableCell>
 														<TableCell align="center">
 															<Tooltip title={entry.success ? "Exitoso" : "Fallido"}>

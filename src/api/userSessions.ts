@@ -29,10 +29,7 @@ class UserSessionsService {
 	/**
 	 * Obtener historial de sesiones de un usuario específico
 	 */
-	static async getUserSessionHistory(
-		userId: string,
-		params: UserSessionHistoryQueryParams = {}
-	): Promise<UserSessionHistoryResponse> {
+	static async getUserSessionHistory(userId: string, params: UserSessionHistoryQueryParams = {}): Promise<UserSessionHistoryResponse> {
 		try {
 			const response = await adminAxios.get<UserSessionHistoryResponse>(`/api/user-sessions/${userId}/history`, {
 				params,
@@ -74,9 +71,7 @@ class UserSessionsService {
 	/**
 	 * Obtener usuarios con sus métricas de sesión (combinado)
 	 */
-	static async getUsersWithSessionMetrics(
-		params: UsersWithMetricsQueryParams = {}
-	): Promise<UsersWithSessionMetricsResponse> {
+	static async getUsersWithSessionMetrics(params: UsersWithMetricsQueryParams = {}): Promise<UsersWithSessionMetricsResponse> {
 		try {
 			const response = await adminAxios.get<UsersWithSessionMetricsResponse>("/api/user-sessions/users-with-metrics", {
 				params,

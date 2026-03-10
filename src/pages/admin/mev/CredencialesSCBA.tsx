@@ -370,11 +370,7 @@ const CredencialesSCBA = () => {
 						<Grid item xs={6} sm={3} md={2}>
 							<FormControl fullWidth size="small">
 								<InputLabel>Estado Sync</InputLabel>
-								<Select
-									value={syncStatusFilter}
-									label="Estado Sync"
-									onChange={(e) => setSyncStatusFilter(e.target.value)}
-								>
+								<Select value={syncStatusFilter} label="Estado Sync" onChange={(e) => setSyncStatusFilter(e.target.value)}>
 									<MenuItem value="todos">Todos</MenuItem>
 									<MenuItem value="completed">Completado</MenuItem>
 									<MenuItem value="in_progress">En progreso</MenuItem>
@@ -387,11 +383,7 @@ const CredencialesSCBA = () => {
 						<Grid item xs={6} sm={3} md={2}>
 							<FormControl fullWidth size="small">
 								<InputLabel>Verificado</InputLabel>
-								<Select
-									value={verifiedFilter}
-									label="Verificado"
-									onChange={(e) => setVerifiedFilter(e.target.value)}
-								>
+								<Select value={verifiedFilter} label="Verificado" onChange={(e) => setVerifiedFilter(e.target.value)}>
 									<MenuItem value="todos">Todos</MenuItem>
 									<MenuItem value="true">Sí</MenuItem>
 									<MenuItem value="false">No</MenuItem>
@@ -401,11 +393,7 @@ const CredencialesSCBA = () => {
 						<Grid item xs={6} sm={3} md={2}>
 							<FormControl fullWidth size="small">
 								<InputLabel>Habilitado</InputLabel>
-								<Select
-									value={enabledFilter}
-									label="Habilitado"
-									onChange={(e) => setEnabledFilter(e.target.value)}
-								>
+								<Select value={enabledFilter} label="Habilitado" onChange={(e) => setEnabledFilter(e.target.value)}>
 									<MenuItem value="todos">Todos</MenuItem>
 									<MenuItem value="true">Sí</MenuItem>
 									<MenuItem value="false">No</MenuItem>
@@ -414,20 +402,10 @@ const CredencialesSCBA = () => {
 						</Grid>
 						<Grid item xs={6} sm={6} md={3}>
 							<Stack direction="row" spacing={1}>
-								<Button
-									variant="contained"
-									size="small"
-									onClick={handleSearch}
-									startIcon={<SearchNormal1 size={16} />}
-								>
+								<Button variant="contained" size="small" onClick={handleSearch} startIcon={<SearchNormal1 size={16} />}>
 									Buscar
 								</Button>
-								<Button
-									variant="outlined"
-									size="small"
-									onClick={handleClearFilters}
-									startIcon={<CloseCircle size={16} />}
-								>
+								<Button variant="outlined" size="small" onClick={handleClearFilters} startIcon={<CloseCircle size={16} />}>
 									Limpiar
 								</Button>
 								<Tooltip title="Refrescar">
@@ -482,18 +460,12 @@ const CredencialesSCBA = () => {
 								) : credentials.length === 0 ? (
 									<TableRow>
 										<TableCell colSpan={9} align="center" sx={{ py: 4 }}>
-											<Typography color="text.secondary">
-												No se encontraron credenciales
-											</Typography>
+											<Typography color="text.secondary">No se encontraron credenciales</Typography>
 										</TableCell>
 									</TableRow>
 								) : (
 									credentials.map((cred) => (
-										<TableRow
-											key={cred._id}
-											hover
-											sx={{ "&:hover": { bgcolor: "action.hover" } }}
-										>
+										<TableRow key={cred._id} hover sx={{ "&:hover": { bgcolor: "action.hover" } }}>
 											<TableCell>
 												<Stack>
 													<Typography variant="body2" fontWeight={500}>
@@ -510,84 +482,40 @@ const CredencialesSCBA = () => {
 												</Typography>
 											</TableCell>
 											<TableCell align="center">
-												<Chip
-													label={getSyncStatusLabel(cred.syncStatus)}
-													color={getSyncStatusColor(cred.syncStatus) as any}
-													size="small"
-												/>
+												<Chip label={getSyncStatusLabel(cred.syncStatus)} color={getSyncStatusColor(cred.syncStatus) as any} size="small" />
 											</TableCell>
 											<TableCell align="center">
 												{cred.verified ? (
-													<TickCircle
-														size={20}
-														color={theme.palette.success.main}
-														variant="Bold"
-													/>
+													<TickCircle size={20} color={theme.palette.success.main} variant="Bold" />
 												) : (
-													<CloseCircle
-														size={20}
-														color={theme.palette.error.main}
-														variant="Bold"
-													/>
+													<CloseCircle size={20} color={theme.palette.error.main} variant="Bold" />
 												)}
 											</TableCell>
 											<TableCell align="center">
 												{cred.enabled ? (
-													<TickCircle
-														size={20}
-														color={theme.palette.success.main}
-														variant="Bold"
-													/>
+													<TickCircle size={20} color={theme.palette.success.main} variant="Bold" />
 												) : (
-													<CloseCircle
-														size={20}
-														color={theme.palette.warning.main}
-														variant="Bold"
-													/>
+													<CloseCircle size={20} color={theme.palette.warning.main} variant="Bold" />
 												)}
 											</TableCell>
 											<TableCell align="right">
-												<Typography variant="body2">
-													{cred.stats?.totalCausasFound || 0}
-												</Typography>
+												<Typography variant="body2">{cred.stats?.totalCausasFound || 0}</Typography>
 											</TableCell>
 											<TableCell align="right">
-												<Typography variant="body2">
-													{cred.stats?.causasCreated || 0}
-												</Typography>
+												<Typography variant="body2">{cred.stats?.causasCreated || 0}</Typography>
 											</TableCell>
 											<TableCell>
-												<Typography variant="caption">
-													{formatDate(cred.lastSync)}
-												</Typography>
+												<Typography variant="caption">{formatDate(cred.lastSync)}</Typography>
 											</TableCell>
 											<TableCell align="center">
 												<Stack direction="row" spacing={0.5} justifyContent="center">
-													<Tooltip
-														title={
-															cred.enabled ? "Deshabilitar" : "Habilitar"
-														}
-													>
-														<IconButton
-															size="small"
-															onClick={() => handleToggleEnabled(cred)}
-															color={
-																cred.enabled ? "success" : "warning"
-															}
-														>
-															{cred.enabled ? (
-																<ToggleOnCircle size={18} />
-															) : (
-																<ToggleOffCircle size={18} />
-															)}
+													<Tooltip title={cred.enabled ? "Deshabilitar" : "Habilitar"}>
+														<IconButton size="small" onClick={() => handleToggleEnabled(cred)} color={cred.enabled ? "success" : "warning"}>
+															{cred.enabled ? <ToggleOnCircle size={18} /> : <ToggleOffCircle size={18} />}
 														</IconButton>
 													</Tooltip>
 													<Tooltip title="Resetear para re-sync">
-														<IconButton
-															size="small"
-															onClick={() => handleReset(cred)}
-															color="info"
-														>
+														<IconButton size="small" onClick={() => handleReset(cred)} color="info">
 															<RefreshCircle size={18} />
 														</IconButton>
 													</Tooltip>
@@ -646,8 +574,8 @@ const CredencialesSCBA = () => {
 				<DialogTitle>Confirmar eliminación</DialogTitle>
 				<DialogContent>
 					<DialogContentText>
-						¿Estás seguro de eliminar las credenciales de{" "}
-						<strong>{deleteDialog.credential?.userName}</strong> ({deleteDialog.credential?.userEmail})?
+						¿Estás seguro de eliminar las credenciales de <strong>{deleteDialog.credential?.userName}</strong> (
+						{deleteDialog.credential?.userEmail})?
 						<br />
 						<br />
 						Esta acción no se puede deshacer. Las causas vinculadas no serán eliminadas.
@@ -666,27 +594,21 @@ const CredencialesSCBA = () => {
 				<DialogTitle>Resetear y limpiar causas</DialogTitle>
 				<DialogContent>
 					<DialogContentText>
-						¿Estás seguro de resetear la sincronización de{" "}
-						<strong>{cleanDialog.credential?.userName}</strong> ({cleanDialog.credential?.userEmail})?
+						¿Estás seguro de resetear la sincronización de <strong>{cleanDialog.credential?.userName}</strong> (
+						{cleanDialog.credential?.userEmail})?
 						<br />
 						<br />
 						Esta acción:
 					</DialogContentText>
 					<Box component="ul" sx={{ mt: 1, pl: 2 }}>
 						<li>
-							<Typography variant="body2">
-								Eliminará las causas creadas exclusivamente por esta sincronización
-							</Typography>
+							<Typography variant="body2">Eliminará las causas creadas exclusivamente por esta sincronización</Typography>
 						</li>
 						<li>
-							<Typography variant="body2">
-								Desvinculará al usuario de causas compartidas con otros usuarios
-							</Typography>
+							<Typography variant="body2">Desvinculará al usuario de causas compartidas con otros usuarios</Typography>
 						</li>
 						<li>
-							<Typography variant="body2">
-								Reseteará el estado de sincronización a &quot;Sin sincronizar&quot;
-							</Typography>
+							<Typography variant="body2">Reseteará el estado de sincronización a &quot;Sin sincronizar&quot;</Typography>
 						</li>
 					</Box>
 					{cleanDialog.credential?.linkedCausasCount ? (
@@ -717,9 +639,7 @@ const CredencialesSCBA = () => {
 			>
 				<DialogTitle>Nueva credencial SCBA</DialogTitle>
 				<DialogContent>
-					<DialogContentText sx={{ mb: 2 }}>
-						Ingresá los datos de la credencial SCBA para vincular a un usuario.
-					</DialogContentText>
+					<DialogContentText sx={{ mb: 2 }}>Ingresá los datos de la credencial SCBA para vincular a un usuario.</DialogContentText>
 					<Stack spacing={2} sx={{ mt: 1 }}>
 						<TextField
 							fullWidth

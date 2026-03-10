@@ -37,16 +37,16 @@ import dayjs, { Dayjs } from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import "dayjs/locale/es";
-
-// Extend dayjs with timezone support
-dayjs.extend(utc);
-dayjs.extend(timezone);
 import { InfoCircle } from "iconsax-react";
 
 // project imports
 import { Campaign, CampaignInput, CampaignType } from "types/campaign";
 import { CampaignService } from "store/reducers/campaign";
 import { useSnackbar } from "notistack";
+
+// Extend dayjs with timezone support
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 // types
 interface CampaignFormModalProps {
@@ -266,14 +266,17 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 								},
 							},
 							// Recurring schedule (only for recurring campaigns)
-							recurringSchedule: values.type === "recurring" ? {
-								enabled: values.recurringEnabled,
-								frequency: values.recurringFrequency,
-								dayOfMonth: values.recurringDayOfMonth,
-								dayOfWeek: values.recurringDayOfWeek,
-								monthOfYear: values.recurringMonthOfYear,
-								time: values.recurringTime,
-							} : undefined,
+							recurringSchedule:
+								values.type === "recurring"
+									? {
+											enabled: values.recurringEnabled,
+											frequency: values.recurringFrequency,
+											dayOfMonth: values.recurringDayOfMonth,
+											dayOfWeek: values.recurringDayOfWeek,
+											monthOfYear: values.recurringMonthOfYear,
+											time: values.recurringTime,
+									  }
+									: undefined,
 						},
 					};
 
@@ -303,14 +306,17 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 								},
 							},
 							// Recurring schedule (only for recurring campaigns)
-							recurringSchedule: values.type === "recurring" ? {
-								enabled: values.recurringEnabled,
-								frequency: values.recurringFrequency,
-								dayOfMonth: values.recurringDayOfMonth,
-								dayOfWeek: values.recurringDayOfWeek,
-								monthOfYear: values.recurringMonthOfYear,
-								time: values.recurringTime,
-							} : undefined,
+							recurringSchedule:
+								values.type === "recurring"
+									? {
+											enabled: values.recurringEnabled,
+											frequency: values.recurringFrequency,
+											dayOfMonth: values.recurringDayOfMonth,
+											dayOfWeek: values.recurringDayOfWeek,
+											monthOfYear: values.recurringMonthOfYear,
+											time: values.recurringTime,
+									  }
+									: undefined,
 						},
 					};
 
@@ -686,10 +692,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 									onChange={formik.handleChange}
 									onBlur={formik.handleBlur}
 									error={formik.touched.throttleRate && Boolean(formik.errors.throttleRate)}
-									helperText={
-										(formik.touched.throttleRate && formik.errors.throttleRate) ||
-										"Cantidad máxima de emails a enviar por batch"
-									}
+									helperText={(formik.touched.throttleRate && formik.errors.throttleRate) || "Cantidad máxima de emails a enviar por batch"}
 									inputProps={{ min: 1, max: 1000 }}
 								/>
 							</FormControl>
@@ -707,10 +710,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 									onChange={formik.handleChange}
 									onBlur={formik.handleBlur}
 									error={formik.touched.dailyLimit && Boolean(formik.errors.dailyLimit)}
-									helperText={
-										(formik.touched.dailyLimit && formik.errors.dailyLimit) ||
-										"Máximo de emails por día (0 = sin límite)"
-									}
+									helperText={(formik.touched.dailyLimit && formik.errors.dailyLimit) || "Máximo de emails por día (0 = sin límite)"}
 									inputProps={{ min: 0, max: 100000 }}
 								/>
 							</FormControl>
@@ -748,10 +748,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 
 						{/* Allowed Days */}
 						<Grid item xs={12}>
-							<FormControl
-								fullWidth
-								error={formik.touched.allowedDays && Boolean(formik.errors.allowedDays)}
-							>
+							<FormControl fullWidth error={formik.touched.allowedDays && Boolean(formik.errors.allowedDays)}>
 								<Typography variant="subtitle2" gutterBottom>
 									Días permitidos
 								</Typography>
@@ -773,9 +770,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 										/>
 									))}
 								</Box>
-								{formik.touched.allowedDays && formik.errors.allowedDays && (
-									<FormHelperText>{formik.errors.allowedDays}</FormHelperText>
-								)}
+								{formik.touched.allowedDays && formik.errors.allowedDays && <FormHelperText>{formik.errors.allowedDays}</FormHelperText>}
 							</FormControl>
 						</Grid>
 
@@ -923,7 +918,8 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 									</FormHelperText>
 									{!formik.values.syncWithSegment && (
 										<Alert severity="info" sx={{ mt: 1 }}>
-											La sincronización está deshabilitada. Esto es útil para campañas duplicadas donde quieres controlar manualmente los contactos.
+											La sincronización está deshabilitada. Esto es útil para campañas duplicadas donde quieres controlar manualmente los
+											contactos.
 										</Alert>
 									)}
 								</Grid>
@@ -939,7 +935,8 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 										Configuración de Envío Recurrente
 									</Typography>
 									<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-										Configura cuándo se enviará el email de forma recurrente. Si no habilitas esta opción, la campaña funcionará como una secuencia tradicional.
+										Configura cuándo se enviará el email de forma recurrente. Si no habilitas esta opción, la campaña funcionará como una
+										secuencia tradicional.
 									</Typography>
 								</Grid>
 
@@ -1068,16 +1065,40 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 													<>El email se enviará todos los días a las {formik.values.recurringTime}hs.</>
 												)}
 												{formik.values.recurringFrequency === "weekly" && (
-													<>El email se enviará todos los {daysOfWeek.find(d => d.value === formik.values.recurringDayOfWeek)?.label} a las {formik.values.recurringTime}hs.</>
+													<>
+														El email se enviará todos los {daysOfWeek.find((d) => d.value === formik.values.recurringDayOfWeek)?.label} a
+														las {formik.values.recurringTime}hs.
+													</>
 												)}
 												{formik.values.recurringFrequency === "monthly" && (
 													<>
-														El email se enviará el {formik.values.recurringDayOfMonth === -1 ? "último día" : `día ${formik.values.recurringDayOfMonth}`} de cada mes a las {formik.values.recurringTime}hs.
+														El email se enviará el{" "}
+														{formik.values.recurringDayOfMonth === -1 ? "último día" : `día ${formik.values.recurringDayOfMonth}`} de cada
+														mes a las {formik.values.recurringTime}hs.
 													</>
 												)}
 												{formik.values.recurringFrequency === "yearly" && (
 													<>
-														El email se enviará el {formik.values.recurringDayOfMonth === -1 ? "último día" : `día ${formik.values.recurringDayOfMonth}`} de {["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"][formik.values.recurringMonthOfYear]} a las {formik.values.recurringTime}hs.
+														El email se enviará el{" "}
+														{formik.values.recurringDayOfMonth === -1 ? "último día" : `día ${formik.values.recurringDayOfMonth}`} de{" "}
+														{
+															[
+																"",
+																"Enero",
+																"Febrero",
+																"Marzo",
+																"Abril",
+																"Mayo",
+																"Junio",
+																"Julio",
+																"Agosto",
+																"Septiembre",
+																"Octubre",
+																"Noviembre",
+																"Diciembre",
+															][formik.values.recurringMonthOfYear]
+														}{" "}
+														a las {formik.values.recurringTime}hs.
 													</>
 												)}
 											</Alert>

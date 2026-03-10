@@ -456,11 +456,13 @@ export const CampaignEmailService = {
 // AWS SES Suppression List Service
 export const SuppressionService = {
 	// Get all suppressed emails from AWS SES
-	getSuppressionList: async (filters: {
-		startDate?: string;
-		endDate?: string;
-		reasons?: string; // 'BOUNCE', 'COMPLAINT' or both comma-separated
-	} = {}): Promise<SuppressionListResponse> => {
+	getSuppressionList: async (
+		filters: {
+			startDate?: string;
+			endDate?: string;
+			reasons?: string; // 'BOUNCE', 'COMPLAINT' or both comma-separated
+		} = {},
+	): Promise<SuppressionListResponse> => {
 		try {
 			const response = await mktAxios.get("/api/suppression/list", {
 				params: filters,
@@ -492,11 +494,13 @@ export const SuppressionService = {
 	},
 
 	// Sync AWS SES suppression list with contacts
-	syncWithContacts: async (options: {
-		startDate?: string;
-		endDate?: string;
-		dryRun?: boolean;
-	} = {}): Promise<SuppressionSyncResponse> => {
+	syncWithContacts: async (
+		options: {
+			startDate?: string;
+			endDate?: string;
+			dryRun?: boolean;
+		} = {},
+	): Promise<SuppressionSyncResponse> => {
 		try {
 			const response = await mktAxios.post("/api/suppression/sync", options);
 			return response.data;

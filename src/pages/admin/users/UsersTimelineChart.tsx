@@ -1,16 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import {
-	Box,
-	Typography,
-	Paper,
-	Grid,
-	Skeleton,
-	ToggleButton,
-	ToggleButtonGroup,
-	useTheme,
-	alpha,
-	Stack,
-} from "@mui/material";
+import { Box, Typography, Paper, Grid, Skeleton, ToggleButton, ToggleButtonGroup, useTheme, alpha, Stack } from "@mui/material";
 import { Calendar, TrendUp, UserAdd, Chart1 } from "iconsax-react";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -223,12 +212,7 @@ const UsersTimelineChart: React.FC = () => {
 							<Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
 								Agrupar por
 							</Typography>
-							<ToggleButtonGroup
-								value={granularity}
-								exclusive
-								onChange={handleGranularityChange}
-								size="small"
-							>
+							<ToggleButtonGroup value={granularity} exclusive onChange={handleGranularityChange} size="small">
 								<ToggleButton value="day">Día</ToggleButton>
 								<ToggleButton value="week">Semana</ToggleButton>
 								<ToggleButton value="month">Mes</ToggleButton>
@@ -300,11 +284,7 @@ const UsersTimelineChart: React.FC = () => {
 					<Grid item xs={12} sm={6} md={3}>
 						<StatCard
 							title="Mejor período"
-							value={
-								summary?.bestPeriod
-									? `${summary.bestPeriod.count} (${formatXAxisDate(summary.bestPeriod.date)})`
-									: "-"
-							}
+							value={summary?.bestPeriod ? `${summary.bestPeriod.count} (${formatXAxisDate(summary.bestPeriod.date)})` : "-"}
 							icon={<Calendar size={20} />}
 							color={COLORS.success.light}
 							loading={loading}
@@ -353,23 +333,14 @@ const UsersTimelineChart: React.FC = () => {
 											<stop offset="95%" stopColor={COLORS.success.main} stopOpacity={0} />
 										</linearGradient>
 									</defs>
-									<CartesianGrid
-										strokeDasharray="3 3"
-										stroke={alpha(theme.palette.divider, 0.5)}
-										vertical={false}
-									/>
+									<CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} vertical={false} />
 									<XAxis
 										dataKey="date"
 										tick={{ fill: theme.palette.text.secondary, fontSize: 11 }}
 										tickFormatter={formatXAxisDate}
 										interval="preserveStartEnd"
 									/>
-									<YAxis
-										yAxisId="left"
-										tick={{ fill: theme.palette.text.secondary, fontSize: 11 }}
-										axisLine={false}
-										tickLine={false}
-									/>
+									<YAxis yAxisId="left" tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} axisLine={false} tickLine={false} />
 									<YAxis
 										yAxisId="right"
 										orientation="right"
@@ -383,15 +354,10 @@ const UsersTimelineChart: React.FC = () => {
 											border: `1px solid ${theme.palette.divider}`,
 											borderRadius: 8,
 										}}
-										formatter={(value: number, name: string) => [
-											value.toLocaleString(),
-											name === "cumulative" ? "Acumulado" : "Nuevos",
-										]}
+										formatter={(value: number, name: string) => [value.toLocaleString(), name === "cumulative" ? "Acumulado" : "Nuevos"]}
 										labelFormatter={(label) => `Fecha: ${formatXAxisDate(label)}`}
 									/>
-									<Legend
-										formatter={(value) => (value === "cumulative" ? "Acumulado" : "Nuevos registros")}
-									/>
+									<Legend formatter={(value) => (value === "cumulative" ? "Acumulado" : "Nuevos registros")} />
 									<Area
 										yAxisId="right"
 										type="monotone"

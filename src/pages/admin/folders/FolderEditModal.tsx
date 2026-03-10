@@ -241,7 +241,13 @@ const FolderEditModal = ({ open, onClose, folder, onFolderUpdated }: FolderEditM
 							</Grid>
 
 							<Grid item xs={12} md={6}>
-								<TextField fullWidth label="Materia" value={formData.materia || ""} onChange={(e) => handleChange("materia", e.target.value)} size="small" />
+								<TextField
+									fullWidth
+									label="Materia"
+									value={formData.materia || ""}
+									onChange={(e) => handleChange("materia", e.target.value)}
+									size="small"
+								/>
 							</Grid>
 
 							<Grid item xs={12} md={6}>
@@ -312,11 +318,17 @@ const FolderEditModal = ({ open, onClose, folder, onFolderUpdated }: FolderEditM
 							</Grid>
 
 							<Grid item xs={6} md={3}>
-								<FormControlLabel control={<Switch checked={formData.pjn || false} onChange={(e) => handleChange("pjn", e.target.checked)} />} label="PJN" />
+								<FormControlLabel
+									control={<Switch checked={formData.pjn || false} onChange={(e) => handleChange("pjn", e.target.checked)} />}
+									label="PJN"
+								/>
 							</Grid>
 
 							<Grid item xs={6} md={3}>
-								<FormControlLabel control={<Switch checked={formData.mev || false} onChange={(e) => handleChange("mev", e.target.checked)} />} label="MEV" />
+								<FormControlLabel
+									control={<Switch checked={formData.mev || false} onChange={(e) => handleChange("mev", e.target.checked)} />}
+									label="MEV"
+								/>
 							</Grid>
 
 							<Grid item xs={12}>
@@ -469,7 +481,11 @@ const FolderEditModal = ({ open, onClose, folder, onFolderUpdated }: FolderEditM
 									<Grid item xs={12} md={4}>
 										<FormControl fullWidth size="small">
 											<InputLabel>Tipo de Causa</InputLabel>
-											<Select value={formData.causaType || ""} onChange={(e) => handleChange("causaType", e.target.value)} label="Tipo de Causa">
+											<Select
+												value={formData.causaType || ""}
+												onChange={(e) => handleChange("causaType", e.target.value)}
+												label="Tipo de Causa"
+											>
 												{CAUSA_TYPES.map((type) => (
 													<MenuItem key={type} value={type}>
 														{type}
@@ -488,14 +504,21 @@ const FolderEditModal = ({ open, onClose, folder, onFolderUpdated }: FolderEditM
 
 									<Grid item xs={6} md={3}>
 										<FormControlLabel
-											control={<Switch checked={formData.causaVerified || false} onChange={(e) => handleChange("causaVerified", e.target.checked)} />}
+											control={
+												<Switch
+													checked={formData.causaVerified || false}
+													onChange={(e) => handleChange("causaVerified", e.target.checked)}
+												/>
+											}
 											label="Verificada"
 										/>
 									</Grid>
 
 									<Grid item xs={6} md={3}>
 										<FormControlLabel
-											control={<Switch checked={formData.causaIsValid || false} onChange={(e) => handleChange("causaIsValid", e.target.checked)} />}
+											control={
+												<Switch checked={formData.causaIsValid || false} onChange={(e) => handleChange("causaIsValid", e.target.checked)} />
+											}
 											label="Válida"
 										/>
 									</Grid>
@@ -503,7 +526,10 @@ const FolderEditModal = ({ open, onClose, folder, onFolderUpdated }: FolderEditM
 									<Grid item xs={6} md={3}>
 										<FormControlLabel
 											control={
-												<Switch checked={formData.causaUpdateEnabled || false} onChange={(e) => handleChange("causaUpdateEnabled", e.target.checked)} />
+												<Switch
+													checked={formData.causaUpdateEnabled || false}
+													onChange={(e) => handleChange("causaUpdateEnabled", e.target.checked)}
+												/>
 											}
 											label="Updates Habilitados"
 										/>

@@ -32,7 +32,19 @@ import {
 	FormControl,
 	CircularProgress,
 } from "@mui/material";
-import { Refresh, InfoCircle, TickCircle, CloseCircle, Warning2, ArrowDown2, ArrowUp2, Add, Trash, Camera, SearchNormal1 } from "iconsax-react";
+import {
+	Refresh,
+	InfoCircle,
+	TickCircle,
+	CloseCircle,
+	Warning2,
+	ArrowDown2,
+	ArrowUp2,
+	Add,
+	Trash,
+	Camera,
+	SearchNormal1,
+} from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MEVWorkersService, { SyncCheckConfig, NavigationCodeDoc, ScreenshotInfo } from "api/workersMEV";
 
@@ -145,7 +157,12 @@ const SyncCheckTab = () => {
 		setEditDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()));
 	};
 
-	const handleAddOrganism = async (jurisdiccionCodigo: string, jurisdiccionNombre: string, organismoCodigo: string, organismoNombre: string) => {
+	const handleAddOrganism = async (
+		jurisdiccionCodigo: string,
+		jurisdiccionNombre: string,
+		organismoCodigo: string,
+		organismoNombre: string,
+	) => {
 		const key = `add_${organismoCodigo}`;
 		setFixLoading((prev) => ({ ...prev, [key]: true }));
 		try {
@@ -170,7 +187,12 @@ const SyncCheckTab = () => {
 		}
 	};
 
-	const handleRemoveOrganism = async (jurisdiccionCodigo: string, organismoCodigo: string, jurisdiccionNombre?: string, organismoNombre?: string) => {
+	const handleRemoveOrganism = async (
+		jurisdiccionCodigo: string,
+		organismoCodigo: string,
+		jurisdiccionNombre?: string,
+		organismoNombre?: string,
+	) => {
 		const key = `rm_${organismoCodigo}`;
 		setFixLoading((prev) => ({ ...prev, [key]: true }));
 		try {
@@ -195,7 +217,11 @@ const SyncCheckTab = () => {
 		}
 	};
 
-	const handleAddJurisdiction = async (jurisdiccionCodigo: string, jurisdiccionNombre: string, organismos: Array<{ codigo: string; nombre: string }>) => {
+	const handleAddJurisdiction = async (
+		jurisdiccionCodigo: string,
+		jurisdiccionNombre: string,
+		organismos: Array<{ codigo: string; nombre: string }>,
+	) => {
 		const key = `jur_${jurisdiccionCodigo}`;
 		setFixLoading((prev) => ({ ...prev, [key]: true }));
 		try {
@@ -279,7 +305,12 @@ const SyncCheckTab = () => {
 		if (nc && config?.last_report?.screenshots_dir && screenshots.length > 0) {
 			// Buscar screenshot del organismo (modo detallado) o jurisdiccion
 			const orgScreenshot = screenshots.find((s) => s.filename.includes(`-${orgCode}.png`));
-			const jurScreenshot = screenshots.find((s) => s.jurisdiccionCodigo === selectedJurisdiccion && !s.filename.endsWith(`${orgCode}.png`) && s.filename.includes(`-${selectedJurisdiccion}-`));
+			const jurScreenshot = screenshots.find(
+				(s) =>
+					s.jurisdiccionCodigo === selectedJurisdiccion &&
+					!s.filename.endsWith(`${orgCode}.png`) &&
+					s.filename.includes(`-${selectedJurisdiccion}-`),
+			);
 			const match = orgScreenshot || jurScreenshot;
 			if (match) {
 				setScreenshotUrl(MEVWorkersService.getScreenshotUrl(config.last_report.screenshots_dir, match.filename));
@@ -406,24 +437,24 @@ const SyncCheckTab = () => {
 							<Typography variant="body2" component="div">
 								<ul style={{ margin: 0, paddingLeft: 20 }}>
 									<li>
-										<strong>Estado y Resumen:</strong> Muestra el resultado de la ultima ejecucion (OK/ALERTA/ERROR), fecha,
-										duracion y contadores de jurisdicciones/organismos comparados.
+										<strong>Estado y Resumen:</strong> Muestra el resultado de la ultima ejecucion (OK/ALERTA/ERROR), fecha, duracion y
+										contadores de jurisdicciones/organismos comparados.
 									</li>
 									<li>
-										<strong>Configuracion:</strong> Permite habilitar/deshabilitar el worker, cambiar el horario cron, seleccionar
-										dias activos y configurar notificaciones por email. Los cambios se aplican sin reiniciar PM2.
+										<strong>Configuracion:</strong> Permite habilitar/deshabilitar el worker, cambiar el horario cron, seleccionar dias
+										activos y configurar notificaciones por email. Los cambios se aplican sin reiniciar PM2.
 									</li>
 									<li>
-										<strong>Detalle del ultimo reporte:</strong> Si el estado es ALERTA, muestra las tablas de jurisdicciones
-										faltantes, organismos faltantes y organismos sobrantes con sus codigos y nombres.
+										<strong>Detalle del ultimo reporte:</strong> Si el estado es ALERTA, muestra las tablas de jurisdicciones faltantes,
+										organismos faltantes y organismos sobrantes con sus codigos y nombres.
 									</li>
 									<li>
-										<strong>Historial de reportes:</strong> Lista las ultimas 30 ejecuciones del worker con fecha, estado, duracion
-										y resumen. Permite expandir cada entrada para ver el detalle completo.
+										<strong>Historial de reportes:</strong> Lista las ultimas 30 ejecuciones del worker con fecha, estado, duracion y
+										resumen. Permite expandir cada entrada para ver el detalle completo.
 									</li>
 									<li>
-										<strong>Navigation Codes en BD:</strong> Estadisticas de los codigos de navegacion almacenados en la base de
-										datos (total, activos, inactivos, por tipo).
+										<strong>Navigation Codes en BD:</strong> Estadisticas de los codigos de navegacion almacenados en la base de datos
+										(total, activos, inactivos, por tipo).
 									</li>
 									<li>
 										<strong>Estadisticas historicas:</strong> Contadores acumulados de ejecuciones totales, exitosas, fallidas, OK
@@ -437,8 +468,8 @@ const SyncCheckTab = () => {
 							</Typography>
 							<Typography variant="body2" component="div">
 								<p style={{ margin: "4px 0" }}>
-									Los cambios realizados desde esta UI se guardan en la base de datos. El worker consulta la BD periodicamente para
-									detectar cambios sin necesidad de reiniciar PM2.
+									Los cambios realizados desde esta UI se guardan en la base de datos. El worker consulta la BD periodicamente para detectar
+									cambios sin necesidad de reiniciar PM2.
 								</p>
 							</Typography>
 							<TableContainer component={Paper} variant="outlined" sx={{ mt: 1 }}>
@@ -733,9 +764,7 @@ pm2 save`}
 								)}
 
 								{report.status === "ERROR" && (
-									<Alert severity="error">
-										Error durante la ejecucion: {report.error_message || "Error desconocido"}
-									</Alert>
+									<Alert severity="error">Error durante la ejecucion: {report.error_message || "Error desconocido"}</Alert>
 								)}
 
 								{report.status === "ALERTA" && (
@@ -788,7 +817,11 @@ pm2 save`}
 																					}
 																				}}
 																			>
-																				{fixLoading[`jur_${j.codigo}`] ? "..." : fixApplied[`jur_${j.codigo}`] ? "Agregada" : "Agregar todo"}
+																				{fixLoading[`jur_${j.codigo}`]
+																					? "..."
+																					: fixApplied[`jur_${j.codigo}`]
+																					? "Agregada"
+																					: "Agregar todo"}
 																			</Button>
 																		</TableCell>
 																	</TableRow>
@@ -859,9 +892,15 @@ pm2 save`}
 																			color="success"
 																			startIcon={fixApplied[`add_${o.organismoCodigo}`] ? <TickCircle size={14} /> : <Add size={14} />}
 																			disabled={fixLoading[`add_${o.organismoCodigo}`] || fixApplied[`add_${o.organismoCodigo}`]}
-																			onClick={() => handleAddOrganism(o.jurisdiccionCodigo, o.jurisdiccion, o.organismoCodigo, o.organismoNombre)}
+																			onClick={() =>
+																				handleAddOrganism(o.jurisdiccionCodigo, o.jurisdiccion, o.organismoCodigo, o.organismoNombre)
+																			}
 																		>
-																			{fixLoading[`add_${o.organismoCodigo}`] ? "..." : fixApplied[`add_${o.organismoCodigo}`] ? "Agregado" : "Agregar"}
+																			{fixLoading[`add_${o.organismoCodigo}`]
+																				? "..."
+																				: fixApplied[`add_${o.organismoCodigo}`]
+																				? "Agregado"
+																				: "Agregar"}
 																		</Button>
 																	</TableCell>
 																</TableRow>
@@ -905,9 +944,15 @@ pm2 save`}
 																			color="warning"
 																			startIcon={fixApplied[`rm_${o.organismoCodigo}`] ? <TickCircle size={14} /> : <Trash size={14} />}
 																			disabled={fixLoading[`rm_${o.organismoCodigo}`] || fixApplied[`rm_${o.organismoCodigo}`]}
-																			onClick={() => handleRemoveOrganism(o.jurisdiccionCodigo, o.organismoCodigo, o.jurisdiccion, o.organismoNombre)}
+																			onClick={() =>
+																				handleRemoveOrganism(o.jurisdiccionCodigo, o.organismoCodigo, o.jurisdiccion, o.organismoNombre)
+																			}
 																		>
-																			{fixLoading[`rm_${o.organismoCodigo}`] ? "..." : fixApplied[`rm_${o.organismoCodigo}`] ? "Desactivado" : "Desactivar"}
+																			{fixLoading[`rm_${o.organismoCodigo}`]
+																				? "..."
+																				: fixApplied[`rm_${o.organismoCodigo}`]
+																				? "Desactivado"
+																				: "Desactivar"}
 																		</Button>
 																	</TableCell>
 																</TableRow>
@@ -917,12 +962,12 @@ pm2 save`}
 												</TableContainer>
 											</>
 										)}
-									{Object.keys(fixApplied).length > 0 && (
-										<Alert severity="info" variant="outlined" sx={{ mt: 1 }}>
-											Las correcciones se aplicaron en la base de datos. El archivo JSON se actualizara automaticamente en la proxima
-											ejecucion del worker.
-										</Alert>
-									)}
+										{Object.keys(fixApplied).length > 0 && (
+											<Alert severity="info" variant="outlined" sx={{ mt: 1 }}>
+												Las correcciones se aplicaron en la base de datos. El archivo JSON se actualizara automaticamente en la proxima
+												ejecucion del worker.
+											</Alert>
+										)}
 									</Stack>
 								)}
 							</Box>
@@ -985,11 +1030,7 @@ pm2 save`}
 										<Grid item xs={12} sm={6}>
 											<FormControl fullWidth size="small" disabled={!selectedJurisdiccion}>
 												<InputLabel>Organismo</InputLabel>
-												<Select
-													value={selectedOrganismo}
-													onChange={(e) => handleOrganismoChange(e.target.value)}
-													label="Organismo"
-												>
+												<Select value={selectedOrganismo} onChange={(e) => handleOrganismoChange(e.target.value)} label="Organismo">
 													<MenuItem value="">
 														<em>Seleccionar organismo...</em>
 													</MenuItem>
@@ -1099,9 +1140,7 @@ pm2 save`}
 							sx={{ cursor: "pointer" }}
 							onClick={() => setHistoryOpen(!historyOpen)}
 						>
-							<Typography variant="h6">
-								Historial de reportes ({config.report_history.length})
-							</Typography>
+							<Typography variant="h6">Historial de reportes ({config.report_history.length})</Typography>
 							{historyOpen ? <ArrowUp2 size={20} /> : <ArrowDown2 size={20} />}
 						</Stack>
 						<Collapse in={historyOpen}>
@@ -1128,9 +1167,7 @@ pm2 save`}
 														sx={{ cursor: "pointer", "& > *": { borderBottom: expandedHistoryIdx === idx ? "unset" : undefined } }}
 														onClick={() => setExpandedHistoryIdx(expandedHistoryIdx === idx ? null : idx)}
 													>
-														<TableCell>
-															{expandedHistoryIdx === idx ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}
-														</TableCell>
+														<TableCell>{expandedHistoryIdx === idx ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}</TableCell>
 														<TableCell>{formatDate(entry.date)}</TableCell>
 														<TableCell>
 															{entry.status === "OK" && <Chip label="OK" color="success" size="small" />}

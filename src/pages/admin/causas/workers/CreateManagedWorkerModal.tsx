@@ -126,8 +126,7 @@ const CreateManagedWorkerModal: React.FC<CreateManagedWorkerModalProps> = ({ ope
 				<Stack spacing={2.5} sx={{ mt: 2 }}>
 					<Alert severity="info" variant="outlined">
 						<Typography variant="body2">
-							Este worker será gestionado por el Scraping Manager. Se iniciará automáticamente en el próximo ciclo de
-							reconciliación (~30s).
+							Este worker será gestionado por el Scraping Manager. Se iniciará automáticamente en el próximo ciclo de reconciliación (~30s).
 						</Typography>
 					</Alert>
 

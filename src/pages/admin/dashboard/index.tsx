@@ -110,7 +110,8 @@ const metricInfo: Record<string, string> = {
 	// PJN Folders
 	pjnTotal: "Total de causas PJN (Poder Judicial de la Nación) = Verificadas + No Verificadas + Pendientes.",
 	pjnVerified: "Causas PJN verificadas y válidas (verified: true, isValid: true). Corresponde a la ruta 'Carpetas Verificadas (App)'.",
-	pjnNonVerified: "Causas PJN verificadas pero no válidas (verified: true, isValid: false). Corresponde a la ruta 'Carpetas No Verificadas'.",
+	pjnNonVerified:
+		"Causas PJN verificadas pero no válidas (verified: true, isValid: false). Corresponde a la ruta 'Carpetas No Verificadas'.",
 	pjnPending: "Causas PJN pendientes de verificación (verified: false). Aún no han sido procesadas.",
 	// MEV Folders
 	mevTotal: "Total de causas MEV (Mesa de Entradas Virtual de la Provincia de Buenos Aires) = Verificadas + No Verificadas + Pendientes.",
@@ -137,8 +138,10 @@ const metricInfo: Record<string, string> = {
 	staticSegments: "Segmentos con lista fija de contactos agregados manualmente.",
 	// Services
 	neverBounceCredits: "Créditos disponibles en NeverBounce para verificación de emails. Se consumen al verificar direcciones de correo.",
-	capsolverBalance: "Saldo disponible en Capsolver para resolución de captchas. Se consume al resolver captchas en los workers de scraping.",
-	openaiBalance: "Saldo estimado de OpenAI calculado como: Saldo inicial configurado - Costos consumidos desde la fecha inicial. Configurable en la sección de Gastos.",
+	capsolverBalance:
+		"Saldo disponible en Capsolver para resolución de captchas. Se consume al resolver captchas en los workers de scraping.",
+	openaiBalance:
+		"Saldo estimado de OpenAI calculado como: Saldo inicial configurado - Costos consumidos desde la fecha inicial. Configurable en la sección de Gastos.",
 	// User data
 	userContacts: "Total de contactos creados por todos los usuarios en la plataforma (agenda de contactos).",
 	userCalculators: "Total de cálculos realizados por todos los usuarios en la plataforma.",
@@ -260,9 +263,7 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 			{/* Header: Icon + Title + Info */}
 			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 1, sm: 1.5 } }}>
 				<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 }, minWidth: 0 }}>
-					<Box sx={{ color: COLORS.neutral.light, display: "flex", flexShrink: 0 }}>
-						{icon}
-					</Box>
+					<Box sx={{ color: COLORS.neutral.light, display: "flex", flexShrink: 0 }}>{icon}</Box>
 					<Typography
 						variant="body2"
 						sx={{
@@ -396,9 +397,7 @@ const ChartCard: React.FC<ChartCardProps> = ({ title, icon, children, linkTo, he
 				</Box>
 				{linkTo && <ArrowRight2 size={16} style={{ color: theme.palette.text.secondary, opacity: 0.5 }} />}
 			</Box>
-			<Box sx={{ height: { xs: mobileHeight || height * 0.8, sm: height } }}>
-				{children}
-			</Box>
+			<Box sx={{ height: { xs: mobileHeight || height * 0.8, sm: height } }}>{children}</Box>
 		</Paper>
 	);
 };
@@ -757,7 +756,20 @@ const AdminDashboard = () => {
 		fetchEjeStats();
 		fetchTasasStatus();
 		fetchDatosPrevsStats();
-	}, [fetchData, fetchNeverBounceCredits, fetchCapsolverBalance, fetchOpenaiBalance, fetchEligibilityStats, fetchMisCausasCoverage, fetchMevEligibilityStats, fetchEjeEligibilityStats, fetchStuckDocumentsStats, fetchEjeStats, fetchTasasStatus, fetchDatosPrevsStats]);
+	}, [
+		fetchData,
+		fetchNeverBounceCredits,
+		fetchCapsolverBalance,
+		fetchOpenaiBalance,
+		fetchEligibilityStats,
+		fetchMisCausasCoverage,
+		fetchMevEligibilityStats,
+		fetchEjeEligibilityStats,
+		fetchStuckDocumentsStats,
+		fetchEjeStats,
+		fetchTasasStatus,
+		fetchDatosPrevsStats,
+	]);
 
 	useRequestQueueRefresh(fetchData);
 
@@ -777,61 +789,109 @@ const AdminDashboard = () => {
 	};
 
 	// Chart data - Consistent colors: Green=Active/Verified, Gray=Inactive/Unverified
-	const userStatusData = useMemo(() => data ? [
-		{ name: "Activos", value: data.users.active, color: COLORS.success.main },
-		{ name: "Inactivos", value: data.users.total - data.users.active, color: COLORS.neutral.light },
-	] : [], [data]);
+	const userStatusData = useMemo(
+		() =>
+			data
+				? [
+						{ name: "Activos", value: data.users.active, color: COLORS.success.main },
+						{ name: "Inactivos", value: data.users.total - data.users.active, color: COLORS.neutral.light },
+				  ]
+				: [],
+		[data],
+	);
 
-	const userVerificationData = useMemo(() => data ? [
-		{ name: "Verificados", value: data.users.verified, color: COLORS.success.main },
-		{ name: "Sin verificar", value: data.users.total - data.users.verified, color: COLORS.neutral.light },
-	] : [], [data]);
+	const userVerificationData = useMemo(
+		() =>
+			data
+				? [
+						{ name: "Verificados", value: data.users.verified, color: COLORS.success.main },
+						{ name: "Sin verificar", value: data.users.total - data.users.verified, color: COLORS.neutral.light },
+				  ]
+				: [],
+		[data],
+	);
 
 	// Subscription plans: Gray=Free, Primary=Standard, Premium=Violet (only place for violet)
-	const subscriptionPlanData = useMemo(() => data ? [
-		{ name: "Free", value: data.subscriptions.live?.byPlan?.free || 0, color: COLORS.neutral.main },
-		{ name: "Standard", value: data.subscriptions.live?.byPlan?.standard || 0, color: COLORS.primary.main },
-		{ name: "Premium", value: data.subscriptions.live?.byPlan?.premium || 0, color: COLORS.premium.main },
-	].filter(item => item.value > 0) : [], [data]);
+	const subscriptionPlanData = useMemo(
+		() =>
+			data
+				? [
+						{ name: "Free", value: data.subscriptions.live?.byPlan?.free || 0, color: COLORS.neutral.main },
+						{ name: "Standard", value: data.subscriptions.live?.byPlan?.standard || 0, color: COLORS.primary.main },
+						{ name: "Premium", value: data.subscriptions.live?.byPlan?.premium || 0, color: COLORS.premium.main },
+				  ].filter((item) => item.value > 0)
+				: [],
+		[data],
+	);
 
-	const foldersComparisonData = useMemo(() => data ? [
-		{
-			name: "PJN",
-			verificadas: data.folders.pjn?.verified || 0,
-			noVerificadas: data.folders.pjn?.nonVerified || 0,
-			pendientes: data.folders.pjn?.pending || 0,
-		},
-		{
-			name: "MEV",
-			verificadas: data.folders.mev?.verified || 0,
-			noVerificadas: data.folders.mev?.nonVerified || 0,
-			pendientes: data.folders.mev?.pending || 0,
-		},
-	] : [], [data]);
+	const foldersComparisonData = useMemo(
+		() =>
+			data
+				? [
+						{
+							name: "PJN",
+							verificadas: data.folders.pjn?.verified || 0,
+							noVerificadas: data.folders.pjn?.nonVerified || 0,
+							pendientes: data.folders.pjn?.pending || 0,
+						},
+						{
+							name: "MEV",
+							verificadas: data.folders.mev?.verified || 0,
+							noVerificadas: data.folders.mev?.nonVerified || 0,
+							pendientes: data.folders.mev?.pending || 0,
+						},
+				  ]
+				: [],
+		[data],
+	);
 
 	// Marketing - consistent: Green=Active, Gray=Inactive
-	const marketingContactsData = useMemo(() => data ? [
-		{ name: "Activos", value: data.marketing.contacts.active, color: COLORS.success.main },
-		{ name: "Inactivos", value: data.marketing.contacts.total - data.marketing.contacts.active, color: COLORS.neutral.light },
-	] : [], [data]);
+	const marketingContactsData = useMemo(
+		() =>
+			data
+				? [
+						{ name: "Activos", value: data.marketing.contacts.active, color: COLORS.success.main },
+						{ name: "Inactivos", value: data.marketing.contacts.total - data.marketing.contacts.active, color: COLORS.neutral.light },
+				  ]
+				: [],
+		[data],
+	);
 
 	// Marketing - Email verification (isEmailVerified field)
-	const emailVerificationData = useMemo(() => data ? [
-		{ name: "Verificados", value: data.marketing.contacts.emailVerified || 0, color: COLORS.success.main },
-		{ name: "No Verificados", value: data.marketing.contacts.emailNotVerified || 0, color: COLORS.neutral.light },
-	] : [], [data]);
+	const emailVerificationData = useMemo(
+		() =>
+			data
+				? [
+						{ name: "Verificados", value: data.marketing.contacts.emailVerified || 0, color: COLORS.success.main },
+						{ name: "No Verificados", value: data.marketing.contacts.emailNotVerified || 0, color: COLORS.neutral.light },
+				  ]
+				: [],
+		[data],
+	);
 
 	// Marketing - Verification result (emailVerification.verified field - within verified emails)
-	const verificationResultData = useMemo(() => data ? [
-		{ name: "Válidos", value: data.marketing.contacts.verificationValid || 0, color: COLORS.success.main },
-		{ name: "No Válidos", value: data.marketing.contacts.verificationNotValid || 0, color: COLORS.neutral.light },
-	] : [], [data]);
+	const verificationResultData = useMemo(
+		() =>
+			data
+				? [
+						{ name: "Válidos", value: data.marketing.contacts.verificationValid || 0, color: COLORS.success.main },
+						{ name: "No Válidos", value: data.marketing.contacts.verificationNotValid || 0, color: COLORS.neutral.light },
+				  ]
+				: [],
+		[data],
+	);
 
 	// Segments - use primary blue tones (no violet - not premium)
-	const segmentsData = useMemo(() => data ? [
-		{ name: "Dinámicos", value: data.marketing.segments.dynamic, color: COLORS.primary.main },
-		{ name: "Estáticos", value: data.marketing.segments.static, color: COLORS.primary.light },
-	].filter(item => item.value > 0) : [], [data]);
+	const segmentsData = useMemo(
+		() =>
+			data
+				? [
+						{ name: "Dinámicos", value: data.marketing.segments.dynamic, color: COLORS.primary.main },
+						{ name: "Estáticos", value: data.marketing.segments.static, color: COLORS.primary.light },
+				  ].filter((item) => item.value > 0)
+				: [],
+		[data],
+	);
 
 	const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
 		if (percent < 0.05) return null;
@@ -929,7 +989,9 @@ const AdminDashboard = () => {
 								}}
 							>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-									<Box sx={{ color: COLORS.success.main }}><Folder size={20} /></Box>
+									<Box sx={{ color: COLORS.success.main }}>
+										<Folder size={20} />
+									</Box>
 									<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>
 										Carpetas Verificadas
 									</Typography>
@@ -940,7 +1002,11 @@ const AdminDashboard = () => {
 								) : (
 									<>
 										<Typography variant="h3" sx={{ fontWeight: 700, color: COLORS.success.main, mb: 0.5, textAlign: "center" }}>
-											{((data?.folders.pjn?.verified || 0) + (data?.folders.mev?.verified || 0) + (ejeStats?.status.valid || 0)).toLocaleString()}
+											{(
+												(data?.folders.pjn?.verified || 0) +
+												(data?.folders.mev?.verified || 0) +
+												(ejeStats?.status.valid || 0)
+											).toLocaleString()}
 										</Typography>
 										<Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", justifyContent: "center" }}>
 											<Chip
@@ -953,7 +1019,7 @@ const AdminDashboard = () => {
 													fontWeight: 500,
 													fontSize: "0.65rem",
 													cursor: "pointer",
-													"&:hover": { bgcolor: alpha(COLORS.primary.main, 0.2) }
+													"&:hover": { bgcolor: alpha(COLORS.primary.main, 0.2) },
 												}}
 											/>
 											<Chip
@@ -966,7 +1032,7 @@ const AdminDashboard = () => {
 													fontWeight: 500,
 													fontSize: "0.65rem",
 													cursor: "pointer",
-													"&:hover": { bgcolor: alpha(COLORS.neutral.main, 0.2) }
+													"&:hover": { bgcolor: alpha(COLORS.neutral.main, 0.2) },
 												}}
 											/>
 											<Chip
@@ -979,7 +1045,7 @@ const AdminDashboard = () => {
 													fontWeight: 500,
 													fontSize: "0.65rem",
 													cursor: "pointer",
-													"&:hover": { bgcolor: alpha(COLORS.success.main, 0.2) }
+													"&:hover": { bgcolor: alpha(COLORS.success.main, 0.2) },
 												}}
 											/>
 										</Box>
@@ -1081,26 +1147,26 @@ const AdminDashboard = () => {
 									p: { xs: 1.5, sm: 2.5 },
 									borderRadius: 2,
 									bgcolor: theme.palette.background.paper,
-									border: `1px solid ${
-										tasasStatus && tasasStatus.noActualizadas > 0
-											? theme.palette.error.main
-											: theme.palette.divider
-									}`,
+									border: `1px solid ${tasasStatus && tasasStatus.noActualizadas > 0 ? theme.palette.error.main : theme.palette.divider}`,
 									height: "100%",
 									cursor: "pointer",
 									transition: "all 0.2s ease",
 									"&:hover": {
 										boxShadow: theme.shadows[2],
-										borderColor: tasasStatus && tasasStatus.noActualizadas > 0
-											? theme.palette.error.dark
-											: COLORS.primary.light,
+										borderColor: tasasStatus && tasasStatus.noActualizadas > 0 ? theme.palette.error.dark : COLORS.primary.light,
 									},
 								}}
 							>
 								{/* Header */}
 								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 1, sm: 1.5 } }}>
 									<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 }, minWidth: 0 }}>
-										<Box sx={{ color: tasasStatus && tasasStatus.noActualizadas > 0 ? COLORS.error.main : COLORS.neutral.light, display: "flex", flexShrink: 0 }}>
+										<Box
+											sx={{
+												color: tasasStatus && tasasStatus.noActualizadas > 0 ? COLORS.error.main : COLORS.neutral.light,
+												display: "flex",
+												flexShrink: 0,
+											}}
+										>
 											{tasasStatus && tasasStatus.noActualizadas > 0 ? <Warning2 size={20} /> : <Chart size={20} />}
 										</Box>
 										<Typography
@@ -1144,10 +1210,13 @@ const AdminDashboard = () => {
 											<Tooltip
 												title={
 													<Box>
-														<Typography variant="caption" fontWeight={600}>Sin actualizar:</Typography>
+														<Typography variant="caption" fontWeight={600}>
+															Sin actualizar:
+														</Typography>
 														{tasasStatus.desactualizadas.map((d) => (
 															<Typography key={d.tipoTasa} variant="caption" display="block">
-																• {d.tipoTasa}{d.fechaUltima ? ` (${d.fechaUltima})` : ""}
+																• {d.tipoTasa}
+																{d.fechaUltima ? ` (${d.fechaUltima})` : ""}
 															</Typography>
 														))}
 													</Box>
@@ -1177,7 +1246,9 @@ const AdminDashboard = () => {
 									p: { xs: 1.5, sm: 2.5 },
 									borderRadius: 2,
 									bgcolor: theme.palette.background.paper,
-									border: `1px solid ${datosPrevsStats && datosPrevsStats.mesesFaltantes > 0 ? theme.palette.warning.main : theme.palette.divider}`,
+									border: `1px solid ${
+										datosPrevsStats && datosPrevsStats.mesesFaltantes > 0 ? theme.palette.warning.main : theme.palette.divider
+									}`,
 									height: "100%",
 									cursor: "pointer",
 									transition: "all 0.2s ease",
@@ -1289,87 +1360,90 @@ const AdminDashboard = () => {
 								</Box>
 							</Box>
 
-						{loadingEligibility ? (
-							<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-								<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
-							</Box>
-						) : eligibilityStats ? (
-							<>
-								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-									<Typography variant="body2" color="text.secondary">
-										Cobertura hoy
-									</Typography>
-									<Typography variant="h6" fontWeight="bold" color="primary.main">
-										{eligibilityStats.coveragePercent}%
-									</Typography>
+							{loadingEligibility ? (
+								<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
 								</Box>
-								<LinearProgress
-									variant="determinate"
-									value={eligibilityStats.coveragePercent || 0}
-									sx={{
-										height: 8,
-										borderRadius: 4,
-										mb: 2,
-										backgroundColor: alpha(COLORS.neutral.light, 0.3),
-										"& .MuiLinearProgress-bar": {
+							) : eligibilityStats ? (
+								<>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+										<Typography variant="body2" color="text.secondary">
+											Cobertura hoy
+										</Typography>
+										<Typography variant="h6" fontWeight="bold" color="primary.main">
+											{eligibilityStats.coveragePercent}%
+										</Typography>
+									</Box>
+									<LinearProgress
+										variant="determinate"
+										value={eligibilityStats.coveragePercent || 0}
+										sx={{
+											height: 8,
 											borderRadius: 4,
-											backgroundColor:
-												(eligibilityStats.coveragePercent || 0) > 90
-													? COLORS.success.main
-													: (eligibilityStats.coveragePercent || 0) > 70
-													? COLORS.warning.main
-													: COLORS.error.main,
-										},
-									}}
-								/>
-								<Grid container spacing={2}>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
-												{eligibilityStats.updatedToday.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												✅ Actualizados hoy
-											</Typography>
-										</Box>
+											mb: 2,
+											backgroundColor: alpha(COLORS.neutral.light, 0.3),
+											"& .MuiLinearProgress-bar": {
+												borderRadius: 4,
+												backgroundColor:
+													(eligibilityStats.coveragePercent || 0) > 90
+														? COLORS.success.main
+														: (eligibilityStats.coveragePercent || 0) > 70
+														? COLORS.warning.main
+														: COLORS.error.main,
+											},
+										}}
+									/>
+									<Grid container spacing={2}>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
+													{eligibilityStats.updatedToday.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													✅ Actualizados hoy
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
+													{(
+														eligibilityStats.pendingToday ??
+														eligibilityStats.eligible - eligibilityStats.updatedToday - eligibilityStats.eligibleWithErrors
+													).toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													⚠️ Pendientes hoy
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.error.main}>
+													{eligibilityStats.eligibleWithErrors.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													🔴 Con errores
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.primary.main}>
+													{eligibilityStats.eligible.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Total elegibles
+												</Typography>
+											</Box>
+										</Grid>
 									</Grid>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
-												{(eligibilityStats.pendingToday ?? (eligibilityStats.eligible - eligibilityStats.updatedToday - eligibilityStats.eligibleWithErrors)).toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												⚠️ Pendientes hoy
-											</Typography>
-										</Box>
-									</Grid>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.error.main}>
-												{eligibilityStats.eligibleWithErrors.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												🔴 Con errores
-											</Typography>
-										</Box>
-									</Grid>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.primary.main}>
-												{eligibilityStats.eligible.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												Total elegibles
-											</Typography>
-										</Box>
-									</Grid>
-								</Grid>
-							</>
-						) : (
-							<Typography variant="body2" color="text.secondary" textAlign="center">
-								No se pudieron cargar las estadísticas
-							</Typography>
-						)}
+								</>
+							) : (
+								<Typography variant="body2" color="text.secondary" textAlign="center">
+									No se pudieron cargar las estadísticas
+								</Typography>
+							)}
 						</Paper>
 					</Grid>
 
@@ -1414,87 +1488,90 @@ const AdminDashboard = () => {
 								</Box>
 							</Box>
 
-						{loadingMevEligibility ? (
-							<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-								<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
-							</Box>
-						) : mevEligibilityStats ? (
-							<>
-								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-									<Typography variant="body2" color="text.secondary">
-										Cobertura hoy
-									</Typography>
-									<Typography variant="h6" fontWeight="bold" sx={{ color: COLORS.neutral.main }}>
-										{mevEligibilityStats.coveragePercent}%
-									</Typography>
+							{loadingMevEligibility ? (
+								<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
 								</Box>
-								<LinearProgress
-									variant="determinate"
-									value={mevEligibilityStats.coveragePercent || 0}
-									sx={{
-										height: 8,
-										borderRadius: 4,
-										mb: 2,
-										backgroundColor: alpha(COLORS.neutral.light, 0.3),
-										"& .MuiLinearProgress-bar": {
+							) : mevEligibilityStats ? (
+								<>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+										<Typography variant="body2" color="text.secondary">
+											Cobertura hoy
+										</Typography>
+										<Typography variant="h6" fontWeight="bold" sx={{ color: COLORS.neutral.main }}>
+											{mevEligibilityStats.coveragePercent}%
+										</Typography>
+									</Box>
+									<LinearProgress
+										variant="determinate"
+										value={mevEligibilityStats.coveragePercent || 0}
+										sx={{
+											height: 8,
 											borderRadius: 4,
-											backgroundColor:
-												(mevEligibilityStats.coveragePercent || 0) > 90
-													? COLORS.success.main
-													: (mevEligibilityStats.coveragePercent || 0) > 70
-													? COLORS.warning.main
-													: COLORS.error.main,
-										},
-									}}
-								/>
-								<Grid container spacing={2}>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
-												{mevEligibilityStats.updatedToday.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												Actualizados hoy
-											</Typography>
-										</Box>
+											mb: 2,
+											backgroundColor: alpha(COLORS.neutral.light, 0.3),
+											"& .MuiLinearProgress-bar": {
+												borderRadius: 4,
+												backgroundColor:
+													(mevEligibilityStats.coveragePercent || 0) > 90
+														? COLORS.success.main
+														: (mevEligibilityStats.coveragePercent || 0) > 70
+														? COLORS.warning.main
+														: COLORS.error.main,
+											},
+										}}
+									/>
+									<Grid container spacing={2}>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
+													{mevEligibilityStats.updatedToday.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Actualizados hoy
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
+													{(
+														mevEligibilityStats.pendingToday ??
+														mevEligibilityStats.eligible - mevEligibilityStats.updatedToday - mevEligibilityStats.eligibleWithErrors
+													).toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Pendientes hoy
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.error.main}>
+													{mevEligibilityStats.eligibleWithErrors.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Con errores
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.neutral.main}>
+													{mevEligibilityStats.eligible.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Total elegibles
+												</Typography>
+											</Box>
+										</Grid>
 									</Grid>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
-												{(mevEligibilityStats.pendingToday ?? (mevEligibilityStats.eligible - mevEligibilityStats.updatedToday - mevEligibilityStats.eligibleWithErrors)).toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												Pendientes hoy
-											</Typography>
-										</Box>
-									</Grid>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.error.main}>
-												{mevEligibilityStats.eligibleWithErrors.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												Con errores
-											</Typography>
-										</Box>
-									</Grid>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.neutral.main}>
-												{mevEligibilityStats.eligible.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												Total elegibles
-											</Typography>
-										</Box>
-									</Grid>
-								</Grid>
-							</>
-						) : (
-							<Typography variant="body2" color="text.secondary" textAlign="center">
-								No se pudieron cargar las estadísticas
-							</Typography>
-						)}
+								</>
+							) : (
+								<Typography variant="body2" color="text.secondary" textAlign="center">
+									No se pudieron cargar las estadísticas
+								</Typography>
+							)}
 						</Paper>
 					</Grid>
 
@@ -1539,87 +1616,87 @@ const AdminDashboard = () => {
 								</Box>
 							</Box>
 
-						{loadingEjeEligibility ? (
-							<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-								<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
-							</Box>
-						) : ejeEligibilityStats ? (
-							<>
-								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-									<Typography variant="body2" color="text.secondary">
-										Cobertura hoy
-									</Typography>
-									<Typography variant="h6" fontWeight="bold" sx={{ color: COLORS.success.main }}>
-										{ejeEligibilityStats.coveragePercent.toFixed(1)}%
-									</Typography>
+							{loadingEjeEligibility ? (
+								<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
 								</Box>
-								<LinearProgress
-									variant="determinate"
-									value={ejeEligibilityStats.coveragePercent || 0}
-									sx={{
-										height: 8,
-										borderRadius: 4,
-										mb: 2,
-										backgroundColor: alpha(COLORS.neutral.light, 0.3),
-										"& .MuiLinearProgress-bar": {
+							) : ejeEligibilityStats ? (
+								<>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+										<Typography variant="body2" color="text.secondary">
+											Cobertura hoy
+										</Typography>
+										<Typography variant="h6" fontWeight="bold" sx={{ color: COLORS.success.main }}>
+											{ejeEligibilityStats.coveragePercent.toFixed(1)}%
+										</Typography>
+									</Box>
+									<LinearProgress
+										variant="determinate"
+										value={ejeEligibilityStats.coveragePercent || 0}
+										sx={{
+											height: 8,
 											borderRadius: 4,
-											backgroundColor:
-												(ejeEligibilityStats.coveragePercent || 0) > 90
-													? COLORS.success.main
-													: (ejeEligibilityStats.coveragePercent || 0) > 70
-													? COLORS.warning.main
-													: COLORS.error.main,
-										},
-									}}
-								/>
-								<Grid container spacing={2}>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
-												{ejeEligibilityStats.actualizadosHoy.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												Actualizados hoy
-											</Typography>
-										</Box>
+											mb: 2,
+											backgroundColor: alpha(COLORS.neutral.light, 0.3),
+											"& .MuiLinearProgress-bar": {
+												borderRadius: 4,
+												backgroundColor:
+													(ejeEligibilityStats.coveragePercent || 0) > 90
+														? COLORS.success.main
+														: (ejeEligibilityStats.coveragePercent || 0) > 70
+														? COLORS.warning.main
+														: COLORS.error.main,
+											},
+										}}
+									/>
+									<Grid container spacing={2}>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
+													{ejeEligibilityStats.actualizadosHoy.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Actualizados hoy
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
+													{ejeEligibilityStats.pendientesHoy.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Pendientes hoy
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
+													{ejeEligibilityStats.totalElegibles.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Total elegibles
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.neutral.main}>
+													{ejeEligibilityStats.noElegibles.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													No elegibles
+												</Typography>
+											</Box>
+										</Grid>
 									</Grid>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
-												{ejeEligibilityStats.pendientesHoy.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												Pendientes hoy
-											</Typography>
-										</Box>
-									</Grid>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
-												{ejeEligibilityStats.totalElegibles.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												Total elegibles
-											</Typography>
-										</Box>
-									</Grid>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.neutral.main}>
-												{ejeEligibilityStats.noElegibles.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												No elegibles
-											</Typography>
-										</Box>
-									</Grid>
-								</Grid>
-							</>
-						) : (
-							<Typography variant="body2" color="text.secondary" textAlign="center">
-								No se pudieron cargar las estadísticas
-							</Typography>
-						)}
+								</>
+							) : (
+								<Typography variant="body2" color="text.secondary" textAlign="center">
+									No se pudieron cargar las estadísticas
+								</Typography>
+							)}
 						</Paper>
 					</Grid>
 
@@ -1676,106 +1753,110 @@ const AdminDashboard = () => {
 								</Box>
 							</Box>
 
-						{loadingStuckDocuments ? (
-							<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-								<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
-							</Box>
-						) : stuckDocumentsStats ? (
-							<>
-								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-									<Typography variant="body2" color="text.secondary">
-										Tasa de éxito (últimas 24h)
-									</Typography>
-									<Typography variant="h6" fontWeight="bold" color="primary.main">
-										{stuckDocumentsStats.recent.successRate}
-									</Typography>
+							{loadingStuckDocuments ? (
+								<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
 								</Box>
-								<LinearProgress
-									variant="determinate"
-									value={parseFloat(stuckDocumentsStats.recent.successRate) || 0}
-									sx={{
-										height: 8,
-										borderRadius: 4,
-										mb: 2,
-										backgroundColor: alpha(COLORS.neutral.light, 0.3),
-										"& .MuiLinearProgress-bar": {
+							) : stuckDocumentsStats ? (
+								<>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+										<Typography variant="body2" color="text.secondary">
+											Tasa de éxito (últimas 24h)
+										</Typography>
+										<Typography variant="h6" fontWeight="bold" color="primary.main">
+											{stuckDocumentsStats.recent.successRate}
+										</Typography>
+									</Box>
+									<LinearProgress
+										variant="determinate"
+										value={parseFloat(stuckDocumentsStats.recent.successRate) || 0}
+										sx={{
+											height: 8,
 											borderRadius: 4,
-											backgroundColor:
-												parseFloat(stuckDocumentsStats.recent.successRate) > 50
-													? COLORS.success.main
-													: parseFloat(stuckDocumentsStats.recent.successRate) > 20
-													? COLORS.warning.main
-													: COLORS.error.main,
-										},
-									}}
-								/>
-								<Grid container spacing={2}>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
-												{stuckDocumentsStats.pending.total.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												⏳ Pendientes
+											mb: 2,
+											backgroundColor: alpha(COLORS.neutral.light, 0.3),
+											"& .MuiLinearProgress-bar": {
+												borderRadius: 4,
+												backgroundColor:
+													parseFloat(stuckDocumentsStats.recent.successRate) > 50
+														? COLORS.success.main
+														: parseFloat(stuckDocumentsStats.recent.successRate) > 20
+														? COLORS.warning.main
+														: COLORS.error.main,
+											},
+										}}
+									/>
+									<Grid container spacing={2}>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
+													{stuckDocumentsStats.pending.total.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													⏳ Pendientes
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
+													{stuckDocumentsStats.totals.fixed.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													✅ Reparados
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.error.main}>
+													{stuckDocumentsStats.totals.failed.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													🔴 Fallidos
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.primary.main}>
+													{stuckDocumentsStats.totals.processed.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Total procesados
+												</Typography>
+											</Box>
+										</Grid>
+									</Grid>
+									{stuckDocumentsStats.repeatedFailures && stuckDocumentsStats.repeatedFailures.length > 0 && (
+										<Box sx={{ mt: 2, pt: 2, borderTop: `1px dashed ${theme.palette.divider}` }}>
+											<Typography variant="caption" color="error.main" fontWeight="bold">
+												⚠️ {stuckDocumentsStats.repeatedFailures.length} documento(s) con fallos repetidos
 											</Typography>
 										</Box>
-									</Grid>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
-												{stuckDocumentsStats.totals.fixed.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												✅ Reparados
-											</Typography>
-										</Box>
-									</Grid>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.error.main}>
-												{stuckDocumentsStats.totals.failed.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												🔴 Fallidos
+									)}
+									{stuckDocumentsStats.chronicStuck && stuckDocumentsStats.chronicStuck.length > 0 && (
+										<Box
+											sx={{
+												mt: stuckDocumentsStats.repeatedFailures?.length ? 1 : 2,
+												pt: stuckDocumentsStats.repeatedFailures?.length ? 0 : 2,
+												borderTop: stuckDocumentsStats.repeatedFailures?.length ? "none" : `1px dashed ${theme.palette.divider}`,
+											}}
+										>
+											<Typography variant="caption" color="error.main" fontWeight="bold">
+												🔴 {stuckDocumentsStats.chronicStuck.length} documento(s) crónicamente atorados
+												{stuckDocumentsStats.chronicStuck.some((d) => d.daysSinceFirst && d.daysSinceFirst >= 7) && (
+													<span style={{ marginLeft: 4 }}>(algunos por más de 7 días)</span>
+												)}
 											</Typography>
 										</Box>
-									</Grid>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.primary.main}>
-												{stuckDocumentsStats.totals.processed.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												Total procesados
-											</Typography>
-										</Box>
-									</Grid>
-								</Grid>
-								{stuckDocumentsStats.repeatedFailures && stuckDocumentsStats.repeatedFailures.length > 0 && (
-									<Box sx={{ mt: 2, pt: 2, borderTop: `1px dashed ${theme.palette.divider}` }}>
-										<Typography variant="caption" color="error.main" fontWeight="bold">
-											⚠️ {stuckDocumentsStats.repeatedFailures.length} documento(s) con fallos repetidos
-										</Typography>
-									</Box>
-								)}
-								{stuckDocumentsStats.chronicStuck && stuckDocumentsStats.chronicStuck.length > 0 && (
-									<Box sx={{ mt: stuckDocumentsStats.repeatedFailures?.length ? 1 : 2, pt: stuckDocumentsStats.repeatedFailures?.length ? 0 : 2, borderTop: stuckDocumentsStats.repeatedFailures?.length ? 'none' : `1px dashed ${theme.palette.divider}` }}>
-										<Typography variant="caption" color="error.main" fontWeight="bold">
-											🔴 {stuckDocumentsStats.chronicStuck.length} documento(s) crónicamente atorados
-											{stuckDocumentsStats.chronicStuck.some(d => d.daysSinceFirst && d.daysSinceFirst >= 7) && (
-												<span style={{ marginLeft: 4 }}>
-													(algunos por más de 7 días)
-												</span>
-											)}
-										</Typography>
-									</Box>
-								)}
-							</>
-						) : (
-							<Typography variant="body2" color="text.secondary" textAlign="center">
-								No se pudieron cargar las estadísticas
-							</Typography>
-						)}
+									)}
+								</>
+							) : (
+								<Typography variant="body2" color="text.secondary" textAlign="center">
+									No se pudieron cargar las estadísticas
+								</Typography>
+							)}
 						</Paper>
 					</Grid>
 
@@ -1820,87 +1901,87 @@ const AdminDashboard = () => {
 								</Box>
 							</Box>
 
-						{loadingMisCausasCoverage ? (
-							<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-								<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
-							</Box>
-						) : misCausasCoverage ? (
-							<>
-								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-									<Typography variant="body2" color="text.secondary">
-										Cobertura hoy
-									</Typography>
-									<Typography variant="h6" fontWeight="bold" color="primary.main">
-										{misCausasCoverage.coveragePercent}%
-									</Typography>
+							{loadingMisCausasCoverage ? (
+								<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
 								</Box>
-								<LinearProgress
-									variant="determinate"
-									value={misCausasCoverage.coveragePercent || 0}
-									sx={{
-										height: 8,
-										borderRadius: 4,
-										mb: 2,
-										backgroundColor: alpha(COLORS.neutral.light, 0.3),
-										"& .MuiLinearProgress-bar": {
+							) : misCausasCoverage ? (
+								<>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+										<Typography variant="body2" color="text.secondary">
+											Cobertura hoy
+										</Typography>
+										<Typography variant="h6" fontWeight="bold" color="primary.main">
+											{misCausasCoverage.coveragePercent}%
+										</Typography>
+									</Box>
+									<LinearProgress
+										variant="determinate"
+										value={misCausasCoverage.coveragePercent || 0}
+										sx={{
+											height: 8,
 											borderRadius: 4,
-											backgroundColor:
-												(misCausasCoverage.coveragePercent || 0) > 90
-													? COLORS.success.main
-													: (misCausasCoverage.coveragePercent || 0) > 70
-													? COLORS.warning.main
-													: COLORS.error.main,
-										},
-									}}
-								/>
-								<Grid container spacing={2}>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
-												{misCausasCoverage.updatedToday.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												Actualizados hoy
-											</Typography>
-										</Box>
+											mb: 2,
+											backgroundColor: alpha(COLORS.neutral.light, 0.3),
+											"& .MuiLinearProgress-bar": {
+												borderRadius: 4,
+												backgroundColor:
+													(misCausasCoverage.coveragePercent || 0) > 90
+														? COLORS.success.main
+														: (misCausasCoverage.coveragePercent || 0) > 70
+														? COLORS.warning.main
+														: COLORS.error.main,
+											},
+										}}
+									/>
+									<Grid container spacing={2}>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
+													{misCausasCoverage.updatedToday.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Actualizados hoy
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
+													{misCausasCoverage.pending.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Pendientes
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.error.main}>
+													{misCausasCoverage.withErrors.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Con errores
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography variant="h5" fontWeight="bold" color={COLORS.primary.main}>
+													{misCausasCoverage.total.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Total
+												</Typography>
+											</Box>
+										</Grid>
 									</Grid>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
-												{misCausasCoverage.pending.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												Pendientes
-											</Typography>
-										</Box>
-									</Grid>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.error.main}>
-												{misCausasCoverage.withErrors.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												Con errores
-											</Typography>
-										</Box>
-									</Grid>
-									<Grid item xs={6} sm={3}>
-										<Box sx={{ textAlign: "center" }}>
-											<Typography variant="h5" fontWeight="bold" color={COLORS.primary.main}>
-												{misCausasCoverage.total.toLocaleString()}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												Total
-											</Typography>
-										</Box>
-									</Grid>
-								</Grid>
-							</>
-						) : (
-							<Typography variant="body2" color="text.secondary" textAlign="center">
-								No se pudieron cargar las estadísticas
-							</Typography>
-						)}
+								</>
+							) : (
+								<Typography variant="body2" color="text.secondary" textAlign="center">
+									No se pudieron cargar las estadísticas
+								</Typography>
+							)}
 						</Paper>
 					</Grid>
 				</Grid>
@@ -1909,7 +1990,11 @@ const AdminDashboard = () => {
 				<Grid container spacing={{ xs: 2, sm: 3 }}>
 					{/* Users Section with Charts */}
 					<Grid item xs={12} lg={6}>
-						<SectionHeader title="Usuarios" subtitle="Estadísticas de usuarios registrados" icon={<UserSquare size={22} variant="Bold" />} />
+						<SectionHeader
+							title="Usuarios"
+							subtitle="Estadísticas de usuarios registrados"
+							icon={<UserSquare size={22} variant="Bold" />}
+						/>
 						<Grid container spacing={{ xs: 1.5, sm: 2 }}>
 							{/* User Status Donut Chart */}
 							<Grid item xs={12} sm={6}>
@@ -1946,7 +2031,11 @@ const AdminDashboard = () => {
 												<StatsLegend
 													items={[
 														{ label: "Activos", value: data?.users.active || 0, color: COLORS.success.main, infoKey: "activeUsers" },
-														{ label: "Inactivos", value: (data?.users.total || 0) - (data?.users.active || 0), color: COLORS.neutral.light },
+														{
+															label: "Inactivos",
+															value: (data?.users.total || 0) - (data?.users.active || 0),
+															color: COLORS.neutral.light,
+														},
 													]}
 													loading={loading}
 												/>
@@ -1990,8 +2079,17 @@ const AdminDashboard = () => {
 											<Grid item xs={5}>
 												<StatsLegend
 													items={[
-														{ label: "Verificados", value: data?.users.verified || 0, color: COLORS.success.main, infoKey: "verifiedUsers" },
-														{ label: "Sin verificar", value: (data?.users.total || 0) - (data?.users.verified || 0), color: COLORS.neutral.light },
+														{
+															label: "Verificados",
+															value: data?.users.verified || 0,
+															color: COLORS.success.main,
+															infoKey: "verifiedUsers",
+														},
+														{
+															label: "Sin verificar",
+															value: (data?.users.total || 0) - (data?.users.verified || 0),
+															color: COLORS.neutral.light,
+														},
 													]}
 													loading={loading}
 												/>
@@ -2013,7 +2111,12 @@ const AdminDashboard = () => {
 						<Grid container spacing={{ xs: 1.5, sm: 2 }}>
 							{/* Plan Distribution Pie Chart - Live Mode */}
 							<Grid item xs={12} sm={6}>
-								<ChartCard title="Distribución por Plan (Live)" icon={<TickCircle size={18} />} linkTo="/admin/usuarios/suscripciones" height={200}>
+								<ChartCard
+									title="Distribución por Plan (Live)"
+									icon={<TickCircle size={18} />}
+									linkTo="/admin/usuarios/suscripciones"
+									height={200}
+								>
 									{loading ? (
 										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
 											<Skeleton variant="circular" width={150} height={150} />
@@ -2045,9 +2148,24 @@ const AdminDashboard = () => {
 											<Grid item xs={5}>
 												<StatsLegend
 													items={[
-														{ label: "Free", value: data?.subscriptions.live?.byPlan?.free || 0, color: COLORS.neutral.main, infoKey: "freePlan" },
-														{ label: "Standard", value: data?.subscriptions.live?.byPlan?.standard || 0, color: COLORS.primary.main, infoKey: "standardPlan" },
-														{ label: "Premium", value: data?.subscriptions.live?.byPlan?.premium || 0, color: COLORS.premium.main, infoKey: "premiumPlan" },
+														{
+															label: "Free",
+															value: data?.subscriptions.live?.byPlan?.free || 0,
+															color: COLORS.neutral.main,
+															infoKey: "freePlan",
+														},
+														{
+															label: "Standard",
+															value: data?.subscriptions.live?.byPlan?.standard || 0,
+															color: COLORS.primary.main,
+															infoKey: "standardPlan",
+														},
+														{
+															label: "Premium",
+															value: data?.subscriptions.live?.byPlan?.premium || 0,
+															color: COLORS.premium.main,
+															infoKey: "premiumPlan",
+														},
 													]}
 													loading={loading}
 												/>
@@ -2055,7 +2173,9 @@ const AdminDashboard = () => {
 										</Grid>
 									) : (
 										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-											<Typography variant="body2" color="textSecondary">Sin datos</Typography>
+											<Typography variant="body2" color="textSecondary">
+												Sin datos
+											</Typography>
 										</Box>
 									)}
 								</ChartCard>
@@ -2092,7 +2212,10 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}>
+													<Typography
+														variant="h5"
+														sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}
+													>
 														{(data?.subscriptions.test?.byPlan?.free || 0).toLocaleString()}
 													</Typography>
 												)}
@@ -2106,7 +2229,10 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}>
+													<Typography
+														variant="h5"
+														sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}
+													>
 														{(data?.subscriptions.test?.byPlan?.standard || 0).toLocaleString()}
 													</Typography>
 												)}
@@ -2120,7 +2246,10 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}>
+													<Typography
+														variant="h5"
+														sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}
+													>
 														{(data?.subscriptions.test?.byPlan?.premium || 0).toLocaleString()}
 													</Typography>
 												)}
@@ -2145,7 +2274,8 @@ const AdminDashboard = () => {
 											Total: <strong>{(data?.subscriptions.test?.total || 0).toLocaleString()}</strong>
 										</Typography>
 										<Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}>
-											Activas: <strong style={{ color: COLORS.warning.main }}>{(data?.subscriptions.test?.active || 0).toLocaleString()}</strong>
+											Activas:{" "}
+											<strong style={{ color: COLORS.warning.main }}>{(data?.subscriptions.test?.active || 0).toLocaleString()}</strong>
 										</Typography>
 									</Box>
 								</Paper>
@@ -2183,7 +2313,10 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.primary.main, fontSize: { xs: "1.25rem", sm: "1.5rem" } }}>
+													<Typography
+														variant="h4"
+														sx={{ fontWeight: 600, color: COLORS.primary.main, fontSize: { xs: "1.25rem", sm: "1.5rem" } }}
+													>
 														{(data?.subscriptions.live?.total || 0).toLocaleString()}
 													</Typography>
 												)}
@@ -2197,7 +2330,10 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.success.main, fontSize: { xs: "1.25rem", sm: "1.5rem" } }}>
+													<Typography
+														variant="h4"
+														sx={{ fontWeight: 600, color: COLORS.success.main, fontSize: { xs: "1.25rem", sm: "1.5rem" } }}
+													>
 														{(data?.subscriptions.live?.active || 0).toLocaleString()}
 													</Typography>
 												)}
@@ -2358,7 +2494,9 @@ const AdminDashboard = () => {
 													</Typography>
 												)}
 												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Typography variant="caption" color="textSecondary">Total</Typography>
+													<Typography variant="caption" color="textSecondary">
+														Total
+													</Typography>
 													<InfoTooltip metricKey="totalCampaigns" />
 												</Box>
 											</Box>
@@ -2373,7 +2511,9 @@ const AdminDashboard = () => {
 													</Typography>
 												)}
 												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Typography variant="caption" color="textSecondary">Activas</Typography>
+													<Typography variant="caption" color="textSecondary">
+														Activas
+													</Typography>
 													<InfoTooltip metricKey="activeCampaigns" />
 												</Box>
 											</Box>
@@ -2388,7 +2528,9 @@ const AdminDashboard = () => {
 													</Typography>
 												)}
 												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Typography variant="caption" color="textSecondary">Programadas</Typography>
+													<Typography variant="caption" color="textSecondary">
+														Programadas
+													</Typography>
 													<InfoTooltip metricKey="scheduledCampaigns" />
 												</Box>
 											</Box>
@@ -2431,8 +2573,17 @@ const AdminDashboard = () => {
 											<Grid item xs={6}>
 												<StatsLegend
 													items={[
-														{ label: "Activos", value: data?.marketing.contacts.active || 0, color: COLORS.success.main, infoKey: "activeContacts" },
-														{ label: "Inactivos", value: (data?.marketing.contacts.total || 0) - (data?.marketing.contacts.active || 0), color: COLORS.neutral.light },
+														{
+															label: "Activos",
+															value: data?.marketing.contacts.active || 0,
+															color: COLORS.success.main,
+															infoKey: "activeContacts",
+														},
+														{
+															label: "Inactivos",
+															value: (data?.marketing.contacts.total || 0) - (data?.marketing.contacts.active || 0),
+															color: COLORS.neutral.light,
+														},
 													]}
 													loading={loading}
 												/>
@@ -2476,8 +2627,18 @@ const AdminDashboard = () => {
 											<Grid item xs={6}>
 												<StatsLegend
 													items={[
-														{ label: "Dinámicos", value: data?.marketing.segments.dynamic || 0, color: COLORS.primary.main, infoKey: "dynamicSegments" },
-														{ label: "Estáticos", value: data?.marketing.segments.static || 0, color: COLORS.primary.light, infoKey: "staticSegments" },
+														{
+															label: "Dinámicos",
+															value: data?.marketing.segments.dynamic || 0,
+															color: COLORS.primary.main,
+															infoKey: "dynamicSegments",
+														},
+														{
+															label: "Estáticos",
+															value: data?.marketing.segments.static || 0,
+															color: COLORS.primary.light,
+															infoKey: "staticSegments",
+														},
 													]}
 													loading={loading}
 												/>
@@ -2488,7 +2649,9 @@ const AdminDashboard = () => {
 											<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.primary.main }}>
 												{(data?.marketing.segments.total || 0).toLocaleString()}
 											</Typography>
-											<Typography variant="body2" color="textSecondary">Total segmentos</Typography>
+											<Typography variant="body2" color="textSecondary">
+												Total segmentos
+											</Typography>
 										</Box>
 									)}
 								</ChartCard>
@@ -2501,7 +2664,7 @@ const AdminDashboard = () => {
 										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
 											<Skeleton variant="circular" width={120} height={120} />
 										</Box>
-									) : emailVerificationData.some(item => item.value > 0) ? (
+									) : emailVerificationData.some((item) => item.value > 0) ? (
 										<Grid container sx={{ height: "100%" }}>
 											<Grid item xs={6}>
 												<ResponsiveContainer width="100%" height="100%">
@@ -2528,8 +2691,18 @@ const AdminDashboard = () => {
 											<Grid item xs={6}>
 												<StatsLegend
 													items={[
-														{ label: "Verificados", value: data?.marketing.contacts.emailVerified || 0, color: COLORS.success.main, infoKey: "emailVerifiedContacts" },
-														{ label: "No Verificados", value: data?.marketing.contacts.emailNotVerified || 0, color: COLORS.neutral.light, infoKey: "emailNotVerifiedContacts" },
+														{
+															label: "Verificados",
+															value: data?.marketing.contacts.emailVerified || 0,
+															color: COLORS.success.main,
+															infoKey: "emailVerifiedContacts",
+														},
+														{
+															label: "No Verificados",
+															value: data?.marketing.contacts.emailNotVerified || 0,
+															color: COLORS.neutral.light,
+															infoKey: "emailNotVerifiedContacts",
+														},
 													]}
 													loading={loading}
 												/>
@@ -2537,7 +2710,9 @@ const AdminDashboard = () => {
 										</Grid>
 									) : (
 										<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
-											<Typography variant="body2" color="textSecondary">Sin datos de verificación</Typography>
+											<Typography variant="body2" color="textSecondary">
+												Sin datos de verificación
+											</Typography>
 										</Box>
 									)}
 								</ChartCard>
@@ -2545,12 +2720,17 @@ const AdminDashboard = () => {
 
 							{/* Verification Result Pie Chart (emailVerification.verified - within verified emails) */}
 							<Grid item xs={12} sm={6}>
-								<ChartCard title="Resultado de Verificación" icon={<TickCircle size={18} />} linkTo="/admin/marketing/contacts" height={180}>
+								<ChartCard
+									title="Resultado de Verificación"
+									icon={<TickCircle size={18} />}
+									linkTo="/admin/marketing/contacts"
+									height={180}
+								>
 									{loading ? (
 										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
 											<Skeleton variant="circular" width={120} height={120} />
 										</Box>
-									) : verificationResultData.some(item => item.value > 0) ? (
+									) : verificationResultData.some((item) => item.value > 0) ? (
 										<Grid container sx={{ height: "100%" }}>
 											<Grid item xs={6}>
 												<ResponsiveContainer width="100%" height="100%">
@@ -2577,8 +2757,18 @@ const AdminDashboard = () => {
 											<Grid item xs={6}>
 												<StatsLegend
 													items={[
-														{ label: "Válidos", value: data?.marketing.contacts.verificationValid || 0, color: COLORS.success.main, infoKey: "verificationValidContacts" },
-														{ label: "No Válidos", value: data?.marketing.contacts.verificationNotValid || 0, color: COLORS.neutral.light, infoKey: "verificationNotValidContacts" },
+														{
+															label: "Válidos",
+															value: data?.marketing.contacts.verificationValid || 0,
+															color: COLORS.success.main,
+															infoKey: "verificationValidContacts",
+														},
+														{
+															label: "No Válidos",
+															value: data?.marketing.contacts.verificationNotValid || 0,
+															color: COLORS.neutral.light,
+															infoKey: "verificationNotValidContacts",
+														},
 													]}
 													loading={loading}
 												/>
@@ -2586,7 +2776,9 @@ const AdminDashboard = () => {
 										</Grid>
 									) : (
 										<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
-											<Typography variant="body2" color="textSecondary">Sin datos de resultado</Typography>
+											<Typography variant="body2" color="textSecondary">
+												Sin datos de resultado
+											</Typography>
 										</Box>
 									)}
 								</ChartCard>

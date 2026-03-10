@@ -31,7 +31,20 @@ import {
 	Tabs,
 	Tab,
 } from "@mui/material";
-import { Refresh, TickCircle, CloseCircle, Warning2, Calendar, Profile2User, Eye, CloseSquare, Edit, Trash, RefreshCircle, Copy } from "iconsax-react";
+import {
+	Refresh,
+	TickCircle,
+	CloseCircle,
+	Warning2,
+	Calendar,
+	Profile2User,
+	Eye,
+	CloseSquare,
+	Edit,
+	Trash,
+	RefreshCircle,
+	Copy,
+} from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import SubscriptionsService, { Subscription } from "api/subscriptions";
@@ -2083,13 +2096,7 @@ const Suscripciones = () => {
 							<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
 								Modo de Stripe a Sincronizar
 							</Typography>
-							<TextField
-								select
-								fullWidth
-								value={syncMode}
-								onChange={(e) => setSyncMode(e.target.value as "test" | "live")}
-								size="small"
-							>
+							<TextField select fullWidth value={syncMode} onChange={(e) => setSyncMode(e.target.value as "test" | "live")} size="small">
 								<MenuItem value="live">🟢 LIVE (Producción)</MenuItem>
 								<MenuItem value="test">🟡 TEST (Pruebas)</MenuItem>
 							</TextField>

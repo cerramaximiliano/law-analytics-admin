@@ -333,14 +333,7 @@ const ContactsPanel = () => {
 				{/* Segunda fila: Filtros */}
 				<Grid container spacing={2} alignItems="center">
 					<Grid item xs={6} sm={4} md={2}>
-						<TextField
-							select
-							fullWidth
-							size="small"
-							label="Estado"
-							value={filterStatus}
-							onChange={handleStatusFilterChange}
-						>
+						<TextField select fullWidth size="small" label="Estado" value={filterStatus} onChange={handleStatusFilterChange}>
 							<MenuItem value="">Todos</MenuItem>
 							<MenuItem value="active">Activo</MenuItem>
 							<MenuItem value="unsubscribed">Desuscrito</MenuItem>
@@ -381,28 +374,14 @@ const ContactsPanel = () => {
 						</TextField>
 					</Grid>
 					<Grid item xs={6} sm={4} md={2}>
-						<TextField
-							select
-							fullWidth
-							size="small"
-							label="Usuario App"
-							value={filterIsAppUser}
-							onChange={handleIsAppUserFilterChange}
-						>
+						<TextField select fullWidth size="small" label="Usuario App" value={filterIsAppUser} onChange={handleIsAppUserFilterChange}>
 							<MenuItem value="">Todos</MenuItem>
 							<MenuItem value="true">Es usuario</MenuItem>
 							<MenuItem value="false">No es usuario</MenuItem>
 						</TextField>
 					</Grid>
 					<Grid item xs={6} sm={4} md={2}>
-						<TextField
-							select
-							fullWidth
-							size="small"
-							label="Etiqueta"
-							value={filterTag}
-							onChange={handleTagFilterChange}
-						>
+						<TextField select fullWidth size="small" label="Etiqueta" value={filterTag} onChange={handleTagFilterChange}>
 							<MenuItem value="">Todas</MenuItem>
 							{availableTags.map((tag) => (
 								<MenuItem key={tag} value={tag}>
@@ -413,14 +392,7 @@ const ContactsPanel = () => {
 					</Grid>
 					<Grid item xs={6} sm={4} md={2}>
 						{hasActiveFilters && (
-							<Button
-								fullWidth
-								variant="text"
-								color="error"
-								size="small"
-								onClick={handleClearFilters}
-								sx={{ height: 40 }}
-							>
+							<Button fullWidth variant="text" color="error" size="small" onClick={handleClearFilters} sx={{ height: 40 }}>
 								Limpiar filtros
 							</Button>
 						)}
@@ -430,14 +402,7 @@ const ContactsPanel = () => {
 				{/* Tercera fila: Ordenamiento */}
 				<Grid container spacing={2} alignItems="center" sx={{ mt: 1 }}>
 					<Grid item xs={6} sm={4} md={2}>
-						<TextField
-							select
-							fullWidth
-							size="small"
-							label="Ordenar por"
-							value={sortBy}
-							onChange={handleSortChange}
-						>
+						<TextField select fullWidth size="small" label="Ordenar por" value={sortBy} onChange={handleSortChange}>
 							<MenuItem value="email">Email</MenuItem>
 							<MenuItem value="firstName">Nombre</MenuItem>
 							<MenuItem value="lastName">Apellido</MenuItem>
@@ -446,13 +411,7 @@ const ContactsPanel = () => {
 						</TextField>
 					</Grid>
 					<Grid item xs={6} sm={4} md={2}>
-						<Button
-							fullWidth
-							variant="outlined"
-							size="small"
-							onClick={handleSortDirChange}
-							sx={{ height: 40 }}
-						>
+						<Button fullWidth variant="outlined" size="small" onClick={handleSortDirChange} sx={{ height: 40 }}>
 							{sortDir === "asc" ? "↑ Ascendente" : "↓ Descendente"}
 						</Button>
 					</Grid>
@@ -474,7 +433,17 @@ const ContactsPanel = () => {
 							)}
 							{filterStatus && (
 								<Chip
-									label={`Estado: ${filterStatus === "active" ? "Activo" : filterStatus === "unsubscribed" ? "Desuscrito" : filterStatus === "bounced" ? "Rebotado" : filterStatus === "complained" ? "Queja" : filterStatus}`}
+									label={`Estado: ${
+										filterStatus === "active"
+											? "Activo"
+											: filterStatus === "unsubscribed"
+											? "Desuscrito"
+											: filterStatus === "bounced"
+											? "Rebotado"
+											: filterStatus === "complained"
+											? "Queja"
+											: filterStatus
+									}`}
 									size="small"
 									color="primary"
 									onDelete={() => setFilterStatus("")}
@@ -491,31 +460,26 @@ const ContactsPanel = () => {
 							{filterVerificationResult && (
 								<Chip
 									label={`Resultado: ${
-										filterVerificationResult === "valid" ? "Válido" :
-										filterVerificationResult === "invalid" ? "Inválido" :
-										filterVerificationResult === "disposable" ? "Desechable" :
-										filterVerificationResult === "catchall" ? "Catchall" :
-										filterVerificationResult === "unknown" ? "Desconocido" :
-										filterVerificationResult === "null" ? "Sin verificar" :
-										filterVerificationResult
+										filterVerificationResult === "valid"
+											? "Válido"
+											: filterVerificationResult === "invalid"
+											? "Inválido"
+											: filterVerificationResult === "disposable"
+											? "Desechable"
+											: filterVerificationResult === "catchall"
+											? "Catchall"
+											: filterVerificationResult === "unknown"
+											? "Desconocido"
+											: filterVerificationResult === "null"
+											? "Sin verificar"
+											: filterVerificationResult
 									}`}
 									size="small"
-									color={
-										filterVerificationResult === "valid" ? "success" :
-										filterVerificationResult === "invalid" ? "error" :
-										"default"
-									}
+									color={filterVerificationResult === "valid" ? "success" : filterVerificationResult === "invalid" ? "error" : "default"}
 									onDelete={() => setFilterVerificationResult("")}
 								/>
 							)}
-							{filterTag && (
-								<Chip
-									label={`Etiqueta: ${filterTag}`}
-									size="small"
-									color="secondary"
-									onDelete={() => setFilterTag("")}
-								/>
-							)}
+							{filterTag && <Chip label={`Etiqueta: ${filterTag}`} size="small" color="secondary" onDelete={() => setFilterTag("")} />}
 							{filterIsAppUser && (
 								<Chip
 									label={`Usuario App: ${filterIsAppUser === "true" ? "Sí" : "No"}`}
@@ -565,7 +529,7 @@ const ContactsPanel = () => {
 												<Typography variant="caption" color="textSecondary" sx={{ fontFamily: "monospace" }}>
 													{(contact._id || "").slice(0, 8)}…
 												</Typography>
-												<Tooltip title={copiedContactId === contact._id ? "¡Copiado!" : (contact._id || "")}>
+												<Tooltip title={copiedContactId === contact._id ? "¡Copiado!" : contact._id || ""}>
 													<IconButton size="small" onClick={() => handleCopyId(contact._id || "")} sx={{ p: 0.25 }}>
 														{copiedContactId === contact._id ? <CopySuccess size={13} color="green" /> : <Copy size={13} />}
 													</IconButton>

@@ -1,5 +1,5 @@
 // Tipo para la visibilidad de features y resourceLimits
-export type VisibilityType = 'all' | 'development' | 'production' | 'none';
+export type VisibilityType = "all" | "development" | "production" | "none";
 
 export interface ResourceLimit {
 	name: string;

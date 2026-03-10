@@ -523,7 +523,13 @@ const FoldersPage = () => {
 				{/* Acciones */}
 				<Grid item xs={12}>
 					<Stack direction="row" spacing={1}>
-						<Button variant="outlined" startIcon={sortOrder === "asc" ? <ArrowUp size={18} /> : <ArrowDown size={18} />} onClick={handleSortOrderChange} disabled={loading} size="small">
+						<Button
+							variant="outlined"
+							startIcon={sortOrder === "asc" ? <ArrowUp size={18} /> : <ArrowDown size={18} />}
+							onClick={handleSortOrderChange}
+							disabled={loading}
+							size="small"
+						>
 							{sortOrder === "asc" ? "Ascendente" : "Descendente"}
 						</Button>
 						<Button variant="contained" startIcon={<SearchNormal1 size={18} />} onClick={handleSearch} disabled={loading} size="small">
@@ -676,20 +682,12 @@ const FoldersPage = () => {
 													<TableCell align="center">
 														<Stack direction="row" spacing={0} justifyContent="center">
 															<Tooltip title="Ver detalles">
-																<IconButton
-																	size="small"
-																	color="primary"
-																	onClick={() => handleViewDetail(folder)}
-																>
+																<IconButton size="small" color="primary" onClick={() => handleViewDetail(folder)}>
 																	<Eye size={18} />
 																</IconButton>
 															</Tooltip>
 															<Tooltip title="Editar carpeta">
-																<IconButton
-																	size="small"
-																	color="warning"
-																	onClick={() => handleEditFolder(folder)}
-																>
+																<IconButton size="small" color="warning" onClick={() => handleEditFolder(folder)}>
 																	<Edit2 size={18} />
 																</IconButton>
 															</Tooltip>
@@ -726,12 +724,7 @@ const FoldersPage = () => {
 			)}
 
 			{/* Modal de Edición de Folder */}
-			<FolderEditModal
-				open={editModalOpen}
-				onClose={handleCloseEditModal}
-				folder={selectedFolder}
-				onFolderUpdated={handleRefresh}
-			/>
+			<FolderEditModal open={editModalOpen} onClose={handleCloseEditModal} folder={selectedFolder} onFolderUpdated={handleRefresh} />
 
 			{/* Modal de Edición de Causa */}
 			{selectedCausa && selectedFolderForCausaEdit && (
@@ -745,11 +738,7 @@ const FoldersPage = () => {
 				/>
 			)}
 			{/* Modal de Detalle de Folder */}
-			<FolderDetalleModal
-				open={detailModalOpen}
-				onClose={handleCloseDetailModal}
-				folder={selectedFolderForDetail}
-			/>
+			<FolderDetalleModal open={detailModalOpen} onClose={handleCloseDetailModal} folder={selectedFolderForDetail} />
 		</MainCard>
 	);
 };

@@ -56,7 +56,10 @@ const WorkerStatsTab = () => {
 	const fetchStats = useCallback(async () => {
 		try {
 			setLoading(true);
-			const [statsData, dailyData] = await Promise.all([RagWorkersService.getStats(period), RagWorkersService.getDailyStats(period === "today" ? 1 : period === "week" ? 7 : 30)]);
+			const [statsData, dailyData] = await Promise.all([
+				RagWorkersService.getStats(period),
+				RagWorkersService.getDailyStats(period === "today" ? 1 : period === "week" ? 7 : 30),
+			]);
 			setStats(statsData);
 			setDailyStats(dailyData.stats);
 		} catch (err: any) {
@@ -228,7 +231,9 @@ const WorkerStatsCard: React.FC<WorkerStatsCardProps> = ({ worker, theme }) => {
 				)}
 
 				{/* ocrDocument specific */}
-				{w.ocrPagesProcessed !== undefined && w.ocrPagesProcessed > 0 && <StatItem label="Paginas OCR" value={formatNumber(w.ocrPagesProcessed)} />}
+				{w.ocrPagesProcessed !== undefined && w.ocrPagesProcessed > 0 && (
+					<StatItem label="Paginas OCR" value={formatNumber(w.ocrPagesProcessed)} />
+				)}
 
 				{/* indexCausa specific */}
 				{w.causasIndexed !== undefined && w.causasIndexed > 0 && (

@@ -126,7 +126,10 @@ const CausasUpdateHistoryTab: React.FC = () => {
 						size="small"
 						label="Estado"
 						value={statusFilter}
-						onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
+						onChange={(e) => {
+							setStatusFilter(e.target.value);
+							setPage(0);
+						}}
 						sx={{ minWidth: 150 }}
 					>
 						<MenuItem value="">Todos</MenuItem>
@@ -173,27 +176,32 @@ const CausasUpdateHistoryTab: React.FC = () => {
 									<TableRow key={run._id} hover sx={{ cursor: "pointer" }} onClick={() => handleViewDetail(run._id)}>
 										<TableCell>
 											<Typography variant="caption">
-												{new Date(run.startedAt).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+												{new Date(run.startedAt).toLocaleString("es-AR", {
+													day: "2-digit",
+													month: "2-digit",
+													hour: "2-digit",
+													minute: "2-digit",
+												})}
 											</Typography>
 										</TableCell>
 										<TableCell>
 											<Typography variant="caption" fontFamily="monospace">
 												{run.credentialsId?.toString().slice(-6)}
 											</Typography>
-											{run.metadata?.isResumedRun && (
-												<Chip label="Resume" size="small" sx={{ ml: 0.5, height: 16, fontSize: "0.6rem" }} />
-											)}
+											{run.metadata?.isResumedRun && <Chip label="Resume" size="small" sx={{ ml: 0.5, height: 16, fontSize: "0.6rem" }} />}
 										</TableCell>
 										<TableCell>
 											<Chip
 												label={statusLabels[run.status] || run.status}
 												size="small"
-												color={statusColors[run.status] as any || "default"}
+												color={(statusColors[run.status] as any) || "default"}
 												variant="outlined"
 												sx={{ height: 22, fontSize: "0.75rem" }}
 											/>
 										</TableCell>
-										<TableCell align="right">{run.results?.causasProcessed ?? 0}/{run.results?.totalCausas ?? 0}</TableCell>
+										<TableCell align="right">
+											{run.results?.causasProcessed ?? 0}/{run.results?.totalCausas ?? 0}
+										</TableCell>
 										<TableCell align="right">{run.results?.causasUpdated ?? 0}</TableCell>
 										<TableCell align="right">{run.results?.newMovimientos ?? 0}</TableCell>
 										<TableCell align="right">{formatDuration(run.durationSeconds)}</TableCell>
@@ -205,7 +213,14 @@ const CausasUpdateHistoryTab: React.FC = () => {
 											)}
 										</TableCell>
 										<TableCell>
-											<Button size="small" variant="text" onClick={(e) => { e.stopPropagation(); handleViewDetail(run._id); }}>
+											<Button
+												size="small"
+												variant="text"
+												onClick={(e) => {
+													e.stopPropagation();
+													handleViewDetail(run._id);
+												}}
+											>
 												Ver
 											</Button>
 										</TableCell>
@@ -221,7 +236,10 @@ const CausasUpdateHistoryTab: React.FC = () => {
 					page={page}
 					onPageChange={(_, p) => setPage(p)}
 					rowsPerPage={rowsPerPage}
-					onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+					onRowsPerPageChange={(e) => {
+						setRowsPerPage(parseInt(e.target.value, 10));
+						setPage(0);
+					}}
 					rowsPerPageOptions={[10, 25, 50]}
 					labelRowsPerPage="Filas"
 				/>
@@ -237,7 +255,7 @@ const CausasUpdateHistoryTab: React.FC = () => {
 								<Chip
 									label={statusLabels[selectedRun.status] || selectedRun.status}
 									size="small"
-									color={statusColors[selectedRun.status] as any || "default"}
+									color={(statusColors[selectedRun.status] as any) || "default"}
 								/>
 							</Stack>
 						</DialogTitle>
@@ -246,34 +264,44 @@ const CausasUpdateHistoryTab: React.FC = () => {
 								{/* Summary */}
 								<Stack direction="row" spacing={3} flexWrap="wrap">
 									<Box>
-										<Typography variant="caption" color="text.secondary">Credencial</Typography>
-										<Typography variant="body2" fontFamily="monospace">{selectedRun.credentialsId}</Typography>
+										<Typography variant="caption" color="text.secondary">
+											Credencial
+										</Typography>
+										<Typography variant="body2" fontFamily="monospace">
+											{selectedRun.credentialsId}
+										</Typography>
 									</Box>
 									<Box>
-										<Typography variant="caption" color="text.secondary">Inicio</Typography>
+										<Typography variant="caption" color="text.secondary">
+											Inicio
+										</Typography>
 										<Typography variant="body2">{new Date(selectedRun.startedAt).toLocaleString("es-AR")}</Typography>
 									</Box>
 									<Box>
-										<Typography variant="caption" color="text.secondary">Duración</Typography>
+										<Typography variant="caption" color="text.secondary">
+											Duración
+										</Typography>
 										<Typography variant="body2">{formatDuration(selectedRun.durationSeconds)}</Typography>
 									</Box>
-									{selectedRun.metadata?.isFirstRun && (
-										<Chip label="Primera ejecución" size="small" color="info" />
-									)}
+									{selectedRun.metadata?.isFirstRun && <Chip label="Primera ejecución" size="small" color="info" />}
 								</Stack>
 
 								{/* Error */}
 								{selectedRun.error && (
 									<Alert severity="error" variant="outlined">
 										<Typography variant="body2">{selectedRun.error.message}</Typography>
-										<Typography variant="caption" color="text.secondary">Fase: {selectedRun.error.phase}</Typography>
+										<Typography variant="caption" color="text.secondary">
+											Fase: {selectedRun.error.phase}
+										</Typography>
 									</Alert>
 								)}
 
 								{/* Causas detail */}
 								{selectedRun.causasDetail && selectedRun.causasDetail.length > 0 && (
 									<>
-										<Typography variant="subtitle1" fontWeight={600}>Detalle por causa ({selectedRun.causasDetail.length})</Typography>
+										<Typography variant="subtitle1" fontWeight={600}>
+											Detalle por causa ({selectedRun.causasDetail.length})
+										</Typography>
 										<TableContainer>
 											<Table size="small">
 												<TableHead>
@@ -290,7 +318,9 @@ const CausasUpdateHistoryTab: React.FC = () => {
 													{selectedRun.causasDetail.map((d: CausaDetail, i: number) => (
 														<TableRow key={i}>
 															<TableCell>{d.fuero}</TableCell>
-															<TableCell>{d.number}/{d.year}</TableCell>
+															<TableCell>
+																{d.number}/{d.year}
+															</TableCell>
 															<TableCell>
 																<Chip
 																	label={d.status}
@@ -304,7 +334,11 @@ const CausasUpdateHistoryTab: React.FC = () => {
 															<TableCell align="right">{d.movimientosTotal || "-"}</TableCell>
 															<TableCell>
 																{d.error && (
-																	<Typography variant="caption" color="error.main" sx={{ maxWidth: 200, display: "block", overflow: "hidden", textOverflow: "ellipsis" }}>
+																	<Typography
+																		variant="caption"
+																		color="error.main"
+																		sx={{ maxWidth: 200, display: "block", overflow: "hidden", textOverflow: "ellipsis" }}
+																	>
 																		{d.error}
 																	</Typography>
 																)}

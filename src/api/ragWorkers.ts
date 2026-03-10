@@ -481,7 +481,20 @@ class RagWorkersService {
 
 	static async updateWorker(
 		workerName: string,
-		data: Partial<Pick<WorkerConfig, "enabled" | "concurrency" | "paused" | "rateLimiter" | "autoIndexSettings" | "recoverySettings" | "scaling" | "instanceScaling" | "description">>,
+		data: Partial<
+			Pick<
+				WorkerConfig,
+				| "enabled"
+				| "concurrency"
+				| "paused"
+				| "rateLimiter"
+				| "autoIndexSettings"
+				| "recoverySettings"
+				| "scaling"
+				| "instanceScaling"
+				| "description"
+			>
+		>,
 	): Promise<{ data: WorkerConfig; requiresRestart: boolean }> {
 		const res = await ragAxios.put(`${BASE}/workers/${workerName}`, data);
 		return { data: res.data.data, requiresRestart: res.data.requiresRestart };
@@ -510,7 +523,10 @@ class RagWorkersService {
 		return res.data.data;
 	}
 
-	static async getDailyStats(days = 30, workerName?: string): Promise<{ period: { from: string; to: string; days: number }; stats: DailyStatsEntry[] }> {
+	static async getDailyStats(
+		days = 30,
+		workerName?: string,
+	): Promise<{ period: { from: string; to: string; days: number }; stats: DailyStatsEntry[] }> {
 		const params: Record<string, string | number> = { days };
 		if (workerName) params.workerName = workerName;
 		const res = await ragAxios.get(`${BASE}/workers/stats/daily`, { params });
@@ -524,7 +540,10 @@ class RagWorkersService {
 		return res.data.data;
 	}
 
-	static async updatePricing(modelName: string, data: Partial<Pick<CostPricing, "inputPricePer1M" | "outputPricePer1M" | "notes">>): Promise<CostPricing> {
+	static async updatePricing(
+		modelName: string,
+		data: Partial<Pick<CostPricing, "inputPricePer1M" | "outputPricePer1M" | "notes">>,
+	): Promise<CostPricing> {
 		const res = await ragAxios.put(`${BASE}/pricing/${modelName}`, data);
 		return res.data.data;
 	}
@@ -545,14 +564,12 @@ class RagWorkersService {
 		return res.data.data;
 	}
 
-	static async updatePipelineConfig(
-		data: {
-			chunker?: Partial<PipelineChunkerConfig>;
-			embedding?: Partial<Pick<PipelineEmbeddingConfig, "maxInputChars" | "maxRetries">>;
-			batcher?: Partial<PipelineBatcherConfig>;
-			llm?: Partial<PipelineLlmConfig>;
-		},
-	): Promise<{ data: PipelineConfig; requiresRestart: boolean }> {
+	static async updatePipelineConfig(data: {
+		chunker?: Partial<PipelineChunkerConfig>;
+		embedding?: Partial<Pick<PipelineEmbeddingConfig, "maxInputChars" | "maxRetries">>;
+		batcher?: Partial<PipelineBatcherConfig>;
+		llm?: Partial<PipelineLlmConfig>;
+	}): Promise<{ data: PipelineConfig; requiresRestart: boolean }> {
 		const res = await ragAxios.put(`${BASE}/pipeline`, data);
 		return { data: res.data.data, requiresRestart: res.data.requiresRestart };
 	}

@@ -294,8 +294,8 @@ export default function WorkerManagerTab() {
 								Recursos
 							</Typography>
 							<Typography variant="body2">
-								CPU: {((status.systemResources?.cpuUsage || 0) * 100).toFixed(0)}% | RAM:{" "}
-								{status.systemResources?.freeMemoryMB || 0}/{status.systemResources?.totalMemoryMB || 0} MB
+								CPU: {((status.systemResources?.cpuUsage || 0) * 100).toFixed(0)}% | RAM: {status.systemResources?.freeMemoryMB || 0}/
+								{status.systemResources?.totalMemoryMB || 0} MB
 							</Typography>
 						</Grid>
 					</Grid>
@@ -465,15 +465,12 @@ export default function WorkerManagerTab() {
 										<Checkbox
 											size="small"
 											checked={(
-												(editConfig as any)?.workDays?.[type] ||
-												(type === "verify" ? [0, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5])
+												(editConfig as any)?.workDays?.[type] || (type === "verify" ? [0, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5])
 											).includes(i)}
 											onChange={(e) => {
 												const defaults = type === "verify" ? [0, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5];
 												const current = (editConfig as any)?.workDays?.[type] || defaults;
-												const updated = e.target.checked
-													? [...current, i].sort()
-													: current.filter((d: number) => d !== i);
+												const updated = e.target.checked ? [...current, i].sort() : current.filter((d: number) => d !== i);
 												updateNestedConfig(`workDays.${type}`, updated);
 											}}
 										/>

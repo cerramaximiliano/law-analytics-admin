@@ -1153,7 +1153,9 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 														<ListItem>
 															<ListItemText
 																primary="Posición en secuencia"
-																secondary={`Email #${selectedEmailForPreview.sequenceIndex}${selectedEmailForPreview.isFinal ? " (Final)" : ""}`}
+																secondary={`Email #${selectedEmailForPreview.sequenceIndex}${
+																	selectedEmailForPreview.isFinal ? " (Final)" : ""
+																}`}
 															/>
 														</ListItem>
 														{selectedEmailForPreview.sender && (

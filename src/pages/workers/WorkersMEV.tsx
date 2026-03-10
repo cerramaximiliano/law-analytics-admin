@@ -32,7 +32,25 @@ import {
 	useTheme,
 	alpha,
 } from "@mui/material";
-import { Edit2, TickCircle, CloseCircle, Refresh, Calendar, ArrowDown2, ArrowUp2, InfoCircle, Eye, EyeSlash, Setting2, TickSquare, DocumentUpload, Refresh2, Setting, People, Warning2 } from "iconsax-react";
+import {
+	Edit2,
+	TickCircle,
+	CloseCircle,
+	Refresh,
+	Calendar,
+	ArrowDown2,
+	ArrowUp2,
+	InfoCircle,
+	Eye,
+	EyeSlash,
+	Setting2,
+	TickSquare,
+	DocumentUpload,
+	Refresh2,
+	Setting,
+	People,
+	Warning2,
+} from "iconsax-react";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -845,8 +863,8 @@ const MEVWorkers = () => {
 												🌍 Configuración de Headless por Ambiente
 											</Typography>
 											<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-												Controla si el navegador se ejecuta en modo headless (sin interfaz gráfica) según el ambiente.
-												En producción debería estar activado para mejor rendimiento.
+												Controla si el navegador se ejecuta en modo headless (sin interfaz gráfica) según el ambiente. En producción debería
+												estar activado para mejor rendimiento.
 											</Typography>
 											<Grid container spacing={3}>
 												<Grid item xs={12} sm={6}>
@@ -1242,8 +1260,7 @@ const MEVWorkers = () => {
 					</CardContent>
 				</Card>
 			)}
-
-			</Stack>
+		</Stack>
 	);
 
 	// Componente de Worker de Actualización
@@ -1345,40 +1362,40 @@ const MEVWorkers = () => {
 					</Typography>
 					<Grid container spacing={2}>
 						<Grid item xs={12} sm={4}>
-							<Card variant="outlined" sx={{ height: '100%' }}>
-								<CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+							<Card variant="outlined" sx={{ height: "100%" }}>
+								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
 									<Typography variant="caption" color="error.main" fontWeight="bold" gutterBottom display="block">
 										Detección
 									</Typography>
 									<Typography variant="caption" color="text.secondary">
-										Un solo <code>JurisdictionUnavailableError</code> confirma que la jurisdicción entera está caída. No se
-										acumulan errores como en PJN.
+										Un solo <code>JurisdictionUnavailableError</code> confirma que la jurisdicción entera está caída. No se acumulan errores
+										como en PJN.
 									</Typography>
 								</CardContent>
 							</Card>
 						</Grid>
 						<Grid item xs={12} sm={4}>
-							<Card variant="outlined" sx={{ height: '100%' }}>
-								<CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+							<Card variant="outlined" sx={{ height: "100%" }}>
+								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
 									<Typography variant="caption" color="warning.main" fontWeight="bold" gutterBottom display="block">
 										Cooldown
 									</Typography>
 									<Typography variant="caption" color="text.secondary">
-										Se setea <code>jurisdictionCooldown.skipUntil</code> con fecha futura (1h). La query excluye expedientes con
-										cooldown activo.
+										Se setea <code>jurisdictionCooldown.skipUntil</code> con fecha futura (1h). La query excluye expedientes con cooldown
+										activo.
 									</Typography>
 								</CardContent>
 							</Card>
 						</Grid>
 						<Grid item xs={12} sm={4}>
-							<Card variant="outlined" sx={{ height: '100%' }}>
-								<CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+							<Card variant="outlined" sx={{ height: "100%" }}>
+								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
 									<Typography variant="caption" color="success.main" fontWeight="bold" gutterBottom display="block">
 										Auto-limpieza
 									</Typography>
 									<Typography variant="caption" color="text.secondary">
-										Al procesar exitosamente, el campo <code>jurisdictionCooldown</code> se elimina automáticamente.
-										También aplica en el worker de verificación.
+										Al procesar exitosamente, el campo <code>jurisdictionCooldown</code> se elimina automáticamente. También aplica en el
+										worker de verificación.
 									</Typography>
 								</CardContent>
 							</Card>
@@ -1629,8 +1646,8 @@ const MEVWorkers = () => {
 												🌍 Configuración de Headless por Ambiente
 											</Typography>
 											<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-												Controla si el navegador se ejecuta en modo headless (sin interfaz gráfica) según el ambiente.
-												En producción debería estar activado para mejor rendimiento.
+												Controla si el navegador se ejecuta en modo headless (sin interfaz gráfica) según el ambiente. En producción debería
+												estar activado para mejor rendimiento.
 											</Typography>
 											<Grid container spacing={3}>
 												<Grid item xs={12} sm={6}>
@@ -2039,11 +2056,7 @@ const MEVWorkers = () => {
 										<Button variant="contained" size="small" onClick={handleSaveCredentials}>
 											Guardar
 										</Button>
-										<Button
-											variant="outlined"
-											size="small"
-											onClick={() => setEditingCredentials(false)}
-										>
+										<Button variant="outlined" size="small" onClick={() => setEditingCredentials(false)}>
 											Cancelar
 										</Button>
 									</>

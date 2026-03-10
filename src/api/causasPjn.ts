@@ -13,15 +13,15 @@ export interface ScrapingProgress {
 
 // Interface para estadísticas de actualización (updateStats en el modelo)
 export interface UpdateStats {
-	count?: number;        // Total actualizaciones (all time)
-	errors?: number;       // Total errores
-	newMovs?: number;      // Total movimientos encontrados
-	avgMs?: number;        // Duración promedio en ms
-	last?: { $date: string } | string;  // Última actualización
+	count?: number; // Total actualizaciones (all time)
+	errors?: number; // Total errores
+	newMovs?: number; // Total movimientos encontrados
+	avgMs?: number; // Duración promedio en ms
+	last?: { $date: string } | string; // Última actualización
 	today?: {
-		date?: string;       // "2026-02-01"
-		count?: number;      // Veces actualizado hoy
-		hours?: number[];    // Horas de cada actualización [8, 11, 14]
+		date?: string; // "2026-02-01"
+		count?: number; // Veces actualizado hoy
+		hours?: number[]; // Horas de cada actualización [8, 11, 14]
 	};
 }
 
@@ -412,7 +412,11 @@ export class CausasPjnService {
 	/**
 	 * Marcar causa como archivada (excluir del procesamiento de stuck documents)
 	 */
-	static async archiveCausa(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string, reason?: string): Promise<{ success: boolean; message: string }> {
+	static async archiveCausa(
+		fuero: "CIV" | "COM" | "CSS" | "CNT",
+		id: string,
+		reason?: string,
+	): Promise<{ success: boolean; message: string }> {
 		try {
 			const response = await pjnAxios.post(`/api/workers/stuck-documents/archive/${fuero}/${id}`, { reason });
 			return response.data;

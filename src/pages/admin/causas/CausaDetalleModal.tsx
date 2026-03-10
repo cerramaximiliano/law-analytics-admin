@@ -908,20 +908,16 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 						{!isEditing && activeTab === 0 && (
 							<Stack direction="row" spacing={0.5}>
 								{apiService === "pjn" && (
-									<Tooltip title={isArchived ? "Desarchivar (incluir en stuck documents worker)" : "Archivar (excluir del stuck documents worker)"}>
+									<Tooltip
+										title={isArchived ? "Desarchivar (incluir en stuck documents worker)" : "Archivar (excluir del stuck documents worker)"}
+									>
 										<IconButton
 											onClick={handleToggleArchive}
 											color={isArchived ? "warning" : "default"}
 											size="small"
 											disabled={isArchiving}
 										>
-											{isArchiving ? (
-												<CircularProgress size={20} />
-											) : isArchived ? (
-												<ArchiveSlash size={20} />
-											) : (
-												<Archive size={20} />
-											)}
+											{isArchiving ? <CircularProgress size={20} /> : isArchived ? <ArchiveSlash size={20} /> : <Archive size={20} />}
 										</IconButton>
 									</Tooltip>
 								)}
@@ -1527,371 +1523,389 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 					)}
 
 					{/* Tab Panel 4: Navegación (solo MEV) */}
-					{activeTab === 4 && apiService === "mev" && (() => {
-						const mevCausa = causa as CausaMEV;
+					{activeTab === 4 &&
+						apiService === "mev" &&
+						(() => {
+							const mevCausa = causa as CausaMEV;
 
-						if (!mevCausa.navigationCode) {
+							if (!mevCausa.navigationCode) {
+								return (
+									<Alert severity="warning">
+										Este expediente no tiene un código de navegación asignado. El worker no puede verificarlo automáticamente.
+									</Alert>
+								);
+							}
+
+							if (loadingNavCode) {
+								return (
+									<Box display="flex" justifyContent="center" alignItems="center" p={4}>
+										<CircularProgress />
+									</Box>
+								);
+							}
+
+							const navCode = navigationCodeData;
+							const isJusticiaDePaz = navCode?.navegacion?.requiresRadio && navCode?.navegacion?.radioValue === "PZ";
+
+							// Color helper para tipo organismo
+							const getTipoOrganismoColor = (
+								tipo?: string,
+							): "primary" | "secondary" | "success" | "warning" | "error" | "info" | "default" => {
+								switch (tipo) {
+									case "civil":
+										return "primary";
+									case "familia":
+										return "secondary";
+									case "laboral":
+										return "warning";
+									case "contencioso":
+										return "info";
+									case "paz":
+										return "success";
+									default:
+										return "default";
+								}
+							};
+
+							// Color helper para estado de verificación
+							const getVerificacionColor = (estado?: string): "success" | "warning" | "error" | "info" | "default" => {
+								switch (estado) {
+									case "verificado":
+										return "success";
+									case "pendiente":
+										return "warning";
+									case "en_proceso":
+										return "info";
+									case "error":
+										return "error";
+									case "no_encontrado":
+										return "error";
+									default:
+										return "default";
+								}
+							};
+
+							const getVerificacionLabel = (estado?: string): string => {
+								switch (estado) {
+									case "verificado":
+										return "Verificado";
+									case "pendiente":
+										return "Pendiente";
+									case "en_proceso":
+										return "En proceso";
+									case "error":
+										return "Error";
+									case "no_encontrado":
+										return "No encontrado";
+									default:
+										return estado || "Sin estado";
+								}
+							};
+
+							// Generar pasos del stepper
+							const steps = isJusticiaDePaz
+								? [
+										{
+											label: "Login en MEV",
+											description: "Acceder al sitio de Mesa de Entradas Virtual",
+											selector: null,
+											value: "https://mev.scba.gov.ar/POSLoguin.asp",
+										},
+										{
+											label: 'Click radio "Justicia de Paz"',
+											description: "Seleccionar tipo de juzgado: Justicia de Paz",
+											selector: 'input[type="radio"]',
+											value: `radioValue: "${navCode?.navegacion?.radioValue}"`,
+										},
+										{
+											label: "Seleccionar juzgado",
+											description: `Elegir juzgado en el selector: ${navCode?.organismo?.nombre || ""}`,
+											selector: '<select id="JuzgadoElegido">',
+											value: navCode?.navegacion?.organismoValue || "",
+										},
+										{
+											label: "Buscar expediente",
+											description: "Ingresar número de expediente en el buscador",
+											selector: 'input[name="numero"]',
+											value: String(mevCausa.number),
+										},
+								  ]
+								: [
+										{
+											label: "Login en MEV",
+											description: "Acceder al sitio de Mesa de Entradas Virtual",
+											selector: null,
+											value: "https://mev.scba.gov.ar/POSLoguin.asp",
+										},
+										{
+											label: "Seleccionar jurisdicción",
+											description: `Elegir jurisdicción: ${navCode?.jurisdiccion?.nombre || mevCausa.jurisdiccionNombre || ""}`,
+											selector: "<select> jurisdicción",
+											value: navCode?.navegacion?.jurisdiccionValue || "",
+										},
+										{
+											label: 'Click "Aceptar"',
+											description: "Confirmar jurisdicción y esperar navegación",
+											selector: "button[Aceptar]",
+											value: null,
+										},
+										{
+											label: "Seleccionar organismo",
+											description: `Elegir organismo: ${navCode?.organismo?.nombre || mevCausa.organismoNombre || ""}`,
+											selector: "<select> organismo",
+											value: navCode?.navegacion?.organismoValue || "",
+										},
+										{
+											label: "Buscar expediente",
+											description: "Ingresar número de expediente en el buscador",
+											selector: 'input[name="numero"]',
+											value: String(mevCausa.number),
+										},
+								  ];
+
 							return (
-								<Alert severity="warning">
-									Este expediente no tiene un código de navegación asignado. El worker no puede verificarlo automáticamente.
-								</Alert>
-							);
-						}
-
-						if (loadingNavCode) {
-							return (
-								<Box display="flex" justifyContent="center" alignItems="center" p={4}>
-									<CircularProgress />
-								</Box>
-							);
-						}
-
-						const navCode = navigationCodeData;
-						const isJusticiaDePaz = navCode?.navegacion?.requiresRadio && navCode?.navegacion?.radioValue === "PZ";
-
-						// Color helper para tipo organismo
-						const getTipoOrganismoColor = (tipo?: string): "primary" | "secondary" | "success" | "warning" | "error" | "info" | "default" => {
-							switch (tipo) {
-								case "civil": return "primary";
-								case "familia": return "secondary";
-								case "laboral": return "warning";
-								case "contencioso": return "info";
-								case "paz": return "success";
-								default: return "default";
-							}
-						};
-
-						// Color helper para estado de verificación
-						const getVerificacionColor = (estado?: string): "success" | "warning" | "error" | "info" | "default" => {
-							switch (estado) {
-								case "verificado": return "success";
-								case "pendiente": return "warning";
-								case "en_proceso": return "info";
-								case "error": return "error";
-								case "no_encontrado": return "error";
-								default: return "default";
-							}
-						};
-
-						const getVerificacionLabel = (estado?: string): string => {
-							switch (estado) {
-								case "verificado": return "Verificado";
-								case "pendiente": return "Pendiente";
-								case "en_proceso": return "En proceso";
-								case "error": return "Error";
-								case "no_encontrado": return "No encontrado";
-								default: return estado || "Sin estado";
-							}
-						};
-
-						// Generar pasos del stepper
-						const steps = isJusticiaDePaz
-							? [
-								{
-									label: 'Login en MEV',
-									description: 'Acceder al sitio de Mesa de Entradas Virtual',
-									selector: null,
-									value: 'https://mev.scba.gov.ar/POSLoguin.asp',
-								},
-								{
-									label: 'Click radio "Justicia de Paz"',
-									description: 'Seleccionar tipo de juzgado: Justicia de Paz',
-									selector: 'input[type="radio"]',
-									value: `radioValue: "${navCode?.navegacion?.radioValue}"`,
-								},
-								{
-									label: 'Seleccionar juzgado',
-									description: `Elegir juzgado en el selector: ${navCode?.organismo?.nombre || ""}`,
-									selector: '<select id="JuzgadoElegido">',
-									value: navCode?.navegacion?.organismoValue || "",
-								},
-								{
-									label: 'Buscar expediente',
-									description: 'Ingresar número de expediente en el buscador',
-									selector: 'input[name="numero"]',
-									value: String(mevCausa.number),
-								},
-							]
-							: [
-								{
-									label: 'Login en MEV',
-									description: 'Acceder al sitio de Mesa de Entradas Virtual',
-									selector: null,
-									value: 'https://mev.scba.gov.ar/POSLoguin.asp',
-								},
-								{
-									label: 'Seleccionar jurisdicción',
-									description: `Elegir jurisdicción: ${navCode?.jurisdiccion?.nombre || mevCausa.jurisdiccionNombre || ""}`,
-									selector: '<select> jurisdicción',
-									value: navCode?.navegacion?.jurisdiccionValue || "",
-								},
-								{
-									label: 'Click "Aceptar"',
-									description: 'Confirmar jurisdicción y esperar navegación',
-									selector: 'button[Aceptar]',
-									value: null,
-								},
-								{
-									label: 'Seleccionar organismo',
-									description: `Elegir organismo: ${navCode?.organismo?.nombre || mevCausa.organismoNombre || ""}`,
-									selector: '<select> organismo',
-									value: navCode?.navegacion?.organismoValue || "",
-								},
-								{
-									label: 'Buscar expediente',
-									description: 'Ingresar número de expediente en el buscador',
-									selector: 'input[name="numero"]',
-									value: String(mevCausa.number),
-								},
-							];
-
-						return (
-							<Box>
-								{/* Sección 1: Datos del documento */}
-								<Typography variant="subtitle2" color="primary" gutterBottom>
-									Datos del documento
-								</Typography>
-								<Divider sx={{ mb: 1.5 }} />
-								<Grid container spacing={1.5} sx={{ mb: 3 }}>
-									<Grid item xs={12} sm={6} md={4}>
-										<Typography variant="caption" color="textSecondary">
-											Navigation Code
-										</Typography>
-										<Box>
-											<Chip
-												label={mevCausa.navigationCode}
-												size="small"
-												variant="outlined"
-												sx={{ fontFamily: "monospace", fontWeight: 600 }}
-											/>
-										</Box>
-									</Grid>
-									<Grid item xs={12} sm={6} md={4}>
-										<Typography variant="caption" color="textSecondary">
-											Jurisdicción
-										</Typography>
-										<Typography variant="body2">
-											{mevCausa.jurisdiccion ? `${mevCausa.jurisdiccion} — ${mevCausa.jurisdiccionNombre || ""}` : "N/A"}
-										</Typography>
-									</Grid>
-									<Grid item xs={12} sm={6} md={4}>
-										<Typography variant="caption" color="textSecondary">
-											Organismo
-										</Typography>
-										<Typography variant="body2">
-											{mevCausa.organismo ? `${mevCausa.organismo} — ${mevCausa.organismoNombre || ""}` : "N/A"}
-										</Typography>
-									</Grid>
-									<Grid item xs={6} sm={3} md={2}>
-										<Typography variant="caption" color="textSecondary">
-											Tipo organismo
-										</Typography>
-										<Box>
-											<Chip
-												label={mevCausa.tipoOrganismo || "N/A"}
-												size="small"
-												color={getTipoOrganismoColor(mevCausa.tipoOrganismo)}
-												variant="filled"
-											/>
-										</Box>
-									</Grid>
-									<Grid item xs={6} sm={3} md={2}>
-										<Typography variant="caption" color="textSecondary">
-											Estado verificación
-										</Typography>
-										<Box>
-											<Chip
-												label={getVerificacionLabel(mevCausa.verificacion?.estadoVerificacion)}
-												size="small"
-												color={getVerificacionColor(mevCausa.verificacion?.estadoVerificacion)}
-												variant="filled"
-											/>
-										</Box>
-									</Grid>
-									{mevCausa.verificacion?.intentosVerificacion !== undefined && (
-										<Grid item xs={6} sm={3} md={2}>
+								<Box>
+									{/* Sección 1: Datos del documento */}
+									<Typography variant="subtitle2" color="primary" gutterBottom>
+										Datos del documento
+									</Typography>
+									<Divider sx={{ mb: 1.5 }} />
+									<Grid container spacing={1.5} sx={{ mb: 3 }}>
+										<Grid item xs={12} sm={6} md={4}>
 											<Typography variant="caption" color="textSecondary">
-												Intentos
+												Navigation Code
 											</Typography>
-											<Typography variant="body2" fontWeight={600}>
-												{mevCausa.verificacion.intentosVerificacion}
-											</Typography>
+											<Box>
+												<Chip
+													label={mevCausa.navigationCode}
+													size="small"
+													variant="outlined"
+													sx={{ fontFamily: "monospace", fontWeight: 600 }}
+												/>
+											</Box>
 										</Grid>
-									)}
-									{mevCausa.verificacion?.ultimoIntento && (
-										<Grid item xs={6} sm={3} md={3}>
+										<Grid item xs={12} sm={6} md={4}>
 											<Typography variant="caption" color="textSecondary">
-												Último intento
+												Jurisdicción
 											</Typography>
 											<Typography variant="body2">
-												{formatDate(mevCausa.verificacion.ultimoIntento)}
+												{mevCausa.jurisdiccion ? `${mevCausa.jurisdiccion} — ${mevCausa.jurisdiccionNombre || ""}` : "N/A"}
 											</Typography>
 										</Grid>
-									)}
-									{mevCausa.verificacion?.error?.tipo && (
-										<Grid item xs={12}>
-											<Alert severity="error" sx={{ py: 0.5 }}>
-												<Typography variant="caption" fontWeight={600}>
-													Error: {mevCausa.verificacion.error.tipo}
-												</Typography>
-												{mevCausa.verificacion.error.mensaje && (
-													<Typography variant="caption" display="block">
-														{mevCausa.verificacion.error.mensaje}
-													</Typography>
-												)}
-												{mevCausa.verificacion.error.fecha && (
-													<Typography variant="caption" display="block" color="text.secondary">
-														{formatDate(mevCausa.verificacion.error.fecha)}
-													</Typography>
-												)}
-											</Alert>
+										<Grid item xs={12} sm={6} md={4}>
+											<Typography variant="caption" color="textSecondary">
+												Organismo
+											</Typography>
+											<Typography variant="body2">
+												{mevCausa.organismo ? `${mevCausa.organismo} — ${mevCausa.organismoNombre || ""}` : "N/A"}
+											</Typography>
 										</Grid>
-									)}
-								</Grid>
-
-								{/* Botón Re-verificar */}
-								<Box sx={{ mb: 3, mt: 1 }}>
-									<Button
-										variant="outlined"
-										color="warning"
-										size="small"
-										startIcon={isReVerifying ? <CircularProgress size={16} /> : <Refresh2 size={18} />}
-										onClick={handleReVerify}
-										disabled={isReVerifying}
-									>
-										{isReVerifying ? "Re-encolando..." : "Re-verificar"}
-									</Button>
-									<Typography variant="caption" color="textSecondary" sx={{ ml: 1 }}>
-										Re-encola el expediente para que el worker lo verifique en su próximo ciclo
-									</Typography>
-								</Box>
-
-								{/* Sección 2: Ruta de navegación del worker */}
-								<Typography variant="subtitle2" color="primary" gutterBottom>
-									Ruta de navegación del worker
-									{isJusticiaDePaz && (
-										<Chip label="Justicia de Paz" size="small" color="success" variant="outlined" sx={{ ml: 1 }} />
-									)}
-								</Typography>
-								<Divider sx={{ mb: 1.5 }} />
-
-								{navCode ? (
-									<Stepper orientation="vertical" activeStep={-1} sx={{ mb: 3 }}>
-										{steps.map((step, index) => (
-											<Step key={index} active expanded>
-												<StepLabel>
-													<Typography variant="body2" fontWeight={600}>
-														{step.label}
-													</Typography>
-												</StepLabel>
-												<StepContent>
-													<Typography variant="caption" color="textSecondary" display="block">
-														{step.description}
-													</Typography>
-													{step.selector && (
-														<Box sx={{ mt: 0.5 }}>
-															<Typography variant="caption" color="textSecondary">
-																Selector:{" "}
-															</Typography>
-															<Chip
-																label={step.selector}
-																size="small"
-																variant="outlined"
-																sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}
-															/>
-														</Box>
-													)}
-													{step.value && (
-														<Box sx={{ mt: 0.5 }}>
-															<Typography variant="caption" color="textSecondary">
-																Valor:{" "}
-															</Typography>
-															<Chip
-																label={step.value}
-																size="small"
-																color="primary"
-																variant="outlined"
-																sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}
-															/>
-														</Box>
-													)}
-												</StepContent>
-											</Step>
-										))}
-									</Stepper>
-								) : (
-									<Alert severity="info" sx={{ mb: 3 }}>
-										No se pudo cargar la información del código de navegación.
-									</Alert>
-								)}
-
-								{/* Sección 3: Estadísticas del código */}
-								{navCode && (
-									<>
-										<Typography variant="subtitle2" color="primary" gutterBottom>
-											Estadísticas del código
-										</Typography>
-										<Divider sx={{ mb: 1.5 }} />
-										<Grid container spacing={1.5}>
-											<Grid item xs={12}>
+										<Grid item xs={6} sm={3} md={2}>
+											<Typography variant="caption" color="textSecondary">
+												Tipo organismo
+											</Typography>
+											<Box>
+												<Chip
+													label={mevCausa.tipoOrganismo || "N/A"}
+													size="small"
+													color={getTipoOrganismoColor(mevCausa.tipoOrganismo)}
+													variant="filled"
+												/>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3} md={2}>
+											<Typography variant="caption" color="textSecondary">
+												Estado verificación
+											</Typography>
+											<Box>
+												<Chip
+													label={getVerificacionLabel(mevCausa.verificacion?.estadoVerificacion)}
+													size="small"
+													color={getVerificacionColor(mevCausa.verificacion?.estadoVerificacion)}
+													variant="filled"
+												/>
+											</Box>
+										</Grid>
+										{mevCausa.verificacion?.intentosVerificacion !== undefined && (
+											<Grid item xs={6} sm={3} md={2}>
 												<Typography variant="caption" color="textSecondary">
-													Descripción
-												</Typography>
-												<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>
-													{navCode.descripcion}
-												</Typography>
-											</Grid>
-											<Grid item xs={6} sm={3}>
-												<Typography variant="caption" color="textSecondary">
-													Veces usado
+													Intentos
 												</Typography>
 												<Typography variant="body2" fontWeight={600}>
-													{navCode.stats?.vecesUsado ?? 0}
+													{mevCausa.verificacion.intentosVerificacion}
 												</Typography>
 											</Grid>
-											<Grid item xs={6} sm={3}>
+										)}
+										{mevCausa.verificacion?.ultimoIntento && (
+											<Grid item xs={6} sm={3} md={3}>
 												<Typography variant="caption" color="textSecondary">
-													Exitosos
+													Último intento
 												</Typography>
-												<Typography variant="body2" fontWeight={600} color="success.main">
-													{navCode.stats?.exitosos ?? 0}
-												</Typography>
+												<Typography variant="body2">{formatDate(mevCausa.verificacion.ultimoIntento)}</Typography>
 											</Grid>
-											<Grid item xs={6} sm={3}>
-												<Typography variant="caption" color="textSecondary">
-													Fallidos
-												</Typography>
-												<Typography variant="body2" fontWeight={600} color="error.main">
-													{navCode.stats?.fallidos ?? 0}
-												</Typography>
+										)}
+										{mevCausa.verificacion?.error?.tipo && (
+											<Grid item xs={12}>
+												<Alert severity="error" sx={{ py: 0.5 }}>
+													<Typography variant="caption" fontWeight={600}>
+														Error: {mevCausa.verificacion.error.tipo}
+													</Typography>
+													{mevCausa.verificacion.error.mensaje && (
+														<Typography variant="caption" display="block">
+															{mevCausa.verificacion.error.mensaje}
+														</Typography>
+													)}
+													{mevCausa.verificacion.error.fecha && (
+														<Typography variant="caption" display="block" color="text.secondary">
+															{formatDate(mevCausa.verificacion.error.fecha)}
+														</Typography>
+													)}
+												</Alert>
 											</Grid>
-											<Grid item xs={6} sm={3}>
-												<Typography variant="caption" color="textSecondary">
-													Último uso
-												</Typography>
-												<Typography variant="body2">
-													{navCode.stats?.ultimoUso ? formatDate(navCode.stats.ultimoUso) : "Nunca"}
-												</Typography>
+										)}
+									</Grid>
+
+									{/* Botón Re-verificar */}
+									<Box sx={{ mb: 3, mt: 1 }}>
+										<Button
+											variant="outlined"
+											color="warning"
+											size="small"
+											startIcon={isReVerifying ? <CircularProgress size={16} /> : <Refresh2 size={18} />}
+											onClick={handleReVerify}
+											disabled={isReVerifying}
+										>
+											{isReVerifying ? "Re-encolando..." : "Re-verificar"}
+										</Button>
+										<Typography variant="caption" color="textSecondary" sx={{ ml: 1 }}>
+											Re-encola el expediente para que el worker lo verifique en su próximo ciclo
+										</Typography>
+									</Box>
+
+									{/* Sección 2: Ruta de navegación del worker */}
+									<Typography variant="subtitle2" color="primary" gutterBottom>
+										Ruta de navegación del worker
+										{isJusticiaDePaz && <Chip label="Justicia de Paz" size="small" color="success" variant="outlined" sx={{ ml: 1 }} />}
+									</Typography>
+									<Divider sx={{ mb: 1.5 }} />
+
+									{navCode ? (
+										<Stepper orientation="vertical" activeStep={-1} sx={{ mb: 3 }}>
+											{steps.map((step, index) => (
+												<Step key={index} active expanded>
+													<StepLabel>
+														<Typography variant="body2" fontWeight={600}>
+															{step.label}
+														</Typography>
+													</StepLabel>
+													<StepContent>
+														<Typography variant="caption" color="textSecondary" display="block">
+															{step.description}
+														</Typography>
+														{step.selector && (
+															<Box sx={{ mt: 0.5 }}>
+																<Typography variant="caption" color="textSecondary">
+																	Selector:{" "}
+																</Typography>
+																<Chip
+																	label={step.selector}
+																	size="small"
+																	variant="outlined"
+																	sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}
+																/>
+															</Box>
+														)}
+														{step.value && (
+															<Box sx={{ mt: 0.5 }}>
+																<Typography variant="caption" color="textSecondary">
+																	Valor:{" "}
+																</Typography>
+																<Chip
+																	label={step.value}
+																	size="small"
+																	color="primary"
+																	variant="outlined"
+																	sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}
+																/>
+															</Box>
+														)}
+													</StepContent>
+												</Step>
+											))}
+										</Stepper>
+									) : (
+										<Alert severity="info" sx={{ mb: 3 }}>
+											No se pudo cargar la información del código de navegación.
+										</Alert>
+									)}
+
+									{/* Sección 3: Estadísticas del código */}
+									{navCode && (
+										<>
+											<Typography variant="subtitle2" color="primary" gutterBottom>
+												Estadísticas del código
+											</Typography>
+											<Divider sx={{ mb: 1.5 }} />
+											<Grid container spacing={1.5}>
+												<Grid item xs={12}>
+													<Typography variant="caption" color="textSecondary">
+														Descripción
+													</Typography>
+													<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>
+														{navCode.descripcion}
+													</Typography>
+												</Grid>
+												<Grid item xs={6} sm={3}>
+													<Typography variant="caption" color="textSecondary">
+														Veces usado
+													</Typography>
+													<Typography variant="body2" fontWeight={600}>
+														{navCode.stats?.vecesUsado ?? 0}
+													</Typography>
+												</Grid>
+												<Grid item xs={6} sm={3}>
+													<Typography variant="caption" color="textSecondary">
+														Exitosos
+													</Typography>
+													<Typography variant="body2" fontWeight={600} color="success.main">
+														{navCode.stats?.exitosos ?? 0}
+													</Typography>
+												</Grid>
+												<Grid item xs={6} sm={3}>
+													<Typography variant="caption" color="textSecondary">
+														Fallidos
+													</Typography>
+													<Typography variant="body2" fontWeight={600} color="error.main">
+														{navCode.stats?.fallidos ?? 0}
+													</Typography>
+												</Grid>
+												<Grid item xs={6} sm={3}>
+													<Typography variant="caption" color="textSecondary">
+														Último uso
+													</Typography>
+													<Typography variant="body2">
+														{navCode.stats?.ultimoUso ? formatDate(navCode.stats.ultimoUso) : "Nunca"}
+													</Typography>
+												</Grid>
+												<Grid item xs={6} sm={3}>
+													<Typography variant="caption" color="textSecondary">
+														Activo
+													</Typography>
+													<Box>
+														<Chip
+															label={navCode.activo ? "Sí" : "No"}
+															size="small"
+															color={navCode.activo ? "success" : "error"}
+															variant="filled"
+														/>
+													</Box>
+												</Grid>
 											</Grid>
-											<Grid item xs={6} sm={3}>
-												<Typography variant="caption" color="textSecondary">
-													Activo
-												</Typography>
-												<Box>
-													<Chip
-														label={navCode.activo ? "Sí" : "No"}
-														size="small"
-														color={navCode.activo ? "success" : "error"}
-														variant="filled"
-													/>
-												</Box>
-											</Grid>
-										</Grid>
-									</>
-								)}
-							</Box>
-						);
-					})()}
+										</>
+									)}
+								</Box>
+							);
+						})()}
 				</DialogContent>
 
 				<DialogActions>

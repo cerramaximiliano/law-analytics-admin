@@ -394,28 +394,13 @@ const StripeSubscriptionsTable = () => {
 								<TableCell align="center">
 									<Stack direction="row" spacing={0.5} justifyContent="center">
 										<Tooltip title="Ver detalles del cliente">
-											<IconButton
-												color="primary"
-												onClick={() => handleViewClick(customer)}
-												size="small"
-											>
+											<IconButton color="primary" onClick={() => handleViewClick(customer)} size="small">
 												<Eye size={18} />
 											</IconButton>
 										</Tooltip>
-										<Tooltip
-											title={
-												canDelete(customer)
-													? "Eliminar cliente de Stripe"
-													: "No se puede eliminar: tiene suscripción activa"
-											}
-										>
+										<Tooltip title={canDelete(customer) ? "Eliminar cliente de Stripe" : "No se puede eliminar: tiene suscripción activa"}>
 											<span>
-												<IconButton
-													color="error"
-													onClick={() => handleDeleteClick(customer)}
-													disabled={!canDelete(customer)}
-													size="small"
-												>
+												<IconButton color="error" onClick={() => handleDeleteClick(customer)} disabled={!canDelete(customer)} size="small">
 													<Trash size={18} />
 												</IconButton>
 											</span>
@@ -447,9 +432,7 @@ const StripeSubscriptionsTable = () => {
 						</Alert>
 					) : (
 						<>
-							<DialogContentText>
-								¿Estás seguro de que deseas eliminar este cliente de Stripe?
-							</DialogContentText>
+							<DialogContentText>¿Estás seguro de que deseas eliminar este cliente de Stripe?</DialogContentText>
 							{customerToDelete && (
 								<Box sx={{ mt: 2, p: 2, bgcolor: "background.default", borderRadius: 1 }}>
 									<Typography variant="body2">

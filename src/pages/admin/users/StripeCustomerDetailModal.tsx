@@ -112,11 +112,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 			<DialogTitle>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Typography variant="h5">Detalles del Cliente de Stripe</Typography>
-					<Chip
-						label={getEnvironmentLabel(customer.environment)}
-						color={getEnvironmentColor(customer.environment) as any}
-						size="small"
-					/>
+					<Chip label={getEnvironmentLabel(customer.environment)} color={getEnvironmentColor(customer.environment) as any} size="small" />
 				</Stack>
 			</DialogTitle>
 			<DialogContent dividers>
@@ -183,11 +179,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 									<Typography variant="caption" color="text.secondary">
 										Moroso
 									</Typography>
-									<Chip
-										label={customer.delinquent ? "Sí" : "No"}
-										color={customer.delinquent ? "error" : "success"}
-										size="small"
-									/>
+									<Chip label={customer.delinquent ? "Sí" : "No"} color={customer.delinquent ? "error" : "success"} size="small" />
 								</Stack>
 							</Grid>
 							<Grid item xs={12} md={6}>
@@ -304,9 +296,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 										<Typography variant="caption" color="text.secondary">
 											Fecha de Consolidación
 										</Typography>
-										<Typography variant="body1">
-											{dayjs(customer.metadata.consolidation_date).format("DD/MM/YYYY HH:mm")}
-										</Typography>
+										<Typography variant="body1">{dayjs(customer.metadata.consolidation_date).format("DD/MM/YYYY HH:mm")}</Typography>
 									</Stack>
 								</Grid>
 							)}
@@ -403,9 +393,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 										<Typography variant="caption" color="text.secondary">
 											Inicio del Período Actual
 										</Typography>
-										<Typography variant="body1">
-											{dayjs(customer.subscription.current_period_start).format("DD/MM/YYYY HH:mm")}
-										</Typography>
+										<Typography variant="body1">{dayjs(customer.subscription.current_period_start).format("DD/MM/YYYY HH:mm")}</Typography>
 									</Stack>
 								</Grid>
 								<Grid item xs={12} md={6}>
@@ -413,9 +401,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 										<Typography variant="caption" color="text.secondary">
 											Fin del Período Actual
 										</Typography>
-										<Typography variant="body1">
-											{dayjs(customer.subscription.current_period_end).format("DD/MM/YYYY HH:mm")}
-										</Typography>
+										<Typography variant="body1">{dayjs(customer.subscription.current_period_end).format("DD/MM/YYYY HH:mm")}</Typography>
 									</Stack>
 								</Grid>
 								<Grid item xs={12} md={6}>
@@ -489,10 +475,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 									<Typography variant="caption" color="text.secondary">
 										Entorno
 									</Typography>
-									<Chip
-										label={getEnvironmentLabel(customer.environment)}
-										color={getEnvironmentColor(customer.environment) as any}
-									/>
+									<Chip label={getEnvironmentLabel(customer.environment)} color={getEnvironmentColor(customer.environment) as any} />
 								</Stack>
 							</Grid>
 						</Grid>

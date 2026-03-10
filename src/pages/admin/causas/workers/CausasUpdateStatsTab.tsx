@@ -88,24 +88,36 @@ const CausasUpdateStatsTab: React.FC = () => {
 				<Grid item xs={6} sm={3}>
 					<Card variant="outlined">
 						<CardContent sx={{ textAlign: "center", py: 2 }}>
-							<Typography variant="h4" color="primary.main">{today.totalRuns}</Typography>
-							<Typography variant="caption" color="text.secondary">Runs hoy</Typography>
+							<Typography variant="h4" color="primary.main">
+								{today.totalRuns}
+							</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Runs hoy
+							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
 				<Grid item xs={6} sm={3}>
 					<Card variant="outlined">
 						<CardContent sx={{ textAlign: "center", py: 2 }}>
-							<Typography variant="h4" color="success.main">{today.causasUpdated}</Typography>
-							<Typography variant="caption" color="text.secondary">Causas actualizadas</Typography>
+							<Typography variant="h4" color="success.main">
+								{today.causasUpdated}
+							</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Causas actualizadas
+							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
 				<Grid item xs={6} sm={3}>
 					<Card variant="outlined">
 						<CardContent sx={{ textAlign: "center", py: 2 }}>
-							<Typography variant="h4" color="info.main">{today.newMovimientos}</Typography>
-							<Typography variant="caption" color="text.secondary">Movimientos nuevos</Typography>
+							<Typography variant="h4" color="info.main">
+								{today.newMovimientos}
+							</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Movimientos nuevos
+							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
@@ -118,7 +130,9 @@ const CausasUpdateStatsTab: React.FC = () => {
 								</Typography>
 								{stats.incompleteRuns > 0 && <Warning2 size={20} color={theme.palette.warning.main} />}
 							</Stack>
-							<Typography variant="caption" color="text.secondary">Runs incompletos</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Runs incompletos
+							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
@@ -128,7 +142,13 @@ const CausasUpdateStatsTab: React.FC = () => {
 			{(today.completed !== undefined || today.partial !== undefined || today.errors !== undefined) && (
 				<Stack direction="row" spacing={1}>
 					{today.completed !== undefined && today.completed > 0 && (
-						<Chip icon={<TickCircle size={14} />} label={`${today.completed} completados`} size="small" color="success" variant="outlined" />
+						<Chip
+							icon={<TickCircle size={14} />}
+							label={`${today.completed} completados`}
+							size="small"
+							color="success"
+							variant="outlined"
+						/>
 					)}
 					{today.partial !== undefined && today.partial > 0 && (
 						<Chip icon={<Warning2 size={14} />} label={`${today.partial} parciales`} size="small" color="warning" variant="outlined" />
@@ -207,14 +227,21 @@ const CausasUpdateStatsTab: React.FC = () => {
 											<TableCell align="right">{cred.newMovimientos}</TableCell>
 											<TableCell align="right">
 												{cred.errors > 0 ? (
-													<Typography variant="body2" color="error.main">{cred.errors}</Typography>
+													<Typography variant="body2" color="error.main">
+														{cred.errors}
+													</Typography>
 												) : (
 													0
 												)}
 											</TableCell>
 											<TableCell>
 												<Typography variant="caption">
-													{new Date(cred.lastRun).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+													{new Date(cred.lastRun).toLocaleString("es-AR", {
+														day: "2-digit",
+														month: "2-digit",
+														hour: "2-digit",
+														minute: "2-digit",
+													})}
 												</Typography>
 											</TableCell>
 										</TableRow>
@@ -249,7 +276,12 @@ const CausasUpdateStatsTab: React.FC = () => {
 										<TableRow key={run._id}>
 											<TableCell>
 												<Typography variant="caption">
-													{new Date(run.startedAt).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+													{new Date(run.startedAt).toLocaleString("es-AR", {
+														day: "2-digit",
+														month: "2-digit",
+														hour: "2-digit",
+														minute: "2-digit",
+													})}
 												</Typography>
 											</TableCell>
 											<TableCell>
@@ -257,9 +289,13 @@ const CausasUpdateStatsTab: React.FC = () => {
 													label={run.status}
 													size="small"
 													color={
-														run.status === "completed" ? "success" :
-														run.status === "error" ? "error" :
-														run.status === "partial" || run.status === "interrupted" ? "warning" : "info"
+														run.status === "completed"
+															? "success"
+															: run.status === "error"
+															? "error"
+															: run.status === "partial" || run.status === "interrupted"
+															? "warning"
+															: "info"
 													}
 													variant="outlined"
 													sx={{ height: 20, fontSize: "0.7rem" }}
@@ -268,7 +304,11 @@ const CausasUpdateStatsTab: React.FC = () => {
 											<TableCell align="right">{run.results?.causasProcessed ?? 0}</TableCell>
 											<TableCell align="right">{run.results?.newMovimientos ?? 0}</TableCell>
 											<TableCell align="right">
-												{run.durationSeconds ? (run.durationSeconds < 60 ? `${run.durationSeconds}s` : `${Math.floor(run.durationSeconds / 60)}m`) : "-"}
+												{run.durationSeconds
+													? run.durationSeconds < 60
+														? `${run.durationSeconds}s`
+														: `${Math.floor(run.durationSeconds / 60)}m`
+													: "-"}
 											</TableCell>
 										</TableRow>
 									))}

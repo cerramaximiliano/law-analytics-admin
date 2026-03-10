@@ -26,12 +26,7 @@ import MainCard from "components/MainCard";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useSnackbar } from "notistack";
 import { Refresh, ArrowUp, ArrowDown, SearchNormal1, CloseCircle } from "iconsax-react";
-import {
-	PendingCausasService,
-	PendingCausa,
-	FuenteCausa,
-	FueroPJN,
-} from "api/pendingCausas";
+import { PendingCausasService, PendingCausa, FuenteCausa, FueroPJN } from "api/pendingCausas";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -131,46 +126,49 @@ const CausasPendientes = () => {
 
 	// ── Fetch list ───────────────────────────────────────────────────────────
 
-	const fetchCausas = useCallback(async (
-		tab: FuenteCausa,
-		currentPage: number,
-		limit: number,
-		fuero: string,
-		caratula: string,
-		numero: string,
-		anio: string,
-		sortByParam: string,
-		sortOrderParam: "asc" | "desc",
-	) => {
-		try {
-			setLoading(true);
-			const params: Record<string, unknown> = {
-				fuente: tab,
-				page: currentPage + 1,
-				limit,
-				sortBy: sortByParam,
-				sortOrder: sortOrderParam,
-			};
+	const fetchCausas = useCallback(
+		async (
+			tab: FuenteCausa,
+			currentPage: number,
+			limit: number,
+			fuero: string,
+			caratula: string,
+			numero: string,
+			anio: string,
+			sortByParam: string,
+			sortOrderParam: "asc" | "desc",
+		) => {
+			try {
+				setLoading(true);
+				const params: Record<string, unknown> = {
+					fuente: tab,
+					page: currentPage + 1,
+					limit,
+					sortBy: sortByParam,
+					sortOrder: sortOrderParam,
+				};
 
-			if (tab === "pjn" && fuero !== "todos") {
-				params.fuero = fuero as FueroPJN;
-			}
-			if (caratula.trim()) params.caratula = caratula.trim();
-			if (numero.trim()) params.numero = numero.trim();
-			if (anio.trim()) params.anio = anio.trim();
+				if (tab === "pjn" && fuero !== "todos") {
+					params.fuero = fuero as FueroPJN;
+				}
+				if (caratula.trim()) params.caratula = caratula.trim();
+				if (numero.trim()) params.numero = numero.trim();
+				if (anio.trim()) params.anio = anio.trim();
 
-			const response = await PendingCausasService.getPendingCausas(params);
-			if (response.success) {
-				setCausas(response.data);
-				setTotalCount(response.pagination.total);
+				const response = await PendingCausasService.getPendingCausas(params);
+				if (response.success) {
+					setCausas(response.data);
+					setTotalCount(response.pagination.total);
+				}
+			} catch {
+				enqueueSnackbar("Error al cargar causas pendientes", { variant: "error" });
+				setCausas([]);
+			} finally {
+				setLoading(false);
 			}
-		} catch {
-			enqueueSnackbar("Error al cargar causas pendientes", { variant: "error" });
-			setCausas([]);
-		} finally {
-			setLoading(false);
-		}
-	}, [enqueueSnackbar]);
+		},
+		[enqueueSnackbar],
+	);
 
 	// ── Effects ──────────────────────────────────────────────────────────────
 
@@ -231,15 +229,10 @@ const CausasPendientes = () => {
 	// ── Sort header ──────────────────────────────────────────────────────────
 
 	const SortableHeader = ({ field, label }: { field: string; label: string }) => (
-		<TableCell
-			onClick={() => handleSort(field)}
-			sx={{ cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}
-		>
+		<TableCell onClick={() => handleSort(field)} sx={{ cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}>
 			<Stack direction="row" alignItems="center" spacing={0.5}>
 				<span>{label}</span>
-				{sortBy === field ? (
-					sortOrder === "desc" ? <ArrowDown size={14} /> : <ArrowUp size={14} />
-				) : null}
+				{sortBy === field ? sortOrder === "desc" ? <ArrowDown size={14} /> : <ArrowUp size={14} /> : null}
 			</Stack>
 		</TableCell>
 	);
@@ -265,7 +258,11 @@ const CausasPendientes = () => {
 		}
 
 		if (!causas.length) {
-			return <Alert severity="info" sx={{ m: 2 }}>No se encontraron causas pendientes con los filtros seleccionados.</Alert>;
+			return (
+				<Alert severity="info" sx={{ m: 2 }}>
+					No se encontraron causas pendientes con los filtros seleccionados.
+				</Alert>
+			);
 		}
 
 		return (
@@ -295,11 +292,7 @@ const CausasPendientes = () => {
 						{causas.map((causa) => (
 							<TableRow key={causa._id} hover>
 								<TableCell>
-									<Chip
-										label={FUERO_LABELS[causa.fuero] || causa.fuero}
-										size="small"
-										color={FUERO_COLORS[causa.fuero] || "default"}
-									/>
+									<Chip label={FUERO_LABELS[causa.fuero] || causa.fuero} size="small" color={FUERO_COLORS[causa.fuero] || "default"} />
 								</TableCell>
 								{activeTab === "eje" ? (
 									<TableCell>
@@ -331,10 +324,7 @@ const CausasPendientes = () => {
 								{activeTab !== "eje" && <TableCell>{causa.juzgado ?? "—"}</TableCell>}
 								{activeTab !== "eje" && (
 									<TableCell sx={{ maxWidth: 200 }}>
-										<Typography
-											variant="body2"
-											sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}
-										>
+										<Typography variant="body2" sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>
 											{causa.objeto || "—"}
 										</Typography>
 									</TableCell>
@@ -344,16 +334,14 @@ const CausasPendientes = () => {
 										{causa.isPivot ? (
 											<Chip label="Pivot" size="small" color="warning" />
 										) : (
-											<Typography variant="caption" color="text.secondary">No</Typography>
+											<Typography variant="caption" color="text.secondary">
+												No
+											</Typography>
 										)}
 									</TableCell>
 								)}
 								<TableCell>
-									<Chip
-										label={SOURCE_LABELS[causa.source || ""] || causa.source || "—"}
-										size="small"
-										variant="outlined"
-									/>
+									<Chip label={SOURCE_LABELS[causa.source || ""] || causa.source || "—"} size="small" variant="outlined" />
 								</TableCell>
 								<TableCell>{formatDate(causa.lastUpdate)}</TableCell>
 								<TableCell>{formatDate(causa.createdAt)}</TableCell>
@@ -381,11 +369,7 @@ const CausasPendientes = () => {
 			{/* Tabs */}
 			<Tabs value={activeTab} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
 				{TABS.map((tab) => (
-					<Tab
-						key={tab.value}
-						value={tab.value}
-						label={tabLabel(tab.label, stats[tab.value])}
-					/>
+					<Tab key={tab.value} value={tab.value} label={tabLabel(tab.label, stats[tab.value])} />
 				))}
 			</Tabs>
 
@@ -397,7 +381,10 @@ const CausasPendientes = () => {
 						<Select
 							value={fueroFilter}
 							label="Fuero"
-							onChange={(e) => { setFueroFilter(e.target.value); setPage(0); }}
+							onChange={(e) => {
+								setFueroFilter(e.target.value);
+								setPage(0);
+							}}
 						>
 							<MenuItem value="todos">Todos</MenuItem>
 							<MenuItem value="CIV">Civil</MenuItem>
@@ -441,9 +428,18 @@ const CausasPendientes = () => {
 
 				<FormControl size="small" sx={{ minWidth: 160 }}>
 					<InputLabel>Ordenar por</InputLabel>
-					<Select value={sortBy} label="Ordenar por" onChange={(e) => { setSortBy(e.target.value); setPage(0); }}>
+					<Select
+						value={sortBy}
+						label="Ordenar por"
+						onChange={(e) => {
+							setSortBy(e.target.value);
+							setPage(0);
+						}}
+					>
 						{SORT_OPTIONS.map((opt) => (
-							<MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+							<MenuItem key={opt.value} value={opt.value}>
+								{opt.label}
+							</MenuItem>
 						))}
 					</Select>
 				</FormControl>

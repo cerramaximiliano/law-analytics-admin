@@ -23,7 +23,15 @@ import {
 	Collapse,
 } from "@mui/material";
 import { Folder2, Calculator, Profile2User, Refresh, ArrowDown2, ArrowUp2 } from "iconsax-react";
-import { UserResourcesService, UserFolder, UserCalculator, UserContact, FolderStats, CalculatorStats, ContactStats } from "api/userResources";
+import {
+	UserResourcesService,
+	UserFolder,
+	UserCalculator,
+	UserContact,
+	FolderStats,
+	CalculatorStats,
+	ContactStats,
+} from "api/userResources";
 
 interface UserResourcesTabProps {
 	userId: string;
@@ -221,12 +229,7 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 
 			{/* Tabs */}
 			<Tabs value={activeTab} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: "divider" }}>
-				<Tab
-					icon={<Folder2 size={16} />}
-					iconPosition="start"
-					label={`Carpetas (${foldersStats?.total || 0})`}
-					sx={{ minHeight: 48 }}
-				/>
+				<Tab icon={<Folder2 size={16} />} iconPosition="start" label={`Carpetas (${foldersStats?.total || 0})`} sx={{ minHeight: 48 }} />
 				<Tab
 					icon={<Calculator size={16} />}
 					iconPosition="start"

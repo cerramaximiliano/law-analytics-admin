@@ -34,26 +34,9 @@ import {
 	useTheme,
 	alpha,
 } from "@mui/material";
-import {
-	Refresh2,
-	AddCircle,
-	Play,
-	Pause,
-	RotateLeft,
-	Trash,
-	Link1,
-	Copy,
-	Timer1,
-	Cpu,
-	StatusUp,
-	Repeat,
-} from "iconsax-react";
+import { Refresh2, AddCircle, Play, Pause, RotateLeft, Trash, Link1, Copy, Timer1, Cpu, StatusUp, Repeat } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import {
-	ScrapingWorkerManagerService,
-	ManagedWorker,
-	ManagerStatusData,
-} from "api/workers";
+import { ScrapingWorkerManagerService, ManagedWorker, ManagerStatusData } from "api/workers";
 import CreateManagedWorkerModal from "./CreateManagedWorkerModal";
 import BatchCreateWorkersModal from "./BatchCreateWorkersModal";
 import LinkExistingConfigModal from "./LinkExistingConfigModal";
@@ -128,35 +111,38 @@ const ScrapingManagerPanel: React.FC = () => {
 	// Action loading
 	const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-	const fetchData = useCallback(async (showLoading = true) => {
-		if (showLoading) setLoading(true);
-		try {
-			const params: { fuero?: string; enabled?: string; page?: number; limit?: number } = {
-				page: page + 1,
-				limit: rowsPerPage,
-			};
-			if (fueroFilter) params.fuero = fueroFilter;
-			if (enabledFilter) params.enabled = enabledFilter;
+	const fetchData = useCallback(
+		async (showLoading = true) => {
+			if (showLoading) setLoading(true);
+			try {
+				const params: { fuero?: string; enabled?: string; page?: number; limit?: number } = {
+					page: page + 1,
+					limit: rowsPerPage,
+				};
+				if (fueroFilter) params.fuero = fueroFilter;
+				if (enabledFilter) params.enabled = enabledFilter;
 
-			const [workersRes, statusRes] = await Promise.all([
-				ScrapingWorkerManagerService.listWorkers(params),
-				ScrapingWorkerManagerService.getStatus(),
-			]);
+				const [workersRes, statusRes] = await Promise.all([
+					ScrapingWorkerManagerService.listWorkers(params),
+					ScrapingWorkerManagerService.getStatus(),
+				]);
 
-			setWorkers(workersRes.data || []);
-			setTotal(workersRes.total || 0);
-			setManagerStatus(statusRes.data || null);
-		} catch (error: any) {
-			if (showLoading) {
-				enqueueSnackbar("Error al cargar datos del manager", {
-					variant: "error",
-					anchorOrigin: { vertical: "bottom", horizontal: "right" },
-				});
+				setWorkers(workersRes.data || []);
+				setTotal(workersRes.total || 0);
+				setManagerStatus(statusRes.data || null);
+			} catch (error: any) {
+				if (showLoading) {
+					enqueueSnackbar("Error al cargar datos del manager", {
+						variant: "error",
+						anchorOrigin: { vertical: "bottom", horizontal: "right" },
+					});
+				}
+			} finally {
+				if (showLoading) setLoading(false);
 			}
-		} finally {
-			if (showLoading) setLoading(false);
-		}
-	}, [page, rowsPerPage, fueroFilter, enabledFilter, enqueueSnackbar]);
+		},
+		[page, rowsPerPage, fueroFilter, enabledFilter, enqueueSnackbar],
+	);
 
 	useEffect(() => {
 		fetchData();
@@ -284,10 +270,14 @@ const ScrapingManagerPanel: React.FC = () => {
 		}
 		const status = worker.pm2Status.status;
 		if (status === "online") {
-			return <Chip label="Online" size="small" sx={{ bgcolor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main }} />;
+			return (
+				<Chip label="Online" size="small" sx={{ bgcolor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main }} />
+			);
 		}
 		if (status === "stopped") {
-			return <Chip label="Stopped" size="small" sx={{ bgcolor: alpha(theme.palette.warning.main, 0.1), color: theme.palette.warning.main }} />;
+			return (
+				<Chip label="Stopped" size="small" sx={{ bgcolor: alpha(theme.palette.warning.main, 0.1), color: theme.palette.warning.main }} />
+			);
 		}
 		return <Chip label={status} size="small" sx={{ bgcolor: alpha(theme.palette.error.main, 0.1), color: theme.palette.error.main }} />;
 	};
@@ -315,11 +305,7 @@ const ScrapingManagerPanel: React.FC = () => {
 								Manager
 							</Typography>
 							<Stack direction="row" alignItems="center" spacing={1}>
-								<Chip
-									label={isManagerOnline ? "Online" : "Offline"}
-									size="small"
-									color={isManagerOnline ? "success" : "error"}
-								/>
+								<Chip label={isManagerOnline ? "Online" : "Offline"} size="small" color={isManagerOnline ? "success" : "error"} />
 								{managerStatus?.manager && (
 									<Typography variant="caption" color="text.secondary">
 										Ciclo #{managerStatus.manager.cycleCount}
@@ -406,7 +392,14 @@ const ScrapingManagerPanel: React.FC = () => {
 					<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
 						<FormControl size="small" sx={{ minWidth: 120 }}>
 							<InputLabel>Fuero</InputLabel>
-							<Select value={fueroFilter} onChange={(e) => { setFueroFilter(e.target.value); setPage(0); }} label="Fuero">
+							<Select
+								value={fueroFilter}
+								onChange={(e) => {
+									setFueroFilter(e.target.value);
+									setPage(0);
+								}}
+								label="Fuero"
+							>
 								{FUERO_OPTIONS.map((o) => (
 									<MenuItem key={o.value} value={o.value}>
 										{o.label}
@@ -416,7 +409,14 @@ const ScrapingManagerPanel: React.FC = () => {
 						</FormControl>
 						<FormControl size="small" sx={{ minWidth: 120 }}>
 							<InputLabel>Estado</InputLabel>
-							<Select value={enabledFilter} onChange={(e) => { setEnabledFilter(e.target.value); setPage(0); }} label="Estado">
+							<Select
+								value={enabledFilter}
+								onChange={(e) => {
+									setEnabledFilter(e.target.value);
+									setPage(0);
+								}}
+								label="Estado"
+							>
 								<MenuItem value="">Todos</MenuItem>
 								<MenuItem value="true">Habilitado</MenuItem>
 								<MenuItem value="false">Deshabilitado</MenuItem>
@@ -528,11 +528,7 @@ const ScrapingManagerPanel: React.FC = () => {
 									return (
 										<TableRow key={wId} hover>
 											<TableCell padding="checkbox">
-												<Checkbox
-													size="small"
-													checked={selected.includes(wId)}
-													onChange={() => handleToggleSelect(wId)}
-												/>
+												<Checkbox size="small" checked={selected.includes(wId)} onChange={() => handleToggleSelect(wId)} />
 											</TableCell>
 											<TableCell>
 												<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem">
@@ -552,11 +548,7 @@ const ScrapingManagerPanel: React.FC = () => {
 											</TableCell>
 											<TableCell sx={{ minWidth: 120 }}>
 												<Stack spacing={0.25}>
-													<LinearProgress
-														variant="determinate"
-														value={progress}
-														sx={{ height: 4, borderRadius: 1 }}
-													/>
+													<LinearProgress variant="determinate" value={progress} sx={{ height: 4, borderRadius: 1 }} />
 													<Typography variant="caption" color="text.secondary">
 														{progress}% — #{worker.number?.toLocaleString() || "?"}
 													</Typography>
@@ -695,11 +687,7 @@ const ScrapingManagerPanel: React.FC = () => {
 						)}
 					</DialogContentText>
 					<Box sx={{ mt: 2 }}>
-						<Checkbox
-							checked={deleteDoc}
-							onChange={(e) => setDeleteDoc(e.target.checked)}
-							id="delete-doc-check"
-						/>
+						<Checkbox checked={deleteDoc} onChange={(e) => setDeleteDoc(e.target.checked)} id="delete-doc-check" />
 						<label htmlFor="delete-doc-check">
 							<Typography variant="body2" component="span" color="error">
 								También eliminar el documento de configuración de la base de datos
@@ -721,7 +709,10 @@ const ScrapingManagerPanel: React.FC = () => {
 			<LinkExistingConfigModal open={linkOpen} onClose={() => setLinkOpen(false)} onSuccess={() => fetchData(false)} />
 			<UpdateRangeModal
 				open={updateRangeOpen}
-				onClose={() => { setUpdateRangeOpen(false); setWorkerToUpdateRange(null); }}
+				onClose={() => {
+					setUpdateRangeOpen(false);
+					setWorkerToUpdateRange(null);
+				}}
 				onSuccess={() => fetchData(false)}
 				worker={workerToUpdateRange}
 			/>

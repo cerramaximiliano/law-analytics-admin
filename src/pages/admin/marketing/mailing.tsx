@@ -735,9 +735,7 @@ const MailingCampaigns = () => {
 											<TableCell align="right">
 												{campaign.settings?.dailyLimit && campaign.settings.dailyLimit > 0 ? (
 													<Tooltip title="Límite de emails por día">
-														<Typography variant="body2">
-															{campaign.settings.dailyLimit.toLocaleString()}
-														</Typography>
+														<Typography variant="body2">{campaign.settings.dailyLimit.toLocaleString()}</Typography>
 													</Tooltip>
 												) : (
 													<Typography variant="body2" color="textSecondary">
@@ -748,10 +746,7 @@ const MailingCampaigns = () => {
 											<TableCell align="right">{`${openRate}%`}</TableCell>
 											<TableCell align="right">
 												{campaign.startDate ? (
-													<Tooltip
-														title={`Zona horaria: ${campaign.settings?.timezone || "UTC"}`}
-														arrow
-													>
+													<Tooltip title={`Zona horaria: ${campaign.settings?.timezone || "UTC"}`} arrow>
 														<Box>
 															<Typography variant="body2">
 																{dayjs
@@ -814,11 +809,7 @@ const MailingCampaigns = () => {
 														</IconButton>
 													</Tooltip>
 													<Tooltip title="Más acciones">
-														<IconButton
-															aria-label="más acciones"
-															size="small"
-															onClick={(e) => handleOpenActionsMenu(e, campaign)}
-														>
+														<IconButton aria-label="más acciones" size="small" onClick={(e) => handleOpenActionsMenu(e, campaign)}>
 															<More size={18} />
 														</IconButton>
 													</Tooltip>
@@ -981,10 +972,7 @@ const MailingCampaigns = () => {
 					<ListItemIcon>
 						<Copy size={18} />
 					</ListItemIcon>
-					<ListItemText
-						primary="Duplicar campaña"
-						secondary="Crea copia en borrador sin contactos"
-					/>
+					<ListItemText primary="Duplicar campaña" secondary="Crea copia en borrador sin contactos" />
 				</MenuItem>
 			</Menu>
 
@@ -1005,9 +993,7 @@ const MailingCampaigns = () => {
 						<Typography variant="subtitle2" gutterBottom>
 							La copia se creará en modo BORRADOR
 						</Typography>
-						<Typography variant="body2">
-							Podrás modificar el público objetivo, fechas y contenido antes de activarla.
-						</Typography>
+						<Typography variant="body2">Podrás modificar el público objetivo, fechas y contenido antes de activarla.</Typography>
 					</Alert>
 
 					<Typography variant="subtitle2" color="textSecondary" gutterBottom>
@@ -1046,8 +1032,8 @@ const MailingCampaigns = () => {
 								Sincronización de segmento DESHABILITADA
 							</Typography>
 							<Typography variant="body2">
-								La campaña duplicada <strong>NO sincronizará contactos automáticamente</strong> con el segmento heredado.
-								Esto evita que se agreguen contactos no deseados. Puedes habilitar la sincronización desde la edición de la campaña si lo necesitas.
+								La campaña duplicada <strong>NO sincronizará contactos automáticamente</strong> con el segmento heredado. Esto evita que se
+								agreguen contactos no deseados. Puedes habilitar la sincronización desde la edición de la campaña si lo necesitas.
 							</Typography>
 						</Alert>
 					)}

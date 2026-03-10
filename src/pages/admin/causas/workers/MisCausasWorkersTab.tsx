@@ -147,12 +147,24 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 							<TableHead>
 								<TableRow>
 									<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Worker</TableCell>
-									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Estado</TableCell>
-									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Horario</TableCell>
-									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Instancias</TableCell>
-									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Scale Up</TableCell>
-									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Scale Down</TableCell>
-									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Fast</TableCell>
+									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>
+										Estado
+									</TableCell>
+									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>
+										Horario
+									</TableCell>
+									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>
+										Instancias
+									</TableCell>
+									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>
+										Scale Up
+									</TableCell>
+									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>
+										Scale Down
+									</TableCell>
+									<TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>
+										Fast
+									</TableCell>
 								</TableRow>
 							</TableHead>
 							<TableBody>
@@ -160,7 +172,9 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 									<TableRow key={name} sx={{ "&:last-child td": { borderBottom: 0 } }}>
 										<TableCell sx={{ fontSize: "0.8rem" }}>
 											<Stack direction="row" spacing={0.5} alignItems="center">
-												<Typography variant="body2" fontWeight={500}>{WORKER_LABELS[name] || name}</Typography>
+												<Typography variant="body2" fontWeight={500}>
+													{WORKER_LABELS[name] || name}
+												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
 													({name})
 												</Typography>
@@ -175,9 +189,7 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 											/>
 										</TableCell>
 										<TableCell align="center" sx={{ fontSize: "0.8rem", fontFamily: "monospace" }}>
-											{w.schedule.enabled
-												? `${w.schedule.workingHoursStart} - ${w.schedule.workingHoursEnd}`
-												: "24/7"}
+											{w.schedule.enabled ? `${w.schedule.workingHoursStart} - ${w.schedule.workingHoursEnd}` : "24/7"}
 										</TableCell>
 										<TableCell align="center" sx={{ fontSize: "0.8rem" }}>
 											{w.scaling.minInstances} - {w.scaling.maxInstances}
@@ -190,7 +202,12 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 										</TableCell>
 										<TableCell align="center" sx={{ fontSize: "0.8rem" }}>
 											{w.scaling.fastScalingEnabled !== false ? (
-												<Chip label={`1:1 ≤${w.scaling.fastScalingThreshold || 5}`} size="small" color="info" sx={{ fontSize: "0.65rem", height: 20 }} />
+												<Chip
+													label={`1:1 ≤${w.scaling.fastScalingThreshold || 5}`}
+													size="small"
+													color="info"
+													sx={{ fontSize: "0.65rem", height: 20 }}
+												/>
 											) : (
 												<Chip label="OFF" size="small" variant="outlined" sx={{ fontSize: "0.65rem", height: 20 }} />
 											)}
@@ -223,12 +240,7 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 											<Typography variant="subtitle1" fontWeight="bold">
 												{WORKER_LABELS[workerName] || workerName}
 											</Typography>
-											<Chip
-												label={workerName}
-												size="small"
-												variant="outlined"
-												sx={{ fontSize: "0.65rem", fontFamily: "monospace" }}
-											/>
+											<Chip label={workerName} size="small" variant="outlined" sx={{ fontSize: "0.65rem", fontFamily: "monospace" }} />
 											<Chip
 												label={worker.enabled ? "ON" : "OFF"}
 												size="small"

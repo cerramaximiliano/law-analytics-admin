@@ -105,9 +105,7 @@ const CausaSelector: React.FC<{ onSelect: (causa: IndexationCausa) => void }> = 
 		fetchCausas();
 	}, [fetchCausas]);
 
-	const filtered = search
-		? causas.filter((c) => c.caratula?.toLowerCase().includes(search.toLowerCase()))
-		: causas;
+	const filtered = search ? causas.filter((c) => c.caratula?.toLowerCase().includes(search.toLowerCase())) : causas;
 
 	return (
 		<Stack spacing={2}>
@@ -139,7 +137,9 @@ const CausaSelector: React.FC<{ onSelect: (causa: IndexationCausa) => void }> = 
 							<TableCell sx={{ width: "8%", display: { xs: "none", md: "table-cell" } }}>Fuero</TableCell>
 							<TableCell sx={{ width: "10%", display: { xs: "none", md: "table-cell" } }}>Juzgado</TableCell>
 							<TableCell sx={{ width: "8%", display: { xs: "none", md: "table-cell" } }}>Tipo</TableCell>
-							<TableCell sx={{ width: isMobile ? "20%" : "10%" }} align="right">Docs</TableCell>
+							<TableCell sx={{ width: isMobile ? "20%" : "10%" }} align="right">
+								Docs
+							</TableCell>
 							<TableCell sx={{ width: isMobile ? "25%" : "14%", display: { xs: "none", sm: "table-cell" } }}>Ultima indexacion</TableCell>
 						</TableRow>
 					</TableHead>
@@ -164,20 +164,21 @@ const CausaSelector: React.FC<{ onSelect: (causa: IndexationCausa) => void }> = 
 							</TableRow>
 						) : (
 							filtered.map((c) => (
-								<TableRow
-									key={`${c.causaType}-${c.causaId}`}
-									hover
-									sx={{ cursor: "pointer" }}
-									onClick={() => onSelect(c)}
-								>
+								<TableRow key={`${c.causaType}-${c.causaId}`} hover sx={{ cursor: "pointer" }} onClick={() => onSelect(c)}>
 									<TableCell sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={c.caratula}>
-										<Typography variant="caption" noWrap>{c.caratula || "-"}</Typography>
+										<Typography variant="caption" noWrap>
+											{c.caratula || "-"}
+										</Typography>
 									</TableCell>
 									<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
-										<Typography variant="caption" color="text.secondary">{c.fuero || "-"}</Typography>
+										<Typography variant="caption" color="text.secondary">
+											{c.fuero || "-"}
+										</Typography>
 									</TableCell>
 									<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
-										<Typography variant="caption" color="text.secondary">{c.juzgado ?? "-"}</Typography>
+										<Typography variant="caption" color="text.secondary">
+											{c.juzgado ?? "-"}
+										</Typography>
 									</TableCell>
 									<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
 										<Chip label={c.causaType} size="small" variant="outlined" sx={{ fontSize: "0.65rem", height: 20 }} />
@@ -237,195 +238,198 @@ const ChatInterface: React.FC<{ causa: IndexationCausa; onBack: () => void }> = 
 		scrollToBottom();
 	}, [messages, scrollToBottom]);
 
-	const executeSend = useCallback(async (text: string, userMsgId?: string) => {
-		if (streaming) return;
+	const executeSend = useCallback(
+		async (text: string, userMsgId?: string) => {
+			if (streaming) return;
 
-		// Si es retry, limpiar el mensaje fallido y su burbuja assistant vacia
-		if (userMsgId) {
-			setMessages((prev) => {
-				const idx = prev.findIndex((m) => m.id === userMsgId);
-				if (idx === -1) return prev;
-				const copy = [...prev];
-				// Marcar el mensaje user como no-error (se reenvia)
-				copy[idx] = { ...copy[idx], error: false };
-				// Si el siguiente es un assistant vacio/con error, eliminarlo
-				if (idx + 1 < copy.length && copy[idx + 1].role === "assistant" && !copy[idx + 1].content) {
-					copy.splice(idx + 1, 1);
-				}
-				return copy;
-			});
-		}
-
-		const userMsg: ChatMessage = userMsgId
-			? { id: userMsgId, role: "user", content: text }
-			: { id: `user-${Date.now()}`, role: "user", content: text };
-		const assistantMsg: ChatMessage = { id: `assistant-${Date.now()}`, role: "assistant", content: "", streaming: true };
-
-		if (!userMsgId) {
-			setMessages((prev) => [...prev, userMsg, assistantMsg]);
-		} else {
-			setMessages((prev) => {
-				const idx = prev.findIndex((m) => m.id === userMsgId);
-				if (idx === -1) return [...prev, assistantMsg];
-				const copy = [...prev];
-				copy.splice(idx + 1, 0, assistantMsg);
-				return copy;
-			});
-		}
-
-		setInput("");
-		setStreaming(true);
-
-		const controller = new AbortController();
-		abortRef.current = controller;
-		const currentUserMsgId = userMsg.id;
-
-		try {
-			const doFetch = async (retry = false): Promise<Response> => {
-				const token = getAuthToken();
-				const headers: Record<string, string> = { "Content-Type": "application/json" };
-				if (token) headers["Authorization"] = `Bearer ${token}`;
-
-				const res = await fetch(`${RAG_URL}/rag/chat/message`, {
-					method: "POST",
-					headers,
-					credentials: "include",
-					body: JSON.stringify({
-						message: text,
-						causaId: causa.causaId,
-						causaType: causa.causaType,
-						conversationId,
-						stream: true,
-					}),
-					signal: controller.signal,
+			// Si es retry, limpiar el mensaje fallido y su burbuja assistant vacia
+			if (userMsgId) {
+				setMessages((prev) => {
+					const idx = prev.findIndex((m) => m.id === userMsgId);
+					if (idx === -1) return prev;
+					const copy = [...prev];
+					// Marcar el mensaje user como no-error (se reenvia)
+					copy[idx] = { ...copy[idx], error: false };
+					// Si el siguiente es un assistant vacio/con error, eliminarlo
+					if (idx + 1 < copy.length && copy[idx + 1].role === "assistant" && !copy[idx + 1].content) {
+						copy.splice(idx + 1, 1);
+					}
+					return copy;
 				});
-
-				if (res.status === 401 && !retry) {
-					try {
-						await refreshAuthToken();
-						return doFetch(true);
-					} catch {
-						window.dispatchEvent(new CustomEvent("showUnauthorizedModal"));
-						throw new Error("Sesion expirada");
-					}
-				}
-
-				if (!res.ok) {
-					const errorData = await res.json().catch(() => ({}));
-					throw new Error(errorData.error || `Error ${res.status}`);
-				}
-
-				return res;
-			};
-
-			const response = await doFetch();
-			if (!response.body) throw new Error("ReadableStream no soportado");
-
-			const reader = response.body.getReader();
-			const decoder = new TextDecoder();
-			let buffer = "";
-			let accumulatedText = "";
-
-			while (true) {
-				const { done, value } = await reader.read();
-				if (done) break;
-
-				buffer += decoder.decode(value, { stream: true });
-				const lines = buffer.split("\n");
-				buffer = lines.pop() || "";
-
-				for (const line of lines) {
-					if (!line.startsWith("data: ")) continue;
-					const raw = line.slice(6);
-					let data: any;
-					try {
-						data = JSON.parse(raw);
-					} catch {
-						continue;
-					}
-
-					const eventType = data.type;
-
-					if (eventType === "start") {
-						if (data.conversationId) setConversationId(data.conversationId);
-					} else if (eventType === "chunk") {
-						accumulatedText += data.text || "";
-						const snapshot = accumulatedText;
-						setMessages((prev) => {
-							const copy = [...prev];
-							const last = copy[copy.length - 1];
-							if (last?.role === "assistant") {
-								copy[copy.length - 1] = { ...last, content: snapshot };
-							}
-							return copy;
-						});
-					} else if (eventType === "done") {
-						const finalText = accumulatedText;
-						// Mapear metadata del servidor al formato de la UI
-						const rawMeta = data.metadata || {};
-						const mappedMetadata: MessageMetadata = {
-							model: rawMeta.model,
-							tokensPrompt: rawMeta.tokensUsed?.prompt,
-							tokensCompletion: rawMeta.tokensUsed?.completion,
-							latencyMs: rawMeta.latencyMs,
-							chunksUsed: rawMeta.chunksUsed,
-							chunksRetrieved: rawMeta.chunksRetrieved,
-						};
-						setMessages((prev) => {
-							const copy = [...prev];
-							const last = copy[copy.length - 1];
-							if (last?.role === "assistant") {
-								copy[copy.length - 1] = {
-									...last,
-									id: data.assistantMessageId || last.id,
-									content: finalText,
-									citations: data.citations || [],
-									metadata: mappedMetadata,
-									streaming: false,
-								};
-							}
-							return copy;
-						});
-					} else if (eventType === "error") {
-						throw new Error(data.error || "Error del servidor");
-					}
-				}
 			}
 
-			// Si el stream termina sin evento "done", marcar como no-streaming
-			setMessages((prev) => {
-				const last = prev[prev.length - 1];
-				if (last?.role === "assistant" && last.streaming) {
+			const userMsg: ChatMessage = userMsgId
+				? { id: userMsgId, role: "user", content: text }
+				: { id: `user-${Date.now()}`, role: "user", content: text };
+			const assistantMsg: ChatMessage = { id: `assistant-${Date.now()}`, role: "assistant", content: "", streaming: true };
+
+			if (!userMsgId) {
+				setMessages((prev) => [...prev, userMsg, assistantMsg]);
+			} else {
+				setMessages((prev) => {
+					const idx = prev.findIndex((m) => m.id === userMsgId);
+					if (idx === -1) return [...prev, assistantMsg];
 					const copy = [...prev];
-					copy[copy.length - 1] = { ...last, streaming: false };
+					copy.splice(idx + 1, 0, assistantMsg);
 					return copy;
+				});
+			}
+
+			setInput("");
+			setStreaming(true);
+
+			const controller = new AbortController();
+			abortRef.current = controller;
+			const currentUserMsgId = userMsg.id;
+
+			try {
+				const doFetch = async (retry = false): Promise<Response> => {
+					const token = getAuthToken();
+					const headers: Record<string, string> = { "Content-Type": "application/json" };
+					if (token) headers["Authorization"] = `Bearer ${token}`;
+
+					const res = await fetch(`${RAG_URL}/rag/chat/message`, {
+						method: "POST",
+						headers,
+						credentials: "include",
+						body: JSON.stringify({
+							message: text,
+							causaId: causa.causaId,
+							causaType: causa.causaType,
+							conversationId,
+							stream: true,
+						}),
+						signal: controller.signal,
+					});
+
+					if (res.status === 401 && !retry) {
+						try {
+							await refreshAuthToken();
+							return doFetch(true);
+						} catch {
+							window.dispatchEvent(new CustomEvent("showUnauthorizedModal"));
+							throw new Error("Sesion expirada");
+						}
+					}
+
+					if (!res.ok) {
+						const errorData = await res.json().catch(() => ({}));
+						throw new Error(errorData.error || `Error ${res.status}`);
+					}
+
+					return res;
+				};
+
+				const response = await doFetch();
+				if (!response.body) throw new Error("ReadableStream no soportado");
+
+				const reader = response.body.getReader();
+				const decoder = new TextDecoder();
+				let buffer = "";
+				let accumulatedText = "";
+
+				while (true) {
+					const { done, value } = await reader.read();
+					if (done) break;
+
+					buffer += decoder.decode(value, { stream: true });
+					const lines = buffer.split("\n");
+					buffer = lines.pop() || "";
+
+					for (const line of lines) {
+						if (!line.startsWith("data: ")) continue;
+						const raw = line.slice(6);
+						let data: any;
+						try {
+							data = JSON.parse(raw);
+						} catch {
+							continue;
+						}
+
+						const eventType = data.type;
+
+						if (eventType === "start") {
+							if (data.conversationId) setConversationId(data.conversationId);
+						} else if (eventType === "chunk") {
+							accumulatedText += data.text || "";
+							const snapshot = accumulatedText;
+							setMessages((prev) => {
+								const copy = [...prev];
+								const last = copy[copy.length - 1];
+								if (last?.role === "assistant") {
+									copy[copy.length - 1] = { ...last, content: snapshot };
+								}
+								return copy;
+							});
+						} else if (eventType === "done") {
+							const finalText = accumulatedText;
+							// Mapear metadata del servidor al formato de la UI
+							const rawMeta = data.metadata || {};
+							const mappedMetadata: MessageMetadata = {
+								model: rawMeta.model,
+								tokensPrompt: rawMeta.tokensUsed?.prompt,
+								tokensCompletion: rawMeta.tokensUsed?.completion,
+								latencyMs: rawMeta.latencyMs,
+								chunksUsed: rawMeta.chunksUsed,
+								chunksRetrieved: rawMeta.chunksRetrieved,
+							};
+							setMessages((prev) => {
+								const copy = [...prev];
+								const last = copy[copy.length - 1];
+								if (last?.role === "assistant") {
+									copy[copy.length - 1] = {
+										...last,
+										id: data.assistantMessageId || last.id,
+										content: finalText,
+										citations: data.citations || [],
+										metadata: mappedMetadata,
+										streaming: false,
+									};
+								}
+								return copy;
+							});
+						} else if (eventType === "error") {
+							throw new Error(data.error || "Error del servidor");
+						}
+					}
 				}
-				return prev;
-			});
-		} catch (err: any) {
-			if (err.name === "AbortError") return;
-			enqueueSnackbar(err.message || "Error al enviar mensaje", { variant: "error" });
-			setMessages((prev) => {
-				const copy = [...prev];
-				// Marcar el mensaje user como error
-				const userIdx = copy.findIndex((m) => m.id === currentUserMsgId);
-				if (userIdx !== -1) {
-					copy[userIdx] = { ...copy[userIdx], error: true };
-				}
-				// Eliminar burbuja assistant vacia, o marcar como no-streaming si tiene contenido
-				const last = copy[copy.length - 1];
-				if (last?.role === "assistant" && !last.content) {
-					copy.pop();
-				} else if (last?.role === "assistant" && last.streaming) {
-					copy[copy.length - 1] = { ...last, streaming: false };
-				}
-				return copy;
-			});
-		} finally {
-			setStreaming(false);
-			abortRef.current = null;
-		}
-	}, [streaming, causa, conversationId, enqueueSnackbar]);
+
+				// Si el stream termina sin evento "done", marcar como no-streaming
+				setMessages((prev) => {
+					const last = prev[prev.length - 1];
+					if (last?.role === "assistant" && last.streaming) {
+						const copy = [...prev];
+						copy[copy.length - 1] = { ...last, streaming: false };
+						return copy;
+					}
+					return prev;
+				});
+			} catch (err: any) {
+				if (err.name === "AbortError") return;
+				enqueueSnackbar(err.message || "Error al enviar mensaje", { variant: "error" });
+				setMessages((prev) => {
+					const copy = [...prev];
+					// Marcar el mensaje user como error
+					const userIdx = copy.findIndex((m) => m.id === currentUserMsgId);
+					if (userIdx !== -1) {
+						copy[userIdx] = { ...copy[userIdx], error: true };
+					}
+					// Eliminar burbuja assistant vacia, o marcar como no-streaming si tiene contenido
+					const last = copy[copy.length - 1];
+					if (last?.role === "assistant" && !last.content) {
+						copy.pop();
+					} else if (last?.role === "assistant" && last.streaming) {
+						copy[copy.length - 1] = { ...last, streaming: false };
+					}
+					return copy;
+				});
+			} finally {
+				setStreaming(false);
+				abortRef.current = null;
+			}
+		},
+		[streaming, causa, conversationId, enqueueSnackbar],
+	);
 
 	const sendMessage = useCallback(() => {
 		const text = input.trim();
@@ -433,10 +437,13 @@ const ChatInterface: React.FC<{ causa: IndexationCausa; onBack: () => void }> = 
 		executeSend(text);
 	}, [input, streaming, executeSend]);
 
-	const retryMessage = useCallback((msgId: string, text: string) => {
-		if (streaming) return;
-		executeSend(text, msgId);
-	}, [streaming, executeSend]);
+	const retryMessage = useCallback(
+		(msgId: string, text: string) => {
+			if (streaming) return;
+			executeSend(text, msgId);
+		},
+		[streaming, executeSend],
+	);
 
 	useEffect(() => {
 		return () => {
@@ -460,13 +467,7 @@ const ChatInterface: React.FC<{ causa: IndexationCausa; onBack: () => void }> = 
 						<ArrowLeft2 size={18} />
 					</IconButton>
 				</Tooltip>
-				<Chip
-					label={causa.caratula}
-					size="small"
-					color="primary"
-					variant="outlined"
-					sx={{ maxWidth: 400 }}
-				/>
+				<Chip label={causa.caratula} size="small" color="primary" variant="outlined" sx={{ maxWidth: 400 }} />
 				<Typography variant="caption" color="text.secondary">
 					{causa.fuero} · {causa.causaType}
 				</Typography>
@@ -483,9 +484,7 @@ const ChatInterface: React.FC<{ causa: IndexationCausa; onBack: () => void }> = 
 					gap: 2,
 				}}
 			>
-				{messages.length === 0 && (
-					<ChatWelcome causa={causa} onSuggestionClick={(text) => executeSend(text)} />
-				)}
+				{messages.length === 0 && <ChatWelcome causa={causa} onSuggestionClick={(text) => executeSend(text)} />}
 				{messages.map((msg) => (
 					<MessageBubble key={msg.id} message={msg} theme={theme} onRetry={retryMessage} />
 				))}
@@ -553,7 +552,18 @@ const ChatWelcome: React.FC<{
 	const s = summary?.summary;
 
 	return (
-		<Box sx={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, py: 2 }}>
+		<Box
+			sx={{
+				flex: 1,
+				overflow: "auto",
+				display: "flex",
+				flexDirection: "column",
+				alignItems: "center",
+				justifyContent: "center",
+				gap: 2,
+				py: 2,
+			}}
+		>
 			{/* Resumen ejecutivo */}
 			<Paper variant="outlined" sx={{ maxWidth: 600, width: "100%", p: 2.5 }}>
 				{loadingSummary ? (
@@ -572,7 +582,11 @@ const ChatWelcome: React.FC<{
 						{/* Estado actual */}
 						{s.estadoActual && (
 							<Box>
-								<Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: 0.5 }}>
+								<Typography
+									variant="subtitle2"
+									color="text.secondary"
+									sx={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: 0.5 }}
+								>
 									Estado actual
 								</Typography>
 								<Typography variant="body2">{s.estadoActual}</Typography>
@@ -582,20 +596,32 @@ const ChatWelcome: React.FC<{
 						{/* Partes */}
 						{s.partes && (s.partes.actor || s.partes.demandado) && (
 							<Box>
-								<Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: 0.5 }}>
+								<Typography
+									variant="subtitle2"
+									color="text.secondary"
+									sx={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: 0.5 }}
+								>
 									Partes
 								</Typography>
 								<Stack direction="row" spacing={3} sx={{ mt: 0.5 }}>
 									{s.partes.actor && (
 										<Box sx={{ flex: 1 }}>
-											<Typography variant="caption" color="text.disabled">Actor</Typography>
-											<Typography variant="body2" sx={{ fontSize: "0.8rem" }}>{s.partes.actor}</Typography>
+											<Typography variant="caption" color="text.disabled">
+												Actor
+											</Typography>
+											<Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
+												{s.partes.actor}
+											</Typography>
 										</Box>
 									)}
 									{s.partes.demandado && (
 										<Box sx={{ flex: 1 }}>
-											<Typography variant="caption" color="text.disabled">Demandado</Typography>
-											<Typography variant="body2" sx={{ fontSize: "0.8rem" }}>{s.partes.demandado}</Typography>
+											<Typography variant="caption" color="text.disabled">
+												Demandado
+											</Typography>
+											<Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
+												{s.partes.demandado}
+											</Typography>
 										</Box>
 									)}
 								</Stack>
@@ -605,7 +631,11 @@ const ChatWelcome: React.FC<{
 						{/* Decisiones judiciales */}
 						{s.decisionesJudiciales && s.decisionesJudiciales.length > 0 && (
 							<Box>
-								<Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: 0.5 }}>
+								<Typography
+									variant="subtitle2"
+									color="text.secondary"
+									sx={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: 0.5 }}
+								>
 									Ultimas decisiones
 								</Typography>
 								<Stack spacing={0.5} sx={{ mt: 0.5 }}>
@@ -615,7 +645,11 @@ const ChatWelcome: React.FC<{
 												{d.fecha ? new Date(d.fecha).toLocaleDateString("es-AR") : "-"}
 											</Typography>
 											<Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
-												{d.tipo && <Box component="span" sx={{ fontWeight: 600 }}>{d.tipo}: </Box>}
+												{d.tipo && (
+													<Box component="span" sx={{ fontWeight: 600 }}>
+														{d.tipo}:{" "}
+													</Box>
+												)}
 												{d.resumen}
 											</Typography>
 										</Box>
@@ -627,7 +661,11 @@ const ChatWelcome: React.FC<{
 						{/* Pendientes */}
 						{s.pendientes && s.pendientes.length > 0 && (
 							<Box>
-								<Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: 0.5 }}>
+								<Typography
+									variant="subtitle2"
+									color="text.secondary"
+									sx={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: 0.5 }}
+								>
 									Pendientes
 								</Typography>
 								<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
@@ -684,7 +722,11 @@ const ChatWelcome: React.FC<{
 
 // ── Message Bubble ───────────────────────────────────────────────────────────
 
-const MessageBubble: React.FC<{ message: ChatMessage; theme: any; onRetry: (msgId: string, text: string) => void }> = ({ message, theme, onRetry }) => {
+const MessageBubble: React.FC<{ message: ChatMessage; theme: any; onRetry: (msgId: string, text: string) => void }> = ({
+	message,
+	theme,
+	onRetry,
+}) => {
 	const [metadataOpen, setMetadataOpen] = useState(false);
 	const isUser = message.role === "user";
 	const meta = message.metadata;
@@ -694,11 +736,7 @@ const MessageBubble: React.FC<{ message: ChatMessage; theme: any; onRetry: (msgI
 		<Box sx={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start", alignItems: "center", gap: 0.5, px: 1 }}>
 			{hasError && (
 				<Tooltip title="Reintentar envio">
-					<IconButton
-						size="small"
-						onClick={() => onRetry(message.id, message.content)}
-						sx={{ color: theme.palette.error.main }}
-					>
+					<IconButton size="small" onClick={() => onRetry(message.id, message.content)} sx={{ color: theme.palette.error.main }}>
 						<Refresh2 size={16} />
 					</IconButton>
 				</Tooltip>
@@ -712,12 +750,21 @@ const MessageBubble: React.FC<{ message: ChatMessage; theme: any; onRetry: (msgI
 					bgcolor: hasError
 						? alpha(theme.palette.error.main, 0.06)
 						: isUser
-							? alpha(theme.palette.primary.main, 0.1)
-							: alpha(theme.palette.grey[500], 0.08),
-					border: `1px solid ${hasError ? alpha(theme.palette.error.main, 0.3) : isUser ? alpha(theme.palette.primary.main, 0.2) : alpha(theme.palette.grey[500], 0.15)}`,
+						? alpha(theme.palette.primary.main, 0.1)
+						: alpha(theme.palette.grey[500], 0.08),
+					border: `1px solid ${
+						hasError
+							? alpha(theme.palette.error.main, 0.3)
+							: isUser
+							? alpha(theme.palette.primary.main, 0.2)
+							: alpha(theme.palette.grey[500], 0.15)
+					}`,
 				}}
 			>
-				<Typography variant="body2" sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: 1.6, color: hasError ? theme.palette.error.main : undefined }}>
+				<Typography
+					variant="body2"
+					sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: 1.6, color: hasError ? theme.palette.error.main : undefined }}
+				>
 					{message.content}
 					{message.streaming && !message.content && "..."}
 					{message.streaming && message.content && (
@@ -760,15 +807,17 @@ const MessageBubble: React.FC<{ message: ChatMessage; theme: any; onRetry: (msgI
 							const parts: string[] = [];
 							if (cit.docType) parts.push(cit.docType);
 							if (cit.docDate) {
-								try { parts.push(new Date(cit.docDate).toLocaleDateString("es-AR")); } catch { /* ignore */ }
+								try {
+									parts.push(new Date(cit.docDate).toLocaleDateString("es-AR"));
+								} catch {
+									/* ignore */
+								}
 							}
 							if (cit.page) parts.push(`pág ${cit.page}`);
 							const label = parts.length > 0 ? parts.join(" · ") : `Fuente ${i + 1}`;
 
 							// Tooltip: preview del texto del chunk
-							const tooltipText = cit.chunkText
-								? `${cit.chunkText.substring(0, 150)}${cit.chunkText.length > 150 ? "..." : ""}`
-								: label;
+							const tooltipText = cit.chunkText ? `${cit.chunkText.substring(0, 150)}${cit.chunkText.length > 150 ? "..." : ""}` : label;
 
 							const isClickable = !!cit.sourceUrl;
 

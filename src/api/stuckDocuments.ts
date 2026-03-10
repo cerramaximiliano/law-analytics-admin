@@ -222,7 +222,7 @@ export class StuckDocumentsService {
 	static async archiveDocument(
 		fuero: "CIV" | "COM" | "CSS" | "CNT",
 		id: string,
-		reason?: string
+		reason?: string,
 	): Promise<{ success: boolean; message: string }> {
 		try {
 			const response = await pjnAxios.post(`/api/workers/stuck-documents/archive/${fuero}/${id}`, {
@@ -237,10 +237,7 @@ export class StuckDocumentsService {
 	/**
 	 * Desarchivar documento (volver a incluir en procesamiento)
 	 */
-	static async unarchiveDocument(
-		fuero: "CIV" | "COM" | "CSS" | "CNT",
-		id: string
-	): Promise<{ success: boolean; message: string }> {
+	static async unarchiveDocument(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string): Promise<{ success: boolean; message: string }> {
 		try {
 			const response = await pjnAxios.post(`/api/workers/stuck-documents/unarchive/${fuero}/${id}`);
 			return response.data;
@@ -276,13 +273,15 @@ export class StuckDocumentsService {
 	/**
 	 * Actualizar configuración del worker
 	 */
-	static async updateConfig(updates: Partial<{
-		enabled: boolean;
-		processing_mode: string;
-		batch_size: number;
-		lock_timeout_minutes: number;
-		schedule: Partial<StuckDocumentsSchedule>;
-	}>): Promise<StuckDocumentsConfigResponse> {
+	static async updateConfig(
+		updates: Partial<{
+			enabled: boolean;
+			processing_mode: string;
+			batch_size: number;
+			lock_timeout_minutes: number;
+			schedule: Partial<StuckDocumentsSchedule>;
+		}>,
+	): Promise<StuckDocumentsConfigResponse> {
 		try {
 			const response = await pjnAxios.patch("/api/workers/stuck-documents/config", updates);
 			return response.data;

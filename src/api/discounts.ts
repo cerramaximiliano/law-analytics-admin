@@ -349,10 +349,13 @@ export interface FullDiscountInfoResponse {
 	success: boolean;
 	data: {
 		database: DiscountCode;
-		stripe: {
-			coupon: StripeCouponInfo;
-			promotionCodes: StripePromotionCode[];
-		} | { error: string } | null;
+		stripe:
+			| {
+					coupon: StripeCouponInfo;
+					promotionCodes: StripePromotionCode[];
+			  }
+			| { error: string }
+			| null;
 		subscribers: {
 			environment: string;
 			total: number;
@@ -570,9 +573,7 @@ class DiscountsService {
 	 */
 	async getStripeInfo(id: string, environment: "development" | "production"): Promise<StripeInfoResponse> {
 		try {
-			const response = await adminAxios.get<StripeInfoResponse>(
-				`/api/discounts/${id}/stripe-info?environment=${environment}`
-			);
+			const response = await adminAxios.get<StripeInfoResponse>(`/api/discounts/${id}/stripe-info?environment=${environment}`);
 			return response.data;
 		} catch (error: any) {
 			if (error.response?.status === 404) {
@@ -587,9 +588,7 @@ class DiscountsService {
 	 */
 	async getSubscribers(id: string, environment: "development" | "production"): Promise<SubscribersResponse> {
 		try {
-			const response = await adminAxios.get<SubscribersResponse>(
-				`/api/discounts/${id}/subscribers?environment=${environment}`
-			);
+			const response = await adminAxios.get<SubscribersResponse>(`/api/discounts/${id}/subscribers?environment=${environment}`);
 			return response.data;
 		} catch (error: any) {
 			if (error.response?.status === 404) {
@@ -604,9 +603,7 @@ class DiscountsService {
 	 */
 	async getFullInfo(id: string, environment: "development" | "production"): Promise<FullDiscountInfoResponse> {
 		try {
-			const response = await adminAxios.get<FullDiscountInfoResponse>(
-				`/api/discounts/${id}/full-info?environment=${environment}`
-			);
+			const response = await adminAxios.get<FullDiscountInfoResponse>(`/api/discounts/${id}/full-info?environment=${environment}`);
 			return response.data;
 		} catch (error: any) {
 			if (error.response?.status === 404) {
@@ -626,7 +623,7 @@ class DiscountsService {
 	async searchUsers(query: string, limit: number = 20): Promise<SearchUsersResponse> {
 		try {
 			const response = await adminAxios.get<SearchUsersResponse>(
-				`/api/discounts/search-users?q=${encodeURIComponent(query)}&limit=${limit}`
+				`/api/discounts/search-users?q=${encodeURIComponent(query)}&limit=${limit}`,
 			);
 			return response.data;
 		} catch (error: any) {
@@ -639,9 +636,7 @@ class DiscountsService {
 	 */
 	async getTargetUsers(discountId: string): Promise<TargetUsersResponse> {
 		try {
-			const response = await adminAxios.get<TargetUsersResponse>(
-				`/api/discounts/${discountId}/target-users`
-			);
+			const response = await adminAxios.get<TargetUsersResponse>(`/api/discounts/${discountId}/target-users`);
 			return response.data;
 		} catch (error: any) {
 			if (error.response?.status === 404) {
@@ -656,10 +651,7 @@ class DiscountsService {
 	 */
 	async addTargetUsers(discountId: string, params: AddTargetUsersParams): Promise<AddTargetUsersResponse> {
 		try {
-			const response = await adminAxios.post<AddTargetUsersResponse>(
-				`/api/discounts/${discountId}/target-users`,
-				params
-			);
+			const response = await adminAxios.post<AddTargetUsersResponse>(`/api/discounts/${discountId}/target-users`, params);
 			return response.data;
 		} catch (error: any) {
 			if (error.response?.status === 404) {
@@ -674,10 +666,7 @@ class DiscountsService {
 	 */
 	async removeTargetUsers(discountId: string, params: AddTargetUsersParams): Promise<RemoveTargetUsersResponse> {
 		try {
-			const response = await adminAxios.delete<RemoveTargetUsersResponse>(
-				`/api/discounts/${discountId}/target-users`,
-				{ data: params }
-			);
+			const response = await adminAxios.delete<RemoveTargetUsersResponse>(`/api/discounts/${discountId}/target-users`, { data: params });
 			return response.data;
 		} catch (error: any) {
 			if (error.response?.status === 404) {
@@ -692,10 +681,7 @@ class DiscountsService {
 	 */
 	async setTargetUsers(discountId: string, params: AddTargetUsersParams): Promise<SetTargetUsersResponse> {
 		try {
-			const response = await adminAxios.put<SetTargetUsersResponse>(
-				`/api/discounts/${discountId}/target-users`,
-				params
-			);
+			const response = await adminAxios.put<SetTargetUsersResponse>(`/api/discounts/${discountId}/target-users`, params);
 			return response.data;
 		} catch (error: any) {
 			if (error.response?.status === 404) {
@@ -714,9 +700,7 @@ class DiscountsService {
 	 */
 	async getTargetSegments(discountId: string): Promise<TargetSegmentsResponse> {
 		try {
-			const response = await adminAxios.get<TargetSegmentsResponse>(
-				`/api/discounts/${discountId}/target-segments`
-			);
+			const response = await adminAxios.get<TargetSegmentsResponse>(`/api/discounts/${discountId}/target-segments`);
 			return response.data;
 		} catch (error: any) {
 			if (error.response?.status === 404) {
@@ -731,10 +715,7 @@ class DiscountsService {
 	 */
 	async setTargetSegments(discountId: string, segmentIds: string[]): Promise<SetTargetSegmentsResponse> {
 		try {
-			const response = await adminAxios.put<SetTargetSegmentsResponse>(
-				`/api/discounts/${discountId}/target-segments`,
-				{ segmentIds }
-			);
+			const response = await adminAxios.put<SetTargetSegmentsResponse>(`/api/discounts/${discountId}/target-segments`, { segmentIds });
 			return response.data;
 		} catch (error: any) {
 			if (error.response?.status === 404) {
@@ -753,9 +734,7 @@ class DiscountsService {
 	 */
 	async getUserPromotions(userId: string): Promise<UserPromotionsResponse> {
 		try {
-			const response = await adminAxios.get<UserPromotionsResponse>(
-				`/api/discounts/user/${userId}/promotions`
-			);
+			const response = await adminAxios.get<UserPromotionsResponse>(`/api/discounts/user/${userId}/promotions`);
 			return response.data;
 		} catch (error: any) {
 			if (error.response?.status === 404) {
@@ -767,7 +746,6 @@ class DiscountsService {
 			throw new Error(error.response?.data?.message || "Error al obtener promociones del usuario");
 		}
 	}
-
 }
 
 export default new DiscountsService();

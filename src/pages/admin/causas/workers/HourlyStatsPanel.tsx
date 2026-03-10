@@ -204,12 +204,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 						</Typography>
 					</Box>
 					<Stack direction="row" spacing={1} alignItems="center">
-						<ToggleButtonGroup
-							value={viewMode}
-							exclusive
-							onChange={(_, v) => v && setViewMode(v)}
-							size="small"
-						>
+						<ToggleButtonGroup value={viewMode} exclusive onChange={(_, v) => v && setViewMode(v)} size="small">
 							<ToggleButton value="today" sx={{ px: 2 }}>
 								<Stack direction="row" spacing={1} alignItems="center">
 									<Chart size={16} />
@@ -312,9 +307,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 													<Typography color="success.main">{stats.successful}</Typography>
 												</TableCell>
 												<TableCell align="right">
-													<Typography color={stats.failed > 0 ? "error.main" : "text.secondary"}>
-														{stats.failed}
-													</Typography>
+													<Typography color={stats.failed > 0 ? "error.main" : "text.secondary"}>{stats.failed}</Typography>
 												</TableCell>
 												<TableCell align="right">
 													<Typography color="info.main">{stats.movimientosFound}</Typography>
@@ -407,11 +400,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 												<stop offset="95%" stopColor={theme.palette.success.main} stopOpacity={0.3} />
 											</linearGradient>
 										</defs>
-										<CartesianGrid
-											strokeDasharray="3 3"
-											stroke={alpha(theme.palette.divider, 0.5)}
-											vertical={false}
-										/>
+										<CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} vertical={false} />
 										<XAxis
 											dataKey="hourLabel"
 											tick={{ fill: theme.palette.text.secondary, fontSize: 11 }}
@@ -420,12 +409,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 											textAnchor="end"
 											height={50}
 										/>
-										<YAxis
-											yAxisId="left"
-											tick={{ fill: theme.palette.text.secondary, fontSize: 11 }}
-											axisLine={false}
-											tickLine={false}
-										/>
+										<YAxis yAxisId="left" tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} axisLine={false} tickLine={false} />
 										<YAxis
 											yAxisId="right"
 											orientation="right"
@@ -507,9 +491,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 									{scalingEvents.slice(0, 10).map((event, idx) => (
 										<TableRow key={idx}>
 											<TableCell>
-												<Typography variant="caption">
-													{formatInTimezone(event.timestamp, "HH:mm")}
-												</Typography>
+												<Typography variant="caption">{formatInTimezone(event.timestamp, "HH:mm")}</Typography>
 											</TableCell>
 											<TableCell>
 												<Chip label={event.fuero} size="small" variant="outlined" />
@@ -555,7 +537,8 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 			{/* Info Alert */}
 			<Alert severity="info" variant="outlined">
 				<Typography variant="body2">
-					Las estadísticas horarias se actualizan automáticamente cada minuto. Utiliza la vista "Hora Actual" para ver el desglose por fuero en tiempo real.
+					Las estadísticas horarias se actualizan automáticamente cada minuto. Utiliza la vista "Hora Actual" para ver el desglose por fuero
+					en tiempo real.
 				</Typography>
 			</Alert>
 		</Stack>

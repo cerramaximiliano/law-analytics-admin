@@ -59,12 +59,7 @@ import {
 	Bar,
 	BarChart,
 } from "recharts";
-import {
-	WorkersService,
-	WorkerDailySummaryData,
-	WorkerDailySummaryChartResponse,
-	WorkerDailySummaryCompareResponse,
-} from "api/workers";
+import { WorkersService, WorkerDailySummaryData, WorkerDailySummaryChartResponse, WorkerDailySummaryCompareResponse } from "api/workers";
 
 // Stat Card Component
 interface StatCardProps {
@@ -191,7 +186,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 			const res = await WorkersService.getWorkerDailySummaryCompare(
 				compareDate1.format("YYYY-MM-DD"),
 				compareDate2.format("YYYY-MM-DD"),
-				workerType
+				workerType,
 			);
 
 			if (res.success) {
@@ -259,11 +254,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 						<Stack direction="row" spacing={1} alignItems="center">
 							<FormControl size="small" sx={{ minWidth: 100 }}>
 								<InputLabel>Días</InputLabel>
-								<Select
-									value={chartDays}
-									label="Días"
-									onChange={(e) => setChartDays(Number(e.target.value))}
-								>
+								<Select value={chartDays} label="Días" onChange={(e) => setChartDays(Number(e.target.value))}>
 									<MenuItem value={7}>7 días</MenuItem>
 									<MenuItem value={14}>14 días</MenuItem>
 									<MenuItem value={30}>30 días</MenuItem>
@@ -289,7 +280,11 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 							icon={<Activity size={18} />}
 							color={theme.palette.primary.main}
 							loading={loading}
-							trend={todaySummary?.comparison ? getTrend(todaySummary.totals.processed, todaySummary.totals.processed - (todaySummary.comparison.processed || 0)) : undefined}
+							trend={
+								todaySummary?.comparison
+									? getTrend(todaySummary.totals.processed, todaySummary.totals.processed - (todaySummary.comparison.processed || 0))
+									: undefined
+							}
 						/>
 					</Grid>
 					<Grid item xs={6} sm={4} md={2}>
@@ -364,22 +359,9 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 											<stop offset="95%" stopColor={theme.palette.success.main} stopOpacity={0} />
 										</linearGradient>
 									</defs>
-									<CartesianGrid
-										strokeDasharray="3 3"
-										stroke={alpha(theme.palette.divider, 0.5)}
-										vertical={false}
-									/>
-									<XAxis
-										dataKey="dateLabel"
-										tick={{ fill: theme.palette.text.secondary, fontSize: 11 }}
-										interval="preserveStartEnd"
-									/>
-									<YAxis
-										yAxisId="left"
-										tick={{ fill: theme.palette.text.secondary, fontSize: 11 }}
-										axisLine={false}
-										tickLine={false}
-									/>
+									<CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} vertical={false} />
+									<XAxis dataKey="dateLabel" tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} interval="preserveStartEnd" />
+									<YAxis yAxisId="left" tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} axisLine={false} tickLine={false} />
 									<YAxis
 										yAxisId="right"
 										orientation="right"
@@ -397,22 +379,34 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 										}}
 										formatter={(value: number, name: string) => {
 											if (name === "successRateNum") return [`${value.toFixed(1)}%`, "Tasa Éxito"];
-											return [value.toLocaleString("es-AR"),
-												name === "processed" ? "Procesados" :
-												name === "successful" ? "Exitosos" :
-												name === "failed" ? "Fallidos" :
-												name === "movimientosFound" ? "Movimientos" : name
+											return [
+												value.toLocaleString("es-AR"),
+												name === "processed"
+													? "Procesados"
+													: name === "successful"
+													? "Exitosos"
+													: name === "failed"
+													? "Fallidos"
+													: name === "movimientosFound"
+													? "Movimientos"
+													: name,
 											];
 										}}
 										labelFormatter={(label) => `Fecha: ${label}`}
 									/>
 									<Legend
 										formatter={(value) =>
-											value === "processed" ? "Procesados" :
-											value === "successful" ? "Exitosos" :
-											value === "failed" ? "Fallidos" :
-											value === "movimientosFound" ? "Movimientos" :
-											value === "successRateNum" ? "Tasa Éxito" : value
+											value === "processed"
+												? "Procesados"
+												: value === "successful"
+												? "Exitosos"
+												: value === "failed"
+												? "Fallidos"
+												: value === "movimientosFound"
+												? "Movimientos"
+												: value === "successRateNum"
+												? "Tasa Éxito"
+												: value
 										}
 									/>
 									<Area
@@ -503,11 +497,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 												</TableCell>
 												<TableCell align="right">
 													{stats.peakHour !== undefined ? (
-														<Chip
-															label={`${String(stats.peakHour).padStart(2, "0")}:00`}
-															size="small"
-															variant="outlined"
-														/>
+														<Chip label={`${String(stats.peakHour).padStart(2, "0")}:00`} size="small" variant="outlined" />
 													) : (
 														"-"
 													)}
@@ -530,11 +520,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 									Comparar Días
 								</Typography>
 							</Stack>
-							<Button
-								variant={showComparison ? "contained" : "outlined"}
-								size="small"
-								onClick={() => setShowComparison(!showComparison)}
-							>
+							<Button variant={showComparison ? "contained" : "outlined"} size="small" onClick={() => setShowComparison(!showComparison)}>
 								{showComparison ? "Ocultar" : "Mostrar"}
 							</Button>
 						</Stack>
@@ -574,15 +560,23 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 													</Typography>
 													<Stack spacing={0.5}>
 														<Box sx={{ display: "flex", justifyContent: "space-between" }}>
-															<Typography variant="body2" color="text.secondary">Procesados:</Typography>
+															<Typography variant="body2" color="text.secondary">
+																Procesados:
+															</Typography>
 															<Typography variant="body2">{comparison.date1.totals.processed.toLocaleString("es-AR")}</Typography>
 														</Box>
 														<Box sx={{ display: "flex", justifyContent: "space-between" }}>
-															<Typography variant="body2" color="text.secondary">Exitosos:</Typography>
-															<Typography variant="body2" color="success.main">{comparison.date1.totals.successful.toLocaleString("es-AR")}</Typography>
+															<Typography variant="body2" color="text.secondary">
+																Exitosos:
+															</Typography>
+															<Typography variant="body2" color="success.main">
+																{comparison.date1.totals.successful.toLocaleString("es-AR")}
+															</Typography>
 														</Box>
 														<Box sx={{ display: "flex", justifyContent: "space-between" }}>
-															<Typography variant="body2" color="text.secondary">Tasa éxito:</Typography>
+															<Typography variant="body2" color="text.secondary">
+																Tasa éxito:
+															</Typography>
 															<Typography variant="body2">{comparison.date1.totals.successRate?.toFixed(1)}%</Typography>
 														</Box>
 													</Stack>
@@ -610,15 +604,23 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 													</Typography>
 													<Stack spacing={0.5}>
 														<Box sx={{ display: "flex", justifyContent: "space-between" }}>
-															<Typography variant="body2" color="text.secondary">Procesados:</Typography>
+															<Typography variant="body2" color="text.secondary">
+																Procesados:
+															</Typography>
 															<Typography variant="body2">{comparison.date2.totals.processed.toLocaleString("es-AR")}</Typography>
 														</Box>
 														<Box sx={{ display: "flex", justifyContent: "space-between" }}>
-															<Typography variant="body2" color="text.secondary">Exitosos:</Typography>
-															<Typography variant="body2" color="success.main">{comparison.date2.totals.successful.toLocaleString("es-AR")}</Typography>
+															<Typography variant="body2" color="text.secondary">
+																Exitosos:
+															</Typography>
+															<Typography variant="body2" color="success.main">
+																{comparison.date2.totals.successful.toLocaleString("es-AR")}
+															</Typography>
 														</Box>
 														<Box sx={{ display: "flex", justifyContent: "space-between" }}>
-															<Typography variant="body2" color="text.secondary">Tasa éxito:</Typography>
+															<Typography variant="body2" color="text.secondary">
+																Tasa éxito:
+															</Typography>
 															<Typography variant="body2">{comparison.date2.totals.successRate?.toFixed(1)}%</Typography>
 														</Box>
 													</Stack>
@@ -635,7 +637,8 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 				{/* Info Alert */}
 				<Alert severity="info" variant="outlined">
 					<Typography variant="body2">
-						Los resúmenes diarios se generan automáticamente al finalizar cada día. Utiliza la función de comparación para analizar el rendimiento entre fechas específicas.
+						Los resúmenes diarios se generan automáticamente al finalizar cada día. Utiliza la función de comparación para analizar el
+						rendimiento entre fechas específicas.
 					</Typography>
 				</Alert>
 			</Stack>

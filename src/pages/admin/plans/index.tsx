@@ -258,7 +258,9 @@ const PlansManagement = () => {
 								<Typography variant="body2" paragraph sx={{ fontSize: "0.875rem" }}>
 									<strong>1. Primera instalación:</strong>
 									<br />• Ejecutar:{" "}
-									<code style={{ backgroundColor: theme.palette.action.hover, padding: "2px 4px", borderRadius: "3px", fontSize: "0.8rem" }}>
+									<code
+										style={{ backgroundColor: theme.palette.action.hover, padding: "2px 4px", borderRadius: "3px", fontSize: "0.8rem" }}
+									>
 										node scripts/initializePlanConfigs.js
 									</code>
 									<br />• Crea productos iniciales en Stripe y MongoDB

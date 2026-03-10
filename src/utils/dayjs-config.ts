@@ -29,8 +29,7 @@ export const TIMEZONE = "America/Buenos_Aires";
 export const nowInTimezone = () => dayjs().tz(TIMEZONE);
 
 // Helper para obtener fecha formateada en zona horaria de Argentina
-export const formatInTimezone = (date: string | Date, format: string = "YYYY-MM-DD") =>
-	dayjs(date).tz(TIMEZONE).format(format);
+export const formatInTimezone = (date: string | Date, format: string = "YYYY-MM-DD") => dayjs(date).tz(TIMEZONE).format(format);
 
 // Helper para obtener la hora actual en zona horaria de Argentina
 export const currentHourInTimezone = () => dayjs().tz(TIMEZONE).hour();

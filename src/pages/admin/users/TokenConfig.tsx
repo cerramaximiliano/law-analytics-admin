@@ -186,7 +186,7 @@ const TokenConfigPage = () => {
 					label={`Access Dev: ${changes.before?.accessToken?.development || "?"} → ${changes.after.accessToken.development}`}
 					size="small"
 					sx={{ mb: 0.5, mr: 0.5 }}
-				/>
+				/>,
 			);
 		}
 		if (changes.after?.accessToken?.production) {
@@ -196,7 +196,7 @@ const TokenConfigPage = () => {
 					label={`Access Prod: ${changes.before?.accessToken?.production || "?"} → ${changes.after.accessToken.production}`}
 					size="small"
 					sx={{ mb: 0.5, mr: 0.5 }}
-				/>
+				/>,
 			);
 		}
 		if (changes.after?.refreshToken?.development) {
@@ -206,7 +206,7 @@ const TokenConfigPage = () => {
 					label={`Refresh Dev: ${changes.before?.refreshToken?.development || "?"} → ${changes.after.refreshToken.development}`}
 					size="small"
 					sx={{ mb: 0.5, mr: 0.5 }}
-				/>
+				/>,
 			);
 		}
 		if (changes.after?.refreshToken?.production) {
@@ -216,11 +216,15 @@ const TokenConfigPage = () => {
 					label={`Refresh Prod: ${changes.before?.refreshToken?.production || "?"} → ${changes.after.refreshToken.production}`}
 					size="small"
 					sx={{ mb: 0.5, mr: 0.5 }}
-				/>
+				/>,
 			);
 		}
 
-		return <Stack direction="row" flexWrap="wrap">{chips}</Stack>;
+		return (
+			<Stack direction="row" flexWrap="wrap">
+				{chips}
+			</Stack>
+		);
 	};
 
 	if (loading) {
@@ -536,9 +540,7 @@ const TokenConfigPage = () => {
 											.map((entry, index) => (
 												<TableRow key={index}>
 													<TableCell>
-														<Typography variant="caption">
-															{dayjs(entry.changedAt).format("DD/MM/YYYY HH:mm")}
-														</Typography>
+														<Typography variant="caption">{dayjs(entry.changedAt).format("DD/MM/YYYY HH:mm")}</Typography>
 														<br />
 														<Typography variant="caption" color="text.secondary">
 															{dayjs(entry.changedAt).fromNow()}
@@ -560,9 +562,9 @@ const TokenConfigPage = () => {
 				{/* Info adicional */}
 				<Alert severity="info" icon={<InfoCircle size={20} />}>
 					<Typography variant="body2">
-						<strong>Nota:</strong> Los cambios en la configuracion de tokens se aplicaran automaticamente en un maximo de 5 minutos
-						debido al sistema de cache del servidor. Los usuarios que ya tienen tokens activos no se veran afectados hasta que sus
-						tokens expiren y se generen nuevos.
+						<strong>Nota:</strong> Los cambios en la configuracion de tokens se aplicaran automaticamente en un maximo de 5 minutos debido
+						al sistema de cache del servidor. Los usuarios que ya tienen tokens activos no se veran afectados hasta que sus tokens expiren y
+						se generen nuevos.
 					</Typography>
 				</Alert>
 			</Stack>

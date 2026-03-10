@@ -158,9 +158,7 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 			onSave();
 			onClose();
 		} catch (err: any) {
-			const errorMessage = isEditMode
-				? "No se pudo guardar la información del contacto"
-				: "No se pudo crear el contacto";
+			const errorMessage = isEditMode ? "No se pudo guardar la información del contacto" : "No se pudo crear el contacto";
 			setError(err?.message || errorMessage);
 		} finally {
 			setSaving(false);
@@ -326,26 +324,14 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 
 						<Grid item xs={12} sm={6}>
 							<FormControlLabel
-								control={
-									<Switch
-										checked={isAppUser}
-										onChange={(e) => setIsAppUser(e.target.checked)}
-										disabled={saving}
-									/>
-								}
+								control={<Switch checked={isAppUser} onChange={(e) => setIsAppUser(e.target.checked)} disabled={saving} />}
 								label="Usuario de la App"
 							/>
 						</Grid>
 
 						<Grid item xs={12} sm={6}>
 							<FormControlLabel
-								control={
-									<Switch
-										checked={isVerified}
-										onChange={(e) => setIsVerified(e.target.checked)}
-										disabled={saving}
-									/>
-								}
+								control={<Switch checked={isVerified} onChange={(e) => setIsVerified(e.target.checked)} disabled={saving} />}
 								label="Verificado"
 							/>
 						</Grid>

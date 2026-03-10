@@ -237,12 +237,15 @@ export interface WorkerHourlyDaySummaryResponse {
 			movimientosFound: number;
 			activeHours: number;
 		};
-		byHour: Record<string, {
-			processed: number;
-			successful: number;
-			failed: number;
-			movimientosFound: number;
-		}>;
+		byHour: Record<
+			string,
+			{
+				processed: number;
+				successful: number;
+				failed: number;
+				movimientosFound: number;
+			}
+		>;
 	};
 }
 
@@ -259,16 +262,19 @@ export interface WorkerHourlyCurrentResponse {
 			movimientosFound: number;
 			managerCycles: number;
 		};
-		byFuero: Record<string, {
-			processed: number;
-			successful: number;
-			failed: number;
-			movimientosFound: number;
-			avgWorkers: number;
-			maxWorkers: number;
-			pendingAtEnd: number;
-			scalingEvents: number;
-		}>;
+		byFuero: Record<
+			string,
+			{
+				processed: number;
+				successful: number;
+				failed: number;
+				movimientosFound: number;
+				avgWorkers: number;
+				maxWorkers: number;
+				pendingAtEnd: number;
+				scalingEvents: number;
+			}
+		>;
 	};
 }
 
@@ -539,7 +545,15 @@ export interface WorkerConfigResponse {
 }
 
 // Tipos de workers disponibles
-export type WorkerType = "verificacion" | "sincronizacion" | "procesamiento" | "notificaciones" | "limpieza" | "scraping" | "app-update" | "email-verification";
+export type WorkerType =
+	| "verificacion"
+	| "sincronizacion"
+	| "procesamiento"
+	| "notificaciones"
+	| "limpieza"
+	| "scraping"
+	| "app-update"
+	| "email-verification";
 
 // Interface para configuración de email verification
 export interface EmailVerificationConfig {
@@ -748,7 +762,10 @@ export class WorkersService {
 		return this.updateConfig("scraping", id, data);
 	}
 
-	static async updateScrapingRange(id: string, data: { range_start: number; range_end: number; year?: number }): Promise<WorkerConfigResponse> {
+	static async updateScrapingRange(
+		id: string,
+		data: { range_start: number; range_end: number; year?: number },
+	): Promise<WorkerConfigResponse> {
 		return this.services["scraping"].updateRange(id, data);
 	}
 
@@ -867,10 +884,7 @@ export class WorkersService {
 	/**
 	 * Obtener estadísticas de un día específico
 	 */
-	static async getWorkerStatsByDate(
-		date: string,
-		params?: { workerType?: string; fuero?: string }
-	): Promise<WorkerStatsByDateResponse> {
+	static async getWorkerStatsByDate(date: string, params?: { workerType?: string; fuero?: string }): Promise<WorkerStatsByDateResponse> {
 		try {
 			const response = await pjnAxios.get(`/api/workers/stats/${date}`, { params });
 			return response.data;
@@ -899,10 +913,7 @@ export class WorkersService {
 	/**
 	 * Obtener estado actual de un fuero específico
 	 */
-	static async getWorkerFueroStatus(
-		fuero: string,
-		workerType?: string
-	): Promise<WorkerFueroStatusResponse> {
+	static async getWorkerFueroStatus(fuero: string, workerType?: string): Promise<WorkerFueroStatusResponse> {
 		try {
 			const params: Record<string, string> = {};
 			if (workerType) params.workerType = workerType;
@@ -916,10 +927,7 @@ export class WorkersService {
 	/**
 	 * Obtener errores recientes de un fuero
 	 */
-	static async getWorkerFueroErrors(
-		fuero: string,
-		params?: { workerType?: string; limit?: number }
-	): Promise<WorkerFueroErrorsResponse> {
+	static async getWorkerFueroErrors(fuero: string, params?: { workerType?: string; limit?: number }): Promise<WorkerFueroErrorsResponse> {
 		try {
 			const response = await pjnAxios.get(`/api/workers/fuero/${fuero}/errors`, { params });
 			return response.data;
@@ -946,16 +954,12 @@ export class WorkersService {
 	static async acknowledgeWorkerAlert(
 		fuero: string,
 		alertType: string,
-		workerType?: string
+		workerType?: string,
 	): Promise<{ success: boolean; message: string; modifiedCount: number }> {
 		try {
 			const params: Record<string, string> = {};
 			if (workerType) params.workerType = workerType;
-			const response = await pjnAxios.post(
-				`/api/workers/alerts/${fuero}/${alertType}/acknowledge`,
-				{},
-				{ params }
-			);
+			const response = await pjnAxios.post(`/api/workers/alerts/${fuero}/${alertType}/acknowledge`, {}, { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -969,10 +973,7 @@ export class WorkersService {
 	/**
 	 * Obtener estadísticas de las últimas N horas
 	 */
-	static async getWorkerHourlyLastN(
-		hours: number,
-		params?: { fuero?: string; workerType?: string }
-	): Promise<WorkerHourlyLastNResponse> {
+	static async getWorkerHourlyLastN(hours: number, params?: { fuero?: string; workerType?: string }): Promise<WorkerHourlyLastNResponse> {
 		try {
 			const response = await pjnAxios.get(`/api/workers/hourly/last/${hours}`, { params });
 			return response.data;
@@ -986,7 +987,7 @@ export class WorkersService {
 	 */
 	static async getWorkerHourlyDaySummary(
 		date: string,
-		params?: { fuero?: string; workerType?: string }
+		params?: { fuero?: string; workerType?: string },
 	): Promise<WorkerHourlyDaySummaryResponse> {
 		try {
 			const response = await pjnAxios.get(`/api/workers/hourly/day/${date}`, { params });
@@ -999,9 +1000,7 @@ export class WorkersService {
 	/**
 	 * Obtener estadísticas de la hora actual
 	 */
-	static async getWorkerHourlyCurrent(
-		workerType?: string
-	): Promise<WorkerHourlyCurrentResponse> {
+	static async getWorkerHourlyCurrent(workerType?: string): Promise<WorkerHourlyCurrentResponse> {
 		try {
 			const params: Record<string, string> = {};
 			if (workerType) params.workerType = workerType;
@@ -1015,9 +1014,11 @@ export class WorkersService {
 	/**
 	 * Obtener eventos de escalado recientes
 	 */
-	static async getWorkerHourlyScalingEvents(
-		params?: { hours?: number; fuero?: string; workerType?: string }
-	): Promise<WorkerHourlyScalingEventsResponse> {
+	static async getWorkerHourlyScalingEvents(params?: {
+		hours?: number;
+		fuero?: string;
+		workerType?: string;
+	}): Promise<WorkerHourlyScalingEventsResponse> {
 		try {
 			const response = await pjnAxios.get("/api/workers/hourly/scaling-events", { params });
 			return response.data;
@@ -1033,9 +1034,7 @@ export class WorkersService {
 	/**
 	 * Obtener resumen del día actual (consolidado)
 	 */
-	static async getWorkerDailySummaryToday(
-		workerType?: string
-	): Promise<WorkerDailySummaryResponse> {
+	static async getWorkerDailySummaryToday(workerType?: string): Promise<WorkerDailySummaryResponse> {
 		try {
 			const params: Record<string, string> = {};
 			if (workerType) params.workerType = workerType;
@@ -1049,10 +1048,7 @@ export class WorkersService {
 	/**
 	 * Obtener resumen de un día específico
 	 */
-	static async getWorkerDailySummaryByDate(
-		date: string,
-		workerType?: string
-	): Promise<WorkerDailySummaryResponse> {
+	static async getWorkerDailySummaryByDate(date: string, workerType?: string): Promise<WorkerDailySummaryResponse> {
 		try {
 			const params: Record<string, string> = {};
 			if (workerType) params.workerType = workerType;
@@ -1066,10 +1062,7 @@ export class WorkersService {
 	/**
 	 * Obtener resúmenes de los últimos N días
 	 */
-	static async getWorkerDailySummaryLastN(
-		days: number,
-		workerType?: string
-	): Promise<WorkerDailySummaryLastNDaysResponse> {
+	static async getWorkerDailySummaryLastN(days: number, workerType?: string): Promise<WorkerDailySummaryLastNDaysResponse> {
 		try {
 			const params: Record<string, string> = {};
 			if (workerType) params.workerType = workerType;
@@ -1083,9 +1076,7 @@ export class WorkersService {
 	/**
 	 * Obtener datos para gráficos
 	 */
-	static async getWorkerDailySummaryChart(
-		params?: { days?: number; workerType?: string }
-	): Promise<WorkerDailySummaryChartResponse> {
+	static async getWorkerDailySummaryChart(params?: { days?: number; workerType?: string }): Promise<WorkerDailySummaryChartResponse> {
 		try {
 			const response = await pjnAxios.get("/api/workers/summary/chart", { params });
 			return response.data;
@@ -1097,11 +1088,7 @@ export class WorkersService {
 	/**
 	 * Comparar dos días
 	 */
-	static async getWorkerDailySummaryCompare(
-		date1: string,
-		date2: string,
-		workerType?: string
-	): Promise<WorkerDailySummaryCompareResponse> {
+	static async getWorkerDailySummaryCompare(date1: string, date2: string, workerType?: string): Promise<WorkerDailySummaryCompareResponse> {
 		try {
 			const params: Record<string, string> = { date1, date2 };
 			if (workerType) params.workerType = workerType;
@@ -1115,10 +1102,7 @@ export class WorkersService {
 	/**
 	 * Regenerar resumen de un día
 	 */
-	static async regenerateWorkerDailySummary(
-		date: string,
-		workerType?: string
-	): Promise<WorkerDailySummaryResponse> {
+	static async regenerateWorkerDailySummary(date: string, workerType?: string): Promise<WorkerDailySummaryResponse> {
 		try {
 			const params: Record<string, string> = {};
 			if (workerType) params.workerType = workerType;
@@ -1169,10 +1153,8 @@ export interface FailoverHistoryEntry {
 }
 
 export const FailoverService = {
-	getStatus: (): Promise<{ data: { success: boolean; data: FailoverStatus } }> =>
-		pjnAxios.get("/api/failover/status"),
-	getHistory: (): Promise<{ data: { success: boolean; data: FailoverHistoryEntry[] } }> =>
-		pjnAxios.get("/api/failover/history"),
+	getStatus: (): Promise<{ data: { success: boolean; data: FailoverStatus } }> => pjnAxios.get("/api/failover/status"),
+	getHistory: (): Promise<{ data: { success: boolean; data: FailoverHistoryEntry[] } }> => pjnAxios.get("/api/failover/history"),
 };
 
 // ========================================
@@ -1271,12 +1253,7 @@ export class ScrapingWorkerManagerService {
 	}
 
 	// Worker listing
-	static async listWorkers(params?: {
-		fuero?: string;
-		enabled?: string;
-		page?: number;
-		limit?: number;
-	}): Promise<ManagedWorkersResponse> {
+	static async listWorkers(params?: { fuero?: string; enabled?: string; page?: number; limit?: number }): Promise<ManagedWorkersResponse> {
 		const response = await workersAxios.get("/api/scraping-worker-manager/workers", { params });
 		return response.data;
 	}

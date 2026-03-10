@@ -115,10 +115,7 @@ const StuckDocumentsWorker = () => {
 			if (showRefreshing) setRefreshing(true);
 			else setLoading(true);
 
-			const [configRes, statsRes] = await Promise.all([
-				StuckDocumentsService.getConfig(),
-				StuckDocumentsService.getStats(24),
-			]);
+			const [configRes, statsRes] = await Promise.all([StuckDocumentsService.getConfig(), StuckDocumentsService.getStats(24)]);
 
 			if (configRes.success) setConfig(configRes.data);
 			if (statsRes.success) setStats(statsRes.data);
@@ -262,7 +259,10 @@ const StuckDocumentsWorker = () => {
 	const ConfigContent = () => (
 		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 			{/* Estado actual */}
-			<Card variant="outlined" sx={{ backgroundColor: alpha(config?.enabled ? theme.palette.success.main : theme.palette.grey[500], 0.05) }}>
+			<Card
+				variant="outlined"
+				sx={{ backgroundColor: alpha(config?.enabled ? theme.palette.success.main : theme.palette.grey[500], 0.05) }}
+			>
 				<CardContent>
 					<Stack direction="row" justifyContent="space-between" alignItems="center">
 						<Stack direction="row" spacing={2} alignItems="center">
@@ -504,9 +504,9 @@ const StuckDocumentsWorker = () => {
 			{/* Descripcion del worker */}
 			<Alert severity="info" variant="outlined">
 				<Typography variant="body2">
-					<strong>Stuck Documents Worker:</strong> Este worker procesa documentos que fueron verificados exitosamente pero
-					no tienen movimientos guardados, usualmente debido a errores durante la fase de scraping. Reintenta la extraccion
-					de movimientos para recuperar estos documentos.
+					<strong>Stuck Documents Worker:</strong> Este worker procesa documentos que fueron verificados exitosamente pero no tienen
+					movimientos guardados, usualmente debido a errores durante la fase de scraping. Reintenta la extraccion de movimientos para
+					recuperar estos documentos.
 				</Typography>
 			</Alert>
 		</Stack>
@@ -523,9 +523,7 @@ const StuckDocumentsWorker = () => {
 							<Typography variant="caption" color="text.secondary">
 								Docs Procesados
 							</Typography>
-							<Typography variant="h5">
-								{config?.documents_processed?.toLocaleString() || 0}
-							</Typography>
+							<Typography variant="h5">{config?.documents_processed?.toLocaleString() || 0}</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
@@ -621,7 +619,7 @@ const StuckDocumentsWorker = () => {
 							size="small"
 							sx={{
 								backgroundColor: alpha(getHealthColor(stats?.worker?.health), 0.1),
-								color: getHealthColor(stats?.worker?.health)
+								color: getHealthColor(stats?.worker?.health),
 							}}
 						/>
 					</Stack>
@@ -642,7 +640,9 @@ const StuckDocumentsWorker = () => {
 							<Typography variant="caption" color="text.secondary">
 								Movimientos agregados
 							</Typography>
-							<Typography variant="h6" color="success.main">{stats?.recent?.movimientosAdded || 0}</Typography>
+							<Typography variant="h6" color="success.main">
+								{stats?.recent?.movimientosAdded || 0}
+							</Typography>
 						</Grid>
 						<Grid item xs={6} sm={3}>
 							<Typography variant="caption" color="text.secondary">
@@ -687,11 +687,7 @@ const StuckDocumentsWorker = () => {
 												<Chip label={doc.fuero} size="small" variant="outlined" />
 											</TableCell>
 											<TableCell align="center">
-												<Chip
-													label={doc.attempts}
-													size="small"
-													color={doc.attempts >= 5 ? "error" : "warning"}
-												/>
+												<Chip label={doc.attempts} size="small" color={doc.attempts >= 5 ? "error" : "warning"} />
 											</TableCell>
 											<TableCell>{formatDate(doc.lastAttempt)}</TableCell>
 											<TableCell>
@@ -717,17 +713,12 @@ const StuckDocumentsWorker = () => {
 							<Typography variant="subtitle1" fontWeight="bold" color="error.main">
 								Documentos Crónicamente Atorados
 							</Typography>
-							<Chip
-								label={`${stats.chronicStuck.length} docs`}
-								size="small"
-								color="error"
-								variant="outlined"
-							/>
+							<Chip label={`${stats.chronicStuck.length} docs`} size="small" color="error" variant="outlined" />
 						</Stack>
 						<Alert severity="error" variant="outlined" sx={{ mb: 2 }}>
 							<Typography variant="body2">
-								Estos documentos llevan mucho tiempo atorados con múltiples intentos fallidos.
-								Pueden requerir intervención manual o tienen discordancia de datos.
+								Estos documentos llevan mucho tiempo atorados con múltiples intentos fallidos. Pueden requerir intervención manual o tienen
+								discordancia de datos.
 							</Typography>
 						</Alert>
 						<TableContainer>
@@ -760,7 +751,7 @@ const StuckDocumentsWorker = () => {
 																overflow: "hidden",
 																textOverflow: "ellipsis",
 																whiteSpace: "nowrap",
-																display: "block"
+																display: "block",
 															}}
 														>
 															{doc.caratula}
@@ -772,11 +763,7 @@ const StuckDocumentsWorker = () => {
 												<Chip label={doc.fuero} size="small" variant="outlined" />
 											</TableCell>
 											<TableCell align="center">
-												<Chip
-													label={doc.attemptCount}
-													size="small"
-													color="error"
-												/>
+												<Chip label={doc.attemptCount} size="small" color="error" />
 											</TableCell>
 											<TableCell align="center">
 												<Typography
@@ -788,36 +775,21 @@ const StuckDocumentsWorker = () => {
 												</Typography>
 											</TableCell>
 											<TableCell>
-												<Typography variant="caption">
-													{formatDate(doc.firstAttempt)}
-												</Typography>
+												<Typography variant="caption">{formatDate(doc.firstAttempt)}</Typography>
 											</TableCell>
 											<TableCell>
-												<Typography variant="caption">
-													{formatDate(doc.lastAttempt)}
-												</Typography>
+												<Typography variant="caption">{formatDate(doc.lastAttempt)}</Typography>
 											</TableCell>
 											<TableCell align="center">
 												<Stack direction="row" spacing={0.5} justifyContent="center">
 													{doc.hasFolders && (
 														<Tooltip title={`Tiene ${doc.foldersCount} carpetas asociadas`}>
-															<Chip
-																label="📁"
-																size="small"
-																variant="outlined"
-																sx={{ minWidth: 'auto', px: 0.5 }}
-															/>
+															<Chip label="📁" size="small" variant="outlined" sx={{ minWidth: "auto", px: 0.5 }} />
 														</Tooltip>
 													)}
 													{doc.hasDateDiscordance && (
 														<Tooltip title="Discordancia: tiene fechaUltimoMovimiento pero movimientosCount=0">
-															<Chip
-																label="⚠️"
-																size="small"
-																color="warning"
-																variant="outlined"
-																sx={{ minWidth: 'auto', px: 0.5 }}
-															/>
+															<Chip label="⚠️" size="small" color="warning" variant="outlined" sx={{ minWidth: "auto", px: 0.5 }} />
 														</Tooltip>
 													)}
 												</Stack>
@@ -900,9 +872,7 @@ const StuckDocumentsWorker = () => {
 												</Typography>
 											</TableCell>
 											<TableCell>
-												<Typography variant="caption">
-													{formatDate(log.startTime)}
-												</Typography>
+												<Typography variant="caption">{formatDate(log.startTime)}</Typography>
 											</TableCell>
 										</TableRow>
 									))
@@ -952,14 +922,17 @@ const StuckDocumentsWorker = () => {
 							<TableBody>
 								{pendingDocs.length > 0 ? (
 									pendingDocs.map((doc) => (
-										<TableRow key={typeof doc._id === 'string' ? doc._id : doc._id.$oid} hover>
+										<TableRow key={typeof doc._id === "string" ? doc._id : doc._id.$oid} hover>
 											<TableCell>
 												<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
 													{doc.number}/{doc.year}
 												</Typography>
 											</TableCell>
 											<TableCell>
-												<Typography variant="body2" sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+												<Typography
+													variant="body2"
+													sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+												>
 													{doc.caratula || "-"}
 												</Typography>
 											</TableCell>
@@ -977,9 +950,7 @@ const StuckDocumentsWorker = () => {
 												/>
 											</TableCell>
 											<TableCell>
-												<Typography variant="caption">
-													{formatDate(doc.lastUpdate)}
-												</Typography>
+												<Typography variant="caption">{formatDate(doc.lastUpdate)}</Typography>
 											</TableCell>
 										</TableRow>
 									))
@@ -1034,7 +1005,7 @@ const StuckDocumentsWorker = () => {
 						size="small"
 						sx={{
 							backgroundColor: alpha(getHealthColor(stats?.worker?.health), 0.1),
-							color: getHealthColor(stats?.worker?.health)
+							color: getHealthColor(stats?.worker?.health),
 						}}
 					/>
 					<Chip label={config?.enabled ? "Habilitado" : "Deshabilitado"} size="small" color={config?.enabled ? "primary" : "default"} />

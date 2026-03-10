@@ -1222,9 +1222,9 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 												<strong>Campos personalizados:</strong> {"{{contact.customFields.nombreCampo}}"}
 											</Typography>
 											<Typography variant="caption" component="div" color="text.secondary" sx={{ mt: 1 }}>
-												<strong>Valores por defecto:</strong> Use {"{{variable || \"texto\"}}"} para mostrar un texto alternativo si la
-												variable está vacía. Ejemplo: {"{{firstName || \"Suscriptor\"}}"} o {"{{firstName || email}}"} para usar otra
-												variable como fallback.
+												<strong>Valores por defecto:</strong> Use {'{{variable || "texto"}}'} para mostrar un texto alternativo si la
+												variable está vacía. Ejemplo: {'{{firstName || "Suscriptor"}}'} o {"{{firstName || email}}"} para usar otra variable
+												como fallback.
 											</Typography>
 										</Box>
 									</Grid>

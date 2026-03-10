@@ -799,21 +799,13 @@ const UsersList = () => {
 										return (
 											<TableRow hover role="checkbox" tabIndex={-1} key={user._id || user.id || `user-row-${index}`}>
 												<TableCell sx={{ whiteSpace: "nowrap" }}>
-													<Tooltip title={copiedId === (user._id || user.id) ? "¡Copiado!" : (user._id || user.id || "")}>
+													<Tooltip title={copiedId === (user._id || user.id) ? "¡Copiado!" : user._id || user.id || ""}>
 														<Stack direction="row" alignItems="center" spacing={0.5}>
 															<Typography variant="caption" color="textSecondary" sx={{ fontFamily: "monospace" }}>
 																{(user._id || user.id || "").slice(0, 8)}…
 															</Typography>
-															<IconButton
-																size="small"
-																onClick={() => handleCopyId(user._id || user.id || "")}
-																sx={{ p: 0.25 }}
-															>
-																{copiedId === (user._id || user.id) ? (
-																	<CopySuccess size={14} color="green" />
-																) : (
-																	<Copy size={14} />
-																)}
+															<IconButton size="small" onClick={() => handleCopyId(user._id || user.id || "")} sx={{ p: 0.25 }}>
+																{copiedId === (user._id || user.id) ? <CopySuccess size={14} color="green" /> : <Copy size={14} />}
 															</IconButton>
 														</Stack>
 													</Tooltip>

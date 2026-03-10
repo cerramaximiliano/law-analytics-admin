@@ -92,13 +92,7 @@ const RangeHistoryPanel: React.FC = () => {
 	// Summary counts per fuero
 	const [fueroCounts, setFueroCounts] = useState<Record<string, number>>({});
 
-	const fetchHistory = async (
-		p = page,
-		fuero = fueroFilter,
-		year = yearFilter,
-		orderBy = sortBy,
-		order = sortOrder,
-	) => {
+	const fetchHistory = async (p = page, fuero = fueroFilter, year = yearFilter, orderBy = sortBy, order = sortOrder) => {
 		try {
 			setLoading(true);
 			const params: any = {
@@ -179,10 +173,15 @@ const RangeHistoryPanel: React.FC = () => {
 							borderColor: !fueroFilter ? "primary.main" : "divider",
 							bgcolor: !fueroFilter ? "primary.50" : "transparent",
 						}}
-						onClick={() => { setFueroFilter(""); setPage(1); }}
+						onClick={() => {
+							setFueroFilter("");
+							setPage(1);
+						}}
 					>
 						<CardContent sx={{ py: 1, "&:last-child": { pb: 1 } }}>
-							<Typography variant="caption" color="text.secondary">Todos</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Todos
+							</Typography>
 							<Typography variant="h5">{totalCount}</Typography>
 						</CardContent>
 					</Card>
@@ -199,7 +198,9 @@ const RangeHistoryPanel: React.FC = () => {
 							onClick={() => handleFueroFilter(f.value)}
 						>
 							<CardContent sx={{ py: 1, "&:last-child": { pb: 1 } }}>
-								<Typography variant="caption" color="text.secondary">{f.label}</Typography>
+								<Typography variant="caption" color="text.secondary">
+									{f.label}
+								</Typography>
 								<Typography variant="h5">{fueroCounts[f.value] || 0}</Typography>
 							</CardContent>
 						</Card>
@@ -214,12 +215,17 @@ const RangeHistoryPanel: React.FC = () => {
 						<InputLabel>Fuero</InputLabel>
 						<Select
 							value={fueroFilter}
-							onChange={(e) => { setFueroFilter(e.target.value); setPage(1); }}
+							onChange={(e) => {
+								setFueroFilter(e.target.value);
+								setPage(1);
+							}}
 							label="Fuero"
 						>
 							<MenuItem value="">Todos</MenuItem>
 							{FUERO_OPTIONS.map((o) => (
-								<MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
+								<MenuItem key={o.value} value={o.value}>
+									{o.label}
+								</MenuItem>
 							))}
 						</Select>
 					</FormControl>
@@ -227,12 +233,17 @@ const RangeHistoryPanel: React.FC = () => {
 						<InputLabel>Año</InputLabel>
 						<Select
 							value={yearFilter}
-							onChange={(e) => { setYearFilter(e.target.value); setPage(1); }}
+							onChange={(e) => {
+								setYearFilter(e.target.value);
+								setPage(1);
+							}}
 							label="Año"
 						>
 							<MenuItem value="">Todos</MenuItem>
 							{YEAR_OPTIONS.map((y) => (
-								<MenuItem key={y} value={y}>{y}</MenuItem>
+								<MenuItem key={y} value={y}>
+									{y}
+								</MenuItem>
 							))}
 						</Select>
 					</FormControl>
@@ -245,7 +256,10 @@ const RangeHistoryPanel: React.FC = () => {
 							size="small"
 							variant="text"
 							startIcon={<Refresh2 size={16} />}
-							onClick={() => { fetchHistory(); fetchFueroCounts(); }}
+							onClick={() => {
+								fetchHistory();
+								fetchFueroCounts();
+							}}
 							disabled={loading}
 						>
 							Actualizar
@@ -366,9 +380,7 @@ const RangeHistoryPanel: React.FC = () => {
 													</Typography>
 												</TableCell>
 												<TableCell align="center">
-													<Typography variant="body2">
-														{processed.toLocaleString()}
-													</Typography>
+													<Typography variant="body2">{processed.toLocaleString()}</Typography>
 												</TableCell>
 												<TableCell align="center">
 													<Typography
@@ -386,9 +398,7 @@ const RangeHistoryPanel: React.FC = () => {
 												</TableCell>
 												<TableCell align="center">
 													<Tooltip title={formatDateFull(h.completedAt)}>
-														<Typography variant="caption">
-															{getRelativeTime(h.completedAt)}
-														</Typography>
+														<Typography variant="caption">{getRelativeTime(h.completedAt)}</Typography>
 													</Tooltip>
 													<Typography variant="caption" display="block" color="text.secondary" fontSize="0.65rem">
 														{formatDate(h.completedAt)}

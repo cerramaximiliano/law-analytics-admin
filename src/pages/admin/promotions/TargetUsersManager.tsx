@@ -285,15 +285,15 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, onUpdate }: Ta
 			{/* Summary Alert */}
 			{!hasTargeting ? (
 				<Alert severity="info" sx={{ mb: 2 }}>
-					Este descuento está disponible para <strong>todos los usuarios</strong>. Agrega usuarios específicos o segmentos para restringir el acceso.
+					Este descuento está disponible para <strong>todos los usuarios</strong>. Agrega usuarios específicos o segmentos para restringir
+					el acceso.
 				</Alert>
 			) : (
 				<Alert severity="warning" sx={{ mb: 2 }}>
-					Este descuento está restringido a{" "}
-					{totalTargetUsers > 0 && <strong>{totalTargetUsers} usuario(s)</strong>}
+					Este descuento está restringido a {totalTargetUsers > 0 && <strong>{totalTargetUsers} usuario(s)</strong>}
 					{totalTargetUsers > 0 && totalTargetSegments > 0 && " y "}
-					{totalTargetSegments > 0 && <strong>{totalTargetSegments} segmento(s)</strong>}
-					. Solo los usuarios que cumplan alguna de estas condiciones podrán ver el código <strong>{discountCode}</strong>.
+					{totalTargetSegments > 0 && <strong>{totalTargetSegments} segmento(s)</strong>}. Solo los usuarios que cumplan alguna de estas
+					condiciones podrán ver el código <strong>{discountCode}</strong>.
 				</Alert>
 			)}
 
@@ -459,12 +459,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, onUpdate }: Ta
 											</TableCell>
 											<TableCell align="center">
 												<Tooltip title="Quitar segmento">
-													<IconButton
-														size="small"
-														color="error"
-														onClick={() => handleRemoveSegment(segment._id)}
-														disabled={savingSegments}
-													>
+													<IconButton size="small" color="error" onClick={() => handleRemoveSegment(segment._id)} disabled={savingSegments}>
 														{savingSegments ? <CircularProgress size={18} /> : <Trash size={18} />}
 													</IconButton>
 												</Tooltip>
@@ -541,9 +536,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, onUpdate }: Ta
 							</li>
 						)}
 						renderTags={(value, getTagProps) =>
-							value.map((option, index) => (
-								<Chip {...getTagProps({ index })} key={option._id} label={option.email} size="small" />
-							))
+							value.map((option, index) => <Chip {...getTagProps({ index })} key={option._id} label={option.email} size="small" />)
 						}
 						noOptionsText={searchQuery.length < 2 ? "Escribe para buscar..." : "No se encontraron usuarios"}
 					/>
@@ -581,8 +574,8 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, onUpdate }: Ta
 				</DialogTitle>
 				<DialogContent dividers>
 					<Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-						Ingresa los emails de los usuarios que deseas agregar, separados por comas o en líneas separadas. Solo se agregarán
-						usuarios que ya existan en el sistema.
+						Ingresa los emails de los usuarios que deseas agregar, separados por comas o en líneas separadas. Solo se agregarán usuarios que
+						ya existan en el sistema.
 					</Typography>
 					<TextField
 						fullWidth
@@ -630,8 +623,8 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, onUpdate }: Ta
 				</DialogTitle>
 				<DialogContent dividers>
 					<Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-						Selecciona los segmentos de contactos. Los usuarios cuyo email coincida con un contacto de estos segmentos podrán ver
-						el descuento.
+						Selecciona los segmentos de contactos. Los usuarios cuyo email coincida con un contacto de estos segmentos podrán ver el
+						descuento.
 					</Typography>
 					<Autocomplete
 						multiple

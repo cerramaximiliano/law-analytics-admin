@@ -310,7 +310,13 @@ const StripeWebhooks = () => {
 											<Stack spacing={0.5}>
 												<Chip
 													label={endpoint.service?.name || "Desconocido"}
-													color={endpoint.service?.id === "la-subscriptions" ? "warning" : endpoint.service?.id === "law-analytics-server" ? "info" : "default"}
+													color={
+														endpoint.service?.id === "la-subscriptions"
+															? "warning"
+															: endpoint.service?.id === "law-analytics-server"
+															? "info"
+															: "default"
+													}
 													size="small"
 													sx={{ fontWeight: "bold" }}
 												/>
@@ -375,7 +381,13 @@ const StripeWebhooks = () => {
 																<Chip
 																	label={ep.service_name}
 																	size="small"
-																	color={ep.service_id === "la-subscriptions" ? "warning" : ep.service_id === "law-analytics-server" ? "info" : "default"}
+																	color={
+																		ep.service_id === "la-subscriptions"
+																			? "warning"
+																			: ep.service_id === "law-analytics-server"
+																			? "info"
+																			: "default"
+																	}
 																	sx={{ fontWeight: "bold", fontSize: "0.7rem" }}
 																/>
 																<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace", fontSize: "0.65rem" }}>

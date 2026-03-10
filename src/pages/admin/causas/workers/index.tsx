@@ -117,11 +117,7 @@ const WorkersConfig = () => {
 					<Stack direction="row" alignItems="center" spacing={1}>
 						<Typography variant="h3">Configuración de Workers</Typography>
 						<Tooltip title="Ver información">
-							<IconButton
-								size="small"
-								color="info"
-								onClick={(e) => setInfoAnchorEl(e.currentTarget)}
-							>
+							<IconButton size="small" color="info" onClick={(e) => setInfoAnchorEl(e.currentTarget)}>
 								<InfoCircle size={22} />
 							</IconButton>
 						</Tooltip>
@@ -143,7 +139,8 @@ const WorkersConfig = () => {
 									Información sobre Workers
 								</Typography>
 								<Typography variant="body2" color="text.secondary">
-									Los workers son procesos automatizados que ejecutan tareas en segundo plano. Cada worker tiene su propia configuración y puede ser activado o desactivado según las necesidades del sistema.
+									Los workers son procesos automatizados que ejecutan tareas en segundo plano. Cada worker tiene su propia configuración y
+									puede ser activado o desactivado según las necesidades del sistema.
 								</Typography>
 							</Box>
 						</Popover>

@@ -250,7 +250,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 					size="small"
 					icon={hasDev ? <TickCircle size={14} /> : <CloseSquare size={14} />}
 					sx={hasDev ? { color: theme.palette.text.primary, "& .MuiChip-icon": { color: theme.palette.text.primary } } : {}}
-				/>
+				/>,
 			);
 		}
 		if (discount.targetEnvironment === "both" || discount.targetEnvironment === "production") {
@@ -262,7 +262,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 					variant={hasProd ? "filled" : "outlined"}
 					size="small"
 					icon={hasProd ? <TickCircle size={14} /> : <CloseSquare size={14} />}
-				/>
+				/>,
 			);
 		}
 		return chips;
@@ -390,9 +390,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 								Planes aplicables:
 							</Typography>
 							<Typography variant="body2">
-								{discount.restrictions.applicablePlans.length === 0
-									? "Todos"
-									: discount.restrictions.applicablePlans.join(", ")}
+								{discount.restrictions.applicablePlans.length === 0 ? "Todos" : discount.restrictions.applicablePlans.join(", ")}
 							</Typography>
 						</Box>
 						<Box display="flex" justifyContent="space-between">
@@ -433,11 +431,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 							}}
 						>
 							<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-								{discount.restrictions.excludeActiveSubscribers ? (
-									<TickCircle size={18} color="orange" />
-								) : (
-									<CloseSquare size={18} />
-								)}
+								{discount.restrictions.excludeActiveSubscribers ? <TickCircle size={18} color="orange" /> : <CloseSquare size={18} />}
 								<Typography variant="subtitle2" fontWeight={600}>
 									Excluir suscriptores activos
 								</Typography>
@@ -459,11 +453,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 							}}
 						>
 							<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-								{discount.restrictions.newCustomersOnly ? (
-									<TickCircle size={18} color="red" />
-								) : (
-									<CloseSquare size={18} />
-								)}
+								{discount.restrictions.newCustomersOnly ? <TickCircle size={18} color="red" /> : <CloseSquare size={18} />}
 								<Typography variant="subtitle2" fontWeight={600}>
 									Solo clientes nuevos
 								</Typography>
@@ -490,13 +480,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 						</Typography>
 						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							{discount.restrictions.targetSegments.map((segmentId: string) => (
-								<Chip
-									key={segmentId}
-									label={segmentId}
-									size="small"
-									color="secondary"
-									variant="outlined"
-								/>
+								<Chip key={segmentId} label={segmentId} size="small" color="secondary" variant="outlined" />
 							))}
 						</Stack>
 						<Typography variant="caption" color="textSecondary" display="block" sx={{ mt: 1 }}>
@@ -677,17 +661,8 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 				{/* Selector de entorno */}
 				<Grid item xs={12}>
 					<Stack direction="row" justifyContent="flex-end">
-						<ToggleButtonGroup
-							value={environment}
-							exclusive
-							onChange={handleEnvironmentChange}
-							size="small"
-						>
-							<ToggleButton
-								value="development"
-								color="warning"
-								sx={{ "&.Mui-selected": { color: theme.palette.text.primary } }}
-							>
+						<ToggleButtonGroup value={environment} exclusive onChange={handleEnvironmentChange} size="small">
+							<ToggleButton value="development" color="warning" sx={{ "&.Mui-selected": { color: theme.palette.text.primary } }}>
 								Development
 							</ToggleButton>
 							<ToggleButton value="production" color="success">
@@ -699,9 +674,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 
 				{isStripeError ? (
 					<Grid item xs={12}>
-						<Alert severity="warning">
-							Error consultando Stripe: {(stripeInfo as { error: string }).error}
-						</Alert>
+						<Alert severity="warning">Error consultando Stripe: {(stripeInfo as { error: string }).error}</Alert>
 					</Grid>
 				) : stripeInfo ? (
 					<>
@@ -767,18 +740,14 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 											<Typography variant="body2" color="textSecondary">
 												Límite máximo:
 											</Typography>
-											<Typography variant="body2">
-												{(stripeInfo as any).coupon.max_redemptions}
-											</Typography>
+											<Typography variant="body2">{(stripeInfo as any).coupon.max_redemptions}</Typography>
 										</Box>
 									)}
 									<Box display="flex" justifyContent="space-between">
 										<Typography variant="body2" color="textSecondary">
 											Creado en Stripe:
 										</Typography>
-										<Typography variant="body2">
-											{formatShortDate((stripeInfo as any).coupon.created)}
-										</Typography>
+										<Typography variant="body2">{formatShortDate((stripeInfo as any).coupon.created)}</Typography>
 									</Box>
 								</Stack>
 							</Paper>
@@ -809,11 +778,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 													<Typography variant="body2" fontWeight={600} sx={{ fontFamily: "monospace" }}>
 														{pc.code}
 													</Typography>
-													<Chip
-														label={pc.active ? "Activo" : "Inactivo"}
-														color={pc.active ? "success" : "default"}
-														size="small"
-													/>
+													<Chip label={pc.active ? "Activo" : "Inactivo"} color={pc.active ? "success" : "default"} size="small" />
 												</Stack>
 												<Typography variant="caption" color="textSecondary">
 													Usado {pc.times_redeemed} veces
@@ -827,9 +792,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 					</>
 				) : (
 					<Grid item xs={12}>
-						<Alert severity="info">
-							Este código no está sincronizado con Stripe en el entorno {environment}
-						</Alert>
+						<Alert severity="info">Este código no está sincronizado con Stripe en el entorno {environment}</Alert>
 					</Grid>
 				)}
 
@@ -881,26 +844,16 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 											<TableCell align="center">
 												<Chip
 													label={formatShortDate(sub.discountEnd)}
-													color={
-														sub.discountEnd && new Date(sub.discountEnd) > new Date()
-															? "success"
-															: "default"
-													}
+													color={sub.discountEnd && new Date(sub.discountEnd) > new Date() ? "success" : "default"}
 													size="small"
 													variant="outlined"
 												/>
 											</TableCell>
 											<TableCell align="center">
-												<Typography variant="body2">
-													{formatShortDate(sub.currentPeriodEnd)}
-												</Typography>
+												<Typography variant="body2">{formatShortDate(sub.currentPeriodEnd)}</Typography>
 											</TableCell>
 											<TableCell align="center">
-												<Chip
-													label={sub.status}
-													color={sub.status === "active" ? "success" : "default"}
-													size="small"
-												/>
+												<Chip label={sub.status} color={sub.status === "active" ? "success" : "default"} size="small" />
 											</TableCell>
 										</TableRow>
 									))}
@@ -977,11 +930,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 						{renderStripeTab()}
 					</TabPanel>
 					<TabPanel value={tabValue} index={2}>
-						<TargetUsersManager
-							discountId={discount._id}
-							discountCode={discount.code}
-							isPublic={discount.activationRules.isPublic}
-						/>
+						<TargetUsersManager discountId={discount._id} discountCode={discount.code} isPublic={discount.activationRules.isPublic} />
 					</TabPanel>
 					<TabPanel value={tabValue} index={3}>
 						<Stack direction="row" justifyContent="flex-end" sx={{ mb: 1 }}>
