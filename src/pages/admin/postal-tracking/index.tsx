@@ -510,6 +510,7 @@ const PostalTrackingPage = () => {
 								</TableCell>
 								<TableCell>Codigo / Numero</TableCell>
 								<TableCell>Etiqueta</TableCell>
+								<TableCell>Usuario ID</TableCell>
 								<TableCell align="center">Estado proceso</TableCell>
 								<TableCell>Estado rastreo</TableCell>
 								<TableCell align="center">Errores</TableCell>
