@@ -30,8 +30,11 @@ import {
 	Skeleton,
 	Alert,
 	InputAdornment,
+	Checkbox,
+	Tabs,
+	Tab,
 } from "@mui/material";
-import { Refresh, Trash, SearchNormal1, Eye, Play, Pause, Send2, Add, CloseCircle } from "iconsax-react";
+import { Refresh, Trash, SearchNormal1, Eye, Play, Pause, Send2, Add, CloseCircle, Code } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import ScraperService, { PostalTracking, PostalTrackingStats, PostalTrackingFilters } from "api/scraperService";
@@ -69,10 +72,14 @@ const PostalTrackingPage = () => {
 	const [filterCodeId, setFilterCodeId] = useState("");
 	const [searchTerm, setSearchTerm] = useState("");
 
+	// Selection for bulk delete
+	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
 	// Detail dialog
 	const [detailOpen, setDetailOpen] = useState(false);
 	const [detailTracking, setDetailTracking] = useState<PostalTracking | null>(null);
 	const [loadingDetail, setLoadingDetail] = useState(false);
+	const [detailTab, setDetailTab] = useState(0);
 
 	// Create dialog
 	const [createOpen, setCreateOpen] = useState(false);
@@ -81,10 +88,14 @@ const PostalTrackingPage = () => {
 	const [newLabel, setNewLabel] = useState("");
 	const [creating, setCreating] = useState(false);
 
-	// Delete dialog
+	// Delete single dialog
 	const [deleteOpen, setDeleteOpen] = useState(false);
 	const [trackingToDelete, setTrackingToDelete] = useState<PostalTracking | null>(null);
 	const [deleting, setDeleting] = useState(false);
+
+	// Bulk delete dialog
+	const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+	const [bulkDeleting, setBulkDeleting] = useState(false);
 
 	// Action loading states
 	const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
@@ -103,6 +114,7 @@ const PostalTrackingPage = () => {
 			const response = await ScraperService.getPostalTrackings(filters);
 			setTrackings(response.data);
 			setTotal((response as any).count || response.pagination?.total || 0);
+			setSelectedIds(new Set());
 		} catch (error: any) {
 			enqueueSnackbar(error?.message || "Error al cargar los seguimientos postales", { variant: "error" });
 		} finally {
@@ -130,10 +142,35 @@ const PostalTrackingPage = () => {
 		fetchTrackings();
 	}, [fetchTrackings]);
 
+	// ─── Selection ──────────────────────────────────────────────────────────────
+
+	const handleSelectAll = (checked: boolean) => {
+		if (checked) {
+			setSelectedIds(new Set(trackings.map((t) => t._id)));
+		} else {
+			setSelectedIds(new Set());
+		}
+	};
+
+	const handleSelectOne = (id: string, checked: boolean) => {
+		setSelectedIds((prev) => {
+			const next = new Set(prev);
+			if (checked) next.add(id);
+			else next.delete(id);
+			return next;
+		});
+	};
+
+	const allSelected = trackings.length > 0 && selectedIds.size === trackings.length;
+	const someSelected = selectedIds.size > 0 && selectedIds.size < trackings.length;
+
+	// ─── Actions ─────────────────────────────────────────────────────────────
+
 	const handleOpenDetail = async (tracking: PostalTracking) => {
 		try {
 			setLoadingDetail(true);
 			setDetailOpen(true);
+			setDetailTab(0);
 			const response = await ScraperService.getPostalTrackingById(tracking._id);
 			setDetailTracking(response.data);
 		} catch (error: any) {
@@ -227,6 +264,23 @@ const PostalTrackingPage = () => {
 			enqueueSnackbar(error?.message || "Error al eliminar el seguimiento postal", { variant: "error" });
 		} finally {
 			setDeleting(false);
+		}
+	};
+
+	const handleBulkDelete = async () => {
+		try {
+			setBulkDeleting(true);
+			const ids = Array.from(selectedIds);
+			await Promise.all(ids.map((id) => ScraperService.deletePostalTracking(id)));
+			enqueueSnackbar(`${ids.length} seguimientos eliminados`, { variant: "success" });
+			setBulkDeleteOpen(false);
+			setSelectedIds(new Set());
+			fetchTrackings();
+			fetchStats();
+		} catch (error: any) {
+			enqueueSnackbar(error?.message || "Error al eliminar los seguimientos", { variant: "error" });
+		} finally {
+			setBulkDeleting(false);
 		}
 	};
 
@@ -392,11 +446,43 @@ const PostalTrackingPage = () => {
 					</Grid>
 				</Paper>
 
+				{/* Bulk action bar */}
+				{selectedIds.size > 0 && (
+					<Paper variant="outlined" sx={{ p: 1.5, bgcolor: "error.lighter", borderColor: "error.light" }}>
+						<Stack direction="row" spacing={2} alignItems="center">
+							<Typography variant="body2" fontWeight={600} color="error.dark">
+								{selectedIds.size} seleccionado{selectedIds.size !== 1 ? "s" : ""}
+							</Typography>
+							<Button
+								size="small"
+								variant="contained"
+								color="error"
+								startIcon={<Trash size={16} />}
+								onClick={() => setBulkDeleteOpen(true)}
+							>
+								Eliminar seleccionados
+							</Button>
+							<Button size="small" variant="text" onClick={() => setSelectedIds(new Set())}>
+								Cancelar selección
+							</Button>
+						</Stack>
+					</Paper>
+				)}
+
 				{/* Table */}
 				<TableContainer component={Paper} variant="outlined">
 					<Table size="small">
 						<TableHead>
 							<TableRow>
+								<TableCell padding="checkbox">
+									<Checkbox
+										size="small"
+										checked={allSelected}
+										indeterminate={someSelected}
+										onChange={(e) => handleSelectAll(e.target.checked)}
+										disabled={loading || trackings.length === 0}
+									/>
+								</TableCell>
 								<TableCell>Codigo / Numero</TableCell>
 								<TableCell>Etiqueta</TableCell>
 								<TableCell align="center">Estado proceso</TableCell>
@@ -411,7 +497,7 @@ const PostalTrackingPage = () => {
 							{loading ? (
 								Array.from({ length: 5 }).map((_, i) => (
 									<TableRow key={i}>
-										{Array.from({ length: 8 }).map((_, j) => (
+										{Array.from({ length: 9 }).map((_, j) => (
 											<TableCell key={j}>
 												<Skeleton variant="text" />
 											</TableCell>
@@ -420,7 +506,7 @@ const PostalTrackingPage = () => {
 								))
 							) : trackings.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={8} align="center">
+									<TableCell colSpan={9} align="center">
 										<Alert severity="info" sx={{ justifyContent: "center" }}>
 											No se encontraron seguimientos postales
 										</Alert>
@@ -428,7 +514,19 @@ const PostalTrackingPage = () => {
 								</TableRow>
 							) : (
 								trackings.map((tracking) => (
-									<TableRow key={tracking._id} hover>
+									<TableRow
+										key={tracking._id}
+										hover
+										selected={selectedIds.has(tracking._id)}
+										sx={{ cursor: "pointer" }}
+									>
+										<TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
+											<Checkbox
+												size="small"
+												checked={selectedIds.has(tracking._id)}
+												onChange={(e) => handleSelectOne(tracking._id, e.target.checked)}
+											/>
+										</TableCell>
 										<TableCell>
 											<Stack>
 												<Typography variant="body2" fontWeight={500} fontFamily="monospace">
@@ -552,125 +650,157 @@ const PostalTrackingPage = () => {
 			{/* Detail Dialog */}
 			<Dialog open={detailOpen} onClose={() => setDetailOpen(false)} maxWidth="md" fullWidth>
 				<DialogTitle>{detailTracking ? `${detailTracking.codeId} ${detailTracking.numberId}` : "Detalle del Seguimiento"}</DialogTitle>
-				<DialogContent dividers>
-					{loadingDetail ? (
-						<Stack spacing={2}>
-							{Array.from({ length: 4 }).map((_, i) => (
-								<Skeleton key={i} variant="rectangular" height={48} />
-							))}
-						</Stack>
-					) : detailTracking ? (
-						<Stack spacing={3}>
-							{/* Info */}
-							<Grid container spacing={2}>
-								<Grid item xs={6} sm={3}>
-									<Typography variant="caption" color="textSecondary">
-										Codigo
-									</Typography>
-									<Typography variant="body1" fontWeight={600} fontFamily="monospace">
-										{detailTracking.codeId}
-									</Typography>
-								</Grid>
-								<Grid item xs={6} sm={3}>
-									<Typography variant="caption" color="textSecondary">
-										Numero
-									</Typography>
-									<Typography variant="body1" fontWeight={600} fontFamily="monospace">
-										{detailTracking.numberId}
-									</Typography>
-								</Grid>
-								<Grid item xs={6} sm={3}>
-									<Typography variant="caption" color="textSecondary">
-										Estado proceso
-									</Typography>
-									<Box mt={0.5}>
-										<Chip
-											label={PROCESSING_STATUS_CONFIG[detailTracking.processingStatus]?.label}
-											size="small"
-											color={PROCESSING_STATUS_CONFIG[detailTracking.processingStatus]?.color || "default"}
-										/>
-									</Box>
-								</Grid>
-								<Grid item xs={6} sm={3}>
-									<Typography variant="caption" color="textSecondary">
-										Errores consecutivos
-									</Typography>
-									<Typography variant="body1" color={detailTracking.consecutiveErrors > 0 ? "error.main" : "textPrimary"}>
-										{detailTracking.consecutiveErrors}
-									</Typography>
-								</Grid>
-								{detailTracking.trackingStatus && (
-									<Grid item xs={12}>
-										<Typography variant="caption" color="textSecondary">
-											Estado de rastreo
-										</Typography>
-										<Typography variant="body2">{detailTracking.trackingStatus}</Typography>
-									</Grid>
-								)}
-								{detailTracking.lastError && (
-									<Grid item xs={12}>
-										<Alert severity="error">{detailTracking.lastError}</Alert>
-									</Grid>
-								)}
-								<Grid item xs={6}>
-									<Typography variant="caption" color="textSecondary">
-										Ultimo check
-									</Typography>
-									<Typography variant="body2">{formatDate(detailTracking.lastCheckedAt)}</Typography>
-								</Grid>
-								<Grid item xs={6}>
-									<Typography variant="caption" color="textSecondary">
-										Proximo check
-									</Typography>
-									<Typography variant="body2">{formatDate(detailTracking.nextCheckAt)}</Typography>
-								</Grid>
-							</Grid>
+				<DialogContent dividers sx={{ p: 0 }}>
+					<Tabs value={detailTab} onChange={(_, v) => setDetailTab(v)} sx={{ borderBottom: 1, borderColor: "divider", px: 2 }}>
+						<Tab label="Historial" />
+						<Tab label="JSON" icon={<Code size={14} />} iconPosition="end" />
+					</Tabs>
+					<Box sx={{ p: 2 }}>
+						{loadingDetail ? (
+							<Stack spacing={2}>
+								{Array.from({ length: 4 }).map((_, i) => (
+									<Skeleton key={i} variant="rectangular" height={48} />
+								))}
+							</Stack>
+						) : detailTracking ? (
+							<>
+								{/* Tab 0: Historial */}
+								{detailTab === 0 && (
+									<Stack spacing={3}>
+										{/* Info */}
+										<Grid container spacing={2}>
+											<Grid item xs={6} sm={3}>
+												<Typography variant="caption" color="textSecondary">
+													Codigo
+												</Typography>
+												<Typography variant="body1" fontWeight={600} fontFamily="monospace">
+													{detailTracking.codeId}
+												</Typography>
+											</Grid>
+											<Grid item xs={6} sm={3}>
+												<Typography variant="caption" color="textSecondary">
+													Numero
+												</Typography>
+												<Typography variant="body1" fontWeight={600} fontFamily="monospace">
+													{detailTracking.numberId}
+												</Typography>
+											</Grid>
+											<Grid item xs={6} sm={3}>
+												<Typography variant="caption" color="textSecondary">
+													Estado proceso
+												</Typography>
+												<Box mt={0.5}>
+													<Chip
+														label={PROCESSING_STATUS_CONFIG[detailTracking.processingStatus]?.label}
+														size="small"
+														color={PROCESSING_STATUS_CONFIG[detailTracking.processingStatus]?.color || "default"}
+													/>
+												</Box>
+											</Grid>
+											<Grid item xs={6} sm={3}>
+												<Typography variant="caption" color="textSecondary">
+													Errores consecutivos
+												</Typography>
+												<Typography variant="body1" color={detailTracking.consecutiveErrors > 0 ? "error.main" : "textPrimary"}>
+													{detailTracking.consecutiveErrors}
+												</Typography>
+											</Grid>
+											{detailTracking.trackingStatus && (
+												<Grid item xs={12}>
+													<Typography variant="caption" color="textSecondary">
+														Estado de rastreo
+													</Typography>
+													<Typography variant="body2">{detailTracking.trackingStatus}</Typography>
+												</Grid>
+											)}
+											{detailTracking.lastError && (
+												<Grid item xs={12}>
+													<Alert severity="error">{detailTracking.lastError}</Alert>
+												</Grid>
+											)}
+											<Grid item xs={6}>
+												<Typography variant="caption" color="textSecondary">
+													Ultimo check
+												</Typography>
+												<Typography variant="body2">{formatDate(detailTracking.lastCheckedAt)}</Typography>
+											</Grid>
+											<Grid item xs={6}>
+												<Typography variant="caption" color="textSecondary">
+													Proximo check
+												</Typography>
+												<Typography variant="body2">{formatDate(detailTracking.nextCheckAt)}</Typography>
+											</Grid>
+										</Grid>
 
-							{/* History */}
-							<Box>
-								<Typography variant="subtitle2" mb={1}>
-									Historial ({detailTracking.history?.length || 0} eventos)
-								</Typography>
-								{detailTracking.history && detailTracking.history.length > 0 ? (
-									<Stack spacing={1}>
-										{[...detailTracking.history].reverse().map((event, index) => (
-											<Paper key={index} variant="outlined" sx={{ p: 1.5 }}>
-												<Stack direction="row" spacing={2} alignItems="flex-start">
-													<Box flex={1}>
-														<Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
-															<Chip label={event.status} size="small" variant="outlined" color="primary" />
-															{event.location && (
-																<Typography variant="caption" color="textSecondary">
-																	📍 {event.location}
-																</Typography>
-															)}
-														</Stack>
-														{event.description && (
-															<Typography variant="body2" color="textSecondary">
-																{event.description}
-															</Typography>
-														)}
-													</Box>
-													<Stack alignItems="flex-end">
-														{event.eventDate && (
-															<Typography variant="caption" color="textSecondary">
-																{formatDate(event.eventDate)}
-															</Typography>
-														)}
-														<Typography variant="caption" color="textSecondary" fontSize="0.65rem">
-															Scrapeado: {formatDate(event.scrapedAt)}
-														</Typography>
-													</Stack>
+										{/* History */}
+										<Box>
+											<Typography variant="subtitle2" mb={1}>
+												Historial ({detailTracking.history?.length || 0} eventos)
+											</Typography>
+											{detailTracking.history && detailTracking.history.length > 0 ? (
+												<Stack spacing={1}>
+													{[...detailTracking.history].reverse().map((event, index) => (
+														<Paper key={index} variant="outlined" sx={{ p: 1.5 }}>
+															<Stack direction="row" spacing={2} alignItems="flex-start">
+																<Box flex={1}>
+																	<Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
+																		<Chip label={event.status} size="small" variant="outlined" color="primary" />
+																		{event.location && (
+																			<Typography variant="caption" color="textSecondary">
+																				📍 {event.location}
+																			</Typography>
+																		)}
+																	</Stack>
+																	{event.description && (
+																		<Typography variant="body2" color="textSecondary">
+																			{event.description}
+																		</Typography>
+																	)}
+																</Box>
+																<Stack alignItems="flex-end">
+																	{event.eventDate && (
+																		<Typography variant="caption" color="textSecondary">
+																			{formatDate(event.eventDate)}
+																		</Typography>
+																	)}
+																	<Typography variant="caption" color="textSecondary" fontSize="0.65rem">
+																		Scrapeado: {formatDate(event.scrapedAt)}
+																	</Typography>
+																</Stack>
+															</Stack>
+														</Paper>
+													))}
 												</Stack>
-											</Paper>
-										))}
+											) : (
+												<Alert severity="info">No hay eventos en el historial</Alert>
+											)}
+										</Box>
 									</Stack>
-								) : (
-									<Alert severity="info">No hay eventos en el historial</Alert>
 								)}
-							</Box>
-						</Stack>
-					) : null}
+
+								{/* Tab 1: JSON */}
+								{detailTab === 1 && (
+									<Box
+										component="pre"
+										sx={{
+											bgcolor: "grey.900",
+											color: "grey.100",
+											p: 2,
+											borderRadius: 1,
+											overflow: "auto",
+											fontSize: "0.75rem",
+											lineHeight: 1.6,
+											maxHeight: 500,
+											fontFamily: "monospace",
+											m: 0,
+										}}
+									>
+										{JSON.stringify(detailTracking, null, 2)}
+									</Box>
+								)}
+							</>
+						) : null}
+					</Box>
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setDetailOpen(false)}>Cerrar</Button>
@@ -732,7 +862,7 @@ const PostalTrackingPage = () => {
 				</DialogActions>
 			</Dialog>
 
-			{/* Delete Dialog */}
+			{/* Delete single Dialog */}
 			<Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
 				<DialogTitle>Confirmar Eliminacion</DialogTitle>
 				<DialogContent>
@@ -759,6 +889,27 @@ const PostalTrackingPage = () => {
 					</Button>
 					<Button variant="contained" color="error" onClick={handleConfirmDelete} disabled={deleting}>
 						{deleting ? "Eliminando..." : "Eliminar"}
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Bulk Delete Dialog */}
+			<Dialog open={bulkDeleteOpen} onClose={() => setBulkDeleteOpen(false)}>
+				<DialogTitle>Eliminar {selectedIds.size} seguimientos</DialogTitle>
+				<DialogContent>
+					<Typography>
+						Estas seguro de que queres eliminar <strong>{selectedIds.size}</strong> seguimiento{selectedIds.size !== 1 ? "s" : ""} seleccionado{selectedIds.size !== 1 ? "s" : ""}?
+					</Typography>
+					<Alert severity="warning" sx={{ mt: 2 }}>
+						Se eliminara tambien todo el historial de rastreo de cada documento.
+					</Alert>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setBulkDeleteOpen(false)} disabled={bulkDeleting}>
+						Cancelar
+					</Button>
+					<Button variant="contained" color="error" onClick={handleBulkDelete} disabled={bulkDeleting}>
+						{bulkDeleting ? "Eliminando..." : `Eliminar ${selectedIds.size}`}
 					</Button>
 				</DialogActions>
 			</Dialog>
