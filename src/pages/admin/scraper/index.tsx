@@ -489,7 +489,7 @@ const JobsTab = () => {
 	const [loading, setLoading] = useState(true);
 	const [loadingStats, setLoadingStats] = useState(true);
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(20);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [total, setTotal] = useState(0);
 	const [filterStatus, setFilterStatus] = useState("");
 	const [clearDialogOpen, setClearDialogOpen] = useState(false);
@@ -1117,8 +1117,8 @@ const ScraperWorkerPage = () => {
 		>
 			<Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons="auto">
 				<Tab label="Configuracion" value="config" />
-				<Tab label="Jobs" value="jobs" />
-				<Tab label="Runs" value="runs" />
+				<Tab label="Cola de trabajos" value="jobs" />
+				<Tab label="Ejecuciones de workers" value="runs" />
 			</Tabs>
 			<Divider />
 
