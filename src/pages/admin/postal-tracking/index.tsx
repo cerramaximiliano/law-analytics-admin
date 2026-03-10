@@ -704,7 +704,7 @@ const PostalTrackingPage = () => {
 						<Tab label="Historial" />
 						<Tab label="JSON" icon={<Code size={14} />} iconPosition="end" />
 					</Tabs>
-					<Box sx={{ p: 2 }}>
+					<Box sx={{ p: 2, minHeight: 420 }}>
 						{loadingDetail ? (
 							<Stack spacing={2}>
 								{Array.from({ length: 4 }).map((_, i) => (
@@ -779,6 +779,34 @@ const PostalTrackingPage = () => {
 												</Typography>
 												<Typography variant="body2">{formatDate(detailTracking.nextCheckAt)}</Typography>
 											</Grid>
+											{/* IDs de referencia */}
+											{detailTracking.userId && (
+												<Grid item xs={12} sm={6}>
+													<Typography variant="caption" color="textSecondary">Usuario ID</Typography>
+													<Stack direction="row" spacing={0.5} alignItems="center">
+														<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem" sx={{ wordBreak: "break-all" }}>{detailTracking.userId}</Typography>
+														<Tooltip title="Copiar"><IconButton size="small" onClick={() => { navigator.clipboard.writeText(detailTracking.userId!); enqueueSnackbar("ID copiado", { variant: "success", autoHideDuration: 1500 }); }}><Copy size={12} /></IconButton></Tooltip>
+													</Stack>
+												</Grid>
+											)}
+											{detailTracking.folderId && (
+												<Grid item xs={12} sm={6}>
+													<Typography variant="caption" color="textSecondary">Folder ID</Typography>
+													<Stack direction="row" spacing={0.5} alignItems="center">
+														<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem" sx={{ wordBreak: "break-all" }}>{detailTracking.folderId}</Typography>
+														<Tooltip title="Copiar"><IconButton size="small" onClick={() => { navigator.clipboard.writeText(detailTracking.folderId!); enqueueSnackbar("ID copiado", { variant: "success", autoHideDuration: 1500 }); }}><Copy size={12} /></IconButton></Tooltip>
+													</Stack>
+												</Grid>
+											)}
+											{detailTracking.movementId && (
+												<Grid item xs={12} sm={6}>
+													<Typography variant="caption" color="textSecondary">Movement ID</Typography>
+													<Stack direction="row" spacing={0.5} alignItems="center">
+														<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem" sx={{ wordBreak: "break-all" }}>{detailTracking.movementId}</Typography>
+														<Tooltip title="Copiar"><IconButton size="small" onClick={() => { navigator.clipboard.writeText(detailTracking.movementId!); enqueueSnackbar("ID copiado", { variant: "success", autoHideDuration: 1500 }); }}><Copy size={12} /></IconButton></Tooltip>
+													</Stack>
+												</Grid>
+											)}
 										</Grid>
 
 										{/* History */}
