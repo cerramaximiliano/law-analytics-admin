@@ -100,6 +100,13 @@ const ConfigTab = () => {
 	const [minWorkers, setMinWorkers] = useState(1);
 	const [maxWorkers, setMaxWorkers] = useState(3);
 	const [batchSize, setBatchSize] = useState(50);
+	// Estados finales y patrones de notificación
+	const [finalStatuses, setFinalStatuses] = useState<string[]>([]);
+	const [finalStatusInput, setFinalStatusInput] = useState("");
+	const [notifStatusMatches, setNotifStatusMatches] = useState<string[]>([]);
+	const [notifStatusInput, setNotifStatusInput] = useState("");
+	const [notifDescMatches, setNotifDescMatches] = useState<string[]>([]);
+	const [notifDescInput, setNotifDescInput] = useState("");
 
 	const fetchConfig = useCallback(async () => {
 		try {
@@ -116,6 +123,9 @@ const ConfigTab = () => {
 			setMinWorkers(cfg.workers?.scraper?.scaling?.minWorkers ?? 1);
 			setMaxWorkers(cfg.workers?.scraper?.scaling?.maxWorkers ?? 3);
 			setBatchSize(cfg.workers?.scraper?.cron?.batchSize ?? 50);
+			setFinalStatuses(cfg.scraping?.finalStatuses ?? []);
+			setNotifStatusMatches(cfg.scraping?.notificationPatterns?.statusMatches ?? []);
+			setNotifDescMatches(cfg.scraping?.notificationPatterns?.descriptionMatches ?? []);
 		} catch (error: any) {
 			enqueueSnackbar(error?.message || "Error al cargar la configuracion", { variant: "error" });
 		} finally {
@@ -131,15 +141,23 @@ const ConfigTab = () => {
 		try {
 			setSaving(true);
 			await ScraperService.updateConfig({
-				"global.enabled": enabled,
-				"scraping.checkIntervalHours": checkIntervalHours,
-				"scraping.schedule.workingHoursStart": workingHoursStart,
-				"scraping.schedule.workingHoursEnd": workingHoursEnd,
-				"scraping.headless.development": headlessDev,
-				"scraping.headless.production": headlessProd,
-				"workers.scraper.scaling.minWorkers": minWorkers,
-				"workers.scraper.scaling.maxWorkers": maxWorkers,
-				"workers.scraper.cron.batchSize": batchSize,
+				scraping: {
+					checkIntervalHours,
+					schedule: { workingHoursStart, workingHoursEnd },
+					headless: { development: headlessDev, production: headlessProd },
+					finalStatuses,
+					notificationPatterns: {
+						statusMatches: notifStatusMatches,
+						descriptionMatches: notifDescMatches,
+					},
+				},
+				global: { enabled },
+				workers: {
+					scraper: {
+						scaling: { minInstances: minWorkers, maxInstances: maxWorkers },
+						cron: { batchSize },
+					},
+				},
 			});
 			enqueueSnackbar("Configuracion guardada exitosamente", { variant: "success" });
 			fetchConfig();
@@ -298,6 +316,137 @@ const ConfigTab = () => {
 						/>
 					</Grid>
 				</Grid>
+			</Paper>
+
+			{/* Estados finales */}
+			<Paper variant="outlined" sx={{ p: 2 }}>
+				<Typography variant="subtitle2" mb={2} color="textSecondary">
+					Estados Finales
+				</Typography>
+				<Typography variant="caption" color="textSecondary" display="block" mb={1}>
+					Substrings del campo <code>status</code> que se consideran estados definitivos (entregado, devuelto, etc.). Case-insensitive.
+				</Typography>
+				<Stack direction="row" spacing={1} mb={1} flexWrap="wrap" gap={0.5}>
+					{finalStatuses.map((s) => (
+						<Chip key={s} label={s} size="small" onDelete={() => setFinalStatuses((prev) => prev.filter((x) => x !== s))} />
+					))}
+				</Stack>
+				<Stack direction="row" spacing={1}>
+					<TextField
+						size="small"
+						label="Agregar estado final"
+						value={finalStatusInput}
+						onChange={(e) => setFinalStatusInput(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter" && finalStatusInput.trim()) {
+								setFinalStatuses((prev) => [...new Set([...prev, finalStatusInput.trim()])]);
+								setFinalStatusInput("");
+							}
+						}}
+						placeholder="ej: entregado, devuelto"
+						sx={{ flex: 1 }}
+					/>
+					<Button
+						variant="outlined"
+						size="small"
+						onClick={() => {
+							if (finalStatusInput.trim()) {
+								setFinalStatuses((prev) => [...new Set([...prev, finalStatusInput.trim()])]);
+								setFinalStatusInput("");
+							}
+						}}
+					>
+						Agregar
+					</Button>
+				</Stack>
+			</Paper>
+
+			{/* Patrones de notificación */}
+			<Paper variant="outlined" sx={{ p: 2 }}>
+				<Typography variant="subtitle2" mb={2} color="textSecondary">
+					Patrones de Fecha de Notificación
+				</Typography>
+				<Typography variant="caption" color="textSecondary" display="block" mb={2}>
+					Si algún evento del historial coincide con alguno de estos patrones, se establece automáticamente la <code>notificationDate</code>. Case-insensitive.
+				</Typography>
+				<Stack spacing={2}>
+					<Box>
+						<Typography variant="caption" fontWeight={600} display="block" mb={0.5}>
+							Por status del evento
+						</Typography>
+						<Stack direction="row" spacing={1} mb={1} flexWrap="wrap" gap={0.5}>
+							{notifStatusMatches.map((s) => (
+								<Chip key={s} label={s} size="small" color="primary" variant="outlined" onDelete={() => setNotifStatusMatches((prev) => prev.filter((x) => x !== s))} />
+							))}
+						</Stack>
+						<Stack direction="row" spacing={1}>
+							<TextField
+								size="small"
+								label="Substring de status"
+								value={notifStatusInput}
+								onChange={(e) => setNotifStatusInput(e.target.value)}
+								onKeyDown={(e) => {
+									if (e.key === "Enter" && notifStatusInput.trim()) {
+										setNotifStatusMatches((prev) => [...new Set([...prev, notifStatusInput.trim()])]);
+										setNotifStatusInput("");
+									}
+								}}
+								placeholder="ej: notificado, avisado"
+								sx={{ flex: 1 }}
+							/>
+							<Button
+								variant="outlined"
+								size="small"
+								onClick={() => {
+									if (notifStatusInput.trim()) {
+										setNotifStatusMatches((prev) => [...new Set([...prev, notifStatusInput.trim()])]);
+										setNotifStatusInput("");
+									}
+								}}
+							>
+								Agregar
+							</Button>
+						</Stack>
+					</Box>
+					<Box>
+						<Typography variant="caption" fontWeight={600} display="block" mb={0.5}>
+							Por descripción del evento
+						</Typography>
+						<Stack direction="row" spacing={1} mb={1} flexWrap="wrap" gap={0.5}>
+							{notifDescMatches.map((s) => (
+								<Chip key={s} label={s} size="small" color="secondary" variant="outlined" onDelete={() => setNotifDescMatches((prev) => prev.filter((x) => x !== s))} />
+							))}
+						</Stack>
+						<Stack direction="row" spacing={1}>
+							<TextField
+								size="small"
+								label="Substring de descripción"
+								value={notifDescInput}
+								onChange={(e) => setNotifDescInput(e.target.value)}
+								onKeyDown={(e) => {
+									if (e.key === "Enter" && notifDescInput.trim()) {
+										setNotifDescMatches((prev) => [...new Set([...prev, notifDescInput.trim()])]);
+										setNotifDescInput("");
+									}
+								}}
+								placeholder="ej: aviso de llegada, carta documento"
+								sx={{ flex: 1 }}
+							/>
+							<Button
+								variant="outlined"
+								size="small"
+								onClick={() => {
+									if (notifDescInput.trim()) {
+										setNotifDescMatches((prev) => [...new Set([...prev, notifDescInput.trim()])]);
+										setNotifDescInput("");
+									}
+								}}
+							>
+								Agregar
+							</Button>
+						</Stack>
+					</Box>
+				</Stack>
 			</Paper>
 
 			{/* Actions */}

@@ -86,6 +86,10 @@ const PostalTrackingPage = () => {
 	const [newCodeId, setNewCodeId] = useState("CD");
 	const [newNumberId, setNewNumberId] = useState("");
 	const [newLabel, setNewLabel] = useState("");
+	const [newDocumentId, setNewDocumentId] = useState("");
+	const [newAttachment, setNewAttachment] = useState("");
+	const [newNotificationDate, setNewNotificationDate] = useState("");
+	const [newDeadlineDays, setNewDeadlineDays] = useState<number | "">("");
 	const [creating, setCreating] = useState(false);
 
 	// Delete single dialog
@@ -244,11 +248,19 @@ const PostalTrackingPage = () => {
 				codeId: newCodeId,
 				numberId: newNumberId.trim(),
 				...(newLabel.trim() && { label: newLabel.trim() }),
+				...(newDocumentId.trim() && { documentId: newDocumentId.trim() }),
+				...(newAttachment.trim() && { attachment: newAttachment.trim() }),
+				...(newNotificationDate && { notificationDate: newNotificationDate }),
+				...(newDeadlineDays !== "" && { deadlineDays: Number(newDeadlineDays) }),
 			});
 			enqueueSnackbar("Seguimiento postal creado exitosamente", { variant: "success" });
 			setCreateOpen(false);
 			setNewNumberId("");
 			setNewLabel("");
+			setNewDocumentId("");
+			setNewAttachment("");
+			setNewNotificationDate("");
+			setNewDeadlineDays("");
 			fetchTrackings();
 			fetchStats();
 		} catch (error: any) {
@@ -857,35 +869,82 @@ const PostalTrackingPage = () => {
 			</Dialog>
 
 			{/* Create Dialog */}
-			<Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="xs" fullWidth>
+			<Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="sm" fullWidth>
 				<DialogTitle>Nuevo Seguimiento Postal</DialogTitle>
 				<DialogContent dividers>
 					<Stack spacing={2} sx={{ mt: 1 }}>
-						<TextField
-							fullWidth
-							size="small"
-							label="Codigo de servicio (ej: CD, CP, AR)"
-							value={newCodeId}
-							onChange={(e) => setNewCodeId(e.target.value.toUpperCase())}
-							helperText="Codigo del tipo de envio de Correo Argentino"
-						/>
-						<TextField
-							fullWidth
-							size="small"
-							label="Numero de envio (9 digitos)"
-							value={newNumberId}
-							onChange={(e) => setNewNumberId(e.target.value.replace(/\D/g, "").slice(0, 9))}
-							helperText="Solo numeros, exactamente 9 digitos"
-							inputProps={{ maxLength: 9 }}
-						/>
+						<Typography variant="caption" color="textSecondary" fontWeight={600}>
+							Datos del envío (requeridos)
+						</Typography>
+						<Stack direction="row" spacing={1}>
+							<TextField
+								size="small"
+								label="Código"
+								value={newCodeId}
+								onChange={(e) => setNewCodeId(e.target.value.toUpperCase())}
+								sx={{ width: 100 }}
+							/>
+							<TextField
+								fullWidth
+								size="small"
+								label="Número de envío (9 dígitos)"
+								value={newNumberId}
+								onChange={(e) => setNewNumberId(e.target.value.replace(/\D/g, "").slice(0, 9))}
+								helperText="Solo números, exactamente 9 dígitos"
+								inputProps={{ maxLength: 9 }}
+							/>
+						</Stack>
 						<TextField
 							fullWidth
 							size="small"
 							label="Etiqueta (opcional)"
 							value={newLabel}
 							onChange={(e) => setNewLabel(e.target.value)}
-							placeholder="Descripcion para identificar el envio"
+							placeholder="Descripción para identificar el envío"
 						/>
+						<Typography variant="caption" color="textSecondary" fontWeight={600} sx={{ pt: 1 }}>
+							Vínculos (opcionales)
+						</Typography>
+						<TextField
+							fullWidth
+							size="small"
+							label="Document ID"
+							value={newDocumentId}
+							onChange={(e) => setNewDocumentId(e.target.value)}
+							placeholder="ObjectId del documento asociado"
+							helperText="ID del documento del ecosistema Law Analytics"
+						/>
+						<TextField
+							fullWidth
+							size="small"
+							label="Archivo adjunto (URL o path)"
+							value={newAttachment}
+							onChange={(e) => setNewAttachment(e.target.value)}
+							placeholder="https://... o /ruta/al/archivo"
+						/>
+						<Typography variant="caption" color="textSecondary" fontWeight={600} sx={{ pt: 1 }}>
+							Fechas y plazos (opcionales)
+						</Typography>
+						<Stack direction="row" spacing={1}>
+							<TextField
+								fullWidth
+								size="small"
+								label="Fecha de notificación"
+								type="date"
+								value={newNotificationDate}
+								onChange={(e) => setNewNotificationDate(e.target.value)}
+								InputLabelProps={{ shrink: true }}
+							/>
+							<TextField
+								size="small"
+								label="Plazo (días)"
+								type="number"
+								value={newDeadlineDays}
+								onChange={(e) => setNewDeadlineDays(e.target.value === "" ? "" : Math.max(1, Number(e.target.value)))}
+								inputProps={{ min: 1 }}
+								sx={{ width: 130 }}
+							/>
+						</Stack>
 					</Stack>
 				</DialogContent>
 				<DialogActions>
