@@ -99,28 +99,45 @@ const PostalTrackingPage = () => {
 
 	// Action loading states
 	const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+	const [refreshKey, setRefreshKey] = useState(0);
 
-	const fetchTrackings = useCallback(async () => {
-		try {
-			setLoading(true);
-			const filters: PostalTrackingFilters = {
-				page: page + 1,
-				limit: rowsPerPage,
-			};
-			if (filterProcessingStatus) filters.processingStatus = filterProcessingStatus;
-			if (filterCodeId) filters.codeId = filterCodeId;
-			if (searchTerm) filters.search = searchTerm;
+	const triggerRefresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
-			const response = await ScraperService.getPostalTrackings(filters);
-			setTrackings(response.data);
-			setTotal((response as any).count || response.pagination?.total || 0);
-			setSelectedIds(new Set());
-		} catch (error: any) {
-			enqueueSnackbar(error?.message || "Error al cargar los seguimientos postales", { variant: "error" });
-		} finally {
-			setLoading(false);
-		}
-	}, [page, rowsPerPage, filterProcessingStatus, filterCodeId, searchTerm, enqueueSnackbar]);
+	useEffect(() => {
+		let cancelled = false;
+		const fetchData = async () => {
+			try {
+				setLoading(true);
+				const filters: PostalTrackingFilters = {
+					page: page + 1,
+					limit: rowsPerPage,
+				};
+				if (filterProcessingStatus) filters.processingStatus = filterProcessingStatus;
+				if (filterCodeId) filters.codeId = filterCodeId;
+				if (searchTerm) filters.search = searchTerm;
+
+				const response = await ScraperService.getPostalTrackings(filters);
+				if (!cancelled) {
+					setTrackings(response.data);
+					setTotal((response as any).count || 0);
+					setSelectedIds(new Set());
+				}
+			} catch (error: any) {
+				if (!cancelled) {
+					enqueueSnackbar(error?.message || "Error al cargar los seguimientos postales", { variant: "error" });
+				}
+			} finally {
+				if (!cancelled) setLoading(false);
+			}
+		};
+		fetchData();
+		return () => {
+			cancelled = true;
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [page, rowsPerPage, filterProcessingStatus, filterCodeId, searchTerm, refreshKey]);
+
+	const fetchTrackings = useCallback(() => triggerRefresh(), [triggerRefresh]);
 
 	const fetchStats = useCallback(async () => {
 		try {
@@ -137,10 +154,6 @@ const PostalTrackingPage = () => {
 	useEffect(() => {
 		fetchStats();
 	}, [fetchStats]);
-
-	useEffect(() => {
-		fetchTrackings();
-	}, [fetchTrackings]);
 
 	// ─── Selection ──────────────────────────────────────────────────────────────
 
