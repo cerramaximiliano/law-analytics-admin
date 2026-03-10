@@ -73,6 +73,14 @@ const admin: NavItemType = {
 			],
 		},
 		{
+			id: "causas-pending",
+			title: "Causas Pendientes de Verificación",
+			type: "item",
+			icon: Folder2,
+			url: "/admin/causas/pending",
+			breadcrumbs: true,
+		},
+		{
 			id: "causas",
 			title: "Carpetas PJN",
 			type: "collapse",
@@ -105,13 +113,6 @@ const admin: NavItemType = {
 					title: "Carpetas No Verificadas (App)",
 					type: "item",
 					url: "/admin/causas/non-verified",
-					breadcrumbs: true,
-				},
-				{
-					id: "causas-pending",
-					title: "Causas Pendientes de Verificación",
-					type: "item",
-					url: "/admin/causas/pending",
 					breadcrumbs: true,
 				},
 				{
