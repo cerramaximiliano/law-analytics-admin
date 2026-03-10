@@ -108,6 +108,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "causas-pending",
+					title: "Causas Pendientes de Verificación",
+					type: "item",
+					url: "/admin/causas/pending",
+					breadcrumbs: true,
+				},
+				{
 					id: "causas-synced-credentials",
 					title: "Causas por Credencial",
 					type: "item",

@@ -39,6 +39,7 @@ export interface FolderStats {
 	pending: number;
 	pjn: FolderSourceStats;
 	mev: FolderSourceStats;
+	eje?: FolderSourceStats;
 }
 
 export interface MarketingCampaignStats {

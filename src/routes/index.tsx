@@ -22,6 +22,7 @@ const EmailVerificationWorkerPage = Loadable(lazy(() => import("pages/admin/work
 const CarpetasVerificadas = Loadable(lazy(() => import("pages/admin/causas/CarpetasVerificadas")));
 const CarpetasVerificadasApp = Loadable(lazy(() => import("pages/admin/causas/CarpetasVerificadasApp")));
 const CarpetasNoVerificadas = Loadable(lazy(() => import("pages/admin/causas/CarpetasNoVerificadas")));
+const CausasPendientes = Loadable(lazy(() => import("pages/admin/causas/CausasPendientes")));
 const CredencialesPJN = Loadable(lazy(() => import("pages/admin/causas/CredencialesPJN")));
 const CausasSyncCredentials = Loadable(lazy(() => import("pages/admin/causas/CausasSyncCredentials")));
 
@@ -228,6 +229,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<CarpetasNoVerificadas />
+								</AdminRoleGuard>
+							),
+						},
+				{
+							path: "causas/pending",
+							element: (
+								<AdminRoleGuard>
+									<CausasPendientes />
 								</AdminRoleGuard>
 							),
 						},
