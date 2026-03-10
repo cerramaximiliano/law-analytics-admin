@@ -34,7 +34,7 @@ import {
 	Tabs,
 	Tab,
 } from "@mui/material";
-import { Refresh, Trash, SearchNormal1, Eye, Play, Pause, Send2, Add, CloseCircle, Code } from "iconsax-react";
+import { Refresh, Trash, SearchNormal1, Eye, Play, Pause, Send2, Add, CloseCircle, Code, Copy } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import ScraperService, { PostalTracking, PostalTrackingStats, PostalTrackingFilters } from "api/scraperService";
@@ -510,7 +510,7 @@ const PostalTrackingPage = () => {
 							{loading ? (
 								Array.from({ length: 5 }).map((_, i) => (
 									<TableRow key={i}>
-										{Array.from({ length: 9 }).map((_, j) => (
+										{Array.from({ length: 10 }).map((_, j) => (
 											<TableCell key={j}>
 												<Skeleton variant="text" />
 											</TableCell>
@@ -519,7 +519,7 @@ const PostalTrackingPage = () => {
 								))
 							) : trackings.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={9} align="center">
+									<TableCell colSpan={10} align="center">
 										<Alert severity="info" sx={{ justifyContent: "center" }}>
 											No se encontraron seguimientos postales
 										</Alert>
@@ -551,6 +551,29 @@ const PostalTrackingPage = () => {
 											<Typography variant="body2" color="textSecondary">
 												{tracking.label || "-"}
 											</Typography>
+										</TableCell>
+										<TableCell>
+											{tracking.userId ? (
+												<Stack direction="row" spacing={0.5} alignItems="center">
+													<Typography variant="body2" fontFamily="monospace" fontSize="0.7rem" color="textSecondary" noWrap sx={{ maxWidth: 90 }}>
+														{tracking.userId}
+													</Typography>
+													<Tooltip title="Copiar ID">
+														<IconButton
+															size="small"
+															onClick={(e) => {
+																e.stopPropagation();
+																navigator.clipboard.writeText(tracking.userId!);
+																enqueueSnackbar("ID copiado al portapapeles", { variant: "success", autoHideDuration: 1500 });
+															}}
+														>
+															<Copy size={13} />
+														</IconButton>
+													</Tooltip>
+												</Stack>
+											) : (
+												<Typography variant="body2" color="textSecondary">-</Typography>
+											)}
 										</TableCell>
 										<TableCell align="center">
 											<Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
