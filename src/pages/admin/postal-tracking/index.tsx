@@ -102,7 +102,7 @@ const PostalTrackingPage = () => {
 
 			const response = await ScraperService.getPostalTrackings(filters);
 			setTrackings(response.data);
-			setTotal(response.pagination?.total || 0);
+			setTotal((response as any).count || response.pagination?.total || 0);
 		} catch (error: any) {
 			enqueueSnackbar(error?.message || "Error al cargar los seguimientos postales", { variant: "error" });
 		} finally {
