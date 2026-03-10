@@ -3,6 +3,10 @@ import {
 	Box,
 	Card,
 	Collapse,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
 	Divider,
 	Table,
 	TableBody,
@@ -33,7 +37,7 @@ import {
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { Refresh, SearchNormal1, Edit, CloseCircle, TickCircle, Chart, ArrowDown2, ArrowUp2 } from "iconsax-react";
+import { Refresh, SearchNormal1, Edit, CloseCircle, TickCircle, Chart, ArrowDown2, ArrowUp2, Code } from "iconsax-react";
 import { getTasasListado, consultarTasas, actualizarValorTasa, rellenarGaps, TasaConfig, TasaResultItem } from "utils/tasasService";
 
 // ─── Tab panel ────────────────────────────────────────────────────────────────
@@ -262,6 +266,11 @@ const TasasInteres = () => {
 	const [loadingRellenar, setLoadingRellenar] = useState(false);
 	const [loadingRellenarTasa, setLoadingRellenarTasa] = useState<Record<string, boolean>>({});
 
+	// JSON viewer
+	const [jsonDialog, setJsonDialog] = useState<{ open: boolean; data: unknown; title: string }>({ open: false, data: null, title: "" });
+	const openJsonDialog = (title: string, data: unknown) => setJsonDialog({ open: true, data, title });
+	const closeJsonDialog = () => setJsonDialog((prev) => ({ ...prev, open: false }));
+
 	// ── Load listado on mount ────────────────────────────────────────────────
 
 	const fetchListado = async () => {
@@ -403,6 +412,7 @@ const TasasInteres = () => {
 	// ── Render ───────────────────────────────────────────────────────────────
 
 	return (
+		<>
 		<MainCard title="Tasas de Interés" secondary={<Chart size={24} />}>
 			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
 				<Tabs value={tabValue} onChange={(_e: SyntheticEvent, v: number) => setTabValue(v)}>
@@ -455,6 +465,7 @@ const TasasInteres = () => {
 										<TableCell>Última Completa</TableCell>
 										<TableCell align="center">Estado</TableCell>
 										<TableCell>Detalle de cobertura</TableCell>
+										<TableCell align="center" sx={{ width: 80 }}>Acciones</TableCell>
 									</TableRow>
 								</TableHead>
 								<TableBody>
@@ -478,11 +489,18 @@ const TasasInteres = () => {
 												<TableCell>
 													<CoverageDetail tasa={tasa} />
 												</TableCell>
+										<TableCell align="center">
+											<Tooltip title="Ver JSON del documento">
+												<IconButton size="small" color="default" onClick={() => openJsonDialog(tasa.label, tasa)}>
+													<Code size={18} />
+												</IconButton>
+											</Tooltip>
+										</TableCell>
 											</TableRow>
 											<FechasFaltantesRow
 											key={`gaps-${tasa.value}`}
 											tasa={tasa}
-											colSpan={6}
+											colSpan={7}
 											onRellenar={() => handleRellenarTasa(tasa.value)}
 											loading={!!loadingRellenarTasa[tasa.value]}
 										/>
@@ -671,11 +689,18 @@ const TasasInteres = () => {
 															</Tooltip>
 														</Stack>
 													) : (
-														<Tooltip title="Editar valor">
-															<IconButton size="small" color="primary" onClick={() => handleStartEdit(item)}>
-																<Edit size={18} />
-															</IconButton>
-														</Tooltip>
+														<Stack direction="row" spacing={0.5} justifyContent="center">
+															<Tooltip title="Editar valor">
+																<IconButton size="small" color="primary" onClick={() => handleStartEdit(item)}>
+																	<Edit size={18} />
+																</IconButton>
+															</Tooltip>
+															<Tooltip title="Ver JSON del documento">
+																<IconButton size="small" color="default" onClick={() => openJsonDialog(`${selectedTasaLabel} — ${formatDate(item.fecha)}`, item)}>
+																	<Code size={18} />
+																</IconButton>
+															</Tooltip>
+														</Stack>
 													)}
 												</TableCell>
 											</TableRow>
@@ -908,6 +933,39 @@ const TasasInteres = () => {
 			</Stack>
 		</TabPanel>
 		</MainCard>
+
+		{/* ═══════ JSON viewer dialog ═══════ */}
+		<Dialog open={jsonDialog.open} onClose={closeJsonDialog} maxWidth="md" fullWidth>
+			<DialogTitle>
+				<Stack direction="row" alignItems="center" justifyContent="space-between">
+					<Typography variant="h6" sx={{ fontFamily: "monospace", fontSize: "0.95rem" }}>{jsonDialog.title}</Typography>
+					<IconButton size="small" onClick={closeJsonDialog}>
+						<CloseCircle size={18} />
+					</IconButton>
+				</Stack>
+			</DialogTitle>
+			<DialogContent dividers sx={{ p: 0 }}>
+				<Box
+					component="pre"
+					sx={{
+						fontFamily: "monospace",
+						fontSize: "0.78rem",
+						overflowX: "auto",
+						whiteSpace: "pre-wrap",
+						wordBreak: "break-all",
+						m: 0,
+						p: 2,
+						bgcolor: "action.hover",
+					}}
+				>
+					{JSON.stringify(jsonDialog.data, null, 2)}
+				</Box>
+			</DialogContent>
+			<DialogActions>
+				<Button size="small" onClick={closeJsonDialog}>Cerrar</Button>
+			</DialogActions>
+		</Dialog>
+		</>
 	);
 };
 
