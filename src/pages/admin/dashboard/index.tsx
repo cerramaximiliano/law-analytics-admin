@@ -995,6 +995,7 @@ const AdminDashboard = () => {
 								valueColor={COLORS.warning.main}
 								loading={loading}
 								infoKey="pendingFolders"
+								linkTo="/admin/causas/pending"
 							/>
 						</Grid>
 						<Grid item xs={6} sm={6} md={3}>
