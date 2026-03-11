@@ -21,6 +21,7 @@ export interface EmailLog {
 	metadata?: Record<string, any>;
 	requestIp?: string | null;
 	userAgent?: string | null;
+	source?: string | null;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -102,6 +103,7 @@ export interface EmailLogTemplatesResponse {
 	message: string;
 	data: {
 		categories: string[];
+		sources: string[];
 		templates: EmailLogTemplateOption[];
 	};
 }
@@ -119,6 +121,7 @@ export interface EmailLogsQueryParams {
 	startDate?: string;
 	endDate?: string;
 	sesMessageId?: string;
+	source?: string;
 }
 
 export interface UpdateEmailStatusParams {
