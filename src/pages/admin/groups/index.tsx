@@ -131,8 +131,8 @@ export default function GroupsPage() {
 		try {
 			const res = await GroupsService.getStats();
 			setStats(res.data);
-		} catch {
-			// stats are non-critical
+		} catch (err) {
+			console.error("[GroupsPage] Error al cargar estadísticas:", err);
 		} finally {
 			setLoadingStats(false);
 		}
