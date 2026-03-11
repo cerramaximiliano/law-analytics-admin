@@ -106,6 +106,9 @@ const ScraperWorkerPage = Loadable(lazy(() => import("pages/admin/scraper")));
 // Postal tracking page
 const PostalTrackingPage = Loadable(lazy(() => import("pages/admin/postal-tracking")));
 
+// Groups page
+const GroupsPage = Loadable(lazy(() => import("pages/admin/groups")));
+
 // ==============================|| ROUTES ||============================== //
 
 export default function Routes() {
@@ -515,6 +518,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<PostalTrackingPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "groups",
+							element: (
+								<AdminRoleGuard>
+									<GroupsPage />
 								</AdminRoleGuard>
 							),
 						},
