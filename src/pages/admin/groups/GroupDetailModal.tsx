@@ -29,7 +29,7 @@ import {
 	FormControl,
 	InputLabel,
 } from "@mui/material";
-import { CloseCircle, People, Messages2, Clock, TickCircle, CloseSquare, Trash, Warning2, UserRemove, Crown1, DocumentText } from "iconsax-react";
+import { CloseCircle, People, Messages2, Clock, TickCircle, CloseSquare, Trash, Warning2, UserRemove, Crown1, DocumentText, Code, Copy } from "iconsax-react";
 import { useTheme } from "@mui/material/styles";
 import { useSnackbar } from "notistack";
 import GroupsService, { Group, GroupMember, GroupInvitation, GroupHistoryEntry } from "api/groups";
@@ -475,6 +475,55 @@ function ResourcesTab({ group }: { group: Group }) {
 }
 
 // ====================================
+// JSON TAB
+// ====================================
+
+function JsonTab({ group }: { group: Group }) {
+	const { enqueueSnackbar } = useSnackbar();
+	const theme = useTheme();
+	const json = JSON.stringify(group, null, 2);
+
+	const handleCopy = () => {
+		navigator.clipboard.writeText(json).then(() => {
+			enqueueSnackbar("JSON copiado al portapapeles", { variant: "success" });
+		});
+	};
+
+	return (
+		<Box sx={{ position: "relative" }}>
+			<Tooltip title="Copiar JSON">
+				<IconButton
+					size="small"
+					onClick={handleCopy}
+					sx={{ position: "absolute", top: 8, right: 8, zIndex: 1, bgcolor: theme.palette.background.paper }}
+				>
+					<Copy size={16} />
+				</IconButton>
+			</Tooltip>
+			<Box
+				component="pre"
+				sx={{
+					m: 0,
+					p: 2,
+					borderRadius: 1,
+					bgcolor: theme.palette.mode === "dark" ? theme.palette.grey[900] : theme.palette.grey[100],
+					border: `1px solid ${theme.palette.divider}`,
+					fontSize: "0.75rem",
+					fontFamily: "monospace",
+					overflowX: "auto",
+					whiteSpace: "pre-wrap",
+					wordBreak: "break-all",
+					maxHeight: 400,
+					overflowY: "auto",
+				}}
+			>
+				{json}
+			</Box>
+		</Box>
+	);
+}
+
+// ====================================
 // MAIN MODAL
 // ====================================
 
@@ -491,6 +540,12 @@ const PLAN_COLOR: Record<string, "default" | "primary" | "warning"> = { free: "d
 export default function GroupDetailModal({ open, onClose, groupId, onStatusChanged }: GroupDetailModalProps) {
 	const { enqueueSnackbar } = useSnackbar();
 	const theme = useTheme();
+
+	const handleCopyId = (id: string) => {
+		navigator.clipboard.writeText(id).then(() => {
+			enqueueSnackbar("ID copiado al portapapeles", { variant: "success" });
+		});
+	};
 	const [tab, setTab] = useState(0);
 	const [group, setGroup] = useState<Group | null>(null);
 	const [loading, setLoading] = useState(false);
@@ -549,6 +604,18 @@ export default function GroupDetailModal({ open, onClose, groupId, onStatusChang
 						</Stack>
 						{group?.description && (
 							<Typography variant="body2" color="text.secondary">{group.description}</Typography>
+						)}
+						{group?._id && (
+							<Stack direction="row" spacing={0.5} alignItems="center">
+								<Typography variant="caption" color="text.disabled" sx={{ fontFamily: "monospace" }}>
+									{group._id}
+								</Typography>
+								<Tooltip title="Copiar ID">
+									<IconButton size="small" onClick={() => handleCopyId(group._id)} sx={{ p: 0.25 }}>
+										<Copy size={12} />
+									</IconButton>
+								</Tooltip>
+							</Stack>
 						)}
 					</Stack>
 					<IconButton onClick={onClose} size="small">
@@ -636,6 +703,7 @@ export default function GroupDetailModal({ open, onClose, groupId, onStatusChang
 							<Tab label={<Stack direction="row" spacing={0.5} alignItems="center"><Messages2 size={16} /><span>Invitaciones</span></Stack>} />
 							<Tab label={<Stack direction="row" spacing={0.5} alignItems="center"><DocumentText size={16} /><span>Recursos</span></Stack>} />
 							<Tab label={<Stack direction="row" spacing={0.5} alignItems="center"><Clock size={16} /><span>Historial</span></Stack>} />
+							<Tab label={<Stack direction="row" spacing={0.5} alignItems="center"><Code size={16} /><span>JSON</span></Stack>} />
 						</Tabs>
 
 						<TabPanel value={tab} index={0}>
@@ -649,6 +717,9 @@ export default function GroupDetailModal({ open, onClose, groupId, onStatusChang
 						</TabPanel>
 						<TabPanel value={tab} index={3}>
 							<HistoryTab groupId={group._id} />
+						</TabPanel>
+						<TabPanel value={tab} index={4}>
+							<JsonTab group={group} />
 						</TabPanel>
 					</Box>
 				</DialogContent>
