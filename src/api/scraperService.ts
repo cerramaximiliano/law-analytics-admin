@@ -39,6 +39,7 @@ export interface ScraperConfigScraping {
 	schedule: ScraperConfigSchedule;
 	checkIntervalHours: number;
 	finalStatuses: string[];
+	finalDeliveryStatuses: string[];
 	notificationPatterns: {
 		statusMatches: string[];
 		descriptionMatches: string[];
