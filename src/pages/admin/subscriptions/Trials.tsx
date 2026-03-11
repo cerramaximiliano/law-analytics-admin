@@ -52,6 +52,7 @@ import TrialsService, {
 	TrialUrgency,
 	GracePeriod,
 	GraceStats,
+	GraceConfig,
 	PlanTrialConfig,
 	GetTrialSubscriptionsParams,
 	GetGracePeriodsParams,
@@ -161,6 +162,13 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 	const [typeFilter, setTypeFilter] = useState<"" | "downgrade" | "payment">("");
 	const [statusFilter, setStatusFilter] = useState<"" | "active" | "expired">("");
 
+	// Grace config state
+	const [graceConfig, setGraceConfig] = useState<GraceConfig | null>(null);
+	const [graceConfigLoading, setGraceConfigLoading] = useState(true);
+	const [editingGraceField, setEditingGraceField] = useState<"downgrade" | "payment" | null>(null);
+	const [editGraceDays, setEditGraceDays] = useState<string>("");
+	const [savingGrace, setSavingGrace] = useState(false);
+
 	const fetchStats = useCallback(async () => {
 		setStatsLoading(true);
 		try {
@@ -190,9 +198,59 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 		}
 	}, [page, typeFilter, statusFilter, testMode, enqueueSnackbar]);
 
-	useEffect(() => { fetchStats(); }, [fetchStats]);
+	const fetchGraceConfig = useCallback(async () => {
+		setGraceConfigLoading(true);
+		try {
+			const res = await TrialsService.getGraceConfig();
+			setGraceConfig(res.data);
+		} catch {
+			enqueueSnackbar("Error al cargar configuración de período de gracia", { variant: "error" });
+		} finally {
+			setGraceConfigLoading(false);
+		}
+	}, [enqueueSnackbar]);
+
+	const handleGraceSave = async () => {
+		if (!editingGraceField) return;
+		const days = parseInt(editGraceDays, 10);
+		if (isNaN(days) || days < 1) {
+			enqueueSnackbar("Ingresa un número válido de días (≥ 1)", { variant: "warning" });
+			return;
+		}
+		setSavingGrace(true);
+		try {
+			const params = editingGraceField === "downgrade"
+				? { downgradeGraceDays: days }
+				: { paymentGraceDays: days };
+			await TrialsService.updateGraceConfig(params);
+			enqueueSnackbar(`Período de gracia actualizado: ${days} días para ${editingGraceField === "downgrade" ? "downgrade" : "pago fallido"}`, { variant: "success" });
+			setEditingGraceField(null);
+			fetchGraceConfig();
+		} catch {
+			enqueueSnackbar("Error al guardar configuración", { variant: "error" });
+		} finally {
+			setSavingGrace(false);
+		}
+	};
+
+	useEffect(() => { fetchStats(); fetchGraceConfig(); }, [fetchStats, fetchGraceConfig]);
 	useEffect(() => { setPage(1); }, [typeFilter, statusFilter, testMode]);
 	useEffect(() => { fetchRows(); }, [fetchRows]);
+
+	const graceFields: { key: "downgrade" | "payment"; label: string; description: string; value: number | undefined }[] = [
+		{
+			key: "downgrade",
+			label: "Gracia por downgrade",
+			description: "Días para que el usuario ajuste sus recursos tras bajar de plan o cancelar",
+			value: graceConfig?.downgradeGraceDays
+		},
+		{
+			key: "payment",
+			label: "Gracia por pago fallido",
+			description: "Días de tolerancia tras el primer pago fallido antes de suspender la cuenta",
+			value: graceConfig?.paymentGraceDays
+		},
+	];
 
 	return (
 		<Box>
@@ -211,6 +269,75 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 					<StatCard title="Gracia por pago" value={stats?.payment.total} subtitle="pago fallido" icon={<CardPos size={24} />} color="error" loading={statsLoading} />
 				</Grid>
 			</Grid>
+
+			{/* Configuración de período de gracia */}
+			<Card variant="outlined" sx={{ mb: 3 }}>
+				<CardContent>
+					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+						<Setting2 size={18} color={theme.palette.primary.main} />
+						<Typography variant="subtitle1" fontWeight={600}>Configuración de períodos de gracia</Typography>
+					</Stack>
+					<Alert severity="info" sx={{ mb: 2 }}>
+						Estos valores determinan la duración de cada tipo de período de gracia. Cambiarlos afecta únicamente a nuevos períodos; los existentes conservan su fecha original.
+					</Alert>
+					{graceConfigLoading ? (
+						<Stack spacing={1}>{Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} height={56} />)}</Stack>
+					) : (
+						<Stack spacing={2}>
+							{graceFields.map((field) => (
+								<Box key={field.key} sx={{ p: 2, border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
+									<Stack direction="row" justifyContent="space-between" alignItems="center">
+										<Box>
+											<Stack direction="row" spacing={1} alignItems="center">
+												<Chip
+													label={field.label}
+													size="small"
+													color={field.key === "downgrade" ? "warning" : "error"}
+													icon={field.key === "downgrade" ? <ArrowDown size={12} /> : <CardPos size={12} />}
+												/>
+												<Typography variant="body2" color="text.secondary">
+													Actual:
+													<Typography component="span" fontWeight={700} sx={{ ml: 0.5 }}>
+														{field.value ?? "—"} días
+													</Typography>
+												</Typography>
+											</Stack>
+											<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
+												{field.description}
+											</Typography>
+										</Box>
+										{editingGraceField === field.key ? (
+											<Stack direction="row" spacing={1} alignItems="center">
+												<TextField
+													size="small"
+													type="number"
+													value={editGraceDays}
+													onChange={(e) => setEditGraceDays(e.target.value)}
+													sx={{ width: 120 }}
+													InputProps={{
+														endAdornment: <InputAdornment position="end">días</InputAdornment>,
+														inputProps: { min: 1 }
+													}}
+												/>
+												<Button size="small" variant="contained" onClick={handleGraceSave} disabled={savingGrace}>
+													{savingGrace ? "Guardando..." : "Guardar"}
+												</Button>
+												<Button size="small" onClick={() => setEditingGraceField(null)}>Cancelar</Button>
+											</Stack>
+										) : (
+											<Tooltip title="Editar">
+												<IconButton size="small" onClick={() => { setEditingGraceField(field.key); setEditGraceDays(String(field.value ?? 15)); }}>
+													<Edit2 size={16} />
+												</IconButton>
+											</Tooltip>
+										)}
+									</Stack>
+								</Box>
+							))}
+						</Stack>
+					)}
+				</CardContent>
+			</Card>
 
 			{/* Filtros */}
 			<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
