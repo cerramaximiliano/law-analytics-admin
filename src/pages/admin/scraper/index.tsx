@@ -103,6 +103,8 @@ const ConfigTab = () => {
 	// Estados finales y patrones de notificación
 	const [finalStatuses, setFinalStatuses] = useState<string[]>([]);
 	const [finalStatusInput, setFinalStatusInput] = useState("");
+	const [finalDeliveryStatuses, setFinalDeliveryStatuses] = useState<string[]>([]);
+	const [finalDeliveryStatusInput, setFinalDeliveryStatusInput] = useState("");
 	const [notifStatusMatches, setNotifStatusMatches] = useState<string[]>([]);
 	const [notifStatusInput, setNotifStatusInput] = useState("");
 	const [notifDescMatches, setNotifDescMatches] = useState<string[]>([]);
@@ -124,6 +126,7 @@ const ConfigTab = () => {
 			setMaxWorkers(cfg.workers?.scraper?.scaling?.maxWorkers ?? 3);
 			setBatchSize(cfg.workers?.scraper?.cron?.batchSize ?? 50);
 			setFinalStatuses(cfg.scraping?.finalStatuses ?? []);
+			setFinalDeliveryStatuses(cfg.scraping?.finalDeliveryStatuses ?? []);
 			setNotifStatusMatches(cfg.scraping?.notificationPatterns?.statusMatches ?? []);
 			setNotifDescMatches(cfg.scraping?.notificationPatterns?.descriptionMatches ?? []);
 		} catch (error: any) {
@@ -146,6 +149,7 @@ const ConfigTab = () => {
 					schedule: { workingHoursStart, workingHoursEnd },
 					headless: { development: headlessDev, production: headlessProd },
 					finalStatuses,
+					finalDeliveryStatuses,
 					notificationPatterns: {
 						statusMatches: notifStatusMatches,
 						descriptionMatches: notifDescMatches,
@@ -353,6 +357,49 @@ const ConfigTab = () => {
 							if (finalStatusInput.trim()) {
 								setFinalStatuses((prev) => [...new Set([...prev, finalStatusInput.trim()])]);
 								setFinalStatusInput("");
+							}
+						}}
+					>
+						Agregar
+					</Button>
+				</Stack>
+			</Paper>
+
+			{/* Estados de entrega finales */}
+			<Paper variant="outlined" sx={{ p: 2 }}>
+				<Typography variant="subtitle2" mb={2} color="textSecondary">
+					Estados de Entrega Finales
+				</Typography>
+				<Typography variant="caption" color="textSecondary" display="block" mb={1}>
+					Substrings del campo <code>deliveryStatus</code> (columna "Estado:" del sitio) que cierran el scraping del documento. Case-insensitive.
+				</Typography>
+				<Stack direction="row" spacing={1} mb={1} flexWrap="wrap" gap={0.5}>
+					{finalDeliveryStatuses.map((s) => (
+						<Chip key={s} label={s} size="small" color="success" onDelete={() => setFinalDeliveryStatuses((prev) => prev.filter((x) => x !== s))} />
+					))}
+				</Stack>
+				<Stack direction="row" spacing={1}>
+					<TextField
+						size="small"
+						label="Agregar estado de entrega final"
+						value={finalDeliveryStatusInput}
+						onChange={(e) => setFinalDeliveryStatusInput(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter" && finalDeliveryStatusInput.trim()) {
+								setFinalDeliveryStatuses((prev) => [...new Set([...prev, finalDeliveryStatusInput.trim()])]);
+								setFinalDeliveryStatusInput("");
+							}
+						}}
+						placeholder="ej: ENTREGADO, DEVUELTO"
+						sx={{ flex: 1 }}
+					/>
+					<Button
+						variant="outlined"
+						size="small"
+						onClick={() => {
+							if (finalDeliveryStatusInput.trim()) {
+								setFinalDeliveryStatuses((prev) => [...new Set([...prev, finalDeliveryStatusInput.trim()])]);
+								setFinalDeliveryStatusInput("");
 							}
 						}}
 					>
