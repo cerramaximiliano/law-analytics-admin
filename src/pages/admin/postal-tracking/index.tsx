@@ -831,6 +831,9 @@ const PostalTrackingPage = () => {
 																<Box flex={1}>
 																	<Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
 																		<Chip label={event.status} size="small" variant="outlined" color="primary" />
+																		{(event as any).deliveryStatus && (
+																			<Chip label={(event as any).deliveryStatus} size="small" color="success" />
+																		)}
 																		{event.location && (
 																			<Typography variant="caption" color="textSecondary">
 																				📍 {event.location}
