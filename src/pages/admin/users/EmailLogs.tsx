@@ -48,6 +48,24 @@ import ScrollX from "components/ScrollX";
 import EmailLogsService from "api/emailLogs";
 import { EmailLog, EmailLogPagination, EmailLogsQueryParams, EmailLogGeneralStats, EmailLogTemplateOption } from "types/email-log";
 
+const KNOWN_CATEGORIES = [
+	{ value: "auth", label: "Auth" },
+	{ value: "subscription", label: "Suscripción" },
+	{ value: "payment", label: "Pago" },
+	{ value: "support", label: "Soporte" },
+	{ value: "tasks", label: "Tareas" },
+	{ value: "documents", label: "Documentos" },
+	{ value: "booking", label: "Reservas" },
+	{ value: "healthCheck", label: "Health Check" },
+	{ value: "notification", label: "Notificación" },
+	{ value: "transactional", label: "Transaccional" },
+];
+
+const getCategoryLabel = (category: string | null | undefined) => {
+	if (!category) return "-";
+	return KNOWN_CATEGORIES.find((c) => c.value === category)?.label || category;
+};
+
 // assets
 import { SearchNormal1, CloseCircle, Refresh, Filter, Sms, TickCircle, CloseSquare, Warning2, Copy, Eye, Trash } from "iconsax-react";
 
@@ -109,6 +127,7 @@ const EmailLogsPage = () => {
 	const [stats, setStats] = useState<EmailLogGeneralStats | null>(null);
 	const [templates, setTemplates] = useState<EmailLogTemplateOption[]>([]);
 	const [categories, setCategories] = useState<string[]>([]);
+	const [sources, setSources] = useState<string[]>([]);
 
 	// Loading states
 	const [loading, setLoading] = useState(true);
@@ -122,6 +141,7 @@ const EmailLogsPage = () => {
 	const [statusFilter, setStatusFilter] = useState<string>("");
 	const [categoryFilter, setCategoryFilter] = useState<string>("");
 	const [templateFilter, setTemplateFilter] = useState<string>("");
+	const [sourceFilter, setSourceFilter] = useState<string>("");
 	const [startDate, setStartDate] = useState<Date | null>(null);
 	const [endDate, setEndDate] = useState<Date | null>(null);
 
@@ -164,6 +184,7 @@ const EmailLogsPage = () => {
 			if (templateFilter) params.templateName = templateFilter;
 			if (startDate) params.startDate = startDate.toISOString();
 			if (endDate) params.endDate = endDate.toISOString();
+			if (sourceFilter) params.source = sourceFilter;
 
 			const response = await EmailLogsService.getEmailLogs(params);
 			setLogs(response.data);
@@ -173,7 +194,7 @@ const EmailLogsPage = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [page, rowsPerPage, orderBy, order, searchEmail, searchSesId, statusFilter, categoryFilter, templateFilter, startDate, endDate]);
+	}, [page, rowsPerPage, orderBy, order, searchEmail, searchSesId, statusFilter, categoryFilter, templateFilter, startDate, endDate, sourceFilter]);
 
 	// Fetch stats
 	const fetchStats = useCallback(async () => {
@@ -192,7 +213,12 @@ const EmailLogsPage = () => {
 	const fetchTemplateOptions = useCallback(async () => {
 		try {
 			const response = await EmailLogsService.getTemplateOptions();
-			setCategories(response.data.categories);
+			// Combinar categorías de la DB con las conocidas, sin duplicados
+			const dbCategories = response.data.categories || [];
+			const knownValues = KNOWN_CATEGORIES.map((c) => c.value);
+			const extraFromDb = dbCategories.filter((c) => !knownValues.includes(c));
+			setCategories([...knownValues, ...extraFromDb]);
+			setSources(response.data.sources || []);
 			setTemplates(response.data.templates);
 		} catch (err) {
 			console.error("Error fetching template options:", err);
@@ -230,6 +256,7 @@ const EmailLogsPage = () => {
 		setStatusFilter("");
 		setCategoryFilter("");
 		setTemplateFilter("");
+		setSourceFilter("");
 		setStartDate(null);
 		setEndDate(null);
 		setPage(0);
@@ -483,8 +510,21 @@ const EmailLogsPage = () => {
 										<MenuItem value="">Todas</MenuItem>
 										{categories.map((cat) => (
 											<MenuItem key={cat} value={cat}>
-												{cat}
+												{getCategoryLabel(cat)}
 											</MenuItem>
+										))}
+									</Select>
+								</FormControl>
+							</Grid>
+							<Grid item xs={12} sm={6} md={2}>
+								<FormControl fullWidth size="small">
+									<InputLabel>Origen</InputLabel>
+									<Select value={sourceFilter} label="Origen" onChange={(e: SelectChangeEvent) => setSourceFilter(e.target.value)}>
+										<MenuItem value="">Todos</MenuItem>
+										<MenuItem value="law-analytics-server">law-analytics-server</MenuItem>
+										<MenuItem value="la-subscriptions">la-subscriptions</MenuItem>
+										{sources.filter((s) => s !== "law-analytics-server" && s !== "la-subscriptions").map((s) => (
+											<MenuItem key={s} value={s}>{s}</MenuItem>
 										))}
 									</Select>
 								</FormControl>
@@ -612,7 +652,7 @@ const EmailLogsPage = () => {
 													</Tooltip>
 												</TableCell>
 												<TableCell>
-													<Chip label={log.templateCategory || "-"} size="small" variant="outlined" />
+													<Chip label={getCategoryLabel(log.templateCategory)} size="small" variant="outlined" />
 												</TableCell>
 												<TableCell>
 													<Typography variant="body2">{log.templateName || "-"}</Typography>
@@ -693,7 +733,13 @@ const EmailLogsPage = () => {
 									<Typography variant="subtitle2" color="textSecondary">
 										Categoria
 									</Typography>
-									<Typography variant="body1">{selectedLog.templateCategory || "-"}</Typography>
+									<Typography variant="body1">{getCategoryLabel(selectedLog.templateCategory)}</Typography>
+								</Grid>
+								<Grid item xs={12} sm={6}>
+									<Typography variant="subtitle2" color="textSecondary">
+										Origen
+									</Typography>
+									<Typography variant="body1">{selectedLog.source || "law-analytics-server"}</Typography>
 								</Grid>
 								<Grid item xs={12} sm={6}>
 									<Typography variant="subtitle2" color="textSecondary">
