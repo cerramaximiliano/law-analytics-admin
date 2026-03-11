@@ -59,6 +59,8 @@ export interface GracePeriod {
   expiresAt: string | null;
   daysRemaining: number | null;
   isExpired: boolean;
+  isCompleted: boolean;
+  processedAt: string | null;
   // downgrade específico
   reminder3DaysSent?: boolean;
   reminder1DaySent?: boolean;
@@ -71,7 +73,7 @@ export interface GracePeriod {
 }
 
 export interface GraceStats {
-  downgrade: { total: number; active: number; expired: number };
+  downgrade: { total: number; active: number; expired: number; completed: number };
   payment: { total: number };
   total: number;
 }
@@ -80,7 +82,7 @@ export interface GetGracePeriodsParams {
   page?: number;
   limit?: number;
   type?: "downgrade" | "payment" | "";
-  status?: "active" | "expired" | "";
+  status?: "active" | "expired" | "completed" | "";
   testMode?: boolean;
 }
 

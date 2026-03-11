@@ -40,6 +40,7 @@ import {
 	CardPos,
 	Setting2,
 	Edit2,
+	TaskSquare,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import dayjs from "dayjs";
@@ -160,7 +161,7 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 	const [totalPages, setTotalPages] = useState(1);
 	const [page, setPage] = useState(1);
 	const [typeFilter, setTypeFilter] = useState<"" | "downgrade" | "payment">("");
-	const [statusFilter, setStatusFilter] = useState<"" | "active" | "expired">("");
+	const [statusFilter, setStatusFilter] = useState<"" | "active" | "expired" | "completed">("");
 
 	// Grace config state
 	const [graceConfig, setGraceConfig] = useState<GraceConfig | null>(null);
@@ -256,16 +257,19 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 		<Box>
 			{/* Stats */}
 			<Grid container spacing={2} sx={{ mb: 3 }}>
-				<Grid item xs={12} sm={6} md={3}>
+				<Grid item xs={12} sm={6} md={2.4}>
 					<StatCard title="Total períodos" value={stats?.total} subtitle="downgrade + pago" icon={<Clock size={24} />} color="primary" loading={statsLoading} />
 				</Grid>
-				<Grid item xs={12} sm={6} md={3}>
+				<Grid item xs={12} sm={6} md={2.4}>
 					<StatCard title="Downgrade activos" value={stats?.downgrade.active} subtitle="aún no vencidos" icon={<ArrowDown size={24} />} color="warning" loading={statsLoading} />
 				</Grid>
-				<Grid item xs={12} sm={6} md={3}>
-					<StatCard title="Downgrade vencidos" value={stats?.downgrade.expired} subtitle="sin procesar" icon={<Warning2 size={24} />} color="error" loading={statsLoading} />
+				<Grid item xs={12} sm={6} md={2.4}>
+					<StatCard title="Vencidos pendientes" value={stats?.downgrade.expired} subtitle="sin procesar aún" icon={<Warning2 size={24} />} color="error" loading={statsLoading} />
 				</Grid>
-				<Grid item xs={12} sm={6} md={3}>
+				<Grid item xs={12} sm={6} md={2.4}>
+					<StatCard title="Procesados" value={stats?.downgrade.completed} subtitle="auto-archivado ok" icon={<TaskSquare size={24} />} color="success" loading={statsLoading} />
+				</Grid>
+				<Grid item xs={12} sm={6} md={2.4}>
 					<StatCard title="Gracia por pago" value={stats?.payment.total} subtitle="pago fallido" icon={<CardPos size={24} />} color="error" loading={statsLoading} />
 				</Grid>
 			</Grid>
@@ -350,6 +354,7 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 					<ToggleButton value="">Todos</ToggleButton>
 					<ToggleButton value="active">Activos</ToggleButton>
 					<ToggleButton value="expired">Vencidos</ToggleButton>
+					<ToggleButton value="completed">Procesados</ToggleButton>
 				</ToggleButtonGroup>
 				<Typography variant="caption" color="text.secondary" sx={{ ml: "auto" }}>{total} resultado{total !== 1 ? "s" : ""}</Typography>
 			</Stack>
@@ -364,9 +369,9 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 							<TableCell sx={{ fontWeight: 600 }}>Plan anterior → destino</TableCell>
 							<TableCell sx={{ fontWeight: 600 }}>Inicio</TableCell>
 							<TableCell sx={{ fontWeight: 600 }}>Vencimiento</TableCell>
-							<TableCell sx={{ fontWeight: 600 }}>Días restantes</TableCell>
+							<TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
 							<TableCell sx={{ fontWeight: 600 }}>Recursos en riesgo</TableCell>
-							<TableCell sx={{ fontWeight: 600 }}>Recordatorios</TableCell>
+							<TableCell sx={{ fontWeight: 600 }}>Recordatorios / Procesado</TableCell>
 						</TableRow>
 					</TableHead>
 					<TableBody>
@@ -386,7 +391,9 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 							)
 							: rows.map((row) => {
 									const urgency = getDaysUrgency(row.daysRemaining);
-									const rowBg = row.isExpired
+									const rowBg = row.isCompleted
+										? alpha(theme.palette.success.main, 0.04)
+										: row.isExpired
 										? alpha(theme.palette.error.main, 0.04)
 										: urgency === "warning" || urgency === "critical"
 										? alpha(theme.palette.warning.main, 0.04)
@@ -428,8 +435,14 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 													{formatDate(row.expiresAt)}
 												</Typography>
 											</TableCell>
-											{/* Días */}
-											<TableCell><DaysChip days={row.daysRemaining} urgency={urgency} /></TableCell>
+											{/* Estado */}
+											<TableCell>
+												{row.isCompleted ? (
+													<Chip label="Procesado" size="small" color="success" icon={<TaskSquare size={12} />} />
+												) : (
+													<DaysChip days={row.daysRemaining} urgency={urgency} />
+												)}
+											</TableCell>
 											{/* Recursos */}
 											<TableCell sx={{ minWidth: 180 }}>
 												{row.resources ? (
@@ -448,9 +461,17 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 													)
 												) : <Typography variant="caption" color="text.disabled">—</Typography>}
 											</TableCell>
-											{/* Recordatorios */}
+											{/* Recordatorios / Procesado */}
 											<TableCell>
-												{row.type === "downgrade" ? (
+												{row.isCompleted ? (
+													<Stack spacing={0.5}>
+														<Stack direction="row" spacing={0.5} alignItems="center">
+															<TickCircle size={14} color={theme.palette.success.main} />
+															<Typography variant="caption" color="success.main" fontWeight={600}>Auto-archivado</Typography>
+														</Stack>
+														<Typography variant="caption" color="text.secondary">{formatDate(row.processedAt)}</Typography>
+													</Stack>
+												) : row.type === "downgrade" ? (
 													<Stack spacing={0.5}>
 														<Chip size="small" label="3 días" color={row.reminder3DaysSent ? "success" : "default"} variant={row.reminder3DaysSent ? "filled" : "outlined"} />
 														<Chip size="small" label="1 día" color={row.reminder1DaySent ? "success" : "default"} variant={row.reminder1DaySent ? "filled" : "outlined"} />
