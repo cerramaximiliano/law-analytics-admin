@@ -97,6 +97,18 @@ export interface UpdateTrialConfigParams {
   trialDays: number;
 }
 
+// ── Configuración de período de gracia ────────────────────────────────────────
+
+export interface GraceConfig {
+  downgradeGraceDays: number;
+  paymentGraceDays: number;
+}
+
+export interface UpdateGraceConfigParams {
+  downgradeGraceDays?: number;
+  paymentGraceDays?: number;
+}
+
 // ── Respuestas genéricas ──────────────────────────────────────────────────────
 
 export interface PaginatedResponse<T> {
@@ -138,6 +150,17 @@ class TrialsService {
 
   async updateTrialConfig(planId: string, params: UpdateTrialConfigParams): Promise<{ success: boolean; message: string }> {
     const response = await adminAxios.put(`/api/trials/config/${planId}`, params);
+    return response.data;
+  }
+
+  // Configuración de período de gracia
+  async getGraceConfig(): Promise<{ success: boolean; data: GraceConfig }> {
+    const response = await adminAxios.get("/api/trials/grace/config");
+    return response.data;
+  }
+
+  async updateGraceConfig(params: UpdateGraceConfigParams): Promise<{ success: boolean; message: string; data: GraceConfig }> {
+    const response = await adminAxios.put("/api/trials/grace/config", params);
     return response.data;
   }
 }
