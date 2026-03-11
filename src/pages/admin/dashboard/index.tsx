@@ -49,6 +49,7 @@ import LinearProgress from "@mui/material/LinearProgress";
 import { Warning2 } from "iconsax-react";
 import { getTasasStatus, TasasStatus } from "utils/tasasService";
 import { getStats as getDatosPrevisionales, Stats as DatosPrevsStats } from "utils/datosPrevsionalesService";
+import GroupsService from "api/groups";
 
 // Theme-aware color helper - maps semantic roles to MUI theme palette tokens
 // Usage: const COLORS = getThemeColors(theme) inside any component with useTheme()
@@ -97,6 +98,7 @@ const metricInfo: Record<string, string> = {
 	freePlan: "Usuarios con plan gratuito que tienen acceso limitado a funcionalidades.",
 	standardPlan: "Usuarios con plan Standard que tienen acceso a funcionalidades intermedias.",
 	premiumPlan: "Usuarios con plan Premium que tienen acceso completo a todas las funcionalidades.",
+	activeGroups: "Grupos de usuarios activos en la plataforma.",
 	// Subscriptions - Live mode
 	liveSubscriptions: "Suscripciones en modo PRODUCCIÓN de Stripe. Estas son suscripciones reales con pagos reales.",
 	liveActive: "Suscripciones activas en modo producción.",
@@ -571,6 +573,20 @@ const AdminDashboard = () => {
 	const [loadingTasasStatus, setLoadingTasasStatus] = useState(false);
 	const [datosPrevsStats, setDatosPrevsStats] = useState<DatosPrevsStats | null>(null);
 	const [loadingDatosPrevsStats, setLoadingDatosPrevsStats] = useState(false);
+	const [activeGroupsCount, setActiveGroupsCount] = useState<number>(0);
+	const [loadingGroups, setLoadingGroups] = useState(false);
+
+	const fetchActiveGroups = useCallback(async () => {
+		try {
+			setLoadingGroups(true);
+			const res = await GroupsService.getStats();
+			setActiveGroupsCount(res.data.byStatus.active ?? 0);
+		} catch (error: any) {
+			console.error("Error fetching active groups count:", error);
+		} finally {
+			setLoadingGroups(false);
+		}
+	}, []);
 
 	const fetchTasasStatus = useCallback(async () => {
 		try {
@@ -756,6 +772,7 @@ const AdminDashboard = () => {
 		fetchEjeStats();
 		fetchTasasStatus();
 		fetchDatosPrevsStats();
+		fetchActiveGroups();
 	}, [
 		fetchData,
 		fetchNeverBounceCredits,
@@ -769,6 +786,7 @@ const AdminDashboard = () => {
 		fetchEjeStats,
 		fetchTasasStatus,
 		fetchDatosPrevsStats,
+		fetchActiveGroups,
 	]);
 
 	useRequestQueueRefresh(fetchData);
@@ -786,6 +804,7 @@ const AdminDashboard = () => {
 		fetchEjeStats();
 		fetchTasasStatus();
 		fetchDatosPrevsStats();
+		fetchActiveGroups();
 	};
 
 	// Chart data - Consistent colors: Green=Active/Verified, Gray=Inactive/Unverified
@@ -1136,6 +1155,17 @@ const AdminDashboard = () => {
 								loading={loadingOpenai}
 								infoKey="openaiBalance"
 								linkTo="/admin/expenses"
+							/>
+						</Grid>
+						<Grid item xs={6} sm={6} md={3}>
+							<PrimaryKPICard
+								title="Grupos Activos"
+								value={activeGroupsCount}
+								icon={<People size={20} />}
+								valueColor={COLORS.success.main}
+								loading={loadingGroups}
+								infoKey="activeGroups"
+								linkTo="/admin/groups"
 							/>
 						</Grid>
 						{/* Tasas de Interés widget */}
