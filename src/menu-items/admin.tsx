@@ -18,6 +18,7 @@ import {
 	TaskSquare,
 	Cloud,
 	Box1,
+	People,
 } from "iconsax-react";
 
 // type
@@ -225,6 +226,14 @@ const admin: NavItemType = {
 			type: "item",
 			icon: Box1,
 			url: "/admin/postal-tracking",
+			breadcrumbs: true,
+		},
+		{
+			id: "groups",
+			title: "Grupos de Usuarios",
+			type: "item",
+			icon: People,
+			url: "/admin/groups",
 			breadcrumbs: true,
 		},
 		{
