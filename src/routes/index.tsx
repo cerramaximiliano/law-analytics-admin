@@ -41,6 +41,7 @@ const RagWorkersPage = Loadable(lazy(() => import("pages/admin/rag-workers")));
 // Subscriptions pages
 const StripeWebhooks = Loadable(lazy(() => import("pages/subscriptions/StripeWebhooks")));
 const CronConfig = Loadable(lazy(() => import("pages/subscriptions/CronConfig")));
+const TrialsPage = Loadable(lazy(() => import("pages/admin/subscriptions/Trials")));
 
 // Usuarios pages
 const Suscripciones = Loadable(lazy(() => import("pages/usuarios/Suscripciones")));
@@ -326,6 +327,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<CronConfig />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "subscriptions/trials",
+							element: (
+								<AdminRoleGuard>
+									<TrialsPage />
 								</AdminRoleGuard>
 							),
 						},

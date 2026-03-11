@@ -19,6 +19,7 @@ import {
 	Cloud,
 	Box1,
 	People,
+	Clock,
 } from "iconsax-react";
 
 // type
@@ -262,6 +263,14 @@ const admin: NavItemType = {
 					title: "Configuración de Cron",
 					type: "item",
 					url: "/admin/subscriptions/cron-config",
+					breadcrumbs: true,
+				},
+				{
+					id: "subscriptions-trials",
+					title: "Períodos de Prueba",
+					type: "item",
+					icon: Clock,
+					url: "/admin/subscriptions/trials",
 					breadcrumbs: true,
 				},
 			],
