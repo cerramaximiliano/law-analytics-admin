@@ -1,5 +1,7 @@
 import adminAxios from "utils/adminAxios";
 
+// ── Tipos comunes ──────────────────────────────────────────────────────────────
+
 export interface TrialResources {
   folders: { current: number; limit: number; atRisk: number };
   calculators: { current: number; limit: number; atRisk: number };
@@ -8,6 +10,8 @@ export interface TrialResources {
 }
 
 export type TrialUrgency = "ok" | "attention" | "warning" | "critical" | "expired" | "unknown";
+
+// ── Períodos de prueba (status: trialing) ─────────────────────────────────────
 
 export interface TrialSubscription {
   _id: string;
@@ -42,25 +46,98 @@ export interface GetTrialSubscriptionsParams {
   testMode?: boolean;
 }
 
-export interface TrialSubscriptionsResponse {
+// ── Períodos de gracia ────────────────────────────────────────────────────────
+
+export interface GracePeriod {
+  _id: string;
+  type: "downgrade" | "payment";
+  user: { _id: string; email: string; name: string } | null;
+  plan: string;
+  previousPlan: string | null;
+  targetPlan: string | null;
+  startedAt: string | null;
+  expiresAt: string | null;
+  daysRemaining: number | null;
+  isExpired: boolean;
+  // downgrade específico
+  reminder3DaysSent?: boolean;
+  reminder1DaySent?: boolean;
+  resources?: TrialResources | null;
+  // payment específico
+  failureCount?: number;
+  lastFailureReason?: string;
+  reminderSent?: boolean;
+  testMode: boolean;
+}
+
+export interface GraceStats {
+  downgrade: { total: number; active: number; expired: number };
+  payment: { total: number };
+  total: number;
+}
+
+export interface GetGracePeriodsParams {
+  page?: number;
+  limit?: number;
+  type?: "downgrade" | "payment" | "";
+  status?: "active" | "expired" | "";
+  testMode?: boolean;
+}
+
+// ── Configuración de trial ────────────────────────────────────────────────────
+
+export interface PlanTrialConfig {
+  planId: string;
+  displayName: string;
+  trialDays: { development: number; production: number };
+}
+
+export interface UpdateTrialConfigParams {
+  environment: "development" | "production";
+  trialDays: number;
+}
+
+// ── Respuestas genéricas ──────────────────────────────────────────────────────
+
+export interface PaginatedResponse<T> {
   success: boolean;
-  data: TrialSubscription[];
+  data: T[];
   stats: { total: number; page: number; limit: number; totalPages: number };
 }
 
-export interface TrialStatsResponse {
-  success: boolean;
-  data: TrialStats;
-}
+// ── Servicio ──────────────────────────────────────────────────────────────────
 
 class TrialsService {
-  async getTrialSubscriptions(params: GetTrialSubscriptionsParams = {}): Promise<TrialSubscriptionsResponse> {
+  // Períodos de prueba
+  async getTrialSubscriptions(params: GetTrialSubscriptionsParams = {}): Promise<PaginatedResponse<TrialSubscription>> {
     const response = await adminAxios.get("/api/trials", { params });
     return response.data;
   }
 
-  async getTrialStats(): Promise<TrialStatsResponse> {
+  async getTrialStats(): Promise<{ success: boolean; data: TrialStats }> {
     const response = await adminAxios.get("/api/trials/stats");
+    return response.data;
+  }
+
+  // Períodos de gracia
+  async getGracePeriods(params: GetGracePeriodsParams = {}): Promise<PaginatedResponse<GracePeriod>> {
+    const response = await adminAxios.get("/api/trials/grace", { params });
+    return response.data;
+  }
+
+  async getGraceStats(): Promise<{ success: boolean; data: GraceStats }> {
+    const response = await adminAxios.get("/api/trials/grace/stats");
+    return response.data;
+  }
+
+  // Configuración
+  async getTrialConfig(): Promise<{ success: boolean; data: PlanTrialConfig[] }> {
+    const response = await adminAxios.get("/api/trials/config");
+    return response.data;
+  }
+
+  async updateTrialConfig(planId: string, params: UpdateTrialConfigParams): Promise<{ success: boolean; message: string }> {
+    const response = await adminAxios.put(`/api/trials/config/${planId}`, params);
     return response.data;
   }
 }
