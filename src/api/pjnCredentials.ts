@@ -232,6 +232,8 @@ export interface SyncedCausa {
 		userEmail: string;
 		initialMovementsSync: string | null;
 		initialMovementsSyncAt: string | null;
+		removedFromSync?: boolean;
+		removedAt?: string | null;
 	};
 }
 
