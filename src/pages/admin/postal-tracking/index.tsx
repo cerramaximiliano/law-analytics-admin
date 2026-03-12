@@ -879,12 +879,14 @@ const PostalTrackingPage = () => {
 												Abrir en nueva pestaña
 											</Button>
 										</Stack>
-										<Box
-											component="img"
-											src={detailTracking.screenshotUrl}
-											alt="Screenshot del seguimiento postal"
-											sx={{ width: "100%", borderRadius: 1, border: "1px solid", borderColor: "divider" }}
-										/>
+										<Box sx={{ overflow: "auto", maxHeight: 560, borderRadius: 1, border: "1px solid", borderColor: "divider" }}>
+											<Box
+												component="img"
+												src={detailTracking.screenshotUrl}
+												alt="Screenshot del seguimiento postal"
+												sx={{ width: "100%", height: "auto", display: "block" }}
+											/>
+										</Box>
 									</Box>
 								)}
 
