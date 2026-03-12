@@ -494,6 +494,11 @@ const CausasSyncCredentials = () => {
 												<Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 150 }}>
 													{causa.credential.userEmail}
 												</Typography>
+												{causa.credential.removedFromSync && (
+													<Tooltip title={causa.credential.removedAt ? `Retirada el ${formatDate(causa.credential.removedAt)}` : "Retirada del listado"}>
+														<Chip label="Retirada" color="error" size="small" variant="outlined" sx={{ mt: 0.5, width: "fit-content" }} />
+													</Tooltip>
+												)}
 											</Stack>
 										</TableCell>
 										<TableCell align="center">
