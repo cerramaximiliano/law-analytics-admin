@@ -152,6 +152,10 @@ export interface PostalTracking {
 	notFoundAt?: string;
 	label?: string;
 	tags?: string[];
+	screenshotEnabled?: boolean;
+	screenshotKey?: string;
+	screenshotUrl?: string;
+	screenshotUpdatedAt?: string;
 	createdAt: string;
 	updatedAt: string;
 }
