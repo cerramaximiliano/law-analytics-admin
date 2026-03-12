@@ -704,6 +704,7 @@ const PostalTrackingPage = () => {
 				<DialogContent dividers sx={{ p: 0 }}>
 					<Tabs value={detailTab} onChange={(_, v) => setDetailTab(v)} sx={{ borderBottom: 1, borderColor: "divider", px: 2 }}>
 						<Tab label="Historial" />
+						<Tab label="Screenshot" disabled={!detailTracking?.screenshotUrl} />
 						<Tab label="JSON" icon={<Code size={14} />} iconPosition="end" />
 					</Tabs>
 					<Box sx={{ p: 2, minHeight: 420 }}>
@@ -867,8 +868,28 @@ const PostalTrackingPage = () => {
 									</Stack>
 								)}
 
-								{/* Tab 1: JSON */}
-								{detailTab === 1 && (
+								{/* Tab 1: Screenshot */}
+								{detailTab === 1 && detailTracking?.screenshotUrl && (
+									<Box>
+										<Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
+											<Typography variant="caption" color="textSecondary">
+												Última captura: {detailTracking.screenshotUpdatedAt ? formatDate(detailTracking.screenshotUpdatedAt) : "-"}
+											</Typography>
+											<Button size="small" variant="outlined" onClick={() => window.open(detailTracking.screenshotUrl, "_blank")}>
+												Abrir en nueva pestaña
+											</Button>
+										</Stack>
+										<Box
+											component="img"
+											src={detailTracking.screenshotUrl}
+											alt="Screenshot del seguimiento postal"
+											sx={{ width: "100%", borderRadius: 1, border: "1px solid", borderColor: "divider" }}
+										/>
+									</Box>
+								)}
+
+								{/* Tab 2: JSON */}
+								{detailTab === 2 && (
 									<Box
 										component="pre"
 										sx={{
