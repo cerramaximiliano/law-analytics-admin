@@ -401,6 +401,14 @@ class PjnCredentialsService {
 	}
 
 	/**
+	 * Obtener documento completo de una causa sincronizada por ID y fuero
+	 */
+	async getSyncedCausaById(id: string, fuero: string): Promise<{ success: boolean; data: Record<string, unknown> }> {
+		const response = await adminAxios.get(`/api/pjn-credentials/synced-causas/${id}`, { params: { fuero } });
+		return response.data;
+	}
+
+	/**
 	 * Obtener documento raw de una credencial (sin datos sensibles)
 	 */
 	async getRawCredential(id: string): Promise<GenericResponse> {

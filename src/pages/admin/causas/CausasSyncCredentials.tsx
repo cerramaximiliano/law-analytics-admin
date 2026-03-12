@@ -127,6 +127,8 @@ const CausasSyncCredentials = () => {
 	// Modal JSON
 	const [jsonModalOpen, setJsonModalOpen] = useState(false);
 	const [selectedCausa, setSelectedCausa] = useState<SyncedCausa | null>(null);
+	const [fullDoc, setFullDoc] = useState<Record<string, unknown> | null>(null);
+	const [loadingDoc, setLoadingDoc] = useState(false);
 
 	// Cargar credenciales para dropdown (al montar)
 	useEffect(() => {
@@ -213,14 +215,28 @@ const CausasSyncCredentials = () => {
 		return dayjs(date).format("DD/MM/YYYY");
 	};
 
-	const handleOpenJson = (causa: SyncedCausa) => {
+	const handleOpenJson = async (causa: SyncedCausa) => {
 		setSelectedCausa(causa);
+		setFullDoc(null);
 		setJsonModalOpen(true);
+		try {
+			setLoadingDoc(true);
+			const response = await pjnCredentialsService.getSyncedCausaById(causa._id, causa.fuero);
+			if (response.success) {
+				setFullDoc(response.data);
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al cargar el documento completo", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+			console.error(error);
+		} finally {
+			setLoadingDoc(false);
+		}
 	};
 
 	const handleCloseJson = () => {
 		setJsonModalOpen(false);
 		setSelectedCausa(null);
+		setFullDoc(null);
 	};
 
 	return (
@@ -529,23 +545,29 @@ const CausasSyncCredentials = () => {
 				</Stack>
 			</DialogTitle>
 			<DialogContent dividers>
-				<Box
-					component="pre"
-					sx={{
-						m: 0,
-						p: 2,
-						backgroundColor: "grey.900",
-						color: "common.white",
-						borderRadius: 1,
-						fontSize: "0.75rem",
-						overflowX: "auto",
-						whiteSpace: "pre-wrap",
-						wordBreak: "break-all",
-						fontFamily: "monospace",
-					}}
-				>
-					{selectedCausa ? JSON.stringify(selectedCausa, null, 2) : ""}
-				</Box>
+				{loadingDoc ? (
+					<Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+						<CircularProgress />
+					</Box>
+				) : (
+					<Box
+						component="pre"
+						sx={{
+							m: 0,
+							p: 2,
+							backgroundColor: "grey.900",
+							color: "common.white",
+							borderRadius: 1,
+							fontSize: "0.75rem",
+							overflowX: "auto",
+							whiteSpace: "pre-wrap",
+							wordBreak: "break-all",
+							fontFamily: "monospace",
+						}}
+					>
+						{fullDoc ? JSON.stringify(fullDoc, null, 2) : ""}
+					</Box>
+				)}
 			</DialogContent>
 			<DialogActions>
 				<Button onClick={handleCloseJson} variant="outlined" size="small">
