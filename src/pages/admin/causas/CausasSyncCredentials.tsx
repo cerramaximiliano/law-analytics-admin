@@ -24,6 +24,10 @@ import {
 	Button,
 	Checkbox,
 	FormControlLabel,
+	Dialog,
+	DialogTitle,
+	DialogContent,
+	DialogActions,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import dayjs from "dayjs";
@@ -31,7 +35,7 @@ import "dayjs/locale/es";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import pjnCredentialsService, { SyncedCausa, SyncedCausasSummary, PjnCredential } from "api/pjnCredentials";
-import { Refresh, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Repeat } from "iconsax-react";
+import { Refresh, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Repeat, Eye } from "iconsax-react";
 
 dayjs.locale("es");
 
@@ -120,6 +124,10 @@ const CausasSyncCredentials = () => {
 	// Credenciales para el dropdown
 	const [credentialsList, setCredentialsList] = useState<PjnCredential[]>([]);
 
+	// Modal JSON
+	const [jsonModalOpen, setJsonModalOpen] = useState(false);
+	const [selectedCausa, setSelectedCausa] = useState<SyncedCausa | null>(null);
+
 	// Cargar credenciales para dropdown (al montar)
 	useEffect(() => {
 		const loadCredentials = async () => {
@@ -205,7 +213,18 @@ const CausasSyncCredentials = () => {
 		return dayjs(date).format("DD/MM/YYYY");
 	};
 
+	const handleOpenJson = (causa: SyncedCausa) => {
+		setSelectedCausa(causa);
+		setJsonModalOpen(true);
+	};
+
+	const handleCloseJson = () => {
+		setJsonModalOpen(false);
+		setSelectedCausa(null);
+	};
+
 	return (
+		<>
 		<MainCard title="Causas Sincronizadas por Credenciales">
 			{/* Summary Cards */}
 			{summary && (
@@ -376,6 +395,7 @@ const CausasSyncCredentials = () => {
 									<TableCell>Últ. Movimiento</TableCell>
 									<TableCell>Credencial</TableCell>
 									<TableCell align="center">Initial Sync</TableCell>
+									<TableCell align="center">Acciones</TableCell>
 								</TableRow>
 							</TableHead>
 							<TableBody>
@@ -471,6 +491,13 @@ const CausasSyncCredentials = () => {
 												<Chip label="N/A" size="small" variant="outlined" />
 											)}
 										</TableCell>
+										<TableCell align="center">
+											<Tooltip title="Ver JSON">
+												<IconButton size="small" onClick={() => handleOpenJson(causa)}>
+													<Eye size={18} />
+												</IconButton>
+											</Tooltip>
+										</TableCell>
 									</TableRow>
 								))}
 							</TableBody>
@@ -487,6 +514,46 @@ const CausasSyncCredentials = () => {
 				</Card>
 			)}
 		</MainCard>
+
+		{/* Modal JSON */}
+
+		<Dialog open={jsonModalOpen} onClose={handleCloseJson} maxWidth="md" fullWidth>
+			<DialogTitle>
+				<Stack direction="row" alignItems="center" justifyContent="space-between">
+					<Typography variant="h6">
+						JSON — {`${selectedCausa?.number ?? ""}/${selectedCausa?.year ?? ""}`}
+					</Typography>
+					<IconButton onClick={handleCloseJson} size="small">
+						<CloseCircle size={20} />
+					</IconButton>
+				</Stack>
+			</DialogTitle>
+			<DialogContent dividers>
+				<Box
+					component="pre"
+					sx={{
+						m: 0,
+						p: 2,
+						backgroundColor: "grey.900",
+						color: "common.white",
+						borderRadius: 1,
+						fontSize: "0.75rem",
+						overflowX: "auto",
+						whiteSpace: "pre-wrap",
+						wordBreak: "break-all",
+						fontFamily: "monospace",
+					}}
+				>
+					{selectedCausa ? JSON.stringify(selectedCausa, null, 2) : ""}
+				</Box>
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={handleCloseJson} variant="outlined" size="small">
+					Cerrar
+				</Button>
+			</DialogActions>
+		</Dialog>
+		</>
 	);
 };
 
