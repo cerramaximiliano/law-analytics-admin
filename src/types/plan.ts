@@ -7,6 +7,7 @@ export interface ResourceLimit {
 	description: string;
 	displayName?: string;
 	visibility?: VisibilityType;
+	order?: number;
 }
 
 export interface PlanFeature {
@@ -15,6 +16,7 @@ export interface PlanFeature {
 	description: string;
 	displayName?: string;
 	visibility?: VisibilityType;
+	order?: number;
 }
 
 export interface PlanPricingInfo {
