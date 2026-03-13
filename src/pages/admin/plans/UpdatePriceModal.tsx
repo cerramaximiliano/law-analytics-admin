@@ -28,7 +28,7 @@ import {
 } from "@mui/material";
 import { CloseCircle, Refresh, DollarCircle } from "iconsax-react";
 import { Plan } from "types/plan";
-import authAxios from "utils/authAxios";
+import adminAxios from "utils/adminAxios";
 import { formatCurrency } from "utils/formatCurrency";
 
 interface StripePriceInfo {
@@ -110,7 +110,7 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 		try {
 			setLoadingPrices(true);
 			setError(null);
-			const response = await authAxios.get<StripePricesResponse>(
+			const response = await adminAxios.get<StripePricesResponse>(
 				`/api/plan-configs/${plan.planId}/stripe-prices?environment=${environment}`,
 			);
 
@@ -163,7 +163,7 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 			setError(null);
 			setSuccess(null);
 
-			const response = await authAxios.post<UpdatePriceResponse>(`/api/plan-configs/${plan.planId}/update-price`, {
+			const response = await adminAxios.post<UpdatePriceResponse>(`/api/plan-configs/${plan.planId}/update-price`, {
 				environment,
 				price,
 				billingPeriod,
