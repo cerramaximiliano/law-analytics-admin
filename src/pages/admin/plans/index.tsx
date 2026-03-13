@@ -13,17 +13,19 @@ import {
 	IconButton,
 	Paper,
 	Stack,
+	Tab,
 	Table,
 	TableBody,
 	TableCell,
 	TableContainer,
 	TableHead,
 	TableRow,
+	Tabs,
 	Tooltip,
 	Typography,
 	CircularProgress,
 } from "@mui/material";
-import { Edit, Trash, Eye, Add, Refresh2, Link1, ArrowDown2, ArrowUp2, DollarCircle, DiscountShape } from "iconsax-react";
+import { Edit, Trash, Eye, Add, Refresh2, Link1, ArrowDown2, ArrowUp2, DollarCircle, DiscountShape, ArrangeVertical } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { useSnackbar } from "notistack";
 import { formatCurrency } from "utils/formatCurrency";
@@ -34,6 +36,7 @@ import PlanFormModal from "./PlanFormModal";
 import DeletePlanDialog from "./DeletePlanDialog";
 import PlanDetailModal from "./PlanDetailModal";
 import UpdatePriceModal from "./UpdatePriceModal";
+import PlanOrderTab from "./PlanOrderTab";
 
 const PlansManagement = () => {
 	const theme = useTheme();
@@ -49,6 +52,7 @@ const PlansManagement = () => {
 	const [syncLoading, setSyncLoading] = useState(false);
 	const [showDetailedInfo, setShowDetailedInfo] = useState(false);
 	const [updatePriceModalOpen, setUpdatePriceModalOpen] = useState(false);
+	const [activeTab, setActiveTab] = useState(0);
 
 	const fetchPlans = async () => {
 		try {
@@ -315,6 +319,17 @@ const PlansManagement = () => {
 					</Collapse>
 				</Alert>
 
+
+			<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+				<Tabs value={activeTab} onChange={(_e, v) => setActiveTab(v)}>
+					<Tab label="Planes" />
+					<Tab icon={<ArrangeVertical size={16} />} iconPosition="start" label="Ordenamiento" />
+				</Tabs>
+			</Box>
+
+			{activeTab === 1 && <PlanOrderTab plans={plans} onRefresh={fetchPlans} />}
+
+			{activeTab === 0 && (
 				<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 					{/* Summary Cards */}
 					<Grid item xs={12} sm={6} md={3}>
@@ -589,6 +604,7 @@ const PlansManagement = () => {
 						</Grid>
 					</Grid>
 				</Grid>
+			)}
 			</MainCard>
 
 			{/* Plan Form Modal */}

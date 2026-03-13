@@ -97,7 +97,7 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 	const addResourceLimit = () => {
 		setFormData((prev) => ({
 			...prev,
-			resourceLimits: [...prev.resourceLimits!, { name: "", limit: 0, description: "", displayName: "", visibility: "all" }],
+			resourceLimits: [...prev.resourceLimits!, { name: "", limit: 0, description: "", displayName: "", visibility: "all", order: 99 }],
 		}));
 	};
 
@@ -121,7 +121,7 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 	const addFeature = () => {
 		setFormData((prev) => ({
 			...prev,
-			features: [...prev.features!, { name: "", enabled: true, description: "", displayName: "", visibility: "all" }],
+			features: [...prev.features!, { name: "", enabled: true, description: "", displayName: "", visibility: "all", order: 99 }],
 		}));
 	};
 
@@ -314,6 +314,15 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 										))}
 									</Select>
 								</FormControl>
+								<TextField
+									label="Orden"
+									type="number"
+									value={limit.order ?? 99}
+									onChange={(e) => updateResourceLimit(index, "order", Number(e.target.value))}
+									size="small"
+									style={{ width: 70 }}
+									inputProps={{ min: 0 }}
+								/>
 								<IconButton onClick={() => removeResourceLimit(index)} size="small">
 									<Trash size={20} />
 								</IconButton>
@@ -369,6 +378,15 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 										))}
 									</Select>
 								</FormControl>
+								<TextField
+									label="Orden"
+									type="number"
+									value={feature.order ?? 99}
+									onChange={(e) => updateFeature(index, "order", Number(e.target.value))}
+									size="small"
+									style={{ width: 70 }}
+									inputProps={{ min: 0 }}
+								/>
 								<FormControlLabel
 									control={<Switch checked={feature.enabled} onChange={(e) => updateFeature(index, "enabled", e.target.checked)} />}
 									label="Activo"
