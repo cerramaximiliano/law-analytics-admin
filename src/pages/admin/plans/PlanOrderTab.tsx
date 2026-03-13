@@ -16,7 +16,7 @@ import { useTheme } from "@mui/material/styles";
 import { ArrangeVertical, Save2, TickCircle, CloseCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { Plan } from "types/plan";
-import authAxios from "utils/authAxios";
+import adminAxios from "utils/adminAxios";
 
 interface PlanOrderTabProps {
 	plans: Plan[];
@@ -81,7 +81,7 @@ const PlanOrderTab = ({ plans, onRefresh }: PlanOrderTabProps) => {
 			const resourcePromises = plan.resourceLimits.map((resource) => {
 				const newOrder = orders.resources[resource.name] ?? 99;
 				if (newOrder === (resource.order ?? 99)) return Promise.resolve();
-				return authAxios
+				return adminAxios
 					.patch(`/api/plan-configs/${plan.planId}/resource-limits/${resource.name}`, { order: newOrder })
 					.catch((err) => {
 						console.error(`Error saving resource ${resource.name}:`, err);
@@ -93,7 +93,7 @@ const PlanOrderTab = ({ plans, onRefresh }: PlanOrderTabProps) => {
 			const featurePromises = plan.features.map((feature) => {
 				const newOrder = orders.features[feature.name] ?? 99;
 				if (newOrder === (feature.order ?? 99)) return Promise.resolve();
-				return authAxios
+				return adminAxios
 					.patch(`/api/plan-configs/${plan.planId}/features/${feature.name}`, { order: newOrder })
 					.catch((err) => {
 						console.error(`Error saving feature ${feature.name}:`, err);

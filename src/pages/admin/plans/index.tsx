@@ -31,7 +31,7 @@ import { useSnackbar } from "notistack";
 import { formatCurrency } from "utils/formatCurrency";
 import { getPlanPricing, getBillingPeriodText } from "utils/planPricingUtils";
 import { Plan, PlansResponse, PlanResponse, SyncResponse, DeleteResponse } from "types/plan";
-import authAxios from "utils/authAxios";
+import adminAxios from "utils/adminAxios";
 import PlanFormModal from "./PlanFormModal";
 import DeletePlanDialog from "./DeletePlanDialog";
 import PlanDetailModal from "./PlanDetailModal";
@@ -57,7 +57,7 @@ const PlansManagement = () => {
 	const fetchPlans = async () => {
 		try {
 			setLoading(true);
-			const response = await authAxios.get<PlansResponse>("/api/plan-configs");
+			const response = await adminAxios.get<PlansResponse>("/api/plan-configs");
 			console.log("📋 GET /api/plan-configs response:", response.data);
 			setPlans(response.data.data || []);
 		} catch (error: any) {
@@ -124,7 +124,7 @@ const PlansManagement = () => {
 
 	const handleSavePlan = async (planData: Partial<Plan>, updateSubscriptions: boolean = false) => {
 		try {
-			const response = await authAxios.post<PlanResponse>(`/api/plan-configs?updateSubscriptions=${updateSubscriptions}`, planData);
+			const response = await adminAxios.post<PlanResponse>(`/api/plan-configs?updateSubscriptions=${updateSubscriptions}`, planData);
 			if (response.data.success) {
 				let message = selectedPlan ? "Plan actualizado correctamente" : "Plan creado correctamente";
 				if (updateSubscriptions && selectedPlan) {
@@ -145,7 +145,7 @@ const PlansManagement = () => {
 
 		try {
 			setDeleteLoading(true);
-			const response = await authAxios.delete<DeleteResponse>(`/api/plan-configs/${selectedPlan.planId}`);
+			const response = await adminAxios.delete<DeleteResponse>(`/api/plan-configs/${selectedPlan.planId}`);
 			if (response.data.success) {
 				enqueueSnackbar("Plan eliminado correctamente", { variant: "success" });
 				fetchPlans();
@@ -162,7 +162,7 @@ const PlansManagement = () => {
 	const handleSyncWithStripe = async () => {
 		try {
 			setSyncLoading(true);
-			const response = await authAxios.post<SyncResponse>("/api/plan-configs/sync-with-stripe", {});
+			const response = await adminAxios.post<SyncResponse>("/api/plan-configs/sync-with-stripe", {});
 
 			if (response.data.success) {
 				const syncedCount = response.data.data?.filter((plan) => plan.synced).length || 0;
