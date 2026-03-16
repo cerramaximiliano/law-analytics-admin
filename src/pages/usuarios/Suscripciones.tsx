@@ -92,6 +92,12 @@ const Suscripciones = () => {
 	const [cancelInStripe, setCancelInStripe] = useState(true);
 	const [resettingSubscription, setResettingSubscription] = useState(false);
 
+	// Modal de dar de baja
+	const [openCancelDialog, setOpenCancelDialog] = useState(false);
+	const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(true);
+	const [cancelReason, setCancelReason] = useState("");
+	const [cancelingSubscription, setCancelingSubscription] = useState(false);
+
 	// Modal de sincronizar con Stripe
 	const [openSyncDialog, setOpenSyncDialog] = useState(false);
 	const [syncMode, setSyncMode] = useState<"test" | "live">("live");
@@ -207,6 +213,47 @@ const Suscripciones = () => {
 			enqueueSnackbar(error.message || "Error al actualizar el período de gracia", { variant: "error" });
 		} finally {
 			setUpdatingGracePeriod(false);
+		}
+	};
+
+	const handleOpenCancelDialog = () => {
+		setCancelAtPeriodEnd(true);
+		setCancelReason("");
+		setOpenCancelDialog(true);
+	};
+
+	const handleCloseCancelDialog = () => {
+		setOpenCancelDialog(false);
+		setCancelReason("");
+	};
+
+	const handleCancelSubscription = async () => {
+		if (!selectedSubscription) {
+			enqueueSnackbar("No hay suscripción seleccionada", { variant: "warning" });
+			return;
+		}
+
+		try {
+			setCancelingSubscription(true);
+
+			const response = await SubscriptionsService.cancelUserSubscription({
+				userId: selectedSubscription.user._id,
+				atPeriodEnd: cancelAtPeriodEnd,
+				reason: cancelReason || "Cancelación por administrador",
+			});
+
+			const msg = cancelAtPeriodEnd
+				? `Suscripción programada para cancelarse. Período de gracia hasta ${response.gracePeriodEndDate ? dayjs(response.gracePeriodEndDate).format("DD/MM/YYYY") : "—"}`
+				: `Suscripción cancelada inmediatamente. Período de gracia activo.`;
+
+			enqueueSnackbar(msg, { variant: "success", autoHideDuration: 6000 });
+			handleCloseCancelDialog();
+			handleCloseDialog();
+			await fetchSubscriptions();
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al dar de baja la suscripción", { variant: "error" });
+		} finally {
+			setCancelingSubscription(false);
 		}
 	};
 
@@ -1603,6 +1650,45 @@ const Suscripciones = () => {
 
 									<Divider />
 
+									{/* Dar de baja */}
+									<Box>
+										<Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<CloseCircle size={20} color={theme.palette.warning.main} />
+											Dar de Baja
+										</Typography>
+										<Divider sx={{ mb: 2 }} />
+										<Stack spacing={2}>
+											<Typography variant="body2" color="text.secondary">
+												Cancela la suscripción del usuario de forma controlada. El usuario recibirá una notificación y tendrá un período de gracia para archivar sus datos.
+											</Typography>
+											<Alert severity="warning">
+												<Typography variant="body2" fontWeight="bold">
+													¿Qué hace esta acción?
+												</Typography>
+												<ul style={{ marginTop: "8px", marginBottom: 0, paddingLeft: "20px" }}>
+													<li>Cancela en Stripe (al fin del período o inmediatamente)</li>
+													<li>Establece un período de gracia de 15 días</li>
+													<li>Envía alerta y email al usuario</li>
+													<li>Registra el evento en el historial con origen "admin"</li>
+												</ul>
+											</Alert>
+											<Box>
+												<Button
+													variant="contained"
+													color="warning"
+													startIcon={<CloseCircle size={20} />}
+													onClick={handleOpenCancelDialog}
+													fullWidth
+													disabled={selectedSubscription?.plan === "free" || selectedSubscription?.cancelAtPeriodEnd === true}
+												>
+													{selectedSubscription?.cancelAtPeriodEnd ? "Ya programada para cancelarse" : "Dar de Baja"}
+												</Button>
+											</Box>
+										</Stack>
+									</Box>
+
+									<Divider />
+
 									<Alert severity="warning" icon={<Warning2 size={24} />}>
 										<Typography variant="subtitle2" fontWeight="bold">
 											Zona de Peligro - Acciones Destructivas
@@ -1899,6 +1985,104 @@ const Suscripciones = () => {
 						startIcon={updatingGracePeriod ? <CircularProgress size={16} color="inherit" /> : <Edit size={16} />}
 					>
 						{updatingGracePeriod ? "Actualizando..." : "Actualizar"}
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Modal de dar de baja */}
+			<Dialog open={openCancelDialog} onClose={handleCloseCancelDialog} maxWidth="sm" fullWidth>
+				<DialogTitle>
+					<Stack direction="row" justifyContent="space-between" alignItems="center">
+						<Typography variant="h5" color="warning.main">
+							Dar de Baja Suscripción
+						</Typography>
+						<IconButton onClick={handleCloseCancelDialog} size="small">
+							<CloseSquare size={20} />
+						</IconButton>
+					</Stack>
+				</DialogTitle>
+				<DialogContent>
+					<Stack spacing={3} sx={{ mt: 2 }}>
+						<Box sx={{ p: 2, backgroundColor: "background.default", borderRadius: 1 }}>
+							<Typography variant="caption" color="text.secondary" fontWeight="bold">
+								Usuario
+							</Typography>
+							<Typography variant="body2" fontWeight="bold" sx={{ mt: 0.5 }}>
+								{selectedSubscription?.user.name} — {selectedSubscription?.user.email}
+							</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Plan actual: <strong>{getPlanLabel(selectedSubscription?.plan)}</strong>
+							</Typography>
+						</Box>
+
+						<Box>
+							<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+								Tipo de cancelación
+							</Typography>
+							<Stack spacing={1}>
+								<Stack direction="row" spacing={1} alignItems="center">
+									<input
+										type="radio"
+										id="atPeriodEndTrue"
+										name="cancelType"
+										checked={cancelAtPeriodEnd}
+										onChange={() => setCancelAtPeriodEnd(true)}
+										style={{ cursor: "pointer" }}
+									/>
+									<label htmlFor="atPeriodEndTrue" style={{ cursor: "pointer" }}>
+										<Typography variant="body2" fontWeight="bold">Al fin del período de facturación</Typography>
+										<Typography variant="caption" color="text.secondary">El usuario conserva acceso hasta que venza su período. Luego 15 días de gracia.</Typography>
+									</label>
+								</Stack>
+								<Stack direction="row" spacing={1} alignItems="center">
+									<input
+										type="radio"
+										id="atPeriodEndFalse"
+										name="cancelType"
+										checked={!cancelAtPeriodEnd}
+										onChange={() => setCancelAtPeriodEnd(false)}
+										style={{ cursor: "pointer" }}
+									/>
+									<label htmlFor="atPeriodEndFalse" style={{ cursor: "pointer" }}>
+										<Typography variant="body2" fontWeight="bold">Inmediatamente</Typography>
+										<Typography variant="caption" color="text.secondary">El usuario pasa al plan FREE ahora mismo. 15 días de gracia para archivar datos.</Typography>
+									</label>
+								</Stack>
+							</Stack>
+						</Box>
+
+						<Box>
+							<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+								Motivo (para auditoría)
+							</Typography>
+							<TextField
+								fullWidth
+								size="small"
+								placeholder="Ej: Solicitud del usuario vía soporte"
+								value={cancelReason}
+								onChange={(e) => setCancelReason(e.target.value)}
+							/>
+						</Box>
+
+						<Alert severity="info">
+							<Typography variant="body2">
+								El usuario recibirá un <strong>email de notificación</strong> y una alerta en la plataforma. El evento quedará registrado en el historial con origen <strong>"admin"</strong>.
+							</Typography>
+						</Alert>
+					</Stack>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleCloseCancelDialog} variant="outlined" disabled={cancelingSubscription}>
+						Cancelar
+					</Button>
+					<Button
+						onClick={handleCancelSubscription}
+						variant="contained"
+						color="warning"
+						disabled={cancelingSubscription}
+						startIcon={cancelingSubscription ? <CircularProgress size={16} /> : <CloseCircle size={16} />}
+					>
+						{cancelingSubscription ? "Procesando..." : "Confirmar Baja"}
 					</Button>
 				</DialogActions>
 			</Dialog>

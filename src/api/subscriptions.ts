@@ -199,6 +199,28 @@ export interface ResetSubscriptionResponse {
 	data?: any;
 }
 
+export interface CancelUserSubscriptionParams {
+	userId: string;
+	atPeriodEnd?: boolean;
+	reason?: string;
+}
+
+export interface CancelUserSubscriptionResponse {
+	success: boolean;
+	message: string;
+	userId: string;
+	userEmail: string;
+	reason: string;
+	currentPeriodEnd?: string;
+	remainingDays?: number;
+	hasScheduledGracePeriod?: boolean;
+	gracePeriodEndDate?: string;
+	immediateDowngrade?: boolean;
+	hasGracePeriod?: boolean;
+	gracePeriodEnd?: string;
+	previousPlan?: string;
+}
+
 export interface SyncWithStripeParams {
 	userId: string;
 	mode: "test" | "live";
@@ -286,6 +308,24 @@ class SubscriptionsService {
 			}
 
 			throw new Error(error.response?.data?.message || "Error al resetear la suscripción");
+		}
+	}
+
+	async cancelUserSubscription(params: CancelUserSubscriptionParams): Promise<CancelUserSubscriptionResponse> {
+		try {
+			const response = await adminAxios.post("/api/subscriptions/cancel-user", params);
+			return response.data;
+		} catch (error: any) {
+			if (error.response?.status === 409) {
+				throw new Error(error.response?.data?.message || "No se puede cancelar: hay equipos activos incompatibles");
+			}
+			if (error.response?.status === 404) {
+				throw new Error("Usuario o suscripción no encontrados");
+			}
+			if (error.response?.status === 401) {
+				throw new Error("No autorizado. Por favor, inicie sesión nuevamente.");
+			}
+			throw new Error(error.response?.data?.message || "Error al dar de baja la suscripción");
 		}
 	}
 
