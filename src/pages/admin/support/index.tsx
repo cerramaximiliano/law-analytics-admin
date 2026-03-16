@@ -227,16 +227,14 @@ const SupportContactsPage = () => {
 	const handleOpenDetail = async (contact: SupportContact) => {
 		setSelectedContact(contact);
 		setDetailDialogOpen(true);
-		if (contact.attachmentKey) {
-			try {
-				setFetchingDetail(true);
-				const response = await SupportContactsService.getSupportContactById(contact._id);
-				if (response.success) setSelectedContact(response.data);
-			} catch {
-				// Keep the list data on error
-			} finally {
-				setFetchingDetail(false);
-			}
+		try {
+			setFetchingDetail(true);
+			const response = await SupportContactsService.getSupportContactById(contact._id);
+			if (response.success) setSelectedContact(response.data);
+		} catch {
+			// Keep the list data on error
+		} finally {
+			setFetchingDetail(false);
 		}
 	};
 
@@ -838,10 +836,7 @@ const SupportContactsPage = () => {
 													size="small"
 													variant="contained"
 													startIcon={<DocumentDownload size={16} />}
-													href={selectedContact.attachmentUrl}
-													target="_blank"
-													rel="noopener noreferrer"
-													component="a"
+													onClick={() => window.open(selectedContact.attachmentUrl!, "_blank", "noopener,noreferrer")}
 												>
 													Descargar
 												</Button>
