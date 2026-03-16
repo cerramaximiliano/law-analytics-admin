@@ -230,6 +230,29 @@ const admin: NavItemType = {
 			breadcrumbs: true,
 		},
 		{
+			id: "escritos",
+			title: "Escritos judiciales",
+			type: "collapse",
+			icon: DocumentText,
+			breadcrumbs: true,
+			children: [
+				{
+					id: "pdf-templates",
+					title: "Modelos PDF",
+					type: "item",
+					url: "/admin/pdf-templates",
+					breadcrumbs: true,
+				},
+				{
+					id: "postal-documents-resources",
+					title: "Escritos de usuarios",
+					type: "item",
+					url: "/admin/users/resources",
+					breadcrumbs: true,
+				},
+			],
+		},
+		{
 			id: "groups",
 			title: "Grupos de Usuarios",
 			type: "item",
