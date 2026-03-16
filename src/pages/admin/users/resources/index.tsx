@@ -21,6 +21,16 @@ import {
 	Skeleton,
 	useTheme,
 	alpha,
+	Tooltip,
+	Dialog,
+	DialogTitle,
+	DialogContent,
+	DialogActions,
+	Button,
+	MenuItem,
+	Select,
+	FormControl,
+	InputLabel,
 } from "@mui/material";
 import {
 	SearchNormal1,
@@ -35,8 +45,13 @@ import {
 	Activity,
 	Login,
 	Chart,
+	DocumentText,
+	Eye,
+	Trash,
 } from "iconsax-react";
+import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import PostalDocumentsAdminService, { PostalDocument, PostalDocumentStats } from "api/postalDocumentsAdmin";
 import AdminResourcesService, {
 	ResourceType,
 	Resource,
@@ -60,7 +75,7 @@ dayjs.locale("es");
 
 // Tab configuration
 interface TabConfig {
-	type: ResourceType | "users" | "activity";
+	type: ResourceType | "users" | "activity" | "escritos";
 	label: string;
 	icon: React.ReactElement;
 }
@@ -74,6 +89,7 @@ const tabs: TabConfig[] = [
 	{ type: "movement", label: "Movimientos", icon: <Activity size={18} /> },
 	{ type: "users", label: "Usuarios", icon: <ProfileCircle size={18} /> },
 	{ type: "activity", label: "Actividad", icon: <Login size={18} /> },
+	{ type: "escritos", label: "Escritos", icon: <DocumentText size={18} /> },
 ];
 
 // Column definitions per type
@@ -385,6 +401,7 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color, loading 
 
 const UserResources: React.FC = () => {
 	const theme = useTheme();
+	const { enqueueSnackbar } = useSnackbar();
 	const [activeTab, setActiveTab] = useState(0);
 	const [loading, setLoading] = useState(true);
 	const [resources, setResources] = useState<Resource[]>([]);
@@ -405,10 +422,20 @@ const UserResources: React.FC = () => {
 	const [activityUsers, setActivityUsers] = useState<UserWithSessionMetrics[]>([]);
 	const [activityLoading, setActivityLoading] = useState(true);
 
+	// Escritos tab states
+	const [escritos, setEscritos] = useState<PostalDocument[]>([]);
+	const [escritosTotal, setEscritosTotal] = useState(0);
+	const [escritosLoading, setEscritosLoading] = useState(false);
+	const [escritosStats, setEscritosStats] = useState<PostalDocumentStats | null>(null);
+	const [escritosFilterStatus, setEscritosFilterStatus] = useState("");
+	const [escritosDetailOpen, setEscritosDetailOpen] = useState(false);
+	const [escritosDetailDoc, setEscritosDetailDoc] = useState<PostalDocument | null>(null);
+
 	const currentType = tabs[activeTab].type;
 	const isUsersTab = currentType === "users";
 	const isActivityTab = currentType === "activity";
-	const columns = isUsersTab || isActivityTab ? [] : getColumnsByType(currentType as ResourceType, theme);
+	const isEscritosTab = currentType === "escritos";
+	const columns = isUsersTab || isActivityTab || isEscritosTab ? [] : getColumnsByType(currentType as ResourceType, theme);
 
 	// Fetch stats
 	const fetchStats = useCallback(async () => {
@@ -516,6 +543,30 @@ const UserResources: React.FC = () => {
 		}
 	}, [isActivityTab, page, rowsPerPage, search, sortBy, sortOrder]);
 
+	// Fetch escritos data
+	const fetchEscritos = useCallback(async () => {
+		if (!isEscritosTab) return;
+		setEscritosLoading(true);
+		try {
+			const [listRes, statsRes] = await Promise.all([
+				PostalDocumentsAdminService.getAll({
+					page: page + 1,
+					limit: rowsPerPage,
+					search: search || undefined,
+					status: escritosFilterStatus || undefined,
+				}),
+				escritosStats === null ? PostalDocumentsAdminService.getStats() : Promise.resolve(null),
+			]);
+			setEscritos(listRes.data);
+			setEscritosTotal(listRes.count);
+			if (statsRes) setEscritosStats(statsRes.data);
+		} catch (error) {
+			console.error("Error fetching escritos:", error);
+		} finally {
+			setEscritosLoading(false);
+		}
+	}, [isEscritosTab, page, rowsPerPage, search, escritosFilterStatus, escritosStats]);
+
 	useEffect(() => {
 		fetchStats();
 	}, [fetchStats]);
@@ -525,10 +576,12 @@ const UserResources: React.FC = () => {
 			fetchUsers();
 		} else if (isActivityTab) {
 			fetchActivityData();
+		} else if (isEscritosTab) {
+			fetchEscritos();
 		} else {
 			fetchResources();
 		}
-	}, [fetchResources, fetchUsers, fetchActivityData, isUsersTab, isActivityTab]);
+	}, [fetchResources, fetchUsers, fetchActivityData, fetchEscritos, isUsersTab, isActivityTab, isEscritosTab]);
 
 	// Handlers
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -920,6 +973,213 @@ const UserResources: React.FC = () => {
 							</TableBody>
 						</Table>
 					</TableContainer>
+				</>
+			) : isEscritosTab ? (
+				<>
+					{/* Escritos Stats */}
+					{escritosStats && (
+						<Box sx={{ p: { xs: 1.5, sm: 2 }, borderBottom: 1, borderColor: "divider" }}>
+							<Grid container spacing={{ xs: 1, sm: 2 }}>
+								{[
+									{ label: "Total", value: escritosStats.totals.total, color: theme.palette.primary.main },
+									{ label: "Generados", value: escritosStats.totals.generated, color: theme.palette.success.main },
+									{ label: "Borradores", value: escritosStats.totals.draft, color: theme.palette.warning.main },
+									{ label: "Enviados", value: escritosStats.totals.sent, color: theme.palette.info.main },
+									{ label: "Archivados", value: escritosStats.totals.archived, color: theme.palette.text.secondary },
+									{ label: "Hoy", value: escritosStats.totals.createdToday, color: theme.palette.secondary.main },
+								].map((s) => (
+									<Grid item xs={6} sm={4} md={2} key={s.label}>
+										<Paper
+											elevation={0}
+											sx={{ p: 1.5, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, height: "100%" }}
+										>
+											<Typography variant="caption" color="textSecondary" display="block">
+												{s.label}
+											</Typography>
+											<Typography variant="h6" fontWeight="bold" sx={{ color: s.color }}>
+												{s.value.toLocaleString()}
+											</Typography>
+										</Paper>
+									</Grid>
+								))}
+							</Grid>
+						</Box>
+					)}
+
+					{/* Escritos Filters */}
+					<Box sx={{ p: { xs: 1.5, sm: 2 }, display: "flex", gap: 2, flexWrap: "wrap", borderBottom: 1, borderColor: "divider" }}>
+						<FormControl size="small" sx={{ minWidth: 150 }}>
+							<InputLabel>Estado</InputLabel>
+							<Select
+								label="Estado"
+								value={escritosFilterStatus}
+								onChange={(e) => {
+									setEscritosFilterStatus(e.target.value);
+									setPage(0);
+								}}
+							>
+								<MenuItem value="">Todos</MenuItem>
+								<MenuItem value="draft">Borrador</MenuItem>
+								<MenuItem value="generated">Generado</MenuItem>
+								<MenuItem value="sent">Enviado</MenuItem>
+								<MenuItem value="archived">Archivado</MenuItem>
+							</Select>
+						</FormControl>
+					</Box>
+
+					{/* Escritos Table */}
+					<TableContainer sx={{ overflowX: "auto" }}>
+						<Table size="small" sx={{ minWidth: { xs: 700, md: "100%" } }}>
+							<TableHead>
+								<TableRow>
+									<TableCell>Usuario</TableCell>
+									<TableCell>Título</TableCell>
+									<TableCell>Template</TableCell>
+									<TableCell>Categoría</TableCell>
+									<TableCell>Estado</TableCell>
+									<TableCell>Creado</TableCell>
+									<TableCell align="center">Acciones</TableCell>
+								</TableRow>
+							</TableHead>
+							<TableBody>
+								{escritosLoading ? (
+									Array.from({ length: rowsPerPage }).map((_, i) => (
+										<TableRow key={i}>
+											{Array.from({ length: 7 }).map((_, j) => (
+												<TableCell key={j}>
+													<Skeleton variant="text" />
+												</TableCell>
+											))}
+										</TableRow>
+									))
+								) : escritos.length === 0 ? (
+									<TableRow>
+										<TableCell colSpan={7} align="center">
+											<Typography color="textSecondary" sx={{ py: 4 }}>
+												No se encontraron escritos
+											</Typography>
+										</TableCell>
+									</TableRow>
+								) : (
+									escritos.map((doc) => {
+										const STATUS_CONFIG: Record<string, { color: "default" | "warning" | "success" | "info" | "error"; label: string }> = {
+											draft: { color: "warning", label: "Borrador" },
+											generated: { color: "success", label: "Generado" },
+											sent: { color: "info", label: "Enviado" },
+											archived: { color: "default", label: "Archivado" },
+										};
+										const statusCfg = STATUS_CONFIG[doc.status] || { color: "default", label: doc.status };
+										const userDisplay =
+											typeof doc.userId === "object" && doc.userId
+												? doc.userId.email || doc.userId.name || "-"
+												: String(doc.userId || "-");
+										return (
+											<TableRow key={doc._id} hover>
+												<TableCell>
+													<Typography variant="body2" noWrap sx={{ maxWidth: 160 }}>
+														{userDisplay}
+													</Typography>
+												</TableCell>
+												<TableCell>
+													<Typography variant="body2" fontWeight="medium" noWrap sx={{ maxWidth: 200 }}>
+														{doc.title}
+													</Typography>
+												</TableCell>
+												<TableCell>
+													<Typography variant="body2" noWrap sx={{ maxWidth: 160 }}>
+														{doc.templateName}
+													</Typography>
+												</TableCell>
+												<TableCell>
+													<Typography variant="body2" color="textSecondary">
+														{doc.templateCategory || "-"}
+													</Typography>
+												</TableCell>
+												<TableCell>
+													<Chip label={statusCfg.label} color={statusCfg.color} size="small" />
+												</TableCell>
+												<TableCell>{formatDate(doc.createdAt)}</TableCell>
+												<TableCell align="center">
+													<Tooltip title="Ver detalle">
+														<IconButton
+															size="small"
+															onClick={() => {
+																setEscritosDetailDoc(doc);
+																setEscritosDetailOpen(true);
+															}}
+														>
+															<Eye size={16} />
+														</IconButton>
+													</Tooltip>
+												</TableCell>
+											</TableRow>
+										);
+									})
+								)}
+							</TableBody>
+						</Table>
+					</TableContainer>
+
+					{/* Detail Dialog */}
+					<Dialog open={escritosDetailOpen} onClose={() => setEscritosDetailOpen(false)} maxWidth="sm" fullWidth>
+						<DialogTitle>Detalle del Escrito</DialogTitle>
+						<DialogContent dividers>
+							{escritosDetailDoc && (
+								<Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+									{[
+										{ label: "ID", value: escritosDetailDoc._id },
+										{
+											label: "Usuario",
+											value:
+												typeof escritosDetailDoc.userId === "object" && escritosDetailDoc.userId
+													? escritosDetailDoc.userId.email || escritosDetailDoc.userId.name
+													: String(escritosDetailDoc.userId),
+										},
+										{ label: "Título", value: escritosDetailDoc.title },
+										{ label: "Descripción", value: escritosDetailDoc.description || "-" },
+										{ label: "Template", value: escritosDetailDoc.templateName },
+										{ label: "Slug", value: escritosDetailDoc.templateSlug },
+										{ label: "Categoría", value: escritosDetailDoc.templateCategory || "-" },
+										{ label: "Estado", value: escritosDetailDoc.status },
+										{ label: "S3 Key", value: escritosDetailDoc.s3Key || "-" },
+										{ label: "Generado", value: escritosDetailDoc.generatedAt ? formatDate(escritosDetailDoc.generatedAt) : "-" },
+										{ label: "Enviado", value: escritosDetailDoc.sentAt ? formatDate(escritosDetailDoc.sentAt) : "-" },
+										{ label: "Vía", value: escritosDetailDoc.sentVia || "-" },
+										{ label: "Creado", value: formatDate(escritosDetailDoc.createdAt) },
+									].map(({ label, value }) => (
+										<Box key={label} sx={{ display: "flex", gap: 1 }}>
+											<Typography variant="body2" color="textSecondary" sx={{ minWidth: 100 }}>
+												{label}:
+											</Typography>
+											<Typography variant="body2" sx={{ wordBreak: "break-all" }}>
+												{value}
+											</Typography>
+										</Box>
+									))}
+									{escritosDetailDoc.s3Key && (
+										<Button
+											size="small"
+											variant="outlined"
+											startIcon={<Eye size={14} />}
+											onClick={async () => {
+												try {
+													const res = await PostalDocumentsAdminService.getPresignedUrl(escritosDetailDoc._id);
+													window.open(res.data.presignedUrl, "_blank");
+												} catch {
+													enqueueSnackbar("No se pudo obtener la URL del PDF", { variant: "error" });
+												}
+											}}
+										>
+											Abrir PDF
+										</Button>
+									)}
+								</Box>
+							)}
+						</DialogContent>
+						<DialogActions>
+							<Button onClick={() => setEscritosDetailOpen(false)}>Cerrar</Button>
+						</DialogActions>
+					</Dialog>
 				</>
 			) : (
 				<>
