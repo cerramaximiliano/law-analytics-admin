@@ -34,6 +34,7 @@ import {
 	Divider,
 	Switch,
 	FormControlLabel,
+	useTheme,
 } from "@mui/material";
 import { Refresh, Trash, Setting3 } from "iconsax-react";
 import { useSnackbar } from "notistack";
@@ -1149,6 +1150,21 @@ const RunsTab = () => {
 
 const ScraperWorkerPage = () => {
 	const [tab, setTab] = useState("config");
+	const theme = useTheme();
+
+	const badgeStyle = {
+		display: "inline-flex",
+		alignItems: "center",
+		px: 1,
+		py: 0.25,
+		borderRadius: 1,
+		bgcolor: theme.palette.grey[800],
+		color: theme.palette.common.white,
+		fontSize: "0.65rem",
+		fontWeight: 500,
+		fontFamily: "monospace",
+		letterSpacing: "0.5px",
+	};
 
 	return (
 		<MainCard
@@ -1159,6 +1175,12 @@ const ScraperWorkerPage = () => {
 					<Typography variant="body2" color="textSecondary">
 						Worker de Seguimiento Postal (Correo Argentino)
 					</Typography>
+					<Box component="span" sx={badgeStyle}>
+						Scraper Postal
+					</Box>
+					<Box component="span" sx={badgeStyle}>
+						worker_01
+					</Box>
 				</Stack>
 			}
 		>
