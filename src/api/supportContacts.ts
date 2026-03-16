@@ -32,6 +32,9 @@ export interface SupportContact {
 		lastName?: string;
 	} | null;
 	replies?: SupportContactReply[];
+	attachmentKey?: string | null;
+	attachmentFilename?: string | null;
+	attachmentUrl?: string | null;
 	createdAt: string;
 	updatedAt: string;
 }
