@@ -59,6 +59,8 @@ import {
 	Message,
 	TickSquare,
 	CloseSquare as CloseSquareIcon,
+	Paperclip,
+	DocumentDownload,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -113,6 +115,7 @@ const SupportContactsPage = () => {
 	// State for detail dialog
 	const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 	const [selectedContact, setSelectedContact] = useState<SupportContact | null>(null);
+	const [fetchingDetail, setFetchingDetail] = useState(false);
 
 	// State for update dialog
 	const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
@@ -220,10 +223,21 @@ const SupportContactsPage = () => {
 		setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
 	};
 
-	// Open detail dialog
-	const handleOpenDetail = (contact: SupportContact) => {
+	// Open detail dialog — fetch by ID to get fresh presigned URL for attachment
+	const handleOpenDetail = async (contact: SupportContact) => {
 		setSelectedContact(contact);
 		setDetailDialogOpen(true);
+		if (contact.attachmentKey) {
+			try {
+				setFetchingDetail(true);
+				const response = await SupportContactsService.getSupportContactById(contact._id);
+				if (response.success) setSelectedContact(response.data);
+			} catch {
+				// Keep the list data on error
+			} finally {
+				setFetchingDetail(false);
+			}
+		}
 	};
 
 	// Open update dialog
@@ -653,9 +667,16 @@ const SupportContactsPage = () => {
 												</Typography>
 											</TableCell>
 											<TableCell>
-												<Typography variant="body2" sx={{ maxWidth: 200 }} noWrap title={contact.subject}>
-													{contact.subject}
-												</Typography>
+												<Stack direction="row" alignItems="center" spacing={0.75}>
+													<Typography variant="body2" sx={{ maxWidth: 190 }} noWrap title={contact.subject}>
+														{contact.subject}
+													</Typography>
+													{contact.attachmentFilename && (
+														<Tooltip title={`Adjunto: ${contact.attachmentFilename}`}>
+															<Paperclip size={14} color={theme.palette.primary.main} style={{ flexShrink: 0 }} />
+														</Tooltip>
+													)}
+												</Stack>
 											</TableCell>
 											<TableCell align="center">
 												<Chip
@@ -793,6 +814,43 @@ const SupportContactsPage = () => {
 										)}
 									</Grid>
 								</Paper>
+
+								{/* Attachment */}
+								{selectedContact.attachmentFilename && (
+									<Paper
+										variant="outlined"
+										sx={{ p: 2, borderColor: "primary.200", bgcolor: "primary.50" }}
+									>
+										<Stack direction="row" alignItems="center" spacing={1.5}>
+											<Paperclip size={20} color={theme.palette.primary.main} />
+											<Box flex={1}>
+												<Typography variant="subtitle2" fontWeight={600}>
+													Documento adjunto
+												</Typography>
+												<Typography variant="body2" color="textSecondary" noWrap>
+													{selectedContact.attachmentFilename}
+												</Typography>
+											</Box>
+											{fetchingDetail ? (
+												<Typography variant="caption" color="textSecondary">Obteniendo enlace…</Typography>
+											) : selectedContact.attachmentUrl ? (
+												<Button
+													size="small"
+													variant="contained"
+													startIcon={<DocumentDownload size={16} />}
+													href={selectedContact.attachmentUrl}
+													target="_blank"
+													rel="noopener noreferrer"
+													component="a"
+												>
+													Descargar
+												</Button>
+											) : (
+												<Typography variant="caption" color="error">Enlace no disponible</Typography>
+											)}
+										</Stack>
+									</Paper>
+								)}
 
 								{/* Conversation History */}
 								<Box>
