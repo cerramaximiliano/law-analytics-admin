@@ -67,6 +67,7 @@ import {
 	Code,
 	Link21,
 	Image,
+	Data2,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import AnimateButton from "components/@extended/AnimateButton";
@@ -1389,7 +1390,19 @@ const EmailTemplates = () => {
 					<Grid item>
 						<Stack direction="row" alignItems="center" spacing={1}>
 							<Typography variant="h3">Plantillas de Email</Typography>
-							<Chip label="emailtemplates" size="small" variant="outlined" color="default" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }} />
+							<Chip
+								icon={<Data2 size={13} color="#00ED64" />}
+								label="db.emailtemplates"
+								size="small"
+								variant="outlined"
+								sx={{
+									fontFamily: "monospace",
+									fontSize: "0.7rem",
+									borderColor: "#00ED64",
+									color: "#00ED64",
+									"& .MuiChip-icon": { marginLeft: "6px" },
+								}}
+							/>
 						</Stack>
 					</Grid>
 					<Grid item>
