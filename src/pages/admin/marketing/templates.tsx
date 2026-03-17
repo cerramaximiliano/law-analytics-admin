@@ -1387,7 +1387,10 @@ const EmailTemplates = () => {
 			<Box sx={{ mb: 2 }}>
 				<Grid container alignItems="center" justifyContent="space-between">
 					<Grid item>
-						<Typography variant="h3">Plantillas de Email</Typography>
+						<Stack direction="row" alignItems="center" spacing={1}>
+							<Typography variant="h3">Plantillas de Email</Typography>
+							<Chip label="emailtemplates" size="small" variant="outlined" color="default" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }} />
+						</Stack>
 					</Grid>
 					<Grid item>
 						<Button variant="contained" color="primary" startIcon={<Add />} sx={{ textTransform: "none" }} onClick={handleOpenCreate}>
