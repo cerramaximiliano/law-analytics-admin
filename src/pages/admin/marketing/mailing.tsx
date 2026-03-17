@@ -45,7 +45,7 @@ import { styled } from "@mui/material/styles";
 
 // project imports
 import MainCard from "components/MainCard";
-import { Add, Edit2, SearchNormal1, Trash, MessageText1, People, Refresh, Chart, Copy } from "iconsax-react";
+import { Add, Edit2, SearchNormal1, Trash, MessageText1, People, Refresh, Chart, Copy, Data2 } from "iconsax-react";
 import CampaignFormModal from "sections/admin/marketing/CampaignFormModal";
 import DeleteCampaignDialog from "sections/admin/marketing/DeleteCampaignDialog";
 import CampaignEmailList from "sections/admin/marketing/CampaignEmailList";
@@ -543,7 +543,22 @@ const MailingCampaigns = () => {
 			<Box sx={{ mb: 2 }}>
 				<Grid container alignItems="center" justifyContent="space-between">
 					<Grid item>
-						<Typography variant="h3">Campañas de Email Marketing</Typography>
+						<Stack direction="row" alignItems="center" spacing={1}>
+							<Typography variant="h3">Campañas de Email Marketing</Typography>
+							<Chip
+								icon={<Data2 size={13} color="#00ED64" />}
+								label="db.email_campaign"
+								size="small"
+								variant="outlined"
+								sx={{
+									fontFamily: "monospace",
+									fontSize: "0.7rem",
+									borderColor: "#00ED64",
+									color: "#00ED64",
+									"& .MuiChip-icon": { marginLeft: "6px" },
+								}}
+							/>
+						</Stack>
 					</Grid>
 					<Grid item>
 						<Button variant="contained" color="primary" startIcon={<Add />} sx={{ textTransform: "none" }} onClick={handleOpenCreateModal}>

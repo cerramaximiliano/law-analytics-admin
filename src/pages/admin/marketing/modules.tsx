@@ -44,7 +44,7 @@ import {
 
 // project imports
 import MainCard from "components/MainCard";
-import { Add, Edit2, Eye, Trash, Copy } from "iconsax-react";
+import { Add, Edit2, Eye, Trash, Copy, Data2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import AnimateButton from "components/@extended/AnimateButton";
 import TableSkeleton from "components/UI/TableSkeleton";
@@ -404,7 +404,22 @@ const EmailModules = () => {
 			<Box sx={{ mb: 2 }}>
 				<Grid container alignItems="center" justifyContent="space-between">
 					<Grid item>
-						<Typography variant="h3">Módulos HTML</Typography>
+						<Stack direction="row" alignItems="center" spacing={1}>
+							<Typography variant="h3">Módulos HTML</Typography>
+							<Chip
+								icon={<Data2 size={13} color="#00ED64" />}
+								label="db.emailmodules"
+								size="small"
+								variant="outlined"
+								sx={{
+									fontFamily: "monospace",
+									fontSize: "0.7rem",
+									borderColor: "#00ED64",
+									color: "#00ED64",
+									"& .MuiChip-icon": { marginLeft: "6px" },
+								}}
+							/>
+						</Stack>
 						<Typography variant="body2" color="textSecondary">
 							Componentes reutilizables para plantillas de email (footers, headers, etc.)
 						</Typography>

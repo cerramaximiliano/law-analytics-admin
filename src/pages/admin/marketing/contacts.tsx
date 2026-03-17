@@ -2,7 +2,7 @@ import React from "react";
 import { useState, useEffect, useCallback } from "react";
 
 // material-ui
-import { Box, Divider, Grid, Tab, Tabs, Typography, Alert, IconButton, Tooltip } from "@mui/material";
+import { Box, Chip, Divider, Grid, Stack, Tab, Tabs, Typography, Alert, IconButton, Tooltip } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
 // project imports
@@ -10,7 +10,7 @@ import MainCard from "components/MainCard";
 import ContactsPanel from "sections/admin/marketing/ContactsPanel";
 import SegmentsPanel from "sections/admin/marketing/SegmentsPanel";
 import MarketingQuickNav from "components/admin/marketing/MarketingQuickNav";
-import { Refresh } from "iconsax-react";
+import { Refresh, Data2 } from "iconsax-react";
 import { useRequestQueueRefresh } from "hooks/useRequestQueueRefresh";
 
 // ==============================|| ADMIN - MARKETING CONTACTS ||============================== //
@@ -160,7 +160,22 @@ const MarketingContacts = () => {
 			<Box sx={{ mb: 2 }}>
 				<Grid container alignItems="center" justifyContent="space-between">
 					<Grid item>
-						<Typography variant="h3">Gestión de Contactos y Segmentos</Typography>
+						<Stack direction="row" alignItems="center" spacing={1}>
+							<Typography variant="h3">Gestión de Contactos y Segmentos</Typography>
+							<Chip
+								icon={<Data2 size={13} color="#00ED64" />}
+								label="db.email_contacts"
+								size="small"
+								variant="outlined"
+								sx={{
+									fontFamily: "monospace",
+									fontSize: "0.7rem",
+									borderColor: "#00ED64",
+									color: "#00ED64",
+									"& .MuiChip-icon": { marginLeft: "6px" },
+								}}
+							/>
+						</Stack>
 					</Grid>
 				</Grid>
 			</Box>
