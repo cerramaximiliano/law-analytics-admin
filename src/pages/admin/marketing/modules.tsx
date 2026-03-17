@@ -414,9 +414,7 @@ const EmailModules = () => {
 								sx={{
 									fontFamily: "monospace",
 									fontSize: "0.7rem",
-									borderColor: "#00ED64",
-									color: "#00ED64",
-									"& .MuiChip-icon": { marginLeft: "6px" },
+									"& .MuiChip-icon": { marginLeft: "6px", color: "#00ED64" },
 								}}
 							/>
 						</Stack>
