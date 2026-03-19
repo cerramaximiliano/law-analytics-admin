@@ -50,6 +50,7 @@ import { Warning2 } from "iconsax-react";
 import { getTasasStatus, TasasStatus } from "utils/tasasService";
 import { getStats as getDatosPrevisionales, Stats as DatosPrevsStats } from "utils/datosPrevsionalesService";
 import GroupsService from "api/groups";
+import ServicesStatusWidget from "./ServicesStatusWidget";
 
 // Theme-aware color helper - maps semantic roles to MUI theme palette tokens
 // Usage: const COLORS = getThemeColors(theme) inside any component with useTheme()
@@ -1343,6 +1344,22 @@ const AdminDashboard = () => {
 									</>
 								)}
 							</Paper>
+						</Grid>
+					</Grid>
+				</Box>
+
+				{/* Services Status Widget */}
+				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
+					<Typography
+						variant="overline"
+						color="textSecondary"
+						sx={{ mb: { xs: 1, sm: 2 }, display: "block", letterSpacing: 1.5, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}
+					>
+						Infraestructura
+					</Typography>
+					<Grid container spacing={{ xs: 1, sm: 2 }}>
+						<Grid item xs={12} sm={6} md={3}>
+							<ServicesStatusWidget />
 						</Grid>
 					</Grid>
 				</Box>
