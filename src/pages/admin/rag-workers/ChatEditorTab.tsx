@@ -4,6 +4,9 @@ import {
 	Stack,
 	Typography,
 	TextField,
+	Select,
+	MenuItem,
+	FormControl,
 	IconButton,
 	Button,
 	Tooltip,
@@ -19,16 +22,46 @@ import { Refresh, TickCircle, Edit2, CloseCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import RagWorkersService, { PipelineEditorConfig } from "api/ragWorkers";
 
+// ── Available options ────────────────────────────────────────────────────────
+
+const OPENAI_MODELS = [
+	{ value: "gpt-4o-mini", label: "gpt-4o-mini", note: "Económico, rápido" },
+	{ value: "gpt-4o", label: "gpt-4o", note: "Potente, multimodal" },
+	{ value: "gpt-4.1-nano", label: "gpt-4.1-nano", note: "Más económico" },
+	{ value: "gpt-4.1-mini", label: "gpt-4.1-mini", note: "Balance costo/calidad" },
+	{ value: "gpt-4.1", label: "gpt-4.1", note: "Alta capacidad" },
+	{ value: "o3-mini", label: "o3-mini", note: "Razonamiento" },
+	{ value: "o4-mini", label: "o4-mini", note: "Razonamiento avanzado" },
+];
+
+const RATE_LIMIT_WINDOWS = [
+	{ value: 15000, label: "15 segundos" },
+	{ value: 30000, label: "30 segundos" },
+	{ value: 60000, label: "1 minuto" },
+	{ value: 120000, label: "2 minutos" },
+	{ value: 300000, label: "5 minutos" },
+	{ value: 600000, label: "10 minutos" },
+	{ value: 1800000, label: "30 minutos" },
+	{ value: 3600000, label: "1 hora" },
+];
+
 // ── Config variable definition ──────────────────────────────────────────────
+
+interface SelectOption {
+	value: string | number;
+	label: string;
+	note?: string;
+}
 
 interface EditorConfigVar {
 	key: keyof Omit<PipelineEditorConfig, "systemPrompt">;
 	label: string;
 	description: string;
 	suffix?: string;
-	type: "int" | "float" | "string";
+	type: "int" | "float" | "select";
 	min?: number;
 	max?: number;
+	options?: SelectOption[];
 }
 
 const CONFIG_VARS: EditorConfigVar[] = [
@@ -36,7 +69,8 @@ const CONFIG_VARS: EditorConfigVar[] = [
 		key: "model",
 		label: "Modelo",
 		description: "Modelo de OpenAI utilizado para el chat del editor.",
-		type: "string",
+		type: "select",
+		options: OPENAI_MODELS,
 	},
 	{
 		key: "maxTokens",
@@ -67,11 +101,9 @@ const CONFIG_VARS: EditorConfigVar[] = [
 	{
 		key: "rateLimitWindowMs",
 		label: "Rate Limit (ventana)",
-		description: "Duracion de la ventana de rate limiting en milisegundos.",
-		suffix: "ms",
-		type: "int",
-		min: 1000,
-		max: 3600000,
+		description: "Duracion de la ventana de rate limiting.",
+		type: "select",
+		options: RATE_LIMIT_WINDOWS,
 	},
 	{
 		key: "documentMaxChars",
@@ -127,7 +159,23 @@ const ChatEditorTab = () => {
 		fetchConfig();
 	}, [fetchConfig]);
 
-	// ── Inline field edit ──────────────────────────────────────────────────
+	// ── Select field (auto-save on change) ────────────────────────────────
+
+	const handleSelectChange = async (v: EditorConfigVar, newValue: string | number) => {
+		if (!editorConfig) return;
+		try {
+			setSaving(true);
+			const result = await RagWorkersService.updatePipelineConfig({ editor: { [v.key]: newValue } });
+			setEditorConfig(result.data.editor ?? null);
+			enqueueSnackbar("Configuracion actualizada", { variant: "success" });
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.error || "Error al guardar", { variant: "error" });
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	// ── Inline numeric field edit ──────────────────────────────────────────
 
 	const handleStartEdit = (v: EditorConfigVar) => {
 		setEditingKey(v.key);
@@ -142,21 +190,10 @@ const ChatEditorTab = () => {
 	const handleSave = async (v: EditorConfigVar) => {
 		if (!editorConfig) return;
 
-		let parsed: string | number = editValue;
-		if (v.type === "int") {
-			parsed = parseInt(editValue, 10);
-			if (isNaN(parsed as number)) { enqueueSnackbar("Valor invalido", { variant: "error" }); return; }
-		} else if (v.type === "float") {
-			parsed = parseFloat(editValue);
-			if (isNaN(parsed as number)) { enqueueSnackbar("Valor invalido", { variant: "error" }); return; }
-		}
-
-		if (v.min !== undefined && (parsed as number) < v.min) {
-			enqueueSnackbar(`Valor minimo: ${v.min}`, { variant: "warning" }); return;
-		}
-		if (v.max !== undefined && (parsed as number) > v.max) {
-			enqueueSnackbar(`Valor maximo: ${v.max}`, { variant: "warning" }); return;
-		}
+		const parsed = v.type === "float" ? parseFloat(editValue) : parseInt(editValue, 10);
+		if (isNaN(parsed)) { enqueueSnackbar("Valor invalido", { variant: "error" }); return; }
+		if (v.min !== undefined && parsed < v.min) { enqueueSnackbar(`Valor minimo: ${v.min}`, { variant: "warning" }); return; }
+		if (v.max !== undefined && parsed > v.max) { enqueueSnackbar(`Valor maximo: ${v.max}`, { variant: "warning" }); return; }
 
 		try {
 			setSaving(true);
@@ -204,6 +241,13 @@ const ChatEditorTab = () => {
 		}
 	};
 
+	// ── Helpers ────────────────────────────────────────────────────────────
+
+	const getSelectLabel = (v: EditorConfigVar, value: string | number): string => {
+		const opt = v.options?.find((o) => o.value === value);
+		return opt ? opt.label : String(value);
+	};
+
 	// ── Render ─────────────────────────────────────────────────────────────
 
 	if (loading) {
@@ -245,7 +289,7 @@ const ChatEditorTab = () => {
 				Los cambios se aplican en las proximas requests (cache TTL ~30s). No requiere reinicio.
 			</Alert>
 
-			{/* Numeric / string fields */}
+			{/* Numeric / select fields */}
 			<Box sx={{ p: isMobile ? 1.5 : 2.5, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
 				<Stack spacing={0.5} sx={{ mb: 2 }}>
 					<Typography variant="subtitle1" fontWeight={600}>
@@ -262,6 +306,7 @@ const ChatEditorTab = () => {
 					{CONFIG_VARS.map((v) => {
 						const currentValue = editorConfig[v.key];
 						const isEditing = editingKey === v.key;
+						const isSelect = v.type === "select";
 
 						return (
 							<Box
@@ -289,7 +334,33 @@ const ChatEditorTab = () => {
 
 								{/* Value */}
 								<Box sx={{ minWidth: isMobile ? "100%" : 220, display: "flex", alignItems: "center", gap: 1 }}>
-									{isEditing ? (
+									{isSelect ? (
+										// Select field — auto-save on change
+										<FormControl size="small" sx={{ minWidth: 200 }}>
+											<Select
+												value={currentValue}
+												onChange={(e) => handleSelectChange(v, e.target.value as string | number)}
+												disabled={saving}
+												sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}
+											>
+												{v.options!.map((opt) => (
+													<MenuItem key={String(opt.value)} value={opt.value}>
+														<Stack direction="row" spacing={1} alignItems="center">
+															<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+																{opt.label}
+															</Typography>
+															{opt.note && (
+																<Typography variant="caption" color="text.secondary">
+																	— {opt.note}
+																</Typography>
+															)}
+														</Stack>
+													</MenuItem>
+												))}
+											</Select>
+										</FormControl>
+									) : isEditing ? (
+										// Numeric inline edit
 										<>
 											<TextField
 												size="small"
@@ -298,9 +369,9 @@ const ChatEditorTab = () => {
 												onKeyDown={(e) => handleKeyDown(e, v)}
 												autoFocus
 												disabled={saving}
-												type={v.type === "string" ? "text" : "number"}
+												type="number"
 												inputProps={{ min: v.min, max: v.max, step: v.type === "float" ? 0.1 : 1 }}
-												sx={{ width: v.type === "string" ? 180 : 120, "& input": { fontFamily: "monospace", fontSize: "0.85rem" } }}
+												sx={{ width: 120, "& input": { fontFamily: "monospace", fontSize: "0.85rem" } }}
 											/>
 											{v.suffix && (
 												<Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
@@ -319,12 +390,13 @@ const ChatEditorTab = () => {
 											</Tooltip>
 										</>
 									) : (
+										// Numeric read mode
 										<>
 											<Typography
 												variant="body2"
 												sx={{ fontFamily: "monospace", fontWeight: 600, color: theme.palette.primary.main }}
 											>
-												{String(currentValue)}
+												{isSelect ? getSelectLabel(v, currentValue as string | number) : String(currentValue)}
 											</Typography>
 											{v.suffix && (
 												<Typography variant="caption" color="text.secondary">
