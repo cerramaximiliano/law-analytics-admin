@@ -11,6 +11,7 @@ import WorkerPipelineTab from "./WorkerPipelineTab";
 import WorkerAnalyticsTab from "./WorkerAnalyticsTab";
 import WorkerHelpTab from "./WorkerHelpTab";
 import ChatRagTab from "./ChatRagTab";
+import ChatEditorTab from "./ChatEditorTab";
 
 interface RagWorkerTab {
 	label: string;
@@ -69,6 +70,12 @@ const RagWorkersPage = () => {
 			value: "chat",
 			icon: <MessageText size={20} />,
 			component: <ChatRagTab />,
+		},
+		{
+			label: "Chat Editor",
+			value: "chat-editor",
+			icon: <MessageText size={20} />,
+			component: <ChatEditorTab />,
 		},
 		{
 			label: "Ayuda",
