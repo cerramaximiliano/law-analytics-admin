@@ -164,6 +164,17 @@ export interface PipelineLlmConfig {
 	generationTemperature: number;
 }
 
+export interface PipelineEditorConfig {
+	model: string;
+	maxTokens: number;
+	temperature: number;
+	rateLimitMax: number;
+	rateLimitWindowMs: number;
+	documentMaxChars: number;
+	pdfMaxChars: number;
+	systemPrompt: string;
+}
+
 export interface PipelineConfig {
 	_id: string;
 	chunker: PipelineChunkerConfig;
@@ -172,6 +183,7 @@ export interface PipelineConfig {
 	modelLimits: PipelineModelLimits;
 	pinecone: PipelinePineconeConfig;
 	llm: PipelineLlmConfig;
+	editor: PipelineEditorConfig;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -569,6 +581,7 @@ class RagWorkersService {
 		embedding?: Partial<Pick<PipelineEmbeddingConfig, "maxInputChars" | "maxRetries">>;
 		batcher?: Partial<PipelineBatcherConfig>;
 		llm?: Partial<PipelineLlmConfig>;
+		editor?: Partial<PipelineEditorConfig>;
 	}): Promise<{ data: PipelineConfig; requiresRestart: boolean }> {
 		const res = await ragAxios.put(`${BASE}/pipeline`, data);
 		return { data: res.data.data, requiresRestart: res.data.requiresRestart };
