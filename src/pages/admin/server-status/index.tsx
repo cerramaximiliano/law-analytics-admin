@@ -1,6 +1,6 @@
 import React from "react";
 import { useEffect, useState, useCallback } from "react";
-import { Grid, Typography, Box, Chip, Stack, IconButton, Tooltip } from "@mui/material";
+import { Grid, Typography, Box, Chip, IconButton, Tooltip } from "@mui/material";
 import { Refresh } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { styled } from "@mui/material/styles";
@@ -19,12 +19,13 @@ interface ServiceStatus {
 
 // Styled components
 const StatusIndicator = styled(Box)<{ status: "online" | "offline" | "checking" }>(({ theme, status }) => ({
-	width: 12,
-	height: 12,
+	width: 8,
+	height: 8,
 	borderRadius: "50%",
+	flexShrink: 0,
 	backgroundColor:
 		status === "online" ? theme.palette.success.main : status === "offline" ? theme.palette.error.main : theme.palette.warning.main,
-	marginRight: theme.spacing(1),
+	marginRight: theme.spacing(0.75),
 	animation: status === "checking" ? "pulse 1.5s infinite" : "none",
 	"@keyframes pulse": {
 		"0%": {
@@ -89,6 +90,13 @@ const ServerStatus = () => {
 			url: `${import.meta.env.VITE_API_EJE || "https://eje.lawanalytics.app/api"}/health`,
 			ip: "15.229.93.121",
 			baseUrl: import.meta.env.VITE_API_EJE || "https://eje.lawanalytics.app/api",
+			status: "checking",
+		},
+		{
+			name: "API de RAG (IA)",
+			url: "https://ia.lawanalytics.app/rag/health",
+			ip: "15.229.93.121",
+			baseUrl: "https://ia.lawanalytics.app",
 			status: "checking",
 		},
 	]);
@@ -166,7 +174,8 @@ const ServerStatus = () => {
 							service.name === "API de Suscripciones" ||
 							service.name === "API de Causas PJN" ||
 							service.name === "API de Causas MEV" ||
-							service.name === "API de Causas EJE"
+							service.name === "API de Causas EJE" ||
+							service.name === "API de RAG (IA)"
 						) {
 							// Intentar verificar a través de nuestro backend
 							try {
@@ -277,41 +286,42 @@ const ServerStatus = () => {
 						</Tooltip>
 					}
 				>
-					<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+					<Grid container spacing={1.5}>
 						{services.map((service, index) => (
-							<Box key={index} sx={{ p: 2, border: 1, borderColor: "divider", borderRadius: 1 }}>
-								<Box display="flex" alignItems="center" mb={1}>
-									<StatusIndicator status={service.status} />
-									<Typography variant="h6" sx={{ flexGrow: 1 }}>
-										{service.name}
+							<Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+								<Box sx={{ p: 1.25, border: 1, borderColor: "divider", borderRadius: 1, height: "100%" }}>
+									<Box display="flex" alignItems="center" mb={0.5}>
+										<StatusIndicator status={service.status} />
+										<Typography variant="subtitle2" sx={{ flexGrow: 1, fontSize: "0.8rem", lineHeight: 1.3 }}>
+											{service.name}
+										</Typography>
+										<Chip
+											label={service.status === "online" ? "Online" : service.status === "offline" ? "Offline" : "..."}
+											color={service.status === "online" ? "success" : service.status === "offline" ? "error" : "warning"}
+											size="small"
+											sx={{ fontSize: "0.65rem", height: 18 }}
+										/>
+									</Box>
+									<Typography variant="caption" color="text.secondary" display="block" sx={{ lineHeight: 1.4 }}>
+										{service.baseUrl}
 									</Typography>
-									<Chip
-										label={service.status === "online" ? "En línea" : service.status === "offline" ? "Fuera de línea" : "Verificando..."}
-										color={service.status === "online" ? "success" : service.status === "offline" ? "error" : "warning"}
-										size="small"
-									/>
-								</Box>
-								<Box sx={{ mt: 1 }}>
-									<Typography variant="body2" color="text.secondary">
-										URL: {service.baseUrl}
-									</Typography>
-									<Typography variant="body2" color="text.secondary">
-										IP: {service.ip}
+									<Typography variant="caption" color="text.secondary" display="block" sx={{ lineHeight: 1.4 }}>
+										{service.ip}
 									</Typography>
 									{service.timestamp && service.status === "online" && (
-										<Typography variant="body2" color="text.secondary">
-											Última actualización: {formatTimestamp(service.timestamp)}
+										<Typography variant="caption" color="text.secondary" display="block" sx={{ lineHeight: 1.4 }}>
+											{formatTimestamp(service.timestamp)}
 										</Typography>
 									)}
 									{service.message && (
-										<Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
+										<Typography variant="caption" color="text.secondary" display="block" sx={{ fontStyle: "italic", lineHeight: 1.4 }}>
 											{service.message}
 										</Typography>
 									)}
 								</Box>
-							</Box>
+							</Grid>
 						))}
-					</Stack>
+					</Grid>
 				</MainCard>
 			</Grid>
 		</Grid>
