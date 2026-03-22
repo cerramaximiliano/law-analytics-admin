@@ -164,6 +164,40 @@ export interface PipelineLlmConfig {
 	generationTemperature: number;
 }
 
+// ── Editor Actions ───────────────────────────────────────────────────────────
+
+export interface EditorActionContext {
+	includeDocument: boolean;
+	requiresSelection: boolean;
+}
+
+export interface EditorAction {
+	_id: string;
+	label: string;
+	hint: string;
+	prompt: string;
+	systemPromptOverride: string | null;
+	context: EditorActionContext;
+	scope: "bubble" | "panel" | "both";
+	order: number;
+	active: boolean;
+	visibility: "global" | "user" | "plan";
+	userId?: string | null;
+	allowedPlans?: string[];
+	createdAt: string;
+	updatedAt: string;
+}
+
+export type EditorActionInput = Omit<EditorAction, "_id" | "createdAt" | "updatedAt">;
+
+export interface EditorActionsListParams {
+	scope?: "bubble" | "panel" | "both";
+	visibility?: "global" | "user" | "plan";
+	active?: boolean;
+}
+
+// ── Pipeline Editor Config ────────────────────────────────────────────────────
+
 export interface PipelineEditorConfig {
 	model: string;
 	maxTokens: number;
@@ -603,6 +637,32 @@ class RagWorkersService {
 		const params: Record<string, string | number> = { filter, page, limit };
 		if (causaType) params.causaType = causaType;
 		const res = await ragAxios.get(`${BASE}/indexation/causas`, { params });
+		return res.data.data;
+	}
+
+	// ── Editor Actions ──────────────────────────────────────────────────────
+
+	static async getEditorActions(params?: EditorActionsListParams): Promise<EditorAction[]> {
+		const res = await ragAxios.get(`${BASE}/editor-actions`, { params });
+		return res.data.data;
+	}
+
+	static async createEditorAction(data: EditorActionInput): Promise<EditorAction> {
+		const res = await ragAxios.post(`${BASE}/editor-actions`, data);
+		return res.data.data;
+	}
+
+	static async updateEditorAction(id: string, data: Partial<EditorActionInput>): Promise<EditorAction> {
+		const res = await ragAxios.put(`${BASE}/editor-actions/${id}`, data);
+		return res.data.data;
+	}
+
+	static async deleteEditorAction(id: string, hard = false): Promise<void> {
+		await ragAxios.delete(`${BASE}/editor-actions/${id}`, { params: hard ? { hard: "true" } : undefined });
+	}
+
+	static async seedEditorActions(force = false): Promise<{ seeded: number; skipped: number }> {
+		const res = await ragAxios.post(`${BASE}/editor-actions/seed`, {}, { params: force ? { force: "true" } : undefined });
 		return res.data.data;
 	}
 
