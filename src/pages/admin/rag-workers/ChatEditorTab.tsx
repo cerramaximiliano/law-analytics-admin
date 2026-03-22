@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import EditorActionsSection from "./EditorActionsSection";
 import {
 	Box,
 	Stack,
@@ -415,6 +416,11 @@ const ChatEditorTab = () => {
 						);
 					})}
 				</Stack>
+			</Box>
+
+			{/* Actions */}
+			<Box sx={{ p: isMobile ? 1.5 : 2.5, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
+				<EditorActionsSection />
 			</Box>
 
 			{/* System Prompt */}
