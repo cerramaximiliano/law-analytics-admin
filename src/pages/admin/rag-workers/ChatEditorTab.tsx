@@ -20,6 +20,8 @@ import {
 	alpha,
 } from "@mui/material";
 import { Refresh, TickCircle, Edit2, CloseCircle } from "iconsax-react";
+import Switch from "@mui/material/Switch";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import { useSnackbar } from "notistack";
 import RagWorkersService, { PipelineEditorConfig } from "api/ragWorkers";
 
@@ -415,6 +417,48 @@ const ChatEditorTab = () => {
 							</Box>
 						);
 					})}
+				</Stack>
+			</Box>
+
+			{/* Style Corpus toggle */}
+			<Box sx={{ p: isMobile ? 1.5 : 2.5, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
+				<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Stack spacing={0.5}>
+						<Typography variant="subtitle1" fontWeight={600}>
+							Corpus de Estilo Forense
+						</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Inyecta ejemplos reales de escritura jurídica en el system prompt al usar acciones con "Corpus de estilo" activado (pjn-style-corpus-v2, ~100K vectores).
+						</Typography>
+					</Stack>
+					<Tooltip title={editorConfig?.styleCorpusEnabled ? "Desactivar corpus" : "Activar corpus"}>
+						<FormControlLabel
+							control={
+								<Switch
+									checked={editorConfig?.styleCorpusEnabled ?? false}
+									onChange={async (e) => {
+										try {
+											await RagWorkersService.updatePipelineConfig({ editor: { styleCorpusEnabled: e.target.checked } });
+											enqueueSnackbar(`Corpus de estilo ${e.target.checked ? "activado" : "desactivado"}`, { variant: "success" });
+											fetchConfig();
+										} catch {
+											enqueueSnackbar("Error al actualizar configuración", { variant: "error" });
+										}
+									}}
+									color="secondary"
+								/>
+							}
+							label={
+								<Chip
+									label={editorConfig?.styleCorpusEnabled ? "activo" : "inactivo"}
+									size="small"
+									color={editorConfig?.styleCorpusEnabled ? "success" : "default"}
+								/>
+							}
+							labelPlacement="start"
+							sx={{ m: 0 }}
+						/>
+					</Tooltip>
 				</Stack>
 			</Box>
 

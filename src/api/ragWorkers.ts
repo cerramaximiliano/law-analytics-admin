@@ -208,6 +208,7 @@ export interface PipelineEditorConfig {
 	documentMaxChars: number;
 	pdfMaxChars: number;
 	systemPrompt: string;
+	styleCorpusEnabled: boolean;
 }
 
 export interface PipelineConfig {
