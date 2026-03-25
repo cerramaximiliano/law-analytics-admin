@@ -177,6 +177,7 @@ export interface EditorAction {
 	hint: string;
 	prompt: string;
 	systemPromptOverride: string | null;
+	useStyleCorpus: boolean;
 	context: EditorActionContext;
 	scope: "bubble" | "panel" | "both";
 	order: number;
@@ -481,6 +482,42 @@ export interface DocumentAnalytics {
 	avgConfig: AvgConfigSnapshot | null;
 }
 
+// ─── Style Corpus types ───────────────────────────────────────────────────────
+
+export interface StyleCorpusExample {
+	title: string;
+	docType: string;
+	preview: string;
+}
+
+export interface StyleCorpusByFuero {
+	_id: string;
+	total: number;
+	high: number;
+	embedded: number;
+}
+
+export interface StyleCorpusRecentDoc {
+	_id: string;
+	fuero: string;
+	title: string;
+	quality: "high" | "normal" | null;
+	vectorId: string | null;
+	createdAt: string;
+}
+
+export interface StyleCorpusStats {
+	total: number;
+	ready: number;
+	high: number;
+	normal: number;
+	embedded: number;
+	byFuero: StyleCorpusByFuero[];
+	recentDocs: StyleCorpusRecentDoc[];
+	indexName?: string;
+	enabled?: boolean;
+}
+
 // ─── Chat types ──────────────────────────────────────────────────────────────
 
 export interface CausaSummaryData {
@@ -693,6 +730,20 @@ class RagWorkersService {
 	static async getDocumentAnalytics(period = "week", limit = 10): Promise<DocumentAnalytics> {
 		const res = await ragAxios.get(`${BASE}/analytics/documents`, { params: { period, limit } });
 		return res.data.data;
+	}
+
+	// ── Style Corpus ────────────────────────────────────────────────────────
+
+	static async getStyleCorpusStats(): Promise<StyleCorpusStats> {
+		const res = await ragAxios.get(`${BASE}/style-corpus/stats`);
+		return res.data.data;
+	}
+
+	static async getStyleExamples(fuero: string, q: string, limit = 3, docType?: string): Promise<StyleCorpusExample[]> {
+		const params: Record<string, string | number> = { fuero, q, limit };
+		if (docType) params.docType = docType;
+		const res = await ragAxios.get("/rag/editor/style-examples", { params });
+		return res.data.data ?? [];
 	}
 }
 

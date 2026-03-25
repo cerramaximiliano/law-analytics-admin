@@ -101,6 +101,7 @@ const EMPTY_FORM: EditorActionInput = {
 	hint: "",
 	prompt: "",
 	systemPromptOverride: null,
+	useStyleCorpus: false,
 	context: { includeDocument: false, requiresSelection: false },
 	scope: "both",
 	order: 0,
@@ -250,7 +251,7 @@ const ActionDialog = ({ open, initial, onClose, onSave, saving }: ActionDialogPr
 						<Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mb: 1, display: "block" }}>
 							Contexto enviado al modelo
 						</Typography>
-						<Stack direction="row" spacing={3}>
+						<Stack direction="row" spacing={3} flexWrap="wrap">
 							<Tooltip title="Si está activo, el texto completo del documento se envía como contexto al LLM. Útil para acciones que necesitan coherencia con el resto del documento.">
 								<FormControlLabel
 									control={<Checkbox checked={form.context.includeDocument} onChange={(e) => setCtx("includeDocument", e.target.checked)} size="small" />}
@@ -261,6 +262,12 @@ const ActionDialog = ({ open, initial, onClose, onSave, saving }: ActionDialogPr
 								<FormControlLabel
 									control={<Checkbox checked={form.context.requiresSelection} onChange={(e) => setCtx("requiresSelection", e.target.checked)} size="small" />}
 									label={<Typography variant="body2">Requiere selección</Typography>}
+								/>
+							</Tooltip>
+							<Tooltip title="Inyecta ejemplos del corpus de estilo forense (pjn-style-corpus-v2) en el system prompt usando búsqueda semántica. Requiere STYLE_CORPUS_ENABLED=true en pjn-rag-api.">
+								<FormControlLabel
+									control={<Checkbox checked={form.useStyleCorpus ?? false} onChange={(e) => set("useStyleCorpus", e.target.checked)} size="small" color="secondary" />}
+									label={<Typography variant="body2">Corpus de estilo forense</Typography>}
 								/>
 							</Tooltip>
 						</Stack>
@@ -610,6 +617,9 @@ const EditorActionsSection = () => {
 											{action.systemPromptOverride && (
 												<Chip label="system prompt custom" size="small" color="warning" variant="outlined" sx={{ width: "fit-content", fontSize: "0.62rem", height: 16 }} />
 											)}
+										{action.useStyleCorpus && (
+												<Chip label="corpus estilo" size="small" color="secondary" variant="outlined" sx={{ width: "fit-content", fontSize: "0.62rem", height: 16 }} />
+											)}
 										</Stack>
 									</TableCell>
 									<TableCell>
@@ -680,6 +690,7 @@ const EditorActionsSection = () => {
 					hint: editingAction.hint,
 					prompt: editingAction.prompt,
 					systemPromptOverride: editingAction.systemPromptOverride,
+					useStyleCorpus: editingAction.useStyleCorpus ?? false,
 					context: editingAction.context,
 					scope: editingAction.scope,
 					order: editingAction.order,
