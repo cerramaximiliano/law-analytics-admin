@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Box, Tab, Tabs, Typography, Paper, Stack, useTheme, alpha } from "@mui/material";
-import { Setting3, Chart, DollarSquare, InfoCircle, DocumentText, CpuSetting, Activity, MessageText } from "iconsax-react";
+import { Setting3, Chart, DollarSquare, InfoCircle, DocumentText, CpuSetting, Activity, MessageText, Book } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import WorkerControlTab from "./WorkerControlTab";
@@ -12,6 +12,7 @@ import WorkerAnalyticsTab from "./WorkerAnalyticsTab";
 import WorkerHelpTab from "./WorkerHelpTab";
 import ChatRagTab from "./ChatRagTab";
 import ChatEditorTab from "./ChatEditorTab";
+import StyleCorpusTab from "./StyleCorpusTab";
 
 interface RagWorkerTab {
 	label: string;
@@ -76,6 +77,12 @@ const RagWorkersPage = () => {
 			value: "chat-editor",
 			icon: <MessageText size={20} />,
 			component: <ChatEditorTab />,
+		},
+		{
+			label: "Corpus de Estilo",
+			value: "style-corpus",
+			icon: <Book size={20} />,
+			component: <StyleCorpusTab />,
 		},
 		{
 			label: "Ayuda",

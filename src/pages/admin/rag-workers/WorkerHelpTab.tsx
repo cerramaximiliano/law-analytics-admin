@@ -1685,13 +1685,556 @@ const HelpInfrastructureSection: React.FC = () => {
 	);
 };
 
+// ── Sub-tab: Chat Editor AI ───────────────────────────────────────────────────
+
+const HelpEditorAiSection: React.FC = () => {
+	const theme = useTheme();
+
+	const colors = {
+		frontend: theme.palette.info.main,
+		api: theme.palette.primary.main,
+		corpus: theme.palette.success.main,
+		openai: theme.palette.warning.main,
+		pinecone: theme.palette.secondary.main,
+	};
+
+	return (
+		<Stack spacing={4} sx={{ p: 3 }}>
+
+			{/* Intro */}
+			<Stack>
+				<Typography variant="h5">Asistente IA del Editor de Documentos</Typography>
+				<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+					Sistema de escritura jurídica asistida por IA, con calibración semántica por fuero.
+				</Typography>
+			</Stack>
+
+			{/* Flujo completo */}
+			<SectionBox theme={theme}>
+				<SectionTitle>Flujo de una request "Formalizar" con fuero activo</SectionTitle>
+
+				<Stack direction={{ xs: "column", md: "row" }} alignItems="center" spacing={1} flexWrap="wrap">
+					<FlowNode
+						title="SelectionBubble / AiChatPanel"
+						badge="FRONTEND"
+						subtitle="document-editor/index.tsx"
+						color={colors.frontend}
+						items={[
+							"Usuario selecciona texto → clic Formalizar",
+							"caseContext: { folderFuero, representedParty... }",
+							"POST /rag/editor/chat",
+							"systemPromptOverride + caseContext + messages",
+						]}
+					/>
+					<FlowArrow label="HTTP" />
+					<FlowNode
+						title="editor.routes.js"
+						badge="API"
+						subtitle="POST /rag/editor/chat"
+						color={colors.api}
+						items={[
+							"1. Cargar pipeline-config (cache 30s)",
+							"2. Construir contextBlock (documento + PDF)",
+							"3. Construir caseContextBlock (fuero + vocabulario)",
+							"4. Obtener styleExamplesBlock (corpus semántico)",
+							"5. Armar systemMessage final",
+						]}
+					/>
+					<FlowArrow label="embed" />
+					<FlowNode
+						title="pjn-style-corpus"
+						badge="PINECONE"
+						subtitle="Índice de corpus de estilo"
+						color={colors.pinecone}
+						items={[
+							"query(embedding, filter: { fuero: 'CIV' })",
+							"topK: 3 escritos más similares",
+							"metadata: { title, textPreview }",
+							"Fallback → MongoDB $sample si falla",
+						]}
+					/>
+					<FlowArrow label="stream" />
+					<FlowNode
+						title="OpenAI API"
+						badge="LLM"
+						subtitle="gpt-4o (configurable)"
+						color={colors.openai}
+						items={[
+							"System: prompt + contexto + vocabulario + ejemplos",
+							"User: texto a formalizar",
+							"Respuesta SSE → chunks en tiempo real",
+						]}
+					/>
+				</Stack>
+
+				<Box sx={{ mt: 2, p: 1.5, borderRadius: 1, bgcolor: alpha(theme.palette.primary.main, 0.04), border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}` }}>
+					<Typography variant="caption" color="text.secondary">
+						<strong>Condición para inyección de corpus:</strong> la request debe incluir <code>systemPromptOverride</code> (la acción tiene un system prompt propio) Y <code>caseContext.folderFuero</code> (el expediente tiene fuero asignado).
+						Si alguna condición no se cumple, el sistema responde normalmente sin los ejemplos de estilo.
+					</Typography>
+				</Box>
+			</SectionBox>
+
+			{/* System message anatomy */}
+			<SectionBox theme={theme}>
+				<SectionTitle>Anatomía del System Message</SectionTitle>
+				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+					El mensaje de sistema que recibe OpenAI se construye concatenando cuatro bloques en orden:
+				</Typography>
+
+				<Stack spacing={1.5}>
+					{[
+						{
+							n: "1",
+							label: "systemPrompt",
+							origin: "EditorAction.systemPromptOverride → pipeline-config.editor.systemPrompt (fallback)",
+							desc: "El prompt base que define el rol del asistente. Si la acción tiene uno propio, tiene prioridad sobre el global.",
+							color: colors.api,
+						},
+						{
+							n: "2",
+							label: "contextBlock",
+							origin: "documentText + pdfUrl/movementText del body",
+							desc: "Texto del documento actual numerado por párrafos y/o el contenido del movimiento/PDF adjunto.",
+							color: colors.frontend,
+						},
+						{
+							n: "3",
+							label: "caseContextBlock",
+							origin: "caseContext del body",
+							desc: "Fuero, vocabulario específico, parte representada, tipo de representación, nombres, expediente.",
+							color: colors.pinecone,
+						},
+						{
+							n: "4",
+							label: "styleExamplesBlock",
+							origin: "Pinecone pjn-style-corpus → MongoDB fallback",
+							desc: "3 escritos judiciales reales del mismo fuero, seleccionados semánticamente por similitud al texto del usuario.",
+							color: colors.corpus,
+						},
+					].map((b) => (
+						<Box key={b.n} sx={{ display: "flex", gap: 2, alignItems: "flex-start" }}>
+							<Box sx={{ minWidth: 28, height: 28, borderRadius: "50%", bgcolor: b.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, mt: 0.2 }}>
+								<Typography variant="caption" fontWeight={700}>{b.n}</Typography>
+							</Box>
+							<Box sx={{ flex: 1 }}>
+								<Typography variant="subtitle2" fontWeight={700} sx={{ color: b.color }}>{b.label}</Typography>
+								<Typography variant="caption" color="text.secondary" display="block" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}>{b.origin}</Typography>
+								<Typography variant="caption" color="text.secondary">{b.desc}</Typography>
+							</Box>
+						</Box>
+					))}
+				</Stack>
+			</SectionBox>
+
+			{/* caseContext */}
+			<SectionBox theme={theme}>
+				<SectionTitle>caseContext — campos y efectos</SectionTitle>
+				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+					Metadatos del expediente que el frontend envía en cada request. Se construye en <code>document-editor/index.tsx</code> a partir del expediente seleccionado.
+				</Typography>
+				<Box component="table" sx={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+					<Box component="thead">
+						<Box component="tr" sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+							{["Campo", "Tipo", "Efecto en la API"].map((h) => (
+								<Box component="th" key={h} sx={{ p: 1, textAlign: "left", borderBottom: `1px solid ${theme.palette.divider}`, fontWeight: 600, fontSize: "0.75rem" }}>
+									{h}
+								</Box>
+							))}
+						</Box>
+					</Box>
+					<Box component="tbody">
+						{[
+							["representedParty", '"actor" | "demandado"', "Determina si usar actor/actora o demandado/demandada"],
+							["representationType", '"patrocinio" | "apoderado"', "patrocinio → primera persona; apoderado → tercera persona"],
+							["folderFuero", "string", "Activa vocabulario específico + corpus de estilo semántico"],
+							["folderJuris", "string", "Añade 'Jurisdicción: CABA/PBA...' al contexto"],
+							["folderName", "string", "Añade 'Expediente: Carátula...' al contexto"],
+							["actorName", "string", "Nombre real del actor en el contexto"],
+							["demandadoName", "string", "Nombre real del demandado en el contexto"],
+						].map(([campo, tipo, efecto]) => (
+							<Box component="tr" key={campo} sx={{ "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.02) } }}>
+								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", fontSize: "0.75rem", color: theme.palette.primary.main }}>{campo}</Box>
+								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", fontSize: "0.7rem", color: theme.palette.text.secondary }}>{tipo}</Box>
+								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem" }}>{efecto}</Box>
+							</Box>
+						))}
+					</Box>
+				</Box>
+			</SectionBox>
+
+			{/* EditorActions */}
+			<SectionBox theme={theme}>
+				<SectionTitle>EditorActions — acciones configurables</SectionTitle>
+				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+					Las acciones que aparecen en el bubble y el panel son documentos MongoDB en la colección <code>editor-actions</code>. Se pueden gestionar desde el tab <strong>Chat Editor</strong> sin tocar código.
+				</Typography>
+				<Stack direction={{ xs: "column", md: "row" }} spacing={2} flexWrap="wrap">
+					{[
+						{ title: "label", desc: "Texto del botón (ej: 'Formalizar')" },
+						{ title: "prompt", desc: "Prompt enviado al LLM. Puede usar {{selectedText}} como placeholder." },
+						{ title: "systemPromptOverride", desc: "System prompt propio. Si presente, activa la inyección del corpus de estilo." },
+						{ title: "scope", desc: "'bubble' = solo en selección flotante, 'panel' = solo en chat lateral, 'both' = ambos" },
+						{ title: "visibility", desc: "'global' = todos los usuarios, 'user' = usuario específico, 'plan' = por plan" },
+						{ title: "context.includeDocument", desc: "Si la acción siempre envía el documento completo como contexto" },
+					].map((f) => (
+						<Box key={f.title} sx={{ flex: "1 1 280px", p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}>
+							<Typography variant="caption" sx={{ fontFamily: "monospace", color: theme.palette.primary.main, display: "block", fontWeight: 700 }}>{f.title}</Typography>
+							<Typography variant="caption" color="text.secondary">{f.desc}</Typography>
+						</Box>
+					))}
+				</Stack>
+
+				<Box sx={{ mt: 2, p: 1.5, borderRadius: 1, bgcolor: alpha(theme.palette.warning.main, 0.05), border: `1px solid ${alpha(theme.palette.warning.main, 0.3)}` }}>
+					<Typography variant="caption" color="text.secondary">
+						<strong>Importante:</strong> el caché de acciones en el servidor dura <strong>5 minutos</strong> por usuario. Los cambios desde admin pueden tardar hasta 5 min en reflejarse. Podés invalidarlo reiniciando el proceso o esperando.
+					</Typography>
+				</Box>
+			</SectionBox>
+
+			{/* Config en caliente */}
+			<SectionBox theme={theme}>
+				<SectionTitle>Configuración en caliente — pipeline-config.editor</SectionTitle>
+				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+					Estos parámetros se leen de la BD con caché de 30s. Se modifican desde el tab <strong>Pipeline</strong>, sin reiniciar el proceso.
+				</Typography>
+				<Box component="table" sx={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+					<Box component="thead">
+						<Box component="tr" sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+							{["Parámetro", "Default", "Descripción"].map((h) => (
+								<Box component="th" key={h} sx={{ p: 1, textAlign: "left", borderBottom: `1px solid ${theme.palette.divider}`, fontWeight: 600, fontSize: "0.75rem" }}>{h}</Box>
+							))}
+						</Box>
+					</Box>
+					<Box component="tbody">
+						{[
+							["model", "gpt-4o", "Modelo OpenAI para el asistente"],
+							["maxTokens", "1024", "Tokens máximos de respuesta"],
+							["temperature", "0.4", "Temperatura del LLM (0.0–1.0)"],
+							["documentMaxChars", "4000", "Máx. caracteres del documento a incluir como contexto"],
+							["pdfMaxChars", "4000", "Máx. caracteres del PDF/movimiento adjunto"],
+							["systemPrompt", "(ver admin)", "Prompt global cuando la acción no tiene override propio"],
+							["rateLimit.max", "20", "Requests máximas por ventana por usuario"],
+							["rateLimit.duration", "60000", "Ventana de rate limit en ms"],
+						].map(([param, def, desc]) => (
+							<Box component="tr" key={param} sx={{ "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.02) } }}>
+								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", fontSize: "0.75rem", color: theme.palette.primary.main }}>{param}</Box>
+								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", fontSize: "0.75rem", color: theme.palette.text.secondary }}>{def}</Box>
+								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem" }}>{desc}</Box>
+							</Box>
+						))}
+					</Box>
+				</Box>
+			</SectionBox>
+
+			{/* Troubleshooting */}
+			<SectionBox theme={theme}>
+				<SectionTitle>Troubleshooting frecuente</SectionTitle>
+				<Stack spacing={2}>
+					{[
+						{
+							prob: "El corpus de estilo no se inyecta",
+							cause: "La acción no tiene systemPromptOverride, o el expediente no tiene folderFuero asignado.",
+							fix: "Verificar en tab Chat Editor que la acción tiene 'System Prompt Override'. Verificar que el expediente tiene fuero completo en la BD.",
+						},
+						{
+							prob: "Las acciones no aparecen en el editor",
+							cause: "Colección editor-actions vacía, acciones con active=false, o caché no expirado.",
+							fix: "Tab Chat Editor → botón 'Seed Acciones'. Verificar que las acciones tienen active=true. Esperar 5 min o reiniciar el proceso.",
+						},
+						{
+							prob: "Respuesta lenta en Formalizar",
+							cause: "Embedding semántico del corpus agrega ~200–500ms. Alta latencia de OpenAI.",
+							fix: "Normal durante picos de OpenAI. Si es sistemático, verificar logs del servidor por errores en embedSingle.",
+						},
+						{
+							prob: "Error 429 (rate limit)",
+							cause: "El usuario superó el límite configurado.",
+							fix: "Ajustar rateLimit.max en tab Pipeline → sección Editor AI.",
+						},
+						{
+							prob: "Respuesta en inglés o sin vocabulario jurídico",
+							cause: "El systemPromptOverride de la acción es incorrecto o está vacío.",
+							fix: "Editar la acción 'Formalizar' desde Chat Editor y verificar que el system prompt está en español y menciona derecho argentino.",
+						},
+					].map((item, i) => (
+						<Box key={i} sx={{ p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}>
+							<Typography variant="subtitle2" fontWeight={600} color="error.main" gutterBottom>⚠ {item.prob}</Typography>
+							<Typography variant="caption" color="text.secondary" display="block"><strong>Causa:</strong> {item.cause}</Typography>
+							<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}><strong>Solución:</strong> {item.fix}</Typography>
+						</Box>
+					))}
+				</Stack>
+			</SectionBox>
+
+		</Stack>
+	);
+};
+
+// ── Sub-tab: Corpus de Estilo ─────────────────────────────────────────────────
+
+const HelpStyleCorpusSection: React.FC = () => {
+	const theme = useTheme();
+
+	const colors = {
+		pipeline: theme.palette.info.main,
+		mongo: theme.palette.success.main,
+		pinecone: theme.palette.secondary.main,
+		worker: theme.palette.primary.main,
+		quality: theme.palette.warning.main,
+	};
+
+	return (
+		<Stack spacing={4} sx={{ p: 3 }}>
+
+			<Stack>
+				<Typography variant="h5">Corpus de Estilo Jurídico</Typography>
+				<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+					Base de conocimiento de escritos judiciales reales usada para calibrar el tono y vocabulario del asistente de documentos.
+				</Typography>
+			</Stack>
+
+			{/* Concepto */}
+			<SectionBox theme={theme}>
+				<SectionTitle>¿Qué es y para qué sirve?</SectionTitle>
+				<Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+					El corpus es una colección de los primeros ~800 caracteres de escritos judiciales reales (tipo "ESCRITO AGREGADO") ya procesados por el pipeline RAG.
+					A diferencia del RAG de causas (que responde preguntas <em>sobre</em> documentos), este corpus no busca información — usa los escritos únicamente como <strong>calibrador de tono y vocabulario</strong> para la generación de nuevos textos.
+				</Typography>
+				<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+					<Box sx={{ flex: 1, p: 1.5, borderRadius: 1.5, bgcolor: alpha(colors.mongo, 0.06), border: `1px solid ${alpha(colors.mongo, 0.2)}` }}>
+						<Typography variant="subtitle2" fontWeight={700} color="success.main" gutterBottom>RAG de causas</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Responde preguntas sobre el contenido de expedientes. Busca información específica en documentos ya indexados.
+							Usa el índice Pinecone shardado por causa.
+						</Typography>
+					</Box>
+					<Box sx={{ flex: 1, p: 1.5, borderRadius: 1.5, bgcolor: alpha(colors.pinecone, 0.06), border: `1px solid ${alpha(colors.pinecone, 0.2)}` }}>
+						<Typography variant="subtitle2" fontWeight={700} sx={{ color: colors.pinecone }} gutterBottom>Corpus de estilo</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Calibra el registro y vocabulario del asistente al fuero. No busca información — inyecta ejemplos de <em>cómo escribe un letrado real</em> de ese fuero.
+							Usa el índice Pinecone global <code>pjn-style-corpus</code>.
+						</Typography>
+					</Box>
+				</Stack>
+			</SectionBox>
+
+			{/* Pipeline */}
+			<SectionBox theme={theme}>
+				<SectionTitle>Pipeline de construcción del corpus</SectionTitle>
+
+				<Stack direction={{ xs: "column", md: "row" }} alignItems="center" spacing={1} flexWrap="wrap">
+					<FlowNode
+						title="rag-documents"
+						badge="MONGODB"
+						subtitle="Documentos ya procesados"
+						color={colors.pipeline}
+						items={[
+							"movimientoTipo = 'ESCRITO AGREGADO'",
+							"status = 'embedded'",
+							"textLength > 400",
+							"textS3Key presente",
+						]}
+					/>
+					<FlowArrow label="descarga S3" />
+					<FlowNode
+						title="build-style-corpus.js"
+						badge="SCRIPT"
+						subtitle="Construcción batch inicial"
+						color={colors.mongo}
+						items={[
+							"Descarga .txt extraído de S3",
+							"Limpia texto (normaliza saltos, spaces)",
+							"Extrae primeros ~800 chars",
+							"Clasifica calidad (BRIEF_SALUTATION)",
+							"Upsert en legal-style-corpus",
+						]}
+					/>
+					<FlowArrow label="clasifica" />
+					<FlowNode
+						title="legal-style-corpus"
+						badge="MONGODB"
+						subtitle="Colección de snippets"
+						color={colors.quality}
+						items={[
+							"fuero, title, textPreview",
+							"quality: 'high' | 'normal'",
+							"vectorId: null → pendiente embed",
+							"~71% high quality",
+						]}
+					/>
+					<FlowArrow label="embebe" />
+					<FlowNode
+						title="pjn-style-corpus"
+						badge="PINECONE"
+						subtitle="Índice global de estilo"
+						color={colors.pinecone}
+						items={[
+							"1024 dims, cosine, serverless",
+							"metadata: { fuero, title, textPreview }",
+							"6.703 vectores (al 23/03/2026)",
+							"filter: { fuero: { $eq: 'CIV' } }",
+						]}
+					/>
+				</Stack>
+
+				<Box sx={{ mt: 2, p: 1.5, borderRadius: 1, bgcolor: alpha(colors.worker, 0.04), border: `1px solid ${alpha(colors.worker, 0.15)}` }}>
+					<Typography variant="subtitle2" fontWeight={600} gutterBottom>Ingesta en tiempo real (automática)</Typography>
+					<Typography variant="caption" color="text.secondary">
+						<code>indexDocument.worker.js</code> llama a <code>ingestStyleCorpusDoc(ragDoc, text)</code> después de procesar cada documento.
+						Si es un ESCRITO AGREGADO con calidad 'high', lo agrega a MongoDB y lo embebe a Pinecone de forma asíncrona (no bloquea el pipeline principal).
+					</Typography>
+				</Box>
+			</SectionBox>
+
+			{/* Calidad */}
+			<SectionBox theme={theme}>
+				<SectionTitle>Clasificación de calidad</SectionTitle>
+				<Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+					Un documento se clasifica como <strong>high</strong> si contiene un saludo reconocible al juez en los primeros 400 caracteres:
+				</Typography>
+				<Box sx={{ p: 1.5, borderRadius: 1, bgcolor: alpha(theme.palette.grey[500], 0.08), fontFamily: "monospace", fontSize: "0.8rem", mb: 1.5 }}>
+					/señor\s+juez|sr\.\s*juez|sr\/a\.\s*juez|excm[ao]\.|a\s+v\.s\.|a\s+s\.s\.|señora\s+jueza/i
+				</Box>
+				<Stack direction="row" spacing={2}>
+					<Box sx={{ flex: 1, p: 1.5, borderRadius: 1.5, bgcolor: alpha(colors.mongo, 0.06), border: `1px solid ${alpha(colors.mongo, 0.2)}` }}>
+						<Typography variant="subtitle2" fontWeight={700} color="success.main">high (~71.7%)</Typography>
+						<Typography variant="caption" color="text.secondary">Escritos judiciales confirmados. Tienen el saludo al juez en los primeros 400 chars. Solo estos se embedan en Pinecone y se inyectan como ejemplos.</Typography>
+					</Box>
+					<Box sx={{ flex: 1, p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}>
+						<Typography variant="subtitle2" fontWeight={700} color="text.secondary">normal (~28.3%)</Typography>
+						<Typography variant="caption" color="text.secondary">Sin saludo al juez en los primeros 400 chars. Pueden ser tablas OCR, formularios, carátulas o escritos que comienzan directamente con el cuerpo.</Typography>
+					</Box>
+				</Stack>
+			</SectionBox>
+
+			{/* Estado del corpus */}
+			<SectionBox theme={theme}>
+				<SectionTitle>Estado del corpus (al 23/03/2026)</SectionTitle>
+				<Box component="table" sx={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+					<Box component="thead">
+						<Box component="tr" sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+							{["Fuero", "Código", "Total corpus", "High quality", "Embebidos en Pinecone"].map((h) => (
+								<Box component="th" key={h} sx={{ p: 1, textAlign: "left", borderBottom: `1px solid ${theme.palette.divider}`, fontWeight: 600, fontSize: "0.75rem" }}>{h}</Box>
+							))}
+						</Box>
+					</Box>
+					<Box component="tbody">
+						{[
+							["Civil", "CIV", "4.826", "3.648", "3.648"],
+							["Laboral", "CNT", "1.760", "1.168", "1.168"],
+							["Seg. Social", "CSS", "1.220", "724", "724"],
+							["Familia", "FSM", "958", "779", "779"],
+							["Comercial", "COM", "582", "384", "384"],
+							["Total", "—", "9.346", "6.703", "6.703"],
+						].map(([fuero, cod, total, high, emb]) => (
+							<Box component="tr" key={fuero} sx={{ "&:last-child td": { fontWeight: 700 }, "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.02) } }}>
+								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem" }}>{fuero}</Box>
+								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", fontSize: "0.75rem", color: theme.palette.primary.main }}>{cod}</Box>
+								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem" }}>{total}</Box>
+								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem", color: "success.main" }}>{high}</Box>
+								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem" }}>{emb}</Box>
+							</Box>
+						))}
+					</Box>
+				</Box>
+				<Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+					Ver estadísticas actualizadas en tiempo real en el tab <strong>Corpus de Estilo</strong>.
+				</Typography>
+			</SectionBox>
+
+			{/* Scripts de mantenimiento */}
+			<SectionBox theme={theme}>
+				<SectionTitle>Scripts de mantenimiento</SectionTitle>
+				<Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+					Todos los scripts son <strong>idempotentes</strong> — saltean entradas ya procesadas.
+					Correr desde <code>/home/mcerra/www/pjn-rag-api/</code>.
+				</Typography>
+				<Stack spacing={2}>
+					{[
+						{
+							script: "node scripts/build-style-corpus.js",
+							flags: "--fuero CIV  --limit 500  --stats  --concurrency 10",
+							desc: "Extrae snippets de S3 para documentos ESCRITO AGREGADO aún no procesados. Usa después de un procesamiento masivo de nuevas causas.",
+						},
+						{
+							script: "node scripts/classify-style-corpus.js",
+							flags: "--all  --stats",
+							desc: "Re-clasifica la calidad de entradas existentes. Usar si se ajusta el heurístico BRIEF_SALUTATION. Sin --all solo clasifica las entradas sin calidad.",
+						},
+						{
+							script: "node scripts/embed-style-corpus.js",
+							flags: "--fuero CIV  --limit 200  --stats  --create-index",
+							desc: "Embebe entradas high-quality pendientes en Pinecone. --create-index recrea el índice (destructivo). Usar --stats para revisar estado antes de correr.",
+						},
+						{
+							script: "node scripts/test-formalizar.js --test-style",
+							flags: "--variant N  --update N  --show-current",
+							desc: "Valida end-to-end el corpus de estilo. Compara respuestas con/sin folderFuero para Civil y Laboral. Útil para confirmar que el corpus está activo.",
+						},
+					].map((s, i) => (
+						<Box key={i} sx={{ p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}>
+							<Typography variant="caption" sx={{ fontFamily: "monospace", color: theme.palette.primary.main, display: "block", fontWeight: 700, mb: 0.5 }}>{s.script}</Typography>
+							<Typography variant="caption" sx={{ fontFamily: "monospace", color: theme.palette.text.secondary, display: "block", fontSize: "0.7rem", mb: 0.5 }}>flags: {s.flags}</Typography>
+							<Typography variant="caption" color="text.secondary">{s.desc}</Typography>
+						</Box>
+					))}
+				</Stack>
+			</SectionBox>
+
+			{/* Troubleshooting */}
+			<SectionBox theme={theme}>
+				<SectionTitle>Troubleshooting frecuente</SectionTitle>
+				<Stack spacing={2}>
+					{[
+						{
+							prob: "build-style-corpus procesa 0 documentos",
+							cause: "Credenciales AWS S3 ausentes o incorrectas en el .env de pjn-rag-api.",
+							fix: "Verificar AWS_S3_ACCESS_KEY_ID, AWS_S3_SECRET_ACCESS_KEY, AWS_S3_BUCKET_NAME en /home/mcerra/www/pjn-rag-api/.env.",
+						},
+						{
+							prob: "embed-style-corpus falla con 'PINECONE_API_KEY not configured'",
+							cause: "Variable de entorno ausente.",
+							fix: "Agregar PINECONE_API_KEY al .env de pjn-rag-api. El sistema cae en fallback $sample automáticamente hasta que se configure.",
+						},
+						{
+							prob: "Los ejemplos de estilo son irrelevantes al contenido",
+							cause: "Pinecone no disponible → el sistema usó $sample aleatorio.",
+							fix: "Verificar logs del servidor por '[EditorAI] Semantic style search failed'. Confirmar que PINECONE_STYLE_INDEX=pjn-style-corpus está en .env.",
+						},
+						{
+							prob: "Un fuero no tiene corpus (CAF, CPF)",
+							cause: "Esos fueros tienen pocos escritos procesados o ninguno.",
+							fix: "Ejecutar build-style-corpus.js --fuero CAF cuando haya escritos de ese fuero indexados. La inyección de corpus se omite silenciosamente para fueros sin vectores.",
+						},
+						{
+							prob: "Documento nuevo no aparece en el corpus",
+							cause: "El worker estaba offline o el documento no es ESCRITO AGREGADO.",
+							fix: "Ejecutar node scripts/build-style-corpus.js para capturar documentos perdidos. Verificar que movimientoTipo = 'ESCRITO AGREGADO' en el RagDocument.",
+						},
+					].map((item, i) => (
+						<Box key={i} sx={{ p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}>
+							<Typography variant="subtitle2" fontWeight={600} color="error.main" gutterBottom>⚠ {item.prob}</Typography>
+							<Typography variant="caption" color="text.secondary" display="block"><strong>Causa:</strong> {item.cause}</Typography>
+							<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}><strong>Solución:</strong> {item.fix}</Typography>
+						</Box>
+					))}
+				</Stack>
+			</SectionBox>
+
+		</Stack>
+	);
+};
+
 // ── Main component with internal tabs ────────────────────────────────────────
 
 const HELP_TABS = [
-	{ label: "Pipeline", value: "pipeline" },
+	{ label: "Pipeline RAG", value: "pipeline" },
 	{ label: "Controles y costos", value: "control" },
 	{ label: "Rendimiento", value: "performance" },
 	{ label: "Infraestructura", value: "infrastructure" },
+	{ label: "Chat Editor IA", value: "editor-ai" },
+	{ label: "Corpus de Estilo", value: "style-corpus" },
 ] as const;
 
 const WorkerHelpTab = () => {
@@ -1727,6 +2270,8 @@ const WorkerHelpTab = () => {
 			{subTab === "control" && <HelpControlSection />}
 			{subTab === "performance" && <HelpPerformanceSection />}
 			{subTab === "infrastructure" && <HelpInfrastructureSection />}
+			{subTab === "editor-ai" && <HelpEditorAiSection />}
+			{subTab === "style-corpus" && <HelpStyleCorpusSection />}
 		</Stack>
 	);
 };
