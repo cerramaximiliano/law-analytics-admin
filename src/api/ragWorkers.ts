@@ -220,6 +220,7 @@ export interface PipelineConfig {
 	pinecone: PipelinePineconeConfig;
 	llm: PipelineLlmConfig;
 	editor: PipelineEditorConfig;
+	escritosWorker: EscritosWorkerConfig;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -481,6 +482,49 @@ export interface DocumentAnalytics {
 	slowest: SlowestDocument[];
 	scannedPdfRatio: ScannedPdfRatio | null;
 	avgConfig: AvgConfigSnapshot | null;
+}
+
+// ─── Escritos Worker types ────────────────────────────────────────────────────
+
+export interface EscritosWorkerConfig {
+	enabled: boolean;
+	scanCron: string;
+	concurrency: number;
+	maxPdfSizeMb: number;
+	activeFueros: string[];
+	relevantDocTypes: string[];
+	pauseUntil: string | null;
+}
+
+export interface EscritosWorkerStats {
+	total: number;
+	byStatus: Record<string, number>;
+	recentErrors24h: number;
+	embedded: number;
+	pending: number;
+	error: number;
+	deferred: number;
+}
+
+export interface GlobalDocumentEntry {
+	_id: string;
+	causeId: string;
+	causaType: string;
+	fuero: string;
+	docType: string;
+	status: string;
+	charCount?: number;
+	chunksCount?: number;
+	movimientoTipo?: string;
+	movimientoFecha?: string;
+	embeddedAt?: string;
+	errorMessage?: string;
+	updatedAt: string;
+}
+
+export interface GlobalDocumentsResponse {
+	docs: GlobalDocumentEntry[];
+	pagination: { total: number; page: number; limit: number; pages: number };
 }
 
 // ─── Style Corpus types ───────────────────────────────────────────────────────
@@ -746,6 +790,30 @@ class RagWorkersService {
 
 	static async getDocumentAnalytics(period = "week", limit = 10): Promise<DocumentAnalytics> {
 		const res = await ragAxios.get(`${BASE}/analytics/documents`, { params: { period, limit } });
+		return res.data.data;
+	}
+
+	// ── Escritos Worker ─────────────────────────────────────────────────────
+
+	static async getEscritosWorkerConfig(): Promise<EscritosWorkerConfig> {
+		const res = await ragAxios.get(`${BASE}/escritos-worker/config`);
+		return res.data.data;
+	}
+
+	static async updateEscritosWorkerConfig(data: Partial<EscritosWorkerConfig>): Promise<EscritosWorkerConfig> {
+		const res = await ragAxios.patch(`${BASE}/escritos-worker/config`, data);
+		return res.data.data;
+	}
+
+	static async getEscritosWorkerStats(): Promise<EscritosWorkerStats> {
+		const res = await ragAxios.get(`${BASE}/escritos-worker/stats`);
+		return res.data.data;
+	}
+
+	static async getEscritosWorkerDocuments(
+		opts: { status?: string; fuero?: string; limit?: number; page?: number } = {}
+	): Promise<GlobalDocumentsResponse> {
+		const res = await ragAxios.get(`${BASE}/escritos-worker/documents`, { params: opts });
 		return res.data.data;
 	}
 

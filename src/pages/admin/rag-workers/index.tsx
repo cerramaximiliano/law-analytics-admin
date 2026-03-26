@@ -13,6 +13,7 @@ import WorkerHelpTab from "./WorkerHelpTab";
 import ChatRagTab from "./ChatRagTab";
 import ChatEditorTab from "./ChatEditorTab";
 import StyleCorpusTab from "./StyleCorpusTab";
+import EscritosWorkerTab from "./EscritosWorkerTab";
 
 interface RagWorkerTab {
 	label: string;
@@ -83,6 +84,12 @@ const RagWorkersPage = () => {
 			value: "style-corpus",
 			icon: <Book size={20} />,
 			component: <StyleCorpusTab />,
+		},
+		{
+			label: "Escritos Worker",
+			value: "escritos-worker",
+			icon: <DocumentText size={20} />,
+			component: <EscritosWorkerTab />,
 		},
 		{
 			label: "Ayuda",
