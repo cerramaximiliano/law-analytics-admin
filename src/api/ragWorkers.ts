@@ -491,6 +491,22 @@ export interface StyleCorpusExample {
 	preview: string;
 }
 
+export interface StyleCorpusSearchResult {
+	id: string;
+	score: number;
+	fuero: string | null;
+	docType: string | null;
+	title: string | null;
+	preview: string;
+}
+
+export interface StyleCorpusSearchMeta {
+	query: string;
+	fueroCode: string | null;
+	docType: string | null;
+	total: number;
+}
+
 export interface StyleCorpusByFuero {
 	_id: string;
 	total: number;
@@ -745,6 +761,19 @@ class RagWorkersService {
 		if (docType) params.docType = docType;
 		const res = await ragAxios.get("/rag/editor/style-examples", { params });
 		return res.data.data ?? [];
+	}
+
+	static async searchStyleCorpus(
+		q: string,
+		opts: { fuero?: string; docType?: string; limit?: number; minScore?: number } = {}
+	): Promise<{ data: StyleCorpusSearchResult[]; meta: StyleCorpusSearchMeta }> {
+		const params: Record<string, string | number> = { q };
+		if (opts.fuero)    params.fuero    = opts.fuero;
+		if (opts.docType)  params.docType  = opts.docType;
+		if (opts.limit)    params.limit    = opts.limit;
+		if (opts.minScore) params.minScore = opts.minScore;
+		const res = await ragAxios.get(`${BASE}/style-corpus/search`, { params });
+		return { data: res.data.data ?? [], meta: res.data.meta };
 	}
 }
 
