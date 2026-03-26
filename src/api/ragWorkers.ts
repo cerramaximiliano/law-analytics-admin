@@ -527,6 +527,43 @@ export interface GlobalDocumentsResponse {
 	pagination: { total: number; page: number; limit: number; pages: number };
 }
 
+export interface EscritosCausa {
+	_id: string;
+	causaType: string;
+	fuero: string;
+	total: number;
+	embedded: number;
+	error: number;
+	deferred: number;
+	lastUpdated: string;
+	docTypes: string[];
+}
+
+export interface EscritosCausasResponse {
+	causas: EscritosCausa[];
+	pagination: { total: number; page: number; limit: number; pages: number };
+}
+
+export interface EscritosSearchResult {
+	id: string;
+	score: number;
+	causeId: string | null;
+	docId: string | null;
+	fuero: string | null;
+	docType: string | null;
+	sectionType: string | null;
+	chunkIndex: number | null;
+	preview: string;
+}
+
+export interface EscritosSearchMeta {
+	query: string;
+	fuero: string | null;
+	docType: string | null;
+	sectionType: string | null;
+	total: number;
+}
+
 // ─── Style Corpus types ───────────────────────────────────────────────────────
 
 export interface StyleCorpusExample {
@@ -815,6 +852,21 @@ class RagWorkersService {
 	): Promise<GlobalDocumentsResponse> {
 		const res = await ragAxios.get(`${BASE}/escritos-worker/documents`, { params: opts });
 		return res.data.data;
+	}
+
+	static async getEscritosWorkerCausas(
+		opts: { fuero?: string; status?: string; limit?: number; page?: number } = {}
+	): Promise<EscritosCausasResponse> {
+		const res = await ragAxios.get(`${BASE}/escritos-worker/causas`, { params: opts });
+		return res.data.data;
+	}
+
+	static async searchEscritosWorker(
+		q: string,
+		opts: { fuero?: string; docType?: string; sectionType?: string; limit?: number; minScore?: number } = {}
+	): Promise<{ data: EscritosSearchResult[]; meta: EscritosSearchMeta }> {
+		const res = await ragAxios.get(`${BASE}/escritos-worker/search`, { params: { q, ...opts } });
+		return { data: res.data.data ?? [], meta: res.data.meta };
 	}
 
 	// ── Style Corpus ────────────────────────────────────────────────────────
