@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
 	Box,
 	Stack,
@@ -24,43 +24,42 @@ import {
 	MenuItem,
 	FormControl,
 	InputLabel,
+	LinearProgress,
+	Tab,
+	Tabs,
+	InputAdornment,
+	IconButton,
+	Card,
+	CardContent,
 	useTheme,
 	alpha,
 } from "@mui/material";
-import { Refresh, TickCircle, CloseCircle } from "iconsax-react";
+import { Refresh, TickCircle, CloseCircle, SearchNormal1, Setting2, DocumentText, Folder2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import RagWorkersService, { EscritosWorkerConfig, EscritosWorkerStats, GlobalDocumentEntry } from "api/ragWorkers";
+import RagWorkersService, {
+	EscritosWorkerConfig,
+	EscritosWorkerStats,
+	GlobalDocumentEntry,
+	EscritosCausa,
+	EscritosSearchResult,
+} from "api/ragWorkers";
 
 // ── Constantes ───────────────────────────────────────────────────────────────
 
 const ALL_FUEROS = ["CIV", "CNT", "CSS", "COM"];
-const FUERO_LABELS: Record<string, string> = {
-	CIV: "Civil",
-	CNT: "Trabajo (CNT)",
-	CSS: "Seguridad Social",
-	COM: "Comercial",
-};
+const FUERO_LABELS: Record<string, string> = { CIV: "Civil", CNT: "Trabajo", CSS: "Seg. Social", COM: "Comercial" };
 
 const ALL_DOC_TYPES = [
-	"demanda",
-	"contestacion_demanda",
-	"reconvencion",
-	"expresion_agravios",
-	"contestacion_agravios",
-	"recurso_extraordinario",
-	"sentencia",
+	"demanda", "contestacion_demanda", "reconvencion",
+	"expresion_agravios", "contestacion_agravios",
+	"recurso_extraordinario", "sentencia",
 ];
 
+const SECTION_TYPES = ["apertura", "hechos", "fundamentos", "petitorio", "body"];
+
 const STATUS_COLORS: Record<string, "default" | "info" | "success" | "warning" | "error"> = {
-	pending: "info",
-	downloading: "info",
-	extracting: "info",
-	extracted: "warning",
-	chunking: "info",
-	chunked: "info",
-	embedding: "info",
-	embedded: "success",
-	error: "error",
+	pending: "info", downloading: "info", extracting: "info", extracted: "warning",
+	chunking: "info", chunked: "info", embedding: "info", embedded: "success", error: "error",
 };
 
 const DOC_STATUS_OPTIONS = ["", "pending", "extracting", "extracted", "embedding", "embedded", "error"];
@@ -70,451 +69,536 @@ const DOC_STATUS_OPTIONS = ["", "pending", "extracting", "extracted", "embedding
 function StatCard({ label, value, color }: { label: string; value: number | string; color?: string }) {
 	const theme = useTheme();
 	return (
-		<Box
-			sx={{
-				p: 2,
-				borderRadius: 2,
-				border: `1px solid ${theme.palette.divider}`,
-				bgcolor: alpha(theme.palette.primary.main, 0.03),
-				minWidth: 120,
-			}}
-		>
+		<Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.03), minWidth: 120 }}>
 			<Typography variant="h4" fontWeight={700} color={color || "text.primary"}>
 				{typeof value === "number" ? value.toLocaleString("es-AR") : value}
 			</Typography>
-			<Typography variant="caption" color="text.secondary">
-				{label}
-			</Typography>
+			<Typography variant="caption" color="text.secondary">{label}</Typography>
 		</Box>
+	);
+}
+
+function fmtDate(d?: string) {
+	if (!d) return "-";
+	return new Date(d).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
+}
+
+// ── Tab: Configuración ───────────────────────────────────────────────────────
+
+function ConfigSection() {
+	const theme = useTheme();
+	const { enqueueSnackbar } = useSnackbar();
+	const [config, setConfig] = useState<EscritosWorkerConfig | null>(null);
+	const [loading, setLoading] = useState(true);
+	const [saving, setSaving] = useState(false);
+	const [local, setLocal] = useState<Partial<EscritosWorkerConfig>>({});
+	const [dirty, setDirty] = useState(false);
+
+	const load = useCallback(async () => {
+		setLoading(true);
+		try {
+			const data = await RagWorkersService.getEscritosWorkerConfig();
+			setConfig(data); setLocal(data); setDirty(false);
+		} catch { enqueueSnackbar("Error al cargar configuración", { variant: "error" }); }
+		finally { setLoading(false); }
+	}, [enqueueSnackbar]);
+
+	useEffect(() => { load(); }, [load]);
+
+	function patch(key: keyof EscritosWorkerConfig, value: unknown) {
+		setLocal(p => ({ ...p, [key]: value })); setDirty(true);
+	}
+	function toggleFuero(f: string) {
+		const cur = local.activeFueros ?? config?.activeFueros ?? [];
+		patch("activeFueros", cur.includes(f) ? cur.filter(x => x !== f) : [...cur, f]);
+	}
+	function toggleDocType(dt: string) {
+		const cur = local.relevantDocTypes ?? config?.relevantDocTypes ?? [];
+		patch("relevantDocTypes", cur.includes(dt) ? cur.filter(x => x !== dt) : [...cur, dt]);
+	}
+
+	async function save() {
+		setSaving(true);
+		try {
+			const saved = await RagWorkersService.updateEscritosWorkerConfig(local);
+			setConfig(saved); setLocal(saved); setDirty(false);
+			enqueueSnackbar("Configuración guardada", { variant: "success" });
+		} catch { enqueueSnackbar("Error al guardar", { variant: "error" }); }
+		finally { setSaving(false); }
+	}
+
+	if (loading) return <Stack spacing={2}>{[...Array(4)].map((_, i) => <Skeleton key={i} variant="rounded" height={56} />)}</Stack>;
+
+	const enabled = local.enabled ?? config?.enabled ?? false;
+
+	return (
+		<Stack spacing={3}>
+			<Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: enabled ? alpha(theme.palette.success.main, 0.05) : alpha(theme.palette.error.main, 0.05) }}>
+				<FormControlLabel
+					control={<Switch checked={enabled} onChange={e => patch("enabled", e.target.checked)} />}
+					label={
+						<Box>
+							<Typography fontWeight={600}>{enabled ? "Worker habilitado" : "Worker deshabilitado"}</Typography>
+							<Typography variant="caption" color="text.secondary">Cuando está deshabilitado el cron no encola nuevos escritos</Typography>
+						</Box>
+					}
+				/>
+			</Box>
+
+			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+				<TextField label="Cron de escaneo" value={local.scanCron ?? config?.scanCron ?? ""} onChange={e => patch("scanCron", e.target.value)} helperText="Requiere reinicio del worker" size="small" sx={{ flex: 1 }} />
+				<TextField label="Concurrencia" type="number" value={local.concurrency ?? config?.concurrency ?? 3} onChange={e => patch("concurrency", parseInt(e.target.value, 10))} helperText="Workers simultáneos (1-20)" size="small" inputProps={{ min: 1, max: 20 }} sx={{ flex: 1 }} />
+				<TextField label="Tamaño máx. PDF (MB)" type="number" value={local.maxPdfSizeMb ?? config?.maxPdfSizeMb ?? 25} onChange={e => patch("maxPdfSizeMb", parseInt(e.target.value, 10))} helperText="PDFs más grandes se ignoran" size="small" inputProps={{ min: 1, max: 100 }} sx={{ flex: 1 }} />
+			</Stack>
+
+			<TextField label="Pausar hasta" type="datetime-local" value={local.pauseUntil ? new Date(local.pauseUntil).toISOString().slice(0, 16) : ""}
+				onChange={e => patch("pauseUntil", e.target.value ? new Date(e.target.value).toISOString() : null)}
+				helperText="Dejar vacío para no pausar" size="small" InputLabelProps={{ shrink: true }} sx={{ maxWidth: 300 }} />
+
+			<Box>
+				<Typography variant="body2" fontWeight={600} mb={1}>Fueros activos</Typography>
+				<FormGroup row>
+					{ALL_FUEROS.map(f => (
+						<FormControlLabel key={f} control={<Checkbox checked={(local.activeFueros ?? config?.activeFueros ?? []).includes(f)} onChange={() => toggleFuero(f)} size="small" />} label={FUERO_LABELS[f] || f} />
+					))}
+				</FormGroup>
+			</Box>
+
+			<Box>
+				<Typography variant="body2" fontWeight={600} mb={1}>Tipos de documento</Typography>
+				<Stack direction="row" flexWrap="wrap" gap={1}>
+					{ALL_DOC_TYPES.map(dt => {
+						const active = (local.relevantDocTypes ?? config?.relevantDocTypes ?? []).includes(dt);
+						return <Chip key={dt} label={dt} size="small" variant={active ? "filled" : "outlined"} color={active ? "primary" : "default"} onClick={() => toggleDocType(dt)} sx={{ cursor: "pointer" }} />;
+					})}
+				</Stack>
+			</Box>
+
+			<Stack direction="row" spacing={2} alignItems="center">
+				<Button variant="contained" onClick={save} disabled={!dirty || saving} startIcon={<TickCircle size={18} />}>
+					{saving ? "Guardando..." : "Guardar cambios"}
+				</Button>
+				{dirty && (
+					<Button variant="outlined" color="inherit" onClick={() => { setLocal(config || {}); setDirty(false); }} startIcon={<CloseCircle size={18} />}>
+						Descartar
+					</Button>
+				)}
+				{dirty && <Alert severity="warning" sx={{ py: 0.5, px: 1 }}>Cambios sin guardar</Alert>}
+			</Stack>
+		</Stack>
+	);
+}
+
+// ── Tab: Documentos ──────────────────────────────────────────────────────────
+
+function DocumentosSection() {
+	const theme = useTheme();
+	const { enqueueSnackbar } = useSnackbar();
+	const [stats, setStats] = useState<EscritosWorkerStats | null>(null);
+	const [statsLoading, setStatsLoading] = useState(true);
+	const [docs, setDocs] = useState<GlobalDocumentEntry[]>([]);
+	const [docsTotal, setDocsTotal] = useState(0);
+	const [docsLoading, setDocsLoading] = useState(true);
+	const [filterStatus, setFilterStatus] = useState("");
+	const [filterFuero, setFilterFuero] = useState("");
+	const [page, setPage] = useState(1);
+	const limit = 20;
+
+	const loadStats = useCallback(async () => {
+		setStatsLoading(true);
+		try { setStats(await RagWorkersService.getEscritosWorkerStats()); }
+		catch { enqueueSnackbar("Error al cargar estadísticas", { variant: "error" }); }
+		finally { setStatsLoading(false); }
+	}, [enqueueSnackbar]);
+
+	const loadDocs = useCallback(async () => {
+		setDocsLoading(true);
+		try {
+			const data = await RagWorkersService.getEscritosWorkerDocuments({ status: filterStatus || undefined, fuero: filterFuero || undefined, page, limit });
+			setDocs(data.docs); setDocsTotal(data.pagination.total);
+		} catch { enqueueSnackbar("Error al cargar documentos", { variant: "error" }); }
+		finally { setDocsLoading(false); }
+	}, [filterStatus, filterFuero, page, enqueueSnackbar]);
+
+	useEffect(() => { loadStats(); }, [loadStats]);
+	useEffect(() => { loadDocs(); }, [loadDocs]);
+
+	return (
+		<Stack spacing={3}>
+			{/* Stats */}
+			{statsLoading ? (
+				<Stack direction="row" spacing={2}>{[...Array(5)].map((_, i) => <Skeleton key={i} variant="rounded" width={130} height={70} />)}</Stack>
+			) : stats ? (
+				<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+					<StatCard label="Total" value={stats.total} />
+					<StatCard label="Embeddings OK" value={stats.embedded} color={theme.palette.success.main} />
+					<StatCard label="Pendientes" value={stats.pending} color={theme.palette.info.main} />
+					<StatCard label="Con error" value={stats.error} color={theme.palette.error.main} />
+					<StatCard label="Requieren OCR" value={stats.deferred} color={theme.palette.warning.main} />
+					<StatCard label="Errores 24h" value={stats.recentErrors24h} color={stats.recentErrors24h > 0 ? theme.palette.error.main : undefined} />
+				</Stack>
+			) : null}
+
+			<Divider />
+
+			{/* Filtros + tabla */}
+			<Stack direction="row" justifyContent="space-between" alignItems="center">
+				<Typography variant="subtitle2" fontWeight={600}>Documentos procesados</Typography>
+				<Stack direction="row" spacing={1}>
+					<FormControl size="small" sx={{ minWidth: 130 }}>
+						<InputLabel>Estado</InputLabel>
+						<Select value={filterStatus} label="Estado" onChange={e => { setFilterStatus(e.target.value); setPage(1); }}>
+							{DOC_STATUS_OPTIONS.map(s => <MenuItem key={s} value={s}>{s || "Todos"}</MenuItem>)}
+						</Select>
+					</FormControl>
+					<FormControl size="small" sx={{ minWidth: 110 }}>
+						<InputLabel>Fuero</InputLabel>
+						<Select value={filterFuero} label="Fuero" onChange={e => { setFilterFuero(e.target.value); setPage(1); }}>
+							<MenuItem value="">Todos</MenuItem>
+							{ALL_FUEROS.map(f => <MenuItem key={f} value={f}>{FUERO_LABELS[f]}</MenuItem>)}
+						</Select>
+					</FormControl>
+					<Button size="small" startIcon={<Refresh size={16} />} onClick={loadDocs} variant="outlined">Actualizar</Button>
+				</Stack>
+			</Stack>
+
+			{docsLoading ? <Skeleton variant="rounded" height={200} /> : (
+				<>
+					<TableContainer component={Paper} variant="outlined">
+						<Table size="small">
+							<TableHead>
+								<TableRow>
+									<TableCell>Tipo doc.</TableCell>
+									<TableCell>Fuero</TableCell>
+									<TableCell>Estado</TableCell>
+									<TableCell align="right">Chars</TableCell>
+									<TableCell align="right">Chunks</TableCell>
+									<TableCell>Actualizado</TableCell>
+								</TableRow>
+							</TableHead>
+							<TableBody>
+								{docs.length === 0 ? (
+									<TableRow><TableCell colSpan={6} align="center"><Typography variant="body2" color="text.secondary" py={2}>No hay documentos</Typography></TableCell></TableRow>
+								) : docs.map(doc => (
+									<TableRow key={doc._id} hover>
+										<TableCell><Typography variant="caption">{doc.docType || doc.movimientoTipo || "-"}</Typography></TableCell>
+										<TableCell><Chip label={doc.fuero || "-"} size="small" variant="outlined" /></TableCell>
+										<TableCell><Chip label={doc.status} size="small" color={STATUS_COLORS[doc.status] || "default"} /></TableCell>
+										<TableCell align="right"><Typography variant="caption">{doc.charCount?.toLocaleString("es-AR") || "-"}</Typography></TableCell>
+										<TableCell align="right"><Typography variant="caption">{doc.chunksCount || "-"}</Typography></TableCell>
+										<TableCell><Typography variant="caption">{fmtDate(doc.updatedAt)}</Typography></TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
+					</TableContainer>
+					<Stack direction="row" justifyContent="space-between" alignItems="center">
+						<Typography variant="caption" color="text.secondary">{docsTotal.toLocaleString("es-AR")} documentos</Typography>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Button size="small" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Anterior</Button>
+							<Typography variant="caption">Pág. {page}</Typography>
+							<Button size="small" disabled={page * limit >= docsTotal} onClick={() => setPage(p => p + 1)}>Siguiente</Button>
+						</Stack>
+					</Stack>
+				</>
+			)}
+		</Stack>
+	);
+}
+
+// ── Tab: Causas ──────────────────────────────────────────────────────────────
+
+function CausasSection() {
+	const { enqueueSnackbar } = useSnackbar();
+	const [causas, setCausas] = useState<EscritosCausa[]>([]);
+	const [total, setTotal] = useState(0);
+	const [loading, setLoading] = useState(true);
+	const [filterFuero, setFilterFuero] = useState("");
+	const [filterStatus, setFilterStatus] = useState("all");
+	const [page, setPage] = useState(1);
+	const limit = 30;
+
+	const load = useCallback(async () => {
+		setLoading(true);
+		try {
+			const data = await RagWorkersService.getEscritosWorkerCausas({ fuero: filterFuero || undefined, status: filterStatus, page, limit });
+			setCausas(data.causas); setTotal(data.pagination.total);
+		} catch { enqueueSnackbar("Error al cargar causas", { variant: "error" }); }
+		finally { setLoading(false); }
+	}, [filterFuero, filterStatus, page, enqueueSnackbar]);
+
+	useEffect(() => { load(); }, [load]);
+
+	return (
+		<Stack spacing={3}>
+			<Stack direction="row" justifyContent="space-between" alignItems="center">
+				<Typography variant="subtitle2" fontWeight={600}>Causas con documentos procesados</Typography>
+				<Stack direction="row" spacing={1}>
+					<FormControl size="small" sx={{ minWidth: 130 }}>
+						<InputLabel>Estado causa</InputLabel>
+						<Select value={filterStatus} label="Estado causa" onChange={e => { setFilterStatus(e.target.value); setPage(1); }}>
+							<MenuItem value="all">Todas</MenuItem>
+							<MenuItem value="complete">Completas</MenuItem>
+							<MenuItem value="partial">Parciales</MenuItem>
+							<MenuItem value="error">Con error</MenuItem>
+						</Select>
+					</FormControl>
+					<FormControl size="small" sx={{ minWidth: 110 }}>
+						<InputLabel>Fuero</InputLabel>
+						<Select value={filterFuero} label="Fuero" onChange={e => { setFilterFuero(e.target.value); setPage(1); }}>
+							<MenuItem value="">Todos</MenuItem>
+							{ALL_FUEROS.map(f => <MenuItem key={f} value={f}>{FUERO_LABELS[f]}</MenuItem>)}
+						</Select>
+					</FormControl>
+					<Button size="small" startIcon={<Refresh size={16} />} onClick={load} variant="outlined">Actualizar</Button>
+				</Stack>
+			</Stack>
+
+			{loading ? <Skeleton variant="rounded" height={300} /> : (
+				<>
+					<TableContainer component={Paper} variant="outlined">
+						<Table size="small">
+							<TableHead>
+								<TableRow>
+									<TableCell>Causa ID</TableCell>
+									<TableCell>Fuero</TableCell>
+									<TableCell>Tipos de doc.</TableCell>
+									<TableCell align="right">Total docs</TableCell>
+									<TableCell>Progreso</TableCell>
+									<TableCell align="right">Errores</TableCell>
+									<TableCell>Última act.</TableCell>
+								</TableRow>
+							</TableHead>
+							<TableBody>
+								{causas.length === 0 ? (
+									<TableRow><TableCell colSpan={7} align="center"><Typography variant="body2" color="text.secondary" py={2}>No hay causas</Typography></TableCell></TableRow>
+								) : causas.map(c => {
+									const pct = c.total > 0 ? Math.round((c.embedded / c.total) * 100) : 0;
+									const complete = c.embedded === c.total && c.total > 0;
+									return (
+										<TableRow key={c._id} hover>
+											<TableCell><Typography variant="caption" sx={{ fontFamily: "monospace" }}>{String(c._id).slice(-8)}</Typography></TableCell>
+											<TableCell><Chip label={c.fuero || "-"} size="small" variant="outlined" /></TableCell>
+											<TableCell>
+												<Stack direction="row" spacing={0.5} flexWrap="wrap">
+													{(c.docTypes || []).filter(Boolean).map(dt => <Chip key={dt} label={dt} size="small" sx={{ fontSize: "0.65rem", height: 18 }} />)}
+												</Stack>
+											</TableCell>
+											<TableCell align="right"><Typography variant="caption">{c.total}</Typography></TableCell>
+											<TableCell sx={{ minWidth: 130 }}>
+												<Stack spacing={0.5}>
+													<LinearProgress variant="determinate" value={pct} color={complete ? "success" : c.error > 0 ? "warning" : "primary"} sx={{ height: 6, borderRadius: 3 }} />
+													<Typography variant="caption" color="text.secondary">{c.embedded}/{c.total} ({pct}%)</Typography>
+												</Stack>
+											</TableCell>
+											<TableCell align="right">
+												{c.error > 0 ? <Chip label={c.error} size="small" color="error" /> : <Typography variant="caption" color="text.secondary">-</Typography>}
+											</TableCell>
+											<TableCell><Typography variant="caption">{fmtDate(c.lastUpdated)}</Typography></TableCell>
+										</TableRow>
+									);
+								})}
+							</TableBody>
+						</Table>
+					</TableContainer>
+					<Stack direction="row" justifyContent="space-between" alignItems="center">
+						<Typography variant="caption" color="text.secondary">{total.toLocaleString("es-AR")} causas</Typography>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Button size="small" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Anterior</Button>
+							<Typography variant="caption">Pág. {page}</Typography>
+							<Button size="small" disabled={page * limit >= total} onClick={() => setPage(p => p + 1)}>Siguiente</Button>
+						</Stack>
+					</Stack>
+				</>
+			)}
+		</Stack>
+	);
+}
+
+// ── Tab: Búsqueda ────────────────────────────────────────────────────────────
+
+function BusquedaSection() {
+	const theme = useTheme();
+	const { enqueueSnackbar } = useSnackbar();
+	const [query, setQuery] = useState("");
+	const [filterFuero, setFilterFuero] = useState("");
+	const [filterDocType, setFilterDocType] = useState("");
+	const [filterSection, setFilterSection] = useState("");
+	const [minScore, setMinScore] = useState(0.3);
+	const [results, setResults] = useState<EscritosSearchResult[]>([]);
+	const [loading, setLoading] = useState(false);
+	const [searched, setSearched] = useState(false);
+	const inputRef = useRef<HTMLInputElement>(null);
+
+	async function search() {
+		if (!query.trim() || query.trim().length < 3) {
+			enqueueSnackbar("Ingresá al menos 3 caracteres", { variant: "warning" }); return;
+		}
+		setLoading(true); setSearched(true);
+		try {
+			const { data } = await RagWorkersService.searchEscritosWorker(query, {
+				fuero: filterFuero || undefined,
+				docType: filterDocType || undefined,
+				sectionType: filterSection || undefined,
+				limit: 10,
+				minScore,
+			});
+			setResults(data);
+		} catch { enqueueSnackbar("Error en la búsqueda", { variant: "error" }); }
+		finally { setLoading(false); }
+	}
+
+	function scoreColor(score: number) {
+		if (score >= 0.8) return theme.palette.success.main;
+		if (score >= 0.6) return theme.palette.warning.main;
+		return theme.palette.error.main;
+	}
+
+	return (
+		<Stack spacing={3}>
+			<Box>
+				<Typography variant="subtitle2" fontWeight={600} mb={0.5}>Búsqueda semántica en escritos</Typography>
+				<Typography variant="body2" color="text.secondary">Buscá planteos jurídicos, argumentos o texto en todos los escritos procesados (namespace global-chunks).</Typography>
+			</Box>
+
+			{/* Filtros */}
+			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+				<FormControl size="small" sx={{ minWidth: 120 }}>
+					<InputLabel>Fuero</InputLabel>
+					<Select value={filterFuero} label="Fuero" onChange={e => setFilterFuero(e.target.value)}>
+						<MenuItem value="">Todos</MenuItem>
+						{ALL_FUEROS.map(f => <MenuItem key={f} value={f}>{FUERO_LABELS[f]}</MenuItem>)}
+					</Select>
+				</FormControl>
+				<FormControl size="small" sx={{ minWidth: 180 }}>
+					<InputLabel>Tipo de documento</InputLabel>
+					<Select value={filterDocType} label="Tipo de documento" onChange={e => setFilterDocType(e.target.value)}>
+						<MenuItem value="">Todos</MenuItem>
+						{ALL_DOC_TYPES.map(dt => <MenuItem key={dt} value={dt}>{dt}</MenuItem>)}
+					</Select>
+				</FormControl>
+				<FormControl size="small" sx={{ minWidth: 150 }}>
+					<InputLabel>Sección</InputLabel>
+					<Select value={filterSection} label="Sección" onChange={e => setFilterSection(e.target.value)}>
+						<MenuItem value="">Todas</MenuItem>
+						{SECTION_TYPES.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+					</Select>
+				</FormControl>
+				<TextField label="Score mínimo" type="number" size="small" value={minScore} onChange={e => setMinScore(parseFloat(e.target.value))} inputProps={{ min: 0, max: 1, step: 0.05 }} sx={{ width: 130 }} />
+			</Stack>
+
+			{/* Buscador */}
+			<TextField
+				inputRef={inputRef}
+				fullWidth
+				multiline
+				minRows={2}
+				maxRows={5}
+				placeholder="Ej: responsabilidad objetiva del empleador por accidente de trabajo..."
+				value={query}
+				onChange={e => setQuery(e.target.value)}
+				onKeyDown={e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) search(); }}
+				InputProps={{
+					endAdornment: (
+						<InputAdornment position="end" sx={{ alignSelf: "flex-end", mb: 1 }}>
+							<IconButton onClick={search} disabled={loading || query.trim().length < 3} color="primary">
+								<SearchNormal1 size={20} />
+							</IconButton>
+						</InputAdornment>
+					),
+				}}
+				helperText="Ctrl+Enter para buscar"
+			/>
+
+			<Button variant="contained" onClick={search} disabled={loading || query.trim().length < 3} startIcon={<SearchNormal1 size={18} />} sx={{ alignSelf: "flex-start" }}>
+				{loading ? "Buscando..." : "Buscar en escritos"}
+			</Button>
+
+			{loading && <LinearProgress />}
+
+			{/* Resultados */}
+			{!loading && searched && (
+				results.length === 0 ? (
+					<Alert severity="info">No se encontraron resultados. Probá con un query más amplio o bajá el score mínimo.</Alert>
+				) : (
+					<Stack spacing={2}>
+						<Typography variant="body2" color="text.secondary">{results.length} resultado{results.length !== 1 ? "s" : ""}</Typography>
+						{results.map((r, i) => (
+							<Card key={r.id} variant="outlined">
+								<CardContent sx={{ pb: "12px !important" }}>
+									<Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={1}>
+										<Stack direction="row" spacing={1} flexWrap="wrap">
+											{r.fuero && <Chip label={r.fuero} size="small" variant="outlined" />}
+											{r.docType && <Chip label={r.docType} size="small" color="primary" variant="outlined" />}
+											{r.sectionType && <Chip label={r.sectionType} size="small" />}
+											{r.chunkIndex !== null && <Chip label={`chunk #${r.chunkIndex}`} size="small" variant="outlined" />}
+										</Stack>
+										<Stack direction="row" spacing={1} alignItems="center" flexShrink={0}>
+											<Typography variant="caption" color="text.secondary">#{i + 1}</Typography>
+											<Chip
+												label={r.score.toFixed(3)}
+												size="small"
+												sx={{ bgcolor: alpha(scoreColor(r.score), 0.12), color: scoreColor(r.score), fontWeight: 700 }}
+											/>
+										</Stack>
+									</Stack>
+									{r.causeId && (
+										<Typography variant="caption" color="text.secondary" display="block" mb={1}>
+											Causa: <code>{r.causeId}</code>
+										</Typography>
+									)}
+									<Typography variant="body2" sx={{ whiteSpace: "pre-wrap", fontSize: "0.8rem", color: "text.secondary", maxHeight: 200, overflow: "auto" }}>
+										{r.preview || "(sin preview)"}
+									</Typography>
+								</CardContent>
+							</Card>
+						))}
+					</Stack>
+				)
+			)}
+		</Stack>
 	);
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
 
 const EscritosWorkerTab: React.FC = () => {
-	const theme = useTheme();
-	const { enqueueSnackbar } = useSnackbar();
+	const [tab, setTab] = useState("documentos");
 
-	// Config state
-	const [config, setConfig] = useState<EscritosWorkerConfig | null>(null);
-	const [configLoading, setConfigLoading] = useState(true);
-	const [configSaving, setConfigSaving] = useState(false);
-	const [localConfig, setLocalConfig] = useState<Partial<EscritosWorkerConfig>>({});
-	const [isDirty, setIsDirty] = useState(false);
-
-	// Stats state
-	const [stats, setStats] = useState<EscritosWorkerStats | null>(null);
-	const [statsLoading, setStatsLoading] = useState(true);
-
-	// Documents state
-	const [docs, setDocs] = useState<GlobalDocumentEntry[]>([]);
-	const [docsTotal, setDocsTotal] = useState(0);
-	const [docsLoading, setDocsLoading] = useState(true);
-	const [docsStatus, setDocsStatus] = useState("");
-	const [docsFuero, setDocsFuero] = useState("");
-	const [docsPage, setDocsPage] = useState(1);
-	const docsLimit = 20;
-
-	// ── Loaders ──────────────────────────────────────────────────────────────
-
-	const loadConfig = useCallback(async () => {
-		setConfigLoading(true);
-		try {
-			const data = await RagWorkersService.getEscritosWorkerConfig();
-			setConfig(data);
-			setLocalConfig(data);
-			setIsDirty(false);
-		} catch {
-			enqueueSnackbar("Error al cargar la configuración", { variant: "error" });
-		} finally {
-			setConfigLoading(false);
-		}
-	}, [enqueueSnackbar]);
-
-	const loadStats = useCallback(async () => {
-		setStatsLoading(true);
-		try {
-			const data = await RagWorkersService.getEscritosWorkerStats();
-			setStats(data);
-		} catch {
-			enqueueSnackbar("Error al cargar estadísticas", { variant: "error" });
-		} finally {
-			setStatsLoading(false);
-		}
-	}, [enqueueSnackbar]);
-
-	const loadDocs = useCallback(async () => {
-		setDocsLoading(true);
-		try {
-			const data = await RagWorkersService.getEscritosWorkerDocuments({
-				status: docsStatus || undefined,
-				fuero: docsFuero || undefined,
-				page: docsPage,
-				limit: docsLimit,
-			});
-			setDocs(data.docs);
-			setDocsTotal(data.pagination.total);
-		} catch {
-			enqueueSnackbar("Error al cargar documentos", { variant: "error" });
-		} finally {
-			setDocsLoading(false);
-		}
-	}, [docsStatus, docsFuero, docsPage, enqueueSnackbar]);
-
-	useEffect(() => { loadConfig(); loadStats(); }, [loadConfig, loadStats]);
-	useEffect(() => { loadDocs(); }, [loadDocs]);
-
-	// ── Config handlers ──────────────────────────────────────────────────────
-
-	function patch(key: keyof EscritosWorkerConfig, value: unknown) {
-		setLocalConfig((prev) => ({ ...prev, [key]: value }));
-		setIsDirty(true);
-	}
-
-	function toggleFuero(fuero: string) {
-		const current = localConfig.activeFueros || config?.activeFueros || [];
-		const next = current.includes(fuero) ? current.filter((f) => f !== fuero) : [...current, fuero];
-		patch("activeFueros", next);
-	}
-
-	function toggleDocType(dt: string) {
-		const current = localConfig.relevantDocTypes || config?.relevantDocTypes || [];
-		const next = current.includes(dt) ? current.filter((d) => d !== dt) : [...current, dt];
-		patch("relevantDocTypes", next);
-	}
-
-	async function saveConfig() {
-		setConfigSaving(true);
-		try {
-			const saved = await RagWorkersService.updateEscritosWorkerConfig(localConfig);
-			setConfig(saved);
-			setLocalConfig(saved);
-			setIsDirty(false);
-			enqueueSnackbar("Configuración guardada", { variant: "success" });
-		} catch {
-			enqueueSnackbar("Error al guardar la configuración", { variant: "error" });
-		} finally {
-			setConfigSaving(false);
-		}
-	}
-
-	// ── Render ───────────────────────────────────────────────────────────────
+	const TABS = [
+		{ value: "documentos", label: "Documentos", icon: <DocumentText size={18} /> },
+		{ value: "causas",     label: "Causas",     icon: <Folder2 size={18} /> },
+		{ value: "busqueda",   label: "Búsqueda",   icon: <SearchNormal1 size={18} /> },
+		{ value: "config",     label: "Config",     icon: <Setting2 size={18} /> },
+	];
 
 	return (
 		<Box sx={{ p: { xs: 2, md: 3 } }}>
-			<Stack spacing={4}>
-				{/* ── Header ── */}
-				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Box>
-						<Typography variant="h5" fontWeight={600}>
-							Escritos Worker
-						</Typography>
-						<Typography variant="body2" color="text.secondary">
-							Pipeline de extracción global de PDFs judiciales (escritos)
-						</Typography>
+			<Stack spacing={3}>
+				<Box>
+					<Typography variant="h5" fontWeight={600}>Escritos Worker</Typography>
+					<Typography variant="body2" color="text.secondary">Pipeline de extracción global de PDFs judiciales</Typography>
+				</Box>
+
+				<Paper variant="outlined" sx={{ borderRadius: 2 }}>
+					<Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ borderBottom: 1, borderColor: "divider", px: 1, "& .MuiTab-root": { minHeight: 48, textTransform: "none" } }}>
+						{TABS.map(t => (
+							<Tab key={t.value} value={t.value} label={
+								<Stack direction="row" spacing={0.75} alignItems="center">
+									{t.icon}
+									<span>{t.label}</span>
+								</Stack>
+							} />
+						))}
+					</Tabs>
+
+					<Box sx={{ p: { xs: 2, md: 3 } }}>
+						{tab === "documentos" && <DocumentosSection />}
+						{tab === "causas"     && <CausasSection />}
+						{tab === "busqueda"   && <BusquedaSection />}
+						{tab === "config"     && <ConfigSection />}
 					</Box>
-					<Button
-						startIcon={<Refresh size={18} />}
-						onClick={() => { loadConfig(); loadStats(); loadDocs(); }}
-						variant="outlined"
-						size="small"
-					>
-						Actualizar
-					</Button>
-				</Stack>
-
-				{/* ── Stats ── */}
-				<Box>
-					<Typography variant="subtitle1" fontWeight={600} mb={2}>
-						Estadísticas
-					</Typography>
-					{statsLoading ? (
-						<Stack direction="row" spacing={2} flexWrap="wrap">
-							{[...Array(5)].map((_, i) => <Skeleton key={i} variant="rounded" width={130} height={70} />)}
-						</Stack>
-					) : stats ? (
-						<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-							<StatCard label="Total procesados" value={stats.total} />
-							<StatCard label="Embeddings OK" value={stats.embedded} color={theme.palette.success.main} />
-							<StatCard label="Pendientes" value={stats.pending} color={theme.palette.info.main} />
-							<StatCard label="Con error" value={stats.error} color={theme.palette.error.main} />
-							<StatCard label="Errores 24h" value={stats.recentErrors24h} color={stats.recentErrors24h > 0 ? theme.palette.error.main : undefined} />
-							<StatCard label="Requieren OCR" value={stats.deferred} color={theme.palette.warning.main} />
-						</Stack>
-					) : null}
-				</Box>
-
-				<Divider />
-
-				{/* ── Config ── */}
-				<Box>
-					<Typography variant="subtitle1" fontWeight={600} mb={2}>
-						Configuración
-					</Typography>
-
-					{configLoading ? (
-						<Stack spacing={2}>
-							{[...Array(4)].map((_, i) => <Skeleton key={i} variant="rounded" height={56} />)}
-						</Stack>
-					) : (
-						<Stack spacing={3}>
-							{/* Enabled toggle */}
-							<Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: (localConfig.enabled ?? config?.enabled) ? alpha(theme.palette.success.main, 0.05) : alpha(theme.palette.error.main, 0.05) }}>
-								<FormControlLabel
-									control={
-										<Switch
-											checked={localConfig.enabled ?? config?.enabled ?? false}
-											onChange={(e) => patch("enabled", e.target.checked)}
-										/>
-									}
-									label={
-										<Box>
-											<Typography variant="body1" fontWeight={600}>
-												{(localConfig.enabled ?? config?.enabled) ? "Worker habilitado" : "Worker deshabilitado"}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												Cuando está deshabilitado, el cron no procesa ningún escrito
-											</Typography>
-										</Box>
-									}
-								/>
-							</Box>
-
-							{/* Cron + Concurrency + Max PDF */}
-							<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-								<TextField
-									label="Cron de escaneo"
-									value={localConfig.scanCron ?? config?.scanCron ?? ""}
-									onChange={(e) => patch("scanCron", e.target.value)}
-									helperText="Expresión cron (requiere reinicio del worker)"
-									size="small"
-									sx={{ flex: 1 }}
-								/>
-								<TextField
-									label="Concurrencia"
-									type="number"
-									value={localConfig.concurrency ?? config?.concurrency ?? 3}
-									onChange={(e) => patch("concurrency", parseInt(e.target.value, 10))}
-									helperText="Workers simultáneos (1-20)"
-									size="small"
-									inputProps={{ min: 1, max: 20 }}
-									sx={{ flex: 1 }}
-								/>
-								<TextField
-									label="Tamaño máx. PDF (MB)"
-									type="number"
-									value={localConfig.maxPdfSizeMb ?? config?.maxPdfSizeMb ?? 25}
-									onChange={(e) => patch("maxPdfSizeMb", parseInt(e.target.value, 10))}
-									helperText="PDFs más grandes son ignorados"
-									size="small"
-									inputProps={{ min: 1, max: 100 }}
-									sx={{ flex: 1 }}
-								/>
-							</Stack>
-
-							{/* Pause Until */}
-							<TextField
-								label="Pausar hasta"
-								type="datetime-local"
-								value={localConfig.pauseUntil ? new Date(localConfig.pauseUntil).toISOString().slice(0, 16) : ""}
-								onChange={(e) => patch("pauseUntil", e.target.value ? new Date(e.target.value).toISOString() : null)}
-								helperText="Dejar vacío para no pausar"
-								size="small"
-								InputLabelProps={{ shrink: true }}
-								sx={{ maxWidth: 300 }}
-							/>
-
-							{/* Fueros */}
-							<Box>
-								<Typography variant="body2" fontWeight={600} mb={1}>
-									Fueros activos
-								</Typography>
-								<FormGroup row>
-									{ALL_FUEROS.map((f) => (
-										<FormControlLabel
-											key={f}
-											control={
-												<Checkbox
-													checked={(localConfig.activeFueros ?? config?.activeFueros ?? []).includes(f)}
-													onChange={() => toggleFuero(f)}
-													size="small"
-												/>
-											}
-											label={FUERO_LABELS[f] || f}
-										/>
-									))}
-								</FormGroup>
-							</Box>
-
-							{/* Doc types */}
-							<Box>
-								<Typography variant="body2" fontWeight={600} mb={1}>
-									Tipos de documento
-								</Typography>
-								<Stack direction="row" flexWrap="wrap" gap={1}>
-									{ALL_DOC_TYPES.map((dt) => {
-										const active = (localConfig.relevantDocTypes ?? config?.relevantDocTypes ?? []).includes(dt);
-										return (
-											<Chip
-												key={dt}
-												label={dt}
-												size="small"
-												variant={active ? "filled" : "outlined"}
-												color={active ? "primary" : "default"}
-												onClick={() => toggleDocType(dt)}
-												sx={{ cursor: "pointer" }}
-											/>
-										);
-									})}
-								</Stack>
-							</Box>
-
-							{/* Save */}
-							<Stack direction="row" spacing={2} alignItems="center">
-								<Button
-									variant="contained"
-									onClick={saveConfig}
-									disabled={!isDirty || configSaving}
-									startIcon={<TickCircle size={18} />}
-								>
-									{configSaving ? "Guardando..." : "Guardar cambios"}
-								</Button>
-								{isDirty && (
-									<Button
-										variant="outlined"
-										color="inherit"
-										onClick={() => { setLocalConfig(config || {}); setIsDirty(false); }}
-										startIcon={<CloseCircle size={18} />}
-									>
-										Descartar
-									</Button>
-								)}
-								{isDirty && (
-									<Alert severity="warning" sx={{ py: 0.5, px: 1 }}>
-										Hay cambios sin guardar
-									</Alert>
-								)}
-							</Stack>
-						</Stack>
-					)}
-				</Box>
-
-				<Divider />
-
-				{/* ── Documents ── */}
-				<Box>
-					<Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-						<Typography variant="subtitle1" fontWeight={600}>
-							Documentos procesados
-						</Typography>
-						<Stack direction="row" spacing={1}>
-							<FormControl size="small" sx={{ minWidth: 130 }}>
-								<InputLabel>Estado</InputLabel>
-								<Select
-									value={docsStatus}
-									label="Estado"
-									onChange={(e) => { setDocsStatus(e.target.value); setDocsPage(1); }}
-								>
-									{DOC_STATUS_OPTIONS.map((s) => (
-										<MenuItem key={s} value={s}>{s || "Todos"}</MenuItem>
-									))}
-								</Select>
-							</FormControl>
-							<FormControl size="small" sx={{ minWidth: 120 }}>
-								<InputLabel>Fuero</InputLabel>
-								<Select
-									value={docsFuero}
-									label="Fuero"
-									onChange={(e) => { setDocsFuero(e.target.value); setDocsPage(1); }}
-								>
-									<MenuItem value="">Todos</MenuItem>
-									{ALL_FUEROS.map((f) => (
-										<MenuItem key={f} value={f}>{FUERO_LABELS[f] || f}</MenuItem>
-									))}
-								</Select>
-							</FormControl>
-						</Stack>
-					</Stack>
-
-					{docsLoading ? (
-						<Skeleton variant="rounded" height={200} />
-					) : (
-						<>
-							<TableContainer component={Paper} variant="outlined">
-								<Table size="small">
-									<TableHead>
-										<TableRow>
-											<TableCell>Tipo doc.</TableCell>
-											<TableCell>Fuero</TableCell>
-											<TableCell>Estado</TableCell>
-											<TableCell align="right">Chars</TableCell>
-											<TableCell align="right">Chunks</TableCell>
-											<TableCell>Última actu.</TableCell>
-										</TableRow>
-									</TableHead>
-									<TableBody>
-										{docs.length === 0 ? (
-											<TableRow>
-												<TableCell colSpan={6} align="center">
-													<Typography variant="body2" color="text.secondary" py={2}>
-														No hay documentos
-													</Typography>
-												</TableCell>
-											</TableRow>
-										) : (
-											docs.map((doc) => (
-												<TableRow key={doc._id} hover>
-													<TableCell>
-														<Typography variant="caption">{doc.docType || doc.movimientoTipo || "-"}</Typography>
-													</TableCell>
-													<TableCell>
-														<Chip label={doc.fuero || "-"} size="small" variant="outlined" />
-													</TableCell>
-													<TableCell>
-														<Chip
-															label={doc.status}
-															size="small"
-															color={STATUS_COLORS[doc.status] || "default"}
-														/>
-													</TableCell>
-													<TableCell align="right">
-														<Typography variant="caption">{doc.charCount?.toLocaleString("es-AR") || "-"}</Typography>
-													</TableCell>
-													<TableCell align="right">
-														<Typography variant="caption">{doc.chunksCount || "-"}</Typography>
-													</TableCell>
-													<TableCell>
-														<Typography variant="caption">
-															{doc.updatedAt ? new Date(doc.updatedAt).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" }) : "-"}
-														</Typography>
-													</TableCell>
-												</TableRow>
-											))
-										)}
-									</TableBody>
-								</Table>
-							</TableContainer>
-
-							{/* Pagination */}
-							<Stack direction="row" justifyContent="space-between" alignItems="center" mt={1}>
-								<Typography variant="caption" color="text.secondary">
-									{docsTotal.toLocaleString("es-AR")} documentos
-								</Typography>
-								<Stack direction="row" spacing={1}>
-									<Button size="small" disabled={docsPage <= 1} onClick={() => setDocsPage((p) => p - 1)}>
-										Anterior
-									</Button>
-									<Typography variant="caption" alignSelf="center">
-										Pág. {docsPage}
-									</Typography>
-									<Button size="small" disabled={docsPage * docsLimit >= docsTotal} onClick={() => setDocsPage((p) => p + 1)}>
-										Siguiente
-									</Button>
-								</Stack>
-							</Stack>
-						</>
-					)}
-				</Box>
+				</Paper>
 			</Stack>
 		</Box>
 	);
