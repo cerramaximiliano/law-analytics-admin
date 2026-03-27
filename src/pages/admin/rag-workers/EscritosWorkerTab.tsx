@@ -174,6 +174,73 @@ function ConfigSection() {
 				</Stack>
 			</Box>
 
+			<Divider />
+
+			<Box>
+				<Typography variant="body2" fontWeight={700} mb={0.5}>Novelty Detection</Typography>
+				<Typography variant="caption" color="text.secondary">Configuración de la fase 2: detección de novedad jurídica</Typography>
+			</Box>
+
+			<Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: (local.noveltyEnabled ?? config?.noveltyEnabled) ? alpha(theme.palette.success.main, 0.05) : alpha(theme.palette.warning.main, 0.04) }}>
+				<FormControlLabel
+					control={<Switch checked={local.noveltyEnabled ?? config?.noveltyEnabled ?? false} onChange={e => patch("noveltyEnabled", e.target.checked)} />}
+					label={
+						<Box>
+							<Typography fontWeight={600}>{(local.noveltyEnabled ?? config?.noveltyEnabled) ? "Novelty detection habilitado" : "Novelty detection deshabilitado"}</Typography>
+							<Typography variant="caption" color="text.secondary">Cuando está deshabilitado, los docs se marcan como 'skipped'</Typography>
+						</Box>
+					}
+				/>
+			</Box>
+
+			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+				<FormControl size="small" sx={{ flex: 1 }}>
+					<InputLabel>Estrategia</InputLabel>
+					<Select label="Estrategia" value={local.noveltyStrategy ?? config?.noveltyStrategy ?? "A"} onChange={e => patch("noveltyStrategy", e.target.value)}>
+						<MenuItem value="A">A — Prioridad por sección (fundamentos › hechos › body)</MenuItem>
+						<MenuItem value="B">B — Zona de argumentos (todo excepto apertura/petitorio)</MenuItem>
+					</Select>
+				</FormControl>
+				<TextField label="TopK vecinos" type="number" value={local.noveltyTopK ?? config?.noveltyTopK ?? 5} onChange={e => patch("noveltyTopK", parseInt(e.target.value, 10))} helperText="Vecinos consultados en Pinecone (1-20)" size="small" inputProps={{ min: 1, max: 20 }} sx={{ flex: 1 }} />
+				<TextField label="Máx. chunks" type="number" value={local.noveltyMaxChunks ?? config?.noveltyMaxChunks ?? 4} onChange={e => patch("noveltyMaxChunks", parseInt(e.target.value, 10))} helperText="Chunks a analizar por documento (1-10)" size="small" inputProps={{ min: 1, max: 10 }} sx={{ flex: 1 }} />
+			</Stack>
+
+			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+				<TextField label="Umbral review (p75)" type="number" value={local.noveltyThresholdTrack ?? config?.noveltyThresholdTrack ?? 0.194} onChange={e => patch("noveltyThresholdTrack", parseFloat(e.target.value))} helperText="Score mínimo para label 'review'" size="small" inputProps={{ min: 0, max: 1, step: 0.001 }} sx={{ flex: 1 }} />
+				<TextField label="Umbral alert (p90)" type="number" value={local.noveltyThresholdAlert ?? config?.noveltyThresholdAlert ?? 0.234} onChange={e => patch("noveltyThresholdAlert", parseFloat(e.target.value))} helperText="Score mínimo para label 'alert'" size="small" inputProps={{ min: 0, max: 1, step: 0.001 }} sx={{ flex: 1 }} />
+				<FormControl size="small" sx={{ flex: 1 }}>
+					<InputLabel>Auto-tracking</InputLabel>
+					<Select label="Auto-tracking" value={local.noveltyAutoTrackLabel ?? config?.noveltyAutoTrackLabel ?? "alert"} onChange={e => patch("noveltyAutoTrackLabel", e.target.value)}>
+						<MenuItem value="review">review — marcar causas con score ≥ p75</MenuItem>
+						<MenuItem value="alert">alert — marcar causas con score ≥ p90 (default)</MenuItem>
+					</Select>
+				</FormControl>
+			</Stack>
+
+			<Box>
+				<FormControlLabel
+					control={<Checkbox checked={local.noveltySameDoctypeFilter ?? config?.noveltySameDoctypeFilter ?? true} onChange={e => patch("noveltySameDoctypeFilter", e.target.checked)} size="small" />}
+					label={<Typography variant="body2">Comparar solo contra documentos del mismo tipo (noveltySameDoctypeFilter)</Typography>}
+				/>
+			</Box>
+
+			<Box>
+				<Typography variant="body2" fontWeight={600} mb={1}>DocTypes para novelty</Typography>
+				<Stack direction="row" flexWrap="wrap" gap={1}>
+					{ALL_DOC_TYPES.map(dt => {
+						const active = (local.noveltyDocTypes ?? config?.noveltyDocTypes ?? []).includes(dt);
+						return (
+							<Chip key={dt} label={dt} size="small" variant={active ? "filled" : "outlined"} color={active ? "secondary" : "default"}
+								onClick={() => {
+									const cur = local.noveltyDocTypes ?? config?.noveltyDocTypes ?? [];
+									patch("noveltyDocTypes", active ? cur.filter(x => x !== dt) : [...cur, dt]);
+								}}
+								sx={{ cursor: "pointer" }} />
+						);
+					})}
+				</Stack>
+			</Box>
+
 			<Stack direction="row" spacing={2} alignItems="center">
 				<Button variant="contained" onClick={save} disabled={!dirty || saving} startIcon={<TickCircle size={18} />}>
 					{saving ? "Guardando..." : "Guardar cambios"}
