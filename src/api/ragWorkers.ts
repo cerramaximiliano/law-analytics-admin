@@ -494,6 +494,16 @@ export interface EscritosWorkerConfig {
 	activeFueros: string[];
 	relevantDocTypes: string[];
 	pauseUntil: string | null;
+	// novelty detection
+	noveltyEnabled: boolean;
+	noveltyDocTypes: string[];
+	noveltyStrategy: "A" | "B";
+	noveltyTopK: number;
+	noveltyThresholdTrack: number;
+	noveltyThresholdAlert: number;
+	noveltySameDoctypeFilter: boolean;
+	noveltyMaxChunks: number;
+	noveltyAutoTrackLabel: "review" | "alert";
 }
 
 export interface EscritosWorkerStats {
