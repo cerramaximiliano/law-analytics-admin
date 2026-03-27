@@ -2226,9 +2226,122 @@ const HelpStyleCorpusSection: React.FC = () => {
 	);
 };
 
+// ── Sub-tab: Resumen de infraestructura ──────────────────────────────────────
+
+const HelpSummarySection: React.FC = () => {
+	const theme = useTheme();
+	const pinecone = "#1A73E8";
+	const mongo = theme.palette.success.main;
+	const redis = "#D82C20";
+	const s3 = "#FF9900";
+	const openai = "#10A37F";
+
+	const InfoRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
+		<Box sx={{ display: "flex", gap: 2, py: 0.6, borderBottom: "1px solid", borderColor: "divider" }}>
+			<Typography variant="caption" color="text.secondary" sx={{ minWidth: 180, fontWeight: 600 }}>{label}</Typography>
+			<Typography variant="caption">{value}</Typography>
+		</Box>
+	);
+
+	return (
+		<Stack spacing={3}>
+			<Box>
+				<Typography variant="body2" color="text.secondary">
+					El <strong>Workers RAG</strong> indexa los expedientes judiciales de los usuarios: descarga sus PDFs, extrae texto,
+					genera embeddings y los almacena en Pinecone para búsqueda semántica en el chat. Corre en <strong>worker_02</strong> y
+					opera sobre dos bases de datos: el MongoDB local con las causas scrapeadas (fuente) y MongoDB Atlas (destino de embeddings y metadatos).
+				</Typography>
+			</Box>
+
+			<Box>
+				<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>Ficha de infraestructura</Typography>
+				<Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, overflow: "hidden" }}>
+					<InfoRow label="Servidor" value={<><strong>worker_02</strong> · IP 100.98.180.101 · Ryzen 5700X · 16 cores · 32 GB RAM</>} />
+					<InfoRow label="Proceso PM2" value="pjn-rag-api (Express + BullMQ + Socket.io)" />
+					<InfoRow label="BD origen" value={<>MongoDB <strong>local</strong> en worker_02 · colecciones de causas PJN (fuente)</>} />
+					<InfoRow label="BD destino" value={<>MongoDB <strong>Atlas</strong> (cloud) · RagDocument, CausaSummary, PipelineConfig</>} />
+					<InfoRow label="AWS S3" value="Almacena PDFs originales y texto extraído de chunks · región us-east-1" />
+					<InfoRow label="Redis" value="BullMQ en worker_02 · colas: indexCausa · indexDocument · ocrDocument · recoveryCausa" />
+					<InfoRow label="OpenAI" value="text-embedding-3-small (1024 dims) · GPT-4o (chat + generación)" />
+					<InfoRow label="Activación del scan" value="Auto-Index: intervalo configurable desde Panel → Control · También manual por usuario" />
+				</Box>
+			</Box>
+
+			<Box>
+				<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>Índices Pinecone utilizados</Typography>
+				<Stack spacing={1.5}>
+					<Box sx={{ border: `2px solid ${pinecone}`, borderRadius: 2, p: 2, bgcolor: alpha(pinecone, 0.04) }}>
+						<Stack direction="row" spacing={1.5} alignItems="flex-start">
+							<Box sx={{ px: 1, py: 0.3, bgcolor: pinecone, color: "#fff", borderRadius: 1, fontSize: "0.68rem", fontWeight: 700, flexShrink: 0, mt: 0.2 }}>CAUSAS / USUARIOS</Box>
+							<Box sx={{ flex: 1 }}>
+								<Typography variant="subtitle2" fontWeight={700} sx={{ color: pinecone, fontFamily: "monospace" }}>pjn-rag-shard-0 · pjn-rag-shard-1 · pjn-rag-shard-2 · pjn-rag-shard-3</Typography>
+								<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.3 }}>
+									4 índices con sharding por userId/causaId (hash % 4). Almacenan los chunks de cada expediente para búsqueda en el chat RAG del usuario.
+									Cada usuario tiene su propio namespace dentro del shard.
+								</Typography>
+								<Stack direction="row" spacing={2} sx={{ mt: 0.8 }} flexWrap="wrap">
+									{["1024 dims", "coseno", "serverless"].map((t) => (
+										<Box key={t} sx={{ px: 0.8, py: 0.1, bgcolor: alpha(pinecone, 0.1), borderRadius: 0.5, fontSize: "0.65rem", color: pinecone, fontWeight: 600 }}>{t}</Box>
+									))}
+									<Typography variant="caption" color="text.secondary">Escribe: indexDocument.worker · Lee: chat.routes (query semántica)</Typography>
+								</Stack>
+							</Box>
+						</Stack>
+					</Box>
+
+					<Box sx={{ border: `2px solid ${openai}`, borderRadius: 2, p: 2, bgcolor: alpha(openai, 0.04) }}>
+						<Stack direction="row" spacing={1.5} alignItems="flex-start">
+							<Box sx={{ px: 1, py: 0.3, bgcolor: openai, color: "#fff", borderRadius: 1, fontSize: "0.68rem", fontWeight: 700, flexShrink: 0, mt: 0.2 }}>CORPUS ESTILO</Box>
+							<Box sx={{ flex: 1 }}>
+								<Typography variant="subtitle2" fontWeight={700} sx={{ color: openai, fontFamily: "monospace" }}>pjn-style-corpus</Typography>
+								<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.3 }}>
+									Índice único (no shardado) con ejemplos de escritos jurídicos de calidad alta. Usado por el Editor IA para few-shot retrieval al generar documentos.
+									Gestionado desde <strong>Workers Corpus (IA)</strong>.
+								</Typography>
+								<Stack direction="row" spacing={2} sx={{ mt: 0.8 }} flexWrap="wrap">
+									{["1024 dims", "coseno", "serverless"].map((t) => (
+										<Box key={t} sx={{ px: 0.8, py: 0.1, bgcolor: alpha(openai, 0.1), borderRadius: 0.5, fontSize: "0.65rem", color: openai, fontWeight: 600 }}>{t}</Box>
+									))}
+									<Typography variant="caption" color="text.secondary">Escribe: embed-style-corpus.js (manual) · Lee: editor.routes (few-shot)</Typography>
+								</Stack>
+							</Box>
+						</Stack>
+					</Box>
+				</Stack>
+			</Box>
+
+			<Box>
+				<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>Diagrama de recursos</Typography>
+				<Box sx={{ overflowX: "auto", pb: 1 }}>
+					<Stack spacing={1.5}>
+						{/* Row 1: source → scan → queues */}
+						<Stack direction="row" alignItems="stretch" spacing={1} sx={{ minWidth: 760 }}>
+							<FlowNode badge="ORIGEN" title="MongoDB Local" subtitle="worker_02" items={["Causas PJN scrapeadas", "movimientos con PDF URL", "status sin indexar"]} color={mongo} />
+							<FlowArrow label="Auto-Index scan" />
+							<FlowNode badge="COLA" title="Redis BullMQ" subtitle="worker_02" items={["indexCausa", "indexDocument", "ocrDocument", "recoveryCausa"]} color={redis} />
+							<FlowArrow label="workers paralelos" />
+							<FlowNode badge="PROCESSING" title="indexDocument.worker" subtitle="worker_02 (concurrency: 2-15)" items={["Descarga PDF", "Extrae texto", "Chunking + embeddings", "Upsert Pinecone shards"]} color={theme.palette.primary.main} />
+						</Stack>
+
+						{/* Row 2: destinations */}
+						<Stack direction="row" spacing={1} sx={{ minWidth: 760 }}>
+							<Box sx={{ flex: 1 }} />
+							<FlowArrow label="persiste" />
+							<FlowNode badge="VECTOR DB" title="pjn-rag-shard-0..3" subtitle="Pinecone · 4 shards" items={["chunks por usuario/causa", "1024 dims · coseno", "metadata: tipo, fecha, text"]} color={pinecone} />
+							<FlowArrow label="y también" />
+							<FlowNode badge="CLOUD" title="MongoDB Atlas + S3" subtitle="RagDocument · chunks" items={["Texto completo (S3)", "Metadata de chunks (Atlas)", "CausaSummary (Atlas)"]} color={s3} />
+						</Stack>
+					</Stack>
+				</Box>
+			</Box>
+		</Stack>
+	);
+};
+
 // ── Main component with internal tabs ────────────────────────────────────────
 
 const HELP_TABS = [
+	{ label: "Resumen", value: "summary" },
 	{ label: "Pipeline RAG", value: "pipeline" },
 	{ label: "Controles y costos", value: "control" },
 	{ label: "Rendimiento", value: "performance" },
@@ -2239,7 +2352,7 @@ const HELP_TABS = [
 
 const WorkerHelpTab = () => {
 	const theme = useTheme();
-	const [subTab, setSubTab] = useState("pipeline");
+	const [subTab, setSubTab] = useState("summary");
 
 	return (
 		<Stack spacing={0}>
@@ -2266,7 +2379,8 @@ const WorkerHelpTab = () => {
 				</Tabs>
 			</Box>
 
-			{subTab === "pipeline" && <HelpPipelineSection />}
+			{subTab === "summary" && <HelpSummarySection />}
+		{subTab === "pipeline" && <HelpPipelineSection />}
 			{subTab === "control" && <HelpControlSection />}
 			{subTab === "performance" && <HelpPerformanceSection />}
 			{subTab === "infrastructure" && <HelpInfrastructureSection />}
