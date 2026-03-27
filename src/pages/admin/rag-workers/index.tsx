@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Box, Tab, Tabs, Typography, Paper, Stack, useTheme, alpha } from "@mui/material";
-import { Setting3, Chart, DollarSquare, InfoCircle, DocumentText, CpuSetting, Activity, MessageText, Book } from "iconsax-react";
+import { Setting3, Chart, DollarSquare, InfoCircle, DocumentText, CpuSetting, Activity, MessageText } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import WorkerControlTab from "./WorkerControlTab";
@@ -12,8 +12,6 @@ import WorkerAnalyticsTab from "./WorkerAnalyticsTab";
 import WorkerHelpTab from "./WorkerHelpTab";
 import ChatRagTab from "./ChatRagTab";
 import ChatEditorTab from "./ChatEditorTab";
-import StyleCorpusTab from "./StyleCorpusTab";
-import EscritosWorkerTab from "./EscritosWorkerTab";
 
 interface RagWorkerTab {
 	label: string;
@@ -80,18 +78,6 @@ const RagWorkersPage = () => {
 			component: <ChatEditorTab />,
 		},
 		{
-			label: "Corpus de Estilo",
-			value: "style-corpus",
-			icon: <Book size={20} />,
-			component: <StyleCorpusTab />,
-		},
-		{
-			label: "Escritos Worker",
-			value: "escritos-worker",
-			icon: <DocumentText size={20} />,
-			component: <EscritosWorkerTab />,
-		},
-		{
 			label: "Ayuda",
 			value: "help",
 			icon: <InfoCircle size={20} />,
@@ -103,9 +89,9 @@ const RagWorkersPage = () => {
 		<MainCard>
 			<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 				<Box>
-					<Typography variant="h3">Workers de IA (RAG)</Typography>
+					<Typography variant="h3">Workers RAG</Typography>
 					<Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-						Gestiona los workers de indexacion, embeddings, resumenes y OCR del sistema RAG
+						Indexación por causa, embeddings, resúmenes y OCR del sistema RAG por usuario
 					</Typography>
 				</Box>
 
