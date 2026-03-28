@@ -149,6 +149,7 @@ function ConfigSection() {
 				<TextField label="Cron de escaneo" value={local.scanCron ?? config?.scanCron ?? ""} onChange={e => patch("scanCron", e.target.value)} helperText="Requiere reinicio del worker" size="small" sx={{ flex: 1 }} />
 				<TextField label="Concurrencia" type="number" value={local.concurrency ?? config?.concurrency ?? 3} onChange={e => patch("concurrency", parseInt(e.target.value, 10))} helperText="Workers simultáneos (1-20)" size="small" inputProps={{ min: 1, max: 20 }} sx={{ flex: 1 }} />
 				<TextField label="Tamaño máx. PDF (MB)" type="number" value={local.maxPdfSizeMb ?? config?.maxPdfSizeMb ?? 25} onChange={e => patch("maxPdfSizeMb", parseInt(e.target.value, 10))} helperText="PDFs más grandes se ignoran" size="small" inputProps={{ min: 1, max: 100 }} sx={{ flex: 1 }} />
+				<TextField label="Año mínimo" type="number" value={local.minYear ?? config?.minYear ?? 2023} onChange={e => patch("minYear", parseInt(e.target.value, 10))} helperText="Solo causas desde este año (isValid=true)" size="small" inputProps={{ min: 2000, max: new Date().getFullYear() }} sx={{ flex: 1 }} />
 			</Stack>
 
 			<TextField label="Pausar hasta" type="datetime-local" value={local.pauseUntil ? new Date(local.pauseUntil).toISOString().slice(0, 16) : ""}
