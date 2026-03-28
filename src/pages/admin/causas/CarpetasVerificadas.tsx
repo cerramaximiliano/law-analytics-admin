@@ -62,6 +62,7 @@ const CarpetasVerificadas = () => {
 	const [searchYear, setSearchYear] = useState<string>("");
 	const [searchObjeto, setSearchObjeto] = useState<string>("");
 	const [searchCaratula, setSearchCaratula] = useState<string>("");
+	const [searchUpdate, setSearchUpdate] = useState<string>("todos");
 
 	// Ordenamiento
 	const [sortBy, setSortBy] = useState<string>("year");
@@ -83,6 +84,7 @@ const CarpetasVerificadas = () => {
 		caratula?: string,
 		sortByParam?: string,
 		sortOrderParam?: "asc" | "desc",
+		update?: string,
 	) => {
 		try {
 			setLoading(true);
@@ -110,6 +112,10 @@ const CarpetasVerificadas = () => {
 
 			if (caratula && caratula.trim() !== "") {
 				params.caratula = caratula.trim();
+			}
+
+			if (update && update !== "todos") {
+				params.update = update;
 			}
 
 			// Agregar parámetros de ordenamiento
@@ -144,7 +150,7 @@ const CarpetasVerificadas = () => {
 	// Los filtros de búsqueda (searchNumber, etc.) NO están en las dependencias para evitar
 	// búsquedas automáticas mientras el usuario escribe. Se aplican al hacer clic en "Buscar"
 	useEffect(() => {
-		fetchCausas(page, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder);
+		fetchCausas(page, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder, searchUpdate);
 	}, [page, rowsPerPage, fueroFilter, sortBy, sortOrder]);
 
 	// Handlers de paginación
@@ -165,13 +171,13 @@ const CarpetasVerificadas = () => {
 
 	// Handler de refresh
 	const handleRefresh = () => {
-		fetchCausas(page, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder);
+		fetchCausas(page, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder, searchUpdate);
 	};
 
 	// Handler de búsqueda
 	const handleSearch = () => {
 		setPage(0); // Resetear a página 1
-		fetchCausas(0, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder);
+		fetchCausas(0, rowsPerPage, fueroFilter, searchNumber, searchYear, searchObjeto, searchCaratula, sortBy, sortOrder, searchUpdate);
 	};
 
 	// Handler de limpiar búsqueda
@@ -180,8 +186,9 @@ const CarpetasVerificadas = () => {
 		setSearchYear("");
 		setSearchObjeto("");
 		setSearchCaratula("");
+		setSearchUpdate("todos");
 		setPage(0);
-		fetchCausas(0, rowsPerPage, fueroFilter, "", "", "", "", sortBy, sortOrder);
+		fetchCausas(0, rowsPerPage, fueroFilter, "", "", "", "", sortBy, sortOrder, "todos");
 	};
 
 	// Handler de cambio de ordenamiento
@@ -291,7 +298,7 @@ const CarpetasVerificadas = () => {
 								placeholder="Ej: daños"
 							/>
 						</Grid>
-						<Grid item xs={12} md={6} lg={3}>
+						<Grid item xs={12} md={6} lg={2}>
 							<TextField
 								fullWidth
 								label="Carátula"
@@ -300,6 +307,16 @@ const CarpetasVerificadas = () => {
 								size="small"
 								placeholder="Ej: Pérez"
 							/>
+						</Grid>
+						<Grid item xs={12} md={6} lg={1}>
+							<FormControl fullWidth>
+								<InputLabel>Update</InputLabel>
+								<Select value={searchUpdate} onChange={(e) => setSearchUpdate(e.target.value)} label="Update" size="small">
+									<MenuItem value="todos">Todos</MenuItem>
+									<MenuItem value="true">Sí</MenuItem>
+									<MenuItem value="false">No</MenuItem>
+								</Select>
+							</FormControl>
 						</Grid>
 					</Grid>
 				</Grid>
@@ -377,6 +394,7 @@ const CarpetasVerificadas = () => {
 											<TableCell>Juzgado</TableCell>
 											<TableCell>Objeto</TableCell>
 											<TableCell align="center">Movimientos</TableCell>
+											<TableCell align="center">Update</TableCell>
 											<TableCell>Última Act.</TableCell>
 											<TableCell align="center">Acciones</TableCell>
 										</TableRow>
@@ -419,6 +437,13 @@ const CarpetasVerificadas = () => {
 												</TableCell>
 												<TableCell align="center">
 													<Chip label={causa.movimientosCount || 0} size="small" variant="outlined" />
+												</TableCell>
+												<TableCell align="center">
+													{causa.update === true ? (
+														<Chip label="Sí" color="warning" size="small" />
+													) : (
+														<Chip label="No" size="small" variant="outlined" />
+													)}
 												</TableCell>
 												<TableCell>
 													<Typography variant="caption">{formatDate(causa.lastUpdate)}</Typography>
