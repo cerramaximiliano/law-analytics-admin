@@ -7,6 +7,8 @@ export interface UpdateMovimientosWorkerConfig {
 	worker_id: string;
 	fuero: "CIV" | "CSS" | "CNT" | "COM";
 	enabled: boolean;
+	cronPattern: string;
+	batchSize: number;
 	lockTimeoutMinutes: number;
 	errorCooldown: {
 		enabled: boolean;

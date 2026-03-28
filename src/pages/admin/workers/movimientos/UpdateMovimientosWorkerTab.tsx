@@ -449,6 +449,24 @@ function WorkersSection() {
 								{/* Config editable */}
 								<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
 									<TextField
+										label="Cron pattern"
+										value={merged.cronPattern ?? "*/2 * * * *"}
+										onChange={e => patchWorker(config._id, "cronPattern", e.target.value)}
+										helperText="Frecuencia de ciclos (sin horario, el manager controla el scaling)"
+										size="small" sx={{ flex: 2 }}
+									/>
+									<TextField
+										label="Causas por ciclo"
+										type="number"
+										value={merged.batchSize ?? 1}
+										onChange={e => patchWorker(config._id, "batchSize", parseInt(e.target.value, 10))}
+										helperText="Causas procesadas por ciclo"
+										size="small" inputProps={{ min: 1, max: 20 }} sx={{ flex: 1 }}
+									/>
+								</Stack>
+
+								<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+									<TextField
 										label="Timeout lock (min)"
 										type="number"
 										value={merged.lockTimeoutMinutes ?? 5}
