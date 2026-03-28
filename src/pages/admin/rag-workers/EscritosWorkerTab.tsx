@@ -384,7 +384,7 @@ function CausasSection() {
 	const [filterFuero, setFilterFuero] = useState("");
 	const [filterStatus, setFilterStatus] = useState("all");
 	const [page, setPage] = useState(1);
-	const limit = 30;
+	const limit = 10;
 
 	const load = useCallback(async () => {
 		setLoading(true);
