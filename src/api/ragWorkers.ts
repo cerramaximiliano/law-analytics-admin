@@ -504,6 +504,7 @@ export interface EscritosWorkerConfig {
 	noveltySameDoctypeFilter: boolean;
 	noveltyMaxChunks: number;
 	noveltyAutoTrackLabel: "review" | "alert";
+	minYear: number;
 }
 
 export interface EscritosWorkerStats {
