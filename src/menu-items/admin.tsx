@@ -90,6 +90,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "workers-movimientos",
+					title: "Worker Update Movimientos",
+					type: "item",
+					url: "/admin/workers/movimientos",
+					breadcrumbs: true,
+				},
+				{
 					id: "infrastructure",
 					title: "Infraestructura",
 					type: "item",
