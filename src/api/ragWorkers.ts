@@ -548,6 +548,9 @@ export interface EscritosCausa {
 	deferred: number;
 	lastUpdated: string;
 	docTypes: string[];
+	maxNovelty?: number;
+	avgNovelty?: number;
+	noveltyLabels?: string[];
 }
 
 export interface EscritosCausasResponse {

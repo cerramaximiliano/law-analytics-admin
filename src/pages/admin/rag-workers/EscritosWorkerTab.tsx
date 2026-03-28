@@ -25,6 +25,7 @@ import {
 	FormControl,
 	InputLabel,
 	LinearProgress,
+	Tooltip,
 	Tab,
 	Tabs,
 	InputAdornment,
@@ -434,6 +435,7 @@ function CausasSection() {
 									<TableCell align="right">Total docs</TableCell>
 									<TableCell>Progreso</TableCell>
 									<TableCell align="right">Errores</TableCell>
+									<TableCell>Novelty</TableCell>
 									<TableCell>Última act.</TableCell>
 								</TableRow>
 							</TableHead>
@@ -461,6 +463,20 @@ function CausasSection() {
 											</TableCell>
 											<TableCell align="right">
 												{c.error > 0 ? <Chip label={c.error} size="small" color="error" /> : <Typography variant="caption" color="text.secondary">-</Typography>}
+											</TableCell>
+											<TableCell>
+												{c.maxNovelty != null ? (() => {
+													const labels = c.noveltyLabels || [];
+													const alerts = labels.filter(l => l === "alert").length;
+													const reviews = labels.filter(l => l === "review").length;
+													const topLabel = alerts > 0 ? "alert" : reviews > 0 ? "review" : "routine";
+													const color = topLabel === "alert" ? "error" : topLabel === "review" ? "warning" : "default";
+													return (
+														<Tooltip title={`Max: ${c.maxNovelty.toFixed(3)} · Avg: ${c.avgNovelty?.toFixed(3)} · alert:${alerts} review:${reviews} routine:${labels.length - alerts - reviews}`}>
+															<Chip label={`${topLabel} ${c.maxNovelty.toFixed(2)}`} size="small" color={color as any} variant={topLabel === "routine" ? "outlined" : "filled"} sx={{ fontSize: "0.65rem", height: 18 }} />
+														</Tooltip>
+													);
+												})() : <Typography variant="caption" color="text.secondary">-</Typography>}
 											</TableCell>
 											<TableCell><Typography variant="caption">{fmtDate(c.lastUpdated)}</Typography></TableCell>
 										</TableRow>
