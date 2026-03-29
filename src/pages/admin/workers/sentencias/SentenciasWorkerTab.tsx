@@ -22,9 +22,9 @@ import {
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { CloseCircle, DocumentText, Refresh, TickCircle, Warning2 } from "iconsax-react";
+import { CloseCircle, DocumentText, Refresh, Scanner, TickCircle, Warning2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import SentenciasService, { SentenciaCapturada, SentenciasStats, SentenciaTipo, Fuero } from "api/sentenciasCapturadas";
+import SentenciasService, { OcrStatus, SentenciaCapturada, SentenciasStats, SentenciaTipo, Fuero } from "api/sentenciasCapturadas";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -54,6 +54,20 @@ const STATUS_COLOR: Record<string, "success" | "warning" | "error" | "default" |
 	processing: "info",
 	error: "error",
 };
+const OCR_STATUS_COLOR: Record<OcrStatus, "success" | "warning" | "error" | "default" | "info"> = {
+	not_needed: "default",
+	pending: "warning",
+	processing: "info",
+	completed: "success",
+	error: "error",
+};
+const OCR_STATUS_LABEL: Record<OcrStatus, string> = {
+	not_needed: "No necesita",
+	pending: "Pendiente",
+	processing: "Procesando",
+	completed: "Completado",
+	error: "Error",
+};
 
 function fmtDate(d?: string) {
 	if (!d) return "—";
@@ -79,8 +93,13 @@ function StatCard({ label, value, color, sub }: StatCardProps) {
 }
 
 // ── SentenciaRow ──────────────────────────────────────────────────────────────
-interface SentenciaRowProps { doc: SentenciaCapturada; onDetail: (doc: SentenciaCapturada) => void; onRetry?: (id: string) => void; }
-function SentenciaRow({ doc, onDetail, onRetry }: SentenciaRowProps) {
+interface SentenciaRowProps {
+	doc: SentenciaCapturada;
+	onDetail: (doc: SentenciaCapturada) => void;
+	onRetry?: (id: string) => void;
+	onRetryOcr?: (id: string) => void;
+}
+function SentenciaRow({ doc, onDetail, onRetry, onRetryOcr }: SentenciaRowProps) {
 	const color = TIPO_COLORS[doc.sentenciaTipo] || "#616161";
 	return (
 		<Box sx={{ display: "flex", alignItems: "center", gap: 1.5, py: 1, px: 1, borderRadius: 1, "&:hover": { bgcolor: "action.hover" } }}>
@@ -92,6 +111,9 @@ function SentenciaRow({ doc, onDetail, onRetry }: SentenciaRowProps) {
 					</Typography>
 					<Chip label={TIPO_LABELS[doc.sentenciaTipo]} size="small" sx={{ bgcolor: alpha(color, 0.12), color, fontWeight: 600, fontSize: 11 }} />
 					<Chip label={doc.processingStatus} size="small" color={STATUS_COLOR[doc.processingStatus] || "default"} variant="outlined" sx={{ fontSize: 11 }} />
+					{doc.ocrStatus && doc.ocrStatus !== "not_needed" && (
+						<Chip label={`OCR: ${OCR_STATUS_LABEL[doc.ocrStatus]}`} size="small" color={OCR_STATUS_COLOR[doc.ocrStatus]} sx={{ fontSize: 11 }} />
+					)}
 				</Stack>
 				<Typography variant="caption" color="text.secondary" noWrap display="block">
 					{doc.caratula || "Sin carátula"} · {fmtDate(doc.processedAt || doc.detectedAt)}
@@ -99,7 +121,13 @@ function SentenciaRow({ doc, onDetail, onRetry }: SentenciaRowProps) {
 				{doc.processingResult && (
 					<Typography variant="caption" color="text.disabled">
 						{fmtNum(doc.processingResult.charCount)} chars · {doc.processingResult.pageCount} pág · {doc.processingResult.method}
-						{doc.processingResult.isScanned ? " · 🖨 escaneado" : ""}
+						{doc.processingResult.isScanned ? " · escaneado" : ""}
+					</Typography>
+				)}
+				{doc.ocrResult?.charCount && (
+					<Typography variant="caption" color="text.disabled" display="block">
+						OCR: {fmtNum(doc.ocrResult.charCount)} chars · {doc.ocrResult.pageCount} pág · {doc.ocrResult.method}
+						{doc.ocrResult.processingTimeMs ? ` · ${(doc.ocrResult.processingTimeMs / 1000).toFixed(1)}s` : ""}
 					</Typography>
 				)}
 				{doc.processingError && (
@@ -111,8 +139,13 @@ function SentenciaRow({ doc, onDetail, onRetry }: SentenciaRowProps) {
 					<IconButton size="small" onClick={() => onDetail(doc)}><DocumentText size={16} /></IconButton>
 				</Tooltip>
 				{onRetry && doc.processingStatus === "error" && (
-					<Tooltip title="Reintentar">
+					<Tooltip title="Reintentar desde PDF">
 						<IconButton size="small" color="warning" onClick={() => onRetry(doc._id)}><Refresh size={16} /></IconButton>
+					</Tooltip>
+				)}
+				{onRetryOcr && doc.ocrStatus === "error" && (
+					<Tooltip title="Reintentar OCR">
+						<IconButton size="small" color="info" onClick={() => onRetryOcr(doc._id)}><Scanner size={16} /></IconButton>
 					</Tooltip>
 				)}
 			</Stack>
@@ -180,9 +213,53 @@ function DetailDialog({ doc, open, onClose }: { doc: SentenciaCapturada | null; 
 								)}
 							</>
 						)}
+						{/* OCR Result */}
+						{data.ocrResult?.text && (
+							<>
+								<Divider />
+								<Box>
+									<Stack direction="row" spacing={1} alignItems="center" mb={1}>
+										<Scanner size={16} />
+										<Typography variant="subtitle2">Texto extraído por OCR</Typography>
+										<Chip label={`${fmtNum(data.ocrResult.charCount)} chars`} size="small" color="info" />
+										{data.ocrResult.processingTimeMs && (
+											<Chip label={`${(data.ocrResult.processingTimeMs / 1000).toFixed(1)}s`} size="small" variant="outlined" />
+										)}
+									</Stack>
+									<Box sx={{ bgcolor: "grey.50", borderRadius: 1, p: 1.5, maxHeight: 200, overflow: "auto", fontFamily: "monospace", fontSize: 12, whiteSpace: "pre-wrap", border: "1px solid", borderColor: "info.light" }}>
+										{data.ocrResult.text}
+									</Box>
+								</Box>
+							</>
+						)}
+
 						{data.processingError && (
 							<Alert severity="error"><strong>Error:</strong> {data.processingError}</Alert>
 						)}
+						{data.ocrResult?.error && (
+							<Alert severity="warning"><strong>Error OCR:</strong> {data.ocrResult.error}</Alert>
+						)}
+
+						{/* Historial de transiciones */}
+						{data.processingHistory && data.processingHistory.length > 0 && (
+							<>
+								<Divider />
+								<Box>
+									<Typography variant="subtitle2" mb={1}>Historial de procesamiento</Typography>
+									<Stack spacing={0.5}>
+										{data.processingHistory.map((entry, idx) => (
+											<Stack key={idx} direction="row" spacing={1.5} alignItems="flex-start" sx={{ py: 0.5, px: 1, bgcolor: "action.hover", borderRadius: 1 }}>
+												<Chip label={entry.status} size="small" color={STATUS_COLOR[entry.status] || "default"} sx={{ fontSize: 10, minWidth: 80 }} />
+												<Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>{fmtDate(entry.at)}</Typography>
+												{entry.method && <Typography variant="caption" color="text.disabled" sx={{ fontFamily: "monospace" }}>{entry.method}</Typography>}
+												{entry.notes && <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>{entry.notes}</Typography>}
+											</Stack>
+										))}
+									</Stack>
+								</Box>
+							</>
+						)}
+
 						<Box>
 							<Typography variant="caption" color="text.secondary">URL Viewer</Typography>
 							<Typography variant="body2" sx={{ wordBreak: "break-all", fontSize: 11 }}>{data.url}</Typography>
@@ -340,6 +417,98 @@ function EstadoSection({ stats, loading, onRefresh, onRetry }: { stats: Sentenci
 	);
 }
 
+// ── OCR Section ───────────────────────────────────────────────────────────────
+function OcrSection({ stats, loading, onRefresh, onRetryOcr }: { stats: SentenciasStats | null; loading: boolean; onRefresh: () => void; onRetryOcr: (id: string) => void }) {
+	const theme = useTheme();
+	const [selectedDoc, setSelectedDoc] = useState<SentenciaCapturada | null>(null);
+	const [dialogOpen, setDialogOpen] = useState(false);
+
+	const handleDetail = (doc: SentenciaCapturada) => { setSelectedDoc(doc); setDialogOpen(true); };
+	const ocr = stats?.ocr;
+
+	return (
+		<Stack spacing={3}>
+			<Stack direction="row" justifyContent="space-between" alignItems="center">
+				<Typography variant="h6">Pipeline OCR — PDFs Escaneados</Typography>
+				<Button startIcon={<Refresh size={16} />} size="small" onClick={onRefresh} disabled={loading}>Actualizar</Button>
+			</Stack>
+
+			{loading && !stats ? (
+				<Grid container spacing={2}>{[...Array(4)].map((_, i) => <Grid item xs={6} sm={3} key={i}><Skeleton height={80} variant="rounded" /></Grid>)}</Grid>
+			) : ocr ? (
+				<>
+					{/* Stats por estado OCR */}
+					<Grid container spacing={2}>
+						{(["pending", "processing", "completed", "error"] as OcrStatus[]).map(st => {
+							const entry = ocr.byStatus.find(b => b._id === st);
+							return (
+								<Grid item xs={6} sm={3} key={st}>
+									<StatCard
+										label={OCR_STATUS_LABEL[st]}
+										value={entry?.count || 0}
+										color={(() => { const c = OCR_STATUS_COLOR[st]; return c !== "default" ? theme.palette[c]?.main : undefined; })()}
+										sub={entry?.avgMs ? `~${(entry.avgMs / 1000).toFixed(0)}s prom.` : undefined}
+									/>
+								</Grid>
+							);
+						})}
+					</Grid>
+
+					{/* Información sobre dependencias requeridas */}
+					{stats && stats.totals.needsOcr === 0 && (!ocr.byStatus.length) && (
+						<Alert severity="info" icon={<Scanner size={20} />}>
+							No hay documentos escaneados detectados aún. El worker OCR procesará automáticamente los PDFs
+							que no puedan ser extraídos por texto (PDFs escaneados o imágenes).
+							<br />
+							<strong>Requisito:</strong> <code>sudo apt-get install -y tesseract-ocr tesseract-ocr-spa poppler-utils</code>
+						</Alert>
+					)}
+
+					{/* Últimos procesados por OCR */}
+					{ocr.recientes.length > 0 && (
+						<Box>
+							<Stack direction="row" alignItems="center" spacing={1} mb={1}>
+								<TickCircle size={16} color={theme.palette.success.main} />
+								<Typography variant="subtitle2">Últimos procesados por OCR</Typography>
+							</Stack>
+							<Paper variant="outlined" sx={{ p: 1 }}>
+								{ocr.recientes.map((doc, i) => (
+									<Box key={doc._id}>
+										{i > 0 && <Divider sx={{ my: 0.5 }} />}
+										<SentenciaRow doc={doc} onDetail={handleDetail} />
+									</Box>
+								))}
+							</Paper>
+						</Box>
+					)}
+
+					{/* Errores de OCR */}
+					{ocr.byStatus.find(b => b._id === "error")?.count ? (
+						<Alert severity="warning" icon={<Warning2 size={20} />}>
+							Hay documentos con errores en OCR. Usa el botón <Scanner size={14} style={{ verticalAlign: "middle" }} /> en la lista para reintentarlos.
+						</Alert>
+					) : null}
+
+					{/* Nota de instalación */}
+					<Paper variant="outlined" sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.04), borderColor: alpha(theme.palette.info.main, 0.2) }}>
+						<Typography variant="subtitle2" gutterBottom>Configuración requerida en el servidor</Typography>
+						<Typography variant="body2" color="text.secondary" mb={1}>
+							Ejecutar una sola vez en worker_01 para habilitar OCR de PDFs escaneados:
+						</Typography>
+						<Box sx={{ bgcolor: "grey.900", borderRadius: 1, p: 1.5, fontFamily: "monospace", fontSize: 12, color: "grey.100" }}>
+							sudo apt-get install -y tesseract-ocr tesseract-ocr-spa poppler-utils
+						</Box>
+					</Paper>
+				</>
+			) : (
+				<Alert severity="info">No hay datos de OCR disponibles aún.</Alert>
+			)}
+
+			<DetailDialog doc={selectedDoc} open={dialogOpen} onClose={() => setDialogOpen(false)} />
+		</Stack>
+	);
+}
+
 // ── Lista Section ─────────────────────────────────────────────────────────────
 function ListaSection() {
 	const [docs, setDocs] = useState<SentenciaCapturada[]>([]);
@@ -400,7 +569,7 @@ function ListaSection() {
 
 // ── Root component ────────────────────────────────────────────────────────────
 
-const SECTIONS = ["Estado", "Lista"];
+const SECTIONS = ["Estado", "OCR", "Lista"];
 
 export default function SentenciasWorkerTab() {
 	const { enqueueSnackbar } = useSnackbar();
@@ -431,6 +600,16 @@ export default function SentenciasWorkerTab() {
 		}
 	};
 
+	const handleRetryOcr = async (id: string) => {
+		try {
+			await SentenciasService.retryOcr(id);
+			enqueueSnackbar("Reencolada para OCR", { variant: "success" });
+			loadStats();
+		} catch {
+			enqueueSnackbar("Error al reintentar OCR", { variant: "error" });
+		}
+	};
+
 	return (
 		<Box>
 			<Tabs value={section} onChange={(_, v) => setSection(v)} sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
@@ -440,6 +619,9 @@ export default function SentenciasWorkerTab() {
 				<EstadoSection stats={stats} loading={loading} onRefresh={loadStats} onRetry={handleRetry} />
 			</TabPanel>
 			<TabPanel value={section} index={1}>
+				<OcrSection stats={stats} loading={loading} onRefresh={loadStats} onRetryOcr={handleRetryOcr} />
+			</TabPanel>
+			<TabPanel value={section} index={2}>
 				<ListaSection />
 			</TabPanel>
 		</Box>
