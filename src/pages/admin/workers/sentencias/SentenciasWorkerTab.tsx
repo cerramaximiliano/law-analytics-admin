@@ -15,8 +15,10 @@ import {
 	Paper,
 	Skeleton,
 	Stack,
+	Switch,
 	Tab,
 	Tabs,
+	TextField,
 	Tooltip,
 	Typography,
 	alpha,
@@ -25,6 +27,7 @@ import {
 import { CloseCircle, DocumentText, Refresh, Scanner, TickCircle, Warning2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import SentenciasService, { OcrStatus, SentenciaCapturada, SentenciasStats, SentenciaTipo, Fuero } from "api/sentenciasCapturadas";
+import CollectorService, { CollectorConfig, FueroConfig } from "api/sentenciasCollector";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -567,9 +570,323 @@ function ListaSection() {
 	);
 }
 
+// ── Collector Section ─────────────────────────────────────────────────────────
+
+const FUERO_COLLECTION_LABELS: Record<string, string> = {
+	"causas-civil": "Civil",
+	"causas-segsocial": "Seg. Social",
+	"causas-trabajo": "Trabajo",
+	"causas-comercial": "Comercial",
+};
+
+function FueroRow({
+	fuero,
+	saving,
+	onToggle,
+	onYearChange,
+	onSaveYears,
+	onResetCursor,
+}: {
+	fuero: FueroConfig;
+	saving: boolean;
+	onToggle: (f: Fuero, val: boolean) => void;
+	onYearChange: (f: Fuero, field: "yearFrom" | "yearTo", val: number) => void;
+	onSaveYears: (f: Fuero) => void;
+	onResetCursor: (f: Fuero) => void;
+}) {
+	const theme = useTheme();
+	const label = FUERO_COLLECTION_LABELS[fuero.collection || ""] || fuero.fuero;
+	const scannedPct = fuero.totalScanned > 0 ? Math.min(100, fuero.totalScanned / 10000 * 100) : 0;
+
+	return (
+		<Paper
+			variant="outlined"
+			sx={{ p: 2, borderColor: fuero.enabled ? alpha(theme.palette.primary.main, 0.3) : undefined, bgcolor: fuero.enabled ? alpha(theme.palette.primary.main, 0.02) : undefined }}
+		>
+			<Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap">
+				{/* Label + toggle */}
+				<Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 120 }}>
+					<Switch
+						size="small"
+						checked={fuero.enabled}
+						onChange={(e) => onToggle(fuero.fuero, e.target.checked)}
+						disabled={saving}
+					/>
+					<Typography variant="body2" fontWeight={700}>{fuero.fuero}</Typography>
+					<Typography variant="caption" color="text.secondary">{label}</Typography>
+				</Stack>
+
+				{/* Year range */}
+				<Stack direction="row" spacing={1} alignItems="center">
+					<TextField
+						label="Desde"
+						type="number"
+						size="small"
+						value={fuero.yearFrom}
+						onChange={(e) => onYearChange(fuero.fuero, "yearFrom", Number(e.target.value))}
+						onBlur={() => onSaveYears(fuero.fuero)}
+						disabled={saving}
+						sx={{ width: 90 }}
+						inputProps={{ min: 2010, max: new Date().getFullYear() }}
+					/>
+					<TextField
+						label="Hasta"
+						type="number"
+						size="small"
+						value={fuero.yearTo}
+						onChange={(e) => onYearChange(fuero.fuero, "yearTo", Number(e.target.value))}
+						onBlur={() => onSaveYears(fuero.fuero)}
+						disabled={saving}
+						sx={{ width: 90 }}
+						inputProps={{ min: 2010, max: new Date().getFullYear() }}
+					/>
+				</Stack>
+
+				{/* Stats */}
+				<Stack direction="row" spacing={2} flex={1} flexWrap="wrap">
+					<Box textAlign="center" minWidth={60}>
+						<Typography variant="caption" color="text.secondary" display="block">Escaneadas</Typography>
+						<Typography variant="body2" fontWeight={600}>{fuero.totalScanned.toLocaleString("es-AR")}</Typography>
+					</Box>
+					<Box textAlign="center" minWidth={60}>
+						<Typography variant="caption" color="text.secondary" display="block">Encoladas</Typography>
+						<Typography variant="body2" fontWeight={600} color="primary.main">{fuero.totalEnqueued.toLocaleString("es-AR")}</Typography>
+					</Box>
+					{fuero.completedFullScan && (
+						<Chip label="Scan completo" size="small" color="success" variant="outlined" icon={<TickCircle size={12} />} />
+					)}
+					{fuero.lastScannedId && (
+						<Chip label="En progreso" size="small" color="info" variant="outlined" />
+					)}
+				</Stack>
+
+				{/* Reset cursor */}
+				<Tooltip title={`Reiniciar cursor de ${fuero.fuero} (comenzar scan desde el principio)`}>
+					<span>
+						<Button
+							size="small"
+							variant="outlined"
+							color="warning"
+							disabled={saving || (!fuero.lastScannedId && !fuero.completedFullScan)}
+							onClick={() => onResetCursor(fuero.fuero)}
+						>
+							Reset
+						</Button>
+					</span>
+				</Tooltip>
+			</Stack>
+
+			{/* Progress bar */}
+			{fuero.totalScanned > 0 && (
+				<Box mt={1}>
+					<LinearProgress variant="determinate" value={scannedPct} sx={{ height: 3, borderRadius: 2 }} color="primary" />
+				</Box>
+			)}
+
+			{fuero.lastScanCompletedAt && (
+				<Typography variant="caption" color="text.disabled" display="block" mt={0.5}>
+					Último scan completado: {fmtDate(fuero.lastScanCompletedAt)}
+				</Typography>
+			)}
+		</Paper>
+	);
+}
+
+function CollectorSection() {
+	const theme = useTheme();
+	const { enqueueSnackbar } = useSnackbar();
+	const [config, setConfig] = useState<CollectorConfig | null>(null);
+	const [loading, setLoading] = useState(false);
+	const [saving, setSaving] = useState(false);
+	// Local editable state for fueros year ranges
+	const [localFueros, setLocalFueros] = useState<FueroConfig[]>([]);
+
+	const load = async () => {
+		setLoading(true);
+		try {
+			const c = await CollectorService.getConfig();
+			setConfig(c);
+			setLocalFueros(c.fueros);
+		} catch {
+			enqueueSnackbar("Error cargando configuración del collector", { variant: "error" });
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => { load(); }, []);
+
+	const saveField = async (payload: Parameters<typeof CollectorService.updateConfig>[0]) => {
+		setSaving(true);
+		try {
+			const updated = await CollectorService.updateConfig(payload);
+			setConfig(updated);
+			setLocalFueros(updated.fueros);
+			enqueueSnackbar("Guardado", { variant: "success" });
+		} catch {
+			enqueueSnackbar("Error guardando configuración", { variant: "error" });
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	const handleToggleGlobal = (val: boolean) => saveField({ enabled: val });
+
+	const handleToggleFuero = (fuero: Fuero, val: boolean) =>
+		saveField({ fueros: [{ fuero, enabled: val }] });
+
+	const handleYearChange = (fuero: Fuero, field: "yearFrom" | "yearTo", val: number) => {
+		setLocalFueros(prev => prev.map(f => f.fuero === fuero ? { ...f, [field]: val } : f));
+	};
+
+	const handleSaveYears = (fuero: Fuero) => {
+		const f = localFueros.find(x => x.fuero === fuero);
+		if (!f) return;
+		saveField({ fueros: [{ fuero, yearFrom: f.yearFrom, yearTo: f.yearTo }] });
+	};
+
+	const handleResetCursor = async (fuero: Fuero) => {
+		setSaving(true);
+		try {
+			const updated = await CollectorService.resetFueroCursor(fuero);
+			setConfig(updated);
+			setLocalFueros(updated.fueros);
+			enqueueSnackbar(`Cursor de ${fuero} reiniciado`, { variant: "success" });
+		} catch {
+			enqueueSnackbar("Error reiniciando cursor", { variant: "error" });
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	const handleResetAll = async () => {
+		setSaving(true);
+		try {
+			const updated = await CollectorService.resetAllCursors();
+			setConfig(updated);
+			setLocalFueros(updated.fueros);
+			enqueueSnackbar("Todos los cursores reiniciados", { variant: "success" });
+		} catch {
+			enqueueSnackbar("Error reiniciando cursores", { variant: "error" });
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	if (loading) return <Stack spacing={2}>{[...Array(3)].map((_, i) => <Skeleton key={i} height={80} variant="rounded" />)}</Stack>;
+	if (!config) return <Alert severity="error">No se pudo cargar la configuración.</Alert>;
+
+	const { currentState, stats } = config;
+
+	return (
+		<Stack spacing={3}>
+			{/* Header */}
+			<Stack direction="row" justifyContent="space-between" alignItems="center">
+				<Typography variant="h6">Sentencias Collector — Corpus Histórico</Typography>
+				<Stack direction="row" spacing={1}>
+					<Button startIcon={<Refresh size={16} />} size="small" onClick={load} disabled={loading || saving}>Actualizar</Button>
+				</Stack>
+			</Stack>
+
+			{/* Estado actual */}
+			{currentState.isRunning && (
+				<Alert severity="info" icon={<CircularProgress size={16} />}>
+					Worker corriendo — fuero actual: <strong>{currentState.currentFuero || "—"}</strong>
+					{currentState.startedAt && ` · iniciado ${fmtDate(currentState.startedAt)}`}
+				</Alert>
+			)}
+
+			{/* Control global */}
+			<Paper variant="outlined" sx={{ p: 2 }}>
+				<Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap">
+					<Stack direction="row" alignItems="center" spacing={1}>
+						<Switch
+							checked={config.enabled}
+							onChange={(e) => handleToggleGlobal(e.target.checked)}
+							disabled={saving}
+						/>
+						<Typography variant="body2" fontWeight={600}>
+							Worker {config.enabled ? "habilitado" : "deshabilitado"}
+						</Typography>
+						{config.enabled ? (
+							<Chip label="ON" size="small" color="success" />
+						) : (
+							<Chip label="OFF" size="small" color="default" />
+						)}
+					</Stack>
+					<Divider orientation="vertical" flexItem />
+					<Box>
+						<Typography variant="caption" color="text.secondary">Cron</Typography>
+						<Typography variant="body2" sx={{ fontFamily: "monospace" }}>{config.cronPattern}</Typography>
+					</Box>
+					<Box>
+						<Typography variant="caption" color="text.secondary">Batch size</Typography>
+						<Typography variant="body2">{config.batchSize} causas/ciclo</Typography>
+					</Box>
+					<Box>
+						<Typography variant="caption" color="text.secondary">Max pending queue</Typography>
+						<Typography variant="body2">{config.maxPendingQueue} docs</Typography>
+					</Box>
+				</Stack>
+			</Paper>
+
+			{/* Stats globales */}
+			<Grid container spacing={2}>
+				<Grid item xs={6} sm={3}>
+					<StatCard label="Total escaneadas" value={stats.totalScannedAllTime.toLocaleString("es-AR")} />
+				</Grid>
+				<Grid item xs={6} sm={3}>
+					<StatCard label="Total encoladas" value={stats.totalEnqueuedAllTime.toLocaleString("es-AR")} color={theme.palette.primary.main} />
+				</Grid>
+				<Grid item xs={6} sm={3}>
+					<StatCard label="Último ciclo — escaneadas" value={stats.lastRunScanned} sub={stats.lastRunAt ? fmtDate(stats.lastRunAt) : undefined} />
+				</Grid>
+				<Grid item xs={6} sm={3}>
+					<StatCard label="Último ciclo — encoladas" value={stats.lastRunEnqueued} color={stats.lastRunEnqueued > 0 ? theme.palette.success.main : undefined} />
+				</Grid>
+			</Grid>
+
+			{/* Configuración por fuero */}
+			<Box>
+				<Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
+					<Typography variant="subtitle2">Configuración por fuero</Typography>
+					<Button size="small" variant="outlined" color="warning" onClick={handleResetAll} disabled={saving}>
+						Reset todos los cursores
+					</Button>
+				</Stack>
+				<Stack spacing={1.5}>
+					{localFueros.map((f) => (
+						<FueroRow
+							key={f.fuero}
+							fuero={f}
+							saving={saving}
+							onToggle={handleToggleFuero}
+							onYearChange={handleYearChange}
+							onSaveYears={handleSaveYears}
+							onResetCursor={handleResetCursor}
+						/>
+					))}
+				</Stack>
+			</Box>
+
+			{/* Info */}
+			<Paper variant="outlined" sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.04), borderColor: alpha(theme.palette.info.main, 0.2) }}>
+				<Typography variant="subtitle2" gutterBottom>Cómo iniciar el worker en el servidor</Typography>
+				<Box sx={{ bgcolor: "grey.900", borderRadius: 1, p: 1.5, fontFamily: "monospace", fontSize: 12, color: "grey.100" }}>
+					{`cd /var/www/pjn-workers-scraping\npm2 start pm2.collector.config.js\npm2 save`}
+				</Box>
+				<Typography variant="caption" color="text.secondary" display="block" mt={1}>
+					El worker lee causas de MongoDB local (worker_01) y encola sentencias en Atlas con <code>category: 'rutina'</code>.
+					Solo procesa causas con movimientos de tipo sentencia no capturadas aún.
+				</Typography>
+			</Paper>
+		</Stack>
+	);
+}
+
 // ── Root component ────────────────────────────────────────────────────────────
 
-const SECTIONS = ["Estado", "OCR", "Lista"];
+const SECTIONS = ["Estado", "OCR", "Collector", "Lista"];
 
 export default function SentenciasWorkerTab() {
 	const { enqueueSnackbar } = useSnackbar();
@@ -622,6 +939,9 @@ export default function SentenciasWorkerTab() {
 				<OcrSection stats={stats} loading={loading} onRefresh={loadStats} onRetryOcr={handleRetryOcr} />
 			</TabPanel>
 			<TabPanel value={section} index={2}>
+				<CollectorSection />
+			</TabPanel>
+			<TabPanel value={section} index={3}>
 				<ListaSection />
 			</TabPanel>
 		</Box>
