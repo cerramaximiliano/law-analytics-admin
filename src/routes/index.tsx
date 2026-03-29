@@ -40,6 +40,7 @@ const RagWorkersPage = Loadable(lazy(() => import("pages/admin/rag-workers")));
 const CorpusWorkerPage = Loadable(lazy(() => import("pages/admin/workers/corpus")));
 const EscritosWorkerPage = Loadable(lazy(() => import("pages/admin/workers/escritos")));
 const MovimientosWorkerPage = Loadable(lazy(() => import("pages/admin/workers/movimientos")));
+const SentenciasWorkerPage = Loadable(lazy(() => import("pages/admin/workers/sentencias")));
 
 // Subscriptions pages
 const StripeWebhooks = Loadable(lazy(() => import("pages/subscriptions/StripeWebhooks")));
@@ -237,6 +238,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<MovimientosWorkerPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "workers/sentencias",
+							element: (
+								<AdminRoleGuard>
+									<SentenciasWorkerPage />
 								</AdminRoleGuard>
 							),
 						},
