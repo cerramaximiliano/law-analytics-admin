@@ -97,6 +97,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "workers-sentencias",
+					title: "Sentencias Capturadas",
+					type: "item",
+					url: "/admin/workers/sentencias",
+					breadcrumbs: true,
+				},
+				{
 					id: "infrastructure",
 					title: "Infraestructura",
 					type: "item",
