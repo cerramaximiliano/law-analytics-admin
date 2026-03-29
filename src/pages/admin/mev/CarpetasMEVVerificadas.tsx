@@ -760,6 +760,7 @@ const CarpetasMEVVerificadas = () => {
 									<MenuItem value="movimientosCount">Movimientos</MenuItem>
 									<MenuItem value="lastUpdate">Última Act.</MenuItem>
 									<MenuItem value="fechaUltimoMovimiento">Fecha Últ. Mov.</MenuItem>
+									<MenuItem value="createdAt">Fecha de creación</MenuItem>
 								</Select>
 							</FormControl>
 						</Grid>
