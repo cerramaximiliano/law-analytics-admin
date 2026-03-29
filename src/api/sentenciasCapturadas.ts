@@ -7,6 +7,8 @@ export type OcrStatus = "not_needed" | "pending" | "processing" | "completed" | 
 export type SentenciaTipo = "primera_instancia" | "camara" | "interlocutoria" | "honorarios" | "definitiva" | "resolucion" | "otro";
 export type Fuero = "CIV" | "CSS" | "CNT" | "COM";
 
+export type Category = "novelty" | "rutina";
+
 export interface SentenciaCapturada {
 	_id: string;
 	causaId: string;
@@ -14,6 +16,7 @@ export interface SentenciaCapturada {
 	year: number;
 	fuero: Fuero;
 	caratula?: string;
+	category?: Category;
 	juzgado?: number;
 	secretaria?: number;
 	sala?: number;
@@ -74,6 +77,8 @@ export interface SentenciasStats {
 		byStatus: { _id: OcrStatus; count: number; avgMs: number }[];
 		recientes: SentenciaCapturada[];
 	};
+	byCategory: { _id: Category; total: number; processed: number; pending: number }[];
+	noveltyRecientes: SentenciaCapturada[];
 }
 
 // ── Service ───────────────────────────────────────────────────────────────────
@@ -86,7 +91,7 @@ const SentenciasService = {
 		return res.data.data;
 	},
 
-	async findAll(params?: { status?: ProcessingStatus; fuero?: Fuero; tipo?: SentenciaTipo; page?: number; limit?: number }): Promise<{ data: SentenciaCapturada[]; total: number }> {
+	async findAll(params?: { status?: ProcessingStatus; fuero?: Fuero; tipo?: SentenciaTipo; category?: Category; page?: number; limit?: number }): Promise<{ data: SentenciaCapturada[]; total: number }> {
 		const res = await pjnAxios.get<{ success: boolean; data: SentenciaCapturada[]; total: number }>(BASE, { params });
 		return { data: res.data.data, total: res.data.total };
 	},
