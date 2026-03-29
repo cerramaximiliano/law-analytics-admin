@@ -26,7 +26,7 @@ import {
 } from "@mui/material";
 import { CloseCircle, DocumentText, Refresh, Scanner, TickCircle, Warning2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import SentenciasService, { OcrStatus, SentenciaCapturada, SentenciasStats, SentenciaTipo, Fuero } from "api/sentenciasCapturadas";
+import SentenciasService, { Category, OcrStatus, SentenciaCapturada, SentenciasStats, SentenciaTipo, Fuero } from "api/sentenciasCapturadas";
 import CollectorService, { CollectorConfig, FueroConfig } from "api/sentenciasCollector";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -114,6 +114,9 @@ function SentenciaRow({ doc, onDetail, onRetry, onRetryOcr }: SentenciaRowProps)
 					</Typography>
 					<Chip label={TIPO_LABELS[doc.sentenciaTipo]} size="small" sx={{ bgcolor: alpha(color, 0.12), color, fontWeight: 600, fontSize: 11 }} />
 					<Chip label={doc.processingStatus} size="small" color={STATUS_COLOR[doc.processingStatus] || "default"} variant="outlined" sx={{ fontSize: 11 }} />
+					{doc.category && (
+						<Chip label={CATEGORY_LABEL[doc.category]} size="small" sx={{ bgcolor: alpha(CATEGORY_COLOR[doc.category], 0.12), color: CATEGORY_COLOR[doc.category], fontWeight: 600, fontSize: 10 }} />
+					)}
 					{doc.ocrStatus && doc.ocrStatus !== "not_needed" && (
 						<Chip label={`OCR: ${OCR_STATUS_LABEL[doc.ocrStatus]}`} size="small" color={OCR_STATUS_COLOR[doc.ocrStatus]} sx={{ fontSize: 11 }} />
 					)}
@@ -282,6 +285,9 @@ function TabPanel({ children, value, index }: TabPanelProps) {
 }
 
 // ── Estado Section ────────────────────────────────────────────────────────────
+const CATEGORY_COLOR: Record<Category, string> = { novelty: "#7b1fa2", rutina: "#1565c0" };
+const CATEGORY_LABEL: Record<Category, string> = { novelty: "Novelty", rutina: "Rutina" };
+
 function EstadoSection({ stats, loading, onRefresh, onRetry }: { stats: SentenciasStats | null; loading: boolean; onRefresh: () => void; onRetry: (id: string) => void }) {
 	const theme = useTheme();
 	const [selectedDoc, setSelectedDoc] = useState<SentenciaCapturada | null>(null);
@@ -386,6 +392,52 @@ function EstadoSection({ stats, loading, onRefresh, onRetry }: { stats: Sentenci
 							</Stack>
 							<Paper variant="outlined" sx={{ p: 1 }}>
 								{stats.recientes.map((doc, i) => (
+									<Box key={doc._id}>
+										{i > 0 && <Divider sx={{ my: 0.5 }} />}
+										<SentenciaRow doc={doc} onDetail={handleDetail} />
+									</Box>
+								))}
+							</Paper>
+						</Box>
+					)}
+
+					{/* Por categoría */}
+					{stats.byCategory && stats.byCategory.length > 0 && (
+						<Box>
+							<Typography variant="subtitle2" mb={1}>Por categoría</Typography>
+							<Grid container spacing={2}>
+								{(["novelty", "rutina"] as Category[]).map(cat => {
+									const entry = stats.byCategory.find(c => c._id === cat);
+									const color = CATEGORY_COLOR[cat];
+									return (
+										<Grid item xs={12} sm={6} key={cat}>
+											<Paper variant="outlined" sx={{ p: 2, borderColor: alpha(color, 0.4), bgcolor: alpha(color, 0.04) }}>
+												<Stack direction="row" alignItems="center" spacing={1} mb={1}>
+													<Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: color }} />
+													<Typography variant="body2" fontWeight={700} color={color}>{CATEGORY_LABEL[cat]}</Typography>
+												</Stack>
+												<Grid container spacing={1}>
+													<Grid item xs={4}><Typography variant="caption" color="text.secondary" display="block">Total</Typography><Typography variant="body2" fontWeight={600}>{(entry?.total || 0).toLocaleString("es-AR")}</Typography></Grid>
+													<Grid item xs={4}><Typography variant="caption" color="text.secondary" display="block">Procesadas</Typography><Typography variant="body2" fontWeight={600} color="success.main">{(entry?.processed || 0).toLocaleString("es-AR")}</Typography></Grid>
+													<Grid item xs={4}><Typography variant="caption" color="text.secondary" display="block">Pendientes</Typography><Typography variant="body2" fontWeight={600}>{(entry?.pending || 0).toLocaleString("es-AR")}</Typography></Grid>
+												</Grid>
+											</Paper>
+										</Grid>
+									);
+								})}
+							</Grid>
+						</Box>
+					)}
+
+					{/* Últimas novelty procesadas */}
+					{stats.noveltyRecientes && stats.noveltyRecientes.length > 0 && (
+						<Box>
+							<Stack direction="row" alignItems="center" spacing={1} mb={1}>
+								<Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: CATEGORY_COLOR.novelty }} />
+								<Typography variant="subtitle2" color={CATEGORY_COLOR.novelty}>Últimas Novelty (newsletter)</Typography>
+							</Stack>
+							<Paper variant="outlined" sx={{ p: 1, borderColor: alpha(CATEGORY_COLOR.novelty, 0.3) }}>
+								{stats.noveltyRecientes.map((doc, i) => (
 									<Box key={doc._id}>
 										{i > 0 && <Divider sx={{ my: 0.5 }} />}
 										<SentenciaRow doc={doc} onDetail={handleDetail} />
@@ -520,11 +572,12 @@ function ListaSection() {
 	const [loading, setLoading] = useState(false);
 	const [selectedDoc, setSelectedDoc] = useState<SentenciaCapturada | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
+	const [categoryFilter, setCategoryFilter] = useState<Category | "all">("all");
 
-	const load = async (p = page) => {
+	const load = async (p = page, cat = categoryFilter) => {
 		setLoading(true);
 		try {
-			const res = await SentenciasService.findAll({ page: p, limit: 20 });
+			const res = await SentenciasService.findAll({ page: p, limit: 20, category: cat === "all" ? undefined : cat });
 			setDocs(res.data);
 			setTotal(res.total);
 		} finally {
@@ -532,16 +585,31 @@ function ListaSection() {
 		}
 	};
 
-	useEffect(() => { load(); }, [page]);
+	useEffect(() => { load(1, categoryFilter); setPage(1); }, [categoryFilter]);
+	useEffect(() => { load(page, categoryFilter); }, [page]);
 
 	const handleDetail = (doc: SentenciaCapturada) => { setSelectedDoc(doc); setDialogOpen(true); };
 	const totalPages = Math.ceil(total / 20);
 
 	return (
 		<Stack spacing={2}>
-			<Stack direction="row" justifyContent="space-between" alignItems="center">
-				<Typography variant="h6">Todas las sentencias ({fmtNum(total)})</Typography>
-				<Button startIcon={<Refresh size={16} />} size="small" onClick={() => load()} disabled={loading}>Actualizar</Button>
+			<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
+				<Typography variant="h6">Sentencias ({fmtNum(total)})</Typography>
+				<Stack direction="row" spacing={1} alignItems="center">
+					{/* Chips de categoría */}
+					{([["all", "Todas"], ["novelty", "Novelty"], ["rutina", "Rutina"]] as [Category | "all", string][]).map(([val, label]) => (
+						<Chip
+							key={val}
+							label={label}
+							size="small"
+							onClick={() => setCategoryFilter(val)}
+							variant={categoryFilter === val ? "filled" : "outlined"}
+							sx={categoryFilter === val && val !== "all" ? { bgcolor: CATEGORY_COLOR[val as Category], color: "white", fontWeight: 700, "&:hover": { bgcolor: CATEGORY_COLOR[val as Category] } } : {}}
+							color={categoryFilter === val && val === "all" ? "primary" : "default"}
+						/>
+					))}
+					<Button startIcon={<Refresh size={16} />} size="small" onClick={() => load(page, categoryFilter)} disabled={loading}>Actualizar</Button>
+				</Stack>
 			</Stack>
 
 			{loading ? (
