@@ -24,9 +24,9 @@ import {
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { CloseCircle, DocumentText, Refresh, Scanner, TickCircle, Warning2 } from "iconsax-react";
+import { CloseCircle, DocumentText, Refresh, Scanner, TickCircle, Warning2, Data } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import SentenciasService, { Category, OcrStatus, SentenciaCapturada, SentenciasStats, SentenciaTipo, Fuero } from "api/sentenciasCapturadas";
+import SentenciasService, { Category, EmbeddingStatus, OcrStatus, SentenciaCapturada, SentenciasStats, SentenciaTipo, Fuero } from "api/sentenciasCapturadas";
 import CollectorService, { CollectorConfig, FueroConfig } from "api/sentenciasCollector";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -564,6 +564,179 @@ function OcrSection({ stats, loading, onRefresh, onRetryOcr }: { stats: Sentenci
 	);
 }
 
+// ── Embeddings Section ────────────────────────────────────────────────────────
+
+const EMBEDDING_STATUS_LABEL: Record<EmbeddingStatus, string> = {
+	pending: "Pendiente",
+	processing: "Procesando",
+	completed: "Indexado",
+	error: "Error",
+	skipped: "Omitido",
+};
+const EMBEDDING_STATUS_COLOR: Record<EmbeddingStatus, "success" | "warning" | "error" | "default" | "info"> = {
+	pending: "warning",
+	processing: "info",
+	completed: "success",
+	error: "error",
+	skipped: "default",
+};
+
+function EmbeddingsSection({ stats, loading, onRefresh, onRetryEmbedding }: {
+	stats: SentenciasStats | null;
+	loading: boolean;
+	onRefresh: () => void;
+	onRetryEmbedding: (id: string) => void;
+}) {
+	const theme = useTheme();
+	const emb = stats?.embeddings;
+
+	const total = emb?.byStatus.reduce((acc, b) => acc + b.count, 0) ?? 0;
+	const completed = emb?.byStatus.find(b => b._id === "completed")?.count ?? 0;
+	const pending = emb?.byStatus.find(b => b._id === "pending")?.count ?? 0;
+	const errors = emb?.byStatus.find(b => b._id === "error")?.count ?? 0;
+	const skipped = emb?.byStatus.find(b => b._id === "skipped")?.count ?? 0;
+	const avgChunks = emb?.byStatus.find(b => b._id === "completed")?.avgChunks;
+	const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+	return (
+		<Stack spacing={3}>
+			<Stack direction="row" justifyContent="space-between" alignItems="center">
+				<Typography variant="h6">Pipeline Embeddings — Pinecone</Typography>
+				<Button startIcon={<Refresh size={16} />} size="small" onClick={onRefresh} disabled={loading}>Actualizar</Button>
+			</Stack>
+
+			{loading && !stats ? (
+				<Grid container spacing={2}>{[...Array(4)].map((_, i) => <Grid item xs={6} sm={3} key={i}><Skeleton height={80} variant="rounded" /></Grid>)}</Grid>
+			) : emb ? (
+				<>
+					{/* Stats cards */}
+					<Grid container spacing={2}>
+						{(["completed", "pending", "error", "skipped"] as EmbeddingStatus[]).map(st => {
+							const entry = emb.byStatus.find(b => b._id === st);
+							return (
+								<Grid item xs={6} sm={3} key={st}>
+									<StatCard
+										label={EMBEDDING_STATUS_LABEL[st]}
+										value={entry?.count ?? 0}
+										color={(() => { const c = EMBEDDING_STATUS_COLOR[st]; return c !== "default" ? theme.palette[c]?.main : undefined; })()}
+										sub={st === "completed" && entry?.avgChunks ? `~${entry.avgChunks.toFixed(1)} chunks prom.` : undefined}
+									/>
+								</Grid>
+							);
+						})}
+					</Grid>
+
+					{/* Barra de progreso */}
+					{total > 0 && (
+						<Box>
+							<Stack direction="row" justifyContent="space-between" mb={0.5}>
+								<Typography variant="body2" color="text.secondary">
+									{completed} de {total} indexados en Pinecone
+									{avgChunks ? ` · ~${avgChunks.toFixed(1)} chunks/doc` : ""}
+								</Typography>
+								<Typography variant="body2" fontWeight={700} color={theme.palette.success.main}>{pct}%</Typography>
+							</Stack>
+							<LinearProgress variant="determinate" value={pct} sx={{ height: 8, borderRadius: 4 }} color="success" />
+						</Box>
+					)}
+
+					{/* Info Pinecone */}
+					<Paper variant="outlined" sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.04), borderColor: alpha(theme.palette.primary.main, 0.2) }}>
+						<Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
+							<Data size={16} color={theme.palette.primary.main} />
+							<Typography variant="subtitle2">Pinecone — índice pjn-style-corpus-v2</Typography>
+						</Stack>
+						<Typography variant="body2" color="text.secondary">
+							Namespace: <code>sentencias-corpus</code> · Modelo: <code>text-embedding-3-small</code> (1024 dims)
+							{pending > 0 && ` · ${pending} docs esperando indexación`}
+							{skipped > 0 && ` · ${skipped} omitidos (sin texto)`}
+						</Typography>
+					</Paper>
+
+					{/* Últimos indexados */}
+					{emb.recientes.length > 0 && (
+						<Box>
+							<Stack direction="row" alignItems="center" spacing={1} mb={1}>
+								<TickCircle size={16} color={theme.palette.success.main} />
+								<Typography variant="subtitle2">Últimos indexados en Pinecone</Typography>
+							</Stack>
+							<Paper variant="outlined" sx={{ p: 1 }}>
+								{emb.recientes.map((doc, i) => (
+									<Box key={doc._id}>
+										{i > 0 && <Divider sx={{ my: 0.5 }} />}
+										<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ px: 1, py: 0.5 }}>
+											<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+												<Typography variant="body2" fontWeight={600}>{doc.number}/{doc.year}</Typography>
+												<Chip label={doc.fuero} size="small" variant="outlined" sx={{ fontSize: 10 }} />
+												<Chip
+													label={TIPO_LABELS[doc.sentenciaTipo] ?? doc.sentenciaTipo}
+													size="small"
+													sx={{ fontSize: 10, bgcolor: alpha(TIPO_COLORS[doc.sentenciaTipo] ?? "#616161", 0.1), color: TIPO_COLORS[doc.sentenciaTipo] ?? "#616161", fontWeight: 600 }}
+												/>
+												{doc.category === "novelty" && <Chip label="Novelty" size="small" color="secondary" sx={{ fontSize: 10 }} />}
+											</Stack>
+											<Stack direction="row" spacing={1} alignItems="center">
+												{doc.embeddingChunksCount != null && (
+													<Chip label={`${doc.embeddingChunksCount} chunks`} size="small" color="success" variant="outlined" sx={{ fontSize: 10 }} />
+												)}
+												<Typography variant="caption" color="text.disabled" noWrap>{fmtDate(doc.embeddedAt)}</Typography>
+											</Stack>
+										</Stack>
+										{doc.caratula && (
+											<Typography variant="caption" color="text.secondary" sx={{ px: 1, display: "block" }} noWrap>{doc.caratula}</Typography>
+										)}
+									</Box>
+								))}
+							</Paper>
+						</Box>
+					)}
+
+					{/* Errores de embedding */}
+					{emb.errors.length > 0 && (
+						<Box>
+							<Stack direction="row" alignItems="center" spacing={1} mb={1}>
+								<Warning2 size={16} color={theme.palette.error.main} />
+								<Typography variant="subtitle2" color="error">Errores de embedding</Typography>
+							</Stack>
+							<Paper variant="outlined" sx={{ p: 1, borderColor: alpha(theme.palette.error.main, 0.3) }}>
+								{emb.errors.map((doc, i) => (
+									<Box key={doc._id}>
+										{i > 0 && <Divider sx={{ my: 0.5 }} />}
+										<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ px: 1, py: 0.5 }}>
+											<Stack>
+												<Stack direction="row" spacing={1} alignItems="center">
+													<Typography variant="body2" fontWeight={600}>{doc.number}/{doc.year}</Typography>
+													<Chip label={doc.fuero} size="small" variant="outlined" sx={{ fontSize: 10 }} />
+												</Stack>
+												{doc.embeddingError && (
+													<Typography variant="caption" color="error" noWrap sx={{ maxWidth: 400 }}>{doc.embeddingError}</Typography>
+												)}
+											</Stack>
+											<Tooltip title="Reintentar embedding">
+												<IconButton size="small" color="warning" onClick={() => onRetryEmbedding(doc._id)}>
+													<Refresh size={14} />
+												</IconButton>
+											</Tooltip>
+										</Stack>
+									</Box>
+								))}
+							</Paper>
+						</Box>
+					)}
+
+					{errors === 0 && completed > 0 && (
+						<Alert severity="success" icon={<TickCircle size={20} />}>
+							Pipeline de embeddings funcionando correctamente. {completed} sentencias indexadas en Pinecone.
+						</Alert>
+					)}
+				</>
+			) : (
+				<Alert severity="info">No hay datos de embeddings disponibles aún.</Alert>
+			)}
+		</Stack>
+	);
+}
+
 // ── Lista Section ─────────────────────────────────────────────────────────────
 function ListaSection() {
 	const [docs, setDocs] = useState<SentenciaCapturada[]>([]);
@@ -954,7 +1127,7 @@ function CollectorSection() {
 
 // ── Root component ────────────────────────────────────────────────────────────
 
-const SECTIONS = ["Estado", "OCR", "Collector", "Lista"];
+const SECTIONS = ["Estado", "OCR", "Embeddings", "Collector", "Lista"];
 
 export default function SentenciasWorkerTab() {
 	const { enqueueSnackbar } = useSnackbar();
@@ -995,6 +1168,16 @@ export default function SentenciasWorkerTab() {
 		}
 	};
 
+	const handleRetryEmbedding = async (id: string) => {
+		try {
+			await SentenciasService.retryEmbedding(id);
+			enqueueSnackbar("Reencolada para embedding", { variant: "success" });
+			loadStats();
+		} catch {
+			enqueueSnackbar("Error al reintentar embedding", { variant: "error" });
+		}
+	};
+
 	return (
 		<Box>
 			<Tabs value={section} onChange={(_, v) => setSection(v)} sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
@@ -1007,9 +1190,12 @@ export default function SentenciasWorkerTab() {
 				<OcrSection stats={stats} loading={loading} onRefresh={loadStats} onRetryOcr={handleRetryOcr} />
 			</TabPanel>
 			<TabPanel value={section} index={2}>
-				<CollectorSection />
+				<EmbeddingsSection stats={stats} loading={loading} onRefresh={loadStats} onRetryEmbedding={handleRetryEmbedding} />
 			</TabPanel>
 			<TabPanel value={section} index={3}>
+				<CollectorSection />
+			</TabPanel>
+			<TabPanel value={section} index={4}>
 				<ListaSection />
 			</TabPanel>
 		</Box>
