@@ -28,6 +28,7 @@ import { CloseCircle, DocumentText, Refresh, Scanner, TickCircle, Warning2, Data
 import { useSnackbar } from "notistack";
 import SentenciasService, { Category, EmbeddingStatus, NoveltyCheckStatus, OcrStatus, SentenciaCapturada, SentenciasStats, SentenciaTipo, Fuero } from "api/sentenciasCapturadas";
 import CollectorService, { CollectorConfig, FueroConfig } from "api/sentenciasCollector";
+import SemanticWorkerService, { SemanticWorkerConfig } from "api/semanticWorker";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -597,14 +598,19 @@ const NOVELTY_CHECK_COLOR: Record<NoveltyCheckStatus, "success" | "warning" | "e
 	pending_semantic: "warning",
 };
 
-const MIN_CORPUS_FOR_LAYER2 = 5000;
-
 function NoveltySection({ stats, loading, onRefresh }: {
 	stats: SentenciasStats | null;
 	loading: boolean;
 	onRefresh: () => void;
 }) {
 	const theme = useTheme();
+	const { enqueueSnackbar } = useSnackbar();
+
+	const [config, setConfig] = useState<SemanticWorkerConfig | null>(null);
+	const [configLoading, setConfigLoading] = useState(false);
+	const [saving, setSaving] = useState(false);
+	const [draft, setDraft] = useState<Partial<SemanticWorkerConfig>>({});
+
 	const nc = stats?.noveltyCheck;
 	const byCategory = stats?.byCategory ?? [];
 
@@ -615,13 +621,62 @@ function NoveltySection({ stats, loading, onRefresh }: {
 	const pendingSemantic = nc?.byStatus.find(b => b._id === "pending_semantic")?.count ?? 0;
 	const unverified      = nc?.byStatus.find(b => b._id === null)?.count ?? 0;
 
-	const corpusCompleted = stats?.embeddings.byStatus.find(b => b._id === "completed")?.count ?? 0;
-	const layer2Active    = corpusCompleted >= MIN_CORPUS_FOR_LAYER2;
-	const layer2Pct       = Math.min(100, Math.round((corpusCompleted / MIN_CORPUS_FOR_LAYER2) * 100));
+	const corpusCompleted  = stats?.embeddings.byStatus.find(b => b._id === "completed")?.count ?? 0;
+	const minCorpus        = config?.minCorpusSize ?? 5000;
+	const layer2Enabled    = config?.enabled ?? true;
+	const layer2Active     = layer2Enabled && corpusCompleted >= minCorpus;
+	const layer2Pct        = Math.min(100, Math.round((corpusCompleted / minCorpus) * 100));
 
-	const layer1Verified  = single + doublev + rejected + pendingSemantic;
-	const layer2Verified  = doublev + rejected;
-	const layer1Pct       = noveltyTotal > 0 ? Math.round((layer1Verified / noveltyTotal) * 100) : 0;
+	const layer1Verified = single + doublev + rejected + pendingSemantic;
+	const layer2Verified = doublev + rejected;
+	const layer1Pct      = noveltyTotal > 0 ? Math.round((layer1Verified / noveltyTotal) * 100) : 0;
+
+	const loadConfig = async () => {
+		setConfigLoading(true);
+		try {
+			const c = await SemanticWorkerService.getConfig();
+			setConfig(c);
+			setDraft(c);
+		} catch {
+			enqueueSnackbar("Error cargando configuración", { variant: "error" });
+		} finally {
+			setConfigLoading(false);
+		}
+	};
+
+	useEffect(() => { loadConfig(); }, []);
+
+	const handleSave = async () => {
+		setSaving(true);
+		try {
+			const updated = await SemanticWorkerService.updateConfig({
+				enabled:              draft.enabled,
+				minCorpusSize:        draft.minCorpusSize,
+				similarityThreshold:  draft.similarityThreshold,
+				filterByFuero:        draft.filterByFuero,
+				filterBySentenciaTipo: draft.filterBySentenciaTipo,
+				topK:                 draft.topK,
+				batchSize:            draft.batchSize,
+			});
+			setConfig(updated);
+			setDraft(updated);
+			enqueueSnackbar("Configuración guardada", { variant: "success" });
+		} catch {
+			enqueueSnackbar("Error guardando configuración", { variant: "error" });
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	const isDirty = config && (
+		draft.enabled !== config.enabled ||
+		draft.minCorpusSize !== config.minCorpusSize ||
+		draft.similarityThreshold !== config.similarityThreshold ||
+		draft.filterByFuero !== config.filterByFuero ||
+		draft.filterBySentenciaTipo !== config.filterBySentenciaTipo ||
+		draft.topK !== config.topK ||
+		draft.batchSize !== config.batchSize
+	);
 
 	return (
 		<Stack spacing={3}>
@@ -629,9 +684,9 @@ function NoveltySection({ stats, loading, onRefresh }: {
 				<Stack direction="row" spacing={1.5} alignItems="center">
 					<Typography variant="h6">Verificación de Novedad</Typography>
 					<Chip
-						label={layer2Active ? "Layer 2 activo" : `Layer 2: ${corpusCompleted.toLocaleString("es-AR")}/${MIN_CORPUS_FOR_LAYER2.toLocaleString("es-AR")}`}
+						label={!layer2Enabled ? "Layer 2 deshabilitado" : layer2Active ? "Layer 2 activo" : `Layer 2: ${corpusCompleted.toLocaleString("es-AR")}/${minCorpus.toLocaleString("es-AR")}`}
 						size="small"
-						color={layer2Active ? "success" : "default"}
+						color={!layer2Enabled ? "error" : layer2Active ? "success" : "default"}
 						variant={layer2Active ? "filled" : "outlined"}
 					/>
 				</Stack>
@@ -688,35 +743,155 @@ function NoveltySection({ stats, loading, onRefresh }: {
 					<Box>
 						<Stack direction="row" justifyContent="space-between" mb={0.5}>
 							<Typography variant="body2" color="text.secondary">
-								{layer2Active
-									? `Layer 2 — ${layer2Verified.toLocaleString("es-AR")} verificadas semánticamente (${single.toLocaleString("es-AR")} pendientes)`
-									: `Layer 2 — corpus: ${corpusCompleted.toLocaleString("es-AR")} / ${MIN_CORPUS_FOR_LAYER2.toLocaleString("es-AR")} sentencias embebidas`
+								{!layer2Enabled
+									? "Layer 2 — deshabilitado manualmente"
+									: layer2Active
+										? `Layer 2 — ${layer2Verified.toLocaleString("es-AR")} verificadas semánticamente (${single.toLocaleString("es-AR")} pendientes)`
+										: `Layer 2 — corpus: ${corpusCompleted.toLocaleString("es-AR")} / ${minCorpus.toLocaleString("es-AR")} sentencias embebidas`
 								}
 							</Typography>
-							<Typography variant="body2" fontWeight={700} color={layer2Active ? theme.palette.success.main : theme.palette.text.secondary}>
-								{layer2Active ? "activo" : `${layer2Pct}%`}
+							<Typography variant="body2" fontWeight={700} color={!layer2Enabled ? theme.palette.error.main : layer2Active ? theme.palette.success.main : theme.palette.text.secondary}>
+								{!layer2Enabled ? "off" : layer2Active ? "activo" : `${layer2Pct}%`}
 							</Typography>
 						</Stack>
 						<LinearProgress
 							variant="determinate"
-							value={layer2Active ? 100 : layer2Pct}
+							value={!layer2Enabled ? 0 : layer2Active ? 100 : layer2Pct}
 							sx={{ height: 6, borderRadius: 4 }}
-							color={layer2Active ? "success" : "inherit"}
+							color={!layer2Enabled ? "error" : layer2Active ? "success" : "inherit"}
 						/>
 					</Box>
 
-					{/* Info del sistema */}
-					<Paper variant="outlined" sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.04), borderColor: alpha(theme.palette.info.main, 0.2) }}>
-						<Typography variant="subtitle2" gutterBottom>Sistema de doble verificación de novedad</Typography>
-						<Stack spacing={1}>
-							<Typography variant="body2" color="text.secondary">
-								<strong>Layer 1 — Estructural:</strong> el worker <code>update-movimientos</code> detecta el movimiento como nuevo. Al completar el embedding se asigna <code>status=&apos;single&apos;</code>.
-							</Typography>
-							<Typography variant="body2" color="text.secondary">
-								<strong>Layer 2 — Semántica</strong> (<code>sentencias-semantic-worker</code>): búsqueda cosine en Pinecone filtrando por fuero y tipo. Score &lt; 0.88 → <code>&apos;double&apos;</code>; score ≥ 0.88 → <code>&apos;rejected&apos;</code>.
-								{!layer2Active && <> Se activa al superar {MIN_CORPUS_FOR_LAYER2.toLocaleString("es-AR")} sentencias embebidas.</>}
-							</Typography>
+					{/* Configuración del worker */}
+					<Paper variant="outlined" sx={{ p: 2 }}>
+						<Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+							<Typography variant="subtitle2">Configuración — sentencias-semantic-worker</Typography>
+							{configLoading && <CircularProgress size={14} />}
 						</Stack>
+
+						{config ? (
+							<Stack spacing={2}>
+								{/* Habilitado */}
+								<Stack direction="row" justifyContent="space-between" alignItems="center">
+									<Box>
+										<Typography variant="body2" fontWeight={600}>Layer 2 habilitado</Typography>
+										<Typography variant="caption" color="text.secondary">Desactivar detiene completamente la verificación semántica</Typography>
+									</Box>
+									<Switch
+										checked={draft.enabled ?? true}
+										onChange={e => setDraft(d => ({ ...d, enabled: e.target.checked }))}
+										disabled={saving}
+									/>
+								</Stack>
+
+								<Divider />
+
+								{/* Parámetros numéricos */}
+								<Grid container spacing={2}>
+									<Grid item xs={12} sm={6}>
+										<TextField
+											label="Corpus mínimo (sentencias embebidas)"
+											type="number"
+											size="small"
+											fullWidth
+											value={draft.minCorpusSize ?? 5000}
+											onChange={e => setDraft(d => ({ ...d, minCorpusSize: parseInt(e.target.value) || 1 }))}
+											disabled={saving}
+											inputProps={{ min: 1 }}
+											helperText="El layer 2 no procesa hasta alcanzar este umbral"
+										/>
+									</Grid>
+									<Grid item xs={12} sm={6}>
+										<TextField
+											label="Umbral de similitud"
+											type="number"
+											size="small"
+											fullWidth
+											value={draft.similarityThreshold ?? 0.88}
+											onChange={e => setDraft(d => ({ ...d, similarityThreshold: parseFloat(e.target.value) || 0 }))}
+											disabled={saving}
+											inputProps={{ min: 0, max: 1, step: 0.01 }}
+											helperText="Score ≥ umbral → rechazada · Score < umbral → doble verificada"
+										/>
+									</Grid>
+									<Grid item xs={12} sm={6}>
+										<TextField
+											label="Top K (resultados Pinecone)"
+											type="number"
+											size="small"
+											fullWidth
+											value={draft.topK ?? 10}
+											onChange={e => setDraft(d => ({ ...d, topK: parseInt(e.target.value) || 1 }))}
+											disabled={saving}
+											inputProps={{ min: 1, max: 100 }}
+											helperText="Cantidad de matches a recuperar por consulta"
+										/>
+									</Grid>
+									<Grid item xs={12} sm={6}>
+										<TextField
+											label="Batch size (docs por ciclo)"
+											type="number"
+											size="small"
+											fullWidth
+											value={draft.batchSize ?? 10}
+											onChange={e => setDraft(d => ({ ...d, batchSize: parseInt(e.target.value) || 1 }))}
+											disabled={saving}
+											inputProps={{ min: 1, max: 100 }}
+										/>
+									</Grid>
+								</Grid>
+
+								{/* Filtros */}
+								<Stack direction="row" spacing={3}>
+									<Stack direction="row" alignItems="center" spacing={1}>
+										<Switch
+											checked={draft.filterByFuero ?? true}
+											onChange={e => setDraft(d => ({ ...d, filterByFuero: e.target.checked }))}
+											disabled={saving}
+											size="small"
+										/>
+										<Box>
+											<Typography variant="body2">Filtrar por fuero</Typography>
+											<Typography variant="caption" color="text.secondary">Compara solo contra sentencias del mismo fuero</Typography>
+										</Box>
+									</Stack>
+									<Stack direction="row" alignItems="center" spacing={1}>
+										<Switch
+											checked={draft.filterBySentenciaTipo ?? true}
+											onChange={e => setDraft(d => ({ ...d, filterBySentenciaTipo: e.target.checked }))}
+											disabled={saving}
+											size="small"
+										/>
+										<Box>
+											<Typography variant="body2">Filtrar por tipo</Typography>
+											<Typography variant="caption" color="text.secondary">Compara solo contra el mismo sentenciaTipo</Typography>
+										</Box>
+									</Stack>
+								</Stack>
+
+								{/* Último ciclo */}
+								{config.currentState?.lastRunAt && (
+									<Typography variant="caption" color="text.secondary">
+										Último ciclo: {fmtDate(config.currentState.lastRunAt)} · doubles={config.currentState.lastRunDoubles} · rejected={config.currentState.lastRunRejected}
+										{config.currentState.isRunning && " · corriendo ahora"}
+									</Typography>
+								)}
+
+								{/* Guardar */}
+								<Box>
+									<Button
+										variant="contained"
+										size="small"
+										onClick={handleSave}
+										disabled={saving || !isDirty}
+									>
+										{saving ? "Guardando..." : "Guardar configuración"}
+									</Button>
+								</Box>
+							</Stack>
+						) : (
+							<Skeleton height={200} variant="rounded" />
+						)}
 					</Paper>
 				</>
 			) : (
