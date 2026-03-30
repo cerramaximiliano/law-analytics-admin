@@ -9,6 +9,7 @@ export type SentenciaTipo = "primera_instancia" | "camara" | "interlocutoria" | 
 export type Fuero = "CIV" | "CSS" | "CNT" | "COM";
 
 export type Category = "novelty" | "rutina";
+export type NoveltyCheckStatus = "single" | "double" | "rejected" | "pending_semantic";
 
 export interface SentenciaCapturada {
 	_id: string;
@@ -62,6 +63,13 @@ export interface SentenciaCapturada {
 	embeddedAt?: string;
 	embeddingError?: string;
 	embeddingChunksCount?: number;
+	noveltyCheck?: {
+		status?: NoveltyCheckStatus;
+		semanticScore?: number;
+		semanticTopMatchId?: string;
+		verifiedAt?: string;
+		semanticVerifiedAt?: string;
+	};
 }
 
 export interface SentenciasStats {
@@ -88,6 +96,9 @@ export interface SentenciasStats {
 		byStatus: { _id: EmbeddingStatus; count: number; avgChunks: number }[];
 		recientes: SentenciaCapturada[];
 		errors: SentenciaCapturada[];
+	};
+	noveltyCheck: {
+		byStatus: { _id: NoveltyCheckStatus | null; count: number }[];
 	};
 }
 
