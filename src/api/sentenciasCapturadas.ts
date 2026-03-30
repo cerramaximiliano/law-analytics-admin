@@ -4,6 +4,7 @@ import pjnAxios from "utils/pjnAxios";
 
 export type ProcessingStatus = "pending" | "processing" | "extracted_needs_ocr" | "processed" | "error";
 export type OcrStatus = "not_needed" | "pending" | "processing" | "completed" | "error";
+export type EmbeddingStatus = "pending" | "processing" | "completed" | "error" | "skipped";
 export type SentenciaTipo = "primera_instancia" | "camara" | "interlocutoria" | "honorarios" | "definitiva" | "resolucion" | "otro";
 export type Fuero = "CIV" | "CSS" | "CNT" | "COM";
 
@@ -57,6 +58,10 @@ export interface SentenciaCapturada {
 		method?: string;
 		notes?: string;
 	}>;
+	embeddingStatus?: EmbeddingStatus;
+	embeddedAt?: string;
+	embeddingError?: string;
+	embeddingChunksCount?: number;
 }
 
 export interface SentenciasStats {
@@ -79,6 +84,11 @@ export interface SentenciasStats {
 	};
 	byCategory: { _id: Category; total: number; processed: number; pending: number }[];
 	noveltyRecientes: SentenciaCapturada[];
+	embeddings: {
+		byStatus: { _id: EmbeddingStatus; count: number; avgChunks: number }[];
+		recientes: SentenciaCapturada[];
+		errors: SentenciaCapturada[];
+	};
 }
 
 // ── Service ───────────────────────────────────────────────────────────────────
@@ -108,6 +118,11 @@ const SentenciasService = {
 
 	async retryOcr(id: string): Promise<SentenciaCapturada> {
 		const res = await pjnAxios.post<{ success: boolean; data: SentenciaCapturada }>(`${BASE}/${id}/retry-ocr`);
+		return res.data.data;
+	},
+
+	async retryEmbedding(id: string): Promise<SentenciaCapturada> {
+		const res = await pjnAxios.post<{ success: boolean; data: SentenciaCapturada }>(`${BASE}/${id}/retry-embedding`);
 		return res.data.data;
 	},
 };
