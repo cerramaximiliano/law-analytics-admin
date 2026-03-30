@@ -597,6 +597,8 @@ const NOVELTY_CHECK_COLOR: Record<NoveltyCheckStatus, "success" | "warning" | "e
 	pending_semantic: "warning",
 };
 
+const MIN_CORPUS_FOR_LAYER2 = 5000;
+
 function NoveltySection({ stats, loading, onRefresh }: {
 	stats: SentenciasStats | null;
 	loading: boolean;
@@ -606,20 +608,33 @@ function NoveltySection({ stats, loading, onRefresh }: {
 	const nc = stats?.noveltyCheck;
 	const byCategory = stats?.byCategory ?? [];
 
-	const noveltyTotal = byCategory.find(b => b._id === "novelty")?.total ?? 0;
-	const single = nc?.byStatus.find(b => b._id === "single")?.count ?? 0;
-	const doublev = nc?.byStatus.find(b => b._id === "double")?.count ?? 0;
-	const rejected = nc?.byStatus.find(b => b._id === "rejected")?.count ?? 0;
+	const noveltyTotal    = byCategory.find(b => b._id === "novelty")?.total ?? 0;
+	const single          = nc?.byStatus.find(b => b._id === "single")?.count ?? 0;
+	const doublev         = nc?.byStatus.find(b => b._id === "double")?.count ?? 0;
+	const rejected        = nc?.byStatus.find(b => b._id === "rejected")?.count ?? 0;
 	const pendingSemantic = nc?.byStatus.find(b => b._id === "pending_semantic")?.count ?? 0;
-	const unverified = nc?.byStatus.find(b => b._id === null)?.count ?? 0;
+	const unverified      = nc?.byStatus.find(b => b._id === null)?.count ?? 0;
 
-	const verified = single + doublev + rejected + pendingSemantic;
-	const pct = noveltyTotal > 0 ? Math.round((verified / noveltyTotal) * 100) : 0;
+	const corpusCompleted = stats?.embeddings.byStatus.find(b => b._id === "completed")?.count ?? 0;
+	const layer2Active    = corpusCompleted >= MIN_CORPUS_FOR_LAYER2;
+	const layer2Pct       = Math.min(100, Math.round((corpusCompleted / MIN_CORPUS_FOR_LAYER2) * 100));
+
+	const layer1Verified  = single + doublev + rejected + pendingSemantic;
+	const layer2Verified  = doublev + rejected;
+	const layer1Pct       = noveltyTotal > 0 ? Math.round((layer1Verified / noveltyTotal) * 100) : 0;
 
 	return (
 		<Stack spacing={3}>
 			<Stack direction="row" justifyContent="space-between" alignItems="center">
-				<Typography variant="h6">Verificación de Novedad</Typography>
+				<Stack direction="row" spacing={1.5} alignItems="center">
+					<Typography variant="h6">Verificación de Novedad</Typography>
+					<Chip
+						label={layer2Active ? "Layer 2 activo" : `Layer 2: ${corpusCompleted.toLocaleString("es-AR")}/${MIN_CORPUS_FOR_LAYER2.toLocaleString("es-AR")}`}
+						size="small"
+						color={layer2Active ? "success" : "default"}
+						variant={layer2Active ? "filled" : "outlined"}
+					/>
+				</Stack>
 				<Button startIcon={<Refresh size={16} />} size="small" onClick={onRefresh} disabled={loading}>Actualizar</Button>
 			</Stack>
 
@@ -650,34 +665,56 @@ function NoveltySection({ stats, loading, onRefresh }: {
 							<Stack direction="row" spacing={1} alignItems="center">
 								<Warning2 size={16} color={theme.palette.warning.main} />
 								<Typography variant="body2">
-									<strong>{unverified.toLocaleString("es-AR")}</strong> sentencias novelty aún sin asignar verificación (pendientes de embedding o del backfill).
+									<strong>{unverified.toLocaleString("es-AR")}</strong> sentencias novelty sin verificación asignada (pendientes de embedding).
 								</Typography>
 							</Stack>
 						</Paper>
 					)}
 
-					{/* Barra de progreso */}
+					{/* Progreso layer 1 */}
 					{noveltyTotal > 0 && (
 						<Box>
 							<Stack direction="row" justifyContent="space-between" mb={0.5}>
 								<Typography variant="body2" color="text.secondary">
-									{verified.toLocaleString("es-AR")} de {noveltyTotal.toLocaleString("es-AR")} novelties con verificación layer 1
+									Layer 1 — {layer1Verified.toLocaleString("es-AR")} de {noveltyTotal.toLocaleString("es-AR")} novelties verificadas estructuralmente
 								</Typography>
-								<Typography variant="body2" fontWeight={700} color={theme.palette.info.main}>{pct}%</Typography>
+								<Typography variant="body2" fontWeight={700} color={theme.palette.info.main}>{layer1Pct}%</Typography>
 							</Stack>
-							<LinearProgress variant="determinate" value={pct} sx={{ height: 8, borderRadius: 4 }} color="info" />
+							<LinearProgress variant="determinate" value={layer1Pct} sx={{ height: 6, borderRadius: 4 }} color="info" />
 						</Box>
 					)}
 
-					{/* Descripción del sistema */}
+					{/* Progreso layer 2 */}
+					<Box>
+						<Stack direction="row" justifyContent="space-between" mb={0.5}>
+							<Typography variant="body2" color="text.secondary">
+								{layer2Active
+									? `Layer 2 — ${layer2Verified.toLocaleString("es-AR")} verificadas semánticamente (${single.toLocaleString("es-AR")} pendientes)`
+									: `Layer 2 — corpus: ${corpusCompleted.toLocaleString("es-AR")} / ${MIN_CORPUS_FOR_LAYER2.toLocaleString("es-AR")} sentencias embebidas`
+								}
+							</Typography>
+							<Typography variant="body2" fontWeight={700} color={layer2Active ? theme.palette.success.main : theme.palette.text.secondary}>
+								{layer2Active ? "activo" : `${layer2Pct}%`}
+							</Typography>
+						</Stack>
+						<LinearProgress
+							variant="determinate"
+							value={layer2Active ? 100 : layer2Pct}
+							sx={{ height: 6, borderRadius: 4 }}
+							color={layer2Active ? "success" : "inherit"}
+						/>
+					</Box>
+
+					{/* Info del sistema */}
 					<Paper variant="outlined" sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.04), borderColor: alpha(theme.palette.info.main, 0.2) }}>
 						<Typography variant="subtitle2" gutterBottom>Sistema de doble verificación de novedad</Typography>
 						<Stack spacing={1}>
 							<Typography variant="body2" color="text.secondary">
-								<strong>Layer 1 — Estructural:</strong> el worker <code>update-movimientos</code> detecta el movimiento como nuevo en una causa con <code>update=true</code>. Al completar el embedding, la sentencia recibe <code>noveltyCheck.status = &apos;single&apos;</code>.
+								<strong>Layer 1 — Estructural:</strong> el worker <code>update-movimientos</code> detecta el movimiento como nuevo. Al completar el embedding se asigna <code>status=&apos;single&apos;</code>.
 							</Typography>
 							<Typography variant="body2" color="text.secondary">
-								<strong>Layer 2 — Semántica (futuro):</strong> búsqueda cosine en Pinecone dentro del mismo fuero/tipo. Si la similitud máxima es inferior al umbral (~0.88), se confirma como <code>&apos;double&apos;</code>; si supera el umbral, se marca como <code>&apos;rejected&apos;</code> (sentencia formulaica o duplicada).
+								<strong>Layer 2 — Semántica</strong> (<code>sentencias-semantic-worker</code>): búsqueda cosine en Pinecone filtrando por fuero y tipo. Score &lt; 0.88 → <code>&apos;double&apos;</code>; score ≥ 0.88 → <code>&apos;rejected&apos;</code>.
+								{!layer2Active && <> Se activa al superar {MIN_CORPUS_FOR_LAYER2.toLocaleString("es-AR")} sentencias embebidas.</>}
 							</Typography>
 						</Stack>
 					</Paper>
