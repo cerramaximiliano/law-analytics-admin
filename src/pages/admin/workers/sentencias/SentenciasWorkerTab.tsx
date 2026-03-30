@@ -124,6 +124,9 @@ function SentenciaRow({ doc, onDetail, onRetry, onRetryOcr }: SentenciaRowProps)
 				<Typography variant="caption" color="text.secondary" noWrap display="block">
 					{doc.caratula || "Sin carátula"} · {fmtDate(doc.processedAt || doc.detectedAt)}
 				</Typography>
+				<Typography variant="caption" color="text.disabled" sx={{ fontFamily: "monospace", fontSize: 10 }} display="block">
+					{doc._id}
+				</Typography>
 				{doc.processingResult && (
 					<Typography variant="caption" color="text.disabled">
 						{fmtNum(doc.processingResult.charCount)} chars · {doc.processingResult.pageCount} pág · {doc.processingResult.method}
