@@ -21,11 +21,16 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
+	Dialog,
+	DialogTitle,
+	DialogContent,
+	DialogActions,
+	Button,
 } from "@mui/material";
 import MainCard from "components/MainCard";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useSnackbar } from "notistack";
-import { Refresh, ArrowUp, ArrowDown, SearchNormal1, CloseCircle } from "iconsax-react";
+import { Refresh, ArrowUp, ArrowDown, SearchNormal1, CloseCircle, Code } from "iconsax-react";
 import { PendingCausasService, PendingCausa, FuenteCausa, FueroPJN } from "api/pendingCausas";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -85,6 +90,9 @@ const formatDate = (dateStr?: string) => {
 
 const CausasPendientes = () => {
 	const { enqueueSnackbar } = useSnackbar();
+
+	// JSON modal
+	const [jsonCausa, setJsonCausa] = useState<PendingCausa | null>(null);
 
 	// Tab state
 	const [activeTab, setActiveTab] = useState<FuenteCausa>("pjn");
@@ -286,6 +294,7 @@ const CausasPendientes = () => {
 							<TableCell>Fuente</TableCell>
 							<SortableHeader field="lastUpdate" label="Últ. Act." />
 							<SortableHeader field="createdAt" label="Creación" />
+							<TableCell />
 						</TableRow>
 					</TableHead>
 					<TableBody>
@@ -345,6 +354,13 @@ const CausasPendientes = () => {
 								</TableCell>
 								<TableCell>{formatDate(causa.lastUpdate)}</TableCell>
 								<TableCell>{formatDate(causa.createdAt)}</TableCell>
+							<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+								<Tooltip title="Ver JSON">
+									<IconButton size="small" onClick={() => setJsonCausa(causa)}>
+										<Code size={16} />
+									</IconButton>
+								</Tooltip>
+							</TableCell>
 							</TableRow>
 						))}
 					</TableBody>
@@ -471,6 +487,39 @@ const CausasPendientes = () => {
 					rowsPerPageOptions={[10, 20, 50, 100]}
 				/>
 			)}
+		{/* JSON Modal */}
+		<Dialog open={!!jsonCausa} onClose={() => setJsonCausa(null)} maxWidth="md" fullWidth>
+			<DialogTitle>
+				JSON del documento
+				{jsonCausa && (
+					<Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+						{jsonCausa._id}
+					</Typography>
+				)}
+			</DialogTitle>
+			<DialogContent dividers>
+				<Box
+					component="pre"
+					sx={{
+						fontFamily: "monospace",
+						fontSize: 12,
+						whiteSpace: "pre-wrap",
+						wordBreak: "break-all",
+						m: 0,
+						p: 1,
+						bgcolor: "action.hover",
+						borderRadius: 1,
+						maxHeight: 520,
+						overflowY: "auto",
+					}}
+				>
+					{jsonCausa ? JSON.stringify(jsonCausa, null, 2) : ""}
+				</Box>
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={() => setJsonCausa(null)}>Cerrar</Button>
+			</DialogActions>
+		</Dialog>
 		</MainCard>
 	);
 };
