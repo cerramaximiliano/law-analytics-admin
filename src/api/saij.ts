@@ -24,6 +24,7 @@ export interface SaijSentencia {
 	sumarios: string[];
 	numeroSumario: string;
 	texto: string;
+	textoCompleto?: string;
 	titulo: string;
 	fecha: string;
 	fechaString: string;

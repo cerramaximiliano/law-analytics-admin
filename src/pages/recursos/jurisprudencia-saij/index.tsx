@@ -448,9 +448,28 @@ function SumarioDetail({ sumario, onClose }: { sumario: SaijSentencia; onClose: 
 				{/* ── Tab 0: Texto completo ── */}
 				{tab === 0 && (
 					<Stack spacing={2}>
-						<Typography variant="body2" sx={{ whiteSpace: "pre-wrap", lineHeight: 1.8 }}>
-							{sumario.texto || <Typography component="span" color="text.disabled">Sin texto disponible</Typography>}
-						</Typography>
+						{sumario.textoCompleto ? (
+							<>
+								<Typography variant="body2" sx={{ whiteSpace: "pre-wrap", lineHeight: 1.8 }}>
+									{sumario.textoCompleto}
+								</Typography>
+								<Typography variant="caption" color="text.disabled">
+									Fuente: página SAIJ ({sumario.textoCompleto.length} caracteres)
+								</Typography>
+							</>
+						) : (
+							<>
+								<Typography variant="body2" sx={{ whiteSpace: "pre-wrap", lineHeight: 1.8 }}>
+									{sumario.texto || <Typography component="span" color="text.disabled">Sin texto disponible</Typography>}
+								</Typography>
+								{sumario.texto && (
+									<Typography variant="caption" color="warning.main">
+										Texto truncado (~250 chars). Ejecutar enrich-sumarios-texto para obtener el texto completo.
+									</Typography>
+								)}
+							</>
+						)}
+
 						{sumario.descriptores?.length > 0 && (
 							<Box>
 								<Typography variant="caption" color="text.secondary" display="block" mb={0.5}>Descriptores</Typography>
