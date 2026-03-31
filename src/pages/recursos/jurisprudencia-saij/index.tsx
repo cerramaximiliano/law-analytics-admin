@@ -6,6 +6,7 @@ import {
 	Chip,
 	CircularProgress,
 	Dialog,
+	DialogActions,
 	DialogContent,
 	DialogTitle,
 	Divider,
@@ -18,6 +19,7 @@ import {
 	Paper,
 	Select,
 	Stack,
+	Tab,
 	Table,
 	TableBody,
 	TableCell,
@@ -25,16 +27,26 @@ import {
 	TableHead,
 	TablePagination,
 	TableRow,
+	Tabs,
 	TextField,
 	Tooltip,
 	Typography,
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { CloseCircle, DocumentDownload, Eye, Refresh, SearchNormal1 } from "iconsax-react";
+import { CloseCircle, DocumentDownload, Edit, Eye, Link21, Refresh, SearchNormal1, Trash } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { getSaijSentencias, getSaijSentenciaStats, SaijSentencia, SentenciaListParams } from "api/saij";
+import {
+	CausaRef,
+	SaijSentencia,
+	SentenciaListParams,
+	deleteSaijSentencia,
+	getSaijSentenciaById,
+	getSaijSentencias,
+	getSaijSentenciaStats,
+	updateSaijSentencia,
+} from "api/saij";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -59,9 +71,28 @@ const TYPE_COLOR: Record<string, string> = {
 	sumario: "#7b1fa2",
 };
 
+const FUERO_COLOR: Record<string, string> = {
+	CNT: "#2e7d32",
+	CIV: "#1565c0",
+	CSS: "#6a1b9a",
+	COM: "#e65100",
+	CAF: "#00695c",
+	CCC: "#b71c1c",
+	CCF: "#880e4f",
+	CFP: "#4a148c",
+	CPE: "#827717",
+	CNE: "#004d40",
+	CSJ: "#bf360c",
+};
+
 function fmtDate(d?: string) {
 	if (!d) return "—";
 	return new Date(d).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function fmtExpediente(exp?: SaijSentencia["expediente"]) {
+	if (!exp?.numero) return "—";
+	return `${exp.numero}/${exp.año}`;
 }
 
 // ── Stat badge ─────────────────────────────────────────────────────────────────
@@ -89,14 +120,113 @@ function StatBadge({ label, value, color }: { label: string; value: number; colo
 	);
 }
 
+// ── CausaRefs chips ────────────────────────────────────────────────────────────
+
+function CausaRefsCell({ refs }: { refs: CausaRef[] }) {
+	if (!refs?.length) return <Typography variant="caption" color="text.disabled">—</Typography>;
+	return (
+		<Stack direction="row" spacing={0.5} flexWrap="wrap">
+			{refs.map((r, i) => (
+				<Tooltip key={i} title={`${r.caratula || "Sin carátula"} · ${r.coleccion}`}>
+					<Chip
+						icon={<Link21 size={11} />}
+						label={r.source}
+						size="small"
+						sx={{
+							fontSize: 10,
+							height: 20,
+							bgcolor: alpha(r.source === "app" ? "#1976d2" : "#7b1fa2", 0.1),
+							color: r.source === "app" ? "#1976d2" : "#7b1fa2",
+							"& .MuiChip-icon": { color: "inherit" },
+						}}
+					/>
+				</Tooltip>
+			))}
+		</Stack>
+	);
+}
+
+// ── Edit dialog ────────────────────────────────────────────────────────────────
+
+function EditDialog({ sentencia, onClose, onSaved }: { sentencia: SaijSentencia; onClose: () => void; onSaved: (updated: SaijSentencia) => void }) {
+	const { enqueueSnackbar } = useSnackbar();
+	const [saving, setSaving] = useState(false);
+	const [form, setForm] = useState({
+		status: sentencia.status,
+		titulo: sentencia.titulo || "",
+		tribunal: sentencia.tribunal || "",
+		pdfUrl: sentencia.pdfUrl || "",
+		errorMessage: sentencia.errorMessage || "",
+	});
+
+	const handleSave = async () => {
+		setSaving(true);
+		try {
+			const res = await updateSaijSentencia(sentencia._id, form);
+			enqueueSnackbar("Sentencia actualizada", { variant: "success" });
+			onSaved(res.data);
+		} catch {
+			enqueueSnackbar("Error al guardar", { variant: "error" });
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	return (
+		<Dialog open onClose={onClose} maxWidth="sm" fullWidth>
+			<DialogTitle>
+				<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Typography variant="h6">Editar sentencia</Typography>
+					<IconButton size="small" onClick={onClose}><CloseCircle size={18} /></IconButton>
+				</Stack>
+			</DialogTitle>
+			<DialogContent dividers>
+				<Stack spacing={2} mt={0.5}>
+					<FormControl size="small" fullWidth>
+						<InputLabel>Estado</InputLabel>
+						<Select value={form.status} label="Estado" onChange={(e) => setForm(f => ({ ...f, status: e.target.value as SaijSentencia["status"] }))}>
+							{Object.entries(STATUS_LABEL).map(([v, l]) => <MenuItem key={v} value={v}>{l}</MenuItem>)}
+						</Select>
+					</FormControl>
+					<TextField size="small" label="Título" value={form.titulo} onChange={(e) => setForm(f => ({ ...f, titulo: e.target.value }))} fullWidth />
+					<TextField size="small" label="Tribunal" value={form.tribunal} onChange={(e) => setForm(f => ({ ...f, tribunal: e.target.value }))} fullWidth />
+					<TextField size="small" label="URL del PDF" value={form.pdfUrl} onChange={(e) => setForm(f => ({ ...f, pdfUrl: e.target.value }))} fullWidth />
+					<TextField size="small" label="Mensaje de error" value={form.errorMessage} onChange={(e) => setForm(f => ({ ...f, errorMessage: e.target.value }))} fullWidth multiline rows={2} />
+				</Stack>
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={onClose} disabled={saving}>Cancelar</Button>
+				<Button variant="contained" onClick={handleSave} disabled={saving}>
+					{saving ? <CircularProgress size={16} /> : "Guardar"}
+				</Button>
+			</DialogActions>
+		</Dialog>
+	);
+}
+
 // ── Detail dialog ──────────────────────────────────────────────────────────────
 
-function SentenciaDetail({ sentencia, onClose }: { sentencia: SaijSentencia; onClose: () => void }) {
+function SentenciaDetail({
+	sentencia,
+	onClose,
+	onEdit,
+	onDelete,
+}: {
+	sentencia: SaijSentencia;
+	onClose: () => void;
+	onEdit: () => void;
+	onDelete: () => void;
+}) {
+	const theme = useTheme();
+	const [tab, setTab] = useState(0);
+
 	const rows = [
 		{ label: "ID SAIJ", value: sentencia.saijId },
 		{ label: "Tipo", value: sentencia.saijType },
 		{ label: "Número de fallo", value: sentencia.numeroFallo || "—" },
 		{ label: "Tipo de fallo", value: sentencia.tipoFallo || "—" },
+		{ label: "Fuero", value: sentencia.fuero || "—" },
+		{ label: "Expediente", value: fmtExpediente(sentencia.expediente) },
 		{ label: "Actor", value: sentencia.actor || "—" },
 		{ label: "Demandado", value: sentencia.demandado || "—" },
 		{ label: "Sobre", value: sentencia.sobre || "—" },
@@ -115,67 +245,199 @@ function SentenciaDetail({ sentencia, onClose }: { sentencia: SaijSentencia; onC
 					<Typography variant="h6" sx={{ pr: 4 }}>
 						{sentencia.titulo || sentencia.saijId}
 					</Typography>
-					<IconButton size="small" onClick={onClose}>
-						<CloseCircle size={18} />
-					</IconButton>
+					<IconButton size="small" onClick={onClose}><CloseCircle size={18} /></IconButton>
 				</Stack>
 			</DialogTitle>
-			<DialogContent dividers>
-				<Grid container spacing={1.5}>
-					{rows.map((r) => (
-						<Grid item xs={12} sm={6} key={r.label}>
-							<Typography variant="caption" color="text.secondary">
-								{r.label}
-							</Typography>
-							<Typography variant="body2">{r.value}</Typography>
-						</Grid>
-					))}
 
-					{sentencia.descriptores?.length > 0 && (
+			<Box sx={{ borderBottom: 1, borderColor: "divider", px: 3 }}>
+				<Tabs value={tab} onChange={(_, v) => setTab(v)} textColor="primary" indicatorColor="primary">
+					<Tab label="Detalle" />
+					<Tab label="JSON" />
+					<Tab label="Acciones" />
+				</Tabs>
+			</Box>
+
+			<DialogContent dividers sx={{ p: tab === 1 ? 0 : undefined }}>
+				{/* ── Tab 0: Detalle ── */}
+				{tab === 0 && (
+					<Grid container spacing={1.5}>
+						{rows.map((r) => (
+							<Grid item xs={12} sm={6} key={r.label}>
+								<Typography variant="caption" color="text.secondary">{r.label}</Typography>
+								<Typography variant="body2">{r.value}</Typography>
+							</Grid>
+						))}
+
+						{/* CausaRefs */}
 						<Grid item xs={12}>
-							<Typography variant="caption" color="text.secondary">
-								Descriptores
-							</Typography>
-							<Stack direction="row" flexWrap="wrap" gap={0.5} mt={0.5}>
-								{sentencia.descriptores.map((d) => (
-									<Chip key={d} label={d} size="small" variant="outlined" />
-								))}
+							<Typography variant="caption" color="text.secondary">Causas vinculadas</Typography>
+							{sentencia.causaRefs?.length ? (
+								<Stack spacing={0.5} mt={0.5}>
+									{sentencia.causaRefs.map((r, i) => (
+										<Paper key={i} variant="outlined" sx={{ p: 1, display: "flex", alignItems: "center", gap: 1 }}>
+											<Chip
+												label={r.source}
+												size="small"
+												sx={{
+													fontSize: 10,
+													height: 20,
+													bgcolor: alpha(r.source === "app" ? "#1976d2" : "#7b1fa2", 0.1),
+													color: r.source === "app" ? "#1976d2" : "#7b1fa2",
+												}}
+											/>
+											<Chip label={r.fuero} size="small" sx={{ fontSize: 10, height: 20, bgcolor: alpha(FUERO_COLOR[r.fuero] || "#888", 0.1), color: FUERO_COLOR[r.fuero] || "#888" }} />
+											<Typography variant="body2" sx={{ flex: 1 }}>{r.caratula || "Sin carátula"}</Typography>
+											<Typography variant="caption" color="text.secondary">{r.coleccion}</Typography>
+										</Paper>
+									))}
+								</Stack>
+							) : (
+								<Typography variant="body2" color="text.disabled" mt={0.5}>Sin causas vinculadas</Typography>
+							)}
+						</Grid>
+
+						{sentencia.descriptores?.length > 0 && (
+							<Grid item xs={12}>
+								<Typography variant="caption" color="text.secondary">Descriptores</Typography>
+								<Stack direction="row" flexWrap="wrap" gap={0.5} mt={0.5}>
+									{sentencia.descriptores.map((d) => (
+										<Chip key={d} label={d} size="small" variant="outlined" />
+									))}
+								</Stack>
+							</Grid>
+						)}
+
+						{sentencia.texto && (
+							<Grid item xs={12}>
+								<Divider sx={{ my: 1 }} />
+								<Typography variant="caption" color="text.secondary">Texto / Sumario</Typography>
+								<Paper variant="outlined" sx={{ p: 1.5, mt: 0.5, maxHeight: 200, overflow: "auto" }}>
+									<Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>{sentencia.texto}</Typography>
+								</Paper>
+							</Grid>
+						)}
+
+						{sentencia.pdfUrl && (
+							<Grid item xs={12}>
+								<Divider sx={{ my: 1 }} />
+								<Button
+									variant="outlined"
+									size="small"
+									startIcon={<DocumentDownload size={16} />}
+									component="a"
+									href={sentencia.pdfUrl}
+									target="_blank"
+									rel="noopener noreferrer"
+								>
+									Ver PDF
+								</Button>
+							</Grid>
+						)}
+					</Grid>
+				)}
+
+				{/* ── Tab 1: JSON ── */}
+				{tab === 1 && (
+					<Box
+						component="pre"
+						sx={{
+							m: 0,
+							p: 2,
+							fontSize: 12,
+							fontFamily: "monospace",
+							bgcolor: alpha(theme.palette.grey[900], 0.04),
+							overflow: "auto",
+							maxHeight: 520,
+							whiteSpace: "pre-wrap",
+							wordBreak: "break-all",
+						}}
+					>
+						{JSON.stringify(sentencia, null, 2)}
+					</Box>
+				)}
+
+				{/* ── Tab 2: Acciones ── */}
+				{tab === 2 && (
+					<Stack spacing={2} sx={{ py: 1 }}>
+						<Alert severity="info" variant="outlined">
+							Las acciones de edición y eliminación son permanentes y afectan la base de datos de producción.
+						</Alert>
+						<Paper variant="outlined" sx={{ p: 2 }}>
+							<Stack direction="row" alignItems="center" justifyContent="space-between">
+								<Box>
+									<Typography variant="subtitle2">Editar sentencia</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Modifica campos como estado, título, tribunal, URL del PDF o mensaje de error.
+									</Typography>
+								</Box>
+								<Button
+									variant="outlined"
+									startIcon={<Edit size={16} />}
+									onClick={onEdit}
+									sx={{ whiteSpace: "nowrap" }}
+								>
+									Editar
+								</Button>
 							</Stack>
-						</Grid>
-					)}
-
-					{sentencia.texto && (
-						<Grid item xs={12}>
-							<Divider sx={{ my: 1 }} />
-							<Typography variant="caption" color="text.secondary">
-								Texto / Sumario
-							</Typography>
-							<Paper variant="outlined" sx={{ p: 1.5, mt: 0.5, maxHeight: 200, overflow: "auto" }}>
-								<Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
-									{sentencia.texto}
-								</Typography>
-							</Paper>
-						</Grid>
-					)}
-
-					{sentencia.pdfUrl && (
-						<Grid item xs={12}>
-							<Divider sx={{ my: 1 }} />
-							<Button
-								variant="outlined"
-								size="small"
-								startIcon={<DocumentDownload size={16} />}
-								component="a"
-								href={sentencia.pdfUrl}
-								target="_blank"
-								rel="noopener noreferrer"
-							>
-								Ver PDF
-							</Button>
-						</Grid>
-					)}
-				</Grid>
+						</Paper>
+						<Paper variant="outlined" sx={{ p: 2, borderColor: "error.light" }}>
+							<Stack direction="row" alignItems="center" justifyContent="space-between">
+								<Box>
+									<Typography variant="subtitle2" color="error.main">Eliminar sentencia</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Elimina permanentemente este documento de la colección. Esta acción no se puede deshacer.
+									</Typography>
+								</Box>
+								<Button
+									variant="outlined"
+									color="error"
+									startIcon={<Trash size={16} />}
+									onClick={onDelete}
+									sx={{ whiteSpace: "nowrap" }}
+								>
+									Eliminar
+								</Button>
+							</Stack>
+						</Paper>
+					</Stack>
+				)}
 			</DialogContent>
+		</Dialog>
+	);
+}
+
+// ── Delete confirm dialog ──────────────────────────────────────────────────────
+
+function DeleteConfirmDialog({ sentencia, onClose, onDeleted }: { sentencia: SaijSentencia; onClose: () => void; onDeleted: () => void }) {
+	const { enqueueSnackbar } = useSnackbar();
+	const [deleting, setDeleting] = useState(false);
+
+	const handleDelete = async () => {
+		setDeleting(true);
+		try {
+			await deleteSaijSentencia(sentencia._id);
+			enqueueSnackbar("Sentencia eliminada", { variant: "success" });
+			onDeleted();
+		} catch {
+			enqueueSnackbar("Error al eliminar", { variant: "error" });
+			setDeleting(false);
+		}
+	};
+
+	return (
+		<Dialog open onClose={onClose} maxWidth="xs" fullWidth>
+			<DialogTitle>Confirmar eliminación</DialogTitle>
+			<DialogContent>
+				<Typography variant="body2">
+					¿Eliminar permanentemente <strong>{sentencia.titulo || sentencia.saijId}</strong>?
+				</Typography>
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={onClose} disabled={deleting}>Cancelar</Button>
+				<Button variant="contained" color="error" onClick={handleDelete} disabled={deleting}>
+					{deleting ? <CircularProgress size={16} /> : "Eliminar"}
+				</Button>
+			</DialogActions>
 		</Dialog>
 	);
 }
@@ -203,8 +465,10 @@ export default function JurisprudenciaSaijPage() {
 	const [filterYearFrom, setFilterYearFrom] = useState("");
 	const [filterYearTo, setFilterYearTo] = useState("");
 
-	// Detail dialog
+	// Dialogs
 	const [selected, setSelected] = useState<SaijSentencia | null>(null);
+	const [editing, setEditing] = useState<SaijSentencia | null>(null);
+	const [deleting, setDeleting] = useState<SaijSentencia | null>(null);
 
 	const buildParams = useCallback(
 		(pg: number): SentenciaListParams => ({
@@ -252,7 +516,6 @@ export default function JurisprudenciaSaijPage() {
 		fetchStats();
 	}, []);
 
-	// Refresh when filters change (reset to page 0)
 	useEffect(() => {
 		setPage(0);
 		fetchData(0);
@@ -263,9 +526,7 @@ export default function JurisprudenciaSaijPage() {
 		fetchData(newPage);
 	};
 
-	const handleSearch = () => {
-		setSearch(searchInput.trim());
-	};
+	const handleSearch = () => setSearch(searchInput.trim());
 
 	const handleClearFilters = () => {
 		setSearchInput("");
@@ -274,6 +535,19 @@ export default function JurisprudenciaSaijPage() {
 		setFilterStatus("");
 		setFilterYearFrom("");
 		setFilterYearTo("");
+	};
+
+	const handleSaved = (updated: SaijSentencia) => {
+		setData((prev) => prev.map((d) => (d._id === updated._id ? updated : d)));
+		if (selected?._id === updated._id) setSelected(updated);
+		setEditing(null);
+	};
+
+	const handleDeleted = () => {
+		setData((prev) => prev.filter((d) => d._id !== deleting?._id));
+		setDeleting(null);
+		setSelected(null);
+		setTotal((t) => t - 1);
 	};
 
 	const hasFilters = search || filterType || filterStatus || filterYearFrom || filterYearTo;
@@ -315,11 +589,7 @@ export default function JurisprudenciaSaijPage() {
 						onKeyDown={(e) => e.key === "Enter" && handleSearch()}
 						sx={{ minWidth: 220 }}
 						InputProps={{
-							startAdornment: (
-								<InputAdornment position="start">
-									<SearchNormal1 size={16} />
-								</InputAdornment>
-							),
+							startAdornment: <InputAdornment position="start"><SearchNormal1 size={16} /></InputAdornment>,
 							endAdornment: searchInput && (
 								<InputAdornment position="end">
 									<IconButton size="small" onClick={() => { setSearchInput(""); setSearch(""); }}>
@@ -349,14 +619,8 @@ export default function JurisprudenciaSaijPage() {
 					</FormControl>
 					<TextField size="small" label="Año desde" type="number" value={filterYearFrom} onChange={(e) => setFilterYearFrom(e.target.value)} sx={{ width: 110 }} />
 					<TextField size="small" label="Año hasta" type="number" value={filterYearTo} onChange={(e) => setFilterYearTo(e.target.value)} sx={{ width: 110 }} />
-					<Button size="small" variant="contained" onClick={handleSearch} disabled={loading}>
-						Buscar
-					</Button>
-					{hasFilters && (
-						<Button size="small" onClick={handleClearFilters}>
-							Limpiar
-						</Button>
-					)}
+					<Button size="small" variant="contained" onClick={handleSearch} disabled={loading}>Buscar</Button>
+					{hasFilters && <Button size="small" onClick={handleClearFilters}>Limpiar</Button>}
 				</Stack>
 			</Paper>
 
@@ -367,9 +631,12 @@ export default function JurisprudenciaSaijPage() {
 						<TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}>
 							<TableCell>Título / Carátula</TableCell>
 							<TableCell>Tipo</TableCell>
+							<TableCell>Fuero</TableCell>
+							<TableCell>Expediente</TableCell>
 							<TableCell>Tribunal</TableCell>
 							<TableCell>Fecha</TableCell>
 							<TableCell>Estado</TableCell>
+							<TableCell>Causa</TableCell>
 							<TableCell align="center">PDF</TableCell>
 							<TableCell align="center">Acciones</TableCell>
 						</TableRow>
@@ -377,14 +644,14 @@ export default function JurisprudenciaSaijPage() {
 					<TableBody>
 						{loading && (
 							<TableRow>
-								<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+								<TableCell colSpan={10} align="center" sx={{ py: 4 }}>
 									<CircularProgress size={28} />
 								</TableCell>
 							</TableRow>
 						)}
 						{!loading && data.length === 0 && (
 							<TableRow>
-								<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+								<TableCell colSpan={10} align="center" sx={{ py: 4 }}>
 									<Typography color="text.secondary">Sin resultados</Typography>
 								</TableCell>
 							</TableRow>
@@ -392,11 +659,9 @@ export default function JurisprudenciaSaijPage() {
 						{!loading &&
 							data.map((row) => (
 								<TableRow key={row._id} hover>
-									<TableCell sx={{ maxWidth: 280 }}>
+									<TableCell sx={{ maxWidth: 220 }}>
 										<Tooltip title={row.titulo || row.saijId}>
-											<Typography variant="body2" noWrap>
-												{row.titulo || row.saijId}
-											</Typography>
+											<Typography variant="body2" noWrap>{row.titulo || row.saijId}</Typography>
 										</Tooltip>
 									</TableCell>
 									<TableCell>
@@ -411,11 +676,30 @@ export default function JurisprudenciaSaijPage() {
 											}}
 										/>
 									</TableCell>
+									<TableCell>
+										{row.fuero ? (
+											<Chip
+												label={row.fuero}
+												size="small"
+												sx={{
+													bgcolor: alpha(FUERO_COLOR[row.fuero] || "#888", 0.1),
+													color: FUERO_COLOR[row.fuero] || "#888",
+													fontWeight: 700,
+													fontSize: 11,
+												}}
+											/>
+										) : (
+											<Typography variant="caption" color="text.disabled">—</Typography>
+										)}
+									</TableCell>
+									<TableCell>
+										<Typography variant="body2" fontFamily="monospace" fontSize={12}>
+											{fmtExpediente(row.expediente)}
+										</Typography>
+									</TableCell>
 									<TableCell sx={{ maxWidth: 160 }}>
 										<Tooltip title={row.tribunal || ""}>
-											<Typography variant="body2" noWrap color="text.secondary">
-												{row.tribunal || "—"}
-											</Typography>
+											<Typography variant="body2" noWrap color="text.secondary">{row.tribunal || "—"}</Typography>
 										</Tooltip>
 									</TableCell>
 									<TableCell>
@@ -423,6 +707,9 @@ export default function JurisprudenciaSaijPage() {
 									</TableCell>
 									<TableCell>
 										<Chip label={STATUS_LABEL[row.status] || row.status} size="small" color={STATUS_COLOR[row.status] || "default"} />
+									</TableCell>
+									<TableCell>
+										<CausaRefsCell refs={row.causaRefs} />
 									</TableCell>
 									<TableCell align="center">
 										{row.pdfUrl ? (
@@ -432,17 +719,27 @@ export default function JurisprudenciaSaijPage() {
 												</IconButton>
 											</Tooltip>
 										) : (
-											<Typography variant="caption" color="text.disabled">
-												—
-											</Typography>
+											<Typography variant="caption" color="text.disabled">—</Typography>
 										)}
 									</TableCell>
 									<TableCell align="center">
-										<Tooltip title="Ver detalle">
-											<IconButton size="small" onClick={() => setSelected(row)}>
-												<Eye size={16} />
-											</IconButton>
-										</Tooltip>
+										<Stack direction="row" spacing={0.5} justifyContent="center">
+											<Tooltip title="Ver detalle">
+												<IconButton size="small" onClick={() => setSelected(row)}>
+													<Eye size={16} />
+												</IconButton>
+											</Tooltip>
+											<Tooltip title="Editar">
+												<IconButton size="small" onClick={() => setEditing(row)}>
+													<Edit size={16} />
+												</IconButton>
+											</Tooltip>
+											<Tooltip title="Eliminar">
+												<IconButton size="small" color="error" onClick={() => setDeleting(row)}>
+													<Trash size={16} />
+												</IconButton>
+											</Tooltip>
+										</Stack>
 									</TableCell>
 								</TableRow>
 							))}
@@ -460,7 +757,16 @@ export default function JurisprudenciaSaijPage() {
 				labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count.toLocaleString("es-AR")}`}
 			/>
 
-			{selected && <SentenciaDetail sentencia={selected} onClose={() => setSelected(null)} />}
+			{selected && (
+				<SentenciaDetail
+					sentencia={selected}
+					onClose={() => setSelected(null)}
+					onEdit={() => { setEditing(selected); setSelected(null); }}
+					onDelete={() => { setDeleting(selected); setSelected(null); }}
+				/>
+			)}
+			{editing && <EditDialog sentencia={editing} onClose={() => setEditing(null)} onSaved={handleSaved} />}
+			{deleting && <DeleteConfirmDialog sentencia={deleting} onClose={() => setDeleting(null)} onDeleted={handleDeleted} />}
 		</MainCard>
 	);
 }
