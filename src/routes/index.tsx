@@ -41,6 +41,8 @@ const CorpusWorkerPage = Loadable(lazy(() => import("pages/admin/workers/corpus"
 const EscritosWorkerPage = Loadable(lazy(() => import("pages/admin/workers/escritos")));
 const MovimientosWorkerPage = Loadable(lazy(() => import("pages/admin/workers/movimientos")));
 const SentenciasWorkerPage = Loadable(lazy(() => import("pages/admin/workers/sentencias")));
+const SaijWorkerPage = Loadable(lazy(() => import("pages/admin/workers/saij")));
+const JurisprudenciaSaijPage = Loadable(lazy(() => import("pages/recursos/jurisprudencia-saij")));
 
 // Subscriptions pages
 const StripeWebhooks = Loadable(lazy(() => import("pages/subscriptions/StripeWebhooks")));
@@ -246,6 +248,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<SentenciasWorkerPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "workers/saij",
+							element: (
+								<AdminRoleGuard>
+									<SaijWorkerPage />
 								</AdminRoleGuard>
 							),
 						},
@@ -595,6 +605,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<Jurisprudencia />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "jurisprudencia/saij",
+							element: (
+								<AdminRoleGuard>
+									<JurisprudenciaSaijPage />
 								</AdminRoleGuard>
 							),
 						},
