@@ -410,6 +410,129 @@ function FalloDetail({
 	);
 }
 
+// ── Sumario detail ─────────────────────────────────────────────────────────────
+
+function SumarioDetail({ sumario, onClose }: { sumario: SaijSentencia; onClose: () => void }) {
+	const theme = useTheme();
+	const [tab, setTab] = useState(0);
+
+	return (
+		<Dialog open onClose={onClose} maxWidth="md" fullWidth>
+			<DialogTitle>
+				<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+					<Box flex={1} pr={4}>
+						<Typography variant="caption" color="text.secondary" fontFamily="monospace">
+							{sumario.numeroSumario || sumario.saijId}
+						</Typography>
+						<Stack direction="row" spacing={1} mt={0.5} flexWrap="wrap">
+							{sumario.fuero && (
+								<Chip label={sumario.fuero} size="small" sx={{ fontSize: 11, height: 20, bgcolor: alpha(FUERO_COLOR[sumario.fuero] || "#888", 0.12), color: FUERO_COLOR[sumario.fuero] || "#888", fontWeight: 700 }} />
+							)}
+							<Chip label={STATUS_LABEL[sumario.status] || sumario.status} size="small" color={STATUS_COLOR[sumario.status] || "default"} />
+						</Stack>
+					</Box>
+					<IconButton size="small" onClick={onClose}><CloseCircle size={18} /></IconButton>
+				</Stack>
+			</DialogTitle>
+
+			<Box sx={{ borderBottom: 1, borderColor: "divider", px: 3 }}>
+				<Tabs value={tab} onChange={(_, v) => setTab(v)} textColor="primary" indicatorColor="primary">
+					<Tab label="Texto" />
+					<Tab label="Detalle" />
+					<Tab label="JSON" />
+				</Tabs>
+			</Box>
+
+			<DialogContent dividers sx={{ p: tab === 2 ? 0 : undefined }}>
+
+				{/* ── Tab 0: Texto completo ── */}
+				{tab === 0 && (
+					<Stack spacing={2}>
+						<Typography variant="body2" sx={{ whiteSpace: "pre-wrap", lineHeight: 1.8 }}>
+							{sumario.texto || <Typography component="span" color="text.disabled">Sin texto disponible</Typography>}
+						</Typography>
+						{sumario.descriptores?.length > 0 && (
+							<Box>
+								<Typography variant="caption" color="text.secondary" display="block" mb={0.5}>Descriptores</Typography>
+								<Stack direction="row" flexWrap="wrap" gap={0.5}>
+									{sumario.descriptores.map((d) => <Chip key={d} label={d} size="small" variant="outlined" />)}
+								</Stack>
+							</Box>
+						)}
+					</Stack>
+				)}
+
+				{/* ── Tab 1: Detalle ── */}
+				{tab === 1 && (
+					<Grid container spacing={1.5}>
+						{[
+							{ label: "Número de sumario", value: sumario.numeroSumario || "—" },
+							{ label: "SAIJ ID", value: sumario.saijId || "—" },
+							{ label: "Fallo vinculado", value: sumario.saijSentenciaId || "—" },
+							{ label: "Tribunal", value: sumario.tribunal || "—" },
+							{ label: "Fuero", value: sumario.fuero || "—" },
+							{ label: "Fecha", value: fmtDate(sumario.fecha) },
+							{ label: "Estado", value: STATUS_LABEL[sumario.status] || sumario.status },
+							{ label: "Worker", value: sumario.workerId || "—" },
+							{ label: "Capturado", value: fmtDate(sumario.scrapedAt) },
+						].map((r) => (
+							<Grid item xs={12} sm={6} key={r.label}>
+								<Typography variant="caption" color="text.secondary">{r.label}</Typography>
+								<Typography variant="body2" fontFamily={r.label.includes("ID") ? "monospace" : undefined}>{r.value}</Typography>
+							</Grid>
+						))}
+						{sumario.expediente?.numero && (
+							<Grid item xs={12} sm={6}>
+								<Typography variant="caption" color="text.secondary">Expediente</Typography>
+								<Typography variant="body2">{sumario.expediente.numero}/{sumario.expediente.año}</Typography>
+							</Grid>
+						)}
+						{sumario.causaRefs?.length > 0 && (
+							<Grid item xs={12}>
+								<Typography variant="caption" color="text.secondary">Causas vinculadas</Typography>
+								<Stack spacing={0.5} mt={0.5}>
+									{sumario.causaRefs.map((r, i) => (
+										<Paper key={i} variant="outlined" sx={{ p: 1, display: "flex", alignItems: "center", gap: 1 }}>
+											<Chip label={r.source} size="small" sx={{ fontSize: 10, height: 20, bgcolor: alpha(r.source === "app" ? "#1976d2" : "#7b1fa2", 0.1), color: r.source === "app" ? "#1976d2" : "#7b1fa2" }} />
+											<Chip label={r.fuero} size="small" sx={{ fontSize: 10, height: 20, bgcolor: alpha(FUERO_COLOR[r.fuero] || "#888", 0.1), color: FUERO_COLOR[r.fuero] || "#888" }} />
+											<Typography variant="body2" flex={1}>{r.caratula || "Sin carátula"}</Typography>
+											<Typography variant="caption" color="text.secondary">{r.coleccion}</Typography>
+										</Paper>
+									))}
+								</Stack>
+							</Grid>
+						)}
+					</Grid>
+				)}
+
+				{/* ── Tab 2: JSON ── */}
+				{tab === 2 && (
+					<Box
+						component="pre"
+						sx={{
+							m: 0, p: 2, fontSize: 12, fontFamily: "monospace",
+							bgcolor: alpha(theme.palette.grey[900], 0.04),
+							overflow: "auto", maxHeight: 520,
+							whiteSpace: "pre-wrap", wordBreak: "break-all",
+						}}
+					>
+						{JSON.stringify(sumario, null, 2)}
+					</Box>
+				)}
+			</DialogContent>
+
+			<DialogActions>
+				{sumario.url && (
+					<Button size="small" component="a" href={sumario.url} target="_blank" rel="noopener noreferrer">
+						Ver en SAIJ
+					</Button>
+				)}
+				<Button onClick={onClose}>Cerrar</Button>
+			</DialogActions>
+		</Dialog>
+	);
+}
+
 // ── Delete confirm ─────────────────────────────────────────────────────────────
 
 function DeleteConfirmDialog({ sentencia, onClose, onDeleted }: { sentencia: SaijSentencia; onClose: () => void; onDeleted: () => void }) {
@@ -777,6 +900,9 @@ export default function JurisprudenciaSaijPage() {
 
 			{selected && selected.saijType === "jurisprudencia" && (
 				<FalloDetail fallo={selected} onClose={() => setSelected(null)} onEdit={() => { setEditing(selected); setSelected(null); }} onDelete={() => { setDeleting(selected); setSelected(null); }} />
+			)}
+			{selected && selected.saijType === "sumario" && (
+				<SumarioDetail sumario={selected} onClose={() => setSelected(null)} />
 			)}
 			{editing && <EditDialog sentencia={editing} onClose={() => setEditing(null)} onSaved={handleSaved} />}
 			{deleting && <DeleteConfirmDialog sentencia={deleting} onClose={() => setDeleting(null)} onDeleted={handleDeleted} />}

@@ -43,6 +43,7 @@ export interface SaijSentencia {
 		idPais: number;
 	};
 	descriptores: string[];
+	saijSentenciaId?: string;
 	source: string;
 	workerId: string;
 	scrapedAt: string;
