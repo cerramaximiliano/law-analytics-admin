@@ -25,6 +25,13 @@ const recursos: NavItemType = {
 					url: "/recursos/jurisprudencia",
 					breadcrumbs: true,
 				},
+				{
+					id: "jurisprudencia-saij",
+					title: "SAIJ",
+					type: "item",
+					url: "/recursos/jurisprudencia/saij",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{

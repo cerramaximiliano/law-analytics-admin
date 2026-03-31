@@ -111,6 +111,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "workers-saij",
+					title: "Workers SAIJ",
+					type: "item",
+					url: "/admin/workers/saij",
+					breadcrumbs: true,
+				},
+				{
 					id: "workers-scraper-postal",
 					title: "Scraper Postal",
 					type: "item",
