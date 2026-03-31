@@ -65,6 +65,7 @@ export interface SentenciaListParams {
 	monthFrom?: number;
 	monthTo?: number;
 	workerId?: string;
+	saijSentenciaId?: string;
 	q?: string;
 }
 
