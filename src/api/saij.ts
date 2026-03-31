@@ -2,6 +2,14 @@ import pjnAxios from "utils/pjnAxios";
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 
+export interface CausaRef {
+	causaId: string;
+	caratula: string;
+	fuero: string;
+	coleccion: string;
+	source: "app" | "cache";
+}
+
 export interface SaijSentencia {
 	_id: string;
 	saijId: string;
@@ -21,6 +29,13 @@ export interface SaijSentencia {
 	fechaString: string;
 	tribunal: string;
 	tipoTribunal: string;
+	fuero: string;
+	expediente?: {
+		numero: number;
+		año: number;
+		texto: string;
+	};
+	causaRefs: CausaRef[];
 	jurisdiccion: {
 		codigo: string;
 		descripcion: string;
