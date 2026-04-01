@@ -103,14 +103,15 @@ const OverviewSection: React.FC = () => {
 					<InfoRow label="Proceso PM2" value="pjn-escritos-worker (Node.js)" />
 					<InfoRow label="Base de datos ORIGEN" value={<>MongoDB <strong>local</strong> en worker_01 · CausasCivil / CausasTrabajo / CausasSegSoc / CausasComercial</>} />
 					<InfoRow label="Base de datos DESTINO" value={<>MongoDB <strong>Atlas</strong> (cloud) · colección global_documents</>} />
-					<InfoRow label="Índice Pinecone" value={<><code style={{ background: "#f5f5f5", padding: "1px 5px", borderRadius: 3 }}>pjn-style-corpus-v2</code> · namespace <code style={{ background: "#f5f5f5", padding: "1px 5px", borderRadius: 3 }}>global-chunks</code> · 1536 dims · coseno</>} />
-					<InfoRow label="Cola de mensajes" value="Redis (BullMQ) en worker_01 · colas: escritos-extract · escritos-select" />
+					<InfoRow label="Índice Pinecone" value={<><code style={{ background: "#f5f5f5", padding: "1px 5px", borderRadius: 3 }}>pjn-style-corpus-v2</code> · namespace <code style={{ background: "#f5f5f5", padding: "1px 5px", borderRadius: 3 }}>global-chunks</code> · <strong>1024 dims</strong> · coseno</>} />
+					<InfoRow label="Cola de mensajes" value="Redis (BullMQ) en worker_01 · colas: escritos-extract · escritos-ocr · escritos-select" />
 					<InfoRow label="Activación" value="Cron periódico + scan inicial al arrancar el proceso" />
 					<InfoRow label="Cron default" value={<><code style={{ background: "#f5f5f5", padding: "1px 5px", borderRadius: 3 }}>0 * * * *</code> — cada hora (configurable desde Panel → Config)</>} />
 					<InfoRow label="Concurrencia extractor" value="3 workers paralelos (EXTRACTOR_CONCURRENCY)" />
 					<InfoRow label="Concurrencia selector" value="2 workers paralelos (SELECTOR_CONCURRENCY)" />
-					<InfoRow label="OpenAI model" value="text-embedding-3-small (1536 dims)" />
+					<InfoRow label="OpenAI model" value="text-embedding-3-small (1024 dims)" />
 					<InfoRow label="PDFs" value="Descargados directamente desde URLs públicas del PJN · no se guardan en S3" />
+					<InfoRow label="Chunks (texto completo)" value={<>AWS S3 · bucket <code style={{ background: "#f5f5f5", padding: "1px 5px", borderRadius: 3 }}>pjn-rag-documents</code> · ruta <code style={{ background: "#f5f5f5", padding: "1px 5px", borderRadius: 3 }}>escritos/&#123;causaId&#125;/chunks/&#123;docId&#125;.json</code> · región sa-east-1</>} />
 					<InfoRow label="Config dinámica" value="PipelineConfig en MongoDB Atlas · caché 5 min · sin reiniciar el proceso" />
 				</Box>
 			</Box>
@@ -130,7 +131,7 @@ const OverviewSection: React.FC = () => {
 
 					{/* Row 2: processing */}
 					<Stack direction="row" alignItems="stretch" spacing={1} sx={{ mb: 1 }}>
-						<Node badge="FASE 1" badgeColor={colors.worker} title="Extractor Worker" subtitle="worker_01 · Node.js" items={["1. Descarga PDF (max 25 MB)", "2. Extrae texto (pdf-parse)", "3. Chunking semántico", "4. Embeddings (OpenAI)", "5. Upsert a Pinecone", "6. Guarda GlobalDocument"]} color={colors.worker} />
+						<Node badge="FASE 1" badgeColor={colors.worker} title="Extractor Worker" subtitle="worker_01 · Node.js" items={["1. Descarga PDF (max 25 MB)", "2. Extrae texto (pdf-parse)", "3. Chunking semántico", "4. Embeddings (OpenAI)", "5. Upsert a Pinecone", "6. Sube chunks a S3", "7. Guarda GlobalDocument"]} color={colors.worker} />
 						<Arrow label="llamadas API" />
 						<Stack spacing={1} sx={{ flex: 1 }}>
 							<Node badge="EXTERNO" badgeColor={colors.openai} title="OpenAI API" subtitle="text-embedding-3-small" items={["Batches de 20 chunks", "1536 dims por vector"]} color={colors.openai} />
@@ -166,9 +167,10 @@ const OverviewSection: React.FC = () => {
 				</Typography>
 				<Box sx={{ mt: 1.5, border: "1px solid", borderColor: "divider", borderRadius: 2, overflow: "hidden" }}>
 					<InfoRow label="BD LOCAL (worker_01)" value="Lee movimientos con URL no procesada. Al terminar marca globalProcessed=true." />
-					<InfoRow label="MongoDB Atlas (cloud)" value="Escribe GlobalDocument completo: texto, chunks, embeddings, novedad." />
-					<InfoRow label="Pinecone (cloud)" value="Almacena vectores para novelty detection y future semantic search sobre escritos." />
-					<InfoRow label="Redis (worker_01)" value="BullMQ: cola interna entre scan → extractor → selector. No persiste datos judiciales." />
+					<InfoRow label="MongoDB Atlas (cloud)" value="Escribe GlobalDocument: texto completo (fullText), chunks sin texto (solo metadata: chunkIndex, vectorId, hash), novedad." />
+					<InfoRow label="AWS S3 (cloud)" value="Almacena el texto completo de los chunks: escritos/{causaId}/chunks/{docId}.json · región sa-east-1 · bucket pjn-rag-documents." />
+					<InfoRow label="Pinecone (cloud)" value="Almacena vectores para novelty detection y búsqueda semántica sobre escritos." />
+					<InfoRow label="Redis (worker_01)" value="BullMQ: cola interna entre scan → extractor → ocr → selector. No persiste datos judiciales." />
 				</Box>
 			</Box>
 		</Stack>
@@ -208,7 +210,8 @@ const PipelineSection: React.FC = () => {
 				"escritoChunker: detecta secciones (apertura, hechos, fundamentos, petitorio, body)",
 				"OpenAI text-embedding-3-small en batches de 20 chunks",
 				"Upsert a Pinecone pjn-style-corpus-v2/global-chunks en batches de 100",
-				"Guarda chunks con vectorId en GlobalDocument (Atlas)",
+				"Sube texto completo de chunks a S3: escritos/{causaId}/chunks/{docId}.json",
+				"Guarda GlobalDocument en Atlas (chunks sin .text, solo metadata: index, vectorId, hash)",
 				"Marca movimiento.globalProcessed=true en BD local",
 				"Si docType ∈ NOVELTY_DOCTYPES → encola en escritos-select",
 			],

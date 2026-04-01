@@ -466,13 +466,13 @@ function CausasSection() {
 											</TableCell>
 											<TableCell>
 												{c.maxNovelty != null ? (() => {
-													const labels = c.noveltyLabels || [];
-													const alerts = labels.filter(l => l === "alert").length;
-													const reviews = labels.filter(l => l === "review").length;
+													const alerts = c.noveltyAlertCount || 0;
+													const reviews = c.noveltyReviewCount || 0;
+													const routines = c.noveltyRoutineCount || 0;
 													const topLabel = alerts > 0 ? "alert" : reviews > 0 ? "review" : "routine";
 													const color = topLabel === "alert" ? "error" : topLabel === "review" ? "warning" : "default";
 													return (
-														<Tooltip title={`Max: ${c.maxNovelty.toFixed(3)} · Avg: ${c.avgNovelty?.toFixed(3)} · alert:${alerts} review:${reviews} routine:${labels.length - alerts - reviews}`}>
+														<Tooltip title={`Max: ${c.maxNovelty.toFixed(3)} · Avg: ${c.avgNovelty?.toFixed(3)} · alert:${alerts} review:${reviews} routine:${routines}`}>
 															<Chip label={`${topLabel} ${c.maxNovelty.toFixed(2)}`} size="small" color={color as any} variant={topLabel === "routine" ? "outlined" : "filled"} sx={{ fontSize: "0.65rem", height: 18 }} />
 														</Tooltip>
 													);
