@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Tab, Tabs, Typography, Paper, Stack, useTheme, alpha } from "@mui/material";
+import { Box, Chip, Tab, Tabs, Typography, Paper, Stack, useTheme, alpha } from "@mui/material";
 import { Setting2, InfoCircle } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
@@ -29,10 +29,20 @@ const MovimientosWorkerPage = () => {
 		<MainCard>
 			<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 				<Box>
-					<Typography variant="h3">Worker Update Movimientos</Typography>
-					<Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-						Scraping de nuevos movimientos judiciales en causas marcadas con update=true por el pipeline de novelty
-					</Typography>
+					<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1}>
+						<Box>
+							<Typography variant="h3">Worker Update (IA)</Typography>
+							<Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
+								Scraping de nuevos movimientos en causas marcadas por el pipeline de novelty — instancias dinámicas vía manager
+							</Typography>
+						</Box>
+						<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
+							<Chip label="worker_01" size="small" color="default" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }} />
+							<Chip label="sin Pinecone" size="small" color="default" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
+							<Chip label="CausasCIV/CNT/CSS/COM · local" size="small" color="info" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
+							<Chip label="manager + workers dinámicos" size="small" color="warning" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
+						</Stack>
+					</Stack>
 				</Box>
 
 				<Paper sx={{ borderRadius: 2, overflow: "hidden" }}>

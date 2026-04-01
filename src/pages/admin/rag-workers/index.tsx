@@ -13,6 +13,39 @@ import WorkerHelpTab from "./WorkerHelpTab";
 import ChatRagTab from "./ChatRagTab";
 import ChatEditorTab from "./ChatEditorTab";
 
+// ── Sub-tab wrappers ─────────────────────────────────────────────────────────
+
+const MetricasTab = () => {
+	const theme = useTheme();
+	const [sub, setSub] = useState("stats");
+	return (
+		<Stack spacing={0}>
+			<Tabs value={sub} onChange={(_, v) => setSub(v)} sx={{ borderBottom: 1, borderColor: "divider", mb: 2, "& .MuiTab-root": { textTransform: "none", minHeight: 40 } }}>
+				<Tab value="stats" label="Estadísticas de Jobs" icon={<Chart size={16} />} iconPosition="start" />
+				<Tab value="analytics" label="Analytics del Pipeline" icon={<Activity size={16} />} iconPosition="start" />
+			</Tabs>
+			{sub === "stats" && <WorkerStatsTab />}
+			{sub === "analytics" && <WorkerAnalyticsTab />}
+		</Stack>
+	);
+};
+
+const ChatTab = () => {
+	const [sub, setSub] = useState("rag");
+	return (
+		<Stack spacing={0}>
+			<Tabs value={sub} onChange={(_, v) => setSub(v)} sx={{ borderBottom: 1, borderColor: "divider", mb: 2, "& .MuiTab-root": { textTransform: "none", minHeight: 40 } }}>
+				<Tab value="rag" label="Chat RAG" icon={<MessageText size={16} />} iconPosition="start" />
+				<Tab value="editor" label="Chat Editor" icon={<MessageText size={16} />} iconPosition="start" />
+			</Tabs>
+			{sub === "rag" && <ChatRagTab />}
+			{sub === "editor" && <ChatEditorTab />}
+		</Stack>
+	);
+};
+
+// ── Page ─────────────────────────────────────────────────────────────────────
+
 interface RagWorkerTab {
 	label: string;
 	value: string;
@@ -36,16 +69,10 @@ const RagWorkersPage = () => {
 			component: <WorkerControlTab />,
 		},
 		{
-			label: "Estadisticas",
-			value: "stats",
+			label: "Métricas",
+			value: "metricas",
 			icon: <Chart size={20} />,
-			component: <WorkerStatsTab />,
-		},
-		{
-			label: "Analytics",
-			value: "analytics",
-			icon: <Activity size={20} />,
-			component: <WorkerAnalyticsTab />,
+			component: <MetricasTab />,
 		},
 		{
 			label: "Costos y Precios",
@@ -66,16 +93,10 @@ const RagWorkersPage = () => {
 			component: <WorkerPipelineTab />,
 		},
 		{
-			label: "Chat RAG",
+			label: "Chat",
 			value: "chat",
 			icon: <MessageText size={20} />,
-			component: <ChatRagTab />,
-		},
-		{
-			label: "Chat Editor",
-			value: "chat-editor",
-			icon: <MessageText size={20} />,
-			component: <ChatEditorTab />,
+			component: <ChatTab />,
 		},
 		{
 			label: "Ayuda",

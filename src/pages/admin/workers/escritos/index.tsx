@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Tab, Tabs, Typography, Paper, Stack, useTheme, alpha } from "@mui/material";
+import { Box, Chip, Tab, Tabs, Typography, Paper, Stack, useTheme, alpha } from "@mui/material";
 import { Edit, InfoCircle } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
@@ -36,10 +36,20 @@ const EscritosWorkerPage = () => {
 		<MainCard>
 			<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 				<Box>
-					<Typography variant="h3">Workers Escritos (IA)</Typography>
-					<Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-						Pipeline de extracción, chunking semántico y detección de novedad de escritos judiciales
-					</Typography>
+					<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1}>
+						<Box>
+							<Typography variant="h3">Worker Escritos (IA)</Typography>
+							<Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
+								Pipeline de extracción, chunking semántico y detección de novedad de escritos judiciales
+							</Typography>
+						</Box>
+						<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
+							<Chip label="worker_01" size="small" color="default" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }} />
+							<Chip label="pjn-style-corpus-v2 · global-chunks" size="small" color="secondary" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
+							<Chip label="GlobalDocument · Atlas" size="small" color="info" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
+							<Chip label="CausasCIV/CNT/CSS/COM · local" size="small" color="default" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
+						</Stack>
+					</Stack>
 				</Box>
 
 				<Paper sx={{ borderRadius: 2, overflow: "hidden" }}>

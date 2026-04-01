@@ -32,10 +32,11 @@ import {
 	IconButton,
 	Card,
 	CardContent,
+	Pagination,
 	useTheme,
 	alpha,
 } from "@mui/material";
-import { Refresh, TickCircle, CloseCircle, SearchNormal1, Setting2, DocumentText } from "iconsax-react";
+import { Refresh, TickCircle, CloseCircle, SearchNormal1, Setting2, DocumentText, Chart, Lock1 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import RagWorkersService, {
 	EscritosWorkerConfig,
@@ -64,17 +65,20 @@ const STATUS_COLORS: Record<string, "default" | "info" | "success" | "warning" |
 
 const DOC_STATUS_OPTIONS = ["", "pending", "extracting", "extracted", "embedding", "embedded", "error"];
 
+const LIMIT = 10;
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function StatCard({ label, value, color }: { label: string; value: number | string; color?: string }) {
+function StatCard({ label, value, color, sub }: { label: string; value: number | string; color?: string; sub?: string }) {
 	const theme = useTheme();
 	return (
-		<Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.03), minWidth: 120 }}>
+		<Paper variant="outlined" sx={{ p: 2, minWidth: 120, borderColor: color ? alpha(color, 0.35) : undefined, bgcolor: color ? alpha(color, 0.04) : undefined }}>
 			<Typography variant="h4" fontWeight={700} color={color || "text.primary"}>
 				{typeof value === "number" ? value.toLocaleString("es-AR") : value}
 			</Typography>
 			<Typography variant="caption" color="text.secondary">{label}</Typography>
-		</Box>
+			{sub && <Typography variant="caption" color="text.disabled" display="block">{sub}</Typography>}
+		</Paper>
 	);
 }
 
@@ -83,16 +87,158 @@ function fmtDate(d?: string) {
 	return new Date(d).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
 }
 
-// ── Tab: Configuración ───────────────────────────────────────────────────────
+function timeAgo(d?: string): string {
+	if (!d) return "—";
+	const diffMs = Date.now() - new Date(d).getTime();
+	const diffMin = Math.floor(diffMs / 60000);
+	if (diffMin < 1) return "hace un momento";
+	if (diffMin < 60) return `hace ${diffMin} min`;
+	const diffH = Math.floor(diffMin / 60);
+	if (diffH < 24) return `hace ${diffH}h`;
+	const diffD = Math.floor(diffH / 24);
+	return `hace ${diffD}d`;
+}
+
+// ── Tab: Config — sección General ────────────────────────────────────────────
+
+function ConfigGeneral({ config, local, patch, toggleFuero, toggleDocType }: {
+	config: EscritosWorkerConfig | null;
+	local: Partial<EscritosWorkerConfig>;
+	patch: (k: keyof EscritosWorkerConfig, v: unknown) => void;
+	toggleFuero: (f: string) => void;
+	toggleDocType: (dt: string) => void;
+}) {
+	const theme = useTheme();
+	const enabled = local.enabled ?? config?.enabled ?? false;
+	return (
+		<Stack spacing={3}>
+			<Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: enabled ? alpha(theme.palette.success.main, 0.05) : alpha(theme.palette.error.main, 0.05) }}>
+				<FormControlLabel
+					control={<Switch checked={enabled} onChange={e => patch("enabled", e.target.checked)} />}
+					label={
+						<Box>
+							<Typography fontWeight={600}>{enabled ? "Worker habilitado" : "Worker deshabilitado"}</Typography>
+							<Typography variant="caption" color="text.secondary">Cuando está deshabilitado el cron no encola nuevos escritos</Typography>
+						</Box>
+					}
+				/>
+			</Box>
+
+			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+				<TextField label="Cron de escaneo" value={local.scanCron ?? config?.scanCron ?? ""} onChange={e => patch("scanCron", e.target.value)} helperText="Requiere reinicio del worker" size="small" sx={{ flex: 1 }} />
+				<TextField label="Concurrencia" type="number" value={local.concurrency ?? config?.concurrency ?? 3} onChange={e => patch("concurrency", parseInt(e.target.value, 10))} helperText="Workers simultáneos (1-20)" size="small" inputProps={{ min: 1, max: 20 }} sx={{ flex: 1 }} />
+				<TextField label="Tamaño máx. PDF (MB)" type="number" value={local.maxPdfSizeMb ?? config?.maxPdfSizeMb ?? 25} onChange={e => patch("maxPdfSizeMb", parseInt(e.target.value, 10))} helperText="PDFs más grandes se ignoran" size="small" inputProps={{ min: 1, max: 100 }} sx={{ flex: 1 }} />
+				<TextField label="Año mínimo" type="number" value={local.minYear ?? config?.minYear ?? 2023} onChange={e => patch("minYear", parseInt(e.target.value, 10))} helperText="Solo causas desde este año" size="small" inputProps={{ min: 2000, max: new Date().getFullYear() }} sx={{ flex: 1 }} />
+			</Stack>
+
+			<TextField label="Pausar hasta" type="datetime-local" value={local.pauseUntil ? new Date(local.pauseUntil).toISOString().slice(0, 16) : ""}
+				onChange={e => patch("pauseUntil", e.target.value ? new Date(e.target.value).toISOString() : null)}
+				helperText="Dejar vacío para no pausar" size="small" InputLabelProps={{ shrink: true }} sx={{ maxWidth: 300 }} />
+
+			<Box>
+				<Typography variant="body2" fontWeight={600} mb={1}>Fueros activos</Typography>
+				<FormGroup row>
+					{ALL_FUEROS.map(f => (
+						<FormControlLabel key={f} control={<Checkbox checked={(local.activeFueros ?? config?.activeFueros ?? []).includes(f)} onChange={() => toggleFuero(f)} size="small" />} label={FUERO_LABELS[f] || f} />
+					))}
+				</FormGroup>
+			</Box>
+
+			<Box>
+				<Typography variant="body2" fontWeight={600} mb={1}>Tipos de documento</Typography>
+				<Stack direction="row" flexWrap="wrap" gap={1}>
+					{ALL_DOC_TYPES.map(dt => {
+						const active = (local.relevantDocTypes ?? config?.relevantDocTypes ?? []).includes(dt);
+						return <Chip key={dt} label={dt} size="small" variant={active ? "filled" : "outlined"} color={active ? "primary" : "default"} onClick={() => toggleDocType(dt)} sx={{ cursor: "pointer" }} />;
+					})}
+				</Stack>
+			</Box>
+		</Stack>
+	);
+}
+
+// ── Tab: Config — sección Novelty ────────────────────────────────────────────
+
+function ConfigNovelty({ config, local, patch }: {
+	config: EscritosWorkerConfig | null;
+	local: Partial<EscritosWorkerConfig>;
+	patch: (k: keyof EscritosWorkerConfig, v: unknown) => void;
+}) {
+	const theme = useTheme();
+	const noveltyEnabled = local.noveltyEnabled ?? config?.noveltyEnabled ?? false;
+	return (
+		<Stack spacing={3}>
+			<Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: noveltyEnabled ? alpha(theme.palette.success.main, 0.05) : alpha(theme.palette.warning.main, 0.04) }}>
+				<FormControlLabel
+					control={<Switch checked={noveltyEnabled} onChange={e => patch("noveltyEnabled", e.target.checked)} />}
+					label={
+						<Box>
+							<Typography fontWeight={600}>{noveltyEnabled ? "Novelty detection habilitado" : "Novelty detection deshabilitado"}</Typography>
+							<Typography variant="caption" color="text.secondary">Cuando está deshabilitado, los docs se marcan como 'skipped'</Typography>
+						</Box>
+					}
+				/>
+			</Box>
+
+			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+				<FormControl size="small" sx={{ flex: 1 }}>
+					<InputLabel>Estrategia</InputLabel>
+					<Select label="Estrategia" value={local.noveltyStrategy ?? config?.noveltyStrategy ?? "A"} onChange={e => patch("noveltyStrategy", e.target.value)}>
+						<MenuItem value="A">A — Prioridad por sección (fundamentos › hechos › body)</MenuItem>
+						<MenuItem value="B">B — Zona de argumentos (todo excepto apertura/petitorio)</MenuItem>
+					</Select>
+				</FormControl>
+				<TextField label="TopK vecinos" type="number" value={local.noveltyTopK ?? config?.noveltyTopK ?? 5} onChange={e => patch("noveltyTopK", parseInt(e.target.value, 10))} helperText="Vecinos en Pinecone (1-20)" size="small" inputProps={{ min: 1, max: 20 }} sx={{ flex: 1 }} />
+				<TextField label="Máx. chunks" type="number" value={local.noveltyMaxChunks ?? config?.noveltyMaxChunks ?? 4} onChange={e => patch("noveltyMaxChunks", parseInt(e.target.value, 10))} helperText="Chunks a analizar (1-10)" size="small" inputProps={{ min: 1, max: 10 }} sx={{ flex: 1 }} />
+			</Stack>
+
+			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+				<TextField label="Umbral review (p75)" type="number" value={local.noveltyThresholdTrack ?? config?.noveltyThresholdTrack ?? 0.194} onChange={e => patch("noveltyThresholdTrack", parseFloat(e.target.value))} helperText="Score mínimo para 'review'" size="small" inputProps={{ min: 0, max: 1, step: 0.001 }} sx={{ flex: 1 }} />
+				<TextField label="Umbral alert (p90)" type="number" value={local.noveltyThresholdAlert ?? config?.noveltyThresholdAlert ?? 0.234} onChange={e => patch("noveltyThresholdAlert", parseFloat(e.target.value))} helperText="Score mínimo para 'alert'" size="small" inputProps={{ min: 0, max: 1, step: 0.001 }} sx={{ flex: 1 }} />
+				<FormControl size="small" sx={{ flex: 1 }}>
+					<InputLabel>Auto-tracking</InputLabel>
+					<Select label="Auto-tracking" value={local.noveltyAutoTrackLabel ?? config?.noveltyAutoTrackLabel ?? "alert"} onChange={e => patch("noveltyAutoTrackLabel", e.target.value)}>
+						<MenuItem value="review">review — score ≥ p75</MenuItem>
+						<MenuItem value="alert">alert — score ≥ p90 (default)</MenuItem>
+					</Select>
+				</FormControl>
+			</Stack>
+
+			<FormControlLabel
+				control={<Checkbox checked={local.noveltySameDoctypeFilter ?? config?.noveltySameDoctypeFilter ?? true} onChange={e => patch("noveltySameDoctypeFilter", e.target.checked)} size="small" />}
+				label={<Typography variant="body2">Comparar solo contra documentos del mismo tipo</Typography>}
+			/>
+
+			<Box>
+				<Typography variant="body2" fontWeight={600} mb={1}>DocTypes para novelty</Typography>
+				<Stack direction="row" flexWrap="wrap" gap={1}>
+					{ALL_DOC_TYPES.map(dt => {
+						const active = (local.noveltyDocTypes ?? config?.noveltyDocTypes ?? []).includes(dt);
+						return (
+							<Chip key={dt} label={dt} size="small" variant={active ? "filled" : "outlined"} color={active ? "secondary" : "default"}
+								onClick={() => {
+									const cur = local.noveltyDocTypes ?? config?.noveltyDocTypes ?? [];
+									patch("noveltyDocTypes", active ? cur.filter(x => x !== dt) : [...cur, dt]);
+								}}
+								sx={{ cursor: "pointer" }} />
+						);
+					})}
+				</Stack>
+			</Box>
+		</Stack>
+	);
+}
+
+// ── Tab: Configuración (con tabs verticales) ──────────────────────────────────
 
 function ConfigSection() {
-	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 	const [config, setConfig] = useState<EscritosWorkerConfig | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [local, setLocal] = useState<Partial<EscritosWorkerConfig>>({});
 	const [dirty, setDirty] = useState(false);
+	const [subTab, setSubTab] = useState("general");
 
 	const load = useCallback(async () => {
 		setLoading(true);
@@ -129,118 +275,31 @@ function ConfigSection() {
 
 	if (loading) return <Stack spacing={2}>{[...Array(4)].map((_, i) => <Skeleton key={i} variant="rounded" height={56} />)}</Stack>;
 
-	const enabled = local.enabled ?? config?.enabled ?? false;
-
 	return (
 		<Stack spacing={3}>
-			<Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: enabled ? alpha(theme.palette.success.main, 0.05) : alpha(theme.palette.error.main, 0.05) }}>
-				<FormControlLabel
-					control={<Switch checked={enabled} onChange={e => patch("enabled", e.target.checked)} />}
-					label={
-						<Box>
-							<Typography fontWeight={600}>{enabled ? "Worker habilitado" : "Worker deshabilitado"}</Typography>
-							<Typography variant="caption" color="text.secondary">Cuando está deshabilitado el cron no encola nuevos escritos</Typography>
-						</Box>
-					}
-				/>
-			</Box>
+			<Box sx={{ display: "flex", gap: 3 }}>
+				{/* Tabs verticales */}
+				<Tabs
+					orientation="vertical"
+					value={subTab}
+					onChange={(_, v) => setSubTab(v)}
+					sx={{
+						borderRight: 1, borderColor: "divider", minWidth: 140,
+						"& .MuiTab-root": { alignItems: "flex-start", textTransform: "none", minHeight: 44, px: 2 },
+					}}
+				>
+					<Tab value="general" label="General" icon={<Setting2 size={16} />} iconPosition="start" />
+					<Tab value="novelty" label="Novelty" icon={<Lock1 size={16} />} iconPosition="start" />
+				</Tabs>
 
-			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-				<TextField label="Cron de escaneo" value={local.scanCron ?? config?.scanCron ?? ""} onChange={e => patch("scanCron", e.target.value)} helperText="Requiere reinicio del worker" size="small" sx={{ flex: 1 }} />
-				<TextField label="Concurrencia" type="number" value={local.concurrency ?? config?.concurrency ?? 3} onChange={e => patch("concurrency", parseInt(e.target.value, 10))} helperText="Workers simultáneos (1-20)" size="small" inputProps={{ min: 1, max: 20 }} sx={{ flex: 1 }} />
-				<TextField label="Tamaño máx. PDF (MB)" type="number" value={local.maxPdfSizeMb ?? config?.maxPdfSizeMb ?? 25} onChange={e => patch("maxPdfSizeMb", parseInt(e.target.value, 10))} helperText="PDFs más grandes se ignoran" size="small" inputProps={{ min: 1, max: 100 }} sx={{ flex: 1 }} />
-				<TextField label="Año mínimo" type="number" value={local.minYear ?? config?.minYear ?? 2023} onChange={e => patch("minYear", parseInt(e.target.value, 10))} helperText="Solo causas desde este año (isValid=true)" size="small" inputProps={{ min: 2000, max: new Date().getFullYear() }} sx={{ flex: 1 }} />
-			</Stack>
-
-			<TextField label="Pausar hasta" type="datetime-local" value={local.pauseUntil ? new Date(local.pauseUntil).toISOString().slice(0, 16) : ""}
-				onChange={e => patch("pauseUntil", e.target.value ? new Date(e.target.value).toISOString() : null)}
-				helperText="Dejar vacío para no pausar" size="small" InputLabelProps={{ shrink: true }} sx={{ maxWidth: 300 }} />
-
-			<Box>
-				<Typography variant="body2" fontWeight={600} mb={1}>Fueros activos</Typography>
-				<FormGroup row>
-					{ALL_FUEROS.map(f => (
-						<FormControlLabel key={f} control={<Checkbox checked={(local.activeFueros ?? config?.activeFueros ?? []).includes(f)} onChange={() => toggleFuero(f)} size="small" />} label={FUERO_LABELS[f] || f} />
-					))}
-				</FormGroup>
-			</Box>
-
-			<Box>
-				<Typography variant="body2" fontWeight={600} mb={1}>Tipos de documento</Typography>
-				<Stack direction="row" flexWrap="wrap" gap={1}>
-					{ALL_DOC_TYPES.map(dt => {
-						const active = (local.relevantDocTypes ?? config?.relevantDocTypes ?? []).includes(dt);
-						return <Chip key={dt} label={dt} size="small" variant={active ? "filled" : "outlined"} color={active ? "primary" : "default"} onClick={() => toggleDocType(dt)} sx={{ cursor: "pointer" }} />;
-					})}
-				</Stack>
+				{/* Contenido */}
+				<Box sx={{ flex: 1 }}>
+					{subTab === "general" && <ConfigGeneral config={config} local={local} patch={patch} toggleFuero={toggleFuero} toggleDocType={toggleDocType} />}
+					{subTab === "novelty" && <ConfigNovelty config={config} local={local} patch={patch} />}
+				</Box>
 			</Box>
 
 			<Divider />
-
-			<Box>
-				<Typography variant="body2" fontWeight={700} mb={0.5}>Novelty Detection</Typography>
-				<Typography variant="caption" color="text.secondary">Configuración de la fase 2: detección de novedad jurídica</Typography>
-			</Box>
-
-			<Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: (local.noveltyEnabled ?? config?.noveltyEnabled) ? alpha(theme.palette.success.main, 0.05) : alpha(theme.palette.warning.main, 0.04) }}>
-				<FormControlLabel
-					control={<Switch checked={local.noveltyEnabled ?? config?.noveltyEnabled ?? false} onChange={e => patch("noveltyEnabled", e.target.checked)} />}
-					label={
-						<Box>
-							<Typography fontWeight={600}>{(local.noveltyEnabled ?? config?.noveltyEnabled) ? "Novelty detection habilitado" : "Novelty detection deshabilitado"}</Typography>
-							<Typography variant="caption" color="text.secondary">Cuando está deshabilitado, los docs se marcan como 'skipped'</Typography>
-						</Box>
-					}
-				/>
-			</Box>
-
-			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-				<FormControl size="small" sx={{ flex: 1 }}>
-					<InputLabel>Estrategia</InputLabel>
-					<Select label="Estrategia" value={local.noveltyStrategy ?? config?.noveltyStrategy ?? "A"} onChange={e => patch("noveltyStrategy", e.target.value)}>
-						<MenuItem value="A">A — Prioridad por sección (fundamentos › hechos › body)</MenuItem>
-						<MenuItem value="B">B — Zona de argumentos (todo excepto apertura/petitorio)</MenuItem>
-					</Select>
-				</FormControl>
-				<TextField label="TopK vecinos" type="number" value={local.noveltyTopK ?? config?.noveltyTopK ?? 5} onChange={e => patch("noveltyTopK", parseInt(e.target.value, 10))} helperText="Vecinos consultados en Pinecone (1-20)" size="small" inputProps={{ min: 1, max: 20 }} sx={{ flex: 1 }} />
-				<TextField label="Máx. chunks" type="number" value={local.noveltyMaxChunks ?? config?.noveltyMaxChunks ?? 4} onChange={e => patch("noveltyMaxChunks", parseInt(e.target.value, 10))} helperText="Chunks a analizar por documento (1-10)" size="small" inputProps={{ min: 1, max: 10 }} sx={{ flex: 1 }} />
-			</Stack>
-
-			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-				<TextField label="Umbral review (p75)" type="number" value={local.noveltyThresholdTrack ?? config?.noveltyThresholdTrack ?? 0.194} onChange={e => patch("noveltyThresholdTrack", parseFloat(e.target.value))} helperText="Score mínimo para label 'review'" size="small" inputProps={{ min: 0, max: 1, step: 0.001 }} sx={{ flex: 1 }} />
-				<TextField label="Umbral alert (p90)" type="number" value={local.noveltyThresholdAlert ?? config?.noveltyThresholdAlert ?? 0.234} onChange={e => patch("noveltyThresholdAlert", parseFloat(e.target.value))} helperText="Score mínimo para label 'alert'" size="small" inputProps={{ min: 0, max: 1, step: 0.001 }} sx={{ flex: 1 }} />
-				<FormControl size="small" sx={{ flex: 1 }}>
-					<InputLabel>Auto-tracking</InputLabel>
-					<Select label="Auto-tracking" value={local.noveltyAutoTrackLabel ?? config?.noveltyAutoTrackLabel ?? "alert"} onChange={e => patch("noveltyAutoTrackLabel", e.target.value)}>
-						<MenuItem value="review">review — marcar causas con score ≥ p75</MenuItem>
-						<MenuItem value="alert">alert — marcar causas con score ≥ p90 (default)</MenuItem>
-					</Select>
-				</FormControl>
-			</Stack>
-
-			<Box>
-				<FormControlLabel
-					control={<Checkbox checked={local.noveltySameDoctypeFilter ?? config?.noveltySameDoctypeFilter ?? true} onChange={e => patch("noveltySameDoctypeFilter", e.target.checked)} size="small" />}
-					label={<Typography variant="body2">Comparar solo contra documentos del mismo tipo (noveltySameDoctypeFilter)</Typography>}
-				/>
-			</Box>
-
-			<Box>
-				<Typography variant="body2" fontWeight={600} mb={1}>DocTypes para novelty</Typography>
-				<Stack direction="row" flexWrap="wrap" gap={1}>
-					{ALL_DOC_TYPES.map(dt => {
-						const active = (local.noveltyDocTypes ?? config?.noveltyDocTypes ?? []).includes(dt);
-						return (
-							<Chip key={dt} label={dt} size="small" variant={active ? "filled" : "outlined"} color={active ? "secondary" : "default"}
-								onClick={() => {
-									const cur = local.noveltyDocTypes ?? config?.noveltyDocTypes ?? [];
-									patch("noveltyDocTypes", active ? cur.filter(x => x !== dt) : [...cur, dt]);
-								}}
-								sx={{ cursor: "pointer" }} />
-						);
-					})}
-				</Stack>
-			</Box>
 
 			<Stack direction="row" spacing={2} alignItems="center">
 				<Button variant="contained" onClick={save} disabled={!dirty || saving} startIcon={<TickCircle size={18} />}>
@@ -257,9 +316,9 @@ function ConfigSection() {
 	);
 }
 
-// ── Tab: Documentos ──────────────────────────────────────────────────────────
+// ── Tab: Resumen ──────────────────────────────────────────────────────────────
 
-function DocumentosSection() {
+function ResumenSection() {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 	const [stats, setStats] = useState<EscritosWorkerStats | null>(null);
@@ -270,7 +329,6 @@ function DocumentosSection() {
 	const [filterStatus, setFilterStatus] = useState("");
 	const [filterFuero, setFilterFuero] = useState("");
 	const [page, setPage] = useState(1);
-	const limit = 20;
 
 	const loadStats = useCallback(async () => {
 		setStatsLoading(true);
@@ -282,7 +340,7 @@ function DocumentosSection() {
 	const loadDocs = useCallback(async () => {
 		setDocsLoading(true);
 		try {
-			const data = await RagWorkersService.getEscritosWorkerDocuments({ status: filterStatus || undefined, fuero: filterFuero || undefined, page, limit });
+			const data = await RagWorkersService.getEscritosWorkerDocuments({ status: filterStatus || undefined, fuero: filterFuero || undefined, page, limit: LIMIT });
 			setDocs(data.docs); setHasMore(data.pagination.hasMore);
 		} catch { enqueueSnackbar("Error al cargar documentos", { variant: "error" }); }
 		finally { setDocsLoading(false); }
@@ -293,20 +351,52 @@ function DocumentosSection() {
 
 	return (
 		<Stack spacing={3}>
-			{/* Stats */}
+			{/* Stat cards */}
 			{statsLoading ? (
-				<Stack direction="row" spacing={2}>{[...Array(5)].map((_, i) => <Skeleton key={i} variant="rounded" width={130} height={70} />)}</Stack>
+				<Stack direction="row" spacing={2}>{[...Array(4)].map((_, i) => <Skeleton key={i} variant="rounded" width={130} height={72} />)}</Stack>
 			) : stats ? (
-				<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-					<StatCard label="Total documentos" value={stats.total} />
-				</Stack>
+				<>
+					<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+						<StatCard label="Total" value={stats.total} />
+						<StatCard label="Embeddings OK" value={stats.embedded ?? 0} color={theme.palette.success.main} />
+						<StatCard label="Con error" value={stats.error ?? 0} color={stats.error ? theme.palette.error.main : undefined} />
+						{stats.lastEmbeddedAt && (
+							<StatCard label="Último embed" value={timeAgo(stats.lastEmbeddedAt)} sub={fmtDate(stats.lastEmbeddedAt)} />
+						)}
+					</Stack>
+
+					{/* Por fuero */}
+					{stats.byFuero && Object.keys(stats.byFuero).length > 0 && (
+						<Box>
+							<Typography variant="caption" color="text.secondary" fontWeight={600} display="block" mb={1}>
+								Por fuero
+							</Typography>
+							<Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+								{Object.entries(stats.byFuero).map(([fuero, counts]) => {
+									const total = counts.embedded + counts.error;
+									const pct = total > 0 ? Math.round((counts.embedded / total) * 100) : 0;
+									return (
+										<Paper key={fuero} variant="outlined" sx={{ p: 1.5, minWidth: 130, flex: "1 1 130px" }}>
+											<Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.75}>
+												<Typography variant="body2" fontWeight={700}>{FUERO_LABELS[fuero] || fuero}</Typography>
+												<Typography variant="caption" color="text.secondary">{pct}%</Typography>
+											</Stack>
+											<LinearProgress variant="determinate" value={pct} sx={{ height: 4, borderRadius: 2, mb: 0.75 }} color="success" />
+											<Stack direction="row" spacing={1}>
+												<Typography variant="caption" color="success.main">{counts.embedded.toLocaleString("es-AR")} ok</Typography>
+												{counts.error > 0 && <Typography variant="caption" color="error.main">{counts.error} err</Typography>}
+											</Stack>
+										</Paper>
+									);
+								})}
+							</Stack>
+						</Box>
+					)}
+				</>
 			) : null}
 
-			<Divider />
-
-			{/* Filtros + tabla */}
-			<Stack direction="row" justifyContent="space-between" alignItems="center">
-				<Typography variant="subtitle2" fontWeight={600}>Documentos procesados</Typography>
+			{/* Filtros */}
+			<Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
 				<Stack direction="row" spacing={1}>
 					<FormControl size="small" sx={{ minWidth: 130 }}>
 						<InputLabel>Estado</InputLabel>
@@ -321,16 +411,17 @@ function DocumentosSection() {
 							{ALL_FUEROS.map(f => <MenuItem key={f} value={f}>{FUERO_LABELS[f]}</MenuItem>)}
 						</Select>
 					</FormControl>
-					<Button size="small" startIcon={<Refresh size={16} />} onClick={loadDocs} variant="outlined">Actualizar</Button>
 				</Stack>
+				<Button size="small" startIcon={<Refresh size={16} />} onClick={loadDocs} variant="outlined">Actualizar</Button>
 			</Stack>
 
+			{/* Tabla */}
 			{docsLoading ? <Skeleton variant="rounded" height={200} /> : (
 				<>
 					<TableContainer component={Paper} variant="outlined">
 						<Table size="small">
 							<TableHead>
-								<TableRow>
+								<TableRow sx={{ "& th": { fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.04) } }}>
 									<TableCell>Tipo doc.</TableCell>
 									<TableCell>Fuero</TableCell>
 									<TableCell>Estado</TableCell>
@@ -355,12 +446,20 @@ function DocumentosSection() {
 							</TableBody>
 						</Table>
 					</TableContainer>
-					<Stack direction="row" justifyContent="flex-end" alignItems="center">
-						<Stack direction="row" spacing={1} alignItems="center">
-							<Button size="small" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Anterior</Button>
-							<Typography variant="caption">Pág. {page}</Typography>
-							<Button size="small" disabled={!hasMore} onClick={() => setPage(p => p + 1)}>Siguiente</Button>
-						</Stack>
+
+					{/* Paginación con números */}
+					<Stack direction="row" justifyContent="center" alignItems="center" spacing={1}>
+						<Button size="small" disabled={page <= 1} onClick={() => setPage(p => p - 1)} variant="outlined" sx={{ minWidth: 36 }}>‹</Button>
+						{Array.from({ length: Math.min(page + (hasMore ? 1 : 0), page + 1) }, (_, i) => {
+							const p = Math.max(1, page - 1) + i;
+							return (
+								<Button key={p} size="small" onClick={() => setPage(p)}
+									variant={p === page ? "contained" : "outlined"}
+									sx={{ minWidth: 36, px: 0 }}
+								>{p}</Button>
+							);
+						})}
+						<Button size="small" disabled={!hasMore} onClick={() => setPage(p => p + 1)} variant="outlined" sx={{ minWidth: 36 }}>›</Button>
 					</Stack>
 				</>
 			)}
@@ -409,12 +508,7 @@ function BusquedaSection() {
 
 	return (
 		<Stack spacing={3}>
-			<Box>
-				<Typography variant="subtitle2" fontWeight={600} mb={0.5}>Búsqueda semántica en escritos</Typography>
-				<Typography variant="body2" color="text.secondary">Buscá planteos jurídicos, argumentos o texto en todos los escritos procesados (namespace global-chunks).</Typography>
-			</Box>
-
-			{/* Filtros */}
+			{/* Filtros + buscador */}
 			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
 				<FormControl size="small" sx={{ minWidth: 120 }}>
 					<InputLabel>Fuero</InputLabel>
@@ -440,7 +534,6 @@ function BusquedaSection() {
 				<TextField label="Score mínimo" type="number" size="small" value={minScore} onChange={e => setMinScore(parseFloat(e.target.value))} inputProps={{ min: 0, max: 1, step: 0.05 }} sx={{ width: 130 }} />
 			</Stack>
 
-			{/* Buscador */}
 			<TextField
 				inputRef={inputRef}
 				fullWidth
@@ -469,13 +562,12 @@ function BusquedaSection() {
 
 			{loading && <LinearProgress />}
 
-			{/* Resultados */}
 			{!loading && searched && (
 				results.length === 0 ? (
 					<Alert severity="info">No se encontraron resultados. Probá con un query más amplio o bajá el score mínimo.</Alert>
 				) : (
 					<Stack spacing={2}>
-						<Typography variant="body2" color="text.secondary">{results.length} resultado{results.length !== 1 ? "s" : ""}</Typography>
+						<Typography variant="caption" color="text.secondary">{results.length} resultado{results.length !== 1 ? "s" : ""}</Typography>
 						{results.map((r, i) => (
 							<Card key={r.id} variant="outlined">
 								<CardContent sx={{ pb: "12px !important" }}>
@@ -516,38 +608,37 @@ function BusquedaSection() {
 // ── Main component ────────────────────────────────────────────────────────────
 
 const EscritosWorkerTab: React.FC = () => {
-	const [tab, setTab] = useState("documentos");
+	const [tab, setTab] = useState("resumen");
 
 	const TABS = [
-		{ value: "documentos", label: "Documentos", icon: <DocumentText size={18} /> },
-		{ value: "busqueda",   label: "Búsqueda",   icon: <SearchNormal1 size={18} /> },
-		{ value: "config",     label: "Config",     icon: <Setting2 size={18} /> },
+		{ value: "resumen",  label: "Resumen",  icon: <Chart size={16} /> },
+		{ value: "busqueda", label: "Búsqueda", icon: <SearchNormal1 size={16} /> },
+		{ value: "config",   label: "Config",   icon: <Setting2 size={16} /> },
 	];
 
 	return (
 		<Box sx={{ p: { xs: 2, md: 3 } }}>
 			<Stack spacing={3}>
-				<Box>
+				<Stack direction="row" alignItems="baseline" spacing={2}>
 					<Typography variant="h5" fontWeight={600}>Escritos Worker</Typography>
 					<Typography variant="body2" color="text.secondary">Pipeline de extracción global de PDFs judiciales</Typography>
-				</Box>
+				</Stack>
 
 				<Paper variant="outlined" sx={{ borderRadius: 2 }}>
-					<Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ borderBottom: 1, borderColor: "divider", px: 1, "& .MuiTab-root": { minHeight: 48, textTransform: "none" } }}>
+					<Tabs
+						value={tab}
+						onChange={(_, v) => setTab(v)}
+						sx={{ borderBottom: 1, borderColor: "divider", px: 2, "& .MuiTab-root": { minHeight: 44, textTransform: "none", gap: 0.75 } }}
+					>
 						{TABS.map(t => (
-							<Tab key={t.value} value={t.value} label={
-								<Stack direction="row" spacing={0.75} alignItems="center">
-									{t.icon}
-									<span>{t.label}</span>
-								</Stack>
-							} />
+							<Tab key={t.value} value={t.value} icon={t.icon} iconPosition="start" label={t.label} />
 						))}
 					</Tabs>
 
 					<Box sx={{ p: { xs: 2, md: 3 } }}>
-						{tab === "documentos" && <DocumentosSection />}
-						{tab === "busqueda"   && <BusquedaSection />}
-						{tab === "config"     && <ConfigSection />}
+						{tab === "resumen"  && <ResumenSection />}
+						{tab === "busqueda" && <BusquedaSection />}
+						{tab === "config"   && <ConfigSection />}
 					</Box>
 				</Paper>
 			</Stack>
