@@ -538,26 +538,6 @@ export interface GlobalDocumentsResponse {
 	pagination: { total: number; page: number; limit: number; pages: number };
 }
 
-export interface EscritosCausa {
-	_id: string;
-	causaType: string;
-	fuero: string;
-	total: number;
-	embedded: number;
-	error: number;
-	deferred: number;
-	lastUpdated: string;
-	docTypes: string[];
-	maxNovelty?: number;
-	avgNovelty?: number;
-	noveltyLabels?: string[];
-}
-
-export interface EscritosCausasResponse {
-	causas: EscritosCausa[];
-	pagination: { total: number; page: number; limit: number; pages: number };
-}
-
 export interface EscritosSearchResult {
 	id: string;
 	score: number;
@@ -865,13 +845,6 @@ class RagWorkersService {
 		opts: { status?: string; fuero?: string; limit?: number; page?: number } = {}
 	): Promise<GlobalDocumentsResponse> {
 		const res = await ragAxios.get(`${BASE}/escritos-worker/documents`, { params: opts });
-		return res.data.data;
-	}
-
-	static async getEscritosWorkerCausas(
-		opts: { fuero?: string; status?: string; limit?: number; page?: number } = {}
-	): Promise<EscritosCausasResponse> {
-		const res = await ragAxios.get(`${BASE}/escritos-worker/causas`, { params: opts });
 		return res.data.data;
 	}
 
