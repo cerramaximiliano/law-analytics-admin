@@ -265,7 +265,7 @@ function DocumentosSection() {
 	const [stats, setStats] = useState<EscritosWorkerStats | null>(null);
 	const [statsLoading, setStatsLoading] = useState(true);
 	const [docs, setDocs] = useState<GlobalDocumentEntry[]>([]);
-	const [docsTotal, setDocsTotal] = useState(0);
+	const [hasMore, setHasMore] = useState(false);
 	const [docsLoading, setDocsLoading] = useState(true);
 	const [filterStatus, setFilterStatus] = useState("");
 	const [filterFuero, setFilterFuero] = useState("");
@@ -283,7 +283,7 @@ function DocumentosSection() {
 		setDocsLoading(true);
 		try {
 			const data = await RagWorkersService.getEscritosWorkerDocuments({ status: filterStatus || undefined, fuero: filterFuero || undefined, page, limit });
-			setDocs(data.docs); setDocsTotal(data.pagination.total);
+			setDocs(data.docs); setHasMore(data.pagination.hasMore);
 		} catch { enqueueSnackbar("Error al cargar documentos", { variant: "error" }); }
 		finally { setDocsLoading(false); }
 	}, [filterStatus, filterFuero, page, enqueueSnackbar]);
@@ -298,12 +298,7 @@ function DocumentosSection() {
 				<Stack direction="row" spacing={2}>{[...Array(5)].map((_, i) => <Skeleton key={i} variant="rounded" width={130} height={70} />)}</Stack>
 			) : stats ? (
 				<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-					<StatCard label="Total" value={stats.total} />
-					<StatCard label="Embeddings OK" value={stats.embedded} color={theme.palette.success.main} />
-					<StatCard label="Pendientes" value={stats.pending} color={theme.palette.info.main} />
-					<StatCard label="Con error" value={stats.error} color={theme.palette.error.main} />
-					<StatCard label="Requieren OCR" value={stats.deferred} color={theme.palette.warning.main} />
-					<StatCard label="Errores 24h" value={stats.recentErrors24h} color={stats.recentErrors24h > 0 ? theme.palette.error.main : undefined} />
+					<StatCard label="Total documentos" value={stats.total} />
 				</Stack>
 			) : null}
 
@@ -360,12 +355,11 @@ function DocumentosSection() {
 							</TableBody>
 						</Table>
 					</TableContainer>
-					<Stack direction="row" justifyContent="space-between" alignItems="center">
-						<Typography variant="caption" color="text.secondary">{docsTotal.toLocaleString("es-AR")} documentos</Typography>
+					<Stack direction="row" justifyContent="flex-end" alignItems="center">
 						<Stack direction="row" spacing={1} alignItems="center">
 							<Button size="small" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Anterior</Button>
 							<Typography variant="caption">Pág. {page}</Typography>
-							<Button size="small" disabled={page * limit >= docsTotal} onClick={() => setPage(p => p + 1)}>Siguiente</Button>
+							<Button size="small" disabled={!hasMore} onClick={() => setPage(p => p + 1)}>Siguiente</Button>
 						</Stack>
 					</Stack>
 				</>

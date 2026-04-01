@@ -509,12 +509,6 @@ export interface EscritosWorkerConfig {
 
 export interface EscritosWorkerStats {
 	total: number;
-	byStatus: Record<string, number>;
-	recentErrors24h: number;
-	embedded: number;
-	pending: number;
-	error: number;
-	deferred: number;
 }
 
 export interface GlobalDocumentEntry {
@@ -535,7 +529,7 @@ export interface GlobalDocumentEntry {
 
 export interface GlobalDocumentsResponse {
 	docs: GlobalDocumentEntry[];
-	pagination: { total: number; page: number; limit: number; pages: number };
+	pagination: { page: number; limit: number; hasMore: boolean };
 }
 
 export interface EscritosSearchResult {
