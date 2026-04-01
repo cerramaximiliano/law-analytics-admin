@@ -12,7 +12,7 @@ import {
 	Divider,
 	Grid,
 	IconButton,
-	InputAdornment,
+	LinearProgress,
 	Paper,
 	Stack,
 	Switch,
@@ -30,11 +30,13 @@ import {
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { CloseCircle, Refresh, Setting2, DocumentText, TickCircle, Warning2, Calendar, ArrowRight2, Pause, Play } from "iconsax-react";
+import { CloseCircle, Refresh, Setting2, DocumentText, TickCircle, Warning2, Calendar, ArrowRight2, Pause, Play, TextBlock } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import {
+	EnrichStatsResponse,
 	SaijWorkerConfig,
+	getSaijEnrichStats,
 	getSaijWorkerConfigs,
 	getSaijWorkerHistory,
 	enableSaijWorker,
@@ -112,9 +114,31 @@ export default function SaijWorkerPage() {
 	const [scrapingEdit, setScrapingEdit] = useState(false);
 	const [scrapingForm, setScrapingForm] = useState<Partial<SaijWorkerConfig["scraping"]>>({});
 
+	// Enrich worker
+	const [enrichStats, setEnrichStats] = useState<EnrichStatsResponse["data"] | null>(null);
+	const [enrichLoading, setEnrichLoading] = useState(false);
+	const [sideTab, setSideTab] = useState<"scraping" | "enrich">("scraping");
+
 	useEffect(() => {
 		fetchConfigs();
 	}, []);
+
+	const loadEnrichStats = async () => {
+		setEnrichLoading(true);
+		try {
+			const res = await getSaijEnrichStats();
+			setEnrichStats(res.data);
+		} catch {
+			enqueueSnackbar("Error cargando stats de enriquecimiento", { variant: "error" });
+		} finally {
+			setEnrichLoading(false);
+		}
+	};
+
+	const handleSideTabChange = (val: "scraping" | "enrich") => {
+		setSideTab(val);
+		if (val === "enrich" && !enrichStats) loadEnrichStats();
+	};
 
 	const fetchConfigs = async () => {
 		try {
@@ -275,22 +299,22 @@ export default function SaijWorkerPage() {
 				<Grid item xs={12} md={3}>
 					<Paper variant="outlined" sx={{ p: 1 }}>
 						<Typography variant="subtitle2" color="text.secondary" sx={{ px: 1, py: 0.5 }}>
-							Workers
+							Workers de scraping
 						</Typography>
 						{configs.map((cfg) => (
 							<Box
 								key={cfg.worker_id}
-								onClick={() => selectWorker(cfg)}
+								onClick={() => { selectWorker(cfg); handleSideTabChange("scraping"); }}
 								sx={{
 									p: 1.5,
 									borderRadius: 1,
 									cursor: "pointer",
-									bgcolor: selected?.worker_id === cfg.worker_id ? alpha(theme.palette.primary.main, 0.1) : "transparent",
+									bgcolor: sideTab === "scraping" && selected?.worker_id === cfg.worker_id ? alpha(theme.palette.primary.main, 0.1) : "transparent",
 									"&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.06) },
 								}}
 							>
 								<Stack direction="row" alignItems="center" justifyContent="space-between">
-									<Typography variant="body2" fontWeight={selected?.worker_id === cfg.worker_id ? 600 : 400}>
+									<Typography variant="body2" fontWeight={sideTab === "scraping" && selected?.worker_id === cfg.worker_id ? 600 : 400}>
 										{cfg.worker_id}
 									</Typography>
 									<Chip
@@ -305,11 +329,129 @@ export default function SaijWorkerPage() {
 								</Typography>
 							</Box>
 						))}
+
+						<Divider sx={{ my: 1 }} />
+						<Typography variant="subtitle2" color="text.secondary" sx={{ px: 1, py: 0.5 }}>
+							Workers de enriquecimiento
+						</Typography>
+						<Box
+							onClick={() => handleSideTabChange("enrich")}
+							sx={{
+								p: 1.5,
+								borderRadius: 1,
+								cursor: "pointer",
+								bgcolor: sideTab === "enrich" ? alpha(theme.palette.secondary.main, 0.1) : "transparent",
+								"&:hover": { bgcolor: alpha(theme.palette.secondary.main, 0.06) },
+							}}
+						>
+							<Stack direction="row" alignItems="center" justifyContent="space-between">
+								<Stack direction="row" alignItems="center" spacing={0.5}>
+									<TextBlock size={14} />
+									<Typography variant="body2" fontWeight={sideTab === "enrich" ? 600 : 400}>
+										worker_SAIJ_enrich
+									</Typography>
+								</Stack>
+								<Chip size="small" label="PM2" color="info" sx={{ fontSize: 10, height: 18 }} />
+							</Stack>
+							<Typography variant="caption" color="text.secondary">
+								Texto completo de sumarios
+							</Typography>
+						</Box>
 					</Paper>
 				</Grid>
 
+				{/* ── Enrich worker panel ── */}
+				{sideTab === "enrich" && (
+					<Grid item xs={12} md={9}>
+						<Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+							<Typography variant="h6">worker_SAIJ_enrich</Typography>
+							<Tooltip title="Recargar">
+								<IconButton size="small" onClick={loadEnrichStats} disabled={enrichLoading}>
+									<Refresh size={18} />
+								</IconButton>
+							</Tooltip>
+						</Stack>
+
+						{enrichLoading && <LinearProgress sx={{ mb: 2 }} />}
+
+						{enrichStats && (
+							<Stack spacing={2}>
+								{/* Progress */}
+								<Paper variant="outlined" sx={{ p: 2 }}>
+									<Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+										<Typography variant="subtitle2">Progreso de enriquecimiento</Typography>
+										<Typography variant="body2" color="text.secondary">
+											{enrichStats.enriched} / {enrichStats.total} sumarios
+										</Typography>
+									</Stack>
+									<LinearProgress
+										variant="determinate"
+										value={enrichStats.total > 0 ? (enrichStats.enriched / enrichStats.total) * 100 : 0}
+										sx={{ height: 8, borderRadius: 4 }}
+									/>
+									<Stack direction="row" spacing={2} mt={1.5} flexWrap="wrap">
+										<StatBox label="Total sumarios" value={fmtNum(enrichStats.total)} />
+										<StatBox label="Enriquecidos" value={fmtNum(enrichStats.enriched)} color={theme.palette.success.main} />
+										<StatBox label="Pendientes" value={fmtNum(enrichStats.pendingWithUrl)} color={theme.palette.warning.main} />
+										<StatBox label="Sin URL" value={fmtNum(enrichStats.noUrl)} color={theme.palette.text.disabled} />
+									</Stack>
+								</Paper>
+
+								{/* Últimos procesados */}
+								<Paper variant="outlined" sx={{ p: 2 }}>
+									<Typography variant="subtitle2" mb={1}>
+										Últimos sumarios enriquecidos
+									</Typography>
+									<TableContainer>
+										<Table size="small">
+											<TableHead>
+												<TableRow>
+													<TableCell>Número</TableCell>
+													<TableCell>Chars antes</TableCell>
+													<TableCell>Chars después</TableCell>
+													<TableCell>Actualizado</TableCell>
+												</TableRow>
+											</TableHead>
+											<TableBody>
+												{enrichStats.recent.map((r) => (
+													<TableRow key={r._id} hover>
+														<TableCell>
+															<Typography variant="caption" fontFamily="monospace">{r.numeroSumario || "—"}</Typography>
+														</TableCell>
+														<TableCell>
+															<Typography variant="caption" color="text.secondary">{r.texto?.length ?? 0}</Typography>
+														</TableCell>
+														<TableCell>
+															<Typography variant="caption" color="success.main" fontWeight={600}>
+																{r.textoCompleto?.length ?? 0}
+															</Typography>
+														</TableCell>
+														<TableCell>
+															<Typography variant="caption">{fmtDate(r.updatedAt)}</Typography>
+														</TableCell>
+													</TableRow>
+												))}
+											</TableBody>
+										</Table>
+									</TableContainer>
+								</Paper>
+
+								<Alert severity="info" variant="outlined">
+									El worker corre como proceso PM2 <strong>worker_SAIJ_enrich</strong> (id: 539) en worker_01.
+									Procesa un sumario cada ~5s con delay configurable via <code>ENRICH_DELAY_MS</code>.
+									Cuando no hay pendientes duerme 30 min y reintenta.
+								</Alert>
+							</Stack>
+						)}
+
+						{!enrichStats && !enrichLoading && (
+							<Alert severity="info">Hacé click en recargar para ver el estado del worker.</Alert>
+						)}
+					</Grid>
+				)}
+
 				{/* Detail panel */}
-				{s && (
+				{sideTab === "scraping" && s && (
 					<Grid item xs={12} md={9}>
 						{/* Actions bar */}
 						<Stack direction="row" spacing={1.5} alignItems="center" mb={2} flexWrap="wrap">

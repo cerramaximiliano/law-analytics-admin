@@ -167,6 +167,22 @@ export const getSaijSentenciaStats = async (): Promise<SentenciaStatsResponse> =
 	return response.data;
 };
 
+export interface EnrichStatsResponse {
+	success: boolean;
+	data: {
+		total: number;
+		enriched: number;
+		pendingWithUrl: number;
+		noUrl: number;
+		recent: { _id: string; numeroSumario: string; texto: string; textoCompleto: string; updatedAt: string }[];
+	};
+}
+
+export const getSaijEnrichStats = async (): Promise<EnrichStatsResponse> => {
+	const response = await pjnAxios.get("/api/saij/sentencias/enrich/stats");
+	return response.data;
+};
+
 export const getSaijSentenciaById = async (id: string): Promise<{ success: boolean; data: SaijSentencia }> => {
 	const response = await pjnAxios.get(`/api/saij/sentencias/${id}`);
 	return response.data;
