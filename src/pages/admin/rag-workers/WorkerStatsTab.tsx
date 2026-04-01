@@ -16,6 +16,7 @@ import {
 	IconButton,
 	Tooltip,
 	Divider,
+	Pagination,
 	useTheme,
 	alpha,
 } from "@mui/material";
@@ -45,6 +46,8 @@ const formatMs = (ms: number): string => {
 	return `${ms}ms`;
 };
 
+const DAILY_PAGE_SIZE = 10;
+
 const WorkerStatsTab = () => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
@@ -52,6 +55,7 @@ const WorkerStatsTab = () => {
 	const [stats, setStats] = useState<StatsResponse | null>(null);
 	const [dailyStats, setDailyStats] = useState<DailyStatsEntry[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [dailyPage, setDailyPage] = useState(1);
 
 	const fetchStats = useCallback(async () => {
 		try {
@@ -134,11 +138,14 @@ const WorkerStatsTab = () => {
 			{dailyStats.length > 0 && (
 				<>
 					<Divider />
-					<Typography variant="h6">Desglose diario</Typography>
-					<TableContainer>
+					<Stack direction="row" justifyContent="space-between" alignItems="center">
+						<Typography variant="h6">Desglose diario</Typography>
+						<Typography variant="caption" color="text.secondary">{dailyStats.length} entradas</Typography>
+					</Stack>
+					<TableContainer component={Box}>
 						<Table size="small">
 							<TableHead>
-								<TableRow>
+								<TableRow sx={{ "& th": { fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.04) } }}>
 									<TableCell>Fecha</TableCell>
 									<TableCell>Worker</TableCell>
 									<TableCell align="right">Completados</TableCell>
@@ -147,7 +154,7 @@ const WorkerStatsTab = () => {
 								</TableRow>
 							</TableHead>
 							<TableBody>
-								{dailyStats.slice(-50).map((entry) => (
+								{[...dailyStats].reverse().slice((dailyPage - 1) * DAILY_PAGE_SIZE, dailyPage * DAILY_PAGE_SIZE).map((entry) => (
 									<TableRow key={entry._id} hover>
 										<TableCell>
 											<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
@@ -177,6 +184,17 @@ const WorkerStatsTab = () => {
 							</TableBody>
 						</Table>
 					</TableContainer>
+					{dailyStats.length > DAILY_PAGE_SIZE && (
+						<Stack alignItems="center">
+							<Pagination
+								count={Math.ceil(dailyStats.length / DAILY_PAGE_SIZE)}
+								page={dailyPage}
+								onChange={(_, p) => setDailyPage(p)}
+								size="small"
+								color="primary"
+							/>
+						</Stack>
+					)}
 				</>
 			)}
 		</Stack>

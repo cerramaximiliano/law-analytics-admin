@@ -509,6 +509,11 @@ export interface EscritosWorkerConfig {
 
 export interface EscritosWorkerStats {
 	total: number;
+	embedded?: number;
+	error?: number;
+	byFuero?: Record<string, { embedded: number; error: number }>;
+	lastEmbeddedAt?: string;
+	lastErrorAt?: string;
 }
 
 export interface GlobalDocumentEntry {

@@ -12,6 +12,7 @@ import {
 	Grid,
 	IconButton,
 	LinearProgress,
+	Pagination,
 	Paper,
 	Skeleton,
 	Stack,
@@ -24,7 +25,7 @@ import {
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { CloseCircle, DocumentText, Refresh, Scanner, TickCircle, Warning2, Data } from "iconsax-react";
+import { Activity, CloseCircle, Data, DocumentText, Refresh, Scanner, Setting3, TickCircle, Warning2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import SentenciasService, { Category, EmbeddingStatus, NoveltyCheckStatus, OcrStatus, SentenciaCapturada, SentenciasStats, SentenciaTipo, Fuero } from "api/sentenciasCapturadas";
 import CollectorService, { CollectorConfig, FueroConfig } from "api/sentenciasCollector";
@@ -78,6 +79,18 @@ function fmtDate(d?: string) {
 	return new Date(d).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
+function timeAgo(d?: string): string {
+	if (!d) return "—";
+	const diffMs = Date.now() - new Date(d).getTime();
+	const diffMin = Math.floor(diffMs / 60000);
+	if (diffMin < 1) return "hace un momento";
+	if (diffMin < 60) return `hace ${diffMin} min`;
+	const diffH = Math.floor(diffMin / 60);
+	if (diffH < 24) return `hace ${diffH}h`;
+	const diffD = Math.floor(diffH / 24);
+	return `hace ${diffD}d`;
+}
+
 function fmtNum(n?: number) {
 	if (n == null) return "—";
 	return n.toLocaleString("es-AR");
@@ -123,7 +136,7 @@ function SentenciaRow({ doc, onDetail, onRetry, onRetryOcr }: SentenciaRowProps)
 					)}
 				</Stack>
 				<Typography variant="caption" color="text.secondary" noWrap display="block">
-					{doc.caratula || "Sin carátula"} · {fmtDate(doc.processedAt || doc.detectedAt)}
+					{doc.caratula || "Sin carátula"} · <Tooltip title={fmtDate(doc.processedAt || doc.detectedAt)}><span>{timeAgo(doc.processedAt || doc.detectedAt)}</span></Tooltip>
 				</Typography>
 				<Typography variant="caption" color="text.disabled" sx={{ fontFamily: "monospace", fontSize: 10 }} display="block">
 					{doc._id}
@@ -1058,6 +1071,8 @@ function EmbeddingsSection({ stats, loading, onRefresh, onRetryEmbedding }: {
 }
 
 // ── Lista Section ─────────────────────────────────────────────────────────────
+const LISTA_LIMIT = 10;
+
 function ListaSection() {
 	const [docs, setDocs] = useState<SentenciaCapturada[]>([]);
 	const [total, setTotal] = useState(0);
@@ -1070,7 +1085,7 @@ function ListaSection() {
 	const load = async (p = page, cat = categoryFilter) => {
 		setLoading(true);
 		try {
-			const res = await SentenciasService.findAll({ page: p, limit: 20, category: cat === "all" ? undefined : cat });
+			const res = await SentenciasService.findAll({ page: p, limit: LISTA_LIMIT, category: cat === "all" ? undefined : cat });
 			setDocs(res.data);
 			setTotal(res.total);
 		} finally {
@@ -1082,14 +1097,13 @@ function ListaSection() {
 	useEffect(() => { load(page, categoryFilter); }, [page]);
 
 	const handleDetail = (doc: SentenciaCapturada) => { setSelectedDoc(doc); setDialogOpen(true); };
-	const totalPages = Math.ceil(total / 20);
+	const totalPages = Math.ceil(total / LISTA_LIMIT);
 
 	return (
 		<Stack spacing={2}>
 			<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
 				<Typography variant="h6">Sentencias ({fmtNum(total)})</Typography>
 				<Stack direction="row" spacing={1} alignItems="center">
-					{/* Chips de categoría */}
 					{([["all", "Todas"], ["novelty", "Novelty"], ["rutina", "Rutina"]] as [Category | "all", string][]).map(([val, label]) => (
 						<Chip
 							key={val}
@@ -1106,7 +1120,7 @@ function ListaSection() {
 			</Stack>
 
 			{loading ? (
-				<Stack spacing={1}>{[...Array(5)].map((_, i) => <Skeleton key={i} height={60} variant="rounded" />)}</Stack>
+				<Stack spacing={1}>{[...Array(LISTA_LIMIT)].map((_, i) => <Skeleton key={i} height={60} variant="rounded" />)}</Stack>
 			) : (
 				<Paper variant="outlined" sx={{ p: 1 }}>
 					{docs.map((doc, i) => (
@@ -1119,10 +1133,16 @@ function ListaSection() {
 			)}
 
 			{totalPages > 1 && (
-				<Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
-					<Button size="small" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Anterior</Button>
-					<Typography variant="body2">{page} / {totalPages}</Typography>
-					<Button size="small" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Siguiente</Button>
+				<Stack alignItems="center">
+					<Pagination
+						count={totalPages}
+						page={page}
+						onChange={(_, p) => setPage(p)}
+						size="small"
+						color="primary"
+						showFirstButton
+						showLastButton
+					/>
 				</Stack>
 			)}
 
@@ -1447,9 +1467,17 @@ function CollectorSection() {
 
 // ── Root component ────────────────────────────────────────────────────────────
 
-const SECTIONS = ["Estado", "OCR", "Embeddings", "Novedades", "Collector", "Lista"];
+const SECTIONS = [
+	{ label: "Estado", icon: <Activity size={16} /> },
+	{ label: "OCR", icon: <Scanner size={16} /> },
+	{ label: "Embeddings", icon: <Data size={16} /> },
+	{ label: "Novedades", icon: <TickCircle size={16} /> },
+	{ label: "Collector", icon: <Setting3 size={16} /> },
+	{ label: "Lista", icon: <DocumentText size={16} /> },
+];
 
 export default function SentenciasWorkerTab() {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 	const [section, setSection] = useState(0);
 	const [stats, setStats] = useState<SentenciasStats | null>(null);
@@ -1499,28 +1527,60 @@ export default function SentenciasWorkerTab() {
 	};
 
 	return (
-		<Box>
-			<Tabs value={section} onChange={(_, v) => setSection(v)} sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
-				{SECTIONS.map((s, i) => <Tab key={i} label={s} />)}
-			</Tabs>
-			<TabPanel value={section} index={0}>
-				<EstadoSection stats={stats} loading={loading} onRefresh={loadStats} onRetry={handleRetry} />
-			</TabPanel>
-			<TabPanel value={section} index={1}>
-				<OcrSection stats={stats} loading={loading} onRefresh={loadStats} onRetryOcr={handleRetryOcr} />
-			</TabPanel>
-			<TabPanel value={section} index={2}>
-				<EmbeddingsSection stats={stats} loading={loading} onRefresh={loadStats} onRetryEmbedding={handleRetryEmbedding} />
-			</TabPanel>
-			<TabPanel value={section} index={3}>
-				<NoveltySection stats={stats} loading={loading} onRefresh={loadStats} />
-			</TabPanel>
-			<TabPanel value={section} index={4}>
-				<CollectorSection />
-			</TabPanel>
-			<TabPanel value={section} index={5}>
-				<ListaSection />
-			</TabPanel>
-		</Box>
+		<Stack direction="row" sx={{ minHeight: 500 }}>
+			{/* Vertical tabs on left */}
+			<Box sx={{ borderRight: 1, borderColor: "divider", flexShrink: 0, width: 160, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+				<Tabs
+					orientation="vertical"
+					value={section}
+					onChange={(_, v) => setSection(v)}
+					sx={{
+						"& .MuiTab-root": {
+							alignItems: "flex-start",
+							textAlign: "left",
+							minHeight: 48,
+							pl: 2,
+							textTransform: "none",
+							fontSize: "0.875rem",
+							fontWeight: 500,
+						},
+					}}
+				>
+					{SECTIONS.map((s, i) => (
+						<Tab
+							key={i}
+							label={
+								<Stack direction="row" spacing={1} alignItems="center">
+									<Box sx={{ color: theme.palette.primary.main, display: "flex", flexShrink: 0 }}>{s.icon}</Box>
+									<span>{s.label}</span>
+								</Stack>
+							}
+						/>
+					))}
+				</Tabs>
+			</Box>
+
+			{/* Content on right */}
+			<Box sx={{ flex: 1, minWidth: 0, pl: 3, pt: 1 }}>
+				<TabPanel value={section} index={0}>
+					<EstadoSection stats={stats} loading={loading} onRefresh={loadStats} onRetry={handleRetry} />
+				</TabPanel>
+				<TabPanel value={section} index={1}>
+					<OcrSection stats={stats} loading={loading} onRefresh={loadStats} onRetryOcr={handleRetryOcr} />
+				</TabPanel>
+				<TabPanel value={section} index={2}>
+					<EmbeddingsSection stats={stats} loading={loading} onRefresh={loadStats} onRetryEmbedding={handleRetryEmbedding} />
+				</TabPanel>
+				<TabPanel value={section} index={3}>
+					<NoveltySection stats={stats} loading={loading} onRefresh={loadStats} />
+				</TabPanel>
+				<TabPanel value={section} index={4}>
+					<CollectorSection />
+				</TabPanel>
+				<TabPanel value={section} index={5}>
+					<ListaSection />
+				</TabPanel>
+			</Box>
+		</Stack>
 	);
 }
