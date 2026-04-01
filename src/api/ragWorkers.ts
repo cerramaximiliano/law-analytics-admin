@@ -557,6 +557,15 @@ export interface EscritosSearchMeta {
 	total: number;
 }
 
+// ─── Sentencias Worker types ──────────────────────────────────────────────────
+
+export interface SentenciasWorkerConfig {
+	enabled: boolean;
+	batchSize: number;
+	embedBatchSize: number;
+	cronPattern: string;
+}
+
 // ─── Style Corpus types ───────────────────────────────────────────────────────
 
 export interface StyleCorpusExample {
@@ -853,6 +862,18 @@ class RagWorkersService {
 	): Promise<{ data: EscritosSearchResult[]; meta: EscritosSearchMeta }> {
 		const res = await ragAxios.get(`${BASE}/escritos-worker/search`, { params: { q, ...opts } });
 		return { data: res.data.data ?? [], meta: res.data.meta };
+	}
+
+	// ── Sentencias Worker ───────────────────────────────────────────────────
+
+	static async getSentenciasWorkerConfig(): Promise<SentenciasWorkerConfig> {
+		const res = await ragAxios.get(`${BASE}/sentencias-worker/config`);
+		return res.data.data;
+	}
+
+	static async updateSentenciasWorkerConfig(data: Partial<SentenciasWorkerConfig>): Promise<SentenciasWorkerConfig> {
+		const res = await ragAxios.patch(`${BASE}/sentencias-worker/config`, data);
+		return res.data.data;
 	}
 
 	// ── Style Corpus ────────────────────────────────────────────────────────
