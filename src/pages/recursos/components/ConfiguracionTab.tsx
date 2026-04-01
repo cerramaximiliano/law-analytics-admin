@@ -17,12 +17,14 @@ import {
 	FormControlLabel,
 	Divider,
 	Chip,
+	Tooltip,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
-import { Refresh, Setting2, Timer1, Activity, Warning2 } from "iconsax-react";
+import { Refresh, Setting2, Activity, Warning2, ArrowRight, RotateLeft } from "iconsax-react";
 import legalAxios from "utils/legalAxios";
 
-// Tipos
+// ─── Tipos ────────────────────────────────────────────────────────────────────
+
 interface Patron {
 	letras: string;
 	numeros: string;
@@ -36,6 +38,18 @@ interface RangoCodigo {
 	actualizadoPor?: string;
 }
 
+interface Frontier {
+	ultimoPrefijoConResultados?: string;
+	bufferPrefijos: number;
+}
+
+interface Rescan {
+	habilitado: boolean;
+	intervaloDias: number;
+	ultimaEjecucion?: string | null;
+	batchSize: number;
+}
+
 interface Estadisticas {
 	totalCodigosRastreados: number;
 	codigosValidosEncontrados: number;
@@ -43,19 +57,14 @@ interface Estadisticas {
 	duracionUltimaEjecucion: number | null;
 }
 
-interface UltimoError {
-	mensaje: string;
-	fecha: string;
-}
-
 interface EstadoWorker {
 	activo: boolean;
 	enEjecucion: boolean;
-	ultimoError: UltimoError | null;
+	ultimoError: { mensaje: string; fecha: string } | null;
 }
 
 interface Configuracion {
-	estrategia: "secuencial" | "inteligente" | "manual";
+	estrategia: "frontier" | "secuencial" | "inteligente" | "manual";
 	batchSize: number;
 	pausaEntreBatches: number;
 	codigosPorEjecucion: number;
@@ -67,6 +76,8 @@ interface RastreoConfig {
 	rangoInicio: RangoCodigo;
 	ultimoCodigoRastreado: RangoCodigo;
 	rangoLimite: RangoCodigo;
+	frontier: Frontier;
+	rescan: Rescan;
 	estadisticas: Estadisticas;
 	estadoWorker: EstadoWorker;
 	configuracion: Configuracion;
@@ -80,105 +91,116 @@ interface ConfigResponse {
 	message?: string;
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const siguientePrefijo = (prefijo: string): string => {
+	let codigo = 0;
+	for (let i = 0; i < prefijo.length; i++) {
+		codigo = codigo * 26 + (prefijo.charCodeAt(i) - 65);
+	}
+	codigo++;
+	let resultado = "";
+	for (let i = 0; i < prefijo.length; i++) {
+		resultado = String.fromCharCode(65 + (codigo % 26)) + resultado;
+		codigo = Math.floor(codigo / 26);
+	}
+	return resultado;
+};
+
+const calcularCeiling = (base: string, buffer: number): string => {
+	let prefijo = base;
+	for (let i = 0; i < buffer; i++) {
+		prefijo = siguientePrefijo(prefijo);
+	}
+	return prefijo;
+};
+
+// ─── Componente ───────────────────────────────────────────────────────────────
+
 const ConfiguracionTab = () => {
 	const { enqueueSnackbar } = useSnackbar();
 
-	// Estados
 	const [config, setConfig] = useState<RastreoConfig | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
 
-	// Estados para edición
-	const [rangoInicio, setRangoInicio] = useState("");
-	const [estrategia, setEstrategia] = useState<"secuencial" | "inteligente" | "manual">("secuencial");
+	// Campos editables — Ejecución
+	const [estrategia, setEstrategia] = useState<Configuracion["estrategia"]>("frontier");
 	const [batchSize, setBatchSize] = useState(100);
 	const [pausaEntreBatches, setPausaEntreBatches] = useState(5000);
-	const [codigosPorEjecucion, setCodigosPorEjecucion] = useState(1000);
+	const [codigosPorEjecucion, setCodigosPorEjecucion] = useState(2500);
 	const [workerActivo, setWorkerActivo] = useState(false);
 
-	// Cargar configuración
+	// Campos editables — Rango inicio
+	const [rangoInicio, setRangoInicio] = useState("");
+
+	// Campos editables — Frontier
+	const [bufferPrefijos, setBufferPrefijos] = useState(5);
+
+	// Campos editables — Rescan
+	const [rescanHabilitado, setRescanHabilitado] = useState(true);
+	const [rescanIntervaloDias, setRescanIntervaloDias] = useState(30);
+	const [rescanBatchSize, setRescanBatchSize] = useState(200);
+
 	const fetchConfig = async () => {
 		try {
 			setLoading(true);
-
 			const response = await legalAxios.get<ConfigResponse>("/api/admin/rastreo/config");
-
 			if (response.data.success) {
 				const data = response.data.data;
 				setConfig(data);
-
-				// Establecer valores en los campos editables
 				setRangoInicio(data.rangoInicio?.codigo || "");
-				setEstrategia(data.configuracion?.estrategia || "secuencial");
+				setEstrategia(data.configuracion?.estrategia || "frontier");
 				setBatchSize(data.configuracion?.batchSize || 100);
 				setPausaEntreBatches(data.configuracion?.pausaEntreBatches || 5000);
-				setCodigosPorEjecucion(data.configuracion?.codigosPorEjecucion || 1000);
+				setCodigosPorEjecucion(data.configuracion?.codigosPorEjecucion || 2500);
 				setWorkerActivo(data.estadoWorker?.activo || false);
+				setBufferPrefijos(data.frontier?.bufferPrefijos ?? 5);
+				setRescanHabilitado(data.rescan?.habilitado ?? true);
+				setRescanIntervaloDias(data.rescan?.intervaloDias ?? 30);
+				setRescanBatchSize(data.rescan?.batchSize ?? 200);
 			}
 		} catch (error: any) {
-			console.error("Error al cargar configuración:", error);
 			enqueueSnackbar(error?.response?.data?.error || "Error al cargar la configuración", { variant: "error" });
 		} finally {
 			setLoading(false);
 		}
 	};
 
-	// Guardar configuración
 	const handleSave = async () => {
 		try {
 			setSaving(true);
-
-			const payload: any = {
-				rangoInicio: rangoInicio,
-				configuracion: {
-					estrategia,
-					batchSize,
-					pausaEntreBatches,
-					codigosPorEjecucion,
-				},
-				estadoWorker: {
-					activo: workerActivo,
-				},
+			const payload = {
+				rangoInicio,
+				configuracion: { estrategia, batchSize, pausaEntreBatches, codigosPorEjecucion },
+				estadoWorker: { activo: workerActivo },
+				frontier: { bufferPrefijos },
+				rescan: { habilitado: rescanHabilitado, intervaloDias: rescanIntervaloDias, batchSize: rescanBatchSize },
 			};
-
 			const response = await legalAxios.put<ConfigResponse>("/api/admin/rastreo/config", payload);
-
 			if (response.data.success) {
-				enqueueSnackbar(response.data.message || "Configuración guardada correctamente", { variant: "success" });
+				enqueueSnackbar(response.data.message || "Configuración guardada", { variant: "success" });
 				setConfig(response.data.data);
 			}
 		} catch (error: any) {
-			console.error("Error al guardar configuración:", error);
-			enqueueSnackbar(error?.response?.data?.error || "Error al guardar la configuración", { variant: "error" });
+			enqueueSnackbar(error?.response?.data?.error || "Error al guardar", { variant: "error" });
 		} finally {
 			setSaving(false);
 		}
 	};
 
-	// Efectos
-	useEffect(() => {
-		fetchConfig();
-	}, []);
+	useEffect(() => { fetchConfig(); }, []);
 
-	// Formatear fecha
-	const formatDate = (dateString: string | null | undefined) => {
-		if (!dateString) return "-";
-		const date = new Date(dateString);
-		return date.toLocaleDateString("es-AR", {
-			year: "numeric",
-			month: "2-digit",
-			day: "2-digit",
-			hour: "2-digit",
-			minute: "2-digit",
-		});
+	const formatDate = (d?: string | null) => {
+		if (!d) return "-";
+		return new Date(d).toLocaleDateString("es-AR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
 	};
 
-	// Formatear duración
-	const formatDuration = (seconds: number | null | undefined) => {
-		if (!seconds) return "-";
-		if (seconds < 60) return `${seconds} seg`;
-		if (seconds < 3600) return `${Math.floor(seconds / 60)} min ${seconds % 60} seg`;
-		return `${Math.floor(seconds / 3600)} h ${Math.floor((seconds % 3600) / 60)} min`;
+	const formatDuration = (s?: number | null) => {
+		if (!s) return "-";
+		if (s < 60) return `${s} seg`;
+		if (s < 3600) return `${Math.floor(s / 60)} min ${s % 60} seg`;
+		return `${Math.floor(s / 3600)} h ${Math.floor((s % 3600) / 60)} min`;
 	};
 
 	if (loading) {
@@ -190,16 +212,18 @@ const ConfiguracionTab = () => {
 	}
 
 	if (!config) {
-		return (
-			<Box p={4}>
-				<Alert severity="warning">No se pudo cargar la configuración de rastreo.</Alert>
-			</Box>
-		);
+		return <Box p={4}><Alert severity="warning">No se pudo cargar la configuración de rastreo.</Alert></Box>;
 	}
+
+	const frontierBase = config.frontier?.ultimoPrefijoConResultados || config.rangoInicio?.patron?.letras || "AAAA";
+	const frontierCeiling = calcularCeiling(frontierBase, bufferPrefijos);
+	const prefijoActual = config.ultimoCodigoRastreado?.patron?.letras;
+	const hayMas = prefijoActual ? prefijoActual <= frontierCeiling : true;
 
 	return (
 		<Stack spacing={3}>
-			{/* Header con acciones */}
+
+			{/* Header */}
 			<Stack direction="row" justifyContent="space-between" alignItems="center">
 				<Typography variant="h5">Configuración de Rastreo de Códigos</Typography>
 				<Stack direction="row" spacing={2}>
@@ -226,9 +250,7 @@ const ConfiguracionTab = () => {
 						/>
 					</Grid>
 					<Grid item xs={12} md={4}>
-						<Typography variant="caption" color="text.secondary">
-							En Ejecución
-						</Typography>
+						<Typography variant="caption" color="text.secondary">En Ejecución</Typography>
 						<Box>
 							<Chip
 								label={config.estadoWorker?.enEjecucion ? "Ejecutando" : "Detenido"}
@@ -238,9 +260,7 @@ const ConfiguracionTab = () => {
 						</Box>
 					</Grid>
 					<Grid item xs={12} md={4}>
-						<Typography variant="caption" color="text.secondary">
-							Estado Actual en BD
-						</Typography>
+						<Typography variant="caption" color="text.secondary">Estado en BD</Typography>
 						<Box>
 							<Chip
 								label={config.estadoWorker?.activo ? "Activo" : "Inactivo"}
@@ -250,16 +270,98 @@ const ConfiguracionTab = () => {
 						</Box>
 					</Grid>
 				</Grid>
-
 				{config.estadoWorker?.ultimoError && (
 					<Alert severity="error" icon={<Warning2 />} sx={{ mt: 2 }}>
 						<Typography variant="subtitle2">Último Error:</Typography>
 						<Typography variant="body2">{config.estadoWorker.ultimoError.mensaje}</Typography>
-						<Typography variant="caption" color="text.secondary">
-							{formatDate(config.estadoWorker.ultimoError.fecha)}
-						</Typography>
+						<Typography variant="caption" color="text.secondary">{formatDate(config.estadoWorker.ultimoError.fecha)}</Typography>
 					</Alert>
 				)}
+			</Card>
+
+			{/* Frontier Dinámico */}
+			<Card sx={{ p: 3 }}>
+				<Stack direction="row" alignItems="center" gap={1} mb={1}>
+					<ArrowRight size={24} />
+					<Typography variant="h6">Frontier Dinámico</Typography>
+					<Tooltip title="El discovery avanza de forma autónoma. El techo se expande automáticamente cuando encuentra PDFs válidos en prefijos nuevos.">
+						<Chip label="Opción C" size="small" color="primary" variant="outlined" sx={{ ml: 1 }} />
+					</Tooltip>
+				</Stack>
+				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+					El techo de exploración = último prefijo con resultados + buffer. No depende del scraping worker.
+				</Typography>
+				<Grid container spacing={3} alignItems="center">
+					<Grid item xs={12} md={3}>
+						<Typography variant="caption" color="text.secondary">Último prefijo con resultados</Typography>
+						<Typography variant="h5" fontFamily="monospace" color="success.main">
+							{config.frontier?.ultimoPrefijoConResultados || "-"}
+						</Typography>
+					</Grid>
+					<Grid item xs={12} md={1} sx={{ textAlign: "center" }}>
+						<Typography variant="h5" color="text.disabled">+</Typography>
+					</Grid>
+					<Grid item xs={12} md={3}>
+						<TextField
+							fullWidth
+							type="number"
+							label="Buffer de prefijos"
+							value={bufferPrefijos}
+							onChange={(e) => setBufferPrefijos(Math.max(1, parseInt(e.target.value, 10) || 1))}
+							helperText="Prefijos a explorar más allá del último exitoso"
+							inputProps={{ min: 1, max: 20 }}
+						/>
+					</Grid>
+					<Grid item xs={12} md={1} sx={{ textAlign: "center" }}>
+						<Typography variant="h5" color="text.disabled">=</Typography>
+					</Grid>
+					<Grid item xs={12} md={4}>
+						<Typography variant="caption" color="text.secondary">Ceiling actual</Typography>
+						<Typography variant="h5" fontFamily="monospace" color={hayMas ? "warning.main" : "text.disabled"}>
+							{frontierCeiling}
+						</Typography>
+						<Chip
+							label={hayMas ? "Hay prefijos por explorar" : "Frontier alcanzado"}
+							size="small"
+							color={hayMas ? "warning" : "default"}
+							sx={{ mt: 0.5 }}
+						/>
+					</Grid>
+				</Grid>
+				<Divider sx={{ my: 2 }} />
+				<Grid container spacing={3}>
+					<Grid item xs={12} md={4}>
+						<Typography variant="caption" color="text.secondary">Desde (último rastreado)</Typography>
+						<Typography variant="h6" fontFamily="monospace">
+							{config.ultimoCodigoRastreado?.codigo || "-"}
+						</Typography>
+						<Typography variant="caption" color="text.secondary">
+							{formatDate(config.ultimoCodigoRastreado?.fechaRastreo)}
+						</Typography>
+					</Grid>
+					<Grid item xs={12} md={4}>
+						<Typography variant="caption" color="text.secondary">Rango inicio (manual)</Typography>
+						<Box mt={0.5}>
+							<TextField
+								size="small"
+								label="Inicio"
+								value={rangoInicio}
+								onChange={(e) => setRangoInicio(e.target.value.toUpperCase())}
+								helperText="Formato: AAAA00"
+								inputProps={{ maxLength: 6 }}
+							/>
+						</Box>
+					</Grid>
+					<Grid item xs={12} md={4}>
+						<Typography variant="caption" color="text.secondary">Rango límite (scraping worker)</Typography>
+						<Typography variant="h6" fontFamily="monospace" color="text.secondary">
+							{config.rangoLimite?.codigo || "-"}
+						</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Referencia — ya no controla el discovery
+						</Typography>
+					</Grid>
+				</Grid>
 			</Card>
 
 			{/* Configuración de Ejecución */}
@@ -272,16 +374,23 @@ const ConfiguracionTab = () => {
 					<Grid item xs={12} md={6}>
 						<FormControl fullWidth>
 							<InputLabel>Estrategia</InputLabel>
-							<Select
-								value={estrategia}
-								onChange={(e) => setEstrategia(e.target.value as "secuencial" | "inteligente" | "manual")}
-								label="Estrategia"
-							>
+							<Select value={estrategia} onChange={(e) => setEstrategia(e.target.value as Configuracion["estrategia"])} label="Estrategia">
+								<MenuItem value="frontier">Frontier Dinámico (recomendado)</MenuItem>
 								<MenuItem value="secuencial">Secuencial</MenuItem>
 								<MenuItem value="inteligente">Inteligente</MenuItem>
 								<MenuItem value="manual">Manual</MenuItem>
 							</Select>
 						</FormControl>
+					</Grid>
+					<Grid item xs={12} md={6}>
+						<TextField
+							fullWidth
+							type="number"
+							label="Códigos por Ejecución"
+							value={codigosPorEjecucion}
+							onChange={(e) => setCodigosPorEjecucion(parseInt(e.target.value, 10) || 0)}
+							helperText="Límite de códigos a verificar por run"
+						/>
 					</Grid>
 					<Grid item xs={12} md={6}>
 						<TextField
@@ -300,65 +409,60 @@ const ConfiguracionTab = () => {
 							label="Pausa entre Batches (ms)"
 							value={pausaEntreBatches}
 							onChange={(e) => setPausaEntreBatches(parseInt(e.target.value, 10) || 0)}
-							helperText="Tiempo de espera entre lotes en milisegundos"
-						/>
-					</Grid>
-					<Grid item xs={12} md={6}>
-						<TextField
-							fullWidth
-							type="number"
-							label="Códigos por Ejecución"
-							value={codigosPorEjecucion}
-							onChange={(e) => setCodigosPorEjecucion(parseInt(e.target.value, 10) || 0)}
-							helperText="Límite de códigos a procesar por ejecución"
+							helperText="Tiempo de espera entre lotes"
 						/>
 					</Grid>
 				</Grid>
 			</Card>
 
-			{/* Rangos de Códigos */}
+			{/* Re-scan Periódico */}
 			<Card sx={{ p: 3 }}>
-				<Stack direction="row" alignItems="center" gap={1} mb={2}>
-					<Timer1 size={24} />
-					<Typography variant="h6">Rangos de Códigos</Typography>
+				<Stack direction="row" alignItems="center" gap={1} mb={1}>
+					<RotateLeft size={24} />
+					<Typography variant="h6">Re-scan Periódico de Inválidos</Typography>
 				</Stack>
+				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+					Re-verifica códigos marcados como inválidos. Útil porque eldial puede asignar nuevos PDFs a códigos que antes devolvían 404.
+				</Typography>
 				<Grid container spacing={3}>
-					<Grid item xs={12} md={4}>
-						<TextField
-							fullWidth
-							label="Rango de Inicio"
-							value={rangoInicio}
-							onChange={(e) => setRangoInicio(e.target.value.toUpperCase())}
-							helperText="Formato: AAAA00 (4 letras + 2 números)"
-							inputProps={{ maxLength: 6 }}
+					<Grid item xs={12} md={3}>
+						<FormControlLabel
+							control={<Switch checked={rescanHabilitado} onChange={(e) => setRescanHabilitado(e.target.checked)} color="primary" />}
+							label="Habilitado"
 						/>
 					</Grid>
-					<Grid item xs={12} md={4}>
-						<Typography variant="caption" color="text.secondary">
-							Último Código Rastreado
-						</Typography>
-						<Typography variant="h6">{config.ultimoCodigoRastreado?.codigo || "-"}</Typography>
-						<Typography variant="caption" color="text.secondary">
-							{formatDate(config.ultimoCodigoRastreado?.fechaRastreo)}
-						</Typography>
+					<Grid item xs={12} md={3}>
+						<TextField
+							fullWidth
+							type="number"
+							label="Intervalo (días)"
+							value={rescanIntervaloDias}
+							onChange={(e) => setRescanIntervaloDias(Math.max(1, parseInt(e.target.value, 10) || 1))}
+							helperText="Re-verificar inválidos de más de N días"
+							disabled={!rescanHabilitado}
+						/>
 					</Grid>
-					<Grid item xs={12} md={4}>
-						<Typography variant="caption" color="text.secondary">
-							Rango Límite
-						</Typography>
-						<Typography variant="h6">{config.rangoLimite?.codigo || "-"}</Typography>
-						<Typography variant="caption" color="text.secondary">
-							Actualizado: {formatDate(config.rangoLimite?.fechaActualizacion)}
-						</Typography>
+					<Grid item xs={12} md={3}>
+						<TextField
+							fullWidth
+							type="number"
+							label="Batch Size"
+							value={rescanBatchSize}
+							onChange={(e) => setRescanBatchSize(parseInt(e.target.value, 10) || 0)}
+							helperText="Inválidos a re-verificar por run"
+							disabled={!rescanHabilitado}
+						/>
+					</Grid>
+					<Grid item xs={12} md={3}>
+						<Typography variant="caption" color="text.secondary">Última Ejecución</Typography>
+						<Typography variant="body2">{formatDate(config.rescan?.ultimaEjecucion)}</Typography>
 					</Grid>
 				</Grid>
 			</Card>
 
 			{/* Estadísticas */}
 			<Card sx={{ p: 3 }}>
-				<Typography variant="h6" gutterBottom>
-					Estadísticas
-				</Typography>
+				<Typography variant="h6" gutterBottom>Estadísticas</Typography>
 				<Divider sx={{ mb: 2 }} />
 				<Grid container spacing={3}>
 					<Grid item xs={6} md={3}>
@@ -366,9 +470,7 @@ const ConfiguracionTab = () => {
 							<Typography variant="h4" color="primary.main">
 								{config.estadisticas?.totalCodigosRastreados?.toLocaleString() || 0}
 							</Typography>
-							<Typography variant="caption" color="text.secondary">
-								Total Códigos Rastreados
-							</Typography>
+							<Typography variant="caption" color="text.secondary">Total Rastreados</Typography>
 						</Card>
 					</Grid>
 					<Grid item xs={6} md={3}>
@@ -376,9 +478,7 @@ const ConfiguracionTab = () => {
 							<Typography variant="h4" color="success.main">
 								{config.estadisticas?.codigosValidosEncontrados?.toLocaleString() || 0}
 							</Typography>
-							<Typography variant="caption" color="text.secondary">
-								Códigos Válidos Encontrados
-							</Typography>
+							<Typography variant="caption" color="text.secondary">PDFs Válidos Encontrados</Typography>
 						</Card>
 					</Grid>
 					<Grid item xs={6} md={3}>
@@ -386,9 +486,7 @@ const ConfiguracionTab = () => {
 							<Typography variant="body1" color="info.main" fontWeight={600}>
 								{formatDate(config.estadisticas?.ultimaEjecucion)}
 							</Typography>
-							<Typography variant="caption" color="text.secondary">
-								Última Ejecución
-							</Typography>
+							<Typography variant="caption" color="text.secondary">Última Ejecución</Typography>
 						</Card>
 					</Grid>
 					<Grid item xs={6} md={3}>
@@ -396,43 +494,32 @@ const ConfiguracionTab = () => {
 							<Typography variant="body1" color="warning.main" fontWeight={600}>
 								{formatDuration(config.estadisticas?.duracionUltimaEjecucion)}
 							</Typography>
-							<Typography variant="caption" color="text.secondary">
-								Duración Última Ejecución
-							</Typography>
+							<Typography variant="caption" color="text.secondary">Duración Última Ejecución</Typography>
 						</Card>
 					</Grid>
 				</Grid>
 			</Card>
 
-			{/* Información del Sistema */}
+			{/* Info del Sistema */}
 			<Card sx={{ p: 3 }}>
-				<Typography variant="h6" gutterBottom>
-					Información del Sistema
-				</Typography>
+				<Typography variant="h6" gutterBottom>Información del Sistema</Typography>
 				<Divider sx={{ mb: 2 }} />
 				<Grid container spacing={2}>
 					<Grid item xs={12} md={6}>
-						<Typography variant="caption" color="text.secondary">
-							ID de Configuración
-						</Typography>
-						<Typography variant="body2" fontFamily="monospace">
-							{config._id}
-						</Typography>
+						<Typography variant="caption" color="text.secondary">ID de Configuración</Typography>
+						<Typography variant="body2" fontFamily="monospace">{config._id}</Typography>
 					</Grid>
 					<Grid item xs={12} md={3}>
-						<Typography variant="caption" color="text.secondary">
-							Creado
-						</Typography>
+						<Typography variant="caption" color="text.secondary">Creado</Typography>
 						<Typography variant="body2">{formatDate(config.createdAt)}</Typography>
 					</Grid>
 					<Grid item xs={12} md={3}>
-						<Typography variant="caption" color="text.secondary">
-							Última Actualización
-						</Typography>
+						<Typography variant="caption" color="text.secondary">Última Actualización</Typography>
 						<Typography variant="body2">{formatDate(config.updatedAt)}</Typography>
 					</Grid>
 				</Grid>
 			</Card>
+
 		</Stack>
 	);
 };
