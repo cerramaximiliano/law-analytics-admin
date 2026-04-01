@@ -35,13 +35,12 @@ import {
 	useTheme,
 	alpha,
 } from "@mui/material";
-import { Refresh, TickCircle, CloseCircle, SearchNormal1, Setting2, DocumentText, Folder2 } from "iconsax-react";
+import { Refresh, TickCircle, CloseCircle, SearchNormal1, Setting2, DocumentText } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import RagWorkersService, {
 	EscritosWorkerConfig,
 	EscritosWorkerStats,
 	GlobalDocumentEntry,
-	EscritosCausa,
 	EscritosSearchResult,
 } from "api/ragWorkers";
 
@@ -375,130 +374,6 @@ function DocumentosSection() {
 	);
 }
 
-// ── Tab: Causas ──────────────────────────────────────────────────────────────
-
-function CausasSection() {
-	const { enqueueSnackbar } = useSnackbar();
-	const [causas, setCausas] = useState<EscritosCausa[]>([]);
-	const [total, setTotal] = useState(0);
-	const [loading, setLoading] = useState(true);
-	const [filterFuero, setFilterFuero] = useState("");
-	const [filterStatus, setFilterStatus] = useState("all");
-	const [page, setPage] = useState(1);
-	const limit = 10;
-
-	const load = useCallback(async () => {
-		setLoading(true);
-		try {
-			const data = await RagWorkersService.getEscritosWorkerCausas({ fuero: filterFuero || undefined, status: filterStatus, page, limit });
-			setCausas(data.causas); setTotal(data.pagination.total);
-		} catch { enqueueSnackbar("Error al cargar causas", { variant: "error" }); }
-		finally { setLoading(false); }
-	}, [filterFuero, filterStatus, page, enqueueSnackbar]);
-
-	useEffect(() => { load(); }, [load]);
-
-	return (
-		<Stack spacing={3}>
-			<Stack direction="row" justifyContent="space-between" alignItems="center">
-				<Typography variant="subtitle2" fontWeight={600}>Causas con documentos procesados</Typography>
-				<Stack direction="row" spacing={1}>
-					<FormControl size="small" sx={{ minWidth: 130 }}>
-						<InputLabel>Estado causa</InputLabel>
-						<Select value={filterStatus} label="Estado causa" onChange={e => { setFilterStatus(e.target.value); setPage(1); }}>
-							<MenuItem value="all">Todas</MenuItem>
-							<MenuItem value="complete">Completas</MenuItem>
-							<MenuItem value="partial">Parciales</MenuItem>
-							<MenuItem value="error">Con error</MenuItem>
-						</Select>
-					</FormControl>
-					<FormControl size="small" sx={{ minWidth: 110 }}>
-						<InputLabel>Fuero</InputLabel>
-						<Select value={filterFuero} label="Fuero" onChange={e => { setFilterFuero(e.target.value); setPage(1); }}>
-							<MenuItem value="">Todos</MenuItem>
-							{ALL_FUEROS.map(f => <MenuItem key={f} value={f}>{FUERO_LABELS[f]}</MenuItem>)}
-						</Select>
-					</FormControl>
-					<Button size="small" startIcon={<Refresh size={16} />} onClick={load} variant="outlined">Actualizar</Button>
-				</Stack>
-			</Stack>
-
-			{loading ? <Skeleton variant="rounded" height={300} /> : (
-				<>
-					<TableContainer component={Paper} variant="outlined">
-						<Table size="small">
-							<TableHead>
-								<TableRow>
-									<TableCell>Causa ID</TableCell>
-									<TableCell>Fuero</TableCell>
-									<TableCell>Tipos de doc.</TableCell>
-									<TableCell align="right">Total docs</TableCell>
-									<TableCell>Progreso</TableCell>
-									<TableCell align="right">Errores</TableCell>
-									<TableCell>Novelty</TableCell>
-									<TableCell>Última act.</TableCell>
-								</TableRow>
-							</TableHead>
-							<TableBody>
-								{causas.length === 0 ? (
-									<TableRow><TableCell colSpan={7} align="center"><Typography variant="body2" color="text.secondary" py={2}>No hay causas</Typography></TableCell></TableRow>
-								) : causas.map(c => {
-									const pct = c.total > 0 ? Math.round((c.embedded / c.total) * 100) : 0;
-									const complete = c.embedded === c.total && c.total > 0;
-									return (
-										<TableRow key={c._id} hover>
-											<TableCell><Typography variant="caption" sx={{ fontFamily: "monospace" }}>{String(c._id).slice(-8)}</Typography></TableCell>
-											<TableCell><Chip label={c.fuero || "-"} size="small" variant="outlined" /></TableCell>
-											<TableCell>
-												<Stack direction="row" spacing={0.5} flexWrap="wrap">
-													{(c.docTypes || []).filter(Boolean).map(dt => <Chip key={dt} label={dt} size="small" sx={{ fontSize: "0.65rem", height: 18 }} />)}
-												</Stack>
-											</TableCell>
-											<TableCell align="right"><Typography variant="caption">{c.total}</Typography></TableCell>
-											<TableCell sx={{ minWidth: 130 }}>
-												<Stack spacing={0.5}>
-													<LinearProgress variant="determinate" value={pct} color={complete ? "success" : c.error > 0 ? "warning" : "primary"} sx={{ height: 6, borderRadius: 3 }} />
-													<Typography variant="caption" color="text.secondary">{c.embedded}/{c.total} ({pct}%)</Typography>
-												</Stack>
-											</TableCell>
-											<TableCell align="right">
-												{c.error > 0 ? <Chip label={c.error} size="small" color="error" /> : <Typography variant="caption" color="text.secondary">-</Typography>}
-											</TableCell>
-											<TableCell>
-												{c.maxNovelty != null ? (() => {
-													const alerts = c.noveltyAlertCount || 0;
-													const reviews = c.noveltyReviewCount || 0;
-													const routines = c.noveltyRoutineCount || 0;
-													const topLabel = alerts > 0 ? "alert" : reviews > 0 ? "review" : "routine";
-													const color = topLabel === "alert" ? "error" : topLabel === "review" ? "warning" : "default";
-													return (
-														<Tooltip title={`Max: ${c.maxNovelty.toFixed(3)} · Avg: ${c.avgNovelty?.toFixed(3)} · alert:${alerts} review:${reviews} routine:${routines}`}>
-															<Chip label={`${topLabel} ${c.maxNovelty.toFixed(2)}`} size="small" color={color as any} variant={topLabel === "routine" ? "outlined" : "filled"} sx={{ fontSize: "0.65rem", height: 18 }} />
-														</Tooltip>
-													);
-												})() : <Typography variant="caption" color="text.secondary">-</Typography>}
-											</TableCell>
-											<TableCell><Typography variant="caption">{fmtDate(c.lastUpdated)}</Typography></TableCell>
-										</TableRow>
-									);
-								})}
-							</TableBody>
-						</Table>
-					</TableContainer>
-					<Stack direction="row" justifyContent="space-between" alignItems="center">
-						<Typography variant="caption" color="text.secondary">{total.toLocaleString("es-AR")} causas</Typography>
-						<Stack direction="row" spacing={1} alignItems="center">
-							<Button size="small" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Anterior</Button>
-							<Typography variant="caption">Pág. {page}</Typography>
-							<Button size="small" disabled={page * limit >= total} onClick={() => setPage(p => p + 1)}>Siguiente</Button>
-						</Stack>
-					</Stack>
-				</>
-			)}
-		</Stack>
-	);
-}
-
 // ── Tab: Búsqueda ────────────────────────────────────────────────────────────
 
 function BusquedaSection() {
@@ -651,7 +526,6 @@ const EscritosWorkerTab: React.FC = () => {
 
 	const TABS = [
 		{ value: "documentos", label: "Documentos", icon: <DocumentText size={18} /> },
-		{ value: "causas",     label: "Causas",     icon: <Folder2 size={18} /> },
 		{ value: "busqueda",   label: "Búsqueda",   icon: <SearchNormal1 size={18} /> },
 		{ value: "config",     label: "Config",     icon: <Setting2 size={18} /> },
 	];
@@ -678,7 +552,6 @@ const EscritosWorkerTab: React.FC = () => {
 
 					<Box sx={{ p: { xs: 2, md: 3 } }}>
 						{tab === "documentos" && <DocumentosSection />}
-						{tab === "causas"     && <CausasSection />}
 						{tab === "busqueda"   && <BusquedaSection />}
 						{tab === "config"     && <ConfigSection />}
 					</Box>
