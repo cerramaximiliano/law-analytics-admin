@@ -31,6 +31,7 @@ import SentenciasService, { Category, EmbeddingStatus, NoveltyCheckStatus, OcrSt
 import CollectorService, { CollectorConfig, FueroConfig } from "api/sentenciasCollector";
 import SemanticWorkerService, { SemanticWorkerConfig } from "api/semanticWorker";
 import RagWorkersService from "api/ragWorkers";
+import WorkerControlPanel from "components/WorkerControlPanel";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -306,14 +307,11 @@ function TabPanel({ children, value, index }: TabPanelProps) {
 const CATEGORY_COLOR: Record<Category, string> = { novelty: "#7b1fa2", rutina: "#1565c0" };
 const CATEGORY_LABEL: Record<Category, string> = { novelty: "Novelty", rutina: "Rutina" };
 
-function EstadoSection({ stats, loading, onRefresh, onRetry, workerEnabled, onToggleEnabled, togglingEnabled }: {
+function EstadoSection({ stats, loading, onRefresh, onRetry }: {
 	stats: SentenciasStats | null;
 	loading: boolean;
 	onRefresh: () => void;
 	onRetry: (id: string) => void;
-	workerEnabled: boolean | null;
-	onToggleEnabled: (val: boolean) => void;
-	togglingEnabled: boolean;
 }) {
 	const theme = useTheme();
 	const [selectedDoc, setSelectedDoc] = useState<SentenciaCapturada | null>(null);
@@ -324,7 +322,6 @@ function EstadoSection({ stats, loading, onRefresh, onRetry, workerEnabled, onTo
 	const processed = stats?.totals.processed || 0;
 	const total = stats?.totals.total || 0;
 	const pct = total > 0 ? Math.round((processed / total) * 100) : 0;
-	const enabled = workerEnabled ?? true;
 
 	return (
 		<Stack spacing={3}>
@@ -334,19 +331,6 @@ function EstadoSection({ stats, loading, onRefresh, onRetry, workerEnabled, onTo
 					Actualizar
 				</Button>
 			</Stack>
-
-			{/* Enable/disable toggle */}
-			<Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${enabled ? alpha(theme.palette.success.main, 0.4) : alpha(theme.palette.error.main, 0.4)}`, bgcolor: enabled ? alpha(theme.palette.success.main, 0.04) : alpha(theme.palette.error.main, 0.04) }}>
-				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Box>
-						<Typography fontWeight={600}>{enabled ? "Workers de sentencias habilitados" : "Workers de sentencias deshabilitados"}</Typography>
-						<Typography variant="caption" color="text.secondary">
-							Controla sentencias-worker (PDF/OCR) y sentencias-embeddings-worker. El cambio aplica en el próximo ciclo cron.
-						</Typography>
-					</Box>
-					<Switch checked={enabled} onChange={e => onToggleEnabled(e.target.checked)} disabled={togglingEnabled || workerEnabled === null} />
-				</Stack>
-			</Box>
 
 			{loading && !stats ? (
 				<Grid container spacing={2}>{[...Array(6)].map((_, i) => <Grid item xs={6} sm={4} md={2} key={i}><Skeleton height={80} variant="rounded" /></Grid>)}</Grid>
@@ -1505,8 +1489,14 @@ export default function SentenciasWorkerTab() {
 	const [section, setSection] = useState(0);
 	const [stats, setStats] = useState<SentenciasStats | null>(null);
 	const [loading, setLoading] = useState(false);
-	const [workerEnabled, setWorkerEnabled] = useState<boolean | null>(null);
-	const [togglingEnabled, setTogglingEnabled] = useState(false);
+
+	// ── Worker control state ──────────────────────────────────────────────────
+	const [embEnabled,       setEmbEnabled]       = useState<boolean | null>(null);
+	const [collectorEnabled, setCollectorEnabled] = useState<boolean | null>(null);
+	const [semanticEnabled,  setSemanticEnabled]  = useState<boolean | null>(null);
+	const [togglingEmb,       setTogglingEmb]       = useState(false);
+	const [togglingCollector, setTogglingCollector] = useState(false);
+	const [togglingSemantic,  setTogglingSemantic]  = useState(false);
 
 	const loadStats = async () => {
 		setLoading(true);
@@ -1519,29 +1509,50 @@ export default function SentenciasWorkerTab() {
 		}
 	};
 
-	const loadWorkerConfig = async () => {
+	const loadControlStates = async () => {
 		try {
-			const cfg = await RagWorkersService.getSentenciasWorkerConfig();
-			setWorkerEnabled(cfg.enabled);
-		} catch {
-			// silently ignore, toggle will show as null
-		}
+			const [embCfg, collCfg, semCfg] = await Promise.allSettled([
+				RagWorkersService.getSentenciasWorkerConfig(),
+				CollectorService.getConfig(),
+				SemanticWorkerService.getConfig(),
+			]);
+			if (embCfg.status === "fulfilled")       setEmbEnabled(embCfg.value.enabled);
+			if (collCfg.status === "fulfilled")      setCollectorEnabled(collCfg.value.enabled);
+			if (semCfg.status === "fulfilled")       setSemanticEnabled(semCfg.value.enabled);
+		} catch { /* silently ignore */ }
 	};
 
-	const handleToggleEnabled = async (val: boolean) => {
-		setTogglingEnabled(true);
+	const handleToggleEmb = async (val: boolean) => {
+		setTogglingEmb(true);
 		try {
 			const updated = await RagWorkersService.updateSentenciasWorkerConfig({ enabled: val });
-			setWorkerEnabled(updated.enabled);
-			enqueueSnackbar(`Workers de sentencias ${updated.enabled ? "habilitados" : "deshabilitados"}`, { variant: updated.enabled ? "success" : "warning" });
-		} catch {
-			enqueueSnackbar("Error actualizando configuración", { variant: "error" });
-		} finally {
-			setTogglingEnabled(false);
-		}
+			setEmbEnabled(updated.enabled);
+			enqueueSnackbar(`PDF · Embeddings ${val ? "habilitados" : "deshabilitados"}`, { variant: val ? "success" : "warning" });
+		} catch { enqueueSnackbar("Error actualizando", { variant: "error" }); }
+		finally { setTogglingEmb(false); }
 	};
 
-	useEffect(() => { loadStats(); loadWorkerConfig(); }, []);
+	const handleToggleCollector = async (val: boolean) => {
+		setTogglingCollector(true);
+		try {
+			const updated = await CollectorService.updateConfig({ enabled: val });
+			setCollectorEnabled(updated.enabled);
+			enqueueSnackbar(`Collector ${val ? "habilitado" : "deshabilitado"}`, { variant: val ? "success" : "warning" });
+		} catch { enqueueSnackbar("Error actualizando", { variant: "error" }); }
+		finally { setTogglingCollector(false); }
+	};
+
+	const handleToggleSemantic = async (val: boolean) => {
+		setTogglingSemantic(true);
+		try {
+			const updated = await SemanticWorkerService.updateConfig({ enabled: val });
+			setSemanticEnabled(updated.enabled);
+			enqueueSnackbar(`Layer 2 Semántico ${val ? "habilitado" : "deshabilitado"}`, { variant: val ? "success" : "warning" });
+		} catch { enqueueSnackbar("Error actualizando", { variant: "error" }); }
+		finally { setTogglingSemantic(false); }
+	};
+
+	useEffect(() => { loadStats(); loadControlStates(); }, []);
 
 	const handleRetry = async (id: string) => {
 		try {
@@ -1574,6 +1585,32 @@ export default function SentenciasWorkerTab() {
 	};
 
 	return (
+		<Stack spacing={2}>
+			{/* ── Worker Control Panel ── */}
+			<WorkerControlPanel processes={[
+				{
+					label: "PDF · OCR · Embeddings",
+					description: "sentencias-worker · sentencias-embeddings-worker",
+					enabled: embEnabled,
+					toggling: togglingEmb,
+					onToggle: handleToggleEmb,
+				},
+				{
+					label: "Collector",
+					description: "sentencias-collector-worker",
+					enabled: collectorEnabled,
+					toggling: togglingCollector,
+					onToggle: handleToggleCollector,
+				},
+				{
+					label: "Layer 2 Semántico",
+					description: "sentencias-semantic-worker",
+					enabled: semanticEnabled,
+					toggling: togglingSemantic,
+					onToggle: handleToggleSemantic,
+				},
+			]} />
+
 		<Stack direction="row" sx={{ minHeight: 500 }}>
 			{/* Vertical tabs on left */}
 			<Box sx={{ borderRight: 1, borderColor: "divider", flexShrink: 0, width: 160, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
@@ -1610,7 +1647,7 @@ export default function SentenciasWorkerTab() {
 			{/* Content on right */}
 			<Box sx={{ flex: 1, minWidth: 0, pl: 3, pt: 1 }}>
 				<TabPanel value={section} index={0}>
-					<EstadoSection stats={stats} loading={loading} onRefresh={loadStats} onRetry={handleRetry} workerEnabled={workerEnabled} onToggleEnabled={handleToggleEnabled} togglingEnabled={togglingEnabled} />
+					<EstadoSection stats={stats} loading={loading} onRefresh={loadStats} onRetry={handleRetry} />
 				</TabPanel>
 				<TabPanel value={section} index={1}>
 					<OcrSection stats={stats} loading={loading} onRefresh={loadStats} onRetryOcr={handleRetryOcr} />
@@ -1628,6 +1665,7 @@ export default function SentenciasWorkerTab() {
 					<ListaSection />
 				</TabPanel>
 			</Box>
+		</Stack>
 		</Stack>
 	);
 }

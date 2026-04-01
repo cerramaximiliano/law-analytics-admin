@@ -29,6 +29,7 @@ import UpdateMovimientosService, {
 	UpdateMovimientosWorkerConfig,
 	UpdateMovimientosManagerConfig,
 } from "api/updateMovimientos";
+import WorkerControlPanel from "components/WorkerControlPanel";
 
 const FUERO_LABELS: Record<string, string> = { CIV: "Civil", CNT: "Trabajo", CSS: "Seg. Social", COM: "Comercial" };
 const ALL_FUEROS = ["CIV", "CNT", "CSS", "COM"];
@@ -565,11 +566,49 @@ const SECTIONS = [
 ];
 
 export default function UpdateMovimientosWorkerTab() {
-	const theme = useTheme();
+	const { enqueueSnackbar } = useSnackbar();
 	const [section, setSection] = useState("estado");
+
+	// ── Worker control state (por fuero) ──────────────────────────────────────
+	const [workerConfigs, setWorkerConfigs] = useState<UpdateMovimientosWorkerConfig[]>([]);
+	const [toggling, setToggling] = useState<Record<string, boolean>>({});
+
+	useEffect(() => {
+		UpdateMovimientosService.getWorkerConfigs()
+			.then(setWorkerConfigs)
+			.catch(() => { /* silently ignore */ });
+	}, []);
+
+	const handleToggleFuero = async (config: UpdateMovimientosWorkerConfig, val: boolean) => {
+		setToggling(p => ({ ...p, [config._id]: true }));
+		try {
+			const updated = await UpdateMovimientosService.updateWorkerConfig(config._id, { enabled: val });
+			setWorkerConfigs(prev => prev.map(c => c._id === updated._id ? updated : c));
+			enqueueSnackbar(`Worker ${config.fuero} ${val ? "habilitado" : "deshabilitado"}`, { variant: val ? "success" : "warning" });
+		} catch { enqueueSnackbar("Error actualizando", { variant: "error" }); }
+		finally { setToggling(p => ({ ...p, [config._id]: false })); }
+	};
 
 	return (
 		<Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
+			{/* ── Worker Control Panel ── */}
+			<WorkerControlPanel processes={
+				workerConfigs.length > 0
+					? workerConfigs.map(cfg => ({
+						label: FUERO_LABELS[cfg.fuero] || cfg.fuero,
+						description: cfg.worker_id,
+						enabled: cfg.enabled,
+						toggling: toggling[cfg._id] ?? false,
+						onToggle: (val) => handleToggleFuero(cfg, val),
+					}))
+					: ALL_FUEROS.map(f => ({
+						label: FUERO_LABELS[f] || f,
+						description: "cargando...",
+						enabled: null,
+						onToggle: () => {},
+					}))
+			} />
+
 			{/* Sub-tabs */}
 			<Stack direction="row" spacing={1}>
 				{SECTIONS.map(s => (

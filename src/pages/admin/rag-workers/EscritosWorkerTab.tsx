@@ -44,6 +44,7 @@ import RagWorkersService, {
 	GlobalDocumentEntry,
 	EscritosSearchResult,
 } from "api/ragWorkers";
+import WorkerControlPanel from "components/WorkerControlPanel";
 
 // ── Constantes ───────────────────────────────────────────────────────────────
 
@@ -608,7 +609,40 @@ function BusquedaSection() {
 // ── Main component ────────────────────────────────────────────────────────────
 
 const EscritosWorkerTab: React.FC = () => {
+	const { enqueueSnackbar } = useSnackbar();
 	const [tab, setTab] = useState("resumen");
+
+	// ── Worker control state ──────────────────────────────────────────────────
+	const [workerEnabled,  setWorkerEnabled]  = useState<boolean | null>(null);
+	const [noveltyEnabled, setNoveltyEnabled] = useState<boolean | null>(null);
+	const [togglingWorker,  setTogglingWorker]  = useState(false);
+	const [togglingNovelty, setTogglingNovelty] = useState(false);
+
+	useEffect(() => {
+		RagWorkersService.getEscritosWorkerConfig()
+			.then(cfg => { setWorkerEnabled(cfg.enabled); setNoveltyEnabled(cfg.noveltyEnabled); })
+			.catch(() => { /* silently ignore */ });
+	}, []);
+
+	const handleToggleWorker = async (val: boolean) => {
+		setTogglingWorker(true);
+		try {
+			const updated = await RagWorkersService.updateEscritosWorkerConfig({ enabled: val });
+			setWorkerEnabled(updated.enabled);
+			enqueueSnackbar(`Scanner / Extractor ${val ? "habilitado" : "deshabilitado"}`, { variant: val ? "success" : "warning" });
+		} catch { enqueueSnackbar("Error actualizando", { variant: "error" }); }
+		finally { setTogglingWorker(false); }
+	};
+
+	const handleToggleNovelty = async (val: boolean) => {
+		setTogglingNovelty(true);
+		try {
+			const updated = await RagWorkersService.updateEscritosWorkerConfig({ noveltyEnabled: val });
+			setNoveltyEnabled(updated.noveltyEnabled);
+			enqueueSnackbar(`Novelty Detection ${val ? "habilitada" : "deshabilitada"}`, { variant: val ? "success" : "warning" });
+		} catch { enqueueSnackbar("Error actualizando", { variant: "error" }); }
+		finally { setTogglingNovelty(false); }
+	};
 
 	const TABS = [
 		{ value: "resumen",  label: "Resumen",  icon: <Chart size={16} /> },
@@ -623,6 +657,24 @@ const EscritosWorkerTab: React.FC = () => {
 					<Typography variant="h5" fontWeight={600}>Escritos Worker</Typography>
 					<Typography variant="body2" color="text.secondary">Pipeline de extracción global de PDFs judiciales</Typography>
 				</Stack>
+
+				{/* ── Worker Control Panel ── */}
+				<WorkerControlPanel processes={[
+					{
+						label: "Scanner / Extractor",
+						description: "scan.job · extractor.worker · ocr.worker",
+						enabled: workerEnabled,
+						toggling: togglingWorker,
+						onToggle: handleToggleWorker,
+					},
+					{
+						label: "Novelty Detection",
+						description: "selector.worker",
+						enabled: noveltyEnabled,
+						toggling: togglingNovelty,
+						onToggle: handleToggleNovelty,
+					},
+				]} />
 
 				<Paper variant="outlined" sx={{ borderRadius: 2 }}>
 					<Tabs
