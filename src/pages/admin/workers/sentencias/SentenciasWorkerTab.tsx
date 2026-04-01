@@ -30,6 +30,7 @@ import { useSnackbar } from "notistack";
 import SentenciasService, { Category, EmbeddingStatus, NoveltyCheckStatus, OcrStatus, SentenciaCapturada, SentenciasStats, SentenciaTipo, Fuero } from "api/sentenciasCapturadas";
 import CollectorService, { CollectorConfig, FueroConfig } from "api/sentenciasCollector";
 import SemanticWorkerService, { SemanticWorkerConfig } from "api/semanticWorker";
+import RagWorkersService from "api/ragWorkers";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -305,7 +306,15 @@ function TabPanel({ children, value, index }: TabPanelProps) {
 const CATEGORY_COLOR: Record<Category, string> = { novelty: "#7b1fa2", rutina: "#1565c0" };
 const CATEGORY_LABEL: Record<Category, string> = { novelty: "Novelty", rutina: "Rutina" };
 
-function EstadoSection({ stats, loading, onRefresh, onRetry }: { stats: SentenciasStats | null; loading: boolean; onRefresh: () => void; onRetry: (id: string) => void }) {
+function EstadoSection({ stats, loading, onRefresh, onRetry, workerEnabled, onToggleEnabled, togglingEnabled }: {
+	stats: SentenciasStats | null;
+	loading: boolean;
+	onRefresh: () => void;
+	onRetry: (id: string) => void;
+	workerEnabled: boolean | null;
+	onToggleEnabled: (val: boolean) => void;
+	togglingEnabled: boolean;
+}) {
 	const theme = useTheme();
 	const [selectedDoc, setSelectedDoc] = useState<SentenciaCapturada | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -315,6 +324,7 @@ function EstadoSection({ stats, loading, onRefresh, onRetry }: { stats: Sentenci
 	const processed = stats?.totals.processed || 0;
 	const total = stats?.totals.total || 0;
 	const pct = total > 0 ? Math.round((processed / total) * 100) : 0;
+	const enabled = workerEnabled ?? true;
 
 	return (
 		<Stack spacing={3}>
@@ -324,6 +334,19 @@ function EstadoSection({ stats, loading, onRefresh, onRetry }: { stats: Sentenci
 					Actualizar
 				</Button>
 			</Stack>
+
+			{/* Enable/disable toggle */}
+			<Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${enabled ? alpha(theme.palette.success.main, 0.4) : alpha(theme.palette.error.main, 0.4)}`, bgcolor: enabled ? alpha(theme.palette.success.main, 0.04) : alpha(theme.palette.error.main, 0.04) }}>
+				<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Box>
+						<Typography fontWeight={600}>{enabled ? "Workers de sentencias habilitados" : "Workers de sentencias deshabilitados"}</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Controla sentencias-worker (PDF/OCR) y sentencias-embeddings-worker. El cambio aplica en el próximo ciclo cron.
+						</Typography>
+					</Box>
+					<Switch checked={enabled} onChange={e => onToggleEnabled(e.target.checked)} disabled={togglingEnabled || workerEnabled === null} />
+				</Stack>
+			</Box>
 
 			{loading && !stats ? (
 				<Grid container spacing={2}>{[...Array(6)].map((_, i) => <Grid item xs={6} sm={4} md={2} key={i}><Skeleton height={80} variant="rounded" /></Grid>)}</Grid>
@@ -1482,6 +1505,8 @@ export default function SentenciasWorkerTab() {
 	const [section, setSection] = useState(0);
 	const [stats, setStats] = useState<SentenciasStats | null>(null);
 	const [loading, setLoading] = useState(false);
+	const [workerEnabled, setWorkerEnabled] = useState<boolean | null>(null);
+	const [togglingEnabled, setTogglingEnabled] = useState(false);
 
 	const loadStats = async () => {
 		setLoading(true);
@@ -1494,7 +1519,29 @@ export default function SentenciasWorkerTab() {
 		}
 	};
 
-	useEffect(() => { loadStats(); }, []);
+	const loadWorkerConfig = async () => {
+		try {
+			const cfg = await RagWorkersService.getSentenciasWorkerConfig();
+			setWorkerEnabled(cfg.enabled);
+		} catch {
+			// silently ignore, toggle will show as null
+		}
+	};
+
+	const handleToggleEnabled = async (val: boolean) => {
+		setTogglingEnabled(true);
+		try {
+			const updated = await RagWorkersService.updateSentenciasWorkerConfig({ enabled: val });
+			setWorkerEnabled(updated.enabled);
+			enqueueSnackbar(`Workers de sentencias ${updated.enabled ? "habilitados" : "deshabilitados"}`, { variant: updated.enabled ? "success" : "warning" });
+		} catch {
+			enqueueSnackbar("Error actualizando configuración", { variant: "error" });
+		} finally {
+			setTogglingEnabled(false);
+		}
+	};
+
+	useEffect(() => { loadStats(); loadWorkerConfig(); }, []);
 
 	const handleRetry = async (id: string) => {
 		try {
@@ -1563,7 +1610,7 @@ export default function SentenciasWorkerTab() {
 			{/* Content on right */}
 			<Box sx={{ flex: 1, minWidth: 0, pl: 3, pt: 1 }}>
 				<TabPanel value={section} index={0}>
-					<EstadoSection stats={stats} loading={loading} onRefresh={loadStats} onRetry={handleRetry} />
+					<EstadoSection stats={stats} loading={loading} onRefresh={loadStats} onRetry={handleRetry} workerEnabled={workerEnabled} onToggleEnabled={handleToggleEnabled} togglingEnabled={togglingEnabled} />
 				</TabPanel>
 				<TabPanel value={section} index={1}>
 					<OcrSection stats={stats} loading={loading} onRefresh={loadStats} onRetryOcr={handleRetryOcr} />
