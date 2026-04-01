@@ -174,7 +174,7 @@ function SumariosPanel({ falloSaijId }: { falloSaijId: string }) {
 								</Typography>
 							)}
 							<Typography variant="body2" sx={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
-								{s.texto || "—"}
+								{s.textoCompleto || s.texto || "—"}
 							</Typography>
 						</Box>
 					</Stack>
