@@ -29,7 +29,7 @@ import {
 	useTheme,
 	Divider,
 } from "@mui/material";
-import { Refresh2, ExportSquare, TickCircle, Calendar, Building, Judge, InfoCircle, ArrowUp2, Flash, Clock, DocumentText, ArrowRotateLeft, Archive } from "iconsax-react";
+import { Refresh2, ExportSquare, TickCircle, Calendar, Building, Judge, InfoCircle, ArrowUp2, Flash, Clock, DocumentText, ArrowRotateLeft, Archive, ArrowUp3, ArrowDown3 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import SentenciasService, { SentenciaCapturada, Fuero, SentenciaTipo, PublicationStatus } from "api/sentenciasCapturadas";
 
@@ -112,6 +112,7 @@ export default function PublicacionesSection() {
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [fueroFilter, setFueroFilter] = useState<string>("");
 	const [tipoFilter, setTipoFilter] = useState<string>("");
+	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 	const [helpOpen, setHelpOpen] = useState(false);
 
 	const [skipDialog, setSkipDialog] = useState<{ open: boolean; doc: SentenciaCapturada | null }>({ open: false, doc: null });
@@ -123,6 +124,7 @@ export default function PublicacionesSection() {
 				publicationStatus: activeTab as PublicationStatus,
 				...(fueroFilter ? { fuero: fueroFilter as Fuero } : {}),
 				...(tipoFilter ? { tipo: tipoFilter as SentenciaTipo } : {}),
+				sortOrder,
 				page,
 				limit: rowsPerPage,
 			});
@@ -133,7 +135,7 @@ export default function PublicacionesSection() {
 		} finally {
 			if (showLoading) setLoading(false);
 		}
-	}, [activeTab, fueroFilter, tipoFilter, page, rowsPerPage, enqueueSnackbar]);
+	}, [activeTab, fueroFilter, tipoFilter, sortOrder, page, rowsPerPage, enqueueSnackbar]);
 
 	useEffect(() => { load(); }, [load]);
 
@@ -311,7 +313,7 @@ export default function PublicacionesSection() {
 			</Tabs>
 
 			{/* Filters */}
-			<Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+			<Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap alignItems="center">
 				<FormControl size="small" sx={{ minWidth: 130 }}>
 					<InputLabel>Fuero</InputLabel>
 					<Select value={fueroFilter} label="Fuero" onChange={e => { setFueroFilter(e.target.value); setPage(0); }}>
@@ -326,6 +328,18 @@ export default function PublicacionesSection() {
 						{Object.entries(TIPO_LABELS).map(([k, v]) => <MenuItem key={k} value={k}>{v}</MenuItem>)}
 					</Select>
 				</FormControl>
+				<Tooltip title={sortOrder === "desc" ? "Más recientes primero (click para invertir)" : "Más antiguas primero (click para invertir)"}>
+					<Button
+						size="small"
+						variant="outlined"
+						color="inherit"
+						onClick={() => { setSortOrder(o => o === "desc" ? "asc" : "desc"); setPage(0); }}
+						startIcon={sortOrder === "desc" ? <ArrowDown3 size={15} /> : <ArrowUp3 size={15} />}
+						sx={{ height: 40, borderColor: "divider", color: "text.secondary", fontSize: "0.75rem" }}
+					>
+						Fecha {sortOrder === "desc" ? "↓" : "↑"}
+					</Button>
+				</Tooltip>
 			</Stack>
 
 			{/* Cards */}
