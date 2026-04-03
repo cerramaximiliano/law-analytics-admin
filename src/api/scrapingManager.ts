@@ -154,12 +154,35 @@ export class ScrapingManagerService {
 		}
 	}
 
+	static async getFueroStats(): Promise<ApiResponse<FueroStats>> {
+		try {
+			const response = await pjnAxios.get("/api/scraping-manager/fuero-stats");
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
 	private static handleError(error: any): Error {
 		if (error.isAxiosError) {
 			throw error;
 		}
 		return new Error("Error al procesar la solicitud");
 	}
+}
+
+// ====== Fuero Stats Interfaces ======
+
+export interface FueroStat {
+	causas: { count: number; pct: number };
+	sentencias: { count: number };
+	escritos: { count: number };
+}
+
+export interface FueroStats {
+	total: number;
+	fueros: Record<string, FueroStat>;
+	updatedAt: string;
 }
 
 export default ScrapingManagerService;
