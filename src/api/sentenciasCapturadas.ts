@@ -12,6 +12,14 @@ export type Category = "novelty" | "rutina";
 export type NoveltyCheckStatus = "single" | "double" | "rejected" | "pending_semantic";
 export type PublicationStatus = "pending" | "published" | "skipped";
 
+export interface AiSummary {
+	content: string;
+	status: "draft" | "approved";
+	generatedAt?: string;
+	approvedAt?: string;
+	model?: string;
+}
+
 export interface SentenciaCapturada {
 	_id: string;
 	causaId: string;
@@ -74,6 +82,7 @@ export interface SentenciaCapturada {
 	publicationStatus?: PublicationStatus;
 	publishedAt?: string;
 	publicationNotes?: string;
+	aiSummary?: AiSummary;
 }
 
 export interface SentenciasStats {
@@ -148,6 +157,16 @@ const SentenciasService = {
 
 	async updatePublicationStatus(id: string, status: "published" | "skipped" | "pending", notes?: string): Promise<SentenciaCapturada> {
 		const res = await pjnAxios.patch<{ success: boolean; data: SentenciaCapturada }>(`${BASE}/${id}/publication`, { status, notes });
+		return res.data.data;
+	},
+
+	async generateSummary(id: string): Promise<AiSummary> {
+		const res = await pjnAxios.post<{ success: boolean; data: AiSummary }>(`${BASE}/${id}/summary`);
+		return res.data.data;
+	},
+
+	async saveSummary(id: string, content: string, action: "save" | "approve"): Promise<AiSummary> {
+		const res = await pjnAxios.patch<{ success: boolean; data: AiSummary }>(`${BASE}/${id}/summary`, { content, action });
 		return res.data.data;
 	},
 };

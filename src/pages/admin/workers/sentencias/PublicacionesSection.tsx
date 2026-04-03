@@ -25,13 +25,14 @@ import {
 	Collapse,
 	Tab,
 	Tabs,
+	CircularProgress,
 	alpha,
 	useTheme,
 	Divider,
 } from "@mui/material";
-import { Refresh2, ExportSquare, TickCircle, Calendar, Building, Judge, InfoCircle, ArrowUp2, Flash, Clock, DocumentText, ArrowRotateLeft, Archive, ArrowUp3, ArrowDown3 } from "iconsax-react";
+import { Refresh2, ExportSquare, TickCircle, Calendar, Building, Judge, InfoCircle, ArrowUp2, Flash, Clock, DocumentText, ArrowRotateLeft, Archive, ArrowUp3, ArrowDown3, Magicpen, TickSquare } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import SentenciasService, { SentenciaCapturada, Fuero, SentenciaTipo, PublicationStatus } from "api/sentenciasCapturadas";
+import SentenciasService, { AiSummary, SentenciaCapturada, Fuero, SentenciaTipo, PublicationStatus } from "api/sentenciasCapturadas";
 
 const FUERO_LABELS: Record<string, string> = { CIV: "Civil", CSS: "Seg. Social", CNT: "Trabajo", COM: "Comercial" };
 const FUERO_COLORS: Record<string, "primary" | "warning" | "error" | "success"> = {
@@ -90,6 +91,171 @@ function SkipDialog({ open, doc, onConfirm, onClose }: SkipDialogProps) {
 	);
 }
 
+// ── Summary Dialog ────────────────────────────────────────────────────────────
+
+interface SummaryDialogProps {
+	open: boolean;
+	doc: SentenciaCapturada | null;
+	onClose: () => void;
+	onSaved: (id: string, summary: AiSummary) => void;
+}
+
+function SummaryDialog({ open, doc, onClose, onSaved }: SummaryDialogProps) {
+	const theme = useTheme();
+	const { enqueueSnackbar } = useSnackbar();
+	const [content, setContent] = useState("");
+	const [generating, setGenerating] = useState(false);
+	const [saving, setSaving] = useState(false);
+
+	useEffect(() => {
+		if (open && doc) {
+			setContent(doc.aiSummary?.content || "");
+		}
+	}, [open, doc]);
+
+	const handleGenerate = async () => {
+		if (!doc) return;
+		setGenerating(true);
+		try {
+			const summary = await SentenciasService.generateSummary(doc._id);
+			setContent(summary.content);
+			onSaved(doc._id, summary);
+			enqueueSnackbar("Resumen generado", { variant: "success", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+		} catch (e: any) {
+			const msg = e?.response?.data?.message || "Error al generar el resumen";
+			enqueueSnackbar(msg, { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+		} finally {
+			setGenerating(false);
+		}
+	};
+
+	const handleSave = async (action: "save" | "approve") => {
+		if (!doc) return;
+		setSaving(true);
+		try {
+			const summary = await SentenciasService.saveSummary(doc._id, content, action);
+			onSaved(doc._id, summary);
+			enqueueSnackbar(action === "approve" ? "Resumen aprobado" : "Borrador guardado", {
+				variant: action === "approve" ? "success" : "info",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			if (action === "approve") onClose();
+		} catch {
+			enqueueSnackbar("Error al guardar", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	const isApproved = doc?.aiSummary?.status === "approved";
+
+	return (
+		<Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+			<DialogTitle>
+				<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Box>
+						<Typography variant="h6" component="span">Resumen para publicación</Typography>
+						{doc?.aiSummary?.status && (
+							<Chip
+								label={isApproved ? "Aprobado" : "Borrador"}
+								size="small"
+								color={isApproved ? "success" : "default"}
+								sx={{ ml: 1, height: 20, fontSize: "0.68rem" }}
+							/>
+						)}
+					</Box>
+					{doc?.aiSummary?.model && (
+						<Typography variant="caption" color="text.disabled">
+							{doc.aiSummary.model}
+						</Typography>
+					)}
+				</Stack>
+				<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 400 }}>
+					{doc?.caratula || `Sentencia ${doc?._id.slice(-6)}`}
+				</Typography>
+			</DialogTitle>
+
+			<DialogContent dividers>
+				<Stack spacing={2}>
+					{!content && !generating && (
+						<Alert severity="info" sx={{ borderRadius: 1.5 }}>
+							No hay resumen generado aún. Hacé click en <strong>Generar con IA</strong> para crear uno automáticamente a partir del texto del fallo.
+						</Alert>
+					)}
+
+					{generating && (
+						<Stack alignItems="center" spacing={1.5} py={3}>
+							<CircularProgress size={32} />
+							<Typography variant="body2" color="text.secondary">
+								Analizando el fallo y generando el resumen…
+							</Typography>
+						</Stack>
+					)}
+
+					{!generating && content && (
+						<TextField
+							multiline
+							fullWidth
+							minRows={12}
+							maxRows={24}
+							value={content}
+							onChange={e => setContent(e.target.value)}
+							variant="outlined"
+							size="small"
+							label="Resumen (editable)"
+							inputProps={{ style: { fontFamily: "monospace", fontSize: "0.82rem", lineHeight: 1.6 } }}
+							sx={{ "& .MuiOutlinedInput-root": { bgcolor: alpha(theme.palette.background.default, 0.5) } }}
+						/>
+					)}
+
+					{doc?.aiSummary?.generatedAt && (
+						<Typography variant="caption" color="text.disabled">
+							Generado el {new Date(doc.aiSummary.generatedAt).toLocaleString("es-AR")}
+							{doc.aiSummary.approvedAt && ` · Aprobado el ${new Date(doc.aiSummary.approvedAt).toLocaleString("es-AR")}`}
+						</Typography>
+					)}
+				</Stack>
+			</DialogContent>
+
+			<DialogActions sx={{ px: 3, py: 1.5, gap: 1 }}>
+				<Button
+					variant="outlined"
+					startIcon={generating ? <CircularProgress size={14} /> : <Magicpen size={16} />}
+					onClick={handleGenerate}
+					disabled={generating || saving}
+					color="secondary"
+				>
+					{content ? "Regenerar" : "Generar con IA"}
+				</Button>
+				<Box flex={1} />
+				<Button onClick={onClose} disabled={saving}>Cerrar</Button>
+				{content && !isApproved && (
+					<Button
+						variant="outlined"
+						onClick={() => handleSave("save")}
+						disabled={saving || generating}
+					>
+						Guardar borrador
+					</Button>
+				)}
+				{content && (
+					<Button
+						variant="contained"
+						color="success"
+						startIcon={saving ? <CircularProgress size={14} color="inherit" /> : <TickSquare size={16} />}
+						onClick={() => handleSave("approve")}
+						disabled={saving || generating}
+					>
+						{isApproved ? "Actualizar y aprobar" : "Aprobar"}
+					</Button>
+				)}
+			</DialogActions>
+		</Dialog>
+	);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 type ViewTab = "pending" | "skipped" | "published";
 
 const TAB_LABELS: Record<ViewTab, string> = {
@@ -116,6 +282,7 @@ export default function PublicacionesSection() {
 	const [helpOpen, setHelpOpen] = useState(false);
 
 	const [skipDialog, setSkipDialog] = useState<{ open: boolean; doc: SentenciaCapturada | null }>({ open: false, doc: null });
+	const [summaryDialog, setSummaryDialog] = useState<{ open: boolean; doc: SentenciaCapturada | null }>({ open: false, doc: null });
 
 	const load = useCallback(async (showLoading = true) => {
 		if (showLoading) setLoading(true);
@@ -185,6 +352,11 @@ export default function PublicacionesSection() {
 		} finally {
 			setActionLoading(null);
 		}
+	};
+
+	const handleSummaryUpdate = (id: string, summary: AiSummary) => {
+		setDocs(prev => prev.map(d => d._id === id ? { ...d, aiSummary: summary } : d));
+		setSummaryDialog(prev => prev.doc?._id === id ? { ...prev, doc: { ...prev.doc!, aiSummary: summary } } : prev);
 	};
 
 	const isPending = activeTab === "pending";
@@ -408,6 +580,24 @@ export default function PublicacionesSection() {
 															sx={{ height: 20, fontSize: "0.68rem" }}
 														/>
 													)}
+													{doc.aiSummary?.status === "approved" && (
+														<Chip
+															label="Resumen ✓"
+															size="small"
+															color="success"
+															variant="outlined"
+															sx={{ height: 20, fontSize: "0.68rem" }}
+														/>
+													)}
+													{doc.aiSummary?.status === "draft" && (
+														<Chip
+															label="Resumen borrador"
+															size="small"
+															color="warning"
+															variant="outlined"
+															sx={{ height: 20, fontSize: "0.68rem" }}
+														/>
+													)}
 													{isArchived && doc.publicationNotes && (
 														<Tooltip title={doc.publicationNotes}>
 															<Chip
@@ -488,6 +678,19 @@ export default function PublicacionesSection() {
 														</IconButton>
 													</Tooltip>
 												)}
+												<Tooltip title={doc.aiSummary ? "Ver / editar resumen IA" : "Generar resumen IA"}>
+													<Button
+														size="small"
+														variant={doc.aiSummary?.status === "approved" ? "contained" : "outlined"}
+														color={doc.aiSummary?.status === "approved" ? "success" : "secondary"}
+														startIcon={<Magicpen size={15} />}
+														disabled={isActing}
+														onClick={() => setSummaryDialog({ open: true, doc })}
+														sx={{ whiteSpace: "nowrap", minWidth: 110 }}
+													>
+														{doc.aiSummary ? "Resumen" : "Resumir"}
+													</Button>
+												</Tooltip>
 												{isPending && (
 													<>
 														<Button
@@ -558,6 +761,13 @@ export default function PublicacionesSection() {
 				doc={skipDialog.doc}
 				onConfirm={handleSkipConfirm}
 				onClose={() => setSkipDialog({ open: false, doc: null })}
+			/>
+
+			<SummaryDialog
+				open={summaryDialog.open}
+				doc={summaryDialog.doc}
+				onClose={() => setSummaryDialog({ open: false, doc: null })}
+				onSaved={handleSummaryUpdate}
 			/>
 		</Stack>
 	);
