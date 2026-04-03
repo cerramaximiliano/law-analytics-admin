@@ -25,13 +25,14 @@ import {
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { Activity, CloseCircle, Data, DocumentText, Refresh, Scanner, Setting3, TickCircle, Warning2 } from "iconsax-react";
+import { Activity, CloseCircle, Data, DocumentText, Refresh, Scanner, Setting3, TickCircle, Warning2, Notification } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import SentenciasService, { Category, EmbeddingStatus, NoveltyCheckStatus, OcrStatus, SentenciaCapturada, SentenciasStats, SentenciaTipo, Fuero } from "api/sentenciasCapturadas";
 import CollectorService, { CollectorConfig, FueroConfig } from "api/sentenciasCollector";
 import SemanticWorkerService, { SemanticWorkerConfig } from "api/semanticWorker";
 import RagWorkersService from "api/ragWorkers";
 import WorkerControlPanel from "components/WorkerControlPanel";
+import PublicacionesSection from "./PublicacionesSection";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -1479,6 +1480,7 @@ const SECTIONS = [
 	{ label: "OCR", icon: <Scanner size={16} /> },
 	{ label: "Embeddings", icon: <Data size={16} /> },
 	{ label: "Novedades", icon: <TickCircle size={16} /> },
+	{ label: "Publicaciones", icon: <Notification size={16} /> },
 	{ label: "Collector", icon: <Setting3 size={16} /> },
 	{ label: "Lista", icon: <DocumentText size={16} /> },
 ];
@@ -1659,9 +1661,12 @@ export default function SentenciasWorkerTab() {
 					<NoveltySection stats={stats} loading={loading} onRefresh={loadStats} />
 				</TabPanel>
 				<TabPanel value={section} index={4}>
-					<CollectorSection />
+					<PublicacionesSection />
 				</TabPanel>
 				<TabPanel value={section} index={5}>
+					<CollectorSection />
+				</TabPanel>
+				<TabPanel value={section} index={6}>
 					<ListaSection />
 				</TabPanel>
 			</Box>

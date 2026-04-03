@@ -10,6 +10,7 @@ export type Fuero = "CIV" | "CSS" | "CNT" | "COM";
 
 export type Category = "novelty" | "rutina";
 export type NoveltyCheckStatus = "single" | "double" | "rejected" | "pending_semantic";
+export type PublicationStatus = "pending" | "published" | "skipped";
 
 export interface SentenciaCapturada {
 	_id: string;
@@ -70,6 +71,9 @@ export interface SentenciaCapturada {
 		verifiedAt?: string;
 		semanticVerifiedAt?: string;
 	};
+	publicationStatus?: PublicationStatus;
+	publishedAt?: string;
+	publicationNotes?: string;
 }
 
 export interface SentenciasStats {
@@ -134,6 +138,16 @@ const SentenciasService = {
 
 	async retryEmbedding(id: string): Promise<SentenciaCapturada> {
 		const res = await pjnAxios.post<{ success: boolean; data: SentenciaCapturada }>(`${BASE}/${id}/retry-embedding`);
+		return res.data.data;
+	},
+
+	async getPublicationQueue(params?: { fuero?: Fuero; tipo?: SentenciaTipo; page?: number; limit?: number }): Promise<{ data: SentenciaCapturada[]; total: number; page: number; limit: number }> {
+		const res = await pjnAxios.get<{ success: boolean; data: SentenciaCapturada[]; total: number; page: number; limit: number }>(BASE + "/publication-queue", { params });
+		return res.data;
+	},
+
+	async updatePublicationStatus(id: string, status: "published" | "skipped", notes?: string): Promise<SentenciaCapturada> {
+		const res = await pjnAxios.patch<{ success: boolean; data: SentenciaCapturada }>(`${BASE}/${id}/publication`, { status, notes });
 		return res.data.data;
 	},
 };
