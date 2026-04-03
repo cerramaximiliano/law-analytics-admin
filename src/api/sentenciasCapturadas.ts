@@ -141,12 +141,12 @@ const SentenciasService = {
 		return res.data.data;
 	},
 
-	async getPublicationQueue(params?: { fuero?: Fuero; tipo?: SentenciaTipo; page?: number; limit?: number }): Promise<{ data: SentenciaCapturada[]; total: number; page: number; limit: number }> {
+	async getPublicationQueue(params?: { fuero?: Fuero; tipo?: SentenciaTipo; publicationStatus?: PublicationStatus; page?: number; limit?: number }): Promise<{ data: SentenciaCapturada[]; total: number; page: number; limit: number }> {
 		const res = await pjnAxios.get<{ success: boolean; data: SentenciaCapturada[]; total: number; page: number; limit: number }>(BASE + "/publication-queue", { params });
 		return res.data;
 	},
 
-	async updatePublicationStatus(id: string, status: "published" | "skipped", notes?: string): Promise<SentenciaCapturada> {
+	async updatePublicationStatus(id: string, status: "published" | "skipped" | "pending", notes?: string): Promise<SentenciaCapturada> {
 		const res = await pjnAxios.patch<{ success: boolean; data: SentenciaCapturada }>(`${BASE}/${id}/publication`, { status, notes });
 		return res.data.data;
 	},

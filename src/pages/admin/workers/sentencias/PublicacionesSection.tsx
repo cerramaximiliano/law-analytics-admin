@@ -23,13 +23,15 @@ import {
 	MenuItem,
 	TablePagination,
 	Collapse,
+	Tab,
+	Tabs,
 	alpha,
 	useTheme,
 	Divider,
 } from "@mui/material";
-import { Refresh2, ExportSquare, TickCircle, CloseCircle, Calendar, Building, Judge, InfoCircle, ArrowDown2, ArrowUp2, Flash, Clock, DocumentText } from "iconsax-react";
+import { Refresh2, ExportSquare, TickCircle, Calendar, Building, Judge, InfoCircle, ArrowUp2, Flash, Clock, DocumentText, ArrowRotateLeft, Archive } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import SentenciasService, { SentenciaCapturada, Fuero, SentenciaTipo } from "api/sentenciasCapturadas";
+import SentenciasService, { SentenciaCapturada, Fuero, SentenciaTipo, PublicationStatus } from "api/sentenciasCapturadas";
 
 const FUERO_LABELS: Record<string, string> = { CIV: "Civil", CSS: "Seg. Social", CNT: "Trabajo", COM: "Comercial" };
 const FUERO_COLORS: Record<string, "primary" | "warning" | "error" | "success"> = {
@@ -63,7 +65,7 @@ function SkipDialog({ open, doc, onConfirm, onClose }: SkipDialogProps) {
 	useEffect(() => { if (open) setNotes(""); }, [open]);
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-			<DialogTitle>Descartar sentencia</DialogTitle>
+			<DialogTitle>Archivar sentencia</DialogTitle>
 			<DialogContent>
 				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
 					{doc?.caratula || `Sentencia ${doc?._id.slice(-6)}`}
@@ -80,18 +82,27 @@ function SkipDialog({ open, doc, onConfirm, onClose }: SkipDialogProps) {
 			</DialogContent>
 			<DialogActions>
 				<Button onClick={onClose}>Cancelar</Button>
-				<Button variant="contained" color="error" onClick={() => onConfirm(notes)}>
-					Descartar
+				<Button variant="contained" color="warning" onClick={() => onConfirm(notes)}>
+					Archivar
 				</Button>
 			</DialogActions>
 		</Dialog>
 	);
 }
 
+type ViewTab = "pending" | "skipped" | "published";
+
+const TAB_LABELS: Record<ViewTab, string> = {
+	pending: "Pendientes",
+	skipped: "Archivadas",
+	published: "Publicadas",
+};
+
 export default function PublicacionesSection() {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
+	const [activeTab, setActiveTab] = useState<ViewTab>("pending");
 	const [docs, setDocs] = useState<SentenciaCapturada[]>([]);
 	const [total, setTotal] = useState(0);
 	const [loading, setLoading] = useState(false);
@@ -109,6 +120,7 @@ export default function PublicacionesSection() {
 		if (showLoading) setLoading(true);
 		try {
 			const res = await SentenciasService.getPublicationQueue({
+				publicationStatus: activeTab as PublicationStatus,
 				...(fueroFilter ? { fuero: fueroFilter as Fuero } : {}),
 				...(tipoFilter ? { tipo: tipoFilter as SentenciaTipo } : {}),
 				page,
@@ -121,9 +133,15 @@ export default function PublicacionesSection() {
 		} finally {
 			if (showLoading) setLoading(false);
 		}
-	}, [fueroFilter, tipoFilter, page, rowsPerPage, enqueueSnackbar]);
+	}, [activeTab, fueroFilter, tipoFilter, page, rowsPerPage, enqueueSnackbar]);
 
 	useEffect(() => { load(); }, [load]);
+
+	// Reset page when tab changes
+	const handleTabChange = (_: React.SyntheticEvent, val: ViewTab) => {
+		setActiveTab(val);
+		setPage(0);
+	};
 
 	const handlePublish = async (doc: SentenciaCapturada) => {
 		setActionLoading(doc._id);
@@ -138,6 +156,19 @@ export default function PublicacionesSection() {
 		}
 	};
 
+	const handleRestore = async (doc: SentenciaCapturada) => {
+		setActionLoading(doc._id);
+		try {
+			await SentenciasService.updatePublicationStatus(doc._id, "pending");
+			enqueueSnackbar("Sentencia restaurada a pendientes", { variant: "info", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+			load(false);
+		} catch {
+			enqueueSnackbar("Error al restaurar", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+		} finally {
+			setActionLoading(null);
+		}
+	};
+
 	const handleSkipConfirm = async (notes: string) => {
 		const doc = skipDialog.doc;
 		if (!doc) return;
@@ -145,14 +176,17 @@ export default function PublicacionesSection() {
 		setActionLoading(doc._id);
 		try {
 			await SentenciasService.updatePublicationStatus(doc._id, "skipped", notes);
-			enqueueSnackbar("Sentencia descartada", { variant: "info", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+			enqueueSnackbar("Sentencia archivada", { variant: "info", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
 			load(false);
 		} catch {
-			enqueueSnackbar("Error al actualizar", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+			enqueueSnackbar("Error al archivar", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
 		} finally {
 			setActionLoading(null);
 		}
 	};
+
+	const isPending = activeTab === "pending";
+	const isArchived = activeTab === "skipped";
 
 	return (
 		<Stack spacing={2}>
@@ -161,7 +195,7 @@ export default function PublicacionesSection() {
 				<Box>
 					<Stack direction="row" spacing={1} alignItems="center">
 						<Typography variant="h6">Cola de Publicaciones</Typography>
-						{total > 0 && (
+						{activeTab === "pending" && total > 0 && (
 							<Chip
 								label={total}
 								size="small"
@@ -252,12 +286,29 @@ export default function PublicacionesSection() {
 
 							<Divider />
 							<Typography variant="caption" color="text.secondary">
-								<strong>Publicar</strong> registra la fecha de publicación y saca la sentencia de la cola. <strong>Descartar</strong> la excluye con un motivo opcional. Ambas acciones son permanentes.
+								<strong>Publicar</strong> registra la fecha de publicación y saca la sentencia de la cola. <strong>Archivar</strong> la excluye con un motivo opcional. Desde <strong>Archivadas</strong> podés restaurar cualquier sentencia a pendientes.
 							</Typography>
 						</Stack>
 					</CardContent>
 				</Card>
 			</Collapse>
+
+			{/* Tabs */}
+			<Tabs
+				value={activeTab}
+				onChange={handleTabChange}
+				sx={{ borderBottom: 1, borderColor: "divider", minHeight: 36 }}
+				TabIndicatorProps={{ style: { height: 2 } }}
+			>
+				{(["pending", "skipped", "published"] as ViewTab[]).map(tab => (
+					<Tab
+						key={tab}
+						value={tab}
+						label={TAB_LABELS[tab]}
+						sx={{ minHeight: 36, py: 0.5, fontSize: "0.8rem" }}
+					/>
+				))}
+			</Tabs>
 
 			{/* Filters */}
 			<Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
@@ -287,8 +338,12 @@ export default function PublicacionesSection() {
 					))}
 				</Grid>
 			) : docs.length === 0 ? (
-				<Alert severity="success" sx={{ borderRadius: 2 }}>
-					No hay sentencias pendientes de publicación{fueroFilter || tipoFilter ? " con los filtros aplicados" : ""}.
+				<Alert severity={isPending ? "success" : "info"} sx={{ borderRadius: 2 }}>
+					{isPending
+						? `No hay sentencias pendientes de publicación${fueroFilter || tipoFilter ? " con los filtros aplicados" : ""}.`
+						: isArchived
+						? `No hay sentencias archivadas${fueroFilter || tipoFilter ? " con los filtros aplicados" : ""}.`
+						: `No hay sentencias publicadas${fueroFilter || tipoFilter ? " con los filtros aplicados" : ""}.`}
 				</Alert>
 			) : (
 				<Stack spacing={1.5}>
@@ -339,6 +394,16 @@ export default function PublicacionesSection() {
 															sx={{ height: 20, fontSize: "0.68rem" }}
 														/>
 													)}
+													{isArchived && doc.publicationNotes && (
+														<Tooltip title={doc.publicationNotes}>
+															<Chip
+																label="Con nota"
+																size="small"
+																variant="outlined"
+																sx={{ height: 20, fontSize: "0.68rem" }}
+															/>
+														</Tooltip>
+													)}
 												</Stack>
 
 												{/* Detalles */}
@@ -367,12 +432,27 @@ export default function PublicacionesSection() {
 															</Typography>
 														</Stack>
 													)}
+													{activeTab === "published" && doc.publishedAt && (
+														<Stack direction="row" spacing={0.5} alignItems="center">
+															<TickCircle size={13} color={theme.palette.success.main} />
+															<Typography variant="caption" color="success.main">
+																Publicada {formatDate(doc.publishedAt)}
+															</Typography>
+														</Stack>
+													)}
 												</Stack>
 
 												{/* Detalle del movimiento */}
 												{doc.movimientoDetalle && (
 													<Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
 														{doc.movimientoDetalle.slice(0, 120)}{doc.movimientoDetalle.length > 120 ? "…" : ""}
+													</Typography>
+												)}
+
+												{/* Nota de archivo */}
+												{isArchived && doc.publicationNotes && (
+													<Typography variant="caption" color="text.disabled" sx={{ fontStyle: "italic" }}>
+														Motivo: {doc.publicationNotes}
 													</Typography>
 												)}
 											</Stack>
@@ -394,28 +474,45 @@ export default function PublicacionesSection() {
 														</IconButton>
 													</Tooltip>
 												)}
-												<Button
-													size="small"
-													variant="contained"
-													color="success"
-													startIcon={<TickCircle size={16} />}
-													disabled={isActing}
-													onClick={() => handlePublish(doc)}
-													sx={{ whiteSpace: "nowrap", minWidth: 110 }}
-												>
-													Publicar
-												</Button>
-												<Button
-													size="small"
-													variant="outlined"
-													color="error"
-													startIcon={<CloseCircle size={16} />}
-													disabled={isActing}
-													onClick={() => setSkipDialog({ open: true, doc })}
-													sx={{ whiteSpace: "nowrap", minWidth: 110 }}
-												>
-													Descartar
-												</Button>
+												{isPending && (
+													<>
+														<Button
+															size="small"
+															variant="contained"
+															color="success"
+															startIcon={<TickCircle size={16} />}
+															disabled={isActing}
+															onClick={() => handlePublish(doc)}
+															sx={{ whiteSpace: "nowrap", minWidth: 110 }}
+														>
+															Publicar
+														</Button>
+														<Button
+															size="small"
+															variant="outlined"
+															color="warning"
+															startIcon={<Archive size={16} />}
+															disabled={isActing}
+															onClick={() => setSkipDialog({ open: true, doc })}
+															sx={{ whiteSpace: "nowrap", minWidth: 110 }}
+														>
+															Archivar
+														</Button>
+													</>
+												)}
+												{isArchived && (
+													<Button
+														size="small"
+														variant="outlined"
+														color="primary"
+														startIcon={<ArrowRotateLeft size={16} />}
+														disabled={isActing}
+														onClick={() => handleRestore(doc)}
+														sx={{ whiteSpace: "nowrap", minWidth: 110 }}
+													>
+														Restaurar
+													</Button>
+												)}
 											</Stack>
 										</Grid>
 									</Grid>
