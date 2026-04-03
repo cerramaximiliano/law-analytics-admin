@@ -22,11 +22,12 @@ import {
 	Select,
 	MenuItem,
 	TablePagination,
+	Collapse,
 	alpha,
 	useTheme,
 	Divider,
 } from "@mui/material";
-import { Refresh2, ExportSquare, TickCircle, CloseCircle, Calendar, Building, Judge } from "iconsax-react";
+import { Refresh2, ExportSquare, TickCircle, CloseCircle, Calendar, Building, Judge, InfoCircle, ArrowDown2, ArrowUp2, Flash, Clock, DocumentText } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import SentenciasService, { SentenciaCapturada, Fuero, SentenciaTipo } from "api/sentenciasCapturadas";
 
@@ -100,6 +101,7 @@ export default function PublicacionesSection() {
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [fueroFilter, setFueroFilter] = useState<string>("");
 	const [tipoFilter, setTipoFilter] = useState<string>("");
+	const [helpOpen, setHelpOpen] = useState(false);
 
 	const [skipDialog, setSkipDialog] = useState<{ open: boolean; doc: SentenciaCapturada | null }>({ open: false, doc: null });
 
@@ -172,12 +174,90 @@ export default function PublicacionesSection() {
 						Sentencias de causas con novedad listas para publicar
 					</Typography>
 				</Box>
-				<Tooltip title="Actualizar">
-					<IconButton size="small" onClick={() => load()} disabled={loading}>
-						<Refresh2 size={18} />
-					</IconButton>
-				</Tooltip>
+				<Stack direction="row" spacing={0.5}>
+					<Tooltip title={helpOpen ? "Ocultar ayuda" : "¿Cómo funciona esta sección?"}>
+						<IconButton size="small" color="info" onClick={() => setHelpOpen(v => !v)}>
+							{helpOpen ? <ArrowUp2 size={18} /> : <InfoCircle size={18} />}
+						</IconButton>
+					</Tooltip>
+					<Tooltip title="Actualizar">
+						<IconButton size="small" onClick={() => load()} disabled={loading}>
+							<Refresh2 size={18} />
+						</IconButton>
+					</Tooltip>
+				</Stack>
 			</Box>
+
+			{/* Help panel */}
+			<Collapse in={helpOpen}>
+				<Card variant="outlined" sx={{ borderRadius: 2, bgcolor: alpha(theme.palette.info.main, 0.04), borderColor: alpha(theme.palette.info.main, 0.25) }}>
+					<CardContent sx={{ pb: "16px !important" }}>
+						<Stack spacing={1.5}>
+							<Stack direction="row" spacing={1} alignItems="center">
+								<InfoCircle size={16} color={theme.palette.info.main} />
+								<Typography variant="subtitle2" color="info.main">
+									¿Cuándo aparece una sentencia en esta cola?
+								</Typography>
+							</Stack>
+							<Typography variant="body2" color="text.secondary">
+								Una sentencia aparece aquí cuando proviene de una <strong>causa con novedad detectada</strong> (escrito semánticamente distinto al corpus) y ya fue embebida en Pinecone. Hay tres escenarios posibles:
+							</Typography>
+
+							<Stack spacing={1.25}>
+								{/* Escenario 1 */}
+								<Box sx={{ pl: 1.5, borderLeft: `3px solid ${theme.palette.success.main}` }}>
+									<Stack direction="row" spacing={1} alignItems="flex-start">
+										<Flash size={15} color={theme.palette.success.main} style={{ marginTop: 2, flexShrink: 0 }} />
+										<Box>
+											<Typography variant="caption" fontWeight={700} color="success.main" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
+												Escenario 1 — Sentencia nueva post-novedad
+											</Typography>
+											<Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+												El escrito es detectado como novelty → la causa se marca con <code>update=true</code> → el worker de movimientos rastrea la causa y encuentra una <strong>nueva sentencia</strong> → se captura como <code>category='novelty'</code> → una vez embebida aparece aquí automáticamente.
+											</Typography>
+										</Box>
+									</Stack>
+								</Box>
+
+								{/* Escenario 2 */}
+								<Box sx={{ pl: 1.5, borderLeft: `3px solid ${theme.palette.warning.main}` }}>
+									<Stack direction="row" spacing={1} alignItems="flex-start">
+										<Clock size={15} color={theme.palette.warning.main} style={{ marginTop: 2, flexShrink: 0 }} />
+										<Box>
+											<Typography variant="caption" fontWeight={700} color="warning.main" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
+												Escenario 2 — Sentencia ya estaba en el historial
+											</Typography>
+											<Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+												La causa tiene una sentencia <strong>pre-existente</strong> en su historial al momento de detectarse la novedad. El worker de actualización solo rastrea movimientos nuevos, por lo que no la volvería a capturar. En cambio, al marcar la causa como novelty el <strong>selector worker</strong> busca directamente en <code>sentencias-capturadas</code> y marca las sentencias ya embebidas de esa causa como pendientes de publicación.
+											</Typography>
+										</Box>
+									</Stack>
+								</Box>
+
+								{/* Escenario 3 */}
+								<Box sx={{ pl: 1.5, borderLeft: `3px solid ${theme.palette.secondary.main}` }}>
+									<Stack direction="row" spacing={1} alignItems="flex-start">
+										<DocumentText size={15} color={theme.palette.secondary.main} style={{ marginTop: 2, flexShrink: 0 }} />
+										<Box>
+											<Typography variant="caption" fontWeight={700} color="secondary.main" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
+												Escenario 3 — Sentencia capturada como rutina
+											</Typography>
+											<Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+												El collector de sentencias ya había capturado la sentencia como <code>category='rutina'</code> (antes o después de la detección de novedad). Cuando el selector worker identifica la novedad del escrito, busca por <code>causaId</code> en <code>sentencias-capturadas</code> independientemente de la categoría y marca esa sentencia como pendiente de publicación.
+											</Typography>
+										</Box>
+									</Stack>
+								</Box>
+							</Stack>
+
+							<Divider />
+							<Typography variant="caption" color="text.secondary">
+								<strong>Publicar</strong> registra la fecha de publicación y saca la sentencia de la cola. <strong>Descartar</strong> la excluye con un motivo opcional. Ambas acciones son permanentes.
+							</Typography>
+						</Stack>
+					</CardContent>
+				</Card>
+			</Collapse>
 
 			{/* Filters */}
 			<Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
