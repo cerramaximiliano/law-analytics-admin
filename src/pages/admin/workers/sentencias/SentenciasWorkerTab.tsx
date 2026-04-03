@@ -5,6 +5,7 @@ import {
 	Button,
 	Chip,
 	CircularProgress,
+	Collapse,
 	Dialog,
 	DialogContent,
 	DialogTitle,
@@ -12,6 +13,7 @@ import {
 	Grid,
 	IconButton,
 	LinearProgress,
+	MenuItem,
 	Pagination,
 	Paper,
 	Skeleton,
@@ -25,7 +27,7 @@ import {
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { Activity, CloseCircle, Data, DocumentText, Refresh, Scanner, Setting3, TickCircle, Warning2, Notification } from "iconsax-react";
+import { Activity, ArrowDown2, CloseCircle, Data, DocumentText, Refresh, Scanner, Setting3, TickCircle, Warning2, Notification } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import SentenciasService, { Category, EmbeddingStatus, NoveltyCheckStatus, OcrStatus, SentenciaCapturada, SentenciasStats, SentenciaTipo, Fuero } from "api/sentenciasCapturadas";
 import CollectorService, { CollectorConfig, FueroConfig } from "api/sentenciasCollector";
@@ -1159,6 +1161,113 @@ function ListaSection() {
 	);
 }
 
+// ── AI Summary Config Panel ───────────────────────────────────────────────────
+
+const DEFAULT_PROMPT_PLACEHOLDER = `Eres un asistente jurídico especializado en derecho argentino. Tu tarea es analizar fallos judiciales y producir un resumen estructurado...
+
+(Dejá vacío para usar el prompt por defecto del sistema)`;
+
+interface AiSummaryConfigPanelProps {
+	config: CollectorConfig;
+	saving: boolean;
+	onSave: (payload: Parameters<typeof CollectorService.updateConfig>[0]) => void;
+}
+
+function AiSummaryConfigPanel({ config, saving, onSave }: AiSummaryConfigPanelProps) {
+	const theme = useTheme();
+	const [prompt, setPrompt] = useState(config.aiSummary?.systemPrompt || "");
+	const [model, setModel] = useState(config.aiSummary?.model || "gpt-4o-mini");
+	const [open, setOpen] = useState(false);
+
+	useEffect(() => {
+		setPrompt(config.aiSummary?.systemPrompt || "");
+		setModel(config.aiSummary?.model || "gpt-4o-mini");
+	}, [config]);
+
+	const handleSave = () => {
+		onSave({ aiSummary: { systemPrompt: prompt.trim() || null, model } });
+	};
+
+	const handleReset = () => {
+		setPrompt("");
+		onSave({ aiSummary: { systemPrompt: null, model } });
+	};
+
+	const isDirty = prompt !== (config.aiSummary?.systemPrompt || "") || model !== (config.aiSummary?.model || "gpt-4o-mini");
+
+	return (
+		<Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+			<Stack direction="row" justifyContent="space-between" alignItems="center" onClick={() => setOpen(v => !v)} sx={{ cursor: "pointer" }}>
+				<Stack direction="row" spacing={1} alignItems="center">
+					<Typography variant="subtitle2">Configuración de resumen IA</Typography>
+					<Chip
+						label={config.aiSummary?.systemPrompt ? "Prompt personalizado" : "Prompt por defecto"}
+						size="small"
+						color={config.aiSummary?.systemPrompt ? "secondary" : "default"}
+						sx={{ height: 18, fontSize: "0.65rem" }}
+					/>
+					<Chip
+						label={config.aiSummary?.model || "gpt-4o-mini"}
+						size="small"
+						variant="outlined"
+						sx={{ height: 18, fontSize: "0.65rem" }}
+					/>
+				</Stack>
+				<IconButton size="small">
+					{open ? <ArrowDown2 size={16} /> : <ArrowDown2 size={16} style={{ transform: "rotate(-90deg)" }} />}
+				</IconButton>
+			</Stack>
+
+			<Collapse in={open}>
+				<Stack spacing={2} mt={2}>
+					<Typography variant="caption" color="text.secondary">
+						Este prompt se usa para generar el resumen de cada sentencia en la cola de publicaciones. Si se deja vacío, se usa el prompt por defecto del sistema.
+					</Typography>
+
+					<TextField
+						select
+						size="small"
+						label="Modelo"
+						value={model}
+						onChange={e => setModel(e.target.value)}
+						sx={{ maxWidth: 220 }}
+					>
+						{["gpt-4o-mini", "gpt-4o", "gpt-4-turbo"].map(m => (
+							<MenuItem key={m} value={m}>{m}</MenuItem>
+						))}
+					</TextField>
+
+					<TextField
+						multiline
+						fullWidth
+						minRows={6}
+						maxRows={20}
+						label="System prompt"
+						placeholder={DEFAULT_PROMPT_PLACEHOLDER}
+						value={prompt}
+						onChange={e => setPrompt(e.target.value)}
+						size="small"
+						helperText={`${prompt.length} caracteres · Dejá vacío para usar el prompt por defecto`}
+						inputProps={{ style: { fontFamily: "monospace", fontSize: "0.8rem", lineHeight: 1.6 } }}
+						sx={{ "& .MuiOutlinedInput-root": { bgcolor: alpha(theme.palette.background.default, 0.5) } }}
+					/>
+
+					<Stack direction="row" spacing={1} justifyContent="flex-end">
+						{config.aiSummary?.systemPrompt && (
+							<Button size="small" color="error" variant="outlined" onClick={handleReset} disabled={saving}>
+								Restaurar por defecto
+							</Button>
+						)}
+						<Button size="small" variant="contained" onClick={handleSave} disabled={saving || !isDirty}>
+							Guardar
+						</Button>
+					</Stack>
+				</Stack>
+			</Collapse>
+		</Paper>
+	);
+}
+
 // ── Collector Section ─────────────────────────────────────────────────────────
 
 const FUERO_COLLECTION_LABELS: Record<string, string> = {
@@ -1457,6 +1566,9 @@ function CollectorSection() {
 					))}
 				</Stack>
 			</Box>
+
+			{/* AI Summary config */}
+			<AiSummaryConfigPanel config={config} saving={saving} onSave={saveField} />
 
 			{/* Info */}
 			<Paper variant="outlined" sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.04), borderColor: alpha(theme.palette.info.main, 0.2) }}>

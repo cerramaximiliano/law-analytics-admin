@@ -23,6 +23,10 @@ export interface CollectorConfig {
 	batchSize: number;
 	maxPendingQueue: number;
 	fueros: FueroConfig[];
+	aiSummary?: {
+		systemPrompt: string | null;
+		model: string;
+	};
 	currentState: {
 		isRunning: boolean;
 		workerId?: string;
@@ -45,6 +49,10 @@ export interface UpdateCollectorConfigPayload {
 	batchSize?: number;
 	maxPendingQueue?: number;
 	fueros?: Partial<FueroConfig & { fuero: Fuero }>[];
+	aiSummary?: {
+		systemPrompt?: string | null;
+		model?: string;
+	};
 }
 
 const BASE = "/api/configuracion-sentencias-collector";
