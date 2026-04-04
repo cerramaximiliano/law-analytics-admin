@@ -988,6 +988,16 @@ const CredencialesPJN = () => {
 										</TableCell>
 										<TableCell align="center">
 											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+												Cred.
+												<Tooltip title="Estado de las credenciales: OK si el último login fue exitoso, INVÁLIDA si la contraseña es incorrecta o expiró." arrow placement="top">
+													<Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}>
+														<InfoCircle size={13} />
+													</Box>
+												</Tooltip>
+											</Box>
+										</TableCell>
+										<TableCell align="center">
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
 												Habilitado
 												<Tooltip
 													title="El worker incluirá esta credencial en el próximo ciclo de actualización. No indica si el usuario tiene carpetas PJN activas en la aplicación."
@@ -1133,13 +1143,13 @@ const CredencialesPJN = () => {
 								<TableBody>
 									{loading ? (
 										<TableRow>
-											<TableCell colSpan={16} align="center" sx={{ py: 4 }}>
+											<TableCell colSpan={17} align="center" sx={{ py: 4 }}>
 												<CircularProgress size={32} />
 											</TableCell>
 										</TableRow>
 									) : credentials.length === 0 ? (
 										<TableRow>
-											<TableCell colSpan={16} align="center" sx={{ py: 4 }}>
+											<TableCell colSpan={17} align="center" sx={{ py: 4 }}>
 												<Typography color="text.secondary">No se encontraron credenciales</Typography>
 											</TableCell>
 										</TableRow>
@@ -1198,6 +1208,30 @@ const CredencialesPJN = () => {
 														<TickCircle size={20} color={theme.palette.success.main} variant="Bold" />
 													) : (
 														<CloseCircle size={20} color={theme.palette.error.main} variant="Bold" />
+													)}
+												</TableCell>
+												<TableCell align="center">
+													{cred.credentialInvalid ? (
+														<Tooltip
+															title={`Credencial inválida — ${cred.credentialInvalidReason || "contraseña incorrecta o expirada"}${cred.credentialInvalidAt ? ` (${formatDate(cred.credentialInvalidAt)})` : ""}`}
+															arrow
+														>
+															<Chip
+																label="INVÁLIDA"
+																size="small"
+																color="error"
+																variant="filled"
+																sx={{ fontWeight: 700, fontSize: "0.65rem", height: 20, cursor: "help" }}
+															/>
+														</Tooltip>
+													) : (
+														<Chip
+															label="OK"
+															size="small"
+															color="success"
+															variant="outlined"
+															sx={{ fontSize: "0.65rem", height: 20 }}
+														/>
 													)}
 												</TableCell>
 												<TableCell align="center">
