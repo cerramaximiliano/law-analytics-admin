@@ -51,6 +51,7 @@ import {
 	Broom,
 	Copy,
 	InfoCircle,
+	Sms,
 } from "iconsax-react";
 import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -62,6 +63,8 @@ import pjnCredentialsService, {
 	UpdateRun,
 	SyncedCausa,
 } from "api/pjnCredentials";
+import EmailLogsService from "api/emailLogs";
+import { EmailLog } from "types/email-log";
 
 // Colores para estados
 const getSyncStatusColor = (status: string) => {
@@ -387,11 +390,55 @@ const CredencialesPJN = () => {
 		fetchPortalStatus();
 	}, []);
 
+	// Estado notificaciones
+	const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
+	const [emailLogsLoading, setEmailLogsLoading] = useState(false);
+	const [emailLogsTotal, setEmailLogsTotal] = useState(0);
+	const [emailLogsPage, setEmailLogsPage] = useState(0);
+	const [emailLogsRowsPerPage, setEmailLogsRowsPerPage] = useState(25);
+	const [emailLogsFetched, setEmailLogsFetched] = useState(false);
+	const [emailLogsStatusFilter, setEmailLogsStatusFilter] = useState<string>("todos");
+	const [emailLogsCategoryFilter, setEmailLogsCategoryFilter] = useState<string>("");
+	const [emailLogsUserFilter, setEmailLogsUserFilter] = useState<string>("");
+
+	const fetchEmailLogs = async (page = emailLogsPage, rowsPerPage = emailLogsRowsPerPage) => {
+		setEmailLogsLoading(true);
+		try {
+			const params: any = {
+				page: page + 1,
+				limit: rowsPerPage,
+				sortBy: "createdAt",
+				sortOrder: "desc",
+			};
+			if (emailLogsStatusFilter !== "todos") params.status = emailLogsStatusFilter;
+			if (emailLogsCategoryFilter.trim()) params.templateCategory = emailLogsCategoryFilter.trim();
+			if (emailLogsUserFilter.trim()) params.to = emailLogsUserFilter.trim();
+
+			const res = await EmailLogsService.getEmailLogs(params);
+			if (res.success) {
+				setEmailLogs(res.data);
+				setEmailLogsTotal(res.pagination.totalItems);
+				setEmailLogsFetched(true);
+			}
+		} catch (error) {
+			console.error("Error fetching email logs:", error);
+		} finally {
+			setEmailLogsLoading(false);
+		}
+	};
+
 	// Lazy load: cargar sync activity y portal status solo cuando se activa el tab 1
 	useEffect(() => {
 		if (tabValue === 1 && !syncActivity && !syncActivityLoading) {
 			fetchSyncActivity();
 			fetchPortalStatus();
+		}
+	}, [tabValue]);
+
+	// Lazy load: cargar email logs cuando se activa el tab 3
+	useEffect(() => {
+		if (tabValue === 3 && !emailLogsFetched) {
+			fetchEmailLogs(0, emailLogsRowsPerPage);
 		}
 	}, [tabValue]);
 
@@ -759,6 +806,7 @@ const CredencialesPJN = () => {
 					<Tab label="Credenciales" />
 					<Tab label="Actividad Sync" />
 					<Tab label="Movimientos" />
+					<Tab label="Notificaciones" icon={<Sms size={16} />} iconPosition="start" />
 				</Tabs>
 			</Box>
 
@@ -1981,6 +2029,214 @@ const CredencialesPJN = () => {
 							</Grid>
 						</>
 					)}
+				</Grid>
+			)}
+
+			{/* Tab 3: Notificaciones */}
+			{tabValue === 3 && (
+				<Grid container spacing={2}>
+					{/* Filtros */}
+					<Grid item xs={12}>
+						<Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems="flex-end" flexWrap="wrap" useFlexGap>
+							<TextField
+								size="small"
+								label="Filtrar por email destinatario"
+								placeholder="Ej: usuario@mail.com"
+								value={emailLogsUserFilter}
+								onChange={(e) => setEmailLogsUserFilter(e.target.value)}
+								onKeyPress={(e) => {
+									if (e.key === "Enter") {
+										setEmailLogsPage(0);
+										fetchEmailLogs(0, emailLogsRowsPerPage);
+									}
+								}}
+								sx={{ minWidth: 220 }}
+							/>
+							<FormControl size="small" sx={{ minWidth: 160 }}>
+								<InputLabel>Estado</InputLabel>
+								<Select value={emailLogsStatusFilter} label="Estado" onChange={(e) => setEmailLogsStatusFilter(e.target.value)}>
+									<MenuItem value="todos">Todos</MenuItem>
+									<MenuItem value="sent">Enviado</MenuItem>
+									<MenuItem value="delivered">Entregado</MenuItem>
+									<MenuItem value="failed">Fallido</MenuItem>
+									<MenuItem value="bounced">Rebotado</MenuItem>
+									<MenuItem value="complained">Complaint</MenuItem>
+								</Select>
+							</FormControl>
+							<TextField
+								size="small"
+								label="Categoría"
+								placeholder="Ej: credentials"
+								value={emailLogsCategoryFilter}
+								onChange={(e) => setEmailLogsCategoryFilter(e.target.value)}
+								sx={{ minWidth: 180 }}
+							/>
+							<Button
+								variant="contained"
+								size="small"
+								startIcon={<SearchNormal1 size={16} />}
+								onClick={() => {
+									setEmailLogsPage(0);
+									fetchEmailLogs(0, emailLogsRowsPerPage);
+								}}
+							>
+								Buscar
+							</Button>
+							<Button
+								variant="outlined"
+								size="small"
+								startIcon={<CloseCircle size={16} />}
+								onClick={() => {
+									setEmailLogsStatusFilter("todos");
+									setEmailLogsCategoryFilter("");
+									setEmailLogsUserFilter("");
+									setEmailLogsPage(0);
+									setTimeout(() => fetchEmailLogs(0, emailLogsRowsPerPage), 100);
+								}}
+							>
+								Limpiar
+							</Button>
+							<Tooltip title="Refrescar">
+								<IconButton size="small" onClick={() => fetchEmailLogs(emailLogsPage, emailLogsRowsPerPage)}>
+									<Refresh size={18} />
+								</IconButton>
+							</Tooltip>
+						</Stack>
+					</Grid>
+
+					{/* Tabla de logs */}
+					<Grid item xs={12}>
+						<TableContainer component={Paper} variant="outlined">
+							<Table size="small">
+								<TableHead>
+									<TableRow>
+										<TableCell>Destinatario</TableCell>
+										<TableCell>Asunto</TableCell>
+										<TableCell>Categoría</TableCell>
+										<TableCell>Template</TableCell>
+										<TableCell align="center">Estado</TableCell>
+										<TableCell>Fuente</TableCell>
+										<TableCell>Fecha</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{emailLogsLoading ? (
+										<TableRow>
+											<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+												<CircularProgress size={28} />
+											</TableCell>
+										</TableRow>
+									) : emailLogs.length === 0 ? (
+										<TableRow>
+											<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+												<Typography color="text.secondary">No se encontraron notificaciones</Typography>
+											</TableCell>
+										</TableRow>
+									) : (
+										emailLogs.map((log) => {
+											const user = typeof log.userId === "object" && log.userId ? log.userId : null;
+											const statusColorMap: Record<string, "success" | "error" | "warning" | "default" | "info"> = {
+												sent: "info",
+												delivered: "success",
+												failed: "error",
+												bounced: "warning",
+												complained: "warning",
+											};
+											const statusLabelMap: Record<string, string> = {
+												sent: "Enviado",
+												delivered: "Entregado",
+												failed: "Fallido",
+												bounced: "Rebotado",
+												complained: "Complaint",
+											};
+											return (
+												<TableRow key={log._id} hover>
+													<TableCell>
+														<Stack>
+															{user ? (
+																<>
+																	<Typography variant="body2" fontWeight={500}>
+																		{user.firstName && user.lastName
+																			? `${user.firstName} ${user.lastName}`
+																			: user.name || user.email}
+																	</Typography>
+																	<Typography variant="caption" color="text.secondary">
+																		{log.to}
+																	</Typography>
+																</>
+															) : (
+																<Typography variant="body2">{log.to}</Typography>
+															)}
+														</Stack>
+													</TableCell>
+													<TableCell>
+														<Tooltip title={log.subject}>
+															<Typography
+																variant="body2"
+																sx={{ maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+															>
+																{log.subject}
+															</Typography>
+														</Tooltip>
+														{log.errorMessage && (
+															<Tooltip title={log.errorMessage}>
+																<Typography variant="caption" color="error.main" sx={{ display: "block", maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+																	{log.errorMessage}
+																</Typography>
+															</Tooltip>
+														)}
+													</TableCell>
+													<TableCell>
+														{log.templateCategory ? (
+															<Chip label={log.templateCategory} size="small" variant="outlined" />
+														) : (
+															<Typography variant="body2" color="text.disabled">—</Typography>
+														)}
+													</TableCell>
+													<TableCell>
+														<Typography variant="caption" color="text.secondary" fontFamily="monospace">
+															{log.templateName || "—"}
+														</Typography>
+													</TableCell>
+													<TableCell align="center">
+														<Chip
+															label={statusLabelMap[log.status] || log.status}
+															size="small"
+															color={statusColorMap[log.status] || "default"}
+														/>
+													</TableCell>
+													<TableCell>
+														<Typography variant="caption" color="text.secondary">
+															{log.source || "—"}
+														</Typography>
+													</TableCell>
+													<TableCell>
+														<Typography variant="caption">{formatDate(log.createdAt)}</Typography>
+													</TableCell>
+												</TableRow>
+											);
+										})
+									)}
+								</TableBody>
+							</Table>
+						</TableContainer>
+						<EnhancedTablePagination
+							count={emailLogsTotal}
+							page={emailLogsPage}
+							onPageChange={(_, newPage) => {
+								setEmailLogsPage(newPage);
+								fetchEmailLogs(newPage, emailLogsRowsPerPage);
+							}}
+							rowsPerPage={emailLogsRowsPerPage}
+							onRowsPerPageChange={(e) => {
+								const rows = parseInt(e.target.value, 10);
+								setEmailLogsRowsPerPage(rows);
+								setEmailLogsPage(0);
+								fetchEmailLogs(0, rows);
+							}}
+							rowsPerPageOptions={[25, 50, 100]}
+						/>
+					</Grid>
 				</Grid>
 			)}
 
