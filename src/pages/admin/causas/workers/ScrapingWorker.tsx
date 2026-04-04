@@ -75,7 +75,8 @@ const FUERO_OPTIONS = [
 ];
 
 // Años disponibles para filtros (de más reciente a más antiguo)
-const YEAR_OPTIONS = ["2025", "2024", "2023", "2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015"];
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - 2015 + 1 }, (_, i) => String(CURRENT_YEAR - i));
 
 const ScrapingWorker = () => {
 	const { enqueueSnackbar } = useSnackbar();
