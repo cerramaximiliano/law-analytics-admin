@@ -25,6 +25,12 @@ interface CreateConfigModalProps {
 	open: boolean;
 	onClose: () => void;
 	onSuccess: () => void;
+	initialValues?: {
+		fuero?: string;
+		year?: number;
+		rangeStart?: number;
+		rangeEnd?: number;
+	};
 }
 
 const FUERO_OPTIONS = [
@@ -37,15 +43,15 @@ const FUERO_OPTIONS = [
 const CURRENT_YEAR = new Date().getFullYear();
 const YEAR_OPTIONS = Array.from({ length: 10 }, (_, i) => CURRENT_YEAR - i);
 
-const CreateConfigModal: React.FC<CreateConfigModalProps> = ({ open, onClose, onSuccess }) => {
+const CreateConfigModal: React.FC<CreateConfigModalProps> = ({ open, onClose, onSuccess, initialValues }) => {
 	const { enqueueSnackbar } = useSnackbar();
 	const [loading, setLoading] = useState(false);
 
 	// Campos requeridos
-	const [fuero, setFuero] = useState<string>("");
-	const [year, setYear] = useState<number>(CURRENT_YEAR);
-	const [rangeStart, setRangeStart] = useState<number>(1);
-	const [rangeEnd, setRangeEnd] = useState<number>(1000);
+	const [fuero, setFuero] = useState<string>(initialValues?.fuero ?? "");
+	const [year, setYear] = useState<number>(initialValues?.year ?? CURRENT_YEAR);
+	const [rangeStart, setRangeStart] = useState<number>(initialValues?.rangeStart ?? 1);
+	const [rangeEnd, setRangeEnd] = useState<number>(initialValues?.rangeEnd ?? 1000);
 
 	// Campos opcionales
 	const [nombre, setNombre] = useState<string>("");
@@ -60,6 +66,20 @@ const CreateConfigModal: React.FC<CreateConfigModalProps> = ({ open, onClose, on
 		rangeEnd?: string;
 	}>({});
 
+	// Sincronizar con initialValues cuando el modal se abre
+	React.useEffect(() => {
+		if (open) {
+			setFuero(initialValues?.fuero ?? "");
+			setYear(initialValues?.year ?? CURRENT_YEAR);
+			setRangeStart(initialValues?.rangeStart ?? 1);
+			setRangeEnd(initialValues?.rangeEnd ?? 1000);
+			setNombre("");
+			setEnabled(false);
+			setNumber(null);
+			setErrors({});
+		}
+	}, [open, initialValues?.fuero, initialValues?.year, initialValues?.rangeStart, initialValues?.rangeEnd]);
+
 	const handleClose = () => {
 		if (!loading) {
 			resetForm();
@@ -68,10 +88,10 @@ const CreateConfigModal: React.FC<CreateConfigModalProps> = ({ open, onClose, on
 	};
 
 	const resetForm = () => {
-		setFuero("");
-		setYear(CURRENT_YEAR);
-		setRangeStart(1);
-		setRangeEnd(1000);
+		setFuero(initialValues?.fuero ?? "");
+		setYear(initialValues?.year ?? CURRENT_YEAR);
+		setRangeStart(initialValues?.rangeStart ?? 1);
+		setRangeEnd(initialValues?.rangeEnd ?? 1000);
 		setNombre("");
 		setEnabled(false);
 		setNumber(null);

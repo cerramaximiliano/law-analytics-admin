@@ -419,6 +419,45 @@ export interface ScrapingHistoryResponse {
 	data: ScrapingHistory[];
 }
 
+// Interfaces para análisis de cobertura
+export interface CoverageRange {
+	start: number;
+	end: number;
+}
+
+export interface CoverageGap {
+	start: number;
+	end: number;
+	size: number;
+	assigned: boolean;
+	workerId: string | null;
+}
+
+export interface CoverageActiveWorker {
+	worker_id: string;
+	range_start: number;
+	range_end: number;
+	current: number;
+	max_number: number;
+}
+
+export interface ScrapingCoverageData {
+	fuero: string;
+	year: string;
+	maxRange: number;
+	coveredRanges: CoverageRange[];
+	totalCovered: number;
+	coveragePercent: number;
+	gaps: CoverageGap[];
+	activeWorkers: CoverageActiveWorker[];
+}
+
+export interface ScrapingCoverageResponse {
+	success: boolean;
+	message?: string;
+	data: ScrapingCoverageData;
+}
+
 // Interfaces para Workers
 export interface WorkerConfig {
 	_id: string | { $oid: string };
@@ -797,6 +836,16 @@ export class WorkersService {
 	}): Promise<ScrapingHistoryResponse> {
 		try {
 			const response = await workersAxios.get("/api/configuracion-scraping-history/", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	static async getScrapingCoverage(fuero: string, year: string, maxRange?: number): Promise<ScrapingCoverageResponse> {
+		try {
+			const params = maxRange ? { maxRange } : {};
+			const response = await workersAxios.get(`/api/configuracion-scraping-history/coverage/fuero/${fuero}/year/${year}`, { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
