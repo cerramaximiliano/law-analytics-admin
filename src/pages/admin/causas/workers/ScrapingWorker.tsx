@@ -56,6 +56,7 @@ import {
 	Setting4,
 	Clock,
 	ChartSquare,
+	Map1,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig, ScrapingHistory } from "api/workers";
@@ -65,6 +66,7 @@ import TemporaryWorkersModal from "./TemporaryWorkersModal";
 import ScrapingManagerPanel from "./ScrapingManagerPanel";
 import RangeHistoryPanel from "./RangeHistoryPanel";
 import FueroStatsPanel from "./FueroStatsPanel";
+import CoveragePanel from "./CoveragePanel";
 
 // Enums para el worker de scraping
 const FUERO_OPTIONS = [
@@ -627,6 +629,7 @@ const ScrapingWorker = () => {
 					<Tab icon={<Cpu size={18} />} iconPosition="start" label="Manager PM2" />
 					<Tab icon={<Clock size={18} />} iconPosition="start" label="Historial de Rangos" />
 					<Tab icon={<ChartSquare size={18} />} iconPosition="start" label="Distribución" />
+					<Tab icon={<Map1 size={18} />} iconPosition="start" label="Cobertura" />
 				</Tabs>
 			</Box>
 
@@ -635,6 +638,8 @@ const ScrapingWorker = () => {
 			{subTab === 2 && <RangeHistoryPanel />}
 
 			{subTab === 3 && <FueroStatsPanel />}
+
+			{subTab === 4 && <CoveragePanel />}
 
 			{subTab === 0 && (
 				<>
