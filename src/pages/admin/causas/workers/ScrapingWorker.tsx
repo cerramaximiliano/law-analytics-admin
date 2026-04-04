@@ -59,7 +59,7 @@ import {
 	Map1,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import { WorkersService, WorkerConfig, ScrapingHistory } from "api/workers";
+import { WorkersService, WorkerConfig } from "api/workers";
 import AdvancedConfigModal from "./AdvancedConfigModal";
 import CreateConfigModal from "./CreateConfigModal";
 import TemporaryWorkersModal from "./TemporaryWorkersModal";
@@ -90,17 +90,6 @@ const ScrapingWorker = () => {
 	const [selectedConfig, setSelectedConfig] = useState<WorkerConfig | null>(null);
 	const [createConfigOpen, setCreateConfigOpen] = useState(false);
 	const [temporaryWorkersOpen, setTemporaryWorkersOpen] = useState(false);
-	const [scrapingHistory, setScrapingHistory] = useState<ScrapingHistory[]>([]);
-	const [historyLoading, setHistoryLoading] = useState(false);
-	const [historyPage, setHistoryPage] = useState(1);
-	const [historyTotal, setHistoryTotal] = useState(0);
-
-	// Estados de filtros y ordenamiento para historial
-	const [historyFueroFilter, setHistoryFueroFilter] = useState<string>("TODOS");
-	const [historyYearFilter, setHistoryYearFilter] = useState<string>("TODOS");
-	const [historySortBy, setHistorySortBy] = useState<string>("completedAt");
-	const [historySortOrder, setHistorySortOrder] = useState<"asc" | "desc">("desc");
-
 	const [fueroFilter, setFueroFilter] = useState<string>("TODOS");
 	const [yearFilter, setYearFilter] = useState<string>("TODOS");
 	const [progresoFilter, setProgresoFilter] = useState<string>("TODOS");
@@ -209,42 +198,6 @@ const ScrapingWorker = () => {
 		}
 	};
 
-	// Cargar historial de scraping
-	const fetchScrapingHistory = async (
-		page = 1,
-		fuero = historyFueroFilter,
-		year = historyYearFilter,
-		orderBy = historySortBy,
-		order = historySortOrder,
-	) => {
-		try {
-			setHistoryLoading(true);
-
-			const params: any = { page, limit: 10, sortBy: orderBy, sortOrder: order };
-			if (fuero && fuero !== "TODOS") {
-				params.fuero = fuero;
-			}
-			if (year && year !== "TODOS") {
-				params.year = year;
-			}
-
-			const response = await WorkersService.getScrapingHistory(params);
-			if (response.success) {
-				setScrapingHistory(response.data);
-				setHistoryTotal(response.total || 0);
-				setHistoryPage(page);
-			}
-		} catch (error) {
-			enqueueSnackbar("Error al cargar el historial de scraping", {
-				variant: "error",
-				anchorOrigin: { vertical: "bottom", horizontal: "right" },
-			});
-			console.error(error);
-		} finally {
-			setHistoryLoading(false);
-		}
-	};
-
 	useEffect(() => {
 		// Si estamos ordenando por progreso, solo re-fetch cuando cambian filtros/sort, NO cuando cambia la página
 		// porque ya tenemos todos los datos y la paginación se hace client-side
@@ -263,10 +216,6 @@ const ScrapingWorker = () => {
 		workerIdFilter,
 	]);
 
-	useEffect(() => {
-		fetchScrapingHistory(historyPage, historyFueroFilter, historyYearFilter, historySortBy, historySortOrder);
-	}, [historyPage, historyFueroFilter, historyYearFilter, historySortBy, historySortOrder]);
-
 	// Handlers de paginación
 	const handleChangePage = (_event: unknown, newPage: number) => {
 		setConfigPage(newPage);
@@ -282,7 +231,6 @@ const ScrapingWorker = () => {
 		setConfigTotalSnapshot(null); // Resetear snapshot
 		setConfigPage(0); // Volver a página 1
 		fetchConfigs(0, configRowsPerPage, fueroFilter);
-		fetchScrapingHistory();
 	};
 
 	// Handler para cambio de filtro de fuero
@@ -338,26 +286,6 @@ const ScrapingWorker = () => {
 			setSortBy(field);
 			setSortOrder("asc");
 		}
-	};
-
-	// Handlers para historial
-	const handleHistorySort = (field: string) => {
-		if (historySortBy === field) {
-			setHistorySortOrder(historySortOrder === "asc" ? "desc" : "asc");
-		} else {
-			setHistorySortBy(field);
-			setHistorySortOrder("asc");
-		}
-	};
-
-	const handleHistoryFueroFilterChange = (newFuero: string) => {
-		setHistoryFueroFilter(newFuero);
-		setHistoryPage(1);
-	};
-
-	const handleHistoryYearFilterChange = (newYear: string) => {
-		setHistoryYearFilter(newYear);
-		setHistoryPage(1);
 	};
 
 	// Abrir diálogo de confirmación de eliminación
@@ -621,28 +549,56 @@ const ScrapingWorker = () => {
 	}
 
 	return (
-		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-			{/* Sub-tabs: Configuraciones / Manager PM2 */}
-			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-				<Tabs value={subTab} onChange={(_, v) => setSubTab(v)} variant="scrollable" scrollButtons="auto">
-					<Tab icon={<Setting4 size={18} />} iconPosition="start" label="Configuraciones" />
-					<Tab icon={<Cpu size={18} />} iconPosition="start" label="Manager PM2" />
-					<Tab icon={<Clock size={18} />} iconPosition="start" label="Historial de Rangos" />
-					<Tab icon={<ChartSquare size={18} />} iconPosition="start" label="Distribución" />
-					<Tab icon={<Map1 size={18} />} iconPosition="start" label="Cobertura" />
-				</Tabs>
-			</Box>
+		<>
+		<Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" } }}>
+			<Tabs
+				orientation="vertical"
+				variant="scrollable"
+				value={subTab}
+				onChange={(_, v) => setSubTab(v)}
+				sx={{
+					borderRight: { md: 1 },
+					borderBottom: { xs: 1, md: 0 },
+					borderColor: "divider",
+					minWidth: { md: 200 },
+					"& .MuiTab-root": {
+						textTransform: "none",
+						alignItems: "flex-start",
+						minHeight: 64,
+						px: 2,
+					},
+				}}
+			>
+				{([
+					{ label: "Configuraciones", subtitle: "Gestión de workers", icon: <Setting4 size={20} /> },
+					{ label: "Control PM2", subtitle: "Estado y operaciones", icon: <Cpu size={20} /> },
+					{ label: "Historial", subtitle: "Rangos completados", icon: <Clock size={20} /> },
+					{ label: "Cobertura", subtitle: "Períodos faltantes", icon: <Map1 size={20} /> },
+					{ label: "Estadísticas", subtitle: "Distribución por fuero", icon: <ChartSquare size={20} /> },
+				] as { label: string; subtitle: string; icon: React.ReactNode }[]).map((tab, i) => (
+					<Tab
+						key={i}
+						label={
+							<Stack direction="row" spacing={1.5} alignItems="center">
+								{tab.icon}
+								<Box textAlign="left">
+									<Typography variant="body2" fontWeight={500}>{tab.label}</Typography>
+									<Typography variant="caption" color="text.secondary">{tab.subtitle}</Typography>
+								</Box>
+							</Stack>
+						}
+					/>
+				))}
+			</Tabs>
 
-			{subTab === 1 && <ScrapingManagerPanel />}
-
-			{subTab === 2 && <RangeHistoryPanel />}
-
-			{subTab === 3 && <FueroStatsPanel />}
-
-			{subTab === 4 && <CoveragePanel />}
+			<Box sx={{ flexGrow: 1, minWidth: 0 }}>
+				{subTab === 1 && <Box sx={{ p: { xs: 2, md: 3 } }}><ScrapingManagerPanel /></Box>}
+				{subTab === 2 && <Box sx={{ p: { xs: 2, md: 3 } }}><RangeHistoryPanel /></Box>}
+				{subTab === 3 && <Box sx={{ p: { xs: 2, md: 3 } }}><CoveragePanel /></Box>}
+				{subTab === 4 && <Box sx={{ p: { xs: 2, md: 3 } }}><FueroStatsPanel /></Box>}
 
 			{subTab === 0 && (
-				<>
+				<Box sx={{ p: { xs: 2, md: 3 } }}>
 					{/* Header: Título y Acciones */}
 					<Box
 						display="flex"
@@ -1509,299 +1465,120 @@ const ScrapingWorker = () => {
 						</Grid>
 					</Grid>
 
-					{/* Historial de rangos procesados */}
-					<Box>
-						<Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-							<Typography variant="h6">Historial de Rangos Procesados</Typography>
-							<Stack direction="row" spacing={1.5} alignItems="center">
-								<FormControl size="small" sx={{ minWidth: 150 }}>
-									<Select value={historyFueroFilter} onChange={(e) => handleHistoryFueroFilterChange(e.target.value)}>
-										<MenuItem value="TODOS">Todos los Fueros</MenuItem>
-										{FUERO_OPTIONS.map((option) => (
-											<MenuItem key={option.value} value={option.value}>
-												{option.label}
-											</MenuItem>
-										))}
-									</Select>
-								</FormControl>
-								<FormControl size="small" sx={{ minWidth: 120 }}>
-									<Select value={historyYearFilter} onChange={(e) => handleHistoryYearFilterChange(e.target.value)}>
-										<MenuItem value="TODOS">Todos los Años</MenuItem>
-										{YEAR_OPTIONS.map((year) => (
-											<MenuItem key={year} value={year}>
-												{year}
-											</MenuItem>
-										))}
-									</Select>
-								</FormControl>
-								<Button
-									variant="text"
-									size="small"
-									startIcon={<Refresh size={16} />}
-									onClick={() => fetchScrapingHistory(historyPage)}
-									disabled={historyLoading}
-								>
-									Actualizar
-								</Button>
-							</Stack>
-						</Box>
-
-						<TableContainer component={Paper} variant="outlined">
-							{historyLoading && scrapingHistory.length === 0 ? (
-								<Box display="flex" justifyContent="center" alignItems="center" p={4}>
-									<CircularProgress />
-								</Box>
-							) : (
-								<>
-									<Table>
-										<TableHead>
-											<TableRow>
-												<TableCell>
-													<TableSortLabel
-														active={historySortBy === "worker_id"}
-														direction={historySortBy === "worker_id" ? historySortOrder : "asc"}
-														onClick={() => handleHistorySort("worker_id")}
-													>
-														Worker ID
-													</TableSortLabel>
-												</TableCell>
-												<TableCell>
-													<TableSortLabel
-														active={historySortBy === "fuero"}
-														direction={historySortBy === "fuero" ? historySortOrder : "asc"}
-														onClick={() => handleHistorySort("fuero")}
-													>
-														Fuero
-													</TableSortLabel>
-												</TableCell>
-												<TableCell align="center">
-													<TableSortLabel
-														active={historySortBy === "year"}
-														direction={historySortBy === "year" ? historySortOrder : "asc"}
-														onClick={() => handleHistorySort("year")}
-													>
-														Año
-													</TableSortLabel>
-												</TableCell>
-												<TableCell align="center">
-													<TableSortLabel
-														active={historySortBy === "range_start"}
-														direction={historySortBy === "range_start" ? historySortOrder : "asc"}
-														onClick={() => handleHistorySort("range_start")}
-													>
-														Rango Procesado
-													</TableSortLabel>
-												</TableCell>
-												<TableCell align="center">
-													<TableSortLabel
-														active={historySortBy === "documentsProcessed"}
-														direction={historySortBy === "documentsProcessed" ? historySortOrder : "asc"}
-														onClick={() => handleHistorySort("documentsProcessed")}
-													>
-														Documentos Procesados
-													</TableSortLabel>
-												</TableCell>
-												<TableCell align="center">
-													<TableSortLabel
-														active={historySortBy === "documentsFound"}
-														direction={historySortBy === "documentsFound" ? historySortOrder : "asc"}
-														onClick={() => handleHistorySort("documentsFound")}
-													>
-														Documentos Encontrados
-													</TableSortLabel>
-												</TableCell>
-												<TableCell align="center">
-													<TableSortLabel
-														active={historySortBy === "completedAt"}
-														direction={historySortBy === "completedAt" ? historySortOrder : "asc"}
-														onClick={() => handleHistorySort("completedAt")}
-													>
-														Fecha de Completado
-													</TableSortLabel>
-												</TableCell>
-											</TableRow>
-										</TableHead>
-										<TableBody>
-											{scrapingHistory.length > 0 ? (
-												scrapingHistory.map((history) => {
-													const historyId = typeof history._id === "string" ? history._id : history._id.$oid;
-													return (
-														<TableRow key={historyId}>
-															<TableCell>
-																<Typography variant="body2" fontWeight={500}>
-																	{history.worker_id}
-																</Typography>
-															</TableCell>
-															<TableCell>
-																<Chip label={history.fuero} size="small" color="primary" variant="outlined" />
-															</TableCell>
-															<TableCell align="center">
-																<Typography variant="body2">{history.year}</Typography>
-															</TableCell>
-															<TableCell align="center">
-																<Typography variant="body2">
-																	{history.range_start?.toLocaleString()} - {history.range_end?.toLocaleString()}
-																</Typography>
-															</TableCell>
-															<TableCell align="center">
-																<Typography variant="body2">{history.documents_processed?.toLocaleString() || "0"}</Typography>
-															</TableCell>
-															<TableCell align="center">
-																<Typography
-																	variant="body2"
-																	color={history.documents_found && history.documents_found > 0 ? "success.main" : "text.secondary"}
-																	fontWeight={history.documents_found && history.documents_found > 0 ? 500 : 400}
-																>
-																	{history.documents_found?.toLocaleString() || "0"}
-																</Typography>
-															</TableCell>
-															<TableCell align="center">
-																<Tooltip title={formatDate(history.completedAt)}>
-																	<Typography variant="caption">{getRelativeTime(history.completedAt)}</Typography>
-																</Tooltip>
-															</TableCell>
-														</TableRow>
-													);
-												})
-											) : (
-												<TableRow>
-													<TableCell colSpan={7} align="center">
-														<Typography variant="body2" color="text.secondary" py={3}>
-															No hay historial de rangos procesados
-														</Typography>
-													</TableCell>
-												</TableRow>
-											)}
-										</TableBody>
-									</Table>
-									{historyTotal > 10 && (
-										<TablePagination
-											rowsPerPageOptions={[10]}
-											component="div"
-											count={historyTotal}
-											rowsPerPage={10}
-											page={historyPage - 1}
-											onPageChange={(_event, newPage) => fetchScrapingHistory(newPage + 1)}
-											labelRowsPerPage="Filas por página:"
-											labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
-										/>
-									)}
-								</>
-							)}
-						</TableContainer>
-					</Box>
-
-					{/* Modal de configuración avanzada */}
-					{selectedConfig && (
-						<AdvancedConfigModal
-							open={advancedConfigOpen}
-							onClose={handleCloseAdvancedConfig}
-							config={selectedConfig}
-							onUpdate={fetchConfigs}
-							workerType="scraping"
-						/>
-					)}
-
-					{/* Modal de crear nueva configuración */}
-					<CreateConfigModal open={createConfigOpen} onClose={handleCloseCreateConfig} onSuccess={handleCreateSuccess} />
-
-					{/* Modal de workers temporarios */}
-					<TemporaryWorkersModal
-						open={temporaryWorkersOpen}
-						onClose={() => setTemporaryWorkersOpen(false)}
-						onDeleteSuccess={handleRefresh}
-					/>
-
-					{/* Diálogo de confirmación de eliminación */}
-					<Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog} maxWidth="sm" fullWidth>
-						<DialogTitle>Confirmar Eliminación</DialogTitle>
-						<DialogContent>
-							<DialogContentText>
-								¿Estás seguro de que deseas eliminar esta configuración de scraping?
-								<Box sx={{ mt: 2, p: 2, bgcolor: "background.default", borderRadius: 1 }}>
-									<Typography variant="body2" fontWeight={500}>
-										Worker ID: {configToDelete?.fuero} - {configToDelete?.year}
-									</Typography>
-									<Typography variant="body2" color="text.secondary">
-										Rango: {configToDelete?.range_start?.toLocaleString()} - {configToDelete?.range_end?.toLocaleString()}
-									</Typography>
-								</Box>
-								<Alert severity="warning" sx={{ mt: 2 }}>
-									Esta acción no se puede deshacer. Los datos del historial se mantendrán.
-								</Alert>
-							</DialogContentText>
-						</DialogContent>
-						<DialogActions>
-							<Button onClick={handleCloseDeleteDialog} disabled={deleting}>
-								Cancelar
-							</Button>
-							<Button
-								onClick={handleDeleteConfig}
-								color="error"
-								variant="contained"
-								disabled={deleting}
-								startIcon={deleting && <CircularProgress size={16} />}
-							>
-								{deleting ? "Eliminando..." : "Eliminar"}
-							</Button>
-						</DialogActions>
-					</Dialog>
-
-					{/* Diálogo de vista raw JSON */}
-					<Dialog open={rawViewOpen} onClose={handleCloseRawView} maxWidth="md" fullWidth>
-						<DialogTitle>
-							<Stack direction="row" alignItems="center" spacing={1}>
-								<Code1 size={20} />
-								<Typography variant="h6">Vista Raw JSON</Typography>
-							</Stack>
-							{rawViewConfig && (
-								<Typography variant="body2" color="text.secondary">
-									{rawViewConfig.worker_id || `${rawViewConfig.fuero} ${rawViewConfig.year}`}
-								</Typography>
-							)}
-						</DialogTitle>
-						<DialogContent>
-							<Box
-								sx={{
-									bgcolor: "grey.900",
-									color: "grey.100",
-									p: 2,
-									borderRadius: 1,
-									overflow: "auto",
-									maxHeight: "60vh",
-									fontFamily: "monospace",
-									fontSize: "0.75rem",
-									whiteSpace: "pre-wrap",
-									wordBreak: "break-word",
-								}}
-							>
-								{rawViewConfig && JSON.stringify(rawViewConfig, null, 2)}
-							</Box>
-						</DialogContent>
-						<DialogActions>
-							<Button
-								variant="outlined"
-								size="small"
-								onClick={() => {
-									if (rawViewConfig) {
-										navigator.clipboard.writeText(JSON.stringify(rawViewConfig, null, 2));
-										enqueueSnackbar("JSON copiado al portapapeles", {
-											variant: "success",
-											anchorOrigin: { vertical: "bottom", horizontal: "right" },
-										});
-									}
-								}}
-							>
-								Copiar JSON
-							</Button>
-							<Button onClick={handleCloseRawView} variant="contained">
-								Cerrar
-							</Button>
-						</DialogActions>
-					</Dialog>
-				</>
+				</Box>
 			)}
-		</Stack>
+		</Box>
+	</Box>
+
+	{/* Modal de configuración avanzada */}
+	{selectedConfig && (
+		<AdvancedConfigModal
+			open={advancedConfigOpen}
+			onClose={handleCloseAdvancedConfig}
+			config={selectedConfig}
+			onUpdate={fetchConfigs}
+			workerType="scraping"
+		/>
+	)}
+
+	{/* Modal de crear nueva configuración */}
+	<CreateConfigModal open={createConfigOpen} onClose={handleCloseCreateConfig} onSuccess={handleCreateSuccess} />
+
+	{/* Modal de workers temporarios */}
+	<TemporaryWorkersModal
+		open={temporaryWorkersOpen}
+		onClose={() => setTemporaryWorkersOpen(false)}
+		onDeleteSuccess={handleRefresh}
+	/>
+
+	{/* Diálogo de confirmación de eliminación */}
+	<Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog} maxWidth="sm" fullWidth>
+		<DialogTitle>Confirmar Eliminación</DialogTitle>
+		<DialogContent>
+			<DialogContentText>
+				¿Estás seguro de que deseas eliminar esta configuración de scraping?
+				<Box sx={{ mt: 2, p: 2, bgcolor: "background.default", borderRadius: 1 }}>
+					<Typography variant="body2" fontWeight={500}>
+						Worker ID: {configToDelete?.fuero} - {configToDelete?.year}
+					</Typography>
+					<Typography variant="body2" color="text.secondary">
+						Rango: {configToDelete?.range_start?.toLocaleString()} - {configToDelete?.range_end?.toLocaleString()}
+					</Typography>
+				</Box>
+				<Alert severity="warning" sx={{ mt: 2 }}>
+					Esta acción no se puede deshacer. Los datos del historial se mantendrán.
+				</Alert>
+			</DialogContentText>
+		</DialogContent>
+		<DialogActions>
+			<Button onClick={handleCloseDeleteDialog} disabled={deleting}>
+				Cancelar
+			</Button>
+			<Button
+				onClick={handleDeleteConfig}
+				color="error"
+				variant="contained"
+				disabled={deleting}
+				startIcon={deleting && <CircularProgress size={16} />}
+			>
+				{deleting ? "Eliminando..." : "Eliminar"}
+			</Button>
+		</DialogActions>
+	</Dialog>
+
+	{/* Diálogo de vista raw JSON */}
+	<Dialog open={rawViewOpen} onClose={handleCloseRawView} maxWidth="md" fullWidth>
+		<DialogTitle>
+			<Stack direction="row" alignItems="center" spacing={1}>
+				<Code1 size={20} />
+				<Typography variant="h6">Vista Raw JSON</Typography>
+			</Stack>
+			{rawViewConfig && (
+				<Typography variant="body2" color="text.secondary">
+					{rawViewConfig.worker_id || `${rawViewConfig.fuero} ${rawViewConfig.year}`}
+				</Typography>
+			)}
+		</DialogTitle>
+		<DialogContent>
+			<Box
+				sx={{
+					bgcolor: "grey.900",
+					color: "grey.100",
+					p: 2,
+					borderRadius: 1,
+					overflow: "auto",
+					maxHeight: "60vh",
+					fontFamily: "monospace",
+					fontSize: "0.75rem",
+					whiteSpace: "pre-wrap",
+					wordBreak: "break-word",
+				}}
+			>
+				{rawViewConfig && JSON.stringify(rawViewConfig, null, 2)}
+			</Box>
+		</DialogContent>
+		<DialogActions>
+			<Button
+				variant="outlined"
+				size="small"
+				onClick={() => {
+					if (rawViewConfig) {
+						navigator.clipboard.writeText(JSON.stringify(rawViewConfig, null, 2));
+						enqueueSnackbar("JSON copiado al portapapeles", {
+							variant: "success",
+							anchorOrigin: { vertical: "bottom", horizontal: "right" },
+						});
+					}
+				}}
+			>
+				Copiar JSON
+			</Button>
+			<Button onClick={handleCloseRawView} variant="contained">
+				Cerrar
+			</Button>
+		</DialogActions>
+	</Dialog>
+	</>
 	);
 };
 
