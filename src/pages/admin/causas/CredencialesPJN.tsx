@@ -34,6 +34,7 @@ import {
 	AlertTitle,
 	Divider,
 	LinearProgress,
+	InputAdornment,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useTheme } from "@mui/material/styles";
@@ -52,6 +53,7 @@ import {
 	Copy,
 	InfoCircle,
 	Sms,
+	Lock,
 } from "iconsax-react";
 import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -395,6 +397,39 @@ const CredencialesPJN = () => {
 		open: boolean;
 		credential: PjnCredential | null;
 	}>({ open: false, credential: null });
+
+	// Modal de actualización de contraseña
+	const [updatePasswordDialog, setUpdatePasswordDialog] = useState<{
+		open: boolean;
+		credential: PjnCredential | null;
+		password: string;
+		loading: boolean;
+	}>({ open: false, credential: null, password: "", loading: false });
+
+	const handleUpdatePassword = async () => {
+		if (!updatePasswordDialog.credential || !updatePasswordDialog.password.trim()) {
+			enqueueSnackbar("La contraseña es requerida", { variant: "warning" });
+			return;
+		}
+		setUpdatePasswordDialog((prev) => ({ ...prev, loading: true }));
+		try {
+			const response = await pjnCredentialsService.updatePassword(
+				updatePasswordDialog.credential._id,
+				updatePasswordDialog.password.trim(),
+			);
+			if (response.success) {
+				enqueueSnackbar(response.message || "Contraseña actualizada correctamente", { variant: "success" });
+				setUpdatePasswordDialog({ open: false, credential: null, password: "", loading: false });
+				fetchCredentials();
+			} else {
+				enqueueSnackbar(response.message || "Error al actualizar contraseña", { variant: "error" });
+			}
+		} catch (error: any) {
+			enqueueSnackbar(error?.response?.data?.message || "Error al actualizar contraseña", { variant: "error" });
+		} finally {
+			setUpdatePasswordDialog((prev) => ({ ...prev, loading: false }));
+		}
+	};
 
 	// Estado notificaciones
 	const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
@@ -1362,6 +1397,15 @@ const CredencialesPJN = () => {
 																color={cred.enabled ? "success" : "warning"}
 															>
 																{cred.enabled ? <ToggleOnCircle size={18} /> : <ToggleOffCircle size={18} />}
+															</IconButton>
+														</Tooltip>
+														<Tooltip title="Actualizar contraseña">
+															<IconButton
+																size="small"
+																onClick={() => setUpdatePasswordDialog({ open: true, credential: cred, password: "", loading: false })}
+																color={cred.credentialInvalid ? "error" : "default"}
+															>
+																<Lock size={18} />
 															</IconButton>
 														</Tooltip>
 														<Tooltip title="Resetear para re-sync">
@@ -2811,6 +2855,73 @@ const CredencialesPJN = () => {
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={closeDetailDialog}>Cerrar</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Dialog de actualización de contraseña */}
+			<Dialog
+				open={updatePasswordDialog.open}
+				onClose={() => {
+					if (!updatePasswordDialog.loading) {
+						setUpdatePasswordDialog({ open: false, credential: null, password: "", loading: false });
+					}
+				}}
+				maxWidth="xs"
+				fullWidth
+			>
+				<DialogTitle>Actualizar contraseña PJN</DialogTitle>
+				<DialogContent>
+					<Stack spacing={2} sx={{ mt: 1 }}>
+						{updatePasswordDialog.credential?.credentialInvalid && (
+							<Alert severity="warning" variant="outlined">
+								Credencial marcada como inválida. Actualizá la contraseña para re-activar la verificación.
+							</Alert>
+						)}
+						<Typography variant="body2" color="text.secondary">
+							Usuario: <strong>{updatePasswordDialog.credential?.userName}</strong> ({updatePasswordDialog.credential?.userEmail})
+						</Typography>
+						<Typography variant="body2" color="text.secondary">
+							CUIL: <strong>{updatePasswordDialog.credential?.cuilMasked}</strong>
+						</Typography>
+						<TextField
+							fullWidth
+							size="small"
+							label="Nueva contraseña PJN"
+							type="password"
+							value={updatePasswordDialog.password}
+							onChange={(e) => setUpdatePasswordDialog((prev) => ({ ...prev, password: e.target.value }))}
+							onKeyPress={(e) => e.key === "Enter" && handleUpdatePassword()}
+							InputProps={{
+								startAdornment: (
+									<InputAdornment position="start">
+										<Lock size={16} />
+									</InputAdornment>
+								),
+							}}
+							autoFocus
+							disabled={updatePasswordDialog.loading}
+						/>
+						<Typography variant="caption" color="text.secondary">
+							Al guardar, la credencial será re-habilitada y puesta en cola para verificación en el próximo ciclo.
+						</Typography>
+					</Stack>
+				</DialogContent>
+				<DialogActions>
+					<Button
+						onClick={() => setUpdatePasswordDialog({ open: false, credential: null, password: "", loading: false })}
+						disabled={updatePasswordDialog.loading}
+					>
+						Cancelar
+					</Button>
+					<Button
+						variant="contained"
+						color="primary"
+						onClick={handleUpdatePassword}
+						disabled={updatePasswordDialog.loading || !updatePasswordDialog.password.trim()}
+						startIcon={updatePasswordDialog.loading ? <CircularProgress size={16} /> : <Lock size={16} />}
+					>
+						{updatePasswordDialog.loading ? "Guardando..." : "Guardar contraseña"}
+					</Button>
 				</DialogActions>
 			</Dialog>
 		</MainCard>
