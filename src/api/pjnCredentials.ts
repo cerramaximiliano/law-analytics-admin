@@ -437,6 +437,14 @@ class PjnCredentialsService {
 	}
 
 	/**
+	 * Actualizar contraseña de una credencial (admin)
+	 */
+	async updatePassword(id: string, password: string): Promise<GenericResponse> {
+		const response = await adminAxios.patch(`/api/pjn-credentials/${id}/password`, { password });
+		return response.data;
+	}
+
+	/**
 	 * Eliminar credencial
 	 */
 	async deleteCredential(id: string): Promise<GenericResponse> {
