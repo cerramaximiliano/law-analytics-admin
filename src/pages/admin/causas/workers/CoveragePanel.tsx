@@ -427,7 +427,7 @@ const CoveragePanel: React.FC = () => {
 							fuero: wFuero,
 							year: y,
 							range: { start: 1, end: newEnd },
-							score: (yearNum - 2015) * 1000, // años recientes > prioridad
+							score: (CURRENT_YEAR + 1 - yearNum) * 1000, // años más antiguos > prioridad
 							description: `Año vacío — ${wFuero} ${y} sin cobertura`,
 						});
 					}
