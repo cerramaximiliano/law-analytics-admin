@@ -523,6 +523,7 @@ export interface WorkerConfig {
 	};
 	range_start?: number;
 	range_end?: number;
+	completionEmailSent?: boolean;
 	proxy?: {
 		enabled?: boolean;
 		applyTo?: {

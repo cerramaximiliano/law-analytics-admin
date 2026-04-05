@@ -341,8 +341,25 @@ const CoveragePanel: React.FC = () => {
 			const configsRes = await WorkersService.getScrapingConfigs({ limit: 500 });
 			const allConfigs: WorkerConfig[] = Array.isArray(configsRes.data) ? configsRes.data : [configsRes.data as WorkerConfig];
 
-			// 2. Workers al 100% (libres para reasignar)
-			const freeWorkers = allConfigs.filter(c => calculateProgress(c) >= 100);
+			// 2. Workers completados: todos con progress >= 100% y disabled
+			// Estos ocupan su rango aunque aún no estén en el historial
+			const allCompletedWorkers = allConfigs.filter(
+				c => c.enabled === false && calculateProgress(c) >= 100,
+			);
+			// Workers reasignables: además requieren completionEmailSent=true (validación del backend)
+			const freeWorkers = allCompletedWorkers.filter(c => c.completionEmailSent === true);
+
+			// Helper: ¿un rango fuero/year/start-end está cubierto por un worker completado pendiente de historial?
+			const isCoveredByCompleted = (f: string, y: string, gapStart: number, gapEnd: number): boolean =>
+				allCompletedWorkers.some(
+					w =>
+						w.fuero === f &&
+						String(w.year) === y &&
+						w.range_start !== undefined &&
+						w.range_end !== undefined &&
+						w.range_start <= gapEnd &&
+						w.range_end >= gapStart,
+				);
 
 			// 3. Combos fuero/año: los de los configs + año actual de cada fuero
 			const comboSet = new Set<string>();
@@ -368,14 +385,15 @@ const CoveragePanel: React.FC = () => {
 				}
 			}
 
-			// 6. Agregar gaps libres
+			// 6. Agregar gaps libres — excluir los ya cubiertos por workers completados pendientes de historial
 			const aggregated: GlobalGap[] = [];
 			for (const { fuero: f, year: y, data } of coverageMap.values()) {
 				if (!data || data.maxRange === 0) continue;
 				for (const gap of data.gaps) {
-					if (!gap.assigned) {
-						aggregated.push({ fuero: f, year: y, gap, suggestedWorkers: freeWorkers.filter(w => w.fuero === f) });
-					}
+					if (gap.assigned) continue;
+					// Si un worker completado (aún sin historial) ya cubre este gap, no sugerirlo
+					if (isCoveredByCompleted(f, y, gap.start, gap.end)) continue;
+					aggregated.push({ fuero: f, year: y, gap, suggestedWorkers: freeWorkers.filter(w => w.fuero === f) });
 				}
 			}
 			aggregated.sort((a, b) => {
@@ -395,10 +413,12 @@ const CoveragePanel: React.FC = () => {
 				const bestCandidates: SmartSuggestion[] = [];
 
 				// Oportunidad tipo "brecha": gaps libres en el mismo fuero
+				// Excluir los que ya están cubiertos por workers completados pendientes de historial
 				for (const { fuero: f, year: y, data } of coverageMap.values()) {
 					if (f !== wFuero) continue;
 					for (const gap of data.gaps) {
 						if (gap.assigned) continue;
+						if (isCoveredByCompleted(f, y, gap.start, gap.end)) continue;
 						bestCandidates.push({
 							worker,
 							type: "gap",
@@ -424,8 +444,10 @@ const CoveragePanel: React.FC = () => {
 						const y = String(yr);
 						const key = `${wFuero}|${y}`;
 						const entry = coverageMap.get(key);
-						const isEmpty = !entry || entry.data.maxRange === 0;
-						if (isEmpty) {
+						// Un año es "vacío" si no tiene historial Y ningún worker completado lo cubre
+					const isEmpty = (!entry || entry.data.maxRange === 0) &&
+						!allCompletedWorkers.some(w => w.fuero === wFuero && String(w.year) === y);
+					if (isEmpty) {
 							const workerSize = (worker.range_end ?? 50000) - (worker.range_start ?? 1);
 							const newEnd = Math.max(workerSize, 50000);
 							bestCandidates.push({
