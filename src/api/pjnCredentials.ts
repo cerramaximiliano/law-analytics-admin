@@ -25,6 +25,13 @@ export interface PjnCredential {
 	credentialInvalid: boolean;
 	credentialInvalidAt: string | null;
 	credentialInvalidReason: string | null;
+	errorHistory?: Array<{
+		message: string;
+		code: string;
+		isPortalError: boolean;
+		timestamp: string;
+		screenshotFile: string | null;
+	}>;
 	expectedCausasCount: number;
 	processedCausasCount: number;
 	foldersCreatedCount: number;

@@ -390,6 +390,12 @@ const CredencialesPJN = () => {
 		fetchPortalStatus();
 	}, []);
 
+	// Modal de historial de errores
+	const [errorHistoryDialog, setErrorHistoryDialog] = useState<{
+		open: boolean;
+		credential: PjnCredential | null;
+	}>({ open: false, credential: null });
+
 	// Estado notificaciones
 	const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
 	const [emailLogsLoading, setEmailLogsLoading] = useState(false);
@@ -1318,27 +1324,18 @@ const CredencialesPJN = () => {
 												</TableCell>
 												<TableCell align="center">
 													{cred.consecutiveErrors > 0 || cred.lastError ? (
-														<Tooltip
-															title={
-																cred.lastError
-																	? `${cred.lastError.message}${cred.lastError.code ? ` [${cred.lastError.code}]` : ""} - ${formatDate(
-																			cred.lastError.timestamp,
-																	  )}`
-																	: "Sin detalle"
+														<Chip
+															label={cred.consecutiveErrors}
+															color={
+																cred.lastError?.code &&
+																["PORTAL_TIMEOUT", "NETWORK_ERROR", "PORTAL_ERROR", "LOGIN_SERVICE_ERROR"].includes(cred.lastError.code)
+																	? "warning"
+																	: "error"
 															}
-														>
-															<Chip
-																label={cred.consecutiveErrors}
-																color={
-																	cred.lastError?.code &&
-																	["PORTAL_TIMEOUT", "NETWORK_ERROR", "PORTAL_ERROR", "LOGIN_SERVICE_ERROR"].includes(cred.lastError.code)
-																		? "warning"
-																		: "error"
-																}
-																size="small"
-																sx={{ minWidth: 32, cursor: "help" }}
-															/>
-														</Tooltip>
+															size="small"
+															onClick={() => setErrorHistoryDialog({ open: true, credential: cred })}
+															sx={{ minWidth: 32, cursor: "pointer" }}
+														/>
 													) : (
 														<Typography variant="body2" color="text.disabled">
 															0
@@ -2273,6 +2270,138 @@ const CredencialesPJN = () => {
 					</Grid>
 				</Grid>
 			)}
+
+			{/* Modal historial de errores */}
+			<Dialog
+				open={errorHistoryDialog.open}
+				onClose={() => setErrorHistoryDialog({ open: false, credential: null })}
+				maxWidth="md"
+				fullWidth
+			>
+				<DialogTitle>
+					<Stack direction="row" justifyContent="space-between" alignItems="center">
+						<Box>
+							<Typography variant="h5">Historial de Errores</Typography>
+							{errorHistoryDialog.credential && (
+								<Typography variant="caption" color="text.secondary">
+									{errorHistoryDialog.credential.userName} — {errorHistoryDialog.credential.cuilMasked}
+								</Typography>
+							)}
+						</Box>
+						{errorHistoryDialog.credential && (
+							<Chip
+								label={`${errorHistoryDialog.credential.consecutiveErrors} error${errorHistoryDialog.credential.consecutiveErrors !== 1 ? "es" : ""} consecutivo${errorHistoryDialog.credential.consecutiveErrors !== 1 ? "s" : ""}`}
+								color={errorHistoryDialog.credential.consecutiveErrors >= 5 ? "error" : "warning"}
+								size="small"
+							/>
+						)}
+					</Stack>
+				</DialogTitle>
+				<DialogContent dividers>
+					{errorHistoryDialog.credential && (
+						<Stack spacing={2}>
+							{/* Último error destacado */}
+							{errorHistoryDialog.credential.lastError && (
+								<Alert
+									severity={
+										["PORTAL_TIMEOUT", "NETWORK_ERROR", "PORTAL_ERROR", "LOGIN_SERVICE_ERROR"].includes(
+											errorHistoryDialog.credential.lastError.code,
+										)
+											? "warning"
+											: "error"
+									}
+									variant="outlined"
+								>
+									<Typography variant="subtitle2" gutterBottom>
+										Último error — {formatDate(errorHistoryDialog.credential.lastError.timestamp)}
+									</Typography>
+									<Typography variant="body2">{errorHistoryDialog.credential.lastError.message}</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Código: <strong>{errorHistoryDialog.credential.lastError.code}</strong>
+									</Typography>
+								</Alert>
+							)}
+
+							{/* Historial completo */}
+							{errorHistoryDialog.credential.errorHistory && errorHistoryDialog.credential.errorHistory.length > 0 ? (
+								<Box>
+									<Typography variant="subtitle2" gutterBottom>
+										Historial ({errorHistoryDialog.credential.errorHistory.length} registros)
+									</Typography>
+									<TableContainer component={Paper} variant="outlined">
+										<Table size="small">
+											<TableHead>
+												<TableRow>
+													<TableCell>Fecha</TableCell>
+													<TableCell>Código</TableCell>
+													<TableCell>Mensaje</TableCell>
+													<TableCell align="center">Tipo</TableCell>
+													<TableCell>Screenshot</TableCell>
+												</TableRow>
+											</TableHead>
+											<TableBody>
+												{errorHistoryDialog.credential.errorHistory.map((err, i) => (
+													<TableRow key={i} hover>
+														<TableCell>
+															<Typography variant="caption" noWrap>{formatDate(err.timestamp)}</Typography>
+														</TableCell>
+														<TableCell>
+															<Chip
+																label={err.code}
+																size="small"
+																color={err.isPortalError ? "warning" : "error"}
+																variant="outlined"
+																sx={{ fontSize: "0.65rem", height: 20, fontFamily: "monospace" }}
+															/>
+														</TableCell>
+														<TableCell>
+															<Tooltip title={err.message} arrow>
+																<Typography
+																	variant="caption"
+																	sx={{ maxWidth: 280, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+																>
+																	{err.message}
+																</Typography>
+															</Tooltip>
+														</TableCell>
+														<TableCell align="center">
+															<Chip
+																label={err.isPortalError ? "Portal" : "Credencial"}
+																size="small"
+																color={err.isPortalError ? "warning" : "error"}
+																variant="outlined"
+																sx={{ fontSize: "0.6rem", height: 18 }}
+															/>
+														</TableCell>
+														<TableCell>
+															{err.screenshotFile ? (
+																<Tooltip title={err.screenshotFile} arrow>
+																	<Typography variant="caption" color="primary.main" sx={{ fontFamily: "monospace", fontSize: "0.65rem", cursor: "default" }}>
+																		{err.screenshotFile.split("/").pop()}
+																	</Typography>
+																</Tooltip>
+															) : (
+																<Typography variant="caption" color="text.disabled">—</Typography>
+															)}
+														</TableCell>
+													</TableRow>
+												))}
+											</TableBody>
+										</Table>
+									</TableContainer>
+								</Box>
+							) : (
+								<Alert severity="info" variant="outlined">
+									No hay historial de errores registrado. Los nuevos errores se registrarán a partir de ahora.
+								</Alert>
+							)}
+						</Stack>
+					)}
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setErrorHistoryDialog({ open: false, credential: null })}>Cerrar</Button>
+				</DialogActions>
+			</Dialog>
 
 			{/* Dialog de confirmación de eliminación */}
 			<Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, credential: null })}>
