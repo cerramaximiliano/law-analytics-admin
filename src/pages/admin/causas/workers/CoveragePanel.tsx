@@ -411,25 +411,33 @@ const CoveragePanel: React.FC = () => {
 					}
 				}
 
-				// Oportunidad tipo "año vacío": fuero sin ningún dato en un año
-				for (const y of YEAR_OPTIONS) {
-					const key = `${wFuero}|${y}`;
-					const entry = coverageMap.get(key);
-					const isEmpty = !entry || entry.data.maxRange === 0;
-					if (isEmpty) {
-						const yearNum = Number(y);
-						// Reusar el mismo rango del worker (same size) para el nuevo año
-						const workerSize = (worker.range_end ?? 50000) - (worker.range_start ?? 1);
-						const newEnd = Math.max(workerSize, 50000);
-						bestCandidates.push({
-							worker,
-							type: "empty_year",
-							fuero: wFuero,
-							year: y,
-							range: { start: 1, end: newEnd },
-							score: (CURRENT_YEAR + 1 - yearNum) * 1000, // años más antiguos > prioridad
-							description: `Año vacío — ${wFuero} ${y} sin cobertura`,
-						});
+				// Oportunidad tipo "año vacío": solo dentro del rango de años con historial real para este fuero
+				const fueroYearsWithData = Array.from(coverageMap.values())
+					.filter(e => e.fuero === wFuero && e.data.maxRange > 0)
+					.map(e => Number(e.year));
+
+				if (fueroYearsWithData.length > 0) {
+					const minYear = Math.min(...fueroYearsWithData);
+					const maxYear = Math.max(...fueroYearsWithData);
+
+					for (let yr = minYear; yr <= maxYear; yr++) {
+						const y = String(yr);
+						const key = `${wFuero}|${y}`;
+						const entry = coverageMap.get(key);
+						const isEmpty = !entry || entry.data.maxRange === 0;
+						if (isEmpty) {
+							const workerSize = (worker.range_end ?? 50000) - (worker.range_start ?? 1);
+							const newEnd = Math.max(workerSize, 50000);
+							bestCandidates.push({
+								worker,
+								type: "empty_year",
+								fuero: wFuero,
+								year: y,
+								range: { start: 1, end: newEnd },
+								score: (maxYear + 1 - yr) * 1000, // años más antiguos dentro del rango > prioridad
+								description: `Año sin cobertura — ${wFuero} ${y} (entre ${minYear} y ${maxYear})`,
+							});
+						}
 					}
 				}
 
