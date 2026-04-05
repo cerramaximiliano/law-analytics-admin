@@ -341,24 +341,23 @@ const CoveragePanel: React.FC = () => {
 			const configsRes = await WorkersService.getScrapingConfigs({ limit: 500 });
 			const allConfigs: WorkerConfig[] = Array.isArray(configsRes.data) ? configsRes.data : [configsRes.data as WorkerConfig];
 
-			// 2. Workers completados: todos con progress >= 100% y disabled
-			// Estos ocupan su rango aunque aún no estén en el historial
-			const allCompletedWorkers = allConfigs.filter(
-				c => c.enabled === false && calculateProgress(c) >= 100,
+			// 2. Workers reasignables: disabled + progress >= 100% + completionEmailSent=true
+			const freeWorkers = allConfigs.filter(
+				c => c.enabled === false && calculateProgress(c) >= 100 && c.completionEmailSent === true,
 			);
-			// Workers reasignables: además requieren completionEmailSent=true (validación del backend)
-			const freeWorkers = allCompletedWorkers.filter(c => c.completionEmailSent === true);
 
-			// Helper: ¿un rango fuero/year/start-end está cubierto por un worker completado pendiente de historial?
-			const isCoveredByCompleted = (f: string, y: string, gapStart: number, gapEnd: number): boolean =>
-				allCompletedWorkers.some(
+			// Helper: ¿el rango fuero/year/start-end se superpone con ALGÚN otro config en la DB?
+			// El backend rechaza cualquier overlap (enabled o no), excepto el propio worker siendo reasignado.
+			const isRangeConflicting = (f: string, y: string, start: number, end: number, excludeId: string): boolean =>
+				allConfigs.some(
 					w =>
+						getConfigId(w) !== excludeId &&
 						w.fuero === f &&
 						String(w.year) === y &&
 						w.range_start !== undefined &&
 						w.range_end !== undefined &&
-						w.range_start <= gapEnd &&
-						w.range_end >= gapStart,
+						w.range_start <= end &&
+						w.range_end >= start,
 				);
 
 			// 3. Combos fuero/año: los de los configs + año actual de cada fuero
@@ -385,15 +384,17 @@ const CoveragePanel: React.FC = () => {
 				}
 			}
 
-			// 6. Agregar gaps libres — excluir los ya cubiertos por workers completados pendientes de historial
+			// 6. Agregar gaps libres — incluir solo los que al menos un free worker puede cubrir sin conflicto
 			const aggregated: GlobalGap[] = [];
 			for (const { fuero: f, year: y, data } of coverageMap.values()) {
 				if (!data || data.maxRange === 0) continue;
 				for (const gap of data.gaps) {
 					if (gap.assigned) continue;
-					// Si un worker completado (aún sin historial) ya cubre este gap, no sugerirlo
-					if (isCoveredByCompleted(f, y, gap.start, gap.end)) continue;
-					aggregated.push({ fuero: f, year: y, gap, suggestedWorkers: freeWorkers.filter(w => w.fuero === f) });
+					// Para cada free worker del mismo fuero, verificar si puede cubrir este gap sin conflicto con otros configs
+					const validWorkers = freeWorkers.filter(
+						w => w.fuero === f && !isRangeConflicting(f, y, gap.start, gap.end, getConfigId(w)),
+					);
+					aggregated.push({ fuero: f, year: y, gap, suggestedWorkers: validWorkers });
 				}
 			}
 			aggregated.sort((a, b) => {
@@ -412,13 +413,13 @@ const CoveragePanel: React.FC = () => {
 				const wFuero = worker.fuero;
 				const bestCandidates: SmartSuggestion[] = [];
 
-				// Oportunidad tipo "brecha": gaps libres en el mismo fuero
-				// Excluir los que ya están cubiertos por workers completados pendientes de historial
+				// Oportunidad tipo "brecha": gaps libres en el mismo fuero donde este worker puede asignarse sin conflicto
 				for (const { fuero: f, year: y, data } of coverageMap.values()) {
 					if (f !== wFuero) continue;
 					for (const gap of data.gaps) {
 						if (gap.assigned) continue;
-						if (isCoveredByCompleted(f, y, gap.start, gap.end)) continue;
+						// Verificar que no haya conflicto con otros configs (el backend rechaza cualquier overlap)
+						if (isRangeConflicting(f, y, gap.start, gap.end, getConfigId(worker))) continue;
 						bestCandidates.push({
 							worker,
 							type: "gap",
@@ -444,22 +445,21 @@ const CoveragePanel: React.FC = () => {
 						const y = String(yr);
 						const key = `${wFuero}|${y}`;
 						const entry = coverageMap.get(key);
-						// Un año es "vacío" si no tiene historial Y ningún worker completado lo cubre
-					const isEmpty = (!entry || entry.data.maxRange === 0) &&
-						!allCompletedWorkers.some(w => w.fuero === wFuero && String(w.year) === y);
-					if (isEmpty) {
-							const workerSize = (worker.range_end ?? 50000) - (worker.range_start ?? 1);
-							const newEnd = Math.max(workerSize, 50000);
-							bestCandidates.push({
-								worker,
-								type: "empty_year",
-								fuero: wFuero,
-								year: y,
-								range: { start: 1, end: newEnd },
-								score: (maxYear + 1 - yr) * 1000, // años más antiguos dentro del rango > prioridad
-								description: `Año sin cobertura — ${wFuero} ${y} (entre ${minYear} y ${maxYear})`,
-							});
-						}
+						// Un año es "vacío" si no tiene historial de cobertura
+						if (entry && entry.data.maxRange > 0) continue;
+						// Verificar que no haya ningún config (enabled o no) que ya ocupe el rango 1-N en ese año
+						const workerSize = (worker.range_end ?? 50000) - (worker.range_start ?? 1);
+						const newEnd = Math.max(workerSize, 50000);
+						if (isRangeConflicting(wFuero, y, 1, newEnd, getConfigId(worker))) continue;
+						bestCandidates.push({
+							worker,
+							type: "empty_year",
+							fuero: wFuero,
+							year: y,
+							range: { start: 1, end: newEnd },
+							score: (maxYear + 1 - yr) * 1000, // años más antiguos dentro del rango > prioridad
+							description: `Año sin cobertura — ${wFuero} ${y} (entre ${minYear} y ${maxYear})`,
+						});
 					}
 				}
 
@@ -507,7 +507,12 @@ const CoveragePanel: React.FC = () => {
 			if (mode === "fuero") handleLoadFuero();
 			else handleGlobalScan();
 		} catch (error: any) {
-			enqueueSnackbar(error.message || "Error al asignar worker", { variant: "error" });
+			const apiMessage = error?.response?.data?.message || error?.message || "Error al asignar worker";
+			const conflicting = error?.response?.data?.data?.conflictingConfig;
+			const detail = conflicting
+				? ` — conflicto con: ${conflicting.nombre || conflicting.id} (${conflicting.fuero} ${conflicting.year}, ${conflicting.range_start?.toLocaleString()}–${conflicting.range_end?.toLocaleString()})`
+				: "";
+			enqueueSnackbar(`${apiMessage}${detail}`, { variant: "error", style: { maxWidth: 600 } });
 			setAssignDialog(prev => ({ ...prev, loading: false }));
 		}
 	};
