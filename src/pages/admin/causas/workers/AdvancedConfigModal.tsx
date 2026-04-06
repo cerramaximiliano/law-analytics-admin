@@ -57,10 +57,10 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 		year: config.year || new Date().getFullYear(),
 	});
 
-	// Estado para probe config
+	// Estado para probe config (strings para evitar que el campo quede en 0 al borrar)
 	const [probeData, setProbeData] = useState({
-		threshold: config.current_year_probe?.threshold ?? 50,
-		check_interval_hours: config.current_year_probe?.check_interval_hours ?? 6,
+		threshold_str: String(config.current_year_probe?.threshold ?? 50),
+		check_interval_hours_str: String(config.current_year_probe?.check_interval_hours ?? 6),
 		probe_offsets_str: (config.current_year_probe?.probe_offsets ?? [200, 1000, 5000]).join(", "),
 	});
 
@@ -79,8 +79,8 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 			year: config.year || new Date().getFullYear(),
 		});
 		setProbeData({
-			threshold: config.current_year_probe?.threshold ?? 50,
-			check_interval_hours: config.current_year_probe?.check_interval_hours ?? 6,
+			threshold_str: String(config.current_year_probe?.threshold ?? 50),
+			check_interval_hours_str: String(config.current_year_probe?.check_interval_hours ?? 6),
 			probe_offsets_str: (config.current_year_probe?.probe_offsets ?? [200, 1000, 5000]).join(", "),
 		});
 	}, [config]);
@@ -220,8 +220,10 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 	};
 
 	const isProbeValid = (): boolean => {
-		if (probeData.threshold < 1) return false;
-		if (probeData.check_interval_hours <= 0) return false;
+		const threshold = Number(probeData.threshold_str);
+		const hours = Number(probeData.check_interval_hours_str);
+		if (!Number.isFinite(threshold) || threshold < 1) return false;
+		if (!Number.isFinite(hours) || hours <= 0) return false;
 		return parseProbeOffsets() !== null;
 	};
 
@@ -242,8 +244,8 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 			setLoading(true);
 			const configId = getConfigId();
 			const response = await WorkersService.updateScrapingProbeConfig(configId, {
-				threshold: probeData.threshold,
-				check_interval_hours: probeData.check_interval_hours,
+				threshold: Number(probeData.threshold_str),
+				check_interval_hours: Number(probeData.check_interval_hours_str),
 				probe_offsets: offsets,
 			});
 			if (response.success) {
@@ -578,8 +580,8 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 											</Typography>
 											<TextField
 												type="number"
-												value={probeData.threshold}
-												onChange={(e) => setProbeData((p) => ({ ...p, threshold: Number(e.target.value) }))}
+												value={probeData.threshold_str}
+												onChange={(e) => setProbeData((p) => ({ ...p, threshold_str: e.target.value }))}
 												inputProps={{ min: 1 }}
 												helperText="El worker sondea cuando acumula esta cantidad de not-founds seguidos (default: 50)"
 												sx={{ maxWidth: 200 }}
@@ -605,8 +607,8 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 											</Typography>
 											<TextField
 												type="number"
-												value={probeData.check_interval_hours}
-												onChange={(e) => setProbeData((p) => ({ ...p, check_interval_hours: Number(e.target.value) }))}
+												value={probeData.check_interval_hours_str}
+												onChange={(e) => setProbeData((p) => ({ ...p, check_interval_hours_str: e.target.value }))}
 												inputProps={{ min: 0.5, step: 0.5 }}
 												helperText="Tiempo que el worker espera antes de reintentar tras detectar la frontera (default: 6)"
 												sx={{ maxWidth: 200 }}
