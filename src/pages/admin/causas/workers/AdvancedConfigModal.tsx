@@ -20,7 +20,7 @@ import {
 	Tab,
 } from "@mui/material";
 import ResponsiveDialog from "components/@extended/ResponsiveDialog";
-import { Eye, EyeSlash, Setting2, Shield, ChartCircle } from "iconsax-react";
+import { Eye, EyeSlash, Setting2, Shield, ChartCircle, Scanning } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig, WorkerType } from "api/workers";
 
@@ -57,6 +57,13 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 		year: config.year || new Date().getFullYear(),
 	});
 
+	// Estado para probe config
+	const [probeData, setProbeData] = useState({
+		threshold: config.current_year_probe?.threshold ?? 50,
+		check_interval_hours: config.current_year_probe?.check_interval_hours ?? 6,
+		probe_offsets_str: (config.current_year_probe?.probe_offsets ?? [200, 1000, 5000]).join(", "),
+	});
+
 	// Actualizar estado cuando cambie la configuración
 	useEffect(() => {
 		setFormData({
@@ -70,6 +77,11 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 			range_start: config.range_start || 0,
 			range_end: config.range_end || 0,
 			year: config.year || new Date().getFullYear(),
+		});
+		setProbeData({
+			threshold: config.current_year_probe?.threshold ?? 50,
+			check_interval_hours: config.current_year_probe?.check_interval_hours ?? 6,
+			probe_offsets_str: (config.current_year_probe?.probe_offsets ?? [200, 1000, 5000]).join(", "),
 		});
 	}, [config]);
 
@@ -198,9 +210,74 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 		}
 	};
 
+	// Probe: parsear offsets y validar
+	const parseProbeOffsets = (): number[] | null => {
+		const parts = probeData.probe_offsets_str
+			.split(",")
+			.map((s) => parseInt(s.trim(), 10))
+			.filter((n) => !isNaN(n) && n > 0);
+		return parts.length > 0 ? parts : null;
+	};
+
+	const isProbeValid = (): boolean => {
+		if (probeData.threshold < 1) return false;
+		if (probeData.check_interval_hours <= 0) return false;
+		return parseProbeOffsets() !== null;
+	};
+
+	const isPaused = (): boolean => {
+		const paused = config.current_year_probe?.paused_until;
+		if (!paused) return false;
+		const pausedDate = typeof paused === "string" ? new Date(paused) : new Date((paused as any).$date);
+		return pausedDate > new Date();
+	};
+
+	const handleSaveProbe = async () => {
+		const offsets = parseProbeOffsets();
+		if (!isProbeValid() || !offsets) {
+			enqueueSnackbar("Valores de probe inválidos", { variant: "warning", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+			return;
+		}
+		try {
+			setLoading(true);
+			const configId = getConfigId();
+			const response = await WorkersService.updateScrapingProbeConfig(configId, {
+				threshold: probeData.threshold,
+				check_interval_hours: probeData.check_interval_hours,
+				probe_offsets: offsets,
+			});
+			if (response.success) {
+				enqueueSnackbar("Configuración de probe actualizada", { variant: "success", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+				onUpdate();
+			}
+		} catch (error: any) {
+			enqueueSnackbar(error.response?.data?.message || error.message || "Error al actualizar", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleResetPause = async () => {
+		try {
+			setLoading(true);
+			const configId = getConfigId();
+			const response = await WorkersService.updateScrapingProbeConfig(configId, { reset_pause: true });
+			if (response.success) {
+				enqueueSnackbar("Pausa de frontera eliminada — worker retomará en el próximo ciclo", { variant: "success", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+				onUpdate();
+			}
+		} catch (error: any) {
+			enqueueSnackbar(error.response?.data?.message || error.message || "Error al resetear pausa", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	// Determinar si mostrar el tab de rangos
 	const showRangeTab =
 		workerType === "scraping" && config.enabled === false && config.number && config.range_end && config.number > config.range_end;
+
+	const showProbeTab = workerType === "scraping";
 
 	// Manejar cambio de tab
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -256,6 +333,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 						<Tabs value={activeTab} onChange={handleTabChange} aria-label="configuración avanzada tabs">
 							<Tab icon={<Shield size={20} />} label="Servicios de Captcha" iconPosition="start" />
 							{showRangeTab && <Tab icon={<ChartCircle size={20} />} label="Rango de Búsqueda" iconPosition="start" />}
+							{showProbeTab && <Tab icon={<Scanning size={20} />} label="Frontera" iconPosition="start" />}
 						</Tabs>
 					</Box>
 
@@ -438,6 +516,111 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 								</Alert>
 							</Stack>
 						</Box>
+
+						{/* Tab Panel: Frontera / Probe */}
+						{showProbeTab && (() => {
+							const probeTabIndex = showRangeTab ? 2 : 1;
+							const probe = config.current_year_probe;
+							const pausedUntil = probe?.paused_until
+								? typeof probe.paused_until === "string"
+									? new Date(probe.paused_until)
+									: new Date((probe.paused_until as any).$date)
+								: null;
+							const workerIsPaused = pausedUntil ? pausedUntil > new Date() : false;
+							return (
+								<Box sx={{ display: activeTab === probeTabIndex ? "block" : "none", pt: 2 }}>
+									<Stack spacing={2}>
+										{workerIsPaused && pausedUntil && (
+											<Alert
+												severity="warning"
+												variant="outlined"
+												action={
+													<Button color="warning" size="small" onClick={handleResetPause} disabled={loading}>
+														Reanudar ahora
+													</Button>
+												}
+											>
+												<Typography variant="body2">
+													Worker pausado por frontera detectada hasta{" "}
+													<strong>{pausedUntil.toLocaleString("es-AR")}</strong>.
+													{probe?.estimated_frontier && (
+														<> Frontera estimada en expediente <strong>{probe.estimated_frontier.toLocaleString()}</strong>.</>
+													)}
+												</Typography>
+											</Alert>
+										)}
+
+										{probe?.last_probe_at && (
+											<Alert severity="info" variant="outlined">
+												<Typography variant="body2">
+													Último sondeo:{" "}
+													<strong>
+														{new Date(
+															typeof probe.last_probe_at === "string"
+																? probe.last_probe_at
+																: (probe.last_probe_at as any).$date,
+														).toLocaleString("es-AR")}
+													</strong>
+													{probe.last_probe_result && (
+														<> — {probe.last_probe_result}</>
+													)}
+												</Typography>
+											</Alert>
+										)}
+
+										<Divider />
+
+										<Box>
+											<Typography variant="subtitle2" gutterBottom>
+												Umbral de no-encontrados consecutivos para disparar sondeo
+											</Typography>
+											<TextField
+												type="number"
+												value={probeData.threshold}
+												onChange={(e) => setProbeData((p) => ({ ...p, threshold: Number(e.target.value) }))}
+												inputProps={{ min: 1 }}
+												helperText="El worker sondea cuando acumula esta cantidad de not-founds seguidos (default: 50)"
+												sx={{ maxWidth: 200 }}
+											/>
+										</Box>
+
+										<Box>
+											<Typography variant="subtitle2" gutterBottom>
+												Offsets de sondeo (separados por coma)
+											</Typography>
+											<TextField
+												fullWidth
+												value={probeData.probe_offsets_str}
+												onChange={(e) => setProbeData((p) => ({ ...p, probe_offsets_str: e.target.value }))}
+												helperText="Números a sondear por delante del actual (ej: 200, 1000, 5000)"
+												error={parseProbeOffsets() === null && probeData.probe_offsets_str.trim() !== ""}
+											/>
+										</Box>
+
+										<Box>
+											<Typography variant="subtitle2" gutterBottom>
+												Horas de pausa al detectar frontera real
+											</Typography>
+											<TextField
+												type="number"
+												value={probeData.check_interval_hours}
+												onChange={(e) => setProbeData((p) => ({ ...p, check_interval_hours: Number(e.target.value) }))}
+												inputProps={{ min: 0.5, step: 0.5 }}
+												helperText="Tiempo que el worker espera antes de reintentar tras detectar la frontera (default: 6)"
+												sx={{ maxWidth: 200 }}
+											/>
+										</Box>
+
+										<Alert severity="info" variant="outlined">
+											<Typography variant="body2">
+												El sondeo aplica solo cuando el worker procesa el <strong>año en curso</strong>. Si encuentra expedientes
+												en los offsets, asume privadas y avanza; si no encuentra nada, detecta la frontera real y pausa.
+											</Typography>
+										</Alert>
+									</Stack>
+								</Box>
+							);
+						})()}
 					</Box>
 				</Stack>
 			</DialogContent>
@@ -458,6 +641,11 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 				{activeTab === 1 && showRangeTab && (
 					<Button onClick={handleUpdateRange} variant="contained" disabled={loading || !isRangeValid()}>
 						{loading ? "Actualizando..." : "Actualizar Rango"}
+					</Button>
+				)}
+				{showProbeTab && activeTab === (showRangeTab ? 2 : 1) && (
+					<Button onClick={handleSaveProbe} variant="contained" disabled={loading || !isProbeValid()}>
+						{loading ? "Guardando..." : "Guardar Probe"}
 					</Button>
 				)}
 			</DialogActions>

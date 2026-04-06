@@ -572,6 +572,16 @@ export interface WorkerConfig {
 		completionEmailSent?: boolean;
 		_id?: string | { $oid: string };
 	}>;
+	// Configuración de sondeo de frontera (año en curso)
+	current_year_probe?: {
+		threshold?: number;
+		probe_offsets?: number[];
+		check_interval_hours?: number;
+		paused_until?: { $date: string } | string | null;
+		estimated_frontier?: number | null;
+		last_probe_at?: { $date: string } | string | null;
+		last_probe_result?: string | null;
+	};
 }
 
 export interface WorkerConfigResponse {
@@ -702,6 +712,18 @@ class WorkerConfigService {
 			throw WorkersService.handleError(error);
 		}
 	}
+
+	async updateProbeConfig(
+		id: string,
+		data: { threshold?: number; probe_offsets?: number[]; check_interval_hours?: number; reset_pause?: boolean },
+	): Promise<WorkerConfigResponse> {
+		try {
+			const response = await workersAxios.patch(`${this.endpoint}${id}/probe`, data);
+			return response.data;
+		} catch (error) {
+			throw WorkersService.handleError(error);
+		}
+	}
 }
 
 // Servicio principal de Workers
@@ -811,6 +833,13 @@ export class WorkersService {
 
 	static async deleteScrapingConfig(id: string): Promise<WorkerConfigResponse> {
 		return this.services["scraping"].deleteConfig(id);
+	}
+
+	static async updateScrapingProbeConfig(
+		id: string,
+		data: { threshold?: number; probe_offsets?: number[]; check_interval_hours?: number; reset_pause?: boolean },
+	): Promise<WorkerConfigResponse> {
+		return this.services["scraping"].updateProbeConfig(id, data);
 	}
 
 	static async createScrapingConfig(data: Partial<WorkerConfig>): Promise<WorkerConfigResponse> {
