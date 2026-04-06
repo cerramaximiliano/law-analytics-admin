@@ -249,6 +249,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 			if (response.success) {
 				enqueueSnackbar("Configuración de probe actualizada", { variant: "success", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
 				onUpdate();
+				onClose();
 			}
 		} catch (error: any) {
 			enqueueSnackbar(error.response?.data?.message || error.message || "Error al actualizar", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
@@ -265,6 +266,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 			if (response.success) {
 				enqueueSnackbar("Pausa de frontera eliminada — worker retomará en el próximo ciclo", { variant: "success", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
 				onUpdate();
+				onClose();
 			}
 		} catch (error: any) {
 			enqueueSnackbar(error.response?.data?.message || error.message || "Error al resetear pausa", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
