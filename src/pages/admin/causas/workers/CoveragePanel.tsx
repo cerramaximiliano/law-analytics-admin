@@ -96,6 +96,12 @@ interface SmartSuggestion {
 	description: string;
 }
 
+interface PendingHistoryWorker {
+	worker: WorkerConfig;
+	/** El rango actual completado que aún no está en el historial */
+	pendingRange: { start: number; end: number };
+}
+
 interface AssignDialogState {
 	open: boolean;
 	workerId: string;
@@ -277,6 +283,7 @@ const CoveragePanel: React.FC = () => {
 	const [globalLoading, setGlobalLoading] = useState(false);
 	const [globalGaps, setGlobalGaps] = useState<GlobalGap[]>([]);
 	const [smartSuggestions, setSmartSuggestions] = useState<SmartSuggestion[]>([]);
+	const [pendingHistoryWorkers, setPendingHistoryWorkers] = useState<PendingHistoryWorker[]>([]);
 	const [globalScanned, setGlobalScanned] = useState(false);
 	const [globalScanInfo, setGlobalScanInfo] = useState<{ combos: number; freeWorkers: number } | null>(null);
 
@@ -333,6 +340,7 @@ const CoveragePanel: React.FC = () => {
 		setGlobalLoading(true);
 		setGlobalGaps([]);
 		setSmartSuggestions([]);
+		setPendingHistoryWorkers([]);
 		setGlobalScanned(false);
 		setGlobalScanInfo(null);
 
@@ -405,6 +413,28 @@ const CoveragePanel: React.FC = () => {
 			});
 			setGlobalGaps(aggregated);
 
+			// 6.5. Detectar workers completados cuyo rango aún no está en el historial
+			const allCompletedWorkers = allConfigs.filter(c => c.enabled === false && calculateProgress(c) >= 100);
+			const pending: PendingHistoryWorker[] = [];
+			for (const w of allCompletedWorkers) {
+				if (!w.fuero || !w.year || w.range_start === undefined || w.range_end === undefined) continue;
+				const key = `${w.fuero}|${w.year}`;
+				const entry = coverageMap.get(key);
+				// Sin cobertura para ese año → definitivamente pendiente
+				if (!entry || entry.data.maxRange === 0) {
+					pending.push({ worker: w, pendingRange: { start: w.range_start, end: w.range_end } });
+					continue;
+				}
+				// Ver si el rango del worker está cubierto en el historial
+				const isCoveredInHistory = entry.data.coveredRanges.some(
+					r => r.start <= w.range_start! && r.end >= w.range_end!,
+				);
+				if (!isCoveredInHistory) {
+					pending.push({ worker: w, pendingRange: { start: w.range_start, end: w.range_end } });
+				}
+			}
+			setPendingHistoryWorkers(pending);
+
 			// 7. Sugerencias inteligentes por worker
 			const suggestions: SmartSuggestion[] = [];
 
@@ -444,11 +474,12 @@ const CoveragePanel: React.FC = () => {
 					.map(e => Number(e.year));
 
 				if (fueroYearsWithData.length > 0) {
-					const minYear = Math.min(...fueroYearsWithData);
+					const minHistYear = Math.min(...fueroYearsWithData);
+					const maxHistYear = Math.max(...fueroYearsWithData);
 					// Extender hasta el año actual para sugerir años recientes sin cobertura
-					const maxYear = Math.max(Math.max(...fueroYearsWithData), CURRENT_YEAR);
+					const maxYear = Math.max(maxHistYear, CURRENT_YEAR);
 
-					for (let yr = minYear; yr <= maxYear; yr++) {
+					for (let yr = minHistYear; yr <= maxYear; yr++) {
 						const y = String(yr);
 						// Nunca sugerir que el worker vuelva a su propio año (evita reset circular)
 						if (String(worker.year) === y) continue;
@@ -460,14 +491,19 @@ const CoveragePanel: React.FC = () => {
 						const workerSize = (worker.range_end ?? 50000) - (worker.range_start ?? 1);
 						const newEnd = Math.max(workerSize, 50000);
 						if (isRangeConflicting(wFuero, y, 1, newEnd, getConfigId(worker))) continue;
+						// Score: años históricos sin cobertura (más antiguos primero) > años futuros
+						// Los años dentro del rango histórico tienen alta prioridad; los futuros, baja
+						const isHistorical = yr <= maxHistYear;
+						const score = isHistorical
+							? (maxHistYear + 1 - yr) * 1000          // más antiguo = mayor score
+							: Math.max(1, 50 - (yr - maxHistYear) * 10); // futuros: 50, 40, 30... (muy bajo)
 						bestCandidates.push({
 							worker,
 							type: "empty_year",
 							fuero: wFuero,
 							year: y,
 							range: { start: 1, end: newEnd },
-							// Prioridad: años más antiguos primero (dentro del historial), luego años futuros
-							score: yr <= Math.max(...fueroYearsWithData) ? (maxYear + 1 - yr) * 1000 : yr * 10,
+							score,
 							description: `Año sin cobertura — ${wFuero} ${y}`,
 						});
 					}
@@ -812,8 +848,8 @@ const CoveragePanel: React.FC = () => {
 								{ label: "Combinaciones analizadas", value: globalScanInfo.combos, color: "info.main" },
 								{ label: "Workers al 100%", value: globalScanInfo.freeWorkers, color: globalScanInfo.freeWorkers > 0 ? "success.main" : "text.disabled" },
 								{ label: "Gaps sin cobertura", value: globalGaps.length, color: globalGaps.length > 0 ? "error.main" : "success.main" },
-								{ label: "Con sugerencia de worker", value: globalGaps.filter(g => g.suggestedWorkers.length > 0).length, color: "warning.main" },
 								{ label: "Sugerencias inteligentes", value: smartSuggestions.length, color: smartSuggestions.length > 0 ? "secondary.main" : "text.disabled" },
+								{ label: "Historial pendiente", value: pendingHistoryWorkers.length, color: pendingHistoryWorkers.length > 0 ? "warning.main" : "text.disabled" },
 							].map(({ label, value, color }) => (
 								<Card key={label} variant="outlined" sx={{ flex: 1, minWidth: 130 }}>
 									<CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
@@ -825,7 +861,7 @@ const CoveragePanel: React.FC = () => {
 						</Stack>
 					)}
 
-					{globalScanned && globalGaps.length === 0 && smartSuggestions.length === 0 && (
+					{globalScanned && globalGaps.length === 0 && smartSuggestions.length === 0 && pendingHistoryWorkers.length === 0 && (
 						<Alert severity="success" icon={<TickCircle size={20} />}>
 							Cobertura completa — no se encontraron períodos sin cobertura en ningún fuero ni año analizado.
 						</Alert>
@@ -1001,6 +1037,69 @@ const CoveragePanel: React.FC = () => {
 						<Alert severity="warning">
 							No hay workers al 100% disponibles para reasignar. Todos los workers están activos o en progreso.
 						</Alert>
+					)}
+
+					{/* ── Sección 3: Workers con historial pendiente de guardar ── */}
+					{globalScanned && pendingHistoryWorkers.length > 0 && (
+						<Box>
+							<Divider sx={{ mb: 2 }} />
+							<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+								<Warning2 size={18} color="orange" />
+								<Typography variant="subtitle2">
+									Historial pendiente de guardar ({pendingHistoryWorkers.length})
+								</Typography>
+							</Stack>
+							<Alert severity="warning" variant="outlined" sx={{ mb: 1.5 }}>
+								Estos workers completaron su rango pero <strong>aún no tienen ese rango registrado en el historial</strong>.
+								El historial se guarda automáticamente cuando se reasigna el worker a un nuevo rango.
+								Usa las sugerencias de arriba para reasignarlos y el sistema guardará el historial como parte del proceso.
+							</Alert>
+							<TableContainer component={Paper} variant="outlined">
+								<Table size="small">
+									<TableHead>
+										<TableRow>
+											<TableCell>Worker</TableCell>
+											<TableCell align="center">Fuero / Año</TableCell>
+											<TableCell align="right">Rango completado</TableCell>
+											<TableCell align="right">Progreso</TableCell>
+											<TableCell align="center">Email enviado</TableCell>
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{pendingHistoryWorkers.map((ph, i) => (
+											<TableRow key={i} sx={{ bgcolor: "warning.lighter" }}>
+												<TableCell>
+													<Typography variant="body2" fontFamily="monospace" fontWeight={600}>{ph.worker.worker_id}</Typography>
+												</TableCell>
+												<TableCell align="center">
+													<Stack direction="row" alignItems="center" spacing={0.5} justifyContent="center">
+														<Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: FUERO_COLORS[ph.worker.fuero ?? ""] ?? "#999" }} />
+														<Typography variant="body2">{ph.worker.fuero} {ph.worker.year}</Typography>
+													</Stack>
+												</TableCell>
+												<TableCell align="right">
+													<Typography variant="caption" fontFamily="monospace">
+														{ph.pendingRange.start.toLocaleString()} — {ph.pendingRange.end.toLocaleString()}
+													</Typography>
+												</TableCell>
+												<TableCell align="right">
+													<Typography variant="body2" color="success.main" fontWeight={600}>
+														{calculateProgress(ph.worker).toFixed(0)}%
+													</Typography>
+												</TableCell>
+												<TableCell align="center">
+													{ph.worker.completionEmailSent ? (
+														<Chip label="Enviado" size="small" color="success" variant="outlined" icon={<TickCircle size={12} />} />
+													) : (
+														<Chip label="Pendiente" size="small" color="warning" variant="outlined" icon={<Warning2 size={12} />} />
+													)}
+												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</TableContainer>
+						</Box>
 					)}
 
 					<CreateConfigModal
