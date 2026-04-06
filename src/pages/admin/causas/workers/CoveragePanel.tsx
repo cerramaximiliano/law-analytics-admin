@@ -418,6 +418,12 @@ const CoveragePanel: React.FC = () => {
 					if (f !== wFuero) continue;
 					for (const gap of data.gaps) {
 						if (gap.assigned) continue;
+						// Nunca sugerir que el worker cubra un gap que ya está cubriendo él mismo (evita reset circular)
+						if (
+							String(worker.year) === y &&
+							worker.range_start !== undefined && worker.range_end !== undefined &&
+							worker.range_start <= gap.end && worker.range_end >= gap.start
+						) continue;
 						// Verificar que no haya conflicto con otros configs (el backend rechaza cualquier overlap)
 						if (isRangeConflicting(f, y, gap.start, gap.end, getConfigId(worker))) continue;
 						bestCandidates.push({
@@ -432,22 +438,25 @@ const CoveragePanel: React.FC = () => {
 					}
 				}
 
-				// Oportunidad tipo "año vacío": solo dentro del rango de años con historial real para este fuero
+				// Oportunidad tipo "año vacío": dentro del rango de años con historial + hasta el año actual
 				const fueroYearsWithData = Array.from(coverageMap.values())
 					.filter(e => e.fuero === wFuero && e.data.maxRange > 0)
 					.map(e => Number(e.year));
 
 				if (fueroYearsWithData.length > 0) {
 					const minYear = Math.min(...fueroYearsWithData);
-					const maxYear = Math.max(...fueroYearsWithData);
+					// Extender hasta el año actual para sugerir años recientes sin cobertura
+					const maxYear = Math.max(Math.max(...fueroYearsWithData), CURRENT_YEAR);
 
 					for (let yr = minYear; yr <= maxYear; yr++) {
 						const y = String(yr);
+						// Nunca sugerir que el worker vuelva a su propio año (evita reset circular)
+						if (String(worker.year) === y) continue;
 						const key = `${wFuero}|${y}`;
 						const entry = coverageMap.get(key);
-						// Un año es "vacío" si no tiene historial de cobertura
+						// Un año es "vacío" si no tiene cobertura (sin historial ni workers activos)
 						if (entry && entry.data.maxRange > 0) continue;
-						// Verificar que no haya ningún config (enabled o no) que ya ocupe el rango 1-N en ese año
+						// Verificar que no haya ningún config (enabled o no) que ya ocupe el rango propuesto
 						const workerSize = (worker.range_end ?? 50000) - (worker.range_start ?? 1);
 						const newEnd = Math.max(workerSize, 50000);
 						if (isRangeConflicting(wFuero, y, 1, newEnd, getConfigId(worker))) continue;
@@ -457,8 +466,9 @@ const CoveragePanel: React.FC = () => {
 							fuero: wFuero,
 							year: y,
 							range: { start: 1, end: newEnd },
-							score: (maxYear + 1 - yr) * 1000, // años más antiguos dentro del rango > prioridad
-							description: `Año sin cobertura — ${wFuero} ${y} (entre ${minYear} y ${maxYear})`,
+							// Prioridad: años más antiguos primero (dentro del historial), luego años futuros
+							score: yr <= Math.max(...fueroYearsWithData) ? (maxYear + 1 - yr) * 1000 : yr * 10,
+							description: `Año sin cobertura — ${wFuero} ${y}`,
 						});
 					}
 				}
