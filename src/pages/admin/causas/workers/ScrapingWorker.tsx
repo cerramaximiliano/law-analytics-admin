@@ -67,6 +67,7 @@ import ScrapingManagerPanel from "./ScrapingManagerPanel";
 import RangeHistoryPanel from "./RangeHistoryPanel";
 import FueroStatsPanel from "./FueroStatsPanel";
 import CoveragePanel from "./CoveragePanel";
+import ScrapingStatsPanel from "./ScrapingStatsPanel";
 
 // Enums para el worker de scraping
 const FUERO_OPTIONS = [
@@ -574,7 +575,7 @@ const ScrapingWorker = () => {
 					{ label: "Control PM2", subtitle: "Estado y operaciones", icon: <Cpu size={20} /> },
 					{ label: "Historial", subtitle: "Rangos completados", icon: <Clock size={20} /> },
 					{ label: "Cobertura", subtitle: "Períodos faltantes", icon: <Map1 size={20} /> },
-					{ label: "Estadísticas", subtitle: "Distribución por fuero", icon: <ChartSquare size={20} /> },
+					{ label: "Estadísticas", subtitle: "Captchas y documentos", icon: <ChartSquare size={20} /> },
 				] as { label: string; subtitle: string; icon: React.ReactNode }[]).map((tab, i) => (
 					<Tab
 						key={i}
@@ -595,7 +596,14 @@ const ScrapingWorker = () => {
 				{subTab === 1 && <Box sx={{ p: { xs: 2, md: 3 } }}><ScrapingManagerPanel /></Box>}
 				{subTab === 2 && <Box sx={{ p: { xs: 2, md: 3 } }}><RangeHistoryPanel /></Box>}
 				{subTab === 3 && <Box sx={{ p: { xs: 2, md: 3 } }}><CoveragePanel /></Box>}
-				{subTab === 4 && <Box sx={{ p: { xs: 2, md: 3 } }}><FueroStatsPanel /></Box>}
+				{subTab === 4 && (
+					<Box sx={{ p: { xs: 2, md: 3 } }}>
+						<Stack spacing={4}>
+							<ScrapingStatsPanel />
+							<FueroStatsPanel />
+						</Stack>
+					</Box>
+				)}
 
 			{subTab === 0 && (
 				<Box sx={{ p: { xs: 2, md: 3 } }}>
