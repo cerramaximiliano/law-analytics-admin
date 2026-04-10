@@ -21,8 +21,9 @@ import {
 	Tooltip,
 	IconButton,
 	Collapse,
+	LinearProgress,
 } from "@mui/material";
-import { Folder2, Calculator, Profile2User, Refresh, ArrowDown2, ArrowUp2 } from "iconsax-react";
+import { Folder2, Calculator, Profile2User, Refresh, ArrowDown2, ArrowUp2, MessageText1 } from "iconsax-react";
 import {
 	UserResourcesService,
 	UserFolder,
@@ -32,6 +33,22 @@ import {
 	CalculatorStats,
 	ContactStats,
 } from "api/userResources";
+import ragAxios from "utils/ragAxios";
+
+interface AiUsageRow {
+	_id: string;
+	userId: string;
+	period: string;
+	plan: string;
+	count: number;
+	tokensInput: number;
+	tokensOutput: number;
+	tokensTotal: number;
+	costUsd: number;
+	lastUsedAt: string;
+	monthlyLimit: number;
+	remaining: number;
+}
 
 interface UserResourcesTabProps {
 	userId: string;
@@ -75,6 +92,10 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 	const [contactsStats, setContactsStats] = useState<ContactStats | null>(null);
 	const [contactsPage, setContactsPage] = useState(0);
 	const [contactsTotal, setContactsTotal] = useState(0);
+
+	// AI usage state
+	const [aiUsage, setAiUsage] = useState<AiUsageRow[]>([]);
+	const [aiUsageLoading, setAiUsageLoading] = useState(false);
 
 	// Stats expanded
 	const [statsExpanded, setStatsExpanded] = useState(true);
@@ -120,6 +141,20 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 		}
 	};
 
+	const fetchAiUsage = async () => {
+		setAiUsageLoading(true);
+		try {
+			const response = await ragAxios.get(`/rag/admin/ai-usage/user/${userId}`);
+			if (response.data?.success) {
+				setAiUsage(response.data.data);
+			}
+		} catch (err: any) {
+			console.error("Error fetching AI usage:", err);
+		} finally {
+			setAiUsageLoading(false);
+		}
+	};
+
 	const loadAllData = async () => {
 		setLoading(true);
 		setError(null);
@@ -138,8 +173,22 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 		}
 	}, [userId]);
 
+	useEffect(() => {
+		if (userId && activeTab === 3 && aiUsage.length === 0) {
+			fetchAiUsage();
+		}
+	}, [activeTab, userId]);
+
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
 		setActiveTab(newValue);
+	};
+
+	const handleRefresh = () => {
+		if (activeTab === 3) {
+			fetchAiUsage();
+		} else {
+			loadAllData();
+		}
 	};
 
 	const formatDate = (dateString: string) => {
@@ -209,7 +258,7 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 					</Tooltip>
 				</Stack>
 				<Tooltip title="Actualizar datos">
-					<IconButton size="small" onClick={loadAllData} disabled={loading}>
+					<IconButton size="small" onClick={handleRefresh} disabled={loading || aiUsageLoading}>
 						<Refresh size={18} />
 					</IconButton>
 				</Tooltip>
@@ -240,6 +289,12 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 					icon={<Profile2User size={16} />}
 					iconPosition="start"
 					label={`Contactos (${contactsStats?.total || 0})`}
+					sx={{ minHeight: 48 }}
+				/>
+				<Tab
+					icon={<MessageText1 size={16} />}
+					iconPosition="start"
+					label={`Chat IA${aiUsage.length > 0 ? ` (${aiUsage[0]?.count ?? 0})` : ""}`}
 					sx={{ minHeight: 48 }}
 				/>
 			</Tabs>
@@ -476,6 +531,147 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 							labelRowsPerPage="Por página:"
 							labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
 						/>
+					</>
+				)}
+			</ResourceTabPanel>
+
+			{/* Chat IA Tab */}
+			<ResourceTabPanel value={activeTab} index={3}>
+				{aiUsageLoading ? (
+					<Box display="flex" justifyContent="center" alignItems="center" minHeight={120}>
+						<CircularProgress size={28} />
+					</Box>
+				) : aiUsage.length === 0 ? (
+					<Alert severity="info">Este usuario no tiene consultas IA registradas</Alert>
+				) : (
+					<>
+						{/* Current month summary */}
+						{(() => {
+							const current = aiUsage[0];
+							const pct = current.monthlyLimit > 0 ? Math.min(100, (current.count / current.monthlyLimit) * 100) : 0;
+							const isUnlimited = current.monthlyLimit === 0;
+							return (
+								<Box
+									sx={{
+										p: 2,
+										mb: 2,
+										borderRadius: 1,
+										border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+										bgcolor: alpha(theme.palette.background.paper, 0.5),
+									}}
+								>
+									<Typography variant="subtitle2" mb={1.5}>
+										Mes actual — {current.period}
+									</Typography>
+									<Stack direction="row" spacing={2} mb={1.5} flexWrap="wrap" useFlexGap>
+										<StatCard label="Consultas" value={current.count} color={theme.palette.primary.main} />
+										<StatCard
+											label="Límite"
+											value={isUnlimited ? "∞" : current.monthlyLimit}
+											color={theme.palette.info.main}
+										/>
+										<StatCard
+											label="Restantes"
+											value={isUnlimited ? "∞" : current.remaining}
+											color={current.remaining === 0 ? theme.palette.error.main : theme.palette.success.main}
+										/>
+										<StatCard
+											label="Tokens"
+											value={current.tokensTotal.toLocaleString("es-AR")}
+											color={theme.palette.secondary.main}
+										/>
+										<StatCard
+											label="Costo USD"
+											value={`$${current.costUsd.toFixed(4)}`}
+											color={theme.palette.warning.main}
+										/>
+									</Stack>
+									{!isUnlimited && (
+										<Box>
+											<Stack direction="row" justifyContent="space-between" mb={0.5}>
+												<Typography variant="caption" color="textSecondary">
+													Uso mensual
+												</Typography>
+												<Typography variant="caption" color="textSecondary">
+													{pct.toFixed(0)}%
+												</Typography>
+											</Stack>
+											<LinearProgress
+												variant="determinate"
+												value={pct}
+												color={pct >= 90 ? "error" : pct >= 70 ? "warning" : "primary"}
+												sx={{ height: 6, borderRadius: 3 }}
+											/>
+										</Box>
+									)}
+								</Box>
+							);
+						})()}
+
+						{/* History table */}
+						<TableContainer component={Paper} variant="outlined">
+							<Table size="small">
+								<TableHead>
+									<TableRow>
+										<TableCell>Período</TableCell>
+										<TableCell>Plan</TableCell>
+										<TableCell align="right">Consultas</TableCell>
+										<TableCell align="right">Límite</TableCell>
+										<TableCell align="right">Restantes</TableCell>
+										<TableCell align="right">Tokens entrada</TableCell>
+										<TableCell align="right">Tokens salida</TableCell>
+										<TableCell align="right">Costo USD</TableCell>
+										<TableCell>Último uso</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{aiUsage.map((row) => {
+										const isUnlimited = row.monthlyLimit === 0;
+										return (
+											<TableRow key={row.period} hover>
+												<TableCell>
+													<Typography variant="body2" fontWeight={500}>
+														{row.period}
+													</Typography>
+												</TableCell>
+												<TableCell>
+													<Chip
+														label={row.plan}
+														size="small"
+														color={row.plan === "premium" ? "primary" : row.plan === "standard" ? "info" : "default"}
+														variant="outlined"
+													/>
+												</TableCell>
+												<TableCell align="right">{row.count}</TableCell>
+												<TableCell align="right">{isUnlimited ? "∞" : row.monthlyLimit}</TableCell>
+												<TableCell align="right">
+													<Typography
+														variant="body2"
+														color={!isUnlimited && row.remaining === 0 ? "error" : "inherit"}
+													>
+														{isUnlimited ? "∞" : row.remaining}
+													</Typography>
+												</TableCell>
+												<TableCell align="right">
+													<Typography variant="caption">{row.tokensInput.toLocaleString("es-AR")}</Typography>
+												</TableCell>
+												<TableCell align="right">
+													<Typography variant="caption">{row.tokensOutput.toLocaleString("es-AR")}</Typography>
+												</TableCell>
+												<TableCell align="right">
+													<Typography variant="caption">${row.costUsd.toFixed(4)}</Typography>
+												</TableCell>
+												<TableCell>
+													<Typography variant="caption">
+														{row.lastUsedAt ? new Date(row.lastUsedAt).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" }) : "-"}
+													</Typography>
+												</TableCell>
+											</TableRow>
+										);
+									})}
+								</TableBody>
+							</Table>
+						</TableContainer>
 					</>
 				)}
 			</ResourceTabPanel>
