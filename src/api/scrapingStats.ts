@@ -1,4 +1,4 @@
-import pjnAxios from "utils/pjnAxios";
+import workersAxios from "utils/workersAxios";
 
 // ====== Interfaces ======
 
@@ -79,22 +79,22 @@ export interface ScrapingStatsRangeResponse {
 export const ScrapingStatsService = {
   getToday(fuero?: string): Promise<ScrapingStatsTodayResponse> {
     const params = fuero ? { fuero } : {};
-    return pjnAxios.get("/scraping-stats/today", { params }).then((r) => r.data);
+    return workersAxios.get("/api/scraping-stats/today", { params }).then((r) => r.data);
   },
 
   getDay(date: string, fuero?: string): Promise<ScrapingStatsDayResponse> {
     const params = fuero ? { fuero } : {};
-    return pjnAxios.get(`/scraping-stats/day/${date}`, { params }).then((r) => r.data);
+    return workersAxios.get(`/api/scraping-stats/day/${date}`, { params }).then((r) => r.data);
   },
 
   getMonth(yearMonth: string, fuero?: string): Promise<ScrapingStatsMonthResponse> {
     const params = fuero ? { fuero } : {};
-    return pjnAxios.get(`/scraping-stats/month/${yearMonth}`, { params }).then((r) => r.data);
+    return workersAxios.get(`/api/scraping-stats/month/${yearMonth}`, { params }).then((r) => r.data);
   },
 
   getRange(from: string, to: string, fuero?: string): Promise<ScrapingStatsRangeResponse> {
     const params: Record<string, string> = { from, to };
     if (fuero) params.fuero = fuero;
-    return pjnAxios.get("/scraping-stats/range", { params }).then((r) => r.data);
+    return workersAxios.get("/api/scraping-stats/range", { params }).then((r) => r.data);
   },
 };
