@@ -65,7 +65,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	const [iniciadoPor, setIniciadoPor] = useState<"trabajador" | "empleador">("trabajador");
 
 	// Step 4 – Abogado
-	const [abogado, setAbogado] = useState({ tomo: "", folio: "", caracter: "apoderado" });
+	const [abogado, setAbogado] = useState({ tomo: "", folio: "", caracter: "apoderado", cpa: "" });
 
 	// Step 5 – Documentos
 	const [documentos, setDocumentos] = useState<SecloDocumento[]>([]);
@@ -77,7 +77,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 		setRequirente(null); setDatosLab({ estadoTrabajador: "regular", sexo: "M" });
 		setRequerido(null);
 		setObjetoReclamo([]); setComentario(""); setIniciadoPor("trabajador");
-		setAbogado({ tomo: "", folio: "", caracter: "apoderado" });
+		setAbogado({ tomo: "", folio: "", caracter: "apoderado", cpa: "" });
 		setDocumentos([]);
 	};
 
@@ -159,7 +159,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 				objetoReclamo,
 				comentarioReclamo: comentario,
 				iniciadoPor,
-				datosAbogado: { tomo: abogado.tomo, folio: abogado.folio, caracter: abogado.caracter },
+				datosAbogado: { tomo: abogado.tomo, folio: abogado.folio, caracter: abogado.caracter, domicilio: { cpa: abogado.cpa } },
 				documentos,
 			}));
 			handleClose();
@@ -354,15 +354,15 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 							El portal SECLO pre-llena los datos del abogado desde el perfil CPACF usando el Tomo y Folio.
 						</Alert>
 					</Grid>
-					<Grid item xs={4}>
+					<Grid item xs={3}>
 						<TextField fullWidth label="Tomo CPACF *" value={abogado.tomo}
 							onChange={e => setAbogado(a => ({ ...a, tomo: e.target.value }))} />
 					</Grid>
-					<Grid item xs={4}>
+					<Grid item xs={3}>
 						<TextField fullWidth label="Folio CPACF *" value={abogado.folio}
 							onChange={e => setAbogado(a => ({ ...a, folio: e.target.value }))} />
 					</Grid>
-					<Grid item xs={4}>
+					<Grid item xs={3}>
 						<FormControl fullWidth>
 							<InputLabel>Carácter</InputLabel>
 							<Select value={abogado.caracter} label="Carácter"
@@ -373,6 +373,11 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 								<MenuItem value="rep_empresarial">Rep. Empresarial</MenuItem>
 							</Select>
 						</FormControl>
+					</Grid>
+					<Grid item xs={3}>
+						<TextField fullWidth label="CPA domicilio" placeholder="C1426" value={abogado.cpa || ""}
+							onChange={e => setAbogado(a => ({ ...a, cpa: e.target.value }))}
+							helperText="Código Postal Argentino del estudio" />
 					</Grid>
 				</Grid>
 			);
