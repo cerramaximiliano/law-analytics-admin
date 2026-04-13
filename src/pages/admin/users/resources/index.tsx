@@ -48,6 +48,7 @@ import {
 	DocumentText,
 	Eye,
 	Trash,
+	Copy,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -421,6 +422,10 @@ const UserResources: React.FC = () => {
 	const [activityStats, setActivityStats] = useState<SessionStats | null>(null);
 	const [activityUsers, setActivityUsers] = useState<UserWithSessionMetrics[]>([]);
 	const [activityLoading, setActivityLoading] = useState(true);
+
+	// JSON viewer modal state
+	const [jsonViewOpen, setJsonViewOpen] = useState(false);
+	const [jsonViewResource, setJsonViewResource] = useState<Resource | null>(null);
 
 	// Escritos tab states
 	const [escritos, setEscritos] = useState<PostalDocument[]>([]);
@@ -1287,7 +1292,8 @@ const UserResources: React.FC = () => {
 											</TableCell>
 										</>
 									) : (
-										columns.map((column) => (
+										<>
+										{columns.map((column) => (
 											<TableCell key={column.id}>
 												{column.sortable ? (
 													<TableSortLabel
@@ -1301,7 +1307,9 @@ const UserResources: React.FC = () => {
 													column.label
 												)}
 											</TableCell>
-										))
+										))}
+										<TableCell align="center">Acciones</TableCell>
+									</>
 									)}
 								</TableRow>
 							</TableHead>
@@ -1318,12 +1326,15 @@ const UserResources: React.FC = () => {
 													))}
 												</>
 											) : (
-												columns.map((column) => (
+											<>
+												{columns.map((column) => (
 													<TableCell key={column.id}>
 														<Skeleton variant="text" />
 													</TableCell>
-												))
-											)}
+												))}
+												<TableCell><Skeleton variant="text" /></TableCell>
+											</>
+										)}
 										</TableRow>
 									))
 								) : isUsersTab ? (
@@ -1410,7 +1421,7 @@ const UserResources: React.FC = () => {
 									)
 								) : resources.length === 0 ? (
 									<TableRow>
-										<TableCell colSpan={columns.length} align="center">
+										<TableCell colSpan={columns.length + 1} align="center">
 											<Typography color="textSecondary" sx={{ py: 4 }}>
 												No se encontraron recursos
 											</Typography>
@@ -1422,6 +1433,22 @@ const UserResources: React.FC = () => {
 											{columns.map((column) => (
 												<TableCell key={column.id}>{column.render(resource)}</TableCell>
 											))}
+											<TableCell align="center">
+												<Tooltip title="Ver JSON">
+													<Button
+														size="small"
+														variant="outlined"
+														startIcon={<Eye size={14} />}
+														onClick={() => {
+															setJsonViewResource(resource);
+															setJsonViewOpen(true);
+														}}
+														sx={{ minWidth: 60 }}
+													>
+														VER
+													</Button>
+												</Tooltip>
+											</TableCell>
 										</TableRow>
 									))
 								)}
@@ -1430,6 +1457,55 @@ const UserResources: React.FC = () => {
 					</TableContainer>
 				</>
 			)}
+
+			{/* JSON Viewer Dialog */}
+			<Dialog open={jsonViewOpen} onClose={() => setJsonViewOpen(false)} maxWidth="md" fullWidth>
+				<DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pr: 2 }}>
+					<Typography variant="h6">
+						Documento JSON — {tabs.find((t) => t.type === currentType)?.label}
+					</Typography>
+					<Tooltip title="Copiar JSON">
+						<Button
+							size="small"
+							variant="outlined"
+							startIcon={<Copy size={14} />}
+							onClick={() => {
+								if (jsonViewResource) {
+									navigator.clipboard.writeText(JSON.stringify(jsonViewResource, null, 2));
+									enqueueSnackbar("JSON copiado al portapapeles", { variant: "success" });
+								}
+							}}
+						>
+							Copiar
+						</Button>
+					</Tooltip>
+				</DialogTitle>
+				<DialogContent dividers>
+					<Box
+						component="pre"
+						sx={{
+							m: 0,
+							p: 2,
+							borderRadius: 1,
+							bgcolor: "background.default",
+							border: "1px solid",
+							borderColor: "divider",
+							overflowX: "auto",
+							fontSize: "0.8rem",
+							fontFamily: "monospace",
+							whiteSpace: "pre-wrap",
+							wordBreak: "break-all",
+							maxHeight: 500,
+							overflowY: "auto",
+						}}
+					>
+						{jsonViewResource ? JSON.stringify(jsonViewResource, null, 2) : ""}
+					</Box>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setJsonViewOpen(false)}>Cerrar</Button>
+				</DialogActions>
+			</Dialog>
 
 			{/* Pagination */}
 			<TablePagination
