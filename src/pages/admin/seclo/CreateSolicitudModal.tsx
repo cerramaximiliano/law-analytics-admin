@@ -204,7 +204,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 					<Grid item xs={12}>
 						<Autocomplete
 							options={contacts}
-							getOptionLabel={(c: SecloContact) => `${c.name} ${c.lastName || ""}${c.cuit ? ` — ${c.cuit}` : ""}${c.archived ? " [ARCHIVADO]" : ""}`}
+							getOptionLabel={(c: SecloContact) => `${c.name} ${c.lastName || ""}${c.cuit ? ` — ${c.cuit}` : ""}`}
 							onChange={(_, v) => setRequirente(v)}
 							value={requirente}
 							noOptionsText="Sin contactos para este usuario"
@@ -274,7 +274,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 						</Typography>
 						<Autocomplete
 							options={contacts.filter(c => c._id !== requirente?._id)}
-							getOptionLabel={(c: SecloContact) => `${c.name} ${c.lastName || ""}${c.company ? ` (${c.company})` : ""}${c.cuit ? ` — ${c.cuit}` : ""}${c.archived ? " [ARCHIVADO]" : ""}`}
+							getOptionLabel={(c: SecloContact) => `${c.name} ${c.lastName || ""}${c.company ? ` (${c.company})` : ""}${c.cuit ? ` — ${c.cuit}` : ""}`}
 							onChange={(_, v) => setRequerido(v)}
 							value={requerido}
 							noOptionsText="Sin contactos disponibles"
