@@ -88,23 +88,16 @@ authAxios.interceptors.request.use(
 // Response interceptor for error handling and token refresh
 authAxios.interceptors.response.use(
 	(response: AxiosResponse) => {
-		// Log para debugging
-		console.log("🔍 authAxios response URL:", response.config.url);
-		console.log("🔍 authAxios response data:", response.data);
-		console.log("🔍 authAxios response headers:", response.headers);
-
 		// Capturar token del header si viene
 		const token = response.headers["authorization"] || response.headers["x-auth-token"];
 		if (token) {
 			const cleanToken = token.replace("Bearer ", "");
-			console.log("✅ Token capturado del header de respuesta:", cleanToken.substring(0, 20) + "...");
 			authTokenService.setToken(cleanToken);
 			secureStorage.setAuthToken(cleanToken);
 		}
 
 		// Si la respuesta contiene un token en el body (por ejemplo, en /api/auth/login)
 		if (response.data?.token) {
-			console.log("✅ Token encontrado en response.data.token:", response.data.token.substring(0, 20) + "...");
 			authTokenService.setToken(response.data.token);
 			secureStorage.setAuthToken(response.data.token);
 		}
