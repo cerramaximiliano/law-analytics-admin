@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 import authTokenService from "services/authTokenService";
 import secureStorage from "services/secureStorage";
 import { requestQueueService } from "services/requestQueueService";
+import authAxios from "utils/authAxios";
 
 // Instancia de Axios para la API de PJN (aplicación principal)
 const pjnAxios: AxiosInstance = axios.create({
@@ -114,22 +115,13 @@ pjnAxios.interceptors.response.use(
 			originalRequest._retry = true;
 
 			try {
-				// Intentar refrescar el token usando la API de autenticación
-				const authBaseURL = import.meta.env.VITE_AUTH_URL || "https://api.lawanalytics.app";
-				const refreshResponse = await axios.post(`${authBaseURL}/api/auth/refresh-token`, {}, { withCredentials: true });
+				// Intentar refrescar el token usando authAxios (withCredentials: true, token storage ya manejado)
+				await authAxios.post("/api/auth/refresh-token", {}, { withCredentials: true });
 
-				// Capturar el nuevo token de la respuesta del refresh
-				const newToken =
-					refreshResponse.headers["authorization"]?.replace("Bearer ", "") ||
-					refreshResponse.headers["x-auth-token"] ||
-					refreshResponse.data?.token;
-
-				if (newToken) {
-					authTokenService.setToken(newToken);
-					secureStorage.setAuthToken(newToken);
-					if (originalRequest.headers) {
-						originalRequest.headers.Authorization = `Bearer ${newToken}`;
-					}
+				// authAxios.interceptors.response ya almacenó el nuevo token — solo leerlo
+				const newToken = getAuthToken();
+				if (newToken && originalRequest.headers) {
+					originalRequest.headers.Authorization = `Bearer ${newToken}`;
 				}
 
 				// Reintentar la petición original con el nuevo token
