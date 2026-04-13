@@ -43,6 +43,7 @@ const MovimientosWorkerPage = Loadable(lazy(() => import("pages/admin/workers/mo
 const SentenciasWorkerPage = Loadable(lazy(() => import("pages/admin/workers/sentencias")));
 const SaijWorkerPage = Loadable(lazy(() => import("pages/admin/workers/saij")));
 const JurisprudenciaSaijPage = Loadable(lazy(() => import("pages/recursos/jurisprudencia-saij")));
+const JurisprudenciaPjnPage = Loadable(lazy(() => import("pages/recursos/jurisprudencia-pjn")));
 
 // Subscriptions pages
 const StripeWebhooks = Loadable(lazy(() => import("pages/subscriptions/StripeWebhooks")));
@@ -613,6 +614,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<JurisprudenciaSaijPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "jurisprudencia/pjn",
+							element: (
+								<AdminRoleGuard>
+									<JurisprudenciaPjnPage />
 								</AdminRoleGuard>
 							),
 						},
