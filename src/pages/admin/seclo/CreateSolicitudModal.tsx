@@ -94,6 +94,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 		setRequirente(null); setRequerido(null);
 		setCredentials([]); setSelectedCredentialId(""); setLocalContacts([]);
 		if (!user) return;
+		console.log("[seclo] handleSelectUser → user._id:", user._id);
 		setContactsLoading(true);
 		try {
 			const { default: adminAxios } = await import("utils/adminAxios");
@@ -101,11 +102,14 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 				adminAxios.get(`/api/seclo/users/${user._id}/contacts`),
 				adminAxios.get("/api/seclo/credentials", { params: { userId: user._id, limit: 10 } }),
 			]);
+			console.log("[seclo] contactsRes.data:", contactsRes.data);
+			console.log("[seclo] credsRes.data:", credsRes.data);
 			setLocalContacts(contactsRes.data.contacts || []);
 			const creds = credsRes.data.credentials || [];
 			setCredentials(creds);
 			if (creds.length === 1) setSelectedCredentialId(creds[0]._id);
-		} catch (_) {
+		} catch (err: any) {
+			console.error("[seclo] handleSelectUser → error:", err?.response?.data || err?.message);
 		} finally {
 			setContactsLoading(false);
 		}
