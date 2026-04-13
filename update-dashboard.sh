@@ -93,6 +93,11 @@ if [ "$IS_REMOTE" = false ]; then
 	else
 		echo -e "${YELLOW}⚠ Usando .env existente en el servidor${NC}"
 	fi
+	# Copiar página de mantenimiento al servidor
+	if [ -f "maintenance.html" ]; then
+		scp -i "${SSH_KEY}" maintenance.html "${SERVER_USER}@${SERVER_IP}:${REMOTE_PATH}/maintenance.html"
+		echo -e "${GREEN}✓ Página de mantenimiento copiada${NC}"
+	fi
 else
 	echo -e "\n${YELLOW}[2/4] Omitiendo actualización de .env (ejecutando en servidor)${NC}"
 fi
