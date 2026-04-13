@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
 	Dialog, DialogTitle, DialogContent, DialogActions,
 	Button, Grid, TextField, Typography, Alert,
@@ -26,9 +26,14 @@ export default function CreateCredencialModal({ open, onClose }: Props) {
 	const { users } = useSelector((s) => s.seclo);
 	const [userSearch, setUserSearch] = useState("");
 
+	// Cargar lista de usuarios al abrir el modal
+	useEffect(() => {
+		if (open) dispatch(fetchUsers(""));
+	}, [open]);
+
 	const handleUserSearch = (value: string) => {
 		setUserSearch(value);
-		if (value.length >= 2) dispatch(fetchUsers(value));
+		dispatch(fetchUsers(value));
 	};
 
 	const handleSubmit = async (values: any, { setSubmitting, resetForm }: any) => {
@@ -62,7 +67,7 @@ export default function CreateCredencialModal({ open, onClose }: Props) {
 										getOptionLabel={(u: SecloUser) => `${u.name} — ${u.email}`}
 										onInputChange={(_, v) => handleUserSearch(v)}
 										onChange={(_, v: SecloUser | null) => setFieldValue("userId", v?._id || "")}
-										noOptionsText={userSearch.length < 2 ? "Escribí para buscar..." : "Sin resultados"}
+										noOptionsText="Sin resultados"
 										renderInput={(params) => (
 											<TextField
 												{...params}

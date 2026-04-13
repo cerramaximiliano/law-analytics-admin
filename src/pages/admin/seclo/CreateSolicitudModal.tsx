@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
 	Dialog, DialogTitle, DialogContent, DialogActions,
 	Button, Grid, TextField, Typography, Alert,
@@ -38,6 +38,11 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	const [step, setStep] = useState(0);
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+
+	// Cargar todos los usuarios al abrir el modal
+	useEffect(() => {
+		if (open) dispatch(fetchUsers(""));
+	}, [open]);
 
 	// Step 0 – Usuario
 	const [selectedUser, setSelectedUser] = useState<SecloUser | null>(null);
