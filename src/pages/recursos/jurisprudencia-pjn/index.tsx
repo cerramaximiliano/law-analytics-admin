@@ -132,8 +132,26 @@ function ChunkCard({ chunk, matched }: { chunk: { index: number; sectionType: st
 function ResultCard({ result, index }: { result: SentenciaResult; index: number }) {
 	const theme = useTheme();
 	const [showFull, setShowFull] = useState(false);
-	const { sentencia, score, matchedChunks, fullChunks } = result;
+	const [loadedChunks, setLoadedChunks] = useState<FullChunk[] | null>(result.fullChunks ?? null);
+	const [loadingFull, setLoadingFull] = useState(false);
+	const [loadError, setLoadError] = useState<string | null>(null);
+	const { sentencia, score, matchedChunks } = result;
 	const fueroColor = FUERO_COLOR[sentencia.fuero] || theme.palette.primary.main;
+
+	const handleLoadFull = async () => {
+		if (loadedChunks) { setShowFull((p) => !p); return; }
+		setLoadingFull(true);
+		setLoadError(null);
+		try {
+			const chunks = await SentenciasSearchService.getChunks(sentencia._id);
+			setLoadedChunks(chunks);
+			setShowFull(true);
+		} catch {
+			setLoadError("No se pudo cargar el texto completo");
+		} finally {
+			setLoadingFull(false);
+		}
+	};
 
 	return (
 		<Card variant="outlined" sx={{ borderLeft: `4px solid ${fueroColor}` }}>
@@ -200,21 +218,34 @@ function ResultCard({ result, index }: { result: SentenciaResult; index: number 
 					</Box>
 				)}
 
-				{/* Fallo completo */}
-				{fullChunks && fullChunks.length > 0 && (
-					<Box>
-						<Button size="small" variant="text" onClick={() => setShowFull((p) => !p)} startIcon={showFull ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}>
-							{showFull ? "Ocultar fallo completo" : `Ver fallo completo (${fullChunks.length} secciones)`}
-						</Button>
-						<Collapse in={showFull}>
-							<Stack spacing={0.5} mt={1}>
-								{fullChunks.map((chunk) => (
-									<ChunkCard key={chunk.index} chunk={chunk} matched={chunk.matched} />
-								))}
-							</Stack>
-						</Collapse>
-					</Box>
-				)}
+				{/* Fallo completo — carga bajo demanda */}
+				<Box>
+					<Button
+						size="small"
+						variant="text"
+						onClick={handleLoadFull}
+						disabled={loadingFull}
+						startIcon={loadingFull ? <CircularProgress size={12} color="inherit" /> : showFull ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
+					>
+						{loadingFull
+							? "Cargando fallo…"
+							: showFull
+							? "Ocultar fallo completo"
+							: loadedChunks
+							? `Ver fallo completo (${loadedChunks.length} secciones)`
+							: "Ver fallo completo"}
+					</Button>
+					{loadError && (
+						<Typography variant="caption" color="error" ml={1}>{loadError}</Typography>
+					)}
+					<Collapse in={showFull}>
+						<Stack spacing={0.5} mt={1}>
+							{loadedChunks?.map((chunk) => (
+								<ChunkCard key={chunk.index} chunk={chunk} matched={chunk.matched} />
+							))}
+						</Stack>
+					</Collapse>
+				</Box>
 			</CardContent>
 		</Card>
 	);
