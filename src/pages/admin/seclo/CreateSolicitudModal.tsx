@@ -49,6 +49,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	const [userSearch, setUserSearch] = useState("");
 	const [selectedCredentialId, setSelectedCredentialId] = useState("");
 	const [credentials, setCredentials] = useState<Array<{ _id: string; enabled: boolean }>>([]);
+	const [contactsLoading, setContactsLoading] = useState(false);
 
 	// Step 1 – Requirente (trabajador)
 	const [requirente, setRequirente] = useState<SecloContact | null>(null);
@@ -71,7 +72,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 
 	const resetAll = () => {
 		setStep(0); setError(null);
-		setSelectedUser(null); setUserSearch(""); setSelectedCredentialId(""); setCredentials([]);
+		setSelectedUser(null); setUserSearch(""); setSelectedCredentialId(""); setCredentials([]); setContactsLoading(false);
 		setRequirente(null); setDatosLab({ estadoTrabajador: "regular", sexo: "M" });
 		setRequerido(null);
 		setObjetoReclamo([]); setComentario(""); setIniciadoPor("trabajador");
@@ -90,16 +91,23 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	const handleSelectUser = async (user: SecloUser | null) => {
 		setSelectedUser(user);
 		setRequirente(null); setRequerido(null);
+		setCredentials([]); setSelectedCredentialId("");
 		if (!user) return;
-		dispatch(fetchContactsByUser(user._id));
-		// Cargar credenciales del usuario
+		// Cargar contactos y credenciales en paralelo
+		setContactsLoading(true);
 		try {
 			const { default: adminAxios } = await import("utils/adminAxios");
-			const { data } = await adminAxios.get("/api/seclo/credentials", { params: { userId: user._id, limit: 10 } });
-			const creds = data.credentials || [];
+			const [, credsRes] = await Promise.all([
+				dispatch(fetchContactsByUser(user._id)),
+				adminAxios.get("/api/seclo/credentials", { params: { userId: user._id, limit: 10 } }),
+			]);
+			const creds = credsRes.data.credentials || [];
 			setCredentials(creds);
 			if (creds.length === 1) setSelectedCredentialId(creds[0]._id);
-		} catch (_) {}
+		} catch (_) {
+		} finally {
+			setContactsLoading(false);
+		}
 	};
 
 	// ── Step 5: upload documento ──────────────────────────────────────────────
@@ -121,7 +129,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 
 	// ── Validación por step ───────────────────────────────────────────────────
 	const canAdvance = () => {
-		if (step === 0) return !!selectedUser && !!selectedCredentialId;
+		if (step === 0) return !!selectedUser && !!selectedCredentialId && !contactsLoading;
 		if (step === 1) return !!requirente && !!requirente.phoneCelular;
 		if (step === 2) return !!requerido;
 		if (step === 3) return objetoReclamo.length > 0;
@@ -190,9 +198,15 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 							</FormControl>
 						</Grid>
 					)}
-					{selectedUser && credentials.length === 0 && (
+					{selectedUser && credentials.length === 0 && !contactsLoading && (
 						<Grid item xs={12}>
 							<Alert severity="warning">Este usuario no tiene credenciales SECLO. Creá una desde la pestaña Credenciales.</Alert>
+						</Grid>
+					)}
+					{contactsLoading && (
+						<Grid item xs={12} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+							<CircularProgress size={16} />
+							<Typography variant="body2" color="text.secondary">Cargando contactos...</Typography>
 						</Grid>
 					)}
 				</Grid>
