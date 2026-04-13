@@ -94,6 +94,13 @@ const SentenciasSearchService = {
 		});
 		return res.data;
 	},
+
+	async getChunks(sentenciaId: string): Promise<FullChunk[]> {
+		const res = await pjnAxios.get<{ success: boolean; chunks: FullChunk[]; total: number }>(
+			`${BASE}/${sentenciaId}/chunks`
+		);
+		return res.data.chunks;
+	},
 };
 
 export default SentenciasSearchService;
