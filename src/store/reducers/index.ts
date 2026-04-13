@@ -11,6 +11,7 @@ import users from "./users";
 import stripeSubscriptions from "./stripe-subscriptions";
 import legalDocuments from "./legal-documents";
 import notificationMonitoring from "./notificationMonitoring";
+import seclo from "./seclo";
 
 // ==============================|| COMBINE REDUCERS ||============================== //
 
@@ -24,6 +25,7 @@ const reducers = combineReducers({
 	stripeSubscriptions,
 	legalDocuments,
 	notificationMonitoring,
+	seclo,
 });
 
 export default reducers;

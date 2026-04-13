@@ -120,6 +120,9 @@ const GroupsPage = Loadable(lazy(() => import("pages/admin/groups")));
 // PDF Templates page
 const PdfTemplatesPage = Loadable(lazy(() => import("pages/admin/pdf-templates")));
 
+// SECLO page
+const SecloPage = Loadable(lazy(() => import("pages/admin/seclo")));
+
 // ==============================|| ROUTES ||============================== //
 
 export default function Routes() {
@@ -593,6 +596,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<PdfTemplatesPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "seclo",
+							element: (
+								<AdminRoleGuard>
+									<SecloPage />
 								</AdminRoleGuard>
 							),
 						},
