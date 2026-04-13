@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { useDispatch, useSelector } from "store";
 import {
-	fetchUsers, fetchContactsByUser, createSolicitud, getPresignedUploadUrl,
+	fetchUsers, createSolicitud, getPresignedUploadUrl,
 } from "store/reducers/seclo";
 import {
 	OBJETO_RECLAMO_OPTIONS,
@@ -33,7 +33,8 @@ const DOC_TIPO_LABEL: Record<SecloDocTipo, string> = {
 
 export default function CreateSolicitudModal({ open, onClose }: Props) {
 	const dispatch = useDispatch();
-	const { users, contacts } = useSelector((s) => s.seclo);
+	const { users } = useSelector((s) => s.seclo);
+	const [localContacts, setLocalContacts] = useState<SecloContact[]>([]);
 
 	const [step, setStep] = useState(0);
 	const [submitting, setSubmitting] = useState(false);
@@ -72,7 +73,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 
 	const resetAll = () => {
 		setStep(0); setError(null);
-		setSelectedUser(null); setUserSearch(""); setSelectedCredentialId(""); setCredentials([]); setContactsLoading(false);
+		setSelectedUser(null); setUserSearch(""); setSelectedCredentialId(""); setCredentials([]); setContactsLoading(false); setLocalContacts([]);
 		setRequirente(null); setDatosLab({ estadoTrabajador: "regular", sexo: "M" });
 		setRequerido(null);
 		setObjetoReclamo([]); setComentario(""); setIniciadoPor("trabajador");
@@ -91,16 +92,16 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	const handleSelectUser = async (user: SecloUser | null) => {
 		setSelectedUser(user);
 		setRequirente(null); setRequerido(null);
-		setCredentials([]); setSelectedCredentialId("");
+		setCredentials([]); setSelectedCredentialId(""); setLocalContacts([]);
 		if (!user) return;
-		// Cargar contactos y credenciales en paralelo
 		setContactsLoading(true);
 		try {
 			const { default: adminAxios } = await import("utils/adminAxios");
-			const [, credsRes] = await Promise.all([
-				dispatch(fetchContactsByUser(user._id)),
+			const [contactsRes, credsRes] = await Promise.all([
+				adminAxios.get(`/api/seclo/users/${user._id}/contacts`),
 				adminAxios.get("/api/seclo/credentials", { params: { userId: user._id, limit: 10 } }),
 			]);
+			setLocalContacts(contactsRes.data.contacts || []);
 			const creds = credsRes.data.credentials || [];
 			setCredentials(creds);
 			if (creds.length === 1) setSelectedCredentialId(creds[0]._id);
@@ -217,7 +218,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 				<Grid container spacing={2}>
 					<Grid item xs={12}>
 						<Autocomplete
-							options={contacts}
+							options={localContacts}
 							getOptionLabel={(c: SecloContact) => `${c.name} ${c.lastName || ""}${c.cuit ? ` — ${c.cuit}` : ""}`}
 							onChange={(_, v) => setRequirente(v)}
 							value={requirente}
@@ -287,7 +288,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 							Elegí el contacto que actúa como empleador (requerido).
 						</Typography>
 						<Autocomplete
-							options={contacts.filter(c => c._id !== requirente?._id)}
+							options={localContacts.filter(c => c._id !== requirente?._id)}
 							getOptionLabel={(c: SecloContact) => `${c.name} ${c.lastName || ""}${c.company ? ` (${c.company})` : ""}${c.cuit ? ` — ${c.cuit}` : ""}`}
 							onChange={(_, v) => setRequerido(v)}
 							value={requerido}
