@@ -89,8 +89,8 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 		dispatch(fetchContactsByUser(user._id));
 		// Cargar credenciales del usuario
 		try {
-			const { default: authAxios } = await import("utils/authAxios");
-			const { data } = await authAxios.get("/api/seclo/credentials", { params: { userId: user._id, limit: 10 } });
+			const { default: adminAxios } = await import("utils/adminAxios");
+			const { data } = await adminAxios.get("/api/seclo/credentials", { params: { userId: user._id, limit: 10 } });
 			const creds = data.credentials || [];
 			setCredentials(creds);
 			if (creds.length === 1) setSelectedCredentialId(creds[0]._id);
