@@ -14,6 +14,7 @@ import {
 	TaskSquare,
 	Box1,
 	People,
+	Judge,
 } from "iconsax-react";
 
 // type
@@ -498,6 +499,14 @@ const admin: NavItemType = {
 			type: "item",
 			icon: TaskSquare,
 			url: "/admin/tasks",
+			breadcrumbs: true,
+		},
+		{
+			id: "seclo",
+			title: "SECLO",
+			type: "item",
+			icon: Judge,
+			url: "/admin/seclo",
 			breadcrumbs: true,
 		},
 	],
