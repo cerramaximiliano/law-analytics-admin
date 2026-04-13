@@ -27,7 +27,7 @@ import {
 } from "@mui/material";
 import { ArrowDown2, ArrowUp2, DocumentText1, Refresh, SearchNormal1, Link21 } from "iconsax-react";
 import MainCard from "components/MainCard";
-import SentenciasSearchService, { SearchFilters, SearchOptions, SentenciaResult } from "api/sentenciasSearch";
+import SentenciasSearchService, { FullChunk, SearchFilters, SearchOptions, SentenciaResult } from "api/sentenciasSearch";
 import { Fuero, SentenciaTipo } from "api/sentenciasCapturadas";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
