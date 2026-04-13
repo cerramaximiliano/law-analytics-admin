@@ -1,6 +1,6 @@
 // store/reducers/seclo.ts
 
-import authAxios from "utils/authAxios";
+import adminAxios from "utils/adminAxios";
 import { openSnackbar } from "./snackbar";
 import type { SecloSolicitud, TrabajoCredential, SecloStats, SecloUser, SecloContact } from "types/seclo";
 
@@ -105,7 +105,7 @@ export default function secloReducer(state = initialState, action: any): SecloSt
 
 export const fetchSecloStats = () => async (dispatch: any) => {
 	try {
-		const { data } = await authAxios.get("/api/seclo/stats");
+		const { data } = await adminAxios.get("/api/seclo/stats");
 		if (data.success) dispatch({ type: SECLO_SET_STATS, payload: data.stats });
 	} catch (err: any) {
 		console.error("fetchSecloStats:", err.message);
@@ -115,7 +115,7 @@ export const fetchSecloStats = () => async (dispatch: any) => {
 export const fetchSolicitudes = (params?: Record<string, any>) => async (dispatch: any) => {
 	dispatch({ type: SECLO_SET_LOADING, payload: true });
 	try {
-		const { data } = await authAxios.get("/api/seclo/solicitudes", { params });
+		const { data } = await adminAxios.get("/api/seclo/solicitudes", { params });
 		if (data.success) {
 			dispatch({ type: SECLO_SET_SOLICITUDES, payload: data.solicitudes });
 			dispatch({ type: SECLO_SET_SOL_TOTAL, payload: data.total });
@@ -129,7 +129,7 @@ export const fetchSolicitudes = (params?: Record<string, any>) => async (dispatc
 
 export const createSolicitud = (payload: any) => async (dispatch: any) => {
 	try {
-		const { data } = await authAxios.post("/api/seclo/solicitudes", payload);
+		const { data } = await adminAxios.post("/api/seclo/solicitudes", payload);
 		if (data.success) {
 			dispatch({ type: SECLO_ADD_SOLICITUD, payload: data.solicitud });
 			dispatch(openSnackbar({ open: true, message: "Solicitud creada correctamente", variant: "alert", alert: { color: "success" } }));
@@ -144,7 +144,7 @@ export const createSolicitud = (payload: any) => async (dispatch: any) => {
 
 export const reactivarSolicitud = (id: string) => async (dispatch: any) => {
 	try {
-		const { data } = await authAxios.patch(`/api/seclo/solicitudes/${id}/reactivar`);
+		const { data } = await adminAxios.patch(`/api/seclo/solicitudes/${id}/reactivar`);
 		if (data.success) {
 			dispatch({ type: SECLO_UPDATE_SOLICITUD, payload: data.solicitud });
 			dispatch(openSnackbar({ open: true, message: "Solicitud reactivada", variant: "alert", alert: { color: "success" } }));
@@ -157,7 +157,7 @@ export const reactivarSolicitud = (id: string) => async (dispatch: any) => {
 
 export const deleteSolicitud = (id: string) => async (dispatch: any) => {
 	try {
-		const { data } = await authAxios.delete(`/api/seclo/solicitudes/${id}`);
+		const { data } = await adminAxios.delete(`/api/seclo/solicitudes/${id}`);
 		if (data.success) {
 			dispatch({ type: SECLO_REMOVE_SOLICITUD, payload: id });
 			dispatch(openSnackbar({ open: true, message: "Solicitud eliminada", variant: "alert", alert: { color: "success" } }));
@@ -171,7 +171,7 @@ export const deleteSolicitud = (id: string) => async (dispatch: any) => {
 export const fetchCredentials = (params?: Record<string, any>) => async (dispatch: any) => {
 	dispatch({ type: SECLO_SET_LOADING, payload: true });
 	try {
-		const { data } = await authAxios.get("/api/seclo/credentials", { params });
+		const { data } = await adminAxios.get("/api/seclo/credentials", { params });
 		if (data.success) {
 			dispatch({ type: SECLO_SET_CREDENTIALS, payload: data.credentials });
 			dispatch({ type: SECLO_SET_CRED_TOTAL, payload: data.total });
@@ -185,7 +185,7 @@ export const fetchCredentials = (params?: Record<string, any>) => async (dispatc
 
 export const createCredential = (payload: { userId: string; cuil: string; password: string }) => async (dispatch: any) => {
 	try {
-		const { data } = await authAxios.post("/api/seclo/credentials", payload);
+		const { data } = await adminAxios.post("/api/seclo/credentials", payload);
 		if (data.success) {
 			dispatch({ type: SECLO_ADD_CREDENTIAL, payload: data.credential });
 			dispatch(openSnackbar({ open: true, message: "Credencial creada correctamente", variant: "alert", alert: { color: "success" } }));
@@ -200,7 +200,7 @@ export const createCredential = (payload: { userId: string; cuil: string; passwo
 
 export const updateCredential = (id: string, payload: any) => async (dispatch: any) => {
 	try {
-		const { data } = await authAxios.patch(`/api/seclo/credentials/${id}`, payload);
+		const { data } = await adminAxios.patch(`/api/seclo/credentials/${id}`, payload);
 		if (data.success) {
 			dispatch({ type: SECLO_UPDATE_CREDENTIAL, payload: data.credential });
 			dispatch(openSnackbar({ open: true, message: "Credencial actualizada", variant: "alert", alert: { color: "success" } }));
@@ -213,7 +213,7 @@ export const updateCredential = (id: string, payload: any) => async (dispatch: a
 
 export const deleteCredential = (id: string) => async (dispatch: any) => {
 	try {
-		const { data } = await authAxios.delete(`/api/seclo/credentials/${id}`);
+		const { data } = await adminAxios.delete(`/api/seclo/credentials/${id}`);
 		if (data.success) {
 			dispatch({ type: SECLO_REMOVE_CREDENTIAL, payload: id });
 			dispatch(openSnackbar({ open: true, message: "Credencial eliminada", variant: "alert", alert: { color: "success" } }));
@@ -226,7 +226,7 @@ export const deleteCredential = (id: string) => async (dispatch: any) => {
 
 export const fetchUsers = (search?: string) => async (dispatch: any) => {
 	try {
-		const { data } = await authAxios.get("/api/seclo/users", { params: { search, limit: 50 } });
+		const { data } = await adminAxios.get("/api/seclo/users", { params: { search, limit: 50 } });
 		if (data.success) dispatch({ type: SECLO_SET_USERS, payload: data.users });
 	} catch (err: any) {
 		console.error("fetchUsers:", err.message);
@@ -235,7 +235,7 @@ export const fetchUsers = (search?: string) => async (dispatch: any) => {
 
 export const fetchContactsByUser = (userId: string) => async (dispatch: any) => {
 	try {
-		const { data } = await authAxios.get(`/api/seclo/users/${userId}/contacts`);
+		const { data } = await adminAxios.get(`/api/seclo/users/${userId}/contacts`);
 		if (data.success) dispatch({ type: SECLO_SET_CONTACTS, payload: data.contacts });
 		return data.contacts as SecloContact[];
 	} catch (err: any) {
@@ -245,7 +245,7 @@ export const fetchContactsByUser = (userId: string) => async (dispatch: any) => 
 };
 
 export const getPresignedUploadUrl = async (fileName: string, contentType: string, userId?: string) => {
-	const { data } = await authAxios.post("/api/seclo/upload/presign", { fileName, contentType, userId });
+	const { data } = await adminAxios.post("/api/seclo/upload/presign", { fileName, contentType, userId });
 	if (!data.success) throw new Error(data.message || "Error generando URL de upload");
 	return data as { uploadUrl: string; s3Key: string };
 };
