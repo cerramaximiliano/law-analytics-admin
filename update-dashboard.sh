@@ -48,20 +48,34 @@ local_sudo() {
 
 # 1. Actualizar código
 echo -e "\n${YELLOW}[1/4] Obteniendo últimos cambios de Git...${NC}"
+CODE_CHANGED=true
 if [ "$IS_REMOTE" = true ]; then
 	# Ejecutando en el servidor
 	cd ${REMOTE_PATH}
+	BEFORE=$(git rev-parse HEAD)
 	git fetch origin
 	git reset --hard origin/main
+	AFTER=$(git rev-parse HEAD)
+	if [ "$BEFORE" = "$AFTER" ]; then
+		CODE_CHANGED=false
+	fi
 	echo 'Código actualizado'
 else
 	# Ejecutando desde local
-	ssh -i "${SSH_KEY}" "${SERVER_USER}@${SERVER_IP}" "
+	BEFORE_AFTER=$(ssh -i "${SSH_KEY}" "${SERVER_USER}@${SERVER_IP}" "
 		cd ${REMOTE_PATH}
+		BEFORE=\$(git rev-parse HEAD)
 		git fetch origin
 		git reset --hard origin/main
-		echo 'Código actualizado'
-	"
+		AFTER=\$(git rev-parse HEAD)
+		echo \"\${BEFORE} \${AFTER}\"
+	")
+	BEFORE=$(echo "$BEFORE_AFTER" | tail -1 | awk '{print $1}')
+	AFTER=$(echo "$BEFORE_AFTER" | tail -1 | awk '{print $2}')
+	if [ "$BEFORE" = "$AFTER" ]; then
+		CODE_CHANGED=false
+	fi
+	echo 'Código actualizado'
 fi
 echo -e "${GREEN}✓ Código actualizado${NC}"
 
@@ -85,33 +99,41 @@ fi
 
 # 3. Reinstalar dependencias y rebuild
 echo -e "\n${YELLOW}[3/4] Instalando dependencias y recompilando...${NC}"
-if [ "$IS_REMOTE" = true ]; then
-	# Ejecutando en el servidor
-	cd ${REMOTE_PATH}
-	npm install
-	npm run build
-	echo 'Build completado'
+if [ "$CODE_CHANGED" = false ]; then
+	echo -e "${YELLOW}⚠ Sin cambios en el código — omitiendo build${NC}"
 else
-	# Ejecutando desde local
-	ssh -i "${SSH_KEY}" "${SERVER_USER}@${SERVER_IP}" "
+	if [ "$IS_REMOTE" = true ]; then
+		# Ejecutando en el servidor
 		cd ${REMOTE_PATH}
 		npm install
 		npm run build
 		echo 'Build completado'
-	"
+	else
+		# Ejecutando desde local
+		ssh -i "${SSH_KEY}" "${SERVER_USER}@${SERVER_IP}" "
+			cd ${REMOTE_PATH}
+			npm install
+			npm run build
+			echo 'Build completado'
+		"
+	fi
+	echo -e "${GREEN}✓ Aplicación recompilada${NC}"
 fi
-echo -e "${GREEN}✓ Aplicación recompilada${NC}"
 
 # 4. Limpiar cache de nginx y recargar
 echo -e "\n${YELLOW}[4/4] Recargando nginx...${NC}"
-if [ "$IS_REMOTE" = true ]; then
-	# Ejecutando en el servidor
-	local_sudo "systemctl reload nginx"
+if [ "$CODE_CHANGED" = false ]; then
+	echo -e "${YELLOW}⚠ Sin cambios — omitiendo reload de nginx${NC}"
 else
-	# Ejecutando desde local
-	remote_sudo "systemctl reload nginx"
+	if [ "$IS_REMOTE" = true ]; then
+		# Ejecutando en el servidor
+		local_sudo "systemctl reload nginx"
+	else
+		# Ejecutando desde local
+		remote_sudo "systemctl reload nginx"
+	fi
+	echo -e "${GREEN}✓ Nginx recargado${NC}"
 fi
-echo -e "${GREEN}✓ Nginx recargado${NC}"
 
 echo -e "\n${GREEN}========================================${NC}"
 echo -e "${GREEN}  ¡Actualización completada! 🎉${NC}"
