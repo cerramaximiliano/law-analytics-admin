@@ -240,7 +240,7 @@ export default function JurisprudenciaPjnPage() {
 	// Búsqueda semántica
 	const [query, setQuery] = useState("");
 	const [filters, setFilters] = useState<SearchFilters>({});
-	const [options, setOptions] = useState<SearchOptions>({ topK: 5, minScore: 0.70, includeFullText: false });
+	const [options, setOptions] = useState<SearchOptions>({ topK: 5, minScore: 0.60, includeFullText: false });
 
 	// Búsqueda por similitud
 	const [sentenciaId, setSentenciaId] = useState("");
@@ -434,7 +434,7 @@ export default function JurisprudenciaPjnPage() {
 										Score mínimo: <strong>{options.minScore?.toFixed(2)}</strong>
 									</Typography>
 									<Slider
-										value={options.minScore ?? 0.70}
+										value={options.minScore ?? 0.60}
 										min={0.5} max={0.99} step={0.01}
 										onChange={(_, v) => setOptions((o) => ({ ...o, minScore: v as number }))}
 										marks={[{ value: 0.5, label: "0.5" }, { value: 0.75, label: "0.75" }, { value: 0.99, label: "0.99" }]}
@@ -517,7 +517,7 @@ export default function JurisprudenciaPjnPage() {
 										Score mínimo: <strong>{options.minScore?.toFixed(2)}</strong>
 									</Typography>
 									<Slider
-										value={options.minScore ?? 0.70}
+										value={options.minScore ?? 0.60}
 										min={0.5} max={0.99} step={0.01}
 										onChange={(_, v) => setOptions((o) => ({ ...o, minScore: v as number }))}
 										marks={[{ value: 0.5, label: "0.5" }, { value: 0.75, label: "0.75" }, { value: 0.99, label: "0.99" }]}
