@@ -1,0 +1,453 @@
+import { useEffect, useState, useCallback } from "react";
+import {
+	Alert,
+	Box,
+	Button,
+	Chip,
+	CircularProgress,
+	Divider,
+	FormControlLabel,
+	Grid,
+	Paper,
+	Stack,
+	Switch,
+	TextField,
+	Typography,
+	alpha,
+	useTheme,
+} from "@mui/material";
+import { TickCircle, Warning2, Refresh, Setting2, Clock, Calendar1 } from "iconsax-react";
+import { useSnackbar } from "notistack";
+import MainCard from "components/MainCard";
+import { fetchTrabajoConfig, updateTrabajoConfig } from "store/reducers/seclo";
+import { useDispatch } from "store";
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+function fmtDate(d?: string | null) {
+	if (!d) return "—";
+	return new Date(d).toLocaleString("es-AR", {
+		day: "2-digit", month: "2-digit", year: "numeric",
+		hour: "2-digit", minute: "2-digit",
+	});
+}
+
+const DAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+// ── Worker card ────────────────────────────────────────────────────────────────
+
+interface WorkerCardProps {
+	name: string;
+	label: string;
+	description: string;
+	config: { enabled: boolean; cronPattern: string };
+	stats: { lastRunAt?: string | null; lastRunStatus?: string; lastRunOk?: number; lastRunErrors?: number; totalProcessed?: number; totalErrors?: number };
+	onChange: (field: string, value: any) => void;
+}
+
+function WorkerCard({ name, label, description, config, stats, onChange }: WorkerCardProps) {
+	const theme = useTheme();
+	const statusColor: Record<string, string> = {
+		completed: theme.palette.success.main,
+		error:     theme.palette.error.main,
+		running:   theme.palette.info.main,
+		idle:      theme.palette.text.disabled,
+	};
+	const lastStatus = stats.lastRunStatus || "idle";
+
+	return (
+		<Paper variant="outlined" sx={{ p: 2 }}>
+			<Box display="flex" alignItems="flex-start" justifyContent="space-between" mb={1.5}>
+				<Box>
+					<Typography variant="subtitle1" fontWeight={600}>{label}</Typography>
+					<Typography variant="body2" color="text.secondary">{description}</Typography>
+				</Box>
+				<FormControlLabel
+					control={
+						<Switch
+							checked={config.enabled}
+							onChange={e => onChange(`workers.${name}.enabled`, e.target.checked)}
+							color="primary"
+						/>
+					}
+					label={config.enabled ? "Activo" : "Pausado"}
+					labelPlacement="start"
+					sx={{ ml: 0, mr: 0, gap: 1 }}
+				/>
+			</Box>
+
+			<Stack direction="row" spacing={2} mb={2} flexWrap="wrap">
+				<Box>
+					<Typography variant="caption" color="text.secondary">Último ciclo</Typography>
+					<Typography variant="body2">{fmtDate(stats.lastRunAt)}</Typography>
+				</Box>
+				<Box>
+					<Typography variant="caption" color="text.secondary">Estado</Typography>
+					<Box display="flex" alignItems="center" gap={0.5}>
+						<Box
+							sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: statusColor[lastStatus] || statusColor.idle }}
+						/>
+						<Typography variant="body2" sx={{ textTransform: "capitalize" }}>{lastStatus}</Typography>
+					</Box>
+				</Box>
+				<Box>
+					<Typography variant="caption" color="text.secondary">Último ok / errores</Typography>
+					<Typography variant="body2">
+						<Box component="span" color="success.main">{stats.lastRunOk ?? 0}</Box>
+						{" / "}
+						<Box component="span" color={(stats.lastRunErrors ?? 0) > 0 ? "error.main" : "text.secondary"}>{stats.lastRunErrors ?? 0}</Box>
+					</Typography>
+				</Box>
+				<Box>
+					<Typography variant="caption" color="text.secondary">Total procesados</Typography>
+					<Typography variant="body2">{(stats.totalProcessed ?? 0).toLocaleString("es-AR")}</Typography>
+				</Box>
+			</Stack>
+
+			<TextField
+				fullWidth
+				size="small"
+				label="Patrón cron"
+				value={config.cronPattern || ""}
+				onChange={e => onChange(`workers.${name}.cronPattern`, e.target.value)}
+				placeholder="*/10 * * * *"
+				helperText="Patrón cron estándar — cambios requieren reiniciar el worker"
+				sx={{ bgcolor: alpha("#000", 0.02) }}
+			/>
+		</Paper>
+	);
+}
+
+// ── Página principal ───────────────────────────────────────────────────────────
+
+interface TrabajoConfig {
+	enabled: boolean;
+	workers: {
+		envio:    { enabled: boolean; cronPattern: string };
+		verificar:{ enabled: boolean; cronPattern: string };
+		agenda:   { enabled: boolean; cronPattern: string };
+	};
+	workingDays: number[];
+	workingHours: { start: string; end: string };
+	maxUsersPerCycle: number;
+	navigationTimeoutMs: number;
+	actionDelayMs: number;
+	delayBetweenRequests: number;
+	headless: boolean;
+	retry: { maxAttempts: number; delayMs: number };
+	stats: {
+		envio:    any;
+		verificar:any;
+		agenda:   any;
+	};
+	updatedAt?: string;
+}
+
+const DEFAULT_CONFIG: TrabajoConfig = {
+	enabled: true,
+	workers: {
+		envio:    { enabled: true, cronPattern: "0 */6 * * *" },
+		verificar:{ enabled: true, cronPattern: "0 */2 * * *" },
+		agenda:   { enabled: true, cronPattern: "*/10 * * * *" },
+	},
+	workingDays: [1, 2, 3, 4, 5],
+	workingHours: { start: "08:00", end: "20:00" },
+	maxUsersPerCycle: 10,
+	navigationTimeoutMs: 30000,
+	actionDelayMs: 1500,
+	delayBetweenRequests: 5000,
+	headless: true,
+	retry: { maxAttempts: 3, delayMs: 5000 },
+	stats: { envio: {}, verificar: {}, agenda: {} },
+};
+
+export default function WorkersSecloPage() {
+	const dispatch = useDispatch();
+	const { enqueueSnackbar } = useSnackbar();
+
+	const [config, setConfig] = useState<TrabajoConfig>(DEFAULT_CONFIG);
+	const [loading, setLoading] = useState(true);
+	const [saving, setSaving] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+
+	const loadConfig = useCallback(async () => {
+		setLoading(true);
+		setError(null);
+		try {
+			const data = await dispatch(fetchTrabajoConfig());
+			if (data) setConfig({ ...DEFAULT_CONFIG, ...data });
+		} catch (err: any) {
+			setError(err.message || "Error cargando configuración");
+		} finally {
+			setLoading(false);
+		}
+	}, [dispatch]);
+
+	useEffect(() => { loadConfig(); }, [loadConfig]);
+
+	const handleChange = (path: string, value: any) => {
+		setConfig(prev => {
+			const next = { ...prev };
+			const parts = path.split(".");
+			let obj: any = next;
+			for (let i = 0; i < parts.length - 1; i++) {
+				obj[parts[i]] = { ...(obj[parts[i]] || {}) };
+				obj = obj[parts[i]];
+			}
+			obj[parts[parts.length - 1]] = value;
+			return next;
+		});
+	};
+
+	const handleToggleDay = (day: number) => {
+		setConfig(prev => {
+			const days = prev.workingDays.includes(day)
+				? prev.workingDays.filter(d => d !== day)
+				: [...prev.workingDays, day].sort();
+			return { ...prev, workingDays: days };
+		});
+	};
+
+	const handleSave = async () => {
+		setSaving(true);
+		try {
+			const result = await dispatch(updateTrabajoConfig({
+				enabled:              config.enabled,
+				workers:              config.workers,
+				workingDays:          config.workingDays,
+				workingHours:         config.workingHours,
+				maxUsersPerCycle:     config.maxUsersPerCycle,
+				navigationTimeoutMs:  config.navigationTimeoutMs,
+				actionDelayMs:        config.actionDelayMs,
+				delayBetweenRequests: config.delayBetweenRequests,
+				headless:             config.headless,
+				retry:                config.retry,
+			}));
+			if (result) {
+				setConfig({ ...DEFAULT_CONFIG, ...result });
+				enqueueSnackbar("Configuración guardada", { variant: "success" });
+			} else {
+				enqueueSnackbar("Error al guardar", { variant: "error" });
+			}
+		} catch (err: any) {
+			enqueueSnackbar(err.message || "Error al guardar", { variant: "error" });
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	if (loading) {
+		return (
+			<MainCard title="Workers SECLO">
+				<Box display="flex" justifyContent="center" py={8}>
+					<CircularProgress />
+				</Box>
+			</MainCard>
+		);
+	}
+
+	const WORKERS: Array<{ name: keyof TrabajoConfig["workers"]; label: string; description: string }> = [
+		{ name: "envio",     label: "Worker de Envío",        description: "Toma solicitudes pending y las envía al portal SECLO" },
+		{ name: "verificar", label: "Worker de Verificación", description: "Verifica solicitudes submitted: obtiene expediente, audiencia y constancia" },
+		{ name: "agenda",    label: "Worker de Agenda",       description: "Extrae datos del conciliador, crea evento en calendario y envía email" },
+	];
+
+	return (
+		<MainCard
+			title="Workers SECLO"
+			secondary={
+				<Box display="flex" gap={1}>
+					<Button size="small" startIcon={<Refresh size={16} />} onClick={loadConfig} disabled={loading}>
+						Actualizar
+					</Button>
+					<Button size="small" variant="contained" onClick={handleSave} disabled={saving}>
+						{saving ? <CircularProgress size={16} sx={{ mr: 1 }} /> : null}
+						Guardar cambios
+					</Button>
+				</Box>
+			}
+		>
+			{error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+			<Stack spacing={3}>
+
+				{/* Habilitación global */}
+				<Paper variant="outlined" sx={{ p: 2 }}>
+					<Box display="flex" alignItems="center" justifyContent="space-between">
+						<Box>
+							<Typography variant="subtitle1" fontWeight={600}>Estado global del sistema</Typography>
+							<Typography variant="body2" color="text.secondary">
+								Cuando está deshabilitado, ningún worker procesa solicitudes aunque sus crons estén activos.
+							</Typography>
+						</Box>
+						<Box display="flex" alignItems="center" gap={1}>
+							{config.enabled
+								? <Chip icon={<TickCircle size={14} />} label="Habilitado" color="success" size="small" />
+								: <Chip icon={<Warning2 size={14} />} label="Deshabilitado" color="error" size="small" />
+							}
+							<Switch
+								checked={config.enabled}
+								onChange={e => handleChange("enabled", e.target.checked)}
+								color="primary"
+							/>
+						</Box>
+					</Box>
+					{config.updatedAt && (
+						<Typography variant="caption" color="text.secondary" mt={1} display="block">
+							Última actualización: {fmtDate(config.updatedAt)}
+						</Typography>
+					)}
+				</Paper>
+
+				{/* Workers individuales */}
+				<Box>
+					<Typography variant="subtitle2" color="text.secondary" mb={1.5} display="flex" alignItems="center" gap={0.5}>
+						<Setting2 size={16} /> Configuración de workers
+					</Typography>
+					<Stack spacing={2}>
+						{WORKERS.map(w => (
+							<WorkerCard
+								key={w.name}
+								name={w.name}
+								label={w.label}
+								description={w.description}
+								config={config.workers[w.name]}
+								stats={config.stats?.[w.name] || {}}
+								onChange={(field, value) => handleChange(field, value)}
+							/>
+						))}
+					</Stack>
+				</Box>
+
+				{/* Horario de trabajo */}
+				<Paper variant="outlined" sx={{ p: 2 }}>
+					<Typography variant="subtitle1" fontWeight={600} mb={1.5} display="flex" alignItems="center" gap={0.5}>
+						<Calendar1 size={16} /> Horario de trabajo
+					</Typography>
+					<Typography variant="body2" color="text.secondary" mb={2}>
+						Los workers solo procesarán solicitudes durante estos días y horarios (hora Argentina, UTC-3).
+						Si no hay restricción, deja todos los días seleccionados.
+					</Typography>
+					<Stack spacing={2}>
+						<Box>
+							<Typography variant="caption" color="text.secondary" mb={1} display="block">Días habilitados</Typography>
+							<Box display="flex" gap={1} flexWrap="wrap">
+								{DAY_LABELS.map((day, idx) => (
+									<Chip
+										key={idx}
+										label={day}
+										onClick={() => handleToggleDay(idx)}
+										color={config.workingDays.includes(idx) ? "primary" : "default"}
+										variant={config.workingDays.includes(idx) ? "filled" : "outlined"}
+										size="small"
+										sx={{ cursor: "pointer", minWidth: 48 }}
+									/>
+								))}
+							</Box>
+						</Box>
+						<Grid container spacing={2}>
+							<Grid item xs={6} sm={3}>
+								<TextField
+									fullWidth size="small" label="Hora inicio" type="time"
+									value={config.workingHours.start}
+									onChange={e => handleChange("workingHours.start", e.target.value)}
+									InputLabelProps={{ shrink: true }}
+								/>
+							</Grid>
+							<Grid item xs={6} sm={3}>
+								<TextField
+									fullWidth size="small" label="Hora fin" type="time"
+									value={config.workingHours.end}
+									onChange={e => handleChange("workingHours.end", e.target.value)}
+									InputLabelProps={{ shrink: true }}
+								/>
+							</Grid>
+						</Grid>
+					</Stack>
+				</Paper>
+
+				{/* Parámetros de operación */}
+				<Paper variant="outlined" sx={{ p: 2 }}>
+					<Typography variant="subtitle1" fontWeight={600} mb={1.5} display="flex" alignItems="center" gap={0.5}>
+						<Clock size={16} /> Parámetros de operación
+					</Typography>
+					<Grid container spacing={2}>
+						<Grid item xs={12} sm={6} md={4}>
+							<TextField
+								fullWidth size="small" label="Solicitudes por ciclo" type="number"
+								value={config.maxUsersPerCycle}
+								onChange={e => handleChange("maxUsersPerCycle", Number(e.target.value))}
+								inputProps={{ min: 1, max: 50 }}
+								helperText="Máximo de solicitudes procesadas por ciclo"
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6} md={4}>
+							<TextField
+								fullWidth size="small" label="Timeout navegación (ms)" type="number"
+								value={config.navigationTimeoutMs}
+								onChange={e => handleChange("navigationTimeoutMs", Number(e.target.value))}
+								inputProps={{ min: 5000, max: 120000, step: 1000 }}
+								helperText="Timeout de carga de página"
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6} md={4}>
+							<TextField
+								fullWidth size="small" label="Demora entre acciones (ms)" type="number"
+								value={config.actionDelayMs}
+								onChange={e => handleChange("actionDelayMs", Number(e.target.value))}
+								inputProps={{ min: 500, max: 10000, step: 500 }}
+								helperText="Espera entre clicks/acciones"
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6} md={4}>
+							<TextField
+								fullWidth size="small" label="Demora entre solicitudes (ms)" type="number"
+								value={config.delayBetweenRequests}
+								onChange={e => handleChange("delayBetweenRequests", Number(e.target.value))}
+								inputProps={{ min: 1000, max: 30000, step: 1000 }}
+								helperText="Espera entre solicitudes del ciclo"
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6} md={4}>
+							<TextField
+								fullWidth size="small" label="Max reintentos" type="number"
+								value={config.retry.maxAttempts}
+								onChange={e => handleChange("retry.maxAttempts", Number(e.target.value))}
+								inputProps={{ min: 1, max: 10 }}
+								helperText="Reintentos ante error"
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6} md={4}>
+							<TextField
+								fullWidth size="small" label="Demora entre reintentos (ms)" type="number"
+								value={config.retry.delayMs}
+								onChange={e => handleChange("retry.delayMs", Number(e.target.value))}
+								inputProps={{ min: 1000, max: 60000, step: 1000 }}
+							/>
+						</Grid>
+					</Grid>
+
+					<Divider sx={{ my: 2 }} />
+
+					<FormControlLabel
+						control={
+							<Switch
+								checked={config.headless}
+								onChange={e => handleChange("headless", e.target.checked)}
+							/>
+						}
+						label={
+							<Box>
+								<Typography variant="body2" fontWeight={500}>Modo headless</Typography>
+								<Typography variant="caption" color="text.secondary">
+									Cuando está activo, Puppeteer corre sin interfaz gráfica (recomendado en producción)
+								</Typography>
+							</Box>
+						}
+					/>
+				</Paper>
+
+			</Stack>
+		</MainCard>
+	);
+}
