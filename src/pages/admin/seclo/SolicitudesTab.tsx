@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import {
-	Box, Button, Chip, IconButton, Table, TableBody, TableCell,
+	Box, Button, Chip, CircularProgress, Divider, IconButton, Link, Stack, Table, TableBody, TableCell,
 	TableContainer, TableHead, TablePagination, TableRow,
 	TextField, Tooltip, Typography, Select, MenuItem, FormControl, InputLabel,
 	Dialog, DialogTitle, DialogContent, DialogActions,
 } from "@mui/material";
-import { Add, Eye, Trash, RefreshCircle, SearchNormal1 } from "iconsax-react";
+import { Add, DocumentDownload, Eye, Trash, RefreshCircle, SearchNormal1 } from "iconsax-react";
 import { useDispatch, useSelector } from "store";
-import { fetchSolicitudes, deleteSolicitud, reactivarSolicitud } from "store/reducers/seclo";
-import type { SecloSolicitud, SecloStatus } from "types/seclo";
+import { fetchSolicitudes, deleteSolicitud, reactivarSolicitud, getSecloDownloadUrl } from "store/reducers/seclo";
+import type { SecloDocTipo, SecloSolicitud, SecloStatus } from "types/seclo";
 import CreateSolicitudModal from "./CreateSolicitudModal";
 
 const STATUS_COLORS: Record<SecloStatus, "default" | "warning" | "info" | "success" | "error"> = {
@@ -35,6 +35,213 @@ function getUserName(sol: SecloSolicitud): string {
 function getParticipantName(p: SecloSolicitud["requirentes"][0]): string {
 	if (p.contactId && typeof p.contactId === "object") return `${p.contactId.name} ${p.contactId.lastName || ""}`.trim();
 	return p.snapshot?.name || "—";
+}
+
+const DOC_TIPO_LABELS: Record<SecloDocTipo, string> = {
+	dni:        "D.N.I.",
+	credencial: "Credencial letrado",
+	poder:      "Poder",
+	formulario: "Formulario",
+	otros:      "Otros",
+};
+
+// ─── Botón de descarga de documento S3 ───────────────────────────────────────
+
+function DownloadDocButton({ s3Key, label }: { s3Key: string; label: string }) {
+	const dispatch = useDispatch();
+	const [loading, setLoading] = useState(false);
+
+	const handleDownload = async () => {
+		setLoading(true);
+		try {
+			const url = await dispatch(getSecloDownloadUrl(s3Key));
+			if (url) {
+				const a = document.createElement("a");
+				a.href = url;
+				a.download = label;
+				a.target = "_blank";
+				a.click();
+			}
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	return (
+		<Link
+			component="button"
+			variant="body2"
+			onClick={handleDownload}
+			sx={{ display: "inline-flex", alignItems: "center", gap: 0.5, textDecoration: "none" }}
+		>
+			{loading ? <CircularProgress size={14} /> : <DocumentDownload size={14} />}
+			{label}
+		</Link>
+	);
+}
+
+// ─── Dialog de detalle ────────────────────────────────────────────────────────
+
+function SolicitudDetailDialog({ sol, onClose }: { sol: SecloSolicitud; onClose: () => void }) {
+	const audiencias = sol.resultado?.audiencias ?? [];
+	const hasResultado = !!(sol.resultado?.numeroExpediente || sol.resultado?.numeroTramite || audiencias.length > 0);
+
+	return (
+		<Dialog open onClose={onClose} maxWidth="sm" fullWidth>
+			<DialogTitle>
+				Solicitud <Typography component="span" variant="body2" color="text.secondary">…{sol._id.slice(-8)}</Typography>
+			</DialogTitle>
+			<DialogContent dividers>
+				<Stack spacing={1.5}>
+
+					{/* Info general */}
+					<Box>
+						<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>General</Typography>
+						<Stack spacing={0.5} mt={0.5}>
+							<Typography variant="body2"><strong>Usuario:</strong> {getUserName(sol)}</Typography>
+							<Typography variant="body2"><strong>Estado:</strong>{" "}
+								<Chip label={STATUS_LABELS[sol.status]} color={STATUS_COLORS[sol.status]} size="small" sx={{ ml: 0.5 }} />
+							</Typography>
+							<Typography variant="body2"><strong>Tipo trámite:</strong> {sol.tipoTramite}</Typography>
+							<Typography variant="body2"><strong>Iniciado por:</strong> {sol.iniciadoPor}</Typography>
+							<Typography variant="body2"><strong>Objeto del reclamo:</strong> {sol.objetoReclamo.join(", ")}</Typography>
+							{sol.submittedAt && (
+								<Typography variant="body2"><strong>Enviado:</strong> {new Date(sol.submittedAt).toLocaleString("es-AR")}</Typography>
+							)}
+							{sol.completedAt && (
+								<Typography variant="body2"><strong>Completado:</strong> {new Date(sol.completedAt).toLocaleString("es-AR")}</Typography>
+							)}
+						</Stack>
+					</Box>
+
+					{/* Resultado */}
+					{hasResultado && (
+						<>
+							<Divider />
+							<Box>
+								<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>Resultado del portal</Typography>
+								<Stack spacing={0.5} mt={0.5}>
+									{sol.resultado?.numeroExpediente && (
+										<Typography variant="body2"><strong>Expediente:</strong> {sol.resultado.numeroExpediente}</Typography>
+									)}
+									{sol.resultado?.numeroTramite && (
+										<Typography variant="body2"><strong>N° trámite:</strong> {sol.resultado.numeroTramite}</Typography>
+									)}
+								</Stack>
+
+								{/* Audiencias */}
+								{audiencias.length > 0 && (
+									<Box mt={1}>
+										<Typography variant="body2" fontWeight={600}>Audiencias asignadas</Typography>
+										{audiencias.map((aud, i) => (
+											<Box key={i} mt={0.75} pl={1} borderLeft="3px solid" borderColor="primary.main">
+												<Stack spacing={0.25}>
+													{aud.fecha && (
+														<Typography variant="body2">
+															<strong>Fecha:</strong> {aud.fecha}{aud.hora ? ` — ${aud.hora} hs` : ""}
+														</Typography>
+													)}
+													{aud.lugar && (
+														<Typography variant="body2"><strong>Lugar:</strong> {aud.lugar}</Typography>
+													)}
+													{aud.constanciaKey && (
+														<DownloadDocButton
+															s3Key={aud.constanciaKey}
+															label={`Constancia audiencia${aud.fecha ? ` ${aud.fecha}` : ""}`}
+														/>
+													)}
+													{/* Conciliador */}
+													{aud.conciliador && (aud.conciliador.nombre || aud.conciliador.email || aud.conciliador.telefono) && (
+														<Box mt={0.5} pt={0.5} borderTop="1px dashed" borderColor="divider">
+															<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+																Conciliador
+															</Typography>
+															<Stack spacing={0.25} mt={0.25}>
+																{aud.conciliador.nombre && (
+																	<Typography variant="body2"><strong>Nombre:</strong> {aud.conciliador.nombre}</Typography>
+																)}
+																{aud.conciliador.telefono && (
+																	<Typography variant="body2"><strong>Teléfono:</strong> {aud.conciliador.telefono}</Typography>
+																)}
+																{aud.conciliador.email && (
+																	<Typography variant="body2">
+																		<strong>Email:</strong>{" "}
+																		<Link href={`mailto:${aud.conciliador.email}`} variant="body2">{aud.conciliador.email}</Link>
+																	</Typography>
+																)}
+																{aud.conciliador.sala && (
+																	<Typography variant="body2"><strong>Sala:</strong> {aud.conciliador.sala}</Typography>
+																)}
+															</Stack>
+														</Box>
+													)}
+													{!aud.agendaScrapeAt && aud.fecha && (
+														<Typography variant="caption" color="text.secondary" fontStyle="italic">
+															Datos de conciliador pendientes
+														</Typography>
+													)}
+												</Stack>
+											</Box>
+										))}
+									</Box>
+								)}
+							</Box>
+						</>
+					)}
+
+					{/* Error */}
+					{sol.errorInfo?.message && (
+						<>
+							<Divider />
+							<Box>
+								<Typography variant="caption" color="error" textTransform="uppercase" letterSpacing={0.5}>Error</Typography>
+								<Typography variant="body2" color="error" mt={0.5}>{sol.errorInfo.message}</Typography>
+								{sol.errorInfo.code && (
+									<Typography variant="caption" color="text.secondary">Código: {sol.errorInfo.code}</Typography>
+								)}
+								<Typography variant="caption" color="text.secondary" display="block">
+									Reintentos: {sol.retryCount}
+								</Typography>
+							</Box>
+						</>
+					)}
+
+					{/* Documentos adjuntos (input) */}
+					<Divider />
+					<Box>
+						<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+							Documentos adjuntos
+						</Typography>
+						{sol.documentos.length === 0 ? (
+							<Typography variant="body2" color="text.secondary" mt={0.5}>Sin documentos</Typography>
+						) : (
+							<Stack spacing={0.75} mt={0.5}>
+								{sol.documentos.map((doc, i) => (
+									<Box key={i} display="flex" alignItems="center" gap={1}>
+										<Typography variant="body2" color="text.secondary" minWidth={110}>
+											{DOC_TIPO_LABELS[doc.tipo] ?? doc.tipo}
+										</Typography>
+										{doc.s3Key ? (
+											<DownloadDocButton
+												s3Key={doc.s3Key}
+												label={doc.fileName || doc.s3Key.split("/").pop() || "Descargar"}
+											/>
+										) : (
+											<Typography variant="body2" color="text.secondary">—</Typography>
+										)}
+									</Box>
+								))}
+							</Stack>
+						)}
+					</Box>
+
+				</Stack>
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={onClose}>Cerrar</Button>
+			</DialogActions>
+		</Dialog>
+	);
 }
 
 export default function SolicitudesTab() {
@@ -136,7 +343,11 @@ export default function SolicitudesTab() {
 									<Chip label={STATUS_LABELS[sol.status]} color={STATUS_COLORS[sol.status]} size="small" />
 								</TableCell>
 								<TableCell>
-									<Typography variant="body2">{sol.resultado?.numeroExpediente || "—"}</Typography>
+									<Typography variant="body2">
+										{sol.resultado?.numeroExpediente || sol.resultado?.numeroTramite
+											? `${sol.resultado?.numeroExpediente || ""}${sol.resultado?.numeroTramite ? ` #${sol.resultado.numeroTramite}` : ""}`.trim()
+											: "—"}
+									</Typography>
 								</TableCell>
 								<TableCell>
 									<Typography variant="caption">
@@ -182,39 +393,7 @@ export default function SolicitudesTab() {
 
 			{/* Vista de detalle */}
 			{viewTarget && (
-				<Dialog open onClose={() => setViewTarget(null)} maxWidth="sm" fullWidth>
-					<DialogTitle>Solicitud {viewTarget._id.slice(-8)}</DialogTitle>
-					<DialogContent>
-						<Typography variant="body2"><strong>Usuario:</strong> {getUserName(viewTarget)}</Typography>
-						<Typography variant="body2"><strong>Estado:</strong> {STATUS_LABELS[viewTarget.status]}</Typography>
-						<Typography variant="body2"><strong>Tipo trámite:</strong> {viewTarget.tipoTramite}</Typography>
-						<Typography variant="body2"><strong>Objeto:</strong> {viewTarget.objetoReclamo.join(", ")}</Typography>
-						{viewTarget.resultado?.numeroExpediente && (
-							<Typography variant="body2"><strong>Expediente:</strong> {viewTarget.resultado.numeroExpediente}</Typography>
-						)}
-						{viewTarget.errorInfo?.message && (
-							<Box mt={1}>
-								<Typography variant="body2" color="error">
-									<strong>Error:</strong> {viewTarget.errorInfo.message}
-								</Typography>
-								<Typography variant="caption" color="text.secondary">
-									Reintentos: {viewTarget.retryCount}
-								</Typography>
-							</Box>
-						)}
-						<Box mt={1}>
-							<Typography variant="body2"><strong>Documentos:</strong></Typography>
-							{viewTarget.documentos.length === 0 ? (
-								<Typography variant="body2" color="text.secondary">Sin documentos adjuntos</Typography>
-							) : viewTarget.documentos.map((d, i) => (
-								<Typography key={i} variant="body2">• {d.tipo}: {d.fileName || d.s3Key}</Typography>
-							))}
-						</Box>
-					</DialogContent>
-					<DialogActions>
-						<Button onClick={() => setViewTarget(null)}>Cerrar</Button>
-					</DialogActions>
-				</Dialog>
+				<SolicitudDetailDialog sol={viewTarget} onClose={() => setViewTarget(null)} />
 			)}
 
 			{/* Confirmar eliminación */}

@@ -65,6 +65,23 @@ export interface SecloDocumento {
 	fileName?: string;
 }
 
+export interface SecloConciliador {
+	nombre?:   string | null;
+	telefono?: string | null;
+	email?:    string | null;
+	sala?:     string | null;
+}
+
+export interface SecloAudiencia {
+	fecha?:          string | null;
+	hora?:           string | null;
+	lugar?:          string | null;
+	constanciaKey?:  string | null;
+	conciliador?:    SecloConciliador | null;
+	eventId?:        string;
+	agendaScrapeAt?: string;
+}
+
 export interface SecloDatosAbogado {
 	caracter: SecloCaracter;
 	tomo: string;
@@ -111,9 +128,9 @@ export interface SecloSolicitud {
 	completedAt?: string | null;
 	resultado?: {
 		numeroExpediente?: string;
-		fechaAudiencia?: string;
-		horaAudiencia?: string;
-		lugarAudiencia?: string;
+		numeroTramite?: string;
+		audiencias?: SecloAudiencia[];
+		textoPdf?: string;
 	} | null;
 	errorInfo?: { message: string; code: string; timestamp: string } | null;
 	retryCount: number;

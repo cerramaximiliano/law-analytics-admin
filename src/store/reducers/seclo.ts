@@ -168,6 +168,20 @@ export const deleteSolicitud = (id: string) => async (dispatch: any) => {
 	}
 };
 
+/**
+ * Obtiene una URL presignada de descarga para un documento S3 del módulo SECLO.
+ * Retorna la URL directamente (no modifica el estado de Redux).
+ */
+export const getSecloDownloadUrl = (s3Key: string) => async (_dispatch: any): Promise<string | null> => {
+	try {
+		const { data } = await adminAxios.get("/api/seclo/download-url", { params: { key: s3Key } });
+		return data.success ? data.downloadUrl : null;
+	} catch (err: any) {
+		console.error("getSecloDownloadUrl:", err.message);
+		return null;
+	}
+};
+
 export const fetchCredentials = (params?: Record<string, any>) => async (dispatch: any) => {
 	dispatch({ type: SECLO_SET_LOADING, payload: true });
 	try {
