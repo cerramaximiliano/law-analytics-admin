@@ -182,6 +182,39 @@ export const getSecloDownloadUrl = (s3Key: string) => async (_dispatch: any): Pr
 	}
 };
 
+export const resetAgendaData = (id: string, resetEvent = false) => async (dispatch: any) => {
+	try {
+		const { data } = await adminAxios.post(`/api/seclo/solicitudes/${id}/reset-agenda`, { resetEvent });
+		if (data.success) {
+			dispatch({ type: SECLO_UPDATE_SOLICITUD, payload: data.solicitud });
+			dispatch(openSnackbar({ open: true, message: "Datos de agenda reseteados", variant: "alert", alert: { color: "success" } }));
+		}
+	} catch (err: any) {
+		const msg = err.response?.data?.message || err.message;
+		dispatch(openSnackbar({ open: true, message: msg, variant: "alert", alert: { color: "error" } }));
+	}
+};
+
+export const fetchTrabajoConfig = () => async (_dispatch: any): Promise<any | null> => {
+	try {
+		const { data } = await adminAxios.get("/api/seclo/config");
+		return data.success ? data.config : null;
+	} catch (err: any) {
+		console.error("fetchTrabajoConfig:", err.message);
+		return null;
+	}
+};
+
+export const updateTrabajoConfig = (payload: Record<string, any>) => async (_dispatch: any): Promise<any | null> => {
+	try {
+		const { data } = await adminAxios.patch("/api/seclo/config", payload);
+		return data.success ? data.config : null;
+	} catch (err: any) {
+		console.error("updateTrabajoConfig:", err.message);
+		return null;
+	}
+};
+
 export const fetchCredentials = (params?: Record<string, any>) => async (dispatch: any) => {
 	dispatch({ type: SECLO_SET_LOADING, payload: true });
 	try {

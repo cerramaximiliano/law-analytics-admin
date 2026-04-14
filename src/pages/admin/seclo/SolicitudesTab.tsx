@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import {
-	Box, Button, Chip, CircularProgress, Divider, IconButton, Link, Stack, Table, TableBody, TableCell,
+	Box, Button, Chip, CircularProgress, Collapse, Divider, IconButton, Link, Stack, Table, TableBody, TableCell,
 	TableContainer, TableHead, TablePagination, TableRow,
 	TextField, Tooltip, Typography, Select, MenuItem, FormControl, InputLabel,
 	Dialog, DialogTitle, DialogContent, DialogActions,
 } from "@mui/material";
-import { Add, DocumentDownload, Eye, Trash, RefreshCircle, SearchNormal1 } from "iconsax-react";
+import { Add, ArrowDown2, ArrowRight2, DocumentDownload, Eye, Trash, RefreshCircle, SearchNormal1 } from "iconsax-react";
 import { useDispatch, useSelector } from "store";
-import { fetchSolicitudes, deleteSolicitud, reactivarSolicitud, getSecloDownloadUrl } from "store/reducers/seclo";
+import { fetchSolicitudes, deleteSolicitud, reactivarSolicitud, getSecloDownloadUrl, resetAgendaData } from "store/reducers/seclo";
 import type { SecloDocTipo, SecloSolicitud, SecloStatus } from "types/seclo";
 import CreateSolicitudModal from "./CreateSolicitudModal";
 
@@ -83,8 +83,20 @@ function DownloadDocButton({ s3Key, label }: { s3Key: string; label: string }) {
 // ─── Dialog de detalle ────────────────────────────────────────────────────────
 
 function SolicitudDetailDialog({ sol, onClose }: { sol: SecloSolicitud; onClose: () => void }) {
+	const dispatch = useDispatch();
 	const audiencias = sol.resultado?.audiencias ?? [];
 	const hasResultado = !!(sol.resultado?.numeroExpediente || sol.resultado?.numeroTramite || audiencias.length > 0);
+	const [showJson, setShowJson] = useState(false);
+	const [resetting, setResetting] = useState(false);
+
+	const handleResetAgenda = async () => {
+		setResetting(true);
+		try {
+			await dispatch(resetAgendaData(sol._id));
+		} finally {
+			setResetting(false);
+		}
+	};
 
 	return (
 		<Dialog open onClose={onClose} maxWidth="sm" fullWidth>
@@ -235,9 +247,45 @@ function SolicitudDetailDialog({ sol, onClose }: { sol: SecloSolicitud; onClose:
 						)}
 					</Box>
 
+					{/* Raw JSON debug */}
+					<Divider />
+					<Box>
+						<Box
+							display="flex" alignItems="center" gap={0.5} sx={{ cursor: "pointer" }}
+							onClick={() => setShowJson(v => !v)}
+						>
+							{showJson ? <ArrowDown2 size={14} /> : <ArrowRight2 size={14} />}
+							<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+								JSON debug
+							</Typography>
+						</Box>
+						<Collapse in={showJson}>
+							<Box
+								component="pre"
+								sx={{
+									mt: 1, p: 1.5, bgcolor: "grey.900", color: "grey.100", borderRadius: 1,
+									fontSize: 11, overflowX: "auto", maxHeight: 400, whiteSpace: "pre-wrap", wordBreak: "break-all",
+								}}
+							>
+								{JSON.stringify(sol, null, 2)}
+							</Box>
+						</Collapse>
+					</Box>
+
 				</Stack>
 			</DialogContent>
 			<DialogActions>
+				{["completed", "submitted"].includes(sol.status) && (
+					<Tooltip title="Resetea agendaScrapeAt y conciliador para reprocesar con el worker de agenda">
+						<Button
+							color="warning" size="small" onClick={handleResetAgenda}
+							disabled={resetting}
+							startIcon={resetting ? <CircularProgress size={14} /> : <RefreshCircle size={14} />}
+						>
+							Reset Agenda
+						</Button>
+					</Tooltip>
+				)}
 				<Button onClick={onClose}>Cerrar</Button>
 			</DialogActions>
 		</Dialog>
