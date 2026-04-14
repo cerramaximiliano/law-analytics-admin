@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import {
-	Box, Button, Chip, CircularProgress, Collapse, Divider, IconButton, Link, Stack, Table, TableBody, TableCell,
-	TableContainer, TableHead, TablePagination, TableRow,
+	Box, Button, Chip, CircularProgress, Divider, IconButton, Link, Stack, Tab, Table, TableBody, TableCell,
+	TableContainer, TableHead, TablePagination, TableRow, Tabs,
 	TextField, Tooltip, Typography, Select, MenuItem, FormControl, InputLabel,
 	Dialog, DialogTitle, DialogContent, DialogActions,
 } from "@mui/material";
-import { Add, ArrowDown2, ArrowRight2, DocumentDownload, Eye, Trash, RefreshCircle, SearchNormal1 } from "iconsax-react";
+import { Add, DocumentDownload, Eye, Trash, RefreshCircle, SearchNormal1 } from "iconsax-react";
 import { useDispatch, useSelector } from "store";
 import { fetchSolicitudes, deleteSolicitud, reactivarSolicitud, getSecloDownloadUrl, resetAgendaData } from "store/reducers/seclo";
 import type { SecloDocTipo, SecloSolicitud, SecloStatus } from "types/seclo";
@@ -84,13 +84,12 @@ function DownloadDocButton({ s3Key, label }: { s3Key: string; label: string }) {
 
 function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicitud; onClose: () => void }) {
 	const dispatch = useDispatch();
-	// Usar el documento fresco del store (se actualiza después de resetAgendaData)
 	const solicitudes = useSelector((s: any) => s.seclo.solicitudes as SecloSolicitud[]);
 	const sol: SecloSolicitud = solicitudes.find((s) => s._id === initialSol._id) ?? initialSol;
 
 	const audiencias = sol.resultado?.audiencias ?? [];
 	const hasResultado = !!(sol.resultado?.numeroExpediente || sol.resultado?.numeroTramite || audiencias.length > 0);
-	const [showJson, setShowJson] = useState(false);
+	const [tab, setTab] = useState(0);
 	const [resetting, setResetting] = useState(false);
 
 	const handleResetAgenda = async () => {
@@ -107,176 +106,174 @@ function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicit
 			<DialogTitle>
 				Solicitud <Typography component="span" variant="body2" color="text.secondary">…{sol._id.slice(-8)}</Typography>
 			</DialogTitle>
+
+			<Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ px: 3, borderBottom: 1, borderColor: "divider" }}>
+				<Tab label="Detalle" />
+				<Tab label="JSON" />
+			</Tabs>
+
 			<DialogContent dividers>
-				<Stack spacing={1.5}>
 
-					{/* Info general */}
-					<Box>
-						<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>General</Typography>
-						<Stack spacing={0.5} mt={0.5}>
-							<Typography variant="body2"><strong>Usuario:</strong> {getUserName(sol)}</Typography>
-							<Typography variant="body2"><strong>Estado:</strong>{" "}
-								<Chip label={STATUS_LABELS[sol.status]} color={STATUS_COLORS[sol.status]} size="small" sx={{ ml: 0.5 }} />
-							</Typography>
-							<Typography variant="body2"><strong>Tipo trámite:</strong> {sol.tipoTramite}</Typography>
-							<Typography variant="body2"><strong>Iniciado por:</strong> {sol.iniciadoPor}</Typography>
-							<Typography variant="body2"><strong>Objeto del reclamo:</strong> {sol.objetoReclamo.join(", ")}</Typography>
-							{sol.submittedAt && (
-								<Typography variant="body2"><strong>Enviado:</strong> {new Date(sol.submittedAt).toLocaleString("es-AR")}</Typography>
-							)}
-							{sol.completedAt && (
-								<Typography variant="body2"><strong>Completado:</strong> {new Date(sol.completedAt).toLocaleString("es-AR")}</Typography>
-							)}
-						</Stack>
-					</Box>
+				{/* ── Tab 0: Detalle ── */}
+				{tab === 0 && (
+					<Stack spacing={1.5}>
 
-					{/* Resultado */}
-					{hasResultado && (
-						<>
-							<Divider />
-							<Box>
-								<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>Resultado del portal</Typography>
-								<Stack spacing={0.5} mt={0.5}>
-									{sol.resultado?.numeroExpediente && (
-										<Typography variant="body2"><strong>Expediente:</strong> {sol.resultado.numeroExpediente}</Typography>
-									)}
-									{sol.resultado?.numeroTramite && (
-										<Typography variant="body2"><strong>N° trámite:</strong> {sol.resultado.numeroTramite}</Typography>
-									)}
-								</Stack>
-
-								{/* Audiencias */}
-								{audiencias.length > 0 && (
-									<Box mt={1}>
-										<Typography variant="body2" fontWeight={600}>Audiencias asignadas</Typography>
-										{audiencias.map((aud, i) => (
-											<Box key={i} mt={0.75} pl={1} borderLeft="3px solid" borderColor="primary.main">
-												<Stack spacing={0.25}>
-													{aud.fecha && (
-														<Typography variant="body2">
-															<strong>Fecha:</strong> {aud.fecha}{aud.hora ? ` — ${aud.hora} hs` : ""}
-														</Typography>
-													)}
-													{aud.lugar && (
-														<Typography variant="body2"><strong>Lugar:</strong> {aud.lugar}</Typography>
-													)}
-													{aud.constanciaKey && (
-														<DownloadDocButton
-															s3Key={aud.constanciaKey}
-															label={`Constancia audiencia${aud.fecha ? ` ${aud.fecha}` : ""}`}
-														/>
-													)}
-													{/* Conciliador */}
-													{aud.conciliador && (aud.conciliador.nombre || aud.conciliador.email || aud.conciliador.telefono) && (
-														<Box mt={0.5} pt={0.5} borderTop="1px dashed" borderColor="divider">
-															<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
-																Conciliador
-															</Typography>
-															<Stack spacing={0.25} mt={0.25}>
-																{aud.conciliador.nombre && (
-																	<Typography variant="body2"><strong>Nombre:</strong> {aud.conciliador.nombre}</Typography>
-																)}
-																{aud.conciliador.telefono && (
-																	<Typography variant="body2"><strong>Teléfono:</strong> {aud.conciliador.telefono}</Typography>
-																)}
-																{aud.conciliador.email && (
-																	<Typography variant="body2">
-																		<strong>Email:</strong>{" "}
-																		<Link href={`mailto:${aud.conciliador.email}`} variant="body2">{aud.conciliador.email}</Link>
-																	</Typography>
-																)}
-																{aud.conciliador.sala && (
-																	<Typography variant="body2"><strong>Sala:</strong> {aud.conciliador.sala}</Typography>
-																)}
-															</Stack>
-														</Box>
-													)}
-													{!aud.agendaScrapeAt && aud.fecha && (
-														<Typography variant="caption" color="text.secondary" fontStyle="italic">
-															Datos de conciliador pendientes
-														</Typography>
-													)}
-												</Stack>
-											</Box>
-										))}
-									</Box>
-								)}
-							</Box>
-						</>
-					)}
-
-					{/* Error */}
-					{sol.errorInfo?.message && (
-						<>
-							<Divider />
-							<Box>
-								<Typography variant="caption" color="error" textTransform="uppercase" letterSpacing={0.5}>Error</Typography>
-								<Typography variant="body2" color="error" mt={0.5}>{sol.errorInfo.message}</Typography>
-								{sol.errorInfo.code && (
-									<Typography variant="caption" color="text.secondary">Código: {sol.errorInfo.code}</Typography>
-								)}
-								<Typography variant="caption" color="text.secondary" display="block">
-									Reintentos: {sol.retryCount}
+						{/* Info general */}
+						<Box>
+							<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>General</Typography>
+							<Stack spacing={0.5} mt={0.5}>
+								<Typography variant="body2"><strong>Usuario:</strong> {getUserName(sol)}</Typography>
+								<Typography variant="body2"><strong>Estado:</strong>{" "}
+									<Chip label={STATUS_LABELS[sol.status]} color={STATUS_COLORS[sol.status]} size="small" sx={{ ml: 0.5 }} />
 								</Typography>
-							</Box>
-						</>
-					)}
-
-					{/* Documentos adjuntos (input) */}
-					<Divider />
-					<Box>
-						<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
-							Documentos adjuntos
-						</Typography>
-						{sol.documentos.length === 0 ? (
-							<Typography variant="body2" color="text.secondary" mt={0.5}>Sin documentos</Typography>
-						) : (
-							<Stack spacing={0.75} mt={0.5}>
-								{sol.documentos.map((doc, i) => (
-									<Box key={i} display="flex" alignItems="center" gap={1}>
-										<Typography variant="body2" color="text.secondary" minWidth={110}>
-											{DOC_TIPO_LABELS[doc.tipo] ?? doc.tipo}
-										</Typography>
-										{doc.s3Key ? (
-											<DownloadDocButton
-												s3Key={doc.s3Key}
-												label={doc.fileName || doc.s3Key.split("/").pop() || "Descargar"}
-											/>
-										) : (
-											<Typography variant="body2" color="text.secondary">—</Typography>
-										)}
-									</Box>
-								))}
+								<Typography variant="body2"><strong>Tipo trámite:</strong> {sol.tipoTramite}</Typography>
+								<Typography variant="body2"><strong>Iniciado por:</strong> {sol.iniciadoPor}</Typography>
+								<Typography variant="body2"><strong>Objeto del reclamo:</strong> {sol.objetoReclamo.join(", ")}</Typography>
+								{sol.submittedAt && (
+									<Typography variant="body2"><strong>Enviado:</strong> {new Date(sol.submittedAt).toLocaleString("es-AR")}</Typography>
+								)}
+								{sol.completedAt && (
+									<Typography variant="body2"><strong>Completado:</strong> {new Date(sol.completedAt).toLocaleString("es-AR")}</Typography>
+								)}
 							</Stack>
-						)}
-					</Box>
-
-					{/* Raw JSON debug */}
-					<Divider />
-					<Box>
-						<Box
-							display="flex" alignItems="center" gap={0.5} sx={{ cursor: "pointer" }}
-							onClick={() => setShowJson(v => !v)}
-						>
-							{showJson ? <ArrowDown2 size={14} /> : <ArrowRight2 size={14} />}
-							<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
-								JSON debug
-							</Typography>
 						</Box>
-						<Collapse in={showJson}>
-							<Box
-								component="pre"
-								sx={{
-									mt: 1, p: 1.5, bgcolor: "grey.900", color: "grey.100", borderRadius: 1,
-									fontSize: 11, overflowX: "auto", maxHeight: 400, whiteSpace: "pre-wrap", wordBreak: "break-all",
-								}}
-							>
-								{JSON.stringify(sol, null, 2)}
-							</Box>
-						</Collapse>
-					</Box>
 
-				</Stack>
+						{/* Resultado */}
+						{hasResultado && (
+							<>
+								<Divider />
+								<Box>
+									<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>Resultado del portal</Typography>
+									<Stack spacing={0.5} mt={0.5}>
+										{sol.resultado?.numeroExpediente && (
+											<Typography variant="body2"><strong>Expediente:</strong> {sol.resultado.numeroExpediente}</Typography>
+										)}
+										{sol.resultado?.numeroTramite && (
+											<Typography variant="body2"><strong>N° trámite:</strong> {sol.resultado.numeroTramite}</Typography>
+										)}
+									</Stack>
+
+									{audiencias.length > 0 && (
+										<Box mt={1}>
+											<Typography variant="body2" fontWeight={600}>Audiencias asignadas</Typography>
+											{audiencias.map((aud: any, i: number) => (
+												<Box key={i} mt={0.75} pl={1} borderLeft="3px solid" borderColor="primary.main">
+													<Stack spacing={0.25}>
+														{aud.fecha && (
+															<Typography variant="body2">
+																<strong>Fecha:</strong> {aud.fecha}{aud.hora ? ` — ${aud.hora} hs` : ""}
+															</Typography>
+														)}
+														{aud.lugar && (
+															<Typography variant="body2"><strong>Lugar:</strong> {aud.lugar}</Typography>
+														)}
+														{aud.constanciaKey && (
+															<DownloadDocButton
+																s3Key={aud.constanciaKey}
+																label={`Constancia audiencia${aud.fecha ? ` ${aud.fecha}` : ""}`}
+															/>
+														)}
+														{aud.conciliador && (aud.conciliador.nombre || aud.conciliador.email || aud.conciliador.telefono) && (
+															<Box mt={0.5} pt={0.5} borderTop="1px dashed" borderColor="divider">
+																<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+																	Conciliador
+																</Typography>
+																<Stack spacing={0.25} mt={0.25}>
+																	{aud.conciliador.nombre && (
+																		<Typography variant="body2"><strong>Nombre:</strong> {aud.conciliador.nombre}</Typography>
+																	)}
+																	{aud.conciliador.telefono && (
+																		<Typography variant="body2"><strong>Teléfono:</strong> {aud.conciliador.telefono}</Typography>
+																	)}
+																	{aud.conciliador.email && (
+																		<Typography variant="body2">
+																			<strong>Email:</strong>{" "}
+																			<Link href={`mailto:${aud.conciliador.email}`} variant="body2">{aud.conciliador.email}</Link>
+																		</Typography>
+																	)}
+																	{aud.conciliador.sala && (
+																		<Typography variant="body2"><strong>Sala:</strong> {aud.conciliador.sala}</Typography>
+																	)}
+																</Stack>
+															</Box>
+														)}
+														{!aud.agendaScrapeAt && aud.fecha && (
+															<Typography variant="caption" color="text.secondary" fontStyle="italic">
+																Datos de conciliador pendientes
+															</Typography>
+														)}
+													</Stack>
+												</Box>
+											))}
+										</Box>
+									)}
+								</Box>
+							</>
+						)}
+
+						{/* Error */}
+						{sol.errorInfo?.message && (
+							<>
+								<Divider />
+								<Box>
+									<Typography variant="caption" color="error" textTransform="uppercase" letterSpacing={0.5}>Error</Typography>
+									<Typography variant="body2" color="error" mt={0.5}>{sol.errorInfo.message}</Typography>
+									{sol.errorInfo.code && (
+										<Typography variant="caption" color="text.secondary">Código: {sol.errorInfo.code}</Typography>
+									)}
+									<Typography variant="caption" color="text.secondary" display="block">
+										Reintentos: {sol.retryCount}
+									</Typography>
+								</Box>
+							</>
+						)}
+
+						{/* Documentos adjuntos */}
+						<Divider />
+						<Box>
+							<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+								Documentos adjuntos
+							</Typography>
+							{sol.documentos.length === 0 ? (
+								<Typography variant="body2" color="text.secondary" mt={0.5}>Sin documentos</Typography>
+							) : (
+								<Stack spacing={0.75} mt={0.5}>
+									{sol.documentos.map((doc: any, i: number) => (
+										<Box key={i} display="flex" alignItems="center" gap={1}>
+											<Typography variant="body2" color="text.secondary" minWidth={110}>
+												{DOC_TIPO_LABELS[doc.tipo as SecloDocTipo] ?? doc.tipo}
+											</Typography>
+											{doc.s3Key ? (
+												<DownloadDocButton
+													s3Key={doc.s3Key}
+													label={doc.fileName || doc.s3Key.split("/").pop() || "Descargar"}
+												/>
+											) : (
+												<Typography variant="body2" color="text.secondary">—</Typography>
+											)}
+										</Box>
+									))}
+								</Stack>
+							)}
+						</Box>
+
+					</Stack>
+				)}
+
+				{/* ── Tab 1: JSON debug ── */}
+				{tab === 1 && (
+					<Box
+						component="pre"
+						sx={{
+							m: 0, p: 1.5, bgcolor: "grey.900", color: "grey.100", borderRadius: 1,
+							fontSize: 11, overflowX: "auto", whiteSpace: "pre-wrap", wordBreak: "break-all",
+							minHeight: 200,
+						}}
+					>
+						{JSON.stringify(sol, null, 2)}
+					</Box>
+				)}
+
 			</DialogContent>
 			<DialogActions>
 				{["completed", "submitted"].includes(sol.status) && (

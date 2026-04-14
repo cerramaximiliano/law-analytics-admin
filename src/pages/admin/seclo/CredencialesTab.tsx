@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import {
-	Box, Button, Chip, Collapse, IconButton, Table, TableBody, TableCell,
-	TableContainer, TableHead, TablePagination, TableRow,
+	Box, Button, Chip, IconButton, Table, TableBody, TableCell,
+	TableContainer, TableHead, TablePagination, TableRow, Tab, Tabs,
 	TextField, Tooltip, Typography,
 	Dialog, DialogTitle, DialogContent, DialogActions,
-	Stack, Divider, Switch,
+	Stack, Switch,
 } from "@mui/material";
-import { Add, ArrowDown2, ArrowRight2, Edit, Eye, Trash, SearchNormal1, Warning2 } from "iconsax-react";
+import { Add, Edit, Eye, Trash, SearchNormal1, Warning2 } from "iconsax-react";
 import { useDispatch, useSelector } from "store";
 import { fetchCredentials, deleteCredential, updateCredential } from "store/reducers/seclo";
 import type { TrabajoCredential } from "types/seclo";
@@ -24,7 +24,7 @@ export default function CredencialesTab() {
 	const [deleteTarget, setDeleteTarget] = useState<TrabajoCredential | null>(null);
 	const [viewTarget, setViewTarget]     = useState<TrabajoCredential | null>(null);
 	const [editPassword, setEditPassword] = useState("");
-	const [showJson, setShowJson] = useState(false);
+	const [credTab, setCredTab] = useState(0);
 
 	const load = () => {
 		dispatch(fetchCredentials({ page: page + 1, limit: rowsPerPage, search: search || undefined }));
@@ -128,7 +128,7 @@ export default function CredencialesTab() {
 								<TableCell align="center">
 									<Box display="flex" gap={0.5} justifyContent="center">
 										<Tooltip title="Ver detalle">
-											<IconButton size="small" onClick={() => { setViewTarget(cred); setShowJson(false); }}>
+											<IconButton size="small" onClick={() => { setViewTarget(cred); setCredTab(0); }}>
 												<Eye size={16} />
 											</IconButton>
 										</Tooltip>
@@ -167,60 +167,56 @@ export default function CredencialesTab() {
 							{viewTarget.cuil} — {getUserName(viewTarget)}
 						</Typography>
 					</DialogTitle>
-					<DialogContent dividers>
-						<Stack spacing={1.5}>
-							<Box>
-								<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>General</Typography>
-								<Stack spacing={0.5} mt={0.5}>
-									<Typography variant="body2"><strong>Usuario:</strong> {getUserName(viewTarget)}</Typography>
-									<Typography variant="body2"><strong>CUIL:</strong> <code>{viewTarget.cuil}</code></Typography>
-									<Typography variant="body2"><strong>Habilitada:</strong> {viewTarget.enabled ? "Sí" : "No"}</Typography>
-									<Typography variant="body2"><strong>Sync status:</strong>{" "}
-										<Chip label={viewTarget.syncStatus} size="small"
-											color={viewTarget.syncStatus === "completed" ? "success" : viewTarget.syncStatus === "error" ? "error" : "default"}
-										/>
-									</Typography>
-									<Typography variant="body2"><strong>Errores consecutivos:</strong>{" "}
-										<Typography component="span" variant="body2" color={viewTarget.consecutiveErrors > 0 ? "error" : "text.primary"}>
-											{viewTarget.consecutiveErrors}
-										</Typography>
-									</Typography>
-									{viewTarget.lastSync && (
-										<Typography variant="body2"><strong>Último sync:</strong> {new Date(viewTarget.lastSync).toLocaleString("es-AR")}</Typography>
-									)}
-									{viewTarget.credentialInvalid && (
-										<Typography variant="body2" color="error">
-											<strong>Credencial inválida:</strong> {viewTarget.credentialInvalidReason || "Sin detalle"}
-										</Typography>
-									)}
-								</Stack>
-							</Box>
 
-							{/* Raw JSON debug */}
-							<Divider />
-							<Box>
-								<Box
-									display="flex" alignItems="center" gap={0.5} sx={{ cursor: "pointer" }}
-									onClick={() => setShowJson(v => !v)}
-								>
-									{showJson ? <ArrowDown2 size={14} /> : <ArrowRight2 size={14} />}
-									<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
-										JSON debug
+					<Tabs value={credTab} onChange={(_, v) => setCredTab(v)} sx={{ px: 3, borderBottom: 1, borderColor: "divider" }}>
+						<Tab label="Detalle" />
+						<Tab label="JSON" />
+					</Tabs>
+
+					<DialogContent dividers>
+
+						{/* ── Tab 0: Detalle ── */}
+						{credTab === 0 && (
+							<Stack spacing={0.5}>
+								<Typography variant="body2"><strong>Usuario:</strong> {getUserName(viewTarget)}</Typography>
+								<Typography variant="body2"><strong>CUIL:</strong> <code>{viewTarget.cuil}</code></Typography>
+								<Typography variant="body2"><strong>Habilitada:</strong> {viewTarget.enabled ? "Sí" : "No"}</Typography>
+								<Typography variant="body2"><strong>Sync status:</strong>{" "}
+									<Chip label={viewTarget.syncStatus} size="small"
+										color={viewTarget.syncStatus === "completed" ? "success" : viewTarget.syncStatus === "error" ? "error" : "default"}
+										sx={{ ml: 0.5 }}
+									/>
+								</Typography>
+								<Typography variant="body2"><strong>Errores consecutivos:</strong>{" "}
+									<Typography component="span" variant="body2" color={viewTarget.consecutiveErrors > 0 ? "error" : "text.primary"}>
+										{viewTarget.consecutiveErrors}
 									</Typography>
-								</Box>
-								<Collapse in={showJson}>
-									<Box
-										component="pre"
-										sx={{
-											mt: 1, p: 1.5, bgcolor: "grey.900", color: "grey.100", borderRadius: 1,
-											fontSize: 11, overflowX: "auto", maxHeight: 400, whiteSpace: "pre-wrap", wordBreak: "break-all",
-										}}
-									>
-										{JSON.stringify(viewTarget, null, 2)}
-									</Box>
-								</Collapse>
+								</Typography>
+								{viewTarget.lastSync && (
+									<Typography variant="body2"><strong>Último sync:</strong> {new Date(viewTarget.lastSync).toLocaleString("es-AR")}</Typography>
+								)}
+								{viewTarget.credentialInvalid && (
+									<Typography variant="body2" color="error">
+										<strong>Credencial inválida:</strong> {viewTarget.credentialInvalidReason || "Sin detalle"}
+									</Typography>
+								)}
+							</Stack>
+						)}
+
+						{/* ── Tab 1: JSON debug ── */}
+						{credTab === 1 && (
+							<Box
+								component="pre"
+								sx={{
+									m: 0, p: 1.5, bgcolor: "grey.900", color: "grey.100", borderRadius: 1,
+									fontSize: 11, overflowX: "auto", whiteSpace: "pre-wrap", wordBreak: "break-all",
+									minHeight: 200,
+								}}
+							>
+								{JSON.stringify(viewTarget, null, 2)}
 							</Box>
-						</Stack>
+						)}
+
 					</DialogContent>
 					<DialogActions>
 						<Button onClick={() => setViewTarget(null)}>Cerrar</Button>
