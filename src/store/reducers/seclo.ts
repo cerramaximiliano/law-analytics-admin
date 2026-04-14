@@ -195,6 +195,26 @@ export const resetAgendaData = (id: string, resetEvent = false) => async (dispat
 	}
 };
 
+export const fetchSolicitudById = (id: string) => async (_dispatch: any): Promise<SecloSolicitud | null> => {
+	try {
+		const { data } = await adminAxios.get(`/api/seclo/solicitudes/${id}`);
+		return data.success ? data.solicitud : null;
+	} catch (err: any) {
+		console.error("fetchSolicitudById:", err.message);
+		return null;
+	}
+};
+
+export const revealCredential = (id: string) => async (_dispatch: any): Promise<{ cuil: string; password: string } | null> => {
+	try {
+		const { data } = await adminAxios.get(`/api/seclo/credentials/${id}/reveal`);
+		return data.success ? { cuil: data.cuil, password: data.password } : null;
+	} catch (err: any) {
+		console.error("revealCredential:", err.message);
+		return null;
+	}
+};
+
 export const fetchTrabajoConfig = () => async (_dispatch: any): Promise<any | null> => {
 	try {
 		const { data } = await adminAxios.get("/api/seclo/config");

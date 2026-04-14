@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import {
-	Box, Button, Chip, IconButton, Table, TableBody, TableCell,
+	Box, Button, Chip, CircularProgress, IconButton, InputAdornment, OutlinedInput, Table, TableBody, TableCell,
 	TableContainer, TableHead, TablePagination, TableRow, Tab, Tabs,
 	TextField, Tooltip, Typography,
 	Dialog, DialogTitle, DialogContent, DialogActions,
 	Stack, Switch,
 } from "@mui/material";
-import { Add, Edit, Eye, Trash, SearchNormal1, Warning2 } from "iconsax-react";
+import { Add, Edit, Eye, EyeSlash, Trash, SearchNormal1, Warning2 } from "iconsax-react";
 import { useDispatch, useSelector } from "store";
-import { fetchCredentials, deleteCredential, updateCredential } from "store/reducers/seclo";
+import { fetchCredentials, deleteCredential, updateCredential, revealCredential } from "store/reducers/seclo";
 import type { TrabajoCredential } from "types/seclo";
 import CreateCredencialModal from "./CreateCredencialModal";
 
@@ -25,6 +25,9 @@ export default function CredencialesTab() {
 	const [viewTarget, setViewTarget]     = useState<TrabajoCredential | null>(null);
 	const [editPassword, setEditPassword] = useState("");
 	const [credTab, setCredTab] = useState(0);
+	const [revealed, setRevealed]           = useState<{ cuil: string; password: string } | null>(null);
+	const [revealing, setRevealing]         = useState(false);
+	const [showPassword, setShowPassword]   = useState(false);
 
 	const load = () => {
 		dispatch(fetchCredentials({ page: page + 1, limit: rowsPerPage, search: search || undefined }));
@@ -128,7 +131,7 @@ export default function CredencialesTab() {
 								<TableCell align="center">
 									<Box display="flex" gap={0.5} justifyContent="center">
 										<Tooltip title="Ver detalle">
-											<IconButton size="small" onClick={() => { setViewTarget(cred); setCredTab(0); }}>
+											<IconButton size="small" onClick={() => { setViewTarget(cred); setCredTab(0); setRevealed(null); setShowPassword(false); }}>
 												<Eye size={16} />
 											</IconButton>
 										</Tooltip>
@@ -200,6 +203,58 @@ export default function CredencialesTab() {
 										<strong>Credencial inválida:</strong> {viewTarget.credentialInvalidReason || "Sin detalle"}
 									</Typography>
 								)}
+
+								{/* Reveal */}
+								<Box pt={1} borderTop="1px solid" borderColor="divider">
+									{!revealed ? (
+										<Button
+											size="small"
+											variant="outlined"
+											color="warning"
+											startIcon={revealing ? <CircularProgress size={14} /> : <Eye size={14} />}
+											disabled={revealing}
+											onClick={async () => {
+												setRevealing(true);
+												try {
+													const result = await dispatch(revealCredential(viewTarget._id));
+													setRevealed(result);
+												} finally {
+													setRevealing(false);
+												}
+											}}
+										>
+											Revelar credenciales
+										</Button>
+									) : (
+										<Stack spacing={1}>
+											<Typography variant="body2" fontWeight={600}>Credenciales descifradas</Typography>
+											<Box>
+												<Typography variant="caption" color="text.secondary">CUIL</Typography>
+												<Typography variant="body2" sx={{ fontFamily: "monospace" }}>{revealed.cuil}</Typography>
+											</Box>
+											<Box>
+												<Typography variant="caption" color="text.secondary">Contraseña</Typography>
+												<OutlinedInput
+													size="small"
+													type={showPassword ? "text" : "password"}
+													value={revealed.password}
+													readOnly
+													sx={{ fontFamily: "monospace", fontSize: 13, mt: 0.25 }}
+													endAdornment={
+														<InputAdornment position="end">
+															<IconButton size="small" onClick={() => setShowPassword(p => !p)} edge="end">
+																{showPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
+															</IconButton>
+														</InputAdornment>
+													}
+												/>
+											</Box>
+											<Button size="small" color="inherit" onClick={() => { setRevealed(null); setShowPassword(false); }}>
+												Ocultar
+											</Button>
+										</Stack>
+									)}
+								</Box>
 							</Stack>
 						)}
 

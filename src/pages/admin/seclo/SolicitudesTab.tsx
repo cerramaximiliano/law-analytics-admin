@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-	Box, Button, Chip, CircularProgress, Divider, IconButton, Link, Stack, Tab, Table, TableBody, TableCell,
+	Box, Button, Chip, CircularProgress, Divider, Grid, IconButton, Link, Stack, Tab, Table, TableBody, TableCell,
 	TableContainer, TableHead, TablePagination, TableRow, Tabs,
 	TextField, Tooltip, Typography, Select, MenuItem, FormControl, InputLabel,
 	Dialog, DialogTitle, DialogContent, DialogActions,
@@ -8,7 +8,7 @@ import {
 import { Add, DocumentDownload, Eye, Trash, RefreshCircle, SearchNormal1 } from "iconsax-react";
 import { useDispatch, useSelector } from "store";
 import { fetchSolicitudes, deleteSolicitud, reactivarSolicitud, getSecloDownloadUrl, resetAgendaData } from "store/reducers/seclo";
-import type { SecloDocTipo, SecloSolicitud, SecloStatus } from "types/seclo";
+import type { SecloCaracter, SecloDocTipo, SecloDatosAbogado, SecloDatosLaborales, SecloSolicitud, SecloStatus } from "types/seclo";
 import CreateSolicitudModal from "./CreateSolicitudModal";
 
 const STATUS_COLORS: Record<SecloStatus, "default" | "warning" | "info" | "success" | "error"> = {
@@ -80,6 +80,180 @@ function DownloadDocButton({ s3Key, label }: { s3Key: string; label: string }) {
 	);
 }
 
+// ─── Helpers de label ─────────────────────────────────────────────────────────
+
+const CARACTER_LABELS: Record<SecloCaracter, string> = {
+	apoderado:      "Apoderado",
+	patrocinante:   "Patrocinante",
+	rep_gremial:    "Rep. gremial",
+	rep_empresarial: "Rep. empresarial",
+};
+
+const ESTADO_TRABAJADOR_LABELS: Record<string, string> = {
+	regular:       "Regular",
+	irregular:     "Irregular",
+	no_registrado: "No registrado",
+};
+
+function InfoRow({ label, value }: { label: string; value?: string | number | null }) {
+	if (value === undefined || value === null || value === "") return null;
+	return (
+		<Typography variant="body2">
+			<strong>{label}:</strong> {value}
+		</Typography>
+	);
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+	return (
+		<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+			{children}
+		</Typography>
+	);
+}
+
+function AbogadoSection({ datos }: { datos: SecloDatosAbogado }) {
+	const nombreCompleto = [datos.nombre, datos.apellido].filter(Boolean).join(" ") || null;
+	const celular = datos.celular?.codArea && datos.celular?.numero
+		? `(${datos.celular.codArea}) ${datos.celular.numero}`
+		: null;
+	const dom = datos.domicilio;
+	let domStr: string | null = null;
+	if (dom) {
+		if (dom.descripcionCompleta) {
+			domStr = dom.descripcionCompleta;
+		} else {
+			const parts = [dom.calle, dom.numero, dom.piso && `Piso ${dom.piso}`, dom.depto && `Dpto ${dom.depto}`, dom.localidad, dom.partido, dom.provincia, dom.cpa].filter(Boolean);
+			domStr = parts.join(", ") || null;
+		}
+	}
+	return (
+		<Box>
+			<SectionTitle>Abogado</SectionTitle>
+			<Stack spacing={0.5} mt={0.5}>
+				<InfoRow label="Nombre" value={nombreCompleto} />
+				<InfoRow label="Carácter" value={CARACTER_LABELS[datos.caracter]} />
+				<InfoRow label="Tomo / Folio" value={datos.tomo && datos.folio ? `${datos.tomo} / ${datos.folio}` : undefined} />
+				<InfoRow label="Email" value={datos.email} />
+				<InfoRow label="Teléfono" value={datos.telefono} />
+				<InfoRow label="Celular" value={celular} />
+				<InfoRow label="Domicilio" value={domStr} />
+			</Stack>
+		</Box>
+	);
+}
+
+function ParticipanteSection({
+	title,
+	snapshot,
+	datosLaborales,
+}: {
+	title: string;
+	snapshot?: Partial<{ name: string; lastName: string; cuit: string; document: string; phone: string; phoneCodArea: string; phoneCelular: string; email: string; address: string; city: string; state: string; zipCode: string }>;
+	datosLaborales?: SecloDatosLaborales;
+}) {
+	if (!snapshot) return null;
+	const nombre = [snapshot.name, snapshot.lastName].filter(Boolean).join(" ") || null;
+	const telefono = snapshot.phoneCodArea && snapshot.phone
+		? `(${snapshot.phoneCodArea}) ${snapshot.phone}`
+		: snapshot.phone || null;
+	const domicilio = [snapshot.address, snapshot.city, snapshot.state, snapshot.zipCode].filter(Boolean).join(", ") || null;
+
+	return (
+		<Box>
+			<SectionTitle>{title}</SectionTitle>
+			<Stack spacing={0.5} mt={0.5}>
+				<InfoRow label="Nombre" value={nombre} />
+				<InfoRow label="CUIT" value={snapshot.cuit} />
+				<InfoRow label="DNI" value={snapshot.document} />
+				<InfoRow label="Teléfono" value={telefono} />
+				<InfoRow label="Celular" value={snapshot.phoneCelular} />
+				<InfoRow label="Email" value={snapshot.email} />
+				<InfoRow label="Domicilio" value={domicilio} />
+			</Stack>
+
+			{datosLaborales && (
+				<Box mt={1} pl={1.5} borderLeft="3px solid" borderColor="divider">
+					<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+						Datos laborales
+					</Typography>
+					<Grid container spacing={0.5} mt={0.25}>
+						{[
+							["Fecha nacimiento", datosLaborales.fechaNacimiento],
+							["Fecha ingreso", datosLaborales.fechaIngreso],
+							["Fecha egreso", datosLaborales.fechaEgreso],
+							["Remuneración", datosLaborales.remuneracion != null ? `$${datosLaborales.remuneracion.toLocaleString("es-AR")}` : null],
+							["Importe reclamo", datosLaborales.importeReclamo != null ? `$${datosLaborales.importeReclamo.toLocaleString("es-AR")}` : null],
+							["CCT", datosLaborales.cct],
+							["Categoría", datosLaborales.categoria],
+							["Estado", datosLaborales.estadoTrabajador ? ESTADO_TRABAJADOR_LABELS[datosLaborales.estadoTrabajador] : null],
+							["Sexo", datosLaborales.sexo === "M" ? "Masculino" : datosLaborales.sexo === "F" ? "Femenino" : null],
+						].filter(([, v]) => v != null && v !== "").map(([label, val]) => (
+							<Grid item xs={12} sm={6} key={String(label)}>
+								<Typography variant="body2"><strong>{label}:</strong> {val}</Typography>
+							</Grid>
+						))}
+					</Grid>
+				</Box>
+			)}
+		</Box>
+	);
+}
+
+function FormularioTab({ sol }: { sol: SecloSolicitud }) {
+	const req = sol.requirentes[0];
+	const red = sol.requeridos[0];
+
+	return (
+		<Stack spacing={2}>
+			{/* Reclamo */}
+			<Box>
+				<SectionTitle>Reclamo</SectionTitle>
+				<Stack spacing={0.5} mt={0.5}>
+					<InfoRow label="Tipo trámite" value={sol.tipoTramite} />
+					<InfoRow label="Iniciado por" value={sol.iniciadoPor} />
+					<InfoRow label="Objeto del reclamo" value={sol.objetoReclamo.join(", ")} />
+					{sol.comentarioReclamo && (
+						<Typography variant="body2"><strong>Comentario:</strong> {sol.comentarioReclamo}</Typography>
+					)}
+				</Stack>
+			</Box>
+
+			{/* Abogado */}
+			{sol.datosAbogado && (
+				<>
+					<Divider />
+					<AbogadoSection datos={sol.datosAbogado} />
+				</>
+			)}
+
+			{/* Requirente / Trabajador */}
+			{req?.snapshot && (
+				<>
+					<Divider />
+					<ParticipanteSection
+						title="Requirente / Trabajador"
+						snapshot={req.snapshot}
+						datosLaborales={req.datosLaborales}
+					/>
+				</>
+			)}
+
+			{/* Requerido / Empleador */}
+			{red?.snapshot && (
+				<>
+					<Divider />
+					<ParticipanteSection title="Requerido / Empleador" snapshot={red.snapshot} />
+				</>
+			)}
+
+			{!sol.datosAbogado && !req?.snapshot && !red?.snapshot && (
+				<Typography variant="body2" color="text.secondary">Sin datos de formulario disponibles.</Typography>
+			)}
+		</Stack>
+	);
+}
+
 // ─── Dialog de detalle ────────────────────────────────────────────────────────
 
 function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicitud; onClose: () => void }) {
@@ -109,6 +283,7 @@ function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicit
 
 			<Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ px: 3, borderBottom: 1, borderColor: "divider" }}>
 				<Tab label="Detalle" />
+				<Tab label="Formulario" />
 				<Tab label="JSON" />
 			</Tabs>
 
@@ -260,8 +435,11 @@ function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicit
 					</Stack>
 				)}
 
-				{/* ── Tab 1: JSON debug ── */}
-				{tab === 1 && (
+				{/* ── Tab 1: Formulario completo ── */}
+				{tab === 1 && <FormularioTab sol={sol} />}
+
+				{/* ── Tab 2: JSON debug ── */}
+				{tab === 2 && (
 					<Box
 						component="pre"
 						sx={{
