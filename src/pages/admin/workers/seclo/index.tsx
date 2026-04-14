@@ -40,12 +40,13 @@ interface WorkerCardProps {
 	name: string;
 	label: string;
 	description: string;
+	scheduleMode: "24/7" | "working-hours";
 	config: { enabled: boolean; cronPattern: string };
 	stats: { lastRunAt?: string | null; lastRunStatus?: string; lastRunOk?: number; lastRunErrors?: number; totalProcessed?: number; totalErrors?: number };
 	onChange: (field: string, value: any) => void;
 }
 
-function WorkerCard({ name, label, description, config, stats, onChange }: WorkerCardProps) {
+function WorkerCard({ name, label, description, scheduleMode, config, stats, onChange }: WorkerCardProps) {
 	const theme = useTheme();
 	const statusColor: Record<string, string> = {
 		completed: theme.palette.success.main,
@@ -59,7 +60,15 @@ function WorkerCard({ name, label, description, config, stats, onChange }: Worke
 		<Paper variant="outlined" sx={{ p: 2 }}>
 			<Box display="flex" alignItems="flex-start" justifyContent="space-between" mb={1.5}>
 				<Box>
-					<Typography variant="subtitle1" fontWeight={600}>{label}</Typography>
+					<Box display="flex" alignItems="center" gap={1} mb={0.25}>
+						<Typography variant="subtitle1" fontWeight={600}>{label}</Typography>
+						<Chip
+							label={scheduleMode === "working-hours" ? "Respeta horario" : "24/7"}
+							size="small"
+							color={scheduleMode === "working-hours" ? "info" : "default"}
+							icon={scheduleMode === "working-hours" ? <Calendar1 size={12} /> : <Clock size={12} />}
+						/>
+					</Box>
 					<Typography variant="body2" color="text.secondary">{description}</Typography>
 				</Box>
 				<FormControlLabel
@@ -120,12 +129,15 @@ function WorkerCard({ name, label, description, config, stats, onChange }: Worke
 
 // ── Página principal ───────────────────────────────────────────────────────────
 
+interface WorkerEntry { enabled: boolean; cronPattern: string }
+
 interface TrabajoConfig {
 	enabled: boolean;
 	workers: {
-		envio:    { enabled: boolean; cronPattern: string };
-		verificar:{ enabled: boolean; cronPattern: string };
-		agenda:   { enabled: boolean; cronPattern: string };
+		envio:         WorkerEntry;
+		verificar:     WorkerEntry;
+		agenda:        WorkerEntry;
+		postAudiencia: WorkerEntry;
 	};
 	workingDays: number[];
 	workingHours: { start: string; end: string };
@@ -136,9 +148,10 @@ interface TrabajoConfig {
 	headless: boolean;
 	retry: { maxAttempts: number; delayMs: number };
 	stats: {
-		envio:    any;
-		verificar:any;
-		agenda:   any;
+		envio:         any;
+		verificar:     any;
+		agenda:        any;
+		postAudiencia: any;
 	};
 	updatedAt?: string;
 }
@@ -146,9 +159,10 @@ interface TrabajoConfig {
 const DEFAULT_CONFIG: TrabajoConfig = {
 	enabled: true,
 	workers: {
-		envio:    { enabled: true, cronPattern: "0 */6 * * *" },
-		verificar:{ enabled: true, cronPattern: "0 */2 * * *" },
-		agenda:   { enabled: true, cronPattern: "*/10 * * * *" },
+		envio:         { enabled: true, cronPattern: "0 */6 * * *" },
+		verificar:     { enabled: true, cronPattern: "0 */2 * * *" },
+		agenda:        { enabled: true, cronPattern: "*/10 * * * *" },
+		postAudiencia: { enabled: true, cronPattern: "0 * * * *" },
 	},
 	workingDays: [1, 2, 3, 4, 5],
 	workingHours: { start: "08:00", end: "20:00" },
@@ -158,7 +172,7 @@ const DEFAULT_CONFIG: TrabajoConfig = {
 	delayBetweenRequests: 5000,
 	headless: true,
 	retry: { maxAttempts: 3, delayMs: 5000 },
-	stats: { envio: {}, verificar: {}, agenda: {} },
+	stats: { envio: {}, verificar: {}, agenda: {}, postAudiencia: {} },
 };
 
 export default function WorkersSecloPage() {
@@ -246,10 +260,11 @@ export default function WorkersSecloPage() {
 		);
 	}
 
-	const WORKERS: Array<{ name: keyof TrabajoConfig["workers"]; label: string; description: string }> = [
-		{ name: "envio",     label: "Worker de Envío",        description: "Toma solicitudes pending y las envía al portal SECLO" },
-		{ name: "verificar", label: "Worker de Verificación", description: "Verifica solicitudes submitted: obtiene expediente, audiencia y constancia" },
-		{ name: "agenda",    label: "Worker de Agenda",       description: "Extrae datos del conciliador, crea evento en calendario y envía email" },
+	const WORKERS: Array<{ name: keyof TrabajoConfig["workers"]; label: string; description: string; scheduleMode: "24/7" | "working-hours" }> = [
+		{ name: "envio",         label: "Worker de Envío",          description: "Toma solicitudes pending y las envía al portal SECLO",                                      scheduleMode: "24/7" },
+		{ name: "verificar",     label: "Worker de Verificación",   description: "Verifica solicitudes submitted: obtiene expediente, audiencia y constancia",                scheduleMode: "working-hours" },
+		{ name: "agenda",        label: "Worker de Agenda",         description: "Extrae datos del conciliador, crea evento en calendario y envía email",                     scheduleMode: "working-hours" },
+		{ name: "postAudiencia", label: "Worker Post-Audiencia",    description: "Detecta nuevas audiencias asignadas luego de que la fecha de la última audiencia ha pasado", scheduleMode: "24/7" },
 	];
 
 	return (
@@ -311,6 +326,7 @@ export default function WorkersSecloPage() {
 								name={w.name}
 								label={w.label}
 								description={w.description}
+								scheduleMode={w.scheduleMode}
 								config={config.workers[w.name]}
 								stats={config.stats?.[w.name] || {}}
 								onChange={(field, value) => handleChange(field, value)}
@@ -325,8 +341,8 @@ export default function WorkersSecloPage() {
 						<Calendar1 size={16} /> Horario de trabajo
 					</Typography>
 					<Typography variant="body2" color="text.secondary" mb={2}>
-						Los workers solo procesarán solicitudes durante estos días y horarios (hora Argentina, UTC-3).
-						Si no hay restricción, deja todos los días seleccionados.
+						Aplica únicamente a los workers <strong>verificar</strong> y <strong>agenda</strong> (hora Argentina, UTC-3).
+						Los workers <strong>envío</strong> y <strong>post-audiencia</strong> corren 24/7 y no son afectados por esta configuración.
 					</Typography>
 					<Stack spacing={2}>
 						<Box>
