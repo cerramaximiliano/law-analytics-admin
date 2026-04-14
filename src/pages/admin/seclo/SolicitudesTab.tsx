@@ -82,8 +82,12 @@ function DownloadDocButton({ s3Key, label }: { s3Key: string; label: string }) {
 
 // ─── Dialog de detalle ────────────────────────────────────────────────────────
 
-function SolicitudDetailDialog({ sol, onClose }: { sol: SecloSolicitud; onClose: () => void }) {
+function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicitud; onClose: () => void }) {
 	const dispatch = useDispatch();
+	// Usar el documento fresco del store (se actualiza después de resetAgendaData)
+	const solicitudes = useSelector((s: any) => s.seclo.solicitudes as SecloSolicitud[]);
+	const sol: SecloSolicitud = solicitudes.find((s) => s._id === initialSol._id) ?? initialSol;
+
 	const audiencias = sol.resultado?.audiencias ?? [];
 	const hasResultado = !!(sol.resultado?.numeroExpediente || sol.resultado?.numeroTramite || audiencias.length > 0);
 	const [showJson, setShowJson] = useState(false);
