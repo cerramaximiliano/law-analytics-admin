@@ -189,7 +189,12 @@ export default function WorkersSecloPage() {
 		setError(null);
 		try {
 			const data = await dispatch(fetchTrabajoConfig());
-			if (data) setConfig({ ...DEFAULT_CONFIG, ...data });
+			if (data) setConfig({
+				...DEFAULT_CONFIG,
+				...data,
+				workers: { ...DEFAULT_CONFIG.workers, ...(data.workers || {}) },
+				stats:   { ...DEFAULT_CONFIG.stats,   ...(data.stats   || {}) },
+			});
 		} catch (err: any) {
 			setError(err.message || "Error cargando configuración");
 		} finally {
@@ -238,7 +243,12 @@ export default function WorkersSecloPage() {
 				retry:                config.retry,
 			}));
 			if (result) {
-				setConfig({ ...DEFAULT_CONFIG, ...result });
+				setConfig({
+					...DEFAULT_CONFIG,
+					...result,
+					workers: { ...DEFAULT_CONFIG.workers, ...(result.workers || {}) },
+					stats:   { ...DEFAULT_CONFIG.stats,   ...(result.stats   || {}) },
+				});
 				enqueueSnackbar("Configuración guardada", { variant: "success" });
 			} else {
 				enqueueSnackbar("Error al guardar", { variant: "error" });
