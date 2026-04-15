@@ -45,6 +45,7 @@ export interface SecloContact {
 	zipCode?: string;
 	company?: string;
 	type?: string;
+	folderIds?: string[];
 }
 
 export interface SecloDatosLaborales {
