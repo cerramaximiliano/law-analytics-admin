@@ -9,11 +9,11 @@ import {
 } from "@mui/material";
 import { useDispatch, useSelector } from "store";
 import {
-	fetchUsers, createSolicitud, getPresignedUploadUrl,
+	fetchUsers, createSolicitud, getPresignedUploadUrl, fetchFoldersByUser,
 } from "store/reducers/seclo";
 import {
 	OBJETO_RECLAMO_OPTIONS,
-	type SecloUser, type SecloContact, type SecloDatosLaborales, type SecloDocumento, type SecloDocTipo,
+	type SecloFolder, type SecloUser, type SecloContact, type SecloDatosLaborales, type SecloDocumento, type SecloDocTipo,
 } from "types/seclo";
 
 interface Props {
@@ -51,6 +51,8 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	const [selectedCredentialId, setSelectedCredentialId] = useState("");
 	const [credentials, setCredentials] = useState<Array<{ _id: string; enabled: boolean }>>([]);
 	const [contactsLoading, setContactsLoading] = useState(false);
+	const [folders, setFolders] = useState<SecloFolder[]>([]);
+	const [selectedFolder, setSelectedFolder] = useState<SecloFolder | null>(null);
 
 	// Step 1 – Requirente (trabajador)
 	const [requirente, setRequirente] = useState<SecloContact | null>(null);
@@ -74,6 +76,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	const resetAll = () => {
 		setStep(0); setError(null);
 		setSelectedUser(null); setUserSearch(""); setSelectedCredentialId(""); setCredentials([]); setContactsLoading(false); setLocalContacts([]);
+		setFolders([]); setSelectedFolder(null);
 		setRequirente(null); setDatosLab({ estadoTrabajador: "regular", sexo: "M" });
 		setRequerido(null);
 		setObjetoReclamo([]); setComentario(""); setIniciadoPor("trabajador");
@@ -93,8 +96,8 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 		setSelectedUser(user);
 		setRequirente(null); setRequerido(null);
 		setCredentials([]); setSelectedCredentialId(""); setLocalContacts([]);
+		setFolders([]); setSelectedFolder(null);
 		if (!user) return;
-		console.log("[seclo] handleSelectUser → user._id:", user._id);
 		setContactsLoading(true);
 		try {
 			const { default: adminAxios } = await import("utils/adminAxios");
@@ -102,18 +105,24 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 				adminAxios.get(`/api/seclo/users/${user._id}/contacts`),
 				adminAxios.get("/api/seclo/credentials", { params: { userId: user._id, limit: 10 } }),
 			]);
-			console.log("[seclo] contactsRes.data:", contactsRes.data);
-			console.log("[seclo] credsRes.data:", credsRes.data);
 			setLocalContacts(contactsRes.data.contacts || []);
 			const creds = credsRes.data.credentials || [];
 			setCredentials(creds);
 			if (creds.length === 1) setSelectedCredentialId(creds[0]._id);
+			// Cargar carpetas del usuario para filtrado opcional
+			const foldersResult = await dispatch(fetchFoldersByUser(user._id));
+			setFolders(foldersResult);
 		} catch (err: any) {
 			console.error("[seclo] handleSelectUser → error:", err?.response?.data || err?.message);
 		} finally {
 			setContactsLoading(false);
 		}
 	};
+
+	// Contactos filtrados por carpeta seleccionada (o todos si no hay carpeta)
+	const filteredContacts = selectedFolder
+		? localContacts.filter(c => c.folderIds?.includes(selectedFolder._id))
+		: localContacts;
 
 	// ── Step 5: upload documento ──────────────────────────────────────────────
 	const handleFileUpload = useCallback(async (file: File, tipo: SecloDocTipo) => {
@@ -161,6 +170,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 				iniciadoPor,
 				datosAbogado: { tomo: abogado.tomo, folio: abogado.folio, caracter: abogado.caracter, domicilio: { cpa: abogado.cpa } },
 				documentos,
+				folderId: selectedFolder?._id ?? undefined,
 			}));
 			handleClose();
 		} catch (e: any) {
@@ -211,7 +221,28 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 					{contactsLoading && (
 						<Grid item xs={12} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 							<CircularProgress size={16} />
-							<Typography variant="body2" color="text.secondary">Cargando contactos...</Typography>
+							<Typography variant="body2" color="text.secondary">Cargando contactos y carpetas...</Typography>
+						</Grid>
+					)}
+					{folders.length > 0 && !contactsLoading && (
+						<Grid item xs={12}>
+							<Autocomplete
+								options={[null, ...folders] as (SecloFolder | null)[]}
+								getOptionLabel={(f) => f ? f.folderName : "— Todos los contactos —"}
+								onChange={(_, v) => {
+									setSelectedFolder(v);
+									setRequirente(null);
+									setRequerido(null);
+								}}
+								value={selectedFolder}
+								renderInput={(params) => (
+									<TextField {...params} label="Filtrar por carpeta (opcional)"
+										helperText={selectedFolder
+											? `${filteredContacts.length} contacto${filteredContacts.length !== 1 ? "s" : ""} en esta carpeta`
+											: "Sin filtro — se muestran todos los contactos del usuario"}
+									/>
+								)}
+							/>
 						</Grid>
 					)}
 				</Grid>
@@ -222,7 +253,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 				<Grid container spacing={2}>
 					<Grid item xs={12}>
 						<Autocomplete
-							options={localContacts}
+							options={filteredContacts}
 							getOptionLabel={(c: SecloContact) => `${c.name} ${c.lastName || ""}${c.cuit ? ` — ${c.cuit}` : ""}`}
 							onChange={(_, v) => setRequirente(v)}
 							value={requirente}
@@ -292,7 +323,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 							Elegí el contacto que actúa como empleador (requerido).
 						</Typography>
 						<Autocomplete
-							options={localContacts.filter(c => c._id !== requirente?._id)}
+							options={filteredContacts.filter(c => c._id !== requirente?._id)}
 							getOptionLabel={(c: SecloContact) => `${c.name} ${c.lastName || ""}${c.company ? ` (${c.company})` : ""}${c.cuit ? ` — ${c.cuit}` : ""}`}
 							onChange={(_, v) => setRequerido(v)}
 							value={requerido}
