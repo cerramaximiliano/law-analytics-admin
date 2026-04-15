@@ -74,13 +74,15 @@ export interface SecloConciliador {
 }
 
 export interface SecloAudiencia {
-	fecha?:          string | null;
-	hora?:           string | null;
-	lugar?:          string | null;
-	constanciaKey?:  string | null;
-	conciliador?:    SecloConciliador | null;
-	eventId?:        string;
-	agendaScrapeAt?: string;
+	fecha?:             string | null;
+	hora?:              string | null;
+	lugar?:             string | null;
+	constanciaKey?:     string | null;
+	conciliador?:       SecloConciliador | null;
+	eventId?:           string;
+	agendaScrapeAt?:    string;
+	agendaRetryCount?:  number;
+	suppressNextEmail?: boolean;
 }
 
 export interface SecloDatosAbogado {
