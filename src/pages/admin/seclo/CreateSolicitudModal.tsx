@@ -119,10 +119,37 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 		}
 	};
 
-	// Contactos filtrados por carpeta seleccionada (o todos si no hay carpeta)
-	const filteredContacts = selectedFolder
+	// ── Lógica de filtrado de contactos ──────────────────────────────────────
+
+	// Contactos disponibles para el requirente
+	// Si hay carpeta seleccionada → solo los de esa carpeta; si no → todos
+	const contactsForRequirente = selectedFolder
 		? localContacts.filter(c => c.folderIds?.includes(selectedFolder._id))
 		: localContacts;
+
+	// Carpetas a las que pertenece el requirente seleccionado
+	const requirenteFolders = requirente?.folderIds?.length
+		? folders.filter(f => requirente.folderIds!.includes(f._id))
+		: [];
+
+	// Contactos disponibles para el requerido:
+	// 1. Si se eligió carpeta explícita → solo los de esa carpeta
+	// 2. Si no y el requirente tiene carpetas → solo los que comparten al menos una carpeta
+	// 3. Si el requirente no tiene carpetas → todos (sin restricción)
+	const _baseRequerido = localContacts.filter(c => c._id !== requirente?._id);
+
+	const contactsForRequeridoStrict = (() => {
+		if (selectedFolder) return _baseRequerido.filter(c => c.folderIds?.includes(selectedFolder._id));
+		if (requirente?.folderIds?.length) {
+			const reqSet = new Set(requirente.folderIds);
+			return _baseRequerido.filter(c => c.folderIds?.some(id => reqSet.has(id)));
+		}
+		return _baseRequerido;
+	})();
+
+	// Si el filtro estricto dejó sin opciones, activamos modo permisivo (todos los contactos)
+	const requeridoPermissive = !selectedFolder && !!requirente?.folderIds?.length && contactsForRequeridoStrict.length === 0;
+	const contactsForRequerido = requeridoPermissive ? _baseRequerido : contactsForRequeridoStrict;
 
 	// ── Step 5: upload documento ──────────────────────────────────────────────
 	const handleFileUpload = useCallback(async (file: File, tipo: SecloDocTipo) => {
@@ -224,11 +251,27 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 							<Typography variant="body2" color="text.secondary">Cargando contactos y carpetas...</Typography>
 						</Grid>
 					)}
+					{selectedUser && !contactsLoading && (
+						<Grid item xs={12}>
+							<Alert severity="info" icon={false}>
+								<Typography variant="body2" fontWeight={600} mb={0.5}>Vinculación entre carpetas y contactos</Typography>
+								<Typography variant="body2">
+									• Si elegís una <strong>carpeta</strong>, solo aparecerán contactos vinculados a ella en los pasos siguientes.
+								</Typography>
+								<Typography variant="body2">
+									• Sin carpeta, al seleccionar el <strong>requirente</strong> el sistema filtrará el requerido a contactos que comparten al menos una carpeta con él.
+								</Typography>
+								<Typography variant="body2">
+									• Si el requirente no tiene carpetas, o no hay contactos en común, se permiten todos los contactos del usuario.
+								</Typography>
+							</Alert>
+						</Grid>
+					)}
 					{folders.length > 0 && !contactsLoading && (
 						<Grid item xs={12}>
 							<Autocomplete
 								options={[null, ...folders] as (SecloFolder | null)[]}
-								getOptionLabel={(f) => f ? f.folderName : "— Todos los contactos —"}
+								getOptionLabel={(f) => f ? f.folderName : "— Sin filtro de carpeta —"}
 								onChange={(_, v) => {
 									setSelectedFolder(v);
 									setRequirente(null);
@@ -236,13 +279,24 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 								}}
 								value={selectedFolder}
 								renderInput={(params) => (
-									<TextField {...params} label="Filtrar por carpeta (opcional)"
+									<TextField
+										{...params}
+										label="Filtrar por carpeta (opcional)"
 										helperText={selectedFolder
-											? `${filteredContacts.length} contacto${filteredContacts.length !== 1 ? "s" : ""} en esta carpeta`
-											: "Sin filtro — se muestran todos los contactos del usuario"}
+											? `${contactsForRequirente.length} contacto${contactsForRequirente.length !== 1 ? "s" : ""} en esta carpeta`
+											: `${localContacts.length} contactos disponibles — sin restricción de carpeta`}
 									/>
 								)}
 							/>
+						</Grid>
+					)}
+					{selectedUser && !contactsLoading && folders.length === 0 && localContacts.length > 0 && (
+						<Grid item xs={12}>
+							<Alert severity="warning" icon={false}>
+								<Typography variant="body2">
+									Este usuario no tiene <strong>carpetas</strong>. Se mostrarán todos sus contactos sin restricción.
+								</Typography>
+							</Alert>
 						</Grid>
 					)}
 				</Grid>
@@ -251,13 +305,22 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 			// ── Step 1: Requirente ───────────────────────────────────────────
 			case 1: return (
 				<Grid container spacing={2}>
+					{selectedFolder && (
+						<Grid item xs={12}>
+							<Alert severity="info" icon={false}>
+								<Typography variant="body2">
+									Mostrando <strong>{contactsForRequirente.length}</strong> contacto{contactsForRequirente.length !== 1 ? "s" : ""} de la carpeta <strong>{selectedFolder.folderName}</strong>.
+								</Typography>
+							</Alert>
+						</Grid>
+					)}
 					<Grid item xs={12}>
 						<Autocomplete
-							options={filteredContacts}
+							options={contactsForRequirente}
 							getOptionLabel={(c: SecloContact) => `${c.name} ${c.lastName || ""}${c.cuit ? ` — ${c.cuit}` : ""}`}
-							onChange={(_, v) => setRequirente(v)}
+							onChange={(_, v) => { setRequirente(v); setRequerido(null); }}
 							value={requirente}
-							noOptionsText="Sin contactos para este usuario"
+							noOptionsText={selectedFolder ? "No hay contactos en esta carpeta" : "Sin contactos para este usuario"}
 							renderInput={(params) => <TextField {...params} label="Contacto requirente (trabajador) *" />}
 						/>
 						{requirente && !requirente.phoneCelular && (
@@ -266,6 +329,32 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 							</Alert>
 						)}
 					</Grid>
+					{requirente && !selectedFolder && requirenteFolders.length > 0 && (
+						<Grid item xs={12}>
+							<Alert severity="info" icon={false}>
+								<Typography variant="body2" mb={0.5}>
+									El requirente pertenece a {requirenteFolders.length === 1 ? "la carpeta" : "las carpetas"}:
+								</Typography>
+								<Box display="flex" gap={0.5} flexWrap="wrap">
+									{requirenteFolders.map(f => (
+										<Chip key={f._id} label={f.folderName} size="small" variant="outlined" color="primary" />
+									))}
+								</Box>
+								<Typography variant="body2" mt={0.5} color="text.secondary">
+									El requerido se filtrará a contactos que comparten al menos una de estas carpetas.
+								</Typography>
+							</Alert>
+						</Grid>
+					)}
+					{requirente && !selectedFolder && requirenteFolders.length === 0 && (
+						<Grid item xs={12}>
+							<Alert severity="warning" icon={false}>
+								<Typography variant="body2">
+									El requirente no está vinculado a ninguna carpeta. El requerido no tendrá restricción de carpeta.
+								</Typography>
+							</Alert>
+						</Grid>
+					)}
 					<Grid item xs={6}>
 						<TextField fullWidth type="date" label="Fecha de nacimiento" InputLabelProps={{ shrink: true }}
 							value={datosLab.fechaNacimiento?.toString().slice(0, 10) || ""}
@@ -319,11 +408,39 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 			case 2: return (
 				<Grid container spacing={2}>
 					<Grid item xs={12}>
-						<Typography variant="body2" color="text.secondary" mb={1}>
-							Elegí el contacto que actúa como empleador (requerido).
-						</Typography>
+						{selectedFolder ? (
+							<Alert severity="info" icon={false} sx={{ mb: 1 }}>
+								<Typography variant="body2">
+									Mostrando contactos de la carpeta <strong>{selectedFolder.folderName}</strong>.
+								</Typography>
+							</Alert>
+						) : requeridoPermissive ? (
+							<Alert severity="warning" icon={false} sx={{ mb: 1 }}>
+								<Typography variant="body2">
+									No se encontraron contactos que compartan carpeta con el requirente. Se muestran todos los contactos del usuario.
+									La solicitud <strong>no quedará vinculada a una carpeta específica</strong>.
+								</Typography>
+							</Alert>
+						) : requirenteFolders.length > 0 ? (
+							<Alert severity="info" icon={false} sx={{ mb: 1 }}>
+								<Typography variant="body2" mb={0.5}>
+									Mostrando contactos que comparten carpeta con el requirente:
+								</Typography>
+								<Box display="flex" gap={0.5} flexWrap="wrap">
+									{requirenteFolders.map(f => (
+										<Chip key={f._id} label={f.folderName} size="small" variant="outlined" color="primary" />
+									))}
+								</Box>
+							</Alert>
+						) : (
+							<Alert severity="info" icon={false} sx={{ mb: 1 }}>
+								<Typography variant="body2">
+									Sin restricción de carpeta. Se muestran todos los contactos del usuario.
+								</Typography>
+							</Alert>
+						)}
 						<Autocomplete
-							options={filteredContacts.filter(c => c._id !== requirente?._id)}
+							options={contactsForRequerido}
 							getOptionLabel={(c: SecloContact) => `${c.name} ${c.lastName || ""}${c.company ? ` (${c.company})` : ""}${c.cuit ? ` — ${c.cuit}` : ""}`}
 							onChange={(_, v) => setRequerido(v)}
 							value={requerido}
