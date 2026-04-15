@@ -1,4 +1,4 @@
-import pjnAxios from "utils/pjnAxios";
+import ragAxios from "utils/ragAxios";
 import { Fuero, SentenciaTipo } from "./sentenciasCapturadas";
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
@@ -75,11 +75,11 @@ export interface SearchResponse {
 
 // ── Service ───────────────────────────────────────────────────────────────────
 
-const BASE = "/api/sentencias";
+const BASE = "/rag/sentencias";
 
 const SentenciasSearchService = {
 	async buscar(query: string, filters?: SearchFilters, options?: SearchOptions): Promise<SearchResponse> {
-		const res = await pjnAxios.post<{ success: boolean } & SearchResponse>(BASE + "/buscar", {
+		const res = await ragAxios.post<{ success: boolean } & SearchResponse>(BASE + "/buscar", {
 			query,
 			filters: filters || {},
 			options: options || {},
@@ -88,7 +88,7 @@ const SentenciasSearchService = {
 	},
 
 	async buscarSimilares(sentenciaId: string, options?: SearchOptions): Promise<SearchResponse> {
-		const res = await pjnAxios.post<{ success: boolean } & SearchResponse>(BASE + "/buscar/similar", {
+		const res = await ragAxios.post<{ success: boolean } & SearchResponse>(BASE + "/buscar/similar", {
 			sentenciaId,
 			options: options || {},
 		});
@@ -96,7 +96,7 @@ const SentenciasSearchService = {
 	},
 
 	async getChunks(sentenciaId: string): Promise<FullChunk[]> {
-		const res = await pjnAxios.get<{ success: boolean; chunks: FullChunk[]; total: number }>(
+		const res = await ragAxios.get<{ success: boolean; chunks: FullChunk[]; total: number }>(
 			`${BASE}/${sentenciaId}/chunks`
 		);
 		return res.data.chunks;
