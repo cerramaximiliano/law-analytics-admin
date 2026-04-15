@@ -205,6 +205,29 @@ export const fetchSolicitudById = (id: string) => async (_dispatch: any): Promis
 	}
 };
 
+export const fetchFoldersByUser = (userId: string, search?: string) => async (_dispatch: any): Promise<any[]> => {
+	try {
+		const { data } = await adminAxios.get(`/api/seclo/users/${userId}/folders`, { params: { search, limit: 50 } });
+		return data.success ? data.folders : [];
+	} catch (err: any) {
+		console.error("fetchFoldersByUser:", err.message);
+		return [];
+	}
+};
+
+export const linkSolicitudFolder = (solicitudId: string, folderId: string | null) => async (dispatch: any) => {
+	try {
+		const { data } = await adminAxios.patch(`/api/seclo/solicitudes/${solicitudId}/folder`, { folderId });
+		if (data.success) {
+			dispatch({ type: SECLO_UPDATE_SOLICITUD, payload: data.solicitud });
+			dispatch(openSnackbar({ open: true, message: folderId ? "Carpeta vinculada" : "Carpeta desvinculada", variant: "alert", alert: { color: "success" } }));
+		}
+	} catch (err: any) {
+		const msg = err.response?.data?.message || err.message;
+		dispatch(openSnackbar({ open: true, message: msg, variant: "alert", alert: { color: "error" } }));
+	}
+};
+
 export const revealCredential = (id: string) => async (_dispatch: any): Promise<{ cuil: string; password: string } | null> => {
 	try {
 		const { data } = await adminAxios.get(`/api/seclo/credentials/${id}/reveal`);
