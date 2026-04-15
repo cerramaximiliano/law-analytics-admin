@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import {
-	Box, Button, Chip, CircularProgress, Divider, Grid, IconButton, Link, Stack, Tab, Table, TableBody, TableCell,
+	Box, Button, Chip, CircularProgress, Divider, FormControlLabel, Checkbox, Grid, IconButton, Link, Stack, Tab, Table, TableBody, TableCell,
 	TableContainer, TableHead, TablePagination, TableRow, Tabs,
 	TextField, Tooltip, Typography, Select, MenuItem, FormControl, InputLabel,
 	Dialog, DialogTitle, DialogContent, DialogActions,
 } from "@mui/material";
-import { Add, DocumentDownload, Eye, Trash, RefreshCircle, SearchNormal1 } from "iconsax-react";
+import { Add, DocumentDownload, Eye, Trash, RefreshCircle, SearchNormal1, FilterSearch } from "iconsax-react";
 import { useDispatch, useSelector } from "store";
 import { fetchSolicitudes, deleteSolicitud, reactivarSolicitud, getSecloDownloadUrl, resetAgendaData, fetchFoldersByUser, linkSolicitudFolder } from "store/reducers/seclo";
 import type { SecloCaracter, SecloDocTipo, SecloDatosAbogado, SecloDatosLaborales, SecloFolder, SecloSolicitud, SecloStatus } from "types/seclo";
@@ -335,13 +335,14 @@ function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicit
 	const hasResultado = !!(sol.resultado?.numeroExpediente || sol.resultado?.numeroTramite || audiencias.length > 0);
 	const [tab, setTab] = useState(0);
 	const [resetting, setResetting] = useState(false);
+	const [suppressEmail, setSuppressEmail] = useState(false);
 	const [folderPicker, setFolderPicker] = useState(false);
 	const [linkingFolder, setLinkingFolder] = useState(false);
 
 	const handleResetAgenda = async () => {
 		setResetting(true);
 		try {
-			await dispatch(resetAgendaData(sol._id));
+			await dispatch(resetAgendaData(sol._id, false, suppressEmail));
 		} finally {
 			setResetting(false);
 		}
@@ -467,9 +468,19 @@ function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicit
 															</Box>
 														)}
 														{!aud.agendaScrapeAt && aud.fecha && (
-															<Typography variant="caption" color="text.secondary" fontStyle="italic">
-																Datos de conciliador pendientes
-															</Typography>
+															<Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
+																<Typography variant="caption" color="text.secondary" fontStyle="italic">
+																	Datos de conciliador pendientes
+																</Typography>
+																{(aud.agendaRetryCount ?? 0) > 0 && (
+																	<Chip
+																		label={`${aud.agendaRetryCount} intento${aud.agendaRetryCount === 1 ? "" : "s"} fallido${aud.agendaRetryCount === 1 ? "" : "s"}`}
+																		size="small"
+																		color={(aud.agendaRetryCount ?? 0) >= 8 ? "error" : "warning"}
+																		variant="outlined"
+																	/>
+																)}
+															</Box>
 														)}
 													</Stack>
 												</Box>
@@ -583,18 +594,33 @@ function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicit
 				)}
 
 			</DialogContent>
-			<DialogActions>
-				{["completed", "submitted"].includes(sol.status) && (
-					<Tooltip title="Resetea agendaScrapeAt y conciliador para reprocesar con el worker de agenda">
-						<Button
-							color="warning" size="small" onClick={handleResetAgenda}
-							disabled={resetting}
-							startIcon={resetting ? <CircularProgress size={14} /> : <RefreshCircle size={14} />}
-						>
-							Reset Agenda
-						</Button>
-					</Tooltip>
-				)}
+			<DialogActions sx={{ flexWrap: "wrap", gap: 1, justifyContent: "space-between" }}>
+				<Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
+					{["completed", "submitted"].includes(sol.status) && (
+						<>
+							<FormControlLabel
+								control={
+									<Checkbox
+										size="small"
+										checked={suppressEmail}
+										onChange={e => setSuppressEmail(e.target.checked)}
+									/>
+								}
+								label={<Typography variant="caption">Suprimir email al reprocesar</Typography>}
+								sx={{ m: 0 }}
+							/>
+							<Tooltip title="Resetea agendaScrapeAt, conciliador y reintentos para reprocesar con el worker de agenda">
+								<Button
+									color="warning" size="small" onClick={handleResetAgenda}
+									disabled={resetting}
+									startIcon={resetting ? <CircularProgress size={14} /> : <RefreshCircle size={14} />}
+								>
+									Reset Agenda
+								</Button>
+							</Tooltip>
+						</>
+					)}
+				</Box>
 				<Button onClick={onClose}>Cerrar</Button>
 			</DialogActions>
 
@@ -617,22 +643,28 @@ export default function SolicitudesTab() {
 	const [rowsPerPage]           = useState(15);
 	const [search, setSearch]     = useState("");
 	const [statusFilter, setStatusFilter] = useState("");
+	const [dateFrom, setDateFrom] = useState("");
+	const [dateTo, setDateTo]     = useState("");
+	const [showFilters, setShowFilters]   = useState(false);
 	const [openCreate, setOpenCreate]     = useState(false);
 	const [deleteTarget, setDeleteTarget] = useState<SecloSolicitud | null>(null);
 	const [viewTarget, setViewTarget]     = useState<SecloSolicitud | null>(null);
 
-	const load = () => {
+	const load = (overrides?: Record<string, any>) => {
 		dispatch(fetchSolicitudes({
 			page: page + 1,
 			limit: rowsPerPage,
 			status: statusFilter || undefined,
 			search: search || undefined,
+			dateFrom: dateFrom || undefined,
+			dateTo: dateTo || undefined,
+			...overrides,
 		}));
 	};
 
 	useEffect(() => { load(); }, [page, statusFilter]);
 
-	const handleSearch = () => { setPage(0); load(); };
+	const handleSearch = () => { setPage(0); load({ page: 1 }); };
 
 	const handleDelete = async () => {
 		if (!deleteTarget) return;
@@ -662,11 +694,40 @@ export default function SolicitudesTab() {
 						{Object.entries(STATUS_LABELS).map(([v, l]) => <MenuItem key={v} value={v}>{l}</MenuItem>)}
 					</Select>
 				</FormControl>
+				<Tooltip title={showFilters ? "Ocultar filtros avanzados" : "Mostrar filtros avanzados"}>
+					<Button
+						size="small"
+						variant={showFilters ? "contained" : "outlined"}
+						color={showFilters ? "primary" : "inherit"}
+						startIcon={<FilterSearch size={16} />}
+						onClick={() => setShowFilters(v => !v)}
+					>
+						Filtros
+					</Button>
+				</Tooltip>
 				<Box flexGrow={1} />
 				<Button variant="contained" startIcon={<Add size={18} />} onClick={() => setOpenCreate(true)}>
 					Nueva solicitud
 				</Button>
 			</Box>
+			{showFilters && (
+				<Box display="flex" gap={1.5} mb={2} flexWrap="wrap" alignItems="center">
+					<TextField
+						size="small" label="Desde" type="date" value={dateFrom}
+						onChange={e => setDateFrom(e.target.value)}
+						InputLabelProps={{ shrink: true }}
+						sx={{ width: 160 }}
+					/>
+					<TextField
+						size="small" label="Hasta" type="date" value={dateTo}
+						onChange={e => setDateTo(e.target.value)}
+						InputLabelProps={{ shrink: true }}
+						sx={{ width: 160 }}
+					/>
+					<Button size="small" variant="outlined" onClick={handleSearch}>Aplicar</Button>
+					<Button size="small" color="inherit" onClick={() => { setDateFrom(""); setDateTo(""); setPage(0); load({ dateFrom: undefined, dateTo: undefined, page: 1 }); }}>Limpiar</Button>
+				</Box>
+			)}
 
 			{/* Tabla */}
 			<TableContainer>

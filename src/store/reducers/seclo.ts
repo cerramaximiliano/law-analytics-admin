@@ -182,12 +182,24 @@ export const getSecloDownloadUrl = (s3Key: string) => async (_dispatch: any): Pr
 	}
 };
 
-export const resetAgendaData = (id: string, resetEvent = false) => async (dispatch: any) => {
+export const resetAgendaData = (id: string, resetEvent = false, suppressEmail = false) => async (dispatch: any) => {
 	try {
-		const { data } = await adminAxios.post(`/api/seclo/solicitudes/${id}/reset-agenda`, { resetEvent });
+		const { data } = await adminAxios.post(`/api/seclo/solicitudes/${id}/reset-agenda`, { resetEvent, suppressEmail });
 		if (data.success) {
 			dispatch({ type: SECLO_UPDATE_SOLICITUD, payload: data.solicitud });
 			dispatch(openSnackbar({ open: true, message: "Datos de agenda reseteados", variant: "alert", alert: { color: "success" } }));
+		}
+	} catch (err: any) {
+		const msg = err.response?.data?.message || err.message;
+		dispatch(openSnackbar({ open: true, message: msg, variant: "alert", alert: { color: "error" } }));
+	}
+};
+
+export const triggerWorkerRun = (workerName: string) => async (dispatch: any) => {
+	try {
+		const { data } = await adminAxios.post(`/api/seclo/workers/${workerName}/run`);
+		if (data.success) {
+			dispatch(openSnackbar({ open: true, message: `Ejecución manual iniciada — el worker arrancará en ≤ 10 segundos`, variant: "alert", alert: { color: "info" } }));
 		}
 	} catch (err: any) {
 		const msg = err.response?.data?.message || err.message;

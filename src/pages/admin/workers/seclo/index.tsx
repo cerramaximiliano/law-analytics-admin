@@ -17,14 +17,15 @@ import {
 	Stack,
 	Switch,
 	TextField,
+	Tooltip,
 	Typography,
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { TickCircle, Warning2, Refresh, Setting2, Clock, Calendar1 } from "iconsax-react";
+import { TickCircle, Warning2, Refresh, Setting2, Clock, Calendar1, Play } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { fetchTrabajoConfig, updateTrabajoConfig } from "store/reducers/seclo";
+import { fetchTrabajoConfig, updateTrabajoConfig, triggerWorkerRun } from "store/reducers/seclo";
 import { useDispatch } from "store";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -114,13 +115,15 @@ interface WorkerCardProps {
 	label: string;
 	description: string;
 	scheduleMode: "24/7" | "working-hours";
-	config: { enabled: boolean; cronPattern: string };
+	config: { enabled: boolean; cronPattern: string; consecutiveErrors?: number; disabledByCircuitBreaker?: boolean };
 	stats: { lastRunAt?: string | null; lastRunStatus?: string; lastRunOk?: number; lastRunErrors?: number; totalProcessed?: number; totalErrors?: number };
 	onChange: (field: string, value: any) => void;
+	onRun: () => void;
 }
 
-function WorkerCard({ name, label, description, scheduleMode, config, stats, onChange }: WorkerCardProps) {
+function WorkerCard({ name, label, description, scheduleMode, config, stats, onChange, onRun }: WorkerCardProps) {
 	const theme = useTheme();
+	const [running, setRunning] = useState(false);
 	const statusColor: Record<string, string> = {
 		completed: theme.palette.success.main,
 		error:     theme.palette.error.main,
@@ -129,8 +132,18 @@ function WorkerCard({ name, label, description, scheduleMode, config, stats, onC
 	};
 	const lastStatus = stats.lastRunStatus || "idle";
 
+	const handleRun = async () => {
+		setRunning(true);
+		try { await onRun(); } finally { setRunning(false); }
+	};
+
 	return (
-		<Paper variant="outlined" sx={{ p: 2 }}>
+		<Paper variant="outlined" sx={{ p: 2, borderColor: config.disabledByCircuitBreaker ? "error.main" : undefined }}>
+			{config.disabledByCircuitBreaker && (
+				<Alert severity="error" sx={{ mb: 1.5, py: 0.5 }}>
+					Circuit breaker activo — deshabilitado tras {config.consecutiveErrors ?? 0} errores consecutivos. Corrige el problema y vuelve a habilitar.
+				</Alert>
+			)}
 			<Box display="flex" alignItems="flex-start" justifyContent="space-between" mb={1.5}>
 				<Box>
 					<Box display="flex" alignItems="center" gap={1} mb={0.25}>
@@ -144,18 +157,35 @@ function WorkerCard({ name, label, description, scheduleMode, config, stats, onC
 					</Box>
 					<Typography variant="body2" color="text.secondary">{description}</Typography>
 				</Box>
-				<FormControlLabel
-					control={
-						<Switch
-							checked={config.enabled}
-							onChange={e => onChange(`workers.${name}.enabled`, e.target.checked)}
-							color="primary"
-						/>
-					}
-					label={config.enabled ? "Activo" : "Pausado"}
-					labelPlacement="start"
-					sx={{ ml: 0, mr: 0, gap: 1 }}
-				/>
+				<Box display="flex" alignItems="center" gap={1}>
+					<Tooltip title="Ejecutar ciclo manualmente (en ≤ 10 segundos)">
+						<span>
+							<Button
+								size="small"
+								variant="outlined"
+								color="primary"
+								startIcon={running ? <CircularProgress size={14} /> : <Play size={14} />}
+								onClick={handleRun}
+								disabled={running}
+								sx={{ minWidth: 120 }}
+							>
+								Ejecutar ahora
+							</Button>
+						</span>
+					</Tooltip>
+					<FormControlLabel
+						control={
+							<Switch
+								checked={config.enabled}
+								onChange={e => onChange(`workers.${name}.enabled`, e.target.checked)}
+								color="primary"
+							/>
+						}
+						label={config.enabled ? "Activo" : "Pausado"}
+						labelPlacement="start"
+						sx={{ ml: 0, mr: 0, gap: 1 }}
+					/>
+				</Box>
 			</Box>
 
 			<Stack direction="row" spacing={2} mb={2} flexWrap="wrap">
@@ -196,10 +226,11 @@ function WorkerCard({ name, label, description, scheduleMode, config, stats, onC
 
 // ── Página principal ───────────────────────────────────────────────────────────
 
-interface WorkerEntry { enabled: boolean; cronPattern: string }
+interface WorkerEntry { enabled: boolean; cronPattern: string; consecutiveErrors?: number; disabledByCircuitBreaker?: boolean }
 
 interface TrabajoConfig {
 	enabled: boolean;
+	heartbeatAt?: string | null;
 	workers: {
 		envio:         WorkerEntry;
 		verificar:     WorkerEntry;
@@ -373,6 +404,27 @@ export default function WorkersSecloPage() {
 							</Typography>
 						</Box>
 						<Box display="flex" alignItems="center" gap={1}>
+							{/* Heartbeat indicator */}
+							{(() => {
+								if (!config.heartbeatAt) return (
+									<Tooltip title="Manager no reporta heartbeat — puede estar detenido">
+										<Chip label="Manager offline" color="default" size="small" icon={<Warning2 size={14} />} />
+									</Tooltip>
+								);
+								const ageMs = Date.now() - new Date(config.heartbeatAt).getTime();
+								const isAlive = ageMs < 2 * 60 * 1000; // 2 minutos
+								return (
+									<Tooltip title={isAlive ? `Último heartbeat: ${fmtDate(config.heartbeatAt)}` : `Manager sin respuesta desde ${fmtDate(config.heartbeatAt)}`}>
+										<Chip
+											label={isAlive ? "Manager activo" : "Manager sin respuesta"}
+											color={isAlive ? "success" : "warning"}
+											size="small"
+											icon={isAlive ? <TickCircle size={14} /> : <Warning2 size={14} />}
+										/>
+									</Tooltip>
+								);
+							})()}
+							<Divider orientation="vertical" flexItem />
 							{config.enabled
 								? <Chip icon={<TickCircle size={14} />} label="Habilitado" color="success" size="small" />
 								: <Chip icon={<Warning2 size={14} />} label="Deshabilitado" color="error" size="small" />
@@ -407,6 +459,7 @@ export default function WorkersSecloPage() {
 								config={config.workers[w.name]}
 								stats={config.stats?.[w.name] || {}}
 								onChange={(field, value) => handleChange(field, value)}
+								onRun={() => dispatch(triggerWorkerRun(w.name))}
 							/>
 						))}
 					</Stack>
