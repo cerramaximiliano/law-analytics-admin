@@ -104,10 +104,19 @@ export interface SecloDatosAbogado {
 	};
 }
 
+export interface SecloFolder {
+	_id: string;
+	folderName: string;
+	folderId?: string;
+	materia?: string;
+	status?: string;
+}
+
 export interface SecloSolicitud {
 	_id: string;
 	userId: { _id: string; name: string; email: string } | string;
 	credentialId: string | { _id: string; enabled: boolean; syncStatus: string };
+	folderId?: SecloFolder | string | null;
 	requirentes: Array<{
 		contactId: SecloContact | string;
 		datosLaborales?: SecloDatosLaborales;

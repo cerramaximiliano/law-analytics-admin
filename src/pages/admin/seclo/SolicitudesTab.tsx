@@ -7,8 +7,8 @@ import {
 } from "@mui/material";
 import { Add, DocumentDownload, Eye, Trash, RefreshCircle, SearchNormal1 } from "iconsax-react";
 import { useDispatch, useSelector } from "store";
-import { fetchSolicitudes, deleteSolicitud, reactivarSolicitud, getSecloDownloadUrl, resetAgendaData } from "store/reducers/seclo";
-import type { SecloCaracter, SecloDocTipo, SecloDatosAbogado, SecloDatosLaborales, SecloSolicitud, SecloStatus } from "types/seclo";
+import { fetchSolicitudes, deleteSolicitud, reactivarSolicitud, getSecloDownloadUrl, resetAgendaData, fetchFoldersByUser, linkSolicitudFolder } from "store/reducers/seclo";
+import type { SecloCaracter, SecloDocTipo, SecloDatosAbogado, SecloDatosLaborales, SecloFolder, SecloSolicitud, SecloStatus } from "types/seclo";
 import CreateSolicitudModal from "./CreateSolicitudModal";
 
 const STATUS_COLORS: Record<SecloStatus, "default" | "warning" | "info" | "success" | "error"> = {
@@ -254,6 +254,76 @@ function FormularioTab({ sol }: { sol: SecloSolicitud }) {
 	);
 }
 
+// ─── Dialog de selección de carpeta ──────────────────────────────────────────
+
+function FolderPickerDialog({
+	userId,
+	onSelect,
+	onClose,
+}: {
+	userId: string;
+	onSelect: (folder: SecloFolder) => void;
+	onClose: () => void;
+}) {
+	const dispatch = useDispatch();
+	const [search, setSearch] = useState("");
+	const [folders, setFolders] = useState<SecloFolder[]>([]);
+	const [loading, setLoading] = useState(false);
+
+	const doSearch = async (q: string) => {
+		setLoading(true);
+		try {
+			const result = await dispatch(fetchFoldersByUser(userId, q || undefined));
+			setFolders(result);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => { doSearch(""); }, []);
+
+	return (
+		<Dialog open onClose={onClose} maxWidth="xs" fullWidth>
+			<DialogTitle>Vincular carpeta</DialogTitle>
+			<DialogContent dividers>
+				<TextField
+					fullWidth size="small" placeholder="Buscar carpeta..." value={search}
+					onChange={e => setSearch(e.target.value)}
+					onKeyDown={e => e.key === "Enter" && doSearch(search)}
+					InputProps={{ startAdornment: <SearchNormal1 size={16} style={{ marginRight: 6 }} /> }}
+					sx={{ mb: 1.5 }}
+				/>
+				<Button size="small" variant="outlined" onClick={() => doSearch(search)} disabled={loading} sx={{ mb: 1.5 }}>
+					{loading ? <CircularProgress size={14} sx={{ mr: 1 }} /> : null} Buscar
+				</Button>
+				{folders.length === 0 && !loading && (
+					<Typography variant="body2" color="text.secondary">Sin carpetas encontradas</Typography>
+				)}
+				<Stack spacing={0.75} mt={0.5}>
+					{folders.map(f => (
+						<Box
+							key={f._id}
+							sx={{
+								p: 1, borderRadius: 1, border: "1px solid", borderColor: "divider",
+								cursor: "pointer", "&:hover": { bgcolor: "action.hover" },
+							}}
+							onClick={() => onSelect(f)}
+						>
+							<Typography variant="body2" fontWeight={600}>{f.folderName}</Typography>
+							{f.materia && (
+								<Typography variant="caption" color="text.secondary">{f.materia}</Typography>
+							)}
+						</Box>
+					))}
+				</Stack>
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={onClose}>Cancelar</Button>
+			</DialogActions>
+		</Dialog>
+	);
+}
+
 // ─── Dialog de detalle ────────────────────────────────────────────────────────
 
 function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicitud; onClose: () => void }) {
@@ -265,6 +335,8 @@ function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicit
 	const hasResultado = !!(sol.resultado?.numeroExpediente || sol.resultado?.numeroTramite || audiencias.length > 0);
 	const [tab, setTab] = useState(0);
 	const [resetting, setResetting] = useState(false);
+	const [folderPicker, setFolderPicker] = useState(false);
+	const [linkingFolder, setLinkingFolder] = useState(false);
 
 	const handleResetAgenda = async () => {
 		setResetting(true);
@@ -274,6 +346,28 @@ function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicit
 			setResetting(false);
 		}
 	};
+
+	const handleLinkFolder = async (folder: SecloFolder) => {
+		setFolderPicker(false);
+		setLinkingFolder(true);
+		try {
+			await dispatch(linkSolicitudFolder(sol._id, folder._id));
+		} finally {
+			setLinkingFolder(false);
+		}
+	};
+
+	const handleUnlinkFolder = async () => {
+		setLinkingFolder(true);
+		try {
+			await dispatch(linkSolicitudFolder(sol._id, null));
+		} finally {
+			setLinkingFolder(false);
+		}
+	};
+
+	const userId = typeof sol.userId === "object" ? sol.userId._id : sol.userId;
+	const linkedFolder = sol.folderId && typeof sol.folderId === "object" ? sol.folderId as SecloFolder : null;
 
 	return (
 		<Dialog open onClose={onClose} maxWidth="sm" fullWidth>
@@ -403,6 +497,42 @@ function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicit
 							</>
 						)}
 
+						{/* Carpeta vinculada */}
+						<Divider />
+						<Box>
+							<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+								Carpeta vinculada
+							</Typography>
+							<Box display="flex" alignItems="center" gap={1} mt={0.5} flexWrap="wrap">
+								{linkedFolder ? (
+									<>
+										<Chip
+											label={linkedFolder.folderName}
+											size="small"
+											color="primary"
+											variant="outlined"
+											onDelete={handleUnlinkFolder}
+											sx={{ maxWidth: 260 }}
+										/>
+										{linkedFolder.materia && (
+											<Typography variant="caption" color="text.secondary">{linkedFolder.materia}</Typography>
+										)}
+									</>
+								) : (
+									<Typography variant="body2" color="text.secondary">Sin carpeta vinculada</Typography>
+								)}
+								<Button
+									size="small"
+									variant="text"
+									onClick={() => setFolderPicker(true)}
+									disabled={linkingFolder}
+									sx={{ ml: linkedFolder ? 0 : 0, minWidth: 0, px: 1 }}
+								>
+									{linkingFolder ? <CircularProgress size={14} /> : linkedFolder ? "Cambiar" : "Vincular carpeta"}
+								</Button>
+							</Box>
+						</Box>
+
 						{/* Documentos adjuntos */}
 						<Divider />
 						<Box>
@@ -467,6 +597,14 @@ function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicit
 				)}
 				<Button onClick={onClose}>Cerrar</Button>
 			</DialogActions>
+
+			{folderPicker && (
+				<FolderPickerDialog
+					userId={userId}
+					onSelect={handleLinkFolder}
+					onClose={() => setFolderPicker(false)}
+				/>
+			)}
 		</Dialog>
 	);
 }
