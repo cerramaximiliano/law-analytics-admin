@@ -5,10 +5,15 @@ import {
 	Button,
 	Chip,
 	CircularProgress,
+	Collapse,
 	Divider,
+	FormControl,
 	FormControlLabel,
 	Grid,
+	InputLabel,
+	MenuItem,
 	Paper,
+	Select,
 	Stack,
 	Switch,
 	TextField,
@@ -33,6 +38,74 @@ function fmtDate(d?: string | null) {
 }
 
 const DAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+// ── Cron selector ─────────────────────────────────────────────────────────────
+
+const CRON_PRESETS: Array<{ label: string; value: string }> = [
+	{ label: "Cada 5 minutos",   value: "*/5 * * * *"   },
+	{ label: "Cada 10 minutos",  value: "*/10 * * * *"  },
+	{ label: "Cada 15 minutos",  value: "*/15 * * * *"  },
+	{ label: "Cada 30 minutos",  value: "*/30 * * * *"  },
+	{ label: "Cada hora",        value: "0 * * * *"     },
+	{ label: "Cada 2 horas",     value: "0 */2 * * *"   },
+	{ label: "Cada 4 horas",     value: "0 */4 * * *"   },
+	{ label: "Cada 6 horas",     value: "0 */6 * * *"   },
+	{ label: "Cada 12 horas",    value: "0 */12 * * *"  },
+	{ label: "Una vez al día",   value: "0 0 * * *"     },
+];
+
+const CUSTOM_VALUE = "__custom__";
+
+
+interface CronSelectorProps {
+	value: string;
+	onChange: (value: string) => void;
+}
+
+function CronSelector({ value, onChange }: CronSelectorProps) {
+	const isCustom = !CRON_PRESETS.some(p => p.value === value);
+	const selectValue = isCustom ? CUSTOM_VALUE : value;
+
+	const handleSelect = (v: string) => {
+		if (v !== CUSTOM_VALUE) onChange(v);
+		else onChange(value); // mantener el valor actual al pasar a custom
+	};
+
+	return (
+		<Stack spacing={1}>
+			<FormControl fullWidth size="small">
+				<InputLabel>Frecuencia</InputLabel>
+				<Select
+					value={selectValue}
+					label="Frecuencia"
+					onChange={e => handleSelect(e.target.value)}
+				>
+					{CRON_PRESETS.map(p => (
+						<MenuItem key={p.value} value={p.value}>{p.label}</MenuItem>
+					))}
+					<MenuItem value={CUSTOM_VALUE}>
+						<em>Personalizado (avanzado)</em>
+					</MenuItem>
+				</Select>
+			</FormControl>
+			<Collapse in={isCustom}>
+				<TextField
+					fullWidth
+					size="small"
+					label="Expresión cron"
+					value={value}
+					onChange={e => onChange(e.target.value)}
+					placeholder="*/10 * * * *"
+					helperText="Formato cron estándar: minuto hora día-mes mes día-semana"
+					sx={{ bgcolor: alpha("#000", 0.02) }}
+				/>
+			</Collapse>
+			<Typography variant="caption" color="text.secondary">
+				Los cambios se aplican automáticamente en ≤ 60 segundos sin reiniciar el proceso.
+			</Typography>
+		</Stack>
+	);
+}
 
 // ── Worker card ────────────────────────────────────────────────────────────────
 
@@ -113,15 +186,9 @@ function WorkerCard({ name, label, description, scheduleMode, config, stats, onC
 				</Box>
 			</Stack>
 
-			<TextField
-				fullWidth
-				size="small"
-				label="Patrón cron"
-				value={config.cronPattern || ""}
-				onChange={e => onChange(`workers.${name}.cronPattern`, e.target.value)}
-				placeholder="*/10 * * * *"
-				helperText="Patrón cron estándar — cambios requieren reiniciar el worker"
-				sx={{ bgcolor: alpha("#000", 0.02) }}
+			<CronSelector
+				value={config.cronPattern || "*/10 * * * *"}
+				onChange={v => onChange(`workers.${name}.cronPattern`, v)}
 			/>
 		</Paper>
 	);
