@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, alpha } from "@mui/material/styles";
 import {
 	Box,
 	Card,
@@ -299,7 +299,42 @@ const EmailVerificationWorker = () => {
 		<MainCard
 			title="Worker de Verificación de Emails (NeverBounce)"
 			secondary={
-				<Stack direction="row" spacing={1}>
+				<Stack direction="row" spacing={1} alignItems="center">
+					<Box
+						component="span"
+						sx={{
+							display: "inline-flex",
+							alignItems: "center",
+							px: 1,
+							py: 0.25,
+							borderRadius: 1,
+							bgcolor: theme.palette.grey[800],
+							color: theme.palette.common.white,
+							fontSize: "0.65rem",
+							fontWeight: 500,
+							fontFamily: "monospace",
+							letterSpacing: "0.5px",
+						}}
+					>
+						worker_01
+					</Box>
+					<Box
+						component="span"
+						sx={{
+							display: "inline-flex",
+							alignItems: "center",
+							px: 0.75,
+							py: 0.25,
+							borderRadius: 1,
+							bgcolor: alpha(theme.palette.info.main, 0.1),
+							color: theme.palette.info.main,
+							fontSize: "0.6rem",
+							fontWeight: 500,
+							fontFamily: "monospace",
+						}}
+					>
+						100.111.73.56
+					</Box>
 					<Button variant="outlined" size="small" startIcon={<Code1 size={16} />} onClick={() => setJsonDialogOpen(true)}>
 						Ver JSON
 					</Button>

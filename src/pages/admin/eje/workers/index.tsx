@@ -896,12 +896,78 @@ const EjeWorkersConfig: React.FC = () => {
 				{/* Main Content with Tabs */}
 				<Grid item xs={12}>
 					<MainCard>
-						<Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} variant="scrollable" scrollButtons="auto">
-							<Tab label="Verificación" icon={<SearchNormal1 size={18} />} iconPosition="start" />
-							<Tab label="Actualización" icon={<Refresh size={18} />} iconPosition="start" />
-							<Tab label="Sistema" icon={<Cpu size={18} />} iconPosition="start" />
-							<Tab label="Estadísticas" icon={<Chart size={18} />} iconPosition="start" />
-							<Tab label="Documentación" icon={<Book1 size={18} />} iconPosition="start" />
+						<Tabs
+							value={tabValue}
+							onChange={(_, v) => setTabValue(v)}
+							variant="scrollable"
+							scrollButtons="auto"
+							sx={{
+								"& .MuiTab-root": {
+									minHeight: 64,
+									textTransform: "none",
+									fontSize: "0.875rem",
+									fontWeight: 500,
+								},
+							}}
+						>
+							{[
+								{ label: "Verificación", icon: <SearchNormal1 size={18} /> },
+								{ label: "Actualización", icon: <Refresh size={18} /> },
+								{ label: "Sistema", icon: <Cpu size={18} /> },
+								{ label: "Estadísticas", icon: <Chart size={18} /> },
+								{ label: "Documentación", icon: <Book1 size={18} /> },
+							].map((tab, idx) => (
+								<Tab
+									key={idx}
+									label={
+										<Stack direction="row" spacing={1.5} alignItems="center">
+											<Box sx={{ color: theme.palette.success.main }}>{tab.icon}</Box>
+											<Box>
+												<Stack direction="row" spacing={0.75} alignItems="center">
+													<Typography variant="body2" fontWeight={500}>
+														{tab.label}
+													</Typography>
+													<Box
+														component="span"
+														sx={{
+															display: "inline-flex",
+															alignItems: "center",
+															px: 1,
+															py: 0.25,
+															borderRadius: 1,
+															bgcolor: theme.palette.grey[800],
+															color: theme.palette.common.white,
+															fontSize: "0.65rem",
+															fontWeight: 500,
+															fontFamily: "monospace",
+															letterSpacing: "0.5px",
+														}}
+													>
+														worker_02
+													</Box>
+													<Box
+														component="span"
+														sx={{
+															display: "inline-flex",
+															alignItems: "center",
+															px: 0.75,
+															py: 0.25,
+															borderRadius: 1,
+															bgcolor: alpha(theme.palette.info.main, 0.1),
+															color: theme.palette.info.main,
+															fontSize: "0.6rem",
+															fontWeight: 500,
+															fontFamily: "monospace",
+														}}
+													>
+														100.98.180.101
+													</Box>
+												</Stack>
+											</Box>
+										</Stack>
+									}
+								/>
+							))}
 						</Tabs>
 
 						{/* Tab 0: Verification Worker */}

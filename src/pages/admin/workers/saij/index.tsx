@@ -287,11 +287,48 @@ export default function SaijWorkerPage() {
 		<MainCard
 			title="Workers SAIJ"
 			secondary={
-				<Tooltip title="Recargar">
-					<IconButton size="small" onClick={fetchConfigs} disabled={loading}>
-						<Refresh size={18} />
-					</IconButton>
-				</Tooltip>
+				<Stack direction="row" spacing={1} alignItems="center">
+					<Box
+						component="span"
+						sx={{
+							display: "inline-flex",
+							alignItems: "center",
+							px: 1,
+							py: 0.25,
+							borderRadius: 1,
+							bgcolor: (theme) => theme.palette.grey[800],
+							color: "common.white",
+							fontSize: "0.65rem",
+							fontWeight: 500,
+							fontFamily: "monospace",
+							letterSpacing: "0.5px",
+						}}
+					>
+						worker_01
+					</Box>
+					<Box
+						component="span"
+						sx={{
+							display: "inline-flex",
+							alignItems: "center",
+							px: 0.75,
+							py: 0.25,
+							borderRadius: 1,
+							bgcolor: (theme) => alpha(theme.palette.info.main, 0.1),
+							color: "info.main",
+							fontSize: "0.6rem",
+							fontWeight: 500,
+							fontFamily: "monospace",
+						}}
+					>
+						100.111.73.56
+					</Box>
+					<Tooltip title="Recargar">
+						<IconButton size="small" onClick={fetchConfigs} disabled={loading}>
+							<Refresh size={18} />
+						</IconButton>
+					</Tooltip>
+				</Stack>
 			}
 		>
 			<Grid container spacing={2}>
