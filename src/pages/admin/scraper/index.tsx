@@ -35,6 +35,7 @@ import {
 	Switch,
 	FormControlLabel,
 	useTheme,
+	alpha,
 } from "@mui/material";
 import { Refresh, Trash, Setting3 } from "iconsax-react";
 import { useSnackbar } from "notistack";
@@ -1180,6 +1181,23 @@ const ScraperWorkerPage = () => {
 					</Box>
 					<Box component="span" sx={badgeStyle}>
 						worker_01
+					</Box>
+					<Box
+						component="span"
+						sx={{
+							display: "inline-flex",
+							alignItems: "center",
+							px: 0.75,
+							py: 0.25,
+							borderRadius: 1,
+							bgcolor: alpha(theme.palette.info.main, 0.1),
+							color: theme.palette.info.main,
+							fontSize: "0.6rem",
+							fontWeight: 500,
+							fontFamily: "monospace",
+						}}
+					>
+						100.111.73.56
 					</Box>
 				</Stack>
 			}
