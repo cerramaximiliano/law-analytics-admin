@@ -27,7 +27,7 @@ import {
 } from "@mui/material";
 import { ArrowDown2, ArrowUp2, DocumentText1, Refresh, SearchNormal1, Link21 } from "iconsax-react";
 import MainCard from "components/MainCard";
-import SentenciasSearchService, { FullChunk, SearchFilters, SearchOptions, SentenciaResult } from "api/sentenciasSearch";
+import SentenciasSearchService, { SearchFilters, SearchOptions, SentenciaResult } from "api/sentenciasSearch";
 import { Fuero, SentenciaTipo } from "api/sentenciasCapturadas";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -132,19 +132,19 @@ function ChunkCard({ chunk, matched }: { chunk: { index: number; sectionType: st
 function ResultCard({ result, index }: { result: SentenciaResult; index: number }) {
 	const theme = useTheme();
 	const [showFull, setShowFull] = useState(false);
-	const [loadedChunks, setLoadedChunks] = useState<FullChunk[] | null>(result.fullChunks ?? null);
+	const [loadedText, setLoadedText] = useState<string | null>(null);
 	const [loadingFull, setLoadingFull] = useState(false);
 	const [loadError, setLoadError] = useState<string | null>(null);
 	const { sentencia, score, matchedChunks } = result;
 	const fueroColor = FUERO_COLOR[sentencia.fuero] || theme.palette.primary.main;
 
 	const handleLoadFull = async () => {
-		if (loadedChunks) { setShowFull((p) => !p); return; }
+		if (loadedText !== null) { setShowFull((p) => !p); return; }
 		setLoadingFull(true);
 		setLoadError(null);
 		try {
-			const chunks = await SentenciasSearchService.getChunks(sentencia._id);
-			setLoadedChunks(chunks);
+			const text = await SentenciasSearchService.getTexto(sentencia._id);
+			setLoadedText(text);
 			setShowFull(true);
 		} catch {
 			setLoadError("No se pudo cargar el texto completo");
@@ -231,19 +231,29 @@ function ResultCard({ result, index }: { result: SentenciaResult; index: number 
 							? "Cargando fallo…"
 							: showFull
 							? "Ocultar fallo completo"
-							: loadedChunks
-							? `Ver fallo completo (${loadedChunks.length} secciones)`
 							: "Ver fallo completo"}
 					</Button>
 					{loadError && (
 						<Typography variant="caption" color="error" ml={1}>{loadError}</Typography>
 					)}
 					<Collapse in={showFull}>
-						<Stack spacing={0.5} mt={1}>
-							{loadedChunks?.map((chunk) => (
-								<ChunkCard key={chunk.index} chunk={chunk} matched={chunk.matched} />
-							))}
-						</Stack>
+						{loadedText !== null && (
+							<Box
+								sx={{
+									mt: 1,
+									p: 2,
+									border: `1px solid ${theme.palette.divider}`,
+									borderRadius: 1.5,
+									bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.50",
+									maxHeight: 600,
+									overflowY: "auto",
+								}}
+							>
+								<Typography variant="body2" sx={{ whiteSpace: "pre-wrap", lineHeight: 1.8, fontFamily: "monospace", fontSize: 12 }}>
+									{loadedText}
+								</Typography>
+							</Box>
+						)}
 					</Collapse>
 				</Box>
 			</CardContent>
