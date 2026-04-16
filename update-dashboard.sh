@@ -111,14 +111,35 @@ else
 		# Ejecutando en el servidor
 		cd ${REMOTE_PATH}
 		npm install
-		npm run build
+		# Compilar a directorio temporal para no borrar el sitio activo durante el build
+		rm -rf build.new
+		if npm run build -- --outDir build.new; then
+			# Swap atómico: reemplazar build solo cuando el nuevo está completo
+			rm -rf build.old
+			[ -d "build" ] && mv build build.old
+			mv build.new build
+			rm -rf build.old
+		else
+			# Si el build con outDir falla (ej. incompatibilidad), fallback directo
+			rm -rf build.new
+			npm run build
+		fi
 		echo 'Build completado'
 	else
 		# Ejecutando desde local
 		ssh -i "${SSH_KEY}" "${SERVER_USER}@${SERVER_IP}" "
 			cd ${REMOTE_PATH}
 			npm install
-			npm run build
+			rm -rf build.new
+			if npm run build -- --outDir build.new; then
+				rm -rf build.old
+				[ -d 'build' ] && mv build build.old
+				mv build.new build
+				rm -rf build.old
+			else
+				rm -rf build.new
+				npm run build
+			fi
 			echo 'Build completado'
 		"
 	fi

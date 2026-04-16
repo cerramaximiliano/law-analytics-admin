@@ -1,8 +1,9 @@
-import { Box, Chip, Paper, Stack, Typography } from "@mui/material";
+import { Box, Chip, Paper, Stack, Typography, alpha, useTheme } from "@mui/material";
 import MainCard from "components/MainCard";
 import SentenciasWorkerTab from "./SentenciasWorkerTab";
 
 export default function SentenciasWorkerPage() {
+	const theme = useTheme();
 	return (
 		<MainCard>
 			<Stack spacing={2}>
@@ -14,7 +15,41 @@ export default function SentenciasWorkerPage() {
 						</Typography>
 					</Box>
 					<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
-						<Chip label="worker_01" size="small" color="default" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }} />
+						<Box
+							component="span"
+							sx={{
+								display: "inline-flex",
+								alignItems: "center",
+								px: 1,
+								py: 0.25,
+								borderRadius: 1,
+								bgcolor: theme.palette.grey[800],
+								color: theme.palette.common.white,
+								fontSize: "0.65rem",
+								fontWeight: 500,
+								fontFamily: "monospace",
+								letterSpacing: "0.5px",
+							}}
+						>
+							worker_01
+						</Box>
+						<Box
+							component="span"
+							sx={{
+								display: "inline-flex",
+								alignItems: "center",
+								px: 0.75,
+								py: 0.25,
+								borderRadius: 1,
+								bgcolor: alpha(theme.palette.info.main, 0.1),
+								color: theme.palette.info.main,
+								fontSize: "0.6rem",
+								fontWeight: 500,
+								fontFamily: "monospace",
+							}}
+						>
+							100.111.73.56
+						</Box>
 						<Chip label="pjn-style-corpus-v2 · sentencias-corpus" size="small" color="secondary" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
 						<Chip label="sentencias-capturadas · Atlas" size="small" color="info" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
 						<Chip label="CausasCIV/CNT/CSS/COM · local" size="small" color="default" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
