@@ -101,6 +101,13 @@ const SentenciasSearchService = {
 		);
 		return res.data.chunks;
 	},
+
+	async getTexto(sentenciaId: string): Promise<string> {
+		const res = await ragAxios.get<{ success: boolean; text: string }>(
+			`${BASE}/${sentenciaId}/texto`
+		);
+		return res.data.text;
+	},
 };
 
 export default SentenciasSearchService;
