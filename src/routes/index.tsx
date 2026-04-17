@@ -43,6 +43,8 @@ const MovimientosWorkerPage = Loadable(lazy(() => import("pages/admin/workers/mo
 const SentenciasWorkerPage = Loadable(lazy(() => import("pages/admin/workers/sentencias")));
 const SaijWorkerPage = Loadable(lazy(() => import("pages/admin/workers/saij")));
 const SecloWorkerPage = Loadable(lazy(() => import("pages/admin/workers/seclo")));
+const InfolegWorkersPage = Loadable(lazy(() => import("pages/admin/workers/infoleg")));
+const InfolegNormasPage  = Loadable(lazy(() => import("pages/admin/normas/infoleg")));
 const JurisprudenciaSaijPage = Loadable(lazy(() => import("pages/recursos/jurisprudencia-saij")));
 const JurisprudenciaPjnPage = Loadable(lazy(() => import("pages/recursos/jurisprudencia-pjn")));
 
@@ -269,6 +271,22 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<SecloWorkerPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "workers/infoleg",
+							element: (
+								<AdminRoleGuard>
+									<InfolegWorkersPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "normas/infoleg",
+							element: (
+								<AdminRoleGuard>
+									<InfolegNormasPage />
 								</AdminRoleGuard>
 							),
 						},

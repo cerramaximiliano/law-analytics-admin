@@ -131,6 +131,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "workers-infoleg",
+					title: "Workers InfoLeg",
+					type: "item",
+					url: "/admin/workers/infoleg",
+					breadcrumbs: true,
+				},
+				{
 					id: "workers-scraper-postal",
 					title: "Scraper Postal",
 					type: "item",
@@ -515,6 +522,22 @@ const admin: NavItemType = {
 			icon: Judge,
 			url: "/admin/seclo",
 			breadcrumbs: true,
+		},
+		{
+			id: "normas",
+			title: "Normas",
+			type: "collapse",
+			icon: DocumentText,
+			breadcrumbs: true,
+			children: [
+				{
+					id: "normas-infoleg",
+					title: "InfoLeg",
+					type: "item",
+					url: "/admin/normas/infoleg",
+					breadcrumbs: true,
+				},
+			],
 		},
 	],
 };
