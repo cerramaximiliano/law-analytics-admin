@@ -58,9 +58,20 @@ export interface LaunchCampaignResponse {
 	data: LaunchCampaignResult;
 }
 
+export interface ActivateCampaignResponse {
+	success: boolean;
+	message: string;
+	data: { campaignId: string; status: "active" };
+}
+
 const discountCampaignService = {
 	async launchCampaign(discountId: string, params: LaunchCampaignParams): Promise<LaunchCampaignResponse> {
 		const res = await adminAxios.post<LaunchCampaignResponse>(`/api/discounts/${discountId}/launch-campaign`, params);
+		return res.data;
+	},
+
+	async activateCampaign(discountId: string, campaignId: string): Promise<ActivateCampaignResponse> {
+		const res = await adminAxios.post<ActivateCampaignResponse>(`/api/discounts/${discountId}/activate-campaign`, { campaignId });
 		return res.data;
 	},
 

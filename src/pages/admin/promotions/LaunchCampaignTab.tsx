@@ -119,6 +119,7 @@ const LaunchCampaignTab = ({ discount }: Props) => {
 
 	// ── Result / loading ─────────────────────────────────────────────────────────
 	const [loading, setLoading] = useState(false);
+	const [activateLoading, setActivateLoading] = useState(false);
 	const [result, setResult] = useState<LaunchCampaignResult | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
@@ -274,6 +275,21 @@ const LaunchCampaignTab = ({ discount }: Props) => {
 			enqueueSnackbar(msg, { variant: "error" });
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	const handleActivateCampaign = async () => {
+		if (!result?.campaignId) return;
+		setActivateLoading(true);
+		try {
+			await discountCampaignService.activateCampaign(discount._id, result.campaignId);
+			setResult((prev) => prev ? { ...prev, status: "active" } : prev);
+			enqueueSnackbar("Campaña activada correctamente", { variant: "success" });
+		} catch (err: any) {
+			const msg = err.response?.data?.message || err.message || "Error al activar la campaña";
+			enqueueSnackbar(msg, { variant: "error" });
+		} finally {
+			setActivateLoading(false);
 		}
 	};
 
@@ -957,6 +973,20 @@ const LaunchCampaignTab = ({ discount }: Props) => {
 									/>
 									{result.segmentCreated && <Chip label="Segmento creado" size="small" color="secondary" variant="outlined" />}
 								</Stack>
+								{result.status === "draft" && (
+									<Box mt={1.5}>
+										<Button
+											size="small"
+											variant="contained"
+											color="success"
+											onClick={handleActivateCampaign}
+											disabled={activateLoading}
+											startIcon={activateLoading ? <CircularProgress size={14} color="inherit" /> : <Send2 size={14} />}
+										>
+											{activateLoading ? "Activando..." : "Activar ahora"}
+										</Button>
+									</Box>
+								)}
 							</Alert>
 						)}
 					</Collapse>
