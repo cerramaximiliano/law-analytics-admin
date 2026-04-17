@@ -69,6 +69,8 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 	const [syncLoading, setSyncLoading] = useState(false);
 	// Tracks locally updated stripe IDs after a sync (avoids needing to close/reopen modal)
 	const [localStripe, setLocalStripe] = useState<DiscountCode["stripe"] | null>(null);
+	// Prefer localStripe (post-sync) over the original prop which doesn't refresh
+	const effectiveStripe = localStripe ?? discount?.stripe;
 
 	useEffect(() => {
 		if (open && discount && tabValue === 1) {
@@ -262,8 +264,8 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 
 	const getEnvironmentChips = () => {
 		const chips = [];
-		const hasDev = !!discount.stripe?.development?.couponId;
-		const hasProd = !!discount.stripe?.production?.couponId;
+		const hasDev = !!effectiveStripe?.development?.couponId;
+		const hasProd = !!effectiveStripe?.production?.couponId;
 
 		if (discount.targetEnvironment === "both" || discount.targetEnvironment === "development") {
 			chips.push(
@@ -311,7 +313,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 
 			{/* Alerta de sincronización pendiente */}
 			{discount.isActive && discount.activationRules.isPublic && (
-				(!discount.stripe?.development?.couponId || !discount.stripe?.production?.couponId) && (
+				(!effectiveStripe?.development?.couponId || !effectiveStripe?.production?.couponId) && (
 					<Grid item xs={12}>
 						<Alert
 							severity="warning"
@@ -329,9 +331,9 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 						>
 							<AlertTitle>Descuento público sin sincronizar</AlertTitle>
 							Este descuento es público y está activo, pero no tiene IDs de Stripe en{" "}
-							{!discount.stripe?.development?.couponId && !discount.stripe?.production?.couponId
+							{!effectiveStripe?.development?.couponId && !effectiveStripe?.production?.couponId
 								? "ningún entorno"
-								: !discount.stripe?.development?.couponId
+								: !effectiveStripe?.development?.couponId
 								? "Development"
 								: "Production"}
 							. Los usuarios pueden verlo en la app pero no podrán aplicarlo al pagar. Usá el botón de sincronización en la pestaña Stripe.
@@ -604,10 +606,10 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 							</Typography>
 							<Stack spacing={0.5}>
 								<Typography variant="caption" color="textSecondary">
-									Coupon ID: {discount.stripe?.development?.couponId || "No sincronizado"}
+									Coupon ID: {effectiveStripe?.development?.couponId || "No sincronizado"}
 								</Typography>
 								<Typography variant="caption" color="textSecondary">
-									Promo Code ID: {discount.stripe?.development?.promotionCodeId || "No sincronizado"}
+									Promo Code ID: {effectiveStripe?.development?.promotionCodeId || "No sincronizado"}
 								</Typography>
 							</Stack>
 						</Box>
@@ -618,10 +620,10 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 							</Typography>
 							<Stack spacing={0.5}>
 								<Typography variant="caption" color="textSecondary">
-									Coupon ID: {discount.stripe?.production?.couponId || "No sincronizado"}
+									Coupon ID: {effectiveStripe?.production?.couponId || "No sincronizado"}
 								</Typography>
 								<Typography variant="caption" color="textSecondary">
-									Promo Code ID: {discount.stripe?.production?.promotionCodeId || "No sincronizado"}
+									Promo Code ID: {effectiveStripe?.production?.promotionCodeId || "No sincronizado"}
 								</Typography>
 							</Stack>
 						</Box>
