@@ -1,17 +1,5 @@
 import { useState } from "react";
-import {
-	Box,
-	Button,
-	Chip,
-	CircularProgress,
-	Divider,
-	Grid,
-	Paper,
-	Stack,
-	TextField,
-	Tooltip,
-	Typography,
-} from "@mui/material";
+import { Box, Button, Chip, CircularProgress, Divider, Grid, Paper, Stack, TextField, Tooltip, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { ArrangeVertical, Save2, TickCircle, CloseCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
@@ -36,18 +24,18 @@ const PlanOrderTab = ({ plans, onRefresh }: PlanOrderTabProps) => {
 
 	// Local state: order values per plan, keyed by planId
 	// Structure: { [planId]: { resources: { [name]: order }, features: { [name]: order } } }
-	const [localOrders, setLocalOrders] = useState<
-		Record<string, { resources: Record<string, number>; features: Record<string, number> }>
-	>(() => {
-		const initial: Record<string, { resources: Record<string, number>; features: Record<string, number> }> = {};
-		plans.forEach((plan) => {
-			initial[plan.planId] = {
-				resources: Object.fromEntries(plan.resourceLimits.map((r) => [r.name, r.order ?? 99])),
-				features: Object.fromEntries(plan.features.map((f) => [f.name, f.order ?? 99])),
-			};
-		});
-		return initial;
-	});
+	const [localOrders, setLocalOrders] = useState<Record<string, { resources: Record<string, number>; features: Record<string, number> }>>(
+		() => {
+			const initial: Record<string, { resources: Record<string, number>; features: Record<string, number> }> = {};
+			plans.forEach((plan) => {
+				initial[plan.planId] = {
+					resources: Object.fromEntries(plan.resourceLimits.map((r) => [r.name, r.order ?? 99])),
+					features: Object.fromEntries(plan.features.map((f) => [f.name, f.order ?? 99])),
+				};
+			});
+			return initial;
+		},
+	);
 
 	const [savingPlan, setSavingPlan] = useState<string | null>(null);
 
@@ -81,24 +69,20 @@ const PlanOrderTab = ({ plans, onRefresh }: PlanOrderTabProps) => {
 			const resourcePromises = plan.resourceLimits.map((resource) => {
 				const newOrder = orders.resources[resource.name] ?? 99;
 				if (newOrder === (resource.order ?? 99)) return Promise.resolve();
-				return adminAxios
-					.patch(`/api/plan-configs/${plan.planId}/resource-limits/${resource.name}`, { order: newOrder })
-					.catch((err) => {
-						console.error(`Error saving resource ${resource.name}:`, err);
-						hasError = true;
-					});
+				return adminAxios.patch(`/api/plan-configs/${plan.planId}/resource-limits/${resource.name}`, { order: newOrder }).catch((err) => {
+					console.error(`Error saving resource ${resource.name}:`, err);
+					hasError = true;
+				});
 			});
 
 			// Save features
 			const featurePromises = plan.features.map((feature) => {
 				const newOrder = orders.features[feature.name] ?? 99;
 				if (newOrder === (feature.order ?? 99)) return Promise.resolve();
-				return adminAxios
-					.patch(`/api/plan-configs/${plan.planId}/features/${feature.name}`, { order: newOrder })
-					.catch((err) => {
-						console.error(`Error saving feature ${feature.name}:`, err);
-						hasError = true;
-					});
+				return adminAxios.patch(`/api/plan-configs/${plan.planId}/features/${feature.name}`, { order: newOrder }).catch((err) => {
+					console.error(`Error saving feature ${feature.name}:`, err);
+					hasError = true;
+				});
 			});
 
 			await Promise.all([...resourcePromises, ...featurePromises]);
@@ -133,8 +117,7 @@ const PlanOrderTab = ({ plans, onRefresh }: PlanOrderTabProps) => {
 				<Typography variant="h6">Ordenamiento de Recursos y Características</Typography>
 			</Stack>
 			<Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-				Ajusta el orden de visualización para cada plan. Los ítems con menor número aparecen primero. Guarda cada plan por
-				separado.
+				Ajusta el orden de visualización para cada plan. Los ítems con menor número aparecen primero. Guarda cada plan por separado.
 			</Typography>
 
 			<Grid container spacing={3}>
@@ -198,9 +181,7 @@ const PlanOrderTab = ({ plans, onRefresh }: PlanOrderTabProps) => {
 														<TextField
 															type="number"
 															value={localOrders[plan.planId]?.resources[resource.name] ?? resource.order ?? 99}
-															onChange={(e) =>
-																handleResourceOrderChange(plan.planId, resource.name, Number(e.target.value))
-															}
+															onChange={(e) => handleResourceOrderChange(plan.planId, resource.name, Number(e.target.value))}
 															size="small"
 															inputProps={{ min: 0, style: { width: 40, textAlign: "center", padding: "4px 6px" } }}
 															sx={{ "& .MuiOutlinedInput-root": { width: 58 } }}
@@ -250,9 +231,7 @@ const PlanOrderTab = ({ plans, onRefresh }: PlanOrderTabProps) => {
 														<TextField
 															type="number"
 															value={localOrders[plan.planId]?.features[feature.name] ?? feature.order ?? 99}
-															onChange={(e) =>
-																handleFeatureOrderChange(plan.planId, feature.name, Number(e.target.value))
-															}
+															onChange={(e) => handleFeatureOrderChange(plan.planId, feature.name, Number(e.target.value))}
 															size="small"
 															inputProps={{ min: 0, style: { width: 40, textAlign: "center", padding: "4px 6px" } }}
 															sx={{ "& .MuiOutlinedInput-root": { width: 58 } }}

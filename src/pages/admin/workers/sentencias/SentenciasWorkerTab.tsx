@@ -27,9 +27,30 @@ import {
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { Activity, ArrowDown2, CloseCircle, Data, DocumentText, Refresh, Scanner, Setting3, TickCircle, Warning2, Notification } from "iconsax-react";
+import {
+	Activity,
+	ArrowDown2,
+	CloseCircle,
+	Data,
+	DocumentText,
+	Refresh,
+	Scanner,
+	Setting3,
+	TickCircle,
+	Warning2,
+	Notification,
+} from "iconsax-react";
 import { useSnackbar } from "notistack";
-import SentenciasService, { Category, EmbeddingStatus, NoveltyCheckStatus, OcrStatus, SentenciaCapturada, SentenciasStats, SentenciaTipo, Fuero } from "api/sentenciasCapturadas";
+import SentenciasService, {
+	Category,
+	EmbeddingStatus,
+	NoveltyCheckStatus,
+	OcrStatus,
+	SentenciaCapturada,
+	SentenciasStats,
+	SentenciaTipo,
+	Fuero,
+} from "api/sentenciasCapturadas";
 import CollectorService, { CollectorConfig, FueroConfig } from "api/sentenciasCollector";
 import SemanticWorkerService, { SemanticWorkerConfig } from "api/semanticWorker";
 import RagWorkersService from "api/ragWorkers";
@@ -102,14 +123,35 @@ function fmtNum(n?: number) {
 }
 
 // ── StatCard ──────────────────────────────────────────────────────────────────
-interface StatCardProps { label: string; value: number | string; color?: string; sub?: string; }
+interface StatCardProps {
+	label: string;
+	value: number | string;
+	color?: string;
+	sub?: string;
+}
 function StatCard({ label, value, color, sub }: StatCardProps) {
 	const theme = useTheme();
 	return (
-		<Paper variant="outlined" sx={{ p: 2, textAlign: "center", borderColor: color ? alpha(color, 0.4) : undefined, bgcolor: color ? alpha(color, 0.04) : undefined }}>
-			<Typography variant="h4" fontWeight={700} color={color || "text.primary"}>{value}</Typography>
-			<Typography variant="body2" color="text.secondary" mt={0.5}>{label}</Typography>
-			{sub && <Typography variant="caption" color="text.disabled">{sub}</Typography>}
+		<Paper
+			variant="outlined"
+			sx={{
+				p: 2,
+				textAlign: "center",
+				borderColor: color ? alpha(color, 0.4) : undefined,
+				bgcolor: color ? alpha(color, 0.04) : undefined,
+			}}
+		>
+			<Typography variant="h4" fontWeight={700} color={color || "text.primary"}>
+				{value}
+			</Typography>
+			<Typography variant="body2" color="text.secondary" mt={0.5}>
+				{label}
+			</Typography>
+			{sub && (
+				<Typography variant="caption" color="text.disabled">
+					{sub}
+				</Typography>
+			)}
 		</Paper>
 	);
 }
@@ -131,17 +173,44 @@ function SentenciaRow({ doc, onDetail, onRetry, onRetryOcr }: SentenciaRowProps)
 					<Typography variant="body2" fontWeight={600} noWrap>
 						{doc.number}/{doc.year} [{doc.fuero}]
 					</Typography>
-					<Chip label={TIPO_LABELS[doc.sentenciaTipo]} size="small" sx={{ bgcolor: alpha(color, 0.12), color, fontWeight: 600, fontSize: 11 }} />
-					<Chip label={doc.processingStatus} size="small" color={STATUS_COLOR[doc.processingStatus] || "default"} variant="outlined" sx={{ fontSize: 11 }} />
+					<Chip
+						label={TIPO_LABELS[doc.sentenciaTipo]}
+						size="small"
+						sx={{ bgcolor: alpha(color, 0.12), color, fontWeight: 600, fontSize: 11 }}
+					/>
+					<Chip
+						label={doc.processingStatus}
+						size="small"
+						color={STATUS_COLOR[doc.processingStatus] || "default"}
+						variant="outlined"
+						sx={{ fontSize: 11 }}
+					/>
 					{doc.category && (
-						<Chip label={CATEGORY_LABEL[doc.category]} size="small" sx={{ bgcolor: alpha(CATEGORY_COLOR[doc.category], 0.12), color: CATEGORY_COLOR[doc.category], fontWeight: 600, fontSize: 10 }} />
+						<Chip
+							label={CATEGORY_LABEL[doc.category]}
+							size="small"
+							sx={{
+								bgcolor: alpha(CATEGORY_COLOR[doc.category], 0.12),
+								color: CATEGORY_COLOR[doc.category],
+								fontWeight: 600,
+								fontSize: 10,
+							}}
+						/>
 					)}
 					{doc.ocrStatus && doc.ocrStatus !== "not_needed" && (
-						<Chip label={`OCR: ${OCR_STATUS_LABEL[doc.ocrStatus]}`} size="small" color={OCR_STATUS_COLOR[doc.ocrStatus]} sx={{ fontSize: 11 }} />
+						<Chip
+							label={`OCR: ${OCR_STATUS_LABEL[doc.ocrStatus]}`}
+							size="small"
+							color={OCR_STATUS_COLOR[doc.ocrStatus]}
+							sx={{ fontSize: 11 }}
+						/>
 					)}
 				</Stack>
 				<Typography variant="caption" color="text.secondary" noWrap display="block">
-					{doc.caratula || "Sin carátula"} · <Tooltip title={fmtDate(doc.processedAt || doc.detectedAt)}><span>{timeAgo(doc.processedAt || doc.detectedAt)}</span></Tooltip>
+					{doc.caratula || "Sin carátula"} ·{" "}
+					<Tooltip title={fmtDate(doc.processedAt || doc.detectedAt)}>
+						<span>{timeAgo(doc.processedAt || doc.detectedAt)}</span>
+					</Tooltip>
 				</Typography>
 				<Typography variant="caption" color="text.disabled" sx={{ fontFamily: "monospace", fontSize: 10 }} display="block">
 					{doc._id}
@@ -159,21 +228,29 @@ function SentenciaRow({ doc, onDetail, onRetry, onRetryOcr }: SentenciaRowProps)
 					</Typography>
 				)}
 				{doc.processingError && (
-					<Typography variant="caption" color="error.main" noWrap display="block">{doc.processingError}</Typography>
+					<Typography variant="caption" color="error.main" noWrap display="block">
+						{doc.processingError}
+					</Typography>
 				)}
 			</Box>
 			<Stack direction="row" spacing={0.5} flexShrink={0}>
 				<Tooltip title="Ver detalle">
-					<IconButton size="small" onClick={() => onDetail(doc)}><DocumentText size={16} /></IconButton>
+					<IconButton size="small" onClick={() => onDetail(doc)}>
+						<DocumentText size={16} />
+					</IconButton>
 				</Tooltip>
 				{onRetry && doc.processingStatus === "error" && (
 					<Tooltip title="Reintentar desde PDF">
-						<IconButton size="small" color="warning" onClick={() => onRetry(doc._id)}><Refresh size={16} /></IconButton>
+						<IconButton size="small" color="warning" onClick={() => onRetry(doc._id)}>
+							<Refresh size={16} />
+						</IconButton>
 					</Tooltip>
 				)}
 				{onRetryOcr && doc.ocrStatus === "error" && (
 					<Tooltip title="Reintentar OCR">
-						<IconButton size="small" color="info" onClick={() => onRetryOcr(doc._id)}><Scanner size={16} /></IconButton>
+						<IconButton size="small" color="info" onClick={() => onRetryOcr(doc._id)}>
+							<Scanner size={16} />
+						</IconButton>
 					</Tooltip>
 				)}
 			</Stack>
@@ -205,36 +282,87 @@ function DetailDialog({ doc, open, onClose }: { doc: SentenciaCapturada | null; 
 					<Typography variant="h6" component="span">
 						{data?.number}/{data?.year} [{data?.fuero}]
 					</Typography>
-					{data && <Chip label={TIPO_LABELS[data.sentenciaTipo]} size="small" sx={{ ml: 1, bgcolor: alpha(TIPO_COLORS[data.sentenciaTipo], 0.12), color: TIPO_COLORS[data.sentenciaTipo], fontWeight: 600 }} />}
+					{data && (
+						<Chip
+							label={TIPO_LABELS[data.sentenciaTipo]}
+							size="small"
+							sx={{ ml: 1, bgcolor: alpha(TIPO_COLORS[data.sentenciaTipo], 0.12), color: TIPO_COLORS[data.sentenciaTipo], fontWeight: 600 }}
+						/>
+					)}
 				</Box>
-				<IconButton onClick={onClose} size="small"><CloseCircle size={20} /></IconButton>
+				<IconButton onClick={onClose} size="small">
+					<CloseCircle size={20} />
+				</IconButton>
 			</DialogTitle>
 			<DialogContent dividers>
 				{loading && <CircularProgress size={24} />}
 				{data && (
 					<Stack spacing={2}>
 						<Box>
-							<Typography variant="caption" color="text.secondary">Carátula</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Carátula
+							</Typography>
 							<Typography variant="body2">{data.caratula || "—"}</Typography>
 						</Box>
 						<Grid container spacing={2}>
-							<Grid item xs={6} sm={3}><Typography variant="caption" color="text.secondary">Tipo</Typography><Typography variant="body2">{data.movimientoTipo || "—"}</Typography></Grid>
-							<Grid item xs={6} sm={3}><Typography variant="caption" color="text.secondary">Detectado</Typography><Typography variant="body2">{fmtDate(data.detectedAt)}</Typography></Grid>
-							<Grid item xs={6} sm={3}><Typography variant="caption" color="text.secondary">Procesado</Typography><Typography variant="body2">{fmtDate(data.processedAt)}</Typography></Grid>
-							<Grid item xs={6} sm={3}><Typography variant="caption" color="text.secondary">Status</Typography><Chip label={data.processingStatus} size="small" color={STATUS_COLOR[data.processingStatus] || "default"} /></Grid>
+							<Grid item xs={6} sm={3}>
+								<Typography variant="caption" color="text.secondary">
+									Tipo
+								</Typography>
+								<Typography variant="body2">{data.movimientoTipo || "—"}</Typography>
+							</Grid>
+							<Grid item xs={6} sm={3}>
+								<Typography variant="caption" color="text.secondary">
+									Detectado
+								</Typography>
+								<Typography variant="body2">{fmtDate(data.detectedAt)}</Typography>
+							</Grid>
+							<Grid item xs={6} sm={3}>
+								<Typography variant="caption" color="text.secondary">
+									Procesado
+								</Typography>
+								<Typography variant="body2">{fmtDate(data.processedAt)}</Typography>
+							</Grid>
+							<Grid item xs={6} sm={3}>
+								<Typography variant="caption" color="text.secondary">
+									Status
+								</Typography>
+								<Chip label={data.processingStatus} size="small" color={STATUS_COLOR[data.processingStatus] || "default"} />
+							</Grid>
 						</Grid>
 						{data.processingResult && (
 							<>
 								<Divider />
 								<Grid container spacing={2}>
-									<Grid item xs={4}><StatCard label="Páginas" value={data.processingResult.pageCount || 0} /></Grid>
-									<Grid item xs={4}><StatCard label="Caracteres" value={fmtNum(data.processingResult.charCount)} /></Grid>
-									<Grid item xs={4}><StatCard label="Tamaño PDF" value={`${Math.round((data.processingResult.pdfSizeBytes || 0) / 1024)} KB`} /></Grid>
+									<Grid item xs={4}>
+										<StatCard label="Páginas" value={data.processingResult.pageCount || 0} />
+									</Grid>
+									<Grid item xs={4}>
+										<StatCard label="Caracteres" value={fmtNum(data.processingResult.charCount)} />
+									</Grid>
+									<Grid item xs={4}>
+										<StatCard label="Tamaño PDF" value={`${Math.round((data.processingResult.pdfSizeBytes || 0) / 1024)} KB`} />
+									</Grid>
 								</Grid>
 								{data.processingResult.text && (
 									<Box>
-										<Typography variant="caption" color="text.secondary" mb={0.5} display="block">Texto extraído</Typography>
-										<Box sx={{ bgcolor: "grey.50", borderRadius: 1, p: 1.5, maxHeight: 300, overflow: "auto", fontFamily: "monospace", fontSize: 12, whiteSpace: "pre-wrap", border: "1px solid", borderColor: "divider" }}>
+										<Typography variant="caption" color="text.secondary" mb={0.5} display="block">
+											Texto extraído
+										</Typography>
+										<Box
+											sx={{
+												bgcolor: "grey.50",
+												borderRadius: 1,
+												p: 1.5,
+												maxHeight: 300,
+												overflow: "auto",
+												fontFamily: "monospace",
+												fontSize: 12,
+												whiteSpace: "pre-wrap",
+												border: "1px solid",
+												borderColor: "divider",
+											}}
+										>
 											{data.processingResult.text}
 										</Box>
 									</Box>
@@ -254,7 +382,20 @@ function DetailDialog({ doc, open, onClose }: { doc: SentenciaCapturada | null; 
 											<Chip label={`${(data.ocrResult.processingTimeMs / 1000).toFixed(1)}s`} size="small" variant="outlined" />
 										)}
 									</Stack>
-									<Box sx={{ bgcolor: "grey.50", borderRadius: 1, p: 1.5, maxHeight: 200, overflow: "auto", fontFamily: "monospace", fontSize: 12, whiteSpace: "pre-wrap", border: "1px solid", borderColor: "info.light" }}>
+									<Box
+										sx={{
+											bgcolor: "grey.50",
+											borderRadius: 1,
+											p: 1.5,
+											maxHeight: 200,
+											overflow: "auto",
+											fontFamily: "monospace",
+											fontSize: 12,
+											whiteSpace: "pre-wrap",
+											border: "1px solid",
+											borderColor: "info.light",
+										}}
+									>
 										{data.ocrResult.text}
 									</Box>
 								</Box>
@@ -262,10 +403,14 @@ function DetailDialog({ doc, open, onClose }: { doc: SentenciaCapturada | null; 
 						)}
 
 						{data.processingError && (
-							<Alert severity="error"><strong>Error:</strong> {data.processingError}</Alert>
+							<Alert severity="error">
+								<strong>Error:</strong> {data.processingError}
+							</Alert>
 						)}
 						{data.ocrResult?.error && (
-							<Alert severity="warning"><strong>Error OCR:</strong> {data.ocrResult.error}</Alert>
+							<Alert severity="warning">
+								<strong>Error OCR:</strong> {data.ocrResult.error}
+							</Alert>
 						)}
 
 						{/* Historial de transiciones */}
@@ -273,14 +418,37 @@ function DetailDialog({ doc, open, onClose }: { doc: SentenciaCapturada | null; 
 							<>
 								<Divider />
 								<Box>
-									<Typography variant="subtitle2" mb={1}>Historial de procesamiento</Typography>
+									<Typography variant="subtitle2" mb={1}>
+										Historial de procesamiento
+									</Typography>
 									<Stack spacing={0.5}>
 										{data.processingHistory.map((entry, idx) => (
-											<Stack key={idx} direction="row" spacing={1.5} alignItems="flex-start" sx={{ py: 0.5, px: 1, bgcolor: "action.hover", borderRadius: 1 }}>
-												<Chip label={entry.status} size="small" color={STATUS_COLOR[entry.status] || "default"} sx={{ fontSize: 10, minWidth: 80 }} />
-												<Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>{fmtDate(entry.at)}</Typography>
-												{entry.method && <Typography variant="caption" color="text.disabled" sx={{ fontFamily: "monospace" }}>{entry.method}</Typography>}
-												{entry.notes && <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>{entry.notes}</Typography>}
+											<Stack
+												key={idx}
+												direction="row"
+												spacing={1.5}
+												alignItems="flex-start"
+												sx={{ py: 0.5, px: 1, bgcolor: "action.hover", borderRadius: 1 }}
+											>
+												<Chip
+													label={entry.status}
+													size="small"
+													color={STATUS_COLOR[entry.status] || "default"}
+													sx={{ fontSize: 10, minWidth: 80 }}
+												/>
+												<Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
+													{fmtDate(entry.at)}
+												</Typography>
+												{entry.method && (
+													<Typography variant="caption" color="text.disabled" sx={{ fontFamily: "monospace" }}>
+														{entry.method}
+													</Typography>
+												)}
+												{entry.notes && (
+													<Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+														{entry.notes}
+													</Typography>
+												)}
 											</Stack>
 										))}
 									</Stack>
@@ -289,8 +457,12 @@ function DetailDialog({ doc, open, onClose }: { doc: SentenciaCapturada | null; 
 						)}
 
 						<Box>
-							<Typography variant="caption" color="text.secondary">URL Viewer</Typography>
-							<Typography variant="body2" sx={{ wordBreak: "break-all", fontSize: 11 }}>{data.url}</Typography>
+							<Typography variant="caption" color="text.secondary">
+								URL Viewer
+							</Typography>
+							<Typography variant="body2" sx={{ wordBreak: "break-all", fontSize: 11 }}>
+								{data.url}
+							</Typography>
 						</Box>
 					</Stack>
 				)}
@@ -301,16 +473,29 @@ function DetailDialog({ doc, open, onClose }: { doc: SentenciaCapturada | null; 
 
 // ── Main tab sections ─────────────────────────────────────────────────────────
 
-interface TabPanelProps { children: React.ReactNode; value: number; index: number; }
+interface TabPanelProps {
+	children: React.ReactNode;
+	value: number;
+	index: number;
+}
 function TabPanel({ children, value, index }: TabPanelProps) {
-	return <Box role="tabpanel" hidden={value !== index} sx={{ pt: 2 }}>{value === index && children}</Box>;
+	return (
+		<Box role="tabpanel" hidden={value !== index} sx={{ pt: 2 }}>
+			{value === index && children}
+		</Box>
+	);
 }
 
 // ── Estado Section ────────────────────────────────────────────────────────────
 const CATEGORY_COLOR: Record<Category, string> = { novelty: "#7b1fa2", rutina: "#1565c0" };
 const CATEGORY_LABEL: Record<Category, string> = { novelty: "Novelty", rutina: "Rutina" };
 
-function EstadoSection({ stats, loading, onRefresh, onRetry }: {
+function EstadoSection({
+	stats,
+	loading,
+	onRefresh,
+	onRetry,
+}: {
 	stats: SentenciasStats | null;
 	loading: boolean;
 	onRefresh: () => void;
@@ -320,7 +505,10 @@ function EstadoSection({ stats, loading, onRefresh, onRetry }: {
 	const [selectedDoc, setSelectedDoc] = useState<SentenciaCapturada | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
 
-	const handleDetail = (doc: SentenciaCapturada) => { setSelectedDoc(doc); setDialogOpen(true); };
+	const handleDetail = (doc: SentenciaCapturada) => {
+		setSelectedDoc(doc);
+		setDialogOpen(true);
+	};
 
 	const processed = stats?.totals.processed || 0;
 	const total = stats?.totals.total || 0;
@@ -336,40 +524,74 @@ function EstadoSection({ stats, loading, onRefresh, onRetry }: {
 			</Stack>
 
 			{loading && !stats ? (
-				<Grid container spacing={2}>{[...Array(6)].map((_, i) => <Grid item xs={6} sm={4} md={2} key={i}><Skeleton height={80} variant="rounded" /></Grid>)}</Grid>
+				<Grid container spacing={2}>
+					{[...Array(6)].map((_, i) => (
+						<Grid item xs={6} sm={4} md={2} key={i}>
+							<Skeleton height={80} variant="rounded" />
+						</Grid>
+					))}
+				</Grid>
 			) : stats ? (
 				<>
 					{/* Totales */}
 					<Grid container spacing={2}>
-						<Grid item xs={6} sm={4} md={2}><StatCard label="Total" value={stats.totals.total} /></Grid>
-						<Grid item xs={6} sm={4} md={2}><StatCard label="Procesadas" value={stats.totals.processed} color={theme.palette.success.main} /></Grid>
-						<Grid item xs={6} sm={4} md={2}><StatCard label="Pendientes" value={stats.totals.pending} color={theme.palette.text.secondary} /></Grid>
-						<Grid item xs={6} sm={4} md={2}><StatCard label="Procesando" value={stats.totals.processing} color={theme.palette.info.main} /></Grid>
-						<Grid item xs={6} sm={4} md={2}><StatCard label="Necesita OCR" value={stats.totals.needsOcr} color={theme.palette.warning.main} /></Grid>
-						<Grid item xs={6} sm={4} md={2}><StatCard label="Errores" value={stats.totals.error} color={theme.palette.error.main} /></Grid>
+						<Grid item xs={6} sm={4} md={2}>
+							<StatCard label="Total" value={stats.totals.total} />
+						</Grid>
+						<Grid item xs={6} sm={4} md={2}>
+							<StatCard label="Procesadas" value={stats.totals.processed} color={theme.palette.success.main} />
+						</Grid>
+						<Grid item xs={6} sm={4} md={2}>
+							<StatCard label="Pendientes" value={stats.totals.pending} color={theme.palette.text.secondary} />
+						</Grid>
+						<Grid item xs={6} sm={4} md={2}>
+							<StatCard label="Procesando" value={stats.totals.processing} color={theme.palette.info.main} />
+						</Grid>
+						<Grid item xs={6} sm={4} md={2}>
+							<StatCard label="Necesita OCR" value={stats.totals.needsOcr} color={theme.palette.warning.main} />
+						</Grid>
+						<Grid item xs={6} sm={4} md={2}>
+							<StatCard label="Errores" value={stats.totals.error} color={theme.palette.error.main} />
+						</Grid>
 					</Grid>
 
 					{/* Barra de progreso */}
 					<Box>
 						<Stack direction="row" justifyContent="space-between" mb={0.5}>
-							<Typography variant="body2" color="text.secondary">Progreso total</Typography>
-							<Typography variant="body2" fontWeight={600}>{pct}%</Typography>
+							<Typography variant="body2" color="text.secondary">
+								Progreso total
+							</Typography>
+							<Typography variant="body2" fontWeight={600}>
+								{pct}%
+							</Typography>
 						</Stack>
 						<LinearProgress variant="determinate" value={pct} sx={{ height: 8, borderRadius: 4 }} color="success" />
 					</Box>
 
 					{/* Por fuero */}
 					<Box>
-						<Typography variant="subtitle2" mb={1}>Por fuero</Typography>
+						<Typography variant="subtitle2" mb={1}>
+							Por fuero
+						</Typography>
 						<Grid container spacing={1.5}>
-							{stats.byFuero.map(f => (
+							{stats.byFuero.map((f) => (
 								<Grid item xs={6} sm={3} key={f._id}>
 									<Paper variant="outlined" sx={{ p: 1.5 }}>
-										<Typography variant="body2" fontWeight={700}>{FUERO_LABELS[f._id] || f._id}</Typography>
+										<Typography variant="body2" fontWeight={700}>
+											{FUERO_LABELS[f._id] || f._id}
+										</Typography>
 										<Stack direction="row" spacing={1} mt={0.5} flexWrap="wrap">
-											<Typography variant="caption" color="success.main">{f.processed} proc.</Typography>
-											<Typography variant="caption" color="text.secondary">{f.pending} pend.</Typography>
-											{f.error > 0 && <Typography variant="caption" color="error.main">{f.error} err.</Typography>}
+											<Typography variant="caption" color="success.main">
+												{f.processed} proc.
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												{f.pending} pend.
+											</Typography>
+											{f.error > 0 && (
+												<Typography variant="caption" color="error.main">
+													{f.error} err.
+												</Typography>
+											)}
 										</Stack>
 										<LinearProgress
 											variant="determinate"
@@ -386,20 +608,26 @@ function EstadoSection({ stats, loading, onRefresh, onRetry }: {
 					{/* Por tipo */}
 					{stats.byTipo.length > 0 && (
 						<Box>
-							<Typography variant="subtitle2" mb={1}>Por tipo de sentencia (procesadas)</Typography>
+							<Typography variant="subtitle2" mb={1}>
+								Por tipo de sentencia (procesadas)
+							</Typography>
 							<Stack spacing={1}>
-								{stats.byTipo.map(t => {
+								{stats.byTipo.map((t) => {
 									const color = TIPO_COLORS[t._id] || "#616161";
 									return (
 										<Stack key={t._id} direction="row" alignItems="center" spacing={1.5}>
 											<Box sx={{ width: 12, height: 12, borderRadius: "50%", bgcolor: color, flexShrink: 0 }} />
-											<Typography variant="body2" width={160} flexShrink={0}>{TIPO_LABELS[t._id] || t._id}</Typography>
+											<Typography variant="body2" width={160} flexShrink={0}>
+												{TIPO_LABELS[t._id] || t._id}
+											</Typography>
 											<LinearProgress
 												variant="determinate"
 												value={stats.totals.processed > 0 ? (t.count / stats.totals.processed) * 100 : 0}
 												sx={{ flex: 1, height: 8, borderRadius: 4, "& .MuiLinearProgress-bar": { bgcolor: color } }}
 											/>
-											<Typography variant="body2" width={28} textAlign="right" fontWeight={600}>{t.count}</Typography>
+											<Typography variant="body2" width={28} textAlign="right" fontWeight={600}>
+												{t.count}
+											</Typography>
 											<Typography variant="caption" color="text.secondary" width={100} textAlign="right">
 												~{fmtNum(Math.round(t.avgChars))} chars
 											</Typography>
@@ -431,22 +659,47 @@ function EstadoSection({ stats, loading, onRefresh, onRetry }: {
 					{/* Por categoría */}
 					{stats.byCategory && stats.byCategory.length > 0 && (
 						<Box>
-							<Typography variant="subtitle2" mb={1}>Por categoría</Typography>
+							<Typography variant="subtitle2" mb={1}>
+								Por categoría
+							</Typography>
 							<Grid container spacing={2}>
-								{(["novelty", "rutina"] as Category[]).map(cat => {
-									const entry = stats.byCategory.find(c => c._id === cat);
+								{(["novelty", "rutina"] as Category[]).map((cat) => {
+									const entry = stats.byCategory.find((c) => c._id === cat);
 									const color = CATEGORY_COLOR[cat];
 									return (
 										<Grid item xs={12} sm={6} key={cat}>
 											<Paper variant="outlined" sx={{ p: 2, borderColor: alpha(color, 0.4), bgcolor: alpha(color, 0.04) }}>
 												<Stack direction="row" alignItems="center" spacing={1} mb={1}>
 													<Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: color }} />
-													<Typography variant="body2" fontWeight={700} color={color}>{CATEGORY_LABEL[cat]}</Typography>
+													<Typography variant="body2" fontWeight={700} color={color}>
+														{CATEGORY_LABEL[cat]}
+													</Typography>
 												</Stack>
 												<Grid container spacing={1}>
-													<Grid item xs={4}><Typography variant="caption" color="text.secondary" display="block">Total</Typography><Typography variant="body2" fontWeight={600}>{(entry?.total || 0).toLocaleString("es-AR")}</Typography></Grid>
-													<Grid item xs={4}><Typography variant="caption" color="text.secondary" display="block">Procesadas</Typography><Typography variant="body2" fontWeight={600} color="success.main">{(entry?.processed || 0).toLocaleString("es-AR")}</Typography></Grid>
-													<Grid item xs={4}><Typography variant="caption" color="text.secondary" display="block">Pendientes</Typography><Typography variant="body2" fontWeight={600}>{(entry?.pending || 0).toLocaleString("es-AR")}</Typography></Grid>
+													<Grid item xs={4}>
+														<Typography variant="caption" color="text.secondary" display="block">
+															Total
+														</Typography>
+														<Typography variant="body2" fontWeight={600}>
+															{(entry?.total || 0).toLocaleString("es-AR")}
+														</Typography>
+													</Grid>
+													<Grid item xs={4}>
+														<Typography variant="caption" color="text.secondary" display="block">
+															Procesadas
+														</Typography>
+														<Typography variant="body2" fontWeight={600} color="success.main">
+															{(entry?.processed || 0).toLocaleString("es-AR")}
+														</Typography>
+													</Grid>
+													<Grid item xs={4}>
+														<Typography variant="caption" color="text.secondary" display="block">
+															Pendientes
+														</Typography>
+														<Typography variant="body2" fontWeight={600}>
+															{(entry?.pending || 0).toLocaleString("es-AR")}
+														</Typography>
+													</Grid>
 												</Grid>
 											</Paper>
 										</Grid>
@@ -461,7 +714,9 @@ function EstadoSection({ stats, loading, onRefresh, onRetry }: {
 						<Box>
 							<Stack direction="row" alignItems="center" spacing={1} mb={1}>
 								<Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: CATEGORY_COLOR.novelty }} />
-								<Typography variant="subtitle2" color={CATEGORY_COLOR.novelty}>Últimas Novelty (newsletter)</Typography>
+								<Typography variant="subtitle2" color={CATEGORY_COLOR.novelty}>
+									Últimas Novelty (newsletter)
+								</Typography>
 							</Stack>
 							<Paper variant="outlined" sx={{ p: 1, borderColor: alpha(CATEGORY_COLOR.novelty, 0.3) }}>
 								{stats.noveltyRecientes.map((doc, i) => (
@@ -479,7 +734,9 @@ function EstadoSection({ stats, loading, onRefresh, onRetry }: {
 						<Box>
 							<Stack direction="row" alignItems="center" spacing={1} mb={1}>
 								<Warning2 size={16} color={theme.palette.error.main} />
-								<Typography variant="subtitle2" color="error">Errores</Typography>
+								<Typography variant="subtitle2" color="error">
+									Errores
+								</Typography>
 							</Stack>
 							<Paper variant="outlined" sx={{ p: 1, borderColor: alpha(theme.palette.error.main, 0.3) }}>
 								{stats.errores.map((doc, i) => (
@@ -500,35 +757,59 @@ function EstadoSection({ stats, loading, onRefresh, onRetry }: {
 }
 
 // ── OCR Section ───────────────────────────────────────────────────────────────
-function OcrSection({ stats, loading, onRefresh, onRetryOcr }: { stats: SentenciasStats | null; loading: boolean; onRefresh: () => void; onRetryOcr: (id: string) => void }) {
+function OcrSection({
+	stats,
+	loading,
+	onRefresh,
+	onRetryOcr,
+}: {
+	stats: SentenciasStats | null;
+	loading: boolean;
+	onRefresh: () => void;
+	onRetryOcr: (id: string) => void;
+}) {
 	const theme = useTheme();
 	const [selectedDoc, setSelectedDoc] = useState<SentenciaCapturada | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
 
-	const handleDetail = (doc: SentenciaCapturada) => { setSelectedDoc(doc); setDialogOpen(true); };
+	const handleDetail = (doc: SentenciaCapturada) => {
+		setSelectedDoc(doc);
+		setDialogOpen(true);
+	};
 	const ocr = stats?.ocr;
 
 	return (
 		<Stack spacing={3}>
 			<Stack direction="row" justifyContent="space-between" alignItems="center">
 				<Typography variant="h6">Pipeline OCR — PDFs Escaneados</Typography>
-				<Button startIcon={<Refresh size={16} />} size="small" onClick={onRefresh} disabled={loading}>Actualizar</Button>
+				<Button startIcon={<Refresh size={16} />} size="small" onClick={onRefresh} disabled={loading}>
+					Actualizar
+				</Button>
 			</Stack>
 
 			{loading && !stats ? (
-				<Grid container spacing={2}>{[...Array(4)].map((_, i) => <Grid item xs={6} sm={3} key={i}><Skeleton height={80} variant="rounded" /></Grid>)}</Grid>
+				<Grid container spacing={2}>
+					{[...Array(4)].map((_, i) => (
+						<Grid item xs={6} sm={3} key={i}>
+							<Skeleton height={80} variant="rounded" />
+						</Grid>
+					))}
+				</Grid>
 			) : ocr ? (
 				<>
 					{/* Stats por estado OCR */}
 					<Grid container spacing={2}>
-						{(["pending", "processing", "completed", "error"] as OcrStatus[]).map(st => {
-							const entry = ocr.byStatus.find(b => b._id === st);
+						{(["pending", "processing", "completed", "error"] as OcrStatus[]).map((st) => {
+							const entry = ocr.byStatus.find((b) => b._id === st);
 							return (
 								<Grid item xs={6} sm={3} key={st}>
 									<StatCard
 										label={OCR_STATUS_LABEL[st]}
 										value={entry?.count || 0}
-										color={(() => { const c = OCR_STATUS_COLOR[st]; return c !== "default" ? theme.palette[c]?.main : undefined; })()}
+										color={(() => {
+											const c = OCR_STATUS_COLOR[st];
+											return c !== "default" ? theme.palette[c]?.main : undefined;
+										})()}
 										sub={entry?.avgMs ? `~${(entry.avgMs / 1000).toFixed(0)}s prom.` : undefined}
 									/>
 								</Grid>
@@ -537,10 +818,10 @@ function OcrSection({ stats, loading, onRefresh, onRetryOcr }: { stats: Sentenci
 					</Grid>
 
 					{/* Información sobre dependencias requeridas */}
-					{stats && stats.totals.needsOcr === 0 && (!ocr.byStatus.length) && (
+					{stats && stats.totals.needsOcr === 0 && !ocr.byStatus.length && (
 						<Alert severity="info" icon={<Scanner size={20} />}>
-							No hay documentos escaneados detectados aún. El worker OCR procesará automáticamente los PDFs
-							que no puedan ser extraídos por texto (PDFs escaneados o imágenes).
+							No hay documentos escaneados detectados aún. El worker OCR procesará automáticamente los PDFs que no puedan ser extraídos por
+							texto (PDFs escaneados o imágenes).
 							<br />
 							<strong>Requisito:</strong> <code>sudo apt-get install -y tesseract-ocr tesseract-ocr-spa poppler-utils</code>
 						</Alert>
@@ -565,15 +846,21 @@ function OcrSection({ stats, loading, onRefresh, onRetryOcr }: { stats: Sentenci
 					)}
 
 					{/* Errores de OCR */}
-					{ocr.byStatus.find(b => b._id === "error")?.count ? (
+					{ocr.byStatus.find((b) => b._id === "error")?.count ? (
 						<Alert severity="warning" icon={<Warning2 size={20} />}>
-							Hay documentos con errores en OCR. Usa el botón <Scanner size={14} style={{ verticalAlign: "middle" }} /> en la lista para reintentarlos.
+							Hay documentos con errores en OCR. Usa el botón <Scanner size={14} style={{ verticalAlign: "middle" }} /> en la lista para
+							reintentarlos.
 						</Alert>
 					) : null}
 
 					{/* Nota de instalación */}
-					<Paper variant="outlined" sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.04), borderColor: alpha(theme.palette.info.main, 0.2) }}>
-						<Typography variant="subtitle2" gutterBottom>Configuración requerida en el servidor</Typography>
+					<Paper
+						variant="outlined"
+						sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.04), borderColor: alpha(theme.palette.info.main, 0.2) }}
+					>
+						<Typography variant="subtitle2" gutterBottom>
+							Configuración requerida en el servidor
+						</Typography>
 						<Typography variant="body2" color="text.secondary" mb={1}>
 							Ejecutar una sola vez en worker_01 para habilitar OCR de PDFs escaneados:
 						</Typography>
@@ -621,11 +908,7 @@ const NOVELTY_CHECK_COLOR: Record<NoveltyCheckStatus, "success" | "warning" | "e
 	pending_semantic: "warning",
 };
 
-function NoveltySection({ stats, loading, onRefresh }: {
-	stats: SentenciasStats | null;
-	loading: boolean;
-	onRefresh: () => void;
-}) {
+function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats | null; loading: boolean; onRefresh: () => void }) {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
@@ -637,22 +920,22 @@ function NoveltySection({ stats, loading, onRefresh }: {
 	const nc = stats?.noveltyCheck;
 	const byCategory = stats?.byCategory ?? [];
 
-	const noveltyTotal    = byCategory.find(b => b._id === "novelty")?.total ?? 0;
-	const single          = nc?.byStatus.find(b => b._id === "single")?.count ?? 0;
-	const doublev         = nc?.byStatus.find(b => b._id === "double")?.count ?? 0;
-	const rejected        = nc?.byStatus.find(b => b._id === "rejected")?.count ?? 0;
-	const pendingSemantic = nc?.byStatus.find(b => b._id === "pending_semantic")?.count ?? 0;
-	const unverified      = nc?.byStatus.find(b => b._id === null)?.count ?? 0;
+	const noveltyTotal = byCategory.find((b) => b._id === "novelty")?.total ?? 0;
+	const single = nc?.byStatus.find((b) => b._id === "single")?.count ?? 0;
+	const doublev = nc?.byStatus.find((b) => b._id === "double")?.count ?? 0;
+	const rejected = nc?.byStatus.find((b) => b._id === "rejected")?.count ?? 0;
+	const pendingSemantic = nc?.byStatus.find((b) => b._id === "pending_semantic")?.count ?? 0;
+	const unverified = nc?.byStatus.find((b) => b._id === null)?.count ?? 0;
 
-	const corpusCompleted  = stats?.embeddings.byStatus.find(b => b._id === "completed")?.count ?? 0;
-	const minCorpus        = config?.minCorpusSize ?? 5000;
-	const layer2Enabled    = config?.enabled ?? true;
-	const layer2Active     = layer2Enabled && corpusCompleted >= minCorpus;
-	const layer2Pct        = Math.min(100, Math.round((corpusCompleted / minCorpus) * 100));
+	const corpusCompleted = stats?.embeddings.byStatus.find((b) => b._id === "completed")?.count ?? 0;
+	const minCorpus = config?.minCorpusSize ?? 5000;
+	const layer2Enabled = config?.enabled ?? true;
+	const layer2Active = layer2Enabled && corpusCompleted >= minCorpus;
+	const layer2Pct = Math.min(100, Math.round((corpusCompleted / minCorpus) * 100));
 
 	const layer1Verified = single + doublev + rejected + pendingSemantic;
 	const layer2Verified = doublev + rejected;
-	const layer1Pct      = noveltyTotal > 0 ? Math.round((layer1Verified / noveltyTotal) * 100) : 0;
+	const layer1Pct = noveltyTotal > 0 ? Math.round((layer1Verified / noveltyTotal) * 100) : 0;
 
 	const loadConfig = async () => {
 		setConfigLoading(true);
@@ -667,19 +950,21 @@ function NoveltySection({ stats, loading, onRefresh }: {
 		}
 	};
 
-	useEffect(() => { loadConfig(); }, []);
+	useEffect(() => {
+		loadConfig();
+	}, []);
 
 	const handleSave = async () => {
 		setSaving(true);
 		try {
 			const updated = await SemanticWorkerService.updateConfig({
-				enabled:              draft.enabled,
-				minCorpusSize:        draft.minCorpusSize,
-				similarityThreshold:  draft.similarityThreshold,
-				filterByFuero:        draft.filterByFuero,
+				enabled: draft.enabled,
+				minCorpusSize: draft.minCorpusSize,
+				similarityThreshold: draft.similarityThreshold,
+				filterByFuero: draft.filterByFuero,
 				filterBySentenciaTipo: draft.filterBySentenciaTipo,
-				topK:                 draft.topK,
-				batchSize:            draft.batchSize,
+				topK: draft.topK,
+				batchSize: draft.batchSize,
 			});
 			setConfig(updated);
 			setDraft(updated);
@@ -691,15 +976,15 @@ function NoveltySection({ stats, loading, onRefresh }: {
 		}
 	};
 
-	const isDirty = config && (
-		draft.enabled !== config.enabled ||
-		draft.minCorpusSize !== config.minCorpusSize ||
-		draft.similarityThreshold !== config.similarityThreshold ||
-		draft.filterByFuero !== config.filterByFuero ||
-		draft.filterBySentenciaTipo !== config.filterBySentenciaTipo ||
-		draft.topK !== config.topK ||
-		draft.batchSize !== config.batchSize
-	);
+	const isDirty =
+		config &&
+		(draft.enabled !== config.enabled ||
+			draft.minCorpusSize !== config.minCorpusSize ||
+			draft.similarityThreshold !== config.similarityThreshold ||
+			draft.filterByFuero !== config.filterByFuero ||
+			draft.filterBySentenciaTipo !== config.filterBySentenciaTipo ||
+			draft.topK !== config.topK ||
+			draft.batchSize !== config.batchSize);
 
 	return (
 		<Stack spacing={3}>
@@ -707,23 +992,37 @@ function NoveltySection({ stats, loading, onRefresh }: {
 				<Stack direction="row" spacing={1.5} alignItems="center">
 					<Typography variant="h6">Verificación de Novedad</Typography>
 					<Chip
-						label={!layer2Enabled ? "Layer 2 deshabilitado" : layer2Active ? "Layer 2 activo" : `Layer 2: ${corpusCompleted.toLocaleString("es-AR")}/${minCorpus.toLocaleString("es-AR")}`}
+						label={
+							!layer2Enabled
+								? "Layer 2 deshabilitado"
+								: layer2Active
+								? "Layer 2 activo"
+								: `Layer 2: ${corpusCompleted.toLocaleString("es-AR")}/${minCorpus.toLocaleString("es-AR")}`
+						}
 						size="small"
 						color={!layer2Enabled ? "error" : layer2Active ? "success" : "default"}
 						variant={layer2Active ? "filled" : "outlined"}
 					/>
 				</Stack>
-				<Button startIcon={<Refresh size={16} />} size="small" onClick={onRefresh} disabled={loading}>Actualizar</Button>
+				<Button startIcon={<Refresh size={16} />} size="small" onClick={onRefresh} disabled={loading}>
+					Actualizar
+				</Button>
 			</Stack>
 
 			{loading && !stats ? (
-				<Grid container spacing={2}>{[...Array(4)].map((_, i) => <Grid item xs={6} sm={3} key={i}><Skeleton height={80} variant="rounded" /></Grid>)}</Grid>
+				<Grid container spacing={2}>
+					{[...Array(4)].map((_, i) => (
+						<Grid item xs={6} sm={3} key={i}>
+							<Skeleton height={80} variant="rounded" />
+						</Grid>
+					))}
+				</Grid>
 			) : nc ? (
 				<>
 					{/* Cards por estado */}
 					<Grid container spacing={2}>
-						{(["single", "double", "rejected", "pending_semantic"] as NoveltyCheckStatus[]).map(st => {
-							const entry = nc.byStatus.find(b => b._id === st);
+						{(["single", "double", "rejected", "pending_semantic"] as NoveltyCheckStatus[]).map((st) => {
+							const entry = nc.byStatus.find((b) => b._id === st);
 							const color = NOVELTY_CHECK_COLOR[st];
 							return (
 								<Grid item xs={6} sm={3} key={st}>
@@ -739,11 +1038,15 @@ function NoveltySection({ stats, loading, onRefresh }: {
 
 					{/* Sin verificar */}
 					{unverified > 0 && (
-						<Paper variant="outlined" sx={{ p: 2, bgcolor: alpha(theme.palette.warning.main, 0.04), borderColor: alpha(theme.palette.warning.main, 0.2) }}>
+						<Paper
+							variant="outlined"
+							sx={{ p: 2, bgcolor: alpha(theme.palette.warning.main, 0.04), borderColor: alpha(theme.palette.warning.main, 0.2) }}
+						>
 							<Stack direction="row" spacing={1} alignItems="center">
 								<Warning2 size={16} color={theme.palette.warning.main} />
 								<Typography variant="body2">
-									<strong>{unverified.toLocaleString("es-AR")}</strong> sentencias novelty sin verificación asignada (pendientes de embedding).
+									<strong>{unverified.toLocaleString("es-AR")}</strong> sentencias novelty sin verificación asignada (pendientes de
+									embedding).
 								</Typography>
 							</Stack>
 						</Paper>
@@ -754,9 +1057,12 @@ function NoveltySection({ stats, loading, onRefresh }: {
 						<Box>
 							<Stack direction="row" justifyContent="space-between" mb={0.5}>
 								<Typography variant="body2" color="text.secondary">
-									Layer 1 — {layer1Verified.toLocaleString("es-AR")} de {noveltyTotal.toLocaleString("es-AR")} novelties verificadas estructuralmente
+									Layer 1 — {layer1Verified.toLocaleString("es-AR")} de {noveltyTotal.toLocaleString("es-AR")} novelties verificadas
+									estructuralmente
 								</Typography>
-								<Typography variant="body2" fontWeight={700} color={theme.palette.info.main}>{layer1Pct}%</Typography>
+								<Typography variant="body2" fontWeight={700} color={theme.palette.info.main}>
+									{layer1Pct}%
+								</Typography>
 							</Stack>
 							<LinearProgress variant="determinate" value={layer1Pct} sx={{ height: 6, borderRadius: 4 }} color="info" />
 						</Box>
@@ -769,11 +1075,18 @@ function NoveltySection({ stats, loading, onRefresh }: {
 								{!layer2Enabled
 									? "Layer 2 — deshabilitado manualmente"
 									: layer2Active
-										? `Layer 2 — ${layer2Verified.toLocaleString("es-AR")} verificadas semánticamente (${single.toLocaleString("es-AR")} pendientes)`
-										: `Layer 2 — corpus: ${corpusCompleted.toLocaleString("es-AR")} / ${minCorpus.toLocaleString("es-AR")} sentencias embebidas`
-								}
+									? `Layer 2 — ${layer2Verified.toLocaleString("es-AR")} verificadas semánticamente (${single.toLocaleString(
+											"es-AR",
+									  )} pendientes)`
+									: `Layer 2 — corpus: ${corpusCompleted.toLocaleString("es-AR")} / ${minCorpus.toLocaleString(
+											"es-AR",
+									  )} sentencias embebidas`}
 							</Typography>
-							<Typography variant="body2" fontWeight={700} color={!layer2Enabled ? theme.palette.error.main : layer2Active ? theme.palette.success.main : theme.palette.text.secondary}>
+							<Typography
+								variant="body2"
+								fontWeight={700}
+								color={!layer2Enabled ? theme.palette.error.main : layer2Active ? theme.palette.success.main : theme.palette.text.secondary}
+							>
 								{!layer2Enabled ? "off" : layer2Active ? "activo" : `${layer2Pct}%`}
 							</Typography>
 						</Stack>
@@ -797,12 +1110,16 @@ function NoveltySection({ stats, loading, onRefresh }: {
 								{/* Habilitado */}
 								<Stack direction="row" justifyContent="space-between" alignItems="center">
 									<Box>
-										<Typography variant="body2" fontWeight={600}>Layer 2 habilitado</Typography>
-										<Typography variant="caption" color="text.secondary">Desactivar detiene completamente la verificación semántica</Typography>
+										<Typography variant="body2" fontWeight={600}>
+											Layer 2 habilitado
+										</Typography>
+										<Typography variant="caption" color="text.secondary">
+											Desactivar detiene completamente la verificación semántica
+										</Typography>
 									</Box>
 									<Switch
 										checked={draft.enabled ?? true}
-										onChange={e => setDraft(d => ({ ...d, enabled: e.target.checked }))}
+										onChange={(e) => setDraft((d) => ({ ...d, enabled: e.target.checked }))}
 										disabled={saving}
 									/>
 								</Stack>
@@ -818,7 +1135,7 @@ function NoveltySection({ stats, loading, onRefresh }: {
 											size="small"
 											fullWidth
 											value={draft.minCorpusSize ?? 5000}
-											onChange={e => setDraft(d => ({ ...d, minCorpusSize: parseInt(e.target.value) || 1 }))}
+											onChange={(e) => setDraft((d) => ({ ...d, minCorpusSize: parseInt(e.target.value) || 1 }))}
 											disabled={saving}
 											inputProps={{ min: 1 }}
 											helperText="El layer 2 no procesa hasta alcanzar este umbral"
@@ -831,7 +1148,7 @@ function NoveltySection({ stats, loading, onRefresh }: {
 											size="small"
 											fullWidth
 											value={draft.similarityThreshold ?? 0.88}
-											onChange={e => setDraft(d => ({ ...d, similarityThreshold: parseFloat(e.target.value) || 0 }))}
+											onChange={(e) => setDraft((d) => ({ ...d, similarityThreshold: parseFloat(e.target.value) || 0 }))}
 											disabled={saving}
 											inputProps={{ min: 0, max: 1, step: 0.01 }}
 											helperText="Score ≥ umbral → rechazada · Score < umbral → doble verificada"
@@ -844,7 +1161,7 @@ function NoveltySection({ stats, loading, onRefresh }: {
 											size="small"
 											fullWidth
 											value={draft.topK ?? 10}
-											onChange={e => setDraft(d => ({ ...d, topK: parseInt(e.target.value) || 1 }))}
+											onChange={(e) => setDraft((d) => ({ ...d, topK: parseInt(e.target.value) || 1 }))}
 											disabled={saving}
 											inputProps={{ min: 1, max: 100 }}
 											helperText="Cantidad de matches a recuperar por consulta"
@@ -857,7 +1174,7 @@ function NoveltySection({ stats, loading, onRefresh }: {
 											size="small"
 											fullWidth
 											value={draft.batchSize ?? 10}
-											onChange={e => setDraft(d => ({ ...d, batchSize: parseInt(e.target.value) || 1 }))}
+											onChange={(e) => setDraft((d) => ({ ...d, batchSize: parseInt(e.target.value) || 1 }))}
 											disabled={saving}
 											inputProps={{ min: 1, max: 100 }}
 										/>
@@ -869,25 +1186,29 @@ function NoveltySection({ stats, loading, onRefresh }: {
 									<Stack direction="row" alignItems="center" spacing={1}>
 										<Switch
 											checked={draft.filterByFuero ?? true}
-											onChange={e => setDraft(d => ({ ...d, filterByFuero: e.target.checked }))}
+											onChange={(e) => setDraft((d) => ({ ...d, filterByFuero: e.target.checked }))}
 											disabled={saving}
 											size="small"
 										/>
 										<Box>
 											<Typography variant="body2">Filtrar por fuero</Typography>
-											<Typography variant="caption" color="text.secondary">Compara solo contra sentencias del mismo fuero</Typography>
+											<Typography variant="caption" color="text.secondary">
+												Compara solo contra sentencias del mismo fuero
+											</Typography>
 										</Box>
 									</Stack>
 									<Stack direction="row" alignItems="center" spacing={1}>
 										<Switch
 											checked={draft.filterBySentenciaTipo ?? true}
-											onChange={e => setDraft(d => ({ ...d, filterBySentenciaTipo: e.target.checked }))}
+											onChange={(e) => setDraft((d) => ({ ...d, filterBySentenciaTipo: e.target.checked }))}
 											disabled={saving}
 											size="small"
 										/>
 										<Box>
 											<Typography variant="body2">Filtrar por tipo</Typography>
-											<Typography variant="caption" color="text.secondary">Compara solo contra el mismo sentenciaTipo</Typography>
+											<Typography variant="caption" color="text.secondary">
+												Compara solo contra el mismo sentenciaTipo
+											</Typography>
 										</Box>
 									</Stack>
 								</Stack>
@@ -895,19 +1216,15 @@ function NoveltySection({ stats, loading, onRefresh }: {
 								{/* Último ciclo */}
 								{config.currentState?.lastRunAt && (
 									<Typography variant="caption" color="text.secondary">
-										Último ciclo: {fmtDate(config.currentState.lastRunAt)} · doubles={config.currentState.lastRunDoubles} · rejected={config.currentState.lastRunRejected}
+										Último ciclo: {fmtDate(config.currentState.lastRunAt)} · doubles={config.currentState.lastRunDoubles} · rejected=
+										{config.currentState.lastRunRejected}
 										{config.currentState.isRunning && " · corriendo ahora"}
 									</Typography>
 								)}
 
 								{/* Guardar */}
 								<Box>
-									<Button
-										variant="contained"
-										size="small"
-										onClick={handleSave}
-										disabled={saving || !isDirty}
-									>
+									<Button variant="contained" size="small" onClick={handleSave} disabled={saving || !isDirty}>
 										{saving ? "Guardando..." : "Guardar configuración"}
 									</Button>
 								</Box>
@@ -924,7 +1241,12 @@ function NoveltySection({ stats, loading, onRefresh }: {
 	);
 }
 
-function EmbeddingsSection({ stats, loading, onRefresh, onRetryEmbedding }: {
+function EmbeddingsSection({
+	stats,
+	loading,
+	onRefresh,
+	onRetryEmbedding,
+}: {
 	stats: SentenciasStats | null;
 	loading: boolean;
 	onRefresh: () => void;
@@ -934,34 +1256,45 @@ function EmbeddingsSection({ stats, loading, onRefresh, onRetryEmbedding }: {
 	const emb = stats?.embeddings;
 
 	const total = emb?.byStatus.reduce((acc, b) => acc + b.count, 0) ?? 0;
-	const completed = emb?.byStatus.find(b => b._id === "completed")?.count ?? 0;
-	const pending = emb?.byStatus.find(b => b._id === "pending")?.count ?? 0;
-	const errors = emb?.byStatus.find(b => b._id === "error")?.count ?? 0;
-	const skipped = emb?.byStatus.find(b => b._id === "skipped")?.count ?? 0;
-	const avgChunks = emb?.byStatus.find(b => b._id === "completed")?.avgChunks;
+	const completed = emb?.byStatus.find((b) => b._id === "completed")?.count ?? 0;
+	const pending = emb?.byStatus.find((b) => b._id === "pending")?.count ?? 0;
+	const errors = emb?.byStatus.find((b) => b._id === "error")?.count ?? 0;
+	const skipped = emb?.byStatus.find((b) => b._id === "skipped")?.count ?? 0;
+	const avgChunks = emb?.byStatus.find((b) => b._id === "completed")?.avgChunks;
 	const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
 
 	return (
 		<Stack spacing={3}>
 			<Stack direction="row" justifyContent="space-between" alignItems="center">
 				<Typography variant="h6">Pipeline Embeddings — Pinecone</Typography>
-				<Button startIcon={<Refresh size={16} />} size="small" onClick={onRefresh} disabled={loading}>Actualizar</Button>
+				<Button startIcon={<Refresh size={16} />} size="small" onClick={onRefresh} disabled={loading}>
+					Actualizar
+				</Button>
 			</Stack>
 
 			{loading && !stats ? (
-				<Grid container spacing={2}>{[...Array(4)].map((_, i) => <Grid item xs={6} sm={3} key={i}><Skeleton height={80} variant="rounded" /></Grid>)}</Grid>
+				<Grid container spacing={2}>
+					{[...Array(4)].map((_, i) => (
+						<Grid item xs={6} sm={3} key={i}>
+							<Skeleton height={80} variant="rounded" />
+						</Grid>
+					))}
+				</Grid>
 			) : emb ? (
 				<>
 					{/* Stats cards */}
 					<Grid container spacing={2}>
-						{(["completed", "pending", "error", "skipped"] as EmbeddingStatus[]).map(st => {
-							const entry = emb.byStatus.find(b => b._id === st);
+						{(["completed", "pending", "error", "skipped"] as EmbeddingStatus[]).map((st) => {
+							const entry = emb.byStatus.find((b) => b._id === st);
 							return (
 								<Grid item xs={6} sm={3} key={st}>
 									<StatCard
 										label={EMBEDDING_STATUS_LABEL[st]}
 										value={entry?.count ?? 0}
-										color={(() => { const c = EMBEDDING_STATUS_COLOR[st]; return c !== "default" ? theme.palette[c]?.main : undefined; })()}
+										color={(() => {
+											const c = EMBEDDING_STATUS_COLOR[st];
+											return c !== "default" ? theme.palette[c]?.main : undefined;
+										})()}
 										sub={st === "completed" && entry?.avgChunks ? `~${entry.avgChunks.toFixed(1)} chunks prom.` : undefined}
 									/>
 								</Grid>
@@ -977,14 +1310,19 @@ function EmbeddingsSection({ stats, loading, onRefresh, onRetryEmbedding }: {
 									{completed} de {total} indexados en Pinecone
 									{avgChunks ? ` · ~${avgChunks.toFixed(1)} chunks/doc` : ""}
 								</Typography>
-								<Typography variant="body2" fontWeight={700} color={theme.palette.success.main}>{pct}%</Typography>
+								<Typography variant="body2" fontWeight={700} color={theme.palette.success.main}>
+									{pct}%
+								</Typography>
 							</Stack>
 							<LinearProgress variant="determinate" value={pct} sx={{ height: 8, borderRadius: 4 }} color="success" />
 						</Box>
 					)}
 
 					{/* Info Pinecone */}
-					<Paper variant="outlined" sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.04), borderColor: alpha(theme.palette.primary.main, 0.2) }}>
+					<Paper
+						variant="outlined"
+						sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.04), borderColor: alpha(theme.palette.primary.main, 0.2) }}
+					>
 						<Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
 							<Data size={16} color={theme.palette.primary.main} />
 							<Typography variant="subtitle2">Pinecone — índice pjn-style-corpus-v2</Typography>
@@ -1009,24 +1347,41 @@ function EmbeddingsSection({ stats, loading, onRefresh, onRetryEmbedding }: {
 										{i > 0 && <Divider sx={{ my: 0.5 }} />}
 										<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ px: 1, py: 0.5 }}>
 											<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-												<Typography variant="body2" fontWeight={600}>{doc.number}/{doc.year}</Typography>
+												<Typography variant="body2" fontWeight={600}>
+													{doc.number}/{doc.year}
+												</Typography>
 												<Chip label={doc.fuero} size="small" variant="outlined" sx={{ fontSize: 10 }} />
 												<Chip
 													label={TIPO_LABELS[doc.sentenciaTipo] ?? doc.sentenciaTipo}
 													size="small"
-													sx={{ fontSize: 10, bgcolor: alpha(TIPO_COLORS[doc.sentenciaTipo] ?? "#616161", 0.1), color: TIPO_COLORS[doc.sentenciaTipo] ?? "#616161", fontWeight: 600 }}
+													sx={{
+														fontSize: 10,
+														bgcolor: alpha(TIPO_COLORS[doc.sentenciaTipo] ?? "#616161", 0.1),
+														color: TIPO_COLORS[doc.sentenciaTipo] ?? "#616161",
+														fontWeight: 600,
+													}}
 												/>
 												{doc.category === "novelty" && <Chip label="Novelty" size="small" color="secondary" sx={{ fontSize: 10 }} />}
 											</Stack>
 											<Stack direction="row" spacing={1} alignItems="center">
 												{doc.embeddingChunksCount != null && (
-													<Chip label={`${doc.embeddingChunksCount} chunks`} size="small" color="success" variant="outlined" sx={{ fontSize: 10 }} />
+													<Chip
+														label={`${doc.embeddingChunksCount} chunks`}
+														size="small"
+														color="success"
+														variant="outlined"
+														sx={{ fontSize: 10 }}
+													/>
 												)}
-												<Typography variant="caption" color="text.disabled" noWrap>{fmtDate(doc.embeddedAt)}</Typography>
+												<Typography variant="caption" color="text.disabled" noWrap>
+													{fmtDate(doc.embeddedAt)}
+												</Typography>
 											</Stack>
 										</Stack>
 										{doc.caratula && (
-											<Typography variant="caption" color="text.secondary" sx={{ px: 1, display: "block" }} noWrap>{doc.caratula}</Typography>
+											<Typography variant="caption" color="text.secondary" sx={{ px: 1, display: "block" }} noWrap>
+												{doc.caratula}
+											</Typography>
 										)}
 									</Box>
 								))}
@@ -1039,7 +1394,9 @@ function EmbeddingsSection({ stats, loading, onRefresh, onRetryEmbedding }: {
 						<Box>
 							<Stack direction="row" alignItems="center" spacing={1} mb={1}>
 								<Warning2 size={16} color={theme.palette.error.main} />
-								<Typography variant="subtitle2" color="error">Errores de embedding</Typography>
+								<Typography variant="subtitle2" color="error">
+									Errores de embedding
+								</Typography>
 							</Stack>
 							<Paper variant="outlined" sx={{ p: 1, borderColor: alpha(theme.palette.error.main, 0.3) }}>
 								{emb.errors.map((doc, i) => (
@@ -1048,11 +1405,15 @@ function EmbeddingsSection({ stats, loading, onRefresh, onRetryEmbedding }: {
 										<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ px: 1, py: 0.5 }}>
 											<Stack>
 												<Stack direction="row" spacing={1} alignItems="center">
-													<Typography variant="body2" fontWeight={600}>{doc.number}/{doc.year}</Typography>
+													<Typography variant="body2" fontWeight={600}>
+														{doc.number}/{doc.year}
+													</Typography>
 													<Chip label={doc.fuero} size="small" variant="outlined" sx={{ fontSize: 10 }} />
 												</Stack>
 												{doc.embeddingError && (
-													<Typography variant="caption" color="error" noWrap sx={{ maxWidth: 400 }}>{doc.embeddingError}</Typography>
+													<Typography variant="caption" color="error" noWrap sx={{ maxWidth: 400 }}>
+														{doc.embeddingError}
+													</Typography>
 												)}
 											</Stack>
 											<Tooltip title="Reintentar embedding">
@@ -1103,10 +1464,18 @@ function ListaSection() {
 		}
 	};
 
-	useEffect(() => { load(1, categoryFilter); setPage(1); }, [categoryFilter]);
-	useEffect(() => { load(page, categoryFilter); }, [page]);
+	useEffect(() => {
+		load(1, categoryFilter);
+		setPage(1);
+	}, [categoryFilter]);
+	useEffect(() => {
+		load(page, categoryFilter);
+	}, [page]);
 
-	const handleDetail = (doc: SentenciaCapturada) => { setSelectedDoc(doc); setDialogOpen(true); };
+	const handleDetail = (doc: SentenciaCapturada) => {
+		setSelectedDoc(doc);
+		setDialogOpen(true);
+	};
 	const totalPages = Math.ceil(total / LISTA_LIMIT);
 
 	return (
@@ -1114,23 +1483,44 @@ function ListaSection() {
 			<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
 				<Typography variant="h6">Sentencias ({fmtNum(total)})</Typography>
 				<Stack direction="row" spacing={1} alignItems="center">
-					{([["all", "Todas"], ["novelty", "Novelty"], ["rutina", "Rutina"]] as [Category | "all", string][]).map(([val, label]) => (
+					{(
+						[
+							["all", "Todas"],
+							["novelty", "Novelty"],
+							["rutina", "Rutina"],
+						] as [Category | "all", string][]
+					).map(([val, label]) => (
 						<Chip
 							key={val}
 							label={label}
 							size="small"
 							onClick={() => setCategoryFilter(val)}
 							variant={categoryFilter === val ? "filled" : "outlined"}
-							sx={categoryFilter === val && val !== "all" ? { bgcolor: CATEGORY_COLOR[val as Category], color: "white", fontWeight: 700, "&:hover": { bgcolor: CATEGORY_COLOR[val as Category] } } : {}}
+							sx={
+								categoryFilter === val && val !== "all"
+									? {
+											bgcolor: CATEGORY_COLOR[val as Category],
+											color: "white",
+											fontWeight: 700,
+											"&:hover": { bgcolor: CATEGORY_COLOR[val as Category] },
+									  }
+									: {}
+							}
 							color={categoryFilter === val && val === "all" ? "primary" : "default"}
 						/>
 					))}
-					<Button startIcon={<Refresh size={16} />} size="small" onClick={() => load(page, categoryFilter)} disabled={loading}>Actualizar</Button>
+					<Button startIcon={<Refresh size={16} />} size="small" onClick={() => load(page, categoryFilter)} disabled={loading}>
+						Actualizar
+					</Button>
 				</Stack>
 			</Stack>
 
 			{loading ? (
-				<Stack spacing={1}>{[...Array(LISTA_LIMIT)].map((_, i) => <Skeleton key={i} height={60} variant="rounded" />)}</Stack>
+				<Stack spacing={1}>
+					{[...Array(LISTA_LIMIT)].map((_, i) => (
+						<Skeleton key={i} height={60} variant="rounded" />
+					))}
+				</Stack>
 			) : (
 				<Paper variant="outlined" sx={{ p: 1 }}>
 					{docs.map((doc, i) => (
@@ -1197,7 +1587,13 @@ function AiSummaryConfigPanel({ config, saving, onSave }: AiSummaryConfigPanelPr
 
 	return (
 		<Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-			<Stack direction="row" justifyContent="space-between" alignItems="center" onClick={() => setOpen(v => !v)} sx={{ cursor: "pointer" }}>
+			<Stack
+				direction="row"
+				justifyContent="space-between"
+				alignItems="center"
+				onClick={() => setOpen((v) => !v)}
+				sx={{ cursor: "pointer" }}
+			>
 				<Stack direction="row" spacing={1} alignItems="center">
 					<Typography variant="subtitle2">Configuración de resumen IA</Typography>
 					<Chip
@@ -1206,12 +1602,7 @@ function AiSummaryConfigPanel({ config, saving, onSave }: AiSummaryConfigPanelPr
 						color={config.aiSummary?.systemPrompt ? "secondary" : "default"}
 						sx={{ height: 18, fontSize: "0.65rem" }}
 					/>
-					<Chip
-						label={config.aiSummary?.model || "gpt-4o-mini"}
-						size="small"
-						variant="outlined"
-						sx={{ height: 18, fontSize: "0.65rem" }}
-					/>
+					<Chip label={config.aiSummary?.model || "gpt-4o-mini"} size="small" variant="outlined" sx={{ height: 18, fontSize: "0.65rem" }} />
 				</Stack>
 				<IconButton size="small">
 					{open ? <ArrowDown2 size={16} /> : <ArrowDown2 size={16} style={{ transform: "rotate(-90deg)" }} />}
@@ -1221,19 +1612,15 @@ function AiSummaryConfigPanel({ config, saving, onSave }: AiSummaryConfigPanelPr
 			<Collapse in={open}>
 				<Stack spacing={2} mt={2}>
 					<Typography variant="caption" color="text.secondary">
-						Este prompt se usa para generar el resumen de cada sentencia en la cola de publicaciones. Si se deja vacío, se usa el prompt por defecto del sistema.
+						Este prompt se usa para generar el resumen de cada sentencia en la cola de publicaciones. Si se deja vacío, se usa el prompt por
+						defecto del sistema.
 					</Typography>
 
-					<TextField
-						select
-						size="small"
-						label="Modelo"
-						value={model}
-						onChange={e => setModel(e.target.value)}
-						sx={{ maxWidth: 220 }}
-					>
-						{["gpt-4o-mini", "gpt-4o", "gpt-4-turbo"].map(m => (
-							<MenuItem key={m} value={m}>{m}</MenuItem>
+					<TextField select size="small" label="Modelo" value={model} onChange={(e) => setModel(e.target.value)} sx={{ maxWidth: 220 }}>
+						{["gpt-4o-mini", "gpt-4o", "gpt-4-turbo"].map((m) => (
+							<MenuItem key={m} value={m}>
+								{m}
+							</MenuItem>
 						))}
 					</TextField>
 
@@ -1245,7 +1632,7 @@ function AiSummaryConfigPanel({ config, saving, onSave }: AiSummaryConfigPanelPr
 						label="System prompt"
 						placeholder={DEFAULT_PROMPT_PLACEHOLDER}
 						value={prompt}
-						onChange={e => setPrompt(e.target.value)}
+						onChange={(e) => setPrompt(e.target.value)}
 						size="small"
 						helperText={`${prompt.length} caracteres · Dejá vacío para usar el prompt por defecto`}
 						inputProps={{ style: { fontFamily: "monospace", fontSize: "0.8rem", lineHeight: 1.6 } }}
@@ -1294,24 +1681,27 @@ function FueroRow({
 }) {
 	const theme = useTheme();
 	const label = FUERO_COLLECTION_LABELS[fuero.collection || ""] || fuero.fuero;
-	const scannedPct = fuero.totalScanned > 0 ? Math.min(100, fuero.totalScanned / 10000 * 100) : 0;
+	const scannedPct = fuero.totalScanned > 0 ? Math.min(100, (fuero.totalScanned / 10000) * 100) : 0;
 
 	return (
 		<Paper
 			variant="outlined"
-			sx={{ p: 2, borderColor: fuero.enabled ? alpha(theme.palette.primary.main, 0.3) : undefined, bgcolor: fuero.enabled ? alpha(theme.palette.primary.main, 0.02) : undefined }}
+			sx={{
+				p: 2,
+				borderColor: fuero.enabled ? alpha(theme.palette.primary.main, 0.3) : undefined,
+				bgcolor: fuero.enabled ? alpha(theme.palette.primary.main, 0.02) : undefined,
+			}}
 		>
 			<Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap">
 				{/* Label + toggle */}
 				<Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 120 }}>
-					<Switch
-						size="small"
-						checked={fuero.enabled}
-						onChange={(e) => onToggle(fuero.fuero, e.target.checked)}
-						disabled={saving}
-					/>
-					<Typography variant="body2" fontWeight={700}>{fuero.fuero}</Typography>
-					<Typography variant="caption" color="text.secondary">{label}</Typography>
+					<Switch size="small" checked={fuero.enabled} onChange={(e) => onToggle(fuero.fuero, e.target.checked)} disabled={saving} />
+					<Typography variant="body2" fontWeight={700}>
+						{fuero.fuero}
+					</Typography>
+					<Typography variant="caption" color="text.secondary">
+						{label}
+					</Typography>
 				</Stack>
 
 				{/* Year range */}
@@ -1343,19 +1733,25 @@ function FueroRow({
 				{/* Stats */}
 				<Stack direction="row" spacing={2} flex={1} flexWrap="wrap">
 					<Box textAlign="center" minWidth={60}>
-						<Typography variant="caption" color="text.secondary" display="block">Escaneadas</Typography>
-						<Typography variant="body2" fontWeight={600}>{fuero.totalScanned.toLocaleString("es-AR")}</Typography>
+						<Typography variant="caption" color="text.secondary" display="block">
+							Escaneadas
+						</Typography>
+						<Typography variant="body2" fontWeight={600}>
+							{fuero.totalScanned.toLocaleString("es-AR")}
+						</Typography>
 					</Box>
 					<Box textAlign="center" minWidth={60}>
-						<Typography variant="caption" color="text.secondary" display="block">Encoladas</Typography>
-						<Typography variant="body2" fontWeight={600} color="primary.main">{fuero.totalEnqueued.toLocaleString("es-AR")}</Typography>
+						<Typography variant="caption" color="text.secondary" display="block">
+							Encoladas
+						</Typography>
+						<Typography variant="body2" fontWeight={600} color="primary.main">
+							{fuero.totalEnqueued.toLocaleString("es-AR")}
+						</Typography>
 					</Box>
 					{fuero.completedFullScan && (
 						<Chip label="Scan completo" size="small" color="success" variant="outlined" icon={<TickCircle size={12} />} />
 					)}
-					{fuero.lastScannedId && (
-						<Chip label="En progreso" size="small" color="info" variant="outlined" />
-					)}
+					{fuero.lastScannedId && <Chip label="En progreso" size="small" color="info" variant="outlined" />}
 				</Stack>
 
 				{/* Reset cursor */}
@@ -1412,7 +1808,9 @@ function CollectorSection() {
 		}
 	};
 
-	useEffect(() => { load(); }, []);
+	useEffect(() => {
+		load();
+	}, []);
 
 	const saveField = async (payload: Parameters<typeof CollectorService.updateConfig>[0]) => {
 		setSaving(true);
@@ -1430,15 +1828,14 @@ function CollectorSection() {
 
 	const handleToggleGlobal = (val: boolean) => saveField({ enabled: val });
 
-	const handleToggleFuero = (fuero: Fuero, val: boolean) =>
-		saveField({ fueros: [{ fuero, enabled: val }] });
+	const handleToggleFuero = (fuero: Fuero, val: boolean) => saveField({ fueros: [{ fuero, enabled: val }] });
 
 	const handleYearChange = (fuero: Fuero, field: "yearFrom" | "yearTo", val: number) => {
-		setLocalFueros(prev => prev.map(f => f.fuero === fuero ? { ...f, [field]: val } : f));
+		setLocalFueros((prev) => prev.map((f) => (f.fuero === fuero ? { ...f, [field]: val } : f)));
 	};
 
 	const handleSaveYears = (fuero: Fuero) => {
-		const f = localFueros.find(x => x.fuero === fuero);
+		const f = localFueros.find((x) => x.fuero === fuero);
 		if (!f) return;
 		saveField({ fueros: [{ fuero, yearFrom: f.yearFrom, yearTo: f.yearTo }] });
 	};
@@ -1471,7 +1868,14 @@ function CollectorSection() {
 		}
 	};
 
-	if (loading) return <Stack spacing={2}>{[...Array(3)].map((_, i) => <Skeleton key={i} height={80} variant="rounded" />)}</Stack>;
+	if (loading)
+		return (
+			<Stack spacing={2}>
+				{[...Array(3)].map((_, i) => (
+					<Skeleton key={i} height={80} variant="rounded" />
+				))}
+			</Stack>
+		);
 	if (!config) return <Alert severity="error">No se pudo cargar la configuración.</Alert>;
 
 	const { currentState, stats } = config;
@@ -1482,7 +1886,9 @@ function CollectorSection() {
 			<Stack direction="row" justifyContent="space-between" alignItems="center">
 				<Typography variant="h6">Sentencias Collector — Corpus Histórico</Typography>
 				<Stack direction="row" spacing={1}>
-					<Button startIcon={<Refresh size={16} />} size="small" onClick={load} disabled={loading || saving}>Actualizar</Button>
+					<Button startIcon={<Refresh size={16} />} size="small" onClick={load} disabled={loading || saving}>
+						Actualizar
+					</Button>
 				</Stack>
 			</Stack>
 
@@ -1498,31 +1904,31 @@ function CollectorSection() {
 			<Paper variant="outlined" sx={{ p: 2 }}>
 				<Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap">
 					<Stack direction="row" alignItems="center" spacing={1}>
-						<Switch
-							checked={config.enabled}
-							onChange={(e) => handleToggleGlobal(e.target.checked)}
-							disabled={saving}
-						/>
+						<Switch checked={config.enabled} onChange={(e) => handleToggleGlobal(e.target.checked)} disabled={saving} />
 						<Typography variant="body2" fontWeight={600}>
 							Worker {config.enabled ? "habilitado" : "deshabilitado"}
 						</Typography>
-						{config.enabled ? (
-							<Chip label="ON" size="small" color="success" />
-						) : (
-							<Chip label="OFF" size="small" color="default" />
-						)}
+						{config.enabled ? <Chip label="ON" size="small" color="success" /> : <Chip label="OFF" size="small" color="default" />}
 					</Stack>
 					<Divider orientation="vertical" flexItem />
 					<Box>
-						<Typography variant="caption" color="text.secondary">Cron</Typography>
-						<Typography variant="body2" sx={{ fontFamily: "monospace" }}>{config.cronPattern}</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Cron
+						</Typography>
+						<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+							{config.cronPattern}
+						</Typography>
 					</Box>
 					<Box>
-						<Typography variant="caption" color="text.secondary">Batch size</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Batch size
+						</Typography>
 						<Typography variant="body2">{config.batchSize} causas/ciclo</Typography>
 					</Box>
 					<Box>
-						<Typography variant="caption" color="text.secondary">Max pending queue</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Max pending queue
+						</Typography>
 						<Typography variant="body2">{config.maxPendingQueue} docs</Typography>
 					</Box>
 				</Stack>
@@ -1537,10 +1943,18 @@ function CollectorSection() {
 					<StatCard label="Total encoladas" value={stats.totalEnqueuedAllTime.toLocaleString("es-AR")} color={theme.palette.primary.main} />
 				</Grid>
 				<Grid item xs={6} sm={3}>
-					<StatCard label="Último ciclo — escaneadas" value={stats.lastRunScanned} sub={stats.lastRunAt ? fmtDate(stats.lastRunAt) : undefined} />
+					<StatCard
+						label="Último ciclo — escaneadas"
+						value={stats.lastRunScanned}
+						sub={stats.lastRunAt ? fmtDate(stats.lastRunAt) : undefined}
+					/>
 				</Grid>
 				<Grid item xs={6} sm={3}>
-					<StatCard label="Último ciclo — encoladas" value={stats.lastRunEnqueued} color={stats.lastRunEnqueued > 0 ? theme.palette.success.main : undefined} />
+					<StatCard
+						label="Último ciclo — encoladas"
+						value={stats.lastRunEnqueued}
+						color={stats.lastRunEnqueued > 0 ? theme.palette.success.main : undefined}
+					/>
 				</Grid>
 			</Grid>
 
@@ -1571,14 +1985,19 @@ function CollectorSection() {
 			<AiSummaryConfigPanel config={config} saving={saving} onSave={saveField} />
 
 			{/* Info */}
-			<Paper variant="outlined" sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.04), borderColor: alpha(theme.palette.info.main, 0.2) }}>
-				<Typography variant="subtitle2" gutterBottom>Cómo iniciar el worker en el servidor</Typography>
+			<Paper
+				variant="outlined"
+				sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.04), borderColor: alpha(theme.palette.info.main, 0.2) }}
+			>
+				<Typography variant="subtitle2" gutterBottom>
+					Cómo iniciar el worker en el servidor
+				</Typography>
 				<Box sx={{ bgcolor: "grey.900", borderRadius: 1, p: 1.5, fontFamily: "monospace", fontSize: 12, color: "grey.100" }}>
 					{`cd /var/www/pjn-workers-scraping\npm2 start pm2.collector.config.js\npm2 save`}
 				</Box>
 				<Typography variant="caption" color="text.secondary" display="block" mt={1}>
-					El worker lee causas de MongoDB local (worker_01) y encola sentencias en Atlas con <code>category: 'rutina'</code>.
-					Solo procesa causas con movimientos de tipo sentencia no capturadas aún.
+					El worker lee causas de MongoDB local (worker_01) y encola sentencias en Atlas con <code>category: 'rutina'</code>. Solo procesa
+					causas con movimientos de tipo sentencia no capturadas aún.
 				</Typography>
 			</Paper>
 		</Stack>
@@ -1605,12 +2024,12 @@ export default function SentenciasWorkerTab() {
 	const [loading, setLoading] = useState(false);
 
 	// ── Worker control state ──────────────────────────────────────────────────
-	const [embEnabled,       setEmbEnabled]       = useState<boolean | null>(null);
+	const [embEnabled, setEmbEnabled] = useState<boolean | null>(null);
 	const [collectorEnabled, setCollectorEnabled] = useState<boolean | null>(null);
-	const [semanticEnabled,  setSemanticEnabled]  = useState<boolean | null>(null);
-	const [togglingEmb,       setTogglingEmb]       = useState(false);
+	const [semanticEnabled, setSemanticEnabled] = useState<boolean | null>(null);
+	const [togglingEmb, setTogglingEmb] = useState(false);
 	const [togglingCollector, setTogglingCollector] = useState(false);
-	const [togglingSemantic,  setTogglingSemantic]  = useState(false);
+	const [togglingSemantic, setTogglingSemantic] = useState(false);
 
 	const loadStats = async () => {
 		setLoading(true);
@@ -1630,10 +2049,12 @@ export default function SentenciasWorkerTab() {
 				CollectorService.getConfig(),
 				SemanticWorkerService.getConfig(),
 			]);
-			if (embCfg.status === "fulfilled")       setEmbEnabled(embCfg.value.enabled);
-			if (collCfg.status === "fulfilled")      setCollectorEnabled(collCfg.value.enabled);
-			if (semCfg.status === "fulfilled")       setSemanticEnabled(semCfg.value.enabled);
-		} catch { /* silently ignore */ }
+			if (embCfg.status === "fulfilled") setEmbEnabled(embCfg.value.enabled);
+			if (collCfg.status === "fulfilled") setCollectorEnabled(collCfg.value.enabled);
+			if (semCfg.status === "fulfilled") setSemanticEnabled(semCfg.value.enabled);
+		} catch {
+			/* silently ignore */
+		}
 	};
 
 	const handleToggleEmb = async (val: boolean) => {
@@ -1642,8 +2063,11 @@ export default function SentenciasWorkerTab() {
 			const updated = await RagWorkersService.updateSentenciasWorkerConfig({ enabled: val });
 			setEmbEnabled(updated.enabled);
 			enqueueSnackbar(`PDF · Embeddings ${val ? "habilitados" : "deshabilitados"}`, { variant: val ? "success" : "warning" });
-		} catch { enqueueSnackbar("Error actualizando", { variant: "error" }); }
-		finally { setTogglingEmb(false); }
+		} catch {
+			enqueueSnackbar("Error actualizando", { variant: "error" });
+		} finally {
+			setTogglingEmb(false);
+		}
 	};
 
 	const handleToggleCollector = async (val: boolean) => {
@@ -1652,8 +2076,11 @@ export default function SentenciasWorkerTab() {
 			const updated = await CollectorService.updateConfig({ enabled: val });
 			setCollectorEnabled(updated.enabled);
 			enqueueSnackbar(`Collector ${val ? "habilitado" : "deshabilitado"}`, { variant: val ? "success" : "warning" });
-		} catch { enqueueSnackbar("Error actualizando", { variant: "error" }); }
-		finally { setTogglingCollector(false); }
+		} catch {
+			enqueueSnackbar("Error actualizando", { variant: "error" });
+		} finally {
+			setTogglingCollector(false);
+		}
 	};
 
 	const handleToggleSemantic = async (val: boolean) => {
@@ -1662,11 +2089,17 @@ export default function SentenciasWorkerTab() {
 			const updated = await SemanticWorkerService.updateConfig({ enabled: val });
 			setSemanticEnabled(updated.enabled);
 			enqueueSnackbar(`Layer 2 Semántico ${val ? "habilitado" : "deshabilitado"}`, { variant: val ? "success" : "warning" });
-		} catch { enqueueSnackbar("Error actualizando", { variant: "error" }); }
-		finally { setTogglingSemantic(false); }
+		} catch {
+			enqueueSnackbar("Error actualizando", { variant: "error" });
+		} finally {
+			setTogglingSemantic(false);
+		}
 	};
 
-	useEffect(() => { loadStats(); loadControlStates(); }, []);
+	useEffect(() => {
+		loadStats();
+		loadControlStates();
+	}, []);
 
 	const handleRetry = async (id: string) => {
 		try {
@@ -1701,88 +2134,90 @@ export default function SentenciasWorkerTab() {
 	return (
 		<Stack spacing={2}>
 			{/* ── Worker Control Panel ── */}
-			<WorkerControlPanel processes={[
-				{
-					label: "PDF · OCR · Embeddings",
-					description: "sentencias-worker · sentencias-embeddings-worker",
-					enabled: embEnabled,
-					toggling: togglingEmb,
-					onToggle: handleToggleEmb,
-				},
-				{
-					label: "Collector",
-					description: "sentencias-collector-worker",
-					enabled: collectorEnabled,
-					toggling: togglingCollector,
-					onToggle: handleToggleCollector,
-				},
-				{
-					label: "Layer 2 Semántico",
-					description: "sentencias-semantic-worker",
-					enabled: semanticEnabled,
-					toggling: togglingSemantic,
-					onToggle: handleToggleSemantic,
-				},
-			]} />
+			<WorkerControlPanel
+				processes={[
+					{
+						label: "PDF · OCR · Embeddings",
+						description: "sentencias-worker · sentencias-embeddings-worker",
+						enabled: embEnabled,
+						toggling: togglingEmb,
+						onToggle: handleToggleEmb,
+					},
+					{
+						label: "Collector",
+						description: "sentencias-collector-worker",
+						enabled: collectorEnabled,
+						toggling: togglingCollector,
+						onToggle: handleToggleCollector,
+					},
+					{
+						label: "Layer 2 Semántico",
+						description: "sentencias-semantic-worker",
+						enabled: semanticEnabled,
+						toggling: togglingSemantic,
+						onToggle: handleToggleSemantic,
+					},
+				]}
+			/>
 
-		<Stack direction="row" sx={{ minHeight: 500 }}>
-			{/* Vertical tabs on left */}
-			<Box sx={{ borderRight: 1, borderColor: "divider", flexShrink: 0, width: 160, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
-				<Tabs
-					orientation="vertical"
-					value={section}
-					onChange={(_, v) => setSection(v)}
-					sx={{
-						"& .MuiTab-root": {
-							alignItems: "flex-start",
-							textAlign: "left",
-							minHeight: 48,
-							pl: 2,
-							textTransform: "none",
-							fontSize: "0.875rem",
-							fontWeight: 500,
-						},
-					}}
-				>
-					{SECTIONS.map((s, i) => (
-						<Tab
-							key={i}
-							label={
-								<Stack direction="row" spacing={1} alignItems="center">
-									<Box sx={{ color: theme.palette.primary.main, display: "flex", flexShrink: 0 }}>{s.icon}</Box>
-									<span>{s.label}</span>
-								</Stack>
-							}
-						/>
-					))}
-				</Tabs>
-			</Box>
+			<Stack direction="row" sx={{ minHeight: 500 }}>
+				{/* Vertical tabs on left */}
+				<Box sx={{ borderRight: 1, borderColor: "divider", flexShrink: 0, width: 160, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+					<Tabs
+						orientation="vertical"
+						value={section}
+						onChange={(_, v) => setSection(v)}
+						sx={{
+							"& .MuiTab-root": {
+								alignItems: "flex-start",
+								textAlign: "left",
+								minHeight: 48,
+								pl: 2,
+								textTransform: "none",
+								fontSize: "0.875rem",
+								fontWeight: 500,
+							},
+						}}
+					>
+						{SECTIONS.map((s, i) => (
+							<Tab
+								key={i}
+								label={
+									<Stack direction="row" spacing={1} alignItems="center">
+										<Box sx={{ color: theme.palette.primary.main, display: "flex", flexShrink: 0 }}>{s.icon}</Box>
+										<span>{s.label}</span>
+									</Stack>
+								}
+							/>
+						))}
+					</Tabs>
+				</Box>
 
-			{/* Content on right */}
-			<Box sx={{ flex: 1, minWidth: 0, pl: 3, pt: 1 }}>
-				<TabPanel value={section} index={0}>
-					<EstadoSection stats={stats} loading={loading} onRefresh={loadStats} onRetry={handleRetry} />
-				</TabPanel>
-				<TabPanel value={section} index={1}>
-					<OcrSection stats={stats} loading={loading} onRefresh={loadStats} onRetryOcr={handleRetryOcr} />
-				</TabPanel>
-				<TabPanel value={section} index={2}>
-					<EmbeddingsSection stats={stats} loading={loading} onRefresh={loadStats} onRetryEmbedding={handleRetryEmbedding} />
-				</TabPanel>
-				<TabPanel value={section} index={3}>
-					<NoveltySection stats={stats} loading={loading} onRefresh={loadStats} />
-				</TabPanel>
-				<TabPanel value={section} index={4}>
-					<PublicacionesSection />
-				</TabPanel>
-				<TabPanel value={section} index={5}>
-					<CollectorSection />
-				</TabPanel>
-				<TabPanel value={section} index={6}>
-					<ListaSection />
-				</TabPanel>
-			</Box>
-		</Stack>
+				{/* Content on right */}
+				<Box sx={{ flex: 1, minWidth: 0, pl: 3, pt: 1 }}>
+					<TabPanel value={section} index={0}>
+						<EstadoSection stats={stats} loading={loading} onRefresh={loadStats} onRetry={handleRetry} />
+					</TabPanel>
+					<TabPanel value={section} index={1}>
+						<OcrSection stats={stats} loading={loading} onRefresh={loadStats} onRetryOcr={handleRetryOcr} />
+					</TabPanel>
+					<TabPanel value={section} index={2}>
+						<EmbeddingsSection stats={stats} loading={loading} onRefresh={loadStats} onRetryEmbedding={handleRetryEmbedding} />
+					</TabPanel>
+					<TabPanel value={section} index={3}>
+						<NoveltySection stats={stats} loading={loading} onRefresh={loadStats} />
+					</TabPanel>
+					<TabPanel value={section} index={4}>
+						<PublicacionesSection />
+					</TabPanel>
+					<TabPanel value={section} index={5}>
+						<CollectorSection />
+					</TabPanel>
+					<TabPanel value={section} index={6}>
+						<ListaSection />
+					</TabPanel>
+				</Box>
+			</Stack>
 		</Stack>
 	);
 }

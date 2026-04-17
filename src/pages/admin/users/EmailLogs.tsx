@@ -48,6 +48,9 @@ import ScrollX from "components/ScrollX";
 import EmailLogsService from "api/emailLogs";
 import { EmailLog, EmailLogPagination, EmailLogsQueryParams, EmailLogGeneralStats, EmailLogTemplateOption } from "types/email-log";
 
+// assets
+import { SearchNormal1, CloseCircle, Refresh, Filter, Sms, TickCircle, CloseSquare, Warning2, Copy, Eye, Trash } from "iconsax-react";
+
 const KNOWN_CATEGORIES = [
 	{ value: "auth", label: "Auth" },
 	{ value: "subscription", label: "Suscripción" },
@@ -65,9 +68,6 @@ const getCategoryLabel = (category: string | null | undefined) => {
 	if (!category) return "-";
 	return KNOWN_CATEGORIES.find((c) => c.value === category)?.label || category;
 };
-
-// assets
-import { SearchNormal1, CloseCircle, Refresh, Filter, Sms, TickCircle, CloseSquare, Warning2, Copy, Eye, Trash } from "iconsax-react";
 
 // Status chip colors
 const getStatusColor = (status: string) => {
@@ -194,7 +194,20 @@ const EmailLogsPage = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [page, rowsPerPage, orderBy, order, searchEmail, searchSesId, statusFilter, categoryFilter, templateFilter, startDate, endDate, sourceFilter]);
+	}, [
+		page,
+		rowsPerPage,
+		orderBy,
+		order,
+		searchEmail,
+		searchSesId,
+		statusFilter,
+		categoryFilter,
+		templateFilter,
+		startDate,
+		endDate,
+		sourceFilter,
+	]);
 
 	// Fetch stats
 	const fetchStats = useCallback(async () => {
@@ -523,9 +536,13 @@ const EmailLogsPage = () => {
 										<MenuItem value="">Todos</MenuItem>
 										<MenuItem value="law-analytics-server">law-analytics-server</MenuItem>
 										<MenuItem value="la-subscriptions">la-subscriptions</MenuItem>
-										{sources.filter((s) => s !== "law-analytics-server" && s !== "la-subscriptions").map((s) => (
-											<MenuItem key={s} value={s}>{s}</MenuItem>
-										))}
+										{sources
+											.filter((s) => s !== "law-analytics-server" && s !== "la-subscriptions")
+											.map((s) => (
+												<MenuItem key={s} value={s}>
+													{s}
+												</MenuItem>
+											))}
 									</Select>
 								</FormControl>
 							</Grid>

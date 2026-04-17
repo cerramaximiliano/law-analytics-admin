@@ -319,292 +319,291 @@ const PlansManagement = () => {
 					</Collapse>
 				</Alert>
 
+				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+					<Tabs value={activeTab} onChange={(_e, v) => setActiveTab(v)}>
+						<Tab label="Planes" />
+						<Tab icon={<ArrangeVertical size={16} />} iconPosition="start" label="Ordenamiento" />
+					</Tabs>
+				</Box>
 
-			<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
-				<Tabs value={activeTab} onChange={(_e, v) => setActiveTab(v)}>
-					<Tab label="Planes" />
-					<Tab icon={<ArrangeVertical size={16} />} iconPosition="start" label="Ordenamiento" />
-				</Tabs>
-			</Box>
+				{activeTab === 1 && <PlanOrderTab plans={plans} onRefresh={fetchPlans} />}
 
-			{activeTab === 1 && <PlanOrderTab plans={plans} onRefresh={fetchPlans} />}
+				{activeTab === 0 && (
+					<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+						{/* Summary Cards */}
+						<Grid item xs={12} sm={6} md={3}>
+							<Card>
+								<CardContent>
+									<Stack spacing={1}>
+										<Typography variant="h3" color="primary">
+											{plans.length}
+										</Typography>
+										<Typography variant="body2" color="textSecondary">
+											Total de Planes
+										</Typography>
+									</Stack>
+								</CardContent>
+							</Card>
+						</Grid>
+						<Grid item xs={12} sm={6} md={3}>
+							<Card>
+								<CardContent>
+									<Stack spacing={1}>
+										<Typography variant="h3" color="success.main">
+											{plans.filter((plan) => plan.isActive).length}
+										</Typography>
+										<Typography variant="body2" color="textSecondary">
+											Planes Activos
+										</Typography>
+									</Stack>
+								</CardContent>
+							</Card>
+						</Grid>
+						<Grid item xs={12} sm={6} md={3}>
+							<Card>
+								<CardContent>
+									<Stack spacing={1}>
+										<Typography variant="h3" color="warning.main">
+											{plans.find((plan) => plan.isDefault) ? "1" : "0"}
+										</Typography>
+										<Typography variant="body2" color="textSecondary">
+											Plan Default
+										</Typography>
+									</Stack>
+								</CardContent>
+							</Card>
+						</Grid>
+						<Grid item xs={12} sm={6} md={3}>
+							<Card>
+								<CardContent>
+									<Stack spacing={1}>
+										<Typography variant="h3" color="info.main">
+											{plans.filter((plan) => getPlanPricing(plan).basePrice === 0).length}
+										</Typography>
+										<Typography variant="body2" color="textSecondary">
+											Planes Gratuitos
+										</Typography>
+									</Stack>
+								</CardContent>
+							</Card>
+						</Grid>
 
-			{activeTab === 0 && (
-				<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-					{/* Summary Cards */}
-					<Grid item xs={12} sm={6} md={3}>
-						<Card>
-							<CardContent>
-								<Stack spacing={1}>
-									<Typography variant="h3" color="primary">
-										{plans.length}
-									</Typography>
-									<Typography variant="body2" color="textSecondary">
-										Total de Planes
-									</Typography>
-								</Stack>
-							</CardContent>
-						</Card>
-					</Grid>
-					<Grid item xs={12} sm={6} md={3}>
-						<Card>
-							<CardContent>
-								<Stack spacing={1}>
-									<Typography variant="h3" color="success.main">
-										{plans.filter((plan) => plan.isActive).length}
-									</Typography>
-									<Typography variant="body2" color="textSecondary">
-										Planes Activos
-									</Typography>
-								</Stack>
-							</CardContent>
-						</Card>
-					</Grid>
-					<Grid item xs={12} sm={6} md={3}>
-						<Card>
-							<CardContent>
-								<Stack spacing={1}>
-									<Typography variant="h3" color="warning.main">
-										{plans.find((plan) => plan.isDefault) ? "1" : "0"}
-									</Typography>
-									<Typography variant="body2" color="textSecondary">
-										Plan Default
-									</Typography>
-								</Stack>
-							</CardContent>
-						</Card>
-					</Grid>
-					<Grid item xs={12} sm={6} md={3}>
-						<Card>
-							<CardContent>
-								<Stack spacing={1}>
-									<Typography variant="h3" color="info.main">
-										{plans.filter((plan) => getPlanPricing(plan).basePrice === 0).length}
-									</Typography>
-									<Typography variant="body2" color="textSecondary">
-										Planes Gratuitos
-									</Typography>
-								</Stack>
-							</CardContent>
-						</Card>
-					</Grid>
-
-					{/* Plans Table */}
-					<Grid item xs={12}>
-						<TableContainer component={Paper}>
-							<Table>
-								<TableHead>
-									<TableRow>
-										<TableCell>Plan ID</TableCell>
-										<TableCell>Nombre</TableCell>
-										<TableCell>Descripción</TableCell>
-										<TableCell align="center">Precio</TableCell>
-										<TableCell align="center">Estado</TableCell>
-										<TableCell align="center">Default</TableCell>
-										<TableCell align="center">Acciones</TableCell>
-									</TableRow>
-								</TableHead>
-								<TableBody>
-									{plans.map((plan) => (
-										<TableRow key={plan.planId} hover>
-											<TableCell>{plan.planId}</TableCell>
-											<TableCell>
-												<Typography variant="subtitle1" fontWeight={600}>
-													{plan.displayName}
-												</Typography>
-											</TableCell>
-											<TableCell>
-												<Typography variant="body2" sx={{ maxWidth: 300 }}>
-													{plan.description}
-												</Typography>
-											</TableCell>
-											<TableCell align="center">
-												{plan.activeDiscounts && plan.activeDiscounts.length > 0 ? (
-													<Box>
-														<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
-															<Typography
-																variant="body2"
-																sx={{
-																	textDecoration: "line-through",
-																	color: "text.disabled",
-																}}
-															>
-																{formatCurrency(plan.activeDiscounts[0].originalPrice, getPlanPricing(plan).currency)}
-															</Typography>
-															<Typography variant="subtitle2" color="success.main" fontWeight={700}>
-																{formatCurrency(plan.activeDiscounts[0].finalPrice, getPlanPricing(plan).currency)}
-															</Typography>
-														</Stack>
-														<Typography variant="caption" color="textSecondary">
-															{getBillingPeriodText(getPlanPricing(plan).billingPeriod)}
-														</Typography>
-														<Chip
-															icon={<DiscountShape size={12} />}
-															label={plan.activeDiscounts[0].badge}
-															size="small"
-															color="success"
-															sx={{ mt: 0.5, fontSize: "0.65rem", height: 20 }}
-														/>
-													</Box>
-												) : (
-													<>
-														<Typography variant="subtitle2">
-															{formatCurrency(getPlanPricing(plan).basePrice, getPlanPricing(plan).currency)}
-														</Typography>
-														<Typography variant="caption" color="textSecondary">
-															{getBillingPeriodText(getPlanPricing(plan).billingPeriod)}
-														</Typography>
-													</>
-												)}
-											</TableCell>
-											<TableCell align="center">
-												<Chip label={plan.isActive ? "Activo" : "Inactivo"} color={plan.isActive ? "success" : "error"} size="small" />
-											</TableCell>
-											<TableCell align="center">{plan.isDefault && <Chip label="Default" color="primary" size="small" />}</TableCell>
-											<TableCell align="center">
-												<Stack direction="row" spacing={1} justifyContent="center">
-													<Tooltip title="Ver detalles">
-														<IconButton size="small" color="primary" onClick={() => handleView(plan)}>
-															<Eye size={18} />
-														</IconButton>
-													</Tooltip>
-													<Tooltip title="Editar">
-														<IconButton size="small" color="secondary" onClick={() => handleEdit(plan)}>
-															<Edit size={18} />
-														</IconButton>
-													</Tooltip>
-													<Tooltip title="Actualizar Precio en Stripe">
-														<IconButton size="small" color="warning" onClick={() => handleUpdatePrice(plan)}>
-															<DollarCircle size={18} />
-														</IconButton>
-													</Tooltip>
-													<Tooltip title="Eliminar">
-														<IconButton size="small" color="error" onClick={() => handleDelete(plan)} disabled={plan.isDefault}>
-															<Trash size={18} />
-														</IconButton>
-													</Tooltip>
-												</Stack>
-											</TableCell>
+						{/* Plans Table */}
+						<Grid item xs={12}>
+							<TableContainer component={Paper}>
+								<Table>
+									<TableHead>
+										<TableRow>
+											<TableCell>Plan ID</TableCell>
+											<TableCell>Nombre</TableCell>
+											<TableCell>Descripción</TableCell>
+											<TableCell align="center">Precio</TableCell>
+											<TableCell align="center">Estado</TableCell>
+											<TableCell align="center">Default</TableCell>
+											<TableCell align="center">Acciones</TableCell>
 										</TableRow>
-									))}
-								</TableBody>
-							</Table>
-						</TableContainer>
-					</Grid>
-
-					{/* Plan Details Cards */}
-					<Grid item xs={12}>
-						<Typography variant="h5" sx={{ mb: 2 }}>
-							Detalles de Planes
-						</Typography>
-						<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-							{plans.map((plan) => (
-								<Grid item xs={12} md={6} lg={4} key={plan.planId}>
-									<Card
-										sx={{
-											border: plan.isDefault ? "2px solid" : "1px solid",
-											borderColor: plan.isDefault ? "primary.main" : "divider",
-										}}
-									>
-										<CardContent>
-											<Stack spacing={2}>
-												<Box>
-													<Typography variant="h6" gutterBottom>
+									</TableHead>
+									<TableBody>
+										{plans.map((plan) => (
+											<TableRow key={plan.planId} hover>
+												<TableCell>{plan.planId}</TableCell>
+												<TableCell>
+													<Typography variant="subtitle1" fontWeight={600}>
 														{plan.displayName}
 													</Typography>
+												</TableCell>
+												<TableCell>
+													<Typography variant="body2" sx={{ maxWidth: 300 }}>
+														{plan.description}
+													</Typography>
+												</TableCell>
+												<TableCell align="center">
+													{plan.activeDiscounts && plan.activeDiscounts.length > 0 ? (
+														<Box>
+															<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
+																<Typography
+																	variant="body2"
+																	sx={{
+																		textDecoration: "line-through",
+																		color: "text.disabled",
+																	}}
+																>
+																	{formatCurrency(plan.activeDiscounts[0].originalPrice, getPlanPricing(plan).currency)}
+																</Typography>
+																<Typography variant="subtitle2" color="success.main" fontWeight={700}>
+																	{formatCurrency(plan.activeDiscounts[0].finalPrice, getPlanPricing(plan).currency)}
+																</Typography>
+															</Stack>
+															<Typography variant="caption" color="textSecondary">
+																{getBillingPeriodText(getPlanPricing(plan).billingPeriod)}
+															</Typography>
+															<Chip
+																icon={<DiscountShape size={12} />}
+																label={plan.activeDiscounts[0].badge}
+																size="small"
+																color="success"
+																sx={{ mt: 0.5, fontSize: "0.65rem", height: 20 }}
+															/>
+														</Box>
+													) : (
+														<>
+															<Typography variant="subtitle2">
+																{formatCurrency(getPlanPricing(plan).basePrice, getPlanPricing(plan).currency)}
+															</Typography>
+															<Typography variant="caption" color="textSecondary">
+																{getBillingPeriodText(getPlanPricing(plan).billingPeriod)}
+															</Typography>
+														</>
+													)}
+												</TableCell>
+												<TableCell align="center">
 													<Chip label={plan.isActive ? "Activo" : "Inactivo"} color={plan.isActive ? "success" : "error"} size="small" />
-													{plan.isDefault && <Chip label="Default" color="primary" size="small" sx={{ ml: 1 }} />}
-												</Box>
+												</TableCell>
+												<TableCell align="center">{plan.isDefault && <Chip label="Default" color="primary" size="small" />}</TableCell>
+												<TableCell align="center">
+													<Stack direction="row" spacing={1} justifyContent="center">
+														<Tooltip title="Ver detalles">
+															<IconButton size="small" color="primary" onClick={() => handleView(plan)}>
+																<Eye size={18} />
+															</IconButton>
+														</Tooltip>
+														<Tooltip title="Editar">
+															<IconButton size="small" color="secondary" onClick={() => handleEdit(plan)}>
+																<Edit size={18} />
+															</IconButton>
+														</Tooltip>
+														<Tooltip title="Actualizar Precio en Stripe">
+															<IconButton size="small" color="warning" onClick={() => handleUpdatePrice(plan)}>
+																<DollarCircle size={18} />
+															</IconButton>
+														</Tooltip>
+														<Tooltip title="Eliminar">
+															<IconButton size="small" color="error" onClick={() => handleDelete(plan)} disabled={plan.isDefault}>
+																<Trash size={18} />
+															</IconButton>
+														</Tooltip>
+													</Stack>
+												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</TableContainer>
+						</Grid>
 
-												{plan.activeDiscounts && plan.activeDiscounts.length > 0 ? (
+						{/* Plan Details Cards */}
+						<Grid item xs={12}>
+							<Typography variant="h5" sx={{ mb: 2 }}>
+								Detalles de Planes
+							</Typography>
+							<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+								{plans.map((plan) => (
+									<Grid item xs={12} md={6} lg={4} key={plan.planId}>
+										<Card
+											sx={{
+												border: plan.isDefault ? "2px solid" : "1px solid",
+												borderColor: plan.isDefault ? "primary.main" : "divider",
+											}}
+										>
+											<CardContent>
+												<Stack spacing={2}>
 													<Box>
-														<Stack direction="row" spacing={1} alignItems="baseline">
-															<Typography
-																variant="h6"
+														<Typography variant="h6" gutterBottom>
+															{plan.displayName}
+														</Typography>
+														<Chip label={plan.isActive ? "Activo" : "Inactivo"} color={plan.isActive ? "success" : "error"} size="small" />
+														{plan.isDefault && <Chip label="Default" color="primary" size="small" sx={{ ml: 1 }} />}
+													</Box>
+
+													{plan.activeDiscounts && plan.activeDiscounts.length > 0 ? (
+														<Box>
+															<Stack direction="row" spacing={1} alignItems="baseline">
+																<Typography
+																	variant="h6"
+																	sx={{
+																		textDecoration: "line-through",
+																		color: "text.disabled",
+																	}}
+																>
+																	{formatCurrency(plan.activeDiscounts[0].originalPrice, getPlanPricing(plan).currency)}
+																</Typography>
+																<Typography variant="h4" color="success.main" fontWeight={700}>
+																	{formatCurrency(plan.activeDiscounts[0].finalPrice, getPlanPricing(plan).currency)}
+																</Typography>
+																<Typography variant="body2" component="span" color="textSecondary">
+																	{getBillingPeriodText(getPlanPricing(plan).billingPeriod)}
+																</Typography>
+															</Stack>
+															<Box
 																sx={{
-																	textDecoration: "line-through",
-																	color: "text.disabled",
+																	mt: 1,
+																	p: 1,
+																	bgcolor: "success.lighter",
+																	borderRadius: 1,
+																	border: "1px solid",
+																	borderColor: "success.light",
 																}}
 															>
-																{formatCurrency(plan.activeDiscounts[0].originalPrice, getPlanPricing(plan).currency)}
-															</Typography>
-															<Typography variant="h4" color="success.main" fontWeight={700}>
-																{formatCurrency(plan.activeDiscounts[0].finalPrice, getPlanPricing(plan).currency)}
-															</Typography>
+																<Stack direction="row" spacing={1} alignItems="center">
+																	<DiscountShape size={16} color="var(--mui-palette-success-main)" />
+																	<Typography variant="caption" color="success.dark" fontWeight={600}>
+																		{plan.activeDiscounts[0].promotionalMessage}
+																	</Typography>
+																</Stack>
+																{plan.activeDiscounts[0].durationInMonths && (
+																	<Typography variant="caption" color="success.dark" sx={{ display: "block", mt: 0.5 }}>
+																		Válido por {plan.activeDiscounts[0].durationInMonths} meses
+																	</Typography>
+																)}
+															</Box>
+														</Box>
+													) : (
+														<Typography variant="h4" color="primary">
+															{formatCurrency(getPlanPricing(plan).basePrice, getPlanPricing(plan).currency)}
 															<Typography variant="body2" component="span" color="textSecondary">
 																{getBillingPeriodText(getPlanPricing(plan).billingPeriod)}
 															</Typography>
-														</Stack>
-														<Box
-															sx={{
-																mt: 1,
-																p: 1,
-																bgcolor: "success.lighter",
-																borderRadius: 1,
-																border: "1px solid",
-																borderColor: "success.light",
-															}}
-														>
-															<Stack direction="row" spacing={1} alignItems="center">
-																<DiscountShape size={16} color="var(--mui-palette-success-main)" />
-																<Typography variant="caption" color="success.dark" fontWeight={600}>
-																	{plan.activeDiscounts[0].promotionalMessage}
-																</Typography>
-															</Stack>
-															{plan.activeDiscounts[0].durationInMonths && (
-																<Typography variant="caption" color="success.dark" sx={{ display: "block", mt: 0.5 }}>
-																	Válido por {plan.activeDiscounts[0].durationInMonths} meses
-																</Typography>
-															)}
-														</Box>
-													</Box>
-												) : (
-													<Typography variant="h4" color="primary">
-														{formatCurrency(getPlanPricing(plan).basePrice, getPlanPricing(plan).currency)}
-														<Typography variant="body2" component="span" color="textSecondary">
-															{getBillingPeriodText(getPlanPricing(plan).billingPeriod)}
 														</Typography>
-													</Typography>
-												)}
+													)}
 
-												<Box>
-													<Typography variant="subtitle2" gutterBottom>
-														Límites de Recursos:
-													</Typography>
-													{plan.resourceLimits.map((limit, index) => (
-														<Typography key={index} variant="body2" color="textSecondary">
-															• {limit.description}: {limit.limit}
+													<Box>
+														<Typography variant="subtitle2" gutterBottom>
+															Límites de Recursos:
 														</Typography>
-													))}
-												</Box>
-
-												<Box>
-													<Typography variant="subtitle2" gutterBottom>
-														Características:
-													</Typography>
-													{plan.features
-														.filter((feature) => feature.enabled)
-														.map((feature, index) => (
+														{plan.resourceLimits.map((limit, index) => (
 															<Typography key={index} variant="body2" color="textSecondary">
-																• {feature.description}
+																• {limit.description}: {limit.limit}
 															</Typography>
 														))}
-												</Box>
+													</Box>
 
-												<Box sx={{ mt: 2 }}>
-													<Button variant="outlined" size="small" fullWidth onClick={() => handleEdit(plan)}>
-														Editar Plan
-													</Button>
-												</Box>
-											</Stack>
-										</CardContent>
-									</Card>
-								</Grid>
-							))}
+													<Box>
+														<Typography variant="subtitle2" gutterBottom>
+															Características:
+														</Typography>
+														{plan.features
+															.filter((feature) => feature.enabled)
+															.map((feature, index) => (
+																<Typography key={index} variant="body2" color="textSecondary">
+																	• {feature.description}
+																</Typography>
+															))}
+													</Box>
+
+													<Box sx={{ mt: 2 }}>
+														<Button variant="outlined" size="small" fullWidth onClick={() => handleEdit(plan)}>
+															Editar Plan
+														</Button>
+													</Box>
+												</Stack>
+											</CardContent>
+										</Card>
+									</Grid>
+								))}
+							</Grid>
 						</Grid>
 					</Grid>
-				</Grid>
-			)}
+				)}
 			</MainCard>
 
 			{/* Plan Form Modal */}

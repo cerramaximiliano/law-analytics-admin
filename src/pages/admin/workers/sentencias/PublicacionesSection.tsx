@@ -30,13 +30,34 @@ import {
 	useTheme,
 	Divider,
 } from "@mui/material";
-import { Refresh2, ExportSquare, TickCircle, Calendar, Building, Judge, InfoCircle, ArrowUp2, Flash, Clock, DocumentText, ArrowRotateLeft, Archive, ArrowUp3, ArrowDown3, Magicpen, TickSquare } from "iconsax-react";
+import {
+	Refresh2,
+	ExportSquare,
+	TickCircle,
+	Calendar,
+	Building,
+	Judge,
+	InfoCircle,
+	ArrowUp2,
+	Flash,
+	Clock,
+	DocumentText,
+	ArrowRotateLeft,
+	Archive,
+	ArrowUp3,
+	ArrowDown3,
+	Magicpen,
+	TickSquare,
+} from "iconsax-react";
 import { useSnackbar } from "notistack";
 import SentenciasService, { AiSummary, SentenciaCapturada, Fuero, SentenciaTipo, PublicationStatus } from "api/sentenciasCapturadas";
 
 const FUERO_LABELS: Record<string, string> = { CIV: "Civil", CSS: "Seg. Social", CNT: "Trabajo", COM: "Comercial" };
 const FUERO_COLORS: Record<string, "primary" | "warning" | "error" | "success"> = {
-	CIV: "primary", CSS: "warning", CNT: "error", COM: "success",
+	CIV: "primary",
+	CSS: "warning",
+	CNT: "error",
+	COM: "success",
 };
 
 const TIPO_LABELS: Record<string, string> = {
@@ -63,7 +84,9 @@ interface SkipDialogProps {
 
 function SkipDialog({ open, doc, onConfirm, onClose }: SkipDialogProps) {
 	const [notes, setNotes] = useState("");
-	useEffect(() => { if (open) setNotes(""); }, [open]);
+	useEffect(() => {
+		if (open) setNotes("");
+	}, [open]);
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
 			<DialogTitle>Archivar sentencia</DialogTitle>
@@ -77,7 +100,7 @@ function SkipDialog({ open, doc, onConfirm, onClose }: SkipDialogProps) {
 					multiline
 					rows={3}
 					value={notes}
-					onChange={e => setNotes(e.target.value)}
+					onChange={(e) => setNotes(e.target.value)}
 					size="small"
 				/>
 			</DialogContent>
@@ -154,7 +177,9 @@ function SummaryDialog({ open, doc, onClose, onSaved }: SummaryDialogProps) {
 			<DialogTitle>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Box>
-						<Typography variant="h6" component="span">Resumen para publicación</Typography>
+						<Typography variant="h6" component="span">
+							Resumen para publicación
+						</Typography>
 						{doc?.aiSummary?.status && (
 							<Chip
 								label={isApproved ? "Aprobado" : "Borrador"}
@@ -179,7 +204,8 @@ function SummaryDialog({ open, doc, onClose, onSaved }: SummaryDialogProps) {
 				<Stack spacing={2}>
 					{!content && !generating && (
 						<Alert severity="info" sx={{ borderRadius: 1.5 }}>
-							No hay resumen generado aún. Hacé click en <strong>Generar con IA</strong> para crear uno automáticamente a partir del texto del fallo.
+							No hay resumen generado aún. Hacé click en <strong>Generar con IA</strong> para crear uno automáticamente a partir del texto
+							del fallo.
 						</Alert>
 					)}
 
@@ -199,7 +225,7 @@ function SummaryDialog({ open, doc, onClose, onSaved }: SummaryDialogProps) {
 							minRows={12}
 							maxRows={24}
 							value={content}
-							onChange={e => setContent(e.target.value)}
+							onChange={(e) => setContent(e.target.value)}
 							variant="outlined"
 							size="small"
 							label="Resumen (editable)"
@@ -228,13 +254,11 @@ function SummaryDialog({ open, doc, onClose, onSaved }: SummaryDialogProps) {
 					{content ? "Regenerar" : "Generar con IA"}
 				</Button>
 				<Box flex={1} />
-				<Button onClick={onClose} disabled={saving}>Cerrar</Button>
+				<Button onClick={onClose} disabled={saving}>
+					Cerrar
+				</Button>
 				{content && !isApproved && (
-					<Button
-						variant="outlined"
-						onClick={() => handleSave("save")}
-						disabled={saving || generating}
-					>
+					<Button variant="outlined" onClick={() => handleSave("save")} disabled={saving || generating}>
 						Guardar borrador
 					</Button>
 				)}
@@ -284,27 +308,35 @@ export default function PublicacionesSection() {
 	const [skipDialog, setSkipDialog] = useState<{ open: boolean; doc: SentenciaCapturada | null }>({ open: false, doc: null });
 	const [summaryDialog, setSummaryDialog] = useState<{ open: boolean; doc: SentenciaCapturada | null }>({ open: false, doc: null });
 
-	const load = useCallback(async (showLoading = true) => {
-		if (showLoading) setLoading(true);
-		try {
-			const res = await SentenciasService.getPublicationQueue({
-				publicationStatus: activeTab as PublicationStatus,
-				...(fueroFilter ? { fuero: fueroFilter as Fuero } : {}),
-				...(tipoFilter ? { tipo: tipoFilter as SentenciaTipo } : {}),
-				sortOrder,
-				page,
-				limit: rowsPerPage,
-			});
-			setDocs(res.data);
-			setTotal(res.total);
-		} catch {
-			enqueueSnackbar("Error al cargar cola de publicaciones", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
-		} finally {
-			if (showLoading) setLoading(false);
-		}
-	}, [activeTab, fueroFilter, tipoFilter, sortOrder, page, rowsPerPage, enqueueSnackbar]);
+	const load = useCallback(
+		async (showLoading = true) => {
+			if (showLoading) setLoading(true);
+			try {
+				const res = await SentenciasService.getPublicationQueue({
+					publicationStatus: activeTab as PublicationStatus,
+					...(fueroFilter ? { fuero: fueroFilter as Fuero } : {}),
+					...(tipoFilter ? { tipo: tipoFilter as SentenciaTipo } : {}),
+					sortOrder,
+					page,
+					limit: rowsPerPage,
+				});
+				setDocs(res.data);
+				setTotal(res.total);
+			} catch {
+				enqueueSnackbar("Error al cargar cola de publicaciones", {
+					variant: "error",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+			} finally {
+				if (showLoading) setLoading(false);
+			}
+		},
+		[activeTab, fueroFilter, tipoFilter, sortOrder, page, rowsPerPage, enqueueSnackbar],
+	);
 
-	useEffect(() => { load(); }, [load]);
+	useEffect(() => {
+		load();
+	}, [load]);
 
 	// Reset page when tab changes
 	const handleTabChange = (_: React.SyntheticEvent, val: ViewTab) => {
@@ -316,7 +348,10 @@ export default function PublicacionesSection() {
 		setActionLoading(doc._id);
 		try {
 			await SentenciasService.updatePublicationStatus(doc._id, "published");
-			enqueueSnackbar("Sentencia marcada como publicada", { variant: "success", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+			enqueueSnackbar("Sentencia marcada como publicada", {
+				variant: "success",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
 			load(false);
 		} catch {
 			enqueueSnackbar("Error al actualizar", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
@@ -355,8 +390,8 @@ export default function PublicacionesSection() {
 	};
 
 	const handleSummaryUpdate = (id: string, summary: AiSummary) => {
-		setDocs(prev => prev.map(d => d._id === id ? { ...d, aiSummary: summary } : d));
-		setSummaryDialog(prev => prev.doc?._id === id ? { ...prev, doc: { ...prev.doc!, aiSummary: summary } } : prev);
+		setDocs((prev) => prev.map((d) => (d._id === id ? { ...d, aiSummary: summary } : d)));
+		setSummaryDialog((prev) => (prev.doc?._id === id ? { ...prev, doc: { ...prev.doc!, aiSummary: summary } } : prev));
 	};
 
 	const isPending = activeTab === "pending";
@@ -370,12 +405,7 @@ export default function PublicacionesSection() {
 					<Stack direction="row" spacing={1} alignItems="center">
 						<Typography variant="h6">Cola de Publicaciones</Typography>
 						{activeTab === "pending" && total > 0 && (
-							<Chip
-								label={total}
-								size="small"
-								color="warning"
-								sx={{ height: 20, fontSize: "0.72rem", fontWeight: 700 }}
-							/>
+							<Chip label={total} size="small" color="warning" sx={{ height: 20, fontSize: "0.72rem", fontWeight: 700 }} />
 						)}
 					</Stack>
 					<Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
@@ -384,7 +414,7 @@ export default function PublicacionesSection() {
 				</Box>
 				<Stack direction="row" spacing={0.5}>
 					<Tooltip title={helpOpen ? "Ocultar ayuda" : "¿Cómo funciona esta sección?"}>
-						<IconButton size="small" color="info" onClick={() => setHelpOpen(v => !v)}>
+						<IconButton size="small" color="info" onClick={() => setHelpOpen((v) => !v)}>
 							{helpOpen ? <ArrowUp2 size={18} /> : <InfoCircle size={18} />}
 						</IconButton>
 					</Tooltip>
@@ -398,7 +428,10 @@ export default function PublicacionesSection() {
 
 			{/* Help panel */}
 			<Collapse in={helpOpen}>
-				<Card variant="outlined" sx={{ borderRadius: 2, bgcolor: alpha(theme.palette.info.main, 0.04), borderColor: alpha(theme.palette.info.main, 0.25) }}>
+				<Card
+					variant="outlined"
+					sx={{ borderRadius: 2, bgcolor: alpha(theme.palette.info.main, 0.04), borderColor: alpha(theme.palette.info.main, 0.25) }}
+				>
 					<CardContent sx={{ pb: "16px !important" }}>
 						<Stack spacing={1.5}>
 							<Stack direction="row" spacing={1} alignItems="center">
@@ -408,7 +441,8 @@ export default function PublicacionesSection() {
 								</Typography>
 							</Stack>
 							<Typography variant="body2" color="text.secondary">
-								Una sentencia aparece aquí cuando proviene de una <strong>causa con novedad detectada</strong> (escrito semánticamente distinto al corpus) y ya fue embebida en Pinecone. Hay tres escenarios posibles:
+								Una sentencia aparece aquí cuando proviene de una <strong>causa con novedad detectada</strong> (escrito semánticamente
+								distinto al corpus) y ya fue embebida en Pinecone. Hay tres escenarios posibles:
 							</Typography>
 
 							<Stack spacing={1.25}>
@@ -417,11 +451,18 @@ export default function PublicacionesSection() {
 									<Stack direction="row" spacing={1} alignItems="flex-start">
 										<Flash size={15} color={theme.palette.success.main} style={{ marginTop: 2, flexShrink: 0 }} />
 										<Box>
-											<Typography variant="caption" fontWeight={700} color="success.main" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
+											<Typography
+												variant="caption"
+												fontWeight={700}
+												color="success.main"
+												sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}
+											>
 												Escenario 1 — Sentencia nueva post-novedad
 											</Typography>
 											<Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
-												El escrito es detectado como novelty → la causa se marca con <code>update=true</code> → el worker de movimientos rastrea la causa y encuentra una <strong>nueva sentencia</strong> → se captura como <code>category='novelty'</code> → una vez embebida aparece aquí automáticamente.
+												El escrito es detectado como novelty → la causa se marca con <code>update=true</code> → el worker de movimientos
+												rastrea la causa y encuentra una <strong>nueva sentencia</strong> → se captura como <code>category='novelty'</code>{" "}
+												→ una vez embebida aparece aquí automáticamente.
 											</Typography>
 										</Box>
 									</Stack>
@@ -432,11 +473,19 @@ export default function PublicacionesSection() {
 									<Stack direction="row" spacing={1} alignItems="flex-start">
 										<Clock size={15} color={theme.palette.warning.main} style={{ marginTop: 2, flexShrink: 0 }} />
 										<Box>
-											<Typography variant="caption" fontWeight={700} color="warning.main" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
+											<Typography
+												variant="caption"
+												fontWeight={700}
+												color="warning.main"
+												sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}
+											>
 												Escenario 2 — Sentencia ya estaba en el historial
 											</Typography>
 											<Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
-												La causa tiene una sentencia <strong>pre-existente</strong> en su historial al momento de detectarse la novedad. El worker de actualización solo rastrea movimientos nuevos, por lo que no la volvería a capturar. En cambio, al marcar la causa como novelty el <strong>selector worker</strong> busca directamente en <code>sentencias-capturadas</code> y marca las sentencias ya embebidas de esa causa como pendientes de publicación.
+												La causa tiene una sentencia <strong>pre-existente</strong> en su historial al momento de detectarse la novedad. El
+												worker de actualización solo rastrea movimientos nuevos, por lo que no la volvería a capturar. En cambio, al marcar
+												la causa como novelty el <strong>selector worker</strong> busca directamente en <code>sentencias-capturadas</code> y
+												marca las sentencias ya embebidas de esa causa como pendientes de publicación.
 											</Typography>
 										</Box>
 									</Stack>
@@ -447,11 +496,19 @@ export default function PublicacionesSection() {
 									<Stack direction="row" spacing={1} alignItems="flex-start">
 										<DocumentText size={15} color={theme.palette.secondary.main} style={{ marginTop: 2, flexShrink: 0 }} />
 										<Box>
-											<Typography variant="caption" fontWeight={700} color="secondary.main" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
+											<Typography
+												variant="caption"
+												fontWeight={700}
+												color="secondary.main"
+												sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}
+											>
 												Escenario 3 — Sentencia capturada como rutina
 											</Typography>
 											<Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
-												El collector de sentencias ya había capturado la sentencia como <code>category='rutina'</code> (antes o después de la detección de novedad). Cuando el selector worker identifica la novedad del escrito, busca por <code>causaId</code> en <code>sentencias-capturadas</code> independientemente de la categoría y marca esa sentencia como pendiente de publicación.
+												El collector de sentencias ya había capturado la sentencia como <code>category='rutina'</code> (antes o después de
+												la detección de novedad). Cuando el selector worker identifica la novedad del escrito, busca por{" "}
+												<code>causaId</code> en <code>sentencias-capturadas</code> independientemente de la categoría y marca esa sentencia
+												como pendiente de publicación.
 											</Typography>
 										</Box>
 									</Stack>
@@ -460,7 +517,8 @@ export default function PublicacionesSection() {
 
 							<Divider />
 							<Typography variant="caption" color="text.secondary">
-								<strong>Publicar</strong> registra la fecha de publicación y saca la sentencia de la cola. <strong>Archivar</strong> la excluye con un motivo opcional. Desde <strong>Archivadas</strong> podés restaurar cualquier sentencia a pendientes.
+								<strong>Publicar</strong> registra la fecha de publicación y saca la sentencia de la cola. <strong>Archivar</strong> la
+								excluye con un motivo opcional. Desde <strong>Archivadas</strong> podés restaurar cualquier sentencia a pendientes.
 							</Typography>
 						</Stack>
 					</CardContent>
@@ -474,13 +532,8 @@ export default function PublicacionesSection() {
 				sx={{ borderBottom: 1, borderColor: "divider", minHeight: 36 }}
 				TabIndicatorProps={{ style: { height: 2 } }}
 			>
-				{(["pending", "skipped", "published"] as ViewTab[]).map(tab => (
-					<Tab
-						key={tab}
-						value={tab}
-						label={TAB_LABELS[tab]}
-						sx={{ minHeight: 36, py: 0.5, fontSize: "0.8rem" }}
-					/>
+				{(["pending", "skipped", "published"] as ViewTab[]).map((tab) => (
+					<Tab key={tab} value={tab} label={TAB_LABELS[tab]} sx={{ minHeight: 36, py: 0.5, fontSize: "0.8rem" }} />
 				))}
 			</Tabs>
 
@@ -488,24 +541,51 @@ export default function PublicacionesSection() {
 			<Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap alignItems="center">
 				<FormControl size="small" sx={{ minWidth: 130 }}>
 					<InputLabel>Fuero</InputLabel>
-					<Select value={fueroFilter} label="Fuero" onChange={e => { setFueroFilter(e.target.value); setPage(0); }}>
+					<Select
+						value={fueroFilter}
+						label="Fuero"
+						onChange={(e) => {
+							setFueroFilter(e.target.value);
+							setPage(0);
+						}}
+					>
 						<MenuItem value="">Todos</MenuItem>
-						{Object.entries(FUERO_LABELS).map(([k, v]) => <MenuItem key={k} value={k}>{v}</MenuItem>)}
+						{Object.entries(FUERO_LABELS).map(([k, v]) => (
+							<MenuItem key={k} value={k}>
+								{v}
+							</MenuItem>
+						))}
 					</Select>
 				</FormControl>
 				<FormControl size="small" sx={{ minWidth: 150 }}>
 					<InputLabel>Tipo</InputLabel>
-					<Select value={tipoFilter} label="Tipo" onChange={e => { setTipoFilter(e.target.value); setPage(0); }}>
+					<Select
+						value={tipoFilter}
+						label="Tipo"
+						onChange={(e) => {
+							setTipoFilter(e.target.value);
+							setPage(0);
+						}}
+					>
 						<MenuItem value="">Todos</MenuItem>
-						{Object.entries(TIPO_LABELS).map(([k, v]) => <MenuItem key={k} value={k}>{v}</MenuItem>)}
+						{Object.entries(TIPO_LABELS).map(([k, v]) => (
+							<MenuItem key={k} value={k}>
+								{v}
+							</MenuItem>
+						))}
 					</Select>
 				</FormControl>
-				<Tooltip title={sortOrder === "desc" ? "Más recientes primero (click para invertir)" : "Más antiguas primero (click para invertir)"}>
+				<Tooltip
+					title={sortOrder === "desc" ? "Más recientes primero (click para invertir)" : "Más antiguas primero (click para invertir)"}
+				>
 					<Button
 						size="small"
 						variant="outlined"
 						color="inherit"
-						onClick={() => { setSortOrder(o => o === "desc" ? "asc" : "desc"); setPage(0); }}
+						onClick={() => {
+							setSortOrder((o) => (o === "desc" ? "asc" : "desc"));
+							setPage(0);
+						}}
 						startIcon={sortOrder === "desc" ? <ArrowDown3 size={15} /> : <ArrowUp3 size={15} />}
 						sx={{ height: 40, borderColor: "divider", color: "text.secondary", fontSize: "0.75rem" }}
 					>
@@ -517,7 +597,7 @@ export default function PublicacionesSection() {
 			{/* Cards */}
 			{loading ? (
 				<Grid container spacing={2}>
-					{[1, 2, 3].map(i => (
+					{[1, 2, 3].map((i) => (
 						<Grid item xs={12} key={i}>
 							<Skeleton variant="rounded" height={120} />
 						</Grid>
@@ -533,7 +613,7 @@ export default function PublicacionesSection() {
 				</Alert>
 			) : (
 				<Stack spacing={1.5}>
-					{docs.map(doc => {
+					{docs.map((doc) => {
 						const isActing = actionLoading === doc._id;
 						const fueroColor = FUERO_COLORS[doc.fuero] || "default";
 						return (
@@ -600,12 +680,7 @@ export default function PublicacionesSection() {
 													)}
 													{isArchived && doc.publicationNotes && (
 														<Tooltip title={doc.publicationNotes}>
-															<Chip
-																label="Con nota"
-																size="small"
-																variant="outlined"
-																sx={{ height: 20, fontSize: "0.68rem" }}
-															/>
+															<Chip label="Con nota" size="small" variant="outlined" sx={{ height: 20, fontSize: "0.68rem" }} />
 														</Tooltip>
 													)}
 												</Stack>
@@ -649,7 +724,8 @@ export default function PublicacionesSection() {
 												{/* Detalle del movimiento */}
 												{doc.movimientoDetalle && (
 													<Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
-														{doc.movimientoDetalle.slice(0, 120)}{doc.movimientoDetalle.length > 120 ? "…" : ""}
+														{doc.movimientoDetalle.slice(0, 120)}
+														{doc.movimientoDetalle.length > 120 ? "…" : ""}
 													</Typography>
 												)}
 
@@ -667,13 +743,7 @@ export default function PublicacionesSection() {
 											<Stack direction={{ xs: "row", sm: "column" }} spacing={1} alignItems={{ xs: "center", sm: "flex-end" }}>
 												{doc.url && (
 													<Tooltip title="Ver documento">
-														<IconButton
-															size="small"
-															href={doc.url}
-															target="_blank"
-															rel="noopener noreferrer"
-															component="a"
-														>
+														<IconButton size="small" href={doc.url} target="_blank" rel="noopener noreferrer" component="a">
 															<ExportSquare size={16} />
 														</IconButton>
 													</Tooltip>
@@ -749,7 +819,10 @@ export default function PublicacionesSection() {
 						page={page}
 						onPageChange={(_, p) => setPage(p)}
 						rowsPerPage={rowsPerPage}
-						onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+						onRowsPerPageChange={(e) => {
+							setRowsPerPage(parseInt(e.target.value, 10));
+							setPage(0);
+						}}
 						rowsPerPageOptions={[10, 20, 50]}
 						labelRowsPerPage="Por página:"
 					/>

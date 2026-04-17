@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-	Box, Tab, Tabs, Typography, Grid, Card, CardContent, Skeleton,
-} from "@mui/material";
+import { Box, Tab, Tabs, Typography, Grid, Card, CardContent, Skeleton } from "@mui/material";
 import { People, DocumentText, TickCircle, CloseCircle, Clock, Warning2 } from "iconsax-react";
 import { useDispatch, useSelector } from "store";
 import { fetchSecloStats } from "store/reducers/seclo";
@@ -23,9 +21,15 @@ function StatCard({ label, value, icon, color }: StatCardProps) {
 			<CardContent sx={{ display: "flex", alignItems: "center", gap: 2, py: 1.5, "&:last-child": { pb: 1.5 } }}>
 				<Box
 					sx={{
-						width: 44, height: 44, borderRadius: 2,
-						bgcolor: `${color}20`, color,
-						display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+						width: 44,
+						height: 44,
+						borderRadius: 2,
+						bgcolor: `${color}20`,
+						color,
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						flexShrink: 0,
 					}}
 				>
 					{icon}
@@ -34,9 +38,13 @@ function StatCard({ label, value, icon, color }: StatCardProps) {
 					{value === undefined ? (
 						<Skeleton width={40} height={28} />
 					) : (
-						<Typography variant="h5" fontWeight={600}>{value}</Typography>
+						<Typography variant="h5" fontWeight={600}>
+							{value}
+						</Typography>
 					)}
-					<Typography variant="caption" color="text.secondary">{label}</Typography>
+					<Typography variant="caption" color="text.secondary">
+						{label}
+					</Typography>
 				</Box>
 			</CardContent>
 		</Card>
@@ -58,7 +66,9 @@ export default function SecloPage() {
 		<Box>
 			{/* Header */}
 			<Box mb={3}>
-				<Typography variant="h4" fontWeight={600} gutterBottom>SECLO — Audiencias laborales</Typography>
+				<Typography variant="h4" fontWeight={600} gutterBottom>
+					SECLO — Audiencias laborales
+				</Typography>
 				<Typography variant="body2" color="text.secondary">
 					Gestión de solicitudes de audiencia SECLO y credenciales del portal Ministerio de Trabajo.
 				</Typography>

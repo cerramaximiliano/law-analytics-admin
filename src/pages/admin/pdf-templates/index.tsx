@@ -127,11 +127,7 @@ const DetailDialog: React.FC<DetailDialogProps> = ({ open, template, onClose, on
 			<DialogTitle>
 				<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
 					<Typography variant="h6">{template.name}</Typography>
-					<Chip
-						label={template.isActive ? "Activo" : "Inactivo"}
-						color={template.isActive ? "success" : "default"}
-						size="small"
-					/>
+					<Chip label={template.isActive ? "Activo" : "Inactivo"} color={template.isActive ? "success" : "default"} size="small" />
 				</Box>
 			</DialogTitle>
 			<DialogContent dividers>
@@ -179,13 +175,7 @@ const DetailDialog: React.FC<DetailDialogProps> = ({ open, template, onClose, on
 									</Typography>
 								</Box>
 							))}
-							<Button
-								variant="outlined"
-								size="small"
-								startIcon={<Cloud size={14} />}
-								onClick={handleOpenPdf}
-								disabled={loadingUrl}
-							>
+							<Button variant="outlined" size="small" startIcon={<Cloud size={14} />} onClick={handleOpenPdf} disabled={loadingUrl}>
 								{loadingUrl ? "Generando URL..." : "Abrir PDF base en S3"}
 							</Button>
 						</Stack>
@@ -229,12 +219,8 @@ const DetailDialog: React.FC<DetailDialogProps> = ({ open, template, onClose, on
 																<Chip label={f.type} size="small" variant="outlined" />
 															</TableCell>
 															<TableCell>{f.group || "-"}</TableCell>
-															<TableCell align="center">
-																{f.required ? <Chip label="Sí" size="small" color="error" /> : "-"}
-															</TableCell>
-															<TableCell align="center">
-																{f.x != null ? `${f.x} / ${f.y}` : "-"}
-															</TableCell>
+															<TableCell align="center">{f.required ? <Chip label="Sí" size="small" color="error" /> : "-"}</TableCell>
+															<TableCell align="center">{f.x != null ? `${f.x} / ${f.y}` : "-"}</TableCell>
 														</TableRow>
 													))}
 											</TableBody>
@@ -304,7 +290,19 @@ const EditDialog: React.FC<EditDialogProps> = ({ open, template, onClose, onSave
 				supportsTracking: template.supportsTracking,
 			});
 		} else {
-			setForm({ name: "", slug: "", description: "", category: "judicial", s3Key: "", isActive: true, isPublic: true, fillMethod: "overlay", source: "system", modelType: "dynamic", supportsTracking: false });
+			setForm({
+				name: "",
+				slug: "",
+				description: "",
+				category: "judicial",
+				s3Key: "",
+				isActive: true,
+				isPublic: true,
+				fillMethod: "overlay",
+				source: "system",
+				modelType: "dynamic",
+				supportsTracking: false,
+			});
 		}
 	}, [template, open]);
 
@@ -336,7 +334,14 @@ const EditDialog: React.FC<EditDialogProps> = ({ open, template, onClose, onSave
 			<DialogTitle>{template ? "Editar Template" : "Nuevo Template"}</DialogTitle>
 			<DialogContent dividers>
 				<Stack spacing={2} sx={{ pt: 1 }}>
-					<TextField label="Nombre" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} size="small" fullWidth required />
+					<TextField
+						label="Nombre"
+						value={form.name}
+						onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+						size="small"
+						fullWidth
+						required
+					/>
 					<TextField
 						label="Slug"
 						value={form.slug}
@@ -347,21 +352,49 @@ const EditDialog: React.FC<EditDialogProps> = ({ open, template, onClose, onSave
 						disabled={!!template}
 						helperText={template ? "El slug no puede modificarse" : "Solo minúsculas y guiones bajos"}
 					/>
-					<TextField label="Descripción" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} size="small" fullWidth multiline rows={2} />
-					<TextField label="S3 Key del PDF base" value={form.s3Key} onChange={(e) => setForm((f) => ({ ...f, s3Key: e.target.value }))} size="small" fullWidth required helperText="Ej: models/cedulas/cedula_notificacion.pdf" />
+					<TextField
+						label="Descripción"
+						value={form.description}
+						onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+						size="small"
+						fullWidth
+						multiline
+						rows={2}
+					/>
+					<TextField
+						label="S3 Key del PDF base"
+						value={form.s3Key}
+						onChange={(e) => setForm((f) => ({ ...f, s3Key: e.target.value }))}
+						size="small"
+						fullWidth
+						required
+						helperText="Ej: models/cedulas/cedula_notificacion.pdf"
+					/>
 					<Grid container spacing={2}>
 						<Grid item xs={6}>
 							<FormControl size="small" fullWidth>
 								<InputLabel>Categoría</InputLabel>
-								<Select label="Categoría" value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as PdfTemplate["category"] }))}>
-									{Object.entries(CATEGORY_LABELS).map(([k, v]) => <MenuItem key={k} value={k}>{v}</MenuItem>)}
+								<Select
+									label="Categoría"
+									value={form.category}
+									onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as PdfTemplate["category"] }))}
+								>
+									{Object.entries(CATEGORY_LABELS).map(([k, v]) => (
+										<MenuItem key={k} value={k}>
+											{v}
+										</MenuItem>
+									))}
 								</Select>
 							</FormControl>
 						</Grid>
 						<Grid item xs={6}>
 							<FormControl size="small" fullWidth>
 								<InputLabel>Método de relleno</InputLabel>
-								<Select label="Método de relleno" value={form.fillMethod} onChange={(e) => setForm((f) => ({ ...f, fillMethod: e.target.value as PdfTemplate["fillMethod"] }))}>
+								<Select
+									label="Método de relleno"
+									value={form.fillMethod}
+									onChange={(e) => setForm((f) => ({ ...f, fillMethod: e.target.value as PdfTemplate["fillMethod"] }))}
+								>
 									<MenuItem value="overlay">Overlay</MenuItem>
 									<MenuItem value="acroform">AcroForm</MenuItem>
 								</Select>
@@ -370,7 +403,11 @@ const EditDialog: React.FC<EditDialogProps> = ({ open, template, onClose, onSave
 						<Grid item xs={6}>
 							<FormControl size="small" fullWidth>
 								<InputLabel>Fuente</InputLabel>
-								<Select label="Fuente" value={form.source} onChange={(e) => setForm((f) => ({ ...f, source: e.target.value as PdfTemplate["source"] }))}>
+								<Select
+									label="Fuente"
+									value={form.source}
+									onChange={(e) => setForm((f) => ({ ...f, source: e.target.value as PdfTemplate["source"] }))}
+								>
 									<MenuItem value="system">Sistema</MenuItem>
 									<MenuItem value="user">Usuario</MenuItem>
 								</Select>
@@ -379,7 +416,11 @@ const EditDialog: React.FC<EditDialogProps> = ({ open, template, onClose, onSave
 						<Grid item xs={6}>
 							<FormControl size="small" fullWidth>
 								<InputLabel>Tipo de modelo</InputLabel>
-								<Select label="Tipo de modelo" value={form.modelType} onChange={(e) => setForm((f) => ({ ...f, modelType: e.target.value as PdfTemplate["modelType"] }))}>
+								<Select
+									label="Tipo de modelo"
+									value={form.modelType}
+									onChange={(e) => setForm((f) => ({ ...f, modelType: e.target.value as PdfTemplate["modelType"] }))}
+								>
 									<MenuItem value="dynamic">Dinámico</MenuItem>
 									<MenuItem value="static">Estático</MenuItem>
 								</Select>
@@ -387,14 +428,27 @@ const EditDialog: React.FC<EditDialogProps> = ({ open, template, onClose, onSave
 						</Grid>
 					</Grid>
 					<Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-						<FormControlLabel control={<Switch checked={form.isActive} onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))} />} label="Activo" />
-						<FormControlLabel control={<Switch checked={form.isPublic} onChange={(e) => setForm((f) => ({ ...f, isPublic: e.target.checked }))} />} label="Público" />
-						<FormControlLabel control={<Switch checked={form.supportsTracking} onChange={(e) => setForm((f) => ({ ...f, supportsTracking: e.target.checked }))} />} label="Seguimiento postal" />
+						<FormControlLabel
+							control={<Switch checked={form.isActive} onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))} />}
+							label="Activo"
+						/>
+						<FormControlLabel
+							control={<Switch checked={form.isPublic} onChange={(e) => setForm((f) => ({ ...f, isPublic: e.target.checked }))} />}
+							label="Público"
+						/>
+						<FormControlLabel
+							control={
+								<Switch checked={form.supportsTracking} onChange={(e) => setForm((f) => ({ ...f, supportsTracking: e.target.checked }))} />
+							}
+							label="Seguimiento postal"
+						/>
 					</Box>
 				</Stack>
 			</DialogContent>
 			<DialogActions>
-				<Button onClick={onClose} disabled={saving}>Cancelar</Button>
+				<Button onClick={onClose} disabled={saving}>
+					Cancelar
+				</Button>
 				<Button onClick={handleSave} variant="contained" disabled={saving}>
 					{saving ? "Guardando..." : template ? "Guardar cambios" : "Crear"}
 				</Button>
@@ -424,7 +478,9 @@ const DeleteDialog: React.FC<DeleteDialogProps> = ({ open, template, onClose, on
 			)}
 		</DialogContent>
 		<DialogActions>
-			<Button onClick={onClose} disabled={loading}>Cancelar</Button>
+			<Button onClick={onClose} disabled={loading}>
+				Cancelar
+			</Button>
 			<Button onClick={onConfirm} color="error" variant="contained" disabled={loading}>
 				{loading ? "Eliminando..." : "Eliminar"}
 			</Button>
@@ -511,8 +567,15 @@ const PdfTemplatesPage: React.FC = () => {
 
 	// ── Handlers ──────────────────────────────────────────────────────────────
 
-	const handleSearch = () => { setSearch(searchInput); setPage(0); };
-	const handleClearSearch = () => { setSearchInput(""); setSearch(""); setPage(0); };
+	const handleSearch = () => {
+		setSearch(searchInput);
+		setPage(0);
+	};
+	const handleClearSearch = () => {
+		setSearchInput("");
+		setSearch("");
+		setPage(0);
+	};
 
 	const handleOpenDetail = async (t: PdfTemplate) => {
 		try {
@@ -575,11 +638,25 @@ const PdfTemplatesPage: React.FC = () => {
 			secondary={
 				<Stack direction="row" spacing={1}>
 					<Tooltip title="Actualizar">
-						<IconButton size="small" onClick={() => { fetchTemplates(); fetchStats(); }}>
+						<IconButton
+							size="small"
+							onClick={() => {
+								fetchTemplates();
+								fetchStats();
+							}}
+						>
 							<Refresh size={18} />
 						</IconButton>
 					</Tooltip>
-					<Button variant="contained" size="small" startIcon={<Add size={16} />} onClick={() => { setEditTemplate(null); setEditOpen(true); }}>
+					<Button
+						variant="contained"
+						size="small"
+						startIcon={<Add size={16} />}
+						onClick={() => {
+							setEditTemplate(null);
+							setEditOpen(true);
+						}}
+					>
 						Nuevo template
 					</Button>
 				</Stack>
@@ -615,7 +692,10 @@ const PdfTemplatesPage: React.FC = () => {
 								size="small"
 								variant="outlined"
 								sx={{ cursor: "pointer" }}
-								onClick={() => { setFilterCategory(c._id); setPage(0); }}
+								onClick={() => {
+									setFilterCategory(c._id);
+									setPage(0);
+								}}
 							/>
 						))}
 					</Box>
@@ -632,24 +712,48 @@ const PdfTemplatesPage: React.FC = () => {
 					onKeyPress={(e) => e.key === "Enter" && handleSearch()}
 					sx={{ minWidth: 220 }}
 					InputProps={{
-						startAdornment: <InputAdornment position="start"><SearchNormal1 size={16} /></InputAdornment>,
+						startAdornment: (
+							<InputAdornment position="start">
+								<SearchNormal1 size={16} />
+							</InputAdornment>
+						),
 						endAdornment: searchInput && (
 							<InputAdornment position="end">
-								<IconButton size="small" onClick={handleClearSearch}><CloseCircle size={14} /></IconButton>
+								<IconButton size="small" onClick={handleClearSearch}>
+									<CloseCircle size={14} />
+								</IconButton>
 							</InputAdornment>
 						),
 					}}
 				/>
 				<FormControl size="small" sx={{ minWidth: 130 }}>
 					<InputLabel>Categoría</InputLabel>
-					<Select label="Categoría" value={filterCategory} onChange={(e) => { setFilterCategory(e.target.value); setPage(0); }}>
+					<Select
+						label="Categoría"
+						value={filterCategory}
+						onChange={(e) => {
+							setFilterCategory(e.target.value);
+							setPage(0);
+						}}
+					>
 						<MenuItem value="">Todas</MenuItem>
-						{Object.entries(CATEGORY_LABELS).map(([k, v]) => <MenuItem key={k} value={k}>{v}</MenuItem>)}
+						{Object.entries(CATEGORY_LABELS).map(([k, v]) => (
+							<MenuItem key={k} value={k}>
+								{v}
+							</MenuItem>
+						))}
 					</Select>
 				</FormControl>
 				<FormControl size="small" sx={{ minWidth: 120 }}>
 					<InputLabel>Estado</InputLabel>
-					<Select label="Estado" value={filterIsActive} onChange={(e) => { setFilterIsActive(e.target.value); setPage(0); }}>
+					<Select
+						label="Estado"
+						value={filterIsActive}
+						onChange={(e) => {
+							setFilterIsActive(e.target.value);
+							setPage(0);
+						}}
+					>
 						<MenuItem value="">Todos</MenuItem>
 						<MenuItem value="true">Activos</MenuItem>
 						<MenuItem value="false">Inactivos</MenuItem>
@@ -657,7 +761,14 @@ const PdfTemplatesPage: React.FC = () => {
 				</FormControl>
 				<FormControl size="small" sx={{ minWidth: 120 }}>
 					<InputLabel>Fuente</InputLabel>
-					<Select label="Fuente" value={filterSource} onChange={(e) => { setFilterSource(e.target.value); setPage(0); }}>
+					<Select
+						label="Fuente"
+						value={filterSource}
+						onChange={(e) => {
+							setFilterSource(e.target.value);
+							setPage(0);
+						}}
+					>
 						<MenuItem value="">Todas</MenuItem>
 						<MenuItem value="system">Sistema</MenuItem>
 						<MenuItem value="user">Usuario</MenuItem>
@@ -688,7 +799,9 @@ const PdfTemplatesPage: React.FC = () => {
 							Array.from({ length: rowsPerPage > 10 ? 10 : rowsPerPage }).map((_, i) => (
 								<TableRow key={i}>
 									{Array.from({ length: 11 }).map((_, j) => (
-										<TableCell key={j}><Skeleton variant="text" /></TableCell>
+										<TableCell key={j}>
+											<Skeleton variant="text" />
+										</TableCell>
 									))}
 								</TableRow>
 							))
@@ -717,12 +830,7 @@ const PdfTemplatesPage: React.FC = () => {
 										</Typography>
 									</TableCell>
 									<TableCell>
-										<Chip
-											label={CATEGORY_LABELS[t.category] || t.category}
-											size="small"
-											variant="outlined"
-											sx={{ fontSize: "0.7rem" }}
-										/>
+										<Chip label={CATEGORY_LABELS[t.category] || t.category} size="small" variant="outlined" sx={{ fontSize: "0.7rem" }} />
 									</TableCell>
 									<TableCell>
 										<Chip label={t.modelType} size="small" variant="outlined" sx={{ fontSize: "0.7rem" }} />
@@ -731,27 +839,13 @@ const PdfTemplatesPage: React.FC = () => {
 										<Typography variant="caption">{t.fillMethod}</Typography>
 									</TableCell>
 									<TableCell>
-										<Chip
-											label={STATUS_CHIP[t.source]?.label || t.source}
-											color={STATUS_CHIP[t.source]?.color || "default"}
-											size="small"
-										/>
+										<Chip label={STATUS_CHIP[t.source]?.label || t.source} color={STATUS_CHIP[t.source]?.color || "default"} size="small" />
 									</TableCell>
 									<TableCell align="center">
-										<Chip
-											label={t.isActive ? "Sí" : "No"}
-											color={t.isActive ? "success" : "default"}
-											size="small"
-											sx={{ minWidth: 36 }}
-										/>
+										<Chip label={t.isActive ? "Sí" : "No"} color={t.isActive ? "success" : "default"} size="small" sx={{ minWidth: 36 }} />
 									</TableCell>
 									<TableCell align="center">
-										<Chip
-											label={t.isPublic ? "Sí" : "No"}
-											color={t.isPublic ? "info" : "default"}
-											size="small"
-											sx={{ minWidth: 36 }}
-										/>
+										<Chip label={t.isPublic ? "Sí" : "No"} color={t.isPublic ? "info" : "default"} size="small" sx={{ minWidth: 36 }} />
 									</TableCell>
 									<TableCell align="center">
 										<Typography variant="body2">{"-"}</Typography>
@@ -800,7 +894,10 @@ const PdfTemplatesPage: React.FC = () => {
 				page={page}
 				onPageChange={(_, newPage) => setPage(newPage)}
 				rowsPerPage={rowsPerPage}
-				onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+				onRowsPerPageChange={(e) => {
+					setRowsPerPage(parseInt(e.target.value, 10));
+					setPage(0);
+				}}
 				rowsPerPageOptions={[10, 20, 50]}
 				labelRowsPerPage="Filas por página:"
 				labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
@@ -819,7 +916,10 @@ const PdfTemplatesPage: React.FC = () => {
 				open={editOpen}
 				template={editTemplate}
 				onClose={() => setEditOpen(false)}
-				onSaved={() => { fetchTemplates(); fetchStats(); }}
+				onSaved={() => {
+					fetchTemplates();
+					fetchStats();
+				}}
 			/>
 			<DeleteDialog
 				open={deleteOpen}

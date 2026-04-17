@@ -994,10 +994,7 @@ const UserResources: React.FC = () => {
 									{ label: "Hoy", value: escritosStats.totals.createdToday, color: theme.palette.secondary.main },
 								].map((s) => (
 									<Grid item xs={6} sm={4} md={2} key={s.label}>
-										<Paper
-											elevation={0}
-											sx={{ p: 1.5, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, height: "100%" }}
-										>
+										<Paper elevation={0} sx={{ p: 1.5, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, height: "100%" }}>
 											<Typography variant="caption" color="textSecondary" display="block">
 												{s.label}
 											</Typography>
@@ -1075,9 +1072,7 @@ const UserResources: React.FC = () => {
 										};
 										const statusCfg = STATUS_CONFIG[doc.status] || { color: "default", label: doc.status };
 										const userDisplay =
-											typeof doc.userId === "object" && doc.userId
-												? doc.userId.email || doc.userId.name || "-"
-												: String(doc.userId || "-");
+											typeof doc.userId === "object" && doc.userId ? doc.userId.email || doc.userId.name || "-" : String(doc.userId || "-");
 										return (
 											<TableRow key={doc._id} hover>
 												<TableCell>
@@ -1293,23 +1288,23 @@ const UserResources: React.FC = () => {
 										</>
 									) : (
 										<>
-										{columns.map((column) => (
-											<TableCell key={column.id}>
-												{column.sortable ? (
-													<TableSortLabel
-														active={sortBy === column.id}
-														direction={sortBy === column.id ? sortOrder : "asc"}
-														onClick={() => handleSort(column.id)}
-													>
-														{column.label}
-													</TableSortLabel>
-												) : (
-													column.label
-												)}
-											</TableCell>
-										))}
-										<TableCell align="center">Acciones</TableCell>
-									</>
+											{columns.map((column) => (
+												<TableCell key={column.id}>
+													{column.sortable ? (
+														<TableSortLabel
+															active={sortBy === column.id}
+															direction={sortBy === column.id ? sortOrder : "asc"}
+															onClick={() => handleSort(column.id)}
+														>
+															{column.label}
+														</TableSortLabel>
+													) : (
+														column.label
+													)}
+												</TableCell>
+											))}
+											<TableCell align="center">Acciones</TableCell>
+										</>
 									)}
 								</TableRow>
 							</TableHead>
@@ -1326,15 +1321,17 @@ const UserResources: React.FC = () => {
 													))}
 												</>
 											) : (
-											<>
-												{columns.map((column) => (
-													<TableCell key={column.id}>
+												<>
+													{columns.map((column) => (
+														<TableCell key={column.id}>
+															<Skeleton variant="text" />
+														</TableCell>
+													))}
+													<TableCell>
 														<Skeleton variant="text" />
 													</TableCell>
-												))}
-												<TableCell><Skeleton variant="text" /></TableCell>
-											</>
-										)}
+												</>
+											)}
 										</TableRow>
 									))
 								) : isUsersTab ? (
@@ -1461,9 +1458,7 @@ const UserResources: React.FC = () => {
 			{/* JSON Viewer Dialog */}
 			<Dialog open={jsonViewOpen} onClose={() => setJsonViewOpen(false)} maxWidth="md" fullWidth>
 				<DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pr: 2 }}>
-					<Typography variant="h6">
-						Documento JSON — {tabs.find((t) => t.type === currentType)?.label}
-					</Typography>
+					<Typography variant="h6">Documento JSON — {tabs.find((t) => t.type === currentType)?.label}</Typography>
 					<Tooltip title="Copiar JSON">
 						<Button
 							size="small"

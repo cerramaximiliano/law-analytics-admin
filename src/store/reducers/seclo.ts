@@ -6,21 +6,21 @@ import type { SecloSolicitud, TrabajoCredential, SecloStats, SecloUser, SecloCon
 
 // ─── Action types ─────────────────────────────────────────────────────────────
 
-export const SECLO_SET_LOADING        = "@seclo/SET_LOADING";
-export const SECLO_SET_SOLICITUDES    = "@seclo/SET_SOLICITUDES";
-export const SECLO_ADD_SOLICITUD      = "@seclo/ADD_SOLICITUD";
-export const SECLO_UPDATE_SOLICITUD   = "@seclo/UPDATE_SOLICITUD";
-export const SECLO_REMOVE_SOLICITUD   = "@seclo/REMOVE_SOLICITUD";
-export const SECLO_SET_CREDENTIALS    = "@seclo/SET_CREDENTIALS";
-export const SECLO_ADD_CREDENTIAL     = "@seclo/ADD_CREDENTIAL";
-export const SECLO_UPDATE_CREDENTIAL  = "@seclo/UPDATE_CREDENTIAL";
-export const SECLO_REMOVE_CREDENTIAL  = "@seclo/REMOVE_CREDENTIAL";
-export const SECLO_SET_STATS          = "@seclo/SET_STATS";
-export const SECLO_SET_USERS          = "@seclo/SET_USERS";
-export const SECLO_SET_CONTACTS       = "@seclo/SET_CONTACTS";
-export const SECLO_SET_ERROR          = "@seclo/SET_ERROR";
-export const SECLO_SET_SOL_TOTAL      = "@seclo/SET_SOL_TOTAL";
-export const SECLO_SET_CRED_TOTAL     = "@seclo/SET_CRED_TOTAL";
+export const SECLO_SET_LOADING = "@seclo/SET_LOADING";
+export const SECLO_SET_SOLICITUDES = "@seclo/SET_SOLICITUDES";
+export const SECLO_ADD_SOLICITUD = "@seclo/ADD_SOLICITUD";
+export const SECLO_UPDATE_SOLICITUD = "@seclo/UPDATE_SOLICITUD";
+export const SECLO_REMOVE_SOLICITUD = "@seclo/REMOVE_SOLICITUD";
+export const SECLO_SET_CREDENTIALS = "@seclo/SET_CREDENTIALS";
+export const SECLO_ADD_CREDENTIAL = "@seclo/ADD_CREDENTIAL";
+export const SECLO_UPDATE_CREDENTIAL = "@seclo/UPDATE_CREDENTIAL";
+export const SECLO_REMOVE_CREDENTIAL = "@seclo/REMOVE_CREDENTIAL";
+export const SECLO_SET_STATS = "@seclo/SET_STATS";
+export const SECLO_SET_USERS = "@seclo/SET_USERS";
+export const SECLO_SET_CONTACTS = "@seclo/SET_CONTACTS";
+export const SECLO_SET_ERROR = "@seclo/SET_ERROR";
+export const SECLO_SET_SOL_TOTAL = "@seclo/SET_SOL_TOTAL";
+export const SECLO_SET_CRED_TOTAL = "@seclo/SET_CRED_TOTAL";
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
@@ -63,12 +63,12 @@ export default function secloReducer(state = initialState, action: any): SecloSt
 		case SECLO_UPDATE_SOLICITUD:
 			return {
 				...state,
-				solicitudes: state.solicitudes.map(s => s._id === action.payload._id ? action.payload : s),
+				solicitudes: state.solicitudes.map((s) => (s._id === action.payload._id ? action.payload : s)),
 			};
 		case SECLO_REMOVE_SOLICITUD:
 			return {
 				...state,
-				solicitudes: state.solicitudes.filter(s => s._id !== action.payload),
+				solicitudes: state.solicitudes.filter((s) => s._id !== action.payload),
 				solicitudesTotal: Math.max(0, state.solicitudesTotal - 1),
 			};
 		case SECLO_SET_CREDENTIALS:
@@ -80,12 +80,12 @@ export default function secloReducer(state = initialState, action: any): SecloSt
 		case SECLO_UPDATE_CREDENTIAL:
 			return {
 				...state,
-				credentials: state.credentials.map(c => c._id === action.payload._id ? action.payload : c),
+				credentials: state.credentials.map((c) => (c._id === action.payload._id ? action.payload : c)),
 			};
 		case SECLO_REMOVE_CREDENTIAL:
 			return {
 				...state,
-				credentials: state.credentials.filter(c => c._id !== action.payload),
+				credentials: state.credentials.filter((c) => c._id !== action.payload),
 				credentialsTotal: Math.max(0, state.credentialsTotal - 1),
 			};
 		case SECLO_SET_STATS:
@@ -172,34 +172,45 @@ export const deleteSolicitud = (id: string) => async (dispatch: any) => {
  * Obtiene una URL presignada de descarga para un documento S3 del módulo SECLO.
  * Retorna la URL directamente (no modifica el estado de Redux).
  */
-export const getSecloDownloadUrl = (s3Key: string) => async (_dispatch: any): Promise<string | null> => {
-	try {
-		const { data } = await adminAxios.get("/api/seclo/download-url", { params: { key: s3Key } });
-		return data.success ? data.downloadUrl : null;
-	} catch (err: any) {
-		console.error("getSecloDownloadUrl:", err.message);
-		return null;
-	}
-};
-
-export const resetAgendaData = (id: string, resetEvent = false, suppressEmail = false) => async (dispatch: any) => {
-	try {
-		const { data } = await adminAxios.post(`/api/seclo/solicitudes/${id}/reset-agenda`, { resetEvent, suppressEmail });
-		if (data.success) {
-			dispatch({ type: SECLO_UPDATE_SOLICITUD, payload: data.solicitud });
-			dispatch(openSnackbar({ open: true, message: "Datos de agenda reseteados", variant: "alert", alert: { color: "success" } }));
+export const getSecloDownloadUrl =
+	(s3Key: string) =>
+	async (_dispatch: any): Promise<string | null> => {
+		try {
+			const { data } = await adminAxios.get("/api/seclo/download-url", { params: { key: s3Key } });
+			return data.success ? data.downloadUrl : null;
+		} catch (err: any) {
+			console.error("getSecloDownloadUrl:", err.message);
+			return null;
 		}
-	} catch (err: any) {
-		const msg = err.response?.data?.message || err.message;
-		dispatch(openSnackbar({ open: true, message: msg, variant: "alert", alert: { color: "error" } }));
-	}
-};
+	};
+
+export const resetAgendaData =
+	(id: string, resetEvent = false, suppressEmail = false) =>
+	async (dispatch: any) => {
+		try {
+			const { data } = await adminAxios.post(`/api/seclo/solicitudes/${id}/reset-agenda`, { resetEvent, suppressEmail });
+			if (data.success) {
+				dispatch({ type: SECLO_UPDATE_SOLICITUD, payload: data.solicitud });
+				dispatch(openSnackbar({ open: true, message: "Datos de agenda reseteados", variant: "alert", alert: { color: "success" } }));
+			}
+		} catch (err: any) {
+			const msg = err.response?.data?.message || err.message;
+			dispatch(openSnackbar({ open: true, message: msg, variant: "alert", alert: { color: "error" } }));
+		}
+	};
 
 export const triggerWorkerRun = (workerName: string) => async (dispatch: any) => {
 	try {
 		const { data } = await adminAxios.post(`/api/seclo/workers/${workerName}/run`);
 		if (data.success) {
-			dispatch(openSnackbar({ open: true, message: `Ejecución manual iniciada — el worker arrancará en ≤ 10 segundos`, variant: "alert", alert: { color: "info" } }));
+			dispatch(
+				openSnackbar({
+					open: true,
+					message: `Ejecución manual iniciada — el worker arrancará en ≤ 10 segundos`,
+					variant: "alert",
+					alert: { color: "info" },
+				}),
+			);
 		}
 	} catch (err: any) {
 		const msg = err.response?.data?.message || err.message;
@@ -207,32 +218,43 @@ export const triggerWorkerRun = (workerName: string) => async (dispatch: any) =>
 	}
 };
 
-export const fetchSolicitudById = (id: string) => async (_dispatch: any): Promise<SecloSolicitud | null> => {
-	try {
-		const { data } = await adminAxios.get(`/api/seclo/solicitudes/${id}`);
-		return data.success ? data.solicitud : null;
-	} catch (err: any) {
-		console.error("fetchSolicitudById:", err.message);
-		return null;
-	}
-};
+export const fetchSolicitudById =
+	(id: string) =>
+	async (_dispatch: any): Promise<SecloSolicitud | null> => {
+		try {
+			const { data } = await adminAxios.get(`/api/seclo/solicitudes/${id}`);
+			return data.success ? data.solicitud : null;
+		} catch (err: any) {
+			console.error("fetchSolicitudById:", err.message);
+			return null;
+		}
+	};
 
-export const fetchFoldersByUser = (userId: string, search?: string) => async (_dispatch: any): Promise<any[]> => {
-	try {
-		const { data } = await adminAxios.get(`/api/seclo/users/${userId}/folders`, { params: { search, limit: 50 } });
-		return data.success ? data.folders : [];
-	} catch (err: any) {
-		console.error("fetchFoldersByUser:", err.message);
-		return [];
-	}
-};
+export const fetchFoldersByUser =
+	(userId: string, search?: string) =>
+	async (_dispatch: any): Promise<any[]> => {
+		try {
+			const { data } = await adminAxios.get(`/api/seclo/users/${userId}/folders`, { params: { search, limit: 50 } });
+			return data.success ? data.folders : [];
+		} catch (err: any) {
+			console.error("fetchFoldersByUser:", err.message);
+			return [];
+		}
+	};
 
 export const linkSolicitudFolder = (solicitudId: string, folderId: string | null) => async (dispatch: any) => {
 	try {
 		const { data } = await adminAxios.patch(`/api/seclo/solicitudes/${solicitudId}/folder`, { folderId });
 		if (data.success) {
 			dispatch({ type: SECLO_UPDATE_SOLICITUD, payload: data.solicitud });
-			dispatch(openSnackbar({ open: true, message: folderId ? "Carpeta vinculada" : "Carpeta desvinculada", variant: "alert", alert: { color: "success" } }));
+			dispatch(
+				openSnackbar({
+					open: true,
+					message: folderId ? "Carpeta vinculada" : "Carpeta desvinculada",
+					variant: "alert",
+					alert: { color: "success" },
+				}),
+			);
 		}
 	} catch (err: any) {
 		const msg = err.response?.data?.message || err.message;
@@ -240,35 +262,41 @@ export const linkSolicitudFolder = (solicitudId: string, folderId: string | null
 	}
 };
 
-export const revealCredential = (id: string) => async (_dispatch: any): Promise<{ cuil: string; password: string } | null> => {
-	try {
-		const { data } = await adminAxios.get(`/api/seclo/credentials/${id}/reveal`);
-		return data.success ? { cuil: data.cuil, password: data.password } : null;
-	} catch (err: any) {
-		console.error("revealCredential:", err.message);
-		return null;
-	}
-};
+export const revealCredential =
+	(id: string) =>
+	async (_dispatch: any): Promise<{ cuil: string; password: string } | null> => {
+		try {
+			const { data } = await adminAxios.get(`/api/seclo/credentials/${id}/reveal`);
+			return data.success ? { cuil: data.cuil, password: data.password } : null;
+		} catch (err: any) {
+			console.error("revealCredential:", err.message);
+			return null;
+		}
+	};
 
-export const fetchTrabajoConfig = () => async (_dispatch: any): Promise<any | null> => {
-	try {
-		const { data } = await adminAxios.get("/api/seclo/config");
-		return data.success ? data.config : null;
-	} catch (err: any) {
-		console.error("fetchTrabajoConfig:", err.message);
-		return null;
-	}
-};
+export const fetchTrabajoConfig =
+	() =>
+	async (_dispatch: any): Promise<any | null> => {
+		try {
+			const { data } = await adminAxios.get("/api/seclo/config");
+			return data.success ? data.config : null;
+		} catch (err: any) {
+			console.error("fetchTrabajoConfig:", err.message);
+			return null;
+		}
+	};
 
-export const updateTrabajoConfig = (payload: Record<string, any>) => async (_dispatch: any): Promise<any | null> => {
-	try {
-		const { data } = await adminAxios.patch("/api/seclo/config", payload);
-		return data.success ? data.config : null;
-	} catch (err: any) {
-		console.error("updateTrabajoConfig:", err.message);
-		return null;
-	}
-};
+export const updateTrabajoConfig =
+	(payload: Record<string, any>) =>
+	async (_dispatch: any): Promise<any | null> => {
+		try {
+			const { data } = await adminAxios.patch("/api/seclo/config", payload);
+			return data.success ? data.config : null;
+		} catch (err: any) {
+			console.error("updateTrabajoConfig:", err.message);
+			return null;
+		}
+	};
 
 export const fetchCredentials = (params?: Record<string, any>) => async (dispatch: any) => {
 	dispatch({ type: SECLO_SET_LOADING, payload: true });

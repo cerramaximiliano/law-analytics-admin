@@ -243,7 +243,9 @@ const Suscripciones = () => {
 			});
 
 			const msg = cancelAtPeriodEnd
-				? `Suscripción programada para cancelarse. Período de gracia hasta ${response.gracePeriodEndDate ? dayjs(response.gracePeriodEndDate).format("DD/MM/YYYY") : "—"}`
+				? `Suscripción programada para cancelarse. Período de gracia hasta ${
+						response.gracePeriodEndDate ? dayjs(response.gracePeriodEndDate).format("DD/MM/YYYY") : "—"
+				  }`
 				: `Suscripción cancelada inmediatamente. Período de gracia activo.`;
 
 			enqueueSnackbar(msg, { variant: "success", autoHideDuration: 6000 });
@@ -1659,7 +1661,8 @@ const Suscripciones = () => {
 										<Divider sx={{ mb: 2 }} />
 										<Stack spacing={2}>
 											<Typography variant="body2" color="text.secondary">
-												Cancela la suscripción del usuario de forma controlada. El usuario recibirá una notificación y tendrá un período de gracia para archivar sus datos.
+												Cancela la suscripción del usuario de forma controlada. El usuario recibirá una notificación y tendrá un período de
+												gracia para archivar sus datos.
 											</Typography>
 											<Alert severity="warning">
 												<Typography variant="body2" fontWeight="bold">
@@ -2030,8 +2033,12 @@ const Suscripciones = () => {
 										style={{ cursor: "pointer" }}
 									/>
 									<label htmlFor="atPeriodEndTrue" style={{ cursor: "pointer" }}>
-										<Typography variant="body2" fontWeight="bold">Al fin del período de facturación</Typography>
-										<Typography variant="caption" color="text.secondary">El usuario conserva acceso hasta que venza su período. Luego 15 días de gracia.</Typography>
+										<Typography variant="body2" fontWeight="bold">
+											Al fin del período de facturación
+										</Typography>
+										<Typography variant="caption" color="text.secondary">
+											El usuario conserva acceso hasta que venza su período. Luego 15 días de gracia.
+										</Typography>
 									</label>
 								</Stack>
 								<Stack direction="row" spacing={1} alignItems="center">
@@ -2044,8 +2051,12 @@ const Suscripciones = () => {
 										style={{ cursor: "pointer" }}
 									/>
 									<label htmlFor="atPeriodEndFalse" style={{ cursor: "pointer" }}>
-										<Typography variant="body2" fontWeight="bold">Inmediatamente</Typography>
-										<Typography variant="caption" color="text.secondary">El usuario pasa al plan FREE ahora mismo. 15 días de gracia para archivar datos.</Typography>
+										<Typography variant="body2" fontWeight="bold">
+											Inmediatamente
+										</Typography>
+										<Typography variant="caption" color="text.secondary">
+											El usuario pasa al plan FREE ahora mismo. 15 días de gracia para archivar datos.
+										</Typography>
 									</label>
 								</Stack>
 							</Stack>
@@ -2066,7 +2077,8 @@ const Suscripciones = () => {
 
 						<Alert severity="info">
 							<Typography variant="body2">
-								El usuario recibirá un <strong>email de notificación</strong> y una alerta en la plataforma. El evento quedará registrado en el historial con origen <strong>"admin"</strong>.
+								El usuario recibirá un <strong>email de notificación</strong> y una alerta en la plataforma. El evento quedará registrado en
+								el historial con origen <strong>"admin"</strong>.
 							</Typography>
 						</Alert>
 					</Stack>

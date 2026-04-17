@@ -354,13 +354,13 @@ const CausasPendientes = () => {
 								</TableCell>
 								<TableCell>{formatDate(causa.lastUpdate)}</TableCell>
 								<TableCell>{formatDate(causa.createdAt)}</TableCell>
-							<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-								<Tooltip title="Ver JSON">
-									<IconButton size="small" onClick={() => setJsonCausa(causa)}>
-										<Code size={16} />
-									</IconButton>
-								</Tooltip>
-							</TableCell>
+								<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+									<Tooltip title="Ver JSON">
+										<IconButton size="small" onClick={() => setJsonCausa(causa)}>
+											<Code size={16} />
+										</IconButton>
+									</Tooltip>
+								</TableCell>
 							</TableRow>
 						))}
 					</TableBody>
@@ -487,39 +487,39 @@ const CausasPendientes = () => {
 					rowsPerPageOptions={[10, 20, 50, 100]}
 				/>
 			)}
-		{/* JSON Modal */}
-		<Dialog open={!!jsonCausa} onClose={() => setJsonCausa(null)} maxWidth="md" fullWidth>
-			<DialogTitle>
-				JSON del documento
-				{jsonCausa && (
-					<Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-						{jsonCausa._id}
-					</Typography>
-				)}
-			</DialogTitle>
-			<DialogContent dividers>
-				<Box
-					component="pre"
-					sx={{
-						fontFamily: "monospace",
-						fontSize: 12,
-						whiteSpace: "pre-wrap",
-						wordBreak: "break-all",
-						m: 0,
-						p: 1,
-						bgcolor: "action.hover",
-						borderRadius: 1,
-						maxHeight: 520,
-						overflowY: "auto",
-					}}
-				>
-					{jsonCausa ? JSON.stringify(jsonCausa, null, 2) : ""}
-				</Box>
-			</DialogContent>
-			<DialogActions>
-				<Button onClick={() => setJsonCausa(null)}>Cerrar</Button>
-			</DialogActions>
-		</Dialog>
+			{/* JSON Modal */}
+			<Dialog open={!!jsonCausa} onClose={() => setJsonCausa(null)} maxWidth="md" fullWidth>
+				<DialogTitle>
+					JSON del documento
+					{jsonCausa && (
+						<Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+							{jsonCausa._id}
+						</Typography>
+					)}
+				</DialogTitle>
+				<DialogContent dividers>
+					<Box
+						component="pre"
+						sx={{
+							fontFamily: "monospace",
+							fontSize: 12,
+							whiteSpace: "pre-wrap",
+							wordBreak: "break-all",
+							m: 0,
+							p: 1,
+							bgcolor: "action.hover",
+							borderRadius: 1,
+							maxHeight: 520,
+							overflowY: "auto",
+						}}
+					>
+						{jsonCausa ? JSON.stringify(jsonCausa, null, 2) : ""}
+					</Box>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setJsonCausa(null)}>Cerrar</Button>
+				</DialogActions>
+			</Dialog>
 		</MainCard>
 	);
 };

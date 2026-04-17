@@ -140,7 +140,9 @@ const WorkerStatsTab = () => {
 					<Divider />
 					<Stack direction="row" justifyContent="space-between" alignItems="center">
 						<Typography variant="h6">Desglose diario</Typography>
-						<Typography variant="caption" color="text.secondary">{dailyStats.length} entradas</Typography>
+						<Typography variant="caption" color="text.secondary">
+							{dailyStats.length} entradas
+						</Typography>
 					</Stack>
 					<TableContainer component={Box}>
 						<Table size="small">
@@ -154,33 +156,36 @@ const WorkerStatsTab = () => {
 								</TableRow>
 							</TableHead>
 							<TableBody>
-								{[...dailyStats].reverse().slice((dailyPage - 1) * DAILY_PAGE_SIZE, dailyPage * DAILY_PAGE_SIZE).map((entry) => (
-									<TableRow key={entry._id} hover>
-										<TableCell>
-											<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
-												{entry.date}
-											</Typography>
-										</TableCell>
-										<TableCell>
-											<Typography variant="caption">{WORKER_LABELS[entry.workerName] || entry.workerName}</Typography>
-										</TableCell>
-										<TableCell align="right">
-											<Typography variant="caption" fontWeight={600} color="success.main">
-												{entry.jobsCompleted}
-											</Typography>
-										</TableCell>
-										<TableCell align="right">
-											<Typography variant="caption" fontWeight={600} color={entry.jobsFailed > 0 ? "error.main" : "text.secondary"}>
-												{entry.jobsFailed}
-											</Typography>
-										</TableCell>
-										<TableCell align="right">
-											<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
-												{formatMs(entry.totalProcessingMs)}
-											</Typography>
-										</TableCell>
-									</TableRow>
-								))}
+								{[...dailyStats]
+									.reverse()
+									.slice((dailyPage - 1) * DAILY_PAGE_SIZE, dailyPage * DAILY_PAGE_SIZE)
+									.map((entry) => (
+										<TableRow key={entry._id} hover>
+											<TableCell>
+												<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+													{entry.date}
+												</Typography>
+											</TableCell>
+											<TableCell>
+												<Typography variant="caption">{WORKER_LABELS[entry.workerName] || entry.workerName}</Typography>
+											</TableCell>
+											<TableCell align="right">
+												<Typography variant="caption" fontWeight={600} color="success.main">
+													{entry.jobsCompleted}
+												</Typography>
+											</TableCell>
+											<TableCell align="right">
+												<Typography variant="caption" fontWeight={600} color={entry.jobsFailed > 0 ? "error.main" : "text.secondary"}>
+													{entry.jobsFailed}
+												</Typography>
+											</TableCell>
+											<TableCell align="right">
+												<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+													{formatMs(entry.totalProcessingMs)}
+												</Typography>
+											</TableCell>
+										</TableRow>
+									))}
 							</TableBody>
 						</Table>
 					</TableContainer>

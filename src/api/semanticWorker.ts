@@ -23,10 +23,12 @@ export interface SemanticWorkerConfig {
 	updatedAt?: string;
 }
 
-export type SemanticWorkerConfigUpdate = Partial<Pick<
-	SemanticWorkerConfig,
-	"enabled" | "minCorpusSize" | "similarityThreshold" | "filterByFuero" | "filterBySentenciaTipo" | "topK" | "batchSize" | "cronPattern"
->>;
+export type SemanticWorkerConfigUpdate = Partial<
+	Pick<
+		SemanticWorkerConfig,
+		"enabled" | "minCorpusSize" | "similarityThreshold" | "filterByFuero" | "filterBySentenciaTipo" | "topK" | "batchSize" | "cronPattern"
+	>
+>;
 
 // ── Service ───────────────────────────────────────────────────────────────────
 

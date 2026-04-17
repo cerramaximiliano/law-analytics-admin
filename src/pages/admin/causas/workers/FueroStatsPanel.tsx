@@ -114,24 +114,27 @@ const FueroStatsPanel: React.FC = () => {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	const fetchStats = useCallback(async (showLoading = true) => {
-		if (showLoading) setLoading(true);
-		setError(null);
-		try {
-			const res = await ScrapingManagerService.getFueroStats();
-			if (res.success) {
-				setStats(res.data);
+	const fetchStats = useCallback(
+		async (showLoading = true) => {
+			if (showLoading) setLoading(true);
+			setError(null);
+			try {
+				const res = await ScrapingManagerService.getFueroStats();
+				if (res.success) {
+					setStats(res.data);
+				}
+			} catch (err: any) {
+				const msg = err.response?.data?.message || "Error al cargar estadísticas por fuero";
+				setError(msg);
+				if (showLoading) {
+					enqueueSnackbar(msg, { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+				}
+			} finally {
+				if (showLoading) setLoading(false);
 			}
-		} catch (err: any) {
-			const msg = err.response?.data?.message || "Error al cargar estadísticas por fuero";
-			setError(msg);
-			if (showLoading) {
-				enqueueSnackbar(msg, { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
-			}
-		} finally {
-			if (showLoading) setLoading(false);
-		}
-	}, [enqueueSnackbar]);
+		},
+		[enqueueSnackbar],
+	);
 
 	useEffect(() => {
 		fetchStats();

@@ -815,10 +815,7 @@ const SupportContactsPage = () => {
 
 								{/* Attachment */}
 								{selectedContact.attachmentFilename && (
-									<Paper
-										variant="outlined"
-										sx={{ p: 2, borderColor: "primary.200", bgcolor: "primary.50" }}
-									>
+									<Paper variant="outlined" sx={{ p: 2, borderColor: "primary.200", bgcolor: "primary.50" }}>
 										<Stack direction="row" alignItems="center" spacing={1.5}>
 											<Paperclip size={20} color={theme.palette.primary.main} />
 											<Box flex={1}>
@@ -830,7 +827,9 @@ const SupportContactsPage = () => {
 												</Typography>
 											</Box>
 											{fetchingDetail ? (
-												<Typography variant="caption" color="textSecondary">Obteniendo enlace…</Typography>
+												<Typography variant="caption" color="textSecondary">
+													Obteniendo enlace…
+												</Typography>
 											) : selectedContact.attachmentUrl ? (
 												<Button
 													size="small"
@@ -841,7 +840,9 @@ const SupportContactsPage = () => {
 													Descargar
 												</Button>
 											) : (
-												<Typography variant="caption" color="error">Enlace no disponible</Typography>
+												<Typography variant="caption" color="error">
+													Enlace no disponible
+												</Typography>
 											)}
 										</Stack>
 									</Paper>

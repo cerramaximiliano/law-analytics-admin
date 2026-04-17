@@ -67,21 +67,21 @@ export interface SecloDocumento {
 }
 
 export interface SecloConciliador {
-	nombre?:   string | null;
+	nombre?: string | null;
 	telefono?: string | null;
-	email?:    string | null;
-	sala?:     string | null;
+	email?: string | null;
+	sala?: string | null;
 }
 
 export interface SecloAudiencia {
-	fecha?:             string | null;
-	hora?:              string | null;
-	lugar?:             string | null;
-	constanciaKey?:     string | null;
-	conciliador?:       SecloConciliador | null;
-	eventId?:           string;
-	agendaScrapeAt?:    string;
-	agendaRetryCount?:  number;
+	fecha?: string | null;
+	hora?: string | null;
+	lugar?: string | null;
+	constanciaKey?: string | null;
+	conciliador?: SecloConciliador | null;
+	eventId?: string;
+	agendaScrapeAt?: string;
+	agendaRetryCount?: number;
 	suppressNextEmail?: boolean;
 }
 

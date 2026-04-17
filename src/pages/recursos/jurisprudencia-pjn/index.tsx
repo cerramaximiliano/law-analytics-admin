@@ -102,11 +102,7 @@ function ChunkCard({ chunk, matched }: { chunk: { index: number; sectionType: st
 				sx={{ px: 1.5, py: 0.75, cursor: "pointer" }}
 				onClick={() => setOpen((p) => !p)}
 			>
-				<Chip
-					label={label}
-					size="small"
-					sx={{ bgcolor: alpha(color, 0.12), color, fontWeight: 600, fontSize: 11 }}
-				/>
+				<Chip label={label} size="small" sx={{ bgcolor: alpha(color, 0.12), color, fontWeight: 600, fontSize: 11 }} />
 				<Typography variant="caption" color="text.secondary" noWrap sx={{ flex: 1 }}>
 					{chunk.text.slice(0, 100)}…
 				</Typography>
@@ -139,7 +135,10 @@ function ResultCard({ result, index }: { result: SentenciaResult; index: number 
 	const fueroColor = FUERO_COLOR[sentencia.fuero] || theme.palette.primary.main;
 
 	const handleLoadFull = async () => {
-		if (loadedText !== null) { setShowFull((p) => !p); return; }
+		if (loadedText !== null) {
+			setShowFull((p) => !p);
+			return;
+		}
 		setLoadingFull(true);
 		setLoadError(null);
 		try {
@@ -166,8 +165,17 @@ function ResultCard({ result, index }: { result: SentenciaResult; index: number 
 							{sentencia.caratula || "Sin carátula"}
 						</Typography>
 						<Stack direction="row" flexWrap="wrap" gap={0.5} mt={0.5}>
-							<Chip label={sentencia.fuero} size="small" sx={{ bgcolor: alpha(fueroColor, 0.12), color: fueroColor, fontWeight: 700, fontSize: 11 }} />
-							<Chip label={TIPO_LABEL[sentencia.sentenciaTipo] || sentencia.sentenciaTipo} size="small" variant="outlined" sx={{ fontSize: 11 }} />
+							<Chip
+								label={sentencia.fuero}
+								size="small"
+								sx={{ bgcolor: alpha(fueroColor, 0.12), color: fueroColor, fontWeight: 700, fontSize: 11 }}
+							/>
+							<Chip
+								label={TIPO_LABEL[sentencia.sentenciaTipo] || sentencia.sentenciaTipo}
+								size="small"
+								variant="outlined"
+								sx={{ fontSize: 11 }}
+							/>
 							{sentencia.year && <Chip label={sentencia.year} size="small" variant="outlined" sx={{ fontSize: 11 }} />}
 							{sentencia.category === "novelty" && <Chip label="Novelty" size="small" color="secondary" sx={{ fontSize: 11 }} />}
 						</Stack>
@@ -199,7 +207,8 @@ function ResultCard({ result, index }: { result: SentenciaResult; index: number 
 				{sentencia.aiSummary?.status === "approved" && (
 					<Alert severity="info" sx={{ mb: 1.5, py: 0.5 }}>
 						<Typography variant="caption" sx={{ whiteSpace: "pre-wrap" }}>
-							{sentencia.aiSummary.content.slice(0, 400)}{sentencia.aiSummary.content.length > 400 ? "…" : ""}
+							{sentencia.aiSummary.content.slice(0, 400)}
+							{sentencia.aiSummary.content.length > 400 ? "…" : ""}
 						</Typography>
 					</Alert>
 				)}
@@ -225,16 +234,16 @@ function ResultCard({ result, index }: { result: SentenciaResult; index: number 
 						variant="text"
 						onClick={handleLoadFull}
 						disabled={loadingFull}
-						startIcon={loadingFull ? <CircularProgress size={12} color="inherit" /> : showFull ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
+						startIcon={
+							loadingFull ? <CircularProgress size={12} color="inherit" /> : showFull ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />
+						}
 					>
-						{loadingFull
-							? "Cargando fallo…"
-							: showFull
-							? "Ocultar fallo completo"
-							: "Ver fallo completo"}
+						{loadingFull ? "Cargando fallo…" : showFull ? "Ocultar fallo completo" : "Ver fallo completo"}
 					</Button>
 					{loadError && (
-						<Typography variant="caption" color="error" ml={1}>{loadError}</Typography>
+						<Typography variant="caption" color="error" ml={1}>
+							{loadError}
+						</Typography>
 					)}
 					<Collapse in={showFull}>
 						{loadedText !== null && (
@@ -266,7 +275,9 @@ function ResultCard({ result, index }: { result: SentenciaResult; index: number 
 function LatencyBadge({ label, ms }: { label: string; ms: number }) {
 	return (
 		<Stack direction="row" spacing={0.5} alignItems="center">
-			<Typography variant="caption" color="text.disabled">{label}</Typography>
+			<Typography variant="caption" color="text.disabled">
+				{label}
+			</Typography>
 			<Chip label={`${ms}ms`} size="small" variant="outlined" sx={{ fontSize: 10, height: 18 }} />
 		</Stack>
 	);
@@ -281,7 +292,7 @@ export default function JurisprudenciaPjnPage() {
 	// Búsqueda semántica
 	const [query, setQuery] = useState("");
 	const [filters, setFilters] = useState<SearchFilters>({});
-	const [options, setOptions] = useState<SearchOptions>({ topK: 5, minScore: 0.60, includeFullText: false });
+	const [options, setOptions] = useState<SearchOptions>({ topK: 5, minScore: 0.6, includeFullText: false });
 
 	// Búsqueda por similitud
 	const [sentenciaId, setSentenciaId] = useState("");
@@ -342,7 +353,14 @@ export default function JurisprudenciaPjnPage() {
 		<MainCard title="Jurisprudencia PJN — Búsqueda Semántica">
 			<Stack spacing={3}>
 				{/* Tabs de modo */}
-				<Tabs value={tab} onChange={(_, v) => { setTab(v); handleReset(); }} sx={{ borderBottom: 1, borderColor: "divider" }}>
+				<Tabs
+					value={tab}
+					onChange={(_, v) => {
+						setTab(v);
+						handleReset();
+					}}
+					sx={{ borderBottom: 1, borderColor: "divider" }}
+				>
 					<Tab icon={<SearchNormal1 size={16} />} iconPosition="start" label="Por texto" />
 					<Tab icon={<DocumentText1 size={16} />} iconPosition="start" label="Por similitud" />
 				</Tabs>
@@ -358,7 +376,9 @@ export default function JurisprudenciaPjnPage() {
 							minRows={2}
 							value={query}
 							onChange={(e) => setQuery(e.target.value)}
-							onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) handleBuscar(); }}
+							onKeyDown={(e) => {
+								if (e.key === "Enter" && e.ctrlKey) handleBuscar();
+							}}
 							helperText="Ctrl+Enter para buscar"
 						/>
 
@@ -464,9 +484,15 @@ export default function JurisprudenciaPjnPage() {
 									</Typography>
 									<Slider
 										value={options.topK ?? 5}
-										min={1} max={20} step={1}
+										min={1}
+										max={20}
+										step={1}
 										onChange={(_, v) => setOptions((o) => ({ ...o, topK: v as number }))}
-										marks={[{ value: 1, label: "1" }, { value: 10, label: "10" }, { value: 20, label: "20" }]}
+										marks={[
+											{ value: 1, label: "1" },
+											{ value: 10, label: "10" },
+											{ value: 20, label: "20" },
+										]}
 										size="small"
 									/>
 								</Grid>
@@ -475,10 +501,16 @@ export default function JurisprudenciaPjnPage() {
 										Score mínimo: <strong>{options.minScore?.toFixed(2)}</strong>
 									</Typography>
 									<Slider
-										value={options.minScore ?? 0.60}
-										min={0.5} max={0.99} step={0.01}
+										value={options.minScore ?? 0.6}
+										min={0.5}
+										max={0.99}
+										step={0.01}
 										onChange={(_, v) => setOptions((o) => ({ ...o, minScore: v as number }))}
-										marks={[{ value: 0.5, label: "0.5" }, { value: 0.75, label: "0.75" }, { value: 0.99, label: "0.99" }]}
+										marks={[
+											{ value: 0.5, label: "0.5" },
+											{ value: 0.75, label: "0.75" },
+											{ value: 0.99, label: "0.99" },
+										]}
 										size="small"
 									/>
 								</Grid>
@@ -529,7 +561,9 @@ export default function JurisprudenciaPjnPage() {
 							InputProps={{
 								endAdornment: (
 									<Tooltip title="El ID se encuentra en el listado de sentencias capturadas">
-										<IconButton size="small"><Link21 size={16} /></IconButton>
+										<IconButton size="small">
+											<Link21 size={16} />
+										</IconButton>
 									</Tooltip>
 								),
 							}}
@@ -547,9 +581,15 @@ export default function JurisprudenciaPjnPage() {
 									</Typography>
 									<Slider
 										value={options.topK ?? 5}
-										min={1} max={20} step={1}
+										min={1}
+										max={20}
+										step={1}
 										onChange={(_, v) => setOptions((o) => ({ ...o, topK: v as number }))}
-										marks={[{ value: 1, label: "1" }, { value: 10, label: "10" }, { value: 20, label: "20" }]}
+										marks={[
+											{ value: 1, label: "1" },
+											{ value: 10, label: "10" },
+											{ value: 20, label: "20" },
+										]}
 										size="small"
 									/>
 								</Grid>
@@ -558,10 +598,16 @@ export default function JurisprudenciaPjnPage() {
 										Score mínimo: <strong>{options.minScore?.toFixed(2)}</strong>
 									</Typography>
 									<Slider
-										value={options.minScore ?? 0.60}
-										min={0.5} max={0.99} step={0.01}
+										value={options.minScore ?? 0.6}
+										min={0.5}
+										max={0.99}
+										step={0.01}
 										onChange={(_, v) => setOptions((o) => ({ ...o, minScore: v as number }))}
-										marks={[{ value: 0.5, label: "0.5" }, { value: 0.75, label: "0.75" }, { value: 0.99, label: "0.99" }]}
+										marks={[
+											{ value: 0.5, label: "0.5" },
+											{ value: 0.75, label: "0.75" },
+											{ value: 0.99, label: "0.99" },
+										]}
 										size="small"
 									/>
 								</Grid>

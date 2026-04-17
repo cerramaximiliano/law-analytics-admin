@@ -551,1042 +551,1069 @@ const ScrapingWorker = () => {
 
 	return (
 		<>
-		<Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" } }}>
-			<Tabs
-				orientation="vertical"
-				variant="scrollable"
-				value={subTab}
-				onChange={(_, v) => setSubTab(v)}
-				sx={{
-					borderRight: { md: 1 },
-					borderBottom: { xs: 1, md: 0 },
-					borderColor: "divider",
-					minWidth: { md: 200 },
-					"& .MuiTab-root": {
-						textTransform: "none",
-						alignItems: "flex-start",
-						minHeight: 64,
-						px: 2,
-					},
-				}}
-			>
-				{([
-					{ label: "Configuraciones", subtitle: "Gestión de workers", icon: <Setting4 size={20} /> },
-					{ label: "Control PM2", subtitle: "Estado y operaciones", icon: <Cpu size={20} /> },
-					{ label: "Historial", subtitle: "Rangos completados", icon: <Clock size={20} /> },
-					{ label: "Cobertura", subtitle: "Períodos faltantes", icon: <Map1 size={20} /> },
-					{ label: "Estadísticas", subtitle: "Captchas y documentos", icon: <ChartSquare size={20} /> },
-				] as { label: string; subtitle: string; icon: React.ReactNode }[]).map((tab, i) => (
-					<Tab
-						key={i}
-						label={
-							<Stack direction="row" spacing={1.5} alignItems="center">
-								{tab.icon}
-								<Box textAlign="left">
-									<Typography variant="body2" fontWeight={500}>{tab.label}</Typography>
-									<Typography variant="caption" color="text.secondary">{tab.subtitle}</Typography>
-								</Box>
+			<Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" } }}>
+				<Tabs
+					orientation="vertical"
+					variant="scrollable"
+					value={subTab}
+					onChange={(_, v) => setSubTab(v)}
+					sx={{
+						borderRight: { md: 1 },
+						borderBottom: { xs: 1, md: 0 },
+						borderColor: "divider",
+						minWidth: { md: 200 },
+						"& .MuiTab-root": {
+							textTransform: "none",
+							alignItems: "flex-start",
+							minHeight: 64,
+							px: 2,
+						},
+					}}
+				>
+					{(
+						[
+							{ label: "Configuraciones", subtitle: "Gestión de workers", icon: <Setting4 size={20} /> },
+							{ label: "Control PM2", subtitle: "Estado y operaciones", icon: <Cpu size={20} /> },
+							{ label: "Historial", subtitle: "Rangos completados", icon: <Clock size={20} /> },
+							{ label: "Cobertura", subtitle: "Períodos faltantes", icon: <Map1 size={20} /> },
+							{ label: "Estadísticas", subtitle: "Captchas y documentos", icon: <ChartSquare size={20} /> },
+						] as { label: string; subtitle: string; icon: React.ReactNode }[]
+					).map((tab, i) => (
+						<Tab
+							key={i}
+							label={
+								<Stack direction="row" spacing={1.5} alignItems="center">
+									{tab.icon}
+									<Box textAlign="left">
+										<Typography variant="body2" fontWeight={500}>
+											{tab.label}
+										</Typography>
+										<Typography variant="caption" color="text.secondary">
+											{tab.subtitle}
+										</Typography>
+									</Box>
+								</Stack>
+							}
+						/>
+					))}
+				</Tabs>
+
+				<Box sx={{ flexGrow: 1, minWidth: 0 }}>
+					{subTab === 1 && (
+						<Box sx={{ p: { xs: 2, md: 3 } }}>
+							<ScrapingManagerPanel />
+						</Box>
+					)}
+					{subTab === 2 && (
+						<Box sx={{ p: { xs: 2, md: 3 } }}>
+							<RangeHistoryPanel />
+						</Box>
+					)}
+					{subTab === 3 && (
+						<Box sx={{ p: { xs: 2, md: 3 } }}>
+							<CoveragePanel />
+						</Box>
+					)}
+					{subTab === 4 && (
+						<Box sx={{ p: { xs: 2, md: 3 } }}>
+							<Stack spacing={4}>
+								<ScrapingStatsPanel />
+								<FueroStatsPanel />
 							</Stack>
-						}
-					/>
-				))}
-			</Tabs>
+						</Box>
+					)}
 
-			<Box sx={{ flexGrow: 1, minWidth: 0 }}>
-				{subTab === 1 && <Box sx={{ p: { xs: 2, md: 3 } }}><ScrapingManagerPanel /></Box>}
-				{subTab === 2 && <Box sx={{ p: { xs: 2, md: 3 } }}><RangeHistoryPanel /></Box>}
-				{subTab === 3 && <Box sx={{ p: { xs: 2, md: 3 } }}><CoveragePanel /></Box>}
-				{subTab === 4 && (
-					<Box sx={{ p: { xs: 2, md: 3 } }}>
-						<Stack spacing={4}>
-							<ScrapingStatsPanel />
-							<FueroStatsPanel />
-						</Stack>
-					</Box>
-				)}
-
-			{subTab === 0 && (
-				<Box sx={{ p: { xs: 2, md: 3 } }}>
-					{/* Header: Título y Acciones */}
-					<Box
-						display="flex"
-						flexDirection={{ xs: "column", sm: "row" }}
-						justifyContent="space-between"
-						alignItems={{ xs: "stretch", sm: "center" }}
-						gap={2}
-					>
-						<Stack direction="row" alignItems="center" spacing={1}>
-							<Typography variant="h5">Configuración del Worker de Scraping</Typography>
-							<Tooltip title="Ver información">
-								<IconButton size="small" color="info" onClick={(e) => setInfoAnchorEl(e.currentTarget)}>
-									<InfoCircle size={20} />
-								</IconButton>
-							</Tooltip>
-							<Popover
-								open={Boolean(infoAnchorEl)}
-								anchorEl={infoAnchorEl}
-								onClose={() => setInfoAnchorEl(null)}
-								anchorOrigin={{
-									vertical: "bottom",
-									horizontal: "left",
-								}}
-								transformOrigin={{
-									vertical: "top",
-									horizontal: "left",
-								}}
+					{subTab === 0 && (
+						<Box sx={{ p: { xs: 2, md: 3 } }}>
+							{/* Header: Título y Acciones */}
+							<Box
+								display="flex"
+								flexDirection={{ xs: "column", sm: "row" }}
+								justifyContent="space-between"
+								alignItems={{ xs: "stretch", sm: "center" }}
+								gap={2}
 							>
-								<Box sx={{ p: 2, maxWidth: 400 }}>
-									<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-										Worker de Scraping de Causas
-									</Typography>
-									<Typography variant="body2" color="text.secondary">
-										Este worker se encarga de buscar y recopilar automáticamente nuevas causas judiciales desde los sistemas del Poder
-										Judicial, procesando rangos de números de expedientes por fuero y año.
-									</Typography>
-								</Box>
-							</Popover>
-						</Stack>
-						<Stack direction="row" spacing={1.5} alignItems="center" justifyContent={{ xs: "flex-start", sm: "flex-end" }}>
-							<Button variant="contained" color="primary" size="small" startIcon={<AddCircle size={18} />} onClick={handleOpenCreateConfig}>
-								Nuevo Worker
-							</Button>
-							<Button
-								variant="outlined"
-								color="warning"
-								size="small"
-								startIcon={<Warning2 size={18} />}
-								onClick={() => setTemporaryWorkersOpen(true)}
-							>
-								Temporarios
-							</Button>
-						</Stack>
-					</Box>
-
-					{/* Búsqueda y Filtros */}
-					<Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 } }}>
-						<Grid container spacing={2} alignItems="center">
-							{/* Búsqueda por Worker ID */}
-							<Grid item xs={12} md={5} lg={4}>
-								<Stack spacing={1}>
-									<Typography variant="caption" color="text.secondary" fontWeight={500}>
-										Búsqueda
-									</Typography>
-									<Stack direction="row" spacing={1} alignItems="center">
-										<TextField
-											size="small"
-											placeholder="Buscar por Worker ID"
-											value={workerIdInput}
-											onChange={(e) => setWorkerIdInput(e.target.value)}
-											onKeyDown={(e) => {
-												if (e.key === "Enter") handleWorkerIdSearch();
-											}}
-											fullWidth
-											InputProps={{
-												sx: { fontSize: "0.875rem" },
-											}}
-										/>
-										<Button
-											variant="contained"
-											size="small"
-											startIcon={<SearchNormal1 size={16} />}
-											onClick={handleWorkerIdSearch}
-											disabled={loading}
-											sx={{ minWidth: "auto", whiteSpace: "nowrap" }}
-										>
-											Buscar
-										</Button>
-										{workerIdFilter && (
-											<Button variant="outlined" size="small" color="secondary" onClick={handleWorkerIdClear} sx={{ minWidth: "auto" }}>
-												Limpiar
-											</Button>
-										)}
-									</Stack>
-								</Stack>
-							</Grid>
-
-							{/* Separador vertical en desktop */}
-							<Grid item xs={12} md="auto" sx={{ display: { xs: "none", md: "block" } }}>
-								<Box sx={{ borderLeft: 1, borderColor: "divider", height: 50, mx: 1 }} />
-							</Grid>
-
-							{/* Filtros */}
-							<Grid item xs={12} md>
-								<Stack spacing={1}>
-									<Typography variant="caption" color="text.secondary" fontWeight={500}>
-										Filtros
-									</Typography>
-									<Stack
-										direction={{ xs: "column", sm: "row" }}
-										spacing={1}
-										alignItems={{ xs: "stretch", sm: "center" }}
-										flexWrap="wrap"
-										useFlexGap
+								<Stack direction="row" alignItems="center" spacing={1}>
+									<Typography variant="h5">Configuración del Worker de Scraping</Typography>
+									<Tooltip title="Ver información">
+										<IconButton size="small" color="info" onClick={(e) => setInfoAnchorEl(e.currentTarget)}>
+											<InfoCircle size={20} />
+										</IconButton>
+									</Tooltip>
+									<Popover
+										open={Boolean(infoAnchorEl)}
+										anchorEl={infoAnchorEl}
+										onClose={() => setInfoAnchorEl(null)}
+										anchorOrigin={{
+											vertical: "bottom",
+											horizontal: "left",
+										}}
+										transformOrigin={{
+											vertical: "top",
+											horizontal: "left",
+										}}
 									>
-										<FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 140 } }}>
-											<Select value={fueroFilter} onChange={(e) => handleFueroFilterChange(e.target.value)} displayEmpty>
-												<MenuItem value="TODOS">Todos los Fueros</MenuItem>
-												{FUERO_OPTIONS.map((option) => (
-													<MenuItem key={option.value} value={option.value}>
-														{option.label}
-													</MenuItem>
-												))}
-											</Select>
-										</FormControl>
-										<FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 120 } }}>
-											<Select value={yearFilter} onChange={(e) => handleYearFilterChange(e.target.value)} displayEmpty>
-												<MenuItem value="TODOS">Todos los Años</MenuItem>
-												{YEAR_OPTIONS.map((year) => (
-													<MenuItem key={year} value={year}>
-														{year}
-													</MenuItem>
-												))}
-											</Select>
-										</FormControl>
-										<FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 130 } }}>
-											<Select value={progresoFilter} onChange={(e) => handleProgresoFilterChange(e.target.value)} displayEmpty>
-												<MenuItem value="TODOS">Progreso</MenuItem>
-												<MenuItem value="completo">
-													<Stack direction="row" spacing={1} alignItems="center">
-														<Typography variant="body2">Completo</Typography>
-														<Chip label="100%" size="small" color="success" />
-													</Stack>
-												</MenuItem>
-												<MenuItem value="incompleto">
-													<Stack direction="row" spacing={1} alignItems="center">
-														<Typography variant="body2">En Progreso</Typography>
-														<Chip label="<100%" size="small" color="warning" />
-													</Stack>
-												</MenuItem>
-											</Select>
-										</FormControl>
-										<FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 120 } }}>
-											<Select value={estadoFilter} onChange={(e) => handleEstadoFilterChange(e.target.value)} displayEmpty>
-												<MenuItem value="TODOS">Estado</MenuItem>
-												<MenuItem value="activo">
-													<Stack direction="row" spacing={1} alignItems="center">
-														<Typography variant="body2">Activos</Typography>
-														<Chip label="ON" size="small" color="success" />
-													</Stack>
-												</MenuItem>
-												<MenuItem value="inactivo">
-													<Stack direction="row" spacing={1} alignItems="center">
-														<Typography variant="body2">Inactivos</Typography>
-														<Chip label="OFF" size="small" color="default" />
-													</Stack>
-												</MenuItem>
-											</Select>
-										</FormControl>
-										<Tooltip title="Refrescar datos y actualizar conteo total">
-											<Button
-												variant="outlined"
-												size="small"
-												startIcon={<Refresh size={16} />}
-												onClick={handleRefresh}
-												sx={{ minWidth: { xs: "100%", sm: "auto" } }}
-											>
-												Actualizar
-											</Button>
-										</Tooltip>
-										<Tooltip title={showExtraColumns ? "Ocultar columnas extra" : "Mostrar Balance, Captchas y Proxy"}>
-											<Button
-												variant={showExtraColumns ? "contained" : "outlined"}
-												size="small"
-												color="secondary"
-												startIcon={showExtraColumns ? <EyeSlash size={16} /> : <Eye size={16} />}
-												onClick={() => setShowExtraColumns(!showExtraColumns)}
-												sx={{ minWidth: { xs: "100%", sm: "auto" } }}
-											>
-												{showExtraColumns ? "Menos columnas" : "Más columnas"}
-											</Button>
-										</Tooltip>
-									</Stack>
+										<Box sx={{ p: 2, maxWidth: 400 }}>
+											<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+												Worker de Scraping de Causas
+											</Typography>
+											<Typography variant="body2" color="text.secondary">
+												Este worker se encarga de buscar y recopilar automáticamente nuevas causas judiciales desde los sistemas del Poder
+												Judicial, procesando rangos de números de expedientes por fuero y año.
+											</Typography>
+										</Box>
+									</Popover>
 								</Stack>
-							</Grid>
-						</Grid>
-					</Paper>
+								<Stack direction="row" spacing={1.5} alignItems="center" justifyContent={{ xs: "flex-start", sm: "flex-end" }}>
+									<Button
+										variant="contained"
+										color="primary"
+										size="small"
+										startIcon={<AddCircle size={18} />}
+										onClick={handleOpenCreateConfig}
+									>
+										Nuevo Worker
+									</Button>
+									<Button
+										variant="outlined"
+										color="warning"
+										size="small"
+										startIcon={<Warning2 size={18} />}
+										onClick={() => setTemporaryWorkersOpen(true)}
+									>
+										Temporarios
+									</Button>
+								</Stack>
+							</Box>
 
-					{/* Tabla de configuraciones */}
-					<TableContainer component={Paper} variant="outlined">
-						<Table>
-							<TableHead>
-								<TableRow>
-									<TableCell>
-										<TableSortLabel
-											active={sortBy === "nombre"}
-											direction={sortBy === "nombre" ? sortOrder : "asc"}
-											onClick={() => handleSort("nombre")}
-										>
-											Worker ID
-										</TableSortLabel>
-									</TableCell>
-									<TableCell>
-										<TableSortLabel
-											active={sortBy === "fuero"}
-											direction={sortBy === "fuero" ? sortOrder : "asc"}
-											onClick={() => handleSort("fuero")}
-										>
-											Fuero
-										</TableSortLabel>
-									</TableCell>
-									<TableCell align="center">
-										<Stack spacing={0}>
-											<TableSortLabel
-												active={sortBy === "number"}
-												direction={sortBy === "number" ? sortOrder : "asc"}
-												onClick={() => handleSort("number")}
-											>
-												Expediente
-											</TableSortLabel>
-											<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.65rem" }}>
-												Número / Año
+							{/* Búsqueda y Filtros */}
+							<Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 } }}>
+								<Grid container spacing={2} alignItems="center">
+									{/* Búsqueda por Worker ID */}
+									<Grid item xs={12} md={5} lg={4}>
+										<Stack spacing={1}>
+											<Typography variant="caption" color="text.secondary" fontWeight={500}>
+												Búsqueda
 											</Typography>
-										</Stack>
-									</TableCell>
-									<TableCell align="center">
-										<TableSortLabel
-											active={sortBy === "range_start"}
-											direction={sortBy === "range_start" ? sortOrder : "asc"}
-											onClick={() => handleSort("range_start")}
-										>
-											Rango
-										</TableSortLabel>
-									</TableCell>
-									<TableCell align="center">
-										<Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
-											<Typography variant="body2" fontWeight={500}>
-												Totales
-											</Typography>
-											<Tooltip title="Ver información">
-												<IconButton
+											<Stack direction="row" spacing={1} alignItems="center">
+												<TextField
 													size="small"
-													color="info"
-													onClick={(e) => {
-														e.stopPropagation();
-														setTotalsInfoAnchorEl(e.currentTarget);
+													placeholder="Buscar por Worker ID"
+													value={workerIdInput}
+													onChange={(e) => setWorkerIdInput(e.target.value)}
+													onKeyDown={(e) => {
+														if (e.key === "Enter") handleWorkerIdSearch();
 													}}
-													sx={{ p: 0.25 }}
-												>
-													<InfoCircle size={16} />
-												</IconButton>
-											</Tooltip>
-											<Popover
-												open={Boolean(totalsInfoAnchorEl)}
-												anchorEl={totalsInfoAnchorEl}
-												onClose={() => setTotalsInfoAnchorEl(null)}
-												anchorOrigin={{
-													vertical: "bottom",
-													horizontal: "center",
-												}}
-												transformOrigin={{
-													vertical: "top",
-													horizontal: "center",
-												}}
-											>
-												<Box sx={{ p: 2, maxWidth: 350 }}>
-													<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-														Contadores totales del worker
-													</Typography>
-													<Stack spacing={1} sx={{ mt: 1 }}>
-														<Stack direction="row" spacing={1} alignItems="center">
-															<Chip label="V" size="small" color="success" sx={{ minWidth: 24 }} />
-															<Typography variant="body2" color="text.secondary">
-																<strong>Válidos:</strong> Expedientes encontrados y procesados exitosamente.
-															</Typography>
-														</Stack>
-														<Stack direction="row" spacing={1} alignItems="center">
-															<Chip label="I" size="small" color="warning" sx={{ minWidth: 24 }} />
-															<Typography variant="body2" color="text.secondary">
-																<strong>Inexistentes:</strong> Expedientes que el PJN reporta como no disponibles.
-															</Typography>
-														</Stack>
-														<Stack direction="row" spacing={1} alignItems="center">
-															<Chip label="E" size="small" color="error" sx={{ minWidth: 24 }} />
-															<Typography variant="body2" color="text.secondary">
-																<strong>Errores:</strong> Fallos técnicos (captcha, conexión, timeout).
-															</Typography>
-														</Stack>
-													</Stack>
-												</Box>
-											</Popover>
-										</Stack>
-									</TableCell>
-									<TableCell align="center">
-										<Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
-											<TableSortLabel
-												active={sortBy === "consecutive_not_found"}
-												direction={sortBy === "consecutive_not_found" ? sortOrder : "asc"}
-												onClick={() => handleSort("consecutive_not_found")}
-												sx={{ "& .MuiTableSortLabel-icon": { opacity: 1 } }}
-											>
-												<Typography variant="body2" fontWeight={500}>
-													Inválidos Consecutivos
-												</Typography>
-											</TableSortLabel>
-											<Tooltip title="Ver información">
-												<IconButton
+													fullWidth
+													InputProps={{
+														sx: { fontSize: "0.875rem" },
+													}}
+												/>
+												<Button
+													variant="contained"
 													size="small"
-													color="info"
-													onClick={(e) => {
-														e.stopPropagation();
-														setNotFoundInfoAnchorEl(e.currentTarget);
-													}}
-													sx={{ p: 0.25 }}
+													startIcon={<SearchNormal1 size={16} />}
+													onClick={handleWorkerIdSearch}
+													disabled={loading}
+													sx={{ minWidth: "auto", whiteSpace: "nowrap" }}
 												>
-													<InfoCircle size={16} />
-												</IconButton>
-											</Tooltip>
-											<Popover
-												open={Boolean(notFoundInfoAnchorEl)}
-												anchorEl={notFoundInfoAnchorEl}
-												onClose={() => setNotFoundInfoAnchorEl(null)}
-												anchorOrigin={{
-													vertical: "bottom",
-													horizontal: "center",
-												}}
-												transformOrigin={{
-													vertical: "top",
-													horizontal: "center",
-												}}
-											>
-												<Box sx={{ p: 2, maxWidth: 450 }}>
-													<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-														Contador de documentos no encontrados consecutivos
-													</Typography>
-													<Stack component="ul" spacing={1} sx={{ pl: 2, my: 1 }}>
-														<Typography component="li" variant="body2" color="text.secondary">
-															Se incrementa cuando el PJN responde que el expediente es inexistente o no está disponible para consulta
-															pública.
-														</Typography>
-														<Typography component="li" variant="body2" color="text.secondary">
-															Se resetea a cero cuando se encuentra y procesa exitosamente un expediente válido.
-														</Typography>
-														<Typography component="li" variant="body2" color="text.secondary">
-															No se modifica cuando hay errores técnicos durante el scraping (fallos de captcha, errores de conexión,
-															timeouts, etc.).
-														</Typography>
-													</Stack>
-													<Typography variant="subtitle2" fontWeight="bold" gutterBottom sx={{ mt: 2 }}>
-														Sobre el rango mostrado
-													</Typography>
-													<Typography variant="body2" color="text.secondary">
-														El rango indica el primer y último número de expediente marcados como "no encontrados" dentro de la secuencia
-														actual. Si el número actual del worker es mayor al final del rango, significa que los números intermedios
-														tuvieron errores técnicos y no fueron clasificados como existentes ni inexistentes.
-													</Typography>
-												</Box>
-											</Popover>
+													Buscar
+												</Button>
+												{workerIdFilter && (
+													<Button variant="outlined" size="small" color="secondary" onClick={handleWorkerIdClear} sx={{ minWidth: "auto" }}>
+														Limpiar
+													</Button>
+												)}
+											</Stack>
 										</Stack>
-									</TableCell>
-									<TableCell align="center">
-										<Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
-											<Typography variant="body2" fontWeight={600}>
-												Errores Consecutivos
-											</Typography>
-											<Tooltip title="Ver información">
-												<IconButton
-													size="small"
-													color="info"
-													onClick={(e) => {
-														e.stopPropagation();
-														setErrorsInfoAnchorEl(e.currentTarget);
-													}}
-													sx={{ p: 0.25 }}
-												>
-													<InfoCircle size={16} />
-												</IconButton>
-											</Tooltip>
-											<Popover
-												open={Boolean(errorsInfoAnchorEl)}
-												anchorEl={errorsInfoAnchorEl}
-												onClose={() => setErrorsInfoAnchorEl(null)}
-												anchorOrigin={{
-													vertical: "bottom",
-													horizontal: "center",
-												}}
-												transformOrigin={{
-													vertical: "top",
-													horizontal: "center",
-												}}
-											>
-												<Box sx={{ p: 2, maxWidth: 450 }}>
-													<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-														Contador de errores técnicos consecutivos
-													</Typography>
-													<Stack component="ul" spacing={1} sx={{ pl: 2, my: 1 }}>
-														<Typography component="li" variant="body2" color="text.secondary">
-															Se incrementa cuando ocurre un error técnico durante el scraping (fallos de captcha, errores de conexión,
-															timeouts, etc.).
-														</Typography>
-														<Typography component="li" variant="body2" color="text.secondary">
-															Se resetea a cero cuando se procesa exitosamente un expediente (válido o inexistente).
-														</Typography>
-														<Typography component="li" variant="body2" color="text.secondary">
-															Un valor alto puede indicar problemas con el servicio de captcha, proxy o el servidor del PJN.
-														</Typography>
-													</Stack>
-													<Typography variant="subtitle2" fontWeight="bold" gutterBottom sx={{ mt: 2 }}>
-														Sobre el rango mostrado
-													</Typography>
-													<Typography variant="body2" color="text.secondary">
-														El rango indica el primer y último número de expediente donde ocurrieron errores técnicos consecutivos. Útil
-														para identificar rangos problemáticos.
-													</Typography>
-												</Box>
-											</Popover>
-										</Stack>
-									</TableCell>
-									<TableCell align="center">
-										<TableSortLabel
-											active={sortBy === "progress"}
-											direction={sortBy === "progress" ? sortOrder : "asc"}
-											onClick={() => handleSort("progress")}
-										>
-											Progreso
-										</TableSortLabel>
-									</TableCell>
-									{showExtraColumns && <TableCell align="center">Balance</TableCell>}
-									{showExtraColumns && <TableCell align="center">Captchas</TableCell>}
-									{showExtraColumns && <TableCell align="center">Proxy</TableCell>}
-									<TableCell align="center">
-										<TableSortLabel
-											active={sortBy === "enabled"}
-											direction={sortBy === "enabled" ? sortOrder : "asc"}
-											onClick={() => handleSort("enabled")}
-										>
-											Estado
-										</TableSortLabel>
-									</TableCell>
-									<TableCell align="center">
-										<TableSortLabel
-											active={sortBy === "updatedAt"}
-											direction={sortBy === "updatedAt" ? sortOrder : "asc"}
-											onClick={() => handleSort("updatedAt")}
-										>
-											Última Verificación
-										</TableSortLabel>
-									</TableCell>
-									<TableCell align="center">Acciones</TableCell>
-								</TableRow>
-							</TableHead>
-							<TableBody>
-								{filteredConfigs.length === 0 ? (
-									<TableRow>
-										<TableCell colSpan={showExtraColumns ? 14 : 11} align="center">
-											<Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
-												{fueroFilter === "TODOS"
-													? "No hay configuraciones disponibles"
-													: `No hay configuraciones para el fuero ${
-															FUERO_OPTIONS.find((f) => f.value === fueroFilter)?.label || fueroFilter
-													  }`}
-											</Typography>
-										</TableCell>
-									</TableRow>
-								) : (
-									filteredConfigs.map((config) => {
-										const configId = getConfigId(config);
-										const isEditing = editingId === configId;
-										const progress = calculateProgress(config);
+									</Grid>
 
-										return (
-											<TableRow key={configId}>
-												<TableCell>
-													{isEditing ? (
-														<TextField
-															size="small"
-															value={editValues.worker_id || ""}
-															onChange={(e) => setEditValues({ ...editValues, worker_id: e.target.value })}
-															fullWidth
-														/>
-													) : (
-														<Stack spacing={0.5}>
-															<Typography variant="body2" fontWeight={500}>
-																{config.worker_id}
-															</Typography>
-															<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace", fontSize: "0.65rem" }}>
-																{configId}
-															</Typography>
-														</Stack>
-													)}
-												</TableCell>
-												<TableCell>
-													{isEditing ? (
-														<FormControl size="small" fullWidth>
-															<Select
-																value={editValues.fuero || ""}
-																onChange={(e) => setEditValues({ ...editValues, fuero: e.target.value })}
-															>
-																{FUERO_OPTIONS.map((option) => (
-																	<MenuItem key={option.value} value={option.value}>
-																		{option.label}
-																	</MenuItem>
-																))}
-															</Select>
-														</FormControl>
-													) : (
-														<Chip label={config.fuero || ""} size="small" color="primary" variant="outlined" />
-													)}
-												</TableCell>
-												<TableCell align="center">
-													{isEditing ? (
-														<Stack spacing={1}>
-															<TextField
-																size="small"
-																type="number"
-																value={editValues.number || ""}
-																onChange={(e) => setEditValues({ ...editValues, number: Number(e.target.value) })}
-																sx={{ width: 100 }}
-																placeholder="Número"
-															/>
-															<TextField
-																size="small"
-																type="number"
-																value={editValues.year || ""}
-																onChange={(e) => setEditValues({ ...editValues, year: Number(e.target.value) })}
-																sx={{ width: 100 }}
-																placeholder="Año"
-															/>
-														</Stack>
-													) : (
-														<Stack spacing={0} alignItems="center">
-															<Typography variant="body2" fontWeight={600} fontSize="1rem">
-																{config.number?.toLocaleString() || 0}
-															</Typography>
-															<Typography variant="caption" color="text.secondary">
-																{config.year}
-															</Typography>
-														</Stack>
-													)}
-												</TableCell>
-												<TableCell align="center">
-													{isEditing ? (
-														<Stack direction="row" spacing={1}>
-															<TextField
-																size="small"
-																type="number"
-																value={editValues.range_start || ""}
-																onChange={(e) => setEditValues({ ...editValues, range_start: Number(e.target.value) })}
-																sx={{ width: 80 }}
-																placeholder="Inicio"
-															/>
-															<Typography variant="body2" sx={{ alignSelf: "center" }}>
-																-
-															</Typography>
-															<TextField
-																size="small"
-																type="number"
-																value={editValues.range_end || ""}
-																onChange={(e) => setEditValues({ ...editValues, range_end: Number(e.target.value) })}
-																sx={{ width: 80 }}
-																placeholder="Fin"
-															/>
-														</Stack>
-													) : (
-														<Typography variant="body2">
-															{config.range_start?.toLocaleString()} - {config.range_end?.toLocaleString()}
-														</Typography>
-													)}
-												</TableCell>
-												{/* Columna Totales */}
-												<TableCell align="center">
-													<Stack spacing={0.5} alignItems="center">
-														<Typography variant="body2" fontWeight={600} color="text.primary">
-															{((config.total_found || 0) + (config.total_not_found || 0) + (config.total_errors || 0)).toLocaleString()}
-														</Typography>
-														<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
-															<Tooltip title="Válidos">
-																<Typography variant="caption" color="success.main" fontWeight={500}>
-																	{config.total_found?.toLocaleString() || 0}
-																</Typography>
-															</Tooltip>
-															<Typography variant="caption" color="text.secondary">
-																/
-															</Typography>
-															<Tooltip title="Inválidos">
-																<Typography variant="caption" color="warning.main" fontWeight={500}>
-																	{config.total_not_found?.toLocaleString() || 0}
-																</Typography>
-															</Tooltip>
-															<Typography variant="caption" color="text.secondary">
-																/
-															</Typography>
-															<Tooltip title="Errores">
-																<Typography variant="caption" color="error.main" fontWeight={500}>
-																	{config.total_errors?.toLocaleString() || 0}
-																</Typography>
-															</Tooltip>
-														</Stack>
-													</Stack>
-												</TableCell>
-												{/* Columna Inválidos Consecutivos */}
-												<TableCell align="center">
-													<Stack alignItems="center" spacing={0.5}>
-														<Typography
-															variant="body2"
-															fontWeight={500}
-															color={
-																!config.consecutive_not_found || config.consecutive_not_found === 0
-																	? "text.secondary"
-																	: config.consecutive_not_found >= 50
-																	? "error.main"
-																	: config.consecutive_not_found >= 25
-																	? "warning.main"
-																	: "success.main"
-															}
-														>
-															{config.consecutive_not_found || 0}
-														</Typography>
-														{config.not_found_range?.start_number && config.not_found_range?.end_number && (
-															<Typography variant="caption" color="text.secondary">
-																{config.not_found_range.start_number.toLocaleString()} -{" "}
-																{config.not_found_range.end_number.toLocaleString()}
-															</Typography>
-														)}
-													</Stack>
-												</TableCell>
-												{/* Columna Errores Consecutivos */}
-												<TableCell align="center">
-													<Stack alignItems="center" spacing={0.5}>
-														<Typography
-															variant="body2"
-															fontWeight={500}
-															color={
-																!config.consecutive_errors || config.consecutive_errors === 0
-																	? "text.secondary"
-																	: config.consecutive_errors >= 20
-																	? "error.main"
-																	: config.consecutive_errors >= 10
-																	? "warning.main"
-																	: "success.main"
-															}
-														>
-															{config.consecutive_errors || 0}
-														</Typography>
-														{config.error_range?.start_number && config.error_range?.end_number && (
-															<Typography variant="caption" color="text.secondary">
-																{config.error_range.start_number.toLocaleString()} - {config.error_range.end_number.toLocaleString()}
-															</Typography>
-														)}
-													</Stack>
-												</TableCell>
-												<TableCell align="center">
-													<Box sx={{ width: 100 }}>
-														<LinearProgress
-															variant="determinate"
-															value={Math.min(progress, 100)}
-															color={progress >= 100 ? "success" : "primary"}
-															sx={{ height: 8, borderRadius: 4 }}
-														/>
-														<Typography variant="caption" color="text.secondary">
-															{progress.toFixed(1)}%
-														</Typography>
-													</Box>
-												</TableCell>
-												{showExtraColumns && (
-													<TableCell align="center">
-														<Stack alignItems="center" spacing={0.5}>
-															<Typography
-																variant="body2"
-																fontWeight={500}
-																color={config.balance?.current && config.balance.current > 1 ? "success.main" : "warning.main"}
-															>
-																${config.balance?.current?.toFixed(2) || "0.00"}
-															</Typography>
-															<Typography variant="caption" color="text.secondary">
-																{config.balance?.provider || "N/A"}
-															</Typography>
-														</Stack>
-													</TableCell>
-												)}
-												{showExtraColumns && (
-													<TableCell align="center">
-														<Stack alignItems="center" spacing={0.5}>
-															<Typography variant="body2" fontWeight={500}>
-																{config.capsolver?.totalCaptchas?.toLocaleString() || 0}
-															</Typography>
-															<Chip
-																label={config.captcha?.defaultProvider || "2captcha"}
-																size="small"
-																color="secondary"
-																variant="outlined"
-															/>
-														</Stack>
-													</TableCell>
-												)}
-												{showExtraColumns && (
-													<TableCell align="center">
-														<Chip
-															label={config.proxy?.enabled ? "Activo" : "Inactivo"}
-															size="small"
-															color={config.proxy?.enabled ? "success" : "default"}
-															variant="outlined"
-														/>
-													</TableCell>
-												)}
-												<TableCell align="center">
-													<Switch
-														checked={isEditing ? editValues.enabled : config.enabled}
-														onChange={() => {
-															if (isEditing) {
-																setEditValues({ ...editValues, enabled: !editValues.enabled });
-															} else {
-																handleToggleEnabled(config);
-															}
-														}}
+									{/* Separador vertical en desktop */}
+									<Grid item xs={12} md="auto" sx={{ display: { xs: "none", md: "block" } }}>
+										<Box sx={{ borderLeft: 1, borderColor: "divider", height: 50, mx: 1 }} />
+									</Grid>
+
+									{/* Filtros */}
+									<Grid item xs={12} md>
+										<Stack spacing={1}>
+											<Typography variant="caption" color="text.secondary" fontWeight={500}>
+												Filtros
+											</Typography>
+											<Stack
+												direction={{ xs: "column", sm: "row" }}
+												spacing={1}
+												alignItems={{ xs: "stretch", sm: "center" }}
+												flexWrap="wrap"
+												useFlexGap
+											>
+												<FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 140 } }}>
+													<Select value={fueroFilter} onChange={(e) => handleFueroFilterChange(e.target.value)} displayEmpty>
+														<MenuItem value="TODOS">Todos los Fueros</MenuItem>
+														{FUERO_OPTIONS.map((option) => (
+															<MenuItem key={option.value} value={option.value}>
+																{option.label}
+															</MenuItem>
+														))}
+													</Select>
+												</FormControl>
+												<FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 120 } }}>
+													<Select value={yearFilter} onChange={(e) => handleYearFilterChange(e.target.value)} displayEmpty>
+														<MenuItem value="TODOS">Todos los Años</MenuItem>
+														{YEAR_OPTIONS.map((year) => (
+															<MenuItem key={year} value={year}>
+																{year}
+															</MenuItem>
+														))}
+													</Select>
+												</FormControl>
+												<FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 130 } }}>
+													<Select value={progresoFilter} onChange={(e) => handleProgresoFilterChange(e.target.value)} displayEmpty>
+														<MenuItem value="TODOS">Progreso</MenuItem>
+														<MenuItem value="completo">
+															<Stack direction="row" spacing={1} alignItems="center">
+																<Typography variant="body2">Completo</Typography>
+																<Chip label="100%" size="small" color="success" />
+															</Stack>
+														</MenuItem>
+														<MenuItem value="incompleto">
+															<Stack direction="row" spacing={1} alignItems="center">
+																<Typography variant="body2">En Progreso</Typography>
+																<Chip label="<100%" size="small" color="warning" />
+															</Stack>
+														</MenuItem>
+													</Select>
+												</FormControl>
+												<FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 120 } }}>
+													<Select value={estadoFilter} onChange={(e) => handleEstadoFilterChange(e.target.value)} displayEmpty>
+														<MenuItem value="TODOS">Estado</MenuItem>
+														<MenuItem value="activo">
+															<Stack direction="row" spacing={1} alignItems="center">
+																<Typography variant="body2">Activos</Typography>
+																<Chip label="ON" size="small" color="success" />
+															</Stack>
+														</MenuItem>
+														<MenuItem value="inactivo">
+															<Stack direction="row" spacing={1} alignItems="center">
+																<Typography variant="body2">Inactivos</Typography>
+																<Chip label="OFF" size="small" color="default" />
+															</Stack>
+														</MenuItem>
+													</Select>
+												</FormControl>
+												<Tooltip title="Refrescar datos y actualizar conteo total">
+													<Button
+														variant="outlined"
 														size="small"
-														color="primary"
-													/>
-												</TableCell>
-												<TableCell align="center">
-													<Tooltip title={formatDate(config.updatedAt || config.last_check)}>
-														<Typography variant="caption">{getRelativeTime(config.updatedAt || config.last_check)}</Typography>
+														startIcon={<Refresh size={16} />}
+														onClick={handleRefresh}
+														sx={{ minWidth: { xs: "100%", sm: "auto" } }}
+													>
+														Actualizar
+													</Button>
+												</Tooltip>
+												<Tooltip title={showExtraColumns ? "Ocultar columnas extra" : "Mostrar Balance, Captchas y Proxy"}>
+													<Button
+														variant={showExtraColumns ? "contained" : "outlined"}
+														size="small"
+														color="secondary"
+														startIcon={showExtraColumns ? <EyeSlash size={16} /> : <Eye size={16} />}
+														onClick={() => setShowExtraColumns(!showExtraColumns)}
+														sx={{ minWidth: { xs: "100%", sm: "auto" } }}
+													>
+														{showExtraColumns ? "Menos columnas" : "Más columnas"}
+													</Button>
+												</Tooltip>
+											</Stack>
+										</Stack>
+									</Grid>
+								</Grid>
+							</Paper>
+
+							{/* Tabla de configuraciones */}
+							<TableContainer component={Paper} variant="outlined">
+								<Table>
+									<TableHead>
+										<TableRow>
+											<TableCell>
+												<TableSortLabel
+													active={sortBy === "nombre"}
+													direction={sortBy === "nombre" ? sortOrder : "asc"}
+													onClick={() => handleSort("nombre")}
+												>
+													Worker ID
+												</TableSortLabel>
+											</TableCell>
+											<TableCell>
+												<TableSortLabel
+													active={sortBy === "fuero"}
+													direction={sortBy === "fuero" ? sortOrder : "asc"}
+													onClick={() => handleSort("fuero")}
+												>
+													Fuero
+												</TableSortLabel>
+											</TableCell>
+											<TableCell align="center">
+												<Stack spacing={0}>
+													<TableSortLabel
+														active={sortBy === "number"}
+														direction={sortBy === "number" ? sortOrder : "asc"}
+														onClick={() => handleSort("number")}
+													>
+														Expediente
+													</TableSortLabel>
+													<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.65rem" }}>
+														Número / Año
+													</Typography>
+												</Stack>
+											</TableCell>
+											<TableCell align="center">
+												<TableSortLabel
+													active={sortBy === "range_start"}
+													direction={sortBy === "range_start" ? sortOrder : "asc"}
+													onClick={() => handleSort("range_start")}
+												>
+													Rango
+												</TableSortLabel>
+											</TableCell>
+											<TableCell align="center">
+												<Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
+													<Typography variant="body2" fontWeight={500}>
+														Totales
+													</Typography>
+													<Tooltip title="Ver información">
+														<IconButton
+															size="small"
+															color="info"
+															onClick={(e) => {
+																e.stopPropagation();
+																setTotalsInfoAnchorEl(e.currentTarget);
+															}}
+															sx={{ p: 0.25 }}
+														>
+															<InfoCircle size={16} />
+														</IconButton>
 													</Tooltip>
-												</TableCell>
-												<TableCell align="center">
-													{isEditing ? (
-														<Stack direction="row" spacing={1} justifyContent="center">
-															<Tooltip title="Guardar">
-																<IconButton size="small" color="primary" onClick={handleSave}>
-																	<TickCircle size={18} />
-																</IconButton>
-															</Tooltip>
-															<Tooltip title="Cancelar">
-																<IconButton size="small" color="error" onClick={handleCancelEdit}>
-																	<CloseCircle size={18} />
-																</IconButton>
-															</Tooltip>
-														</Stack>
-													) : (
-														<Stack direction="row" spacing={1} justifyContent="center">
-															<Tooltip title="Editar">
-																<IconButton size="small" color="primary" onClick={() => handleEdit(config)}>
-																	<Edit2 size={18} />
-																</IconButton>
-															</Tooltip>
-															<Tooltip title="Configuración avanzada">
-																<IconButton size="small" color="secondary" onClick={() => handleAdvancedConfig(config)}>
-																	<Setting2 size={18} />
-																</IconButton>
-															</Tooltip>
-															<Tooltip title="Ver JSON">
-																<IconButton size="small" color="info" onClick={() => handleOpenRawView(config)}>
-																	<Code1 size={18} />
-																</IconButton>
-															</Tooltip>
-															<Tooltip title={config.enabled ? "Desactive el worker antes de eliminar" : "Eliminar"}>
-																<span>
-																	<IconButton
-																		size="small"
-																		color="error"
-																		onClick={() => handleOpenDeleteDialog(config)}
-																		disabled={config.enabled}
-																	>
-																		<Trash size={18} />
-																	</IconButton>
-																</span>
-															</Tooltip>
-														</Stack>
-													)}
+													<Popover
+														open={Boolean(totalsInfoAnchorEl)}
+														anchorEl={totalsInfoAnchorEl}
+														onClose={() => setTotalsInfoAnchorEl(null)}
+														anchorOrigin={{
+															vertical: "bottom",
+															horizontal: "center",
+														}}
+														transformOrigin={{
+															vertical: "top",
+															horizontal: "center",
+														}}
+													>
+														<Box sx={{ p: 2, maxWidth: 350 }}>
+															<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+																Contadores totales del worker
+															</Typography>
+															<Stack spacing={1} sx={{ mt: 1 }}>
+																<Stack direction="row" spacing={1} alignItems="center">
+																	<Chip label="V" size="small" color="success" sx={{ minWidth: 24 }} />
+																	<Typography variant="body2" color="text.secondary">
+																		<strong>Válidos:</strong> Expedientes encontrados y procesados exitosamente.
+																	</Typography>
+																</Stack>
+																<Stack direction="row" spacing={1} alignItems="center">
+																	<Chip label="I" size="small" color="warning" sx={{ minWidth: 24 }} />
+																	<Typography variant="body2" color="text.secondary">
+																		<strong>Inexistentes:</strong> Expedientes que el PJN reporta como no disponibles.
+																	</Typography>
+																</Stack>
+																<Stack direction="row" spacing={1} alignItems="center">
+																	<Chip label="E" size="small" color="error" sx={{ minWidth: 24 }} />
+																	<Typography variant="body2" color="text.secondary">
+																		<strong>Errores:</strong> Fallos técnicos (captcha, conexión, timeout).
+																	</Typography>
+																</Stack>
+															</Stack>
+														</Box>
+													</Popover>
+												</Stack>
+											</TableCell>
+											<TableCell align="center">
+												<Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
+													<TableSortLabel
+														active={sortBy === "consecutive_not_found"}
+														direction={sortBy === "consecutive_not_found" ? sortOrder : "asc"}
+														onClick={() => handleSort("consecutive_not_found")}
+														sx={{ "& .MuiTableSortLabel-icon": { opacity: 1 } }}
+													>
+														<Typography variant="body2" fontWeight={500}>
+															Inválidos Consecutivos
+														</Typography>
+													</TableSortLabel>
+													<Tooltip title="Ver información">
+														<IconButton
+															size="small"
+															color="info"
+															onClick={(e) => {
+																e.stopPropagation();
+																setNotFoundInfoAnchorEl(e.currentTarget);
+															}}
+															sx={{ p: 0.25 }}
+														>
+															<InfoCircle size={16} />
+														</IconButton>
+													</Tooltip>
+													<Popover
+														open={Boolean(notFoundInfoAnchorEl)}
+														anchorEl={notFoundInfoAnchorEl}
+														onClose={() => setNotFoundInfoAnchorEl(null)}
+														anchorOrigin={{
+															vertical: "bottom",
+															horizontal: "center",
+														}}
+														transformOrigin={{
+															vertical: "top",
+															horizontal: "center",
+														}}
+													>
+														<Box sx={{ p: 2, maxWidth: 450 }}>
+															<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+																Contador de documentos no encontrados consecutivos
+															</Typography>
+															<Stack component="ul" spacing={1} sx={{ pl: 2, my: 1 }}>
+																<Typography component="li" variant="body2" color="text.secondary">
+																	Se incrementa cuando el PJN responde que el expediente es inexistente o no está disponible para consulta
+																	pública.
+																</Typography>
+																<Typography component="li" variant="body2" color="text.secondary">
+																	Se resetea a cero cuando se encuentra y procesa exitosamente un expediente válido.
+																</Typography>
+																<Typography component="li" variant="body2" color="text.secondary">
+																	No se modifica cuando hay errores técnicos durante el scraping (fallos de captcha, errores de conexión,
+																	timeouts, etc.).
+																</Typography>
+															</Stack>
+															<Typography variant="subtitle2" fontWeight="bold" gutterBottom sx={{ mt: 2 }}>
+																Sobre el rango mostrado
+															</Typography>
+															<Typography variant="body2" color="text.secondary">
+																El rango indica el primer y último número de expediente marcados como "no encontrados" dentro de la
+																secuencia actual. Si el número actual del worker es mayor al final del rango, significa que los números
+																intermedios tuvieron errores técnicos y no fueron clasificados como existentes ni inexistentes.
+															</Typography>
+														</Box>
+													</Popover>
+												</Stack>
+											</TableCell>
+											<TableCell align="center">
+												<Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
+													<Typography variant="body2" fontWeight={600}>
+														Errores Consecutivos
+													</Typography>
+													<Tooltip title="Ver información">
+														<IconButton
+															size="small"
+															color="info"
+															onClick={(e) => {
+																e.stopPropagation();
+																setErrorsInfoAnchorEl(e.currentTarget);
+															}}
+															sx={{ p: 0.25 }}
+														>
+															<InfoCircle size={16} />
+														</IconButton>
+													</Tooltip>
+													<Popover
+														open={Boolean(errorsInfoAnchorEl)}
+														anchorEl={errorsInfoAnchorEl}
+														onClose={() => setErrorsInfoAnchorEl(null)}
+														anchorOrigin={{
+															vertical: "bottom",
+															horizontal: "center",
+														}}
+														transformOrigin={{
+															vertical: "top",
+															horizontal: "center",
+														}}
+													>
+														<Box sx={{ p: 2, maxWidth: 450 }}>
+															<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+																Contador de errores técnicos consecutivos
+															</Typography>
+															<Stack component="ul" spacing={1} sx={{ pl: 2, my: 1 }}>
+																<Typography component="li" variant="body2" color="text.secondary">
+																	Se incrementa cuando ocurre un error técnico durante el scraping (fallos de captcha, errores de conexión,
+																	timeouts, etc.).
+																</Typography>
+																<Typography component="li" variant="body2" color="text.secondary">
+																	Se resetea a cero cuando se procesa exitosamente un expediente (válido o inexistente).
+																</Typography>
+																<Typography component="li" variant="body2" color="text.secondary">
+																	Un valor alto puede indicar problemas con el servicio de captcha, proxy o el servidor del PJN.
+																</Typography>
+															</Stack>
+															<Typography variant="subtitle2" fontWeight="bold" gutterBottom sx={{ mt: 2 }}>
+																Sobre el rango mostrado
+															</Typography>
+															<Typography variant="body2" color="text.secondary">
+																El rango indica el primer y último número de expediente donde ocurrieron errores técnicos consecutivos. Útil
+																para identificar rangos problemáticos.
+															</Typography>
+														</Box>
+													</Popover>
+												</Stack>
+											</TableCell>
+											<TableCell align="center">
+												<TableSortLabel
+													active={sortBy === "progress"}
+													direction={sortBy === "progress" ? sortOrder : "asc"}
+													onClick={() => handleSort("progress")}
+												>
+													Progreso
+												</TableSortLabel>
+											</TableCell>
+											{showExtraColumns && <TableCell align="center">Balance</TableCell>}
+											{showExtraColumns && <TableCell align="center">Captchas</TableCell>}
+											{showExtraColumns && <TableCell align="center">Proxy</TableCell>}
+											<TableCell align="center">
+												<TableSortLabel
+													active={sortBy === "enabled"}
+													direction={sortBy === "enabled" ? sortOrder : "asc"}
+													onClick={() => handleSort("enabled")}
+												>
+													Estado
+												</TableSortLabel>
+											</TableCell>
+											<TableCell align="center">
+												<TableSortLabel
+													active={sortBy === "updatedAt"}
+													direction={sortBy === "updatedAt" ? sortOrder : "asc"}
+													onClick={() => handleSort("updatedAt")}
+												>
+													Última Verificación
+												</TableSortLabel>
+											</TableCell>
+											<TableCell align="center">Acciones</TableCell>
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{filteredConfigs.length === 0 ? (
+											<TableRow>
+												<TableCell colSpan={showExtraColumns ? 14 : 11} align="center">
+													<Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
+														{fueroFilter === "TODOS"
+															? "No hay configuraciones disponibles"
+															: `No hay configuraciones para el fuero ${
+																	FUERO_OPTIONS.find((f) => f.value === fueroFilter)?.label || fueroFilter
+															  }`}
+													</Typography>
 												</TableCell>
 											</TableRow>
-										);
-									})
-								)}
-							</TableBody>
-						</Table>
-					</TableContainer>
-
-					{/* Paginación */}
-					<TablePagination
-						component="div"
-						count={configTotalSnapshot ?? configTotal}
-						page={configPage}
-						onPageChange={handleChangePage}
-						rowsPerPage={configRowsPerPage}
-						onRowsPerPageChange={handleChangeRowsPerPage}
-						rowsPerPageOptions={[10, 20, 50, 100]}
-						labelRowsPerPage="Filas por página:"
-						labelDisplayedRows={({ from, to, count }) =>
-							`${from}-${to} de ${count !== -1 ? count : `más de ${to}`}${
-								configTotalSnapshot !== null && configTotal !== configTotalSnapshot ? " (snapshot)" : ""
-							}`
-						}
-					/>
-
-					{/* Estadísticas */}
-					<Grid container spacing={2}>
-						<Grid item xs={12} sm={6} md={3}>
-							<Card variant="outlined">
-								<CardContent>
-									<Typography variant="subtitle2" color="text.secondary" gutterBottom>
-										Total Workers
-									</Typography>
-									<Typography variant="h4">{configTotalSnapshot ?? configTotal}</Typography>
-									<Typography variant="caption" color="text.secondary">
-										{configTotalSnapshot !== null && configTotal !== configTotalSnapshot ? (
-											<>
-												Actual: {configTotal} • Mostrando {configs.length}
-												<br />
-												<Chip label="Paginación estable" size="small" color="info" sx={{ mt: 0.5, height: 18, fontSize: "0.65rem" }} />
-											</>
 										) : (
-											`Mostrando ${configs.length} en esta página`
+											filteredConfigs.map((config) => {
+												const configId = getConfigId(config);
+												const isEditing = editingId === configId;
+												const progress = calculateProgress(config);
+
+												return (
+													<TableRow key={configId}>
+														<TableCell>
+															{isEditing ? (
+																<TextField
+																	size="small"
+																	value={editValues.worker_id || ""}
+																	onChange={(e) => setEditValues({ ...editValues, worker_id: e.target.value })}
+																	fullWidth
+																/>
+															) : (
+																<Stack spacing={0.5}>
+																	<Typography variant="body2" fontWeight={500}>
+																		{config.worker_id}
+																	</Typography>
+																	<Typography
+																		variant="caption"
+																		color="text.secondary"
+																		sx={{ fontFamily: "monospace", fontSize: "0.65rem" }}
+																	>
+																		{configId}
+																	</Typography>
+																</Stack>
+															)}
+														</TableCell>
+														<TableCell>
+															{isEditing ? (
+																<FormControl size="small" fullWidth>
+																	<Select
+																		value={editValues.fuero || ""}
+																		onChange={(e) => setEditValues({ ...editValues, fuero: e.target.value })}
+																	>
+																		{FUERO_OPTIONS.map((option) => (
+																			<MenuItem key={option.value} value={option.value}>
+																				{option.label}
+																			</MenuItem>
+																		))}
+																	</Select>
+																</FormControl>
+															) : (
+																<Chip label={config.fuero || ""} size="small" color="primary" variant="outlined" />
+															)}
+														</TableCell>
+														<TableCell align="center">
+															{isEditing ? (
+																<Stack spacing={1}>
+																	<TextField
+																		size="small"
+																		type="number"
+																		value={editValues.number || ""}
+																		onChange={(e) => setEditValues({ ...editValues, number: Number(e.target.value) })}
+																		sx={{ width: 100 }}
+																		placeholder="Número"
+																	/>
+																	<TextField
+																		size="small"
+																		type="number"
+																		value={editValues.year || ""}
+																		onChange={(e) => setEditValues({ ...editValues, year: Number(e.target.value) })}
+																		sx={{ width: 100 }}
+																		placeholder="Año"
+																	/>
+																</Stack>
+															) : (
+																<Stack spacing={0} alignItems="center">
+																	<Typography variant="body2" fontWeight={600} fontSize="1rem">
+																		{config.number?.toLocaleString() || 0}
+																	</Typography>
+																	<Typography variant="caption" color="text.secondary">
+																		{config.year}
+																	</Typography>
+																</Stack>
+															)}
+														</TableCell>
+														<TableCell align="center">
+															{isEditing ? (
+																<Stack direction="row" spacing={1}>
+																	<TextField
+																		size="small"
+																		type="number"
+																		value={editValues.range_start || ""}
+																		onChange={(e) => setEditValues({ ...editValues, range_start: Number(e.target.value) })}
+																		sx={{ width: 80 }}
+																		placeholder="Inicio"
+																	/>
+																	<Typography variant="body2" sx={{ alignSelf: "center" }}>
+																		-
+																	</Typography>
+																	<TextField
+																		size="small"
+																		type="number"
+																		value={editValues.range_end || ""}
+																		onChange={(e) => setEditValues({ ...editValues, range_end: Number(e.target.value) })}
+																		sx={{ width: 80 }}
+																		placeholder="Fin"
+																	/>
+																</Stack>
+															) : (
+																<Typography variant="body2">
+																	{config.range_start?.toLocaleString()} - {config.range_end?.toLocaleString()}
+																</Typography>
+															)}
+														</TableCell>
+														{/* Columna Totales */}
+														<TableCell align="center">
+															<Stack spacing={0.5} alignItems="center">
+																<Typography variant="body2" fontWeight={600} color="text.primary">
+																	{(
+																		(config.total_found || 0) +
+																		(config.total_not_found || 0) +
+																		(config.total_errors || 0)
+																	).toLocaleString()}
+																</Typography>
+																<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
+																	<Tooltip title="Válidos">
+																		<Typography variant="caption" color="success.main" fontWeight={500}>
+																			{config.total_found?.toLocaleString() || 0}
+																		</Typography>
+																	</Tooltip>
+																	<Typography variant="caption" color="text.secondary">
+																		/
+																	</Typography>
+																	<Tooltip title="Inválidos">
+																		<Typography variant="caption" color="warning.main" fontWeight={500}>
+																			{config.total_not_found?.toLocaleString() || 0}
+																		</Typography>
+																	</Tooltip>
+																	<Typography variant="caption" color="text.secondary">
+																		/
+																	</Typography>
+																	<Tooltip title="Errores">
+																		<Typography variant="caption" color="error.main" fontWeight={500}>
+																			{config.total_errors?.toLocaleString() || 0}
+																		</Typography>
+																	</Tooltip>
+																</Stack>
+															</Stack>
+														</TableCell>
+														{/* Columna Inválidos Consecutivos */}
+														<TableCell align="center">
+															<Stack alignItems="center" spacing={0.5}>
+																<Typography
+																	variant="body2"
+																	fontWeight={500}
+																	color={
+																		!config.consecutive_not_found || config.consecutive_not_found === 0
+																			? "text.secondary"
+																			: config.consecutive_not_found >= 50
+																			? "error.main"
+																			: config.consecutive_not_found >= 25
+																			? "warning.main"
+																			: "success.main"
+																	}
+																>
+																	{config.consecutive_not_found || 0}
+																</Typography>
+																{config.not_found_range?.start_number && config.not_found_range?.end_number && (
+																	<Typography variant="caption" color="text.secondary">
+																		{config.not_found_range.start_number.toLocaleString()} -{" "}
+																		{config.not_found_range.end_number.toLocaleString()}
+																	</Typography>
+																)}
+															</Stack>
+														</TableCell>
+														{/* Columna Errores Consecutivos */}
+														<TableCell align="center">
+															<Stack alignItems="center" spacing={0.5}>
+																<Typography
+																	variant="body2"
+																	fontWeight={500}
+																	color={
+																		!config.consecutive_errors || config.consecutive_errors === 0
+																			? "text.secondary"
+																			: config.consecutive_errors >= 20
+																			? "error.main"
+																			: config.consecutive_errors >= 10
+																			? "warning.main"
+																			: "success.main"
+																	}
+																>
+																	{config.consecutive_errors || 0}
+																</Typography>
+																{config.error_range?.start_number && config.error_range?.end_number && (
+																	<Typography variant="caption" color="text.secondary">
+																		{config.error_range.start_number.toLocaleString()} - {config.error_range.end_number.toLocaleString()}
+																	</Typography>
+																)}
+															</Stack>
+														</TableCell>
+														<TableCell align="center">
+															<Box sx={{ width: 100 }}>
+																<LinearProgress
+																	variant="determinate"
+																	value={Math.min(progress, 100)}
+																	color={progress >= 100 ? "success" : "primary"}
+																	sx={{ height: 8, borderRadius: 4 }}
+																/>
+																<Typography variant="caption" color="text.secondary">
+																	{progress.toFixed(1)}%
+																</Typography>
+															</Box>
+														</TableCell>
+														{showExtraColumns && (
+															<TableCell align="center">
+																<Stack alignItems="center" spacing={0.5}>
+																	<Typography
+																		variant="body2"
+																		fontWeight={500}
+																		color={config.balance?.current && config.balance.current > 1 ? "success.main" : "warning.main"}
+																	>
+																		${config.balance?.current?.toFixed(2) || "0.00"}
+																	</Typography>
+																	<Typography variant="caption" color="text.secondary">
+																		{config.balance?.provider || "N/A"}
+																	</Typography>
+																</Stack>
+															</TableCell>
+														)}
+														{showExtraColumns && (
+															<TableCell align="center">
+																<Stack alignItems="center" spacing={0.5}>
+																	<Typography variant="body2" fontWeight={500}>
+																		{config.capsolver?.totalCaptchas?.toLocaleString() || 0}
+																	</Typography>
+																	<Chip
+																		label={config.captcha?.defaultProvider || "2captcha"}
+																		size="small"
+																		color="secondary"
+																		variant="outlined"
+																	/>
+																</Stack>
+															</TableCell>
+														)}
+														{showExtraColumns && (
+															<TableCell align="center">
+																<Chip
+																	label={config.proxy?.enabled ? "Activo" : "Inactivo"}
+																	size="small"
+																	color={config.proxy?.enabled ? "success" : "default"}
+																	variant="outlined"
+																/>
+															</TableCell>
+														)}
+														<TableCell align="center">
+															<Switch
+																checked={isEditing ? editValues.enabled : config.enabled}
+																onChange={() => {
+																	if (isEditing) {
+																		setEditValues({ ...editValues, enabled: !editValues.enabled });
+																	} else {
+																		handleToggleEnabled(config);
+																	}
+																}}
+																size="small"
+																color="primary"
+															/>
+														</TableCell>
+														<TableCell align="center">
+															<Tooltip title={formatDate(config.updatedAt || config.last_check)}>
+																<Typography variant="caption">{getRelativeTime(config.updatedAt || config.last_check)}</Typography>
+															</Tooltip>
+														</TableCell>
+														<TableCell align="center">
+															{isEditing ? (
+																<Stack direction="row" spacing={1} justifyContent="center">
+																	<Tooltip title="Guardar">
+																		<IconButton size="small" color="primary" onClick={handleSave}>
+																			<TickCircle size={18} />
+																		</IconButton>
+																	</Tooltip>
+																	<Tooltip title="Cancelar">
+																		<IconButton size="small" color="error" onClick={handleCancelEdit}>
+																			<CloseCircle size={18} />
+																		</IconButton>
+																	</Tooltip>
+																</Stack>
+															) : (
+																<Stack direction="row" spacing={1} justifyContent="center">
+																	<Tooltip title="Editar">
+																		<IconButton size="small" color="primary" onClick={() => handleEdit(config)}>
+																			<Edit2 size={18} />
+																		</IconButton>
+																	</Tooltip>
+																	<Tooltip title="Configuración avanzada">
+																		<IconButton size="small" color="secondary" onClick={() => handleAdvancedConfig(config)}>
+																			<Setting2 size={18} />
+																		</IconButton>
+																	</Tooltip>
+																	<Tooltip title="Ver JSON">
+																		<IconButton size="small" color="info" onClick={() => handleOpenRawView(config)}>
+																			<Code1 size={18} />
+																		</IconButton>
+																	</Tooltip>
+																	<Tooltip title={config.enabled ? "Desactive el worker antes de eliminar" : "Eliminar"}>
+																		<span>
+																			<IconButton
+																				size="small"
+																				color="error"
+																				onClick={() => handleOpenDeleteDialog(config)}
+																				disabled={config.enabled}
+																			>
+																				<Trash size={18} />
+																			</IconButton>
+																		</span>
+																	</Tooltip>
+																</Stack>
+															)}
+														</TableCell>
+													</TableRow>
+												);
+											})
 										)}
-									</Typography>
-								</CardContent>
-							</Card>
-						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
-							<Card variant="outlined">
-								<CardContent>
-									<Typography variant="subtitle2" color="text.secondary" gutterBottom>
-										Workers Activos (página actual)
-									</Typography>
-									<Typography variant="h4" color="success.main">
-										{configs.filter((c) => c.enabled).length}
-									</Typography>
-								</CardContent>
-							</Card>
-						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
-							<Card variant="outlined">
-								<CardContent>
-									<Typography variant="subtitle2" color="text.secondary" gutterBottom>
-										Balance Total
-									</Typography>
-									<Typography variant="h4" color="info.main">
-										${configs.reduce((acc, c) => acc + (c.balance?.current || 0), 0).toFixed(2)}
-									</Typography>
-								</CardContent>
-							</Card>
-						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
-							<Card variant="outlined">
-								<CardContent>
-									<Typography variant="subtitle2" color="text.secondary" gutterBottom>
-										Captchas Resueltos
-									</Typography>
-									<Typography variant="h4">
-										{configs.reduce((acc, c) => acc + (c.capsolver?.totalCaptchas || 0), 0).toLocaleString()}
-									</Typography>
-								</CardContent>
-							</Card>
-						</Grid>
-					</Grid>
+									</TableBody>
+								</Table>
+							</TableContainer>
 
+							{/* Paginación */}
+							<TablePagination
+								component="div"
+								count={configTotalSnapshot ?? configTotal}
+								page={configPage}
+								onPageChange={handleChangePage}
+								rowsPerPage={configRowsPerPage}
+								onRowsPerPageChange={handleChangeRowsPerPage}
+								rowsPerPageOptions={[10, 20, 50, 100]}
+								labelRowsPerPage="Filas por página:"
+								labelDisplayedRows={({ from, to, count }) =>
+									`${from}-${to} de ${count !== -1 ? count : `más de ${to}`}${
+										configTotalSnapshot !== null && configTotal !== configTotalSnapshot ? " (snapshot)" : ""
+									}`
+								}
+							/>
+
+							{/* Estadísticas */}
+							<Grid container spacing={2}>
+								<Grid item xs={12} sm={6} md={3}>
+									<Card variant="outlined">
+										<CardContent>
+											<Typography variant="subtitle2" color="text.secondary" gutterBottom>
+												Total Workers
+											</Typography>
+											<Typography variant="h4">{configTotalSnapshot ?? configTotal}</Typography>
+											<Typography variant="caption" color="text.secondary">
+												{configTotalSnapshot !== null && configTotal !== configTotalSnapshot ? (
+													<>
+														Actual: {configTotal} • Mostrando {configs.length}
+														<br />
+														<Chip label="Paginación estable" size="small" color="info" sx={{ mt: 0.5, height: 18, fontSize: "0.65rem" }} />
+													</>
+												) : (
+													`Mostrando ${configs.length} en esta página`
+												)}
+											</Typography>
+										</CardContent>
+									</Card>
+								</Grid>
+								<Grid item xs={12} sm={6} md={3}>
+									<Card variant="outlined">
+										<CardContent>
+											<Typography variant="subtitle2" color="text.secondary" gutterBottom>
+												Workers Activos (página actual)
+											</Typography>
+											<Typography variant="h4" color="success.main">
+												{configs.filter((c) => c.enabled).length}
+											</Typography>
+										</CardContent>
+									</Card>
+								</Grid>
+								<Grid item xs={12} sm={6} md={3}>
+									<Card variant="outlined">
+										<CardContent>
+											<Typography variant="subtitle2" color="text.secondary" gutterBottom>
+												Balance Total
+											</Typography>
+											<Typography variant="h4" color="info.main">
+												${configs.reduce((acc, c) => acc + (c.balance?.current || 0), 0).toFixed(2)}
+											</Typography>
+										</CardContent>
+									</Card>
+								</Grid>
+								<Grid item xs={12} sm={6} md={3}>
+									<Card variant="outlined">
+										<CardContent>
+											<Typography variant="subtitle2" color="text.secondary" gutterBottom>
+												Captchas Resueltos
+											</Typography>
+											<Typography variant="h4">
+												{configs.reduce((acc, c) => acc + (c.capsolver?.totalCaptchas || 0), 0).toLocaleString()}
+											</Typography>
+										</CardContent>
+									</Card>
+								</Grid>
+							</Grid>
+						</Box>
+					)}
 				</Box>
-			)}
-		</Box>
-	</Box>
-
-	{/* Modal de configuración avanzada */}
-	{selectedConfig && (
-		<AdvancedConfigModal
-			open={advancedConfigOpen}
-			onClose={handleCloseAdvancedConfig}
-			config={selectedConfig}
-			onUpdate={fetchConfigs}
-			workerType="scraping"
-		/>
-	)}
-
-	{/* Modal de crear nueva configuración */}
-	<CreateConfigModal open={createConfigOpen} onClose={handleCloseCreateConfig} onSuccess={handleCreateSuccess} />
-
-	{/* Modal de workers temporarios */}
-	<TemporaryWorkersModal
-		open={temporaryWorkersOpen}
-		onClose={() => setTemporaryWorkersOpen(false)}
-		onDeleteSuccess={handleRefresh}
-	/>
-
-	{/* Diálogo de confirmación de eliminación */}
-	<Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog} maxWidth="sm" fullWidth>
-		<DialogTitle>Confirmar Eliminación</DialogTitle>
-		<DialogContent>
-			<DialogContentText>
-				¿Estás seguro de que deseas eliminar esta configuración de scraping?
-				<Box sx={{ mt: 2, p: 2, bgcolor: "background.default", borderRadius: 1 }}>
-					<Typography variant="body2" fontWeight={500}>
-						Worker ID: {configToDelete?.fuero} - {configToDelete?.year}
-					</Typography>
-					<Typography variant="body2" color="text.secondary">
-						Rango: {configToDelete?.range_start?.toLocaleString()} - {configToDelete?.range_end?.toLocaleString()}
-					</Typography>
-				</Box>
-				<Alert severity="warning" sx={{ mt: 2 }}>
-					Esta acción no se puede deshacer. Los datos del historial se mantendrán.
-				</Alert>
-			</DialogContentText>
-		</DialogContent>
-		<DialogActions>
-			<Button onClick={handleCloseDeleteDialog} disabled={deleting}>
-				Cancelar
-			</Button>
-			<Button
-				onClick={handleDeleteConfig}
-				color="error"
-				variant="contained"
-				disabled={deleting}
-				startIcon={deleting && <CircularProgress size={16} />}
-			>
-				{deleting ? "Eliminando..." : "Eliminar"}
-			</Button>
-		</DialogActions>
-	</Dialog>
-
-	{/* Diálogo de vista raw JSON */}
-	<Dialog open={rawViewOpen} onClose={handleCloseRawView} maxWidth="md" fullWidth>
-		<DialogTitle>
-			<Stack direction="row" alignItems="center" spacing={1}>
-				<Code1 size={20} />
-				<Typography variant="h6">Vista Raw JSON</Typography>
-			</Stack>
-			{rawViewConfig && (
-				<Typography variant="body2" color="text.secondary">
-					{rawViewConfig.worker_id || `${rawViewConfig.fuero} ${rawViewConfig.year}`}
-				</Typography>
-			)}
-		</DialogTitle>
-		<DialogContent>
-			<Box
-				sx={{
-					bgcolor: "grey.900",
-					color: "grey.100",
-					p: 2,
-					borderRadius: 1,
-					overflow: "auto",
-					maxHeight: "60vh",
-					fontFamily: "monospace",
-					fontSize: "0.75rem",
-					whiteSpace: "pre-wrap",
-					wordBreak: "break-word",
-				}}
-			>
-				{rawViewConfig && JSON.stringify(rawViewConfig, null, 2)}
 			</Box>
-		</DialogContent>
-		<DialogActions>
-			<Button
-				variant="outlined"
-				size="small"
-				onClick={() => {
-					if (rawViewConfig) {
-						navigator.clipboard.writeText(JSON.stringify(rawViewConfig, null, 2));
-						enqueueSnackbar("JSON copiado al portapapeles", {
-							variant: "success",
-							anchorOrigin: { vertical: "bottom", horizontal: "right" },
-						});
-					}
-				}}
-			>
-				Copiar JSON
-			</Button>
-			<Button onClick={handleCloseRawView} variant="contained">
-				Cerrar
-			</Button>
-		</DialogActions>
-	</Dialog>
-	</>
+
+			{/* Modal de configuración avanzada */}
+			{selectedConfig && (
+				<AdvancedConfigModal
+					open={advancedConfigOpen}
+					onClose={handleCloseAdvancedConfig}
+					config={selectedConfig}
+					onUpdate={fetchConfigs}
+					workerType="scraping"
+				/>
+			)}
+
+			{/* Modal de crear nueva configuración */}
+			<CreateConfigModal open={createConfigOpen} onClose={handleCloseCreateConfig} onSuccess={handleCreateSuccess} />
+
+			{/* Modal de workers temporarios */}
+			<TemporaryWorkersModal open={temporaryWorkersOpen} onClose={() => setTemporaryWorkersOpen(false)} onDeleteSuccess={handleRefresh} />
+
+			{/* Diálogo de confirmación de eliminación */}
+			<Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog} maxWidth="sm" fullWidth>
+				<DialogTitle>Confirmar Eliminación</DialogTitle>
+				<DialogContent>
+					<DialogContentText>
+						¿Estás seguro de que deseas eliminar esta configuración de scraping?
+						<Box sx={{ mt: 2, p: 2, bgcolor: "background.default", borderRadius: 1 }}>
+							<Typography variant="body2" fontWeight={500}>
+								Worker ID: {configToDelete?.fuero} - {configToDelete?.year}
+							</Typography>
+							<Typography variant="body2" color="text.secondary">
+								Rango: {configToDelete?.range_start?.toLocaleString()} - {configToDelete?.range_end?.toLocaleString()}
+							</Typography>
+						</Box>
+						<Alert severity="warning" sx={{ mt: 2 }}>
+							Esta acción no se puede deshacer. Los datos del historial se mantendrán.
+						</Alert>
+					</DialogContentText>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleCloseDeleteDialog} disabled={deleting}>
+						Cancelar
+					</Button>
+					<Button
+						onClick={handleDeleteConfig}
+						color="error"
+						variant="contained"
+						disabled={deleting}
+						startIcon={deleting && <CircularProgress size={16} />}
+					>
+						{deleting ? "Eliminando..." : "Eliminar"}
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Diálogo de vista raw JSON */}
+			<Dialog open={rawViewOpen} onClose={handleCloseRawView} maxWidth="md" fullWidth>
+				<DialogTitle>
+					<Stack direction="row" alignItems="center" spacing={1}>
+						<Code1 size={20} />
+						<Typography variant="h6">Vista Raw JSON</Typography>
+					</Stack>
+					{rawViewConfig && (
+						<Typography variant="body2" color="text.secondary">
+							{rawViewConfig.worker_id || `${rawViewConfig.fuero} ${rawViewConfig.year}`}
+						</Typography>
+					)}
+				</DialogTitle>
+				<DialogContent>
+					<Box
+						sx={{
+							bgcolor: "grey.900",
+							color: "grey.100",
+							p: 2,
+							borderRadius: 1,
+							overflow: "auto",
+							maxHeight: "60vh",
+							fontFamily: "monospace",
+							fontSize: "0.75rem",
+							whiteSpace: "pre-wrap",
+							wordBreak: "break-word",
+						}}
+					>
+						{rawViewConfig && JSON.stringify(rawViewConfig, null, 2)}
+					</Box>
+				</DialogContent>
+				<DialogActions>
+					<Button
+						variant="outlined"
+						size="small"
+						onClick={() => {
+							if (rawViewConfig) {
+								navigator.clipboard.writeText(JSON.stringify(rawViewConfig, null, 2));
+								enqueueSnackbar("JSON copiado al portapapeles", {
+									variant: "success",
+									anchorOrigin: { vertical: "bottom", horizontal: "right" },
+								});
+							}
+						}}
+					>
+						Copiar JSON
+					</Button>
+					<Button onClick={handleCloseRawView} variant="contained">
+						Cerrar
+					</Button>
+				</DialogActions>
+			</Dialog>
+		</>
 	);
 };
 

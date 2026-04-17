@@ -1,28 +1,5 @@
-import {
-	Alert,
-	Box,
-	Chip,
-	Divider,
-	Grid,
-	Paper,
-	Stack,
-	Typography,
-	alpha,
-	useTheme,
-} from "@mui/material";
-import {
-	ArrowDown,
-	ArrowRight2,
-	Calendar,
-	Code,
-	Data,
-	Diagram,
-	DocumentText,
-	Element4,
-	InfoCircle,
-	Setting3,
-	Timer,
-} from "iconsax-react";
+import { Alert, Box, Chip, Divider, Grid, Paper, Stack, Typography, alpha, useTheme } from "@mui/material";
+import { ArrowDown, ArrowRight2, Calendar, Code, Data, Diagram, DocumentText, Element4, InfoCircle, Setting3, Timer } from "iconsax-react";
 
 // ── Primitivos del diagrama ────────────────────────────────────
 
@@ -55,11 +32,7 @@ const Node = ({ label, sublabel, color = "primary", icon, chip, chipColor = "def
 				textAlign: "center",
 			}}
 		>
-			{icon && (
-				<Box sx={{ color: main, mb: 0.3, display: "flex", justifyContent: "center" }}>
-					{icon}
-				</Box>
-			)}
+			{icon && <Box sx={{ color: main, mb: 0.3, display: "flex", justifyContent: "center" }}>{icon}</Box>}
 			<Typography
 				variant="caption"
 				fontWeight={700}
@@ -75,15 +48,19 @@ const Node = ({ label, sublabel, color = "primary", icon, chip, chipColor = "def
 					{sublabel}
 				</Typography>
 			)}
-			{chip && (
-				<Chip label={chip} color={chipColor} size="small" sx={{ mt: 0.5, fontSize: "0.6rem", height: 18 }} />
-			)}
+			{chip && <Chip label={chip} color={chipColor} size="small" sx={{ mt: 0.5, fontSize: "0.6rem", height: 18 }} />}
 		</Paper>
 	);
 };
 
 const Arrow = ({ horizontal = false }: { horizontal?: boolean }) => (
-	<Box display="flex" justifyContent="center" alignItems="center" color="text.disabled" sx={{ my: horizontal ? 0 : 0.3, mx: horizontal ? 0.3 : 0 }}>
+	<Box
+		display="flex"
+		justifyContent="center"
+		alignItems="center"
+		color="text.disabled"
+		sx={{ my: horizontal ? 0 : 0.3, mx: horizontal ? 0.3 : 0 }}
+	>
 		{horizontal ? <ArrowRight2 size={16} /> : <ArrowDown size={16} />}
 	</Box>
 );
@@ -115,16 +92,15 @@ const HelpTab = () => {
 	return (
 		<Stack spacing={4}>
 			<Alert severity="info" icon={<InfoCircle size={18} />}>
-				Esta página describe la arquitectura del sistema de scraping de InfoLeg y cómo interactúan
-				sus componentes. Es útil para entender el comportamiento de los workers y diagnosticar
-				problemas de cobertura de datos.
+				Esta página describe la arquitectura del sistema de scraping de InfoLeg y cómo interactúan sus componentes. Es útil para entender el
+				comportamiento de los workers y diagnosticar problemas de cobertura de datos.
 			</Alert>
 
 			{/* ── 1. Visión general ── */}
 			<Section title="Visión general" icon={<Diagram size={20} />}>
 				<Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
-					El sistema está compuesto por <strong>5 procesos PM2</strong> que trabajan en conjunto para
-					descargar, procesar y mantener actualizadas las normas jurídicas argentinas publicadas en InfoLeg.
+					El sistema está compuesto por <strong>5 procesos PM2</strong> que trabajan en conjunto para descargar, procesar y mantener
+					actualizadas las normas jurídicas argentinas publicadas en InfoLeg.
 				</Typography>
 
 				<Grid container spacing={1.5}>
@@ -213,7 +189,14 @@ const HelpTab = () => {
 							<Arrow />
 							<Node label="infoleg-normas" sublabel="status: pending" color="default" icon={<Data size={16} />} />
 							<Arrow />
-							<Node label="infoleg-scraper" sublabel="getPendingBatch(source='queue')" color="success" icon={<Code size={16} />} chip="1–3 instancias" chipColor="success" />
+							<Node
+								label="infoleg-scraper"
+								sublabel="getPendingBatch(source='queue')"
+								color="success"
+								icon={<Code size={16} />}
+								chip="1–3 instancias"
+								chipColor="success"
+							/>
 							<Arrow />
 							<Node label="infoleg-normas" sublabel="status: scraped + texto + metadatos" color="success" icon={<Data size={16} />} />
 							<Arrow />
@@ -231,7 +214,15 @@ const HelpTab = () => {
 						<Stack alignItems="center" spacing={0}>
 							<Node label="infoleg-novedades" sublabel="Cron 6:00 AR" color="info" icon={<Calendar size={16} />} />
 							<Arrow />
-							<Box sx={{ border: `1px dashed ${alpha(theme.palette.info.main, 0.4)}`, borderRadius: 1.5, p: 1.5, width: "100%", bgcolor: alpha(theme.palette.info.main, 0.03) }}>
+							<Box
+								sx={{
+									border: `1px dashed ${alpha(theme.palette.info.main, 0.4)}`,
+									borderRadius: 1.5,
+									p: 1.5,
+									width: "100%",
+									bgcolor: alpha(theme.palette.info.main, 0.03),
+								}}
+							>
 								<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.8, textAlign: "center" }}>
 									Itera 27 tipos de norma
 								</Typography>
@@ -246,9 +237,21 @@ const HelpTab = () => {
 							<Arrow />
 							<Node label="infoleg-normas" sublabel="status: pending" color="default" icon={<Data size={16} />} />
 							<Arrow />
-							<Node label="infoleg-novedades (col.)" sublabel="Registro diario: IDs, totales, desglose" color="info" icon={<Data size={16} />} />
+							<Node
+								label="infoleg-novedades (col.)"
+								sublabel="Registro diario: IDs, totales, desglose"
+								color="info"
+								icon={<Data size={16} />}
+							/>
 							<Arrow />
-							<Node label="infoleg-scraper-novedades" sublabel="getPendingBatch(source='novedades')" color="success" icon={<Code size={16} />} chip="Alta prioridad" chipColor="success" />
+							<Node
+								label="infoleg-scraper-novedades"
+								sublabel="getPendingBatch(source='novedades')"
+								color="success"
+								icon={<Code size={16} />}
+								chip="Alta prioridad"
+								chipColor="success"
+							/>
 							<Arrow />
 							<Node label="infoleg-normas" sublabel="status: scraped" color="success" icon={<Data size={16} />} />
 						</Stack>
@@ -261,8 +264,8 @@ const HelpTab = () => {
 			{/* ── 3. Sistema de colas ── */}
 			<Section title="Sistema de colas (source)" icon={<Element4 size={20} />}>
 				<Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
-					Cada documento en <code>infoleg-normas</code> tiene un campo <code>source</code> que indica
-					qué scraper debe procesarlo. Esto permite priorizar normas recientes sin afectar el scraping histórico.
+					Cada documento en <code>infoleg-normas</code> tiene un campo <code>source</code> que indica qué scraper debe procesarlo. Esto
+					permite priorizar normas recientes sin afectar el scraping histórico.
 				</Typography>
 
 				<Grid container spacing={2} sx={{ mb: 2.5 }}>
@@ -270,11 +273,13 @@ const HelpTab = () => {
 						<Paper elevation={0} sx={{ p: 2, border: `1px solid ${theme.palette.divider}`, borderRadius: 1.5, height: "100%" }}>
 							<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
 								<Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: "success.main" }} />
-								<Typography variant="subtitle2">source: <code>'queue'</code></Typography>
+								<Typography variant="subtitle2">
+									source: <code>'queue'</code>
+								</Typography>
 							</Stack>
 							<Typography variant="body2" color="text.secondary">
-								IDs sembrados por el manager en orden secuencial (1 → 500.000). Representan el histórico
-								completo de InfoLeg. Procesados por <strong>infoleg-scraper</strong>.
+								IDs sembrados por el manager en orden secuencial (1 → 500.000). Representan el histórico completo de InfoLeg. Procesados por{" "}
+								<strong>infoleg-scraper</strong>.
 							</Typography>
 						</Paper>
 					</Grid>
@@ -282,11 +287,13 @@ const HelpTab = () => {
 						<Paper elevation={0} sx={{ p: 2, border: `1px solid ${theme.palette.divider}`, borderRadius: 1.5, height: "100%" }}>
 							<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
 								<Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: "info.main" }} />
-								<Typography variant="subtitle2">source: <code>'novedades'</code></Typography>
+								<Typography variant="subtitle2">
+									source: <code>'novedades'</code>
+								</Typography>
 							</Stack>
 							<Typography variant="body2" color="text.secondary">
-								IDs descubiertos por el worker de novedades (normas publicadas ayer). Alta prioridad:
-								procesados por <strong>infoleg-scraper-novedades</strong> antes que el histórico.
+								IDs descubiertos por el worker de novedades (normas publicadas ayer). Alta prioridad: procesados por{" "}
+								<strong>infoleg-scraper-novedades</strong> antes que el histórico.
 							</Typography>
 						</Paper>
 					</Grid>
@@ -295,7 +302,12 @@ const HelpTab = () => {
 				{/* Diagrama de overflow */}
 				<Paper
 					elevation={0}
-					sx={{ p: 2, bgcolor: alpha(theme.palette.success.main, 0.04), border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`, borderRadius: 1.5 }}
+					sx={{
+						p: 2,
+						bgcolor: alpha(theme.palette.success.main, 0.04),
+						border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
+						borderRadius: 1.5,
+					}}
 				>
 					<Typography variant="subtitle2" color="success.main" gutterBottom>
 						Overflow automático del scraper de novedades
@@ -308,8 +320,8 @@ const HelpTab = () => {
 						<Node label="Cola queue" sublabel="ayuda al secuencial" color="success" chip="overflow" />
 					</Stack>
 					<Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-						Cuando la cola de novedades está vacía (la mayoría del día), el scraper-novedades
-						automáticamente procesa IDs de la cola secuencial. Así las instancias nunca quedan ociosas.
+						Cuando la cola de novedades está vacía (la mayoría del día), el scraper-novedades automáticamente procesa IDs de la cola
+						secuencial. Así las instancias nunca quedan ociosas.
 					</Typography>
 				</Paper>
 			</Section>
@@ -328,15 +340,27 @@ const HelpTab = () => {
 								Método descartado: <code>anioSancion=2025</code>
 							</Typography>
 							<Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-								El formulario de búsqueda de InfoLeg requiere al menos 2 criterios. Usar el año de
-								sanción parece lógico, pero falla en la práctica:
+								El formulario de búsqueda de InfoLeg requiere al menos 2 criterios. Usar el año de sanción parece lógico, pero falla en la
+								práctica:
 							</Typography>
-							<Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.error.main, 0.05), borderRadius: 1, fontFamily: "monospace", fontSize: "0.75rem" }}>
+							<Box
+								sx={{
+									p: 1.5,
+									bgcolor: alpha(theme.palette.error.main, 0.05),
+									borderRadius: 1,
+									fontFamily: "monospace",
+									fontSize: "0.75rem",
+								}}
+							>
 								<Typography variant="caption" display="block" color="error.main" fontWeight={700}>
 									Ejemplo real — 2 de enero 2025:
 								</Typography>
-								<Typography variant="caption" display="block">anioSancion=2025 → 9 normas</Typography>
-								<Typography variant="caption" display="block">anioSancion=2024 → 110 normas</Typography>
+								<Typography variant="caption" display="block">
+									anioSancion=2025 → 9 normas
+								</Typography>
+								<Typography variant="caption" display="block">
+									anioSancion=2024 → 110 normas
+								</Typography>
 								<Typography variant="caption" display="block" color="error.main" fontWeight={700}>
 									93% de las normas publicadas ese día
 								</Typography>
@@ -355,8 +379,8 @@ const HelpTab = () => {
 								Método usado: iterar cada <code>tipoNorma</code>
 							</Typography>
 							<Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-								Buscar por tipo + rango de fechas devuelve <strong>todas</strong> las normas
-								publicadas ese día sin importar el año de sanción.
+								Buscar por tipo + rango de fechas devuelve <strong>todas</strong> las normas publicadas ese día sin importar el año de
+								sanción.
 							</Typography>
 							<Stack spacing={0.5}>
 								<Typography variant="caption" color="text.secondary">
@@ -376,7 +400,9 @@ const HelpTab = () => {
 								<Typography variant="caption" display="block">
 									Por tipo: 119 IDs · Por anioSancion: 119 IDs
 								</Typography>
-								<Typography variant="caption" display="block">Gap = 0 normas perdidas ✓</Typography>
+								<Typography variant="caption" display="block">
+									Gap = 0 normas perdidas ✓
+								</Typography>
 							</Box>
 						</Paper>
 					</Grid>
@@ -388,15 +414,27 @@ const HelpTab = () => {
 			{/* ── 5. Colecciones MongoDB ── */}
 			<Section title="Colecciones MongoDB" icon={<Data size={20} />}>
 				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-					Todas las colecciones usan el prefijo <code>infoleg-</code> para evitar colisiones con
-					otros proyectos en la base de datos compartida.
+					Todas las colecciones usan el prefijo <code>infoleg-</code> para evitar colisiones con otros proyectos en la base de datos
+					compartida.
 				</Typography>
 				<Grid container spacing={1.5}>
 					{[
 						{
 							name: "infoleg-normas",
 							desc: "Documento principal de cada norma. Contiene metadatos, texto original, texto actualizado con reformas, vinculaciones raw y estado del pipeline.",
-							fields: ["infolegId", "tipo", "numero", "titulo", "fechaPublicacion", "status", "source", "textoPlano", "textoActualizadoPlano", "vinculacionesRaw", "tasks.*"],
+							fields: [
+								"infolegId",
+								"tipo",
+								"numero",
+								"titulo",
+								"fechaPublicacion",
+								"status",
+								"source",
+								"textoPlano",
+								"textoActualizadoPlano",
+								"vinculacionesRaw",
+								"tasks.*",
+							],
 							color: "primary" as const,
 						},
 						{
@@ -422,7 +460,11 @@ const HelpTab = () => {
 							<Paper elevation={0} sx={{ p: 2, border: `1px solid ${theme.palette.divider}`, borderRadius: 1.5, height: "100%" }}>
 								<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
 									<Data size={16} color={col.color === "default" ? theme.palette.text.secondary : (theme.palette[col.color] as any).main} />
-									<Typography variant="subtitle2" fontFamily="monospace" color={col.color === "default" ? "text.primary" : `${col.color}.main`}>
+									<Typography
+										variant="subtitle2"
+										fontFamily="monospace"
+										color={col.color === "default" ? "text.primary" : `${col.color}.main`}
+									>
 										{col.name}
 									</Typography>
 								</Stack>
@@ -431,7 +473,13 @@ const HelpTab = () => {
 								</Typography>
 								<Stack direction="row" flexWrap="wrap" gap={0.5}>
 									{col.fields.map((f) => (
-										<Chip key={f} label={f} size="small" variant="outlined" sx={{ fontSize: "0.6rem", height: 18, fontFamily: "monospace" }} />
+										<Chip
+											key={f}
+											label={f}
+											size="small"
+											variant="outlined"
+											sx={{ fontSize: "0.6rem", height: 18, fontFamily: "monospace" }}
+										/>
 									))}
 								</Stack>
 							</Paper>
@@ -465,9 +513,9 @@ const HelpTab = () => {
 					</Stack>
 				</Box>
 				<Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: "block" }}>
-					El manager no ejecuta scraping directamente. Solo orquesta: lee config, cuenta pendientes,
-					siembra IDs y ajusta instancias PM2. Si una cola tiene más pendientes que <code>scaleUpThreshold</code>,
-					agrega instancias. Si tiene menos que <code>scaleDownThreshold</code>, las reduce.
+					El manager no ejecuta scraping directamente. Solo orquesta: lee config, cuenta pendientes, siembra IDs y ajusta instancias PM2. Si
+					una cola tiene más pendientes que <code>scaleUpThreshold</code>, agrega instancias. Si tiene menos que{" "}
+					<code>scaleDownThreshold</code>, las reduce.
 				</Typography>
 			</Section>
 
@@ -482,13 +530,24 @@ const HelpTab = () => {
 					<Arrow horizontal />
 					<Node label="scraped" sublabel="Texto + metadatos OK" color="success" />
 					<Arrow horizontal />
-					<Node label="vinculaciones" sublabel="Relaciones resueltas" color="success" chip="tasks.vinculacionesResolved" chipColor="success" />
+					<Node
+						label="vinculaciones"
+						sublabel="Relaciones resueltas"
+						color="success"
+						chip="tasks.vinculacionesResolved"
+						chipColor="success"
+					/>
 				</Stack>
 				<Box sx={{ mt: 1.5 }}>
 					<Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
 						<Chip label="not_found → 404 en InfoLeg (ID sin norma)" size="small" color="default" variant="outlined" />
 						<Chip label="error → 3+ errores consecutivos, skip temporario" size="small" color="error" variant="outlined" />
-						<Chip label="textoActualizadoStale → una norma posterior la modificó, texto desactualizado" size="small" color="warning" variant="outlined" />
+						<Chip
+							label="textoActualizadoStale → una norma posterior la modificó, texto desactualizado"
+							size="small"
+							color="warning"
+							variant="outlined"
+						/>
 					</Stack>
 				</Box>
 			</Section>

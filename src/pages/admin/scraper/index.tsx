@@ -373,11 +373,18 @@ const ConfigTab = () => {
 					Estados de Entrega Finales
 				</Typography>
 				<Typography variant="caption" color="textSecondary" display="block" mb={1}>
-					Substrings del campo <code>deliveryStatus</code> (columna "Estado:" del sitio) que cierran el scraping del documento. Case-insensitive.
+					Substrings del campo <code>deliveryStatus</code> (columna "Estado:" del sitio) que cierran el scraping del documento.
+					Case-insensitive.
 				</Typography>
 				<Stack direction="row" spacing={1} mb={1} flexWrap="wrap" gap={0.5}>
 					{finalDeliveryStatuses.map((s) => (
-						<Chip key={s} label={s} size="small" color="success" onDelete={() => setFinalDeliveryStatuses((prev) => prev.filter((x) => x !== s))} />
+						<Chip
+							key={s}
+							label={s}
+							size="small"
+							color="success"
+							onDelete={() => setFinalDeliveryStatuses((prev) => prev.filter((x) => x !== s))}
+						/>
 					))}
 				</Stack>
 				<Stack direction="row" spacing={1}>
@@ -416,7 +423,8 @@ const ConfigTab = () => {
 					Patrones de Fecha de Notificación
 				</Typography>
 				<Typography variant="caption" color="textSecondary" display="block" mb={2}>
-					Si algún evento del historial coincide con alguno de estos patrones, se establece automáticamente la <code>notificationDate</code>. Case-insensitive.
+					Si algún evento del historial coincide con alguno de estos patrones, se establece automáticamente la <code>notificationDate</code>
+					. Case-insensitive.
 				</Typography>
 				<Stack spacing={2}>
 					<Box>
@@ -425,7 +433,14 @@ const ConfigTab = () => {
 						</Typography>
 						<Stack direction="row" spacing={1} mb={1} flexWrap="wrap" gap={0.5}>
 							{notifStatusMatches.map((s) => (
-								<Chip key={s} label={s} size="small" color="primary" variant="outlined" onDelete={() => setNotifStatusMatches((prev) => prev.filter((x) => x !== s))} />
+								<Chip
+									key={s}
+									label={s}
+									size="small"
+									color="primary"
+									variant="outlined"
+									onDelete={() => setNotifStatusMatches((prev) => prev.filter((x) => x !== s))}
+								/>
 							))}
 						</Stack>
 						<Stack direction="row" spacing={1}>
@@ -463,7 +478,14 @@ const ConfigTab = () => {
 						</Typography>
 						<Stack direction="row" spacing={1} mb={1} flexWrap="wrap" gap={0.5}>
 							{notifDescMatches.map((s) => (
-								<Chip key={s} label={s} size="small" color="secondary" variant="outlined" onDelete={() => setNotifDescMatches((prev) => prev.filter((x) => x !== s))} />
+								<Chip
+									key={s}
+									label={s}
+									size="small"
+									color="secondary"
+									variant="outlined"
+									onDelete={() => setNotifDescMatches((prev) => prev.filter((x) => x !== s))}
+								/>
 							))}
 						</Stack>
 						<Stack direction="row" spacing={1}>
@@ -928,13 +950,7 @@ const RunsTab = () => {
 					</Select>
 				</FormControl>
 				<Box flex={1} />
-				<Button
-					variant="outlined"
-					size="small"
-					color="error"
-					startIcon={<Trash size={16} />}
-					onClick={() => setClearDialogOpen(true)}
-				>
+				<Button variant="outlined" size="small" color="error" startIcon={<Trash size={16} />} onClick={() => setClearDialogOpen(true)}>
 					Limpiar runs
 				</Button>
 				<Button
@@ -1134,10 +1150,14 @@ const RunsTab = () => {
 				<DialogTitle>Limpiar Runs</DialogTitle>
 				<DialogContent>
 					<Typography>Eliminar todos los runs completados, fallidos y detenidos con más de 7 días de antigüedad?</Typography>
-					<Alert severity="warning" sx={{ mt: 2 }}>Esta acción no se puede deshacer.</Alert>
+					<Alert severity="warning" sx={{ mt: 2 }}>
+						Esta acción no se puede deshacer.
+					</Alert>
 				</DialogContent>
 				<DialogActions>
-					<Button onClick={() => setClearDialogOpen(false)} disabled={clearing}>Cancelar</Button>
+					<Button onClick={() => setClearDialogOpen(false)} disabled={clearing}>
+						Cancelar
+					</Button>
 					<Button variant="contained" color="error" onClick={handleClearRuns} disabled={clearing}>
 						{clearing ? "Limpiando..." : "Limpiar"}
 					</Button>

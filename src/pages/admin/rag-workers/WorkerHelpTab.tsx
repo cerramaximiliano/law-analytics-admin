@@ -1700,7 +1700,6 @@ const HelpEditorAiSection: React.FC = () => {
 
 	return (
 		<Stack spacing={4} sx={{ p: 3 }}>
-
 			{/* Intro */}
 			<Stack>
 				<Typography variant="h5">Asistente IA del Editor de Documentos</Typography>
@@ -1767,10 +1766,19 @@ const HelpEditorAiSection: React.FC = () => {
 					/>
 				</Stack>
 
-				<Box sx={{ mt: 2, p: 1.5, borderRadius: 1, bgcolor: alpha(theme.palette.primary.main, 0.04), border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}` }}>
+				<Box
+					sx={{
+						mt: 2,
+						p: 1.5,
+						borderRadius: 1,
+						bgcolor: alpha(theme.palette.primary.main, 0.04),
+						border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+					}}
+				>
 					<Typography variant="caption" color="text.secondary">
-						<strong>Condición para inyección de corpus:</strong> la request debe incluir <code>systemPromptOverride</code> (la acción tiene un system prompt propio) Y <code>caseContext.folderFuero</code> (el expediente tiene fuero asignado).
-						Si alguna condición no se cumple, el sistema responde normalmente sin los ejemplos de estilo.
+						<strong>Condición para inyección de corpus:</strong> la request debe incluir <code>systemPromptOverride</code> (la acción tiene
+						un system prompt propio) Y <code>caseContext.folderFuero</code> (el expediente tiene fuero asignado). Si alguna condición no se
+						cumple, el sistema responde normalmente sin los ejemplos de estilo.
 					</Typography>
 				</Box>
 			</SectionBox>
@@ -1814,13 +1822,34 @@ const HelpEditorAiSection: React.FC = () => {
 						},
 					].map((b) => (
 						<Box key={b.n} sx={{ display: "flex", gap: 2, alignItems: "flex-start" }}>
-							<Box sx={{ minWidth: 28, height: 28, borderRadius: "50%", bgcolor: b.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, mt: 0.2 }}>
-								<Typography variant="caption" fontWeight={700}>{b.n}</Typography>
+							<Box
+								sx={{
+									minWidth: 28,
+									height: 28,
+									borderRadius: "50%",
+									bgcolor: b.color,
+									color: "#fff",
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									flexShrink: 0,
+									mt: 0.2,
+								}}
+							>
+								<Typography variant="caption" fontWeight={700}>
+									{b.n}
+								</Typography>
 							</Box>
 							<Box sx={{ flex: 1 }}>
-								<Typography variant="subtitle2" fontWeight={700} sx={{ color: b.color }}>{b.label}</Typography>
-								<Typography variant="caption" color="text.secondary" display="block" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}>{b.origin}</Typography>
-								<Typography variant="caption" color="text.secondary">{b.desc}</Typography>
+								<Typography variant="subtitle2" fontWeight={700} sx={{ color: b.color }}>
+									{b.label}
+								</Typography>
+								<Typography variant="caption" color="text.secondary" display="block" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}>
+									{b.origin}
+								</Typography>
+								<Typography variant="caption" color="text.secondary">
+									{b.desc}
+								</Typography>
 							</Box>
 						</Box>
 					))}
@@ -1831,13 +1860,18 @@ const HelpEditorAiSection: React.FC = () => {
 			<SectionBox theme={theme}>
 				<SectionTitle>caseContext — campos y efectos</SectionTitle>
 				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-					Metadatos del expediente que el frontend envía en cada request. Se construye en <code>document-editor/index.tsx</code> a partir del expediente seleccionado.
+					Metadatos del expediente que el frontend envía en cada request. Se construye en <code>document-editor/index.tsx</code> a partir
+					del expediente seleccionado.
 				</Typography>
 				<Box component="table" sx={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
 					<Box component="thead">
 						<Box component="tr" sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
 							{["Campo", "Tipo", "Efecto en la API"].map((h) => (
-								<Box component="th" key={h} sx={{ p: 1, textAlign: "left", borderBottom: `1px solid ${theme.palette.divider}`, fontWeight: 600, fontSize: "0.75rem" }}>
+								<Box
+									component="th"
+									key={h}
+									sx={{ p: 1, textAlign: "left", borderBottom: `1px solid ${theme.palette.divider}`, fontWeight: 600, fontSize: "0.75rem" }}
+								>
 									{h}
 								</Box>
 							))}
@@ -1854,9 +1888,33 @@ const HelpEditorAiSection: React.FC = () => {
 							["demandadoName", "string", "Nombre real del demandado en el contexto"],
 						].map(([campo, tipo, efecto]) => (
 							<Box component="tr" key={campo} sx={{ "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.02) } }}>
-								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", fontSize: "0.75rem", color: theme.palette.primary.main }}>{campo}</Box>
-								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", fontSize: "0.7rem", color: theme.palette.text.secondary }}>{tipo}</Box>
-								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem" }}>{efecto}</Box>
+								<Box
+									component="td"
+									sx={{
+										p: 1,
+										borderBottom: `1px solid ${theme.palette.divider}`,
+										fontFamily: "monospace",
+										fontSize: "0.75rem",
+										color: theme.palette.primary.main,
+									}}
+								>
+									{campo}
+								</Box>
+								<Box
+									component="td"
+									sx={{
+										p: 1,
+										borderBottom: `1px solid ${theme.palette.divider}`,
+										fontFamily: "monospace",
+										fontSize: "0.7rem",
+										color: theme.palette.text.secondary,
+									}}
+								>
+									{tipo}
+								</Box>
+								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem" }}>
+									{efecto}
+								</Box>
 							</Box>
 						))}
 					</Box>
@@ -1867,7 +1925,8 @@ const HelpEditorAiSection: React.FC = () => {
 			<SectionBox theme={theme}>
 				<SectionTitle>EditorActions — acciones configurables</SectionTitle>
 				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-					Las acciones que aparecen en el bubble y el panel son documentos MongoDB en la colección <code>editor-actions</code>. Se pueden gestionar desde el tab <strong>Chat Editor</strong> sin tocar código.
+					Las acciones que aparecen en el bubble y el panel son documentos MongoDB en la colección <code>editor-actions</code>. Se pueden
+					gestionar desde el tab <strong>Chat Editor</strong> sin tocar código.
 				</Typography>
 				<Stack direction={{ xs: "column", md: "row" }} spacing={2} flexWrap="wrap">
 					{[
@@ -1879,15 +1938,31 @@ const HelpEditorAiSection: React.FC = () => {
 						{ title: "context.includeDocument", desc: "Si la acción siempre envía el documento completo como contexto" },
 					].map((f) => (
 						<Box key={f.title} sx={{ flex: "1 1 280px", p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}>
-							<Typography variant="caption" sx={{ fontFamily: "monospace", color: theme.palette.primary.main, display: "block", fontWeight: 700 }}>{f.title}</Typography>
-							<Typography variant="caption" color="text.secondary">{f.desc}</Typography>
+							<Typography
+								variant="caption"
+								sx={{ fontFamily: "monospace", color: theme.palette.primary.main, display: "block", fontWeight: 700 }}
+							>
+								{f.title}
+							</Typography>
+							<Typography variant="caption" color="text.secondary">
+								{f.desc}
+							</Typography>
 						</Box>
 					))}
 				</Stack>
 
-				<Box sx={{ mt: 2, p: 1.5, borderRadius: 1, bgcolor: alpha(theme.palette.warning.main, 0.05), border: `1px solid ${alpha(theme.palette.warning.main, 0.3)}` }}>
+				<Box
+					sx={{
+						mt: 2,
+						p: 1.5,
+						borderRadius: 1,
+						bgcolor: alpha(theme.palette.warning.main, 0.05),
+						border: `1px solid ${alpha(theme.palette.warning.main, 0.3)}`,
+					}}
+				>
 					<Typography variant="caption" color="text.secondary">
-						<strong>Importante:</strong> el caché de acciones en el servidor dura <strong>5 minutos</strong> por usuario. Los cambios desde admin pueden tardar hasta 5 min en reflejarse. Podés invalidarlo reiniciando el proceso o esperando.
+						<strong>Importante:</strong> el caché de acciones en el servidor dura <strong>5 minutos</strong> por usuario. Los cambios desde
+						admin pueden tardar hasta 5 min en reflejarse. Podés invalidarlo reiniciando el proceso o esperando.
 					</Typography>
 				</Box>
 			</SectionBox>
@@ -1902,7 +1977,13 @@ const HelpEditorAiSection: React.FC = () => {
 					<Box component="thead">
 						<Box component="tr" sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
 							{["Parámetro", "Default", "Descripción"].map((h) => (
-								<Box component="th" key={h} sx={{ p: 1, textAlign: "left", borderBottom: `1px solid ${theme.palette.divider}`, fontWeight: 600, fontSize: "0.75rem" }}>{h}</Box>
+								<Box
+									component="th"
+									key={h}
+									sx={{ p: 1, textAlign: "left", borderBottom: `1px solid ${theme.palette.divider}`, fontWeight: 600, fontSize: "0.75rem" }}
+								>
+									{h}
+								</Box>
 							))}
 						</Box>
 					</Box>
@@ -1918,9 +1999,33 @@ const HelpEditorAiSection: React.FC = () => {
 							["rateLimit.duration", "60000", "Ventana de rate limit en ms"],
 						].map(([param, def, desc]) => (
 							<Box component="tr" key={param} sx={{ "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.02) } }}>
-								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", fontSize: "0.75rem", color: theme.palette.primary.main }}>{param}</Box>
-								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", fontSize: "0.75rem", color: theme.palette.text.secondary }}>{def}</Box>
-								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem" }}>{desc}</Box>
+								<Box
+									component="td"
+									sx={{
+										p: 1,
+										borderBottom: `1px solid ${theme.palette.divider}`,
+										fontFamily: "monospace",
+										fontSize: "0.75rem",
+										color: theme.palette.primary.main,
+									}}
+								>
+									{param}
+								</Box>
+								<Box
+									component="td"
+									sx={{
+										p: 1,
+										borderBottom: `1px solid ${theme.palette.divider}`,
+										fontFamily: "monospace",
+										fontSize: "0.75rem",
+										color: theme.palette.text.secondary,
+									}}
+								>
+									{def}
+								</Box>
+								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem" }}>
+									{desc}
+								</Box>
 							</Box>
 						))}
 					</Box>
@@ -1959,14 +2064,19 @@ const HelpEditorAiSection: React.FC = () => {
 						},
 					].map((item, i) => (
 						<Box key={i} sx={{ p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}>
-							<Typography variant="subtitle2" fontWeight={600} color="error.main" gutterBottom>⚠ {item.prob}</Typography>
-							<Typography variant="caption" color="text.secondary" display="block"><strong>Causa:</strong> {item.cause}</Typography>
-							<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}><strong>Solución:</strong> {item.fix}</Typography>
+							<Typography variant="subtitle2" fontWeight={600} color="error.main" gutterBottom>
+								⚠ {item.prob}
+							</Typography>
+							<Typography variant="caption" color="text.secondary" display="block">
+								<strong>Causa:</strong> {item.cause}
+							</Typography>
+							<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+								<strong>Solución:</strong> {item.fix}
+							</Typography>
 						</Box>
 					))}
 				</Stack>
 			</SectionBox>
-
 		</Stack>
 	);
 };
@@ -1986,7 +2096,6 @@ const HelpStyleCorpusSection: React.FC = () => {
 
 	return (
 		<Stack spacing={4} sx={{ p: 3 }}>
-
 			<Stack>
 				<Typography variant="h5">Corpus de Estilo Jurídico</Typography>
 				<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -1998,22 +2107,38 @@ const HelpStyleCorpusSection: React.FC = () => {
 			<SectionBox theme={theme}>
 				<SectionTitle>¿Qué es y para qué sirve?</SectionTitle>
 				<Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-					El corpus es una colección de los primeros ~800 caracteres de escritos judiciales reales (tipo "ESCRITO AGREGADO") ya procesados por el pipeline RAG.
-					A diferencia del RAG de causas (que responde preguntas <em>sobre</em> documentos), este corpus no busca información — usa los escritos únicamente como <strong>calibrador de tono y vocabulario</strong> para la generación de nuevos textos.
+					El corpus es una colección de los primeros ~800 caracteres de escritos judiciales reales (tipo "ESCRITO AGREGADO") ya procesados
+					por el pipeline RAG. A diferencia del RAG de causas (que responde preguntas <em>sobre</em> documentos), este corpus no busca
+					información — usa los escritos únicamente como <strong>calibrador de tono y vocabulario</strong> para la generación de nuevos
+					textos.
 				</Typography>
 				<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-					<Box sx={{ flex: 1, p: 1.5, borderRadius: 1.5, bgcolor: alpha(colors.mongo, 0.06), border: `1px solid ${alpha(colors.mongo, 0.2)}` }}>
-						<Typography variant="subtitle2" fontWeight={700} color="success.main" gutterBottom>RAG de causas</Typography>
+					<Box
+						sx={{ flex: 1, p: 1.5, borderRadius: 1.5, bgcolor: alpha(colors.mongo, 0.06), border: `1px solid ${alpha(colors.mongo, 0.2)}` }}
+					>
+						<Typography variant="subtitle2" fontWeight={700} color="success.main" gutterBottom>
+							RAG de causas
+						</Typography>
 						<Typography variant="caption" color="text.secondary">
-							Responde preguntas sobre el contenido de expedientes. Busca información específica en documentos ya indexados.
-							Usa el índice Pinecone shardado por causa.
+							Responde preguntas sobre el contenido de expedientes. Busca información específica en documentos ya indexados. Usa el índice
+							Pinecone shardado por causa.
 						</Typography>
 					</Box>
-					<Box sx={{ flex: 1, p: 1.5, borderRadius: 1.5, bgcolor: alpha(colors.pinecone, 0.06), border: `1px solid ${alpha(colors.pinecone, 0.2)}` }}>
-						<Typography variant="subtitle2" fontWeight={700} sx={{ color: colors.pinecone }} gutterBottom>Corpus de estilo</Typography>
+					<Box
+						sx={{
+							flex: 1,
+							p: 1.5,
+							borderRadius: 1.5,
+							bgcolor: alpha(colors.pinecone, 0.06),
+							border: `1px solid ${alpha(colors.pinecone, 0.2)}`,
+						}}
+					>
+						<Typography variant="subtitle2" fontWeight={700} sx={{ color: colors.pinecone }} gutterBottom>
+							Corpus de estilo
+						</Typography>
 						<Typography variant="caption" color="text.secondary">
-							Calibra el registro y vocabulario del asistente al fuero. No busca información — inyecta ejemplos de <em>cómo escribe un letrado real</em> de ese fuero.
-							Usa el índice Pinecone global <code>pjn-style-corpus</code>.
+							Calibra el registro y vocabulario del asistente al fuero. No busca información — inyecta ejemplos de{" "}
+							<em>cómo escribe un letrado real</em> de ese fuero. Usa el índice Pinecone global <code>pjn-style-corpus</code>.
 						</Typography>
 					</Box>
 				</Stack>
@@ -2029,12 +2154,7 @@ const HelpStyleCorpusSection: React.FC = () => {
 						badge="MONGODB"
 						subtitle="Documentos ya procesados"
 						color={colors.pipeline}
-						items={[
-							"movimientoTipo = 'ESCRITO AGREGADO'",
-							"status = 'embedded'",
-							"textLength > 400",
-							"textS3Key presente",
-						]}
+						items={["movimientoTipo = 'ESCRITO AGREGADO'", "status = 'embedded'", "textLength > 400", "textS3Key presente"]}
 					/>
 					<FlowArrow label="descarga S3" />
 					<FlowNode
@@ -2056,12 +2176,7 @@ const HelpStyleCorpusSection: React.FC = () => {
 						badge="MONGODB"
 						subtitle="Colección de snippets"
 						color={colors.quality}
-						items={[
-							"fuero, title, textPreview",
-							"quality: 'high' | 'normal'",
-							"vectorId: null → pendiente embed",
-							"~71% high quality",
-						]}
+						items={["fuero, title, textPreview", "quality: 'high' | 'normal'", "vectorId: null → pendiente embed", "~71% high quality"]}
 					/>
 					<FlowArrow label="embebe" />
 					<FlowNode
@@ -2078,11 +2193,16 @@ const HelpStyleCorpusSection: React.FC = () => {
 					/>
 				</Stack>
 
-				<Box sx={{ mt: 2, p: 1.5, borderRadius: 1, bgcolor: alpha(colors.worker, 0.04), border: `1px solid ${alpha(colors.worker, 0.15)}` }}>
-					<Typography variant="subtitle2" fontWeight={600} gutterBottom>Ingesta en tiempo real (automática)</Typography>
+				<Box
+					sx={{ mt: 2, p: 1.5, borderRadius: 1, bgcolor: alpha(colors.worker, 0.04), border: `1px solid ${alpha(colors.worker, 0.15)}` }}
+				>
+					<Typography variant="subtitle2" fontWeight={600} gutterBottom>
+						Ingesta en tiempo real (automática)
+					</Typography>
 					<Typography variant="caption" color="text.secondary">
 						<code>indexDocument.worker.js</code> llama a <code>ingestStyleCorpusDoc(ragDoc, text)</code> después de procesar cada documento.
-						Si es un ESCRITO AGREGADO con calidad 'high', lo agrega a MongoDB y lo embebe a Pinecone de forma asíncrona (no bloquea el pipeline principal).
+						Si es un ESCRITO AGREGADO con calidad 'high', lo agrega a MongoDB y lo embebe a Pinecone de forma asíncrona (no bloquea el
+						pipeline principal).
 					</Typography>
 				</Box>
 			</SectionBox>
@@ -2093,17 +2213,38 @@ const HelpStyleCorpusSection: React.FC = () => {
 				<Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
 					Un documento se clasifica como <strong>high</strong> si contiene un saludo reconocible al juez en los primeros 400 caracteres:
 				</Typography>
-				<Box sx={{ p: 1.5, borderRadius: 1, bgcolor: alpha(theme.palette.grey[500], 0.08), fontFamily: "monospace", fontSize: "0.8rem", mb: 1.5 }}>
+				<Box
+					sx={{
+						p: 1.5,
+						borderRadius: 1,
+						bgcolor: alpha(theme.palette.grey[500], 0.08),
+						fontFamily: "monospace",
+						fontSize: "0.8rem",
+						mb: 1.5,
+					}}
+				>
 					/señor\s+juez|sr\.\s*juez|sr\/a\.\s*juez|excm[ao]\.|a\s+v\.s\.|a\s+s\.s\.|señora\s+jueza/i
 				</Box>
 				<Stack direction="row" spacing={2}>
-					<Box sx={{ flex: 1, p: 1.5, borderRadius: 1.5, bgcolor: alpha(colors.mongo, 0.06), border: `1px solid ${alpha(colors.mongo, 0.2)}` }}>
-						<Typography variant="subtitle2" fontWeight={700} color="success.main">high (~71.7%)</Typography>
-						<Typography variant="caption" color="text.secondary">Escritos judiciales confirmados. Tienen el saludo al juez en los primeros 400 chars. Solo estos se embedan en Pinecone y se inyectan como ejemplos.</Typography>
+					<Box
+						sx={{ flex: 1, p: 1.5, borderRadius: 1.5, bgcolor: alpha(colors.mongo, 0.06), border: `1px solid ${alpha(colors.mongo, 0.2)}` }}
+					>
+						<Typography variant="subtitle2" fontWeight={700} color="success.main">
+							high (~71.7%)
+						</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Escritos judiciales confirmados. Tienen el saludo al juez en los primeros 400 chars. Solo estos se embedan en Pinecone y se
+							inyectan como ejemplos.
+						</Typography>
 					</Box>
 					<Box sx={{ flex: 1, p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}>
-						<Typography variant="subtitle2" fontWeight={700} color="text.secondary">normal (~28.3%)</Typography>
-						<Typography variant="caption" color="text.secondary">Sin saludo al juez en los primeros 400 chars. Pueden ser tablas OCR, formularios, carátulas o escritos que comienzan directamente con el cuerpo.</Typography>
+						<Typography variant="subtitle2" fontWeight={700} color="text.secondary">
+							normal (~28.3%)
+						</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Sin saludo al juez en los primeros 400 chars. Pueden ser tablas OCR, formularios, carátulas o escritos que comienzan
+							directamente con el cuerpo.
+						</Typography>
 					</Box>
 				</Stack>
 			</SectionBox>
@@ -2115,7 +2256,13 @@ const HelpStyleCorpusSection: React.FC = () => {
 					<Box component="thead">
 						<Box component="tr" sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
 							{["Fuero", "Código", "Total corpus", "High quality", "Embebidos en Pinecone"].map((h) => (
-								<Box component="th" key={h} sx={{ p: 1, textAlign: "left", borderBottom: `1px solid ${theme.palette.divider}`, fontWeight: 600, fontSize: "0.75rem" }}>{h}</Box>
+								<Box
+									component="th"
+									key={h}
+									sx={{ p: 1, textAlign: "left", borderBottom: `1px solid ${theme.palette.divider}`, fontWeight: 600, fontSize: "0.75rem" }}
+								>
+									{h}
+								</Box>
 							))}
 						</Box>
 					</Box>
@@ -2128,12 +2275,38 @@ const HelpStyleCorpusSection: React.FC = () => {
 							["Comercial", "COM", "582", "384", "384"],
 							["Total", "—", "9.346", "6.703", "6.703"],
 						].map(([fuero, cod, total, high, emb]) => (
-							<Box component="tr" key={fuero} sx={{ "&:last-child td": { fontWeight: 700 }, "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.02) } }}>
-								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem" }}>{fuero}</Box>
-								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontFamily: "monospace", fontSize: "0.75rem", color: theme.palette.primary.main }}>{cod}</Box>
-								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem" }}>{total}</Box>
-								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem", color: "success.main" }}>{high}</Box>
-								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem" }}>{emb}</Box>
+							<Box
+								component="tr"
+								key={fuero}
+								sx={{ "&:last-child td": { fontWeight: 700 }, "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.02) } }}
+							>
+								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem" }}>
+									{fuero}
+								</Box>
+								<Box
+									component="td"
+									sx={{
+										p: 1,
+										borderBottom: `1px solid ${theme.palette.divider}`,
+										fontFamily: "monospace",
+										fontSize: "0.75rem",
+										color: theme.palette.primary.main,
+									}}
+								>
+									{cod}
+								</Box>
+								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem" }}>
+									{total}
+								</Box>
+								<Box
+									component="td"
+									sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem", color: "success.main" }}
+								>
+									{high}
+								</Box>
+								<Box component="td" sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: "0.78rem" }}>
+									{emb}
+								</Box>
 							</Box>
 						))}
 					</Box>
@@ -2147,8 +2320,8 @@ const HelpStyleCorpusSection: React.FC = () => {
 			<SectionBox theme={theme}>
 				<SectionTitle>Scripts de mantenimiento</SectionTitle>
 				<Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-					Todos los scripts son <strong>idempotentes</strong> — saltean entradas ya procesadas.
-					Correr desde <code>/home/mcerra/www/pjn-rag-api/</code>.
+					Todos los scripts son <strong>idempotentes</strong> — saltean entradas ya procesadas. Correr desde{" "}
+					<code>/home/mcerra/www/pjn-rag-api/</code>.
 				</Typography>
 				<Stack spacing={2}>
 					{[
@@ -2174,9 +2347,21 @@ const HelpStyleCorpusSection: React.FC = () => {
 						},
 					].map((s, i) => (
 						<Box key={i} sx={{ p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}>
-							<Typography variant="caption" sx={{ fontFamily: "monospace", color: theme.palette.primary.main, display: "block", fontWeight: 700, mb: 0.5 }}>{s.script}</Typography>
-							<Typography variant="caption" sx={{ fontFamily: "monospace", color: theme.palette.text.secondary, display: "block", fontSize: "0.7rem", mb: 0.5 }}>flags: {s.flags}</Typography>
-							<Typography variant="caption" color="text.secondary">{s.desc}</Typography>
+							<Typography
+								variant="caption"
+								sx={{ fontFamily: "monospace", color: theme.palette.primary.main, display: "block", fontWeight: 700, mb: 0.5 }}
+							>
+								{s.script}
+							</Typography>
+							<Typography
+								variant="caption"
+								sx={{ fontFamily: "monospace", color: theme.palette.text.secondary, display: "block", fontSize: "0.7rem", mb: 0.5 }}
+							>
+								flags: {s.flags}
+							</Typography>
+							<Typography variant="caption" color="text.secondary">
+								{s.desc}
+							</Typography>
 						</Box>
 					))}
 				</Stack>
@@ -2214,14 +2399,19 @@ const HelpStyleCorpusSection: React.FC = () => {
 						},
 					].map((item, i) => (
 						<Box key={i} sx={{ p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}>
-							<Typography variant="subtitle2" fontWeight={600} color="error.main" gutterBottom>⚠ {item.prob}</Typography>
-							<Typography variant="caption" color="text.secondary" display="block"><strong>Causa:</strong> {item.cause}</Typography>
-							<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}><strong>Solución:</strong> {item.fix}</Typography>
+							<Typography variant="subtitle2" fontWeight={600} color="error.main" gutterBottom>
+								⚠ {item.prob}
+							</Typography>
+							<Typography variant="caption" color="text.secondary" display="block">
+								<strong>Causa:</strong> {item.cause}
+							</Typography>
+							<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+								<strong>Solución:</strong> {item.fix}
+							</Typography>
 						</Box>
 					))}
 				</Stack>
 			</SectionBox>
-
 		</Stack>
 	);
 };
@@ -2238,7 +2428,9 @@ const HelpSummarySection: React.FC = () => {
 
 	const InfoRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
 		<Box sx={{ display: "flex", gap: 2, py: 0.6, borderBottom: "1px solid", borderColor: "divider" }}>
-			<Typography variant="caption" color="text.secondary" sx={{ minWidth: 180, fontWeight: 600 }}>{label}</Typography>
+			<Typography variant="caption" color="text.secondary" sx={{ minWidth: 180, fontWeight: 600 }}>
+				{label}
+			</Typography>
 			<Typography variant="caption">{value}</Typography>
 		</Box>
 	);
@@ -2247,43 +2439,102 @@ const HelpSummarySection: React.FC = () => {
 		<Stack spacing={3}>
 			<Box>
 				<Typography variant="body2" color="text.secondary">
-					El <strong>Workers RAG</strong> indexa los expedientes judiciales de los usuarios: descarga sus PDFs, extrae texto,
-					genera embeddings y los almacena en Pinecone para búsqueda semántica en el chat. Corre en <strong>worker_02</strong> y
-					opera sobre dos bases de datos: el MongoDB local con las causas scrapeadas (fuente) y MongoDB Atlas (destino de embeddings y metadatos).
+					El <strong>Workers RAG</strong> indexa los expedientes judiciales de los usuarios: descarga sus PDFs, extrae texto, genera
+					embeddings y los almacena en Pinecone para búsqueda semántica en el chat. Corre en <strong>worker_02</strong> y opera sobre dos
+					bases de datos: el MongoDB local con las causas scrapeadas (fuente) y MongoDB Atlas (destino de embeddings y metadatos).
 				</Typography>
 			</Box>
 
 			<Box>
-				<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>Ficha de infraestructura</Typography>
+				<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
+					Ficha de infraestructura
+				</Typography>
 				<Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, overflow: "hidden" }}>
-					<InfoRow label="Servidor" value={<><strong>worker_02</strong> · IP 100.98.180.101 · Ryzen 5700X · 16 cores · 32 GB RAM</>} />
+					<InfoRow
+						label="Servidor"
+						value={
+							<>
+								<strong>worker_02</strong> · IP 100.98.180.101 · Ryzen 5700X · 16 cores · 32 GB RAM
+							</>
+						}
+					/>
 					<InfoRow label="Proceso PM2" value="pjn-rag-api (Express + BullMQ + Socket.io)" />
-					<InfoRow label="BD origen" value={<>MongoDB <strong>local</strong> en worker_02 · colecciones de causas PJN (fuente)</>} />
-					<InfoRow label="BD destino" value={<>MongoDB <strong>Atlas</strong> (cloud) · RagDocument, CausaSummary, PipelineConfig</>} />
+					<InfoRow
+						label="BD origen"
+						value={
+							<>
+								MongoDB <strong>local</strong> en worker_02 · colecciones de causas PJN (fuente)
+							</>
+						}
+					/>
+					<InfoRow
+						label="BD destino"
+						value={
+							<>
+								MongoDB <strong>Atlas</strong> (cloud) · RagDocument, CausaSummary, PipelineConfig
+							</>
+						}
+					/>
 					<InfoRow label="AWS S3" value="Almacena PDFs originales y texto extraído de chunks · región us-east-1" />
 					<InfoRow label="Redis" value="BullMQ en worker_02 · colas: indexCausa · indexDocument · ocrDocument · recoveryCausa" />
 					<InfoRow label="OpenAI" value="text-embedding-3-small (1024 dims) · GPT-4o (chat + generación)" />
-					<InfoRow label="Activación del scan" value="Auto-Index: intervalo configurable desde Panel → Control · También manual por usuario" />
+					<InfoRow
+						label="Activación del scan"
+						value="Auto-Index: intervalo configurable desde Panel → Control · También manual por usuario"
+					/>
 				</Box>
 			</Box>
 
 			<Box>
-				<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>Índices Pinecone utilizados</Typography>
+				<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
+					Índices Pinecone utilizados
+				</Typography>
 				<Stack spacing={1.5}>
 					<Box sx={{ border: `2px solid ${pinecone}`, borderRadius: 2, p: 2, bgcolor: alpha(pinecone, 0.04) }}>
 						<Stack direction="row" spacing={1.5} alignItems="flex-start">
-							<Box sx={{ px: 1, py: 0.3, bgcolor: pinecone, color: "#fff", borderRadius: 1, fontSize: "0.68rem", fontWeight: 700, flexShrink: 0, mt: 0.2 }}>CAUSAS / USUARIOS</Box>
+							<Box
+								sx={{
+									px: 1,
+									py: 0.3,
+									bgcolor: pinecone,
+									color: "#fff",
+									borderRadius: 1,
+									fontSize: "0.68rem",
+									fontWeight: 700,
+									flexShrink: 0,
+									mt: 0.2,
+								}}
+							>
+								CAUSAS / USUARIOS
+							</Box>
 							<Box sx={{ flex: 1 }}>
-								<Typography variant="subtitle2" fontWeight={700} sx={{ color: pinecone, fontFamily: "monospace" }}>pjn-rag-shard-0 · pjn-rag-shard-1 · pjn-rag-shard-2 · pjn-rag-shard-3</Typography>
+								<Typography variant="subtitle2" fontWeight={700} sx={{ color: pinecone, fontFamily: "monospace" }}>
+									pjn-rag-shard-0 · pjn-rag-shard-1 · pjn-rag-shard-2 · pjn-rag-shard-3
+								</Typography>
 								<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.3 }}>
-									4 índices con sharding por userId/causaId (hash % 4). Almacenan los chunks de cada expediente para búsqueda en el chat RAG del usuario.
-									Cada usuario tiene su propio namespace dentro del shard.
+									4 índices con sharding por userId/causaId (hash % 4). Almacenan los chunks de cada expediente para búsqueda en el chat RAG
+									del usuario. Cada usuario tiene su propio namespace dentro del shard.
 								</Typography>
 								<Stack direction="row" spacing={2} sx={{ mt: 0.8 }} flexWrap="wrap">
 									{["1024 dims", "coseno", "serverless"].map((t) => (
-										<Box key={t} sx={{ px: 0.8, py: 0.1, bgcolor: alpha(pinecone, 0.1), borderRadius: 0.5, fontSize: "0.65rem", color: pinecone, fontWeight: 600 }}>{t}</Box>
+										<Box
+											key={t}
+											sx={{
+												px: 0.8,
+												py: 0.1,
+												bgcolor: alpha(pinecone, 0.1),
+												borderRadius: 0.5,
+												fontSize: "0.65rem",
+												color: pinecone,
+												fontWeight: 600,
+											}}
+										>
+											{t}
+										</Box>
 									))}
-									<Typography variant="caption" color="text.secondary">Escribe: indexDocument.worker · Lee: chat.routes (query semántica)</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Escribe: indexDocument.worker · Lee: chat.routes (query semántica)
+									</Typography>
 								</Stack>
 							</Box>
 						</Stack>
@@ -2291,18 +2542,49 @@ const HelpSummarySection: React.FC = () => {
 
 					<Box sx={{ border: `2px solid ${openai}`, borderRadius: 2, p: 2, bgcolor: alpha(openai, 0.04) }}>
 						<Stack direction="row" spacing={1.5} alignItems="flex-start">
-							<Box sx={{ px: 1, py: 0.3, bgcolor: openai, color: "#fff", borderRadius: 1, fontSize: "0.68rem", fontWeight: 700, flexShrink: 0, mt: 0.2 }}>CORPUS ESTILO</Box>
+							<Box
+								sx={{
+									px: 1,
+									py: 0.3,
+									bgcolor: openai,
+									color: "#fff",
+									borderRadius: 1,
+									fontSize: "0.68rem",
+									fontWeight: 700,
+									flexShrink: 0,
+									mt: 0.2,
+								}}
+							>
+								CORPUS ESTILO
+							</Box>
 							<Box sx={{ flex: 1 }}>
-								<Typography variant="subtitle2" fontWeight={700} sx={{ color: openai, fontFamily: "monospace" }}>pjn-style-corpus</Typography>
+								<Typography variant="subtitle2" fontWeight={700} sx={{ color: openai, fontFamily: "monospace" }}>
+									pjn-style-corpus
+								</Typography>
 								<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.3 }}>
-									Índice único (no shardado) con ejemplos de escritos jurídicos de calidad alta. Usado por el Editor IA para few-shot retrieval al generar documentos.
-									Gestionado desde <strong>Workers Corpus (IA)</strong>.
+									Índice único (no shardado) con ejemplos de escritos jurídicos de calidad alta. Usado por el Editor IA para few-shot
+									retrieval al generar documentos. Gestionado desde <strong>Workers Corpus (IA)</strong>.
 								</Typography>
 								<Stack direction="row" spacing={2} sx={{ mt: 0.8 }} flexWrap="wrap">
 									{["1024 dims", "coseno", "serverless"].map((t) => (
-										<Box key={t} sx={{ px: 0.8, py: 0.1, bgcolor: alpha(openai, 0.1), borderRadius: 0.5, fontSize: "0.65rem", color: openai, fontWeight: 600 }}>{t}</Box>
+										<Box
+											key={t}
+											sx={{
+												px: 0.8,
+												py: 0.1,
+												bgcolor: alpha(openai, 0.1),
+												borderRadius: 0.5,
+												fontSize: "0.65rem",
+												color: openai,
+												fontWeight: 600,
+											}}
+										>
+											{t}
+										</Box>
 									))}
-									<Typography variant="caption" color="text.secondary">Escribe: embed-style-corpus.js (manual) · Lee: editor.routes (few-shot)</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Escribe: embed-style-corpus.js (manual) · Lee: editor.routes (few-shot)
+									</Typography>
 								</Stack>
 							</Box>
 						</Stack>
@@ -2311,25 +2593,57 @@ const HelpSummarySection: React.FC = () => {
 			</Box>
 
 			<Box>
-				<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>Diagrama de recursos</Typography>
+				<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
+					Diagrama de recursos
+				</Typography>
 				<Box sx={{ overflowX: "auto", pb: 1 }}>
 					<Stack spacing={1.5}>
 						{/* Row 1: source → scan → queues */}
 						<Stack direction="row" alignItems="stretch" spacing={1} sx={{ minWidth: 760 }}>
-							<FlowNode badge="ORIGEN" title="MongoDB Local" subtitle="worker_02" items={["Causas PJN scrapeadas", "movimientos con PDF URL", "status sin indexar"]} color={mongo} />
+							<FlowNode
+								badge="ORIGEN"
+								title="MongoDB Local"
+								subtitle="worker_02"
+								items={["Causas PJN scrapeadas", "movimientos con PDF URL", "status sin indexar"]}
+								color={mongo}
+							/>
 							<FlowArrow label="Auto-Index scan" />
-							<FlowNode badge="COLA" title="Redis BullMQ" subtitle="worker_02" items={["indexCausa", "indexDocument", "ocrDocument", "recoveryCausa"]} color={redis} />
+							<FlowNode
+								badge="COLA"
+								title="Redis BullMQ"
+								subtitle="worker_02"
+								items={["indexCausa", "indexDocument", "ocrDocument", "recoveryCausa"]}
+								color={redis}
+							/>
 							<FlowArrow label="workers paralelos" />
-							<FlowNode badge="PROCESSING" title="indexDocument.worker" subtitle="worker_02 (concurrency: 2-15)" items={["Descarga PDF", "Extrae texto", "Chunking + embeddings", "Upsert Pinecone shards"]} color={theme.palette.primary.main} />
+							<FlowNode
+								badge="PROCESSING"
+								title="indexDocument.worker"
+								subtitle="worker_02 (concurrency: 2-15)"
+								items={["Descarga PDF", "Extrae texto", "Chunking + embeddings", "Upsert Pinecone shards"]}
+								color={theme.palette.primary.main}
+							/>
 						</Stack>
 
 						{/* Row 2: destinations */}
 						<Stack direction="row" spacing={1} sx={{ minWidth: 760 }}>
 							<Box sx={{ flex: 1 }} />
 							<FlowArrow label="persiste" />
-							<FlowNode badge="VECTOR DB" title="pjn-rag-shard-0..3" subtitle="Pinecone · 4 shards" items={["chunks por usuario/causa", "1024 dims · coseno", "metadata: tipo, fecha, text"]} color={pinecone} />
+							<FlowNode
+								badge="VECTOR DB"
+								title="pjn-rag-shard-0..3"
+								subtitle="Pinecone · 4 shards"
+								items={["chunks por usuario/causa", "1024 dims · coseno", "metadata: tipo, fecha, text"]}
+								color={pinecone}
+							/>
 							<FlowArrow label="y también" />
-							<FlowNode badge="CLOUD" title="MongoDB Atlas + S3" subtitle="RagDocument · chunks" items={["Texto completo (S3)", "Metadata de chunks (Atlas)", "CausaSummary (Atlas)"]} color={s3} />
+							<FlowNode
+								badge="CLOUD"
+								title="MongoDB Atlas + S3"
+								subtitle="RagDocument · chunks"
+								items={["Texto completo (S3)", "Metadata de chunks (Atlas)", "CausaSummary (Atlas)"]}
+								color={s3}
+							/>
 						</Stack>
 					</Stack>
 				</Box>
@@ -2380,7 +2694,7 @@ const WorkerHelpTab = () => {
 			</Box>
 
 			{subTab === "summary" && <HelpSummarySection />}
-		{subTab === "pipeline" && <HelpPipelineSection />}
+			{subTab === "pipeline" && <HelpPipelineSection />}
 			{subTab === "control" && <HelpControlSection />}
 			{subTab === "performance" && <HelpPerformanceSection />}
 			{subTab === "infrastructure" && <HelpInfrastructureSection />}

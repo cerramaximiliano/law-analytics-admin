@@ -1030,7 +1030,11 @@ const CredencialesPJN = () => {
 										<TableCell align="center">
 											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
 												Cred.
-												<Tooltip title="Estado de las credenciales: OK si el último login fue exitoso, INVÁLIDA si la contraseña es incorrecta o expiró." arrow placement="top">
+												<Tooltip
+													title="Estado de las credenciales: OK si el último login fue exitoso, INVÁLIDA si la contraseña es incorrecta o expiró."
+													arrow
+													placement="top"
+												>
 													<Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}>
 														<InfoCircle size={13} />
 													</Box>
@@ -1254,7 +1258,9 @@ const CredencialesPJN = () => {
 												<TableCell align="center">
 													{cred.credentialInvalid ? (
 														<Tooltip
-															title={`Credencial inválida — ${cred.credentialInvalidReason || "contraseña incorrecta o expirada"}${cred.credentialInvalidAt ? ` (${formatDate(cred.credentialInvalidAt)})` : ""}`}
+															title={`Credencial inválida — ${cred.credentialInvalidReason || "contraseña incorrecta o expirada"}${
+																cred.credentialInvalidAt ? ` (${formatDate(cred.credentialInvalidAt)})` : ""
+															}`}
 															arrow
 														>
 															<Chip
@@ -1266,13 +1272,7 @@ const CredencialesPJN = () => {
 															/>
 														</Tooltip>
 													) : (
-														<Chip
-															label="OK"
-															size="small"
-															color="success"
-															variant="outlined"
-															sx={{ fontSize: "0.65rem", height: 20 }}
-														/>
+														<Chip label="OK" size="small" color="success" variant="outlined" sx={{ fontSize: "0.65rem", height: 20 }} />
 													)}
 												</TableCell>
 												<TableCell align="center">
@@ -2231,9 +2231,7 @@ const CredencialesPJN = () => {
 															{user ? (
 																<>
 																	<Typography variant="body2" fontWeight={500}>
-																		{user.firstName && user.lastName
-																			? `${user.firstName} ${user.lastName}`
-																			: user.name || user.email}
+																		{user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name || user.email}
 																	</Typography>
 																	<Typography variant="caption" color="text.secondary">
 																		{log.to}
@@ -2255,7 +2253,17 @@ const CredencialesPJN = () => {
 														</Tooltip>
 														{log.errorMessage && (
 															<Tooltip title={log.errorMessage}>
-																<Typography variant="caption" color="error.main" sx={{ display: "block", maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+																<Typography
+																	variant="caption"
+																	color="error.main"
+																	sx={{
+																		display: "block",
+																		maxWidth: 260,
+																		overflow: "hidden",
+																		textOverflow: "ellipsis",
+																		whiteSpace: "nowrap",
+																	}}
+																>
 																	{log.errorMessage}
 																</Typography>
 															</Tooltip>
@@ -2265,7 +2273,9 @@ const CredencialesPJN = () => {
 														{log.templateCategory ? (
 															<Chip label={log.templateCategory} size="small" variant="outlined" />
 														) : (
-															<Typography variant="body2" color="text.disabled">—</Typography>
+															<Typography variant="body2" color="text.disabled">
+																—
+															</Typography>
 														)}
 													</TableCell>
 													<TableCell>
@@ -2334,7 +2344,9 @@ const CredencialesPJN = () => {
 						</Box>
 						{errorHistoryDialog.credential && (
 							<Chip
-								label={`${errorHistoryDialog.credential.consecutiveErrors} error${errorHistoryDialog.credential.consecutiveErrors !== 1 ? "es" : ""} consecutivo${errorHistoryDialog.credential.consecutiveErrors !== 1 ? "s" : ""}`}
+								label={`${errorHistoryDialog.credential.consecutiveErrors} error${
+									errorHistoryDialog.credential.consecutiveErrors !== 1 ? "es" : ""
+								} consecutivo${errorHistoryDialog.credential.consecutiveErrors !== 1 ? "s" : ""}`}
 								color={errorHistoryDialog.credential.consecutiveErrors >= 5 ? "error" : "warning"}
 								size="small"
 							/>
@@ -2387,7 +2399,9 @@ const CredencialesPJN = () => {
 												{errorHistoryDialog.credential.errorHistory.map((err, i) => (
 													<TableRow key={i} hover>
 														<TableCell>
-															<Typography variant="caption" noWrap>{formatDate(err.timestamp)}</Typography>
+															<Typography variant="caption" noWrap>
+																{formatDate(err.timestamp)}
+															</Typography>
 														</TableCell>
 														<TableCell>
 															<Chip
@@ -2402,7 +2416,13 @@ const CredencialesPJN = () => {
 															<Tooltip title={err.message} arrow>
 																<Typography
 																	variant="caption"
-																	sx={{ maxWidth: 280, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+																	sx={{
+																		maxWidth: 280,
+																		display: "block",
+																		overflow: "hidden",
+																		textOverflow: "ellipsis",
+																		whiteSpace: "nowrap",
+																	}}
 																>
 																	{err.message}
 																</Typography>
@@ -2420,12 +2440,18 @@ const CredencialesPJN = () => {
 														<TableCell>
 															{err.screenshotFile ? (
 																<Tooltip title={err.screenshotFile} arrow>
-																	<Typography variant="caption" color="primary.main" sx={{ fontFamily: "monospace", fontSize: "0.65rem", cursor: "default" }}>
+																	<Typography
+																		variant="caption"
+																		color="primary.main"
+																		sx={{ fontFamily: "monospace", fontSize: "0.65rem", cursor: "default" }}
+																	>
 																		{err.screenshotFile.split("/").pop()}
 																	</Typography>
 																</Tooltip>
 															) : (
-																<Typography variant="caption" color="text.disabled">—</Typography>
+																<Typography variant="caption" color="text.disabled">
+																	—
+																</Typography>
 															)}
 														</TableCell>
 													</TableRow>

@@ -125,7 +125,14 @@ const SentenciasService = {
 		return res.data.data;
 	},
 
-	async findAll(params?: { status?: ProcessingStatus; fuero?: Fuero; tipo?: SentenciaTipo; category?: Category; page?: number; limit?: number }): Promise<{ data: SentenciaCapturada[]; total: number }> {
+	async findAll(params?: {
+		status?: ProcessingStatus;
+		fuero?: Fuero;
+		tipo?: SentenciaTipo;
+		category?: Category;
+		page?: number;
+		limit?: number;
+	}): Promise<{ data: SentenciaCapturada[]; total: number }> {
 		const res = await pjnAxios.get<{ success: boolean; data: SentenciaCapturada[]; total: number }>(BASE, { params });
 		return { data: res.data.data, total: res.data.total };
 	},
@@ -150,8 +157,18 @@ const SentenciasService = {
 		return res.data.data;
 	},
 
-	async getPublicationQueue(params?: { fuero?: Fuero; tipo?: SentenciaTipo; publicationStatus?: PublicationStatus; sortOrder?: "asc" | "desc"; page?: number; limit?: number }): Promise<{ data: SentenciaCapturada[]; total: number; page: number; limit: number }> {
-		const res = await pjnAxios.get<{ success: boolean; data: SentenciaCapturada[]; total: number; page: number; limit: number }>(BASE + "/publication-queue", { params });
+	async getPublicationQueue(params?: {
+		fuero?: Fuero;
+		tipo?: SentenciaTipo;
+		publicationStatus?: PublicationStatus;
+		sortOrder?: "asc" | "desc";
+		page?: number;
+		limit?: number;
+	}): Promise<{ data: SentenciaCapturada[]; total: number; page: number; limit: number }> {
+		const res = await pjnAxios.get<{ success: boolean; data: SentenciaCapturada[]; total: number; page: number; limit: number }>(
+			BASE + "/publication-queue",
+			{ params },
+		);
 		return res.data;
 	},
 
