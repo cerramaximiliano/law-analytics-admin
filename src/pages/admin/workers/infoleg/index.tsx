@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Box, Paper, Stack, Tab, Tabs, Typography, alpha, useTheme } from '@mui/material';
-import { Activity, CpuSetting, DocumentText, Setting3 } from 'iconsax-react';
+import { Activity, CpuSetting, DocumentText, InfoCircle, Setting3 } from 'iconsax-react';
 import MainCard from 'components/MainCard';
 import WorkerStatusTab  from './WorkerStatusTab';
 import StatsTab         from './StatsTab';
 import ConfigTab        from './ConfigTab';
+import HelpTab          from './HelpTab';
 
 const InfolegWorkersPage = () => {
   const theme = useTheme();
@@ -14,6 +15,7 @@ const InfolegWorkersPage = () => {
     { value: 'status',  label: 'Estado / Control', icon: <CpuSetting  size={18} /> },
     { value: 'stats',   label: 'Estadísticas',      icon: <Activity    size={18} /> },
     { value: 'config',  label: 'Configuración',     icon: <Setting3    size={18} /> },
+    { value: 'help',    label: 'Ayuda',             icon: <InfoCircle  size={18} /> },
   ];
 
   return (
@@ -56,6 +58,7 @@ const InfolegWorkersPage = () => {
             {tab === 'status' && <WorkerStatusTab />}
             {tab === 'stats'  && <StatsTab />}
             {tab === 'config' && <ConfigTab />}
+            {tab === 'help'   && <HelpTab />}
           </Box>
         </Paper>
       </Stack>
