@@ -39,7 +39,24 @@ interface AdditionalStep {
 	htmlBody: string;
 	timeDelayValue: number;
 	timeDelayUnit: "hours" | "days";
+	/** "relative" = X horas/días después del paso anterior (comportamiento original).
+	 *  "days_before_expiry" = anclado al vencimiento del descuento: el delay se computa
+	 *  automáticamente como (validUntil - daysBeforeExpiry) - fechaPasoAnterior. */
+	anchorMode: "relative" | "days_before_expiry";
+	/** Días antes del vencimiento de discount.validUntil en que debe enviarse este paso.
+	 *  Solo relevante cuando anchorMode === "days_before_expiry". */
+	daysBeforeExpiry: number;
 	expanded: boolean;
+}
+
+interface StepTiming {
+	estimatedSendDate: Date;
+	/** Delay real en días desde el paso anterior (puede ser negativo si hay solapamiento). */
+	computedDelayDays: number;
+	/** Días que faltan desde el envío estimado hasta validUntil (negativo = ya expiró). */
+	daysRemainingAtSend: number;
+	isAfterPrev: boolean;
+	isBeforeExpiry: boolean;
 }
 
 interface Props {
@@ -128,6 +145,41 @@ const LaunchCampaignTab = ({ discount }: Props) => {
 	const [additionalSteps, setAdditionalSteps] = useState<AdditionalStep[]>([]);
 	const stepCounter = useRef(1);
 
+	// ── Timeline computations ─────────────────────────────────────────────────────
+	/** Fecha de inicio de la campaña: usa startDate si está configurado, si no "ahora". */
+	const campaignStartDate = useMemo(() => (startDate ? new Date(startDate) : new Date()), [startDate]);
+	const validUntilDate = useMemo(() => new Date(discount.validUntil), [discount.validUntil]);
+
+	/** Para cada paso adicional, calcula la fecha estimada de envío, el delay real en días
+	 *  desde el paso anterior, y los días restantes hasta el vencimiento al momento del envío. */
+	const stepTimings = useMemo((): StepTiming[] => {
+		if (campaignType !== "sequence") return [];
+		const timings: StepTiming[] = [];
+		let prevDate = new Date(campaignStartDate);
+		for (const step of additionalSteps) {
+			let targetDate: Date;
+			let computedDelayDays: number;
+			if (step.anchorMode === "days_before_expiry") {
+				targetDate = new Date(validUntilDate.getTime() - step.daysBeforeExpiry * 86400000);
+				computedDelayDays = (targetDate.getTime() - prevDate.getTime()) / 86400000;
+			} else {
+				const ms = step.timeDelayUnit === "hours" ? step.timeDelayValue * 3600000 : step.timeDelayValue * 86400000;
+				targetDate = new Date(prevDate.getTime() + ms);
+				computedDelayDays = step.timeDelayUnit === "hours" ? step.timeDelayValue / 24 : step.timeDelayValue;
+			}
+			const daysRemainingAtSend = Math.ceil((validUntilDate.getTime() - targetDate.getTime()) / 86400000);
+			timings.push({
+				estimatedSendDate: targetDate,
+				computedDelayDays,
+				daysRemainingAtSend,
+				isAfterPrev: computedDelayDays > 0,
+				isBeforeExpiry: daysRemainingAtSend >= 0,
+			});
+			prevDate = targetDate;
+		}
+		return timings;
+	}, [additionalSteps, campaignStartDate, validUntilDate, campaignType]);
+
 	// ── Recipients ───────────────────────────────────────────────────────────────
 	const targetUsers = discount.restrictions?.targetUsers ?? [];
 	const targetSegments = discount.restrictions?.targetSegments ?? [];
@@ -211,6 +263,8 @@ const LaunchCampaignTab = ({ discount }: Props) => {
 				htmlBody: `<p>Hola {{firstName}},</p>\n<p>Te recordamos que tu código <strong>{{code}}</strong> vence el <strong>{{validUntil}}</strong>.</p>`,
 				timeDelayValue: 3,
 				timeDelayUnit: "days",
+				anchorMode: "relative",
+				daysBeforeExpiry: 3,
 				expanded: true,
 			},
 		]);
@@ -247,13 +301,29 @@ const LaunchCampaignTab = ({ discount }: Props) => {
 		setError(null);
 		setResult(null);
 		try {
-			const steps: CampaignStep[] = additionalSteps.map((s) => ({
-				name: s.name,
-				subject: s.subject,
-				htmlBody: s.htmlBody,
-				timeDelayValue: s.timeDelayValue,
-				timeDelayUnit: s.timeDelayUnit,
-			}));
+			const steps: CampaignStep[] = additionalSteps.map((s, i) => {
+				const timing = stepTimings[i];
+				// Para pasos anclados al vencimiento, convertir el delay calculado a días relativos
+				let actualDelayValue = s.timeDelayValue;
+				let actualDelayUnit: "hours" | "days" = s.timeDelayUnit;
+				if (s.anchorMode === "days_before_expiry" && timing) {
+					actualDelayValue = Math.max(1, Math.round(timing.computedDelayDays));
+					actualDelayUnit = "days";
+				}
+				// Sustituir {{daysRemaining}} con el valor calculado al momento del envío.
+				// Esta variable no es reemplazada automáticamente por el servidor de marketing,
+				// por lo que se resuelve aquí con el valor concreto de la secuencia.
+				const dr = timing && timing.daysRemainingAtSend > 0 ? String(timing.daysRemainingAtSend) : null;
+				const finalSubject = dr ? s.subject.replace(/\{\{daysRemaining\}\}/g, dr) : s.subject;
+				const finalHtmlBody = dr ? s.htmlBody.replace(/\{\{daysRemaining\}\}/g, dr) : s.htmlBody;
+				return {
+					name: s.name,
+					subject: finalSubject,
+					htmlBody: finalHtmlBody,
+					timeDelayValue: actualDelayValue,
+					timeDelayUnit: actualDelayUnit,
+				};
+			});
 			const response = await discountCampaignService.launchCampaign(discount._id, {
 				subject,
 				htmlBody,
@@ -294,7 +364,8 @@ const LaunchCampaignTab = ({ discount }: Props) => {
 	};
 
 	const stepsValid = campaignType !== "sequence" || additionalSteps.every((s) => s.subject.trim() && s.htmlBody.trim());
-	const canSubmit = !loading && subject.trim().length > 0 && htmlBody.trim().length > 0 && !dynamicSegmentBlocked && stepsValid;
+	const hasInvalidStepTimings = campaignType === "sequence" && stepTimings.some((t) => !t.isAfterPrev || !t.isBeforeExpiry);
+	const canSubmit = !loading && subject.trim().length > 0 && htmlBody.trim().length > 0 && !dynamicSegmentBlocked && stepsValid && !hasInvalidStepTimings;
 
 	return (
 		<Stack spacing={3}>
@@ -685,7 +756,7 @@ const LaunchCampaignTab = ({ discount }: Props) => {
 											onClick={() => toggleStep(step.id)}
 										>
 											<Chip label={`Paso ${idx + 2}`} size="small" color="secondary" />
-											<Box flex={1}>
+											<Box flex={1} minWidth={0}>
 												<TextField
 													size="small"
 													value={step.name}
@@ -699,26 +770,100 @@ const LaunchCampaignTab = ({ discount }: Props) => {
 													sx={{ "& .MuiInput-root": { fontSize: "0.875rem", fontWeight: 600 } }}
 												/>
 											</Box>
+
+											{/* Modo de timing + controles de delay */}
 											<Stack direction="row" spacing={0.5} alignItems="center" onClick={(e) => e.stopPropagation()}>
-												<TextField
-													size="small"
-													type="number"
-													value={step.timeDelayValue}
-													onChange={(e) => updateStep(step.id, "timeDelayValue", Number(e.target.value))}
-													inputProps={{ min: 1, style: { width: 48, textAlign: "center" } }}
-													label="Espera"
-													sx={{ width: 90 }}
-												/>
-												<Select
-													size="small"
-													value={step.timeDelayUnit}
-													onChange={(e) => updateStep(step.id, "timeDelayUnit", e.target.value)}
-													sx={{ minWidth: 90, fontSize: "0.8rem" }}
+												<Tooltip
+													title={
+														step.anchorMode === "relative"
+															? "Modo relativo: enviar X horas/días después del paso anterior. Hacé click en 📅 para anclar al vencimiento del descuento."
+															: "Modo anclado: este paso se envía X días antes de que expire el descuento. El delay real se calcula automáticamente. Hacé click en ⏱ para volver a modo relativo."
+													}
 												>
-													<MenuItem value="hours">horas</MenuItem>
-													<MenuItem value="days">días</MenuItem>
-												</Select>
+													<ToggleButtonGroup
+														size="small"
+														exclusive
+														value={step.anchorMode}
+														onChange={(_, val) => val && updateStep(step.id, "anchorMode", val)}
+													>
+														<ToggleButton value="relative" sx={{ px: 0.75, py: 0.25, fontSize: "0.7rem" }}>
+															<Timer1 size={13} />
+														</ToggleButton>
+														<ToggleButton value="days_before_expiry" sx={{ px: 0.75, py: 0.25, fontSize: "0.7rem" }}>
+															<Calendar size={13} />
+														</ToggleButton>
+													</ToggleButtonGroup>
+												</Tooltip>
+
+												{step.anchorMode === "relative" ? (
+													<>
+														<TextField
+															size="small"
+															type="number"
+															value={step.timeDelayValue}
+															onChange={(e) => updateStep(step.id, "timeDelayValue", Number(e.target.value))}
+															inputProps={{ min: 1, style: { width: 44, textAlign: "center" } }}
+															label="Espera"
+															sx={{ width: 86 }}
+														/>
+														<Select
+															size="small"
+															value={step.timeDelayUnit}
+															onChange={(e) => updateStep(step.id, "timeDelayUnit", e.target.value)}
+															sx={{ minWidth: 82, fontSize: "0.8rem" }}
+														>
+															<MenuItem value="hours">horas</MenuItem>
+															<MenuItem value="days">días</MenuItem>
+														</Select>
+													</>
+												) : (
+													<>
+														<TextField
+															size="small"
+															type="number"
+															value={step.daysBeforeExpiry}
+															onChange={(e) => updateStep(step.id, "daysBeforeExpiry", Math.max(1, Number(e.target.value)))}
+															inputProps={{ min: 1, style: { width: 44, textAlign: "center" } }}
+															label="Días antes"
+															sx={{ width: 86 }}
+														/>
+														<Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap", fontSize: "0.7rem" }}>
+															días antes<br />del venc.
+														</Typography>
+													</>
+												)}
 											</Stack>
+
+											{/* Chip de fecha estimada */}
+											{stepTimings[idx] && (() => {
+												const t = stepTimings[idx];
+												const fmtShort = t.estimatedSendDate.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" });
+												const fmtFull = t.estimatedSendDate.toLocaleDateString("es-AR", { day: "numeric", month: "long", year: "numeric" });
+												const chipColor = !t.isAfterPrev || !t.isBeforeExpiry
+													? "error"
+													: t.daysRemainingAtSend <= 2
+													? "warning"
+													: "success";
+												const chipLabel = !t.isAfterPrev ? "⚠ orden" : !t.isBeforeExpiry ? "⚠ expirado" : fmtShort;
+												const tooltipMsg = !t.isAfterPrev
+													? `El delay calculado es ${t.computedDelayDays.toFixed(1)} días — este paso se solaparía con el anterior. Ajustá los valores.`
+													: !t.isBeforeExpiry
+													? `Este paso se enviaría ${Math.abs(t.daysRemainingAtSend)} días DESPUÉS de que expire el descuento (${validUntilDate.toLocaleDateString("es-AR")}).`
+													: `Envío estimado: ${fmtFull}\n${t.daysRemainingAtSend} día${t.daysRemainingAtSend !== 1 ? "s" : ""} antes del vencimiento`;
+												return (
+													<Tooltip title={tooltipMsg}>
+														<Chip
+															label={chipLabel}
+															size="small"
+															color={chipColor}
+															variant="outlined"
+															onClick={(e) => e.stopPropagation()}
+															sx={{ fontFamily: "monospace", fontSize: "0.62rem", cursor: "help" }}
+														/>
+													</Tooltip>
+												);
+											})()}
+
 											<IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); removeStep(step.id); }}>
 												<Trash size={16} />
 											</IconButton>
@@ -770,6 +915,109 @@ const LaunchCampaignTab = ({ discount }: Props) => {
 								>
 									Agregar paso
 								</Button>
+
+								{/* ── Timeline summary ── */}
+								{additionalSteps.length > 0 && (
+									<Paper
+										variant="outlined"
+										sx={{ p: 1.5, bgcolor: alpha(theme.palette.background.default, 0.6) }}
+									>
+										<Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: "block", mb: 1 }}>
+											Línea de tiempo estimada
+										</Typography>
+										<Stack spacing={0.75}>
+											{/* Paso 1 (email inicial, día 0) */}
+											<Stack direction="row" spacing={1} alignItems="center">
+												<Chip label="Paso 1" size="small" color="success" sx={{ fontSize: "0.6rem", minWidth: 54 }} />
+												<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace", minWidth: 38 }}>
+													{campaignStartDate.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" })}
+												</Typography>
+												<Typography variant="caption" color="text.secondary" sx={{ flex: 1 }} noWrap>
+													{subject || "Email inicial"} — día 0
+												</Typography>
+												<Typography variant="caption" color="success.main" sx={{ whiteSpace: "nowrap" }}>
+													{Math.ceil((validUntilDate.getTime() - campaignStartDate.getTime()) / 86400000)}d antes del venc.
+												</Typography>
+											</Stack>
+
+											{/* Pasos adicionales */}
+											{additionalSteps.map((step, idx) => {
+												const t = stepTimings[idx];
+												if (!t) return null;
+												const fmtShort = t.estimatedSendDate.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" });
+												const isOk = t.isAfterPrev && t.isBeforeExpiry;
+												return (
+													<Stack key={step.id} direction="row" spacing={1} alignItems="center">
+														<Chip
+															label={`Paso ${idx + 2}`}
+															size="small"
+															color={isOk ? "secondary" : "error"}
+															sx={{ fontSize: "0.6rem", minWidth: 54 }}
+														/>
+														<Typography
+															variant="caption"
+															color={isOk ? "text.secondary" : "error.main"}
+															sx={{ fontFamily: "monospace", minWidth: 38 }}
+														>
+															{fmtShort}
+														</Typography>
+														<Stack direction="row" spacing={0.5} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+															<Typography variant="caption" color="text.secondary" noWrap>
+																{step.name}
+															</Typography>
+															{step.anchorMode === "days_before_expiry" && (
+																<Chip
+																	label="anclado"
+																	size="small"
+																	color="info"
+																	variant="outlined"
+																	sx={{ fontSize: "0.55rem", height: 16, flexShrink: 0 }}
+																/>
+															)}
+														</Stack>
+														<Typography
+															variant="caption"
+															sx={{ whiteSpace: "nowrap" }}
+															color={
+																!isOk ? "error.main" : t.daysRemainingAtSend <= 2 ? "warning.main" : "success.main"
+															}
+														>
+															{!t.isAfterPrev
+																? "⚠ solapado"
+																: !t.isBeforeExpiry
+																? `${Math.abs(t.daysRemainingAtSend)}d DESPUÉS del venc.`
+																: `${t.daysRemainingAtSend}d antes del venc.`}
+														</Typography>
+													</Stack>
+												);
+											})}
+
+											{/* Línea de vencimiento */}
+											<Stack
+												direction="row"
+												spacing={1}
+												alignItems="center"
+												sx={{ borderTop: "1px dashed", borderColor: "divider", pt: 0.75, mt: 0.25 }}
+											>
+												<Chip label="Vence" size="small" variant="outlined" sx={{ fontSize: "0.6rem", minWidth: 54 }} />
+												<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700, minWidth: 38 }}>
+													{validUntilDate.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" })}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													{discount.code} — fin del período de descuento
+												</Typography>
+											</Stack>
+										</Stack>
+
+										{hasInvalidStepTimings && (
+											<Alert severity="error" icon={<Warning2 size={16} />} sx={{ mt: 1, py: 0.5 }}>
+												<Typography variant="caption">
+													Hay pasos con problemas de temporización. Corregí los errores antes de lanzar.
+												</Typography>
+											</Alert>
+										)}
+									</Paper>
+								)}
 							</Stack>
 						)}
 					</Box>
