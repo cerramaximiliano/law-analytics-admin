@@ -1,9 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-	Dialog, DialogTitle, DialogContent, DialogActions,
-	Button, Grid, TextField, Typography, Alert,
-	Autocomplete,
-} from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Grid, TextField, Typography, Alert, Autocomplete } from "@mui/material";
 import * as Yup from "yup";
 import { Formik } from "formik";
 import { useDispatch, useSelector } from "store";
@@ -16,8 +12,8 @@ interface Props {
 }
 
 const schema = Yup.object({
-	userId:   Yup.string().required("Seleccioná un usuario"),
-	cuil:     Yup.string().min(11, "El CUIL debe tener al menos 11 dígitos").required("El CUIL es requerido"),
+	userId: Yup.string().required("Seleccioná un usuario"),
+	cuil: Yup.string().min(11, "El CUIL debe tener al menos 11 dígitos").required("El CUIL es requerido"),
 	password: Yup.string().min(6, "Mínimo 6 caracteres").required("La contraseña es requerida"),
 });
 
@@ -112,7 +108,9 @@ export default function CreateCredencialModal({ open, onClose }: Props) {
 							</Grid>
 						</DialogContent>
 						<DialogActions>
-							<Button onClick={onClose} disabled={isSubmitting}>Cancelar</Button>
+							<Button onClick={onClose} disabled={isSubmitting}>
+								Cancelar
+							</Button>
 							<Button type="submit" variant="contained" disabled={isSubmitting}>
 								{isSubmitting ? "Guardando..." : "Crear credencial"}
 							</Button>

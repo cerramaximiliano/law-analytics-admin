@@ -29,19 +29,7 @@ import {
 	InputAdornment,
 	Alert,
 } from "@mui/material";
-import {
-	Refresh,
-	Clock,
-	Warning2,
-	TickCircle,
-	CloseCircle,
-	People,
-	ArrowDown,
-	CardPos,
-	Setting2,
-	Edit2,
-	TaskSquare,
-} from "iconsax-react";
+import { Refresh, Clock, Warning2, TickCircle, CloseCircle, People, ArrowDown, CardPos, Setting2, Edit2, TaskSquare } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -64,20 +52,19 @@ dayjs.locale("es");
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const URGENCY_CONFIG: Record<
-	TrialUrgency,
-	{ color: "success" | "warning" | "error" | "default"; label: string }
-> = {
-	ok:        { color: "success", label: "En curso"    },
-	attention: { color: "warning", label: "7 días"      },
-	warning:   { color: "warning", label: "3 días"      },
-	critical:  { color: "error",   label: "Hoy/mañana"  },
-	expired:   { color: "error",   label: "Vencido"     },
-	unknown:   { color: "default", label: "Sin fecha"   },
+const URGENCY_CONFIG: Record<TrialUrgency, { color: "success" | "warning" | "error" | "default"; label: string }> = {
+	ok: { color: "success", label: "En curso" },
+	attention: { color: "warning", label: "7 días" },
+	warning: { color: "warning", label: "3 días" },
+	critical: { color: "error", label: "Hoy/mañana" },
+	expired: { color: "error", label: "Vencido" },
+	unknown: { color: "default", label: "Sin fecha" },
 };
 
 const PLAN_COLOR: Record<string, "default" | "primary" | "warning"> = {
-	free: "default", standard: "primary", premium: "warning",
+	free: "default",
+	standard: "primary",
+	premium: "warning",
 };
 
 const formatDate = (d: string | null | undefined) => (d ? dayjs(d).format("DD/MM/YYYY") : "—");
@@ -96,10 +83,13 @@ const getDaysUrgency = (days: number | null): TrialUrgency => {
 const DaysChip = ({ days, urgency }: { days: number | null; urgency: TrialUrgency }) => {
 	const cfg = URGENCY_CONFIG[urgency];
 	const label =
-		days === null ? "—"
-		: days < 0   ? `Vencido hace ${Math.abs(days)}d`
-		: days === 0 ? "Vence hoy"
-		:              `${days}d restante${days !== 1 ? "s" : ""}`;
+		days === null
+			? "—"
+			: days < 0
+			? `Vencido hace ${Math.abs(days)}d`
+			: days === 0
+			? "Vence hoy"
+			: `${days}d restante${days !== 1 ? "s" : ""}`;
 	return <Chip label={label} size="small" color={cfg.color} variant="filled" />;
 };
 
@@ -111,7 +101,11 @@ const ResourceBar = ({ label, current, limit, atRisk }: { label: string; current
 		<Box>
 			<Typography variant="caption" color="text.secondary">
 				{label}: {current}/{limit}
-				{atRisk > 0 && <Typography component="span" variant="caption" color="error" sx={{ ml: 0.5 }}>(-{atRisk})</Typography>}
+				{atRisk > 0 && (
+					<Typography component="span" variant="caption" color="error" sx={{ ml: 0.5 }}>
+						(-{atRisk})
+					</Typography>
+				)}
 			</Typography>
 			<Box sx={{ height: 4, borderRadius: 2, bgcolor: alpha(color, 0.15), mt: 0.3 }}>
 				<Box sx={{ height: "100%", width: `${pct}%`, borderRadius: 2, bgcolor: color }} />
@@ -121,8 +115,12 @@ const ResourceBar = ({ label, current, limit, atRisk }: { label: string; current
 };
 
 interface StatCardProps {
-	title: string; value: number | undefined; subtitle: string;
-	icon: React.ReactNode; color: "primary" | "warning" | "error" | "success"; loading: boolean;
+	title: string;
+	value: number | undefined;
+	subtitle: string;
+	icon: React.ReactNode;
+	color: "primary" | "warning" | "error" | "success";
+	loading: boolean;
 }
 const StatCard = ({ title, value, subtitle, icon, color, loading }: StatCardProps) => {
 	const theme = useTheme();
@@ -132,15 +130,21 @@ const StatCard = ({ title, value, subtitle, icon, color, loading }: StatCardProp
 			<CardContent>
 				<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
 					<Box>
-						<Typography variant="subtitle2" color="text.secondary" gutterBottom>{title}</Typography>
-						{loading ? <Skeleton width={60} height={40} /> : (
-							<Typography variant="h3" color={`${color}.main`} fontWeight={700}>{value ?? "—"}</Typography>
+						<Typography variant="subtitle2" color="text.secondary" gutterBottom>
+							{title}
+						</Typography>
+						{loading ? (
+							<Skeleton width={60} height={40} />
+						) : (
+							<Typography variant="h3" color={`${color}.main`} fontWeight={700}>
+								{value ?? "—"}
+							</Typography>
 						)}
-						<Typography variant="caption" color="text.secondary">{subtitle}</Typography>
+						<Typography variant="caption" color="text.secondary">
+							{subtitle}
+						</Typography>
 					</Box>
-					<Box sx={{ p: 1, borderRadius: 2, bgcolor: alpha(pal.main, 0.1), color: pal.main, display: "flex" }}>
-						{icon}
-					</Box>
+					<Box sx={{ p: 1, borderRadius: 2, bgcolor: alpha(pal.main, 0.1), color: pal.main, display: "flex" }}>{icon}</Box>
 				</Stack>
 			</CardContent>
 		</Card>
@@ -220,11 +224,12 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 		}
 		setSavingGrace(true);
 		try {
-			const params = editingGraceField === "downgrade"
-				? { downgradeGraceDays: days }
-				: { paymentGraceDays: days };
+			const params = editingGraceField === "downgrade" ? { downgradeGraceDays: days } : { paymentGraceDays: days };
 			await TrialsService.updateGraceConfig(params);
-			enqueueSnackbar(`Período de gracia actualizado: ${days} días para ${editingGraceField === "downgrade" ? "downgrade" : "pago fallido"}`, { variant: "success" });
+			enqueueSnackbar(
+				`Período de gracia actualizado: ${days} días para ${editingGraceField === "downgrade" ? "downgrade" : "pago fallido"}`,
+				{ variant: "success" },
+			);
 			setEditingGraceField(null);
 			fetchGraceConfig();
 		} catch {
@@ -234,22 +239,29 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 		}
 	};
 
-	useEffect(() => { fetchStats(); fetchGraceConfig(); }, [fetchStats, fetchGraceConfig]);
-	useEffect(() => { setPage(1); }, [typeFilter, statusFilter, testMode]);
-	useEffect(() => { fetchRows(); }, [fetchRows]);
+	useEffect(() => {
+		fetchStats();
+		fetchGraceConfig();
+	}, [fetchStats, fetchGraceConfig]);
+	useEffect(() => {
+		setPage(1);
+	}, [typeFilter, statusFilter, testMode]);
+	useEffect(() => {
+		fetchRows();
+	}, [fetchRows]);
 
 	const graceFields: { key: "downgrade" | "payment"; label: string; description: string; value: number | undefined }[] = [
 		{
 			key: "downgrade",
 			label: "Gracia por downgrade",
 			description: "Días para que el usuario ajuste sus recursos tras bajar de plan o cancelar",
-			value: graceConfig?.downgradeGraceDays
+			value: graceConfig?.downgradeGraceDays,
 		},
 		{
 			key: "payment",
 			label: "Gracia por pago fallido",
 			description: "Días de tolerancia tras el primer pago fallido antes de suspender la cuenta",
-			value: graceConfig?.paymentGraceDays
+			value: graceConfig?.paymentGraceDays,
 		},
 	];
 
@@ -258,19 +270,54 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 			{/* Stats */}
 			<Grid container spacing={2} sx={{ mb: 3 }}>
 				<Grid item xs={12} sm={6} md={2.4}>
-					<StatCard title="Total períodos" value={stats?.total} subtitle="downgrade + pago" icon={<Clock size={24} />} color="primary" loading={statsLoading} />
+					<StatCard
+						title="Total períodos"
+						value={stats?.total}
+						subtitle="downgrade + pago"
+						icon={<Clock size={24} />}
+						color="primary"
+						loading={statsLoading}
+					/>
 				</Grid>
 				<Grid item xs={12} sm={6} md={2.4}>
-					<StatCard title="Downgrade activos" value={stats?.downgrade.active} subtitle="aún no vencidos" icon={<ArrowDown size={24} />} color="warning" loading={statsLoading} />
+					<StatCard
+						title="Downgrade activos"
+						value={stats?.downgrade.active}
+						subtitle="aún no vencidos"
+						icon={<ArrowDown size={24} />}
+						color="warning"
+						loading={statsLoading}
+					/>
 				</Grid>
 				<Grid item xs={12} sm={6} md={2.4}>
-					<StatCard title="Vencidos pendientes" value={stats?.downgrade.expired} subtitle="sin procesar aún" icon={<Warning2 size={24} />} color="error" loading={statsLoading} />
+					<StatCard
+						title="Vencidos pendientes"
+						value={stats?.downgrade.expired}
+						subtitle="sin procesar aún"
+						icon={<Warning2 size={24} />}
+						color="error"
+						loading={statsLoading}
+					/>
 				</Grid>
 				<Grid item xs={12} sm={6} md={2.4}>
-					<StatCard title="Procesados" value={stats?.downgrade.completed} subtitle="auto-archivado ok" icon={<TaskSquare size={24} />} color="success" loading={statsLoading} />
+					<StatCard
+						title="Procesados"
+						value={stats?.downgrade.completed}
+						subtitle="auto-archivado ok"
+						icon={<TaskSquare size={24} />}
+						color="success"
+						loading={statsLoading}
+					/>
 				</Grid>
 				<Grid item xs={12} sm={6} md={2.4}>
-					<StatCard title="Gracia por pago" value={stats?.payment.total} subtitle="pago fallido" icon={<CardPos size={24} />} color="error" loading={statsLoading} />
+					<StatCard
+						title="Gracia por pago"
+						value={stats?.payment.total}
+						subtitle="pago fallido"
+						icon={<CardPos size={24} />}
+						color="error"
+						loading={statsLoading}
+					/>
 				</Grid>
 			</Grid>
 
@@ -279,13 +326,20 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<Setting2 size={18} color={theme.palette.primary.main} />
-						<Typography variant="subtitle1" fontWeight={600}>Configuración de períodos de gracia</Typography>
+						<Typography variant="subtitle1" fontWeight={600}>
+							Configuración de períodos de gracia
+						</Typography>
 					</Stack>
 					<Alert severity="info" sx={{ mb: 2 }}>
-						Estos valores determinan la duración de cada tipo de período de gracia. Cambiarlos afecta únicamente a nuevos períodos; los existentes conservan su fecha original.
+						Estos valores determinan la duración de cada tipo de período de gracia. Cambiarlos afecta únicamente a nuevos períodos; los
+						existentes conservan su fecha original.
 					</Alert>
 					{graceConfigLoading ? (
-						<Stack spacing={1}>{Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} height={56} />)}</Stack>
+						<Stack spacing={1}>
+							{Array.from({ length: 2 }).map((_, i) => (
+								<Skeleton key={i} height={56} />
+							))}
+						</Stack>
 					) : (
 						<Stack spacing={2}>
 							{graceFields.map((field) => (
@@ -320,17 +374,25 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 													sx={{ width: 120 }}
 													InputProps={{
 														endAdornment: <InputAdornment position="end">días</InputAdornment>,
-														inputProps: { min: 1 }
+														inputProps: { min: 1 },
 													}}
 												/>
 												<Button size="small" variant="contained" onClick={handleGraceSave} disabled={savingGrace}>
 													{savingGrace ? "Guardando..." : "Guardar"}
 												</Button>
-												<Button size="small" onClick={() => setEditingGraceField(null)}>Cancelar</Button>
+												<Button size="small" onClick={() => setEditingGraceField(null)}>
+													Cancelar
+												</Button>
 											</Stack>
 										) : (
 											<Tooltip title="Editar">
-												<IconButton size="small" onClick={() => { setEditingGraceField(field.key); setEditGraceDays(String(field.value ?? 15)); }}>
+												<IconButton
+													size="small"
+													onClick={() => {
+														setEditingGraceField(field.key);
+														setEditGraceDays(String(field.value ?? 15));
+													}}
+												>
 													<Edit2 size={16} />
 												</IconButton>
 											</Tooltip>
@@ -356,7 +418,9 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 					<ToggleButton value="expired">Vencidos</ToggleButton>
 					<ToggleButton value="completed">Procesados</ToggleButton>
 				</ToggleButtonGroup>
-				<Typography variant="caption" color="text.secondary" sx={{ ml: "auto" }}>{total} resultado{total !== 1 ? "s" : ""}</Typography>
+				<Typography variant="caption" color="text.secondary" sx={{ ml: "auto" }}>
+					{total} resultado{total !== 1 ? "s" : ""}
+				</Typography>
 			</Stack>
 
 			{/* Tabla */}
@@ -375,114 +439,184 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 						</TableRow>
 					</TableHead>
 					<TableBody>
-						{loading
-							? Array.from({ length: 5 }).map((_, i) => (
-									<TableRow key={i}>
-										{Array.from({ length: 8 }).map((_, j) => <TableCell key={j}><Skeleton height={20} /></TableCell>)}
-									</TableRow>
-								))
-							: rows.length === 0
-							? (
-								<TableRow>
-									<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-										<Typography color="text.secondary">No hay períodos de gracia con los filtros seleccionados</Typography>
-									</TableCell>
+						{loading ? (
+							Array.from({ length: 5 }).map((_, i) => (
+								<TableRow key={i}>
+									{Array.from({ length: 8 }).map((_, j) => (
+										<TableCell key={j}>
+											<Skeleton height={20} />
+										</TableCell>
+									))}
 								</TableRow>
-							)
-							: rows.map((row) => {
-									const urgency = getDaysUrgency(row.daysRemaining);
-									const rowBg = row.isCompleted
-										? alpha(theme.palette.success.main, 0.04)
-										: row.isExpired
-										? alpha(theme.palette.error.main, 0.04)
-										: urgency === "warning" || urgency === "critical"
-										? alpha(theme.palette.warning.main, 0.04)
-										: "inherit";
+							))
+						) : rows.length === 0 ? (
+							<TableRow>
+								<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+									<Typography color="text.secondary">No hay períodos de gracia con los filtros seleccionados</Typography>
+								</TableCell>
+							</TableRow>
+						) : (
+							rows.map((row) => {
+								const urgency = getDaysUrgency(row.daysRemaining);
+								const rowBg = row.isCompleted
+									? alpha(theme.palette.success.main, 0.04)
+									: row.isExpired
+									? alpha(theme.palette.error.main, 0.04)
+									: urgency === "warning" || urgency === "critical"
+									? alpha(theme.palette.warning.main, 0.04)
+									: "inherit";
 
-									return (
-										<TableRow key={row._id} sx={{ bgcolor: rowBg }}>
-											{/* Usuario */}
-											<TableCell>
-												<Stack direction="row" spacing={1} alignItems="center">
-													<People size={16} color={theme.palette.text.secondary} />
-													<Box>
-														<Typography variant="body2" fontWeight={500}>{row.user?.email ?? "—"}</Typography>
-														{row.user?.name && <Typography variant="caption" color="text.secondary">{row.user.name}</Typography>}
-													</Box>
-												</Stack>
-											</TableCell>
-											{/* Tipo */}
-											<TableCell>
+								return (
+									<TableRow key={row._id} sx={{ bgcolor: rowBg }}>
+										{/* Usuario */}
+										<TableCell>
+											<Stack direction="row" spacing={1} alignItems="center">
+												<People size={16} color={theme.palette.text.secondary} />
+												<Box>
+													<Typography variant="body2" fontWeight={500}>
+														{row.user?.email ?? "—"}
+													</Typography>
+													{row.user?.name && (
+														<Typography variant="caption" color="text.secondary">
+															{row.user.name}
+														</Typography>
+													)}
+												</Box>
+											</Stack>
+										</TableCell>
+										{/* Tipo */}
+										<TableCell>
+											<Chip
+												label={row.type === "downgrade" ? "Downgrade" : "Pago fallido"}
+												size="small"
+												color={row.type === "downgrade" ? "warning" : "error"}
+												icon={row.type === "downgrade" ? <ArrowDown size={12} /> : <CardPos size={12} />}
+											/>
+										</TableCell>
+										{/* Planes */}
+										<TableCell>
+											<Stack direction="row" spacing={0.5} alignItems="center">
 												<Chip
-													label={row.type === "downgrade" ? "Downgrade" : "Pago fallido"}
+													label={row.previousPlan ?? "—"}
 													size="small"
-													color={row.type === "downgrade" ? "warning" : "error"}
-													icon={row.type === "downgrade" ? <ArrowDown size={12} /> : <CardPos size={12} />}
+													color={PLAN_COLOR[row.previousPlan ?? ""] ?? "default"}
+													variant="outlined"
 												/>
-											</TableCell>
-											{/* Planes */}
-											<TableCell>
-												<Stack direction="row" spacing={0.5} alignItems="center">
-													<Chip label={row.previousPlan ?? "—"} size="small" color={PLAN_COLOR[row.previousPlan ?? ""] ?? "default"} variant="outlined" />
-													<Typography variant="caption">→</Typography>
-													<Chip label={row.targetPlan ?? "—"} size="small" color={PLAN_COLOR[row.targetPlan ?? ""] ?? "default"} variant="outlined" />
-												</Stack>
-											</TableCell>
-											{/* Fechas */}
-											<TableCell><Typography variant="body2">{formatDate(row.startedAt)}</Typography></TableCell>
-											<TableCell>
-												<Typography variant="body2" color={row.isExpired ? "error" : "text.primary"} fontWeight={row.isExpired ? 600 : 400}>
-													{formatDate(row.expiresAt)}
+												<Typography variant="caption">→</Typography>
+												<Chip
+													label={row.targetPlan ?? "—"}
+													size="small"
+													color={PLAN_COLOR[row.targetPlan ?? ""] ?? "default"}
+													variant="outlined"
+												/>
+											</Stack>
+										</TableCell>
+										{/* Fechas */}
+										<TableCell>
+											<Typography variant="body2">{formatDate(row.startedAt)}</Typography>
+										</TableCell>
+										<TableCell>
+											<Typography variant="body2" color={row.isExpired ? "error" : "text.primary"} fontWeight={row.isExpired ? 600 : 400}>
+												{formatDate(row.expiresAt)}
+											</Typography>
+										</TableCell>
+										{/* Estado */}
+										<TableCell>
+											{row.isCompleted ? (
+												<Chip label="Procesado" size="small" color="success" icon={<TaskSquare size={12} />} />
+											) : (
+												<DaysChip days={row.daysRemaining} urgency={urgency} />
+											)}
+										</TableCell>
+										{/* Recursos */}
+										<TableCell sx={{ minWidth: 180 }}>
+											{row.resources ? (
+												row.resources.totalAtRisk > 0 ? (
+													<Stack spacing={0.5}>
+														{row.resources.folders.atRisk > 0 && (
+															<ResourceBar
+																label="Carpetas"
+																current={row.resources.folders.current}
+																limit={row.resources.folders.limit}
+																atRisk={row.resources.folders.atRisk}
+															/>
+														)}
+														{row.resources.calculators.atRisk > 0 && (
+															<ResourceBar
+																label="Calculadoras"
+																current={row.resources.calculators.current}
+																limit={row.resources.calculators.limit}
+																atRisk={row.resources.calculators.atRisk}
+															/>
+														)}
+														{row.resources.contacts.atRisk > 0 && (
+															<ResourceBar
+																label="Contactos"
+																current={row.resources.contacts.current}
+																limit={row.resources.contacts.limit}
+																atRisk={row.resources.contacts.atRisk}
+															/>
+														)}
+														<Typography variant="caption" color="error" fontWeight={600}>
+															Total: {row.resources.totalAtRisk}
+														</Typography>
+													</Stack>
+												) : (
+													<Stack direction="row" spacing={0.5} alignItems="center">
+														<TickCircle size={14} color={theme.palette.success.main} />
+														<Typography variant="caption" color="success.main">
+															Sin exceso
+														</Typography>
+													</Stack>
+												)
+											) : (
+												<Typography variant="caption" color="text.disabled">
+													—
 												</Typography>
-											</TableCell>
-											{/* Estado */}
-											<TableCell>
-												{row.isCompleted ? (
-													<Chip label="Procesado" size="small" color="success" icon={<TaskSquare size={12} />} />
-												) : (
-													<DaysChip days={row.daysRemaining} urgency={urgency} />
-												)}
-											</TableCell>
-											{/* Recursos */}
-											<TableCell sx={{ minWidth: 180 }}>
-												{row.resources ? (
-													row.resources.totalAtRisk > 0 ? (
-														<Stack spacing={0.5}>
-															{row.resources.folders.atRisk > 0 && <ResourceBar label="Carpetas" current={row.resources.folders.current} limit={row.resources.folders.limit} atRisk={row.resources.folders.atRisk} />}
-															{row.resources.calculators.atRisk > 0 && <ResourceBar label="Calculadoras" current={row.resources.calculators.current} limit={row.resources.calculators.limit} atRisk={row.resources.calculators.atRisk} />}
-															{row.resources.contacts.atRisk > 0 && <ResourceBar label="Contactos" current={row.resources.contacts.current} limit={row.resources.contacts.limit} atRisk={row.resources.contacts.atRisk} />}
-															<Typography variant="caption" color="error" fontWeight={600}>Total: {row.resources.totalAtRisk}</Typography>
-														</Stack>
-													) : (
-														<Stack direction="row" spacing={0.5} alignItems="center">
-															<TickCircle size={14} color={theme.palette.success.main} />
-															<Typography variant="caption" color="success.main">Sin exceso</Typography>
-														</Stack>
-													)
-												) : <Typography variant="caption" color="text.disabled">—</Typography>}
-											</TableCell>
-											{/* Recordatorios / Procesado */}
-											<TableCell>
-												{row.isCompleted ? (
-													<Stack spacing={0.5}>
-														<Stack direction="row" spacing={0.5} alignItems="center">
-															<TickCircle size={14} color={theme.palette.success.main} />
-															<Typography variant="caption" color="success.main" fontWeight={600}>Auto-archivado</Typography>
-														</Stack>
-														<Typography variant="caption" color="text.secondary">{formatDate(row.processedAt)}</Typography>
+											)}
+										</TableCell>
+										{/* Recordatorios / Procesado */}
+										<TableCell>
+											{row.isCompleted ? (
+												<Stack spacing={0.5}>
+													<Stack direction="row" spacing={0.5} alignItems="center">
+														<TickCircle size={14} color={theme.palette.success.main} />
+														<Typography variant="caption" color="success.main" fontWeight={600}>
+															Auto-archivado
+														</Typography>
 													</Stack>
-												) : row.type === "downgrade" ? (
-													<Stack spacing={0.5}>
-														<Chip size="small" label="3 días" color={row.reminder3DaysSent ? "success" : "default"} variant={row.reminder3DaysSent ? "filled" : "outlined"} />
-														<Chip size="small" label="1 día" color={row.reminder1DaySent ? "success" : "default"} variant={row.reminder1DaySent ? "filled" : "outlined"} />
-													</Stack>
-												) : (
-													<Chip size="small" label="Enviado" color={row.reminderSent ? "success" : "default"} variant={row.reminderSent ? "filled" : "outlined"} />
-												)}
-											</TableCell>
-										</TableRow>
-									);
-								})}
+													<Typography variant="caption" color="text.secondary">
+														{formatDate(row.processedAt)}
+													</Typography>
+												</Stack>
+											) : row.type === "downgrade" ? (
+												<Stack spacing={0.5}>
+													<Chip
+														size="small"
+														label="3 días"
+														color={row.reminder3DaysSent ? "success" : "default"}
+														variant={row.reminder3DaysSent ? "filled" : "outlined"}
+													/>
+													<Chip
+														size="small"
+														label="1 día"
+														color={row.reminder1DaySent ? "success" : "default"}
+														variant={row.reminder1DaySent ? "filled" : "outlined"}
+													/>
+												</Stack>
+											) : (
+												<Chip
+													size="small"
+													label="Enviado"
+													color={row.reminderSent ? "success" : "default"}
+													variant={row.reminderSent ? "filled" : "outlined"}
+												/>
+											)}
+										</TableCell>
+									</TableRow>
+								);
+							})
+						)}
 					</TableBody>
 				</Table>
 			</TableContainer>
@@ -492,7 +626,14 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 				<Stack direction="row" justifyContent="center" sx={{ mt: 2 }}>
 					<Stack direction="row" spacing={1}>
 						{Array.from({ length: totalPages }).map((_, i) => (
-							<Chip key={i} label={i + 1} size="small" color={page === i + 1 ? "primary" : "default"} onClick={() => setPage(i + 1)} clickable />
+							<Chip
+								key={i}
+								label={i + 1}
+								size="small"
+								color={page === i + 1 ? "primary" : "default"}
+								onClick={() => setPage(i + 1)}
+								clickable
+							/>
 						))}
 					</Stack>
 				</Stack>
@@ -526,9 +667,14 @@ const TrialsTab = ({ testMode }: { testMode: boolean }) => {
 
 	const fetchStats = useCallback(async () => {
 		setStatsLoading(true);
-		try { const res = await TrialsService.getTrialStats(); setStats(res.data); }
-		catch { enqueueSnackbar("Error al cargar estadísticas", { variant: "error" }); }
-		finally { setStatsLoading(false); }
+		try {
+			const res = await TrialsService.getTrialStats();
+			setStats(res.data);
+		} catch {
+			enqueueSnackbar("Error al cargar estadísticas", { variant: "error" });
+		} finally {
+			setStatsLoading(false);
+		}
 	}, [enqueueSnackbar]);
 
 	const fetchRows = useCallback(async () => {
@@ -537,21 +683,38 @@ const TrialsTab = ({ testMode }: { testMode: boolean }) => {
 			const params: GetTrialSubscriptionsParams = { page, limit: 50, sortBy: "trialEnd", sortOrder: "asc", testMode };
 			if (expiringSoon) params.expiringSoon = expiringSoon;
 			const res = await TrialsService.getTrialSubscriptions(params);
-			setRows(res.data); setTotal(res.stats.total); setTotalPages(res.stats.totalPages);
-		} catch { enqueueSnackbar("Error al cargar períodos de prueba", { variant: "error" }); }
-		finally { setLoading(false); }
+			setRows(res.data);
+			setTotal(res.stats.total);
+			setTotalPages(res.stats.totalPages);
+		} catch {
+			enqueueSnackbar("Error al cargar períodos de prueba", { variant: "error" });
+		} finally {
+			setLoading(false);
+		}
 	}, [page, expiringSoon, testMode, enqueueSnackbar]);
 
 	const fetchConfig = useCallback(async () => {
 		setConfigLoading(true);
-		try { const res = await TrialsService.getTrialConfig(); setConfig(res.data); }
-		catch { enqueueSnackbar("Error al cargar configuración de trial", { variant: "error" }); }
-		finally { setConfigLoading(false); }
+		try {
+			const res = await TrialsService.getTrialConfig();
+			setConfig(res.data);
+		} catch {
+			enqueueSnackbar("Error al cargar configuración de trial", { variant: "error" });
+		} finally {
+			setConfigLoading(false);
+		}
 	}, [enqueueSnackbar]);
 
-	useEffect(() => { fetchStats(); fetchConfig(); }, [fetchStats, fetchConfig]);
-	useEffect(() => { setPage(1); }, [expiringSoon, testMode]);
-	useEffect(() => { fetchRows(); }, [fetchRows]);
+	useEffect(() => {
+		fetchStats();
+		fetchConfig();
+	}, [fetchStats, fetchConfig]);
+	useEffect(() => {
+		setPage(1);
+	}, [expiringSoon, testMode]);
+	useEffect(() => {
+		fetchRows();
+	}, [fetchRows]);
 
 	const startEdit = (plan: PlanTrialConfig) => {
 		setEditingPlan(plan.planId);
@@ -583,16 +746,44 @@ const TrialsTab = ({ testMode }: { testMode: boolean }) => {
 			{/* Stats */}
 			<Grid container spacing={2} sx={{ mb: 3 }}>
 				<Grid item xs={12} sm={6} md={3}>
-					<StatCard title="Total en trial" value={stats?.total} subtitle="suscripciones" icon={<Clock size={24} />} color="primary" loading={statsLoading} />
+					<StatCard
+						title="Total en trial"
+						value={stats?.total}
+						subtitle="suscripciones"
+						icon={<Clock size={24} />}
+						color="primary"
+						loading={statsLoading}
+					/>
 				</Grid>
 				<Grid item xs={12} sm={6} md={3}>
-					<StatCard title="Vencen en 3 días" value={stats?.expiring3d} subtitle="requieren atención" icon={<Warning2 size={24} />} color="warning" loading={statsLoading} />
+					<StatCard
+						title="Vencen en 3 días"
+						value={stats?.expiring3d}
+						subtitle="requieren atención"
+						icon={<Warning2 size={24} />}
+						color="warning"
+						loading={statsLoading}
+					/>
 				</Grid>
 				<Grid item xs={12} sm={6} md={3}>
-					<StatCard title="Vencen hoy/mañana" value={stats?.expiring1d} subtitle="acción urgente" icon={<CloseCircle size={24} />} color="error" loading={statsLoading} />
+					<StatCard
+						title="Vencen hoy/mañana"
+						value={stats?.expiring1d}
+						subtitle="acción urgente"
+						icon={<CloseCircle size={24} />}
+						color="error"
+						loading={statsLoading}
+					/>
 				</Grid>
 				<Grid item xs={12} sm={6} md={3}>
-					<StatCard title="Trials vencidos" value={stats?.expired} subtitle="sin conversión" icon={<TickCircle size={24} />} color="success" loading={statsLoading} />
+					<StatCard
+						title="Trials vencidos"
+						value={stats?.expired}
+						subtitle="sin conversión"
+						icon={<TickCircle size={24} />}
+						color="success"
+						loading={statsLoading}
+					/>
 				</Grid>
 			</Grid>
 
@@ -601,23 +792,42 @@ const TrialsTab = ({ testMode }: { testMode: boolean }) => {
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<Setting2 size={18} color={theme.palette.primary.main} />
-						<Typography variant="subtitle1" fontWeight={600}>Configuración de período de prueba</Typography>
+						<Typography variant="subtitle1" fontWeight={600}>
+							Configuración de período de prueba
+						</Typography>
 					</Stack>
 					<Alert severity="info" sx={{ mb: 2 }}>
-						El período de prueba se aplica automáticamente al crear una sesión de checkout en Stripe. Cambiar este valor afecta a nuevos suscriptores, no a los existentes.
+						El período de prueba se aplica automáticamente al crear una sesión de checkout en Stripe. Cambiar este valor afecta a nuevos
+						suscriptores, no a los existentes.
 					</Alert>
 
 					{/* Selector de ambiente */}
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-						<Typography variant="body2" color="text.secondary">Ambiente:</Typography>
-						<ToggleButtonGroup size="small" value={editEnv} exclusive onChange={(_, v) => { if (v) { setEditEnv(v); setEditingPlan(null); } }}>
+						<Typography variant="body2" color="text.secondary">
+							Ambiente:
+						</Typography>
+						<ToggleButtonGroup
+							size="small"
+							value={editEnv}
+							exclusive
+							onChange={(_, v) => {
+								if (v) {
+									setEditEnv(v);
+									setEditingPlan(null);
+								}
+							}}
+						>
 							<ToggleButton value="production">Producción</ToggleButton>
 							<ToggleButton value="development">Desarrollo</ToggleButton>
 						</ToggleButtonGroup>
 					</Stack>
 
 					{configLoading ? (
-						<Stack spacing={1}>{Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} height={56} />)}</Stack>
+						<Stack spacing={1}>
+							{Array.from({ length: 2 }).map((_, i) => (
+								<Skeleton key={i} height={56} />
+							))}
+						</Stack>
 					) : (
 						<Stack spacing={2}>
 							{config.map((plan) => (
@@ -644,13 +854,15 @@ const TrialsTab = ({ testMode }: { testMode: boolean }) => {
 													sx={{ width: 120 }}
 													InputProps={{
 														endAdornment: <InputAdornment position="end">días</InputAdornment>,
-														inputProps: { min: 0 }
+														inputProps: { min: 0 },
 													}}
 												/>
 												<Button size="small" variant="contained" onClick={handleSave} disabled={saving}>
 													{saving ? "Guardando..." : "Guardar"}
 												</Button>
-												<Button size="small" onClick={() => setEditingPlan(null)}>Cancelar</Button>
+												<Button size="small" onClick={() => setEditingPlan(null)}>
+													Cancelar
+												</Button>
 											</Stack>
 										) : (
 											<Tooltip title="Editar">
@@ -676,7 +888,9 @@ const TrialsTab = ({ testMode }: { testMode: boolean }) => {
 					<ToggleButton value="3">3 días</ToggleButton>
 					<ToggleButton value="7">7 días</ToggleButton>
 				</ToggleButtonGroup>
-				<Typography variant="caption" color="text.secondary" sx={{ ml: "auto" }}>{total} resultado{total !== 1 ? "s" : ""}</Typography>
+				<Typography variant="caption" color="text.secondary" sx={{ ml: "auto" }}>
+					{total} resultado{total !== 1 ? "s" : ""}
+				</Typography>
 			</Stack>
 
 			<TableContainer component={Paper} variant="outlined">
@@ -694,71 +908,131 @@ const TrialsTab = ({ testMode }: { testMode: boolean }) => {
 						</TableRow>
 					</TableHead>
 					<TableBody>
-						{loading
-							? Array.from({ length: 5 }).map((_, i) => (
-									<TableRow key={i}>
-										{Array.from({ length: 8 }).map((_, j) => <TableCell key={j}><Skeleton height={20} /></TableCell>)}
-									</TableRow>
-								))
-							: rows.length === 0
-							? (
-								<TableRow>
-									<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-										<Typography color="text.secondary">No hay usuarios en período de prueba con los filtros seleccionados</Typography>
-									</TableCell>
+						{loading ? (
+							Array.from({ length: 5 }).map((_, i) => (
+								<TableRow key={i}>
+									{Array.from({ length: 8 }).map((_, j) => (
+										<TableCell key={j}>
+											<Skeleton height={20} />
+										</TableCell>
+									))}
 								</TableRow>
-							)
-							: rows.map((row) => {
-									const urgency = URGENCY_CONFIG[row.urgency];
-									const rowBg = row.urgency === "critical" || row.urgency === "expired"
+							))
+						) : rows.length === 0 ? (
+							<TableRow>
+								<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+									<Typography color="text.secondary">No hay usuarios en período de prueba con los filtros seleccionados</Typography>
+								</TableCell>
+							</TableRow>
+						) : (
+							rows.map((row) => {
+								const urgency = URGENCY_CONFIG[row.urgency];
+								const rowBg =
+									row.urgency === "critical" || row.urgency === "expired"
 										? alpha(theme.palette.error.main, 0.04)
-										: row.urgency === "warning" ? alpha(theme.palette.warning.main, 0.04)
+										: row.urgency === "warning"
+										? alpha(theme.palette.warning.main, 0.04)
 										: "inherit";
-									return (
-										<TableRow key={row._id} sx={{ bgcolor: rowBg }}>
-											<TableCell>
-												<Stack direction="row" spacing={1} alignItems="center">
-													<People size={16} color={theme.palette.text.secondary} />
-													<Box>
-														<Typography variant="body2" fontWeight={500}>{row.user?.email ?? "—"}</Typography>
-														{row.user?.name && <Typography variant="caption" color="text.secondary">{row.user.name}</Typography>}
-													</Box>
-												</Stack>
-											</TableCell>
-											<TableCell><Chip label={row.plan} size="small" color={PLAN_COLOR[row.plan] ?? "default"} variant="outlined" /></TableCell>
-											<TableCell><Chip label={urgency.label} size="small" color={urgency.color} variant={row.urgency === "ok" ? "outlined" : "filled"} /></TableCell>
-											<TableCell><Typography variant="body2">{formatDate(row.trialStart)}</Typography></TableCell>
-											<TableCell>
-												<Typography variant="body2" color={row.urgency === "expired" || row.urgency === "critical" ? "error" : "text.primary"} fontWeight={row.urgency !== "ok" ? 600 : 400}>
-													{formatDate(row.trialEnd)}
+								return (
+									<TableRow key={row._id} sx={{ bgcolor: rowBg }}>
+										<TableCell>
+											<Stack direction="row" spacing={1} alignItems="center">
+												<People size={16} color={theme.palette.text.secondary} />
+												<Box>
+													<Typography variant="body2" fontWeight={500}>
+														{row.user?.email ?? "—"}
+													</Typography>
+													{row.user?.name && (
+														<Typography variant="caption" color="text.secondary">
+															{row.user.name}
+														</Typography>
+													)}
+												</Box>
+											</Stack>
+										</TableCell>
+										<TableCell>
+											<Chip label={row.plan} size="small" color={PLAN_COLOR[row.plan] ?? "default"} variant="outlined" />
+										</TableCell>
+										<TableCell>
+											<Chip
+												label={urgency.label}
+												size="small"
+												color={urgency.color}
+												variant={row.urgency === "ok" ? "outlined" : "filled"}
+											/>
+										</TableCell>
+										<TableCell>
+											<Typography variant="body2">{formatDate(row.trialStart)}</Typography>
+										</TableCell>
+										<TableCell>
+											<Typography
+												variant="body2"
+												color={row.urgency === "expired" || row.urgency === "critical" ? "error" : "text.primary"}
+												fontWeight={row.urgency !== "ok" ? 600 : 400}
+											>
+												{formatDate(row.trialEnd)}
+											</Typography>
+										</TableCell>
+										<TableCell>
+											<DaysChip days={row.daysRemaining} urgency={row.urgency} />
+										</TableCell>
+										<TableCell sx={{ minWidth: 180 }}>
+											{row.resources ? (
+												row.resources.totalAtRisk > 0 ? (
+													<Stack spacing={0.5}>
+														{row.resources.folders.atRisk > 0 && (
+															<ResourceBar
+																label="Carpetas"
+																current={row.resources.folders.current}
+																limit={row.resources.folders.limit}
+																atRisk={row.resources.folders.atRisk}
+															/>
+														)}
+														{row.resources.calculators.atRisk > 0 && (
+															<ResourceBar
+																label="Calculadoras"
+																current={row.resources.calculators.current}
+																limit={row.resources.calculators.limit}
+																atRisk={row.resources.calculators.atRisk}
+															/>
+														)}
+														{row.resources.contacts.atRisk > 0 && (
+															<ResourceBar
+																label="Contactos"
+																current={row.resources.contacts.current}
+																limit={row.resources.contacts.limit}
+																atRisk={row.resources.contacts.atRisk}
+															/>
+														)}
+														<Typography variant="caption" color="error" fontWeight={600}>
+															Total: {row.resources.totalAtRisk}
+														</Typography>
+													</Stack>
+												) : (
+													<Stack direction="row" spacing={0.5} alignItems="center">
+														<TickCircle size={14} color={theme.palette.success.main} />
+														<Typography variant="caption" color="success.main">
+															Sin exceso
+														</Typography>
+													</Stack>
+												)
+											) : (
+												<Typography variant="caption" color="text.disabled">
+													—
 												</Typography>
-											</TableCell>
-											<TableCell><DaysChip days={row.daysRemaining} urgency={row.urgency} /></TableCell>
-											<TableCell sx={{ minWidth: 180 }}>
-												{row.resources ? (
-													row.resources.totalAtRisk > 0 ? (
-														<Stack spacing={0.5}>
-															{row.resources.folders.atRisk > 0 && <ResourceBar label="Carpetas" current={row.resources.folders.current} limit={row.resources.folders.limit} atRisk={row.resources.folders.atRisk} />}
-															{row.resources.calculators.atRisk > 0 && <ResourceBar label="Calculadoras" current={row.resources.calculators.current} limit={row.resources.calculators.limit} atRisk={row.resources.calculators.atRisk} />}
-															{row.resources.contacts.atRisk > 0 && <ResourceBar label="Contactos" current={row.resources.contacts.current} limit={row.resources.contacts.limit} atRisk={row.resources.contacts.atRisk} />}
-															<Typography variant="caption" color="error" fontWeight={600}>Total: {row.resources.totalAtRisk}</Typography>
-														</Stack>
-													) : (
-														<Stack direction="row" spacing={0.5} alignItems="center">
-															<TickCircle size={14} color={theme.palette.success.main} />
-															<Typography variant="caption" color="success.main">Sin exceso</Typography>
-														</Stack>
-													)
-												) : <Typography variant="caption" color="text.disabled">—</Typography>}
-											</TableCell>
-											<TableCell>
-												{row.paymentMethod
-													? <Chip label={row.paymentMethod} size="small" color="success" variant="outlined" />
-													: <Chip label="Sin método" size="small" color="error" variant="outlined" />}
-											</TableCell>
-										</TableRow>
-									);
-								})}
+											)}
+										</TableCell>
+										<TableCell>
+											{row.paymentMethod ? (
+												<Chip label={row.paymentMethod} size="small" color="success" variant="outlined" />
+											) : (
+												<Chip label="Sin método" size="small" color="error" variant="outlined" />
+											)}
+										</TableCell>
+									</TableRow>
+								);
+							})
+						)}
 					</TableBody>
 				</Table>
 			</TableContainer>
@@ -767,7 +1041,14 @@ const TrialsTab = ({ testMode }: { testMode: boolean }) => {
 				<Stack direction="row" justifyContent="center" sx={{ mt: 2 }}>
 					<Stack direction="row" spacing={1}>
 						{Array.from({ length: totalPages }).map((_, i) => (
-							<Chip key={i} label={i + 1} size="small" color={page === i + 1 ? "primary" : "default"} onClick={() => setPage(i + 1)} clickable />
+							<Chip
+								key={i}
+								label={i + 1}
+								size="small"
+								color={page === i + 1 ? "primary" : "default"}
+								onClick={() => setPage(i + 1)}
+								clickable
+							/>
 						))}
 					</Stack>
 				</Stack>
@@ -795,7 +1076,9 @@ const Trials = () => {
 						label={<Typography variant="caption">Test mode</Typography>}
 					/>
 					<Tooltip title="Actualizar">
-						<IconButton onClick={handleRefresh} size="small"><Refresh size={18} /></IconButton>
+						<IconButton onClick={handleRefresh} size="small">
+							<Refresh size={18} />
+						</IconButton>
 					</Tooltip>
 				</Stack>
 			}

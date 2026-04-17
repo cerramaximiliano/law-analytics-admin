@@ -44,9 +44,27 @@ const CorpusWorkerPage = () => {
 							</Typography>
 						</Box>
 						<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
-							<Chip label="worker_01" size="small" color="default" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }} />
-							<Chip label="pjn-style-corpus-v2 · style-corpus" size="small" color="secondary" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
-							<Chip label="StyleDocument · Atlas" size="small" color="info" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
+							<Chip
+								label="worker_01"
+								size="small"
+								color="default"
+								variant="outlined"
+								sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}
+							/>
+							<Chip
+								label="pjn-style-corpus-v2 · style-corpus"
+								size="small"
+								color="secondary"
+								variant="outlined"
+								sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+							/>
+							<Chip
+								label="StyleDocument · Atlas"
+								size="small"
+								color="info"
+								variant="outlined"
+								sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+							/>
 						</Stack>
 					</Stack>
 				</Box>
@@ -73,7 +91,9 @@ const CorpusWorkerPage = () => {
 									label={
 										<Stack direction="row" spacing={1} alignItems="center">
 											<Box sx={{ color: theme.palette.primary.main, display: "flex" }}>{tab.icon}</Box>
-											<Typography variant="body2" fontWeight={500}>{tab.label}</Typography>
+											<Typography variant="body2" fontWeight={500}>
+												{tab.label}
+											</Typography>
 										</Stack>
 									}
 									value={tab.value}

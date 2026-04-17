@@ -19,8 +19,18 @@ const SERVICES: ServiceInfo[] = [
 	{ name: "API de Marketing", shortName: "Marketing", url: "https://mkt.lawanalytics.app" },
 	{ name: "API Principal", shortName: "Principal", url: "https://server.lawanalytics.app" },
 	{ name: "API de Suscripciones", shortName: "Subs.", url: "https://subscriptions.lawanalytics.app/health", corsRestricted: true },
-	{ name: "API de Causas MEV", shortName: "MEV", url: `${import.meta.env.VITE_API_MEV || "https://mev.lawanalytics.app"}/health`, corsRestricted: true },
-	{ name: "API de Causas EJE", shortName: "EJE", url: `${import.meta.env.VITE_API_EJE || "https://eje.lawanalytics.app/api"}/health`, corsRestricted: true },
+	{
+		name: "API de Causas MEV",
+		shortName: "MEV",
+		url: `${import.meta.env.VITE_API_MEV || "https://mev.lawanalytics.app"}/health`,
+		corsRestricted: true,
+	},
+	{
+		name: "API de Causas EJE",
+		shortName: "EJE",
+		url: `${import.meta.env.VITE_API_EJE || "https://eje.lawanalytics.app/api"}/health`,
+		corsRestricted: true,
+	},
 	{ name: "API de RAG (IA)", shortName: "RAG/IA", url: "https://ia.lawanalytics.app/rag/health", corsRestricted: true },
 ];
 

@@ -542,12 +542,7 @@ const PostalTrackingPage = () => {
 								</TableRow>
 							) : (
 								trackings.map((tracking) => (
-									<TableRow
-										key={tracking._id}
-										hover
-										selected={selectedIds.has(tracking._id)}
-										sx={{ cursor: "pointer" }}
-									>
+									<TableRow key={tracking._id} hover selected={selectedIds.has(tracking._id)} sx={{ cursor: "pointer" }}>
 										<TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
 											<Checkbox
 												size="small"
@@ -570,7 +565,14 @@ const PostalTrackingPage = () => {
 										<TableCell>
 											{tracking.userId ? (
 												<Stack direction="row" spacing={0.5} alignItems="center">
-													<Typography variant="body2" fontFamily="monospace" fontSize="0.7rem" color="textSecondary" noWrap sx={{ maxWidth: 90 }}>
+													<Typography
+														variant="body2"
+														fontFamily="monospace"
+														fontSize="0.7rem"
+														color="textSecondary"
+														noWrap
+														sx={{ maxWidth: 90 }}
+													>
 														{tracking.userId}
 													</Typography>
 													<Tooltip title="Copiar ID">
@@ -587,7 +589,9 @@ const PostalTrackingPage = () => {
 													</Tooltip>
 												</Stack>
 											) : (
-												<Typography variant="body2" color="textSecondary">-</Typography>
+												<Typography variant="body2" color="textSecondary">
+													-
+												</Typography>
 											)}
 										</TableCell>
 										<TableCell align="center">
@@ -792,28 +796,70 @@ const PostalTrackingPage = () => {
 											{/* IDs de referencia */}
 											{detailTracking.userId && (
 												<Grid item xs={12} sm={6}>
-													<Typography variant="caption" color="textSecondary">Usuario ID</Typography>
+													<Typography variant="caption" color="textSecondary">
+														Usuario ID
+													</Typography>
 													<Stack direction="row" spacing={0.5} alignItems="center">
-														<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem" sx={{ wordBreak: "break-all" }}>{detailTracking.userId}</Typography>
-														<Tooltip title="Copiar"><IconButton size="small" onClick={() => { navigator.clipboard.writeText(detailTracking.userId!); enqueueSnackbar("ID copiado", { variant: "success", autoHideDuration: 1500 }); }}><Copy size={12} /></IconButton></Tooltip>
+														<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem" sx={{ wordBreak: "break-all" }}>
+															{detailTracking.userId}
+														</Typography>
+														<Tooltip title="Copiar">
+															<IconButton
+																size="small"
+																onClick={() => {
+																	navigator.clipboard.writeText(detailTracking.userId!);
+																	enqueueSnackbar("ID copiado", { variant: "success", autoHideDuration: 1500 });
+																}}
+															>
+																<Copy size={12} />
+															</IconButton>
+														</Tooltip>
 													</Stack>
 												</Grid>
 											)}
 											{detailTracking.folderId && (
 												<Grid item xs={12} sm={6}>
-													<Typography variant="caption" color="textSecondary">Folder ID</Typography>
+													<Typography variant="caption" color="textSecondary">
+														Folder ID
+													</Typography>
 													<Stack direction="row" spacing={0.5} alignItems="center">
-														<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem" sx={{ wordBreak: "break-all" }}>{detailTracking.folderId}</Typography>
-														<Tooltip title="Copiar"><IconButton size="small" onClick={() => { navigator.clipboard.writeText(detailTracking.folderId!); enqueueSnackbar("ID copiado", { variant: "success", autoHideDuration: 1500 }); }}><Copy size={12} /></IconButton></Tooltip>
+														<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem" sx={{ wordBreak: "break-all" }}>
+															{detailTracking.folderId}
+														</Typography>
+														<Tooltip title="Copiar">
+															<IconButton
+																size="small"
+																onClick={() => {
+																	navigator.clipboard.writeText(detailTracking.folderId!);
+																	enqueueSnackbar("ID copiado", { variant: "success", autoHideDuration: 1500 });
+																}}
+															>
+																<Copy size={12} />
+															</IconButton>
+														</Tooltip>
 													</Stack>
 												</Grid>
 											)}
 											{detailTracking.movementId && (
 												<Grid item xs={12} sm={6}>
-													<Typography variant="caption" color="textSecondary">Movement ID</Typography>
+													<Typography variant="caption" color="textSecondary">
+														Movement ID
+													</Typography>
 													<Stack direction="row" spacing={0.5} alignItems="center">
-														<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem" sx={{ wordBreak: "break-all" }}>{detailTracking.movementId}</Typography>
-														<Tooltip title="Copiar"><IconButton size="small" onClick={() => { navigator.clipboard.writeText(detailTracking.movementId!); enqueueSnackbar("ID copiado", { variant: "success", autoHideDuration: 1500 }); }}><Copy size={12} /></IconButton></Tooltip>
+														<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem" sx={{ wordBreak: "break-all" }}>
+															{detailTracking.movementId}
+														</Typography>
+														<Tooltip title="Copiar">
+															<IconButton
+																size="small"
+																onClick={() => {
+																	navigator.clipboard.writeText(detailTracking.movementId!);
+																	enqueueSnackbar("ID copiado", { variant: "success", autoHideDuration: 1500 });
+																}}
+															>
+																<Copy size={12} />
+															</IconButton>
+														</Tooltip>
 													</Stack>
 												</Grid>
 											)}
@@ -1057,7 +1103,8 @@ const PostalTrackingPage = () => {
 				<DialogTitle>Eliminar {selectedIds.size} seguimientos</DialogTitle>
 				<DialogContent>
 					<Typography>
-						Estas seguro de que queres eliminar <strong>{selectedIds.size}</strong> seguimiento{selectedIds.size !== 1 ? "s" : ""} seleccionado{selectedIds.size !== 1 ? "s" : ""}?
+						Estas seguro de que queres eliminar <strong>{selectedIds.size}</strong> seguimiento{selectedIds.size !== 1 ? "s" : ""}{" "}
+						seleccionado{selectedIds.size !== 1 ? "s" : ""}?
 					</Typography>
 					<Alert severity="warning" sx={{ mt: 2 }}>
 						Se eliminara tambien todo el historial de rastreo de cada documento.

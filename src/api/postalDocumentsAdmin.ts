@@ -150,7 +150,7 @@ class PostalDocumentsAdminService {
 
 	static async bulkUpdateStatus(
 		ids: string[],
-		status: PostalDocument["status"]
+		status: PostalDocument["status"],
 	): Promise<{ success: boolean; message: string; data: { modified: number } }> {
 		const response = await adminAxios.post(`${this.BASE}/bulk-status`, { ids, status });
 		return response.data;

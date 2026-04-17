@@ -72,9 +72,27 @@ const MovimientosWorkerPage = () => {
 							>
 								100.111.73.56
 							</Box>
-							<Chip label="sin Pinecone" size="small" color="default" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
-							<Chip label="CausasCIV/CNT/CSS/COM · local" size="small" color="info" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
-							<Chip label="manager + workers dinámicos" size="small" color="warning" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
+							<Chip
+								label="sin Pinecone"
+								size="small"
+								color="default"
+								variant="outlined"
+								sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+							/>
+							<Chip
+								label="CausasCIV/CNT/CSS/COM · local"
+								size="small"
+								color="info"
+								variant="outlined"
+								sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+							/>
+							<Chip
+								label="manager + workers dinámicos"
+								size="small"
+								color="warning"
+								variant="outlined"
+								sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+							/>
 						</Stack>
 					</Stack>
 				</Box>
@@ -101,7 +119,9 @@ const MovimientosWorkerPage = () => {
 									label={
 										<Stack direction="row" spacing={1} alignItems="center">
 											<Box sx={{ color: theme.palette.primary.main, display: "flex" }}>{tab.icon}</Box>
-											<Typography variant="body2" fontWeight={500}>{tab.label}</Typography>
+											<Typography variant="body2" fontWeight={500}>
+												{tab.label}
+											</Typography>
 										</Stack>
 									}
 									value={tab.value}

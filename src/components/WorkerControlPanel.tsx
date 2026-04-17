@@ -24,16 +24,20 @@ interface WorkerControlPanelProps {
 export default function WorkerControlPanel({ processes }: WorkerControlPanelProps) {
 	const theme = useTheme();
 
-	const loaded = processes.filter(p => p.enabled !== null);
-	const anyEnabled = loaded.some(p => p.enabled === true);
-	const noneEnabled = loaded.length > 0 && loaded.every(p => p.enabled === false);
+	const loaded = processes.filter((p) => p.enabled !== null);
+	const anyEnabled = loaded.some((p) => p.enabled === true);
+	const noneEnabled = loaded.length > 0 && loaded.every((p) => p.enabled === false);
 	const multiProcess = processes.length > 1;
 
 	function stopAll() {
-		processes.forEach(p => { if (p.enabled) p.onToggle(false); });
+		processes.forEach((p) => {
+			if (p.enabled) p.onToggle(false);
+		});
 	}
 	function startAll() {
-		processes.forEach(p => { if (!p.enabled) p.onToggle(true); });
+		processes.forEach((p) => {
+			if (!p.enabled) p.onToggle(true);
+		});
 	}
 
 	return (
@@ -45,24 +49,14 @@ export default function WorkerControlPanel({ processes }: WorkerControlPanelProp
 				bgcolor: alpha(theme.palette.primary.main, 0.015),
 			}}
 		>
-			<Stack
-				direction={{ xs: "column", sm: "row" }}
-				alignItems="stretch"
-				divider={<Divider orientation="vertical" flexItem />}
-			>
+			<Stack direction={{ xs: "column", sm: "row" }} alignItems="stretch" divider={<Divider orientation="vertical" flexItem />}>
 				{/* ── Processes ── */}
 				{processes.map((proc, idx) => {
 					const isLoading = proc.enabled === null;
 					const isOn = proc.enabled === true;
 
 					return (
-						<Stack
-							key={idx}
-							direction="row"
-							alignItems="center"
-							spacing={1.5}
-							sx={{ flex: "1 1 0", px: 2.5, py: 1.5, minWidth: 0 }}
-						>
+						<Stack key={idx} direction="row" alignItems="center" spacing={1.5} sx={{ flex: "1 1 0", px: 2.5, py: 1.5, minWidth: 0 }}>
 							{/* Status dot */}
 							<Box
 								sx={{
@@ -74,11 +68,9 @@ export default function WorkerControlPanel({ processes }: WorkerControlPanelProp
 									bgcolor: isLoading
 										? theme.palette.action.disabled
 										: isOn
-											? theme.palette.success.main
-											: alpha(theme.palette.text.primary, 0.2),
-									boxShadow: isOn
-										? `0 0 7px ${alpha(theme.palette.success.main, 0.55)}`
-										: "none",
+										? theme.palette.success.main
+										: alpha(theme.palette.text.primary, 0.2),
+									boxShadow: isOn ? `0 0 7px ${alpha(theme.palette.success.main, 0.55)}` : "none",
 								}}
 							/>
 
@@ -102,7 +94,7 @@ export default function WorkerControlPanel({ processes }: WorkerControlPanelProp
 									<Switch
 										size="small"
 										checked={isOn}
-										onChange={e => proc.onToggle(e.target.checked)}
+										onChange={(e) => proc.onToggle(e.target.checked)}
 										color="success"
 										sx={{ flexShrink: 0 }}
 									/>

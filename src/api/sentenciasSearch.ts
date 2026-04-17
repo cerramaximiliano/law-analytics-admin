@@ -96,16 +96,12 @@ const SentenciasSearchService = {
 	},
 
 	async getChunks(sentenciaId: string): Promise<FullChunk[]> {
-		const res = await ragAxios.get<{ success: boolean; chunks: FullChunk[]; total: number }>(
-			`${BASE}/${sentenciaId}/chunks`
-		);
+		const res = await ragAxios.get<{ success: boolean; chunks: FullChunk[]; total: number }>(`${BASE}/${sentenciaId}/chunks`);
 		return res.data.chunks;
 	},
 
 	async getTexto(sentenciaId: string): Promise<string> {
-		const res = await ragAxios.get<{ success: boolean; text: string }>(
-			`${BASE}/${sentenciaId}/texto`
-		);
+		const res = await ragAxios.get<{ success: boolean; text: string }>(`${BASE}/${sentenciaId}/texto`);
 		return res.data.text;
 	},
 };

@@ -50,9 +50,27 @@ export default function SentenciasWorkerPage() {
 						>
 							100.111.73.56
 						</Box>
-						<Chip label="pjn-style-corpus-v2 · sentencias-corpus" size="small" color="secondary" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
-						<Chip label="sentencias-capturadas · Atlas" size="small" color="info" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
-						<Chip label="CausasCIV/CNT/CSS/COM · local" size="small" color="default" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
+						<Chip
+							label="pjn-style-corpus-v2 · sentencias-corpus"
+							size="small"
+							color="secondary"
+							variant="outlined"
+							sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+						/>
+						<Chip
+							label="sentencias-capturadas · Atlas"
+							size="small"
+							color="info"
+							variant="outlined"
+							sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+						/>
+						<Chip
+							label="CausasCIV/CNT/CSS/COM · local"
+							size="small"
+							color="default"
+							variant="outlined"
+							sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+						/>
 					</Stack>
 				</Stack>
 				<Paper variant="outlined" sx={{ p: 2 }}>

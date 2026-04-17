@@ -189,11 +189,19 @@ const ConfiguracionTab = () => {
 		}
 	};
 
-	useEffect(() => { fetchConfig(); }, []);
+	useEffect(() => {
+		fetchConfig();
+	}, []);
 
 	const formatDate = (d?: string | null) => {
 		if (!d) return "-";
-		return new Date(d).toLocaleDateString("es-AR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+		return new Date(d).toLocaleDateString("es-AR", {
+			year: "numeric",
+			month: "2-digit",
+			day: "2-digit",
+			hour: "2-digit",
+			minute: "2-digit",
+		});
 	};
 
 	const formatDuration = (s?: number | null) => {
@@ -212,7 +220,11 @@ const ConfiguracionTab = () => {
 	}
 
 	if (!config) {
-		return <Box p={4}><Alert severity="warning">No se pudo cargar la configuración de rastreo.</Alert></Box>;
+		return (
+			<Box p={4}>
+				<Alert severity="warning">No se pudo cargar la configuración de rastreo.</Alert>
+			</Box>
+		);
 	}
 
 	const frontierBase = config.frontier?.ultimoPrefijoConResultados || config.rangoInicio?.patron?.letras || "AAAA";
@@ -222,7 +234,6 @@ const ConfiguracionTab = () => {
 
 	return (
 		<Stack spacing={3}>
-
 			{/* Header */}
 			<Stack direction="row" justifyContent="space-between" alignItems="center">
 				<Typography variant="h5">Configuración de Rastreo de Códigos</Typography>
@@ -250,7 +261,9 @@ const ConfiguracionTab = () => {
 						/>
 					</Grid>
 					<Grid item xs={12} md={4}>
-						<Typography variant="caption" color="text.secondary">En Ejecución</Typography>
+						<Typography variant="caption" color="text.secondary">
+							En Ejecución
+						</Typography>
 						<Box>
 							<Chip
 								label={config.estadoWorker?.enEjecucion ? "Ejecutando" : "Detenido"}
@@ -260,7 +273,9 @@ const ConfiguracionTab = () => {
 						</Box>
 					</Grid>
 					<Grid item xs={12} md={4}>
-						<Typography variant="caption" color="text.secondary">Estado en BD</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Estado en BD
+						</Typography>
 						<Box>
 							<Chip
 								label={config.estadoWorker?.activo ? "Activo" : "Inactivo"}
@@ -274,7 +289,9 @@ const ConfiguracionTab = () => {
 					<Alert severity="error" icon={<Warning2 />} sx={{ mt: 2 }}>
 						<Typography variant="subtitle2">Último Error:</Typography>
 						<Typography variant="body2">{config.estadoWorker.ultimoError.mensaje}</Typography>
-						<Typography variant="caption" color="text.secondary">{formatDate(config.estadoWorker.ultimoError.fecha)}</Typography>
+						<Typography variant="caption" color="text.secondary">
+							{formatDate(config.estadoWorker.ultimoError.fecha)}
+						</Typography>
 					</Alert>
 				)}
 			</Card>
@@ -293,13 +310,17 @@ const ConfiguracionTab = () => {
 				</Typography>
 				<Grid container spacing={3} alignItems="center">
 					<Grid item xs={12} md={3}>
-						<Typography variant="caption" color="text.secondary">Último prefijo con resultados</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Último prefijo con resultados
+						</Typography>
 						<Typography variant="h5" fontFamily="monospace" color="success.main">
 							{config.frontier?.ultimoPrefijoConResultados || "-"}
 						</Typography>
 					</Grid>
 					<Grid item xs={12} md={1} sx={{ textAlign: "center" }}>
-						<Typography variant="h5" color="text.disabled">+</Typography>
+						<Typography variant="h5" color="text.disabled">
+							+
+						</Typography>
 					</Grid>
 					<Grid item xs={12} md={3}>
 						<TextField
@@ -313,10 +334,14 @@ const ConfiguracionTab = () => {
 						/>
 					</Grid>
 					<Grid item xs={12} md={1} sx={{ textAlign: "center" }}>
-						<Typography variant="h5" color="text.disabled">=</Typography>
+						<Typography variant="h5" color="text.disabled">
+							=
+						</Typography>
 					</Grid>
 					<Grid item xs={12} md={4}>
-						<Typography variant="caption" color="text.secondary">Ceiling actual</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Ceiling actual
+						</Typography>
 						<Typography variant="h5" fontFamily="monospace" color={hayMas ? "warning.main" : "text.disabled"}>
 							{frontierCeiling}
 						</Typography>
@@ -331,7 +356,9 @@ const ConfiguracionTab = () => {
 				<Divider sx={{ my: 2 }} />
 				<Grid container spacing={3}>
 					<Grid item xs={12} md={4}>
-						<Typography variant="caption" color="text.secondary">Desde (último rastreado)</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Desde (último rastreado)
+						</Typography>
 						<Typography variant="h6" fontFamily="monospace">
 							{config.ultimoCodigoRastreado?.codigo || "-"}
 						</Typography>
@@ -340,7 +367,9 @@ const ConfiguracionTab = () => {
 						</Typography>
 					</Grid>
 					<Grid item xs={12} md={4}>
-						<Typography variant="caption" color="text.secondary">Rango inicio (manual)</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Rango inicio (manual)
+						</Typography>
 						<Box mt={0.5}>
 							<TextField
 								size="small"
@@ -353,7 +382,9 @@ const ConfiguracionTab = () => {
 						</Box>
 					</Grid>
 					<Grid item xs={12} md={4}>
-						<Typography variant="caption" color="text.secondary">Rango límite (scraping worker)</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Rango límite (scraping worker)
+						</Typography>
 						<Typography variant="h6" fontFamily="monospace" color="text.secondary">
 							{config.rangoLimite?.codigo || "-"}
 						</Typography>
@@ -454,7 +485,9 @@ const ConfiguracionTab = () => {
 						/>
 					</Grid>
 					<Grid item xs={12} md={3}>
-						<Typography variant="caption" color="text.secondary">Última Ejecución</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Última Ejecución
+						</Typography>
 						<Typography variant="body2">{formatDate(config.rescan?.ultimaEjecucion)}</Typography>
 					</Grid>
 				</Grid>
@@ -462,7 +495,9 @@ const ConfiguracionTab = () => {
 
 			{/* Estadísticas */}
 			<Card sx={{ p: 3 }}>
-				<Typography variant="h6" gutterBottom>Estadísticas</Typography>
+				<Typography variant="h6" gutterBottom>
+					Estadísticas
+				</Typography>
 				<Divider sx={{ mb: 2 }} />
 				<Grid container spacing={3}>
 					<Grid item xs={6} md={3}>
@@ -470,7 +505,9 @@ const ConfiguracionTab = () => {
 							<Typography variant="h4" color="primary.main">
 								{config.estadisticas?.totalCodigosRastreados?.toLocaleString() || 0}
 							</Typography>
-							<Typography variant="caption" color="text.secondary">Total Rastreados</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Total Rastreados
+							</Typography>
 						</Card>
 					</Grid>
 					<Grid item xs={6} md={3}>
@@ -478,7 +515,9 @@ const ConfiguracionTab = () => {
 							<Typography variant="h4" color="success.main">
 								{config.estadisticas?.codigosValidosEncontrados?.toLocaleString() || 0}
 							</Typography>
-							<Typography variant="caption" color="text.secondary">PDFs Válidos Encontrados</Typography>
+							<Typography variant="caption" color="text.secondary">
+								PDFs Válidos Encontrados
+							</Typography>
 						</Card>
 					</Grid>
 					<Grid item xs={6} md={3}>
@@ -486,7 +525,9 @@ const ConfiguracionTab = () => {
 							<Typography variant="body1" color="info.main" fontWeight={600}>
 								{formatDate(config.estadisticas?.ultimaEjecucion)}
 							</Typography>
-							<Typography variant="caption" color="text.secondary">Última Ejecución</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Última Ejecución
+							</Typography>
 						</Card>
 					</Grid>
 					<Grid item xs={6} md={3}>
@@ -494,7 +535,9 @@ const ConfiguracionTab = () => {
 							<Typography variant="body1" color="warning.main" fontWeight={600}>
 								{formatDuration(config.estadisticas?.duracionUltimaEjecucion)}
 							</Typography>
-							<Typography variant="caption" color="text.secondary">Duración Última Ejecución</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Duración Última Ejecución
+							</Typography>
 						</Card>
 					</Grid>
 				</Grid>
@@ -502,24 +545,33 @@ const ConfiguracionTab = () => {
 
 			{/* Info del Sistema */}
 			<Card sx={{ p: 3 }}>
-				<Typography variant="h6" gutterBottom>Información del Sistema</Typography>
+				<Typography variant="h6" gutterBottom>
+					Información del Sistema
+				</Typography>
 				<Divider sx={{ mb: 2 }} />
 				<Grid container spacing={2}>
 					<Grid item xs={12} md={6}>
-						<Typography variant="caption" color="text.secondary">ID de Configuración</Typography>
-						<Typography variant="body2" fontFamily="monospace">{config._id}</Typography>
+						<Typography variant="caption" color="text.secondary">
+							ID de Configuración
+						</Typography>
+						<Typography variant="body2" fontFamily="monospace">
+							{config._id}
+						</Typography>
 					</Grid>
 					<Grid item xs={12} md={3}>
-						<Typography variant="caption" color="text.secondary">Creado</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Creado
+						</Typography>
 						<Typography variant="body2">{formatDate(config.createdAt)}</Typography>
 					</Grid>
 					<Grid item xs={12} md={3}>
-						<Typography variant="caption" color="text.secondary">Última Actualización</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Última Actualización
+						</Typography>
 						<Typography variant="body2">{formatDate(config.updatedAt)}</Typography>
 					</Grid>
 				</Grid>
 			</Card>
-
 		</Stack>
 	);
 };

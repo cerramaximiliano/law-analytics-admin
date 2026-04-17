@@ -194,9 +194,18 @@ const ChatEditorTab = () => {
 		if (!editorConfig) return;
 
 		const parsed = v.type === "float" ? parseFloat(editValue) : parseInt(editValue, 10);
-		if (isNaN(parsed)) { enqueueSnackbar("Valor invalido", { variant: "error" }); return; }
-		if (v.min !== undefined && parsed < v.min) { enqueueSnackbar(`Valor minimo: ${v.min}`, { variant: "warning" }); return; }
-		if (v.max !== undefined && parsed > v.max) { enqueueSnackbar(`Valor maximo: ${v.max}`, { variant: "warning" }); return; }
+		if (isNaN(parsed)) {
+			enqueueSnackbar("Valor invalido", { variant: "error" });
+			return;
+		}
+		if (v.min !== undefined && parsed < v.min) {
+			enqueueSnackbar(`Valor minimo: ${v.min}`, { variant: "warning" });
+			return;
+		}
+		if (v.max !== undefined && parsed > v.max) {
+			enqueueSnackbar(`Valor maximo: ${v.max}`, { variant: "warning" });
+			return;
+		}
 
 		try {
 			setSaving(true);
@@ -395,10 +404,7 @@ const ChatEditorTab = () => {
 									) : (
 										// Numeric read mode
 										<>
-											<Typography
-												variant="body2"
-												sx={{ fontFamily: "monospace", fontWeight: 600, color: theme.palette.primary.main }}
-											>
+											<Typography variant="body2" sx={{ fontFamily: "monospace", fontWeight: 600, color: theme.palette.primary.main }}>
 												{isSelect ? getSelectLabel(v, currentValue as string | number) : String(currentValue)}
 											</Typography>
 											{v.suffix && (
@@ -428,7 +434,8 @@ const ChatEditorTab = () => {
 							Corpus de Estilo Forense
 						</Typography>
 						<Typography variant="caption" color="text.secondary">
-							Inyecta ejemplos reales de escritura jurídica en el system prompt al usar acciones con "Corpus de estilo" activado (pjn-style-corpus-v2, ~100K vectores).
+							Inyecta ejemplos reales de escritura jurídica en el system prompt al usar acciones con "Corpus de estilo" activado
+							(pjn-style-corpus-v2, ~100K vectores).
 						</Typography>
 					</Stack>
 					<Tooltip title={editorConfig?.styleCorpusEnabled ? "Desactivar corpus" : "Activar corpus"}>
@@ -480,12 +487,7 @@ const ChatEditorTab = () => {
 					</Stack>
 					{!editingPrompt && (
 						<Stack direction="row" spacing={1} alignItems="center">
-							<Chip
-								label={`${editorConfig.systemPrompt?.length ?? 0} chars`}
-								size="small"
-								variant="outlined"
-								sx={{ fontSize: "0.7rem" }}
-							/>
+							<Chip label={`${editorConfig.systemPrompt?.length ?? 0} chars`} size="small" variant="outlined" sx={{ fontSize: "0.7rem" }} />
 							<Tooltip title="Editar">
 								<IconButton size="small" onClick={handleStartEditPrompt}>
 									<Edit2 size={14} />

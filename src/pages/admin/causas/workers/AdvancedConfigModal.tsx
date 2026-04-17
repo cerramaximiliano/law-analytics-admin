@@ -249,12 +249,18 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 				probe_offsets: offsets,
 			});
 			if (response.success) {
-				enqueueSnackbar("Configuración de probe actualizada", { variant: "success", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+				enqueueSnackbar("Configuración de probe actualizada", {
+					variant: "success",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
 				onUpdate();
 				onClose();
 			}
 		} catch (error: any) {
-			enqueueSnackbar(error.response?.data?.message || error.message || "Error al actualizar", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+			enqueueSnackbar(error.response?.data?.message || error.message || "Error al actualizar", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
 		} finally {
 			setLoading(false);
 		}
@@ -266,12 +272,18 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 			const configId = getConfigId();
 			const response = await WorkersService.updateScrapingProbeConfig(configId, { reset_pause: true });
 			if (response.success) {
-				enqueueSnackbar("Pausa de frontera eliminada — worker retomará en el próximo ciclo", { variant: "success", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+				enqueueSnackbar("Pausa de frontera eliminada — worker retomará en el próximo ciclo", {
+					variant: "success",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
 				onUpdate();
 				onClose();
 			}
 		} catch (error: any) {
-			enqueueSnackbar(error.response?.data?.message || error.message || "Error al resetear pausa", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+			enqueueSnackbar(error.response?.data?.message || error.message || "Error al resetear pausa", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
 		} finally {
 			setLoading(false);
 		}
@@ -522,109 +534,108 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 						</Box>
 
 						{/* Tab Panel: Frontera / Probe */}
-						{showProbeTab && (() => {
-							const probeTabIndex = showRangeTab ? 2 : 1;
-							const probe = config.current_year_probe;
-							const pausedUntil = probe?.paused_until
-								? typeof probe.paused_until === "string"
-									? new Date(probe.paused_until)
-									: new Date((probe.paused_until as any).$date)
-								: null;
-							const workerIsPaused = pausedUntil ? pausedUntil > new Date() : false;
-							return (
-								<Box sx={{ display: activeTab === probeTabIndex ? "block" : "none", pt: 2 }}>
-									<Stack spacing={2}>
-										{workerIsPaused && pausedUntil && (
-											<Alert
-												severity="warning"
-												variant="outlined"
-												action={
-													<Button color="warning" size="small" onClick={handleResetPause} disabled={loading}>
-														Reanudar ahora
-													</Button>
-												}
-											>
-												<Typography variant="body2">
-													Worker pausado por frontera detectada hasta{" "}
-													<strong>{pausedUntil.toLocaleString("es-AR")}</strong>.
-													{probe?.estimated_frontier && (
-														<> Frontera estimada en expediente <strong>{probe.estimated_frontier.toLocaleString()}</strong>.</>
-													)}
-												</Typography>
-											</Alert>
-										)}
+						{showProbeTab &&
+							(() => {
+								const probeTabIndex = showRangeTab ? 2 : 1;
+								const probe = config.current_year_probe;
+								const pausedUntil = probe?.paused_until
+									? typeof probe.paused_until === "string"
+										? new Date(probe.paused_until)
+										: new Date((probe.paused_until as any).$date)
+									: null;
+								const workerIsPaused = pausedUntil ? pausedUntil > new Date() : false;
+								return (
+									<Box sx={{ display: activeTab === probeTabIndex ? "block" : "none", pt: 2 }}>
+										<Stack spacing={2}>
+											{workerIsPaused && pausedUntil && (
+												<Alert
+													severity="warning"
+													variant="outlined"
+													action={
+														<Button color="warning" size="small" onClick={handleResetPause} disabled={loading}>
+															Reanudar ahora
+														</Button>
+													}
+												>
+													<Typography variant="body2">
+														Worker pausado por frontera detectada hasta <strong>{pausedUntil.toLocaleString("es-AR")}</strong>.
+														{probe?.estimated_frontier && (
+															<>
+																{" "}
+																Frontera estimada en expediente <strong>{probe.estimated_frontier.toLocaleString()}</strong>.
+															</>
+														)}
+													</Typography>
+												</Alert>
+											)}
 
-										{probe?.last_probe_at && (
+											{probe?.last_probe_at && (
+												<Alert severity="info" variant="outlined">
+													<Typography variant="body2">
+														Último sondeo:{" "}
+														<strong>
+															{new Date(
+																typeof probe.last_probe_at === "string" ? probe.last_probe_at : (probe.last_probe_at as any).$date,
+															).toLocaleString("es-AR")}
+														</strong>
+														{probe.last_probe_result && <> — {probe.last_probe_result}</>}
+													</Typography>
+												</Alert>
+											)}
+
+											<Divider />
+
+											<Box>
+												<Typography variant="subtitle2" gutterBottom>
+													Umbral de no-encontrados consecutivos para disparar sondeo
+												</Typography>
+												<TextField
+													type="number"
+													value={probeData.threshold_str}
+													onChange={(e) => setProbeData((p) => ({ ...p, threshold_str: e.target.value }))}
+													inputProps={{ min: 1 }}
+													helperText="El worker sondea cuando acumula esta cantidad de not-founds seguidos (default: 50)"
+													sx={{ maxWidth: 200 }}
+												/>
+											</Box>
+
+											<Box>
+												<Typography variant="subtitle2" gutterBottom>
+													Offsets de sondeo (separados por coma)
+												</Typography>
+												<TextField
+													fullWidth
+													value={probeData.probe_offsets_str}
+													onChange={(e) => setProbeData((p) => ({ ...p, probe_offsets_str: e.target.value }))}
+													helperText="Números a sondear por delante del actual (ej: 200, 1000, 5000)"
+													error={parseProbeOffsets() === null && probeData.probe_offsets_str.trim() !== ""}
+												/>
+											</Box>
+
+											<Box>
+												<Typography variant="subtitle2" gutterBottom>
+													Horas de pausa al detectar frontera real
+												</Typography>
+												<TextField
+													type="number"
+													value={probeData.check_interval_hours_str}
+													onChange={(e) => setProbeData((p) => ({ ...p, check_interval_hours_str: e.target.value }))}
+													inputProps={{ min: 0.5, step: 0.5 }}
+													helperText="Tiempo que el worker espera antes de reintentar tras detectar la frontera (default: 6)"
+													sx={{ maxWidth: 200 }}
+												/>
+											</Box>
+
 											<Alert severity="info" variant="outlined">
 												<Typography variant="body2">
-													Último sondeo:{" "}
-													<strong>
-														{new Date(
-															typeof probe.last_probe_at === "string"
-																? probe.last_probe_at
-																: (probe.last_probe_at as any).$date,
-														).toLocaleString("es-AR")}
-													</strong>
-													{probe.last_probe_result && (
-														<> — {probe.last_probe_result}</>
-													)}
+													El sondeo aplica solo cuando el worker procesa el <strong>año en curso</strong>. Si encuentra expedientes en los
+													offsets, asume privadas y avanza; si no encuentra nada, detecta la frontera real y pausa.
 												</Typography>
 											</Alert>
-										)}
-
-										<Divider />
-
-										<Box>
-											<Typography variant="subtitle2" gutterBottom>
-												Umbral de no-encontrados consecutivos para disparar sondeo
-											</Typography>
-											<TextField
-												type="number"
-												value={probeData.threshold_str}
-												onChange={(e) => setProbeData((p) => ({ ...p, threshold_str: e.target.value }))}
-												inputProps={{ min: 1 }}
-												helperText="El worker sondea cuando acumula esta cantidad de not-founds seguidos (default: 50)"
-												sx={{ maxWidth: 200 }}
-											/>
-										</Box>
-
-										<Box>
-											<Typography variant="subtitle2" gutterBottom>
-												Offsets de sondeo (separados por coma)
-											</Typography>
-											<TextField
-												fullWidth
-												value={probeData.probe_offsets_str}
-												onChange={(e) => setProbeData((p) => ({ ...p, probe_offsets_str: e.target.value }))}
-												helperText="Números a sondear por delante del actual (ej: 200, 1000, 5000)"
-												error={parseProbeOffsets() === null && probeData.probe_offsets_str.trim() !== ""}
-											/>
-										</Box>
-
-										<Box>
-											<Typography variant="subtitle2" gutterBottom>
-												Horas de pausa al detectar frontera real
-											</Typography>
-											<TextField
-												type="number"
-												value={probeData.check_interval_hours_str}
-												onChange={(e) => setProbeData((p) => ({ ...p, check_interval_hours_str: e.target.value }))}
-												inputProps={{ min: 0.5, step: 0.5 }}
-												helperText="Tiempo que el worker espera antes de reintentar tras detectar la frontera (default: 6)"
-												sx={{ maxWidth: 200 }}
-											/>
-										</Box>
-
-										<Alert severity="info" variant="outlined">
-											<Typography variant="body2">
-												El sondeo aplica solo cuando el worker procesa el <strong>año en curso</strong>. Si encuentra expedientes
-												en los offsets, asume privadas y avanza; si no encuentra nada, detecta la frontera real y pausa.
-											</Typography>
-										</Alert>
-									</Stack>
-								</Box>
-							);
-						})()}
+										</Stack>
+									</Box>
+								);
+							})()}
 					</Box>
 				</Stack>
 			</DialogContent>

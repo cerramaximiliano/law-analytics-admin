@@ -79,9 +79,27 @@ const EscritosWorkerPage = () => {
 							>
 								100.111.73.56
 							</Box>
-							<Chip label="pjn-style-corpus-v2 · global-chunks" size="small" color="secondary" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
-							<Chip label="GlobalDocument · Atlas" size="small" color="info" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
-							<Chip label="CausasCIV/CNT/CSS/COM · local" size="small" color="default" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
+							<Chip
+								label="pjn-style-corpus-v2 · global-chunks"
+								size="small"
+								color="secondary"
+								variant="outlined"
+								sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+							/>
+							<Chip
+								label="GlobalDocument · Atlas"
+								size="small"
+								color="info"
+								variant="outlined"
+								sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+							/>
+							<Chip
+								label="CausasCIV/CNT/CSS/COM · local"
+								size="small"
+								color="default"
+								variant="outlined"
+								sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+							/>
 						</Stack>
 					</Stack>
 				</Box>
@@ -108,7 +126,9 @@ const EscritosWorkerPage = () => {
 									label={
 										<Stack direction="row" spacing={1} alignItems="center">
 											<Box sx={{ color: theme.palette.primary.main, display: "flex" }}>{tab.icon}</Box>
-											<Typography variant="body2" fontWeight={500}>{tab.label}</Typography>
+											<Typography variant="body2" fontWeight={500}>
+												{tab.label}
+											</Typography>
 										</Stack>
 									}
 									value={tab.value}

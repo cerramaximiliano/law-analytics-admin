@@ -38,12 +38,7 @@ import {
 } from "@mui/material";
 import { Refresh, TickCircle, CloseCircle, SearchNormal1, Setting2, DocumentText, Chart, Lock1 } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import RagWorkersService, {
-	EscritosWorkerConfig,
-	EscritosWorkerStats,
-	GlobalDocumentEntry,
-	EscritosSearchResult,
-} from "api/ragWorkers";
+import RagWorkersService, { EscritosWorkerConfig, EscritosWorkerStats, GlobalDocumentEntry, EscritosSearchResult } from "api/ragWorkers";
 import WorkerControlPanel from "components/WorkerControlPanel";
 
 // ── Constantes ───────────────────────────────────────────────────────────────
@@ -52,16 +47,27 @@ const ALL_FUEROS = ["CIV", "CNT", "CSS", "COM"];
 const FUERO_LABELS: Record<string, string> = { CIV: "Civil", CNT: "Trabajo", CSS: "Seg. Social", COM: "Comercial" };
 
 const ALL_DOC_TYPES = [
-	"demanda", "contestacion_demanda", "reconvencion",
-	"expresion_agravios", "contestacion_agravios",
-	"recurso_extraordinario", "sentencia",
+	"demanda",
+	"contestacion_demanda",
+	"reconvencion",
+	"expresion_agravios",
+	"contestacion_agravios",
+	"recurso_extraordinario",
+	"sentencia",
 ];
 
 const SECTION_TYPES = ["apertura", "hechos", "fundamentos", "petitorio", "body"];
 
 const STATUS_COLORS: Record<string, "default" | "info" | "success" | "warning" | "error"> = {
-	pending: "info", downloading: "info", extracting: "info", extracted: "warning",
-	chunking: "info", chunked: "info", embedding: "info", embedded: "success", error: "error",
+	pending: "info",
+	downloading: "info",
+	extracting: "info",
+	extracted: "warning",
+	chunking: "info",
+	chunked: "info",
+	embedding: "info",
+	embedded: "success",
+	error: "error",
 };
 
 const DOC_STATUS_OPTIONS = ["", "pending", "extracting", "extracted", "embedding", "embedded", "error"];
@@ -73,12 +79,21 @@ const LIMIT = 10;
 function StatCard({ label, value, color, sub }: { label: string; value: number | string; color?: string; sub?: string }) {
 	const theme = useTheme();
 	return (
-		<Paper variant="outlined" sx={{ p: 2, minWidth: 120, borderColor: color ? alpha(color, 0.35) : undefined, bgcolor: color ? alpha(color, 0.04) : undefined }}>
+		<Paper
+			variant="outlined"
+			sx={{ p: 2, minWidth: 120, borderColor: color ? alpha(color, 0.35) : undefined, bgcolor: color ? alpha(color, 0.04) : undefined }}
+		>
 			<Typography variant="h4" fontWeight={700} color={color || "text.primary"}>
 				{typeof value === "number" ? value.toLocaleString("es-AR") : value}
 			</Typography>
-			<Typography variant="caption" color="text.secondary">{label}</Typography>
-			{sub && <Typography variant="caption" color="text.disabled" display="block">{sub}</Typography>}
+			<Typography variant="caption" color="text.secondary">
+				{label}
+			</Typography>
+			{sub && (
+				<Typography variant="caption" color="text.disabled" display="block">
+					{sub}
+				</Typography>
+			)}
 		</Paper>
 	);
 }
@@ -102,7 +117,13 @@ function timeAgo(d?: string): string {
 
 // ── Tab: Config — sección General ────────────────────────────────────────────
 
-function ConfigGeneral({ config, local, patch, toggleFuero, toggleDocType }: {
+function ConfigGeneral({
+	config,
+	local,
+	patch,
+	toggleFuero,
+	toggleDocType,
+}: {
 	config: EscritosWorkerConfig | null;
 	local: Partial<EscritosWorkerConfig>;
 	patch: (k: keyof EscritosWorkerConfig, v: unknown) => void;
@@ -113,44 +134,118 @@ function ConfigGeneral({ config, local, patch, toggleFuero, toggleDocType }: {
 	const enabled = local.enabled ?? config?.enabled ?? false;
 	return (
 		<Stack spacing={3}>
-			<Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: enabled ? alpha(theme.palette.success.main, 0.05) : alpha(theme.palette.error.main, 0.05) }}>
+			<Box
+				sx={{
+					p: 2,
+					borderRadius: 2,
+					border: `1px solid ${theme.palette.divider}`,
+					bgcolor: enabled ? alpha(theme.palette.success.main, 0.05) : alpha(theme.palette.error.main, 0.05),
+				}}
+			>
 				<FormControlLabel
-					control={<Switch checked={enabled} onChange={e => patch("enabled", e.target.checked)} />}
+					control={<Switch checked={enabled} onChange={(e) => patch("enabled", e.target.checked)} />}
 					label={
 						<Box>
 							<Typography fontWeight={600}>{enabled ? "Worker habilitado" : "Worker deshabilitado"}</Typography>
-							<Typography variant="caption" color="text.secondary">Cuando está deshabilitado el cron no encola nuevos escritos</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Cuando está deshabilitado el cron no encola nuevos escritos
+							</Typography>
 						</Box>
 					}
 				/>
 			</Box>
 
 			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-				<TextField label="Cron de escaneo" value={local.scanCron ?? config?.scanCron ?? ""} onChange={e => patch("scanCron", e.target.value)} helperText="Requiere reinicio del worker" size="small" sx={{ flex: 1 }} />
-				<TextField label="Concurrencia" type="number" value={local.concurrency ?? config?.concurrency ?? 3} onChange={e => patch("concurrency", parseInt(e.target.value, 10))} helperText="Workers simultáneos (1-20)" size="small" inputProps={{ min: 1, max: 20 }} sx={{ flex: 1 }} />
-				<TextField label="Tamaño máx. PDF (MB)" type="number" value={local.maxPdfSizeMb ?? config?.maxPdfSizeMb ?? 25} onChange={e => patch("maxPdfSizeMb", parseInt(e.target.value, 10))} helperText="PDFs más grandes se ignoran" size="small" inputProps={{ min: 1, max: 100 }} sx={{ flex: 1 }} />
-				<TextField label="Año mínimo" type="number" value={local.minYear ?? config?.minYear ?? 2023} onChange={e => patch("minYear", parseInt(e.target.value, 10))} helperText="Solo causas desde este año" size="small" inputProps={{ min: 2000, max: new Date().getFullYear() }} sx={{ flex: 1 }} />
+				<TextField
+					label="Cron de escaneo"
+					value={local.scanCron ?? config?.scanCron ?? ""}
+					onChange={(e) => patch("scanCron", e.target.value)}
+					helperText="Requiere reinicio del worker"
+					size="small"
+					sx={{ flex: 1 }}
+				/>
+				<TextField
+					label="Concurrencia"
+					type="number"
+					value={local.concurrency ?? config?.concurrency ?? 3}
+					onChange={(e) => patch("concurrency", parseInt(e.target.value, 10))}
+					helperText="Workers simultáneos (1-20)"
+					size="small"
+					inputProps={{ min: 1, max: 20 }}
+					sx={{ flex: 1 }}
+				/>
+				<TextField
+					label="Tamaño máx. PDF (MB)"
+					type="number"
+					value={local.maxPdfSizeMb ?? config?.maxPdfSizeMb ?? 25}
+					onChange={(e) => patch("maxPdfSizeMb", parseInt(e.target.value, 10))}
+					helperText="PDFs más grandes se ignoran"
+					size="small"
+					inputProps={{ min: 1, max: 100 }}
+					sx={{ flex: 1 }}
+				/>
+				<TextField
+					label="Año mínimo"
+					type="number"
+					value={local.minYear ?? config?.minYear ?? 2023}
+					onChange={(e) => patch("minYear", parseInt(e.target.value, 10))}
+					helperText="Solo causas desde este año"
+					size="small"
+					inputProps={{ min: 2000, max: new Date().getFullYear() }}
+					sx={{ flex: 1 }}
+				/>
 			</Stack>
 
-			<TextField label="Pausar hasta" type="datetime-local" value={local.pauseUntil ? new Date(local.pauseUntil).toISOString().slice(0, 16) : ""}
-				onChange={e => patch("pauseUntil", e.target.value ? new Date(e.target.value).toISOString() : null)}
-				helperText="Dejar vacío para no pausar" size="small" InputLabelProps={{ shrink: true }} sx={{ maxWidth: 300 }} />
+			<TextField
+				label="Pausar hasta"
+				type="datetime-local"
+				value={local.pauseUntil ? new Date(local.pauseUntil).toISOString().slice(0, 16) : ""}
+				onChange={(e) => patch("pauseUntil", e.target.value ? new Date(e.target.value).toISOString() : null)}
+				helperText="Dejar vacío para no pausar"
+				size="small"
+				InputLabelProps={{ shrink: true }}
+				sx={{ maxWidth: 300 }}
+			/>
 
 			<Box>
-				<Typography variant="body2" fontWeight={600} mb={1}>Fueros activos</Typography>
+				<Typography variant="body2" fontWeight={600} mb={1}>
+					Fueros activos
+				</Typography>
 				<FormGroup row>
-					{ALL_FUEROS.map(f => (
-						<FormControlLabel key={f} control={<Checkbox checked={(local.activeFueros ?? config?.activeFueros ?? []).includes(f)} onChange={() => toggleFuero(f)} size="small" />} label={FUERO_LABELS[f] || f} />
+					{ALL_FUEROS.map((f) => (
+						<FormControlLabel
+							key={f}
+							control={
+								<Checkbox
+									checked={(local.activeFueros ?? config?.activeFueros ?? []).includes(f)}
+									onChange={() => toggleFuero(f)}
+									size="small"
+								/>
+							}
+							label={FUERO_LABELS[f] || f}
+						/>
 					))}
 				</FormGroup>
 			</Box>
 
 			<Box>
-				<Typography variant="body2" fontWeight={600} mb={1}>Tipos de documento</Typography>
+				<Typography variant="body2" fontWeight={600} mb={1}>
+					Tipos de documento
+				</Typography>
 				<Stack direction="row" flexWrap="wrap" gap={1}>
-					{ALL_DOC_TYPES.map(dt => {
+					{ALL_DOC_TYPES.map((dt) => {
 						const active = (local.relevantDocTypes ?? config?.relevantDocTypes ?? []).includes(dt);
-						return <Chip key={dt} label={dt} size="small" variant={active ? "filled" : "outlined"} color={active ? "primary" : "default"} onClick={() => toggleDocType(dt)} sx={{ cursor: "pointer" }} />;
+						return (
+							<Chip
+								key={dt}
+								label={dt}
+								size="small"
+								variant={active ? "filled" : "outlined"}
+								color={active ? "primary" : "default"}
+								onClick={() => toggleDocType(dt)}
+								sx={{ cursor: "pointer" }}
+							/>
+						);
 					})}
 				</Stack>
 			</Box>
@@ -160,7 +255,11 @@ function ConfigGeneral({ config, local, patch, toggleFuero, toggleDocType }: {
 
 // ── Tab: Config — sección Novelty ────────────────────────────────────────────
 
-function ConfigNovelty({ config, local, patch }: {
+function ConfigNovelty({
+	config,
+	local,
+	patch,
+}: {
 	config: EscritosWorkerConfig | null;
 	local: Partial<EscritosWorkerConfig>;
 	patch: (k: keyof EscritosWorkerConfig, v: unknown) => void;
@@ -169,13 +268,24 @@ function ConfigNovelty({ config, local, patch }: {
 	const noveltyEnabled = local.noveltyEnabled ?? config?.noveltyEnabled ?? false;
 	return (
 		<Stack spacing={3}>
-			<Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: noveltyEnabled ? alpha(theme.palette.success.main, 0.05) : alpha(theme.palette.warning.main, 0.04) }}>
+			<Box
+				sx={{
+					p: 2,
+					borderRadius: 2,
+					border: `1px solid ${theme.palette.divider}`,
+					bgcolor: noveltyEnabled ? alpha(theme.palette.success.main, 0.05) : alpha(theme.palette.warning.main, 0.04),
+				}}
+			>
 				<FormControlLabel
-					control={<Switch checked={noveltyEnabled} onChange={e => patch("noveltyEnabled", e.target.checked)} />}
+					control={<Switch checked={noveltyEnabled} onChange={(e) => patch("noveltyEnabled", e.target.checked)} />}
 					label={
 						<Box>
-							<Typography fontWeight={600}>{noveltyEnabled ? "Novelty detection habilitado" : "Novelty detection deshabilitado"}</Typography>
-							<Typography variant="caption" color="text.secondary">Cuando está deshabilitado, los docs se marcan como 'skipped'</Typography>
+							<Typography fontWeight={600}>
+								{noveltyEnabled ? "Novelty detection habilitado" : "Novelty detection deshabilitado"}
+							</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Cuando está deshabilitado, los docs se marcan como 'skipped'
+							</Typography>
 						</Box>
 					}
 				/>
@@ -184,21 +294,65 @@ function ConfigNovelty({ config, local, patch }: {
 			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
 				<FormControl size="small" sx={{ flex: 1 }}>
 					<InputLabel>Estrategia</InputLabel>
-					<Select label="Estrategia" value={local.noveltyStrategy ?? config?.noveltyStrategy ?? "A"} onChange={e => patch("noveltyStrategy", e.target.value)}>
+					<Select
+						label="Estrategia"
+						value={local.noveltyStrategy ?? config?.noveltyStrategy ?? "A"}
+						onChange={(e) => patch("noveltyStrategy", e.target.value)}
+					>
 						<MenuItem value="A">A — Prioridad por sección (fundamentos › hechos › body)</MenuItem>
 						<MenuItem value="B">B — Zona de argumentos (todo excepto apertura/petitorio)</MenuItem>
 					</Select>
 				</FormControl>
-				<TextField label="TopK vecinos" type="number" value={local.noveltyTopK ?? config?.noveltyTopK ?? 5} onChange={e => patch("noveltyTopK", parseInt(e.target.value, 10))} helperText="Vecinos en Pinecone (1-20)" size="small" inputProps={{ min: 1, max: 20 }} sx={{ flex: 1 }} />
-				<TextField label="Máx. chunks" type="number" value={local.noveltyMaxChunks ?? config?.noveltyMaxChunks ?? 4} onChange={e => patch("noveltyMaxChunks", parseInt(e.target.value, 10))} helperText="Chunks a analizar (1-10)" size="small" inputProps={{ min: 1, max: 10 }} sx={{ flex: 1 }} />
+				<TextField
+					label="TopK vecinos"
+					type="number"
+					value={local.noveltyTopK ?? config?.noveltyTopK ?? 5}
+					onChange={(e) => patch("noveltyTopK", parseInt(e.target.value, 10))}
+					helperText="Vecinos en Pinecone (1-20)"
+					size="small"
+					inputProps={{ min: 1, max: 20 }}
+					sx={{ flex: 1 }}
+				/>
+				<TextField
+					label="Máx. chunks"
+					type="number"
+					value={local.noveltyMaxChunks ?? config?.noveltyMaxChunks ?? 4}
+					onChange={(e) => patch("noveltyMaxChunks", parseInt(e.target.value, 10))}
+					helperText="Chunks a analizar (1-10)"
+					size="small"
+					inputProps={{ min: 1, max: 10 }}
+					sx={{ flex: 1 }}
+				/>
 			</Stack>
 
 			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-				<TextField label="Umbral review (p75)" type="number" value={local.noveltyThresholdTrack ?? config?.noveltyThresholdTrack ?? 0.194} onChange={e => patch("noveltyThresholdTrack", parseFloat(e.target.value))} helperText="Score mínimo para 'review'" size="small" inputProps={{ min: 0, max: 1, step: 0.001 }} sx={{ flex: 1 }} />
-				<TextField label="Umbral alert (p90)" type="number" value={local.noveltyThresholdAlert ?? config?.noveltyThresholdAlert ?? 0.234} onChange={e => patch("noveltyThresholdAlert", parseFloat(e.target.value))} helperText="Score mínimo para 'alert'" size="small" inputProps={{ min: 0, max: 1, step: 0.001 }} sx={{ flex: 1 }} />
+				<TextField
+					label="Umbral review (p75)"
+					type="number"
+					value={local.noveltyThresholdTrack ?? config?.noveltyThresholdTrack ?? 0.194}
+					onChange={(e) => patch("noveltyThresholdTrack", parseFloat(e.target.value))}
+					helperText="Score mínimo para 'review'"
+					size="small"
+					inputProps={{ min: 0, max: 1, step: 0.001 }}
+					sx={{ flex: 1 }}
+				/>
+				<TextField
+					label="Umbral alert (p90)"
+					type="number"
+					value={local.noveltyThresholdAlert ?? config?.noveltyThresholdAlert ?? 0.234}
+					onChange={(e) => patch("noveltyThresholdAlert", parseFloat(e.target.value))}
+					helperText="Score mínimo para 'alert'"
+					size="small"
+					inputProps={{ min: 0, max: 1, step: 0.001 }}
+					sx={{ flex: 1 }}
+				/>
 				<FormControl size="small" sx={{ flex: 1 }}>
 					<InputLabel>Auto-tracking</InputLabel>
-					<Select label="Auto-tracking" value={local.noveltyAutoTrackLabel ?? config?.noveltyAutoTrackLabel ?? "alert"} onChange={e => patch("noveltyAutoTrackLabel", e.target.value)}>
+					<Select
+						label="Auto-tracking"
+						value={local.noveltyAutoTrackLabel ?? config?.noveltyAutoTrackLabel ?? "alert"}
+						onChange={(e) => patch("noveltyAutoTrackLabel", e.target.value)}
+					>
 						<MenuItem value="review">review — score ≥ p75</MenuItem>
 						<MenuItem value="alert">alert — score ≥ p90 (default)</MenuItem>
 					</Select>
@@ -206,22 +360,36 @@ function ConfigNovelty({ config, local, patch }: {
 			</Stack>
 
 			<FormControlLabel
-				control={<Checkbox checked={local.noveltySameDoctypeFilter ?? config?.noveltySameDoctypeFilter ?? true} onChange={e => patch("noveltySameDoctypeFilter", e.target.checked)} size="small" />}
+				control={
+					<Checkbox
+						checked={local.noveltySameDoctypeFilter ?? config?.noveltySameDoctypeFilter ?? true}
+						onChange={(e) => patch("noveltySameDoctypeFilter", e.target.checked)}
+						size="small"
+					/>
+				}
 				label={<Typography variant="body2">Comparar solo contra documentos del mismo tipo</Typography>}
 			/>
 
 			<Box>
-				<Typography variant="body2" fontWeight={600} mb={1}>DocTypes para novelty</Typography>
+				<Typography variant="body2" fontWeight={600} mb={1}>
+					DocTypes para novelty
+				</Typography>
 				<Stack direction="row" flexWrap="wrap" gap={1}>
-					{ALL_DOC_TYPES.map(dt => {
+					{ALL_DOC_TYPES.map((dt) => {
 						const active = (local.noveltyDocTypes ?? config?.noveltyDocTypes ?? []).includes(dt);
 						return (
-							<Chip key={dt} label={dt} size="small" variant={active ? "filled" : "outlined"} color={active ? "secondary" : "default"}
+							<Chip
+								key={dt}
+								label={dt}
+								size="small"
+								variant={active ? "filled" : "outlined"}
+								color={active ? "secondary" : "default"}
 								onClick={() => {
 									const cur = local.noveltyDocTypes ?? config?.noveltyDocTypes ?? [];
-									patch("noveltyDocTypes", active ? cur.filter(x => x !== dt) : [...cur, dt]);
+									patch("noveltyDocTypes", active ? cur.filter((x) => x !== dt) : [...cur, dt]);
 								}}
-								sx={{ cursor: "pointer" }} />
+								sx={{ cursor: "pointer" }}
+							/>
 						);
 					})}
 				</Stack>
@@ -245,36 +413,56 @@ function ConfigSection() {
 		setLoading(true);
 		try {
 			const data = await RagWorkersService.getEscritosWorkerConfig();
-			setConfig(data); setLocal(data); setDirty(false);
-		} catch { enqueueSnackbar("Error al cargar configuración", { variant: "error" }); }
-		finally { setLoading(false); }
+			setConfig(data);
+			setLocal(data);
+			setDirty(false);
+		} catch {
+			enqueueSnackbar("Error al cargar configuración", { variant: "error" });
+		} finally {
+			setLoading(false);
+		}
 	}, [enqueueSnackbar]);
 
-	useEffect(() => { load(); }, [load]);
+	useEffect(() => {
+		load();
+	}, [load]);
 
 	function patch(key: keyof EscritosWorkerConfig, value: unknown) {
-		setLocal(p => ({ ...p, [key]: value })); setDirty(true);
+		setLocal((p) => ({ ...p, [key]: value }));
+		setDirty(true);
 	}
 	function toggleFuero(f: string) {
 		const cur = local.activeFueros ?? config?.activeFueros ?? [];
-		patch("activeFueros", cur.includes(f) ? cur.filter(x => x !== f) : [...cur, f]);
+		patch("activeFueros", cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f]);
 	}
 	function toggleDocType(dt: string) {
 		const cur = local.relevantDocTypes ?? config?.relevantDocTypes ?? [];
-		patch("relevantDocTypes", cur.includes(dt) ? cur.filter(x => x !== dt) : [...cur, dt]);
+		patch("relevantDocTypes", cur.includes(dt) ? cur.filter((x) => x !== dt) : [...cur, dt]);
 	}
 
 	async function save() {
 		setSaving(true);
 		try {
 			const saved = await RagWorkersService.updateEscritosWorkerConfig(local);
-			setConfig(saved); setLocal(saved); setDirty(false);
+			setConfig(saved);
+			setLocal(saved);
+			setDirty(false);
 			enqueueSnackbar("Configuración guardada", { variant: "success" });
-		} catch { enqueueSnackbar("Error al guardar", { variant: "error" }); }
-		finally { setSaving(false); }
+		} catch {
+			enqueueSnackbar("Error al guardar", { variant: "error" });
+		} finally {
+			setSaving(false);
+		}
 	}
 
-	if (loading) return <Stack spacing={2}>{[...Array(4)].map((_, i) => <Skeleton key={i} variant="rounded" height={56} />)}</Stack>;
+	if (loading)
+		return (
+			<Stack spacing={2}>
+				{[...Array(4)].map((_, i) => (
+					<Skeleton key={i} variant="rounded" height={56} />
+				))}
+			</Stack>
+		);
 
 	return (
 		<Stack spacing={3}>
@@ -285,7 +473,9 @@ function ConfigSection() {
 					value={subTab}
 					onChange={(_, v) => setSubTab(v)}
 					sx={{
-						borderRight: 1, borderColor: "divider", minWidth: 140,
+						borderRight: 1,
+						borderColor: "divider",
+						minWidth: 140,
 						"& .MuiTab-root": { alignItems: "flex-start", textTransform: "none", minHeight: 44, px: 2 },
 					}}
 				>
@@ -295,7 +485,9 @@ function ConfigSection() {
 
 				{/* Contenido */}
 				<Box sx={{ flex: 1 }}>
-					{subTab === "general" && <ConfigGeneral config={config} local={local} patch={patch} toggleFuero={toggleFuero} toggleDocType={toggleDocType} />}
+					{subTab === "general" && (
+						<ConfigGeneral config={config} local={local} patch={patch} toggleFuero={toggleFuero} toggleDocType={toggleDocType} />
+					)}
 					{subTab === "novelty" && <ConfigNovelty config={config} local={local} patch={patch} />}
 				</Box>
 			</Box>
@@ -307,11 +499,23 @@ function ConfigSection() {
 					{saving ? "Guardando..." : "Guardar cambios"}
 				</Button>
 				{dirty && (
-					<Button variant="outlined" color="inherit" onClick={() => { setLocal(config || {}); setDirty(false); }} startIcon={<CloseCircle size={18} />}>
+					<Button
+						variant="outlined"
+						color="inherit"
+						onClick={() => {
+							setLocal(config || {});
+							setDirty(false);
+						}}
+						startIcon={<CloseCircle size={18} />}
+					>
 						Descartar
 					</Button>
 				)}
-				{dirty && <Alert severity="warning" sx={{ py: 0.5, px: 1 }}>Cambios sin guardar</Alert>}
+				{dirty && (
+					<Alert severity="warning" sx={{ py: 0.5, px: 1 }}>
+						Cambios sin guardar
+					</Alert>
+				)}
 			</Stack>
 		</Stack>
 	);
@@ -333,28 +537,49 @@ function ResumenSection() {
 
 	const loadStats = useCallback(async () => {
 		setStatsLoading(true);
-		try { setStats(await RagWorkersService.getEscritosWorkerStats()); }
-		catch { enqueueSnackbar("Error al cargar estadísticas", { variant: "error" }); }
-		finally { setStatsLoading(false); }
+		try {
+			setStats(await RagWorkersService.getEscritosWorkerStats());
+		} catch {
+			enqueueSnackbar("Error al cargar estadísticas", { variant: "error" });
+		} finally {
+			setStatsLoading(false);
+		}
 	}, [enqueueSnackbar]);
 
 	const loadDocs = useCallback(async () => {
 		setDocsLoading(true);
 		try {
-			const data = await RagWorkersService.getEscritosWorkerDocuments({ status: filterStatus || undefined, fuero: filterFuero || undefined, page, limit: LIMIT });
-			setDocs(data.docs); setHasMore(data.pagination.hasMore);
-		} catch { enqueueSnackbar("Error al cargar documentos", { variant: "error" }); }
-		finally { setDocsLoading(false); }
+			const data = await RagWorkersService.getEscritosWorkerDocuments({
+				status: filterStatus || undefined,
+				fuero: filterFuero || undefined,
+				page,
+				limit: LIMIT,
+			});
+			setDocs(data.docs);
+			setHasMore(data.pagination.hasMore);
+		} catch {
+			enqueueSnackbar("Error al cargar documentos", { variant: "error" });
+		} finally {
+			setDocsLoading(false);
+		}
 	}, [filterStatus, filterFuero, page, enqueueSnackbar]);
 
-	useEffect(() => { loadStats(); }, [loadStats]);
-	useEffect(() => { loadDocs(); }, [loadDocs]);
+	useEffect(() => {
+		loadStats();
+	}, [loadStats]);
+	useEffect(() => {
+		loadDocs();
+	}, [loadDocs]);
 
 	return (
 		<Stack spacing={3}>
 			{/* Stat cards */}
 			{statsLoading ? (
-				<Stack direction="row" spacing={2}>{[...Array(4)].map((_, i) => <Skeleton key={i} variant="rounded" width={130} height={72} />)}</Stack>
+				<Stack direction="row" spacing={2}>
+					{[...Array(4)].map((_, i) => (
+						<Skeleton key={i} variant="rounded" width={130} height={72} />
+					))}
+				</Stack>
 			) : stats ? (
 				<>
 					<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
@@ -379,13 +604,23 @@ function ResumenSection() {
 									return (
 										<Paper key={fuero} variant="outlined" sx={{ p: 1.5, minWidth: 130, flex: "1 1 130px" }}>
 											<Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.75}>
-												<Typography variant="body2" fontWeight={700}>{FUERO_LABELS[fuero] || fuero}</Typography>
-												<Typography variant="caption" color="text.secondary">{pct}%</Typography>
+												<Typography variant="body2" fontWeight={700}>
+													{FUERO_LABELS[fuero] || fuero}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													{pct}%
+												</Typography>
 											</Stack>
 											<LinearProgress variant="determinate" value={pct} sx={{ height: 4, borderRadius: 2, mb: 0.75 }} color="success" />
 											<Stack direction="row" spacing={1}>
-												<Typography variant="caption" color="success.main">{counts.embedded.toLocaleString("es-AR")} ok</Typography>
-												{counts.error > 0 && <Typography variant="caption" color="error.main">{counts.error} err</Typography>}
+												<Typography variant="caption" color="success.main">
+													{counts.embedded.toLocaleString("es-AR")} ok
+												</Typography>
+												{counts.error > 0 && (
+													<Typography variant="caption" color="error.main">
+														{counts.error} err
+													</Typography>
+												)}
 											</Stack>
 										</Paper>
 									);
@@ -401,23 +636,49 @@ function ResumenSection() {
 				<Stack direction="row" spacing={1}>
 					<FormControl size="small" sx={{ minWidth: 130 }}>
 						<InputLabel>Estado</InputLabel>
-						<Select value={filterStatus} label="Estado" onChange={e => { setFilterStatus(e.target.value); setPage(1); }}>
-							{DOC_STATUS_OPTIONS.map(s => <MenuItem key={s} value={s}>{s || "Todos"}</MenuItem>)}
+						<Select
+							value={filterStatus}
+							label="Estado"
+							onChange={(e) => {
+								setFilterStatus(e.target.value);
+								setPage(1);
+							}}
+						>
+							{DOC_STATUS_OPTIONS.map((s) => (
+								<MenuItem key={s} value={s}>
+									{s || "Todos"}
+								</MenuItem>
+							))}
 						</Select>
 					</FormControl>
 					<FormControl size="small" sx={{ minWidth: 110 }}>
 						<InputLabel>Fuero</InputLabel>
-						<Select value={filterFuero} label="Fuero" onChange={e => { setFilterFuero(e.target.value); setPage(1); }}>
+						<Select
+							value={filterFuero}
+							label="Fuero"
+							onChange={(e) => {
+								setFilterFuero(e.target.value);
+								setPage(1);
+							}}
+						>
 							<MenuItem value="">Todos</MenuItem>
-							{ALL_FUEROS.map(f => <MenuItem key={f} value={f}>{FUERO_LABELS[f]}</MenuItem>)}
+							{ALL_FUEROS.map((f) => (
+								<MenuItem key={f} value={f}>
+									{FUERO_LABELS[f]}
+								</MenuItem>
+							))}
 						</Select>
 					</FormControl>
 				</Stack>
-				<Button size="small" startIcon={<Refresh size={16} />} onClick={loadDocs} variant="outlined">Actualizar</Button>
+				<Button size="small" startIcon={<Refresh size={16} />} onClick={loadDocs} variant="outlined">
+					Actualizar
+				</Button>
 			</Stack>
 
 			{/* Tabla */}
-			{docsLoading ? <Skeleton variant="rounded" height={200} /> : (
+			{docsLoading ? (
+				<Skeleton variant="rounded" height={200} />
+			) : (
 				<>
 					<TableContainer component={Paper} variant="outlined">
 						<Table size="small">
@@ -433,34 +694,63 @@ function ResumenSection() {
 							</TableHead>
 							<TableBody>
 								{docs.length === 0 ? (
-									<TableRow><TableCell colSpan={6} align="center"><Typography variant="body2" color="text.secondary" py={2}>No hay documentos</Typography></TableCell></TableRow>
-								) : docs.map(doc => (
-									<TableRow key={doc._id} hover>
-										<TableCell><Typography variant="caption">{doc.docType || doc.movimientoTipo || "-"}</Typography></TableCell>
-										<TableCell><Chip label={doc.fuero || "-"} size="small" variant="outlined" /></TableCell>
-										<TableCell><Chip label={doc.status} size="small" color={STATUS_COLORS[doc.status] || "default"} /></TableCell>
-										<TableCell align="right"><Typography variant="caption">{doc.charCount?.toLocaleString("es-AR") || "-"}</Typography></TableCell>
-										<TableCell align="right"><Typography variant="caption">{doc.chunksCount || "-"}</Typography></TableCell>
-										<TableCell><Typography variant="caption">{fmtDate(doc.updatedAt)}</Typography></TableCell>
+									<TableRow>
+										<TableCell colSpan={6} align="center">
+											<Typography variant="body2" color="text.secondary" py={2}>
+												No hay documentos
+											</Typography>
+										</TableCell>
 									</TableRow>
-								))}
+								) : (
+									docs.map((doc) => (
+										<TableRow key={doc._id} hover>
+											<TableCell>
+												<Typography variant="caption">{doc.docType || doc.movimientoTipo || "-"}</Typography>
+											</TableCell>
+											<TableCell>
+												<Chip label={doc.fuero || "-"} size="small" variant="outlined" />
+											</TableCell>
+											<TableCell>
+												<Chip label={doc.status} size="small" color={STATUS_COLORS[doc.status] || "default"} />
+											</TableCell>
+											<TableCell align="right">
+												<Typography variant="caption">{doc.charCount?.toLocaleString("es-AR") || "-"}</Typography>
+											</TableCell>
+											<TableCell align="right">
+												<Typography variant="caption">{doc.chunksCount || "-"}</Typography>
+											</TableCell>
+											<TableCell>
+												<Typography variant="caption">{fmtDate(doc.updatedAt)}</Typography>
+											</TableCell>
+										</TableRow>
+									))
+								)}
 							</TableBody>
 						</Table>
 					</TableContainer>
 
 					{/* Paginación con números */}
 					<Stack direction="row" justifyContent="center" alignItems="center" spacing={1}>
-						<Button size="small" disabled={page <= 1} onClick={() => setPage(p => p - 1)} variant="outlined" sx={{ minWidth: 36 }}>‹</Button>
+						<Button size="small" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} variant="outlined" sx={{ minWidth: 36 }}>
+							‹
+						</Button>
 						{Array.from({ length: Math.min(page + (hasMore ? 1 : 0), page + 1) }, (_, i) => {
 							const p = Math.max(1, page - 1) + i;
 							return (
-								<Button key={p} size="small" onClick={() => setPage(p)}
+								<Button
+									key={p}
+									size="small"
+									onClick={() => setPage(p)}
 									variant={p === page ? "contained" : "outlined"}
 									sx={{ minWidth: 36, px: 0 }}
-								>{p}</Button>
+								>
+									{p}
+								</Button>
 							);
 						})}
-						<Button size="small" disabled={!hasMore} onClick={() => setPage(p => p + 1)} variant="outlined" sx={{ minWidth: 36 }}>›</Button>
+						<Button size="small" disabled={!hasMore} onClick={() => setPage((p) => p + 1)} variant="outlined" sx={{ minWidth: 36 }}>
+							›
+						</Button>
 					</Stack>
 				</>
 			)}
@@ -485,9 +775,11 @@ function BusquedaSection() {
 
 	async function search() {
 		if (!query.trim() || query.trim().length < 3) {
-			enqueueSnackbar("Ingresá al menos 3 caracteres", { variant: "warning" }); return;
+			enqueueSnackbar("Ingresá al menos 3 caracteres", { variant: "warning" });
+			return;
 		}
-		setLoading(true); setSearched(true);
+		setLoading(true);
+		setSearched(true);
 		try {
 			const { data } = await RagWorkersService.searchEscritosWorker(query, {
 				fuero: filterFuero || undefined,
@@ -497,8 +789,11 @@ function BusquedaSection() {
 				minScore,
 			});
 			setResults(data);
-		} catch { enqueueSnackbar("Error en la búsqueda", { variant: "error" }); }
-		finally { setLoading(false); }
+		} catch {
+			enqueueSnackbar("Error en la búsqueda", { variant: "error" });
+		} finally {
+			setLoading(false);
+		}
 	}
 
 	function scoreColor(score: number) {
@@ -513,26 +808,46 @@ function BusquedaSection() {
 			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
 				<FormControl size="small" sx={{ minWidth: 120 }}>
 					<InputLabel>Fuero</InputLabel>
-					<Select value={filterFuero} label="Fuero" onChange={e => setFilterFuero(e.target.value)}>
+					<Select value={filterFuero} label="Fuero" onChange={(e) => setFilterFuero(e.target.value)}>
 						<MenuItem value="">Todos</MenuItem>
-						{ALL_FUEROS.map(f => <MenuItem key={f} value={f}>{FUERO_LABELS[f]}</MenuItem>)}
+						{ALL_FUEROS.map((f) => (
+							<MenuItem key={f} value={f}>
+								{FUERO_LABELS[f]}
+							</MenuItem>
+						))}
 					</Select>
 				</FormControl>
 				<FormControl size="small" sx={{ minWidth: 180 }}>
 					<InputLabel>Tipo de documento</InputLabel>
-					<Select value={filterDocType} label="Tipo de documento" onChange={e => setFilterDocType(e.target.value)}>
+					<Select value={filterDocType} label="Tipo de documento" onChange={(e) => setFilterDocType(e.target.value)}>
 						<MenuItem value="">Todos</MenuItem>
-						{ALL_DOC_TYPES.map(dt => <MenuItem key={dt} value={dt}>{dt}</MenuItem>)}
+						{ALL_DOC_TYPES.map((dt) => (
+							<MenuItem key={dt} value={dt}>
+								{dt}
+							</MenuItem>
+						))}
 					</Select>
 				</FormControl>
 				<FormControl size="small" sx={{ minWidth: 150 }}>
 					<InputLabel>Sección</InputLabel>
-					<Select value={filterSection} label="Sección" onChange={e => setFilterSection(e.target.value)}>
+					<Select value={filterSection} label="Sección" onChange={(e) => setFilterSection(e.target.value)}>
 						<MenuItem value="">Todas</MenuItem>
-						{SECTION_TYPES.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+						{SECTION_TYPES.map((s) => (
+							<MenuItem key={s} value={s}>
+								{s}
+							</MenuItem>
+						))}
 					</Select>
 				</FormControl>
-				<TextField label="Score mínimo" type="number" size="small" value={minScore} onChange={e => setMinScore(parseFloat(e.target.value))} inputProps={{ min: 0, max: 1, step: 0.05 }} sx={{ width: 130 }} />
+				<TextField
+					label="Score mínimo"
+					type="number"
+					size="small"
+					value={minScore}
+					onChange={(e) => setMinScore(parseFloat(e.target.value))}
+					inputProps={{ min: 0, max: 1, step: 0.05 }}
+					sx={{ width: 130 }}
+				/>
 			</Stack>
 
 			<TextField
@@ -543,8 +858,10 @@ function BusquedaSection() {
 				maxRows={5}
 				placeholder="Ej: responsabilidad objetiva del empleador por accidente de trabajo..."
 				value={query}
-				onChange={e => setQuery(e.target.value)}
-				onKeyDown={e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) search(); }}
+				onChange={(e) => setQuery(e.target.value)}
+				onKeyDown={(e) => {
+					if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) search();
+				}}
 				InputProps={{
 					endAdornment: (
 						<InputAdornment position="end" sx={{ alignSelf: "flex-end", mb: 1 }}>
@@ -557,18 +874,27 @@ function BusquedaSection() {
 				helperText="Ctrl+Enter para buscar"
 			/>
 
-			<Button variant="contained" onClick={search} disabled={loading || query.trim().length < 3} startIcon={<SearchNormal1 size={18} />} sx={{ alignSelf: "flex-start" }}>
+			<Button
+				variant="contained"
+				onClick={search}
+				disabled={loading || query.trim().length < 3}
+				startIcon={<SearchNormal1 size={18} />}
+				sx={{ alignSelf: "flex-start" }}
+			>
 				{loading ? "Buscando..." : "Buscar en escritos"}
 			</Button>
 
 			{loading && <LinearProgress />}
 
-			{!loading && searched && (
-				results.length === 0 ? (
+			{!loading &&
+				searched &&
+				(results.length === 0 ? (
 					<Alert severity="info">No se encontraron resultados. Probá con un query más amplio o bajá el score mínimo.</Alert>
 				) : (
 					<Stack spacing={2}>
-						<Typography variant="caption" color="text.secondary">{results.length} resultado{results.length !== 1 ? "s" : ""}</Typography>
+						<Typography variant="caption" color="text.secondary">
+							{results.length} resultado{results.length !== 1 ? "s" : ""}
+						</Typography>
 						{results.map((r, i) => (
 							<Card key={r.id} variant="outlined">
 								<CardContent sx={{ pb: "12px !important" }}>
@@ -580,7 +906,9 @@ function BusquedaSection() {
 											{r.chunkIndex !== null && <Chip label={`chunk #${r.chunkIndex}`} size="small" variant="outlined" />}
 										</Stack>
 										<Stack direction="row" spacing={1} alignItems="center" flexShrink={0}>
-											<Typography variant="caption" color="text.secondary">#{i + 1}</Typography>
+											<Typography variant="caption" color="text.secondary">
+												#{i + 1}
+											</Typography>
 											<Chip
 												label={r.score.toFixed(3)}
 												size="small"
@@ -593,15 +921,17 @@ function BusquedaSection() {
 											Causa: <code>{r.causeId}</code>
 										</Typography>
 									)}
-									<Typography variant="body2" sx={{ whiteSpace: "pre-wrap", fontSize: "0.8rem", color: "text.secondary", maxHeight: 200, overflow: "auto" }}>
+									<Typography
+										variant="body2"
+										sx={{ whiteSpace: "pre-wrap", fontSize: "0.8rem", color: "text.secondary", maxHeight: 200, overflow: "auto" }}
+									>
 										{r.preview || "(sin preview)"}
 									</Typography>
 								</CardContent>
 							</Card>
 						))}
 					</Stack>
-				)
-			)}
+				))}
 		</Stack>
 	);
 }
@@ -613,15 +943,20 @@ const EscritosWorkerTab: React.FC = () => {
 	const [tab, setTab] = useState("resumen");
 
 	// ── Worker control state ──────────────────────────────────────────────────
-	const [workerEnabled,  setWorkerEnabled]  = useState<boolean | null>(null);
+	const [workerEnabled, setWorkerEnabled] = useState<boolean | null>(null);
 	const [noveltyEnabled, setNoveltyEnabled] = useState<boolean | null>(null);
-	const [togglingWorker,  setTogglingWorker]  = useState(false);
+	const [togglingWorker, setTogglingWorker] = useState(false);
 	const [togglingNovelty, setTogglingNovelty] = useState(false);
 
 	useEffect(() => {
 		RagWorkersService.getEscritosWorkerConfig()
-			.then(cfg => { setWorkerEnabled(cfg.enabled); setNoveltyEnabled(cfg.noveltyEnabled); })
-			.catch(() => { /* silently ignore */ });
+			.then((cfg) => {
+				setWorkerEnabled(cfg.enabled);
+				setNoveltyEnabled(cfg.noveltyEnabled);
+			})
+			.catch(() => {
+				/* silently ignore */
+			});
 	}, []);
 
 	const handleToggleWorker = async (val: boolean) => {
@@ -630,8 +965,11 @@ const EscritosWorkerTab: React.FC = () => {
 			const updated = await RagWorkersService.updateEscritosWorkerConfig({ enabled: val });
 			setWorkerEnabled(updated.enabled);
 			enqueueSnackbar(`Scanner / Extractor ${val ? "habilitado" : "deshabilitado"}`, { variant: val ? "success" : "warning" });
-		} catch { enqueueSnackbar("Error actualizando", { variant: "error" }); }
-		finally { setTogglingWorker(false); }
+		} catch {
+			enqueueSnackbar("Error actualizando", { variant: "error" });
+		} finally {
+			setTogglingWorker(false);
+		}
 	};
 
 	const handleToggleNovelty = async (val: boolean) => {
@@ -640,41 +978,50 @@ const EscritosWorkerTab: React.FC = () => {
 			const updated = await RagWorkersService.updateEscritosWorkerConfig({ noveltyEnabled: val });
 			setNoveltyEnabled(updated.noveltyEnabled);
 			enqueueSnackbar(`Novelty Detection ${val ? "habilitada" : "deshabilitada"}`, { variant: val ? "success" : "warning" });
-		} catch { enqueueSnackbar("Error actualizando", { variant: "error" }); }
-		finally { setTogglingNovelty(false); }
+		} catch {
+			enqueueSnackbar("Error actualizando", { variant: "error" });
+		} finally {
+			setTogglingNovelty(false);
+		}
 	};
 
 	const TABS = [
-		{ value: "resumen",  label: "Resumen",  icon: <Chart size={16} /> },
+		{ value: "resumen", label: "Resumen", icon: <Chart size={16} /> },
 		{ value: "busqueda", label: "Búsqueda", icon: <SearchNormal1 size={16} /> },
-		{ value: "config",   label: "Config",   icon: <Setting2 size={16} /> },
+		{ value: "config", label: "Config", icon: <Setting2 size={16} /> },
 	];
 
 	return (
 		<Box sx={{ p: { xs: 2, md: 3 } }}>
 			<Stack spacing={3}>
 				<Stack direction="row" alignItems="baseline" spacing={2}>
-					<Typography variant="h5" fontWeight={600}>Escritos Worker</Typography>
-					<Typography variant="body2" color="text.secondary">Pipeline de extracción global de PDFs judiciales</Typography>
+					<Typography variant="h5" fontWeight={600}>
+						Escritos Worker
+					</Typography>
+					<Typography variant="body2" color="text.secondary">
+						Pipeline de extracción global de PDFs judiciales
+					</Typography>
 				</Stack>
 
 				{/* ── Worker Control Panel ── */}
-				<WorkerControlPanel processes={[
-					{
-						label: "Scanner / Extractor",
-						description: "scan.job · extractor.worker · ocr.worker",
-						enabled: workerEnabled,
-						toggling: togglingWorker,
-						onToggle: handleToggleWorker,
-					},
-					{
-						label: "Novelty Detection",
-						description: "selector.worker",
-						enabled: noveltyEnabled,
-						toggling: togglingNovelty,
-						onToggle: handleToggleNovelty,
-					},
-				]} />
+				<WorkerControlPanel
+					processes={[
+						{
+							label: "Scanner / Extractor",
+							description: "scan.job · extractor.worker · ocr.worker",
+							enabled: workerEnabled,
+							toggling: togglingWorker,
+							onToggle: handleToggleWorker,
+						},
+						{
+							label: "Novelty Detection",
+							description: "selector.worker",
+							enabled: noveltyEnabled,
+							toggling: togglingNovelty,
+							onToggle: handleToggleNovelty,
+						},
+					]}
+				/>
 
 				<Paper variant="outlined" sx={{ borderRadius: 2 }}>
 					<Tabs
@@ -682,15 +1029,15 @@ const EscritosWorkerTab: React.FC = () => {
 						onChange={(_, v) => setTab(v)}
 						sx={{ borderBottom: 1, borderColor: "divider", px: 2, "& .MuiTab-root": { minHeight: 44, textTransform: "none", gap: 0.75 } }}
 					>
-						{TABS.map(t => (
+						{TABS.map((t) => (
 							<Tab key={t.value} value={t.value} icon={t.icon} iconPosition="start" label={t.label} />
 						))}
 					</Tabs>
 
 					<Box sx={{ p: { xs: 2, md: 3 } }}>
-						{tab === "resumen"  && <ResumenSection />}
+						{tab === "resumen" && <ResumenSection />}
 						{tab === "busqueda" && <BusquedaSection />}
-						{tab === "config"   && <ConfigSection />}
+						{tab === "config" && <ConfigSection />}
 					</Box>
 				</Paper>
 			</Stack>

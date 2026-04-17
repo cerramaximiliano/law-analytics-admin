@@ -123,8 +123,8 @@ const CoverageBar: React.FC<{ data: ScrapingCoverageData; compact?: boolean }> =
 	type Segment = { type: "covered" | "gap-free" | "gap-assigned"; start: number; end: number; workerId?: string | null };
 
 	const allSegments: Segment[] = [
-		...coveredRanges.map(r => ({ type: "covered" as const, start: r.start, end: r.end })),
-		...gaps.map(g => ({
+		...coveredRanges.map((r) => ({ type: "covered" as const, start: r.start, end: r.end })),
+		...gaps.map((g) => ({
 			type: (g.assigned ? "gap-assigned" : "gap-free") as "gap-free" | "gap-assigned",
 			start: g.start,
 			end: g.end,
@@ -132,8 +132,8 @@ const CoverageBar: React.FC<{ data: ScrapingCoverageData; compact?: boolean }> =
 		})),
 	].sort((a, b) => a.start - b.start);
 
-	const segments: Segment[] = allSegments.map(seg => {
-		const activeWorker = activeWorkers.find(w => w.range_start <= seg.end && w.range_end >= seg.start);
+	const segments: Segment[] = allSegments.map((seg) => {
+		const activeWorker = activeWorkers.find((w) => w.range_start <= seg.end && w.range_end >= seg.start);
 		return activeWorker && seg.type !== "covered" ? { ...seg, type: "gap-assigned" as const, workerId: activeWorker.worker_id } : seg;
 	});
 
@@ -159,7 +159,9 @@ const CoverageBar: React.FC<{ data: ScrapingCoverageData; compact?: boolean }> =
 			>
 				{segments.map((seg, i) => {
 					const widthPct = ((seg.end - seg.start + 1) / maxRange) * 100;
-					const label = `${seg.type === "covered" ? "Cubierto" : seg.type === "gap-free" ? "Sin cubrir" : "Asignado"}: ${seg.start.toLocaleString()} — ${seg.end.toLocaleString()}`;
+					const label = `${
+						seg.type === "covered" ? "Cubierto" : seg.type === "gap-free" ? "Sin cubrir" : "Asignado"
+					}: ${seg.start.toLocaleString()} — ${seg.end.toLocaleString()}`;
 					return (
 						<Tooltip key={i} title={label} arrow>
 							<Box
@@ -177,10 +179,18 @@ const CoverageBar: React.FC<{ data: ScrapingCoverageData; compact?: boolean }> =
 			</Box>
 			{!compact && (
 				<Stack direction="row" spacing={2} mt={0.75} flexWrap="wrap">
-					{([["covered", "Cubierto"], ["gap-free", "Sin cubrir"], ["gap-assigned", "Asignado"]] as const).map(([k, l]) => (
+					{(
+						[
+							["covered", "Cubierto"],
+							["gap-free", "Sin cubrir"],
+							["gap-assigned", "Asignado"],
+						] as const
+					).map(([k, l]) => (
 						<Stack key={k} direction="row" alignItems="center" spacing={0.5}>
 							<Box sx={{ width: 10, height: 10, borderRadius: "2px", bgcolor: colorMap[k] }} />
-							<Typography variant="caption" color="text.secondary">{l}</Typography>
+							<Typography variant="caption" color="text.secondary">
+								{l}
+							</Typography>
 						</Stack>
 					))}
 				</Stack>
@@ -212,45 +222,73 @@ const AssignDialog: React.FC<{
 						<CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
 							<Stack direction="row" spacing={3} flexWrap="wrap">
 								<Box>
-									<Typography variant="caption" color="text.secondary">Worker</Typography>
-									<Typography variant="body2" fontFamily="monospace" fontWeight={600}>{workerLabel}</Typography>
-								</Box>
-								<Box>
-									<Typography variant="caption" color="text.secondary">Fuero</Typography>
-									<Typography variant="body2" fontWeight={600}>
-										<Box component="span" sx={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", bgcolor: FUERO_COLORS[fuero] ?? "#999", mr: 0.5 }} />
-										{FUERO_OPTIONS.find(f => f.value === fuero)?.label ?? fuero}
+									<Typography variant="caption" color="text.secondary">
+										Worker
+									</Typography>
+									<Typography variant="body2" fontFamily="monospace" fontWeight={600}>
+										{workerLabel}
 									</Typography>
 								</Box>
 								<Box>
-									<Typography variant="caption" color="text.secondary">Año</Typography>
-									<Typography variant="body2" fontWeight={600}>{year}</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Fuero
+									</Typography>
+									<Typography variant="body2" fontWeight={600}>
+										<Box
+											component="span"
+											sx={{
+												display: "inline-block",
+												width: 8,
+												height: 8,
+												borderRadius: "50%",
+												bgcolor: FUERO_COLORS[fuero] ?? "#999",
+												mr: 0.5,
+											}}
+										/>
+										{FUERO_OPTIONS.find((f) => f.value === fuero)?.label ?? fuero}
+									</Typography>
 								</Box>
 								<Box>
-									<Typography variant="caption" color="text.secondary">Nuevo rango</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Año
+									</Typography>
+									<Typography variant="body2" fontWeight={600}>
+										{year}
+									</Typography>
+								</Box>
+								<Box>
+									<Typography variant="caption" color="text.secondary">
+										Nuevo rango
+									</Typography>
 									<Typography variant="body2" fontFamily="monospace" fontWeight={600}>
 										{range.start.toLocaleString()} — {range.end.toLocaleString()}
 									</Typography>
 								</Box>
 								<Box>
-									<Typography variant="caption" color="text.secondary">Tamaño</Typography>
-									<Typography variant="body2" fontWeight={600}>{(range.end - range.start + 1).toLocaleString()}</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Tamaño
+									</Typography>
+									<Typography variant="body2" fontWeight={600}>
+										{(range.end - range.start + 1).toLocaleString()}
+									</Typography>
 								</Box>
 							</Stack>
 						</CardContent>
 					</Card>
 					<Alert severity="info" variant="outlined">
-						El rango del worker se reasignará y comenzará a procesar desde{" "}
-						<strong>{range.start.toLocaleString()}</strong>. El historial anterior se conserva.
+						El rango del worker se reasignará y comenzará a procesar desde <strong>{range.start.toLocaleString()}</strong>. El historial
+						anterior se conserva.
 					</Alert>
 					<FormControlLabel
-						control={<Checkbox checked={enableWorker} onChange={e => onEnableChange(e.target.checked)} size="small" />}
+						control={<Checkbox checked={enableWorker} onChange={(e) => onEnableChange(e.target.checked)} size="small" />}
 						label={<Typography variant="body2">Habilitar worker automáticamente al asignar</Typography>}
 					/>
 				</Stack>
 			</DialogContent>
 			<DialogActions>
-				<Button onClick={onClose} disabled={loading}>Cancelar</Button>
+				<Button onClick={onClose} disabled={loading}>
+					Cancelar
+				</Button>
 				<Button
 					variant="contained"
 					onClick={onConfirm}
@@ -277,7 +315,9 @@ const CoveragePanel: React.FC = () => {
 	const [fueroLoading, setFueroLoading] = useState(false);
 	// CreateConfigModal (asignación manual desde modo fuero)
 	const [createModalOpen, setCreateModalOpen] = useState(false);
-	const [createModalInitial, setCreateModalInitial] = useState<{ fuero: string; year: number; rangeStart: number; rangeEnd: number } | undefined>();
+	const [createModalInitial, setCreateModalInitial] = useState<
+		{ fuero: string; year: number; rangeStart: number; rangeEnd: number } | undefined
+	>();
 
 	// ── Estado modo "Análisis Global" ──
 	const [globalLoading, setGlobalLoading] = useState(false);
@@ -289,8 +329,15 @@ const CoveragePanel: React.FC = () => {
 
 	// ── Dialog de asignación (compartido) ──
 	const emptyAssignDialog: AssignDialogState = {
-		open: false, workerId: "", workerLabel: "", fuero: "", year: "",
-		range: { start: 0, end: 0 }, enableWorker: true, loading: false, gap: null,
+		open: false,
+		workerId: "",
+		workerLabel: "",
+		fuero: "",
+		year: "",
+		range: { start: 0, end: 0 },
+		enableWorker: true,
+		loading: false,
+		gap: null,
 	};
 	const [assignDialog, setAssignDialog] = useState<AssignDialogState>(emptyAssignDialog);
 
@@ -309,7 +356,7 @@ const CoveragePanel: React.FC = () => {
 
 		// Cargar todos los años en paralelo
 		const results = await Promise.allSettled(
-			YEAR_OPTIONS.map(y => WorkersService.getScrapingCoverage(fuero, y).then(res => ({ year: y, data: res.data }))),
+			YEAR_OPTIONS.map((y) => WorkersService.getScrapingCoverage(fuero, y).then((res) => ({ year: y, data: res.data }))),
 		);
 
 		const updated: Record<string, YearData> = { ...initial };
@@ -317,7 +364,7 @@ const CoveragePanel: React.FC = () => {
 			if (result.status === "fulfilled") {
 				const { year: y, data } = result.value;
 				// Auto-expandir años con gaps libres
-				const hasFreeGaps = data.gaps.some(g => !g.assigned);
+				const hasFreeGaps = data.gaps.some((g) => !g.assigned);
 				updated[y] = { status: "success", coverage: data, expanded: hasFreeGaps };
 			} else {
 				const y = YEAR_OPTIONS[results.indexOf(result)];
@@ -330,7 +377,7 @@ const CoveragePanel: React.FC = () => {
 	}, [fuero]);
 
 	const toggleYearExpanded = (y: string) => {
-		setYearDataMap(prev => ({ ...prev, [y]: { ...prev[y], expanded: !prev[y]?.expanded } }));
+		setYearDataMap((prev) => ({ ...prev, [y]: { ...prev[y], expanded: !prev[y]?.expanded } }));
 	};
 
 	// ────────────────────────────────────────────────────────────────────────
@@ -350,15 +397,13 @@ const CoveragePanel: React.FC = () => {
 			const allConfigs: WorkerConfig[] = Array.isArray(configsRes.data) ? configsRes.data : [configsRes.data as WorkerConfig];
 
 			// 2. Workers reasignables: disabled + progress >= 100% + completionEmailSent=true
-			const freeWorkers = allConfigs.filter(
-				c => c.enabled === false && calculateProgress(c) >= 100 && c.completionEmailSent === true,
-			);
+			const freeWorkers = allConfigs.filter((c) => c.enabled === false && calculateProgress(c) >= 100 && c.completionEmailSent === true);
 
 			// Helper: ¿el rango fuero/year/start-end se superpone con ALGÚN otro config en la DB?
 			// El backend rechaza cualquier overlap (enabled o no), excepto el propio worker siendo reasignado.
 			const isRangeConflicting = (f: string, y: string, start: number, end: number, excludeId: string): boolean =>
 				allConfigs.some(
-					w =>
+					(w) =>
 						getConfigId(w) !== excludeId &&
 						w.fuero === f &&
 						String(w.year) === y &&
@@ -375,12 +420,15 @@ const CoveragePanel: React.FC = () => {
 			}
 			for (const f of FUERO_OPTIONS) comboSet.add(`${f.value}|${CURRENT_YEAR}`);
 
-			const combos = Array.from(comboSet).map(s => { const [f, y] = s.split("|"); return { fuero: f, year: y }; });
+			const combos = Array.from(comboSet).map((s) => {
+				const [f, y] = s.split("|");
+				return { fuero: f, year: y };
+			});
 
 			// 4. Cobertura de todos los combos en paralelo
 			const coverageResults = await Promise.allSettled(
 				combos.map(({ fuero: f, year: y }) =>
-					WorkersService.getScrapingCoverage(f, y).then(res => ({ fuero: f, year: y, data: res.data })),
+					WorkersService.getScrapingCoverage(f, y).then((res) => ({ fuero: f, year: y, data: res.data })),
 				),
 			);
 
@@ -399,9 +447,7 @@ const CoveragePanel: React.FC = () => {
 				for (const gap of data.gaps) {
 					if (gap.assigned) continue;
 					// Para cada free worker del mismo fuero, verificar si puede cubrir este gap sin conflicto con otros configs
-					const validWorkers = freeWorkers.filter(
-						w => w.fuero === f && !isRangeConflicting(f, y, gap.start, gap.end, getConfigId(w)),
-					);
+					const validWorkers = freeWorkers.filter((w) => w.fuero === f && !isRangeConflicting(f, y, gap.start, gap.end, getConfigId(w)));
 					aggregated.push({ fuero: f, year: y, gap, suggestedWorkers: validWorkers });
 				}
 			}
@@ -414,7 +460,7 @@ const CoveragePanel: React.FC = () => {
 			setGlobalGaps(aggregated);
 
 			// 6.5. Detectar workers completados cuyo rango aún no está en el historial
-			const allCompletedWorkers = allConfigs.filter(c => c.enabled === false && calculateProgress(c) >= 100);
+			const allCompletedWorkers = allConfigs.filter((c) => c.enabled === false && calculateProgress(c) >= 100);
 			const pending: PendingHistoryWorker[] = [];
 			for (const w of allCompletedWorkers) {
 				if (!w.fuero || !w.year || w.range_start === undefined || w.range_end === undefined) continue;
@@ -426,9 +472,7 @@ const CoveragePanel: React.FC = () => {
 					continue;
 				}
 				// Ver si el rango del worker está cubierto en el historial
-				const isCoveredInHistory = entry.data.coveredRanges.some(
-					r => r.start <= w.range_start! && r.end >= w.range_end!,
-				);
+				const isCoveredInHistory = entry.data.coveredRanges.some((r) => r.start <= w.range_start! && r.end >= w.range_end!);
 				if (!isCoveredInHistory) {
 					pending.push({ worker: w, pendingRange: { start: w.range_start, end: w.range_end } });
 				}
@@ -451,9 +495,12 @@ const CoveragePanel: React.FC = () => {
 						// Nunca sugerir que el worker cubra un gap que ya está cubriendo él mismo (evita reset circular)
 						if (
 							String(worker.year) === y &&
-							worker.range_start !== undefined && worker.range_end !== undefined &&
-							worker.range_start <= gap.end && worker.range_end >= gap.start
-						) continue;
+							worker.range_start !== undefined &&
+							worker.range_end !== undefined &&
+							worker.range_start <= gap.end &&
+							worker.range_end >= gap.start
+						)
+							continue;
 						// Verificar que no haya conflicto con otros configs (el backend rechaza cualquier overlap)
 						if (isRangeConflicting(f, y, gap.start, gap.end, getConfigId(worker))) continue;
 						bestCandidates.push({
@@ -470,8 +517,8 @@ const CoveragePanel: React.FC = () => {
 
 				// Oportunidad tipo "año vacío": dentro del rango de años con historial + hasta el año actual
 				const fueroYearsWithData = Array.from(coverageMap.values())
-					.filter(e => e.fuero === wFuero && e.data.maxRange > 0)
-					.map(e => Number(e.year));
+					.filter((e) => e.fuero === wFuero && e.data.maxRange > 0)
+					.map((e) => Number(e.year));
 
 				if (fueroYearsWithData.length > 0) {
 					const minHistYear = Math.min(...fueroYearsWithData);
@@ -495,7 +542,7 @@ const CoveragePanel: React.FC = () => {
 						// Los años dentro del rango histórico tienen alta prioridad; los futuros, baja
 						const isHistorical = yr <= maxHistYear;
 						const score = isHistorical
-							? (maxHistYear + 1 - yr) * 1000          // más antiguo = mayor score
+							? (maxHistYear + 1 - yr) * 1000 // más antiguo = mayor score
 							: Math.max(1, 50 - (yr - maxHistYear) * 10); // futuros: 50, 40, 30... (muy bajo)
 						bestCandidates.push({
 							worker,
@@ -535,19 +582,28 @@ const CoveragePanel: React.FC = () => {
 	// ────────────────────────────────────────────────────────────────────────
 	// Asignación
 	// ────────────────────────────────────────────────────────────────────────
-	const openAssignDialog = (workerId: string, workerLabel: string, fueroVal: string, yearVal: string, range: { start: number; end: number }, gap: CoverageGap | null = null) => {
+	const openAssignDialog = (
+		workerId: string,
+		workerLabel: string,
+		fueroVal: string,
+		yearVal: string,
+		range: { start: number; end: number },
+		gap: CoverageGap | null = null,
+	) => {
 		setAssignDialog({ open: true, workerId, workerLabel, fuero: fueroVal, year: yearVal, range, enableWorker: true, loading: false, gap });
 	};
 
 	const handleConfirmAssign = async () => {
 		const { workerId, fuero: f, year: y, range, enableWorker } = assignDialog;
-		setAssignDialog(prev => ({ ...prev, loading: true }));
+		setAssignDialog((prev) => ({ ...prev, loading: true }));
 		try {
 			await WorkersService.updateScrapingRange(workerId, { range_start: range.start, range_end: range.end, year: Number(y) });
 			if (enableWorker) {
 				await WorkersService.updateScrapingConfig(workerId, { enabled: true });
 			}
-			enqueueSnackbar(`Worker reasignado: ${f} ${y} — ${range.start.toLocaleString()} a ${range.end.toLocaleString()}`, { variant: "success" });
+			enqueueSnackbar(`Worker reasignado: ${f} ${y} — ${range.start.toLocaleString()} a ${range.end.toLocaleString()}`, {
+				variant: "success",
+			});
 			setAssignDialog(emptyAssignDialog);
 			// Refrescar según modo activo
 			if (mode === "fuero") handleLoadFuero();
@@ -556,10 +612,12 @@ const CoveragePanel: React.FC = () => {
 			const apiMessage = error?.response?.data?.message || error?.message || "Error al asignar worker";
 			const conflicting = error?.response?.data?.data?.conflictingConfig;
 			const detail = conflicting
-				? ` — conflicto con: ${conflicting.nombre || conflicting.id} (${conflicting.fuero} ${conflicting.year}, ${conflicting.range_start?.toLocaleString()}–${conflicting.range_end?.toLocaleString()})`
+				? ` — conflicto con: ${conflicting.nombre || conflicting.id} (${conflicting.fuero} ${
+						conflicting.year
+				  }, ${conflicting.range_start?.toLocaleString()}–${conflicting.range_end?.toLocaleString()})`
 				: "";
 			enqueueSnackbar(`${apiMessage}${detail}`, { variant: "error", style: { maxWidth: 600 } });
-			setAssignDialog(prev => ({ ...prev, loading: false }));
+			setAssignDialog((prev) => ({ ...prev, loading: false }));
 		}
 	};
 
@@ -591,8 +649,15 @@ const CoveragePanel: React.FC = () => {
 					<Stack direction="row" spacing={2} alignItems="flex-end">
 						<FormControl size="small" sx={{ minWidth: 180 }}>
 							<InputLabel>Fuero</InputLabel>
-							<Select value={fuero} onChange={e => { setFuero(e.target.value); setYearDataMap({}); }} label="Fuero">
-								{FUERO_OPTIONS.map(o => (
+							<Select
+								value={fuero}
+								onChange={(e) => {
+									setFuero(e.target.value);
+									setYearDataMap({});
+								}}
+								label="Fuero"
+							>
+								{FUERO_OPTIONS.map((o) => (
 									<MenuItem key={o.value} value={o.value}>
 										<Stack direction="row" alignItems="center" spacing={1}>
 											<Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: FUERO_COLORS[o.value] }} />
@@ -635,12 +700,12 @@ const CoveragePanel: React.FC = () => {
 									</TableRow>
 								</TableHead>
 								<TableBody>
-									{YEAR_OPTIONS.map(y => {
+									{YEAR_OPTIONS.map((y) => {
 										const yd = yearDataMap[y];
 										if (!yd) return null;
 										const { status, coverage, expanded } = yd;
-										const freeGaps = coverage?.gaps.filter(g => !g.assigned) ?? [];
-										const assignedGaps = coverage?.gaps.filter(g => g.assigned) ?? [];
+										const freeGaps = coverage?.gaps.filter((g) => !g.assigned) ?? [];
+										const assignedGaps = coverage?.gaps.filter((g) => g.assigned) ?? [];
 										const hasData = status === "success" && coverage && coverage.maxRange > 0;
 
 										return (
@@ -662,13 +727,21 @@ const CoveragePanel: React.FC = () => {
 														)}
 													</TableCell>
 													<TableCell>
-														<Typography variant="body2" fontWeight={freeGaps.length > 0 ? 700 : 400}>{y}</Typography>
+														<Typography variant="body2" fontWeight={freeGaps.length > 0 ? 700 : 400}>
+															{y}
+														</Typography>
 													</TableCell>
 													<TableCell sx={{ minWidth: 180 }}>
 														{status === "loading" && <LinearProgress sx={{ height: 8, borderRadius: 1 }} />}
-														{status === "error" && <Typography variant="caption" color="error">Error al cargar</Typography>}
+														{status === "error" && (
+															<Typography variant="caption" color="error">
+																Error al cargar
+															</Typography>
+														)}
 														{status === "success" && coverage && coverage.maxRange === 0 && (
-															<Typography variant="caption" color="text.disabled">Sin registros</Typography>
+															<Typography variant="caption" color="text.disabled">
+																Sin registros
+															</Typography>
 														)}
 														{hasData && (
 															<Box sx={{ position: "relative" }}>
@@ -685,7 +758,11 @@ const CoveragePanel: React.FC = () => {
 													</TableCell>
 													<TableCell align="right">
 														{hasData && (
-															<Typography variant="body2" color={freeGaps.length > 0 ? "error.main" : "text.disabled"} fontWeight={freeGaps.length > 0 ? 700 : 400}>
+															<Typography
+																variant="body2"
+																color={freeGaps.length > 0 ? "error.main" : "text.disabled"}
+																fontWeight={freeGaps.length > 0 ? 700 : 400}
+															>
 																{freeGaps.length}
 															</Typography>
 														)}
@@ -722,9 +799,21 @@ const CoveragePanel: React.FC = () => {
 																				<Typography variant="caption" color="text.secondary" sx={{ alignSelf: "center" }}>
 																					Workers activos:
 																				</Typography>
-																				{coverage!.activeWorkers.map(w => (
-																					<Tooltip key={w.worker_id} title={`${w.range_start.toLocaleString()} — ${w.range_end.toLocaleString()} | pos: ${w.current?.toLocaleString() ?? "—"}`} arrow>
-																						<Chip label={w.worker_id} size="small" color="primary" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }} />
+																				{coverage!.activeWorkers.map((w) => (
+																					<Tooltip
+																						key={w.worker_id}
+																						title={`${w.range_start.toLocaleString()} — ${w.range_end.toLocaleString()} | pos: ${
+																							w.current?.toLocaleString() ?? "—"
+																						}`}
+																						arrow
+																					>
+																						<Chip
+																							label={w.worker_id}
+																							size="small"
+																							color="primary"
+																							variant="outlined"
+																							sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}
+																						/>
 																					</Tooltip>
 																				))}
 																			</Stack>
@@ -733,7 +822,12 @@ const CoveragePanel: React.FC = () => {
 																		{/* Gaps */}
 																		{coverage!.gaps.length > 0 ? (
 																			<Box>
-																				<Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ mb: 0.5, display: "block" }}>
+																				<Typography
+																					variant="caption"
+																					color="text.secondary"
+																					fontWeight={600}
+																					sx={{ mb: 0.5, display: "block" }}
+																				>
 																					Períodos faltantes ({coverage!.gaps.length})
 																				</Typography>
 																				<TableContainer component={Paper} variant="outlined">
@@ -750,16 +844,38 @@ const CoveragePanel: React.FC = () => {
 																						<TableBody>
 																							{coverage!.gaps.map((gap, i) => (
 																								<TableRow key={i} sx={{ bgcolor: gap.assigned ? "warning.lighter" : "error.lighter" }}>
-																									<TableCell><Typography variant="body2" fontFamily="monospace">{gap.start.toLocaleString()}</Typography></TableCell>
-																									<TableCell><Typography variant="body2" fontFamily="monospace">{gap.end.toLocaleString()}</Typography></TableCell>
-																									<TableCell align="right"><Typography variant="body2">{gap.size.toLocaleString()}</Typography></TableCell>
+																									<TableCell>
+																										<Typography variant="body2" fontFamily="monospace">
+																											{gap.start.toLocaleString()}
+																										</Typography>
+																									</TableCell>
+																									<TableCell>
+																										<Typography variant="body2" fontFamily="monospace">
+																											{gap.end.toLocaleString()}
+																										</Typography>
+																									</TableCell>
+																									<TableCell align="right">
+																										<Typography variant="body2">{gap.size.toLocaleString()}</Typography>
+																									</TableCell>
 																									<TableCell align="center">
 																										{gap.assigned ? (
 																											<Tooltip title={`Worker: ${gap.workerId}`} arrow>
-																												<Chip icon={<Warning2 size={12} />} label="Asignado" size="small" color="warning" variant="outlined" />
+																												<Chip
+																													icon={<Warning2 size={12} />}
+																													label="Asignado"
+																													size="small"
+																													color="warning"
+																													variant="outlined"
+																												/>
 																											</Tooltip>
 																										) : (
-																											<Chip icon={<CloseCircle size={12} />} label="Libre" size="small" color="error" variant="outlined" />
+																											<Chip
+																												icon={<CloseCircle size={12} />}
+																												label="Libre"
+																												size="small"
+																												color="error"
+																												variant="outlined"
+																											/>
 																										)}
 																									</TableCell>
 																									<TableCell align="center">
@@ -769,7 +885,12 @@ const CoveragePanel: React.FC = () => {
 																											startIcon={<AddCircle size={12} />}
 																											disabled={gap.assigned}
 																											onClick={() => {
-																												setCreateModalInitial({ fuero, year: Number(y), rangeStart: gap.start, rangeEnd: gap.end });
+																												setCreateModalInitial({
+																													fuero,
+																													year: Number(y),
+																													rangeStart: gap.start,
+																													rangeEnd: gap.end,
+																												});
 																												setCreateModalOpen(true);
 																											}}
 																										>
@@ -803,8 +924,15 @@ const CoveragePanel: React.FC = () => {
 
 					<CreateConfigModal
 						open={createModalOpen}
-						onClose={() => { setCreateModalOpen(false); setCreateModalInitial(undefined); }}
-						onSuccess={() => { setCreateModalOpen(false); setCreateModalInitial(undefined); handleLoadFuero(); }}
+						onClose={() => {
+							setCreateModalOpen(false);
+							setCreateModalInitial(undefined);
+						}}
+						onSuccess={() => {
+							setCreateModalOpen(false);
+							setCreateModalInitial(undefined);
+							handleLoadFuero();
+						}}
 						initialValues={createModalInitial}
 					/>
 				</Stack>
@@ -817,7 +945,9 @@ const CoveragePanel: React.FC = () => {
 				<Stack spacing={2}>
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
 						<Box>
-							<Typography variant="subtitle1" fontWeight={600}>Análisis Global de Cobertura</Typography>
+							<Typography variant="subtitle1" fontWeight={600}>
+								Análisis Global de Cobertura
+							</Typography>
 							<Typography variant="body2" color="text.secondary">
 								Detecta todos los períodos sin cobertura y sugiere workers al 100% listos para reasignar.
 							</Typography>
@@ -837,7 +967,9 @@ const CoveragePanel: React.FC = () => {
 					{globalLoading && (
 						<Box>
 							<LinearProgress />
-							<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>Analizando todos los fueros y años con registros...</Typography>
+							<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+								Analizando todos los fueros y años con registros...
+							</Typography>
 						</Box>
 					)}
 
@@ -846,15 +978,31 @@ const CoveragePanel: React.FC = () => {
 						<Stack direction={{ xs: "column", sm: "row" }} spacing={2} flexWrap="wrap">
 							{[
 								{ label: "Combinaciones analizadas", value: globalScanInfo.combos, color: "info.main" },
-								{ label: "Workers al 100%", value: globalScanInfo.freeWorkers, color: globalScanInfo.freeWorkers > 0 ? "success.main" : "text.disabled" },
+								{
+									label: "Workers al 100%",
+									value: globalScanInfo.freeWorkers,
+									color: globalScanInfo.freeWorkers > 0 ? "success.main" : "text.disabled",
+								},
 								{ label: "Gaps sin cobertura", value: globalGaps.length, color: globalGaps.length > 0 ? "error.main" : "success.main" },
-								{ label: "Sugerencias inteligentes", value: smartSuggestions.length, color: smartSuggestions.length > 0 ? "secondary.main" : "text.disabled" },
-								{ label: "Historial pendiente", value: pendingHistoryWorkers.length, color: pendingHistoryWorkers.length > 0 ? "warning.main" : "text.disabled" },
+								{
+									label: "Sugerencias inteligentes",
+									value: smartSuggestions.length,
+									color: smartSuggestions.length > 0 ? "secondary.main" : "text.disabled",
+								},
+								{
+									label: "Historial pendiente",
+									value: pendingHistoryWorkers.length,
+									color: pendingHistoryWorkers.length > 0 ? "warning.main" : "text.disabled",
+								},
 							].map(({ label, value, color }) => (
 								<Card key={label} variant="outlined" sx={{ flex: 1, minWidth: 130 }}>
 									<CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
-										<Typography variant="caption" color="text.secondary">{label}</Typography>
-										<Typography variant="h6" color={color} fontWeight="bold">{value}</Typography>
+										<Typography variant="caption" color="text.secondary">
+											{label}
+										</Typography>
+										<Typography variant="h6" color={color} fontWeight="bold">
+											{value}
+										</Typography>
 									</CardContent>
 								</Card>
 							))}
@@ -890,29 +1038,62 @@ const CoveragePanel: React.FC = () => {
 										{globalGaps.map((gg, i) => {
 											const hasSuggestion = gg.suggestedWorkers.length > 0;
 											return (
-												<TableRow key={i} sx={{ bgcolor: hasSuggestion ? "warning.lighter" : "error.lighter", "&:hover": { opacity: 0.9 } }}>
+												<TableRow
+													key={i}
+													sx={{ bgcolor: hasSuggestion ? "warning.lighter" : "error.lighter", "&:hover": { opacity: 0.9 } }}
+												>
 													<TableCell>
 														<Stack direction="row" alignItems="center" spacing={0.75}>
-															<Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: FUERO_COLORS[gg.fuero] ?? "#999", flexShrink: 0 }} />
-															<Typography variant="body2">{FUERO_OPTIONS.find(f => f.value === gg.fuero)?.label ?? gg.fuero}</Typography>
+															<Box
+																sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: FUERO_COLORS[gg.fuero] ?? "#999", flexShrink: 0 }}
+															/>
+															<Typography variant="body2">{FUERO_OPTIONS.find((f) => f.value === gg.fuero)?.label ?? gg.fuero}</Typography>
 														</Stack>
 													</TableCell>
-													<TableCell align="center"><Typography variant="body2">{gg.year}</Typography></TableCell>
-													<TableCell align="right"><Typography variant="body2" fontFamily="monospace">{gg.gap.start.toLocaleString()}</Typography></TableCell>
-													<TableCell align="right"><Typography variant="body2" fontFamily="monospace">{gg.gap.end.toLocaleString()}</Typography></TableCell>
-													<TableCell align="right"><Typography variant="body2">{gg.gap.size.toLocaleString()}</Typography></TableCell>
+													<TableCell align="center">
+														<Typography variant="body2">{gg.year}</Typography>
+													</TableCell>
+													<TableCell align="right">
+														<Typography variant="body2" fontFamily="monospace">
+															{gg.gap.start.toLocaleString()}
+														</Typography>
+													</TableCell>
+													<TableCell align="right">
+														<Typography variant="body2" fontFamily="monospace">
+															{gg.gap.end.toLocaleString()}
+														</Typography>
+													</TableCell>
+													<TableCell align="right">
+														<Typography variant="body2">{gg.gap.size.toLocaleString()}</Typography>
+													</TableCell>
 													<TableCell>
 														{hasSuggestion ? (
 															<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-																{gg.suggestedWorkers.slice(0, 3).map(w => (
-																	<Tooltip key={getConfigId(w)} title={`Año: ${w.year} | ${(w.range_start ?? 0).toLocaleString()}–${(w.range_end ?? 0).toLocaleString()} | ${calculateProgress(w).toFixed(0)}%`} arrow>
-																		<Chip label={w.worker_id} size="small" color="warning" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }} />
+																{gg.suggestedWorkers.slice(0, 3).map((w) => (
+																	<Tooltip
+																		key={getConfigId(w)}
+																		title={`Año: ${w.year} | ${(w.range_start ?? 0).toLocaleString()}–${(
+																			w.range_end ?? 0
+																		).toLocaleString()} | ${calculateProgress(w).toFixed(0)}%`}
+																		arrow
+																	>
+																		<Chip
+																			label={w.worker_id}
+																			size="small"
+																			color="warning"
+																			variant="outlined"
+																			sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}
+																		/>
 																	</Tooltip>
 																))}
-																{gg.suggestedWorkers.length > 3 && <Chip label={`+${gg.suggestedWorkers.length - 3}`} size="small" variant="outlined" />}
+																{gg.suggestedWorkers.length > 3 && (
+																	<Chip label={`+${gg.suggestedWorkers.length - 3}`} size="small" variant="outlined" />
+																)}
 															</Stack>
 														) : (
-															<Typography variant="caption" color="text.disabled">Sin workers libres</Typography>
+															<Typography variant="caption" color="text.disabled">
+																Sin workers libres
+															</Typography>
 														)}
 													</TableCell>
 													<TableCell align="center">
@@ -924,7 +1105,14 @@ const CoveragePanel: React.FC = () => {
 																startIcon={<Flash size={13} />}
 																onClick={() => {
 																	const w = gg.suggestedWorkers[0];
-																	openAssignDialog(getConfigId(w), w.worker_id ?? "", gg.fuero, gg.year, { start: gg.gap.start, end: gg.gap.end }, gg.gap);
+																	openAssignDialog(
+																		getConfigId(w),
+																		w.worker_id ?? "",
+																		gg.fuero,
+																		gg.year,
+																		{ start: gg.gap.start, end: gg.gap.end },
+																		gg.gap,
+																	);
 																}}
 															>
 																Auto-asignar
@@ -935,7 +1123,12 @@ const CoveragePanel: React.FC = () => {
 																variant="outlined"
 																startIcon={<AddCircle size={13} />}
 																onClick={() => {
-																	setCreateModalInitial({ fuero: gg.fuero, year: Number(gg.year), rangeStart: gg.gap.start, rangeEnd: gg.gap.end });
+																	setCreateModalInitial({
+																		fuero: gg.fuero,
+																		year: Number(gg.year),
+																		rangeStart: gg.gap.start,
+																		rangeEnd: gg.gap.end,
+																	});
 																	setCreateModalOpen(true);
 																}}
 															>
@@ -958,13 +1151,11 @@ const CoveragePanel: React.FC = () => {
 							<Divider sx={{ mb: 2 }} />
 							<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
 								<Ranking size={18} />
-								<Typography variant="subtitle2">
-									Workers detenidos — sugerencias de reasignación ({smartSuggestions.length})
-								</Typography>
+								<Typography variant="subtitle2">Workers detenidos — sugerencias de reasignación ({smartSuggestions.length})</Typography>
 							</Stack>
 							<Alert severity="info" variant="outlined" sx={{ mb: 1.5 }}>
-								Estos workers completaron su rango al 100% y están disponibles para cubrir nuevas áreas.
-								El sistema rankeó la mejor oportunidad por worker según el impacto estimado.
+								Estos workers completaron su rango al 100% y están disponibles para cubrir nuevas áreas. El sistema rankeó la mejor
+								oportunidad por worker según el impacto estimado.
 							</Alert>
 							<TableContainer component={Paper} variant="outlined">
 								<Table size="small">
@@ -983,7 +1174,9 @@ const CoveragePanel: React.FC = () => {
 											<TableRow key={i} hover sx={{ "&:hover": { bgcolor: "action.hover" } }}>
 												<TableCell>
 													<Stack>
-														<Typography variant="body2" fontFamily="monospace" fontWeight={600}>{s.worker.worker_id}</Typography>
+														<Typography variant="body2" fontFamily="monospace" fontWeight={600}>
+															{s.worker.worker_id}
+														</Typography>
 														<Typography variant="caption" color="text.secondary">
 															{s.worker.fuero} {s.worker.year} — pos {(s.worker.number ?? 0).toLocaleString()}
 														</Typography>
@@ -999,10 +1192,16 @@ const CoveragePanel: React.FC = () => {
 												</TableCell>
 												<TableCell>
 													<Stack direction="row" alignItems="center" spacing={0.75}>
-														<Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: FUERO_COLORS[s.fuero] ?? "#999", flexShrink: 0 }} />
-														<Typography variant="body2">{FUERO_OPTIONS.find(f => f.value === s.fuero)?.label ?? s.fuero} {s.year}</Typography>
+														<Box
+															sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: FUERO_COLORS[s.fuero] ?? "#999", flexShrink: 0 }}
+														/>
+														<Typography variant="body2">
+															{FUERO_OPTIONS.find((f) => f.value === s.fuero)?.label ?? s.fuero} {s.year}
+														</Typography>
 													</Stack>
-													<Typography variant="caption" color="text.secondary">{s.description}</Typography>
+													<Typography variant="caption" color="text.secondary">
+														{s.description}
+													</Typography>
 												</TableCell>
 												<TableCell align="right">
 													<Typography variant="caption" fontFamily="monospace">
@@ -1045,14 +1244,12 @@ const CoveragePanel: React.FC = () => {
 							<Divider sx={{ mb: 2 }} />
 							<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
 								<Warning2 size={18} color="orange" />
-								<Typography variant="subtitle2">
-									Historial pendiente de guardar ({pendingHistoryWorkers.length})
-								</Typography>
+								<Typography variant="subtitle2">Historial pendiente de guardar ({pendingHistoryWorkers.length})</Typography>
 							</Stack>
 							<Alert severity="warning" variant="outlined" sx={{ mb: 1.5 }}>
-								Estos workers completaron su rango pero <strong>aún no tienen ese rango registrado en el historial</strong>.
-								El historial se guarda automáticamente cuando se reasigna el worker a un nuevo rango.
-								Usa las sugerencias de arriba para reasignarlos y el sistema guardará el historial como parte del proceso.
+								Estos workers completaron su rango pero <strong>aún no tienen ese rango registrado en el historial</strong>. El historial se
+								guarda automáticamente cuando se reasigna el worker a un nuevo rango. Usa las sugerencias de arriba para reasignarlos y el
+								sistema guardará el historial como parte del proceso.
 							</Alert>
 							<TableContainer component={Paper} variant="outlined">
 								<Table size="small">
@@ -1069,12 +1266,18 @@ const CoveragePanel: React.FC = () => {
 										{pendingHistoryWorkers.map((ph, i) => (
 											<TableRow key={i} sx={{ bgcolor: "warning.lighter" }}>
 												<TableCell>
-													<Typography variant="body2" fontFamily="monospace" fontWeight={600}>{ph.worker.worker_id}</Typography>
+													<Typography variant="body2" fontFamily="monospace" fontWeight={600}>
+														{ph.worker.worker_id}
+													</Typography>
 												</TableCell>
 												<TableCell align="center">
 													<Stack direction="row" alignItems="center" spacing={0.5} justifyContent="center">
-														<Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: FUERO_COLORS[ph.worker.fuero ?? ""] ?? "#999" }} />
-														<Typography variant="body2">{ph.worker.fuero} {ph.worker.year}</Typography>
+														<Box
+															sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: FUERO_COLORS[ph.worker.fuero ?? ""] ?? "#999" }}
+														/>
+														<Typography variant="body2">
+															{ph.worker.fuero} {ph.worker.year}
+														</Typography>
 													</Stack>
 												</TableCell>
 												<TableCell align="right">
@@ -1104,8 +1307,15 @@ const CoveragePanel: React.FC = () => {
 
 					<CreateConfigModal
 						open={createModalOpen}
-						onClose={() => { setCreateModalOpen(false); setCreateModalInitial(undefined); }}
-						onSuccess={() => { setCreateModalOpen(false); setCreateModalInitial(undefined); handleGlobalScan(); }}
+						onClose={() => {
+							setCreateModalOpen(false);
+							setCreateModalInitial(undefined);
+						}}
+						onSuccess={() => {
+							setCreateModalOpen(false);
+							setCreateModalInitial(undefined);
+							handleGlobalScan();
+						}}
 						initialValues={createModalInitial}
 					/>
 				</Stack>
@@ -1115,7 +1325,7 @@ const CoveragePanel: React.FC = () => {
 			<AssignDialog
 				state={assignDialog}
 				onClose={() => setAssignDialog(emptyAssignDialog)}
-				onEnableChange={v => setAssignDialog(prev => ({ ...prev, enableWorker: v }))}
+				onEnableChange={(v) => setAssignDialog((prev) => ({ ...prev, enableWorker: v }))}
 				onConfirm={handleConfirmAssign}
 			/>
 		</Stack>

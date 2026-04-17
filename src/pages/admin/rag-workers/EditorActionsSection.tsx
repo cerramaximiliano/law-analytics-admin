@@ -61,11 +61,13 @@ const VISIBILITY_LABELS: Record<string, string> = {
 const PROMPT_SUGGESTIONS = [
 	{
 		label: "Mejorar redacción",
-		prompt: "Mejorá la redacción del siguiente texto manteniendo el significado y el registro jurídico formal:\n\n{{text}}\n\nDevolvé solo el texto mejorado, sin explicaciones.",
+		prompt:
+			"Mejorá la redacción del siguiente texto manteniendo el significado y el registro jurídico formal:\n\n{{text}}\n\nDevolvé solo el texto mejorado, sin explicaciones.",
 	},
 	{
 		label: "Simplificar lenguaje",
-		prompt: "Simplificá el siguiente texto jurídico para que sea más claro y comprensible, sin perder precisión legal:\n\n{{text}}\n\nDevolvé solo el texto simplificado.",
+		prompt:
+			"Simplificá el siguiente texto jurídico para que sea más claro y comprensible, sin perder precisión legal:\n\n{{text}}\n\nDevolvé solo el texto simplificado.",
 	},
 	{
 		label: "Ampliar desarrollo",
@@ -73,26 +75,31 @@ const PROMPT_SUGGESTIONS = [
 	},
 	{
 		label: "Acortar",
-		prompt: "Resumí el siguiente texto conservando los puntos esenciales y el registro formal:\n\n{{text}}\n\nDevolvé solo el texto resumido.",
+		prompt:
+			"Resumí el siguiente texto conservando los puntos esenciales y el registro formal:\n\n{{text}}\n\nDevolvé solo el texto resumido.",
 	},
 	{
 		label: "Corregir ortografía",
-		prompt: "Corregí los errores ortográficos y gramaticales del siguiente texto sin cambiar el contenido ni el estilo:\n\n{{text}}\n\nDevolvé solo el texto corregido.",
+		prompt:
+			"Corregí los errores ortográficos y gramaticales del siguiente texto sin cambiar el contenido ni el estilo:\n\n{{text}}\n\nDevolvé solo el texto corregido.",
 	},
 	{
 		label: "Tono formal",
-		prompt: "Reescribí el siguiente texto con un tono formal y técnico-jurídico apropiado para un escrito judicial:\n\n{{text}}\n\nDevolvé solo el texto reescrito.",
+		prompt:
+			"Reescribí el siguiente texto con un tono formal y técnico-jurídico apropiado para un escrito judicial:\n\n{{text}}\n\nDevolvé solo el texto reescrito.",
 	},
 ];
 
 const SYSTEM_PROMPT_SUGGESTIONS = [
 	{
 		label: "Asistente jurídico",
-		prompt: "Sos un asistente jurídico especializado en derecho argentino. Tu tarea es editar y mejorar textos legales. Respondé siempre en español formal y jurídico. No agregues explicaciones, devolvé únicamente el texto editado.",
+		prompt:
+			"Sos un asistente jurídico especializado en derecho argentino. Tu tarea es editar y mejorar textos legales. Respondé siempre en español formal y jurídico. No agregues explicaciones, devolvé únicamente el texto editado.",
 	},
 	{
 		label: "Editor de documentos",
-		prompt: "Sos un editor experto en documentos legales argentinos. Tu objetivo es mejorar la calidad, claridad y precisión de los textos jurídicos. Mantené siempre el registro formal y técnico propio de los escritos judiciales.",
+		prompt:
+			"Sos un editor experto en documentos legales argentinos. Tu objetivo es mejorar la calidad, claridad y precisión de los textos jurídicos. Mantené siempre el registro formal y técnico propio de los escritos judiciales.",
 	},
 ];
 
@@ -131,7 +138,7 @@ const ActionDialog = ({ open, initial, onClose, onSave, saving }: ActionDialogPr
 	useEffect(() => {
 		if (open) {
 			setForm(initial ?? EMPTY_FORM);
-			setShowSystemPrompt(!!(initial?.systemPromptOverride));
+			setShowSystemPrompt(!!initial?.systemPromptOverride);
 			setShowPromptSuggestions(false);
 			setShowSystemSuggestions(false);
 		}
@@ -186,19 +193,25 @@ const ActionDialog = ({ open, initial, onClose, onSave, saving }: ActionDialogPr
 								<MenuItem value="bubble">
 									<Stack>
 										<Typography variant="body2">Bubble</Typography>
-										<Typography variant="caption" color="text.secondary">Al seleccionar texto</Typography>
+										<Typography variant="caption" color="text.secondary">
+											Al seleccionar texto
+										</Typography>
 									</Stack>
 								</MenuItem>
 								<MenuItem value="panel">
 									<Stack>
 										<Typography variant="body2">Panel</Typography>
-										<Typography variant="caption" color="text.secondary">Acciones rápidas del chat</Typography>
+										<Typography variant="caption" color="text.secondary">
+											Acciones rápidas del chat
+										</Typography>
 									</Stack>
 								</MenuItem>
 								<MenuItem value="both">
 									<Stack>
 										<Typography variant="body2">Ambos</Typography>
-										<Typography variant="caption" color="text.secondary">Bubble y panel</Typography>
+										<Typography variant="caption" color="text.secondary">
+											Bubble y panel
+										</Typography>
 									</Stack>
 								</MenuItem>
 							</Select>
@@ -206,23 +219,33 @@ const ActionDialog = ({ open, initial, onClose, onSave, saving }: ActionDialogPr
 
 						<FormControl size="small" sx={{ minWidth: 160 }}>
 							<InputLabel>Visibilidad</InputLabel>
-							<Select label="Visibilidad" value={form.visibility} onChange={(e) => set("visibility", e.target.value as EditorActionInput["visibility"])}>
+							<Select
+								label="Visibilidad"
+								value={form.visibility}
+								onChange={(e) => set("visibility", e.target.value as EditorActionInput["visibility"])}
+							>
 								<MenuItem value="global">
 									<Stack>
 										<Typography variant="body2">Global</Typography>
-										<Typography variant="caption" color="text.secondary">Todos los usuarios</Typography>
+										<Typography variant="caption" color="text.secondary">
+											Todos los usuarios
+										</Typography>
 									</Stack>
 								</MenuItem>
 								<MenuItem value="user">
 									<Stack>
 										<Typography variant="body2">Usuario</Typography>
-										<Typography variant="caption" color="text.secondary">Solo un usuario específico</Typography>
+										<Typography variant="caption" color="text.secondary">
+											Solo un usuario específico
+										</Typography>
 									</Stack>
 								</MenuItem>
 								<MenuItem value="plan">
 									<Stack>
 										<Typography variant="body2">Por plan</Typography>
-										<Typography variant="caption" color="text.secondary">Según suscripción</Typography>
+										<Typography variant="caption" color="text.secondary">
+											Según suscripción
+										</Typography>
 									</Stack>
 								</MenuItem>
 							</Select>
@@ -247,26 +270,52 @@ const ActionDialog = ({ open, initial, onClose, onSave, saving }: ActionDialogPr
 					</Stack>
 
 					{/* Context flags */}
-					<Box sx={{ p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+					<Box
+						sx={{
+							p: 1.5,
+							borderRadius: 1.5,
+							border: `1px solid ${theme.palette.divider}`,
+							bgcolor: alpha(theme.palette.primary.main, 0.02),
+						}}
+					>
 						<Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mb: 1, display: "block" }}>
 							Contexto enviado al modelo
 						</Typography>
 						<Stack direction="row" spacing={3} flexWrap="wrap">
 							<Tooltip title="Si está activo, el texto completo del documento se envía como contexto al LLM. Útil para acciones que necesitan coherencia con el resto del documento.">
 								<FormControlLabel
-									control={<Checkbox checked={form.context.includeDocument} onChange={(e) => setCtx("includeDocument", e.target.checked)} size="small" />}
+									control={
+										<Checkbox
+											checked={form.context.includeDocument}
+											onChange={(e) => setCtx("includeDocument", e.target.checked)}
+											size="small"
+										/>
+									}
 									label={<Typography variant="body2">Incluir documento completo</Typography>}
 								/>
 							</Tooltip>
 							<Tooltip title="Si está activo, esta acción solo se habilitará cuando el usuario haya seleccionado texto.">
 								<FormControlLabel
-									control={<Checkbox checked={form.context.requiresSelection} onChange={(e) => setCtx("requiresSelection", e.target.checked)} size="small" />}
+									control={
+										<Checkbox
+											checked={form.context.requiresSelection}
+											onChange={(e) => setCtx("requiresSelection", e.target.checked)}
+											size="small"
+										/>
+									}
 									label={<Typography variant="body2">Requiere selección</Typography>}
 								/>
 							</Tooltip>
 							<Tooltip title="Inyecta ejemplos del corpus de estilo forense (pjn-style-corpus-v2) en el system prompt usando búsqueda semántica. Requiere STYLE_CORPUS_ENABLED=true en pjn-rag-api.">
 								<FormControlLabel
-									control={<Checkbox checked={form.useStyleCorpus ?? false} onChange={(e) => set("useStyleCorpus", e.target.checked)} size="small" color="secondary" />}
+									control={
+										<Checkbox
+											checked={form.useStyleCorpus ?? false}
+											onChange={(e) => set("useStyleCorpus", e.target.checked)}
+											size="small"
+											color="secondary"
+										/>
+									}
 									label={<Typography variant="body2">Corpus de estilo forense</Typography>}
 								/>
 							</Tooltip>
@@ -295,7 +344,15 @@ const ActionDialog = ({ open, initial, onClose, onSave, saving }: ActionDialogPr
 						</Stack>
 
 						<Collapse in={showPromptSuggestions}>
-							<Box sx={{ mb: 1.5, p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.secondary.main, 0.03) }}>
+							<Box
+								sx={{
+									mb: 1.5,
+									p: 1.5,
+									borderRadius: 1.5,
+									border: `1px solid ${theme.palette.divider}`,
+									bgcolor: alpha(theme.palette.secondary.main, 0.03),
+								}}
+							>
 								<Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: "block" }}>
 									Hacé clic para insertar una sugerencia como base
 								</Typography>
@@ -306,7 +363,10 @@ const ActionDialog = ({ open, initial, onClose, onSave, saving }: ActionDialogPr
 											label={s.label}
 											size="small"
 											variant="outlined"
-											onClick={() => { set("prompt", s.prompt); setShowPromptSuggestions(false); }}
+											onClick={() => {
+												set("prompt", s.prompt);
+												setShowPromptSuggestions(false);
+											}}
 											sx={{ cursor: "pointer", fontSize: "0.72rem" }}
 										/>
 									))}
@@ -322,10 +382,12 @@ const ActionDialog = ({ open, initial, onClose, onSave, saving }: ActionDialogPr
 							value={form.prompt}
 							onChange={(e) => set("prompt", e.target.value)}
 							inputProps={{ maxLength: 4000 }}
-							placeholder='Ej: Mejorá la redacción del siguiente texto: {{text}}'
+							placeholder="Ej: Mejorá la redacción del siguiente texto: {{text}}"
 							helperText={
 								<Stack direction="row" justifyContent="space-between">
-									<span>Usá <code>{"{{text}}"}</code> para insertar el texto seleccionado</span>
+									<span>
+										Usá <code>{"{{text}}"}</code> para insertar el texto seleccionado
+									</span>
 									<span>{form.prompt.length}/4000</span>
 								</Stack>
 							}
@@ -362,7 +424,14 @@ const ActionDialog = ({ open, initial, onClose, onSave, saving }: ActionDialogPr
 						<Collapse in={showSystemPrompt}>
 							<Stack spacing={1} sx={{ mt: 1 }}>
 								<Collapse in={showSystemSuggestions}>
-									<Box sx={{ p: 1.5, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.secondary.main, 0.03) }}>
+									<Box
+										sx={{
+											p: 1.5,
+											borderRadius: 1.5,
+											border: `1px solid ${theme.palette.divider}`,
+											bgcolor: alpha(theme.palette.secondary.main, 0.03),
+										}}
+									>
 										<Stack direction="row" flexWrap="wrap" gap={0.75}>
 											{SYSTEM_PROMPT_SUGGESTIONS.map((s) => (
 												<Chip
@@ -370,7 +439,10 @@ const ActionDialog = ({ open, initial, onClose, onSave, saving }: ActionDialogPr
 													label={s.label}
 													size="small"
 													variant="outlined"
-													onClick={() => { set("systemPromptOverride", s.prompt); setShowSystemSuggestions(false); }}
+													onClick={() => {
+														set("systemPromptOverride", s.prompt);
+														setShowSystemSuggestions(false);
+													}}
 													sx={{ cursor: "pointer", fontSize: "0.72rem" }}
 												/>
 											))}
@@ -395,7 +467,9 @@ const ActionDialog = ({ open, initial, onClose, onSave, saving }: ActionDialogPr
 			</DialogContent>
 
 			<DialogActions sx={{ px: 3, py: 2 }}>
-				<Button onClick={onClose} disabled={saving}>Cancelar</Button>
+				<Button onClick={onClose} disabled={saving}>
+					Cancelar
+				</Button>
 				<Button variant="contained" onClick={() => onSave(form)} disabled={saving || !isValid}>
 					{saving ? "Guardando..." : isEdit ? "Guardar cambios" : "Crear acción"}
 				</Button>
@@ -421,11 +495,14 @@ const DeleteDialog = ({ action, onClose, onConfirm, deleting }: DeleteDialogProp
 				¿Eliminar la acción <strong>{action?.label}</strong>?
 			</DialogContentText>
 			<Alert severity="info" sx={{ mt: 2, borderRadius: 1.5 }}>
-				La eliminación suave desactiva la acción (<code>active: false</code>) y se puede recuperar. La eliminación permanente la borra de la base de datos.
+				La eliminación suave desactiva la acción (<code>active: false</code>) y se puede recuperar. La eliminación permanente la borra de la
+				base de datos.
 			</Alert>
 		</DialogContent>
 		<DialogActions sx={{ px: 3, py: 2 }}>
-			<Button onClick={onClose} disabled={deleting}>Cancelar</Button>
+			<Button onClick={onClose} disabled={deleting}>
+				Cancelar
+			</Button>
 			<Button onClick={() => onConfirm(false)} disabled={deleting} color="warning">
 				Desactivar
 			</Button>
@@ -470,7 +547,9 @@ const EditorActionsSection = () => {
 		}
 	}, [enqueueSnackbar]);
 
-	useEffect(() => { fetchActions(); }, [fetchActions]);
+	useEffect(() => {
+		fetchActions();
+	}, [fetchActions]);
 
 	const handleOpenCreate = () => {
 		setEditingAction(null);
@@ -487,7 +566,7 @@ const EditorActionsSection = () => {
 			setSaving(true);
 			if (editingAction) {
 				const updated = await RagWorkersService.updateEditorAction(editingAction._id, data);
-				setActions((prev) => prev.map((a) => a._id === updated._id ? updated : a));
+				setActions((prev) => prev.map((a) => (a._id === updated._id ? updated : a)));
 				enqueueSnackbar("Acción actualizada", { variant: "success" });
 			} else {
 				const created = await RagWorkersService.createEditorAction(data);
@@ -510,7 +589,7 @@ const EditorActionsSection = () => {
 			if (hard) {
 				setActions((prev) => prev.filter((a) => a._id !== deleteTarget._id));
 			} else {
-				setActions((prev) => prev.map((a) => a._id === deleteTarget._id ? { ...a, active: false } : a));
+				setActions((prev) => prev.map((a) => (a._id === deleteTarget._id ? { ...a, active: false } : a)));
 			}
 			enqueueSnackbar(hard ? "Acción eliminada permanentemente" : "Acción desactivada", { variant: "success" });
 			setDeleteTarget(null);
@@ -545,7 +624,8 @@ const EditorActionsSection = () => {
 						Acciones del asistente IA
 					</Typography>
 					<Typography variant="caption" color="text.secondary">
-						Acciones rápidas que aparecen en el bubble de selección y en el panel del chat. El prompt global se puede sobreescribir por acción.
+						Acciones rápidas que aparecen en el bubble de selección y en el panel del chat. El prompt global se puede sobreescribir por
+						acción.
 					</Typography>
 				</Stack>
 				<Stack direction="row" spacing={1} alignItems="center">
@@ -577,7 +657,9 @@ const EditorActionsSection = () => {
 			{/* Table */}
 			{loading ? (
 				<Stack spacing={1}>
-					{[1, 2, 3].map((i) => <Skeleton key={i} variant="rectangular" height={52} sx={{ borderRadius: 1 }} />)}
+					{[1, 2, 3].map((i) => (
+						<Skeleton key={i} variant="rectangular" height={52} sx={{ borderRadius: 1 }} />
+					))}
 				</Stack>
 			) : displayed.length === 0 ? (
 				<Alert severity="info" sx={{ borderRadius: 1.5 }}>
@@ -592,18 +674,20 @@ const EditorActionsSection = () => {
 								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Alcance</TableCell>
 								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Visibilidad</TableCell>
 								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Contexto</TableCell>
-								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }} align="center">Orden</TableCell>
-								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }} align="center">Estado</TableCell>
-								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }} align="right">Acciones</TableCell>
+								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }} align="center">
+									Orden
+								</TableCell>
+								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }} align="center">
+									Estado
+								</TableCell>
+								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }} align="right">
+									Acciones
+								</TableCell>
 							</TableRow>
 						</TableHead>
 						<TableBody>
 							{displayed.map((action) => (
-								<TableRow
-									key={action._id}
-									hover
-									sx={{ opacity: action.active ? 1 : 0.5, "&:last-child td": { borderBottom: 0 } }}
-								>
+								<TableRow key={action._id} hover sx={{ opacity: action.active ? 1 : 0.5, "&:last-child td": { borderBottom: 0 } }}>
 									<TableCell>
 										<Stack spacing={0.25}>
 											<Typography variant="body2" fontWeight={500}>
@@ -615,10 +699,22 @@ const EditorActionsSection = () => {
 												</Typography>
 											)}
 											{action.systemPromptOverride && (
-												<Chip label="system prompt custom" size="small" color="warning" variant="outlined" sx={{ width: "fit-content", fontSize: "0.62rem", height: 16 }} />
+												<Chip
+													label="system prompt custom"
+													size="small"
+													color="warning"
+													variant="outlined"
+													sx={{ width: "fit-content", fontSize: "0.62rem", height: 16 }}
+												/>
 											)}
-										{action.useStyleCorpus && (
-												<Chip label="corpus estilo" size="small" color="secondary" variant="outlined" sx={{ width: "fit-content", fontSize: "0.62rem", height: 16 }} />
+											{action.useStyleCorpus && (
+												<Chip
+													label="corpus estilo"
+													size="small"
+													color="secondary"
+													variant="outlined"
+													sx={{ width: "fit-content", fontSize: "0.62rem", height: 16 }}
+												/>
 											)}
 										</Stack>
 									</TableCell>
@@ -641,16 +737,14 @@ const EditorActionsSection = () => {
 									</TableCell>
 									<TableCell>
 										<Stack direction="row" spacing={0.5} flexWrap="wrap">
-											{action.context.includeDocument && (
-												<Chip label="doc" size="small" sx={{ fontSize: "0.6rem", height: 18 }} />
-											)}
-											{action.context.requiresSelection && (
-												<Chip label="selección" size="small" sx={{ fontSize: "0.6rem", height: 18 }} />
-											)}
+											{action.context.includeDocument && <Chip label="doc" size="small" sx={{ fontSize: "0.6rem", height: 18 }} />}
+											{action.context.requiresSelection && <Chip label="selección" size="small" sx={{ fontSize: "0.6rem", height: 18 }} />}
 										</Stack>
 									</TableCell>
 									<TableCell align="center">
-										<Typography variant="body2" sx={{ fontFamily: "monospace" }}>{action.order}</Typography>
+										<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+											{action.order}
+										</Typography>
 									</TableCell>
 									<TableCell align="center">
 										<Chip
@@ -685,31 +779,30 @@ const EditorActionsSection = () => {
 			{/* Dialogs */}
 			<ActionDialog
 				open={dialogOpen}
-				initial={editingAction ? {
-					label: editingAction.label,
-					hint: editingAction.hint,
-					prompt: editingAction.prompt,
-					systemPromptOverride: editingAction.systemPromptOverride,
-					useStyleCorpus: editingAction.useStyleCorpus ?? false,
-					context: editingAction.context,
-					scope: editingAction.scope,
-					order: editingAction.order,
-					active: editingAction.active,
-					visibility: editingAction.visibility,
-					userId: editingAction.userId,
-					allowedPlans: editingAction.allowedPlans,
-				} : null}
+				initial={
+					editingAction
+						? {
+								label: editingAction.label,
+								hint: editingAction.hint,
+								prompt: editingAction.prompt,
+								systemPromptOverride: editingAction.systemPromptOverride,
+								useStyleCorpus: editingAction.useStyleCorpus ?? false,
+								context: editingAction.context,
+								scope: editingAction.scope,
+								order: editingAction.order,
+								active: editingAction.active,
+								visibility: editingAction.visibility,
+								userId: editingAction.userId,
+								allowedPlans: editingAction.allowedPlans,
+						  }
+						: null
+				}
 				onClose={() => setDialogOpen(false)}
 				onSave={handleSave}
 				saving={saving}
 			/>
 
-			<DeleteDialog
-				action={deleteTarget}
-				onClose={() => setDeleteTarget(null)}
-				onConfirm={handleDelete}
-				deleting={deleting}
-			/>
+			<DeleteDialog action={deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} deleting={deleting} />
 		</Box>
 	);
 };

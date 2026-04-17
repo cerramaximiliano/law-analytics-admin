@@ -20,7 +20,11 @@ const MetricasTab = () => {
 	const [sub, setSub] = useState("stats");
 	return (
 		<Stack spacing={0}>
-			<Tabs value={sub} onChange={(_, v) => setSub(v)} sx={{ borderBottom: 1, borderColor: "divider", mb: 2, "& .MuiTab-root": { textTransform: "none", minHeight: 40 } }}>
+			<Tabs
+				value={sub}
+				onChange={(_, v) => setSub(v)}
+				sx={{ borderBottom: 1, borderColor: "divider", mb: 2, "& .MuiTab-root": { textTransform: "none", minHeight: 40 } }}
+			>
 				<Tab value="stats" label="Estadísticas de Jobs" icon={<Chart size={16} />} iconPosition="start" />
 				<Tab value="analytics" label="Analytics del Pipeline" icon={<Activity size={16} />} iconPosition="start" />
 			</Tabs>
@@ -34,7 +38,11 @@ const ChatTab = () => {
 	const [sub, setSub] = useState("rag");
 	return (
 		<Stack spacing={0}>
-			<Tabs value={sub} onChange={(_, v) => setSub(v)} sx={{ borderBottom: 1, borderColor: "divider", mb: 2, "& .MuiTab-root": { textTransform: "none", minHeight: 40 } }}>
+			<Tabs
+				value={sub}
+				onChange={(_, v) => setSub(v)}
+				sx={{ borderBottom: 1, borderColor: "divider", mb: 2, "& .MuiTab-root": { textTransform: "none", minHeight: 40 } }}
+			>
 				<Tab value="rag" label="Chat RAG" icon={<MessageText size={16} />} iconPosition="start" />
 				<Tab value="editor" label="Chat Editor" icon={<MessageText size={16} />} iconPosition="start" />
 			</Tabs>

@@ -30,7 +30,19 @@ import {
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { CloseCircle, Refresh, Setting2, DocumentText, TickCircle, Warning2, Calendar, ArrowRight2, Pause, Play, TextBlock } from "iconsax-react";
+import {
+	CloseCircle,
+	Refresh,
+	Setting2,
+	DocumentText,
+	TickCircle,
+	Warning2,
+	Calendar,
+	ArrowRight2,
+	Pause,
+	Play,
+	TextBlock,
+} from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import {
@@ -341,12 +353,18 @@ export default function SaijWorkerPage() {
 						{configs.map((cfg) => (
 							<Box
 								key={cfg.worker_id}
-								onClick={() => { selectWorker(cfg); handleSideTabChange("scraping"); }}
+								onClick={() => {
+									selectWorker(cfg);
+									handleSideTabChange("scraping");
+								}}
 								sx={{
 									p: 1.5,
 									borderRadius: 1,
 									cursor: "pointer",
-									bgcolor: sideTab === "scraping" && selected?.worker_id === cfg.worker_id ? alpha(theme.palette.primary.main, 0.1) : "transparent",
+									bgcolor:
+										sideTab === "scraping" && selected?.worker_id === cfg.worker_id
+											? alpha(theme.palette.primary.main, 0.1)
+											: "transparent",
 									"&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.06) },
 								}}
 							>
@@ -453,10 +471,14 @@ export default function SaijWorkerPage() {
 												{enrichStats.recent.map((r) => (
 													<TableRow key={r._id} hover>
 														<TableCell>
-															<Typography variant="caption" fontFamily="monospace">{r.numeroSumario || "—"}</Typography>
+															<Typography variant="caption" fontFamily="monospace">
+																{r.numeroSumario || "—"}
+															</Typography>
 														</TableCell>
 														<TableCell>
-															<Typography variant="caption" color="text.secondary">{r.texto?.length ?? 0}</Typography>
+															<Typography variant="caption" color="text.secondary">
+																{r.texto?.length ?? 0}
+															</Typography>
 														</TableCell>
 														<TableCell>
 															<Typography variant="caption" color="success.main" fontWeight={600}>
@@ -474,16 +496,13 @@ export default function SaijWorkerPage() {
 								</Paper>
 
 								<Alert severity="info" variant="outlined">
-									El worker corre como proceso PM2 <strong>worker_SAIJ_enrich</strong> (id: 539) en worker_01.
-									Procesa un sumario cada ~5s con delay configurable via <code>ENRICH_DELAY_MS</code>.
-									Cuando no hay pendientes duerme 30 min y reintenta.
+									El worker corre como proceso PM2 <strong>worker_SAIJ_enrich</strong> (id: 539) en worker_01. Procesa un sumario cada ~5s
+									con delay configurable via <code>ENRICH_DELAY_MS</code>. Cuando no hay pendientes duerme 30 min y reintenta.
 								</Alert>
 							</Stack>
 						)}
 
-						{!enrichStats && !enrichLoading && (
-							<Alert severity="info">Hacé click en recargar para ver el estado del worker.</Alert>
-						)}
+						{!enrichStats && !enrichLoading && <Alert severity="info">Hacé click en recargar para ver el estado del worker.</Alert>}
 					</Grid>
 				)}
 
@@ -506,7 +525,13 @@ export default function SaijWorkerPage() {
 									Pausar
 								</Button>
 							)}
-							<Button size="small" startIcon={<Calendar size={14} />} onClick={() => setCursorDialogOpen(true)} variant="outlined" disabled={actionLoading}>
+							<Button
+								size="small"
+								startIcon={<Calendar size={14} />}
+								onClick={() => setCursorDialogOpen(true)}
+								variant="outlined"
+								disabled={actionLoading}
+							>
 								Mover cursor
 							</Button>
 						</Stack>
@@ -542,11 +567,7 @@ export default function SaijWorkerPage() {
 									<Stack direction="row" spacing={1} alignItems="center">
 										<Chip label={`Desde ${s.scraping.yearFrom}`} size="small" variant="outlined" />
 										<ArrowRight2 size={14} />
-										<Chip
-											label={`${s.scraping.currentYear} / ${MONTH_NAMES[s.scraping.currentMonth - 1]}`}
-											size="small"
-											color="primary"
-										/>
+										<Chip label={`${s.scraping.currentYear} / ${MONTH_NAMES[s.scraping.currentMonth - 1]}`} size="small" color="primary" />
 										<Typography variant="caption" color="text.secondary">
 											offset {s.scraping.currentOffset}
 										</Typography>
@@ -587,7 +608,13 @@ export default function SaijWorkerPage() {
 								<Stack direction="row" justifyContent="flex-end">
 									{scrapingEdit ? (
 										<Stack direction="row" spacing={1}>
-											<Button size="small" onClick={() => { setScrapingEdit(false); setScrapingForm(s.scraping); }}>
+											<Button
+												size="small"
+												onClick={() => {
+													setScrapingEdit(false);
+													setScrapingForm(s.scraping);
+												}}
+											>
 												Cancelar
 											</Button>
 											<Button size="small" variant="contained" onClick={handleSaveScraping} disabled={actionLoading}>
@@ -619,7 +646,9 @@ export default function SaijWorkerPage() {
 												type={type}
 												value={scrapingForm[key] ?? ""}
 												disabled={!scrapingEdit}
-												onChange={(e) => setScrapingForm((f) => ({ ...f, [key]: type === "number" ? Number(e.target.value) : e.target.value }))}
+												onChange={(e) =>
+													setScrapingForm((f) => ({ ...f, [key]: type === "number" ? Number(e.target.value) : e.target.value }))
+												}
 											/>
 										</Grid>
 									))}

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+	AlertTitle,
 	Box,
 	Chip,
 	CircularProgress,
@@ -24,8 +25,9 @@ import {
 	Button,
 	ToggleButton,
 	ToggleButtonGroup,
+	Tooltip,
 } from "@mui/material";
-import { CloseCircle, Calendar, Chart, TickCircle, CloseSquare, Copy, Cloud, People, UserTick, DocumentCode, Send2 } from "iconsax-react";
+import { CloseCircle, Calendar, Chart, TickCircle, CloseSquare, Copy, Cloud, People, UserTick, DocumentCode, Send2, Refresh2, Warning2 } from "iconsax-react";
 import { useTheme } from "@mui/material/styles";
 import { DiscountCode, FullDiscountInfoResponse } from "api/discounts";
 import discountsService from "api/discounts";
@@ -64,6 +66,9 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 	const [stripeData, setStripeData] = useState<FullDiscountInfoResponse["data"] | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [syncLoading, setSyncLoading] = useState(false);
+	// Tracks locally updated stripe IDs after a sync (avoids needing to close/reopen modal)
+	const [localStripe, setLocalStripe] = useState<DiscountCode["stripe"] | null>(null);
 
 	useEffect(() => {
 		if (open && discount && tabValue === 1) {
@@ -236,6 +241,25 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 		}
 	};
 
+	const handleStripeSync = async () => {
+		if (!discount) return;
+		setSyncLoading(true);
+		try {
+			const response = await discountsService.syncWithStripe(discount._id, environment);
+			if (response.success && response.data?.stripe) {
+				setLocalStripe(response.data.stripe);
+			}
+			enqueueSnackbar(`Sincronización con Stripe (${environment}) completada`, { variant: "success" });
+			// Reload stripe info for the current tab
+			await fetchStripeInfo();
+		} catch (err: any) {
+			const msg = err?.response?.data?.message || err.message || "Error al sincronizar con Stripe";
+			enqueueSnackbar(msg, { variant: "error" });
+		} finally {
+			setSyncLoading(false);
+		}
+	};
+
 	const getEnvironmentChips = () => {
 		const chips = [];
 		const hasDev = !!discount.stripe?.development?.couponId;
@@ -284,6 +308,37 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 					</Stack>
 				</Paper>
 			</Grid>
+
+			{/* Alerta de sincronización pendiente */}
+			{discount.isActive && discount.activationRules.isPublic && (
+				(!discount.stripe?.development?.couponId || !discount.stripe?.production?.couponId) && (
+					<Grid item xs={12}>
+						<Alert
+							severity="warning"
+							icon={<Warning2 size={20} />}
+							action={
+								<Button
+									color="inherit"
+									size="small"
+									onClick={() => setTabValue(1)}
+									sx={{ whiteSpace: "nowrap" }}
+								>
+									Ir a Stripe
+								</Button>
+							}
+						>
+							<AlertTitle>Descuento público sin sincronizar</AlertTitle>
+							Este descuento es público y está activo, pero no tiene IDs de Stripe en{" "}
+							{!discount.stripe?.development?.couponId && !discount.stripe?.production?.couponId
+								? "ningún entorno"
+								: !discount.stripe?.development?.couponId
+								? "Development"
+								: "Production"}
+							. Los usuarios pueden verlo en la app pero no podrán aplicarlo al pagar. Usá el botón de sincronización en la pestaña Stripe.
+						</Alert>
+					</Grid>
+				)
+			)}
 
 			{/* Estadísticas */}
 			<Grid item xs={12}>
@@ -659,9 +714,23 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 
 		return (
 			<Grid container spacing={3}>
-				{/* Selector de entorno */}
+				{/* Selector de entorno + botón de sincronización */}
 				<Grid item xs={12}>
-					<Stack direction="row" justifyContent="flex-end">
+					<Stack direction="row" justifyContent="space-between" alignItems="center">
+						<Tooltip title={`Sincronizar código "${discount.code}" con Stripe en ${environment}`}>
+							<span>
+								<Button
+									variant="outlined"
+									size="small"
+									color={environment === "production" ? "success" : "warning"}
+									startIcon={syncLoading ? <CircularProgress size={14} color="inherit" /> : <Refresh2 size={16} />}
+									onClick={handleStripeSync}
+									disabled={syncLoading}
+								>
+									{syncLoading ? "Sincronizando…" : `Sincronizar con Stripe (${environment})`}
+								</Button>
+							</span>
+						</Tooltip>
 						<ToggleButtonGroup value={environment} exclusive onChange={handleEnvironmentChange} size="small">
 							<ToggleButton value="development" color="warning" sx={{ "&.Mui-selected": { color: theme.palette.text.primary } }}>
 								Development

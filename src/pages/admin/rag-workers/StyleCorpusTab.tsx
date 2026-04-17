@@ -28,12 +28,7 @@ import {
 } from "@mui/material";
 import { Refresh, SearchNormal1, ArrowDown2, ArrowUp2, DocumentText } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import RagWorkersService, {
-	StyleCorpusStats,
-	StyleCorpusByFuero,
-	StyleCorpusExample,
-	StyleCorpusSearchResult,
-} from "api/ragWorkers";
+import RagWorkersService, { StyleCorpusStats, StyleCorpusByFuero, StyleCorpusExample, StyleCorpusSearchResult } from "api/ragWorkers";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -43,8 +38,7 @@ const formatNumber = (n: number): string => {
 	return n.toString();
 };
 
-const pct = (part: number, total: number): string =>
-	total > 0 ? `${((part / total) * 100).toFixed(1)}%` : "—";
+const pct = (part: number, total: number): string => (total > 0 ? `${((part / total) * 100).toFixed(1)}%` : "—");
 
 const FUERO_LABELS: Record<string, string> = {
 	CIV: "Civil",
@@ -56,10 +50,7 @@ const FUERO_LABELS: Record<string, string> = {
 	CPF: "Penal",
 };
 
-const FUERO_OPTIONS = [
-	{ code: "", label: "Todos los fueros" },
-	...Object.entries(FUERO_LABELS).map(([code, label]) => ({ code, label })),
-];
+const FUERO_OPTIONS = [{ code: "", label: "Todos los fueros" }, ...Object.entries(FUERO_LABELS).map(([code, label]) => ({ code, label }))];
 
 const DOC_TYPE_OPTIONS = [
 	"",
@@ -83,7 +74,7 @@ const DOC_TYPE_OPTIONS = [
 
 const SCORE_COLOR = (score: number) => {
 	if (score >= 0.65) return "success";
-	if (score >= 0.50) return "warning";
+	if (score >= 0.5) return "warning";
 	return "error";
 };
 
@@ -102,10 +93,16 @@ const SummaryCard = ({ label, value, sub }: { label: string; value: string | num
 				border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
 			}}
 		>
-			<Typography variant="h4" fontWeight={700}>{value}</Typography>
-			<Typography variant="caption" color="text.secondary">{label}</Typography>
+			<Typography variant="h4" fontWeight={700}>
+				{value}
+			</Typography>
+			<Typography variant="caption" color="text.secondary">
+				{label}
+			</Typography>
 			{sub && (
-				<Typography variant="caption" color="text.secondary" display="block">{sub}</Typography>
+				<Typography variant="caption" color="text.secondary" display="block">
+					{sub}
+				</Typography>
 			)}
 		</Box>
 	);
@@ -115,12 +112,7 @@ const ScoreBar = ({ score }: { score: number }) => {
 	const color = SCORE_COLOR(score);
 	return (
 		<Stack spacing={0.5} sx={{ minWidth: 80 }}>
-			<LinearProgress
-				variant="determinate"
-				value={score * 100}
-				color={color}
-				sx={{ height: 5, borderRadius: 3 }}
-			/>
+			<LinearProgress variant="determinate" value={score * 100} color={color} sx={{ height: 5, borderRadius: 3 }} />
 			<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
 				{score.toFixed(3)}
 			</Typography>
@@ -128,11 +120,7 @@ const ScoreBar = ({ score }: { score: number }) => {
 	);
 };
 
-const PreviewCard = ({ result, expanded, onToggle }: {
-	result: StyleCorpusSearchResult;
-	expanded: boolean;
-	onToggle: () => void;
-}) => {
+const PreviewCard = ({ result, expanded, onToggle }: { result: StyleCorpusSearchResult; expanded: boolean; onToggle: () => void }) => {
 	const theme = useTheme();
 	return (
 		<Box
@@ -153,12 +141,8 @@ const PreviewCard = ({ result, expanded, onToggle }: {
 				{/* Content */}
 				<Box sx={{ flex: 1, minWidth: 0 }}>
 					<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mb: 0.75 }}>
-						{result.fuero && (
-							<Chip label={result.fuero} size="small" color="primary" variant="outlined" />
-						)}
-						{result.docType && (
-							<Chip label={result.docType} size="small" color="secondary" variant="outlined" />
-						)}
+						{result.fuero && <Chip label={result.fuero} size="small" color="primary" variant="outlined" />}
+						{result.docType && <Chip label={result.docType} size="small" color="secondary" variant="outlined" />}
 						<Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 400 }}>
 							{result.title || "(sin carátula)"}
 						</Typography>
@@ -229,7 +213,9 @@ const StyleCorpusTab = () => {
 		}
 	}, [enqueueSnackbar]);
 
-	useEffect(() => { fetchStats(); }, [fetchStats]);
+	useEffect(() => {
+		fetchStats();
+	}, [fetchStats]);
 
 	const handlePreviewSearch = async () => {
 		if (previewQuery.trim().length < 20) {
@@ -256,9 +242,9 @@ const StyleCorpusTab = () => {
 			setSearchLoading(true);
 			setExpandedIds(new Set());
 			const { data } = await RagWorkersService.searchStyleCorpus(searchQuery.trim(), {
-				fuero:    searchFuero   || undefined,
-				docType:  searchDocType || undefined,
-				limit:    searchLimit,
+				fuero: searchFuero || undefined,
+				docType: searchDocType || undefined,
+				limit: searchLimit,
 				minScore: searchMinScore,
 			});
 			setSearchResults(data);
@@ -270,7 +256,7 @@ const StyleCorpusTab = () => {
 	};
 
 	const toggleExpand = (id: string) => {
-		setExpandedIds(prev => {
+		setExpandedIds((prev) => {
 			const next = new Set(prev);
 			next.has(id) ? next.delete(id) : next.add(id);
 			return next;
@@ -279,22 +265,15 @@ const StyleCorpusTab = () => {
 
 	return (
 		<Stack spacing={3} sx={{ p: 3 }}>
-
 			{/* ── Header ── */}
 			<Stack direction="row" justifyContent="space-between" alignItems="center">
 				<Box>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-						<Typography variant="h5" fontWeight={600}>Corpus de Estilo Jurídico</Typography>
-						{stats && (
-							<Chip
-								label={stats.enabled ? "activo" : "inactivo"}
-								size="small"
-								color={stats.enabled ? "success" : "warning"}
-							/>
-						)}
-						{stats?.indexName && (
-							<Chip label={stats.indexName} size="small" variant="outlined" color="secondary" />
-						)}
+						<Typography variant="h5" fontWeight={600}>
+							Corpus de Estilo Jurídico
+						</Typography>
+						{stats && <Chip label={stats.enabled ? "activo" : "inactivo"} size="small" color={stats.enabled ? "success" : "warning"} />}
+						{stats?.indexName && <Chip label={stats.indexName} size="small" variant="outlined" color="secondary" />}
 					</Stack>
 					<Typography variant="body2" color="text.secondary">
 						Escritos judiciales reales (Pinecone v2) usados como ejemplos de estilo en el asistente de documentos
@@ -310,13 +289,19 @@ const StyleCorpusTab = () => {
 			{/* ── Summary cards ── */}
 			{loading ? (
 				<Stack direction="row" flexWrap="wrap" gap={2}>
-					{[...Array(5)].map((_, i) => <Skeleton key={i} variant="rounded" width={140} height={72} />)}
+					{[...Array(5)].map((_, i) => (
+						<Skeleton key={i} variant="rounded" width={140} height={72} />
+					))}
 				</Stack>
 			) : stats ? (
 				<Stack direction="row" flexWrap="wrap" gap={2}>
 					<SummaryCard label="Total corpus" value={formatNumber(stats.total)} />
 					<SummaryCard label="Alta calidad" value={formatNumber(stats.high)} sub={`${pct(stats.high, stats.total)} del total`} />
-					<SummaryCard label="Embebidos en Pinecone" value={formatNumber(stats.embedded)} sub={`${pct(stats.embedded, stats.high)} de los high`} />
+					<SummaryCard
+						label="Embebidos en Pinecone"
+						value={formatNumber(stats.embedded)}
+						sub={`${pct(stats.embedded, stats.high)} de los high`}
+					/>
 					<SummaryCard label="Normal / sin clasificar" value={formatNumber(stats.normal)} sub={pct(stats.normal, stats.total)} />
 					<SummaryCard label="Pendientes de embed" value={formatNumber(stats.high - stats.embedded)} sub="high sin vectorId" />
 				</Stack>
@@ -324,7 +309,9 @@ const StyleCorpusTab = () => {
 
 			{/* ── By fuero table ── */}
 			<Box>
-				<Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }}>Por fuero</Typography>
+				<Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }}>
+					Por fuero
+				</Typography>
 				{loading ? (
 					<Skeleton variant="rounded" height={200} />
 				) : (
@@ -332,9 +319,11 @@ const StyleCorpusTab = () => {
 						<Table size="small">
 							<TableHead>
 								<TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}>
-									{["Fuero", "Total", "Alta calidad", "Embebidos", "Cobertura Pinecone"].map(h => (
+									{["Fuero", "Total", "Alta calidad", "Embebidos", "Cobertura Pinecone"].map((h) => (
 										<TableCell key={h} align={h === "Fuero" ? "left" : "right"}>
-											<Typography variant="caption" fontWeight={600}>{h}</Typography>
+											<Typography variant="caption" fontWeight={600}>
+												{h}
+											</Typography>
 										</TableCell>
 									))}
 								</TableRow>
@@ -345,17 +334,25 @@ const StyleCorpusTab = () => {
 										<TableCell>
 											<Stack direction="row" spacing={1} alignItems="center">
 												<Chip label={row._id || "?"} size="small" variant="outlined" color="primary" />
-												<Typography variant="body2" color="text.secondary">{FUERO_LABELS[row._id] || ""}</Typography>
+												<Typography variant="body2" color="text.secondary">
+													{FUERO_LABELS[row._id] || ""}
+												</Typography>
 											</Stack>
 										</TableCell>
-										<TableCell align="right"><Typography variant="body2">{formatNumber(row.total)}</Typography></TableCell>
+										<TableCell align="right">
+											<Typography variant="body2">{formatNumber(row.total)}</Typography>
+										</TableCell>
 										<TableCell align="right">
 											<Typography variant="body2">
 												{formatNumber(row.high)}{" "}
-												<Typography component="span" variant="caption" color="text.secondary">({pct(row.high, row.total)})</Typography>
+												<Typography component="span" variant="caption" color="text.secondary">
+													({pct(row.high, row.total)})
+												</Typography>
 											</Typography>
 										</TableCell>
-										<TableCell align="right"><Typography variant="body2">{formatNumber(row.embedded)}</Typography></TableCell>
+										<TableCell align="right">
+											<Typography variant="body2">{formatNumber(row.embedded)}</Typography>
+										</TableCell>
 										<TableCell sx={{ minWidth: 160 }}>
 											<Stack spacing={0.5}>
 												<LinearProgress
@@ -363,7 +360,9 @@ const StyleCorpusTab = () => {
 													value={row.high > 0 ? (row.embedded / row.high) * 100 : 0}
 													sx={{ height: 6, borderRadius: 3 }}
 												/>
-												<Typography variant="caption" color="text.secondary">{pct(row.embedded, row.high)} de high</Typography>
+												<Typography variant="caption" color="text.secondary">
+													{pct(row.embedded, row.high)} de high
+												</Typography>
 											</Stack>
 										</TableCell>
 									</TableRow>
@@ -376,28 +375,43 @@ const StyleCorpusTab = () => {
 
 			{/* ── Semantic preview (quick, 3 results) ── */}
 			<Box>
-				<Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }}>Preview semántico</Typography>
+				<Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }}>
+					Preview semántico
+				</Typography>
 				<Paper variant="outlined" sx={{ p: 2 }}>
 					<Stack spacing={2}>
 						<Stack direction="row" spacing={2} alignItems="flex-start">
 							<TextField
-								select label="Fuero" value={previewFuero}
+								select
+								label="Fuero"
+								value={previewFuero}
 								onChange={(e) => setPreviewFuero(e.target.value)}
-								size="small" sx={{ minWidth: 140 }}
+								size="small"
+								sx={{ minWidth: 140 }}
 							>
-								{FUERO_OPTIONS.filter(o => o.code).map(o => (
-									<MenuItem key={o.code} value={o.code}>{o.code} — {o.label}</MenuItem>
+								{FUERO_OPTIONS.filter((o) => o.code).map((o) => (
+									<MenuItem key={o.code} value={o.code}>
+										{o.code} — {o.label}
+									</MenuItem>
 								))}
 							</TextField>
 							<TextField
 								label="Texto a buscar"
 								placeholder="Ej: quiero demandar a mi empleador por despido injustificado..."
-								value={previewQuery} onChange={(e) => setPreviewQuery(e.target.value)}
-								size="small" multiline minRows={2} fullWidth
-								onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) handlePreviewSearch(); }}
+								value={previewQuery}
+								onChange={(e) => setPreviewQuery(e.target.value)}
+								size="small"
+								multiline
+								minRows={2}
+								fullWidth
+								onKeyDown={(e) => {
+									if (e.key === "Enter" && e.ctrlKey) handlePreviewSearch();
+								}}
 							/>
 							<Button
-								variant="contained" size="small" onClick={handlePreviewSearch}
+								variant="contained"
+								size="small"
+								onClick={handlePreviewSearch}
 								disabled={previewLoading || previewQuery.trim().length < 20}
 								startIcon={previewLoading ? <CircularProgress size={14} color="inherit" /> : <SearchNormal1 size={16} />}
 								sx={{ whiteSpace: "nowrap", alignSelf: "flex-end" }}
@@ -409,16 +423,31 @@ const StyleCorpusTab = () => {
 							<>
 								<Divider />
 								{previewResults.length === 0 ? (
-									<Typography variant="body2" color="text.secondary">Sin resultados.</Typography>
+									<Typography variant="body2" color="text.secondary">
+										Sin resultados.
+									</Typography>
 								) : (
 									<Stack spacing={2}>
 										{previewResults.map((ex, i) => (
-											<Box key={i} sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.03), border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}` }}>
+											<Box
+												key={i}
+												sx={{
+													p: 1.5,
+													borderRadius: 1.5,
+													bgcolor: alpha(theme.palette.primary.main, 0.03),
+													border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+												}}
+											>
 												<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }}>
 													<Chip label={ex.docType || "?"} size="small" color="primary" variant="outlined" />
-													<Typography variant="caption" color="text.secondary" noWrap>{ex.title}</Typography>
+													<Typography variant="caption" color="text.secondary" noWrap>
+														{ex.title}
+													</Typography>
 												</Stack>
-												<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem", whiteSpace: "pre-wrap", maxHeight: 140, overflow: "auto" }}>
+												<Typography
+													variant="body2"
+													sx={{ fontFamily: "monospace", fontSize: "0.75rem", whiteSpace: "pre-wrap", maxHeight: 140, overflow: "auto" }}
+												>
 													{ex.preview}
 												</Typography>
 											</Box>
@@ -435,7 +464,9 @@ const StyleCorpusTab = () => {
 			<Box>
 				<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
 					<DocumentText size={18} />
-					<Typography variant="subtitle1" fontWeight={600}>Buscador de escritos</Typography>
+					<Typography variant="subtitle1" fontWeight={600}>
+						Buscador de escritos
+					</Typography>
 					<Chip label="semántico" size="small" variant="outlined" color="secondary" />
 				</Stack>
 
@@ -445,13 +476,21 @@ const StyleCorpusTab = () => {
 						<TextField
 							label="Texto de búsqueda"
 							placeholder="Ej: liquidación de haberes con intereses moratorios, impugnación de liquidación..."
-							value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-							multiline minRows={2} fullWidth size="small"
-							onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) handleSearch(); }}
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+							multiline
+							minRows={2}
+							fullWidth
+							size="small"
+							onKeyDown={(e) => {
+								if (e.key === "Enter" && e.ctrlKey) handleSearch();
+							}}
 							InputProps={{
 								endAdornment: (
 									<InputAdornment position="end">
-										<Typography variant="caption" color="text.secondary">{searchQuery.length}/2000</Typography>
+										<Typography variant="caption" color="text.secondary">
+											{searchQuery.length}/2000
+										</Typography>
 									</InputAdornment>
 								),
 							}}
@@ -460,11 +499,14 @@ const StyleCorpusTab = () => {
 						{/* Filters row */}
 						<Stack direction="row" spacing={2} flexWrap="wrap" alignItems="flex-end">
 							<TextField
-								select label="Fuero" value={searchFuero}
+								select
+								label="Fuero"
+								value={searchFuero}
 								onChange={(e) => setSearchFuero(e.target.value)}
-								size="small" sx={{ minWidth: 160 }}
+								size="small"
+								sx={{ minWidth: 160 }}
 							>
-								{FUERO_OPTIONS.map(o => (
+								{FUERO_OPTIONS.map((o) => (
 									<MenuItem key={o.code} value={o.code}>
 										{o.code ? `${o.code} — ${o.label}` : o.label}
 									</MenuItem>
@@ -472,21 +514,33 @@ const StyleCorpusTab = () => {
 							</TextField>
 
 							<TextField
-								select label="Tipo de escrito" value={searchDocType}
+								select
+								label="Tipo de escrito"
+								value={searchDocType}
 								onChange={(e) => setSearchDocType(e.target.value)}
-								size="small" sx={{ minWidth: 200 }}
+								size="small"
+								sx={{ minWidth: 200 }}
 							>
-								{DOC_TYPE_OPTIONS.map(dt => (
-									<MenuItem key={dt} value={dt}>{dt || "Todos los tipos"}</MenuItem>
+								{DOC_TYPE_OPTIONS.map((dt) => (
+									<MenuItem key={dt} value={dt}>
+										{dt || "Todos los tipos"}
+									</MenuItem>
 								))}
 							</TextField>
 
 							<TextField
-								select label="Resultados" value={searchLimit}
+								select
+								label="Resultados"
+								value={searchLimit}
 								onChange={(e) => setSearchLimit(Number(e.target.value))}
-								size="small" sx={{ minWidth: 110 }}
+								size="small"
+								sx={{ minWidth: 110 }}
 							>
-								{[5, 10, 20, 30].map(n => <MenuItem key={n} value={n}>{n}</MenuItem>)}
+								{[5, 10, 20, 30].map((n) => (
+									<MenuItem key={n} value={n}>
+										{n}
+									</MenuItem>
+								))}
 							</TextField>
 
 							<Box sx={{ minWidth: 180 }}>
@@ -494,15 +548,20 @@ const StyleCorpusTab = () => {
 									Score mínimo: {searchMinScore.toFixed(2)}
 								</Typography>
 								<Slider
-									value={searchMinScore} onChange={(_, v) => setSearchMinScore(v as number)}
-									min={0} max={0.9} step={0.05} size="small"
+									value={searchMinScore}
+									onChange={(_, v) => setSearchMinScore(v as number)}
+									min={0}
+									max={0.9}
+									step={0.05}
+									size="small"
 									marks={[{ value: 0 }, { value: 0.5 }, { value: 0.7 }, { value: 0.9 }]}
 									sx={{ mt: 0.5 }}
 								/>
 							</Box>
 
 							<Button
-								variant="contained" onClick={handleSearch}
+								variant="contained"
+								onClick={handleSearch}
 								disabled={searchLoading || searchQuery.trim().length < 3}
 								startIcon={searchLoading ? <CircularProgress size={16} color="inherit" /> : <SearchNormal1 size={18} />}
 								sx={{ alignSelf: "flex-end", mb: 0.3 }}
@@ -517,21 +576,25 @@ const StyleCorpusTab = () => {
 								<Divider />
 								<Stack direction="row" justifyContent="space-between" alignItems="center">
 									<Typography variant="caption" color="text.secondary">
-										{searchResults.length === 0 ? "Sin resultados." : `${searchResults.length} resultado${searchResults.length > 1 ? "s" : ""} encontrados`}
+										{searchResults.length === 0
+											? "Sin resultados."
+											: `${searchResults.length} resultado${searchResults.length > 1 ? "s" : ""} encontrados`}
 									</Typography>
 									{searchResults.length > 0 && (
-										<Button size="small" variant="text" onClick={() => setExpandedIds(
-											expandedIds.size < searchResults.length
-												? new Set(searchResults.map(r => r.id))
-												: new Set()
-										)}>
+										<Button
+											size="small"
+											variant="text"
+											onClick={() =>
+												setExpandedIds(expandedIds.size < searchResults.length ? new Set(searchResults.map((r) => r.id)) : new Set())
+											}
+										>
 											{expandedIds.size < searchResults.length ? "Expandir todos" : "Contraer todos"}
 										</Button>
 									)}
 								</Stack>
 								{searchResults.length > 0 && (
 									<Stack spacing={1.5}>
-										{searchResults.map(result => (
+										{searchResults.map((result) => (
 											<PreviewCard
 												key={result.id}
 												result={result}
@@ -548,9 +611,17 @@ const StyleCorpusTab = () => {
 			</Box>
 
 			{/* ── Note ── */}
-			<Box sx={{ p: 2, borderRadius: 2, bgcolor: alpha(theme.palette.secondary.main, 0.04), border: `1px solid ${alpha(theme.palette.secondary.main, 0.12)}` }}>
+			<Box
+				sx={{
+					p: 2,
+					borderRadius: 2,
+					bgcolor: alpha(theme.palette.secondary.main, 0.04),
+					border: `1px solid ${alpha(theme.palette.secondary.main, 0.12)}`,
+				}}
+			>
 				<Typography variant="body2" color="text.secondary">
-					El corpus v2 vive íntegramente en Pinecone. Los conteos por fuero reflejan los valores al cierre del run de embedding (2026-03-25). Índice: <strong>{stats?.indexName || "pjn-style-corpus-v2"}</strong>.
+					El corpus v2 vive íntegramente en Pinecone. Los conteos por fuero reflejan los valores al cierre del run de embedding
+					(2026-03-25). Índice: <strong>{stats?.indexName || "pjn-style-corpus-v2"}</strong>.
 				</Typography>
 			</Box>
 		</Stack>

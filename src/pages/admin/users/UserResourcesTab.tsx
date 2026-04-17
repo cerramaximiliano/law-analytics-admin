@@ -565,26 +565,14 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 									</Typography>
 									<Stack direction="row" spacing={2} mb={1.5} flexWrap="wrap" useFlexGap>
 										<StatCard label="Consultas" value={current.count} color={theme.palette.primary.main} />
-										<StatCard
-											label="Límite"
-											value={isUnlimited ? "∞" : current.monthlyLimit}
-											color={theme.palette.info.main}
-										/>
+										<StatCard label="Límite" value={isUnlimited ? "∞" : current.monthlyLimit} color={theme.palette.info.main} />
 										<StatCard
 											label="Restantes"
 											value={isUnlimited ? "∞" : current.remaining}
 											color={current.remaining === 0 ? theme.palette.error.main : theme.palette.success.main}
 										/>
-										<StatCard
-											label="Tokens"
-											value={current.tokensTotal.toLocaleString("es-AR")}
-											color={theme.palette.secondary.main}
-										/>
-										<StatCard
-											label="Costo USD"
-											value={`$${current.costUsd.toFixed(4)}`}
-											color={theme.palette.warning.main}
-										/>
+										<StatCard label="Tokens" value={current.tokensTotal.toLocaleString("es-AR")} color={theme.palette.secondary.main} />
+										<StatCard label="Costo USD" value={`$${current.costUsd.toFixed(4)}`} color={theme.palette.warning.main} />
 									</Stack>
 									{!isUnlimited && (
 										<Box>
@@ -645,10 +633,7 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 												<TableCell align="right">{row.count}</TableCell>
 												<TableCell align="right">{isUnlimited ? "∞" : row.monthlyLimit}</TableCell>
 												<TableCell align="right">
-													<Typography
-														variant="body2"
-														color={!isUnlimited && row.remaining === 0 ? "error" : "inherit"}
-													>
+													<Typography variant="body2" color={!isUnlimited && row.remaining === 0 ? "error" : "inherit"}>
 														{isUnlimited ? "∞" : row.remaining}
 													</Typography>
 												</TableCell>
@@ -663,7 +648,9 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 												</TableCell>
 												<TableCell>
 													<Typography variant="caption">
-														{row.lastUsedAt ? new Date(row.lastUsedAt).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" }) : "-"}
+														{row.lastUsedAt
+															? new Date(row.lastUsedAt).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" })
+															: "-"}
 													</Typography>
 												</TableCell>
 											</TableRow>

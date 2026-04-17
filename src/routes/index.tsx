@@ -44,7 +44,7 @@ const SentenciasWorkerPage = Loadable(lazy(() => import("pages/admin/workers/sen
 const SaijWorkerPage = Loadable(lazy(() => import("pages/admin/workers/saij")));
 const SecloWorkerPage = Loadable(lazy(() => import("pages/admin/workers/seclo")));
 const InfolegWorkersPage = Loadable(lazy(() => import("pages/admin/workers/infoleg")));
-const InfolegNormasPage  = Loadable(lazy(() => import("pages/admin/normas/infoleg")));
+const InfolegNormasPage = Loadable(lazy(() => import("pages/admin/normas/infoleg")));
 const JurisprudenciaSaijPage = Loadable(lazy(() => import("pages/recursos/jurisprudencia-saij")));
 const JurisprudenciaPjnPage = Loadable(lazy(() => import("pages/recursos/jurisprudencia-pjn")));
 

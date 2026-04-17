@@ -850,7 +850,7 @@ class RagWorkersService {
 	}
 
 	static async getEscritosWorkerDocuments(
-		opts: { status?: string; fuero?: string; limit?: number; page?: number } = {}
+		opts: { status?: string; fuero?: string; limit?: number; page?: number } = {},
 	): Promise<GlobalDocumentsResponse> {
 		const res = await ragAxios.get(`${BASE}/escritos-worker/documents`, { params: opts });
 		return res.data.data;
@@ -858,7 +858,7 @@ class RagWorkersService {
 
 	static async searchEscritosWorker(
 		q: string,
-		opts: { fuero?: string; docType?: string; sectionType?: string; limit?: number; minScore?: number } = {}
+		opts: { fuero?: string; docType?: string; sectionType?: string; limit?: number; minScore?: number } = {},
 	): Promise<{ data: EscritosSearchResult[]; meta: EscritosSearchMeta }> {
 		const res = await ragAxios.get(`${BASE}/escritos-worker/search`, { params: { q, ...opts } });
 		return { data: res.data.data ?? [], meta: res.data.meta };
@@ -892,12 +892,12 @@ class RagWorkersService {
 
 	static async searchStyleCorpus(
 		q: string,
-		opts: { fuero?: string; docType?: string; limit?: number; minScore?: number } = {}
+		opts: { fuero?: string; docType?: string; limit?: number; minScore?: number } = {},
 	): Promise<{ data: StyleCorpusSearchResult[]; meta: StyleCorpusSearchMeta }> {
 		const params: Record<string, string | number> = { q };
-		if (opts.fuero)    params.fuero    = opts.fuero;
-		if (opts.docType)  params.docType  = opts.docType;
-		if (opts.limit)    params.limit    = opts.limit;
+		if (opts.fuero) params.fuero = opts.fuero;
+		if (opts.docType) params.docType = opts.docType;
+		if (opts.limit) params.limit = opts.limit;
 		if (opts.minScore) params.minScore = opts.minScore;
 		const res = await ragAxios.get(`${BASE}/style-corpus/search`, { params });
 		return { data: res.data.data ?? [], meta: res.data.meta };

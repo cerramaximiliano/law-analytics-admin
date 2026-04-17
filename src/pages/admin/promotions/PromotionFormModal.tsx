@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import {
+	Alert,
+	AlertTitle,
 	Box,
 	Button,
 	Checkbox,
@@ -685,6 +687,17 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 							label="Promoción activa"
 						/>
 					</Grid>
+
+					{formData.isPublic && formData.targetSegments.length === 0 && (
+						<Grid item xs={12}>
+							<Alert severity="warning">
+								<AlertTitle>Descuento público sin audiencia restringida</AlertTitle>
+								Al activar esta opción sin segmentos asignados, el descuento será visible para <strong>todos los usuarios</strong> en
+								la página de planes. Si querés restringirlo a una audiencia específica, asigná segmentos arriba o agregá usuarios
+								objetivo desde el detalle de la promoción (después de crearla).
+							</Alert>
+						</Grid>
+					)}
 
 					<Grid item xs={12} sm={6}>
 						<TextField

@@ -29,7 +29,21 @@ import {
 	FormControl,
 	InputLabel,
 } from "@mui/material";
-import { CloseCircle, People, Messages2, Clock, TickCircle, CloseSquare, Trash, Warning2, UserRemove, Crown1, DocumentText, Code, Copy } from "iconsax-react";
+import {
+	CloseCircle,
+	People,
+	Messages2,
+	Clock,
+	TickCircle,
+	CloseSquare,
+	Trash,
+	Warning2,
+	UserRemove,
+	Crown1,
+	DocumentText,
+	Code,
+	Copy,
+} from "iconsax-react";
 import { useTheme } from "@mui/material/styles";
 import { useSnackbar } from "notistack";
 import GroupsService, { Group, GroupMember, GroupInvitation, GroupHistoryEntry } from "api/groups";
@@ -156,7 +170,12 @@ function MembersTab({ groupId, onMemberRemoved }: MembersTabProps) {
 		}
 	};
 
-	if (loading) return <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}><CircularProgress /></Box>;
+	if (loading)
+		return (
+			<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+				<CircularProgress />
+			</Box>
+		);
 	if (!data) return <Alert severity="error">Error al cargar miembros</Alert>;
 
 	const allMembers = data.owner ? [data.owner, ...data.members] : data.members;
@@ -185,12 +204,14 @@ function MembersTab({ groupId, onMemberRemoved }: MembersTabProps) {
 							<TableRow key={member._id} hover>
 								<TableCell>
 									<Stack direction="row" spacing={1} alignItems="center">
-										<Avatar sx={{ width: 32, height: 32, fontSize: 13 }}>
-											{userName.charAt(0).toUpperCase()}
-										</Avatar>
+										<Avatar sx={{ width: 32, height: 32, fontSize: 13 }}>{userName.charAt(0).toUpperCase()}</Avatar>
 										<Box>
-											<Typography variant="body2" fontWeight={500}>{userName}</Typography>
-											<Typography variant="caption" color="text.secondary">{userEmail}</Typography>
+											<Typography variant="body2" fontWeight={500}>
+												{userName}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												{userEmail}
+											</Typography>
 										</Box>
 									</Stack>
 								</TableCell>
@@ -207,8 +228,12 @@ function MembersTab({ groupId, onMemberRemoved }: MembersTabProps) {
 										color={MEMBER_STATUS_CHIP[member.status]?.color ?? "default"}
 									/>
 								</TableCell>
-								<TableCell><Typography variant="caption">{formatDate(member.joinedAt)}</Typography></TableCell>
-								<TableCell><Typography variant="caption">{member.lastActivityAt ? formatDate(member.lastActivityAt) : "—"}</Typography></TableCell>
+								<TableCell>
+									<Typography variant="caption">{formatDate(member.joinedAt)}</Typography>
+								</TableCell>
+								<TableCell>
+									<Typography variant="caption">{member.lastActivityAt ? formatDate(member.lastActivityAt) : "—"}</Typography>
+								</TableCell>
 								<TableCell align="center">
 									{!member.isOwner && member.status === "active" && (
 										<Tooltip title="Remover miembro">
@@ -295,7 +320,9 @@ function InvitationsTab({ groupId }: InvitationsTabProps) {
 			</FormControl>
 
 			{loading ? (
-				<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}><CircularProgress /></Box>
+				<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+					<CircularProgress />
+				</Box>
 			) : invitations.length === 0 ? (
 				<Alert severity="info">No hay invitaciones con el filtro seleccionado</Alert>
 			) : (
@@ -315,8 +342,12 @@ function InvitationsTab({ groupId }: InvitationsTabProps) {
 						<TableBody>
 							{invitations.map((inv) => (
 								<TableRow key={inv._id} hover>
-									<TableCell><Typography variant="body2">{inv.email}</Typography></TableCell>
-									<TableCell><Typography variant="body2">{ROLE_LABEL[inv.role] ?? inv.role}</Typography></TableCell>
+									<TableCell>
+										<Typography variant="body2">{inv.email}</Typography>
+									</TableCell>
+									<TableCell>
+										<Typography variant="body2">{ROLE_LABEL[inv.role] ?? inv.role}</Typography>
+									</TableCell>
 									<TableCell>
 										<Chip
 											size="small"
@@ -327,12 +358,11 @@ function InvitationsTab({ groupId }: InvitationsTabProps) {
 									<TableCell>
 										<Typography variant="caption">{getUserFullName(inv.invitedBy)}</Typography>
 									</TableCell>
-									<TableCell><Typography variant="caption">{formatDate(inv.sentAt)}</Typography></TableCell>
 									<TableCell>
-										<Typography
-											variant="caption"
-											color={new Date(inv.expiresAt) < new Date() ? "error" : "text.secondary"}
-										>
+										<Typography variant="caption">{formatDate(inv.sentAt)}</Typography>
+									</TableCell>
+									<TableCell>
+										<Typography variant="caption" color={new Date(inv.expiresAt) < new Date() ? "error" : "text.secondary"}>
 											{formatDate(inv.expiresAt)}
 										</Typography>
 									</TableCell>
@@ -391,7 +421,12 @@ function HistoryTab({ groupId }: HistoryTabProps) {
 		load();
 	}, [groupId]);
 
-	if (loading) return <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}><CircularProgress /></Box>;
+	if (loading)
+		return (
+			<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+				<CircularProgress />
+			</Box>
+		);
 	if (history.length === 0) return <Alert severity="info">Sin historial registrado</Alert>;
 
 	return (
@@ -417,8 +452,12 @@ function HistoryTab({ groupId }: HistoryTabProps) {
 									) : null}
 								</Typography>
 							</TableCell>
-							<TableCell><Typography variant="caption">{getUserFullName(entry.performedBy)}</Typography></TableCell>
-							<TableCell><Typography variant="caption">{getUserFullName(entry.targetUser)}</Typography></TableCell>
+							<TableCell>
+								<Typography variant="caption">{getUserFullName(entry.performedBy)}</Typography>
+							</TableCell>
+							<TableCell>
+								<Typography variant="caption">{getUserFullName(entry.targetUser)}</Typography>
+							</TableCell>
 							<TableCell>
 								<Typography variant="caption" color="text.secondary">
 									{entry.details
@@ -429,7 +468,9 @@ function HistoryTab({ groupId }: HistoryTabProps) {
 										: "—"}
 								</Typography>
 							</TableCell>
-							<TableCell><Typography variant="caption">{formatDate(entry.timestamp)}</Typography></TableCell>
+							<TableCell>
+								<Typography variant="caption">{formatDate(entry.timestamp)}</Typography>
+							</TableCell>
 						</TableRow>
 					))}
 				</TableBody>
@@ -458,8 +499,12 @@ function ResourcesTab({ group }: { group: Group }) {
 			{resources.map((r) => (
 				<Grid item xs={6} sm={4} key={r.label}>
 					<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
-						<Typography variant="h4" fontWeight={700}>{r.value}</Typography>
-						<Typography variant="body2" color="text.secondary">{r.label}</Typography>
+						<Typography variant="h4" fontWeight={700}>
+							{r.value}
+						</Typography>
+						<Typography variant="body2" color="text.secondary">
+							{r.label}
+						</Typography>
 					</Paper>
 				</Grid>
 			))}
@@ -603,7 +648,9 @@ export default function GroupDetailModal({ open, onClose, groupId, onStatusChang
 							<Chip size="small" label={PLAN_LABEL[ownerPlan]} color={PLAN_COLOR[ownerPlan]} variant="outlined" />
 						</Stack>
 						{group?.description && (
-							<Typography variant="body2" color="text.secondary">{group.description}</Typography>
+							<Typography variant="body2" color="text.secondary">
+								{group.description}
+							</Typography>
 						)}
 						{group?._id && (
 							<Stack direction="row" spacing={0.5} alignItems="center">
@@ -640,21 +687,27 @@ export default function GroupDetailModal({ open, onClose, groupId, onStatusChang
 					<Grid container spacing={2}>
 						<Grid item xs={12} sm={6}>
 							<Paper variant="outlined" sx={{ p: 1.5 }}>
-								<Typography variant="caption" color="text.secondary" display="block">Owner</Typography>
+								<Typography variant="caption" color="text.secondary" display="block">
+									Owner
+								</Typography>
 								<Stack direction="row" spacing={1} alignItems="center" mt={0.5}>
-									<Avatar sx={{ width: 28, height: 28, fontSize: 12 }}>
-										{getUserFullName(group.owner).charAt(0).toUpperCase()}
-									</Avatar>
+									<Avatar sx={{ width: 28, height: 28, fontSize: 12 }}>{getUserFullName(group.owner).charAt(0).toUpperCase()}</Avatar>
 									<Box>
-										<Typography variant="body2" fontWeight={500}>{getUserFullName(group.owner)}</Typography>
-										<Typography variant="caption" color="text.secondary">{group.owner?.email}</Typography>
+										<Typography variant="body2" fontWeight={500}>
+											{getUserFullName(group.owner)}
+										</Typography>
+										<Typography variant="caption" color="text.secondary">
+											{group.owner?.email}
+										</Typography>
 									</Box>
 								</Stack>
 							</Paper>
 						</Grid>
 						<Grid item xs={6} sm={3}>
 							<Paper variant="outlined" sx={{ p: 1.5, textAlign: "center" }}>
-								<Typography variant="h4" fontWeight={700}>{group.totalMemberCount}</Typography>
+								<Typography variant="h4" fontWeight={700}>
+									{group.totalMemberCount}
+								</Typography>
 								<Typography variant="caption" color="text.secondary">
 									Miembros / {group.memberLimit ?? 0} máx
 								</Typography>
@@ -662,8 +715,12 @@ export default function GroupDetailModal({ open, onClose, groupId, onStatusChang
 						</Grid>
 						<Grid item xs={6} sm={3}>
 							<Paper variant="outlined" sx={{ p: 1.5, textAlign: "center" }}>
-								<Typography variant="h4" fontWeight={700}>{group.pendingInvitationsCount}</Typography>
-								<Typography variant="caption" color="text.secondary">Invitaciones pendientes</Typography>
+								<Typography variant="h4" fontWeight={700}>
+									{group.pendingInvitationsCount}
+								</Typography>
+								<Typography variant="caption" color="text.secondary">
+									Invitaciones pendientes
+								</Typography>
 							</Paper>
 						</Grid>
 						<Grid item xs={12}>
@@ -674,17 +731,35 @@ export default function GroupDetailModal({ open, onClose, groupId, onStatusChang
 								<Box sx={{ flex: 1 }} />
 								{/* Acciones de admin */}
 								{group.status !== "active" && (
-									<Button size="small" variant="outlined" color="success" disabled={updatingStatus} onClick={() => handleStatusChange("active")}>
+									<Button
+										size="small"
+										variant="outlined"
+										color="success"
+										disabled={updatingStatus}
+										onClick={() => handleStatusChange("active")}
+									>
 										Activar
 									</Button>
 								)}
 								{group.status === "active" && (
-									<Button size="small" variant="outlined" color="warning" disabled={updatingStatus} onClick={() => handleStatusChange("suspended")}>
+									<Button
+										size="small"
+										variant="outlined"
+										color="warning"
+										disabled={updatingStatus}
+										onClick={() => handleStatusChange("suspended")}
+									>
 										Suspender
 									</Button>
 								)}
 								{group.status !== "archived" && group.status !== "deleted" && (
-									<Button size="small" variant="outlined" color="inherit" disabled={updatingStatus} onClick={() => handleStatusChange("archived")}>
+									<Button
+										size="small"
+										variant="outlined"
+										color="inherit"
+										disabled={updatingStatus}
+										onClick={() => handleStatusChange("archived")}
+									>
 										Archivar
 									</Button>
 								)}
@@ -694,20 +769,57 @@ export default function GroupDetailModal({ open, onClose, groupId, onStatusChang
 
 					{/* Tabs */}
 					<Box>
-						<Tabs
-							value={tab}
-							onChange={(_, v) => setTab(v)}
-							sx={{ borderBottom: 1, borderColor: "divider", mb: 1 }}
-						>
-							<Tab label={<Stack direction="row" spacing={0.5} alignItems="center"><People size={16} /><span>Miembros ({group.totalMemberCount})</span></Stack>} />
-							<Tab label={<Stack direction="row" spacing={0.5} alignItems="center"><Messages2 size={16} /><span>Invitaciones</span></Stack>} />
-							<Tab label={<Stack direction="row" spacing={0.5} alignItems="center"><DocumentText size={16} /><span>Recursos</span></Stack>} />
-							<Tab label={<Stack direction="row" spacing={0.5} alignItems="center"><Clock size={16} /><span>Historial</span></Stack>} />
-							<Tab label={<Stack direction="row" spacing={0.5} alignItems="center"><Code size={16} /><span>JSON</span></Stack>} />
+						<Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ borderBottom: 1, borderColor: "divider", mb: 1 }}>
+							<Tab
+								label={
+									<Stack direction="row" spacing={0.5} alignItems="center">
+										<People size={16} />
+										<span>Miembros ({group.totalMemberCount})</span>
+									</Stack>
+								}
+							/>
+							<Tab
+								label={
+									<Stack direction="row" spacing={0.5} alignItems="center">
+										<Messages2 size={16} />
+										<span>Invitaciones</span>
+									</Stack>
+								}
+							/>
+							<Tab
+								label={
+									<Stack direction="row" spacing={0.5} alignItems="center">
+										<DocumentText size={16} />
+										<span>Recursos</span>
+									</Stack>
+								}
+							/>
+							<Tab
+								label={
+									<Stack direction="row" spacing={0.5} alignItems="center">
+										<Clock size={16} />
+										<span>Historial</span>
+									</Stack>
+								}
+							/>
+							<Tab
+								label={
+									<Stack direction="row" spacing={0.5} alignItems="center">
+										<Code size={16} />
+										<span>JSON</span>
+									</Stack>
+								}
+							/>
 						</Tabs>
 
 						<TabPanel value={tab} index={0}>
-							<MembersTab groupId={group._id} onMemberRemoved={() => { onStatusChanged(); load(); }} />
+							<MembersTab
+								groupId={group._id}
+								onMemberRemoved={() => {
+									onStatusChanged();
+									load();
+								}}
+							/>
 						</TabPanel>
 						<TabPanel value={tab} index={1}>
 							<InvitationsTab groupId={group._id} />

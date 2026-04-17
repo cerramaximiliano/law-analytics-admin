@@ -126,7 +126,9 @@ class PdfTemplatesAdminService {
 		return response.data;
 	}
 
-	static async getPresignedUrl(id: string): Promise<{ success: boolean; data: { presignedUrl: string; expiresIn: number; s3Key: string } }> {
+	static async getPresignedUrl(
+		id: string,
+	): Promise<{ success: boolean; data: { presignedUrl: string; expiresIn: number; s3Key: string } }> {
 		const response = await adminAxios.get(`${this.BASE}/${id}/presigned-url`);
 		return response.data;
 	}

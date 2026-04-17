@@ -78,19 +78,23 @@ function StatCard({ title, value, subtitle, loading, icon, color }: StatCardProp
 			<CardContent>
 				<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
 					<Box>
-						<Typography variant="caption" color="text.secondary">{title}</Typography>
+						<Typography variant="caption" color="text.secondary">
+							{title}
+						</Typography>
 						{loading ? (
 							<Skeleton width={60} height={40} />
 						) : (
-							<Typography variant="h4" fontWeight={700} color={color ?? "text.primary"}>{value}</Typography>
+							<Typography variant="h4" fontWeight={700} color={color ?? "text.primary"}>
+								{value}
+							</Typography>
 						)}
-						{subtitle && <Typography variant="caption" color="text.secondary">{subtitle}</Typography>}
+						{subtitle && (
+							<Typography variant="caption" color="text.secondary">
+								{subtitle}
+							</Typography>
+						)}
 					</Box>
-					{icon && (
-						<Box sx={{ p: 1, borderRadius: 2, bgcolor: theme.palette.grey[100] }}>
-							{icon}
-						</Box>
-					)}
+					{icon && <Box sx={{ p: 1, borderRadius: 2, bgcolor: theme.palette.grey[100] }}>{icon}</Box>}
 				</Stack>
 			</CardContent>
 		</Card>
@@ -204,12 +208,7 @@ export default function GroupsPage() {
 			{/* Stats */}
 			<Grid container spacing={2} sx={{ mb: 3 }}>
 				<Grid item xs={6} sm={3}>
-					<StatCard
-						title="Total grupos"
-						value={stats?.total ?? 0}
-						loading={loadingStats}
-						icon={<People size={20} />}
-					/>
+					<StatCard title="Total grupos" value={stats?.total ?? 0} loading={loadingStats} icon={<People size={20} />} />
 				</Grid>
 				<Grid item xs={6} sm={3}>
 					<StatCard
@@ -271,7 +270,10 @@ export default function GroupsPage() {
 					<Select
 						value={statusFilter}
 						label="Estado"
-						onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
+						onChange={(e) => {
+							setStatusFilter(e.target.value);
+							setPage(0);
+						}}
 					>
 						<MenuItem value="">Todos</MenuItem>
 						<MenuItem value="active">Activo</MenuItem>
@@ -282,7 +284,13 @@ export default function GroupsPage() {
 				</FormControl>
 
 				<Tooltip title="Actualizar">
-					<IconButton onClick={() => { fetchGroups(); fetchStats(); }} disabled={loadingGroups}>
+					<IconButton
+						onClick={() => {
+							fetchGroups();
+							fetchStats();
+						}}
+						disabled={loadingGroups}
+					>
 						<Refresh size={18} />
 					</IconButton>
 				</Tooltip>
@@ -291,7 +299,9 @@ export default function GroupsPage() {
 			{/* Table */}
 			{loadingGroups ? (
 				<Stack spacing={1}>
-					{[...Array(5)].map((_, i) => <Skeleton key={i} height={52} variant="rounded" />)}
+					{[...Array(5)].map((_, i) => (
+						<Skeleton key={i} height={52} variant="rounded" />
+					))}
 				</Stack>
 			) : groups.length === 0 ? (
 				<Alert severity="info">No se encontraron grupos con los filtros seleccionados</Alert>
@@ -324,7 +334,9 @@ export default function GroupsPage() {
 													{group.name.charAt(0).toUpperCase()}
 												</Avatar>
 												<Box>
-													<Typography variant="body2" fontWeight={500}>{group.name}</Typography>
+													<Typography variant="body2" fontWeight={500}>
+														{group.name}
+													</Typography>
 													{group.description && (
 														<Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 180, display: "block" }}>
 															{group.description}
@@ -336,7 +348,9 @@ export default function GroupsPage() {
 										<TableCell>
 											<Box>
 												<Typography variant="body2">{getUserFullName(group.owner)}</Typography>
-												<Typography variant="caption" color="text.secondary">{group.owner?.email}</Typography>
+												<Typography variant="caption" color="text.secondary">
+													{group.owner?.email}
+												</Typography>
 											</Box>
 										</TableCell>
 										<TableCell>
@@ -345,7 +359,9 @@ export default function GroupsPage() {
 										<TableCell align="center">
 											<Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
 												<People size={14} />
-												<Typography variant="body2">{group.totalMemberCount} / {group.memberLimit ?? "—"}</Typography>
+												<Typography variant="body2">
+													{group.totalMemberCount} / {group.memberLimit ?? "—"}
+												</Typography>
 											</Stack>
 										</TableCell>
 										<TableCell align="center">
@@ -357,9 +373,7 @@ export default function GroupsPage() {
 											<Chip size="small" label={statusConfig.label} color={statusConfig.color} />
 										</TableCell>
 										<TableCell>
-											<Typography variant="caption">
-												{new Date(group.createdAt).toLocaleDateString("es-AR")}
-											</Typography>
+											<Typography variant="caption">{new Date(group.createdAt).toLocaleDateString("es-AR")}</Typography>
 										</TableCell>
 										<TableCell align="center">
 											<Tooltip title="Ver detalle">
@@ -379,7 +393,10 @@ export default function GroupsPage() {
 						page={page}
 						onPageChange={(_, p) => setPage(p)}
 						rowsPerPage={rowsPerPage}
-						onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+						onRowsPerPageChange={(e) => {
+							setRowsPerPage(parseInt(e.target.value, 10));
+							setPage(0);
+						}}
 						rowsPerPageOptions={[10, 20, 50]}
 						labelRowsPerPage="Filas:"
 						labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
@@ -388,12 +405,7 @@ export default function GroupsPage() {
 			)}
 
 			{/* Modal */}
-			<GroupDetailModal
-				open={modalOpen}
-				onClose={handleCloseModal}
-				groupId={selectedGroupId}
-				onStatusChanged={handleStatusChanged}
-			/>
+			<GroupDetailModal open={modalOpen} onClose={handleCloseModal} groupId={selectedGroupId} onStatusChanged={handleStatusChanged} />
 		</MainCard>
 	);
 }
