@@ -49,6 +49,8 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 	// Target users: en creación se acumulan para asignar post-creación; en edición se cargan y sincronizan al guardar
 	const [pendingTargetUsers, setPendingTargetUsers] = useState<TargetUser[]>([]);
 	const [loadingTargetUsers, setLoadingTargetUsers] = useState(false);
+	// Datos frescos del descuento (re-fetched al abrir en edición para evitar datos stale del padre)
+	const [freshDiscount, setFreshDiscount] = useState<DiscountCode | null>(null);
 	const [userSearchQuery, setUserSearchQuery] = useState("");
 	const [userSearchResults, setUserSearchResults] = useState<TargetUser[]>([]);
 	const [userSearchLoading, setUserSearchLoading] = useState(false);
@@ -160,6 +162,10 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 						.then((res) => setPendingTargetUsers(res.data?.targetUsers || []))
 						.catch(() => {/* silencioso: el campo queda vacío */})
 						.finally(() => setLoadingTargetUsers(false));
+					// Refrescar datos del descuento para obtener el estado actualizado de Stripe
+					discountsService.getDiscountById(discount._id)
+						.then((res) => setFreshDiscount(res.data ?? null))
+						.catch(() => {/* silencioso: se usa el prop como fallback */});
 				}
 			} else {
 				// Create mode: reset form
@@ -196,6 +202,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 				setPendingTargetUsers([]);
 				setUserSearchQuery("");
 				setUserSearchResults([]);
+				setFreshDiscount(null);
 			}
 		}
 	}, [open, discount]);
@@ -230,12 +237,14 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 	};
 
 	// En edición: no se puede activar isPublic si el descuento no está sincronizado con Stripe
+	// Usa freshDiscount (re-fetched al abrir) para evitar leer datos stale del prop del padre
+	const effectiveStripeForValidation = freshDiscount?.stripe ?? discount?.stripe;
 	const editSyncBlocked =
 		isEditing &&
 		formData.isPublic &&
 		formData.isActive &&
-		!discount?.stripe?.development?.couponId &&
-		!discount?.stripe?.production?.couponId;
+		!effectiveStripeForValidation?.development?.couponId &&
+		!effectiveStripeForValidation?.production?.couponId;
 
 	const handleSubmit = async () => {
 		// Validation
