@@ -1003,7 +1003,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 						{renderStripeTab()}
 					</TabPanel>
 					<TabPanel value={tabValue} index={2}>
-						<TargetUsersManager discountId={discount._id} discountCode={discount.code} isPublic={discount.activationRules.isPublic} />
+						<TargetUsersManager discountId={discount._id} discountCode={discount.code} isPublic={discount.activationRules.isPublic} frozenSegment={discount.campaign?.frozenSegment} />
 					</TabPanel>
 					<TabPanel value={tabValue} index={3}>
 						<LaunchCampaignTab discount={discount} />

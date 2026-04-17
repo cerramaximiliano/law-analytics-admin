@@ -162,6 +162,12 @@ export interface DiscountCode {
 	targetEnvironment: TargetEnvironment;
 	stats: DiscountStats;
 	redemptionHistory: RedemptionHistoryItem[];
+	campaign?: {
+		campaignId: string;
+		type: "onetime" | "sequence";
+		frozenSegment: boolean;
+		launchedAt: string;
+	};
 	createdBy?: string;
 	updatedBy?: string;
 	createdAt: string;
