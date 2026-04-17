@@ -237,8 +237,8 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 
 	const getEnvironmentChips = () => {
 		const chips = [];
-		const hasDev = !!discount.stripe.development?.couponId;
-		const hasProd = !!discount.stripe.production?.couponId;
+		const hasDev = !!discount.stripe?.development?.couponId;
+		const hasProd = !!discount.stripe?.production?.couponId;
 
 		if (discount.targetEnvironment === "both" || discount.targetEnvironment === "development") {
 			chips.push(
@@ -548,10 +548,10 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 							</Typography>
 							<Stack spacing={0.5}>
 								<Typography variant="caption" color="textSecondary">
-									Coupon ID: {discount.stripe.development?.couponId || "No sincronizado"}
+									Coupon ID: {discount.stripe?.development?.couponId || "No sincronizado"}
 								</Typography>
 								<Typography variant="caption" color="textSecondary">
-									Promo Code ID: {discount.stripe.development?.promotionCodeId || "No sincronizado"}
+									Promo Code ID: {discount.stripe?.development?.promotionCodeId || "No sincronizado"}
 								</Typography>
 							</Stack>
 						</Box>
@@ -562,10 +562,10 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 							</Typography>
 							<Stack spacing={0.5}>
 								<Typography variant="caption" color="textSecondary">
-									Coupon ID: {discount.stripe.production?.couponId || "No sincronizado"}
+									Coupon ID: {discount.stripe?.production?.couponId || "No sincronizado"}
 								</Typography>
 								<Typography variant="caption" color="textSecondary">
-									Promo Code ID: {discount.stripe.production?.promotionCodeId || "No sincronizado"}
+									Promo Code ID: {discount.stripe?.production?.promotionCodeId || "No sincronizado"}
 								</Typography>
 							</Stack>
 						</Box>
