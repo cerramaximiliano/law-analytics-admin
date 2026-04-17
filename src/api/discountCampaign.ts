@@ -17,6 +17,14 @@ export interface MarketingTemplatesResponse {
 	data: MarketingTemplate[];
 }
 
+export interface CampaignStep {
+	name: string;
+	subject: string;
+	htmlBody: string;
+	timeDelayValue: number;
+	timeDelayUnit: "hours" | "days";
+}
+
 export interface LaunchCampaignParams {
 	subject: string;
 	htmlBody: string;
@@ -30,6 +38,8 @@ export interface LaunchCampaignParams {
 	dailyLimit?: number;
 	allowedDays?: number[];
 	timeWindow?: { start: string; end: string };
+	campaignType?: "onetime" | "sequence";
+	steps?: CampaignStep[];
 }
 
 export interface LaunchCampaignResult {
@@ -39,6 +49,7 @@ export interface LaunchCampaignResult {
 	recipientCount: number;
 	status: "draft" | "active";
 	segmentCreated: boolean;
+	emailsCreated?: number;
 }
 
 export interface LaunchCampaignResponse {
