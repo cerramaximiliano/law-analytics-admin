@@ -46,8 +46,9 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 	const [loading, setLoading] = useState(false);
 	const [segments, setSegments] = useState<Segment[]>([]);
 	const [loadingSegments, setLoadingSegments] = useState(false);
-	// Pending target users: acumulados en memoria para asignar post-creación
+	// Target users: en creación se acumulan para asignar post-creación; en edición se cargan y sincronizan al guardar
 	const [pendingTargetUsers, setPendingTargetUsers] = useState<TargetUser[]>([]);
+	const [loadingTargetUsers, setLoadingTargetUsers] = useState(false);
 	const [userSearchQuery, setUserSearchQuery] = useState("");
 	const [userSearchResults, setUserSearchResults] = useState<TargetUser[]>([]);
 	const [userSearchLoading, setUserSearchLoading] = useState(false);
@@ -152,6 +153,14 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					environments: (discount as any).environments || (["development", "production"] as StripeEnvironment[]),
 					targetSegments: discount.restrictions.targetSegments || [],
 				});
+				// Cargar usuarios objetivo existentes para mostrarlos en el Autocomplete
+				if (discount._id) {
+					setLoadingTargetUsers(true);
+					discountsService.getTargetUsers(discount._id)
+						.then((res) => setPendingTargetUsers(res.data?.targetUsers || []))
+						.catch(() => {/* silencioso: el campo queda vacío */})
+						.finally(() => setLoadingTargetUsers(false));
+				}
 			} else {
 				// Create mode: reset form
 				const today = new Date();
@@ -296,6 +305,10 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 				};
 
 				await discountsService.updateDiscount(discount!._id, updateData);
+				// Sincronizar usuarios objetivo (reemplaza la lista completa)
+				await discountsService.setTargetUsers(discount!._id, {
+					userIds: pendingTargetUsers.map((u) => u._id),
+				});
 				enqueueSnackbar("Promoción actualizada correctamente", { variant: "success" });
 			} else {
 				// Create new discount
@@ -734,90 +747,89 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 						/>
 					</Grid>
 
-					{/* Target Users — solo en creación */}
-					{!isEditing && (
-						<>
-							<Grid item xs={12}>
-								<Divider sx={{ my: 1 }} />
-								<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
-									Usuarios Objetivo
-								</Typography>
-								<Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 2 }}>
-									Buscá y seleccioná usuarios específicos que podrán ver y usar esta promoción. Se combina con los segmentos usando lógica OR.
-									También podés agregar más usuarios después de crear la promoción.
-								</Typography>
-							</Grid>
-							<Grid item xs={12}>
-								<Autocomplete
-									multiple
-									options={userSearchResults}
-									value={pendingTargetUsers}
-									onChange={(_, newValue) => setPendingTargetUsers(newValue)}
-									getOptionLabel={(option) => `${option.email}${option.fullName ? ` (${option.fullName})` : ""}`}
-									isOptionEqualToValue={(option, value) => option._id === value._id}
-									loading={userSearchLoading}
-									inputValue={userSearchQuery}
-									onInputChange={(_, value, reason) => {
-										if (reason !== "reset") setUserSearchQuery(value);
-									}}
-									filterOptions={(x) => x}
-									renderInput={(params) => (
-										<TextField
-											{...params}
-											label="Buscar usuarios por email o nombre"
-											placeholder={pendingTargetUsers.length === 0 ? "Escribí al menos 2 caracteres..." : ""}
-											helperText={
-												pendingTargetUsers.length > 0
-													? `${pendingTargetUsers.length} usuario(s) seleccionado(s)`
-													: "Dejar vacío para no restringir por usuarios individuales"
-											}
-											InputProps={{
-												...params.InputProps,
-												startAdornment: (
-													<>
-														<InputAdornment position="start">
-															<SearchNormal1 size={18} />
-														</InputAdornment>
-														{params.InputProps.startAdornment}
-													</>
-												),
-												endAdornment: (
-													<>
-														{userSearchLoading ? <CircularProgress color="inherit" size={18} /> : null}
-														{params.InputProps.endAdornment}
-													</>
-												),
-											}}
+					{/* Target Users */}
+					<>
+						<Grid item xs={12}>
+							<Divider sx={{ my: 1 }} />
+							<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
+								Usuarios Objetivo
+							</Typography>
+							<Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 2 }}>
+								Buscá y seleccioná usuarios específicos que podrán ver y usar esta promoción. Se combina con los segmentos usando lógica OR.
+							</Typography>
+						</Grid>
+						<Grid item xs={12}>
+							<Autocomplete
+								multiple
+								options={userSearchResults}
+								value={pendingTargetUsers}
+								onChange={(_, newValue) => setPendingTargetUsers(newValue)}
+								getOptionLabel={(option) => `${option.email}${option.fullName ? ` (${option.fullName})` : ""}`}
+								isOptionEqualToValue={(option, value) => option._id === value._id}
+								loading={userSearchLoading || loadingTargetUsers}
+								inputValue={userSearchQuery}
+								onInputChange={(_, value, reason) => {
+									if (reason !== "reset") setUserSearchQuery(value);
+								}}
+								filterOptions={(x) => x}
+								renderInput={(params) => (
+									<TextField
+										{...params}
+										label="Buscar usuarios por email o nombre"
+										placeholder={pendingTargetUsers.length === 0 ? "Escribí al menos 2 caracteres..." : ""}
+										helperText={
+											loadingTargetUsers
+												? "Cargando usuarios existentes..."
+												: pendingTargetUsers.length > 0
+												? `${pendingTargetUsers.length} usuario(s) seleccionado(s)`
+												: "Dejar vacío para no restringir por usuarios individuales"
+										}
+										InputProps={{
+											...params.InputProps,
+											startAdornment: (
+												<>
+													<InputAdornment position="start">
+														<SearchNormal1 size={18} />
+													</InputAdornment>
+													{params.InputProps.startAdornment}
+												</>
+											),
+											endAdornment: (
+												<>
+													{(userSearchLoading || loadingTargetUsers) ? <CircularProgress color="inherit" size={18} /> : null}
+													{params.InputProps.endAdornment}
+												</>
+											),
+										}}
+									/>
+								)}
+								renderOption={(props, option) => (
+									<li {...props} key={option._id}>
+										<Stack>
+											<Typography variant="body2">{option.email}</Typography>
+											{option.fullName && (
+												<Typography variant="caption" color="textSecondary">
+													{option.fullName}
+												</Typography>
+											)}
+										</Stack>
+									</li>
+								)}
+								renderTags={(value, getTagProps) =>
+									value.map((option, index) => (
+										<Chip
+											{...getTagProps({ index })}
+											key={option._id}
+											label={option.email}
+											size="small"
+											icon={<UserAdd size={14} />}
 										/>
-									)}
-									renderOption={(props, option) => (
-										<li {...props} key={option._id}>
-											<Stack>
-												<Typography variant="body2">{option.email}</Typography>
-												{option.fullName && (
-													<Typography variant="caption" color="textSecondary">
-														{option.fullName}
-													</Typography>
-												)}
-											</Stack>
-										</li>
-									)}
-									renderTags={(value, getTagProps) =>
-										value.map((option, index) => (
-											<Chip
-												{...getTagProps({ index })}
-												key={option._id}
-												label={option.email}
-												size="small"
-												icon={<UserAdd size={14} />}
-											/>
-										))
-									}
-									noOptionsText={userSearchQuery.length < 2 ? "Escribí para buscar..." : "No se encontraron usuarios"}
-								/>
-							</Grid>
-						</>
-					)}
+									))
+								}
+								noOptionsText={userSearchQuery.length < 2 ? "Escribí para buscar..." : "No se encontraron usuarios"}
+							/>
+						</Grid>
+					</>
 
 					{/* Visibility */}
 					<Grid item xs={12}>
