@@ -340,14 +340,12 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 			});
 			setResult(response.data);
 			enqueueSnackbar(response.message, { variant: "success" });
-			if (campaignType === "sequence") {
-				onCampaignLaunched?.({
-					campaignId: response.data.campaignId,
-					type: "sequence",
-					frozenSegment: true,
-					launchedAt: new Date().toISOString(),
-				});
-			}
+			onCampaignLaunched?.({
+				campaignId: response.data.campaignId,
+				type: campaignType === "sequence" ? "sequence" : "onetime",
+				frozenSegment: campaignType === "sequence",
+				launchedAt: new Date().toISOString(),
+			});
 		} catch (err: any) {
 			const msg = err.response?.data?.message || err.message || "Error al lanzar la campaña";
 			setError(msg);
