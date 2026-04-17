@@ -72,6 +72,10 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 	// Prefer localStripe (post-sync) over the original prop which doesn't refresh
 	const effectiveStripe = localStripe ?? discount?.stripe;
 
+	// Tracks campaign info after a launch (avoids needing to close/reopen modal to see frozenSegment)
+	const [localCampaign, setLocalCampaign] = useState<DiscountCode["campaign"] | null>(null);
+	const effectiveCampaign = localCampaign ?? discount?.campaign;
+
 	useEffect(() => {
 		if (open && discount && tabValue === 1) {
 			fetchStripeInfo();
@@ -83,6 +87,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 			setTabValue(0);
 			setStripeData(null);
 			setError(null);
+			setLocalCampaign(null);
 		}
 	}, [open]);
 
@@ -1003,10 +1008,10 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 						{renderStripeTab()}
 					</TabPanel>
 					<TabPanel value={tabValue} index={2}>
-						<TargetUsersManager discountId={discount._id} discountCode={discount.code} isPublic={discount.activationRules.isPublic} frozenSegment={discount.campaign?.frozenSegment} />
+						<TargetUsersManager discountId={discount._id} discountCode={discount.code} isPublic={discount.activationRules.isPublic} frozenSegment={effectiveCampaign?.frozenSegment} />
 					</TabPanel>
 					<TabPanel value={tabValue} index={3}>
-						<LaunchCampaignTab discount={discount} />
+						<LaunchCampaignTab discount={discount} onCampaignLaunched={setLocalCampaign} />
 					</TabPanel>
 					<TabPanel value={tabValue} index={4}>
 						<Stack direction="row" justifyContent="flex-end" sx={{ mb: 1 }}>

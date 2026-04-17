@@ -61,6 +61,7 @@ interface StepTiming {
 
 interface Props {
 	discount: DiscountCode;
+	onCampaignLaunched?: (campaignInfo: { campaignId: string; type: "onetime" | "sequence"; frozenSegment: boolean; launchedAt: string }) => void;
 }
 
 // Variables que el marketing service reemplaza automáticamente en los templates
@@ -110,7 +111,7 @@ function extractTemplateVars(html: string): string[] {
 	return [...new Set(matches.map((m) => m[1].trim()))];
 }
 
-const LaunchCampaignTab = ({ discount }: Props) => {
+const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
@@ -339,6 +340,14 @@ const LaunchCampaignTab = ({ discount }: Props) => {
 			});
 			setResult(response.data);
 			enqueueSnackbar(response.message, { variant: "success" });
+			if (campaignType === "sequence") {
+				onCampaignLaunched?.({
+					campaignId: response.data.campaignId,
+					type: "sequence",
+					frozenSegment: true,
+					launchedAt: new Date().toISOString(),
+				});
+			}
 		} catch (err: any) {
 			const msg = err.response?.data?.message || err.message || "Error al lanzar la campaña";
 			setError(msg);
