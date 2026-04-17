@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
 	Alert,
 	AlertTitle,
 	Box,
 	Button,
 	Checkbox,
+	CircularProgress,
 	Dialog,
 	DialogActions,
 	DialogContent,
@@ -22,12 +23,14 @@ import {
 	Switch,
 	TextField,
 	Typography,
+	Autocomplete,
+	Chip,
 } from "@mui/material";
+import { SearchNormal1, UserAdd } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import discountsService, { DiscountCode, CreateDiscountParams, UpdateDiscountParams, StripeEnvironment } from "api/discounts";
+import discountsService, { DiscountCode, CreateDiscountParams, UpdateDiscountParams, StripeEnvironment, TargetUser } from "api/discounts";
 import { SegmentService } from "store/reducers/segments";
 import { Segment } from "types/segment";
-import { Autocomplete, Chip } from "@mui/material";
 
 interface PromotionFormModalProps {
 	open: boolean;
@@ -43,6 +46,11 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 	const [loading, setLoading] = useState(false);
 	const [segments, setSegments] = useState<Segment[]>([]);
 	const [loadingSegments, setLoadingSegments] = useState(false);
+	// Pending target users: acumulados en memoria para asignar post-creación
+	const [pendingTargetUsers, setPendingTargetUsers] = useState<TargetUser[]>([]);
+	const [userSearchQuery, setUserSearchQuery] = useState("");
+	const [userSearchResults, setUserSearchResults] = useState<TargetUser[]>([]);
+	const [userSearchLoading, setUserSearchLoading] = useState(false);
 	const [formData, setFormData] = useState({
 		code: "",
 		name: "",
@@ -90,6 +98,29 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 			loadSegments();
 		}
 	}, [open]);
+
+	// Búsqueda de usuarios con debounce
+	const searchUsers = useCallback(async (query: string) => {
+		if (query.length < 2) {
+			setUserSearchResults([]);
+			return;
+		}
+		setUserSearchLoading(true);
+		try {
+			const response = await discountsService.searchUsers(query, 20);
+			const existingIds = pendingTargetUsers.map((u) => u._id);
+			setUserSearchResults(response.data.filter((u) => !existingIds.includes(u._id)));
+		} catch (error) {
+			console.error("Error buscando usuarios:", error);
+		} finally {
+			setUserSearchLoading(false);
+		}
+	}, [pendingTargetUsers]);
+
+	useEffect(() => {
+		const timer = setTimeout(() => searchUsers(userSearchQuery), 300);
+		return () => clearTimeout(timer);
+	}, [userSearchQuery, searchUsers]);
 
 	useEffect(() => {
 		if (open) {
@@ -153,6 +184,9 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					environments: ["development", "production"],
 					targetSegments: [],
 				});
+				setPendingTargetUsers([]);
+				setUserSearchQuery("");
+				setUserSearchResults([]);
 			}
 		}
 	}, [open, discount]);
@@ -279,7 +313,26 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 
 				const response = await discountsService.createDiscount(createData);
 				const envNames = response.createdInEnvironments?.map((e) => (e === "development" ? "Desarrollo" : "Producción")).join(" y ") || "";
-				enqueueSnackbar(`Promoción creada correctamente en: ${envNames}`, { variant: "success" });
+
+				// Asignar usuarios objetivo pendientes si los hay
+				if (pendingTargetUsers.length > 0 && response.data._id) {
+					try {
+						await discountsService.addTargetUsers(response.data._id, {
+							userIds: pendingTargetUsers.map((u) => u._id),
+						});
+						enqueueSnackbar(
+							`Promoción creada en: ${envNames}. ${pendingTargetUsers.length} usuario(s) objetivo asignados.`,
+							{ variant: "success" },
+						);
+					} catch (_err) {
+						enqueueSnackbar(
+							`Promoción creada en: ${envNames}, pero hubo un error al asignar usuarios objetivo. Asignalos desde la pestaña "Usuarios Objetivo".`,
+							{ variant: "warning" },
+						);
+					}
+				} else {
+					enqueueSnackbar(`Promoción creada correctamente en: ${envNames}`, { variant: "success" });
+				}
 			}
 
 			onSuccess();
@@ -666,6 +719,91 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 						/>
 					</Grid>
 
+					{/* Target Users — solo en creación */}
+					{!isEditing && (
+						<>
+							<Grid item xs={12}>
+								<Divider sx={{ my: 1 }} />
+								<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
+									Usuarios Objetivo
+								</Typography>
+								<Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 2 }}>
+									Buscá y seleccioná usuarios específicos que podrán ver y usar esta promoción. Se combina con los segmentos usando lógica OR.
+									También podés agregar más usuarios después de crear la promoción.
+								</Typography>
+							</Grid>
+							<Grid item xs={12}>
+								<Autocomplete
+									multiple
+									options={userSearchResults}
+									value={pendingTargetUsers}
+									onChange={(_, newValue) => setPendingTargetUsers(newValue)}
+									getOptionLabel={(option) => `${option.email}${option.fullName ? ` (${option.fullName})` : ""}`}
+									isOptionEqualToValue={(option, value) => option._id === value._id}
+									loading={userSearchLoading}
+									inputValue={userSearchQuery}
+									onInputChange={(_, value, reason) => {
+										if (reason !== "reset") setUserSearchQuery(value);
+									}}
+									filterOptions={(x) => x}
+									renderInput={(params) => (
+										<TextField
+											{...params}
+											label="Buscar usuarios por email o nombre"
+											placeholder={pendingTargetUsers.length === 0 ? "Escribí al menos 2 caracteres..." : ""}
+											helperText={
+												pendingTargetUsers.length > 0
+													? `${pendingTargetUsers.length} usuario(s) seleccionado(s)`
+													: "Dejar vacío para no restringir por usuarios individuales"
+											}
+											InputProps={{
+												...params.InputProps,
+												startAdornment: (
+													<>
+														<InputAdornment position="start">
+															<SearchNormal1 size={18} />
+														</InputAdornment>
+														{params.InputProps.startAdornment}
+													</>
+												),
+												endAdornment: (
+													<>
+														{userSearchLoading ? <CircularProgress color="inherit" size={18} /> : null}
+														{params.InputProps.endAdornment}
+													</>
+												),
+											}}
+										/>
+									)}
+									renderOption={(props, option) => (
+										<li {...props} key={option._id}>
+											<Stack>
+												<Typography variant="body2">{option.email}</Typography>
+												{option.fullName && (
+													<Typography variant="caption" color="textSecondary">
+														{option.fullName}
+													</Typography>
+												)}
+											</Stack>
+										</li>
+									)}
+									renderTags={(value, getTagProps) =>
+										value.map((option, index) => (
+											<Chip
+												{...getTagProps({ index })}
+												key={option._id}
+												label={option.email}
+												size="small"
+												icon={<UserAdd size={14} />}
+											/>
+										))
+									}
+									noOptionsText={userSearchQuery.length < 2 ? "Escribí para buscar..." : "No se encontraron usuarios"}
+								/>
+							</Grid>
+						</>
+					)}
+
 					{/* Visibility */}
 					<Grid item xs={12}>
 						<Divider sx={{ my: 1 }} />
@@ -688,13 +826,13 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 						/>
 					</Grid>
 
-					{formData.isPublic && formData.targetSegments.length === 0 && (
+					{formData.isPublic && formData.targetSegments.length === 0 && pendingTargetUsers.length === 0 && (
 						<Grid item xs={12}>
 							<Alert severity="warning">
 								<AlertTitle>Descuento público sin audiencia restringida</AlertTitle>
-								Al activar esta opción sin segmentos asignados, el descuento será visible para <strong>todos los usuarios</strong> en
-								la página de planes. Si querés restringirlo a una audiencia específica, asigná segmentos arriba o agregá usuarios
-								objetivo desde el detalle de la promoción (después de crearla).
+								Sin segmentos ni usuarios asignados, este descuento será visible para <strong>todos los usuarios</strong> en la página
+								de planes. Si querés restringirlo, asigná segmentos en "Segmentación de Audiencia" o usuarios en "Usuarios Objetivo"
+								arriba.
 							</Alert>
 						</Grid>
 					)}
