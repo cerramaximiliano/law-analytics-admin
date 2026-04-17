@@ -183,6 +183,8 @@ export interface FueroStats {
 	total: number;
 	fueros: Record<string, FueroStat>;
 	updatedAt: string;
+	/** Sentencias actualmente indexadas en Pinecone (embeddingStatus=completed en MongoDB) */
+	sentenciasActivas?: { total: number; byFuero: Record<string, number> };
 }
 
 export default ScrapingManagerService;

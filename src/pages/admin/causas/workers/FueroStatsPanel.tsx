@@ -16,7 +16,7 @@ import {
 	alpha,
 	Divider,
 } from "@mui/material";
-import { Refresh2, FolderOpen, DocumentText, Book1, Clock } from "iconsax-react";
+import { Refresh2, FolderOpen, DocumentText, Book1, Clock, InfoCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { ScrapingManagerService, FueroStats, FueroStat } from "api/scrapingManager";
 
@@ -46,18 +46,20 @@ function formatTimeAgo(dateStr: string): string {
 	return `Hace ${Math.floor(diff / 86400000)} d`;
 }
 
-const SummaryCard: React.FC<{ icon: React.ReactNode; label: string; value: string; color: string; loading: boolean }> = ({
-	icon,
-	label,
-	value,
-	color,
-	loading,
-}) => {
+const SummaryCard: React.FC<{
+	icon: React.ReactNode;
+	label: string;
+	value: string;
+	subtitle?: string;
+	tooltip?: string;
+	color: string;
+	loading: boolean;
+}> = ({ icon, label, value, subtitle, tooltip, color, loading }) => {
 	const theme = useTheme();
 	return (
 		<Card variant="outlined" sx={{ borderRadius: 2 }}>
 			<CardContent sx={{ pb: "16px !important" }}>
-				<Stack direction="row" alignItems="center" spacing={1.5}>
+				<Stack direction="row" alignItems="flex-start" spacing={1.5}>
 					<Box
 						sx={{
 							width: 44,
@@ -73,15 +75,29 @@ const SummaryCard: React.FC<{ icon: React.ReactNode; label: string; value: strin
 					>
 						{icon}
 					</Box>
-					<Box>
-						<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
-							{label}
-						</Typography>
+					<Box flex={1}>
+						<Stack direction="row" alignItems="center" spacing={0.5}>
+							<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
+								{label}
+							</Typography>
+							{tooltip && (
+								<Tooltip title={tooltip} placement="top">
+									<Box sx={{ display: "flex", alignItems: "center", color: "text.disabled", cursor: "help" }}>
+										<InfoCircle size={13} />
+									</Box>
+								</Tooltip>
+							)}
+						</Stack>
 						{loading ? (
 							<Skeleton width={80} height={28} />
 						) : (
 							<Typography variant="h5" fontWeight={600}>
 								{value}
+							</Typography>
+						)}
+						{subtitle && !loading && (
+							<Typography variant="caption" color="text.secondary">
+								{subtitle}
 							</Typography>
 						)}
 					</Box>
@@ -122,7 +138,8 @@ const FueroStatsPanel: React.FC = () => {
 	}, [fetchStats]);
 
 	const fueroEntries = stats ? Object.entries(stats.fueros) : [];
-	const totalSentencias = fueroEntries.reduce((acc, [, s]) => acc + s.sentencias.count, 0);
+	const totalSentenciasHistorico = fueroEntries.reduce((acc, [, s]) => acc + s.sentencias.count, 0);
+	const totalSentenciasActivas = stats?.sentenciasActivas?.total ?? null;
 	const totalEscritos = fueroEntries.reduce((acc, [, s]) => acc + s.escritos.count, 0);
 
 	return (
@@ -161,25 +178,38 @@ const FueroStatsPanel: React.FC = () => {
 
 			{/* Summary cards */}
 			<Grid container spacing={2}>
-				<Grid item xs={12} sm={4}>
+				<Grid item xs={12} sm={3}>
 					<SummaryCard
 						icon={<FolderOpen size={22} />}
-						label="Total causas válidas"
+						label="Causas válidas"
 						value={stats ? formatNumber(stats.total) : "-"}
 						color={theme.palette.primary.main}
 						loading={loading}
 					/>
 				</Grid>
-				<Grid item xs={12} sm={4}>
+				<Grid item xs={12} sm={3}>
 					<SummaryCard
 						icon={<DocumentText size={22} />}
-						label="Sentencias embebidas"
-						value={stats ? formatNumber(totalSentencias) : "-"}
+						label="Indexadas en Pinecone"
+						value={totalSentenciasActivas !== null ? formatNumber(totalSentenciasActivas) : "-"}
+						subtitle="Stock actual de vectores activos"
+						tooltip="Sentencias con embeddingStatus=completed en MongoDB. Representa el corpus efectivamente disponible para búsqueda semántica en Pinecone ahora mismo."
 						color={theme.palette.success.main}
 						loading={loading}
 					/>
 				</Grid>
-				<Grid item xs={12} sm={4}>
+				<Grid item xs={12} sm={3}>
+					<SummaryCard
+						icon={<DocumentText size={22} />}
+						label="Procesadas por worker"
+						value={stats ? formatNumber(totalSentenciasHistorico) : "-"}
+						subtitle="Contador histórico acumulativo"
+						tooltip="Total de operaciones de embedding ejecutadas por el worker a lo largo del tiempo. Puede superar al stock actual porque cuenta cada procesamiento, incluyendo re-indexaciones del corpus completo."
+						color={theme.palette.warning.main}
+						loading={loading}
+					/>
+				</Grid>
+				<Grid item xs={12} sm={3}>
 					<SummaryCard
 						icon={<Book1 size={22} />}
 						label="Escritos embebidos"
@@ -254,23 +284,29 @@ const FueroStatsPanel: React.FC = () => {
 											/>
 
 											<Grid container spacing={2}>
-												<Grid item xs={6}>
+												<Grid item xs={12} sm={4}>
 													<Stack direction="row" spacing={0.75} alignItems="center">
 														<DocumentText size={14} color={theme.palette.success.main} />
 														<Typography variant="caption" color="text.secondary">
-															Sentencias:
+															Indexadas (Pinecone):
 														</Typography>
-														<Typography variant="caption" fontWeight={600}>
-															{formatNumber(data.sentencias.count)}
+														<Typography variant="caption" fontWeight={600} color={theme.palette.success.main}>
+															{formatNumber(stats?.sentenciasActivas?.byFuero?.[fuero] ?? 0)}
 														</Typography>
-														{stats && data.causas.count > 0 && (
-															<Typography variant="caption" color="text.secondary">
-																({((data.sentencias.count / data.causas.count) * 100).toFixed(1)}% cobertura)
-															</Typography>
-														)}
 													</Stack>
 												</Grid>
-												<Grid item xs={6}>
+												<Grid item xs={12} sm={4}>
+													<Stack direction="row" spacing={0.75} alignItems="center">
+														<DocumentText size={14} color={theme.palette.warning.main} />
+														<Typography variant="caption" color="text.secondary">
+															Worker (histórico):
+														</Typography>
+														<Typography variant="caption" fontWeight={600} color={theme.palette.warning.main}>
+															{formatNumber(data.sentencias.count)}
+														</Typography>
+													</Stack>
+												</Grid>
+												<Grid item xs={12} sm={4}>
 													<Stack direction="row" spacing={0.75} alignItems="center">
 														<Book1 size={14} color={theme.palette.info.main} />
 														<Typography variant="caption" color="text.secondary">
@@ -281,7 +317,7 @@ const FueroStatsPanel: React.FC = () => {
 														</Typography>
 														{stats && data.causas.count > 0 && (
 															<Typography variant="caption" color="text.secondary">
-																({((data.escritos.count / data.causas.count) * 100).toFixed(1)}% cobertura)
+																({((data.escritos.count / data.causas.count) * 100).toFixed(1)}%)
 															</Typography>
 														)}
 													</Stack>
