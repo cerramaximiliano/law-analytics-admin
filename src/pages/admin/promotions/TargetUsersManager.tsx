@@ -38,10 +38,11 @@ interface TargetUsersManagerProps {
 	discountId: string;
 	discountCode: string;
 	isPublic: boolean;
+	frozenSegment?: boolean;
 	onUpdate?: () => void;
 }
 
-const TargetUsersManager = ({ discountId, discountCode, isPublic, onUpdate }: TargetUsersManagerProps) => {
+const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment, onUpdate }: TargetUsersManagerProps) => {
 	const { enqueueSnackbar } = useSnackbar();
 	const [activeTab, setActiveTab] = useState(0);
 	const [loading, setLoading] = useState(true);
@@ -282,6 +283,14 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, onUpdate }: Ta
 
 	return (
 		<Box>
+			{/* Frozen segment alert */}
+			{frozenSegment && (
+				<Alert severity="error" sx={{ mb: 2 }}>
+					<strong>Segmento congelado.</strong> Esta promoción tiene una campaña de secuencia activa con segmento congelado. No es posible
+					agregar nuevos destinatarios — hacerlo podría resultar en envíos desincronizados o fuera de plazo.
+				</Alert>
+			)}
+
 			{/* Summary Alert */}
 			{!hasTargeting ? (
 				<Alert severity="info" sx={{ mb: 2 }}>
@@ -328,10 +337,10 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, onUpdate }: Ta
 							Usuarios específicos que pueden ver este descuento
 						</Typography>
 						<Stack direction="row" spacing={1}>
-							<Button variant="outlined" size="small" startIcon={<UserAdd size={18} />} onClick={() => setAddDialogOpen(true)}>
+							<Button variant="outlined" size="small" startIcon={<UserAdd size={18} />} onClick={() => setAddDialogOpen(true)} disabled={frozenSegment}>
 								Buscar Usuario
 							</Button>
-							<Button variant="outlined" size="small" startIcon={<Add size={18} />} onClick={() => setAddByEmailDialogOpen(true)}>
+							<Button variant="outlined" size="small" startIcon={<Add size={18} />} onClick={() => setAddByEmailDialogOpen(true)} disabled={frozenSegment}>
 								Agregar por Email
 							</Button>
 							{totalTargetUsers > 0 && (
@@ -341,7 +350,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, onUpdate }: Ta
 									color="warning"
 									startIcon={<UserRemove size={18} />}
 									onClick={handleClearAllUsers}
-									disabled={addLoading}
+									disabled={addLoading || frozenSegment}
 								>
 									Limpiar Todos
 								</Button>
@@ -408,7 +417,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, onUpdate }: Ta
 						<Typography variant="subtitle1" color="text.secondary">
 							Segmentos de contactos cuyos usuarios pueden ver este descuento
 						</Typography>
-						<Button variant="outlined" size="small" startIcon={<Add size={18} />} onClick={handleOpenSegmentDialog}>
+						<Button variant="outlined" size="small" startIcon={<Add size={18} />} onClick={handleOpenSegmentDialog} disabled={frozenSegment}>
 							Gestionar Segmentos
 						</Button>
 					</Stack>
