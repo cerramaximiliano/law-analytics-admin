@@ -25,12 +25,13 @@ import {
 	ToggleButton,
 	ToggleButtonGroup,
 } from "@mui/material";
-import { CloseCircle, Calendar, Chart, TickCircle, CloseSquare, Copy, Cloud, People, UserTick, DocumentCode } from "iconsax-react";
+import { CloseCircle, Calendar, Chart, TickCircle, CloseSquare, Copy, Cloud, People, UserTick, DocumentCode, Send2 } from "iconsax-react";
 import { useTheme } from "@mui/material/styles";
 import { DiscountCode, FullDiscountInfoResponse } from "api/discounts";
 import discountsService from "api/discounts";
 import { useSnackbar } from "notistack";
 import TargetUsersManager from "./TargetUsersManager";
+import LaunchCampaignTab from "./LaunchCampaignTab";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -918,6 +919,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 						<Tab label="Base de Datos" icon={<Chart size={18} />} iconPosition="start" />
 						<Tab label="Stripe & Suscriptores" icon={<Cloud size={18} />} iconPosition="start" />
 						<Tab label="Usuarios Objetivo" icon={<UserTick size={18} />} iconPosition="start" />
+						<Tab label="Campaña de Email" icon={<Send2 size={18} />} iconPosition="start" />
 						<Tab label="JSON" icon={<DocumentCode size={18} />} iconPosition="start" />
 					</Tabs>
 				</Box>
@@ -933,6 +935,9 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 						<TargetUsersManager discountId={discount._id} discountCode={discount.code} isPublic={discount.activationRules.isPublic} />
 					</TabPanel>
 					<TabPanel value={tabValue} index={3}>
+						<LaunchCampaignTab discount={discount} />
+					</TabPanel>
+					<TabPanel value={tabValue} index={4}>
 						<Stack direction="row" justifyContent="flex-end" sx={{ mb: 1 }}>
 							<Button variant="outlined" size="small" startIcon={<Copy size={16} />} onClick={handleCopyJson}>
 								Copiar JSON
