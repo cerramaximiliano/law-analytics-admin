@@ -220,8 +220,23 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 		}));
 	};
 
+	// En edición: no se puede activar isPublic si el descuento no está sincronizado con Stripe
+	const editSyncBlocked =
+		isEditing &&
+		formData.isPublic &&
+		formData.isActive &&
+		!discount?.stripe?.development?.couponId &&
+		!discount?.stripe?.production?.couponId;
+
 	const handleSubmit = async () => {
 		// Validation
+		if (editSyncBlocked) {
+			enqueueSnackbar(
+				"No se puede activar 'Mostrar públicamente' en un descuento sin sincronizar con Stripe. Sincronizá primero desde la pestaña Stripe.",
+				{ variant: "error" },
+			);
+			return;
+		}
 		if (!formData.code.trim()) {
 			enqueueSnackbar("El código es requerido", { variant: "error" });
 			return;
@@ -826,6 +841,17 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 						/>
 					</Grid>
 
+					{editSyncBlocked && (
+						<Grid item xs={12}>
+							<Alert severity="error">
+								<AlertTitle>Descuento no sincronizado con Stripe</AlertTitle>
+								No podés activar "Mostrar públicamente" porque este descuento no tiene un Coupon ID válido en Stripe (ni en Development ni en
+								Production). Cerrá este formulario, abrí el detalle de la promoción y usá el botón <strong>Sincronizar con Stripe</strong>{" "}
+								en la pestaña Stripe antes de continuar.
+							</Alert>
+						</Grid>
+					)}
+
 					{formData.isPublic && formData.targetSegments.length === 0 && pendingTargetUsers.length === 0 && (
 						<Grid item xs={12}>
 							<Alert severity="warning">
@@ -873,7 +899,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 				<Button onClick={onClose} disabled={loading}>
 					Cancelar
 				</Button>
-				<Button variant="contained" onClick={handleSubmit} disabled={loading}>
+				<Button variant="contained" onClick={handleSubmit} disabled={loading || editSyncBlocked}>
 					{loading ? "Guardando..." : isEditing ? "Actualizar" : "Crear"}
 				</Button>
 			</DialogActions>
