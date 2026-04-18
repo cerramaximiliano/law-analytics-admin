@@ -477,6 +477,31 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 
 			{hasRecipients && !dynamicSegmentBlocked && (
 				<>
+					{/* ── Campaña existente ── */}
+					{discount.campaign?.campaignId && !result && (
+						<Alert severity="warning" icon={<Warning2 size={18} />} sx={{ alignItems: "flex-start" }}>
+							<AlertTitle sx={{ fontSize: "0.85rem", fontWeight: 700 }}>Ya existe una campaña lanzada para esta promoción</AlertTitle>
+							<Stack spacing={0.75}>
+								<Typography variant="caption" component="div">
+									Si lanzás una nueva campaña, se creará de forma independiente en el servidor de marketing —
+									la anterior <strong>no se eliminará automáticamente</strong>.
+								</Typography>
+								<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+									<Chip label={`ID: ${discount.campaign.campaignId}`} size="small" sx={{ fontFamily: "monospace", fontSize: "0.65rem" }} />
+									<Chip label={discount.campaign.type === "sequence" ? "Secuencia" : "Email único"} size="small" variant="outlined" />
+									<Chip
+										label={`Lanzada: ${new Date(discount.campaign.launchedAt).toLocaleDateString("es-AR")}`}
+										size="small"
+										variant="outlined"
+									/>
+									{discount.campaign.frozenSegment && (
+										<Chip label="Segmento congelado" size="small" color="warning" variant="outlined" />
+									)}
+								</Stack>
+							</Stack>
+						</Alert>
+					)}
+
 					{/* ── 2+3. Contenido del email (template + editor) ────────────────────── */}
 					<Accordion
 						expanded={contentOpen}
@@ -485,11 +510,16 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 						sx={{ "&:before": { display: "none" }, borderRadius: 1 }}
 					>
 						<AccordionSummary expandIcon={<ArrowDown2 size={16} />} sx={{ minHeight: 48, "& .MuiAccordionSummary-content": { my: 0.75 } }}>
-							<Stack direction="row" spacing={1} alignItems="center">
-								<DocumentText size={18} color={theme.palette.primary.main} />
-								<Typography variant="subtitle2" fontWeight={600}>
+							<Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0, flex: 1, mr: 1 }}>
+								<DocumentText size={18} color={theme.palette.primary.main} style={{ flexShrink: 0 }} />
+								<Typography variant="subtitle2" fontWeight={600} sx={{ flexShrink: 0 }}>
 									Contenido del email
 								</Typography>
+								{!contentOpen && subject.trim() && (
+									<Typography variant="caption" color="text.secondary" noWrap sx={{ opacity: 0.8 }}>
+										— {subject}
+									</Typography>
+								)}
 							</Stack>
 						</AccordionSummary>
 						<AccordionDetails sx={{ pt: 0, pb: 2 }}>
@@ -721,10 +751,18 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 					>
 						<AccordionSummary expandIcon={<ArrowDown2 size={16} />} sx={{ minHeight: 48, "& .MuiAccordionSummary-content": { my: 0.75 } }}>
 							<Stack direction="row" spacing={1} alignItems="center">
-								<Add size={18} color={theme.palette.secondary.main} />
-								<Typography variant="subtitle2" fontWeight={600}>
+								<Add size={18} color={theme.palette.secondary.main} style={{ flexShrink: 0 }} />
+								<Typography variant="subtitle2" fontWeight={600} sx={{ flexShrink: 0 }}>
 									Tipo de campaña
 								</Typography>
+								{!campaignTypeOpen && (
+									<Typography variant="caption" color="text.secondary" sx={{ opacity: 0.8 }}>
+										—{" "}
+										{campaignType === "sequence"
+											? `Secuencia · ${additionalSteps.length + 1} paso${additionalSteps.length + 1 !== 1 ? "s" : ""}`
+											: "Email único"}
+									</Typography>
+								)}
 							</Stack>
 						</AccordionSummary>
 						<AccordionDetails sx={{ pt: 0, pb: 2 }}>
@@ -1057,12 +1095,17 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 						sx={{ "&:before": { display: "none" }, borderRadius: 1 }}
 					>
 						<AccordionSummary expandIcon={<ArrowDown2 size={16} />} sx={{ minHeight: 48, "& .MuiAccordionSummary-content": { my: 0.75 } }}>
-							<Stack direction="row" spacing={1} alignItems="center">
-								<Calendar size={18} color={theme.palette.text.secondary} />
-								<Typography variant="subtitle2" fontWeight={600}>
+							<Stack direction="row" spacing={1} alignItems="center" sx={{ flex: 1, mr: 1 }}>
+								<Calendar size={18} color={theme.palette.text.secondary} style={{ flexShrink: 0 }} />
+								<Typography variant="subtitle2" fontWeight={600} sx={{ flexShrink: 0 }}>
 									Configuración de envío
 								</Typography>
-								<Chip label="Opcional" size="small" variant="outlined" sx={{ fontSize: "0.6rem", height: 18 }} />
+								<Chip label="Opcional" size="small" variant="outlined" sx={{ fontSize: "0.6rem", height: 18, flexShrink: 0 }} />
+								{!sendConfigOpen && (
+									<Typography variant="caption" color="text.secondary" noWrap sx={{ opacity: 0.8 }}>
+										{allowedDays.map((d) => DAY_LABELS[d]).join(", ")} · {timeWindowStart}–{timeWindowEnd} · {throttleRate}/ciclo
+									</Typography>
+								)}
 							</Stack>
 						</AccordionSummary>
 						<AccordionDetails sx={{ pt: 0, pb: 2 }}>
@@ -1274,7 +1317,20 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 					</Collapse>
 
 					{/* ── Botón de envío ── */}
-					<Box display="flex" justifyContent="flex-end">
+					<Stack alignItems="flex-end" spacing={0.5}>
+						{(() => {
+							const missing = [
+								!subject.trim() && "asunto del email",
+								!htmlBody.trim() && "cuerpo HTML",
+								!stepsValid && "asunto/HTML incompleto en algún paso",
+								hasInvalidStepTimings && "timing inválido en la secuencia",
+							].filter(Boolean) as string[];
+							return missing.length > 0 && !loading ? (
+								<Typography variant="caption" color="text.secondary">
+									Falta: {missing.join(" · ")}
+								</Typography>
+							) : null;
+						})()}
 						<Button
 							variant="contained"
 							color={launchImmediately ? "success" : "primary"}
@@ -1285,7 +1341,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 						>
 							{loading ? "Procesando..." : launchImmediately ? "Crear y lanzar campaña" : "Crear campaña en borrador"}
 						</Button>
-					</Box>
+					</Stack>
 				</>
 			)}
 
