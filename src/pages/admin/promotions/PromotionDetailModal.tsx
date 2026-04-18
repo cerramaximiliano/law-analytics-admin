@@ -1024,8 +1024,6 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 							sx={{
 								p: 2,
 								bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.50",
-								overflow: "auto",
-								maxHeight: 500,
 							}}
 						>
 							<pre
