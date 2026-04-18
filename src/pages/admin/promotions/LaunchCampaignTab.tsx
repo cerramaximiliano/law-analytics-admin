@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+	Accordion,
+	AccordionDetails,
+	AccordionSummary,
 	Alert,
 	AlertTitle,
 	Autocomplete,
@@ -145,6 +148,11 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 	const [campaignType, setCampaignType] = useState<"onetime" | "sequence">("onetime");
 	const [additionalSteps, setAdditionalSteps] = useState<AdditionalStep[]>([]);
 	const stepCounter = useRef(1);
+
+	// ── Accordion open state ─────────────────────────────────────────────────────
+	const [contentOpen, setContentOpen] = useState(true);
+	const [campaignTypeOpen, setCampaignTypeOpen] = useState(true);
+	const [sendConfigOpen, setSendConfigOpen] = useState(false);
 
 	// ── Timeline computations ─────────────────────────────────────────────────────
 	/** Fecha de inicio de la campaña: usa startDate si está configurado, si no "ahora". */
@@ -469,12 +477,23 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 
 			{hasRecipients && !dynamicSegmentBlocked && (
 				<>
-					{/* ── 2. Selección de template ─────────────────────────────────────────── */}
-					<Box>
-						<Typography variant="h5" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-							<DocumentText size={18} />
-							Template del email
-						</Typography>
+					{/* ── 2+3. Contenido del email (template + editor) ────────────────────── */}
+					<Accordion
+						expanded={contentOpen}
+						onChange={() => setContentOpen((v) => !v)}
+						variant="outlined"
+						sx={{ "&:before": { display: "none" }, borderRadius: 1 }}
+					>
+						<AccordionSummary expandIcon={<ArrowDown2 size={16} />} sx={{ minHeight: 48, "& .MuiAccordionSummary-content": { my: 0.75 } }}>
+							<Stack direction="row" spacing={1} alignItems="center">
+								<DocumentText size={18} color={theme.palette.primary.main} />
+								<Typography variant="subtitle2" fontWeight={600}>
+									Contenido del email
+								</Typography>
+							</Stack>
+						</AccordionSummary>
+						<AccordionDetails sx={{ pt: 0, pb: 2 }}>
+						<Stack spacing={2}>
 
 						{/* Modo de template */}
 						<Stack direction="row" spacing={1} mb={2}>
@@ -515,6 +534,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 									getOptionLabel={(t) => `${t.name} (${t.category})`}
 									value={selectedTemplate}
 									onChange={(_, val) => handleTemplateSelect(val)}
+									ListboxProps={{ style: { maxHeight: 220 } }}
 									renderOption={(props, t) => (
 										<Box component="li" {...props} key={t._id}>
 											<Stack>
@@ -629,17 +649,9 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 								</Alert>
 							)}
 						</Stack>
-					</Box>
 
-					<Divider />
-
-					{/* ── 3. Configuración del email ───────────────────────────────────────── */}
-					<Box>
-						<Typography variant="h5" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-							<Sms size={18} />
-							Configuración del email
-						</Typography>
-						<Grid container spacing={2}>
+					<Divider sx={{ my: 1 }} />
+					<Grid container spacing={2}>
 							<Grid item xs={12} md={8}>
 								<TextField
 									label="Nombre de la campaña"
@@ -695,19 +707,28 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 									}
 								/>
 							</Grid>
-						</Grid>
-					</Box>
+							</Grid>
+					</Stack>
+					</AccordionDetails>
+					</Accordion>
 
-					<Divider />
-
-					{/* ── 4. Tipo de campaña + pasos de secuencia ─────────────────────────── */}
-					<Box>
-						<Stack direction="row" spacing={1} alignItems="center" mb={2}>
-							<Typography variant="h5" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-								<Add size={18} />
-								Tipo de campaña
-							</Typography>
-							<Stack direction="row" spacing={1}>
+					{/* ── 4. Tipo de campaña ── */}
+					<Accordion
+						expanded={campaignTypeOpen}
+						onChange={() => setCampaignTypeOpen((v) => !v)}
+						variant="outlined"
+						sx={{ "&:before": { display: "none" }, borderRadius: 1 }}
+					>
+						<AccordionSummary expandIcon={<ArrowDown2 size={16} />} sx={{ minHeight: 48, "& .MuiAccordionSummary-content": { my: 0.75 } }}>
+							<Stack direction="row" spacing={1} alignItems="center">
+								<Add size={18} color={theme.palette.secondary.main} />
+								<Typography variant="subtitle2" fontWeight={600}>
+									Tipo de campaña
+								</Typography>
+							</Stack>
+						</AccordionSummary>
+						<AccordionDetails sx={{ pt: 0, pb: 2 }}>
+							<Stack direction="row" spacing={1} sx={{ mb: 2 }}>
 								{(["onetime", "sequence"] as const).map((type) => (
 									<Button
 										key={type}
@@ -721,8 +742,6 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 									</Button>
 								))}
 							</Stack>
-						</Stack>
-
 						{campaignType === "sequence" && (
 							<Stack spacing={1.5}>
 								<Paper
@@ -1027,21 +1046,30 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 								)}
 							</Stack>
 						)}
-					</Box>
+						</AccordionDetails>
+					</Accordion>
 
-					<Divider />
-
-					{/* ── 5. Configuración de envío ────────────────────────────────────────── */}
-					<Box>
-						<Typography variant="h5" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-							<Calendar size={18} />
-							Configuración de envío
-						</Typography>
-
-						<Grid container spacing={2} alignItems="flex-start">
-							{/* Throttle y fecha */}
-							<Grid item xs={12} md={4}>
-								<TextField
+					{/* ── 5. Configuración de envío ── */}
+					<Accordion
+						expanded={sendConfigOpen}
+						onChange={() => setSendConfigOpen((v) => !v)}
+						variant="outlined"
+						sx={{ "&:before": { display: "none" }, borderRadius: 1 }}
+					>
+						<AccordionSummary expandIcon={<ArrowDown2 size={16} />} sx={{ minHeight: 48, "& .MuiAccordionSummary-content": { my: 0.75 } }}>
+							<Stack direction="row" spacing={1} alignItems="center">
+								<Calendar size={18} color={theme.palette.text.secondary} />
+								<Typography variant="subtitle2" fontWeight={600}>
+									Configuración de envío
+								</Typography>
+								<Chip label="Opcional" size="small" variant="outlined" sx={{ fontSize: "0.6rem", height: 18 }} />
+							</Stack>
+						</AccordionSummary>
+						<AccordionDetails sx={{ pt: 0, pb: 2 }}>
+							<Grid container spacing={2} alignItems="flex-start">
+								{/* Throttle y fecha */}
+								<Grid item xs={12} md={4}>
+									<TextField
 									label="Throttle (emails por ciclo)"
 									type="number"
 									value={throttleRate}
@@ -1156,11 +1184,10 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 								/>
 							</Grid>
 						</Grid>
-					</Box>
+						</AccordionDetails>
+					</Accordion>
 
-					<Divider />
-
-					{/* ── 5. Resumen informativo ───────────────────────────────────────────── */}
+					{/* ── Resumen informativo ── */}
 					<Paper
 						variant="outlined"
 						sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.04), borderColor: alpha(theme.palette.info.main, 0.3) }}
