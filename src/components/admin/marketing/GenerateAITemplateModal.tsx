@@ -13,6 +13,7 @@ import {
 	FormControl,
 	FormControlLabel,
 	Grid,
+	IconButton,
 	InputLabel,
 	MenuItem,
 	Paper,
@@ -25,7 +26,21 @@ import {
 	Typography,
 	useTheme,
 } from "@mui/material";
-import { Magicpen, Refresh, TickCircle, CloseCircle, Monitor, Code, TextBlock, ArrowLeft2 } from "iconsax-react";
+import {
+	Magicpen,
+	Refresh,
+	TickCircle,
+	CloseCircle,
+	Monitor,
+	Code,
+	TextBlock,
+	ArrowLeft2,
+	Image,
+	Add,
+	Trash,
+	ArrowUp2,
+	ArrowDown2,
+} from "iconsax-react";
 import { useSnackbar } from "notistack";
 import mktAxios from "utils/mktAxios";
 
@@ -93,6 +108,8 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 	const [objective, setObjective] = useState("");
 	const [includePreheader, setIncludePreheader] = useState(true);
 	const [includeCTA, setIncludeCTA] = useState(true);
+	const [additionalImages, setAdditionalImages] = useState<{ url: string; description: string }[]>([]);
+	const [imagesExpanded, setImagesExpanded] = useState(false);
 
 	// ── Generation state ─────────────────────────────────────────────────────
 	const [generating, setGenerating] = useState(false);
@@ -122,6 +139,8 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 		setObjective("");
 		setIncludePreheader(true);
 		setIncludeCTA(true);
+		setAdditionalImages([]);
+		setImagesExpanded(false);
 		setGenerated(null);
 		setUsage(null);
 		setError(null);
@@ -150,6 +169,7 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 		setGenerating(true);
 		setError(null);
 		try {
+			const validImages = additionalImages.filter((img) => img.url.trim());
 			const response = await mktAxios.post("/api/ai-templates/generate", {
 				type: category,
 				tone,
@@ -158,6 +178,7 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 				customPrompt: customPrompt || undefined,
 				includePreheader,
 				includeCTA,
+				additionalImages: validImages.length > 0 ? validImages : undefined,
 				saveTemplate: false,
 			});
 
@@ -193,12 +214,14 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 		setRefining(true);
 		setError(null);
 		try {
+			const validImages = additionalImages.filter((img) => img.url.trim());
 			const response = await mktAxios.post("/api/ai-templates/refine", {
 				previousTemplate: generated,
 				refinementPrompt: refinementPrompt.trim(),
 				type: category,
 				tone,
 				audience,
+				additionalImages: validImages.length > 0 ? validImages : undefined,
 			});
 			if (response.data.success && response.data.data) {
 				setPreviousTemplate(generated);
@@ -351,6 +374,121 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 									label="Botón CTA"
 								/>
 							</Stack>
+
+							{/* ── Imágenes adicionales ── */}
+							<Paper variant="outlined" sx={{ p: 1.5 }}>
+								<Stack
+									direction="row"
+									alignItems="center"
+									justifyContent="space-between"
+									sx={{ cursor: "pointer" }}
+									onClick={() => setImagesExpanded((v) => !v)}
+								>
+									<Stack direction="row" spacing={1} alignItems="center">
+										<Image size={16} color={theme.palette.text.secondary} />
+										<Typography variant="subtitle2">Imágenes adicionales</Typography>
+										{additionalImages.filter((i) => i.url.trim()).length > 0 && (
+											<Chip
+												label={additionalImages.filter((i) => i.url.trim()).length}
+												size="small"
+												color="primary"
+												sx={{ height: 18, fontSize: "0.65rem" }}
+											/>
+										)}
+									</Stack>
+									{imagesExpanded ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
+								</Stack>
+								{imagesExpanded && (
+									<Stack spacing={1.5} sx={{ mt: 1.5 }}>
+										<Typography variant="caption" color="text.secondary">
+											El modelo podrá usar estas imágenes en el HTML cuando aporten valor. Usá URLs públicas de un CDN (Cloudinary, S3,
+											etc.) — evitá hosts que bloqueen hotlinking.
+										</Typography>
+										{additionalImages.map((img, idx) => (
+											<Stack key={idx} direction="row" spacing={1} alignItems="flex-start">
+												{img.url.trim() ? (
+													<Box
+														component="img"
+														src={img.url}
+														alt="preview"
+														sx={{
+															width: 56,
+															height: 56,
+															objectFit: "cover",
+															borderRadius: 1,
+															border: 1,
+															borderColor: "divider",
+															flexShrink: 0,
+															bgcolor: "grey.100",
+														}}
+														onError={(e: any) => {
+															e.currentTarget.style.visibility = "hidden";
+														}}
+													/>
+												) : (
+													<Box
+														sx={{
+															width: 56,
+															height: 56,
+															borderRadius: 1,
+															border: 1,
+															borderColor: "divider",
+															display: "flex",
+															alignItems: "center",
+															justifyContent: "center",
+															flexShrink: 0,
+															bgcolor: "grey.100",
+															color: "text.disabled",
+														}}
+													>
+														<Image size={18} />
+													</Box>
+												)}
+												<Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+													<TextField
+														size="small"
+														fullWidth
+														placeholder="URL de la imagen (https://...)"
+														value={img.url}
+														onChange={(e) =>
+															setAdditionalImages((prev) => prev.map((p, i) => (i === idx ? { ...p, url: e.target.value } : p)))
+														}
+														disabled={busy}
+													/>
+													<TextField
+														size="small"
+														fullWidth
+														placeholder="Descripción (qué muestra, para qué se usa)"
+														value={img.description}
+														onChange={(e) =>
+															setAdditionalImages((prev) => prev.map((p, i) => (i === idx ? { ...p, description: e.target.value } : p)))
+														}
+														disabled={busy}
+													/>
+												</Stack>
+												<IconButton
+													size="small"
+													onClick={() => setAdditionalImages((prev) => prev.filter((_, i) => i !== idx))}
+													disabled={busy}
+													sx={{ mt: 0.5 }}
+												>
+													<Trash size={14} />
+												</IconButton>
+											</Stack>
+										))}
+										<Button
+											variant="outlined"
+											size="small"
+											startIcon={<Add size={14} />}
+											onClick={() => setAdditionalImages((prev) => [...prev, { url: "", description: "" }])}
+											disabled={busy}
+											sx={{ alignSelf: "flex-start" }}
+										>
+											Agregar imagen
+										</Button>
+									</Stack>
+								)}
+							</Paper>
 
 							<Divider />
 
