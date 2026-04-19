@@ -114,6 +114,13 @@ function extractTemplateVars(html: string): string[] {
 	return [...new Set(matches.map((m) => m[1].trim()))];
 }
 
+// Variables reemplazadas por el servicio por prefijo/patrón (no por nombre exacto):
+// - `process.env.*` → replaceEnvVariables() en contentBuilder.js
+// - `contact.customFields.*` → getVariableValue() en contentBuilder.js
+function isAutoReplacedByPattern(varName: string): boolean {
+	return varName.startsWith("process.env.") || varName.startsWith("contact.customFields.");
+}
+
 const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
@@ -215,7 +222,10 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 	const discountVarsInHtml = useMemo(() => templateVars.filter((v) => DISCOUNT_VARS.has(v.toLowerCase())), [templateVars]);
 
 	const unknownVarsInHtml = useMemo(
-		() => templateVars.filter((v) => !AUTO_REPLACED_VARS.has(v) && !DISCOUNT_VARS.has(v.toLowerCase())),
+		() =>
+			templateVars.filter(
+				(v) => !AUTO_REPLACED_VARS.has(v) && !DISCOUNT_VARS.has(v.toLowerCase()) && !isAutoReplacedByPattern(v),
+			),
 		[templateVars],
 	);
 
@@ -620,7 +630,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 														Variables declaradas:
 													</Typography>
 													{selectedTemplate.variables.map((v) => {
-														const isAuto = AUTO_REPLACED_VARS.has(v);
+														const isAuto = AUTO_REPLACED_VARS.has(v) || isAutoReplacedByPattern(v);
 														const isDiscount = DISCOUNT_VARS.has(v.toLowerCase());
 														return (
 															<Tooltip
