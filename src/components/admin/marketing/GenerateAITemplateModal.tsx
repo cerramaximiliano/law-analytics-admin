@@ -25,7 +25,7 @@ import {
 	Typography,
 	useTheme,
 } from "@mui/material";
-import { Magicpen, Refresh, TickCircle, CloseCircle, Monitor, Code, TextBlock } from "iconsax-react";
+import { Magicpen, Refresh, TickCircle, CloseCircle, Monitor, Code, TextBlock, ArrowLeft2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import mktAxios from "utils/mktAxios";
 
@@ -100,6 +100,11 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 	const [usage, setUsage] = useState<Usage | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
+	// ── Refinement state ─────────────────────────────────────────────────────
+	const [refinementPrompt, setRefinementPrompt] = useState("");
+	const [previousTemplate, setPreviousTemplate] = useState<GeneratedTemplate | null>(null);
+	const [refining, setRefining] = useState(false);
+
 	// ── Preview state ────────────────────────────────────────────────────────
 	const [previewTab, setPreviewTab] = useState(0); // 0=HTML, 1=Texto, 2=JSON
 
@@ -123,6 +128,8 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 		setPreviewTab(0);
 		setTemplateName("");
 		setDescription("");
+		setRefinementPrompt("");
+		setPreviousTemplate(null);
 	}, []);
 
 	const handleClose = () => {
@@ -181,6 +188,42 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 		}
 	};
 
+	const handleRefine = async () => {
+		if (!generated || !refinementPrompt.trim() || refining) return;
+		setRefining(true);
+		setError(null);
+		try {
+			const response = await mktAxios.post("/api/ai-templates/refine", {
+				previousTemplate: generated,
+				refinementPrompt: refinementPrompt.trim(),
+				type: category,
+				tone,
+				audience,
+			});
+			if (response.data.success && response.data.data) {
+				setPreviousTemplate(generated);
+				setGenerated(response.data.data as GeneratedTemplate);
+				setUsage(response.data.usage || null);
+				setRefinementPrompt("");
+			} else {
+				throw new Error(response.data.error || "Respuesta inválida del servidor");
+			}
+		} catch (err: any) {
+			const msg = err.response?.data?.error || err.message || "Error al refinar el template";
+			setError(msg);
+			enqueueSnackbar(msg, { variant: "error" });
+		} finally {
+			setRefining(false);
+		}
+	};
+
+	const handleRevert = () => {
+		if (!previousTemplate) return;
+		setGenerated(previousTemplate);
+		setPreviousTemplate(null);
+		setRefinementPrompt("");
+	};
+
 	const handleSave = async () => {
 		if (!canSave || !generated) return;
 		setSaving(true);
@@ -214,7 +257,7 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 		}
 	};
 
-	const busy = generating || saving;
+	const busy = generating || saving || refining;
 
 	return (
 		<Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
@@ -311,19 +354,70 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 
 							<Divider />
 
-							<Button
-								variant="contained"
-								color="primary"
-								startIcon={
-									generating ? <CircularProgress size={16} color="inherit" /> : generated ? <Refresh size={18} /> : <Magicpen size={18} />
-								}
-								onClick={handleGenerate}
-								disabled={!canGenerate || busy}
-								fullWidth
-								size="large"
-							>
-								{generating ? "Generando..." : generated ? "Regenerar" : "Generar"}
-							</Button>
+							{!generated ? (
+								<Button
+									variant="contained"
+									color="primary"
+									startIcon={generating ? <CircularProgress size={16} color="inherit" /> : <Magicpen size={18} />}
+									onClick={handleGenerate}
+									disabled={!canGenerate || busy}
+									fullWidth
+									size="large"
+								>
+									{generating ? "Generando..." : "Generar"}
+								</Button>
+							) : (
+								<Stack spacing={1.5}>
+									<Typography variant="subtitle2" color="text.secondary">
+										Refinar el template
+									</Typography>
+									<TextField
+										label="¿Qué cambiarías?"
+										size="small"
+										fullWidth
+										multiline
+										rows={3}
+										value={refinementPrompt}
+										onChange={(e) => setRefinementPrompt(e.target.value)}
+										disabled={busy}
+										placeholder="Ej: hacé el subject más corto, cambiá el color del CTA a verde, agregá una línea sobre soporte 24/7..."
+										helperText="Se enviará el template actual como contexto. El modelo aplicará solo los cambios pedidos."
+									/>
+									<Button
+										variant="contained"
+										color="primary"
+										startIcon={refining ? <CircularProgress size={16} color="inherit" /> : <Refresh size={18} />}
+										onClick={handleRefine}
+										disabled={refinementPrompt.trim().length === 0 || busy}
+										fullWidth
+									>
+										{refining ? "Aplicando cambios..." : "Regenerar con cambios"}
+									</Button>
+									<Stack direction="row" spacing={1}>
+										<Button
+											variant="outlined"
+											size="small"
+											startIcon={<ArrowLeft2 size={14} />}
+											onClick={handleRevert}
+											disabled={!previousTemplate || busy}
+											sx={{ flex: 1 }}
+										>
+											Revertir anterior
+										</Button>
+										<Button
+											variant="outlined"
+											size="small"
+											color="secondary"
+											startIcon={<Magicpen size={14} />}
+											onClick={handleGenerate}
+											disabled={busy}
+											sx={{ flex: 1 }}
+										>
+											Generar desde cero
+										</Button>
+									</Stack>
+								</Stack>
+							)}
 
 							{usage && (
 								<Typography variant="caption" color="text.secondary">
