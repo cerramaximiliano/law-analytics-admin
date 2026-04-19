@@ -68,11 +68,13 @@ import {
 	Link21,
 	Image,
 	Data2,
+	Magicpen,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import AnimateButton from "components/@extended/AnimateButton";
 import TableSkeleton from "components/UI/TableSkeleton";
 import MarketingQuickNav from "components/admin/marketing/MarketingQuickNav";
+import GenerateAITemplateModal from "components/admin/marketing/GenerateAITemplateModal";
 
 // types
 interface EmailTemplate {
@@ -428,6 +430,9 @@ const EmailTemplates = () => {
 	const [createOpen, setCreateOpen] = useState<boolean>(false);
 	const [createViewTab, setCreateViewTab] = useState<number>(0);
 	const [creating, setCreating] = useState<boolean>(false);
+
+	// State for AI-generated template modal
+	const [aiModalOpen, setAiModalOpen] = useState<boolean>(false);
 
 	// State for edit template modal
 	const [editOpen, setEditOpen] = useState<boolean>(false);
@@ -1404,9 +1409,20 @@ const EmailTemplates = () => {
 						</Stack>
 					</Grid>
 					<Grid item>
-						<Button variant="contained" color="primary" startIcon={<Add />} sx={{ textTransform: "none" }} onClick={handleOpenCreate}>
-							Nueva plantilla
-						</Button>
+						<Stack direction="row" spacing={1}>
+							<Button
+								variant="outlined"
+								color="secondary"
+								startIcon={<Magicpen size={18} />}
+								sx={{ textTransform: "none" }}
+								onClick={() => setAiModalOpen(true)}
+							>
+								Generar con AI
+							</Button>
+							<Button variant="contained" color="primary" startIcon={<Add />} sx={{ textTransform: "none" }} onClick={handleOpenCreate}>
+								Nueva plantilla
+							</Button>
+						</Stack>
 					</Grid>
 				</Grid>
 			</Box>
@@ -2898,6 +2914,16 @@ const EmailTemplates = () => {
 					</AnimateButton>
 				</DialogActions>
 			</Dialog>
+
+			{/* AI-generated template modal */}
+			<GenerateAITemplateModal
+				open={aiModalOpen}
+				onClose={() => setAiModalOpen(false)}
+				onTemplateSaved={() => {
+					setAiModalOpen(false);
+					fetchTemplates();
+				}}
+			/>
 		</MainCard>
 	);
 };
