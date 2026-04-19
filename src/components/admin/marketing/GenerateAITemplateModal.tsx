@@ -1,8 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
 	Alert,
 	Box,
 	Button,
+	Checkbox,
 	Chip,
 	CircularProgress,
 	Dialog,
@@ -23,6 +24,7 @@ import {
 	Tab,
 	Tabs,
 	TextField,
+	Tooltip,
 	Typography,
 	useTheme,
 } from "@mui/material";
@@ -43,6 +45,7 @@ import {
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import mktAxios from "utils/mktAxios";
+import emailTemplateImagesService, { EmailTemplateImage } from "api/emailTemplateImages";
 
 // Categorías válidas según el enum del schema EmailTemplate en la-marketing-service
 const CATEGORY_OPTIONS: { value: string; label: string }[] = [
@@ -108,8 +111,15 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 	const [objective, setObjective] = useState("");
 	const [includePreheader, setIncludePreheader] = useState(true);
 	const [includeCTA, setIncludeCTA] = useState(true);
-	const [additionalImages, setAdditionalImages] = useState<{ url: string; description: string }[]>([]);
+	const [additionalImages, setAdditionalImages] = useState<
+		{ url: string; description: string; saveToLibrary?: boolean; fromLibraryId?: string }[]
+	>([]);
 	const [imagesExpanded, setImagesExpanded] = useState(false);
+
+	// ── Library state ────────────────────────────────────────────────────────
+	const [library, setLibrary] = useState<EmailTemplateImage[]>([]);
+	const [libraryLoading, setLibraryLoading] = useState(false);
+	const [libraryLoaded, setLibraryLoaded] = useState(false);
 
 	// ── Generation state ─────────────────────────────────────────────────────
 	const [generating, setGenerating] = useState(false);
@@ -141,6 +151,7 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 		setIncludeCTA(true);
 		setAdditionalImages([]);
 		setImagesExpanded(false);
+		// library se preserva a propósito: si el modal se reabre, evitamos re-fetch.
 		setGenerated(null);
 		setUsage(null);
 		setError(null);
@@ -197,6 +208,10 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 						.slice(0, 40);
 					setTemplateName(`ai_${category}_${slug || Date.now()}`);
 				}
+				// Persistir y trackear imágenes de forma asíncrona (no crítico)
+				await persistNewLibraryImages();
+				const usedInHtml = validImages.filter((img) => tpl.htmlBody.includes(img.url));
+				trackImageUsage(usedInHtml.map((i) => i.url));
 			} else {
 				throw new Error(response.data.error || "Respuesta inválida del servidor");
 			}
@@ -224,10 +239,14 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 				additionalImages: validImages.length > 0 ? validImages : undefined,
 			});
 			if (response.data.success && response.data.data) {
+				const tpl = response.data.data as GeneratedTemplate;
 				setPreviousTemplate(generated);
-				setGenerated(response.data.data as GeneratedTemplate);
+				setGenerated(tpl);
 				setUsage(response.data.usage || null);
 				setRefinementPrompt("");
+				await persistNewLibraryImages();
+				const usedInHtml = validImages.filter((img) => tpl.htmlBody.includes(img.url));
+				trackImageUsage(usedInHtml.map((i) => i.url));
 			} else {
 				throw new Error(response.data.error || "Respuesta inválida del servidor");
 			}
@@ -277,6 +296,93 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 			enqueueSnackbar(msg, { variant: "error" });
 		} finally {
 			setSaving(false);
+		}
+	};
+
+	// ── Library handlers ─────────────────────────────────────────────────────
+	const fetchLibrary = useCallback(async () => {
+		if (libraryLoading) return;
+		setLibraryLoading(true);
+		try {
+			const res = await emailTemplateImagesService.list();
+			setLibrary(res.data || []);
+			setLibraryLoaded(true);
+		} catch (err: any) {
+			enqueueSnackbar(err.response?.data?.error || err.message || "Error al cargar biblioteca de imágenes", { variant: "warning" });
+		} finally {
+			setLibraryLoading(false);
+		}
+	}, [libraryLoading, enqueueSnackbar]);
+
+	// Cargar biblioteca la primera vez que se expande
+	useEffect(() => {
+		if (imagesExpanded && !libraryLoaded && !libraryLoading) {
+			fetchLibrary();
+		}
+	}, [imagesExpanded, libraryLoaded, libraryLoading, fetchLibrary]);
+
+	const isImageSelected = useCallback((url: string) => additionalImages.some((img) => img.url.trim() === url.trim()), [additionalImages]);
+
+	const toggleLibraryImage = (img: EmailTemplateImage) => {
+		if (busy) return;
+		if (isImageSelected(img.url)) {
+			setAdditionalImages((prev) => prev.filter((p) => p.url.trim() !== img.url.trim()));
+		} else {
+			setAdditionalImages((prev) => [...prev, { url: img.url, description: img.description || img.name || "", fromLibraryId: img._id }]);
+		}
+	};
+
+	const deleteFromLibrary = async (img: EmailTemplateImage) => {
+		if (busy) return;
+		if (!window.confirm(`¿Eliminar "${img.name || img.url}" de la biblioteca? Esto no afecta a los templates ya guardados.`)) return;
+		try {
+			await emailTemplateImagesService.remove(img._id);
+			setLibrary((prev) => prev.filter((i) => i._id !== img._id));
+			setAdditionalImages((prev) => prev.filter((p) => p.fromLibraryId !== img._id));
+			enqueueSnackbar("Imagen eliminada de la biblioteca", { variant: "success" });
+		} catch (err: any) {
+			enqueueSnackbar(err.response?.data?.error || err.message || "Error al eliminar imagen", { variant: "error" });
+		}
+	};
+
+	// Persistir en biblioteca las imágenes manuales con saveToLibrary=true
+	const persistNewLibraryImages = async () => {
+		const toSave = additionalImages.filter((img) => img.saveToLibrary && img.url.trim() && !img.fromLibraryId);
+		if (toSave.length === 0) return;
+		try {
+			const created = await Promise.all(
+				toSave.map((img) =>
+					emailTemplateImagesService.create({ url: img.url.trim(), description: img.description.trim() }).catch(() => null),
+				),
+			);
+			// Refrescar la biblioteca con las nuevas
+			const newImages = created.filter((c): c is NonNullable<typeof c> => c !== null && !!c.data).map((c) => c.data);
+			if (newImages.length > 0) {
+				setLibrary((prev) => {
+					const existingUrls = new Set(prev.map((p) => p.url));
+					const dedup = newImages.filter((n) => !existingUrls.has(n.url));
+					return [...dedup, ...prev];
+				});
+				// Marcar los items del additionalImages como vinculados a biblioteca
+				setAdditionalImages((prev) =>
+					prev.map((p) => {
+						if (!p.saveToLibrary || p.fromLibraryId) return p;
+						const match = newImages.find((n) => n.url === p.url.trim());
+						return match ? { ...p, fromLibraryId: match._id, saveToLibrary: false } : p;
+					}),
+				);
+			}
+		} catch {
+			// Error no crítico — la biblioteca es opcional
+		}
+	};
+
+	const trackImageUsage = async (urls: string[]) => {
+		if (urls.length === 0) return;
+		try {
+			await emailTemplateImagesService.trackUsage(urls);
+		} catch {
+			// No crítico
 		}
 	};
 
@@ -399,93 +505,238 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 									{imagesExpanded ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
 								</Stack>
 								{imagesExpanded && (
-									<Stack spacing={1.5} sx={{ mt: 1.5 }}>
+									<Stack spacing={2} sx={{ mt: 1.5 }}>
 										<Typography variant="caption" color="text.secondary">
 											El modelo podrá usar estas imágenes en el HTML cuando aporten valor. Usá URLs públicas de un CDN (Cloudinary, S3,
 											etc.) — evitá hosts que bloqueen hotlinking.
 										</Typography>
-										{additionalImages.map((img, idx) => (
-											<Stack key={idx} direction="row" spacing={1} alignItems="flex-start">
-												{img.url.trim() ? (
-													<Box
-														component="img"
-														src={img.url}
-														alt="preview"
-														sx={{
-															width: 56,
-															height: 56,
-															objectFit: "cover",
-															borderRadius: 1,
-															border: 1,
-															borderColor: "divider",
-															flexShrink: 0,
-															bgcolor: "grey.100",
-														}}
-														onError={(e: any) => {
-															e.currentTarget.style.visibility = "hidden";
-														}}
-													/>
-												) : (
-													<Box
-														sx={{
-															width: 56,
-															height: 56,
-															borderRadius: 1,
-															border: 1,
-															borderColor: "divider",
-															display: "flex",
-															alignItems: "center",
-															justifyContent: "center",
-															flexShrink: 0,
-															bgcolor: "grey.100",
-															color: "text.disabled",
-														}}
-													>
-														<Image size={18} />
-													</Box>
-												)}
-												<Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
-													<TextField
-														size="small"
-														fullWidth
-														placeholder="URL de la imagen (https://...)"
-														value={img.url}
-														onChange={(e) =>
-															setAdditionalImages((prev) => prev.map((p, i) => (i === idx ? { ...p, url: e.target.value } : p)))
-														}
-														disabled={busy}
-													/>
-													<TextField
-														size="small"
-														fullWidth
-														placeholder="Descripción (qué muestra, para qué se usa)"
-														value={img.description}
-														onChange={(e) =>
-															setAdditionalImages((prev) => prev.map((p, i) => (i === idx ? { ...p, description: e.target.value } : p)))
-														}
-														disabled={busy}
-													/>
-												</Stack>
-												<IconButton
-													size="small"
-													onClick={() => setAdditionalImages((prev) => prev.filter((_, i) => i !== idx))}
-													disabled={busy}
-													sx={{ mt: 0.5 }}
-												>
-													<Trash size={14} />
-												</IconButton>
+
+										{/* ── Biblioteca ── */}
+										<Box>
+											<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 0.5 }}>
+												<Typography variant="caption" fontWeight={700} color="text.secondary">
+													Biblioteca {library.length > 0 && `(${library.length})`}
+												</Typography>
+												{libraryLoading && <CircularProgress size={12} />}
 											</Stack>
-										))}
-										<Button
-											variant="outlined"
-											size="small"
-											startIcon={<Add size={14} />}
-											onClick={() => setAdditionalImages((prev) => [...prev, { url: "", description: "" }])}
-											disabled={busy}
-											sx={{ alignSelf: "flex-start" }}
-										>
-											Agregar imagen
-										</Button>
+											{library.length === 0 && !libraryLoading ? (
+												<Typography variant="caption" color="text.disabled">
+													Todavía no hay imágenes guardadas. Agregá una abajo con el check "Guardar en biblioteca".
+												</Typography>
+											) : (
+												<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+													{library.map((img) => {
+														const selected = isImageSelected(img.url);
+														return (
+															<Tooltip
+																key={img._id}
+																title={
+																	<Box>
+																		<Typography variant="caption" fontWeight={700}>
+																			{img.name || "(sin nombre)"}
+																		</Typography>
+																		{img.description && (
+																			<Typography variant="caption" component="div">
+																				{img.description}
+																			</Typography>
+																		)}
+																		<Typography variant="caption" component="div" sx={{ opacity: 0.7, mt: 0.5 }}>
+																			Usada {img.usageCount} {img.usageCount === 1 ? "vez" : "veces"}
+																		</Typography>
+																	</Box>
+																}
+																arrow
+															>
+																<Box sx={{ position: "relative" }}>
+																	<Box
+																		component="img"
+																		src={img.url}
+																		alt={img.name || ""}
+																		onClick={() => toggleLibraryImage(img)}
+																		sx={{
+																			width: 64,
+																			height: 64,
+																			objectFit: "cover",
+																			borderRadius: 1,
+																			cursor: busy ? "not-allowed" : "pointer",
+																			border: 2,
+																			borderColor: selected ? "primary.main" : "divider",
+																			opacity: busy ? 0.5 : 1,
+																			transition: "all 0.15s",
+																			"&:hover": { borderColor: busy ? "divider" : "primary.light" },
+																		}}
+																		onError={(e: any) => {
+																			e.currentTarget.style.visibility = "hidden";
+																		}}
+																	/>
+																	{selected && (
+																		<Box
+																			sx={{
+																				position: "absolute",
+																				top: 2,
+																				right: 2,
+																				bgcolor: "primary.main",
+																				color: "primary.contrastText",
+																				borderRadius: "50%",
+																				width: 16,
+																				height: 16,
+																				display: "flex",
+																				alignItems: "center",
+																				justifyContent: "center",
+																				fontSize: 10,
+																				fontWeight: 700,
+																			}}
+																		>
+																			✓
+																		</Box>
+																	)}
+																	<IconButton
+																		size="small"
+																		onClick={(e) => {
+																			e.stopPropagation();
+																			deleteFromLibrary(img);
+																		}}
+																		disabled={busy}
+																		sx={{
+																			position: "absolute",
+																			bottom: -6,
+																			right: -6,
+																			bgcolor: "background.paper",
+																			border: 1,
+																			borderColor: "divider",
+																			p: 0.25,
+																			"&:hover": { bgcolor: "error.light", color: "error.contrastText" },
+																		}}
+																	>
+																		<Trash size={10} />
+																	</IconButton>
+																</Box>
+															</Tooltip>
+														);
+													})}
+												</Stack>
+											)}
+										</Box>
+
+										<Divider />
+
+										{/* ── URLs manuales ── */}
+										<Box>
+											<Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+												Agregar URL manual
+											</Typography>
+											<Stack spacing={1.5}>
+												{additionalImages
+													.filter((img) => !img.fromLibraryId)
+													.map((img) => {
+														const idx = additionalImages.indexOf(img);
+														return (
+															<Stack key={idx} direction="row" spacing={1} alignItems="flex-start">
+																{img.url.trim() ? (
+																	<Box
+																		component="img"
+																		src={img.url}
+																		alt="preview"
+																		sx={{
+																			width: 56,
+																			height: 56,
+																			objectFit: "cover",
+																			borderRadius: 1,
+																			border: 1,
+																			borderColor: "divider",
+																			flexShrink: 0,
+																			bgcolor: "grey.100",
+																		}}
+																		onError={(e: any) => {
+																			e.currentTarget.style.visibility = "hidden";
+																		}}
+																	/>
+																) : (
+																	<Box
+																		sx={{
+																			width: 56,
+																			height: 56,
+																			borderRadius: 1,
+																			border: 1,
+																			borderColor: "divider",
+																			display: "flex",
+																			alignItems: "center",
+																			justifyContent: "center",
+																			flexShrink: 0,
+																			bgcolor: "grey.100",
+																			color: "text.disabled",
+																		}}
+																	>
+																		<Image size={18} />
+																	</Box>
+																)}
+																<Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+																	<TextField
+																		size="small"
+																		fullWidth
+																		placeholder="URL de la imagen (https://...)"
+																		value={img.url}
+																		onChange={(e) =>
+																			setAdditionalImages((prev) => prev.map((p, i) => (i === idx ? { ...p, url: e.target.value } : p)))
+																		}
+																		disabled={busy}
+																	/>
+																	<TextField
+																		size="small"
+																		fullWidth
+																		placeholder="Descripción (qué muestra, para qué se usa)"
+																		value={img.description}
+																		onChange={(e) =>
+																			setAdditionalImages((prev) =>
+																				prev.map((p, i) => (i === idx ? { ...p, description: e.target.value } : p)),
+																			)
+																		}
+																		disabled={busy}
+																	/>
+																	<FormControlLabel
+																		sx={{ m: 0 }}
+																		control={
+																			<Checkbox
+																				size="small"
+																				checked={!!img.saveToLibrary}
+																				onChange={(e) =>
+																					setAdditionalImages((prev) =>
+																						prev.map((p, i) => (i === idx ? { ...p, saveToLibrary: e.target.checked } : p)),
+																					)
+																				}
+																				disabled={busy || !img.url.trim()}
+																			/>
+																		}
+																		label={
+																			<Typography variant="caption" color="text.secondary">
+																				Guardar en biblioteca para reutilizar
+																			</Typography>
+																		}
+																	/>
+																</Stack>
+																<IconButton
+																	size="small"
+																	onClick={() => setAdditionalImages((prev) => prev.filter((_, i) => i !== idx))}
+																	disabled={busy}
+																	sx={{ mt: 0.5 }}
+																>
+																	<Trash size={14} />
+																</IconButton>
+															</Stack>
+														);
+													})}
+												<Button
+													variant="outlined"
+													size="small"
+													startIcon={<Add size={14} />}
+													onClick={() => setAdditionalImages((prev) => [...prev, { url: "", description: "", saveToLibrary: false }])}
+													disabled={busy}
+													sx={{ alignSelf: "flex-start" }}
+												>
+													Agregar URL
+												</Button>
+											</Stack>
+										</Box>
 									</Stack>
 								)}
 							</Paper>
