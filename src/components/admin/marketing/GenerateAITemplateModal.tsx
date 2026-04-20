@@ -93,13 +93,25 @@ interface Usage {
 	completion_tokens?: number;
 }
 
+export interface VariantSource {
+	name: string;
+	category: string;
+	subject: string;
+	preheader?: string;
+	htmlBody: string;
+	textBody?: string;
+	variables?: string[];
+}
+
 interface Props {
 	open: boolean;
 	onClose: () => void;
 	onTemplateSaved?: () => void;
+	/** Si viene, el modal se abre en modo "crear variante" con el template ya cargado. */
+	sourceTemplate?: VariantSource | null;
 }
 
-const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
+const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved, sourceTemplate }: Props) => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
@@ -321,6 +333,22 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 		}
 	}, [imagesExpanded, libraryLoaded, libraryLoading, fetchLibrary]);
 
+	// ── Modo "variante": pre-cargar el template fuente cuando el modal se abre con sourceTemplate
+	useEffect(() => {
+		if (!open || !sourceTemplate) return;
+		setCategory(sourceTemplate.category);
+		setGenerated({
+			subject: sourceTemplate.subject || "",
+			preheader: sourceTemplate.preheader || "",
+			htmlBody: sourceTemplate.htmlBody || "",
+			textBody: sourceTemplate.textBody || "",
+			variables: sourceTemplate.variables || [],
+		});
+		setTemplateName(`${sourceTemplate.name}_variant`);
+		// El prompt estructurado queda vacío: la fuente es el template completo,
+		// el refinamiento es la forma esperada de iterar.
+	}, [open, sourceTemplate]);
+
 	const isImageSelected = useCallback((url: string) => additionalImages.some((img) => img.url.trim() === url.trim()), [additionalImages]);
 
 	const toggleLibraryImage = (img: EmailTemplateImage) => {
@@ -391,12 +419,26 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 	return (
 		<Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
 			<DialogTitle>
-				<Stack direction="row" spacing={1} alignItems="center">
+				<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
 					<Magicpen size={22} color={theme.palette.primary.main} />
 					<Typography variant="h6" fontWeight={700}>
-						Generar plantilla con AI
+						{sourceTemplate ? "Crear variante con AI" : "Generar plantilla con AI"}
 					</Typography>
+					{sourceTemplate && (
+						<Chip
+							label={`Base: ${sourceTemplate.name}`}
+							size="small"
+							variant="outlined"
+							color="secondary"
+							sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}
+						/>
+					)}
 				</Stack>
+				{sourceTemplate && (
+					<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+						Iterá con el campo "¿Qué cambiarías?" para generar una nueva variación. Se guardará como un template nuevo.
+					</Typography>
+				)}
 			</DialogTitle>
 
 			<DialogContent dividers>
@@ -793,17 +835,41 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved }: Props) => {
 										>
 											Revertir anterior
 										</Button>
-										<Button
-											variant="outlined"
-											size="small"
-											color="secondary"
-											startIcon={<Magicpen size={14} />}
-											onClick={handleGenerate}
-											disabled={busy}
-											sx={{ flex: 1 }}
-										>
-											Generar desde cero
-										</Button>
+										{sourceTemplate ? (
+											<Button
+												variant="outlined"
+												size="small"
+												color="secondary"
+												startIcon={<Refresh size={14} />}
+												onClick={() => {
+													setPreviousTemplate(generated);
+													setGenerated({
+														subject: sourceTemplate.subject || "",
+														preheader: sourceTemplate.preheader || "",
+														htmlBody: sourceTemplate.htmlBody || "",
+														textBody: sourceTemplate.textBody || "",
+														variables: sourceTemplate.variables || [],
+													});
+													setRefinementPrompt("");
+												}}
+												disabled={busy}
+												sx={{ flex: 1 }}
+											>
+												Restaurar original
+											</Button>
+										) : (
+											<Button
+												variant="outlined"
+												size="small"
+												color="secondary"
+												startIcon={<Magicpen size={14} />}
+												onClick={handleGenerate}
+												disabled={busy}
+												sx={{ flex: 1 }}
+											>
+												Generar desde cero
+											</Button>
+										)}
 									</Stack>
 								</Stack>
 							)}
