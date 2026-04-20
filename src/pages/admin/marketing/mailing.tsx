@@ -45,8 +45,9 @@ import { styled } from "@mui/material/styles";
 
 // project imports
 import MainCard from "components/MainCard";
-import { Add, Edit2, SearchNormal1, Trash, MessageText1, People, Refresh, Chart, Copy, Data2 } from "iconsax-react";
+import { Add, Edit2, SearchNormal1, Trash, MessageText1, People, Refresh, Chart, Copy, Data2, Magicpen } from "iconsax-react";
 import CampaignFormModal from "sections/admin/marketing/CampaignFormModal";
+import GenerateAICampaignModal from "components/admin/marketing/GenerateAICampaignModal";
 import DeleteCampaignDialog from "sections/admin/marketing/DeleteCampaignDialog";
 import CampaignEmailList from "sections/admin/marketing/CampaignEmailList";
 import CampaignContactsList from "sections/admin/marketing/CampaignContactsList";
@@ -121,6 +122,7 @@ const MailingCampaigns = () => {
 	// State for modals
 	const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 	const [createModalOpen, setCreateModalOpen] = useState<boolean>(false);
+	const [aiCampaignModalOpen, setAiCampaignModalOpen] = useState<boolean>(false);
 	const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
 	const [emailListOpen, setEmailListOpen] = useState<boolean>(false);
@@ -559,9 +561,26 @@ const MailingCampaigns = () => {
 						</Stack>
 					</Grid>
 					<Grid item>
-						<Button variant="contained" color="primary" startIcon={<Add />} sx={{ textTransform: "none" }} onClick={handleOpenCreateModal}>
-							Nueva campaña
-						</Button>
+						<Stack direction="row" spacing={1}>
+							<Button
+								variant="outlined"
+								color="secondary"
+								startIcon={<Magicpen size={18} />}
+								sx={{ textTransform: "none" }}
+								onClick={() => setAiCampaignModalOpen(true)}
+							>
+								Generar con AI
+							</Button>
+							<Button
+								variant="contained"
+								color="primary"
+								startIcon={<Add />}
+								sx={{ textTransform: "none" }}
+								onClick={handleOpenCreateModal}
+							>
+								Nueva campaña
+							</Button>
+						</Stack>
 					</Grid>
 				</Grid>
 			</Box>
@@ -912,6 +931,16 @@ const MailingCampaigns = () => {
 					</Card>
 				</Grid>
 			</Grid>
+
+			{/* AI-generated Campaign Modal */}
+			<GenerateAICampaignModal
+				open={aiCampaignModalOpen}
+				onClose={() => setAiCampaignModalOpen(false)}
+				onCampaignSaved={() => {
+					setAiCampaignModalOpen(false);
+					handleCampaignCreated();
+				}}
+			/>
 
 			{/* Campaign Form Modals */}
 			<CampaignFormModal open={createModalOpen} onClose={handleCloseCreateModal} onSuccess={handleCampaignCreated} mode="create" />
