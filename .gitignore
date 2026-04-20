@@ -32,3 +32,4 @@ yarn-error.log*
 # Vite
 .vite
 bundle-stats.html
+.claude
