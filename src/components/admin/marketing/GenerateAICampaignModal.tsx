@@ -137,12 +137,17 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 
 	// ── Preview state ────────────────────────────────────────────────────────
 	const [emailTab, setEmailTab] = useState(0);
-	const [previewMode, setPreviewMode] = useState<"html" | "text" | "json">("html");
+	const [previewMode, setPreviewMode] = useState<"html" | "htmlEdit" | "text" | "json">("html");
+
+	// ── Per-email refinement state ───────────────────────────────────────────
+	const [refinePrompts, setRefinePrompts] = useState<Record<number, string>>({});
+	const [refiningIndex, setRefiningIndex] = useState<number | null>(null);
+	const [emailHistory, setEmailHistory] = useState<Record<number, GeneratedEmail[]>>({}); // stack por email index para revertir
 
 	// ── Save state ───────────────────────────────────────────────────────────
 	const [saving, setSaving] = useState(false);
 
-	const busy = generating || saving;
+	const busy = generating || saving || refiningIndex !== null;
 
 	// ── Sync numberOfEmails with delays array ────────────────────────────────
 	useEffect(() => {
@@ -180,6 +185,9 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 		setError(null);
 		setEmailTab(0);
 		setPreviewMode("html");
+		setRefinePrompts({});
+		setRefiningIndex(null);
+		setEmailHistory({});
 	}, []);
 
 	const handleClose = () => {
@@ -263,6 +271,104 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 		} finally {
 			setGenerating(false);
 		}
+	};
+
+	const handleRefineEmail = async (idx: number) => {
+		const prompt = (refinePrompts[idx] || "").trim();
+		const target = emails[idx];
+		if (!prompt || !target) return;
+		setRefiningIndex(idx);
+		setError(null);
+		try {
+			const validImages = additionalImages.filter((img) => img.url.trim());
+			const response = await mktAxios.post(
+				"/api/ai-templates/refine",
+				{
+					previousTemplate: target.template,
+					refinementPrompt: prompt,
+					type: campaign?.category || category,
+					tone,
+					audience,
+					additionalImages: validImages.length > 0 ? validImages : undefined,
+				},
+				{ timeout: CAMPAIGN_TIMEOUT_MS },
+			);
+
+			if (response.data.success && response.data.data) {
+				const newTemplate = response.data.data as EmailTemplate;
+				// Push current version al historial del email
+				setEmailHistory((prev) => ({
+					...prev,
+					[idx]: [...(prev[idx] || []), target],
+				}));
+				// Reemplazar el email con la versión refinada; preservar metadata (name, sequenceIndex, timeDelay)
+				setEmails((prev) =>
+					prev.map((e, i) =>
+						i === idx
+							? {
+									...e,
+									subject: newTemplate.subject || e.subject,
+									template: newTemplate,
+							  }
+							: e,
+					),
+				);
+				setUsage(response.data.usage || null);
+				// Limpiar el prompt
+				setRefinePrompts((prev) => ({ ...prev, [idx]: "" }));
+			} else {
+				throw new Error(response.data.error || "Respuesta inválida del servidor");
+			}
+		} catch (err: any) {
+			const msg = err.response?.data?.error || err.message || "Error al refinar el email";
+			setError(msg);
+			enqueueSnackbar(msg, { variant: "error" });
+		} finally {
+			setRefiningIndex(null);
+		}
+	};
+
+	const handleRevertEmail = (idx: number) => {
+		const stack = emailHistory[idx] || [];
+		if (stack.length === 0) return;
+		const previous = stack[stack.length - 1];
+		setEmails((prev) => prev.map((e, i) => (i === idx ? previous : e)));
+		setEmailHistory((prev) => ({
+			...prev,
+			[idx]: stack.slice(0, -1),
+		}));
+	};
+
+	const updateEmailField = (idx: number, patch: Partial<GeneratedEmail>) => {
+		setEmails((prev) => prev.map((e, i) => (i === idx ? { ...e, ...patch } : e)));
+	};
+
+	const updateEmailTemplateField = (idx: number, patch: Partial<EmailTemplate>) => {
+		setEmails((prev) => prev.map((e, i) => (i === idx ? { ...e, template: { ...e.template, ...patch } } : e)));
+	};
+
+	const moveEmail = (from: number, to: number) => {
+		if (to < 0 || to >= emails.length || from === to) return;
+		setEmails((prev) => {
+			const next = [...prev];
+			const [moved] = next.splice(from, 1);
+			next.splice(to, 0, moved);
+			// Re-asignar sequenceIndex según posición nueva
+			return next.map((em, i) => ({ ...em, sequenceIndex: i }));
+		});
+		// Migrar historial y prompts para los dos índices afectados
+		setEmailHistory((prev) => {
+			const a = prev[from] || [];
+			const b = prev[to] || [];
+			return { ...prev, [from]: b, [to]: a };
+		});
+		setRefinePrompts((prev) => {
+			const a = prev[from] || "";
+			const b = prev[to] || "";
+			return { ...prev, [from]: b, [to]: a };
+		});
+		// Seguir al email que se movió
+		setEmailTab(to);
 	};
 
 	const handleSave = async () => {
@@ -678,23 +784,90 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 								{currentEmail && (
 									<>
 										<Paper variant="outlined" sx={{ p: 1.5 }}>
-											<Stack spacing={0.5}>
-												<Typography variant="caption" fontWeight={700} color="text.secondary">
-													Subject
-												</Typography>
-												<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
-													{currentEmail.subject}
-												</Typography>
-												{currentEmail.template.preheader && (
-													<>
-														<Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ mt: 0.5 }}>
-															Preheader
+											<Stack spacing={1}>
+												{/* Controles de posición del email */}
+												{emails.length > 1 && (
+													<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+														<Typography variant="caption" color="text.secondary">
+															Posición: {emailTab + 1} / {emails.length}
 														</Typography>
-														<Typography variant="body2" sx={{ fontFamily: "monospace", opacity: 0.8 }}>
-															{currentEmail.template.preheader}
-														</Typography>
-													</>
+														<Box sx={{ flex: 1 }} />
+														<Tooltip title="Mover arriba">
+															<span>
+																<IconButton
+																	size="small"
+																	onClick={() => moveEmail(emailTab, emailTab - 1)}
+																	disabled={busy || emailTab === 0}
+																>
+																	<ArrowUp2 size={14} />
+																</IconButton>
+															</span>
+														</Tooltip>
+														<Tooltip title="Mover abajo">
+															<span>
+																<IconButton
+																	size="small"
+																	onClick={() => moveEmail(emailTab, emailTab + 1)}
+																	disabled={busy || emailTab === emails.length - 1}
+																>
+																	<ArrowDown2 size={14} />
+																</IconButton>
+															</span>
+														</Tooltip>
+													</Stack>
 												)}
+												{emailTab > 0 && (
+													<Stack direction="row" spacing={1} alignItems="center">
+														<TextField
+															label="Delay (días)"
+															size="small"
+															type="number"
+															value={currentEmail.timeDelay.value}
+															onChange={(e) =>
+																updateEmailField(emailTab, {
+																	timeDelay: {
+																		...currentEmail.timeDelay,
+																		value: Math.max(0, parseInt(e.target.value) || 0),
+																	},
+																})
+															}
+															disabled={busy}
+															inputProps={{ min: 0, max: 90 }}
+															sx={{ width: 140 }}
+															helperText={`Días desde email ${emailTab}`}
+														/>
+													</Stack>
+												)}
+												<TextField
+													label="Nombre interno"
+													size="small"
+													fullWidth
+													value={currentEmail.name}
+													onChange={(e) => updateEmailField(emailTab, { name: e.target.value })}
+													disabled={busy}
+													helperText="Nombre que ve el admin (no lo ve el destinatario)"
+												/>
+												<TextField
+													label="Subject"
+													size="small"
+													fullWidth
+													value={currentEmail.subject}
+													onChange={(e) => {
+														updateEmailField(emailTab, { subject: e.target.value });
+														updateEmailTemplateField(emailTab, { subject: e.target.value });
+													}}
+													disabled={busy}
+													inputProps={{ style: { fontFamily: "monospace", fontSize: 13 } }}
+												/>
+												<TextField
+													label="Preheader"
+													size="small"
+													fullWidth
+													value={currentEmail.template.preheader}
+													onChange={(e) => updateEmailTemplateField(emailTab, { preheader: e.target.value })}
+													disabled={busy}
+													inputProps={{ style: { fontFamily: "monospace", fontSize: 13 } }}
+												/>
 												{currentEmail.template.variables.length > 0 && (
 													<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
 														{currentEmail.template.variables.map((v) => (
@@ -711,12 +884,56 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 											</Stack>
 										</Paper>
 
+										{/* ── Refinar este email con AI ── */}
+										<Paper variant="outlined" sx={{ p: 1.5, bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.50" }}>
+											<Stack spacing={1}>
+												<Stack direction="row" alignItems="center" spacing={1}>
+													<Magicpen size={14} color={theme.palette.secondary.main} />
+													<Typography variant="caption" fontWeight={700} color="text.secondary">
+														Refinar solo este email con AI
+													</Typography>
+												</Stack>
+												<TextField
+													size="small"
+													fullWidth
+													multiline
+													rows={2}
+													placeholder="Ej: hacé el subject más corto y cambiá el CTA a verde"
+													value={refinePrompts[emailTab] || ""}
+													onChange={(e) => setRefinePrompts((prev) => ({ ...prev, [emailTab]: e.target.value }))}
+													disabled={busy}
+												/>
+												<Stack direction="row" spacing={1}>
+													<Button
+														size="small"
+														variant="contained"
+														color="secondary"
+														startIcon={refiningIndex === emailTab ? <CircularProgress size={14} color="inherit" /> : <Refresh size={14} />}
+														onClick={() => handleRefineEmail(emailTab)}
+														disabled={busy || !(refinePrompts[emailTab] || "").trim()}
+														sx={{ flex: 1 }}
+													>
+														{refiningIndex === emailTab ? "Aplicando..." : "Refinar con AI"}
+													</Button>
+													<Button
+														size="small"
+														variant="outlined"
+														onClick={() => handleRevertEmail(emailTab)}
+														disabled={busy || !(emailHistory[emailTab] || []).length}
+													>
+														Revertir ({(emailHistory[emailTab] || []).length})
+													</Button>
+												</Stack>
+											</Stack>
+										</Paper>
+
 										<Tabs
 											value={previewMode}
 											onChange={(_, v) => setPreviewMode(v)}
 											sx={{ minHeight: 36, "& .MuiTab-root": { minHeight: 36, textTransform: "none" } }}
 										>
 											<Tab value="html" icon={<Monitor size={14} />} iconPosition="start" label="HTML" />
+											<Tab value="htmlEdit" icon={<Code size={14} />} iconPosition="start" label="Editor HTML" />
 											<Tab value="text" icon={<TextBlock size={14} />} iconPosition="start" label="Texto" />
 											<Tab value="json" icon={<Code size={14} />} iconPosition="start" label="JSON" />
 										</Tabs>
@@ -735,23 +952,50 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 													}}
 												/>
 											)}
-											{previewMode === "text" && (
-												<Box
-													component="pre"
-													sx={{
-														m: 0,
-														p: 2,
-														fontFamily: "monospace",
-														fontSize: 12,
-														lineHeight: 1.5,
-														whiteSpace: "pre-wrap",
-														wordBreak: "break-word",
-														maxHeight: 400,
-														overflow: "auto",
+											{previewMode === "htmlEdit" && (
+												<TextField
+													multiline
+													fullWidth
+													minRows={16}
+													maxRows={16}
+													value={currentEmail.template.htmlBody}
+													onChange={(e) => updateEmailTemplateField(emailTab, { htmlBody: e.target.value })}
+													disabled={busy}
+													variant="outlined"
+													InputProps={{
+														sx: {
+															fontFamily: "monospace",
+															fontSize: 11,
+															lineHeight: 1.5,
+															bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.50",
+															borderRadius: 0,
+														},
 													}}
-												>
-													{currentEmail.template.textBody || "(sin versión de texto plano)"}
-												</Box>
+													sx={{ "& fieldset": { border: 0 } }}
+												/>
+											)}
+											{previewMode === "text" && (
+												<TextField
+													multiline
+													fullWidth
+													minRows={16}
+													maxRows={16}
+													value={currentEmail.template.textBody}
+													onChange={(e) => updateEmailTemplateField(emailTab, { textBody: e.target.value })}
+													disabled={busy}
+													variant="outlined"
+													placeholder="(sin versión de texto plano)"
+													InputProps={{
+														sx: {
+															fontFamily: "monospace",
+															fontSize: 12,
+															lineHeight: 1.5,
+															bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.50",
+															borderRadius: 0,
+														},
+													}}
+													sx={{ "& fieldset": { border: 0 } }}
+												/>
 											)}
 											{previewMode === "json" && (
 												<Box
