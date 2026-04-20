@@ -4,10 +4,13 @@ import {
 	Box,
 	Button,
 	Chip,
+	CircularProgress,
+	Collapse,
 	FormControl,
 	Grid,
 	IconButton,
 	InputLabel,
+	Menu,
 	MenuItem,
 	Paper,
 	Select,
@@ -22,9 +25,8 @@ import {
 	TextField,
 	Typography,
 	useTheme,
-	Collapse,
 } from "@mui/material";
-import { Refresh, SearchNormal1, CloseCircle, Magicpen, ArrowDown2, ArrowUp2, Data2 } from "iconsax-react";
+import { Refresh, SearchNormal1, CloseCircle, Magicpen, ArrowDown2, ArrowUp2, Data2, Copy, DocumentDownload } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import TableSkeleton from "components/UI/TableSkeleton";
@@ -171,6 +173,10 @@ const SystemLogs = () => {
 	// ── Modal AI ────────────────────────────────────────────────────────────
 	const [analyzeOpen, setAnalyzeOpen] = useState(false);
 
+	// ── Export logs (clipboard / download) ──────────────────────────────────
+	const [exportMenuAnchor, setExportMenuAnchor] = useState<null | HTMLElement>(null);
+	const [exporting, setExporting] = useState(false);
+
 	const hostOptions = useMemo(() => {
 		const set = new Set<string>();
 		services.forEach((s) => set.add(s.host));
@@ -232,6 +238,101 @@ const SystemLogs = () => {
 		fetchLogs();
 	}, [fetchLogs]);
 
+	// Trae hasta N logs con los filtros actuales (sin paginar) y los devuelve formateados
+	const fetchForExport = useCallback(
+		async (limit: number): Promise<LogEntry[]> => {
+			const res = await logsService.list({ ...currentFilters, page: 1, limit });
+			return res.data;
+		},
+		[currentFilters],
+	);
+
+	const formatAsText = (entries: LogEntry[]): string => {
+		const header = [
+			`# Logs del ecosistema Law Analytics — exportados ${new Date().toISOString()}`,
+			`# Filtros: ${JSON.stringify(currentFilters)}`,
+			`# Total exportados: ${entries.length}`,
+			``,
+		].join("\n");
+		const body = entries
+			.map((l) => {
+				const ts = new Date(l.timestamp).toISOString().replace("T", " ").slice(0, 19);
+				return `[${ts}] [${l.level || "unknown"}] ${l.service}@${l.host}: ${l.message}`;
+			})
+			.join("\n");
+		return header + body + "\n";
+	};
+
+	const formatAsJson = (entries: LogEntry[]): string => {
+		return JSON.stringify(
+			{
+				exportedAt: new Date().toISOString(),
+				filters: currentFilters,
+				total: entries.length,
+				logs: entries.map((l) => ({
+					timestamp: l.timestamp,
+					level: l.level,
+					service: l.service,
+					host: l.host,
+					message: l.message,
+					traceId: l.traceId || undefined,
+					context: l.context && Object.keys(l.context).length > 0 ? l.context : undefined,
+				})),
+			},
+			null,
+			2,
+		);
+	};
+
+	const handleCopy = async (format: "text" | "json") => {
+		setExportMenuAnchor(null);
+		setExporting(true);
+		try {
+			const entries = await fetchForExport(2000);
+			if (entries.length === 0) {
+				enqueueSnackbar("No hay logs para copiar con estos filtros", { variant: "warning" });
+				return;
+			}
+			const content = format === "json" ? formatAsJson(entries) : formatAsText(entries);
+			await navigator.clipboard.writeText(content);
+			enqueueSnackbar(`${entries.length} logs copiados al portapapeles (${format.toUpperCase()})`, { variant: "success" });
+		} catch (err: any) {
+			enqueueSnackbar(err.message || "Error al copiar logs", { variant: "error" });
+		} finally {
+			setExporting(false);
+		}
+	};
+
+	const handleDownload = async (format: "text" | "json") => {
+		setExportMenuAnchor(null);
+		setExporting(true);
+		try {
+			const entries = await fetchForExport(5000);
+			if (entries.length === 0) {
+				enqueueSnackbar("No hay logs para descargar con estos filtros", { variant: "warning" });
+				return;
+			}
+			const content = format === "json" ? formatAsJson(entries) : formatAsText(entries);
+			const mime = format === "json" ? "application/json" : "text/plain";
+			const ext = format === "json" ? "json" : "log";
+			const blob = new Blob([content], { type: mime + ";charset=utf-8" });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+			a.href = url;
+			a.download = `logs-${ts}.${ext}`;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+			enqueueSnackbar(`${entries.length} logs descargados`, { variant: "success" });
+		} catch (err: any) {
+			enqueueSnackbar(err.message || "Error al descargar logs", { variant: "error" });
+		} finally {
+			setExporting(false);
+		}
+	};
+
 	const handleClearFilters = () => {
 		setService("");
 		setHost("");
@@ -276,6 +377,33 @@ const SystemLogs = () => {
 							>
 								Analizar con AI
 							</Button>
+							<Button
+								variant="outlined"
+								startIcon={exporting ? <CircularProgress size={14} color="inherit" /> : <Copy size={16} />}
+								onClick={(e) => setExportMenuAnchor(e.currentTarget)}
+								disabled={total === 0 || exporting}
+								sx={{ textTransform: "none" }}
+							>
+								Exportar
+							</Button>
+							<Menu anchorEl={exportMenuAnchor} open={Boolean(exportMenuAnchor)} onClose={() => setExportMenuAnchor(null)}>
+								<MenuItem onClick={() => handleCopy("text")}>
+									<Copy size={14} style={{ marginRight: 8 }} />
+									Copiar como texto (máx 2000)
+								</MenuItem>
+								<MenuItem onClick={() => handleCopy("json")}>
+									<Copy size={14} style={{ marginRight: 8 }} />
+									Copiar como JSON (máx 2000)
+								</MenuItem>
+								<MenuItem onClick={() => handleDownload("text")}>
+									<DocumentDownload size={14} style={{ marginRight: 8 }} />
+									Descargar .log (máx 5000)
+								</MenuItem>
+								<MenuItem onClick={() => handleDownload("json")}>
+									<DocumentDownload size={14} style={{ marginRight: 8 }} />
+									Descargar .json (máx 5000)
+								</MenuItem>
+							</Menu>
 							<Button
 								variant="outlined"
 								startIcon={<Refresh size={16} />}
