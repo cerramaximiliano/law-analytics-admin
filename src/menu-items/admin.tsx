@@ -117,6 +117,14 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "system-logs",
+					title: "Logs del Ecosistema",
+					type: "item",
+					url: "/admin/logs",
+					breadcrumbs: true,
+					chip: { label: "AI", color: "secondary", variant: "outlined", size: "small" },
+				},
+				{
 					id: "workers-saij",
 					title: "Workers SAIJ",
 					type: "item",
