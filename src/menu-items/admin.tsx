@@ -125,6 +125,14 @@ const admin: NavItemType = {
 					chip: { label: "AI", color: "secondary", variant: "outlined", size: "small" },
 				},
 				{
+					id: "service-health",
+					title: "Estado de Servicios",
+					type: "item",
+					url: "/admin/logs/health",
+					breadcrumbs: true,
+					chip: { label: "AI", color: "secondary", variant: "outlined", size: "small" },
+				},
+				{
 					id: "workers-saij",
 					title: "Workers SAIJ",
 					type: "item",
