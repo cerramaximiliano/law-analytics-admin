@@ -433,6 +433,13 @@ const EmailTemplates = () => {
 
 	// State for AI-generated template modal
 	const [aiModalOpen, setAiModalOpen] = useState<boolean>(false);
+	// Fuente para el modo "crear variante" (si es null, el modal abre en modo generación normal)
+	const [aiVariantSource, setAiVariantSource] = useState<EmailTemplate | null>(null);
+
+	const handleOpenAiVariant = (template: EmailTemplate) => {
+		setAiVariantSource(template);
+		setAiModalOpen(true);
+	};
 
 	// State for edit template modal
 	const [editOpen, setEditOpen] = useState<boolean>(false);
@@ -1515,6 +1522,15 @@ const EmailTemplates = () => {
 															<Edit2 size={18} />
 														</IconButton>
 														<IconButton
+															aria-label="crear variante con AI"
+															size="small"
+															color="secondary"
+															onClick={() => handleOpenAiVariant(template)}
+															title="Crear variante con AI"
+														>
+															<Magicpen size={18} />
+														</IconButton>
+														<IconButton
 															aria-label="enviar email"
 															size="small"
 															color="secondary"
@@ -1975,6 +1991,17 @@ const EmailTemplates = () => {
 								sx={{ mr: 1 }}
 							>
 								Enviar email
+							</Button>
+							<Button
+								color="secondary"
+								startIcon={<Magicpen />}
+								onClick={() => {
+									handleCloseDetail();
+									handleOpenAiVariant(selectedTemplate);
+								}}
+								sx={{ mr: 1 }}
+							>
+								Crear variante
 							</Button>
 							<Button color="primary" startIcon={<Edit2 />} onClick={() => handleOpenEdit(selectedTemplate)}>
 								Editar
@@ -2918,9 +2945,14 @@ const EmailTemplates = () => {
 			{/* AI-generated template modal */}
 			<GenerateAITemplateModal
 				open={aiModalOpen}
-				onClose={() => setAiModalOpen(false)}
+				sourceTemplate={aiVariantSource}
+				onClose={() => {
+					setAiModalOpen(false);
+					setAiVariantSource(null);
+				}}
 				onTemplateSaved={() => {
 					setAiModalOpen(false);
+					setAiVariantSource(null);
 					fetchTemplates();
 				}}
 			/>
