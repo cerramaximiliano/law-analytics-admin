@@ -92,6 +92,37 @@ export interface AnalyzeResponse {
 	};
 }
 
+export interface HealthReport {
+	_id: string;
+	service: string;
+	host: string;
+	date: string;
+	healthScore: "green" | "yellow" | "red" | "unknown";
+	summary: string;
+	metrics: {
+		logCount24h: number;
+		logCount7dAvg: number;
+		errorCount24h: number;
+		errorCount7dAvg: number;
+		errorRate24h: number;
+		errorRate7dAvg: number;
+		levelBreakdown: Record<string, number>;
+	};
+	topIssues: {
+		title: string;
+		count: number;
+		severity: "low" | "medium" | "high";
+		rootCause: string;
+		fix: string;
+	}[];
+	alerts: string[];
+	aiModel: string;
+	aiTokensUsed: number;
+	generatedBy: "cron" | "manual";
+	generationDurationMs: number;
+	createdAt: string;
+}
+
 const logsService = {
 	async list(params: LogsQueryParams = {}): Promise<LogsListResponse> {
 		const res = await adminAxios.get<LogsListResponse>("/api/logs", { params });
@@ -110,6 +141,25 @@ const logsService = {
 
 	async analyze(params: AnalyzeParams): Promise<AnalyzeResponse> {
 		const res = await adminAxios.post<AnalyzeResponse>("/api/logs/analyze", params, { timeout: 90000 });
+		return res.data;
+	},
+
+	async listHealthReports(params: { service?: string; host?: string; score?: string; date?: string } = {}) {
+		const res = await adminAxios.get<{ success: boolean; data: HealthReport[] }>("/api/logs/health-reports", { params });
+		return res.data;
+	},
+
+	async getHealthReport(id: string) {
+		const res = await adminAxios.get<{ success: boolean; data: HealthReport }>(`/api/logs/health-reports/${id}`);
+		return res.data;
+	},
+
+	async generateHealthReport(params: { service?: string; host?: string; all?: boolean }) {
+		const res = await adminAxios.post<{ success: boolean; data?: HealthReport; message?: string }>(
+			"/api/logs/health-reports/generate",
+			params,
+			{ timeout: 120000 },
+		);
 		return res.data;
 	},
 };
