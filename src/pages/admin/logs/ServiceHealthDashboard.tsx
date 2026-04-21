@@ -27,6 +27,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { Link } from "react-router-dom";
 import logsService, { HealthReport } from "api/logs";
+import { buildDebugPromptFromReport } from "utils/buildDebugPrompt";
 
 const SCORE_CONFIG: Record<string, { color: "success" | "warning" | "error" | "default"; label: string; icon: any }> = {
 	green: { color: "success", label: "OK", icon: TickCircle },
@@ -50,6 +51,7 @@ function percentChange(current: number, baseline: number): { value: number; dire
 
 function ReportDetailDialog({ report, open, onClose }: { report: HealthReport | null; open: boolean; onClose: () => void }) {
 	const theme = useTheme();
+	const { enqueueSnackbar } = useSnackbar();
 	if (!report) return null;
 
 	const cfg = SCORE_CONFIG[report.healthScore] || SCORE_CONFIG.unknown;
@@ -211,18 +213,37 @@ function ReportDetailDialog({ report, open, onClose }: { report: HealthReport | 
 					)}
 
 					<Divider />
-					<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap sx={{ gap: 1 }}>
 						<Typography variant="caption" color="text.disabled">
 							{report.aiModel} · {report.aiTokensUsed} tokens · {(report.generationDurationMs / 1000).toFixed(1)}s
 						</Typography>
-						<Button
-							component={Link}
-							to={`/admin/logs?service=${encodeURIComponent(report.service)}&host=${encodeURIComponent(report.host)}`}
-							size="small"
-							variant="outlined"
-						>
-							Ver logs del servicio
-						</Button>
+						<Stack direction="row" spacing={1}>
+							<Button
+								size="small"
+								variant="outlined"
+								color="secondary"
+								startIcon={<Magicpen size={14} />}
+								onClick={async () => {
+									try {
+										const prompt = buildDebugPromptFromReport({ report });
+										await navigator.clipboard.writeText(prompt);
+										enqueueSnackbar("Prompt copiado — pegalo en Claude Code", { variant: "success" });
+									} catch (err: any) {
+										enqueueSnackbar("Error al copiar: " + (err.message || err), { variant: "error" });
+									}
+								}}
+							>
+								Investigar en Claude Code
+							</Button>
+							<Button
+								component={Link}
+								to={`/admin/logs?service=${encodeURIComponent(report.service)}&host=${encodeURIComponent(report.host)}`}
+								size="small"
+								variant="outlined"
+							>
+								Ver logs del servicio
+							</Button>
+						</Stack>
 					</Stack>
 				</Stack>
 			</DialogContent>
