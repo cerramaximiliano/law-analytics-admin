@@ -18,6 +18,7 @@ import {
 	Paper,
 	Select,
 	Stack,
+	TextField,
 	Typography,
 	useTheme,
 } from "@mui/material";
@@ -237,19 +238,23 @@ const ServiceHealthDashboard = () => {
 	const [loading, setLoading] = useState(false);
 	const [generating, setGenerating] = useState(false);
 	const [scoreFilter, setScoreFilter] = useState("");
+	const [selectedDate, setSelectedDate] = useState("");
 	const [selectedReport, setSelectedReport] = useState<HealthReport | null>(null);
 
 	const fetchReports = useCallback(async () => {
 		setLoading(true);
 		try {
-			const res = await logsService.listHealthReports({ score: scoreFilter || undefined });
+			const res = await logsService.listHealthReports({
+				score: scoreFilter || undefined,
+				date: selectedDate || undefined,
+			});
 			setReports(res.data);
 		} catch (err: any) {
 			enqueueSnackbar(err.message || "Error al cargar reports", { variant: "error" });
 		} finally {
 			setLoading(false);
 		}
-	}, [scoreFilter, enqueueSnackbar]);
+	}, [scoreFilter, selectedDate, enqueueSnackbar]);
 
 	useEffect(() => {
 		fetchReports();
@@ -365,17 +370,51 @@ const ServiceHealthDashboard = () => {
 						</Stack>
 					</Grid>
 					<Grid item xs={12} sm={6} sx={{ textAlign: { sm: "right" } }}>
-						<FormControl size="small" sx={{ minWidth: 180 }}>
-							<InputLabel>Filtro</InputLabel>
-							<Select value={scoreFilter} label="Filtro" onChange={(e) => setScoreFilter(e.target.value)}>
-								<MenuItem value="">Todos</MenuItem>
-								<MenuItem value="red">Solo crítico 🔴</MenuItem>
-								<MenuItem value="yellow">Solo atención 🟡</MenuItem>
-								<MenuItem value="green">Solo OK 🟢</MenuItem>
-							</Select>
-						</FormControl>
+						<Stack direction="row" spacing={1} justifyContent={{ sm: "flex-end" }} flexWrap="wrap" useFlexGap>
+							<TextField
+								label="Fecha"
+								type="date"
+								size="small"
+								value={selectedDate}
+								onChange={(e) => setSelectedDate(e.target.value)}
+								InputLabelProps={{ shrink: true }}
+								sx={{ width: 160 }}
+								helperText={selectedDate ? "Histórico" : "Más recientes"}
+							/>
+							<FormControl size="small" sx={{ minWidth: 180 }}>
+								<InputLabel>Filtro</InputLabel>
+								<Select value={scoreFilter} label="Filtro" onChange={(e) => setScoreFilter(e.target.value)}>
+									<MenuItem value="">Todos</MenuItem>
+									<MenuItem value="red">Solo crítico 🔴</MenuItem>
+									<MenuItem value="yellow">Solo atención 🟡</MenuItem>
+									<MenuItem value="green">Solo OK 🟢</MenuItem>
+								</Select>
+							</FormControl>
+						</Stack>
 					</Grid>
 				</Grid>
+				{selectedDate && (
+					<Alert
+						severity="info"
+						icon={false}
+						sx={{ mt: 1.5, py: 0.5, "& .MuiAlert-message": { display: "flex", alignItems: "center", width: "100%" } }}
+					>
+						<Typography variant="caption" sx={{ flex: 1 }}>
+							Viendo reports del{" "}
+							<strong>
+								{new Date(selectedDate + "T00:00:00").toLocaleDateString("es-AR", {
+									weekday: "long",
+									day: "numeric",
+									month: "long",
+									year: "numeric",
+								})}
+							</strong>
+						</Typography>
+						<Button size="small" onClick={() => setSelectedDate("")} sx={{ textTransform: "none", ml: 1 }}>
+							Volver a actuales
+						</Button>
+					</Alert>
+				)}
 			</Paper>
 
 			{/* Grid */}
