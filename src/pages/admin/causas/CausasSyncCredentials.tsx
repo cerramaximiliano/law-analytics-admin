@@ -421,9 +421,28 @@ const CausasSyncCredentials = () => {
 									{causas.map((causa) => (
 										<TableRow key={causa._id} hover>
 											<TableCell>
-												<Typography variant="body2" fontWeight="bold" sx={{ fontFamily: "monospace" }}>
-													{causa.number}/{causa.year}
-												</Typography>
+												<Stack spacing={0.5}>
+													<Typography variant="body2" fontWeight="bold" sx={{ fontFamily: "monospace" }}>
+														{causa.number}/{causa.year}
+													</Typography>
+													{causa.folder?.listRemoved && (
+														<Tooltip
+															title={
+																causa.folder.listRemovedAt
+																	? `Detectado ${formatDate(causa.folder.listRemovedAt)} — ya no aparece en "Mis Causas" del portal ${(causa.folder.listRemovedSource || "PJN").toUpperCase()}`
+																	: `No aparece en "Mis Causas" del portal ${(causa.folder.listRemovedSource || "PJN").toUpperCase()}`
+															}
+														>
+															<Chip
+																label="No en portal"
+																color="warning"
+																size="small"
+																variant="outlined"
+																sx={{ width: "fit-content" }}
+															/>
+														</Tooltip>
+													)}
+												</Stack>
 											</TableCell>
 											<TableCell>
 												<Chip

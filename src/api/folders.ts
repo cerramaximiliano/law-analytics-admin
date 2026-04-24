@@ -58,6 +58,12 @@ export interface Folder {
 	causaLastSyncDate?: string;
 	lastMovementDate?: string;
 	scrapingProgress?: ScrapingProgress;
+	/** @deprecated usar listRemoved + listRemovedSource='pjn' */
+	pjnNotFound?: boolean;
+	/** La causa ya no aparece en el listado "Mis Causas" del portal origen. */
+	listRemoved?: boolean;
+	listRemovedAt?: string;
+	listRemovedSource?: "pjn" | "scba" | "mev" | "eje";
 	createdAt: string;
 	updatedAt: string;
 	user?: FolderUser;
