@@ -55,10 +55,24 @@ import ScbaManagerService, {
 	ScbaManagerConfig,
 	ScbaManagerSettings,
 	ScbaWorkerConfig,
-	ScbaManagerCurrentState,
+	ScbaWorkerType,
 	ScbaAlert,
 	ScbaDailyStats,
+	SCBA_WORKER_TYPES,
+	SCBA_WORKER_LABELS,
+	SCBA_WORKER_DESCRIPTIONS,
 } from "api/scbaManager";
+
+// Días de la semana (locale es-AR, Domingo=0)
+const WEEK_DAYS: { value: number; short: string; label: string }[] = [
+	{ value: 1, short: "L", label: "Lun" },
+	{ value: 2, short: "M", label: "Mar" },
+	{ value: 3, short: "X", label: "Mié" },
+	{ value: 4, short: "J", label: "Jue" },
+	{ value: 5, short: "V", label: "Vie" },
+	{ value: 6, short: "S", label: "Sáb" },
+	{ value: 0, short: "D", label: "Dom" },
+];
 
 // ========== Sub-tab Panel ==========
 function SubTabPanel({ children, value, index }: { children: React.ReactNode; value: number; index: number }) {
@@ -164,7 +178,7 @@ const ScbaManagerTab: React.FC = () => {
 		setHasChanges(true);
 	};
 
-	const updateWorkerField = (workerType: "verification" | "update", field: string, value: any) => {
+	const updateWorkerField = (workerType: ScbaWorkerType, field: string, value: any) => {
 		setEditConfig((prev) => ({
 			...prev,
 			workers: {
@@ -178,16 +192,46 @@ const ScbaManagerTab: React.FC = () => {
 		setHasChanges(true);
 	};
 
+	const updateWorkerSchedule = (workerType: ScbaWorkerType, field: keyof NonNullable<ScbaWorkerConfig["schedule"]>, value: any) => {
+		setEditConfig((prev) => {
+			const prevWorkers = (prev.workers || {}) as any;
+			const prevWorker = prevWorkers[workerType] || {};
+			const prevSchedule =
+				prevWorker.schedule !== undefined
+					? prevWorker.schedule
+					: config?.config?.workers?.[workerType]?.schedule || {};
+			return {
+				...prev,
+				workers: {
+					...prevWorkers,
+					[workerType]: {
+						...prevWorker,
+						schedule: { ...prevSchedule, [field]: value },
+					},
+				},
+			};
+		});
+		setHasChanges(true);
+	};
+
 	const getVal = <T,>(field: keyof ScbaManagerSettings, fallback: T): T => {
 		if ((editConfig as any)[field] !== undefined) return (editConfig as any)[field];
 		if (config?.config) return (config.config as any)[field] ?? fallback;
 		return fallback;
 	};
 
-	const getWorkerVal = <T,>(workerType: "verification" | "update", field: keyof ScbaWorkerConfig, fallback: T): T => {
+	const getWorkerVal = <T,>(workerType: ScbaWorkerType, field: keyof ScbaWorkerConfig, fallback: T): T => {
 		const editWorker = (editConfig.workers as any)?.[workerType];
 		if (editWorker?.[field] !== undefined) return editWorker[field];
 		if (config?.config?.workers?.[workerType]) return (config.config.workers[workerType] as any)[field] ?? fallback;
+		return fallback;
+	};
+
+	const getWorkerSchedule = (workerType: ScbaWorkerType, field: keyof ScbaWorkerConfig["schedule"], fallback: any): any => {
+		const editSchedule = (editConfig.workers as any)?.[workerType]?.schedule;
+		if (editSchedule && editSchedule[field] !== undefined) return editSchedule[field];
+		const configSchedule = config?.config?.workers?.[workerType]?.schedule;
+		if (configSchedule && (configSchedule as any)[field] !== undefined) return (configSchedule as any)[field];
 		return fallback;
 	};
 
@@ -525,22 +569,38 @@ const ScbaManagerTab: React.FC = () => {
 				{/* ========== TAB 1: Workers ========== */}
 				<SubTabPanel value={subTab} index={1}>
 					<Stack spacing={3}>
-						{(["verification", "update"] as const).map((workerType) => {
-							const label = workerType === "verification" ? "Verificación" : "Actualización";
+						<Alert severity="info" icon={<InfoCircle size={18} />} sx={{ py: 0.5 }}>
+							<Typography variant="caption">
+								El manager escala instancias <strong>+1 por ciclo</strong> mientras <code>pending &gt; Scale Up Threshold</code> (hasta Max Workers) y las apaga
+								<strong> -1 por ciclo</strong> cuando <code>pending ≤ Scale Down Threshold</code> (hasta Min Workers). Si Min = 0 los workers quedan apagados
+								cuando no hay trabajo y se levantan bajo demanda. Los in-progress activos cuentan como carga para no cortar procesamientos.
+							</Typography>
+						</Alert>
+
+						{SCBA_WORKER_TYPES.map((workerType) => {
+							const label = SCBA_WORKER_LABELS[workerType];
+							const description = SCBA_WORKER_DESCRIPTIONS[workerType];
 							const wState = state?.workers?.[workerType];
+							const useGlobalSchedule = getWorkerSchedule(workerType, "useGlobalSchedule", true);
 							return (
 								<Card key={workerType} variant="outlined">
 									<CardContent>
-										<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-											<Stack direction="row" spacing={1.5} alignItems="center">
-												<Typography variant="subtitle1" fontWeight={600}>
-													Worker de {label}
+										<Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 1.5 }}>
+											<Stack spacing={0.5}>
+												<Stack direction="row" spacing={1.5} alignItems="center">
+													<Typography variant="subtitle1" fontWeight={600}>
+														{label}
+													</Typography>
+													<Chip
+														size="small"
+														label={getWorkerVal(workerType, "enabled", true) ? "Habilitado" : "Deshabilitado"}
+														color={getWorkerVal(workerType, "enabled", true) ? "success" : "default"}
+													/>
+													<Chip size="small" label={workerType} variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }} />
+												</Stack>
+												<Typography variant="caption" color="text.secondary" sx={{ maxWidth: 680 }}>
+													{description}
 												</Typography>
-												<Chip
-													size="small"
-													label={getWorkerVal(workerType, "enabled", true) ? "Habilitado" : "Deshabilitado"}
-													color={getWorkerVal(workerType, "enabled", true) ? "success" : "default"}
-												/>
 											</Stack>
 											<FormControlLabel
 												control={
@@ -566,29 +626,15 @@ const ScbaManagerTab: React.FC = () => {
 													</Box>
 												</Grid>
 												<Grid item xs={4}>
-													<Box
-														sx={{
-															textAlign: "center",
-															p: 1,
-															bgcolor: alpha(theme.palette.warning.main, 0.08),
-															borderRadius: 1,
-														}}
-													>
+													<Box sx={{ textAlign: "center", p: 1, bgcolor: alpha(theme.palette.warning.main, 0.08), borderRadius: 1 }}>
 														<Typography variant="caption" color="text.secondary">
-															Docs pendientes
+															Pendientes
 														</Typography>
 														<Typography variant="h6">{wState.pendingDocuments}</Typography>
 													</Box>
 												</Grid>
 												<Grid item xs={4}>
-													<Box
-														sx={{
-															textAlign: "center",
-															p: 1,
-															bgcolor: alpha(theme.palette.success.main, 0.08),
-															borderRadius: 1,
-														}}
-													>
+													<Box sx={{ textAlign: "center", p: 1, bgcolor: alpha(theme.palette.success.main, 0.08), borderRadius: 1 }}>
 														<Typography variant="caption" color="text.secondary">
 															Procesados (ciclo)
 														</Typography>
@@ -598,19 +644,22 @@ const ScbaManagerTab: React.FC = () => {
 											</Grid>
 										)}
 
-										<Divider sx={{ my: 1.5 }} />
+										<Divider sx={{ my: 1.5 }}>
+											<Chip label="Escalado" size="small" variant="outlined" />
+										</Divider>
 
-										{/* Config fields */}
-										<Grid container spacing={2}>
+										{/* Escalado */}
+										<Grid container spacing={2} sx={{ mb: 1 }}>
 											<Grid item xs={6} sm={3}>
 												<TextField
 													fullWidth
 													size="small"
 													type="number"
 													label="Min Workers"
-													value={getWorkerVal(workerType, "minWorkers", 1)}
-													onChange={(e) => updateWorkerField(workerType, "minWorkers", parseInt(e.target.value) || 1)}
+													value={getWorkerVal(workerType, "minWorkers", 0)}
+													onChange={(e) => updateWorkerField(workerType, "minWorkers", parseInt(e.target.value) || 0)}
 													inputProps={{ min: 0, max: 20 }}
+													helperText="Instancias mínimas"
 												/>
 											</Grid>
 											<Grid item xs={6} sm={3}>
@@ -619,31 +668,10 @@ const ScbaManagerTab: React.FC = () => {
 													size="small"
 													type="number"
 													label="Max Workers"
-													value={getWorkerVal(workerType, "maxWorkers", 3)}
-													onChange={(e) => updateWorkerField(workerType, "maxWorkers", parseInt(e.target.value) || 3)}
-													inputProps={{ min: 0, max: 20 }}
-												/>
-											</Grid>
-											<Grid item xs={6} sm={3}>
-												<TextField
-													fullWidth
-													size="small"
-													type="number"
-													label="Batch Size"
-													value={getWorkerVal(workerType, "batchSize", 10)}
-													onChange={(e) => updateWorkerField(workerType, "batchSize", parseInt(e.target.value) || 10)}
-													inputProps={{ min: 1, max: 100 }}
-												/>
-											</Grid>
-											<Grid item xs={6} sm={3}>
-												<TextField
-													fullWidth
-													size="small"
-													type="number"
-													label="Delay (ms)"
-													value={getWorkerVal(workerType, "delayBetweenRequests", 2000)}
-													onChange={(e) => updateWorkerField(workerType, "delayBetweenRequests", parseInt(e.target.value) || 2000)}
-													inputProps={{ min: 500 }}
+													value={getWorkerVal(workerType, "maxWorkers", 15)}
+													onChange={(e) => updateWorkerField(workerType, "maxWorkers", parseInt(e.target.value) || 0)}
+													inputProps={{ min: 0, max: 50 }}
+													helperText="Tope de paralelismo"
 												/>
 											</Grid>
 											<Grid item xs={6} sm={3}>
@@ -652,8 +680,9 @@ const ScbaManagerTab: React.FC = () => {
 													size="small"
 													type="number"
 													label="Scale Up Threshold"
-													value={getWorkerVal(workerType, "scaleUpThreshold", 100)}
-													onChange={(e) => updateWorkerField(workerType, "scaleUpThreshold", parseInt(e.target.value) || 100)}
+													value={getWorkerVal(workerType, "scaleUpThreshold", 0)}
+													onChange={(e) => updateWorkerField(workerType, "scaleUpThreshold", parseInt(e.target.value) || 0)}
+													helperText="Sube +1 si pending >"
 												/>
 											</Grid>
 											<Grid item xs={6} sm={3}>
@@ -662,28 +691,206 @@ const ScbaManagerTab: React.FC = () => {
 													size="small"
 													type="number"
 													label="Scale Down Threshold"
-													value={getWorkerVal(workerType, "scaleDownThreshold", 10)}
-													onChange={(e) => updateWorkerField(workerType, "scaleDownThreshold", parseInt(e.target.value) || 10)}
+													value={getWorkerVal(workerType, "scaleDownThreshold", 0)}
+													onChange={(e) => updateWorkerField(workerType, "scaleDownThreshold", parseInt(e.target.value) || 0)}
+													helperText="Baja -1 si pending ≤"
 												/>
 											</Grid>
-											<Grid item xs={6} sm={3}>
+										</Grid>
+
+										<Divider sx={{ my: 1.5 }}>
+											<Chip label="Ejecución" size="small" variant="outlined" />
+										</Divider>
+
+										<Grid container spacing={2} sx={{ mb: 1 }}>
+											<Grid item xs={12} sm={4}>
+												<TextField
+													fullWidth
+													size="small"
+													label="Cron Expression"
+													value={getWorkerVal(workerType, "cronExpression", "*/5 * * * *")}
+													onChange={(e) => updateWorkerField(workerType, "cronExpression", e.target.value)}
+													helperText="Frecuencia del tick del worker"
+												/>
+											</Grid>
+											<Grid item xs={6} sm={2}>
+												<TextField
+													fullWidth
+													size="small"
+													type="number"
+													label="Batch Size"
+													value={getWorkerVal(workerType, "batchSize", 10)}
+													onChange={(e) => updateWorkerField(workerType, "batchSize", parseInt(e.target.value) || 1)}
+													inputProps={{ min: 1, max: 200 }}
+													helperText="Docs por ciclo"
+												/>
+											</Grid>
+											<Grid item xs={6} sm={2}>
+												<TextField
+													fullWidth
+													size="small"
+													type="number"
+													label="Delay (ms)"
+													value={getWorkerVal(workerType, "delayBetweenRequests", 2000)}
+													onChange={(e) => updateWorkerField(workerType, "delayBetweenRequests", parseInt(e.target.value) || 500)}
+													inputProps={{ min: 0 }}
+													helperText="Entre requests"
+												/>
+											</Grid>
+											{workerType === "update" && (
+												<Grid item xs={6} sm={2}>
+													<TextField
+														fullWidth
+														size="small"
+														type="number"
+														label="Update Threshold (h)"
+														value={getWorkerVal(workerType, "updateThresholdHours", 2)}
+														onChange={(e) => updateWorkerField(workerType, "updateThresholdHours", parseInt(e.target.value) || 0)}
+														inputProps={{ min: 0, max: 720 }}
+														helperText="No re-procesa antes de X h"
+													/>
+												</Grid>
+											)}
+											<Grid item xs={6} sm={2}>
 												<TextField
 													fullWidth
 													size="small"
 													type="number"
 													label="Max Retries"
 													value={getWorkerVal(workerType, "maxRetries", 3)}
-													onChange={(e) => updateWorkerField(workerType, "maxRetries", parseInt(e.target.value) || 3)}
+													onChange={(e) => updateWorkerField(workerType, "maxRetries", parseInt(e.target.value) || 0)}
 													inputProps={{ min: 0, max: 10 }}
+													helperText="Por doc"
 												/>
 											</Grid>
-											<Grid item xs={6} sm={3}>
+										</Grid>
+
+										<Divider sx={{ my: 1.5 }}>
+											<Chip label="Horario" size="small" variant="outlined" />
+										</Divider>
+
+										{/* Horario */}
+										<Stack spacing={1.5}>
+											<FormControlLabel
+												control={
+													<Switch
+														size="small"
+														checked={useGlobalSchedule}
+														onChange={(e) => updateWorkerSchedule(workerType, "useGlobalSchedule", e.target.checked)}
+													/>
+												}
+												label={
+													<Typography variant="body2">
+														Usar horario global del sistema
+														<Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+															({getVal("workStartHour", 0)}:00 – {getVal("workEndHour", 23)}:00, días:{" "}
+															{(getVal("workDays", [0, 1, 2, 3, 4, 5, 6]) as number[])
+																.map((d) => WEEK_DAYS.find((w) => w.value === d)?.short)
+																.filter(Boolean)
+																.join("")}
+															)
+														</Typography>
+													</Typography>
+												}
+											/>
+
+											{!useGlobalSchedule && (
+												<Box>
+													<Grid container spacing={2} sx={{ mb: 1 }}>
+														<Grid item xs={6} sm={3}>
+															<TextField
+																fullWidth
+																size="small"
+																type="number"
+																label="Hora inicio"
+																value={getWorkerSchedule(workerType, "workStartHour", 0)}
+																onChange={(e) =>
+																	updateWorkerSchedule(workerType, "workStartHour", Math.max(0, Math.min(23, parseInt(e.target.value) || 0)))
+																}
+																inputProps={{ min: 0, max: 23 }}
+															/>
+														</Grid>
+														<Grid item xs={6} sm={3}>
+															<TextField
+																fullWidth
+																size="small"
+																type="number"
+																label="Hora fin"
+																value={getWorkerSchedule(workerType, "workEndHour", 23)}
+																onChange={(e) =>
+																	updateWorkerSchedule(workerType, "workEndHour", Math.max(0, Math.min(23, parseInt(e.target.value) || 0)))
+																}
+																inputProps={{ min: 0, max: 23 }}
+															/>
+														</Grid>
+													</Grid>
+													<Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: "block" }}>
+														Días activos
+													</Typography>
+													<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+														{WEEK_DAYS.map((d) => {
+															const activeDays = getWorkerSchedule(workerType, "workDays", [0, 1, 2, 3, 4, 5, 6]) as number[];
+															const isActive = activeDays.includes(d.value);
+															return (
+																<Chip
+																	key={d.value}
+																	label={d.short}
+																	size="small"
+																	clickable
+																	color={isActive ? "primary" : "default"}
+																	variant={isActive ? "filled" : "outlined"}
+																	onClick={() => {
+																		const current = new Set(activeDays);
+																		if (isActive) current.delete(d.value);
+																		else current.add(d.value);
+																		updateWorkerSchedule(
+																			workerType,
+																			"workDays",
+																			Array.from(current).sort((a, b) => a - b),
+																		);
+																	}}
+																/>
+															);
+														})}
+													</Stack>
+												</Box>
+											)}
+										</Stack>
+
+										<Divider sx={{ my: 1.5 }}>
+											<Chip label="Runtime" size="small" variant="outlined" />
+										</Divider>
+
+										<Grid container spacing={2}>
+											<Grid item xs={12} sm={6}>
 												<TextField
 													fullWidth
 													size="small"
-													label="Cron Expression"
-													value={getWorkerVal(workerType, "cronExpression", "*/2 * * * *")}
-													onChange={(e) => updateWorkerField(workerType, "cronExpression", e.target.value)}
+													label="Nombre PM2"
+													value={getWorkerVal(workerType, "workerName", "")}
+													onChange={(e) => updateWorkerField(workerType, "workerName", e.target.value)}
+													InputProps={{ sx: { fontFamily: "monospace", fontSize: "0.85rem" } }}
+													helperText="Identificador del proceso en PM2"
+												/>
+											</Grid>
+											<Grid item xs={8} sm={4}>
+												<TextField
+													fullWidth
+													size="small"
+													label="Script"
+													value={getWorkerVal(workerType, "workerScript", "")}
+													onChange={(e) => updateWorkerField(workerType, "workerScript", e.target.value)}
+													InputProps={{ sx: { fontFamily: "monospace", fontSize: "0.8rem" } }}
+												/>
+											</Grid>
+											<Grid item xs={4} sm={2}>
+												<TextField
+													fullWidth
+													size="small"
+													label="Max Mem"
+													value={getWorkerVal(workerType, "maxMemoryRestart", "500M")}
+													onChange={(e) => updateWorkerField(workerType, "maxMemoryRestart", e.target.value)}
+													helperText="Restart si supera"
 												/>
 											</Grid>
 										</Grid>
@@ -772,29 +979,37 @@ const ScbaManagerTab: React.FC = () => {
 									<TableHead>
 										<TableRow>
 											<TableCell>Fecha</TableCell>
-											<TableCell align="center" colSpan={3} sx={{ borderLeft: 1, borderColor: "divider" }}>
-												Verificación
-											</TableCell>
-											<TableCell align="center" colSpan={4} sx={{ borderLeft: 1, borderColor: "divider" }}>
-												Actualización
-											</TableCell>
+											{SCBA_WORKER_TYPES.map((t) => {
+												const hasMovs = t === "initialScraping" || t === "update";
+												const isAudit = t === "listAudit";
+												const cols = isAudit ? 4 : hasMovs ? 4 : 3;
+												return (
+													<TableCell key={t} align="center" colSpan={cols} sx={{ borderLeft: 1, borderColor: "divider" }}>
+														{SCBA_WORKER_LABELS[t]}
+													</TableCell>
+												);
+											})}
 											<TableCell align="center" sx={{ borderLeft: 1, borderColor: "divider" }}>
 												Ciclos
 											</TableCell>
 										</TableRow>
 										<TableRow>
 											<TableCell />
-											<TableCell align="right" sx={{ borderLeft: 1, borderColor: "divider" }}>
-												Proc
-											</TableCell>
-											<TableCell align="right">OK</TableCell>
-											<TableCell align="right">Err</TableCell>
-											<TableCell align="right" sx={{ borderLeft: 1, borderColor: "divider" }}>
-												Proc
-											</TableCell>
-											<TableCell align="right">OK</TableCell>
-											<TableCell align="right">Err</TableCell>
-											<TableCell align="right">Movs</TableCell>
+											{SCBA_WORKER_TYPES.map((t) => {
+												const hasMovs = t === "initialScraping" || t === "update";
+												const isAudit = t === "listAudit";
+												return (
+													<React.Fragment key={t}>
+														<TableCell align="right" sx={{ borderLeft: 1, borderColor: "divider" }}>
+															Proc
+														</TableCell>
+														<TableCell align="right">OK</TableCell>
+														<TableCell align="right">Err</TableCell>
+														{hasMovs && <TableCell align="right">Movs</TableCell>}
+														{isAudit && <TableCell align="right">Bajas</TableCell>}
+													</React.Fragment>
+												);
+											})}
 											<TableCell align="right" sx={{ borderLeft: 1, borderColor: "divider" }}>
 												Total
 											</TableCell>
@@ -804,21 +1019,24 @@ const ScbaManagerTab: React.FC = () => {
 										{stats.map((day) => (
 											<TableRow key={day.date}>
 												<TableCell>{day.date}</TableCell>
-												<TableCell align="right" sx={{ borderLeft: 1, borderColor: "divider" }}>
-													{day.byWorker.verification.processed}
-												</TableCell>
-												<TableCell align="right">{day.byWorker.verification.success}</TableCell>
-												<TableCell align="right" sx={{ color: day.byWorker.verification.errors > 0 ? "error.main" : "inherit" }}>
-													{day.byWorker.verification.errors}
-												</TableCell>
-												<TableCell align="right" sx={{ borderLeft: 1, borderColor: "divider" }}>
-													{day.byWorker.update.processed}
-												</TableCell>
-												<TableCell align="right">{day.byWorker.update.success}</TableCell>
-												<TableCell align="right" sx={{ color: day.byWorker.update.errors > 0 ? "error.main" : "inherit" }}>
-													{day.byWorker.update.errors}
-												</TableCell>
-												<TableCell align="right">{day.byWorker.update.movimientosFound}</TableCell>
+												{SCBA_WORKER_TYPES.map((t) => {
+													const w: any = day.byWorker?.[t] || { processed: 0, success: 0, errors: 0 };
+													const hasMovs = t === "initialScraping" || t === "update";
+													const isAudit = t === "listAudit";
+													return (
+														<React.Fragment key={t}>
+															<TableCell align="right" sx={{ borderLeft: 1, borderColor: "divider" }}>
+																{w.processed ?? 0}
+															</TableCell>
+															<TableCell align="right">{w.success ?? 0}</TableCell>
+															<TableCell align="right" sx={{ color: (w.errors ?? 0) > 0 ? "error.main" : "inherit" }}>
+																{w.errors ?? 0}
+															</TableCell>
+															{hasMovs && <TableCell align="right">{w.movimientosFound ?? 0}</TableCell>}
+															{isAudit && <TableCell align="right">{w.causasRemoved ?? 0}</TableCell>}
+														</React.Fragment>
+													);
+												})}
 												<TableCell align="right" sx={{ borderLeft: 1, borderColor: "divider" }}>
 													{day.cyclesRun}
 												</TableCell>
@@ -840,36 +1058,33 @@ const ScbaManagerTab: React.FC = () => {
 							</Typography>
 							<Typography variant="body2">
 								El sistema SCBA sincroniza expedientes desde el portal de notificaciones de la Suprema Corte de Buenos Aires
-								(notificaciones.scba.gov.ar) con la base de datos de causas MEV.
+								(<code>notificaciones.scba.gov.ar</code>). El trabajo se divide en 4 workers con responsabilidades estancas, orquestados por un
+								<strong> manager </strong>que escala instancias +1/ciclo según la cola pendiente (patrón alineado a <code>pjn-mis-causas</code>).
 							</Typography>
 						</Alert>
 
 						<Card variant="outlined">
 							<CardContent>
 								<Typography variant="subtitle1" fontWeight={600} gutterBottom>
-									Workers
+									Pipeline de los 4 workers
 								</Typography>
-								<Stack spacing={1}>
-									<Box>
-										<Typography variant="subtitle2" color="primary.main">
-											Verification Worker
-										</Typography>
-										<Typography variant="body2" color="text.secondary">
-											Se conecta con las credenciales SCBA del usuario, navega a "Mis Causas", extrae todos los expedientes, mapea
-											jurisdicción/organismo a MEV, deduplica contra causas existentes, y crea o vincula documentos. Extrae también todos
-											los trámites/movimientos de cada causa.
-										</Typography>
-									</Box>
-									<Divider />
-									<Box>
-										<Typography variant="subtitle2" color="primary.main">
-											Update Worker
-										</Typography>
-										<Typography variant="body2" color="text.secondary">
-											Busca causas que ya tienen scbaData y necesitan actualización de trámites. Navega a la página de trámites de cada
-											causa y extrae los movimientos nuevos.
-										</Typography>
-									</Box>
+								<Stack spacing={1.5}>
+									{SCBA_WORKER_TYPES.map((t, idx) => (
+										<React.Fragment key={t}>
+											{idx > 0 && <Divider />}
+											<Box>
+												<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+													<Typography variant="subtitle2" color="primary.main">
+														{idx + 1}. {SCBA_WORKER_LABELS[t]}
+													</Typography>
+													<Chip size="small" label={t} variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }} />
+												</Stack>
+												<Typography variant="body2" color="text.secondary">
+													{SCBA_WORKER_DESCRIPTIONS[t]}
+												</Typography>
+											</Box>
+										</React.Fragment>
+									))}
 								</Stack>
 							</CardContent>
 						</Card>
@@ -877,28 +1092,29 @@ const ScbaManagerTab: React.FC = () => {
 						<Card variant="outlined">
 							<CardContent>
 								<Typography variant="subtitle1" fontWeight={600} gutterBottom>
-									Flujo de Datos
+									Ciclo de vida de una causa
 								</Typography>
 								<Typography variant="body2" component="div">
 									<ol style={{ margin: 0, paddingLeft: 20 }}>
 										<li>
-											<strong>Login</strong>: POST a Login.aspx/VerificarPass con credenciales encriptadas (AES-256-CBC)
+											Usuario crea credencial SCBA → <code>scba-credentials.syncStatus = pending</code>.
 										</li>
 										<li>
-											<strong>Búsqueda</strong>: AJAX POST a vercausas.aspx/buscar, retorna HTML con causas paginadas
+											<strong>Verificación</strong> toma la cred con atomic-take, hace login AES-256-CBC, scrapea “Mis Causas”, upserta
+											docs en <code>causas-scba</code> con <code>scrapingProgress.status = pending</code> y crea folders respetando los
+											límites del plan del usuario (activo / archivado / pending según slots y storage disponibles).
 										</li>
 										<li>
-											<strong>Parseo</strong>: Cheerio extrae número, carátula, juzgado, IDs de cada causa
+											<strong>Extracción Inicial</strong> toma las causas pendientes, navega a <code>vertramites.aspx</code>, extrae la
+											tabla de trámites y deja el doc en <code>status = completed</code>.
 										</li>
 										<li>
-											<strong>Mapeo</strong>: Jurisdicción (departamento → código MEV), Organismo (búsqueda flexible en navigation-codes),
-											Juzgados de Paz (búsqueda especial con extracción de jurisdicción real)
+											<strong>Actualización</strong> re-procesa causas completed cuando pasaron más de <code>updateThresholdHours</code>
+											desde su último save; merge inteligente por (fecha + detalle + verUrl) sin duplicar movimientos.
 										</li>
 										<li>
-											<strong>Deduplicación</strong>: 3 niveles (exacto → número+jurisdicción → solo número)
-										</li>
-										<li>
-											<strong>Trámites</strong>: Navega a vertramites.aspx, extrae DataTable con paginación (100/página)
+											<strong>Auditoría Diaria</strong> compara la lista actual en SCBA contra las causas guardadas: altas se crean como
+											pending (reentran al pipeline), bajas se marcan <code>listStatus = removed</code> y se notifica al usuario.
 										</li>
 									</ol>
 								</Typography>
@@ -908,7 +1124,23 @@ const ScbaManagerTab: React.FC = () => {
 						<Card variant="outlined">
 							<CardContent>
 								<Typography variant="subtitle1" fontWeight={600} gutterBottom>
-									Update History Types
+									Manejo de credenciales inválidas
+								</Typography>
+								<Typography variant="body2" color="text.secondary">
+									Si cualquier worker detecta login fallido, marca la credencial
+									<code> enabled=false, isExpired=true, syncStatus=error, errorNotifiedAt=now</code>, propaga
+									<code> update=false </code>a las causas y folders del usuario (sin seguimiento en la UI), y envía un email de
+									“credenciales inválidas” una sola vez (controlado por <code>errorNotifiedAt</code>). Cuando el usuario corrige la
+									contraseña, el controller marca <code>errorRecoveryPending=true</code>; en el próximo sync exitoso, si no hay folders
+									nuevos que dispararían el email regular, se envía un email de “credenciales restablecidas”.
+								</Typography>
+							</CardContent>
+						</Card>
+
+						<Card variant="outlined">
+							<CardContent>
+								<Typography variant="subtitle1" fontWeight={600} gutterBottom>
+									Tipos de entrada en updateHistory
 								</Typography>
 								<TableContainer>
 									<Table size="small">
@@ -921,12 +1153,14 @@ const ScbaManagerTab: React.FC = () => {
 										</TableHead>
 										<TableBody>
 											{[
-												["sync-create", "scba-verification", "Causa nueva creada desde SCBA"],
-												["sync-dedup-match", "scba-verification", "Match encontrado con causa existente (trazabilidad)"],
-												["sync-link", "scba-verification", "Primera vez que se vincula scbaData a causa existente"],
-												["sync-refresh", "scba-verification", "Causa ya sincronizada, actualización de fecha"],
-												["update-tramites", "scba-update", "Trámites actualizados exitosamente"],
-												["update-error", "scba-update", "Error durante actualización de trámites"],
+												["sync-create", "scba-verification", "Causa nueva detectada en la lista"],
+												["sync-refresh", "scba-verification", "Causa ya existente, refresca fecha de scraping"],
+												["initial-scraping", "scba-initial-scraping", "Extracción inicial de trámites completada"],
+												["initial-scraping-error", "scba-initial-scraping", "Error al extraer trámites por primera vez"],
+												["update-tramites", "scba-update", "Trámites actualizados (merge inteligente, sin duplicados)"],
+												["update-error", "scba-update", "Error durante actualización periódica"],
+												["list-audit-removed", "scba-list-audit", "Causa ya no aparece en Mis Causas del portal"],
+												["list-audit-reactivated", "scba-list-audit", "Causa previamente removida volvió a aparecer"],
 											].map(([type, source, desc]) => (
 												<TableRow key={type}>
 													<TableCell>
@@ -935,6 +1169,42 @@ const ScbaManagerTab: React.FC = () => {
 													<TableCell>
 														<Typography variant="caption" fontFamily="monospace">
 															{source}
+														</Typography>
+													</TableCell>
+													<TableCell>{desc}</TableCell>
+												</TableRow>
+											))}
+										</TableBody>
+									</Table>
+								</TableContainer>
+							</CardContent>
+						</Card>
+
+						<Card variant="outlined">
+							<CardContent>
+								<Typography variant="subtitle1" fontWeight={600} gutterBottom>
+									Emails transaccionales
+								</Typography>
+								<TableContainer>
+									<Table size="small">
+										<TableHead>
+											<TableRow>
+												<TableCell>templateName</TableCell>
+												<TableCell>Cuándo se envía</TableCell>
+											</TableRow>
+										</TableHead>
+										<TableBody>
+											{[
+												["scbaSyncComplete", "Primera sync exitosa — resumen de carpetas creadas (activas / archivadas / pending)"],
+												["scbaCausasAdded", "Audit detectó altas en la lista de Mis Causas"],
+												["scbaListUpdate", "Audit detectó altas y/o bajas (consolidado en un solo correo)"],
+												["scbaCredentialError / scbaCredentialDisabled", "Login fallido (una sola vez por errorNotifiedAt)"],
+												["scbaCredentialRestored", "Credencial corregida y sync exitoso sin folders nuevos"],
+											].map(([name, desc]) => (
+												<TableRow key={name}>
+													<TableCell>
+														<Typography variant="caption" fontFamily="monospace">
+															{name}
 														</Typography>
 													</TableCell>
 													<TableCell>{desc}</TableCell>
