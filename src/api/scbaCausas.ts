@@ -99,6 +99,15 @@ export interface ScbaSyncedCausasResponse {
 	};
 }
 
+export interface ScbaUpdateCoverage {
+	total: number;
+	updatedToday: number;
+	pending: number;
+	withErrors: number;
+	coveragePercent: number;
+	byFuero: Array<{ fuero: string; total: number; updatedToday: number; withErrors: number }>;
+}
+
 const scbaCausasService = {
 	/** Lista paginada de causas SCBA agrupadas por credencial, con summary. */
 	async getSyncedCausas(filters: ScbaSyncedCausasFilters = {}): Promise<ScbaSyncedCausasResponse> {
@@ -112,6 +121,17 @@ const scbaCausasService = {
 	async getSyncedCausaById(id: string): Promise<{ success: boolean; data: Record<string, unknown> }> {
 		const response = await adminAxios.get<{ success: boolean; data: Record<string, unknown> }>(
 			`/api/scba-causas/synced-causas/${id}`,
+		);
+		return response.data;
+	},
+
+	/**
+	 * Cobertura diaria para el widget del dashboard (paralelo a
+	 * pjnCredentialsService.getUpdateCoverage).
+	 */
+	async getUpdateCoverage(): Promise<{ success: boolean; data: ScbaUpdateCoverage }> {
+		const response = await adminAxios.get<{ success: boolean; data: ScbaUpdateCoverage }>(
+			"/api/scba-causas/update-coverage",
 		);
 		return response.data;
 	},
