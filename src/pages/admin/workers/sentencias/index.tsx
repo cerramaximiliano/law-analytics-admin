@@ -51,7 +51,7 @@ export default function SentenciasWorkerPage() {
 							100.111.73.56
 						</Box>
 						<Chip
-							label="pjn-style-corpus-v2 · sentencias-corpus"
+							label="pjn-sentencias-v1 · sentencias-corpus"
 							size="small"
 							color="secondary"
 							variant="outlined"

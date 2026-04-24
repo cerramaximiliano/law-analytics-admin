@@ -1325,10 +1325,10 @@ function EmbeddingsSection({
 					>
 						<Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
 							<Data size={16} color={theme.palette.primary.main} />
-							<Typography variant="subtitle2">Pinecone — índice pjn-style-corpus-v2</Typography>
+							<Typography variant="subtitle2">Pinecone — índice pjn-sentencias-v1</Typography>
 						</Stack>
 						<Typography variant="body2" color="text.secondary">
-							Namespace: <code>sentencias-corpus</code> · Modelo: <code>text-embedding-3-small</code> (1024 dims)
+							Namespace: <code>sentencias-corpus</code> · Modelo: <code>text-embedding-3-large</code> (3072 dims)
 							{pending > 0 && ` · ${pending} docs esperando indexación`}
 							{skipped > 0 && ` · ${skipped} omitidos (sin texto)`}
 						</Typography>
