@@ -236,6 +236,17 @@ export interface SyncedCausa {
 		today?: { date: string; count: number; hours: number[] };
 	};
 	createdAt: string;
+	/**
+	 * Flags del Folder asociado a la causa (null si no hay folder).
+	 * `listRemoved` se setea por el worker cuando la causa ya no aparece en
+	 * "Mis Causas" del portal origen.
+	 */
+	folder?: {
+		folderId: string;
+		listRemoved: boolean;
+		listRemovedSource: "pjn" | "scba" | "mev" | "eje" | null;
+		listRemovedAt: string | null;
+	} | null;
 	credential: {
 		credentialId?: string;
 		userName: string;

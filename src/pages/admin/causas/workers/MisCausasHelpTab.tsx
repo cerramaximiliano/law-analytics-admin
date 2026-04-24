@@ -861,7 +861,7 @@ if (existingCausa && excludedSet.has(existingCausa._id.toString())) {
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<Warning2 size={20} color={theme.palette.warning.main} />
 						<Typography variant="h6">
-							Causas no encontradas en el portal (<code>pjnNotFound</code>)
+							Causas no encontradas en el portal (<code>listRemoved</code>)
 						</Typography>
 					</Stack>
 
