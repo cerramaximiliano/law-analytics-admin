@@ -62,6 +62,30 @@ const KNOWN_CATEGORIES = [
 	{ value: "healthCheck", label: "Health Check" },
 	{ value: "notification", label: "Notificación" },
 	{ value: "transactional", label: "Transaccional" },
+	{ value: "pjn", label: "PJN (usuario)" },
+	{ value: "pjn-admin", label: "PJN (admin)" },
+	{ value: "scba", label: "SCBA (usuario)" },
+];
+
+// Catálogo estático de plantillas emitidas por cada worker del ecosistema.
+// Se mergea con las plantillas agregadas de emaillogs para que el dropdown
+// muestre incluso las que todavía no se enviaron en producción.
+const KNOWN_TEMPLATES: Array<{ category: string; name: string }> = [
+	// PJN — pjn-mis-causas
+	{ category: "pjn", name: "pjnSyncComplete" },
+	{ category: "pjn", name: "pjnCredentialError" },
+	{ category: "pjn", name: "pjnCredentialDisabled" },
+	{ category: "pjn", name: "pjnCredentialRestored" },
+	{ category: "pjn-admin", name: "pjnPortalCritical" },
+	// SCBA — scba-workers
+	{ category: "scba", name: "scbaSyncComplete" },
+	{ category: "scba", name: "scbaCausasAdded" },
+	{ category: "scba", name: "scbaCredentialError" },
+	{ category: "scba", name: "scbaCredentialDisabled" },
+	{ category: "scba", name: "scbaCredentialRestored" },
+	{ category: "scba", name: "scbaListUpdateAdded" },
+	{ category: "scba", name: "scbaListUpdateRemoved" },
+	{ category: "scba", name: "scbaListUpdateBoth" },
 ];
 
 const getCategoryLabel = (category: string | null | undefined) => {
@@ -232,7 +256,17 @@ const EmailLogsPage = () => {
 			const extraFromDb = dbCategories.filter((c) => !knownValues.includes(c));
 			setCategories([...knownValues, ...extraFromDb]);
 			setSources(response.data.sources || []);
-			setTemplates(response.data.templates);
+
+			// Merge plantillas del backend con el catálogo estático: así aparecen
+			// los templates conocidos aunque todavía no se hayan enviado nunca.
+			const dbTemplates = response.data.templates || [];
+			const dbKeys = new Set(dbTemplates.map((t) => `${t.category}:${t.name}`));
+			const extraKnown = KNOWN_TEMPLATES.filter((t) => !dbKeys.has(`${t.category}:${t.name}`)).map((t) => ({
+				category: t.category,
+				name: t.name,
+				count: 0,
+			}));
+			setTemplates([...dbTemplates, ...extraKnown]);
 		} catch (err) {
 			console.error("Error fetching template options:", err);
 		}
