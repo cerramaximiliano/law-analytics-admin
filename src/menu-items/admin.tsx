@@ -242,6 +242,13 @@ const admin: NavItemType = {
 					url: "/admin/mev/non-verified",
 					breadcrumbs: true,
 				},
+				{
+					id: "mev-causes-by-credential",
+					title: "Causas por Credencial",
+					type: "item",
+					url: "/admin/mev/causes-by-credential",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{

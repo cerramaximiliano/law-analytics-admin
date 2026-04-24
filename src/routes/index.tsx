@@ -30,6 +30,7 @@ const CausasSyncCredentials = Loadable(lazy(() => import("pages/admin/causas/Cau
 const CarpetasMEVVerificadas = Loadable(lazy(() => import("pages/admin/mev/CarpetasMEVVerificadas")));
 const CarpetasMEVNoVerificadas = Loadable(lazy(() => import("pages/admin/mev/CarpetasMEVNoVerificadas")));
 const CredencialesSCBA = Loadable(lazy(() => import("pages/admin/mev/CredencialesSCBA")));
+const CausasMEVByCredential = Loadable(lazy(() => import("pages/admin/mev/CausasMEVByCredential")));
 
 // EJE pages
 const CarpetasVerificadasEje = Loadable(lazy(() => import("pages/admin/eje/CarpetasVerificadasEje")));
@@ -361,6 +362,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<CarpetasMEVNoVerificadas />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "mev/causes-by-credential",
+							element: (
+								<AdminRoleGuard>
+									<CausasMEVByCredential />
 								</AdminRoleGuard>
 							),
 						},
