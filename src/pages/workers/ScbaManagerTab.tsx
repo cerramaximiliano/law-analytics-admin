@@ -58,6 +58,8 @@ import ScbaManagerService, {
 	ScbaWorkerType,
 	ScbaAlert,
 	ScbaDailyStats,
+	ScbaCredentialListItem,
+	ScbaResetPreview,
 	SCBA_WORKER_TYPES,
 	SCBA_WORKER_LABELS,
 	SCBA_WORKER_DESCRIPTIONS,
@@ -123,6 +125,16 @@ const ScbaManagerTab: React.FC = () => {
 	// Reset dialog
 	const [resetDialogOpen, setResetDialogOpen] = useState(false);
 	const [resetting, setResetting] = useState(false);
+
+	// Credentials
+	const [credentials, setCredentials] = useState<ScbaCredentialListItem[]>([]);
+	const [credentialsLoading, setCredentialsLoading] = useState(false);
+	const [credentialResetDialog, setCredentialResetDialog] = useState<{
+		open: boolean;
+		credential: ScbaCredentialListItem | null;
+		preview: ScbaResetPreview | null;
+		loading: boolean;
+	}>({ open: false, credential: null, preview: null, loading: false });
 
 	const fetchConfig = useCallback(async () => {
 		try {
@@ -285,6 +297,56 @@ const ScbaManagerTab: React.FC = () => {
 		}
 	};
 
+	const fetchCredentials = useCallback(async () => {
+		try {
+			setCredentialsLoading(true);
+			const response = await ScbaManagerService.listCredentials();
+			if (response.success) setCredentials(response.data);
+		} catch (err: any) {
+			enqueueSnackbar(err.message || "Error al cargar credenciales", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+		} finally {
+			setCredentialsLoading(false);
+		}
+	}, [enqueueSnackbar]);
+
+	useEffect(() => {
+		if (subTab === 5) fetchCredentials();
+	}, [subTab, fetchCredentials]);
+
+	const openResetCredentialDialog = async (credential: ScbaCredentialListItem) => {
+		setCredentialResetDialog({ open: true, credential, preview: null, loading: true });
+		try {
+			const response = await ScbaManagerService.previewResetCredential(credential._id);
+			setCredentialResetDialog((prev) => ({ ...prev, preview: response.data, loading: false }));
+		} catch (err: any) {
+			enqueueSnackbar(err.message || "Error al previsualizar reset", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+			setCredentialResetDialog({ open: false, credential: null, preview: null, loading: false });
+		}
+	};
+
+	const closeResetCredentialDialog = () => {
+		setCredentialResetDialog({ open: false, credential: null, preview: null, loading: false });
+	};
+
+	const confirmResetCredential = async () => {
+		if (!credentialResetDialog.credential) return;
+		const credId = credentialResetDialog.credential._id;
+		const userEmail = credentialResetDialog.credential.user?.email || credId;
+		try {
+			setCredentialResetDialog((prev) => ({ ...prev, loading: true }));
+			const response = await ScbaManagerService.resetCredential(credId);
+			enqueueSnackbar(
+				`Reset ok — ${userEmail}: ${response.data.deleted.folders} folders / ${response.data.deleted.orphanCausas} causas huérfanas`,
+				{ variant: "success", anchorOrigin: { vertical: "bottom", horizontal: "right" }, autoHideDuration: 6000 }
+			);
+			closeResetCredentialDialog();
+			await fetchCredentials();
+		} catch (err: any) {
+			enqueueSnackbar(err.message || "Error al resetear credencial", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+			setCredentialResetDialog((prev) => ({ ...prev, loading: false }));
+		}
+	};
+
 	// ========== Loading State ==========
 	if (loading) {
 		return (
@@ -417,6 +479,7 @@ const ScbaManagerTab: React.FC = () => {
 						/>
 						<Tab icon={<Chart size={18} />} iconPosition="start" label="Estadísticas" sx={{ textTransform: "none" }} />
 						<Tab icon={<InfoCircle size={18} />} iconPosition="start" label="Info" sx={{ textTransform: "none" }} />
+						<Tab icon={<People size={18} />} iconPosition="start" label="Credenciales" sx={{ textTransform: "none" }} />
 					</Tabs>
 				</Box>
 
@@ -1256,6 +1319,129 @@ const ScbaManagerTab: React.FC = () => {
 						)}
 					</Stack>
 				</SubTabPanel>
+
+				{/* ========== TAB 5: Credenciales ========== */}
+				<SubTabPanel value={subTab} index={5}>
+					<Stack spacing={3}>
+						<Stack direction="row" justifyContent="space-between" alignItems="center">
+							<Box>
+								<Typography variant="subtitle1" fontWeight={600}>
+									Credenciales SCBA
+								</Typography>
+								<Typography variant="caption" color="text.secondary">
+									Reset individual: limpia los folders auto-creados del usuario y deja la credencial en <code>pending</code> para que el
+									verification-worker la re-sincronice.
+								</Typography>
+							</Box>
+							<Button size="small" startIcon={<Refresh size={16} />} onClick={fetchCredentials} disabled={credentialsLoading}>
+								Recargar
+							</Button>
+						</Stack>
+
+						{credentialsLoading ? (
+							<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+								<CircularProgress />
+							</Box>
+						) : credentials.length === 0 ? (
+							<Alert severity="info">No hay credenciales SCBA registradas.</Alert>
+						) : (
+							<TableContainer component={Paper} variant="outlined">
+								<Table size="small">
+									<TableHead>
+										<TableRow>
+											<TableCell>Usuario</TableCell>
+											<TableCell align="center">Estado</TableCell>
+											<TableCell align="center">Sync</TableCell>
+											<TableCell align="center">Folders</TableCell>
+											<TableCell align="center">Causas</TableCell>
+											<TableCell align="center">Errores</TableCell>
+											<TableCell>Último sync</TableCell>
+											<TableCell align="right">Acciones</TableCell>
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{credentials.map((c) => {
+											const userLabel = c.user?.email || c.userId;
+											const statusColor =
+												c.syncStatus === "completed"
+													? "success"
+													: c.syncStatus === "error"
+														? "error"
+														: c.syncStatus === "in_progress"
+															? "info"
+															: c.syncStatus === "pending"
+																? "warning"
+																: "default";
+											return (
+												<TableRow key={c._id} hover>
+													<TableCell>
+														<Stack>
+															<Typography variant="body2" fontWeight={500}>
+																{userLabel}
+															</Typography>
+															{c.user?.firstName && (
+																<Typography variant="caption" color="text.secondary">
+																	{c.user.firstName} {c.user.lastName || ""}
+																</Typography>
+															)}
+														</Stack>
+													</TableCell>
+													<TableCell align="center">
+														<Stack direction="row" spacing={0.5} justifyContent="center">
+															{c.enabled ? (
+																<Chip size="small" label="Activa" color="success" variant="outlined" />
+															) : (
+																<Chip size="small" label="Desactivada" color="default" variant="outlined" />
+															)}
+															{c.isExpired && <Chip size="small" label="Expirada" color="error" />}
+															{c.errorRecoveryPending && (
+																<Tooltip title="Usuario corrigió credencial; aún no re-sincronizada">
+																	<Chip size="small" label="Recovery" color="warning" variant="outlined" />
+																</Tooltip>
+															)}
+														</Stack>
+													</TableCell>
+													<TableCell align="center">
+														<Chip size="small" label={c.syncStatus} color={statusColor as any} variant="outlined" />
+													</TableCell>
+													<TableCell align="center">{c.foldersCount}</TableCell>
+													<TableCell align="center">
+														<Tooltip title={`Creadas: ${c.stats.causasCreated} / Linked: ${c.stats.causasLinked}`}>
+															<span>{c.stats.causasCreated + c.stats.causasLinked}</span>
+														</Tooltip>
+													</TableCell>
+													<TableCell align="center">
+														{c.consecutiveErrors > 0 ? (
+															<Chip size="small" label={c.consecutiveErrors} color="error" />
+														) : (
+															<Typography variant="caption" color="text.secondary">
+																0
+															</Typography>
+														)}
+													</TableCell>
+													<TableCell>
+														<Typography variant="caption">{c.lastSync ? new Date(c.lastSync).toLocaleString("es-AR") : "—"}</Typography>
+													</TableCell>
+													<TableCell align="right">
+														<Button
+															size="small"
+															variant="outlined"
+															color="warning"
+															startIcon={<Refresh size={14} />}
+															onClick={() => openResetCredentialDialog(c)}
+														>
+															Reset
+														</Button>
+													</TableCell>
+												</TableRow>
+											);
+										})}
+									</TableBody>
+								</Table>
+							</TableContainer>
+						)}
+					</Stack>
+				</SubTabPanel>
 			</Paper>
 
 			{/* Reset dialog */}
@@ -1270,6 +1456,83 @@ const ScbaManagerTab: React.FC = () => {
 					<Button onClick={() => setResetDialogOpen(false)}>Cancelar</Button>
 					<Button variant="contained" color="error" onClick={handleReset} disabled={resetting}>
 						{resetting ? <CircularProgress size={20} /> : "Resetear"}
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Credential reset dialog */}
+			<Dialog
+				open={credentialResetDialog.open}
+				onClose={() => !credentialResetDialog.loading && closeResetCredentialDialog()}
+				maxWidth="sm"
+				fullWidth
+			>
+				<DialogTitle>Resetear credencial SCBA</DialogTitle>
+				<DialogContent>
+					{credentialResetDialog.loading && !credentialResetDialog.preview ? (
+						<Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+							<CircularProgress />
+						</Box>
+					) : credentialResetDialog.preview ? (
+						<Stack spacing={2}>
+							<Alert severity="warning">
+								Esta acción limpia los folders auto-creados del usuario y deja la credencial en <code>pending</code>. El verification-worker la
+								re-sincronizará en ~30s, disparando el email de sync-complete.
+							</Alert>
+							<Box>
+								<Typography variant="caption" color="text.secondary">
+									Usuario
+								</Typography>
+								<Typography variant="body2" fontWeight={500}>
+									{credentialResetDialog.credential?.user?.email || credentialResetDialog.credential?.userId}
+								</Typography>
+							</Box>
+							<Divider />
+							<Stack direction="row" spacing={3}>
+								<Box>
+									<Typography variant="caption" color="text.secondary">
+										Folders a borrar
+									</Typography>
+									<Typography variant="h6">{credentialResetDialog.preview.willDelete.userFolders}</Typography>
+								</Box>
+								<Box>
+									<Typography variant="caption" color="text.secondary">
+										Causas huérfanas a borrar
+									</Typography>
+									<Typography variant="h6">{credentialResetDialog.preview.willDelete.orphanCausas}</Typography>
+								</Box>
+								<Box>
+									<Typography variant="caption" color="text.secondary">
+										Causas compartidas (pull)
+									</Typography>
+									<Typography variant="h6">{credentialResetDialog.preview.willPull.sharedCausas}</Typography>
+								</Box>
+							</Stack>
+							<Box>
+								<Typography variant="caption" color="text.secondary">
+									Estado actual
+								</Typography>
+								<Typography variant="body2">
+									{credentialResetDialog.preview.syncStatus}
+									{credentialResetDialog.preview.lastSync
+										? ` — último sync: ${new Date(credentialResetDialog.preview.lastSync).toLocaleString("es-AR")}`
+										: ""}
+								</Typography>
+							</Box>
+						</Stack>
+					) : null}
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={closeResetCredentialDialog} disabled={credentialResetDialog.loading}>
+						Cancelar
+					</Button>
+					<Button
+						variant="contained"
+						color="warning"
+						onClick={confirmResetCredential}
+						disabled={credentialResetDialog.loading || !credentialResetDialog.preview}
+					>
+						{credentialResetDialog.loading ? <CircularProgress size={20} /> : "Resetear credencial"}
 					</Button>
 				</DialogActions>
 			</Dialog>
