@@ -1,5 +1,29 @@
 import mevAxios from "utils/mevAxios";
 
+// ========== Tipos de worker ==========
+
+export type ScbaWorkerType = "verification" | "initialScraping" | "update" | "listAudit";
+
+export const SCBA_WORKER_TYPES: ScbaWorkerType[] = ["verification", "initialScraping", "update", "listAudit"];
+
+export const SCBA_WORKER_LABELS: Record<ScbaWorkerType, string> = {
+	verification: "Verificación de Lista",
+	initialScraping: "Extracción Inicial",
+	update: "Actualización Periódica",
+	listAudit: "Auditoría Diaria",
+};
+
+export const SCBA_WORKER_DESCRIPTIONS: Record<ScbaWorkerType, string> = {
+	verification:
+		"Sincroniza la lista de 'Mis Causas' del portal SCBA para cada credencial. Descarga sólo metadata (carátula, juzgado, IDs) y deja cada causa pendiente para el Extracción Inicial.",
+	initialScraping:
+		"Procesa las causas marcadas como pending por el Verificación: navega a cada una, extrae todos los trámites y las deja en estado completed listas para el Actualización.",
+	update:
+		"Refresca periódicamente los movimientos de causas ya procesadas. Usa merge inteligente por (fecha+detalle+URL) para no duplicar movimientos. Respeta el threshold de horas desde la última actualización.",
+	listAudit:
+		"Corre una vez al día (3 AM ARG): compara la lista actual en SCBA con las causas ya guardadas, detecta altas y bajas, y dispara email consolidado al usuario con los cambios.",
+};
+
 // ========== Interfaces ==========
 
 export interface ScbaWorkerSchedule {
@@ -26,6 +50,8 @@ export interface ScbaWorkerConfig {
 	maxMemoryRestart: string;
 }
 
+export type ScbaWorkersConfigMap = Record<ScbaWorkerType, ScbaWorkerConfig>;
+
 export interface ScbaManagerSettings {
 	serviceAvailable: boolean;
 	maintenanceMessage: string;
@@ -38,10 +64,7 @@ export interface ScbaManagerSettings {
 	workEndHour: number;
 	workDays: number[];
 	timezone: string;
-	workers: {
-		verification: ScbaWorkerConfig;
-		update: ScbaWorkerConfig;
-	};
+	workers: ScbaWorkersConfigMap;
 }
 
 export interface ScbaWorkerStatus {
@@ -52,6 +75,8 @@ export interface ScbaWorkerStatus {
 	processedThisCycle: number;
 	errorsThisCycle: number;
 }
+
+export type ScbaWorkerStatusMap = Record<ScbaWorkerType, ScbaWorkerStatus>;
 
 export interface ScbaSystemResources {
 	cpuUsage: number;
@@ -66,14 +91,11 @@ export interface ScbaManagerCurrentState {
 	isPaused: boolean;
 	lastCycleAt?: string;
 	cycleCount: number;
-	workers: {
-		verification: ScbaWorkerStatus;
-		update: ScbaWorkerStatus;
-	};
+	workers: ScbaWorkerStatusMap;
 	systemResources: ScbaSystemResources;
 	lastScaleAction?: {
 		timestamp: string;
-		workerType: "verification" | "update";
+		workerType: ScbaWorkerType;
 		action: "scale_up" | "scale_down" | "no_change";
 		from: number;
 		to: number;
@@ -83,17 +105,14 @@ export interface ScbaManagerCurrentState {
 
 export interface ScbaHistorySnapshot {
 	timestamp: string;
-	workers: {
-		verification: { active: number; pending: number };
-		update: { active: number; pending: number };
-	};
+	workers: Record<ScbaWorkerType, { active: number; pending: number }>;
 	systemResources: ScbaSystemResources;
 	scaleChanges: number;
 }
 
 export interface ScbaAlert {
 	type: string;
-	workerType?: string;
+	workerType?: ScbaWorkerType;
 	message: string;
 	timestamp: string;
 	acknowledged: boolean;
@@ -103,24 +122,34 @@ export interface ScbaAlert {
 	threshold?: number;
 }
 
+export interface ScbaDailyStatsByWorkerCommon {
+	processed: number;
+	success: number;
+	errors: number;
+	peakPending: number;
+	peakWorkers: number;
+}
+
+export interface ScbaDailyStatsWorkerWithMovimientos extends ScbaDailyStatsByWorkerCommon {
+	movimientosFound: number;
+}
+
+export interface ScbaDailyStatsListAudit {
+	processed: number;
+	success: number;
+	errors: number;
+	causasRemoved: number;
+	causasReactivated: number;
+	causasAdded: number;
+}
+
 export interface ScbaDailyStats {
 	date: string;
 	byWorker: {
-		verification: {
-			processed: number;
-			success: number;
-			errors: number;
-			peakPending: number;
-			peakWorkers: number;
-		};
-		update: {
-			processed: number;
-			success: number;
-			errors: number;
-			movimientosFound: number;
-			peakPending: number;
-			peakWorkers: number;
-		};
+		verification: ScbaDailyStatsByWorkerCommon;
+		initialScraping: ScbaDailyStatsWorkerWithMovimientos;
+		update: ScbaDailyStatsWorkerWithMovimientos;
+		listAudit: ScbaDailyStatsListAudit;
 	};
 	cyclesRun: number;
 	avgCycleTime: number;
