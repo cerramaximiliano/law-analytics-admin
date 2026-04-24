@@ -175,6 +175,62 @@ export interface ScbaManagerStatusResponse {
 	};
 }
 
+// ========== Credenciales (listado admin + reset) ==========
+
+export type ScbaSyncStatus = "never_synced" | "pending" | "in_progress" | "completed" | "error";
+
+export interface ScbaCredentialListItem {
+	_id: string;
+	userId: string;
+	user: {
+		email?: string;
+		firstName?: string;
+		lastName?: string;
+		role?: string;
+	} | null;
+	enabled: boolean;
+	isExpired: boolean;
+	syncStatus: ScbaSyncStatus;
+	lastSync: string | null;
+	lastSyncAttempt: string | null;
+	consecutiveErrors: number;
+	errorNotifiedAt: string | null;
+	errorRecoveryPending: boolean;
+	stats: {
+		causasCreated: number;
+		causasLinked: number;
+		errors: number;
+	};
+	foldersCount: number;
+}
+
+export interface ScbaResetPreview {
+	credentialId: string;
+	userId: string;
+	syncStatus: ScbaSyncStatus;
+	lastSync: string | null;
+	willDelete: {
+		userFolders: number;
+		orphanCausas: number;
+	};
+	willPull: {
+		sharedCausas: number;
+	};
+}
+
+export interface ScbaResetResult {
+	credentialId: string;
+	userId: string;
+	deleted: {
+		folders: number;
+		orphanCausas: number;
+	};
+	pulledFrom: {
+		sharedCausas: number;
+	};
+	credentialUpdated: boolean;
+}
+
 // ========== Service ==========
 
 class ScbaManagerService {
@@ -259,6 +315,35 @@ class ScbaManagerService {
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al resetear configuración del SCBA manager");
+		}
+	}
+
+	async listCredentials(): Promise<{ success: boolean; data: ScbaCredentialListItem[]; count: number }> {
+		try {
+			const response = await mevAxios.get("/api/scba-manager/credentials");
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al listar credenciales SCBA");
+		}
+	}
+
+	async previewResetCredential(credentialId: string): Promise<{ success: boolean; dryRun: boolean; data: ScbaResetPreview }> {
+		try {
+			const response = await mevAxios.post(`/api/scba-manager/credentials/${credentialId}/reset`, null, {
+				params: { dryRun: true },
+			});
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al previsualizar reset de credencial SCBA");
+		}
+	}
+
+	async resetCredential(credentialId: string): Promise<{ success: boolean; message: string; data: ScbaResetResult }> {
+		try {
+			const response = await mevAxios.post(`/api/scba-manager/credentials/${credentialId}/reset`);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al resetear credencial SCBA");
 		}
 	}
 }
