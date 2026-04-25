@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import { Box, Tab, Tabs, Typography, Paper, Stack, Chip, useTheme, alpha, IconButton, Tooltip, Popover } from "@mui/material";
-import { TickSquare, SearchNormal1, DocumentUpload, InfoCircle, People, Warning2, SecurityUser } from "iconsax-react";
+import { TickSquare, SearchNormal1, DocumentUpload, InfoCircle, People, Warning2, SecurityUser, Lock1 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import VerificationWorker from "./VerificationWorker";
@@ -10,6 +10,7 @@ import AppUpdateWorker from "./AppUpdateWorker";
 import IntervinientesWorker from "./IntervinientesWorker";
 import StuckDocumentsWorker from "./StuckDocumentsWorker";
 import MisCausasWorker from "./MisCausasWorker";
+import PrivacyCheckerWorker from "./PrivacyCheckerWorker";
 
 // Interfaz para los tabs
 interface WorkerTab {
@@ -93,6 +94,16 @@ const WorkersConfig = () => {
 			status: "active",
 			badge: "worker_02",
 			ip: "100.98.180.101",
+		},
+		{
+			label: "Privacy Checker",
+			value: "privacy-checker",
+			icon: <Lock1 size={20} />,
+			component: <PrivacyCheckerWorker />,
+			description: "Detecta causas PJN individuales que pasaron a estado reservado y mantiene el flag automáticamente",
+			status: "active",
+			badge: "app",
+			ip: "18.228.63.73",
 		},
 	];
 
