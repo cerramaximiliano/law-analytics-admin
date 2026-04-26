@@ -199,6 +199,67 @@ export const resetAgendaData =
 		}
 	};
 
+/**
+ * Re-ejecuta una solicitud existente en modo dry-run (DEV):
+ * resetea status a 'pending' + dryRun=true. Después hay que disparar el
+ * worker de envío manualmente (o esperar al cron).
+ */
+export const rerunAsDry =
+	(id: string, withHtml = false) =>
+	async (dispatch: any) => {
+		try {
+			const { data } = await adminAxios.post(`/api/seclo/solicitudes/${id}/rerun-as-dry`, { withHtml });
+			if (data.success) {
+				dispatch({ type: SECLO_UPDATE_SOLICITUD, payload: data.solicitud });
+				dispatch(openSnackbar({ open: true, message: data.message || "Reseteada en modo prueba (DEV)", variant: "alert", alert: { color: "success" } }));
+				return data.solicitud;
+			}
+		} catch (err: any) {
+			const msg = err.response?.data?.message || err.message;
+			dispatch(openSnackbar({ open: true, message: msg, variant: "alert", alert: { color: "error" } }));
+			throw err;
+		}
+	};
+
+/**
+ * Promueve una solicitud 'dry_run_completed' a envío real (status='pending', dryRun=false).
+ * Si deleteArtifacts=true también borra los screenshots del dry-run de S3.
+ */
+export const promoteRealSolicitud =
+	(id: string, deleteArtifacts = false) =>
+	async (dispatch: any) => {
+		try {
+			const { data } = await adminAxios.post(`/api/seclo/solicitudes/${id}/promote-real`, { deleteArtifacts });
+			if (data.success) {
+				dispatch({ type: SECLO_UPDATE_SOLICITUD, payload: data.solicitud });
+				dispatch(openSnackbar({ open: true, message: data.message || "Solicitud promovida a envío real", variant: "alert", alert: { color: "success" } }));
+				return data.solicitud;
+			}
+		} catch (err: any) {
+			const msg = err.response?.data?.message || err.message;
+			dispatch(openSnackbar({ open: true, message: msg, variant: "alert", alert: { color: "error" } }));
+			throw err;
+		}
+	};
+
+/**
+ * Borra de S3 los screenshots/HTML del último dry-run. No cambia el status.
+ */
+export const deleteDryRunArtifacts = (id: string) => async (dispatch: any) => {
+	try {
+		const { data } = await adminAxios.delete(`/api/seclo/solicitudes/${id}/dry-run-artifacts`);
+		if (data.success) {
+			dispatch({ type: SECLO_UPDATE_SOLICITUD, payload: data.solicitud });
+			dispatch(openSnackbar({ open: true, message: data.message || "Artefactos eliminados", variant: "alert", alert: { color: "success" } }));
+			return data.solicitud;
+		}
+	} catch (err: any) {
+		const msg = err.response?.data?.message || err.message;
+		dispatch(openSnackbar({ open: true, message: msg, variant: "alert", alert: { color: "error" } }));
+		throw err;
+	}
+};
+
 export const triggerWorkerRun = (workerName: string) => async (dispatch: any) => {
 	try {
 		const { data } = await adminAxios.post(`/api/seclo/workers/${workerName}/run`);

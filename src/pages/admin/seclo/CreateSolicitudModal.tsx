@@ -25,6 +25,9 @@ import {
 	Box,
 	Divider,
 	CircularProgress,
+	Switch,
+	Tooltip,
+	Stack,
 } from "@mui/material";
 import { useDispatch, useSelector } from "store";
 import { fetchUsers, createSolicitud, getPresignedUploadUrl, fetchFoldersByUser } from "store/reducers/seclo";
@@ -95,6 +98,11 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	const [documentos, setDocumentos] = useState<SecloDocumento[]>([]);
 	const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
 
+	// Modo prueba (DEV) — el worker llena el formulario y se detiene antes
+	// del btnConfirmarObligatoria. No envía nada al portal.
+	const [dryRunMode, setDryRunMode] = useState(false);
+	const [dryRunWithHtml, setDryRunWithHtml] = useState(false);
+
 	const resetAll = () => {
 		setStep(0);
 		setError(null);
@@ -114,6 +122,8 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 		setIniciadoPor("trabajador");
 		setAbogado({ tomo: "", folio: "", caracter: "apoderado", cpa: "" });
 		setDocumentos([]);
+		setDryRunMode(false);
+		setDryRunWithHtml(false);
 	};
 
 	const handleClose = () => {
@@ -244,6 +254,8 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 					datosAbogado: { tomo: abogado.tomo, folio: abogado.folio, caracter: abogado.caracter, domicilio: { cpa: abogado.cpa } },
 					documentos,
 					folderId: selectedFolder?._id ?? undefined,
+					dryRun: dryRunMode,
+					dryRunWithHtml: dryRunMode && dryRunWithHtml,
 				}),
 			);
 			handleClose();
@@ -724,24 +736,55 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 
 				{renderStep()}
 			</DialogContent>
-			<DialogActions>
-				<Button onClick={handleClose} disabled={submitting}>
-					Cancelar
-				</Button>
-				{step > 0 && (
-					<Button onClick={handleBack} disabled={submitting}>
-						Atrás
-					</Button>
-				)}
-				{step < STEPS.length - 1 ? (
-					<Button variant="contained" onClick={handleNext} disabled={!canAdvance()}>
-						Siguiente
-					</Button>
+			<DialogActions sx={{ flexWrap: "wrap", gap: 1, justifyContent: "space-between" }}>
+				{step === STEPS.length - 1 ? (
+					<Stack direction="row" alignItems="center" spacing={1} sx={{ pl: 1 }}>
+						<Tooltip title="Modo prueba: el worker llena el formulario y se detiene ANTES de confirmarlo. NO se envía al portal. Quedan screenshots y un volcado del DOM en S3 para auditar.">
+							<FormControlLabel
+								control={<Switch checked={dryRunMode} onChange={(e) => setDryRunMode(e.target.checked)} color="warning" />}
+								label={
+									<Typography variant="body2" sx={{ fontWeight: dryRunMode ? 600 : 400 }}>
+										Modo prueba (DEV) — no envía
+									</Typography>
+								}
+							/>
+						</Tooltip>
+						{dryRunMode && (
+							<Tooltip title="Además de los screenshots, sube el HTML del paso 7 a S3 (útil para inspeccionar IDs ASP.NET).">
+								<FormControlLabel
+									control={<Switch size="small" checked={dryRunWithHtml} onChange={(e) => setDryRunWithHtml(e.target.checked)} />}
+									label={<Typography variant="caption">Capturar HTML</Typography>}
+								/>
+							</Tooltip>
+						)}
+					</Stack>
 				) : (
-					<Button variant="contained" color="success" onClick={handleSubmit} disabled={submitting || !canAdvance()}>
-						{submitting ? "Creando..." : "Crear solicitud"}
-					</Button>
+					<Box />
 				)}
+				<Box>
+					<Button onClick={handleClose} disabled={submitting}>
+						Cancelar
+					</Button>
+					{step > 0 && (
+						<Button onClick={handleBack} disabled={submitting}>
+							Atrás
+						</Button>
+					)}
+					{step < STEPS.length - 1 ? (
+						<Button variant="contained" onClick={handleNext} disabled={!canAdvance()}>
+							Siguiente
+						</Button>
+					) : (
+						<Button
+							variant="contained"
+							color={dryRunMode ? "warning" : "success"}
+							onClick={handleSubmit}
+							disabled={submitting || !canAdvance()}
+						>
+							{submitting ? "Creando..." : dryRunMode ? "Crear en modo DEV" : "Crear solicitud"}
+						</Button>
+					)}
+				</Box>
 			</DialogActions>
 		</Dialog>
 	);
