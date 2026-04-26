@@ -32,7 +32,7 @@ import {
 	DialogContent,
 	DialogActions,
 } from "@mui/material";
-import { Add, DocumentDownload, Eye, Trash, RefreshCircle, SearchNormal1, FilterSearch } from "iconsax-react";
+import { Add, DocumentDownload, Eye, Trash, RefreshCircle, SearchNormal1, FilterSearch, Code, ArrowUp2, Broom } from "iconsax-react";
 import { useDispatch, useSelector } from "store";
 import {
 	fetchSolicitudes,
@@ -42,6 +42,9 @@ import {
 	resetAgendaData,
 	fetchFoldersByUser,
 	linkSolicitudFolder,
+	rerunAsDry,
+	promoteRealSolicitud,
+	deleteDryRunArtifacts,
 } from "store/reducers/seclo";
 import type {
 	SecloCaracter,
@@ -60,6 +63,7 @@ const STATUS_COLORS: Record<SecloStatus, "default" | "warning" | "info" | "succe
 	submitted: "info",
 	completed: "success",
 	error: "error",
+	dry_run_completed: "info",
 };
 
 const STATUS_LABELS: Record<SecloStatus, string> = {
@@ -68,6 +72,7 @@ const STATUS_LABELS: Record<SecloStatus, string> = {
 	submitted: "Enviado",
 	completed: "Completado",
 	error: "Error",
+	dry_run_completed: "Prueba completada",
 };
 
 function getUserName(sol: SecloSolicitud): string {
@@ -407,6 +412,236 @@ function FolderPickerDialog({
 	);
 }
 
+// ─── Tab Dry-run (artefactos del modo DEV) ───────────────────────────────────
+
+function DryRunScreenshotImage({ s3Key, step }: { s3Key: string; step: string }) {
+	const dispatch = useDispatch();
+	const [url, setUrl] = useState<string | null>(null);
+	const [loading, setLoading] = useState(false);
+	const [open, setOpen] = useState(false);
+
+	const handleOpen = async () => {
+		setLoading(true);
+		try {
+			const u = await dispatch(getSecloDownloadUrl(s3Key));
+			if (u) {
+				setUrl(u);
+				setOpen(true);
+			}
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	return (
+		<>
+			<Button
+				size="small"
+				variant="outlined"
+				onClick={handleOpen}
+				disabled={loading}
+				startIcon={loading ? <CircularProgress size={12} /> : <Eye size={14} />}
+				sx={{ justifyContent: "flex-start", textTransform: "none" }}
+			>
+				{step}
+			</Button>
+			{open && url && (
+				<Dialog open onClose={() => setOpen(false)} maxWidth="lg" fullWidth>
+					<DialogTitle>{step}</DialogTitle>
+					<DialogContent>
+						<Box component="img" src={url} alt={step} sx={{ width: "100%", height: "auto", display: "block" }} />
+					</DialogContent>
+					<DialogActions>
+						<Button onClick={() => setOpen(false)}>Cerrar</Button>
+					</DialogActions>
+				</Dialog>
+			)}
+		</>
+	);
+}
+
+function DryRunTab({ sol }: { sol: SecloSolicitud }) {
+	const dispatch = useDispatch();
+	const result = sol.dryRunResult;
+	const [busy, setBusy] = useState<"clean" | "rerun" | "promote" | null>(null);
+
+	const handleClean = async () => {
+		if (!window.confirm("Borrar de S3 todos los screenshots y el HTML del último dry-run? La solicitud queda como está.")) return;
+		setBusy("clean");
+		try {
+			await dispatch(deleteDryRunArtifacts(sol._id));
+		} finally {
+			setBusy(null);
+		}
+	};
+
+	const handleRerun = async () => {
+		if (!window.confirm("Re-ejecutar dry-run: la solicitud volverá a 'pending' con dryRun=true. El próximo ciclo del worker la procesará SIN enviar.")) return;
+		setBusy("rerun");
+		try {
+			await dispatch(rerunAsDry(sol._id, !!sol.dryRunWithHtml));
+		} finally {
+			setBusy(null);
+		}
+	};
+
+	const handlePromote = async () => {
+		if (!window.confirm("Promover a envío real: la solicitud pasa a 'pending' con dryRun=false. El próximo ciclo del worker la enviará al portal.")) return;
+		setBusy("promote");
+		try {
+			await dispatch(promoteRealSolicitud(sol._id));
+		} finally {
+			setBusy(null);
+		}
+	};
+
+	if (!result) {
+		return (
+			<Stack spacing={2}>
+				<Typography variant="body2" color="text.secondary">
+					Esta solicitud está marcada como DEV pero todavía no fue procesada por el worker. Apenas el worker corra (ver "Acciones" arriba o en
+					la pestaña Workers), aparecerán acá los screenshots de cada paso del formulario.
+				</Typography>
+				<Box>
+					<Button size="small" variant="outlined" onClick={handleRerun} disabled={busy !== null}>
+						Re-ejecutar dry-run
+					</Button>
+				</Box>
+			</Stack>
+		);
+	}
+
+	const fields = result.formSnapshot?.fields || [];
+
+	return (
+		<Stack spacing={2}>
+			{/* Acciones */}
+			<Stack direction="row" spacing={1} flexWrap="wrap">
+				<Button
+					size="small"
+					variant="contained"
+					color="success"
+					startIcon={busy === "promote" ? <CircularProgress size={12} /> : <ArrowUp2 size={14} />}
+					onClick={handlePromote}
+					disabled={busy !== null || sol.status !== "dry_run_completed"}
+				>
+					Promover a envío real
+				</Button>
+				<Button
+					size="small"
+					variant="outlined"
+					startIcon={busy === "rerun" ? <CircularProgress size={12} /> : <Code size={14} />}
+					onClick={handleRerun}
+					disabled={busy !== null}
+				>
+					Re-ejecutar dry-run
+				</Button>
+				<Button
+					size="small"
+					variant="outlined"
+					color="error"
+					startIcon={busy === "clean" ? <CircularProgress size={12} /> : <Broom size={14} />}
+					onClick={handleClean}
+					disabled={busy !== null || result.screenshots.length === 0}
+				>
+					Limpiar artefactos S3
+				</Button>
+			</Stack>
+
+			{/* Metadatos */}
+			<Box>
+				<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+					Ejecución
+				</Typography>
+				<Stack spacing={0.25} mt={0.5}>
+					<Typography variant="body2">
+						<strong>Ejecutado:</strong> {result.runAt ? new Date(result.runAt).toLocaleString("es-AR") : "—"}
+					</Typography>
+					<Typography variant="body2">
+						<strong>Worker:</strong> <code>{result.workerId || "—"}</code>
+					</Typography>
+					{result.error && (
+						<Typography variant="body2" color="error">
+							<strong>Error:</strong> {result.error}
+						</Typography>
+					)}
+				</Stack>
+			</Box>
+
+			{/* Screenshots */}
+			<Divider />
+			<Box>
+				<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+					Screenshots ({result.screenshots.length})
+				</Typography>
+				{result.screenshots.length === 0 ? (
+					<Typography variant="body2" color="text.secondary" mt={0.5}>
+						Sin screenshots — el worker no llegó a capturar ninguno antes del error.
+					</Typography>
+				) : (
+					<Stack spacing={0.5} mt={0.5}>
+						{result.screenshots.map((sc, i) => (
+							<DryRunScreenshotImage key={i} s3Key={sc.s3Key} step={sc.step} />
+						))}
+					</Stack>
+				)}
+				{result.htmlSnapshotKey && (
+					<Box mt={1}>
+						<Tooltip title="HTML completo del paso 7 (DOM antes del submit)">
+							<Button
+								size="small"
+								variant="outlined"
+								startIcon={<DocumentDownload size={14} />}
+								onClick={async () => {
+									const u = await dispatch(getSecloDownloadUrl(result.htmlSnapshotKey!));
+									if (u) window.open(u, "_blank");
+								}}
+							>
+								Descargar HTML del paso 7
+							</Button>
+						</Tooltip>
+					</Box>
+				)}
+			</Box>
+
+			{/* Form snapshot */}
+			{fields.length > 0 && (
+				<>
+					<Divider />
+					<Box>
+						<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+							Form snapshot ({fields.length} campos)
+						</Typography>
+						<Box sx={{ maxHeight: 320, overflowY: "auto", mt: 0.5, border: 1, borderColor: "divider", borderRadius: 1 }}>
+							<Table size="small" stickyHeader>
+								<TableHead>
+									<TableRow>
+										<TableCell sx={{ fontWeight: 600 }}>Campo (id / name)</TableCell>
+										<TableCell sx={{ fontWeight: 600 }}>Tipo</TableCell>
+										<TableCell sx={{ fontWeight: 600 }}>Valor</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{fields.map((f, i) => (
+										<TableRow key={i}>
+											<TableCell sx={{ fontFamily: "monospace", fontSize: 11 }}>{f.id || f.name || "—"}</TableCell>
+											<TableCell sx={{ fontSize: 11 }}>
+												{f.tag}/{f.type}
+												{f.checked !== undefined && f.checked && " ✓"}
+											</TableCell>
+											<TableCell sx={{ fontFamily: "monospace", fontSize: 11, wordBreak: "break-all" }}>{f.value || "—"}</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</Box>
+					</Box>
+				</>
+			)}
+		</Stack>
+	);
+}
+
 // ─── Dialog de detalle ────────────────────────────────────────────────────────
 
 function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicitud; onClose: () => void }) {
@@ -466,6 +701,7 @@ function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicit
 				<Tab label="Detalle" />
 				<Tab label="Formulario" />
 				<Tab label="JSON" />
+				{(sol.dryRun || sol.dryRunResult) && <Tab label={`Dry-run (${sol.dryRunResult?.screenshots?.length ?? 0})`} />}
 			</Tabs>
 
 			<DialogContent dividers>
@@ -729,6 +965,9 @@ function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicit
 						{JSON.stringify(sol, null, 2)}
 					</Box>
 				)}
+
+				{/* ── Tab 3: Dry-run (artefactos del modo DEV) ── */}
+				{tab === 3 && (sol.dryRun || sol.dryRunResult) && <DryRunTab sol={sol} />}
 			</DialogContent>
 			<DialogActions sx={{ flexWrap: "wrap", gap: 1, justifyContent: "space-between" }}>
 				<Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
@@ -807,6 +1046,16 @@ export default function SolicitudesTab() {
 
 	const handleReactivar = async (sol: SecloSolicitud) => {
 		await dispatch(reactivarSolicitud(sol._id));
+	};
+
+	const handleRerunAsDry = async (sol: SecloSolicitud) => {
+		if (!window.confirm(`Re-ejecutar en modo DEV: la solicitud volverá a "pending" y el próximo ciclo del worker la procesará SIN enviar al portal.\n\n¿Continuar?`)) return;
+		await dispatch(rerunAsDry(sol._id));
+	};
+
+	const handlePromoteReal = async (sol: SecloSolicitud) => {
+		if (!window.confirm(`Promover a envío real: la solicitud volverá a "pending" con dryRun=false. El próximo ciclo del worker la enviará al portal SECLO.\n\n¿Continuar?`)) return;
+		await dispatch(promoteRealSolicitud(sol._id));
 	};
 
 	return (
@@ -946,7 +1195,14 @@ export default function SolicitudesTab() {
 										</Typography>
 									</TableCell>
 									<TableCell>
-										<Chip label={STATUS_LABELS[sol.status]} color={STATUS_COLORS[sol.status]} size="small" />
+										<Stack direction="row" spacing={0.5} alignItems="center">
+											<Chip label={STATUS_LABELS[sol.status]} color={STATUS_COLORS[sol.status]} size="small" />
+											{sol.dryRun && sol.status !== "dry_run_completed" && (
+												<Tooltip title="Esta solicitud está marcada como DEV — el worker no enviará al portal">
+													<Chip label="DEV" size="small" color="warning" variant="outlined" />
+												</Tooltip>
+											)}
+										</Stack>
 									</TableCell>
 									<TableCell>
 										<Typography variant="body2">
@@ -974,7 +1230,21 @@ export default function SolicitudesTab() {
 													</IconButton>
 												</Tooltip>
 											)}
-											{["pending", "error"].includes(sol.status) && (
+											{["pending", "error", "dry_run_completed"].includes(sol.status) && (
+												<Tooltip title="Re-ejecutar en modo DEV (no envía al portal)">
+													<IconButton size="small" color="info" onClick={() => handleRerunAsDry(sol)}>
+														<Code size={16} />
+													</IconButton>
+												</Tooltip>
+											)}
+											{sol.status === "dry_run_completed" && (
+												<Tooltip title="Promover a envío real">
+													<IconButton size="small" color="success" onClick={() => handlePromoteReal(sol)}>
+														<ArrowUp2 size={16} />
+													</IconButton>
+												</Tooltip>
+											)}
+											{["pending", "error", "dry_run_completed"].includes(sol.status) && (
 												<Tooltip title="Eliminar">
 													<IconButton size="small" color="error" onClick={() => setDeleteTarget(sol)}>
 														<Trash size={16} />

@@ -1,6 +1,6 @@
 // types/seclo.ts — Tipos TypeScript para el módulo SECLO
 
-export type SecloStatus = "pending" | "processing" | "submitted" | "completed" | "error";
+export type SecloStatus = "pending" | "processing" | "submitted" | "completed" | "error" | "dry_run_completed";
 export type SecloTipoTramite = "obligatoria" | "espontanea";
 export type SecloIniciadoPor = "trabajador" | "empleador";
 export type SecloCaracter = "apoderado" | "patrocinante" | "rep_gremial" | "rep_empresarial";
@@ -115,6 +115,25 @@ export interface SecloFolder {
 	status?: string;
 }
 
+export interface SecloDryRunScreenshot {
+	step: string;
+	s3Key: string;
+	takenAt?: string;
+}
+
+export interface SecloDryRunResult {
+	runAt?: string;
+	workerId?: string;
+	screenshots: SecloDryRunScreenshot[];
+	formSnapshot?: {
+		capturedAt?: string;
+		url?: string;
+		fields?: Array<{ name?: string | null; id?: string | null; tag: string; type: string; value: string; checked?: boolean }>;
+	} | null;
+	htmlSnapshotKey?: string | null;
+	error?: string | null;
+}
+
 export interface SecloSolicitud {
 	_id: string;
 	userId: { _id: string; name: string; email: string } | string;
@@ -146,6 +165,9 @@ export interface SecloSolicitud {
 	} | null;
 	errorInfo?: { message: string; code: string; timestamp: string } | null;
 	retryCount: number;
+	dryRun?: boolean;
+	dryRunWithHtml?: boolean;
+	dryRunResult?: SecloDryRunResult | null;
 	createdAt: string;
 	updatedAt: string;
 }
