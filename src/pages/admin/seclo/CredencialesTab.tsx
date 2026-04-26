@@ -48,15 +48,36 @@ export default function CredencialesTab() {
 	const [revealed, setRevealed] = useState<{ cuil: string; password: string } | null>(null);
 	const [revealing, setRevealing] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
+	// IDs de credenciales con validación en curso — para mostrar spinner en el botón
+	const [validatingIds, setValidatingIds] = useState<Set<string>>(new Set());
 
 	const load = () => {
 		dispatch(fetchCredentials({ page: page + 1, limit: rowsPerPage, search: search || undefined }));
 	};
 
 	const handleValidate = async (cred: TrabajoCredential) => {
-		await dispatch(validateCredential(cred._id));
-		// Refrescar tras unos segundos para que la UI muestre el resultado del checker
-		setTimeout(load, 12000);
+		// Spinner inmediato + reload optimista para reflejar "Pendiente" enseguida
+		setValidatingIds((prev) => new Set(prev).add(cred._id));
+		try {
+			await dispatch(validateCredential(cred._id));
+			// Reload rápido para mostrar el chip "Pendiente" tras el reset de flags
+			setTimeout(load, 800);
+			// Reload final tras el ciclo del worker (~10s polling + ~10s login)
+			setTimeout(() => {
+				load();
+				setValidatingIds((prev) => {
+					const next = new Set(prev);
+					next.delete(cred._id);
+					return next;
+				});
+			}, 25000);
+		} catch {
+			setValidatingIds((prev) => {
+				const next = new Set(prev);
+				next.delete(cred._id);
+				return next;
+			});
+		}
 	};
 
 	useEffect(() => {
@@ -208,10 +229,17 @@ export default function CredencialesTab() {
 													<Edit size={16} />
 												</IconButton>
 											</Tooltip>
-											<Tooltip title="Validar ahora — el worker la verifica en ≤ 10s">
-												<IconButton size="small" color="info" onClick={() => handleValidate(cred)}>
-													<FlashCircle size={16} />
-												</IconButton>
+											<Tooltip title={validatingIds.has(cred._id) ? "Validando — el worker corre en ≤ 10s, refrescamos en 25s" : "Validar ahora — el worker la verifica en ≤ 10s"}>
+												<span>
+													<IconButton
+														size="small"
+														color="info"
+														onClick={() => handleValidate(cred)}
+														disabled={validatingIds.has(cred._id)}
+													>
+														{validatingIds.has(cred._id) ? <CircularProgress size={14} /> : <FlashCircle size={16} />}
+													</IconButton>
+												</span>
 											</Tooltip>
 											<Tooltip title="Eliminar">
 												<IconButton size="small" color="error" onClick={() => setDeleteTarget(cred)}>
