@@ -179,7 +179,11 @@ export interface TrabajoCredential {
 	enabled: boolean;
 	syncStatus: string;
 	credentialInvalid: boolean;
+	credentialInvalidAt?: string | null;
 	credentialInvalidReason?: string | null;
+	credentialsValidated?: boolean;
+	credentialsValidatedAt?: string | null;
+	notificationsSent?: { validated?: boolean; invalid?: boolean };
 	lastSync?: string | null;
 	consecutiveErrors: number;
 	createdAt: string;

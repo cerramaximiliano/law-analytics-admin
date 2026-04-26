@@ -26,9 +26,9 @@ import {
 	Stack,
 	Switch,
 } from "@mui/material";
-import { Add, Edit, Eye, EyeSlash, Trash, SearchNormal1, Warning2 } from "iconsax-react";
+import { Add, Edit, Eye, EyeSlash, Trash, SearchNormal1, Warning2, FlashCircle } from "iconsax-react";
 import { useDispatch, useSelector } from "store";
-import { fetchCredentials, deleteCredential, updateCredential, revealCredential } from "store/reducers/seclo";
+import { fetchCredentials, deleteCredential, updateCredential, revealCredential, validateCredential } from "store/reducers/seclo";
 import type { TrabajoCredential } from "types/seclo";
 import CreateCredencialModal from "./CreateCredencialModal";
 
@@ -51,6 +51,12 @@ export default function CredencialesTab() {
 
 	const load = () => {
 		dispatch(fetchCredentials({ page: page + 1, limit: rowsPerPage, search: search || undefined }));
+	};
+
+	const handleValidate = async (cred: TrabajoCredential) => {
+		await dispatch(validateCredential(cred._id));
+		// Refrescar tras unos segundos para que la UI muestre el resultado del checker
+		setTimeout(load, 12000);
 	};
 
 	useEffect(() => {
@@ -110,7 +116,7 @@ export default function CredencialesTab() {
 						<TableRow>
 							<TableCell>Usuario</TableCell>
 							<TableCell>CUIL</TableCell>
-							<TableCell>Estado sync</TableCell>
+							<TableCell>Validación</TableCell>
 							<TableCell>Habilitada</TableCell>
 							<TableCell>Último sync</TableCell>
 							<TableCell>Errores</TableCell>
@@ -151,11 +157,19 @@ export default function CredencialesTab() {
 										</Typography>
 									</TableCell>
 									<TableCell>
-										<Chip
-											label={cred.syncStatus}
-											size="small"
-											color={cred.syncStatus === "completed" ? "success" : cred.syncStatus === "error" ? "error" : "default"}
-										/>
+										{cred.credentialInvalid ? (
+											<Tooltip title={cred.credentialInvalidReason || "Credenciales inválidas"}>
+												<Chip label="Inválida" size="small" color="error" />
+											</Tooltip>
+										) : cred.credentialsValidated ? (
+											<Tooltip title={cred.credentialsValidatedAt ? `Validada el ${new Date(cred.credentialsValidatedAt).toLocaleString("es-AR")}` : "Validada"}>
+												<Chip label="Validada" size="small" color="success" />
+											</Tooltip>
+										) : (
+											<Tooltip title="Pendiente de validar — el worker la verifica en ≤ 5 min">
+												<Chip label="Pendiente" size="small" color="warning" variant="outlined" />
+											</Tooltip>
+										)}
 									</TableCell>
 									<TableCell>
 										<Switch size="small" checked={cred.enabled} onChange={() => handleToggleEnabled(cred)} />
@@ -192,6 +206,11 @@ export default function CredencialesTab() {
 													}}
 												>
 													<Edit size={16} />
+												</IconButton>
+											</Tooltip>
+											<Tooltip title="Validar ahora — el worker la verifica en ≤ 10s">
+												<IconButton size="small" color="info" onClick={() => handleValidate(cred)}>
+													<FlashCircle size={16} />
 												</IconButton>
 											</Tooltip>
 											<Tooltip title="Eliminar">
