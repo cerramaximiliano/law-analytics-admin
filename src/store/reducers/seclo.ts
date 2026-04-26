@@ -402,6 +402,24 @@ export const updateCredential = (id: string, payload: any) => async (dispatch: a
 	}
 };
 
+/**
+ * Pide al backend que dispare el credentialsChecker para revalidar esta
+ * credencial. El worker corre en ≤ 10 s y el resultado queda reflejado en
+ * los flags `credentialsValidated` / `credentialInvalid`.
+ */
+export const validateCredential = (id: string) => async (dispatch: any) => {
+	try {
+		const { data } = await adminAxios.post(`/api/seclo/credentials/${id}/validate`);
+		if (data.success) {
+			dispatch(openSnackbar({ open: true, message: data.message || "Validación solicitada", variant: "alert", alert: { color: "info" } }));
+		}
+	} catch (err: any) {
+		const msg = err.response?.data?.message || err.message;
+		dispatch(openSnackbar({ open: true, message: msg, variant: "alert", alert: { color: "error" } }));
+		throw err;
+	}
+};
+
 export const deleteCredential = (id: string) => async (dispatch: any) => {
 	try {
 		const { data } = await adminAxios.delete(`/api/seclo/credentials/${id}`);
