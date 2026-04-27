@@ -131,8 +131,17 @@ export default function SecloContactDialog({
 
 	const setField = (k: keyof FormState) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
 
-	// Validación mínima: SECLO requiere nombre, apellido y celular del trabajador
-	const canSubmit = !!form.name && !!form.lastName;
+	// SECLO carga al portal calle y número como campos separados — sin
+	// ellos el form no se puede submitear y la solicitud falla. Los
+	// exigimos al guardar para que ningún contacto que pase por SECLO
+	// quede con domicilio incompleto.
+	const errors = {
+		name:         !form.name.trim() ? "Requerido" : "",
+		lastName:     !form.lastName.trim() ? "Requerido" : "",
+		street:       !form.street.trim() ? "Requerido por SECLO" : "",
+		streetNumber: !form.streetNumber.trim() ? "Requerido por SECLO" : "",
+	};
+	const canSubmit = !errors.name && !errors.lastName && !errors.street && !errors.streetNumber;
 
 	const handleSubmit = async () => {
 		setSubmitting(true);
@@ -209,6 +218,8 @@ export default function SecloContactDialog({
 							label="Nombre *"
 							value={form.name}
 							onChange={(e) => setField("name")(e.target.value)}
+							error={!!errors.name}
+							helperText={errors.name || " "}
 							fullWidth
 						/>
 					</Grid>
@@ -217,6 +228,8 @@ export default function SecloContactDialog({
 							label="Apellido *"
 							value={form.lastName}
 							onChange={(e) => setField("lastName")(e.target.value)}
+							error={!!errors.lastName}
+							helperText={errors.lastName || " "}
 							fullWidth
 						/>
 					</Grid>
@@ -314,6 +327,8 @@ export default function SecloContactDialog({
 							placeholder="Av. Corrientes"
 							value={form.street}
 							onChange={(e) => setField("street")(e.target.value)}
+							error={!!errors.street}
+							helperText={errors.street || " "}
 							fullWidth
 						/>
 					</Grid>
@@ -323,6 +338,8 @@ export default function SecloContactDialog({
 							placeholder="1234"
 							value={form.streetNumber}
 							onChange={(e) => setField("streetNumber")(e.target.value)}
+							error={!!errors.streetNumber}
+							helperText={errors.streetNumber || " "}
 							fullWidth
 						/>
 					</Grid>

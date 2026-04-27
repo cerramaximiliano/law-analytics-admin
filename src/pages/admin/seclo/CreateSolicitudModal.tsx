@@ -267,10 +267,16 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	);
 
 	// ── Validación por step ───────────────────────────────────────────────────
+	// SECLO carga calle y número en campos separados — sin esos datos
+	// estructurados el portal rechaza el formulario. Verificamos que el
+	// contacto los tenga antes de avanzar; si no, el admin tiene que
+	// abrir "Editar contacto" para completarlos.
+	const hasStructuredAddress = (c: any) => !!(c?.street?.trim() && c?.streetNumber?.trim());
+
 	const canAdvance = () => {
 		if (step === 0) return !!selectedUser && !!selectedCredentialId && !contactsLoading;
-		if (step === 1) return !!requirente && !!requirente.phoneCelular;
-		if (step === 2) return !!requerido;
+		if (step === 1) return !!requirente && !!requirente.phoneCelular && hasStructuredAddress(requirente);
+		if (step === 2) return !!requerido && hasStructuredAddress(requerido);
 		if (step === 3) {
 			if (objetoReclamo.length === 0) return false;
 			// Si el reclamo es por accidente o enfermedad, fechaAccidente es requerida
@@ -525,7 +531,24 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 									Falta <strong>phoneCelular</strong>. Es obligatorio para el portal SECLO.
 								</Alert>
 							)}
-							{requirente && requirente.phoneCelular && (
+							{requirente && !hasStructuredAddress(requirente) && (
+								<Alert
+									severity="warning"
+									sx={{ mt: 1 }}
+									action={
+										<Button
+											color="inherit"
+											size="small"
+											onClick={() => setContactDialog({ open: true, mode: "edit", target: "requirente", contact: requirente })}
+										>
+											Completar ahora
+										</Button>
+									}
+								>
+									Faltan <strong>calle</strong> y/o <strong>número</strong>. SECLO los exige como campos separados.
+								</Alert>
+							)}
+							{requirente && requirente.phoneCelular && hasStructuredAddress(requirente) && (
 								<Button
 									size="small"
 									sx={{ mt: 1 }}
@@ -711,6 +734,24 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 								renderInput={(params) => <TextField {...params} label="Contacto requerido (empleador) *" />}
 							/>
 						</Grid>
+						{requerido && !hasStructuredAddress(requerido) && (
+							<Grid item xs={12}>
+								<Alert
+									severity="warning"
+									action={
+										<Button
+											color="inherit"
+											size="small"
+											onClick={() => setContactDialog({ open: true, mode: "edit", target: "requerido", contact: requerido })}
+										>
+											Completar ahora
+										</Button>
+									}
+								>
+									Faltan <strong>calle</strong> y/o <strong>número</strong> del empleador. SECLO los exige como campos separados.
+								</Alert>
+							</Grid>
+						)}
 						{requerido && (
 							<Grid item xs={12}>
 								<Alert
@@ -730,7 +771,11 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 										<strong>CUIT:</strong> {requerido.cuit || "—"}
 									</Typography>
 									<Typography variant="body2">
-										<strong>Domicilio:</strong> {requerido.address || "—"}, {requerido.city || "—"}
+										<strong>Domicilio:</strong>{" "}
+										{[requerido.street, requerido.streetNumber].filter(Boolean).join(" ") || requerido.address || "—"}
+										{requerido.floor && `, Piso ${requerido.floor}`}
+										{requerido.apartment && `, Depto ${requerido.apartment}`}
+										{requerido.city && `, ${requerido.city}`}
 									</Typography>
 									<Typography variant="body2">
 										<strong>Email:</strong> {requerido.email || "—"}
