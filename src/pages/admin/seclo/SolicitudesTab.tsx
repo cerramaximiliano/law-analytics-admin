@@ -50,6 +50,7 @@ import {
 } from "store/reducers/seclo";
 import type {
 	SecloCaracter,
+	SecloContact,
 	SecloDocTipo,
 	SecloDatosAbogado,
 	SecloDatosLaborales,
@@ -58,6 +59,7 @@ import type {
 	SecloStatus,
 } from "types/seclo";
 import CreateSolicitudModal from "./CreateSolicitudModal";
+import SecloContactDialog from "./SecloContactDialog";
 
 const STATUS_COLORS: Record<SecloStatus, "default" | "warning" | "info" | "success" | "error"> = {
 	pending: "warning",
@@ -636,12 +638,41 @@ function EditDatosLaboralesDialog({
 	);
 }
 
+// El portal SECLO usa control IDs tipo `ctl00_Principal_ctlXX_...`. Mapeo
+// observado en seclo-service.js: ctl02 = requerido (empleador),
+// ctl03 = requirente (trabajador). El step `pasoN-rol` también lo indica.
+type MissingRole = "empleador" | "trabajador" | null;
+function detectMissingRole(f: { id?: string; name?: string; step?: string }): MissingRole {
+	const blob = `${f.step || ""} ${f.id || ""} ${f.name || ""}`.toLowerCase();
+	if (blob.includes("requerido") || blob.includes("ctl02")) return "empleador";
+	if (blob.includes("requirente") || blob.includes("ctl03")) return "trabajador";
+	return null;
+}
+
 function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 	const dispatch = useDispatch();
 	const result = sol.dryRunResult;
 	const [busy, setBusy] = useState<"clean" | "rerun" | "promote" | null>(null);
 	const [confirm, setConfirm] = useState<ConfirmActionState | null>(null);
 	const [editOpen, setEditOpen] = useState(false);
+	const [contactEdit, setContactEdit] = useState<{ contact: SecloContact; roleHint: "empleador" | "trabajador" } | null>(null);
+
+	const userId = typeof sol.userId === "object" ? sol.userId._id : sol.userId;
+
+	// Resuelvo los Contact populados de cada participante para poder editarlos.
+	const trabajadorContact: SecloContact | null =
+		sol.requirentes?.[0]?.contactId && typeof sol.requirentes[0].contactId === "object"
+			? (sol.requirentes[0].contactId as SecloContact)
+			: null;
+	const empleadorContact: SecloContact | null =
+		sol.requeridos?.[0]?.contactId && typeof sol.requeridos[0].contactId === "object"
+			? (sol.requeridos[0].contactId as SecloContact)
+			: null;
+
+	// Roles únicos detectados en los campos faltantes.
+	const missingRoles = new Set(
+		(result?.missingRequiredFields || []).map((f) => detectMissingRole(f)).filter((r): r is "empleador" | "trabajador" => !!r)
+	);
 
 	const handleClean = () => {
 		setConfirm({
@@ -766,22 +797,51 @@ function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 				<>
 					<Divider />
 					<Box>
-						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5, flexWrap: "wrap", gap: 1 }}>
 							<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
 								Campos requeridos vacíos ({result.missingRequiredFields!.length})
 							</Typography>
-							<Button
-								size="small"
-								variant="outlined"
-								startIcon={<Edit2 size={14} />}
-								onClick={() => setEditOpen(true)}
-							>
-								Editar datos del trabajador
-							</Button>
+							<Stack direction="row" spacing={1} flexWrap="wrap">
+								{missingRoles.has("empleador") && empleadorContact && (
+									<Tooltip title="Editar contacto del empleador (CUIT, razón social, domicilio, CPA, etc.)">
+										<Button
+											size="small"
+											variant="outlined"
+											color="warning"
+											startIcon={<Edit2 size={14} />}
+											onClick={() => setContactEdit({ contact: empleadorContact, roleHint: "empleador" })}
+										>
+											Editar empleador
+										</Button>
+									</Tooltip>
+								)}
+								{missingRoles.has("trabajador") && trabajadorContact && (
+									<Tooltip title="Editar contacto del trabajador (CUIL, DNI, domicilio, teléfono, etc.)">
+										<Button
+											size="small"
+											variant="outlined"
+											startIcon={<Edit2 size={14} />}
+											onClick={() => setContactEdit({ contact: trabajadorContact, roleHint: "trabajador" })}
+										>
+											Editar trabajador
+										</Button>
+									</Tooltip>
+								)}
+								<Tooltip title="Editar datos laborales del trabajador (fechas, remuneración, categoría, etc.)">
+									<Button
+										size="small"
+										variant="outlined"
+										startIcon={<Edit2 size={14} />}
+										onClick={() => setEditOpen(true)}
+									>
+										Datos laborales
+									</Button>
+								</Tooltip>
+							</Stack>
 						</Stack>
 						<Alert severity="warning">
 							El portal SECLO marca estos campos como obligatorios pero el worker los dejó vacíos.
-							Completalos y ejecutá un nuevo dry-run.
+							Completalos en el contacto correspondiente y ejecutá un nuevo dry-run.
 						</Alert>
 						<Box sx={{ mt: 1, border: 1, borderColor: "divider", borderRadius: 1 }}>
 							<Table size="small">
@@ -789,17 +849,26 @@ function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 									<TableRow>
 										<TableCell sx={{ fontWeight: 600 }}>Paso</TableCell>
 										<TableCell sx={{ fontWeight: 600 }}>Campo</TableCell>
+										<TableCell sx={{ fontWeight: 600 }}>Rol</TableCell>
 										<TableCell sx={{ fontWeight: 600 }}>ID en el DOM</TableCell>
 									</TableRow>
 								</TableHead>
 								<TableBody>
-									{result.missingRequiredFields!.map((f, i) => (
-										<TableRow key={i}>
-											<TableCell><Chip label={f.step || "—"} size="small" variant="outlined" /></TableCell>
-											<TableCell sx={{ fontWeight: 600 }}>{f.label || "—"}</TableCell>
-											<TableCell sx={{ fontFamily: "monospace", fontSize: 11 }}>{f.id || f.name || "—"}</TableCell>
-										</TableRow>
-									))}
+									{result.missingRequiredFields!.map((f, i) => {
+										const role = detectMissingRole(f);
+										return (
+											<TableRow key={i}>
+												<TableCell><Chip label={f.step || "—"} size="small" variant="outlined" /></TableCell>
+												<TableCell sx={{ fontWeight: 600 }}>{f.label || "—"}</TableCell>
+												<TableCell>
+													{role === "empleador" && <Chip label="Empleador" size="small" color="warning" variant="outlined" />}
+													{role === "trabajador" && <Chip label="Trabajador" size="small" color="info" variant="outlined" />}
+													{!role && <Chip label="—" size="small" variant="outlined" />}
+												</TableCell>
+												<TableCell sx={{ fontFamily: "monospace", fontSize: 11 }}>{f.id || f.name || "—"}</TableCell>
+											</TableRow>
+										);
+									})}
 								</TableBody>
 							</Table>
 						</Box>
@@ -885,6 +954,26 @@ function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 				sol={sol}
 				onClose={() => setEditOpen(false)}
 			/>
+
+			{/* Editor del Contact del empleador o trabajador. SECLO recarga el
+			    Contact desde Mongo en cada run, así que basta con persistir el
+			    cambio en el Contact — no hace falta sincronizar el snapshot
+			    de la solicitud. Tras guardar, refrescamos la lista para que
+			    el populate quede actualizado en la UI. */}
+			{contactEdit && userId && (
+				<SecloContactDialog
+					open
+					mode="edit"
+					userId={userId}
+					contact={contactEdit.contact}
+					roleHint={contactEdit.roleHint}
+					onClose={() => setContactEdit(null)}
+					onSaved={() => {
+						setContactEdit(null);
+						dispatch(fetchSolicitudes() as any);
+					}}
+				/>
+			)}
 		</Stack>
 	);
 }
