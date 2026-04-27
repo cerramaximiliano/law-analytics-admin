@@ -349,6 +349,7 @@ export default function SecloContactDialog({
 							placeholder="4"
 							value={form.floor}
 							onChange={(e) => setField("floor")(e.target.value)}
+							helperText="Opcional"
 							fullWidth
 						/>
 					</Grid>
@@ -358,6 +359,7 @@ export default function SecloContactDialog({
 							placeholder="B"
 							value={form.apartment}
 							onChange={(e) => setField("apartment")(e.target.value)}
+							helperText="Opcional"
 							fullWidth
 						/>
 					</Grid>
