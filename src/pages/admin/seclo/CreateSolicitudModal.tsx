@@ -48,7 +48,7 @@ interface Props {
 	onClose: () => void;
 }
 
-const STEPS = ["Usuario", "Trabajador", "Empleador", "Reclamo", "Abogado", "Documentos"];
+const STEPS = ["Usuario", "Trabajador", "Empleador", "Reclamo", "Abogado", "Documentos", "Revisar"];
 
 const DOC_TIPO_LABEL: Record<SecloDocTipo, string> = {
 	dni: "D.N.I",
@@ -57,6 +57,46 @@ const DOC_TIPO_LABEL: Record<SecloDocTipo, string> = {
 	formulario: "Formulario de autorización",
 	otros: "Otros",
 };
+
+// ─── Review components ────────────────────────────────────────────────────
+// Wrappers minimalistas para el step "Revisar y enviar". Se mantienen
+// inline porque el shape de los datos es específico de SECLO.
+
+function ReviewSection({
+	title, onEdit, children,
+}: { title: string; onEdit?: () => void; children: React.ReactNode }) {
+	return (
+		<Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
+			<Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+				<Typography variant="subtitle2">{title}</Typography>
+				{onEdit && (
+					<Link component="button" type="button" onClick={onEdit} sx={{ fontSize: 12 }}>
+						Editar
+					</Link>
+				)}
+			</Stack>
+			<Stack spacing={0.25}>{children}</Stack>
+		</Box>
+	);
+}
+
+function ReviewRow({
+	label, value, emptyHint,
+}: { label: string; value?: string | null; emptyHint?: React.ReactNode }) {
+	const isEmpty = !value || !String(value).trim();
+	return (
+		<Box>
+			<Typography variant="body2">
+				<strong>{label}:</strong> {isEmpty ? "—" : value}
+			</Typography>
+			{isEmpty && emptyHint && (
+				<Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+					{emptyHint}
+				</Typography>
+			)}
+		</Box>
+	);
+}
 
 export default function CreateSolicitudModal({ open, onClose }: Props) {
 	const dispatch = useDispatch();
@@ -286,6 +326,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 		}
 		if (step === 4) return !!abogado.tomo && !!abogado.folio;
 		if (step === 5) return documentos.some((d) => d.tipo === "dni") && documentos.some((d) => d.tipo === "credencial");
+		if (step === 6) return true; // resumen final — el submit se hace con su propio botón
 		return false;
 	};
 
@@ -969,9 +1010,120 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 					</Grid>
 				);
 
+			// ── Step 6: Revisar y enviar ───────────────────────────────────
+			case 6:
+				return renderReview();
+
 			default:
 				return null;
 		}
+	};
+
+	// ── Helpers + render del step "Revisar y enviar" ──────────────────────────
+	const formatDomicilio = (c: SecloContact | null): string => {
+		if (!c) return "—";
+		const calle = [c.street, c.streetNumber].filter(Boolean).join(" ");
+		const piso = c.floor ? `Piso ${c.floor}` : "";
+		const depto = c.apartment ? `Depto ${c.apartment}` : "";
+		const ciudad = c.city || "";
+		return [calle || c.address, piso, depto, ciudad].filter(Boolean).join(", ") || "—";
+	};
+
+	const renderReview = () => {
+		const reclamoRequiereFecha = objetoReclamo.some((o) => /accidente|enfermedad/i.test(o));
+		const credSeleccionada = credentials.find((c: any) => c._id === selectedCredentialId);
+		return (
+			<Stack spacing={2}>
+				<Alert severity="info">
+					Revisá todos los datos antes de crear la solicitud. Una vez creada, el worker la procesará automáticamente
+					{dryRunMode ? " en modo prueba (DEV — no envía al portal)" : " y la enviará al portal SECLO"}.
+				</Alert>
+
+				<ReviewSection title="Usuario y credencial" onEdit={() => setStep(0)}>
+					<ReviewRow label="Usuario" value={selectedUser ? `${selectedUser.name} (${selectedUser.email})` : "—"} />
+					<ReviewRow label="Credencial CUIL" value={credSeleccionada?.cuil || "—"} />
+					{selectedFolder && <ReviewRow label="Carpeta vinculada" value={selectedFolder.folderName} />}
+				</ReviewSection>
+
+				<ReviewSection title="Trabajador (requirente)" onEdit={() => setStep(1)}>
+					<ReviewRow label="Nombre" value={requirente ? `${requirente.name} ${requirente.lastName || ""}`.trim() : "—"} />
+					<ReviewRow label="CUIL" value={requirente?.cuit || "—"} />
+					<ReviewRow label="DNI" value={requirente?.document || "—"} />
+					<ReviewRow label="Celular" value={requirente?.phoneCelular || "—"} />
+					<ReviewRow label="Email" value={requirente?.email || "—"} />
+					<ReviewRow label="Domicilio" value={formatDomicilio(requirente)} />
+					{requirente && hasStructuredAddress(requirente) && !requirente.floor && !requirente.apartment && (
+						<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+							Sin piso ni depto.{" "}
+							<Link component="button" type="button" onClick={() => setContactDialog({ open: true, mode: "edit", target: "requirente", contact: requirente })} sx={{ verticalAlign: "baseline" }}>
+								Agregar
+							</Link>{" "}(opcional).
+						</Typography>
+					)}
+				</ReviewSection>
+
+				<ReviewSection title="Datos laborales" onEdit={() => setStep(1)}>
+					<ReviewRow label="Fecha de ingreso" value={datosLab.fechaIngreso || "—"} />
+					<ReviewRow label="Fecha de egreso" value={datosLab.fechaEgreso || "—"} />
+					{(reclamoRequiereFecha || datosLab.fechaAccidente) && (
+						<ReviewRow label="Fecha del accidente" value={datosLab.fechaAccidente || "—"} />
+					)}
+					<ReviewRow label="Última remuneración" value={datosLab.remuneracion ? `$${datosLab.remuneracion}` : "—"} />
+					<ReviewRow label="Importe del reclamo" value={datosLab.importeReclamo ? `$${datosLab.importeReclamo}` : "—"} />
+					<ReviewRow label="Estado" value={datosLab.estadoTrabajador || "regular"} />
+					<ReviewRow label="Sexo" value={datosLab.sexo === "F" ? "Femenino" : "Masculino"} />
+				</ReviewSection>
+
+				<ReviewSection title="Empleador (requerido)" onEdit={() => setStep(2)}>
+					<ReviewRow label="Nombre / Razón social" value={requerido ? (requerido.company || `${requerido.name} ${requerido.lastName || ""}`.trim()) : "—"} />
+					<ReviewRow label="CUIT" value={requerido?.cuit || "—"} />
+					<ReviewRow label="Email" value={requerido?.email || "—"} />
+					<ReviewRow label="Domicilio" value={formatDomicilio(requerido)} />
+					{requerido && hasStructuredAddress(requerido) && !requerido.floor && !requerido.apartment && (
+						<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+							Sin piso ni depto.{" "}
+							<Link component="button" type="button" onClick={() => setContactDialog({ open: true, mode: "edit", target: "requerido", contact: requerido })} sx={{ verticalAlign: "baseline" }}>
+								Agregar
+							</Link>{" "}(opcional).
+						</Typography>
+					)}
+				</ReviewSection>
+
+				<ReviewSection title="Reclamo" onEdit={() => setStep(3)}>
+					<ReviewRow label="Iniciado por" value={iniciadoPor === "trabajador" ? "Trabajador" : "Empleador"} />
+					<ReviewRow label="Objeto/s del reclamo" value={objetoReclamo.length ? objetoReclamo.join(", ") : "—"} />
+					<ReviewRow
+						label="Comentario"
+						value={comentario}
+						emptyHint={
+							<>
+								Sin comentario.{" "}
+								<Link component="button" type="button" onClick={() => setStep(3)} sx={{ verticalAlign: "baseline" }}>
+									Agregar
+								</Link>{" "}(opcional).
+							</>
+						}
+					/>
+				</ReviewSection>
+
+				<ReviewSection title="Abogado" onEdit={() => setStep(4)}>
+					<ReviewRow label="Tomo" value={abogado.tomo || "—"} />
+					<ReviewRow label="Folio" value={abogado.folio || "—"} />
+					<ReviewRow label="Carácter" value={abogado.caracter} />
+					<ReviewRow label="CPA" value={abogado.cpa || "—"} />
+				</ReviewSection>
+
+				<ReviewSection title="Documentos adjuntos" onEdit={() => setStep(5)}>
+					{(["dni", "credencial", "otros"] as SecloDocTipo[]).map((tipo) => {
+						const doc = documentos.find((d) => d.tipo === tipo);
+						if (!doc && tipo === "otros") return null;
+						return (
+							<ReviewRow key={tipo} label={DOC_TIPO_LABEL[tipo]} value={doc?.fileName || "—"} />
+						);
+					})}
+				</ReviewSection>
+			</Stack>
+		);
 	};
 
 	return (
