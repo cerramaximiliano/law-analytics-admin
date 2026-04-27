@@ -142,6 +142,27 @@ export const createSolicitud = (payload: any) => async (dispatch: any) => {
 	}
 };
 
+/**
+ * PATCH parcial de una solicitud. Acepta campos del schema (objetoReclamo,
+ * comentarioReclamo, iniciadoPor, datosAbogado, documentos) + el merge
+ * especial `requirenteDatosLaborales` que el backend usa para corregir
+ * campos faltantes detectados en dryRunResult.
+ */
+export const updateSolicitudAdmin = (id: string, patch: Record<string, any>) => async (dispatch: any) => {
+	try {
+		const { data } = await adminAxios.patch(`/api/seclo/solicitudes/${id}`, patch);
+		if (data.success) {
+			dispatch({ type: SECLO_UPDATE_SOLICITUD, payload: data.solicitud });
+			dispatch(openSnackbar({ open: true, message: "Solicitud actualizada", variant: "alert", alert: { color: "success" } }));
+			return data.solicitud;
+		}
+	} catch (err: any) {
+		const msg = err.response?.data?.message || err.message;
+		dispatch(openSnackbar({ open: true, message: msg, variant: "alert", alert: { color: "error" } }));
+		throw err;
+	}
+};
+
 export const reactivarSolicitud = (id: string) => async (dispatch: any) => {
 	try {
 		const { data } = await adminAxios.patch(`/api/seclo/solicitudes/${id}/reactivar`);
