@@ -26,7 +26,7 @@ import {
 	Stack,
 	Switch,
 } from "@mui/material";
-import { Add, Edit, Eye, EyeSlash, Trash, SearchNormal1, Warning2, FlashCircle } from "iconsax-react";
+import { Add, Edit, Eye, EyeSlash, Trash, SearchNormal1, Warning2, FlashCircle, RefreshCircle } from "iconsax-react";
 import { useDispatch, useSelector } from "store";
 import { fetchCredentials, deleteCredential, updateCredential, revealCredential, validateCredential } from "store/reducers/seclo";
 import type { TrabajoCredential } from "types/seclo";
@@ -125,6 +125,11 @@ export default function CredencialesTab() {
 					sx={{ width: 220 }}
 				/>
 				<Box flexGrow={1} />
+				<Tooltip title="Recargar lista">
+					<IconButton size="small" onClick={() => load()} disabled={loading}>
+						<RefreshCircle size={20} />
+					</IconButton>
+				</Tooltip>
 				<Button variant="contained" startIcon={<Add size={18} />} onClick={() => setOpenCreate(true)}>
 					Nueva credencial
 				</Button>
