@@ -193,9 +193,21 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 				adminAxios.get("/api/seclo/credentials", { params: { userId: user._id, limit: 10 } }),
 			]);
 			setLocalContacts(contactsRes.data.contacts || []);
-			const creds = credsRes.data.credentials || [];
+			// Filtrado defensivo client-side: aunque el backend ya soporta
+			// ?userId=..., guardamos solo las credenciales que efectivamente
+			// pertenecen al usuario seleccionado. Robust frente a cualquier
+			// versión del API y a casos edge donde la query devuelva otras.
+			const allCreds = credsRes.data.credentials || [];
+			const creds = allCreds.filter((c: any) => {
+				const cuid = typeof c.userId === "string" ? c.userId : c.userId?._id;
+				return cuid === user._id;
+			});
 			setCredentials(creds);
-			if (creds.length === 1) setSelectedCredentialId(creds[0]._id);
+			// Auto-seleccionar la primera (cada usuario tiene una única credencial
+			// por unique:true en el modelo). Antes era === 1 y dejaba al usuario
+			// sin selección si el response traía 0 o más de una.
+			if (creds.length >= 1) setSelectedCredentialId(creds[0]._id);
+			else setSelectedCredentialId("");
 			// Cargar carpetas del usuario para filtrado opcional
 			const foldersResult = await dispatch(fetchFoldersByUser(user._id));
 			setFolders(foldersResult);
