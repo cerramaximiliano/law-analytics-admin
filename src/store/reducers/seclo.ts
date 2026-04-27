@@ -147,18 +147,53 @@ export const createSolicitud = (payload: any) => async (dispatch: any) => {
  * comentarioReclamo, iniciadoPor, datosAbogado, documentos) + el merge
  * especial `requirenteDatosLaborales` que el backend usa para corregir
  * campos faltantes detectados en dryRunResult.
+ *
+ * Siempre dispara un snackbar — éxito o error — para que el usuario tenga
+ * feedback claro del resultado del servidor.
  */
 export const updateSolicitudAdmin = (id: string, patch: Record<string, any>) => async (dispatch: any) => {
 	try {
 		const { data } = await adminAxios.patch(`/api/seclo/solicitudes/${id}`, patch);
-		if (data.success) {
+		if (data?.success) {
 			dispatch({ type: SECLO_UPDATE_SOLICITUD, payload: data.solicitud });
-			dispatch(openSnackbar({ open: true, message: "Solicitud actualizada", variant: "alert", alert: { color: "success" } }));
+			dispatch(openSnackbar({
+				open: true,
+				message: data?.message || "Solicitud actualizada",
+				variant: "alert",
+				alert: { color: "success" },
+				transition: "Fade",
+				close: true,
+			}));
 			return data.solicitud;
 		}
+		// Caso edge: el server devuelve 200 con success:false (raro pero
+		// posible). Disparamos snackbar de error con el message del body.
+		const msg = data?.message || "El servidor no aceptó la actualización";
+		dispatch(openSnackbar({
+			open: true,
+			message: msg,
+			variant: "alert",
+			alert: { color: "error" },
+			transition: "Fade",
+			close: true,
+		}));
+		throw new Error(msg);
 	} catch (err: any) {
-		const msg = err.response?.data?.message || err.message;
-		dispatch(openSnackbar({ open: true, message: msg, variant: "alert", alert: { color: "error" } }));
+		// Si llegamos acá desde el throw de arriba, el snackbar ya se mostró.
+		// Si es un error de red/4xx/5xx, lo extraemos del response.
+		if (!err.__snackbarShown) {
+			const msg = err.response?.data?.message || err.message || "Error al actualizar la solicitud";
+			dispatch(openSnackbar({
+				open: true,
+				message: msg,
+				variant: "alert",
+				alert: { color: "error" },
+				transition: "Fade",
+				close: true,
+			}));
+		}
+		// eslint-disable-next-line no-console
+		console.error("[seclo] updateSolicitudAdmin error:", err.response?.data || err.message);
 		throw err;
 	}
 };
