@@ -31,6 +31,7 @@ import {
 } from "@mui/material";
 import { useDispatch, useSelector } from "store";
 import { fetchUsers, createSolicitud, getPresignedUploadUrl, fetchFoldersByUser } from "store/reducers/seclo";
+import SecloContactDialog from "./SecloContactDialog";
 import {
 	OBJETO_RECLAMO_OPTIONS,
 	type SecloFolder,
@@ -106,6 +107,34 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	// Step 5 – Documentos
 	const [documentos, setDocumentos] = useState<SecloDocumento[]>([]);
 	const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+
+	// Diálogo de creación/edición rápida de contacto desde steps 1-2.
+	// `target` indica para qué rol abrimos el modal (auto-selecciona al guardar).
+	const [contactDialog, setContactDialog] = useState<{
+		open: boolean;
+		mode: "add" | "edit";
+		target: "requirente" | "requerido";
+		contact: SecloContact | null;
+	}>({ open: false, mode: "add", target: "requirente", contact: null });
+
+	const closeContactDialog = () => setContactDialog((s) => ({ ...s, open: false }));
+
+	// Tras crear o editar un contacto: actualizar la lista local y
+	// auto-asignarlo al rol correspondiente.
+	const handleContactSaved = (saved: SecloContact) => {
+		setLocalContacts((prev) => {
+			const exists = prev.some((c) => c._id === saved._id);
+			return exists
+				? prev.map((c) => (c._id === saved._id ? { ...c, ...saved } : c))
+				: [...prev, saved];
+		});
+		if (contactDialog.target === "requirente") {
+			setRequirente(saved);
+			setRequerido(null);
+		} else {
+			setRequerido(saved);
+		}
+	};
 
 	// Modo prueba (DEV) — el worker llena el formulario y se detiene antes
 	// del btnConfirmarObligatoria. No envía nada al portal.
@@ -440,6 +469,17 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 							</Grid>
 						)}
 						<Grid item xs={12}>
+							<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
+								<Typography variant="subtitle2">Trabajador (requirente)</Typography>
+								<Button
+									size="small"
+									variant="outlined"
+									onClick={() => setContactDialog({ open: true, mode: "add", target: "requirente", contact: null })}
+									disabled={!selectedUser}
+								>
+									+ Nuevo contacto
+								</Button>
+							</Stack>
 							<Autocomplete
 								options={contactsForRequirente}
 								getOptionLabel={(c: SecloContact) => `${c.name} ${c.lastName || ""}${c.cuit ? ` — ${c.cuit}` : ""}`}
@@ -452,9 +492,30 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 								renderInput={(params) => <TextField {...params} label="Contacto requirente (trabajador) *" />}
 							/>
 							{requirente && !requirente.phoneCelular && (
-								<Alert severity="warning" sx={{ mt: 1 }}>
-									Este contacto no tiene <strong>phoneCelular</strong>. Es obligatorio para el portal SECLO. Actualizalo antes de continuar.
+								<Alert
+									severity="warning"
+									sx={{ mt: 1 }}
+									action={
+										<Button
+											color="inherit"
+											size="small"
+											onClick={() => setContactDialog({ open: true, mode: "edit", target: "requirente", contact: requirente })}
+										>
+											Completar ahora
+										</Button>
+									}
+								>
+									Falta <strong>phoneCelular</strong>. Es obligatorio para el portal SECLO.
 								</Alert>
+							)}
+							{requirente && requirente.phoneCelular && (
+								<Button
+									size="small"
+									sx={{ mt: 1 }}
+									onClick={() => setContactDialog({ open: true, mode: "edit", target: "requirente", contact: requirente })}
+								>
+									Editar datos del contacto
+								</Button>
 							)}
 						</Grid>
 						{requirente && !selectedFolder && requirenteFolders.length > 0 && (
@@ -595,6 +656,17 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 									<Typography variant="body2">Sin restricción de carpeta. Se muestran todos los contactos del usuario.</Typography>
 								</Alert>
 							)}
+							<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
+								<Typography variant="subtitle2">Empleador (requerido)</Typography>
+								<Button
+									size="small"
+									variant="outlined"
+									onClick={() => setContactDialog({ open: true, mode: "add", target: "requerido", contact: null })}
+									disabled={!selectedUser}
+								>
+									+ Nuevo contacto
+								</Button>
+							</Stack>
 							<Autocomplete
 								options={contactsForRequerido}
 								getOptionLabel={(c: SecloContact) =>
@@ -608,7 +680,19 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 						</Grid>
 						{requerido && (
 							<Grid item xs={12}>
-								<Alert severity="info" icon={false}>
+								<Alert
+									severity="info"
+									icon={false}
+									action={
+										<Button
+											color="inherit"
+											size="small"
+											onClick={() => setContactDialog({ open: true, mode: "edit", target: "requerido", contact: requerido })}
+										>
+											Editar
+										</Button>
+									}
+								>
 									<Typography variant="body2">
 										<strong>CUIT:</strong> {requerido.cuit || "—"}
 									</Typography>
@@ -773,7 +857,8 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	};
 
 	return (
-		<Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+		<>
+		<Dialog open={open && !contactDialog.open} onClose={handleClose} maxWidth="md" fullWidth>
 			<DialogTitle>Nueva solicitud de audiencia SECLO</DialogTitle>
 			<DialogContent>
 				<Stepper activeStep={step} alternativeLabel sx={{ mb: 3, mt: 1 }}>
@@ -843,5 +928,21 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 				</Box>
 			</DialogActions>
 		</Dialog>
+
+		{/* Diálogo de creación/edición rápida de contacto.
+		    El Dialog del wizard se cierra visualmente (open={open && !contactDialog.open})
+		    para evitar Dialog dentro de Dialog y los issues de z-index con los Selects internos.
+		    El componente padre sigue montado, así que el state del wizard se preserva. */}
+		<SecloContactDialog
+			open={contactDialog.open}
+			mode={contactDialog.mode}
+			userId={selectedUser?._id || ""}
+			contact={contactDialog.contact}
+			folderId={selectedFolder?._id}
+			roleHint={contactDialog.target === "requirente" ? "trabajador" : "empleador"}
+			onClose={closeContactDialog}
+			onSaved={handleContactSaved}
+		/>
+		</>
 	);
 }
