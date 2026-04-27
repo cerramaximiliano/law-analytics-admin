@@ -96,6 +96,52 @@ const DOC_TIPO_LABELS: Record<SecloDocTipo, string> = {
 
 // ─── Botón de descarga de documento S3 ───────────────────────────────────────
 
+// ─── Confirmación reutilizable (reemplaza window.confirm) ────────────────────
+
+interface ConfirmActionState {
+	title: string;
+	message: React.ReactNode;
+	confirmLabel: string;
+	confirmColor?: "primary" | "success" | "error" | "warning" | "info";
+	onConfirm: () => void | Promise<void>;
+}
+
+function ConfirmActionDialog({
+	state, onClose,
+}: { state: ConfirmActionState | null; onClose: () => void }) {
+	const [busy, setBusy] = useState(false);
+	if (!state) return null;
+	const handleConfirm = async () => {
+		setBusy(true);
+		try {
+			await state.onConfirm();
+		} finally {
+			setBusy(false);
+			onClose();
+		}
+	};
+	return (
+		<Dialog open onClose={() => !busy && onClose()} maxWidth="xs" fullWidth>
+			<DialogTitle>{state.title}</DialogTitle>
+			<DialogContent>
+				<Typography variant="body2" color="text.secondary">{state.message}</Typography>
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={onClose} disabled={busy}>Cancelar</Button>
+				<Button
+					variant="contained"
+					color={state.confirmColor || "primary"}
+					onClick={handleConfirm}
+					disabled={busy}
+					startIcon={busy ? <CircularProgress size={14} /> : null}
+				>
+					{busy ? "Procesando…" : state.confirmLabel}
+				</Button>
+			</DialogActions>
+		</Dialog>
+	);
+}
+
 function DownloadDocButton({ s3Key, label }: { s3Key: string; label: string }) {
 	const dispatch = useDispatch();
 	const [loading, setLoading] = useState(false);
@@ -465,35 +511,48 @@ function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 	const dispatch = useDispatch();
 	const result = sol.dryRunResult;
 	const [busy, setBusy] = useState<"clean" | "rerun" | "promote" | null>(null);
+	const [confirm, setConfirm] = useState<ConfirmActionState | null>(null);
 
-	const handleClean = async () => {
-		if (!window.confirm("Borrar de S3 todos los screenshots y el HTML del último dry-run? La solicitud queda como está.")) return;
-		setBusy("clean");
-		try {
-			await dispatch(deleteDryRunArtifacts(sol._id));
-		} finally {
-			setBusy(null);
-		}
+	const handleClean = () => {
+		setConfirm({
+			title: "Limpiar artefactos del dry-run",
+			message: "Se borran de S3 todos los screenshots y el HTML del último dry-run. La solicitud y el resto de los datos quedan como están.",
+			confirmLabel: "Limpiar",
+			confirmColor: "error",
+			onConfirm: async () => {
+				setBusy("clean");
+				try { await dispatch(deleteDryRunArtifacts(sol._id)); }
+				finally { setBusy(null); }
+			},
+		});
 	};
 
-	const handleRerun = async () => {
-		if (!window.confirm("Re-ejecutar dry-run: la solicitud volverá a 'pending' con dryRun=true. El próximo ciclo del worker la procesará SIN enviar.")) return;
-		setBusy("rerun");
-		try {
-			await dispatch(rerunAsDry(sol._id, !!sol.dryRunWithHtml));
-		} finally {
-			setBusy(null);
-		}
+	const handleRerun = () => {
+		setConfirm({
+			title: "Re-ejecutar dry-run",
+			message: "La solicitud vuelve a 'pending' con dryRun=true. El próximo ciclo del worker la procesará SIN enviar al portal.",
+			confirmLabel: "Re-ejecutar",
+			confirmColor: "info",
+			onConfirm: async () => {
+				setBusy("rerun");
+				try { await dispatch(rerunAsDry(sol._id, !!sol.dryRunWithHtml)); }
+				finally { setBusy(null); }
+			},
+		});
 	};
 
-	const handlePromote = async () => {
-		if (!window.confirm("Promover a envío real: la solicitud pasa a 'pending' con dryRun=false. El próximo ciclo del worker la enviará al portal.")) return;
-		setBusy("promote");
-		try {
-			await dispatch(promoteRealSolicitud(sol._id));
-		} finally {
-			setBusy(null);
-		}
+	const handlePromote = () => {
+		setConfirm({
+			title: "Promover a envío real",
+			message: "La solicitud pasa a 'pending' con dryRun=false. El próximo ciclo del worker la enviará al portal SECLO de forma definitiva.",
+			confirmLabel: "Promover",
+			confirmColor: "success",
+			onConfirm: async () => {
+				setBusy("promote");
+				try { await dispatch(promoteRealSolicitud(sol._id)); }
+				finally { setBusy(null); }
+			},
+		});
 	};
 
 	if (!result) {
@@ -678,6 +737,8 @@ function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 					</Box>
 				</>
 			)}
+
+			<ConfirmActionDialog state={confirm} onClose={() => setConfirm(null)} />
 		</Stack>
 	);
 }
@@ -1054,6 +1115,7 @@ export default function SolicitudesTab() {
 	const [openCreate, setOpenCreate] = useState(false);
 	const [deleteTarget, setDeleteTarget] = useState<SecloSolicitud | null>(null);
 	const [viewTarget, setViewTarget] = useState<SecloSolicitud | null>(null);
+	const [rowConfirm, setRowConfirm] = useState<ConfirmActionState | null>(null);
 
 	const load = (overrides?: Record<string, any>) => {
 		dispatch(
@@ -1088,14 +1150,28 @@ export default function SolicitudesTab() {
 		await dispatch(reactivarSolicitud(sol._id));
 	};
 
-	const handleRerunAsDry = async (sol: SecloSolicitud) => {
-		if (!window.confirm(`Re-ejecutar en modo DEV: la solicitud volverá a "pending" y el próximo ciclo del worker la procesará SIN enviar al portal.\n\n¿Continuar?`)) return;
-		await dispatch(rerunAsDry(sol._id));
+	const handleRerunAsDry = (sol: SecloSolicitud) => {
+		setRowConfirm({
+			title: "Re-ejecutar en modo DEV",
+			message: "La solicitud vuelve a 'pending' y el próximo ciclo del worker la procesará SIN enviar al portal SECLO. Sirve para auditar qué hubiera enviado antes de hacerlo de verdad.",
+			confirmLabel: "Re-ejecutar en DEV",
+			confirmColor: "info",
+			onConfirm: async () => {
+				await dispatch(rerunAsDry(sol._id));
+			},
+		});
 	};
 
-	const handlePromoteReal = async (sol: SecloSolicitud) => {
-		if (!window.confirm(`Promover a envío real: la solicitud volverá a "pending" con dryRun=false. El próximo ciclo del worker la enviará al portal SECLO.\n\n¿Continuar?`)) return;
-		await dispatch(promoteRealSolicitud(sol._id));
+	const handlePromoteReal = (sol: SecloSolicitud) => {
+		setRowConfirm({
+			title: "Promover a envío real",
+			message: "La solicitud vuelve a 'pending' con dryRun=false. El próximo ciclo del worker la enviará al portal SECLO de forma definitiva.",
+			confirmLabel: "Promover",
+			confirmColor: "success",
+			onConfirm: async () => {
+				await dispatch(promoteRealSolicitud(sol._id));
+			},
+		});
 	};
 
 	return (
@@ -1340,6 +1416,9 @@ export default function SolicitudesTab() {
 					</DialogActions>
 				</Dialog>
 			)}
+
+			{/* Confirmación reutilizable para acciones por fila (re-ejecutar DEV / promover real) */}
+			<ConfirmActionDialog state={rowConfirm} onClose={() => setRowConfirm(null)} />
 		</Box>
 	);
 }
