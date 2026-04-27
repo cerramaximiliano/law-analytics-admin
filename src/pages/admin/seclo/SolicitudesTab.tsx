@@ -1217,6 +1217,11 @@ export default function SolicitudesTab() {
 					</Button>
 				</Tooltip>
 				<Box flexGrow={1} />
+				<Tooltip title="Recargar lista">
+					<IconButton size="small" onClick={() => load()} disabled={loading}>
+						<RefreshCircle size={20} />
+					</IconButton>
+				</Tooltip>
 				<Button variant="contained" startIcon={<Add size={18} />} onClick={() => setOpenCreate(true)}>
 					Nueva solicitud
 				</Button>
