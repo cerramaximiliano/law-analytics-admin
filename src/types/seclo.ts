@@ -52,12 +52,20 @@ export interface SecloDatosLaborales {
 	fechaNacimiento?: string | null;
 	fechaIngreso?: string | null;
 	fechaEgreso?: string | null;
+	fechaAccidente?: string | null;
 	remuneracion?: number | null;
 	importeReclamo?: number | null;
 	cct?: string;
 	categoria?: string;
 	estadoTrabajador?: "regular" | "irregular" | "no_registrado" | null;
 	sexo?: "M" | "F" | null;
+}
+
+export interface SecloMissingRequiredField {
+	label?: string;
+	id?: string;
+	name?: string;
+	step?: string;
 }
 
 export interface SecloDocumento {
@@ -132,6 +140,7 @@ export interface SecloDryRunResult {
 	} | null;
 	htmlSnapshotKey?: string | null;
 	error?: string | null;
+	missingRequiredFields?: SecloMissingRequiredField[];
 }
 
 export interface SecloSolicitud {

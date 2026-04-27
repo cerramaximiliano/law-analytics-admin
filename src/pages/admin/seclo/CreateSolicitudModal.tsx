@@ -586,6 +586,22 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 								onChange={(e) => setDatosLab((d) => ({ ...d, fechaEgreso: e.target.value || null }))}
 							/>
 						</Grid>
+						{/* Fecha del accidente — opcional aquí porque el step "Reclamo" viene
+						    después; el campo lo requiere el portal solo cuando el reclamo es
+						    por accidente o enfermedad. Si lo dejás vacío y luego el reclamo
+						    sí lo requiere, el detector de campos requeridos del worker lo
+						    reporta en dryRunResult. */}
+						<Grid item xs={12}>
+							<TextField
+								fullWidth
+								type="date"
+								label="Fecha del accidente (si aplica)"
+								InputLabelProps={{ shrink: true }}
+								value={datosLab.fechaAccidente?.toString().slice(0, 10) || ""}
+								onChange={(e) => setDatosLab((d) => ({ ...d, fechaAccidente: e.target.value || null }))}
+								helperText="Requerido por el portal cuando el reclamo incluye accidente o enfermedad laboral"
+							/>
+						</Grid>
 						<Grid item xs={6}>
 							<TextField
 								fullWidth

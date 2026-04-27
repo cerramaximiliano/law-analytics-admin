@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+	Alert,
 	Box,
 	Button,
 	Chip,
@@ -567,6 +568,45 @@ function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 					)}
 				</Stack>
 			</Box>
+
+			{/* Campos requeridos vacíos detectados por el worker.
+			    Auto-detector que recorre el DOM antes de cada submit y reporta
+			    todo input/select visible con label `*` y valor vacío. Útil
+			    para iterar el código cada vez que SECLO agrega/cambia campos. */}
+			{(result.missingRequiredFields?.length ?? 0) > 0 && (
+				<>
+					<Divider />
+					<Box>
+						<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+							Campos requeridos vacíos ({result.missingRequiredFields!.length})
+						</Typography>
+						<Alert severity="warning" sx={{ mt: 0.5 }}>
+							El portal SECLO marca estos campos como obligatorios pero el worker los dejó vacíos.
+							Posible causa raíz del timeout o error.
+						</Alert>
+						<Box sx={{ mt: 1, border: 1, borderColor: "divider", borderRadius: 1 }}>
+							<Table size="small">
+								<TableHead>
+									<TableRow>
+										<TableCell sx={{ fontWeight: 600 }}>Paso</TableCell>
+										<TableCell sx={{ fontWeight: 600 }}>Campo</TableCell>
+										<TableCell sx={{ fontWeight: 600 }}>ID en el DOM</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{result.missingRequiredFields!.map((f, i) => (
+										<TableRow key={i}>
+											<TableCell><Chip label={f.step || "—"} size="small" variant="outlined" /></TableCell>
+											<TableCell sx={{ fontWeight: 600 }}>{f.label || "—"}</TableCell>
+											<TableCell sx={{ fontFamily: "monospace", fontSize: 11 }}>{f.id || f.name || "—"}</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</Box>
+					</Box>
+				</>
+			)}
 
 			{/* Screenshots */}
 			<Divider />
