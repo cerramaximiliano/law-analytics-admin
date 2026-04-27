@@ -74,7 +74,16 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	const [selectedUser, setSelectedUser] = useState<SecloUser | null>(null);
 	const [userSearch, setUserSearch] = useState("");
 	const [selectedCredentialId, setSelectedCredentialId] = useState("");
-	const [credentials, setCredentials] = useState<Array<{ _id: string; enabled: boolean }>>([]);
+	const [credentials, setCredentials] = useState<Array<{
+		_id: string;
+		enabled: boolean;
+		cuil?: string | null;
+		credentialsValidated?: boolean;
+		credentialsValidatedAt?: string | null;
+		credentialInvalid?: boolean;
+		credentialInvalidAt?: string | null;
+		credentialInvalidReason?: string | null;
+	}>>([]);
 	const [contactsLoading, setContactsLoading] = useState(false);
 	const [folders, setFolders] = useState<SecloFolder[]>([]);
 	const [selectedFolder, setSelectedFolder] = useState<SecloFolder | null>(null);
@@ -285,21 +294,68 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 								renderInput={(params) => <TextField {...params} label="Usuario *" placeholder="Buscá por nombre o email" />}
 							/>
 						</Grid>
-						{credentials.length > 0 && (
-							<Grid item xs={12}>
-								<FormControl fullWidth>
-									<InputLabel>Credencial SECLO *</InputLabel>
-									<Select value={selectedCredentialId} label="Credencial SECLO *" onChange={(e) => setSelectedCredentialId(e.target.value)}>
-										{credentials.map((c) => (
-											<MenuItem key={c._id} value={c._id}>
-												{c._id.slice(-8)}
-												{!c.enabled && <Chip label="Deshabilitada" size="small" color="error" sx={{ ml: 1 }} />}
-											</MenuItem>
-										))}
-									</Select>
-								</FormControl>
-							</Grid>
-						)}
+						{/* Credencial del usuario — cada usuario tiene UNA sola por modelo
+						    (TrabajoCredentials.userId es unique). Mostramos vista informativa,
+						    no selector. El selectedCredentialId se setea automáticamente al
+						    cargar contactos+credenciales del usuario. */}
+						{credentials.length > 0 && (() => {
+							const cred = credentials[0];
+							const validationChip = cred.credentialInvalid
+								? <Chip label="Inválida" size="small" color="error" />
+								: cred.credentialsValidated
+									? <Chip label="Validada" size="small" color="success" />
+									: <Chip label="Pendiente" size="small" color="warning" variant="outlined" />;
+							return (
+								<Grid item xs={12}>
+									<Box sx={{ p: 1.5, border: 1, borderColor: "divider", borderRadius: 1, bgcolor: "background.default" }}>
+										<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
+											<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
+												Credencial SECLO del usuario
+											</Typography>
+											<Stack direction="row" spacing={0.5} alignItems="center">
+												{validationChip}
+												{!cred.enabled && <Chip label="Deshabilitada" size="small" color="error" />}
+											</Stack>
+										</Stack>
+										<Stack direction="row" spacing={2} flexWrap="wrap">
+											<Box>
+												<Typography variant="caption" color="text.secondary" component="div">CUIL</Typography>
+												<Typography variant="body2" sx={{ fontFamily: "monospace" }}>{cred.cuil || "—"}</Typography>
+											</Box>
+											<Box>
+												<Typography variant="caption" color="text.secondary" component="div">
+													{cred.credentialInvalid ? "Detectada como inválida" : cred.credentialsValidated ? "Validada el" : "Estado"}
+												</Typography>
+												<Typography variant="body2">
+													{cred.credentialInvalid && cred.credentialInvalidAt
+														? new Date(cred.credentialInvalidAt).toLocaleString("es-AR")
+														: cred.credentialsValidated && cred.credentialsValidatedAt
+															? new Date(cred.credentialsValidatedAt).toLocaleString("es-AR")
+															: "Esperando validación del worker"}
+												</Typography>
+											</Box>
+										</Stack>
+										{cred.credentialInvalid && cred.credentialInvalidReason && (
+											<Alert severity="error" sx={{ mt: 1.5 }}>
+												<Typography variant="caption">
+													<strong>Motivo:</strong> {cred.credentialInvalidReason}
+												</Typography>
+											</Alert>
+										)}
+										{!cred.enabled && (
+											<Alert severity="warning" sx={{ mt: 1.5 }}>
+												La credencial está deshabilitada. Reactivala desde Credenciales antes de crear la solicitud.
+											</Alert>
+										)}
+										{!cred.credentialsValidated && !cred.credentialInvalid && cred.enabled && (
+											<Alert severity="info" sx={{ mt: 1.5 }}>
+												Estamos validando esta credencial. La solicitud quedará en pending hasta que se confirme.
+											</Alert>
+										)}
+									</Box>
+								</Grid>
+							);
+						})()}
 						{selectedUser && credentials.length === 0 && !contactsLoading && (
 							<Grid item xs={12}>
 								<Alert severity="warning">Este usuario no tiene credenciales SECLO. Creá una desde la pestaña Credenciales.</Alert>
