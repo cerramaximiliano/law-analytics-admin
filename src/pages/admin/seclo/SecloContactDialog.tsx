@@ -46,7 +46,10 @@ interface FormState {
 	phoneCelular: string;
 	phone: string;
 	email: string;
-	address: string;
+	street: string;
+	streetNumber: string;
+	floor: string;
+	apartment: string;
 	city: string;
 	state: string;
 	zipCode: string;
@@ -56,8 +59,22 @@ interface FormState {
 const empty: FormState = {
 	name: "", lastName: "", type: "Persona Física", cuit: "", document: "",
 	phoneCodArea: "", phoneCelular: "", phone: "", email: "",
-	address: "", city: "", state: "", zipCode: "", company: "",
+	street: "", streetNumber: "", floor: "", apartment: "",
+	city: "", state: "", zipCode: "", company: "",
 };
+
+/**
+ * Parsea el legacy `address` ("Av. Corrientes 1234") al shape estructurado.
+ * Sólo se usa al cargar contactos antiguos que todavía no tienen los campos
+ * separados poblados. La heurística es la misma que usa el worker SECLO.
+ */
+function parseLegacyAddress(address: string | undefined): { street: string; streetNumber: string } {
+	if (!address) return { street: "", streetNumber: "" };
+	const cleaned = address.replace(/\s+[Nn][ºª°]\s*/g, " ");
+	const m = cleaned.match(/^(.+?)\s+(\d+)\s*$/);
+	if (m) return { street: m[1].trim(), streetNumber: m[2].trim() };
+	return { street: address.trim(), streetNumber: "" };
+}
 
 /**
  * Dialog admin para crear o editar un contacto en nombre del usuario seleccionado.
@@ -82,6 +99,12 @@ export default function SecloContactDialog({
 		if (!open) return;
 		setError(null);
 		if (contact) {
+			// Si el contacto ya tiene los campos estructurados, los usamos.
+			// Si no (legacy), parseamos el `address` para prefillear calle+número.
+			const hasStructured = !!(contact.street || contact.streetNumber);
+			const parsed = hasStructured
+				? { street: contact.street || "", streetNumber: contact.streetNumber || "" }
+				: parseLegacyAddress(contact.address);
 			setForm({
 				name:         contact.name         || "",
 				lastName:     contact.lastName     || "",
@@ -92,7 +115,10 @@ export default function SecloContactDialog({
 				phoneCelular: contact.phoneCelular || "",
 				phone:        contact.phone        || "",
 				email:        contact.email        || "",
-				address:      contact.address      || "",
+				street:       parsed.street,
+				streetNumber: parsed.streetNumber,
+				floor:        contact.floor        || "",
+				apartment:    contact.apartment    || "",
 				city:         contact.city         || "",
 				state:        contact.state        || "",
 				zipCode:      contact.zipCode      || "",
@@ -112,9 +138,16 @@ export default function SecloContactDialog({
 		setSubmitting(true);
 		setError(null);
 		try {
+			// Reconstruimos el legacy `address` desde calle+número para que
+			// los flujos no migrados (facturas, exports PDF) sigan viendo un
+			// domicilio coherente. Piso/depto van sólo a sus campos.
+			const composedAddress = [form.street.trim(), form.streetNumber.trim()]
+				.filter(Boolean)
+				.join(" ");
 			const payload = {
 				...form,
 				cuit: form.cuit.replace(/\D/g, "") || undefined,
+				address: composedAddress,
 				...(folderId && mode === "add" ? { folderIds: [folderId] } : {}),
 			};
 
@@ -258,7 +291,7 @@ export default function SecloContactDialog({
 						/>
 					</Grid>
 
-					<Grid item xs={12} sm={6}>
+					<Grid item xs={12} sm={12}>
 						<TextField
 							label="Email"
 							type="email"
@@ -267,16 +300,60 @@ export default function SecloContactDialog({
 							fullWidth
 						/>
 					</Grid>
+
+					{/* Domicilio estructurado — el portal SECLO exige calle/número
+					    como campos separados. Piso/depto opcionales. */}
+					<Grid item xs={12}>
+						<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+							Domicilio
+						</Typography>
+					</Grid>
+					<Grid item xs={12} sm={8}>
+						<TextField
+							label="Calle *"
+							placeholder="Av. Corrientes"
+							value={form.street}
+							onChange={(e) => setField("street")(e.target.value)}
+							fullWidth
+						/>
+					</Grid>
+					<Grid item xs={12} sm={4}>
+						<TextField
+							label="Número *"
+							placeholder="1234"
+							value={form.streetNumber}
+							onChange={(e) => setField("streetNumber")(e.target.value)}
+							fullWidth
+						/>
+					</Grid>
+					<Grid item xs={6} sm={3}>
+						<TextField
+							label="Piso"
+							placeholder="4"
+							value={form.floor}
+							onChange={(e) => setField("floor")(e.target.value)}
+							fullWidth
+						/>
+					</Grid>
+					<Grid item xs={6} sm={3}>
+						<TextField
+							label="Depto"
+							placeholder="B"
+							value={form.apartment}
+							onChange={(e) => setField("apartment")(e.target.value)}
+							fullWidth
+						/>
+					</Grid>
 					<Grid item xs={12} sm={6}>
 						<TextField
-							label="Dirección"
-							value={form.address}
-							onChange={(e) => setField("address")(e.target.value)}
+							label="Código postal"
+							value={form.zipCode}
+							onChange={(e) => setField("zipCode")(e.target.value)}
 							fullWidth
 						/>
 					</Grid>
 
-					<Grid item xs={12} sm={5}>
+					<Grid item xs={12} sm={6}>
 						<TextField
 							label="Ciudad/Localidad"
 							value={form.city}
@@ -284,19 +361,11 @@ export default function SecloContactDialog({
 							fullWidth
 						/>
 					</Grid>
-					<Grid item xs={12} sm={4}>
+					<Grid item xs={12} sm={6}>
 						<TextField
 							label="Provincia"
 							value={form.state}
 							onChange={(e) => setField("state")(e.target.value)}
-							fullWidth
-						/>
-					</Grid>
-					<Grid item xs={12} sm={3}>
-						<TextField
-							label="Código postal"
-							value={form.zipCode}
-							onChange={(e) => setField("zipCode")(e.target.value)}
 							fullWidth
 						/>
 					</Grid>

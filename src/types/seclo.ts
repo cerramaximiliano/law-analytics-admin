@@ -39,7 +39,13 @@ export interface SecloContact {
 	phoneCodArea?: string;
 	phoneCelular?: string;
 	email?: string;
+	/** Domicilio en formato libre (legacy). Se reconstruye desde los campos
+	 *  estructurados al guardar desde formularios actualizados. */
 	address?: string;
+	street?: string;
+	streetNumber?: string;
+	floor?: string;
+	apartment?: string;
 	city?: string;
 	state?: string;
 	zipCode?: string;
