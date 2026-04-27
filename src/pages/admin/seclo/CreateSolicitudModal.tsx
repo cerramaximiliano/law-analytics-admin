@@ -28,6 +28,7 @@ import {
 	Switch,
 	Tooltip,
 	Stack,
+	Link,
 } from "@mui/material";
 import { useDispatch, useSelector } from "store";
 import { fetchUsers, createSolicitud, getPresignedUploadUrl, fetchFoldersByUser } from "store/reducers/seclo";
@@ -780,6 +781,20 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 									<Typography variant="body2">
 										<strong>Email:</strong> {requerido.email || "—"}
 									</Typography>
+									{hasStructuredAddress(requerido) && !requerido.floor && !requerido.apartment && (
+										<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
+											No tiene piso ni departamento cargados. Si el domicilio lo requiere, podés{" "}
+											<Link
+												component="button"
+												type="button"
+												onClick={() => setContactDialog({ open: true, mode: "edit", target: "requerido", contact: requerido })}
+												sx={{ verticalAlign: "baseline" }}
+											>
+												agregarlos
+											</Link>
+											{" "}(son opcionales).
+										</Typography>
+									)}
 								</Alert>
 							</Grid>
 						)}
