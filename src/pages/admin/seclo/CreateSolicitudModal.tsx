@@ -271,7 +271,12 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 		if (step === 0) return !!selectedUser && !!selectedCredentialId && !contactsLoading;
 		if (step === 1) return !!requirente && !!requirente.phoneCelular;
 		if (step === 2) return !!requerido;
-		if (step === 3) return objetoReclamo.length > 0;
+		if (step === 3) {
+			if (objetoReclamo.length === 0) return false;
+			// Si el reclamo es por accidente o enfermedad, fechaAccidente es requerida
+			if (objetoReclamo.some((o) => /accidente|enfermedad/i.test(o)) && !datosLab.fechaAccidente) return false;
+			return true;
+		}
 		if (step === 4) return !!abogado.tomo && !!abogado.folio;
 		if (step === 5) return documentos.some((d) => d.tipo === "dni") && documentos.some((d) => d.tipo === "credencial");
 		return false;
@@ -761,6 +766,31 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 							</FormGroup>
 							{objetoReclamo.length === 0 && <FormHelperText error>Seleccioná al menos un objeto</FormHelperText>}
 						</Grid>
+
+						{/* Si el objetoReclamo incluye accidente o enfermedad laboral, el portal SECLO
+						    requiere "Fecha del Accidente" en el paso del trabajador. Lo ofrecemos inline
+						    acá porque es donde aparece naturalmente la dependencia. Si falta, bloquea
+						    el avance del wizard. Sincroniza con datosLab del step Trabajador (mismo state). */}
+						{objetoReclamo.some((o) => /accidente|enfermedad/i.test(o)) && (
+							<Grid item xs={12}>
+								<Alert severity={datosLab.fechaAccidente ? "success" : "warning"} sx={{ mb: 1.5 }}>
+									{datosLab.fechaAccidente
+										? "Fecha del accidente cargada — el portal la va a aceptar."
+										: "El reclamo elegido requiere Fecha del Accidente. Completala acá o volvé al step Trabajador."}
+								</Alert>
+								<TextField
+									fullWidth
+									type="date"
+									label="Fecha del accidente *"
+									InputLabelProps={{ shrink: true }}
+									value={datosLab.fechaAccidente?.toString().slice(0, 10) || ""}
+									onChange={(e) => setDatosLab((d) => ({ ...d, fechaAccidente: e.target.value || null }))}
+									error={!datosLab.fechaAccidente}
+									helperText="Requerido por el portal cuando el reclamo es por accidente o enfermedad laboral"
+								/>
+							</Grid>
+						)}
+
 						<Grid item xs={12}>
 							<Divider />
 						</Grid>
