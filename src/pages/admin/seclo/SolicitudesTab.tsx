@@ -33,7 +33,7 @@ import {
 	DialogContent,
 	DialogActions,
 } from "@mui/material";
-import { Add, DocumentDownload, Eye, Trash, RefreshCircle, SearchNormal1, FilterSearch, Code, ArrowUp2, Broom } from "iconsax-react";
+import { Add, DocumentDownload, Edit2, Eye, Trash, RefreshCircle, SearchNormal1, FilterSearch, Code, ArrowUp2, Broom } from "iconsax-react";
 import { useDispatch, useSelector } from "store";
 import {
 	fetchSolicitudes,
@@ -46,6 +46,7 @@ import {
 	rerunAsDry,
 	promoteRealSolicitud,
 	deleteDryRunArtifacts,
+	updateSolicitudAdmin,
 } from "store/reducers/seclo";
 import type {
 	SecloCaracter,
@@ -507,11 +508,140 @@ function DryRunScreenshotImage({ s3Key, step }: { s3Key: string; step: string })
 	);
 }
 
+// ─── Editor inline de datos laborales del trabajador ─────────────────────────
+//
+// Permite al admin corregir desde el detalle de una solicitud los campos
+// detectados como vacíos en dryRunResult.missingRequiredFields, sin re-crear
+// la solicitud. Hace PATCH parcial via updateSolicitudAdmin con el merge
+// especial `requirenteDatosLaborales` del backend.
+
+function EditDatosLaboralesDialog({
+	open, sol, onClose,
+}: { open: boolean; sol: SecloSolicitud; onClose: () => void }) {
+	const dispatch = useDispatch();
+	const initial = (sol.requirentes?.[0]?.datosLaborales || {}) as SecloDatosLaborales;
+
+	const [form, setForm] = useState<SecloDatosLaborales>(initial);
+	const [submitting, setSubmitting] = useState(false);
+
+	useEffect(() => {
+		if (open) setForm(initial);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [open]);
+
+	const setField = <K extends keyof SecloDatosLaborales>(k: K, v: SecloDatosLaborales[K]) =>
+		setForm((f) => ({ ...f, [k]: v }));
+
+	const dateValue = (v: any) => (typeof v === "string" ? v.slice(0, 10) : "");
+
+	const handleSubmit = async () => {
+		setSubmitting(true);
+		try {
+			// Sólo mandamos los campos que cambiaron — el backend hace merge.
+			const patch: Record<string, any> = {};
+			(Object.keys(form) as Array<keyof SecloDatosLaborales>).forEach((k) => {
+				if (form[k] !== initial[k]) (patch as any)[k] = form[k] ?? null;
+			});
+			if (Object.keys(patch).length === 0) {
+				onClose();
+				return;
+			}
+			await dispatch(updateSolicitudAdmin(sol._id, { requirenteDatosLaborales: patch }) as any);
+			onClose();
+		} finally {
+			setSubmitting(false);
+		}
+	};
+
+	return (
+		<Dialog open={open} onClose={() => !submitting && onClose()} maxWidth="md" fullWidth>
+			<DialogTitle>Editar datos laborales del trabajador</DialogTitle>
+			<DialogContent dividers>
+				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+					Corregí los campos faltantes detectados en el dry-run y volvé a ejecutarlo. El cambio aplica un merge parcial — los campos que dejes vacíos no pisan los anteriores.
+				</Typography>
+				<Grid container spacing={2}>
+					<Grid item xs={12} sm={4}>
+						<TextField fullWidth type="date" label="Fecha de nacimiento" InputLabelProps={{ shrink: true }}
+							value={dateValue(form.fechaNacimiento)}
+							onChange={(e) => setField("fechaNacimiento", e.target.value || null)} />
+					</Grid>
+					<Grid item xs={12} sm={4}>
+						<TextField fullWidth type="date" label="Fecha de ingreso" InputLabelProps={{ shrink: true }}
+							value={dateValue(form.fechaIngreso)}
+							onChange={(e) => setField("fechaIngreso", e.target.value || null)} />
+					</Grid>
+					<Grid item xs={12} sm={4}>
+						<TextField fullWidth type="date" label="Fecha de egreso" InputLabelProps={{ shrink: true }}
+							value={dateValue(form.fechaEgreso)}
+							onChange={(e) => setField("fechaEgreso", e.target.value || null)} />
+					</Grid>
+					<Grid item xs={12} sm={4}>
+						<TextField fullWidth type="date" label="Fecha del accidente" InputLabelProps={{ shrink: true }}
+							value={dateValue(form.fechaAccidente)}
+							onChange={(e) => setField("fechaAccidente", e.target.value || null)}
+							helperText="Requerido si el reclamo es por accidente o enfermedad" />
+					</Grid>
+					<Grid item xs={12} sm={4}>
+						<TextField fullWidth type="number" label="Última remuneración"
+							value={form.remuneracion ?? ""}
+							onChange={(e) => setField("remuneracion", e.target.value ? Number(e.target.value) : null)} />
+					</Grid>
+					<Grid item xs={12} sm={4}>
+						<TextField fullWidth type="number" label="Importe del reclamo"
+							value={form.importeReclamo ?? ""}
+							onChange={(e) => setField("importeReclamo", e.target.value ? Number(e.target.value) : null)} />
+					</Grid>
+					<Grid item xs={12} sm={6}>
+						<TextField fullWidth label="C.C.T."
+							value={form.cct || ""}
+							onChange={(e) => setField("cct", e.target.value)} />
+					</Grid>
+					<Grid item xs={12} sm={6}>
+						<TextField fullWidth label="Categoría"
+							value={form.categoria || ""}
+							onChange={(e) => setField("categoria", e.target.value)} />
+					</Grid>
+					<Grid item xs={12} sm={6}>
+						<FormControl fullWidth>
+							<InputLabel>Estado</InputLabel>
+							<Select value={form.estadoTrabajador || "regular"} label="Estado"
+								onChange={(e) => setField("estadoTrabajador", e.target.value as any)}>
+								<MenuItem value="regular">Regular</MenuItem>
+								<MenuItem value="irregular">Irregular</MenuItem>
+								<MenuItem value="no_registrado">No registrado</MenuItem>
+							</Select>
+						</FormControl>
+					</Grid>
+					<Grid item xs={12} sm={6}>
+						<FormControl fullWidth>
+							<InputLabel>Sexo</InputLabel>
+							<Select value={form.sexo || "M"} label="Sexo"
+								onChange={(e) => setField("sexo", e.target.value as any)}>
+								<MenuItem value="M">Masculino</MenuItem>
+								<MenuItem value="F">Femenino</MenuItem>
+							</Select>
+						</FormControl>
+					</Grid>
+				</Grid>
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={onClose} disabled={submitting}>Cancelar</Button>
+				<Button variant="contained" onClick={handleSubmit} disabled={submitting}
+					startIcon={submitting ? <CircularProgress size={14} /> : null}>
+					{submitting ? "Guardando…" : "Guardar cambios"}
+				</Button>
+			</DialogActions>
+		</Dialog>
+	);
+}
+
 function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 	const dispatch = useDispatch();
 	const result = sol.dryRunResult;
 	const [busy, setBusy] = useState<"clean" | "rerun" | "promote" | null>(null);
 	const [confirm, setConfirm] = useState<ConfirmActionState | null>(null);
+	const [editOpen, setEditOpen] = useState(false);
 
 	const handleClean = () => {
 		setConfirm({
@@ -636,12 +766,22 @@ function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 				<>
 					<Divider />
 					<Box>
-						<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
-							Campos requeridos vacíos ({result.missingRequiredFields!.length})
-						</Typography>
-						<Alert severity="warning" sx={{ mt: 0.5 }}>
+						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+							<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+								Campos requeridos vacíos ({result.missingRequiredFields!.length})
+							</Typography>
+							<Button
+								size="small"
+								variant="outlined"
+								startIcon={<Edit2 size={14} />}
+								onClick={() => setEditOpen(true)}
+							>
+								Editar datos del trabajador
+							</Button>
+						</Stack>
+						<Alert severity="warning">
 							El portal SECLO marca estos campos como obligatorios pero el worker los dejó vacíos.
-							Posible causa raíz del timeout o error.
+							Completalos y ejecutá un nuevo dry-run.
 						</Alert>
 						<Box sx={{ mt: 1, border: 1, borderColor: "divider", borderRadius: 1 }}>
 							<Table size="small">
@@ -739,6 +879,12 @@ function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 			)}
 
 			<ConfirmActionDialog state={confirm} onClose={() => setConfirm(null)} />
+
+			<EditDatosLaboralesDialog
+				open={editOpen}
+				sol={sol}
+				onClose={() => setEditOpen(false)}
+			/>
 		</Stack>
 	);
 }
