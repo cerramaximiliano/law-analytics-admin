@@ -51,8 +51,35 @@ export interface SecloContact {
 	zipCode?: string;
 	company?: string;
 	type?: string;
+	/** Subtipo específico de persona jurídica (cmbTipoSociedad del portal SECLO).
+	 *  Vacío para personas físicas o contactos legacy aún sin completar. */
+	tipoSociedad?: string;
 	folderIds?: string[];
 }
+
+// Tipos de persona jurídica del portal SECLO. Sólo se exponen al usuario
+// cuando type === "Persona Jurídica". Para personas físicas el sistema
+// asume "Persona Física" automáticamente.
+export const TIPO_SOCIEDAD_OPTIONS = [
+	"Persona Física",
+	"Sociedades de Hecho",
+	"Sociedad Colectiva",
+	"Sociedad en Comandita Simple",
+	"Sociedad de Capital e Industria",
+	"Sociedad de Responsabilidad Limitada",
+	"Sociedad Anónima",
+	"Sociedad Anónima con Part. Estatal",
+	"Sociedad Comandita por Acciones",
+	"Sociedad Accidental o en Participación",
+	"Asociación Civil",
+	"Sociedades Civiles",
+	"Fundaciones",
+	"O.N.G.",
+	"Cooperativas",
+	"Cooperativas de trabajo",
+	"Otro",
+] as const;
+export type TipoSociedad = typeof TIPO_SOCIEDAD_OPTIONS[number];
 
 export interface SecloDatosLaborales {
 	fechaNacimiento?: string | null;

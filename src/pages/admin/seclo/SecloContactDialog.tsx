@@ -22,6 +22,7 @@ import { dispatch } from "store";
 import { openSnackbar } from "store/reducers/snackbar";
 
 import type { SecloContact } from "types/seclo";
+import { TIPO_SOCIEDAD_OPTIONS } from "types/seclo";
 
 interface Props {
 	open: boolean;
@@ -40,6 +41,7 @@ interface FormState {
 	name: string;
 	lastName: string;
 	type: string;
+	tipoSociedad: string;
 	cuit: string;
 	document: string;
 	phoneCodArea: string;
@@ -57,7 +59,7 @@ interface FormState {
 }
 
 const empty: FormState = {
-	name: "", lastName: "", type: "Persona Física", cuit: "", document: "",
+	name: "", lastName: "", type: "Persona Física", tipoSociedad: "", cuit: "", document: "",
 	phoneCodArea: "", phoneCelular: "", phone: "", email: "",
 	street: "", streetNumber: "", floor: "", apartment: "",
 	city: "", state: "", zipCode: "", company: "",
@@ -109,6 +111,7 @@ export default function SecloContactDialog({
 				name:         contact.name         || "",
 				lastName:     contact.lastName     || "",
 				type:         (contact as any).type || "Persona Física",
+				tipoSociedad: contact.tipoSociedad || "",
 				cuit:         contact.cuit         || "",
 				document:     contact.document     || "",
 				phoneCodArea: contact.phoneCodArea || "",
@@ -135,13 +138,18 @@ export default function SecloContactDialog({
 	// ellos el form no se puede submitear y la solicitud falla. Los
 	// exigimos al guardar para que ningún contacto que pase por SECLO
 	// quede con domicilio incompleto.
+	// Si type === "Persona Jurídica", el portal SECLO exige un subtipo concreto
+	// (cmbTipoSociedad). Para personas físicas se asume "Persona Física" y el
+	// campo queda implícito.
+	const isJuridica = form.type === "Persona Jurídica";
 	const errors = {
 		name:         !form.name.trim() ? "Requerido" : "",
 		lastName:     !form.lastName.trim() ? "Requerido" : "",
 		street:       !form.street.trim() ? "Requerido por SECLO" : "",
 		streetNumber: !form.streetNumber.trim() ? "Requerido por SECLO" : "",
+		tipoSociedad: isJuridica && !form.tipoSociedad.trim() ? "Requerido por SECLO" : "",
 	};
-	const canSubmit = !errors.name && !errors.lastName && !errors.street && !errors.streetNumber;
+	const canSubmit = !errors.name && !errors.lastName && !errors.street && !errors.streetNumber && !errors.tipoSociedad;
 
 	const handleSubmit = async () => {
 		setSubmitting(true);
@@ -153,8 +161,16 @@ export default function SecloContactDialog({
 			const composedAddress = [form.street.trim(), form.streetNumber.trim()]
 				.filter(Boolean)
 				.join(" ");
+			// Para personas físicas siempre persistimos tipoSociedad="Persona Física"
+			// (el portal SECLO usa ese valor). Para jurídicas guardamos lo que
+			// eligió el admin. Nunca dejamos el campo vacío en escritura — así los
+			// contactos creados desde acá nunca arrastran la inconsistencia legacy.
+			const tipoSociedadNorm = form.type === "Persona Jurídica"
+				? form.tipoSociedad
+				: "Persona Física";
 			const payload = {
 				...form,
+				tipoSociedad: tipoSociedadNorm,
 				cuit: form.cuit.replace(/\D/g, "") || undefined,
 				address: composedAddress,
 				...(folderId && mode === "add" ? { folderIds: [folderId] } : {}),
@@ -256,6 +272,27 @@ export default function SecloContactDialog({
 							disabled={form.type !== "Persona Jurídica"}
 						/>
 					</Grid>
+
+					{isJuridica && (
+						<Grid item xs={12}>
+							<FormControl fullWidth error={!!errors.tipoSociedad}>
+								<InputLabel id="tipoSociedad-label">Tipo de persona jurídica *</InputLabel>
+								<Select
+									labelId="tipoSociedad-label"
+									value={form.tipoSociedad}
+									label="Tipo de persona jurídica *"
+									onChange={(e) => setField("tipoSociedad")(e.target.value)}
+								>
+									{TIPO_SOCIEDAD_OPTIONS.filter((o) => o !== "Persona Física").map((opt) => (
+										<MenuItem key={opt} value={opt}>{opt}</MenuItem>
+									))}
+								</Select>
+								<Typography variant="caption" color={errors.tipoSociedad ? "error" : "text.secondary"} sx={{ mt: 0.5 }}>
+									{errors.tipoSociedad || "El portal SECLO lo exige para personas jurídicas (cmbTipoSociedad)."}
+								</Typography>
+							</FormControl>
+						</Grid>
+					)}
 
 					<Grid item xs={12} sm={6}>
 						<TextField
