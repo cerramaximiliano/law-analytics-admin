@@ -1199,11 +1199,14 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	const renderReview = () => {
 		const reclamoRequiereFecha = objetoReclamo.some((o) => /accidente|enfermedad/i.test(o));
 		const credSeleccionada = credentials.find((c: any) => c._id === selectedCredentialId);
+		const empleadorIniciadoForzado = iniciadoPor === "empleador";
 		return (
 			<Stack spacing={2}>
-				<Alert severity="info">
-					Revisá todos los datos antes de crear la solicitud. Una vez creada, el worker la procesará automáticamente
-					{dryRunMode ? " en modo prueba (DEV — no envía al portal)" : " y la enviará al portal SECLO"}.
+				<Alert severity={dryRunMode || empleadorIniciadoForzado ? "warning" : "info"}>
+					{empleadorIniciadoForzado
+						? "Trámite iniciado por el empleador: el worker corre en modo PRUEBA forzado. El flujo en este caso carga primero empleadores y luego trabajadores; el dry-run se detiene ANTES del botón \"Generar Reclamo y Especificar Fecha\"."
+						: <>Revisá todos los datos antes de crear la solicitud. Una vez creada, el worker la procesará automáticamente
+							{dryRunMode ? " en modo prueba (DEV — no envía al portal)" : " y la enviará al portal SECLO"}.</>}
 				</Alert>
 
 				<ReviewSection title="Usuario y credencial" onEdit={() => setStep(0)}>
