@@ -176,6 +176,16 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 
 	const closeContactDialog = () => setContactDialog((s) => ({ ...s, open: false }));
 
+	// Cuando el admin abre SecloContactDialog desde uno de los extra-diálogos
+	// (reclamante o empleador adicional), guardamos a dónde tenemos que volver
+	// con el contacto actualizado, para que el flow no pierda los datos
+	// laborales ya tipeados.
+	const [extraReopen, setExtraReopen] = useState<{
+		kind: "trabajador" | "empleador";
+		editIndex: number | null;
+		datosLab?: SecloDatosLaborales;
+	} | null>(null);
+
 	// Tras crear o editar un contacto: actualizar la lista local y
 	// auto-asignarlo al rol correspondiente.
 	const handleContactSaved = (saved: SecloContact) => {
@@ -185,11 +195,51 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 				? prev.map((c) => (c._id === saved._id ? { ...c, ...saved } : c))
 				: [...prev, saved];
 		});
+
+		// Si veníamos desde un extra-diálogo, volvemos ahí con el contacto
+		// fresco — sin tocar requirente/requerido principales (que ya estaban
+		// asignados antes de abrir el extra-diálogo).
+		if (extraReopen) {
+			if (extraReopen.kind === "trabajador") {
+				setExtraDialog({
+					open: true,
+					editIndex: extraReopen.editIndex,
+					contact: saved,
+					datosLab: extraReopen.datosLab || { estadoTrabajador: "regular", sexo: "M" },
+				});
+			} else {
+				setExtraRequeridoDialog({
+					open: true,
+					editIndex: extraReopen.editIndex,
+					contact: saved,
+				});
+			}
+			setExtraReopen(null);
+			return;
+		}
+
 		if (contactDialog.target === "requirente") {
 			setRequirente(saved);
 			setRequerido(null);
 		} else {
 			setRequerido(saved);
+		}
+	};
+
+	// Abre SecloContactDialog en modo edit para completar campos faltantes
+	// del contacto seleccionado en un extra-diálogo. Cierra el extra-diálogo
+	// temporalmente; vuelve a abrirlo con el contacto actualizado tras guardar.
+	const completarDesdeExtra = (kind: "trabajador" | "empleador") => {
+		if (kind === "trabajador") {
+			if (!extraDialog.contact) return;
+			setExtraReopen({ kind, editIndex: extraDialog.editIndex, datosLab: extraDialog.datosLab });
+			setExtraDialog((s) => ({ ...s, open: false }));
+			setContactDialog({ open: true, mode: "edit", target: "requirente", contact: extraDialog.contact });
+		} else {
+			if (!extraRequeridoDialog.contact) return;
+			setExtraReopen({ kind, editIndex: extraRequeridoDialog.editIndex });
+			setExtraRequeridoDialog((s) => ({ ...s, open: false }));
+			setContactDialog({ open: true, mode: "edit", target: "requerido", contact: extraRequeridoDialog.contact });
 		}
 	};
 
@@ -1441,10 +1491,28 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 						noOptionsText="No hay otros contactos disponibles"
 					/>
 					{extraDialog.contact && !extraDialog.contact.phoneCelular && (
-						<Alert severity="warning">Falta <strong>phoneCelular</strong> en este contacto. SECLO lo exige.</Alert>
+						<Alert
+							severity="warning"
+							action={
+								<Button color="inherit" size="small" onClick={() => completarDesdeExtra("trabajador")}>
+									Editar contacto
+								</Button>
+							}
+						>
+							Falta <strong>celular</strong> en este contacto. SECLO lo exige.
+						</Alert>
 					)}
 					{extraDialog.contact && !hasStructuredAddress(extraDialog.contact) && (
-						<Alert severity="warning">Faltan <strong>calle</strong> y/o <strong>número</strong>. SECLO los exige separados.</Alert>
+						<Alert
+							severity="warning"
+							action={
+								<Button color="inherit" size="small" onClick={() => completarDesdeExtra("trabajador")}>
+									Editar contacto
+								</Button>
+							}
+						>
+							Faltan <strong>calle</strong> y/o <strong>número</strong> en este contacto. SECLO los exige separados.
+						</Alert>
 					)}
 					<Grid container spacing={2}>
 						<Grid item xs={6}>
@@ -1557,21 +1625,23 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 						noOptionsText="No hay otros contactos disponibles"
 					/>
 					{extraRequeridoDialog.contact && !hasStructuredAddress(extraRequeridoDialog.contact) && (
-						<Alert severity="warning">Faltan <strong>calle</strong> y/o <strong>número</strong>. SECLO los exige separados.</Alert>
+						<Alert
+							severity="warning"
+							action={
+								<Button color="inherit" size="small" onClick={() => completarDesdeExtra("empleador")}>
+									Editar contacto
+								</Button>
+							}
+						>
+							Faltan <strong>calle</strong> y/o <strong>número</strong> en este contacto. SECLO los exige separados.
+						</Alert>
 					)}
 					{extraRequeridoDialog.contact && !hasValidTipoSociedad(extraRequeridoDialog.contact) && (
 						<Alert
 							severity="warning"
 							action={
-								<Button
-									color="inherit"
-									size="small"
-									onClick={() => {
-										setExtraRequeridoDialog((s) => ({ ...s, open: false }));
-										setContactDialog({ open: true, mode: "edit", target: "requerido", contact: extraRequeridoDialog.contact! });
-									}}
-								>
-									Completar
+								<Button color="inherit" size="small" onClick={() => completarDesdeExtra("empleador")}>
+									Editar contacto
 								</Button>
 							}
 						>
