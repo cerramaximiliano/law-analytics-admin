@@ -145,6 +145,13 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 
 	// Step 2 – Requerido (empleador)
 	const [requerido, setRequerido] = useState<SecloContact | null>(null);
+	// Empleadores adicionales — el portal SECLO permite varios en la grilla
+	// ctl02_grdEmpleadores. El worker hace loop con ctl02_btnSeguir y luego
+	// btnSeguirEmpleador para avanzar al paso 7.
+	const [extraRequeridos, setExtraRequeridos] = useState<SecloContact[]>([]);
+	const [extraRequeridoDialog, setExtraRequeridoDialog] = useState<{ open: boolean; editIndex: number | null; contact: SecloContact | null }>({
+		open: false, editIndex: null, contact: null,
+	});
 
 	// Step 3 – Reclamo
 	const [objetoReclamo, setObjetoReclamo] = useState<string[]>([]);
@@ -207,6 +214,8 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 		setExtraRequirentes([]);
 		setExtraDialog({ open: false, editIndex: null, contact: null, datosLab: { estadoTrabajador: "regular", sexo: "M" } });
 		setRequerido(null);
+		setExtraRequeridos([]);
+		setExtraRequeridoDialog({ open: false, editIndex: null, contact: null });
 		setObjetoReclamo([]);
 		setComentario("");
 		setIniciadoPor("trabajador");
@@ -355,12 +364,17 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 		setSubmitting(true);
 		setError(null);
 		try {
-			// Si hay reclamantes adicionales (sólo válidos cuando iniciadoPor === 'trabajador'),
-			// mandamos el array completo. Si no, mantenemos la forma legacy con `requirenteId`
-			// directo para no cambiar el shape para solicitudes simples.
+			// Si hay reclamantes y/o empleadores adicionales mandamos el array
+			// completo (forma nueva). Si no, mantenemos la forma legacy con
+			// requirenteId/requeridoId directos para no cambiar el shape para
+			// solicitudes simples.
 			const allRequirentes = [
 				{ contactId: requirente!._id, datosLaborales: datosLab },
 				...extraRequirentes.map((r) => ({ contactId: r.contact._id, datosLaborales: r.datosLaborales })),
+			];
+			const allRequeridos = [
+				{ contactId: requerido!._id },
+				...extraRequeridos.map((c) => ({ contactId: c._id })),
 			];
 			await dispatch(
 				createSolicitud({
@@ -369,7 +383,9 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 					...(allRequirentes.length > 1
 						? { requirentes: allRequirentes }
 						: { requirenteId: requirente!._id, requirenteDatosLaborales: datosLab }),
-					requeridoId: requerido!._id,
+					...(allRequeridos.length > 1
+						? { requeridos: allRequeridos }
+						: { requeridoId: requerido!._id }),
 					objetoReclamo,
 					comentarioReclamo: comentario,
 					iniciadoPor,
@@ -912,6 +928,59 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 								</Alert>
 							</Grid>
 						)}
+
+						{/* Empleadores adicionales — el portal SECLO permite varios
+						    en la grilla ctl02_grdEmpleadores. El worker presiona
+						    ctl02_btnSeguir por cada uno y luego btnSeguirEmpleador
+						    para avanzar. Mientras la feature se valida la solicitud
+						    se fuerza a dryRun cuando hay >1 empleador. */}
+						{requerido && (
+							<Grid item xs={12}>
+								<Box sx={{ borderTop: 1, borderColor: "divider", pt: 2, mt: 1 }}>
+									<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
+										<Typography variant="subtitle2">
+											Empleadores adicionales {extraRequeridos.length > 0 && <Chip size="small" label={extraRequeridos.length} sx={{ ml: 1 }} />}
+										</Typography>
+										<Button
+											size="small"
+											variant="outlined"
+											onClick={() => setExtraRequeridoDialog({ open: true, editIndex: null, contact: null })}
+										>
+											+ Agregar empleador
+										</Button>
+									</Stack>
+									<Alert severity="warning" sx={{ mb: 1 }}>
+										Cuando hay más de un empleador, la solicitud corre <strong>siempre en modo prueba</strong> hasta validar el flujo end-to-end con el portal.
+									</Alert>
+									{extraRequeridos.length === 0 ? (
+										<Typography variant="caption" color="text.secondary">
+											Sólo el empleador principal de arriba. Agregá más empleadores si el trámite los requiere.
+										</Typography>
+									) : (
+										<Stack spacing={0.5}>
+											{extraRequeridos.map((c, i) => (
+												<Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1, border: 1, borderColor: "divider", borderRadius: 1, p: 1 }}>
+													<Box flexGrow={1}>
+														<Typography variant="body2" fontWeight={600}>
+															#{i + 2} · {c.company || `${c.name} ${c.lastName || ""}`.trim()}
+														</Typography>
+														<Typography variant="caption" color="text.secondary">
+															{c.cuit || "—"} · {[c.street, c.streetNumber].filter(Boolean).join(" ") || c.address || "—"}
+														</Typography>
+													</Box>
+													<Button size="small" onClick={() => setExtraRequeridoDialog({ open: true, editIndex: i, contact: c })}>
+														Cambiar
+													</Button>
+													<Button size="small" color="error" onClick={() => setExtraRequeridos((prev) => prev.filter((_, j) => j !== i))}>
+														Quitar
+													</Button>
+												</Box>
+											))}
+										</Stack>
+									)}
+								</Box>
+							</Grid>
+						)}
 					</Grid>
 				);
 
@@ -1180,7 +1249,25 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 					)}
 				</ReviewSection>
 
-				<ReviewSection title="Reclamo" onEdit={() => setStep(3)}>
+				{extraRequeridos.length > 0 && (
+				<ReviewSection title={`Empleadores adicionales (${extraRequeridos.length})`} onEdit={() => setStep(2)}>
+					{extraRequeridos.map((c, i) => (
+						<Box key={i} sx={{ mb: 0.5 }}>
+							<Typography variant="body2" fontWeight={600}>
+								#{i + 2} · {c.company || `${c.name} ${c.lastName || ""}`.trim()} {c.cuit && `— ${c.cuit}`}
+							</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Domicilio: {formatDomicilio(c)}
+							</Typography>
+						</Box>
+					))}
+					<Alert severity="warning" sx={{ mt: 1 }}>
+						Con múltiples empleadores la solicitud corre forzada en <strong>modo prueba</strong>.
+					</Alert>
+				</ReviewSection>
+			)}
+
+			<ReviewSection title="Reclamo" onEdit={() => setStep(3)}>
 					<ReviewRow label="Iniciado por" value={iniciadoPor === "trabajador" ? "Trabajador" : "Empleador"} />
 					<ReviewRow label="Objeto/s del reclamo" value={objetoReclamo.length ? objetoReclamo.join(", ") : "—"} />
 					<ReviewRow
@@ -1219,7 +1306,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 
 	return (
 		<>
-		<Dialog open={open && !contactDialog.open && !extraDialog.open} onClose={handleClose} maxWidth="md" fullWidth>
+		<Dialog open={open && !contactDialog.open && !extraDialog.open && !extraRequeridoDialog.open} onClose={handleClose} maxWidth="md" fullWidth>
 			<DialogTitle>Nueva solicitud de audiencia SECLO</DialogTitle>
 			<DialogContent>
 				<Stepper activeStep={step} alternativeLabel sx={{ mb: 3, mt: 1 }}>
@@ -1414,6 +1501,67 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 					}}
 				>
 					{extraDialog.editIndex !== null ? "Guardar cambios" : "Agregar a la lista"}
+				</Button>
+			</DialogActions>
+		</Dialog>
+
+		{/* Diálogo para agregar/editar un empleador adicional. Como los empleadores
+		    no tienen datos laborales asociados, el sub-dialog sólo necesita la
+		    selección de Contact (con validación de calle+número). */}
+		<Dialog open={extraRequeridoDialog.open} onClose={() => setExtraRequeridoDialog((s) => ({ ...s, open: false }))} maxWidth="sm" fullWidth>
+			<DialogTitle>{extraRequeridoDialog.editIndex !== null ? "Cambiar empleador" : "Agregar empleador"}</DialogTitle>
+			<DialogContent dividers>
+				<Stack spacing={2}>
+					<Autocomplete
+						options={localContacts.filter((c) =>
+							c._id !== requirente?._id &&
+							c._id !== requerido?._id &&
+							!extraRequirentes.some((r) => r.contact._id === c._id) &&
+							!extraRequeridos.some((r, i) => r._id === c._id && i !== extraRequeridoDialog.editIndex)
+						)}
+						getOptionLabel={(c: SecloContact) =>
+							`${c.company || `${c.name} ${c.lastName || ""}`.trim()}${c.cuit ? ` — ${c.cuit}` : ""}`
+						}
+						value={extraRequeridoDialog.contact}
+						onChange={(_, v) => setExtraRequeridoDialog((s) => ({ ...s, contact: v }))}
+						isOptionEqualToValue={(a, b) => a._id === b._id}
+						renderInput={(params) => <TextField {...params} label="Contacto empleador *" />}
+						noOptionsText="No hay otros contactos disponibles"
+					/>
+					{extraRequeridoDialog.contact && !hasStructuredAddress(extraRequeridoDialog.contact) && (
+						<Alert severity="warning">Faltan <strong>calle</strong> y/o <strong>número</strong>. SECLO los exige separados.</Alert>
+					)}
+					{extraRequeridoDialog.contact && (
+						<Alert severity="info" icon={false}>
+							<Typography variant="body2"><strong>CUIT:</strong> {extraRequeridoDialog.contact.cuit || "—"}</Typography>
+							<Typography variant="body2">
+								<strong>Domicilio:</strong>{" "}
+								{[extraRequeridoDialog.contact.street, extraRequeridoDialog.contact.streetNumber].filter(Boolean).join(" ") || extraRequeridoDialog.contact.address || "—"}
+							</Typography>
+						</Alert>
+					)}
+				</Stack>
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={() => setExtraRequeridoDialog((s) => ({ ...s, open: false }))}>Cancelar</Button>
+				<Button
+					variant="contained"
+					disabled={!extraRequeridoDialog.contact || !hasStructuredAddress(extraRequeridoDialog.contact)}
+					onClick={() => {
+						if (!extraRequeridoDialog.contact) return;
+						const c = extraRequeridoDialog.contact;
+						setExtraRequeridos((prev) => {
+							if (extraRequeridoDialog.editIndex !== null) {
+								const copy = [...prev];
+								copy[extraRequeridoDialog.editIndex] = c;
+								return copy;
+							}
+							return [...prev, c];
+						});
+						setExtraRequeridoDialog({ open: false, editIndex: null, contact: null });
+					}}
+				>
+					{extraRequeridoDialog.editIndex !== null ? "Guardar cambios" : "Agregar a la lista"}
 				</Button>
 			</DialogActions>
 		</Dialog>
