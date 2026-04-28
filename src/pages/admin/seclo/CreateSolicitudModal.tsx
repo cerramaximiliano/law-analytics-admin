@@ -1158,17 +1158,6 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 								</Select>
 							</FormControl>
 						</Grid>
-						<Grid item xs={12}>
-							<TextField
-								fullWidth
-								multiline
-								rows={3}
-								label="Comentario (opcional)"
-								value={comentario}
-								onChange={(e) => setComentario(e.target.value)}
-								placeholder="Detalles adicionales del reclamo..."
-							/>
-						</Grid>
 					</Grid>
 				);
 
@@ -1385,18 +1374,6 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 			<ReviewSection title="Reclamo" onEdit={() => setStep(3)}>
 					<ReviewRow label="Iniciado por" value={iniciadoPor === "trabajador" ? "Trabajador" : "Empleador"} />
 					<ReviewRow label="Objeto/s del reclamo" value={objetoReclamo.length ? objetoReclamo.join(", ") : "—"} />
-					<ReviewRow
-						label="Comentario"
-						value={comentario}
-						emptyHint={
-							<>
-								Sin comentario.{" "}
-								<Link component="button" type="button" onClick={() => setStep(3)} sx={{ verticalAlign: "baseline" }}>
-									Agregar
-								</Link>{" "}(opcional).
-							</>
-						}
-					/>
 				</ReviewSection>
 
 				<ReviewSection title="Abogado" onEdit={() => setStep(4)}>
