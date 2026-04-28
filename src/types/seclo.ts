@@ -55,6 +55,41 @@ export interface SecloContact {
 	 *  Vacío para personas físicas o contactos legacy aún sin completar. */
 	tipoSociedad?: string;
 	folderIds?: string[];
+	/** Historial de datos laborales — sólo aplica cuando este contacto figura
+	 *  como trabajador. Auto-grabado por la API SECLO al crear solicitudes. */
+	datosLaboralesHistorial?: SecloDatosLaboralesEntry[];
+	/** Historial de datos de empleador — sólo aplica cuando es empleador. */
+	datosEmpleadorHistorial?: SecloDatosEmpleadorEntry[];
+}
+
+export interface SecloDatosLaboralesEntry {
+	_id?: string;
+	source?: string;
+	empleadorId?: string | null;
+	empleadorName?: string;
+	fechaNacimiento?: string | null;
+	fechaIngreso?: string | null;
+	fechaEgreso?: string | null;
+	fechaAccidente?: string | null;
+	remuneracion?: number | null;
+	importeReclamo?: number | null;
+	cct?: string;
+	categoria?: string;
+	estadoTrabajador?: "regular" | "irregular" | "no_registrado" | null;
+	sexo?: "M" | "F" | null;
+	notes?: string;
+	createdAt?: string;
+	lastUsedAt?: string;
+}
+
+export interface SecloDatosEmpleadorEntry {
+	_id?: string;
+	source?: string;
+	tipoSociedad?: string;
+	actividad?: string;
+	notes?: string;
+	createdAt?: string;
+	lastUsedAt?: string;
 }
 
 // Tipos de persona jurídica del portal SECLO. Sólo se exponen al usuario
