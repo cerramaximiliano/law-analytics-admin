@@ -1,4 +1,5 @@
 import authAxios from "utils/authAxios";
+import adminAxios from "utils/adminAxios";
 import { dispatch } from "../index";
 
 // ACTION TYPES
@@ -264,7 +265,7 @@ export const searchUsers = (params: SearchUsersParams) => {
 			const queryString = queryParams.toString();
 			const url = `/api/users/search${queryString ? `?${queryString}` : ""}`;
 
-			const response = await authAxios.get(url);
+			const response = await adminAxios.get(url);
 
 			// Asegurarse de que estamos usando el formato correcto
 			// La respuesta del backend es: { success: true, data: { users: [...], pagination: {...} } }
