@@ -49,6 +49,8 @@ import {
 	Eye,
 	Trash,
 	Copy,
+	Magicpen,
+	Refresh,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -67,6 +69,14 @@ import AdminResourcesService, {
 } from "api/adminResources";
 import UserSessionsService from "api/userSessions";
 import { UserSessionMetrics, SessionStats, UserWithSessionMetrics } from "types/user-session";
+import AdminAiUsageService, {
+	AiUsageRow,
+	AiUsageStats,
+	AiUsageMonthlyFilters,
+	AiUsageLogEntry,
+	AiUsageBreakdown,
+	AiPlan,
+} from "api/adminAiUsage";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/es";
@@ -76,7 +86,7 @@ dayjs.locale("es");
 
 // Tab configuration
 interface TabConfig {
-	type: ResourceType | "users" | "activity" | "escritos";
+	type: ResourceType | "users" | "activity" | "escritos" | "aiUsage";
 	label: string;
 	icon: React.ReactElement;
 }
@@ -91,7 +101,27 @@ const tabs: TabConfig[] = [
 	{ type: "users", label: "Usuarios", icon: <ProfileCircle size={18} /> },
 	{ type: "activity", label: "Actividad", icon: <Login size={18} /> },
 	{ type: "escritos", label: "Escritos", icon: <DocumentText size={18} /> },
+	{ type: "aiUsage", label: "Uso IA", icon: <Magicpen size={18} /> },
 ];
+
+const getCurrentPeriod = (): string => dayjs().format("YYYY-MM");
+
+const formatCostUsd = (n: number | undefined): string => {
+	if (n === undefined || n === null) return "-";
+	return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 4 }).format(n);
+};
+
+const formatNumber = (n: number | undefined): string => {
+	if (n === undefined || n === null) return "-";
+	return new Intl.NumberFormat("es-AR").format(n);
+};
+
+const planChipColor = (plan?: AiPlan): "default" | "success" | "warning" | "info" => {
+	if (plan === "premium") return "success";
+	if (plan === "standard") return "info";
+	if (plan === "free") return "warning";
+	return "default";
+};
 
 // Column definitions per type
 interface ColumnDef {
@@ -436,11 +466,28 @@ const UserResources: React.FC = () => {
 	const [escritosDetailOpen, setEscritosDetailOpen] = useState(false);
 	const [escritosDetailDoc, setEscritosDetailDoc] = useState<PostalDocument | null>(null);
 
+	// AI Usage tab states
+	const [aiUsage, setAiUsage] = useState<AiUsageRow[]>([]);
+	const [aiUsageStats, setAiUsageStats] = useState<AiUsageStats | null>(null);
+	const [aiUsageLoading, setAiUsageLoading] = useState(false);
+	const [aiPeriod, setAiPeriod] = useState<string>(getCurrentPeriod());
+	const [aiPlanFilter, setAiPlanFilter] = useState<"" | AiPlan>("");
+	const [aiPeriods, setAiPeriods] = useState<string[]>([]);
+	const [aiDetailOpen, setAiDetailOpen] = useState(false);
+	const [aiDetailRow, setAiDetailRow] = useState<AiUsageRow | null>(null);
+	const [aiDetailLogs, setAiDetailLogs] = useState<AiUsageLogEntry[]>([]);
+	const [aiDetailBreakdown, setAiDetailBreakdown] = useState<AiUsageBreakdown | null>(null);
+	const [aiDetailLoading, setAiDetailLoading] = useState(false);
+	const [aiResetOpen, setAiResetOpen] = useState(false);
+	const [aiResetRow, setAiResetRow] = useState<AiUsageRow | null>(null);
+	const [aiResetting, setAiResetting] = useState(false);
+
 	const currentType = tabs[activeTab].type;
 	const isUsersTab = currentType === "users";
 	const isActivityTab = currentType === "activity";
 	const isEscritosTab = currentType === "escritos";
-	const columns = isUsersTab || isActivityTab || isEscritosTab ? [] : getColumnsByType(currentType as ResourceType, theme);
+	const isAiUsageTab = currentType === "aiUsage";
+	const columns = isUsersTab || isActivityTab || isEscritosTab || isAiUsageTab ? [] : getColumnsByType(currentType as ResourceType, theme);
 
 	// Fetch stats
 	const fetchStats = useCallback(async () => {
@@ -572,6 +619,46 @@ const UserResources: React.FC = () => {
 		}
 	}, [isEscritosTab, page, rowsPerPage, search, escritosFilterStatus, escritosStats]);
 
+	// Fetch AI usage rows
+	const fetchAiUsage = useCallback(async () => {
+		if (!isAiUsageTab) return;
+		setAiUsageLoading(true);
+		try {
+			const allowedSorts = ["count", "tokensTotal", "costUsd", "lastUsedAt", "email", "plan"];
+			const params: AiUsageMonthlyFilters = {
+				period: aiPeriod,
+				page: page + 1,
+				limit: rowsPerPage,
+				search: search || undefined,
+				sortBy: (allowedSorts.includes(sortBy) ? sortBy : "count") as AiUsageMonthlyFilters["sortBy"],
+				sortOrder,
+			};
+			if (aiPlanFilter) params.plan = aiPlanFilter;
+			const response = await AdminAiUsageService.getMonthly(params);
+			if (response.success) {
+				setAiUsage(response.data);
+				setAiUsageStats(response.stats);
+				setTotal(response.pagination.total);
+			}
+		} catch (error) {
+			console.error("Error fetching AI usage:", error);
+		} finally {
+			setAiUsageLoading(false);
+		}
+	}, [isAiUsageTab, aiPeriod, aiPlanFilter, page, rowsPerPage, search, sortBy, sortOrder]);
+
+	const fetchAiPeriods = useCallback(async () => {
+		try {
+			const response = await AdminAiUsageService.getPeriods();
+			if (response.success) {
+				const periods = response.data.length > 0 ? response.data : [getCurrentPeriod()];
+				setAiPeriods(periods);
+			}
+		} catch (error) {
+			console.error("Error fetching AI usage periods:", error);
+		}
+	}, []);
+
 	useEffect(() => {
 		fetchStats();
 	}, [fetchStats]);
@@ -583,10 +670,16 @@ const UserResources: React.FC = () => {
 			fetchActivityData();
 		} else if (isEscritosTab) {
 			fetchEscritos();
+		} else if (isAiUsageTab) {
+			fetchAiUsage();
 		} else {
 			fetchResources();
 		}
-	}, [fetchResources, fetchUsers, fetchActivityData, fetchEscritos, isUsersTab, isActivityTab, isEscritosTab]);
+	}, [fetchResources, fetchUsers, fetchActivityData, fetchEscritos, fetchAiUsage, isUsersTab, isActivityTab, isEscritosTab, isAiUsageTab]);
+
+	useEffect(() => {
+		if (isAiUsageTab) fetchAiPeriods();
+	}, [isAiUsageTab, fetchAiPeriods]);
 
 	// Handlers
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -594,8 +687,48 @@ const UserResources: React.FC = () => {
 		setPage(0);
 		setSearch("");
 		setSearchInput("");
-		setSortBy("createdAt");
+		const newType = tabs[newValue].type;
+		setSortBy(newType === "aiUsage" ? "count" : "createdAt");
 		setSortOrder("desc");
+	};
+
+	const handleOpenAiDetail = async (row: AiUsageRow) => {
+		setAiDetailRow(row);
+		setAiDetailOpen(true);
+		setAiDetailLogs([]);
+		setAiDetailBreakdown(null);
+		setAiDetailLoading(true);
+		try {
+			const res = await AdminAiUsageService.getDetail(row.userId, row.period, 1, 100);
+			if (res.success) {
+				setAiDetailLogs(res.data);
+				setAiDetailBreakdown(res.breakdown);
+			}
+		} catch (error) {
+			console.error("Error fetching AI usage detail:", error);
+			enqueueSnackbar("No se pudo obtener el detalle de uso", { variant: "error" });
+		} finally {
+			setAiDetailLoading(false);
+		}
+	};
+
+	const handleConfirmAiReset = async () => {
+		if (!aiResetRow) return;
+		setAiResetting(true);
+		try {
+			const res = await AdminAiUsageService.reset(aiResetRow.userId, aiResetRow.period);
+			if (res.success) {
+				enqueueSnackbar(res.message || "Contador reseteado", { variant: "success" });
+				setAiResetOpen(false);
+				setAiResetRow(null);
+				fetchAiUsage();
+			}
+		} catch (error) {
+			console.error("Error resetting AI usage:", error);
+			enqueueSnackbar("Error al resetear el contador", { variant: "error" });
+		} finally {
+			setAiResetting(false);
+		}
 	};
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
@@ -1178,6 +1311,410 @@ const UserResources: React.FC = () => {
 						</DialogContent>
 						<DialogActions>
 							<Button onClick={() => setEscritosDetailOpen(false)}>Cerrar</Button>
+						</DialogActions>
+					</Dialog>
+				</>
+			) : isAiUsageTab ? (
+				<>
+					{/* AI Usage Stats */}
+					{aiUsageStats && (
+						<Box sx={{ p: { xs: 1.5, sm: 2 }, borderBottom: 1, borderColor: "divider" }}>
+							<Grid container spacing={{ xs: 1, sm: 2 }}>
+								{[
+									{ label: "Período", value: aiUsageStats.period, color: theme.palette.text.primary },
+									{ label: "Usuarios con uso", value: formatNumber(aiUsageStats.usersWithUsage), color: theme.palette.primary.main },
+									{ label: "Consultas IA", value: formatNumber(aiUsageStats.totalQueries), color: theme.palette.info.main },
+									{ label: "Tokens totales", value: formatNumber(aiUsageStats.totalTokens), color: theme.palette.warning.main },
+									{ label: "Costo USD", value: formatCostUsd(aiUsageStats.totalCostUsd), color: theme.palette.success.main },
+								].map((s) => (
+									<Grid item xs={6} sm={4} md={2.4} key={s.label}>
+										<Paper elevation={0} sx={{ p: 1.5, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, height: "100%" }}>
+											<Typography variant="caption" color="textSecondary" display="block">
+												{s.label}
+											</Typography>
+											<Typography variant="h6" fontWeight="bold" sx={{ color: s.color }}>
+												{s.value}
+											</Typography>
+										</Paper>
+									</Grid>
+								))}
+							</Grid>
+						</Box>
+					)}
+
+					{/* Filters: período + plan */}
+					<Box sx={{ p: { xs: 1.5, sm: 2 }, display: "flex", gap: 2, flexWrap: "wrap", borderBottom: 1, borderColor: "divider" }}>
+						<FormControl size="small" sx={{ minWidth: 160 }}>
+							<InputLabel>Período</InputLabel>
+							<Select
+								label="Período"
+								value={aiPeriod}
+								onChange={(e) => {
+									setAiPeriod(e.target.value);
+									setPage(0);
+								}}
+							>
+								{(aiPeriods.length > 0 ? aiPeriods : [aiPeriod]).map((p) => (
+									<MenuItem key={p} value={p}>
+										{p}
+									</MenuItem>
+								))}
+							</Select>
+						</FormControl>
+						<FormControl size="small" sx={{ minWidth: 150 }}>
+							<InputLabel>Plan</InputLabel>
+							<Select
+								label="Plan"
+								value={aiPlanFilter}
+								onChange={(e) => {
+									setAiPlanFilter(e.target.value as "" | AiPlan);
+									setPage(0);
+								}}
+							>
+								<MenuItem value="">Todos</MenuItem>
+								<MenuItem value="free">Free</MenuItem>
+								<MenuItem value="standard">Standard</MenuItem>
+								<MenuItem value="premium">Premium</MenuItem>
+							</Select>
+						</FormControl>
+					</Box>
+
+					{/* AI Usage Table */}
+					<TableContainer sx={{ overflowX: "auto", maxWidth: "100%" }}>
+						<Table size="small" sx={{ minWidth: { xs: 900, md: "100%" } }}>
+							<TableHead>
+								<TableRow>
+									<TableCell>
+										<TableSortLabel active={sortBy === "email"} direction={sortBy === "email" ? sortOrder : "asc"} onClick={() => handleSort("email")}>
+											Usuario
+										</TableSortLabel>
+									</TableCell>
+									<TableCell>
+										<TableSortLabel active={sortBy === "plan"} direction={sortBy === "plan" ? sortOrder : "asc"} onClick={() => handleSort("plan")}>
+											Plan
+										</TableSortLabel>
+									</TableCell>
+									<TableCell align="center">
+										<TableSortLabel active={sortBy === "count"} direction={sortBy === "count" ? sortOrder : "asc"} onClick={() => handleSort("count")}>
+											Consultas
+										</TableSortLabel>
+									</TableCell>
+									<TableCell align="center">
+										<TableSortLabel
+											active={sortBy === "tokensTotal"}
+											direction={sortBy === "tokensTotal" ? sortOrder : "asc"}
+											onClick={() => handleSort("tokensTotal")}
+										>
+											Tokens (in / out / total)
+										</TableSortLabel>
+									</TableCell>
+									<TableCell align="right">
+										<TableSortLabel active={sortBy === "costUsd"} direction={sortBy === "costUsd" ? sortOrder : "asc"} onClick={() => handleSort("costUsd")}>
+											Costo USD
+										</TableSortLabel>
+									</TableCell>
+									<TableCell>
+										<TableSortLabel
+											active={sortBy === "lastUsedAt"}
+											direction={sortBy === "lastUsedAt" ? sortOrder : "asc"}
+											onClick={() => handleSort("lastUsedAt")}
+										>
+											Última consulta
+										</TableSortLabel>
+									</TableCell>
+									<TableCell align="center">Acciones</TableCell>
+								</TableRow>
+							</TableHead>
+							<TableBody>
+								{aiUsageLoading ? (
+									Array.from({ length: rowsPerPage }).map((_, i) => (
+										<TableRow key={i}>
+											{Array.from({ length: 7 }).map((_, j) => (
+												<TableCell key={j}>
+													<Skeleton variant="text" />
+												</TableCell>
+											))}
+										</TableRow>
+									))
+								) : aiUsage.length === 0 ? (
+									<TableRow>
+										<TableCell colSpan={7} align="center">
+											<Typography color="textSecondary" sx={{ py: 4 }}>
+												No hay registros de uso de IA en el período seleccionado
+											</Typography>
+										</TableCell>
+									</TableRow>
+								) : (
+									aiUsage.map((row) => {
+										const userDisplay = row.email || [row.firstName, row.lastName].filter(Boolean).join(" ") || row.name || row.userId;
+										const fullName = [row.firstName, row.lastName].filter(Boolean).join(" ") || row.name;
+										return (
+											<TableRow key={row._id} hover>
+												<TableCell>
+													<Box>
+														<Typography variant="body2" fontWeight="medium">
+															{userDisplay}
+														</Typography>
+														{fullName && row.email && (
+															<Typography variant="caption" color="textSecondary">
+																{fullName}
+															</Typography>
+														)}
+													</Box>
+												</TableCell>
+												<TableCell>
+													<Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+														<Chip label={row.plan} size="small" color={planChipColor(row.plan)} sx={{ minWidth: 70, textTransform: "capitalize" }} />
+														{row.currentPlan && row.currentPlan !== row.plan && (
+															<Tooltip title="Plan actual del usuario (snapshot del periodo difiere)">
+																<Typography variant="caption" color="textSecondary">
+																	hoy: {row.currentPlan}
+																</Typography>
+															</Tooltip>
+														)}
+													</Box>
+												</TableCell>
+												<TableCell align="center">
+													<Chip
+														label={formatNumber(row.count)}
+														size="small"
+														color={row.count >= 1000 ? "error" : row.count >= 200 ? "warning" : "default"}
+														sx={{ minWidth: 50 }}
+													/>
+												</TableCell>
+												<TableCell align="center">
+													<Box>
+														<Typography variant="body2">{formatNumber(row.tokensTotal)}</Typography>
+														<Typography variant="caption" color="textSecondary">
+															{formatNumber(row.tokensInput)} in · {formatNumber(row.tokensOutput)} out
+														</Typography>
+													</Box>
+												</TableCell>
+												<TableCell align="right">
+													<Typography variant="body2" fontWeight="medium">
+														{formatCostUsd(row.costUsd)}
+													</Typography>
+												</TableCell>
+												<TableCell>
+													{row.lastUsedAt ? (
+														<Box>
+															<Typography variant="body2">{dayjs(row.lastUsedAt).fromNow()}</Typography>
+															<Typography variant="caption" color="textSecondary">
+																{dayjs(row.lastUsedAt).format("DD/MM/YY HH:mm")}
+															</Typography>
+														</Box>
+													) : (
+														<Typography variant="body2" color="textSecondary">
+															-
+														</Typography>
+													)}
+												</TableCell>
+												<TableCell align="center">
+													<Box sx={{ display: "flex", justifyContent: "center", gap: 0.5 }}>
+														<Tooltip title="Ver detalle">
+															<IconButton size="small" onClick={() => handleOpenAiDetail(row)}>
+																<Eye size={16} />
+															</IconButton>
+														</Tooltip>
+														<Tooltip title="Resetear contador del período">
+															<IconButton
+																size="small"
+																color="warning"
+																onClick={() => {
+																	setAiResetRow(row);
+																	setAiResetOpen(true);
+																}}
+															>
+																<Refresh size={16} />
+															</IconButton>
+														</Tooltip>
+													</Box>
+												</TableCell>
+											</TableRow>
+										);
+									})
+								)}
+							</TableBody>
+						</Table>
+					</TableContainer>
+
+					{/* AI Usage Detail Dialog */}
+					<Dialog
+						open={aiDetailOpen}
+						onClose={() => {
+							setAiDetailOpen(false);
+							setAiDetailRow(null);
+						}}
+						maxWidth="md"
+						fullWidth
+					>
+						<DialogTitle>
+							Detalle de uso de IA
+							{aiDetailRow && (
+								<Typography variant="caption" color="textSecondary" display="block">
+									{aiDetailRow.email || aiDetailRow.userId} — {aiDetailRow.period}
+								</Typography>
+							)}
+						</DialogTitle>
+						<DialogContent dividers>
+							{aiDetailLoading ? (
+								<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+									{Array.from({ length: 6 }).map((_, i) => (
+										<Skeleton key={i} variant="text" />
+									))}
+								</Box>
+							) : (
+								<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+									{aiDetailBreakdown && (aiDetailBreakdown.byAction.length > 0 || aiDetailBreakdown.byModel.length > 0) && (
+										<Grid container spacing={2}>
+											<Grid item xs={12} md={6}>
+												<Typography variant="subtitle2" gutterBottom>
+													Por acción
+												</Typography>
+												<Table size="small">
+													<TableHead>
+														<TableRow>
+															<TableCell>Acción</TableCell>
+															<TableCell align="right">N°</TableCell>
+															<TableCell align="right">Tokens</TableCell>
+															<TableCell align="right">USD</TableCell>
+														</TableRow>
+													</TableHead>
+													<TableBody>
+														{aiDetailBreakdown.byAction.map((b) => (
+															<TableRow key={b._id || "na"}>
+																<TableCell>{b._id || "-"}</TableCell>
+																<TableCell align="right">{formatNumber(b.count)}</TableCell>
+																<TableCell align="right">{formatNumber(b.tokensTotal)}</TableCell>
+																<TableCell align="right">{formatCostUsd(b.costUsd)}</TableCell>
+															</TableRow>
+														))}
+													</TableBody>
+												</Table>
+											</Grid>
+											<Grid item xs={12} md={6}>
+												<Typography variant="subtitle2" gutterBottom>
+													Por modelo
+												</Typography>
+												<Table size="small">
+													<TableHead>
+														<TableRow>
+															<TableCell>Modelo</TableCell>
+															<TableCell align="right">N°</TableCell>
+															<TableCell align="right">In/Out</TableCell>
+															<TableCell align="right">USD</TableCell>
+														</TableRow>
+													</TableHead>
+													<TableBody>
+														{aiDetailBreakdown.byModel.map((b) => (
+															<TableRow key={b._id || "na"}>
+																<TableCell>{b._id || "-"}</TableCell>
+																<TableCell align="right">{formatNumber(b.count)}</TableCell>
+																<TableCell align="right">
+																	{formatNumber(b.tokensInput)}/{formatNumber(b.tokensOutput)}
+																</TableCell>
+																<TableCell align="right">{formatCostUsd(b.costUsd)}</TableCell>
+															</TableRow>
+														))}
+													</TableBody>
+												</Table>
+											</Grid>
+										</Grid>
+									)}
+
+									<Box>
+										<Typography variant="subtitle2" gutterBottom>
+											Últimas {aiDetailLogs.length} consultas
+										</Typography>
+										<TableContainer sx={{ maxHeight: 360 }}>
+											<Table size="small" stickyHeader>
+												<TableHead>
+													<TableRow>
+														<TableCell>Fecha</TableCell>
+														<TableCell>Acción</TableCell>
+														<TableCell>Modelo</TableCell>
+														<TableCell align="right">In</TableCell>
+														<TableCell align="right">Out</TableCell>
+														<TableCell align="right">Total</TableCell>
+														<TableCell align="right">USD</TableCell>
+													</TableRow>
+												</TableHead>
+												<TableBody>
+													{aiDetailLogs.length === 0 ? (
+														<TableRow>
+															<TableCell colSpan={7} align="center">
+																<Typography color="textSecondary" sx={{ py: 2 }}>
+																	Sin logs detallados
+																</Typography>
+															</TableCell>
+														</TableRow>
+													) : (
+														aiDetailLogs.map((log) => (
+															<TableRow key={log._id} hover>
+																<TableCell>{formatDate(log.createdAt)}</TableCell>
+																<TableCell>{log.action}</TableCell>
+																<TableCell>{log.model}</TableCell>
+																<TableCell align="right">{formatNumber(log.tokensInput)}</TableCell>
+																<TableCell align="right">{formatNumber(log.tokensOutput)}</TableCell>
+																<TableCell align="right">{formatNumber(log.tokensTotal)}</TableCell>
+																<TableCell align="right">{formatCostUsd(log.costUsd)}</TableCell>
+															</TableRow>
+														))
+													)}
+												</TableBody>
+											</Table>
+										</TableContainer>
+									</Box>
+								</Box>
+							)}
+						</DialogContent>
+						<DialogActions>
+							<Button
+								onClick={() => {
+									setAiDetailOpen(false);
+									setAiDetailRow(null);
+								}}
+							>
+								Cerrar
+							</Button>
+						</DialogActions>
+					</Dialog>
+
+					{/* Reset Confirmation Dialog */}
+					<Dialog open={aiResetOpen} onClose={() => !aiResetting && setAiResetOpen(false)} maxWidth="xs" fullWidth>
+						<DialogTitle>Resetear contador de uso</DialogTitle>
+						<DialogContent dividers>
+							{aiResetRow && (
+								<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+									<Typography variant="body2">
+										¿Estás seguro de resetear el contador de IA para <strong>{aiResetRow.email || aiResetRow.userId}</strong> en el período{" "}
+										<strong>{aiResetRow.period}</strong>?
+									</Typography>
+									<Typography variant="caption" color="textSecondary">
+										La acción pone count, tokens y costo a 0 sin borrar el documento. El usuario va a poder volver a hacer consultas hasta el límite del plan.
+									</Typography>
+									<Box sx={{ mt: 1, p: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.08), borderRadius: 1 }}>
+										<Typography variant="caption" color="textSecondary">
+											Antes del reset: <strong>{formatNumber(aiResetRow.count)}</strong> consultas ·{" "}
+											<strong>{formatNumber(aiResetRow.tokensTotal)}</strong> tokens · <strong>{formatCostUsd(aiResetRow.costUsd)}</strong>
+										</Typography>
+									</Box>
+								</Box>
+							)}
+						</DialogContent>
+						<DialogActions>
+							<Button onClick={() => setAiResetOpen(false)} disabled={aiResetting}>
+								Cancelar
+							</Button>
+							<Button
+								onClick={handleConfirmAiReset}
+								color="warning"
+								variant="contained"
+								startIcon={<Trash size={14} />}
+								disabled={aiResetting}
+							>
+								{aiResetting ? "Reseteando..." : "Resetear"}
+							</Button>
 						</DialogActions>
 					</Dialog>
 				</>
