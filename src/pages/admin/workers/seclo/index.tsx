@@ -431,18 +431,43 @@ export default function WorkersSecloPage() {
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
+	// Deep-merge entre la respuesta del API y los DEFAULTS del cliente.
+	// Necesario porque los documentos existentes en MongoDB pueden no tener
+	// los subdocs nuevos (workers.X.scaling, scaling global, managerHealth).
+	// Si la API responde sin esos campos, conservamos los defaults del
+	// cliente — así la UI siempre muestra los inputs editables aunque la
+	// migración del schema todavía no haya corrido para ese documento.
+	const mergeConfig = (data: Partial<TrabajoConfig>): TrabajoConfig => {
+		const mergeWorker = (name: keyof TrabajoConfig["workers"], apiW: any): WorkerEntry => {
+			const def = DEFAULT_CONFIG.workers[name];
+			return {
+				...def,
+				...(apiW || {}),
+				scaling: { ...(def.scaling as WorkerScaling), ...((apiW?.scaling) || {}) } as WorkerScaling,
+			};
+		};
+		return {
+			...DEFAULT_CONFIG,
+			...data,
+			workers: {
+				envio:              mergeWorker("envio",              data.workers?.envio),
+				verificar:          mergeWorker("verificar",          data.workers?.verificar),
+				credentialsChecker: mergeWorker("credentialsChecker", data.workers?.credentialsChecker),
+				agenda:             mergeWorker("agenda",             data.workers?.agenda),
+				postAudiencia:      mergeWorker("postAudiencia",      data.workers?.postAudiencia),
+			},
+			scaling:       { ...DEFAULT_CONFIG.scaling, ...(data.scaling || {}) } as ScalingGlobal,
+			managerHealth: { ...DEFAULT_CONFIG.managerHealth, ...(data.managerHealth || {}) },
+			stats:         { ...DEFAULT_CONFIG.stats, ...(data.stats || {}) } as TrabajoConfig["stats"],
+		};
+	};
+
 	const loadConfig = useCallback(async () => {
 		setLoading(true);
 		setError(null);
 		try {
 			const data = await dispatch(fetchTrabajoConfig());
-			if (data)
-				setConfig({
-					...DEFAULT_CONFIG,
-					...data,
-					workers: { ...DEFAULT_CONFIG.workers, ...(data.workers || {}) },
-					stats: { ...DEFAULT_CONFIG.stats, ...(data.stats || {}) },
-				});
+			if (data) setConfig(mergeConfig(data));
 		} catch (err: any) {
 			setError(err.message || "Error cargando configuración");
 		} finally {
@@ -494,12 +519,7 @@ export default function WorkersSecloPage() {
 				}),
 			);
 			if (result) {
-				setConfig({
-					...DEFAULT_CONFIG,
-					...result,
-					workers: { ...DEFAULT_CONFIG.workers, ...(result.workers || {}) },
-					stats: { ...DEFAULT_CONFIG.stats, ...(result.stats || {}) },
-				});
+				setConfig(mergeConfig(result));
 				enqueueSnackbar("Configuración guardada", { variant: "success" });
 			} else {
 				enqueueSnackbar("Error al guardar", { variant: "error" });
