@@ -115,7 +115,7 @@ interface WorkerCardProps {
 	label: string;
 	description: string;
 	scheduleMode: "24/7" | "working-hours";
-	config: { enabled: boolean; cronPattern: string; consecutiveErrors?: number; disabledByCircuitBreaker?: boolean };
+	config: { enabled: boolean; cronPattern: string; consecutiveErrors?: number; disabledByCircuitBreaker?: boolean; scaling?: WorkerScaling };
 	stats: {
 		lastRunAt?: string | null;
 		lastRunStatus?: string;
@@ -241,25 +241,113 @@ function WorkerCard({ name, label, description, scheduleMode, config, stats, onC
 			</Stack>
 
 			<CronSelector value={config.cronPattern || "*/10 * * * *"} onChange={(v) => onChange(`workers.${name}.cronPattern`, v)} />
+
+			{/* Scaling — sólo aparece cuando el worker es marcado como escalable
+			    en el modelo (envio, verificar, credentialsChecker). Permite ajustar
+			    min/max instancias y los umbrales de pending count que disparan
+			    scale-up y scale-down. currentInstances es solo lectura — lo escribe
+			    el manager cada loop reflejando el estado real reportado por PM2. */}
+			{config.scaling?.scalable && (
+				<Box sx={{ mt: 2, p: 1.5, border: 1, borderColor: "divider", borderRadius: 1, bgcolor: alpha("#000", 0.02) }}>
+					<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
+						<Typography variant="caption" color="text.secondary" fontWeight={600}>
+							Escalado dinámico
+						</Typography>
+						<Chip
+							label={`${config.scaling.currentInstances ?? 0} instancia${(config.scaling.currentInstances ?? 0) === 1 ? "" : "s"} activas`}
+							size="small"
+							color={(config.scaling.currentInstances ?? 0) > config.scaling.minInstances ? "info" : "default"}
+						/>
+					</Stack>
+					<Stack direction="row" spacing={1} flexWrap="wrap">
+						<TextField
+							label="Min"
+							type="number"
+							size="small"
+							value={config.scaling.minInstances}
+							onChange={(e) => onChange(`workers.${name}.scaling.minInstances`, Math.max(0, Number(e.target.value) || 0))}
+							inputProps={{ min: 0, max: 10 }}
+							sx={{ width: 80 }}
+						/>
+						<TextField
+							label="Max"
+							type="number"
+							size="small"
+							value={config.scaling.maxInstances}
+							onChange={(e) => onChange(`workers.${name}.scaling.maxInstances`, Math.max(1, Number(e.target.value) || 1))}
+							inputProps={{ min: 1, max: 10 }}
+							sx={{ width: 80 }}
+						/>
+						<TextField
+							label="Scale up si pending >"
+							type="number"
+							size="small"
+							value={config.scaling.scaleUpThreshold}
+							onChange={(e) => onChange(`workers.${name}.scaling.scaleUpThreshold`, Math.max(1, Number(e.target.value) || 1))}
+							inputProps={{ min: 1 }}
+							sx={{ width: 160 }}
+						/>
+						<TextField
+							label="Scale down si pending <"
+							type="number"
+							size="small"
+							value={config.scaling.scaleDownThreshold}
+							onChange={(e) => onChange(`workers.${name}.scaling.scaleDownThreshold`, Math.max(0, Number(e.target.value) || 0))}
+							inputProps={{ min: 0 }}
+							sx={{ width: 180 }}
+						/>
+					</Stack>
+				</Box>
+			)}
 		</Paper>
 	);
 }
 
 // ── Página principal ───────────────────────────────────────────────────────────
 
+interface WorkerScaling {
+	scalable: boolean;
+	minInstances: number;
+	maxInstances: number;
+	scaleUpThreshold: number;
+	scaleDownThreshold: number;
+	currentInstances?: number;
+	lastScaleAt?: string | null;
+}
+
 interface WorkerEntry {
 	enabled: boolean;
 	cronPattern: string;
 	consecutiveErrors?: number;
 	disabledByCircuitBreaker?: boolean;
+	scaling?: WorkerScaling;
+}
+
+interface ScalingGlobal {
+	checkIntervalMs: number;
+	staleLockTimeoutMs: number;
+	cpuPauseThreshold: number;
+	cpuScaleDownThreshold: number;
+	memoryPauseThreshold: number;
+	killTimeoutMs: number;
+	ignoreWorkingHours: boolean;
+}
+
+interface ManagerHealth {
+	cpuPercent?: number;
+	memoryPercent?: number;
+	lastCheckAt?: string | null;
 }
 
 interface TrabajoConfig {
 	enabled: boolean;
 	heartbeatAt?: string | null;
+	scaling?: ScalingGlobal;
+	managerHealth?: ManagerHealth;
 	workers: {
 		envio: WorkerEntry;
 		verificar: WorkerEntry;
+		credentialsChecker: WorkerEntry;
 		agenda: WorkerEntry;
 		postAudiencia: WorkerEntry;
 	};
@@ -274,19 +362,26 @@ interface TrabajoConfig {
 	stats: {
 		envio: any;
 		verificar: any;
+		credentialsChecker: any;
 		agenda: any;
 		postAudiencia: any;
 	};
 	updatedAt?: string;
 }
 
+const DEFAULT_SCALING_OFF: WorkerScaling = { scalable: false, minInstances: 1, maxInstances: 1, scaleUpThreshold: 0, scaleDownThreshold: 0 };
+const DEFAULT_SCALING_ENVIO: WorkerScaling = { scalable: true, minInstances: 1, maxInstances: 3, scaleUpThreshold: 20, scaleDownThreshold: 5 };
+const DEFAULT_SCALING_VERIFICAR: WorkerScaling = { scalable: true, minInstances: 1, maxInstances: 2, scaleUpThreshold: 20, scaleDownThreshold: 5 };
+const DEFAULT_SCALING_CREDS: WorkerScaling = { scalable: true, minInstances: 1, maxInstances: 2, scaleUpThreshold: 15, scaleDownThreshold: 3 };
+
 const DEFAULT_CONFIG: TrabajoConfig = {
 	enabled: true,
 	workers: {
-		envio: { enabled: true, cronPattern: "0 */6 * * *" },
-		verificar: { enabled: true, cronPattern: "0 */2 * * *" },
-		agenda: { enabled: true, cronPattern: "*/10 * * * *" },
-		postAudiencia: { enabled: true, cronPattern: "0 * * * *" },
+		envio:              { enabled: true, cronPattern: "*/5 * * * *",  scaling: DEFAULT_SCALING_ENVIO },
+		verificar:          { enabled: true, cronPattern: "*/5 * * * *",  scaling: DEFAULT_SCALING_VERIFICAR },
+		credentialsChecker: { enabled: true, cronPattern: "*/5 * * * *",  scaling: DEFAULT_SCALING_CREDS },
+		agenda:             { enabled: true, cronPattern: "*/10 * * * *", scaling: DEFAULT_SCALING_OFF },
+		postAudiencia:      { enabled: true, cronPattern: "0 * * * *",    scaling: DEFAULT_SCALING_OFF },
 	},
 	workingDays: [1, 2, 3, 4, 5],
 	workingHours: { start: "08:00", end: "20:00" },
@@ -296,7 +391,16 @@ const DEFAULT_CONFIG: TrabajoConfig = {
 	delayBetweenRequests: 5000,
 	headless: true,
 	retry: { maxAttempts: 3, delayMs: 5000 },
-	stats: { envio: {}, verificar: {}, agenda: {}, postAudiencia: {} },
+	scaling: {
+		checkIntervalMs: 60000,
+		staleLockTimeoutMs: 900000,
+		cpuPauseThreshold: 75,
+		cpuScaleDownThreshold: 90,
+		memoryPauseThreshold: 80,
+		killTimeoutMs: 30000,
+		ignoreWorkingHours: true,
+	},
+	stats: { envio: {}, verificar: {}, credentialsChecker: {}, agenda: {}, postAudiencia: {} },
 };
 
 export default function WorkersSecloPage() {
@@ -367,6 +471,7 @@ export default function WorkersSecloPage() {
 					delayBetweenRequests: config.delayBetweenRequests,
 					headless: config.headless,
 					retry: config.retry,
+					scaling: config.scaling,
 				}),
 			);
 			if (result) {
@@ -409,6 +514,12 @@ export default function WorkersSecloPage() {
 			label: "Worker de Verificación",
 			description: "Verifica solicitudes submitted: obtiene expediente, audiencia y constancia",
 			scheduleMode: "working-hours",
+		},
+		{
+			name: "credentialsChecker",
+			label: "Worker de Credenciales",
+			description: "Valida credenciales SECLO (login + verificación). Escalable para alta demanda de onboarding",
+			scheduleMode: "24/7",
 		},
 		{
 			name: "agenda",
@@ -576,6 +687,112 @@ export default function WorkersSecloPage() {
 							</Grid>
 						</Grid>
 					</Stack>
+				</Paper>
+
+				{/* Scaling global — todos los workers escalables comparten estos parámetros.
+				    El manager los lee al inicio de cada loop y los aplica al PM2 API. */}
+				<Paper variant="outlined" sx={{ p: 2 }}>
+					<Typography variant="subtitle1" fontWeight={600} mb={1.5} display="flex" alignItems="center" gap={0.5}>
+						<Setting2 size={16} /> Escalado dinámico (global)
+					</Typography>
+					<Typography variant="body2" color="text.secondary" mb={2}>
+						Parámetros del manager para escalar instancias de los workers marcados como escalables. El manager evalúa los umbrales cada{" "}
+						<strong>checkInterval</strong> y suma/resta una instancia por evaluación si supera los thresholds configurados.
+					</Typography>
+					{config.managerHealth?.lastCheckAt && (
+						<Alert severity="info" icon={false} sx={{ mb: 2 }}>
+							<Typography variant="body2">
+								Health del manager · CPU: <strong>{(config.managerHealth.cpuPercent ?? 0).toFixed(1)}%</strong> · Memoria:{" "}
+								<strong>{(config.managerHealth.memoryPercent ?? 0).toFixed(1)}%</strong> · Última lectura: {fmtDate(config.managerHealth.lastCheckAt)}
+							</Typography>
+						</Alert>
+					)}
+					<Grid container spacing={2}>
+						<Grid item xs={12} sm={6} md={4}>
+							<TextField
+								fullWidth
+								size="small"
+								label="Intervalo de chequeo (ms)"
+								type="number"
+								value={config.scaling?.checkIntervalMs ?? 60000}
+								onChange={(e) => handleChange("scaling.checkIntervalMs", Number(e.target.value))}
+								inputProps={{ min: 10000, max: 600000, step: 10000 }}
+								helperText="Cada cuánto el manager evalúa la cola y escala (60s típico)"
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6} md={4}>
+							<TextField
+								fullWidth
+								size="small"
+								label="Stale lock timeout (ms)"
+								type="number"
+								value={config.scaling?.staleLockTimeoutMs ?? 900000}
+								onChange={(e) => handleChange("scaling.staleLockTimeoutMs", Number(e.target.value))}
+								inputProps={{ min: 60000, max: 3600000, step: 60000 }}
+								helperText="Locks viejos se liberan automáticamente (15min típico)"
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6} md={4}>
+							<TextField
+								fullWidth
+								size="small"
+								label="Kill timeout graceful (ms)"
+								type="number"
+								value={config.scaling?.killTimeoutMs ?? 30000}
+								onChange={(e) => handleChange("scaling.killTimeoutMs", Number(e.target.value))}
+								inputProps={{ min: 5000, max: 120000, step: 5000 }}
+								helperText="Tiempo para terminar gracefully en scale-down"
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6} md={4}>
+							<TextField
+								fullWidth
+								size="small"
+								label="CPU pause threshold (%)"
+								type="number"
+								value={config.scaling?.cpuPauseThreshold ?? 75}
+								onChange={(e) => handleChange("scaling.cpuPauseThreshold", Number(e.target.value))}
+								inputProps={{ min: 30, max: 99, step: 5 }}
+								helperText="Sobre este % de CPU se pausa el scale-up"
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6} md={4}>
+							<TextField
+								fullWidth
+								size="small"
+								label="CPU scale-down forzado (%)"
+								type="number"
+								value={config.scaling?.cpuScaleDownThreshold ?? 90}
+								onChange={(e) => handleChange("scaling.cpuScaleDownThreshold", Number(e.target.value))}
+								inputProps={{ min: 50, max: 99, step: 5 }}
+								helperText="Sobre este % de CPU se reduce defensivamente"
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6} md={4}>
+							<TextField
+								fullWidth
+								size="small"
+								label="Memoria pause threshold (%)"
+								type="number"
+								value={config.scaling?.memoryPauseThreshold ?? 80}
+								onChange={(e) => handleChange("scaling.memoryPauseThreshold", Number(e.target.value))}
+								inputProps={{ min: 30, max: 99, step: 5 }}
+								helperText="Sobre este % de RAM se pausa el scale-up"
+							/>
+						</Grid>
+						<Grid item xs={12}>
+							<FormControlLabel
+								control={
+									<Switch
+										checked={config.scaling?.ignoreWorkingHours ?? true}
+										onChange={(e) => handleChange("scaling.ignoreWorkingHours", e.target.checked)}
+										color="primary"
+									/>
+								}
+								label="Ignorar horario de trabajo en escalado (SECLO opera 24/7)"
+							/>
+						</Grid>
+					</Grid>
 				</Paper>
 
 				{/* Parámetros de operación */}
