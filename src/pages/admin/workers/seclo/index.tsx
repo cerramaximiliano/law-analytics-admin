@@ -259,6 +259,10 @@ function WorkerCard({ name, label, description, scheduleMode, config, stats, onC
 							color={(config.scaling.currentInstances ?? 0) > config.scaling.minInstances ? "info" : "default"}
 						/>
 					</Stack>
+					<Typography variant="caption" color="text.secondary" display="block" mb={1}>
+						Hasta el <strong>warm pool</strong>, las instancias suben +1 ni bien hay trabajo pendiente (sin esperar threshold).
+						Por encima del warm, aplican los umbrales. El scale-down nunca baja del warm pool.
+					</Typography>
 					<Stack direction="row" spacing={1} flexWrap="wrap">
 						<TextField
 							label="Min"
@@ -266,8 +270,19 @@ function WorkerCard({ name, label, description, scheduleMode, config, stats, onC
 							size="small"
 							value={config.scaling.minInstances}
 							onChange={(e) => onChange(`workers.${name}.scaling.minInstances`, Math.max(0, Number(e.target.value) || 0))}
-							inputProps={{ min: 0, max: 10 }}
+							inputProps={{ min: 0, max: 30 }}
 							sx={{ width: 80 }}
+							helperText="Hard floor"
+						/>
+						<TextField
+							label="Warm"
+							type="number"
+							size="small"
+							value={config.scaling.warmInstances ?? 1}
+							onChange={(e) => onChange(`workers.${name}.scaling.warmInstances`, Math.max(1, Number(e.target.value) || 1))}
+							inputProps={{ min: 1, max: 30 }}
+							sx={{ width: 90 }}
+							helperText="Pool caliente"
 						/>
 						<TextField
 							label="Max"
@@ -275,8 +290,9 @@ function WorkerCard({ name, label, description, scheduleMode, config, stats, onC
 							size="small"
 							value={config.scaling.maxInstances}
 							onChange={(e) => onChange(`workers.${name}.scaling.maxInstances`, Math.max(1, Number(e.target.value) || 1))}
-							inputProps={{ min: 1, max: 10 }}
+							inputProps={{ min: 1, max: 30 }}
 							sx={{ width: 80 }}
+							helperText="Hard ceiling"
 						/>
 						<TextField
 							label="Scale up si pending >"
@@ -286,6 +302,7 @@ function WorkerCard({ name, label, description, scheduleMode, config, stats, onC
 							onChange={(e) => onChange(`workers.${name}.scaling.scaleUpThreshold`, Math.max(1, Number(e.target.value) || 1))}
 							inputProps={{ min: 1 }}
 							sx={{ width: 160 }}
+							helperText="Sólo > warm"
 						/>
 						<TextField
 							label="Scale down si pending <"
@@ -295,6 +312,7 @@ function WorkerCard({ name, label, description, scheduleMode, config, stats, onC
 							onChange={(e) => onChange(`workers.${name}.scaling.scaleDownThreshold`, Math.max(0, Number(e.target.value) || 0))}
 							inputProps={{ min: 0 }}
 							sx={{ width: 180 }}
+							helperText="Sólo > warm"
 						/>
 					</Stack>
 				</Box>
@@ -308,6 +326,7 @@ function WorkerCard({ name, label, description, scheduleMode, config, stats, onC
 interface WorkerScaling {
 	scalable: boolean;
 	minInstances: number;
+	warmInstances: number;
 	maxInstances: number;
 	scaleUpThreshold: number;
 	scaleDownThreshold: number;
@@ -369,10 +388,10 @@ interface TrabajoConfig {
 	updatedAt?: string;
 }
 
-const DEFAULT_SCALING_OFF: WorkerScaling = { scalable: false, minInstances: 1, maxInstances: 1, scaleUpThreshold: 0, scaleDownThreshold: 0 };
-const DEFAULT_SCALING_ENVIO: WorkerScaling = { scalable: true, minInstances: 1, maxInstances: 3, scaleUpThreshold: 20, scaleDownThreshold: 5 };
-const DEFAULT_SCALING_VERIFICAR: WorkerScaling = { scalable: true, minInstances: 1, maxInstances: 2, scaleUpThreshold: 20, scaleDownThreshold: 5 };
-const DEFAULT_SCALING_CREDS: WorkerScaling = { scalable: true, minInstances: 1, maxInstances: 2, scaleUpThreshold: 15, scaleDownThreshold: 3 };
+const DEFAULT_SCALING_OFF: WorkerScaling = { scalable: false, minInstances: 1, warmInstances: 1, maxInstances: 1, scaleUpThreshold: 0, scaleDownThreshold: 0 };
+const DEFAULT_SCALING_ENVIO: WorkerScaling = { scalable: true, minInstances: 1, warmInstances: 5, maxInstances: 15, scaleUpThreshold: 20, scaleDownThreshold: 5 };
+const DEFAULT_SCALING_VERIFICAR: WorkerScaling = { scalable: true, minInstances: 1, warmInstances: 5, maxInstances: 15, scaleUpThreshold: 20, scaleDownThreshold: 5 };
+const DEFAULT_SCALING_CREDS: WorkerScaling = { scalable: true, minInstances: 1, warmInstances: 2, maxInstances: 5, scaleUpThreshold: 15, scaleDownThreshold: 3 };
 
 const DEFAULT_CONFIG: TrabajoConfig = {
 	enabled: true,
