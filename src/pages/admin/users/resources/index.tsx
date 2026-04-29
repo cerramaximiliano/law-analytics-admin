@@ -1446,16 +1446,15 @@ const UserResources: React.FC = () => {
 									</TableRow>
 								) : (
 									aiUsage.map((row) => {
-										const userDisplay = row.email || [row.firstName, row.lastName].filter(Boolean).join(" ") || row.name || row.userId;
-										const fullName = [row.firstName, row.lastName].filter(Boolean).join(" ") || row.name;
+										const fullName = [row.firstName, row.lastName].filter(Boolean).join(" ") || row.name || "";
 										return (
 											<TableRow key={row._id} hover>
 												<TableCell>
 													<Box>
-														<Typography variant="body2" fontWeight="medium">
-															{userDisplay}
+														<Typography variant="body2" fontWeight="medium" color={row.email ? "textPrimary" : "textSecondary"} fontStyle={row.email ? "normal" : "italic"}>
+															{row.email || "(usuario eliminado)"}
 														</Typography>
-														{fullName && row.email && (
+														{fullName && (
 															<Typography variant="caption" color="textSecondary">
 																{fullName}
 															</Typography>
@@ -1552,7 +1551,7 @@ const UserResources: React.FC = () => {
 							Detalle de uso de IA
 							{aiDetailRow && (
 								<Typography variant="caption" color="textSecondary" display="block">
-									{aiDetailRow.email || aiDetailRow.userId} — {aiDetailRow.period}
+									{aiDetailRow.email || "(usuario eliminado)"} — {aiDetailRow.period}
 								</Typography>
 							)}
 						</DialogTitle>
@@ -1687,7 +1686,7 @@ const UserResources: React.FC = () => {
 							{aiResetRow && (
 								<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
 									<Typography variant="body2">
-										¿Estás seguro de resetear el contador de IA para <strong>{aiResetRow.email || aiResetRow.userId}</strong> en el período{" "}
+										¿Estás seguro de resetear el contador de IA para <strong>{aiResetRow.email || "(usuario eliminado)"}</strong> en el período{" "}
 										<strong>{aiResetRow.period}</strong>?
 									</Typography>
 									<Typography variant="caption" color="textSecondary">
