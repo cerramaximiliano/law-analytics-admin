@@ -600,7 +600,7 @@ const UsersList = () => {
 						{/* Búsqueda por texto */}
 						<TextField
 							size="small"
-							placeholder="Buscar por nombre o email..."
+							placeholder="Buscar por nombre, email o ID..."
 							value={searchText}
 							onChange={handleSearchChange}
 							onKeyPress={handleSearchKeyPress}
