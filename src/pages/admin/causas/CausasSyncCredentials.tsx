@@ -429,17 +429,13 @@ const CausasSyncCredentials = () => {
 														<Tooltip
 															title={
 																causa.folder.listRemovedAt
-																	? `Detectado ${formatDate(causa.folder.listRemovedAt)} — ya no aparece en "Mis Causas" del portal ${(causa.folder.listRemovedSource || "PJN").toUpperCase()}`
+																	? `Detectado ${formatDate(causa.folder.listRemovedAt)} — ya no aparece en "Mis Causas" del portal ${(
+																			causa.folder.listRemovedSource || "PJN"
+																	  ).toUpperCase()}`
 																	: `No aparece en "Mis Causas" del portal ${(causa.folder.listRemovedSource || "PJN").toUpperCase()}`
 															}
 														>
-															<Chip
-																label="No en portal"
-																color="warning"
-																size="small"
-																variant="outlined"
-																sx={{ width: "fit-content" }}
-															/>
+															<Chip label="No en portal" color="warning" size="small" variant="outlined" sx={{ width: "fit-content" }} />
 														</Tooltip>
 													)}
 												</Stack>

@@ -115,7 +115,13 @@ interface WorkerCardProps {
 	label: string;
 	description: string;
 	scheduleMode: "24/7" | "working-hours";
-	config: { enabled: boolean; cronPattern: string; consecutiveErrors?: number; disabledByCircuitBreaker?: boolean; scaling?: WorkerScaling };
+	config: {
+		enabled: boolean;
+		cronPattern: string;
+		consecutiveErrors?: number;
+		disabledByCircuitBreaker?: boolean;
+		scaling?: WorkerScaling;
+	};
 	stats: {
 		lastRunAt?: string | null;
 		lastRunStatus?: string;
@@ -260,8 +266,8 @@ function WorkerCard({ name, label, description, scheduleMode, config, stats, onC
 						/>
 					</Stack>
 					<Typography variant="caption" color="text.secondary" display="block" mb={1}>
-						Hasta el <strong>warm pool</strong>, las instancias suben +1 ni bien hay trabajo pendiente (sin esperar threshold).
-						Por encima del warm, aplican los umbrales. El scale-down nunca baja del warm pool.
+						Hasta el <strong>warm pool</strong>, las instancias suben +1 ni bien hay trabajo pendiente (sin esperar threshold). Por encima
+						del warm, aplican los umbrales. El scale-down nunca baja del warm pool.
 					</Typography>
 					<Stack direction="row" spacing={1} flexWrap="wrap">
 						<TextField
@@ -388,19 +394,47 @@ interface TrabajoConfig {
 	updatedAt?: string;
 }
 
-const DEFAULT_SCALING_OFF: WorkerScaling = { scalable: false, minInstances: 1, warmInstances: 1, maxInstances: 1, scaleUpThreshold: 0, scaleDownThreshold: 0 };
-const DEFAULT_SCALING_ENVIO: WorkerScaling = { scalable: true, minInstances: 1, warmInstances: 5, maxInstances: 15, scaleUpThreshold: 20, scaleDownThreshold: 5 };
-const DEFAULT_SCALING_VERIFICAR: WorkerScaling = { scalable: true, minInstances: 1, warmInstances: 5, maxInstances: 15, scaleUpThreshold: 20, scaleDownThreshold: 5 };
-const DEFAULT_SCALING_CREDS: WorkerScaling = { scalable: true, minInstances: 1, warmInstances: 2, maxInstances: 5, scaleUpThreshold: 15, scaleDownThreshold: 3 };
+const DEFAULT_SCALING_OFF: WorkerScaling = {
+	scalable: false,
+	minInstances: 1,
+	warmInstances: 1,
+	maxInstances: 1,
+	scaleUpThreshold: 0,
+	scaleDownThreshold: 0,
+};
+const DEFAULT_SCALING_ENVIO: WorkerScaling = {
+	scalable: true,
+	minInstances: 1,
+	warmInstances: 5,
+	maxInstances: 15,
+	scaleUpThreshold: 20,
+	scaleDownThreshold: 5,
+};
+const DEFAULT_SCALING_VERIFICAR: WorkerScaling = {
+	scalable: true,
+	minInstances: 1,
+	warmInstances: 5,
+	maxInstances: 15,
+	scaleUpThreshold: 20,
+	scaleDownThreshold: 5,
+};
+const DEFAULT_SCALING_CREDS: WorkerScaling = {
+	scalable: true,
+	minInstances: 1,
+	warmInstances: 2,
+	maxInstances: 5,
+	scaleUpThreshold: 15,
+	scaleDownThreshold: 3,
+};
 
 const DEFAULT_CONFIG: TrabajoConfig = {
 	enabled: true,
 	workers: {
-		envio:              { enabled: true, cronPattern: "*/5 * * * *",  scaling: DEFAULT_SCALING_ENVIO },
-		verificar:          { enabled: true, cronPattern: "*/5 * * * *",  scaling: DEFAULT_SCALING_VERIFICAR },
-		credentialsChecker: { enabled: true, cronPattern: "*/5 * * * *",  scaling: DEFAULT_SCALING_CREDS },
-		agenda:             { enabled: true, cronPattern: "*/10 * * * *", scaling: DEFAULT_SCALING_OFF },
-		postAudiencia:      { enabled: true, cronPattern: "0 * * * *",    scaling: DEFAULT_SCALING_OFF },
+		envio: { enabled: true, cronPattern: "*/5 * * * *", scaling: DEFAULT_SCALING_ENVIO },
+		verificar: { enabled: true, cronPattern: "*/5 * * * *", scaling: DEFAULT_SCALING_VERIFICAR },
+		credentialsChecker: { enabled: true, cronPattern: "*/5 * * * *", scaling: DEFAULT_SCALING_CREDS },
+		agenda: { enabled: true, cronPattern: "*/10 * * * *", scaling: DEFAULT_SCALING_OFF },
+		postAudiencia: { enabled: true, cronPattern: "0 * * * *", scaling: DEFAULT_SCALING_OFF },
 	},
 	workingDays: [1, 2, 3, 4, 5],
 	workingHours: { start: "08:00", end: "20:00" },
@@ -443,22 +477,22 @@ export default function WorkersSecloPage() {
 			return {
 				...def,
 				...(apiW || {}),
-				scaling: { ...(def.scaling as WorkerScaling), ...((apiW?.scaling) || {}) } as WorkerScaling,
+				scaling: { ...(def.scaling as WorkerScaling), ...(apiW?.scaling || {}) } as WorkerScaling,
 			};
 		};
 		return {
 			...DEFAULT_CONFIG,
 			...data,
 			workers: {
-				envio:              mergeWorker("envio",              data.workers?.envio),
-				verificar:          mergeWorker("verificar",          data.workers?.verificar),
+				envio: mergeWorker("envio", data.workers?.envio),
+				verificar: mergeWorker("verificar", data.workers?.verificar),
 				credentialsChecker: mergeWorker("credentialsChecker", data.workers?.credentialsChecker),
-				agenda:             mergeWorker("agenda",             data.workers?.agenda),
-				postAudiencia:      mergeWorker("postAudiencia",      data.workers?.postAudiencia),
+				agenda: mergeWorker("agenda", data.workers?.agenda),
+				postAudiencia: mergeWorker("postAudiencia", data.workers?.postAudiencia),
 			},
-			scaling:       { ...DEFAULT_CONFIG.scaling, ...(data.scaling || {}) } as ScalingGlobal,
+			scaling: { ...DEFAULT_CONFIG.scaling, ...(data.scaling || {}) } as ScalingGlobal,
 			managerHealth: { ...DEFAULT_CONFIG.managerHealth, ...(data.managerHealth || {}) },
-			stats:         { ...DEFAULT_CONFIG.stats, ...(data.stats || {}) } as TrabajoConfig["stats"],
+			stats: { ...DEFAULT_CONFIG.stats, ...(data.stats || {}) } as TrabajoConfig["stats"],
 		};
 	};
 
@@ -742,7 +776,8 @@ export default function WorkersSecloPage() {
 						<Alert severity="info" icon={false} sx={{ mb: 2 }}>
 							<Typography variant="body2">
 								Health del manager · CPU: <strong>{(config.managerHealth.cpuPercent ?? 0).toFixed(1)}%</strong> · Memoria:{" "}
-								<strong>{(config.managerHealth.memoryPercent ?? 0).toFixed(1)}%</strong> · Última lectura: {fmtDate(config.managerHealth.lastCheckAt)}
+								<strong>{(config.managerHealth.memoryPercent ?? 0).toFixed(1)}%</strong> · Última lectura:{" "}
+								{fmtDate(config.managerHealth.lastCheckAt)}
 							</Typography>
 						</Alert>
 					)}

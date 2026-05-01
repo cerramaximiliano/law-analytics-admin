@@ -114,7 +114,7 @@ export const TIPO_SOCIEDAD_OPTIONS = [
 	"Cooperativas de trabajo",
 	"Otro",
 ] as const;
-export type TipoSociedad = typeof TIPO_SOCIEDAD_OPTIONS[number];
+export type TipoSociedad = (typeof TIPO_SOCIEDAD_OPTIONS)[number];
 
 export interface SecloDatosLaborales {
 	fechaNacimiento?: string | null;

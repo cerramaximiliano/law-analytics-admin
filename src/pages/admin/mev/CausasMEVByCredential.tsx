@@ -467,7 +467,9 @@ const CausasMEVByCredential = () => {
 															<Tooltip
 																title={
 																	causa.folder.listRemovedAt
-																		? `Detectado ${formatDate(causa.folder.listRemovedAt)} — ya no aparece en "Mis Causas" del portal ${(causa.folder.listRemovedSource || "SCBA").toUpperCase()}`
+																		? `Detectado ${formatDate(causa.folder.listRemovedAt)} — ya no aparece en "Mis Causas" del portal ${(
+																				causa.folder.listRemovedSource || "SCBA"
+																		  ).toUpperCase()}`
 																		: `No aparece en "Mis Causas" del portal ${(causa.folder.listRemovedSource || "SCBA").toUpperCase()}`
 																}
 															>
@@ -553,7 +555,13 @@ const CausasMEVByCredential = () => {
 																		: "Retirada del listado"
 																}
 															>
-																<Chip label="Retirada" color="error" size="small" variant="outlined" sx={{ mt: 0.5, width: "fit-content" }} />
+																<Chip
+																	label="Retirada"
+																	color="error"
+																	size="small"
+																	variant="outlined"
+																	sx={{ mt: 0.5, width: "fit-content" }}
+																/>
 															</Tooltip>
 														)}
 													</Stack>

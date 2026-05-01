@@ -29,12 +29,7 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { Refresh, TickCircle, Warning2, Lock1, Setting2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import {
-	PrivacyCheckerService,
-	PrivacyCheckerConfig,
-	PrivacyCheckerLive,
-	PrivacyCheckerFolder,
-} from "api/privacyChecker";
+import { PrivacyCheckerService, PrivacyCheckerConfig, PrivacyCheckerLive, PrivacyCheckerFolder } from "api/privacyChecker";
 
 const FUEROS: Array<{ key: "CIV" | "CSS" | "CNT" | "COM"; label: string }> = [
 	{ key: "CIV", label: "Civil" },
@@ -175,7 +170,13 @@ const PrivacyCheckerWorker = () => {
 							</Box>
 						</Stack>
 						<Tooltip title="Recargar">
-							<IconButton onClick={() => { fetchConfig(); fetchFolders(); }} size="small">
+							<IconButton
+								onClick={() => {
+									fetchConfig();
+									fetchFolders();
+								}}
+								size="small"
+							>
 								<Refresh size={18} />
 							</IconButton>
 						</Tooltip>
@@ -224,9 +225,7 @@ const PrivacyCheckerWorker = () => {
 									<Typography variant="body2" color="text.secondary">
 										Última corrida
 									</Typography>
-									<Typography variant="body1">
-										{config.last_run ? new Date(config.last_run).toLocaleString("es-AR") : "Nunca"}
-									</Typography>
+									<Typography variant="body1">{config.last_run ? new Date(config.last_run).toLocaleString("es-AR") : "Nunca"}</Typography>
 									<Typography variant="caption" color="text.secondary">
 										Total: {config.stats?.total_runs ?? 0} ciclos
 									</Typography>
@@ -246,8 +245,8 @@ const PrivacyCheckerWorker = () => {
 					</Stack>
 
 					<Alert severity="info" sx={{ mb: 2 }}>
-						Cambios en este formulario impactan al iniciar el siguiente ciclo del worker (sin requerir restart). Solo se procesan
-						folders <strong>PJN individuales</strong> (source distinto de <code>pjn-login</code>).
+						Cambios en este formulario impactan al iniciar el siguiente ciclo del worker (sin requerir restart). Solo se procesan folders{" "}
+						<strong>PJN individuales</strong> (source distinto de <code>pjn-login</code>).
 					</Alert>
 
 					<Grid container spacing={2}>
@@ -322,23 +321,14 @@ const PrivacyCheckerWorker = () => {
 						Estadísticas acumuladas
 					</Typography>
 					<Stack direction="row" spacing={1} flexWrap="wrap">
-						<Chip
-							label={`${config.stats?.causas_marked_private ?? 0} marcadas privadas`}
-							color="error"
-							variant="outlined"
-							size="small"
-						/>
+						<Chip label={`${config.stats?.causas_marked_private ?? 0} marcadas privadas`} color="error" variant="outlined" size="small" />
 						<Chip
 							label={`${config.stats?.causas_reset_public ?? 0} reseteadas a públicas`}
 							color="success"
 							variant="outlined"
 							size="small"
 						/>
-						<Chip
-							label={`${config.stats?.folders_synced ?? 0} folders sincronizados`}
-							variant="outlined"
-							size="small"
-						/>
+						<Chip label={`${config.stats?.folders_synced ?? 0} folders sincronizados`} variant="outlined" size="small" />
 					</Stack>
 				</CardContent>
 			</Card>
@@ -400,31 +390,19 @@ const PrivacyCheckerWorker = () => {
 												<Chip
 													label={f.accessFailureCount}
 													size="small"
-													color={
-														f.accessFailureCount >= (config.consecutive_strikes_threshold ?? 3)
-															? "error"
-															: "warning"
-													}
+													color={f.accessFailureCount >= (config.consecutive_strikes_threshold ?? 3) ? "error" : "warning"}
 												/>
 											</TableCell>
 											<TableCell>
 												{f.causaIsPrivate ? (
-													<Chip
-														icon={<Lock1 size={12} />}
-														label="Reservada"
-														size="small"
-														color="error"
-														variant="outlined"
-													/>
+													<Chip icon={<Lock1 size={12} />} label="Reservada" size="small" color="error" variant="outlined" />
 												) : (
 													<Chip label="Pública" size="small" color="success" variant="outlined" />
 												)}
 											</TableCell>
 											<TableCell>
 												<Typography variant="caption">
-													{f.causaPrivateDetectedAt
-														? new Date(f.causaPrivateDetectedAt).toLocaleDateString("es-AR")
-														: "—"}
+													{f.causaPrivateDetectedAt ? new Date(f.causaPrivateDetectedAt).toLocaleDateString("es-AR") : "—"}
 												</Typography>
 											</TableCell>
 										</TableRow>

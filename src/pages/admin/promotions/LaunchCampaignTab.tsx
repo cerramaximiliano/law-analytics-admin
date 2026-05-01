@@ -30,7 +30,22 @@ import {
 	Typography,
 } from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
-import { Send2, People, TickCircle, InfoCircle, Sms, Calendar, DocumentText, Warning2, CloseCircle, Timer1, Add, Trash, ArrowDown2, ArrowUp2 } from "iconsax-react";
+import {
+	Send2,
+	People,
+	TickCircle,
+	InfoCircle,
+	Sms,
+	Calendar,
+	DocumentText,
+	Warning2,
+	CloseCircle,
+	Timer1,
+	Add,
+	Trash,
+	ArrowDown2,
+	ArrowUp2,
+} from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { DiscountCode } from "api/discounts";
 import discountCampaignService, { CampaignStep, LaunchCampaignResult, MarketingTemplate } from "api/discountCampaign";
@@ -64,7 +79,12 @@ interface StepTiming {
 
 interface Props {
 	discount: DiscountCode;
-	onCampaignLaunched?: (campaignInfo: { campaignId: string; type: "onetime" | "sequence"; frozenSegment: boolean; launchedAt: string }) => void;
+	onCampaignLaunched?: (campaignInfo: {
+		campaignId: string;
+		type: "onetime" | "sequence";
+		frozenSegment: boolean;
+		launchedAt: string;
+	}) => void;
 }
 
 // Variables que el marketing service reemplaza automáticamente en los templates
@@ -222,10 +242,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 	const discountVarsInHtml = useMemo(() => templateVars.filter((v) => DISCOUNT_VARS.has(v.toLowerCase())), [templateVars]);
 
 	const unknownVarsInHtml = useMemo(
-		() =>
-			templateVars.filter(
-				(v) => !AUTO_REPLACED_VARS.has(v) && !DISCOUNT_VARS.has(v.toLowerCase()) && !isAutoReplacedByPattern(v),
-			),
+		() => templateVars.filter((v) => !AUTO_REPLACED_VARS.has(v) && !DISCOUNT_VARS.has(v.toLowerCase()) && !isAutoReplacedByPattern(v)),
 		[templateVars],
 	);
 
@@ -294,8 +311,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 	const updateStep = (id: string, field: keyof AdditionalStep, value: any) =>
 		setAdditionalSteps((prev) => prev.map((s) => (s.id === id ? { ...s, [field]: value } : s)));
 
-	const toggleStep = (id: string) =>
-		setAdditionalSteps((prev) => prev.map((s) => (s.id === id ? { ...s, expanded: !s.expanded } : s)));
+	const toggleStep = (id: string) => setAdditionalSteps((prev) => prev.map((s) => (s.id === id ? { ...s, expanded: !s.expanded } : s)));
 
 	// ── Submit ────────────────────────────────────────────────────────────────────
 	const handleSubmit = async () => {
@@ -378,7 +394,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 		setActivateLoading(true);
 		try {
 			await discountCampaignService.activateCampaign(discount._id, result.campaignId);
-			setResult((prev) => prev ? { ...prev, status: "active" } : prev);
+			setResult((prev) => (prev ? { ...prev, status: "active" } : prev));
 			enqueueSnackbar("Campaña activada correctamente", { variant: "success" });
 		} catch (err: any) {
 			const msg = err.response?.data?.message || err.message || "Error al activar la campaña";
@@ -390,7 +406,8 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 
 	const stepsValid = campaignType !== "sequence" || additionalSteps.every((s) => s.subject.trim() && s.htmlBody.trim());
 	const hasInvalidStepTimings = campaignType === "sequence" && stepTimings.some((t) => !t.isAfterPrev || !t.isBeforeExpiry);
-	const canSubmit = !loading && subject.trim().length > 0 && htmlBody.trim().length > 0 && !dynamicSegmentBlocked && stepsValid && !hasInvalidStepTimings;
+	const canSubmit =
+		!loading && subject.trim().length > 0 && htmlBody.trim().length > 0 && !dynamicSegmentBlocked && stepsValid && !hasInvalidStepTimings;
 
 	return (
 		<Stack spacing={3}>
@@ -493,8 +510,8 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 							<AlertTitle sx={{ fontSize: "0.85rem", fontWeight: 700 }}>Ya existe una campaña lanzada para esta promoción</AlertTitle>
 							<Stack spacing={0.75}>
 								<Typography variant="caption" component="div">
-									Si lanzás una nueva campaña, se creará de forma independiente en el servidor de marketing —
-									la anterior <strong>no se eliminará automáticamente</strong>.
+									Si lanzás una nueva campaña, se creará de forma independiente en el servidor de marketing — la anterior{" "}
+									<strong>no se eliminará automáticamente</strong>.
 								</Typography>
 								<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 									<Chip label={`ID: ${discount.campaign.campaignId}`} size="small" sx={{ fontFamily: "monospace", fontSize: "0.65rem" }} />
@@ -504,9 +521,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 										size="small"
 										variant="outlined"
 									/>
-									{discount.campaign.frozenSegment && (
-										<Chip label="Segmento congelado" size="small" color="warning" variant="outlined" />
-									)}
+									{discount.campaign.frozenSegment && <Chip label="Segmento congelado" size="small" color="warning" variant="outlined" />}
 								</Stack>
 							</Stack>
 						</Alert>
@@ -533,223 +548,222 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 							</Stack>
 						</AccordionSummary>
 						<AccordionDetails sx={{ pt: 0, pb: 2 }}>
-						<Stack spacing={2}>
-
-						{/* Modo de template */}
-						<Stack direction="row" spacing={1} mb={2}>
-							{(["new", "existing"] as const).map((mode) => (
-								<Button
-									key={mode}
-									size="small"
-									variant={templateMode === mode ? "contained" : "outlined"}
-									onClick={() => setTemplateMode(mode)}
-									sx={{ textTransform: "none" }}
-								>
-									{mode === "new" ? "✏️ Crear template nuevo" : "📂 Cargar desde repositorio"}
-								</Button>
-							))}
-						</Stack>
-
-						{templateMode === "existing" && (
 							<Stack spacing={2}>
-								{/* Explicación del modo */}
-								<Paper
-									variant="outlined"
-									sx={{ p: 1.5, bgcolor: alpha(theme.palette.info.main, 0.04), borderColor: alpha(theme.palette.info.main, 0.3) }}
-								>
-									<Stack direction="row" spacing={1} alignItems="flex-start">
-										<InfoCircle size={16} color={theme.palette.info.main} style={{ marginTop: 2, flexShrink: 0 }} />
-										<Typography variant="caption" color="text.secondary">
-											Seleccioná un template del repositorio de marketing como <strong>punto de partida</strong>. Su contenido se cargará en
-											el editor para que puedas personalizarlo. Al lanzar, siempre se crea un
-											<strong> template nuevo</strong> específico para esta campaña.
-										</Typography>
-									</Stack>
-								</Paper>
+								{/* Modo de template */}
+								<Stack direction="row" spacing={1} mb={2}>
+									{(["new", "existing"] as const).map((mode) => (
+										<Button
+											key={mode}
+											size="small"
+											variant={templateMode === mode ? "contained" : "outlined"}
+											onClick={() => setTemplateMode(mode)}
+											sx={{ textTransform: "none" }}
+										>
+											{mode === "new" ? "✏️ Crear template nuevo" : "📂 Cargar desde repositorio"}
+										</Button>
+									))}
+								</Stack>
 
-								{/* Selector de template */}
-								<Autocomplete
-									options={templates}
-									loading={templatesLoading}
-									getOptionLabel={(t) => `${t.name} (${t.category})`}
-									value={selectedTemplate}
-									onChange={(_, val) => handleTemplateSelect(val)}
-									ListboxProps={{ style: { maxHeight: 220 } }}
-									renderOption={(props, t) => (
-										<Box component="li" {...props} key={t._id}>
-											<Stack>
-												<Typography variant="body2" fontWeight={600}>
-													{t.name}
+								{templateMode === "existing" && (
+									<Stack spacing={2}>
+										{/* Explicación del modo */}
+										<Paper
+											variant="outlined"
+											sx={{ p: 1.5, bgcolor: alpha(theme.palette.info.main, 0.04), borderColor: alpha(theme.palette.info.main, 0.3) }}
+										>
+											<Stack direction="row" spacing={1} alignItems="flex-start">
+												<InfoCircle size={16} color={theme.palette.info.main} style={{ marginTop: 2, flexShrink: 0 }} />
+												<Typography variant="caption" color="text.secondary">
+													Seleccioná un template del repositorio de marketing como <strong>punto de partida</strong>. Su contenido se
+													cargará en el editor para que puedas personalizarlo. Al lanzar, siempre se crea un
+													<strong> template nuevo</strong> específico para esta campaña.
 												</Typography>
-												<Stack direction="row" spacing={0.5} flexWrap="wrap">
-													<Chip label={t.category} size="small" variant="outlined" sx={{ fontSize: "0.6rem" }} />
-													{t.variables?.slice(0, 4).map((v) => (
-														<Chip key={v} label={`{{${v}}}`} size="small" sx={{ fontSize: "0.6rem", fontFamily: "monospace" }} />
-													))}
-													{(t.variables?.length || 0) > 4 && (
-														<Chip label={`+${(t.variables?.length || 0) - 4} vars`} size="small" sx={{ fontSize: "0.6rem" }} />
+											</Stack>
+										</Paper>
+
+										{/* Selector de template */}
+										<Autocomplete
+											options={templates}
+											loading={templatesLoading}
+											getOptionLabel={(t) => `${t.name} (${t.category})`}
+											value={selectedTemplate}
+											onChange={(_, val) => handleTemplateSelect(val)}
+											ListboxProps={{ style: { maxHeight: 220 } }}
+											renderOption={(props, t) => (
+												<Box component="li" {...props} key={t._id}>
+													<Stack>
+														<Typography variant="body2" fontWeight={600}>
+															{t.name}
+														</Typography>
+														<Stack direction="row" spacing={0.5} flexWrap="wrap">
+															<Chip label={t.category} size="small" variant="outlined" sx={{ fontSize: "0.6rem" }} />
+															{t.variables?.slice(0, 4).map((v) => (
+																<Chip key={v} label={`{{${v}}}`} size="small" sx={{ fontSize: "0.6rem", fontFamily: "monospace" }} />
+															))}
+															{(t.variables?.length || 0) > 4 && (
+																<Chip label={`+${(t.variables?.length || 0) - 4} vars`} size="small" sx={{ fontSize: "0.6rem" }} />
+															)}
+														</Stack>
+													</Stack>
+												</Box>
+											)}
+											renderInput={(params) => (
+												<TextField
+													{...params}
+													label="Buscar template"
+													size="small"
+													placeholder="Escribí para filtrar..."
+													InputProps={{
+														...params.InputProps,
+														endAdornment: (
+															<>
+																{templatesLoading && <CircularProgress size={14} />}
+																{params.InputProps.endAdornment}
+															</>
+														),
+													}}
+												/>
+											)}
+										/>
+
+										{/* Info del template seleccionado */}
+										{selectedTemplate && (
+											<Paper variant="outlined" sx={{ p: 1.5, bgcolor: alpha(theme.palette.success.main, 0.04) }}>
+												<Stack spacing={0.5}>
+													<Typography variant="caption" fontWeight={700}>
+														Template cargado: {selectedTemplate.name}
+													</Typography>
+													{selectedTemplate.description && (
+														<Typography variant="caption" color="text.secondary">
+															{selectedTemplate.description}
+														</Typography>
+													)}
+													{(selectedTemplate.variables?.length || 0) > 0 && (
+														<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+															<Typography variant="caption" color="text.secondary" sx={{ alignSelf: "center" }}>
+																Variables declaradas:
+															</Typography>
+															{selectedTemplate.variables.map((v) => {
+																const isAuto = AUTO_REPLACED_VARS.has(v) || isAutoReplacedByPattern(v);
+																const isDiscount = DISCOUNT_VARS.has(v.toLowerCase());
+																return (
+																	<Tooltip
+																		key={v}
+																		title={
+																			isAuto
+																				? "Reemplazada automáticamente por el servidor de marketing"
+																				: isDiscount
+																				? "Variable de descuento — NO se reemplaza automáticamente"
+																				: "Variable desconocida — quedará vacía si no se provee"
+																		}
+																	>
+																		<Chip
+																			label={`{{${v}}}`}
+																			size="small"
+																			color={isAuto ? "success" : isDiscount ? "warning" : "default"}
+																			variant="outlined"
+																			sx={{ fontSize: "0.6rem", fontFamily: "monospace", cursor: "help" }}
+																		/>
+																	</Tooltip>
+																);
+															})}
+														</Stack>
 													)}
 												</Stack>
-											</Stack>
-										</Box>
+											</Paper>
+										)}
+									</Stack>
+								)}
+
+								{/* ── Validaciones de variables en el HTML ── */}
+								<Stack spacing={1} mt={templateMode === "existing" ? 2 : 0}>
+									{!hasDiscountCodeMentioned && (htmlBody.trim().length > 0 || selectedTemplate) && (
+										<Alert severity="warning" icon={<Warning2 size={16} />} sx={{ py: 0.5 }}>
+											<Typography variant="caption">
+												<strong>El HTML no menciona el código de descuento.</strong> Asegurate de incluir <code>{discount.code}</code> en el
+												cuerpo del email para que el destinatario pueda usarlo.
+											</Typography>
+										</Alert>
 									)}
-									renderInput={(params) => (
+									{discountVarsInHtml.length > 0 && (
+										<Alert severity="success" icon={<TickCircle size={16} />} sx={{ py: 0.5 }}>
+											<Typography variant="caption">
+												<strong>Variables de descuento detectadas:</strong> {discountVarsInHtml.map((v) => `{{${v}}}`).join(", ")} — serán
+												reemplazadas automáticamente al enviar usando los valores de la promoción (código: <code>{discount.code}</code>,
+												vence: {new Date(discount.validUntil).toLocaleDateString("es-AR")}).
+											</Typography>
+										</Alert>
+									)}
+									{unknownVarsInHtml.length > 0 && (
+										<Alert severity="info" icon={<InfoCircle size={16} />} sx={{ py: 0.5 }}>
+											<Typography variant="caption">
+												Variables no reconocidas (quedarán vacías): {unknownVarsInHtml.map((v) => `{{${v}}}`).join(", ")}. Si son
+												intencionales, asegurate de que el contacto tenga esos valores en sus <code>customFields</code>.
+											</Typography>
+										</Alert>
+									)}
+								</Stack>
+
+								<Divider sx={{ my: 1 }} />
+								<Grid container spacing={2}>
+									<Grid item xs={12} md={8}>
 										<TextField
-											{...params}
-											label="Buscar template"
+											label="Nombre de la campaña"
+											value={campaignName}
+											onChange={(e) => setCampaignName(e.target.value)}
+											fullWidth
 											size="small"
-											placeholder="Escribí para filtrar..."
+											helperText="Identificador interno para esta campaña en el servidor de marketing"
+										/>
+									</Grid>
+									<Grid item xs={12} md={4}>
+										<TextField
+											label="Nombre del remitente"
+											value={fromName}
+											onChange={(e) => setFromName(e.target.value)}
+											fullWidth
+											size="small"
+											helperText="Nombre visible en el cliente de email del destinatario"
+										/>
+									</Grid>
+									<Grid item xs={12}>
+										<TextField
+											label="Asunto del email"
+											value={subject}
+											onChange={(e) => setSubject(e.target.value)}
+											fullWidth
+											size="small"
+											required
+											helperText="Las variables {{firstName}}, {{fullName}} serán reemplazadas automáticamente si están disponibles."
 											InputProps={{
-												...params.InputProps,
-												endAdornment: (
-													<>
-														{templatesLoading && <CircularProgress size={14} />}
-														{params.InputProps.endAdornment}
-													</>
+												startAdornment: (
+													<InputAdornment position="start">
+														<Sms size={16} color={theme.palette.text.secondary} />
+													</InputAdornment>
 												),
 											}}
 										/>
-									)}
-								/>
-
-								{/* Info del template seleccionado */}
-								{selectedTemplate && (
-									<Paper variant="outlined" sx={{ p: 1.5, bgcolor: alpha(theme.palette.success.main, 0.04) }}>
-										<Stack spacing={0.5}>
-											<Typography variant="caption" fontWeight={700}>
-												Template cargado: {selectedTemplate.name}
-											</Typography>
-											{selectedTemplate.description && (
-												<Typography variant="caption" color="text.secondary">
-													{selectedTemplate.description}
-												</Typography>
-											)}
-											{(selectedTemplate.variables?.length || 0) > 0 && (
-												<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-													<Typography variant="caption" color="text.secondary" sx={{ alignSelf: "center" }}>
-														Variables declaradas:
-													</Typography>
-													{selectedTemplate.variables.map((v) => {
-														const isAuto = AUTO_REPLACED_VARS.has(v) || isAutoReplacedByPattern(v);
-														const isDiscount = DISCOUNT_VARS.has(v.toLowerCase());
-														return (
-															<Tooltip
-																key={v}
-																title={
-																	isAuto
-																		? "Reemplazada automáticamente por el servidor de marketing"
-																		: isDiscount
-																		? "Variable de descuento — NO se reemplaza automáticamente"
-																		: "Variable desconocida — quedará vacía si no se provee"
-																}
-															>
-																<Chip
-																	label={`{{${v}}}`}
-																	size="small"
-																	color={isAuto ? "success" : isDiscount ? "warning" : "default"}
-																	variant="outlined"
-																	sx={{ fontSize: "0.6rem", fontFamily: "monospace", cursor: "help" }}
-																/>
-															</Tooltip>
-														);
-													})}
-												</Stack>
-											)}
-										</Stack>
-									</Paper>
-								)}
+									</Grid>
+									<Grid item xs={12}>
+										<TextField
+											label="Cuerpo del email (HTML)"
+											value={htmlBody}
+											onChange={(e) => setHtmlBody(e.target.value)}
+											fullWidth
+											multiline
+											rows={12}
+											required
+											inputProps={{ style: { fontFamily: "monospace", fontSize: 12 } }}
+											helperText={
+												templateMode === "existing" && selectedTemplate
+													? "Contenido cargado desde el template seleccionado. Podés editarlo libremente antes de lanzar."
+													: "HTML completo del email. Variables auto-reemplazadas: {{firstName}}, {{lastName}}, {{email}}, {{campaignName}}."
+											}
+										/>
+									</Grid>
+								</Grid>
 							</Stack>
-						)}
-
-						{/* ── Validaciones de variables en el HTML ── */}
-						<Stack spacing={1} mt={templateMode === "existing" ? 2 : 0}>
-							{!hasDiscountCodeMentioned && (htmlBody.trim().length > 0 || selectedTemplate) && (
-								<Alert severity="warning" icon={<Warning2 size={16} />} sx={{ py: 0.5 }}>
-									<Typography variant="caption">
-										<strong>El HTML no menciona el código de descuento.</strong> Asegurate de incluir <code>{discount.code}</code> en el
-										cuerpo del email para que el destinatario pueda usarlo.
-									</Typography>
-								</Alert>
-							)}
-							{discountVarsInHtml.length > 0 && (
-								<Alert severity="success" icon={<TickCircle size={16} />} sx={{ py: 0.5 }}>
-									<Typography variant="caption">
-										<strong>Variables de descuento detectadas:</strong> {discountVarsInHtml.map((v) => `{{${v}}}`).join(", ")} — serán
-										reemplazadas automáticamente al enviar usando los valores de la promoción (código:{" "}
-										<code>{discount.code}</code>, vence: {new Date(discount.validUntil).toLocaleDateString("es-AR")}).
-									</Typography>
-								</Alert>
-							)}
-							{unknownVarsInHtml.length > 0 && (
-								<Alert severity="info" icon={<InfoCircle size={16} />} sx={{ py: 0.5 }}>
-									<Typography variant="caption">
-										Variables no reconocidas (quedarán vacías): {unknownVarsInHtml.map((v) => `{{${v}}}`).join(", ")}. Si son intencionales,
-										asegurate de que el contacto tenga esos valores en sus <code>customFields</code>.
-									</Typography>
-								</Alert>
-							)}
-						</Stack>
-
-					<Divider sx={{ my: 1 }} />
-					<Grid container spacing={2}>
-							<Grid item xs={12} md={8}>
-								<TextField
-									label="Nombre de la campaña"
-									value={campaignName}
-									onChange={(e) => setCampaignName(e.target.value)}
-									fullWidth
-									size="small"
-									helperText="Identificador interno para esta campaña en el servidor de marketing"
-								/>
-							</Grid>
-							<Grid item xs={12} md={4}>
-								<TextField
-									label="Nombre del remitente"
-									value={fromName}
-									onChange={(e) => setFromName(e.target.value)}
-									fullWidth
-									size="small"
-									helperText="Nombre visible en el cliente de email del destinatario"
-								/>
-							</Grid>
-							<Grid item xs={12}>
-								<TextField
-									label="Asunto del email"
-									value={subject}
-									onChange={(e) => setSubject(e.target.value)}
-									fullWidth
-									size="small"
-									required
-									helperText="Las variables {{firstName}}, {{fullName}} serán reemplazadas automáticamente si están disponibles."
-									InputProps={{
-										startAdornment: (
-											<InputAdornment position="start">
-												<Sms size={16} color={theme.palette.text.secondary} />
-											</InputAdornment>
-										),
-									}}
-								/>
-							</Grid>
-							<Grid item xs={12}>
-								<TextField
-									label="Cuerpo del email (HTML)"
-									value={htmlBody}
-									onChange={(e) => setHtmlBody(e.target.value)}
-									fullWidth
-									multiline
-									rows={12}
-									required
-									inputProps={{ style: { fontFamily: "monospace", fontSize: 12 } }}
-									helperText={
-										templateMode === "existing" && selectedTemplate
-											? "Contenido cargado desde el template seleccionado. Podés editarlo libremente antes de lanzar."
-											: "HTML completo del email. Variables auto-reemplazadas: {{firstName}}, {{lastName}}, {{email}}, {{campaignName}}."
-									}
-								/>
-							</Grid>
-							</Grid>
-					</Stack>
-					</AccordionDetails>
+						</AccordionDetails>
 					</Accordion>
 
 					{/* ── 4. Tipo de campaña ── */}
@@ -790,310 +804,319 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 									</Button>
 								))}
 							</Stack>
-						{campaignType === "sequence" && (
-							<Stack spacing={1.5}>
-								<Paper
-									variant="outlined"
-									sx={{ p: 1.5, bgcolor: alpha(theme.palette.secondary.main, 0.04), borderColor: alpha(theme.palette.secondary.main, 0.3) }}
-								>
-									<Stack direction="row" spacing={1} alignItems="flex-start">
-										<InfoCircle size={16} color={theme.palette.secondary.main} style={{ marginTop: 2, flexShrink: 0 }} />
-										<Typography variant="caption" color="text.secondary">
-											El <strong>Email inicial</strong> (configurado arriba) se envía en el momento del lanzamiento. Los pasos adicionales se
-											envían automáticamente después de la espera configurada en cada uno. Las variables{" "}
-											<code>{"{{code}}"}</code>, <code>{"{{discountValue}}"}</code>, <code>{"{{validUntil}}"}</code> funcionan en todos los
-											pasos.
-										</Typography>
-									</Stack>
-								</Paper>
-
-								{/* Paso 0 (fijo, siempre es el email del editor arriba) */}
-								<Paper variant="outlined" sx={{ p: 1.5, bgcolor: alpha(theme.palette.success.main, 0.04) }}>
-									<Stack direction="row" spacing={1} alignItems="center">
-										<Chip label="Paso 1" size="small" color="success" />
-										<Typography variant="body2" fontWeight={600}>
-											{subject || "Email inicial"}
-										</Typography>
-										<Chip label="Envío inmediato" size="small" variant="outlined" />
-									</Stack>
-								</Paper>
-
-								{/* Pasos adicionales */}
-								{additionalSteps.map((step, idx) => (
-									<Paper key={step.id} variant="outlined" sx={{ overflow: "hidden" }}>
-										{/* Header del paso */}
-										<Stack
-											direction="row"
-											spacing={1}
-											alignItems="center"
-											sx={{ p: 1.5, cursor: "pointer", "&:hover": { bgcolor: "action.hover" } }}
-											onClick={() => toggleStep(step.id)}
-										>
-											<Chip label={`Paso ${idx + 2}`} size="small" color="secondary" />
-											<Box flex={1} minWidth={0}>
-												<TextField
-													size="small"
-													value={step.name}
-													onChange={(e) => {
-														e.stopPropagation();
-														updateStep(step.id, "name", e.target.value);
-													}}
-													onClick={(e) => e.stopPropagation()}
-													placeholder="Nombre del paso"
-													variant="standard"
-													sx={{ "& .MuiInput-root": { fontSize: "0.875rem", fontWeight: 600 } }}
-												/>
-											</Box>
-
-											{/* Modo de timing + controles de delay */}
-											<Stack direction="row" spacing={0.5} alignItems="center" onClick={(e) => e.stopPropagation()}>
-												<Tooltip
-													title={
-														step.anchorMode === "relative"
-															? "Modo relativo: enviar X horas/días después del paso anterior. Hacé click en 📅 para anclar al vencimiento del descuento."
-															: "Modo anclado: este paso se envía X días antes de que expire el descuento. El delay real se calcula automáticamente. Hacé click en ⏱ para volver a modo relativo."
-													}
-												>
-													<ToggleButtonGroup
-														size="small"
-														exclusive
-														value={step.anchorMode}
-														onChange={(_, val) => val && updateStep(step.id, "anchorMode", val)}
-													>
-														<ToggleButton value="relative" sx={{ px: 0.75, py: 0.25, fontSize: "0.7rem" }}>
-															<Timer1 size={13} />
-														</ToggleButton>
-														<ToggleButton value="days_before_expiry" sx={{ px: 0.75, py: 0.25, fontSize: "0.7rem" }}>
-															<Calendar size={13} />
-														</ToggleButton>
-													</ToggleButtonGroup>
-												</Tooltip>
-
-												{step.anchorMode === "relative" ? (
-													<>
-														<TextField
-															size="small"
-															type="number"
-															value={step.timeDelayValue}
-															onChange={(e) => updateStep(step.id, "timeDelayValue", Number(e.target.value))}
-															inputProps={{ min: 1, style: { width: 44, textAlign: "center" } }}
-															label="Espera"
-															sx={{ width: 86 }}
-														/>
-														<Select
-															size="small"
-															value={step.timeDelayUnit}
-															onChange={(e) => updateStep(step.id, "timeDelayUnit", e.target.value)}
-															sx={{ minWidth: 82, fontSize: "0.8rem" }}
-														>
-															<MenuItem value="hours">horas</MenuItem>
-															<MenuItem value="days">días</MenuItem>
-														</Select>
-													</>
-												) : (
-													<>
-														<TextField
-															size="small"
-															type="number"
-															value={step.daysBeforeExpiry}
-															onChange={(e) => updateStep(step.id, "daysBeforeExpiry", Math.max(1, Number(e.target.value)))}
-															inputProps={{ min: 1, style: { width: 44, textAlign: "center" } }}
-															label="Días antes"
-															sx={{ width: 86 }}
-														/>
-														<Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap", fontSize: "0.7rem" }}>
-															días antes<br />del venc.
-														</Typography>
-													</>
-												)}
-											</Stack>
-
-											{/* Chip de fecha estimada */}
-											{stepTimings[idx] && (() => {
-												const t = stepTimings[idx];
-												const fmtShort = t.estimatedSendDate.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" });
-												const fmtFull = t.estimatedSendDate.toLocaleDateString("es-AR", { day: "numeric", month: "long", year: "numeric" });
-												const chipColor = !t.isAfterPrev || !t.isBeforeExpiry
-													? "error"
-													: t.daysRemainingAtSend <= 2
-													? "warning"
-													: "success";
-												const chipLabel = !t.isAfterPrev ? "⚠ orden" : !t.isBeforeExpiry ? "⚠ expirado" : fmtShort;
-												const tooltipMsg = !t.isAfterPrev
-													? `El delay calculado es ${t.computedDelayDays.toFixed(1)} días — este paso se solaparía con el anterior. Ajustá los valores.`
-													: !t.isBeforeExpiry
-													? `Este paso se enviaría ${Math.abs(t.daysRemainingAtSend)} días DESPUÉS de que expire el descuento (${validUntilDate.toLocaleDateString("es-AR")}).`
-													: `Envío estimado: ${fmtFull}\n${t.daysRemainingAtSend} día${t.daysRemainingAtSend !== 1 ? "s" : ""} antes del vencimiento`;
-												return (
-													<Tooltip title={tooltipMsg}>
-														<Chip
-															label={chipLabel}
-															size="small"
-															color={chipColor}
-															variant="outlined"
-															onClick={(e) => e.stopPropagation()}
-															sx={{ fontFamily: "monospace", fontSize: "0.62rem", cursor: "help" }}
-														/>
-													</Tooltip>
-												);
-											})()}
-
-											<IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); removeStep(step.id); }}>
-												<Trash size={16} />
-											</IconButton>
-											{step.expanded ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}
-										</Stack>
-
-										{/* Body del paso (colapsable) */}
-										<Collapse in={step.expanded}>
-											<Divider />
-											<Box sx={{ p: 1.5 }}>
-												<Grid container spacing={1.5}>
-													<Grid item xs={12}>
-														<TextField
-															fullWidth
-															size="small"
-															label="Asunto"
-															value={step.subject}
-															onChange={(e) => updateStep(step.id, "subject", e.target.value)}
-															error={!step.subject.trim()}
-															helperText={!step.subject.trim() ? "Requerido" : ""}
-														/>
-													</Grid>
-													<Grid item xs={12}>
-														<TextField
-															fullWidth
-															size="small"
-															label="Cuerpo HTML"
-															value={step.htmlBody}
-															onChange={(e) => updateStep(step.id, "htmlBody", e.target.value)}
-															multiline
-															rows={6}
-															error={!step.htmlBody.trim()}
-															helperText={!step.htmlBody.trim() ? "Requerido" : "Usá {{code}}, {{firstName}}, {{validUntil}}, etc."}
-															inputProps={{ style: { fontFamily: "monospace", fontSize: 12 } }}
-														/>
-													</Grid>
-												</Grid>
-											</Box>
-										</Collapse>
-									</Paper>
-								))}
-
-								<Button
-									variant="outlined"
-									size="small"
-									startIcon={<Add size={16} />}
-									onClick={addStep}
-									sx={{ alignSelf: "flex-start" }}
-								>
-									Agregar paso
-								</Button>
-
-								{/* ── Timeline summary ── */}
-								{additionalSteps.length > 0 && (
+							{campaignType === "sequence" && (
+								<Stack spacing={1.5}>
 									<Paper
 										variant="outlined"
-										sx={{ p: 1.5, bgcolor: alpha(theme.palette.background.default, 0.6) }}
+										sx={{
+											p: 1.5,
+											bgcolor: alpha(theme.palette.secondary.main, 0.04),
+											borderColor: alpha(theme.palette.secondary.main, 0.3),
+										}}
 									>
-										<Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: "block", mb: 1 }}>
-											Línea de tiempo estimada
-										</Typography>
-										<Stack spacing={0.75}>
-											{/* Paso 1 (email inicial, día 0) */}
-											<Stack direction="row" spacing={1} alignItems="center">
-												<Chip label="Paso 1" size="small" color="success" sx={{ fontSize: "0.6rem", minWidth: 54 }} />
-												<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace", minWidth: 38 }}>
-													{campaignStartDate.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" })}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ flex: 1 }} noWrap>
-													{subject || "Email inicial"} — día 0
-												</Typography>
-												<Typography variant="caption" color="success.main" sx={{ whiteSpace: "nowrap" }}>
-													{Math.ceil((validUntilDate.getTime() - campaignStartDate.getTime()) / 86400000)}d antes del venc.
-												</Typography>
-											</Stack>
+										<Stack direction="row" spacing={1} alignItems="flex-start">
+											<InfoCircle size={16} color={theme.palette.secondary.main} style={{ marginTop: 2, flexShrink: 0 }} />
+											<Typography variant="caption" color="text.secondary">
+												El <strong>Email inicial</strong> (configurado arriba) se envía en el momento del lanzamiento. Los pasos adicionales
+												se envían automáticamente después de la espera configurada en cada uno. Las variables <code>{"{{code}}"}</code>,{" "}
+												<code>{"{{discountValue}}"}</code>, <code>{"{{validUntil}}"}</code> funcionan en todos los pasos.
+											</Typography>
+										</Stack>
+									</Paper>
 
-											{/* Pasos adicionales */}
-											{additionalSteps.map((step, idx) => {
-												const t = stepTimings[idx];
-												if (!t) return null;
-												const fmtShort = t.estimatedSendDate.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" });
-												const isOk = t.isAfterPrev && t.isBeforeExpiry;
-												return (
-													<Stack key={step.id} direction="row" spacing={1} alignItems="center">
-														<Chip
-															label={`Paso ${idx + 2}`}
-															size="small"
-															color={isOk ? "secondary" : "error"}
-															sx={{ fontSize: "0.6rem", minWidth: 54 }}
-														/>
-														<Typography
-															variant="caption"
-															color={isOk ? "text.secondary" : "error.main"}
-															sx={{ fontFamily: "monospace", minWidth: 38 }}
-														>
-															{fmtShort}
-														</Typography>
-														<Stack direction="row" spacing={0.5} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
-															<Typography variant="caption" color="text.secondary" noWrap>
-																{step.name}
-															</Typography>
-															{step.anchorMode === "days_before_expiry" && (
-																<Chip
-																	label="anclado"
-																	size="small"
-																	color="info"
-																	variant="outlined"
-																	sx={{ fontSize: "0.55rem", height: 16, flexShrink: 0 }}
-																/>
-															)}
-														</Stack>
-														<Typography
-															variant="caption"
-															sx={{ whiteSpace: "nowrap" }}
-															color={
-																!isOk ? "error.main" : t.daysRemainingAtSend <= 2 ? "warning.main" : "success.main"
-															}
-														>
-															{!t.isAfterPrev
-																? "⚠ solapado"
-																: !t.isBeforeExpiry
-																? `${Math.abs(t.daysRemainingAtSend)}d DESPUÉS del venc.`
-																: `${t.daysRemainingAtSend}d antes del venc.`}
-														</Typography>
-													</Stack>
-												);
-											})}
+									{/* Paso 0 (fijo, siempre es el email del editor arriba) */}
+									<Paper variant="outlined" sx={{ p: 1.5, bgcolor: alpha(theme.palette.success.main, 0.04) }}>
+										<Stack direction="row" spacing={1} alignItems="center">
+											<Chip label="Paso 1" size="small" color="success" />
+											<Typography variant="body2" fontWeight={600}>
+												{subject || "Email inicial"}
+											</Typography>
+											<Chip label="Envío inmediato" size="small" variant="outlined" />
+										</Stack>
+									</Paper>
 
-											{/* Línea de vencimiento */}
+									{/* Pasos adicionales */}
+									{additionalSteps.map((step, idx) => (
+										<Paper key={step.id} variant="outlined" sx={{ overflow: "hidden" }}>
+											{/* Header del paso */}
 											<Stack
 												direction="row"
 												spacing={1}
 												alignItems="center"
-												sx={{ borderTop: "1px dashed", borderColor: "divider", pt: 0.75, mt: 0.25 }}
+												sx={{ p: 1.5, cursor: "pointer", "&:hover": { bgcolor: "action.hover" } }}
+												onClick={() => toggleStep(step.id)}
 											>
-												<Chip label="Vence" size="small" variant="outlined" sx={{ fontSize: "0.6rem", minWidth: 54 }} />
-												<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700, minWidth: 38 }}>
-													{validUntilDate.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" })}
-												</Typography>
-												<Typography variant="caption" color="text.secondary">
-													{discount.code} — fin del período de descuento
-												</Typography>
-											</Stack>
-										</Stack>
+												<Chip label={`Paso ${idx + 2}`} size="small" color="secondary" />
+												<Box flex={1} minWidth={0}>
+													<TextField
+														size="small"
+														value={step.name}
+														onChange={(e) => {
+															e.stopPropagation();
+															updateStep(step.id, "name", e.target.value);
+														}}
+														onClick={(e) => e.stopPropagation()}
+														placeholder="Nombre del paso"
+														variant="standard"
+														sx={{ "& .MuiInput-root": { fontSize: "0.875rem", fontWeight: 600 } }}
+													/>
+												</Box>
 
-										{hasInvalidStepTimings && (
-											<Alert severity="error" icon={<Warning2 size={16} />} sx={{ mt: 1, py: 0.5 }}>
-												<Typography variant="caption">
-													Hay pasos con problemas de temporización. Corregí los errores antes de lanzar.
-												</Typography>
-											</Alert>
-										)}
-									</Paper>
-								)}
-							</Stack>
-						)}
+												{/* Modo de timing + controles de delay */}
+												<Stack direction="row" spacing={0.5} alignItems="center" onClick={(e) => e.stopPropagation()}>
+													<Tooltip
+														title={
+															step.anchorMode === "relative"
+																? "Modo relativo: enviar X horas/días después del paso anterior. Hacé click en 📅 para anclar al vencimiento del descuento."
+																: "Modo anclado: este paso se envía X días antes de que expire el descuento. El delay real se calcula automáticamente. Hacé click en ⏱ para volver a modo relativo."
+														}
+													>
+														<ToggleButtonGroup
+															size="small"
+															exclusive
+															value={step.anchorMode}
+															onChange={(_, val) => val && updateStep(step.id, "anchorMode", val)}
+														>
+															<ToggleButton value="relative" sx={{ px: 0.75, py: 0.25, fontSize: "0.7rem" }}>
+																<Timer1 size={13} />
+															</ToggleButton>
+															<ToggleButton value="days_before_expiry" sx={{ px: 0.75, py: 0.25, fontSize: "0.7rem" }}>
+																<Calendar size={13} />
+															</ToggleButton>
+														</ToggleButtonGroup>
+													</Tooltip>
+
+													{step.anchorMode === "relative" ? (
+														<>
+															<TextField
+																size="small"
+																type="number"
+																value={step.timeDelayValue}
+																onChange={(e) => updateStep(step.id, "timeDelayValue", Number(e.target.value))}
+																inputProps={{ min: 1, style: { width: 44, textAlign: "center" } }}
+																label="Espera"
+																sx={{ width: 86 }}
+															/>
+															<Select
+																size="small"
+																value={step.timeDelayUnit}
+																onChange={(e) => updateStep(step.id, "timeDelayUnit", e.target.value)}
+																sx={{ minWidth: 82, fontSize: "0.8rem" }}
+															>
+																<MenuItem value="hours">horas</MenuItem>
+																<MenuItem value="days">días</MenuItem>
+															</Select>
+														</>
+													) : (
+														<>
+															<TextField
+																size="small"
+																type="number"
+																value={step.daysBeforeExpiry}
+																onChange={(e) => updateStep(step.id, "daysBeforeExpiry", Math.max(1, Number(e.target.value)))}
+																inputProps={{ min: 1, style: { width: 44, textAlign: "center" } }}
+																label="Días antes"
+																sx={{ width: 86 }}
+															/>
+															<Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap", fontSize: "0.7rem" }}>
+																días antes
+																<br />
+																del venc.
+															</Typography>
+														</>
+													)}
+												</Stack>
+
+												{/* Chip de fecha estimada */}
+												{stepTimings[idx] &&
+													(() => {
+														const t = stepTimings[idx];
+														const fmtShort = t.estimatedSendDate.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" });
+														const fmtFull = t.estimatedSendDate.toLocaleDateString("es-AR", {
+															day: "numeric",
+															month: "long",
+															year: "numeric",
+														});
+														const chipColor =
+															!t.isAfterPrev || !t.isBeforeExpiry ? "error" : t.daysRemainingAtSend <= 2 ? "warning" : "success";
+														const chipLabel = !t.isAfterPrev ? "⚠ orden" : !t.isBeforeExpiry ? "⚠ expirado" : fmtShort;
+														const tooltipMsg = !t.isAfterPrev
+															? `El delay calculado es ${t.computedDelayDays.toFixed(
+																	1,
+															  )} días — este paso se solaparía con el anterior. Ajustá los valores.`
+															: !t.isBeforeExpiry
+															? `Este paso se enviaría ${Math.abs(
+																	t.daysRemainingAtSend,
+															  )} días DESPUÉS de que expire el descuento (${validUntilDate.toLocaleDateString("es-AR")}).`
+															: `Envío estimado: ${fmtFull}\n${t.daysRemainingAtSend} día${
+																	t.daysRemainingAtSend !== 1 ? "s" : ""
+															  } antes del vencimiento`;
+														return (
+															<Tooltip title={tooltipMsg}>
+																<Chip
+																	label={chipLabel}
+																	size="small"
+																	color={chipColor}
+																	variant="outlined"
+																	onClick={(e) => e.stopPropagation()}
+																	sx={{ fontFamily: "monospace", fontSize: "0.62rem", cursor: "help" }}
+																/>
+															</Tooltip>
+														);
+													})()}
+
+												<IconButton
+													size="small"
+													color="error"
+													onClick={(e) => {
+														e.stopPropagation();
+														removeStep(step.id);
+													}}
+												>
+													<Trash size={16} />
+												</IconButton>
+												{step.expanded ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}
+											</Stack>
+
+											{/* Body del paso (colapsable) */}
+											<Collapse in={step.expanded}>
+												<Divider />
+												<Box sx={{ p: 1.5 }}>
+													<Grid container spacing={1.5}>
+														<Grid item xs={12}>
+															<TextField
+																fullWidth
+																size="small"
+																label="Asunto"
+																value={step.subject}
+																onChange={(e) => updateStep(step.id, "subject", e.target.value)}
+																error={!step.subject.trim()}
+																helperText={!step.subject.trim() ? "Requerido" : ""}
+															/>
+														</Grid>
+														<Grid item xs={12}>
+															<TextField
+																fullWidth
+																size="small"
+																label="Cuerpo HTML"
+																value={step.htmlBody}
+																onChange={(e) => updateStep(step.id, "htmlBody", e.target.value)}
+																multiline
+																rows={6}
+																error={!step.htmlBody.trim()}
+																helperText={!step.htmlBody.trim() ? "Requerido" : "Usá {{code}}, {{firstName}}, {{validUntil}}, etc."}
+																inputProps={{ style: { fontFamily: "monospace", fontSize: 12 } }}
+															/>
+														</Grid>
+													</Grid>
+												</Box>
+											</Collapse>
+										</Paper>
+									))}
+
+									<Button variant="outlined" size="small" startIcon={<Add size={16} />} onClick={addStep} sx={{ alignSelf: "flex-start" }}>
+										Agregar paso
+									</Button>
+
+									{/* ── Timeline summary ── */}
+									{additionalSteps.length > 0 && (
+										<Paper variant="outlined" sx={{ p: 1.5, bgcolor: alpha(theme.palette.background.default, 0.6) }}>
+											<Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: "block", mb: 1 }}>
+												Línea de tiempo estimada
+											</Typography>
+											<Stack spacing={0.75}>
+												{/* Paso 1 (email inicial, día 0) */}
+												<Stack direction="row" spacing={1} alignItems="center">
+													<Chip label="Paso 1" size="small" color="success" sx={{ fontSize: "0.6rem", minWidth: 54 }} />
+													<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace", minWidth: 38 }}>
+														{campaignStartDate.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" })}
+													</Typography>
+													<Typography variant="caption" color="text.secondary" sx={{ flex: 1 }} noWrap>
+														{subject || "Email inicial"} — día 0
+													</Typography>
+													<Typography variant="caption" color="success.main" sx={{ whiteSpace: "nowrap" }}>
+														{Math.ceil((validUntilDate.getTime() - campaignStartDate.getTime()) / 86400000)}d antes del venc.
+													</Typography>
+												</Stack>
+
+												{/* Pasos adicionales */}
+												{additionalSteps.map((step, idx) => {
+													const t = stepTimings[idx];
+													if (!t) return null;
+													const fmtShort = t.estimatedSendDate.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" });
+													const isOk = t.isAfterPrev && t.isBeforeExpiry;
+													return (
+														<Stack key={step.id} direction="row" spacing={1} alignItems="center">
+															<Chip
+																label={`Paso ${idx + 2}`}
+																size="small"
+																color={isOk ? "secondary" : "error"}
+																sx={{ fontSize: "0.6rem", minWidth: 54 }}
+															/>
+															<Typography
+																variant="caption"
+																color={isOk ? "text.secondary" : "error.main"}
+																sx={{ fontFamily: "monospace", minWidth: 38 }}
+															>
+																{fmtShort}
+															</Typography>
+															<Stack direction="row" spacing={0.5} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+																<Typography variant="caption" color="text.secondary" noWrap>
+																	{step.name}
+																</Typography>
+																{step.anchorMode === "days_before_expiry" && (
+																	<Chip
+																		label="anclado"
+																		size="small"
+																		color="info"
+																		variant="outlined"
+																		sx={{ fontSize: "0.55rem", height: 16, flexShrink: 0 }}
+																	/>
+																)}
+															</Stack>
+															<Typography
+																variant="caption"
+																sx={{ whiteSpace: "nowrap" }}
+																color={!isOk ? "error.main" : t.daysRemainingAtSend <= 2 ? "warning.main" : "success.main"}
+															>
+																{!t.isAfterPrev
+																	? "⚠ solapado"
+																	: !t.isBeforeExpiry
+																	? `${Math.abs(t.daysRemainingAtSend)}d DESPUÉS del venc.`
+																	: `${t.daysRemainingAtSend}d antes del venc.`}
+															</Typography>
+														</Stack>
+													);
+												})}
+
+												{/* Línea de vencimiento */}
+												<Stack
+													direction="row"
+													spacing={1}
+													alignItems="center"
+													sx={{ borderTop: "1px dashed", borderColor: "divider", pt: 0.75, mt: 0.25 }}
+												>
+													<Chip label="Vence" size="small" variant="outlined" sx={{ fontSize: "0.6rem", minWidth: 54 }} />
+													<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700, minWidth: 38 }}>
+														{validUntilDate.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" })}
+													</Typography>
+													<Typography variant="caption" color="text.secondary">
+														{discount.code} — fin del período de descuento
+													</Typography>
+												</Stack>
+											</Stack>
+
+											{hasInvalidStepTimings && (
+												<Alert severity="error" icon={<Warning2 size={16} />} sx={{ mt: 1, py: 0.5 }}>
+													<Typography variant="caption">
+														Hay pasos con problemas de temporización. Corregí los errores antes de lanzar.
+													</Typography>
+												</Alert>
+											)}
+										</Paper>
+									)}
+								</Stack>
+							)}
 						</AccordionDetails>
 					</Accordion>
 
@@ -1123,120 +1146,120 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 								{/* Throttle y fecha */}
 								<Grid item xs={12} md={4}>
 									<TextField
-									label="Throttle (emails por ciclo)"
-									type="number"
-									value={throttleRate}
-									onChange={(e) => setThrottleRate(Number(e.target.value))}
-									fullWidth
-									size="small"
-									inputProps={{ min: 1, max: 5000 }}
-									helperText="Máx. emails procesados por ejecución del scheduler (cada ~10 min)"
-								/>
-							</Grid>
-							<Grid item xs={12} md={4}>
-								<TextField
-									label="Fecha de inicio"
-									type="datetime-local"
-									value={startDate}
-									onChange={(e) => setStartDate(e.target.value)}
-									fullWidth
-									size="small"
-									InputLabelProps={{ shrink: true }}
-									helperText="Vacío = comienza cuando se active la campaña"
-								/>
-							</Grid>
-							<Grid item xs={12} md={4}>
-								<Paper variant="outlined" sx={{ p: 1.5 }}>
-									<FormControlLabel
-										control={
-											<Switch checked={launchImmediately} onChange={(e) => setLaunchImmediately(e.target.checked)} color="success" />
-										}
-										label={
-											<Box>
-												<Typography variant="body2" fontWeight={600}>
-													Lanzar inmediatamente
-												</Typography>
-												<Typography variant="caption" color="text.secondary">
-													{launchImmediately ? "La campaña se activará al crear" : "Se guardará como borrador"}
-												</Typography>
-											</Box>
-										}
-									/>
-								</Paper>
-							</Grid>
-
-							{/* Días permitidos */}
-							<Grid item xs={12}>
-								<FormControl component="fieldset">
-									<FormLabel component="legend" sx={{ fontSize: "0.8rem", mb: 0.5, color: "text.secondary" }}>
-										Días de envío permitidos
-									</FormLabel>
-									<ToggleButtonGroup
-										value={allowedDays}
-										onChange={(_, val: number[]) => val.length > 0 && setAllowedDays(val)}
-										aria-label="días permitidos"
+										label="Throttle (emails por ciclo)"
+										type="number"
+										value={throttleRate}
+										onChange={(e) => setThrottleRate(Number(e.target.value))}
+										fullWidth
 										size="small"
-										sx={{ flexWrap: "wrap", gap: 0.5 }}
-									>
-										{ALL_DAYS.map((day) => (
-											<ToggleButton
-												key={day}
-												value={day}
-												aria-label={DAY_LABELS[day]}
-												sx={{ minWidth: 46, fontSize: "0.7rem", fontWeight: 600 }}
-											>
-												{DAY_LABELS[day]}
-											</ToggleButton>
-										))}
-									</ToggleButtonGroup>
-									<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-										El scheduler solo procesará esta campaña en los días seleccionados (zona horaria: America/Argentina/Buenos_Aires)
-									</Typography>
-								</FormControl>
-							</Grid>
+										inputProps={{ min: 1, max: 5000 }}
+										helperText="Máx. emails procesados por ejecución del scheduler (cada ~10 min)"
+									/>
+								</Grid>
+								<Grid item xs={12} md={4}>
+									<TextField
+										label="Fecha de inicio"
+										type="datetime-local"
+										value={startDate}
+										onChange={(e) => setStartDate(e.target.value)}
+										fullWidth
+										size="small"
+										InputLabelProps={{ shrink: true }}
+										helperText="Vacío = comienza cuando se active la campaña"
+									/>
+								</Grid>
+								<Grid item xs={12} md={4}>
+									<Paper variant="outlined" sx={{ p: 1.5 }}>
+										<FormControlLabel
+											control={
+												<Switch checked={launchImmediately} onChange={(e) => setLaunchImmediately(e.target.checked)} color="success" />
+											}
+											label={
+												<Box>
+													<Typography variant="body2" fontWeight={600}>
+														Lanzar inmediatamente
+													</Typography>
+													<Typography variant="caption" color="text.secondary">
+														{launchImmediately ? "La campaña se activará al crear" : "Se guardará como borrador"}
+													</Typography>
+												</Box>
+											}
+										/>
+									</Paper>
+								</Grid>
 
-							{/* Ventana horaria */}
-							<Grid item xs={12} sm={6} md={3}>
-								<TextField
-									label="Hora de inicio"
-									type="time"
-									value={timeWindowStart}
-									onChange={(e) => setTimeWindowStart(e.target.value)}
-									fullWidth
-									size="small"
-									InputLabelProps={{ shrink: true }}
-									inputProps={{ step: 300 }}
-									helperText="Hora más temprana de envío"
-									InputProps={{
-										startAdornment: (
-											<InputAdornment position="start">
-												<Timer1 size={14} color={theme.palette.text.secondary} />
-											</InputAdornment>
-										),
-									}}
-								/>
+								{/* Días permitidos */}
+								<Grid item xs={12}>
+									<FormControl component="fieldset">
+										<FormLabel component="legend" sx={{ fontSize: "0.8rem", mb: 0.5, color: "text.secondary" }}>
+											Días de envío permitidos
+										</FormLabel>
+										<ToggleButtonGroup
+											value={allowedDays}
+											onChange={(_, val: number[]) => val.length > 0 && setAllowedDays(val)}
+											aria-label="días permitidos"
+											size="small"
+											sx={{ flexWrap: "wrap", gap: 0.5 }}
+										>
+											{ALL_DAYS.map((day) => (
+												<ToggleButton
+													key={day}
+													value={day}
+													aria-label={DAY_LABELS[day]}
+													sx={{ minWidth: 46, fontSize: "0.7rem", fontWeight: 600 }}
+												>
+													{DAY_LABELS[day]}
+												</ToggleButton>
+											))}
+										</ToggleButtonGroup>
+										<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+											El scheduler solo procesará esta campaña en los días seleccionados (zona horaria: America/Argentina/Buenos_Aires)
+										</Typography>
+									</FormControl>
+								</Grid>
+
+								{/* Ventana horaria */}
+								<Grid item xs={12} sm={6} md={3}>
+									<TextField
+										label="Hora de inicio"
+										type="time"
+										value={timeWindowStart}
+										onChange={(e) => setTimeWindowStart(e.target.value)}
+										fullWidth
+										size="small"
+										InputLabelProps={{ shrink: true }}
+										inputProps={{ step: 300 }}
+										helperText="Hora más temprana de envío"
+										InputProps={{
+											startAdornment: (
+												<InputAdornment position="start">
+													<Timer1 size={14} color={theme.palette.text.secondary} />
+												</InputAdornment>
+											),
+										}}
+									/>
+								</Grid>
+								<Grid item xs={12} sm={6} md={3}>
+									<TextField
+										label="Hora de fin"
+										type="time"
+										value={timeWindowEnd}
+										onChange={(e) => setTimeWindowEnd(e.target.value)}
+										fullWidth
+										size="small"
+										InputLabelProps={{ shrink: true }}
+										inputProps={{ step: 300 }}
+										helperText="Hora más tardía de envío"
+										InputProps={{
+											startAdornment: (
+												<InputAdornment position="start">
+													<Timer1 size={14} color={theme.palette.text.secondary} />
+												</InputAdornment>
+											),
+										}}
+									/>
+								</Grid>
 							</Grid>
-							<Grid item xs={12} sm={6} md={3}>
-								<TextField
-									label="Hora de fin"
-									type="time"
-									value={timeWindowEnd}
-									onChange={(e) => setTimeWindowEnd(e.target.value)}
-									fullWidth
-									size="small"
-									InputLabelProps={{ shrink: true }}
-									inputProps={{ step: 300 }}
-									helperText="Hora más tardía de envío"
-									InputProps={{
-										startAdornment: (
-											<InputAdornment position="start">
-												<Timer1 size={14} color={theme.palette.text.secondary} />
-											</InputAdornment>
-										),
-									}}
-								/>
-							</Grid>
-						</Grid>
 						</AccordionDetails>
 					</Accordion>
 
@@ -1258,14 +1281,16 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 										</li>
 										<li>
 											Se crea una <strong>Campaign</strong> de tipo{" "}
-											{campaignType === "sequence"
-												? `sequence con ${additionalSteps.length + 1} pasos`
-												: "onetime"}{" "}
-											vinculada al segmento de destinatarios.
+											{campaignType === "sequence" ? `sequence con ${additionalSteps.length + 1} pasos` : "onetime"} vinculada al segmento
+											de destinatarios.
 										</li>
 										<li>
-											Se crea{campaignType === "sequence" ? "n" : ""} <strong>{campaignType === "sequence" ? `${additionalSteps.length + 1} CampaignEmails` : "un CampaignEmail"}</strong>{" "}
-											{campaignType === "sequence" ? "con sus respectivos delays entre pasos" : "que asocia template y campaña con la configuración de envío"}.
+											Se crea{campaignType === "sequence" ? "n" : ""}{" "}
+											<strong>{campaignType === "sequence" ? `${additionalSteps.length + 1} CampaignEmails` : "un CampaignEmail"}</strong>{" "}
+											{campaignType === "sequence"
+												? "con sus respectivos delays entre pasos"
+												: "que asocia template y campaña con la configuración de envío"}
+											.
 										</li>
 										<li>
 											Si "Lanzar inmediatamente" está activo, la campaña cambia a estado <em>active</em> y el scheduler de{" "}
@@ -1298,9 +1323,9 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 								<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap mt={0.5}>
 									<Chip label={`ID: ${result.campaignId}`} size="small" sx={{ fontFamily: "monospace", fontSize: "0.65rem" }} />
 									<Chip label={`${result.recipientCount} destinatarios`} size="small" color="info" />
-								{result.emailsCreated && result.emailsCreated > 1 && (
-									<Chip label={`${result.emailsCreated} emails en secuencia`} size="small" color="secondary" />
-								)}
+									{result.emailsCreated && result.emailsCreated > 1 && (
+										<Chip label={`${result.emailsCreated} emails en secuencia`} size="small" color="secondary" />
+									)}
 									<Chip
 										label={result.status === "active" ? "Activa" : "Borrador"}
 										size="small"

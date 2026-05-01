@@ -156,41 +156,47 @@ export const updateSolicitudAdmin = (id: string, patch: Record<string, any>) => 
 		const { data } = await adminAxios.patch(`/api/seclo/solicitudes/${id}`, patch);
 		if (data?.success) {
 			dispatch({ type: SECLO_UPDATE_SOLICITUD, payload: data.solicitud });
-			dispatch(openSnackbar({
-				open: true,
-				message: data?.message || "Solicitud actualizada",
-				variant: "alert",
-				alert: { color: "success" },
-				transition: "Fade",
-				close: true,
-			}));
+			dispatch(
+				openSnackbar({
+					open: true,
+					message: data?.message || "Solicitud actualizada",
+					variant: "alert",
+					alert: { color: "success" },
+					transition: "Fade",
+					close: true,
+				}),
+			);
 			return data.solicitud;
 		}
 		// Caso edge: el server devuelve 200 con success:false (raro pero
 		// posible). Disparamos snackbar de error con el message del body.
 		const msg = data?.message || "El servidor no aceptó la actualización";
-		dispatch(openSnackbar({
-			open: true,
-			message: msg,
-			variant: "alert",
-			alert: { color: "error" },
-			transition: "Fade",
-			close: true,
-		}));
-		throw new Error(msg);
-	} catch (err: any) {
-		// Si llegamos acá desde el throw de arriba, el snackbar ya se mostró.
-		// Si es un error de red/4xx/5xx, lo extraemos del response.
-		if (!err.__snackbarShown) {
-			const msg = err.response?.data?.message || err.message || "Error al actualizar la solicitud";
-			dispatch(openSnackbar({
+		dispatch(
+			openSnackbar({
 				open: true,
 				message: msg,
 				variant: "alert",
 				alert: { color: "error" },
 				transition: "Fade",
 				close: true,
-			}));
+			}),
+		);
+		throw new Error(msg);
+	} catch (err: any) {
+		// Si llegamos acá desde el throw de arriba, el snackbar ya se mostró.
+		// Si es un error de red/4xx/5xx, lo extraemos del response.
+		if (!err.__snackbarShown) {
+			const msg = err.response?.data?.message || err.message || "Error al actualizar la solicitud";
+			dispatch(
+				openSnackbar({
+					open: true,
+					message: msg,
+					variant: "alert",
+					alert: { color: "error" },
+					transition: "Fade",
+					close: true,
+				}),
+			);
 		}
 		// eslint-disable-next-line no-console
 		console.error("[seclo] updateSolicitudAdmin error:", err.response?.data || err.message);
@@ -267,7 +273,14 @@ export const rerunAsDry =
 			const { data } = await adminAxios.post(`/api/seclo/solicitudes/${id}/rerun-as-dry`, { withHtml });
 			if (data.success) {
 				dispatch({ type: SECLO_UPDATE_SOLICITUD, payload: data.solicitud });
-				dispatch(openSnackbar({ open: true, message: data.message || "Reseteada en modo prueba (DEV)", variant: "alert", alert: { color: "success" } }));
+				dispatch(
+					openSnackbar({
+						open: true,
+						message: data.message || "Reseteada en modo prueba (DEV)",
+						variant: "alert",
+						alert: { color: "success" },
+					}),
+				);
 				return data.solicitud;
 			}
 		} catch (err: any) {
@@ -288,7 +301,14 @@ export const promoteRealSolicitud =
 			const { data } = await adminAxios.post(`/api/seclo/solicitudes/${id}/promote-real`, { deleteArtifacts });
 			if (data.success) {
 				dispatch({ type: SECLO_UPDATE_SOLICITUD, payload: data.solicitud });
-				dispatch(openSnackbar({ open: true, message: data.message || "Solicitud promovida a envío real", variant: "alert", alert: { color: "success" } }));
+				dispatch(
+					openSnackbar({
+						open: true,
+						message: data.message || "Solicitud promovida a envío real",
+						variant: "alert",
+						alert: { color: "success" },
+					}),
+				);
 				return data.solicitud;
 			}
 		} catch (err: any) {
@@ -306,7 +326,9 @@ export const deleteDryRunArtifacts = (id: string) => async (dispatch: any) => {
 		const { data } = await adminAxios.delete(`/api/seclo/solicitudes/${id}/dry-run-artifacts`);
 		if (data.success) {
 			dispatch({ type: SECLO_UPDATE_SOLICITUD, payload: data.solicitud });
-			dispatch(openSnackbar({ open: true, message: data.message || "Artefactos eliminados", variant: "alert", alert: { color: "success" } }));
+			dispatch(
+				openSnackbar({ open: true, message: data.message || "Artefactos eliminados", variant: "alert", alert: { color: "success" } }),
+			);
 			return data.solicitud;
 		}
 	} catch (err: any) {

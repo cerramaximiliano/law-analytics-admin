@@ -59,10 +59,24 @@ interface FormState {
 }
 
 const empty: FormState = {
-	name: "", lastName: "", type: "Persona Física", tipoSociedad: "", cuit: "", document: "",
-	phoneCodArea: "", phoneCelular: "", phone: "", email: "",
-	street: "", streetNumber: "", floor: "", apartment: "",
-	city: "", state: "", zipCode: "", company: "",
+	name: "",
+	lastName: "",
+	type: "Persona Física",
+	tipoSociedad: "",
+	cuit: "",
+	document: "",
+	phoneCodArea: "",
+	phoneCelular: "",
+	phone: "",
+	email: "",
+	street: "",
+	streetNumber: "",
+	floor: "",
+	apartment: "",
+	city: "",
+	state: "",
+	zipCode: "",
+	company: "",
 };
 
 /**
@@ -89,9 +103,7 @@ function parseLegacyAddress(address: string | undefined): { street: string; stre
  * Al guardar, llama a `onSaved(contact)` con el documento creado/actualizado.
  * El padre se encarga de actualizar la lista local y auto-seleccionar.
  */
-export default function SecloContactDialog({
-	open, mode, userId, contact, folderId, roleHint, onClose, onSaved,
-}: Props) {
+export default function SecloContactDialog({ open, mode, userId, contact, folderId, roleHint, onClose, onSaved }: Props) {
 	const [form, setForm] = useState<FormState>(empty);
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -108,24 +120,24 @@ export default function SecloContactDialog({
 				? { street: contact.street || "", streetNumber: contact.streetNumber || "" }
 				: parseLegacyAddress(contact.address);
 			setForm({
-				name:         contact.name         || "",
-				lastName:     contact.lastName     || "",
-				type:         (contact as any).type || "Persona Física",
+				name: contact.name || "",
+				lastName: contact.lastName || "",
+				type: (contact as any).type || "Persona Física",
 				tipoSociedad: contact.tipoSociedad || "",
-				cuit:         contact.cuit         || "",
-				document:     contact.document     || "",
+				cuit: contact.cuit || "",
+				document: contact.document || "",
 				phoneCodArea: contact.phoneCodArea || "",
 				phoneCelular: contact.phoneCelular || "",
-				phone:        contact.phone        || "",
-				email:        contact.email        || "",
-				street:       parsed.street,
+				phone: contact.phone || "",
+				email: contact.email || "",
+				street: parsed.street,
 				streetNumber: parsed.streetNumber,
-				floor:        contact.floor        || "",
-				apartment:    contact.apartment    || "",
-				city:         contact.city         || "",
-				state:        contact.state        || "",
-				zipCode:      contact.zipCode      || "",
-				company:      contact.company      || "",
+				floor: contact.floor || "",
+				apartment: contact.apartment || "",
+				city: contact.city || "",
+				state: contact.state || "",
+				zipCode: contact.zipCode || "",
+				company: contact.company || "",
 			});
 		} else {
 			setForm(empty);
@@ -143,9 +155,9 @@ export default function SecloContactDialog({
 	// campo queda implícito.
 	const isJuridica = form.type === "Persona Jurídica";
 	const errors = {
-		name:         !form.name.trim() ? "Requerido" : "",
-		lastName:     !form.lastName.trim() ? "Requerido" : "",
-		street:       !form.street.trim() ? "Requerido por SECLO" : "",
+		name: !form.name.trim() ? "Requerido" : "",
+		lastName: !form.lastName.trim() ? "Requerido" : "",
+		street: !form.street.trim() ? "Requerido por SECLO" : "",
 		streetNumber: !form.streetNumber.trim() ? "Requerido por SECLO" : "",
 		tipoSociedad: isJuridica && !form.tipoSociedad.trim() ? "Requerido por SECLO" : "",
 	};
@@ -158,16 +170,12 @@ export default function SecloContactDialog({
 			// Reconstruimos el legacy `address` desde calle+número para que
 			// los flujos no migrados (facturas, exports PDF) sigan viendo un
 			// domicilio coherente. Piso/depto van sólo a sus campos.
-			const composedAddress = [form.street.trim(), form.streetNumber.trim()]
-				.filter(Boolean)
-				.join(" ");
+			const composedAddress = [form.street.trim(), form.streetNumber.trim()].filter(Boolean).join(" ");
 			// Para personas físicas siempre persistimos tipoSociedad="Persona Física"
 			// (el portal SECLO usa ese valor). Para jurídicas guardamos lo que
 			// eligió el admin. Nunca dejamos el campo vacío en escritura — así los
 			// contactos creados desde acá nunca arrastran la inconsistencia legacy.
-			const tipoSociedadNorm = form.type === "Persona Jurídica"
-				? form.tipoSociedad
-				: "Persona Física";
+			const tipoSociedadNorm = form.type === "Persona Jurídica" ? form.tipoSociedad : "Persona Física";
 			const payload = {
 				...form,
 				tipoSociedad: tipoSociedadNorm,
@@ -185,12 +193,14 @@ export default function SecloContactDialog({
 			}
 
 			if (response.data?.success && response.data?.contact) {
-				dispatch(openSnackbar({
-					open: true,
-					message: mode === "add" ? "Contacto creado" : "Contacto actualizado",
-					variant: "alert",
-					alert: { color: "success" },
-				}));
+				dispatch(
+					openSnackbar({
+						open: true,
+						message: mode === "add" ? "Contacto creado" : "Contacto actualizado",
+						variant: "alert",
+						alert: { color: "success" },
+					}),
+				);
 				onSaved(response.data.contact);
 				onClose();
 			} else {
@@ -207,9 +217,7 @@ export default function SecloContactDialog({
 		<Dialog open={open} onClose={() => !submitting && onClose()} maxWidth="md" fullWidth>
 			<DialogTitle>
 				<Stack direction="row" alignItems="center" justifyContent="space-between">
-					<Typography variant="h5">
-						{mode === "add" ? "Nuevo contacto" : "Editar contacto"}
-					</Typography>
+					<Typography variant="h5">{mode === "add" ? "Nuevo contacto" : "Editar contacto"}</Typography>
 					{roleHint && (
 						<Typography variant="body2" color="text.secondary">
 							Rol: {roleHint === "trabajador" ? "Trabajador (requirente)" : "Empleador (requerido)"}
@@ -219,12 +227,15 @@ export default function SecloContactDialog({
 			</DialogTitle>
 
 			<DialogContent dividers>
-				{error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+				{error && (
+					<Alert severity="error" sx={{ mb: 2 }}>
+						{error}
+					</Alert>
+				)}
 
 				{mode === "edit" && (
 					<Alert severity="info" sx={{ mb: 2 }}>
-						Completá los campos que falten. Para SECLO suele ser crítico el celular
-						del trabajador (código de área + número).
+						Completá los campos que falten. Para SECLO suele ser crítico el celular del trabajador (código de área + número).
 					</Alert>
 				)}
 
@@ -253,11 +264,7 @@ export default function SecloContactDialog({
 					<Grid item xs={12} sm={6}>
 						<FormControl fullWidth>
 							<InputLabel>Tipo</InputLabel>
-							<Select
-								value={form.type}
-								label="Tipo"
-								onChange={(e) => setField("type")(e.target.value)}
-							>
+							<Select value={form.type} label="Tipo" onChange={(e) => setField("type")(e.target.value)}>
 								<MenuItem value="Persona Física">Persona Física</MenuItem>
 								<MenuItem value="Persona Jurídica">Persona Jurídica</MenuItem>
 							</Select>
@@ -284,7 +291,9 @@ export default function SecloContactDialog({
 									onChange={(e) => setField("tipoSociedad")(e.target.value)}
 								>
 									{TIPO_SOCIEDAD_OPTIONS.filter((o) => o !== "Persona Física").map((opt) => (
-										<MenuItem key={opt} value={opt}>{opt}</MenuItem>
+										<MenuItem key={opt} value={opt}>
+											{opt}
+										</MenuItem>
 									))}
 								</Select>
 								<Typography variant="caption" color={errors.tipoSociedad ? "error" : "text.secondary"} sx={{ mt: 0.5 }}>
@@ -305,12 +314,7 @@ export default function SecloContactDialog({
 						/>
 					</Grid>
 					<Grid item xs={12} sm={6}>
-						<TextField
-							label="DNI"
-							value={form.document}
-							onChange={(e) => setField("document")(e.target.value)}
-							fullWidth
-						/>
+						<TextField label="DNI" value={form.document} onChange={(e) => setField("document")(e.target.value)} fullWidth />
 					</Grid>
 
 					<Grid item xs={12} sm={3}>
@@ -333,22 +337,11 @@ export default function SecloContactDialog({
 						/>
 					</Grid>
 					<Grid item xs={12} sm={4}>
-						<TextField
-							label="Tel. fijo"
-							value={form.phone}
-							onChange={(e) => setField("phone")(e.target.value)}
-							fullWidth
-						/>
+						<TextField label="Tel. fijo" value={form.phone} onChange={(e) => setField("phone")(e.target.value)} fullWidth />
 					</Grid>
 
 					<Grid item xs={12} sm={12}>
-						<TextField
-							label="Email"
-							type="email"
-							value={form.email}
-							onChange={(e) => setField("email")(e.target.value)}
-							fullWidth
-						/>
+						<TextField label="Email" type="email" value={form.email} onChange={(e) => setField("email")(e.target.value)} fullWidth />
 					</Grid>
 
 					{/* Domicilio estructurado — el portal SECLO exige calle/número
@@ -401,42 +394,29 @@ export default function SecloContactDialog({
 						/>
 					</Grid>
 					<Grid item xs={12} sm={6}>
-						<TextField
-							label="Código postal"
-							value={form.zipCode}
-							onChange={(e) => setField("zipCode")(e.target.value)}
-							fullWidth
-						/>
+						<TextField label="Código postal" value={form.zipCode} onChange={(e) => setField("zipCode")(e.target.value)} fullWidth />
 					</Grid>
 
 					<Grid item xs={12} sm={6}>
-						<TextField
-							label="Ciudad/Localidad"
-							value={form.city}
-							onChange={(e) => setField("city")(e.target.value)}
-							fullWidth
-						/>
+						<TextField label="Ciudad/Localidad" value={form.city} onChange={(e) => setField("city")(e.target.value)} fullWidth />
 					</Grid>
 					<Grid item xs={12} sm={6}>
-						<TextField
-							label="Provincia"
-							value={form.state}
-							onChange={(e) => setField("state")(e.target.value)}
-							fullWidth
-						/>
+						<TextField label="Provincia" value={form.state} onChange={(e) => setField("state")(e.target.value)} fullWidth />
 					</Grid>
 				</Grid>
 			</DialogContent>
 
 			<DialogActions>
-				<Button onClick={onClose} disabled={submitting}>Cancelar</Button>
+				<Button onClick={onClose} disabled={submitting}>
+					Cancelar
+				</Button>
 				<Button
 					variant="contained"
 					onClick={handleSubmit}
 					disabled={!canSubmit || submitting}
 					startIcon={submitting ? <CircularProgress size={14} /> : null}
 				>
-					{submitting ? "Guardando…" : (mode === "add" ? "Crear contacto" : "Guardar cambios")}
+					{submitting ? "Guardando…" : mode === "add" ? "Crear contacto" : "Guardar cambios"}
 				</Button>
 			</DialogActions>
 		</Dialog>

@@ -188,7 +188,13 @@ export default function CredencialesTab() {
 												<Chip label="Inválida" size="small" color="error" />
 											</Tooltip>
 										) : cred.credentialsValidated ? (
-											<Tooltip title={cred.credentialsValidatedAt ? `Validada el ${new Date(cred.credentialsValidatedAt).toLocaleString("es-AR")}` : "Validada"}>
+											<Tooltip
+												title={
+													cred.credentialsValidatedAt
+														? `Validada el ${new Date(cred.credentialsValidatedAt).toLocaleString("es-AR")}`
+														: "Validada"
+												}
+											>
 												<Chip label="Validada" size="small" color="success" />
 											</Tooltip>
 										) : (
@@ -234,14 +240,15 @@ export default function CredencialesTab() {
 													<Edit size={16} />
 												</IconButton>
 											</Tooltip>
-											<Tooltip title={validatingIds.has(cred._id) ? "Validando — el worker corre en ≤ 10s, refrescamos en 25s" : "Validar ahora — el worker la verifica en ≤ 10s"}>
+											<Tooltip
+												title={
+													validatingIds.has(cred._id)
+														? "Validando — el worker corre en ≤ 10s, refrescamos en 25s"
+														: "Validar ahora — el worker la verifica en ≤ 10s"
+												}
+											>
 												<span>
-													<IconButton
-														size="small"
-														color="info"
-														onClick={() => handleValidate(cred)}
-														disabled={validatingIds.has(cred._id)}
-													>
+													<IconButton size="small" color="info" onClick={() => handleValidate(cred)} disabled={validatingIds.has(cred._id)}>
 														{validatingIds.has(cred._id) ? <CircularProgress size={14} /> : <FlashCircle size={16} />}
 													</IconButton>
 												</span>
