@@ -27,9 +27,23 @@ import {
 	ToggleButtonGroup,
 	Tooltip,
 } from "@mui/material";
-import { CloseCircle, Calendar, Chart, TickCircle, CloseSquare, Copy, Cloud, People, UserTick, DocumentCode, Send2, Refresh2, Warning2 } from "iconsax-react";
+import {
+	CloseCircle,
+	Calendar,
+	Chart,
+	TickCircle,
+	CloseSquare,
+	Copy,
+	Cloud,
+	People,
+	UserTick,
+	DocumentCode,
+	Send2,
+	Refresh2,
+	Warning2,
+} from "iconsax-react";
 import { useTheme } from "@mui/material/styles";
-import { DiscountCode, FullDiscountInfoResponse } from "api/discounts";
+import { DiscountCode, EligibleUsersCountResponse, FullDiscountInfoResponse } from "api/discounts";
 import discountsService from "api/discounts";
 import { useSnackbar } from "notistack";
 import TargetUsersManager from "./TargetUsersManager";
@@ -76,6 +90,10 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 	const [localCampaign, setLocalCampaign] = useState<DiscountCode["campaign"] | null>(null);
 	const effectiveCampaign = localCampaign ?? discount?.campaign;
 
+	// Conteo de usuarios elegibles (cuántos verán el beneficio)
+	const [eligibleData, setEligibleData] = useState<EligibleUsersCountResponse["data"] | null>(null);
+	const [loadingEligible, setLoadingEligible] = useState(false);
+
 	useEffect(() => {
 		if (open && discount && tabValue === 1) {
 			fetchStripeInfo();
@@ -83,13 +101,33 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 	}, [open, discount, tabValue, environment]);
 
 	useEffect(() => {
+		if (open && discount && tabValue === 0) {
+			fetchEligibleCount();
+		}
+	}, [open, discount?._id, tabValue]);
+
+	useEffect(() => {
 		if (!open) {
 			setTabValue(0);
 			setStripeData(null);
 			setError(null);
 			setLocalCampaign(null);
+			setEligibleData(null);
 		}
 	}, [open]);
+
+	const fetchEligibleCount = async () => {
+		if (!discount) return;
+		setLoadingEligible(true);
+		try {
+			const res = await discountsService.getEligibleUsersCount(discount._id);
+			setEligibleData(res.data);
+		} catch {
+			setEligibleData(null);
+		} finally {
+			setLoadingEligible(false);
+		}
+	};
 
 	const fetchStripeInfo = async () => {
 		if (!discount) return;
@@ -317,19 +355,15 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 			</Grid>
 
 			{/* Alerta de sincronización pendiente */}
-			{discount.isActive && discount.activationRules.isPublic && (
+			{discount.isActive &&
+				discount.activationRules.isPublic &&
 				(!effectiveStripe?.development?.couponId || !effectiveStripe?.production?.couponId) && (
 					<Grid item xs={12}>
 						<Alert
 							severity="warning"
 							icon={<Warning2 size={20} />}
 							action={
-								<Button
-									color="inherit"
-									size="small"
-									onClick={() => setTabValue(1)}
-									sx={{ whiteSpace: "nowrap" }}
-								>
+								<Button color="inherit" size="small" onClick={() => setTabValue(1)} sx={{ whiteSpace: "nowrap" }}>
 									Ir a Stripe
 								</Button>
 							}
@@ -344,8 +378,93 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 							. Los usuarios pueden verlo en la app pero no podrán aplicarlo al pagar. Usá el botón de sincronización en la pestaña Stripe.
 						</Alert>
 					</Grid>
-				)
-			)}
+				)}
+
+			{/* Audiencia: cuántos usuarios verán el beneficio */}
+			<Grid item xs={12}>
+				<Typography variant="h5" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+					<People size={20} />
+					Audiencia
+				</Typography>
+				<Paper variant="outlined" sx={{ p: 2.5 }}>
+					{loadingEligible ? (
+						<Stack direction="row" alignItems="center" spacing={1.5}>
+							<CircularProgress size={20} />
+							<Typography variant="body2" color="textSecondary">
+								Calculando usuarios elegibles…
+							</Typography>
+						</Stack>
+					) : eligibleData ? (
+						<Grid container spacing={2} alignItems="center">
+							<Grid item xs={12} sm={4}>
+								<Stack direction="row" spacing={1.5} alignItems="center">
+									<People size={32} color={theme.palette.primary.main} variant="Bulk" />
+									<Box>
+										<Typography variant="h2" color="primary" sx={{ lineHeight: 1.1 }}>
+											{eligibleData.eligibleCount.toLocaleString()}
+										</Typography>
+										<Typography variant="caption" color="textSecondary">
+											{eligibleData.eligibleCount === 1 ? "usuario verá el beneficio" : "usuarios verán el beneficio"}
+										</Typography>
+									</Box>
+								</Stack>
+							</Grid>
+							<Grid item xs={12} sm={8}>
+								<Stack spacing={0.75}>
+									<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+										<Chip
+											size="small"
+											color={eligibleData.breakdown.isPublic ? "info" : "secondary"}
+											variant="outlined"
+											label={eligibleData.breakdown.isPublic ? "Público (todos los usuarios activos)" : "Targeted"}
+										/>
+										{!eligibleData.breakdown.isPublic && eligibleData.breakdown.targetUsersCount > 0 && (
+											<Tooltip title="Usuarios agregados manualmente como objetivo">
+												<Chip size="small" variant="outlined" label={`${eligibleData.breakdown.targetUsersCount} usuario(s) objetivo`} />
+											</Tooltip>
+										)}
+										{!eligibleData.breakdown.isPublic && eligibleData.breakdown.targetSegmentsCount > 0 && (
+											<Tooltip
+												title={`${eligibleData.breakdown.segmentEmailsCount.toLocaleString()} email(s) en los segmentos resueltos a usuarios de la plataforma`}
+											>
+												<Chip size="small" variant="outlined" label={`${eligibleData.breakdown.targetSegmentsCount} segmento(s)`} />
+											</Tooltip>
+										)}
+										{eligibleData.breakdown.excludeActiveSubscribers && (
+											<Tooltip
+												title={`Se excluyen ${eligibleData.breakdown.activeSubscribersInPlatform.toLocaleString()} suscriptores activos en plan paid`}
+											>
+												<Chip size="small" color="warning" variant="outlined" label="Excluye suscriptores activos" />
+											</Tooltip>
+										)}
+										{eligibleData.breakdown.newCustomersOnly && (
+											<Tooltip
+												title={`Se excluyen ${eligibleData.breakdown.everPaidUsersInPlatform.toLocaleString()} usuarios que alguna vez tuvieron suscripción paga`}
+											>
+												<Chip size="small" color="error" variant="outlined" label="Solo nuevos clientes" />
+											</Tooltip>
+										)}
+									</Stack>
+									<Typography variant="caption" color="textSecondary">
+										Universo bruto: <strong>{eligibleData.universeCount.toLocaleString()}</strong>
+										{eligibleData.universeCount !== eligibleData.eligibleCount && (
+											<>
+												{" "}
+												· Excluidos por restricciones:{" "}
+												<strong>{(eligibleData.universeCount - eligibleData.eligibleCount).toLocaleString()}</strong>
+											</>
+										)}
+									</Typography>
+								</Stack>
+							</Grid>
+						</Grid>
+					) : (
+						<Typography variant="body2" color="textSecondary">
+							No se pudo calcular el conteo. Verificá la consola.
+						</Typography>
+					)}
+				</Paper>
+			</Grid>
 
 			{/* Estadísticas */}
 			<Grid item xs={12}>
@@ -1008,7 +1127,12 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 						{renderStripeTab()}
 					</TabPanel>
 					<TabPanel value={tabValue} index={2}>
-						<TargetUsersManager discountId={discount._id} discountCode={discount.code} isPublic={discount.activationRules.isPublic} frozenSegment={effectiveCampaign?.frozenSegment} />
+						<TargetUsersManager
+							discountId={discount._id}
+							discountCode={discount.code}
+							isPublic={discount.activationRules.isPublic}
+							frozenSegment={effectiveCampaign?.frozenSegment}
+						/>
 					</TabPanel>
 					<TabPanel value={tabValue} index={3}>
 						<LaunchCampaignTab discount={discount} onCampaignLaunched={setLocalCampaign} />

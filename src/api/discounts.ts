@@ -447,6 +447,31 @@ export interface UserPromotionsResponse {
 	};
 }
 
+export interface EligibleUsersCountResponse {
+	success: boolean;
+	data: {
+		eligibleCount: number;
+		universeCount: number;
+		breakdown: {
+			isPublic: boolean;
+			targetUsersCount: number;
+			targetSegmentsCount: number;
+			segmentEmailsCount: number;
+			excludeActiveSubscribers: boolean;
+			newCustomersOnly: boolean;
+			activeSubscribersInPlatform: number;
+			everPaidUsersInPlatform: number;
+		};
+	};
+}
+
+export interface EligibleUsersCountsBatchResponse {
+	success: boolean;
+	data: {
+		counts: Record<string, { eligibleCount: number; universeCount: number; isPublic: boolean }>;
+	};
+}
+
 class DiscountsService {
 	/**
 	 * Listar todos los códigos de descuento
@@ -734,6 +759,38 @@ class DiscountsService {
 	// ============================================
 	// User Promotions lookup
 	// ============================================
+
+	/**
+	 * Batch — contar usuarios elegibles para varias promociones en una sola request.
+	 * Reusa el snapshot de Subscription/User en el servidor.
+	 */
+	async getEligibleUsersCountsBatch(ids: string[]): Promise<EligibleUsersCountsBatchResponse> {
+		try {
+			if (!ids.length) return { success: true, data: { counts: {} } };
+			const response = await adminAxios.get<EligibleUsersCountsBatchResponse>(
+				`/api/discounts/eligible-users-counts?ids=${encodeURIComponent(ids.join(","))}`,
+			);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al contar usuarios elegibles en batch");
+		}
+	}
+
+	/**
+	 * Contar cuántos usuarios verán el beneficio de la promoción
+	 * Aplica targeting (targetUsers + targetSegments) y restricciones de tipo de cliente.
+	 */
+	async getEligibleUsersCount(id: string): Promise<EligibleUsersCountResponse> {
+		try {
+			const response = await adminAxios.get<EligibleUsersCountResponse>(`/api/discounts/${id}/eligible-users-count`);
+			return response.data;
+		} catch (error: any) {
+			if (error.response?.status === 404) {
+				throw new Error("Código de descuento no encontrado");
+			}
+			throw new Error(error.response?.data?.message || "Error al contar usuarios elegibles");
+		}
+	}
 
 	/**
 	 * Obtener todas las promociones que aplican a un usuario específico
