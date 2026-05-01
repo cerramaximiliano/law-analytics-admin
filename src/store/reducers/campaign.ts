@@ -193,6 +193,26 @@ export const CampaignService = {
 		}
 	},
 
+	// Recalcular contadores de contactos (totalContacts/activeContacts) con datos en vivo
+	syncTotalContacts: async (
+		id: string,
+	): Promise<{
+		success: boolean;
+		message: string;
+		data: {
+			campaignId: string;
+			before: { totalContacts: number; activeContacts: number };
+			after: { totalContacts: number; activeContacts: number };
+		};
+	}> => {
+		try {
+			const response = await mktAxios.post(`/api/campaigns/${id}/sync-total-contacts`);
+			return response.data;
+		} catch (error) {
+			throw error;
+		}
+	},
+
 	// Remove all contacts from a campaign
 	removeAllContactsFromCampaign: async (id: string): Promise<RemoveAllContactsResponse> => {
 		try {

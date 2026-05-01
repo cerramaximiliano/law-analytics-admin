@@ -26,7 +26,7 @@ import {
 } from "@mui/material";
 
 // project imports
-import { Add, SearchNormal1, Trash, Eye, Edit2 } from "iconsax-react";
+import { Add, SearchNormal1, Trash, Eye, Edit2, Refresh } from "iconsax-react";
 import { useSnackbar } from "notistack";
 
 // types
@@ -183,6 +183,9 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 	// State for edit contact modal
 	const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
 	const [editContactId, setEditContactId] = useState<string | null>(null);
+
+	// Estado para resync de contadores
+	const [syncing, setSyncing] = useState<boolean>(false);
 
 	// Estados para proceso asíncrono de eliminación
 	const [asyncDeletionProcessing, setAsyncDeletionProcessing] = useState<boolean>(false);
@@ -420,6 +423,30 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 		// El efecto se encargará de llamar a fetchCampaignContacts gracias a la dependencia en searchTerm
 	};
 
+	const handleSyncCounters = async () => {
+		if (!campaign._id) return;
+		try {
+			setSyncing(true);
+			const result = await CampaignService.syncTotalContacts(campaign._id);
+			const { before, after } = result.data;
+			enqueueSnackbar(
+				`Contadores recalculados: totalContacts ${before.totalContacts} → ${after.totalContacts} (active ${before.activeContacts} → ${after.activeContacts})`,
+				{ variant: "success", anchorOrigin: { vertical: "bottom", horizontal: "right" } },
+			);
+			if (onContactsChange) onContactsChange();
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.error || err?.message || "Error al recalcular contadores", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+		} finally {
+			setSyncing(false);
+		}
+	};
+
+	const persistedTotal = campaign.metrics?.totalContacts ?? 0;
+	const driftDetected = !loading && persistedTotal !== totalCount;
+
 	// Handlers para el modal de detalles
 	const handleViewDetails = (contactId: string) => {
 		setSelectedContactId(contactId);
@@ -561,7 +588,27 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 									</Typography>
 								</Grid>
 								<Grid item>
-									<Box sx={{ display: "flex", gap: 2 }}>
+									<Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+										{driftDetected && (
+											<Chip
+												label={`Métrica drifted: ${persistedTotal} (real: ${totalCount})`}
+												color="warning"
+												size="small"
+												variant="outlined"
+											/>
+										)}
+										{driftDetected && (
+											<Button
+												variant="outlined"
+												color="warning"
+												startIcon={syncing ? <CircularProgress size={16} color="inherit" /> : <Refresh size={16} />}
+												onClick={handleSyncCounters}
+												disabled={syncing}
+												sx={{ textTransform: "none" }}
+											>
+												{syncing ? "Recalculando..." : "Recalcular contadores"}
+											</Button>
+										)}
 										{totalCount > 0 && (
 											<Button variant="outlined" color="error" onClick={handleOpenDeleteAllDialog} sx={{ textTransform: "none" }}>
 												Eliminar todos los contactos
