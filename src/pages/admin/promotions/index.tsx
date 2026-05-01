@@ -11,17 +11,20 @@ import {
 	Grid,
 	IconButton,
 	Paper,
+	Skeleton,
 	Stack,
+	Tab,
 	Table,
 	TableBody,
 	TableCell,
 	TableContainer,
 	TableHead,
 	TableRow,
+	Tabs,
 	Tooltip,
 	Typography,
 } from "@mui/material";
-import { Add, Edit, Trash, Eye, Refresh2, TickCircle, CloseCircle, Chart, UserTick, Category2 } from "iconsax-react";
+import { Add, Edit, Trash, Eye, Refresh2, TickCircle, CloseCircle, UserTick, Category2, People } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { useSnackbar } from "notistack";
 import discountsService, { DiscountCode, GetDiscountsParams } from "api/discounts";
@@ -29,12 +32,17 @@ import PromotionFormModal from "./PromotionFormModal";
 import PromotionDetailModal from "./PromotionDetailModal";
 import DeletePromotionDialog from "./DeletePromotionDialog";
 
+type StatusFilter = "active" | "inactive" | "all";
+
 const PromotionsManagement = () => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
 	const [discounts, setDiscounts] = useState<DiscountCode[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
+	const [eligibleCounts, setEligibleCounts] = useState<Record<string, { eligibleCount: number; isPublic: boolean }>>({});
+	const [loadingCounts, setLoadingCounts] = useState(false);
 	const [formOpen, setFormOpen] = useState(false);
 	const [detailModalOpen, setDetailModalOpen] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -42,11 +50,18 @@ const PromotionsManagement = () => {
 	const [deleteLoading, setDeleteLoading] = useState(false);
 	const [toggleLoading, setToggleLoading] = useState<string | null>(null);
 
-	const fetchDiscounts = async (params: GetDiscountsParams = {}) => {
+	const buildParams = (filter: StatusFilter): GetDiscountsParams => {
+		if (filter === "active") return { isActive: true };
+		if (filter === "inactive") return { isActive: false };
+		return {};
+	};
+
+	const fetchDiscounts = async (filter: StatusFilter = statusFilter) => {
 		try {
 			setLoading(true);
-			const response = await discountsService.getDiscounts(params);
+			const response = await discountsService.getDiscounts(buildParams(filter));
 			setDiscounts(response.data || []);
+			setEligibleCounts({});
 		} catch (error: any) {
 			console.error("Error al cargar promociones:", error);
 			enqueueSnackbar(error?.message || "Error al cargar las promociones", { variant: "error" });
@@ -56,8 +71,38 @@ const PromotionsManagement = () => {
 	};
 
 	useEffect(() => {
-		fetchDiscounts();
-	}, []);
+		fetchDiscounts(statusFilter);
+	}, [statusFilter]);
+
+	useEffect(() => {
+		// Refresca el conteo de audiencia en batch cada vez que cambia la lista
+		const ids = discounts.map((d) => d._id);
+		if (ids.length === 0) {
+			setEligibleCounts({});
+			return;
+		}
+		let cancelled = false;
+		(async () => {
+			try {
+				setLoadingCounts(true);
+				const res = await discountsService.getEligibleUsersCountsBatch(ids);
+				if (!cancelled) {
+					const mapped: Record<string, { eligibleCount: number; isPublic: boolean }> = {};
+					for (const [id, c] of Object.entries(res.data.counts)) {
+						mapped[id] = { eligibleCount: c.eligibleCount, isPublic: c.isPublic };
+					}
+					setEligibleCounts(mapped);
+				}
+			} catch (err: any) {
+				if (!cancelled) console.error("Error al cargar audiencias:", err);
+			} finally {
+				if (!cancelled) setLoadingCounts(false);
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, [discounts]);
 
 	const handleAddNew = () => {
 		setSelectedDiscount(null);
@@ -95,7 +140,7 @@ const PromotionsManagement = () => {
 	};
 
 	const handleFormSuccess = () => {
-		fetchDiscounts();
+		fetchDiscounts(statusFilter);
 		handleFormClose();
 	};
 
@@ -106,7 +151,7 @@ const PromotionsManagement = () => {
 			setDeleteLoading(true);
 			await discountsService.deleteDiscount(selectedDiscount._id);
 			enqueueSnackbar("Promoción eliminada correctamente", { variant: "success" });
-			fetchDiscounts();
+			fetchDiscounts(statusFilter);
 			handleDeleteClose();
 		} catch (error: any) {
 			console.error("Error al eliminar promoción:", error);
@@ -121,7 +166,7 @@ const PromotionsManagement = () => {
 			setToggleLoading(discount._id);
 			await discountsService.toggleDiscount(discount._id);
 			enqueueSnackbar(`Promoción ${discount.isActive ? "desactivada" : "activada"} correctamente`, { variant: "success" });
-			fetchDiscounts();
+			fetchDiscounts(statusFilter);
 		} catch (error: any) {
 			console.error("Error al cambiar estado:", error);
 			enqueueSnackbar(error?.message || "Error al cambiar el estado", { variant: "error" });
@@ -189,7 +234,7 @@ const PromotionsManagement = () => {
 				title="Gestión de Promociones"
 				secondary={
 					<Stack direction="row" spacing={2}>
-						<Button variant="outlined" color="secondary" startIcon={<Refresh2 />} onClick={() => fetchDiscounts()}>
+						<Button variant="outlined" color="secondary" startIcon={<Refresh2 />} onClick={() => fetchDiscounts(statusFilter)}>
 							Actualizar
 						</Button>
 						<Button variant="contained" color="primary" startIcon={<Add />} onClick={handleAddNew}>
@@ -265,6 +310,15 @@ const PromotionsManagement = () => {
 					</Grid>
 				</Grid>
 
+				{/* Status filter */}
+				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+					<Tabs value={statusFilter} onChange={(_, value: StatusFilter) => setStatusFilter(value)} aria-label="Filtro de estado">
+						<Tab label="Activas" value="active" />
+						<Tab label="Inactivas" value="inactive" />
+						<Tab label="Todas" value="all" />
+					</Tabs>
+				</Box>
+
 				{/* Promotions Table */}
 				<TableContainer component={Paper}>
 					<Table>
@@ -276,6 +330,7 @@ const PromotionsManagement = () => {
 								<TableCell align="center">Entorno</TableCell>
 								<TableCell align="center">Vigencia</TableCell>
 								<TableCell align="center">Visibilidad</TableCell>
+								<TableCell align="center">Audiencia</TableCell>
 								<TableCell align="center">Usos</TableCell>
 								<TableCell align="center">Estado</TableCell>
 								<TableCell align="center">Acciones</TableCell>
@@ -284,7 +339,7 @@ const PromotionsManagement = () => {
 						<TableBody>
 							{discounts.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={9} align="center">
+									<TableCell colSpan={10} align="center">
 										<Typography variant="body2" color="textSecondary" sx={{ py: 4 }}>
 											No hay promociones configuradas. Crea una nueva promoción para comenzar.
 										</Typography>
@@ -366,6 +421,37 @@ const PromotionsManagement = () => {
 													</Tooltip>
 												)}
 											</Stack>
+										</TableCell>
+										<TableCell align="center">
+											{(() => {
+												const audience = eligibleCounts[discount._id];
+												if (audience) {
+													return (
+														<Tooltip
+															title={
+																audience.isPublic
+																	? "Promoción pública: visible para todos los usuarios activos (descontando restricciones)"
+																	: "Promoción targeted: solo para usuarios y segmentos asignados"
+															}
+														>
+															<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
+																<People size={14} color={theme.palette.primary.main} />
+																<Typography variant="body2" fontWeight={600}>
+																	{audience.eligibleCount.toLocaleString()}
+																</Typography>
+															</Stack>
+														</Tooltip>
+													);
+												}
+												if (loadingCounts) {
+													return <Skeleton variant="text" width={50} sx={{ mx: "auto" }} />;
+												}
+												return (
+													<Typography variant="caption" color="textSecondary">
+														—
+													</Typography>
+												);
+											})()}
 										</TableCell>
 										<TableCell align="center">
 											<Typography variant="body2">
