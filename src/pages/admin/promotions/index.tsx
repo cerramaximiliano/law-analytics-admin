@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTheme } from "@mui/material/styles";
 import {
 	Alert,
@@ -32,7 +32,7 @@ import PromotionFormModal from "./PromotionFormModal";
 import PromotionDetailModal from "./PromotionDetailModal";
 import DeletePromotionDialog from "./DeletePromotionDialog";
 
-type StatusFilter = "active" | "inactive" | "all";
+type StatusFilter = "active" | "expired" | "inactive" | "all";
 
 const PromotionsManagement = () => {
 	const theme = useTheme();
@@ -51,7 +51,11 @@ const PromotionsManagement = () => {
 	const [toggleLoading, setToggleLoading] = useState<string | null>(null);
 
 	const buildParams = (filter: StatusFilter): GetDiscountsParams => {
-		if (filter === "active") return { isActive: true };
+		// "active" y "expired" comparten el mismo backend filter (isActive=true)
+		// y se diferencian client-side por validUntil. Esto evita agregar un
+		// parámetro nuevo al endpoint listDiscounts y mantiene la lógica de
+		// vigencia en un solo lugar (acá).
+		if (filter === "active" || filter === "expired") return { isActive: true };
 		if (filter === "inactive") return { isActive: false };
 		return {};
 	};
@@ -74,9 +78,24 @@ const PromotionsManagement = () => {
 		fetchDiscounts(statusFilter);
 	}, [statusFilter]);
 
+	// Aplica el corte por vigencia client-side: "active" excluye las expiradas
+	// (validUntil < now), "expired" muestra solo las expiradas. Backend ya filtró
+	// por isActive=true cuando aplica.
+	const filteredDiscounts = useMemo(() => {
+		if (statusFilter === "active") {
+			const now = Date.now();
+			return discounts.filter((d) => new Date(d.validUntil).getTime() >= now);
+		}
+		if (statusFilter === "expired") {
+			const now = Date.now();
+			return discounts.filter((d) => new Date(d.validUntil).getTime() < now);
+		}
+		return discounts;
+	}, [discounts, statusFilter]);
+
 	useEffect(() => {
-		// Refresca el conteo de audiencia en batch cada vez que cambia la lista
-		const ids = discounts.map((d) => d._id);
+		// Refresca el conteo de audiencia en batch para los items visibles
+		const ids = filteredDiscounts.map((d) => d._id);
 		if (ids.length === 0) {
 			setEligibleCounts({});
 			return;
@@ -102,7 +121,7 @@ const PromotionsManagement = () => {
 		return () => {
 			cancelled = true;
 		};
-	}, [discounts]);
+	}, [filteredDiscounts]);
 
 	const handleAddNew = () => {
 		setSelectedDiscount(null);
@@ -314,6 +333,7 @@ const PromotionsManagement = () => {
 				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
 					<Tabs value={statusFilter} onChange={(_, value: StatusFilter) => setStatusFilter(value)} aria-label="Filtro de estado">
 						<Tab label="Activas" value="active" />
+						<Tab label="Expiradas" value="expired" />
 						<Tab label="Inactivas" value="inactive" />
 						<Tab label="Todas" value="all" />
 					</Tabs>
@@ -337,16 +357,22 @@ const PromotionsManagement = () => {
 							</TableRow>
 						</TableHead>
 						<TableBody>
-							{discounts.length === 0 ? (
+							{filteredDiscounts.length === 0 ? (
 								<TableRow>
 									<TableCell colSpan={10} align="center">
 										<Typography variant="body2" color="textSecondary" sx={{ py: 4 }}>
-											No hay promociones configuradas. Crea una nueva promoción para comenzar.
+											{statusFilter === "expired"
+												? "No hay promociones expiradas en este filtro."
+												: statusFilter === "active"
+												? "No hay promociones activas vigentes."
+												: statusFilter === "inactive"
+												? "No hay promociones inactivas."
+												: "No hay promociones configuradas. Crea una nueva promoción para comenzar."}
 										</Typography>
 									</TableCell>
 								</TableRow>
 							) : (
-								discounts.map((discount) => (
+								filteredDiscounts.map((discount) => (
 									<TableRow key={discount._id} hover>
 										<TableCell>
 											<Typography variant="subtitle2" fontWeight={600} sx={{ fontFamily: "monospace" }}>
