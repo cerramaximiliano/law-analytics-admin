@@ -109,9 +109,7 @@ interface ConfirmActionState {
 	onConfirm: () => void | Promise<void>;
 }
 
-function ConfirmActionDialog({
-	state, onClose,
-}: { state: ConfirmActionState | null; onClose: () => void }) {
+function ConfirmActionDialog({ state, onClose }: { state: ConfirmActionState | null; onClose: () => void }) {
 	const [busy, setBusy] = useState(false);
 	if (!state) return null;
 	const handleConfirm = async () => {
@@ -127,10 +125,14 @@ function ConfirmActionDialog({
 		<Dialog open onClose={() => !busy && onClose()} maxWidth="xs" fullWidth>
 			<DialogTitle>{state.title}</DialogTitle>
 			<DialogContent>
-				<Typography variant="body2" color="text.secondary">{state.message}</Typography>
+				<Typography variant="body2" color="text.secondary">
+					{state.message}
+				</Typography>
 			</DialogContent>
 			<DialogActions>
-				<Button onClick={onClose} disabled={busy}>Cancelar</Button>
+				<Button onClick={onClose} disabled={busy}>
+					Cancelar
+				</Button>
 				<Button
 					variant="contained"
 					color={state.confirmColor || "primary"}
@@ -517,9 +519,7 @@ function DryRunScreenshotImage({ s3Key, step }: { s3Key: string; step: string })
 // la solicitud. Hace PATCH parcial via updateSolicitudAdmin con el merge
 // especial `requirenteDatosLaborales` del backend.
 
-function EditDatosLaboralesDialog({
-	open, sol, onClose,
-}: { open: boolean; sol: SecloSolicitud; onClose: () => void }) {
+function EditDatosLaboralesDialog({ open, sol, onClose }: { open: boolean; sol: SecloSolicitud; onClose: () => void }) {
 	const dispatch = useDispatch();
 	const initial = (sol.requirentes?.[0]?.datosLaborales || {}) as SecloDatosLaborales;
 
@@ -531,8 +531,7 @@ function EditDatosLaboralesDialog({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [open]);
 
-	const setField = <K extends keyof SecloDatosLaborales>(k: K, v: SecloDatosLaborales[K]) =>
-		setForm((f) => ({ ...f, [k]: v }));
+	const setField = <K extends keyof SecloDatosLaborales>(k: K, v: SecloDatosLaborales[K]) => setForm((f) => ({ ...f, [k]: v }));
 
 	const dateValue = (v: any) => (typeof v === "string" ? v.slice(0, 10) : "");
 
@@ -560,55 +559,83 @@ function EditDatosLaboralesDialog({
 			<DialogTitle>Editar datos laborales del trabajador</DialogTitle>
 			<DialogContent dividers>
 				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-					Corregí los campos faltantes detectados en el dry-run y volvé a ejecutarlo. El cambio aplica un merge parcial — los campos que dejes vacíos no pisan los anteriores.
+					Corregí los campos faltantes detectados en el dry-run y volvé a ejecutarlo. El cambio aplica un merge parcial — los campos que
+					dejes vacíos no pisan los anteriores.
 				</Typography>
 				<Grid container spacing={2}>
 					<Grid item xs={12} sm={4}>
-						<TextField fullWidth type="date" label="Fecha de nacimiento" InputLabelProps={{ shrink: true }}
+						<TextField
+							fullWidth
+							type="date"
+							label="Fecha de nacimiento"
+							InputLabelProps={{ shrink: true }}
 							value={dateValue(form.fechaNacimiento)}
-							onChange={(e) => setField("fechaNacimiento", e.target.value || null)} />
+							onChange={(e) => setField("fechaNacimiento", e.target.value || null)}
+						/>
 					</Grid>
 					<Grid item xs={12} sm={4}>
-						<TextField fullWidth type="date" label="Fecha de ingreso" InputLabelProps={{ shrink: true }}
+						<TextField
+							fullWidth
+							type="date"
+							label="Fecha de ingreso"
+							InputLabelProps={{ shrink: true }}
 							value={dateValue(form.fechaIngreso)}
-							onChange={(e) => setField("fechaIngreso", e.target.value || null)} />
+							onChange={(e) => setField("fechaIngreso", e.target.value || null)}
+						/>
 					</Grid>
 					<Grid item xs={12} sm={4}>
-						<TextField fullWidth type="date" label="Fecha de egreso" InputLabelProps={{ shrink: true }}
+						<TextField
+							fullWidth
+							type="date"
+							label="Fecha de egreso"
+							InputLabelProps={{ shrink: true }}
 							value={dateValue(form.fechaEgreso)}
-							onChange={(e) => setField("fechaEgreso", e.target.value || null)} />
+							onChange={(e) => setField("fechaEgreso", e.target.value || null)}
+						/>
 					</Grid>
 					<Grid item xs={12} sm={4}>
-						<TextField fullWidth type="date" label="Fecha del accidente" InputLabelProps={{ shrink: true }}
+						<TextField
+							fullWidth
+							type="date"
+							label="Fecha del accidente"
+							InputLabelProps={{ shrink: true }}
 							value={dateValue(form.fechaAccidente)}
 							onChange={(e) => setField("fechaAccidente", e.target.value || null)}
-							helperText="Requerido si el reclamo es por accidente o enfermedad" />
+							helperText="Requerido si el reclamo es por accidente o enfermedad"
+						/>
 					</Grid>
 					<Grid item xs={12} sm={4}>
-						<TextField fullWidth type="number" label="Última remuneración"
+						<TextField
+							fullWidth
+							type="number"
+							label="Última remuneración"
 							value={form.remuneracion ?? ""}
-							onChange={(e) => setField("remuneracion", e.target.value ? Number(e.target.value) : null)} />
+							onChange={(e) => setField("remuneracion", e.target.value ? Number(e.target.value) : null)}
+						/>
 					</Grid>
 					<Grid item xs={12} sm={4}>
-						<TextField fullWidth type="number" label="Importe del reclamo"
+						<TextField
+							fullWidth
+							type="number"
+							label="Importe del reclamo"
 							value={form.importeReclamo ?? ""}
-							onChange={(e) => setField("importeReclamo", e.target.value ? Number(e.target.value) : null)} />
+							onChange={(e) => setField("importeReclamo", e.target.value ? Number(e.target.value) : null)}
+						/>
 					</Grid>
 					<Grid item xs={12} sm={6}>
-						<TextField fullWidth label="C.C.T."
-							value={form.cct || ""}
-							onChange={(e) => setField("cct", e.target.value)} />
+						<TextField fullWidth label="C.C.T." value={form.cct || ""} onChange={(e) => setField("cct", e.target.value)} />
 					</Grid>
 					<Grid item xs={12} sm={6}>
-						<TextField fullWidth label="Categoría"
-							value={form.categoria || ""}
-							onChange={(e) => setField("categoria", e.target.value)} />
+						<TextField fullWidth label="Categoría" value={form.categoria || ""} onChange={(e) => setField("categoria", e.target.value)} />
 					</Grid>
 					<Grid item xs={12} sm={6}>
 						<FormControl fullWidth>
 							<InputLabel>Estado</InputLabel>
-							<Select value={form.estadoTrabajador || "regular"} label="Estado"
-								onChange={(e) => setField("estadoTrabajador", e.target.value as any)}>
+							<Select
+								value={form.estadoTrabajador || "regular"}
+								label="Estado"
+								onChange={(e) => setField("estadoTrabajador", e.target.value as any)}
+							>
 								<MenuItem value="regular">Regular</MenuItem>
 								<MenuItem value="irregular">Irregular</MenuItem>
 								<MenuItem value="no_registrado">No registrado</MenuItem>
@@ -618,8 +645,7 @@ function EditDatosLaboralesDialog({
 					<Grid item xs={12} sm={6}>
 						<FormControl fullWidth>
 							<InputLabel>Sexo</InputLabel>
-							<Select value={form.sexo || "M"} label="Sexo"
-								onChange={(e) => setField("sexo", e.target.value as any)}>
+							<Select value={form.sexo || "M"} label="Sexo" onChange={(e) => setField("sexo", e.target.value as any)}>
 								<MenuItem value="M">Masculino</MenuItem>
 								<MenuItem value="F">Femenino</MenuItem>
 							</Select>
@@ -628,9 +654,15 @@ function EditDatosLaboralesDialog({
 				</Grid>
 			</DialogContent>
 			<DialogActions>
-				<Button onClick={onClose} disabled={submitting}>Cancelar</Button>
-				<Button variant="contained" onClick={handleSubmit} disabled={submitting}
-					startIcon={submitting ? <CircularProgress size={14} /> : null}>
+				<Button onClick={onClose} disabled={submitting}>
+					Cancelar
+				</Button>
+				<Button
+					variant="contained"
+					onClick={handleSubmit}
+					disabled={submitting}
+					startIcon={submitting ? <CircularProgress size={14} /> : null}
+				>
 					{submitting ? "Guardando…" : "Guardar cambios"}
 				</Button>
 			</DialogActions>
@@ -671,19 +703,23 @@ function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 
 	// Roles únicos detectados en los campos faltantes.
 	const missingRoles = new Set(
-		(result?.missingRequiredFields || []).map((f) => detectMissingRole(f)).filter((r): r is "empleador" | "trabajador" => !!r)
+		(result?.missingRequiredFields || []).map((f) => detectMissingRole(f)).filter((r): r is "empleador" | "trabajador" => !!r),
 	);
 
 	const handleClean = () => {
 		setConfirm({
 			title: "Limpiar artefactos del dry-run",
-			message: "Se borran de S3 todos los screenshots y el HTML del último dry-run. La solicitud y el resto de los datos quedan como están.",
+			message:
+				"Se borran de S3 todos los screenshots y el HTML del último dry-run. La solicitud y el resto de los datos quedan como están.",
 			confirmLabel: "Limpiar",
 			confirmColor: "error",
 			onConfirm: async () => {
 				setBusy("clean");
-				try { await dispatch(deleteDryRunArtifacts(sol._id)); }
-				finally { setBusy(null); }
+				try {
+					await dispatch(deleteDryRunArtifacts(sol._id));
+				} finally {
+					setBusy(null);
+				}
 			},
 		});
 	};
@@ -696,8 +732,11 @@ function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 			confirmColor: "info",
 			onConfirm: async () => {
 				setBusy("rerun");
-				try { await dispatch(rerunAsDry(sol._id, !!sol.dryRunWithHtml)); }
-				finally { setBusy(null); }
+				try {
+					await dispatch(rerunAsDry(sol._id, !!sol.dryRunWithHtml));
+				} finally {
+					setBusy(null);
+				}
 			},
 		});
 	};
@@ -705,13 +744,17 @@ function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 	const handlePromote = () => {
 		setConfirm({
 			title: "Promover a envío real",
-			message: "La solicitud pasa a 'pending' con dryRun=false. El próximo ciclo del worker la enviará al portal SECLO de forma definitiva.",
+			message:
+				"La solicitud pasa a 'pending' con dryRun=false. El próximo ciclo del worker la enviará al portal SECLO de forma definitiva.",
 			confirmLabel: "Promover",
 			confirmColor: "success",
 			onConfirm: async () => {
 				setBusy("promote");
-				try { await dispatch(promoteRealSolicitud(sol._id)); }
-				finally { setBusy(null); }
+				try {
+					await dispatch(promoteRealSolicitud(sol._id));
+				} finally {
+					setBusy(null);
+				}
 			},
 		});
 	};
@@ -720,8 +763,8 @@ function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 		return (
 			<Stack spacing={2}>
 				<Typography variant="body2" color="text.secondary">
-					Esta solicitud está marcada como DEV pero todavía no fue procesada por el worker. Apenas el worker corra (ver "Acciones" arriba o en
-					la pestaña Workers), aparecerán acá los screenshots de cada paso del formulario.
+					Esta solicitud está marcada como DEV pero todavía no fue procesada por el worker. Apenas el worker corra (ver "Acciones" arriba o
+					en la pestaña Workers), aparecerán acá los screenshots de cada paso del formulario.
 				</Typography>
 				<Box>
 					<Button size="small" variant="outlined" onClick={handleRerun} disabled={busy !== null}>
@@ -828,20 +871,15 @@ function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 									</Tooltip>
 								)}
 								<Tooltip title="Editar datos laborales del trabajador (fechas, remuneración, categoría, etc.)">
-									<Button
-										size="small"
-										variant="outlined"
-										startIcon={<Edit2 size={14} />}
-										onClick={() => setEditOpen(true)}
-									>
+									<Button size="small" variant="outlined" startIcon={<Edit2 size={14} />} onClick={() => setEditOpen(true)}>
 										Datos laborales
 									</Button>
 								</Tooltip>
 							</Stack>
 						</Stack>
 						<Alert severity="warning">
-							El portal SECLO marca estos campos como obligatorios pero el worker los dejó vacíos.
-							Completalos en el contacto correspondiente y ejecutá un nuevo dry-run.
+							El portal SECLO marca estos campos como obligatorios pero el worker los dejó vacíos. Completalos en el contacto
+							correspondiente y ejecutá un nuevo dry-run.
 						</Alert>
 						<Box sx={{ mt: 1, border: 1, borderColor: "divider", borderRadius: 1 }}>
 							<Table size="small">
@@ -858,7 +896,9 @@ function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 										const role = detectMissingRole(f);
 										return (
 											<TableRow key={i}>
-												<TableCell><Chip label={f.step || "—"} size="small" variant="outlined" /></TableCell>
+												<TableCell>
+													<Chip label={f.step || "—"} size="small" variant="outlined" />
+												</TableCell>
 												<TableCell sx={{ fontWeight: 600 }}>{f.label || "—"}</TableCell>
 												<TableCell>
 													{role === "empleador" && <Chip label="Empleador" size="small" color="warning" variant="outlined" />}
@@ -949,11 +989,7 @@ function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 
 			<ConfirmActionDialog state={confirm} onClose={() => setConfirm(null)} />
 
-			<EditDatosLaboralesDialog
-				open={editOpen}
-				sol={sol}
-				onClose={() => setEditOpen(false)}
-			/>
+			<EditDatosLaboralesDialog open={editOpen} sol={sol} onClose={() => setEditOpen(false)} />
 
 			{/* Editor del Contact del empleador o trabajador. SECLO recarga el
 			    Contact desde Mongo en cada run, así que basta con persistir el
@@ -1388,7 +1424,8 @@ export default function SolicitudesTab() {
 	const handleRerunAsDry = (sol: SecloSolicitud) => {
 		setRowConfirm({
 			title: "Re-ejecutar en modo DEV",
-			message: "La solicitud vuelve a 'pending' y el próximo ciclo del worker la procesará SIN enviar al portal SECLO. Sirve para auditar qué hubiera enviado antes de hacerlo de verdad.",
+			message:
+				"La solicitud vuelve a 'pending' y el próximo ciclo del worker la procesará SIN enviar al portal SECLO. Sirve para auditar qué hubiera enviado antes de hacerlo de verdad.",
 			confirmLabel: "Re-ejecutar en DEV",
 			confirmColor: "info",
 			onConfirm: async () => {
@@ -1400,7 +1437,8 @@ export default function SolicitudesTab() {
 	const handlePromoteReal = (sol: SecloSolicitud) => {
 		setRowConfirm({
 			title: "Promover a envío real",
-			message: "La solicitud vuelve a 'pending' con dryRun=false. El próximo ciclo del worker la enviará al portal SECLO de forma definitiva.",
+			message:
+				"La solicitud vuelve a 'pending' con dryRun=false. El próximo ciclo del worker la enviará al portal SECLO de forma definitiva.",
 			confirmLabel: "Promover",
 			confirmColor: "success",
 			onConfirm: async () => {

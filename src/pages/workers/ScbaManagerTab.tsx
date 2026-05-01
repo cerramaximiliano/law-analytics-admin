@@ -208,10 +208,7 @@ const ScbaManagerTab: React.FC = () => {
 		setEditConfig((prev) => {
 			const prevWorkers = (prev.workers || {}) as any;
 			const prevWorker = prevWorkers[workerType] || {};
-			const prevSchedule =
-				prevWorker.schedule !== undefined
-					? prevWorker.schedule
-					: config?.config?.workers?.[workerType]?.schedule || {};
+			const prevSchedule = prevWorker.schedule !== undefined ? prevWorker.schedule : config?.config?.workers?.[workerType]?.schedule || {};
 			return {
 				...prev,
 				workers: {
@@ -303,7 +300,10 @@ const ScbaManagerTab: React.FC = () => {
 			const response = await ScbaManagerService.listCredentials();
 			if (response.success) setCredentials(response.data);
 		} catch (err: any) {
-			enqueueSnackbar(err.message || "Error al cargar credenciales", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+			enqueueSnackbar(err.message || "Error al cargar credenciales", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
 		} finally {
 			setCredentialsLoading(false);
 		}
@@ -319,7 +319,10 @@ const ScbaManagerTab: React.FC = () => {
 			const response = await ScbaManagerService.previewResetCredential(credential._id);
 			setCredentialResetDialog((prev) => ({ ...prev, preview: response.data, loading: false }));
 		} catch (err: any) {
-			enqueueSnackbar(err.message || "Error al previsualizar reset", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+			enqueueSnackbar(err.message || "Error al previsualizar reset", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
 			setCredentialResetDialog({ open: false, credential: null, preview: null, loading: false });
 		}
 	};
@@ -337,12 +340,15 @@ const ScbaManagerTab: React.FC = () => {
 			const response = await ScbaManagerService.resetCredential(credId);
 			enqueueSnackbar(
 				`Reset ok — ${userEmail}: ${response.data.deleted.folders} folders / ${response.data.deleted.orphanCausas} causas huérfanas`,
-				{ variant: "success", anchorOrigin: { vertical: "bottom", horizontal: "right" }, autoHideDuration: 6000 }
+				{ variant: "success", anchorOrigin: { vertical: "bottom", horizontal: "right" }, autoHideDuration: 6000 },
 			);
 			closeResetCredentialDialog();
 			await fetchCredentials();
 		} catch (err: any) {
-			enqueueSnackbar(err.message || "Error al resetear credencial", { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
+			enqueueSnackbar(err.message || "Error al resetear credencial", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
 			setCredentialResetDialog((prev) => ({ ...prev, loading: false }));
 		}
 	};
@@ -634,9 +640,11 @@ const ScbaManagerTab: React.FC = () => {
 					<Stack spacing={3}>
 						<Alert severity="info" icon={<InfoCircle size={18} />} sx={{ py: 0.5 }}>
 							<Typography variant="caption">
-								El manager escala instancias <strong>+1 por ciclo</strong> mientras <code>pending &gt; Scale Up Threshold</code> (hasta Max Workers) y las apaga
-								<strong> -1 por ciclo</strong> cuando <code>pending ≤ Scale Down Threshold</code> (hasta Min Workers). Si Min = 0 los workers quedan apagados
-								cuando no hay trabajo y se levantan bajo demanda. Los in-progress activos cuentan como carga para no cortar procesamientos.
+								El manager escala instancias <strong>+1 por ciclo</strong> mientras <code>pending &gt; Scale Up Threshold</code> (hasta Max
+								Workers) y las apaga
+								<strong> -1 por ciclo</strong> cuando <code>pending ≤ Scale Down Threshold</code> (hasta Min Workers). Si Min = 0 los
+								workers quedan apagados cuando no hay trabajo y se levantan bajo demanda. Los in-progress activos cuentan como carga para no
+								cortar procesamientos.
 							</Typography>
 						</Alert>
 
@@ -868,7 +876,11 @@ const ScbaManagerTab: React.FC = () => {
 																label="Hora inicio"
 																value={getWorkerSchedule(workerType, "workStartHour", 0)}
 																onChange={(e) =>
-																	updateWorkerSchedule(workerType, "workStartHour", Math.max(0, Math.min(23, parseInt(e.target.value) || 0)))
+																	updateWorkerSchedule(
+																		workerType,
+																		"workStartHour",
+																		Math.max(0, Math.min(23, parseInt(e.target.value) || 0)),
+																	)
 																}
 																inputProps={{ min: 0, max: 23 }}
 															/>
@@ -1120,9 +1132,11 @@ const ScbaManagerTab: React.FC = () => {
 								Arquitectura SCBA Workers
 							</Typography>
 							<Typography variant="body2">
-								El sistema SCBA sincroniza expedientes desde el portal de notificaciones de la Suprema Corte de Buenos Aires
-								(<code>notificaciones.scba.gov.ar</code>). El trabajo se divide en 4 workers con responsabilidades estancas, orquestados por un
-								<strong> manager </strong>que escala instancias +1/ciclo según la cola pendiente (patrón alineado a <code>pjn-mis-causas</code>).
+								El sistema SCBA sincroniza expedientes desde el portal de notificaciones de la Suprema Corte de Buenos Aires (
+								<code>notificaciones.scba.gov.ar</code>). El trabajo se divide en 4 workers con responsabilidades estancas, orquestados por
+								un
+								<strong> manager </strong>que escala instancias +1/ciclo según la cola pendiente (patrón alineado a{" "}
+								<code>pjn-mis-causas</code>).
 							</Typography>
 						</Alert>
 
@@ -1163,9 +1177,9 @@ const ScbaManagerTab: React.FC = () => {
 											Usuario crea credencial SCBA → <code>scba-credentials.syncStatus = pending</code>.
 										</li>
 										<li>
-											<strong>Verificación</strong> toma la cred con atomic-take, hace login AES-256-CBC, scrapea “Mis Causas”, upserta
-											docs en <code>causas-scba</code> con <code>scrapingProgress.status = pending</code> y crea folders respetando los
-											límites del plan del usuario (activo / archivado / pending según slots y storage disponibles).
+											<strong>Verificación</strong> toma la cred con atomic-take, hace login AES-256-CBC, scrapea “Mis Causas”, upserta docs
+											en <code>causas-scba</code> con <code>scrapingProgress.status = pending</code> y crea folders respetando los límites
+											del plan del usuario (activo / archivado / pending según slots y storage disponibles).
 										</li>
 										<li>
 											<strong>Extracción Inicial</strong> toma las causas pendientes, navega a <code>vertramites.aspx</code>, extrae la
@@ -1366,12 +1380,12 @@ const ScbaManagerTab: React.FC = () => {
 												c.syncStatus === "completed"
 													? "success"
 													: c.syncStatus === "error"
-														? "error"
-														: c.syncStatus === "in_progress"
-															? "info"
-															: c.syncStatus === "pending"
-																? "warning"
-																: "default";
+													? "error"
+													: c.syncStatus === "in_progress"
+													? "info"
+													: c.syncStatus === "pending"
+													? "warning"
+													: "default";
 											return (
 												<TableRow key={c._id} hover>
 													<TableCell>
@@ -1476,8 +1490,8 @@ const ScbaManagerTab: React.FC = () => {
 					) : credentialResetDialog.preview ? (
 						<Stack spacing={2}>
 							<Alert severity="warning">
-								Esta acción limpia los folders auto-creados del usuario y deja la credencial en <code>pending</code>. El verification-worker la
-								re-sincronizará en ~30s, disparando el email de sync-complete.
+								Esta acción limpia los folders auto-creados del usuario y deja la credencial en <code>pending</code>. El verification-worker
+								la re-sincronizará en ~30s, disparando el email de sync-complete.
 							</Alert>
 							<Box>
 								<Typography variant="caption" color="text.secondary">

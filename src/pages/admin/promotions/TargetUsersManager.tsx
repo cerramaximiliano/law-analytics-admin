@@ -337,10 +337,22 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 							Usuarios específicos que pueden ver este descuento
 						</Typography>
 						<Stack direction="row" spacing={1}>
-							<Button variant="outlined" size="small" startIcon={<UserAdd size={18} />} onClick={() => setAddDialogOpen(true)} disabled={frozenSegment}>
+							<Button
+								variant="outlined"
+								size="small"
+								startIcon={<UserAdd size={18} />}
+								onClick={() => setAddDialogOpen(true)}
+								disabled={frozenSegment}
+							>
 								Buscar Usuario
 							</Button>
-							<Button variant="outlined" size="small" startIcon={<Add size={18} />} onClick={() => setAddByEmailDialogOpen(true)} disabled={frozenSegment}>
+							<Button
+								variant="outlined"
+								size="small"
+								startIcon={<Add size={18} />}
+								onClick={() => setAddByEmailDialogOpen(true)}
+								disabled={frozenSegment}
+							>
 								Agregar por Email
 							</Button>
 							{totalTargetUsers > 0 && (
@@ -417,7 +429,13 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 						<Typography variant="subtitle1" color="text.secondary">
 							Segmentos de contactos cuyos usuarios pueden ver este descuento
 						</Typography>
-						<Button variant="outlined" size="small" startIcon={<Add size={18} />} onClick={handleOpenSegmentDialog} disabled={frozenSegment}>
+						<Button
+							variant="outlined"
+							size="small"
+							startIcon={<Add size={18} />}
+							onClick={handleOpenSegmentDialog}
+							disabled={frozenSegment}
+						>
 							Gestionar Segmentos
 						</Button>
 					</Stack>

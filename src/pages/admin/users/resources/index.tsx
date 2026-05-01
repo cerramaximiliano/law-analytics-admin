@@ -1385,17 +1385,29 @@ const UserResources: React.FC = () => {
 							<TableHead>
 								<TableRow>
 									<TableCell>
-										<TableSortLabel active={sortBy === "email"} direction={sortBy === "email" ? sortOrder : "asc"} onClick={() => handleSort("email")}>
+										<TableSortLabel
+											active={sortBy === "email"}
+											direction={sortBy === "email" ? sortOrder : "asc"}
+											onClick={() => handleSort("email")}
+										>
 											Usuario
 										</TableSortLabel>
 									</TableCell>
 									<TableCell>
-										<TableSortLabel active={sortBy === "plan"} direction={sortBy === "plan" ? sortOrder : "asc"} onClick={() => handleSort("plan")}>
+										<TableSortLabel
+											active={sortBy === "plan"}
+											direction={sortBy === "plan" ? sortOrder : "asc"}
+											onClick={() => handleSort("plan")}
+										>
 											Plan
 										</TableSortLabel>
 									</TableCell>
 									<TableCell align="center">
-										<TableSortLabel active={sortBy === "count"} direction={sortBy === "count" ? sortOrder : "asc"} onClick={() => handleSort("count")}>
+										<TableSortLabel
+											active={sortBy === "count"}
+											direction={sortBy === "count" ? sortOrder : "asc"}
+											onClick={() => handleSort("count")}
+										>
 											Consultas
 										</TableSortLabel>
 									</TableCell>
@@ -1409,7 +1421,11 @@ const UserResources: React.FC = () => {
 										</TableSortLabel>
 									</TableCell>
 									<TableCell align="right">
-										<TableSortLabel active={sortBy === "costUsd"} direction={sortBy === "costUsd" ? sortOrder : "asc"} onClick={() => handleSort("costUsd")}>
+										<TableSortLabel
+											active={sortBy === "costUsd"}
+											direction={sortBy === "costUsd" ? sortOrder : "asc"}
+											onClick={() => handleSort("costUsd")}
+										>
 											Costo USD
 										</TableSortLabel>
 									</TableCell>
@@ -1451,7 +1467,12 @@ const UserResources: React.FC = () => {
 											<TableRow key={row._id} hover>
 												<TableCell>
 													<Box>
-														<Typography variant="body2" fontWeight="medium" color={row.email ? "textPrimary" : "textSecondary"} fontStyle={row.email ? "normal" : "italic"}>
+														<Typography
+															variant="body2"
+															fontWeight="medium"
+															color={row.email ? "textPrimary" : "textSecondary"}
+															fontStyle={row.email ? "normal" : "italic"}
+														>
 															{row.email || "(usuario eliminado)"}
 														</Typography>
 														{fullName && (
@@ -1463,7 +1484,12 @@ const UserResources: React.FC = () => {
 												</TableCell>
 												<TableCell>
 													<Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-														<Chip label={row.plan} size="small" color={planChipColor(row.plan)} sx={{ minWidth: 70, textTransform: "capitalize" }} />
+														<Chip
+															label={row.plan}
+															size="small"
+															color={planChipColor(row.plan)}
+															sx={{ minWidth: 70, textTransform: "capitalize" }}
+														/>
 														{row.currentPlan && row.currentPlan !== row.plan && (
 															<Tooltip title="Plan actual del usuario (snapshot del periodo difiere)">
 																<Typography variant="caption" color="textSecondary">
@@ -1686,11 +1712,12 @@ const UserResources: React.FC = () => {
 							{aiResetRow && (
 								<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
 									<Typography variant="body2">
-										¿Estás seguro de resetear el contador de IA para <strong>{aiResetRow.email || "(usuario eliminado)"}</strong> en el período{" "}
-										<strong>{aiResetRow.period}</strong>?
+										¿Estás seguro de resetear el contador de IA para <strong>{aiResetRow.email || "(usuario eliminado)"}</strong> en el
+										período <strong>{aiResetRow.period}</strong>?
 									</Typography>
 									<Typography variant="caption" color="textSecondary">
-										La acción pone count, tokens y costo a 0 sin borrar el documento. El usuario va a poder volver a hacer consultas hasta el límite del plan.
+										La acción pone count, tokens y costo a 0 sin borrar el documento. El usuario va a poder volver a hacer consultas hasta
+										el límite del plan.
 									</Typography>
 									<Box sx={{ mt: 1, p: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.08), borderRadius: 1 }}>
 										<Typography variant="caption" color="textSecondary">

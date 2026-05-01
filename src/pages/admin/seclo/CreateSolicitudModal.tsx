@@ -62,9 +62,7 @@ const DOC_TIPO_LABEL: Record<SecloDocTipo, string> = {
 // Wrappers minimalistas para el step "Revisar y enviar". Se mantienen
 // inline porque el shape de los datos es específico de SECLO.
 
-function ReviewSection({
-	title, onEdit, children,
-}: { title: string; onEdit?: () => void; children: React.ReactNode }) {
+function ReviewSection({ title, onEdit, children }: { title: string; onEdit?: () => void; children: React.ReactNode }) {
 	return (
 		<Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
 			<Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
@@ -80,9 +78,7 @@ function ReviewSection({
 	);
 }
 
-function ReviewRow({
-	label, value, emptyHint,
-}: { label: string; value?: string | null; emptyHint?: React.ReactNode }) {
+function ReviewRow({ label, value, emptyHint }: { label: string; value?: string | null; emptyHint?: React.ReactNode }) {
 	const isEmpty = !value || !String(value).trim();
 	return (
 		<Box>
@@ -116,16 +112,18 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	const [selectedUser, setSelectedUser] = useState<SecloUser | null>(null);
 	const [userSearch, setUserSearch] = useState("");
 	const [selectedCredentialId, setSelectedCredentialId] = useState("");
-	const [credentials, setCredentials] = useState<Array<{
-		_id: string;
-		enabled: boolean;
-		cuil?: string | null;
-		credentialsValidated?: boolean;
-		credentialsValidatedAt?: string | null;
-		credentialInvalid?: boolean;
-		credentialInvalidAt?: string | null;
-		credentialInvalidReason?: string | null;
-	}>>([]);
+	const [credentials, setCredentials] = useState<
+		Array<{
+			_id: string;
+			enabled: boolean;
+			cuil?: string | null;
+			credentialsValidated?: boolean;
+			credentialsValidatedAt?: string | null;
+			credentialInvalid?: boolean;
+			credentialInvalidAt?: string | null;
+			credentialInvalidReason?: string | null;
+		}>
+	>([]);
 	const [contactsLoading, setContactsLoading] = useState(false);
 	const [folders, setFolders] = useState<SecloFolder[]>([]);
 	const [selectedFolder, setSelectedFolder] = useState<SecloFolder | null>(null);
@@ -139,8 +137,16 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	// La worker corre paso 5 en loop por cada uno, presionando ctl03_btnSeguir
 	// para guardarlo en la grilla del portal antes de avanzar al paso 6.
 	const [extraRequirentes, setExtraRequirentes] = useState<Array<{ contact: SecloContact; datosLaborales: SecloDatosLaborales }>>([]);
-	const [extraDialog, setExtraDialog] = useState<{ open: boolean; editIndex: number | null; contact: SecloContact | null; datosLab: SecloDatosLaborales }>({
-		open: false, editIndex: null, contact: null, datosLab: { estadoTrabajador: "regular", sexo: "M" },
+	const [extraDialog, setExtraDialog] = useState<{
+		open: boolean;
+		editIndex: number | null;
+		contact: SecloContact | null;
+		datosLab: SecloDatosLaborales;
+	}>({
+		open: false,
+		editIndex: null,
+		contact: null,
+		datosLab: { estadoTrabajador: "regular", sexo: "M" },
 	});
 
 	// Step 2 – Requerido (empleador)
@@ -149,8 +155,14 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	// ctl02_grdEmpleadores. El worker hace loop con ctl02_btnSeguir y luego
 	// btnSeguirEmpleador para avanzar al paso 7.
 	const [extraRequeridos, setExtraRequeridos] = useState<SecloContact[]>([]);
-	const [extraRequeridoDialog, setExtraRequeridoDialog] = useState<{ open: boolean; editIndex: number | null; contact: SecloContact | null }>({
-		open: false, editIndex: null, contact: null,
+	const [extraRequeridoDialog, setExtraRequeridoDialog] = useState<{
+		open: boolean;
+		editIndex: number | null;
+		contact: SecloContact | null;
+	}>({
+		open: false,
+		editIndex: null,
+		contact: null,
 	});
 
 	// Step 3 – Reclamo
@@ -191,9 +203,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	const handleContactSaved = (saved: SecloContact) => {
 		setLocalContacts((prev) => {
 			const exists = prev.some((c) => c._id === saved._id);
-			return exists
-				? prev.map((c) => (c._id === saved._id ? { ...c, ...saved } : c))
-				: [...prev, saved];
+			return exists ? prev.map((c) => (c._id === saved._id ? { ...c, ...saved } : c)) : [...prev, saved];
 		});
 
 		// Si veníamos desde un extra-diálogo, volvemos ahí con el contacto
@@ -429,10 +439,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 				{ contactId: requirente!._id, datosLaborales: datosLab },
 				...extraRequirentes.map((r) => ({ contactId: r.contact._id, datosLaborales: r.datosLaborales })),
 			];
-			const allRequeridos = [
-				{ contactId: requerido!._id },
-				...extraRequeridos.map((c) => ({ contactId: c._id })),
-			];
+			const allRequeridos = [{ contactId: requerido!._id }, ...extraRequeridos.map((c) => ({ contactId: c._id }))];
 			await dispatch(
 				createSolicitud({
 					userId: selectedUser!._id,
@@ -440,9 +447,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 					...(allRequirentes.length > 1
 						? { requirentes: allRequirentes }
 						: { requirenteId: requirente!._id, requirenteDatosLaborales: datosLab }),
-					...(allRequeridos.length > 1
-						? { requeridos: allRequeridos }
-						: { requeridoId: requerido!._id }),
+					...(allRequeridos.length > 1 ? { requeridos: allRequeridos } : { requeridoId: requerido!._id }),
 					objetoReclamo,
 					comentarioReclamo: comentario,
 					iniciadoPor,
@@ -484,64 +489,71 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 						    (TrabajoCredentials.userId es unique). Mostramos vista informativa,
 						    no selector. El selectedCredentialId se setea automáticamente al
 						    cargar contactos+credenciales del usuario. */}
-						{credentials.length > 0 && (() => {
-							const cred = credentials[0];
-							const validationChip = cred.credentialInvalid
-								? <Chip label="Inválida" size="small" color="error" />
-								: cred.credentialsValidated
-									? <Chip label="Validada" size="small" color="success" />
-									: <Chip label="Pendiente" size="small" color="warning" variant="outlined" />;
-							return (
-								<Grid item xs={12}>
-									<Box sx={{ p: 1.5, border: 1, borderColor: "divider", borderRadius: 1, bgcolor: "background.default" }}>
-										<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
-											<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
-												Credencial SECLO del usuario
-											</Typography>
-											<Stack direction="row" spacing={0.5} alignItems="center">
-												{validationChip}
-												{!cred.enabled && <Chip label="Deshabilitada" size="small" color="error" />}
-											</Stack>
-										</Stack>
-										<Stack direction="row" spacing={2} flexWrap="wrap">
-											<Box>
-												<Typography variant="caption" color="text.secondary" component="div">CUIL</Typography>
-												<Typography variant="body2" sx={{ fontFamily: "monospace" }}>{cred.cuil || "—"}</Typography>
-											</Box>
-											<Box>
-												<Typography variant="caption" color="text.secondary" component="div">
-													{cred.credentialInvalid ? "Detectada como inválida" : cred.credentialsValidated ? "Validada el" : "Estado"}
+						{credentials.length > 0 &&
+							(() => {
+								const cred = credentials[0];
+								const validationChip = cred.credentialInvalid ? (
+									<Chip label="Inválida" size="small" color="error" />
+								) : cred.credentialsValidated ? (
+									<Chip label="Validada" size="small" color="success" />
+								) : (
+									<Chip label="Pendiente" size="small" color="warning" variant="outlined" />
+								);
+								return (
+									<Grid item xs={12}>
+										<Box sx={{ p: 1.5, border: 1, borderColor: "divider", borderRadius: 1, bgcolor: "background.default" }}>
+											<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
+												<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
+													Credencial SECLO del usuario
 												</Typography>
-												<Typography variant="body2">
-													{cred.credentialInvalid && cred.credentialInvalidAt
-														? new Date(cred.credentialInvalidAt).toLocaleString("es-AR")
-														: cred.credentialsValidated && cred.credentialsValidatedAt
+												<Stack direction="row" spacing={0.5} alignItems="center">
+													{validationChip}
+													{!cred.enabled && <Chip label="Deshabilitada" size="small" color="error" />}
+												</Stack>
+											</Stack>
+											<Stack direction="row" spacing={2} flexWrap="wrap">
+												<Box>
+													<Typography variant="caption" color="text.secondary" component="div">
+														CUIL
+													</Typography>
+													<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+														{cred.cuil || "—"}
+													</Typography>
+												</Box>
+												<Box>
+													<Typography variant="caption" color="text.secondary" component="div">
+														{cred.credentialInvalid ? "Detectada como inválida" : cred.credentialsValidated ? "Validada el" : "Estado"}
+													</Typography>
+													<Typography variant="body2">
+														{cred.credentialInvalid && cred.credentialInvalidAt
+															? new Date(cred.credentialInvalidAt).toLocaleString("es-AR")
+															: cred.credentialsValidated && cred.credentialsValidatedAt
 															? new Date(cred.credentialsValidatedAt).toLocaleString("es-AR")
 															: "Esperando validación del worker"}
-												</Typography>
-											</Box>
-										</Stack>
-										{cred.credentialInvalid && cred.credentialInvalidReason && (
-											<Alert severity="error" sx={{ mt: 1.5 }}>
-												<Typography variant="caption">
-													<strong>Motivo:</strong> {cred.credentialInvalidReason}
-												</Typography>
-											</Alert>
-										)}
-										{!cred.enabled && (
-											<Alert severity="warning" sx={{ mt: 1.5 }}>
-												La credencial está deshabilitada. Reactivala desde Credenciales antes de crear la solicitud.
-											</Alert>
-										)}
-										{!cred.credentialsValidated && !cred.credentialInvalid && cred.enabled && (
-											<Alert severity="info" sx={{ mt: 1.5 }}>
-												Estamos validando esta credencial. La solicitud quedará en pending hasta que se confirme.
-											</Alert>
-										)}
-									</Box>
-								</Grid>
-							);
-						})()}
+													</Typography>
+												</Box>
+											</Stack>
+											{cred.credentialInvalid && cred.credentialInvalidReason && (
+												<Alert severity="error" sx={{ mt: 1.5 }}>
+													<Typography variant="caption">
+														<strong>Motivo:</strong> {cred.credentialInvalidReason}
+													</Typography>
+												</Alert>
+											)}
+											{!cred.enabled && (
+												<Alert severity="warning" sx={{ mt: 1.5 }}>
+													La credencial está deshabilitada. Reactivala desde Credenciales antes de crear la solicitud.
+												</Alert>
+											)}
+											{!cred.credentialsValidated && !cred.credentialInvalid && cred.enabled && (
+												<Alert severity="info" sx={{ mt: 1.5 }}>
+													Estamos validando esta credencial. La solicitud quedará en pending hasta que se confirme.
+												</Alert>
+											)}
+										</Box>
+									</Grid>
+								);
+							})()}
 						{selectedUser && credentials.length === 0 && !contactsLoading && (
 							<Grid item xs={12}>
 								<Alert severity="warning">Este usuario no tiene credenciales SECLO. Creá una desde la pestaña Credenciales.</Alert>
@@ -735,21 +747,27 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 											if (!entry) return;
 											setDatosLab({
 												fechaNacimiento: entry.fechaNacimiento ? entry.fechaNacimiento.slice(0, 10) : null,
-												fechaIngreso:    entry.fechaIngreso ? entry.fechaIngreso.slice(0, 10) : null,
-												fechaEgreso:     entry.fechaEgreso ? entry.fechaEgreso.slice(0, 10) : null,
-												fechaAccidente:  entry.fechaAccidente ? entry.fechaAccidente.slice(0, 10) : null,
-												remuneracion:    entry.remuneracion ?? null,
-												importeReclamo:  entry.importeReclamo ?? null,
-												cct:             entry.cct || "",
-												categoria:       entry.categoria || "",
+												fechaIngreso: entry.fechaIngreso ? entry.fechaIngreso.slice(0, 10) : null,
+												fechaEgreso: entry.fechaEgreso ? entry.fechaEgreso.slice(0, 10) : null,
+												fechaAccidente: entry.fechaAccidente ? entry.fechaAccidente.slice(0, 10) : null,
+												remuneracion: entry.remuneracion ?? null,
+												importeReclamo: entry.importeReclamo ?? null,
+												cct: entry.cct || "",
+												categoria: entry.categoria || "",
 												estadoTrabajador: entry.estadoTrabajador || "regular",
-												sexo:            entry.sexo || "M",
+												sexo: entry.sexo || "M",
 											});
 										}}
 									>
 										{requirente.datosLaboralesHistorial!.map((e, i) => {
-											const lab = `${e.empleadorName || "Sin empleador"} · ${e.fechaIngreso?.slice(0, 10) || "—"} → ${e.fechaEgreso?.slice(0, 10) || "—"} · $${e.remuneracion ?? "—"} · src=${e.source || "—"}`;
-											return <MenuItem key={i} value={i}>{lab}</MenuItem>;
+											const lab = `${e.empleadorName || "Sin empleador"} · ${e.fechaIngreso?.slice(0, 10) || "—"} → ${
+												e.fechaEgreso?.slice(0, 10) || "—"
+											} · $${e.remuneracion ?? "—"} · src=${e.source || "—"}`;
+											return (
+												<MenuItem key={i} value={i}>
+													{lab}
+												</MenuItem>
+											);
 										})}
 									</Select>
 								</FormControl>
@@ -858,18 +876,22 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 								<Box sx={{ borderTop: 1, borderColor: "divider", pt: 2, mt: 1 }}>
 									<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
 										<Typography variant="subtitle2">
-											Reclamantes adicionales {extraRequirentes.length > 0 && <Chip size="small" label={extraRequirentes.length} sx={{ ml: 1 }} />}
+											Reclamantes adicionales{" "}
+											{extraRequirentes.length > 0 && <Chip size="small" label={extraRequirentes.length} sx={{ ml: 1 }} />}
 										</Typography>
 										<Button
 											size="small"
 											variant="outlined"
-											onClick={() => setExtraDialog({ open: true, editIndex: null, contact: null, datosLab: { estadoTrabajador: "regular", sexo: "M" } })}
+											onClick={() =>
+												setExtraDialog({ open: true, editIndex: null, contact: null, datosLab: { estadoTrabajador: "regular", sexo: "M" } })
+											}
 										>
 											+ Agregar reclamante
 										</Button>
 									</Stack>
 									<Alert severity="warning" sx={{ mb: 1 }}>
-										Cuando hay más de un reclamante, la solicitud corre <strong>siempre en modo prueba</strong> hasta validar el flujo end-to-end con el portal.
+										Cuando hay más de un reclamante, la solicitud corre <strong>siempre en modo prueba</strong> hasta validar el flujo
+										end-to-end con el portal.
 									</Alert>
 									{extraRequirentes.length === 0 ? (
 										<Typography variant="caption" color="text.secondary">
@@ -878,16 +900,23 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 									) : (
 										<Stack spacing={0.5}>
 											{extraRequirentes.map((r, i) => (
-												<Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1, border: 1, borderColor: "divider", borderRadius: 1, p: 1 }}>
+												<Box
+													key={i}
+													sx={{ display: "flex", alignItems: "center", gap: 1, border: 1, borderColor: "divider", borderRadius: 1, p: 1 }}
+												>
 													<Box flexGrow={1}>
 														<Typography variant="body2" fontWeight={600}>
 															#{i + 2} · {r.contact.name} {r.contact.lastName || ""}
 														</Typography>
 														<Typography variant="caption" color="text.secondary">
-															{r.contact.cuit || "—"} · Ingreso: {r.datosLaborales.fechaIngreso?.toString().slice(0, 10) || "—"} · Egreso: {r.datosLaborales.fechaEgreso?.toString().slice(0, 10) || "—"}
+															{r.contact.cuit || "—"} · Ingreso: {r.datosLaborales.fechaIngreso?.toString().slice(0, 10) || "—"} · Egreso:{" "}
+															{r.datosLaborales.fechaEgreso?.toString().slice(0, 10) || "—"}
 														</Typography>
 													</Box>
-													<Button size="small" onClick={() => setExtraDialog({ open: true, editIndex: i, contact: r.contact, datosLab: r.datosLaborales })}>
+													<Button
+														size="small"
+														onClick={() => setExtraDialog({ open: true, editIndex: i, contact: r.contact, datosLab: r.datosLaborales })}
+													>
 														Editar
 													</Button>
 													<Button size="small" color="error" onClick={() => setExtraRequirentes((prev) => prev.filter((_, j) => j !== i))}>
@@ -1033,8 +1062,8 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 												sx={{ verticalAlign: "baseline" }}
 											>
 												agregarlos
-											</Link>
-											{" "}(son opcionales).
+											</Link>{" "}
+											(son opcionales).
 										</Typography>
 									)}
 								</Alert>
@@ -1051,7 +1080,8 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 								<Box sx={{ borderTop: 1, borderColor: "divider", pt: 2, mt: 1 }}>
 									<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
 										<Typography variant="subtitle2">
-											Empleadores adicionales {extraRequeridos.length > 0 && <Chip size="small" label={extraRequeridos.length} sx={{ ml: 1 }} />}
+											Empleadores adicionales{" "}
+											{extraRequeridos.length > 0 && <Chip size="small" label={extraRequeridos.length} sx={{ ml: 1 }} />}
 										</Typography>
 										<Button
 											size="small"
@@ -1062,7 +1092,8 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 										</Button>
 									</Stack>
 									<Alert severity="warning" sx={{ mb: 1 }}>
-										Cuando hay más de un empleador, la solicitud corre <strong>siempre en modo prueba</strong> hasta validar el flujo end-to-end con el portal.
+										Cuando hay más de un empleador, la solicitud corre <strong>siempre en modo prueba</strong> hasta validar el flujo
+										end-to-end con el portal.
 									</Alert>
 									{extraRequeridos.length === 0 ? (
 										<Typography variant="caption" color="text.secondary">
@@ -1071,7 +1102,10 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 									) : (
 										<Stack spacing={0.5}>
 											{extraRequeridos.map((c, i) => (
-												<Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1, border: 1, borderColor: "divider", borderRadius: 1, p: 1 }}>
+												<Box
+													key={i}
+													sx={{ display: "flex", alignItems: "center", gap: 1, border: 1, borderColor: "divider", borderRadius: 1, p: 1 }}
+												>
 													<Box flexGrow={1}>
 														<Typography variant="body2" fontWeight={600}>
 															#{i + 2} · {c.company || `${c.name} ${c.lastName || ""}`.trim()}
@@ -1279,10 +1313,14 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 		return (
 			<Stack spacing={2}>
 				<Alert severity={dryRunMode || empleadorIniciadoForzado ? "warning" : "info"}>
-					{empleadorIniciadoForzado
-						? "Trámite iniciado por el empleador: el worker corre en modo PRUEBA forzado. El flujo en este caso carga primero empleadores y luego trabajadores; el dry-run se detiene ANTES del botón \"Generar Reclamo y Especificar Fecha\"."
-						: <>Revisá todos los datos antes de crear la solicitud. Una vez creada, el worker la procesará automáticamente
-							{dryRunMode ? " en modo prueba (DEV — no envía al portal)" : " y la enviará al portal SECLO"}.</>}
+					{empleadorIniciadoForzado ? (
+						'Trámite iniciado por el empleador: el worker corre en modo PRUEBA forzado. El flujo en este caso carga primero empleadores y luego trabajadores; el dry-run se detiene ANTES del botón "Generar Reclamo y Especificar Fecha".'
+					) : (
+						<>
+							Revisá todos los datos antes de crear la solicitud. Una vez creada, el worker la procesará automáticamente
+							{dryRunMode ? " en modo prueba (DEV — no envía al portal)" : " y la enviará al portal SECLO"}.
+						</>
+					)}
 				</Alert>
 
 				<ReviewSection title="Usuario y credencial" onEdit={() => setStep(0)}>
@@ -1301,32 +1339,39 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 					{requirente && hasStructuredAddress(requirente) && !requirente.floor && !requirente.apartment && (
 						<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
 							Sin piso ni depto.{" "}
-							<Link component="button" type="button" onClick={() => setContactDialog({ open: true, mode: "edit", target: "requirente", contact: requirente })} sx={{ verticalAlign: "baseline" }}>
+							<Link
+								component="button"
+								type="button"
+								onClick={() => setContactDialog({ open: true, mode: "edit", target: "requirente", contact: requirente })}
+								sx={{ verticalAlign: "baseline" }}
+							>
 								Agregar
-							</Link>{" "}(opcional).
+							</Link>{" "}
+							(opcional).
 						</Typography>
 					)}
 				</ReviewSection>
 
 				{extraRequirentes.length > 0 && (
-				<ReviewSection title={`Reclamantes adicionales (${extraRequirentes.length})`} onEdit={() => setStep(1)}>
-					{extraRequirentes.map((r, i) => (
-						<Box key={i} sx={{ mb: 0.5 }}>
-							<Typography variant="body2" fontWeight={600}>
-								#{i + 2} · {r.contact.name} {r.contact.lastName || ""} {r.contact.cuit && `— ${r.contact.cuit}`}
-							</Typography>
-							<Typography variant="caption" color="text.secondary">
-								Domicilio: {formatDomicilio(r.contact)} · Ingreso: {r.datosLaborales.fechaIngreso?.toString().slice(0, 10) || "—"} · Egreso: {r.datosLaborales.fechaEgreso?.toString().slice(0, 10) || "—"}
-							</Typography>
-						</Box>
-					))}
-					<Alert severity="warning" sx={{ mt: 1 }}>
-						Con múltiples reclamantes la solicitud corre forzada en <strong>modo prueba</strong>.
-					</Alert>
-				</ReviewSection>
-			)}
+					<ReviewSection title={`Reclamantes adicionales (${extraRequirentes.length})`} onEdit={() => setStep(1)}>
+						{extraRequirentes.map((r, i) => (
+							<Box key={i} sx={{ mb: 0.5 }}>
+								<Typography variant="body2" fontWeight={600}>
+									#{i + 2} · {r.contact.name} {r.contact.lastName || ""} {r.contact.cuit && `— ${r.contact.cuit}`}
+								</Typography>
+								<Typography variant="caption" color="text.secondary">
+									Domicilio: {formatDomicilio(r.contact)} · Ingreso: {r.datosLaborales.fechaIngreso?.toString().slice(0, 10) || "—"} ·
+									Egreso: {r.datosLaborales.fechaEgreso?.toString().slice(0, 10) || "—"}
+								</Typography>
+							</Box>
+						))}
+						<Alert severity="warning" sx={{ mt: 1 }}>
+							Con múltiples reclamantes la solicitud corre forzada en <strong>modo prueba</strong>.
+						</Alert>
+					</ReviewSection>
+				)}
 
-			<ReviewSection title="Datos laborales" onEdit={() => setStep(1)}>
+				<ReviewSection title="Datos laborales" onEdit={() => setStep(1)}>
 					<ReviewRow label="Fecha de ingreso" value={datosLab.fechaIngreso || "—"} />
 					<ReviewRow label="Fecha de egreso" value={datosLab.fechaEgreso || "—"} />
 					{(reclamoRequiereFecha || datosLab.fechaAccidente) && (
@@ -1339,39 +1384,48 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 				</ReviewSection>
 
 				<ReviewSection title="Empleador (requerido)" onEdit={() => setStep(2)}>
-					<ReviewRow label="Nombre / Razón social" value={requerido ? (requerido.company || `${requerido.name} ${requerido.lastName || ""}`.trim()) : "—"} />
+					<ReviewRow
+						label="Nombre / Razón social"
+						value={requerido ? requerido.company || `${requerido.name} ${requerido.lastName || ""}`.trim() : "—"}
+					/>
 					<ReviewRow label="CUIT" value={requerido?.cuit || "—"} />
 					<ReviewRow label="Email" value={requerido?.email || "—"} />
 					<ReviewRow label="Domicilio" value={formatDomicilio(requerido)} />
 					{requerido && hasStructuredAddress(requerido) && !requerido.floor && !requerido.apartment && (
 						<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
 							Sin piso ni depto.{" "}
-							<Link component="button" type="button" onClick={() => setContactDialog({ open: true, mode: "edit", target: "requerido", contact: requerido })} sx={{ verticalAlign: "baseline" }}>
+							<Link
+								component="button"
+								type="button"
+								onClick={() => setContactDialog({ open: true, mode: "edit", target: "requerido", contact: requerido })}
+								sx={{ verticalAlign: "baseline" }}
+							>
 								Agregar
-							</Link>{" "}(opcional).
+							</Link>{" "}
+							(opcional).
 						</Typography>
 					)}
 				</ReviewSection>
 
 				{extraRequeridos.length > 0 && (
-				<ReviewSection title={`Empleadores adicionales (${extraRequeridos.length})`} onEdit={() => setStep(2)}>
-					{extraRequeridos.map((c, i) => (
-						<Box key={i} sx={{ mb: 0.5 }}>
-							<Typography variant="body2" fontWeight={600}>
-								#{i + 2} · {c.company || `${c.name} ${c.lastName || ""}`.trim()} {c.cuit && `— ${c.cuit}`}
-							</Typography>
-							<Typography variant="caption" color="text.secondary">
-								Domicilio: {formatDomicilio(c)}
-							</Typography>
-						</Box>
-					))}
-					<Alert severity="warning" sx={{ mt: 1 }}>
-						Con múltiples empleadores la solicitud corre forzada en <strong>modo prueba</strong>.
-					</Alert>
-				</ReviewSection>
-			)}
+					<ReviewSection title={`Empleadores adicionales (${extraRequeridos.length})`} onEdit={() => setStep(2)}>
+						{extraRequeridos.map((c, i) => (
+							<Box key={i} sx={{ mb: 0.5 }}>
+								<Typography variant="body2" fontWeight={600}>
+									#{i + 2} · {c.company || `${c.name} ${c.lastName || ""}`.trim()} {c.cuit && `— ${c.cuit}`}
+								</Typography>
+								<Typography variant="caption" color="text.secondary">
+									Domicilio: {formatDomicilio(c)}
+								</Typography>
+							</Box>
+						))}
+						<Alert severity="warning" sx={{ mt: 1 }}>
+							Con múltiples empleadores la solicitud corre forzada en <strong>modo prueba</strong>.
+						</Alert>
+					</ReviewSection>
+				)}
 
-			<ReviewSection title="Reclamo" onEdit={() => setStep(3)}>
+				<ReviewSection title="Reclamo" onEdit={() => setStep(3)}>
 					<ReviewRow label="Iniciado por" value={iniciadoPor === "trabajador" ? "Trabajador" : "Empleador"} />
 					<ReviewRow label="Objeto/s del reclamo" value={objetoReclamo.length ? objetoReclamo.join(", ") : "—"} />
 				</ReviewSection>
@@ -1387,9 +1441,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 					{(["dni", "credencial", "otros"] as SecloDocTipo[]).map((tipo) => {
 						const doc = documentos.find((d) => d.tipo === tipo);
 						if (!doc && tipo === "otros") return null;
-						return (
-							<ReviewRow key={tipo} label={DOC_TIPO_LABEL[tipo]} value={doc?.fileName || "—"} />
-						);
+						return <ReviewRow key={tipo} label={DOC_TIPO_LABEL[tipo]} value={doc?.fileName || "—"} />;
 					})}
 				</ReviewSection>
 			</Stack>
@@ -1398,342 +1450,393 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 
 	return (
 		<>
-		<Dialog open={open && !contactDialog.open && !extraDialog.open && !extraRequeridoDialog.open} onClose={handleClose} maxWidth="md" fullWidth>
-			<DialogTitle>Nueva solicitud de audiencia SECLO</DialogTitle>
-			<DialogContent>
-				<Stepper activeStep={step} alternativeLabel sx={{ mb: 3, mt: 1 }}>
-					{STEPS.map((label) => (
-						<Step key={label}>
-							<StepLabel>{label}</StepLabel>
-						</Step>
-					))}
-				</Stepper>
+			<Dialog
+				open={open && !contactDialog.open && !extraDialog.open && !extraRequeridoDialog.open}
+				onClose={handleClose}
+				maxWidth="md"
+				fullWidth
+			>
+				<DialogTitle>Nueva solicitud de audiencia SECLO</DialogTitle>
+				<DialogContent>
+					<Stepper activeStep={step} alternativeLabel sx={{ mb: 3, mt: 1 }}>
+						{STEPS.map((label) => (
+							<Step key={label}>
+								<StepLabel>{label}</StepLabel>
+							</Step>
+						))}
+					</Stepper>
 
-				{error && (
-					<Alert severity="error" sx={{ mb: 2 }}>
-						{error}
-					</Alert>
-				)}
+					{error && (
+						<Alert severity="error" sx={{ mb: 2 }}>
+							{error}
+						</Alert>
+					)}
 
-				{renderStep()}
-			</DialogContent>
-			<DialogActions sx={{ flexWrap: "wrap", gap: 1, justifyContent: "space-between" }}>
-				{step === STEPS.length - 1 ? (
-					<Stack direction="row" alignItems="center" spacing={1} sx={{ pl: 1 }}>
-						<Tooltip title="Modo prueba: el worker llena el formulario y se detiene ANTES de confirmarlo. NO se envía al portal. Quedan screenshots y un volcado del DOM en S3 para auditar.">
-							<FormControlLabel
-								control={<Switch checked={dryRunMode} onChange={(e) => setDryRunMode(e.target.checked)} color="warning" />}
-								label={
-									<Typography variant="body2" sx={{ fontWeight: dryRunMode ? 600 : 400 }}>
-										Modo prueba (DEV) — no envía
-									</Typography>
-								}
-							/>
-						</Tooltip>
-						{dryRunMode && (
-							<Tooltip title="Además de los screenshots, sube el HTML del paso 7 a S3 (útil para inspeccionar IDs ASP.NET).">
+					{renderStep()}
+				</DialogContent>
+				<DialogActions sx={{ flexWrap: "wrap", gap: 1, justifyContent: "space-between" }}>
+					{step === STEPS.length - 1 ? (
+						<Stack direction="row" alignItems="center" spacing={1} sx={{ pl: 1 }}>
+							<Tooltip title="Modo prueba: el worker llena el formulario y se detiene ANTES de confirmarlo. NO se envía al portal. Quedan screenshots y un volcado del DOM en S3 para auditar.">
 								<FormControlLabel
-									control={<Switch size="small" checked={dryRunWithHtml} onChange={(e) => setDryRunWithHtml(e.target.checked)} />}
-									label={<Typography variant="caption">Capturar HTML</Typography>}
+									control={<Switch checked={dryRunMode} onChange={(e) => setDryRunMode(e.target.checked)} color="warning" />}
+									label={
+										<Typography variant="body2" sx={{ fontWeight: dryRunMode ? 600 : 400 }}>
+											Modo prueba (DEV) — no envía
+										</Typography>
+									}
 								/>
 							</Tooltip>
-						)}
-					</Stack>
-				) : (
-					<Box />
-				)}
-				<Box>
-					<Button onClick={handleClose} disabled={submitting}>
-						Cancelar
-					</Button>
-					{step > 0 && (
-						<Button onClick={handleBack} disabled={submitting}>
-							Atrás
-						</Button>
-					)}
-					{step < STEPS.length - 1 ? (
-						<Button variant="contained" onClick={handleNext} disabled={!canAdvance()}>
-							Siguiente
-						</Button>
+							{dryRunMode && (
+								<Tooltip title="Además de los screenshots, sube el HTML del paso 7 a S3 (útil para inspeccionar IDs ASP.NET).">
+									<FormControlLabel
+										control={<Switch size="small" checked={dryRunWithHtml} onChange={(e) => setDryRunWithHtml(e.target.checked)} />}
+										label={<Typography variant="caption">Capturar HTML</Typography>}
+									/>
+								</Tooltip>
+							)}
+						</Stack>
 					) : (
-						<Button
-							variant="contained"
-							color={dryRunMode ? "warning" : "success"}
-							onClick={handleSubmit}
-							disabled={submitting || !canAdvance()}
-						>
-							{submitting ? "Creando..." : dryRunMode ? "Crear en modo DEV" : "Crear solicitud"}
-						</Button>
+						<Box />
 					)}
-				</Box>
-			</DialogActions>
-		</Dialog>
+					<Box>
+						<Button onClick={handleClose} disabled={submitting}>
+							Cancelar
+						</Button>
+						{step > 0 && (
+							<Button onClick={handleBack} disabled={submitting}>
+								Atrás
+							</Button>
+						)}
+						{step < STEPS.length - 1 ? (
+							<Button variant="contained" onClick={handleNext} disabled={!canAdvance()}>
+								Siguiente
+							</Button>
+						) : (
+							<Button
+								variant="contained"
+								color={dryRunMode ? "warning" : "success"}
+								onClick={handleSubmit}
+								disabled={submitting || !canAdvance()}
+							>
+								{submitting ? "Creando..." : dryRunMode ? "Crear en modo DEV" : "Crear solicitud"}
+							</Button>
+						)}
+					</Box>
+				</DialogActions>
+			</Dialog>
 
-		{/* Diálogo de creación/edición rápida de contacto.
+			{/* Diálogo de creación/edición rápida de contacto.
 		    El Dialog del wizard se cierra visualmente (open={open && !contactDialog.open})
 		    para evitar Dialog dentro de Dialog y los issues de z-index con los Selects internos.
 		    El componente padre sigue montado, así que el state del wizard se preserva. */}
-		<SecloContactDialog
-			open={contactDialog.open}
-			mode={contactDialog.mode}
-			userId={selectedUser?._id || ""}
-			contact={contactDialog.contact}
-			folderId={selectedFolder?._id}
-			roleHint={contactDialog.target === "requirente" ? "trabajador" : "empleador"}
-			onClose={closeContactDialog}
-			onSaved={handleContactSaved}
-		/>
+			<SecloContactDialog
+				open={contactDialog.open}
+				mode={contactDialog.mode}
+				userId={selectedUser?._id || ""}
+				contact={contactDialog.contact}
+				folderId={selectedFolder?._id}
+				roleHint={contactDialog.target === "requirente" ? "trabajador" : "empleador"}
+				onClose={closeContactDialog}
+				onSaved={handleContactSaved}
+			/>
 
-		{/* Diálogo para agregar/editar un reclamante adicional. La feature
+			{/* Diálogo para agregar/editar un reclamante adicional. La feature
 		    de múltiples reclamantes sólo aplica cuando iniciadoPor === 'trabajador'
 		    y la solicitud corre forzada en dryRun (guard del worker) hasta
 		    validar el flujo end-to-end con el portal SECLO. */}
-		<Dialog open={extraDialog.open} onClose={() => setExtraDialog((s) => ({ ...s, open: false }))} maxWidth="sm" fullWidth>
-			<DialogTitle>{extraDialog.editIndex !== null ? "Editar reclamante" : "Agregar reclamante"}</DialogTitle>
-			<DialogContent dividers>
-				<Stack spacing={2}>
-					<Autocomplete
-						options={contactsForRequirente.filter((c) =>
-							c._id !== requirente?._id &&
-							!extraRequirentes.some((r, i) => r.contact._id === c._id && i !== extraDialog.editIndex)
-						)}
-						getOptionLabel={(c: SecloContact) => `${c.name} ${c.lastName || ""}${c.cuit ? ` — ${c.cuit}` : ""}`}
-						value={extraDialog.contact}
-						onChange={(_, v) => setExtraDialog((s) => ({ ...s, contact: v }))}
-						isOptionEqualToValue={(a, b) => a._id === b._id}
-						renderInput={(params) => <TextField {...params} label="Contacto reclamante *" />}
-						noOptionsText="No hay otros contactos disponibles"
-					/>
-					{extraDialog.contact && !extraDialog.contact.phoneCelular && (
-						<Alert
-							severity="warning"
-							action={
-								<Button color="inherit" size="small" onClick={() => completarDesdeExtra("trabajador")}>
-									Editar contacto
-								</Button>
-							}
-						>
-							Falta <strong>celular</strong> en este contacto. SECLO lo exige.
-						</Alert>
-					)}
-					{extraDialog.contact && !hasStructuredAddress(extraDialog.contact) && (
-						<Alert
-							severity="warning"
-							action={
-								<Button color="inherit" size="small" onClick={() => completarDesdeExtra("trabajador")}>
-									Editar contacto
-								</Button>
-							}
-						>
-							Faltan <strong>calle</strong> y/o <strong>número</strong> en este contacto. SECLO los exige separados.
-						</Alert>
-					)}
-					{extraDialog.contact && (extraDialog.contact.datosLaboralesHistorial?.length ?? 0) > 0 && (
-						<FormControl fullWidth size="small">
-							<InputLabel>Reutilizar datos del historial ({extraDialog.contact.datosLaboralesHistorial!.length})</InputLabel>
-							<Select
-								label={`Reutilizar datos del historial (${extraDialog.contact.datosLaboralesHistorial!.length})`}
-								value=""
-								onChange={(e) => {
-									const idx = Number(e.target.value);
-									const entry = extraDialog.contact!.datosLaboralesHistorial![idx];
-									if (!entry) return;
-									setExtraDialog((s) => ({
-										...s,
-										datosLab: {
-											fechaNacimiento: entry.fechaNacimiento ? entry.fechaNacimiento.slice(0, 10) : null,
-											fechaIngreso:    entry.fechaIngreso ? entry.fechaIngreso.slice(0, 10) : null,
-											fechaEgreso:     entry.fechaEgreso ? entry.fechaEgreso.slice(0, 10) : null,
-											fechaAccidente:  entry.fechaAccidente ? entry.fechaAccidente.slice(0, 10) : null,
-											remuneracion:    entry.remuneracion ?? null,
-											importeReclamo:  entry.importeReclamo ?? null,
-											cct:             entry.cct || "",
-											categoria:       entry.categoria || "",
-											estadoTrabajador: entry.estadoTrabajador || "regular",
-											sexo:            entry.sexo || "M",
-										},
-									}));
-								}}
+			<Dialog open={extraDialog.open} onClose={() => setExtraDialog((s) => ({ ...s, open: false }))} maxWidth="sm" fullWidth>
+				<DialogTitle>{extraDialog.editIndex !== null ? "Editar reclamante" : "Agregar reclamante"}</DialogTitle>
+				<DialogContent dividers>
+					<Stack spacing={2}>
+						<Autocomplete
+							options={contactsForRequirente.filter(
+								(c) =>
+									c._id !== requirente?._id && !extraRequirentes.some((r, i) => r.contact._id === c._id && i !== extraDialog.editIndex),
+							)}
+							getOptionLabel={(c: SecloContact) => `${c.name} ${c.lastName || ""}${c.cuit ? ` — ${c.cuit}` : ""}`}
+							value={extraDialog.contact}
+							onChange={(_, v) => setExtraDialog((s) => ({ ...s, contact: v }))}
+							isOptionEqualToValue={(a, b) => a._id === b._id}
+							renderInput={(params) => <TextField {...params} label="Contacto reclamante *" />}
+							noOptionsText="No hay otros contactos disponibles"
+						/>
+						{extraDialog.contact && !extraDialog.contact.phoneCelular && (
+							<Alert
+								severity="warning"
+								action={
+									<Button color="inherit" size="small" onClick={() => completarDesdeExtra("trabajador")}>
+										Editar contacto
+									</Button>
+								}
 							>
-								{extraDialog.contact.datosLaboralesHistorial!.map((e, i) => {
-									const lab = `${e.empleadorName || "Sin empleador"} · ${e.fechaIngreso?.slice(0, 10) || "—"} → ${e.fechaEgreso?.slice(0, 10) || "—"} · $${e.remuneracion ?? "—"} · src=${e.source || "—"}`;
-									return <MenuItem key={i} value={i}>{lab}</MenuItem>;
-								})}
-							</Select>
-						</FormControl>
-					)}
-					<Grid container spacing={2}>
-						<Grid item xs={6}>
-							<TextField fullWidth type="date" label="Fecha de nacimiento" InputLabelProps={{ shrink: true }}
-								value={extraDialog.datosLab.fechaNacimiento?.toString().slice(0, 10) || ""}
-								onChange={(e) => setExtraDialog((s) => ({ ...s, datosLab: { ...s.datosLab, fechaNacimiento: e.target.value || null } }))}
-							/>
-						</Grid>
-						<Grid item xs={6}>
-							<TextField fullWidth type="date" label="Fecha de ingreso" InputLabelProps={{ shrink: true }}
-								value={extraDialog.datosLab.fechaIngreso?.toString().slice(0, 10) || ""}
-								onChange={(e) => setExtraDialog((s) => ({ ...s, datosLab: { ...s.datosLab, fechaIngreso: e.target.value || null } }))}
-							/>
-						</Grid>
-						<Grid item xs={6}>
-							<TextField fullWidth type="date" label="Fecha de egreso" InputLabelProps={{ shrink: true }}
-								value={extraDialog.datosLab.fechaEgreso?.toString().slice(0, 10) || ""}
-								onChange={(e) => setExtraDialog((s) => ({ ...s, datosLab: { ...s.datosLab, fechaEgreso: e.target.value || null } }))}
-							/>
-						</Grid>
-						<Grid item xs={6}>
-							<TextField fullWidth type="date" label="Fecha del accidente (si aplica)" InputLabelProps={{ shrink: true }}
-								value={extraDialog.datosLab.fechaAccidente?.toString().slice(0, 10) || ""}
-								onChange={(e) => setExtraDialog((s) => ({ ...s, datosLab: { ...s.datosLab, fechaAccidente: e.target.value || null } }))}
-							/>
-						</Grid>
-						<Grid item xs={6}>
-							<TextField fullWidth type="number" label="Última remuneración ($)"
-								value={extraDialog.datosLab.remuneracion || ""}
-								onChange={(e) => setExtraDialog((s) => ({ ...s, datosLab: { ...s.datosLab, remuneracion: Number(e.target.value) || null } }))}
-							/>
-						</Grid>
-						<Grid item xs={6}>
-							<TextField fullWidth type="number" label="Importe del reclamo ($)"
-								value={extraDialog.datosLab.importeReclamo || ""}
-								onChange={(e) => setExtraDialog((s) => ({ ...s, datosLab: { ...s.datosLab, importeReclamo: Number(e.target.value) || null } }))}
-							/>
-						</Grid>
-						<Grid item xs={6}>
-							<FormControl fullWidth>
-								<InputLabel>Estado trabajador</InputLabel>
-								<Select value={extraDialog.datosLab.estadoTrabajador || "regular"} label="Estado trabajador"
-									onChange={(e) => setExtraDialog((s) => ({ ...s, datosLab: { ...s.datosLab, estadoTrabajador: e.target.value as any } }))}
+								Falta <strong>celular</strong> en este contacto. SECLO lo exige.
+							</Alert>
+						)}
+						{extraDialog.contact && !hasStructuredAddress(extraDialog.contact) && (
+							<Alert
+								severity="warning"
+								action={
+									<Button color="inherit" size="small" onClick={() => completarDesdeExtra("trabajador")}>
+										Editar contacto
+									</Button>
+								}
+							>
+								Faltan <strong>calle</strong> y/o <strong>número</strong> en este contacto. SECLO los exige separados.
+							</Alert>
+						)}
+						{extraDialog.contact && (extraDialog.contact.datosLaboralesHistorial?.length ?? 0) > 0 && (
+							<FormControl fullWidth size="small">
+								<InputLabel>Reutilizar datos del historial ({extraDialog.contact.datosLaboralesHistorial!.length})</InputLabel>
+								<Select
+									label={`Reutilizar datos del historial (${extraDialog.contact.datosLaboralesHistorial!.length})`}
+									value=""
+									onChange={(e) => {
+										const idx = Number(e.target.value);
+										const entry = extraDialog.contact!.datosLaboralesHistorial![idx];
+										if (!entry) return;
+										setExtraDialog((s) => ({
+											...s,
+											datosLab: {
+												fechaNacimiento: entry.fechaNacimiento ? entry.fechaNacimiento.slice(0, 10) : null,
+												fechaIngreso: entry.fechaIngreso ? entry.fechaIngreso.slice(0, 10) : null,
+												fechaEgreso: entry.fechaEgreso ? entry.fechaEgreso.slice(0, 10) : null,
+												fechaAccidente: entry.fechaAccidente ? entry.fechaAccidente.slice(0, 10) : null,
+												remuneracion: entry.remuneracion ?? null,
+												importeReclamo: entry.importeReclamo ?? null,
+												cct: entry.cct || "",
+												categoria: entry.categoria || "",
+												estadoTrabajador: entry.estadoTrabajador || "regular",
+												sexo: entry.sexo || "M",
+											},
+										}));
+									}}
 								>
-									<MenuItem value="regular">Regular</MenuItem>
-									<MenuItem value="irregular">Irregular</MenuItem>
-									<MenuItem value="no_registrado">No registrado</MenuItem>
+									{extraDialog.contact.datosLaboralesHistorial!.map((e, i) => {
+										const lab = `${e.empleadorName || "Sin empleador"} · ${e.fechaIngreso?.slice(0, 10) || "—"} → ${
+											e.fechaEgreso?.slice(0, 10) || "—"
+										} · $${e.remuneracion ?? "—"} · src=${e.source || "—"}`;
+										return (
+											<MenuItem key={i} value={i}>
+												{lab}
+											</MenuItem>
+										);
+									})}
 								</Select>
 							</FormControl>
+						)}
+						<Grid container spacing={2}>
+							<Grid item xs={6}>
+								<TextField
+									fullWidth
+									type="date"
+									label="Fecha de nacimiento"
+									InputLabelProps={{ shrink: true }}
+									value={extraDialog.datosLab.fechaNacimiento?.toString().slice(0, 10) || ""}
+									onChange={(e) => setExtraDialog((s) => ({ ...s, datosLab: { ...s.datosLab, fechaNacimiento: e.target.value || null } }))}
+								/>
+							</Grid>
+							<Grid item xs={6}>
+								<TextField
+									fullWidth
+									type="date"
+									label="Fecha de ingreso"
+									InputLabelProps={{ shrink: true }}
+									value={extraDialog.datosLab.fechaIngreso?.toString().slice(0, 10) || ""}
+									onChange={(e) => setExtraDialog((s) => ({ ...s, datosLab: { ...s.datosLab, fechaIngreso: e.target.value || null } }))}
+								/>
+							</Grid>
+							<Grid item xs={6}>
+								<TextField
+									fullWidth
+									type="date"
+									label="Fecha de egreso"
+									InputLabelProps={{ shrink: true }}
+									value={extraDialog.datosLab.fechaEgreso?.toString().slice(0, 10) || ""}
+									onChange={(e) => setExtraDialog((s) => ({ ...s, datosLab: { ...s.datosLab, fechaEgreso: e.target.value || null } }))}
+								/>
+							</Grid>
+							<Grid item xs={6}>
+								<TextField
+									fullWidth
+									type="date"
+									label="Fecha del accidente (si aplica)"
+									InputLabelProps={{ shrink: true }}
+									value={extraDialog.datosLab.fechaAccidente?.toString().slice(0, 10) || ""}
+									onChange={(e) => setExtraDialog((s) => ({ ...s, datosLab: { ...s.datosLab, fechaAccidente: e.target.value || null } }))}
+								/>
+							</Grid>
+							<Grid item xs={6}>
+								<TextField
+									fullWidth
+									type="number"
+									label="Última remuneración ($)"
+									value={extraDialog.datosLab.remuneracion || ""}
+									onChange={(e) =>
+										setExtraDialog((s) => ({ ...s, datosLab: { ...s.datosLab, remuneracion: Number(e.target.value) || null } }))
+									}
+								/>
+							</Grid>
+							<Grid item xs={6}>
+								<TextField
+									fullWidth
+									type="number"
+									label="Importe del reclamo ($)"
+									value={extraDialog.datosLab.importeReclamo || ""}
+									onChange={(e) =>
+										setExtraDialog((s) => ({ ...s, datosLab: { ...s.datosLab, importeReclamo: Number(e.target.value) || null } }))
+									}
+								/>
+							</Grid>
+							<Grid item xs={6}>
+								<FormControl fullWidth>
+									<InputLabel>Estado trabajador</InputLabel>
+									<Select
+										value={extraDialog.datosLab.estadoTrabajador || "regular"}
+										label="Estado trabajador"
+										onChange={(e) =>
+											setExtraDialog((s) => ({ ...s, datosLab: { ...s.datosLab, estadoTrabajador: e.target.value as any } }))
+										}
+									>
+										<MenuItem value="regular">Regular</MenuItem>
+										<MenuItem value="irregular">Irregular</MenuItem>
+										<MenuItem value="no_registrado">No registrado</MenuItem>
+									</Select>
+								</FormControl>
+							</Grid>
+							<Grid item xs={6}>
+								<FormControl fullWidth>
+									<InputLabel>Sexo</InputLabel>
+									<Select
+										value={extraDialog.datosLab.sexo || "M"}
+										label="Sexo"
+										onChange={(e) => setExtraDialog((s) => ({ ...s, datosLab: { ...s.datosLab, sexo: e.target.value as any } }))}
+									>
+										<MenuItem value="M">Masculino</MenuItem>
+										<MenuItem value="F">Femenino</MenuItem>
+									</Select>
+								</FormControl>
+							</Grid>
 						</Grid>
-						<Grid item xs={6}>
-							<FormControl fullWidth>
-								<InputLabel>Sexo</InputLabel>
-								<Select value={extraDialog.datosLab.sexo || "M"} label="Sexo"
-									onChange={(e) => setExtraDialog((s) => ({ ...s, datosLab: { ...s.datosLab, sexo: e.target.value as any } }))}
-								>
-									<MenuItem value="M">Masculino</MenuItem>
-									<MenuItem value="F">Femenino</MenuItem>
-								</Select>
-							</FormControl>
-						</Grid>
-					</Grid>
-				</Stack>
-			</DialogContent>
-			<DialogActions>
-				<Button onClick={() => setExtraDialog((s) => ({ ...s, open: false }))}>Cancelar</Button>
-				<Button
-					variant="contained"
-					disabled={!extraDialog.contact || !extraDialog.contact.phoneCelular || !hasStructuredAddress(extraDialog.contact)}
-					onClick={() => {
-						if (!extraDialog.contact) return;
-						const entry = { contact: extraDialog.contact, datosLaborales: extraDialog.datosLab };
-						setExtraRequirentes((prev) => {
-							if (extraDialog.editIndex !== null) {
-								const copy = [...prev];
-								copy[extraDialog.editIndex] = entry;
-								return copy;
-							}
-							return [...prev, entry];
-						});
-						setExtraDialog({ open: false, editIndex: null, contact: null, datosLab: { estadoTrabajador: "regular", sexo: "M" } });
-					}}
-				>
-					{extraDialog.editIndex !== null ? "Guardar cambios" : "Agregar a la lista"}
-				</Button>
-			</DialogActions>
-		</Dialog>
+					</Stack>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setExtraDialog((s) => ({ ...s, open: false }))}>Cancelar</Button>
+					<Button
+						variant="contained"
+						disabled={!extraDialog.contact || !extraDialog.contact.phoneCelular || !hasStructuredAddress(extraDialog.contact)}
+						onClick={() => {
+							if (!extraDialog.contact) return;
+							const entry = { contact: extraDialog.contact, datosLaborales: extraDialog.datosLab };
+							setExtraRequirentes((prev) => {
+								if (extraDialog.editIndex !== null) {
+									const copy = [...prev];
+									copy[extraDialog.editIndex] = entry;
+									return copy;
+								}
+								return [...prev, entry];
+							});
+							setExtraDialog({ open: false, editIndex: null, contact: null, datosLab: { estadoTrabajador: "regular", sexo: "M" } });
+						}}
+					>
+						{extraDialog.editIndex !== null ? "Guardar cambios" : "Agregar a la lista"}
+					</Button>
+				</DialogActions>
+			</Dialog>
 
-		{/* Diálogo para agregar/editar un empleador adicional. Como los empleadores
+			{/* Diálogo para agregar/editar un empleador adicional. Como los empleadores
 		    no tienen datos laborales asociados, el sub-dialog sólo necesita la
 		    selección de Contact (con validación de calle+número). */}
-		<Dialog open={extraRequeridoDialog.open} onClose={() => setExtraRequeridoDialog((s) => ({ ...s, open: false }))} maxWidth="sm" fullWidth>
-			<DialogTitle>{extraRequeridoDialog.editIndex !== null ? "Cambiar empleador" : "Agregar empleador"}</DialogTitle>
-			<DialogContent dividers>
-				<Stack spacing={2}>
-					<Autocomplete
-						options={localContacts.filter((c) =>
-							c._id !== requirente?._id &&
-							c._id !== requerido?._id &&
-							!extraRequirentes.some((r) => r.contact._id === c._id) &&
-							!extraRequeridos.some((r, i) => r._id === c._id && i !== extraRequeridoDialog.editIndex)
+			<Dialog
+				open={extraRequeridoDialog.open}
+				onClose={() => setExtraRequeridoDialog((s) => ({ ...s, open: false }))}
+				maxWidth="sm"
+				fullWidth
+			>
+				<DialogTitle>{extraRequeridoDialog.editIndex !== null ? "Cambiar empleador" : "Agregar empleador"}</DialogTitle>
+				<DialogContent dividers>
+					<Stack spacing={2}>
+						<Autocomplete
+							options={localContacts.filter(
+								(c) =>
+									c._id !== requirente?._id &&
+									c._id !== requerido?._id &&
+									!extraRequirentes.some((r) => r.contact._id === c._id) &&
+									!extraRequeridos.some((r, i) => r._id === c._id && i !== extraRequeridoDialog.editIndex),
+							)}
+							getOptionLabel={(c: SecloContact) => `${c.company || `${c.name} ${c.lastName || ""}`.trim()}${c.cuit ? ` — ${c.cuit}` : ""}`}
+							value={extraRequeridoDialog.contact}
+							onChange={(_, v) => setExtraRequeridoDialog((s) => ({ ...s, contact: v }))}
+							isOptionEqualToValue={(a, b) => a._id === b._id}
+							renderInput={(params) => <TextField {...params} label="Contacto empleador *" />}
+							noOptionsText="No hay otros contactos disponibles"
+						/>
+						{extraRequeridoDialog.contact && !hasStructuredAddress(extraRequeridoDialog.contact) && (
+							<Alert
+								severity="warning"
+								action={
+									<Button color="inherit" size="small" onClick={() => completarDesdeExtra("empleador")}>
+										Editar contacto
+									</Button>
+								}
+							>
+								Faltan <strong>calle</strong> y/o <strong>número</strong> en este contacto. SECLO los exige separados.
+							</Alert>
 						)}
-						getOptionLabel={(c: SecloContact) =>
-							`${c.company || `${c.name} ${c.lastName || ""}`.trim()}${c.cuit ? ` — ${c.cuit}` : ""}`
+						{extraRequeridoDialog.contact && !hasValidTipoSociedad(extraRequeridoDialog.contact) && (
+							<Alert
+								severity="warning"
+								action={
+									<Button color="inherit" size="small" onClick={() => completarDesdeExtra("empleador")}>
+										Editar contacto
+									</Button>
+								}
+							>
+								Falta el <strong>tipo</strong> de persona jurídica. SECLO lo exige.
+							</Alert>
+						)}
+						{extraRequeridoDialog.contact && (
+							<Alert severity="info" icon={false}>
+								<Typography variant="body2">
+									<strong>CUIT:</strong> {extraRequeridoDialog.contact.cuit || "—"}
+								</Typography>
+								<Typography variant="body2">
+									<strong>Domicilio:</strong>{" "}
+									{[extraRequeridoDialog.contact.street, extraRequeridoDialog.contact.streetNumber].filter(Boolean).join(" ") ||
+										extraRequeridoDialog.contact.address ||
+										"—"}
+								</Typography>
+							</Alert>
+						)}
+					</Stack>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setExtraRequeridoDialog((s) => ({ ...s, open: false }))}>Cancelar</Button>
+					<Button
+						variant="contained"
+						disabled={
+							!extraRequeridoDialog.contact ||
+							!hasStructuredAddress(extraRequeridoDialog.contact) ||
+							!hasValidTipoSociedad(extraRequeridoDialog.contact)
 						}
-						value={extraRequeridoDialog.contact}
-						onChange={(_, v) => setExtraRequeridoDialog((s) => ({ ...s, contact: v }))}
-						isOptionEqualToValue={(a, b) => a._id === b._id}
-						renderInput={(params) => <TextField {...params} label="Contacto empleador *" />}
-						noOptionsText="No hay otros contactos disponibles"
-					/>
-					{extraRequeridoDialog.contact && !hasStructuredAddress(extraRequeridoDialog.contact) && (
-						<Alert
-							severity="warning"
-							action={
-								<Button color="inherit" size="small" onClick={() => completarDesdeExtra("empleador")}>
-									Editar contacto
-								</Button>
-							}
-						>
-							Faltan <strong>calle</strong> y/o <strong>número</strong> en este contacto. SECLO los exige separados.
-						</Alert>
-					)}
-					{extraRequeridoDialog.contact && !hasValidTipoSociedad(extraRequeridoDialog.contact) && (
-						<Alert
-							severity="warning"
-							action={
-								<Button color="inherit" size="small" onClick={() => completarDesdeExtra("empleador")}>
-									Editar contacto
-								</Button>
-							}
-						>
-							Falta el <strong>tipo</strong> de persona jurídica. SECLO lo exige.
-						</Alert>
-					)}
-					{extraRequeridoDialog.contact && (
-						<Alert severity="info" icon={false}>
-							<Typography variant="body2"><strong>CUIT:</strong> {extraRequeridoDialog.contact.cuit || "—"}</Typography>
-							<Typography variant="body2">
-								<strong>Domicilio:</strong>{" "}
-								{[extraRequeridoDialog.contact.street, extraRequeridoDialog.contact.streetNumber].filter(Boolean).join(" ") || extraRequeridoDialog.contact.address || "—"}
-							</Typography>
-						</Alert>
-					)}
-				</Stack>
-			</DialogContent>
-			<DialogActions>
-				<Button onClick={() => setExtraRequeridoDialog((s) => ({ ...s, open: false }))}>Cancelar</Button>
-				<Button
-					variant="contained"
-					disabled={
-						!extraRequeridoDialog.contact ||
-						!hasStructuredAddress(extraRequeridoDialog.contact) ||
-						!hasValidTipoSociedad(extraRequeridoDialog.contact)
-					}
-					onClick={() => {
-						if (!extraRequeridoDialog.contact) return;
-						const c = extraRequeridoDialog.contact;
-						setExtraRequeridos((prev) => {
-							if (extraRequeridoDialog.editIndex !== null) {
-								const copy = [...prev];
-								copy[extraRequeridoDialog.editIndex] = c;
-								return copy;
-							}
-							return [...prev, c];
-						});
-						setExtraRequeridoDialog({ open: false, editIndex: null, contact: null });
-					}}
-				>
-					{extraRequeridoDialog.editIndex !== null ? "Guardar cambios" : "Agregar a la lista"}
-				</Button>
-			</DialogActions>
-		</Dialog>
+						onClick={() => {
+							if (!extraRequeridoDialog.contact) return;
+							const c = extraRequeridoDialog.contact;
+							setExtraRequeridos((prev) => {
+								if (extraRequeridoDialog.editIndex !== null) {
+									const copy = [...prev];
+									copy[extraRequeridoDialog.editIndex] = c;
+									return copy;
+								}
+								return [...prev, c];
+							});
+							setExtraRequeridoDialog({ open: false, editIndex: null, contact: null });
+						}}
+					>
+						{extraRequeridoDialog.editIndex !== null ? "Guardar cambios" : "Agregar a la lista"}
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</>
 	);
 }

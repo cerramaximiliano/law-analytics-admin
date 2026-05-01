@@ -103,22 +103,25 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 	}, [open]);
 
 	// Búsqueda de usuarios con debounce
-	const searchUsers = useCallback(async (query: string) => {
-		if (query.length < 2) {
-			setUserSearchResults([]);
-			return;
-		}
-		setUserSearchLoading(true);
-		try {
-			const response = await discountsService.searchUsers(query, 20);
-			const existingIds = pendingTargetUsers.map((u) => u._id);
-			setUserSearchResults(response.data.filter((u) => !existingIds.includes(u._id)));
-		} catch (error) {
-			console.error("Error buscando usuarios:", error);
-		} finally {
-			setUserSearchLoading(false);
-		}
-	}, [pendingTargetUsers]);
+	const searchUsers = useCallback(
+		async (query: string) => {
+			if (query.length < 2) {
+				setUserSearchResults([]);
+				return;
+			}
+			setUserSearchLoading(true);
+			try {
+				const response = await discountsService.searchUsers(query, 20);
+				const existingIds = pendingTargetUsers.map((u) => u._id);
+				setUserSearchResults(response.data.filter((u) => !existingIds.includes(u._id)));
+			} catch (error) {
+				console.error("Error buscando usuarios:", error);
+			} finally {
+				setUserSearchLoading(false);
+			}
+		},
+		[pendingTargetUsers],
+	);
 
 	useEffect(() => {
 		const timer = setTimeout(() => searchUsers(userSearchQuery), 300);
@@ -158,14 +161,20 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 				// Cargar usuarios objetivo existentes para mostrarlos en el Autocomplete
 				if (discount._id) {
 					setLoadingTargetUsers(true);
-					discountsService.getTargetUsers(discount._id)
+					discountsService
+						.getTargetUsers(discount._id)
 						.then((res) => setPendingTargetUsers(res.data?.targetUsers || []))
-						.catch(() => {/* silencioso: el campo queda vacío */})
+						.catch(() => {
+							/* silencioso: el campo queda vacío */
+						})
 						.finally(() => setLoadingTargetUsers(false));
 					// Refrescar datos del descuento para obtener el estado actualizado de Stripe
-					discountsService.getDiscountById(discount._id)
+					discountsService
+						.getDiscountById(discount._id)
 						.then((res) => setFreshDiscount(res.data ?? null))
-						.catch(() => {/* silencioso: se usa el prop como fallback */});
+						.catch(() => {
+							/* silencioso: se usa el prop como fallback */
+						});
 				}
 			} else {
 				// Create mode: reset form
@@ -357,10 +366,9 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 						await discountsService.addTargetUsers(response.data._id, {
 							userIds: pendingTargetUsers.map((u) => u._id),
 						});
-						enqueueSnackbar(
-							`Promoción creada en: ${envNames}. ${pendingTargetUsers.length} usuario(s) objetivo asignados.`,
-							{ variant: "success" },
-						);
+						enqueueSnackbar(`Promoción creada en: ${envNames}. ${pendingTargetUsers.length} usuario(s) objetivo asignados.`, {
+							variant: "success",
+						});
 					} catch (_err) {
 						enqueueSnackbar(
 							`Promoción creada en: ${envNames}, pero hubo un error al asignar usuarios objetivo. Asignalos desde la pestaña "Usuarios Objetivo".`,
@@ -805,7 +813,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 											),
 											endAdornment: (
 												<>
-													{(userSearchLoading || loadingTargetUsers) ? <CircularProgress color="inherit" size={18} /> : null}
+													{userSearchLoading || loadingTargetUsers ? <CircularProgress color="inherit" size={18} /> : null}
 													{params.InputProps.endAdornment}
 												</>
 											),
@@ -826,13 +834,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 								)}
 								renderTags={(value, getTagProps) =>
 									value.map((option, index) => (
-										<Chip
-											{...getTagProps({ index })}
-											key={option._id}
-											label={option.email}
-											size="small"
-											icon={<UserAdd size={14} />}
-										/>
+										<Chip {...getTagProps({ index })} key={option._id} label={option.email} size="small" icon={<UserAdd size={14} />} />
 									))
 								}
 								noOptionsText={userSearchQuery.length < 2 ? "Escribí para buscar..." : "No se encontraron usuarios"}
@@ -866,9 +868,9 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 						<Grid item xs={12}>
 							<Alert severity="error">
 								<AlertTitle>Descuento no sincronizado con Stripe</AlertTitle>
-								No podés activar "Mostrar públicamente" porque este descuento no tiene un Coupon ID válido en Stripe (ni en Development ni en
-								Production). Cerrá este formulario, abrí el detalle de la promoción y usá el botón <strong>Sincronizar con Stripe</strong>{" "}
-								en la pestaña Stripe antes de continuar.
+								No podés activar "Mostrar públicamente" porque este descuento no tiene un Coupon ID válido en Stripe (ni en Development ni
+								en Production). Cerrá este formulario, abrí el detalle de la promoción y usá el botón{" "}
+								<strong>Sincronizar con Stripe</strong> en la pestaña Stripe antes de continuar.
 							</Alert>
 						</Grid>
 					)}
@@ -877,9 +879,8 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 						<Grid item xs={12}>
 							<Alert severity="warning">
 								<AlertTitle>Descuento público sin audiencia restringida</AlertTitle>
-								Sin segmentos ni usuarios asignados, este descuento será visible para <strong>todos los usuarios</strong> en la página
-								de planes. Si querés restringirlo, asigná segmentos en "Segmentación de Audiencia" o usuarios en "Usuarios Objetivo"
-								arriba.
+								Sin segmentos ni usuarios asignados, este descuento será visible para <strong>todos los usuarios</strong> en la página de
+								planes. Si querés restringirlo, asigná segmentos en "Segmentación de Audiencia" o usuarios en "Usuarios Objetivo" arriba.
 							</Alert>
 						</Grid>
 					)}

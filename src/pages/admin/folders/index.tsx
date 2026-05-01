@@ -29,7 +29,19 @@ import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import FoldersService, { Folder, FolderStats } from "api/folders";
-import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Archive, Edit2, Warning2 } from "iconsax-react";
+import {
+	Refresh,
+	Eye,
+	SearchNormal1,
+	CloseCircle,
+	ArrowUp,
+	ArrowDown,
+	TickCircle,
+	CloseSquare,
+	Archive,
+	Edit2,
+	Warning2,
+} from "iconsax-react";
 import CausaDetalleModal from "../causas/CausaDetalleModal";
 import FolderEditModal from "./FolderEditModal";
 import CausaEditModal from "./CausaEditModal";
@@ -591,7 +603,9 @@ const FoldersPage = () => {
 															)}
 															{(folder.listRemoved || folder.pjnNotFound) && (
 																<Tooltip
-																	title={`Causa ya no aparece en "Mis Causas" del portal ${(folder.listRemovedSource || "pjn").toUpperCase()}${
+																	title={`Causa ya no aparece en "Mis Causas" del portal ${(
+																		folder.listRemovedSource || "pjn"
+																	).toUpperCase()}${
 																		folder.listRemovedAt ? ` (detectado ${new Date(folder.listRemovedAt).toLocaleDateString("es-AR")})` : ""
 																	}`}
 																>

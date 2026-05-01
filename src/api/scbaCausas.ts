@@ -119,9 +119,7 @@ const scbaCausasService = {
 
 	/** Devuelve el documento completo de una causa (para el modal JSON). */
 	async getSyncedCausaById(id: string): Promise<{ success: boolean; data: Record<string, unknown> }> {
-		const response = await adminAxios.get<{ success: boolean; data: Record<string, unknown> }>(
-			`/api/scba-causas/synced-causas/${id}`,
-		);
+		const response = await adminAxios.get<{ success: boolean; data: Record<string, unknown> }>(`/api/scba-causas/synced-causas/${id}`);
 		return response.data;
 	},
 
@@ -130,9 +128,7 @@ const scbaCausasService = {
 	 * pjnCredentialsService.getUpdateCoverage).
 	 */
 	async getUpdateCoverage(): Promise<{ success: boolean; data: ScbaUpdateCoverage }> {
-		const response = await adminAxios.get<{ success: boolean; data: ScbaUpdateCoverage }>(
-			"/api/scba-causas/update-coverage",
-		);
+		const response = await adminAxios.get<{ success: boolean; data: ScbaUpdateCoverage }>("/api/scba-causas/update-coverage");
 		return response.data;
 	},
 };
