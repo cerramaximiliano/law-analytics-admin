@@ -93,6 +93,12 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 	//const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
+	// Para campañas onetime: el envío se rige por campaign.startDate/endDate, el sender
+	// usa default global, y al ser un solo correo no aplican timeDelay ni
+	// sendingRestrictions a nivel email. Ocultamos esos controles para evitar
+	// que queden con valores que no tienen efecto.
+	const isOnetime = campaign.type === "onetime";
+
 	// State for tabs
 	const [tabValue, setTabValue] = useState(0);
 
@@ -664,6 +670,17 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 
 								<Divider sx={{ my: 2 }} />
 
+								{isOnetime && (
+									<Card variant="outlined" sx={{ mb: 2, p: 2, backgroundColor: "info.lighter" }}>
+										<Typography variant="body2" color="text.secondary">
+											<strong>Campaña one-time:</strong> el envío se controla con la fecha de inicio y fin de la campaña.
+											El remitente, retraso y restricciones horarias del email se ignoran en este tipo de campaña.
+										</Typography>
+									</Card>
+								)}
+
+								{!isOnetime && (
+									<>
 								<Typography variant="subtitle2" gutterBottom>
 									Configuración de tiempo de envío
 								</Typography>
@@ -733,48 +750,54 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 										</FormControl>
 									</Grid>
 								</Grid>
+									</>
+								)}
 							</Grid>
 
-							<Grid item xs={12} md={6}>
-								<Typography variant="subtitle2" gutterBottom>
-									Información del Remitente
-								</Typography>
-								<TextField
-									fullWidth
-									id="sender.name"
-									name="sender.name"
-									label="Nombre del remitente"
-									value={formik.values.sender?.name || ""}
-									onChange={formik.handleChange}
-									sx={{ mb: 2 }}
-								/>
+							{!isOnetime && (
+								<Grid item xs={12} md={6}>
+									<Typography variant="subtitle2" gutterBottom>
+										Información del Remitente
+									</Typography>
+									<TextField
+										fullWidth
+										id="sender.name"
+										name="sender.name"
+										label="Nombre del remitente"
+										value={formik.values.sender?.name || ""}
+										onChange={formik.handleChange}
+										sx={{ mb: 2 }}
+									/>
 
-								<TextField
-									fullWidth
-									id="sender.email"
-									name="sender.email"
-									label="Email del remitente"
-									value={formik.values.sender?.email || ""}
-									onChange={formik.handleChange}
-									sx={{ mb: 2 }}
-								/>
+									<TextField
+										fullWidth
+										id="sender.email"
+										name="sender.email"
+										label="Email del remitente"
+										value={formik.values.sender?.email || ""}
+										onChange={formik.handleChange}
+										sx={{ mb: 2 }}
+									/>
 
-								<TextField
-									fullWidth
-									id="replyTo"
-									name="replyTo"
-									label="Email de respuesta (Reply-To)"
-									value={formik.values.replyTo || ""}
-									onChange={formik.handleChange}
-									sx={{ mb: 2 }}
-								/>
-							</Grid>
+									<TextField
+										fullWidth
+										id="replyTo"
+										name="replyTo"
+										label="Email de respuesta (Reply-To)"
+										value={formik.values.replyTo || ""}
+										onChange={formik.handleChange}
+										sx={{ mb: 2 }}
+									/>
+								</Grid>
+							)}
 						</Grid>
 					</TabPanel>
 
 					{/* Configuración Avanzada */}
 					<TabPanel value={tabValue} index={1}>
 						<Grid container spacing={3}>
+							{!isOnetime && (
+								<>
 							{/* Título general de restricciones */}
 							<Grid item xs={12}>
 								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
@@ -884,6 +907,8 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 									</>
 								)}
 							</Grid>
+								</>
+							)}
 
 							{/* Sección A/B Testing dentro de Configuración Avanzada */}
 							<Grid item xs={12}>
