@@ -92,14 +92,26 @@ const validationSchema = Yup.object({
 	type: Yup.string().required("Tipo de campaña requerido"),
 	description: Yup.string(),
 	status: Yup.string(),
-	startDate: Yup.date().nullable(),
+	// Para onetime startDate y endDate son obligatorias (define la ventana de envío).
+	// Para otros tipos pueden ser opcionales o regirse por isPermanent.
+	startDate: Yup.date()
+		.nullable()
+		.when("type", {
+			is: "onetime",
+			then: (schema) => schema.required("La fecha de inicio es requerida para campañas one-time"),
+		}),
 	endDate: Yup.date()
 		.nullable()
-		.when("startDate", (startDate, schema) => {
-			if (startDate && startDate[0]) {
-				return schema.min(startDate[0], "La fecha de fin debe ser posterior a la fecha de inicio");
+		.when(["startDate", "type", "isPermanent"], (values, schema) => {
+			const [startDate, type, isPermanent] = values;
+			let s = schema;
+			if (type === "onetime" && !isPermanent) {
+				s = s.required("La fecha de fin es requerida para campañas one-time");
 			}
-			return schema;
+			if (startDate) {
+				s = s.min(startDate, "La fecha de fin debe ser posterior a la fecha de inicio");
+			}
+			return s;
 		}),
 	isPermanent: Yup.boolean(),
 	category: Yup.string(),
@@ -501,7 +513,14 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 										id="type"
 										name="type"
 										value={formik.values.type}
-										onChange={formik.handleChange}
+										onChange={(e) => {
+											const nextType = e.target.value as CampaignType;
+											formik.setFieldValue("type", nextType);
+											// onetime nunca es permanente — siempre requiere endDate explícito
+											if (nextType === "onetime" && formik.values.isPermanent) {
+												formik.setFieldValue("isPermanent", false);
+											}
+										}}
 										onBlur={formik.handleBlur}
 										label="Tipo de campaña *"
 										disabled={isEditMode} // Can't change type in edit mode
@@ -878,13 +897,15 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 							</Grid>
 						</LocalizationProvider>
 
-						{/* Permanent campaign switch */}
-						<Grid item xs={12}>
-							<FormControlLabel
-								control={<Switch checked={formik.values.isPermanent} onChange={handlePermanentToggle} name="isPermanent" color="primary" />}
-								label="Campaña permanente (sin fecha de finalización)"
-							/>
-						</Grid>
+						{/* Permanent campaign switch — no aplica a onetime (siempre requiere endDate) */}
+						{formik.values.type !== "onetime" && (
+							<Grid item xs={12}>
+								<FormControlLabel
+									control={<Switch checked={formik.values.isPermanent} onChange={handlePermanentToggle} name="isPermanent" color="primary" />}
+									label="Campaña permanente (sin fecha de finalización)"
+								/>
+							</Grid>
+						)}
 
 						{/* Sincronización con segmento - solo en modo edición y si hay segmento */}
 						{isEditMode && campaign?.audience?.segmentId && (

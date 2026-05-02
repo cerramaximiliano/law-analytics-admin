@@ -724,7 +724,7 @@ const MailingCampaigns = () => {
 								<TableCell align="right">Emails</TableCell>
 								<TableCell align="right">Límite diario</TableCell>
 								<TableCell align="right">Tasa apertura</TableCell>
-								<TableCell align="right">Fecha inicio</TableCell>
+								<TableCell align="right">Vigencia</TableCell>
 								<TableCell align="center">Acciones</TableCell>
 							</TableRow>
 						</TableHead>
@@ -777,26 +777,31 @@ const MailingCampaigns = () => {
 											</TableCell>
 											<TableCell align="right">{`${openRate}%`}</TableCell>
 											<TableCell align="right">
-												{campaign.startDate ? (
-													<Tooltip title={`Zona horaria: ${campaign.settings?.timezone || "UTC"}`} arrow>
-														<Box>
-															<Typography variant="body2">
-																{dayjs
-																	.utc(campaign.startDate)
-																	.tz(campaign.settings?.timezone || "UTC")
-																	.format("DD/MM/YYYY")}
-															</Typography>
-															<Typography variant="caption" color="textSecondary">
-																{dayjs
-																	.utc(campaign.startDate)
-																	.tz(campaign.settings?.timezone || "UTC")
-																	.format("HH:mm")}
-															</Typography>
-														</Box>
-													</Tooltip>
-												) : (
-													"-"
-												)}
+												{(() => {
+													const tz = campaign.settings?.timezone || "UTC";
+													const fmt = (d: string | Date) => dayjs.utc(d as any).tz(tz).format("DD/MM/YYYY HH:mm");
+													if (!campaign.startDate && !campaign.endDate) return "-";
+													return (
+														<Tooltip title={`Zona horaria: ${tz}`} arrow>
+															<Box>
+																{campaign.startDate && (
+																	<Typography variant="caption" display="block">
+																		<strong>Inicio:</strong> {fmt(campaign.startDate)}
+																	</Typography>
+																)}
+																{campaign.endDate ? (
+																	<Typography variant="caption" display="block" color="textSecondary">
+																		<strong>Fin:</strong> {fmt(campaign.endDate)}
+																	</Typography>
+																) : campaign.isPermanent ? (
+																	<Typography variant="caption" display="block" color="textSecondary">
+																		Permanente
+																	</Typography>
+																) : null}
+															</Box>
+														</Tooltip>
+													);
+												})()}
 											</TableCell>
 											<TableCell align="center">
 												<Stack direction="row" spacing={0.5} justifyContent="center">
