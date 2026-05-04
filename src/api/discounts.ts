@@ -104,6 +104,66 @@ export interface SetTargetSegmentsResponse {
 	};
 }
 
+// Types for Target Contacts management — contactos individuales (EmailContact)
+// que se vuelven elegibles para el descuento al registrarse con su mismo email.
+export interface TargetContact {
+	_id: string;
+	email: string;
+	firstName: string;
+	lastName: string;
+	fullName: string;
+	status?: string;
+	createdAt?: string;
+	hasRegisteredUser: boolean;
+}
+
+export interface TargetContactsResponse {
+	success: boolean;
+	data: {
+		discountId: string;
+		code: string;
+		name: string;
+		totalTargetContacts: number;
+		targetContacts: TargetContact[];
+	};
+}
+
+export interface AddTargetContactsResponse {
+	success: boolean;
+	message: string;
+	data: {
+		added: number;
+		skipped: number;
+		invalidIds: string[];
+		totalNow: number;
+	};
+}
+
+export interface RemoveTargetContactsResponse {
+	success: boolean;
+	message: string;
+	data: {
+		removed: number;
+		totalNow: number;
+	};
+}
+
+export interface SetTargetContactsResponse {
+	success: boolean;
+	message: string;
+	data: {
+		previousCount: number;
+		newCount: number;
+		invalidIds: string[];
+	};
+}
+
+export interface SearchContactsResponse {
+	success: boolean;
+	count: number;
+	data: TargetContact[];
+}
+
 export interface SearchUsersResponse {
 	success: boolean;
 	count: number;
@@ -725,6 +785,67 @@ class DiscountsService {
 	// ============================================
 	// Target Segments Methods
 	// ============================================
+
+	// ============================================
+	// Target Contacts (EmailContact-based targeting)
+	// ============================================
+
+	async searchContacts(query: string, limit: number = 20): Promise<SearchContactsResponse> {
+		try {
+			const response = await adminAxios.get<SearchContactsResponse>(
+				`/api/discounts/search-contacts?q=${encodeURIComponent(query)}&limit=${limit}`,
+			);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al buscar contactos");
+		}
+	}
+
+	async getTargetContacts(discountId: string): Promise<TargetContactsResponse> {
+		try {
+			const response = await adminAxios.get<TargetContactsResponse>(`/api/discounts/${discountId}/target-contacts`);
+			return response.data;
+		} catch (error: any) {
+			if (error.response?.status === 404) throw new Error("Código de descuento no encontrado");
+			throw new Error(error.response?.data?.message || "Error al obtener contactos objetivo");
+		}
+	}
+
+	async addTargetContacts(discountId: string, contactIds: string[]): Promise<AddTargetContactsResponse> {
+		try {
+			const response = await adminAxios.post<AddTargetContactsResponse>(
+				`/api/discounts/${discountId}/target-contacts`,
+				{ contactIds },
+			);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al agregar contactos objetivo");
+		}
+	}
+
+	async removeTargetContacts(discountId: string, contactIds: string[]): Promise<RemoveTargetContactsResponse> {
+		try {
+			const response = await adminAxios.delete<RemoveTargetContactsResponse>(
+				`/api/discounts/${discountId}/target-contacts`,
+				{ data: { contactIds } },
+			);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al quitar contactos objetivo");
+		}
+	}
+
+	async setTargetContacts(discountId: string, contactIds: string[]): Promise<SetTargetContactsResponse> {
+		try {
+			const response = await adminAxios.put<SetTargetContactsResponse>(
+				`/api/discounts/${discountId}/target-contacts`,
+				{ contactIds },
+			);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al configurar contactos objetivo");
+		}
+	}
 
 	/**
 	 * Obtener segmentos objetivo de un código de descuento

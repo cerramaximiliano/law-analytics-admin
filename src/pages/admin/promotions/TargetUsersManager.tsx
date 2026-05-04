@@ -28,11 +28,12 @@ import {
 	Tabs,
 	Tab,
 } from "@mui/material";
-import { Add, CloseCircle, Trash, SearchNormal1, UserAdd, People, UserRemove, Category2 } from "iconsax-react";
+import { Add, CloseCircle, Trash, SearchNormal1, UserAdd, People, UserRemove, Category2, Profile } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import discountsService, { TargetUser, TargetSegment } from "api/discounts";
 import { SegmentService } from "store/reducers/segments";
 import { Segment } from "types/segment";
+import TargetContactsTab from "./TargetContactsTab";
 
 interface TargetUsersManagerProps {
 	discountId: string;
@@ -57,6 +58,9 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 	const [emailsToAdd, setEmailsToAdd] = useState("");
 	const [addLoading, setAddLoading] = useState(false);
 	const [removeLoading, setRemoveLoading] = useState<string | null>(null);
+
+	// Contacts state — solo el contador, la gestión vive en TargetContactsTab
+	const [totalTargetContacts, setTotalTargetContacts] = useState(0);
 
 	// Segments state
 	const [targetSegments, setTargetSegments] = useState<TargetSegment[]>([]);
@@ -326,6 +330,15 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 						</Stack>
 					}
 				/>
+				<Tab
+					label={
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Profile size={18} />
+							<span>Contactos</span>
+							{totalTargetContacts > 0 && <Chip label={totalTargetContacts} size="small" color="info" />}
+						</Stack>
+					}
+				/>
 			</Tabs>
 
 			{/* Users Tab */}
@@ -505,6 +518,16 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 						</Paper>
 					)}
 				</Box>
+			)}
+
+			{/* Contacts Tab */}
+			{activeTab === 2 && (
+				<TargetContactsTab
+					discountId={discountId}
+					discountCode={discountCode}
+					onUpdate={onUpdate}
+					onCountChange={setTotalTargetContacts}
+				/>
 			)}
 
 			{/* Add Users Dialog - Search */}
