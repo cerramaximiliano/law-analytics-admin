@@ -24,7 +24,7 @@ import {
 	Tooltip,
 	Typography,
 } from "@mui/material";
-import { Add, Edit, Trash, Eye, Refresh2, TickCircle, CloseCircle, UserTick, Category2, People } from "iconsax-react";
+import { Add, Edit, Trash, Eye, Refresh2, TickCircle, CloseCircle, UserTick, Category2, People, Profile, Warning2 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { useSnackbar } from "notistack";
 import discountsService, { DiscountCode, GetDiscountsParams } from "api/discounts";
@@ -446,6 +446,41 @@ const PromotionsManagement = () => {
 														/>
 													</Tooltip>
 												)}
+												{discount.restrictions.targetContacts && discount.restrictions.targetContacts.length > 0 && (
+													<Tooltip title={`Restringido a ${discount.restrictions.targetContacts.length} contacto(s)`}>
+														<Chip
+															icon={<Profile size={14} />}
+															label={discount.restrictions.targetContacts.length}
+															size="small"
+															color="info"
+															sx={{ "& .MuiChip-icon": { color: "inherit" } }}
+														/>
+													</Tooltip>
+												)}
+												{(() => {
+													// Warning: público + sin ningún target + sin filtros de tipo de cliente
+													// = visible para todos los users activos (caso típico de error).
+													const r = discount.restrictions || ({} as any);
+													const hasTargets =
+														(r.targetUsers?.length ?? 0) > 0 ||
+														(r.targetSegments?.length ?? 0) > 0 ||
+														(r.targetContacts?.length ?? 0) > 0;
+													const hasRestriction = r.excludeActiveSubscribers || r.newCustomersOnly;
+													const isOpen = discount.activationRules.isPublic && !hasTargets && !hasRestriction;
+													if (!isOpen) return null;
+													return (
+														<Tooltip title="Sin audiencia restringida ni filtros — visible para todos los usuarios activos">
+															<Chip
+																icon={<Warning2 size={14} />}
+																label="ABIERTA"
+																size="small"
+																color="error"
+																variant="outlined"
+																sx={{ "& .MuiChip-icon": { color: "inherit" } }}
+															/>
+														</Tooltip>
+													);
+												})()}
 											</Stack>
 										</TableCell>
 										<TableCell align="center">

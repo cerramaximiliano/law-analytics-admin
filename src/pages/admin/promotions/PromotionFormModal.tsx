@@ -28,7 +28,14 @@ import {
 } from "@mui/material";
 import { SearchNormal1, UserAdd } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import discountsService, { DiscountCode, CreateDiscountParams, UpdateDiscountParams, StripeEnvironment, TargetUser } from "api/discounts";
+import discountsService, {
+	DiscountCode,
+	CreateDiscountParams,
+	UpdateDiscountParams,
+	StripeEnvironment,
+	TargetUser,
+	TargetContact,
+} from "api/discounts";
 import { SegmentService } from "store/reducers/segments";
 import { Segment } from "types/segment";
 
@@ -49,11 +56,19 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 	// Target users: en creación se acumulan para asignar post-creación; en edición se cargan y sincronizan al guardar
 	const [pendingTargetUsers, setPendingTargetUsers] = useState<TargetUser[]>([]);
 	const [loadingTargetUsers, setLoadingTargetUsers] = useState(false);
+	// Count de targetContacts existentes — para detectar promos públicas sin restricciones
+	// y mostrar el warning correspondiente. Se gestionan fuera del form, en el tab "Contactos".
+	const [targetContactsCount, setTargetContactsCount] = useState(0);
 	// Datos frescos del descuento (re-fetched al abrir en edición para evitar datos stale del padre)
 	const [freshDiscount, setFreshDiscount] = useState<DiscountCode | null>(null);
 	const [userSearchQuery, setUserSearchQuery] = useState("");
 	const [userSearchResults, setUserSearchResults] = useState<TargetUser[]>([]);
 	const [userSearchLoading, setUserSearchLoading] = useState(false);
+	// Contactos a asignar en modo create (en edit se gestionan vía el tab "Contactos")
+	const [pendingTargetContacts, setPendingTargetContacts] = useState<TargetContact[]>([]);
+	const [contactSearchQuery, setContactSearchQuery] = useState("");
+	const [contactSearchResults, setContactSearchResults] = useState<TargetContact[]>([]);
+	const [contactSearchLoading, setContactSearchLoading] = useState(false);
 	const [formData, setFormData] = useState({
 		code: "",
 		name: "",
@@ -128,6 +143,32 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 		return () => clearTimeout(timer);
 	}, [userSearchQuery, searchUsers]);
 
+	// Búsqueda de contactos con debounce
+	const searchContacts = useCallback(
+		async (query: string) => {
+			if (query.length < 2) {
+				setContactSearchResults([]);
+				return;
+			}
+			setContactSearchLoading(true);
+			try {
+				const response = await discountsService.searchContacts(query, 20);
+				const existingIds = pendingTargetContacts.map((c) => c._id);
+				setContactSearchResults(response.data.filter((c) => !existingIds.includes(c._id)));
+			} catch (error) {
+				console.error("Error buscando contactos:", error);
+			} finally {
+				setContactSearchLoading(false);
+			}
+		},
+		[pendingTargetContacts],
+	);
+
+	useEffect(() => {
+		const timer = setTimeout(() => searchContacts(contactSearchQuery), 300);
+		return () => clearTimeout(timer);
+	}, [contactSearchQuery, searchContacts]);
+
 	useEffect(() => {
 		if (open) {
 			if (discount) {
@@ -168,6 +209,11 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 							/* silencioso: el campo queda vacío */
 						})
 						.finally(() => setLoadingTargetUsers(false));
+					// Cargar count de contactos targeted (gestionados en el tab Contactos)
+					discountsService
+						.getTargetContacts(discount._id)
+						.then((res) => setTargetContactsCount(res.data?.totalTargetContacts || 0))
+						.catch(() => setTargetContactsCount(0));
 					// Refrescar datos del descuento para obtener el estado actualizado de Stripe
 					discountsService
 						.getDiscountById(discount._id)
@@ -209,6 +255,8 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					targetSegments: [],
 				});
 				setPendingTargetUsers([]);
+				setPendingTargetContacts([]);
+				setTargetContactsCount(0);
 				setUserSearchQuery("");
 				setUserSearchResults([]);
 				setFreshDiscount(null);
@@ -360,21 +408,43 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 				const response = await discountsService.createDiscount(createData);
 				const envNames = response.createdInEnvironments?.map((e) => (e === "development" ? "Desarrollo" : "Producción")).join(" y ") || "";
 
-				// Asignar usuarios objetivo pendientes si los hay
-				if (pendingTargetUsers.length > 0 && response.data._id) {
+				// Asignar usuarios y contactos objetivo pendientes si los hay
+				const newId = response.data._id;
+				const assignmentResults: string[] = [];
+				const assignmentWarnings: string[] = [];
+
+				if (pendingTargetUsers.length > 0 && newId) {
 					try {
-						await discountsService.addTargetUsers(response.data._id, {
+						await discountsService.addTargetUsers(newId, {
 							userIds: pendingTargetUsers.map((u) => u._id),
 						});
-						enqueueSnackbar(`Promoción creada en: ${envNames}. ${pendingTargetUsers.length} usuario(s) objetivo asignados.`, {
-							variant: "success",
-						});
+						assignmentResults.push(`${pendingTargetUsers.length} usuario(s)`);
 					} catch (_err) {
-						enqueueSnackbar(
-							`Promoción creada en: ${envNames}, pero hubo un error al asignar usuarios objetivo. Asignalos desde la pestaña "Usuarios Objetivo".`,
-							{ variant: "warning" },
-						);
+						assignmentWarnings.push("usuarios objetivo");
 					}
+				}
+
+				if (pendingTargetContacts.length > 0 && newId) {
+					try {
+						await discountsService.addTargetContacts(
+							newId,
+							pendingTargetContacts.map((c) => c._id),
+						);
+						assignmentResults.push(`${pendingTargetContacts.length} contacto(s)`);
+					} catch (_err) {
+						assignmentWarnings.push("contactos");
+					}
+				}
+
+				if (assignmentWarnings.length > 0) {
+					enqueueSnackbar(
+						`Promoción creada en: ${envNames}, pero hubo un error al asignar ${assignmentWarnings.join(" y ")}. Asignalos desde el detalle.`,
+						{ variant: "warning" },
+					);
+				} else if (assignmentResults.length > 0) {
+					enqueueSnackbar(`Promoción creada en: ${envNames}. ${assignmentResults.join(" y ")} asignados.`, {
+						variant: "success",
+					});
 				} else {
 					enqueueSnackbar(`Promoción creada correctamente en: ${envNames}`, { variant: "success" });
 				}
@@ -842,6 +912,94 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 						</Grid>
 					</>
 
+					{/* Target Contacts — solo al crear. En edición se gestionan en el tab "Contactos" del modal de detalle. */}
+					{!isEditing && (
+						<>
+							<Grid item xs={12}>
+								<Divider sx={{ my: 1 }} />
+								<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
+									Contactos Individuales
+								</Typography>
+								<Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 2 }}>
+									Buscá contactos del CRM (incluso sin cuenta de usuario aún). Cuando se registren con su mismo email, automáticamente verán
+									esta promoción. Útil para otorgar el descuento de forma discrecional a prospectos.
+								</Typography>
+							</Grid>
+							<Grid item xs={12}>
+								<Autocomplete
+									multiple
+									options={contactSearchResults}
+									value={pendingTargetContacts}
+									onChange={(_, newValue) => setPendingTargetContacts(newValue)}
+									getOptionLabel={(option) => `${option.email}${option.fullName ? ` (${option.fullName})` : ""}`}
+									isOptionEqualToValue={(option, value) => option._id === value._id}
+									loading={contactSearchLoading}
+									inputValue={contactSearchQuery}
+									onInputChange={(_, value, reason) => {
+										if (reason !== "reset") setContactSearchQuery(value);
+									}}
+									filterOptions={(x) => x}
+									renderInput={(params) => (
+										<TextField
+											{...params}
+											label="Buscar contactos por email o nombre"
+											placeholder={pendingTargetContacts.length === 0 ? "Escribí al menos 2 caracteres..." : ""}
+											helperText={
+												pendingTargetContacts.length > 0
+													? `${pendingTargetContacts.length} contacto(s) seleccionado(s)`
+													: "Dejar vacío para no restringir por contactos individuales"
+											}
+											InputProps={{
+												...params.InputProps,
+												startAdornment: (
+													<>
+														<InputAdornment position="start">
+															<SearchNormal1 size={18} />
+														</InputAdornment>
+														{params.InputProps.startAdornment}
+													</>
+												),
+												endAdornment: (
+													<>
+														{contactSearchLoading ? <CircularProgress color="inherit" size={18} /> : null}
+														{params.InputProps.endAdornment}
+													</>
+												),
+											}}
+										/>
+									)}
+									renderOption={(props, option) => (
+										<li {...props} key={option._id}>
+											<Stack direction="row" spacing={1} alignItems="center">
+												<Stack>
+													<Typography variant="body2">{option.email}</Typography>
+													{option.fullName && (
+														<Typography variant="caption" color="textSecondary">
+															{option.fullName}
+														</Typography>
+													)}
+												</Stack>
+												{option.hasRegisteredUser && <Chip size="small" label="ya registrado" color="success" />}
+											</Stack>
+										</li>
+									)}
+									renderTags={(value, getTagProps) =>
+										value.map((option, index) => (
+											<Chip
+												{...getTagProps({ index })}
+												key={option._id}
+												label={option.email}
+												size="small"
+												color={option.hasRegisteredUser ? "success" : "default"}
+											/>
+										))
+									}
+									noOptionsText={contactSearchQuery.length < 2 ? "Escribí para buscar..." : "No se encontraron contactos"}
+								/>
+							</Grid>
+						</>
+					)}
+
 					{/* Visibility */}
 					<Grid item xs={12}>
 						<Divider sx={{ my: 1 }} />
@@ -875,15 +1033,45 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 						</Grid>
 					)}
 
-					{formData.isPublic && formData.targetSegments.length === 0 && pendingTargetUsers.length === 0 && (
-						<Grid item xs={12}>
-							<Alert severity="warning">
-								<AlertTitle>Descuento público sin audiencia restringida</AlertTitle>
-								Sin segmentos ni usuarios asignados, este descuento será visible para <strong>todos los usuarios</strong> en la página de
-								planes. Si querés restringirlo, asigná segmentos en "Segmentación de Audiencia" o usuarios en "Usuarios Objetivo" arriba.
-							</Alert>
-						</Grid>
-					)}
+					{(() => {
+						const hasTargetUsers = pendingTargetUsers.length > 0;
+						const hasTargetSegments = formData.targetSegments.length > 0;
+						const hasTargetContacts = targetContactsCount > 0;
+						const hasAnyTarget = hasTargetUsers || hasTargetSegments || hasTargetContacts;
+						const hasAnyRestriction = formData.excludeActiveSubscribers || formData.newCustomersOnly;
+
+						// Caso crítico: público sin ningún tipo de filtro → todos los users activos lo ven
+						if (formData.isPublic && !hasAnyTarget && !hasAnyRestriction) {
+							return (
+								<Grid item xs={12}>
+									<Alert severity="warning">
+										<AlertTitle>Descuento público sin restricciones</AlertTitle>
+										Sin segmentos, usuarios, contactos ni filtros de tipo de cliente, este descuento será visible para{" "}
+										<strong>todos los usuarios activos</strong> de la plataforma. Si querés limitarlo, agregá:
+										<ul style={{ marginTop: 8, marginBottom: 0 }}>
+											<li>una <strong>audiencia específica</strong> (segmentos, usuarios o contactos en el tab "Usuarios Objetivo"),</li>
+											<li>o activá <strong>"Solo clientes nuevos"</strong> / <strong>"Excluir suscriptores activos"</strong> arriba.</li>
+										</ul>
+									</Alert>
+								</Grid>
+							);
+						}
+
+						// Caso intermedio: público sin targets pero con filtros de tipo cliente — sigue siendo amplio
+						if (formData.isPublic && !hasAnyTarget && hasAnyRestriction) {
+							return (
+								<Grid item xs={12}>
+									<Alert severity="info">
+										<AlertTitle>Descuento público con filtros por tipo de cliente</AlertTitle>
+										Este descuento se mostrará a todos los usuarios que cumplan las restricciones marcadas
+										{formData.newCustomersOnly && " (solo nuevos clientes)"}
+										{formData.excludeActiveSubscribers && " (excluyendo suscriptores activos)"}. Confirmá que es lo que querés.
+									</Alert>
+								</Grid>
+							);
+						}
+						return null;
+					})()}
 
 					<Grid item xs={12} sm={6}>
 						<TextField

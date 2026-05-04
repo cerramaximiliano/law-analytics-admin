@@ -13,6 +13,8 @@ export interface DiscountRestrictions {
 	minimumAmount: number | null;
 	targetUsers?: string[]; // Array de IDs de usuarios específicos
 	targetSegments?: string[]; // Array de IDs de segmentos de contactos
+	/** Contactos individuales (EmailContact._id) — heredan elegibilidad al registrarse con el mismo email */
+	targetContacts?: string[];
 }
 
 // Types for Target Users management
@@ -264,6 +266,8 @@ export interface CreateDiscountParams {
 	environments?: StripeEnvironment[];
 	targetUsers?: string[]; // Array de IDs de usuarios específicos
 	targetSegments?: string[]; // Array de IDs de segmentos de contactos
+	/** Contactos individuales (EmailContact._id) — heredan elegibilidad al registrarse con el mismo email */
+	targetContacts?: string[];
 }
 
 export interface UpdateDiscountParams {

@@ -380,6 +380,28 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 					</Grid>
 				)}
 
+			{/* Alerta: descuento abierto (público sin restricciones) */}
+			{(() => {
+				const r = discount.restrictions || ({} as any);
+				const hasTargets =
+					(r.targetUsers?.length ?? 0) > 0 ||
+					(r.targetSegments?.length ?? 0) > 0 ||
+					(r.targetContacts?.length ?? 0) > 0;
+				const hasRestriction = r.excludeActiveSubscribers || r.newCustomersOnly;
+				const isOpen = discount.activationRules.isPublic && !hasTargets && !hasRestriction;
+				if (!isOpen) return null;
+				return (
+					<Grid item xs={12}>
+						<Alert severity="warning" icon={<Warning2 size={20} />}>
+							<AlertTitle>Descuento abierto a todos los usuarios</AlertTitle>
+							Esta promoción es pública y no tiene segmentos, usuarios objetivo, contactos individuales ni filtros de tipo de cliente
+							(<em>solo nuevos clientes</em>, <em>excluir suscriptores activos</em>). Cualquier usuario activo de la plataforma puede
+							verla y aplicarla al pagar. Si esto no es lo que querías, editá la promoción para limitarla.
+						</Alert>
+					</Grid>
+				);
+			})()}
+
 			{/* Audiencia: cuántos usuarios verán el beneficio */}
 			<Grid item xs={12}>
 				<Typography variant="h5" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
