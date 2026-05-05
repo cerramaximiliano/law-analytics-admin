@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
 	Alert,
+	Autocomplete,
 	Box,
 	Button,
 	Chip,
@@ -20,6 +21,7 @@ import {
 	TableHead,
 	TablePagination,
 	TableRow,
+	TableSortLabel,
 	Tabs,
 	TextField,
 	Tooltip,
@@ -60,6 +62,11 @@ import type {
 } from "types/seclo";
 import CreateSolicitudModal from "./CreateSolicitudModal";
 import SecloContactDialog from "./SecloContactDialog";
+import { TIMEZONE_OPTIONS, detectBrowserTimezone, wallClockToUtc, utcToWallClock } from "utils/seclo-scheduling";
+
+type ScheduledFilter = "all" | "only-scheduled" | "only-immediate";
+type SortField = "createdAt" | "scheduledAt";
+type SortDir = "asc" | "desc";
 
 const STATUS_COLORS: Record<SecloStatus, "default" | "warning" | "info" | "success" | "error"> = {
 	pending: "warning",
@@ -1014,6 +1021,156 @@ function DryRunTab({ sol }: { sol: SecloSolicitud }) {
 	);
 }
 
+// ─── Editor de programación ───────────────────────────────────────────────────
+// Permite agregar / cambiar / quitar la programación de envío de una solicitud.
+// Sólo se renderiza para estados editables (pending, error, dry_run_completed).
+// Hace PATCH parcial vía updateSolicitudAdmin con { scheduledAt, scheduledTimezone }.
+// scheduledAt: null | "" en el patch desactiva la programación en el backend.
+function ScheduleEditor({ sol }: { sol: SecloSolicitud }) {
+	const dispatch = useDispatch();
+	const initialTz = sol.scheduledTimezone || detectBrowserTimezone();
+	const initialLocal = sol.scheduledAt ? utcToWallClock(sol.scheduledAt, initialTz) : "";
+	const initialAddToCal = !!sol.addToCalendar;
+	const [local, setLocal] = useState<string>(initialLocal);
+	const [tz, setTz] = useState<string>(initialTz);
+	const [addToCal, setAddToCal] = useState<boolean>(initialAddToCal);
+	const [saving, setSaving] = useState(false);
+
+	// Resincronizar el form si la solicitud cambia (por ejemplo, tras un PATCH
+	// remoto que modificó scheduledAt). Usamos los valores actuales como
+	// "originales" para detectar dirty-state.
+	useEffect(() => {
+		setLocal(sol.scheduledAt ? utcToWallClock(sol.scheduledAt, sol.scheduledTimezone || initialTz) : "");
+		setTz(sol.scheduledTimezone || detectBrowserTimezone());
+		setAddToCal(!!sol.addToCalendar);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [sol._id, sol.scheduledAt, sol.scheduledTimezone, sol.addToCalendar]);
+
+	const isDirty =
+		local !== initialLocal ||
+		(local && tz !== initialTz) ||
+		addToCal !== initialAddToCal;
+
+	const handleSave = async () => {
+		setSaving(true);
+		try {
+			if (!local) {
+				// Quitar programación: scheduledAt: null deja la solicitud como
+				// "no programada". El server borra el evento de calendario si
+				// existía. Mandamos addToCalendar=false para mantener el flag
+				// alineado con el estado real (sin fecha, no hay evento).
+				await dispatch(
+					updateSolicitudAdmin(sol._id, {
+						scheduledAt: null,
+						scheduledTimezone: null,
+						addToCalendar: false,
+					}) as any,
+				);
+			} else {
+				const utc = wallClockToUtc(local, tz).toISOString();
+				await dispatch(
+					updateSolicitudAdmin(sol._id, {
+						scheduledAt: utc,
+						scheduledTimezone: tz,
+						addToCalendar: addToCal,
+					}) as any,
+				);
+			}
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	const previewUtc = local ? wallClockToUtc(local, tz) : null;
+	const previewIsPast = !!previewUtc && previewUtc.getTime() <= Date.now();
+
+	return (
+		<Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5, mt: 1 }}>
+			<Typography variant="subtitle2" mb={0.5}>
+				Programación de envío
+			</Typography>
+			<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.25 }}>
+				Vacío = el worker la procesa apenas la levante. Con fecha y zona, queda en cola hasta ese instante.
+			</Typography>
+			<Grid container spacing={1.5}>
+				<Grid item xs={12} sm={7}>
+					<TextField
+						label="Fecha y hora"
+						type="datetime-local"
+						size="small"
+						fullWidth
+						InputLabelProps={{ shrink: true }}
+						value={local}
+						onChange={(e) => setLocal(e.target.value)}
+					/>
+				</Grid>
+				<Grid item xs={12} sm={5}>
+					<Autocomplete
+						freeSolo
+						options={TIMEZONE_OPTIONS as readonly string[] as string[]}
+						value={tz}
+						onChange={(_, v) => setTz(v || detectBrowserTimezone())}
+						onInputChange={(_, v) => setTz(v)}
+						disabled={!local}
+						renderInput={(params) => <TextField {...params} label="Zona horaria" size="small" />}
+					/>
+				</Grid>
+				{previewUtc && (
+					<Grid item xs={12}>
+						<Alert severity={previewIsPast ? "warning" : "info"} sx={{ py: 0.5 }}>
+							<Typography variant="caption">
+								{previewIsPast
+									? "El instante ya pasó — al guardar, la solicitud entra en la cola del próximo ciclo."
+									: `Se procesará a partir de ${previewUtc.toLocaleString("es-AR")} hora local del navegador.`}
+							</Typography>
+						</Alert>
+					</Grid>
+				)}
+				<Grid item xs={12}>
+					<Tooltip
+						title={
+							local
+								? "Crea o actualiza un evento en el calendario del usuario propietario para este instante. Si la fecha cambia, el evento se actualiza; si se quita, se borra."
+								: "Disponible al elegir fecha y hora."
+						}
+					>
+						<FormControlLabel
+							control={
+								<Checkbox
+									checked={addToCal && !!local}
+									onChange={(e) => setAddToCal(e.target.checked)}
+									disabled={!local}
+									size="small"
+								/>
+							}
+							label={<Typography variant="body2">Agregar al calendario del usuario</Typography>}
+						/>
+					</Tooltip>
+				</Grid>
+				<Grid item xs={12}>
+					<Stack direction="row" spacing={1}>
+						<Button size="small" variant="contained" disabled={!isDirty || saving} onClick={handleSave}>
+							{saving ? "Guardando..." : "Guardar programación"}
+						</Button>
+						{sol.scheduledAt && (
+							<Button
+								size="small"
+								color="inherit"
+								disabled={saving}
+								onClick={() => {
+									setLocal("");
+								}}
+							>
+								Quitar
+							</Button>
+						)}
+					</Stack>
+				</Grid>
+			</Grid>
+		</Box>
+	);
+}
+
 // ─── Dialog de detalle ────────────────────────────────────────────────────────
 
 function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicitud; onClose: () => void }) {
@@ -1102,6 +1259,23 @@ function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicit
 								<Typography variant="body2">
 									<strong>Objeto del reclamo:</strong> {sol.objetoReclamo.join(", ")}
 								</Typography>
+								{sol.scheduledAt && (
+									<Typography variant="body2">
+										<strong>Programada para:</strong> {new Date(sol.scheduledAt).toLocaleString("es-AR")}
+										{sol.scheduledTimezone ? ` (${sol.scheduledTimezone})` : ""}
+										{new Date(sol.scheduledAt).getTime() > Date.now() ? (
+											<Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+												— el worker la toma cuando llegue ese instante
+											</Typography>
+										) : (
+											sol.status === "pending" && (
+												<Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+													— ya elegible, en cola del próximo ciclo
+												</Typography>
+											)
+										)}
+									</Typography>
+								)}
 								{sol.submittedAt && (
 									<Typography variant="body2">
 										<strong>Enviado:</strong> {new Date(sol.submittedAt).toLocaleString("es-AR")}
@@ -1114,6 +1288,8 @@ function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicit
 								)}
 							</Stack>
 						</Box>
+
+						{["pending", "error", "dry_run_completed"].includes(sol.status) && <ScheduleEditor sol={sol} />}
 
 						{/* Resultado */}
 						{hasResultado && (
@@ -1380,6 +1556,9 @@ export default function SolicitudesTab() {
 	const [rowsPerPage] = useState(15);
 	const [search, setSearch] = useState("");
 	const [statusFilter, setStatusFilter] = useState("");
+	const [scheduledFilter, setScheduledFilter] = useState<ScheduledFilter>("all");
+	const [sortBy, setSortBy] = useState<SortField>("createdAt");
+	const [sortDir, setSortDir] = useState<SortDir>("desc");
 	const [dateFrom, setDateFrom] = useState("");
 	const [dateTo, setDateTo] = useState("");
 	const [showFilters, setShowFilters] = useState(false);
@@ -1397,6 +1576,9 @@ export default function SolicitudesTab() {
 				search: search || undefined,
 				dateFrom: dateFrom || undefined,
 				dateTo: dateTo || undefined,
+				scheduled: scheduledFilter,
+				sortBy,
+				sortDir,
 				...overrides,
 			}),
 		);
@@ -1404,7 +1586,19 @@ export default function SolicitudesTab() {
 
 	useEffect(() => {
 		load();
-	}, [page, statusFilter]);
+	}, [page, statusFilter, scheduledFilter, sortBy, sortDir]);
+
+	// Click en una columna ordenable: alterna dir si ya estaba ordenando por
+	// ese campo; si no, la setea como activa con dir descendente por default.
+	const handleSort = (field: SortField) => {
+		if (sortBy === field) {
+			setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+		} else {
+			setSortBy(field);
+			setSortDir("desc");
+		}
+		setPage(0);
+	};
 
 	const handleSearch = () => {
 		setPage(0);
@@ -1519,6 +1713,21 @@ export default function SolicitudesTab() {
 						InputLabelProps={{ shrink: true }}
 						sx={{ width: 160 }}
 					/>
+					<FormControl size="small" sx={{ minWidth: 180 }}>
+						<InputLabel>Programación</InputLabel>
+						<Select
+							value={scheduledFilter}
+							label="Programación"
+							onChange={(e) => {
+								setScheduledFilter(e.target.value as ScheduledFilter);
+								setPage(0);
+							}}
+						>
+							<MenuItem value="all">Todas</MenuItem>
+							<MenuItem value="only-scheduled">Sólo programadas (futuro)</MenuItem>
+							<MenuItem value="only-immediate">Sin programar / vencidas</MenuItem>
+						</Select>
+					</FormControl>
 					<Button size="small" variant="outlined" onClick={handleSearch}>
 						Aplicar
 					</Button>
@@ -1528,8 +1737,9 @@ export default function SolicitudesTab() {
 						onClick={() => {
 							setDateFrom("");
 							setDateTo("");
+							setScheduledFilter("all");
 							setPage(0);
-							load({ dateFrom: undefined, dateTo: undefined, page: 1 });
+							load({ dateFrom: undefined, dateTo: undefined, scheduled: "all", page: 1 });
 						}}
 					>
 						Limpiar
@@ -1547,21 +1757,38 @@ export default function SolicitudesTab() {
 							<TableCell>Requerido</TableCell>
 							<TableCell>Objeto del reclamo</TableCell>
 							<TableCell>Estado</TableCell>
+							<TableCell sortDirection={sortBy === "scheduledAt" ? sortDir : false}>
+								<TableSortLabel
+									active={sortBy === "scheduledAt"}
+									direction={sortBy === "scheduledAt" ? sortDir : "desc"}
+									onClick={() => handleSort("scheduledAt")}
+								>
+									Programada
+								</TableSortLabel>
+							</TableCell>
 							<TableCell>Expediente</TableCell>
-							<TableCell>Creado</TableCell>
+							<TableCell sortDirection={sortBy === "createdAt" ? sortDir : false}>
+								<TableSortLabel
+									active={sortBy === "createdAt"}
+									direction={sortBy === "createdAt" ? sortDir : "desc"}
+									onClick={() => handleSort("createdAt")}
+								>
+									Creado
+								</TableSortLabel>
+							</TableCell>
 							<TableCell align="center">Acciones</TableCell>
 						</TableRow>
 					</TableHead>
 					<TableBody>
 						{loading ? (
 							<TableRow>
-								<TableCell colSpan={8} align="center">
+								<TableCell colSpan={9} align="center">
 									Cargando...
 								</TableCell>
 							</TableRow>
 						) : solicitudes.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={8} align="center">
+								<TableCell colSpan={9} align="center">
 									Sin solicitudes
 								</TableCell>
 							</TableRow>
@@ -1589,14 +1816,55 @@ export default function SolicitudesTab() {
 										</Typography>
 									</TableCell>
 									<TableCell>
-										<Stack direction="row" spacing={0.5} alignItems="center">
+										<Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
 											<Chip label={STATUS_LABELS[sol.status]} color={STATUS_COLORS[sol.status]} size="small" />
+												{sol.status === "pending" && sol.scheduledAt && new Date(sol.scheduledAt).getTime() > Date.now() && (
+													<Tooltip
+														title={`El worker no la procesa hasta ${new Date(sol.scheduledAt).toLocaleString("es-AR")}${
+															sol.scheduledTimezone ? ` (${sol.scheduledTimezone})` : ""
+														}`}
+													>
+														<Chip label="Programada" size="small" color="info" variant="outlined" />
+													</Tooltip>
+												)}
 											{sol.dryRun && sol.status !== "dry_run_completed" && (
 												<Tooltip title="Esta solicitud está marcada como DEV — el worker no enviará al portal">
 													<Chip label="DEV" size="small" color="warning" variant="outlined" />
 												</Tooltip>
 											)}
 										</Stack>
+									</TableCell>
+									<TableCell>
+										{sol.scheduledAt ? (
+											<Tooltip
+												title={
+													sol.scheduledTimezone
+														? `Hora original: ${utcToWallClock(sol.scheduledAt, sol.scheduledTimezone)} (${sol.scheduledTimezone})`
+														: ""
+												}
+											>
+												<Typography
+													variant="caption"
+													noWrap
+													sx={{
+														color: new Date(sol.scheduledAt).getTime() > Date.now() ? "info.main" : "text.secondary",
+														fontWeight: new Date(sol.scheduledAt).getTime() > Date.now() ? 600 : 400,
+													}}
+												>
+													{new Date(sol.scheduledAt).toLocaleString("es-AR", {
+														day: "2-digit",
+														month: "2-digit",
+														year: "2-digit",
+														hour: "2-digit",
+														minute: "2-digit",
+													})}
+												</Typography>
+											</Tooltip>
+										) : (
+											<Typography variant="caption" color="text.secondary">
+												—
+											</Typography>
+										)}
 									</TableCell>
 									<TableCell>
 										<Typography variant="body2">

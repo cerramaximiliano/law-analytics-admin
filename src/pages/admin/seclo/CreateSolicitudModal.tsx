@@ -42,6 +42,7 @@ import {
 	type SecloDocumento,
 	type SecloDocTipo,
 } from "types/seclo";
+import { TIMEZONE_OPTIONS, detectBrowserTimezone, wallClockToUtc } from "utils/seclo-scheduling";
 
 interface Props {
 	open: boolean;
@@ -258,6 +259,13 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 	const [dryRunMode, setDryRunMode] = useState(false);
 	const [dryRunWithHtml, setDryRunWithHtml] = useState(false);
 
+	// Programación opcional: si scheduledLocal está vacío la solicitud entra
+	// en cola de procesamiento inmediato (comportamiento por defecto). Con
+	// fecha+timezone el worker la toma recién pasado el instante absoluto.
+	const [scheduledLocal, setScheduledLocal] = useState<string>(""); // "YYYY-MM-DDTHH:MM"
+	const [scheduledTz, setScheduledTz] = useState<string>(() => detectBrowserTimezone());
+	const [addToCalendar, setAddToCalendar] = useState<boolean>(false);
+
 	const resetAll = () => {
 		setStep(0);
 		setError(null);
@@ -283,6 +291,9 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 		setDocumentos([]);
 		setDryRunMode(false);
 		setDryRunWithHtml(false);
+		setScheduledLocal("");
+		setScheduledTz(detectBrowserTimezone());
+		setAddToCalendar(false);
 	};
 
 	const handleClose = () => {
@@ -440,6 +451,16 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 				...extraRequirentes.map((r) => ({ contactId: r.contact._id, datosLaborales: r.datosLaborales })),
 			];
 			const allRequeridos = [{ contactId: requerido!._id }, ...extraRequeridos.map((c) => ({ contactId: c._id }))];
+			// Programación: sólo se envían los campos si el admin tipeó una
+			// fecha. Vacío = procesamiento inmediato. addToCalendar requiere
+			// fecha — si el admin destildó/borró la fecha se manda false.
+			const schedulingPayload = scheduledLocal
+				? {
+						scheduledAt: wallClockToUtc(scheduledLocal, scheduledTz).toISOString(),
+						scheduledTimezone: scheduledTz,
+						addToCalendar,
+				  }
+				: { addToCalendar: false };
 			await dispatch(
 				createSolicitud({
 					userId: selectedUser!._id,
@@ -456,6 +477,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 					folderId: selectedFolder?._id ?? undefined,
 					dryRun: dryRunMode,
 					dryRunWithHtml: dryRunMode && dryRunWithHtml,
+					...schedulingPayload,
 				}),
 			);
 			handleClose();
@@ -1444,6 +1466,95 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 						return <ReviewRow key={tipo} label={DOC_TIPO_LABEL[tipo]} value={doc?.fileName || "—"} />;
 					})}
 				</ReviewSection>
+
+				<Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+						<Typography variant="subtitle2">Programación (opcional)</Typography>
+						{scheduledLocal && (
+							<Link component="button" type="button" onClick={() => setScheduledLocal("")} sx={{ fontSize: 12 }}>
+								Quitar programación
+							</Link>
+						)}
+					</Stack>
+					<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.25 }}>
+						Si no completás fecha y hora, la solicitud se procesa apenas el worker la levante. Si ponés una fecha, el
+						worker la dejará en cola hasta ese instante en la zona horaria elegida.
+					</Typography>
+					<Grid container spacing={1.5}>
+						<Grid item xs={12} sm={7}>
+							<TextField
+								label="Fecha y hora de inicio"
+								type="datetime-local"
+								size="small"
+								fullWidth
+								InputLabelProps={{ shrink: true }}
+								value={scheduledLocal}
+								onChange={(e) => setScheduledLocal(e.target.value)}
+								helperText={scheduledLocal ? "Hora local en la zona seleccionada" : "Vacío = procesamiento inmediato"}
+							/>
+						</Grid>
+						<Grid item xs={12} sm={5}>
+							<Autocomplete
+								freeSolo
+								options={TIMEZONE_OPTIONS as readonly string[] as string[]}
+								value={scheduledTz}
+								onChange={(_, v) => setScheduledTz(v || detectBrowserTimezone())}
+								onInputChange={(_, v) => setScheduledTz(v)}
+								disabled={!scheduledLocal}
+								renderInput={(params) => (
+									<TextField
+										{...params}
+										label="Zona horaria"
+										size="small"
+										helperText={scheduledLocal ? "Zona IANA" : "Habilita al elegir fecha"}
+									/>
+								)}
+							/>
+						</Grid>
+						{scheduledLocal && (
+							<Grid item xs={12}>
+								{(() => {
+									const utc = wallClockToUtc(scheduledLocal, scheduledTz);
+									const isPast = utc.getTime() <= Date.now();
+									return (
+										<Alert severity={isPast ? "warning" : "info"} sx={{ py: 0.5 }}>
+											<Typography variant="caption">
+												{isPast
+													? "El instante ya pasó: el worker la procesará en su próximo ciclo (igual que sin programación)."
+													: `Se procesará a partir de ${utc.toLocaleString("es-AR")} hora local del navegador.`}
+											</Typography>
+										</Alert>
+									);
+								})()}
+							</Grid>
+						)}
+						<Grid item xs={12}>
+							<Tooltip
+								title={
+									scheduledLocal
+										? "Crea un evento en el calendario del usuario propietario para el instante programado."
+										: "Disponible al elegir fecha y hora."
+								}
+							>
+								<FormControlLabel
+									control={
+										<Checkbox
+											checked={addToCalendar && !!scheduledLocal}
+											onChange={(e) => setAddToCalendar(e.target.checked)}
+											disabled={!scheduledLocal}
+											size="small"
+										/>
+									}
+									label={
+										<Typography variant="body2">
+											Agregar al calendario del usuario
+										</Typography>
+									}
+								/>
+							</Tooltip>
+						</Grid>
+					</Grid>
+				</Box>
 			</Stack>
 		);
 	};

@@ -232,6 +232,17 @@ export interface SecloSolicitud {
 	comentarioReclamo?: string;
 	datosAbogado?: SecloDatosAbogado;
 	status: SecloStatus;
+	/** Instante absoluto (ISO UTC) a partir del cual el worker tomará la
+	 *  solicitud. `null`/ausente = procesamiento inmediato (no programada). */
+	scheduledAt?: string | null;
+	/** Zona IANA en la que el usuario configuró `scheduledAt`. Sólo informativa
+	 *  para que la UI re-muestre el wall-clock original. */
+	scheduledTimezone?: string | null;
+	/** Si true, el server crea/actualiza un Event en el calendario del usuario
+	 *  propietario para `scheduledAt`. Requiere `scheduledAt` definido. */
+	addToCalendar?: boolean;
+	/** ID del Event creado en el calendario, si `addToCalendar` está activo. */
+	calendarEventId?: string | null;
 	submittedAt?: string | null;
 	completedAt?: string | null;
 	resultado?: {
