@@ -25,6 +25,7 @@ const CarpetasNoVerificadas = Loadable(lazy(() => import("pages/admin/causas/Car
 const CausasPendientes = Loadable(lazy(() => import("pages/admin/causas/CausasPendientes")));
 const CredencialesPJN = Loadable(lazy(() => import("pages/admin/causas/CredencialesPJN")));
 const CausasSyncCredentials = Loadable(lazy(() => import("pages/admin/causas/CausasSyncCredentials")));
+const CausasUpdateEligible = Loadable(lazy(() => import("pages/admin/causas/update-eligible")));
 
 // MEV pages
 const CarpetasMEVVerificadas = Loadable(lazy(() => import("pages/admin/mev/CarpetasMEVVerificadas")));
@@ -338,6 +339,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<CausasSyncCredentials />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "causas/update-eligible",
+							element: (
+								<AdminRoleGuard>
+									<CausasUpdateEligible />
 								</AdminRoleGuard>
 							),
 						},

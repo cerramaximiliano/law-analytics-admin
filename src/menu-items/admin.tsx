@@ -212,6 +212,13 @@ const admin: NavItemType = {
 					url: "/admin/causas/synced-credentials",
 					breadcrumbs: true,
 				},
+				{
+					id: "causas-update-eligible",
+					title: "Causas en Update",
+					type: "item",
+					url: "/admin/causas/update-eligible",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{
