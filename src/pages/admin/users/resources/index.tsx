@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
 	Box,
 	Tabs,
@@ -514,6 +514,25 @@ const UserResources: React.FC = () => {
 	// Bulk retry de causa-association para folders
 	const [selectedFolderIds, setSelectedFolderIds] = useState<Set<string>>(new Set());
 	const [retryHasPaid, setRetryHasPaid] = useState(false);
+
+	// Notification status por folder (último envío en emaillogs). Lookup batch
+	// después de cargar la lista — solo aplica al tab Carpetas.
+	type FolderNotifStatus = {
+		count: number;
+		last: {
+			sentAt: string;
+			status: "sent" | "failed" | "bounced" | "complained" | "delivered";
+			subject: string | null;
+			templateName: string | null;
+			templateCategory: string | null;
+			source: string | null;
+			sesMessageId: string | null;
+			errorMessage: string | null;
+			eventType: string | null;
+		} | null;
+	};
+	const [folderNotifStatus, setFolderNotifStatus] = useState<Record<string, FolderNotifStatus>>({});
+	const [folderNotifLoading, setFolderNotifLoading] = useState(false);
 	const [retryDialogOpen, setRetryDialogOpen] = useState(false);
 	const [retryLoading, setRetryLoading] = useState(false);
 
@@ -607,6 +626,30 @@ const UserResources: React.FC = () => {
 		setSelectedFolderIds(new Set());
 	}, [currentType, page, rowsPerPage, search]);
 
+	// Lookup batch de notificaciones cuando cambian los folders visibles
+	useEffect(() => {
+		if (!isFolderTab || resources.length === 0) {
+			setFolderNotifStatus({});
+			return;
+		}
+		let cancelled = false;
+		const ids = resources.map((r) => r._id);
+		(async () => {
+			try {
+				setFolderNotifLoading(true);
+				const res = await FoldersService.getEmailLogsBatch(ids);
+				if (!cancelled) setFolderNotifStatus(res.data);
+			} catch (err: any) {
+				if (!cancelled) console.error("Error cargando notif status:", err);
+			} finally {
+				if (!cancelled) setFolderNotifLoading(false);
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, [isFolderTab, resources]);
+
 	const handleRetryAssociation = async () => {
 		// Safety net — filtrar contra los flags actuales por si el state quedó stale
 		// con folders que entre tanto pasaron a verified=true. La UI ya deshabilita
@@ -651,7 +694,94 @@ const UserResources: React.FC = () => {
 			setRetryLoading(false);
 		}
 	};
-	const columns = isUsersTab || isActivityTab || isEscritosTab || isAiUsageTab ? [] : getColumnsByType(currentType as ResourceType, theme);
+	const baseColumns = isUsersTab || isActivityTab || isEscritosTab || isAiUsageTab ? [] : getColumnsByType(currentType as ResourceType, theme);
+
+	// Columna extra "Notif." solo para folders — chip mínimo del último envío.
+	// Se inserta antes de "Monto" / "createdAt" (= antes de las dos últimas).
+	const columns = useMemo(() => {
+		if (!isFolderTab) return baseColumns;
+		const notifColumn: ColumnDef = {
+			id: "notif",
+			label: "Notif.",
+			sortable: false,
+			render: (r) => {
+				const ns = folderNotifStatus[r._id];
+				if (!ns || ns.count === 0) {
+					if (folderNotifLoading) return <Skeleton variant="rounded" width={56} height={20} />;
+					return (
+						<Tooltip title="Sin notificaciones registradas para esta carpeta">
+							<Chip label="—" size="small" variant="outlined" sx={{ height: 20, fontSize: "0.7rem" }} />
+						</Tooltip>
+					);
+				}
+				const last = ns.last!;
+				const sentAt = last.sentAt ? new Date(last.sentAt).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" }) : "—";
+				const tooltip = (
+					<Box>
+						<Typography variant="caption" sx={{ display: "block", fontWeight: 600 }}>
+							{last.subject || last.templateName || "(sin subject)"}
+						</Typography>
+						<Typography variant="caption" sx={{ display: "block", opacity: 0.85 }}>
+							Estado: {last.status}
+						</Typography>
+						<Typography variant="caption" sx={{ display: "block", opacity: 0.85 }}>
+							Enviado: {sentAt}
+						</Typography>
+						{last.source && (
+							<Typography variant="caption" sx={{ display: "block", opacity: 0.7 }}>
+								Origen: {last.source}
+							</Typography>
+						)}
+						{ns.count > 1 && (
+							<Typography variant="caption" sx={{ display: "block", opacity: 0.7, mt: 0.5 }}>
+								Total envíos: {ns.count}
+							</Typography>
+						)}
+						{last.errorMessage && (
+							<Typography variant="caption" sx={{ display: "block", color: "error.light", mt: 0.5 }}>
+								{last.errorMessage}
+							</Typography>
+						)}
+					</Box>
+				);
+				let color: "success" | "error" | "warning" | "info" | "default" = "default";
+				let label: string = last.status;
+				switch (last.status) {
+					case "sent":
+					case "delivered":
+						color = "success";
+						label = last.status === "delivered" ? "✉️ entregado" : "✉️ enviado";
+						break;
+					case "failed":
+						color = "error";
+						label = "✉️ falló";
+						break;
+					case "bounced":
+						color = "warning";
+						label = "✉️ bounced";
+						break;
+					case "complained":
+						color = "warning";
+						label = "✉️ complaint";
+						break;
+				}
+				const chip = (
+					<Chip
+						label={label + (ns.count > 1 ? ` (${ns.count})` : "")}
+						size="small"
+						color={color}
+						variant="outlined"
+						sx={{ height: 20, fontSize: "0.7rem" }}
+					/>
+				);
+				return <Tooltip title={tooltip}>{chip}</Tooltip>;
+			},
+		};
+		// Insertar antes de "amount" si existe, sino antes de "createdAt".
+		const idx = baseColumns.findIndex((c) => c.id === "amount");
+		const insertAt = idx >= 0 ? idx : baseColumns.length - 1;
+		return [...baseColumns.slice(0, insertAt), notifColumn, ...baseColumns.slice(insertAt)];
+	}, [baseColumns, isFolderTab, folderNotifStatus, folderNotifLoading]);
 
 	// Fetch stats
 	const fetchStats = useCallback(async () => {

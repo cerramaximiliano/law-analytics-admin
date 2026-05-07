@@ -248,6 +248,35 @@ class FoldersService {
 	}
 
 	/**
+	 * Batch lookup en emaillogs por folderId. Devuelve por cada folder el count
+	 * total de envíos y el último (status, sentAt, subject, sesMessageId).
+	 */
+	static async getEmailLogsBatch(folderIds: string[]): Promise<{
+		success: boolean;
+		data: Record<
+			string,
+			{
+				count: number;
+				last: {
+					sentAt: string;
+					status: "sent" | "failed" | "bounced" | "complained" | "delivered";
+					subject: string | null;
+					templateName: string | null;
+					templateCategory: string | null;
+					source: string | null;
+					sesMessageId: string | null;
+					errorMessage: string | null;
+					eventType: string | null;
+				} | null;
+			}
+		>;
+	}> {
+		if (!folderIds.length) return { success: true, data: {} };
+		const response = await adminAxios.post(`/api/folders/email-logs/batch`, { folderIds });
+		return response.data;
+	}
+
+	/**
 	 * Bulk: vuelve a hacer elegibles folders para que pjn-workers / mev-workers /
 	 * eje-workers los procesen.
 	 *
