@@ -246,6 +246,46 @@ class FoldersService {
 		});
 		return response.data;
 	}
+
+	/**
+	 * Bulk: vuelve a hacer elegibles folders para que pjn-workers / mev-workers /
+	 * eje-workers los procesen.
+	 *
+	 * - PJN: crea (si no existe) o asocia el doc en CausasXXX y marca la asociación pending.
+	 * - MEV/EJE: re-trigger sobre asociaciones existentes (requiere causaId previo).
+	 */
+	static async retryCausaAssociation(
+		folderIds: string[],
+		hasPaidSubscription: boolean = false,
+	): Promise<{
+		success: boolean;
+		data: {
+			summary: {
+				totalRequested: number;
+				validIds: number;
+				notFound: number;
+				queued: number;
+				skipped: number;
+				failed: number;
+			};
+			results: Array<{
+				folderId: string;
+				platform: "pjn" | "mev" | "eje" | null;
+				status: "queued" | "skipped" | "failed";
+				causaId?: string;
+				causaType?: string;
+				reason?: string;
+				note?: string;
+			}>;
+			notFoundIds: string[];
+		};
+	}> {
+		const response = await adminAxios.post(`/api/folders/retry-causa-association`, {
+			folderIds,
+			hasPaidSubscription,
+		});
+		return response.data;
+	}
 }
 
 export default FoldersService;

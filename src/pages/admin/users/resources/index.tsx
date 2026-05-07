@@ -31,6 +31,11 @@ import {
 	Select,
 	FormControl,
 	InputLabel,
+	Checkbox,
+	FormControlLabel,
+	Switch,
+	Stack,
+	CircularProgress,
 } from "@mui/material";
 import {
 	SearchNormal1,
@@ -68,6 +73,7 @@ import AdminResourcesService, {
 	UserWithResources,
 } from "api/adminResources";
 import UserSessionsService from "api/userSessions";
+import FoldersService from "api/folders";
 import { UserSessionMetrics, SessionStats, UserWithSessionMetrics } from "types/user-session";
 import AdminAiUsageService, {
 	AiUsageRow,
@@ -448,6 +454,12 @@ const UserResources: React.FC = () => {
 	const [stats, setStats] = useState({ folders: 0, contacts: 0, calculators: 0, tasks: 0, events: 0, movements: 0, total: 0 });
 	const [statsLoading, setStatsLoading] = useState(true);
 
+	// Bulk retry de causa-association para folders
+	const [selectedFolderIds, setSelectedFolderIds] = useState<Set<string>>(new Set());
+	const [retryHasPaid, setRetryHasPaid] = useState(false);
+	const [retryDialogOpen, setRetryDialogOpen] = useState(false);
+	const [retryLoading, setRetryLoading] = useState(false);
+
 	// Activity tab states
 	const [activityStats, setActivityStats] = useState<SessionStats | null>(null);
 	const [activityUsers, setActivityUsers] = useState<UserWithSessionMetrics[]>([]);
@@ -487,6 +499,61 @@ const UserResources: React.FC = () => {
 	const isActivityTab = currentType === "activity";
 	const isEscritosTab = currentType === "escritos";
 	const isAiUsageTab = currentType === "aiUsage";
+	const isFolderTab = currentType === "folder";
+
+	// Handlers para bulk retry de carpetas
+	const toggleFolderSelected = (id: string) => {
+		setSelectedFolderIds((prev) => {
+			const next = new Set(prev);
+			if (next.has(id)) next.delete(id);
+			else next.add(id);
+			return next;
+		});
+	};
+
+	const toggleAllFoldersInPage = () => {
+		setSelectedFolderIds((prev) => {
+			const idsInPage = resources.map((r) => r._id);
+			const allSelected = idsInPage.every((id) => prev.has(id));
+			const next = new Set(prev);
+			if (allSelected) idsInPage.forEach((id) => next.delete(id));
+			else idsInPage.forEach((id) => next.add(id));
+			return next;
+		});
+	};
+
+	// Reset de selección al cambiar de tab/página/búsqueda
+	useEffect(() => {
+		setSelectedFolderIds(new Set());
+	}, [currentType, page, rowsPerPage, search]);
+
+	const handleRetryAssociation = async () => {
+		if (selectedFolderIds.size === 0) return;
+		try {
+			setRetryLoading(true);
+			const response = await FoldersService.retryCausaAssociation(Array.from(selectedFolderIds), retryHasPaid);
+			const { summary } = response.data;
+			const msg =
+				`Reintentadas ${summary.totalRequested} carpeta(s): ` +
+				`${summary.queued} en cola, ${summary.skipped} salteadas, ${summary.failed} fallidas` +
+				(summary.notFound ? `, ${summary.notFound} no encontradas` : "");
+			enqueueSnackbar(msg, {
+				variant: summary.queued > 0 ? "success" : summary.failed > 0 ? "error" : "warning",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			setRetryDialogOpen(false);
+			setSelectedFolderIds(new Set());
+			// Refresh resources para mostrar el nuevo causaAssociationStatus
+			fetchResources();
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.error || err?.message || "Error al reintentar asociación", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+		} finally {
+			setRetryLoading(false);
+		}
+	};
 	const columns = isUsersTab || isActivityTab || isEscritosTab || isAiUsageTab ? [] : getColumnsByType(currentType as ResourceType, theme);
 
 	// Fetch stats
@@ -1746,6 +1813,41 @@ const UserResources: React.FC = () => {
 				</>
 			) : (
 				<>
+					{/* Toolbar de bulk retry — solo en tab folder cuando hay selección */}
+					{isFolderTab && selectedFolderIds.size > 0 && (
+						<Paper
+							sx={{
+								mb: 2,
+								p: 2,
+								bgcolor: alpha(theme.palette.primary.main, 0.06),
+								borderLeft: `4px solid ${theme.palette.primary.main}`,
+							}}
+						>
+							<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
+								<Typography variant="body2" fontWeight={600}>
+									{selectedFolderIds.size} carpeta(s) seleccionada(s)
+								</Typography>
+								<FormControlLabel
+									control={<Switch checked={retryHasPaid} onChange={(e) => setRetryHasPaid(e.target.checked)} size="small" />}
+									label={<Typography variant="caption">Habilitar updates automáticos (suscripción paga)</Typography>}
+								/>
+								<Box sx={{ flex: 1 }} />
+								<Button size="small" variant="outlined" onClick={() => setSelectedFolderIds(new Set())}>
+									Limpiar
+								</Button>
+								<Button
+									size="small"
+									variant="contained"
+									color="primary"
+									startIcon={<Refresh size={16} />}
+									onClick={() => setRetryDialogOpen(true)}
+								>
+									Reintentar verificación
+								</Button>
+							</Stack>
+						</Paper>
+					)}
+
 					{/* Table */}
 					<TableContainer sx={{ overflowX: "auto", maxWidth: "100%" }}>
 						<Table size="small" sx={{ minWidth: { xs: 800, md: "100%" } }}>
@@ -1851,6 +1953,22 @@ const UserResources: React.FC = () => {
 										</>
 									) : (
 										<>
+											{isFolderTab && (
+												<TableCell padding="checkbox">
+													<Checkbox
+														size="small"
+														indeterminate={
+															selectedFolderIds.size > 0 &&
+															!resources.every((r) => selectedFolderIds.has(r._id))
+														}
+														checked={
+															resources.length > 0 &&
+															resources.every((r) => selectedFolderIds.has(r._id))
+														}
+														onChange={toggleAllFoldersInPage}
+													/>
+												</TableCell>
+											)}
 											{columns.map((column) => (
 												<TableCell key={column.id}>
 													{column.sortable ? (
@@ -1885,6 +2003,11 @@ const UserResources: React.FC = () => {
 												</>
 											) : (
 												<>
+													{isFolderTab && (
+														<TableCell padding="checkbox">
+															<Skeleton variant="rectangular" width={20} height={20} />
+														</TableCell>
+													)}
 													{columns.map((column) => (
 														<TableCell key={column.id}>
 															<Skeleton variant="text" />
@@ -1981,7 +2104,7 @@ const UserResources: React.FC = () => {
 									)
 								) : resources.length === 0 ? (
 									<TableRow>
-										<TableCell colSpan={columns.length + 1} align="center">
+										<TableCell colSpan={columns.length + (isFolderTab ? 2 : 1)} align="center">
 											<Typography color="textSecondary" sx={{ py: 4 }}>
 												No se encontraron recursos
 											</Typography>
@@ -1989,7 +2112,20 @@ const UserResources: React.FC = () => {
 									</TableRow>
 								) : (
 									resources.map((resource) => (
-										<TableRow key={resource._id} hover>
+										<TableRow
+											key={resource._id}
+											hover
+											selected={isFolderTab && selectedFolderIds.has(resource._id)}
+										>
+											{isFolderTab && (
+												<TableCell padding="checkbox">
+													<Checkbox
+														size="small"
+														checked={selectedFolderIds.has(resource._id)}
+														onChange={() => toggleFolderSelected(resource._id)}
+													/>
+												</TableCell>
+											)}
 											{columns.map((column) => (
 												<TableCell key={column.id}>{column.render(resource)}</TableCell>
 											))}
@@ -2017,6 +2153,58 @@ const UserResources: React.FC = () => {
 					</TableContainer>
 				</>
 			)}
+
+			{/* Dialog de confirmación de retry bulk */}
+			<Dialog open={retryDialogOpen} onClose={() => setRetryDialogOpen(false)} maxWidth="sm" fullWidth>
+				<DialogTitle>Reintentar verificación de carpetas</DialogTitle>
+				<DialogContent>
+					<Typography variant="body2" sx={{ mb: 2 }}>
+						Vas a marcar <strong>{selectedFolderIds.size}</strong> carpeta(s) como elegibles para que los workers de scraping (PJN /
+						MEV / EJE) las procesen en su próxima ejecución.
+					</Typography>
+					<Typography variant="caption" color="text.secondary" component="div" sx={{ mb: 1 }}>
+						- <strong>PJN</strong>: si no existe el documento en la collection de causas, se crea con <code>verified: false</code> →
+						el verify-worker lo levanta en su próximo tick.
+					</Typography>
+					<Typography variant="caption" color="text.secondary" component="div" sx={{ mb: 1 }}>
+						- <strong>MEV / EJE</strong>: solo se re-trigger si la carpeta ya tiene una asociación previa (con causaId). Las que no
+						tengan asociación previa serán salteadas.
+					</Typography>
+					<Typography variant="caption" color="text.secondary" component="div" sx={{ mb: 1 }}>
+						- Carpetas sin plataforma activa (<code>pjn/mev/eje</code> todos en false) se saltean.
+					</Typography>
+					<Box sx={{ mt: 2, p: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.08), borderRadius: 1 }}>
+						<FormControlLabel
+							control={<Switch checked={retryHasPaid} onChange={(e) => setRetryHasPaid(e.target.checked)} />}
+							label={
+								<Box>
+									<Typography variant="body2" fontWeight={600}>
+										Habilitar updates automáticos
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Si se activa, las causas vinculadas quedarán con <code>userUpdatesEnabled: true</code> (equivale a una
+										suscripción paga).
+									</Typography>
+								</Box>
+							}
+						/>
+					</Box>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setRetryDialogOpen(false)} disabled={retryLoading}>
+						Cancelar
+					</Button>
+					<Button
+						variant="contained"
+						color="primary"
+						onClick={handleRetryAssociation}
+						disabled={retryLoading}
+						startIcon={retryLoading ? <CircularProgress size={16} color="inherit" /> : <Refresh size={16} />}
+					>
+						{retryLoading ? "Procesando..." : "Confirmar retry"}
+					</Button>
+				</DialogActions>
+			</Dialog>
 
 			{/* JSON Viewer Dialog */}
 			<Dialog open={jsonViewOpen} onClose={() => setJsonViewOpen(false)} maxWidth="md" fullWidth>
