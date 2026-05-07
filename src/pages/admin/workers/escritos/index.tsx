@@ -5,6 +5,7 @@ import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import EscritosWorkerTab from "pages/admin/rag-workers/EscritosWorkerTab";
 import EscritosHelpTab from "./EscritosHelpTab";
+import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
 
 interface TabDef {
 	label: string;
@@ -103,6 +104,22 @@ const EscritosWorkerPage = () => {
 						</Stack>
 					</Stack>
 				</Box>
+
+				<RepoBadgeGroup
+					repos={[
+						{
+							localName: "pjn-escritos-worker",
+							role: "Worker",
+							description: "Monorepo BullMQ con 4 sub-workers: extractor, OCR, selector (novelty L1) y recovery. Coordina con PipelineConfig.",
+						},
+						{
+							localName: "pjn-rag-api",
+							githubName: "pjn-rag-service",
+							role: "API config",
+							description: "Endpoints /rag/admin/escritos-worker/* (config + stats) en src/routes/admin.routes.js",
+						},
+					]}
+				/>
 
 				<Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
 					<Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: alpha(theme.palette.primary.main, 0.02) }}>

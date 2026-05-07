@@ -1,6 +1,7 @@
 import { Box, Chip, Paper, Stack, Typography, alpha, useTheme } from "@mui/material";
 import MainCard from "components/MainCard";
 import SentenciasWorkerTab from "./SentenciasWorkerTab";
+import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
 
 export default function SentenciasWorkerPage() {
 	const theme = useTheme();
@@ -73,6 +74,28 @@ export default function SentenciasWorkerPage() {
 						/>
 					</Stack>
 				</Stack>
+				<RepoBadgeGroup
+					repos={[
+						{
+							localName: "pjn-workers-scraping",
+							role: "Workers (×4)",
+							description:
+								"Aloja sentencias-worker, sentencias-collector, sentencias-semantic-worker y sentencias-embeddings en src/tasks/. Cada uno con su pm2.*.config.js.",
+						},
+						{
+							localName: "pjn-api",
+							role: "API config",
+							description:
+								"Endpoints /api/sentencias-capturadas, /api/configuracion-sentencias-collector y /api/configuracion-semantic-worker en src/controllers/.",
+						},
+						{
+							localName: "pjn-rag-api",
+							githubName: "pjn-rag-service",
+							role: "API publicaciones",
+							description: "Endpoints /rag/admin/sentencias-worker/* del tab 'Publicaciones' (sin worker separado).",
+						},
+					]}
+				/>
 				<Paper variant="outlined" sx={{ p: 2 }}>
 					<SentenciasWorkerTab />
 				</Paper>

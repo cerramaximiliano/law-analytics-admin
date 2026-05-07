@@ -51,6 +51,7 @@ import {
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import SentenciasService, { AiSummary, SentenciaCapturada, Fuero, SentenciaTipo, PublicationStatus } from "api/sentenciasCapturadas";
+import RepoBadge from "components/admin/RepoBadge";
 
 const FUERO_LABELS: Record<string, string> = { CIV: "Civil", CSS: "Seg. Social", CNT: "Trabajo", COM: "Comercial" };
 const FUERO_COLORS: Record<string, "primary" | "warning" | "error" | "success"> = {
@@ -411,6 +412,14 @@ export default function PublicacionesSection() {
 					<Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
 						Sentencias de causas con novedad listas para publicar
 					</Typography>
+					<Box sx={{ mt: 0.5 }}>
+						<RepoBadge
+							localName="pjn-rag-api"
+							githubName="pjn-rag-service"
+							role="Backend"
+							description="Esta sección corre 100% dentro de pjn-rag-api (no hay worker separado). Endpoints en src/routes/admin.routes.js."
+						/>
+					</Box>
 				</Box>
 				<Stack direction="row" spacing={0.5}>
 					<Tooltip title={helpOpen ? "Ocultar ayuda" : "¿Cómo funciona esta sección?"}>
