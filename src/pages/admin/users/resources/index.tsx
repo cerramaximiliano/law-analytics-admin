@@ -558,6 +558,28 @@ const UserResources: React.FC = () => {
 	const isAiUsageTab = currentType === "aiUsage";
 	const isFolderTab = currentType === "folder";
 
+	/**
+	 * Una carpeta es elegible para "Reintentar verificación" cuando:
+	 * - Tiene al menos una plataforma activa (no es manual: pjn|mev|eje|scba).
+	 * - NO está ya verificada (causaVerified !== true).
+	 * Las verificadas no se pueden re-verificar; las manuales no tienen worker
+	 * que las procese.
+	 */
+	const isFolderRetryEligible = (resource: Resource): boolean => {
+		const f = resource as FolderResource;
+		const hasPlatform = !!(f.pjn || f.mev || f.eje || f.scba);
+		const alreadyVerified = f.causaVerified === true;
+		return hasPlatform && !alreadyVerified;
+	};
+
+	const folderRetryIneligibleReason = (resource: Resource): string => {
+		const f = resource as FolderResource;
+		if (f.causaVerified === true) return "Ya está verificada — no se puede re-verificar.";
+		const hasPlatform = !!(f.pjn || f.mev || f.eje || f.scba);
+		if (!hasPlatform) return "Es una carpeta manual — no hay worker que la verifique.";
+		return "";
+	};
+
 	// Handlers para bulk retry de carpetas
 	const toggleFolderSelected = (id: string) => {
 		setSelectedFolderIds((prev) => {
@@ -570,11 +592,12 @@ const UserResources: React.FC = () => {
 
 	const toggleAllFoldersInPage = () => {
 		setSelectedFolderIds((prev) => {
-			const idsInPage = resources.map((r) => r._id);
-			const allSelected = idsInPage.every((id) => prev.has(id));
+			// Solo operamos sobre las elegibles de la página actual
+			const eligibleIdsInPage = resources.filter(isFolderRetryEligible).map((r) => r._id);
+			const allSelected = eligibleIdsInPage.length > 0 && eligibleIdsInPage.every((id) => prev.has(id));
 			const next = new Set(prev);
-			if (allSelected) idsInPage.forEach((id) => next.delete(id));
-			else idsInPage.forEach((id) => next.add(id));
+			if (allSelected) eligibleIdsInPage.forEach((id) => next.delete(id));
+			else eligibleIdsInPage.forEach((id) => next.add(id));
 			return next;
 		});
 	};
@@ -585,10 +608,27 @@ const UserResources: React.FC = () => {
 	}, [currentType, page, rowsPerPage, search]);
 
 	const handleRetryAssociation = async () => {
-		if (selectedFolderIds.size === 0) return;
+		// Safety net — filtrar contra los flags actuales por si el state quedó stale
+		// con folders que entre tanto pasaron a verified=true. La UI ya deshabilita
+		// los checkboxes de no-elegibles, este filtro es defensa en profundidad.
+		const eligibleSelectedIds = Array.from(selectedFolderIds).filter((id) => {
+			const r = resources.find((res) => res._id === id);
+			return r ? isFolderRetryEligible(r) : true; // si no está en la página actual, dejar pasar y que el backend decida
+		});
+
+		if (eligibleSelectedIds.length === 0) {
+			enqueueSnackbar("Las carpetas seleccionadas ya están verificadas o son manuales — nada que reintentar.", {
+				variant: "warning",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			setRetryDialogOpen(false);
+			setSelectedFolderIds(new Set());
+			return;
+		}
+
 		try {
 			setRetryLoading(true);
-			const response = await FoldersService.retryCausaAssociation(Array.from(selectedFolderIds), retryHasPaid);
+			const response = await FoldersService.retryCausaAssociation(eligibleSelectedIds, retryHasPaid);
 			const { summary } = response.data;
 			const msg =
 				`Reintentadas ${summary.totalRequested} carpeta(s): ` +
@@ -2012,18 +2052,24 @@ const UserResources: React.FC = () => {
 										<>
 											{isFolderTab && (
 												<TableCell padding="checkbox">
-													<Checkbox
-														size="small"
-														indeterminate={
-															selectedFolderIds.size > 0 &&
-															!resources.every((r) => selectedFolderIds.has(r._id))
-														}
-														checked={
-															resources.length > 0 &&
-															resources.every((r) => selectedFolderIds.has(r._id))
-														}
-														onChange={toggleAllFoldersInPage}
-													/>
+													{(() => {
+														const eligibleInPage = resources.filter(isFolderRetryEligible);
+														const allEligibleSelected =
+															eligibleInPage.length > 0 && eligibleInPage.every((r) => selectedFolderIds.has(r._id));
+														const someEligibleSelected =
+															eligibleInPage.some((r) => selectedFolderIds.has(r._id)) && !allEligibleSelected;
+														return (
+															<Tooltip title="Seleccionar todas las elegibles de la página (omite verificadas y manuales)">
+																<Checkbox
+																	size="small"
+																	indeterminate={someEligibleSelected}
+																	checked={allEligibleSelected}
+																	onChange={toggleAllFoldersInPage}
+																	disabled={eligibleInPage.length === 0}
+																/>
+															</Tooltip>
+														);
+													})()}
 												</TableCell>
 											)}
 											{columns.map((column) => (
@@ -2176,11 +2222,25 @@ const UserResources: React.FC = () => {
 										>
 											{isFolderTab && (
 												<TableCell padding="checkbox">
-													<Checkbox
-														size="small"
-														checked={selectedFolderIds.has(resource._id)}
-														onChange={() => toggleFolderSelected(resource._id)}
-													/>
+													{(() => {
+														const eligible = isFolderRetryEligible(resource);
+														const reason = eligible ? "" : folderRetryIneligibleReason(resource);
+														const checkbox = (
+															<Checkbox
+																size="small"
+																checked={eligible && selectedFolderIds.has(resource._id)}
+																onChange={() => eligible && toggleFolderSelected(resource._id)}
+																disabled={!eligible}
+															/>
+														);
+														return reason ? (
+															<Tooltip title={reason}>
+																<span>{checkbox}</span>
+															</Tooltip>
+														) : (
+															checkbox
+														);
+													})()}
 												</TableCell>
 											)}
 											{columns.map((column) => (
