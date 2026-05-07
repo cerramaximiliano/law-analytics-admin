@@ -4,6 +4,7 @@ import { Setting2, InfoCircle } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import UpdateMovimientosWorkerTab from "./UpdateMovimientosWorkerTab";
+import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
 
 interface TabDef {
 	label: string;
@@ -96,6 +97,23 @@ const MovimientosWorkerPage = () => {
 						</Stack>
 					</Stack>
 				</Box>
+
+				<RepoBadgeGroup
+					repos={[
+						{
+							localName: "pjn-workers-scraping",
+							role: "Worker + Manager",
+							description:
+								"src/tasks/update-movimientos-manager.js (escala) + src/tasks/update-movimientos-worker.js (uno por fuero). PM2: pm2.update-movimientos.config.js. Lee config de configuracion-update-movimientos[-manager] en law_analytics.",
+						},
+						{
+							localName: "pjn-api",
+							role: "API config",
+							description:
+								"Endpoints /api/configuracion-update-movimientos/ y /manager (CRUD de la config que lee el worker). Controllers y rutas en src/controllers + src/routes.",
+						},
+					]}
+				/>
 
 				<Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
 					<Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
