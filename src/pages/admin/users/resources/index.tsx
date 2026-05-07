@@ -183,6 +183,50 @@ const getColumnsByType = (type: ResourceType, theme: any): ColumnDef[] => {
 			return [
 				...commonColumns,
 				{ id: "folderName", label: "Nombre", sortable: true, render: (r) => (r as FolderResource).folderName || "-" },
+				{
+					id: "platform",
+					label: "Plataforma",
+					sortable: false,
+					render: (r) => {
+						const f = r as FolderResource;
+						// Prioridad: pjn > mev > eje > scba > manual. Solo una debería estar activa.
+						if (f.pjn) return <Chip label="PJN" size="small" color="primary" />;
+						if (f.mev) return <Chip label="MEV" size="small" color="secondary" />;
+						if (f.eje) return <Chip label="EJE" size="small" color="info" />;
+						if (f.scba) return <Chip label="SCBA" size="small" color="warning" />;
+						return <Chip label="Manual" size="small" variant="outlined" />;
+					},
+				},
+				{
+					id: "expediente",
+					label: "Expediente",
+					sortable: false,
+					render: (r) => {
+						const f = r as FolderResource;
+						const num = f.judFolder?.numberJudFolder;
+						if (!num) return <Typography variant="caption" color="text.secondary">—</Typography>;
+						return (
+							<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+								{num}
+							</Typography>
+						);
+					},
+				},
+				{
+					id: "fuero",
+					label: "Fuero",
+					sortable: true,
+					render: (r) => {
+						const f = (r as FolderResource).folderFuero;
+						return f ? (
+							<Typography variant="caption" color="text.secondary">
+								{f}
+							</Typography>
+						) : (
+							"-"
+						);
+					},
+				},
 				{ id: "materia", label: "Materia", sortable: true, render: (r) => (r as FolderResource).materia || "-" },
 				{
 					id: "status",
@@ -220,6 +264,19 @@ const getColumnsByType = (type: ResourceType, theme: any): ColumnDef[] => {
 						) : (
 							<Chip label="No" size="small" variant="outlined" />
 						),
+				},
+				{
+					id: "causaIsValid",
+					label: "Válida",
+					sortable: true,
+					render: (r) => {
+						const f = r as FolderResource;
+						// Distinguimos 3 estados: true (válida), false (inválida = no encontrada),
+						// null/undefined (aún no verificada).
+						if (f.causaIsValid === true) return <Chip label="Sí" size="small" color="success" />;
+						if (f.causaIsValid === false) return <Chip label="No" size="small" color="error" />;
+						return <Chip label="—" size="small" variant="outlined" />;
+					},
 				},
 				{ id: "amount", label: "Monto", sortable: true, render: (r) => formatCurrency((r as FolderResource).amount) },
 				createdAtColumn,

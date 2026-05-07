@@ -24,6 +24,19 @@ export interface FolderResource extends BaseResource {
 	status?: string;
 	archived?: boolean;
 	causaVerified?: boolean;
+	causaIsValid?: boolean | null;
+	causaType?: string | null;
+	causaAssociationStatus?: string;
+	folderFuero?: string;
+	pjn?: boolean;
+	mev?: boolean;
+	eje?: boolean;
+	scba?: boolean;
+	source?: string;
+	judFolder?: {
+		numberJudFolder?: string;
+		_id?: string;
+	} | null;
 	amount?: number;
 }
 
