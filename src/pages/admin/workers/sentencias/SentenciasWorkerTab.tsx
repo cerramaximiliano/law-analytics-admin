@@ -53,7 +53,7 @@ import SentenciasService, {
 } from "api/sentenciasCapturadas";
 import CollectorService, { CollectorConfig, FueroConfig } from "api/sentenciasCollector";
 import SemanticWorkerService, { SemanticWorkerConfig } from "api/semanticWorker";
-import RagWorkersService, { PineconeStats } from "api/ragWorkers";
+import RagWorkersService, { PineconeStats, SentenciasWorkerConfig } from "api/ragWorkers";
 import WorkerControlPanel from "components/WorkerControlPanel";
 import PublicacionesSection from "./PublicacionesSection";
 
@@ -1241,6 +1241,126 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 	);
 }
 
+/**
+ * Card para configurar el ritmo del sentencias-embeddings-worker.
+ * Expone cronPattern / batchSize / embedBatchSize que viven en
+ * pipeline-config.sentenciasWorker y se setean vía PATCH /sentencias-worker/config.
+ *
+ * Misma forma visual que ConfigGeneral del tab Escritos para consistencia UX.
+ */
+function EmbeddingsConfigCard() {
+	const { enqueueSnackbar } = useSnackbar();
+	const [config, setConfig] = useState<SentenciasWorkerConfig | null>(null);
+	const [draft, setDraft] = useState<{ cronPattern?: string; batchSize?: number; embedBatchSize?: number }>({});
+	const [saving, setSaving] = useState(false);
+	const [loading, setLoading] = useState(true);
+
+	const loadCfg = async () => {
+		setLoading(true);
+		try {
+			const cfg = await RagWorkersService.getSentenciasWorkerConfig();
+			setConfig(cfg);
+			setDraft({ cronPattern: cfg.cronPattern, batchSize: cfg.batchSize, embedBatchSize: cfg.embedBatchSize });
+		} catch {
+			/* silently */
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		loadCfg();
+	}, []);
+
+	const dirty = !!config && (
+		draft.cronPattern !== config.cronPattern ||
+		draft.batchSize !== config.batchSize ||
+		draft.embedBatchSize !== config.embedBatchSize
+	);
+
+	const handleSave = async () => {
+		setSaving(true);
+		try {
+			const updated = await RagWorkersService.updateSentenciasWorkerConfig({
+				cronPattern: draft.cronPattern,
+				batchSize: draft.batchSize,
+				embedBatchSize: draft.embedBatchSize,
+			});
+			setConfig(updated);
+			setDraft({ cronPattern: updated.cronPattern, batchSize: updated.batchSize, embedBatchSize: updated.embedBatchSize });
+			enqueueSnackbar("Configuración guardada", { variant: "success" });
+		} catch {
+			enqueueSnackbar("Error guardando configuración", { variant: "error" });
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	return (
+		<Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+			<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1.5}>
+				<Box>
+					<Typography variant="subtitle2" fontWeight={600}>
+						Configuración del ritmo (sentencias-embeddings-worker)
+					</Typography>
+					<Typography variant="caption" color="text.secondary">
+						Reducir frecuencia o batch size baja directamente el consumo Pinecone/OpenAI.
+					</Typography>
+				</Box>
+			</Stack>
+
+			<Grid container spacing={2}>
+				<Grid item xs={12} sm={4}>
+					<TextField
+						label="Cron pattern"
+						size="small"
+						fullWidth
+						value={draft.cronPattern ?? ""}
+						onChange={(e) => setDraft((d) => ({ ...d, cronPattern: e.target.value }))}
+						disabled={saving || loading}
+						helperText="Frecuencia (ej. */5 * * * * = cada 5 min)"
+					/>
+				</Grid>
+				<Grid item xs={6} sm={4}>
+					<TextField
+						label="Batch size (docs por ciclo)"
+						type="number"
+						size="small"
+						fullWidth
+						value={draft.batchSize ?? 50}
+						onChange={(e) => setDraft((d) => ({ ...d, batchSize: parseInt(e.target.value) || 1 }))}
+						disabled={saving || loading}
+						inputProps={{ min: 1, max: 500 }}
+						helperText="Sentencias procesadas por ciclo"
+					/>
+				</Grid>
+				<Grid item xs={6} sm={4}>
+					<TextField
+						label="Embed batch size"
+						type="number"
+						size="small"
+						fullWidth
+						value={draft.embedBatchSize ?? 50}
+						onChange={(e) => setDraft((d) => ({ ...d, embedBatchSize: parseInt(e.target.value) || 1 }))}
+						disabled={saving || loading}
+						inputProps={{ min: 1, max: 200 }}
+						helperText="Vectors por llamada a Pinecone"
+					/>
+				</Grid>
+			</Grid>
+
+			<Stack direction="row" justifyContent="flex-end" mt={2} spacing={1}>
+				<Button size="small" onClick={loadCfg} disabled={saving || loading} sx={{ textTransform: "none" }}>
+					Descartar
+				</Button>
+				<Button variant="contained" size="small" onClick={handleSave} disabled={!dirty || saving || loading} sx={{ textTransform: "none" }}>
+					{saving ? "Guardando..." : "Guardar"}
+				</Button>
+			</Stack>
+		</Paper>
+	);
+}
+
 function EmbeddingsSection({
 	stats,
 	loading,
@@ -1271,6 +1391,9 @@ function EmbeddingsSection({
 					Actualizar
 				</Button>
 			</Stack>
+
+			{/* Config del ritmo del worker (cron + batch sizes) */}
+			<EmbeddingsConfigCard />
 
 			{loading && !stats ? (
 				<Grid container spacing={2}>
