@@ -559,11 +559,56 @@ export interface EscritosSearchMeta {
 
 // ─── Sentencias Worker types ──────────────────────────────────────────────────
 
+/** Nombres canónicos de los procesos PM2 del grupo "pipeline".
+ *  Mantener sincronizado con PIPELINE_WORKERS en pjn-rag-api admin.routes.js
+ *  y con CONTROLS en pjn-workers-scraping/src/tasks/sentencias-manager.js.
+ */
+export const PIPELINE_WORKERS = [
+	"sentencias-worker",
+	"sentencias-worker-2",
+	"sentencias-embeddings",
+	"ocr-worker",
+	"sentencias-retry",
+] as const;
+export type PipelineWorkerName = typeof PIPELINE_WORKERS[number];
+
 export interface SentenciasWorkerConfig {
 	enabled: boolean;
 	batchSize: number;
 	embedBatchSize: number;
 	cronPattern: string;
+	/** Sub-flags individuales por worker del grupo pipeline.
+	 *  Regla efectiva: enabled (master) AND workers[name].enabled. */
+	workers: Record<PipelineWorkerName, { enabled: boolean }>;
+}
+
+/** Update payload (partial). workers admite nombres parciales para toggleos
+ *  individuales (ej. `{ workers: { 'ocr-worker': { enabled: false } } }`). */
+export interface SentenciasWorkerConfigUpdate {
+	enabled?: boolean;
+	batchSize?: number;
+	embedBatchSize?: number;
+	cronPattern?: string;
+	workers?: Partial<Record<PipelineWorkerName, { enabled: boolean }>>;
+}
+
+/** Estado real de cada proceso PM2 escrito por el sentencias-manager.
+ *  Permite mostrar la realidad en la UI (no solo el flag deseado). */
+export interface SentenciasManagerProcessStatus {
+	desired: boolean | null;
+	status: "online" | "stopped" | "errored" | "stopping" | "launching" | "unknown";
+	uptime?: number;
+	restarts?: number;
+	mem?: number;
+	action: string;
+	failAttempts: number;
+	gaveUp: boolean;
+}
+
+export interface SentenciasManagerRuntimeStatus {
+	lastSync: string;
+	cycleCount: number;
+	controls: Record<string, { processes: Record<string, SentenciasManagerProcessStatus> }>;
 }
 
 // ─── Style Corpus types ───────────────────────────────────────────────────────
@@ -871,8 +916,15 @@ class RagWorkersService {
 		return res.data.data;
 	}
 
-	static async updateSentenciasWorkerConfig(data: Partial<SentenciasWorkerConfig>): Promise<SentenciasWorkerConfig> {
+	static async updateSentenciasWorkerConfig(data: SentenciasWorkerConfigUpdate): Promise<SentenciasWorkerConfig> {
 		const res = await ragAxios.patch(`${BASE}/sentencias-worker/config`, data);
+		return res.data.data;
+	}
+
+	/** Devuelve el estado real (PM2) de cada proceso, escrito por el
+	 *  sentencias-manager cada 60s en pipeline-config.sentenciasManager.runtimeStatus. */
+	static async getSentenciasWorkerRuntimeStatus(): Promise<SentenciasManagerRuntimeStatus | null> {
+		const res = await ragAxios.get(`${BASE}/sentencias-worker/runtime-status`);
 		return res.data.data;
 	}
 

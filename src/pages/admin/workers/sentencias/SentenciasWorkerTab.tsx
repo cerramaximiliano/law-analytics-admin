@@ -2029,6 +2029,16 @@ export default function SentenciasWorkerTab() {
 	const [semanticEnabled, setSemanticEnabled] = useState<boolean | null>(null);
 	const [togglingEmb, setTogglingEmb] = useState(false);
 	const [togglingCollector, setTogglingCollector] = useState(false);
+	// Sub-flags individuales del grupo pipeline (granularidad).
+	// Regla efectiva: embEnabled (master) AND pipelineWorkers[name].
+	const [pipelineWorkers, setPipelineWorkers] = useState<Record<string, boolean | null>>({
+		"sentencias-worker": null,
+		"sentencias-worker-2": null,
+		"sentencias-embeddings": null,
+		"ocr-worker": null,
+		"sentencias-retry": null,
+	});
+	const [togglingPipelineWorker, setTogglingPipelineWorker] = useState<Record<string, boolean>>({});
 	const [togglingSemantic, setTogglingSemantic] = useState(false);
 
 	const loadStats = async () => {
@@ -2049,11 +2059,37 @@ export default function SentenciasWorkerTab() {
 				CollectorService.getConfig(),
 				SemanticWorkerService.getConfig(),
 			]);
-			if (embCfg.status === "fulfilled") setEmbEnabled(embCfg.value.enabled);
+			if (embCfg.status === "fulfilled") {
+				setEmbEnabled(embCfg.value.enabled);
+				const workers: Record<string, boolean> = {};
+				for (const [name, cfg] of Object.entries(embCfg.value.workers || {})) {
+					workers[name] = (cfg as { enabled: boolean }).enabled;
+				}
+				setPipelineWorkers((prev) => ({ ...prev, ...workers }));
+			}
 			if (collCfg.status === "fulfilled") setCollectorEnabled(collCfg.value.enabled);
 			if (semCfg.status === "fulfilled") setSemanticEnabled(semCfg.value.enabled);
 		} catch {
 			/* silently ignore */
+		}
+	};
+
+	const handleTogglePipelineWorker = async (name: string, val: boolean) => {
+		setTogglingPipelineWorker((s) => ({ ...s, [name]: true }));
+		try {
+			const updated = await RagWorkersService.updateSentenciasWorkerConfig({
+				workers: { [name]: { enabled: val } } as never,
+			});
+			const newWorkers: Record<string, boolean> = {};
+			for (const [n, cfg] of Object.entries(updated.workers || {})) {
+				newWorkers[n] = (cfg as { enabled: boolean }).enabled;
+			}
+			setPipelineWorkers((prev) => ({ ...prev, ...newWorkers }));
+			enqueueSnackbar(`${name} ${val ? "habilitado" : "deshabilitado"}`, { variant: val ? "success" : "warning" });
+		} catch {
+			enqueueSnackbar(`Error actualizando ${name}`, { variant: "error" });
+		} finally {
+			setTogglingPipelineWorker((s) => ({ ...s, [name]: false }));
 		}
 	};
 
@@ -2159,6 +2195,55 @@ export default function SentenciasWorkerTab() {
 					},
 				]}
 			/>
+
+			{/* ── Granularidad: sub-flags individuales del grupo "PDF · OCR · Embeddings" ──
+			    Cada uno controla un proceso PM2 específico. La regla efectiva es
+			    embEnabled (master) AND el sub-flag individual: si el master está OFF,
+			    todos los workers quedan OFF aunque su sub-flag esté ON. */}
+			<Box>
+				<Typography variant="caption" color="text.secondary" sx={{ pl: 0.5, mb: 0.5, display: "block" }}>
+					Control individual del grupo PDF · OCR · Embeddings (queda anulado si el master está OFF)
+				</Typography>
+				<WorkerControlPanel
+					processes={[
+						{
+							label: "sentencias-worker",
+							description: "PDF download + extracción",
+							enabled: pipelineWorkers["sentencias-worker"] ?? null,
+							toggling: togglingPipelineWorker["sentencias-worker"],
+							onToggle: (v) => handleTogglePipelineWorker("sentencias-worker", v),
+						},
+						{
+							label: "sentencias-worker-2",
+							description: "PDF download + extracción (instancia 2)",
+							enabled: pipelineWorkers["sentencias-worker-2"] ?? null,
+							toggling: togglingPipelineWorker["sentencias-worker-2"],
+							onToggle: (v) => handleTogglePipelineWorker("sentencias-worker-2", v),
+						},
+						{
+							label: "sentencias-embeddings",
+							description: "Generación de embeddings + upsert Pinecone",
+							enabled: pipelineWorkers["sentencias-embeddings"] ?? null,
+							toggling: togglingPipelineWorker["sentencias-embeddings"],
+							onToggle: (v) => handleTogglePipelineWorker("sentencias-embeddings", v),
+						},
+						{
+							label: "ocr-worker",
+							description: "OCR para PDFs escaneados",
+							enabled: pipelineWorkers["ocr-worker"] ?? null,
+							toggling: togglingPipelineWorker["ocr-worker"],
+							onToggle: (v) => handleTogglePipelineWorker("ocr-worker", v),
+						},
+						{
+							label: "sentencias-retry",
+							description: "Reintentos de sentencias fallidas",
+							enabled: pipelineWorkers["sentencias-retry"] ?? null,
+							toggling: togglingPipelineWorker["sentencias-retry"],
+							onToggle: (v) => handleTogglePipelineWorker("sentencias-retry", v),
+						},
+					]}
+				/>
+			</Box>
 
 			<Stack direction="row" sx={{ minHeight: 500 }}>
 				{/* Vertical tabs on left */}
