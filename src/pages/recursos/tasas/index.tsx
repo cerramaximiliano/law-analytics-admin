@@ -76,6 +76,14 @@ const isSameDay = (d1: string | null, d2: string | null): boolean => {
 	return toYYYYMMDD(d1) === toYYYYMMDD(d2);
 };
 
+const todayUTC = (): string => new Date().toISOString().split("T")[0];
+
+const isFechaUltimaDesactualizada = (tasa: TasaConfig): boolean => {
+	if (tasa.discontinuada) return false;
+	if (!tasa.fechaUltima) return true;
+	return toYYYYMMDD(tasa.fechaUltima) < todayUTC();
+};
+
 // ─── Status chip ──────────────────────────────────────────────────────────────
 
 const StatusChip = ({ tasa }: { tasa: TasaConfig }) => {
@@ -594,7 +602,14 @@ const TasasInteres = () => {
 														</Typography>
 													</TableCell>
 													<TableCell>{formatDate(tasa.fechaInicio)}</TableCell>
-													<TableCell>{formatDate(tasa.fechaUltima)}</TableCell>
+													<TableCell
+														sx={{
+															color: isFechaUltimaDesactualizada(tasa) ? "error.main" : undefined,
+															fontWeight: isFechaUltimaDesactualizada(tasa) ? 600 : undefined,
+														}}
+													>
+														{formatDate(tasa.fechaUltima)}
+													</TableCell>
 													<TableCell>{formatDate(tasa.fechaUltimaCompleta)}</TableCell>
 													<TableCell align="center">
 														<StatusChip tasa={tasa} />
