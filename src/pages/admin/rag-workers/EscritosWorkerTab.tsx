@@ -32,6 +32,7 @@ import {
 	IconButton,
 	Card,
 	CardContent,
+	Grid,
 	Pagination,
 	useTheme,
 	alpha,
@@ -114,6 +115,112 @@ function timeAgo(d?: string): string {
 	if (diffH < 24) return `hace ${diffH}h`;
 	const diffD = Math.floor(diffH / 24);
 	return `hace ${diffD}d`;
+}
+
+/**
+ * Card compacto al tope del tab con los 2 controles más usados para regular
+ * el ritmo del pipeline de escritos: scanCron y concurrency. La config
+ * completa sigue en el tab "Config" (ConfigGeneral) para casos avanzados.
+ *
+ * Mismo patrón visual que EmbeddingsConfigCard del tab Sentencias para
+ * consistencia UX.
+ */
+function EscritosRateConfigCard() {
+	const { enqueueSnackbar } = useSnackbar();
+	const [config, setConfig] = useState<EscritosWorkerConfig | null>(null);
+	const [draft, setDraft] = useState<{ scanCron?: string; concurrency?: number }>({});
+	const [saving, setSaving] = useState(false);
+	const [loading, setLoading] = useState(true);
+
+	const loadCfg = async () => {
+		setLoading(true);
+		try {
+			const cfg = await RagWorkersService.getEscritosWorkerConfig();
+			setConfig(cfg);
+			setDraft({ scanCron: cfg.scanCron, concurrency: cfg.concurrency });
+		} catch {
+			/* silently */
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		loadCfg();
+	}, []);
+
+	const dirty = !!config && (
+		draft.scanCron !== config.scanCron ||
+		draft.concurrency !== config.concurrency
+	);
+
+	const handleSave = async () => {
+		setSaving(true);
+		try {
+			const updated = await RagWorkersService.updateEscritosWorkerConfig({
+				scanCron: draft.scanCron,
+				concurrency: draft.concurrency,
+			});
+			setConfig(updated);
+			setDraft({ scanCron: updated.scanCron, concurrency: updated.concurrency });
+			enqueueSnackbar("Configuración guardada", { variant: "success" });
+		} catch {
+			enqueueSnackbar("Error guardando configuración", { variant: "error" });
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	return (
+		<Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+			<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1.5}>
+				<Box>
+					<Typography variant="subtitle2" fontWeight={600}>
+						Configuración del ritmo (escritos pipeline)
+					</Typography>
+					<Typography variant="caption" color="text.secondary">
+						Espaciar el cron o bajar concurrencia reduce el consumo Pinecone/OpenAI. Config completa en el tab Config.
+					</Typography>
+				</Box>
+			</Stack>
+
+			<Grid container spacing={2}>
+				<Grid item xs={12} sm={6}>
+					<TextField
+						label="Cron de escaneo"
+						size="small"
+						fullWidth
+						value={draft.scanCron ?? ""}
+						onChange={(e) => setDraft((d) => ({ ...d, scanCron: e.target.value }))}
+						disabled={saving || loading}
+						helperText="Frecuencia (ej. 0 */6 * * * = cada 6h)"
+					/>
+				</Grid>
+				<Grid item xs={12} sm={6}>
+					<TextField
+						label="Concurrencia"
+						type="number"
+						size="small"
+						fullWidth
+						value={draft.concurrency ?? 3}
+						onChange={(e) => setDraft((d) => ({ ...d, concurrency: parseInt(e.target.value, 10) || 1 }))}
+						disabled={saving || loading}
+						inputProps={{ min: 1, max: 20 }}
+						helperText="Workers simultáneos de extracción"
+					/>
+				</Grid>
+			</Grid>
+
+			<Stack direction="row" justifyContent="flex-end" mt={2} spacing={1}>
+				<Button size="small" onClick={loadCfg} disabled={saving || loading} sx={{ textTransform: "none" }}>
+					Descartar
+				</Button>
+				<Button variant="contained" size="small" onClick={handleSave} disabled={!dirty || saving || loading} sx={{ textTransform: "none" }}>
+					{saving ? "Guardando..." : "Guardar"}
+				</Button>
+			</Stack>
+		</Paper>
+	);
 }
 
 // ── Tab: Config — sección General ────────────────────────────────────────────
@@ -1170,6 +1277,9 @@ const EscritosWorkerTab: React.FC = () => {
 						</>
 					)}
 				</Paper>
+
+				{/* ── Card de ritmo (scanCron + concurrency), visible al frente ── */}
+				<EscritosRateConfigCard />
 
 				<Paper variant="outlined" sx={{ borderRadius: 2 }}>
 					<Tabs
