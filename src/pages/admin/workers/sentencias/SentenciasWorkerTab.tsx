@@ -2501,14 +2501,20 @@ function CollectorSection() {
 
 // ── Root component ────────────────────────────────────────────────────────────
 
-const SECTIONS = [
-	{ label: "Estado", icon: <Activity size={16} /> },
-	{ label: "OCR", icon: <Scanner size={16} /> },
-	{ label: "Embeddings", icon: <Data size={16} /> },
-	{ label: "Novedades", icon: <TickCircle size={16} /> },
-	{ label: "Publicaciones", icon: <Notification size={16} /> },
-	{ label: "Collector", icon: <Setting3 size={16} /> },
-	{ label: "Lista", icon: <DocumentText size={16} /> },
+// Tabs agrupados visualmente: 'config' (operativa del pipeline) y 'data' (datos
+// que el pipeline genera y publica). El orden importa porque el `value` del Tab
+// es su índice — los componentes del switch abajo deben mapear los índices.
+type SectionGroup = "config" | "data";
+const SECTIONS: { label: string; icon: React.ReactElement; group: SectionGroup }[] = [
+	// Grupo configuración / operativa
+	{ label: "Estado general", icon: <Activity size={16} />, group: "config" },
+	{ label: "Collector", icon: <Setting3 size={16} />, group: "config" },
+	{ label: "OCR", icon: <Scanner size={16} />, group: "config" },
+	{ label: "Embeddings", icon: <Data size={16} />, group: "config" },
+	// Grupo datos / resultados
+	{ label: "Lista", icon: <DocumentText size={16} />, group: "data" },
+	{ label: "Publicaciones", icon: <Notification size={16} />, group: "data" },
+	{ label: "Novedades", icon: <TickCircle size={16} />, group: "data" },
 ];
 
 export default function SentenciasWorkerTab() {
@@ -2877,60 +2883,137 @@ export default function SentenciasWorkerTab() {
 			</Paper>
 
 			<Stack direction="row" sx={{ minHeight: 500 }}>
-				{/* Vertical tabs on left */}
-				<Box sx={{ borderRight: 1, borderColor: "divider", flexShrink: 0, width: 160, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
-					<Tabs
-						orientation="vertical"
-						value={section}
-						onChange={(_, v) => setSection(v)}
+				{/* Vertical tabs on left — 2 grupos: config (gestión del pipeline) y data (resultados) */}
+				<Box sx={{ borderRight: 1, borderColor: "divider", flexShrink: 0, width: 170 }}>
+					{/* Grupo 1: Operativa del pipeline */}
+					<Typography
+						variant="overline"
 						sx={{
-							"& .MuiTab-root": {
-								alignItems: "flex-start",
-								textAlign: "left",
-								minHeight: 48,
-								pl: 2,
-								textTransform: "none",
-								fontSize: "0.875rem",
-								fontWeight: 500,
-							},
+							display: "block",
+							px: 2,
+							pt: 1.5,
+							pb: 0.5,
+							color: "text.secondary",
+							fontSize: "0.65rem",
+							fontWeight: 700,
+							letterSpacing: "0.08em",
 						}}
 					>
-						{SECTIONS.map((s, i) => (
-							<Tab
-								key={i}
-								label={
-									<Stack direction="row" spacing={1} alignItems="center">
-										<Box sx={{ color: theme.palette.primary.main, display: "flex", flexShrink: 0 }}>{s.icon}</Box>
-										<span>{s.label}</span>
-									</Stack>
-								}
-							/>
-						))}
-					</Tabs>
+						Configuración
+					</Typography>
+					<Box sx={{ bgcolor: alpha(theme.palette.primary.main, 0.03) }}>
+						<Tabs
+							orientation="vertical"
+							value={SECTIONS[section]?.group === "config" ? section : false}
+							onChange={(_, v) => setSection(v)}
+							sx={{
+								"& .MuiTab-root": {
+									alignItems: "flex-start",
+									textAlign: "left",
+									minHeight: 44,
+									pl: 2,
+									textTransform: "none",
+									fontSize: "0.875rem",
+									fontWeight: 500,
+								},
+							}}
+						>
+							{SECTIONS.map((s, i) =>
+								s.group === "config" ? (
+									<Tab
+										key={i}
+										value={i}
+										label={
+											<Stack direction="row" spacing={1} alignItems="center">
+												<Box sx={{ color: theme.palette.primary.main, display: "flex", flexShrink: 0 }}>{s.icon}</Box>
+												<span>{s.label}</span>
+											</Stack>
+										}
+									/>
+								) : null,
+							)}
+						</Tabs>
+					</Box>
+
+					{/* Divider entre grupos */}
+					<Divider sx={{ my: 1 }} />
+
+					{/* Grupo 2: Resultados / datos del pipeline */}
+					<Typography
+						variant="overline"
+						sx={{
+							display: "block",
+							px: 2,
+							pt: 0.5,
+							pb: 0.5,
+							color: "text.secondary",
+							fontSize: "0.65rem",
+							fontWeight: 700,
+							letterSpacing: "0.08em",
+						}}
+					>
+						Datos
+					</Typography>
+					<Box sx={{ bgcolor: alpha(theme.palette.success.main, 0.04) }}>
+						<Tabs
+							orientation="vertical"
+							value={SECTIONS[section]?.group === "data" ? section : false}
+							onChange={(_, v) => setSection(v)}
+							sx={{
+								"& .MuiTab-root": {
+									alignItems: "flex-start",
+									textAlign: "left",
+									minHeight: 44,
+									pl: 2,
+									textTransform: "none",
+									fontSize: "0.875rem",
+									fontWeight: 500,
+								},
+								"& .MuiTabs-indicator": { bgcolor: theme.palette.success.main },
+							}}
+						>
+							{SECTIONS.map((s, i) =>
+								s.group === "data" ? (
+									<Tab
+										key={i}
+										value={i}
+										label={
+											<Stack direction="row" spacing={1} alignItems="center">
+												<Box sx={{ color: theme.palette.success.main, display: "flex", flexShrink: 0 }}>{s.icon}</Box>
+												<span>{s.label}</span>
+											</Stack>
+										}
+									/>
+								) : null,
+							)}
+						</Tabs>
+					</Box>
 				</Box>
 
-				{/* Content on right */}
+				{/* Content on right — orden debe matchear SECTIONS arriba */}
 				<Box sx={{ flex: 1, minWidth: 0, pl: 3, pt: 1 }}>
+					{/* Grupo CONFIG */}
 					<TabPanel value={section} index={0}>
 						<EstadoSection stats={stats} loading={loading} onRefresh={loadStats} onRetry={handleRetry} />
 					</TabPanel>
 					<TabPanel value={section} index={1}>
-						<OcrSection stats={stats} loading={loading} onRefresh={loadStats} onRetryOcr={handleRetryOcr} />
-					</TabPanel>
-					<TabPanel value={section} index={2}>
-						<EmbeddingsSection stats={stats} loading={loading} onRefresh={loadStats} onRetryEmbedding={handleRetryEmbedding} />
-					</TabPanel>
-					<TabPanel value={section} index={3}>
-						<NoveltySection stats={stats} loading={loading} onRefresh={loadStats} />
-					</TabPanel>
-					<TabPanel value={section} index={4}>
-						<PublicacionesSection />
-					</TabPanel>
-					<TabPanel value={section} index={5}>
 						<CollectorSection />
 					</TabPanel>
-					<TabPanel value={section} index={6}>
+					<TabPanel value={section} index={2}>
+						<OcrSection stats={stats} loading={loading} onRefresh={loadStats} onRetryOcr={handleRetryOcr} />
+					</TabPanel>
+					<TabPanel value={section} index={3}>
+						<EmbeddingsSection stats={stats} loading={loading} onRefresh={loadStats} onRetryEmbedding={handleRetryEmbedding} />
+					</TabPanel>
+					{/* Grupo DATA */}
+					<TabPanel value={section} index={4}>
 						<ListaSection />
+					</TabPanel>
+					<TabPanel value={section} index={5}>
+						<PublicacionesSection />
+					</TabPanel>
+					<TabPanel value={section} index={6}>
+						<NoveltySection stats={stats} loading={loading} onRefresh={loadStats} />
 					</TabPanel>
 				</Box>
 			</Stack>
