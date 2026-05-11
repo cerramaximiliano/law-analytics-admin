@@ -12,6 +12,7 @@ import {
 	Divider,
 	Grid,
 	IconButton,
+	InputAdornment,
 	LinearProgress,
 	MenuItem,
 	Pagination,
@@ -33,8 +34,10 @@ import {
 	CloseCircle,
 	Data,
 	DocumentText,
+	InfoCircle,
 	Refresh,
 	Scanner,
+	SearchNormal1,
 	Setting3,
 	TickCircle,
 	Warning2,
@@ -350,8 +353,9 @@ function DetailDialog({ doc, open, onClose }: { doc: SentenciaCapturada | null; 
 											Texto extraído
 										</Typography>
 										<Box
-											sx={{
-												bgcolor: "grey.50",
+											sx={(theme) => ({
+												bgcolor: theme.palette.mode === "dark" ? alpha(theme.palette.grey[900], 0.5) : "grey.50",
+												color: "text.primary",
 												borderRadius: 1,
 												p: 1.5,
 												maxHeight: 300,
@@ -361,7 +365,7 @@ function DetailDialog({ doc, open, onClose }: { doc: SentenciaCapturada | null; 
 												whiteSpace: "pre-wrap",
 												border: "1px solid",
 												borderColor: "divider",
-											}}
+											})}
 										>
 											{data.processingResult.text}
 										</Box>
@@ -383,8 +387,9 @@ function DetailDialog({ doc, open, onClose }: { doc: SentenciaCapturada | null; 
 										)}
 									</Stack>
 									<Box
-										sx={{
-											bgcolor: "grey.50",
+										sx={(theme) => ({
+											bgcolor: theme.palette.mode === "dark" ? alpha(theme.palette.grey[900], 0.5) : "grey.50",
+											color: "text.primary",
 											borderRadius: 1,
 											p: 1.5,
 											maxHeight: 200,
@@ -394,7 +399,7 @@ function DetailDialog({ doc, open, onClose }: { doc: SentenciaCapturada | null; 
 											whiteSpace: "pre-wrap",
 											border: "1px solid",
 											borderColor: "info.light",
-										}}
+										})}
 									>
 										{data.ocrResult.text}
 									</Box>
@@ -1575,7 +1580,8 @@ function EmbeddingsSection({
 }
 
 // ── Lista Section ─────────────────────────────────────────────────────────────
-const LISTA_LIMIT = 10;
+const LISTA_LIMIT = 12;
+type SortByOpt = "detectedAt" | "processedAt" | "movimientoFecha" | "embeddedAt" | "publishedAt";
 
 function ListaSection() {
 	const [docs, setDocs] = useState<SentenciaCapturada[]>([]);
@@ -1584,12 +1590,31 @@ function ListaSection() {
 	const [loading, setLoading] = useState(false);
 	const [selectedDoc, setSelectedDoc] = useState<SentenciaCapturada | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const [categoryFilter, setCategoryFilter] = useState<Category | "all">("all");
 
-	const load = async (p = page, cat = categoryFilter) => {
+	// Filtros
+	const [categoryFilter, setCategoryFilter] = useState<Category | "all">("all");
+	const [fueroFilter, setFueroFilter] = useState<Fuero | "all">("all");
+	const [tipoFilter, setTipoFilter] = useState<SentenciaTipo | "all">("all");
+	const [noveltyFilter, setNoveltyFilter] = useState<NoveltyCheckStatus | "all">("all");
+	const [sortBy, setSortBy] = useState<SortByOpt>("detectedAt");
+	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+	const [searchInput, setSearchInput] = useState("");
+	const [search, setSearch] = useState("");
+
+	const load = async (p: number) => {
 		setLoading(true);
 		try {
-			const res = await SentenciasService.findAll({ page: p, limit: LISTA_LIMIT, category: cat === "all" ? undefined : cat });
+			const res = await SentenciasService.findAll({
+				page: p,
+				limit: LISTA_LIMIT,
+				category: categoryFilter === "all" ? undefined : categoryFilter,
+				fuero: fueroFilter === "all" ? undefined : fueroFilter,
+				tipo: tipoFilter === "all" ? undefined : tipoFilter,
+				noveltyStatus: noveltyFilter === "all" ? undefined : noveltyFilter,
+				search: search || undefined,
+				sortBy,
+				sortOrder,
+			});
 			setDocs(res.data);
 			setTotal(res.total);
 		} finally {
@@ -1597,40 +1622,82 @@ function ListaSection() {
 		}
 	};
 
+	// Reset a página 1 al cambiar cualquier filtro/orden
 	useEffect(() => {
-		load(1, categoryFilter);
 		setPage(1);
-	}, [categoryFilter]);
+		load(1);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [categoryFilter, fueroFilter, tipoFilter, noveltyFilter, sortBy, sortOrder, search]);
+
 	useEffect(() => {
-		load(page, categoryFilter);
+		load(page);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [page]);
 
 	const handleDetail = (doc: SentenciaCapturada) => {
 		setSelectedDoc(doc);
 		setDialogOpen(true);
 	};
+	const handleSearch = () => setSearch(searchInput.trim());
+	const handleResetFilters = () => {
+		setCategoryFilter("all");
+		setFueroFilter("all");
+		setTipoFilter("all");
+		setNoveltyFilter("all");
+		setSortBy("detectedAt");
+		setSortOrder("desc");
+		setSearch("");
+		setSearchInput("");
+	};
+
 	const totalPages = Math.ceil(total / LISTA_LIMIT);
+	const activeFiltersCount =
+		(categoryFilter !== "all" ? 1 : 0) +
+		(fueroFilter !== "all" ? 1 : 0) +
+		(tipoFilter !== "all" ? 1 : 0) +
+		(noveltyFilter !== "all" ? 1 : 0) +
+		(search ? 1 : 0);
 
 	return (
 		<Stack spacing={2}>
+			{/* Header */}
 			<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
-				<Typography variant="h6">Sentencias ({fmtNum(total)})</Typography>
 				<Stack direction="row" spacing={1} alignItems="center">
-					{(
-						[
-							["all", "Todas"],
-							["novelty", "Novelty"],
-							["rutina", "Rutina"],
-						] as [Category | "all", string][]
-					).map(([val, label]) => (
+					<Typography variant="h6">Sentencias ({fmtNum(total)})</Typography>
+					{activeFiltersCount > 0 && (
+						<Chip
+							label={`${activeFiltersCount} filtro${activeFiltersCount > 1 ? "s" : ""} activo${activeFiltersCount > 1 ? "s" : ""}`}
+							size="small"
+							color="info"
+							variant="outlined"
+							onDelete={handleResetFilters}
+						/>
+					)}
+				</Stack>
+				<Button startIcon={<Refresh size={16} />} size="small" onClick={() => load(page)} disabled={loading}>
+					Actualizar
+				</Button>
+			</Stack>
+
+			{/* Chips de Category */}
+			<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+				{(
+					[
+						["all", "Todas"],
+						["novelty", "Novelty"],
+						["rutina", "Rutina"],
+					] as [Category | "all", string][]
+				).map(([val, label]) => {
+					const isActive = categoryFilter === val;
+					const chip = (
 						<Chip
 							key={val}
 							label={label}
 							size="small"
 							onClick={() => setCategoryFilter(val)}
-							variant={categoryFilter === val ? "filled" : "outlined"}
+							variant={isActive ? "filled" : "outlined"}
 							sx={
-								categoryFilter === val && val !== "all"
+								isActive && val !== "all"
 									? {
 											bgcolor: CATEGORY_COLOR[val as Category],
 											color: "white",
@@ -1639,30 +1706,145 @@ function ListaSection() {
 									  }
 									: {}
 							}
-							color={categoryFilter === val && val === "all" ? "primary" : "default"}
+							color={isActive && val === "all" ? "primary" : "default"}
 						/>
-					))}
-					<Button startIcon={<Refresh size={16} />} size="small" onClick={() => load(page, categoryFilter)} disabled={loading}>
-						Actualizar
-					</Button>
-				</Stack>
+					);
+					if (val === "novelty") {
+						return (
+							<Stack direction="row" spacing={0.5} alignItems="center" key={val}>
+								{chip}
+								<Tooltip
+									arrow
+									title={
+										<Box sx={{ maxWidth: 320 }}>
+											<Typography variant="caption" sx={{ display: "block", fontWeight: 600, mb: 0.5 }}>
+												¿Por qué Novelty y Publicaciones muestran cantidades distintas?
+											</Typography>
+											<Typography variant="caption" sx={{ display: "block", mb: 0.5 }}>
+												<strong>Novelty</strong> en esta Lista ={" "}
+												<code>category: &apos;novelty&apos;</code> (todas las sentencias detectadas como novedad, en
+												cualquier estado del pipeline: pendientes, OCR, error, procesadas...).
+											</Typography>
+											<Typography variant="caption" sx={{ display: "block" }}>
+												<strong>Publicaciones</strong> es un subconjunto: <code>novelty + embeddingStatus: completed + publicationStatus: pending</code>.
+												Es decir, solo las que llegaron al final del pipeline y están listas para publicar.
+											</Typography>
+										</Box>
+									}
+								>
+									<InfoCircle size={14} style={{ opacity: 0.55, cursor: "help" }} />
+								</Tooltip>
+							</Stack>
+						);
+					}
+					return chip;
+				})}
 			</Stack>
 
+			{/* Toolbar de filtros */}
+			<Paper variant="outlined" sx={{ p: 1.5 }}>
+				<Grid container spacing={1.5} alignItems="center">
+					<Grid item xs={12} sm={6} md={3}>
+						<TextField
+							fullWidth
+							size="small"
+							placeholder="Buscar por carátula o número..."
+							value={searchInput}
+							onChange={(e) => setSearchInput(e.target.value)}
+							onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+							InputProps={{
+								startAdornment: (
+									<InputAdornment position="start">
+										<SearchNormal1 size={14} />
+									</InputAdornment>
+								),
+								endAdornment: search && (
+									<IconButton size="small" onClick={() => { setSearch(""); setSearchInput(""); }}>
+										<CloseCircle size={14} />
+									</IconButton>
+								),
+							}}
+						/>
+					</Grid>
+					<Grid item xs={6} sm={3} md={2}>
+						<TextField select fullWidth size="small" label="Fuero" value={fueroFilter} onChange={(e) => setFueroFilter(e.target.value as any)}>
+							<MenuItem value="all">Todos</MenuItem>
+							{(Object.keys(FUERO_LABELS) as Fuero[]).map((f) => (
+								<MenuItem key={f} value={f}>{FUERO_LABELS[f]}</MenuItem>
+							))}
+						</TextField>
+					</Grid>
+					<Grid item xs={6} sm={3} md={2}>
+						<TextField select fullWidth size="small" label="Tipo" value={tipoFilter} onChange={(e) => setTipoFilter(e.target.value as any)}>
+							<MenuItem value="all">Todos</MenuItem>
+							{(Object.keys(TIPO_LABELS) as SentenciaTipo[]).map((t) => (
+								<MenuItem key={t} value={t}>{TIPO_LABELS[t]}</MenuItem>
+							))}
+						</TextField>
+					</Grid>
+					<Grid item xs={6} sm={3} md={2}>
+						<TextField
+							select
+							fullWidth
+							size="small"
+							label="Novelty status"
+							value={noveltyFilter}
+							onChange={(e) => setNoveltyFilter(e.target.value as any)}
+						>
+							<MenuItem value="all">Todos</MenuItem>
+							{(Object.keys(NOVELTY_CHECK_LABEL) as NoveltyCheckStatus[]).map((s) => (
+								<MenuItem key={s} value={s}>{NOVELTY_CHECK_LABEL[s]}</MenuItem>
+							))}
+						</TextField>
+					</Grid>
+					<Grid item xs={6} sm={3} md={2}>
+						<TextField select fullWidth size="small" label="Ordenar por" value={sortBy} onChange={(e) => setSortBy(e.target.value as SortByOpt)}>
+							<MenuItem value="detectedAt">Detección</MenuItem>
+							<MenuItem value="processedAt">Procesado</MenuItem>
+							<MenuItem value="movimientoFecha">Fecha movimiento</MenuItem>
+							<MenuItem value="embeddedAt">Embeddings</MenuItem>
+							<MenuItem value="publishedAt">Publicación</MenuItem>
+						</TextField>
+					</Grid>
+					<Grid item xs={6} sm={3} md={1}>
+						<TextField
+							select
+							fullWidth
+							size="small"
+							label="Orden"
+							value={sortOrder}
+							onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+						>
+							<MenuItem value="desc">↓ Desc</MenuItem>
+							<MenuItem value="asc">↑ Asc</MenuItem>
+						</TextField>
+					</Grid>
+				</Grid>
+			</Paper>
+
+			{/* Grid de cards */}
 			{loading ? (
-				<Stack spacing={1}>
+				<Grid container spacing={2}>
 					{[...Array(LISTA_LIMIT)].map((_, i) => (
-						<Skeleton key={i} height={60} variant="rounded" />
+						<Grid item xs={12} md={6} key={i}>
+							<Skeleton height={170} variant="rounded" />
+						</Grid>
 					))}
-				</Stack>
-			) : (
-				<Paper variant="outlined" sx={{ p: 1 }}>
-					{docs.map((doc, i) => (
-						<Box key={doc._id}>
-							{i > 0 && <Divider sx={{ my: 0.5 }} />}
-							<SentenciaRow doc={doc} onDetail={handleDetail} />
-						</Box>
-					))}
+				</Grid>
+			) : docs.length === 0 ? (
+				<Paper variant="outlined" sx={{ p: 4, textAlign: "center" }}>
+					<Typography variant="body2" color="text.secondary">
+						No hay sentencias que coincidan con los filtros.
+					</Typography>
 				</Paper>
+			) : (
+				<Grid container spacing={2}>
+					{docs.map((doc) => (
+						<Grid item xs={12} md={6} key={doc._id}>
+							<SentenciaCard doc={doc} onDetail={handleDetail} />
+						</Grid>
+					))}
+				</Grid>
 			)}
 
 			{totalPages > 1 && (
@@ -1681,6 +1863,186 @@ function ListaSection() {
 
 			<DetailDialog doc={selectedDoc} open={dialogOpen} onClose={() => setDialogOpen(false)} />
 		</Stack>
+	);
+}
+
+// ── SentenciaCard ─────────────────────────────────────────────────────────────
+// Card más rica que SentenciaRow — destaca movimientoFecha, novelty status,
+// embeddings y stats. Usada en ListaSection (grid 2 cols desktop).
+interface SentenciaCardProps {
+	doc: SentenciaCapturada;
+	onDetail: (doc: SentenciaCapturada) => void;
+}
+function SentenciaCard({ doc, onDetail }: SentenciaCardProps) {
+	const color = TIPO_COLORS[doc.sentenciaTipo] || "#616161";
+	const novelty = doc.noveltyCheck?.status;
+	return (
+		<Paper
+			variant="outlined"
+			sx={{
+				p: 1.5,
+				borderLeft: `4px solid ${color}`,
+				borderRadius: 1.5,
+				transition: "box-shadow 0.15s",
+				"&:hover": { boxShadow: 2, cursor: "pointer" },
+				height: "100%",
+				display: "flex",
+				flexDirection: "column",
+			}}
+			onClick={() => onDetail(doc)}
+		>
+			{/* Header: expediente + tipo + categoría */}
+			<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap mb={1}>
+				<Typography variant="body2" fontWeight={700}>
+					{doc.number}/{doc.year}
+				</Typography>
+				<Chip label={doc.fuero} size="small" variant="outlined" sx={{ height: 18, fontSize: 10 }} />
+				<Chip
+					label={TIPO_LABELS[doc.sentenciaTipo]}
+					size="small"
+					sx={{ bgcolor: alpha(color, 0.12), color, fontWeight: 600, fontSize: 10, height: 18 }}
+				/>
+				{doc.category && (
+					<Chip
+						label={CATEGORY_LABEL[doc.category]}
+						size="small"
+						sx={{
+							bgcolor: alpha(CATEGORY_COLOR[doc.category], 0.12),
+							color: CATEGORY_COLOR[doc.category],
+							fontWeight: 600,
+							fontSize: 10,
+							height: 18,
+						}}
+					/>
+				)}
+				<Box sx={{ flex: 1 }} />
+				<Chip
+					label={doc.processingStatus}
+					size="small"
+					color={STATUS_COLOR[doc.processingStatus] || "default"}
+					variant="outlined"
+					sx={{ fontSize: 10, height: 18 }}
+				/>
+			</Stack>
+
+			{/* Carátula */}
+			<Typography variant="body2" sx={{ mb: 0.5, fontWeight: 500, lineHeight: 1.35 }}>
+				{doc.caratula || (
+					<Box component="span" sx={{ fontStyle: "italic", color: "text.disabled" }}>
+						Sin carátula
+					</Box>
+				)}
+			</Typography>
+
+			{/* Stats grid: fecha movimiento + tipo movimiento + juzgado */}
+			<Grid container spacing={1} sx={{ mt: 0.5, mb: 1 }}>
+				<Grid item xs={6}>
+					<Typography variant="caption" color="text.secondary" sx={{ display: "block", lineHeight: 1.2 }}>
+						Fecha movimiento
+					</Typography>
+					<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 600 }}>
+						{doc.movimientoFecha ? fmtDate(doc.movimientoFecha) : "—"}
+					</Typography>
+				</Grid>
+				<Grid item xs={6}>
+					<Typography variant="caption" color="text.secondary" sx={{ display: "block", lineHeight: 1.2 }}>
+						Detectada
+					</Typography>
+					<Tooltip title={fmtDate(doc.detectedAt)}>
+						<Typography variant="caption" sx={{ fontWeight: 600 }}>
+							{timeAgo(doc.detectedAt)}
+						</Typography>
+					</Tooltip>
+				</Grid>
+				{doc.movimientoTipo && (
+					<Grid item xs={6}>
+						<Typography variant="caption" color="text.secondary" sx={{ display: "block", lineHeight: 1.2 }}>
+							Tipo movimiento
+						</Typography>
+						<Typography variant="caption">{doc.movimientoTipo}</Typography>
+					</Grid>
+				)}
+				{doc.juzgado != null && (
+					<Grid item xs={6}>
+						<Typography variant="caption" color="text.secondary" sx={{ display: "block", lineHeight: 1.2 }}>
+							Juzgado
+						</Typography>
+						<Typography variant="caption">
+							Juzg. {doc.juzgado}
+							{doc.secretaria != null ? ` · Sec. ${doc.secretaria}` : ""}
+						</Typography>
+					</Grid>
+				)}
+			</Grid>
+
+			{/* Footer: pipeline status (OCR, embeddings, novelty, publicación) */}
+			<Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mt: "auto", pt: 1, borderTop: "1px solid", borderColor: "divider" }}>
+				{doc.ocrStatus && doc.ocrStatus !== "not_needed" && (
+					<Tooltip title={`OCR: ${OCR_STATUS_LABEL[doc.ocrStatus]}`}>
+						<Chip
+							icon={<Scanner size={12} />}
+							label={OCR_STATUS_LABEL[doc.ocrStatus]}
+							size="small"
+							color={OCR_STATUS_COLOR[doc.ocrStatus]}
+							sx={{ height: 18, fontSize: 10 }}
+						/>
+					</Tooltip>
+				)}
+				{doc.embeddingStatus && doc.embeddingStatus !== "skipped" && (
+					<Tooltip title={`Embeddings: ${doc.embeddingStatus}`}>
+						<Chip
+							label={`emb: ${doc.embeddingStatus}`}
+							size="small"
+							color={doc.embeddingStatus === "completed" ? "success" : doc.embeddingStatus === "error" ? "error" : "default"}
+							variant="outlined"
+							sx={{ height: 18, fontSize: 10 }}
+						/>
+					</Tooltip>
+				)}
+				{novelty && (
+					<Tooltip title={`Novelty L2: ${NOVELTY_CHECK_LABEL[novelty]}`}>
+						<Chip
+							label={NOVELTY_CHECK_LABEL[novelty]}
+							size="small"
+							color={NOVELTY_CHECK_COLOR[novelty]}
+							variant="outlined"
+							sx={{ height: 18, fontSize: 10 }}
+						/>
+					</Tooltip>
+				)}
+				{doc.publicationStatus && doc.publicationStatus !== "pending" && (
+					<Chip
+						label={`pub: ${doc.publicationStatus}`}
+						size="small"
+						color={doc.publicationStatus === "published" ? "success" : "default"}
+						variant="outlined"
+						sx={{ height: 18, fontSize: 10 }}
+					/>
+				)}
+				{doc.processingResult?.charCount && (
+					<Tooltip title={`${doc.processingResult.pageCount} pág · ${doc.processingResult.method}`}>
+						<Chip
+							label={`${fmtNum(doc.processingResult.charCount)} chars`}
+							size="small"
+							variant="outlined"
+							sx={{ height: 18, fontSize: 10 }}
+						/>
+					</Tooltip>
+				)}
+				<Box sx={{ flex: 1 }} />
+				<Tooltip title="Ver detalle">
+					<IconButton size="small" onClick={(e) => { e.stopPropagation(); onDetail(doc); }}>
+						<DocumentText size={14} />
+					</IconButton>
+				</Tooltip>
+			</Stack>
+
+			{doc.processingError && (
+				<Alert severity="error" sx={{ mt: 0.5, py: 0.25, fontSize: 10, "& .MuiAlert-message": { py: 0 } }}>
+					{doc.processingError.slice(0, 100)}
+				</Alert>
+			)}
+		</Paper>
 	);
 }
 

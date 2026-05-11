@@ -130,6 +130,10 @@ const SentenciasService = {
 		fuero?: Fuero;
 		tipo?: SentenciaTipo;
 		category?: Category;
+		noveltyStatus?: NoveltyCheckStatus;
+		search?: string;
+		sortBy?: "detectedAt" | "processedAt" | "movimientoFecha" | "embeddedAt" | "publishedAt";
+		sortOrder?: "asc" | "desc";
 		page?: number;
 		limit?: number;
 	}): Promise<{ data: SentenciaCapturada[]; total: number }> {
