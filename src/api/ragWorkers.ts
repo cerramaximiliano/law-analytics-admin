@@ -611,6 +611,36 @@ export interface SentenciasManagerRuntimeStatus {
 	controls: Record<string, { processes: Record<string, SentenciasManagerProcessStatus> }>;
 }
 
+// ─── Pinecone usage stats ─────────────────────────────────────────────────────
+
+export interface PineconeUsageBucket {
+	queries: number;
+	upsertCalls: number;
+	vectorsUpserted: number;
+}
+
+export interface PineconeUsageBucketWithTime extends PineconeUsageBucket {
+	bucket: string;
+}
+
+export interface PineconeIndexStats {
+	totalRecordCount: number | null;
+	dimension: number | null;
+	namespaces: Record<string, { recordCount?: number; vectorCount?: number }> | null;
+	indexFullness: number | null;
+}
+
+export interface PineconeStats {
+	totals: PineconeUsageBucket;
+	last24h: PineconeUsageBucket;
+	last7d: PineconeUsageBucket;
+	last30d: PineconeUsageBucket;
+	hourly: PineconeUsageBucketWithTime[];
+	daily: PineconeUsageBucketWithTime[];
+	indexStats: PineconeIndexStats | null;
+	lastUpdated: string | null;
+}
+
 // ─── Style Corpus types ───────────────────────────────────────────────────────
 
 export interface StyleCorpusExample {
@@ -925,6 +955,12 @@ class RagWorkersService {
 	 *  sentencias-manager cada 60s en pipeline-config.sentenciasManager.runtimeStatus. */
 	static async getSentenciasWorkerRuntimeStatus(): Promise<SentenciasManagerRuntimeStatus | null> {
 		const res = await ragAxios.get(`${BASE}/sentencias-worker/runtime-status`);
+		return res.data.data;
+	}
+
+	/** Consumo Pinecone: totales + agregados (24h, 7d, 30d) + describeIndexStats. */
+	static async getSentenciasPineconeStats(): Promise<PineconeStats> {
+		const res = await ragAxios.get(`${BASE}/sentencias-worker/pinecone-stats`);
 		return res.data.data;
 	}
 

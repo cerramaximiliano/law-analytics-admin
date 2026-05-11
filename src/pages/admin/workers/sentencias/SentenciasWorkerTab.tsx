@@ -53,7 +53,7 @@ import SentenciasService, {
 } from "api/sentenciasCapturadas";
 import CollectorService, { CollectorConfig, FueroConfig } from "api/sentenciasCollector";
 import SemanticWorkerService, { SemanticWorkerConfig } from "api/semanticWorker";
-import RagWorkersService from "api/ragWorkers";
+import RagWorkersService, { PineconeStats } from "api/ragWorkers";
 import WorkerControlPanel from "components/WorkerControlPanel";
 import PublicacionesSection from "./PublicacionesSection";
 
@@ -2039,6 +2039,9 @@ export default function SentenciasWorkerTab() {
 		"sentencias-retry": null,
 	});
 	const [togglingPipelineWorker, setTogglingPipelineWorker] = useState<Record<string, boolean>>({});
+	// Pinecone usage stats (cargado bajo demanda y refrescable)
+	const [pineconeStats, setPineconeStats] = useState<PineconeStats | null>(null);
+	const [pineconeStatsLoading, setPineconeStatsLoading] = useState(false);
 	const [togglingSemantic, setTogglingSemantic] = useState(false);
 
 	const loadStats = async () => {
@@ -2132,9 +2135,21 @@ export default function SentenciasWorkerTab() {
 		}
 	};
 
+	const loadPineconeStats = async () => {
+		setPineconeStatsLoading(true);
+		try {
+			setPineconeStats(await RagWorkersService.getSentenciasPineconeStats());
+		} catch {
+			/* silently ignore */
+		} finally {
+			setPineconeStatsLoading(false);
+		}
+	};
+
 	useEffect(() => {
 		loadStats();
 		loadControlStates();
+		loadPineconeStats();
 	}, []);
 
 	const handleRetry = async (id: string) => {
@@ -2244,6 +2259,127 @@ export default function SentenciasWorkerTab() {
 					]}
 				/>
 			</Box>
+
+			{/* ── Consumo Pinecone (queries, upserts, vectors, index size) ── */}
+			<Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+				<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1.5}>
+					<Box>
+						<Typography variant="subtitle2" fontWeight={600}>
+							Consumo Pinecone
+						</Typography>
+						<Typography variant="caption" color="text.secondary">
+							{pineconeStats?.lastUpdated
+								? `Última actualización: ${new Date(pineconeStats.lastUpdated).toLocaleString("es-AR")}`
+								: "Sin datos aún"}
+						</Typography>
+					</Box>
+					<Button size="small" onClick={loadPineconeStats} disabled={pineconeStatsLoading} sx={{ textTransform: "none" }}>
+						{pineconeStatsLoading ? "Cargando..." : "Refrescar"}
+					</Button>
+				</Stack>
+
+				{(() => {
+					const fmt = (n: number) => n.toLocaleString("es-AR");
+					const cells: { label: string; data?: { queries: number; upsertCalls: number; vectorsUpserted: number } }[] = [
+						{ label: "All-time", data: pineconeStats?.totals },
+						{ label: "Últimas 24h", data: pineconeStats?.last24h },
+						{ label: "Últimos 7d", data: pineconeStats?.last7d },
+						{ label: "Últimos 30d", data: pineconeStats?.last30d },
+					];
+					return (
+						<Stack
+							direction={{ xs: "column", sm: "row" }}
+							spacing={1.5}
+							divider={<Divider orientation="vertical" flexItem sx={{ display: { xs: "none", sm: "block" } }} />}
+						>
+							{cells.map((c) => (
+								<Box key={c.label} flex={1}>
+									<Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+										{c.label}
+									</Typography>
+									<Stack direction="row" spacing={2}>
+										<Box>
+											<Typography variant="caption" color="text.secondary" display="block">
+												Queries
+											</Typography>
+											<Typography variant="body2" fontWeight={600}>
+												{c.data ? fmt(c.data.queries) : "—"}
+											</Typography>
+										</Box>
+										<Box>
+											<Typography variant="caption" color="text.secondary" display="block">
+												Upserts
+											</Typography>
+											<Typography variant="body2" fontWeight={600}>
+												{c.data ? fmt(c.data.upsertCalls) : "—"}
+											</Typography>
+										</Box>
+										<Box>
+											<Typography variant="caption" color="text.secondary" display="block">
+												Vectors
+											</Typography>
+											<Typography variant="body2" fontWeight={600}>
+												{c.data ? fmt(c.data.vectorsUpserted) : "—"}
+											</Typography>
+										</Box>
+									</Stack>
+								</Box>
+							))}
+						</Stack>
+					);
+				})()}
+
+				{pineconeStats?.indexStats && (
+					<>
+						<Divider sx={{ my: 1.5 }} />
+						<Stack direction={{ xs: "column", sm: "row" }} spacing={3} alignItems={{ sm: "center" }}>
+							<Box>
+								<Typography variant="caption" color="text.secondary" display="block">
+									Tamaño índice (records)
+								</Typography>
+								<Typography variant="body2" fontWeight={600}>
+									{pineconeStats.indexStats.totalRecordCount != null
+										? pineconeStats.indexStats.totalRecordCount.toLocaleString("es-AR")
+										: "—"}
+								</Typography>
+							</Box>
+							<Box>
+								<Typography variant="caption" color="text.secondary" display="block">
+									Dimensión
+								</Typography>
+								<Typography variant="body2" fontWeight={600}>
+									{pineconeStats.indexStats.dimension ?? "—"}
+								</Typography>
+							</Box>
+							{pineconeStats.indexStats.indexFullness != null && (
+								<Box>
+									<Typography variant="caption" color="text.secondary" display="block">
+										Fullness
+									</Typography>
+									<Typography variant="body2" fontWeight={600}>
+										{(pineconeStats.indexStats.indexFullness * 100).toFixed(2)}%
+									</Typography>
+								</Box>
+							)}
+							{pineconeStats.indexStats.namespaces && Object.keys(pineconeStats.indexStats.namespaces).length > 0 && (
+								<Box flex={1} minWidth={0}>
+									<Typography variant="caption" color="text.secondary" display="block">
+										Namespaces
+									</Typography>
+									<Typography
+										variant="caption"
+										sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}
+									>
+										{Object.entries(pineconeStats.indexStats.namespaces)
+											.map(([n, v]) => `${n}: ${(v.recordCount ?? v.vectorCount ?? 0).toLocaleString("es-AR")}`)
+											.join(" · ")}
+									</Typography>
+								</Box>
+							)}
+						</Stack>
+					</>
+				)}
+			</Paper>
 
 			<Stack direction="row" sx={{ minHeight: 500 }}>
 				{/* Vertical tabs on left */}
