@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Box, Stack, Tab, Tabs, Typography, useTheme, alpha } from "@mui/material";
+import WorkerScopeAlert from "components/admin/WorkerScopeAlert";
 
 // ── Diagram primitives ────────────────────────────────────────────────────────
 
@@ -159,6 +160,9 @@ const OverviewSection: React.FC = () => {
 					existente para identificar planteos jurídicos inusuales.
 				</Typography>
 			</Box>
+
+			<WorkerScopeAlert variant="detailed" />
+
 
 			<Box>
 				<SectionTitle>Ficha de infraestructura</SectionTitle>

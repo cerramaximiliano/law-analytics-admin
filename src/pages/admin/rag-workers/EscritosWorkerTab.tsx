@@ -40,6 +40,7 @@ import { Refresh, TickCircle, CloseCircle, SearchNormal1, Setting2, DocumentText
 import { useSnackbar } from "notistack";
 import RagWorkersService, { EscritosWorkerConfig, EscritosWorkerStats, GlobalDocumentEntry, EscritosSearchResult } from "api/ragWorkers";
 import WorkerControlPanel from "components/WorkerControlPanel";
+import WorkerScopeAlert from "components/admin/WorkerScopeAlert";
 
 // ── Constantes ───────────────────────────────────────────────────────────────
 
@@ -154,6 +155,8 @@ function ConfigGeneral({
 					}
 				/>
 			</Box>
+
+			<WorkerScopeAlert variant="compact" scope="enabled" />
 
 			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
 				<TextField
@@ -290,6 +293,8 @@ function ConfigNovelty({
 					}
 				/>
 			</Box>
+
+			<WorkerScopeAlert variant="compact" scope="novelty" />
 
 			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
 				<FormControl size="small" sx={{ flex: 1 }}>
