@@ -1304,10 +1304,20 @@ function EmbeddingsConfigCard() {
 						Configuración del ritmo (sentencias-embeddings-worker)
 					</Typography>
 					<Typography variant="caption" color="text.secondary">
-						Reducir frecuencia o batch size baja directamente el consumo Pinecone/OpenAI.
+						Pinecone factura por vector upserted y por match retornado, no por call.
 					</Typography>
 				</Box>
 			</Stack>
+
+			<Alert severity="info" variant="outlined" sx={{ mb: 2, py: 0.5 }}>
+				<Typography variant="caption" component="div">
+					<strong>Para reducir costos:</strong> espaciar <code>cronPattern</code> o bajar <code>batchSize</code> reduce
+					la cantidad de sentencias procesadas/hora → menos vectors upserted → menos $$.
+					<br />
+					<strong>Para tunning de performance:</strong> <code>embedBatchSize</code> sólo cambia el shape de los calls
+					a Pinecone (1×50 vs 5×10) — el total facturado es el mismo.
+				</Typography>
+			</Alert>
 
 			<Grid container spacing={2}>
 				<Grid item xs={12} sm={4}>
@@ -1318,7 +1328,7 @@ function EmbeddingsConfigCard() {
 						value={draft.cronPattern ?? ""}
 						onChange={(e) => setDraft((d) => ({ ...d, cronPattern: e.target.value }))}
 						disabled={saving || loading}
-						helperText="Frecuencia (ej. */5 * * * * = cada 5 min)"
+						helperText="Ej. */5 * * * * = cada 5 min · ↓ ritmo = ↓ costo"
 					/>
 				</Grid>
 				<Grid item xs={6} sm={4}>
@@ -1331,7 +1341,7 @@ function EmbeddingsConfigCard() {
 						onChange={(e) => setDraft((d) => ({ ...d, batchSize: parseInt(e.target.value) || 1 }))}
 						disabled={saving || loading}
 						inputProps={{ min: 1, max: 500 }}
-						helperText="Sentencias procesadas por ciclo"
+						helperText="Sentencias por ciclo · ↓ batch = ↓ costo"
 					/>
 				</Grid>
 				<Grid item xs={6} sm={4}>
@@ -1344,7 +1354,7 @@ function EmbeddingsConfigCard() {
 						onChange={(e) => setDraft((d) => ({ ...d, embedBatchSize: parseInt(e.target.value) || 1 }))}
 						disabled={saving || loading}
 						inputProps={{ min: 1, max: 200 }}
-						helperText="Vectors por llamada a Pinecone"
+						helperText="Vectors por call · NO afecta costo, sólo throughput"
 					/>
 				</Grid>
 			</Grid>

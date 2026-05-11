@@ -179,10 +179,20 @@ function EscritosRateConfigCard() {
 						Configuración del ritmo (escritos pipeline)
 					</Typography>
 					<Typography variant="caption" color="text.secondary">
-						Espaciar el cron o bajar concurrencia reduce el consumo Pinecone/OpenAI. Config completa en el tab Config.
+						Pinecone factura por vector upserted y por match retornado, no por call.
 					</Typography>
 				</Box>
 			</Stack>
+
+			<Alert severity="info" variant="outlined" sx={{ mb: 2, py: 0.5 }}>
+				<Typography variant="caption" component="div">
+					<strong>Para reducir costos:</strong> espaciar <code>scanCron</code> reduce cuántos PDFs se procesan/día →
+					menos vectors upserted → menos $$.
+					<br />
+					<strong>Para tunning de performance:</strong> <code>concurrency</code> sólo cambia cuántos workers procesan
+					en paralelo — el costo por PDF es el mismo (3 PDFs en serie facturan igual que 3 en paralelo).
+				</Typography>
+			</Alert>
 
 			<Grid container spacing={2}>
 				<Grid item xs={12} sm={6}>
@@ -193,7 +203,7 @@ function EscritosRateConfigCard() {
 						value={draft.scanCron ?? ""}
 						onChange={(e) => setDraft((d) => ({ ...d, scanCron: e.target.value }))}
 						disabled={saving || loading}
-						helperText="Frecuencia (ej. 0 */6 * * * = cada 6h)"
+						helperText="Ej. 0 */6 * * * = cada 6h · ↓ ritmo = ↓ costo"
 					/>
 				</Grid>
 				<Grid item xs={12} sm={6}>
@@ -206,7 +216,7 @@ function EscritosRateConfigCard() {
 						onChange={(e) => setDraft((d) => ({ ...d, concurrency: parseInt(e.target.value, 10) || 1 }))}
 						disabled={saving || loading}
 						inputProps={{ min: 1, max: 20 }}
-						helperText="Workers simultáneos de extracción"
+						helperText="Workers simultáneos · NO afecta costo, sólo throughput"
 					/>
 				</Grid>
 			</Grid>
