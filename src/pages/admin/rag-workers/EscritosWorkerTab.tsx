@@ -38,7 +38,7 @@ import {
 } from "@mui/material";
 import { Refresh, TickCircle, CloseCircle, SearchNormal1, Setting2, DocumentText, Chart, Lock1 } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import RagWorkersService, { EscritosWorkerConfig, EscritosWorkerStats, GlobalDocumentEntry, EscritosSearchResult } from "api/ragWorkers";
+import RagWorkersService, { EscritosWorkerConfig, EscritosWorkerStats, GlobalDocumentEntry, EscritosSearchResult, PineconeStats } from "api/ragWorkers";
 import WorkerControlPanel from "components/WorkerControlPanel";
 import WorkerScopeAlert from "components/admin/WorkerScopeAlert";
 
@@ -952,6 +952,20 @@ const EscritosWorkerTab: React.FC = () => {
 	const [noveltyEnabled, setNoveltyEnabled] = useState<boolean | null>(null);
 	const [togglingWorker, setTogglingWorker] = useState(false);
 	const [togglingNovelty, setTogglingNovelty] = useState(false);
+	// Pinecone usage stats
+	const [pineconeStats, setPineconeStats] = useState<PineconeStats | null>(null);
+	const [pineconeStatsLoading, setPineconeStatsLoading] = useState(false);
+
+	const loadPineconeStats = useCallback(async () => {
+		setPineconeStatsLoading(true);
+		try {
+			setPineconeStats(await RagWorkersService.getEscritosPineconeStats());
+		} catch {
+			/* silently ignore */
+		} finally {
+			setPineconeStatsLoading(false);
+		}
+	}, []);
 
 	useEffect(() => {
 		RagWorkersService.getEscritosWorkerConfig()
@@ -962,7 +976,8 @@ const EscritosWorkerTab: React.FC = () => {
 			.catch(() => {
 				/* silently ignore */
 			});
-	}, []);
+		loadPineconeStats();
+	}, [loadPineconeStats]);
 
 	const handleToggleWorker = async (val: boolean) => {
 		setTogglingWorker(true);
@@ -1027,6 +1042,134 @@ const EscritosWorkerTab: React.FC = () => {
 						},
 					]}
 				/>
+
+				{/* ── Consumo Pinecone (queries, upserts, fetches, index size) ── */}
+				<Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+					<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1.5}>
+						<Box>
+							<Typography variant="subtitle2" fontWeight={600}>
+								Consumo Pinecone
+							</Typography>
+							<Typography variant="caption" color="text.secondary">
+								{pineconeStats?.lastUpdated
+									? `Última actualización: ${new Date(pineconeStats.lastUpdated).toLocaleString("es-AR")}`
+									: "Sin datos aún"}
+							</Typography>
+						</Box>
+						<Button size="small" onClick={loadPineconeStats} disabled={pineconeStatsLoading} sx={{ textTransform: "none" }}>
+							{pineconeStatsLoading ? "Cargando..." : "Refrescar"}
+						</Button>
+					</Stack>
+
+					{(() => {
+						const fmt = (n: number) => n.toLocaleString("es-AR");
+						const empty = { queries: 0, upsertCalls: 0, vectorsUpserted: 0, fetches: 0, vectorsFetched: 0 };
+						const cells: { label: string; data: typeof empty }[] = [
+							{ label: "All-time", data: { ...empty, ...(pineconeStats?.totals || {}) } },
+							{ label: "Últimas 24h", data: { ...empty, ...(pineconeStats?.last24h || {}) } },
+							{ label: "Últimos 7d", data: { ...empty, ...(pineconeStats?.last7d || {}) } },
+							{ label: "Últimos 30d", data: { ...empty, ...(pineconeStats?.last30d || {}) } },
+						];
+						return (
+							<Stack
+								direction={{ xs: "column", sm: "row" }}
+								spacing={1.5}
+								divider={<Divider orientation="vertical" flexItem sx={{ display: { xs: "none", sm: "block" } }} />}
+							>
+								{cells.map((c) => (
+									<Box key={c.label} flex={1}>
+										<Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+											{c.label}
+										</Typography>
+										<Stack direction="row" spacing={2} flexWrap="wrap" rowGap={0.5}>
+											<Box>
+												<Typography variant="caption" color="text.secondary" display="block">
+													Queries
+												</Typography>
+												<Typography variant="body2" fontWeight={600}>
+													{pineconeStats ? fmt(c.data.queries) : "—"}
+												</Typography>
+											</Box>
+											<Box>
+												<Typography variant="caption" color="text.secondary" display="block">
+													Fetches
+												</Typography>
+												<Typography variant="body2" fontWeight={600}>
+													{pineconeStats ? fmt(c.data.fetches || 0) : "—"}
+												</Typography>
+											</Box>
+											<Box>
+												<Typography variant="caption" color="text.secondary" display="block">
+													Upserts
+												</Typography>
+												<Typography variant="body2" fontWeight={600}>
+													{pineconeStats ? fmt(c.data.upsertCalls) : "—"}
+												</Typography>
+											</Box>
+											<Box>
+												<Typography variant="caption" color="text.secondary" display="block">
+													Vectors
+												</Typography>
+												<Typography variant="body2" fontWeight={600}>
+													{pineconeStats ? fmt(c.data.vectorsUpserted) : "—"}
+												</Typography>
+											</Box>
+										</Stack>
+									</Box>
+								))}
+							</Stack>
+						);
+					})()}
+
+					{pineconeStats?.indexStats && (
+						<>
+							<Divider sx={{ my: 1.5 }} />
+							<Stack direction={{ xs: "column", sm: "row" }} spacing={3} alignItems={{ sm: "center" }}>
+								<Box>
+									<Typography variant="caption" color="text.secondary" display="block">
+										Tamaño índice (records)
+									</Typography>
+									<Typography variant="body2" fontWeight={600}>
+										{pineconeStats.indexStats.totalRecordCount != null
+											? pineconeStats.indexStats.totalRecordCount.toLocaleString("es-AR")
+											: "—"}
+									</Typography>
+								</Box>
+								<Box>
+									<Typography variant="caption" color="text.secondary" display="block">
+										Dimensión
+									</Typography>
+									<Typography variant="body2" fontWeight={600}>{pineconeStats.indexStats.dimension ?? "—"}</Typography>
+								</Box>
+								{pineconeStats.indexStats.indexFullness != null && (
+									<Box>
+										<Typography variant="caption" color="text.secondary" display="block">
+											Fullness
+										</Typography>
+										<Typography variant="body2" fontWeight={600}>
+											{(pineconeStats.indexStats.indexFullness * 100).toFixed(2)}%
+										</Typography>
+									</Box>
+								)}
+								{pineconeStats.indexStats.namespaces && Object.keys(pineconeStats.indexStats.namespaces).length > 0 && (
+									<Box flex={1} minWidth={0}>
+										<Typography variant="caption" color="text.secondary" display="block">
+											Namespaces
+										</Typography>
+										<Typography
+											variant="caption"
+											sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}
+										>
+											{Object.entries(pineconeStats.indexStats.namespaces)
+												.map(([n, v]) => `${n}: ${(v.recordCount ?? v.vectorCount ?? 0).toLocaleString("es-AR")}`)
+												.join(" · ")}
+										</Typography>
+									</Box>
+								)}
+							</Stack>
+						</>
+					)}
+				</Paper>
 
 				<Paper variant="outlined" sx={{ borderRadius: 2 }}>
 					<Tabs

@@ -617,6 +617,8 @@ export interface PineconeUsageBucket {
 	queries: number;
 	upsertCalls: number;
 	vectorsUpserted: number;
+	fetches?: number;
+	vectorsFetched?: number;
 }
 
 export interface PineconeUsageBucketWithTime extends PineconeUsageBucket {
@@ -958,9 +960,16 @@ class RagWorkersService {
 		return res.data.data;
 	}
 
-	/** Consumo Pinecone: totales + agregados (24h, 7d, 30d) + describeIndexStats. */
+	/** Consumo Pinecone sentencias: totales + agregados (24h, 7d, 30d) + describeIndexStats. */
 	static async getSentenciasPineconeStats(): Promise<PineconeStats> {
 		const res = await ragAxios.get(`${BASE}/sentencias-worker/pinecone-stats`);
+		return res.data.data;
+	}
+
+	/** Consumo Pinecone escritos: idem para los workers de pjn-escritos-worker
+	 *  (extractor, ocr, selector). Incluye queries + fetches del selector. */
+	static async getEscritosPineconeStats(): Promise<PineconeStats> {
+		const res = await ragAxios.get(`${BASE}/escritos-worker/pinecone-stats`);
 		return res.data.data;
 	}
 
