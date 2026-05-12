@@ -109,6 +109,12 @@ const ExpensesPage = Loadable(lazy(() => import("pages/admin/expenses")));
 // Support page
 const SupportContactsPage = Loadable(lazy(() => import("pages/admin/support")));
 
+// Feedback page
+const FeedbackAdminPage = Loadable(lazy(() => import("pages/admin/feedback")));
+
+// Surveys page
+const SurveysAdminPage = Loadable(lazy(() => import("pages/admin/surveys")));
+
 // Tasks page
 const AdminTasksPage = Loadable(lazy(() => import("pages/admin/tasks")));
 
@@ -587,6 +593,22 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<SupportContactsPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "feedback",
+							element: (
+								<AdminRoleGuard>
+									<FeedbackAdminPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "surveys",
+							element: (
+								<AdminRoleGuard>
+									<SurveysAdminPage />
 								</AdminRoleGuard>
 							),
 						},
