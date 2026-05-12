@@ -12,6 +12,7 @@ import {
 	Wallet2,
 	MessageQuestion,
 	Like1,
+	Link21,
 	Chart,
 	TaskSquare,
 	Box1,
@@ -545,6 +546,14 @@ const admin: NavItemType = {
 			type: "item",
 			icon: Chart,
 			url: "/admin/surveys",
+			breadcrumbs: true,
+		},
+		{
+			id: "feedback-invites",
+			title: "Invites",
+			type: "item",
+			icon: Link21,
+			url: "/admin/feedback-invites",
 			breadcrumbs: true,
 		},
 		{

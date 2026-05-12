@@ -115,6 +115,9 @@ const FeedbackAdminPage = Loadable(lazy(() => import("pages/admin/feedback")));
 // Surveys page
 const SurveysAdminPage = Loadable(lazy(() => import("pages/admin/surveys")));
 
+// Feedback invites page
+const FeedbackInvitesPage = Loadable(lazy(() => import("pages/admin/feedback-invites")));
+
 // Tasks page
 const AdminTasksPage = Loadable(lazy(() => import("pages/admin/tasks")));
 
@@ -609,6 +612,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<SurveysAdminPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "feedback-invites",
+							element: (
+								<AdminRoleGuard>
+									<FeedbackInvitesPage />
 								</AdminRoleGuard>
 							),
 						},
