@@ -42,6 +42,7 @@ import { useSnackbar } from "notistack";
 import RagWorkersService, { EscritosWorkerConfig, EscritosWorkerStats, GlobalDocumentEntry, EscritosSearchResult, PineconeStats } from "api/ragWorkers";
 import WorkerControlPanel from "components/WorkerControlPanel";
 import WorkerScopeAlert from "components/admin/WorkerScopeAlert";
+import CronSelector from "components/admin/CronSelector";
 
 // ── Constantes ───────────────────────────────────────────────────────────────
 
@@ -196,14 +197,11 @@ function EscritosRateConfigCard() {
 
 			<Grid container spacing={2}>
 				<Grid item xs={12} sm={6}>
-					<TextField
+					<CronSelector
 						label="Cron de escaneo"
-						size="small"
-						fullWidth
 						value={draft.scanCron ?? ""}
-						onChange={(e) => setDraft((d) => ({ ...d, scanCron: e.target.value }))}
-						disabled={saving || loading}
-						helperText="Ej. 0 */6 * * * = cada 6h · ↓ ritmo = ↓ costo"
+						onChange={(v) => setDraft((d) => ({ ...d, scanCron: v }))}
+						helperText="↓ ritmo = ↓ costo · requiere reinicio del worker"
 					/>
 				</Grid>
 				<Grid item xs={12} sm={6}>
@@ -275,15 +273,15 @@ function ConfigGeneral({
 
 			<WorkerScopeAlert variant="compact" scope="enabled" />
 
-			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-				<TextField
-					label="Cron de escaneo"
-					value={local.scanCron ?? config?.scanCron ?? ""}
-					onChange={(e) => patch("scanCron", e.target.value)}
-					helperText="Requiere reinicio del worker"
-					size="small"
-					sx={{ flex: 1 }}
-				/>
+			<Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems="flex-start">
+				<Box sx={{ flex: 1, width: "100%" }}>
+					<CronSelector
+						label="Cron de escaneo"
+						value={local.scanCron ?? config?.scanCron ?? ""}
+						onChange={(v) => patch("scanCron", v)}
+						helperText="Requiere reinicio del worker"
+					/>
+				</Box>
 				<TextField
 					label="Concurrencia"
 					type="number"

@@ -58,6 +58,7 @@ import CollectorService, { CollectorConfig, FueroConfig } from "api/sentenciasCo
 import SemanticWorkerService, { SemanticWorkerConfig } from "api/semanticWorker";
 import RagWorkersService, { PineconeStats, SentenciasWorkerConfig } from "api/ragWorkers";
 import WorkerControlPanel from "components/WorkerControlPanel";
+import CronSelector from "components/admin/CronSelector";
 import PublicacionesSection from "./PublicacionesSection";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -1326,14 +1327,11 @@ function EmbeddingsConfigCard() {
 
 			<Grid container spacing={2}>
 				<Grid item xs={12} sm={4}>
-					<TextField
+					<CronSelector
 						label="Cron pattern"
-						size="small"
-						fullWidth
 						value={draft.cronPattern ?? ""}
-						onChange={(e) => setDraft((d) => ({ ...d, cronPattern: e.target.value }))}
-						disabled={saving || loading}
-						helperText="Ej. */5 * * * * = cada 5 min · ↓ ritmo = ↓ costo"
+						onChange={(v) => setDraft((d) => ({ ...d, cronPattern: v }))}
+						helperText="↓ ritmo = ↓ costo"
 					/>
 				</Grid>
 				<Grid item xs={6} sm={4}>
