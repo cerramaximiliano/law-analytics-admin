@@ -39,6 +39,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 	const [showApiKeys, setShowApiKeys] = useState({
 		twocaptcha: false,
 		capsolver: false,
+		captchaai: false,
 	});
 
 	// Estado del formulario
@@ -48,6 +49,8 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 		twocaptchaEnabled: config.captcha?.apiKeys?.twocaptcha?.enabled ?? true,
 		capsolverKey: config.captcha?.apiKeys?.capsolver?.key || "",
 		capsolverEnabled: config.captcha?.apiKeys?.capsolver?.enabled ?? false,
+		captchaaiKey: config.captcha?.apiKeys?.captchaai?.key || "",
+		captchaaiEnabled: config.captcha?.apiKeys?.captchaai?.enabled ?? false,
 	});
 
 	// Estado para el rango
@@ -72,6 +75,8 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 			twocaptchaEnabled: config.captcha?.apiKeys?.twocaptcha?.enabled ?? true,
 			capsolverKey: config.captcha?.apiKeys?.capsolver?.key || "",
 			capsolverEnabled: config.captcha?.apiKeys?.capsolver?.enabled ?? false,
+			captchaaiKey: config.captcha?.apiKeys?.captchaai?.key || "",
+			captchaaiEnabled: config.captcha?.apiKeys?.captchaai?.enabled ?? false,
 		});
 		setRangeData({
 			range_start: config.range_start || 0,
@@ -109,7 +114,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 			// Preparar datos para actualizar
 			const updateData: Partial<WorkerConfig> = {
 				captcha: {
-					defaultProvider: formData.defaultProvider as "2captcha" | "capsolver",
+					defaultProvider: formData.defaultProvider as "2captcha" | "capsolver" | "captchaai",
 					apiKeys: {
 						twocaptcha: {
 							key: formData.twocaptchaKey,
@@ -118,6 +123,10 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 						capsolver: {
 							key: formData.capsolverKey,
 							enabled: formData.capsolverEnabled,
+						},
+						captchaai: {
+							key: formData.captchaaiKey,
+							enabled: formData.captchaaiEnabled,
 						},
 					},
 				},
@@ -146,7 +155,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 	};
 
 	// Toggle visibilidad de API key
-	const toggleShowApiKey = (provider: "twocaptcha" | "capsolver") => {
+	const toggleShowApiKey = (provider: "twocaptcha" | "capsolver" | "captchaai") => {
 		setShowApiKeys((prev) => ({
 			...prev,
 			[provider]: !prev[provider],
@@ -363,7 +372,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 									<Typography variant="subtitle2" gutterBottom>
 										Proveedor de Captcha por Defecto
 									</Typography>
-									<Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+									<Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap" useFlexGap>
 										<Chip
 											label="2Captcha"
 											color={formData.defaultProvider === "2captcha" ? "primary" : "default"}
@@ -374,6 +383,12 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 											label="Capsolver"
 											color={formData.defaultProvider === "capsolver" ? "primary" : "default"}
 											onClick={() => handleChange("defaultProvider", "capsolver")}
+											clickable
+										/>
+										<Chip
+											label="CaptchaAI"
+											color={formData.defaultProvider === "captchaai" ? "primary" : "default"}
+											onClick={() => handleChange("defaultProvider", "captchaai")}
 											clickable
 										/>
 									</Stack>
@@ -452,6 +467,46 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 												<InputAdornment position="end">
 													<IconButton onClick={() => toggleShowApiKey("capsolver")} edge="end" size="small">
 														{showApiKeys.capsolver ? <EyeSlash size={20} /> : <Eye size={20} />}
+													</IconButton>
+												</InputAdornment>
+											),
+										}}
+									/>
+								</Box>
+
+								<Divider />
+
+								{/* Configuración CaptchaAI */}
+								<Box>
+									<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+										<Typography variant="subtitle1" fontWeight={500}>
+											CaptchaAI
+										</Typography>
+										<FormControlLabel
+											control={
+												<Switch
+													checked={formData.captchaaiEnabled}
+													onChange={(e) => handleChange("captchaaiEnabled", e.target.checked)}
+													size="small"
+												/>
+											}
+											label="Habilitado"
+										/>
+									</Stack>
+
+									<TextField
+										fullWidth
+										label="API Key"
+										type={showApiKeys.captchaai ? "text" : "password"}
+										value={formData.captchaaiKey}
+										onChange={(e) => handleChange("captchaaiKey", e.target.value)}
+										disabled={!formData.captchaaiEnabled}
+										placeholder="Ingrese su API key de CaptchaAI"
+										InputProps={{
+											endAdornment: (
+												<InputAdornment position="end">
+													<IconButton onClick={() => toggleShowApiKey("captchaai")} edge="end" size="small">
+														{showApiKeys.captchaai ? <EyeSlash size={20} /> : <Eye size={20} />}
 													</IconButton>
 												</InputAdornment>
 											),

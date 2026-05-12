@@ -16,11 +16,12 @@ export interface UpdateMovimientosWorkerConfig {
 		cooldownHours: number;
 	};
 	captcha: {
-		defaultProvider: "2captcha" | "capsolver";
+		defaultProvider: "2captcha" | "capsolver" | "captchaai";
 		fallbackEnabled: boolean;
 		apiKeys: {
 			twocaptcha: { key: string; enabled: boolean };
 			capsolver: { key: string; enabled: boolean };
+			captchaai: { key: string; enabled: boolean };
 		};
 		minimumBalance: number;
 	};

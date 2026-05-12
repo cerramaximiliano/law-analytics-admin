@@ -50,7 +50,7 @@ export interface WorkerConfig {
 	};
 	batch_size?: number;
 	captcha?: {
-		defaultProvider?: "2captcha" | "capsolver" | string;
+		defaultProvider?: "2captcha" | "capsolver" | "captchaai" | string;
 		skipResolution?: boolean;
 		apiKeys?: {
 			twocaptcha?: {
@@ -58,6 +58,10 @@ export interface WorkerConfig {
 				enabled?: boolean;
 			};
 			capsolver?: {
+				key?: string;
+				enabled?: boolean;
+			};
+			captchaai?: {
 				key?: string;
 				enabled?: boolean;
 			};

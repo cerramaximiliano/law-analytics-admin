@@ -620,6 +620,7 @@ function WorkersSection() {
 										>
 											<MenuItem value="capsolver">Capsolver</MenuItem>
 											<MenuItem value="2captcha">2Captcha</MenuItem>
+											<MenuItem value="captchaai">CaptchaAI</MenuItem>
 										</Select>
 									</FormControl>
 									<TextField
