@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import { Box, Tab, Tabs, Typography, Paper, Stack, Chip, useTheme, alpha, IconButton, Tooltip, Popover } from "@mui/material";
-import { TickSquare, SearchNormal1, DocumentUpload, InfoCircle, People, Warning2, SecurityUser, Lock1 } from "iconsax-react";
+import { TickSquare, SearchNormal1, DocumentUpload, InfoCircle, People, Warning2, SecurityUser, Lock1, Gallery } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import VerificationWorker from "./VerificationWorker";
@@ -11,6 +11,7 @@ import IntervinientesWorker from "./IntervinientesWorker";
 import StuckDocumentsWorker from "./StuckDocumentsWorker";
 import MisCausasWorker from "./MisCausasWorker";
 import PrivacyCheckerWorker from "./PrivacyCheckerWorker";
+import CaptchaDatasetTab from "./CaptchaDatasetTab";
 
 // Interfaz para los tabs
 interface WorkerTab {
@@ -104,6 +105,16 @@ const WorkersConfig = () => {
 			status: "active",
 			badge: "app",
 			ip: "18.228.63.73",
+		},
+		{
+			label: "Captcha Dataset",
+			value: "captcha-dataset",
+			icon: <Gallery size={20} />,
+			component: <CaptchaDatasetTab />,
+			description: "Visualiza las imágenes de captcha capturadas para entrenar un OCR propio",
+			status: "active",
+			badge: "worker_01",
+			ip: "100.111.73.56",
 		},
 	];
 
