@@ -70,6 +70,7 @@ import {
 } from "api/workers";
 import HourlyStatsPanel from "./HourlyStatsPanel";
 import DailySummaryPanel from "./DailySummaryPanel";
+import ZeroMovementsProtectionPanel from "./ZeroMovementsProtectionPanel";
 import CapacityStatsWidget from "../../dashboard/CapacityStatsWidget";
 
 // Fueros disponibles
@@ -554,6 +555,15 @@ const WorkerStatistics: React.FC = () => {
 								<Stack direction="row" spacing={1} alignItems="center">
 									<Activity size={18} />
 									<span>Capacidad</span>
+								</Stack>
+							}
+							sx={{ textTransform: "none" }}
+						/>
+						<Tab
+							label={
+								<Stack direction="row" spacing={1} alignItems="center">
+									<Warning2 size={18} />
+									<span>Anti-eliminación</span>
 								</Stack>
 							}
 							sx={{ textTransform: "none" }}
@@ -1159,6 +1169,11 @@ const WorkerStatistics: React.FC = () => {
 				{/* Tab: Capacidad (capacity stats simulator) */}
 				<TabPanel value={activeTab} index={3}>
 					<CapacityStatsWidget />
+				</TabPanel>
+
+				{/* Tab: Anti-eliminación (causas con SCRAPING_ERROR_ZERO_MOVEMENTS) */}
+				<TabPanel value={activeTab} index={4}>
+					<ZeroMovementsProtectionPanel />
 				</TabPanel>
 			</Stack>
 		</LocalizationProvider>

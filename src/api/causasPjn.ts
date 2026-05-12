@@ -1,5 +1,13 @@
 import pjnAxios from "utils/pjnAxios";
 
+// Trazabilidad de la protección anti-eliminación (SCRAPING_ERROR_ZERO_MOVEMENTS).
+// Histórico — no se resetea con éxito posterior.
+export interface ZeroMovementsProtection {
+	count?: number; // veces que se disparó la protección
+	lastAt?: { $date: string } | string; // última activación
+	lastBdCount?: number; // movs que tenía la BD cuando saltó
+}
+
 // Interface para ScrapingProgress
 export interface ScrapingProgress {
 	status?: string;
@@ -9,6 +17,7 @@ export interface ScrapingProgress {
 	lastErrorType?: string;
 	lastErrorAt?: { $date: string } | string;
 	skipUntil?: { $date: string } | string;
+	zeroMovementsProtection?: ZeroMovementsProtection;
 }
 
 // Interface para estadísticas de actualización (updateStats en el modelo)
@@ -431,6 +440,30 @@ export class CausasPjnService {
 	static async unarchiveCausa(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string): Promise<{ success: boolean; message: string }> {
 		try {
 			const response = await pjnAxios.post(`/api/workers/stuck-documents/unarchive/${fuero}/${id}`);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Lista causas con protección anti-eliminación activada (count > 0).
+	 */
+	static async getZeroMovementsProtection(params: {
+		fuero?: "CIV" | "COM" | "CSS" | "CNT";
+		page?: number;
+		limit?: number;
+		sortBy?: "count" | "lastAt" | "lastBdCount";
+		sortOrder?: "asc" | "desc";
+	}): Promise<{
+		success: boolean;
+		data: {
+			causas: Causa[];
+			pagination: { page: number; limit: number; total: number; pages: number };
+		};
+	}> {
+		try {
+			const response = await pjnAxios.get("/api/causas/admin/zero-movements-protection", { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
