@@ -502,6 +502,11 @@ export interface WorkerConfig {
 		fallbackEnabled?: boolean;
 		minimumBalance?: number;
 	};
+	// Captura de imágenes de captcha para dataset de entrenamiento de OCR propio
+	captureDataset?: {
+		enabled?: boolean;
+		path?: string;
+	};
 	lastUpdate?: { $date: string } | string;
 	createdAt?: { $date: string } | string;
 	updatedAt?: { $date: string } | string;

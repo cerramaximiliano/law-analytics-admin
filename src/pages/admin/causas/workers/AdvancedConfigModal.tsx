@@ -51,6 +51,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 		capsolverEnabled: config.captcha?.apiKeys?.capsolver?.enabled ?? false,
 		captchaaiKey: config.captcha?.apiKeys?.captchaai?.key || "",
 		captchaaiEnabled: config.captcha?.apiKeys?.captchaai?.enabled ?? false,
+		captureDatasetEnabled: config.captureDataset?.enabled ?? false,
 	});
 
 	// Estado para el rango
@@ -77,6 +78,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 			capsolverEnabled: config.captcha?.apiKeys?.capsolver?.enabled ?? false,
 			captchaaiKey: config.captcha?.apiKeys?.captchaai?.key || "",
 			captchaaiEnabled: config.captcha?.apiKeys?.captchaai?.enabled ?? false,
+			captureDatasetEnabled: config.captureDataset?.enabled ?? false,
 		});
 		setRangeData({
 			range_start: config.range_start || 0,
@@ -129,6 +131,9 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 							enabled: formData.captchaaiEnabled,
 						},
 					},
+				},
+				captureDataset: {
+					enabled: formData.captureDatasetEnabled,
 				},
 			};
 
@@ -521,6 +526,35 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 										guardar.
 									</Typography>
 								</Alert>
+
+								<Divider />
+
+								{/* Captura de imágenes para dataset de OCR propio */}
+								<Box>
+									<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+										<Typography variant="subtitle1" fontWeight={500}>
+											Capturar imágenes para dataset
+										</Typography>
+										<FormControlLabel
+											control={
+												<Switch
+													checked={formData.captureDatasetEnabled}
+													onChange={(e) => handleChange("captureDatasetEnabled", e.target.checked)}
+													size="small"
+												/>
+											}
+											label="Habilitado"
+										/>
+									</Stack>
+									<Alert severity="info" variant="outlined">
+										<Typography variant="body2">
+											Cuando está activo, el worker guarda cada imagen de captcha resuelta en{" "}
+											<code>/var/lib/pjn-captcha-dataset/</code> del servidor (subcarpetas <code>verified/</code> y{" "}
+											<code>unverified/</code> según si PJN aceptó el token). Las imágenes verificadas sirven como ground truth para entrenar
+											un OCR propio. Activar solo en workers seleccionados — cada uno suma ~50-100 MB/día.
+										</Typography>
+									</Alert>
+								</Box>
 							</Stack>
 						</Box>
 
