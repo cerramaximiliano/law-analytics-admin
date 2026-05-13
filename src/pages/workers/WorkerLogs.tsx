@@ -73,7 +73,9 @@ import WorkerLogsService, {
 	SearchLogsResponse,
 	LogLevel,
 	DetailedLogEntry,
+	ErrorBreakdownResponse,
 } from "api/workerLogs";
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from "recharts";
 import CleanupConfigService, { CleanupConfig, CleanupStatusResponse, ExecutionHistoryItem } from "api/cleanupConfig";
 
 // ======================== HELPER FUNCTIONS ========================
@@ -172,6 +174,47 @@ const getLogLevelLabel = (level: LogLevel): string => {
 		default:
 			return String(level).toUpperCase();
 	}
+};
+
+const getErrorTypeLabel = (errorType: string | undefined | null): string => {
+	switch (errorType) {
+		case "captcha_not_detected":
+			return "Captcha no detectado";
+		case "captcha_solver_failed":
+			return "Captcha no resuelto";
+		case "insufficient_balance":
+			return "Saldo insuficiente";
+		case "scraping_zero_movements":
+			return "Scraping 0 movs";
+		case "not_accessible_publicly":
+			return "No accesible";
+		case "browser_error":
+			return "Error de browser";
+		case "timeout":
+			return "Timeout";
+		case "general_error":
+			return "Error general";
+		case "unclassified":
+			return "Sin clasificar";
+		default:
+			return errorType || "—";
+	}
+};
+
+const ERROR_TYPE_COLORS: Record<string, string> = {
+	captcha_not_detected: "#d32f2f",
+	captcha_solver_failed: "#f57c00",
+	insufficient_balance: "#fbc02d",
+	scraping_zero_movements: "#c2185b",
+	not_accessible_publicly: "#7b1fa2",
+	browser_error: "#5d4037",
+	timeout: "#455a64",
+	general_error: "#616161",
+	unclassified: "#9e9e9e",
+};
+
+const getErrorTypeColor = (errorType: string | undefined | null): string => {
+	return ERROR_TYPE_COLORS[errorType || "unclassified"] || "#9e9e9e";
 };
 
 // ======================== OVERVIEW TAB ========================
@@ -567,24 +610,57 @@ const WorkersTab: React.FC = () => {
 	const { enqueueSnackbar } = useSnackbar();
 	const [loading, setLoading] = useState(true);
 	const [data, setData] = useState<WorkerListResponse | null>(null);
+	const [statsData, setStatsData] = useState<WorkerLogStats | null>(null);
+	const [breakdown, setBreakdown] = useState<ErrorBreakdownResponse | null>(null);
 	const [hoursFilter, setHoursFilter] = useState(24);
+	const [workerTypeFilter, setWorkerTypeFilter] = useState<string>("all");
 
 	const fetchData = useCallback(async () => {
 		try {
 			setLoading(true);
-			const response = await WorkerLogsService.getWorkers(hoursFilter);
-			setData(response);
+			const wt = workerTypeFilter === "all" ? undefined : workerTypeFilter;
+			const [workers, stats, errorBreakdown] = await Promise.all([
+				WorkerLogsService.getWorkers(hoursFilter, wt),
+				WorkerLogsService.getStats(hoursFilter, wt),
+				WorkerLogsService.getErrorBreakdown({ hours: hoursFilter, workerType: wt }),
+			]);
+			setData(workers);
+			setStatsData(stats);
+			setBreakdown(errorBreakdown);
 		} catch (error) {
 			enqueueSnackbar("Error al cargar workers", { variant: "error" });
 			console.error(error);
 		} finally {
 			setLoading(false);
 		}
-	}, [hoursFilter, enqueueSnackbar]);
+	}, [hoursFilter, workerTypeFilter, enqueueSnackbar]);
 
 	useEffect(() => {
 		fetchData();
 	}, [fetchData]);
+
+	const statusPieData = React.useMemo(() => {
+		if (!statsData) return [];
+		const acc: Record<string, number> = {};
+		statsData.byWorkerType.forEach((w) => {
+			w.stats.forEach((s) => {
+				acc[s.status] = (acc[s.status] || 0) + s.count;
+			});
+		});
+		return Object.entries(acc)
+			.map(([status, count]) => ({ name: getStatusLabel(status), status, count }))
+			.sort((a, b) => b.count - a.count);
+	}, [statsData]);
+
+	const errorPieData = React.useMemo(() => {
+		if (!breakdown) return [];
+		return breakdown.byErrorType.map((e) => ({
+			name: getErrorTypeLabel(e.errorType),
+			errorType: e.errorType,
+			count: e.count,
+			percentage: e.percentage,
+		}));
+	}, [breakdown]);
 
 	return (
 		<Box sx={{ p: 3 }}>
@@ -592,6 +668,17 @@ const WorkersTab: React.FC = () => {
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Typography variant="h5">Workers Activos ({data?.total || 0})</Typography>
 					<Stack direction="row" spacing={2} alignItems="center">
+						<FormControl size="small" sx={{ minWidth: 160 }}>
+							<InputLabel>Tipo de worker</InputLabel>
+							<Select value={workerTypeFilter} label="Tipo de worker" onChange={(e) => setWorkerTypeFilter(String(e.target.value))}>
+								<MenuItem value="all">Todos</MenuItem>
+								<MenuItem value="update">Actualización</MenuItem>
+								<MenuItem value="verify">Verificación</MenuItem>
+								<MenuItem value="scraping">Scraping</MenuItem>
+								<MenuItem value="recovery">Recuperación</MenuItem>
+								<MenuItem value="stuck_documents">Docs Atascados</MenuItem>
+							</Select>
+						</FormControl>
 						<FormControl size="small" sx={{ minWidth: 120 }}>
 							<InputLabel>Período</InputLabel>
 							<Select value={hoursFilter} label="Período" onChange={(e) => setHoursFilter(Number(e.target.value))}>
@@ -614,6 +701,87 @@ const WorkersTab: React.FC = () => {
 				{loading ? (
 					<Skeleton variant="rectangular" height={300} sx={{ borderRadius: 2 }} />
 				) : (
+					<>
+						<Grid container spacing={2}>
+							<Grid item xs={12} md={6}>
+								<Card>
+									<CardContent>
+										<Typography variant="h6" gutterBottom>
+											Distribución por estado
+										</Typography>
+										{statusPieData.length === 0 ? (
+											<Typography variant="body2" color="text.secondary">
+												Sin datos en el período.
+											</Typography>
+										) : (
+											<Box sx={{ width: "100%", height: 280 }}>
+												<ResponsiveContainer>
+													<PieChart>
+														<Pie
+															data={statusPieData}
+															dataKey="count"
+															nameKey="name"
+															cx="50%"
+															cy="50%"
+															outerRadius={90}
+															label={(d: any) => `${d.name}: ${d.count}`}
+														>
+															{statusPieData.map((entry) => (
+																<Cell key={entry.status} fill={getStatusColor(entry.status, theme)} />
+															))}
+														</Pie>
+														<RechartsTooltip formatter={(v: any) => [v, "Operaciones"]} />
+														<Legend />
+													</PieChart>
+												</ResponsiveContainer>
+											</Box>
+										)}
+									</CardContent>
+								</Card>
+							</Grid>
+							<Grid item xs={12} md={6}>
+								<Card>
+									<CardContent>
+										<Typography variant="h6" gutterBottom>
+											Distribución por tipo de error
+										</Typography>
+										{errorPieData.length === 0 ? (
+											<Alert severity="success" icon={<TickCircle size={20} />}>
+												Sin errores clasificados en el período.
+											</Alert>
+										) : (
+											<Box sx={{ width: "100%", height: 280 }}>
+												<ResponsiveContainer>
+													<PieChart>
+														<Pie
+															data={errorPieData}
+															dataKey="count"
+															nameKey="name"
+															cx="50%"
+															cy="50%"
+															outerRadius={90}
+															label={(d: any) => `${d.count}`}
+														>
+															{errorPieData.map((entry) => (
+																<Cell key={entry.errorType} fill={getErrorTypeColor(entry.errorType)} />
+															))}
+														</Pie>
+														<RechartsTooltip
+															formatter={(v: any, _n: any, p: any) => [
+																`${v} (${p?.payload?.percentage ?? 0}%)`,
+																p?.payload?.name,
+															]}
+														/>
+														<Legend />
+													</PieChart>
+												</ResponsiveContainer>
+											</Box>
+										)}
+									</CardContent>
+								</Card>
+							</Grid>
+						</Grid>
+
 					<TableContainer component={Paper}>
 						<Table>
 							<TableHead>
@@ -674,6 +842,7 @@ const WorkersTab: React.FC = () => {
 							</TableBody>
 						</Table>
 					</TableContainer>
+					</>
 				)}
 			</Stack>
 		</Box>
@@ -1557,9 +1726,20 @@ const ErrorsTab: React.FC = () => {
 														onClick={() => setExpandedPattern(expandedPattern === pattern ? null : pattern)}
 													>
 														<Box flex={1}>
-															<Typography variant="subtitle1" fontWeight={500} color="error.main">
-																{pattern}
-															</Typography>
+															<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+																<Chip
+																	label={getErrorTypeLabel(pattern)}
+																	size="small"
+																	sx={{
+																		bgcolor: alpha(getErrorTypeColor(pattern), 0.15),
+																		color: getErrorTypeColor(pattern),
+																		fontWeight: 600,
+																	}}
+																/>
+																<Typography variant="subtitle1" fontWeight={500} color="error.main">
+																	{pattern}
+																</Typography>
+															</Stack>
 															<Stack direction="row" spacing={2} mt={1}>
 																<Chip label={`${info.count} ocurrencias`} size="small" color="error" variant="outlined" />
 																<Typography variant="caption" color="text.secondary">
@@ -1631,7 +1811,8 @@ const ErrorsTab: React.FC = () => {
 													<TableCell>Fecha</TableCell>
 													<TableCell>Worker</TableCell>
 													<TableCell>Documento</TableCell>
-													<TableCell>Error</TableCell>
+													<TableCell>Tipo de error</TableCell>
+													<TableCell>Mensaje</TableCell>
 												</TableRow>
 											</TableHead>
 											<TableBody>
@@ -1647,8 +1828,25 @@ const ErrorsTab: React.FC = () => {
 															{log.document.fuero} {log.document.number}/{log.document.year}
 														</TableCell>
 														<TableCell>
+															{log.result?.errorType ? (
+																<Chip
+																	label={getErrorTypeLabel(log.result.errorType)}
+																	size="small"
+																	sx={{
+																		bgcolor: alpha(getErrorTypeColor(log.result.errorType), 0.15),
+																		color: getErrorTypeColor(log.result.errorType),
+																		fontWeight: 500,
+																	}}
+																/>
+															) : (
+																<Typography variant="caption" color="text.secondary">
+																	—
+																</Typography>
+															)}
+														</TableCell>
+														<TableCell>
 															<Typography variant="body2" color="error" fontSize="0.8rem">
-																{log.error || log.result?.message || "-"}
+																{log.result?.error?.message || log.result?.message || log.error || "-"}
 															</Typography>
 														</TableCell>
 													</TableRow>
@@ -2700,7 +2898,7 @@ const WorkerLogs: React.FC = () => {
 				{/* Header */}
 				<Box>
 					<Stack direction="row" alignItems="center" spacing={1}>
-						<Typography variant="h3">Logs de Workers (APP)</Typography>
+						<Typography variant="h3">Workers Logs</Typography>
 						<Chip
 							label="VITE_API_PJN"
 							size="small"

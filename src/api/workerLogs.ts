@@ -115,8 +115,20 @@ export interface WorkerLogChanges {
 	fieldsUpdated?: string[];
 }
 
+export type WorkerErrorType =
+	| "captcha_not_detected"
+	| "captcha_solver_failed"
+	| "insufficient_balance"
+	| "scraping_zero_movements"
+	| "not_accessible_publicly"
+	| "browser_error"
+	| "timeout"
+	| "general_error";
+
 export interface WorkerLogResult {
 	message: string;
+	skipReason?: string;
+	errorType?: WorkerErrorType | string;
 	verificationResult?: {
 		documentFound: boolean;
 	};
@@ -124,6 +136,26 @@ export interface WorkerLogResult {
 		message: string;
 		code?: string;
 	};
+}
+
+export interface ErrorBreakdownEntry {
+	errorType: string;
+	count: number;
+	percentage: number;
+	lastOccurrence?: string;
+	sample?: string | null;
+}
+
+export interface ErrorBreakdownResponse {
+	success: boolean;
+	period: string;
+	periodStart: string;
+	periodEnd: string;
+	filters: { workerType: string | null; fuero: string | null };
+	total: number;
+	byErrorType: ErrorBreakdownEntry[];
+	byStatus: Array<{ status: string; count: number }>;
+	unclassifiedPatterns: Array<{ message: string; count: number }>;
 }
 
 // Detailed log entry within a WorkerLog
@@ -280,10 +312,11 @@ export class WorkerLogsService {
 	/**
 	 * GET /stats - Detailed operation statistics
 	 * @param hours - Analysis period (default: 24)
+	 * @param workerType - Optional filter por tipo de worker
 	 */
-	static async getStats(hours: number = 24): Promise<WorkerLogStats> {
+	static async getStats(hours: number = 24, workerType?: string): Promise<WorkerLogStats> {
 		const response = await pjnAxios.get(`${this.BASE_PATH}/stats`, {
-			params: { hours },
+			params: workerType ? { hours, workerType } : { hours },
 		});
 		return response.data;
 	}
@@ -291,10 +324,11 @@ export class WorkerLogsService {
 	/**
 	 * GET /workers - List of workers with individual statistics
 	 * @param hours - Analysis period (default: 24)
+	 * @param workerType - Optional filter por tipo de worker
 	 */
-	static async getWorkers(hours: number = 24): Promise<WorkerListResponse> {
+	static async getWorkers(hours: number = 24, workerType?: string): Promise<WorkerListResponse> {
 		const response = await pjnAxios.get(`${this.BASE_PATH}/workers`, {
-			params: { hours },
+			params: workerType ? { hours, workerType } : { hours },
 		});
 		return response.data;
 	}
@@ -319,6 +353,16 @@ export class WorkerLogsService {
 		const response = await pjnAxios.get(`${this.BASE_PATH}/failed`, {
 			params: { hours, limit },
 		});
+		return response.data;
+	}
+
+	/**
+	 * GET /error-breakdown - Error distribution grouped by errorType (alimenta pie chart)
+	 */
+	static async getErrorBreakdown(
+		params: { workerType?: string; hours?: number; fuero?: string } = {},
+	): Promise<ErrorBreakdownResponse> {
+		const response = await pjnAxios.get(`${this.BASE_PATH}/error-breakdown`, { params });
 		return response.data;
 	}
 

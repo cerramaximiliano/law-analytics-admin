@@ -61,7 +61,7 @@ const admin: NavItemType = {
 				},
 				{
 					id: "workers-logs",
-					title: "Logs",
+					title: "Workers Logs",
 					type: "item",
 					url: "/admin/workers/logs",
 					breadcrumbs: true,
