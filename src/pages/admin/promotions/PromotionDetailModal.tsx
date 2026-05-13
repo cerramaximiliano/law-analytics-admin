@@ -711,6 +711,16 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 								<Chip label="No - solo por código" variant="outlined" size="small" />
 							)}
 						</Box>
+						<Box display="flex" justifyContent="space-between" alignItems="center">
+							<Typography variant="body2" color="textSecondary">
+								En landing pública:
+							</Typography>
+							{discount.activationRules.showOnLanding ? (
+								<Chip label="Sí - visible a visitantes" color="success" size="small" />
+							) : (
+								<Chip label="No" variant="outlined" size="small" />
+							)}
+						</Box>
 						<Box display="flex" justifyContent="space-between">
 							<Typography variant="body2" color="textSecondary">
 								Prioridad:

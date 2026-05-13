@@ -88,6 +88,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 		excludeActiveSubscribers: false,
 		minimumAmount: null as number | null,
 		isPublic: false,
+		showOnLanding: false,
 		priority: 0,
 		promotionalMessage: "",
 		badge: "",
@@ -192,6 +193,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					excludeActiveSubscribers: discount.restrictions.excludeActiveSubscribers || false,
 					minimumAmount: discount.restrictions.minimumAmount,
 					isPublic: discount.activationRules.isPublic,
+					showOnLanding: discount.activationRules.showOnLanding || false,
 					priority: discount.activationRules.priority,
 					promotionalMessage: discount.activationRules.promotionalMessage || "",
 					badge: discount.activationRules.badge || "",
@@ -247,6 +249,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					excludeActiveSubscribers: false,
 					minimumAmount: null,
 					isPublic: false,
+					showOnLanding: false,
 					priority: 0,
 					promotionalMessage: "",
 					badge: "",
@@ -302,6 +305,36 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 		formData.isActive &&
 		!effectiveStripeForValidation?.development?.couponId &&
 		!effectiveStripeForValidation?.production?.couponId;
+
+	// Pre-requisitos para mostrar el descuento en la landing pública (no autenticada).
+	// Si alguno falla, el switch "Mostrar en landing" queda deshabilitado y se muestra
+	// un Alert listando qué hay que cambiar. La misma validación corre en el backend.
+	const landingBlockers: string[] = [];
+	if (!formData.isPublic) landingBlockers.push("activá 'Mostrar públicamente en la página de planes'");
+	if (!formData.isActive) landingBlockers.push("la promoción debe estar activa");
+	if (pendingTargetUsers.length > 0) landingBlockers.push("remové los usuarios objetivo (debe ser para todos)");
+	if (formData.targetSegments.length > 0) landingBlockers.push("remové los segmentos objetivo (debe ser para todos)");
+	if (targetContactsCount > 0) landingBlockers.push("remové los contactos objetivo (debe ser para todos)");
+	if (formData.newCustomersOnly) landingBlockers.push("desactivá 'Solo clientes nuevos'");
+	if (formData.excludeActiveSubscribers) landingBlockers.push("desactivá 'Excluir suscriptores activos'");
+	// Sincronización con Stripe: en creación se crea recién al guardar, así que no
+	// bloqueamos. En edición sí: si no hay couponId en ningún entorno, no se puede.
+	if (
+		isEditing &&
+		!effectiveStripeForValidation?.development?.couponId &&
+		!effectiveStripeForValidation?.production?.couponId
+	) {
+		landingBlockers.push("sincronizá el descuento con Stripe (pestaña Stripe del detalle)");
+	}
+	const landingEligible = landingBlockers.length === 0;
+
+	// Si el usuario cambió alguna condición que invalida showOnLanding, lo apagamos
+	// automáticamente para mantener el form coherente con lo que aceptará el backend.
+	useEffect(() => {
+		if (formData.showOnLanding && !landingEligible) {
+			setFormData((prev) => ({ ...prev, showOnLanding: false }));
+		}
+	}, [formData.showOnLanding, landingEligible]);
 
 	const handleSubmit = async () => {
 		// Validation
@@ -363,6 +396,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					},
 					activationRules: {
 						isPublic: formData.isPublic,
+						showOnLanding: formData.showOnLanding,
 						priority: formData.priority,
 						promotionalMessage: formData.promotionalMessage || undefined,
 						badge: formData.badge || undefined,
@@ -397,6 +431,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					excludeActiveSubscribers: formData.excludeActiveSubscribers,
 					minimumAmount: formData.minimumAmount,
 					isPublic: formData.isPublic,
+					showOnLanding: formData.showOnLanding,
 					priority: formData.priority,
 					promotionalMessage: formData.promotionalMessage || undefined,
 					badge: formData.badge || undefined,
@@ -1021,6 +1056,41 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 							label="Promoción activa"
 						/>
 					</Grid>
+
+					<Grid item xs={12}>
+						<FormControlLabel
+							control={
+								<Switch
+									checked={formData.showOnLanding}
+									onChange={(e) => handleChange("showOnLanding", e.target.checked)}
+									disabled={!landingEligible}
+								/>
+							}
+							label={
+								<Box>
+									<Typography variant="body2">Mostrar en la landing pública (visitantes no autenticados)</Typography>
+									<Typography variant="caption" color="textSecondary">
+										El descuento aparecerá en la sección de planes de la landing. Requiere que sea aplicable a todos por igual.
+									</Typography>
+								</Box>
+							}
+						/>
+					</Grid>
+
+					{!landingEligible && (
+						<Grid item xs={12}>
+							<Alert severity="info">
+								<AlertTitle>Para habilitar "Mostrar en la landing pública"</AlertTitle>
+								Un descuento en la landing pública debe poder aplicarse a cualquier visitante que se registre después de verlo.
+								Ajustá lo siguiente:
+								<ul style={{ marginTop: 8, marginBottom: 0 }}>
+									{landingBlockers.map((blocker, i) => (
+										<li key={i}>{blocker}</li>
+									))}
+								</ul>
+							</Alert>
+						</Grid>
+					)}
 
 					{editSyncBlocked && (
 						<Grid item xs={12}>

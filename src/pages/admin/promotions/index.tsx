@@ -421,6 +421,11 @@ const PromotionsManagement = () => {
 												) : (
 													<Chip label="Privado" size="small" variant="outlined" />
 												)}
+												{discount.activationRules.showOnLanding && (
+													<Tooltip title="Visible en la landing pública (visitantes no autenticados)">
+														<Chip label="En landing" size="small" color="success" />
+													</Tooltip>
+												)}
 												{discount.restrictions.targetUsers && discount.restrictions.targetUsers.length > 0 && (
 													<Tooltip title={`Restringido a ${discount.restrictions.targetUsers.length} usuario(s)`}>
 														<Chip

@@ -174,6 +174,14 @@ export interface SearchUsersResponse {
 
 export interface DiscountActivationRules {
 	isPublic: boolean;
+	/**
+	 * Mostrar este descuento en la landing pública (no autenticada).
+	 * Requiere que el descuento sea aplicable a todos los visitantes:
+	 * isPublic=true, sin target users/segments/contacts, sin
+	 * newCustomersOnly, sin excludeActiveSubscribers, sincronizado con Stripe.
+	 * El backend valida estos pre-requisitos al crear/actualizar.
+	 */
+	showOnLanding?: boolean;
 	priority: number;
 	promotionalMessage?: string;
 	badge?: string;
@@ -259,6 +267,8 @@ export interface CreateDiscountParams {
 	excludeActiveSubscribers?: boolean;
 	minimumAmount?: number | null;
 	isPublic?: boolean;
+	/** Mostrar en landing pública — el backend valida pre-requisitos */
+	showOnLanding?: boolean;
 	priority?: number;
 	promotionalMessage?: string;
 	badge?: string;
