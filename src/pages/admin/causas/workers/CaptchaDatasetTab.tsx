@@ -22,14 +22,14 @@ import {
 	CircularProgress,
 } from "@mui/material";
 import { CloseCircle, TickCircle, Warning2 } from "iconsax-react";
-import pjnAxios from "utils/pjnAxios";
+import workersAxios from "utils/workersAxios";
 import CaptchaDatasetService, { CaptchaDatasetEntry, CaptchaDatasetStats } from "api/captchaDataset";
 
 const PAGE_SIZE = 10;
 
 // Carga una imagen con auth y devuelve un object URL (revocar después).
 async function loadImageBlob(file: string): Promise<string> {
-	const response = await pjnAxios.get(`/api/captcha-dataset/image/${file}`, { responseType: "blob" });
+	const response = await workersAxios.get(`/api/captcha-dataset/image/${file}`, { responseType: "blob" });
 	return URL.createObjectURL(response.data as Blob);
 }
 
