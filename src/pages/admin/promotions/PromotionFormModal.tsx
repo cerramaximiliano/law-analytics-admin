@@ -21,12 +21,14 @@ import {
 	Select,
 	Stack,
 	Switch,
+	Tab,
+	Tabs,
 	TextField,
 	Typography,
 	Autocomplete,
 	Chip,
 } from "@mui/material";
-import { SearchNormal1, UserAdd } from "iconsax-react";
+import { Eye, SearchNormal1, Setting2, UserAdd } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import discountsService, {
 	DiscountCode,
@@ -38,6 +40,22 @@ import discountsService, {
 } from "api/discounts";
 import { SegmentService } from "store/reducers/segments";
 import { Segment } from "types/segment";
+import PromotionPreviewTab from "./PromotionPreviewTab";
+
+interface TabPanelProps {
+	children?: React.ReactNode;
+	index: number;
+	value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+	const { children, value, index, ...other } = props;
+	return (
+		<div role="tabpanel" hidden={value !== index} {...other}>
+			{value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
+		</div>
+	);
+}
 
 interface PromotionFormModalProps {
 	open: boolean;
@@ -51,6 +69,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 	const isEditing = !!discount;
 
 	const [loading, setLoading] = useState(false);
+	const [tabValue, setTabValue] = useState(0);
 	const [segments, setSegments] = useState<Segment[]>([]);
 	const [loadingSegments, setLoadingSegments] = useState(false);
 	// Target users: en creación se acumulan para asignar post-creación; en edición se cargan y sincronizan al guardar
@@ -169,6 +188,12 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 		const timer = setTimeout(() => searchContacts(contactSearchQuery), 300);
 		return () => clearTimeout(timer);
 	}, [contactSearchQuery, searchContacts]);
+
+	// Resetear al tab de Configuración cuando se abre/cierra el modal para que el primer
+	// render siempre muestre el formulario, no el preview que el usuario quizá dejó abierto.
+	useEffect(() => {
+		if (open) setTabValue(0);
+	}, [open]);
 
 	useEffect(() => {
 		if (open) {
@@ -319,11 +344,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 	if (formData.excludeActiveSubscribers) landingBlockers.push("desactivá 'Excluir suscriptores activos'");
 	// Sincronización con Stripe: en creación se crea recién al guardar, así que no
 	// bloqueamos. En edición sí: si no hay couponId en ningún entorno, no se puede.
-	if (
-		isEditing &&
-		!effectiveStripeForValidation?.development?.couponId &&
-		!effectiveStripeForValidation?.production?.couponId
-	) {
+	if (isEditing && !effectiveStripeForValidation?.development?.couponId && !effectiveStripeForValidation?.production?.couponId) {
 		landingBlockers.push("sincronizá el descuento con Stripe (pestaña Stripe del detalle)");
 	}
 	const landingEligible = landingBlockers.length === 0;
@@ -473,7 +494,9 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 
 				if (assignmentWarnings.length > 0) {
 					enqueueSnackbar(
-						`Promoción creada en: ${envNames}, pero hubo un error al asignar ${assignmentWarnings.join(" y ")}. Asignalos desde el detalle.`,
+						`Promoción creada en: ${envNames}, pero hubo un error al asignar ${assignmentWarnings.join(
+							" y ",
+						)}. Asignalos desde el detalle.`,
 						{ variant: "warning" },
 					);
 				} else if (assignmentResults.length > 0) {
@@ -498,491 +521,424 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 		<Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
 			<DialogTitle>{isEditing ? "Editar Promoción" : "Nueva Promoción"}</DialogTitle>
 			<DialogContent dividers>
-				<Grid container spacing={3}>
-					{/* Basic Info */}
-					<Grid item xs={12}>
-						<Typography variant="subtitle2" color="primary" gutterBottom>
-							Información Básica
-						</Typography>
-					</Grid>
+				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 1 }}>
+					<Tabs value={tabValue} onChange={(_, v) => setTabValue(v)}>
+						<Tab label="Configuración" icon={<Setting2 size={18} />} iconPosition="start" />
+						<Tab label="Vista previa" icon={<Eye size={18} />} iconPosition="start" />
+					</Tabs>
+				</Box>
 
-					<Grid item xs={12} sm={6}>
-						<TextField
-							fullWidth
-							label="Código"
-							value={formData.code}
-							onChange={(e) => handleChange("code", e.target.value.toUpperCase())}
-							disabled={isEditing}
-							helperText={isEditing ? "El código no se puede modificar" : "Ej: VERANO2025, DESCUENTO20"}
-							inputProps={{ style: { textTransform: "uppercase" } }}
-						/>
-					</Grid>
+				<TabPanel value={tabValue} index={0}>
+					<Grid container spacing={3}>
+						{/* Basic Info */}
+						<Grid item xs={12}>
+							<Typography variant="subtitle2" color="primary" gutterBottom>
+								Información Básica
+							</Typography>
+						</Grid>
 
-					<Grid item xs={12} sm={6}>
-						<TextField fullWidth label="Nombre" value={formData.name} onChange={(e) => handleChange("name", e.target.value)} />
-					</Grid>
-
-					<Grid item xs={12}>
-						<TextField
-							fullWidth
-							label="Descripción"
-							value={formData.description}
-							onChange={(e) => handleChange("description", e.target.value)}
-							multiline
-							rows={2}
-						/>
-					</Grid>
-
-					{/* Stripe Environments - Only for new discounts */}
-					{!isEditing && (
-						<>
-							<Grid item xs={12}>
-								<Divider sx={{ my: 1 }} />
-								<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
-									Entornos de Stripe
-								</Typography>
-								<Typography variant="caption" color="textSecondary">
-									Selecciona en qué entornos de Stripe se creará el cupón. Una vez creado, no se puede modificar.
-								</Typography>
-							</Grid>
-
-							<Grid item xs={12}>
-								<Stack direction="row" spacing={3}>
-									<FormControlLabel
-										control={
-											<Checkbox
-												checked={formData.environments.includes("development")}
-												onChange={() => handleEnvironmentToggle("development")}
-												color="warning"
-											/>
-										}
-										label={
-											<Box>
-												<Typography variant="body2">Desarrollo</Typography>
-												<Typography variant="caption" color="textSecondary">
-													Stripe Test Mode
-												</Typography>
-											</Box>
-										}
-									/>
-									<FormControlLabel
-										control={
-											<Checkbox
-												checked={formData.environments.includes("production")}
-												onChange={() => handleEnvironmentToggle("production")}
-												color="success"
-											/>
-										}
-										label={
-											<Box>
-												<Typography variant="body2">Producción</Typography>
-												<Typography variant="caption" color="textSecondary">
-													Stripe Live Mode
-												</Typography>
-											</Box>
-										}
-									/>
-								</Stack>
-							</Grid>
-						</>
-					)}
-
-					{/* Discount Configuration */}
-					<Grid item xs={12}>
-						<Divider sx={{ my: 1 }} />
-						<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
-							Configuración del Descuento
-						</Typography>
-					</Grid>
-
-					<Grid item xs={12} sm={4}>
-						<FormControl fullWidth disabled={isEditing}>
-							<InputLabel>Tipo de Descuento</InputLabel>
-							<Select
-								value={formData.discountType}
-								label="Tipo de Descuento"
-								onChange={(e) => handleChange("discountType", e.target.value)}
-							>
-								<MenuItem value="percentage">Porcentaje</MenuItem>
-								<MenuItem value="fixed_amount">Monto Fijo</MenuItem>
-							</Select>
-							{isEditing && <FormHelperText>No se puede modificar</FormHelperText>}
-						</FormControl>
-					</Grid>
-
-					<Grid item xs={12} sm={4}>
-						<TextField
-							fullWidth
-							type="number"
-							label="Valor"
-							value={formData.discountValue}
-							onChange={(e) => handleChange("discountValue", Number(e.target.value))}
-							disabled={isEditing}
-							InputProps={{
-								endAdornment: (
-									<InputAdornment position="end">{formData.discountType === "percentage" ? "%" : formData.currency}</InputAdornment>
-								),
-							}}
-						/>
-					</Grid>
-
-					<Grid item xs={12} sm={4}>
-						<FormControl fullWidth>
-							<InputLabel>Duración</InputLabel>
-							<Select
-								value={formData.duration}
-								label="Duración"
-								onChange={(e) => handleChange("duration", e.target.value)}
+						<Grid item xs={12} sm={6}>
+							<TextField
+								fullWidth
+								label="Código"
+								value={formData.code}
+								onChange={(e) => handleChange("code", e.target.value.toUpperCase())}
 								disabled={isEditing}
-							>
-								<MenuItem value="once">Una vez</MenuItem>
-								<MenuItem value="repeating">Varios meses</MenuItem>
-								<MenuItem value="forever">Siempre</MenuItem>
-							</Select>
-						</FormControl>
-					</Grid>
+								helperText={isEditing ? "El código no se puede modificar" : "Ej: VERANO2025, DESCUENTO20"}
+								inputProps={{ style: { textTransform: "uppercase" } }}
+							/>
+						</Grid>
 
-					{formData.duration === "repeating" && (
+						<Grid item xs={12} sm={6}>
+							<TextField fullWidth label="Nombre" value={formData.name} onChange={(e) => handleChange("name", e.target.value)} />
+						</Grid>
+
+						<Grid item xs={12}>
+							<TextField
+								fullWidth
+								label="Descripción"
+								value={formData.description}
+								onChange={(e) => handleChange("description", e.target.value)}
+								multiline
+								rows={2}
+							/>
+						</Grid>
+
+						{/* Stripe Environments - Only for new discounts */}
+						{!isEditing && (
+							<>
+								<Grid item xs={12}>
+									<Divider sx={{ my: 1 }} />
+									<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
+										Entornos de Stripe
+									</Typography>
+									<Typography variant="caption" color="textSecondary">
+										Selecciona en qué entornos de Stripe se creará el cupón. Una vez creado, no se puede modificar.
+									</Typography>
+								</Grid>
+
+								<Grid item xs={12}>
+									<Stack direction="row" spacing={3}>
+										<FormControlLabel
+											control={
+												<Checkbox
+													checked={formData.environments.includes("development")}
+													onChange={() => handleEnvironmentToggle("development")}
+													color="warning"
+												/>
+											}
+											label={
+												<Box>
+													<Typography variant="body2">Desarrollo</Typography>
+													<Typography variant="caption" color="textSecondary">
+														Stripe Test Mode
+													</Typography>
+												</Box>
+											}
+										/>
+										<FormControlLabel
+											control={
+												<Checkbox
+													checked={formData.environments.includes("production")}
+													onChange={() => handleEnvironmentToggle("production")}
+													color="success"
+												/>
+											}
+											label={
+												<Box>
+													<Typography variant="body2">Producción</Typography>
+													<Typography variant="caption" color="textSecondary">
+														Stripe Live Mode
+													</Typography>
+												</Box>
+											}
+										/>
+									</Stack>
+								</Grid>
+							</>
+						)}
+
+						{/* Discount Configuration */}
+						<Grid item xs={12}>
+							<Divider sx={{ my: 1 }} />
+							<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
+								Configuración del Descuento
+							</Typography>
+						</Grid>
+
+						<Grid item xs={12} sm={4}>
+							<FormControl fullWidth disabled={isEditing}>
+								<InputLabel>Tipo de Descuento</InputLabel>
+								<Select
+									value={formData.discountType}
+									label="Tipo de Descuento"
+									onChange={(e) => handleChange("discountType", e.target.value)}
+								>
+									<MenuItem value="percentage">Porcentaje</MenuItem>
+									<MenuItem value="fixed_amount">Monto Fijo</MenuItem>
+								</Select>
+								{isEditing && <FormHelperText>No se puede modificar</FormHelperText>}
+							</FormControl>
+						</Grid>
+
 						<Grid item xs={12} sm={4}>
 							<TextField
 								fullWidth
 								type="number"
-								label="Meses de duración"
-								value={formData.durationInMonths}
-								onChange={(e) => handleChange("durationInMonths", Number(e.target.value))}
+								label="Valor"
+								value={formData.discountValue}
+								onChange={(e) => handleChange("discountValue", Number(e.target.value))}
 								disabled={isEditing}
-								inputProps={{ min: 1, max: 24 }}
+								InputProps={{
+									endAdornment: (
+										<InputAdornment position="end">{formData.discountType === "percentage" ? "%" : formData.currency}</InputAdornment>
+									),
+								}}
 							/>
 						</Grid>
-					)}
 
-					{/* Validity Period */}
-					<Grid item xs={12}>
-						<Divider sx={{ my: 1 }} />
-						<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
-							Período de Vigencia
-						</Typography>
-					</Grid>
+						<Grid item xs={12} sm={4}>
+							<FormControl fullWidth>
+								<InputLabel>Duración</InputLabel>
+								<Select
+									value={formData.duration}
+									label="Duración"
+									onChange={(e) => handleChange("duration", e.target.value)}
+									disabled={isEditing}
+								>
+									<MenuItem value="once">Una vez</MenuItem>
+									<MenuItem value="repeating">Varios meses</MenuItem>
+									<MenuItem value="forever">Siempre</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
 
-					<Grid item xs={12} sm={6}>
-						<TextField
-							fullWidth
-							type="date"
-							label="Válido desde"
-							value={formData.validFrom}
-							onChange={(e) => handleChange("validFrom", e.target.value)}
-							InputLabelProps={{ shrink: true }}
-						/>
-					</Grid>
-
-					<Grid item xs={12} sm={6}>
-						<TextField
-							fullWidth
-							type="date"
-							label="Válido hasta"
-							value={formData.validUntil}
-							onChange={(e) => handleChange("validUntil", e.target.value)}
-							InputLabelProps={{ shrink: true }}
-						/>
-					</Grid>
-
-					{/* Restrictions */}
-					<Grid item xs={12}>
-						<Divider sx={{ my: 1 }} />
-						<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
-							Restricciones
-						</Typography>
-					</Grid>
-
-					<Grid item xs={12} sm={6}>
-						<Typography variant="body2" gutterBottom>
-							Planes aplicables (vacío = todos)
-						</Typography>
-						<Stack direction="row" spacing={1}>
-							<FormControlLabel
-								control={<Checkbox checked={formData.applicablePlans.includes("standard")} onChange={() => handlePlanToggle("standard")} />}
-								label="Standard"
-							/>
-							<FormControlLabel
-								control={<Checkbox checked={formData.applicablePlans.includes("premium")} onChange={() => handlePlanToggle("premium")} />}
-								label="Premium"
-							/>
-						</Stack>
-					</Grid>
-
-					<Grid item xs={12} sm={6}>
-						<Typography variant="body2" gutterBottom>
-							Períodos de facturación (vacío = todos)
-						</Typography>
-						<Stack direction="row" spacing={1}>
-							<FormControlLabel
-								control={
-									<Checkbox
-										checked={formData.applicableBillingPeriods.includes("monthly")}
-										onChange={() => handleBillingPeriodToggle("monthly")}
-									/>
-								}
-								label="Mensual"
-							/>
-							<FormControlLabel
-								control={
-									<Checkbox
-										checked={formData.applicableBillingPeriods.includes("annual")}
-										onChange={() => handleBillingPeriodToggle("annual")}
-									/>
-								}
-								label="Anual"
-							/>
-						</Stack>
-					</Grid>
-
-					<Grid item xs={12} sm={4}>
-						<TextField
-							fullWidth
-							type="number"
-							label="Máximo de usos totales"
-							value={formData.maxRedemptions ?? ""}
-							onChange={(e) => handleChange("maxRedemptions", e.target.value ? Number(e.target.value) : null)}
-							helperText="Vacío = ilimitado"
-							inputProps={{ min: 1 }}
-						/>
-					</Grid>
-
-					<Grid item xs={12} sm={4}>
-						<TextField
-							fullWidth
-							type="number"
-							label="Máximo por usuario"
-							value={formData.maxRedemptionsPerUser}
-							onChange={(e) => handleChange("maxRedemptionsPerUser", Number(e.target.value))}
-							inputProps={{ min: 1 }}
-						/>
-					</Grid>
-
-					{/* Customer Targeting Restrictions */}
-					<Grid item xs={12}>
-						<Divider sx={{ my: 1 }} />
-						<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
-							Restricciones por Tipo de Cliente
-						</Typography>
-						<Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 2 }}>
-							Estas opciones controlan qué usuarios pueden ver y usar este descuento basándose en su historial de suscripciones.
-						</Typography>
-					</Grid>
-
-					<Grid item xs={12} sm={6}>
-						<Box sx={{ p: 2, border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
-							<FormControlLabel
-								control={
-									<Switch
-										checked={formData.excludeActiveSubscribers}
-										onChange={(e) => handleChange("excludeActiveSubscribers", e.target.checked)}
-										color="warning"
-									/>
-								}
-								label={
-									<Typography variant="body2" fontWeight={500}>
-										Excluir suscriptores activos
-									</Typography>
-								}
-							/>
-							<Typography variant="caption" color="textSecondary" display="block" sx={{ ml: 4.5, mt: 0.5 }}>
-								No mostrar a usuarios con una suscripción paga <strong>actualmente activa</strong>. Los usuarios que cancelaron su
-								suscripción SÍ podrán ver y usar este descuento. Ideal para promociones de "vuelve a suscribirte" o para usuarios en plan
-								gratuito.
-							</Typography>
-						</Box>
-					</Grid>
-
-					<Grid item xs={12} sm={6}>
-						<Box sx={{ p: 2, border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
-							<FormControlLabel
-								control={
-									<Switch
-										checked={formData.newCustomersOnly}
-										onChange={(e) => handleChange("newCustomersOnly", e.target.checked)}
-										color="error"
-									/>
-								}
-								label={
-									<Typography variant="body2" fontWeight={500}>
-										Solo clientes nuevos
-									</Typography>
-								}
-							/>
-							<Typography variant="caption" color="textSecondary" display="block" sx={{ ml: 4.5, mt: 0.5 }}>
-								Solo para usuarios que <strong>nunca han tenido</strong> una suscripción paga (ni activa ni cancelada). Más restrictivo que
-								"Excluir suscriptores activos". Ideal para promociones de "primera vez" para captar nuevos clientes.
-							</Typography>
-						</Box>
-					</Grid>
-
-					{/* Segment Targeting */}
-					<Grid item xs={12}>
-						<Divider sx={{ my: 1 }} />
-						<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
-							Segmentación de Audiencia
-						</Typography>
-						<Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 2 }}>
-							Selecciona segmentos de contactos que podrán ver y usar esta promoción. Se combina con "Usuarios Objetivo" usando lógica OR
-							(si está en usuarios O en segmentos).
-						</Typography>
-					</Grid>
-
-					<Grid item xs={12}>
-						<Autocomplete
-							multiple
-							options={segments.filter((s) => s._id)} // Solo segmentos con _id válido
-							getOptionLabel={(option) =>
-								`${option.name} (${option.type === "static" ? "Estático" : "Dinámico"} - ${option.estimatedCount} contactos)`
-							}
-							value={segments.filter((s) => s._id && formData.targetSegments.includes(s._id))}
-							onChange={(_, newValue) => {
-								handleChange("targetSegments", newValue.map((s) => s._id!).filter(Boolean));
-							}}
-							loading={loadingSegments}
-							renderInput={(params) => (
+						{formData.duration === "repeating" && (
+							<Grid item xs={12} sm={4}>
 								<TextField
-									{...params}
-									label="Segmentos de Contactos"
-									placeholder={formData.targetSegments.length === 0 ? "Seleccionar segmentos..." : ""}
-									helperText={
-										formData.targetSegments.length > 0
-											? `${formData.targetSegments.length} segmento(s) seleccionado(s)`
-											: "Dejar vacío para no restringir por segmentos"
-									}
+									fullWidth
+									type="number"
+									label="Meses de duración"
+									value={formData.durationInMonths}
+									onChange={(e) => handleChange("durationInMonths", Number(e.target.value))}
+									disabled={isEditing}
+									inputProps={{ min: 1, max: 24 }}
 								/>
-							)}
-							renderTags={(value, getTagProps) =>
-								value.map((option, index) => (
-									<Chip
-										{...getTagProps({ index })}
-										key={option._id || index}
-										label={option.name}
-										size="small"
-										color={option.type === "static" ? "primary" : "secondary"}
-									/>
-								))
-							}
-							isOptionEqualToValue={(option, value) => option._id === value._id}
-							noOptionsText="No hay segmentos disponibles"
-						/>
-					</Grid>
+							</Grid>
+						)}
 
-					{/* Target Users */}
-					<>
+						{/* Validity Period */}
 						<Grid item xs={12}>
 							<Divider sx={{ my: 1 }} />
 							<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
-								Usuarios Objetivo
-							</Typography>
-							<Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 2 }}>
-								Buscá y seleccioná usuarios específicos que podrán ver y usar esta promoción. Se combina con los segmentos usando lógica OR.
+								Período de Vigencia
 							</Typography>
 						</Grid>
+
+						<Grid item xs={12} sm={6}>
+							<TextField
+								fullWidth
+								type="date"
+								label="Válido desde"
+								value={formData.validFrom}
+								onChange={(e) => handleChange("validFrom", e.target.value)}
+								InputLabelProps={{ shrink: true }}
+							/>
+						</Grid>
+
+						<Grid item xs={12} sm={6}>
+							<TextField
+								fullWidth
+								type="date"
+								label="Válido hasta"
+								value={formData.validUntil}
+								onChange={(e) => handleChange("validUntil", e.target.value)}
+								InputLabelProps={{ shrink: true }}
+							/>
+						</Grid>
+
+						{/* Restrictions */}
+						<Grid item xs={12}>
+							<Divider sx={{ my: 1 }} />
+							<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
+								Restricciones
+							</Typography>
+						</Grid>
+
+						<Grid item xs={12} sm={6}>
+							<Typography variant="body2" gutterBottom>
+								Planes aplicables (vacío = todos)
+							</Typography>
+							<Stack direction="row" spacing={1}>
+								<FormControlLabel
+									control={
+										<Checkbox checked={formData.applicablePlans.includes("standard")} onChange={() => handlePlanToggle("standard")} />
+									}
+									label="Standard"
+								/>
+								<FormControlLabel
+									control={<Checkbox checked={formData.applicablePlans.includes("premium")} onChange={() => handlePlanToggle("premium")} />}
+									label="Premium"
+								/>
+							</Stack>
+						</Grid>
+
+						<Grid item xs={12} sm={6}>
+							<Typography variant="body2" gutterBottom>
+								Períodos de facturación (vacío = todos)
+							</Typography>
+							<Stack direction="row" spacing={1}>
+								<FormControlLabel
+									control={
+										<Checkbox
+											checked={formData.applicableBillingPeriods.includes("monthly")}
+											onChange={() => handleBillingPeriodToggle("monthly")}
+										/>
+									}
+									label="Mensual"
+								/>
+								<FormControlLabel
+									control={
+										<Checkbox
+											checked={formData.applicableBillingPeriods.includes("annual")}
+											onChange={() => handleBillingPeriodToggle("annual")}
+										/>
+									}
+									label="Anual"
+								/>
+							</Stack>
+						</Grid>
+
+						<Grid item xs={12} sm={4}>
+							<TextField
+								fullWidth
+								type="number"
+								label="Máximo de usos totales"
+								value={formData.maxRedemptions ?? ""}
+								onChange={(e) => handleChange("maxRedemptions", e.target.value ? Number(e.target.value) : null)}
+								helperText="Vacío = ilimitado"
+								inputProps={{ min: 1 }}
+							/>
+						</Grid>
+
+						<Grid item xs={12} sm={4}>
+							<TextField
+								fullWidth
+								type="number"
+								label="Máximo por usuario"
+								value={formData.maxRedemptionsPerUser}
+								onChange={(e) => handleChange("maxRedemptionsPerUser", Number(e.target.value))}
+								inputProps={{ min: 1 }}
+							/>
+						</Grid>
+
+						{/* Customer Targeting Restrictions */}
+						<Grid item xs={12}>
+							<Divider sx={{ my: 1 }} />
+							<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
+								Restricciones por Tipo de Cliente
+							</Typography>
+							<Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 2 }}>
+								Estas opciones controlan qué usuarios pueden ver y usar este descuento basándose en su historial de suscripciones.
+							</Typography>
+						</Grid>
+
+						<Grid item xs={12} sm={6}>
+							<Box sx={{ p: 2, border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
+								<FormControlLabel
+									control={
+										<Switch
+											checked={formData.excludeActiveSubscribers}
+											onChange={(e) => handleChange("excludeActiveSubscribers", e.target.checked)}
+											color="warning"
+										/>
+									}
+									label={
+										<Typography variant="body2" fontWeight={500}>
+											Excluir suscriptores activos
+										</Typography>
+									}
+								/>
+								<Typography variant="caption" color="textSecondary" display="block" sx={{ ml: 4.5, mt: 0.5 }}>
+									No mostrar a usuarios con una suscripción paga <strong>actualmente activa</strong>. Los usuarios que cancelaron su
+									suscripción SÍ podrán ver y usar este descuento. Ideal para promociones de "vuelve a suscribirte" o para usuarios en plan
+									gratuito.
+								</Typography>
+							</Box>
+						</Grid>
+
+						<Grid item xs={12} sm={6}>
+							<Box sx={{ p: 2, border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
+								<FormControlLabel
+									control={
+										<Switch
+											checked={formData.newCustomersOnly}
+											onChange={(e) => handleChange("newCustomersOnly", e.target.checked)}
+											color="error"
+										/>
+									}
+									label={
+										<Typography variant="body2" fontWeight={500}>
+											Solo clientes nuevos
+										</Typography>
+									}
+								/>
+								<Typography variant="caption" color="textSecondary" display="block" sx={{ ml: 4.5, mt: 0.5 }}>
+									Solo para usuarios que <strong>nunca han tenido</strong> una suscripción paga (ni activa ni cancelada). Más restrictivo
+									que "Excluir suscriptores activos". Ideal para promociones de "primera vez" para captar nuevos clientes.
+								</Typography>
+							</Box>
+						</Grid>
+
+						{/* Segment Targeting */}
+						<Grid item xs={12}>
+							<Divider sx={{ my: 1 }} />
+							<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
+								Segmentación de Audiencia
+							</Typography>
+							<Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 2 }}>
+								Selecciona segmentos de contactos que podrán ver y usar esta promoción. Se combina con "Usuarios Objetivo" usando lógica OR
+								(si está en usuarios O en segmentos).
+							</Typography>
+						</Grid>
+
 						<Grid item xs={12}>
 							<Autocomplete
 								multiple
-								options={userSearchResults}
-								value={pendingTargetUsers}
-								onChange={(_, newValue) => setPendingTargetUsers(newValue)}
-								getOptionLabel={(option) => `${option.email}${option.fullName ? ` (${option.fullName})` : ""}`}
-								isOptionEqualToValue={(option, value) => option._id === value._id}
-								loading={userSearchLoading || loadingTargetUsers}
-								inputValue={userSearchQuery}
-								onInputChange={(_, value, reason) => {
-									if (reason !== "reset") setUserSearchQuery(value);
+								options={segments.filter((s) => s._id)} // Solo segmentos con _id válido
+								getOptionLabel={(option) =>
+									`${option.name} (${option.type === "static" ? "Estático" : "Dinámico"} - ${option.estimatedCount} contactos)`
+								}
+								value={segments.filter((s) => s._id && formData.targetSegments.includes(s._id))}
+								onChange={(_, newValue) => {
+									handleChange("targetSegments", newValue.map((s) => s._id!).filter(Boolean));
 								}}
-								filterOptions={(x) => x}
+								loading={loadingSegments}
 								renderInput={(params) => (
 									<TextField
 										{...params}
-										label="Buscar usuarios por email o nombre"
-										placeholder={pendingTargetUsers.length === 0 ? "Escribí al menos 2 caracteres..." : ""}
+										label="Segmentos de Contactos"
+										placeholder={formData.targetSegments.length === 0 ? "Seleccionar segmentos..." : ""}
 										helperText={
-											loadingTargetUsers
-												? "Cargando usuarios existentes..."
-												: pendingTargetUsers.length > 0
-												? `${pendingTargetUsers.length} usuario(s) seleccionado(s)`
-												: "Dejar vacío para no restringir por usuarios individuales"
+											formData.targetSegments.length > 0
+												? `${formData.targetSegments.length} segmento(s) seleccionado(s)`
+												: "Dejar vacío para no restringir por segmentos"
 										}
-										InputProps={{
-											...params.InputProps,
-											startAdornment: (
-												<>
-													<InputAdornment position="start">
-														<SearchNormal1 size={18} />
-													</InputAdornment>
-													{params.InputProps.startAdornment}
-												</>
-											),
-											endAdornment: (
-												<>
-													{userSearchLoading || loadingTargetUsers ? <CircularProgress color="inherit" size={18} /> : null}
-													{params.InputProps.endAdornment}
-												</>
-											),
-										}}
 									/>
-								)}
-								renderOption={(props, option) => (
-									<li {...props} key={option._id}>
-										<Stack>
-											<Typography variant="body2">{option.email}</Typography>
-											{option.fullName && (
-												<Typography variant="caption" color="textSecondary">
-													{option.fullName}
-												</Typography>
-											)}
-										</Stack>
-									</li>
 								)}
 								renderTags={(value, getTagProps) =>
 									value.map((option, index) => (
-										<Chip {...getTagProps({ index })} key={option._id} label={option.email} size="small" icon={<UserAdd size={14} />} />
+										<Chip
+											{...getTagProps({ index })}
+											key={option._id || index}
+											label={option.name}
+											size="small"
+											color={option.type === "static" ? "primary" : "secondary"}
+										/>
 									))
 								}
-								noOptionsText={userSearchQuery.length < 2 ? "Escribí para buscar..." : "No se encontraron usuarios"}
+								isOptionEqualToValue={(option, value) => option._id === value._id}
+								noOptionsText="No hay segmentos disponibles"
 							/>
 						</Grid>
-					</>
 
-					{/* Target Contacts — solo al crear. En edición se gestionan en el tab "Contactos" del modal de detalle. */}
-					{!isEditing && (
+						{/* Target Users */}
 						<>
 							<Grid item xs={12}>
 								<Divider sx={{ my: 1 }} />
 								<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
-									Contactos Individuales
+									Usuarios Objetivo
 								</Typography>
 								<Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 2 }}>
-									Buscá contactos del CRM (incluso sin cuenta de usuario aún). Cuando se registren con su mismo email, automáticamente verán
-									esta promoción. Útil para otorgar el descuento de forma discrecional a prospectos.
+									Buscá y seleccioná usuarios específicos que podrán ver y usar esta promoción. Se combina con los segmentos usando lógica
+									OR.
 								</Typography>
 							</Grid>
 							<Grid item xs={12}>
 								<Autocomplete
 									multiple
-									options={contactSearchResults}
-									value={pendingTargetContacts}
-									onChange={(_, newValue) => setPendingTargetContacts(newValue)}
+									options={userSearchResults}
+									value={pendingTargetUsers}
+									onChange={(_, newValue) => setPendingTargetUsers(newValue)}
 									getOptionLabel={(option) => `${option.email}${option.fullName ? ` (${option.fullName})` : ""}`}
 									isOptionEqualToValue={(option, value) => option._id === value._id}
-									loading={contactSearchLoading}
-									inputValue={contactSearchQuery}
+									loading={userSearchLoading || loadingTargetUsers}
+									inputValue={userSearchQuery}
 									onInputChange={(_, value, reason) => {
-										if (reason !== "reset") setContactSearchQuery(value);
+										if (reason !== "reset") setUserSearchQuery(value);
 									}}
 									filterOptions={(x) => x}
 									renderInput={(params) => (
 										<TextField
 											{...params}
-											label="Buscar contactos por email o nombre"
-											placeholder={pendingTargetContacts.length === 0 ? "Escribí al menos 2 caracteres..." : ""}
+											label="Buscar usuarios por email o nombre"
+											placeholder={pendingTargetUsers.length === 0 ? "Escribí al menos 2 caracteres..." : ""}
 											helperText={
-												pendingTargetContacts.length > 0
-													? `${pendingTargetContacts.length} contacto(s) seleccionado(s)`
-													: "Dejar vacío para no restringir por contactos individuales"
+												loadingTargetUsers
+													? "Cargando usuarios existentes..."
+													: pendingTargetUsers.length > 0
+													? `${pendingTargetUsers.length} usuario(s) seleccionado(s)`
+													: "Dejar vacío para no restringir por usuarios individuales"
 											}
 											InputProps={{
 												...params.InputProps,
@@ -996,7 +952,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 												),
 												endAdornment: (
 													<>
-														{contactSearchLoading ? <CircularProgress color="inherit" size={18} /> : null}
+														{userSearchLoading || loadingTargetUsers ? <CircularProgress color="inherit" size={18} /> : null}
 														{params.InputProps.endAdornment}
 													</>
 												),
@@ -1005,175 +961,279 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 									)}
 									renderOption={(props, option) => (
 										<li {...props} key={option._id}>
-											<Stack direction="row" spacing={1} alignItems="center">
-												<Stack>
-													<Typography variant="body2">{option.email}</Typography>
-													{option.fullName && (
-														<Typography variant="caption" color="textSecondary">
-															{option.fullName}
-														</Typography>
-													)}
-												</Stack>
-												{option.hasRegisteredUser && <Chip size="small" label="ya registrado" color="success" />}
+											<Stack>
+												<Typography variant="body2">{option.email}</Typography>
+												{option.fullName && (
+													<Typography variant="caption" color="textSecondary">
+														{option.fullName}
+													</Typography>
+												)}
 											</Stack>
 										</li>
 									)}
 									renderTags={(value, getTagProps) =>
 										value.map((option, index) => (
-											<Chip
-												{...getTagProps({ index })}
-												key={option._id}
-												label={option.email}
-												size="small"
-												color={option.hasRegisteredUser ? "success" : "default"}
-											/>
+											<Chip {...getTagProps({ index })} key={option._id} label={option.email} size="small" icon={<UserAdd size={14} />} />
 										))
 									}
-									noOptionsText={contactSearchQuery.length < 2 ? "Escribí para buscar..." : "No se encontraron contactos"}
+									noOptionsText={userSearchQuery.length < 2 ? "Escribí para buscar..." : "No se encontraron usuarios"}
 								/>
 							</Grid>
 						</>
-					)}
 
-					{/* Visibility */}
-					<Grid item xs={12}>
-						<Divider sx={{ my: 1 }} />
-						<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
-							Visibilidad y Promoción
-						</Typography>
-					</Grid>
-
-					<Grid item xs={12} sm={6}>
-						<FormControlLabel
-							control={<Switch checked={formData.isPublic} onChange={(e) => handleChange("isPublic", e.target.checked)} />}
-							label="Mostrar públicamente en la página de planes"
-						/>
-					</Grid>
-
-					<Grid item xs={12} sm={6}>
-						<FormControlLabel
-							control={<Switch checked={formData.isActive} onChange={(e) => handleChange("isActive", e.target.checked)} />}
-							label="Promoción activa"
-						/>
-					</Grid>
-
-					<Grid item xs={12}>
-						<FormControlLabel
-							control={
-								<Switch
-									checked={formData.showOnLanding}
-									onChange={(e) => handleChange("showOnLanding", e.target.checked)}
-									disabled={!landingEligible}
-								/>
-							}
-							label={
-								<Box>
-									<Typography variant="body2">Mostrar en la landing pública (visitantes no autenticados)</Typography>
-									<Typography variant="caption" color="textSecondary">
-										El descuento aparecerá en la sección de planes de la landing. Requiere que sea aplicable a todos por igual.
+						{/* Target Contacts — solo al crear. En edición se gestionan en el tab "Contactos" del modal de detalle. */}
+						{!isEditing && (
+							<>
+								<Grid item xs={12}>
+									<Divider sx={{ my: 1 }} />
+									<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
+										Contactos Individuales
 									</Typography>
-								</Box>
+									<Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 2 }}>
+										Buscá contactos del CRM (incluso sin cuenta de usuario aún). Cuando se registren con su mismo email, automáticamente
+										verán esta promoción. Útil para otorgar el descuento de forma discrecional a prospectos.
+									</Typography>
+								</Grid>
+								<Grid item xs={12}>
+									<Autocomplete
+										multiple
+										options={contactSearchResults}
+										value={pendingTargetContacts}
+										onChange={(_, newValue) => setPendingTargetContacts(newValue)}
+										getOptionLabel={(option) => `${option.email}${option.fullName ? ` (${option.fullName})` : ""}`}
+										isOptionEqualToValue={(option, value) => option._id === value._id}
+										loading={contactSearchLoading}
+										inputValue={contactSearchQuery}
+										onInputChange={(_, value, reason) => {
+											if (reason !== "reset") setContactSearchQuery(value);
+										}}
+										filterOptions={(x) => x}
+										renderInput={(params) => (
+											<TextField
+												{...params}
+												label="Buscar contactos por email o nombre"
+												placeholder={pendingTargetContacts.length === 0 ? "Escribí al menos 2 caracteres..." : ""}
+												helperText={
+													pendingTargetContacts.length > 0
+														? `${pendingTargetContacts.length} contacto(s) seleccionado(s)`
+														: "Dejar vacío para no restringir por contactos individuales"
+												}
+												InputProps={{
+													...params.InputProps,
+													startAdornment: (
+														<>
+															<InputAdornment position="start">
+																<SearchNormal1 size={18} />
+															</InputAdornment>
+															{params.InputProps.startAdornment}
+														</>
+													),
+													endAdornment: (
+														<>
+															{contactSearchLoading ? <CircularProgress color="inherit" size={18} /> : null}
+															{params.InputProps.endAdornment}
+														</>
+													),
+												}}
+											/>
+										)}
+										renderOption={(props, option) => (
+											<li {...props} key={option._id}>
+												<Stack direction="row" spacing={1} alignItems="center">
+													<Stack>
+														<Typography variant="body2">{option.email}</Typography>
+														{option.fullName && (
+															<Typography variant="caption" color="textSecondary">
+																{option.fullName}
+															</Typography>
+														)}
+													</Stack>
+													{option.hasRegisteredUser && <Chip size="small" label="ya registrado" color="success" />}
+												</Stack>
+											</li>
+										)}
+										renderTags={(value, getTagProps) =>
+											value.map((option, index) => (
+												<Chip
+													{...getTagProps({ index })}
+													key={option._id}
+													label={option.email}
+													size="small"
+													color={option.hasRegisteredUser ? "success" : "default"}
+												/>
+											))
+										}
+										noOptionsText={contactSearchQuery.length < 2 ? "Escribí para buscar..." : "No se encontraron contactos"}
+									/>
+								</Grid>
+							</>
+						)}
+
+						{/* Visibility */}
+						<Grid item xs={12}>
+							<Divider sx={{ my: 1 }} />
+							<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
+								Visibilidad y Promoción
+							</Typography>
+						</Grid>
+
+						<Grid item xs={12} sm={6}>
+							<FormControlLabel
+								control={<Switch checked={formData.isPublic} onChange={(e) => handleChange("isPublic", e.target.checked)} />}
+								label="Mostrar públicamente en la página de planes"
+							/>
+						</Grid>
+
+						<Grid item xs={12} sm={6}>
+							<FormControlLabel
+								control={<Switch checked={formData.isActive} onChange={(e) => handleChange("isActive", e.target.checked)} />}
+								label="Promoción activa"
+							/>
+						</Grid>
+
+						<Grid item xs={12}>
+							<FormControlLabel
+								control={
+									<Switch
+										checked={formData.showOnLanding}
+										onChange={(e) => handleChange("showOnLanding", e.target.checked)}
+										disabled={!landingEligible}
+									/>
+								}
+								label={
+									<Box>
+										<Typography variant="body2">Mostrar en la landing pública (visitantes no autenticados)</Typography>
+										<Typography variant="caption" color="textSecondary">
+											El descuento aparecerá en la sección de planes de la landing. Requiere que sea aplicable a todos por igual.
+										</Typography>
+									</Box>
+								}
+							/>
+						</Grid>
+
+						{!landingEligible && (
+							<Grid item xs={12}>
+								<Alert severity="info">
+									<AlertTitle>Para habilitar "Mostrar en la landing pública"</AlertTitle>
+									Un descuento en la landing pública debe poder aplicarse a cualquier visitante que se registre después de verlo. Ajustá lo
+									siguiente:
+									<ul style={{ marginTop: 8, marginBottom: 0 }}>
+										{landingBlockers.map((blocker, i) => (
+											<li key={i}>{blocker}</li>
+										))}
+									</ul>
+								</Alert>
+							</Grid>
+						)}
+
+						{editSyncBlocked && (
+							<Grid item xs={12}>
+								<Alert severity="error">
+									<AlertTitle>Descuento no sincronizado con Stripe</AlertTitle>
+									No podés activar "Mostrar públicamente" porque este descuento no tiene un Coupon ID válido en Stripe (ni en Development ni
+									en Production). Cerrá este formulario, abrí el detalle de la promoción y usá el botón{" "}
+									<strong>Sincronizar con Stripe</strong> en la pestaña Stripe antes de continuar.
+								</Alert>
+							</Grid>
+						)}
+
+						{(() => {
+							const hasTargetUsers = pendingTargetUsers.length > 0;
+							const hasTargetSegments = formData.targetSegments.length > 0;
+							const hasTargetContacts = targetContactsCount > 0;
+							const hasAnyTarget = hasTargetUsers || hasTargetSegments || hasTargetContacts;
+							const hasAnyRestriction = formData.excludeActiveSubscribers || formData.newCustomersOnly;
+
+							// Caso crítico: público sin ningún tipo de filtro → todos los users activos lo ven
+							if (formData.isPublic && !hasAnyTarget && !hasAnyRestriction) {
+								return (
+									<Grid item xs={12}>
+										<Alert severity="warning">
+											<AlertTitle>Descuento público sin restricciones</AlertTitle>
+											Sin segmentos, usuarios, contactos ni filtros de tipo de cliente, este descuento será visible para{" "}
+											<strong>todos los usuarios activos</strong> de la plataforma. Si querés limitarlo, agregá:
+											<ul style={{ marginTop: 8, marginBottom: 0 }}>
+												<li>
+													una <strong>audiencia específica</strong> (segmentos, usuarios o contactos en el tab "Usuarios Objetivo"),
+												</li>
+												<li>
+													o activá <strong>"Solo clientes nuevos"</strong> / <strong>"Excluir suscriptores activos"</strong> arriba.
+												</li>
+											</ul>
+										</Alert>
+									</Grid>
+								);
 							}
-						/>
-					</Grid>
 
-					{!landingEligible && (
-						<Grid item xs={12}>
-							<Alert severity="info">
-								<AlertTitle>Para habilitar "Mostrar en la landing pública"</AlertTitle>
-								Un descuento en la landing pública debe poder aplicarse a cualquier visitante que se registre después de verlo.
-								Ajustá lo siguiente:
-								<ul style={{ marginTop: 8, marginBottom: 0 }}>
-									{landingBlockers.map((blocker, i) => (
-										<li key={i}>{blocker}</li>
-									))}
-								</ul>
-							</Alert>
+							// Caso intermedio: público sin targets pero con filtros de tipo cliente — sigue siendo amplio
+							if (formData.isPublic && !hasAnyTarget && hasAnyRestriction) {
+								return (
+									<Grid item xs={12}>
+										<Alert severity="info">
+											<AlertTitle>Descuento público con filtros por tipo de cliente</AlertTitle>
+											Este descuento se mostrará a todos los usuarios que cumplan las restricciones marcadas
+											{formData.newCustomersOnly && " (solo nuevos clientes)"}
+											{formData.excludeActiveSubscribers && " (excluyendo suscriptores activos)"}. Confirmá que es lo que querés.
+										</Alert>
+									</Grid>
+								);
+							}
+							return null;
+						})()}
+
+						<Grid item xs={12} sm={6}>
+							<TextField
+								fullWidth
+								label="Badge/Etiqueta"
+								value={formData.badge}
+								onChange={(e) => handleChange("badge", e.target.value)}
+								helperText="Ej: 20% OFF, PROMO"
+							/>
 						</Grid>
-					)}
 
-					{editSyncBlocked && (
-						<Grid item xs={12}>
-							<Alert severity="error">
-								<AlertTitle>Descuento no sincronizado con Stripe</AlertTitle>
-								No podés activar "Mostrar públicamente" porque este descuento no tiene un Coupon ID válido en Stripe (ni en Development ni
-								en Production). Cerrá este formulario, abrí el detalle de la promoción y usá el botón{" "}
-								<strong>Sincronizar con Stripe</strong> en la pestaña Stripe antes de continuar.
-							</Alert>
+						<Grid item xs={12} sm={6}>
+							<TextField
+								fullWidth
+								type="number"
+								label="Prioridad"
+								value={formData.priority}
+								onChange={(e) => handleChange("priority", Number(e.target.value))}
+								helperText="Mayor número = mayor prioridad"
+							/>
 						</Grid>
-					)}
 
-					{(() => {
-						const hasTargetUsers = pendingTargetUsers.length > 0;
-						const hasTargetSegments = formData.targetSegments.length > 0;
-						const hasTargetContacts = targetContactsCount > 0;
-						const hasAnyTarget = hasTargetUsers || hasTargetSegments || hasTargetContacts;
-						const hasAnyRestriction = formData.excludeActiveSubscribers || formData.newCustomersOnly;
-
-						// Caso crítico: público sin ningún tipo de filtro → todos los users activos lo ven
-						if (formData.isPublic && !hasAnyTarget && !hasAnyRestriction) {
-							return (
-								<Grid item xs={12}>
-									<Alert severity="warning">
-										<AlertTitle>Descuento público sin restricciones</AlertTitle>
-										Sin segmentos, usuarios, contactos ni filtros de tipo de cliente, este descuento será visible para{" "}
-										<strong>todos los usuarios activos</strong> de la plataforma. Si querés limitarlo, agregá:
-										<ul style={{ marginTop: 8, marginBottom: 0 }}>
-											<li>una <strong>audiencia específica</strong> (segmentos, usuarios o contactos en el tab "Usuarios Objetivo"),</li>
-											<li>o activá <strong>"Solo clientes nuevos"</strong> / <strong>"Excluir suscriptores activos"</strong> arriba.</li>
-										</ul>
-									</Alert>
-								</Grid>
-							);
-						}
-
-						// Caso intermedio: público sin targets pero con filtros de tipo cliente — sigue siendo amplio
-						if (formData.isPublic && !hasAnyTarget && hasAnyRestriction) {
-							return (
-								<Grid item xs={12}>
-									<Alert severity="info">
-										<AlertTitle>Descuento público con filtros por tipo de cliente</AlertTitle>
-										Este descuento se mostrará a todos los usuarios que cumplan las restricciones marcadas
-										{formData.newCustomersOnly && " (solo nuevos clientes)"}
-										{formData.excludeActiveSubscribers && " (excluyendo suscriptores activos)"}. Confirmá que es lo que querés.
-									</Alert>
-								</Grid>
-							);
-						}
-						return null;
-					})()}
-
-					<Grid item xs={12} sm={6}>
-						<TextField
-							fullWidth
-							label="Badge/Etiqueta"
-							value={formData.badge}
-							onChange={(e) => handleChange("badge", e.target.value)}
-							helperText="Ej: 20% OFF, PROMO"
-						/>
+						<Grid item xs={12}>
+							<TextField
+								fullWidth
+								label="Mensaje promocional"
+								value={formData.promotionalMessage}
+								onChange={(e) => handleChange("promotionalMessage", e.target.value)}
+								helperText="Se mostrará en la UI junto al descuento"
+							/>
+						</Grid>
 					</Grid>
+				</TabPanel>
 
-					<Grid item xs={12} sm={6}>
-						<TextField
-							fullWidth
-							type="number"
-							label="Prioridad"
-							value={formData.priority}
-							onChange={(e) => handleChange("priority", Number(e.target.value))}
-							helperText="Mayor número = mayor prioridad"
-						/>
-					</Grid>
-
-					<Grid item xs={12}>
-						<TextField
-							fullWidth
-							label="Mensaje promocional"
-							value={formData.promotionalMessage}
-							onChange={(e) => handleChange("promotionalMessage", e.target.value)}
-							helperText="Se mostrará en la UI junto al descuento"
-						/>
-					</Grid>
-				</Grid>
+				<TabPanel value={tabValue} index={1}>
+					<PromotionPreviewTab
+						formData={{
+							discountType: formData.discountType,
+							discountValue: formData.discountValue,
+							currency: formData.currency,
+							applicablePlans: formData.applicablePlans,
+							applicableBillingPeriods: formData.applicableBillingPeriods,
+							duration: formData.duration,
+							durationInMonths: formData.durationInMonths,
+							isPublic: formData.isPublic,
+							showOnLanding: formData.showOnLanding,
+							isActive: formData.isActive,
+							badge: formData.badge,
+							promotionalMessage: formData.promotionalMessage,
+							newCustomersOnly: formData.newCustomersOnly,
+							excludeActiveSubscribers: formData.excludeActiveSubscribers,
+						}}
+					/>
+				</TabPanel>
 			</DialogContent>
 			<DialogActions>
 				<Button onClick={onClose} disabled={loading}>
