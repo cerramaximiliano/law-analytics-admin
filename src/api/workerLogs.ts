@@ -76,23 +76,46 @@ export interface WorkerActivityResponse {
 	recentActivity: Record<string, { total: number; success: number; partial: number; failed?: number }>;
 }
 
+export interface ErrorPatternExample {
+	logId: string;
+	workerId?: string;
+	documentId?: string;
+	number: number;
+	year: number;
+	fuero?: string;
+	startTime?: string;
+	status?: string;
+}
+
 export interface ErrorPattern {
 	count: number;
 	lastOccurrence: string;
 	workers: string[];
-	examples: Array<{
-		logId: string;
-		number: number;
-		year: number;
-	}>;
+	examples: ErrorPatternExample[];
 }
 
 export interface FailedLogsResponse {
 	success: boolean;
 	total: number;
+	totalInPeriod?: number; // total real del período (sin limit), agregado en /failed v2
 	period: string;
 	errorPatterns: Record<string, ErrorPattern>;
 	logs: WorkerLog[];
+}
+
+export interface ErrorTimelineRow {
+	bucket: string; // ISO timestamp del inicio del bucket
+	[errorType: string]: string | number;
+}
+
+export interface ErrorTimelineResponse {
+	success: boolean;
+	period: string;
+	periodStart: string;
+	periodEnd: string;
+	granularity: "hour" | "day";
+	errorTypes: string[];
+	series: ErrorTimelineRow[];
 }
 
 export interface DocumentState {
@@ -233,6 +256,7 @@ export interface LogsListParams {
 	documentId?: string;
 	sort?: string;
 	hasMovimientos?: "true" | "false";
+	errorType?: string;
 }
 
 // Search logs parameters
@@ -363,6 +387,16 @@ export class WorkerLogsService {
 		params: { workerType?: string; hours?: number; fuero?: string } = {},
 	): Promise<ErrorBreakdownResponse> {
 		const response = await pjnAxios.get(`${this.BASE_PATH}/error-breakdown`, { params });
+		return response.data;
+	}
+
+	/**
+	 * GET /error-timeline - Evolución temporal de errores (bar chart apilado)
+	 */
+	static async getErrorTimeline(
+		params: { workerType?: string; hours?: number; fuero?: string; bucket?: "hour" | "day" | "auto" } = {},
+	): Promise<ErrorTimelineResponse> {
+		const response = await pjnAxios.get(`${this.BASE_PATH}/error-timeline`, { params });
 		return response.data;
 	}
 

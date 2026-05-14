@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
 import {
 	Box,
@@ -334,6 +335,48 @@ const CarpetasVerificadasApp = () => {
 	useEffect(() => {
 		fetchEligibilityStats();
 	}, [fueroFilter]);
+
+	// Deep-link desde Workers Logs: /admin/causas/verified-app?number=X&year=Y&fuero=Z
+	// Lee los params al mount, los aplica como filtros y dispara la búsqueda.
+	// Solo corre una vez al mount — cambiar URL manualmente no re-fetchea.
+	const [searchParams, setSearchParams] = useSearchParams();
+	useEffect(() => {
+		const urlNumber = searchParams.get("number") || "";
+		const urlYear = searchParams.get("year") || "";
+		const urlFuero = searchParams.get("fuero") || "";
+		if (!urlNumber && !urlYear && !urlFuero) return;
+
+		if (urlNumber) setSearchNumber(urlNumber);
+		if (urlYear) setSearchYear(urlYear);
+		const effectiveFuero = urlFuero && ["CIV", "COM", "CSS", "CNT"].includes(urlFuero) ? urlFuero : fueroFilter;
+		if (effectiveFuero !== fueroFilter) setFueroFilter(effectiveFuero);
+
+		// Dispara la búsqueda inmediata con los valores del URL (no podemos confiar
+		// en los setters, todavía no se aplicaron en el render actual).
+		fetchCausas(
+			0,
+			rowsPerPage,
+			effectiveFuero,
+			urlNumber,
+			urlYear,
+			"",
+			"",
+			sortBy,
+			sortOrder,
+			null,
+			null,
+			"todos",
+			"todos",
+			"todos",
+			false,
+			"todos",
+		);
+
+		// Limpiamos los params del URL para que un refresh manual no re-aplique
+		// el filtro inesperadamente. Mantenemos los filtros visibles en los inputs.
+		setSearchParams({}, { replace: true });
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	// Handlers de paginación
 	const handleChangePage = (_event: unknown, newPage: number) => {

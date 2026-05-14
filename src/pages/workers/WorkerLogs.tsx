@@ -75,7 +75,19 @@ import WorkerLogsService, {
 	DetailedLogEntry,
 	ErrorBreakdownResponse,
 } from "api/workerLogs";
-import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+	PieChart,
+	Pie,
+	Cell,
+	Tooltip as RechartsTooltip,
+	Legend,
+	ResponsiveContainer,
+	BarChart,
+	Bar,
+	XAxis,
+	YAxis,
+	CartesianGrid,
+} from "recharts";
 import CleanupConfigService, { CleanupConfig, CleanupStatusResponse, ExecutionHistoryItem } from "api/cleanupConfig";
 
 // ======================== HELPER FUNCTIONS ========================
@@ -215,6 +227,16 @@ const ERROR_TYPE_COLORS: Record<string, string> = {
 
 const getErrorTypeColor = (errorType: string | undefined | null): string => {
 	return ERROR_TYPE_COLORS[errorType || "unclassified"] || "#9e9e9e";
+};
+
+// Construye un deep-link a la vista de causas con filtros pre-aplicados.
+// La página `CarpetasVerificadasApp` lee estos query params al mount.
+const buildCausaLink = (number?: number, year?: number, fuero?: string): string => {
+	const params = new URLSearchParams();
+	if (number != null) params.set("number", String(number));
+	if (year != null) params.set("year", String(year));
+	if (fuero) params.set("fuero", fuero);
+	return `/admin/causas/verified-app?${params.toString()}`;
 };
 
 // ======================== OVERVIEW TAB ========================
@@ -612,6 +634,7 @@ const WorkersTab: React.FC = () => {
 	const [data, setData] = useState<WorkerListResponse | null>(null);
 	const [statsData, setStatsData] = useState<WorkerLogStats | null>(null);
 	const [breakdown, setBreakdown] = useState<ErrorBreakdownResponse | null>(null);
+	const [timeline, setTimeline] = useState<import("api/workerLogs").ErrorTimelineResponse | null>(null);
 	const [hoursFilter, setHoursFilter] = useState(24);
 	const [workerTypeFilter, setWorkerTypeFilter] = useState<string>("all");
 
@@ -619,14 +642,16 @@ const WorkersTab: React.FC = () => {
 		try {
 			setLoading(true);
 			const wt = workerTypeFilter === "all" ? undefined : workerTypeFilter;
-			const [workers, stats, errorBreakdown] = await Promise.all([
+			const [workers, stats, errorBreakdown, errorTimeline] = await Promise.all([
 				WorkerLogsService.getWorkers(hoursFilter, wt),
 				WorkerLogsService.getStats(hoursFilter, wt),
 				WorkerLogsService.getErrorBreakdown({ hours: hoursFilter, workerType: wt }),
+				WorkerLogsService.getErrorTimeline({ hours: hoursFilter, workerType: wt }),
 			]);
 			setData(workers);
 			setStatsData(stats);
 			setBreakdown(errorBreakdown);
+			setTimeline(errorTimeline);
 		} catch (error) {
 			enqueueSnackbar("Error al cargar workers", { variant: "error" });
 			console.error(error);
@@ -724,7 +749,11 @@ const WorkersTab: React.FC = () => {
 															cx="50%"
 															cy="50%"
 															outerRadius={90}
-															label={(d: any) => `${d.name}: ${d.count}`}
+															label={(d: any) => {
+															const total = statusPieData.reduce((s, x) => s + x.count, 0);
+															const pct = total > 0 ? ((d.count / total) * 100).toFixed(1) : 0;
+															return `${d.name}: ${d.count} (${pct}%)`;
+														}}
 														>
 															{statusPieData.map((entry) => (
 																<Cell key={entry.status} fill={getStatusColor(entry.status, theme)} />
@@ -760,7 +789,7 @@ const WorkersTab: React.FC = () => {
 															cx="50%"
 															cy="50%"
 															outerRadius={90}
-															label={(d: any) => `${d.count}`}
+															label={(d: any) => `${d.count} (${d.percentage}%)`}
 														>
 															{errorPieData.map((entry) => (
 																<Cell key={entry.errorType} fill={getErrorTypeColor(entry.errorType)} />
@@ -782,7 +811,58 @@ const WorkersTab: React.FC = () => {
 							</Grid>
 						</Grid>
 
-					<TableContainer component={Paper}>
+						{/* Evolución temporal de errores — barras apiladas por errorType */}
+						{timeline && timeline.series.length > 0 && (
+							<Card sx={{ mt: 2 }}>
+								<CardContent>
+									<Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+										<Typography variant="h6">
+											Evolución de errores por {timeline.granularity === "hour" ? "hora" : "día"}
+										</Typography>
+										<Typography variant="caption" color="text.secondary">
+											{timeline.errorTypes.length} categorías · {timeline.series.length} buckets
+										</Typography>
+									</Stack>
+									<Box sx={{ width: "100%", height: 320 }}>
+										<ResponsiveContainer>
+											<BarChart data={timeline.series} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+												<CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.text.primary, 0.08)} />
+												<XAxis
+													dataKey="bucket"
+													tick={{ fontSize: 11 }}
+													tickFormatter={(v: string) => {
+														const d = new Date(v);
+														return timeline.granularity === "hour"
+															? `${String(d.getUTCHours()).padStart(2, "0")}:00`
+															: `${String(d.getUTCDate()).padStart(2, "0")}/${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+													}}
+												/>
+												<YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+												<RechartsTooltip
+													labelFormatter={(v: string) => {
+														const d = new Date(v);
+														return d.toLocaleString("es-AR", {
+															day: "2-digit",
+															month: "2-digit",
+															hour: "2-digit",
+															minute: "2-digit",
+															timeZone: "UTC",
+														}) + " UTC";
+													}}
+													formatter={(v: any, name: string) => [v, getErrorTypeLabel(name)]}
+												/>
+												<Legend formatter={(v: string) => getErrorTypeLabel(v)} />
+												{timeline.errorTypes.map((et) => (
+													<Bar key={et} dataKey={et} stackId="a" fill={getErrorTypeColor(et)} />
+												))}
+											</BarChart>
+										</ResponsiveContainer>
+									</Box>
+								</CardContent>
+							</Card>
+						)}
+
+					<TableContainer component={Paper} sx={{ mt: 2 }}>
 						<Table>
 							<TableHead>
 								<TableRow>
@@ -1538,6 +1618,26 @@ const LogsTab: React.FC = () => {
 							</FormControl>
 						</Grid>
 						<Grid item xs={12} sm={6} md={2}>
+							<FormControl fullWidth size="small">
+								<InputLabel>Tipo de error</InputLabel>
+								<Select
+									value={filters.errorType || ""}
+									label="Tipo de error"
+									onChange={(e) => handleFilterChange("errorType", e.target.value || undefined)}
+								>
+									<MenuItem value="">Todos</MenuItem>
+									<MenuItem value="captcha_not_detected">Captcha no detectado</MenuItem>
+									<MenuItem value="captcha_solver_failed">Captcha no resuelto</MenuItem>
+									<MenuItem value="insufficient_balance">Saldo insuficiente</MenuItem>
+									<MenuItem value="scraping_zero_movements">Scraping 0 movs</MenuItem>
+									<MenuItem value="not_accessible_publicly">No accesible</MenuItem>
+									<MenuItem value="browser_error">Error de browser</MenuItem>
+									<MenuItem value="timeout">Timeout</MenuItem>
+									<MenuItem value="general_error">Error general</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={12} sm={6} md={2}>
 							<TextField
 								fullWidth
 								size="small"
@@ -1584,10 +1684,19 @@ const LogsTab: React.FC = () => {
 											<TableCell>
 												<Chip label={getWorkerTypeLabel(log.workerType)} size="small" variant="outlined" />
 											</TableCell>
-											<TableCell>
-												<Typography variant="body2" fontSize="0.8rem">
+											<TableCell onClick={(e) => e.stopPropagation()}>
+												<a
+													href={buildCausaLink(log.document.number, log.document.year, log.document.fuero)}
+													target="_blank"
+													rel="noopener noreferrer"
+													style={{
+														color: theme.palette.primary.main,
+														textDecoration: "underline",
+														fontSize: "0.8rem",
+													}}
+												>
 													{log.document.fuero} {log.document.number}/{log.document.year}
-												</Typography>
+												</a>
 											</TableCell>
 											<TableCell>
 												<Chip
@@ -1776,13 +1885,40 @@ const ErrorsTab: React.FC = () => {
 															{info.examples.length > 0 && (
 																<>
 																	<Typography variant="subtitle2" gutterBottom>
-																		Ejemplos:
+																		Ejemplos (click para ver la causa):
 																	</Typography>
-																	<Stack spacing={1}>
+																	<Stack spacing={0.5}>
 																		{info.examples.map((ex) => (
-																			<Typography key={ex.logId} variant="body2" fontFamily="monospace" fontSize="0.75rem">
-																				Doc: {ex.number}/{ex.year} - Log: {ex.logId}
-																			</Typography>
+																			<Stack
+																				key={ex.logId}
+																				direction="row"
+																				spacing={1}
+																				alignItems="center"
+																				flexWrap="wrap"
+																			>
+																				{ex.fuero && (
+																					<Chip label={ex.fuero} size="small" variant="outlined" sx={{ height: 18, fontSize: "0.65rem" }} />
+																				)}
+																				<a
+																					href={buildCausaLink(ex.number, ex.year, ex.fuero)}
+																					target="_blank"
+																					rel="noopener noreferrer"
+																					style={{
+																						fontFamily: "monospace",
+																						fontSize: "0.8rem",
+																						color: theme.palette.primary.main,
+																						textDecoration: "underline",
+																					}}
+																					onClick={(e) => e.stopPropagation()}
+																				>
+																					{ex.number}/{ex.year}
+																				</a>
+																				{ex.startTime && (
+																					<Typography variant="caption" color="text.secondary">
+																						{formatDate(ex.startTime)}
+																					</Typography>
+																				)}
+																			</Stack>
 																		))}
 																	</Stack>
 																</>
@@ -1825,7 +1961,14 @@ const ErrorsTab: React.FC = () => {
 															</Typography>
 														</TableCell>
 														<TableCell>
-															{log.document.fuero} {log.document.number}/{log.document.year}
+															<a
+																href={buildCausaLink(log.document.number, log.document.year, log.document.fuero)}
+																target="_blank"
+																rel="noopener noreferrer"
+																style={{ color: theme.palette.primary.main, textDecoration: "underline", fontSize: "0.8rem" }}
+															>
+																{log.document.fuero} {log.document.number}/{log.document.year}
+															</a>
 														</TableCell>
 														<TableCell>
 															{log.result?.errorType ? (
@@ -2095,10 +2238,19 @@ const SearchTab: React.FC = () => {
 											<TableCell>
 												<Chip label={getWorkerTypeLabel(log.workerType)} size="small" variant="outlined" />
 											</TableCell>
-											<TableCell>
-												<Typography variant="body2" fontSize="0.8rem">
+											<TableCell onClick={(e) => e.stopPropagation()}>
+												<a
+													href={buildCausaLink(log.document.number, log.document.year, log.document.fuero)}
+													target="_blank"
+													rel="noopener noreferrer"
+													style={{
+														color: theme.palette.primary.main,
+														textDecoration: "underline",
+														fontSize: "0.8rem",
+													}}
+												>
 													{log.document.fuero} {log.document.number}/{log.document.year}
-												</Typography>
+												</a>
 											</TableCell>
 											<TableCell>
 												<Chip
