@@ -54,6 +54,7 @@ import {
 	Archive,
 	Timer,
 	Repeat,
+	Warning2,
 } from "iconsax-react";
 import CausaDetalleModal from "./CausaDetalleModal";
 import JudicialMovementsModal from "./JudicialMovementsModal";
@@ -580,6 +581,41 @@ const CarpetasVerificadasApp = () => {
 		const sortedHours = [...hours].sort((a, b) => a - b);
 		const formatted = sortedHours.map((h) => `${h.toString().padStart(2, "0")}:00`);
 		return `Actualizado a las ${formatted.join(", ")}`;
+	};
+
+	// Errores de hoy (espeja getTodayUpdateInfo). count/hours del día actual ART.
+	const getTodayErrorInfo = (causa: Causa): { isToday: boolean; count: number; hours: number[]; byType: Record<string, number> } => {
+		const stats = causa.errorStats?.today;
+		if (!stats || !stats.date) return { isToday: false, count: 0, hours: [], byType: {} };
+		const today = getArgentinaDate();
+		const isToday = stats.date === today;
+		return {
+			isToday,
+			count: isToday ? stats.count || 0 : 0,
+			hours: isToday ? stats.hours || [] : [],
+			byType: isToday ? stats.byType || {} : {},
+		};
+	};
+
+	// Tooltip para errores: horas + desglose por tipo
+	const formatErrorsTooltip = (hours: number[], byType: Record<string, number>): string => {
+		const sortedHours = [...hours].sort((a, b) => a - b);
+		const horasStr = sortedHours.map((h) => `${h.toString().padStart(2, "0")}:00`).join(", ");
+		const labels: Record<string, string> = {
+			captcha_not_detected: "Captcha no detectado",
+			captcha_solver_failed: "Captcha no resuelto",
+			insufficient_balance: "Saldo insuficiente",
+			scraping_zero_movements: "Scraping 0 movs",
+			not_accessible_publicly: "No accesible",
+			browser_error: "Error de browser",
+			timeout: "Timeout",
+			general_error: "Error general",
+		};
+		const byTypeStr = Object.entries(byType)
+			.sort((a, b) => b[1] - a[1])
+			.map(([k, v]) => `${labels[k] || k}: ${v}`)
+			.join(" · ");
+		return `Errores a las ${horasStr}${byTypeStr ? ` — ${byTypeStr}` : ""}`;
 	};
 
 	// Verificar estado de cooldown
@@ -1151,9 +1187,10 @@ const CarpetasVerificadasApp = () => {
 												<TableCell>
 													{(() => {
 														const todayInfo = getTodayUpdateInfo(causa);
+														const errorInfo = getTodayErrorInfo(causa);
 														const dateMatch = datesMatchUTC(causa.lastUpdate, causa.fechaUltimoMovimiento);
 														return (
-															<Stack direction="row" alignItems="center" spacing={0.5}>
+															<Stack direction="row" alignItems="center" spacing={0.5} flexWrap="wrap">
 																<Typography
 																	variant="caption"
 																	sx={{
@@ -1177,6 +1214,31 @@ const CarpetasVerificadasApp = () => {
 																				fontSize: "0.75rem",
 																				fontWeight: 700,
 																				backgroundColor: "success.main",
+																				color: "common.white",
+																				"& .MuiChip-icon": {
+																					color: "common.white",
+																					marginLeft: "6px",
+																				},
+																				"& .MuiChip-label": {
+																					paddingLeft: "4px",
+																					paddingRight: "8px",
+																				},
+																			}}
+																		/>
+																	</Tooltip>
+																)}
+																{errorInfo.isToday && errorInfo.count > 0 && (
+																	<Tooltip title={formatErrorsTooltip(errorInfo.hours, errorInfo.byType)}>
+																		<Chip
+																			icon={<Warning2 size={14} />}
+																			label={errorInfo.count}
+																			size="small"
+																			sx={{
+																				height: 22,
+																				minWidth: 40,
+																				fontSize: "0.75rem",
+																				fontWeight: 700,
+																				backgroundColor: "error.main",
 																				color: "common.white",
 																				"& .MuiChip-icon": {
 																					color: "common.white",

@@ -88,6 +88,7 @@ import {
 	YAxis,
 	CartesianGrid,
 } from "recharts";
+import { Link as RouterLink } from "react-router-dom";
 import CleanupConfigService, { CleanupConfig, CleanupStatusResponse, ExecutionHistoryItem } from "api/cleanupConfig";
 
 // ======================== HELPER FUNCTIONS ========================
@@ -840,14 +841,17 @@ const WorkersTab: React.FC = () => {
 												<YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
 												<RechartsTooltip
 													labelFormatter={(v: string) => {
+														// timeZone:"UTC" hace que getUTC* lea el valor crudo del
+														// string, ya viene pre-shifted a hora local de Argentina.
 														const d = new Date(v);
-														return d.toLocaleString("es-AR", {
+														const fmt = d.toLocaleString("es-AR", {
 															day: "2-digit",
 															month: "2-digit",
 															hour: "2-digit",
 															minute: "2-digit",
 															timeZone: "UTC",
-														}) + " UTC";
+														});
+														return `${fmt} hs (ART)`;
 													}}
 													formatter={(v: any, name: string) => [v, getErrorTypeLabel(name)]}
 												/>
@@ -1685,10 +1689,8 @@ const LogsTab: React.FC = () => {
 												<Chip label={getWorkerTypeLabel(log.workerType)} size="small" variant="outlined" />
 											</TableCell>
 											<TableCell onClick={(e) => e.stopPropagation()}>
-												<a
-													href={buildCausaLink(log.document.number, log.document.year, log.document.fuero)}
-													target="_blank"
-													rel="noopener noreferrer"
+												<RouterLink
+													to={buildCausaLink(log.document.number, log.document.year, log.document.fuero)}
 													style={{
 														color: theme.palette.primary.main,
 														textDecoration: "underline",
@@ -1696,7 +1698,7 @@ const LogsTab: React.FC = () => {
 													}}
 												>
 													{log.document.fuero} {log.document.number}/{log.document.year}
-												</a>
+												</RouterLink>
 											</TableCell>
 											<TableCell>
 												<Chip
@@ -1899,10 +1901,8 @@ const ErrorsTab: React.FC = () => {
 																				{ex.fuero && (
 																					<Chip label={ex.fuero} size="small" variant="outlined" sx={{ height: 18, fontSize: "0.65rem" }} />
 																				)}
-																				<a
-																					href={buildCausaLink(ex.number, ex.year, ex.fuero)}
-																					target="_blank"
-																					rel="noopener noreferrer"
+																				<RouterLink
+																					to={buildCausaLink(ex.number, ex.year, ex.fuero)}
 																					style={{
 																						fontFamily: "monospace",
 																						fontSize: "0.8rem",
@@ -1912,7 +1912,7 @@ const ErrorsTab: React.FC = () => {
 																					onClick={(e) => e.stopPropagation()}
 																				>
 																					{ex.number}/{ex.year}
-																				</a>
+																				</RouterLink>
 																				{ex.startTime && (
 																					<Typography variant="caption" color="text.secondary">
 																						{formatDate(ex.startTime)}
@@ -1961,14 +1961,12 @@ const ErrorsTab: React.FC = () => {
 															</Typography>
 														</TableCell>
 														<TableCell>
-															<a
-																href={buildCausaLink(log.document.number, log.document.year, log.document.fuero)}
-																target="_blank"
-																rel="noopener noreferrer"
+															<RouterLink
+																to={buildCausaLink(log.document.number, log.document.year, log.document.fuero)}
 																style={{ color: theme.palette.primary.main, textDecoration: "underline", fontSize: "0.8rem" }}
 															>
 																{log.document.fuero} {log.document.number}/{log.document.year}
-															</a>
+															</RouterLink>
 														</TableCell>
 														<TableCell>
 															{log.result?.errorType ? (
@@ -2239,10 +2237,8 @@ const SearchTab: React.FC = () => {
 												<Chip label={getWorkerTypeLabel(log.workerType)} size="small" variant="outlined" />
 											</TableCell>
 											<TableCell onClick={(e) => e.stopPropagation()}>
-												<a
-													href={buildCausaLink(log.document.number, log.document.year, log.document.fuero)}
-													target="_blank"
-													rel="noopener noreferrer"
+												<RouterLink
+													to={buildCausaLink(log.document.number, log.document.year, log.document.fuero)}
 													style={{
 														color: theme.palette.primary.main,
 														textDecoration: "underline",
@@ -2250,7 +2246,7 @@ const SearchTab: React.FC = () => {
 													}}
 												>
 													{log.document.fuero} {log.document.number}/{log.document.year}
-												</a>
+												</RouterLink>
 											</TableCell>
 											<TableCell>
 												<Chip

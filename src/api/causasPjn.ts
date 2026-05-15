@@ -20,17 +20,34 @@ export interface ScrapingProgress {
 	zeroMovementsProtection?: ZeroMovementsProtection;
 }
 
-// Interface para estadísticas de actualización (updateStats en el modelo)
+// Interface para estadísticas de actualización (updateStats en el modelo).
+// IMPORTANTE: today.count y today.hours cuentan SOLO actualizaciones EXITOSAS
+// (los errores van a errorStats.today). El total de ejecuciones del día es
+// updateStats.today.count + errorStats.today.count.
 export interface UpdateStats {
-	count?: number; // Total actualizaciones (all time)
-	errors?: number; // Total errores
+	count?: number; // Total ejecuciones all-time (éxito + fallo)
+	errors?: number; // Total errores all-time
 	newMovs?: number; // Total movimientos encontrados
 	avgMs?: number; // Duración promedio en ms
 	last?: { $date: string } | string; // Última actualización
 	today?: {
 		date?: string; // "2026-02-01"
-		count?: number; // Veces actualizado hoy
-		hours?: number[]; // Horas de cada actualización [8, 11, 14]
+		count?: number; // Actualizaciones EXITOSAS hoy
+		hours?: number[]; // Horas de éxitos [8, 11, 14]
+	};
+}
+
+// Contador diario de errores por documento (espeja updateStats.today).
+// byType permite ver qué tipo de error predominó hoy.
+export interface ErrorStats {
+	count?: number; // Total errores all-time
+	last?: { $date: string } | string;
+	lastErrorType?: string;
+	today?: {
+		date?: string;
+		count?: number;
+		hours?: number[];
+		byType?: Record<string, number>; // { captcha_not_detected: 12, scraping_zero_movements: 1 }
 	};
 }
 
@@ -59,6 +76,7 @@ export interface Causa {
 	updatedAt?: { $date: string } | string;
 	scrapingProgress?: ScrapingProgress;
 	updateStats?: UpdateStats;
+	errorStats?: ErrorStats;
 }
 
 // Interface para estadísticas de elegibilidad
