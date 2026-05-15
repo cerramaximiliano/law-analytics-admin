@@ -138,6 +138,10 @@ const FeedbackInvitesPage = () => {
 	};
 
 	const handleCreate = async () => {
+		if (!form.recipientName?.trim()) {
+			enqueueSnackbar("Ingresá el nombre del destinatario", { variant: "warning" });
+			return;
+		}
 		if (form.type === "survey" && !form.surveyId) {
 			enqueueSnackbar("Seleccioná una encuesta", { variant: "warning" });
 			return;
@@ -478,10 +482,12 @@ const FeedbackInvitesPage = () => {
 
 						<TextField
 							fullWidth
-							label="Nombre del destinatario (opcional)"
+							required
+							label="Nombre del destinatario"
 							value={form.recipientName || ""}
 							onChange={(e) => setForm({ ...form, recipientName: e.target.value })}
-							helperText="Solo informativo — no se envía email automático"
+							error={!form.recipientName?.trim()}
+							helperText={!form.recipientName?.trim() ? "Campo obligatorio" : "Solo informativo — no se envía email automático"}
 						/>
 						<TextField
 							fullWidth
@@ -512,7 +518,7 @@ const FeedbackInvitesPage = () => {
 					<Button onClick={() => setCreateOpen(false)} disabled={busy}>
 						Cancelar
 					</Button>
-					<Button variant="contained" onClick={handleCreate} disabled={busy}>
+					<Button variant="contained" onClick={handleCreate} disabled={busy || !form.recipientName?.trim()}>
 						{busy ? "Generando..." : "Generar"}
 					</Button>
 				</DialogActions>
