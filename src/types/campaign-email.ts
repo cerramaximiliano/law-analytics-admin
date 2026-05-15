@@ -102,6 +102,9 @@ export interface SingleCampaignEmailResponse {
 	success: boolean;
 	data: CampaignEmail;
 	message?: string;
+	// Cantidad de contactos que ya habían terminado la secuencia y fueron
+	// reactivados al agregar este nuevo email final.
+	reactivatedContacts?: number;
 }
 
 // Interface for campaign email creation/update

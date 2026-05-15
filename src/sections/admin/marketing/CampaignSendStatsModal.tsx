@@ -30,9 +30,16 @@ import {
 	Tabs,
 	Tab,
 } from "@mui/material";
-import { CloseCircle, Chart, Sms, TickCircle, CloseCircle as CloseIcon, Warning2, Mouse, UserRemove, Code1, Copy } from "iconsax-react";
+import { CloseCircle, Chart, Sms, TickCircle, CloseCircle as CloseIcon, Warning2, Mouse, UserRemove, Code1, Copy, People, LogoutCurve } from "iconsax-react";
 import { CampaignService } from "store/reducers/campaign";
-import { Campaign, CampaignSendStatsSummary, EmailBreakdown, DailyBreakdown, StepBreakdownItem } from "types/campaign";
+import {
+	Campaign,
+	CampaignSendStatsSummary,
+	EmailBreakdown,
+	DailyBreakdown,
+	StepBreakdownItem,
+	CampaignAudienceStats,
+} from "types/campaign";
 import { ArrowDown2, ArrowUp2 } from "iconsax-react";
 
 interface CampaignSendStatsModalProps {
@@ -58,6 +65,9 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 	const [activeTab, setActiveTab] = useState<number>(0);
 	const [copied, setCopied] = useState<boolean>(false);
 	const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
+	const [audience, setAudience] = useState<CampaignAudienceStats | null>(null);
+	const [audienceLoading, setAudienceLoading] = useState<boolean>(false);
+	const [audienceError, setAudienceError] = useState<string | null>(null);
 
 	const toggleDayExpansion = (dayId: string) => {
 		setExpandedDays((prev) => {
@@ -84,6 +94,31 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 			fetchStats(campaign._id);
 		}
 	}, [open, campaign]);
+
+	// Fetch audiencia on demand cuando se abre la tab "Audiencia"
+	useEffect(() => {
+		if (open && activeTab === 1 && campaign?._id && !audience && !audienceLoading) {
+			fetchAudience(campaign._id);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [open, activeTab, campaign]);
+
+	const fetchAudience = async (campaignId: string) => {
+		try {
+			setAudienceLoading(true);
+			setAudienceError(null);
+			const response = await CampaignService.getCampaignAudienceStats(campaignId);
+			if (response.success) {
+				setAudience(response.data);
+			} else {
+				setAudienceError("No se pudieron obtener las estadísticas de audiencia");
+			}
+		} catch (err: any) {
+			setAudienceError(err?.response?.data?.error || err?.message || "Error al cargar estadísticas de audiencia");
+		} finally {
+			setAudienceLoading(false);
+		}
+	};
 
 	// Auto-refresh effect
 	useEffect(() => {
@@ -289,6 +324,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
 					<Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
 						<Tab icon={<Chart size={18} />} iconPosition="start" label="Estadísticas" />
+						<Tab icon={<People size={18} />} iconPosition="start" label="Audiencia" />
 						<Tab icon={<Code1 size={18} />} iconPosition="start" label="JSON Raw" />
 					</Tabs>
 				</Box>
@@ -626,6 +662,15 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 				)}
 
 				{activeTab === 1 && (
+					<AudienceTab
+						loading={audienceLoading}
+						error={audienceError}
+						data={audience}
+						onRefresh={() => campaign?._id && fetchAudience(campaign._id)}
+					/>
+				)}
+
+				{activeTab === 2 && (
 					<Box sx={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}>
 						{loading ? (
 							<Skeleton variant="rounded" height={400} />
@@ -715,6 +760,271 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 				</Button>
 			</DialogActions>
 		</Dialog>
+	);
+};
+
+// =========================================================================
+// AudienceTab — estado de la audiencia (no de los envíos)
+// =========================================================================
+interface AudienceTabProps {
+	loading: boolean;
+	error: string | null;
+	data: CampaignAudienceStats | null;
+	onRefresh: () => void;
+}
+
+const REASON_LABELS: Record<string, string> = {
+	finished: "Completó la secuencia",
+	unsubscribed: "Se desuscribió",
+	bounced: "Rebotó",
+	complained: "Se quejó",
+	manual: "Removido manualmente",
+	segment_sync: "Expulsado por segmento",
+	bounce: "Rebote",
+	complaint: "Queja",
+	unsubscribe: "Desuscripción",
+	campaign_endDate_reached: "Campaña expiró",
+};
+
+const reasonLabel = (r: string | null): string => (r ? REASON_LABELS[r] || r : "(sin razón registrada)");
+
+const AudienceTab: React.FC<AudienceTabProps> = ({ loading, error, data, onRefresh }) => {
+	const theme = useTheme();
+	const fmt = (n: number) => n.toLocaleString("es-AR");
+
+	if (loading) {
+		return (
+			<Grid container spacing={2} sx={{ mt: 0 }}>
+				{[1, 2, 3, 4].map((i) => (
+					<Grid item xs={6} md={3} key={i}>
+						<Skeleton variant="rounded" height={100} />
+					</Grid>
+				))}
+				<Grid item xs={12}>
+					<Skeleton variant="rounded" height={300} />
+				</Grid>
+			</Grid>
+		);
+	}
+
+	if (error) {
+		return (
+			<Alert severity="error" sx={{ my: 2 }} action={<Button color="inherit" size="small" onClick={onRefresh}>Reintentar</Button>}>
+				{error}
+			</Alert>
+		);
+	}
+
+	if (!data) {
+		return (
+			<Typography variant="body1" color="textSecondary" align="center" sx={{ py: 3 }}>
+				No hay datos de audiencia
+			</Typography>
+		);
+	}
+
+	// Tarjeta para los 4 contadores principales
+	const HeadlineCard = ({ title, value, subtitle, icon, color }: { title: string; value: number; subtitle?: string; icon: React.ReactNode; color: string }) => (
+		<Box
+			sx={{
+				p: 2,
+				borderRadius: 2,
+				bgcolor: alpha(color, 0.1),
+				border: `1px solid ${alpha(color, 0.2)}`,
+				height: "100%",
+			}}
+		>
+			<Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+				<Box sx={{ color, mr: 1 }}>{icon}</Box>
+				<Typography variant="body2" color="textSecondary">{title}</Typography>
+			</Box>
+			<Typography variant="h4" sx={{ color }}>{fmt(value)}</Typography>
+			{subtitle && (
+				<Typography variant="caption" color="textSecondary">{subtitle}</Typography>
+			)}
+		</Box>
+	);
+
+	// Embudo: el step con mayor "delivered" como referencia para barra %
+	const maxDelivered = Math.max(1, ...data.byStep.map((s) => s.deliveredUnique));
+
+	return (
+		<Grid container spacing={3} sx={{ mt: 0 }}>
+			{/* Tarjetas principales */}
+			<Grid item xs={12}>
+				<Typography variant="subtitle1" fontWeight="bold" gutterBottom>Audiencia</Typography>
+				<Divider sx={{ mb: 2 }} />
+				<Grid container spacing={2}>
+					<Grid item xs={6} md={3}>
+						<HeadlineCard
+							title="Elegibles ahora"
+							value={data.eligible}
+							subtitle="Activos en cola y contactables"
+							icon={<TickCircle size={20} variant="Bold" />}
+							color={theme.palette.success.main}
+						/>
+					</Grid>
+					<Grid item xs={6} md={3}>
+						<HeadlineCard
+							title="Ya comenzaron"
+							value={data.total}
+							subtitle="Total que alguna vez entró"
+							icon={<People size={20} variant="Bold" />}
+							color={theme.palette.primary.main}
+						/>
+					</Grid>
+					<Grid item xs={6} md={3}>
+						<HeadlineCard
+							title="Dentro (no excluidos)"
+							value={data.inside}
+							subtitle="Active + completed + paused"
+							icon={<Chart size={20} variant="Bold" />}
+							color={theme.palette.info.main}
+						/>
+					</Grid>
+					<Grid item xs={6} md={3}>
+						<HeadlineCard
+							title="Excluidos"
+							value={data.excluded}
+							subtitle="Removed + skipped"
+							icon={<LogoutCurve size={20} variant="Bold" />}
+							color={theme.palette.warning.main}
+						/>
+					</Grid>
+				</Grid>
+				{data.inside + data.excluded !== data.total && (
+					<Alert severity="warning" sx={{ mt: 2 }}>
+						Inconsistencia: dentro ({fmt(data.inside)}) + excluidos ({fmt(data.excluded)}) ≠ total ({fmt(data.total)}).
+					</Alert>
+				)}
+			</Grid>
+
+			{/* Embudo por etapa */}
+			<Grid item xs={12}>
+				<Typography variant="subtitle1" fontWeight="bold" gutterBottom>Embudo por etapa</Typography>
+				<Divider sx={{ mb: 2 }} />
+				<TableContainer component={Paper} variant="outlined">
+					<Table size="small">
+						<TableHead>
+							<TableRow>
+								<TableCell>#</TableCell>
+								<TableCell>Email</TableCell>
+								<TableCell align="right">En cola (activos)</TableCell>
+								<TableCell align="right">Cumplieron (delivered únicos)</TableCell>
+								<TableCell sx={{ minWidth: 200 }}>Progresión</TableCell>
+							</TableRow>
+						</TableHead>
+						<TableBody>
+							{data.byStep.map((s) => (
+								<TableRow key={s.step} hover>
+									<TableCell>
+										<Chip label={s.step + 1} size="small" color="primary" variant="outlined" sx={{ minWidth: 32 }} />
+									</TableCell>
+									<TableCell>
+										<Typography variant="body2" fontWeight="medium">{s.name}</Typography>
+										{s.subject && (
+											<Typography variant="caption" color="textSecondary">
+												{s.subject.length > 50 ? `${s.subject.substring(0, 50)}…` : s.subject}
+											</Typography>
+										)}
+									</TableCell>
+									<TableCell align="right">
+										<Chip label={fmt(s.activeQueued)} size="small" color="info" variant="outlined" />
+									</TableCell>
+									<TableCell align="right">
+										<Chip label={fmt(s.deliveredUnique)} size="small" color="success" variant="outlined" />
+									</TableCell>
+									<TableCell>
+										<LinearProgress
+											variant="determinate"
+											value={(s.deliveredUnique / maxDelivered) * 100}
+											sx={{
+												height: 8,
+												borderRadius: 4,
+												bgcolor: alpha(theme.palette.success.main, 0.15),
+												"& .MuiLinearProgress-bar": { bgcolor: theme.palette.success.main, borderRadius: 4 },
+											}}
+										/>
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</TableContainer>
+			</Grid>
+
+			{/* Exclusiones por etapa con razón */}
+			<Grid item xs={12} md={7}>
+				<Typography variant="subtitle1" fontWeight="bold" gutterBottom>Exclusiones por etapa</Typography>
+				<Divider sx={{ mb: 2 }} />
+				{data.exclusionsByStep.length === 0 ? (
+					<Alert severity="info">No hay contactos excluidos.</Alert>
+				) : (
+					<TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 360 }}>
+						<Table size="small" stickyHeader>
+							<TableHead>
+								<TableRow>
+									<TableCell>Step</TableCell>
+									<TableCell>Estado subdoc</TableCell>
+									<TableCell>Razón</TableCell>
+									<TableCell>Estado contacto</TableCell>
+									<TableCell align="right">Cantidad</TableCell>
+								</TableRow>
+							</TableHead>
+							<TableBody>
+								{data.exclusionsByStep.map((row, idx) => (
+									<TableRow key={idx} hover>
+										<TableCell>
+											<Chip label={row.step + 1} size="small" color="primary" variant="outlined" sx={{ minWidth: 32 }} />
+										</TableCell>
+										<TableCell>
+											<Chip
+												label={row.status === "removed" ? "Removido" : "Skipped"}
+												size="small"
+												color={row.status === "removed" ? "warning" : "default"}
+												variant="outlined"
+											/>
+										</TableCell>
+										<TableCell>{reasonLabel(row.reason)}</TableCell>
+										<TableCell>
+											<Typography variant="caption">{row.contactStatus}</Typography>
+										</TableCell>
+										<TableCell align="right">{fmt(row.count)}</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
+					</TableContainer>
+				)}
+			</Grid>
+
+			{/* Completados con razón */}
+			<Grid item xs={12} md={5}>
+				<Typography variant="subtitle1" fontWeight="bold" gutterBottom>Completados</Typography>
+				<Divider sx={{ mb: 2 }} />
+				<TableContainer component={Paper} variant="outlined">
+					<Table size="small">
+						<TableHead>
+							<TableRow>
+								<TableCell>Razón</TableCell>
+								<TableCell align="right">Cantidad</TableCell>
+							</TableRow>
+						</TableHead>
+						<TableBody>
+							{data.completionsByReason.map((row, idx) => (
+								<TableRow key={idx} hover>
+									<TableCell>{reasonLabel(row.reason)}</TableCell>
+									<TableCell align="right">{fmt(row.count)}</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</TableContainer>
+				<Typography variant="caption" color="textSecondary" sx={{ display: "block", mt: 1 }}>
+					Generado: {new Date(data.meta.generatedAt).toLocaleString("es-AR")}
+				</Typography>
+			</Grid>
+		</Grid>
 	);
 };
 

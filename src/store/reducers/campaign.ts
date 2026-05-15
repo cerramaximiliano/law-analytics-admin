@@ -1,5 +1,12 @@
 import mktAxios from "utils/mktAxios";
-import { Campaign, CampaignResponse, CampaignInput, CampaignSendLogsResponse, CampaignSendStatsResponse } from "types/campaign";
+import {
+	Campaign,
+	CampaignResponse,
+	CampaignInput,
+	CampaignSendLogsResponse,
+	CampaignSendStatsResponse,
+	CampaignAudienceStatsResponse,
+} from "types/campaign";
 import { CampaignEmailResponse, SingleCampaignEmailResponse, CampaignEmailInput } from "types/campaign-email";
 import { ContactResponse } from "types/marketing-contact";
 import {
@@ -354,6 +361,16 @@ export const CampaignService = {
 			const response = await mktAxios.get(`/api/campaigns/${campaignId}/send-logs/stats`, {
 				params: filters,
 			});
+			return response.data;
+		} catch (error) {
+			throw error;
+		}
+	},
+
+	// Get campaign AUDIENCE statistics (estado de contactos en la campaña)
+	getCampaignAudienceStats: async (campaignId: string): Promise<CampaignAudienceStatsResponse> => {
+		try {
+			const response = await mktAxios.get(`/api/campaigns/${campaignId}/audience-stats`);
 			return response.data;
 		} catch (error) {
 			throw error;

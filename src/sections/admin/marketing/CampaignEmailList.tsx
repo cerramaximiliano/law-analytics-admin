@@ -224,13 +224,27 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 	};
 
 	// Success handlers
-	const handleEmailCreated = () => {
+	const handleEmailCreated = (info?: { reactivatedContacts?: number }) => {
 		setCreateModalOpen(false);
 		fetchCampaignEmails();
 		enqueueSnackbar("Email creado con éxito", {
 			variant: "success",
 			anchorOrigin: { vertical: "bottom", horizontal: "right" },
 		});
+
+		// Si el backend reactivó contactos previamente completados, avisarlo
+		// con un snackbar adicional (persistente hasta que el usuario lo cierre).
+		const reactivated = info?.reactivatedContacts ?? 0;
+		if (reactivated > 0) {
+			enqueueSnackbar(
+				`Se reactivaron ${reactivated.toLocaleString("es-AR")} contactos que ya habían completado la secuencia. Recibirán este nuevo email en el próximo ciclo del scheduler.`,
+				{
+					variant: "info",
+					persist: true,
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				},
+			);
+		}
 	};
 
 	const handleEmailUpdated = () => {

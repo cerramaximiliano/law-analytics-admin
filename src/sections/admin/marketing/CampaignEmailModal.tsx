@@ -58,9 +58,11 @@ interface EmailTemplate {
 }
 
 interface CampaignEmailModalProps {
+	// onSuccess admite opcionalmente { reactivatedContacts } cuando el backend
+	// reactiva contactos completed al agregar un nuevo email final de secuencia.
 	open: boolean;
 	onClose: () => void;
-	onSuccess: () => void;
+	onSuccess: (info?: { reactivatedContacts?: number }) => void;
 	campaign: Campaign;
 	email?: CampaignEmail;
 	mode: "create" | "edit";
@@ -392,8 +394,9 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 			}
 
 			if (response && response.success) {
-				// No mostrar snackbar aquí, se maneja en el componente padre (CampaignEmailList)
-				onSuccess();
+				// No mostrar snackbar aquí, se maneja en el componente padre (CampaignEmailList).
+				// Si el backend reactivó contactos al agregar un nuevo email final, lo propagamos.
+				onSuccess({ reactivatedContacts: response.reactivatedContacts });
 			} else {
 				throw new Error("Error en la respuesta del servidor");
 			}

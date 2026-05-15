@@ -260,3 +260,47 @@ export interface CampaignSendStatsResponse {
 		dailyBreakdown: DailyBreakdown[];
 	};
 }
+
+// === Audience stats (estado de los contactos, no de los envíos) ===
+
+export interface AudienceStepItem {
+	step: number;
+	name: string;
+	subject?: string;
+	activeQueued: number;     // contactos esperando recibir este email
+	deliveredUnique: number;  // contactos distintos que ya recibieron este email
+}
+
+export interface AudienceExclusionItem {
+	step: number;
+	status: "removed" | "skipped";
+	reason: string | null;          // removalReason o skippedReason
+	contactStatus: "active" | "unsubscribed" | "bounced" | "complained";
+	count: number;
+}
+
+export interface AudienceCompletionItem {
+	reason: "finished" | "unsubscribed" | "bounced" | "complained" | "manual" | null;
+	count: number;
+}
+
+export interface CampaignAudienceStats {
+	eligible: number;
+	total: number;
+	inside: number;
+	excluded: number;
+	statusBreakdown: Record<string, number>;
+	byStep: AudienceStepItem[];
+	exclusionsByStep: AudienceExclusionItem[];
+	completionsByReason: AudienceCompletionItem[];
+	meta: {
+		sequenceLength: number;
+		lastSequenceIndex: number;
+		generatedAt: string;
+	};
+}
+
+export interface CampaignAudienceStatsResponse {
+	success: boolean;
+	data: CampaignAudienceStats;
+}
