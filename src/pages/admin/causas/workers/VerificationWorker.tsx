@@ -26,9 +26,10 @@ import {
 	MenuItem,
 	FormControl,
 } from "@mui/material";
-import { Edit2, TickCircle, CloseCircle, Refresh, Setting2 } from "iconsax-react";
+import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, Warning2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig } from "api/workers";
+import { ManagerConfigService, ManagerStatusResponse, ManagerAlertsResponse } from "api/managerConfig";
 import AdvancedConfigModal from "./AdvancedConfigModal";
 
 // Enums según el modelo mongoose
@@ -52,6 +53,10 @@ const VerificationWorker = () => {
 	const [editValues, setEditValues] = useState<Partial<WorkerConfig>>({});
 	const [advancedConfigOpen, setAdvancedConfigOpen] = useState(false);
 	const [selectedConfig, setSelectedConfig] = useState<WorkerConfig | null>(null);
+	// Estado del manager para mostrar chips de "PJN en mantenimiento" y alertas
+	// (mismo origen que ManagerConfigPanel — pjn-api /manager-config/status + /alerts)
+	const [managerStatus, setManagerStatus] = useState<ManagerStatusResponse["data"] | null>(null);
+	const [managerAlerts, setManagerAlerts] = useState<ManagerAlertsResponse | null>(null);
 
 	// Helper para obtener labels
 	const getVerificationModeLabel = (value: string) => {
@@ -77,8 +82,21 @@ const VerificationWorker = () => {
 		}
 	};
 
+	// Cargar estado del manager (mismo origen que la vista Actualización).
+	// Silencioso: si falla, no rompemos la tabla principal de verificación.
+	const fetchManagerStatus = async () => {
+		try {
+			const [statusRes, alertsRes] = await Promise.all([ManagerConfigService.getCurrentStatus(), ManagerConfigService.getAlerts()]);
+			setManagerStatus(statusRes.data);
+			setManagerAlerts(alertsRes);
+		} catch (error) {
+			console.error("Error fetching manager status:", error);
+		}
+	};
+
 	useEffect(() => {
 		fetchConfigs();
+		fetchManagerStatus();
 	}, []);
 
 	// Obtener el ID real del documento
@@ -182,9 +200,52 @@ const VerificationWorker = () => {
 	return (
 		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 			{/* Header con acciones */}
-			<Box display="flex" justifyContent="space-between" alignItems="center">
-				<Typography variant="h5">Configuración del Worker de Verificación</Typography>
-				<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchConfigs}>
+			<Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
+				<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+					<Typography variant="h5">Configuración del Worker de Verificación</Typography>
+					{managerStatus?.pjnSiteStatus && managerStatus.pjnSiteStatus.status !== "unknown" && (
+						<Tooltip
+							title={
+								managerStatus.pjnSiteStatus.status === "maintenance"
+									? `Sitio PJN en mantenimiento desde ${
+											managerStatus.pjnSiteStatus.maintenanceSince
+												? new Date(managerStatus.pjnSiteStatus.maintenanceSince).toLocaleString("es-AR", {
+														timeZone: "America/Argentina/Buenos_Aires",
+												  })
+												: "—"
+									  }${managerStatus.pjnSiteStatus.message ? ` — ${managerStatus.pjnSiteStatus.message}` : ""}${
+											managerStatus.pjnSiteStatus.lastDetectedBy ? ` (detectado por ${managerStatus.pjnSiteStatus.lastDetectedBy})` : ""
+									  }`
+									: `Sitio PJN operativo${
+											managerStatus.pjnSiteStatus.lastHealthyAt
+												? ` — última verificación ${new Date(managerStatus.pjnSiteStatus.lastHealthyAt).toLocaleString("es-AR", {
+														timeZone: "America/Argentina/Buenos_Aires",
+												  })}`
+												: ""
+									  }`
+							}
+						>
+							<Chip
+								label={managerStatus.pjnSiteStatus.status === "maintenance" ? "PJN en mantenimiento" : "PJN operativo"}
+								size="small"
+								color={managerStatus.pjnSiteStatus.status === "maintenance" ? "warning" : "success"}
+								icon={managerStatus.pjnSiteStatus.status === "maintenance" ? <Warning2 size={14} /> : <TickCircle size={14} />}
+							/>
+						</Tooltip>
+					)}
+					{managerAlerts && managerAlerts.count > 0 && (
+						<Chip label={`${managerAlerts.count} alertas`} size="small" color="warning" icon={<Warning2 size={14} />} />
+					)}
+				</Stack>
+				<Button
+					variant="outlined"
+					size="small"
+					startIcon={<Refresh size={16} />}
+					onClick={() => {
+						fetchConfigs();
+						fetchManagerStatus();
+					}}
+				>
 					Actualizar
 				</Button>
 			</Box>

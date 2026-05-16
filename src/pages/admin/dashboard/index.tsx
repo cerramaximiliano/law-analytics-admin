@@ -46,6 +46,7 @@ import { CausasEjeService, WorkerStatsResponse, EligibilityStatsResponse as EjeE
 import { CausasMEVService, EligibilityStatsMEV } from "api/causasMEV";
 import pjnCredentialsService, { MisCausasCoverage } from "api/pjnCredentials";
 import scbaCausasService, { ScbaUpdateCoverage } from "api/scbaCausas";
+import { ManagerConfigService, PjnSiteStatus } from "api/managerConfig";
 import LinearProgress from "@mui/material/LinearProgress";
 import { Warning2 } from "iconsax-react";
 import { getTasasStatus, TasasStatus } from "utils/tasasService";
@@ -579,6 +580,9 @@ const AdminDashboard = () => {
 	const [loadingDatosPrevsStats, setLoadingDatosPrevsStats] = useState(false);
 	const [activeGroupsCount, setActiveGroupsCount] = useState<number>(0);
 	const [loadingGroups, setLoadingGroups] = useState(false);
+	// Estado del sitio PJN (mantenimiento detectado por los workers). Lo muestra
+	// el widget "Cobertura Actualización PJN" cuando status !== "unknown".
+	const [pjnSiteStatus, setPjnSiteStatus] = useState<PjnSiteStatus | null>(null);
 
 	const fetchActiveGroups = useCallback(async () => {
 		try {
@@ -627,6 +631,17 @@ const AdminDashboard = () => {
 			console.error("Error fetching EJE stats:", error);
 		} finally {
 			setLoadingEjeStats(false);
+		}
+	}, []);
+
+	// Trae el flag de "PJN en mantenimiento" del manager-config. Silencioso:
+	// si falla, el resto del dashboard sigue funcionando sin la badge.
+	const fetchPjnSiteStatus = useCallback(async () => {
+		try {
+			const res = await ManagerConfigService.getCurrentStatus();
+			setPjnSiteStatus(res.data.pjnSiteStatus ?? null);
+		} catch (error: any) {
+			console.error("Error fetching PJN site status:", error);
 		}
 	}, []);
 
@@ -792,6 +807,7 @@ const AdminDashboard = () => {
 		fetchTasasStatus();
 		fetchDatosPrevsStats();
 		fetchActiveGroups();
+		fetchPjnSiteStatus();
 	}, [
 		fetchData,
 		fetchNeverBounceCredits,
@@ -807,6 +823,7 @@ const AdminDashboard = () => {
 		fetchTasasStatus,
 		fetchDatosPrevsStats,
 		fetchActiveGroups,
+		fetchPjnSiteStatus,
 	]);
 
 	useRequestQueueRefresh(fetchData);
@@ -826,6 +843,7 @@ const AdminDashboard = () => {
 		fetchTasasStatus();
 		fetchDatosPrevsStats();
 		fetchActiveGroups();
+		fetchPjnSiteStatus();
 	};
 
 	// Chart data - Consistent colors: Green=Active/Verified, Gray=Inactive/Unverified
@@ -1405,12 +1423,37 @@ const AdminDashboard = () => {
 								},
 							}}
 						>
-							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5, flexWrap: "wrap", gap: 0.5 }}>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
 									<Refresh size={20} style={{ color: COLORS.primary.main }} />
 									<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}>
 										Cobertura Actualización PJN
 									</Typography>
+									{pjnSiteStatus && pjnSiteStatus.status === "maintenance" && (
+										<Tooltip
+											title={`Sitio PJN en mantenimiento desde ${
+												pjnSiteStatus.maintenanceSince
+													? new Date(pjnSiteStatus.maintenanceSince).toLocaleString("es-AR", {
+															timeZone: "America/Argentina/Buenos_Aires",
+													  })
+													: "—"
+											}${pjnSiteStatus.message ? ` — ${pjnSiteStatus.message}` : ""}${
+												pjnSiteStatus.lastDetectedBy ? ` (detectado por ${pjnSiteStatus.lastDetectedBy})` : ""
+											}`}
+										>
+											<Chip
+												label="PJN en mantenimiento"
+												size="small"
+												color="warning"
+												icon={<Warning2 size={12} />}
+												onClick={(e) => {
+													e.stopPropagation();
+													navigate("/admin/causas/workers");
+												}}
+												sx={{ fontSize: "0.65rem", fontWeight: 500 }}
+											/>
+										</Tooltip>
+									)}
 								</Box>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 									<Chip
