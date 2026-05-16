@@ -1989,12 +1989,37 @@ const AdminDashboard = () => {
 								},
 							}}
 						>
-							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5, flexWrap: "wrap", gap: 0.5 }}>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
 									<Refresh size={20} style={{ color: COLORS.primary.main }} />
 									<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}>
 										Cobertura Mis Causas
 									</Typography>
+									{pjnSiteStatus && pjnSiteStatus.status === "maintenance" && (
+										<Tooltip
+											title={`Sitio PJN en mantenimiento desde ${
+												pjnSiteStatus.maintenanceSince
+													? new Date(pjnSiteStatus.maintenanceSince).toLocaleString("es-AR", {
+															timeZone: "America/Argentina/Buenos_Aires",
+													  })
+													: "—"
+											}${pjnSiteStatus.message ? ` — ${pjnSiteStatus.message}` : ""}${
+												pjnSiteStatus.lastDetectedBy ? ` (detectado por ${pjnSiteStatus.lastDetectedBy})` : ""
+											}`}
+										>
+											<Chip
+												label="PJN en mantenimiento"
+												size="small"
+												color="warning"
+												icon={<Warning2 size={12} />}
+												onClick={(e) => {
+													e.stopPropagation();
+													navigate("/admin/causas/workers");
+												}}
+												sx={{ fontSize: "0.65rem", fontWeight: 500 }}
+											/>
+										</Tooltip>
+									)}
 								</Box>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 									<Chip
