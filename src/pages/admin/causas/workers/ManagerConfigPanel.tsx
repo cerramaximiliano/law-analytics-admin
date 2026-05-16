@@ -233,6 +233,44 @@ const ManagerConfigPanel: React.FC = () => {
 						{status && (
 							<Chip label={status.isRunning ? "Activo" : "Detenido"} size="small" color={status.isRunning ? "success" : "error"} />
 						)}
+						{status?.pjnSiteStatus && status.pjnSiteStatus.status !== "unknown" && (
+							<Tooltip
+								title={
+									status.pjnSiteStatus.status === "maintenance"
+										? `Sitio PJN en mantenimiento desde ${
+												status.pjnSiteStatus.maintenanceSince
+													? new Date(status.pjnSiteStatus.maintenanceSince).toLocaleString("es-AR", {
+															timeZone: "America/Argentina/Buenos_Aires",
+													  })
+													: "—"
+										  }${status.pjnSiteStatus.message ? ` — ${status.pjnSiteStatus.message}` : ""}${
+												status.pjnSiteStatus.lastDetectedBy
+													? ` (detectado por ${status.pjnSiteStatus.lastDetectedBy})`
+													: ""
+										  }`
+										: `Sitio PJN operativo${
+												status.pjnSiteStatus.lastHealthyAt
+													? ` — última verificación ${new Date(status.pjnSiteStatus.lastHealthyAt).toLocaleString("es-AR", {
+															timeZone: "America/Argentina/Buenos_Aires",
+													  })}`
+													: ""
+										  }`
+								}
+							>
+								<Chip
+									label={status.pjnSiteStatus.status === "maintenance" ? "PJN en mantenimiento" : "PJN operativo"}
+									size="small"
+									color={status.pjnSiteStatus.status === "maintenance" ? "warning" : "success"}
+									icon={
+										status.pjnSiteStatus.status === "maintenance" ? (
+											<Warning2 size={14} />
+										) : (
+											<TickCircle size={14} />
+										)
+									}
+								/>
+							</Tooltip>
+						)}
 						{alerts && alerts.count > 0 && (
 							<Chip label={`${alerts.count} alertas`} size="small" color="warning" icon={<Warning2 size={14} />} />
 						)}

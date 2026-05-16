@@ -92,6 +92,16 @@ export interface ManagerConfig {
 	createdAt: string;
 }
 
+export interface PjnSiteStatus {
+	status: "healthy" | "maintenance" | "unknown";
+	message: string | null;
+	maintenanceSince: string | null;
+	lastDetectedAt: string | null;
+	lastDetectedBy: string | null;
+	lastHealthyAt: string | null;
+	consecutiveDetections: number;
+}
+
 export interface ManagerStatusResponse {
 	success: boolean;
 	message: string;
@@ -110,6 +120,7 @@ export interface ManagerStatusResponse {
 		isStale: boolean;
 		totalWorkers: number;
 		totalPending: number;
+		pjnSiteStatus?: PjnSiteStatus | null;
 	};
 }
 
