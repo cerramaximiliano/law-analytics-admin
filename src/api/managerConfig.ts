@@ -149,6 +149,43 @@ export interface ManagerAlertsResponse {
 	data: ManagerAlert[];
 }
 
+export interface PjnSiteIncident {
+	_id: string;
+	startedAt: string;
+	endedAt: string | null;
+	durationMs: number | null;
+	detectedBy: string | null;
+	resolvedBy: string | null;
+	message: string | null;
+	consecutiveDetections: number;
+	createdAt?: string;
+	updatedAt?: string;
+}
+
+export interface IncidentsSummary {
+	totalDurationMs: number;
+	avgDurationMs: number;
+	closedCount: number;
+	openCount: number;
+}
+
+export interface IncidentsResponse {
+	success: boolean;
+	message: string;
+	data: PjnSiteIncident[];
+	count: number;
+	summary: IncidentsSummary;
+	currentStatus: PjnSiteStatus | null;
+	serverTime: string;
+}
+
+export interface IncidentsQuery {
+	limit?: number;
+	skip?: number;
+	resolved?: boolean;
+	sinceDays?: number;
+}
+
 export interface ApiResponse<T> {
 	success: boolean;
 	message: string;
@@ -223,6 +260,29 @@ export class ManagerConfigService {
 	static async getAlerts(): Promise<ManagerAlertsResponse> {
 		try {
 			const response = await pjnAxios.get("/api/manager-config/alerts");
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Obtiene el historial de incidents (caídas por mantenimiento del PJN).
+	 *
+	 * @param query Filtros opcionales:
+	 *   - limit (1-200, default 50)
+	 *   - skip (default 0)
+	 *   - resolved: true=cerrados, false=abiertos, undefined=todos
+	 *   - sinceDays: filtra incidents iniciados en los últimos N días
+	 */
+	static async getIncidents(query: IncidentsQuery = {}): Promise<IncidentsResponse> {
+		try {
+			const params: Record<string, string | number> = {};
+			if (query.limit !== undefined) params.limit = query.limit;
+			if (query.skip !== undefined) params.skip = query.skip;
+			if (query.resolved !== undefined) params.resolved = String(query.resolved);
+			if (query.sinceDays !== undefined) params.sinceDays = query.sinceDays;
+			const response = await pjnAxios.get("/api/manager-config/incidents", { params });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);

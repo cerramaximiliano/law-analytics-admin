@@ -33,6 +33,7 @@ import { WorkerConfig } from "api/workers";
 import WorkersPjnService from "api/workersPjn";
 import AdvancedConfigModal from "./AdvancedConfigModal";
 import ManagerConfigPanel from "./ManagerConfigPanel";
+import PjnIncidentsPanel from "./PjnIncidentsPanel";
 import WorkerStatistics from "./WorkerStatistics";
 
 // Enums para el worker de actualización
@@ -205,6 +206,7 @@ const AppUpdateWorker = () => {
 	const ManagerContent = () => (
 		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 			<ManagerConfigPanel />
+			<PjnIncidentsPanel />
 		</Stack>
 	);
 
