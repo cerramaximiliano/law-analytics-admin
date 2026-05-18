@@ -1,5 +1,5 @@
 // assets
-import { Category, Chart } from "iconsax-react";
+import { Category, Chart, Filter } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -25,6 +25,14 @@ const dashboard: NavItemType = {
 			type: "item",
 			icon: Chart,
 			url: "/admin/ga4-analytics",
+			breadcrumbs: true,
+		},
+		{
+			id: "funnel-snapshots",
+			title: "Funnel Snapshots",
+			type: "item",
+			icon: Filter,
+			url: "/admin/funnel-snapshots",
 			breadcrumbs: true,
 		},
 	],

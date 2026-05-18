@@ -103,6 +103,9 @@ const Dashboard = Loadable(lazy(() => import("pages/admin/dashboard")));
 // GA4 Analytics page
 const GA4Analytics = Loadable(lazy(() => import("pages/admin/ga4-analytics")));
 
+// Funnel Snapshots page (data persistida por la-ads cron)
+const FunnelSnapshots = Loadable(lazy(() => import("pages/admin/funnel-snapshots")));
+
 // Expenses page
 const ExpensesPage = Loadable(lazy(() => import("pages/admin/expenses")));
 
@@ -580,6 +583,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<GA4Analytics />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "funnel-snapshots",
+							element: (
+								<AdminRoleGuard>
+									<FunnelSnapshots />
 								</AdminRoleGuard>
 							),
 						},
