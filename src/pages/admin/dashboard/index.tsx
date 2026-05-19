@@ -53,6 +53,7 @@ import { getTasasStatus, TasasStatus } from "utils/tasasService";
 import { getStats as getDatosPrevisionales, Stats as DatosPrevsStats } from "utils/datosPrevsionalesService";
 import GroupsService from "api/groups";
 import ServicesStatusWidget from "./ServicesStatusWidget";
+import PrivacyStatsWidget from "./PrivacyStatsWidget";
 
 // Theme-aware color helper - maps semantic roles to MUI theme palette tokens
 // Usage: const COLORS = getThemeColors(theme) inside any component with useTheme()
@@ -1398,6 +1399,9 @@ const AdminDashboard = () => {
 					<Grid container spacing={{ xs: 1, sm: 2 }}>
 						<Grid item xs={12} sm={6} md={3}>
 							<ServicesStatusWidget />
+						</Grid>
+						<Grid item xs={12} sm={6} md={9}>
+							<PrivacyStatsWidget />
 						</Grid>
 					</Grid>
 				</Box>

@@ -56,6 +56,7 @@ import {
 	Repeat,
 	Warning2,
 } from "iconsax-react";
+import PrivacyStatsWidget from "../dashboard/PrivacyStatsWidget";
 import CausaDetalleModal from "./CausaDetalleModal";
 import JudicialMovementsModal from "./JudicialMovementsModal";
 import IntervinientesModal from "./IntervinientesModal";
@@ -764,6 +765,12 @@ const CarpetasVerificadasApp = () => {
 
 	return (
 		<MainCard title="Carpetas Verificadas (App)">
+			{/* Privacy stats compactas: visibilidad inmediata de cuántas causas
+			    están marcadas privadas y cuántas cambiaron recientemente. */}
+			<Box sx={{ mb: 2, p: 1.5, border: 1, borderColor: "divider", borderRadius: 1.5 }}>
+				<PrivacyStatsWidget compact />
+			</Box>
+
 			{/* Header: Resultados + Cobertura compacta */}
 			<Box sx={{ mb: 2 }}>
 				<Grid container spacing={2} alignItems="center">

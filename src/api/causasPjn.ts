@@ -162,6 +162,49 @@ export interface CapacityStatsResponse {
 	};
 }
 
+// ===== Privacy stats =====
+// Resumen de causas marcadas como privadas (isPrivate=true) por fuero
+// para el widget admin. Sirve también para el card en /admin/causas/verified-app.
+export interface PrivacyStatsFueroEntry {
+	total: number;
+	last24h: number;
+	last7d: number;
+}
+
+export interface PrivacyStatsRecentCausa {
+	_id: string;
+	number?: number;
+	year?: number;
+	caratula?: string;
+	fuero?: string;
+	causaType?: string;
+	privateDetectedAt?: string;
+}
+
+export interface PrivacyStatsChecker {
+	enabled: boolean;
+	cronExpression: string | null;
+	threshold: number;
+	lastRun: string | null;
+	allTimeStats: {
+		causas_marked_private?: number;
+		causas_reset_public?: number;
+		folders_synced?: number;
+		total_runs?: number;
+	} | null;
+}
+
+export interface PrivacyStatsResponse {
+	success: boolean;
+	data: {
+		total: number;
+		byFuero: Record<"CIV" | "COM" | "CSS" | "CNT", PrivacyStatsFueroEntry>;
+		changes: { last24h: number; last7d: number };
+		recent: PrivacyStatsRecentCausa[];
+		checker: PrivacyStatsChecker | null;
+	};
+}
+
 export interface CausasResponse {
 	success: boolean;
 	message: string;
@@ -430,6 +473,19 @@ export class CausasPjnService {
 	}): Promise<CapacityStatsResponse> {
 		try {
 			const response = await pjnAxios.get("/api/causas/stats/capacity", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Resumen agregado de causas privadas (widget admin).
+	 * GET /api/causas/stats/privacy
+	 */
+	static async getPrivacyStats(): Promise<PrivacyStatsResponse> {
+		try {
+			const response = await pjnAxios.get("/api/causas/stats/privacy");
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
