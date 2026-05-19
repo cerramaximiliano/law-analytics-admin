@@ -10,20 +10,6 @@ interface PrivacyStatsWidgetProps {
 	onRefresh?: () => void;
 }
 
-const FUERO_LABELS: Record<string, string> = {
-	CIV: "Civil",
-	COM: "Comercial",
-	CSS: "Seg. Social",
-	CNT: "Trabajo",
-};
-
-const FUERO_COLORS: Record<string, "primary" | "secondary" | "warning" | "info"> = {
-	CIV: "primary",
-	COM: "secondary",
-	CSS: "warning",
-	CNT: "info",
-};
-
 const getColors = (theme: Theme) => ({
 	private: { main: theme.palette.error.main, lighter: alpha(theme.palette.error.light, 0.15) },
 	change24h: { main: theme.palette.warning.main, lighter: alpha(theme.palette.warning.light, 0.15) },
@@ -83,7 +69,7 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 				<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
 					<Lock1 size={20} style={{ color: COLORS.private.main }} />
 					<Typography variant="subtitle1" fontWeight="bold">
-						Causas privadas
+						Causas Privadas PJN
 					</Typography>
 				</Box>
 				<Skeleton variant="rectangular" width="100%" height={compact ? 80 : 200} sx={{ borderRadius: 1 }} />
@@ -106,7 +92,7 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 				<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 					<Lock1 size={20} style={{ color: COLORS.private.main }} />
 					<Typography variant={compact ? "subtitle2" : "subtitle1"} fontWeight="bold">
-						Causas marcadas privadas
+						Causas Privadas PJN
 					</Typography>
 				</Box>
 				<Tooltip title="Actualizar">
@@ -163,27 +149,6 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 					</Box>
 				</Grid>
 			</Grid>
-
-			{/* Breakdown por fuero */}
-			<Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: compact ? 0 : 2 }}>
-				{(Object.keys(FUERO_LABELS) as Array<keyof typeof FUERO_LABELS>).map((code) => {
-					const entry = stats.byFuero[code as "CIV" | "COM" | "CSS" | "CNT"];
-					if (!entry) return null;
-					return (
-						<Tooltip
-							key={code}
-							title={`${FUERO_LABELS[code]}: ${entry.total} privadas · 24h:${entry.last24h} · 7d:${entry.last7d}`}
-						>
-							<Chip
-								size="small"
-								color={FUERO_COLORS[code]}
-								variant={entry.total > 0 ? "filled" : "outlined"}
-								label={`${FUERO_LABELS[code]} · ${entry.total}`}
-							/>
-						</Tooltip>
-					);
-				})}
-			</Stack>
 
 			{!compact && (
 				<>
