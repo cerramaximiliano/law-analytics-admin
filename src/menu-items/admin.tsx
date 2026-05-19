@@ -19,6 +19,7 @@ import {
 	Box1,
 	People,
 	Judge,
+	Routing2,
 } from "iconsax-react";
 
 // type
@@ -338,6 +339,43 @@ const admin: NavItemType = {
 			icon: People,
 			url: "/admin/groups",
 			breadcrumbs: true,
+		},
+		{
+			id: "integrations",
+			title: "Integraciones",
+			type: "collapse",
+			icon: Routing2,
+			breadcrumbs: true,
+			children: [
+				{
+					id: "integrations-overview",
+					title: "Resumen",
+					type: "item",
+					url: "/admin/integrations",
+					breadcrumbs: true,
+				},
+				{
+					id: "integrations-pjn",
+					title: "Mis Causas PJN",
+					type: "item",
+					url: "/admin/causas/workers",
+					breadcrumbs: true,
+				},
+				{
+					id: "integrations-scba",
+					title: "Mis Causas SCBA",
+					type: "item",
+					url: "/admin/workers/mev",
+					breadcrumbs: true,
+				},
+				{
+					id: "integrations-groups",
+					title: "Grupos / Teams",
+					type: "item",
+					url: "/admin/groups",
+					breadcrumbs: true,
+				},
+			],
 		},
 		{
 			id: "subscriptions",

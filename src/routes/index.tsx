@@ -136,6 +136,9 @@ const PostalTrackingPage = Loadable(lazy(() => import("pages/admin/postal-tracki
 // Groups page
 const GroupsPage = Loadable(lazy(() => import("pages/admin/groups")));
 
+// Integrations page
+const IntegrationsPage = Loadable(lazy(() => import("pages/admin/integrations")));
+
 // PDF Templates page
 const PdfTemplatesPage = Loadable(lazy(() => import("pages/admin/pdf-templates")));
 
@@ -695,6 +698,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<GroupsPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "integrations",
+							element: (
+								<AdminRoleGuard>
+									<IntegrationsPage />
 								</AdminRoleGuard>
 							),
 						},

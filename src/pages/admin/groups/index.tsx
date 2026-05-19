@@ -32,6 +32,8 @@ import { Refresh, SearchNormal1, Eye, People, Crown1, TickCircle, Warning2, Arch
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import GroupsService, { Group, GroupStats, GroupFilters } from "api/groups";
+import IntegrationsConfigService, { ServiceFlag } from "api/integrationsConfig";
+import ServiceAvailabilityCard from "pages/admin/integrations/ServiceAvailabilityCard";
 import GroupDetailModal from "./GroupDetailModal";
 
 // ====================================
@@ -128,7 +130,52 @@ export default function GroupsPage() {
 	const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
 	const [modalOpen, setModalOpen] = useState(false);
 
+	// Integrations config (servicio a usuarios)
+	const [groupsFlag, setGroupsFlag] = useState<ServiceFlag | null>(null);
+	const [flagSaving, setFlagSaving] = useState(false);
+
 	// ---- Data fetching ----
+
+	const fetchIntegrationsFlag = useCallback(async () => {
+		try {
+			const res = await IntegrationsConfigService.getConfig();
+			setGroupsFlag(res.data.services.groups);
+		} catch (err) {
+			console.error("[GroupsPage] Error al cargar integrations config:", err);
+		}
+	}, []);
+
+	const handleToggleService = async (enabled: boolean) => {
+		try {
+			setFlagSaving(true);
+			const res = await IntegrationsConfigService.updateService("groups", { enabled });
+			setGroupsFlag(res.data.services.groups);
+			enqueueSnackbar(enabled ? "Servicio de grupos habilitado" : "Servicio de grupos deshabilitado", {
+				variant: "success",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.message || "Error al actualizar el servicio", { variant: "error" });
+		} finally {
+			setFlagSaving(false);
+		}
+	};
+
+	const handleSaveMaintenanceMessage = async (message: string | null) => {
+		try {
+			setFlagSaving(true);
+			const res = await IntegrationsConfigService.updateService("groups", { maintenanceMessage: message });
+			setGroupsFlag(res.data.services.groups);
+			enqueueSnackbar("Mensaje de mantenimiento actualizado", {
+				variant: "success",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.message || "Error al guardar el mensaje", { variant: "error" });
+		} finally {
+			setFlagSaving(false);
+		}
+	};
 
 	const fetchStats = useCallback(async () => {
 		setLoadingStats(true);
@@ -166,7 +213,8 @@ export default function GroupsPage() {
 
 	useEffect(() => {
 		fetchStats();
-	}, [fetchStats]);
+		fetchIntegrationsFlag();
+	}, [fetchStats, fetchIntegrationsFlag]);
 
 	useEffect(() => {
 		fetchGroups();
@@ -205,6 +253,23 @@ export default function GroupsPage() {
 
 	return (
 		<MainCard title="Grupos de Usuarios">
+			{/* Servicio a Usuarios */}
+			<Box sx={{ mb: 3 }}>
+				<ServiceAvailabilityCard
+					title="Servicio a Usuarios"
+					description="Disponibilidad del servicio de Grupos / Teams"
+					enabled={groupsFlag?.enabled ?? true}
+					maintenanceMessage={groupsFlag?.maintenanceMessage}
+					saving={flagSaving}
+					editableMessage
+					updatedAt={groupsFlag?.updatedAt}
+					updatedBy={groupsFlag?.updatedBy}
+					helperOff="El servicio está deshabilitado. Los usuarios verán un aviso de mantenimiento al intentar usar Grupos."
+					onToggle={handleToggleService}
+					onSaveMessage={handleSaveMaintenanceMessage}
+				/>
+			</Box>
+
 			{/* Stats */}
 			<Grid container spacing={2} sx={{ mb: 3 }}>
 				<Grid item xs={6} sm={3}>
