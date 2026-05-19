@@ -1,6 +1,22 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Alert, Box, Grid, IconButton, Skeleton, Stack, Tooltip, Typography } from "@mui/material";
-import { Refresh } from "iconsax-react";
+import {
+	Alert,
+	Box,
+	Button,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
+	Grid,
+	IconButton,
+	Skeleton,
+	Stack,
+	Tooltip,
+	Typography,
+	alpha,
+	useTheme,
+} from "@mui/material";
+import { Code1, Copy, Refresh } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 
@@ -29,10 +45,12 @@ const initialServiceState = <T,>(): ServiceState<T> => ({ loading: true, saving:
 
 const IntegrationsPage: React.FC = () => {
 	const { enqueueSnackbar } = useSnackbar();
+	const theme = useTheme();
 
 	const [integrations, setIntegrations] = useState<ServiceState<IntegrationsConfigDoc>>(initialServiceState());
 	const [pjn, setPjn] = useState<ServiceState<ScrapingManagerConfig>>(initialServiceState());
 	const [scba, setScba] = useState<ServiceState<ScbaManagerConfig>>(initialServiceState());
+	const [rawOpen, setRawOpen] = useState(false);
 
 	// ---- Fetchers ----
 
@@ -154,6 +172,15 @@ const IntegrationsPage: React.FC = () => {
 		}
 	};
 
+	const handleCopyRaw = async () => {
+		try {
+			await navigator.clipboard.writeText(JSON.stringify(integrations.data, null, 2));
+			enqueueSnackbar("JSON copiado al portapapeles", { variant: "success" });
+		} catch {
+			enqueueSnackbar("No se pudo copiar al portapapeles", { variant: "error" });
+		}
+	};
+
 	// ---- Render helpers ----
 
 	const groupsFlag = integrations.data?.services.groups;
@@ -164,11 +191,20 @@ const IntegrationsPage: React.FC = () => {
 		<MainCard
 			title="Integraciones"
 			secondary={
-				<Tooltip title="Actualizar todo">
-					<IconButton onClick={refreshAll} size="small">
-						<Refresh size={18} />
-					</IconButton>
-				</Tooltip>
+				<Stack direction="row" spacing={0.5}>
+					<Tooltip title="Ver IntegrationsConfig (RAW JSON)">
+						<span>
+							<IconButton onClick={() => setRawOpen(true)} size="small" disabled={!integrations.data}>
+								<Code1 size={18} />
+							</IconButton>
+						</span>
+					</Tooltip>
+					<Tooltip title="Actualizar todo">
+						<IconButton onClick={refreshAll} size="small">
+							<Refresh size={18} />
+						</IconButton>
+					</Tooltip>
+				</Stack>
 			}
 		>
 			<Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -254,6 +290,45 @@ const IntegrationsPage: React.FC = () => {
 					</Typography>
 				</Stack>
 			</Box>
+
+			{/* RAW JSON dialog */}
+			<Dialog open={rawOpen} onClose={() => setRawOpen(false)} maxWidth="md" fullWidth>
+				<DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+					<Code1 size={20} />
+					IntegrationsConfig — RAW JSON
+				</DialogTitle>
+				<DialogContent dividers>
+					<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+						Colección: <code>integrationsconfigs</code> · Documento singleton con <code>key: "config"</code>
+					</Typography>
+					<Box
+						component="pre"
+						sx={{
+							m: 0,
+							p: 2,
+							borderRadius: 1,
+							bgcolor: alpha(theme.palette.text.primary, 0.04),
+							border: `1px solid ${theme.palette.divider}`,
+							fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+							fontSize: 12,
+							lineHeight: 1.6,
+							overflow: "auto",
+							maxHeight: "60vh",
+							whiteSpace: "pre",
+						}}
+					>
+						{integrations.data ? JSON.stringify(integrations.data, null, 2) : "(sin datos)"}
+					</Box>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleCopyRaw} startIcon={<Copy size={16} />} disabled={!integrations.data}>
+						Copiar JSON
+					</Button>
+					<Button onClick={() => setRawOpen(false)} variant="contained">
+						Cerrar
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</MainCard>
 	);
 };
