@@ -38,6 +38,12 @@ const CarpetasVerificadasEje = Loadable(lazy(() => import("pages/admin/eje/Carpe
 const CarpetasNoVerificadasEje = Loadable(lazy(() => import("pages/admin/eje/CarpetasNoVerificadasEje")));
 const CarpetasPivotsEje = Loadable(lazy(() => import("pages/admin/eje/CarpetasPivotsEje")));
 const EjeWorkersConfig = Loadable(lazy(() => import("pages/admin/eje/workers")));
+
+// PJ Salta pages
+const CarpetasVerificadasPjSalta = Loadable(lazy(() => import("pages/admin/pjsalta/CarpetasVerificadasPjSalta")));
+const CarpetasNoVerificadasPjSalta = Loadable(lazy(() => import("pages/admin/pjsalta/CarpetasNoVerificadasPjSalta")));
+const CarpetasPivotsPjSalta = Loadable(lazy(() => import("pages/admin/pjsalta/CarpetasPivotsPjSalta")));
+const PjSaltaWorkersConfig = Loadable(lazy(() => import("pages/admin/pjsalta/workers")));
 const RagWorkersPage = Loadable(lazy(() => import("pages/admin/rag-workers")));
 const CorpusWorkerPage = Loadable(lazy(() => import("pages/admin/workers/corpus")));
 const EscritosWorkerPage = Loadable(lazy(() => import("pages/admin/workers/escritos")));
@@ -426,6 +432,38 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<EjeWorkersConfig />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "pjsalta/verified-app",
+							element: (
+								<AdminRoleGuard>
+									<CarpetasVerificadasPjSalta />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "pjsalta/non-verified",
+							element: (
+								<AdminRoleGuard>
+									<CarpetasNoVerificadasPjSalta />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "pjsalta/pivots",
+							element: (
+								<AdminRoleGuard>
+									<CarpetasPivotsPjSalta />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "pjsalta/workers",
+							element: (
+								<AdminRoleGuard>
+									<PjSaltaWorkersConfig />
 								</AdminRoleGuard>
 							),
 						},
