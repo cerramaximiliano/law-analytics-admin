@@ -73,7 +73,8 @@ const CausaDetalleModalPjSalta = ({ open, onClose, causa, onCausaUpdated }: Caus
 			setHistoryPage(0);
 			setIsEditing(false);
 			setEditedCausa({});
-			setCurrentMovimientos(causa.movimientos || []);
+			// El campo real en pjsalta es `movimiento` (singular). `movimientos` es alias compat.
+			setCurrentMovimientos(causa.movimiento || causa.movimientos || []);
 			setUpdateHistory(causa.updateHistory || []);
 		}
 	}, [open, causa]);
@@ -308,9 +309,10 @@ const CausaDetalleModalPjSalta = ({ open, onClose, causa, onCausaUpdated }: Caus
 				</DialogTitle>
 
 				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-					<Tabs value={activeTab} onChange={handleTabChange} aria-label="causa eje detail tabs">
+					<Tabs value={activeTab} onChange={handleTabChange} aria-label="causa pjsalta detail tabs">
 						<Tab label="Información General" />
 						<Tab label={`Movimientos (${currentMovimientos.length})`} />
+						<Tab label={`Traspasos (${causa.traspasos?.length || 0})`} />
 						<Tab label={`Intervinientes (${causa.intervinientes?.length || 0})`} />
 						<Tab label={`Historial (${updateHistory.length})`} />
 						<Tab label="JSON" />
@@ -512,23 +514,53 @@ const CausaDetalleModalPjSalta = ({ open, onClose, causa, onCausaUpdated }: Caus
 								)}
 							</Grid>
 
-							{causa.sala && (
+							{/* Campos específicos PJ Salta */}
+							{causa.juez && (
 								<Grid item xs={12} md={6}>
 									<Typography variant="caption" color="textSecondary">
-										Sala
+										Juez en trámite
 									</Typography>
-									<Typography variant="body2">{causa.sala}</Typography>
+									<Typography variant="body2">{causa.juez}</Typography>
 								</Grid>
 							)}
 
-							{causa.tribunalSuperior && (
+							{causa.tribunalPrimera && (
 								<Grid item xs={12} md={6}>
 									<Typography variant="caption" color="textSecondary">
-										Tribunal Superior
+										Tribunal de Primera Instancia
 									</Typography>
-									<Typography variant="body2">{causa.tribunalSuperior}</Typography>
+									<Typography variant="body2">{causa.tribunalPrimera}</Typography>
 								</Grid>
 							)}
+
+							{causa.tribunalSegunda && (
+								<Grid item xs={12} md={6}>
+									<Typography variant="caption" color="textSecondary">
+										Tribunal de Segunda Instancia
+									</Typography>
+									<Typography variant="body2">{causa.tribunalSegunda}</Typography>
+								</Grid>
+							)}
+
+							{causa.corteJusticia && (
+								<Grid item xs={12} md={6}>
+									<Typography variant="caption" color="textSecondary">
+										Corte de Justicia
+									</Typography>
+									<Typography variant="body2">{causa.corteJusticia}</Typography>
+								</Grid>
+							)}
+
+							{causa.expedienteAdministrativoUACF && (
+								<Grid item xs={12} md={6}>
+									<Typography variant="caption" color="textSecondary">
+										Expediente Administrativo UACF
+									</Typography>
+									<Typography variant="body2">{causa.expedienteAdministrativoUACF}</Typography>
+								</Grid>
+							)}
+
+							{/* Sala y TribunalSuperior — no aplican a PJ Salta (campos legacy del modal eje) */}
 
 							{causa.ubicacionActual && (
 								<Grid item xs={12} md={6}>
@@ -575,12 +607,37 @@ const CausaDetalleModalPjSalta = ({ open, onClose, causa, onCausaUpdated }: Caus
 								)}
 							</Grid>
 
-							{(causa.monto || causa.montoMoneda) && (
+							{causa.tieneSentencia !== undefined && (
 								<Grid item xs={12} md={6}>
 									<Typography variant="caption" color="textSecondary">
-										Monto
+										Sentencia
 									</Typography>
-									<Typography variant="body2">{formatMonto(causa.monto, causa.montoMoneda)}</Typography>
+									<Box>
+										<Chip
+											label={causa.tieneSentencia ? "Sí" : "No"}
+											size="small"
+											color={causa.tieneSentencia ? "success" : "default"}
+											variant="outlined"
+										/>
+									</Box>
+								</Grid>
+							)}
+
+							{causa.portalData?.urlExpediente && (
+								<Grid item xs={12}>
+									<Typography variant="caption" color="textSecondary">
+										Link al portal IOL
+									</Typography>
+									<Typography variant="body2">
+										<a
+											href={causa.portalData.urlExpediente}
+											target="_blank"
+											rel="noopener noreferrer"
+											style={{ color: "inherit", wordBreak: "break-all" }}
+										>
+											{causa.portalData.urlExpediente}
+										</a>
+									</Typography>
 								</Grid>
 							)}
 
@@ -803,22 +860,34 @@ const CausaDetalleModalPjSalta = ({ open, onClose, causa, onCausaUpdated }: Caus
 											<Table size="small">
 												<TableHead>
 													<TableRow>
-														<TableCell>CUIJ</TableCell>
+														<TableCell width="20%">CUIJ</TableCell>
 														<TableCell>Carátula</TableCell>
-														<TableCell>Relación</TableCell>
+														<TableCell width="20%">Relación</TableCell>
+														<TableCell width="15%">Vinculada</TableCell>
 													</TableRow>
 												</TableHead>
 												<TableBody>
-													{causa.causasRelacionadas.map((rel: CausaRelacionada, index: number) => (
+													{causa.causasRelacionadas.map((rel: any, index: number) => (
 														<TableRow key={index}>
 															<TableCell>
 																<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
-																	{rel.cuij}
+																	{rel.identificador || rel.cuij || "—"}
 																</Typography>
 															</TableCell>
-															<TableCell>{rel.caratula || "N/A"}</TableCell>
 															<TableCell>
-																<Chip label={rel.relacion} size="small" variant="outlined" />
+																<Typography variant="body2" sx={{ wordBreak: "break-word" }}>
+																	{rel.caratula || "—"}
+																</Typography>
+															</TableCell>
+															<TableCell>
+																{rel.relacion ? (
+																	<Chip label={rel.relacion} size="small" variant="outlined" />
+																) : (
+																	<Typography variant="caption" color="textSecondary">—</Typography>
+																)}
+															</TableCell>
+															<TableCell>
+																<Typography variant="caption">{formatDateOnly(rel.fechaVinculacion)}</Typography>
 															</TableCell>
 														</TableRow>
 													))}
@@ -840,35 +909,50 @@ const CausaDetalleModalPjSalta = ({ open, onClose, causa, onCausaUpdated }: Caus
 										<Table size="small">
 											<TableHead>
 												<TableRow>
-													<TableCell width="12%">Fecha</TableCell>
-													<TableCell width="15%">Tipo</TableCell>
-													<TableCell>Descripción</TableCell>
-													<TableCell width="15%">Firmante</TableCell>
 													<TableCell width="10%">Número</TableCell>
+													<TableCell>Título</TableCell>
+													<TableCell width="12%">Fecha firma</TableCell>
+													<TableCell width="15%">Firmantes</TableCell>
+													<TableCell width="15%">Organismo</TableCell>
+													<TableCell width="8%" align="center">Adj.</TableCell>
+													<TableCell width="8%" align="center">Notif.</TableCell>
 												</TableRow>
 											</TableHead>
 											<TableBody>
 												{paginatedMovimientos.map((mov: MovimientoPjSalta, index: number) => (
-													<TableRow key={index} hover>
+													<TableRow key={mov.numero || index} hover>
 														<TableCell>
-															<Typography variant="caption">{formatDateOnly(mov.fecha)}</Typography>
+															<Typography variant="caption">{mov.numero || "—"}</Typography>
 														</TableCell>
-														<TableCell>{mov.tipo && <Chip label={mov.tipo} size="small" variant="outlined" />}</TableCell>
 														<TableCell>
 															<Typography variant="body2" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
-																{mov.descripcion || "Sin descripción"}
+																{mov.titulo || mov.descripcion || "Sin título"}
 															</Typography>
-															{mov.detalle && (
-																<Typography variant="caption" color="textSecondary" display="block">
-																	{mov.detalle}
-																</Typography>
+														</TableCell>
+														<TableCell>
+															<Typography variant="caption">
+																{formatDateOnly(mov.fechaFirma as any) || formatDateOnly(mov.fecha)}
+															</Typography>
+														</TableCell>
+														<TableCell>
+															<Typography variant="caption" sx={{ wordBreak: "break-word" }}>
+																{mov.firmantes || mov.firmante || "—"}
+															</Typography>
+														</TableCell>
+														<TableCell>
+															<Typography variant="caption" sx={{ wordBreak: "break-word" }}>
+																{mov.organismo || "—"}
+															</Typography>
+														</TableCell>
+														<TableCell align="center">
+															<Typography variant="caption">{mov.adjuntos || 0}</Typography>
+														</TableCell>
+														<TableCell align="center">
+															{mov.notificada ? (
+																<Chip label="Sí" size="small" color="success" variant="outlined" />
+															) : (
+																<Typography variant="caption" color="textSecondary">—</Typography>
 															)}
-														</TableCell>
-														<TableCell>
-															<Typography variant="caption">{mov.firmante || "N/A"}</Typography>
-														</TableCell>
-														<TableCell>
-															<Typography variant="caption">{mov.numero || "N/A"}</Typography>
 														</TableCell>
 													</TableRow>
 												))}
@@ -893,30 +977,87 @@ const CausaDetalleModalPjSalta = ({ open, onClose, causa, onCausaUpdated }: Caus
 						</Box>
 					)}
 
-					{/* Tab Panel 2: Intervinientes */}
+					{/* Tab Panel 2: Traspasos físicos (pestaña "Movimientos" del portal IOL) */}
 					{activeTab === 2 && (
+						<Box>
+							{causa.traspasos && causa.traspasos.length > 0 ? (
+								<TableContainer>
+									<Table size="small">
+										<TableHead>
+											<TableRow>
+												<TableCell width="18%">Fecha</TableCell>
+												<TableCell width="25%">Descripción</TableCell>
+												<TableCell>Origen → Destino</TableCell>
+												<TableCell width="15%">Observación</TableCell>
+												<TableCell width="8%" align="right">Tiempo</TableCell>
+											</TableRow>
+										</TableHead>
+										<TableBody>
+											{causa.traspasos.map((t, index) => (
+												<TableRow key={(t._id as string) || index} hover>
+													<TableCell>
+														<Typography variant="caption">{formatDate(t.fecha as any)}</Typography>
+													</TableCell>
+													<TableCell>
+														<Typography variant="body2">{t.descripcion || "—"}</Typography>
+													</TableCell>
+													<TableCell>
+														<Typography variant="caption" sx={{ wordBreak: "break-word" }}>
+															{t.origenDestino || "—"}
+														</Typography>
+													</TableCell>
+													<TableCell>
+														<Typography variant="caption">{t.observacion || "—"}</Typography>
+													</TableCell>
+													<TableCell align="right">
+														<Typography variant="caption">{t.tiempo || "—"}</Typography>
+													</TableCell>
+												</TableRow>
+											))}
+										</TableBody>
+									</Table>
+								</TableContainer>
+							) : (
+								<Alert severity="info">Esta causa no tiene traspasos físicos registrados</Alert>
+							)}
+						</Box>
+					)}
+
+					{/* Tab Panel 3: Intervinientes */}
+					{activeTab === 3 && (
 						<Box>
 							{causa.intervinientes && causa.intervinientes.length > 0 ? (
 								<TableContainer>
 									<Table size="small">
 										<TableHead>
 											<TableRow>
-												<TableCell width="20%">Tipo</TableCell>
+												<TableCell width="20%">Vínculo</TableCell>
 												<TableCell>Nombre</TableCell>
-												<TableCell width="30%">Representante</TableCell>
+												<TableCell width="25%">Representante</TableCell>
+												<TableCell width="25%">Domicilio</TableCell>
 											</TableRow>
 										</TableHead>
 										<TableBody>
 											{causa.intervinientes.map((interv: IntervinientePjSalta, index: number) => (
 												<TableRow key={index} hover>
 													<TableCell>
-														<Chip label={interv.tipo} size="small" variant="outlined" color="primary" />
+														<Chip
+															label={interv.vinculo || interv.tipo || "—"}
+															size="small"
+															variant="outlined"
+															color="primary"
+														/>
 													</TableCell>
 													<TableCell>
 														<Typography variant="body2">{interv.nombre}</Typography>
 													</TableCell>
 													<TableCell>
-														<Typography variant="caption">{interv.representante || "N/A"}</Typography>
+														<Typography variant="caption">{interv.representante || "—"}</Typography>
+													</TableCell>
+													<TableCell>
+														<Typography variant="caption" sx={{ wordBreak: "break-word" }}>
+															{interv.domicilio || "—"}
+														</Typography>
 													</TableCell>
 												</TableRow>
 											))}
@@ -929,8 +1070,8 @@ const CausaDetalleModalPjSalta = ({ open, onClose, causa, onCausaUpdated }: Caus
 						</Box>
 					)}
 
-					{/* Tab Panel 3: Historial de Actualizaciones */}
-					{activeTab === 3 && (
+					{/* Tab Panel 4: Historial de Actualizaciones */}
+					{activeTab === 4 && (
 						<Box>
 							<Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
 								<Typography variant="h6">Historial de Actualizaciones</Typography>
@@ -1038,7 +1179,7 @@ const CausaDetalleModalPjSalta = ({ open, onClose, causa, onCausaUpdated }: Caus
 					)}
 
 					{/* Tab Panel 4: JSON Raw */}
-					{activeTab === 4 && (
+					{activeTab === 5 && (
 						<Box sx={{ position: "relative", height: "100%" }}>
 							<Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 1 }}>
 								<Tooltip title="Copiar JSON">
