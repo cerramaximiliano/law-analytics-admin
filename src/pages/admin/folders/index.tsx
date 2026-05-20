@@ -41,6 +41,8 @@ import {
 	Archive,
 	Edit2,
 	Warning2,
+	Copy,
+	CopySuccess,
 } from "iconsax-react";
 import CausaDetalleModal from "../causas/CausaDetalleModal";
 import FolderEditModal from "./FolderEditModal";
@@ -118,6 +120,17 @@ const FoldersPage = () => {
 	// Modal de detalle de folder
 	const [detailModalOpen, setDetailModalOpen] = useState(false);
 	const [selectedFolderForDetail, setSelectedFolderForDetail] = useState<Folder | null>(null);
+
+	// Copia de _id al portapapeles
+	const [copiedFolderId, setCopiedFolderId] = useState<string | null>(null);
+
+	const handleCopyFolderId = async (id: string) => {
+		try {
+			await navigator.clipboard.writeText(id);
+			setCopiedFolderId(id);
+			setTimeout(() => setCopiedFolderId(null), 2000);
+		} catch {}
+	};
 
 	// Cargar carpetas
 	const fetchFolders = async () => {
@@ -572,7 +585,7 @@ const FoldersPage = () => {
 								<Table size="small">
 									<TableHead>
 										<TableRow>
-											<TableCell>Nombre</TableCell>
+											<TableCell>Carátula</TableCell>
 											<TableCell>Usuario</TableCell>
 											<TableCell>Materia</TableCell>
 											<TableCell>Estado</TableCell>
@@ -595,26 +608,44 @@ const FoldersPage = () => {
 											return (
 												<TableRow key={folder._id} hover>
 													<TableCell sx={{ maxWidth: 200 }}>
-														<Stack direction="row" alignItems="center" spacing={1}>
-															{folder.archived && (
-																<Tooltip title="Archivada">
-																	<Archive size={16} color={theme.palette.text.secondary} />
+														<Stack spacing={0.25}>
+															<Stack direction="row" alignItems="center" spacing={1}>
+																{folder.archived && (
+																	<Tooltip title="Archivada">
+																		<Archive size={16} color={theme.palette.text.secondary} />
+																	</Tooltip>
+																)}
+																{(folder.listRemoved || folder.pjnNotFound) && (
+																	<Tooltip
+																		title={`Causa ya no aparece en "Mis Causas" del portal ${(
+																			folder.listRemovedSource || "pjn"
+																		).toUpperCase()}${
+																			folder.listRemovedAt
+																				? ` (detectado ${new Date(folder.listRemovedAt).toLocaleDateString("es-AR")})`
+																				: ""
+																		}`}
+																	>
+																		<Warning2 size={16} variant="Bold" color={theme.palette.warning.main} />
+																	</Tooltip>
+																)}
+																<Typography variant="body2" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
+																	{folder.folderName}
+																</Typography>
+															</Stack>
+															<Stack direction="row" alignItems="center" spacing={0.5}>
+																<Typography variant="caption" color="textSecondary" sx={{ fontFamily: "monospace" }}>
+																	{folder._id}
+																</Typography>
+																<Tooltip title={copiedFolderId === folder._id ? "¡Copiado!" : "Copiar ID"}>
+																	<IconButton size="small" onClick={() => handleCopyFolderId(folder._id)} sx={{ p: 0.25 }}>
+																		{copiedFolderId === folder._id ? (
+																			<CopySuccess size={13} color="green" />
+																		) : (
+																			<Copy size={13} />
+																		)}
+																	</IconButton>
 																</Tooltip>
-															)}
-															{(folder.listRemoved || folder.pjnNotFound) && (
-																<Tooltip
-																	title={`Causa ya no aparece en "Mis Causas" del portal ${(
-																		folder.listRemovedSource || "pjn"
-																	).toUpperCase()}${
-																		folder.listRemovedAt ? ` (detectado ${new Date(folder.listRemovedAt).toLocaleDateString("es-AR")})` : ""
-																	}`}
-																>
-																	<Warning2 size={16} variant="Bold" color={theme.palette.warning.main} />
-																</Tooltip>
-															)}
-															<Typography variant="body2" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
-																{folder.folderName}
-															</Typography>
+															</Stack>
 														</Stack>
 													</TableCell>
 													<TableCell sx={{ maxWidth: 150 }}>
