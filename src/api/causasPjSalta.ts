@@ -336,34 +336,21 @@ export class CausasPjSaltaService {
 		return { success: true, data: data.candidates };
 	}
 
-	/**
-	 * Stats globales del subsistema pjsalta. El API actual no expone un endpoint
-	 * dedicado — los calculamos haciendo varios counts con limit=1.
-	 */
+	/** Stats globales del subsistema pjsalta — una sola query agregada en backend. */
 	static async getWorkerStats(): Promise<WorkerStatsResponse> {
 		try {
-			const queries = await Promise.all([
-				pjsaltaAxios.get("/causas", { params: { limit: 1 } }),
-				pjsaltaAxios.get("/causas", { params: { limit: 1, verified: true, isPivot: false } }),
-				pjsaltaAxios.get("/causas", { params: { limit: 1, verified: false, isPivot: false } }),
-				pjsaltaAxios.get("/causas", { params: { limit: 1, verified: true, isValid: true, isPivot: false } }),
-				pjsaltaAxios.get("/causas", { params: { limit: 1, verified: true, isValid: false, isPivot: false } }),
-			]);
-			const total = queries[0].data?.pagination?.total ?? 0;
-			const verified = queries[1].data?.pagination?.total ?? 0;
-			const pendingV = queries[2].data?.pagination?.total ?? 0;
-			const valid = queries[3].data?.pagination?.total ?? 0;
-			const invalid = queries[4].data?.pagination?.total ?? 0;
-			const rate = total > 0 ? `${Math.round((verified / total) * 100)}%` : "0%";
+			const response = await pjsaltaAxios.get("/causas/stats");
+			const d = response.data?.data || {};
 			return {
-				success: true,
+				success: !!response.data?.success,
 				data: {
-					total,
-					verification: { pending: pendingV, completed: verified, rate },
+					total: d.total || 0,
+					verification: d.verification || { pending: 0, completed: 0, rate: "0%" },
+					// `details` no aplica en pjsalta — devolvemos shape vacío
 					details: { pending: 0, completed: 0, rate: "0%" },
-					status: { valid, invalid, private: 0 },
-					processing: { locked: 0, stuck: 0, recentlyProcessed: 0 },
-					errors: { total: 0, distribution: [] },
+					status: d.status || { valid: 0, invalid: 0, private: 0 },
+					processing: { locked: 0, stuck: d.processing?.stuck || 0, recentlyProcessed: d.update?.updatedToday || 0 },
+					errors: { total: d.processing?.withErrors || 0, distribution: [] },
 				},
 			};
 		} catch (error) {
@@ -381,20 +368,25 @@ export class CausasPjSaltaService {
 		}
 	}
 
-	/** Stats de elegibilidad. Placeholders por ahora — no hay endpoint dedicado. */
+	/** Stats de elegibilidad para el update worker. */
 	static async getEligibilityStats(): Promise<EligibilityStatsResponse> {
-		return {
-			success: true,
-			data: {
-				elegibles: 0,
-				noElegibles: 0,
-				totalElegibles: 0,
-				actualizadosHoy: 0,
-				pendientesHoy: 0,
-				coveragePercent: 0,
-				thresholdHours: 24,
-			},
-		};
+		try {
+			const response = await pjsaltaAxios.get("/causas/eligibility");
+			return response.data;
+		} catch (error) {
+			return {
+				success: false,
+				data: {
+					elegibles: 0,
+					noElegibles: 0,
+					totalElegibles: 0,
+					actualizadosHoy: 0,
+					pendientesHoy: 0,
+					coveragePercent: 0,
+					thresholdHours: 24,
+				},
+			};
+		}
 	}
 }
 
