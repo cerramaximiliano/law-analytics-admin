@@ -38,7 +38,6 @@ import {
 import MainCard from "components/MainCard";
 import ScrollX from "components/ScrollX";
 import { getUsers, searchUsers, SearchUsersParams } from "store/reducers/users";
-import { openSnackbar } from "store/reducers/snackbar";
 import { DefaultRootStateProps } from "types/root";
 import { User } from "types/user";
 import UserView from "./UserView";
@@ -50,6 +49,7 @@ import GenerateDataModal from "./GenerateDataModal";
 import StripeSubscriptionsTable from "./StripeSubscriptionsTable";
 import UsersTimelineChart from "./UsersTimelineChart";
 import UserStatsService, { SyncFolderStatsResult, SyncFolderStatsBulkResult } from "api/userStats";
+import { useSnackbar } from "notistack";
 
 // assets
 import { Eye, Trash, Edit, Add, Chart, SearchNormal1, CloseCircle, Refresh, Copy, CopySuccess, Calculator } from "iconsax-react";
@@ -156,6 +156,7 @@ const headCells = [
 
 const UsersList = () => {
 	const theme = useTheme();
+	const { enqueueSnackbar } = useSnackbar();
 
 	const { users, loading, error } = useSelector((state: DefaultRootStateProps) => state.users);
 
@@ -219,26 +220,16 @@ const UsersList = () => {
 		try {
 			const response = await UserStatsService.syncFolderStatsForUser(userId);
 			if (response.success) {
-				dispatch(
-					openSnackbar({
-						open: true,
-						message: formatSyncResultMessage(response.data),
-						variant: "alert",
-						alert: { color: response.data.changed ? "success" : "info" },
-						close: true,
-					}),
-				);
+				enqueueSnackbar(formatSyncResultMessage(response.data), {
+					variant: response.data.changed ? "success" : "info",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
 			}
 		} catch (error: any) {
-			dispatch(
-				openSnackbar({
-					open: true,
-					message: error?.response?.data?.error || "Error al sincronizar stats",
-					variant: "alert",
-					alert: { color: "error" },
-					close: true,
-				}),
-			);
+			enqueueSnackbar(error?.response?.data?.error || "Error al sincronizar stats", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
 		} finally {
 			setSyncingUserId(null);
 		}
@@ -251,26 +242,19 @@ const UsersList = () => {
 			const response = await UserStatsService.syncFolderStatsBulk();
 			if (response.success) {
 				const r: SyncFolderStatsBulkResult = response.data;
-				dispatch(
-					openSnackbar({
-						open: true,
-						message: `Sync masivo: ${r.processed}/${r.totalUsers} procesados, ${r.changedUsers} con cambios, ${r.errors} errores`,
-						variant: "alert",
-						alert: { color: r.errors > 0 ? "warning" : "success" },
-						close: true,
-					}),
+				enqueueSnackbar(
+					`Sync masivo: ${r.processed}/${r.totalUsers} procesados, ${r.changedUsers} con cambios, ${r.errors} errores`,
+					{
+						variant: r.errors > 0 ? "warning" : "success",
+						anchorOrigin: { vertical: "bottom", horizontal: "right" },
+					},
 				);
 			}
 		} catch (error: any) {
-			dispatch(
-				openSnackbar({
-					open: true,
-					message: error?.response?.data?.error || "Error en sync masivo",
-					variant: "alert",
-					alert: { color: "error" },
-					close: true,
-				}),
-			);
+			enqueueSnackbar(error?.response?.data?.error || "Error en sync masivo", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
 		} finally {
 			setBulkSyncing(false);
 		}
