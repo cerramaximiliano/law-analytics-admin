@@ -40,6 +40,8 @@ export interface Folder {
 	archived: boolean;
 	pjn: boolean;
 	mev: boolean;
+	eje?: boolean;
+	scba?: boolean;
 	causaId?: string;
 	causaType?: string;
 	folderJuris?: FolderJuris;
@@ -111,6 +113,8 @@ export interface FolderStats {
 	active: number;
 	pjn: number;
 	mev: number;
+	eje?: number;
+	scba?: number;
 	withCausa: number;
 	verified: number;
 	valid?: number;
@@ -152,6 +156,8 @@ export interface FoldersFilters {
 	archived?: boolean;
 	pjn?: boolean;
 	mev?: boolean;
+	eje?: boolean;
+	scba?: boolean;
 	causaType?: string;
 	fuero?: string;
 }
@@ -173,6 +179,8 @@ class FoldersService {
 		if (filters.archived !== undefined) params.append("archived", String(filters.archived));
 		if (filters.pjn !== undefined) params.append("pjn", String(filters.pjn));
 		if (filters.mev !== undefined) params.append("mev", String(filters.mev));
+		if (filters.eje !== undefined) params.append("eje", String(filters.eje));
+		if (filters.scba !== undefined) params.append("scba", String(filters.scba));
 		if (filters.causaType) params.append("causaType", filters.causaType);
 		if (filters.fuero) params.append("fuero", filters.fuero);
 

@@ -29,6 +29,7 @@ import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import FoldersService, { Folder, FolderStats } from "api/folders";
+import UserStatsService, { SyncFolderStatsResult, SyncFolderStatsBulkResult } from "api/userStats";
 import {
 	Refresh,
 	Eye,
@@ -43,6 +44,7 @@ import {
 	Warning2,
 	Copy,
 	CopySuccess,
+	Calculator,
 } from "iconsax-react";
 import CausaDetalleModal from "../causas/CausaDetalleModal";
 import FolderEditModal from "./FolderEditModal";
@@ -132,6 +134,66 @@ const FoldersPage = () => {
 		} catch {}
 	};
 
+	// Sincronización de stats de folders por usuario
+	const [syncingUserId, setSyncingUserId] = useState<string | null>(null);
+	const [bulkSyncing, setBulkSyncing] = useState(false);
+
+	const formatSyncResultMessage = (r: SyncFolderStatsResult): string => {
+		if (!r.changed) return `Stats ya estaban correctos (${r.email || r.userId})`;
+		const b = r.before;
+		const a = r.after;
+		return (
+			`Stats sincronizados (${r.email || r.userId}): ` +
+			`activeFoldersCount ${b.activeFoldersCount}→${a.activeFoldersCount}, ` +
+			`counts.folders ${b.statsFolders ?? "∅"}→${a.statsFolders}, ` +
+			`counts.foldersTotal ${b.statsFoldersTotal ?? "∅"}→${a.statsFoldersTotal}`
+		);
+	};
+
+	const handleSyncFolderStats = async (userId: string) => {
+		setSyncingUserId(userId);
+		try {
+			const response = await UserStatsService.syncFolderStatsForUser(userId);
+			if (response.success) {
+				enqueueSnackbar(formatSyncResultMessage(response.data), {
+					variant: response.data.changed ? "success" : "info",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+			}
+		} catch (error: any) {
+			enqueueSnackbar(error?.response?.data?.error || "Error al sincronizar stats", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+		} finally {
+			setSyncingUserId(null);
+		}
+	};
+
+	const formatBulkResultMessage = (r: SyncFolderStatsBulkResult): string =>
+		`Sync masivo: ${r.processed}/${r.totalUsers} usuarios procesados, ${r.changedUsers} con cambios, ${r.errors} errores`;
+
+	const handleBulkSyncFolderStats = async () => {
+		if (!window.confirm("¿Sincronizar los stats de folders de TODOS los usuarios? Puede tardar varios segundos.")) return;
+		setBulkSyncing(true);
+		try {
+			const response = await UserStatsService.syncFolderStatsBulk();
+			if (response.success) {
+				enqueueSnackbar(formatBulkResultMessage(response.data), {
+					variant: response.data.errors > 0 ? "warning" : "success",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+			}
+		} catch (error: any) {
+			enqueueSnackbar(error?.response?.data?.error || "Error en sync masivo", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+		} finally {
+			setBulkSyncing(false);
+		}
+	};
+
 	// Cargar carpetas
 	const fetchFolders = async () => {
 		try {
@@ -160,6 +222,10 @@ const FoldersPage = () => {
 				filters.pjn = true;
 			} else if (typeFilter === "mev") {
 				filters.mev = true;
+			} else if (typeFilter === "eje") {
+				filters.eje = true;
+			} else if (typeFilter === "scba") {
+				filters.scba = true;
 			}
 
 			if (fueroFilter !== "todos") {
@@ -345,9 +411,11 @@ const FoldersPage = () => {
 	};
 
 	// Obtener tipo de sistema (PJN, MEV, Manual)
-	const getSystemType = (folder: Folder): { label: string; color: "primary" | "secondary" | "default" } => {
+	const getSystemType = (folder: Folder): { label: string; color: "primary" | "secondary" | "info" | "success" | "default" } => {
 		if (folder.pjn) return { label: "PJN", color: "primary" };
 		if (folder.mev) return { label: "MEV", color: "secondary" };
+		if (folder.eje) return { label: "EJE", color: "info" };
+		if (folder.scba) return { label: "SCBA", color: "success" };
 		return { label: "Manual", color: "default" };
 	};
 
@@ -407,6 +475,30 @@ const FoldersPage = () => {
 									</Typography>
 									<Typography variant="h5" color="secondary.main" fontWeight="bold">
 										{stats.mev}
+									</Typography>
+								</CardContent>
+							</Card>
+						</Grid>
+						<Grid item xs={6} sm={4} md={2}>
+							<Card sx={{ backgroundColor: "info.lighter", border: 1, borderColor: "info.main" }}>
+								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
+									<Typography variant="caption" color="text.secondary">
+										EJE
+									</Typography>
+									<Typography variant="h5" color="info.main" fontWeight="bold">
+										{stats.eje ?? 0}
+									</Typography>
+								</CardContent>
+							</Card>
+						</Grid>
+						<Grid item xs={6} sm={4} md={2}>
+							<Card sx={{ backgroundColor: "success.lighter", border: 1, borderColor: "success.main" }}>
+								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
+									<Typography variant="caption" color="text.secondary">
+										SCBA
+									</Typography>
+									<Typography variant="h5" color="success.main" fontWeight="bold">
+										{stats.scba ?? 0}
 									</Typography>
 								</CardContent>
 							</Card>
@@ -507,6 +599,8 @@ const FoldersPage = () => {
 									<MenuItem value="todos">Todos</MenuItem>
 									<MenuItem value="pjn">PJN</MenuItem>
 									<MenuItem value="mev">MEV</MenuItem>
+									<MenuItem value="eje">EJE</MenuItem>
+									<MenuItem value="scba">SCBA</MenuItem>
 								</Select>
 							</FormControl>
 						</Grid>
@@ -567,6 +661,20 @@ const FoldersPage = () => {
 							<IconButton onClick={handleRefresh} disabled={loading} size="small">
 								<Refresh />
 							</IconButton>
+						</Tooltip>
+						<Tooltip title="Recalcular stats de folders para TODOS los usuarios">
+							<span>
+								<Button
+									variant="outlined"
+									color="info"
+									startIcon={bulkSyncing ? <CircularProgress size={14} /> : <Calculator size={18} />}
+									onClick={handleBulkSyncFolderStats}
+									disabled={bulkSyncing || loading}
+									size="small"
+								>
+									Sync stats (todos)
+								</Button>
+							</span>
 						</Tooltip>
 					</Stack>
 				</Grid>
@@ -745,6 +853,24 @@ const FoldersPage = () => {
 																	<Edit2 size={18} />
 																</IconButton>
 															</Tooltip>
+															{folder.user?._id && (
+																<Tooltip title={`Recalcular stats de folders del usuario ${folder.user.email || folder.user._id}`}>
+																	<span>
+																		<IconButton
+																			size="small"
+																			color="info"
+																			onClick={() => handleSyncFolderStats(folder.user!._id)}
+																			disabled={syncingUserId === folder.user._id}
+																		>
+																			{syncingUserId === folder.user._id ? (
+																				<CircularProgress size={16} />
+																			) : (
+																				<Calculator size={18} />
+																			)}
+																		</IconButton>
+																	</span>
+																</Tooltip>
+															)}
 														</Stack>
 													</TableCell>
 												</TableRow>

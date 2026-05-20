@@ -7,6 +7,7 @@ import {
 	Box,
 	Button,
 	Chip,
+	CircularProgress,
 	Dialog,
 	Divider,
 	FormControl,
@@ -37,6 +38,7 @@ import {
 import MainCard from "components/MainCard";
 import ScrollX from "components/ScrollX";
 import { getUsers, searchUsers, SearchUsersParams } from "store/reducers/users";
+import { openSnackbar } from "store/reducers/snackbar";
 import { DefaultRootStateProps } from "types/root";
 import { User } from "types/user";
 import UserView from "./UserView";
@@ -47,9 +49,10 @@ import DeleteUserDialog from "./DeleteUserDialog";
 import GenerateDataModal from "./GenerateDataModal";
 import StripeSubscriptionsTable from "./StripeSubscriptionsTable";
 import UsersTimelineChart from "./UsersTimelineChart";
+import UserStatsService, { SyncFolderStatsResult, SyncFolderStatsBulkResult } from "api/userStats";
 
 // assets
-import { Eye, Trash, Edit, Add, Chart, SearchNormal1, CloseCircle, Refresh, Copy, CopySuccess } from "iconsax-react";
+import { Eye, Trash, Edit, Add, Chart, SearchNormal1, CloseCircle, Refresh, Copy, CopySuccess, Calculator } from "iconsax-react";
 
 // table sort
 function descendingComparator(a: any, b: any, orderBy: string) {
@@ -194,6 +197,84 @@ const UsersList = () => {
 	const [editModalOpen, setEditModalOpen] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [generateDataModalOpen, setGenerateDataModalOpen] = useState(false);
+
+	// Sincronización de stats de folders
+	const [syncingUserId, setSyncingUserId] = useState<string | null>(null);
+	const [bulkSyncing, setBulkSyncing] = useState(false);
+
+	const formatSyncResultMessage = (r: SyncFolderStatsResult): string => {
+		if (!r.changed) return `Stats ya estaban correctos (${r.email || r.userId})`;
+		const b = r.before;
+		const a = r.after;
+		return (
+			`Stats sincronizados (${r.email || r.userId}): ` +
+			`activeFoldersCount ${b.activeFoldersCount}→${a.activeFoldersCount}, ` +
+			`counts.folders ${b.statsFolders ?? "∅"}→${a.statsFolders}, ` +
+			`counts.foldersTotal ${b.statsFoldersTotal ?? "∅"}→${a.statsFoldersTotal}`
+		);
+	};
+
+	const handleSyncFolderStats = async (userId: string) => {
+		setSyncingUserId(userId);
+		try {
+			const response = await UserStatsService.syncFolderStatsForUser(userId);
+			if (response.success) {
+				dispatch(
+					openSnackbar({
+						open: true,
+						message: formatSyncResultMessage(response.data),
+						variant: "alert",
+						alert: { color: response.data.changed ? "success" : "info" },
+						close: true,
+					}),
+				);
+			}
+		} catch (error: any) {
+			dispatch(
+				openSnackbar({
+					open: true,
+					message: error?.response?.data?.error || "Error al sincronizar stats",
+					variant: "alert",
+					alert: { color: "error" },
+					close: true,
+				}),
+			);
+		} finally {
+			setSyncingUserId(null);
+		}
+	};
+
+	const handleBulkSyncFolderStats = async () => {
+		if (!window.confirm("¿Sincronizar los stats de folders de TODOS los usuarios? Puede tardar varios segundos.")) return;
+		setBulkSyncing(true);
+		try {
+			const response = await UserStatsService.syncFolderStatsBulk();
+			if (response.success) {
+				const r: SyncFolderStatsBulkResult = response.data;
+				dispatch(
+					openSnackbar({
+						open: true,
+						message: `Sync masivo: ${r.processed}/${r.totalUsers} procesados, ${r.changedUsers} con cambios, ${r.errors} errores`,
+						variant: "alert",
+						alert: { color: r.errors > 0 ? "warning" : "success" },
+						close: true,
+					}),
+				);
+			}
+		} catch (error: any) {
+			dispatch(
+				openSnackbar({
+					open: true,
+					message: error?.response?.data?.error || "Error en sync masivo",
+					variant: "alert",
+					alert: { color: "error" },
+					close: true,
+				}),
+			);
+		} finally {
+			setBulkSyncing(false);
+		}
+	};
 
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
 		setTabValue(newValue);
@@ -588,6 +669,19 @@ const UsersList = () => {
 									<Refresh size={20} />
 								</IconButton>
 							</Tooltip>
+							<Tooltip title="Recalcular stats de folders para TODOS los usuarios">
+								<span>
+									<Button
+										variant="outlined"
+										color="info"
+										onClick={handleBulkSyncFolderStats}
+										disabled={bulkSyncing || loading}
+										startIcon={bulkSyncing ? <CircularProgress size={14} /> : <Calculator size={18} />}
+									>
+										Sync stats folders
+									</Button>
+								</span>
+							</Tooltip>
 							<Button variant="contained" color="primary" onClick={handleAddUser} startIcon={<Add />}>
 								Agregar Usuario
 							</Button>
@@ -853,6 +947,21 @@ const UsersList = () => {
 															<IconButton color="success" onClick={() => handleGenerateData(user)}>
 																<Chart size={18} />
 															</IconButton>
+														</Tooltip>
+														<Tooltip title="Recalcular stats de folders">
+															<span>
+																<IconButton
+																	color="info"
+																	onClick={() => handleSyncFolderStats(user._id || user.id || "")}
+																	disabled={syncingUserId === (user._id || user.id)}
+																>
+																	{syncingUserId === (user._id || user.id) ? (
+																		<CircularProgress size={16} />
+																	) : (
+																		<Calculator size={18} />
+																	)}
+																</IconButton>
+															</span>
 														</Tooltip>
 														<Tooltip title="Eliminar">
 															<IconButton color="error" onClick={() => handleUserDelete(user)}>
