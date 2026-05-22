@@ -790,9 +790,73 @@ const EjeWorkersConfig: React.FC = () => {
 							</Stack>
 						}
 					>
-						<Typography variant="body2" color="text.secondary">
-							Gestión de workers para el sistema EJE (Expediente Judicial Electrónico) - Verificación y Actualización de expedientes
-						</Typography>
+						<Stack spacing={1.5}>
+							<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
+								<Box
+									component="span"
+									sx={{
+										display: "inline-flex",
+										alignItems: "center",
+										px: 1,
+										py: 0.25,
+										borderRadius: 1,
+										bgcolor: theme.palette.grey[800],
+										color: theme.palette.common.white,
+										fontSize: "0.65rem",
+										fontWeight: 500,
+										fontFamily: "monospace",
+										letterSpacing: "0.5px",
+									}}
+								>
+									worker_02
+								</Box>
+								<Box
+									component="span"
+									sx={{
+										display: "inline-flex",
+										alignItems: "center",
+										px: 0.75,
+										py: 0.25,
+										borderRadius: 1,
+										bgcolor: alpha(theme.palette.info.main, 0.1),
+										color: theme.palette.info.main,
+										fontSize: "0.6rem",
+										fontWeight: 500,
+										fontFamily: "monospace",
+									}}
+								>
+									100.98.180.101
+								</Box>
+								<Tooltip title="5 procesos PM2 en worker_02: manager · verification · update · stuck · pending-selection-flusher">
+									<Chip
+										label="PM2: manager · verification · update · stuck · flusher"
+										size="small"
+										color="secondary"
+										variant="outlined"
+										sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+									/>
+								</Tooltip>
+								<Chip
+									label="causas-eje · Atlas"
+									size="small"
+									color="info"
+									variant="outlined"
+									sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+								/>
+								<Tooltip title="API REST en server principal, PM2 process: eje/api">
+									<Chip
+										label="eje.lawanalytics.app · API"
+										size="small"
+										color="default"
+										variant="outlined"
+										sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+									/>
+								</Tooltip>
+							</Stack>
+							<Typography variant="body2" color="text.secondary">
+								Gestión de workers para el sistema EJE (Expediente Judicial Electrónico) - Verificación y Actualización de expedientes
+							</Typography>
+						</Stack>
 					</MainCard>
 				</Grid>
 
