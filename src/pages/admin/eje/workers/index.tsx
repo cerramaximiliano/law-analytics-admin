@@ -52,6 +52,7 @@ import {
 	Book1,
 } from "iconsax-react";
 import MainCard from "components/MainCard";
+import CronSelector from "components/admin/CronSelector";
 import { useTheme, alpha } from "@mui/material/styles";
 import DocumentationTabs from "./DocumentationTabs";
 import configEje, {
@@ -449,14 +450,12 @@ const EditWorkerDialog: React.FC<EditDialogProps> = ({ open, workerType, config,
 							InputProps={{ inputProps: { min: 0, max: 10 } }}
 						/>
 					</Grid>
-					<Grid item xs={6}>
-						<TextField
-							label="Expresión Cron"
-							fullWidth
-							size="small"
+					<Grid item xs={12}>
+						<CronSelector
+							label="Frecuencia"
 							value={formData.cronExpression || ""}
-							onChange={handleChange("cronExpression")}
-							helperText="Ej: */2 * * * *"
+							onChange={(v) => setFormData((prev) => ({ ...prev, cronExpression: v }))}
+							helperText="Cuándo corre el worker — requiere reinicio PM2 para aplicar"
 						/>
 					</Grid>
 
