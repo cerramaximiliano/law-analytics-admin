@@ -36,15 +36,29 @@ echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}  Actualizando ${DOMAIN}${NC}"
 echo -e "${GREEN}========================================${NC}"
 
-# Función para ejecutar comandos con sudo en el servidor
+# Función para ejecutar comandos con sudo en el servidor.
+# Asume que el usuario remoto tiene NOPASSWD configurado (ver /etc/sudoers.d/).
 remote_sudo() {
-	ssh -i "${SSH_KEY}" "${SERVER_USER}@${SERVER_IP}" "echo 'REDACTED' | sudo -S bash -c '$1'"
+	ssh -i "${SSH_KEY}" "${SERVER_USER}@${SERVER_IP}" "sudo bash -c '$1'"
 }
 
-# Función para ejecutar comandos localmente con sudo
+# Función para ejecutar comandos localmente con sudo.
 local_sudo() {
-	echo 'REDACTED' | sudo -S bash -c "$1"
+	sudo bash -c "$1"
 }
+
+# 0. Defensa contra archivos root-owned en el repo.
+# Si un deploy previo (o edición manual con sudo) dejó archivos del working
+# tree owned por root, `git reset --hard` falla silenciosamente con
+# "Permission denied" y el build queda con código viejo. Este chown se cura.
+# No toca node_modules ni .git (los excluye para no perder ownership intencional).
+echo -e "\n${YELLOW}[0/4] Verificando ownership del working tree...${NC}"
+if [ "$IS_REMOTE" = true ]; then
+	local_sudo "find ${REMOTE_PATH} -path ${REMOTE_PATH}/node_modules -prune -o -path ${REMOTE_PATH}/.git -prune -o -user root -exec chown ${SERVER_USER}:${SERVER_USER} {} + 2>/dev/null || true"
+else
+	remote_sudo "find ${REMOTE_PATH} -path ${REMOTE_PATH}/node_modules -prune -o -path ${REMOTE_PATH}/.git -prune -o -user root -exec chown ${SERVER_USER}:${SERVER_USER} {} + 2>/dev/null || true"
+fi
+echo -e "${GREEN}✓ Ownership verificado${NC}"
 
 # 1. Actualizar código
 echo -e "\n${YELLOW}[1/4] Obteniendo últimos cambios de Git...${NC}"
