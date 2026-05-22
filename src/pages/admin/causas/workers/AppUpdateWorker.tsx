@@ -27,13 +27,14 @@ import {
 	Tab,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, InfoCircle, Chart, People, MessageQuestion } from "iconsax-react";
+import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, InfoCircle, Chart, People, MessageQuestion, Code1 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkerConfig } from "api/workers";
 import WorkersPjnService from "api/workersPjn";
 import AdvancedConfigModal from "./AdvancedConfigModal";
 import ManagerConfigPanel from "./ManagerConfigPanel";
 import PjnIncidentsPanel from "./PjnIncidentsPanel";
+import PjnHtmlDriftPanel from "./PjnHtmlDriftPanel";
 import WorkerStatistics from "./WorkerStatistics";
 
 // Enums para el worker de actualización
@@ -654,6 +655,22 @@ const AppUpdateWorker = () => {
 					<Tab
 						label={
 							<Stack direction="row" spacing={1.5} alignItems="center">
+								<Code1 size={20} />
+								<Box>
+									<Typography variant="body2" fontWeight={500}>
+										HTML Drift
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Estructura del PJN
+									</Typography>
+								</Box>
+							</Stack>
+						}
+						sx={{ textTransform: "none" }}
+					/>
+					<Tab
+						label={
+							<Stack direction="row" spacing={1.5} alignItems="center">
 								<MessageQuestion size={20} />
 								<Box>
 									<Typography variant="body2" fontWeight={500}>
@@ -680,6 +697,9 @@ const AppUpdateWorker = () => {
 					<WorkerStatistics />
 				</TabPanel>
 				<TabPanel value={activeTab} index={3}>
+					<PjnHtmlDriftPanel />
+				</TabPanel>
+				<TabPanel value={activeTab} index={4}>
 					<HelpContent />
 				</TabPanel>
 			</Box>
