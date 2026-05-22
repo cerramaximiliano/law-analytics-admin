@@ -52,6 +52,7 @@ export interface IEmailConfig {
 }
 
 export interface IManagerSettings {
+	managerCron?: string;
 	checkInterval: number;
 	lockTimeoutMinutes: number;
 	updateThresholdHours: number;
@@ -342,6 +343,7 @@ function expandDailyStatsForUI(stats: IDailyStats[]): IDailyWorkerStats[] {
 }
 
 export interface IGlobalSettings {
+	managerCron?: string;
 	checkInterval?: number;
 	workStartHour?: number;
 	workEndHour?: number;
@@ -413,6 +415,7 @@ export const getAllWorkersConfig = async (): Promise<IAllWorkersResponse> => {
 	return {
 		workers,
 		globalSettings: {
+			managerCron: settings.managerCron,
 			checkInterval: settings.checkInterval,
 			workStartHour: settings.workStartHour,
 			workEndHour: settings.workEndHour,
@@ -522,6 +525,7 @@ export default {
 	getManager,
 	getManagerFull,
 	updateManagerConfig,
+	updateGlobalSettings,
 	toggleManager,
 	pauseManager,
 	getHistory,

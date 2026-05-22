@@ -575,6 +575,12 @@ const PjSaltaWorkersConfig: React.FC = () => {
 		config: null,
 	});
 
+	// Manager cron edit dialog
+	const [managerCronDialog, setManagerCronDialog] = useState<{ open: boolean; value: string }>({
+		open: false,
+		value: "",
+	});
+
 	// Data states
 	const [workersData, setWorkersData] = useState<IAllWorkersResponse | null>(null);
 	const [todayStats, setTodayStats] = useState<IDailyWorkerStats[]>([]);
@@ -677,6 +683,24 @@ const PjSaltaWorkersConfig: React.FC = () => {
 			workerType,
 			config: worker?.config || null,
 		});
+	};
+
+	const handleSaveManagerCron = async (newCron: string) => {
+		setActionLoading(true);
+		try {
+			await configPjSalta.updateGlobalSettings({ managerCron: newCron.trim() });
+			setSnackbar({
+				open: true,
+				message: "Cron del manager actualizado. Reinicio del proceso PM2 requerido para aplicar.",
+				severity: "success",
+			});
+			setManagerCronDialog({ open: false, value: "" });
+			fetchData();
+		} catch (error) {
+			setSnackbar({ open: true, message: "Error actualizando cron del manager", severity: "error" });
+		} finally {
+			setActionLoading(false);
+		}
 	};
 
 	const handleSaveWorkerConfig = async (updates: Partial<IManagerWorkerConfig>) => {
@@ -1367,6 +1391,29 @@ const PjSaltaWorkersConfig: React.FC = () => {
 												<Table size="small">
 													<TableBody>
 														<TableRow>
+															<TableCell>Cron del Manager</TableCell>
+															<TableCell align="right">
+																<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="flex-end">
+																	<Box sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>
+																		{workersData?.globalSettings?.managerCron || "* * * * *"}
+																	</Box>
+																	<Tooltip title="Editar cron del manager (requiere reinicio PM2)">
+																		<IconButton
+																			size="small"
+																			onClick={() =>
+																				setManagerCronDialog({
+																					open: true,
+																					value: workersData?.globalSettings?.managerCron || "* * * * *",
+																				})
+																			}
+																		>
+																			<Edit2 size={14} />
+																		</IconButton>
+																	</Tooltip>
+																</Stack>
+															</TableCell>
+														</TableRow>
+														<TableRow>
 															<TableCell>Umbral CPU</TableCell>
 															<TableCell align="right">{((workersData?.globalSettings?.cpuThreshold || 0.75) * 100).toFixed(0)}%</TableCell>
 														</TableRow>
@@ -1572,6 +1619,39 @@ const PjSaltaWorkersConfig: React.FC = () => {
 				onSave={handleSaveWorkerConfig}
 				loading={actionLoading}
 			/>
+
+			{/* Manager Cron Edit Dialog */}
+			<Dialog open={managerCronDialog.open} onClose={() => setManagerCronDialog({ open: false, value: "" })} maxWidth="xs" fullWidth>
+				<DialogTitle>Editar Cron del Manager</DialogTitle>
+				<DialogContent>
+					<Stack spacing={2} sx={{ pt: 1 }}>
+						<Alert severity="info" variant="outlined">
+							El cambio se guarda inmediatamente, pero requiere reiniciar el proceso PM2 <code>pjsalta-workers-manager</code> en producción para aplicar.
+						</Alert>
+						<TextField
+							autoFocus
+							fullWidth
+							label="Expresión cron"
+							value={managerCronDialog.value}
+							onChange={(e) => setManagerCronDialog({ ...managerCronDialog, value: e.target.value })}
+							helperText="Ej: * * * * * (cada minuto) — */5 * * * * (cada 5 min) — 0 * * * * (cada hora en punto)"
+							inputProps={{ style: { fontFamily: "monospace" } }}
+						/>
+					</Stack>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setManagerCronDialog({ open: false, value: "" })} disabled={actionLoading}>
+						Cancelar
+					</Button>
+					<Button
+						variant="contained"
+						onClick={() => handleSaveManagerCron(managerCronDialog.value)}
+						disabled={actionLoading || !managerCronDialog.value.trim()}
+					>
+						{actionLoading ? <CircularProgress size={20} /> : "Guardar"}
+					</Button>
+				</DialogActions>
+			</Dialog>
 
 			{/* Snackbar for notifications */}
 			<Snackbar
