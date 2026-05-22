@@ -35,6 +35,17 @@ const PRESETS: CronPreset[] = [
 
 const CUSTOM = "__custom__";
 
+/**
+ * Devuelve el label amigable para un cron, o null si no matchea ningún preset.
+ * Útil para vistas read-only que quieren mostrar "Cada 5 minutos" en lugar
+ * de la expresión cruda.
+ */
+export function getCronLabel(value: string | undefined | null): string | null {
+	if (!value) return null;
+	const preset = PRESETS.find((p) => p.value === value.trim());
+	return preset ? preset.label : null;
+}
+
 interface CronSelectorProps {
 	value: string;
 	onChange: (newValue: string) => void;

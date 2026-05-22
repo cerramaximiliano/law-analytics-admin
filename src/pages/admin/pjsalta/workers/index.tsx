@@ -52,6 +52,7 @@ import {
 	Book1,
 } from "iconsax-react";
 import MainCard from "components/MainCard";
+import CronSelector, { getCronLabel } from "components/admin/CronSelector";
 import { useTheme, alpha } from "@mui/material/styles";
 import DocumentationTabs from "./DocumentationTabs";
 import configPjSalta, {
@@ -449,14 +450,12 @@ const EditWorkerDialog: React.FC<EditDialogProps> = ({ open, workerType, config,
 							InputProps={{ inputProps: { min: 0, max: 10 } }}
 						/>
 					</Grid>
-					<Grid item xs={6}>
-						<TextField
-							label="Expresión Cron"
-							fullWidth
-							size="small"
+					<Grid item xs={12}>
+						<CronSelector
+							label="Frecuencia"
 							value={formData.cronExpression || ""}
-							onChange={handleChange("cronExpression")}
-							helperText="Ej: */2 * * * *"
+							onChange={(v) => setFormData((prev) => ({ ...prev, cronExpression: v }))}
+							helperText="Cuándo corre el worker — requiere reinicio PM2 para aplicar"
 						/>
 					</Grid>
 
@@ -1391,13 +1390,15 @@ const PjSaltaWorkersConfig: React.FC = () => {
 												<Table size="small">
 													<TableBody>
 														<TableRow>
-															<TableCell>Cron del Manager</TableCell>
+															<TableCell>Frecuencia del Manager</TableCell>
 															<TableCell align="right">
 																<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="flex-end">
-																	<Box sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>
-																		{workersData?.globalSettings?.managerCron || "* * * * *"}
-																	</Box>
-																	<Tooltip title="Editar cron del manager (requiere reinicio PM2)">
+																	<Tooltip title={workersData?.globalSettings?.managerCron || "* * * * *"}>
+																		<Typography variant="body2">
+																			{getCronLabel(workersData?.globalSettings?.managerCron) || "Personalizado"}
+																		</Typography>
+																	</Tooltip>
+																	<Tooltip title="Editar frecuencia del manager (requiere reinicio PM2)">
 																		<IconButton
 																			size="small"
 																			onClick={() =>
@@ -1621,21 +1622,18 @@ const PjSaltaWorkersConfig: React.FC = () => {
 			/>
 
 			{/* Manager Cron Edit Dialog */}
-			<Dialog open={managerCronDialog.open} onClose={() => setManagerCronDialog({ open: false, value: "" })} maxWidth="xs" fullWidth>
-				<DialogTitle>Editar Cron del Manager</DialogTitle>
+			<Dialog open={managerCronDialog.open} onClose={() => setManagerCronDialog({ open: false, value: "" })} maxWidth="sm" fullWidth>
+				<DialogTitle>Editar frecuencia del Manager</DialogTitle>
 				<DialogContent>
 					<Stack spacing={2} sx={{ pt: 1 }}>
 						<Alert severity="info" variant="outlined">
 							El cambio se guarda inmediatamente, pero requiere reiniciar el proceso PM2 <code>pjsalta-workers-manager</code> en producción para aplicar.
 						</Alert>
-						<TextField
-							autoFocus
-							fullWidth
-							label="Expresión cron"
+						<CronSelector
+							label="Frecuencia"
 							value={managerCronDialog.value}
-							onChange={(e) => setManagerCronDialog({ ...managerCronDialog, value: e.target.value })}
-							helperText="Ej: * * * * * (cada minuto) — */5 * * * * (cada 5 min) — 0 * * * * (cada hora en punto)"
-							inputProps={{ style: { fontFamily: "monospace" } }}
+							onChange={(v) => setManagerCronDialog({ ...managerCronDialog, value: v })}
+							helperText="Cuándo corre el ciclo del manager (escalar workers, capturar recursos, monitoreo)"
 						/>
 					</Stack>
 				</DialogContent>
