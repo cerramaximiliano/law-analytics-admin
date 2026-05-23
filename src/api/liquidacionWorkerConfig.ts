@@ -163,6 +163,150 @@ export interface FullDoc {
 	createdAt?: string;
 }
 
+// ── Document exploration ────────────────────────────────────────────────────
+
+export interface SectionInfo {
+	type: "HABER_CAJA" | "HABER_REAJUSTADO" | "RETROACTIVO" | "ESCRITO_COVER" | "OTRO";
+	confidence: number;
+	markers?: string[];
+	pageStart?: number;
+	pageEnd?: number;
+}
+
+export interface ExtractedData {
+	persona?: string;
+	beneficio?: string;
+	expediente?: string;
+	prestacion?: string;
+	fechaCese?: string;
+	fechaAdquisicion?: string;
+	fechaInicialPago?: string;
+	haberCaja?: {
+		haberInicialPercibido?: number;
+		haberInicialAlAlta?: number;
+		haberActual?: number;
+		fechaCalculo?: string;
+		pbu?: number;
+		pc?: number;
+		pap?: number;
+		pbuAlAlta?: number;
+		pcAlAlta?: number;
+		papAlAlta?: number;
+		totalAlAlta?: number;
+	};
+	haberReajustado?: {
+		haberInicialReajustado?: number;
+		haberActualReajustado?: number;
+		pbuReajustada?: number;
+		pcReajustada?: number;
+		papReajustada?: number;
+		diferenciaPbuPct?: number;
+		indiceUsado?: string;
+	};
+	retroactivo?: {
+		capital?: number;
+		intereses?: number;
+		total?: number;
+		pagado?: number;
+		saldo?: number;
+		fechaConsolidacion?: string;
+		primerHaberReclamado?: number;
+		haberPercibidoBase?: number;
+		tasaInteres?: string;
+	};
+}
+
+export interface LiquidacionDocListItem {
+	_id: string;
+	causaId: string;
+	causaNumber: number;
+	causaYear: number;
+	fuero?: string;
+	caratula: string;
+	juzgado?: number;
+	secretaria?: number;
+	movFecha?: string;
+	tipo?: string;
+	detalleNorm?: string;
+	url: string;
+	tipoDoc?: string;
+	category?: string;
+	pdfStatus?: string;
+	pdfPages?: number;
+	pdfProducer?: string;
+	sectionMix?: string;
+	hasHaberCaja?: boolean;
+	hasHaberReajustado?: boolean;
+	hasRetroactivo?: boolean;
+	extracted?: ExtractedData;
+	processedAt?: string;
+}
+
+export interface LiquidacionDocDetail extends LiquidacionDocListItem {
+	detalle?: string;
+	movIdx?: number;
+	pdfBytes?: number;
+	pdfCharsPerPage?: number;
+	pdfTitle?: string;
+	pdfNeedsOcr?: boolean;
+	pdfFailureReason?: string;
+	pdfFailureCount?: number;
+	sections?: SectionInfo[];
+	processorVersion?: string;
+	capturedAt?: string;
+	lastSeenAt?: string;
+}
+
+export interface CausaOrigen {
+	_id: string;
+	number?: number;
+	year?: number;
+	incidente?: string | null;
+	caratula?: string;
+	objeto?: string;
+	fuero?: string;
+	juzgado?: number;
+	secretaria?: number;
+	situacion?: string;
+	partes?: {
+		actor?: string;
+		demandado?: string;
+		causante?: string;
+	};
+	intervinientes?: Array<{ tipo?: string; nombre?: string }>;
+	movimientosCount?: number;
+	fechaUltimoMovimiento?: string;
+	lastUpdate?: string;
+	isPrivate?: boolean | null;
+	isArchived?: boolean | null;
+	verified?: boolean;
+	isValid?: boolean | null;
+}
+
+export interface DocumentsListParams {
+	page?: number;
+	limit?: number;
+	pdfStatus?: string;
+	sectionMix?: string;
+	category?: string;
+	fuero?: string;
+	caratula?: string;
+	fechaFrom?: string;
+	fechaTo?: string;
+	causaId?: string;
+	hasData?: boolean;
+	sortBy?: string;
+	sortOrder?: "asc" | "desc";
+}
+
+export interface DocumentsListResponse {
+	docs: LiquidacionDocListItem[];
+	total: number;
+	page: number;
+	limit: number;
+	pages: number;
+}
+
 export interface UpdateSettingsPayload {
 	enabled?: boolean;
 	workerNames?: Partial<WorkerNames>;
@@ -229,6 +373,23 @@ const LiquidacionWorkerConfigService = {
 			`${BASE}/pm2/${action}`,
 			workers && workers.length > 0 ? { workers } : {},
 		);
+		return res.data.data;
+	},
+
+	// ── Documents exploration ────────────────────────────────────────────────
+
+	async listDocuments(params: DocumentsListParams = {}): Promise<DocumentsListResponse> {
+		const res = await workersAxios.get<{ success: boolean; data: DocumentsListResponse }>(`${BASE}/documents`, { params });
+		return res.data.data;
+	},
+
+	async getDocument(id: string): Promise<LiquidacionDocDetail> {
+		const res = await workersAxios.get<{ success: boolean; data: LiquidacionDocDetail }>(`${BASE}/documents/${id}`);
+		return res.data.data;
+	},
+
+	async getDocumentCausa(id: string): Promise<CausaOrigen> {
+		const res = await workersAxios.get<{ success: boolean; data: CausaOrigen }>(`${BASE}/documents/${id}/causa`);
 		return res.data.data;
 	},
 };

@@ -6,6 +6,7 @@ import LiquidacionWorkerConfigService, { FullDoc } from "api/liquidacionWorkerCo
 import ConfigTab from "./ConfigTab";
 import StatusTab from "./StatusTab";
 import AlertsTab from "./AlertsTab";
+import DocumentsTab from "./DocumentsTab";
 
 export default function LiquidacionWorkerPage() {
 	const theme = useTheme();
@@ -105,12 +106,14 @@ export default function LiquidacionWorkerPage() {
 				<Tabs value={tab} onChange={(_, v) => setTab(v)}>
 					<Tab label="Configuración" />
 					<Tab label="Estado" />
+					<Tab label="Documentos" />
 					<Tab label={`Alertas${activeAlerts > 0 ? ` (${activeAlerts})` : ""}`} />
 				</Tabs>
 
 				{tab === 0 && <ConfigTab doc={doc} loading={loading} onSaved={refetch} />}
 				{tab === 1 && <StatusTab doc={doc} loading={loading} onRefresh={refetch} />}
-				{tab === 2 && <AlertsTab doc={doc} loading={loading} onChanged={refetch} />}
+				{tab === 2 && <DocumentsTab />}
+				{tab === 3 && <AlertsTab doc={doc} loading={loading} onChanged={refetch} />}
 			</Stack>
 		</MainCard>
 	);
