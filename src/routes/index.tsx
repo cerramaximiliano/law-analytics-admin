@@ -44,6 +44,11 @@ const CarpetasVerificadasPjSalta = Loadable(lazy(() => import("pages/admin/pjsal
 const CarpetasNoVerificadasPjSalta = Loadable(lazy(() => import("pages/admin/pjsalta/CarpetasNoVerificadasPjSalta")));
 const CarpetasPivotsPjSalta = Loadable(lazy(() => import("pages/admin/pjsalta/CarpetasPivotsPjSalta")));
 const PjSaltaWorkersConfig = Loadable(lazy(() => import("pages/admin/pjsalta/workers")));
+// PJ Catamarca pages
+const CarpetasVerificadasPjCatamarca = Loadable(lazy(() => import("pages/admin/pjcatamarca/CarpetasVerificadasPjCatamarca")));
+const CarpetasNoVerificadasPjCatamarca = Loadable(lazy(() => import("pages/admin/pjcatamarca/CarpetasNoVerificadasPjCatamarca")));
+const CarpetasPivotsPjCatamarca = Loadable(lazy(() => import("pages/admin/pjcatamarca/CarpetasPivotsPjCatamarca")));
+const PjCatamarcaWorkersConfig = Loadable(lazy(() => import("pages/admin/pjcatamarca/workers")));
 const RagWorkersPage = Loadable(lazy(() => import("pages/admin/rag-workers")));
 const CorpusWorkerPage = Loadable(lazy(() => import("pages/admin/workers/corpus")));
 const EscritosWorkerPage = Loadable(lazy(() => import("pages/admin/workers/escritos")));
@@ -473,6 +478,38 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<PjSaltaWorkersConfig />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "pjcatamarca/verified-app",
+							element: (
+								<AdminRoleGuard>
+									<CarpetasVerificadasPjCatamarca />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "pjcatamarca/non-verified",
+							element: (
+								<AdminRoleGuard>
+									<CarpetasNoVerificadasPjCatamarca />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "pjcatamarca/pivots",
+							element: (
+								<AdminRoleGuard>
+									<CarpetasPivotsPjCatamarca />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "pjcatamarca/workers",
+							element: (
+								<AdminRoleGuard>
+									<PjCatamarcaWorkersConfig />
 								</AdminRoleGuard>
 							),
 						},
