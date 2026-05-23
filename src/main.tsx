@@ -9,6 +9,7 @@ import { store, persister } from "./store";
 // Estilos base
 import "simplebar-react/dist/simplebar.min.css";
 import "assets/fonts/inter/inter.css";
+import "@fontsource-variable/geist";
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 

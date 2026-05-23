@@ -36,6 +36,10 @@ export default function IconButton(theme: Theme) {
 						width: 16,
 						height: 16,
 					},
+					[theme.breakpoints.down("sm")]: {
+						minWidth: 44,
+						minHeight: 44,
+					},
 				},
 			},
 		},
