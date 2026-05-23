@@ -81,6 +81,9 @@ export interface CollectionStats {
 	total: number;
 	byStatus: Record<string, number>;
 	byCategory: Record<string, number>;
+	bySectionMix?: Record<string, number>;
+	causasWithDataCount?: number;
+	causasTotalCount?: number;
 	lastUpdatedAt?: string;
 }
 

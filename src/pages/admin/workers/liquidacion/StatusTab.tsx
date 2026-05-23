@@ -137,6 +137,12 @@ export default function StatusTab({ doc, loading, onRefresh }: Props) {
 	const dailyLimit = doc.config?.pdfProcessor?.dailyLimit ?? 0;
 	const byStatus = collection.byStatus || {};
 	const byCategory = collection.byCategory || {};
+	const bySectionMix: Record<string, number> = collection.bySectionMix || {};
+	const causasWithData = collection.causasWithDataCount || 0;
+	const causasTotal = collection.causasTotalCount || 0;
+	const causasPct = causasTotal > 0 ? (causasWithData / causasTotal) * 100 : 0;
+	// Mixes considerados "útiles" (con datos extraídos del PDF)
+	const USEFUL_MIXES = new Set(["HC", "HR", "RET", "HC+HR", "HC+RET", "HR+RET", "HC+HR+RET"]);
 	const todayDate = new Date().toISOString().slice(0, 10);
 	const todayCount = dailyProcessed?.date === todayDate ? dailyProcessed.count : 0;
 	const dailyPct = dailyLimit > 0 ? Math.min(100, (todayCount / dailyLimit) * 100) : 0;
@@ -395,12 +401,55 @@ export default function StatusTab({ doc, loading, onRefresh }: Props) {
 				</Grid>
 			</Grid>
 
+			{/* === Causas con datos útiles (highlight metric) === */}
+			{(causasTotal > 0 || causasWithData > 0) && (
+				<Paper variant="outlined" sx={{ p: 2, borderLeft: 4, borderLeftColor: theme.palette.success.main }}>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
+						<Box>
+							<Typography variant="caption" color="text.secondary">
+								Causas con liquidación útil
+							</Typography>
+							<Stack direction="row" alignItems="baseline" spacing={1}>
+								<Typography variant="h4" sx={{ color: theme.palette.success.main }}>
+									{formatNumber(causasWithData)}
+								</Typography>
+								<Typography variant="body2" color="text.secondary">
+									de {formatNumber(causasTotal)} causas con URLs ({causasPct.toFixed(1)}%)
+								</Typography>
+							</Stack>
+							<Typography variant="caption" color="text.secondary">
+								≥ 1 PDF con sectionMix ∈ {`{HC, HR, RET, combinados}`} — excluye COVER, NONE y los aún no procesados
+							</Typography>
+						</Box>
+						<Box sx={{ minWidth: 160 }}>
+							<Box
+								sx={{
+									height: 8,
+									borderRadius: 4,
+									bgcolor: alpha(theme.palette.grey[500], 0.2),
+									overflow: "hidden",
+								}}
+							>
+								<Box
+									sx={{
+										height: "100%",
+										width: `${causasPct}%`,
+										bgcolor: theme.palette.success.main,
+										transition: "width 0.3s",
+									}}
+								/>
+							</Box>
+						</Box>
+					</Stack>
+				</Paper>
+			)}
+
 			{/* === Colección stats === */}
 			<Typography variant="h6" sx={{ mt: 2 }}>
 				Colección <code>previsional-liquidacion-urls</code>
 			</Typography>
 			<Grid container spacing={2}>
-				<Grid item xs={12} md={6}>
+				<Grid item xs={12} md={4}>
 					<Paper variant="outlined" sx={{ p: 2 }}>
 						<Typography variant="subtitle2" sx={{ mb: 1 }}>
 							Por pdfStatus
@@ -426,10 +475,50 @@ export default function StatusTab({ doc, loading, onRefresh }: Props) {
 						</Stack>
 					</Paper>
 				</Grid>
-				<Grid item xs={12} md={6}>
+				<Grid item xs={12} md={4}>
 					<Paper variant="outlined" sx={{ p: 2 }}>
 						<Typography variant="subtitle2" sx={{ mb: 1 }}>
-							Por categoría
+							Por sectionMix (solo extracted)
+						</Typography>
+						<Stack spacing={0.5}>
+							{Object.entries(bySectionMix).length === 0 ? (
+								<Typography variant="caption" color="text.secondary">
+									Aún sin PDFs extraídos
+								</Typography>
+							) : (
+								Object.entries(bySectionMix)
+									.sort((a, b) => (b[1] as number) - (a[1] as number))
+									.map(([k, v]) => {
+										const useful = USEFUL_MIXES.has(k);
+										return (
+											<Stack key={k} direction="row" justifyContent="space-between" alignItems="center">
+												<Stack direction="row" spacing={0.5} alignItems="center">
+													<Box
+														sx={{
+															width: 6,
+															height: 6,
+															borderRadius: "50%",
+															bgcolor: useful ? theme.palette.success.main : theme.palette.grey[400],
+														}}
+													/>
+													<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+														{k}
+													</Typography>
+												</Stack>
+												<Typography variant="body2" sx={{ color: useful ? theme.palette.success.main : undefined }}>
+													{formatNumber(v as number)}
+												</Typography>
+											</Stack>
+										);
+									})
+							)}
+						</Stack>
+					</Paper>
+				</Grid>
+				<Grid item xs={12} md={4}>
+					<Paper variant="outlined" sx={{ p: 2 }}>
+						<Typography variant="subtitle2" sx={{ mb: 1 }}>
+							Por categoría (filtro extractor)
 						</Typography>
 						<Stack spacing={0.5}>
 							{Object.entries(byCategory)
