@@ -114,6 +114,14 @@ const admin: NavItemType = {
 					chip: { label: "6", color: "warning", variant: "outlined", size: "small" },
 				},
 				{
+					id: "workers-liquidacion",
+					title: "Worker Liquidación",
+					type: "item",
+					url: "/admin/workers/liquidacion",
+					breadcrumbs: true,
+					chip: { label: "3", color: "secondary", variant: "outlined", size: "small" },
+				},
+				{
 					id: "workers-movimientos",
 					title: "Worker Update (IA)",
 					type: "item",

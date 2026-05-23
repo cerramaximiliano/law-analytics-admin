@@ -49,6 +49,7 @@ const CorpusWorkerPage = Loadable(lazy(() => import("pages/admin/workers/corpus"
 const EscritosWorkerPage = Loadable(lazy(() => import("pages/admin/workers/escritos")));
 const MovimientosWorkerPage = Loadable(lazy(() => import("pages/admin/workers/movimientos")));
 const SentenciasWorkerPage = Loadable(lazy(() => import("pages/admin/workers/sentencias")));
+const LiquidacionWorkerPage = Loadable(lazy(() => import("pages/admin/workers/liquidacion")));
 const SaijWorkerPage = Loadable(lazy(() => import("pages/admin/workers/saij")));
 const SecloWorkerPage = Loadable(lazy(() => import("pages/admin/workers/seclo")));
 const InfolegWorkersPage = Loadable(lazy(() => import("pages/admin/workers/infoleg")));
@@ -280,6 +281,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<SentenciasWorkerPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "workers/liquidacion",
+							element: (
+								<AdminRoleGuard>
+									<LiquidacionWorkerPage />
 								</AdminRoleGuard>
 							),
 						},
