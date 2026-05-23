@@ -44,6 +44,12 @@ const WORKER_KEY_BY_NAME: Record<string, WorkerKey> = {
 	"pjn-liq-pdf-processor": "pdf-processor",
 };
 
+// Host/IP donde corren los workers (los 3 están en el mismo box worker_01).
+// Si en el futuro se distribuyen en varios servers, derivar del instanceId
+// (formato 'hostname:pid:nonce').
+const WORKER_HOST = "worker_01";
+const WORKER_IP = "100.111.73.56";
+
 function pm2StatusColor(theme: any, status: string): { bg: string; fg: string } {
 	if (status === "online") return { bg: alpha(theme.palette.success.main, 0.15), fg: theme.palette.success.main };
 	if (status === "stopped" || status === "not_found") return { bg: alpha(theme.palette.grey[500], 0.15), fg: theme.palette.grey[700] };
@@ -248,6 +254,82 @@ export default function StatusTab({ doc, loading, onRefresh }: Props) {
 												sx={{ bgcolor: c.bg, color: c.fg, fontWeight: 600, fontSize: "0.65rem", height: 20 }}
 											/>
 										</Stack>
+									</Stack>
+									{/* Host / IP badges — mismo patrón que la sentencias page */}
+									<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+										<Box
+											component="span"
+											sx={{
+												display: "inline-flex",
+												alignItems: "center",
+												px: 0.75,
+												py: 0.25,
+												borderRadius: 1,
+												bgcolor: theme.palette.grey[800],
+												color: theme.palette.common.white,
+												fontSize: "0.62rem",
+												fontWeight: 500,
+												fontFamily: "monospace",
+												letterSpacing: "0.3px",
+											}}
+										>
+											{WORKER_HOST}
+										</Box>
+										<Box
+											component="span"
+											sx={{
+												display: "inline-flex",
+												alignItems: "center",
+												px: 0.75,
+												py: 0.25,
+												borderRadius: 1,
+												bgcolor: alpha(theme.palette.info.main, 0.1),
+												color: theme.palette.info.main,
+												fontSize: "0.6rem",
+												fontWeight: 500,
+												fontFamily: "monospace",
+											}}
+										>
+											{WORKER_IP}
+										</Box>
+										{pm2?.pid && (
+											<Box
+												component="span"
+												sx={{
+													display: "inline-flex",
+													alignItems: "center",
+													px: 0.75,
+													py: 0.25,
+													borderRadius: 1,
+													bgcolor: alpha(theme.palette.grey[500], 0.1),
+													color: theme.palette.text.secondary,
+													fontSize: "0.6rem",
+													fontWeight: 500,
+													fontFamily: "monospace",
+												}}
+											>
+												pid:{pm2.pid}
+											</Box>
+										)}
+										{pm2?.execMode && (
+											<Box
+												component="span"
+												sx={{
+													display: "inline-flex",
+													alignItems: "center",
+													px: 0.75,
+													py: 0.25,
+													borderRadius: 1,
+													bgcolor: alpha(theme.palette.secondary.main, 0.08),
+													color: theme.palette.secondary.main,
+													fontSize: "0.6rem",
+													fontWeight: 500,
+													fontFamily: "monospace",
+												}}
+											>
+												{pm2.execMode}
+											</Box>
+										)}
 									</Stack>
 									<Divider />
 									<Grid container spacing={1}>
