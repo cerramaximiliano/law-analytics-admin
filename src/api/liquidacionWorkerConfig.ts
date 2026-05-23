@@ -120,6 +120,28 @@ export interface StatusResponse {
 	lastUpdate?: string;
 }
 
+export interface Pm2ProcessStatus {
+	name: string;
+	pmId?: number;
+	status: "online" | "stopped" | "stopping" | "launching" | "errored" | "one-launch-status" | "not_found" | "unknown";
+	pid: number | null;
+	uptime: number | null;
+	restarts: number;
+	cpu: number;
+	memory: number;
+	execMode?: string;
+}
+
+export interface Pm2ActionResult {
+	name: string;
+	action: "start" | "stop" | "restart";
+	ok: boolean;
+	error?: string;
+}
+
+export type Pm2Action = "start" | "stop" | "restart";
+export type WorkerKey = "manager" | "url-extractor" | "pdf-processor";
+
 export interface AlertEntry {
 	type: "queue_backlog" | "high_failure_rate" | "worker_stopped" | "config_invalid";
 	message: string;
@@ -185,6 +207,25 @@ const LiquidacionWorkerConfigService = {
 
 	async resetToDefaults(): Promise<FullDoc> {
 		const res = await workersAxios.post<{ success: boolean; data: FullDoc }>(`${BASE}/reset`);
+		return res.data.data;
+	},
+
+	// ── PM2 control ──────────────────────────────────────────────────────────
+
+	async getPm2Status(): Promise<Pm2ProcessStatus[]> {
+		const res = await workersAxios.get<{ success: boolean; data: Pm2ProcessStatus[] }>(`${BASE}/pm2-status`);
+		return res.data.data;
+	},
+
+	/**
+	 * Ejecuta start/stop/restart en uno o más procesos.
+	 * Sin `workers` = aplica a los 3.
+	 */
+	async pm2Action(action: Pm2Action, workers?: WorkerKey[]): Promise<Pm2ActionResult[]> {
+		const res = await workersAxios.post<{ success: boolean; data: Pm2ActionResult[] }>(
+			`${BASE}/pm2/${action}`,
+			workers && workers.length > 0 ? { workers } : {},
+		);
 		return res.data.data;
 	},
 };

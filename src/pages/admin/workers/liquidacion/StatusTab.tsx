@@ -1,6 +1,8 @@
-import { Alert, Box, Chip, Divider, Grid, IconButton, Paper, Skeleton, Stack, Table, TableBody, TableCell, TableRow, Tooltip, Typography, alpha, useTheme } from "@mui/material";
-import { Refresh } from "iconsax-react";
-import { FullDoc, WorkerHeartbeat } from "api/liquidacionWorkerConfig";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, Box, Button, ButtonGroup, Chip, Divider, Grid, IconButton, Paper, Skeleton, Stack, Table, TableBody, TableCell, TableRow, Tooltip, Typography, alpha, useTheme } from "@mui/material";
+import { CloseCircle, Play, Refresh, Refresh2 } from "iconsax-react";
+import { useSnackbar } from "notistack";
+import LiquidacionWorkerConfigService, { FullDoc, Pm2Action, Pm2ProcessStatus, WorkerHeartbeat, WorkerKey } from "api/liquidacionWorkerConfig";
 
 interface Props {
 	doc: FullDoc | null;
@@ -36,8 +38,84 @@ function workerHealthColor(theme: any, hb: WorkerHeartbeat | undefined): { bg: s
 
 const WORKER_NAMES = ["pjn-liq-manager", "pjn-liq-url-extractor", "pjn-liq-pdf-processor"];
 
+const WORKER_KEY_BY_NAME: Record<string, WorkerKey> = {
+	"pjn-liq-manager": "manager",
+	"pjn-liq-url-extractor": "url-extractor",
+	"pjn-liq-pdf-processor": "pdf-processor",
+};
+
+function pm2StatusColor(theme: any, status: string): { bg: string; fg: string } {
+	if (status === "online") return { bg: alpha(theme.palette.success.main, 0.15), fg: theme.palette.success.main };
+	if (status === "stopped" || status === "not_found") return { bg: alpha(theme.palette.grey[500], 0.15), fg: theme.palette.grey[700] };
+	if (status === "errored") return { bg: alpha(theme.palette.error.main, 0.15), fg: theme.palette.error.main };
+	return { bg: alpha(theme.palette.warning.main, 0.15), fg: theme.palette.warning.main };
+}
+
+function formatUptime(ms: number | null): string {
+	if (!ms || ms < 0) return "—";
+	const s = Math.floor(ms / 1000);
+	if (s < 60) return `${s}s`;
+	const m = Math.floor(s / 60);
+	if (m < 60) return `${m}m`;
+	const h = Math.floor(m / 60);
+	if (h < 24) return `${h}h`;
+	return `${Math.floor(h / 24)}d`;
+}
+
+function formatBytes(n: number): string {
+	if (!n) return "—";
+	if (n < 1024) return `${n}B`;
+	if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)}KB`;
+	return `${(n / 1024 / 1024).toFixed(0)}MB`;
+}
+
 export default function StatusTab({ doc, loading, onRefresh }: Props) {
 	const theme = useTheme();
+	const { enqueueSnackbar } = useSnackbar();
+	const [pm2List, setPm2List] = useState<Pm2ProcessStatus[]>([]);
+	const [pm2Loading, setPm2Loading] = useState(false);
+	const [acting, setActing] = useState<string | null>(null);
+
+	const fetchPm2 = useCallback(async () => {
+		try {
+			setPm2Loading(true);
+			const data = await LiquidacionWorkerConfigService.getPm2Status();
+			setPm2List(data);
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.message || "Error obteniendo estado PM2", { variant: "error" });
+		} finally {
+			setPm2Loading(false);
+		}
+	}, [enqueueSnackbar]);
+
+	useEffect(() => {
+		fetchPm2();
+	}, [fetchPm2]);
+
+	// Auto-refresh del PM2 status cada 15s (mismo intervalo que el doc parent)
+	useEffect(() => {
+		const id = setInterval(fetchPm2, 15000);
+		return () => clearInterval(id);
+	}, [fetchPm2]);
+
+	const handleAction = async (action: Pm2Action, workers?: WorkerKey[]) => {
+		const tag = workers && workers.length === 1 ? workers[0] : "all";
+		setActing(`${action}:${tag}`);
+		try {
+			const results = await LiquidacionWorkerConfigService.pm2Action(action, workers);
+			const ok = results.every((r) => r.ok);
+			const summary = results.map((r) => `${r.name.replace("pjn-liq-", "")}:${r.ok ? "✓" : "✗"}`).join(" · ");
+			enqueueSnackbar(`pm2 ${action}: ${summary}`, { variant: ok ? "success" : "warning" });
+			await fetchPm2();
+			onRefresh();
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.message || `Error ejecutando pm2 ${action}`, { variant: "error" });
+		} finally {
+			setActing(null);
+		}
+	};
+
+	const pm2ByName = new Map(pm2List.map((p) => [p.name, p]));
 
 	if (loading && !doc) {
 		return (
@@ -119,55 +197,134 @@ export default function StatusTab({ doc, loading, onRefresh }: Props) {
 				</Paper>
 			)}
 
-			{/* === Workers heartbeats === */}
-			<Typography variant="h6">Procesos PM2</Typography>
+			{/* === Workers heartbeats + PM2 control === */}
+			<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
+				<Typography variant="h6">Procesos PM2</Typography>
+				<ButtonGroup size="small" variant="outlined" disabled={!!acting}>
+					<Button color="success" startIcon={<Play size={14} />} onClick={() => handleAction("start")} disabled={acting === "start:all"}>
+						{acting === "start:all" ? "…" : "Start all"}
+					</Button>
+					<Button color="warning" startIcon={<CloseCircle size={14} />} onClick={() => handleAction("stop")} disabled={acting === "stop:all"}>
+						{acting === "stop:all" ? "…" : "Stop all"}
+					</Button>
+					<Button color="primary" startIcon={<Refresh2 size={14} />} onClick={() => handleAction("restart")} disabled={acting === "restart:all"}>
+						{acting === "restart:all" ? "…" : "Restart all"}
+					</Button>
+				</ButtonGroup>
+			</Stack>
 			<Grid container spacing={2}>
 				{WORKER_NAMES.map((name) => {
 					const hb = workers[name];
 					const c = workerHealthColor(theme, hb);
+					const pm2 = pm2ByName.get(name);
+					const pm2c = pm2 ? pm2StatusColor(theme, pm2.status) : null;
+					const workerKey = WORKER_KEY_BY_NAME[name];
+					const isStopped = pm2?.status === "stopped" || pm2?.status === "not_found";
 					return (
 						<Grid item xs={12} md={4} key={name}>
 							<Paper variant="outlined" sx={{ p: 2 }}>
 								<Stack spacing={1}>
-									<Stack direction="row" justifyContent="space-between" alignItems="center">
-										<Typography variant="subtitle2" sx={{ fontFamily: "monospace" }}>
+									<Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
+										<Typography variant="subtitle2" sx={{ fontFamily: "monospace", fontSize: "0.78rem" }}>
 											{name}
 										</Typography>
-										<Chip label={c.label} size="small" sx={{ bgcolor: c.bg, color: c.fg, fontWeight: 600 }} />
+										<Stack direction="row" spacing={0.5}>
+											{pm2 && pm2c && (
+												<Chip
+													label={`pm2: ${pm2.status}`}
+													size="small"
+													sx={{ bgcolor: pm2c.bg, color: pm2c.fg, fontWeight: 600, fontSize: "0.65rem", height: 20 }}
+												/>
+											)}
+											<Chip
+												label={`hb: ${c.label}`}
+												size="small"
+												sx={{ bgcolor: c.bg, color: c.fg, fontWeight: 600, fontSize: "0.65rem", height: 20 }}
+											/>
+										</Stack>
 									</Stack>
 									<Divider />
+									<Grid container spacing={1}>
+										<Grid item xs={6}>
+											<Typography variant="caption" color="text.secondary">
+												uptime
+											</Typography>
+											<Typography variant="body2">{formatUptime(pm2?.uptime ?? null)}</Typography>
+										</Grid>
+										<Grid item xs={6}>
+											<Typography variant="caption" color="text.secondary">
+												restarts
+											</Typography>
+											<Typography variant="body2">{pm2?.restarts ?? "—"}</Typography>
+										</Grid>
+										<Grid item xs={6}>
+											<Typography variant="caption" color="text.secondary">
+												cpu
+											</Typography>
+											<Typography variant="body2">{pm2 ? `${pm2.cpu}%` : "—"}</Typography>
+										</Grid>
+										<Grid item xs={6}>
+											<Typography variant="caption" color="text.secondary">
+												mem
+											</Typography>
+											<Typography variant="body2">{pm2 ? formatBytes(pm2.memory) : "—"}</Typography>
+										</Grid>
+									</Grid>
 									<Box>
 										<Typography variant="caption" color="text.secondary">
 											last heartbeat
 										</Typography>
 										<Typography variant="body2">{relativeFromNow(hb?.lastHeartbeatAt)}</Typography>
 									</Box>
-									<Box>
-										<Typography variant="caption" color="text.secondary">
-											instance
-										</Typography>
-										<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.72rem", wordBreak: "break-all" }}>
-											{hb?.instanceId || "—"}
-										</Typography>
-									</Box>
 									{hb?.metrics && Object.keys(hb.metrics).length > 0 && (
 										<Box>
 											<Typography variant="caption" color="text.secondary">
 												metrics
 											</Typography>
-											<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}>
+											<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}>
 												{Object.entries(hb.metrics)
 													.map(([k, v]) => `${k}=${typeof v === "object" ? JSON.stringify(v) : v}`)
 													.join(" · ")}
 											</Typography>
 										</Box>
 									)}
+									<Divider />
+									<ButtonGroup size="small" variant="outlined" fullWidth disabled={!!acting}>
+										<Tooltip title="Start">
+											<Button
+												color="success"
+												onClick={() => handleAction("start", [workerKey])}
+												disabled={!isStopped || acting !== null}
+											>
+												{acting === `start:${workerKey}` ? "…" : <Play size={14} />}
+											</Button>
+										</Tooltip>
+										<Tooltip title="Stop">
+											<Button
+												color="warning"
+												onClick={() => handleAction("stop", [workerKey])}
+												disabled={isStopped || acting !== null}
+											>
+												{acting === `stop:${workerKey}` ? "…" : <CloseCircle size={14} />}
+											</Button>
+										</Tooltip>
+										<Tooltip title="Restart">
+											<Button color="primary" onClick={() => handleAction("restart", [workerKey])} disabled={isStopped || acting !== null}>
+												{acting === `restart:${workerKey}` ? "…" : <Refresh2 size={14} />}
+											</Button>
+										</Tooltip>
+									</ButtonGroup>
 								</Stack>
 							</Paper>
 						</Grid>
 					);
 				})}
 			</Grid>
+			{pm2Loading && (
+				<Typography variant="caption" color="text.secondary">
+					Refrescando estado PM2…
+				</Typography>
+			)}
 
 			{/* === Colas BullMQ === */}
 			<Typography variant="h6" sx={{ mt: 2 }}>
