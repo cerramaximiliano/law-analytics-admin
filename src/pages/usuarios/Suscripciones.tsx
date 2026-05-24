@@ -457,7 +457,7 @@ const Suscripciones = () => {
 	if (error && subscriptions.length === 0) {
 		return (
 			<MainCard
-				title="Suscripciones de Usuarios"
+				title="Suscripciones de usuarios"
 				secondary={
 					<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchSubscriptions}>
 						Reintentar

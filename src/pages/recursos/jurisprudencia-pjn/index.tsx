@@ -278,7 +278,12 @@ function LatencyBadge({ label, ms }: { label: string; ms: number }) {
 			<Typography variant="caption" color="text.disabled">
 				{label}
 			</Typography>
-			<Chip label={`${ms}ms`} size="small" variant="outlined" sx={{ fontSize: 10, height: 18 }} />
+			<Chip
+				label={`${ms}ms`}
+				size="small"
+				variant="outlined"
+				sx={{ fontSize: 10, height: 18, fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' }}
+			/>
 		</Stack>
 	);
 }
@@ -350,7 +355,7 @@ export default function JurisprudenciaPjnPage() {
 	};
 
 	return (
-		<MainCard title="Jurisprudencia PJN — Búsqueda Semántica">
+		<MainCard title="Jurisprudencia PJN — búsqueda semántica">
 			<Stack spacing={3}>
 				{/* Tabs de modo */}
 				<Tabs
@@ -536,6 +541,11 @@ export default function JurisprudenciaPjnPage() {
 								startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <SearchNormal1 size={16} />}
 								onClick={handleBuscar}
 								disabled={loading || !query.trim()}
+								sx={{
+									transition: "transform 200ms ease, box-shadow 200ms ease",
+									"&:hover:not(.Mui-disabled)": { transform: "translateY(-1px)" },
+									"&:active": { transform: "translateY(0)" },
+								}}
 							>
 								Buscar
 							</Button>
@@ -633,6 +643,11 @@ export default function JurisprudenciaPjnPage() {
 								startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <DocumentText1 size={16} />}
 								onClick={handleBuscarSimilar}
 								disabled={loading || !sentenciaId.trim()}
+								sx={{
+									transition: "transform 200ms ease, box-shadow 200ms ease",
+									"&:hover:not(.Mui-disabled)": { transform: "translateY(-1px)" },
+									"&:active": { transform: "translateY(0)" },
+								}}
 							>
 								Buscar similares
 							</Button>

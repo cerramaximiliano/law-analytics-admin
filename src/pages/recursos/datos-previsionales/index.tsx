@@ -767,7 +767,7 @@ const DatosPrevisionales = () => {
 	// ── Render ───────────────────────────────────────────────────────────────
 
 	return (
-		<MainCard title="Datos Previsionales" secondary={<DocumentText size={24} />}>
+		<MainCard title="Datos previsionales" secondary={<DocumentText size={24} />}>
 			{/* Stats bar */}
 			<Grid container spacing={2} sx={{ mb: 2 }}>
 				{[
@@ -793,14 +793,36 @@ const DatosPrevisionales = () => {
 					},
 				].map((s) => (
 					<Grid item xs={6} sm={3} key={s.label}>
-						<Paper elevation={0} sx={{ p: 2, border: `1px solid ${theme.palette.divider}`, borderRadius: 2, textAlign: "center" }}>
-							<Typography variant="caption" color="text.secondary" display="block">
+						<Paper
+							elevation={0}
+							sx={{
+								p: 2,
+								border: `1px solid ${theme.palette.divider}`,
+								borderRadius: 1.5,
+								textAlign: "center",
+								transition: "border-color 200ms ease, transform 200ms ease",
+								"&:hover": {
+									borderColor: alpha(theme.palette.primary.main, 0.32),
+									transform: "translateY(-1px)",
+								},
+							}}
+						>
+							<Typography
+								variant="caption"
+								color="text.secondary"
+								display="block"
+								sx={{ textTransform: "uppercase", letterSpacing: 0.5, fontSize: "0.68rem", fontWeight: 600 }}
+							>
 								{s.label}
 							</Typography>
 							{s.value === null ? (
 								<Skeleton variant="text" height={36} sx={{ mx: "auto", width: 80 }} />
 							) : (
-								<Typography variant="h5" fontWeight={700} sx={{ color: s.color }}>
+								<Typography
+									variant="h5"
+									fontWeight={700}
+									sx={{ color: s.color, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
+								>
 									{s.value}
 								</Typography>
 							)}

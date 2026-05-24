@@ -315,8 +315,8 @@ const DocumentosTab = () => {
 		<>
 			<Stack spacing={3}>
 				{/* Filtros */}
-				<Card sx={{ p: 2 }}>
-					<Typography variant="h6" gutterBottom>
+				<Card variant="outlined" sx={{ p: 2, boxShadow: "none" }}>
+					<Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5, letterSpacing: "-0.01em" }}>
 						Filtros de búsqueda
 					</Typography>
 					<Grid container spacing={2} alignItems="center">

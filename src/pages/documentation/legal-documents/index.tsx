@@ -246,10 +246,17 @@ const LegalDocumentsPage = () => {
 	};
 
 	return (
-		<MainCard title="Documentos Legales" content={false}>
+		<MainCard title="Documentos legales" content={false}>
 			<ScrollX>
 				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 3 }}>
-					<Typography variant="h5">Lista de Documentos</Typography>
+					<Stack spacing={0.5}>
+						<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
+							Lista de documentos
+						</Typography>
+						<Typography variant="caption" color="text.secondary">
+							Términos, privacidad, facturación y otros documentos publicados.
+						</Typography>
+					</Stack>
 				</Stack>
 				<Divider />
 
@@ -275,27 +282,37 @@ const LegalDocumentsPage = () => {
 										<Stack spacing={2} alignItems="center">
 											<Box
 												sx={{
-													width: 80,
-													height: 80,
-													borderRadius: "50%",
+													width: 64,
+													height: 64,
+													borderRadius: 2,
 													backgroundColor: theme.palette.mode === "dark" ? "error.dark" : "error.lighter",
 													display: "flex",
 													alignItems: "center",
 													justifyContent: "center",
-													mb: 2,
+													mb: 1,
 												}}
 											>
 												<Typography variant="h2" color="error.main">
 													!
 												</Typography>
 											</Box>
-											<Typography variant="h5" color="text.primary" gutterBottom>
+											<Typography variant="h5" color="text.primary" sx={{ fontWeight: 600 }}>
 												Error al cargar documentos
 											</Typography>
-											<Typography variant="body1" color="text.secondary" align="center" sx={{ maxWidth: 400 }}>
+											<Typography variant="body2" color="text.secondary" align="center" sx={{ maxWidth: 400 }}>
 												{error}
 											</Typography>
-											<Button variant="contained" color="primary" onClick={() => dispatch(fetchLegalDocuments())} sx={{ mt: 2 }}>
+											<Button
+												variant="contained"
+												color="primary"
+												onClick={() => dispatch(fetchLegalDocuments())}
+												sx={{
+													mt: 1,
+													transition: "transform 200ms ease, box-shadow 200ms ease",
+													"&:hover": { transform: "translateY(-1px)" },
+													"&:active": { transform: "translateY(0)" },
+												}}
+											>
 												Reintentar
 											</Button>
 										</Stack>
@@ -307,26 +324,26 @@ const LegalDocumentsPage = () => {
 							{!loading && !error && documents.length === 0 && (
 								<TableRow>
 									<TableCell colSpan={headCells.length} align="center" sx={{ py: 8 }}>
-										<Stack spacing={2} alignItems="center">
+										<Stack spacing={1.5} alignItems="center">
 											<Box
 												sx={{
-													width: 100,
-													height: 100,
-													borderRadius: "50%",
+													width: 72,
+													height: 72,
+													borderRadius: 2,
 													backgroundColor: theme.palette.mode === "dark" ? "background.paper" : "grey.100",
 													display: "flex",
 													alignItems: "center",
 													justifyContent: "center",
-													mb: 2,
+													mb: 1,
 												}}
 											>
-												<DocumentText size={48} color={theme.palette.text.secondary} />
+												<DocumentText size={40} color={theme.palette.text.secondary} />
 											</Box>
-											<Typography variant="h5" color="text.primary">
+											<Typography variant="h5" color="text.primary" sx={{ fontWeight: 600 }}>
 												No hay documentos legales
 											</Typography>
-											<Typography variant="body1" color="text.secondary" align="center" sx={{ maxWidth: 400 }}>
-												Aun no se han creado documentos legales en el sistema.
+											<Typography variant="body2" color="text.secondary" align="center" sx={{ maxWidth: 400 }}>
+												Aún no se crearon documentos legales en el sistema.
 											</Typography>
 										</Stack>
 									</TableCell>
@@ -567,19 +584,28 @@ const LegalDocumentsPage = () => {
 			</Dialog>
 
 			{/* Dialogo de confirmacion para eliminar */}
-			<Dialog open={deleteDialogOpen} onClose={handleCancelDelete} maxWidth="xs" fullWidth>
-				<DialogTitle>Confirmar eliminacion</DialogTitle>
+			<Dialog open={deleteDialogOpen} onClose={handleCancelDelete} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 2 } }}>
+				<DialogTitle sx={{ fontWeight: 600 }}>Confirmar eliminación</DialogTitle>
 				<DialogContent>
 					<DialogContentText>
-						¿Estas seguro de que deseas eliminar el documento <strong>"{documentToDelete?.title}"</strong>? Esta accion no se puede
-						deshacer.
+						¿Querés eliminar el documento <strong>"{documentToDelete?.title}"</strong>? Esta acción no se puede deshacer.
 					</DialogContentText>
 				</DialogContent>
-				<DialogActions>
+				<DialogActions sx={{ px: 3, pb: 2 }}>
 					<Button onClick={handleCancelDelete} color="inherit">
 						Cancelar
 					</Button>
-					<Button onClick={handleConfirmDelete} color="error" variant="contained" disabled={loadingDetail}>
+					<Button
+						onClick={handleConfirmDelete}
+						color="error"
+						variant="contained"
+						disabled={loadingDetail}
+						sx={{
+							transition: "transform 200ms ease",
+							"&:hover": { transform: "translateY(-1px)" },
+							"&:active": { transform: "translateY(0)" },
+						}}
+					>
 						{loadingDetail ? <CircularProgress size={20} /> : "Eliminar"}
 					</Button>
 				</DialogActions>

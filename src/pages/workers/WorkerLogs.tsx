@@ -315,7 +315,9 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 			<Stack spacing={3}>
 				{/* Header with refresh */}
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Typography variant="h5">Resumen de Logs</Typography>
+					<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
+						Resumen de logs
+					</Typography>
 					<Stack direction="row" spacing={2} alignItems="center">
 						<FormControl size="small" sx={{ minWidth: 120 }}>
 							<InputLabel>Período</InputLabel>
@@ -344,13 +346,31 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 				{/* Total counts cards */}
 				<Grid container spacing={3}>
 					<Grid item xs={12} sm={6} md={3}>
-						<Card sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+						<Card
+							variant="outlined"
+							sx={{
+								boxShadow: "none",
+								bgcolor: alpha(theme.palette.primary.main, 0.05),
+								borderColor: alpha(theme.palette.primary.main, 0.2),
+								transition: "border-color 200ms ease, transform 200ms ease",
+								"&:hover": { transform: "translateY(-1px)", borderColor: alpha(theme.palette.primary.main, 0.4) },
+							}}
+						>
 							<CardContent>
 								<Stack spacing={1}>
-									<Typography variant="subtitle2" color="text.secondary">
-										Total de Logs
+									<Typography
+										variant="caption"
+										color="text.secondary"
+										sx={{ textTransform: "uppercase", letterSpacing: 0.5, fontSize: "0.68rem", fontWeight: 600 }}
+									>
+										Total de logs
 									</Typography>
-									<Typography variant="h3">{counts?.total?.toLocaleString() || 0}</Typography>
+									<Typography
+										variant="h3"
+										sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+									>
+										{counts?.total?.toLocaleString() || 0}
+									</Typography>
 								</Stack>
 							</CardContent>
 						</Card>
@@ -358,13 +378,29 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 					{counts?.byType &&
 						Object.entries(counts.byType).map(([type, count]) => (
 							<Grid item xs={12} sm={6} md={3} key={type}>
-								<Card>
+								<Card
+									variant="outlined"
+									sx={{
+										boxShadow: "none",
+										transition: "border-color 200ms ease, transform 200ms ease",
+										"&:hover": { transform: "translateY(-1px)", borderColor: "primary.main" },
+									}}
+								>
 									<CardContent>
 										<Stack spacing={1}>
-											<Typography variant="subtitle2" color="text.secondary">
+											<Typography
+												variant="caption"
+												color="text.secondary"
+												sx={{ textTransform: "uppercase", letterSpacing: 0.5, fontSize: "0.68rem", fontWeight: 600 }}
+											>
 												{getWorkerTypeLabel(type)}
 											</Typography>
-											<Typography variant="h4">{count?.toLocaleString() || 0}</Typography>
+											<Typography
+												variant="h4"
+												sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+											>
+												{count?.toLocaleString() || 0}
+											</Typography>
 										</Stack>
 									</CardContent>
 								</Card>

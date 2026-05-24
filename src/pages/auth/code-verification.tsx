@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { RootState, useSelector } from "store";
 // material-ui
-import { Grid, Stack, Typography } from "@mui/material";
+import { Box, Grid, Stack, Typography } from "@mui/material";
 
 // project-imports
 import AuthWrapper from "sections/auth/AuthWrapper";
@@ -66,12 +66,17 @@ const CodeVerification = () => {
 			<Grid container spacing={3}>
 				<Grid item xs={12}>
 					<Stack spacing={1}>
-						<Typography variant="h3">Ingrese el Código de Verificación</Typography>
-						<Typography color="secondary">Te lo enviamos a tu correo.</Typography>
+						<Typography
+							variant="h2"
+							sx={{ fontWeight: 600, letterSpacing: "-0.025em", lineHeight: 1.15 }}
+						>
+							Código de verificación
+						</Typography>
+						<Typography variant="body2" color="text.secondary">
+							Enviamos un código a <Box component="span" sx={{ color: "text.primary", fontWeight: 600 }}>{email || "tu correo"}</Box>.
+							Revisá la bandeja y también el spam.
+						</Typography>
 					</Stack>
-				</Grid>
-				<Grid item xs={12}>
-					<Typography>Enviamos un código a tu correo.</Typography>
 				</Grid>
 				<Grid item xs={12}>
 					<AuthCodeVerification

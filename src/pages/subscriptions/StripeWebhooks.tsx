@@ -92,7 +92,7 @@ const StripeWebhooks = () => {
 	if (error && !data) {
 		return (
 			<MainCard
-				title="Estado de Stripe Webhooks"
+				title="Estado de Stripe webhooks"
 				secondary={
 					<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchWebhooksStatus}>
 						Reintentar
@@ -168,7 +168,7 @@ const StripeWebhooks = () => {
 				)}
 
 				{/* Botón de Health Check */}
-				<Card variant="outlined" sx={{ backgroundColor: "primary.lighter", borderColor: "primary.main" }}>
+				<Card variant="outlined" sx={{ borderColor: "primary.main", boxShadow: "none" }}>
 					<CardContent>
 						<Stack
 							direction={{ xs: "column", sm: "row" }}
@@ -177,11 +177,11 @@ const StripeWebhooks = () => {
 							justifyContent="space-between"
 						>
 							<Box>
-								<Typography variant="subtitle2" fontWeight="bold" color="primary.main" gutterBottom>
-									🔧 Actualizar Suscripciones y Reparar Webhooks
+								<Typography variant="subtitle2" fontWeight={600} color="primary.main" gutterBottom>
+									Actualizar suscripciones y reparar webhooks
 								</Typography>
 								<Typography variant="body2" color="text.secondary">
-									Sincroniza todas las suscripciones con Stripe y repara webhooks fallados. Este proceso puede tardar algunos minutos.
+									Sincroniza todas las suscripciones con Stripe y repara webhooks fallados. El proceso puede tardar algunos minutos.
 								</Typography>
 							</Box>
 							<Button
@@ -190,7 +190,12 @@ const StripeWebhooks = () => {
 								onClick={handleHealthCheck}
 								disabled={runningHealthCheck}
 								startIcon={runningHealthCheck ? <CircularProgress size={16} color="inherit" /> : <Refresh size={16} />}
-								sx={{ minWidth: { xs: "100%", sm: "200px" } }}
+								sx={{
+									minWidth: { xs: "100%", sm: "200px" },
+									transition: "transform 200ms ease, box-shadow 200ms ease",
+									"&:hover:not(.Mui-disabled)": { transform: "translateY(-1px)" },
+									"&:active": { transform: "translateY(0)" },
+								}}
 							>
 								{runningHealthCheck ? "Ejecutando..." : "Ejecutar Health Check"}
 							</Button>

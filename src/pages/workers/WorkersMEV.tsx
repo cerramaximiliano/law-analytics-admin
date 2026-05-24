@@ -462,7 +462,9 @@ const MEVWorkers = () => {
 		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 			{/* Header con acciones */}
 			<Box display="flex" justifyContent="space-between" alignItems="center">
-				<Typography variant="h5">Configuración del Worker de Verificación MEV</Typography>
+				<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
+					Configuración del worker de verificación MEV
+				</Typography>
 				<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchConfigs}>
 					Actualizar
 				</Button>

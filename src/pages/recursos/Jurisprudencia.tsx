@@ -416,7 +416,7 @@ const Jurisprudencia = () => {
 
 	return (
 		<>
-			<MainCard title="Jurisprudencia - El Dial" secondary={<Book size={24} />}>
+			<MainCard title="Jurisprudencia — El Dial" secondary={<Book size={24} />}>
 				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
 					<Tabs value={tabValue} onChange={handleTabChange} aria-label="Jurisprudencia tabs">
 						<Tab label="Fallos" {...a11yProps(0)} />
@@ -429,8 +429,8 @@ const Jurisprudencia = () => {
 				<TabPanel value={tabValue} index={0}>
 					<Stack spacing={3}>
 						{/* Filtros */}
-						<Card sx={{ p: 2 }}>
-							<Typography variant="h6" gutterBottom>
+						<Card variant="outlined" sx={{ p: 2, boxShadow: "none" }}>
+							<Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5, letterSpacing: "-0.01em" }}>
 								Filtros de búsqueda
 							</Typography>
 							<Grid container spacing={2}>
@@ -536,7 +536,12 @@ const Jurisprudencia = () => {
 											color="primary"
 											startIcon={<SearchNormal1 />}
 											onClick={handleSearch}
-											sx={{ height: "56px" }}
+											sx={{
+												height: "56px",
+												transition: "transform 200ms ease, box-shadow 200ms ease",
+												"&:hover": { transform: "translateY(-1px)" },
+												"&:active": { transform: "translateY(0)" },
+											}}
 										>
 											Buscar
 										</Button>
@@ -556,14 +561,16 @@ const Jurisprudencia = () => {
 						</Card>
 
 						{/* Tabla */}
-						<TableContainer component={Card}>
+						<TableContainer component={Card} variant="outlined" sx={{ boxShadow: "none" }}>
 							{loading ? (
 								<Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
 									<CircularProgress />
 								</Box>
 							) : fallos.length === 0 ? (
 								<Box p={4}>
-									<Alert severity="info">No se encontraron fallos con los filtros aplicados.</Alert>
+									<Alert severity="info" sx={{ borderRadius: 1.5 }}>
+										No se encontraron fallos con los filtros aplicados.
+									</Alert>
 								</Box>
 							) : (
 								<>
@@ -596,10 +603,10 @@ const Jurisprudencia = () => {
 											{fallos.map((fallo) => (
 												<TableRow key={fallo._id} hover>
 													<TableCell>
-														<Typography variant="body2" fontWeight={600}>
+														<Typography variant="body2" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
 															{fallo.codigoCita}
 														</Typography>
-														<Typography variant="caption" color="text.secondary">
+														<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 															ID: {fallo.elDialId}
 														</Typography>
 													</TableCell>

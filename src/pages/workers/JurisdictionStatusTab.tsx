@@ -105,40 +105,88 @@ export default function JurisdictionStatusTab() {
 			{/* Cards de resumen */}
 			<Grid container spacing={2}>
 				<Grid item xs={12} sm={4}>
-					<Card variant="outlined">
+					<Card
+						variant="outlined"
+						sx={{
+							boxShadow: "none",
+							transition: "border-color 200ms ease, transform 200ms ease",
+							"&:hover": { transform: "translateY(-1px)", borderColor: "primary.main" },
+						}}
+					>
 						<CardContent>
-							<Typography variant="body2" color="text.secondary">
+							<Typography
+								variant="caption"
+								color="text.secondary"
+								sx={{ textTransform: "uppercase", letterSpacing: 0.5, fontSize: "0.68rem", fontWeight: 600 }}
+							>
 								Total jurisdicciones
 							</Typography>
-							<Typography variant="h3">{summary?.total ?? 0}</Typography>
+							<Typography
+								variant="h3"
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600, mt: 0.5 }}
+							>
+								{summary?.total ?? 0}
+							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
 				<Grid item xs={12} sm={4}>
-					<Card variant="outlined" sx={{ borderColor: "success.main" }}>
+					<Card
+						variant="outlined"
+						sx={{
+							borderColor: "success.main",
+							boxShadow: "none",
+							transition: "transform 200ms ease",
+							"&:hover": { transform: "translateY(-1px)" },
+						}}
+					>
 						<CardContent>
 							<Stack direction="row" alignItems="center" spacing={1}>
-								<TickCircle size={18} color="var(--mui-palette-success-main, #4caf50)" variant="Bold" />
-								<Typography variant="body2" color="text.secondary">
+								<TickCircle size={16} color="var(--mui-palette-success-main, #4caf50)" variant="Bold" />
+								<Typography
+									variant="caption"
+									color="text.secondary"
+									sx={{ textTransform: "uppercase", letterSpacing: 0.5, fontSize: "0.68rem", fontWeight: 600 }}
+								>
 									Disponibles
 								</Typography>
 							</Stack>
-							<Typography variant="h3" color="success.main">
+							<Typography
+								variant="h3"
+								color="success.main"
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600, mt: 0.5 }}
+							>
 								{summary?.disponibles ?? 0}
 							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
 				<Grid item xs={12} sm={4}>
-					<Card variant="outlined" sx={{ borderColor: "error.main" }}>
+					<Card
+						variant="outlined"
+						sx={{
+							borderColor: "error.main",
+							boxShadow: "none",
+							transition: "transform 200ms ease",
+							"&:hover": { transform: "translateY(-1px)" },
+						}}
+					>
 						<CardContent>
 							<Stack direction="row" alignItems="center" spacing={1}>
-								<CloseCircle size={18} color="var(--mui-palette-error-main, #f44336)" variant="Bold" />
-								<Typography variant="body2" color="text.secondary">
+								<CloseCircle size={16} color="var(--mui-palette-error-main, #f44336)" variant="Bold" />
+								<Typography
+									variant="caption"
+									color="text.secondary"
+									sx={{ textTransform: "uppercase", letterSpacing: 0.5, fontSize: "0.68rem", fontWeight: 600 }}
+								>
 									No disponibles
 								</Typography>
 							</Stack>
-							<Typography variant="h3" color="error.main">
+							<Typography
+								variant="h3"
+								color="error.main"
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600, mt: 0.5 }}
+							>
 								{summary?.noDisponibles ?? 0}
 							</Typography>
 						</CardContent>

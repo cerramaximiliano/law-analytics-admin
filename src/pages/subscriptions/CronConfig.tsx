@@ -227,14 +227,24 @@ const CronConfigPage = () => {
 
 	return (
 		<MainCard
-			title="Configuración de Cron - Período de Gracia"
+			title="Configuración de cron — período de gracia"
 			secondary={
 				<Stack direction="row" spacing={1}>
 					<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchConfig} disabled={saving}>
 						Actualizar
 					</Button>
 					{!editMode && (
-						<Button variant="contained" size="small" startIcon={<Edit size={16} />} onClick={() => setEditMode(true)}>
+						<Button
+							variant="contained"
+							size="small"
+							startIcon={<Edit size={16} />}
+							onClick={() => setEditMode(true)}
+							sx={{
+								transition: "transform 200ms ease, box-shadow 200ms ease",
+								"&:hover": { transform: "translateY(-1px)" },
+								"&:active": { transform: "translateY(0)" },
+							}}
+						>
 							Editar
 						</Button>
 					)}
@@ -299,62 +309,41 @@ const CronConfigPage = () => {
 
 				{/* Estadísticas */}
 				<Grid container spacing={3}>
-					<Grid item xs={12} sm={6} md={3}>
-						<Card sx={{ backgroundColor: "primary.lighter", border: 1, borderColor: "primary.main" }}>
-							<CardContent>
-								<Stack spacing={1}>
-									<Typography variant="caption" color="text.secondary">
-										Ejecuciones Totales
-									</Typography>
-									<Typography variant="h3" color="primary.main">
-										{config?.runCount || 0}
-									</Typography>
-								</Stack>
-							</CardContent>
-						</Card>
-					</Grid>
-					<Grid item xs={12} sm={6} md={3}>
-						<Card sx={{ backgroundColor: "error.lighter", border: 1, borderColor: "error.main" }}>
-							<CardContent>
-								<Stack spacing={1}>
-									<Typography variant="caption" color="text.secondary">
-										Fallos
-									</Typography>
-									<Typography variant="h3" color="error.main">
-										{config?.failureCount || 0}
-									</Typography>
-								</Stack>
-							</CardContent>
-						</Card>
-					</Grid>
-					<Grid item xs={12} sm={6} md={3}>
-						<Card sx={{ backgroundColor: "success.lighter", border: 1, borderColor: "success.main" }}>
-							<CardContent>
-								<Stack spacing={1}>
-									<Typography variant="caption" color="text.secondary">
-										Días por Defecto
-									</Typography>
-									<Typography variant="h3" color="success.main">
-										{config?.config?.gracePeriod?.defaultDays || 30}
-									</Typography>
-								</Stack>
-							</CardContent>
-						</Card>
-					</Grid>
-					<Grid item xs={12} sm={6} md={3}>
-						<Card sx={{ backgroundColor: "warning.lighter", border: 1, borderColor: "warning.main" }}>
-							<CardContent>
-								<Stack spacing={1}>
-									<Typography variant="caption" color="text.secondary">
-										Recordatorios
-									</Typography>
-									<Typography variant="h3" color="warning.main" sx={{ color: "text.primary" }}>
-										{config?.config?.gracePeriod?.reminderDays?.length || 0}
-									</Typography>
-								</Stack>
-							</CardContent>
-						</Card>
-					</Grid>
+					{[
+						{ label: "Ejecuciones totales", value: config?.runCount || 0, color: "primary.main" as const },
+						{ label: "Fallos", value: config?.failureCount || 0, color: "error.main" as const },
+						{ label: "Días por defecto", value: config?.config?.gracePeriod?.defaultDays || 30, color: "success.main" as const },
+						{ label: "Recordatorios", value: config?.config?.gracePeriod?.reminderDays?.length || 0, color: "warning.main" as const },
+					].map((stat) => (
+						<Grid item xs={12} sm={6} md={3} key={stat.label}>
+							<Card
+								variant="outlined"
+								sx={{
+									boxShadow: "none",
+									transition: "border-color 200ms ease, transform 200ms ease",
+									"&:hover": { transform: "translateY(-1px)", borderColor: stat.color },
+								}}
+							>
+								<CardContent>
+									<Stack spacing={1}>
+										<Typography
+											variant="caption"
+											color="text.secondary"
+											sx={{ textTransform: "uppercase", letterSpacing: 0.5, fontSize: "0.68rem", fontWeight: 600 }}
+										>
+											{stat.label}
+										</Typography>
+										<Typography
+											variant="h3"
+											sx={{ color: stat.color, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+										>
+											{stat.value}
+										</Typography>
+									</Stack>
+								</CardContent>
+							</Card>
+						</Grid>
+					))}
 				</Grid>
 
 				{/* Formulario de Edición */}

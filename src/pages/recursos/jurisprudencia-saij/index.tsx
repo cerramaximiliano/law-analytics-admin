@@ -101,16 +101,30 @@ function StatBadge({ label, value, color }: { label: string; value: number; colo
 			sx={{
 				px: 2,
 				py: 1,
-				borderRadius: 2,
-				bgcolor: color ? alpha(color, 0.08) : alpha(theme.palette.primary.main, 0.06),
+				borderRadius: 1.5,
+				bgcolor: color ? alpha(color, 0.06) : alpha(theme.palette.primary.main, 0.05),
 				border: `1px solid ${color ? alpha(color, 0.2) : alpha(theme.palette.primary.main, 0.12)}`,
 				textAlign: "center",
+				transition: "border-color 200ms ease, transform 200ms ease",
+				"&:hover": {
+					borderColor: color ? alpha(color, 0.4) : alpha(theme.palette.primary.main, 0.32),
+					transform: "translateY(-1px)",
+				},
 			}}
 		>
-			<Typography variant="h6" fontWeight={700} color={color || "primary.main"}>
+			<Typography
+				variant="h6"
+				fontWeight={700}
+				color={color || "primary.main"}
+				sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
+			>
 				{value.toLocaleString("es-AR")}
 			</Typography>
-			<Typography variant="caption" color="text.secondary">
+			<Typography
+				variant="caption"
+				color="text.secondary"
+				sx={{ textTransform: "uppercase", letterSpacing: 0.4, fontSize: "0.66rem", fontWeight: 600 }}
+			>
 				{label}
 			</Typography>
 		</Box>

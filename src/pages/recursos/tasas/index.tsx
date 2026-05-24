@@ -525,12 +525,12 @@ const TasasInteres = () => {
 
 	return (
 		<>
-			<MainCard title="Tasas de Interés" secondary={<Chart size={24} />}>
+			<MainCard title="Tasas de interés" secondary={<Chart size={24} />}>
 				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
 					<Tabs value={tabValue} onChange={(_e: SyntheticEvent, v: number) => setTabValue(v)}>
-						<Tab label="Estado Actual" />
+						<Tab label="Estado actual" />
 						\t\t\t\t
-						<Tab label="Consulta por Fecha" />
+						<Tab label="Consulta por fecha" />
 						\n\t\t\t\t
 						<Tab label="Documentación" />
 					</Tabs>
