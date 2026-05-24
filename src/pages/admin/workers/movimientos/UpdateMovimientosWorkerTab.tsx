@@ -27,6 +27,7 @@ import { Refresh, TickCircle, CloseCircle, Setting2, Chart, ArrowUp, ArrowDown }
 import { useSnackbar } from "notistack";
 import UpdateMovimientosService, { UpdateMovimientosWorkerConfig, UpdateMovimientosManagerConfig } from "api/updateMovimientos";
 import WorkerControlPanel from "components/WorkerControlPanel";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 const FUERO_LABELS: Record<string, string> = { CIV: "Civil", CNT: "Trabajo", CSS: "Seg. Social", COM: "Comercial" };
 const ALL_FUEROS = ["CIV", "CNT", "CSS", "COM"];
@@ -39,17 +40,20 @@ function fmtDate(d?: string) {
 
 function StatCard({ label, value, color, sub }: { label: string; value: number | string; color?: string; sub?: string }) {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	return (
 		<Box
 			sx={{
 				p: 2,
 				borderRadius: 2,
-				border: `1px solid ${theme.palette.divider}`,
-				bgcolor: alpha(theme.palette.primary.main, 0.03),
+				border: `1px solid ${headerBorder(isDark)}`,
+				bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03),
 				minWidth: 110,
+				transition: "transform 200ms ease, box-shadow 200ms ease",
+				"&:hover": { transform: "translateY(-1px)", boxShadow: `0 4px 12px ${alpha(BRAND_BLUE, 0.12)}` },
 			}}
 		>
-			<Typography variant="h4" fontWeight={700} color={color || "text.primary"}>
+			<Typography variant="h4" fontWeight={700} color={color || "text.primary"} sx={{ fontVariantNumeric: "tabular-nums" }}>
 				{typeof value === "number" ? value.toLocaleString("es-AR") : value}
 			</Typography>
 			<Typography variant="caption" color="text.secondary" display="block">
@@ -124,10 +128,19 @@ function EstadoSection() {
 				)}
 				{state?.timestamp && (
 					<Box sx={{ ml: "auto" }}>
-						<Typography variant="caption" color="text.secondary">
+						<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 							Último ciclo: {fmtDate(state.timestamp)}
 						</Typography>
-						<Button size="small" startIcon={<Refresh size={14} />} onClick={load} sx={{ ml: 1 }}>
+						<Button
+							size="small"
+							startIcon={<Refresh size={14} />}
+							onClick={load}
+							sx={{
+								ml: 1,
+								transition: "background-color 200ms ease, transform 200ms ease",
+								"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.08), transform: "translateY(-1px)" },
+							}}
+						>
 							Refrescar
 						</Button>
 					</Box>
@@ -398,7 +411,17 @@ function ManagerSection() {
 			</Box>
 
 			<Stack direction="row" spacing={2} alignItems="center">
-				<Button variant="contained" onClick={save} disabled={!dirty || saving} startIcon={<TickCircle size={18} />}>
+				<Button
+					variant="contained"
+					onClick={save}
+					disabled={!dirty || saving}
+					startIcon={<TickCircle size={18} />}
+					sx={{
+						transition: "transform 200ms ease, box-shadow 200ms ease",
+						"&:hover:not(:disabled)": { transform: "translateY(-1px)", boxShadow: `0 4px 12px ${alpha(BRAND_BLUE, 0.32)}` },
+						"&:active:not(:disabled)": { transform: "scale(0.98)" },
+					}}
+				>
 					{saving ? "Guardando..." : "Guardar cambios"}
 				</Button>
 				{dirty && (

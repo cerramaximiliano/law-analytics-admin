@@ -52,6 +52,7 @@ import {
 import { useSnackbar } from "notistack";
 import SentenciasService, { AiSummary, SentenciaCapturada, Fuero, SentenciaTipo, PublicationStatus } from "api/sentenciasCapturadas";
 import RepoBadge from "components/admin/RepoBadge";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 const FUERO_LABELS: Record<string, string> = { CIV: "Civil", CSS: "Seg. Social", CNT: "Trabajo", COM: "Comercial" };
 const FUERO_COLORS: Record<string, "primary" | "warning" | "error" | "success"> = {
@@ -84,13 +85,26 @@ interface SkipDialogProps {
 }
 
 function SkipDialog({ open, doc, onConfirm, onClose }: SkipDialogProps) {
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const [notes, setNotes] = useState("");
 	useEffect(() => {
 		if (open) setNotes("");
 	}, [open]);
 	return (
-		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-			<DialogTitle>Archivar sentencia</DialogTitle>
+		<Dialog
+			open={open}
+			onClose={onClose}
+			maxWidth="sm"
+			fullWidth
+			PaperProps={{
+				sx: {
+					borderRadius: 2.5,
+					boxShadow: `0 16px 40px ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+				},
+			}}
+		>
+			<DialogTitle sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, fontWeight: 600 }}>Archivar sentencia</DialogTitle>
 			<DialogContent>
 				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
 					{doc?.caratula || `Sentencia ${doc?._id.slice(-6)}`}
@@ -126,6 +140,7 @@ interface SummaryDialogProps {
 
 function SummaryDialog({ open, doc, onClose, onSaved }: SummaryDialogProps) {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 	const [content, setContent] = useState("");
 	const [generating, setGenerating] = useState(false);
@@ -174,11 +189,22 @@ function SummaryDialog({ open, doc, onClose, onSaved }: SummaryDialogProps) {
 	const isApproved = doc?.aiSummary?.status === "approved";
 
 	return (
-		<Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-			<DialogTitle>
+		<Dialog
+			open={open}
+			onClose={onClose}
+			maxWidth="md"
+			fullWidth
+			PaperProps={{
+				sx: {
+					borderRadius: 2.5,
+					boxShadow: `0 16px 40px ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+				},
+			}}
+		>
+			<DialogTitle sx={{ borderBottom: `1px solid ${headerBorder(isDark)}` }}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Box>
-						<Typography variant="h6" component="span">
+						<Typography variant="h6" component="span" sx={{ fontWeight: 600 }}>
 							Resumen para publicación
 						</Typography>
 						{doc?.aiSummary?.status && (
@@ -291,6 +317,7 @@ const TAB_LABELS: Record<ViewTab, string> = {
 
 export default function PublicacionesSection() {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 
 	const [activeTab, setActiveTab] = useState<ViewTab>("pending");
@@ -423,12 +450,28 @@ export default function PublicacionesSection() {
 				</Box>
 				<Stack direction="row" spacing={0.5}>
 					<Tooltip title={helpOpen ? "Ocultar ayuda" : "¿Cómo funciona esta sección?"}>
-						<IconButton size="small" color="info" onClick={() => setHelpOpen((v) => !v)}>
+						<IconButton
+						size="small"
+						color="info"
+						onClick={() => setHelpOpen((v) => !v)}
+						sx={{
+							transition: "background-color 200ms ease, transform 200ms ease",
+							"&:hover": { transform: "translateY(-1px)" },
+						}}
+					>
 							{helpOpen ? <ArrowUp2 size={18} /> : <InfoCircle size={18} />}
 						</IconButton>
 					</Tooltip>
 					<Tooltip title="Actualizar">
-						<IconButton size="small" onClick={() => load()} disabled={loading}>
+						<IconButton
+							size="small"
+							onClick={() => load()}
+							disabled={loading}
+							sx={{
+								transition: "background-color 200ms ease, transform 200ms ease",
+								"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+							}}
+						>
 							<Refresh2 size={18} />
 						</IconButton>
 					</Tooltip>
@@ -538,11 +581,23 @@ export default function PublicacionesSection() {
 			<Tabs
 				value={activeTab}
 				onChange={handleTabChange}
-				sx={{ borderBottom: 1, borderColor: "divider", minHeight: 36 }}
-				TabIndicatorProps={{ style: { height: 2 } }}
+				sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, minHeight: 36 }}
+				TabIndicatorProps={{ sx: { height: 2.5, bgcolor: BRAND_BLUE } }}
 			>
 				{(["pending", "skipped", "published"] as ViewTab[]).map((tab) => (
-					<Tab key={tab} value={tab} label={TAB_LABELS[tab]} sx={{ minHeight: 36, py: 0.5, fontSize: "0.8rem" }} />
+					<Tab
+						key={tab}
+						value={tab}
+						label={TAB_LABELS[tab]}
+						sx={{
+							minHeight: 36,
+							py: 0.5,
+							fontSize: "0.8rem",
+							textTransform: "none",
+							transition: "color 200ms ease",
+							"&.Mui-selected": { color: BRAND_BLUE, fontWeight: 600 },
+						}}
+					/>
 				))}
 			</Tabs>
 

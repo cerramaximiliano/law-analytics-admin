@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Box, Stack, Tab, Tabs, Typography, useTheme, alpha, Chip } from "@mui/material";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 // ── Shared diagram primitives ─────────────────────────────────────────────────
 
@@ -496,17 +497,31 @@ const TABS = [
 ];
 
 const CorpusHelpTab: React.FC = () => {
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const [sub, setSub] = useState("overview");
 
 	return (
 		<Stack spacing={0}>
-			<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+			<Box sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, mb: 3 }}>
 				<Tabs
 					value={sub}
 					onChange={(_, v) => setSub(v)}
 					variant="scrollable"
 					scrollButtons="auto"
-					sx={{ minHeight: 40, "& .MuiTab-root": { minHeight: 40, textTransform: "none", fontSize: "0.8rem", fontWeight: 500, py: 0 } }}
+					TabIndicatorProps={{ sx: { height: 2.5, bgcolor: BRAND_BLUE } }}
+					sx={{
+						minHeight: 40,
+						"& .MuiTab-root": {
+							minHeight: 40,
+							textTransform: "none",
+							fontSize: "0.8rem",
+							fontWeight: 500,
+							py: 0,
+							transition: "color 200ms ease",
+							"&.Mui-selected": { color: BRAND_BLUE, fontWeight: 600 },
+						},
+					}}
 				>
 					{TABS.map((t) => (
 						<Tab key={t.value} label={t.label} value={t.value} />

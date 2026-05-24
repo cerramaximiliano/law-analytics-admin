@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, alpha } from "@mui/material/styles";
 import {
 	Box,
 	Card,
@@ -34,6 +34,7 @@ import MainCard from "components/MainCard";
 import { CausasEjeService, CausaEje, WorkerStatsResponse, EligibilityStatsResponse } from "api/causasEje";
 import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Lock1, Repeat } from "iconsax-react";
 import CausaDetalleModalEje from "./CausaDetalleModalEje";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 // Helper para formatear fechas
 const formatDate = (date: { $date: string } | string | undefined): string => {
@@ -108,6 +109,7 @@ const getId = (id: string | { $oid: string }): string => {
 
 const CarpetasVerificadasEje = () => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Estados
@@ -779,7 +781,15 @@ const CarpetasVerificadasEje = () => {
 									Limpiar
 								</Button>
 								<Tooltip title="Actualizar">
-									<IconButton onClick={handleRefresh} disabled={loading} size="small">
+									<IconButton
+										onClick={handleRefresh}
+										disabled={loading}
+										size="small"
+										sx={{
+											transition: "background-color 200ms ease, transform 200ms ease",
+											"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+										}}
+									>
 										<Refresh />
 									</IconButton>
 								</Tooltip>
@@ -797,11 +807,29 @@ const CarpetasVerificadasEje = () => {
 					) : causas.length === 0 ? (
 						<Alert severity="info">No se encontraron carpetas verificadas EJE con los filtros seleccionados</Alert>
 					) : (
-						<Card>
-							<TableContainer>
-								<Table>
+						<Card
+							elevation={0}
+							sx={{
+								border: `1px solid ${headerBorder(isDark)}`,
+								borderRadius: 2,
+							}}
+						>
+							<TableContainer sx={{ maxHeight: "calc(100dvh - 360px)" }}>
+								<Table stickyHeader size="small">
 									<TableHead>
-										<TableRow>
+										<TableRow
+											sx={{
+												"& .MuiTableCell-head": {
+													bgcolor: alpha(BRAND_BLUE, isDark ? 0.08 : 0.04),
+													borderBottom: `1px solid ${headerBorder(isDark)}`,
+													fontSize: "0.72rem",
+													fontWeight: 600,
+													textTransform: "uppercase",
+													letterSpacing: "0.04em",
+													color: "text.secondary",
+												},
+											}}
+										>
 											<TableCell>Expediente</TableCell>
 											<TableCell>CUIJ</TableCell>
 											<TableCell>Source</TableCell>
@@ -822,14 +850,21 @@ const CarpetasVerificadasEje = () => {
 									</TableHead>
 									<TableBody>
 										{causas.map((causa) => (
-											<TableRow key={getId(causa._id)} hover>
+											<TableRow
+												key={getId(causa._id)}
+												hover
+												sx={{
+													transition: "background-color 150ms ease",
+													"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) },
+												}}
+											>
 												<TableCell>
-													<Typography variant="body2" fontWeight="bold">
+													<Typography variant="body2" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
 														{causa.numero}/{causa.anio}
 													</Typography>
 												</TableCell>
 												<TableCell>
-													<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+													<Typography variant="caption" sx={{ fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }}>
 														{causa.cuij}
 													</Typography>
 												</TableCell>
@@ -861,10 +896,17 @@ const CarpetasVerificadasEje = () => {
 												</TableCell>
 												<TableCell>{causa.estado && <Chip label={causa.estado} size="small" color="info" variant="outlined" />}</TableCell>
 												<TableCell align="center">
-													<Chip label={causa.movimientosCount || 0} size="small" variant="outlined" />
+													<Chip
+														label={causa.movimientosCount || 0}
+														size="small"
+														variant="outlined"
+														sx={{ fontVariantNumeric: "tabular-nums", minWidth: 44 }}
+													/>
 												</TableCell>
 												<TableCell>
-													<Typography variant="caption">{formatDate(causa.createdAt)}</Typography>
+													<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums" }}>
+														{formatDate(causa.createdAt)}
+													</Typography>
 												</TableCell>
 												<TableCell>
 													{(() => {
@@ -920,7 +962,16 @@ const CarpetasVerificadasEje = () => {
 												</TableCell>
 												<TableCell align="center">
 													<Tooltip title="Ver detalles">
-														<IconButton size="small" color="primary" onClick={() => handleVerDetalles(causa)} disabled={loadingDetail}>
+														<IconButton
+															size="small"
+															color="primary"
+															onClick={() => handleVerDetalles(causa)}
+															disabled={loadingDetail}
+															sx={{
+																transition: "background-color 200ms ease, transform 200ms ease",
+																"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+															}}
+														>
 															<Eye size={18} />
 														</IconButton>
 													</Tooltip>

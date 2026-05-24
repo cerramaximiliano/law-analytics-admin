@@ -22,6 +22,8 @@ import {
 	IconButton,
 	TextField,
 	Button,
+	useTheme,
+	alpha,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useSnackbar } from "notistack";
@@ -31,9 +33,12 @@ import { JudicialMovementsService, JudicialMovement } from "api/judicialMovement
 import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Notification } from "iconsax-react";
 import CausaDetalleModal from "../causas/CausaDetalleModal";
 import JudicialMovementsModal from "../causas/JudicialMovementsModal";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 const CarpetasMEVNoVerificadas = () => {
 	const { enqueueSnackbar } = useSnackbar();
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 
 	// Estados
 	const [causas, setCausas] = useState<CausaMEV[]>([]);
@@ -372,7 +377,15 @@ const CarpetasMEVNoVerificadas = () => {
 									Limpiar
 								</Button>
 								<Tooltip title="Actualizar">
-									<IconButton onClick={handleRefresh} disabled={loading} size="small">
+									<IconButton
+										onClick={handleRefresh}
+										disabled={loading}
+										size="small"
+										sx={{
+											transition: "background-color 200ms ease, transform 200ms ease",
+											"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+										}}
+									>
 										<Refresh />
 									</IconButton>
 								</Tooltip>
@@ -390,11 +403,29 @@ const CarpetasMEVNoVerificadas = () => {
 					) : causas.length === 0 ? (
 						<Alert severity="info">No se encontraron carpetas MEV no verificadas con los filtros seleccionados</Alert>
 					) : (
-						<Card>
-							<TableContainer>
-								<Table>
+						<Card
+							elevation={0}
+							sx={{
+								border: `1px solid ${headerBorder(isDark)}`,
+								borderRadius: 2,
+							}}
+						>
+							<TableContainer sx={{ maxHeight: "calc(100dvh - 360px)" }}>
+								<Table stickyHeader size="small">
 									<TableHead>
-										<TableRow>
+										<TableRow
+											sx={{
+												"& .MuiTableCell-head": {
+													bgcolor: alpha(BRAND_BLUE, isDark ? 0.08 : 0.04),
+													borderBottom: `1px solid ${headerBorder(isDark)}`,
+													fontSize: "0.72rem",
+													fontWeight: 600,
+													textTransform: "uppercase",
+													letterSpacing: "0.04em",
+													color: "text.secondary",
+												},
+											}}
+										>
 											<TableCell>Número</TableCell>
 											<TableCell>Año</TableCell>
 											<TableCell>Carátula</TableCell>
@@ -408,13 +439,20 @@ const CarpetasMEVNoVerificadas = () => {
 									</TableHead>
 									<TableBody>
 										{causas.map((causa) => (
-											<TableRow key={getId(causa._id)} hover>
+											<TableRow
+												key={getId(causa._id)}
+												hover
+												sx={{
+													transition: "background-color 150ms ease",
+													"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) },
+												}}
+											>
 												<TableCell>
-													<Typography variant="body2" fontWeight="bold">
+													<Typography variant="body2" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
 														{causa.number}
 													</Typography>
 												</TableCell>
-												<TableCell>{causa.year}</TableCell>
+												<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{causa.year}</TableCell>
 												<TableCell sx={{ maxWidth: 250 }}>
 													<Typography variant="body2" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
 														{causa.caratula || "Sin carátula"}
@@ -431,7 +469,12 @@ const CarpetasMEVNoVerificadas = () => {
 													</Typography>
 												</TableCell>
 												<TableCell align="center">
-													<Chip label={causa.movimientosCount || 0} size="small" variant="outlined" />
+													<Chip
+														label={causa.movimientosCount || 0}
+														size="small"
+														variant="outlined"
+														sx={{ fontVariantNumeric: "tabular-nums", minWidth: 44 }}
+													/>
 												</TableCell>
 												<TableCell>
 													<Typography
@@ -462,7 +505,16 @@ const CarpetasMEVNoVerificadas = () => {
 												<TableCell align="center">
 													<Stack direction="row" spacing={0.5} justifyContent="center">
 														<Tooltip title="Ver detalles">
-															<IconButton size="small" color="primary" onClick={() => handleVerDetalles(causa)} disabled={loadingDetail}>
+															<IconButton
+																size="small"
+																color="primary"
+																onClick={() => handleVerDetalles(causa)}
+																disabled={loadingDetail}
+																sx={{
+																	transition: "background-color 200ms ease, transform 200ms ease",
+																	"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+																}}
+															>
 																<Eye size={18} />
 															</IconButton>
 														</Tooltip>
@@ -472,6 +524,10 @@ const CarpetasMEVNoVerificadas = () => {
 																color={datesMatchUTC(causa.lastUpdate, causa.fechaUltimoMovimiento) ? "success" : "warning"}
 																onClick={() => handleVerificarNotificaciones(causa)}
 																disabled={loadingMovements}
+																sx={{
+																	transition: "background-color 200ms ease, transform 200ms ease",
+																	"&:hover": { transform: "translateY(-1px)" },
+																}}
 															>
 																<Notification size={18} />
 															</IconButton>

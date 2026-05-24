@@ -29,6 +29,7 @@ import {
 import { Refresh, SearchNormal1, ArrowDown2, ArrowUp2, DocumentText } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import RagWorkersService, { StyleCorpusStats, StyleCorpusByFuero, StyleCorpusExample, StyleCorpusSearchResult } from "api/ragWorkers";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -179,6 +180,7 @@ const PreviewCard = ({ result, expanded, onToggle }: { result: StyleCorpusSearch
 
 const StyleCorpusTab = () => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Stats state
@@ -280,7 +282,15 @@ const StyleCorpusTab = () => {
 					</Typography>
 				</Box>
 				<Tooltip title="Refrescar">
-					<IconButton onClick={fetchStats} disabled={loading} size="small">
+					<IconButton
+						onClick={fetchStats}
+						disabled={loading}
+						size="small"
+						sx={{
+							transition: "background-color 200ms ease, transform 200ms ease",
+							"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+						}}
+					>
 						<Refresh size={18} />
 					</IconButton>
 				</Tooltip>
@@ -315,13 +325,24 @@ const StyleCorpusTab = () => {
 				{loading ? (
 					<Skeleton variant="rounded" height={200} />
 				) : (
-					<TableContainer component={Paper} variant="outlined">
+					<TableContainer component={Paper} variant="outlined" sx={{ borderColor: headerBorder(isDark), borderRadius: 1.5 }}>
 						<Table size="small">
 							<TableHead>
-								<TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}>
+								<TableRow
+									sx={{
+										"& .MuiTableCell-head": {
+											bgcolor: alpha(BRAND_BLUE, isDark ? 0.08 : 0.04),
+											borderBottom: `1px solid ${headerBorder(isDark)}`,
+										},
+									}}
+								>
 									{["Fuero", "Total", "Alta calidad", "Embebidos", "Cobertura Pinecone"].map((h) => (
 										<TableCell key={h} align={h === "Fuero" ? "left" : "right"}>
-											<Typography variant="caption" fontWeight={600}>
+											<Typography
+												variant="caption"
+												fontWeight={600}
+												sx={{ textTransform: "uppercase", letterSpacing: "0.04em", color: "text.secondary" }}
+											>
 												{h}
 											</Typography>
 										</TableCell>
@@ -330,7 +351,14 @@ const StyleCorpusTab = () => {
 							</TableHead>
 							<TableBody>
 								{(stats?.byFuero ?? []).map((row: StyleCorpusByFuero) => (
-									<TableRow key={row._id} hover>
+									<TableRow
+										key={row._id}
+										hover
+										sx={{
+											transition: "background-color 150ms ease",
+											"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) },
+										}}
+									>
 										<TableCell>
 											<Stack direction="row" spacing={1} alignItems="center">
 												<Chip label={row._id || "?"} size="small" variant="outlined" color="primary" />

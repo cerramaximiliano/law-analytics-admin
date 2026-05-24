@@ -40,6 +40,7 @@ import {
 	CommandSquare,
 	Clock,
 } from "iconsax-react";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 // Tab Panel Component
 interface TabPanelProps {
@@ -645,6 +646,7 @@ npx ts-node scripts/test-verification-flow.ts 162321/2020 162512/2020`}
 
 const DocumentationTabs = () => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const [tabValue, setTabValue] = useState(0);
 
 	const handleTabChange = (_event: SyntheticEvent, newValue: number) => {
@@ -652,21 +654,34 @@ const DocumentationTabs = () => {
 	};
 
 	return (
-		<Box sx={{ display: "flex", bgcolor: "background.paper", borderRadius: 1, border: `1px solid ${theme.palette.divider}` }}>
+		<Box
+			sx={{
+				display: "flex",
+				bgcolor: "background.paper",
+				borderRadius: 2,
+				border: `1px solid ${headerBorder(isDark)}`,
+				overflow: "hidden",
+			}}
+		>
 			{/* Vertical Tabs */}
 			<Tabs
 				orientation="vertical"
 				variant="scrollable"
 				value={tabValue}
 				onChange={handleTabChange}
+				TabIndicatorProps={{ sx: { width: 2.5, bgcolor: BRAND_BLUE } }}
 				sx={{
-					borderRight: 1,
-					borderColor: "divider",
+					borderRight: `1px solid ${headerBorder(isDark)}`,
 					minWidth: 220,
+					bgcolor: alpha(BRAND_BLUE, isDark ? 0.05 : 0.025),
 					"& .MuiTab-root": {
 						alignItems: "flex-start",
 						textAlign: "left",
 						minHeight: 56,
+						textTransform: "none",
+						fontSize: "0.85rem",
+						transition: "color 200ms ease, background-color 200ms ease",
+						"&.Mui-selected": { color: BRAND_BLUE, fontWeight: 600 },
 					},
 				}}
 			>

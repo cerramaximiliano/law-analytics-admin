@@ -12,14 +12,19 @@ import {
 	Switch,
 	TextField,
 	Typography,
+	useTheme,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { useSnackbar } from "notistack";
 import InfolegService from "api/infolegService";
 import type { InfolegConfig } from "types/infoleg";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 const DAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
 const ConfigTab = () => {
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 	const [config, setConfig] = useState<InfolegConfig | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -321,8 +326,27 @@ const ConfigTab = () => {
 				</>
 			)}
 
-			<Box>
-				<Button variant="contained" onClick={handleSave} disabled={saving} startIcon={saving ? <CircularProgress size={16} /> : undefined}>
+			<Box
+				sx={{
+					position: "sticky",
+					bottom: 0,
+					bgcolor: "background.paper",
+					borderTop: `1px solid ${headerBorder(isDark)}`,
+					py: 2,
+					mt: 1,
+				}}
+			>
+				<Button
+					variant="contained"
+					onClick={handleSave}
+					disabled={saving}
+					startIcon={saving ? <CircularProgress size={16} /> : undefined}
+					sx={{
+						transition: "transform 200ms ease, box-shadow 200ms ease",
+						"&:hover:not(:disabled)": { transform: "translateY(-1px)", boxShadow: `0 4px 12px ${alpha(BRAND_BLUE, 0.32)}` },
+						"&:active:not(:disabled)": { transform: "scale(0.98)" },
+					}}
+				>
 					{saving ? "Guardando..." : "Guardar configuración"}
 				</Button>
 			</Box>

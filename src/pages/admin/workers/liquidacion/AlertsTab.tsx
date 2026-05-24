@@ -3,6 +3,7 @@ import { Alert, Box, Button, Chip, IconButton, Paper, Skeleton, Stack, Typograph
 import { TickCircle, Warning2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import LiquidacionWorkerConfigService, { AlertEntry, FullDoc } from "api/liquidacionWorkerConfig";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 interface Props {
 	doc: FullDoc | null;
@@ -31,6 +32,7 @@ function relativeFromNow(iso: string): string {
 
 export default function AlertsTab({ doc, loading, onChanged }: Props) {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 	const [acking, setAcking] = useState<number | null>(null);
 	const [showAcked, setShowAcked] = useState(false);
@@ -67,10 +69,18 @@ export default function AlertsTab({ doc, loading, onChanged }: Props) {
 	return (
 		<Stack spacing={2}>
 			<Stack direction="row" justifyContent="space-between" alignItems="center">
-				<Typography variant="body2" color="text.secondary">
+				<Typography variant="body2" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 					{active} {active === 1 ? "alerta activa" : "alertas activas"} · {alerts.length} total (las últimas 100)
 				</Typography>
-				<Button size="small" variant="text" onClick={() => setShowAcked(!showAcked)}>
+				<Button
+					size="small"
+					variant="text"
+					onClick={() => setShowAcked(!showAcked)}
+					sx={{
+						transition: "background-color 200ms ease",
+						"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.08) },
+					}}
+				>
 					{showAcked ? "Ocultar reconocidas" : "Mostrar reconocidas"}
 				</Button>
 			</Stack>
@@ -96,8 +106,12 @@ export default function AlertsTab({ doc, loading, onChanged }: Props) {
 										p: 2,
 										borderLeft: 4,
 										borderLeftColor: color,
+										borderColor: headerBorder(isDark),
+										borderRadius: 1.5,
 										bgcolor: entry.acknowledged ? alpha(theme.palette.grey[500], 0.05) : "background.paper",
 										opacity: entry.acknowledged ? 0.7 : 1,
+										transition: "transform 200ms ease, box-shadow 200ms ease",
+										"&:hover": { transform: "translateY(-1px)", boxShadow: `0 4px 12px ${alpha(color, 0.16)}` },
 									}}
 								>
 									<Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2}>

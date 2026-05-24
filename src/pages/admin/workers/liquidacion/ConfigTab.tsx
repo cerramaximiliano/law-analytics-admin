@@ -15,10 +15,13 @@ import {
 	Switch,
 	TextField,
 	Typography,
+	useTheme,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { ArrowDown2, Refresh2, Setting2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import LiquidacionWorkerConfigService, { FullDoc, LiquidacionConfig, UpdateSettingsPayload } from "api/liquidacionWorkerConfig";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 interface Props {
 	doc: FullDoc | null;
@@ -44,6 +47,8 @@ const DEFAULT_CATEGORIES = [
 ];
 
 export default function ConfigTab({ doc, loading, onSaved }: Props) {
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 	const [saving, setSaving] = useState(false);
 	const [resetting, setResetting] = useState(false);
@@ -155,8 +160,17 @@ export default function ConfigTab({ doc, loading, onSaved }: Props) {
 			</Alert>
 
 			{/* === Manager === */}
-			<Accordion defaultExpanded>
-				<AccordionSummary expandIcon={<ArrowDown2 size={16} />}>
+			<Accordion
+				defaultExpanded
+				elevation={0}
+				sx={{
+					border: `1px solid ${headerBorder(isDark)}`,
+					borderRadius: 1.5,
+					"&:before": { display: "none" },
+					"&.Mui-expanded": { margin: 0 },
+				}}
+			>
+				<AccordionSummary expandIcon={<ArrowDown2 size={16} />} sx={{ bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) }}>
 					<Stack direction="row" spacing={1} alignItems="center">
 						<Typography variant="h6">Manager</Typography>
 						<Chip label="pjn-liq-manager" size="small" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }} />
@@ -235,8 +249,17 @@ export default function ConfigTab({ doc, loading, onSaved }: Props) {
 			</Accordion>
 
 			{/* === URL Extractor === */}
-			<Accordion defaultExpanded>
-				<AccordionSummary expandIcon={<ArrowDown2 size={16} />}>
+			<Accordion
+				defaultExpanded
+				elevation={0}
+				sx={{
+					border: `1px solid ${headerBorder(isDark)}`,
+					borderRadius: 1.5,
+					"&:before": { display: "none" },
+					"&.Mui-expanded": { margin: 0 },
+				}}
+			>
+				<AccordionSummary expandIcon={<ArrowDown2 size={16} />} sx={{ bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) }}>
 					<Stack direction="row" spacing={1} alignItems="center">
 						<Typography variant="h6">URL Extractor</Typography>
 						<Chip label="pjn-liq-url-extractor" size="small" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }} />
@@ -365,8 +388,17 @@ export default function ConfigTab({ doc, loading, onSaved }: Props) {
 			</Accordion>
 
 			{/* === PDF Processor === */}
-			<Accordion defaultExpanded>
-				<AccordionSummary expandIcon={<ArrowDown2 size={16} />}>
+			<Accordion
+				defaultExpanded
+				elevation={0}
+				sx={{
+					border: `1px solid ${headerBorder(isDark)}`,
+					borderRadius: 1.5,
+					"&:before": { display: "none" },
+					"&.Mui-expanded": { margin: 0 },
+				}}
+			>
+				<AccordionSummary expandIcon={<ArrowDown2 size={16} />} sx={{ bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) }}>
 					<Stack direction="row" spacing={1} alignItems="center">
 						<Typography variant="h6">PDF Processor</Typography>
 						<Chip label="pjn-liq-pdf-processor" size="small" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }} />
@@ -479,8 +511,16 @@ export default function ConfigTab({ doc, loading, onSaved }: Props) {
 			</Accordion>
 
 			{/* === Alertas === */}
-			<Accordion>
-				<AccordionSummary expandIcon={<ArrowDown2 size={16} />}>
+			<Accordion
+				elevation={0}
+				sx={{
+					border: `1px solid ${headerBorder(isDark)}`,
+					borderRadius: 1.5,
+					"&:before": { display: "none" },
+					"&.Mui-expanded": { margin: 0 },
+				}}
+			>
+				<AccordionSummary expandIcon={<ArrowDown2 size={16} />} sx={{ bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) }}>
 					<Typography variant="h6">Umbrales de alertas</Typography>
 				</AccordionSummary>
 				<AccordionDetails>
@@ -520,7 +560,16 @@ export default function ConfigTab({ doc, loading, onSaved }: Props) {
 				>
 					{resetting ? "Reseteando…" : "Reset a defaults"}
 				</Button>
-				<Button variant="contained" onClick={handleSave} disabled={saving || resetting}>
+				<Button
+					variant="contained"
+					onClick={handleSave}
+					disabled={saving || resetting}
+					sx={{
+						transition: "transform 200ms ease, box-shadow 200ms ease",
+						"&:hover:not(:disabled)": { transform: "translateY(-1px)", boxShadow: `0 4px 12px ${alpha(BRAND_BLUE, 0.32)}` },
+						"&:active:not(:disabled)": { transform: "scale(0.98)" },
+					}}
+				>
 					{saving ? "Guardando…" : "Guardar configuración"}
 				</Button>
 			</Stack>

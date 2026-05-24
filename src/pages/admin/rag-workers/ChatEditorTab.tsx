@@ -24,6 +24,7 @@ import Switch from "@mui/material/Switch";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import { useSnackbar } from "notistack";
 import RagWorkersService, { PipelineEditorConfig } from "api/ragWorkers";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 // ── Available options ────────────────────────────────────────────────────────
 
@@ -132,6 +133,7 @@ const CONFIG_VARS: EditorConfigVar[] = [
 
 const ChatEditorTab = () => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 	const { enqueueSnackbar } = useSnackbar();
 
@@ -285,13 +287,22 @@ const ChatEditorTab = () => {
 			{/* Header */}
 			<Stack direction="row" justifyContent="space-between" alignItems="center">
 				<Stack>
-					<Typography variant="h5">Configuracion del Chat Editor</Typography>
+					<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
+						Configuracion del Chat Editor
+					</Typography>
 					<Typography variant="body2" color="text.secondary">
 						Parametros del asistente IA para el editor de documentos legales
 					</Typography>
 				</Stack>
 				<Tooltip title="Refrescar">
-					<IconButton onClick={fetchConfig} size="small">
+					<IconButton
+						onClick={fetchConfig}
+						size="small"
+						sx={{
+							transition: "background-color 200ms ease, transform 200ms ease",
+							"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+						}}
+					>
 						<Refresh size={18} />
 					</IconButton>
 				</Tooltip>
@@ -302,7 +313,7 @@ const ChatEditorTab = () => {
 			</Alert>
 
 			{/* Numeric / select fields */}
-			<Box sx={{ p: isMobile ? 1.5 : 2.5, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
+			<Box sx={{ p: isMobile ? 1.5 : 2.5, borderRadius: 2, border: `1px solid ${headerBorder(isDark)}` }}>
 				<Stack spacing={0.5} sx={{ mb: 2 }}>
 					<Typography variant="subtitle1" fontWeight={600}>
 						Parametros del modelo
@@ -517,7 +528,17 @@ const ChatEditorTab = () => {
 							<Button variant="outlined" size="small" onClick={handleCancelEditPrompt} disabled={savingPrompt}>
 								Cancelar
 							</Button>
-							<Button variant="contained" size="small" onClick={handleSavePrompt} disabled={savingPrompt}>
+							<Button
+								variant="contained"
+								size="small"
+								onClick={handleSavePrompt}
+								disabled={savingPrompt}
+								sx={{
+									transition: "transform 200ms ease, box-shadow 200ms ease",
+									"&:hover:not(:disabled)": { transform: "translateY(-1px)", boxShadow: `0 4px 12px ${alpha(BRAND_BLUE, 0.32)}` },
+									"&:active:not(:disabled)": { transform: "scale(0.98)" },
+								}}
+							>
 								Guardar prompt
 							</Button>
 						</Stack>

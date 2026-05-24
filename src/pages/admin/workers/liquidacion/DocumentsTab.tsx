@@ -30,6 +30,7 @@ import { ExportSquare, Eye, Refresh, SearchNormal1 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import LiquidacionWorkerConfigService, { DocumentsListParams, LiquidacionDocListItem } from "api/liquidacionWorkerConfig";
 import DocumentDetailDrawer from "./DocumentDetailDrawer";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 const PDF_STATUSES = ["pending", "downloading", "parsed", "extracted", "ocr_needed", "failed", "not_pdf"];
 const SECTION_MIXES = ["HC+HR+RET", "HR+RET", "HC+HR", "HC+RET", "HC", "HR", "RET", "COVER", "NONE"];
@@ -71,6 +72,7 @@ function truncate(s: string | undefined, n: number): string {
 
 export default function DocumentsTab() {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 
 	const [docs, setDocs] = useState<LiquidacionDocListItem[]>([]);
@@ -126,7 +128,7 @@ export default function DocumentsTab() {
 	return (
 		<Stack spacing={2}>
 			{/* Filtros */}
-			<Paper variant="outlined" sx={{ p: 2 }}>
+			<Paper variant="outlined" sx={{ p: 2, borderColor: headerBorder(isDark), borderRadius: 1.5 }}>
 				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
 					<TextField
 						size="small"
@@ -184,7 +186,15 @@ export default function DocumentsTab() {
 					</Stack>
 					<Box sx={{ flex: 1 }} />
 					<Tooltip title="Refrescar">
-						<IconButton size="small" onClick={fetchDocs} disabled={loading}>
+						<IconButton
+							size="small"
+							onClick={fetchDocs}
+							disabled={loading}
+							sx={{
+								transition: "background-color 200ms ease, transform 200ms ease",
+								"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+							}}
+						>
 							<Refresh size={16} />
 						</IconButton>
 					</Tooltip>
@@ -195,18 +205,34 @@ export default function DocumentsTab() {
 			</Paper>
 
 			{/* Tabla */}
-			<TableContainer component={Paper} variant="outlined">
-				<Table size="small">
+			<TableContainer
+				component={Paper}
+				variant="outlined"
+				sx={{ borderColor: headerBorder(isDark), borderRadius: 1.5, maxHeight: "calc(100dvh - 360px)" }}
+			>
+				<Table size="small" stickyHeader>
 					<TableHead>
-						<TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}>
-							<TableCell sx={{ fontWeight: 700, width: 90 }}>Fecha</TableCell>
-							<TableCell sx={{ fontWeight: 700 }}>Carátula</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: 130 }}>Mix</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: 140 }}>Persona</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: 110 }} align="right">
+						<TableRow
+							sx={{
+								"& .MuiTableCell-head": {
+									bgcolor: alpha(BRAND_BLUE, isDark ? 0.08 : 0.04),
+									borderBottom: `1px solid ${headerBorder(isDark)}`,
+									fontSize: "0.72rem",
+									fontWeight: 600,
+									textTransform: "uppercase",
+									letterSpacing: "0.04em",
+									color: "text.secondary",
+								},
+							}}
+						>
+							<TableCell sx={{ width: 90 }}>Fecha</TableCell>
+							<TableCell>Carátula</TableCell>
+							<TableCell sx={{ width: 130 }}>Mix</TableCell>
+							<TableCell sx={{ width: 140 }}>Persona</TableCell>
+							<TableCell sx={{ width: 110 }} align="right">
 								Capital
 							</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: 110 }} align="right">
+							<TableCell sx={{ width: 110 }} align="right">
 								Intereses
 							</TableCell>
 							<TableCell sx={{ width: 80 }} align="center">
@@ -229,7 +255,11 @@ export default function DocumentsTab() {
 										<TableRow
 											key={d._id}
 											hover
-											sx={{ cursor: "pointer" }}
+											sx={{
+												cursor: "pointer",
+												transition: "background-color 150ms ease",
+												"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) },
+											}}
 											onClick={() => handleOpenDetail(d._id)}
 										>
 											<TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{fmtDate(d.movFecha)}</TableCell>

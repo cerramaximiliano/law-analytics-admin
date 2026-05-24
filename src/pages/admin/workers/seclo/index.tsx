@@ -27,6 +27,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { fetchTrabajoConfig, updateTrabajoConfig, triggerWorkerRun } from "store/reducers/seclo";
 import { useDispatch } from "store";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -613,10 +614,29 @@ export default function WorkersSecloPage() {
 			title="Workers SECLO"
 			secondary={
 				<Box display="flex" gap={1}>
-					<Button size="small" startIcon={<Refresh size={16} />} onClick={loadConfig} disabled={loading}>
+					<Button
+						size="small"
+						startIcon={<Refresh size={16} />}
+						onClick={loadConfig}
+						disabled={loading}
+						sx={{
+							transition: "background-color 200ms ease, transform 200ms ease",
+							"&:hover:not(:disabled)": { bgcolor: alpha(BRAND_BLUE, 0.06), transform: "translateY(-1px)" },
+						}}
+					>
 						Actualizar
 					</Button>
-					<Button size="small" variant="contained" onClick={handleSave} disabled={saving}>
+					<Button
+						size="small"
+						variant="contained"
+						onClick={handleSave}
+						disabled={saving}
+						sx={{
+							transition: "transform 200ms ease, box-shadow 200ms ease",
+							"&:hover:not(:disabled)": { transform: "translateY(-1px)", boxShadow: `0 4px 12px ${alpha(BRAND_BLUE, 0.32)}` },
+							"&:active:not(:disabled)": { transform: "scale(0.98)" },
+						}}
+					>
 						{saving ? <CircularProgress size={16} sx={{ mr: 1 }} /> : null}
 						Guardar cambios
 					</Button>

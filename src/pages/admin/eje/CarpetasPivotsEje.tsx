@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, alpha } from "@mui/material/styles";
 import {
 	Box,
 	Card,
@@ -47,6 +47,7 @@ import {
 	Layer,
 	DocumentText,
 } from "iconsax-react";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 // Helper para formatear fechas
 const formatDate = (date: { $date: string } | string | undefined): string => {
@@ -183,6 +184,7 @@ const LinkedCausasRow = ({
 
 const CarpetasPivotsEje = () => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Estados
@@ -493,7 +495,15 @@ const CarpetasPivotsEje = () => {
 									Limpiar
 								</Button>
 								<Tooltip title="Actualizar">
-									<IconButton onClick={handleRefresh} disabled={loading} size="small">
+									<IconButton
+										onClick={handleRefresh}
+										disabled={loading}
+										size="small"
+										sx={{
+											transition: "background-color 200ms ease, transform 200ms ease",
+											"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+										}}
+									>
 										<Refresh />
 									</IconButton>
 								</Tooltip>
@@ -511,11 +521,29 @@ const CarpetasPivotsEje = () => {
 					) : pivots.length === 0 ? (
 						<Alert severity="success">No hay pivots pendientes de resolución</Alert>
 					) : (
-						<Card>
-							<TableContainer>
-								<Table>
+						<Card
+							elevation={0}
+							sx={{
+								border: `1px solid ${headerBorder(isDark)}`,
+								borderRadius: 2,
+							}}
+						>
+							<TableContainer sx={{ maxHeight: "calc(100dvh - 360px)" }}>
+								<Table stickyHeader size="small">
 									<TableHead>
-										<TableRow>
+										<TableRow
+											sx={{
+												"& .MuiTableCell-head": {
+													bgcolor: alpha(BRAND_BLUE, isDark ? 0.08 : 0.04),
+													borderBottom: `1px solid ${headerBorder(isDark)}`,
+													fontSize: "0.72rem",
+													fontWeight: 600,
+													textTransform: "uppercase",
+													letterSpacing: "0.04em",
+													color: "text.secondary",
+												},
+											}}
+										>
 											<TableCell width={50}></TableCell>
 											<TableCell>Búsqueda Original</TableCell>
 											<TableCell>Expediente</TableCell>
@@ -530,17 +558,30 @@ const CarpetasPivotsEje = () => {
 											const isExpanded = expandedRows.has(id);
 											return (
 												<>
-													<TableRow key={id} hover sx={{ cursor: "pointer" }} onClick={() => toggleRowExpansion(id)}>
+													<TableRow
+														key={id}
+														hover
+														sx={{
+															cursor: "pointer",
+															transition: "background-color 150ms ease",
+															"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) },
+														}}
+														onClick={() => toggleRowExpansion(id)}
+													>
 														<TableCell>
 															<IconButton size="small">{isExpanded ? <ArrowUp2 size={18} /> : <ArrowDown2 size={18} />}</IconButton>
 														</TableCell>
 														<TableCell>
-															<Typography variant="body2" fontWeight="bold" sx={{ fontFamily: "monospace" }}>
+															<Typography
+																variant="body2"
+																fontWeight={600}
+																sx={{ fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }}
+															>
 																{pivot.searchTerm || `${pivot.numero}/${pivot.anio}`}
 															</Typography>
 														</TableCell>
 														<TableCell>
-															<Typography variant="body2">
+															<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
 																{pivot.numero}/{pivot.anio}
 															</Typography>
 														</TableCell>
@@ -554,7 +595,9 @@ const CarpetasPivotsEje = () => {
 															/>
 														</TableCell>
 														<TableCell>
-															<Typography variant="caption">{formatDate(pivot.createdAt)}</Typography>
+															<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums" }}>
+																{formatDate(pivot.createdAt)}
+															</Typography>
 														</TableCell>
 														<TableCell align="center">
 															{pivot.resolved ? (
@@ -585,8 +628,17 @@ const CarpetasPivotsEje = () => {
 			</Grid>
 
 			{/* Dialog de confirmación */}
-			<Dialog open={confirmDialog.open} onClose={() => setConfirmDialog({ open: false, pivotId: "", causaId: "", causa: null })}>
-				<DialogTitle>Confirmar selección</DialogTitle>
+			<Dialog
+				open={confirmDialog.open}
+				onClose={() => setConfirmDialog({ open: false, pivotId: "", causaId: "", causa: null })}
+				PaperProps={{
+					sx: {
+						borderRadius: 2.5,
+						boxShadow: `0 16px 40px ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+					},
+				}}
+			>
+				<DialogTitle sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, fontWeight: 600 }}>Confirmar selección</DialogTitle>
 				<DialogContent>
 					<Typography gutterBottom>¿Estás seguro de seleccionar esta causa?</Typography>
 					{confirmDialog.causa && (

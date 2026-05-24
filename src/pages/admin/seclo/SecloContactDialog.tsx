@@ -15,7 +15,9 @@ import {
 	Stack,
 	TextField,
 	Typography,
+	useTheme,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 
 import adminAxios from "utils/adminAxios";
 import { dispatch } from "store";
@@ -23,6 +25,7 @@ import { openSnackbar } from "store/reducers/snackbar";
 
 import type { SecloContact } from "types/seclo";
 import { TIPO_SOCIEDAD_OPTIONS } from "types/seclo";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 interface Props {
 	open: boolean;
@@ -104,6 +107,8 @@ function parseLegacyAddress(address: string | undefined): { street: string; stre
  * El padre se encarga de actualizar la lista local y auto-seleccionar.
  */
 export default function SecloContactDialog({ open, mode, userId, contact, folderId, roleHint, onClose, onSaved }: Props) {
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const [form, setForm] = useState<FormState>(empty);
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -214,10 +219,23 @@ export default function SecloContactDialog({ open, mode, userId, contact, folder
 	};
 
 	return (
-		<Dialog open={open} onClose={() => !submitting && onClose()} maxWidth="md" fullWidth>
-			<DialogTitle>
+		<Dialog
+			open={open}
+			onClose={() => !submitting && onClose()}
+			maxWidth="md"
+			fullWidth
+			PaperProps={{
+				sx: {
+					borderRadius: 2.5,
+					boxShadow: `0 16px 40px ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+				},
+			}}
+		>
+			<DialogTitle sx={{ borderBottom: `1px solid ${headerBorder(isDark)}` }}>
 				<Stack direction="row" alignItems="center" justifyContent="space-between">
-					<Typography variant="h5">{mode === "add" ? "Nuevo contacto" : "Editar contacto"}</Typography>
+					<Typography variant="h5" sx={{ fontWeight: 600 }}>
+						{mode === "add" ? "Nuevo contacto" : "Editar contacto"}
+					</Typography>
 					{roleHint && (
 						<Typography variant="body2" color="text.secondary">
 							Rol: {roleHint === "trabajador" ? "Trabajador (requirente)" : "Empleador (requerido)"}
@@ -406,7 +424,7 @@ export default function SecloContactDialog({ open, mode, userId, contact, folder
 				</Grid>
 			</DialogContent>
 
-			<DialogActions>
+			<DialogActions sx={{ borderTop: `1px solid ${headerBorder(isDark)}`, px: 3, py: 2 }}>
 				<Button onClick={onClose} disabled={submitting}>
 					Cancelar
 				</Button>
@@ -415,6 +433,11 @@ export default function SecloContactDialog({ open, mode, userId, contact, folder
 					onClick={handleSubmit}
 					disabled={!canSubmit || submitting}
 					startIcon={submitting ? <CircularProgress size={14} /> : null}
+					sx={{
+						transition: "transform 200ms ease, box-shadow 200ms ease",
+						"&:hover:not(:disabled)": { transform: "translateY(-1px)" },
+						"&:active:not(:disabled)": { transform: "scale(0.98)" },
+					}}
 				>
 					{submitting ? "Guardando…" : mode === "add" ? "Crear contacto" : "Guardar cambios"}
 				</Button>

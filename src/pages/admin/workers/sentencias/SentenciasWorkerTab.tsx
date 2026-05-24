@@ -44,6 +44,7 @@ import {
 	Notification,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import SentenciasService, {
 	Category,
 	EmbeddingStatus,
@@ -2517,6 +2518,7 @@ const SECTIONS: { label: string; icon: React.ReactElement; group: SectionGroup }
 
 export default function SentenciasWorkerTab() {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 	const [section, setSection] = useState(0);
 	const [stats, setStats] = useState<SentenciasStats | null>(null);
@@ -2899,11 +2901,12 @@ export default function SentenciasWorkerTab() {
 					>
 						Configuración
 					</Typography>
-					<Box sx={{ bgcolor: alpha(theme.palette.primary.main, 0.03) }}>
+					<Box sx={{ bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) }}>
 						<Tabs
 							orientation="vertical"
 							value={SECTIONS[section]?.group === "config" ? section : false}
 							onChange={(_, v) => setSection(v)}
+							TabIndicatorProps={{ sx: { width: 2.5, bgcolor: BRAND_BLUE } }}
 							sx={{
 								"& .MuiTab-root": {
 									alignItems: "flex-start",
@@ -2913,6 +2916,8 @@ export default function SentenciasWorkerTab() {
 									textTransform: "none",
 									fontSize: "0.875rem",
 									fontWeight: 500,
+									transition: "color 200ms ease, background-color 200ms ease",
+									"&.Mui-selected": { color: BRAND_BLUE, fontWeight: 600 },
 								},
 							}}
 						>

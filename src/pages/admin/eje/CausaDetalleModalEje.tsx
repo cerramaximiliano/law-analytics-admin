@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, alpha } from "@mui/material/styles";
 import {
 	Dialog,
 	DialogTitle,
@@ -32,6 +32,7 @@ import {
 import { CausaEje, CausasEjeService, MovimientoEje, IntervinienteEje, CausaRelacionada, UpdateHistoryEntry } from "api/causasEje";
 import { CloseCircle, CloseSquare, TickCircle, ArrowDown2, ArrowUp2, Copy, Edit, Save2, Lock1, Repeat } from "iconsax-react";
 import { useSnackbar } from "notistack";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 interface CausaDetalleModalEjeProps {
 	open: boolean;
@@ -42,6 +43,7 @@ interface CausaDetalleModalEjeProps {
 
 const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDetalleModalEjeProps) => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Estado para el tab activo
@@ -277,18 +279,29 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 
 	return (
 		<>
-			<Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-				<DialogTitle>
+			<Dialog
+				open={open}
+				onClose={onClose}
+				maxWidth="lg"
+				fullWidth
+				PaperProps={{
+					sx: {
+						borderRadius: 2.5,
+						boxShadow: `0 16px 40px ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+					},
+				}}
+			>
+				<DialogTitle sx={{ borderBottom: `1px solid ${headerBorder(isDark)}` }}>
 					<Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
 						<Box sx={{ flex: 1 }}>
 							<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-								<Typography variant="h5">
-									Expediente: {causa.numero}/{causa.anio}
+								<Typography variant="h5" sx={{ fontWeight: 600 }}>
+									Expediente: <Box component="span" sx={{ fontVariantNumeric: "tabular-nums" }}>{causa.numero}/{causa.anio}</Box>
 								</Typography>
 								<Chip label="EJE" color="primary" size="small" />
 								{causa.isPrivate && <Chip icon={<Lock1 size={14} />} label="Privado" color="warning" size="small" />}
 							</Stack>
-							<Typography variant="body2" color="textSecondary" sx={{ fontFamily: "monospace" }}>
+							<Typography variant="body2" color="textSecondary" sx={{ fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }}>
 								CUIJ: {causa.cuij}
 							</Typography>
 							<Typography variant="body2" color="textSecondary" noWrap>
@@ -298,7 +311,15 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 						{!isEditing && activeTab === 0 && (
 							<Stack direction="row" spacing={0.5}>
 								<Tooltip title="Editar causa">
-									<IconButton onClick={handleEditClick} color="primary" size="small">
+									<IconButton
+										onClick={handleEditClick}
+										color="primary"
+										size="small"
+										sx={{
+											transition: "background-color 200ms ease, transform 200ms ease",
+											"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+										}}
+									>
 										<Edit size={20} />
 									</IconButton>
 								</Tooltip>
@@ -307,8 +328,22 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 					</Stack>
 				</DialogTitle>
 
-				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-					<Tabs value={activeTab} onChange={handleTabChange} aria-label="causa eje detail tabs">
+				<Box sx={{ borderBottom: `1px solid ${headerBorder(isDark)}` }}>
+					<Tabs
+						value={activeTab}
+						onChange={handleTabChange}
+						aria-label="causa eje detail tabs"
+						TabIndicatorProps={{ sx: { height: 2.5, bgcolor: BRAND_BLUE } }}
+						sx={{
+							"& .MuiTab-root": {
+								textTransform: "none",
+								fontWeight: 500,
+								fontSize: "0.875rem",
+								transition: "color 200ms ease",
+								"&.Mui-selected": { color: BRAND_BLUE, fontWeight: 600 },
+							},
+						}}
+					>
 						<Tab label="Información General" />
 						<Tab label={`Movimientos (${currentMovimientos.length})`} />
 						<Tab label={`Intervinientes (${causa.intervinientes?.length || 0})`} />

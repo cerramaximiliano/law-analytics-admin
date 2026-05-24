@@ -1,5 +1,6 @@
 import { Alert, Box, Chip, Divider, Grid, Paper, Stack, Typography, alpha, useTheme } from "@mui/material";
 import { ArrowDown, ArrowRight2, Calendar, Code, Data, Diagram, DocumentText, Element4, InfoCircle, Setting3, Timer } from "iconsax-react";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 
 // ── Primitivos del diagrama ────────────────────────────────────
 
@@ -74,10 +75,12 @@ interface SectionProps {
 const Section = ({ title, icon, children }: SectionProps) => {
 	const theme = useTheme();
 	return (
-		<Box>
-			<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-				<Box sx={{ color: theme.palette.primary.main }}>{icon}</Box>
-				<Typography variant="h5">{title}</Typography>
+		<Box sx={{ maxWidth: "85ch" }}>
+			<Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 2 }}>
+				<Box sx={{ color: BRAND_BLUE }}>{icon}</Box>
+				<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
+					{title}
+				</Typography>
 			</Stack>
 			{children}
 		</Box>

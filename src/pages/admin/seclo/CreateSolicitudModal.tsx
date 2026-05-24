@@ -29,7 +29,10 @@ import {
 	Tooltip,
 	Stack,
 	Link,
+	useTheme,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import { useDispatch, useSelector } from "store";
 import { fetchUsers, createSolicitud, getPresignedUploadUrl, fetchFoldersByUser } from "store/reducers/seclo";
 import SecloContactDialog from "./SecloContactDialog";
@@ -97,6 +100,8 @@ function ReviewRow({ label, value, emptyHint }: { label: string; value?: string 
 
 export default function CreateSolicitudModal({ open, onClose }: Props) {
 	const dispatch = useDispatch();
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { users } = useSelector((s) => s.seclo);
 	const [localContacts, setLocalContacts] = useState<SecloContact[]>([]);
 
@@ -1566,8 +1571,16 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 				onClose={handleClose}
 				maxWidth="md"
 				fullWidth
+				PaperProps={{
+					sx: {
+						borderRadius: 2.5,
+						boxShadow: `0 16px 40px ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+					},
+				}}
 			>
-				<DialogTitle>Nueva solicitud de audiencia SECLO</DialogTitle>
+				<DialogTitle sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, fontWeight: 600 }}>
+					Nueva solicitud de audiencia SECLO
+				</DialogTitle>
 				<DialogContent>
 					<Stepper activeStep={step} alternativeLabel sx={{ mb: 3, mt: 1 }}>
 						{STEPS.map((label) => (
@@ -1656,8 +1669,21 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 		    de múltiples reclamantes sólo aplica cuando iniciadoPor === 'trabajador'
 		    y la solicitud corre forzada en dryRun (guard del worker) hasta
 		    validar el flujo end-to-end con el portal SECLO. */}
-			<Dialog open={extraDialog.open} onClose={() => setExtraDialog((s) => ({ ...s, open: false }))} maxWidth="sm" fullWidth>
-				<DialogTitle>{extraDialog.editIndex !== null ? "Editar reclamante" : "Agregar reclamante"}</DialogTitle>
+			<Dialog
+				open={extraDialog.open}
+				onClose={() => setExtraDialog((s) => ({ ...s, open: false }))}
+				maxWidth="sm"
+				fullWidth
+				PaperProps={{
+					sx: {
+						borderRadius: 2.5,
+						boxShadow: `0 16px 40px ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+					},
+				}}
+			>
+				<DialogTitle sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, fontWeight: 600 }}>
+					{extraDialog.editIndex !== null ? "Editar reclamante" : "Agregar reclamante"}
+				</DialogTitle>
 				<DialogContent dividers>
 					<Stack spacing={2}>
 						<Autocomplete
@@ -1863,8 +1889,16 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 				onClose={() => setExtraRequeridoDialog((s) => ({ ...s, open: false }))}
 				maxWidth="sm"
 				fullWidth
+				PaperProps={{
+					sx: {
+						borderRadius: 2.5,
+						boxShadow: `0 16px 40px ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+					},
+				}}
 			>
-				<DialogTitle>{extraRequeridoDialog.editIndex !== null ? "Cambiar empleador" : "Agregar empleador"}</DialogTitle>
+				<DialogTitle sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, fontWeight: 600 }}>
+					{extraRequeridoDialog.editIndex !== null ? "Cambiar empleador" : "Agregar empleador"}
+				</DialogTitle>
 				<DialogContent dividers>
 					<Stack spacing={2}>
 						<Autocomplete

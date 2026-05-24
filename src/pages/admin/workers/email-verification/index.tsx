@@ -50,9 +50,11 @@ import {
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { WorkersService, EmailVerificationConfig } from "api/workers";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 const EmailVerificationWorker = () => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 	const [config, setConfig] = useState<EmailVerificationConfig | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -335,10 +337,28 @@ const EmailVerificationWorker = () => {
 					>
 						100.111.73.56
 					</Box>
-					<Button variant="outlined" size="small" startIcon={<Code1 size={16} />} onClick={() => setJsonDialogOpen(true)}>
+					<Button
+						variant="outlined"
+						size="small"
+						startIcon={<Code1 size={16} />}
+						onClick={() => setJsonDialogOpen(true)}
+						sx={{
+							transition: "background-color 200ms ease, transform 200ms ease",
+							"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.06), transform: "translateY(-1px)" },
+						}}
+					>
 						Ver JSON
 					</Button>
-					<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchConfig}>
+					<Button
+						variant="outlined"
+						size="small"
+						startIcon={<Refresh size={16} />}
+						onClick={fetchConfig}
+						sx={{
+							transition: "background-color 200ms ease, transform 200ms ease",
+							"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.06), transform: "translateY(-1px)" },
+						}}
+					>
 						Actualizar
 					</Button>
 				</Stack>
@@ -828,8 +848,17 @@ const EmailVerificationWorker = () => {
 				</Card>
 
 				{/* Dialog de Confirmación */}
-				<Dialog open={confirmDialog.open} onClose={() => setConfirmDialog({ open: false, action: "" })}>
-					<DialogTitle>Confirmar Acción</DialogTitle>
+				<Dialog
+					open={confirmDialog.open}
+					onClose={() => setConfirmDialog({ open: false, action: "" })}
+					PaperProps={{
+						sx: {
+							borderRadius: 2.5,
+							boxShadow: `0 16px 40px ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+						},
+					}}
+				>
+					<DialogTitle sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, fontWeight: 600 }}>Confirmar Acción</DialogTitle>
 					<DialogContent>
 						<Typography>
 							{confirmDialog.action === "reset"
@@ -850,12 +879,32 @@ const EmailVerificationWorker = () => {
 				</Dialog>
 
 				{/* Dialog de JSON Raw */}
-				<Dialog open={jsonDialogOpen} onClose={() => setJsonDialogOpen(false)} maxWidth="md" fullWidth>
-					<DialogTitle>
+				<Dialog
+					open={jsonDialogOpen}
+					onClose={() => setJsonDialogOpen(false)}
+					maxWidth="md"
+					fullWidth
+					PaperProps={{
+						sx: {
+							borderRadius: 2.5,
+							boxShadow: `0 16px 40px ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+						},
+					}}
+				>
+					<DialogTitle sx={{ borderBottom: `1px solid ${headerBorder(isDark)}` }}>
 						<Stack direction="row" justifyContent="space-between" alignItems="center">
-							<Typography variant="h6">Configuración JSON</Typography>
+							<Typography variant="h6" sx={{ fontWeight: 600 }}>
+								Configuración JSON
+							</Typography>
 							<Tooltip title="Copiar JSON">
-								<IconButton onClick={handleCopyJson} color="primary">
+								<IconButton
+									onClick={handleCopyJson}
+									color="primary"
+									sx={{
+										transition: "background-color 200ms ease, transform 200ms ease",
+										"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+									}}
+								>
 									<Copy size={20} />
 								</IconButton>
 							</Tooltip>

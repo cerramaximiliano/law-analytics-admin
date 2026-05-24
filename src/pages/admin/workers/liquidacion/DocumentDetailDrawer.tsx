@@ -17,6 +17,7 @@ import {
 import { ArrowRight2, CloseCircle, DocumentText, ExportSquare, Folder2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import LiquidacionWorkerConfigService, { CausaOrigen, LiquidacionDocDetail } from "api/liquidacionWorkerConfig";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 interface Props {
 	docId: string | null;
@@ -70,6 +71,7 @@ function FieldRow({ label, value }: { label: string; value: React.ReactNode }) {
 
 export default function DocumentDetailDrawer({ docId, open, onClose }: Props) {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 	const [doc, setDoc] = useState<LiquidacionDocDetail | null>(null);
 	const [causa, setCausa] = useState<CausaOrigen | null>(null);
@@ -119,15 +121,41 @@ export default function DocumentDetailDrawer({ docId, open, onClose }: Props) {
 			anchor="right"
 			open={open}
 			onClose={onClose}
-			PaperProps={{ sx: { width: { xs: "100%", sm: 600, md: 720 }, p: 0 } }}
+			PaperProps={{
+				sx: {
+					width: { xs: "100%", sm: 600, md: 720 },
+					p: 0,
+					borderLeft: `1px solid ${headerBorder(isDark)}`,
+				},
+			}}
 		>
-			<Box sx={{ position: "sticky", top: 0, zIndex: 2, bgcolor: "background.paper", borderBottom: 1, borderColor: "divider", p: 2 }}>
+			<Box
+				sx={{
+					position: "sticky",
+					top: 0,
+					zIndex: 2,
+					bgcolor: "background.paper",
+					borderBottom: `1px solid ${headerBorder(isDark)}`,
+					p: 2,
+				}}
+			>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Stack direction="row" spacing={1} alignItems="center">
-						<DocumentText size={20} />
-						<Typography variant="h6">Detalle de liquidación</Typography>
+						<Box sx={{ color: BRAND_BLUE }}>
+							<DocumentText size={20} />
+						</Box>
+						<Typography variant="h6" sx={{ fontWeight: 600 }}>
+							Detalle de liquidación
+						</Typography>
 					</Stack>
-					<IconButton onClick={onClose} size="small">
+					<IconButton
+						onClick={onClose}
+						size="small"
+						sx={{
+							transition: "background-color 200ms ease, transform 200ms ease",
+							"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+						}}
+					>
 						<CloseCircle size={20} />
 					</IconButton>
 				</Stack>

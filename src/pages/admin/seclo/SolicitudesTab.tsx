@@ -34,7 +34,10 @@ import {
 	DialogTitle,
 	DialogContent,
 	DialogActions,
+	useTheme,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import { Add, DocumentDownload, Edit2, Eye, Trash, RefreshCircle, SearchNormal1, FilterSearch, Code, ArrowUp2, Broom } from "iconsax-react";
 import { useDispatch, useSelector } from "store";
 import {
@@ -1550,6 +1553,8 @@ function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicit
 
 export default function SolicitudesTab() {
 	const dispatch = useDispatch();
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { solicitudes, solicitudesTotal, loading } = useSelector((s) => s.seclo);
 
 	const [page, setPage] = useState(0);
@@ -1685,7 +1690,15 @@ export default function SolicitudesTab() {
 				</Tooltip>
 				<Box flexGrow={1} />
 				<Tooltip title="Recargar lista">
-					<IconButton size="small" onClick={() => load()} disabled={loading}>
+					<IconButton
+						size="small"
+						onClick={() => load()}
+						disabled={loading}
+						sx={{
+							transition: "background-color 200ms ease, transform 200ms ease",
+							"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+						}}
+					>
 						<RefreshCircle size={20} />
 					</IconButton>
 				</Tooltip>
@@ -1748,10 +1761,28 @@ export default function SolicitudesTab() {
 			)}
 
 			{/* Tabla */}
-			<TableContainer>
-				<Table size="small">
+			<TableContainer
+				sx={{
+					border: `1px solid ${headerBorder(isDark)}`,
+					borderRadius: 2,
+					maxHeight: "calc(100dvh - 360px)",
+				}}
+			>
+				<Table size="small" stickyHeader>
 					<TableHead>
-						<TableRow>
+						<TableRow
+							sx={{
+								"& .MuiTableCell-head": {
+									bgcolor: alpha(BRAND_BLUE, isDark ? 0.08 : 0.04),
+									borderBottom: `1px solid ${headerBorder(isDark)}`,
+									fontSize: "0.72rem",
+									fontWeight: 600,
+									textTransform: "uppercase",
+									letterSpacing: "0.04em",
+									color: "text.secondary",
+								},
+							}}
+						>
 							<TableCell>Usuario</TableCell>
 							<TableCell>Requirente</TableCell>
 							<TableCell>Requerido</TableCell>
@@ -1794,7 +1825,14 @@ export default function SolicitudesTab() {
 							</TableRow>
 						) : (
 							solicitudes.map((sol) => (
-								<TableRow key={sol._id} hover>
+								<TableRow
+									key={sol._id}
+									hover
+									sx={{
+										transition: "background-color 150ms ease",
+										"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) },
+									}}
+								>
 									<TableCell>
 										<Typography variant="body2" noWrap sx={{ maxWidth: 160 }}>
 											{getUserName(sol)}

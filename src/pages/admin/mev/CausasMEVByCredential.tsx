@@ -4,6 +4,7 @@
  * y modal con el JSON completo. Alimentada por /api/scba-causas/synced-causas.
  */
 import { useState, useEffect } from "react";
+import { useTheme, alpha } from "@mui/material/styles";
 import {
 	Box,
 	Card,
@@ -44,6 +45,7 @@ import MainCard from "components/MainCard";
 import scbaCausasService, { ScbaSyncedCausa, ScbaSyncedCausasSummary } from "api/scbaCausas";
 import scbaCredentialsService, { ScbaCredential } from "api/scbaCredentials";
 import { Refresh, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Repeat, Eye } from "iconsax-react";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 dayjs.locale("es");
 
@@ -112,6 +114,8 @@ const formatHoursTooltip = (hours: number[]): string => {
 
 const CausasMEVByCredential = () => {
 	const { enqueueSnackbar } = useSnackbar();
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 
 	// Estados principales
 	const [causas, setCausas] = useState<ScbaSyncedCausa[]>([]);
@@ -385,7 +389,14 @@ const CausasMEVByCredential = () => {
 						/>
 
 						<Tooltip title={sortOrder === "asc" ? "Ascendente" : "Descendente"}>
-							<IconButton onClick={handleSortOrderToggle} size="small">
+							<IconButton
+								onClick={handleSortOrderToggle}
+								size="small"
+								sx={{
+									transition: "background-color 200ms ease, transform 200ms ease",
+									"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+								}}
+							>
 								{sortOrder === "asc" ? <ArrowUp size={20} /> : <ArrowDown size={20} />}
 							</IconButton>
 						</Tooltip>
@@ -408,7 +419,15 @@ const CausasMEVByCredential = () => {
 							Limpiar
 						</Button>
 						<Tooltip title="Actualizar">
-							<IconButton onClick={fetchCausas} disabled={loading} size="small">
+							<IconButton
+								onClick={fetchCausas}
+								disabled={loading}
+								size="small"
+								sx={{
+									transition: "background-color 200ms ease, transform 200ms ease",
+									"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+								}}
+							>
 								<Refresh size={20} />
 							</IconButton>
 						</Tooltip>
@@ -436,11 +455,29 @@ const CausasMEVByCredential = () => {
 				) : causas.length === 0 ? (
 					<Alert severity="info">No se encontraron causas SCBA con los filtros seleccionados</Alert>
 				) : (
-					<Card>
-						<TableContainer>
-							<Table size="small">
+					<Card
+						elevation={0}
+						sx={{
+							border: `1px solid ${headerBorder(isDark)}`,
+							borderRadius: 2,
+						}}
+					>
+						<TableContainer sx={{ maxHeight: "calc(100dvh - 360px)" }}>
+							<Table size="small" stickyHeader>
 								<TableHead>
-									<TableRow>
+									<TableRow
+										sx={{
+											"& .MuiTableCell-head": {
+												bgcolor: alpha(BRAND_BLUE, isDark ? 0.08 : 0.04),
+												borderBottom: `1px solid ${headerBorder(isDark)}`,
+												fontSize: "0.72rem",
+												fontWeight: 600,
+												textTransform: "uppercase",
+												letterSpacing: "0.04em",
+												color: "text.secondary",
+											},
+										}}
+									>
 										<TableCell>Expediente</TableCell>
 										<TableCell>Departamento</TableCell>
 										<TableCell>Carátula</TableCell>
@@ -457,7 +494,14 @@ const CausasMEVByCredential = () => {
 									{causas.map((causa) => {
 										const syncStatus = causa.credential.syncStatus || "never_synced";
 										return (
-											<TableRow key={causa._id} hover>
+											<TableRow
+												key={causa._id}
+												hover
+												sx={{
+													transition: "background-color 150ms ease",
+													"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) },
+												}}
+											>
 												<TableCell sx={{ minWidth: 160 }}>
 													<Stack spacing={0.5}>
 														<Typography variant="body2" fontWeight="bold" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
@@ -586,7 +630,14 @@ const CausasMEVByCredential = () => {
 												</TableCell>
 												<TableCell align="center">
 													<Tooltip title="Ver JSON">
-														<IconButton size="small" onClick={() => handleOpenJson(causa)}>
+														<IconButton
+															size="small"
+															onClick={() => handleOpenJson(causa)}
+															sx={{
+																transition: "background-color 200ms ease, transform 200ms ease",
+																"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+															}}
+														>
 															<Eye size={18} />
 														</IconButton>
 													</Tooltip>
@@ -610,13 +661,31 @@ const CausasMEVByCredential = () => {
 			</MainCard>
 
 			{/* Modal JSON */}
-			<Dialog open={jsonModalOpen} onClose={handleCloseJson} maxWidth="md" fullWidth>
-				<DialogTitle>
+			<Dialog
+				open={jsonModalOpen}
+				onClose={handleCloseJson}
+				maxWidth="md"
+				fullWidth
+				PaperProps={{
+					sx: {
+						borderRadius: 2.5,
+						boxShadow: `0 16px 40px ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+					},
+				}}
+			>
+				<DialogTitle sx={{ borderBottom: `1px solid ${headerBorder(isDark)}` }}>
 					<Stack direction="row" alignItems="center" justifyContent="space-between">
-						<Typography variant="h6">
+						<Typography variant="h6" sx={{ fontWeight: 600 }}>
 							JSON — {selectedCausa?.scbaNumber || `${selectedCausa?.number ?? ""}/${selectedCausa?.year ?? ""}`}
 						</Typography>
-						<IconButton onClick={handleCloseJson} size="small">
+						<IconButton
+							onClick={handleCloseJson}
+							size="small"
+							sx={{
+								transition: "background-color 200ms ease, transform 200ms ease",
+								"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+							}}
+						>
 							<CloseCircle size={20} />
 						</IconButton>
 					</Stack>

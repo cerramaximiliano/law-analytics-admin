@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Grid, TextField, Typography, Alert, Autocomplete } from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Grid, TextField, Typography, Alert, Autocomplete, useTheme } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import * as Yup from "yup";
 import { Formik } from "formik";
 import { useDispatch, useSelector } from "store";
 import { fetchUsers, createCredential } from "store/reducers/seclo";
 import type { SecloUser } from "types/seclo";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 interface Props {
 	open: boolean;
@@ -19,6 +21,8 @@ const schema = Yup.object({
 
 export default function CreateCredencialModal({ open, onClose }: Props) {
 	const dispatch = useDispatch();
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { users } = useSelector((s) => s.seclo);
 	const [userSearch, setUserSearch] = useState("");
 
@@ -45,8 +49,19 @@ export default function CreateCredencialModal({ open, onClose }: Props) {
 	};
 
 	return (
-		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-			<DialogTitle>Nueva credencial SECLO</DialogTitle>
+		<Dialog
+			open={open}
+			onClose={onClose}
+			maxWidth="sm"
+			fullWidth
+			PaperProps={{
+				sx: {
+					borderRadius: 2.5,
+					boxShadow: `0 16px 40px ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+				},
+			}}
+		>
+			<DialogTitle sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, fontWeight: 600 }}>Nueva credencial SECLO</DialogTitle>
 			<Formik initialValues={{ userId: "", cuil: "", password: "" }} validationSchema={schema} onSubmit={handleSubmit}>
 				{({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting, setFieldValue }) => (
 					<form onSubmit={handleSubmit}>
@@ -107,11 +122,20 @@ export default function CreateCredencialModal({ open, onClose }: Props) {
 								</Grid>
 							</Grid>
 						</DialogContent>
-						<DialogActions>
+						<DialogActions sx={{ borderTop: `1px solid ${headerBorder(isDark)}`, px: 3, py: 2 }}>
 							<Button onClick={onClose} disabled={isSubmitting}>
 								Cancelar
 							</Button>
-							<Button type="submit" variant="contained" disabled={isSubmitting}>
+							<Button
+								type="submit"
+								variant="contained"
+								disabled={isSubmitting}
+								sx={{
+									transition: "transform 200ms ease, box-shadow 200ms ease",
+									"&:hover:not(:disabled)": { transform: "translateY(-1px)" },
+									"&:active:not(:disabled)": { transform: "scale(0.98)" },
+								}}
+							>
 								{isSubmitting ? "Guardando..." : "Crear credencial"}
 							</Button>
 						</DialogActions>
