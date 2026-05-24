@@ -655,11 +655,13 @@ const FolderInactivity: React.FC = () => {
 		<MainCard>
 			<Stack spacing={3}>
 				{/* Header */}
-				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Box>
-						<Typography variant="h3">Caducidades y Prescripciones</Typography>
+				<Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1.5}>
+					<Box sx={{ maxWidth: 720 }}>
+						<Typography variant="h3" sx={{ mb: 0.5 }}>
+							Caducidades y prescripciones
+						</Typography>
 						<Typography variant="body2" color="text.secondary">
-							Monitoreo de alertas de inactividad de carpetas
+							Monitoreo de alertas de inactividad sobre carpetas con plazos vencidos o próximos a vencer.
 						</Typography>
 					</Box>
 					<Tooltip title="Actualizar">

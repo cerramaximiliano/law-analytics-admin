@@ -5,6 +5,7 @@ import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import StyleCorpusTab from "pages/admin/rag-workers/StyleCorpusTab";
 import CorpusHelpTab from "./CorpusHelpTab";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 interface TabDef {
 	label: string;
@@ -15,6 +16,7 @@ interface TabDef {
 
 const CorpusWorkerPage = () => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const [activeTab, setActiveTab] = useState("corpus");
 
 	const tabs: TabDef[] = [
@@ -36,21 +38,35 @@ const CorpusWorkerPage = () => {
 		<MainCard>
 			<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 				<Box>
-					<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1}>
-						<Box>
-							<Typography variant="h3">Workers Corpus (IA)</Typography>
-							<Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
+					<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1.5}>
+						<Box sx={{ maxWidth: 720 }}>
+							<Typography variant="h3" sx={{ mb: 0.75 }}>
+								Workers Corpus (IA)
+							</Typography>
+							<Typography variant="body1" color="text.secondary">
 								Gestión del corpus de estilo jurídico para few-shot retrieval y generación de documentos
 							</Typography>
 						</Box>
 						<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
-							<Chip
-								label="worker_01"
-								size="small"
-								color="default"
-								variant="outlined"
-								sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}
-							/>
+							<Box
+								component="span"
+								sx={{
+									display: "inline-flex",
+									alignItems: "center",
+									px: 1,
+									py: 0.25,
+									borderRadius: 1,
+									bgcolor: theme.palette.grey[800],
+									color: theme.palette.common.white,
+									fontSize: "0.65rem",
+									fontWeight: 500,
+									fontFamily: "monospace",
+									letterSpacing: "0.5px",
+									fontVariantNumeric: "tabular-nums",
+								}}
+							>
+								worker_01
+							</Box>
 							<Chip
 								label="pjn-style-corpus-v2 · style-corpus"
 								size="small"
@@ -61,16 +77,23 @@ const CorpusWorkerPage = () => {
 							<Chip
 								label="StyleDocument · Atlas"
 								size="small"
-								color="info"
 								variant="outlined"
-								sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+								sx={{
+									fontFamily: "monospace",
+									fontSize: "0.72rem",
+									color: BRAND_BLUE,
+									borderColor: alpha(BRAND_BLUE, 0.4),
+								}}
 							/>
 						</Stack>
 					</Stack>
 				</Box>
 
-				<Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
-					<Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+				<Paper
+					variant="outlined"
+					sx={{ borderRadius: 2, overflow: "hidden", borderColor: headerBorder(isDark), boxShadow: "none" }}
+				>
+					<Box sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, bgcolor: alpha(BRAND_BLUE, isDark ? 0.04 : 0.025) }}>
 						<Tabs
 							value={activeTab}
 							onChange={(_, v) => setActiveTab(v)}
@@ -82,6 +105,7 @@ const CorpusWorkerPage = () => {
 									textTransform: "none",
 									fontSize: "0.875rem",
 									fontWeight: 500,
+									transition: "color 200ms ease",
 								},
 							}}
 						>

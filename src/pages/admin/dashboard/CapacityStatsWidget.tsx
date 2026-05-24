@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Box, Typography, Paper, Grid, Skeleton, Slider, Divider, Chip, useTheme, alpha, Tooltip, IconButton, Theme } from "@mui/material";
-import { Calculator, Timer1, Refresh, Clock, Activity, Chart } from "iconsax-react";
-import { CausasPjnService, CapacityStatsResponse, CapacityStatsTotals } from "api/causasPjn";
+import { Box, Stack, Typography, Paper, Grid, Skeleton, Slider, Divider, Chip, useTheme, alpha, Tooltip, IconButton, Theme } from "@mui/material";
+import { Calculator, Refresh, Chart, Document } from "iconsax-react";
+import { CausasPjnService, CapacityStatsResponse } from "api/causasPjn";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 // Helper para obtener colores del tema
 const getThemeColors = (theme: Theme) => ({
-	primary: { main: theme.palette.primary.main, light: theme.palette.primary.light, lighter: alpha(theme.palette.primary.light, 0.15) },
+	primary: { main: BRAND_BLUE, light: alpha(BRAND_BLUE, 0.6), lighter: alpha(BRAND_BLUE, 0.12) },
 	success: { main: theme.palette.success.main, light: theme.palette.success.light, lighter: alpha(theme.palette.success.light, 0.15) },
 	warning: { main: theme.palette.warning.main, light: theme.palette.warning.light, lighter: alpha(theme.palette.warning.light, 0.15) },
 	neutral: {
@@ -102,6 +103,7 @@ const CapacityStatsWidget: React.FC<CapacityStatsWidgetProps> = ({ onRefresh }) 
 
 	const totals = stats?.totals;
 
+	const isDark = theme.palette.mode === "dark";
 	return (
 		<Paper
 			elevation={0}
@@ -109,7 +111,7 @@ const CapacityStatsWidget: React.FC<CapacityStatsWidgetProps> = ({ onRefresh }) 
 				p: { xs: 1.5, sm: 2.5 },
 				borderRadius: 2,
 				bgcolor: theme.palette.background.paper,
-				border: `1px solid ${theme.palette.divider}`,
+				border: `1px solid ${headerBorder(isDark)}`,
 			}}
 		>
 			{/* Header */}
@@ -131,41 +133,61 @@ const CapacityStatsWidget: React.FC<CapacityStatsWidgetProps> = ({ onRefresh }) 
 			<Grid container spacing={2} sx={{ mb: 3 }}>
 				<Grid item xs={6} sm={3}>
 					<Box sx={{ textAlign: "center", p: 1.5, bgcolor: alpha(COLORS.primary.lighter, 0.5), borderRadius: 2 }}>
-						<Typography variant="h5" fontWeight="bold" color={COLORS.primary.main}>
+						<Typography
+							variant="h5"
+							fontWeight={700}
+							color={COLORS.primary.main}
+							sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
+						>
 							{totals?.avgSeconds || 0}s
 						</Typography>
 						<Typography variant="caption" color="text.secondary">
-							⏱️ Tiempo promedio
+							Tiempo promedio
 						</Typography>
 					</Box>
 				</Grid>
 				<Grid item xs={6} sm={3}>
 					<Box sx={{ textAlign: "center", p: 1.5, bgcolor: alpha(COLORS.success.lighter, 0.5), borderRadius: 2 }}>
-						<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
+						<Typography
+							variant="h5"
+							fontWeight={700}
+							color={COLORS.success.main}
+							sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
+						>
 							{totals?.successRate || 0}%
 						</Typography>
 						<Typography variant="caption" color="text.secondary">
-							✅ Tasa de éxito
+							Tasa de éxito
 						</Typography>
 					</Box>
 				</Grid>
 				<Grid item xs={6} sm={3}>
 					<Box sx={{ textAlign: "center", p: 1.5, bgcolor: alpha(COLORS.warning.lighter, 0.5), borderRadius: 2 }}>
-						<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
+						<Typography
+							variant="h5"
+							fontWeight={700}
+							color={COLORS.warning.main}
+							sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
+						>
 							{totals?.docsPerHourPerWorker || 0}
 						</Typography>
 						<Typography variant="caption" color="text.secondary">
-							📄 Docs/hora/worker
+							Docs/hora/worker
 						</Typography>
 					</Box>
 				</Grid>
 				<Grid item xs={6} sm={3}>
 					<Box sx={{ textAlign: "center", p: 1.5, bgcolor: alpha(COLORS.neutral.lighter, 0.5), borderRadius: 2 }}>
-						<Typography variant="h5" fontWeight="bold" color={COLORS.neutral.main}>
+						<Typography
+							variant="h5"
+							fontWeight={700}
+							color={COLORS.neutral.main}
+							sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
+						>
 							{totals?.maxUpdatesPerDocPerDay || 0}x
 						</Typography>
 						<Typography variant="caption" color="text.secondary">
-							🔄 Máx. updates/doc/día
+							Máx. updates/doc/día
 						</Typography>
 					</Box>
 				</Grid>
@@ -173,9 +195,12 @@ const CapacityStatsWidget: React.FC<CapacityStatsWidgetProps> = ({ onRefresh }) 
 
 			{/* Proyecciones */}
 			<Box sx={{ mb: 3, p: 2, bgcolor: alpha(COLORS.primary.lighter, 0.3), borderRadius: 2 }}>
-				<Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1.5 }}>
-					📊 Proyecciones con configuración actual
-				</Typography>
+				<Stack direction="row" spacing={0.75} alignItems="center" sx={{ mb: 1.5 }}>
+					<Chart size={16} color={COLORS.primary.main} />
+					<Typography variant="subtitle2" fontWeight={600}>
+						Proyecciones con configuración actual
+					</Typography>
+				</Stack>
 				<Grid container spacing={2}>
 					<Grid item xs={6} md={3}>
 						<Typography variant="body2" color="text.secondary">
@@ -290,8 +315,10 @@ const CapacityStatsWidget: React.FC<CapacityStatsWidgetProps> = ({ onRefresh }) 
 						sx={{
 							bgcolor: COLORS.primary.main,
 							color: "common.white",
-							fontWeight: "bold",
-							"&:hover": { bgcolor: COLORS.primary.light },
+							fontWeight: 600,
+							transition: "transform 200ms ease, background-color 200ms ease",
+							"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.85), transform: "scale(1.03)" },
+							"&:active": { transform: "scale(0.98)" },
 							cursor: "pointer",
 						}}
 					/>
@@ -313,9 +340,12 @@ const CapacityStatsWidget: React.FC<CapacityStatsWidgetProps> = ({ onRefresh }) 
 			{/* Detalle por fuero */}
 			{stats?.byFuero && (
 				<Box sx={{ mt: 3 }}>
-					<Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1.5 }}>
-						📋 Detalle por Fuero
-					</Typography>
+					<Stack direction="row" spacing={0.75} alignItems="center" sx={{ mb: 1.5 }}>
+						<Document size={16} color={COLORS.neutral.main} />
+						<Typography variant="subtitle2" fontWeight={600}>
+							Detalle por Fuero
+						</Typography>
+					</Stack>
 					<Grid container spacing={1}>
 						{Object.entries(stats.byFuero).map(([key, fuero]) => (
 							<Grid item xs={6} sm={3} key={key}>

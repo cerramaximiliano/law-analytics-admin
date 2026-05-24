@@ -31,6 +31,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import InfolegService from "api/infolegService";
 import NormaDetailModal from "./NormaDetailModal";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 import type { InfolegNorma, InfolegNormaFilters, InfolegStatus, InfolegTipo, InfolegVigencia } from "types/infoleg";
 
 // ── Constants ─────────────────────────────────────────────────
@@ -239,15 +240,30 @@ const InfolegNormasPage = () => {
 					<TableContainer sx={{ borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}>
 						<Table size="small">
 							<TableHead>
-								<TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}>
-									<TableCell sx={{ fontWeight: 600, width: 70 }}>ID</TableCell>
-									<TableCell sx={{ fontWeight: 600, width: 110 }}>Tipo / N°</TableCell>
-									<TableCell sx={{ fontWeight: 600 }}>Título</TableCell>
-									<TableCell sx={{ fontWeight: 600, width: 90 }}>Año</TableCell>
-									<TableCell sx={{ fontWeight: 600, width: 110 }}>Vigencia</TableCell>
-									<TableCell sx={{ fontWeight: 600, width: 110 }}>Estado</TableCell>
-									<TableCell sx={{ fontWeight: 600, width: 120 }}>Scrapeado</TableCell>
-									<TableCell sx={{ fontWeight: 600, width: 60 }} align="center">
+								<TableRow sx={{ bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.08 : 0.04) }}>
+									<TableCell sx={{ fontWeight: 600, width: 70, textTransform: "uppercase", fontSize: "0.7rem", letterSpacing: 0.4 }}>
+										ID
+									</TableCell>
+									<TableCell sx={{ fontWeight: 600, width: 110, textTransform: "uppercase", fontSize: "0.7rem", letterSpacing: 0.4 }}>
+										Tipo / N°
+									</TableCell>
+									<TableCell sx={{ fontWeight: 600, textTransform: "uppercase", fontSize: "0.7rem", letterSpacing: 0.4 }}>Título</TableCell>
+									<TableCell sx={{ fontWeight: 600, width: 90, textTransform: "uppercase", fontSize: "0.7rem", letterSpacing: 0.4 }}>
+										Año
+									</TableCell>
+									<TableCell sx={{ fontWeight: 600, width: 110, textTransform: "uppercase", fontSize: "0.7rem", letterSpacing: 0.4 }}>
+										Vigencia
+									</TableCell>
+									<TableCell sx={{ fontWeight: 600, width: 110, textTransform: "uppercase", fontSize: "0.7rem", letterSpacing: 0.4 }}>
+										Estado
+									</TableCell>
+									<TableCell sx={{ fontWeight: 600, width: 120, textTransform: "uppercase", fontSize: "0.7rem", letterSpacing: 0.4 }}>
+										Scrapeado
+									</TableCell>
+									<TableCell
+										sx={{ fontWeight: 600, width: 60, textTransform: "uppercase", fontSize: "0.7rem", letterSpacing: 0.4 }}
+										align="center"
+									>
 										Ver
 									</TableCell>
 								</TableRow>
@@ -265,8 +281,15 @@ const InfolegNormasPage = () => {
 									))
 								) : normas.length === 0 ? (
 									<TableRow>
-										<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-											<Typography color="text.secondary">Sin resultados</Typography>
+										<TableCell colSpan={8} align="center" sx={{ py: 6 }}>
+											<Stack spacing={0.75} alignItems="center">
+												<Typography variant="subtitle1" color="text.primary">
+													Sin resultados
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Probá ajustar los filtros o limpiarlos para ver más normas.
+												</Typography>
+											</Stack>
 										</TableCell>
 									</TableRow>
 								) : (
@@ -274,11 +297,14 @@ const InfolegNormasPage = () => {
 										<TableRow
 											key={n._id}
 											hover
-											sx={{ cursor: "pointer", "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.03) } }}
+											sx={{
+												cursor: "pointer",
+												"&:hover": { bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.08 : 0.04) },
+											}}
 											onClick={() => setDetailId(n.infolegId)}
 										>
 											<TableCell>
-												<Typography variant="body2" fontFamily="monospace">
+												<Typography variant="body2" fontFamily="monospace" sx={{ fontVariantNumeric: "tabular-nums" }}>
 													{n.infolegId}
 												</Typography>
 											</TableCell>

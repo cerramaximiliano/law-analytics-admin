@@ -258,11 +258,12 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 				border: `1px solid ${theme.palette.divider}`,
 				height: "100%",
 				cursor: isClickable ? "pointer" : "default",
-				transition: "all 0.2s ease",
+				transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 				...(isClickable && {
 					"&:hover": {
 						boxShadow: theme.shadows[2],
 						borderColor: COLORS.primary.light,
+						transform: "translateY(-1px)",
 					},
 				}),
 			}}
@@ -301,6 +302,8 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 						color: valueColor,
 						lineHeight: 1,
 						fontSize: { xs: "1.5rem", sm: "2rem" },
+						letterSpacing: "-0.02em",
+						fontVariantNumeric: "tabular-nums",
 					}}
 				>
 					{value.toLocaleString()}
@@ -324,7 +327,11 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, subtitle, icon }) 
 		<Box sx={{ mb: { xs: 1.5, sm: 2.5 } }}>
 			<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 } }}>
 				<Box sx={{ color: theme.palette.primary.main }}>{icon}</Box>
-				<Typography variant="h5" fontWeight="bold" sx={{ fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>
+				<Typography
+					variant="h4"
+					fontWeight={600}
+					sx={{ fontSize: { xs: "1.05rem", sm: "1.35rem" }, letterSpacing: "-0.02em" }}
+				>
 					{title}
 				</Typography>
 			</Box>
@@ -376,11 +383,12 @@ const ChartCard: React.FC<ChartCardProps> = ({ title, icon, children, linkTo, he
 				border: `1px solid ${theme.palette.divider}`,
 				height: "100%",
 				cursor: linkTo ? "pointer" : "default",
-				transition: "all 0.2s ease",
+				transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 				...(linkTo && {
 					"&:hover": {
 						boxShadow: theme.shadows[2],
 						borderColor: alpha(theme.palette.primary.main, 0.3),
+						transform: "translateY(-1px)",
 					},
 				}),
 			}}
@@ -485,11 +493,12 @@ const GroupedCard: React.FC<GroupedCardProps> = ({ title, icon, children, linkTo
 				border: `1px solid ${theme.palette.divider}`,
 				height: "100%",
 				cursor: isClickable ? "pointer" : "default",
-				transition: "all 0.2s ease",
+				transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 				...(isClickable && {
 					"&:hover": {
 						boxShadow: theme.shadows[2],
 						borderColor: alpha(theme.palette.primary.main, 0.3),
+						transform: "translateY(-1px)",
 					},
 				}),
 			}}
@@ -534,7 +543,15 @@ const MiniStat: React.FC<MiniStatProps> = ({ label, value, color, loading, infoK
 			{loading ? (
 				<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 			) : (
-				<Typography variant="h4" sx={{ fontWeight: 600, color: color || theme.palette.text.primary }}>
+				<Typography
+					variant="h4"
+					sx={{
+						fontWeight: 600,
+						color: color || theme.palette.text.primary,
+						letterSpacing: "-0.02em",
+						fontVariantNumeric: "tabular-nums",
+					}}
+				>
 					{value.toLocaleString()}
 				</Typography>
 			)}
@@ -1061,7 +1078,17 @@ const AdminDashboard = () => {
 									<Skeleton variant="text" width={80} height={48} />
 								) : (
 									<>
-										<Typography variant="h3" sx={{ fontWeight: 700, color: COLORS.success.main, mb: 0.5, textAlign: "center" }}>
+										<Typography
+											variant="h3"
+											sx={{
+												fontWeight: 700,
+												color: COLORS.success.main,
+												mb: 0.5,
+												textAlign: "center",
+												letterSpacing: "-0.02em",
+												fontVariantNumeric: "tabular-nums",
+											}}
+										>
 											{(
 												(data?.folders.pjn?.verified || 0) +
 												(data?.folders.mev?.verified || 0) +
@@ -2675,7 +2702,16 @@ const AdminDashboard = () => {
 										{loading ? (
 											<Skeleton variant="text" width={60} height={40} />
 										) : (
-											<Typography variant="h3" sx={{ fontWeight: 700, color: COLORS.primary.main, fontSize: { xs: "1.5rem", sm: "2rem" } }}>
+											<Typography
+											variant="h3"
+											sx={{
+												fontWeight: 700,
+												color: COLORS.primary.main,
+												fontSize: { xs: "1.5rem", sm: "2rem" },
+												letterSpacing: "-0.02em",
+												fontVariantNumeric: "tabular-nums",
+											}}
+										>
 												{(data?.folders.pjn?.total || 0).toLocaleString()}
 											</Typography>
 										)}
@@ -2720,7 +2756,16 @@ const AdminDashboard = () => {
 										{loading ? (
 											<Skeleton variant="text" width={60} height={40} />
 										) : (
-											<Typography variant="h3" sx={{ fontWeight: 700, color: COLORS.primary.main, fontSize: { xs: "1.5rem", sm: "2rem" } }}>
+											<Typography
+											variant="h3"
+											sx={{
+												fontWeight: 700,
+												color: COLORS.primary.main,
+												fontSize: { xs: "1.5rem", sm: "2rem" },
+												letterSpacing: "-0.02em",
+												fontVariantNumeric: "tabular-nums",
+											}}
+										>
 												{(data?.folders.mev?.total || 0).toLocaleString()}
 											</Typography>
 										)}

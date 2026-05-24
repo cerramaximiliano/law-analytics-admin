@@ -3,6 +3,7 @@ import { Box, Chip, Stack, Tab, Tabs, Typography, alpha, useTheme } from "@mui/m
 import MainCard from "components/MainCard";
 import { useSnackbar } from "notistack";
 import LiquidacionWorkerConfigService, { FullDoc } from "api/liquidacionWorkerConfig";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import ConfigTab from "./ConfigTab";
 import StatusTab from "./StatusTab";
 import AlertsTab from "./AlertsTab";
@@ -40,13 +41,17 @@ export default function LiquidacionWorkerPage() {
 
 	const activeAlerts = (doc?.alerts || []).filter((a) => !a.acknowledged).length;
 
+	const isDark = theme.palette.mode === "dark";
+
 	return (
 		<MainCard>
-			<Stack spacing={2}>
-				<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1}>
-					<Box>
-						<Typography variant="h3">Worker Liquidación Previsional</Typography>
-						<Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
+			<Stack spacing={{ xs: 2, md: 3 }}>
+				<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1.5} sx={{ pb: 1 }}>
+					<Box sx={{ maxWidth: 720 }}>
+						<Typography variant="h3" sx={{ mb: 0.75 }}>
+							Worker Liquidación Previsional
+						</Typography>
+						<Typography variant="body1" color="text.secondary">
 							Pipeline de extracción de liquidaciones previsionales (haber caja / reajustado / retroactivo) adjuntas en causas CSS (s/REAJUSTES VARIOS)
 						</Typography>
 					</Box>
@@ -65,6 +70,7 @@ export default function LiquidacionWorkerPage() {
 								fontWeight: 500,
 								fontFamily: "monospace",
 								letterSpacing: "0.5px",
+								fontVariantNumeric: "tabular-nums",
 							}}
 						>
 							worker_01
@@ -77,11 +83,12 @@ export default function LiquidacionWorkerPage() {
 								px: 0.75,
 								py: 0.25,
 								borderRadius: 1,
-								bgcolor: alpha(theme.palette.info.main, 0.1),
-								color: theme.palette.info.main,
+								bgcolor: alpha(BRAND_BLUE, 0.1),
+								color: BRAND_BLUE,
 								fontSize: "0.6rem",
 								fontWeight: 500,
 								fontFamily: "monospace",
+								fontVariantNumeric: "tabular-nums",
 							}}
 						>
 							100.111.73.56
@@ -96,19 +103,35 @@ export default function LiquidacionWorkerPage() {
 						<Chip
 							label="previsional-liquidacion-urls · local"
 							size="small"
-							color="info"
 							variant="outlined"
-							sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+							sx={{
+								fontFamily: "monospace",
+								fontSize: "0.72rem",
+								color: BRAND_BLUE,
+								borderColor: alpha(BRAND_BLUE, 0.4),
+							}}
 						/>
 					</Stack>
 				</Stack>
 
-				<Tabs value={tab} onChange={(_, v) => setTab(v)}>
-					<Tab label="Configuración" />
-					<Tab label="Estado" />
-					<Tab label="Documentos" />
-					<Tab label={`Alertas${activeAlerts > 0 ? ` (${activeAlerts})` : ""}`} />
-				</Tabs>
+				<Box sx={{ borderBottom: `1px solid ${headerBorder(isDark)}` }}>
+					<Tabs
+						value={tab}
+						onChange={(_, v) => setTab(v)}
+						sx={{
+							"& .MuiTab-root": {
+								textTransform: "none",
+								fontWeight: 500,
+								transition: "color 200ms ease",
+							},
+						}}
+					>
+						<Tab label="Configuración" />
+						<Tab label="Estado" />
+						<Tab label="Documentos" />
+						<Tab label={`Alertas${activeAlerts > 0 ? ` (${activeAlerts})` : ""}`} />
+					</Tabs>
+				</Box>
 
 				{tab === 0 && <ConfigTab doc={doc} loading={loading} onSaved={refetch} />}
 				{tab === 1 && <StatusTab doc={doc} loading={loading} onRefresh={refetch} />}

@@ -6,6 +6,7 @@ import { TabPanel } from "components/ui-component/TabPanel";
 import EscritosWorkerTab from "pages/admin/rag-workers/EscritosWorkerTab";
 import EscritosHelpTab from "./EscritosHelpTab";
 import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 interface TabDef {
 	label: string;
@@ -16,6 +17,7 @@ interface TabDef {
 
 const EscritosWorkerPage = () => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const [activeTab, setActiveTab] = useState("escritos");
 
 	const tabs: TabDef[] = [
@@ -37,10 +39,12 @@ const EscritosWorkerPage = () => {
 		<MainCard>
 			<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 				<Box>
-					<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1}>
-						<Box>
-							<Typography variant="h3">Worker Escritos (IA)</Typography>
-							<Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
+					<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1.5}>
+						<Box sx={{ maxWidth: 720 }}>
+							<Typography variant="h3" sx={{ mb: 0.75 }}>
+								Worker Escritos (IA)
+							</Typography>
+							<Typography variant="body1" color="text.secondary">
 								Pipeline de extracción, chunking semántico y detección de novedad de escritos judiciales
 							</Typography>
 						</Box>
@@ -59,6 +63,7 @@ const EscritosWorkerPage = () => {
 									fontWeight: 500,
 									fontFamily: "monospace",
 									letterSpacing: "0.5px",
+									fontVariantNumeric: "tabular-nums",
 								}}
 							>
 								worker_01
@@ -71,11 +76,12 @@ const EscritosWorkerPage = () => {
 									px: 0.75,
 									py: 0.25,
 									borderRadius: 1,
-									bgcolor: alpha(theme.palette.info.main, 0.1),
-									color: theme.palette.info.main,
+									bgcolor: alpha(BRAND_BLUE, 0.1),
+									color: BRAND_BLUE,
 									fontSize: "0.6rem",
 									fontWeight: 500,
 									fontFamily: "monospace",
+									fontVariantNumeric: "tabular-nums",
 								}}
 							>
 								100.111.73.56
@@ -90,9 +96,13 @@ const EscritosWorkerPage = () => {
 							<Chip
 								label="GlobalDocument · Atlas"
 								size="small"
-								color="info"
 								variant="outlined"
-								sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+								sx={{
+									fontFamily: "monospace",
+									fontSize: "0.72rem",
+									color: BRAND_BLUE,
+									borderColor: alpha(BRAND_BLUE, 0.4),
+								}}
 							/>
 							<Chip
 								label="CausasCIV/CNT/CSS/COM · local"
@@ -121,8 +131,11 @@ const EscritosWorkerPage = () => {
 					]}
 				/>
 
-				<Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
-					<Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+				<Paper
+					variant="outlined"
+					sx={{ borderRadius: 2, overflow: "hidden", borderColor: headerBorder(isDark), boxShadow: "none" }}
+				>
+					<Box sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, bgcolor: alpha(BRAND_BLUE, isDark ? 0.04 : 0.025) }}>
 						<Tabs
 							value={activeTab}
 							onChange={(_, v) => setActiveTab(v)}
@@ -134,6 +147,7 @@ const EscritosWorkerPage = () => {
 									textTransform: "none",
 									fontSize: "0.875rem",
 									fontWeight: 500,
+									transition: "color 200ms ease",
 								},
 							}}
 						>

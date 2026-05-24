@@ -382,7 +382,9 @@ const SurveysAdminPage = () => {
 				<Paper variant="outlined" sx={{ p: 2 }}>
 					<Stack direction="row" spacing={1} alignItems="center" mb={2}>
 						<Filter size={18} />
-						<Typography variant="subtitle2">Filtros</Typography>
+						<Typography variant="subtitle2" sx={{ textTransform: "uppercase", letterSpacing: 0.4, fontSize: "0.72rem" }}>
+							Filtros
+						</Typography>
 					</Stack>
 					<Grid container spacing={2} alignItems="center">
 						<Grid item xs={12} sm={6} md={2}>

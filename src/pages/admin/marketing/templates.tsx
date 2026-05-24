@@ -49,6 +49,8 @@ import {
 
 // project imports
 import MainCard from "components/MainCard";
+import { BRAND_BLUE, LIVE_GREEN } from "themes/dashboardTokens";
+import { alpha } from "@mui/material/styles";
 import {
 	Add,
 	Edit2,
@@ -1397,23 +1399,31 @@ const EmailTemplates = () => {
 
 	return (
 		<MainCard>
-			<Box sx={{ mb: 2 }}>
-				<Grid container alignItems="center" justifyContent="space-between">
-					<Grid item>
-						<Stack direction="row" alignItems="center" spacing={1}>
-							<Typography variant="h3">Plantillas de Email</Typography>
+			<Box sx={{ mb: 2.5 }}>
+				<Grid container alignItems="flex-start" justifyContent="space-between" spacing={1.5}>
+					<Grid item sx={{ maxWidth: 720 }}>
+						<Stack direction="row" alignItems="center" spacing={1.25} flexWrap="wrap">
+							<Typography variant="h3" sx={{ mb: 0 }}>
+								Plantillas de email
+							</Typography>
 							<Chip
-								icon={<Data2 size={13} color="#00ED64" />}
+								icon={<Data2 size={13} color={LIVE_GREEN} />}
 								label="db.emailtemplates"
 								size="small"
 								variant="outlined"
 								sx={{
 									fontFamily: "monospace",
 									fontSize: "0.7rem",
-									"& .MuiChip-icon": { marginLeft: "6px", color: "#00ED64" },
+									fontVariantNumeric: "tabular-nums",
+									borderColor: alpha(LIVE_GREEN, 0.35),
+									color: "text.secondary",
+									"& .MuiChip-icon": { marginLeft: "6px", color: LIVE_GREEN },
 								}}
 							/>
 						</Stack>
+						<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+							Maquetá y administrá los emails reutilizables del sistema con variables dinámicas.
+						</Typography>
 					</Grid>
 					<Grid item>
 						<Stack direction="row" spacing={1}>
@@ -1576,27 +1586,34 @@ const EmailTemplates = () => {
 			{/* Template Stats */}
 			<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }} sx={{ mt: 2 }}>
 				<Grid item xs={12} md={6} lg={4}>
-					<Card>
-						<CardHeader title="Estadísticas de plantillas" />
+					<Card variant="outlined" sx={{ height: "100%" }}>
+						<CardHeader title="Estadísticas de plantillas" titleTypographyProps={{ variant: "h5" }} />
+						<Divider />
 						<CardContent>
-							<Stack spacing={2}>
+							<Stack spacing={2.25}>
 								<Box>
-									<Typography variant="subtitle2" color="textSecondary">
+									<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
 										Total de plantillas
 									</Typography>
-									<Typography variant="h4">{templates.length}</Typography>
+									<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums" }}>
+										{templates.length}
+									</Typography>
 								</Box>
 								<Box>
-									<Typography variant="subtitle2" color="textSecondary">
+									<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
 										Plantillas activas
 									</Typography>
-									<Typography variant="h4">{templates.filter((t) => t.isActive).length}</Typography>
+									<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", color: BRAND_BLUE }}>
+										{templates.filter((t) => t.isActive).length}
+									</Typography>
 								</Box>
 								<Box>
-									<Typography variant="subtitle2" color="textSecondary">
+									<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
 										Categorías
 									</Typography>
-									<Typography variant="h4">{new Set(templates.map((t) => t.category)).size}</Typography>
+									<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums" }}>
+										{new Set(templates.map((t) => t.category)).size}
+									</Typography>
 								</Box>
 							</Stack>
 						</CardContent>
@@ -1604,8 +1621,9 @@ const EmailTemplates = () => {
 				</Grid>
 
 				<Grid item xs={12} md={6} lg={8}>
-					<Card>
-						<CardHeader title="Plantillas por categoría" />
+					<Card variant="outlined" sx={{ height: "100%" }}>
+						<CardHeader title="Plantillas por categoría" titleTypographyProps={{ variant: "h5" }} />
+						<Divider />
 						<CardContent>
 							<Grid container spacing={2}>
 								{Object.entries(
@@ -1618,12 +1636,21 @@ const EmailTemplates = () => {
 										<Box
 											sx={{
 												p: 2.5,
-												bgcolor: theme.palette.mode === "dark" ? theme.palette.dark.main : theme.palette.grey[50],
+												bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.08 : 0.04),
+												border: "1px solid",
+												borderColor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.18 : 0.12),
 												borderRadius: 2,
 												textAlign: "center",
+												transition: "background-color 200ms ease, transform 200ms ease",
+												"&:hover": {
+													bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.12 : 0.07),
+													transform: "translateY(-1px)",
+												},
 											}}
 										>
-											<Typography variant="h4">{count}</Typography>
+											<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums" }}>
+												{count}
+											</Typography>
 											<Typography variant="subtitle2" sx={{ mt: 1 }}>
 												{categoryDisplay[category] || category}
 											</Typography>

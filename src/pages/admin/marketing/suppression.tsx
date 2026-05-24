@@ -31,13 +31,14 @@ import {
 	DialogActions,
 	LinearProgress,
 } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import { styled, alpha } from "@mui/material/styles";
 
 // project imports
 import MainCard from "components/MainCard";
 import MarketingQuickNav from "components/admin/marketing/MarketingQuickNav";
 import { SuppressionService } from "store/reducers/campaign";
 import { SuppressedEmail, SuppressionSyncResults } from "types/suppression";
+import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
 
 // icons
 import { Refresh, SearchNormal1, Warning2, TickCircle, CloseCircle, ArrowRotateLeft } from "iconsax-react";
@@ -46,12 +47,23 @@ import { Refresh, SearchNormal1, Warning2, TickCircle, CloseCircle, ArrowRotateL
 
 // Styled components
 const StatusIndicator = styled(Box)<{ status: "online" | "offline" | "checking" }>(({ theme, status }) => ({
-	width: 12,
-	height: 12,
+	position: "relative",
+	width: 10,
+	height: 10,
 	borderRadius: "50%",
 	backgroundColor:
-		status === "online" ? theme.palette.success.main : status === "offline" ? theme.palette.error.main : theme.palette.warning.main,
+		status === "online" ? LIVE_GREEN : status === "offline" ? theme.palette.error.main : theme.palette.warning.main,
 	marginRight: theme.spacing(1),
+	...(status === "online" && {
+		"&::after": {
+			content: '""',
+			position: "absolute",
+			inset: 0,
+			borderRadius: "50%",
+			border: `1px solid ${LIVE_GREEN}`,
+			animation: "la-live-pulse 2.4s ease-out infinite",
+		},
+	}),
 	animation: status === "checking" ? "pulse 1.5s infinite" : "none",
 	"@keyframes pulse": {
 		"0%": { opacity: 1 },
@@ -287,13 +299,15 @@ const MarketingSuppression = () => {
 	}, [loadSuppressionList]);
 
 	return (
-		<MainCard>
-			<Box sx={{ mb: 2 }}>
-				<Grid container alignItems="center" justifyContent="space-between">
-					<Grid item>
-						<Typography variant="h3">Bounces y Rebotes (AWS SES)</Typography>
-						<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-							Lista de emails suprimidos en AWS SES que no pueden recibir correos
+		<MainCard sx={LIVE_PULSE_KEYFRAMES}>
+			<Box sx={{ mb: 2.5 }}>
+				<Grid container alignItems="flex-start" justifyContent="space-between" spacing={1.5}>
+					<Grid item sx={{ maxWidth: 720 }}>
+						<Typography variant="h3" sx={{ mb: 0.5 }}>
+							Bounces y rebotes (AWS SES)
+						</Typography>
+						<Typography variant="body2" color="text.secondary">
+							Lista de emails suprimidos en AWS SES que no pueden recibir correos.
 						</Typography>
 					</Grid>
 				</Grid>
@@ -345,35 +359,37 @@ const MarketingSuppression = () => {
 			{/* Stats Cards */}
 			<Grid container spacing={2} sx={{ mb: 3 }}>
 				<Grid item xs={12} sm={4}>
-					<Card>
+					<Card variant="outlined" sx={{ height: "100%", borderColor: alpha(BRAND_BLUE, 0.18) }}>
 						<CardContent>
-							<Typography color="text.secondary" gutterBottom>
-								Total Suprimidos
+							<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
+								Total suprimidos
 							</Typography>
-							<Typography variant="h4">{suppressedEmails.length}</Typography>
-						</CardContent>
-					</Card>
-				</Grid>
-				<Grid item xs={12} sm={4}>
-					<Card>
-						<CardContent>
-							<Typography color="text.secondary" gutterBottom>
-								Bounces (Rebotes)
-							</Typography>
-							<Typography variant="h4" color="error.main">
-								{bounceCount}
+							<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
+								{suppressedEmails.length.toLocaleString("es-AR")}
 							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
 				<Grid item xs={12} sm={4}>
-					<Card>
+					<Card variant="outlined" sx={{ height: "100%" }}>
 						<CardContent>
-							<Typography color="text.secondary" gutterBottom>
-								Complaints (Spam)
+							<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
+								Bounces (rebotes)
 							</Typography>
-							<Typography variant="h4" color="warning.main">
-								{complaintCount}
+							<Typography variant="h4" color="error.main" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
+								{bounceCount.toLocaleString("es-AR")}
+							</Typography>
+						</CardContent>
+					</Card>
+				</Grid>
+				<Grid item xs={12} sm={4}>
+					<Card variant="outlined" sx={{ height: "100%" }}>
+						<CardContent>
+							<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
+								Complaints (spam)
+							</Typography>
+							<Typography variant="h4" color="warning.main" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
+								{complaintCount.toLocaleString("es-AR")}
 							</Typography>
 						</CardContent>
 					</Card>

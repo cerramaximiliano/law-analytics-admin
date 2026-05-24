@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 
 // material-ui
 import { Box, Chip, Divider, Grid, Stack, Tab, Tabs, Typography, Alert, IconButton, Tooltip } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import { styled, alpha } from "@mui/material/styles";
 
 // project imports
 import MainCard from "components/MainCard";
@@ -12,6 +12,7 @@ import SegmentsPanel from "sections/admin/marketing/SegmentsPanel";
 import MarketingQuickNav from "components/admin/marketing/MarketingQuickNav";
 import { Refresh, Data2 } from "iconsax-react";
 import { useRequestQueueRefresh } from "hooks/useRequestQueueRefresh";
+import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
 
 // ==============================|| ADMIN - MARKETING CONTACTS ||============================== //
 
@@ -28,23 +29,28 @@ interface ServiceStatus {
 
 // Styled components
 const StatusIndicator = styled(Box)<{ status: "online" | "offline" | "checking" }>(({ theme, status }) => ({
-	width: 12,
-	height: 12,
+	position: "relative",
+	width: 10,
+	height: 10,
 	borderRadius: "50%",
 	backgroundColor:
-		status === "online" ? theme.palette.success.main : status === "offline" ? theme.palette.error.main : theme.palette.warning.main,
+		status === "online" ? LIVE_GREEN : status === "offline" ? theme.palette.error.main : theme.palette.warning.main,
 	marginRight: theme.spacing(1),
+	...(status === "online" && {
+		"&::after": {
+			content: '""',
+			position: "absolute",
+			inset: 0,
+			borderRadius: "50%",
+			border: `1px solid ${LIVE_GREEN}`,
+			animation: "la-live-pulse 2.4s ease-out infinite",
+		},
+	}),
 	animation: status === "checking" ? "pulse 1.5s infinite" : "none",
 	"@keyframes pulse": {
-		"0%": {
-			opacity: 1,
-		},
-		"50%": {
-			opacity: 0.4,
-		},
-		"100%": {
-			opacity: 1,
-		},
+		"0%": { opacity: 1 },
+		"50%": { opacity: 0.4 },
+		"100%": { opacity: 1 },
 	},
 }));
 
@@ -156,24 +162,32 @@ const MarketingContacts = () => {
 	}, [checkServerStatus]);
 
 	return (
-		<MainCard>
-			<Box sx={{ mb: 2 }}>
-				<Grid container alignItems="center" justifyContent="space-between">
-					<Grid item>
-						<Stack direction="row" alignItems="center" spacing={1}>
-							<Typography variant="h3">Gestión de Contactos y Segmentos</Typography>
+		<MainCard sx={LIVE_PULSE_KEYFRAMES}>
+			<Box sx={{ mb: 2.5 }}>
+				<Grid container alignItems="flex-start" justifyContent="space-between" spacing={1.5}>
+					<Grid item sx={{ maxWidth: 720 }}>
+						<Stack direction="row" alignItems="center" spacing={1.25} flexWrap="wrap">
+							<Typography variant="h3" sx={{ mb: 0 }}>
+								Contactos y segmentos
+							</Typography>
 							<Chip
-								icon={<Data2 size={13} color="#00ED64" />}
+								icon={<Data2 size={13} color={LIVE_GREEN} />}
 								label="db.email_contacts"
 								size="small"
 								variant="outlined"
 								sx={{
 									fontFamily: "monospace",
 									fontSize: "0.7rem",
-									"& .MuiChip-icon": { marginLeft: "6px", color: "#00ED64" },
+									fontVariantNumeric: "tabular-nums",
+									borderColor: alpha(LIVE_GREEN, 0.35),
+									color: "text.secondary",
+									"& .MuiChip-icon": { marginLeft: "6px", color: LIVE_GREEN },
 								}}
 							/>
 						</Stack>
+						<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+							Administrá la audiencia de marketing y agrupala en segmentos reutilizables.
+						</Typography>
 					</Grid>
 				</Grid>
 			</Box>
@@ -241,6 +255,11 @@ const MarketingContacts = () => {
 					textColor="primary"
 					variant="fullWidth"
 					aria-label="contact management tabs"
+					sx={{
+						"& .MuiTab-root": { textTransform: "none", fontWeight: 600 },
+						"& .Mui-selected": { color: `${BRAND_BLUE} !important` },
+						"& .MuiTabs-indicator": { backgroundColor: BRAND_BLUE, height: 3, borderRadius: 1.5 },
+					}}
 				>
 					<Tab label="Contactos" />
 					<Tab label="Segmentos" />

@@ -41,10 +41,11 @@ import {
 } from "@mui/material";
 import { InfoCircle, TickCircle, More } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import { styled } from "@mui/material/styles";
+import { styled, alpha } from "@mui/material/styles";
 
 // project imports
 import MainCard from "components/MainCard";
+import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
 import { Add, Edit2, SearchNormal1, Trash, MessageText1, People, Refresh, Chart, Copy, Data2, Magicpen } from "iconsax-react";
 import CampaignFormModal from "sections/admin/marketing/CampaignFormModal";
 import GenerateAICampaignModal from "components/admin/marketing/GenerateAICampaignModal";
@@ -81,23 +82,28 @@ interface ServiceStatus {
 
 // Styled components
 const StatusIndicator = styled(Box)<{ status: "online" | "offline" | "checking" }>(({ theme, status }) => ({
-	width: 12,
-	height: 12,
+	position: "relative",
+	width: 10,
+	height: 10,
 	borderRadius: "50%",
 	backgroundColor:
-		status === "online" ? theme.palette.success.main : status === "offline" ? theme.palette.error.main : theme.palette.warning.main,
+		status === "online" ? LIVE_GREEN : status === "offline" ? theme.palette.error.main : theme.palette.warning.main,
 	marginRight: theme.spacing(1),
+	...(status === "online" && {
+		"&::after": {
+			content: '""',
+			position: "absolute",
+			inset: 0,
+			borderRadius: "50%",
+			border: `1px solid ${LIVE_GREEN}`,
+			animation: "la-live-pulse 2.4s ease-out infinite",
+		},
+	}),
 	animation: status === "checking" ? "pulse 1.5s infinite" : "none",
 	"@keyframes pulse": {
-		"0%": {
-			opacity: 1,
-		},
-		"50%": {
-			opacity: 0.4,
-		},
-		"100%": {
-			opacity: 1,
-		},
+		"0%": { opacity: 1 },
+		"50%": { opacity: 0.4 },
+		"100%": { opacity: 1 },
 	},
 }));
 
@@ -541,24 +547,32 @@ const MailingCampaigns = () => {
 	};
 
 	return (
-		<MainCard>
-			<Box sx={{ mb: 2 }}>
-				<Grid container alignItems="center" justifyContent="space-between">
-					<Grid item>
-						<Stack direction="row" alignItems="center" spacing={1}>
-							<Typography variant="h3">Campañas de Email Marketing</Typography>
+		<MainCard sx={LIVE_PULSE_KEYFRAMES}>
+			<Box sx={{ mb: 2.5 }}>
+				<Grid container alignItems="flex-start" justifyContent="space-between" spacing={1.5}>
+					<Grid item sx={{ maxWidth: 720 }}>
+						<Stack direction="row" alignItems="center" spacing={1.25} flexWrap="wrap">
+							<Typography variant="h3" sx={{ mb: 0 }}>
+								Campañas de email marketing
+							</Typography>
 							<Chip
-								icon={<Data2 size={13} color="#00ED64" />}
+								icon={<Data2 size={13} color={LIVE_GREEN} />}
 								label="db.email_campaign"
 								size="small"
 								variant="outlined"
 								sx={{
 									fontFamily: "monospace",
 									fontSize: "0.7rem",
-									"& .MuiChip-icon": { marginLeft: "6px", color: "#00ED64" },
+									fontVariantNumeric: "tabular-nums",
+									borderColor: alpha(LIVE_GREEN, 0.35),
+									color: "text.secondary",
+									"& .MuiChip-icon": { marginLeft: "6px", color: LIVE_GREEN },
 								}}
 							/>
 						</Stack>
+						<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+							Diseñá, programá y monitoreá envíos automatizados a contactos segmentados.
+						</Typography>
 					</Grid>
 					<Grid item>
 						<Stack direction="row" spacing={1}>
@@ -879,27 +893,34 @@ const MailingCampaigns = () => {
 
 			<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }} sx={{ mt: 2 }}>
 				<Grid item xs={12} md={6} lg={4}>
-					<Card>
-						<CardHeader title="Estadísticas de campañas" />
+					<Card variant="outlined" sx={{ height: "100%" }}>
+						<CardHeader title="Estadísticas de campañas" titleTypographyProps={{ variant: "h5" }} />
+						<Divider />
 						<CardContent>
-							<Stack spacing={2}>
+							<Stack spacing={2.25}>
 								<Box>
-									<Typography variant="subtitle2" color="textSecondary">
+									<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
 										Total de campañas
 									</Typography>
-									<Typography variant="h4">{stats.totalCampaigns}</Typography>
+									<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums" }}>
+										{stats.totalCampaigns}
+									</Typography>
 								</Box>
 								<Box>
-									<Typography variant="subtitle2" color="textSecondary">
+									<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
 										Tasa de apertura promedio
 									</Typography>
-									<Typography variant="h4">{`${stats.averageOpenRate.toFixed(1)}%`}</Typography>
+									<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", color: BRAND_BLUE }}>
+										{`${stats.averageOpenRate.toFixed(1)}%`}
+									</Typography>
 								</Box>
 								<Box>
-									<Typography variant="subtitle2" color="textSecondary">
+									<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
 										Contactos totales
 									</Typography>
-									<Typography variant="h4">{stats.totalContacts}</Typography>
+									<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums" }}>
+										{stats.totalContacts.toLocaleString("es-AR")}
+									</Typography>
 								</Box>
 							</Stack>
 						</CardContent>
@@ -907,8 +928,9 @@ const MailingCampaigns = () => {
 				</Grid>
 
 				<Grid item xs={12} md={6} lg={8}>
-					<Card>
-						<CardHeader title="Estado de campañas" />
+					<Card variant="outlined" sx={{ height: "100%" }}>
+						<CardHeader title="Estado de campañas" titleTypographyProps={{ variant: "h5" }} />
+						<Divider />
 						<CardContent>
 							<Grid container spacing={2}>
 								{(["draft", "active", "paused", "completed", "archived"] as CampaignStatus[]).map((status) => {
@@ -920,12 +942,21 @@ const MailingCampaigns = () => {
 											<Box
 												sx={{
 													p: 2.5,
-													bgcolor: theme.palette.mode === "dark" ? theme.palette.dark.main : theme.palette.grey[50],
+													bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.08 : 0.04),
+													border: "1px solid",
+													borderColor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.18 : 0.12),
 													borderRadius: 2,
 													textAlign: "center",
+													transition: "background-color 200ms ease, transform 200ms ease",
+													"&:hover": {
+														bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.12 : 0.07),
+														transform: "translateY(-1px)",
+													},
 												}}
 											>
-												<Typography variant="h4">{count}</Typography>
+												<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums" }}>
+													{count}
+												</Typography>
 												<Chip label={statusInfo.label} color={statusInfo.color as any} size="small" sx={{ mt: 1 }} />
 											</Box>
 										</Grid>

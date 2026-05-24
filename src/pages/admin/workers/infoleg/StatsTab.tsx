@@ -23,6 +23,7 @@ import dayjs from "dayjs";
 import { useSnackbar } from "notistack";
 import InfolegService from "api/infolegService";
 import type { InfolegStats } from "types/infoleg";
+import { headerBorder } from "themes/dashboardTokens";
 
 const TIPO_LABELS: Record<string, string> = {
 	ley: "Ley",
@@ -51,15 +52,30 @@ interface StatCardProps {
 
 const StatCard = ({ label, value, sub, color = "primary", icon }: StatCardProps) => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	return (
-		<Card sx={{ height: "100%", border: `1px solid ${theme.palette.divider}` }} elevation={0}>
+		<Card
+			sx={{
+				height: "100%",
+				border: `1px solid ${headerBorder(isDark)}`,
+				borderRadius: 2,
+				transition: "transform 240ms ease, border-color 240ms ease",
+				"&:hover": { transform: "translateY(-1px)", borderColor: alpha(theme.palette[color].main, 0.5) },
+			}}
+			elevation={0}
+		>
 			<CardContent>
 				<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
 					<Box>
 						<Typography variant="caption" color="text.secondary" fontWeight={500}>
 							{label}
 						</Typography>
-						<Typography variant="h4" fontWeight={700} color={`${color}.main`} sx={{ mt: 0.5 }}>
+						<Typography
+							variant="h4"
+							fontWeight={700}
+							color={`${color}.main`}
+							sx={{ mt: 0.5, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+						>
 							{typeof value === "number" ? value.toLocaleString("es-AR") : value}
 						</Typography>
 						{sub && (

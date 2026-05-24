@@ -59,6 +59,7 @@ import {
 	updateSaijScrapingConfig,
 	updateSaijNotificationConfig,
 } from "api/saij";
+import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES, headerBorder } from "themes/dashboardTokens";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -77,18 +78,29 @@ function fmtNum(n?: number) {
 
 function StatBox({ label, value, color }: { label: string; value: string | number; color?: string }) {
 	const theme = useTheme();
+	const accent = color || BRAND_BLUE;
 	return (
 		<Box
 			sx={{
 				p: 2,
 				borderRadius: 2,
-				bgcolor: color ? alpha(color, 0.08) : alpha(theme.palette.primary.main, 0.06),
-				border: `1px solid ${color ? alpha(color, 0.2) : alpha(theme.palette.primary.main, 0.15)}`,
+				bgcolor: alpha(accent, theme.palette.mode === "dark" ? 0.12 : 0.08),
+				border: `1px solid ${alpha(accent, theme.palette.mode === "dark" ? 0.3 : 0.2)}`,
 				textAlign: "center",
 				minWidth: 110,
+				transition: "transform 240ms ease, border-color 240ms ease",
+				"&:hover": { transform: "translateY(-1px)", borderColor: alpha(accent, 0.45) },
 			}}
 		>
-			<Typography variant="h5" fontWeight={700} color={color || "primary.main"}>
+			<Typography
+				variant="h5"
+				fontWeight={700}
+				sx={{
+					color: accent,
+					letterSpacing: "-0.02em",
+					fontVariantNumeric: "tabular-nums",
+				}}
+			>
 				{value}
 			</Typography>
 			<Typography variant="caption" color="text.secondary">
@@ -314,6 +326,7 @@ export default function SaijWorkerPage() {
 							fontWeight: 500,
 							fontFamily: "monospace",
 							letterSpacing: "0.5px",
+							fontVariantNumeric: "tabular-nums",
 						}}
 					>
 						worker_01
@@ -326,27 +339,36 @@ export default function SaijWorkerPage() {
 							px: 0.75,
 							py: 0.25,
 							borderRadius: 1,
-							bgcolor: (theme) => alpha(theme.palette.info.main, 0.1),
-							color: "info.main",
+							bgcolor: alpha(BRAND_BLUE, 0.1),
+							color: BRAND_BLUE,
 							fontSize: "0.6rem",
 							fontWeight: 500,
 							fontFamily: "monospace",
+							fontVariantNumeric: "tabular-nums",
 						}}
 					>
 						100.111.73.56
 					</Box>
 					<Tooltip title="Recargar">
-						<IconButton size="small" onClick={fetchConfigs} disabled={loading}>
+						<IconButton
+							size="small"
+							onClick={fetchConfigs}
+							disabled={loading}
+							sx={{ transition: "transform 240ms ease", "&:hover": { transform: "rotate(60deg)" } }}
+						>
 							<Refresh size={18} />
 						</IconButton>
 					</Tooltip>
 				</Stack>
 			}
 		>
-			<Grid container spacing={2}>
+			<Grid container spacing={2} sx={{ ...LIVE_PULSE_KEYFRAMES }}>
 				{/* Worker selector */}
 				<Grid item xs={12} md={3}>
-					<Paper variant="outlined" sx={{ p: 1 }}>
+					<Paper
+						variant="outlined"
+						sx={{ p: 1, borderRadius: 2, borderColor: headerBorder(theme.palette.mode === "dark") }}
+					>
 						<Typography variant="subtitle2" color="text.secondary" sx={{ px: 1, py: 0.5 }}>
 							Workers de scraping
 						</Typography>
@@ -372,12 +394,35 @@ export default function SaijWorkerPage() {
 									<Typography variant="body2" fontWeight={sideTab === "scraping" && selected?.worker_id === cfg.worker_id ? 600 : 400}>
 										{cfg.worker_id}
 									</Typography>
-									<Chip
-										size="small"
-										label={cfg.enabled ? "ON" : "OFF"}
-										color={cfg.enabled ? "success" : "default"}
-										sx={{ fontSize: 10, height: 18 }}
-									/>
+									<Stack direction="row" spacing={0.5} alignItems="center">
+										{cfg.enabled && (
+											<Box
+												component="span"
+												aria-hidden
+												sx={{
+													position: "relative",
+													width: 6,
+													height: 6,
+													borderRadius: "50%",
+													bgcolor: LIVE_GREEN,
+													"&::after": {
+														content: '""',
+														position: "absolute",
+														inset: 0,
+														borderRadius: "50%",
+														bgcolor: LIVE_GREEN,
+														animation: "la-live-pulse 2.4s ease-out infinite",
+													},
+												}}
+											/>
+										)}
+										<Chip
+											size="small"
+											label={cfg.enabled ? "ON" : "OFF"}
+											color={cfg.enabled ? "success" : "default"}
+											sx={{ fontSize: 10, height: 18 }}
+										/>
+									</Stack>
 								</Stack>
 								<Typography variant="caption" color="text.secondary">
 									{cfg.scraping.currentYear}/{String(cfg.scraping.currentMonth).padStart(2, "0")} · offset {cfg.scraping.currentOffset}

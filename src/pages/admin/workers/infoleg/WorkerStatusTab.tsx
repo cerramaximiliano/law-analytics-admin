@@ -30,6 +30,7 @@ import { Play, Refresh, Setting4 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import InfolegService from "api/infolegService";
 import type { InfolegWorkerStatus } from "types/infoleg";
+import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES, headerBorder } from "themes/dashboardTokens";
 
 const STATUS_CONFIG: Record<string, { color: "success" | "error" | "warning" | "default"; label: string }> = {
 	online: { color: "success", label: "Online" },
@@ -167,15 +168,30 @@ const WorkerStatusTab = () => {
 
 	const statusCfg = (status: string) => STATUS_CONFIG[status] || { color: "default" as const, label: status };
 
+	const isDark = theme.palette.mode === "dark";
+
 	return (
-		<Stack spacing={3}>
+		<Stack spacing={3} sx={{ ...LIVE_PULSE_KEYFRAMES }}>
 			<Stack direction="row" justifyContent="space-between" alignItems="center">
-				<Typography variant="h5">Procesos PM2</Typography>
+				<Typography variant="h5" sx={{ letterSpacing: "-0.01em" }}>
+					Procesos PM2
+				</Typography>
 				<Stack direction="row" spacing={1}>
-					<Button variant="outlined" size="small" startIcon={<Setting4 size={16} />} onClick={() => setSeedOpen(true)}>
+					<Button
+						variant="outlined"
+						size="small"
+						startIcon={<Setting4 size={16} />}
+						onClick={() => setSeedOpen(true)}
+						sx={{ transition: "transform 200ms ease", "&:active": { transform: "scale(0.98)" } }}
+					>
 						Sembrar IDs
 					</Button>
-					<IconButton size="small" onClick={fetchWorkers} disabled={loading}>
+					<IconButton
+						size="small"
+						onClick={fetchWorkers}
+						disabled={loading}
+						sx={{ transition: "transform 240ms ease", "&:hover": { transform: "rotate(60deg)" } }}
+					>
 						<Refresh size={18} />
 					</IconButton>
 				</Stack>
@@ -188,10 +204,10 @@ const WorkerStatusTab = () => {
 					))}
 				</Stack>
 			) : (
-				<TableContainer sx={{ borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}>
+				<TableContainer sx={{ borderRadius: 1.5, border: `1px solid ${headerBorder(isDark)}` }}>
 					<Table size="small">
 						<TableHead>
-							<TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}>
+							<TableRow sx={{ bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.04) }}>
 								<TableCell sx={{ fontWeight: 600 }}>Worker</TableCell>
 								<TableCell sx={{ fontWeight: 600 }} align="center">
 									Estado
@@ -229,19 +245,50 @@ const WorkerStatusTab = () => {
 											</Box>
 										</TableCell>
 										<TableCell align="center">
-											<Chip label={cfg.label} color={cfg.color} size="small" />
+											<Stack direction="row" spacing={0.75} alignItems="center" justifyContent="center">
+												{w.status === "online" && (
+													<Box
+														component="span"
+														aria-hidden
+														sx={{
+															position: "relative",
+															width: 8,
+															height: 8,
+															borderRadius: "50%",
+															bgcolor: LIVE_GREEN,
+															"&::after": {
+																content: '""',
+																position: "absolute",
+																inset: 0,
+																borderRadius: "50%",
+																bgcolor: LIVE_GREEN,
+																animation: "la-live-pulse 2.4s ease-out infinite",
+															},
+														}}
+													/>
+												)}
+												<Chip label={cfg.label} color={cfg.color} size="small" />
+											</Stack>
 										</TableCell>
 										<TableCell align="right">
-											<Typography variant="body2">{w.cpu != null ? `${w.cpu}%` : "—"}</Typography>
+											<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+												{w.cpu != null ? `${w.cpu}%` : "—"}
+											</Typography>
 										</TableCell>
 										<TableCell align="right">
-											<Typography variant="body2">{formatMemory(w.memory || 0)}</Typography>
+											<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+												{formatMemory(w.memory || 0)}
+											</Typography>
 										</TableCell>
 										<TableCell align="right">
-											<Typography variant="body2">{formatUptime(w.uptime)}</Typography>
+											<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+												{formatUptime(w.uptime)}
+											</Typography>
 										</TableCell>
 										<TableCell align="right">
-											<Typography variant="body2">{w.restarts ?? "—"}</Typography>
+											<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+												{w.restarts ?? "—"}
+											</Typography>
 										</TableCell>
 										<TableCell align="center">
 											<Tooltip title={`Reiniciar ${w.name}`}>

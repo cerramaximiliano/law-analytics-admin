@@ -31,6 +31,8 @@ import {
 	Trash,
 } from "iconsax-react";
 import MainCard from "components/MainCard";
+import { BRAND_BLUE } from "themes/dashboardTokens";
+import { alpha } from "@mui/material/styles";
 import { RootState } from "store";
 import notificationMonitoringService from "services/notificationMonitoringService";
 import UpcomingNotifications from "./components/UpcomingNotifications";
@@ -187,7 +189,7 @@ const NotificationMonitoring = () => {
 		(pendingAlerts.data?.length || 0);
 
 	return (
-		<MainCard title="Monitoreo de Notificaciones">
+		<MainCard title="Monitoreo de notificaciones">
 			<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 				<Grid item xs={12}>
 					<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
@@ -198,10 +200,11 @@ const NotificationMonitoring = () => {
 							variant="scrollable"
 							scrollButtons="auto"
 							sx={{
+								"& .MuiTab-root": { textTransform: "none", fontWeight: 500, minHeight: 44, fontVariantNumeric: "tabular-nums" },
+								"& .Mui-selected": { color: `${BRAND_BLUE} !important` },
+								"& .MuiTabs-indicator": { backgroundColor: BRAND_BLUE, height: 3, borderRadius: 1.5 },
 								"& .MuiTabs-scrollButtons": {
-									"&.Mui-disabled": {
-										opacity: 0.3,
-									},
+									"&.Mui-disabled": { opacity: 0.3 },
 								},
 							}}
 						>

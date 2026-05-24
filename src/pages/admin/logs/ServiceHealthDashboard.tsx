@@ -24,10 +24,12 @@ import {
 } from "@mui/material";
 import { Refresh, TickCircle, Warning2, CloseCircle, Magicpen, Data2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
+import { alpha } from "@mui/material/styles";
 import MainCard from "components/MainCard";
 import { Link } from "react-router-dom";
 import logsService, { HealthReport } from "api/logs";
 import { buildDebugPromptFromReport } from "utils/buildDebugPrompt";
+import { BRAND_BLUE, LIVE_GREEN } from "themes/dashboardTokens";
 
 const SCORE_CONFIG: Record<string, { color: "success" | "warning" | "error" | "default"; label: string; icon: any }> = {
 	green: { color: "success", label: "OK", icon: TickCircle },
@@ -304,23 +306,31 @@ const ServiceHealthDashboard = () => {
 
 	return (
 		<MainCard>
-			<Box sx={{ mb: 2 }}>
-				<Grid container alignItems="center" justifyContent="space-between">
-					<Grid item>
-						<Stack direction="row" alignItems="center" spacing={1}>
-							<Typography variant="h3">Estado diario de servicios</Typography>
+			<Box sx={{ mb: 2.5 }}>
+				<Grid container alignItems="flex-start" justifyContent="space-between" spacing={1.5}>
+					<Grid item sx={{ maxWidth: 720 }}>
+						<Stack direction="row" alignItems="center" spacing={1.25} flexWrap="wrap">
+							<Typography variant="h3" sx={{ mb: 0 }}>
+								Estado diario de servicios
+							</Typography>
 							<Chip
-								icon={<Data2 size={13} color="#00ED64" />}
+								icon={<Data2 size={13} color={LIVE_GREEN} />}
 								label="AI · daily scan"
 								size="small"
 								variant="outlined"
 								sx={{
 									fontFamily: "monospace",
 									fontSize: "0.7rem",
-									"& .MuiChip-icon": { marginLeft: "6px", color: "#00ED64" },
+									fontVariantNumeric: "tabular-nums",
+									borderColor: alpha(LIVE_GREEN, 0.35),
+									color: "text.secondary",
+									"& .MuiChip-icon": { marginLeft: "6px", color: LIVE_GREEN },
 								}}
 							/>
 						</Stack>
+						<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+							Reportes diarios generados con IA a partir del comportamiento observado de cada servicio.
+						</Typography>
 					</Grid>
 					<Grid item>
 						<Stack direction="row" spacing={1}>
@@ -349,39 +359,51 @@ const ServiceHealthDashboard = () => {
 			</Box>
 
 			{/* Summary bar */}
-			<Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
+			<Paper
+				variant="outlined"
+				sx={{
+					p: 1.5,
+					mb: 2,
+					position: "sticky",
+					top: 0,
+					zIndex: 3,
+					bgcolor: "background.paper",
+					borderColor: scoreFilter || selectedDate ? alpha(BRAND_BLUE, 0.36) : "divider",
+					transition: "border-color 200ms ease",
+				}}
+			>
 				<Grid container spacing={2} alignItems="center">
 					<Grid item xs={12} sm={6}>
-						<Stack direction="row" spacing={1.5}>
-							<Stack direction="row" spacing={0.5} alignItems="center">
+						<Stack direction="row" spacing={2}>
+							<Stack direction="row" spacing={0.75} alignItems="center">
 								<TickCircle size={18} color={theme.palette.success.main} />
-								<Typography variant="h6" fontWeight={700}>
+								<Typography variant="h6" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums" }}>
 									{counts.green}
 								</Typography>
 								<Typography variant="caption" color="text.secondary">
 									OK
 								</Typography>
 							</Stack>
-							<Stack direction="row" spacing={0.5} alignItems="center">
+							<Stack direction="row" spacing={0.75} alignItems="center">
 								<Warning2 size={18} color={theme.palette.warning.main} />
-								<Typography variant="h6" fontWeight={700}>
+								<Typography variant="h6" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums" }}>
 									{counts.yellow}
 								</Typography>
 								<Typography variant="caption" color="text.secondary">
 									Atención
 								</Typography>
 							</Stack>
-							<Stack direction="row" spacing={0.5} alignItems="center">
+							<Stack direction="row" spacing={0.75} alignItems="center">
 								<CloseCircle size={18} color={theme.palette.error.main} />
-								<Typography variant="h6" fontWeight={700}>
+								<Typography variant="h6" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums" }}>
 									{counts.red}
 								</Typography>
 								<Typography variant="caption" color="text.secondary">
 									Crítico
 								</Typography>
 							</Stack>
-							<Stack direction="row" spacing={0.5} alignItems="center">
-								<Typography variant="h6" fontWeight={700} color="text.disabled">
+							<Stack direction="row" spacing={0.75} alignItems="center">
+								<Typography variant="h6" fontWeight={700} color="text.disabled" sx={{ fontVariantNumeric: "tabular-nums" }}>
 									{counts.unknown}
 								</Typography>
 								<Typography variant="caption" color="text.secondary">

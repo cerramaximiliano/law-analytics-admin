@@ -2,16 +2,20 @@ import { Box, Chip, Paper, Stack, Typography, alpha, useTheme } from "@mui/mater
 import MainCard from "components/MainCard";
 import SentenciasWorkerTab from "./SentenciasWorkerTab";
 import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 export default function SentenciasWorkerPage() {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	return (
 		<MainCard>
-			<Stack spacing={2}>
-				<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1}>
-					<Box>
-						<Typography variant="h3">Worker Sentencias (IA)</Typography>
-						<Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
+			<Stack spacing={{ xs: 2, md: 3 }}>
+				<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1.5} sx={{ pb: 1 }}>
+					<Box sx={{ maxWidth: 720 }}>
+						<Typography variant="h3" sx={{ mb: 0.75 }}>
+							Worker Sentencias (IA)
+						</Typography>
+						<Typography variant="body1" color="text.secondary">
 							Pipeline de captura, extracción OCR, embeddings y detección de novedad de sentencias judiciales
 						</Typography>
 					</Box>
@@ -30,6 +34,7 @@ export default function SentenciasWorkerPage() {
 								fontWeight: 500,
 								fontFamily: "monospace",
 								letterSpacing: "0.5px",
+								fontVariantNumeric: "tabular-nums",
 							}}
 						>
 							worker_01
@@ -42,11 +47,12 @@ export default function SentenciasWorkerPage() {
 								px: 0.75,
 								py: 0.25,
 								borderRadius: 1,
-								bgcolor: alpha(theme.palette.info.main, 0.1),
-								color: theme.palette.info.main,
+								bgcolor: alpha(BRAND_BLUE, 0.1),
+								color: BRAND_BLUE,
 								fontSize: "0.6rem",
 								fontWeight: 500,
 								fontFamily: "monospace",
+								fontVariantNumeric: "tabular-nums",
 							}}
 						>
 							100.111.73.56
@@ -61,9 +67,13 @@ export default function SentenciasWorkerPage() {
 						<Chip
 							label="sentencias-capturadas · Atlas"
 							size="small"
-							color="info"
 							variant="outlined"
-							sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+							sx={{
+								fontFamily: "monospace",
+								fontSize: "0.72rem",
+								color: BRAND_BLUE,
+								borderColor: alpha(BRAND_BLUE, 0.4),
+							}}
 						/>
 						<Chip
 							label="CausasCIV/CNT/CSS/COM · local"
@@ -96,7 +106,15 @@ export default function SentenciasWorkerPage() {
 						},
 					]}
 				/>
-				<Paper variant="outlined" sx={{ p: 2 }}>
+				<Paper
+					variant="outlined"
+					sx={{
+						p: { xs: 1.5, sm: 2 },
+						borderRadius: 2,
+						borderColor: headerBorder(isDark),
+						bgcolor: theme.palette.background.paper,
+					}}
+				>
 					<SentenciasWorkerTab />
 				</Paper>
 			</Stack>

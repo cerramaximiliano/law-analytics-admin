@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { Box, Paper, Stack, Tab, Tabs, Typography, alpha, useTheme } from "@mui/material";
-import { Activity, CpuSetting, DocumentText, InfoCircle, Setting3 } from "iconsax-react";
+import { Activity, CpuSetting, InfoCircle, Setting3 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import WorkerStatusTab from "./WorkerStatusTab";
 import StatsTab from "./StatsTab";
 import ConfigTab from "./ConfigTab";
 import HelpTab from "./HelpTab";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 const InfolegWorkersPage = () => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const [tab, setTab] = useState("status");
 
 	const tabs = [
@@ -20,23 +22,25 @@ const InfolegWorkersPage = () => {
 
 	return (
 		<MainCard>
-			<Stack spacing={2.5}>
-				<Box>
-					<Typography variant="h3" gutterBottom>
+			<Stack spacing={{ xs: 2, md: 3 }}>
+				<Box sx={{ maxWidth: 720 }}>
+					<Typography variant="h3" sx={{ mb: 0.75 }}>
 						Workers Infoleg
 					</Typography>
-					<Typography variant="body2" color="text.secondary">
+					<Typography variant="body1" color="text.secondary">
 						Scraper de normas jurídicas argentinas — <strong>infoleg.gob.ar</strong>. Procesa leyes, decretos y resoluciones de forma
 						secuencial por ID numérico.
 					</Typography>
 				</Box>
 
-				<Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
+				<Paper
+					variant="outlined"
+					sx={{ borderRadius: 2, overflow: "hidden", borderColor: headerBorder(isDark), boxShadow: "none" }}
+				>
 					<Box
 						sx={{
-							borderBottom: 1,
-							borderColor: "divider",
-							bgcolor: alpha(theme.palette.primary.main, 0.02),
+							borderBottom: `1px solid ${headerBorder(isDark)}`,
+							bgcolor: alpha(BRAND_BLUE, isDark ? 0.04 : 0.025),
 						}}
 					>
 						<Tabs
@@ -44,7 +48,14 @@ const InfolegWorkersPage = () => {
 							onChange={(_, v) => setTab(v)}
 							variant="scrollable"
 							scrollButtons="auto"
-							sx={{ "& .MuiTab-root": { textTransform: "none", minHeight: 48, fontWeight: 500 } }}
+							sx={{
+								"& .MuiTab-root": {
+									textTransform: "none",
+									minHeight: 48,
+									fontWeight: 500,
+									transition: "color 200ms ease",
+								},
+							}}
 						>
 							{tabs.map((t) => (
 								<Tab key={t.value} value={t.value} label={t.label} icon={t.icon} iconPosition="start" />

@@ -21,6 +21,7 @@ import { CloseCircle, ExportSquare } from "iconsax-react";
 import dayjs from "dayjs";
 import InfolegService from "api/infolegService";
 import type { InfolegNorma } from "types/infoleg";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 
 const TIPO_LABELS: Record<string, string> = {
 	ley: "Ley",
@@ -131,7 +132,15 @@ const NormaDetailModal = ({ infolegId, open, onClose }: NormaDetailModalProps) =
 			</DialogTitle>
 
 			<Box sx={{ borderBottom: 1, borderColor: "divider", px: 3 }}>
-				<Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ "& .MuiTab-root": { textTransform: "none", minHeight: 40 } }}>
+				<Tabs
+					value={tab}
+					onChange={(_, v) => setTab(v)}
+					sx={{
+						"& .MuiTab-root": { textTransform: "none", minHeight: 40, fontWeight: 500 },
+						"& .Mui-selected": { color: `${BRAND_BLUE} !important` },
+						"& .MuiTabs-indicator": { backgroundColor: BRAND_BLUE, height: 2.5, borderRadius: 1.5 },
+					}}
+				>
 					<Tab value="meta" label="Metadatos" />
 					<Tab value="texto" label={`Texto original${!hasTextoOriginal ? " (N/D)" : ""}`} disabled={!hasTextoOriginal} />
 					<Tab value="texact" label={`Texto actualizado${!hasTextoActualizado ? " (N/D)" : ""}`} disabled={!hasTextoActualizado} />

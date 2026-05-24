@@ -207,7 +207,7 @@ const IntegrationsPage: React.FC = () => {
 				</Stack>
 			}
 		>
-			<Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+			<Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 820, lineHeight: 1.55 }}>
 				Disponibilidad de los servicios principales para los usuarios. Cuando un servicio está deshabilitado, los usuarios verán un aviso de
 				mantenimiento aunque los workers internos sigan operando.
 			</Typography>

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Grid, Tab, Tabs, Box, Typography } from "@mui/material";
 import { Setting2, DocumentText } from "iconsax-react";
 import MainCard from "components/MainCard";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 import JudicialMovementsConfig from "./components/JudicialMovementsConfig";
 import JudicialMovementsList from "./components/JudicialMovementsList";
 
@@ -42,7 +43,7 @@ const JudicialMovementsPage = () => {
 	};
 
 	return (
-		<MainCard title="Movimientos Judiciales">
+		<MainCard title="Movimientos judiciales">
 			<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 				<Grid item xs={12}>
 					<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
@@ -52,8 +53,13 @@ const JudicialMovementsPage = () => {
 							aria-label="judicial movements tabs"
 							variant="scrollable"
 							scrollButtons="auto"
+							sx={{
+								"& .MuiTab-root": { textTransform: "none", fontWeight: 500, minHeight: 44 },
+								"& .Mui-selected": { color: `${BRAND_BLUE} !important` },
+								"& .MuiTabs-indicator": { backgroundColor: BRAND_BLUE, height: 3, borderRadius: 1.5 },
+							}}
 						>
-							<Tab icon={<DocumentText size={20} />} iconPosition="start" label="Listado de Movimientos" {...a11yProps(0)} />
+							<Tab icon={<DocumentText size={20} />} iconPosition="start" label="Listado de movimientos" {...a11yProps(0)} />
 							<Tab icon={<Setting2 size={20} />} iconPosition="start" label="Configuración" {...a11yProps(1)} />
 						</Tabs>
 					</Box>

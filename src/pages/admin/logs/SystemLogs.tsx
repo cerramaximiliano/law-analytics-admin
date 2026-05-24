@@ -28,10 +28,12 @@ import {
 } from "@mui/material";
 import { Refresh, SearchNormal1, CloseCircle, Magicpen, ArrowDown2, ArrowUp2, Data2, Copy, DocumentDownload } from "iconsax-react";
 import { useSnackbar } from "notistack";
+import { alpha } from "@mui/material/styles";
 import MainCard from "components/MainCard";
 import TableSkeleton from "components/UI/TableSkeleton";
 import logsService, { LogEntry, ServiceInfo } from "api/logs";
 import AnalyzeLogsModal from "components/admin/logs/AnalyzeLogsModal";
+import { BRAND_BLUE, LIVE_GREEN } from "themes/dashboardTokens";
 
 const LEVEL_COLORS: Record<string, "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"> = {
 	trace: "default",
@@ -347,23 +349,31 @@ const SystemLogs = () => {
 
 	return (
 		<MainCard>
-			<Box sx={{ mb: 2 }}>
-				<Grid container alignItems="center" justifyContent="space-between">
-					<Grid item>
-						<Stack direction="row" alignItems="center" spacing={1}>
-							<Typography variant="h3">Logs del Ecosistema</Typography>
+			<Box sx={{ mb: 2.5 }}>
+				<Grid container alignItems="flex-start" justifyContent="space-between" spacing={1.5}>
+					<Grid item sx={{ maxWidth: 720 }}>
+						<Stack direction="row" alignItems="center" spacing={1.25} flexWrap="wrap">
+							<Typography variant="h3" sx={{ mb: 0 }}>
+								Logs del ecosistema
+							</Typography>
 							<Chip
-								icon={<Data2 size={13} color="#00ED64" />}
-								label="db.logs (URLDB_LOGS · 7d TTL)"
+								icon={<Data2 size={13} color={LIVE_GREEN} />}
+								label="db.logs · 7d TTL"
 								size="small"
 								variant="outlined"
 								sx={{
 									fontFamily: "monospace",
 									fontSize: "0.7rem",
-									"& .MuiChip-icon": { marginLeft: "6px", color: "#00ED64" },
+									fontVariantNumeric: "tabular-nums",
+									borderColor: alpha(LIVE_GREEN, 0.35),
+									color: "text.secondary",
+									"& .MuiChip-icon": { marginLeft: "6px", color: LIVE_GREEN },
 								}}
 							/>
 						</Stack>
+						<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+							Consultá, filtrá y exportá logs en tiempo real de los servicios y workers del ecosistema.
+						</Typography>
 					</Grid>
 					<Grid item>
 						<Stack direction="row" spacing={1}>
@@ -419,7 +429,19 @@ const SystemLogs = () => {
 			</Box>
 
 			{/* ── Filtros ── */}
-			<Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
+			<Paper
+				variant="outlined"
+				sx={{
+					p: 1.5,
+					mb: 2,
+					position: "sticky",
+					top: 0,
+					zIndex: 3,
+					bgcolor: "background.paper",
+					borderColor: hasActiveFilters ? alpha(BRAND_BLUE, 0.36) : "divider",
+					transition: "border-color 200ms ease",
+				}}
+			>
 				<Grid container spacing={1.5} alignItems="center">
 					<Grid item xs={12} sm={6} md={2}>
 						<Autocomplete
@@ -527,14 +549,20 @@ const SystemLogs = () => {
 
 			{/* ── Tabla ── */}
 			<TableContainer>
-				<Table size="small" sx={{ "& td, & th": { borderBottom: `1px solid ${theme.palette.divider}` } }}>
+				<Table
+					size="small"
+					sx={{
+						"& td, & th": { borderBottom: `1px solid ${theme.palette.divider}` },
+						"& tbody tr:hover": { bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.08 : 0.04) },
+					}}
+				>
 					<TableHead>
 						<TableRow>
-							<TableCell sx={{ fontSize: "0.7rem", fontWeight: 700 }}>Timestamp</TableCell>
-							<TableCell sx={{ fontSize: "0.7rem", fontWeight: 700 }}>Nivel</TableCell>
-							<TableCell sx={{ fontSize: "0.7rem", fontWeight: 700 }}>Servicio</TableCell>
-							<TableCell sx={{ fontSize: "0.7rem", fontWeight: 700 }}>Host</TableCell>
-							<TableCell sx={{ fontSize: "0.7rem", fontWeight: 700 }}>Mensaje</TableCell>
+							<TableCell sx={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4 }}>Timestamp</TableCell>
+							<TableCell sx={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4 }}>Nivel</TableCell>
+							<TableCell sx={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4 }}>Servicio</TableCell>
+							<TableCell sx={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4 }}>Host</TableCell>
+							<TableCell sx={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4 }}>Mensaje</TableCell>
 							<TableCell />
 						</TableRow>
 					</TableHead>
@@ -547,8 +575,15 @@ const SystemLogs = () => {
 							</TableRow>
 						) : logs.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={6} sx={{ textAlign: "center", py: 4, color: "text.secondary" }}>
-									{hasActiveFilters ? "Sin resultados con los filtros aplicados" : "Sin logs"}
+								<TableCell colSpan={6} sx={{ textAlign: "center", py: 6, color: "text.secondary" }}>
+									<Stack spacing={0.75} alignItems="center">
+										<Typography variant="subtitle1" color="text.primary">
+											{hasActiveFilters ? "Sin resultados con los filtros aplicados" : "Sin logs"}
+										</Typography>
+										<Typography variant="caption" color="text.secondary">
+											{hasActiveFilters ? "Probá ajustar o limpiar los filtros." : "Cuando lleguen logs van a aparecer acá."}
+										</Typography>
+									</Stack>
 								</TableCell>
 							</TableRow>
 						) : (

@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Box, Typography, Paper, Grid, Skeleton, Chip, useTheme, alpha, Tooltip, IconButton, Stack, Divider, Theme } from "@mui/material";
-import { Refresh, Lock1, LockSlash, Calendar1 } from "iconsax-react";
+import { Refresh, Lock1, LockSlash, Calendar1, Clock, Chart } from "iconsax-react";
 import { Link as RouterLink } from "react-router-dom";
 import { CausasPjnService, PrivacyStatsResponse } from "api/causasPjn";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 interface PrivacyStatsWidgetProps {
 	/** Modo compacto para incrustar como header de la tabla (sin Paper wrapper, sin recent list). */
@@ -13,7 +14,7 @@ interface PrivacyStatsWidgetProps {
 const getColors = (theme: Theme) => ({
 	private: { main: theme.palette.error.main, lighter: alpha(theme.palette.error.light, 0.15) },
 	change24h: { main: theme.palette.warning.main, lighter: alpha(theme.palette.warning.light, 0.15) },
-	change7d: { main: theme.palette.info.main, lighter: alpha(theme.palette.info.light, 0.15) },
+	change7d: { main: BRAND_BLUE, lighter: alpha(BRAND_BLUE, 0.12) },
 	neutral: { main: theme.palette.text.secondary, lighter: alpha(theme.palette.grey[400], 0.15) },
 });
 
@@ -54,11 +55,20 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 		fetchStats();
 	}, [fetchStats]);
 
+	const isDark = theme.palette.mode === "dark";
 	const wrapper = (children: React.ReactNode) =>
 		compact ? (
 			<Box>{children}</Box>
 		) : (
-			<Paper elevation={0} sx={{ p: { xs: 1.5, sm: 2.5 }, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
+			<Paper
+				elevation={0}
+				sx={{
+					p: { xs: 1.5, sm: 2.5 },
+					borderRadius: 2,
+					border: `1px solid ${headerBorder(isDark)}`,
+					transition: "border-color 240ms ease",
+				}}
+			>
 				{children}
 			</Paper>
 		);
@@ -116,36 +126,60 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 							borderRadius: 2,
 							textDecoration: "none",
 							color: "inherit",
-							transition: "transform 0.15s",
+							transition: "transform 240ms ease, background-color 240ms ease",
 							"&:hover": { transform: "translateY(-2px)", bgcolor: alpha(theme.palette.error.light, 0.25) },
 						}}
 					>
-						<Typography variant={compact ? "h5" : "h4"} fontWeight="bold" color={COLORS.private.main}>
+						<Typography
+							variant={compact ? "h5" : "h4"}
+							fontWeight={700}
+							color={COLORS.private.main}
+							sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
+						>
 							{stats.total}
 						</Typography>
-						<Typography variant="caption" color="text.secondary">
-							🔒 Total privadas
-						</Typography>
+						<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
+							<Lock1 size={12} color={COLORS.private.main} />
+							<Typography variant="caption" color="text.secondary">
+								Total privadas
+							</Typography>
+						</Stack>
 					</Box>
 				</Grid>
 				<Grid item xs={4}>
 					<Box sx={{ textAlign: "center", p: compact ? 1 : 1.5, bgcolor: COLORS.change24h.lighter, borderRadius: 2 }}>
-						<Typography variant={compact ? "h5" : "h4"} fontWeight="bold" color={COLORS.change24h.main}>
+						<Typography
+							variant={compact ? "h5" : "h4"}
+							fontWeight={700}
+							color={COLORS.change24h.main}
+							sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
+						>
 							{stats.changes.last24h}
 						</Typography>
-						<Typography variant="caption" color="text.secondary">
-							⏱️ Últimas 24h
-						</Typography>
+						<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
+							<Clock size={12} color={COLORS.change24h.main} />
+							<Typography variant="caption" color="text.secondary">
+								Últimas 24h
+							</Typography>
+						</Stack>
 					</Box>
 				</Grid>
 				<Grid item xs={4}>
 					<Box sx={{ textAlign: "center", p: compact ? 1 : 1.5, bgcolor: COLORS.change7d.lighter, borderRadius: 2 }}>
-						<Typography variant={compact ? "h5" : "h4"} fontWeight="bold" color={COLORS.change7d.main}>
+						<Typography
+							variant={compact ? "h5" : "h4"}
+							fontWeight={700}
+							color={COLORS.change7d.main}
+							sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
+						>
 							{stats.changes.last7d}
 						</Typography>
-						<Typography variant="caption" color="text.secondary">
-							📅 Últimos 7 días
-						</Typography>
+						<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
+							<Chart size={12} color={COLORS.change7d.main} />
+							<Typography variant="caption" color="text.secondary">
+								Últimos 7 días
+							</Typography>
+						</Stack>
 					</Box>
 				</Grid>
 			</Grid>

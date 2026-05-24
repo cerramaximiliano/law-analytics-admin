@@ -3,6 +3,7 @@ import { Alert, Box, Button, ButtonGroup, Chip, Divider, Grid, IconButton, Paper
 import { CloseCircle, Play, Refresh, Refresh2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import LiquidacionWorkerConfigService, { FullDoc, Pm2Action, Pm2ProcessStatus, WorkerHeartbeat, WorkerKey } from "api/liquidacionWorkerConfig";
+import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, LIVE_PULSE_KEYFRAMES, headerBorder } from "themes/dashboardTokens";
 
 interface Props {
 	doc: FullDoc | null;
@@ -28,12 +29,12 @@ function formatNumber(n: number | undefined): string {
 	return n.toLocaleString("es-AR");
 }
 
-function workerHealthColor(theme: any, hb: WorkerHeartbeat | undefined): { bg: string; fg: string; label: string } {
-	if (!hb) return { bg: alpha(theme.palette.grey[500], 0.15), fg: theme.palette.grey[600], label: "sin reporte" };
+function workerHealthColor(theme: any, hb: WorkerHeartbeat | undefined): { bg: string; fg: string; label: string; live: boolean } {
+	if (!hb) return { bg: alpha(theme.palette.grey[500], 0.15), fg: theme.palette.grey[600], label: "sin reporte", live: false };
 	const ms = hb.lastHeartbeatAt ? Date.now() - new Date(hb.lastHeartbeatAt).getTime() : Infinity;
-	if (!hb.isRunning) return { bg: alpha(theme.palette.error.main, 0.15), fg: theme.palette.error.main, label: "stopped" };
-	if (ms > 120_000) return { bg: alpha(theme.palette.warning.main, 0.15), fg: theme.palette.warning.main, label: "stale" };
-	return { bg: alpha(theme.palette.success.main, 0.15), fg: theme.palette.success.main, label: "online" };
+	if (!hb.isRunning) return { bg: alpha(theme.palette.error.main, 0.15), fg: theme.palette.error.main, label: "stopped", live: false };
+	if (ms > 120_000) return { bg: alpha(STALE_AMBER, 0.15), fg: STALE_AMBER, label: "stale", live: false };
+	return { bg: alpha(LIVE_GREEN, 0.15), fg: LIVE_GREEN, label: "online", live: true };
 }
 
 const WORKER_NAMES = ["pjn-liq-manager", "pjn-liq-url-extractor", "pjn-liq-pdf-processor"];
@@ -51,10 +52,10 @@ const WORKER_HOST = "worker_01";
 const WORKER_IP = "100.111.73.56";
 
 function pm2StatusColor(theme: any, status: string): { bg: string; fg: string } {
-	if (status === "online") return { bg: alpha(theme.palette.success.main, 0.15), fg: theme.palette.success.main };
+	if (status === "online") return { bg: alpha(LIVE_GREEN, 0.15), fg: LIVE_GREEN };
 	if (status === "stopped" || status === "not_found") return { bg: alpha(theme.palette.grey[500], 0.15), fg: theme.palette.grey[700] };
 	if (status === "errored") return { bg: alpha(theme.palette.error.main, 0.15), fg: theme.palette.error.main };
-	return { bg: alpha(theme.palette.warning.main, 0.15), fg: theme.palette.warning.main };
+	return { bg: alpha(STALE_AMBER, 0.15), fg: STALE_AMBER };
 }
 
 function formatUptime(ms: number | null): string {
@@ -154,13 +155,17 @@ export default function StatusTab({ doc, loading, onRefresh }: Props) {
 	const dailyPct = dailyLimit > 0 ? Math.min(100, (todayCount / dailyLimit) * 100) : 0;
 
 	return (
-		<Stack spacing={2}>
+		<Stack spacing={2} sx={{ ...LIVE_PULSE_KEYFRAMES }}>
 			<Stack direction="row" justifyContent="space-between" alignItems="center">
 				<Typography variant="body2" color="text.secondary">
 					Última actualización del doc: <strong>{relativeFromNow(doc.lastUpdate)}</strong> · auto-refresh cada 15s
 				</Typography>
 				<Tooltip title="Refrescar ahora">
-					<IconButton onClick={onRefresh} size="small">
+					<IconButton
+						onClick={onRefresh}
+						size="small"
+						sx={{ transition: "transform 240ms ease", "&:hover": { transform: "rotate(60deg)" } }}
+					>
 						<Refresh size={18} />
 					</IconButton>
 				</Tooltip>
@@ -168,14 +173,26 @@ export default function StatusTab({ doc, loading, onRefresh }: Props) {
 
 			{/* === Daily counter === */}
 			{(dailyLimit > 0 || todayCount > 0) && (
-				<Paper variant="outlined" sx={{ p: 2 }}>
+				<Paper
+					variant="outlined"
+					sx={{ p: 2, borderRadius: 2, borderColor: headerBorder(theme.palette.mode === "dark") }}
+				>
 					<Stack direction="row" justifyContent="space-between" alignItems="center">
 						<Box>
-							<Typography variant="subtitle2">Procesados hoy ({todayDate})</Typography>
-							<Typography variant="h4" sx={{ mt: 0.5 }}>
+							<Typography variant="subtitle2" color="text.secondary">
+								Procesados hoy ({todayDate})
+							</Typography>
+							<Typography
+								variant="h4"
+								sx={{
+									mt: 0.5,
+									letterSpacing: "-0.02em",
+									fontVariantNumeric: "tabular-nums",
+								}}
+							>
 								{formatNumber(todayCount)}
 								{dailyLimit > 0 && (
-									<Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+									<Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1, fontVariantNumeric: "tabular-nums" }}>
 										/ {formatNumber(dailyLimit)} ({dailyPct.toFixed(0)}%)
 									</Typography>
 								)}
@@ -195,8 +212,8 @@ export default function StatusTab({ doc, loading, onRefresh }: Props) {
 										sx={{
 											height: "100%",
 											width: `${dailyPct}%`,
-											bgcolor: dailyPct >= 95 ? theme.palette.error.main : dailyPct >= 80 ? theme.palette.warning.main : theme.palette.success.main,
-											transition: "width 0.3s",
+											bgcolor: dailyPct >= 95 ? theme.palette.error.main : dailyPct >= 80 ? STALE_AMBER : LIVE_GREEN,
+											transition: "width 300ms ease",
 										}}
 									/>
 								</Box>
@@ -240,18 +257,53 @@ export default function StatusTab({ doc, loading, onRefresh }: Props) {
 										<Typography variant="subtitle2" sx={{ fontFamily: "monospace", fontSize: "0.78rem" }}>
 											{name}
 										</Typography>
-										<Stack direction="row" spacing={0.5}>
+										<Stack direction="row" spacing={0.5} alignItems="center">
+											{c.live && (
+												<Box
+													component="span"
+													aria-hidden
+													sx={{
+														position: "relative",
+														width: 8,
+														height: 8,
+														borderRadius: "50%",
+														bgcolor: LIVE_GREEN,
+														"&::after": {
+															content: '""',
+															position: "absolute",
+															inset: 0,
+															borderRadius: "50%",
+															bgcolor: LIVE_GREEN,
+															animation: "la-live-pulse 2.4s ease-out infinite",
+														},
+													}}
+												/>
+											)}
 											{pm2 && pm2c && (
 												<Chip
 													label={`pm2: ${pm2.status}`}
 													size="small"
-													sx={{ bgcolor: pm2c.bg, color: pm2c.fg, fontWeight: 600, fontSize: "0.65rem", height: 20 }}
+													sx={{
+														bgcolor: pm2c.bg,
+														color: pm2c.fg,
+														fontWeight: 600,
+														fontSize: "0.65rem",
+														height: 20,
+														fontVariantNumeric: "tabular-nums",
+													}}
 												/>
 											)}
 											<Chip
 												label={`hb: ${c.label}`}
 												size="small"
-												sx={{ bgcolor: c.bg, color: c.fg, fontWeight: 600, fontSize: "0.65rem", height: 20 }}
+												sx={{
+													bgcolor: c.bg,
+													color: c.fg,
+													fontWeight: 600,
+													fontSize: "0.65rem",
+													height: 20,
+													fontVariantNumeric: "tabular-nums",
+												}}
 											/>
 										</Stack>
 									</Stack>
@@ -283,11 +335,12 @@ export default function StatusTab({ doc, loading, onRefresh }: Props) {
 												px: 0.75,
 												py: 0.25,
 												borderRadius: 1,
-												bgcolor: alpha(theme.palette.info.main, 0.1),
-												color: theme.palette.info.main,
+												bgcolor: alpha(BRAND_BLUE, 0.1),
+												color: BRAND_BLUE,
 												fontSize: "0.6rem",
 												fontWeight: 500,
 												fontFamily: "monospace",
+												fontVariantNumeric: "tabular-nums",
 											}}
 										>
 											{WORKER_IP}

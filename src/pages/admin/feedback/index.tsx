@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, ChangeEvent } from "react";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, alpha } from "@mui/material/styles";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 import {
 	Box,
 	Grid,
@@ -382,81 +383,87 @@ const FeedbackAdminPage = () => {
 				{/* Stats */}
 				<Grid container spacing={2}>
 					<Grid item xs={12} sm={6} md={2.4}>
-						<Card variant="outlined">
+						<Card variant="outlined" sx={{ height: "100%", borderColor: alpha(BRAND_BLUE, 0.2) }}>
 							<CardContent>
 								<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-									<MessageQuestion size={20} color={theme.palette.primary.main} />
-									<Typography variant="body2" color="textSecondary">
+									<MessageQuestion size={18} color={BRAND_BLUE} />
+									<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
 										Total
 									</Typography>
 								</Stack>
-								{loadingStats ? <Skeleton variant="text" width={60} height={40} /> : <Typography variant="h4">{totalCount}</Typography>}
+								{loadingStats ? (
+									<Skeleton variant="text" width={60} height={40} />
+								) : (
+									<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", color: BRAND_BLUE }}>
+										{totalCount.toLocaleString("es-AR")}
+									</Typography>
+								)}
 							</CardContent>
 						</Card>
 					</Grid>
 					<Grid item xs={12} sm={6} md={2.4}>
-						<Card variant="outlined">
+						<Card variant="outlined" sx={{ height: "100%" }}>
 							<CardContent>
 								<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-									<Clock size={20} color={theme.palette.warning.main} />
-									<Typography variant="body2" color="textSecondary">
+									<Clock size={18} color={theme.palette.warning.main} />
+									<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
 										Pendientes
 									</Typography>
 								</Stack>
 								{loadingStats ? (
 									<Skeleton variant="text" width={60} height={40} />
 								) : (
-									<Typography variant="h4" color="warning.main">
-										{countByStatus("pending")}
+									<Typography variant="h4" color="warning.main" sx={{ fontVariantNumeric: "tabular-nums" }}>
+										{countByStatus("pending").toLocaleString("es-AR")}
 									</Typography>
 								)}
 							</CardContent>
 						</Card>
 					</Grid>
 					<Grid item xs={12} sm={6} md={2.4}>
-						<Card variant="outlined">
+						<Card variant="outlined" sx={{ height: "100%" }}>
 							<CardContent>
 								<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-									<TickCircle size={20} color={theme.palette.success.main} />
-									<Typography variant="body2" color="textSecondary">
+									<TickCircle size={18} color={theme.palette.success.main} />
+									<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
 										Publicados
 									</Typography>
 								</Stack>
 								{loadingStats ? (
 									<Skeleton variant="text" width={60} height={40} />
 								) : (
-									<Typography variant="h4" color="success.main">
-										{countByStatus("published")}
+									<Typography variant="h4" color="success.main" sx={{ fontVariantNumeric: "tabular-nums" }}>
+										{countByStatus("published").toLocaleString("es-AR")}
 									</Typography>
 								)}
 							</CardContent>
 						</Card>
 					</Grid>
 					<Grid item xs={12} sm={6} md={2.4}>
-						<Card variant="outlined">
+						<Card variant="outlined" sx={{ height: "100%" }}>
 							<CardContent>
 								<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-									<CloseSquare size={20} color={theme.palette.error.main} />
-									<Typography variant="body2" color="textSecondary">
+									<CloseSquare size={18} color={theme.palette.error.main} />
+									<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
 										Rechazados
 									</Typography>
 								</Stack>
 								{loadingStats ? (
 									<Skeleton variant="text" width={60} height={40} />
 								) : (
-									<Typography variant="h4" color="error.main">
-										{countByStatus("rejected")}
+									<Typography variant="h4" color="error.main" sx={{ fontVariantNumeric: "tabular-nums" }}>
+										{countByStatus("rejected").toLocaleString("es-AR")}
 									</Typography>
 								)}
 							</CardContent>
 						</Card>
 					</Grid>
 					<Grid item xs={12} sm={6} md={2.4}>
-						<Card variant="outlined">
+						<Card variant="outlined" sx={{ height: "100%" }}>
 							<CardContent>
 								<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-									<Star1 size={20} color={theme.palette.secondary.main} />
-									<Typography variant="body2" color="textSecondary">
+									<Star1 size={18} color={theme.palette.secondary.main} />
+									<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
 										Rating promedio
 									</Typography>
 								</Stack>
@@ -464,8 +471,10 @@ const FeedbackAdminPage = () => {
 									<Skeleton variant="text" width={60} height={40} />
 								) : (
 									<Stack direction="row" alignItems="baseline" spacing={1}>
-										<Typography variant="h4">{stats?.avgRating?.avg ? Number(stats.avgRating.avg).toFixed(2) : "—"}</Typography>
-										<Typography variant="caption" color="textSecondary">
+										<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums" }}>
+											{stats?.avgRating?.avg ? Number(stats.avgRating.avg).toFixed(2) : "—"}
+										</Typography>
+										<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 											({stats?.avgRating?.count || 0})
 										</Typography>
 									</Stack>
@@ -479,7 +488,9 @@ const FeedbackAdminPage = () => {
 				<Paper variant="outlined" sx={{ p: 2 }}>
 					<Stack direction="row" spacing={1} alignItems="center" mb={2}>
 						<Filter size={18} />
-						<Typography variant="subtitle2">Filtros</Typography>
+						<Typography variant="subtitle2" sx={{ textTransform: "uppercase", letterSpacing: 0.4, fontSize: "0.72rem" }}>
+							Filtros
+						</Typography>
 					</Stack>
 					<Grid container spacing={2} alignItems="center">
 						<Grid item xs={12} sm={6} md={2}>

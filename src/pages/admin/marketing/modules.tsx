@@ -44,6 +44,8 @@ import {
 
 // project imports
 import MainCard from "components/MainCard";
+import { alpha } from "@mui/material/styles";
+import { BRAND_BLUE, LIVE_GREEN } from "themes/dashboardTokens";
 import { Add, Edit2, Eye, Trash, Copy, Data2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import AnimateButton from "components/@extended/AnimateButton";
@@ -401,25 +403,30 @@ const EmailModules = () => {
 
 	return (
 		<MainCard>
-			<Box sx={{ mb: 2 }}>
-				<Grid container alignItems="center" justifyContent="space-between">
-					<Grid item>
-						<Stack direction="row" alignItems="center" spacing={1}>
-							<Typography variant="h3">Módulos HTML</Typography>
+			<Box sx={{ mb: 2.5 }}>
+				<Grid container alignItems="flex-start" justifyContent="space-between" spacing={1.5}>
+					<Grid item sx={{ maxWidth: 720 }}>
+						<Stack direction="row" alignItems="center" spacing={1.25} flexWrap="wrap">
+							<Typography variant="h3" sx={{ mb: 0 }}>
+								Módulos HTML
+							</Typography>
 							<Chip
-								icon={<Data2 size={13} color="#00ED64" />}
+								icon={<Data2 size={13} color={LIVE_GREEN} />}
 								label="db.emailmodules"
 								size="small"
 								variant="outlined"
 								sx={{
 									fontFamily: "monospace",
 									fontSize: "0.7rem",
-									"& .MuiChip-icon": { marginLeft: "6px", color: "#00ED64" },
+									fontVariantNumeric: "tabular-nums",
+									borderColor: alpha(LIVE_GREEN, 0.35),
+									color: "text.secondary",
+									"& .MuiChip-icon": { marginLeft: "6px", color: LIVE_GREEN },
 								}}
 							/>
 						</Stack>
-						<Typography variant="body2" color="textSecondary">
-							Componentes reutilizables para plantillas de email (footers, headers, etc.)
+						<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+							Componentes reutilizables para plantillas de email (footers, headers, bloques).
 						</Typography>
 					</Grid>
 					<Grid item>
@@ -570,29 +577,35 @@ const EmailModules = () => {
 			{/* Stats Cards */}
 			<Grid container spacing={3} sx={{ mt: 2 }}>
 				<Grid item xs={12} md={4}>
-					<Card>
-						<CardHeader title="Estadísticas" />
+					<Card variant="outlined" sx={{ height: "100%" }}>
+						<CardHeader title="Estadísticas" titleTypographyProps={{ variant: "h5" }} />
+						<Divider />
 						<CardContent>
-							<Stack spacing={2}>
+							<Stack spacing={2.25}>
 								<Box>
-									<Typography variant="subtitle2" color="textSecondary">
+									<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
 										Total de módulos
 									</Typography>
-									<Typography variant="h4">{modules.length}</Typography>
+									<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums" }}>
+										{modules.length}
+									</Typography>
 								</Box>
 								<Box>
-									<Typography variant="subtitle2" color="textSecondary">
+									<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
 										Módulos activos
 									</Typography>
-									<Typography variant="h4">{modules.filter((m) => m.isActive).length}</Typography>
+									<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", color: BRAND_BLUE }}>
+										{modules.filter((m) => m.isActive).length}
+									</Typography>
 								</Box>
 							</Stack>
 						</CardContent>
 					</Card>
 				</Grid>
 				<Grid item xs={12} md={8}>
-					<Card>
-						<CardHeader title="Uso en templates" />
+					<Card variant="outlined" sx={{ height: "100%" }}>
+						<CardHeader title="Uso en templates" titleTypographyProps={{ variant: "h5" }} />
+						<Divider />
 						<CardContent>
 							<Typography variant="body2" sx={{ mb: 2 }}>
 								Para usar un módulo en una plantilla, inserta la siguiente sintaxis en el código HTML:
