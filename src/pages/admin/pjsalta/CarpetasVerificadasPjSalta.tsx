@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, alpha } from "@mui/material/styles";
 import {
 	Box,
 	Card,
@@ -34,6 +34,7 @@ import MainCard from "components/MainCard";
 import { CausasPjSaltaService, CausaPjSalta, WorkerStatsResponse, EligibilityStatsResponse } from "api/causasPjSalta";
 import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Lock1, Repeat } from "iconsax-react";
 import CausaDetalleModalPjSalta from "./CausaDetalleModalPjSalta";
+import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
 
 // Helper para formatear fechas
 const formatDate = (date: { $date: string } | string | undefined): string => {
@@ -426,21 +427,41 @@ const CarpetasVerificadasPjSalta = () => {
 	};
 
 	return (
-		<MainCard title="Carpetas Verificadas PJ Salta (App)">
+		<MainCard title="Carpetas verificadas PJ Salta (App)">
 			{/* Header: Resultados + Estadísticas */}
 			<Box sx={{ mb: 2 }}>
 				<Grid container spacing={2} alignItems="center">
 					{/* Resultados */}
 					<Grid item xs={12} md={4}>
-						<Card sx={{ backgroundColor: "primary.lighter", border: 1, borderColor: "primary.main" }}>
+						<Card
+							sx={{
+								backgroundColor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.15 : 0.08),
+								border: 1,
+								borderColor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.4 : 0.28),
+								boxShadow: "none",
+							}}
+						>
 							<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
 								<Stack direction="row" justifyContent="space-between" alignItems="center">
 									<Typography variant="body2" color="text.secondary">
 										Resultados
 									</Typography>
-									<Typography variant="h4" color="primary.main" fontWeight="bold">
+									<Typography
+										variant="h4"
+										sx={{
+											color: BRAND_BLUE,
+											fontWeight: 700,
+											fontVariantNumeric: "tabular-nums",
+											letterSpacing: "-0.01em",
+										}}
+									>
 										{totalCount.toLocaleString()}
-										<Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
+										<Typography
+											component="span"
+											variant="body2"
+											color="text.secondary"
+											sx={{ ml: 0.5, fontVariantNumeric: "tabular-nums" }}
+										>
 											/ {totalInDatabase.toLocaleString()}
 										</Typography>
 									</Typography>
@@ -451,7 +472,7 @@ const CarpetasVerificadasPjSalta = () => {
 
 					{/* Estadísticas de Workers */}
 					<Grid item xs={12} md={8}>
-						<Card sx={{ border: 1, borderColor: "divider" }}>
+						<Card sx={{ border: 1, borderColor: "divider", boxShadow: "none", borderRadius: 1.5 }}>
 							<CardContent sx={{ py: 1, "&:last-child": { pb: 1 } }}>
 								{loadingStats ? (
 									<Box display="flex" justifyContent="center" py={1}>
@@ -713,9 +734,9 @@ const CarpetasVerificadasPjSalta = () => {
 													borderRadius: 4,
 													backgroundColor:
 														eligibilityStats.coveragePercent >= 80
-															? theme.palette.success.dark
+															? LIVE_GREEN
 															: eligibilityStats.coveragePercent >= 50
-															? theme.palette.warning.main
+															? STALE_AMBER
 															: theme.palette.error.main,
 												},
 											}}

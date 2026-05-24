@@ -55,6 +55,7 @@ import MainCard from "components/MainCard";
 import CronSelector, { getCronLabel } from "components/admin/CronSelector";
 import { useTheme, alpha } from "@mui/material/styles";
 import DocumentationTabs from "./DocumentationTabs";
+import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
 import configPjCatamarca, {
 	IAllWorkersResponse,
 	IManagerWorkerConfig,
@@ -139,8 +140,12 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ workerType, config, status, eff
 		<Card
 			variant="outlined"
 			sx={{
-				borderColor: config?.enabled ? theme.palette.success.main : theme.palette.grey[300],
-				borderWidth: config?.enabled ? 2 : 1,
+				borderColor: config?.enabled ? alpha(LIVE_GREEN, theme.palette.mode === "dark" ? 0.5 : 0.4) : theme.palette.divider,
+				borderWidth: config?.enabled ? 1.5 : 1,
+				borderRadius: 1.5,
+				boxShadow: "none",
+				bgcolor: config?.enabled ? alpha(LIVE_GREEN, theme.palette.mode === "dark" ? 0.04 : 0.02) : "background.paper",
+				transition: "border-color 200ms ease, background-color 200ms ease",
 			}}
 		>
 			<CardHeader
@@ -149,8 +154,8 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ workerType, config, status, eff
 						sx={{
 							p: 1,
 							borderRadius: 2,
-							bgcolor: config?.enabled ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.grey[500], 0.1),
-							color: config?.enabled ? theme.palette.success.main : theme.palette.grey[500],
+							bgcolor: config?.enabled ? alpha(LIVE_GREEN, 0.12) : alpha(theme.palette.grey[500], 0.1),
+							color: config?.enabled ? LIVE_GREEN : theme.palette.grey[500],
 						}}
 					>
 						{label.icon}
@@ -158,8 +163,27 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ workerType, config, status, eff
 				}
 				title={
 					<Stack direction="row" spacing={1} alignItems="center">
-						<Typography variant="h6">{label.name}</Typography>
-						<Chip size="small" label={config?.enabled ? "Activo" : "Inactivo"} color={config?.enabled ? "success" : "default"} />
+						<Typography variant="h6" sx={{ fontWeight: 600 }}>
+							{label.name}
+						</Typography>
+						<Chip
+							size="small"
+							label={config?.enabled ? "Activo" : "Inactivo"}
+							sx={{
+								height: 22,
+								fontWeight: 600,
+								fontSize: "0.7rem",
+								letterSpacing: "0.02em",
+								bgcolor: config?.enabled
+									? alpha(LIVE_GREEN, theme.palette.mode === "dark" ? 0.18 : 0.12)
+									: alpha(theme.palette.grey[500], 0.12),
+								color: config?.enabled ? LIVE_GREEN : "text.secondary",
+								border: 1,
+								borderColor: config?.enabled
+									? alpha(LIVE_GREEN, theme.palette.mode === "dark" ? 0.42 : 0.28)
+									: "divider",
+							}}
+						/>
 					</Stack>
 				}
 				subheader={label.description}
@@ -785,13 +809,63 @@ const PjCatamarcaWorkersConfig: React.FC = () => {
 						title="Workers PJ Catamarca"
 						secondary={
 							<Stack direction="row" spacing={1} alignItems="center">
-								<Chip
-									label={workersData?.managerState.isRunning ? "Manager Activo" : "Manager Detenido"}
-									color={workersData?.managerState.isRunning ? "success" : "error"}
-									size="small"
-								/>
-								<Tooltip title={workersData?.managerState.isRunning ? "Detener Manager" : "Iniciar Manager"}>
-									<IconButton onClick={handleToggleManager} disabled={actionLoading}>
+								<Box
+									sx={{
+										display: "inline-flex",
+										alignItems: "center",
+										gap: 0.75,
+										px: 1.25,
+										py: 0.5,
+										borderRadius: 1,
+										border: 1,
+										borderColor: workersData?.managerState.isRunning
+											? alpha(LIVE_GREEN, theme.palette.mode === "dark" ? 0.42 : 0.28)
+											: alpha(theme.palette.error.main, 0.32),
+										bgcolor: workersData?.managerState.isRunning
+											? alpha(LIVE_GREEN, theme.palette.mode === "dark" ? 0.14 : 0.08)
+											: alpha(theme.palette.error.main, theme.palette.mode === "dark" ? 0.14 : 0.06),
+										...LIVE_PULSE_KEYFRAMES,
+									}}
+								>
+									<Box
+										sx={{
+											position: "relative",
+											width: 8,
+											height: 8,
+											borderRadius: "50%",
+											bgcolor: workersData?.managerState.isRunning ? LIVE_GREEN : theme.palette.error.main,
+											"&::after": workersData?.managerState.isRunning
+												? {
+														content: '""',
+														position: "absolute",
+														inset: 0,
+														borderRadius: "50%",
+														bgcolor: LIVE_GREEN,
+														animation: "la-live-pulse 2.4s ease-out infinite",
+												  }
+												: {},
+										}}
+									/>
+									<Typography
+										variant="caption"
+										sx={{
+											fontWeight: 600,
+											letterSpacing: "0.02em",
+											color: workersData?.managerState.isRunning ? LIVE_GREEN : theme.palette.error.main,
+										}}
+									>
+										{workersData?.managerState.isRunning ? "Manager activo" : "Manager detenido"}
+									</Typography>
+								</Box>
+								<Tooltip title={workersData?.managerState.isRunning ? "Detener manager" : "Iniciar manager"}>
+									<IconButton
+										onClick={handleToggleManager}
+										disabled={actionLoading}
+										sx={{
+											transition: "background-color 200ms ease, transform 200ms ease",
+											"&:hover": { transform: "scale(1.05)" },
+										}}
+									>
 										{workersData?.managerState.isRunning ? <Pause size={20} /> : <Play size={20} />}
 									</IconButton>
 								</Tooltip>
@@ -885,43 +959,85 @@ const PjCatamarcaWorkersConfig: React.FC = () => {
 
 				{/* Quick Stats Cards */}
 				<Grid item xs={12} sm={6} md={3}>
-					<Card>
+					<Card
+						sx={{
+							border: 1,
+							borderColor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.32 : 0.2),
+							bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.08 : 0.04),
+							boxShadow: "none",
+							borderRadius: 1.5,
+							transition: "transform 200ms ease, border-color 200ms ease",
+							"&:hover": { transform: "translateY(-1px)", borderColor: alpha(BRAND_BLUE, 0.5) },
+						}}
+					>
 						<CardContent>
 							<Stack direction="row" justifyContent="space-between" alignItems="center">
 								<Box>
-									<Typography variant="h4">{summaryStats.processed}</Typography>
+									<Typography
+										variant="h4"
+										sx={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
+									>
+										{summaryStats.processed}
+									</Typography>
 									<Typography variant="body2" color="text.secondary">
-										Procesados Hoy
+										Procesados hoy
 									</Typography>
 								</Box>
-								<DocumentText1 size={32} color={theme.palette.primary.main} />
+								<DocumentText1 size={32} color={BRAND_BLUE} />
 							</Stack>
 						</CardContent>
 					</Card>
 				</Grid>
 				<Grid item xs={12} sm={6} md={3}>
-					<Card>
+					<Card
+						sx={{
+							border: 1,
+							borderColor: alpha(LIVE_GREEN, theme.palette.mode === "dark" ? 0.32 : 0.2),
+							bgcolor: alpha(LIVE_GREEN, theme.palette.mode === "dark" ? 0.08 : 0.04),
+							boxShadow: "none",
+							borderRadius: 1.5,
+							transition: "transform 200ms ease, border-color 200ms ease",
+							"&:hover": { transform: "translateY(-1px)", borderColor: alpha(LIVE_GREEN, 0.5) },
+						}}
+					>
 						<CardContent>
 							<Stack direction="row" justifyContent="space-between" alignItems="center">
 								<Box>
-									<Typography variant="h4" color="success.main">
+									<Typography
+										variant="h4"
+										sx={{ color: LIVE_GREEN, fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
+									>
 										{summaryStats.success}
 									</Typography>
 									<Typography variant="body2" color="text.secondary">
 										Exitosos
 									</Typography>
 								</Box>
-								<TickCircle size={32} color={theme.palette.success.main} />
+								<TickCircle size={32} color={LIVE_GREEN} />
 							</Stack>
 						</CardContent>
 					</Card>
 				</Grid>
 				<Grid item xs={12} sm={6} md={3}>
-					<Card>
+					<Card
+						sx={{
+							border: 1,
+							borderColor: alpha(theme.palette.error.main, theme.palette.mode === "dark" ? 0.32 : 0.2),
+							bgcolor: alpha(theme.palette.error.main, theme.palette.mode === "dark" ? 0.08 : 0.04),
+							boxShadow: "none",
+							borderRadius: 1.5,
+							transition: "transform 200ms ease, border-color 200ms ease",
+							"&:hover": { transform: "translateY(-1px)", borderColor: alpha(theme.palette.error.main, 0.5) },
+						}}
+					>
 						<CardContent>
 							<Stack direction="row" justifyContent="space-between" alignItems="center">
 								<Box>
-									<Typography variant="h4" color="error.main">
+									<Typography
+										variant="h4"
+										color="error.main"
+										sx={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
+									>
 										{summaryStats.errors}
 									</Typography>
 									<Typography variant="body2" color="text.secondary">
@@ -934,11 +1050,24 @@ const PjCatamarcaWorkersConfig: React.FC = () => {
 					</Card>
 				</Grid>
 				<Grid item xs={12} sm={6} md={3}>
-					<Card>
+					<Card
+						sx={{
+							border: 1,
+							borderColor: alpha(STALE_AMBER, theme.palette.mode === "dark" ? 0.32 : 0.2),
+							bgcolor: alpha(STALE_AMBER, theme.palette.mode === "dark" ? 0.08 : 0.04),
+							boxShadow: "none",
+							borderRadius: 1.5,
+							transition: "transform 200ms ease, border-color 200ms ease",
+							"&:hover": { transform: "translateY(-1px)", borderColor: alpha(STALE_AMBER, 0.5) },
+						}}
+					>
 						<CardContent>
 							<Stack direction="row" justifyContent="space-between" alignItems="center">
 								<Box>
-									<Typography variant="h4">
+									<Typography
+										variant="h4"
+										sx={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
+									>
 										{(workersData?.managerState.systemResources?.cpuUsage || 0) * 100 < 1
 											? "<1"
 											: ((workersData?.managerState.systemResources?.cpuUsage || 0) * 100).toFixed(0)}
@@ -948,7 +1077,7 @@ const PjCatamarcaWorkersConfig: React.FC = () => {
 										CPU / Memoria: {((workersData?.managerState.systemResources?.memoryUsage || 0) * 100).toFixed(0)}%
 									</Typography>
 								</Box>
-								<Cpu size={32} color={theme.palette.info.main} />
+								<Cpu size={32} color={STALE_AMBER} />
 							</Stack>
 						</CardContent>
 					</Card>

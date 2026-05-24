@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, alpha } from "@mui/material/styles";
 import {
 	Box,
 	Card,
@@ -30,6 +30,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { CausasPjSaltaService, CausaPjSalta } from "api/causasPjSalta";
 import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Warning2 } from "iconsax-react";
+import { STALE_AMBER, BRAND_BLUE } from "themes/dashboardTokens";
 
 // Helper para formatear fechas
 const formatDate = (date: { $date: string } | string | undefined): string => {
@@ -189,21 +190,37 @@ const CarpetasNoVerificadasPjSalta = () => {
 	};
 
 	return (
-		<MainCard title="Carpetas No Verificadas PJ Salta (App)">
+		<MainCard title="Carpetas no verificadas PJ Salta (App)">
 			{/* Header: Resultados */}
 			<Box sx={{ mb: 2 }}>
 				<Grid container spacing={2} alignItems="center">
 					<Grid item xs={12} md={4}>
-						<Card sx={{ backgroundColor: "warning.lighter", border: 1, borderColor: "warning.main" }}>
+						<Card
+							sx={{
+								backgroundColor: alpha(STALE_AMBER, theme.palette.mode === "dark" ? 0.16 : 0.1),
+								border: 1,
+								borderColor: alpha(STALE_AMBER, theme.palette.mode === "dark" ? 0.42 : 0.32),
+								boxShadow: "none",
+								transition: "border-color 200ms ease, background-color 200ms ease",
+							}}
+						>
 							<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
 								<Stack direction="row" justifyContent="space-between" alignItems="center">
 									<Stack direction="row" alignItems="center" spacing={1}>
-										<Warning2 size={20} color={theme.palette.warning.main} />
+										<Warning2 size={20} color={STALE_AMBER} />
 										<Typography variant="body2" color="text.secondary">
-											Pendientes de Verificación
+											Pendientes de verificación
 										</Typography>
 									</Stack>
-									<Typography variant="h4" color="warning.main" fontWeight="bold">
+									<Typography
+										variant="h4"
+										sx={{
+											color: STALE_AMBER,
+											fontWeight: 700,
+											fontVariantNumeric: "tabular-nums",
+											letterSpacing: "-0.01em",
+										}}
+									>
 										{totalCount.toLocaleString()}
 									</Typography>
 								</Stack>
@@ -337,20 +354,32 @@ const CarpetasNoVerificadasPjSalta = () => {
 					) : causas.length === 0 ? (
 						<Alert severity="success">No hay carpetas pendientes de verificación</Alert>
 					) : (
-						<Card>
+						<Card sx={{ borderRadius: 1.5, border: 1, borderColor: "divider", boxShadow: "none" }}>
 							<TableContainer>
-								<Table>
+								<Table
+									sx={{
+										"& thead th": {
+											fontSize: "0.7rem",
+											textTransform: "uppercase",
+											letterSpacing: "0.04em",
+											color: "text.secondary",
+											fontWeight: 600,
+											bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.06 : 0.035),
+										},
+										"& tbody td": { fontVariantNumeric: "tabular-nums" },
+									}}
+								>
 									<TableHead>
 										<TableRow>
 											<TableCell>Expediente</TableCell>
 											<TableCell>CUIJ</TableCell>
 											<TableCell>Source</TableCell>
 											<TableCell>Carátula</TableCell>
-											<TableCell>Fecha Creación</TableCell>
+											<TableCell>Fecha creación</TableCell>
 											<TableCell align="center">Verificado</TableCell>
 											<TableCell align="center">Válido</TableCell>
 											<TableCell align="center">Errores</TableCell>
-											<TableCell>Último Error</TableCell>
+											<TableCell>Último error</TableCell>
 										</TableRow>
 									</TableHead>
 									<TableBody>

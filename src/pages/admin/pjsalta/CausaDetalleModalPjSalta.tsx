@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, alpha } from "@mui/material/styles";
 import {
 	Dialog,
 	DialogTitle,
@@ -32,6 +32,7 @@ import {
 import { CausaPjSalta, CausasPjSaltaService, MovimientoPjSalta, IntervinientePjSalta, CausaRelacionada, UpdateHistoryEntry } from "api/causasPjSalta";
 import { CloseCircle, CloseSquare, TickCircle, ArrowDown2, ArrowUp2, Copy, Edit, Save2, Lock1, Repeat } from "iconsax-react";
 import { useSnackbar } from "notistack";
+import { BRAND_BLUE, STALE_AMBER } from "themes/dashboardTokens";
 
 interface CausaDetalleModalPjSaltaProps {
 	open: boolean;
@@ -283,11 +284,40 @@ const CausaDetalleModalPjSalta = ({ open, onClose, causa, onCausaUpdated }: Caus
 					<Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
 						<Box sx={{ flex: 1 }}>
 							<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-								<Typography variant="h5">
+								<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
 									Expediente: {causa.numero}/{causa.anio}
 								</Typography>
-								<Chip label="PJ Salta" color="primary" size="small" />
-								{causa.isPrivate && <Chip icon={<Lock1 size={14} />} label="Privado" color="warning" size="small" />}
+								<Chip
+									label="PJ Salta"
+									size="small"
+									sx={{
+										height: 22,
+										fontWeight: 600,
+										fontSize: "0.7rem",
+										letterSpacing: "0.02em",
+										bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.18 : 0.1),
+										color: BRAND_BLUE,
+										border: 1,
+										borderColor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.42 : 0.28),
+									}}
+								/>
+								{causa.isPrivate && (
+									<Chip
+										icon={<Lock1 size={14} />}
+										label="Privado"
+										size="small"
+										sx={{
+											height: 22,
+											fontWeight: 600,
+											fontSize: "0.7rem",
+											bgcolor: alpha(STALE_AMBER, theme.palette.mode === "dark" ? 0.18 : 0.12),
+											color: STALE_AMBER,
+											border: 1,
+											borderColor: alpha(STALE_AMBER, theme.palette.mode === "dark" ? 0.42 : 0.28),
+											"& .MuiChip-icon": { color: STALE_AMBER },
+										}}
+									/>
+								)}
 							</Stack>
 							<Typography variant="body2" color="textSecondary" sx={{ fontFamily: "monospace" }}>
 								CUIJ: {causa.cuij}
@@ -325,7 +355,7 @@ const CausaDetalleModalPjSalta = ({ open, onClose, causa, onCausaUpdated }: Caus
 						<Grid container spacing={2}>
 							{/* Información principal */}
 							<Grid item xs={12}>
-								<Typography variant="subtitle2" color="primary" gutterBottom>
+								<Typography variant="subtitle2" gutterBottom sx={{ color: BRAND_BLUE, fontWeight: 600, letterSpacing: "0.02em" }}>
 									Información Principal
 								</Typography>
 								<Divider sx={{ mb: 1.5 }} />
@@ -643,7 +673,7 @@ const CausaDetalleModalPjSalta = ({ open, onClose, causa, onCausaUpdated }: Caus
 
 							{/* Fechas */}
 							<Grid item xs={12} sx={{ mt: 1 }}>
-								<Typography variant="subtitle2" color="primary" gutterBottom>
+								<Typography variant="subtitle2" gutterBottom sx={{ color: BRAND_BLUE, fontWeight: 600, letterSpacing: "0.02em" }}>
 									Fechas
 								</Typography>
 								<Divider sx={{ mb: 1.5 }} />
@@ -727,7 +757,7 @@ const CausaDetalleModalPjSalta = ({ open, onClose, causa, onCausaUpdated }: Caus
 							{causa.updateStats && (
 								<>
 									<Grid item xs={12} sx={{ mt: 1 }}>
-										<Typography variant="subtitle2" color="primary" gutterBottom>
+										<Typography variant="subtitle2" gutterBottom sx={{ color: BRAND_BLUE, fontWeight: 600, letterSpacing: "0.02em" }}>
 											Estadísticas de Actualización
 										</Typography>
 										<Divider sx={{ mb: 1.5 }} />
@@ -766,7 +796,7 @@ const CausaDetalleModalPjSalta = ({ open, onClose, causa, onCausaUpdated }: Caus
 
 							{/* Vínculos */}
 							<Grid item xs={12} sx={{ mt: 1 }}>
-								<Typography variant="subtitle2" color="primary" gutterBottom>
+								<Typography variant="subtitle2" gutterBottom sx={{ color: BRAND_BLUE, fontWeight: 600, letterSpacing: "0.02em" }}>
 									Vínculos
 								</Typography>
 								<Divider sx={{ mb: 1.5 }} />
@@ -849,7 +879,7 @@ const CausaDetalleModalPjSalta = ({ open, onClose, causa, onCausaUpdated }: Caus
 							{causa.causasRelacionadas && causa.causasRelacionadas.length > 0 && (
 								<>
 									<Grid item xs={12} sx={{ mt: 1 }}>
-										<Typography variant="subtitle2" color="primary" gutterBottom>
+										<Typography variant="subtitle2" gutterBottom sx={{ color: BRAND_BLUE, fontWeight: 600, letterSpacing: "0.02em" }}>
 											Causas Relacionadas ({causa.causasRelacionadas.length})
 										</Typography>
 										<Divider sx={{ mb: 1.5 }} />
@@ -1199,9 +1229,11 @@ const CausaDetalleModalPjSalta = ({ open, onClose, causa, onCausaUpdated }: Caus
 							<Box
 								component="pre"
 								sx={{
-									backgroundColor: "background.default",
+									backgroundColor: (t) => (t.palette.mode === "dark" ? alpha(BRAND_BLUE, 0.04) : alpha(BRAND_BLUE, 0.025)),
+									border: 1,
+									borderColor: (t) => alpha(BRAND_BLUE, t.palette.mode === "dark" ? 0.18 : 0.12),
 									p: 2,
-									borderRadius: 1,
+									borderRadius: 1.5,
 									overflow: "auto",
 									fontSize: "0.75rem",
 									fontFamily: "monospace",

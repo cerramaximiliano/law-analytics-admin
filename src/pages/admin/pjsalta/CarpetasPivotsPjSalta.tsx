@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, alpha } from "@mui/material/styles";
 import {
 	Box,
 	Card,
@@ -34,6 +34,7 @@ import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { CausasPjSaltaService, CausaPjSalta, CausasPjSaltaResponse } from "api/causasPjSalta";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 import {
 	Refresh,
 	SearchNormal1,
@@ -106,10 +107,14 @@ const LinkedCausasRow = ({
 
 	return (
 		<TableRow>
-			<TableCell colSpan={7} sx={{ py: 0, backgroundColor: "grey.50" }}>
+			<TableCell colSpan={7} sx={{ py: 0, bgcolor: (t) => (t.palette.mode === "dark" ? alpha("#ffffff", 0.02) : alpha("#000000", 0.02)) }}>
 				<Collapse in={expanded} timeout="auto" unmountOnExit>
 					<Box sx={{ py: 2, px: 3 }}>
-						<Typography variant="subtitle2" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+						<Typography
+							variant="subtitle2"
+							gutterBottom
+							sx={{ display: "flex", alignItems: "center", gap: 1, color: BRAND_BLUE, fontWeight: 600 }}
+						>
 							<Layer size={18} />
 							Causas vinculadas ({pivot.pivotCausaIds?.length || 0})
 						</Typography>
@@ -369,21 +374,36 @@ const CarpetasPivotsPjSalta = () => {
 	};
 
 	return (
-		<MainCard title="Pivots PJ Salta - Múltiples Resultados">
+		<MainCard title="Pivots PJ Salta — múltiples resultados">
 			{/* Header: Resultados */}
 			<Box sx={{ mb: 2 }}>
 				<Grid container spacing={2} alignItems="center">
 					<Grid item xs={12} md={4}>
-						<Card sx={{ backgroundColor: "info.lighter", border: 1, borderColor: "info.main" }}>
+						<Card
+							sx={{
+								backgroundColor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.15 : 0.08),
+								border: 1,
+								borderColor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.4 : 0.28),
+								boxShadow: "none",
+							}}
+						>
 							<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
 								<Stack direction="row" justifyContent="space-between" alignItems="center">
 									<Stack direction="row" alignItems="center" spacing={1}>
-										<Layer size={20} color={theme.palette.info.main} />
+										<Layer size={20} color={BRAND_BLUE} />
 										<Typography variant="body2" color="text.secondary">
-											Pivots Pendientes
+											Pivots pendientes
 										</Typography>
 									</Stack>
-									<Typography variant="h4" color="info.main" fontWeight="bold">
+									<Typography
+										variant="h4"
+										sx={{
+											color: BRAND_BLUE,
+											fontWeight: 700,
+											fontVariantNumeric: "tabular-nums",
+											letterSpacing: "-0.01em",
+										}}
+									>
 										{totalCount.toLocaleString()}
 									</Typography>
 								</Stack>
@@ -511,16 +531,28 @@ const CarpetasPivotsPjSalta = () => {
 					) : pivots.length === 0 ? (
 						<Alert severity="success">No hay pivots pendientes de resolución</Alert>
 					) : (
-						<Card>
+						<Card sx={{ borderRadius: 1.5, border: 1, borderColor: "divider", boxShadow: "none" }}>
 							<TableContainer>
-								<Table>
+								<Table
+									sx={{
+										"& thead th": {
+											fontSize: "0.7rem",
+											textTransform: "uppercase",
+											letterSpacing: "0.04em",
+											color: "text.secondary",
+											fontWeight: 600,
+											bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.06 : 0.035),
+										},
+										"& tbody td": { fontVariantNumeric: "tabular-nums" },
+									}}
+								>
 									<TableHead>
 										<TableRow>
 											<TableCell width={50}></TableCell>
-											<TableCell>Búsqueda Original</TableCell>
+											<TableCell>Búsqueda original</TableCell>
 											<TableCell>Expediente</TableCell>
 											<TableCell align="center">Resultados</TableCell>
-											<TableCell>Fecha Creación</TableCell>
+											<TableCell>Fecha creación</TableCell>
 											<TableCell align="center">Estado</TableCell>
 										</TableRow>
 									</TableHead>
@@ -590,7 +622,16 @@ const CarpetasPivotsPjSalta = () => {
 				<DialogContent>
 					<Typography gutterBottom>¿Estás seguro de seleccionar esta causa?</Typography>
 					{confirmDialog.causa && (
-						<Box sx={{ mt: 2, p: 2, backgroundColor: "grey.50", borderRadius: 1 }}>
+						<Box
+							sx={{
+								mt: 2,
+								p: 2,
+								backgroundColor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.08 : 0.05),
+								borderRadius: 1,
+								border: 1,
+								borderColor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.24 : 0.18),
+							}}
+						>
 							<Typography variant="body2">
 								<strong>CUIJ:</strong> {confirmDialog.causa.cuij}
 							</Typography>
