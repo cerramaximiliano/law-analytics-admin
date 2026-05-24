@@ -3,6 +3,7 @@ import { Box, Typography, Stack, Tabs, Tab, Alert, Skeleton, useTheme } from "@m
 import { Setting2, Clock, Chart, MessageQuestion } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { CausasUpdateConfig, CausasUpdateService } from "api/causasUpdate";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 import CausasUpdateConfigTab from "./CausasUpdateConfigTab";
 import CausasUpdateHistoryTab from "./CausasUpdateHistoryTab";
 import CausasUpdateStatsTab from "./CausasUpdateStatsTab";
@@ -81,8 +82,12 @@ const CausasUpdateWorker: React.FC = () => {
 	return (
 		<Stack spacing={2}>
 			<Box>
-				<Typography variant="h4" gutterBottom>
-					Causas Update Worker
+				<Typography
+					variant="h4"
+					gutterBottom
+					sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+				>
+					Causas update worker
 				</Typography>
 				<Typography variant="body2" color="text.secondary">
 					Worker de actualización de movimientos de causas vinculadas a credenciales PJN (login SSO)
@@ -105,6 +110,8 @@ const CausasUpdateWorker: React.FC = () => {
 							minHeight: 64,
 							px: 2,
 						},
+						"& .MuiTabs-indicator": { width: 2.5, backgroundColor: BRAND_BLUE },
+						"& .Mui-selected": { color: `${BRAND_BLUE} !important` },
 					}}
 				>
 					{tabs.map((tab, i) => (
@@ -139,7 +146,9 @@ const CausasUpdateWorker: React.FC = () => {
 					</TabPanel>
 					<TabPanel value={activeTab} index={3}>
 						<Stack spacing={2}>
-							<Typography variant="h6">Guía del Worker de Actualización de Causas</Typography>
+							<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+								Guía del worker de actualización de causas
+							</Typography>
 							<Alert severity="info" variant="outlined">
 								<Typography variant="body2">
 									Este worker actualiza los movimientos de TODAS las causas vinculadas a credenciales de usuario mediante login SSO al

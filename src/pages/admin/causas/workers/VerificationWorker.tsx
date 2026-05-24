@@ -202,7 +202,9 @@ const VerificationWorker = () => {
 			{/* Header con acciones */}
 			<Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
 				<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-					<Typography variant="h5">Configuración del Worker de Verificación</Typography>
+					<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+						Configuración del worker de verificación
+					</Typography>
 					{managerStatus?.pjnSiteStatus && managerStatus.pjnSiteStatus.status !== "unknown" && (
 						<Tooltip
 							title={
@@ -521,9 +523,11 @@ const VerificationWorker = () => {
 					<Card variant="outlined">
 						<CardContent>
 							<Typography variant="subtitle2" color="text.secondary" gutterBottom>
-								Total Workers
+								Total workers
 							</Typography>
-							<Typography variant="h4">{configs.length}</Typography>
+							<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+								{configs.length}
+							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
@@ -531,9 +535,9 @@ const VerificationWorker = () => {
 					<Card variant="outlined">
 						<CardContent>
 							<Typography variant="subtitle2" color="text.secondary" gutterBottom>
-								Workers Activos
+								Workers activos
 							</Typography>
-							<Typography variant="h4" color="success.main">
+							<Typography variant="h4" color="success.main" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
 								{configs.filter((c) => c.enabled).length}
 							</Typography>
 						</CardContent>
@@ -543,9 +547,11 @@ const VerificationWorker = () => {
 					<Card variant="outlined">
 						<CardContent>
 							<Typography variant="subtitle2" color="text.secondary" gutterBottom>
-								Total Verificados
+								Total verificados
 							</Typography>
-							<Typography variant="h4">{configs.reduce((acc, c) => acc + (c.documents_verified || 0), 0).toLocaleString()}</Typography>
+							<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+								{configs.reduce((acc, c) => acc + (c.documents_verified || 0), 0).toLocaleString()}
+							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
@@ -553,9 +559,9 @@ const VerificationWorker = () => {
 					<Card variant="outlined">
 						<CardContent>
 							<Typography variant="subtitle2" color="text.secondary" gutterBottom>
-								Tasa de Éxito
+								Tasa de éxito
 							</Typography>
-							<Typography variant="h4" color="info.main">
+							<Typography variant="h4" color="info.main" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
 								{(() => {
 									const total = configs.reduce((acc, c) => acc + (c.documents_verified || 0), 0);
 									const valid = configs.reduce((acc, c) => acc + (c.documents_valid || 0), 0);

@@ -319,9 +319,11 @@ const ScrapingManagerPanel: React.FC = () => {
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
 							<Typography variant="caption" color="text.secondary">
-								Workers Habilitados
+								Workers habilitados
 							</Typography>
-							<Typography variant="h4">{managerStatus?.totalEnabled ?? "-"}</Typography>
+							<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+								{managerStatus?.totalEnabled ?? "-"}
+							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
@@ -329,9 +331,13 @@ const ScrapingManagerPanel: React.FC = () => {
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
 							<Typography variant="caption" color="text.secondary">
-								PM2 Online
+								PM2 online
 							</Typography>
-							<Typography variant="h4" color="success.main">
+							<Typography
+								variant="h4"
+								color="success.main"
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+							>
 								{managerStatus?.pm2?.online ?? "-"}
 							</Typography>
 						</CardContent>
@@ -341,7 +347,7 @@ const ScrapingManagerPanel: React.FC = () => {
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
 							<Typography variant="caption" color="text.secondary">
-								Última Reconciliación
+								Última reconciliación
 							</Typography>
 							<Typography variant="body2">{formatTimeAgo(managerStatus?.manager?.lastReconcile)}</Typography>
 						</CardContent>

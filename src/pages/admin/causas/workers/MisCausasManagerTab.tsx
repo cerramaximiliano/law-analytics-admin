@@ -81,8 +81,8 @@ const MisCausasManagerTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 			{/* Estado Global */}
 			<Card variant="outlined">
 				<CardContent>
-					<Typography variant="h6" gutterBottom>
-						Estado Global del Sistema
+					<Typography variant="h5" gutterBottom sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+						Estado global del sistema
 					</Typography>
 					<Grid container spacing={3}>
 						{/* Manager ON/OFF */}
@@ -172,7 +172,7 @@ const MisCausasManagerTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 			{/* Mensaje de Mantenimiento */}
 			<Card variant="outlined">
 				<CardContent>
-					<Typography variant="h6" gutterBottom>
+					<Typography variant="h5" gutterBottom sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
 						Mantenimiento
 					</Typography>
 					<Stack spacing={2}>
@@ -204,7 +204,9 @@ const MisCausasManagerTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<Setting2 size={20} />
-						<Typography variant="h6">Configuración del Manager</Typography>
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+							Configuración del manager
+						</Typography>
 					</Stack>
 					<Grid container spacing={2}>
 						<Grid item xs={12} sm={4}>

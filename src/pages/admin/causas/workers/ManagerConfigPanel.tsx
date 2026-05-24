@@ -229,7 +229,9 @@ const ManagerConfigPanel: React.FC = () => {
 				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
 					<Stack direction="row" spacing={1} alignItems="center">
 						<Setting2 size={20} color={theme.palette.primary.main} />
-						<Typography variant="h6">Configuracion del Manager de Workers</Typography>
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+							Configuración del manager de workers
+						</Typography>
 						{status && (
 							<Chip label={status.isRunning ? "Activo" : "Detenido"} size="small" color={status.isRunning ? "success" : "error"} />
 						)}
@@ -316,7 +318,7 @@ const ManagerConfigPanel: React.FC = () => {
 								<Grid item xs={6} sm={3}>
 									<Stack alignItems="center" sx={{ p: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 1 }}>
 										<People size={20} color={theme.palette.primary.main} />
-										<Typography variant="h5" fontWeight="bold">
+										<Typography variant="h4" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
 											{status?.totalWorkers || 0}
 										</Typography>
 										<Typography variant="caption" color="text.secondary">
@@ -327,7 +329,7 @@ const ManagerConfigPanel: React.FC = () => {
 								<Grid item xs={6} sm={3}>
 									<Stack alignItems="center" sx={{ p: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.05), borderRadius: 1 }}>
 										<Timer size={20} color={theme.palette.warning.main} />
-										<Typography variant="h5" fontWeight="bold">
+										<Typography variant="h4" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
 											{status?.totalPending || 0}
 										</Typography>
 										<Typography variant="caption" color="text.secondary">
@@ -338,7 +340,7 @@ const ManagerConfigPanel: React.FC = () => {
 								<Grid item xs={6} sm={3}>
 									<Stack alignItems="center" sx={{ p: 1.5, bgcolor: alpha(theme.palette.info.main, 0.05), borderRadius: 1 }}>
 										<Cpu size={20} color={theme.palette.info.main} />
-										<Typography variant="h5" fontWeight="bold">
+										<Typography variant="h4" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
 											{status?.systemResources ? formatPercent(status.systemResources.cpuUsage) : "-"}
 										</Typography>
 										<Typography variant="caption" color="text.secondary">
@@ -349,7 +351,7 @@ const ManagerConfigPanel: React.FC = () => {
 								<Grid item xs={6} sm={3}>
 									<Stack alignItems="center" sx={{ p: 1.5, bgcolor: alpha(theme.palette.secondary.main, 0.05), borderRadius: 1 }}>
 										<Cpu size={20} color={theme.palette.secondary.main} />
-										<Typography variant="h5" fontWeight="bold">
+										<Typography variant="h4" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
 											{status?.systemResources ? formatPercent(status.systemResources.memoryUsage) : "-"}
 										</Typography>
 										<Typography variant="caption" color="text.secondary">

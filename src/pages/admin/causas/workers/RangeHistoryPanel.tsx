@@ -182,7 +182,9 @@ const RangeHistoryPanel: React.FC = () => {
 							<Typography variant="caption" color="text.secondary">
 								Todos
 							</Typography>
-							<Typography variant="h5">{totalCount}</Typography>
+							<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+								{totalCount}
+							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
@@ -201,7 +203,9 @@ const RangeHistoryPanel: React.FC = () => {
 								<Typography variant="caption" color="text.secondary">
 									{f.label}
 								</Typography>
-								<Typography variant="h5">{fueroCounts[f.value] || 0}</Typography>
+								<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+									{fueroCounts[f.value] || 0}
+								</Typography>
 							</CardContent>
 						</Card>
 					</Grid>

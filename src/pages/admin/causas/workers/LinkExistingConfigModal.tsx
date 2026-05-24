@@ -125,8 +125,10 @@ const LinkExistingConfigModal: React.FC<LinkExistingConfigModalProps> = ({ open,
 
 	return (
 		<Dialog open={open} onClose={() => !linking && onClose()} maxWidth="md" fullWidth>
-			<DialogTitle>
-				<Typography variant="h4">Vincular Configuraciones Existentes</Typography>
+			<DialogTitle sx={{ pb: 1.5 }}>
+				<Typography variant="h4" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em" }}>
+					Vincular configuraciones existentes
+				</Typography>
 			</DialogTitle>
 			<DialogContent>
 				<Stack spacing={2} sx={{ mt: 1 }}>
@@ -182,16 +184,16 @@ const LinkExistingConfigModal: React.FC<LinkExistingConfigModalProps> = ({ open,
 													<TableCell>
 														<Chip label={config.fuero} size="small" />
 													</TableCell>
-													<TableCell>{config.year}</TableCell>
+													<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{config.year}</TableCell>
 													<TableCell>
-														<Typography variant="body2" fontSize="0.75rem">
+														<Typography variant="body2" fontSize="0.75rem" sx={{ fontVariantNumeric: "tabular-nums" }}>
 															{config.range_start?.toLocaleString()} - {config.range_end?.toLocaleString()}
 														</Typography>
 													</TableCell>
 													<TableCell sx={{ minWidth: 120 }}>
 														<Stack spacing={0.5}>
 															<LinearProgress variant="determinate" value={progress} sx={{ height: 6, borderRadius: 1 }} />
-															<Typography variant="caption" color="text.secondary">
+															<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 																{progress}% ({config.number?.toLocaleString()}/{config.range_end?.toLocaleString()})
 															</Typography>
 														</Stack>

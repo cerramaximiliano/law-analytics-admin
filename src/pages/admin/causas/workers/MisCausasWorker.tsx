@@ -4,6 +4,7 @@ import { Setting2, People, Chart, MessageQuestion, Refresh, Clock, RefreshSquare
 import { useSnackbar } from "notistack";
 import { ScrapingManagerConfig, ScrapingManagerService } from "api/scrapingManager";
 import { CausasUpdateConfig, CausasUpdateService } from "api/causasUpdate";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 import MisCausasManagerTab from "./MisCausasManagerTab";
 import MisCausasWorkersTab from "./MisCausasWorkersTab";
 import MisCausasStatsTab from "./MisCausasStatsTab";
@@ -107,13 +108,18 @@ const MisCausasWorker: React.FC = () => {
 			{/* Header */}
 			<Box display="flex" justifyContent="space-between" alignItems="center">
 				<Box>
-					<Typography variant="h4">Scraping Worker Manager</Typography>
+					<Typography
+						variant="h4"
+						sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+					>
+						Scraping worker manager
+					</Typography>
 					<Typography variant="body2" color="text.secondary">
 						Gestión de workers de scraping y actualización del sistema Mis Causas (PJN)
 					</Typography>
 				</Box>
 				<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchConfig}>
-					Recargar Config
+					Recargar config
 				</Button>
 			</Box>
 
@@ -151,6 +157,8 @@ const MisCausasWorker: React.FC = () => {
 							minHeight: 60,
 							px: 2,
 						},
+						"& .MuiTabs-indicator": { width: 2.5, backgroundColor: BRAND_BLUE },
+						"& .Mui-selected": { color: `${BRAND_BLUE} !important` },
 					}}
 				>
 					<Tab

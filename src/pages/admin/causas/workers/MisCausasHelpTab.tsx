@@ -50,7 +50,7 @@ const MisCausasHelpTab: React.FC = () => {
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<InfoCircle size={20} color={theme.palette.info.main} />
-						<Typography variant="h6">Descripción General del Sistema</Typography>
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>Descripción General del Sistema</Typography>
 					</Stack>
 
 					<Typography variant="body2" paragraph>
@@ -92,7 +92,7 @@ const MisCausasHelpTab: React.FC = () => {
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<Chip label="credentials-processor" size="small" color="primary" sx={{ fontFamily: "monospace" }} />
-						<Typography variant="h6">Verificación de Credenciales</Typography>
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>Verificación de Credenciales</Typography>
 					</Stack>
 
 					<Section title="Función">
@@ -157,7 +157,7 @@ const MisCausasHelpTab: React.FC = () => {
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<Chip label="mis-causas" size="small" color="secondary" sx={{ fontFamily: "monospace" }} />
-						<Typography variant="h6">Sync Completa (on-demand)</Typography>
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>Sync Completa (on-demand)</Typography>
 					</Stack>
 
 					<Section title="Función">
@@ -203,7 +203,7 @@ const MisCausasHelpTab: React.FC = () => {
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<Chip label="update-sync" size="small" color="info" sx={{ fontFamily: "monospace" }} />
-						<Typography variant="h6">Detección de Nuevas Causas</Typography>
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>Detección de Nuevas Causas</Typography>
 					</Stack>
 
 					<Section title="Función">
@@ -254,7 +254,7 @@ const MisCausasHelpTab: React.FC = () => {
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<Chip label="private-causas-update" size="small" color="warning" sx={{ fontFamily: "monospace" }} />
-						<Typography variant="h6">Actualización de Movimientos</Typography>
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>Actualización de Movimientos</Typography>
 					</Stack>
 
 					<Section title="Función">
@@ -308,7 +308,7 @@ Credenciales donde:
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<Chip label="causas-update" size="small" color="success" sx={{ fontFamily: "monospace" }} />
-						<Typography variant="h6">Actualización de Movimientos (Causas Update)</Typography>
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>Actualización de Movimientos (Causas Update)</Typography>
 					</Stack>
 
 					<Section title="Función">
@@ -420,7 +420,7 @@ Fase 2 (regular):
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<Folder2 size={20} color={theme.palette.info.main} />
-						<Typography variant="h6">Ciclo de vida: causas y carpetas</Typography>
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>Ciclo de vida: causas y carpetas</Typography>
 					</Stack>
 
 					<Section title="Conceptos clave">
@@ -618,7 +618,7 @@ Después:
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<CloseCircle size={20} color={theme.palette.error.main} />
-						<Typography variant="h6">Desvinculación de cuenta PJN</Typography>
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>Desvinculación de cuenta PJN</Typography>
 					</Stack>
 
 					<Alert severity="warning" variant="outlined" sx={{ mb: 2 }}>
@@ -714,7 +714,7 @@ Después:
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<MinusCirlce size={20} color={theme.palette.warning.main} />
-						<Typography variant="h6">
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
 							Exclusión manual de causas (<code>excludedCausas</code>)
 						</Typography>
 					</Stack>
@@ -860,7 +860,7 @@ if (existingCausa && excludedSet.has(existingCausa._id.toString())) {
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<Warning2 size={20} color={theme.palette.warning.main} />
-						<Typography variant="h6">
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
 							Causas no encontradas en el portal (<code>listRemoved</code>)
 						</Typography>
 					</Stack>
@@ -1055,7 +1055,7 @@ if (allScrapedKeys) {
 				<CardContent>
 					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
 						<Setting2 size={20} color={theme.palette.primary.main} />
-						<Typography variant="h6">Configuración del Manager</Typography>
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>Configuración del Manager</Typography>
 					</Stack>
 
 					<Section title="global.enabled vs global.serviceAvailable">

@@ -187,7 +187,12 @@ const CaptchaDatasetTab = () => {
 	return (
 		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 			<Box>
-				<Typography variant="h4">Dataset de Captcha (OCR propio)</Typography>
+				<Typography
+					variant="h4"
+					sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+				>
+					Dataset de captcha (OCR propio)
+				</Typography>
 				<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
 					Imágenes capturadas por los scraping workers cuando tienen <code>captureDataset.enabled=true</code>. Sirven como dataset
 					etiquetado para entrenar un OCR propio del captcha numérico del PJN. Las imágenes <strong>verified</strong> tienen el label
@@ -205,13 +210,19 @@ const CaptchaDatasetTab = () => {
 								<Typography variant="caption" color="text.secondary">
 									Total imágenes
 								</Typography>
-								<Typography variant="h5">{stats.total.toLocaleString("es-AR")}</Typography>
+								<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+									{stats.total.toLocaleString("es-AR")}
+								</Typography>
 							</Grid>
 							<Grid item xs={6} sm={3}>
 								<Typography variant="caption" color="text.secondary">
 									Verified (ground truth)
 								</Typography>
-								<Typography variant="h5" color="success.main">
+								<Typography
+									variant="h4"
+									color="success.main"
+									sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+								>
 									{stats.verified.toLocaleString("es-AR")}
 								</Typography>
 							</Grid>
@@ -219,7 +230,11 @@ const CaptchaDatasetTab = () => {
 								<Typography variant="caption" color="text.secondary">
 									Unverified
 								</Typography>
-								<Typography variant="h5" color="warning.main">
+								<Typography
+									variant="h4"
+									color="warning.main"
+									sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+								>
 									{stats.unverified.toLocaleString("es-AR")}
 								</Typography>
 							</Grid>
@@ -227,7 +242,9 @@ const CaptchaDatasetTab = () => {
 								<Typography variant="caption" color="text.secondary">
 									Espacio en disco
 								</Typography>
-								<Typography variant="h5">{stats.diskMB} MB</Typography>
+								<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+									{stats.diskMB} MB
+								</Typography>
 							</Grid>
 						</Grid>
 					</CardContent>

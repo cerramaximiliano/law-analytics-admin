@@ -37,6 +37,8 @@ import {
 import { Refresh, AddCircle, TickCircle, Warning2, SearchNormal1, Flash, CloseCircle, ArrowDown2, ArrowUp2, Ranking } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, ScrapingCoverageData, CoverageGap, WorkerConfig } from "api/workers";
+import { BRAND_BLUE, navActiveBg } from "themes/dashboardTokens";
+import { alpha } from "@mui/material/styles";
 import CreateConfigModal from "./CreateConfigModal";
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
@@ -626,17 +628,25 @@ const CoveragePanel: React.FC = () => {
 		<Stack spacing={2}>
 			{/* Tabs de modo */}
 			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-				<Tabs value={mode} onChange={(_, v) => setMode(v)} sx={{ minHeight: 36 }}>
-					<Tab value="fuero" label="Por Fuero" sx={{ minHeight: 36, py: 0.5 }} />
+				<Tabs
+					value={mode}
+					onChange={(_, v) => setMode(v)}
+					sx={{
+						minHeight: 36,
+						"& .MuiTabs-indicator": { height: 2.5, backgroundColor: BRAND_BLUE },
+						"& .Mui-selected": { color: `${BRAND_BLUE} !important` },
+					}}
+				>
+					<Tab value="fuero" label="Por fuero" sx={{ minHeight: 36, py: 0.5, textTransform: "none" }} />
 					<Tab
 						value="global"
 						label={
 							<Stack direction="row" alignItems="center" spacing={0.5}>
 								<Flash size={14} />
-								<span>Análisis Global</span>
+								<span>Análisis global</span>
 							</Stack>
 						}
-						sx={{ minHeight: 36, py: 0.5 }}
+						sx={{ minHeight: 36, py: 0.5, textTransform: "none" }}
 					/>
 				</Tabs>
 			</Box>
@@ -945,8 +955,11 @@ const CoveragePanel: React.FC = () => {
 				<Stack spacing={2}>
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
 						<Box>
-							<Typography variant="subtitle1" fontWeight={600}>
-								Análisis Global de Cobertura
+							<Typography
+								variant="h5"
+								sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+							>
+								Análisis global de cobertura
 							</Typography>
 							<Typography variant="body2" color="text.secondary">
 								Detecta todos los períodos sin cobertura y sugiere workers al 100% listos para reasignar.
@@ -1000,7 +1013,12 @@ const CoveragePanel: React.FC = () => {
 										<Typography variant="caption" color="text.secondary">
 											{label}
 										</Typography>
-										<Typography variant="h6" color={color} fontWeight="bold">
+										<Typography
+											variant="h4"
+											color={color}
+											fontWeight={600}
+											sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
+										>
 											{value}
 										</Typography>
 									</CardContent>

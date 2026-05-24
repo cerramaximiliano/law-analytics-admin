@@ -76,7 +76,12 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, color
 						{loading ? (
 							<Skeleton width={60} height={32} />
 						) : (
-							<Typography variant="h5" fontWeight="bold" color={color}>
+							<Typography
+								variant="h4"
+								fontWeight={600}
+								color={color}
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
+							>
 								{fmt(value)}
 							</Typography>
 						)}
@@ -345,8 +350,8 @@ const ScrapingStatsPanel: React.FC = () => {
 			<Box>
 				<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
 					<Box>
-						<Typography variant="h6" fontWeight="bold">
-							Métricas de Scraping
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+							Métricas de scraping
 						</Typography>
 						<Typography variant="body2" color="text.secondary">
 							Captchas y documentos procesados por todos los workers
@@ -462,8 +467,8 @@ const ScrapingStatsPanel: React.FC = () => {
 
 			{/* Chart */}
 			<Paper sx={{ p: 2.5, borderRadius: 2 }}>
-				<Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
-					{viewMode === "month" ? "Distribución por Día" : "Distribución por Hora"}
+				<Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2, letterSpacing: "-0.01em" }}>
+					{viewMode === "month" ? "Distribución por día" : "Distribución por hora"}
 				</Typography>
 				<Box sx={{ height: 320 }}>
 					{loading ? (
@@ -525,8 +530,8 @@ const ScrapingStatsPanel: React.FC = () => {
 
 			{/* Breakdown Table */}
 			<Box>
-				<Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1.5 }}>
-					{viewMode === "month" ? "Detalle por Día" : "Detalle por Fuero"}
+				<Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5, letterSpacing: "-0.01em" }}>
+					{viewMode === "month" ? "Detalle por día" : "Detalle por fuero"}
 				</Typography>
 				{loading ? (
 					<Skeleton variant="rectangular" height={120} sx={{ borderRadius: 2 }} />

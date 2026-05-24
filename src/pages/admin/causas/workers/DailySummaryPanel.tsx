@@ -93,7 +93,12 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, color
 							<Skeleton width={60} height={32} />
 						) : (
 							<Stack direction="row" spacing={1} alignItems="baseline">
-								<Typography variant="h5" fontWeight="bold" color={color}>
+								<Typography
+									variant="h4"
+									fontWeight={600}
+									color={color}
+									sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
+								>
 									{typeof value === "number" ? value.toLocaleString("es-AR") : value}
 								</Typography>
 								{trend && (
@@ -244,8 +249,11 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 				<Box>
 					<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
 						<Box>
-							<Typography variant="h6" fontWeight="bold">
-								Resumen Diario
+							<Typography
+								variant="h5"
+								sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+							>
+								Resumen diario
 							</Typography>
 							<Typography variant="body2" color="text.secondary">
 								Tendencias de rendimiento en los últimos {chartDays} días
@@ -275,7 +283,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 				<Grid container spacing={2}>
 					<Grid item xs={6} sm={4} md={2}>
 						<StatCard
-							title="Procesados Hoy"
+							title="Procesados hoy"
 							value={todaySummary?.totals.processed || 0}
 							icon={<Activity size={18} />}
 							color={theme.palette.primary.main}
@@ -307,7 +315,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 					</Grid>
 					<Grid item xs={6} sm={4} md={2}>
 						<StatCard
-							title="Tasa Éxito"
+							title="Tasa éxito"
 							value={`${(todaySummary?.totals.successRate || 0).toFixed(1)}%`}
 							icon={<Chart size={18} />}
 							color={theme.palette.info.main}
@@ -336,8 +344,8 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 
 				{/* Main Chart - Trend over time */}
 				<Paper sx={{ p: 2.5, borderRadius: 2 }}>
-					<Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
-						Tendencia de Procesamiento
+					<Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2, letterSpacing: "-0.01em" }}>
+						Tendencia de procesamiento
 					</Typography>
 					<Box sx={{ height: 350 }}>
 						{loading ? (
@@ -442,8 +450,8 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 				{/* By Fuero Table */}
 				{todaySummary?.byFuero && Object.keys(todaySummary.byFuero).length > 0 && (
 					<Paper sx={{ p: 2, borderRadius: 2 }}>
-						<Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
-							Rendimiento por Fuero (Hoy)
+						<Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2, letterSpacing: "-0.01em" }}>
+							Rendimiento por fuero (hoy)
 						</Typography>
 						<TableContainer>
 							<Table size="small">
@@ -516,8 +524,8 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 						<Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
 							<Stack direction="row" spacing={1} alignItems="center">
 								<ArrowSwapHorizontal size={20} color={theme.palette.primary.main} />
-								<Typography variant="subtitle1" fontWeight="bold">
-									Comparar Días
+								<Typography variant="subtitle1" fontWeight={600} sx={{ letterSpacing: "-0.01em" }}>
+									Comparar días
 								</Typography>
 							</Stack>
 							<Button variant={showComparison ? "contained" : "outlined"} size="small" onClick={() => setShowComparison(!showComparison)}>

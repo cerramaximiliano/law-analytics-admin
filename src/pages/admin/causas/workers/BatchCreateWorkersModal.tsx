@@ -164,8 +164,10 @@ const BatchCreateWorkersModal: React.FC<BatchCreateWorkersModalProps> = ({ open,
 
 	return (
 		<Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-			<DialogTitle>
-				<Typography variant="h4">Crear Workers en Lote</Typography>
+			<DialogTitle sx={{ pb: 1.5 }}>
+				<Typography variant="h4" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em" }}>
+					Crear workers en lote
+				</Typography>
 			</DialogTitle>
 			<DialogContent>
 				<Stack spacing={2.5} sx={{ mt: 2 }}>
@@ -299,8 +301,8 @@ const BatchCreateWorkersModal: React.FC<BatchCreateWorkersModalProps> = ({ open,
 														sx={{ width: 120 }}
 													/>
 												</TableCell>
-												<TableCell>{(range.end - range.start).toLocaleString()}</TableCell>
-												<TableCell>{index * delayIncrement}s</TableCell>
+												<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{(range.end - range.start).toLocaleString()}</TableCell>
+												<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{index * delayIncrement}s</TableCell>
 											</TableRow>
 										))}
 									</TableBody>

@@ -782,9 +782,14 @@ const CarpetasVerificadasApp = () => {
 									<Typography variant="body2" color="text.secondary">
 										Resultados
 									</Typography>
-									<Typography variant="h4" color="primary.main" fontWeight="bold">
+									<Typography
+										variant="h4"
+										color="primary.main"
+										fontWeight={600}
+										sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
+									>
 										{totalCount.toLocaleString()}
-										<Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
+										<Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5, fontVariantNumeric: "tabular-nums" }}>
 											/ {totalInDatabase.toLocaleString()}
 										</Typography>
 									</Typography>

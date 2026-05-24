@@ -521,9 +521,11 @@ const StuckDocumentsWorker = () => {
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5 }}>
 							<Typography variant="caption" color="text.secondary">
-								Docs Procesados
+								Docs procesados
 							</Typography>
-							<Typography variant="h5">{config?.documents_processed?.toLocaleString() || 0}</Typography>
+							<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+								{config?.documents_processed?.toLocaleString() || 0}
+							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
@@ -531,9 +533,9 @@ const StuckDocumentsWorker = () => {
 					<Card variant="outlined" sx={{ backgroundColor: alpha(theme.palette.success.main, 0.05) }}>
 						<CardContent sx={{ py: 1.5 }}>
 							<Typography variant="caption" color="text.secondary">
-								Docs Reparados
+								Docs reparados
 							</Typography>
-							<Typography variant="h5" color="success.main">
+							<Typography variant="h4" color="success.main" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
 								{config?.documents_fixed?.toLocaleString() || 0}
 							</Typography>
 						</CardContent>
@@ -543,9 +545,9 @@ const StuckDocumentsWorker = () => {
 					<Card variant="outlined" sx={{ backgroundColor: alpha(theme.palette.error.main, 0.05) }}>
 						<CardContent sx={{ py: 1.5 }}>
 							<Typography variant="caption" color="text.secondary">
-								Docs Fallidos
+								Docs fallidos
 							</Typography>
-							<Typography variant="h5" color="error.main">
+							<Typography variant="h4" color="error.main" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
 								{config?.documents_failed?.toLocaleString() || 0}
 							</Typography>
 						</CardContent>
@@ -555,9 +557,9 @@ const StuckDocumentsWorker = () => {
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5 }}>
 							<Typography variant="caption" color="text.secondary">
-								Tasa de Exito
+								Tasa de éxito
 							</Typography>
-							<Typography variant="h5" color="primary.main">
+							<Typography variant="h4" color="primary.main" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
 								{stats?.totals?.successRate || "0%"}
 							</Typography>
 						</CardContent>
@@ -998,7 +1000,9 @@ const StuckDocumentsWorker = () => {
 		<Stack spacing={2}>
 			{/* Header */}
 			<Box display="flex" justifyContent="space-between" alignItems="center">
-				<Typography variant="h5">Worker de Documentos Atorados</Typography>
+				<Typography variant="h4" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+					Worker de documentos atorados
+				</Typography>
 				<Stack direction="row" spacing={1}>
 					<Chip
 						label={stats?.worker?.health === "healthy" ? "Saludable" : stats?.worker?.health || "Desconocido"}

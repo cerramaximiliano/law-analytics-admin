@@ -215,7 +215,9 @@ const PjnHtmlDriftPanel: React.FC = () => {
 				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
 					<Stack direction="row" spacing={1} alignItems="center">
 						<Code1 size={20} color={theme.palette.primary.main} />
-						<Typography variant="h6">HTML Structure Drift</Typography>
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+							HTML structure drift
+						</Typography>
 						<Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
 							Monitor de cambios estructurales del portal PJN
 						</Typography>
@@ -253,7 +255,11 @@ const PjnHtmlDriftPanel: React.FC = () => {
 							<Typography variant="caption" color="text.secondary">
 								Drifts abiertos
 							</Typography>
-							<Typography variant="h4" color={openCritical > 0 ? "error" : "text.primary"}>
+							<Typography
+								variant="h4"
+								color={openCritical > 0 ? "error" : "text.primary"}
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+							>
 								{openCount}
 							</Typography>
 							<Typography variant="caption" color="text.secondary">
@@ -266,7 +272,9 @@ const PjnHtmlDriftPanel: React.FC = () => {
 							<Typography variant="caption" color="text.secondary">
 								Eventos en ventana
 							</Typography>
-							<Typography variant="h4">{totalInWindow}</Typography>
+							<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+								{totalInWindow}
+							</Typography>
 							<Typography variant="caption" color="text.secondary">
 								Últimos {sinceDays}d
 							</Typography>
@@ -290,7 +298,9 @@ const PjnHtmlDriftPanel: React.FC = () => {
 							<Typography variant="caption" color="text.secondary">
 								Avg spans (HTML)
 							</Typography>
-							<Typography variant="h4">{avgSpans ? avgSpans.toFixed(0) : "—"}</Typography>
+							<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+								{avgSpans ? avgSpans.toFixed(0) : "—"}
+							</Typography>
 							<Typography variant="caption" color="text.secondary">
 								{stats?.total ?? 0} fingerprints
 							</Typography>

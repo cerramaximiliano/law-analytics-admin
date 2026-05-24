@@ -121,7 +121,12 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, color
 						{loading ? (
 							<Skeleton width={80} height={40} />
 						) : (
-							<Typography variant="h4" fontWeight="bold" color={color}>
+							<Typography
+								variant="h3"
+								fontWeight={600}
+								color={color}
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
+							>
 								{value}
 							</Typography>
 						)}
@@ -504,8 +509,8 @@ const WorkerStatistics: React.FC = () => {
 				<Box>
 					<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
 						<Box>
-							<Typography variant="h5" fontWeight="bold">
-								Estadísticas de Workers
+							<Typography variant="h4" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+								Estadísticas de workers
 							</Typography>
 							<Typography variant="body2" color="text.secondary">
 								Monitoreo del rendimiento de los workers de actualización
@@ -776,7 +781,9 @@ const WorkerStatistics: React.FC = () => {
 						<Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
 							<Box sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.02), borderBottom: 1, borderColor: "divider" }}>
 								<Stack direction="row" justifyContent="space-between" alignItems="center">
-									<Typography variant="h6">Estadísticas por Fuero</Typography>
+									<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+										Estadísticas por fuero
+									</Typography>
 									<Typography variant="body2" color="text.secondary">
 										Fecha: {todayStats?.date || "-"}
 									</Typography>

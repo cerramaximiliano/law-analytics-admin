@@ -80,7 +80,9 @@ const CausasUpdateConfigTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 			<Card variant="outlined">
 				<CardContent>
 					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-						<Typography variant="h6">Worker General</Typography>
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+							Worker general
+						</Typography>
 						<Stack direction="row" spacing={1} alignItems="center">
 							{enabled ? (
 								<Chip
@@ -164,7 +166,7 @@ const CausasUpdateConfigTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 			{/* Thresholds */}
 			<Card variant="outlined">
 				<CardContent>
-					<Typography variant="h6" gutterBottom>
+					<Typography variant="h5" gutterBottom sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
 						Thresholds
 					</Typography>
 					<Grid container spacing={3}>
@@ -208,7 +210,7 @@ const CausasUpdateConfigTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 			{/* Concurrencia */}
 			<Card variant="outlined">
 				<CardContent>
-					<Typography variant="h6" gutterBottom>
+					<Typography variant="h5" gutterBottom sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
 						Concurrencia
 					</Typography>
 					<Grid container spacing={3}>
@@ -244,8 +246,8 @@ const CausasUpdateConfigTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 			{/* Resume */}
 			<Card variant="outlined">
 				<CardContent>
-					<Typography variant="h6" gutterBottom>
-						Resume Automático
+					<Typography variant="h5" gutterBottom sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+						Resume automático
 					</Typography>
 					<Grid container spacing={3}>
 						<Grid item xs={12} sm={6}>

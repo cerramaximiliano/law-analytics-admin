@@ -179,10 +179,12 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 
 	return (
 		<Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
-			<DialogTitle>
-				<Stack direction="row" alignItems="center" spacing={1}>
-					<Warning2 size={24} color={theme.palette.error.main} />
-					<Typography variant="h4">Workers Temporarios</Typography>
+			<DialogTitle sx={{ pb: 1.5 }}>
+				<Stack direction="row" alignItems="center" spacing={1.25}>
+					<Warning2 size={22} color={theme.palette.error.main} />
+					<Typography variant="h4" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em" }}>
+						Workers temporarios
+					</Typography>
 				</Stack>
 			</DialogTitle>
 			<DialogContent>
@@ -279,10 +281,12 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 													<Chip label={config.fuero || "N/A"} size="small" color="primary" variant="outlined" />
 												</TableCell>
 												<TableCell align="center">
-													<Typography variant="body2">{config.year}</Typography>
+													<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+														{config.year}
+													</Typography>
 												</TableCell>
 												<TableCell align="center">
-													<Typography variant="body2">
+													<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
 														{config.range_start?.toLocaleString()} - {config.range_end?.toLocaleString()}
 													</Typography>
 												</TableCell>
@@ -294,7 +298,7 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 															color={progress >= 100 ? "success" : "primary"}
 															sx={{ height: 6, borderRadius: 3 }}
 														/>
-														<Typography variant="caption" color="text.secondary">
+														<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 															{progress.toFixed(1)}%
 														</Typography>
 													</Box>

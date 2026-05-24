@@ -121,8 +121,10 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 
 	return (
 		<Dialog open={open} onClose={() => !loading && onClose()} maxWidth="md" fullWidth>
-			<DialogTitle>
-				<Typography variant="h4">Actualizar Rango - {worker.worker_id}</Typography>
+			<DialogTitle sx={{ pb: 1.5 }}>
+				<Typography variant="h4" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em" }}>
+					Actualizar rango — {worker.worker_id}
+				</Typography>
 			</DialogTitle>
 			<DialogContent>
 				<Stack spacing={2.5} sx={{ mt: 1 }}>
@@ -138,22 +140,22 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 					{/* Current state card */}
 					<Paper variant="outlined" sx={{ p: 2 }}>
 						<Typography variant="subtitle2" gutterBottom>
-							Estado Actual
+							Estado actual
 						</Typography>
 						<Stack direction="row" spacing={3} flexWrap="wrap">
 							<Box>
 								<Typography variant="caption" color="text.secondary">
 									Rango
 								</Typography>
-								<Typography variant="body2" fontWeight={600}>
+								<Typography variant="body2" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
 									{worker.range_start?.toLocaleString()} - {worker.range_end?.toLocaleString()}
 								</Typography>
 							</Box>
 							<Box>
 								<Typography variant="caption" color="text.secondary">
-									Número Actual
+									Número actual
 								</Typography>
-								<Typography variant="body2" fontWeight={600}>
+								<Typography variant="body2" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
 									{worker.number?.toLocaleString()}
 								</Typography>
 							</Box>
@@ -161,7 +163,7 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 								<Typography variant="caption" color="text.secondary">
 									Año
 								</Typography>
-								<Typography variant="body2" fontWeight={600}>
+								<Typography variant="body2" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
 									{worker.year}
 								</Typography>
 							</Box>
@@ -169,7 +171,7 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 								<Typography variant="caption" color="text.secondary">
 									Progreso
 								</Typography>
-								<Typography variant="body2" fontWeight={600}>
+								<Typography variant="body2" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
 									{getProgress()}%
 								</Typography>
 							</Box>
@@ -225,7 +227,7 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 					</Stack>
 
 					{rangeStart > 0 && rangeEnd > rangeStart && (
-						<Typography variant="caption" color="text.secondary">
+						<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 							Total expedientes en nuevo rango: {(rangeEnd - rangeStart).toLocaleString()}
 						</Typography>
 					)}

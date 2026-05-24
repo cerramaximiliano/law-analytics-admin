@@ -1,28 +1,26 @@
 import React from "react";
-import { Typography, Box, Alert } from "@mui/material";
+import { Typography, Box, Stack } from "@mui/material";
+import { DocumentText } from "iconsax-react";
+import EmptyStateCard from "components/EmptyStateCard";
 
 const ProcessingWorker = () => {
 	return (
-		<Box>
-			<Alert severity="warning" sx={{ mb: 2 }}>
-				<Typography variant="subtitle2" fontWeight="bold">
-					Worker de Procesamiento
+		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+			<EmptyStateCard
+				icon={<DocumentText />}
+				title="Worker de procesamiento"
+				subtitle="En desarrollo — se encargará del procesamiento automático de documentos judiciales."
+				iconColor="warning"
+			/>
+			<Box sx={{ maxWidth: 520, mx: "auto", textAlign: "center" }}>
+				<Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+					Próximamente podrás configurar
 				</Typography>
-				<Typography variant="body2">
-					Este worker está en desarrollo. Se encargará del procesamiento automático de documentos judiciales.
+				<Typography variant="body2" color="text.primary" sx={{ lineHeight: 1.8 }}>
+					Tipos de documentos a procesar · Reglas de extracción de datos · Prioridades de procesamiento · Límites de procesamiento por día
 				</Typography>
-			</Alert>
-
-			<Typography variant="body2" color="text.secondary">
-				Próximamente podrás configurar:
-			</Typography>
-			<ul>
-				<li>Tipos de documentos a procesar</li>
-				<li>Reglas de extracción de datos</li>
-				<li>Prioridades de procesamiento</li>
-				<li>Límites de procesamiento por día</li>
-			</ul>
-		</Box>
+			</Box>
+		</Stack>
 	);
 };
 

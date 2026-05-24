@@ -330,11 +330,14 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 			<DialogTitle
 				sx={{
 					flexShrink: 0,
+					pb: 1.5,
 				}}
 			>
-				<Stack direction="row" alignItems="center" spacing={1}>
-					<Setting2 size={24} />
-					<Typography variant="h6">Configuración Avanzada</Typography>
+				<Stack direction="row" alignItems="center" spacing={1.25}>
+					<Setting2 size={22} />
+					<Typography variant="h4" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em" }}>
+						Configuración avanzada
+					</Typography>
 				</Stack>
 			</DialogTitle>
 

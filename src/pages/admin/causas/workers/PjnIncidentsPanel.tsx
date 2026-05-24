@@ -103,7 +103,9 @@ const PjnIncidentsPanel: React.FC = () => {
 				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
 					<Stack direction="row" spacing={1} alignItems="center">
 						<Warning2 size={20} color={theme.palette.warning.main} />
-						<Typography variant="h6">Historial de mantenimientos del PJN</Typography>
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+							Historial de mantenimientos del PJN
+						</Typography>
 						{isInMaintenance && <Chip label="En curso" size="small" color="warning" icon={<Warning2 size={12} />} />}
 					</Stack>
 					<Stack direction="row" spacing={1} alignItems="center">
@@ -137,7 +139,7 @@ const PjnIncidentsPanel: React.FC = () => {
 								<Grid item xs={6} sm={3}>
 									<Stack alignItems="center" sx={{ p: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.05), borderRadius: 1 }}>
 										<Warning2 size={20} color={theme.palette.warning.main} />
-										<Typography variant="h5" fontWeight="bold">
+										<Typography variant="h4" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
 											{summary.closedCount}
 										</Typography>
 										<Typography variant="caption" color="text.secondary">
@@ -148,7 +150,7 @@ const PjnIncidentsPanel: React.FC = () => {
 								<Grid item xs={6} sm={3}>
 									<Stack alignItems="center" sx={{ p: 1.5, bgcolor: alpha(theme.palette.error.main, 0.05), borderRadius: 1 }}>
 										<Timer size={20} color={theme.palette.error.main} />
-										<Typography variant="h5" fontWeight="bold">
+										<Typography variant="h4" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
 											{formatDuration(summary.totalDurationMs)}
 										</Typography>
 										<Typography variant="caption" color="text.secondary">
@@ -159,7 +161,7 @@ const PjnIncidentsPanel: React.FC = () => {
 								<Grid item xs={6} sm={3}>
 									<Stack alignItems="center" sx={{ p: 1.5, bgcolor: alpha(theme.palette.info.main, 0.05), borderRadius: 1 }}>
 										<Clock size={20} color={theme.palette.info.main} />
-										<Typography variant="h5" fontWeight="bold">
+										<Typography variant="h4" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
 											{formatDuration(summary.avgDurationMs)}
 										</Typography>
 										<Typography variant="caption" color="text.secondary">
@@ -174,7 +176,7 @@ const PjnIncidentsPanel: React.FC = () => {
 										) : (
 											<TickCircle size={20} color={theme.palette.success.main} />
 										)}
-										<Typography variant="h5" fontWeight="bold">
+										<Typography variant="h4" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
 											{summary.openCount}
 										</Typography>
 										<Typography variant="caption" color="text.secondary">

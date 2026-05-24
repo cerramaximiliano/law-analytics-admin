@@ -68,6 +68,7 @@ import RangeHistoryPanel from "./RangeHistoryPanel";
 import FueroStatsPanel from "./FueroStatsPanel";
 import CoveragePanel from "./CoveragePanel";
 import ScrapingStatsPanel from "./ScrapingStatsPanel";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 
 // Enums para el worker de scraping
 const FUERO_OPTIONS = [
@@ -568,6 +569,8 @@ const ScrapingWorker = () => {
 							minHeight: 64,
 							px: 2,
 						},
+						"& .MuiTabs-indicator": { width: 2.5, backgroundColor: BRAND_BLUE },
+						"& .Mui-selected": { color: `${BRAND_BLUE} !important` },
 					}}
 				>
 					{(
@@ -634,7 +637,9 @@ const ScrapingWorker = () => {
 								gap={2}
 							>
 								<Stack direction="row" alignItems="center" spacing={1}>
-									<Typography variant="h5">Configuración del Worker de Scraping</Typography>
+									<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+										Configuración del worker de scraping
+									</Typography>
 									<Tooltip title="Ver información">
 										<IconButton size="small" color="info" onClick={(e) => setInfoAnchorEl(e.currentTarget)}>
 											<InfoCircle size={20} />

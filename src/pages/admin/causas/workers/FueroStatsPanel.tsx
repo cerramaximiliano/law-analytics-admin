@@ -91,7 +91,7 @@ const SummaryCard: React.FC<{
 						{loading ? (
 							<Skeleton width={80} height={28} />
 						) : (
-							<Typography variant="h5" fontWeight={600}>
+							<Typography variant="h4" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
 								{value}
 							</Typography>
 						)}
@@ -150,7 +150,12 @@ const FueroStatsPanel: React.FC = () => {
 			{/* Header */}
 			<Box display="flex" justifyContent="space-between" alignItems="center">
 				<Box>
-					<Typography variant="h5">Distribución por Fuero</Typography>
+					<Typography
+						variant="h4"
+						sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+					>
+						Distribución por fuero
+					</Typography>
 					<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
 						Causas válidas, sentencias y escritos procesados por fuero judicial
 					</Typography>

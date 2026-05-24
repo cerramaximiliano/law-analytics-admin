@@ -77,7 +77,12 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, color
 						{loading ? (
 							<Skeleton width={60} height={32} />
 						) : (
-							<Typography variant="h5" fontWeight="bold" color={color}>
+							<Typography
+								variant="h4"
+								fontWeight={600}
+								color={color}
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
+							>
 								{typeof value === "number" ? value.toLocaleString("es-AR") : value}
 							</Typography>
 						)}
@@ -196,8 +201,11 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 			<Box>
 				<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
 					<Box>
-						<Typography variant="h6" fontWeight="bold">
-							Estadísticas por Hora
+						<Typography
+							variant="h5"
+							sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+						>
+							Estadísticas por hora
 						</Typography>
 						<Typography variant="body2" color="text.secondary">
 							Rendimiento de los workers en las últimas 24 horas
@@ -214,7 +222,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 							<ToggleButton value="current" sx={{ px: 2 }}>
 								<Stack direction="row" spacing={1} alignItems="center">
 									<Clock size={16} />
-									<span>Hora Actual</span>
+									<span>Hora actual</span>
 								</Stack>
 							</ToggleButton>
 						</ToggleButtonGroup>
@@ -233,8 +241,8 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 					<Stack spacing={2}>
 						<Stack direction="row" spacing={1} alignItems="center">
 							<Clock size={20} color={theme.palette.primary.main} />
-							<Typography variant="subtitle1" fontWeight="bold">
-								Hora Actual ({currentHourData.hour}:00 - {currentHourData.hour + 1}:00)
+							<Typography variant="subtitle1" fontWeight={600} sx={{ letterSpacing: "-0.01em" }}>
+								Hora actual ({currentHourData.hour}:00 - {currentHourData.hour + 1}:00)
 							</Typography>
 							<Chip label={currentHourData.date} size="small" variant="outlined" />
 						</Stack>
@@ -333,7 +341,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 					<Grid container spacing={2}>
 						<Grid item xs={6} sm={2.4}>
 							<StatCard
-								title="Procesados Hoy"
+								title="Procesados hoy"
 								value={todaySummary?.totals.processed || 0}
 								icon={<Activity size={18} />}
 								color={theme.palette.primary.main}
@@ -369,7 +377,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 						</Grid>
 						<Grid item xs={6} sm={2.4}>
 							<StatCard
-								title="Horas Activas"
+								title="Horas activas"
 								value={todaySummary?.totals.activeHours || 0}
 								subtitle={`de ${currentHour + 1} transcurridas`}
 								icon={<Timer size={18} />}
@@ -381,8 +389,8 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 
 					{/* Hourly Chart */}
 					<Paper sx={{ p: 2.5, borderRadius: 2 }}>
-						<Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
-							Distribución por Hora
+						<Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2, letterSpacing: "-0.01em" }}>
+							Distribución por hora
 						</Typography>
 						<Box sx={{ height: 350 }}>
 							{loading ? (
@@ -469,8 +477,8 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 					<Stack spacing={2}>
 						<Stack direction="row" spacing={1} alignItems="center">
 							<Activity size={20} color={theme.palette.warning.main} />
-							<Typography variant="subtitle1" fontWeight="bold">
-								Eventos de Escalado (últimas 24h)
+							<Typography variant="subtitle1" fontWeight={600} sx={{ letterSpacing: "-0.01em" }}>
+								Eventos de escalado (últimas 24h)
 							</Typography>
 							<Chip label={scalingEvents.length} size="small" color="warning" variant="outlined" />
 						</Stack>

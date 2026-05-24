@@ -249,9 +249,11 @@ const CausasUpdateHistoryTab: React.FC = () => {
 			<Dialog open={!!selectedRun} onClose={() => setSelectedRun(null)} maxWidth="md" fullWidth>
 				{selectedRun && (
 					<>
-						<DialogTitle>
+						<DialogTitle sx={{ pb: 1.5 }}>
 							<Stack direction="row" spacing={1} alignItems="center">
-								<Typography variant="h6">Detalle del Run</Typography>
+								<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+									Detalle del run
+								</Typography>
 								<Chip
 									label={statusLabels[selectedRun.status] || selectedRun.status}
 									size="small"

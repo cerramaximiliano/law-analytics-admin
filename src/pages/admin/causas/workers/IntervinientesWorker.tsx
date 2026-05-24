@@ -982,9 +982,9 @@ const IntervinientesWorker = () => {
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5 }}>
 							<Typography variant="caption" color="text.secondary">
-								Docs Procesados
+								Docs procesados
 							</Typography>
-							<Typography variant="h5">
+							<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
 								{stats?.global?.documentsProcessed?.toLocaleString() || 0}
 								{eligibleCount?.total ? (
 									<Typography component="span" variant="body2" color="text.secondary">
@@ -1010,9 +1010,13 @@ const IntervinientesWorker = () => {
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5 }}>
 							<Typography variant="caption" color="text.secondary">
-								Intervinientes Extraídos
+								Intervinientes extraídos
 							</Typography>
-							<Typography variant="h5" color="info.main">
+							<Typography
+								variant="h4"
+								color="info.main"
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+							>
 								{intervinientesStats?.totalIntervinientes?.toLocaleString() || 0}
 							</Typography>
 							<Stack direction="row" spacing={1} sx={{ mt: 1 }}>
@@ -1026,9 +1030,13 @@ const IntervinientesWorker = () => {
 					<Card variant="outlined">
 						<CardContent sx={{ py: 1.5 }}>
 							<Typography variant="caption" color="text.secondary">
-								Contactos Sincronizados
+								Contactos sincronizados
 							</Typography>
-							<Typography variant="h5" color="success.main">
+							<Typography
+								variant="h4"
+								color="success.main"
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+							>
 								{stats?.global?.contactsSynced?.toLocaleString() || 0}
 							</Typography>
 						</CardContent>
@@ -1040,7 +1048,11 @@ const IntervinientesWorker = () => {
 							<Typography variant="caption" color="text.secondary">
 								Errores
 							</Typography>
-							<Typography variant="h5" color="error.main">
+							<Typography
+								variant="h4"
+								color="error.main"
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+							>
 								{stats?.global?.documentsError?.toLocaleString() || 0}
 							</Typography>
 						</CardContent>

@@ -114,7 +114,9 @@ const ZeroMovementsProtectionPanel: React.FC = () => {
 				<Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} sx={{ mb: 2 }}>
 					<Stack direction="row" alignItems="center" spacing={1}>
 						<ShieldCross size={20} color={theme.palette.warning.main} />
-						<Typography variant="h6">Protección anti-eliminación activada</Typography>
+						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+							Protección anti-eliminación activada
+						</Typography>
 						<Chip label={`${total} causas`} size="small" color="warning" />
 					</Stack>
 					<Stack direction="row" alignItems="center" spacing={1}>

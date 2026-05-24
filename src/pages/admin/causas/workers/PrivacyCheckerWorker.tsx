@@ -163,7 +163,9 @@ const PrivacyCheckerWorker = () => {
 						<Stack direction="row" spacing={1.5} alignItems="center">
 							<Lock1 size={24} color={theme.palette.primary.main} variant="Bold" />
 							<Box>
-								<Typography variant="h5">Privacy Checker</Typography>
+								<Typography variant="h4" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+									Privacy checker
+								</Typography>
 								<Typography variant="body2" color="text.secondary">
 									Monitorea causas PJN individuales que pasaron a estado reservado
 								</Typography>
@@ -188,7 +190,9 @@ const PrivacyCheckerWorker = () => {
 								<Stack direction="row" alignItems="center" spacing={1}>
 									<Lock1 size={20} color={theme.palette.error.main} variant="Bold" />
 									<Box>
-										<Typography variant="h4">{live?.currentlyPrivate ?? 0}</Typography>
+										<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+											{live?.currentlyPrivate ?? 0}
+										</Typography>
 										<Typography variant="caption" color="text.secondary">
 											Reservadas
 										</Typography>
@@ -201,7 +205,9 @@ const PrivacyCheckerWorker = () => {
 								<Stack direction="row" alignItems="center" spacing={1}>
 									<Warning2 size={20} color={theme.palette.warning.main} variant="Bold" />
 									<Box>
-										<Typography variant="h4">{live?.pendingPromotion ?? 0}</Typography>
+										<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+											{live?.pendingPromotion ?? 0}
+										</Typography>
 										<Typography variant="caption" color="text.secondary">
 											Pendientes próximo ciclo
 										</Typography>
@@ -212,7 +218,9 @@ const PrivacyCheckerWorker = () => {
 						<Grid item xs={6} md={3}>
 							<Card variant="outlined" sx={{ p: 2 }}>
 								<Stack>
-									<Typography variant="h4">{live?.currentlyTracked ?? 0}</Typography>
+									<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+										{live?.currentlyTracked ?? 0}
+									</Typography>
 									<Typography variant="caption" color="text.secondary">
 										En tracking (counter &gt; 0)
 									</Typography>
