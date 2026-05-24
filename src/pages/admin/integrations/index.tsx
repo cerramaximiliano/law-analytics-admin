@@ -20,7 +20,7 @@ import { Code1, Copy, Refresh } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 
-import IntegrationsConfigService, { IntegrationsConfigDoc } from "api/integrationsConfig";
+import IntegrationsConfigService, { IntegrationsConfigDoc, ReleaseStage, ServiceKey } from "api/integrationsConfig";
 import { ScrapingManagerService, ScrapingManagerConfig } from "api/scrapingManager";
 import ScbaManagerService, { ScbaManagerConfig } from "api/scbaManager";
 
@@ -96,29 +96,46 @@ const IntegrationsPage: React.FC = () => {
 
 	// ---- Handlers ----
 
-	const handleGroupsToggle = async (enabled: boolean) => {
+	// Handler genérico para cualquier service de IntegrationsConfig — devuelve
+	// fn que el card invoca según el tipo de cambio. Reusa el setIntegrations
+	// y respeta el shape de respuesta (siempre devuelve el doc completo).
+	const updateIntegrationService = async (
+		serviceKey: ServiceKey,
+		payload: { enabled?: boolean; maintenanceMessage?: string | null; releaseStage?: ReleaseStage },
+		successMsg: string,
+	) => {
 		setIntegrations((s) => ({ ...s, saving: true }));
 		try {
-			const res = await IntegrationsConfigService.updateService("groups", { enabled });
+			const res = await IntegrationsConfigService.updateService(serviceKey, payload);
 			setIntegrations({ loading: false, saving: false, error: null, data: res.data });
-			enqueueSnackbar(enabled ? "Grupos habilitado" : "Grupos deshabilitado", { variant: "success" });
+			enqueueSnackbar(successMsg, { variant: "success" });
 		} catch (err: any) {
-			enqueueSnackbar(err?.response?.data?.message || "Error al actualizar Grupos", { variant: "error" });
+			enqueueSnackbar(err?.response?.data?.message || `Error al actualizar ${serviceKey}`, { variant: "error" });
 			setIntegrations((s) => ({ ...s, saving: false }));
 		}
 	};
 
-	const handleGroupsMessage = async (message: string | null) => {
-		setIntegrations((s) => ({ ...s, saving: true }));
-		try {
-			const res = await IntegrationsConfigService.updateService("groups", { maintenanceMessage: message });
-			setIntegrations({ loading: false, saving: false, error: null, data: res.data });
-			enqueueSnackbar("Mensaje de mantenimiento actualizado", { variant: "success" });
-		} catch (err: any) {
-			enqueueSnackbar(err?.response?.data?.message || "Error al guardar mensaje", { variant: "error" });
-			setIntegrations((s) => ({ ...s, saving: false }));
-		}
-	};
+	// Grupos (sin releaseStage)
+	const handleGroupsToggle = (enabled: boolean) =>
+		updateIntegrationService("groups", { enabled }, enabled ? "Grupos habilitado" : "Grupos deshabilitado");
+	const handleGroupsMessage = (message: string | null) =>
+		updateIntegrationService("groups", { maintenanceMessage: message }, "Mensaje de mantenimiento actualizado");
+
+	// Claude.ai
+	const handleClaudeAiToggle = (enabled: boolean) =>
+		updateIntegrationService("claudeAi", { enabled }, enabled ? "Claude.ai habilitado" : "Claude.ai deshabilitado");
+	const handleClaudeAiMessage = (message: string | null) =>
+		updateIntegrationService("claudeAi", { maintenanceMessage: message }, "Mensaje Claude.ai actualizado");
+	const handleClaudeAiReleaseStage = (stage: ReleaseStage) =>
+		updateIntegrationService("claudeAi", { releaseStage: stage }, `Claude.ai marcado como ${stage}`);
+
+	// ChatGPT
+	const handleChatGptToggle = (enabled: boolean) =>
+		updateIntegrationService("chatGpt", { enabled }, enabled ? "ChatGPT habilitado" : "ChatGPT deshabilitado");
+	const handleChatGptMessage = (message: string | null) =>
+		updateIntegrationService("chatGpt", { maintenanceMessage: message }, "Mensaje ChatGPT actualizado");
+	const handleChatGptReleaseStage = (stage: ReleaseStage) =>
+		updateIntegrationService("chatGpt", { releaseStage: stage }, `ChatGPT marcado como ${stage}`);
 
 	const handlePjnToggle = async (enabled: boolean) => {
 		if (!pjn.data) return;
@@ -184,6 +201,8 @@ const IntegrationsPage: React.FC = () => {
 	// ---- Render helpers ----
 
 	const groupsFlag = integrations.data?.services.groups;
+	const claudeAiFlag = integrations.data?.services.claudeAi;
+	const chatGptFlag = integrations.data?.services.chatGpt;
 	const pjnGlobal = pjn.data?.global;
 	const scbaSettings = scba.data?.config;
 
@@ -280,13 +299,65 @@ const IntegrationsPage: React.FC = () => {
 						/>
 					) : null}
 				</Grid>
+
+				{/* Claude.ai — MCP integration */}
+				<Grid item xs={12} md={6}>
+					{integrations.loading ? (
+						<Skeleton variant="rounded" height={180} />
+					) : integrations.error ? (
+						<Alert severity="error">No se pudo cargar Claude.ai: {integrations.error}</Alert>
+					) : (
+						<ServiceAvailabilityCard
+							title="Claude.ai (MCP)"
+							description="Conector MCP para que usuarios accedan a Law Analytics desde Claude.ai"
+							enabled={claudeAiFlag?.enabled ?? false}
+							maintenanceMessage={claudeAiFlag?.maintenanceMessage ?? null}
+							releaseStage={(claudeAiFlag?.releaseStage as ReleaseStage) ?? "beta"}
+							saving={integrations.saving}
+							editableMessage
+							updatedAt={claudeAiFlag?.updatedAt}
+							updatedBy={claudeAiFlag?.updatedBy}
+							helperOff="La integración Claude.ai está oculta del landing público (banner MCP, FAQ, página /integraciones/claude-ai)."
+							onToggle={handleClaudeAiToggle}
+							onSaveMessage={handleClaudeAiMessage}
+							onChangeReleaseStage={handleClaudeAiReleaseStage}
+						/>
+					)}
+				</Grid>
+
+				{/* ChatGPT — MCP integration (placeholder UI hasta que tenga vista propia) */}
+				<Grid item xs={12} md={6}>
+					{integrations.loading ? (
+						<Skeleton variant="rounded" height={180} />
+					) : integrations.error ? (
+						<Alert severity="error">No se pudo cargar ChatGPT: {integrations.error}</Alert>
+					) : (
+						<ServiceAvailabilityCard
+							title="ChatGPT (MCP)"
+							description="Conector MCP futuro para ChatGPT — flag preparado, UI pública pendiente"
+							enabled={chatGptFlag?.enabled ?? false}
+							maintenanceMessage={chatGptFlag?.maintenanceMessage ?? null}
+							releaseStage={(chatGptFlag?.releaseStage as ReleaseStage) ?? "beta"}
+							saving={integrations.saving}
+							editableMessage
+							updatedAt={chatGptFlag?.updatedAt}
+							updatedBy={chatGptFlag?.updatedBy}
+							helperOff="ChatGPT MCP no expone UI pública todavía. Habilitarlo acá solo flippea el flag — la vista de /integraciones/chatgpt está pendiente."
+							onToggle={handleChatGptToggle}
+							onSaveMessage={handleChatGptMessage}
+							onChangeReleaseStage={handleChatGptReleaseStage}
+						/>
+					)}
+				</Grid>
 			</Grid>
 
 			<Box sx={{ mt: 4 }}>
 				<Stack spacing={1}>
 					<Typography variant="caption" color="text.secondary">
-						Las configuraciones de PJN y SCBA viven en sus propios servicios (pjn-api, mev-api) y se sincronizan via API. La configuración
-						de Grupos se almacena en <code>integrationsconfigs</code> en la base de datos principal.
+						Las configuraciones de PJN y SCBA viven en sus propios servicios (pjn-api, mev-api) y se sincronizan via API. Grupos,
+						Claude.ai y ChatGPT se almacenan en <code>integrationsconfigs</code> en la base de datos principal. Las integraciones AI
+						(Claude/ChatGPT) tienen además un <em>estado de lanzamiento</em> (Beta / Estable) que controla cómo se renderea el chip y el
+						CTA en la landing pública.
 					</Typography>
 				</Stack>
 			</Box>

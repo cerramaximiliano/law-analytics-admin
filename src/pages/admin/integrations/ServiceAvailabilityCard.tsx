@@ -1,7 +1,23 @@
 import React, { useState } from "react";
-import { Alert, Box, Card, CardContent, Stack, Switch, TextField, Typography, alpha, useTheme } from "@mui/material";
+import {
+	Alert,
+	Box,
+	Card,
+	CardContent,
+	Stack,
+	Switch,
+	TextField,
+	ToggleButton,
+	ToggleButtonGroup,
+	Tooltip,
+	Typography,
+	alpha,
+	useTheme,
+} from "@mui/material";
 import { CloseCircle, InfoCircle, TickCircle } from "iconsax-react";
 import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
+
+export type ReleaseStage = "beta" | "stable";
 
 export interface ServiceAvailabilityCardProps {
 	title: string;
@@ -15,6 +31,9 @@ export interface ServiceAvailabilityCardProps {
 	updatedAt?: string | null;
 	updatedBy?: string | null;
 	helperOff?: string;
+	/** Si se provee, renderiza un toggle Beta/Estable. Solo para integraciones AI. */
+	releaseStage?: ReleaseStage;
+	onChangeReleaseStage?: (stage: ReleaseStage) => void;
 	onToggle: (enabled: boolean) => void;
 	onSaveMessage?: (message: string | null) => void;
 }
@@ -39,6 +58,8 @@ const ServiceAvailabilityCard: React.FC<ServiceAvailabilityCardProps> = ({
 	updatedAt,
 	updatedBy,
 	helperOff,
+	releaseStage,
+	onChangeReleaseStage,
 	onToggle,
 	onSaveMessage,
 }) => {
@@ -155,6 +176,36 @@ const ServiceAvailabilityCard: React.FC<ServiceAvailabilityCardProps> = ({
 							disabled={disabled || saving}
 						/>
 					</Box>
+				)}
+
+				{releaseStage && onChangeReleaseStage && (
+					<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mt: 2 }}>
+						<Tooltip
+							title="Beta = chip 'Beta cerrada' + CTA 'Solicitar acceso'. Estable = chip 'Disponible' + CTA directo de conexión."
+							placement="top"
+							arrow
+						>
+							<Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+								Estado de lanzamiento
+							</Typography>
+						</Tooltip>
+						<ToggleButtonGroup
+							value={releaseStage}
+							exclusive
+							size="small"
+							onChange={(_, val) => {
+								if (val && val !== releaseStage) onChangeReleaseStage(val as ReleaseStage);
+							}}
+							disabled={disabled || saving}
+						>
+							<ToggleButton value="beta" sx={{ py: 0.25, px: 1.5, fontSize: "0.7rem", fontWeight: 600 }}>
+								Beta
+							</ToggleButton>
+							<ToggleButton value="stable" sx={{ py: 0.25, px: 1.5, fontSize: "0.7rem", fontWeight: 600 }}>
+								Estable
+							</ToggleButton>
+						</ToggleButtonGroup>
+					</Stack>
 				)}
 
 				{(ts || updatedBy) && (
