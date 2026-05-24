@@ -51,6 +51,7 @@ import {
 	ArrowDown2,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
+import { BRAND_BLUE, headerBorder, LIVE_GREEN, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
 import ScbaManagerService, {
 	ScbaManagerConfig,
 	ScbaManagerSettings,
@@ -64,6 +65,16 @@ import ScbaManagerService, {
 	SCBA_WORKER_LABELS,
 	SCBA_WORKER_DESCRIPTIONS,
 } from "api/scbaManager";
+
+const tableHeadSx = (t: any) => ({
+	"& .MuiTableCell-head": {
+		backgroundColor: alpha(BRAND_BLUE, t.palette.mode === "dark" ? 0.08 : 0.04),
+		borderBottom: `1px solid ${headerBorder(t.palette.mode === "dark")}`,
+		fontWeight: 600,
+		letterSpacing: "0.01em",
+		textTransform: "none" as const,
+	},
+});
 
 // Días de la semana (locale es-AR, Domingo=0)
 const WEEK_DAYS: { value: number; short: string; label: string }[] = [
@@ -376,17 +387,39 @@ const ScbaManagerTab: React.FC = () => {
 
 	// ========== Render ==========
 	return (
-		<Stack spacing={2}>
+		<Stack spacing={2} sx={{ ...LIVE_PULSE_KEYFRAMES }}>
 			{/* Header */}
 			<Box display="flex" justifyContent="space-between" alignItems="center">
-				<Typography variant="h5">Configuración SCBA Manager</Typography>
+				<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
+					Configuración SCBA manager
+				</Typography>
 				<Stack direction="row" spacing={1}>
-					<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchConfig}>
+					<Button
+						variant="outlined"
+						size="small"
+						startIcon={<Refresh size={16} />}
+						onClick={fetchConfig}
+						sx={{
+							textTransform: "none",
+							transition: "transform 200ms ease",
+							"&:active": { transform: "scale(0.97)" },
+						}}
+					>
 						Actualizar
 					</Button>
 					{hasChanges && (
-						<Button variant="contained" size="small" onClick={handleSave} disabled={saving}>
-							{saving ? <CircularProgress size={18} /> : "Guardar Cambios"}
+						<Button
+							variant="contained"
+							size="small"
+							onClick={handleSave}
+							disabled={saving}
+							sx={{
+								textTransform: "none",
+								transition: "transform 200ms ease",
+								"&:active": { transform: "scale(0.97)" },
+							}}
+						>
+							{saving ? <CircularProgress size={18} /> : "Guardar cambios"}
 						</Button>
 					)}
 				</Stack>
@@ -444,7 +477,7 @@ const ScbaManagerTab: React.FC = () => {
 								<Timer1 size={20} color={theme.palette.info.main} />
 								<Typography variant="subtitle2">Ciclos</Typography>
 							</Stack>
-							<Typography variant="h6" sx={{ mt: 0.5 }}>
+							<Typography variant="h6" sx={{ mt: 0.5, fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
 								{state?.cycleCount ?? 0}
 							</Typography>
 						</CardContent>
@@ -458,7 +491,7 @@ const ScbaManagerTab: React.FC = () => {
 								<Refresh size={20} color={theme.palette.info.main} />
 								<Typography variant="subtitle2">Último ciclo</Typography>
 							</Stack>
-							<Typography variant="body2" sx={{ mt: 0.5 }}>
+							<Typography variant="body2" sx={{ mt: 0.5, fontVariantNumeric: "tabular-nums" }}>
 								{state?.lastCycleAt ? formatElapsed(state.lastCycleAt) : "Nunca"}
 							</Typography>
 						</CardContent>
@@ -495,8 +528,8 @@ const ScbaManagerTab: React.FC = () => {
 						{/* Servicio */}
 						<Card variant="outlined">
 							<CardContent>
-								<Typography variant="subtitle1" fontWeight={600} gutterBottom>
-									Disponibilidad del Servicio
+								<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
+									Disponibilidad del servicio
 								</Typography>
 								<Grid container spacing={2} alignItems="center">
 									<Grid item xs={12} sm={4}>
@@ -529,8 +562,8 @@ const ScbaManagerTab: React.FC = () => {
 						{/* Manager Settings */}
 						<Card variant="outlined">
 							<CardContent>
-								<Typography variant="subtitle1" fontWeight={600} gutterBottom>
-									Configuración del Manager
+								<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
+									Configuración del manager
 								</Typography>
 								<Grid container spacing={2}>
 									<Grid item xs={6} sm={3}>
@@ -582,8 +615,8 @@ const ScbaManagerTab: React.FC = () => {
 						{/* Horario global */}
 						<Card variant="outlined">
 							<CardContent>
-								<Typography variant="subtitle1" fontWeight={600} gutterBottom>
-									Horario Global
+								<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
+									Horario global
 								</Typography>
 								<Grid container spacing={2}>
 									<Grid item xs={6} sm={3}>
@@ -623,12 +656,31 @@ const ScbaManagerTab: React.FC = () => {
 
 						{/* Actions */}
 						<Stack direction="row" spacing={2} justifyContent="flex-end">
-							<Button variant="outlined" color="error" size="small" onClick={() => setResetDialogOpen(true)}>
-								Resetear a Defaults
+							<Button
+								variant="outlined"
+								color="error"
+								size="small"
+								onClick={() => setResetDialogOpen(true)}
+								sx={{
+									textTransform: "none",
+									transition: "transform 200ms ease",
+									"&:active": { transform: "scale(0.97)" },
+								}}
+							>
+								Resetear a defaults
 							</Button>
 							{hasChanges && (
-								<Button variant="contained" onClick={handleSave} disabled={saving}>
-									{saving ? <CircularProgress size={20} /> : "Guardar Cambios"}
+								<Button
+									variant="contained"
+									onClick={handleSave}
+									disabled={saving}
+									sx={{
+										textTransform: "none",
+										transition: "transform 200ms ease",
+										"&:active": { transform: "scale(0.97)" },
+									}}
+								>
+									{saving ? <CircularProgress size={20} /> : "Guardar cambios"}
 								</Button>
 							)}
 						</Stack>
@@ -689,11 +741,46 @@ const ScbaManagerTab: React.FC = () => {
 										{wState && (
 											<Grid container spacing={1} sx={{ mb: 2 }}>
 												<Grid item xs={4}>
-													<Box sx={{ textAlign: "center", p: 1, bgcolor: alpha(theme.palette.info.main, 0.08), borderRadius: 1 }}>
+													<Box
+														sx={{
+															textAlign: "center",
+															p: 1,
+															bgcolor: alpha(wState.activeInstances > 0 ? LIVE_GREEN : theme.palette.info.main, 0.08),
+															borderRadius: 1,
+															position: "relative",
+														}}
+													>
+														{wState.activeInstances > 0 && (
+															<Box
+																sx={{
+																	position: "absolute",
+																	top: 6,
+																	right: 6,
+																	width: 8,
+																	height: 8,
+																	borderRadius: "50%",
+																	bgcolor: LIVE_GREEN,
+																	boxShadow: `0 0 0 4px ${alpha(LIVE_GREEN, 0.25)}`,
+																	"&::before": {
+																		content: '""',
+																		position: "absolute",
+																		inset: 0,
+																		borderRadius: "50%",
+																		bgcolor: LIVE_GREEN,
+																		animation: "la-live-pulse 2.4s ease-out infinite",
+																	},
+																}}
+															/>
+														)}
 														<Typography variant="caption" color="text.secondary">
 															Instancias activas
 														</Typography>
-														<Typography variant="h6">{wState.activeInstances}</Typography>
+														<Typography
+															variant="h6"
+															sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", color: wState.activeInstances > 0 ? LIVE_GREEN : "inherit" }}
+														>
+															{wState.activeInstances}
+														</Typography>
 													</Box>
 												</Grid>
 												<Grid item xs={4}>
@@ -701,7 +788,9 @@ const ScbaManagerTab: React.FC = () => {
 														<Typography variant="caption" color="text.secondary">
 															Pendientes
 														</Typography>
-														<Typography variant="h6">{wState.pendingDocuments}</Typography>
+														<Typography variant="h6" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+															{wState.pendingDocuments}
+														</Typography>
 													</Box>
 												</Grid>
 												<Grid item xs={4}>
@@ -709,7 +798,9 @@ const ScbaManagerTab: React.FC = () => {
 														<Typography variant="caption" color="text.secondary">
 															Procesados (ciclo)
 														</Typography>
-														<Typography variant="h6">{wState.processedThisCycle}</Typography>
+														<Typography variant="h6" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+															{wState.processedThisCycle}
+														</Typography>
 													</Box>
 												</Grid>
 											</Grid>
@@ -975,8 +1066,17 @@ const ScbaManagerTab: React.FC = () => {
 						})}
 						{hasChanges && (
 							<Box display="flex" justifyContent="flex-end">
-								<Button variant="contained" onClick={handleSave} disabled={saving}>
-									{saving ? <CircularProgress size={20} /> : "Guardar Cambios"}
+								<Button
+									variant="contained"
+									onClick={handleSave}
+									disabled={saving}
+									sx={{
+										textTransform: "none",
+										transition: "transform 200ms ease",
+										"&:active": { transform: "scale(0.97)" },
+									}}
+								>
+									{saving ? <CircularProgress size={20} /> : "Guardar cambios"}
 								</Button>
 							</Box>
 						)}
@@ -987,8 +1087,8 @@ const ScbaManagerTab: React.FC = () => {
 				<SubTabPanel value={subTab} index={2}>
 					<Stack spacing={2}>
 						<Box display="flex" justifyContent="space-between" alignItems="center">
-							<Typography variant="subtitle1" fontWeight={600}>
-								Alertas Activas
+							<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }}>
+								Alertas activas
 							</Typography>
 							<Button size="small" startIcon={<Refresh size={16} />} onClick={fetchAlerts}>
 								Actualizar
@@ -999,7 +1099,7 @@ const ScbaManagerTab: React.FC = () => {
 						) : (
 							<TableContainer component={Paper} variant="outlined">
 								<Table size="small">
-									<TableHead>
+									<TableHead sx={tableHeadSx}>
 										<TableRow>
 											<TableCell>Tipo</TableCell>
 											<TableCell>Worker</TableCell>
@@ -1020,7 +1120,7 @@ const ScbaManagerTab: React.FC = () => {
 												</TableCell>
 												<TableCell>{alert.workerType || "-"}</TableCell>
 												<TableCell>{alert.message}</TableCell>
-												<TableCell>{formatDate(alert.timestamp)}</TableCell>
+												<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{formatDate(alert.timestamp)}</TableCell>
 												<TableCell align="center">
 													<Button size="small" variant="outlined" onClick={() => handleAcknowledgeAlert(idx)}>
 														Reconocer
@@ -1039,8 +1139,8 @@ const ScbaManagerTab: React.FC = () => {
 				<SubTabPanel value={subTab} index={3}>
 					<Stack spacing={2}>
 						<Box display="flex" justifyContent="space-between" alignItems="center">
-							<Typography variant="subtitle1" fontWeight={600}>
-								Estadísticas Diarias (últimos 7 días)
+							<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }}>
+								Estadísticas diarias (últimos 7 días)
 							</Typography>
 							<Button size="small" startIcon={<Refresh size={16} />} onClick={fetchStats}>
 								Actualizar
@@ -1051,7 +1151,7 @@ const ScbaManagerTab: React.FC = () => {
 						) : (
 							<TableContainer component={Paper} variant="outlined">
 								<Table size="small">
-									<TableHead>
+									<TableHead sx={tableHeadSx}>
 										<TableRow>
 											<TableCell>Fecha</TableCell>
 											{SCBA_WORKER_TYPES.map((t) => {
@@ -1093,26 +1193,39 @@ const ScbaManagerTab: React.FC = () => {
 									<TableBody>
 										{stats.map((day) => (
 											<TableRow key={day.date}>
-												<TableCell>{day.date}</TableCell>
+												<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{day.date}</TableCell>
 												{SCBA_WORKER_TYPES.map((t) => {
 													const w: any = day.byWorker?.[t] || { processed: 0, success: 0, errors: 0 };
 													const hasMovs = t === "initialScraping" || t === "update";
 													const isAudit = t === "listAudit";
 													return (
 														<React.Fragment key={t}>
-															<TableCell align="right" sx={{ borderLeft: 1, borderColor: "divider" }}>
+															<TableCell align="right" sx={{ borderLeft: 1, borderColor: "divider", fontVariantNumeric: "tabular-nums" }}>
 																{w.processed ?? 0}
 															</TableCell>
-															<TableCell align="right">{w.success ?? 0}</TableCell>
-															<TableCell align="right" sx={{ color: (w.errors ?? 0) > 0 ? "error.main" : "inherit" }}>
+															<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+																{w.success ?? 0}
+															</TableCell>
+															<TableCell
+																align="right"
+																sx={{ color: (w.errors ?? 0) > 0 ? "error.main" : "inherit", fontVariantNumeric: "tabular-nums" }}
+															>
 																{w.errors ?? 0}
 															</TableCell>
-															{hasMovs && <TableCell align="right">{w.movimientosFound ?? 0}</TableCell>}
-															{isAudit && <TableCell align="right">{w.causasRemoved ?? 0}</TableCell>}
+															{hasMovs && (
+																<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+																	{w.movimientosFound ?? 0}
+																</TableCell>
+															)}
+															{isAudit && (
+																<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+																	{w.causasRemoved ?? 0}
+																</TableCell>
+															)}
 														</React.Fragment>
 													);
 												})}
-												<TableCell align="right" sx={{ borderLeft: 1, borderColor: "divider" }}>
+												<TableCell align="right" sx={{ borderLeft: 1, borderColor: "divider", fontVariantNumeric: "tabular-nums" }}>
 													{day.cyclesRun}
 												</TableCell>
 											</TableRow>
@@ -1128,8 +1241,8 @@ const ScbaManagerTab: React.FC = () => {
 				<SubTabPanel value={subTab} index={4}>
 					<Stack spacing={2}>
 						<Alert severity="info" icon={<InfoCircle size={20} />}>
-							<Typography variant="subtitle2" gutterBottom>
-								Arquitectura SCBA Workers
+							<Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+								Arquitectura SCBA workers
 							</Typography>
 							<Typography variant="body2">
 								El sistema SCBA sincroniza expedientes desde el portal de notificaciones de la Suprema Corte de Buenos Aires (
@@ -1142,7 +1255,7 @@ const ScbaManagerTab: React.FC = () => {
 
 						<Card variant="outlined">
 							<CardContent>
-								<Typography variant="subtitle1" fontWeight={600} gutterBottom>
+								<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
 									Pipeline de los 4 workers
 								</Typography>
 								<Stack spacing={1.5}>
@@ -1168,7 +1281,7 @@ const ScbaManagerTab: React.FC = () => {
 
 						<Card variant="outlined">
 							<CardContent>
-								<Typography variant="subtitle1" fontWeight={600} gutterBottom>
+								<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
 									Ciclo de vida de una causa
 								</Typography>
 								<Typography variant="body2" component="div">
@@ -1200,7 +1313,7 @@ const ScbaManagerTab: React.FC = () => {
 
 						<Card variant="outlined">
 							<CardContent>
-								<Typography variant="subtitle1" fontWeight={600} gutterBottom>
+								<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
 									Manejo de credenciales inválidas
 								</Typography>
 								<Typography variant="body2" color="text.secondary">
@@ -1216,12 +1329,12 @@ const ScbaManagerTab: React.FC = () => {
 
 						<Card variant="outlined">
 							<CardContent>
-								<Typography variant="subtitle1" fontWeight={600} gutterBottom>
+								<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
 									Tipos de entrada en updateHistory
 								</Typography>
 								<TableContainer>
 									<Table size="small">
-										<TableHead>
+										<TableHead sx={tableHeadSx}>
 											<TableRow>
 												<TableCell>updateType</TableCell>
 												<TableCell>source</TableCell>
@@ -1259,12 +1372,12 @@ const ScbaManagerTab: React.FC = () => {
 
 						<Card variant="outlined">
 							<CardContent>
-								<Typography variant="subtitle1" fontWeight={600} gutterBottom>
+								<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
 									Emails transaccionales
 								</Typography>
 								<TableContainer>
 									<Table size="small">
-										<TableHead>
+										<TableHead sx={tableHeadSx}>
 											<TableRow>
 												<TableCell>templateName</TableCell>
 												<TableCell>Cuándo se envía</TableCell>
@@ -1297,8 +1410,8 @@ const ScbaManagerTab: React.FC = () => {
 						{config && (
 							<Card variant="outlined">
 								<CardContent>
-									<Typography variant="subtitle1" fontWeight={600} gutterBottom>
-										Documento de Configuración
+									<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
+										Documento de configuración
 									</Typography>
 									<Grid container spacing={1}>
 										<Grid item xs={6} sm={3}>
@@ -1319,13 +1432,17 @@ const ScbaManagerTab: React.FC = () => {
 											<Typography variant="caption" color="text.secondary">
 												Creado
 											</Typography>
-											<Typography variant="body2">{formatDate(config.createdAt)}</Typography>
+											<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+												{formatDate(config.createdAt)}
+											</Typography>
 										</Grid>
 										<Grid item xs={6} sm={3}>
 											<Typography variant="caption" color="text.secondary">
 												Actualizado
 											</Typography>
-											<Typography variant="body2">{formatDate(config.updatedAt)}</Typography>
+											<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+												{formatDate(config.updatedAt)}
+											</Typography>
 										</Grid>
 									</Grid>
 								</CardContent>
@@ -1339,7 +1456,7 @@ const ScbaManagerTab: React.FC = () => {
 					<Stack spacing={3}>
 						<Stack direction="row" justifyContent="space-between" alignItems="center">
 							<Box>
-								<Typography variant="subtitle1" fontWeight={600}>
+								<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }}>
 									Credenciales SCBA
 								</Typography>
 								<Typography variant="caption" color="text.secondary">
@@ -1361,7 +1478,7 @@ const ScbaManagerTab: React.FC = () => {
 						) : (
 							<TableContainer component={Paper} variant="outlined">
 								<Table size="small">
-									<TableHead>
+									<TableHead sx={tableHeadSx}>
 										<TableRow>
 											<TableCell>Usuario</TableCell>
 											<TableCell align="center">Estado</TableCell>

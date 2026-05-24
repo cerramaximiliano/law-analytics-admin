@@ -22,6 +22,7 @@ import {
 	Tab,
 } from "@mui/material";
 import { Notification, TaskSquare, CalendarRemove, TableDocument, Message, NotificationBing, TickCircle } from "iconsax-react";
+import { alpha } from "@mui/material/styles";
 import dayjs from "utils/dayjs-config";
 import notificationMonitoringService from "services/notificationMonitoringService";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -29,6 +30,17 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers";
 import { useSelector } from "store";
 import { RootState } from "store";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+
+const tableHeadSx = (theme: any) => ({
+	"& .MuiTableCell-head": {
+		backgroundColor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.08 : 0.04),
+		borderBottom: `1px solid ${headerBorder(theme.palette.mode === "dark")}`,
+		fontWeight: 600,
+		letterSpacing: "0.01em",
+		textTransform: "none" as const,
+	},
+});
 
 const NotificationHistory = () => {
 	// Estado para el tab activo
@@ -279,9 +291,11 @@ const NotificationHistory = () => {
 								<Notification size={24} />
 							</Avatar>
 							<Box>
-								<Typography variant="h6">{alertsTotalCount}</Typography>
+								<Typography variant="h6" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+									{alertsTotalCount}
+								</Typography>
 								<Typography variant="body2" color="text.secondary">
-									Alertas Entregadas
+									Alertas entregadas
 								</Typography>
 							</Box>
 						</Box>
@@ -294,9 +308,11 @@ const NotificationHistory = () => {
 								<TickCircle size={24} />
 							</Avatar>
 							<Box>
-								<Typography variant="h6">{alerts.filter((a) => a.read).length}</Typography>
+								<Typography variant="h6" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+									{alerts.filter((a) => a.read).length}
+								</Typography>
 								<Typography variant="body2" color="text.secondary">
-									Alertas Leídas
+									Alertas leídas
 								</Typography>
 							</Box>
 						</Box>
@@ -309,9 +325,11 @@ const NotificationHistory = () => {
 								<NotificationBing size={24} />
 							</Avatar>
 							<Box>
-								<Typography variant="h6">{alerts.filter((a) => !a.read).length}</Typography>
+								<Typography variant="h6" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+									{alerts.filter((a) => !a.read).length}
+								</Typography>
 								<Typography variant="body2" color="text.secondary">
-									Alertas No Leídas
+									Alertas no leídas
 								</Typography>
 							</Box>
 						</Box>
@@ -324,9 +342,11 @@ const NotificationHistory = () => {
 								<TableDocument size={24} />
 							</Avatar>
 							<Box>
-								<Typography variant="h6">{history.pagination?.total || 0}</Typography>
+								<Typography variant="h6" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+									{history.pagination?.total || 0}
+								</Typography>
 								<Typography variant="body2" color="text.secondary">
-									Total Notificaciones
+									Total notificaciones
 								</Typography>
 							</Box>
 						</Box>
@@ -343,8 +363,13 @@ const NotificationHistory = () => {
 					indicatorColor="primary"
 					sx={{ borderBottom: 1, borderColor: "divider" }}
 				>
-					<Tab label="Alertas Entregadas" icon={<Notification size={20} />} iconPosition="start" sx={{ minHeight: 48 }} />
-					<Tab label="Historial de Notificaciones" icon={<NotificationBing size={20} />} iconPosition="start" sx={{ minHeight: 48 }} />
+					<Tab label="Alertas entregadas" icon={<Notification size={20} />} iconPosition="start" sx={{ minHeight: 48, textTransform: "none" }} />
+					<Tab
+						label="Historial de notificaciones"
+						icon={<NotificationBing size={20} />}
+						iconPosition="start"
+						sx={{ minHeight: 48, textTransform: "none" }}
+					/>
 				</Tabs>
 			</Paper>
 
@@ -418,7 +443,7 @@ const NotificationHistory = () => {
 					) : (
 						<TableContainer component={Paper} elevation={1}>
 							<Table>
-								<TableHead>
+								<TableHead sx={tableHeadSx}>
 									<TableRow>
 										<TableCell>Tipo</TableCell>
 										<TableCell>Título</TableCell>
@@ -481,7 +506,9 @@ const NotificationHistory = () => {
 														</Box>
 													</Box>
 												</TableCell>
-												<TableCell>{alert.deliveredAt ? formatDate(alert.deliveredAt) : formatDate(alert.createdAt)}</TableCell>
+												<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>
+													{alert.deliveredAt ? formatDate(alert.deliveredAt) : formatDate(alert.createdAt)}
+												</TableCell>
 												<TableCell align="center">
 													<Box sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}>
 														<Chip label="Entregada" color="success" size="small" />
@@ -595,7 +622,7 @@ const NotificationHistory = () => {
 					) : (
 						<TableContainer component={Paper} elevation={1}>
 							<Table>
-								<TableHead>
+								<TableHead sx={tableHeadSx}>
 									<TableRow>
 										<TableCell>Tipo</TableCell>
 										<TableCell>Descripción</TableCell>
@@ -640,7 +667,9 @@ const NotificationHistory = () => {
 															</Box>
 														</Box>
 													</TableCell>
-													<TableCell>{item.notification?.sentAt ? formatDate(item.notification.sentAt) : "Sin fecha"}</TableCell>
+													<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>
+														{item.notification?.sentAt ? formatDate(item.notification.sentAt) : "Sin fecha"}
+													</TableCell>
 													<TableCell>
 														<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
 															{getMethodIcon(item.notification?.method || "browser")}

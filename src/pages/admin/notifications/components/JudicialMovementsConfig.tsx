@@ -351,9 +351,11 @@ const JudicialMovementsConfig: React.FC = () => {
 							<Stack direction="row" spacing={2} alignItems="center">
 								<NotificationBing size={32} color={theme.palette.info.main} />
 								<Box>
-									<Typography variant="h5">Configuración de Notificaciones de Movimientos Judiciales</Typography>
+									<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
+										Configuración de notificaciones de movimientos judiciales
+									</Typography>
 									<Typography variant="body2" color="text.secondary">
-										Gestiona cómo y cuándo se envían las notificaciones de movimientos
+										Gestiona cómo y cuándo se envían las notificaciones de movimientos.
 									</Typography>
 								</Box>
 							</Stack>
@@ -379,13 +381,21 @@ const JudicialMovementsConfig: React.FC = () => {
 
 					{/* Statistics */}
 					{config.stats && (
-						<Box sx={{ mt: 3, p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
+						<Box
+							sx={(theme) => ({
+								mt: 3,
+								p: 2,
+								bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.50",
+								borderRadius: 1,
+								border: `1px solid ${theme.palette.divider}`,
+							})}
+						>
 							<Grid container spacing={2}>
 								<Grid item xs={12} sm={4}>
 									<Typography variant="caption" color="text.secondary">
 										Última notificación
 									</Typography>
-									<Typography variant="body2">
+									<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
 										{config.stats.lastNotificationSentAt ? new Date(config.stats.lastNotificationSentAt).toLocaleString("es-AR") : "Nunca"}
 									</Typography>
 								</Grid>
@@ -393,13 +403,17 @@ const JudicialMovementsConfig: React.FC = () => {
 									<Typography variant="caption" color="text.secondary">
 										Total notificaciones enviadas
 									</Typography>
-									<Typography variant="body2">{config.stats.totalNotificationsSent.toLocaleString()}</Typography>
+									<Typography variant="body2" sx={{ fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
+										{config.stats.totalNotificationsSent.toLocaleString()}
+									</Typography>
 								</Grid>
 								<Grid item xs={12} sm={4}>
 									<Typography variant="caption" color="text.secondary">
 										Total movimientos procesados
 									</Typography>
-									<Typography variant="body2">{config.stats.totalMovementsProcessed.toLocaleString()}</Typography>
+									<Typography variant="body2" sx={{ fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
+										{config.stats.totalMovementsProcessed.toLocaleString()}
+									</Typography>
 								</Grid>
 							</Grid>
 							{config.stats.lastError && (
@@ -421,7 +435,7 @@ const JudicialMovementsConfig: React.FC = () => {
 					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
 						<Stack direction="row" spacing={1} alignItems="center">
 							<Clock size={20} />
-							<Typography variant="h6">Programación de Horarios</Typography>
+							<Typography variant="h6">Programación de horarios</Typography>
 						</Stack>
 						<IconButton size="small" onClick={() => handleToggleSection("schedule")}>
 							{expandedSections.schedule ? <ArrowUp2 /> : <ArrowDown2 />}
@@ -451,11 +465,11 @@ const JudicialMovementsConfig: React.FC = () => {
 							</Grid>
 							<Grid item xs={12} md={4}>
 								<FormControl fullWidth>
-									<InputLabel>Zona Horaria</InputLabel>
+									<InputLabel>Zona horaria</InputLabel>
 									<Select
 										value={config.notificationSchedule.timezone}
 										onChange={(e: SelectChangeEvent) => handleFieldChange("notificationSchedule.timezone", e.target.value)}
-										label="Zona Horaria"
+										label="Zona horaria"
 									>
 										<MenuItem value="America/Argentina/Buenos_Aires">America/Argentina/Buenos_Aires</MenuItem>
 									</Select>
@@ -463,7 +477,7 @@ const JudicialMovementsConfig: React.FC = () => {
 							</Grid>
 							<Grid item xs={12} md={4}>
 								<FormControl fullWidth>
-									<InputLabel>Días Activos</InputLabel>
+									<InputLabel>Días activos</InputLabel>
 									<Select
 										multiple
 										value={config.notificationSchedule.activeDays}
@@ -495,7 +509,7 @@ const JudicialMovementsConfig: React.FC = () => {
 					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
 						<Stack direction="row" spacing={1} alignItems="center">
 							<ChartSquare size={20} />
-							<Typography variant="h6">Límites y Restricciones</Typography>
+							<Typography variant="h6">Límites y restricciones</Typography>
 						</Stack>
 						<IconButton size="small" onClick={() => handleToggleSection("limits")}>
 							{expandedSections.limits ? <ArrowUp2 /> : <ArrowDown2 />}
@@ -544,7 +558,7 @@ const JudicialMovementsConfig: React.FC = () => {
 					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
 						<Stack direction="row" spacing={1} alignItems="center">
 							<RefreshCircle size={20} />
-							<Typography variant="h6">Configuración de Reintentos</Typography>
+							<Typography variant="h6">Configuración de reintentos</Typography>
 						</Stack>
 						<IconButton size="small" onClick={() => handleToggleSection("retry")}>
 							{expandedSections.retry ? <ArrowUp2 /> : <ArrowDown2 />}
@@ -603,7 +617,7 @@ const JudicialMovementsConfig: React.FC = () => {
 					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
 						<Stack direction="row" spacing={1} alignItems="center">
 							<Setting2 size={20} />
-							<Typography variant="h6">Configuración de Contenido</Typography>
+							<Typography variant="h6">Configuración de contenido</Typography>
 						</Stack>
 						<IconButton size="small" onClick={() => handleToggleSection("content")}>
 							{expandedSections.content ? <ArrowUp2 /> : <ArrowDown2 />}
@@ -725,7 +739,7 @@ const JudicialMovementsConfig: React.FC = () => {
 					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
 						<Stack direction="row" spacing={1} alignItems="center">
 							<Archive size={20} />
-							<Typography variant="h6">Retención de Datos</Typography>
+							<Typography variant="h6">Retención de datos</Typography>
 						</Stack>
 						<IconButton size="small" onClick={() => handleToggleSection("dataRetention")}>
 							{expandedSections.dataRetention ? <ArrowUp2 /> : <ArrowDown2 />}
@@ -799,7 +813,7 @@ const JudicialMovementsConfig: React.FC = () => {
 							<Grid item xs={12}>
 								<Alert severity="info">
 									<Typography variant="body2" paragraph>
-										<strong>Política de Retención:</strong>
+										<strong>Política de retención:</strong>
 									</Typography>
 									<Typography variant="body2" component="div">
 										• Los movimientos con estado <strong>"enviado"</strong> se eliminarán después del período configurado.
@@ -822,7 +836,7 @@ const JudicialMovementsConfig: React.FC = () => {
 					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
 						<Stack direction="row" spacing={1} alignItems="center">
 							<Link21 size={20} />
-							<Typography variant="h6">Endpoints y URLs</Typography>
+							<Typography variant="h6">Endpoints y URL</Typography>
 						</Stack>
 						<IconButton size="small" onClick={() => handleToggleSection("endpoints")}>
 							{expandedSections.endpoints ? <ArrowUp2 /> : <ArrowDown2 />}
@@ -865,10 +879,29 @@ const JudicialMovementsConfig: React.FC = () => {
 					{hasChanges ? "Hay cambios sin guardar" : "No hay cambios pendientes"}
 				</Typography>
 				<Box sx={{ display: "flex", gap: 2 }}>
-					<Button variant="outlined" onClick={handleReset} disabled={!hasChanges || saving}>
+					<Button
+						variant="outlined"
+						onClick={handleReset}
+						disabled={!hasChanges || saving}
+						sx={{
+							textTransform: "none",
+							transition: "transform 200ms ease, box-shadow 200ms ease",
+							"&:active": { transform: "scale(0.98)" },
+						}}
+					>
 						Descartar cambios
 					</Button>
-					<Button variant="contained" startIcon={<Save2 size={20} />} onClick={handleSave} disabled={!hasChanges || saving}>
+					<Button
+						variant="contained"
+						startIcon={<Save2 size={20} />}
+						onClick={handleSave}
+						disabled={!hasChanges || saving}
+						sx={{
+							textTransform: "none",
+							transition: "transform 200ms ease, box-shadow 200ms ease",
+							"&:active": { transform: "scale(0.98)" },
+						}}
+					>
 						{saving ? <CircularProgress size={20} /> : "Guardar cambios"}
 					</Button>
 				</Box>

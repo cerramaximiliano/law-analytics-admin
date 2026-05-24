@@ -54,6 +54,8 @@ import { LocalizationProvider, DateTimePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import notificationMonitoringService from "services/notificationMonitoringService";
 import { openSnackbar } from "store/reducers/snackbar";
+import { alpha } from "@mui/material/styles";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -389,9 +391,20 @@ const AlertManagement = () => {
 	return (
 		<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
 			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-				<Tabs value={activeTab} onChange={handleTabChange}>
-					<Tab icon={<Notification size={20} />} iconPosition="start" label="Alertas Personalizadas" />
-					<Tab icon={<People size={20} />} iconPosition="start" label="Alertas Masivas" />
+				<Tabs
+					value={activeTab}
+					onChange={handleTabChange}
+					sx={{
+						"& .MuiTab-root": {
+							textTransform: "none",
+							fontWeight: 500,
+							letterSpacing: "0.01em",
+							transition: "color 200ms ease",
+						},
+					}}
+				>
+					<Tab icon={<Notification size={20} />} iconPosition="start" label="Alertas personalizadas" />
+					<Tab icon={<People size={20} />} iconPosition="start" label="Alertas masivas" />
 					<Tab icon={<CloseCircle size={20} />} iconPosition="start" label="Limpieza" />
 				</Tabs>
 			</Box>
@@ -403,10 +416,10 @@ const AlertManagement = () => {
 						<Card>
 							<CardContent>
 								<Typography variant="h6" gutterBottom>
-									Crear Alertas Personalizadas
+									Crear alertas personalizadas
 								</Typography>
 								<Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-									Envía alertas específicas a usuarios seleccionados
+									Envía alertas específicas a usuarios seleccionados.
 								</Typography>
 
 								<Grid container spacing={2}>
@@ -541,7 +554,7 @@ const AlertManagement = () => {
 
 									<Grid item xs={12}>
 										<Typography variant="subtitle2" gutterBottom>
-											Información de Origen
+											Información de origen
 										</Typography>
 									</Grid>
 
@@ -549,7 +562,7 @@ const AlertManagement = () => {
 										<TextField
 											fullWidth
 											select
-											label="Tipo de Origen"
+											label="Tipo de origen"
 											value={customForm.sourceType}
 											onChange={(e) => setCustomForm({ ...customForm, sourceType: e.target.value as any })}
 										>
@@ -565,7 +578,7 @@ const AlertManagement = () => {
 									<Grid item xs={12} md={6}>
 										<TextField
 											fullWidth
-											label="ID de Origen"
+											label="ID de origen"
 											value={customForm.sourceId}
 											onChange={(e) => setCustomForm({ ...customForm, sourceId: e.target.value })}
 											disabled={!["event", "task", "movement"].includes(customForm.sourceType)}
@@ -591,7 +604,7 @@ const AlertManagement = () => {
 											}
 											startIcon={loading ? <CircularProgress size={20} /> : <Notification />}
 										>
-											{loading ? "Enviando..." : "Enviar Alertas"}
+											{loading ? "Enviando..." : "Enviar alertas"}
 										</Button>
 									</Grid>
 								</Grid>
@@ -608,16 +621,16 @@ const AlertManagement = () => {
 						<Card>
 							<CardContent>
 								<Typography variant="h6" gutterBottom>
-									Crear Alertas Masivas
+									Crear alertas masivas
 								</Typography>
 								<Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-									Envía alertas a grupos de usuarios basados en filtros
+									Envía alertas a grupos de usuarios basados en filtros.
 								</Typography>
 
 								<Grid container spacing={2}>
 									<Grid item xs={12}>
 										<Typography variant="subtitle2" gutterBottom>
-											Filtros de Usuario
+											Filtros de usuario
 										</Typography>
 									</Grid>
 
@@ -652,7 +665,7 @@ const AlertManagement = () => {
 										<TextField
 											fullWidth
 											select
-											label="Plan de Suscripción"
+											label="Plan de suscripción"
 											value={bulkForm.filterPlan}
 											onChange={(e) => setBulkForm({ ...bulkForm, filterPlan: e.target.value })}
 										>
@@ -666,7 +679,7 @@ const AlertManagement = () => {
 
 									<Grid item xs={12}>
 										<Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-											Plantilla de Alerta
+											Plantilla de alerta
 										</Typography>
 									</Grid>
 
@@ -732,7 +745,7 @@ const AlertManagement = () => {
 
 									<Grid item xs={12}>
 										<Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-											Opciones de Envío
+											Opciones de envío
 										</Typography>
 									</Grid>
 
@@ -816,7 +829,7 @@ const AlertManagement = () => {
 
 									<Grid item xs={12}>
 										<Typography variant="subtitle2" gutterBottom>
-											Información de Origen
+											Información de origen
 										</Typography>
 									</Grid>
 
@@ -824,7 +837,7 @@ const AlertManagement = () => {
 										<TextField
 											fullWidth
 											select
-											label="Tipo de Origen"
+											label="Tipo de origen"
 											value={bulkForm.sourceType}
 											onChange={(e) => setBulkForm({ ...bulkForm, sourceType: e.target.value as any })}
 										>
@@ -840,7 +853,7 @@ const AlertManagement = () => {
 									<Grid item xs={12} md={6}>
 										<TextField
 											fullWidth
-											label="ID de Origen"
+											label="ID de origen"
 											value={bulkForm.sourceId}
 											onChange={(e) => setBulkForm({ ...bulkForm, sourceId: e.target.value })}
 											disabled={!["event", "task", "movement"].includes(bulkForm.sourceType)}
@@ -871,7 +884,7 @@ const AlertManagement = () => {
 											startIcon={loading ? <CircularProgress size={20} /> : <People />}
 											color={bulkForm.testMode ? "warning" : "primary"}
 										>
-											{loading ? "Procesando..." : bulkForm.testMode ? "Simular Envío" : "Enviar Alertas Masivas"}
+											{loading ? "Procesando..." : bulkForm.testMode ? "Simular envío" : "Enviar alertas masivas"}
 										</Button>
 									</Grid>
 								</Grid>
@@ -888,10 +901,10 @@ const AlertManagement = () => {
 						<Card>
 							<CardContent>
 								<Typography variant="h6" gutterBottom>
-									Limpieza de Alertas
+									Limpieza de alertas
 								</Typography>
 								<Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-									Elimina alertas antiguas para mantener la base de datos optimizada
+									Elimina alertas antiguas para mantener la base de datos optimizada.
 								</Typography>
 
 								<Grid container spacing={2}>
@@ -949,7 +962,7 @@ const AlertManagement = () => {
 											startIcon={loading ? <CircularProgress size={20} /> : <CloseCircle />}
 											color={cleanupForm.dryRun ? "info" : "error"}
 										>
-											{loading ? "Procesando..." : cleanupForm.dryRun ? "Simular Limpieza" : "Ejecutar Limpieza"}
+											{loading ? "Procesando..." : cleanupForm.dryRun ? "Simular limpieza" : "Ejecutar limpieza"}
 										</Button>
 									</Grid>
 								</Grid>
@@ -961,7 +974,7 @@ const AlertManagement = () => {
 
 			{/* Result Dialog */}
 			<Dialog open={resultDialog} onClose={() => setResultDialog(false)} maxWidth="md" fullWidth>
-				<DialogTitle>Resultado del Envío</DialogTitle>
+				<DialogTitle>Resultado del envío</DialogTitle>
 				<DialogContent>
 					{resultData && (
 						<Box>
@@ -977,7 +990,7 @@ const AlertManagement = () => {
 							{resultData.details?.created && resultData.details.created.length > 0 && (
 								<Box sx={{ mb: 2 }}>
 									<Typography variant="subtitle2" gutterBottom>
-										Alertas Creadas ({resultData.details.created.length})
+										Alertas creadas ({resultData.details.created.length})
 									</Typography>
 									<List dense>
 										{resultData.details.created.slice(0, 5).map((item: any, index: number) => (
@@ -1019,7 +1032,7 @@ const AlertManagement = () => {
 							{resultData.details?.failed && resultData.details.failed.length > 0 && (
 								<Box>
 									<Typography variant="subtitle2" gutterBottom color="error">
-										Alertas Fallidas ({resultData.details.failed.length})
+										Alertas fallidas ({resultData.details.failed.length})
 									</Typography>
 									<List dense>
 										{resultData.details.failed.map((item: any, index: number) => (
@@ -1042,7 +1055,7 @@ const AlertManagement = () => {
 			<Dialog open={userSearchDialog} onClose={handleCloseUserSearch} maxWidth="md" fullWidth>
 				<DialogTitle>
 					<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-						<Typography variant="h6">Buscar Usuarios</Typography>
+						<Typography variant="h6">Buscar usuarios</Typography>
 						<Typography variant="body2" color="text.secondary">
 							{selectedUsers.length} usuario{selectedUsers.length !== 1 ? "s" : ""} seleccionado{selectedUsers.length !== 1 ? "s" : ""}
 						</Typography>
@@ -1073,7 +1086,17 @@ const AlertManagement = () => {
 						<>
 							<TableContainer component={Paper} variant="outlined">
 								<Table size="small">
-									<TableHead>
+									<TableHead
+										sx={(theme) => ({
+											"& .MuiTableCell-head": {
+												backgroundColor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.08 : 0.04),
+												borderBottom: `1px solid ${headerBorder(theme.palette.mode === "dark")}`,
+												fontWeight: 600,
+												letterSpacing: "0.01em",
+												textTransform: "none",
+											},
+										})}
+									>
 										<TableRow>
 											<TableCell padding="checkbox">
 												<Checkbox

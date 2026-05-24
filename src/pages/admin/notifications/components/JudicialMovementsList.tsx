@@ -46,6 +46,7 @@ import {
 	Clock,
 } from "iconsax-react";
 import dayjs from "utils/dayjs-config";
+import { alpha } from "@mui/material/styles";
 import judicialMovementsService, {
 	JudicialMovement,
 	JudicialMovementFilters,
@@ -53,6 +54,7 @@ import judicialMovementsService, {
 } from "services/judicialMovementsService";
 import { dispatch } from "store";
 import { openSnackbar } from "store/reducers/snackbar";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 const JudicialMovementsList = () => {
 	const theme = useTheme();
@@ -334,7 +336,9 @@ const JudicialMovementsList = () => {
 										<Typography color="text.secondary" variant="caption">
 											Pendientes
 										</Typography>
-										<Typography variant="h4">{stats.totalPending}</Typography>
+										<Typography variant="h4" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
+											{stats.totalPending}
+										</Typography>
 									</Box>
 									<NotificationBing size={32} color={theme.palette.warning.main} />
 								</Stack>
@@ -349,7 +353,9 @@ const JudicialMovementsList = () => {
 										<Typography color="text.secondary" variant="caption">
 											Enviados
 										</Typography>
-										<Typography variant="h4">{stats.totalSent}</Typography>
+										<Typography variant="h4" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
+											{stats.totalSent}
+										</Typography>
 									</Box>
 									<NotificationBing size={32} color={theme.palette.success.main} />
 								</Stack>
@@ -364,7 +370,9 @@ const JudicialMovementsList = () => {
 										<Typography color="text.secondary" variant="caption">
 											Fallidos
 										</Typography>
-										<Typography variant="h4">{stats.totalFailed}</Typography>
+										<Typography variant="h4" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
+											{stats.totalFailed}
+										</Typography>
 									</Box>
 									<NotificationBing size={32} color={theme.palette.error.main} />
 								</Stack>
@@ -383,7 +391,7 @@ const JudicialMovementsList = () => {
 					color="info"
 					sx={{ mb: 1 }}
 				>
-					{showRetentionInfo ? "Ocultar Información de Retención" : "Ver Información de Retención"}
+					{showRetentionInfo ? "Ocultar información de retención" : "Ver información de retención"}
 				</Button>
 
 				<Collapse in={showRetentionInfo}>
@@ -392,7 +400,7 @@ const JudicialMovementsList = () => {
 							<Stack direction="row" alignItems="center" spacing={1}>
 								<Clock size={24} color={theme.palette.info.main} />
 								<Typography variant="h6" color="primary">
-									Política de Retención de Movimientos Judiciales
+									Política de retención de movimientos judiciales
 								</Typography>
 							</Stack>
 
@@ -400,7 +408,7 @@ const JudicialMovementsList = () => {
 								<Grid item xs={12} md={6}>
 									<Box>
 										<Typography variant="subtitle2" gutterBottom fontWeight="bold">
-											Duración de Retención
+											Duración de retención
 										</Typography>
 										<Stack spacing={1}>
 											<Typography variant="body2">
@@ -419,7 +427,7 @@ const JudicialMovementsList = () => {
 								<Grid item xs={12} md={6}>
 									<Box>
 										<Typography variant="subtitle2" gutterBottom fontWeight="bold">
-											Condiciones de Eliminación Automática
+											Condiciones de eliminación automática
 										</Typography>
 										<Stack spacing={1}>
 											<Typography variant="body2">Los movimientos se eliminan cuando:</Typography>
@@ -571,7 +579,20 @@ const JudicialMovementsList = () => {
 					</Box>
 				) : (
 					<Table>
-						<TableHead>
+						<TableHead
+							sx={(theme) => ({
+								"& .MuiTableCell-head": {
+									backgroundColor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.08 : 0.04),
+									borderBottom: `1px solid ${headerBorder(theme.palette.mode === "dark")}`,
+									fontWeight: 600,
+									letterSpacing: "0.01em",
+									textTransform: "none",
+									position: "sticky",
+									top: 0,
+									zIndex: 2,
+								},
+							})}
+						>
 							<TableRow>
 								<TableCell padding="checkbox">
 									<Checkbox indeterminate={isSomeSelected} checked={isAllSelected} onChange={handleSelectAll} />
@@ -580,7 +601,7 @@ const JudicialMovementsList = () => {
 								<TableCell>Usuario</TableCell>
 								<TableCell>Expediente</TableCell>
 								<TableCell>Movimiento</TableCell>
-								<TableCell>Fecha Movimiento</TableCell>
+								<TableCell>Fecha movimiento</TableCell>
 								<TableCell>Estado</TableCell>
 								<TableCell>Notificar en</TableCell>
 								<TableCell align="right">Acciones</TableCell>

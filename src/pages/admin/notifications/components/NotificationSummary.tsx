@@ -11,6 +11,7 @@ import notificationMonitoringService from "services/notificationMonitoringServic
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 
 const NotificationSummary = () => {
 	const theme = useTheme();
@@ -101,7 +102,15 @@ const NotificationSummary = () => {
 	];
 
 	const StatCard = ({ icon, title, value, color, subtitle }: any) => (
-		<Card>
+		<Card
+			sx={{
+				transition: "transform 240ms ease, box-shadow 240ms ease",
+				"&:hover": {
+					transform: "translateY(-2px)",
+					boxShadow: `0 6px 18px ${alpha(color, 0.14)}`,
+				},
+			}}
+		>
 			<CardContent>
 				<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
 					<Box
@@ -117,14 +126,14 @@ const NotificationSummary = () => {
 						{icon}
 					</Box>
 					<Box sx={{ flexGrow: 1 }}>
-						<Typography variant="h4" fontWeight="bold">
+						<Typography variant="h4" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
 							{value.toLocaleString()}
 						</Typography>
 						<Typography variant="body2" color="text.secondary">
 							{title}
 						</Typography>
 						{subtitle && (
-							<Typography variant="caption" color="text.secondary">
+							<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 								{subtitle}
 							</Typography>
 						)}
@@ -226,9 +235,18 @@ const NotificationSummary = () => {
 				<Card>
 					<CardContent>
 						<Typography variant="h6" gutterBottom>
-							Total de Notificaciones
+							Total de notificaciones
 						</Typography>
-						<Typography variant="h3" fontWeight="bold" color="primary" sx={{ mb: 2 }}>
+						<Typography
+							variant="h3"
+							sx={{
+								fontWeight: 600,
+								color: BRAND_BLUE,
+								mb: 2,
+								fontVariantNumeric: "tabular-nums",
+								letterSpacing: "-0.02em",
+							}}
+						>
 							{summary.data.totalNotifications.toLocaleString()}
 						</Typography>
 
@@ -241,10 +259,15 @@ const NotificationSummary = () => {
 									<LinearProgress
 										variant="determinate"
 										value={(summary.data.alerts.delivered / summary.data.alerts.total) * 100}
-										sx={{ height: 8, borderRadius: 1 }}
+										sx={{
+											height: 8,
+											borderRadius: 1,
+											backgroundColor: alpha(BRAND_BLUE, 0.1),
+											"& .MuiLinearProgress-bar": { backgroundColor: BRAND_BLUE },
+										}}
 									/>
 								</Box>
-								<Typography variant="body2" fontWeight="medium">
+								<Typography variant="body2" sx={{ fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
 									{((summary.data.alerts.delivered / summary.data.alerts.total) * 100).toFixed(1)}%
 								</Typography>
 							</Box>
@@ -257,7 +280,7 @@ const NotificationSummary = () => {
 				<Card>
 					<CardContent>
 						<Typography variant="h6" gutterBottom>
-							Distribución por Tipo
+							Distribución por tipo
 						</Typography>
 						<ResponsiveContainer width="100%" height={300}>
 							<PieChart>
@@ -286,7 +309,7 @@ const NotificationSummary = () => {
 				<Card>
 					<CardContent>
 						<Typography variant="h6" gutterBottom>
-							Distribución por Método de Envío
+							Distribución por método de envío
 						</Typography>
 						<ResponsiveContainer width="100%" height={300}>
 							<BarChart data={barData}>

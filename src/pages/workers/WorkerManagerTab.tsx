@@ -28,7 +28,9 @@ import {
 	useTheme,
 } from "@mui/material";
 import { Refresh, InfoCircle, Warning2, ArrowDown2, ArrowUp2, Setting2, Chart } from "iconsax-react";
+import { alpha } from "@mui/material/styles";
 import { useSnackbar } from "notistack";
+import { BRAND_BLUE, headerBorder, LIVE_GREEN, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
 import MEVWorkersService, {
 	MEVManagerConfig,
 	MEVManagerConfigSettings,
@@ -64,9 +66,9 @@ function a11yProps(index: number) {
 	return { id: `manager-tab-${index}`, "aria-controls": `manager-tabpanel-${index}` };
 }
 
-const DAY_LABELS = ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"];
+const DAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 const WORKER_TYPES: ("verify" | "update")[] = ["verify", "update"];
-const WORKER_LABELS: Record<string, string> = { verify: "Verificacion", update: "Actualizacion" };
+const WORKER_LABELS: Record<string, string> = { verify: "Verificación", update: "Actualización" };
 
 export default function WorkerManagerTab() {
 	const { enqueueSnackbar } = useSnackbar();
@@ -209,7 +211,15 @@ export default function WorkerManagerTab() {
 	}
 
 	return (
-		<Box sx={{ display: "flex", bgcolor: "background.paper", borderRadius: 1, border: `1px solid ${theme.palette.divider}` }}>
+		<Box
+			sx={{
+				display: "flex",
+				bgcolor: "background.paper",
+				borderRadius: 1,
+				border: `1px solid ${theme.palette.divider}`,
+				...LIVE_PULSE_KEYFRAMES,
+			}}
+		>
 			{/* Tabs verticales */}
 			<Tabs
 				orientation="vertical"
@@ -224,11 +234,15 @@ export default function WorkerManagerTab() {
 						alignItems: "flex-start",
 						textAlign: "left",
 						minHeight: 48,
+						textTransform: "none",
+						fontWeight: 500,
+						letterSpacing: "0.01em",
+						transition: "color 200ms ease",
 					},
 				}}
 			>
 				<Tab label="Estado" icon={<InfoCircle size={18} />} iconPosition="start" {...a11yProps(0)} />
-				<Tab label="Configuracion" icon={<Setting2 size={18} />} iconPosition="start" {...a11yProps(1)} />
+				<Tab label="Configuración" icon={<Setting2 size={18} />} iconPosition="start" {...a11yProps(1)} />
 				<Tab
 					label={
 						<Stack direction="row" spacing={1} alignItems="center">
@@ -240,14 +254,16 @@ export default function WorkerManagerTab() {
 					iconPosition="start"
 					{...a11yProps(2)}
 				/>
-				<Tab label="Estadisticas" icon={<Chart size={18} />} iconPosition="start" {...a11yProps(3)} />
+				<Tab label="Estadísticas" icon={<Chart size={18} />} iconPosition="start" {...a11yProps(3)} />
 				<Tab label="Jurisdicciones" icon={<Warning2 size={18} />} iconPosition="start" {...a11yProps(4)} />
 			</Tabs>
 
 			{/* ===== ESTADO ===== */}
 			<TabPanel value={tabValue} index={0}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-					<Typography variant="h6">Estado del Manager</Typography>
+					<Typography variant="h6" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
+						Estado del manager
+					</Typography>
 					<Stack direction="row" spacing={1} alignItems="center">
 						{getStalenessChip()}
 						<Tooltip title="Refrescar">
@@ -262,15 +278,19 @@ export default function WorkerManagerTab() {
 					<Grid container spacing={2}>
 						<Grid item xs={6} sm={3}>
 							<Typography variant="caption" color="text.secondary">
-								Ultimo ciclo
+								Último ciclo
 							</Typography>
-							<Typography variant="body2">{status.lastCycleAgo ? `hace ${status.lastCycleAgo}` : "Nunca"}</Typography>
+							<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+								{status.lastCycleAgo ? `hace ${status.lastCycleAgo}` : "Nunca"}
+							</Typography>
 						</Grid>
 						<Grid item xs={6} sm={3}>
 							<Typography variant="caption" color="text.secondary">
 								Ciclos totales
 							</Typography>
-							<Typography variant="body2">{status.cycleCount?.toLocaleString() || 0}</Typography>
+							<Typography variant="body2" sx={{ fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
+								{status.cycleCount?.toLocaleString() || 0}
+							</Typography>
 						</Grid>
 						<Grid item xs={6} sm={3}>
 							<Typography variant="caption" color="text.secondary">
@@ -293,7 +313,7 @@ export default function WorkerManagerTab() {
 							<Typography variant="caption" color="text.secondary">
 								Recursos
 							</Typography>
-							<Typography variant="body2">
+							<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
 								CPU: {((status.systemResources?.cpuUsage || 0) * 100).toFixed(0)}% | RAM: {status.systemResources?.freeMemoryMB || 0}/
 								{status.systemResources?.totalMemoryMB || 0} MB
 							</Typography>
@@ -305,13 +325,23 @@ export default function WorkerManagerTab() {
 				{status && (
 					<TableContainer component={Paper} variant="outlined" sx={{ mt: 2 }}>
 						<Table size="small">
-							<TableHead>
+							<TableHead
+								sx={(t) => ({
+									"& .MuiTableCell-head": {
+										backgroundColor: alpha(BRAND_BLUE, t.palette.mode === "dark" ? 0.08 : 0.04),
+										borderBottom: `1px solid ${headerBorder(t.palette.mode === "dark")}`,
+										fontWeight: 600,
+										letterSpacing: "0.01em",
+										textTransform: "none",
+									},
+								})}
+							>
 								<TableRow>
 									<TableCell>Worker</TableCell>
 									<TableCell align="center">Activos</TableCell>
 									<TableCell align="center">Pendientes</TableCell>
-									<TableCell align="center">Optimo</TableCell>
-									<TableCell align="center">Accion</TableCell>
+									<TableCell align="center">Óptimo</TableCell>
+									<TableCell align="center">Acción</TableCell>
 								</TableRow>
 							</TableHead>
 							<TableBody>
@@ -328,14 +358,28 @@ export default function WorkerManagerTab() {
 												</Typography>
 											</TableCell>
 											<TableCell align="center">
-												<Chip size="small" label={current} />
+												<Chip
+													size="small"
+													label={current}
+													sx={(t) => ({
+														fontVariantNumeric: "tabular-nums",
+														fontWeight: 500,
+														...(current > 0 && {
+															bgcolor: alpha(LIVE_GREEN, t.palette.mode === "dark" ? 0.2 : 0.12),
+															color: LIVE_GREEN,
+															borderColor: alpha(LIVE_GREEN, 0.3),
+														}),
+													})}
+												/>
 											</TableCell>
-											<TableCell align="center">
-												<Typography variant="body2" color={pending > 0 ? "warning.main" : "text.secondary"}>
+											<TableCell align="center" sx={{ fontVariantNumeric: "tabular-nums" }}>
+												<Typography variant="body2" color={pending > 0 ? "warning.main" : "text.secondary"} sx={{ fontVariantNumeric: "tabular-nums" }}>
 													{pending.toLocaleString()}
 												</Typography>
 											</TableCell>
-											<TableCell align="center">{optimal}</TableCell>
+											<TableCell align="center" sx={{ fontVariantNumeric: "tabular-nums" }}>
+												{optimal}
+											</TableCell>
 											<TableCell align="center">
 												{diff > 0 ? (
 													<Chip size="small" color="success" label={`+${diff}`} icon={<ArrowUp2 size={14} />} />
@@ -388,20 +432,30 @@ export default function WorkerManagerTab() {
 				</Grid>
 
 				<Typography variant="subtitle2" sx={{ mb: 1 }}>
-					Configuracion por Worker
+					Configuración por worker
 				</Typography>
 				<TableContainer component={Paper} variant="outlined" sx={{ mb: 3 }}>
 					<Table size="small">
-						<TableHead>
+						<TableHead
+							sx={(t) => ({
+								"& .MuiTableCell-head": {
+									backgroundColor: alpha(BRAND_BLUE, t.palette.mode === "dark" ? 0.08 : 0.04),
+									borderBottom: `1px solid ${headerBorder(t.palette.mode === "dark")}`,
+									fontWeight: 600,
+									letterSpacing: "0.01em",
+									textTransform: "none",
+								},
+							})}
+						>
 							<TableRow>
 								<TableCell>Worker</TableCell>
 								<TableCell align="center">Min</TableCell>
 								<TableCell align="center">Max</TableCell>
-								<TableCell align="center">Scale Up</TableCell>
-								<TableCell align="center">Scale Down</TableCell>
-								<TableCell align="center">Docs/Worker</TableCell>
-								<TableCell align="center">Hora Inicio</TableCell>
-								<TableCell align="center">Hora Fin</TableCell>
+								<TableCell align="center">Scale up</TableCell>
+								<TableCell align="center">Scale down</TableCell>
+								<TableCell align="center">Docs/worker</TableCell>
+								<TableCell align="center">Hora inicio</TableCell>
+								<TableCell align="center">Hora fin</TableCell>
 							</TableRow>
 						</TableHead>
 						<TableBody>
@@ -450,7 +504,7 @@ export default function WorkerManagerTab() {
 				</TableContainer>
 
 				<Typography variant="subtitle2" sx={{ mb: 1 }}>
-					Dias laborales por Worker
+					Días laborales por worker
 				</Typography>
 				{WORKER_TYPES.map((type) => (
 					<Box key={type} sx={{ mb: 1 }}>
@@ -483,10 +537,30 @@ export default function WorkerManagerTab() {
 				))}
 
 				<Stack direction="row" spacing={2}>
-					<Button variant="contained" size="small" onClick={handleSave} disabled={saving}>
+					<Button
+						variant="contained"
+						size="small"
+						onClick={handleSave}
+						disabled={saving}
+						sx={{
+							textTransform: "none",
+							transition: "transform 200ms ease",
+							"&:active": { transform: "scale(0.97)" },
+						}}
+					>
 						{saving ? "Guardando..." : "Guardar"}
 					</Button>
-					<Button variant="outlined" size="small" color="warning" onClick={handleReset}>
+					<Button
+						variant="outlined"
+						size="small"
+						color="warning"
+						onClick={handleReset}
+						sx={{
+							textTransform: "none",
+							transition: "transform 200ms ease",
+							"&:active": { transform: "scale(0.97)" },
+						}}
+					>
 						Reset a defaults
 					</Button>
 				</Stack>
@@ -527,7 +601,7 @@ export default function WorkerManagerTab() {
 			<TabPanel value={tabValue} index={3}>
 				{stats.length === 0 ? (
 					<Typography variant="body2" color="text.secondary">
-						Sin estadisticas disponibles
+						Sin estadísticas disponibles
 					</Typography>
 				) : (
 					<>
@@ -550,32 +624,40 @@ export default function WorkerManagerTab() {
 											<Typography variant="caption" color="text.secondary">
 												Ciclos
 											</Typography>
-											<Typography variant="body2">{totalCycles}</Typography>
+											<Typography variant="body2" sx={{ fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
+												{totalCycles}
+											</Typography>
 										</Grid>
 										<Grid item xs={3}>
 											<Typography variant="caption" color="text.secondary">
 												Eventos escalado
 											</Typography>
-											<Typography variant="body2">{totalScaleEvents}</Typography>
+											<Typography variant="body2" sx={{ fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
+												{totalScaleEvents}
+											</Typography>
 										</Grid>
 										<Grid item xs={3}>
 											<Typography variant="caption" color="text.secondary">
 												Max workers
 											</Typography>
-											<Typography variant="body2">{maxWorkers}</Typography>
+											<Typography variant="body2" sx={{ fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
+												{maxWorkers}
+											</Typography>
 										</Grid>
 										<Grid item xs={3}>
 											<Typography variant="caption" color="text.secondary">
-												Pendientes (ultimo)
+												Pendientes (último)
 											</Typography>
-											<Typography variant="body2">{lastPending ?? "-"}</Typography>
+											<Typography variant="body2" sx={{ fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
+												{lastPending ?? "-"}
+											</Typography>
 										</Grid>
 									</Grid>
 
 									{totalScaleEvents > 0 && (
 										<Box sx={{ mt: 1 }}>
 											<Typography variant="caption" color="text.secondary">
-												Ultimos eventos de escalado:
+												Últimos eventos de escalado:
 											</Typography>
 											{typeStats
 												.flatMap((s) => s.scalingEvents || [])

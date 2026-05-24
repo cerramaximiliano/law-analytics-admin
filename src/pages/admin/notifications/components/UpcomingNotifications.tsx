@@ -26,10 +26,22 @@ import {
 	Collapse,
 } from "@mui/material";
 import { Calendar, Timer1, DollarCircle, Notification, Refresh, ArrowDown2, ArrowUp2 } from "iconsax-react";
+import { alpha } from "@mui/material/styles";
 import dayjs from "utils/dayjs-config";
 import { RootState } from "store";
 import notificationMonitoringService from "services/notificationMonitoringService";
 import type { UpcomingEvent, UpcomingTask } from "types/notificationMonitoring";
+import { headerBorder } from "themes/dashboardTokens";
+
+const tableHeadSx = (mode: "light" | "dark", main: string) => ({
+	"& .MuiTableCell-head": {
+		backgroundColor: alpha(main, mode === "dark" ? 0.08 : 0.04),
+		borderBottom: `1px solid ${headerBorder(mode === "dark")}`,
+		fontWeight: 600,
+		letterSpacing: "0.01em",
+		textTransform: "none" as const,
+	},
+});
 
 interface Props {
 	onRefresh: () => void;
@@ -168,14 +180,14 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 									<Box sx={{ display: "flex", alignItems: "center", mb: 2, cursor: "pointer" }} onClick={() => toggleSection("events")}>
 										<Calendar size={24} color={theme.palette.info.main} />
 										<Typography variant="h6" sx={{ ml: 1, flexGrow: 1 }}>
-											Eventos Próximos ({upcomingEvents.data.length})
+											Eventos próximos ({upcomingEvents.data.length})
 										</Typography>
 										{expandedSections.events ? <ArrowUp2 /> : <ArrowDown2 />}
 									</Box>
 									<Collapse in={expandedSections.events}>
 										<TableContainer component={Paper} variant="outlined">
 											<Table size="small">
-												<TableHead>
+												<TableHead sx={tableHeadSx(theme.palette.mode, theme.palette.info.main)}>
 													<TableRow>
 														<TableCell>Título</TableCell>
 														<TableCell>Fecha</TableCell>
@@ -195,7 +207,7 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 																	{event.description}
 																</Typography>
 															</TableCell>
-															<TableCell>{formatDate(event.date)}</TableCell>
+															<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{formatDate(event.date)}</TableCell>
 															<TableCell>
 																<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 																	<Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
@@ -238,14 +250,14 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 									<Box sx={{ display: "flex", alignItems: "center", mb: 2, cursor: "pointer" }} onClick={() => toggleSection("tasks")}>
 										<Timer1 size={24} color={theme.palette.warning.main} />
 										<Typography variant="h6" sx={{ ml: 1, flexGrow: 1 }}>
-											Tareas Próximas ({upcomingTasks.data.length})
+											Tareas próximas ({upcomingTasks.data.length})
 										</Typography>
 										{expandedSections.tasks ? <ArrowUp2 /> : <ArrowDown2 />}
 									</Box>
 									<Collapse in={expandedSections.tasks}>
 										<TableContainer component={Paper} variant="outlined">
 											<Table size="small">
-												<TableHead>
+												<TableHead sx={tableHeadSx(theme.palette.mode, theme.palette.warning.main)}>
 													<TableRow>
 														<TableCell>Título</TableCell>
 														<TableCell>Fecha de vencimiento</TableCell>
@@ -266,7 +278,7 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 																	{task.description}
 																</Typography>
 															</TableCell>
-															<TableCell>{formatDate(task.dueDate)}</TableCell>
+															<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{formatDate(task.dueDate)}</TableCell>
 															<TableCell>
 																<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 																	<Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
@@ -316,18 +328,18 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 									<Box sx={{ display: "flex", alignItems: "center", mb: 2, cursor: "pointer" }} onClick={() => toggleSection("movements")}>
 										<DollarCircle size={24} color={theme.palette.success.main} />
 										<Typography variant="h6" sx={{ ml: 1, flexGrow: 1 }}>
-											Movimientos Próximos ({upcomingMovements.data.length})
+											Movimientos próximos ({upcomingMovements.data.length})
 										</Typography>
 										{expandedSections.movements ? <ArrowUp2 /> : <ArrowDown2 />}
 									</Box>
 									<Collapse in={expandedSections.movements}>
 										<TableContainer component={Paper} variant="outlined">
 											<Table size="small">
-												<TableHead>
+												<TableHead sx={tableHeadSx(theme.palette.mode, theme.palette.success.main)}>
 													<TableRow>
 														<TableCell>Título</TableCell>
-														<TableCell>Tipo de Movimiento</TableCell>
-														<TableCell>Fecha de Vencimiento</TableCell>
+														<TableCell>Tipo de movimiento</TableCell>
+														<TableCell>Fecha de vencimiento</TableCell>
 														<TableCell>Usuario</TableCell>
 														<TableCell>Expira en</TableCell>
 														<TableCell align="center">Estado</TableCell>
@@ -367,7 +379,7 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 																	}
 																/>
 															</TableCell>
-															<TableCell>{formatDate(movement.dateExpiration)}</TableCell>
+															<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{formatDate(movement.dateExpiration)}</TableCell>
 															<TableCell>
 																<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 																	<Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
@@ -410,14 +422,14 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 									<Box sx={{ display: "flex", alignItems: "center", mb: 2, cursor: "pointer" }} onClick={() => toggleSection("alerts")}>
 										<Notification size={24} color={theme.palette.error.main} />
 										<Typography variant="h6" sx={{ ml: 1, flexGrow: 1 }}>
-											Alertas Pendientes ({pendingAlerts.data.length})
+											Alertas pendientes ({pendingAlerts.data.length})
 										</Typography>
 										{expandedSections.alerts ? <ArrowUp2 /> : <ArrowDown2 />}
 									</Box>
 									<Collapse in={expandedSections.alerts}>
 										<TableContainer component={Paper} variant="outlined">
 											<Table size="small">
-												<TableHead>
+												<TableHead sx={tableHeadSx(theme.palette.mode, theme.palette.error.main)}>
 													<TableRow>
 														<TableCell>Título</TableCell>
 														<TableCell>Descripción</TableCell>
@@ -480,7 +492,7 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 																	{alert.folderId ? `Carpeta ${alert.folderId.slice(-6)}` : "Sin carpeta"}
 																</Typography>
 															</TableCell>
-															<TableCell>{formatDate(alert.createdAt)}</TableCell>
+															<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{formatDate(alert.createdAt)}</TableCell>
 															<TableCell align="center">
 																<Box sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}>
 																	<Chip

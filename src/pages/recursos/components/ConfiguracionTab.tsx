@@ -236,13 +236,35 @@ const ConfiguracionTab = () => {
 		<Stack spacing={3}>
 			{/* Header */}
 			<Stack direction="row" justifyContent="space-between" alignItems="center">
-				<Typography variant="h5">Configuración de Rastreo de Códigos</Typography>
+				<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
+					Configuración de rastreo de códigos
+				</Typography>
 				<Stack direction="row" spacing={2}>
-					<Button variant="outlined" startIcon={<Refresh />} onClick={fetchConfig} disabled={loading}>
+					<Button
+						variant="outlined"
+						startIcon={<Refresh />}
+						onClick={fetchConfig}
+						disabled={loading}
+						sx={{
+							textTransform: "none",
+							transition: "transform 200ms ease",
+							"&:active": { transform: "scale(0.98)" },
+						}}
+					>
 						Refrescar
 					</Button>
-					<Button variant="contained" startIcon={<Setting2 />} onClick={handleSave} disabled={saving}>
-						{saving ? "Guardando..." : "Guardar Cambios"}
+					<Button
+						variant="contained"
+						startIcon={<Setting2 />}
+						onClick={handleSave}
+						disabled={saving}
+						sx={{
+							textTransform: "none",
+							transition: "transform 200ms ease",
+							"&:active": { transform: "scale(0.98)" },
+						}}
+					>
+						{saving ? "Guardando..." : "Guardar cambios"}
 					</Button>
 				</Stack>
 			</Stack>
@@ -251,18 +273,18 @@ const ConfiguracionTab = () => {
 			<Card sx={{ p: 3 }}>
 				<Stack direction="row" alignItems="center" gap={1} mb={2}>
 					<Activity size={24} />
-					<Typography variant="h6">Estado del Worker</Typography>
+					<Typography variant="h6">Estado del worker</Typography>
 				</Stack>
 				<Grid container spacing={3}>
 					<Grid item xs={12} md={4}>
 						<FormControlLabel
 							control={<Switch checked={workerActivo} onChange={(e) => setWorkerActivo(e.target.checked)} color="primary" />}
-							label="Worker Activo"
+							label="Worker activo"
 						/>
 					</Grid>
 					<Grid item xs={12} md={4}>
 						<Typography variant="caption" color="text.secondary">
-							En Ejecución
+							En ejecución
 						</Typography>
 						<Box>
 							<Chip
@@ -287,7 +309,7 @@ const ConfiguracionTab = () => {
 				</Grid>
 				{config.estadoWorker?.ultimoError && (
 					<Alert severity="error" icon={<Warning2 />} sx={{ mt: 2 }}>
-						<Typography variant="subtitle2">Último Error:</Typography>
+						<Typography variant="subtitle2">Último error:</Typography>
 						<Typography variant="body2">{config.estadoWorker.ultimoError.mensaje}</Typography>
 						<Typography variant="caption" color="text.secondary">
 							{formatDate(config.estadoWorker.ultimoError.fecha)}
@@ -300,7 +322,7 @@ const ConfiguracionTab = () => {
 			<Card sx={{ p: 3 }}>
 				<Stack direction="row" alignItems="center" gap={1} mb={1}>
 					<ArrowRight size={24} />
-					<Typography variant="h6">Frontier Dinámico</Typography>
+					<Typography variant="h6">Frontier dinámico</Typography>
 					<Tooltip title="El discovery avanza de forma autónoma. El techo se expande automáticamente cuando encuentra PDFs válidos en prefijos nuevos.">
 						<Chip label="Opción C" size="small" color="primary" variant="outlined" sx={{ ml: 1 }} />
 					</Tooltip>
@@ -399,14 +421,14 @@ const ConfiguracionTab = () => {
 			<Card sx={{ p: 3 }}>
 				<Stack direction="row" alignItems="center" gap={1} mb={2}>
 					<Setting2 size={24} />
-					<Typography variant="h6">Configuración de Ejecución</Typography>
+					<Typography variant="h6">Configuración de ejecución</Typography>
 				</Stack>
 				<Grid container spacing={3}>
 					<Grid item xs={12} md={6}>
 						<FormControl fullWidth>
 							<InputLabel>Estrategia</InputLabel>
 							<Select value={estrategia} onChange={(e) => setEstrategia(e.target.value as Configuracion["estrategia"])} label="Estrategia">
-								<MenuItem value="frontier">Frontier Dinámico (recomendado)</MenuItem>
+								<MenuItem value="frontier">Frontier dinámico (recomendado)</MenuItem>
 								<MenuItem value="secuencial">Secuencial</MenuItem>
 								<MenuItem value="inteligente">Inteligente</MenuItem>
 								<MenuItem value="manual">Manual</MenuItem>
@@ -417,7 +439,7 @@ const ConfiguracionTab = () => {
 						<TextField
 							fullWidth
 							type="number"
-							label="Códigos por Ejecución"
+							label="Códigos por ejecución"
 							value={codigosPorEjecucion}
 							onChange={(e) => setCodigosPorEjecucion(parseInt(e.target.value, 10) || 0)}
 							helperText="Límite de códigos a verificar por run"
@@ -437,7 +459,7 @@ const ConfiguracionTab = () => {
 						<TextField
 							fullWidth
 							type="number"
-							label="Pausa entre Batches (ms)"
+							label="Pausa entre batches (ms)"
 							value={pausaEntreBatches}
 							onChange={(e) => setPausaEntreBatches(parseInt(e.target.value, 10) || 0)}
 							helperText="Tiempo de espera entre lotes"
@@ -450,7 +472,7 @@ const ConfiguracionTab = () => {
 			<Card sx={{ p: 3 }}>
 				<Stack direction="row" alignItems="center" gap={1} mb={1}>
 					<RotateLeft size={24} />
-					<Typography variant="h6">Re-scan Periódico de Inválidos</Typography>
+					<Typography variant="h6">Re-scan periódico de inválidos</Typography>
 				</Stack>
 				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
 					Re-verifica códigos marcados como inválidos. Útil porque eldial puede asignar nuevos PDFs a códigos que antes devolvían 404.
@@ -486,9 +508,11 @@ const ConfiguracionTab = () => {
 					</Grid>
 					<Grid item xs={12} md={3}>
 						<Typography variant="caption" color="text.secondary">
-							Última Ejecución
+							Última ejecución
 						</Typography>
-						<Typography variant="body2">{formatDate(config.rescan?.ultimaEjecucion)}</Typography>
+						<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+							{formatDate(config.rescan?.ultimaEjecucion)}
+						</Typography>
 					</Grid>
 				</Grid>
 			</Card>
@@ -502,41 +526,41 @@ const ConfiguracionTab = () => {
 				<Grid container spacing={3}>
 					<Grid item xs={6} md={3}>
 						<Card sx={{ p: 2, bgcolor: "primary.lighter", textAlign: "center" }}>
-							<Typography variant="h4" color="primary.main">
+							<Typography variant="h4" color="primary.main" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
 								{config.estadisticas?.totalCodigosRastreados?.toLocaleString() || 0}
 							</Typography>
 							<Typography variant="caption" color="text.secondary">
-								Total Rastreados
+								Total rastreados
 							</Typography>
 						</Card>
 					</Grid>
 					<Grid item xs={6} md={3}>
 						<Card sx={{ p: 2, bgcolor: "success.lighter", textAlign: "center" }}>
-							<Typography variant="h4" color="success.main">
+							<Typography variant="h4" color="success.main" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
 								{config.estadisticas?.codigosValidosEncontrados?.toLocaleString() || 0}
 							</Typography>
 							<Typography variant="caption" color="text.secondary">
-								PDFs Válidos Encontrados
+								PDFs válidos encontrados
 							</Typography>
 						</Card>
 					</Grid>
 					<Grid item xs={6} md={3}>
 						<Card sx={{ p: 2, bgcolor: "info.lighter", textAlign: "center" }}>
-							<Typography variant="body1" color="info.main" fontWeight={600}>
+							<Typography variant="body1" color="info.main" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
 								{formatDate(config.estadisticas?.ultimaEjecucion)}
 							</Typography>
 							<Typography variant="caption" color="text.secondary">
-								Última Ejecución
+								Última ejecución
 							</Typography>
 						</Card>
 					</Grid>
 					<Grid item xs={6} md={3}>
 						<Card sx={{ p: 2, bgcolor: "warning.lighter", textAlign: "center" }}>
-							<Typography variant="body1" color="warning.main" fontWeight={600}>
+							<Typography variant="body1" color="warning.main" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
 								{formatDuration(config.estadisticas?.duracionUltimaEjecucion)}
 							</Typography>
 							<Typography variant="caption" color="text.secondary">
-								Duración Última Ejecución
+								Duración última ejecución
 							</Typography>
 						</Card>
 					</Grid>
@@ -546,13 +570,13 @@ const ConfiguracionTab = () => {
 			{/* Info del Sistema */}
 			<Card sx={{ p: 3 }}>
 				<Typography variant="h6" gutterBottom>
-					Información del Sistema
+					Información del sistema
 				</Typography>
 				<Divider sx={{ mb: 2 }} />
 				<Grid container spacing={2}>
 					<Grid item xs={12} md={6}>
 						<Typography variant="caption" color="text.secondary">
-							ID de Configuración
+							ID de configuración
 						</Typography>
 						<Typography variant="body2" fontFamily="monospace">
 							{config._id}
@@ -562,13 +586,17 @@ const ConfiguracionTab = () => {
 						<Typography variant="caption" color="text.secondary">
 							Creado
 						</Typography>
-						<Typography variant="body2">{formatDate(config.createdAt)}</Typography>
+						<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+							{formatDate(config.createdAt)}
+						</Typography>
 					</Grid>
 					<Grid item xs={12} md={3}>
 						<Typography variant="caption" color="text.secondary">
-							Última Actualización
+							Última actualización
 						</Typography>
-						<Typography variant="body2">{formatDate(config.updatedAt)}</Typography>
+						<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+							{formatDate(config.updatedAt)}
+						</Typography>
 					</Grid>
 				</Grid>
 			</Card>

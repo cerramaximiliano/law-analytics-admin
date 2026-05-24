@@ -183,7 +183,9 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 		>
 			<DialogTitle>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Typography variant="h5">Editar Documento Legal</Typography>
+					<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
+						Editar documento legal
+					</Typography>
 					<IconButton onClick={onClose} color="error">
 						<CloseCircle size={24} />
 					</IconButton>
@@ -194,14 +196,14 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 				<Stack spacing={3} sx={{ mt: 1 }}>
 					{/* Informacion basica */}
 					<Box>
-						<Typography variant="subtitle1" fontWeight={600} gutterBottom>
-							Informacion Basica
+						<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
+							Información básica
 						</Typography>
 						<Grid container spacing={2}>
 							<Grid item xs={12} md={6}>
 								<TextField
 									fullWidth
-									label="Titulo"
+									label="Título"
 									value={formData.title || ""}
 									onChange={(e) => handleInputChange("title", e.target.value)}
 								/>
@@ -211,21 +213,21 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 									<InputLabel>Tipo de Documento</InputLabel>
 									<Select
 										value={formData.documentType || ""}
-										label="Tipo de Documento"
+										label="Tipo de documento"
 										onChange={(e) => handleInputChange("documentType", e.target.value)}
 									>
-										<MenuItem value="subscription">Suscripcion</MenuItem>
+										<MenuItem value="subscription">Suscripción</MenuItem>
 										<MenuItem value="refund">Reembolsos</MenuItem>
-										<MenuItem value="billing">Facturacion</MenuItem>
+										<MenuItem value="billing">Facturación</MenuItem>
 										<MenuItem value="privacy">Privacidad</MenuItem>
-										<MenuItem value="terms">Terminos de Uso</MenuItem>
+										<MenuItem value="terms">Términos de uso</MenuItem>
 									</Select>
 								</FormControl>
 							</Grid>
 							<Grid item xs={12} md={3}>
 								<TextField
 									fullWidth
-									label="Version"
+									label="Versión"
 									value={formData.version || ""}
 									onChange={(e) => handleInputChange("version", e.target.value)}
 								/>
@@ -234,16 +236,16 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 								<FormControl fullWidth>
 									<InputLabel>Idioma</InputLabel>
 									<Select value={formData.language || ""} label="Idioma" onChange={(e) => handleInputChange("language", e.target.value)}>
-										<MenuItem value="es">Espanol</MenuItem>
-										<MenuItem value="en">Ingles</MenuItem>
-										<MenuItem value="pt">Portugues</MenuItem>
+										<MenuItem value="es">Español</MenuItem>
+										<MenuItem value="en">Inglés</MenuItem>
+										<MenuItem value="pt">Portugués</MenuItem>
 									</Select>
 								</FormControl>
 							</Grid>
 							<Grid item xs={12} md={4}>
 								<TextField
 									fullWidth
-									label="Region"
+									label="Región"
 									value={formData.region || ""}
 									onChange={(e) => handleInputChange("region", e.target.value)}
 								/>
@@ -252,7 +254,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 								<TextField
 									fullWidth
 									type="date"
-									label="Fecha Efectiva"
+									label="Fecha efectiva"
 									value={formData.effectiveDate || ""}
 									onChange={(e) => handleInputChange("effectiveDate", e.target.value)}
 									InputLabelProps={{ shrink: true }}
@@ -267,7 +269,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 											color="success"
 										/>
 									}
-									label="Documento Activo"
+									label="Documento activo"
 								/>
 							</Grid>
 						</Grid>
@@ -277,8 +279,8 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 
 					{/* Introduccion */}
 					<Box>
-						<Typography variant="subtitle1" fontWeight={600} gutterBottom>
-							Introduccion
+						<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
+							Introducción
 						</Typography>
 						<TextField
 							fullWidth
@@ -295,11 +297,21 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 					{/* Secciones */}
 					<Box>
 						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-							<Typography variant="subtitle1" fontWeight={600}>
+							<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }}>
 								Secciones ({sections.length})
 							</Typography>
-							<Button variant="outlined" startIcon={<Add size={18} />} onClick={handleAddSection} size="small">
-								Agregar Seccion
+							<Button
+								variant="outlined"
+								startIcon={<Add size={18} />}
+								onClick={handleAddSection}
+								size="small"
+								sx={{
+									textTransform: "none",
+									transition: "transform 200ms ease",
+									"&:active": { transform: "scale(0.97)" },
+								}}
+							>
+								Agregar sección
 							</Button>
 						</Stack>
 
@@ -316,7 +328,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 								>
 									<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
 										<Typography variant="subtitle2" color="primary">
-											Seccion {section.order}
+											Sección {section.order}
 										</Typography>
 										<Stack direction="row" spacing={0.5}>
 											<IconButton size="small" onClick={() => handleMoveSection(index, "up")} disabled={index === 0}>
@@ -335,7 +347,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 										<Grid item xs={12}>
 											<TextField
 												fullWidth
-												label="Titulo de la Seccion"
+												label="Título de la sección"
 												value={section.title}
 												onChange={(e) => handleSectionChange(index, "title", e.target.value)}
 												size="small"
@@ -384,7 +396,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 									}}
 								>
 									<Typography variant="body2" color="text.secondary">
-										No hay secciones. Haz clic en "Agregar Seccion" para crear una.
+										No hay secciones. Haz clic en "Agregar sección" para crear una.
 									</Typography>
 								</Box>
 							)}
@@ -395,8 +407,8 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 
 					{/* Conclusion */}
 					<Box>
-						<Typography variant="subtitle1" fontWeight={600} gutterBottom>
-							Conclusion
+						<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
+							Conclusión
 						</Typography>
 						<TextField
 							fullWidth
@@ -412,14 +424,14 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 
 					{/* Detalles de la empresa */}
 					<Box>
-						<Typography variant="subtitle1" fontWeight={600} gutterBottom>
-							Informacion de la Empresa
+						<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
+							Información de la empresa
 						</Typography>
 						<Grid container spacing={2}>
 							<Grid item xs={12} md={6}>
 								<TextField
 									fullWidth
-									label="Nombre de la Empresa"
+									label="Nombre de la empresa"
 									value={companyDetails.name}
 									onChange={(e) => handleCompanyDetailChange("name", e.target.value)}
 								/>
@@ -427,7 +439,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 							<Grid item xs={12} md={6}>
 								<TextField
 									fullWidth
-									label="Numero de Registro"
+									label="Número de registro"
 									value={companyDetails.registrationNumber}
 									onChange={(e) => handleCompanyDetailChange("registrationNumber", e.target.value)}
 								/>
@@ -435,7 +447,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 							<Grid item xs={12}>
 								<TextField
 									fullWidth
-									label="Direccion"
+									label="Dirección"
 									value={companyDetails.address}
 									onChange={(e) => handleCompanyDetailChange("address", e.target.value)}
 								/>
@@ -452,7 +464,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 							<Grid item xs={12} md={6}>
 								<TextField
 									fullWidth
-									label="Telefono"
+									label="Teléfono"
 									value={companyDetails.phone}
 									onChange={(e) => handleCompanyDetailChange("phone", e.target.value)}
 								/>
@@ -463,11 +475,29 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 			</DialogContent>
 			<Divider />
 			<DialogActions sx={{ p: 2 }}>
-				<Button onClick={onClose} color="inherit">
+				<Button
+					onClick={onClose}
+					color="inherit"
+					sx={{
+						textTransform: "none",
+						transition: "transform 200ms ease",
+						"&:active": { transform: "scale(0.97)" },
+					}}
+				>
 					Cancelar
 				</Button>
-				<Button onClick={handleSubmit} variant="contained" color="primary" disabled={loading}>
-					{loading ? <CircularProgress size={20} /> : "Guardar Cambios"}
+				<Button
+					onClick={handleSubmit}
+					variant="contained"
+					color="primary"
+					disabled={loading}
+					sx={{
+						textTransform: "none",
+						transition: "transform 200ms ease, box-shadow 200ms ease",
+						"&:active": { transform: "scale(0.97)" },
+					}}
+				>
+					{loading ? <CircularProgress size={20} /> : "Guardar cambios"}
 				</Button>
 			</DialogActions>
 		</Dialog>

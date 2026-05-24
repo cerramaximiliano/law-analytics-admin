@@ -46,9 +46,21 @@ import {
 	SearchNormal1,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
+import { alpha } from "@mui/material/styles";
 import MEVWorkersService, { SyncCheckConfig, NavigationCodeDoc, ScreenshotInfo } from "api/workersMEV";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
-const DAY_LABELS = ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"];
+const DAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+const tableHeadSx = (t: any) => ({
+	"& .MuiTableCell-head": {
+		backgroundColor: alpha(BRAND_BLUE, t.palette.mode === "dark" ? 0.08 : 0.04),
+		borderBottom: `1px solid ${headerBorder(t.palette.mode === "dark")}`,
+		fontWeight: 600,
+		letterSpacing: "0.01em",
+		textTransform: "none" as const,
+	},
+});
 
 const SyncCheckTab = () => {
 	const { enqueueSnackbar } = useSnackbar();
@@ -366,8 +378,20 @@ const SyncCheckTab = () => {
 		<Stack spacing={3}>
 			{/* Header */}
 			<Stack direction="row" justifyContent="space-between" alignItems="center">
-				<Typography variant="h5">Sync Check Worker</Typography>
-				<Button startIcon={<Refresh size={18} />} onClick={fetchData} variant="outlined" size="small">
+				<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
+					Sync check worker
+				</Typography>
+				<Button
+					startIcon={<Refresh size={18} />}
+					onClick={fetchData}
+					variant="outlined"
+					size="small"
+					sx={{
+						textTransform: "none",
+						transition: "transform 200ms ease",
+						"&:active": { transform: "scale(0.97)" },
+					}}
+				>
 					Actualizar
 				</Button>
 			</Stack>
@@ -384,7 +408,7 @@ const SyncCheckTab = () => {
 					>
 						<Stack direction="row" spacing={1} alignItems="center">
 							<InfoCircle size={20} />
-							<Typography variant="h6">Como funciona este worker</Typography>
+							<Typography variant="h6">Cómo funciona este worker</Typography>
 						</Stack>
 						{docsOpen ? <ArrowUp2 size={20} /> : <ArrowDown2 size={20} />}
 					</Stack>
@@ -474,17 +498,11 @@ const SyncCheckTab = () => {
 							</Typography>
 							<TableContainer component={Paper} variant="outlined" sx={{ mt: 1 }}>
 								<Table size="small">
-									<TableHead>
+									<TableHead sx={tableHeadSx}>
 										<TableRow>
-											<TableCell>
-												<strong>Configuracion</strong>
-											</TableCell>
-											<TableCell>
-												<strong>Como se aplica</strong>
-											</TableCell>
-											<TableCell>
-												<strong>Latencia</strong>
-											</TableCell>
+											<TableCell>Configuración</TableCell>
+											<TableCell>Cómo se aplica</TableCell>
+											<TableCell>Latencia</TableCell>
 										</TableRow>
 									</TableHead>
 									<TableBody>
@@ -574,11 +592,13 @@ pm2 save`}
 					<Card>
 						<CardContent>
 							<Typography variant="body2" color="text.secondary" gutterBottom>
-								Ultima ejecucion
+								Última ejecución
 							</Typography>
-							<Typography variant="h6">{formatDate(report?.date)}</Typography>
-							<Typography variant="caption" color="text.secondary">
-								Duracion: {formatDuration(report?.duration_ms)}
+							<Typography variant="h6" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+								{formatDate(report?.date)}
+							</Typography>
+							<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
+								Duración: {formatDuration(report?.duration_ms)}
 							</Typography>
 						</CardContent>
 					</Card>
@@ -589,8 +609,10 @@ pm2 save`}
 							<Typography variant="body2" color="text.secondary" gutterBottom>
 								Ejecuciones totales
 							</Typography>
-							<Typography variant="h6">{stats?.total_runs || 0}</Typography>
-							<Typography variant="caption" color="text.secondary">
+							<Typography variant="h6" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+								{stats?.total_runs || 0}
+							</Typography>
+							<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 								Exitosas: {stats?.successful_runs || 0} | Fallidas: {stats?.failed_runs || 0}
 							</Typography>
 						</CardContent>
@@ -604,7 +626,9 @@ pm2 save`}
 					<Grid item xs={6} sm={2.4}>
 						<Card>
 							<CardContent sx={{ textAlign: "center", py: 1.5 }}>
-								<Typography variant="h5">{report.summary.totalJurisdiccionesMEV}</Typography>
+								<Typography variant="h5" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
+									{report.summary.totalJurisdiccionesMEV}
+								</Typography>
 								<Typography variant="caption" color="text.secondary">
 									Jurisd. MEV
 								</Typography>
@@ -614,7 +638,9 @@ pm2 save`}
 					<Grid item xs={6} sm={2.4}>
 						<Card>
 							<CardContent sx={{ textAlign: "center", py: 1.5 }}>
-								<Typography variant="h5">{report.summary.totalJurisdiccionesJSON}</Typography>
+								<Typography variant="h5" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
+									{report.summary.totalJurisdiccionesJSON}
+								</Typography>
 								<Typography variant="caption" color="text.secondary">
 									Jurisd. JSON
 								</Typography>
@@ -624,7 +650,11 @@ pm2 save`}
 					<Grid item xs={6} sm={2.4}>
 						<Card>
 							<CardContent sx={{ textAlign: "center", py: 1.5 }}>
-								<Typography variant="h5" color={report.summary.jurisdiccionesFaltantes > 0 ? "error" : "success.main"}>
+								<Typography
+									variant="h5"
+									color={report.summary.jurisdiccionesFaltantes > 0 ? "error" : "success.main"}
+									sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
+								>
 									{report.summary.jurisdiccionesFaltantes}
 								</Typography>
 								<Typography variant="caption" color="text.secondary">
@@ -636,7 +666,11 @@ pm2 save`}
 					<Grid item xs={6} sm={2.4}>
 						<Card>
 							<CardContent sx={{ textAlign: "center", py: 1.5 }}>
-								<Typography variant="h5" color={report.summary.organismosFaltantes > 0 ? "error" : "success.main"}>
+								<Typography
+									variant="h5"
+									color={report.summary.organismosFaltantes > 0 ? "error" : "success.main"}
+									sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
+								>
 									{report.summary.organismosFaltantes}
 								</Typography>
 								<Typography variant="caption" color="text.secondary">
@@ -648,7 +682,11 @@ pm2 save`}
 					<Grid item xs={6} sm={2.4}>
 						<Card>
 							<CardContent sx={{ textAlign: "center", py: 1.5 }}>
-								<Typography variant="h5" color={report.summary.organismosSobrantes > 0 ? "warning.main" : "success.main"}>
+								<Typography
+									variant="h5"
+									color={report.summary.organismosSobrantes > 0 ? "warning.main" : "success.main"}
+									sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
+								>
 									{report.summary.organismosSobrantes}
 								</Typography>
 								<Typography variant="caption" color="text.secondary">
@@ -664,7 +702,7 @@ pm2 save`}
 			<Card>
 				<CardContent>
 					<Typography variant="h6" gutterBottom>
-						Configuracion
+						Configuración
 					</Typography>
 					<Grid container spacing={3} alignItems="center">
 						<Grid item xs={12} sm={3}>
@@ -680,12 +718,12 @@ pm2 save`}
 								onChange={(e) => setEditCron(e.target.value)}
 								size="small"
 								fullWidth
-								helperText='Ej: "0 6 * * *" = todos los dias a las 6 AM'
+								helperText='Ej: "0 6 * * *" = todos los días a las 6 AM'
 							/>
 						</Grid>
 						<Grid item xs={12} sm={5}>
 							<Typography variant="body2" gutterBottom>
-								Dias activos:
+								Días activos:
 							</Typography>
 							<FormGroup row>
 								{DAY_LABELS.map((label, idx) => (
@@ -735,8 +773,18 @@ pm2 save`}
 							</Stack>
 						</Grid>
 						<Grid item xs={12} sm={4}>
-							<Button variant="contained" onClick={handleSave} disabled={saving} fullWidth>
-								{saving ? "Guardando..." : "Guardar configuracion"}
+							<Button
+								variant="contained"
+								onClick={handleSave}
+								disabled={saving}
+								fullWidth
+								sx={{
+									textTransform: "none",
+									transition: "transform 200ms ease",
+									"&:active": { transform: "scale(0.98)" },
+								}}
+							>
+								{saving ? "Guardando..." : "Guardar configuración"}
 							</Button>
 						</Grid>
 					</Grid>
@@ -754,7 +802,7 @@ pm2 save`}
 							sx={{ cursor: "pointer" }}
 							onClick={() => setReportOpen(!reportOpen)}
 						>
-							<Typography variant="h6">Detalle del ultimo reporte</Typography>
+							<Typography variant="h6">Detalle del último reporte</Typography>
 							{reportOpen ? <ArrowUp2 size={20} /> : <ArrowDown2 size={20} />}
 						</Stack>
 						<Collapse in={reportOpen}>
@@ -780,13 +828,13 @@ pm2 save`}
 												</Typography>
 												<TableContainer component={Paper} variant="outlined">
 													<Table size="small">
-														<TableHead>
+														<TableHead sx={tableHeadSx}>
 															<TableRow>
 																<TableCell width={40} />
-																<TableCell>Codigo</TableCell>
+																<TableCell>Código</TableCell>
 																<TableCell>Nombre</TableCell>
 																<TableCell align="right">Organismos</TableCell>
-																<TableCell align="right">Accion</TableCell>
+																<TableCell align="right">Acción</TableCell>
 															</TableRow>
 														</TableHead>
 														<TableBody>
@@ -869,12 +917,12 @@ pm2 save`}
 												</Typography>
 												<TableContainer component={Paper} variant="outlined">
 													<Table size="small">
-														<TableHead>
+														<TableHead sx={tableHeadSx}>
 															<TableRow>
-																<TableCell>Jurisdiccion</TableCell>
-																<TableCell>Codigo Org.</TableCell>
-																<TableCell>Nombre Organismo</TableCell>
-																<TableCell align="right">Accion</TableCell>
+																<TableCell>Jurisdicción</TableCell>
+																<TableCell>Código org.</TableCell>
+																<TableCell>Nombre organismo</TableCell>
+																<TableCell align="right">Acción</TableCell>
 															</TableRow>
 														</TableHead>
 														<TableBody>
@@ -921,12 +969,12 @@ pm2 save`}
 												</Typography>
 												<TableContainer component={Paper} variant="outlined">
 													<Table size="small">
-														<TableHead>
+														<TableHead sx={tableHeadSx}>
 															<TableRow>
-																<TableCell>Jurisdiccion</TableCell>
-																<TableCell>Codigo Org.</TableCell>
-																<TableCell>Nombre Organismo</TableCell>
-																<TableCell align="right">Accion</TableCell>
+																<TableCell>Jurisdicción</TableCell>
+																<TableCell>Código org.</TableCell>
+																<TableCell>Nombre organismo</TableCell>
+																<TableCell align="right">Acción</TableCell>
 															</TableRow>
 														</TableHead>
 														<TableBody>
@@ -992,7 +1040,7 @@ pm2 save`}
 					>
 						<Stack direction="row" spacing={1} alignItems="center">
 							<SearchNormal1 size={20} />
-							<Typography variant="h6">Explorador de Navigation Codes</Typography>
+							<Typography variant="h6">Explorador de navigation codes</Typography>
 						</Stack>
 						{explorerOpen ? <ArrowUp2 size={20} /> : <ArrowDown2 size={20} />}
 					</Stack>
@@ -1147,12 +1195,12 @@ pm2 save`}
 							<Box sx={{ mt: 2 }}>
 								<TableContainer component={Paper} variant="outlined">
 									<Table size="small">
-										<TableHead>
+										<TableHead sx={tableHeadSx}>
 											<TableRow>
 												<TableCell width={40} />
 												<TableCell>Fecha</TableCell>
 												<TableCell>Estado</TableCell>
-												<TableCell>Duracion</TableCell>
+												<TableCell>Duración</TableCell>
 												<TableCell>Jurisd. MEV</TableCell>
 												<TableCell>Jurisd. JSON</TableCell>
 												<TableCell>Faltantes</TableCell>
@@ -1168,19 +1216,19 @@ pm2 save`}
 														onClick={() => setExpandedHistoryIdx(expandedHistoryIdx === idx ? null : idx)}
 													>
 														<TableCell>{expandedHistoryIdx === idx ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}</TableCell>
-														<TableCell>{formatDate(entry.date)}</TableCell>
+														<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{formatDate(entry.date)}</TableCell>
 														<TableCell>
 															{entry.status === "OK" && <Chip label="OK" color="success" size="small" />}
 															{entry.status === "ALERTA" && <Chip label="ALERTA" color="warning" size="small" />}
 															{entry.status === "ERROR" && <Chip label="ERROR" color="error" size="small" />}
 														</TableCell>
-														<TableCell>{formatDuration(entry.duration_ms)}</TableCell>
-														<TableCell>{entry.summary?.totalJurisdiccionesMEV ?? "-"}</TableCell>
-														<TableCell>{entry.summary?.totalJurisdiccionesJSON ?? "-"}</TableCell>
-														<TableCell>
+														<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{formatDuration(entry.duration_ms)}</TableCell>
+														<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{entry.summary?.totalJurisdiccionesMEV ?? "-"}</TableCell>
+														<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{entry.summary?.totalJurisdiccionesJSON ?? "-"}</TableCell>
+														<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>
 															{(entry.summary?.jurisdiccionesFaltantes || 0) + (entry.summary?.organismosFaltantes || 0) || "-"}
 														</TableCell>
-														<TableCell>{entry.summary?.organismosSobrantes ?? "-"}</TableCell>
+														<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{entry.summary?.organismosSobrantes ?? "-"}</TableCell>
 													</TableRow>
 													{expandedHistoryIdx === idx && (
 														<TableRow>
@@ -1248,20 +1296,22 @@ pm2 save`}
 				<Card>
 					<CardContent>
 						<Typography variant="h6" gutterBottom>
-							Navigation Codes en BD
+							Navigation codes en BD
 						</Typography>
 						<Grid container spacing={2}>
 							<Grid item xs={6} sm={3}>
 								<Typography variant="body2" color="text.secondary">
-									Total codigos
+									Total códigos
 								</Typography>
-								<Typography variant="h5">{navStats.total || 0}</Typography>
+								<Typography variant="h5" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
+									{navStats.total || 0}
+								</Typography>
 							</Grid>
 							<Grid item xs={6} sm={3}>
 								<Typography variant="body2" color="text.secondary">
 									Activos
 								</Typography>
-								<Typography variant="h5" color="success.main">
+								<Typography variant="h5" color="success.main" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
 									{navStats.activos || 0}
 								</Typography>
 							</Grid>
@@ -1269,7 +1319,7 @@ pm2 save`}
 								<Typography variant="body2" color="text.secondary">
 									Inactivos
 								</Typography>
-								<Typography variant="h5" color="text.disabled">
+								<Typography variant="h5" color="text.disabled" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
 									{navStats.inactivos || 0}
 								</Typography>
 							</Grid>
@@ -1277,7 +1327,9 @@ pm2 save`}
 								<Typography variant="body2" color="text.secondary">
 									Jurisdicciones
 								</Typography>
-								<Typography variant="h5">{navStats.jurisdicciones || 0}</Typography>
+								<Typography variant="h5" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
+									{navStats.jurisdicciones || 0}
+								</Typography>
 							</Grid>
 						</Grid>
 						{navStats.porTipo && (
@@ -1301,20 +1353,22 @@ pm2 save`}
 				<Card>
 					<CardContent>
 						<Typography variant="h6" gutterBottom>
-							Estadisticas historicas
+							Estadísticas históricas
 						</Typography>
 						<Grid container spacing={2}>
 							<Grid item xs={6} sm={2}>
 								<Typography variant="body2" color="text.secondary">
 									Total ejecuciones
 								</Typography>
-								<Typography variant="h6">{stats.total_runs}</Typography>
+								<Typography variant="h6" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+									{stats.total_runs}
+								</Typography>
 							</Grid>
 							<Grid item xs={6} sm={2}>
 								<Typography variant="body2" color="text.secondary">
 									Exitosas
 								</Typography>
-								<Typography variant="h6" color="success.main">
+								<Typography variant="h6" color="success.main" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
 									{stats.successful_runs}
 								</Typography>
 							</Grid>
@@ -1322,7 +1376,7 @@ pm2 save`}
 								<Typography variant="body2" color="text.secondary">
 									Fallidas
 								</Typography>
-								<Typography variant="h6" color="error">
+								<Typography variant="h6" color="error" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
 									{stats.failed_runs}
 								</Typography>
 							</Grid>
@@ -1330,26 +1384,34 @@ pm2 save`}
 								<Typography variant="body2" color="text.secondary">
 									OK consecutivos
 								</Typography>
-								<Typography variant="h6">{stats.consecutive_ok}</Typography>
+								<Typography variant="h6" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+									{stats.consecutive_ok}
+								</Typography>
 							</Grid>
 							<Grid item xs={6} sm={2}>
 								<Typography variant="body2" color="text.secondary">
 									Alertas consec.
 								</Typography>
-								<Typography variant="h6" color={stats.consecutive_alerts > 0 ? "warning.main" : "inherit"}>
+								<Typography
+									variant="h6"
+									color={stats.consecutive_alerts > 0 ? "warning.main" : "inherit"}
+									sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}
+								>
 									{stats.consecutive_alerts}
 								</Typography>
 							</Grid>
 							<Grid item xs={6} sm={2}>
 								<Typography variant="body2" color="text.secondary">
-									Ultimo exito
+									Último éxito
 								</Typography>
-								<Typography variant="body2">{formatDate(stats.last_success_date)}</Typography>
+								<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+									{formatDate(stats.last_success_date)}
+								</Typography>
 							</Grid>
 						</Grid>
 						{stats.last_error && (
 							<Alert severity="error" sx={{ mt: 2 }}>
-								Ultimo error ({formatDate(stats.last_error_date)}): {stats.last_error}
+								Último error ({formatDate(stats.last_error_date)}): {stats.last_error}
 							</Alert>
 						)}
 					</CardContent>

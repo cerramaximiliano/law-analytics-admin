@@ -23,8 +23,10 @@ import {
 	Button,
 } from "@mui/material";
 import { Refresh, Eye } from "iconsax-react";
+import { alpha } from "@mui/material/styles";
 import dayjs from "utils/dayjs-config";
 import notificationMonitoringService from "services/notificationMonitoringService";
+import { headerBorder } from "themes/dashboardTokens";
 
 const FailedNotifications = () => {
 	const [failedNotifications, setFailedNotifications] = useState<any[]>([]);
@@ -174,7 +176,17 @@ const FailedNotifications = () => {
 
 			<TableContainer component={Paper}>
 				<Table>
-					<TableHead>
+					<TableHead
+						sx={(theme) => ({
+							"& .MuiTableCell-head": {
+								backgroundColor: alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.08 : 0.04),
+								borderBottom: `1px solid ${headerBorder(theme.palette.mode === "dark")}`,
+								fontWeight: 600,
+								letterSpacing: "0.01em",
+								textTransform: "none",
+							},
+						})}
+					>
 						<TableRow>
 							<TableCell>Tipo</TableCell>
 							<TableCell>Usuario</TableCell>
@@ -203,14 +215,15 @@ const FailedNotifications = () => {
 										</Box>
 									</TableCell>
 									<TableCell>{notification.notification?.method || "N/A"}</TableCell>
-									<TableCell>
+									<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>
 										<Chip
 											label={notification.notification?.delivery?.attempts || 0}
 											size="small"
 											color={notification.notification?.delivery?.attempts > 3 ? "error" : "default"}
+											sx={{ fontVariantNumeric: "tabular-nums", fontWeight: 500 }}
 										/>
 									</TableCell>
-									<TableCell>{formatDate(notification.notification?.sentAt)}</TableCell>
+									<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{formatDate(notification.notification?.sentAt)}</TableCell>
 									<TableCell>
 										<Typography variant="caption" color="error">
 											{notification.notification?.delivery?.error || "Error desconocido"}
@@ -247,7 +260,7 @@ const FailedNotifications = () => {
 			</TableContainer>
 
 			<Dialog open={detailsDialog} onClose={() => setDetailsDialog(false)} maxWidth="md" fullWidth>
-				<DialogTitle>Detalles de la Notificación</DialogTitle>
+				<DialogTitle>Detalles de la notificación</DialogTitle>
 				<DialogContent>
 					{selectedNotification && (
 						<Box sx={{ pt: 2 }}>
