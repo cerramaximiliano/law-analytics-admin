@@ -642,6 +642,13 @@ const admin: NavItemType = {
 					url: "/admin/users/resources",
 					breadcrumbs: true,
 				},
+				{
+					id: "users-feature-grants",
+					title: "Feature Grants (MCP)",
+					type: "item",
+					url: "/admin/users/feature-grants",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{
