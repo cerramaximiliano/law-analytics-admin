@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 import {
 	Alert,
 	Box,
@@ -25,8 +25,9 @@ import {
 	Typography,
 	CircularProgress,
 } from "@mui/material";
-import { Edit, Trash, Eye, Add, Refresh2, Link1, ArrowDown2, ArrowUp2, DollarCircle, DiscountShape, ArrangeVertical } from "iconsax-react";
+import { Edit, Trash, Eye, Add, Refresh2, Link1, ArrowDown2, ArrowUp2, DollarCircle, DiscountShape, ArrangeVertical, Star1 } from "iconsax-react";
 import MainCard from "components/MainCard";
+import { BRAND_BLUE, PREMIUM_GOLD } from "themes/dashboardTokens";
 import { useSnackbar } from "notistack";
 import { formatCurrency } from "utils/formatCurrency";
 import { getPlanPricing, getBillingPeriodText } from "utils/planPricingUtils";
@@ -198,20 +199,35 @@ const PlansManagement = () => {
 	return (
 		<>
 			<MainCard
-				title="Gestión de Planes y Suscripciones"
+				title="Gestión de planes y suscripciones"
 				secondary={
-					<Stack direction="row" spacing={2}>
+					<Stack direction="row" spacing={1.5}>
 						<Button
 							variant="outlined"
 							color="secondary"
 							startIcon={syncLoading ? <CircularProgress size={18} /> : <Refresh2 />}
 							onClick={handleSyncWithStripe}
 							disabled={syncLoading}
+							sx={{
+								transition: "transform 200ms ease",
+								"&:hover": { transform: "translateY(-1px)" },
+								"&:active": { transform: "translate(0, 1px)" },
+							}}
 						>
 							{syncLoading ? "Sincronizando..." : "Sincronizar con Stripe"}
 						</Button>
-						<Button variant="contained" color="primary" startIcon={<Add />} onClick={handleAddNew}>
-							Agregar Plan
+						<Button
+							variant="contained"
+							color="primary"
+							startIcon={<Add />}
+							onClick={handleAddNew}
+							sx={{
+								transition: "transform 200ms ease, box-shadow 200ms ease",
+								"&:hover": { transform: "translateY(-1px)", boxShadow: `0 8px 18px ${alpha(BRAND_BLUE, 0.28)}` },
+								"&:active": { transform: "translate(0, 1px)" },
+							}}
+						>
+							Agregar plan
 						</Button>
 					</Stack>
 				}
@@ -332,58 +348,50 @@ const PlansManagement = () => {
 					<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 						{/* Summary Cards */}
 						<Grid item xs={12} sm={6} md={3}>
-							<Card>
+							<Card variant="outlined" sx={{ borderColor: alpha(theme.palette.divider, 0.6) }}>
 								<CardContent>
-									<Stack spacing={1}>
-										<Typography variant="h3" color="primary">
-											{plans.length}
-										</Typography>
-										<Typography variant="body2" color="textSecondary">
-											Total de Planes
-										</Typography>
-									</Stack>
+									<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3 }}>
+										Total de planes
+									</Typography>
+									<Typography variant="h3" sx={{ fontVariantNumeric: "tabular-nums", color: BRAND_BLUE, mt: 0.5 }}>
+										{plans.length}
+									</Typography>
 								</CardContent>
 							</Card>
 						</Grid>
 						<Grid item xs={12} sm={6} md={3}>
-							<Card>
+							<Card variant="outlined" sx={{ borderColor: alpha(theme.palette.divider, 0.6) }}>
 								<CardContent>
-									<Stack spacing={1}>
-										<Typography variant="h3" color="success.main">
-											{plans.filter((plan) => plan.isActive).length}
-										</Typography>
-										<Typography variant="body2" color="textSecondary">
-											Planes Activos
-										</Typography>
-									</Stack>
+									<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3 }}>
+										Planes activos
+									</Typography>
+									<Typography variant="h3" color="success.main" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
+										{plans.filter((plan) => plan.isActive).length}
+									</Typography>
 								</CardContent>
 							</Card>
 						</Grid>
 						<Grid item xs={12} sm={6} md={3}>
-							<Card>
+							<Card variant="outlined" sx={{ borderColor: alpha(theme.palette.divider, 0.6) }}>
 								<CardContent>
-									<Stack spacing={1}>
-										<Typography variant="h3" color="warning.main">
-											{plans.find((plan) => plan.isDefault) ? "1" : "0"}
-										</Typography>
-										<Typography variant="body2" color="textSecondary">
-											Plan Default
-										</Typography>
-									</Stack>
+									<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3 }}>
+										Plan default
+									</Typography>
+									<Typography variant="h3" sx={{ color: PREMIUM_GOLD, fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
+										{plans.find((plan) => plan.isDefault) ? "1" : "0"}
+									</Typography>
 								</CardContent>
 							</Card>
 						</Grid>
 						<Grid item xs={12} sm={6} md={3}>
-							<Card>
+							<Card variant="outlined" sx={{ borderColor: alpha(theme.palette.divider, 0.6) }}>
 								<CardContent>
-									<Stack spacing={1}>
-										<Typography variant="h3" color="info.main">
-											{plans.filter((plan) => getPlanPricing(plan).basePrice === 0).length}
-										</Typography>
-										<Typography variant="body2" color="textSecondary">
-											Planes Gratuitos
-										</Typography>
-									</Stack>
+									<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3 }}>
+										Planes gratuitos
+									</Typography>
+									<Typography variant="h3" color="info.main" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
+										{plans.filter((plan) => getPlanPricing(plan).basePrice === 0).length}
+									</Typography>
 								</CardContent>
 							</Card>
 						</Grid>
@@ -417,7 +425,7 @@ const PlansManagement = () => {
 														{plan.description}
 													</Typography>
 												</TableCell>
-												<TableCell align="center">
+												<TableCell align="center" sx={{ fontVariantNumeric: "tabular-nums" }}>
 													{plan.activeDiscounts && plan.activeDiscounts.length > 0 ? (
 														<Box>
 															<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
@@ -426,11 +434,12 @@ const PlansManagement = () => {
 																	sx={{
 																		textDecoration: "line-through",
 																		color: "text.disabled",
+																		fontVariantNumeric: "tabular-nums",
 																	}}
 																>
 																	{formatCurrency(plan.activeDiscounts[0].originalPrice, getPlanPricing(plan).currency)}
 																</Typography>
-																<Typography variant="subtitle2" color="success.main" fontWeight={700}>
+																<Typography variant="subtitle2" color="success.main" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums" }}>
 																	{formatCurrency(plan.activeDiscounts[0].finalPrice, getPlanPricing(plan).currency)}
 																</Typography>
 															</Stack>
@@ -442,12 +451,12 @@ const PlansManagement = () => {
 																label={plan.activeDiscounts[0].badge}
 																size="small"
 																color="success"
-																sx={{ mt: 0.5, fontSize: "0.65rem", height: 20 }}
+																sx={{ mt: 0.5, fontSize: "0.65rem", height: 20, borderRadius: 0.75 }}
 															/>
 														</Box>
 													) : (
 														<>
-															<Typography variant="subtitle2">
+															<Typography variant="subtitle2" sx={{ fontVariantNumeric: "tabular-nums" }}>
 																{formatCurrency(getPlanPricing(plan).basePrice, getPlanPricing(plan).currency)}
 															</Typography>
 															<Typography variant="caption" color="textSecondary">
@@ -494,112 +503,197 @@ const PlansManagement = () => {
 						{/* Plan Details Cards */}
 						<Grid item xs={12}>
 							<Typography variant="h5" sx={{ mb: 2 }}>
-								Detalles de Planes
+								Detalles de planes
 							</Typography>
-							<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-								{plans.map((plan) => (
-									<Grid item xs={12} md={6} lg={4} key={plan.planId}>
-										<Card
-											sx={{
-												border: plan.isDefault ? "2px solid" : "1px solid",
-												borderColor: plan.isDefault ? "primary.main" : "divider",
-											}}
-										>
-											<CardContent>
-												<Stack spacing={2}>
-													<Box>
-														<Typography variant="h6" gutterBottom>
-															{plan.displayName}
-														</Typography>
-														<Chip label={plan.isActive ? "Activo" : "Inactivo"} color={plan.isActive ? "success" : "error"} size="small" />
-														{plan.isDefault && <Chip label="Default" color="primary" size="small" sx={{ ml: 1 }} />}
+							<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }} alignItems="stretch">
+								{plans.map((plan) => {
+									const isPremium = /premium/i.test(plan.planId) || /premium/i.test(plan.displayName);
+									const accent = isPremium ? PREMIUM_GOLD : BRAND_BLUE;
+									return (
+										<Grid item xs={12} md={6} lg={4} key={plan.planId} sx={{ display: "flex" }}>
+											<Card
+												variant="outlined"
+												sx={{
+													position: "relative",
+													overflow: "visible",
+													width: "100%",
+													borderColor: plan.isDefault ? accent : alpha(theme.palette.divider, 0.7),
+													borderWidth: plan.isDefault ? 1.5 : 1,
+													boxShadow: plan.isDefault ? `0 8px 24px ${alpha(accent, 0.12)}` : "none",
+													transition: "transform 200ms ease, box-shadow 200ms ease",
+													"&:hover": {
+														transform: "translateY(-2px)",
+														boxShadow: `0 10px 28px ${alpha(accent, 0.16)}`,
+													},
+												}}
+											>
+												{isPremium && (
+													<Box
+														sx={{
+															// Flag-shape ribbon (no genérico pill) — sale por encima del borde superior
+															position: "absolute",
+															top: -10,
+															right: 16,
+															bgcolor: PREMIUM_GOLD,
+															color: "#fff",
+															px: 1.25,
+															py: 0.4,
+															clipPath: "polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%)",
+															display: "flex",
+															alignItems: "center",
+															gap: 0.5,
+															fontSize: "0.65rem",
+															fontWeight: 700,
+															letterSpacing: 0.6,
+															textTransform: "uppercase",
+															minWidth: 76,
+															justifyContent: "center",
+														}}
+													>
+														<Star1 size={11} variant="Bold" color="#fff" />
+														Premium
 													</Box>
-
-													{plan.activeDiscounts && plan.activeDiscounts.length > 0 ? (
+												)}
+												<CardContent>
+													<Stack spacing={2}>
 														<Box>
-															<Stack direction="row" spacing={1} alignItems="baseline">
-																<Typography
-																	variant="h6"
+															<Typography variant="h6" gutterBottom>
+																{plan.displayName}
+															</Typography>
+															<Stack direction="row" spacing={0.75} flexWrap="wrap">
+																<Chip
+																	label={plan.isActive ? "Activo" : "Inactivo"}
+																	color={plan.isActive ? "success" : "error"}
+																	size="small"
+																	sx={{ borderRadius: 0.75 }}
+																/>
+																{plan.isDefault && (
+																	<Chip
+																		label="Default"
+																		size="small"
+																		sx={{
+																			borderRadius: 0.75,
+																			bgcolor: alpha(accent, 0.12),
+																			color: accent,
+																			fontWeight: 600,
+																		}}
+																	/>
+																)}
+															</Stack>
+														</Box>
+
+														{plan.activeDiscounts && plan.activeDiscounts.length > 0 ? (
+															<Box>
+																<Stack direction="row" spacing={1} alignItems="baseline" sx={{ fontVariantNumeric: "tabular-nums" }}>
+																	<Typography
+																		variant="h6"
+																		sx={{
+																			textDecoration: "line-through",
+																			color: "text.disabled",
+																			fontVariantNumeric: "tabular-nums",
+																		}}
+																	>
+																		{formatCurrency(plan.activeDiscounts[0].originalPrice, getPlanPricing(plan).currency)}
+																	</Typography>
+																	<Typography variant="h4" color="success.main" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums" }}>
+																		{formatCurrency(plan.activeDiscounts[0].finalPrice, getPlanPricing(plan).currency)}
+																	</Typography>
+																	<Typography variant="body2" component="span" color="textSecondary">
+																		{getBillingPeriodText(getPlanPricing(plan).billingPeriod)}
+																	</Typography>
+																</Stack>
+																<Box
 																	sx={{
-																		textDecoration: "line-through",
-																		color: "text.disabled",
+																		mt: 1,
+																		p: 1,
+																		bgcolor: alpha(theme.palette.success.main, 0.08),
+																		borderRadius: 1,
+																		border: `1px solid ${alpha(theme.palette.success.main, 0.24)}`,
 																	}}
 																>
-																	{formatCurrency(plan.activeDiscounts[0].originalPrice, getPlanPricing(plan).currency)}
+																	<Stack direction="row" spacing={1} alignItems="center">
+																		<DiscountShape size={16} color={theme.palette.success.main} />
+																		<Typography variant="caption" color="success.dark" fontWeight={600}>
+																			{plan.activeDiscounts[0].promotionalMessage}
+																		</Typography>
+																	</Stack>
+																	{plan.activeDiscounts[0].durationInMonths && (
+																		<Typography variant="caption" color="success.dark" sx={{ display: "block", mt: 0.5 }}>
+																			Válido por {plan.activeDiscounts[0].durationInMonths} meses
+																		</Typography>
+																	)}
+																</Box>
+															</Box>
+														) : (
+															<Stack direction="row" spacing={1} alignItems="baseline">
+																<Typography
+																	variant="h3"
+																	sx={{ color: accent, fontWeight: 700, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}
+																>
+																	{formatCurrency(getPlanPricing(plan).basePrice, getPlanPricing(plan).currency)}
 																</Typography>
-																<Typography variant="h4" color="success.main" fontWeight={700}>
-																	{formatCurrency(plan.activeDiscounts[0].finalPrice, getPlanPricing(plan).currency)}
-																</Typography>
-																<Typography variant="body2" component="span" color="textSecondary">
+																<Typography variant="body2" color="textSecondary">
 																	{getBillingPeriodText(getPlanPricing(plan).billingPeriod)}
 																</Typography>
 															</Stack>
-															<Box
+														)}
+
+														<Divider sx={{ borderStyle: "dashed", opacity: 0.6 }} />
+
+														<Box>
+															<Typography variant="subtitle2" gutterBottom>
+																Límites de recursos
+															</Typography>
+															<Stack spacing={0.5}>
+																{plan.resourceLimits.map((limit, index) => (
+																	<Typography key={index} variant="body2" color="textSecondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
+																		<Box component="span" sx={{ color: accent, mr: 0.75 }}>›</Box>
+																		{limit.description}: {limit.limit}
+																	</Typography>
+																))}
+															</Stack>
+														</Box>
+
+														<Box>
+															<Typography variant="subtitle2" gutterBottom>
+																Características
+															</Typography>
+															<Stack spacing={0.5}>
+																{plan.features
+																	.filter((feature) => feature.enabled)
+																	.map((feature, index) => (
+																		<Typography key={index} variant="body2" color="textSecondary">
+																			<Box component="span" sx={{ color: accent, mr: 0.75 }}>›</Box>
+																			{feature.description}
+																		</Typography>
+																	))}
+															</Stack>
+														</Box>
+
+														<Box sx={{ mt: 1 }}>
+															<Button
+																variant={plan.isDefault ? "contained" : "outlined"}
+																size="small"
+																fullWidth
+																onClick={() => handleEdit(plan)}
 																sx={{
-																	mt: 1,
-																	p: 1,
-																	bgcolor: "success.lighter",
-																	borderRadius: 1,
-																	border: "1px solid",
-																	borderColor: "success.light",
+																	transition: "transform 200ms ease, background-color 200ms ease",
+																	...(plan.isDefault && {
+																		bgcolor: accent,
+																		"&:hover": { bgcolor: accent, transform: "translateY(-1px)" },
+																	}),
+																	"&:active": { transform: "translate(0, 1px)" },
 																}}
 															>
-																<Stack direction="row" spacing={1} alignItems="center">
-																	<DiscountShape size={16} color="var(--mui-palette-success-main)" />
-																	<Typography variant="caption" color="success.dark" fontWeight={600}>
-																		{plan.activeDiscounts[0].promotionalMessage}
-																	</Typography>
-																</Stack>
-																{plan.activeDiscounts[0].durationInMonths && (
-																	<Typography variant="caption" color="success.dark" sx={{ display: "block", mt: 0.5 }}>
-																		Válido por {plan.activeDiscounts[0].durationInMonths} meses
-																	</Typography>
-																)}
-															</Box>
+																Editar plan
+															</Button>
 														</Box>
-													) : (
-														<Typography variant="h4" color="primary">
-															{formatCurrency(getPlanPricing(plan).basePrice, getPlanPricing(plan).currency)}
-															<Typography variant="body2" component="span" color="textSecondary">
-																{getBillingPeriodText(getPlanPricing(plan).billingPeriod)}
-															</Typography>
-														</Typography>
-													)}
-
-													<Box>
-														<Typography variant="subtitle2" gutterBottom>
-															Límites de Recursos:
-														</Typography>
-														{plan.resourceLimits.map((limit, index) => (
-															<Typography key={index} variant="body2" color="textSecondary">
-																• {limit.description}: {limit.limit}
-															</Typography>
-														))}
-													</Box>
-
-													<Box>
-														<Typography variant="subtitle2" gutterBottom>
-															Características:
-														</Typography>
-														{plan.features
-															.filter((feature) => feature.enabled)
-															.map((feature, index) => (
-																<Typography key={index} variant="body2" color="textSecondary">
-																	• {feature.description}
-																</Typography>
-															))}
-													</Box>
-
-													<Box sx={{ mt: 2 }}>
-														<Button variant="outlined" size="small" fullWidth onClick={() => handleEdit(plan)}>
-															Editar Plan
-														</Button>
-													</Box>
-												</Stack>
-											</CardContent>
-										</Card>
-									</Grid>
-								))}
+													</Stack>
+												</CardContent>
+											</Card>
+										</Grid>
+									);
+								})}
 							</Grid>
 						</Grid>
 					</Grid>

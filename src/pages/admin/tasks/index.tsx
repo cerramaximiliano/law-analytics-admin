@@ -98,14 +98,20 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color, loading 
 				p: 2,
 				borderRadius: 2,
 				bgcolor: theme.palette.background.paper,
-				border: `1px solid ${theme.palette.divider}`,
+				border: `1px solid ${alpha(color, 0.18)}`,
+				transition: "transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease",
+				"&:hover": {
+					transform: "translateY(-1px)",
+					borderColor: alpha(color, 0.34),
+					boxShadow: `0 6px 14px ${alpha(color, 0.08)}`,
+				},
 			}}
 		>
 			<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
 				<Box
 					sx={{
 						p: 1,
-						borderRadius: 1.5,
+						borderRadius: "10px",
 						bgcolor: alpha(color, 0.1),
 						color: color,
 						display: "flex",
@@ -114,13 +120,13 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color, loading 
 					{icon}
 				</Box>
 				<Box>
-					<Typography variant="body2" color="textSecondary">
+					<Typography variant="caption" color="textSecondary" sx={{ letterSpacing: 0.3 }}>
 						{label}
 					</Typography>
 					{loading ? (
 						<Skeleton variant="text" width={40} height={28} />
 					) : (
-						<Typography variant="h5" fontWeight="bold">
+						<Typography variant="h5" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums" }}>
 							{value}
 						</Typography>
 					)}
@@ -562,7 +568,7 @@ const AdminTasks: React.FC = () => {
 	};
 
 	return (
-		<MainCard title="Tareas Administrativas" content={false}>
+		<MainCard title="Tareas administrativas" content={false}>
 			{/* Stats Cards */}
 			<Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
 				<Grid container spacing={2}>

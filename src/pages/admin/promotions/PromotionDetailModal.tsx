@@ -1096,11 +1096,11 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { height: "85vh", maxHeight: 800 } }}>
-			<DialogTitle>
+			<DialogTitle sx={{ pb: 1.5 }}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Stack direction="row" spacing={2} alignItems="center">
-						<Typography variant="h4">Detalles de Promoción</Typography>
-						<Chip label={status.label} color={status.color} size="small" />
+					<Stack direction="row" spacing={1.5} alignItems="center">
+						<Typography variant="h4">Detalle de promoción</Typography>
+						<Chip label={status.label} color={status.color} size="small" sx={{ borderRadius: 0.75 }} />
 					</Stack>
 					<IconButton onClick={onClose} size="small">
 						<CloseCircle />

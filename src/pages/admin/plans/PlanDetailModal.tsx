@@ -76,9 +76,9 @@ const PlanDetailModal = ({ open, onClose, plan }: PlanDetailModalProps) => {
 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-			<DialogTitle>
+			<DialogTitle sx={{ pb: 1.5 }}>
 				<Box display="flex" justifyContent="space-between" alignItems="center">
-					<Typography variant="h4">Detalles del Plan: {plan.displayName}</Typography>
+					<Typography variant="h4">Detalles del plan · {plan.displayName}</Typography>
 					<IconButton onClick={onClose} size="small">
 						<CloseCircle />
 					</IconButton>
@@ -90,9 +90,9 @@ const PlanDetailModal = ({ open, onClose, plan }: PlanDetailModalProps) => {
 					{/* Información General */}
 					<Grid item xs={12}>
 						<Typography variant="h5" gutterBottom>
-							Información General
+							Información general
 						</Typography>
-						<Paper sx={{ p: 2 }}>
+						<Paper variant="outlined" sx={{ p: 2 }}>
 							<Grid container spacing={2}>
 								<Grid item xs={12} sm={6}>
 									<Typography variant="subtitle2" color="text.secondary">
@@ -147,15 +147,15 @@ const PlanDetailModal = ({ open, onClose, plan }: PlanDetailModalProps) => {
 					{/* Información de Precios */}
 					<Grid item xs={12}>
 						<Typography variant="h5" gutterBottom>
-							Información de Precios
+							Información de precios
 						</Typography>
-						<Paper sx={{ p: 2 }}>
+						<Paper variant="outlined" sx={{ p: 2 }}>
 							<Grid container spacing={2}>
 								<Grid item xs={12} sm={4}>
-									<Typography variant="subtitle2" color="text.secondary">
-										Precio Base
+									<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3 }}>
+										Precio base
 									</Typography>
-									<Typography variant="h4" color="primary">
+									<Typography variant="h4" color="primary" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
 										{formatCurrency(plan.pricingInfo.basePrice, plan.pricingInfo.currency)}
 									</Typography>
 								</Grid>

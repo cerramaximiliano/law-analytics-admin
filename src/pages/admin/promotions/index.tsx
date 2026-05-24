@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 import {
 	Alert,
 	Box,
@@ -26,6 +26,7 @@ import {
 } from "@mui/material";
 import { Add, Edit, Trash, Eye, Refresh2, TickCircle, CloseCircle, UserTick, Category2, People, Profile, Warning2 } from "iconsax-react";
 import MainCard from "components/MainCard";
+import { BRAND_BLUE, PREMIUM_GOLD } from "themes/dashboardTokens";
 import { useSnackbar } from "notistack";
 import discountsService, { DiscountCode, GetDiscountsParams } from "api/discounts";
 import PromotionFormModal from "./PromotionFormModal";
@@ -250,14 +251,34 @@ const PromotionsManagement = () => {
 	return (
 		<>
 			<MainCard
-				title="Gestión de Promociones"
+				title="Gestión de promociones"
 				secondary={
-					<Stack direction="row" spacing={2}>
-						<Button variant="outlined" color="secondary" startIcon={<Refresh2 />} onClick={() => fetchDiscounts(statusFilter)}>
+					<Stack direction="row" spacing={1.5}>
+						<Button
+							variant="outlined"
+							color="secondary"
+							startIcon={<Refresh2 />}
+							onClick={() => fetchDiscounts(statusFilter)}
+							sx={{
+								transition: "transform 200ms ease",
+								"&:hover": { transform: "translateY(-1px)" },
+								"&:active": { transform: "translate(0, 1px)" },
+							}}
+						>
 							Actualizar
 						</Button>
-						<Button variant="contained" color="primary" startIcon={<Add />} onClick={handleAddNew}>
-							Nueva Promoción
+						<Button
+							variant="contained"
+							color="primary"
+							startIcon={<Add />}
+							onClick={handleAddNew}
+							sx={{
+								transition: "transform 200ms ease, box-shadow 200ms ease",
+								"&:hover": { transform: "translateY(-1px)", boxShadow: `0 8px 18px ${alpha(BRAND_BLUE, 0.28)}` },
+								"&:active": { transform: "translate(0, 1px)" },
+							}}
+						>
+							Nueva promoción
 						</Button>
 					</Stack>
 				}
@@ -272,58 +293,50 @@ const PromotionsManagement = () => {
 				{/* Summary Cards */}
 				<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }} sx={{ mb: 3 }}>
 					<Grid item xs={12} sm={6} md={3}>
-						<Card>
+						<Card variant="outlined" sx={{ borderColor: alpha(theme.palette.divider, 0.6) }}>
 							<CardContent>
-								<Stack spacing={1}>
-									<Typography variant="h3" color="primary">
-										{discounts.length}
-									</Typography>
-									<Typography variant="body2" color="textSecondary">
-										Total de Promociones
-									</Typography>
-								</Stack>
+								<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3 }}>
+									Total de promociones
+								</Typography>
+								<Typography variant="h3" sx={{ color: BRAND_BLUE, fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
+									{discounts.length}
+								</Typography>
 							</CardContent>
 						</Card>
 					</Grid>
 					<Grid item xs={12} sm={6} md={3}>
-						<Card>
+						<Card variant="outlined" sx={{ borderColor: alpha(theme.palette.divider, 0.6) }}>
 							<CardContent>
-								<Stack spacing={1}>
-									<Typography variant="h3" color="success.main">
-										{activeCount}
-									</Typography>
-									<Typography variant="body2" color="textSecondary">
-										Activas Ahora
-									</Typography>
-								</Stack>
+								<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3 }}>
+									Activas ahora
+								</Typography>
+								<Typography variant="h3" color="success.main" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
+									{activeCount}
+								</Typography>
 							</CardContent>
 						</Card>
 					</Grid>
 					<Grid item xs={12} sm={6} md={3}>
-						<Card>
+						<Card variant="outlined" sx={{ borderColor: alpha(theme.palette.divider, 0.6) }}>
 							<CardContent>
-								<Stack spacing={1}>
-									<Typography variant="h3" color="warning.main">
-										{scheduledCount}
-									</Typography>
-									<Typography variant="body2" color="textSecondary">
-										Programadas
-									</Typography>
-								</Stack>
+								<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3 }}>
+									Programadas
+								</Typography>
+								<Typography variant="h3" sx={{ color: PREMIUM_GOLD, fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
+									{scheduledCount}
+								</Typography>
 							</CardContent>
 						</Card>
 					</Grid>
 					<Grid item xs={12} sm={6} md={3}>
-						<Card>
+						<Card variant="outlined" sx={{ borderColor: alpha(theme.palette.divider, 0.6) }}>
 							<CardContent>
-								<Stack spacing={1}>
-									<Typography variant="h3" color="info.main">
-										{totalRedemptions}
-									</Typography>
-									<Typography variant="body2" color="textSecondary">
-										Usos Totales
-									</Typography>
-								</Stack>
+								<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3 }}>
+									Usos totales
+								</Typography>
+								<Typography variant="h3" color="info.main" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
+									{totalRedemptions}
+								</Typography>
 							</CardContent>
 						</Card>
 					</Grid>
@@ -386,16 +399,35 @@ const PromotionsManagement = () => {
 											)}
 										</TableCell>
 										<TableCell align="center">
-											<Typography variant="subtitle2" color="primary" fontWeight={600}>
-												{getDiscountText(discount)}
-											</Typography>
-											<Typography variant="caption" color="textSecondary">
-												{discount.duration === "once"
-													? "Una vez"
-													: discount.duration === "forever"
-													? "Siempre"
-													: `${discount.durationInMonths} meses`}
-											</Typography>
+											<Stack direction="column" spacing={0.5} alignItems="center">
+												<Box
+													sx={{
+														// Savings badge tipo flag, no pill genérico
+														display: "inline-flex",
+														alignItems: "center",
+														gap: 0.5,
+														px: 1.25,
+														py: 0.4,
+														bgcolor: alpha(theme.palette.success.main, 0.12),
+														border: `1px solid ${alpha(theme.palette.success.main, 0.28)}`,
+														borderRadius: 0.75,
+														color: theme.palette.success.dark,
+														fontWeight: 700,
+														fontSize: "0.8rem",
+														fontVariantNumeric: "tabular-nums",
+														letterSpacing: 0.2,
+													}}
+												>
+													-{getDiscountText(discount)}
+												</Box>
+												<Typography variant="caption" color="textSecondary">
+													{discount.duration === "once"
+														? "Una vez"
+														: discount.duration === "forever"
+														? "Siempre"
+														: `${discount.durationInMonths} meses`}
+												</Typography>
+											</Stack>
 										</TableCell>
 										<TableCell align="center">
 											{discount.targetEnvironment === "both" ? (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
+import { BRAND_BLUE, PREMIUM_GOLD } from "themes/dashboardTokens";
 import {
 	Box,
 	Grid,
@@ -76,27 +77,55 @@ function StatCard({ title, value, subtitle, loading, icon, color }: StatCardProp
 	const theme = useTheme();
 
 	return (
-		<Card variant="outlined">
+		<Card
+			variant="outlined"
+			sx={{
+				borderColor: alpha(theme.palette.divider, 0.6),
+				transition: "transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease",
+				"&:hover": {
+					transform: "translateY(-1px)",
+					borderColor: alpha(BRAND_BLUE, 0.3),
+					boxShadow: `0 6px 18px ${alpha(BRAND_BLUE, 0.06)}`,
+				},
+			}}
+		>
 			<CardContent>
 				<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
 					<Box>
-						<Typography variant="caption" color="text.secondary">
+						<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3 }}>
 							{title}
 						</Typography>
 						{loading ? (
 							<Skeleton width={60} height={40} />
 						) : (
-							<Typography variant="h4" fontWeight={700} color={color ?? "text.primary"}>
+							<Typography
+								variant="h4"
+								fontWeight={700}
+								color={color ?? "text.primary"}
+								sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}
+							>
 								{value}
 							</Typography>
 						)}
 						{subtitle && (
-							<Typography variant="caption" color="text.secondary">
+							<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 								{subtitle}
 							</Typography>
 						)}
 					</Box>
-					{icon && <Box sx={{ p: 1, borderRadius: 2, bgcolor: theme.palette.grey[100] }}>{icon}</Box>}
+					{icon && (
+						<Box
+							sx={{
+								p: 1,
+								borderRadius: "10px",
+								bgcolor: alpha(BRAND_BLUE, 0.08),
+								color: BRAND_BLUE,
+								display: "flex",
+							}}
+						>
+							{icon}
+						</Box>
+					)}
 				</Stack>
 			</CardContent>
 		</Card>
@@ -252,7 +281,7 @@ export default function GroupsPage() {
 	// ---- Render ----
 
 	return (
-		<MainCard title="Grupos de Usuarios">
+		<MainCard title="Grupos de usuarios">
 			{/* Servicio a Usuarios */}
 			<Box sx={{ mb: 3 }}>
 				<ServiceAvailabilityCard
@@ -394,8 +423,19 @@ export default function GroupsPage() {
 								return (
 									<TableRow key={group._id} hover>
 										<TableCell>
-											<Stack direction="row" spacing={1} alignItems="center">
-												<Avatar sx={{ width: 28, height: 28, fontSize: 12, bgcolor: "primary.main" }}>
+											<Stack direction="row" spacing={1.25} alignItems="center">
+												<Avatar
+													sx={{
+														width: 30,
+														height: 30,
+														fontSize: 12,
+														borderRadius: "9px",
+														bgcolor: alpha(BRAND_BLUE, 0.12),
+														color: BRAND_BLUE,
+														fontWeight: 600,
+													}}
+													variant="rounded"
+												>
 													{group.name.charAt(0).toUpperCase()}
 												</Avatar>
 												<Box>
@@ -419,7 +459,21 @@ export default function GroupsPage() {
 											</Box>
 										</TableCell>
 										<TableCell>
-											<Chip size="small" label={planConfig.label} color={planConfig.color} variant="outlined" />
+											{ownerPlan === "premium" ? (
+												<Chip
+													size="small"
+													label={planConfig.label}
+													sx={{
+														borderRadius: 0.75,
+														bgcolor: alpha(PREMIUM_GOLD, 0.12),
+														color: PREMIUM_GOLD,
+														fontWeight: 600,
+														border: `1px solid ${alpha(PREMIUM_GOLD, 0.32)}`,
+													}}
+												/>
+											) : (
+												<Chip size="small" label={planConfig.label} color={planConfig.color} variant="outlined" />
+											)}
 										</TableCell>
 										<TableCell align="center">
 											<Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">

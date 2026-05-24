@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 import {
 	Box,
 	Card,
@@ -427,106 +428,51 @@ const FoldersPage = () => {
 
 	return (
 		<MainCard title="Carpetas (App)">
-			{/* Estadísticas */}
+			{/* Estadísticas — cards livianas (border + accent en valor; sin tinta pastel de fondo) */}
 			{stats && (
 				<Box sx={{ mb: 3 }}>
 					<Grid container spacing={2}>
-						<Grid item xs={6} sm={4} md={2}>
-							<Card sx={{ backgroundColor: "primary.lighter", border: 1, borderColor: "primary.main" }}>
-								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-									<Typography variant="caption" color="text.secondary">
-										Total
-									</Typography>
-									<Typography variant="h5" color="primary.main" fontWeight="bold">
-										{stats.total}
-									</Typography>
-								</CardContent>
-							</Card>
-						</Grid>
-						<Grid item xs={6} sm={4} md={2}>
-							<Card sx={{ backgroundColor: "success.lighter", border: 1, borderColor: "success.main" }}>
-								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-									<Typography variant="caption" color="text.secondary">
-										Activas
-									</Typography>
-									<Typography variant="h5" color="success.main" fontWeight="bold">
-										{stats.active}
-									</Typography>
-								</CardContent>
-							</Card>
-						</Grid>
-						<Grid item xs={6} sm={4} md={2}>
-							<Card sx={{ backgroundColor: "warning.lighter", border: 1, borderColor: "warning.main" }}>
-								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-									<Typography variant="caption" color="text.secondary">
-										PJN
-									</Typography>
-									<Typography variant="h5" color="warning.main" fontWeight="bold">
-										{stats.pjn}
-									</Typography>
-								</CardContent>
-							</Card>
-						</Grid>
-						<Grid item xs={6} sm={4} md={2}>
-							<Card sx={{ backgroundColor: "secondary.lighter", border: 1, borderColor: "secondary.main" }}>
-								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-									<Typography variant="caption" color="text.secondary">
-										MEV
-									</Typography>
-									<Typography variant="h5" color="secondary.main" fontWeight="bold">
-										{stats.mev}
-									</Typography>
-								</CardContent>
-							</Card>
-						</Grid>
-						<Grid item xs={6} sm={4} md={2}>
-							<Card sx={{ backgroundColor: "info.lighter", border: 1, borderColor: "info.main" }}>
-								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-									<Typography variant="caption" color="text.secondary">
-										EJE
-									</Typography>
-									<Typography variant="h5" color="info.main" fontWeight="bold">
-										{stats.eje ?? 0}
-									</Typography>
-								</CardContent>
-							</Card>
-						</Grid>
-						<Grid item xs={6} sm={4} md={2}>
-							<Card sx={{ backgroundColor: "success.lighter", border: 1, borderColor: "success.main" }}>
-								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-									<Typography variant="caption" color="text.secondary">
-										SCBA
-									</Typography>
-									<Typography variant="h5" color="success.main" fontWeight="bold">
-										{stats.scba ?? 0}
-									</Typography>
-								</CardContent>
-							</Card>
-						</Grid>
-						<Grid item xs={6} sm={4} md={2}>
-							<Card sx={{ backgroundColor: "info.lighter", border: 1, borderColor: "info.main" }}>
-								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-									<Typography variant="caption" color="text.secondary">
-										Con Causa
-									</Typography>
-									<Typography variant="h5" color="info.main" fontWeight="bold">
-										{stats.withCausa}
-									</Typography>
-								</CardContent>
-							</Card>
-						</Grid>
-						<Grid item xs={6} sm={4} md={2}>
-							<Card sx={{ backgroundColor: "background.default", border: 1, borderColor: "divider" }}>
-								<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-									<Typography variant="caption" color="text.secondary">
-										Archivadas
-									</Typography>
-									<Typography variant="h5" color="text.secondary" fontWeight="bold">
-										{stats.archived}
-									</Typography>
-								</CardContent>
-							</Card>
-						</Grid>
+						{(
+							[
+								{ label: "Total", value: stats.total, colorKey: "primary" as const, brand: BRAND_BLUE },
+								{ label: "Activas", value: stats.active, colorKey: "success" as const },
+								{ label: "PJN", value: stats.pjn, colorKey: "warning" as const },
+								{ label: "MEV", value: stats.mev, colorKey: "secondary" as const },
+								{ label: "EJE", value: stats.eje ?? 0, colorKey: "info" as const },
+								{ label: "SCBA", value: stats.scba ?? 0, colorKey: "success" as const },
+								{ label: "Con causa", value: stats.withCausa, colorKey: "info" as const },
+								{ label: "Archivadas", value: stats.archived, colorKey: "default" as const },
+							]
+						).map((item) => {
+							const accent =
+								item.brand ??
+								(item.colorKey === "default" ? theme.palette.text.secondary : (theme.palette as any)[item.colorKey].main);
+							return (
+								<Grid item xs={6} sm={4} md={1.5} key={item.label}>
+									<Card
+										variant="outlined"
+										sx={{
+											borderColor: alpha(accent, 0.2),
+											transition: "transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease",
+											"&:hover": {
+												transform: "translateY(-1px)",
+												borderColor: alpha(accent, 0.36),
+												boxShadow: `0 6px 14px ${alpha(accent, 0.1)}`,
+											},
+										}}
+									>
+										<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
+											<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3 }}>
+												{item.label}
+											</Typography>
+											<Typography variant="h5" sx={{ color: accent, fontWeight: 700, fontVariantNumeric: "tabular-nums", mt: 0.25 }}>
+												{item.value}
+											</Typography>
+										</CardContent>
+									</Card>
+								</Grid>
+							);
+						})}
 					</Grid>
 				</Box>
 			)}

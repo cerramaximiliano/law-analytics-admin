@@ -37,6 +37,8 @@ import {
 // project imports
 import MainCard from "components/MainCard";
 import ScrollX from "components/ScrollX";
+import { BRAND_BLUE } from "themes/dashboardTokens";
+import { alpha } from "@mui/material/styles";
 import { getUsers, searchUsers, SearchUsersParams } from "store/reducers/users";
 import { DefaultRootStateProps } from "types/root";
 import { User } from "types/user";
@@ -626,10 +628,10 @@ const UsersList = () => {
 	const errorMessage = error ? (typeof error === "string" ? error : JSON.stringify(error)) : "";
 
 	return (
-		<MainCard title="Administración de Usuarios" content={false}>
+		<MainCard title="Administración de usuarios" content={false}>
 			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
 				<Tabs value={tabValue} onChange={handleTabChange} aria-label="users admin tabs">
-					<Tab label="Usuarios del Sistema" />
+					<Tab label="Usuarios del sistema" />
 					<Tab label="Suscripciones de Stripe" />
 					<Tab label="Estadísticas" />
 				</Tabs>
@@ -638,7 +640,7 @@ const UsersList = () => {
 			{tabValue === 0 && (
 				<ScrollX>
 					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 3 }}>
-						<Typography variant="h5">Lista de Usuarios</Typography>
+						<Typography variant="h5">Lista de usuarios</Typography>
 						<Stack direction="row" spacing={1} alignItems="center">
 							<Tooltip title="Actualizar datos">
 								<IconButton
@@ -648,6 +650,9 @@ const UsersList = () => {
 									sx={{
 										border: 1,
 										borderColor: "divider",
+										transition: "transform 200ms ease, border-color 200ms ease",
+										"&:hover": { transform: "translateY(-1px)", borderColor: alpha(BRAND_BLUE, 0.4) },
+										"&:active": { transform: "translate(0, 1px)" },
 									}}
 								>
 									<Refresh size={20} />
@@ -661,13 +666,28 @@ const UsersList = () => {
 										onClick={handleBulkSyncFolderStats}
 										disabled={bulkSyncing || loading}
 										startIcon={bulkSyncing ? <CircularProgress size={14} /> : <Calculator size={18} />}
+										sx={{
+											transition: "transform 200ms ease",
+											"&:hover": { transform: "translateY(-1px)" },
+											"&:active": { transform: "translate(0, 1px)" },
+										}}
 									>
 										Sync stats folders
 									</Button>
 								</span>
 							</Tooltip>
-							<Button variant="contained" color="primary" onClick={handleAddUser} startIcon={<Add />}>
-								Agregar Usuario
+							<Button
+								variant="contained"
+								color="primary"
+								onClick={handleAddUser}
+								startIcon={<Add />}
+								sx={{
+									transition: "transform 200ms ease, box-shadow 200ms ease",
+									"&:hover": { transform: "translateY(-1px)", boxShadow: `0 8px 18px ${alpha(BRAND_BLUE, 0.28)}` },
+									"&:active": { transform: "translate(0, 1px)" },
+								}}
+							>
+								Agregar usuario
 							</Button>
 						</Stack>
 					</Stack>
@@ -879,7 +899,11 @@ const UsersList = () => {
 												<TableCell sx={{ whiteSpace: "nowrap" }}>
 													<Tooltip title={copiedId === (user._id || user.id) ? "¡Copiado!" : user._id || user.id || ""}>
 														<Stack direction="row" alignItems="center" spacing={0.5}>
-															<Typography variant="caption" color="textSecondary" sx={{ fontFamily: "monospace" }}>
+															<Typography
+																variant="caption"
+																color="textSecondary"
+																sx={{ fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }}
+															>
 																{(user._id || user.id || "").slice(0, 8)}…
 															</Typography>
 															<IconButton size="small" onClick={() => handleCopyId(user._id || user.id || "")} sx={{ p: 0.25 }}>
@@ -889,10 +913,26 @@ const UsersList = () => {
 													</Tooltip>
 												</TableCell>
 												<TableCell>
-													<Stack direction="row" alignItems="center" spacing={1.5}>
-														<Stack>
-															<Typography variant="subtitle1">{user.name || "Sin nombre"}</Typography>
-														</Stack>
+													<Stack direction="row" alignItems="center" spacing={1.25}>
+														<Box
+															sx={{
+																// Squircle avatar — rounded square, no círculo genérico
+																width: 32,
+																height: 32,
+																borderRadius: "10px",
+																bgcolor: alpha(BRAND_BLUE, 0.12),
+																color: BRAND_BLUE,
+																display: "flex",
+																alignItems: "center",
+																justifyContent: "center",
+																fontSize: "0.8rem",
+																fontWeight: 600,
+																flexShrink: 0,
+															}}
+														>
+															{(user.name || "?").charAt(0).toUpperCase()}
+														</Box>
+														<Typography variant="subtitle1">{user.name || "Sin nombre"}</Typography>
 													</Stack>
 												</TableCell>
 												<TableCell>{user.email || "No disponible"}</TableCell>

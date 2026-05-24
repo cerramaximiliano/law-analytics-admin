@@ -271,46 +271,48 @@ const StripeSubscriptionsTable = () => {
 			{/* Tarjetas de estadísticas */}
 			<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }} mb={3}>
 				<Grid item xs={12} sm={6} md={3}>
-					<Card>
+					<Card variant="outlined">
 						<CardContent>
-							<Typography color="textSecondary" gutterBottom variant="body2">
-								Total Clientes
+							<Typography variant="caption" color="textSecondary" sx={{ letterSpacing: 0.3 }}>
+								Total clientes
 							</Typography>
-							<Typography variant="h4">{stats.totalCustomers}</Typography>
+							<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
+								{stats.totalCustomers}
+							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
 				<Grid item xs={12} sm={6} md={3}>
-					<Card>
+					<Card variant="outlined">
 						<CardContent>
-							<Typography color="textSecondary" gutterBottom variant="body2">
-								Con Suscripción Activa
+							<Typography variant="caption" color="textSecondary" sx={{ letterSpacing: 0.3 }}>
+								Con suscripción activa
 							</Typography>
-							<Typography variant="h4" color="success.main">
+							<Typography variant="h4" color="success.main" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
 								{stats.customersWithActiveSubscriptions}
 							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
 				<Grid item xs={12} sm={6} md={3}>
-					<Card>
+					<Card variant="outlined">
 						<CardContent>
-							<Typography color="textSecondary" gutterBottom variant="body2">
-								Sin Suscripción
+							<Typography variant="caption" color="textSecondary" sx={{ letterSpacing: 0.3 }}>
+								Sin suscripción
 							</Typography>
-							<Typography variant="h4" color="text.secondary">
+							<Typography variant="h4" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
 								{stats.customersWithoutSubscriptions}
 							</Typography>
 						</CardContent>
 					</Card>
 				</Grid>
 				<Grid item xs={12} sm={6} md={3}>
-					<Card>
+					<Card variant="outlined">
 						<CardContent>
-							<Typography color="textSecondary" gutterBottom variant="body2">
-								Suscripciones Canceladas
+							<Typography variant="caption" color="textSecondary" sx={{ letterSpacing: 0.3 }}>
+								Suscripciones canceladas
 							</Typography>
-							<Typography variant="h4" color="error.main">
+							<Typography variant="h4" color="error.main" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
 								{stats.customersWithCanceledSubscriptions}
 							</Typography>
 						</CardContent>

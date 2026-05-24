@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 import {
 	Box,
 	Grid,
@@ -400,7 +401,7 @@ const ExpensesPage = () => {
 	return (
 		<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
 			<MainCard
-				title="Gestión de Gastos"
+				title="Gestión de gastos"
 				secondary={
 					<Stack direction="row" spacing={1}>
 						<Button
@@ -411,11 +412,26 @@ const ExpensesPage = () => {
 								fetchExpenses();
 								fetchStats();
 							}}
+							sx={{
+								transition: "transform 200ms ease",
+								"&:hover": { transform: "translateY(-1px)" },
+								"&:active": { transform: "translate(0, 1px)" },
+							}}
 						>
 							Actualizar
 						</Button>
-						<Button variant="contained" size="small" startIcon={<Add size={16} />} onClick={() => handleOpenDialog()}>
-							Nuevo Gasto
+						<Button
+							variant="contained"
+							size="small"
+							startIcon={<Add size={16} />}
+							onClick={() => handleOpenDialog()}
+							sx={{
+								transition: "transform 200ms ease, box-shadow 200ms ease",
+								"&:hover": { transform: "translateY(-1px)", boxShadow: `0 8px 18px ${alpha(BRAND_BLUE, 0.28)}` },
+								"&:active": { transform: "translate(0, 1px)" },
+							}}
+						>
+							Nuevo gasto
 						</Button>
 					</Stack>
 				}
@@ -441,18 +457,38 @@ const ExpensesPage = () => {
 						) : (
 							(stats?.byCurrency || []).map((item: { _id: string; total: number; count: number }) => (
 								<Grid item xs={12} sm={6} md={3} key={item._id}>
-									<Card variant="outlined">
+									<Card
+										variant="outlined"
+										sx={{
+											borderColor: alpha(getCurrencyColor(item._id), 0.2),
+											transition: "transform 200ms ease, box-shadow 200ms ease",
+											"&:hover": {
+												transform: "translateY(-1px)",
+												boxShadow: `0 6px 18px ${alpha(getCurrencyColor(item._id), 0.12)}`,
+											},
+										}}
+									>
 										<CardContent>
 											<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-												<DollarCircle size={20} color={getCurrencyColor(item._id)} />
-												<Typography variant="body2" color="textSecondary">
+												<Box
+													sx={{
+														p: 0.75,
+														borderRadius: "8px",
+														bgcolor: alpha(getCurrencyColor(item._id), 0.1),
+														color: getCurrencyColor(item._id),
+														display: "flex",
+													}}
+												>
+													<DollarCircle size={16} />
+												</Box>
+												<Typography variant="caption" color="textSecondary" sx={{ letterSpacing: 0.3 }}>
 													Total {item._id} ({dayjs().year()})
 												</Typography>
 											</Stack>
-											<Typography variant="h4" sx={{ color: getCurrencyColor(item._id) }}>
+											<Typography variant="h4" sx={{ color: getCurrencyColor(item._id), fontVariantNumeric: "tabular-nums" }}>
 												{formatCurrency(item.total, item._id)}
 											</Typography>
-											<Typography variant="caption" color="textSecondary">
+											<Typography variant="caption" color="textSecondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 												{item.count} {item.count === 1 ? "gasto" : "gastos"}
 											</Typography>
 										</CardContent>
@@ -462,19 +498,39 @@ const ExpensesPage = () => {
 						)}
 						{/* Cantidad total de gastos */}
 						<Grid item xs={12} sm={6} md={3}>
-							<Card variant="outlined">
+							<Card
+								variant="outlined"
+								sx={{
+									borderColor: alpha(theme.palette.success.main, 0.2),
+									transition: "transform 200ms ease, box-shadow 200ms ease",
+									"&:hover": {
+										transform: "translateY(-1px)",
+										boxShadow: `0 6px 18px ${alpha(theme.palette.success.main, 0.12)}`,
+									},
+								}}
+							>
 								<CardContent>
 									<Stack direction="row" spacing={1} alignItems="center" mb={1}>
-										<Calendar size={20} color={theme.palette.success.main} />
-										<Typography variant="body2" color="textSecondary">
-											Cantidad de Gastos
+										<Box
+											sx={{
+												p: 0.75,
+												borderRadius: "8px",
+												bgcolor: alpha(theme.palette.success.main, 0.1),
+												color: theme.palette.success.main,
+												display: "flex",
+											}}
+										>
+											<Calendar size={16} />
+										</Box>
+										<Typography variant="caption" color="textSecondary" sx={{ letterSpacing: 0.3 }}>
+											Cantidad de gastos
 										</Typography>
 									</Stack>
 									{loadingStats ? (
 										<Skeleton variant="text" width={60} height={40} />
 									) : (
 										<>
-											<Typography variant="h4" color="success.main">
+											<Typography variant="h4" color="success.main" sx={{ fontVariantNumeric: "tabular-nums" }}>
 												{stats?.totals?.totalCount || 0}
 											</Typography>
 											<Typography variant="caption" color="textSecondary">
@@ -511,13 +567,13 @@ const ExpensesPage = () => {
 						<Grid container spacing={2}>
 							<Grid item xs={12} sm={6} md={3}>
 								<Box>
-									<Typography variant="body2" color="textSecondary" gutterBottom>
-										Saldo Inicial
+									<Typography variant="caption" color="textSecondary" sx={{ letterSpacing: 0.3 }}>
+										Saldo inicial
 									</Typography>
 									{loadingOpenai ? (
 										<Skeleton variant="text" width={80} height={32} />
 									) : (
-										<Typography variant="h5" color="primary">
+										<Typography variant="h5" color="primary" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
 											${openaiBalance?.initialBalance?.toFixed(2) || "0.00"}
 										</Typography>
 									)}
@@ -525,13 +581,13 @@ const ExpensesPage = () => {
 							</Grid>
 							<Grid item xs={12} sm={6} md={3}>
 								<Box>
-									<Typography variant="body2" color="textSecondary" gutterBottom>
-										Costos Consumidos
+									<Typography variant="caption" color="textSecondary" sx={{ letterSpacing: 0.3 }}>
+										Costos consumidos
 									</Typography>
 									{loadingOpenai ? (
 										<Skeleton variant="text" width={80} height={32} />
 									) : (
-										<Typography variant="h5" color="error.main">
+										<Typography variant="h5" color="error.main" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
 											${openaiBalance?.totalCosts?.toFixed(2) || "0.00"}
 										</Typography>
 									)}
@@ -539,8 +595,8 @@ const ExpensesPage = () => {
 							</Grid>
 							<Grid item xs={12} sm={6} md={3}>
 								<Box>
-									<Typography variant="body2" color="textSecondary" gutterBottom>
-										Saldo Estimado
+									<Typography variant="caption" color="textSecondary" sx={{ letterSpacing: 0.3 }}>
+										Saldo estimado
 									</Typography>
 									{loadingOpenai ? (
 										<Skeleton variant="text" width={80} height={32} />
@@ -548,6 +604,7 @@ const ExpensesPage = () => {
 										<Typography
 											variant="h5"
 											color={openaiBalance?.estimatedBalance && openaiBalance.estimatedBalance > 0 ? "success.main" : "warning.main"}
+											sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}
 										>
 											${openaiBalance?.estimatedBalance?.toFixed(2) || "0.00"}
 										</Typography>
@@ -556,13 +613,13 @@ const ExpensesPage = () => {
 							</Grid>
 							<Grid item xs={12} sm={6} md={3}>
 								<Box>
-									<Typography variant="body2" color="textSecondary" gutterBottom>
-										Última Sincronización
+									<Typography variant="caption" color="textSecondary" sx={{ letterSpacing: 0.3 }}>
+										Última sincronización
 									</Typography>
 									{loadingOpenai ? (
 										<Skeleton variant="text" width={120} height={32} />
 									) : (
-										<Typography variant="body1">
+										<Typography variant="body1" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
 											{openaiBalance?.lastSyncAt ? dayjs(openaiBalance.lastSyncAt).format("DD/MM/YYYY HH:mm") : "Nunca"}
 										</Typography>
 									)}

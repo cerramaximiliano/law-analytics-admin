@@ -643,9 +643,15 @@ export default function GroupDetailModal({ open, onClose, groupId, onStatusChang
 				<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
 					<Stack spacing={0.5}>
 						<Stack direction="row" spacing={1} alignItems="center">
-							<Typography variant="h5">{group?.name ?? "Detalle del Grupo"}</Typography>
-							{statusChip && <Chip size="small" label={statusChip.label} color={statusChip.color} />}
-							<Chip size="small" label={PLAN_LABEL[ownerPlan]} color={PLAN_COLOR[ownerPlan]} variant="outlined" />
+							<Typography variant="h5">{group?.name ?? "Detalle del grupo"}</Typography>
+							{statusChip && <Chip size="small" label={statusChip.label} color={statusChip.color} sx={{ borderRadius: 0.75 }} />}
+							<Chip
+								size="small"
+								label={PLAN_LABEL[ownerPlan]}
+								color={PLAN_COLOR[ownerPlan]}
+								variant="outlined"
+								sx={{ borderRadius: 0.75 }}
+							/>
 						</Stack>
 						{group?.description && (
 							<Typography variant="body2" color="text.secondary">

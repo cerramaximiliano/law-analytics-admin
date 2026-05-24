@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useTheme, alpha } from "@mui/material/styles";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 import {
 	Box,
 	Grid,
@@ -126,17 +127,29 @@ const StatCard = ({ title, value, subtitle, icon, color, loading }: StatCardProp
 	const theme = useTheme();
 	const pal = theme.palette[color];
 	return (
-		<Card sx={{ height: "100%", border: `1px solid ${alpha(pal.main, 0.2)}` }}>
+		<Card
+			variant="outlined"
+			sx={{
+				height: "100%",
+				borderColor: alpha(pal.main, 0.18),
+				transition: "transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease",
+				"&:hover": {
+					transform: "translateY(-1px)",
+					borderColor: alpha(pal.main, 0.32),
+					boxShadow: `0 6px 18px ${alpha(pal.main, 0.1)}`,
+				},
+			}}
+		>
 			<CardContent>
 				<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
 					<Box>
-						<Typography variant="subtitle2" color="text.secondary" gutterBottom>
+						<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3 }}>
 							{title}
 						</Typography>
 						{loading ? (
 							<Skeleton width={60} height={40} />
 						) : (
-							<Typography variant="h3" color={`${color}.main`} fontWeight={700}>
+							<Typography variant="h3" color={`${color}.main`} fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
 								{value ?? "—"}
 							</Typography>
 						)}
@@ -144,7 +157,17 @@ const StatCard = ({ title, value, subtitle, icon, color, loading }: StatCardProp
 							{subtitle}
 						</Typography>
 					</Box>
-					<Box sx={{ p: 1, borderRadius: 2, bgcolor: alpha(pal.main, 0.1), color: pal.main, display: "flex" }}>{icon}</Box>
+					<Box
+						sx={{
+							p: 1,
+							borderRadius: "10px",
+							bgcolor: alpha(pal.main, 0.1),
+							color: pal.main,
+							display: "flex",
+						}}
+					>
+						{icon}
+					</Box>
 				</Stack>
 			</CardContent>
 		</Card>
@@ -1068,7 +1091,7 @@ const Trials = () => {
 
 	return (
 		<MainCard
-			title="Suscripciones — Períodos"
+			title="Suscripciones — períodos"
 			secondary={
 				<Stack direction="row" spacing={1} alignItems="center">
 					<FormControlLabel
@@ -1076,7 +1099,14 @@ const Trials = () => {
 						label={<Typography variant="caption">Test mode</Typography>}
 					/>
 					<Tooltip title="Actualizar">
-						<IconButton onClick={handleRefresh} size="small">
+						<IconButton
+							onClick={handleRefresh}
+							size="small"
+							sx={{
+								transition: "transform 200ms ease",
+								"&:hover": { transform: "rotate(45deg)", color: BRAND_BLUE },
+							}}
+						>
 							<Refresh size={18} />
 						</IconButton>
 					</Tooltip>
