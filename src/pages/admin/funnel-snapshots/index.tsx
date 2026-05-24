@@ -25,6 +25,7 @@ import {
 import { Refresh, ArrowDown2, Calendar, Chart, InfoCircle } from "iconsax-react";
 import MainCard from "components/MainCard";
 import FunnelSnapshotsService, { FunnelSnapshot, FunnelBreakdownRow } from "api/funnelSnapshots";
+import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder } from "themes/dashboardTokens";
 
 // ==============================|| HELPERS ||============================== //
 
@@ -62,6 +63,7 @@ interface FunnelCardProps {
 
 const FunnelCard: React.FC<FunnelCardProps> = ({ snapshot, loading }) => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 
 	if (loading) {
 		return (
@@ -91,7 +93,7 @@ const FunnelCard: React.FC<FunnelCardProps> = ({ snapshot, loading }) => {
 		<MainCard
 			title={
 				<Stack direction="row" spacing={1} alignItems="center">
-					<Chart size={20} color={theme.palette.primary.main} variant="Bold" />
+					<Chart size={20} color={BRAND_BLUE} variant="Bold" />
 					<Typography variant="h5">{snapshot.title}</Typography>
 				</Stack>
 			}
@@ -101,23 +103,24 @@ const FunnelCard: React.FC<FunnelCardProps> = ({ snapshot, loading }) => {
 					label={snapshot.funnel.toUpperCase()}
 					color={snapshot.funnel === "macro" ? "primary" : "secondary"}
 					variant="filled"
+					sx={{ fontVariantNumeric: "tabular-nums" }}
 				/>
 			}
 		>
 			<Stack spacing={2}>
 				{/* Metadata */}
-				<Box sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05), p: 1.5, borderRadius: 1 }}>
+				<Box sx={{ bgcolor: alpha(BRAND_BLUE, isDark ? 0.07 : 0.045), p: 1.5, borderRadius: 1.5 }}>
 					<Stack direction="row" spacing={2} flexWrap="wrap">
 						<Stack direction="row" spacing={0.5} alignItems="center">
 							<Calendar size={14} color={theme.palette.text.secondary} />
-							<Typography variant="caption" color="text.secondary">
+							<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 								Rango: {fmtDate(snapshot.range.start)} → {fmtDate(snapshot.range.end)}
 							</Typography>
 						</Stack>
 						<Stack direction="row" spacing={0.5} alignItems="center">
 							<InfoCircle size={14} color={theme.palette.text.secondary} />
 							<Tooltip title={`Capturado: ${fmtDateTime(snapshot.capturedAt)}`}>
-								<Typography variant="caption" color="text.secondary">
+								<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 									Snapshot: {fmtDate(snapshot.date)}
 								</Typography>
 							</Tooltip>
@@ -126,10 +129,10 @@ const FunnelCard: React.FC<FunnelCardProps> = ({ snapshot, loading }) => {
 				</Box>
 
 				{/* Totales */}
-				<TableContainer>
+				<TableContainer sx={{ border: `1px solid ${headerBorder(isDark)}`, borderRadius: 1.5 }}>
 					<Table size="small">
 						<TableHead>
-							<TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+							<TableRow sx={{ bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.035) }}>
 								<TableCell>Paso</TableCell>
 								<TableCell align="right">Usuarios</TableCell>
 								<TableCell align="right">% Finalización</TableCell>
@@ -141,41 +144,44 @@ const FunnelCard: React.FC<FunnelCardProps> = ({ snapshot, loading }) => {
 							{stepKeys.map((key) => {
 								const step = snapshot.totals[key];
 								const isLast = key === stepKeys[stepKeys.length - 1];
+								const completionColor = isLast
+									? theme.palette.text.secondary
+									: (step.completionRate ?? 0) > 0.5
+										? LIVE_GREEN
+										: (step.completionRate ?? 0) > 0.2
+											? STALE_AMBER
+											: theme.palette.error.main;
 								return (
-									<TableRow key={key}>
+									<TableRow key={key} hover>
 										<TableCell>
 											<Typography variant="body2" fontWeight={500}>
 												{step.name}
 											</Typography>
 										</TableCell>
 										<TableCell align="right">
-											<Typography variant="body2" fontWeight={600}>
+											<Typography variant="body2" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
 												{step.users.toLocaleString("es-AR")}
 											</Typography>
 										</TableCell>
 										<TableCell align="right">
 											<Typography
 												variant="body2"
-												color={
-													isLast
-														? "text.secondary"
-														: (step.completionRate ?? 0) > 0.5
-															? "success.main"
-															: (step.completionRate ?? 0) > 0.2
-																? "warning.main"
-																: "error.main"
-												}
+												sx={{ fontVariantNumeric: "tabular-nums", color: completionColor, fontWeight: 600 }}
 											>
 												{isLast ? "—" : fmtPercent(step.completionRate)}
 											</Typography>
 										</TableCell>
 										<TableCell align="right">
-											<Typography variant="body2" color={isLast ? "text.secondary" : "error.main"}>
+											<Typography
+												variant="body2"
+												color={isLast ? "text.secondary" : "error.main"}
+												sx={{ fontVariantNumeric: "tabular-nums" }}
+											>
 												{isLast ? "—" : fmtPercent(step.abandonmentRate)}
 											</Typography>
 										</TableCell>
 										<TableCell align="right">
-											<Typography variant="body2" color="text.secondary">
+											<Typography variant="body2" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 												{isLast ? "—" : step.abandonments?.toLocaleString("es-AR")}
 											</Typography>
 										</TableCell>
@@ -272,6 +278,7 @@ const prettifyBreakdownKey = (key: string): string => {
 
 const FunnelSnapshotsPage: React.FC = () => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const [snapshots, setSnapshots] = useState<FunnelSnapshot[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -297,12 +304,12 @@ const FunnelSnapshotsPage: React.FC = () => {
 	const micro = snapshots.find((s) => s.funnel === "micro") || null;
 
 	return (
-		<Box>
+		<Box sx={{ minHeight: "100dvh" }}>
 			{/* Header */}
-			<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-				<Box>
-					<Typography variant="h4" gutterBottom>
-						Funnel Snapshots
+			<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1.5} sx={{ mb: 3 }}>
+				<Box sx={{ maxWidth: 760 }}>
+					<Typography variant="h3" sx={{ mb: 0.75 }}>
+						Funnel snapshots
 					</Typography>
 					<Typography variant="body2" color="text.secondary">
 						Último snapshot persistido por el cron diario de <code>la-ads</code> (a las 8 AM AR). Los datos vienen
@@ -310,14 +317,22 @@ const FunnelSnapshotsPage: React.FC = () => {
 					</Typography>
 				</Box>
 				<Tooltip title="Recargar">
-					<IconButton onClick={fetchData} disabled={loading} color="primary">
+					<IconButton
+						onClick={fetchData}
+						disabled={loading}
+						sx={{
+							color: BRAND_BLUE,
+							transition: "transform 250ms ease",
+							"&:hover": { transform: "rotate(90deg)" },
+						}}
+					>
 						<Refresh size={20} />
 					</IconButton>
 				</Tooltip>
 			</Stack>
 
 			{error && (
-				<Alert severity="error" sx={{ mb: 2 }}>
+				<Alert severity="error" sx={{ mb: 2, borderRadius: 1.5 }}>
 					{error}
 				</Alert>
 			)}
@@ -333,9 +348,17 @@ const FunnelSnapshotsPage: React.FC = () => {
 
 			{/* Footer info */}
 			{!loading && (macro || micro) && (
-				<Box sx={{ mt: 3, p: 2, bgcolor: alpha(theme.palette.info.main, 0.08), borderRadius: 1 }}>
+				<Box
+					sx={{
+						mt: 3,
+						p: 2,
+						bgcolor: alpha(BRAND_BLUE, isDark ? 0.07 : 0.045),
+						border: `1px solid ${headerBorder(isDark)}`,
+						borderRadius: 1.5,
+					}}
+				>
 					<Typography variant="caption" color="text.secondary">
-						💡 Esta vista muestra el snapshot más reciente. Para evolución temporal o snapshots históricos, usar
+						Esta vista muestra el snapshot más reciente. Para evolución temporal o snapshots históricos, usar
 						el endpoint <code>/api/funnel-snapshots/trend</code> o <code>/api/funnel-snapshots</code>.
 					</Typography>
 				</Box>

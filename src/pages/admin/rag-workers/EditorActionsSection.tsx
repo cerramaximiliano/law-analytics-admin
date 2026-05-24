@@ -37,6 +37,7 @@ import {
 import { Add, Refresh, Edit2, Trash, ArrowDown2, ArrowUp2, InfoCircle, Magicpen } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import RagWorkersService, { EditorAction, EditorActionInput } from "api/ragWorkers";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -666,10 +667,13 @@ const EditorActionsSection = () => {
 					No hay acciones configuradas. Usá <strong>Seed</strong> para cargar las acciones predeterminadas o creá una nueva.
 				</Alert>
 			) : (
-				<Paper variant="outlined" sx={{ borderRadius: 1.5, overflow: "hidden" }}>
+				<Paper
+					variant="outlined"
+					sx={{ borderRadius: 1.5, overflow: "hidden", borderColor: headerBorder(theme.palette.mode === "dark") }}
+				>
 					<Table size="small">
 						<TableHead>
-							<TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}>
+							<TableRow sx={{ bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.06 : 0.035) }}>
 								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Etiqueta</TableCell>
 								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Alcance</TableCell>
 								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Visibilidad</TableCell>

@@ -25,6 +25,7 @@ import {
 import { Refresh } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import RagWorkersService, { IndexationSummary, IndexationCausa, IndexationActivity, ActiveCausa, StageBreakdown } from "api/ragWorkers";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 type FilterType = "all" | "indexed" | "outdated" | "pending" | "error" | "never";
 
@@ -614,15 +615,19 @@ const WorkerIndexationTab = () => {
 			{/* Summary cards */}
 			{summary ? (
 				<>
-					<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
 						<Stack>
-							<Typography variant="h5">Estado de Indexacion</Typography>
+							<Typography variant="h5">Estado de indexación</Typography>
 							<Typography variant="body2" color="text.secondary">
 								Cobertura del sistema RAG sobre las causas verificadas
 							</Typography>
 						</Stack>
 						<Tooltip title="Refrescar">
-							<IconButton onClick={handleRefresh} size="small">
+							<IconButton
+								onClick={handleRefresh}
+								size="small"
+								sx={{ transition: "transform 250ms ease", "&:hover": { transform: "rotate(90deg)" } }}
+							>
 								<Refresh size={18} />
 							</IconButton>
 						</Tooltip>
@@ -737,11 +742,11 @@ const WorkerIndexationTab = () => {
 			</Box>
 
 			{/* Table */}
-			<TableContainer sx={{ overflowX: "auto" }}>
+			<TableContainer sx={{ overflowX: "auto", border: `1px solid ${headerBorder(theme.palette.mode === "dark")}`, borderRadius: 1.5 }}>
 				<Table size="small" sx={{ tableLayout: "fixed", minWidth: isMobile ? 360 : undefined }}>
 					<TableHead>
-						<TableRow>
-							<TableCell sx={{ width: isMobile ? "50%" : "45%" }}>Caratula</TableCell>
+						<TableRow sx={{ "& th": { bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.06 : 0.035), fontWeight: 600 } }}>
+							<TableCell sx={{ width: isMobile ? "50%" : "45%" }}>Carátula</TableCell>
 							<TableCell sx={{ width: "7%", display: { xs: "none", md: "table-cell" } }}>Fuero</TableCell>
 							<TableCell sx={{ width: isMobile ? "25%" : "12%" }} align="center">
 								Estado
@@ -752,7 +757,7 @@ const WorkerIndexationTab = () => {
 							<TableCell sx={{ width: "10%", display: { xs: "none", md: "table-cell" } }} align="right">
 								Docs
 							</TableCell>
-							<TableCell sx={{ width: "14%", display: { xs: "none", md: "table-cell" } }}>Ultima indexacion</TableCell>
+							<TableCell sx={{ width: "14%", display: { xs: "none", md: "table-cell" } }}>Última indexación</TableCell>
 						</TableRow>
 					</TableHead>
 					<TableBody>

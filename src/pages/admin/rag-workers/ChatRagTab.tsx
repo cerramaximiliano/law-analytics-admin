@@ -27,6 +27,7 @@ import { ArrowLeft2, Send2, SearchNormal1, InfoCircle, Refresh2 } from "iconsax-
 import { useSnackbar } from "notistack";
 import RagWorkersService, { IndexationCausa, CausaSummaryData } from "api/ragWorkers";
 import { getAuthToken, refreshAuthToken } from "utils/ragAxios";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 const RAG_URL = import.meta.env.VITE_RAG_URL || "http://localhost:5005";
 
@@ -111,12 +112,12 @@ const CausaSelector: React.FC<{ onSelect: (causa: IndexationCausa) => void }> = 
 		<Stack spacing={2}>
 			<Typography variant="h5">Seleccionar causa indexada</Typography>
 			<Typography variant="body2" color="text.secondary">
-				Selecciona una causa para iniciar un chat con el sistema RAG
+				Seleccioná una causa para iniciar un chat con el sistema RAG
 			</Typography>
 
 			<TextField
 				size="small"
-				placeholder="Buscar por caratula..."
+				placeholder="Buscar por carátula..."
 				value={search}
 				onChange={(e) => setSearch(e.target.value)}
 				InputProps={{
@@ -129,18 +130,18 @@ const CausaSelector: React.FC<{ onSelect: (causa: IndexationCausa) => void }> = 
 				sx={{ maxWidth: 400 }}
 			/>
 
-			<TableContainer sx={{ overflowX: "auto" }}>
+			<TableContainer sx={{ overflowX: "auto", border: `1px solid ${headerBorder(theme.palette.mode === "dark")}`, borderRadius: 1.5 }}>
 				<Table size="small" sx={{ tableLayout: "fixed", minWidth: isMobile ? 360 : undefined }}>
 					<TableHead>
-						<TableRow>
-							<TableCell sx={{ width: isMobile ? "55%" : "40%" }}>Caratula</TableCell>
+						<TableRow sx={{ "& th": { bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.06 : 0.035), fontWeight: 600 } }}>
+							<TableCell sx={{ width: isMobile ? "55%" : "40%" }}>Carátula</TableCell>
 							<TableCell sx={{ width: "8%", display: { xs: "none", md: "table-cell" } }}>Fuero</TableCell>
 							<TableCell sx={{ width: "10%", display: { xs: "none", md: "table-cell" } }}>Juzgado</TableCell>
 							<TableCell sx={{ width: "8%", display: { xs: "none", md: "table-cell" } }}>Tipo</TableCell>
 							<TableCell sx={{ width: isMobile ? "20%" : "10%" }} align="right">
 								Docs
 							</TableCell>
-							<TableCell sx={{ width: isMobile ? "25%" : "14%", display: { xs: "none", sm: "table-cell" } }}>Ultima indexacion</TableCell>
+							<TableCell sx={{ width: isMobile ? "25%" : "14%", display: { xs: "none", sm: "table-cell" } }}>Última indexación</TableCell>
 						</TableRow>
 					</TableHead>
 					<TableBody>

@@ -35,6 +35,7 @@ import {
 	Cell,
 } from "recharts";
 import { Refresh, Copy, DocumentDownload } from "iconsax-react";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import { useSnackbar } from "notistack";
 import RagWorkersService, {
 	PipelineAnalytics,
@@ -799,16 +800,18 @@ const TrendCharts: React.FC<{ daily: PipelineDailyEntry[]; theme: any }> = ({ da
 // ── Section 5: Percentiles table ────────────────────────────────────────────
 
 const PercentilesTable: React.FC<{ percentiles: NonNullable<DocumentAnalytics["percentiles"]> }> = ({ percentiles }) => {
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const rows = (["totalMs", "downloadMs", "extractMs", "chunkingMs", "embeddingMs", "upsertMs"] as const).map((key) => ({
 		label: STAGE_LABELS[key] || key,
 		...percentiles[key],
 	}));
 
 	return (
-		<TableContainer>
+		<TableContainer sx={{ border: `1px solid ${headerBorder(isDark)}`, borderRadius: 1.5 }}>
 			<Table size="small">
 				<TableHead>
-					<TableRow>
+					<TableRow sx={{ "& th": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.035), fontWeight: 600 } }}>
 						<TableCell>Etapa</TableCell>
 						<TableCell align="right">p50</TableCell>
 						<TableCell align="right">p90</TableCell>
@@ -842,11 +845,13 @@ const PercentilesTable: React.FC<{ percentiles: NonNullable<DocumentAnalytics["p
 // ── Section 6: Slowest documents table ──────────────────────────────────────
 
 const SlowestDocsTable: React.FC<{ documents: DocumentAnalytics["slowest"] }> = ({ documents }) => {
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	return (
-		<TableContainer>
+		<TableContainer sx={{ border: `1px solid ${headerBorder(isDark)}`, borderRadius: 1.5 }}>
 			<Table size="small">
 				<TableHead>
-					<TableRow>
+					<TableRow sx={{ "& th": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.035), fontWeight: 600 } }}>
 						<TableCell>Doc ID</TableCell>
 						<TableCell>Tipo</TableCell>
 						<TableCell align="right">Pags</TableCell>

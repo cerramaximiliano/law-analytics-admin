@@ -17,6 +17,7 @@ import {
 import { Refresh, TickCircle, Edit2, Copy } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import RagWorkersService, { PipelineConfig } from "api/ragWorkers";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 // ── Config variable definition ──────────────────────────────────────────────
 
@@ -316,23 +317,29 @@ const WorkerPipelineTab = () => {
 		{ key: "pinecone", vars: CONFIG_VARS.filter((v) => v.section === "pinecone") },
 	];
 
+	const isDark = theme.palette.mode === "dark";
+
 	return (
 		<Stack spacing={3} sx={{ p: isMobile ? 1.5 : 2 }}>
 			<Stack direction="row" justifyContent="space-between" alignItems="center">
 				<Stack>
-					<Typography variant="h5">Configuracion del Pipeline</Typography>
+					<Typography variant="h5">Configuración del pipeline</Typography>
 					<Typography variant="body2" color="text.secondary">
-						Parametros de chunking, embedding y batching para el procesamiento de documentos
+						Parámetros de chunking, embedding y batching para el procesamiento de documentos
 					</Typography>
 				</Stack>
 				<Stack direction="row" spacing={0.5}>
-					<Tooltip title="Copiar configuracion">
-						<IconButton onClick={handleCopyConfig} size="small">
+					<Tooltip title="Copiar configuración">
+						<IconButton onClick={handleCopyConfig} size="small" sx={{ transition: "color 200ms ease", "&:hover": { color: BRAND_BLUE } }}>
 							<Copy size={18} />
 						</IconButton>
 					</Tooltip>
 					<Tooltip title="Refrescar">
-						<IconButton onClick={fetchConfig} size="small">
+						<IconButton
+							onClick={fetchConfig}
+							size="small"
+							sx={{ transition: "transform 250ms ease", "&:hover": { transform: "rotate(90deg)" } }}
+						>
 							<Refresh size={18} />
 						</IconButton>
 					</Tooltip>
@@ -346,7 +353,15 @@ const WorkerPipelineTab = () => {
 			{sections.map((section) => {
 				const meta = SECTION_LABELS[section.key];
 				return (
-					<Box key={section.key} sx={{ p: isMobile ? 1.5 : 2.5, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
+					<Box
+						key={section.key}
+						sx={{
+							p: isMobile ? 1.5 : 2.5,
+							borderRadius: 2,
+							border: `1px solid ${headerBorder(isDark)}`,
+							bgcolor: theme.palette.background.paper,
+						}}
+					>
 						<Stack spacing={0.5} sx={{ mb: 2 }}>
 							<Typography variant="subtitle1" fontWeight={600}>
 								{meta.title}
@@ -374,7 +389,8 @@ const WorkerPipelineTab = () => {
 											py: 1,
 											px: 1.5,
 											borderRadius: 1,
-											"&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.02) },
+											transition: "background-color 200ms ease",
+											"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.05 : 0.025) },
 										}}
 									>
 										{/* Label + description */}

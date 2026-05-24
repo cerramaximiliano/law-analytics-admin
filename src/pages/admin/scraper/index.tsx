@@ -42,6 +42,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import ScraperService, { ScraperConfig, ScraperJob, ScraperRun, ScraperJobStats, ScraperRunStats } from "api/scraperService";
 import dayjs from "dayjs";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -554,6 +555,7 @@ const ConfigTab = () => {
 // ─── Jobs Tab ─────────────────────────────────────────────────────────────────
 
 const JobsTab = () => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 	const [jobs, setJobs] = useState<ScraperJob[]>([]);
 	const [stats, setStats] = useState<ScraperJobStats | null>(null);
@@ -657,7 +659,10 @@ const JobsTab = () => {
 								{loadingStats ? (
 									<Skeleton variant="text" width={40} height={36} />
 								) : (
-									<Typography variant="h4" color={color}>
+									<Typography
+										variant="h3"
+										sx={{ color, fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
+									>
 										{value}
 									</Typography>
 								)}
@@ -705,10 +710,14 @@ const JobsTab = () => {
 			</Stack>
 
 			{/* Table */}
-			<TableContainer component={Paper} variant="outlined">
+			<TableContainer
+				component={Paper}
+				variant="outlined"
+				sx={{ borderColor: headerBorder(theme.palette.mode === "dark"), borderRadius: 1.5 }}
+			>
 				<Table size="small">
 					<TableHead>
-						<TableRow>
+						<TableRow sx={{ "& th": { bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.06 : 0.035), fontWeight: 600 } }}>
 							<TableCell>Tipo</TableCell>
 							<TableCell>Entity ID</TableCell>
 							<TableCell align="center">Estado</TableCell>
@@ -920,7 +929,10 @@ const RunsTab = () => {
 								{loadingStats ? (
 									<Skeleton variant="text" width={40} height={36} />
 								) : (
-									<Typography variant="h4" color={color}>
+									<Typography
+										variant="h3"
+										sx={{ color, fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
+									>
 										{value ?? 0}
 									</Typography>
 								)}
@@ -1187,17 +1199,19 @@ const ScraperWorkerPage = () => {
 		letterSpacing: "0.5px",
 	};
 
+	const isDark = theme.palette.mode === "dark";
+
 	return (
 		<MainCard
-			title="Scraper Postal"
+			title="Scraper postal"
 			secondary={
-				<Stack direction="row" spacing={1} alignItems="center">
+				<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 					<Setting3 size={20} />
 					<Typography variant="body2" color="textSecondary">
-						Worker de Seguimiento Postal (Correo Argentino)
+						Worker de seguimiento postal (Correo Argentino)
 					</Typography>
 					<Box component="span" sx={badgeStyle}>
-						Scraper Postal
+						scraper-postal
 					</Box>
 					<Box component="span" sx={badgeStyle}>
 						worker_01
@@ -1210,11 +1224,12 @@ const ScraperWorkerPage = () => {
 							px: 0.75,
 							py: 0.25,
 							borderRadius: 1,
-							bgcolor: alpha(theme.palette.info.main, 0.1),
-							color: theme.palette.info.main,
+							bgcolor: alpha(BRAND_BLUE, 0.1),
+							color: BRAND_BLUE,
 							fontSize: "0.6rem",
 							fontWeight: 500,
 							fontFamily: "monospace",
+							fontVariantNumeric: "tabular-nums",
 						}}
 					>
 						100.111.73.56
@@ -1222,12 +1237,26 @@ const ScraperWorkerPage = () => {
 				</Stack>
 			}
 		>
-			<Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons="auto">
-				<Tab label="Configuracion" value="config" />
+			<Tabs
+				value={tab}
+				onChange={(_, v) => setTab(v)}
+				variant="scrollable"
+				scrollButtons="auto"
+				sx={{
+					borderBottom: `1px solid ${headerBorder(isDark)}`,
+					"& .MuiTab-root": {
+						textTransform: "none",
+						minHeight: 48,
+						fontSize: "0.875rem",
+						fontWeight: 500,
+						transition: "color 200ms ease",
+					},
+				}}
+			>
+				<Tab label="Configuración" value="config" />
 				<Tab label="Cola de trabajos" value="jobs" />
 				<Tab label="Ejecuciones de workers" value="runs" />
 			</Tabs>
-			<Divider />
 
 			<TabPanel value={tab} index="config">
 				<ConfigTab />

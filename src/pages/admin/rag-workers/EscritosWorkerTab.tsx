@@ -43,6 +43,7 @@ import RagWorkersService, { EscritosWorkerConfig, EscritosWorkerStats, GlobalDoc
 import WorkerControlPanel from "components/WorkerControlPanel";
 import WorkerScopeAlert from "components/admin/WorkerScopeAlert";
 import CronSelector from "components/admin/CronSelector";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 // ── Constantes ───────────────────────────────────────────────────────────────
 
@@ -84,12 +85,29 @@ function StatCard({ label, value, color, sub }: { label: string; value: number |
 	return (
 		<Paper
 			variant="outlined"
-			sx={{ p: 2, minWidth: 120, borderColor: color ? alpha(color, 0.35) : undefined, bgcolor: color ? alpha(color, 0.04) : undefined }}
+			sx={{
+				p: 2,
+				minWidth: 120,
+				borderRadius: 2,
+				borderColor: color ? alpha(color, 0.35) : undefined,
+				bgcolor: color ? alpha(color, 0.04) : undefined,
+				transition: "transform 200ms ease, border-color 200ms ease",
+				"&:hover": { transform: "translateY(-1px)" },
+			}}
 		>
-			<Typography variant="h4" fontWeight={700} color={color || "text.primary"}>
+			<Typography
+				variant="h3"
+				sx={{
+					fontWeight: 700,
+					color: color || theme.palette.text.primary,
+					fontVariantNumeric: "tabular-nums",
+					letterSpacing: "-0.02em",
+					lineHeight: 1.1,
+				}}
+			>
 				{typeof value === "number" ? value.toLocaleString("es-AR") : value}
 			</Typography>
-			<Typography variant="caption" color="text.secondary">
+			<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
 				{label}
 			</Typography>
 			{sub && (
@@ -800,10 +818,14 @@ function ResumenSection() {
 				<Skeleton variant="rounded" height={200} />
 			) : (
 				<>
-					<TableContainer component={Paper} variant="outlined">
+					<TableContainer
+						component={Paper}
+						variant="outlined"
+						sx={{ borderColor: headerBorder(theme.palette.mode === "dark"), borderRadius: 1.5 }}
+					>
 						<Table size="small">
 							<TableHead>
-								<TableRow sx={{ "& th": { fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.04) } }}>
+								<TableRow sx={{ "& th": { fontWeight: 600, bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.06 : 0.035) } }}>
 									<TableCell>Tipo doc.</TableCell>
 									<TableCell>Fuero</TableCell>
 									<TableCell>Estado</TableCell>

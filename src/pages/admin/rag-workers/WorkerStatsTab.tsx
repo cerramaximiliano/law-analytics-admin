@@ -23,6 +23,7 @@ import {
 import { Refresh } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import RagWorkersService, { StatsResponse, WorkerStats, DailyStatsEntry } from "api/ragWorkers";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 const WORKER_LABELS: Record<string, string> = {
 	indexCausa: "Index Causa",
@@ -103,14 +104,18 @@ const WorkerStatsTab = () => {
 				<Stack direction="row" spacing={2} alignItems="center">
 					{stats && (
 						<Chip
-							label={`Costo total: ${formatUsd(stats.totalCosts.usd)}`}
+							label={`Costo total ${formatUsd(stats.totalCosts.usd)}`}
 							color="primary"
 							variant="outlined"
-							sx={{ fontWeight: 600, fontFamily: "monospace" }}
+							sx={{ fontWeight: 600, fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }}
 						/>
 					)}
 					<Tooltip title="Refrescar">
-						<IconButton onClick={fetchStats} size="small">
+						<IconButton
+							onClick={fetchStats}
+							size="small"
+							sx={{ transition: "transform 250ms ease", "&:hover": { transform: "rotate(90deg)" } }}
+						>
 							<Refresh size={18} />
 						</IconButton>
 					</Tooltip>
@@ -144,10 +149,10 @@ const WorkerStatsTab = () => {
 							{dailyStats.length} entradas
 						</Typography>
 					</Stack>
-					<TableContainer component={Box}>
+					<TableContainer component={Box} sx={{ border: `1px solid ${headerBorder(theme.palette.mode === "dark")}`, borderRadius: 1.5 }}>
 						<Table size="small">
 							<TableHead>
-								<TableRow sx={{ "& th": { fontWeight: 600, bgcolor: alpha(theme.palette.primary.main, 0.04) } }}>
+								<TableRow sx={{ "& th": { fontWeight: 600, bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.06 : 0.035) } }}>
 									<TableCell>Fecha</TableCell>
 									<TableCell>Worker</TableCell>
 									<TableCell align="right">Completados</TableCell>
@@ -220,7 +225,18 @@ const WorkerStatsCard: React.FC<WorkerStatsCardProps> = ({ worker, theme }) => {
 	const successRate = totalJobs > 0 ? ((w.jobsCompleted / totalJobs) * 100).toFixed(1) : "0";
 
 	return (
-		<Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.6) }}>
+		<Box
+			sx={{
+				p: 2,
+				borderRadius: 2,
+				border: `1px solid ${headerBorder(theme.palette.mode === "dark")}`,
+				bgcolor: theme.palette.background.paper,
+				transition: "border-color 200ms ease, box-shadow 200ms ease",
+				"&:hover": {
+					borderColor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.32 : 0.2),
+				},
+			}}
+		>
 			<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
 				<Typography variant="subtitle1" fontWeight={600}>
 					{label}

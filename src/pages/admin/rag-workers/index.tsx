@@ -3,6 +3,7 @@ import { Box, Tab, Tabs, Typography, Paper, Stack, useTheme, alpha } from "@mui/
 import { Setting3, Chart, DollarSquare, InfoCircle, DocumentText, CpuSetting, Activity, MessageText } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import WorkerControlTab from "./WorkerControlTab";
 import WorkerStatsTab from "./WorkerStatsTab";
 import WorkerPricingTab from "./WorkerPricingTab";
@@ -17,16 +18,21 @@ import ChatEditorTab from "./ChatEditorTab";
 
 const MetricasTab = () => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const [sub, setSub] = useState("stats");
 	return (
 		<Stack spacing={0}>
 			<Tabs
 				value={sub}
 				onChange={(_, v) => setSub(v)}
-				sx={{ borderBottom: 1, borderColor: "divider", mb: 2, "& .MuiTab-root": { textTransform: "none", minHeight: 40 } }}
+				sx={{
+					borderBottom: `1px solid ${headerBorder(isDark)}`,
+					mb: 2,
+					"& .MuiTab-root": { textTransform: "none", minHeight: 40, transition: "color 200ms ease" },
+				}}
 			>
-				<Tab value="stats" label="Estadísticas de Jobs" icon={<Chart size={16} />} iconPosition="start" />
-				<Tab value="analytics" label="Analytics del Pipeline" icon={<Activity size={16} />} iconPosition="start" />
+				<Tab value="stats" label="Estadísticas de jobs" icon={<Chart size={16} />} iconPosition="start" />
+				<Tab value="analytics" label="Analytics del pipeline" icon={<Activity size={16} />} iconPosition="start" />
 			</Tabs>
 			{sub === "stats" && <WorkerStatsTab />}
 			{sub === "analytics" && <WorkerAnalyticsTab />}
@@ -35,16 +41,22 @@ const MetricasTab = () => {
 };
 
 const ChatTab = () => {
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const [sub, setSub] = useState("rag");
 	return (
 		<Stack spacing={0}>
 			<Tabs
 				value={sub}
 				onChange={(_, v) => setSub(v)}
-				sx={{ borderBottom: 1, borderColor: "divider", mb: 2, "& .MuiTab-root": { textTransform: "none", minHeight: 40 } }}
+				sx={{
+					borderBottom: `1px solid ${headerBorder(isDark)}`,
+					mb: 2,
+					"& .MuiTab-root": { textTransform: "none", minHeight: 40, transition: "color 200ms ease" },
+				}}
 			>
 				<Tab value="rag" label="Chat RAG" icon={<MessageText size={16} />} iconPosition="start" />
-				<Tab value="editor" label="Chat Editor" icon={<MessageText size={16} />} iconPosition="start" />
+				<Tab value="editor" label="Chat editor" icon={<MessageText size={16} />} iconPosition="start" />
 			</Tabs>
 			{sub === "rag" && <ChatRagTab />}
 			{sub === "editor" && <ChatEditorTab />}
@@ -63,6 +75,7 @@ interface RagWorkerTab {
 
 const RagWorkersPage = () => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const [activeTab, setActiveTab] = useState("control");
 
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
@@ -71,7 +84,7 @@ const RagWorkersPage = () => {
 
 	const tabs: RagWorkerTab[] = [
 		{
-			label: "Control de Workers",
+			label: "Control de workers",
 			value: "control",
 			icon: <Setting3 size={20} />,
 			component: <WorkerControlTab />,
@@ -83,13 +96,13 @@ const RagWorkersPage = () => {
 			component: <MetricasTab />,
 		},
 		{
-			label: "Costos y Precios",
+			label: "Costos y precios",
 			value: "pricing",
 			icon: <DollarSquare size={20} />,
 			component: <WorkerPricingTab />,
 		},
 		{
-			label: "Indexacion",
+			label: "Indexación",
 			value: "indexation",
 			icon: <DocumentText size={20} />,
 			component: <WorkerIndexationTab />,
@@ -117,15 +130,25 @@ const RagWorkersPage = () => {
 	return (
 		<MainCard>
 			<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-				<Box>
-					<Typography variant="h3">Workers RAG</Typography>
-					<Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
+				<Box sx={{ maxWidth: 760 }}>
+					<Typography variant="h3" sx={{ mb: 0.75 }}>
+						Workers RAG
+					</Typography>
+					<Typography variant="body1" color="text.secondary">
 						Indexación por causa, embeddings, resúmenes y OCR del sistema RAG por usuario
 					</Typography>
 				</Box>
 
-				<Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
-					<Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+				<Paper
+					variant="outlined"
+					sx={{ borderRadius: 2, overflow: "hidden", borderColor: headerBorder(isDark), boxShadow: "none" }}
+				>
+					<Box
+						sx={{
+							borderBottom: `1px solid ${headerBorder(isDark)}`,
+							bgcolor: alpha(BRAND_BLUE, isDark ? 0.04 : 0.025),
+						}}
+					>
 						<Tabs
 							value={activeTab}
 							onChange={handleTabChange}
@@ -137,6 +160,7 @@ const RagWorkersPage = () => {
 									textTransform: "none",
 									fontSize: "0.875rem",
 									fontWeight: 500,
+									transition: "color 200ms ease",
 								},
 							}}
 						>

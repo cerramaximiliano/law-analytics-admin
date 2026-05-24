@@ -70,6 +70,7 @@ import {
 } from "recharts";
 import MainCard from "components/MainCard";
 import GA4AnalyticsService from "api/ga4Analytics";
+import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder } from "themes/dashboardTokens";
 import {
 	GA4AllData,
 	GA4PeriodOption,
@@ -343,14 +344,14 @@ const a11yProps = (index: number) => ({
 	"aria-controls": `ga4-tabpanel-${index}`,
 });
 
-// Color palette
+// Color palette — alineada con design tokens del ecosistema (BRAND_BLUE, LIVE_GREEN, STALE_AMBER)
 const COLORS = {
-	primary: { main: "#4F46E5", light: "#6366F1", lighter: "#EEF2FF" },
-	success: { main: "#10B981", light: "#34D399", lighter: "#ECFDF5" },
-	warning: { main: "#F59E0B", light: "#FBBF24", lighter: "#FFFBEB" },
+	primary: { main: BRAND_BLUE, light: "#6B96FF", lighter: "#E8F0FF" },
+	success: { main: LIVE_GREEN, light: "#4ADE80", lighter: "#ECFDF5" },
+	warning: { main: STALE_AMBER, light: "#FBBF24", lighter: "#FFFBEB" },
 	neutral: { main: "#64748B", light: "#94A3B8", lighter: "#F1F5F9", text: "#475569" },
-	funnel: ["#4F46E5", "#6366F1", "#818CF8", "#A5B4FC"],
-	pie: ["#4F46E5", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"],
+	funnel: [BRAND_BLUE, "#5C8FFF", "#7FA8FF", "#A8C3FF"],
+	pie: [BRAND_BLUE, LIVE_GREEN, STALE_AMBER, "#EF4444", "#8B5CF6", "#EC4899"],
 };
 
 // Metric Card Component
@@ -369,6 +370,7 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, loading, co
 	const resolvedColor = color || theme.palette.primary.main;
 	const metricInfo = metricKey ? METRIC_DESCRIPTIONS[metricKey] : null;
 
+	const isDark = theme.palette.mode === "dark";
 	const cardContent = (
 		<Paper
 			elevation={0}
@@ -376,11 +378,13 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, loading, co
 				p: 2.5,
 				borderRadius: 2,
 				bgcolor: theme.palette.background.paper,
-				border: `1px solid ${theme.palette.divider}`,
+				border: `1px solid ${headerBorder(isDark)}`,
 				height: "100%",
 				cursor: metricInfo ? "help" : "default",
-				transition: "border-color 0.2s",
-				"&:hover": metricInfo ? { borderColor: alpha(theme.palette.primary.main, 0.5) } : {},
+				transition: "border-color 200ms ease, transform 200ms ease",
+				"&:hover": metricInfo
+					? { borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22), transform: "translateY(-1px)" }
+					: { transform: "translateY(-1px)" },
 			}}
 		>
 			<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
@@ -393,7 +397,16 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, loading, co
 				<Skeleton variant="text" width={80} height={48} />
 			) : (
 				<>
-					<Typography variant="h3" sx={{ fontWeight: 700, color: resolvedColor, lineHeight: 1 }}>
+					<Typography
+						variant="h3"
+						sx={{
+							fontWeight: 700,
+							color: resolvedColor,
+							lineHeight: 1,
+							fontVariantNumeric: "tabular-nums",
+							letterSpacing: "-0.02em",
+						}}
+					>
 						{typeof value === "number" ? value.toLocaleString() : value}
 					</Typography>
 					{subtitle && (
@@ -879,7 +892,12 @@ const GA4Dashboard = () => {
 						/>
 					)}
 					<Tooltip title="Actualizar datos">
-						<IconButton onClick={handleRefresh} disabled={loading || navLoading} size="small" color="primary">
+						<IconButton
+							onClick={handleRefresh}
+							disabled={loading || navLoading}
+							size="small"
+							sx={{ color: BRAND_BLUE, transition: "transform 250ms ease", "&:hover": { transform: "rotate(90deg)" } }}
+						>
 							<Refresh
 								size={20}
 								style={{
@@ -899,8 +917,21 @@ const GA4Dashboard = () => {
 			`}</style>
 
 			{/* Tabs de navegación */}
-			<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 0 }}>
-				<Tabs value={tabValue} onChange={handleTabChange} aria-label="GA4 analytics tabs">
+			<Box sx={{ borderBottom: `1px solid ${headerBorder(theme.palette.mode === "dark")}`, mb: 0 }}>
+				<Tabs
+					value={tabValue}
+					onChange={handleTabChange}
+					aria-label="GA4 analytics tabs"
+					sx={{
+						"& .MuiTab-root": {
+							textTransform: "none",
+							minHeight: 48,
+							fontSize: "0.875rem",
+							fontWeight: 500,
+							transition: "color 200ms ease",
+						},
+					}}
+				>
 					<Tab icon={<Chart size={18} />} iconPosition="start" label="Overview" {...a11yProps(0)} />
 					<Tab icon={<Login size={18} />} iconPosition="start" label="Landing & Exit Pages" {...a11yProps(1)} />
 					<Tab icon={<Routing size={18} />} iconPosition="start" label="Path Analysis" {...a11yProps(2)} />

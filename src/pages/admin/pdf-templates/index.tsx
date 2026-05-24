@@ -55,6 +55,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import PdfTemplatesAdminService, { PdfTemplate, PdfTemplateStats, PdfField } from "api/pdfTemplatesAdmin";
 import dayjs from "dayjs";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -78,15 +79,26 @@ const STATUS_CHIP: Record<string, { color: "default" | "success" | "warning" | "
 
 const StatCard: React.FC<{ label: string; value: number; color: string; loading?: boolean }> = ({ label, value, color, loading }) => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	return (
-		<Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, height: "100%" }}>
+		<Paper
+			elevation={0}
+			sx={{
+				p: 2,
+				borderRadius: 2,
+				border: `1px solid ${headerBorder(isDark)}`,
+				height: "100%",
+				transition: "border-color 200ms ease, transform 200ms ease",
+				"&:hover": { borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.2), transform: "translateY(-1px)" },
+			}}
+		>
 			<Typography variant="caption" color="textSecondary" display="block">
 				{label}
 			</Typography>
 			{loading ? (
 				<Skeleton variant="text" width={50} height={32} />
 			) : (
-				<Typography variant="h5" fontWeight="bold" sx={{ color }}>
+				<Typography variant="h3" sx={{ color, fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
 					{value.toLocaleString()}
 				</Typography>
 			)}
@@ -644,6 +656,7 @@ const PdfTemplatesPage: React.FC = () => {
 								fetchTemplates();
 								fetchStats();
 							}}
+							sx={{ transition: "transform 250ms ease", "&:hover": { transform: "rotate(90deg)" } }}
 						>
 							<Refresh size={18} />
 						</IconButton>
@@ -655,6 +668,12 @@ const PdfTemplatesPage: React.FC = () => {
 						onClick={() => {
 							setEditTemplate(null);
 							setEditOpen(true);
+						}}
+						sx={{
+							textTransform: "none",
+							transition: "transform 200ms ease, box-shadow 200ms ease",
+							"&:hover": { transform: "translateY(-1px)" },
+							"&:active": { transform: "translateY(0)" },
 						}}
 					>
 						Nuevo template
@@ -780,7 +799,7 @@ const PdfTemplatesPage: React.FC = () => {
 			<TableContainer sx={{ overflowX: "auto" }}>
 				<Table size="small" sx={{ minWidth: { xs: 800, md: "100%" } }}>
 					<TableHead>
-						<TableRow>
+						<TableRow sx={{ "& th": { bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.06 : 0.035), fontWeight: 600 } }}>
 							<TableCell>Nombre</TableCell>
 							<TableCell>Slug</TableCell>
 							<TableCell>Categoría</TableCell>

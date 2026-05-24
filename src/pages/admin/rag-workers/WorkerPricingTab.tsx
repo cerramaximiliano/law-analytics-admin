@@ -27,9 +27,13 @@ import {
 } from "@mui/material";
 import { Refresh, Edit2, Trash, AddCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
+import { useTheme, alpha } from "@mui/material/styles";
 import RagWorkersService, { CostPricing, PipelineLlmConfig } from "api/ragWorkers";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 const WorkerPricingTab = () => {
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 	const [pricing, setPricing] = useState<CostPricing[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -183,9 +187,9 @@ const WorkerPricingTab = () => {
 	return (
 		<Stack spacing={3}>
 			{/* ── Modelo LLM Activo ─────────────────────────────────────────── */}
-			<Paper variant="outlined" sx={{ p: 2 }}>
+			<Paper variant="outlined" sx={{ p: 2, borderColor: headerBorder(isDark), boxShadow: "none", borderRadius: 2 }}>
 				<Stack spacing={2}>
-					<Typography variant="h6">Modelo LLM Activo</Typography>
+					<Typography variant="h6">Modelo LLM activo</Typography>
 					<Typography variant="body2" color="text.secondary">
 						Modelo usado por el sistema para chat/resúmenes y generación de documentos. El cambio aplica en tiempo real.
 					</Typography>
@@ -274,29 +278,44 @@ const WorkerPricingTab = () => {
 			</Paper>
 
 			{/* ── Tabla de Precios ──────────────────────────────────────────── */}
-			<Stack direction="row" justifyContent="space-between" alignItems="center">
+			<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
 				<Stack>
-					<Typography variant="h5">Tabla de Precios por Modelo</Typography>
+					<Typography variant="h5">Tabla de precios por modelo</Typography>
 					<Typography variant="body2" color="text.secondary">
-						Precios USD por 1M tokens. Usados para calcular costos en las estadisticas.
+						Precios USD por 1M tokens. Usados para calcular costos en las estadísticas.
 					</Typography>
 				</Stack>
 				<Stack direction="row" spacing={1}>
-					<Button variant="outlined" size="small" startIcon={<AddCircle size={16} />} onClick={handleAddOpen}>
+					<Button
+						variant="outlined"
+						size="small"
+						startIcon={<AddCircle size={16} />}
+						onClick={handleAddOpen}
+						sx={{
+							textTransform: "none",
+							transition: "transform 200ms ease, background-color 200ms ease",
+							"&:hover": { transform: "translateY(-1px)" },
+							"&:active": { transform: "translateY(0)" },
+						}}
+					>
 						Agregar modelo
 					</Button>
 					<Tooltip title="Refrescar">
-						<IconButton onClick={fetchData} size="small">
+						<IconButton
+							onClick={fetchData}
+							size="small"
+							sx={{ transition: "transform 250ms ease", "&:hover": { transform: "rotate(90deg)" } }}
+						>
 							<Refresh size={18} />
 						</IconButton>
 					</Tooltip>
 				</Stack>
 			</Stack>
 
-			<TableContainer>
+			<TableContainer sx={{ border: `1px solid ${headerBorder(isDark)}`, borderRadius: 1.5 }}>
 				<Table size="small">
 					<TableHead>
-						<TableRow>
+						<TableRow sx={{ "& th": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.035), fontWeight: 600 } }}>
 							<TableCell>Modelo</TableCell>
 							<TableCell>Tipo</TableCell>
 							<TableCell align="right">Input (USD/1M)</TableCell>

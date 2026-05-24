@@ -37,6 +37,7 @@ import RagWorkersService, {
 	InstanceScalingConfig,
 	RateLimiter,
 } from "api/ragWorkers";
+import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES, headerBorder } from "themes/dashboardTokens";
 
 // Orden segun flujo del pipeline: autoIndex → indexCausa → indexDocument → ocrDocument → generateSummary → recovery
 const WORKER_ORDER = ["autoIndex", "indexCausa", "indexDocument", "ocrDocument", "generateSummary", "recovery"];
@@ -299,7 +300,31 @@ const WorkerControlTab = () => {
 	const getStatusChip = (worker: WorkerConfig) => {
 		if (!worker.enabled) return <Chip label="Deshabilitado" size="small" color="default" />;
 		if (worker.paused) return <Chip label="Pausado" size="small" color="warning" />;
-		return <Chip label="Activo" size="small" color="success" />;
+		return (
+			<Stack direction="row" spacing={0.75} alignItems="center">
+				<Box
+					sx={{
+						position: "relative",
+						width: 8,
+						height: 8,
+						borderRadius: "50%",
+						bgcolor: LIVE_GREEN,
+						...LIVE_PULSE_KEYFRAMES,
+						"&::after": {
+							content: '""',
+							position: "absolute",
+							inset: 0,
+							borderRadius: "50%",
+							bgcolor: LIVE_GREEN,
+							animation: "la-live-pulse 2.4s ease-out infinite",
+						},
+					}}
+				/>
+				<Typography variant="caption" sx={{ fontWeight: 600, color: LIVE_GREEN }}>
+					Activo
+				</Typography>
+			</Stack>
+		);
 	};
 
 	const getQueueSummary = (counts?: Record<string, number>) => {
@@ -326,33 +351,55 @@ const WorkerControlTab = () => {
 		);
 	}
 
+	const isDark = theme.palette.mode === "dark";
+
 	return (
 		<Stack spacing={2}>
-			<Stack direction="row" justifyContent="space-between" alignItems="center">
-				<Typography variant="h5">Workers BullMQ</Typography>
+			<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
+				<Box>
+					<Typography variant="h5">Workers BullMQ</Typography>
+					<Typography variant="caption" color="text.secondary">
+						{workers.length} workers en pipeline · pollée cada 30s
+					</Typography>
+				</Box>
 				<Stack direction="row" spacing={1}>
 					<Tooltip title="Forzar escaneo de auto-index">
-						<Button variant="outlined" size="small" startIcon={<Flash size={16} />} onClick={handleTriggerAutoIndex}>
-							Trigger Auto-Index
+						<Button
+							variant="outlined"
+							size="small"
+							startIcon={<Flash size={16} />}
+							onClick={handleTriggerAutoIndex}
+							sx={{
+								textTransform: "none",
+								transition: "transform 200ms ease, background-color 200ms ease",
+								"&:hover": { transform: "translateY(-1px)" },
+								"&:active": { transform: "translateY(0)" },
+							}}
+						>
+							Trigger auto-index
 						</Button>
 					</Tooltip>
 					<Tooltip title="Refrescar">
-						<IconButton onClick={fetchWorkers} size="small">
+						<IconButton
+							onClick={fetchWorkers}
+							size="small"
+							sx={{ transition: "transform 250ms ease", "&:hover": { transform: "rotate(90deg)" } }}
+						>
 							<Refresh size={18} />
 						</IconButton>
 					</Tooltip>
 				</Stack>
 			</Stack>
 
-			<TableContainer>
+			<TableContainer sx={{ border: `1px solid ${headerBorder(isDark)}`, borderRadius: 1.5 }}>
 				<Table size="small">
 					<TableHead>
-						<TableRow>
+						<TableRow sx={{ "& th": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.035), fontWeight: 600 } }}>
 							<TableCell>Worker</TableCell>
 							<TableCell>Estado</TableCell>
 							<TableCell>Habilitado</TableCell>
 							<TableCell align="center">Concurrency</TableCell>
-							<TableCell>Rate Limiter</TableCell>
+							<TableCell>Rate limiter</TableCell>
 							<TableCell align="center">Escalado</TableCell>
 							<TableCell align="center">Instancias</TableCell>
 							<TableCell>Cola</TableCell>
@@ -384,7 +431,14 @@ const WorkerControlTab = () => {
 											size="small"
 											variant="outlined"
 											onClick={() => handleOpenConcurrency(worker)}
-											sx={{ cursor: "pointer", fontWeight: 600, minWidth: 40 }}
+											sx={{
+												cursor: "pointer",
+												fontWeight: 600,
+												minWidth: 40,
+												fontVariantNumeric: "tabular-nums",
+												transition: "border-color 200ms ease, color 200ms ease",
+												"&:hover": { borderColor: BRAND_BLUE, color: BRAND_BLUE },
+											}}
 										/>
 									</TableCell>
 									<TableCell>
@@ -393,7 +447,14 @@ const WorkerControlTab = () => {
 											size="small"
 											variant="outlined"
 											onClick={() => handleOpenRateLimiter(worker)}
-											sx={{ cursor: "pointer", fontWeight: 600, fontFamily: "monospace" }}
+											sx={{
+												cursor: "pointer",
+												fontWeight: 600,
+												fontFamily: "monospace",
+												fontVariantNumeric: "tabular-nums",
+												transition: "border-color 200ms ease, color 200ms ease",
+												"&:hover": { borderColor: BRAND_BLUE, color: BRAND_BLUE },
+											}}
 										/>
 									</TableCell>
 									<TableCell align="center">
