@@ -28,7 +28,7 @@ import {
 } from "@mui/material";
 import { ExportSquare, Eye, Refresh, SearchNormal1 } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import LiquidacionWorkerConfigService, { DocumentsListParams, LiquidacionDocListItem } from "api/liquidacionWorkerConfig";
+import LiquidacionWorkerConfigService, { DocumentsListParams, LiquidacionDocListItem, Regimen } from "api/liquidacionWorkerConfig";
 import DocumentDetailDrawer from "./DocumentDetailDrawer";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
@@ -50,6 +50,21 @@ const CATEGORIES = [
 ];
 
 const USEFUL_MIXES = new Set(["HC", "HR", "RET", "HC+HR", "HC+RET", "HR+RET", "HC+HR+RET"]);
+
+const REGIMEN_OPTIONS: { value: Regimen | ""; label: string }[] = [
+	{ value: "", label: "— todos —" },
+	{ value: "dependencia", label: "Relación de Dependencia" },
+	{ value: "autonomo", label: "Autónomo" },
+	{ value: "mixto", label: "Mixto" },
+	{ value: "unknown", label: "Sin detectar" },
+];
+
+const REGIMEN_LABEL: Record<Regimen, string> = {
+	dependencia: "Dependencia",
+	autonomo: "Autónomo",
+	mixto: "Mixto",
+	unknown: "—",
+};
 
 function fmtNumber(n: number | undefined | null): string {
 	if (n === undefined || n === null) return "—";
@@ -87,6 +102,7 @@ export default function DocumentsTab() {
 	const [category, setCategory] = useState<string>("");
 	const [caratulaQuery, setCaratulaQuery] = useState("");
 	const [hasData, setHasData] = useState(true);
+	const [regimen, setRegimen] = useState<Regimen | "">("");
 
 	const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
 	const [drawerOpen, setDrawerOpen] = useState(false);
@@ -105,6 +121,7 @@ export default function DocumentsTab() {
 			if (category) params.category = category;
 			if (caratulaQuery.trim()) params.caratula = caratulaQuery.trim();
 			if (hasData) params.hasData = true;
+			if (regimen) params.regimen = regimen;
 
 			const res = await LiquidacionWorkerConfigService.listDocuments(params);
 			setDocs(res.docs);
@@ -114,7 +131,7 @@ export default function DocumentsTab() {
 		} finally {
 			setLoading(false);
 		}
-	}, [page, rowsPerPage, pdfStatus, sectionMix, category, caratulaQuery, hasData, enqueueSnackbar]);
+	}, [page, rowsPerPage, pdfStatus, sectionMix, category, caratulaQuery, hasData, regimen, enqueueSnackbar]);
 
 	useEffect(() => {
 		fetchDocs();
@@ -180,6 +197,23 @@ export default function DocumentsTab() {
 							))}
 						</Select>
 					</FormControl>
+					<FormControl size="small" sx={{ minWidth: 200 }}>
+						<InputLabel>régimen</InputLabel>
+						<Select
+							value={regimen}
+							label="régimen"
+							onChange={(e) => {
+								setRegimen(e.target.value as Regimen | "");
+								setPage(0);
+							}}
+						>
+							{REGIMEN_OPTIONS.map((opt) => (
+								<MenuItem key={opt.value || "all"} value={opt.value}>
+									{opt.label}
+								</MenuItem>
+							))}
+						</Select>
+					</FormControl>
 					<Stack direction="row" alignItems="center" spacing={0.5}>
 						<Switch size="small" checked={hasData} onChange={(e) => { setHasData(e.target.checked); setPage(0); }} />
 						<Typography variant="caption">Solo con datos útiles</Typography>
@@ -228,6 +262,7 @@ export default function DocumentsTab() {
 							<TableCell sx={{ width: 90 }}>Fecha</TableCell>
 							<TableCell>Carátula</TableCell>
 							<TableCell sx={{ width: 130 }}>Mix</TableCell>
+							<TableCell sx={{ width: 130 }}>Régimen</TableCell>
 							<TableCell sx={{ width: 140 }}>Persona</TableCell>
 							<TableCell sx={{ width: 110 }} align="right">
 								Capital
@@ -244,7 +279,7 @@ export default function DocumentsTab() {
 						{loading
 							? Array.from({ length: 8 }).map((_, i) => (
 									<TableRow key={i}>
-										<TableCell colSpan={7}>
+										<TableCell colSpan={8}>
 											<Skeleton variant="text" height={28} />
 										</TableCell>
 									</TableRow>
@@ -306,6 +341,45 @@ export default function DocumentsTab() {
 												)}
 											</TableCell>
 											<TableCell>
+												{(() => {
+													const r = d.extracted?.regimen;
+													if (!r || r === "unknown") {
+														return (
+															<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
+																—
+															</Typography>
+														);
+													}
+													const color =
+														r === "mixto"
+															? theme.palette.warning.main
+															: r === "autonomo"
+																? theme.palette.info.main
+																: theme.palette.success.main;
+													const tooltipText = d.extracted?.regimenSource
+														? `Fuente: ${d.extracted.regimenSource}` +
+															(d.extracted.regimenConfidence != null
+																? ` · confianza ${d.extracted.regimenConfidence}`
+																: "")
+														: "";
+													return (
+														<Tooltip title={tooltipText} placement="top" arrow>
+															<Chip
+																label={REGIMEN_LABEL[r]}
+																size="small"
+																sx={{
+																	fontWeight: 600,
+																	fontSize: "0.68rem",
+																	bgcolor: alpha(color, 0.15),
+																	color,
+																	border: `1px solid ${alpha(color, 0.3)}`,
+																}}
+															/>
+														</Tooltip>
+													);
+												})()}
+											</TableCell>
+											<TableCell>
 												<Typography variant="body2" sx={{ fontSize: "0.78rem" }}>
 													{truncate(d.extracted?.persona, 24) || "—"}
 												</Typography>
@@ -347,7 +421,7 @@ export default function DocumentsTab() {
 								})}
 						{!loading && docs.length === 0 && (
 							<TableRow>
-								<TableCell colSpan={7} align="center">
+								<TableCell colSpan={8} align="center">
 									<Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
 										No hay documentos que coincidan con los filtros.
 									</Typography>

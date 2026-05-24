@@ -173,6 +173,21 @@ export interface SectionInfo {
 	pageEnd?: number;
 }
 
+export type Regimen = "dependencia" | "autonomo" | "mixto" | "unknown";
+export type RegimenSource = "tipo_calculo" | "breakdown" | "inferred" | "unknown";
+
+export interface RegimenSignals {
+	tipoCalculo?: string | null;
+	hasCategoriasAutonomas?: boolean;
+	hasRentaPromedioAutonoma?: boolean;
+	soloDepAniosMesesDias?: string | null;
+	soloAutAniosMesesDias?: string | null;
+	soloDepHasService?: boolean;
+	soloAutHasService?: boolean;
+	rdMesesTotal?: number | null;
+	hasRelacionDepText?: boolean;
+}
+
 export interface ExtractedData {
 	persona?: string;
 	beneficio?: string;
@@ -181,6 +196,10 @@ export interface ExtractedData {
 	fechaCese?: string;
 	fechaAdquisicion?: string;
 	fechaInicialPago?: string;
+	regimen?: Regimen;
+	regimenSource?: RegimenSource;
+	regimenConfidence?: number;
+	regimenSignals?: RegimenSignals;
 	haberCaja?: {
 		haberInicialPercibido?: number;
 		haberInicialAlAlta?: number;
@@ -238,6 +257,8 @@ export interface LiquidacionDocListItem {
 	hasHaberCaja?: boolean;
 	hasHaberReajustado?: boolean;
 	hasRetroactivo?: boolean;
+	hasRegimenDependencia?: boolean;
+	hasRegimenAutonomo?: boolean;
 	extracted?: ExtractedData;
 	processedAt?: string;
 }
@@ -295,6 +316,8 @@ export interface DocumentsListParams {
 	fechaTo?: string;
 	causaId?: string;
 	hasData?: boolean;
+	regimen?: Regimen;
+	hasRegimen?: string; // "dependencia" | "autonomo" | "dependencia,autonomo"
 	sortBy?: string;
 	sortOrder?: "asc" | "desc";
 }

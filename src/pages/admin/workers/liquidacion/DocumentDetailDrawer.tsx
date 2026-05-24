@@ -193,6 +193,33 @@ export default function DocumentDetailDrawer({ docId, open, onClose }: Props) {
 										sx={{ fontFamily: "monospace", fontWeight: 600 }}
 									/>
 								)}
+								{doc.extracted?.regimen && doc.extracted.regimen !== "unknown" && (
+									<Chip
+										label={
+											doc.extracted.regimen === "dependencia"
+												? "R. Dependencia"
+												: doc.extracted.regimen === "autonomo"
+													? "Autónomo"
+													: "Mixto"
+										}
+										size="small"
+										sx={{
+											fontWeight: 600,
+											bgcolor:
+												doc.extracted.regimen === "mixto"
+													? alpha(theme.palette.warning.main, 0.18)
+													: doc.extracted.regimen === "autonomo"
+														? alpha(theme.palette.info.main, 0.18)
+														: alpha(theme.palette.success.main, 0.18),
+											color:
+												doc.extracted.regimen === "mixto"
+													? theme.palette.warning.main
+													: doc.extracted.regimen === "autonomo"
+														? theme.palette.info.main
+														: theme.palette.success.main,
+										}}
+									/>
+								)}
 								{doc.category && (
 									<Chip
 										label={doc.category}
@@ -327,6 +354,48 @@ export default function DocumentDetailDrawer({ docId, open, onClose }: Props) {
 									<FieldRow label="fecha cese" value={fmtDate(e.fechaCese)} />
 									<FieldRow label="fecha adquisición" value={fmtDate(e.fechaAdquisicion)} />
 									<FieldRow label="fecha inicial pago" value={fmtDate(e.fechaInicialPago)} />
+								</Stack>
+							</Section>
+						)}
+
+						{/* Régimen previsional */}
+						{e?.regimen && (
+							<Section title="Régimen previsional">
+								<Stack spacing={0.5}>
+									<FieldRow
+										label="régimen"
+										value={
+											e.regimen === "dependencia"
+												? "Relación de Dependencia"
+												: e.regimen === "autonomo"
+													? "Autónomo"
+													: e.regimen === "mixto"
+														? "Mixto (RD + Autónomo)"
+														: "Sin detectar"
+										}
+									/>
+									<FieldRow label="fuente" value={e.regimenSource} />
+									<FieldRow label="confianza" value={e.regimenConfidence != null ? e.regimenConfidence : "—"} />
+									{e.regimenSignals && (
+										<>
+											<Divider sx={{ my: 0.5 }} />
+											<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
+												Señales detectadas
+											</Typography>
+											<FieldRow label="tipo cálculo" value={e.regimenSignals.tipoCalculo} />
+											<FieldRow
+												label="categorías autón."
+												value={e.regimenSignals.hasCategoriasAutonomas ? "sí" : "no"}
+											/>
+											<FieldRow
+												label="renta prom. autón."
+												value={e.regimenSignals.hasRentaPromedioAutonoma ? "sí" : "no"}
+											/>
+											<FieldRow label="sólo dep (a/m/d)" value={e.regimenSignals.soloDepAniosMesesDias} />
+											<FieldRow label="sólo aut (a/m/d)" value={e.regimenSignals.soloAutAniosMesesDias} />
+											<FieldRow label="meses RD totales" value={e.regimenSignals.rdMesesTotal} />
+										</>
+									)}
 								</Stack>
 							</Section>
 						)}
