@@ -4,6 +4,7 @@ import { Box, Tab, Tabs, Typography, Paper, Stack, Chip, useTheme, alpha, IconBu
 import { TickSquare, SearchNormal1, DocumentUpload, InfoCircle, People, Warning2, SecurityUser, Lock1, Gallery } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
+import { BRAND_BLUE, headerBorder, navActiveBg } from "themes/dashboardTokens";
 import VerificationWorker from "./VerificationWorker";
 import ScrapingWorker from "./ScrapingWorker";
 import AppUpdateWorker from "./AppUpdateWorker";
@@ -131,13 +132,17 @@ const WorkersConfig = () => {
 		}
 	};
 
+	const isDark = theme.palette.mode === "dark";
+
 	return (
 		<MainCard>
 			<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 				{/* Header */}
 				<Box>
 					<Stack direction="row" alignItems="center" spacing={1}>
-						<Typography variant="h3">Configuración de Workers</Typography>
+						<Typography variant="h3" sx={{ letterSpacing: "-0.01em" }}>
+							Configuración de workers
+						</Typography>
 						<Tooltip title="Ver información">
 							<IconButton size="small" color="info" onClick={(e) => setInfoAnchorEl(e.currentTarget)}>
 								<InfoCircle size={22} />
@@ -173,20 +178,31 @@ const WorkersConfig = () => {
 				</Box>
 
 				{/* Tabs de navegación */}
-				<Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
-					<Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+				<Paper
+					elevation={0}
+					sx={{
+						borderRadius: 2,
+						overflow: "hidden",
+						border: `1px solid ${headerBorder(isDark)}`,
+					}}
+				>
+					<Box sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, bgcolor: alpha(BRAND_BLUE, isDark ? 0.04 : 0.02) }}>
 						<Tabs
 							value={activeTab}
 							onChange={handleTabChange}
 							variant="scrollable"
 							scrollButtons="auto"
+							TabIndicatorProps={{ sx: { backgroundColor: BRAND_BLUE, height: 2.5 } }}
 							sx={{
 								"& .MuiTab-root": {
 									minHeight: 64,
 									textTransform: "none",
 									fontSize: "0.875rem",
 									fontWeight: 500,
+									transition: "background-color 200ms ease, color 200ms ease",
+									"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.04) },
 								},
+								"& .MuiTab-root.Mui-selected": { color: BRAND_BLUE, bgcolor: navActiveBg(isDark) },
 							}}
 						>
 							{workerTabs.map((tab) => (
@@ -209,12 +225,13 @@ const WorkersConfig = () => {
 																px: 1,
 																py: 0.25,
 																borderRadius: 1,
-																bgcolor: theme.palette.grey[800],
-																color: theme.palette.common.white,
+																bgcolor: alpha(theme.palette.text.primary, isDark ? 0.18 : 0.08),
+																color: theme.palette.text.primary,
 																fontSize: "0.65rem",
 																fontWeight: 500,
 																fontFamily: "monospace",
 																letterSpacing: "0.5px",
+																fontVariantNumeric: "tabular-nums",
 															}}
 														>
 															{tab.badge}

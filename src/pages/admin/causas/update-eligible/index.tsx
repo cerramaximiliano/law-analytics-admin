@@ -31,6 +31,7 @@ import { Refresh, SearchNormal1, InfoCircle, Clock, TickCircle, CloseCircle } fr
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import CausasElegiblesUpdateService, {
 	CausaElegible,
 	Fuero,
@@ -62,6 +63,7 @@ const StatChip = ({ label, value, color }: { label: string; value: number; color
 
 const CausasUpdateEligiblePage = () => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 
 	const [activeFuero, setActiveFuero] = useState<Fuero>("CIV");
@@ -190,7 +192,16 @@ const CausasUpdateEligiblePage = () => {
 				</Paper>
 
 				{/* Tabs por fuero */}
-				<Tabs value={activeFuero} onChange={handleFueroChange} sx={{ borderBottom: 1, borderColor: "divider" }}>
+				<Tabs
+					value={activeFuero}
+					onChange={handleFueroChange}
+					TabIndicatorProps={{ sx: { backgroundColor: BRAND_BLUE, height: 2.5 } }}
+					sx={{
+						borderBottom: `1px solid ${headerBorder(isDark)}`,
+						"& .MuiTab-root": { textTransform: "none", fontWeight: 500, transition: "color 200ms ease" },
+						"& .MuiTab-root.Mui-selected": { color: BRAND_BLUE },
+					}}
+				>
 					{FUEROS.map((f) => (
 						<Tab
 							key={f}
@@ -198,7 +209,13 @@ const CausasUpdateEligiblePage = () => {
 							label={
 								<Stack direction="row" spacing={1} alignItems="center">
 									<span>{FUERO_LABELS[f]}</span>
-									{stats?.[f] && <Chip size="small" label={stats[f].eligibles.toLocaleString("es-AR")} />}
+									{stats?.[f] && (
+										<Chip
+											size="small"
+											label={stats[f].eligibles.toLocaleString("es-AR")}
+											sx={{ fontVariantNumeric: "tabular-nums" }}
+										/>
+									)}
 								</Stack>
 							}
 						/>
@@ -241,10 +258,30 @@ const CausasUpdateEligiblePage = () => {
 				</Stack>
 
 				{/* Tabla */}
-				<TableContainer component={Paper} variant="outlined">
-					<Table size="small">
+				<TableContainer
+					component={Paper}
+					elevation={0}
+					sx={{
+						border: `1px solid ${headerBorder(isDark)}`,
+						borderRadius: 2,
+						maxHeight: "calc(100dvh - 380px)",
+					}}
+				>
+					<Table size="small" stickyHeader>
 						<TableHead>
-							<TableRow>
+							<TableRow
+								sx={{
+									"& .MuiTableCell-head": {
+										bgcolor: alpha(BRAND_BLUE, isDark ? 0.08 : 0.04),
+										borderBottom: `1px solid ${headerBorder(isDark)}`,
+										fontSize: "0.72rem",
+										fontWeight: 600,
+										textTransform: "uppercase",
+										letterSpacing: "0.04em",
+										color: "text.secondary",
+									},
+								}}
+							>
 								<TableCell>Expediente</TableCell>
 								<TableCell>Carátula</TableCell>
 								<TableCell>Juzgado</TableCell>
@@ -279,9 +316,16 @@ const CausasUpdateEligiblePage = () => {
 								</TableRow>
 							) : (
 								rows.map((c) => (
-									<TableRow key={c._id} hover>
+									<TableRow
+										key={c._id}
+										hover
+										sx={{
+											transition: "background-color 150ms ease",
+											"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) },
+										}}
+									>
 										<TableCell>
-											<Typography variant="body2" sx={{ fontFamily: "monospace", fontWeight: 600 }}>
+											<Typography variant="body2" sx={{ fontFamily: "monospace", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
 												{c.number}/{c.year}
 											</Typography>
 										</TableCell>
@@ -297,8 +341,12 @@ const CausasUpdateEligiblePage = () => {
 												{c.juzgado || "—"}
 											</Typography>
 										</TableCell>
-										<TableCell align="center">{c.movimientosCount}</TableCell>
-										<TableCell align="center">{c.foldersLinked}</TableCell>
+										<TableCell align="center" sx={{ fontVariantNumeric: "tabular-nums" }}>
+											{c.movimientosCount}
+										</TableCell>
+										<TableCell align="center" sx={{ fontVariantNumeric: "tabular-nums" }}>
+											{c.foldersLinked}
+										</TableCell>
 										<TableCell align="center">
 											<Tooltip title={`${c.usersWithUpdatesEnabled} con updates enabled`}>
 												<span>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, alpha } from "@mui/material/styles";
 import {
 	Dialog,
 	DialogTitle,
@@ -39,6 +39,7 @@ import {
 	StepLabel,
 	StepContent,
 } from "@mui/material";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import { Causa } from "api/causasPjn";
 import { CausasPjnService } from "api/causasPjn";
 import CausasService from "api/causas";
@@ -111,6 +112,7 @@ const normalizeFuero = (fuero: string | undefined): "CIV" | "COM" | "CSS" | "CNT
 
 const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = "pjn" }: CausaDetalleModalProps) => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Seleccionar el servicio apropiado
@@ -882,13 +884,24 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 
 	return (
 		<>
-			<Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-				<DialogTitle>
+			<Dialog
+				open={open}
+				onClose={onClose}
+				maxWidth="lg"
+				fullWidth
+				PaperProps={{
+					sx: {
+						borderRadius: 2.5,
+						boxShadow: `0 24px 64px ${alpha(BRAND_BLUE, isDark ? 0.18 : 0.12)}, 0 2px 8px rgba(28, 40, 80, 0.06)`,
+					},
+				}}
+			>
+				<DialogTitle sx={{ borderBottom: `1px solid ${headerBorder(isDark)}` }}>
 					<Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
 						<Box sx={{ flex: 1 }}>
 							<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-								<Typography variant="h5">
-									Expediente: {causa.number}/{causa.year}
+								<Typography variant="h5" sx={{ letterSpacing: "-0.01em", fontVariantNumeric: "tabular-nums" }}>
+									Expediente {causa.number}/{causa.year}
 								</Typography>
 								<Chip
 									label={FUERO_LABELS[normalizeFuero(causa.fuero)]}
@@ -931,9 +944,18 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 					</Stack>
 				</DialogTitle>
 
-				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-					<Tabs value={activeTab} onChange={handleTabChange} aria-label="causa detail tabs">
-						<Tab label="Información General" />
+				<Box sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, bgcolor: alpha(BRAND_BLUE, isDark ? 0.04 : 0.02) }}>
+					<Tabs
+						value={activeTab}
+						onChange={handleTabChange}
+						aria-label="causa detail tabs"
+						TabIndicatorProps={{ sx: { backgroundColor: BRAND_BLUE, height: 2.5 } }}
+						sx={{
+							"& .MuiTab-root": { textTransform: "none", fontWeight: 500, transition: "color 200ms ease" },
+							"& .MuiTab-root.Mui-selected": { color: BRAND_BLUE },
+						}}
+					>
+						<Tab label="Información general" />
 						<Tab label={`Movimientos (${currentMovimientos.length})`} />
 						<Tab label={`Historial (${updateHistory.length})`} />
 						<Tab label="JSON" />

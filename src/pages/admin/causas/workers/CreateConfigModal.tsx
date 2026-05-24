@@ -17,9 +17,12 @@ import {
 	CircularProgress,
 	Typography,
 	Box,
+	useTheme,
+	alpha,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import { WorkersService } from "api/workers";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 interface CreateConfigModalProps {
 	open: boolean;
@@ -45,6 +48,8 @@ const YEAR_OPTIONS = Array.from({ length: 10 }, (_, i) => CURRENT_YEAR - i);
 
 const CreateConfigModal: React.FC<CreateConfigModalProps> = ({ open, onClose, onSuccess, initialValues }) => {
 	const { enqueueSnackbar } = useSnackbar();
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const [loading, setLoading] = useState(false);
 
 	// Campos requeridos
@@ -172,9 +177,22 @@ const CreateConfigModal: React.FC<CreateConfigModalProps> = ({ open, onClose, on
 	};
 
 	return (
-		<Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-			<DialogTitle>
-				<Typography variant="h4">Crear Nueva Configuración de Scraping</Typography>
+		<Dialog
+			open={open}
+			onClose={handleClose}
+			maxWidth="sm"
+			fullWidth
+			PaperProps={{
+				sx: {
+					borderRadius: 2.5,
+					boxShadow: `0 24px 64px ${alpha(BRAND_BLUE, isDark ? 0.18 : 0.12)}, 0 2px 8px rgba(28, 40, 80, 0.06)`,
+				},
+			}}
+		>
+			<DialogTitle sx={{ borderBottom: `1px solid ${headerBorder(isDark)}` }}>
+				<Typography variant="h4" sx={{ letterSpacing: "-0.01em" }}>
+					Crear nueva configuración de scraping
+				</Typography>
 			</DialogTitle>
 			<DialogContent>
 				<Stack spacing={2.5} sx={{ mt: 2 }}>

@@ -28,7 +28,10 @@ import {
 	DialogTitle,
 	DialogContent,
 	DialogActions,
+	useTheme,
+	alpha,
 } from "@mui/material";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
@@ -104,6 +107,8 @@ const formatHoursTooltip = (hours: number[]): string => {
 
 const CausasSyncCredentials = () => {
 	const { enqueueSnackbar } = useSnackbar();
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 
 	// Estados principales
 	const [causas, setCausas] = useState<SyncedCausa[]>([]);
@@ -400,29 +405,58 @@ const CausasSyncCredentials = () => {
 				) : causas.length === 0 ? (
 					<Alert severity="info">No se encontraron causas sincronizadas con los filtros seleccionados</Alert>
 				) : (
-					<Card>
-						<TableContainer>
-							<Table size="small">
+					<Card
+						elevation={0}
+						sx={{
+							border: `1px solid ${headerBorder(isDark)}`,
+							borderRadius: 2,
+						}}
+					>
+						<TableContainer sx={{ maxHeight: "calc(100dvh - 400px)" }}>
+							<Table size="small" stickyHeader>
 								<TableHead>
-									<TableRow>
+									<TableRow
+										sx={{
+											"& .MuiTableCell-head": {
+												bgcolor: alpha(BRAND_BLUE, isDark ? 0.08 : 0.04),
+												borderBottom: `1px solid ${headerBorder(isDark)}`,
+												fontSize: "0.72rem",
+												fontWeight: 600,
+												textTransform: "uppercase",
+												letterSpacing: "0.04em",
+												color: "text.secondary",
+											},
+										}}
+									>
 										<TableCell>Expediente</TableCell>
 										<TableCell>Fuero</TableCell>
 										<TableCell>Carátula</TableCell>
 										<TableCell>Source</TableCell>
 										<TableCell align="center">Movimientos</TableCell>
-										<TableCell>Última Act.</TableCell>
-										<TableCell>Últ. Movimiento</TableCell>
+										<TableCell>Última act.</TableCell>
+										<TableCell>Últ. movimiento</TableCell>
 										<TableCell>Credencial</TableCell>
-										<TableCell align="center">Initial Sync</TableCell>
+										<TableCell align="center">Initial sync</TableCell>
 										<TableCell align="center">Acciones</TableCell>
 									</TableRow>
 								</TableHead>
 								<TableBody>
 									{causas.map((causa) => (
-										<TableRow key={causa._id} hover>
+										<TableRow
+											key={causa._id}
+											hover
+											sx={{
+												transition: "background-color 150ms ease",
+												"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) },
+											}}
+										>
 											<TableCell>
 												<Stack spacing={0.5}>
-													<Typography variant="body2" fontWeight="bold" sx={{ fontFamily: "monospace" }}>
+													<Typography
+														variant="body2"
+														fontWeight={600}
+														sx={{ fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }}
+													>
 														{causa.number}/{causa.year}
 													</Typography>
 													{causa.folder?.listRemoved && (

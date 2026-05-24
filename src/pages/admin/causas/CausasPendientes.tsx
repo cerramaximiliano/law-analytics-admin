@@ -26,12 +26,15 @@ import {
 	DialogContent,
 	DialogActions,
 	Button,
+	useTheme,
+	alpha,
 } from "@mui/material";
 import MainCard from "components/MainCard";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useSnackbar } from "notistack";
 import { Refresh, ArrowUp, ArrowDown, SearchNormal1, CloseCircle, Code } from "iconsax-react";
 import { PendingCausasService, PendingCausa, FuenteCausa, FueroPJN } from "api/pendingCausas";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -90,6 +93,8 @@ const formatDate = (dateStr?: string) => {
 
 const CausasPendientes = () => {
 	const { enqueueSnackbar } = useSnackbar();
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 
 	// JSON modal
 	const [jsonCausa, setJsonCausa] = useState<PendingCausa | null>(null);
@@ -237,10 +242,25 @@ const CausasPendientes = () => {
 	// ── Sort header ──────────────────────────────────────────────────────────
 
 	const SortableHeader = ({ field, label }: { field: string; label: string }) => (
-		<TableCell onClick={() => handleSort(field)} sx={{ cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}>
+		<TableCell
+			onClick={() => handleSort(field)}
+			sx={{
+				cursor: "pointer",
+				userSelect: "none",
+				whiteSpace: "nowrap",
+				transition: "color 150ms ease",
+				"&:hover": { color: BRAND_BLUE },
+			}}
+		>
 			<Stack direction="row" alignItems="center" spacing={0.5}>
 				<span>{label}</span>
-				{sortBy === field ? sortOrder === "desc" ? <ArrowDown size={14} /> : <ArrowUp size={14} /> : null}
+				{sortBy === field ? (
+					sortOrder === "desc" ? (
+						<ArrowDown size={14} color={BRAND_BLUE} />
+					) : (
+						<ArrowUp size={14} color={BRAND_BLUE} />
+					)
+				) : null}
 			</Stack>
 		</TableCell>
 	);
@@ -274,10 +294,22 @@ const CausasPendientes = () => {
 		}
 
 		return (
-			<TableContainer>
-				<Table size="small">
+			<TableContainer sx={{ maxHeight: "calc(100dvh - 360px)", border: `1px solid ${headerBorder(isDark)}`, borderRadius: 2 }}>
+				<Table size="small" stickyHeader>
 					<TableHead>
-						<TableRow>
+						<TableRow
+							sx={{
+								"& .MuiTableCell-head": {
+									bgcolor: alpha(BRAND_BLUE, isDark ? 0.08 : 0.04),
+									borderBottom: `1px solid ${headerBorder(isDark)}`,
+									fontSize: "0.72rem",
+									fontWeight: 600,
+									textTransform: "uppercase",
+									letterSpacing: "0.04em",
+									color: "text.secondary",
+								},
+							}}
+						>
 							<TableCell>Fuero</TableCell>
 							{activeTab === "eje" ? (
 								<TableCell>CUIJ</TableCell>
@@ -299,20 +331,27 @@ const CausasPendientes = () => {
 					</TableHead>
 					<TableBody>
 						{causas.map((causa) => (
-							<TableRow key={causa._id} hover>
+							<TableRow
+								key={causa._id}
+								hover
+								sx={{
+									transition: "background-color 150ms ease",
+									"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) },
+								}}
+							>
 								<TableCell>
 									<Chip label={FUERO_LABELS[causa.fuero] || causa.fuero} size="small" color={FUERO_COLORS[causa.fuero] || "default"} />
 								</TableCell>
 								{activeTab === "eje" ? (
 									<TableCell>
-										<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+										<Typography variant="caption" sx={{ fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }}>
 											{causa.cuij || "—"}
 										</Typography>
 									</TableCell>
 								) : (
 									<>
-										<TableCell>{causa.numero ?? "—"}</TableCell>
-										<TableCell>{causa.anio ?? "—"}</TableCell>
+										<TableCell sx={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{causa.numero ?? "—"}</TableCell>
+										<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{causa.anio ?? "—"}</TableCell>
 									</>
 								)}
 								<TableCell sx={{ maxWidth: 280 }}>
@@ -352,11 +391,18 @@ const CausasPendientes = () => {
 								<TableCell>
 									<Chip label={SOURCE_LABELS[causa.source || ""] || causa.source || "—"} size="small" variant="outlined" />
 								</TableCell>
-								<TableCell>{formatDate(causa.lastUpdate)}</TableCell>
-								<TableCell>{formatDate(causa.createdAt)}</TableCell>
+								<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{formatDate(causa.lastUpdate)}</TableCell>
+								<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{formatDate(causa.createdAt)}</TableCell>
 								<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
 									<Tooltip title="Ver JSON">
-										<IconButton size="small" onClick={() => setJsonCausa(causa)}>
+										<IconButton
+											size="small"
+											onClick={() => setJsonCausa(causa)}
+											sx={{
+												transition: "background-color 200ms ease, transform 200ms ease",
+												"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+											}}
+										>
 											<Code size={16} />
 										</IconButton>
 									</Tooltip>
@@ -383,7 +429,17 @@ const CausasPendientes = () => {
 			}
 		>
 			{/* Tabs */}
-			<Tabs value={activeTab} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+			<Tabs
+				value={activeTab}
+				onChange={handleTabChange}
+				TabIndicatorProps={{ sx: { backgroundColor: BRAND_BLUE, height: 2.5 } }}
+				sx={{
+					borderBottom: `1px solid ${headerBorder(isDark)}`,
+					mb: 2,
+					"& .MuiTab-root": { textTransform: "none", fontWeight: 500, transition: "color 200ms ease" },
+					"& .MuiTab-root.Mui-selected": { color: BRAND_BLUE },
+				}}
+			>
 				{TABS.map((tab) => (
 					<Tab key={tab.value} value={tab.value} label={tabLabel(tab.label, stats[tab.value])} />
 				))}

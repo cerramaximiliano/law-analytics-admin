@@ -26,10 +26,13 @@ import {
 	Accordion,
 	AccordionSummary,
 	AccordionDetails,
+	useTheme,
+	alpha,
 } from "@mui/material";
 import { CloseCircle, UserSquare, User, ArrowDown2 } from "iconsax-react";
 import { Interviniente } from "../../../api/intervinientes";
 import { Causa } from "../../../api/causasPjn";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 interface IntervinientesModalProps {
 	open: boolean;
@@ -45,6 +48,8 @@ interface IntervinientesModalProps {
 }
 
 const IntervinientesModal: React.FC<IntervinientesModalProps> = ({ open, onClose, causa, intervinientes, loading, error }) => {
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	// Obtener el ID de la causa
 	const getCausaId = (id: string | { $oid: string } | undefined): string => {
 		if (!id) return "";
@@ -79,18 +84,37 @@ const IntervinientesModal: React.FC<IntervinientesModalProps> = ({ open, onClose
 	};
 
 	return (
-		<Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-			<DialogTitle>
+		<Dialog
+			open={open}
+			onClose={onClose}
+			maxWidth="md"
+			fullWidth
+			PaperProps={{
+				sx: {
+					borderRadius: 2.5,
+					boxShadow: `0 24px 64px ${alpha(BRAND_BLUE, isDark ? 0.18 : 0.12)}, 0 2px 8px rgba(28, 40, 80, 0.06)`,
+				},
+			}}
+		>
+			<DialogTitle sx={{ borderBottom: `1px solid ${headerBorder(isDark)}` }}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Box sx={{ flex: 1 }}>
 						<Stack direction="row" spacing={1} alignItems="center">
-							<UserSquare size={24} variant="Bold" />
-							<Typography variant="h5">Intervinientes</Typography>
-							{intervinientes && <Chip label={`${intervinientes.all?.length || 0} encontrados`} color="primary" size="small" />}
+							<UserSquare size={24} variant="Bold" color={BRAND_BLUE} />
+							<Typography variant="h5" sx={{ letterSpacing: "-0.01em" }}>
+								Intervinientes
+							</Typography>
+							{intervinientes && (
+								<Chip
+									label={`${intervinientes.all?.length || 0} encontrados`}
+									size="small"
+									sx={{ bgcolor: alpha(BRAND_BLUE, 0.1), color: BRAND_BLUE, fontWeight: 500 }}
+								/>
+							)}
 						</Stack>
 						{causa && (
-							<Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
-								Expediente {causa.number}/{causa.year} - {causa.fuero}
+							<Typography variant="body2" color="textSecondary" sx={{ mt: 0.5, fontVariantNumeric: "tabular-nums" }}>
+								Expediente {causa.number}/{causa.year} — {causa.fuero}
 							</Typography>
 						)}
 						{causa?.caratula && (
@@ -156,7 +180,18 @@ const IntervinientesModal: React.FC<IntervinientesModalProps> = ({ open, onClose
 							const letradosDeParte = getLetradosPorParte(parte.parte?.nombre || "");
 
 							return (
-								<Accordion key={parte._id || index} defaultExpanded={index === 0}>
+								<Accordion
+									key={parte._id || index}
+									defaultExpanded={index === 0}
+									elevation={0}
+									sx={{
+										border: `1px solid ${headerBorder(isDark)}`,
+										borderRadius: 1.5,
+										mb: 1,
+										"&:before": { display: "none" },
+										"&.Mui-expanded": { borderColor: alpha(BRAND_BLUE, 0.36) },
+									}}
+								>
 									<AccordionSummary expandIcon={<ArrowDown2 size={18} />}>
 										<Stack direction="row" spacing={2} alignItems="center">
 											<User size={20} />

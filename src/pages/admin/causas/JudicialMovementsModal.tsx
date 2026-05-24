@@ -21,9 +21,12 @@ import {
 	CircularProgress,
 	Tooltip,
 	Button,
+	useTheme,
+	alpha,
 } from "@mui/material";
 import { CloseCircle, Link as LinkIcon, Trash } from "iconsax-react";
 import { JudicialMovement, JudicialMovementsService } from "api/judicialMovements";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 interface JudicialMovementsModalProps {
 	open: boolean;
@@ -35,6 +38,8 @@ interface JudicialMovementsModalProps {
 }
 
 const JudicialMovementsModal = ({ open, onClose, movements, loading, error, onMovementDeleted }: JudicialMovementsModalProps) => {
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 	const [movementToDelete, setMovementToDelete] = useState<JudicialMovement | null>(null);
 	const [deleting, setDeleting] = useState(false);
@@ -142,10 +147,23 @@ const JudicialMovementsModal = ({ open, onClose, movements, loading, error, onMo
 	};
 
 	return (
-		<Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-			<DialogTitle>
+		<Dialog
+			open={open}
+			onClose={onClose}
+			maxWidth="lg"
+			fullWidth
+			PaperProps={{
+				sx: {
+					borderRadius: 2.5,
+					boxShadow: `0 24px 64px ${alpha(BRAND_BLUE, isDark ? 0.18 : 0.12)}, 0 2px 8px rgba(28, 40, 80, 0.06)`,
+				},
+			}}
+		>
+			<DialogTitle sx={{ borderBottom: `1px solid ${headerBorder(isDark)}` }}>
 				<Box display="flex" justifyContent="space-between" alignItems="center">
-					<Typography variant="h5">Notificaciones de Movimientos Judiciales</Typography>
+					<Typography variant="h5" sx={{ letterSpacing: "-0.01em" }}>
+						Notificaciones de movimientos judiciales
+					</Typography>
 					<IconButton onClick={onClose} size="small">
 						<CloseCircle />
 					</IconButton>
@@ -167,11 +185,27 @@ const JudicialMovementsModal = ({ open, onClose, movements, loading, error, onMo
 								Total de notificaciones: <strong>{movements.length}</strong>
 							</Typography>
 						</Box>
-						<TableContainer component={Paper}>
+						<TableContainer
+							component={Paper}
+							elevation={0}
+							sx={{ border: `1px solid ${headerBorder(isDark)}`, borderRadius: 2 }}
+						>
 							<Table size="small">
 								<TableHead>
-									<TableRow>
-										<TableCell>Fecha Mov.</TableCell>
+									<TableRow
+										sx={{
+											"& .MuiTableCell-head": {
+												bgcolor: alpha(BRAND_BLUE, isDark ? 0.08 : 0.04),
+												borderBottom: `1px solid ${headerBorder(isDark)}`,
+												fontSize: "0.72rem",
+												fontWeight: 600,
+												textTransform: "uppercase",
+												letterSpacing: "0.04em",
+												color: "text.secondary",
+											},
+										}}
+									>
+										<TableCell>Fecha mov.</TableCell>
 										<TableCell>Tipo</TableCell>
 										<TableCell>Detalle</TableCell>
 										<TableCell>Estado</TableCell>
@@ -187,9 +221,16 @@ const JudicialMovementsModal = ({ open, onClose, movements, loading, error, onMo
 										const movementId = typeof movement._id === "string" ? movement._id : movement._id.$oid;
 										const recipients = getRecipients(movement);
 										return (
-											<TableRow key={movementId} hover>
+											<TableRow
+												key={movementId}
+												hover
+												sx={{
+													transition: "background-color 150ms ease",
+													"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) },
+												}}
+											>
 												<TableCell>
-													<Typography variant="body2" fontWeight="medium">
+													<Typography variant="body2" fontWeight={500} sx={{ fontVariantNumeric: "tabular-nums" }}>
 														{formatDateUTC(movement.movimiento.fecha)}
 													</Typography>
 												</TableCell>
@@ -256,7 +297,15 @@ const JudicialMovementsModal = ({ open, onClose, movements, loading, error, onMo
 												</TableCell>
 												<TableCell align="center">
 													<Tooltip title="Eliminar movimiento">
-														<IconButton size="small" color="error" onClick={() => handleDeleteClick(movement)}>
+														<IconButton
+															size="small"
+															color="error"
+															onClick={() => handleDeleteClick(movement)}
+															sx={{
+																transition: "background-color 200ms ease, transform 200ms ease",
+																"&:hover": { transform: "translateY(-1px)" },
+															}}
+														>
 															<Trash size={18} />
 														</IconButton>
 													</Tooltip>

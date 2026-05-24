@@ -3,6 +3,7 @@ import { Box, Card, CardContent, Grid, Typography, Stack, Chip, Alert, Skeleton,
 import { Refresh, TickCircle, CloseCircle, Timer1, Warning2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { ScrapingManagerService, ManagerState, WorkerStateInfo } from "api/scrapingManager";
+import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
 
 const WORKER_LABELS: Record<string, string> = {
 	"credentials-processor": "Verificación de Credenciales",
@@ -63,11 +64,40 @@ const MisCausasStatsTab: React.FC = () => {
 	const isStale = lastPoll ? Date.now() - lastPoll.getTime() > 120000 : true;
 
 	return (
-		<Stack spacing={3}>
+		<Stack spacing={3} sx={LIVE_PULSE_KEYFRAMES}>
 			{/* Header con refresh */}
 			<Box display="flex" justifyContent="space-between" alignItems="center">
-				<Typography variant="h6">Estado en Tiempo Real</Typography>
-				<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchState}>
+				<Stack direction="row" spacing={1.25} alignItems="center">
+					{managerStatus.isRunning && !isStale && (
+						<Box sx={{ position: "relative", display: "inline-flex", width: 10, height: 10 }}>
+							<Box
+								sx={{
+									position: "absolute",
+									inset: 0,
+									borderRadius: "50%",
+									bgcolor: LIVE_GREEN,
+									animation: "la-live-pulse 2.4s ease-out infinite",
+								}}
+							/>
+							<Box sx={{ position: "relative", width: 10, height: 10, borderRadius: "50%", bgcolor: LIVE_GREEN }} />
+						</Box>
+					)}
+					<Typography variant="h6" sx={{ letterSpacing: "-0.01em" }}>
+						Estado en tiempo real
+					</Typography>
+				</Stack>
+				<Button
+					variant="outlined"
+					size="small"
+					startIcon={<Refresh size={16} />}
+					onClick={fetchState}
+					sx={{
+						borderColor: alpha(BRAND_BLUE, 0.4),
+						color: BRAND_BLUE,
+						transition: "background-color 200ms ease, transform 200ms ease",
+						"&:hover": { borderColor: BRAND_BLUE, bgcolor: alpha(BRAND_BLUE, 0.06), transform: "translateY(-1px)" },
+					}}
+				>
 					Actualizar
 				</Button>
 			</Box>
@@ -177,15 +207,17 @@ const MisCausasStatsTab: React.FC = () => {
 													<Typography variant="caption" color="text.secondary">
 														Cola
 													</Typography>
-													<Typography variant="h6">{ws.queueDepth}</Typography>
+													<Typography variant="h6" sx={{ fontVariantNumeric: "tabular-nums" }}>
+														{ws.queueDepth}
+													</Typography>
 												</Grid>
 												<Grid item xs={6}>
 													<Typography variant="caption" color="text.secondary">
 														Instancias
 													</Typography>
-													<Typography variant="h6">
+													<Typography variant="h6" sx={{ fontVariantNumeric: "tabular-nums" }}>
 														{ws.currentInstances}
-														<Typography component="span" variant="caption" color="text.secondary">
+														<Typography component="span" variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 															{" "}
 															/ {ws.desiredInstances}
 														</Typography>
