@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { alpha, useTheme } from "@mui/material/styles";
 import {
 	Box,
 	Grid,
@@ -55,6 +56,7 @@ const formatDate = (dateString?: string) => {
 };
 
 const PostalTrackingPage = () => {
+	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
 	// List state
@@ -343,15 +345,23 @@ const PostalTrackingPage = () => {
 				{/* Stats Cards */}
 				<Grid container spacing={2}>
 					<Grid item xs={6} sm={3}>
-						<Card variant="outlined">
+						<Card
+							variant="outlined"
+							sx={{
+								borderColor: alpha(theme.palette.primary.main, 0.22),
+								bgcolor: alpha(theme.palette.primary.main, 0.04),
+								transition: "transform 220ms ease, border-color 220ms ease",
+								"&:hover": { transform: "translateY(-1px)", borderColor: alpha(theme.palette.primary.main, 0.36) },
+							}}
+						>
 							<CardContent>
-								<Typography variant="body2" color="textSecondary">
+								<Typography variant="body2" color="textSecondary" sx={{ letterSpacing: 0.2 }}>
 									Total
 								</Typography>
 								{loadingStats ? (
 									<Skeleton variant="text" width={50} height={36} />
 								) : (
-									<Typography variant="h4" color="primary.main">
+									<Typography variant="h4" sx={{ color: "primary.main", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
 										{stats?.metrics?.total ?? 0}
 									</Typography>
 								)}
@@ -359,15 +369,23 @@ const PostalTrackingPage = () => {
 						</Card>
 					</Grid>
 					<Grid item xs={6} sm={3}>
-						<Card variant="outlined">
+						<Card
+							variant="outlined"
+							sx={{
+								borderColor: alpha(theme.palette.error.main, 0.22),
+								bgcolor: alpha(theme.palette.error.main, 0.04),
+								transition: "transform 220ms ease, border-color 220ms ease",
+								"&:hover": { transform: "translateY(-1px)", borderColor: alpha(theme.palette.error.main, 0.36) },
+							}}
+						>
 							<CardContent>
-								<Typography variant="body2" color="textSecondary">
+								<Typography variant="body2" color="textSecondary" sx={{ letterSpacing: 0.2 }}>
 									Con Errores
 								</Typography>
 								{loadingStats ? (
 									<Skeleton variant="text" width={50} height={36} />
 								) : (
-									<Typography variant="h4" color="error.main">
+									<Typography variant="h4" sx={{ color: "error.main", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
 										{stats?.metrics?.withErrors ?? 0}
 									</Typography>
 								)}
@@ -375,15 +393,23 @@ const PostalTrackingPage = () => {
 						</Card>
 					</Grid>
 					<Grid item xs={6} sm={3}>
-						<Card variant="outlined">
+						<Card
+							variant="outlined"
+							sx={{
+								borderColor: alpha(theme.palette.success.main, 0.22),
+								bgcolor: alpha(theme.palette.success.main, 0.04),
+								transition: "transform 220ms ease, border-color 220ms ease",
+								"&:hover": { transform: "translateY(-1px)", borderColor: alpha(theme.palette.success.main, 0.36) },
+							}}
+						>
 							<CardContent>
-								<Typography variant="body2" color="textSecondary">
+								<Typography variant="body2" color="textSecondary" sx={{ letterSpacing: 0.2 }}>
 									Estado Final
 								</Typography>
 								{loadingStats ? (
 									<Skeleton variant="text" width={50} height={36} />
 								) : (
-									<Typography variant="h4" color="success.main">
+									<Typography variant="h4" sx={{ color: "success.main", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
 										{stats?.metrics?.finalStatuses ?? 0}
 									</Typography>
 								)}
@@ -391,15 +417,23 @@ const PostalTrackingPage = () => {
 						</Card>
 					</Grid>
 					<Grid item xs={6} sm={3}>
-						<Card variant="outlined">
+						<Card
+							variant="outlined"
+							sx={{
+								borderColor: alpha(theme.palette.info.main, 0.22),
+								bgcolor: alpha(theme.palette.info.main, 0.04),
+								transition: "transform 220ms ease, border-color 220ms ease",
+								"&:hover": { transform: "translateY(-1px)", borderColor: alpha(theme.palette.info.main, 0.36) },
+							}}
+						>
 							<CardContent>
-								<Typography variant="body2" color="textSecondary">
+								<Typography variant="body2" color="textSecondary" sx={{ letterSpacing: 0.2 }}>
 									Actualizados hoy
 								</Typography>
 								{loadingStats ? (
 									<Skeleton variant="text" width={50} height={36} />
 								) : (
-									<Typography variant="h4" color="info.main">
+									<Typography variant="h4" sx={{ color: "info.main", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
 										{stats?.recentlyUpdatedToday ?? 0}
 									</Typography>
 								)}
@@ -600,8 +634,11 @@ const PostalTrackingPage = () => {
 													label={PROCESSING_STATUS_CONFIG[tracking.processingStatus]?.label || tracking.processingStatus}
 													size="small"
 													color={PROCESSING_STATUS_CONFIG[tracking.processingStatus]?.color || "default"}
+													sx={{ fontWeight: 600, letterSpacing: 0.3 }}
 												/>
-												{tracking.isFinalStatus && <Chip label="Final" size="small" color="success" variant="outlined" />}
+												{tracking.isFinalStatus && (
+													<Chip label="Final" size="small" color="success" variant="outlined" sx={{ fontWeight: 600, letterSpacing: 0.3 }} />
+												)}
 											</Stack>
 										</TableCell>
 										<TableCell>
@@ -624,12 +661,12 @@ const PostalTrackingPage = () => {
 											)}
 										</TableCell>
 										<TableCell>
-											<Typography variant="body2" fontSize="0.75rem" color="textSecondary">
+											<Typography variant="body2" fontSize="0.75rem" color="textSecondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 												{formatDate(tracking.nextCheckAt)}
 											</Typography>
 										</TableCell>
 										<TableCell>
-											<Typography variant="body2" fontSize="0.75rem" color="textSecondary">
+											<Typography variant="body2" fontSize="0.75rem" color="textSecondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 												{formatDate(tracking.updatedAt)}
 											</Typography>
 										</TableCell>

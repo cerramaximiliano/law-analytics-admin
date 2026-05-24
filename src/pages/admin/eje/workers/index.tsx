@@ -158,8 +158,15 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ workerType, config, status, eff
 				}
 				title={
 					<Stack direction="row" spacing={1} alignItems="center">
-						<Typography variant="h6">{label.name}</Typography>
-						<Chip size="small" label={config?.enabled ? "Activo" : "Inactivo"} color={config?.enabled ? "success" : "default"} />
+						<Typography variant="h6" sx={{ fontWeight: 600, letterSpacing: -0.2 }}>
+							{label.name}
+						</Typography>
+						<Chip
+							size="small"
+							label={config?.enabled ? "Activo" : "Inactivo"}
+							color={config?.enabled ? "success" : "default"}
+							sx={{ fontWeight: 600, letterSpacing: 0.3 }}
+						/>
 					</Stack>
 				}
 				subheader={label.description}
@@ -861,12 +868,22 @@ const EjeWorkersConfig: React.FC = () => {
 
 				{/* Quick Stats Cards */}
 				<Grid item xs={12} sm={6} md={3}>
-					<Card>
+					<Card
+						variant="outlined"
+						sx={{
+							borderColor: alpha(theme.palette.primary.main, 0.22),
+							bgcolor: alpha(theme.palette.primary.main, 0.04),
+							transition: "transform 220ms ease, border-color 220ms ease",
+							"&:hover": { transform: "translateY(-1px)", borderColor: alpha(theme.palette.primary.main, 0.36) },
+						}}
+					>
 						<CardContent>
 							<Stack direction="row" justifyContent="space-between" alignItems="center">
 								<Box>
-									<Typography variant="h4">{summaryStats.processed}</Typography>
-									<Typography variant="body2" color="text.secondary">
+									<Typography variant="h4" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", color: "primary.main" }}>
+										{summaryStats.processed}
+									</Typography>
+									<Typography variant="body2" color="text.secondary" sx={{ letterSpacing: 0.2 }}>
 										Procesados Hoy
 									</Typography>
 								</Box>
@@ -876,14 +893,22 @@ const EjeWorkersConfig: React.FC = () => {
 					</Card>
 				</Grid>
 				<Grid item xs={12} sm={6} md={3}>
-					<Card>
+					<Card
+						variant="outlined"
+						sx={{
+							borderColor: alpha(theme.palette.success.main, 0.22),
+							bgcolor: alpha(theme.palette.success.main, 0.04),
+							transition: "transform 220ms ease, border-color 220ms ease",
+							"&:hover": { transform: "translateY(-1px)", borderColor: alpha(theme.palette.success.main, 0.36) },
+						}}
+					>
 						<CardContent>
 							<Stack direction="row" justifyContent="space-between" alignItems="center">
 								<Box>
-									<Typography variant="h4" color="success.main">
+									<Typography variant="h4" sx={{ color: "success.main", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
 										{summaryStats.success}
 									</Typography>
-									<Typography variant="body2" color="text.secondary">
+									<Typography variant="body2" color="text.secondary" sx={{ letterSpacing: 0.2 }}>
 										Exitosos
 									</Typography>
 								</Box>
@@ -893,14 +918,22 @@ const EjeWorkersConfig: React.FC = () => {
 					</Card>
 				</Grid>
 				<Grid item xs={12} sm={6} md={3}>
-					<Card>
+					<Card
+						variant="outlined"
+						sx={{
+							borderColor: alpha(theme.palette.error.main, 0.22),
+							bgcolor: alpha(theme.palette.error.main, 0.04),
+							transition: "transform 220ms ease, border-color 220ms ease",
+							"&:hover": { transform: "translateY(-1px)", borderColor: alpha(theme.palette.error.main, 0.36) },
+						}}
+					>
 						<CardContent>
 							<Stack direction="row" justifyContent="space-between" alignItems="center">
 								<Box>
-									<Typography variant="h4" color="error.main">
+									<Typography variant="h4" sx={{ color: "error.main", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
 										{summaryStats.errors}
 									</Typography>
-									<Typography variant="body2" color="text.secondary">
+									<Typography variant="body2" color="text.secondary" sx={{ letterSpacing: 0.2 }}>
 										Errores
 									</Typography>
 								</Box>
@@ -910,17 +943,25 @@ const EjeWorkersConfig: React.FC = () => {
 					</Card>
 				</Grid>
 				<Grid item xs={12} sm={6} md={3}>
-					<Card>
+					<Card
+						variant="outlined"
+						sx={{
+							borderColor: alpha(theme.palette.info.main, 0.22),
+							bgcolor: alpha(theme.palette.info.main, 0.04),
+							transition: "transform 220ms ease, border-color 220ms ease",
+							"&:hover": { transform: "translateY(-1px)", borderColor: alpha(theme.palette.info.main, 0.36) },
+						}}
+					>
 						<CardContent>
 							<Stack direction="row" justifyContent="space-between" alignItems="center">
 								<Box>
-									<Typography variant="h4">
+									<Typography variant="h4" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", color: "info.main" }}>
 										{(workersData?.managerState.systemResources?.cpuUsage || 0) * 100 < 1
 											? "<1"
 											: ((workersData?.managerState.systemResources?.cpuUsage || 0) * 100).toFixed(0)}
 										%
 									</Typography>
-									<Typography variant="body2" color="text.secondary">
+									<Typography variant="body2" color="text.secondary" sx={{ letterSpacing: 0.2, fontVariantNumeric: "tabular-nums" }}>
 										CPU / Memoria: {((workersData?.managerState.systemResources?.memoryUsage || 0) * 100).toFixed(0)}%
 									</Typography>
 								</Box>

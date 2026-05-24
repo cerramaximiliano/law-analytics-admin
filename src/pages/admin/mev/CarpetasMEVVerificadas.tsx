@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 import {
 	Box,
 	Card,
@@ -501,15 +501,24 @@ const CarpetasMEVVerificadas = () => {
 				<Grid container spacing={2} alignItems="center">
 					{/* Resultados */}
 					<Grid item xs={12} md={4}>
-						<Card sx={{ backgroundColor: "primary.lighter", border: 1, borderColor: "primary.main" }}>
+						<Card
+							variant="outlined"
+							sx={{
+								borderColor: alpha(theme.palette.primary.main, 0.32),
+								bgcolor: alpha(theme.palette.primary.main, 0.05),
+							}}
+						>
 							<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
 								<Stack direction="row" justifyContent="space-between" alignItems="center">
-									<Typography variant="body2" color="text.secondary">
+									<Typography variant="body2" color="text.secondary" sx={{ letterSpacing: 0.2 }}>
 										Resultados
 									</Typography>
-									<Typography variant="h4" color="primary.main" fontWeight="bold">
+									<Typography
+										variant="h4"
+										sx={{ color: "primary.main", fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: -0.3 }}
+									>
 										{totalCount.toLocaleString()}
-										<Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
+										<Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5, fontVariantNumeric: "tabular-nums" }}>
 											/ {totalInDatabase.toLocaleString()}
 										</Typography>
 									</Typography>

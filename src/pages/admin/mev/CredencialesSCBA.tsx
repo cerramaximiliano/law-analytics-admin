@@ -30,7 +30,7 @@ import {
 	DialogActions,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 import {
 	Refresh,
 	SearchNormal1,
@@ -270,6 +270,42 @@ const CredencialesSCBA = () => {
 		});
 	};
 
+	// Stat card tintada — reemplaza las 6 cards genéricas con un mismo lenguaje.
+	const renderStatCard = (label: string, value: number, colorKey: "primary" | "success" | "warning" | "error" | "info" | "secondary") => {
+		const baseColor =
+			colorKey === "primary"
+				? theme.palette.primary.main
+				: colorKey === "success"
+					? theme.palette.success.main
+					: colorKey === "warning"
+						? theme.palette.warning.main
+						: colorKey === "error"
+							? theme.palette.error.main
+							: colorKey === "info"
+								? theme.palette.info.main
+								: theme.palette.secondary.main;
+		return (
+			<Card
+				variant="outlined"
+				sx={{
+					borderColor: alpha(baseColor, 0.22),
+					bgcolor: alpha(baseColor, 0.04),
+					transition: "transform 220ms ease, border-color 220ms ease",
+					"&:hover": { transform: "translateY(-1px)", borderColor: alpha(baseColor, 0.36) },
+				}}
+			>
+				<CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
+					<Typography variant="h4" sx={{ color: baseColor, fontWeight: 600, fontVariantNumeric: "tabular-nums", lineHeight: 1.1 }}>
+						{value}
+					</Typography>
+					<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.2 }}>
+						{label}
+					</Typography>
+				</CardContent>
+			</Card>
+		);
+	};
+
 	return (
 		<MainCard title="Credenciales SCBA">
 			<Grid container spacing={3}>
@@ -278,76 +314,22 @@ const CredencialesSCBA = () => {
 					<Grid item xs={12}>
 						<Grid container spacing={2}>
 							<Grid item xs={6} sm={3} md={2}>
-								<Card variant="outlined">
-									<CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
-										<Typography variant="h4" color="primary">
-											{stats.total}
-										</Typography>
-										<Typography variant="caption" color="text.secondary">
-											Total
-										</Typography>
-									</CardContent>
-								</Card>
+								{renderStatCard("Total", stats.total, "primary")}
 							</Grid>
 							<Grid item xs={6} sm={3} md={2}>
-								<Card variant="outlined">
-									<CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
-										<Typography variant="h4" color="success.main">
-											{stats.verified}
-										</Typography>
-										<Typography variant="caption" color="text.secondary">
-											Verificadas
-										</Typography>
-									</CardContent>
-								</Card>
+								{renderStatCard("Verificadas", stats.verified, "success")}
 							</Grid>
 							<Grid item xs={6} sm={3} md={2}>
-								<Card variant="outlined">
-									<CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
-										<Typography variant="h4" color="warning.main">
-											{stats.syncStatus.pending}
-										</Typography>
-										<Typography variant="caption" color="text.secondary">
-											Pendientes
-										</Typography>
-									</CardContent>
-								</Card>
+								{renderStatCard("Pendientes", stats.syncStatus.pending, "warning")}
 							</Grid>
 							<Grid item xs={6} sm={3} md={2}>
-								<Card variant="outlined">
-									<CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
-										<Typography variant="h4" color="error.main">
-											{stats.syncStatus.error}
-										</Typography>
-										<Typography variant="caption" color="text.secondary">
-											Con errores
-										</Typography>
-									</CardContent>
-								</Card>
+								{renderStatCard("Con errores", stats.syncStatus.error, "error")}
 							</Grid>
 							<Grid item xs={6} sm={3} md={2}>
-								<Card variant="outlined">
-									<CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
-										<Typography variant="h4" color="info.main">
-											{stats.totals.causasFound}
-										</Typography>
-										<Typography variant="caption" color="text.secondary">
-											Causas encontradas
-										</Typography>
-									</CardContent>
-								</Card>
+								{renderStatCard("Causas encontradas", stats.totals.causasFound, "info")}
 							</Grid>
 							<Grid item xs={6} sm={3} md={2}>
-								<Card variant="outlined">
-									<CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
-										<Typography variant="h4" color="secondary.main">
-											{stats.totals.causasCreated}
-										</Typography>
-										<Typography variant="caption" color="text.secondary">
-											Causas creadas
-										</Typography>
-									</CardContent>
-								</Card>
+								{renderStatCard("Causas creadas", stats.totals.causasCreated, "secondary")}
 							</Grid>
 						</Grid>
 					</Grid>
@@ -477,12 +459,20 @@ const CredencialesSCBA = () => {
 												</Stack>
 											</TableCell>
 											<TableCell>
-												<Typography variant="body2" fontFamily="monospace">
+												<Typography
+													variant="body2"
+													sx={{ fontFamily: "monospace", fontVariantNumeric: "tabular-nums", fontSize: "0.78rem" }}
+												>
 													{cred.usernameMasked}
 												</Typography>
 											</TableCell>
 											<TableCell align="center">
-												<Chip label={getSyncStatusLabel(cred.syncStatus)} color={getSyncStatusColor(cred.syncStatus) as any} size="small" />
+												<Chip
+													label={getSyncStatusLabel(cred.syncStatus)}
+													color={getSyncStatusColor(cred.syncStatus) as any}
+													size="small"
+													sx={{ fontWeight: 600, letterSpacing: 0.3 }}
+												/>
 											</TableCell>
 											<TableCell align="center">
 												{cred.verified ? (
@@ -499,13 +489,19 @@ const CredencialesSCBA = () => {
 												)}
 											</TableCell>
 											<TableCell align="right">
-												<Typography variant="body2">{cred.stats?.totalCausasFound || 0}</Typography>
+												<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+													{cred.stats?.totalCausasFound || 0}
+												</Typography>
 											</TableCell>
 											<TableCell align="right">
-												<Typography variant="body2">{cred.stats?.causasCreated || 0}</Typography>
+												<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+													{cred.stats?.causasCreated || 0}
+												</Typography>
 											</TableCell>
 											<TableCell>
-												<Typography variant="caption">{formatDate(cred.lastSync)}</Typography>
+												<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums" }}>
+													{formatDate(cred.lastSync)}
+												</Typography>
 											</TableCell>
 											<TableCell align="center">
 												<Stack direction="row" spacing={0.5} justifyContent="center">

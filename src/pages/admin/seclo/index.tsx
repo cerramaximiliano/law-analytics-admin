@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Box, Tab, Tabs, Typography, Grid, Card, CardContent, Skeleton } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { People, DocumentText, TickCircle, CloseCircle, Clock, Warning2 } from "iconsax-react";
 import { useDispatch, useSelector } from "store";
 import { fetchSecloStats } from "store/reducers/seclo";
@@ -17,14 +18,27 @@ interface StatCardProps {
 
 function StatCard({ label, value, icon, color }: StatCardProps) {
 	return (
-		<Card variant="outlined" sx={{ height: "100%" }}>
+		<Card
+			variant="outlined"
+			sx={{
+				height: "100%",
+				borderColor: alpha(color, 0.22),
+				bgcolor: alpha(color, 0.04),
+				transition: "transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease",
+				"&:hover": {
+					transform: "translateY(-1px)",
+					borderColor: alpha(color, 0.36),
+					boxShadow: `0 6px 18px ${alpha(color, 0.12)}`,
+				},
+			}}
+		>
 			<CardContent sx={{ display: "flex", alignItems: "center", gap: 2, py: 1.5, "&:last-child": { pb: 1.5 } }}>
 				<Box
 					sx={{
 						width: 44,
 						height: 44,
 						borderRadius: 2,
-						bgcolor: `${color}20`,
+						bgcolor: alpha(color, 0.14),
 						color,
 						display: "flex",
 						alignItems: "center",
@@ -34,15 +48,15 @@ function StatCard({ label, value, icon, color }: StatCardProps) {
 				>
 					{icon}
 				</Box>
-				<Box>
+				<Box sx={{ minWidth: 0 }}>
 					{value === undefined ? (
 						<Skeleton width={40} height={28} />
 					) : (
-						<Typography variant="h5" fontWeight={600}>
+						<Typography variant="h5" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", lineHeight: 1.1 }}>
 							{value}
 						</Typography>
 					)}
-					<Typography variant="caption" color="text.secondary">
+					<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.2 }}>
 						{label}
 					</Typography>
 				</Box>
@@ -66,10 +80,10 @@ export default function SecloPage() {
 		<Box>
 			{/* Header */}
 			<Box mb={3}>
-				<Typography variant="h4" fontWeight={600} gutterBottom>
+				<Typography variant="h4" sx={{ fontWeight: 600, letterSpacing: -0.4 }} gutterBottom>
 					SECLO — Audiencias laborales
 				</Typography>
-				<Typography variant="body2" color="text.secondary">
+				<Typography variant="body2" color="text.secondary" sx={{ maxWidth: 720 }}>
 					Gestión de solicitudes de audiencia SECLO y credenciales del portal Ministerio de Trabajo.
 				</Typography>
 			</Box>

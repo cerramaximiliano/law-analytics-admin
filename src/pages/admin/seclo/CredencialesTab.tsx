@@ -178,14 +178,14 @@ export default function CredencialesTab() {
 										</Box>
 									</TableCell>
 									<TableCell>
-										<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+										<Typography variant="body2" sx={{ fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }}>
 											{cred.cuil}
 										</Typography>
 									</TableCell>
 									<TableCell>
 										{cred.credentialInvalid ? (
 											<Tooltip title={cred.credentialInvalidReason || "Credenciales inválidas"}>
-												<Chip label="Inválida" size="small" color="error" />
+												<Chip label="Inválida" size="small" color="error" sx={{ fontWeight: 600, letterSpacing: 0.3 }} />
 											</Tooltip>
 										) : cred.credentialsValidated ? (
 											<Tooltip
@@ -195,11 +195,11 @@ export default function CredencialesTab() {
 														: "Validada"
 												}
 											>
-												<Chip label="Validada" size="small" color="success" />
+												<Chip label="Validada" size="small" color="success" sx={{ fontWeight: 600, letterSpacing: 0.3 }} />
 											</Tooltip>
 										) : (
 											<Tooltip title="Pendiente de validar — el worker la verifica en ≤ 5 min">
-												<Chip label="Pendiente" size="small" color="warning" variant="outlined" />
+												<Chip label="Pendiente" size="small" color="warning" variant="outlined" sx={{ fontWeight: 600, letterSpacing: 0.3 }} />
 											</Tooltip>
 										)}
 									</TableCell>
@@ -207,10 +207,16 @@ export default function CredencialesTab() {
 										<Switch size="small" checked={cred.enabled} onChange={() => handleToggleEnabled(cred)} />
 									</TableCell>
 									<TableCell>
-										<Typography variant="caption">{cred.lastSync ? new Date(cred.lastSync).toLocaleDateString("es-AR") : "—"}</Typography>
+										<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums" }}>
+											{cred.lastSync ? new Date(cred.lastSync).toLocaleDateString("es-AR") : "—"}
+										</Typography>
 									</TableCell>
 									<TableCell>
-										<Typography variant="body2" color={cred.consecutiveErrors > 0 ? "error" : "text.primary"}>
+										<Typography
+											variant="body2"
+											color={cred.consecutiveErrors > 0 ? "error" : "text.primary"}
+											sx={{ fontVariantNumeric: "tabular-nums", fontWeight: cred.consecutiveErrors > 0 ? 600 : 400 }}
+										>
 											{cred.consecutiveErrors}
 										</Typography>
 									</TableCell>
@@ -411,18 +417,22 @@ export default function CredencialesTab() {
 						{credTab === 1 && (
 							<Box
 								component="pre"
-								sx={{
+								sx={(theme) => ({
 									m: 0,
-									p: 1.5,
-									bgcolor: "grey.900",
-									color: "grey.100",
-									borderRadius: 1,
-									fontSize: 11,
+									p: 1.75,
+									bgcolor: theme.palette.mode === "dark" ? "#0F172A" : "#0F1729",
+									color: theme.palette.mode === "dark" ? "grey.200" : "#E2E8F0",
+									border: 1,
+									borderColor: theme.palette.mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(58,123,255,0.18)",
+									borderRadius: 1.5,
+									fontFamily: "ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, monospace",
+									fontSize: 11.5,
+									lineHeight: 1.55,
 									overflowX: "auto",
 									whiteSpace: "pre-wrap",
 									wordBreak: "break-all",
 									minHeight: 200,
-								}}
+								})}
 							>
 								{JSON.stringify(viewTarget, null, 2)}
 							</Box>

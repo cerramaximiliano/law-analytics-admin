@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 import {
 	Box,
 	Card,
@@ -194,16 +194,25 @@ const CarpetasNoVerificadasEje = () => {
 			<Box sx={{ mb: 2 }}>
 				<Grid container spacing={2} alignItems="center">
 					<Grid item xs={12} md={4}>
-						<Card sx={{ backgroundColor: "warning.lighter", border: 1, borderColor: "warning.main" }}>
+						<Card
+							variant="outlined"
+							sx={{
+								borderColor: alpha(theme.palette.warning.main, 0.36),
+								bgcolor: alpha(theme.palette.warning.main, 0.06),
+							}}
+						>
 							<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
 								<Stack direction="row" justifyContent="space-between" alignItems="center">
 									<Stack direction="row" alignItems="center" spacing={1}>
 										<Warning2 size={20} color={theme.palette.warning.main} />
-										<Typography variant="body2" color="text.secondary">
+										<Typography variant="body2" color="text.secondary" sx={{ letterSpacing: 0.2 }}>
 											Pendientes de Verificación
 										</Typography>
 									</Stack>
-									<Typography variant="h4" color="warning.main" fontWeight="bold">
+									<Typography
+										variant="h4"
+										sx={{ color: "warning.main", fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: -0.3 }}
+									>
 										{totalCount.toLocaleString()}
 									</Typography>
 								</Stack>
@@ -357,12 +366,15 @@ const CarpetasNoVerificadasEje = () => {
 										{causas.map((causa) => (
 											<TableRow key={getId(causa._id)} hover>
 												<TableCell>
-													<Typography variant="body2" fontWeight="bold">
+													<Typography variant="body2" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
 														{causa.numero}/{causa.anio}
 													</Typography>
 												</TableCell>
 												<TableCell>
-													<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+													<Typography
+														variant="caption"
+														sx={{ fontFamily: "monospace", fontVariantNumeric: "tabular-nums", wordBreak: "break-all" }}
+													>
 														{causa.cuij}
 													</Typography>
 												</TableCell>
@@ -372,6 +384,7 @@ const CarpetasNoVerificadasEje = () => {
 														size="small"
 														variant="outlined"
 														color={causa.source === "app" ? "primary" : causa.source === "import" ? "secondary" : "default"}
+														sx={{ fontWeight: 600, letterSpacing: 0.3, textTransform: "lowercase" }}
 													/>
 												</TableCell>
 												<TableCell sx={{ maxWidth: 300 }}>
@@ -380,7 +393,9 @@ const CarpetasNoVerificadasEje = () => {
 													</Typography>
 												</TableCell>
 												<TableCell>
-													<Typography variant="caption">{formatDate(causa.createdAt)}</Typography>
+													<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums" }}>
+														{formatDate(causa.createdAt)}
+													</Typography>
 												</TableCell>
 												<TableCell align="center">
 													{causa.verified ? (

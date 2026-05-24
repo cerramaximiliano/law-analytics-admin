@@ -3,8 +3,9 @@ import { useEffect, useState, useCallback } from "react";
 import { Grid, Typography, Box, Chip, IconButton, Tooltip } from "@mui/material";
 import { Refresh } from "iconsax-react";
 import MainCard from "components/MainCard";
-import { styled } from "@mui/material/styles";
+import { alpha, styled } from "@mui/material/styles";
 import { useRequestQueueRefresh } from "hooks/useRequestQueueRefresh";
+import { LIVE_GREEN, STALE_AMBER, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
 
 // Types
 interface ServiceStatus {
@@ -17,28 +18,33 @@ interface ServiceStatus {
 	message?: string;
 }
 
-// Styled components
-const StatusIndicator = styled(Box)<{ status: "online" | "offline" | "checking" }>(({ theme, status }) => ({
-	width: 8,
-	height: 8,
-	borderRadius: "50%",
-	flexShrink: 0,
-	backgroundColor:
-		status === "online" ? theme.palette.success.main : status === "offline" ? theme.palette.error.main : theme.palette.warning.main,
-	marginRight: theme.spacing(0.75),
-	animation: status === "checking" ? "pulse 1.5s infinite" : "none",
-	"@keyframes pulse": {
-		"0%": {
-			opacity: 1,
-		},
-		"50%": {
-			opacity: 0.4,
-		},
-		"100%": {
-			opacity: 1,
-		},
-	},
-}));
+// Live-pulse dot — verde para online, amber para checking, gris-rojizo estático para offline.
+// Reutiliza la misma curva que el landing (LIVE_PULSE_KEYFRAMES).
+const StatusIndicator = styled(Box)<{ status: "online" | "offline" | "checking" }>(({ theme, status }) => {
+	const baseColor = status === "online" ? LIVE_GREEN : status === "checking" ? STALE_AMBER : theme.palette.error.main;
+	return {
+		position: "relative",
+		width: 10,
+		height: 10,
+		borderRadius: "50%",
+		flexShrink: 0,
+		backgroundColor: baseColor,
+		marginRight: theme.spacing(1),
+		boxShadow: status !== "offline" ? `0 0 0 2px ${alpha(baseColor, 0.18)}` : "none",
+		...LIVE_PULSE_KEYFRAMES,
+		"&::after":
+			status !== "offline"
+				? {
+						content: '""',
+						position: "absolute",
+						inset: 0,
+						borderRadius: "50%",
+						backgroundColor: baseColor,
+						animation: "la-live-pulse 2.4s ease-out infinite",
+					}
+				: {},
+	};
+});
 
 const ServerStatus = () => {
 	const [loading, setLoading] = useState(false);
@@ -289,32 +295,74 @@ const ServerStatus = () => {
 					<Grid container spacing={1.5}>
 						{services.map((service, index) => (
 							<Grid item xs={12} sm={6} md={4} lg={3} key={index}>
-								<Box sx={{ p: 1.25, border: 1, borderColor: "divider", borderRadius: 1, height: "100%" }}>
-									<Box display="flex" alignItems="center" mb={0.5}>
+								<Box
+									sx={(theme) => ({
+										p: 1.5,
+										border: 1,
+										borderColor:
+											service.status === "online"
+												? alpha(LIVE_GREEN, theme.palette.mode === "dark" ? 0.36 : 0.24)
+												: service.status === "offline"
+													? alpha(theme.palette.error.main, theme.palette.mode === "dark" ? 0.32 : 0.2)
+													: "divider",
+										borderRadius: 1.5,
+										height: "100%",
+										bgcolor:
+											service.status === "online"
+												? alpha(LIVE_GREEN, theme.palette.mode === "dark" ? 0.06 : 0.04)
+												: service.status === "offline"
+													? alpha(theme.palette.error.main, theme.palette.mode === "dark" ? 0.05 : 0.03)
+													: "transparent",
+										transition: "background-color 220ms ease, border-color 220ms ease, transform 220ms ease",
+										"&:hover": { transform: "translateY(-1px)" },
+									})}
+								>
+									<Box display="flex" alignItems="center" mb={0.75}>
 										<StatusIndicator status={service.status} />
-										<Typography variant="subtitle2" sx={{ flexGrow: 1, fontSize: "0.8rem", lineHeight: 1.3 }}>
+										<Typography variant="subtitle2" sx={{ flexGrow: 1, fontSize: "0.8rem", lineHeight: 1.3, fontWeight: 600 }}>
 											{service.name}
 										</Typography>
 										<Chip
 											label={service.status === "online" ? "Online" : service.status === "offline" ? "Offline" : "..."}
 											color={service.status === "online" ? "success" : service.status === "offline" ? "error" : "warning"}
 											size="small"
-											sx={{ fontSize: "0.65rem", height: 18 }}
+											variant={service.status === "online" ? "filled" : "outlined"}
+											sx={{ fontSize: "0.65rem", height: 18, fontWeight: 600, letterSpacing: 0.4, textTransform: "uppercase" }}
 										/>
 									</Box>
-									<Typography variant="caption" color="text.secondary" display="block" sx={{ lineHeight: 1.4 }}>
+									<Typography
+										variant="caption"
+										color="text.secondary"
+										display="block"
+										sx={{ lineHeight: 1.45, fontFamily: "monospace", fontSize: "0.7rem", wordBreak: "break-all" }}
+									>
 										{service.baseUrl}
 									</Typography>
-									<Typography variant="caption" color="text.secondary" display="block" sx={{ lineHeight: 1.4 }}>
+									<Typography
+										variant="caption"
+										color="text.secondary"
+										display="block"
+										sx={{ lineHeight: 1.45, fontFamily: "monospace", fontSize: "0.7rem", opacity: 0.75 }}
+									>
 										{service.ip}
 									</Typography>
 									{service.timestamp && service.status === "online" && (
-										<Typography variant="caption" color="text.secondary" display="block" sx={{ lineHeight: 1.4 }}>
+										<Typography
+											variant="caption"
+											color="text.secondary"
+											display="block"
+											sx={{ lineHeight: 1.45, fontVariantNumeric: "tabular-nums", mt: 0.25 }}
+										>
 											{formatTimestamp(service.timestamp)}
 										</Typography>
 									)}
 									{service.message && (
-										<Typography variant="caption" color="text.secondary" display="block" sx={{ fontStyle: "italic", lineHeight: 1.4 }}>
+										<Typography
+											variant="caption"
+											color="text.secondary"
+											display="block"
+											sx={{ fontStyle: "italic", lineHeight: 1.45, mt: 0.25 }}
+										>
 											{service.message}
 										</Typography>
 									)}

@@ -16,9 +16,11 @@ import {
 	Paper,
 	Alert,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { Refresh, Cloud, Cpu, Activity, Timer1, Warning2 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { FailoverService, FailoverStatus, FailoverHistoryEntry } from "api/workers";
+import { LIVE_GREEN, STALE_AMBER, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
 
 // ====== Helpers ======
 
@@ -99,6 +101,31 @@ const InfrastructurePage = () => {
 	const cloudActive = status?.cloudActive ?? false;
 	const draining = status?.draining ?? false;
 
+	const liveDot = (color: string) => (
+		<Box
+			component="span"
+			sx={{
+				position: "relative",
+				display: "inline-block",
+				width: 10,
+				height: 10,
+				borderRadius: "50%",
+				bgcolor: color,
+				mr: 1,
+				boxShadow: `0 0 0 2px ${alpha(color, 0.2)}`,
+				...LIVE_PULSE_KEYFRAMES,
+				"&::after": {
+					content: '""',
+					position: "absolute",
+					inset: 0,
+					borderRadius: "50%",
+					backgroundColor: color,
+					animation: "la-live-pulse 2.4s ease-out infinite",
+				},
+			}}
+		/>
+	);
+
 	return (
 		<Grid container spacing={3}>
 			{/* Banner de estado */}
@@ -106,7 +133,13 @@ const InfrastructurePage = () => {
 				<Alert
 					severity={draining ? "warning" : cloudActive ? "error" : "success"}
 					icon={draining ? <Timer1 /> : cloudActive ? <Warning2 /> : <Activity />}
-					sx={{ fontSize: "1rem", fontWeight: 600, alignItems: "center" }}
+					sx={{
+						fontSize: "1rem",
+						fontWeight: 600,
+						alignItems: "center",
+						borderRadius: 1.5,
+						"& .MuiAlert-message": { display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1 },
+					}}
 					action={
 						<Tooltip title="Actualizar">
 							<IconButton size="small" onClick={fetchData} disabled={loading}>
@@ -117,6 +150,7 @@ const InfrastructurePage = () => {
 				>
 					{draining ? (
 						<>
+							{liveDot(STALE_AMBER)}
 							<strong>CLOUD DRENANDO — On-prem recuperado</strong>
 							{status?.drainingStartedAt && ` — Drain iniciado hace ${formatDuration(status.drainingStartedAt)}`}
 							{` — ${status?.cloudTasksTotal ?? 0} task(s) activa(s)`}
@@ -128,10 +162,13 @@ const InfrastructurePage = () => {
 							{status?.reason && ` (${status.reason})`}
 						</>
 					) : (
-						<strong>ON-PREM ACTIVO — Funcionamiento normal</strong>
+						<>
+							{liveDot(LIVE_GREEN)}
+							<strong>ON-PREM ACTIVO — Funcionamiento normal</strong>
+						</>
 					)}
 					{lastRefresh && (
-						<Typography variant="caption" sx={{ ml: 2, opacity: 0.7 }}>
+						<Typography variant="caption" sx={{ ml: 2, opacity: 0.7, fontVariantNumeric: "tabular-nums" }}>
 							Actualizado: {formatDate(lastRefresh.toISOString())}
 						</Typography>
 					)}
@@ -177,11 +214,12 @@ const InfrastructurePage = () => {
 									label={status?.heartbeat.alive ? "Vivo" : "Sin respuesta"}
 									color={status?.heartbeat.alive ? "success" : "error"}
 									size="small"
+									sx={{ fontWeight: 600, letterSpacing: 0.3 }}
 								/>
-								<Typography variant="caption" color="text.secondary">
+								<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 									Último poll: hace {formatElapsed(status?.heartbeat.msSinceLastPoll ?? null)}
 								</Typography>
-								<Typography variant="caption" color="text.secondary">
+								<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 									{formatDate(status?.heartbeat.lastPoll ?? null)}
 								</Typography>
 							</>
@@ -255,20 +293,22 @@ const InfrastructurePage = () => {
 									</TableHead>
 									<TableBody>
 										{status.cloudTasks.map((task, idx) => (
-											<TableRow key={idx}>
+											<TableRow key={idx} hover>
 												<TableCell>
-													<Chip label={task.worker} size="small" />
+													<Chip label={task.worker} size="small" sx={{ fontWeight: 600, fontFamily: "monospace", fontSize: "0.7rem" }} />
 												</TableCell>
 												<TableCell>
-													<Typography variant="caption" fontFamily="monospace">
+													<Typography variant="caption" fontFamily="monospace" sx={{ wordBreak: "break-all", opacity: 0.85 }}>
 														{truncateArn(task.taskArn)}
 													</Typography>
 												</TableCell>
 												<TableCell>
-													<Typography variant="caption">{formatDate(task.startedAt)}</Typography>
+													<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums" }}>
+														{formatDate(task.startedAt)}
+													</Typography>
 												</TableCell>
 												<TableCell>
-													<Typography variant="caption">
+													<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
 														{task.startedAt ? formatElapsed(Date.now() - new Date(task.startedAt).getTime()) : "N/A"}
 													</Typography>
 												</TableCell>
@@ -307,22 +347,27 @@ const InfrastructurePage = () => {
 								</TableHead>
 								<TableBody>
 									{history.map((entry, idx) => (
-										<TableRow key={idx}>
+										<TableRow key={idx} hover>
 											<TableCell>
-												<Typography variant="caption">{formatDate(entry.at)}</Typography>
+												<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums" }}>
+													{formatDate(entry.at)}
+												</Typography>
 											</TableCell>
 											<TableCell>
 												<Chip
 													label={entry.event === "activated" ? "Activado" : "Desactivado"}
 													color={entry.event === "activated" ? "error" : "success"}
 													size="small"
+													sx={{ fontWeight: 600, letterSpacing: 0.3 }}
 												/>
 											</TableCell>
 											<TableCell>
 												<Typography variant="caption">{entry.reason}</Typography>
 											</TableCell>
 											<TableCell>
-												<Typography variant="caption">{entry.durationMin !== undefined ? `${entry.durationMin} min` : "—"}</Typography>
+												<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums" }}>
+													{entry.durationMin !== undefined ? `${entry.durationMin} min` : "—"}
+												</Typography>
 											</TableCell>
 										</TableRow>
 									))}
