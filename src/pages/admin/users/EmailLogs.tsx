@@ -43,8 +43,10 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
 
 // project imports
+import { alpha } from "@mui/material/styles";
 import MainCard from "components/MainCard";
 import ScrollX from "components/ScrollX";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 import EmailLogsService from "api/emailLogs";
 import { EmailLog, EmailLogPagination, EmailLogsQueryParams, EmailLogGeneralStats, EmailLogTemplateOption } from "types/email-log";
 
@@ -421,7 +423,7 @@ const EmailLogsPage = () => {
 		}
 
 		const statCards = [
-			{ label: "Total", value: stats.total, color: theme.palette.primary.main, icon: Sms },
+			{ label: "Total", value: stats.total, color: BRAND_BLUE, icon: Sms },
 			{ label: "Enviados", value: stats.sent, color: theme.palette.info.main, icon: TickCircle },
 			{ label: "Entregados", value: stats.delivered, color: theme.palette.success.main, icon: TickCircle },
 			{ label: "Fallidos", value: stats.failed, color: theme.palette.error.main, icon: CloseSquare },
@@ -433,15 +435,38 @@ const EmailLogsPage = () => {
 			<Grid container spacing={2} sx={{ mb: 3 }}>
 				{statCards.map((stat) => (
 					<Grid item xs={6} sm={4} md={2} key={stat.label}>
-						<Card sx={{ height: "100%" }}>
+						<Card
+							variant="outlined"
+							sx={{
+								height: "100%",
+								transition: "transform 200ms ease, box-shadow 200ms ease",
+								"&:hover": {
+									transform: "translateY(-2px)",
+									boxShadow: `0 6px 20px ${alpha(stat.color, 0.12)}`,
+								},
+							}}
+						>
 							<CardContent sx={{ py: 2, px: 2, "&:last-child": { pb: 2 } }}>
-								<Stack direction="row" alignItems="center" spacing={1}>
-									<stat.icon size={20} color={stat.color} variant="Bold" />
+								<Stack direction="row" alignItems="center" spacing={1.25}>
+									<Box
+										sx={{
+											width: 32,
+											height: 32,
+											borderRadius: 1.25,
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											bgcolor: alpha(stat.color, 0.1),
+											color: stat.color,
+										}}
+									>
+										<stat.icon size={18} variant="Bold" />
+									</Box>
 									<Box>
-										<Typography variant="h5" fontWeight={600}>
+										<Typography variant="h5" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
 											{stat.value.toLocaleString()}
 										</Typography>
-										<Typography variant="caption" color="textSecondary">
+										<Typography variant="caption" color="textSecondary" sx={{ letterSpacing: 0.3 }}>
 											{stat.label}
 										</Typography>
 									</Box>
@@ -457,7 +482,7 @@ const EmailLogsPage = () => {
 	return (
 		<LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
 			<MainCard
-				title="Logs de Correos Electrónicos"
+				title="Logs de correos electrónicos"
 				secondary={
 					<Stack direction="row" spacing={1}>
 						{selectedIds.length > 0 && (
@@ -630,8 +655,8 @@ const EmailLogsPage = () => {
 				{/* Table */}
 				<ScrollX>
 					<TableContainer>
-						<Table>
-							<TableHead>
+						<Table sx={{ "& tbody td": { fontVariantNumeric: "tabular-nums" } }}>
+							<TableHead sx={{ position: "sticky", top: 0, zIndex: 1, bgcolor: "background.paper" }}>
 								<TableRow>
 									<TableCell padding="checkbox" sx={{ width: 50 }}>
 										<Checkbox
@@ -758,7 +783,11 @@ const EmailLogsPage = () => {
 
 				{/* Detail Modal */}
 				<Dialog open={detailModalOpen} onClose={() => setDetailModalOpen(false)} maxWidth="md" fullWidth>
-					<DialogTitle>Detalle del Correo</DialogTitle>
+					<DialogTitle sx={{ pb: 1.5 }}>
+						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+							Detalle del correo
+						</Typography>
+					</DialogTitle>
 					<DialogContent dividers>
 						{selectedLog && (
 							<Grid container spacing={2}>
@@ -883,7 +912,27 @@ const EmailLogsPage = () => {
 
 				{/* Delete Confirmation Dialog */}
 				<Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog} maxWidth="sm" fullWidth>
-					<DialogTitle>{deleteType === "all" ? "Eliminar todos los logs" : "Confirmar eliminación"}</DialogTitle>
+					<DialogTitle sx={{ pb: 1.5 }}>
+						<Stack direction="row" spacing={1.25} alignItems="center">
+							<Box
+								sx={{
+									width: 36,
+									height: 36,
+									borderRadius: 1.25,
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									bgcolor: alpha(theme.palette.error.main, 0.1),
+									color: "error.main",
+								}}
+							>
+								<Warning2 size={20} variant="Bold" />
+							</Box>
+							<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+								{deleteType === "all" ? "Eliminar todos los logs" : "Confirmar eliminación"}
+							</Typography>
+						</Stack>
+					</DialogTitle>
 					<DialogContent>
 						<DialogContentText>{getDeleteDialogMessage()}</DialogContentText>
 						{deleteType === "all" && (

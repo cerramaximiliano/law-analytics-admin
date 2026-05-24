@@ -138,28 +138,35 @@ const CausaEditModal = ({ open, onClose, causa, causaType, folderId, onCausaUpda
 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-			<DialogTitle>
+			<DialogTitle sx={{ pb: 1.5 }}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Box>
-						<Typography variant="h5">Editar Causa</Typography>
+						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+							Editar causa
+						</Typography>
 						<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-							<Typography variant="body2" color="textSecondary">
+							<Typography variant="body2" color="textSecondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 								{causa.number}/{causa.year}
 							</Typography>
-							<Chip label={causaType} size="small" color="primary" variant="outlined" />
+							<Chip label={causaType} size="small" color="primary" variant="outlined" sx={{ borderRadius: 0.75 }} />
 						</Stack>
 					</Box>
-					<Tooltip title="Copiar ID">
-						<IconButton
-							size="small"
-							onClick={() => {
-								navigator.clipboard.writeText(causa._id);
-								enqueueSnackbar("ID copiado al portapapeles", { variant: "success" });
-							}}
-						>
-							<Copy size={18} />
+					<Stack direction="row" spacing={0.5} alignItems="center">
+						<Tooltip title="Copiar ID">
+							<IconButton
+								size="small"
+								onClick={() => {
+									navigator.clipboard.writeText(causa._id);
+									enqueueSnackbar("ID copiado al portapapeles", { variant: "success" });
+								}}
+							>
+								<Copy size={18} />
+							</IconButton>
+						</Tooltip>
+						<IconButton onClick={onClose} size="small">
+							<CloseCircle size={20} />
 						</IconButton>
-					</Tooltip>
+					</Stack>
 				</Stack>
 			</DialogTitle>
 
@@ -382,8 +389,8 @@ const CausaEditModal = ({ open, onClose, causa, causaType, folderId, onCausaUpda
 				</LocalizationProvider>
 			</DialogContent>
 
-			<DialogActions>
-				<Button onClick={onClose} startIcon={<CloseCircle size={18} />} variant="outlined" disabled={isSaving}>
+			<DialogActions sx={{ px: 3, pb: 2 }}>
+				<Button onClick={onClose} color="secondary" disabled={isSaving}>
 					Cancelar
 				</Button>
 				<Button
@@ -391,9 +398,15 @@ const CausaEditModal = ({ open, onClose, causa, causaType, folderId, onCausaUpda
 					startIcon={isSaving ? <CircularProgress size={18} color="inherit" /> : <Save2 size={18} />}
 					variant="contained"
 					color="warning"
+					disableElevation
 					disabled={isSaving || changedFields.length === 0}
+					sx={{
+						transition: "transform 160ms ease",
+						"&:hover": { transform: "translateY(-1px)" },
+						"&:active": { transform: "scale(0.98)" },
+					}}
 				>
-					{isSaving ? "Sincronizando..." : "Aplicar Cambios"}
+					{isSaving ? "Sincronizando..." : "Aplicar cambios"}
 				</Button>
 			</DialogActions>
 		</Dialog>

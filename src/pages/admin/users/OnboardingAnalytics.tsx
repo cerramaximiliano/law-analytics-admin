@@ -43,6 +43,7 @@ import {
 	Pie,
 } from "recharts";
 import MainCard from "components/MainCard";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 import OnboardingService from "api/onboarding";
 import {
 	OnboardingSummaryData,
@@ -98,31 +99,36 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, color
 				borderRadius: 2,
 				border: `1px solid ${theme.palette.divider}`,
 				height: "100%",
+				transition: "transform 200ms ease, box-shadow 200ms ease",
+				"&:hover": {
+					transform: "translateY(-2px)",
+					boxShadow: `0 6px 20px ${alpha(color, 0.12)}`,
+				},
 			}}
 		>
 			<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
 				<Box>
-					<Typography variant="body2" color="text.secondary" gutterBottom>
+					<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3, textTransform: "uppercase", display: "block", mb: 0.5 }}>
 						{title}
 					</Typography>
 					{loading ? (
 						<Skeleton width={80} height={40} />
 					) : (
-						<Typography variant="h3" fontWeight={600}>
+						<Typography variant="h3" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
 							{value}
 						</Typography>
 					)}
 					{subtitle && (
-						<Typography variant="caption" color="text.secondary">
+						<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 							{subtitle}
 						</Typography>
 					)}
 				</Box>
 				<Box
 					sx={{
-						width: 48,
-						height: 48,
-						borderRadius: 2,
+						width: 44,
+						height: 44,
+						borderRadius: 1.25,
 						display: "flex",
 						alignItems: "center",
 						justifyContent: "center",
@@ -236,7 +242,7 @@ const OnboardingAnalytics: React.FC = () => {
 	};
 
 	// Funnel chart colors
-	const FUNNEL_COLORS = [theme.palette.primary.main, theme.palette.info.main, theme.palette.warning.main, theme.palette.success.main];
+	const FUNNEL_COLORS = [BRAND_BLUE, theme.palette.info.main, theme.palette.warning.main, theme.palette.success.main];
 
 	// Time distribution colors
 	const TIME_COLORS = [
@@ -248,7 +254,7 @@ const OnboardingAnalytics: React.FC = () => {
 	];
 
 	return (
-		<MainCard title="Analytics de Onboarding" content={false}>
+		<MainCard title="Analytics de onboarding" content={false}>
 			{/* Header with filters and refresh */}
 			<Box sx={{ p: 3, pb: 0 }}>
 				<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center" justifyContent="space-between">
@@ -297,10 +303,18 @@ const OnboardingAnalytics: React.FC = () => {
 
 			{/* Tabs */}
 			<Box sx={{ borderBottom: 1, borderColor: "divider", px: 3, pt: 2 }}>
-				<Tabs value={tabValue} onChange={handleTabChange}>
+				<Tabs
+					value={tabValue}
+					onChange={handleTabChange}
+					TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
+					sx={{
+						"& .MuiTab-root": { textTransform: "none", fontWeight: 500, fontSize: "0.875rem" },
+						"& .Mui-selected": { fontWeight: 600, color: BRAND_BLUE + " !important" },
+					}}
+				>
 					<Tab label="Resumen" />
 					<Tab label="Eventos" />
-					<Tab label="Usuarios Estancados" />
+					<Tab label="Usuarios estancados" />
 				</Tabs>
 			</Box>
 
@@ -311,18 +325,18 @@ const OnboardingAnalytics: React.FC = () => {
 					<Grid container spacing={3} sx={{ mb: 4 }}>
 						<Grid item xs={12} sm={6} md={2.4}>
 							<StatCard
-								title="Usuarios con Onboarding"
+								title="Usuarios con onboarding"
 								value={summaryData?.summary.totalUsersWithOnboarding || 0}
 								icon={<People size={24} />}
-								color={theme.palette.primary.main}
+								color={BRAND_BLUE}
 								loading={loading}
 							/>
 						</Grid>
 						<Grid item xs={12} sm={6} md={2.4}>
 							<StatCard
-								title="Crearon Carpeta"
+								title="Crearon carpeta"
 								value={summaryData?.summary.usersCreatedFolder || 0}
-								subtitle={`${summaryData?.rates.activationRate || 0}% tasa de activacion`}
+								subtitle={`${summaryData?.rates.activationRate || 0}% tasa de activación`}
 								icon={<TickCircle size={24} />}
 								color={theme.palette.success.main}
 								loading={loading}
@@ -330,7 +344,7 @@ const OnboardingAnalytics: React.FC = () => {
 						</Grid>
 						<Grid item xs={12} sm={6} md={2.4}>
 							<StatCard
-								title="Completaron Onboarding"
+								title="Completaron onboarding"
 								value={summaryData?.summary.usersCompletedOnboarding || 0}
 								icon={<Activity size={24} />}
 								color={theme.palette.info.main}
@@ -349,7 +363,7 @@ const OnboardingAnalytics: React.FC = () => {
 						</Grid>
 						<Grid item xs={12} sm={6} md={2.4}>
 							<StatCard
-								title="Usuarios Estancados"
+								title="Usuarios estancados"
 								value={summaryData?.summary.stuckUsers || 0}
 								subtitle={`${summaryData?.rates.stuckRate || 0}% del total`}
 								icon={<Warning2 size={24} />}
@@ -365,7 +379,7 @@ const OnboardingAnalytics: React.FC = () => {
 						<Grid item xs={12} md={6}>
 							<Paper elevation={0} sx={{ p: 3, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, height: 400 }}>
 								<Typography variant="h6" gutterBottom>
-									Funnel de Conversion
+									Funnel de conversión
 								</Typography>
 								{loading ? (
 									<Skeleton variant="rectangular" height={300} />
@@ -400,7 +414,7 @@ const OnboardingAnalytics: React.FC = () => {
 						<Grid item xs={12} md={6}>
 							<Paper elevation={0} sx={{ p: 3, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, height: 400 }}>
 								<Typography variant="h6" gutterBottom>
-									Tiempo hasta Activacion
+									Tiempo hasta activación
 								</Typography>
 								{loading ? (
 									<Skeleton variant="rectangular" height={300} />
@@ -461,7 +475,7 @@ const OnboardingAnalytics: React.FC = () => {
 						<Grid item xs={12}>
 							<Paper elevation={0} sx={{ p: 3, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
 								<Typography variant="h6" gutterBottom>
-									Distribucion por Sesiones
+									Distribución por sesiones
 								</Typography>
 								{loading ? (
 									<Skeleton variant="rectangular" height={200} />

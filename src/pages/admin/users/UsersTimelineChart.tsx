@@ -19,6 +19,7 @@ import {
 	AreaChart,
 } from "recharts";
 import adminAxios from "utils/adminAxios";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 
 // Colors are now derived from the theme inside the component
 
@@ -71,13 +72,19 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, loading 
 				bgcolor: theme.palette.background.paper,
 				border: `1px solid ${theme.palette.divider}`,
 				height: "100%",
+				transition: "transform 200ms ease, box-shadow 200ms ease",
+				"&:hover": {
+					transform: "translateY(-2px)",
+					boxShadow: `0 6px 20px ${alpha(color, 0.12)}`,
+				},
 			}}
 		>
 			<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
 				<Box
 					sx={{
-						p: 1,
-						borderRadius: 1.5,
+						width: 36,
+						height: 36,
+						borderRadius: 1.25,
 						bgcolor: alpha(color, 0.1),
 						color: color,
 						display: "flex",
@@ -88,13 +95,13 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, loading 
 					{icon}
 				</Box>
 				<Box>
-					<Typography variant="body2" color="textSecondary" sx={{ mb: 0.25 }}>
+					<Typography variant="caption" color="textSecondary" sx={{ letterSpacing: 0.3, textTransform: "uppercase", display: "block", mb: 0.25 }}>
 						{title}
 					</Typography>
 					{loading ? (
 						<Skeleton variant="text" width={60} height={28} />
 					) : (
-						<Typography variant="h5" fontWeight="bold" sx={{ color }}>
+						<Typography variant="h5" fontWeight={600} sx={{ color, fontVariantNumeric: "tabular-nums" }}>
 							{typeof value === "number" ? value.toLocaleString() : value}
 						</Typography>
 					)}
@@ -109,8 +116,8 @@ const UsersTimelineChart: React.FC = () => {
 
 	const COLORS = {
 		primary: {
-			main: theme.palette.primary.main,
-			light: theme.palette.primary.light,
+			main: BRAND_BLUE,
+			light: alpha(BRAND_BLUE, 0.5),
 		},
 		success: {
 			main: theme.palette.success.main,
@@ -303,7 +310,7 @@ const UsersTimelineChart: React.FC = () => {
 					}}
 				>
 					<Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
-						Evolución de Usuarios Registrados
+						Evolución de usuarios registrados
 					</Typography>
 
 					<Box sx={{ height: 400 }}>
@@ -353,6 +360,7 @@ const UsersTimelineChart: React.FC = () => {
 											backgroundColor: theme.palette.background.paper,
 											border: `1px solid ${theme.palette.divider}`,
 											borderRadius: 8,
+											fontVariantNumeric: "tabular-nums",
 										}}
 										formatter={(value: number, name: string) => [value.toLocaleString(), name === "cumulative" ? "Acumulado" : "Nuevos"]}
 										labelFormatter={(label) => `Fecha: ${formatXAxisDate(label)}`}

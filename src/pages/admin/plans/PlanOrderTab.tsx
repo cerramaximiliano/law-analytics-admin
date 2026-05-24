@@ -5,6 +5,7 @@ import { ArrangeVertical, Save2, TickCircle, CloseCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { Plan } from "types/plan";
 import adminAxios from "utils/adminAxios";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 
 interface PlanOrderTabProps {
 	plans: Plan[];
@@ -113,8 +114,8 @@ const PlanOrderTab = ({ plans, onRefresh }: PlanOrderTabProps) => {
 	return (
 		<Box>
 			<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 3 }}>
-				<ArrangeVertical size={20} color={theme.palette.primary.main} />
-				<Typography variant="h6">Ordenamiento de Recursos y Características</Typography>
+				<ArrangeVertical size={20} color={BRAND_BLUE} />
+				<Typography variant="h6">Ordenamiento de recursos y características</Typography>
 			</Stack>
 			<Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
 				Ajusta el orden de visualización para cada plan. Los ítems con menor número aparecen primero. Guarda cada plan por separado.
@@ -146,9 +147,15 @@ const PlanOrderTab = ({ plans, onRefresh }: PlanOrderTabProps) => {
 										<Button
 											variant="contained"
 											size="small"
+											disableElevation
 											startIcon={isSaving ? <CircularProgress size={14} color="inherit" /> : <Save2 size={16} />}
 											onClick={() => handleSavePlan(plan)}
 											disabled={isSaving}
+											sx={{
+												transition: "transform 160ms ease",
+												"&:hover": { transform: "translateY(-1px)" },
+												"&:active": { transform: "scale(0.98)" },
+											}}
 										>
 											{isSaving ? "Guardando..." : "Guardar"}
 										</Button>

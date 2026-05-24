@@ -22,7 +22,10 @@ import {
 	Tabs,
 	Tab,
 } from "@mui/material";
+import { CloseCircle } from "iconsax-react";
 import ResponsiveDialog from "components/@extended/ResponsiveDialog";
+import { BRAND_BLUE } from "themes/dashboardTokens";
+import { IconButton } from "@mui/material";
 
 // project imports
 import { User } from "types/user";
@@ -229,15 +232,32 @@ const GenerateDataModal: React.FC<GenerateDataModalProps> = ({ user, open, onClo
 				},
 			}}
 		>
-			<DialogTitle sx={{ flexShrink: 0 }}>Generar Datos para {user.name}</DialogTitle>
+			<DialogTitle sx={{ flexShrink: 0, pb: 1.5 }}>
+				<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+						Generar datos · {user.name}
+					</Typography>
+					<IconButton onClick={onClose} size="small" sx={{ mr: -0.5 }}>
+						<CloseCircle size={20} />
+					</IconButton>
+				</Stack>
+			</DialogTitle>
 			<Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
 				{({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values, setFieldValue }) => (
 					<form noValidate onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", flex: 1 }}>
 						<DialogContent sx={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
 							<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3, flexShrink: 0 }}>
-								<Tabs value={tabValue} onChange={handleTabChange}>
-									<Tab label="Datos Generales" />
-									<Tab label="Datos de Causa" />
+								<Tabs
+									value={tabValue}
+									onChange={handleTabChange}
+									TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
+									sx={{
+										"& .MuiTab-root": { textTransform: "none", fontWeight: 500, fontSize: "0.875rem" },
+										"& .Mui-selected": { fontWeight: 600, color: BRAND_BLUE + " !important" },
+									}}
+								>
+									<Tab label="Datos generales" />
+									<Tab label="Datos de causa" />
 								</Tabs>
 							</Box>
 
@@ -346,13 +366,13 @@ const GenerateDataModal: React.FC<GenerateDataModalProps> = ({ user, open, onClo
 										</Grid>
 										<Grid item xs={12}>
 											<FormControl fullWidth>
-												<InputLabel id="folder-select-label">{loadingFolders ? "Cargando causas..." : "Seleccionar Causa"}</InputLabel>
+												<InputLabel id="folder-select-label">{loadingFolders ? "Cargando causas..." : "Seleccionar causa"}</InputLabel>
 												<Select
 													labelId="folder-select-label"
 													id="folderId"
 													name="folderId"
 													value={values.folderId}
-													label={loadingFolders ? "Cargando causas..." : "Seleccionar Causa"}
+													label={loadingFolders ? "Cargando causas..." : "Seleccionar causa"}
 													onChange={handleChange}
 													onBlur={handleBlur}
 													error={Boolean(touched.folderId && errors.folderId)}
@@ -467,7 +487,7 @@ const GenerateDataModal: React.FC<GenerateDataModalProps> = ({ user, open, onClo
 									Cancelar
 								</Button>
 								<Button type="submit" variant="contained" color="primary" disabled={isSubmitting || loading}>
-									Generar Datos
+									Generar datos
 								</Button>
 							</Stack>
 						</DialogActions>

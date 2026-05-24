@@ -32,6 +32,7 @@ import "dayjs/locale/es";
 import { useSnackbar } from "notistack";
 import { CloseCircle, Save2, Copy } from "iconsax-react";
 import FoldersService, { Folder } from "api/folders";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 
 interface FolderEditModalProps {
 	open: boolean;
@@ -174,33 +175,48 @@ const FolderEditModal = ({ open, onClose, folder, onFolderUpdated }: FolderEditM
 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-			<DialogTitle>
+			<DialogTitle sx={{ pb: 1.5 }}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Box>
-						<Typography variant="h5">Editar Carpeta</Typography>
-						<Typography variant="body2" color="textSecondary">
+						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+							Editar carpeta
+						</Typography>
+						<Typography variant="body2" color="textSecondary" sx={{ fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }}>
 							ID: {folder._id}
 						</Typography>
 					</Box>
-					<Tooltip title="Copiar ID">
-						<IconButton
-							size="small"
-							onClick={() => {
-								navigator.clipboard.writeText(folder._id);
-								enqueueSnackbar("ID copiado al portapapeles", { variant: "success" });
-							}}
-						>
-							<Copy size={18} />
+					<Stack direction="row" spacing={0.5} alignItems="center">
+						<Tooltip title="Copiar ID">
+							<IconButton
+								size="small"
+								onClick={() => {
+									navigator.clipboard.writeText(folder._id);
+									enqueueSnackbar("ID copiado al portapapeles", { variant: "success" });
+								}}
+							>
+								<Copy size={18} />
+							</IconButton>
+						</Tooltip>
+						<IconButton onClick={onClose} size="small">
+							<CloseCircle size={20} />
 						</IconButton>
-					</Tooltip>
+					</Stack>
 				</Stack>
 			</DialogTitle>
 
 			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-				<Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
+				<Tabs
+					value={activeTab}
+					onChange={(_, v) => setActiveTab(v)}
+					TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
+					sx={{
+						"& .MuiTab-root": { textTransform: "none", fontWeight: 500, fontSize: "0.875rem" },
+						"& .Mui-selected": { fontWeight: 600, color: BRAND_BLUE + " !important" },
+					}}
+				>
 					<Tab label="General" />
 					<Tab label="Judicial" />
-					<Tab label="Causa Vinculada" />
+					<Tab label="Causa vinculada" />
 					<Tab label="JSON" />
 				</Tabs>
 			</Box>
@@ -657,11 +673,22 @@ const FolderEditModal = ({ open, onClose, folder, onFolderUpdated }: FolderEditM
 				</LocalizationProvider>
 			</DialogContent>
 
-			<DialogActions>
-				<Button onClick={onClose} startIcon={<CloseCircle size={18} />} variant="outlined" disabled={isSaving}>
+			<DialogActions sx={{ px: 3, pb: 2 }}>
+				<Button onClick={onClose} color="secondary" disabled={isSaving}>
 					Cancelar
 				</Button>
-				<Button onClick={handleSave} startIcon={<Save2 size={18} />} variant="contained" disabled={isSaving}>
+				<Button
+					onClick={handleSave}
+					startIcon={<Save2 size={18} />}
+					variant="contained"
+					disableElevation
+					disabled={isSaving}
+					sx={{
+						transition: "transform 160ms ease",
+						"&:hover": { transform: "translateY(-1px)" },
+						"&:active": { transform: "scale(0.98)" },
+					}}
+				>
 					{isSaving ? "Guardando..." : "Guardar"}
 				</Button>
 			</DialogActions>

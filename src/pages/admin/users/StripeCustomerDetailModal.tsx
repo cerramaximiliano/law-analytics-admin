@@ -14,6 +14,8 @@ import {
 	Stack,
 	useTheme,
 } from "@mui/material";
+import { CloseCircle } from "iconsax-react";
+import { IconButton } from "@mui/material";
 import { StripeCustomer } from "types/stripe-subscription";
 import dayjs from "utils/dayjs-config";
 
@@ -109,25 +111,30 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-			<DialogTitle>
+			<DialogTitle sx={{ pb: 1.5 }}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Typography variant="h5">Detalles del Cliente de Stripe</Typography>
-					<Chip label={getEnvironmentLabel(customer.environment)} color={getEnvironmentColor(customer.environment) as any} size="small" />
+					<Stack direction="row" spacing={1.25} alignItems="center">
+						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+							Detalles del cliente de Stripe
+						</Typography>
+						<Chip
+							label={getEnvironmentLabel(customer.environment)}
+							color={getEnvironmentColor(customer.environment) as any}
+							size="small"
+							sx={{ borderRadius: 0.75, fontWeight: 500 }}
+						/>
+					</Stack>
+					<IconButton onClick={onClose} size="small" sx={{ mr: -0.5 }}>
+						<CloseCircle size={20} />
+					</IconButton>
 				</Stack>
 			</DialogTitle>
 			<DialogContent dividers>
 				<Stack spacing={3}>
-					{/* Información del Cliente */}
-					<Paper
-						elevation={0}
-						sx={{
-							p: 3,
-							backgroundColor: theme.palette.mode === "dark" ? "background.default" : "grey.50",
-							borderRadius: 2,
-						}}
-					>
+					{/* Información del cliente */}
+					<Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
 						<Typography variant="h6" sx={{ mb: 2 }}>
-							Información del Cliente
+							Información del cliente
 						</Typography>
 						<Grid container spacing={2}>
 							<Grid item xs={12} md={6}>
@@ -151,7 +158,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 							<Grid item xs={12} md={6}>
 								<Stack spacing={0.5}>
 									<Typography variant="caption" color="text.secondary">
-										ID de Cliente Stripe
+										ID de cliente Stripe
 									</Typography>
 									<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
 										{customer.id}
@@ -185,7 +192,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 							<Grid item xs={12} md={6}>
 								<Stack spacing={0.5}>
 									<Typography variant="caption" color="text.secondary">
-										Prefijo de Factura
+										Prefijo de factura
 									</Typography>
 									<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
 										{customer.invoice_prefix}
@@ -195,7 +202,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 							<Grid item xs={12} md={6}>
 								<Stack spacing={0.5}>
 									<Typography variant="caption" color="text.secondary">
-										Próximo # de Factura
+										Próximo # de factura
 									</Typography>
 									<Typography variant="body1">{customer.next_invoice_sequence}</Typography>
 								</Stack>
@@ -204,14 +211,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 					</Paper>
 
 					{/* Metadata */}
-					<Paper
-						elevation={0}
-						sx={{
-							p: 3,
-							backgroundColor: theme.palette.mode === "dark" ? "background.default" : "grey.50",
-							borderRadius: 2,
-						}}
-					>
+					<Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
 						<Typography variant="h6" sx={{ mb: 2 }}>
 							Metadata
 						</Typography>
@@ -242,7 +242,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 								<Grid item xs={12} md={6}>
 									<Stack spacing={0.5}>
 										<Typography variant="caption" color="text.secondary">
-											Versión de App
+											Versión de app
 										</Typography>
 										<Typography variant="body1">{customer.metadata.app_version}</Typography>
 									</Stack>
@@ -262,7 +262,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 								<Grid item xs={12} md={6}>
 									<Stack spacing={0.5}>
 										<Typography variant="caption" color="text.secondary">
-											Plan Inicial
+											Plan inicial
 										</Typography>
 										<Typography variant="body1" sx={{ textTransform: "capitalize" }}>
 											{customer.metadata.initial_plan}
@@ -274,7 +274,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 								<Grid item xs={12} md={6}>
 									<Stack spacing={0.5}>
 										<Typography variant="caption" color="text.secondary">
-											Creado en App
+											Creado en app
 										</Typography>
 										<Typography variant="body1">{dayjs(customer.metadata.created_at).format("DD/MM/YYYY HH:mm")}</Typography>
 									</Stack>
@@ -294,7 +294,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 								<Grid item xs={12} md={6}>
 									<Stack spacing={0.5}>
 										<Typography variant="caption" color="text.secondary">
-											Fecha de Consolidación
+											Fecha de consolidación
 										</Typography>
 										<Typography variant="body1">{dayjs(customer.metadata.consolidation_date).format("DD/MM/YYYY HH:mm")}</Typography>
 									</Stack>
@@ -304,14 +304,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 					</Paper>
 
 					{/* Información de Suscripción */}
-					<Paper
-						elevation={0}
-						sx={{
-							p: 3,
-							backgroundColor: theme.palette.mode === "dark" ? "background.default" : "grey.50",
-							borderRadius: 2,
-						}}
-					>
+					<Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
 						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
 							<Typography variant="h6">Suscripción</Typography>
 							<Chip
@@ -326,7 +319,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 								<Grid item xs={12} md={6}>
 									<Stack spacing={0.5}>
 										<Typography variant="caption" color="text.secondary">
-											ID de Suscripción
+											ID de suscripción
 										</Typography>
 										<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
 											{customer.subscription.id}
@@ -366,7 +359,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 								<Grid item xs={12} md={6}>
 									<Stack spacing={0.5}>
 										<Typography variant="caption" color="text.secondary">
-											ID del Precio
+											ID del precio
 										</Typography>
 										<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
 											{customer.subscription.plan.id}
@@ -391,7 +384,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 								<Grid item xs={12} md={6}>
 									<Stack spacing={0.5}>
 										<Typography variant="caption" color="text.secondary">
-											Inicio del Período Actual
+											Inicio del período actual
 										</Typography>
 										<Typography variant="body1">{dayjs(customer.subscription.current_period_start).format("DD/MM/YYYY HH:mm")}</Typography>
 									</Stack>
@@ -399,7 +392,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 								<Grid item xs={12} md={6}>
 									<Stack spacing={0.5}>
 										<Typography variant="caption" color="text.secondary">
-											Fin del Período Actual
+											Fin del período actual
 										</Typography>
 										<Typography variant="body1">{dayjs(customer.subscription.current_period_end).format("DD/MM/YYYY HH:mm")}</Typography>
 									</Stack>
@@ -407,7 +400,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 								<Grid item xs={12} md={6}>
 									<Stack spacing={0.5}>
 										<Typography variant="caption" color="text.secondary">
-											Cancelar al Final del Período
+											Cancelar al final del período
 										</Typography>
 										<Chip
 											label={customer.subscription.cancel_at_period_end ? "Sí" : "No"}
@@ -430,14 +423,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 					</Paper>
 
 					{/* Resumen */}
-					<Paper
-						elevation={0}
-						sx={{
-							p: 3,
-							backgroundColor: theme.palette.mode === "dark" ? "background.default" : "grey.50",
-							borderRadius: 2,
-						}}
-					>
+					<Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
 						<Typography variant="h6" sx={{ mb: 2 }}>
 							Resumen
 						</Typography>
@@ -445,15 +431,17 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 							<Grid item xs={6} md={3}>
 								<Stack spacing={0.5} alignItems="center">
 									<Typography variant="caption" color="text.secondary">
-										Total Suscripciones
+										Total suscripciones
 									</Typography>
-									<Typography variant="h4">{customer.totalSubscriptions}</Typography>
+									<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums" }}>
+										{customer.totalSubscriptions}
+									</Typography>
 								</Stack>
 							</Grid>
 							<Grid item xs={6} md={3}>
 								<Stack spacing={0.5} alignItems="center">
 									<Typography variant="caption" color="text.secondary">
-										Suscripción Activa
+										Suscripción activa
 									</Typography>
 									<Typography variant="h4" color={customer.hasActiveSubscription ? "success.main" : "text.secondary"}>
 										{customer.hasActiveSubscription ? "Sí" : "No"}

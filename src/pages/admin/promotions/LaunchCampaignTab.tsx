@@ -49,6 +49,7 @@ import {
 import { useSnackbar } from "notistack";
 import { DiscountCode } from "api/discounts";
 import discountCampaignService, { CampaignStep, LaunchCampaignResult, MarketingTemplate } from "api/discountCampaign";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 
 interface AdditionalStep {
 	id: string;
@@ -414,7 +415,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 			{/* ── 1. Destinatarios y validación de segmento ──────────────────────────── */}
 			<Paper variant="outlined" sx={{ p: 2, bgcolor: "background.default" }}>
 				<Stack direction="row" spacing={1.5} alignItems="flex-start">
-					<People size={20} color={theme.palette.primary.main} style={{ marginTop: 2 }} />
+					<People size={20} color={BRAND_BLUE} style={{ marginTop: 2 }} />
 					<Box flex={1}>
 						<Typography variant="subtitle2" fontWeight={600} gutterBottom>
 							Destinatarios
@@ -1369,10 +1370,16 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 						<Button
 							variant="contained"
 							color={launchImmediately ? "success" : "primary"}
+							disableElevation
 							startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <Send2 size={18} />}
 							onClick={handleSubmit}
 							disabled={!canSubmit}
 							size="large"
+							sx={{
+								transition: "transform 160ms ease",
+								"&:hover": { transform: "translateY(-1px)" },
+								"&:active": { transform: "scale(0.98)" },
+							}}
 						>
 							{loading ? "Procesando..." : launchImmediately ? "Crear y lanzar campaña" : "Crear campaña en borrador"}
 						</Button>

@@ -34,6 +34,7 @@ import discountsService, { TargetUser, TargetSegment } from "api/discounts";
 import { SegmentService } from "store/reducers/segments";
 import { Segment } from "types/segment";
 import TargetContactsTab from "./TargetContactsTab";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 
 interface TargetUsersManagerProps {
 	discountId: string;
@@ -311,7 +312,18 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 			)}
 
 			{/* Tabs */}
-			<Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}>
+			<Tabs
+				value={activeTab}
+				onChange={(_, v) => setActiveTab(v)}
+				TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
+				sx={{
+					mb: 2,
+					borderBottom: 1,
+					borderColor: "divider",
+					"& .MuiTab-root": { textTransform: "none", fontWeight: 500, fontSize: "0.875rem" },
+					"& .Mui-selected": { fontWeight: 600, color: BRAND_BLUE + " !important" },
+				}}
+			>
 				<Tab
 					label={
 						<Stack direction="row" spacing={1} alignItems="center">
@@ -534,7 +546,9 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 			<Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)} maxWidth="sm" fullWidth>
 				<DialogTitle>
 					<Stack direction="row" justifyContent="space-between" alignItems="center">
-						<Typography variant="h5">Buscar y Agregar Usuarios</Typography>
+						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+							Buscar y agregar usuarios
+						</Typography>
 						<IconButton size="small" onClick={() => setAddDialogOpen(false)}>
 							<CloseCircle size={20} />
 						</IconButton>
@@ -616,7 +630,9 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 			<Dialog open={addByEmailDialogOpen} onClose={() => setAddByEmailDialogOpen(false)} maxWidth="sm" fullWidth>
 				<DialogTitle>
 					<Stack direction="row" justifyContent="space-between" alignItems="center">
-						<Typography variant="h5">Agregar Usuarios por Email</Typography>
+						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+							Agregar usuarios por email
+						</Typography>
 						<IconButton size="small" onClick={() => setAddByEmailDialogOpen(false)}>
 							<CloseCircle size={20} />
 						</IconButton>
@@ -665,7 +681,9 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 			<Dialog open={segmentDialogOpen} onClose={() => setSegmentDialogOpen(false)} maxWidth="sm" fullWidth>
 				<DialogTitle>
 					<Stack direction="row" justifyContent="space-between" alignItems="center">
-						<Typography variant="h5">Gestionar Segmentos</Typography>
+						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+							Gestionar segmentos
+						</Typography>
 						<IconButton size="small" onClick={() => setSegmentDialogOpen(false)}>
 							<CloseCircle size={20} />
 						</IconButton>

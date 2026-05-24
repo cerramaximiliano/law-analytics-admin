@@ -12,11 +12,15 @@ import {
 	FormControl,
 	FormHelperText,
 	Grid,
+	IconButton,
 	InputLabel,
 	MenuItem,
 	Select,
+	Stack,
 	TextField,
+	Typography,
 } from "@mui/material";
+import { CloseCircle } from "iconsax-react";
 import ResponsiveDialog from "components/@extended/ResponsiveDialog";
 
 // project imports
@@ -122,7 +126,16 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ open, onClose }) => {
 
 	return (
 		<ResponsiveDialog open={open} onClose={onClose} maxWidth="sm">
-			<DialogTitle>Agregar Nuevo Usuario</DialogTitle>
+			<DialogTitle sx={{ pb: 1.5 }}>
+				<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+						Agregar nuevo usuario
+					</Typography>
+					<IconButton onClick={onClose} size="small" sx={{ mr: -0.5 }}>
+						<CloseCircle size={20} />
+					</IconButton>
+				</Stack>
+			</DialogTitle>
 			<Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
 				{({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
 					<form noValidate onSubmit={handleSubmit}>
@@ -249,7 +262,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ open, onClose }) => {
 								Cancelar
 							</Button>
 							<Button type="submit" variant="contained" color="primary" disabled={isSubmitting || loading}>
-								Crear Usuario
+								Crear usuario
 							</Button>
 						</DialogActions>
 					</form>

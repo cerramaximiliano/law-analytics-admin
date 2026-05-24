@@ -213,14 +213,16 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-			<DialogTitle>
+			<DialogTitle sx={{ pb: 1.5 }}>
 				<Box display="flex" alignItems="center" justifyContent="space-between">
 					<Box display="flex" alignItems="center" gap={1}>
-						<DollarCircle size={24} />
-						<Typography variant="h5">Actualizar Precio - {plan.displayName}</Typography>
+						<DollarCircle size={22} />
+						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+							Actualizar precio · {plan.displayName}
+						</Typography>
 					</Box>
-					<IconButton onClick={onClose} size="small">
-						<CloseCircle />
+					<IconButton onClick={onClose} size="small" sx={{ mr: -0.5 }}>
+						<CloseCircle size={20} />
 					</IconButton>
 				</Box>
 			</DialogTitle>
@@ -272,7 +274,7 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 							</Box>
 						) : stripePrices.length > 0 ? (
 							<TableContainer component={Paper} variant="outlined">
-								<Table size="small">
+								<Table size="small" sx={{ "& tbody td": { fontVariantNumeric: "tabular-nums" } }}>
 									<TableHead>
 										<TableRow>
 											<TableCell>ID</TableCell>
@@ -334,7 +336,7 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 					{/* Formulario de nuevo precio */}
 					<Grid item xs={12}>
 						<Typography variant="h6" gutterBottom>
-							Nuevo Precio
+							Nuevo precio
 						</Typography>
 						<Alert severity="warning" sx={{ mb: 2 }}>
 							<Typography variant="body2">
@@ -360,8 +362,8 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 
 					<Grid item xs={12} sm={6}>
 						<FormControl fullWidth>
-							<InputLabel>Período de Facturación</InputLabel>
-							<Select value={billingPeriod} onChange={(e) => setBillingPeriod(e.target.value)} label="Período de Facturación">
+							<InputLabel>Período de facturación</InputLabel>
+							<Select value={billingPeriod} onChange={(e) => setBillingPeriod(e.target.value)} label="Período de facturación">
 								{BILLING_PERIODS.map((period) => (
 									<MenuItem key={period.value} value={period.value}>
 										{period.label}
@@ -390,12 +392,23 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 					</Grid>
 				</Grid>
 			</DialogContent>
-			<DialogActions>
-				<Button onClick={onClose} disabled={loading}>
+			<DialogActions sx={{ px: 3, pb: 2 }}>
+				<Button onClick={onClose} disabled={loading} color="secondary">
 					Cancelar
 				</Button>
-				<Button onClick={handleUpdatePrice} variant="contained" color="primary" disabled={loading || price <= 0}>
-					{loading ? <CircularProgress size={20} /> : "Actualizar Precio en Stripe"}
+				<Button
+					onClick={handleUpdatePrice}
+					variant="contained"
+					color="primary"
+					disableElevation
+					disabled={loading || price <= 0}
+					sx={{
+						transition: "transform 160ms ease",
+						"&:hover": { transform: "translateY(-1px)" },
+						"&:active": { transform: "scale(0.98)" },
+					}}
+				>
+					{loading ? <CircularProgress size={20} /> : "Actualizar precio en Stripe"}
 				</Button>
 			</DialogActions>
 		</Dialog>

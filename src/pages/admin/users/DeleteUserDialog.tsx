@@ -3,7 +3,9 @@ import { useSelector } from "react-redux";
 import { dispatch } from "store/index";
 
 // material-ui
-import { Button, DialogActions, DialogContent, DialogContentText, DialogTitle, Typography, Box, CircularProgress } from "@mui/material";
+import { Button, DialogActions, DialogContent, DialogContentText, DialogTitle, Typography, Box, CircularProgress, Stack } from "@mui/material";
+import { alpha, useTheme } from "@mui/material/styles";
+import { Warning2 } from "iconsax-react";
 import ResponsiveDialog from "components/@extended/ResponsiveDialog";
 
 // project imports
@@ -20,6 +22,7 @@ interface DeleteUserDialogProps {
 }
 
 const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({ user, open, onClose }) => {
+	const theme = useTheme();
 	const { loading } = useSelector((state: DefaultRootStateProps) => state.users);
 	const [error, setError] = useState<string | null>(null);
 	const [isDeleting, setIsDeleting] = useState(false);
@@ -106,36 +109,62 @@ const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({ user, open, onClose
 
 	return (
 		<ResponsiveDialog open={open} onClose={isDeleting ? undefined : onClose} maxWidth="sm" disableEscapeKeyDown={isDeleting}>
-			<DialogTitle>Eliminar Usuario</DialogTitle>
+			<DialogTitle sx={{ pb: 1.5 }}>
+				<Stack direction="row" spacing={1.25} alignItems="center">
+					<Box
+						sx={{
+							width: 36,
+							height: 36,
+							borderRadius: 1.25,
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							bgcolor: alpha(theme.palette.error.main, 0.1),
+							color: "error.main",
+						}}
+					>
+						<Warning2 size={20} variant="Bold" />
+					</Box>
+					<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+						Eliminar usuario
+					</Typography>
+				</Stack>
+			</DialogTitle>
 			<DialogContent>
 				<DialogContentText>
-					¿Está seguro que desea eliminar al usuario <strong>{user.name}</strong>?
+					¿Estás seguro de que deseas eliminar al usuario <strong>{user.name}</strong>?
 				</DialogContentText>
 				<DialogContentText sx={{ mt: 2 }}>
 					Email:{" "}
-					<Typography component="span" fontWeight="bold">
+					<Typography component="span" fontWeight={600}>
 						{user.email}
 					</Typography>
 				</DialogContentText>
 				<DialogContentText sx={{ mt: 1 }}>
 					Rol:{" "}
-					<Typography component="span" fontWeight="bold">
+					<Typography component="span" fontWeight={600}>
 						{user.role}
 					</Typography>
 				</DialogContentText>
-				<DialogContentText sx={{ mt: 1, color: "error.main" }}>Esta acción no se puede deshacer.</DialogContentText>
+				<DialogContentText sx={{ mt: 2, color: "error.main" }}>Esta acción no se puede deshacer.</DialogContentText>
 				{error && <Box sx={{ color: "error.main", mt: 2 }}>{error}</Box>}
 			</DialogContent>
-			<DialogActions>
-				<Button onClick={onClose} color="primary" disabled={isDeleting}>
+			<DialogActions sx={{ px: 3, pb: 2 }}>
+				<Button onClick={onClose} color="secondary" disabled={isDeleting}>
 					Cancelar
 				</Button>
 				<Button
 					onClick={handleDelete}
 					color="error"
 					variant="contained"
+					disableElevation
 					disabled={loading || isDeleting}
 					startIcon={isDeleting ? <CircularProgress size={16} color="inherit" /> : null}
+					sx={{
+						transition: "transform 160ms ease",
+						"&:hover": { transform: "translateY(-1px)" },
+						"&:active": { transform: "scale(0.98)" },
+					}}
 				>
 					{isDeleting ? "Eliminando..." : "Eliminar"}
 				</Button>

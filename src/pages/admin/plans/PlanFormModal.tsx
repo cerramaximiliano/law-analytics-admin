@@ -158,11 +158,13 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-			<DialogTitle>
+			<DialogTitle sx={{ pb: 1.5 }}>
 				<Box display="flex" alignItems="center" justifyContent="space-between">
-					<Typography variant="h5">{plan ? "Editar Plan" : "Crear Nuevo Plan"}</Typography>
-					<IconButton onClick={onClose} size="small">
-						<CloseCircle />
+					<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+						{plan ? "Editar plan" : "Crear nuevo plan"}
+					</Typography>
+					<IconButton onClick={onClose} size="small" sx={{ mr: -0.5 }}>
+						<CloseCircle size={20} />
 					</IconButton>
 				</Box>
 			</DialogTitle>
@@ -176,7 +178,7 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 					<Grid item xs={12} sm={6}>
 						<TextField
 							fullWidth
-							label="ID del Plan"
+							label="ID del plan"
 							value={formData.planId}
 							onChange={(e) => handleChange("planId", e.target.value)}
 							disabled={!!plan}
@@ -186,7 +188,7 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 					<Grid item xs={12} sm={6}>
 						<TextField
 							fullWidth
-							label="Nombre del Plan"
+							label="Nombre del plan"
 							value={formData.displayName}
 							onChange={(e) => handleChange("displayName", e.target.value)}
 							required
@@ -207,11 +209,11 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 					{/* Pricing Info */}
 					<Grid item xs={12}>
 						<Typography variant="h6" gutterBottom>
-							Información de Precio
+							Información de precio
 						</Typography>
 						{plan && (
 							<Typography variant="caption" color="text.secondary">
-								Para modificar el precio, utilice el botón "Actualizar Precio" en la lista de planes.
+								Para modificar el precio, utilice el botón "Actualizar precio" en la lista de planes.
 							</Typography>
 						)}
 					</Grid>
@@ -261,7 +263,7 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 					{/* Resource Limits */}
 					<Grid item xs={12}>
 						<Box display="flex" alignItems="center" justifyContent="space-between">
-							<Typography variant="h6">Límites de Recursos</Typography>
+							<Typography variant="h6">Límites de recursos</Typography>
 							<Button startIcon={<Add />} onClick={addResourceLimit} size="small">
 								Agregar
 							</Button>
@@ -435,9 +437,21 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 					)}
 				</Grid>
 			</DialogContent>
-			<DialogActions>
-				<Button onClick={onClose}>Cancelar</Button>
-				<Button onClick={handleSubmit} variant="contained" disabled={loading}>
+			<DialogActions sx={{ px: 3, pb: 2 }}>
+				<Button onClick={onClose} color="secondary">
+					Cancelar
+				</Button>
+				<Button
+					onClick={handleSubmit}
+					variant="contained"
+					disableElevation
+					disabled={loading}
+					sx={{
+						transition: "transform 160ms ease",
+						"&:hover": { transform: "translateY(-1px)" },
+						"&:active": { transform: "scale(0.98)" },
+					}}
+				>
 					{loading ? "Guardando..." : plan ? "Actualizar" : "Crear"}
 				</Button>
 			</DialogActions>

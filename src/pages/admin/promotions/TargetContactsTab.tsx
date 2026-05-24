@@ -26,6 +26,7 @@ import {
 import { Add, Trash, UserAdd } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import discountsService, { TargetContact } from "api/discounts";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 
 interface TargetContactsTabProps {
 	discountId: string;
@@ -138,8 +139,20 @@ const TargetContactsTab = ({ discountId, discountCode, onUpdate, onCountChange }
 					Contactos individuales (de la base de marketing) que verán el descuento{" "}
 					<strong>{discountCode}</strong> al registrarse con su mismo email.
 				</Typography>
-				<Button variant="contained" size="small" startIcon={<Add size={18} />} onClick={() => setAddDialogOpen(true)}>
-					Agregar Contactos
+				<Button
+					variant="contained"
+					size="small"
+					disableElevation
+					startIcon={<Add size={18} />}
+					onClick={() => setAddDialogOpen(true)}
+					sx={{
+						bgcolor: BRAND_BLUE,
+						transition: "transform 160ms ease",
+						"&:hover": { bgcolor: BRAND_BLUE, transform: "translateY(-1px)" },
+						"&:active": { transform: "scale(0.98)" },
+					}}
+				>
+					Agregar contactos
 				</Button>
 			</Stack>
 
@@ -150,7 +163,7 @@ const TargetContactsTab = ({ discountId, discountCode, onUpdate, onCountChange }
 
 			{contacts.length > 0 ? (
 				<TableContainer component={Paper} variant="outlined">
-					<Table size="small">
+					<Table size="small" sx={{ "& tbody td": { fontVariantNumeric: "tabular-nums" } }}>
 						<TableHead>
 							<TableRow>
 								<TableCell>Email</TableCell>
@@ -209,7 +222,11 @@ const TargetContactsTab = ({ discountId, discountCode, onUpdate, onCountChange }
 
 			{/* Dialog: agregar contactos */}
 			<Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)} maxWidth="md" fullWidth>
-				<DialogTitle>Agregar contactos al descuento</DialogTitle>
+				<DialogTitle sx={{ pb: 1.5 }}>
+					<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+						Agregar contactos al descuento
+					</Typography>
+				</DialogTitle>
 				<DialogContent>
 					<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
 						Buscá por email, nombre o apellido. Los contactos que agregues podrán usar el descuento al registrarse con ese mismo
@@ -256,9 +273,21 @@ const TargetContactsTab = ({ discountId, discountCode, onUpdate, onCountChange }
 						)}
 					/>
 				</DialogContent>
-				<DialogActions>
-					<Button onClick={() => setAddDialogOpen(false)}>Cancelar</Button>
-					<Button variant="contained" onClick={handleAdd} disabled={adding || selected.length === 0}>
+				<DialogActions sx={{ px: 3, pb: 2 }}>
+					<Button onClick={() => setAddDialogOpen(false)} color="secondary">
+						Cancelar
+					</Button>
+					<Button
+						variant="contained"
+						disableElevation
+						onClick={handleAdd}
+						disabled={adding || selected.length === 0}
+						sx={{
+							transition: "transform 160ms ease",
+							"&:hover": { transform: "translateY(-1px)" },
+							"&:active": { transform: "scale(0.98)" },
+						}}
+					>
 						{adding ? <CircularProgress size={20} /> : `Agregar ${selected.length || ""}`}
 					</Button>
 				</DialogActions>

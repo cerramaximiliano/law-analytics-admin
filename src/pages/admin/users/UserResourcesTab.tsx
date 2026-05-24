@@ -34,6 +34,7 @@ import {
 	ContactStats,
 } from "api/userResources";
 import ragAxios from "utils/ragAxios";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 
 interface AiUsageRow {
 	_id: string;
@@ -213,17 +214,22 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 		<Box
 			sx={{
 				p: 1.5,
-				borderRadius: 1,
-				bgcolor: alpha(color || theme.palette.primary.main, 0.1),
-				border: `1px solid ${alpha(color || theme.palette.primary.main, 0.2)}`,
+				borderRadius: 1.5,
+				bgcolor: "background.paper",
+				border: `1px solid ${alpha(color || BRAND_BLUE, 0.25)}`,
 				textAlign: "center",
-				minWidth: 80,
+				minWidth: 88,
+				transition: "transform 200ms ease, box-shadow 200ms ease",
+				"&:hover": {
+					transform: "translateY(-1px)",
+					boxShadow: `0 4px 12px ${alpha(color || BRAND_BLUE, 0.1)}`,
+				},
 			}}
 		>
-			<Typography variant="h5" sx={{ color: color || theme.palette.primary.main, fontWeight: 600 }}>
+			<Typography variant="h5" sx={{ color: color || BRAND_BLUE, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
 				{value}
 			</Typography>
-			<Typography variant="caption" color="textSecondary">
+			<Typography variant="caption" color="textSecondary" sx={{ letterSpacing: 0.3 }}>
 				{label}
 			</Typography>
 		</Box>
@@ -267,17 +273,27 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 			{/* Summary Stats */}
 			<Collapse in={statsExpanded}>
 				<Stack direction="row" spacing={2} mb={2} flexWrap="wrap" useFlexGap>
-					<StatCard label="Carpetas" value={foldersStats?.total || 0} color={theme.palette.primary.main} />
+					<StatCard label="Carpetas" value={foldersStats?.total || 0} color={BRAND_BLUE} />
 					<StatCard label="Activas" value={foldersStats?.active || 0} color={theme.palette.success.main} />
 					<StatCard label="Calculadoras" value={calculatorsStats?.total || 0} color={theme.palette.info.main} />
 					<StatCard label="Verificadas" value={calculatorsStats?.verified || 0} color={theme.palette.success.main} />
 					<StatCard label="Contactos" value={contactsStats?.total || 0} color={theme.palette.secondary.main} />
-					<StatCard label="Con Email" value={contactsStats?.withEmail || 0} color={theme.palette.warning.main} />
+					<StatCard label="Con email" value={contactsStats?.withEmail || 0} color={theme.palette.warning.main} />
 				</Stack>
 			</Collapse>
 
 			{/* Tabs */}
-			<Tabs value={activeTab} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: "divider" }}>
+			<Tabs
+				value={activeTab}
+				onChange={handleTabChange}
+				TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
+				sx={{
+					borderBottom: 1,
+					borderColor: "divider",
+					"& .MuiTab-root": { textTransform: "none", fontWeight: 500, fontSize: "0.875rem" },
+					"& .Mui-selected": { fontWeight: 600, color: BRAND_BLUE + " !important" },
+				}}
+			>
 				<Tab icon={<Folder2 size={16} />} iconPosition="start" label={`Carpetas (${foldersStats?.total || 0})`} sx={{ minHeight: 48 }} />
 				<Tab
 					icon={<Calculator size={16} />}
@@ -306,7 +322,7 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 				) : (
 					<>
 						<TableContainer component={Paper} variant="outlined">
-							<Table size="small">
+							<Table size="small" sx={{ "& tbody td": { fontVariantNumeric: "tabular-nums" } }}>
 								<TableHead>
 									<TableRow>
 										<TableCell>Nombre</TableCell>
@@ -384,7 +400,7 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 				) : (
 					<>
 						<TableContainer component={Paper} variant="outlined">
-							<Table size="small">
+							<Table size="small" sx={{ "& tbody td": { fontVariantNumeric: "tabular-nums" } }}>
 								<TableHead>
 									<TableRow>
 										<TableCell>Tipo</TableCell>
@@ -466,7 +482,7 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 				) : (
 					<>
 						<TableContainer component={Paper} variant="outlined">
-							<Table size="small">
+							<Table size="small" sx={{ "& tbody td": { fontVariantNumeric: "tabular-nums" } }}>
 								<TableHead>
 									<TableRow>
 										<TableCell>Nombre</TableCell>
@@ -598,7 +614,7 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 
 						{/* History table */}
 						<TableContainer component={Paper} variant="outlined">
-							<Table size="small">
+							<Table size="small" sx={{ "& tbody td": { fontVariantNumeric: "tabular-nums" } }}>
 								<TableHead>
 									<TableRow>
 										<TableCell>Período</TableCell>

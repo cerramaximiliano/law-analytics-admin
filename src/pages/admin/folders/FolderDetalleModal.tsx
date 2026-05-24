@@ -19,6 +19,7 @@ import {
 import { useSnackbar } from "notistack";
 import { CloseCircle, Copy, TickCircle, CloseSquare } from "iconsax-react";
 import { Folder } from "api/folders";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 
 import { useState } from "react";
 import { useTheme } from "@mui/material/styles";
@@ -96,30 +97,45 @@ const FolderDetalleModal = ({ open, onClose, folder }: FolderDetalleModalProps) 
 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-			<DialogTitle>
+			<DialogTitle sx={{ pb: 1.5 }}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Box>
-						<Typography variant="h5">Detalle de Carpeta</Typography>
-						<Typography variant="body2" color="textSecondary">
+						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+							Detalle de carpeta
+						</Typography>
+						<Typography variant="body2" color="textSecondary" sx={{ fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }}>
 							ID: {folder._id}
 						</Typography>
 					</Box>
-					<Tooltip title="Copiar ID">
-						<IconButton
-							size="small"
-							onClick={() => {
-								navigator.clipboard.writeText(folder._id);
-								enqueueSnackbar("ID copiado al portapapeles", { variant: "success" });
-							}}
-						>
-							<Copy size={18} />
+					<Stack direction="row" spacing={0.5} alignItems="center">
+						<Tooltip title="Copiar ID">
+							<IconButton
+								size="small"
+								onClick={() => {
+									navigator.clipboard.writeText(folder._id);
+									enqueueSnackbar("ID copiado al portapapeles", { variant: "success" });
+								}}
+							>
+								<Copy size={18} />
+							</IconButton>
+						</Tooltip>
+						<IconButton onClick={onClose} size="small">
+							<CloseCircle size={20} />
 						</IconButton>
-					</Tooltip>
+					</Stack>
 				</Stack>
 			</DialogTitle>
 
 			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-				<Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
+				<Tabs
+					value={activeTab}
+					onChange={(_, v) => setActiveTab(v)}
+					TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
+					sx={{
+						"& .MuiTab-root": { textTransform: "none", fontWeight: 500, fontSize: "0.875rem" },
+						"& .Mui-selected": { fontWeight: 600, color: BRAND_BLUE + " !important" },
+					}}
+				>
 					<Tab label="Detalles" />
 					<Tab label="JSON" />
 				</Tabs>
@@ -132,7 +148,7 @@ const FolderDetalleModal = ({ open, onClose, folder }: FolderDetalleModalProps) 
 						{/* Seccion General */}
 						<Box>
 							<Typography variant="subtitle2" color="primary" gutterBottom>
-								Informacion General
+								Información general
 							</Typography>
 							<Divider sx={{ mb: 2 }} />
 							<Grid container spacing={2}>
@@ -206,7 +222,7 @@ const FolderDetalleModal = ({ open, onClose, folder }: FolderDetalleModalProps) 
 						{/* Seccion Judicial */}
 						<Box>
 							<Typography variant="subtitle2" color="primary" gutterBottom>
-								Informacion Judicial
+								Información judicial
 							</Typography>
 							<Divider sx={{ mb: 2 }} />
 							<Grid container spacing={2}>
@@ -230,10 +246,10 @@ const FolderDetalleModal = ({ open, onClose, folder }: FolderDetalleModalProps) 
 							</Grid>
 						</Box>
 
-						{/* Seccion Causa Vinculada */}
+						{/* Seccion Causa vinculada */}
 						<Box>
 							<Typography variant="subtitle2" color="primary" gutterBottom>
-								Causa Vinculada
+								Causa vinculada
 							</Typography>
 							<Divider sx={{ mb: 2 }} />
 							{folder.causaId ? (
@@ -334,7 +350,7 @@ const FolderDetalleModal = ({ open, onClose, folder }: FolderDetalleModalProps) 
 						{/* Seccion Sistema */}
 						<Box>
 							<Typography variant="subtitle2" color="primary" gutterBottom>
-								Informacion del Sistema
+								Información del sistema
 							</Typography>
 							<Divider sx={{ mb: 2 }} />
 							<Grid container spacing={2}>
@@ -387,8 +403,8 @@ const FolderDetalleModal = ({ open, onClose, folder }: FolderDetalleModalProps) 
 				)}
 			</DialogContent>
 
-			<DialogActions>
-				<Button onClick={onClose} startIcon={<CloseCircle size={18} />} variant="outlined">
+			<DialogActions sx={{ px: 3, pb: 2 }}>
+				<Button onClick={onClose} color="secondary">
 					Cerrar
 				</Button>
 			</DialogActions>

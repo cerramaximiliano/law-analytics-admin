@@ -59,6 +59,7 @@ import {
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 import PostalDocumentsAdminService, { PostalDocument, PostalDocumentStats } from "api/postalDocumentsAdmin";
 import AdminResourcesService, {
 	ResourceType,
@@ -460,13 +461,19 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color, loading 
 				bgcolor: theme.palette.background.paper,
 				border: `1px solid ${theme.palette.divider}`,
 				height: "100%",
+				transition: "transform 200ms ease, box-shadow 200ms ease",
+				"&:hover": {
+					transform: "translateY(-2px)",
+					boxShadow: `0 6px 20px ${alpha(color, 0.12)}`,
+				},
 			}}
 		>
 			<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 1.5 } }}>
 				<Box
 					sx={{
-						p: { xs: 0.75, sm: 1 },
-						borderRadius: 1.5,
+						width: { xs: 30, sm: 36 },
+						height: { xs: 30, sm: 36 },
+						borderRadius: 1.25,
 						bgcolor: alpha(color, 0.1),
 						color: color,
 						display: "flex",
@@ -477,13 +484,13 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color, loading 
 					{icon}
 				</Box>
 				<Box sx={{ minWidth: 0 }}>
-					<Typography variant="body2" color="textSecondary" noWrap sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
+					<Typography variant="caption" color="textSecondary" noWrap sx={{ letterSpacing: 0.3, textTransform: "uppercase" }}>
 						{label}
 					</Typography>
 					{loading ? (
 						<Skeleton variant="text" width={40} height={28} />
 					) : (
-						<Typography variant="h5" fontWeight="bold" sx={{ fontSize: { xs: "1rem", sm: "1.25rem" } }}>
+						<Typography variant="h5" fontWeight={600} sx={{ fontSize: { xs: "1rem", sm: "1.25rem" }, fontVariantNumeric: "tabular-nums" }}>
 							{value.toLocaleString()}
 						</Typography>
 					)}
@@ -1058,18 +1065,12 @@ const UserResources: React.FC = () => {
 	};
 
 	return (
-		<MainCard title="Recursos de Usuarios" content={false}>
+		<MainCard title="Recursos de usuarios" content={false}>
 			{/* Stats Cards */}
 			<Box sx={{ p: { xs: 1.5, sm: 2 }, borderBottom: 1, borderColor: "divider" }}>
 				<Grid container spacing={{ xs: 1, sm: 2 }}>
 					<Grid item xs={6} sm={4} md>
-						<StatCard
-							label="Carpetas"
-							value={stats.folders}
-							icon={<Folder size={20} />}
-							color={theme.palette.primary.main}
-							loading={statsLoading}
-						/>
+						<StatCard label="Carpetas" value={stats.folders} icon={<Folder size={20} />} color={BRAND_BLUE} loading={statsLoading} />
 					</Grid>
 					<Grid item xs={6} sm={4} md>
 						<StatCard
@@ -1137,6 +1138,11 @@ const UserResources: React.FC = () => {
 					variant="scrollable"
 					scrollButtons="auto"
 					allowScrollButtonsMobile
+					TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
+					sx={{
+						"& .MuiTab-root": { textTransform: "none", fontWeight: 500, fontSize: "0.875rem" },
+						"& .Mui-selected": { fontWeight: 600, color: BRAND_BLUE + " !important" },
+					}}
 				>
 					{tabs.map((tab, index) => (
 						<Tab
@@ -1194,12 +1200,12 @@ const UserResources: React.FC = () => {
 										</Box>
 										<Box>
 											<Typography variant="body2" color="textSecondary">
-												Logins Exitosos
+												Logins exitosos
 											</Typography>
 											{activityLoading ? (
 												<Skeleton variant="text" width={40} height={28} />
 											) : (
-												<Typography variant="h5" fontWeight="bold">
+												<Typography variant="h5" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
 													{activityStats?.summary.successfulLogins.toLocaleString() || 0}
 												</Typography>
 											)}
@@ -1215,12 +1221,12 @@ const UserResources: React.FC = () => {
 										</Box>
 										<Box>
 											<Typography variant="body2" color="textSecondary">
-												Usuarios Activos
+												Usuarios activos
 											</Typography>
 											{activityLoading ? (
 												<Skeleton variant="text" width={40} height={28} />
 											) : (
-												<Typography variant="h5" fontWeight="bold">
+												<Typography variant="h5" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
 													{activityStats?.summary.uniqueUsers.toLocaleString() || 0}
 												</Typography>
 											)}
@@ -1243,7 +1249,7 @@ const UserResources: React.FC = () => {
 											{activityLoading ? (
 												<Skeleton variant="text" width={40} height={28} />
 											) : (
-												<Typography variant="h5" fontWeight="bold">
+												<Typography variant="h5" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
 													{activityStats?.byLoginMethod?.google?.toLocaleString() || 0}
 												</Typography>
 											)}
@@ -1266,12 +1272,12 @@ const UserResources: React.FC = () => {
 										</Box>
 										<Box>
 											<Typography variant="body2" color="textSecondary">
-												Por Password
+												Por password
 											</Typography>
 											{activityLoading ? (
 												<Skeleton variant="text" width={40} height={28} />
 											) : (
-												<Typography variant="h5" fontWeight="bold">
+												<Typography variant="h5" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
 													{activityStats?.byLoginMethod?.password?.toLocaleString() || 0}
 												</Typography>
 											)}

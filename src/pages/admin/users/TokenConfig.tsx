@@ -240,7 +240,7 @@ const TokenConfigPage = () => {
 	if (error && !configData && !noConfig) {
 		return (
 			<MainCard
-				title="Configuracion de Tokens de Autenticacion"
+				title="Configuración de tokens de autenticación"
 				secondary={
 					<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchConfig}>
 						Reintentar
@@ -261,7 +261,7 @@ const TokenConfigPage = () => {
 
 	return (
 		<MainCard
-			title="Configuracion de Tokens de Autenticacion"
+			title="Configuración de tokens de autenticación"
 			secondary={
 				<Stack direction="row" spacing={1}>
 					<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchConfig} disabled={saving}>
@@ -293,7 +293,7 @@ const TokenConfigPage = () => {
 					<CardContent>
 						<Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 							<Timer1 size={20} />
-							Configuracion Actual
+							Configuración actual
 							{configData?.current?.environment && (
 								<Chip
 									label={configData.current.environment.toUpperCase()}
@@ -387,7 +387,7 @@ const TokenConfigPage = () => {
 								<Stack direction="row" spacing={2} alignItems="center">
 									<Clock size={20} />
 									<Box>
-										<Typography variant="subtitle2">Cache de Configuracion</Typography>
+										<Typography variant="subtitle2">Cache de configuración</Typography>
 										<Typography variant="caption" color="text.secondary">
 											Duracion: {configData.cacheInfo.cacheDuration} | {configData.cacheInfo.note}
 										</Typography>
@@ -395,7 +395,7 @@ const TokenConfigPage = () => {
 								</Stack>
 								<Tooltip title="Solicitar invalidacion del cache">
 									<Button variant="outlined" size="small" onClick={handleInvalidateCache}>
-										Invalidar Cache
+										Invalidar cache
 									</Button>
 								</Tooltip>
 							</Stack>
@@ -408,7 +408,7 @@ const TokenConfigPage = () => {
 					<Card variant="outlined" sx={{ backgroundColor: "warning.lighter" }}>
 						<CardContent>
 							<Typography variant="h6" gutterBottom>
-								Editar Configuracion
+								Editar configuración
 							</Typography>
 							<Alert severity="warning" sx={{ mb: 3 }}>
 								<Typography variant="body2">
@@ -506,7 +506,7 @@ const TokenConfigPage = () => {
 											disabled={saving}
 											startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <Save2 size={16} />}
 										>
-											{saving ? "Guardando..." : "Guardar Cambios"}
+											{saving ? "Guardando..." : "Guardar cambios"}
 										</Button>
 									</Stack>
 								</Grid>
@@ -520,7 +520,7 @@ const TokenConfigPage = () => {
 					<Card variant="outlined">
 						<CardContent>
 							<Typography variant="h6" gutterBottom>
-								Historial de Cambios
+								Historial de cambios
 							</Typography>
 							<Divider sx={{ mb: 2 }} />
 							<TableContainer component={Paper} variant="outlined">

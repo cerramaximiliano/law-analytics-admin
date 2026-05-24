@@ -78,6 +78,7 @@ import { dispatch as storeDispatch } from "store/index";
 import dayjs from "dayjs";
 import adminAxios from "utils/adminAxios";
 import { SegmentService } from "store/reducers/segments";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 import { Segment } from "types/segment";
 import discountsService, { UserPromotion, UserPromotionsSummary } from "api/discounts";
 
@@ -2012,34 +2013,42 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 					<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 						<Grid item xs={6} md={3}>
 							<Stack spacing={1}>
-								<Typography variant="subtitle2" color="text.secondary">
-									Total Gastado
+								<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3, textTransform: "uppercase" }}>
+									Total gastado
 								</Typography>
-								<Typography variant="h5">{formatCurrency(stripeHistory.stats?.lifetimeValue || 0)}</Typography>
+								<Typography variant="h5" sx={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
+									{formatCurrency(stripeHistory.stats?.lifetimeValue || 0)}
+								</Typography>
 							</Stack>
 						</Grid>
 						<Grid item xs={6} md={3}>
 							<Stack spacing={1}>
-								<Typography variant="subtitle2" color="text.secondary">
-									Suscripciones Activas
+								<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3, textTransform: "uppercase" }}>
+									Suscripciones activas
 								</Typography>
-								<Typography variant="h5">{stripeHistory.stats?.activeSubscriptions || 0}</Typography>
+								<Typography variant="h5" sx={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
+									{stripeHistory.stats?.activeSubscriptions || 0}
+								</Typography>
 							</Stack>
 						</Grid>
 						<Grid item xs={6} md={3}>
 							<Stack spacing={1}>
-								<Typography variant="subtitle2" color="text.secondary">
-									Total Facturas
+								<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3, textTransform: "uppercase" }}>
+									Total facturas
 								</Typography>
-								<Typography variant="h5">{stripeHistory.stats?.totalInvoices || 0}</Typography>
+								<Typography variant="h5" sx={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
+									{stripeHistory.stats?.totalInvoices || 0}
+								</Typography>
 							</Stack>
 						</Grid>
 						<Grid item xs={6} md={3}>
 							<Stack spacing={1}>
-								<Typography variant="subtitle2" color="text.secondary">
-									Facturas Pagadas
+								<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3, textTransform: "uppercase" }}>
+									Facturas pagadas
 								</Typography>
-								<Typography variant="h5">{stripeHistory.stats?.paidInvoices || 0}</Typography>
+								<Typography variant="h5" sx={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
+									{stripeHistory.stats?.paidInvoices || 0}
+								</Typography>
 							</Stack>
 						</Grid>
 					</Grid>
@@ -2575,7 +2584,11 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 		<>
 			<Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
 				<MainCard
-					title={<Typography variant="h5">Detalles del Usuario</Typography>}
+					title={
+						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+							Detalles del usuario
+						</Typography>
+					}
 					sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", "& .MuiCardContent-root": { pb: 0 } }}
 				>
 					<Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -2618,11 +2631,22 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 						{/* Contenido con tabs */}
 						<Box sx={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", mt: 2 }}>
 							<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-								<Tabs value={tabValue} onChange={handleTabChange} aria-label="user tabs" variant="scrollable" scrollButtons="auto">
+								<Tabs
+									value={tabValue}
+									onChange={handleTabChange}
+									aria-label="user tabs"
+									variant="scrollable"
+									scrollButtons="auto"
+									TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
+									sx={{
+										"& .MuiTab-root": { textTransform: "none", fontWeight: 500, fontSize: "0.875rem" },
+										"& .Mui-selected": { fontWeight: 600, color: BRAND_BLUE + " !important" },
+									}}
+								>
 									<Tab
 										icon={<UserIcon size={18} />}
 										iconPosition="start"
-										label="Información General"
+										label="Información general"
 										id="user-tab-0"
 										aria-controls="user-tabpanel-0"
 									/>
@@ -2651,7 +2675,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 									<Tab
 										icon={<Setting2 size={18} />}
 										iconPosition="start"
-										label="Límites de Recursos"
+										label="Límites de recursos"
 										id="user-tab-5"
 										aria-controls="user-tabpanel-5"
 									/>
@@ -2685,7 +2709,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 								<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 									<Grid item xs={12} md={6}>
 										<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-											<Typography variant="h6">Información Personal</Typography>
+											<Typography variant="h6">Información personal</Typography>
 											<Stack spacing={2}>
 												<Stack direction="row" justifyContent="space-between" alignItems="center">
 													<Typography variant="subtitle1">Nombre completo</Typography>
@@ -2708,7 +2732,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 									</Grid>
 									<Grid item xs={12} md={6}>
 										<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-											<Typography variant="h6">Información de Cuenta</Typography>
+											<Typography variant="h6">Información de cuenta</Typography>
 											<Stack spacing={2}>
 												<Stack direction="row" justifyContent="space-between" alignItems="center">
 													<Typography variant="subtitle1">ID</Typography>
@@ -2757,7 +2781,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 									</Grid>
 									<Grid item xs={12} md={6}>
 										<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-											<Typography variant="h6">Información de Autenticación</Typography>
+											<Typography variant="h6">Información de autenticación</Typography>
 											<Stack spacing={2}>
 												<Stack direction="row" justifyContent="space-between" alignItems="center">
 													<Typography variant="subtitle1">Método de Registro</Typography>
@@ -2794,7 +2818,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 									</Grid>
 									<Grid item xs={12} md={6}>
 										<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-											<Typography variant="h6">Imagen de Perfil</Typography>
+											<Typography variant="h6">Imagen de perfil</Typography>
 											<Stack spacing={2}>
 												<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
 													<Typography variant="subtitle1">Picture URL</Typography>

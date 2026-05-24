@@ -41,6 +41,7 @@ import discountsService, {
 import { SegmentService } from "store/reducers/segments";
 import { Segment } from "types/segment";
 import PromotionPreviewTab from "./PromotionPreviewTab";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -519,10 +520,22 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-			<DialogTitle>{isEditing ? "Editar Promoción" : "Nueva Promoción"}</DialogTitle>
+			<DialogTitle sx={{ pb: 1.5 }}>
+				<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+					{isEditing ? "Editar promoción" : "Nueva promoción"}
+				</Typography>
+			</DialogTitle>
 			<DialogContent dividers>
 				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 1 }}>
-					<Tabs value={tabValue} onChange={(_, v) => setTabValue(v)}>
+					<Tabs
+						value={tabValue}
+						onChange={(_, v) => setTabValue(v)}
+						TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
+						sx={{
+							"& .MuiTab-root": { textTransform: "none", fontWeight: 500, fontSize: "0.875rem" },
+							"& .Mui-selected": { fontWeight: 600, color: BRAND_BLUE + " !important" },
+						}}
+					>
 						<Tab label="Configuración" icon={<Setting2 size={18} />} iconPosition="start" />
 						<Tab label="Vista previa" icon={<Eye size={18} />} iconPosition="start" />
 					</Tabs>
@@ -533,7 +546,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 						{/* Basic Info */}
 						<Grid item xs={12}>
 							<Typography variant="subtitle2" color="primary" gutterBottom>
-								Información Básica
+								Información básica
 							</Typography>
 						</Grid>
 
@@ -1235,11 +1248,21 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					/>
 				</TabPanel>
 			</DialogContent>
-			<DialogActions>
-				<Button onClick={onClose} disabled={loading}>
+			<DialogActions sx={{ px: 3, pb: 2 }}>
+				<Button onClick={onClose} disabled={loading} color="secondary">
 					Cancelar
 				</Button>
-				<Button variant="contained" onClick={handleSubmit} disabled={loading || editSyncBlocked}>
+				<Button
+					variant="contained"
+					disableElevation
+					onClick={handleSubmit}
+					disabled={loading || editSyncBlocked}
+					sx={{
+						transition: "transform 160ms ease",
+						"&:hover": { transform: "translateY(-1px)" },
+						"&:active": { transform: "scale(0.98)" },
+					}}
+				>
 					{loading ? "Guardando..." : isEditing ? "Actualizar" : "Crear"}
 				</Button>
 			</DialogActions>

@@ -13,12 +13,16 @@ import {
 	FormControlLabel,
 	FormHelperText,
 	Grid,
+	IconButton,
 	InputLabel,
 	MenuItem,
 	Select,
+	Stack,
 	Switch,
 	TextField,
+	Typography,
 } from "@mui/material";
+import { CloseCircle } from "iconsax-react";
 import ResponsiveDialog from "components/@extended/ResponsiveDialog";
 
 // project imports
@@ -181,7 +185,16 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, open, onClose }) =>
 
 	return (
 		<ResponsiveDialog open={open} onClose={onClose} maxWidth="sm">
-			<DialogTitle>Editar Usuario</DialogTitle>
+			<DialogTitle sx={{ pb: 1.5 }}>
+				<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+						Editar usuario
+					</Typography>
+					<IconButton onClick={onClose} size="small" sx={{ mr: -0.5 }}>
+						<CloseCircle size={20} />
+					</IconButton>
+				</Stack>
+			</DialogTitle>
 			<Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
 				{({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values, setFieldValue }) => (
 					<form noValidate onSubmit={handleSubmit}>
@@ -277,18 +290,18 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, open, onClose }) =>
 												name="isVerified"
 											/>
 										}
-										label="Usuario Verificado"
+										label="Usuario verificado"
 									/>
 								</Grid>
 								<Grid item xs={12}>
 									<FormControl fullWidth>
-										<InputLabel id="authProvider-label">Método de Registro</InputLabel>
+										<InputLabel id="authProvider-label">Método de registro</InputLabel>
 										<Select
 											labelId="authProvider-label"
 											id="authProvider"
 											name="authProvider"
 											value={values.authProvider}
-											label="Método de Registro"
+											label="Método de registro"
 											onChange={handleChange}
 											onBlur={handleBlur}
 										>
@@ -312,7 +325,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, open, onClose }) =>
 								Cancelar
 							</Button>
 							<Button type="submit" variant="contained" color="primary" disabled={isSubmitting || loading}>
-								Guardar Cambios
+								Guardar cambios
 							</Button>
 						</DialogActions>
 					</form>
