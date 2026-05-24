@@ -529,9 +529,7 @@ const TasasInteres = () => {
 				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
 					<Tabs value={tabValue} onChange={(_e: SyntheticEvent, v: number) => setTabValue(v)}>
 						<Tab label="Estado actual" />
-						\t\t\t\t
 						<Tab label="Consulta por fecha" />
-						\n\t\t\t\t
 						<Tab label="Documentación" />
 					</Tabs>
 				</Box>
