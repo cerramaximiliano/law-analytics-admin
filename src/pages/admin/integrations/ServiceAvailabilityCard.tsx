@@ -18,6 +18,12 @@ import { CloseCircle, InfoCircle, TickCircle } from "iconsax-react";
 import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
 
 export type ReleaseStage = "beta" | "stable";
+export type Environment = "development" | "production";
+
+export interface EnabledByEnv {
+	development: boolean;
+	production: boolean;
+}
 
 export interface ServiceAvailabilityCardProps {
 	title: string;
@@ -34,6 +40,14 @@ export interface ServiceAvailabilityCardProps {
 	/** Si se provee, renderiza un toggle Beta/Estable. Solo para integraciones AI. */
 	releaseStage?: ReleaseStage;
 	onChangeReleaseStage?: (stage: ReleaseStage) => void;
+	/**
+	 * Si se provee (junto con onToggleEnv), reemplaza el Switch único por dos
+	 * toggles independientes "Development" / "Production". El prop `enabled`
+	 * se sigue requiriendo y debería representar el estado "real para el user
+	 * final" (típicamente enabledByEnv.production) — controla el chip Online/Off.
+	 */
+	enabledByEnv?: EnabledByEnv;
+	onToggleEnv?: (env: Environment, value: boolean) => void;
 	onToggle: (enabled: boolean) => void;
 	onSaveMessage?: (message: string | null) => void;
 }
@@ -60,6 +74,8 @@ const ServiceAvailabilityCard: React.FC<ServiceAvailabilityCardProps> = ({
 	helperOff,
 	releaseStage,
 	onChangeReleaseStage,
+	enabledByEnv,
+	onToggleEnv,
 	onToggle,
 	onSaveMessage,
 }) => {
@@ -137,16 +153,49 @@ const ServiceAvailabilityCard: React.FC<ServiceAvailabilityCardProps> = ({
 							</Typography>
 						</Box>
 					</Stack>
-					<Switch
-						checked={enabled}
-						onChange={(e) => onToggle(e.target.checked)}
-						color="info"
-						disabled={disabled || saving}
-						sx={{
-							"& .MuiSwitch-switchBase.Mui-checked": { color: BRAND_BLUE },
-							"& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: BRAND_BLUE },
-						}}
-					/>
+					{enabledByEnv && onToggleEnv ? (
+						// Modo per-env: dos toggles independientes (Development / Production)
+						<Stack spacing={0.25} sx={{ minWidth: 140 }}>
+							{(["development", "production"] as const).map((env) => (
+								<Stack key={env} direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+									<Typography
+										variant="caption"
+										sx={{
+											fontSize: "0.7rem",
+											fontWeight: 600,
+											textTransform: "uppercase",
+											letterSpacing: 0.5,
+											color: env === "production" ? BRAND_BLUE : "text.secondary",
+										}}
+									>
+										{env === "development" ? "Dev" : "Prod"}
+									</Typography>
+									<Switch
+										size="small"
+										checked={enabledByEnv[env]}
+										onChange={(e) => onToggleEnv(env, e.target.checked)}
+										color="info"
+										disabled={disabled || saving}
+										sx={{
+											"& .MuiSwitch-switchBase.Mui-checked": { color: BRAND_BLUE },
+											"& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: BRAND_BLUE },
+										}}
+									/>
+								</Stack>
+							))}
+						</Stack>
+					) : (
+						<Switch
+							checked={enabled}
+							onChange={(e) => onToggle(e.target.checked)}
+							color="info"
+							disabled={disabled || saving}
+							sx={{
+								"& .MuiSwitch-switchBase.Mui-checked": { color: BRAND_BLUE },
+								"& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: BRAND_BLUE },
+							}}
+						/>
+					)}
 				</Stack>
 
 				{!enabled && helperOff && (

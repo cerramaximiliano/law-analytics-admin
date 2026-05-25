@@ -20,7 +20,13 @@ import { Code1, Copy, Refresh } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 
-import IntegrationsConfigService, { IntegrationsConfigDoc, ReleaseStage, ServiceKey } from "api/integrationsConfig";
+import IntegrationsConfigService, {
+	IntegrationsConfigDoc,
+	ReleaseStage,
+	ServiceKey,
+	Environment,
+	UpdateServicePayload,
+} from "api/integrationsConfig";
 import { ScrapingManagerService, ScrapingManagerConfig } from "api/scrapingManager";
 import ScbaManagerService, { ScbaManagerConfig } from "api/scbaManager";
 
@@ -101,7 +107,7 @@ const IntegrationsPage: React.FC = () => {
 	// y respeta el shape de respuesta (siempre devuelve el doc completo).
 	const updateIntegrationService = async (
 		serviceKey: ServiceKey,
-		payload: { enabled?: boolean; maintenanceMessage?: string | null; releaseStage?: ReleaseStage },
+		payload: UpdateServicePayload,
 		successMsg: string,
 	) => {
 		setIntegrations((s) => ({ ...s, saving: true }));
@@ -121,17 +127,32 @@ const IntegrationsPage: React.FC = () => {
 	const handleGroupsMessage = (message: string | null) =>
 		updateIntegrationService("groups", { maintenanceMessage: message }, "Mensaje de mantenimiento actualizado");
 
-	// Claude.ai
+	// Claude.ai — per-env (development / production independientes).
+	// handleClaudeAiToggle (full boolean) se mantiene por compat de la prop
+	// onToggle requerida del card; en práctica no se invoca porque pasamos
+	// enabledByEnv + onToggleEnv.
 	const handleClaudeAiToggle = (enabled: boolean) =>
 		updateIntegrationService("claudeAi", { enabled }, enabled ? "Claude.ai habilitado" : "Claude.ai deshabilitado");
+	const handleClaudeAiToggleEnv = (env: Environment, value: boolean) =>
+		updateIntegrationService(
+			"claudeAi",
+			{ enabled: { [env]: value } },
+			`Claude.ai ${env} ${value ? "habilitado" : "deshabilitado"}`,
+		);
 	const handleClaudeAiMessage = (message: string | null) =>
 		updateIntegrationService("claudeAi", { maintenanceMessage: message }, "Mensaje Claude.ai actualizado");
 	const handleClaudeAiReleaseStage = (stage: ReleaseStage) =>
 		updateIntegrationService("claudeAi", { releaseStage: stage }, `Claude.ai marcado como ${stage}`);
 
-	// ChatGPT
+	// ChatGPT — mismo patrón per-env
 	const handleChatGptToggle = (enabled: boolean) =>
 		updateIntegrationService("chatGpt", { enabled }, enabled ? "ChatGPT habilitado" : "ChatGPT deshabilitado");
+	const handleChatGptToggleEnv = (env: Environment, value: boolean) =>
+		updateIntegrationService(
+			"chatGpt",
+			{ enabled: { [env]: value } },
+			`ChatGPT ${env} ${value ? "habilitado" : "deshabilitado"}`,
+		);
 	const handleChatGptMessage = (message: string | null) =>
 		updateIntegrationService("chatGpt", { maintenanceMessage: message }, "Mensaje ChatGPT actualizado");
 	const handleChatGptReleaseStage = (stage: ReleaseStage) =>
@@ -203,6 +224,20 @@ const IntegrationsPage: React.FC = () => {
 	const groupsFlag = integrations.data?.services.groups;
 	const claudeAiFlag = integrations.data?.services.claudeAi;
 	const chatGptFlag = integrations.data?.services.chatGpt;
+
+	// Normaliza el shape de enabled — el doc viejo puede tener boolean, el
+	// nuevo tiene { development, production }. Devolvemos siempre el shape
+	// nuevo para que la card no tenga que ramificar.
+	const toEnabledByEnv = (e: unknown): { development: boolean; production: boolean } => {
+		if (typeof e === "boolean") return { development: e, production: e };
+		if (e && typeof e === "object") {
+			const obj = e as { development?: unknown; production?: unknown };
+			return { development: obj.development === true, production: obj.production === true };
+		}
+		return { development: false, production: false };
+	};
+	const claudeAiEnabled = toEnabledByEnv(claudeAiFlag?.enabled);
+	const chatGptEnabled = toEnabledByEnv(chatGptFlag?.enabled);
 	const pjnGlobal = pjn.data?.global;
 	const scbaSettings = scba.data?.config;
 
@@ -310,15 +345,17 @@ const IntegrationsPage: React.FC = () => {
 						<ServiceAvailabilityCard
 							title="Claude.ai (MCP)"
 							description="Conector MCP para que usuarios accedan a Law Analytics desde Claude.ai"
-							enabled={claudeAiFlag?.enabled ?? false}
+							enabled={claudeAiEnabled.production}
+							enabledByEnv={claudeAiEnabled}
 							maintenanceMessage={claudeAiFlag?.maintenanceMessage ?? null}
 							releaseStage={(claudeAiFlag?.releaseStage as ReleaseStage) ?? "beta"}
 							saving={integrations.saving}
 							editableMessage
 							updatedAt={claudeAiFlag?.updatedAt}
 							updatedBy={claudeAiFlag?.updatedBy}
-							helperOff="La integración Claude.ai está oculta del landing público (banner MCP, FAQ, página /integraciones/claude-ai)."
+							helperOff="La integración Claude.ai está oculta del landing público en producción. Habilitá 'Dev' para testear localmente sin exponer a usuarios reales."
 							onToggle={handleClaudeAiToggle}
+							onToggleEnv={handleClaudeAiToggleEnv}
 							onSaveMessage={handleClaudeAiMessage}
 							onChangeReleaseStage={handleClaudeAiReleaseStage}
 						/>
@@ -334,16 +371,18 @@ const IntegrationsPage: React.FC = () => {
 					) : (
 						<ServiceAvailabilityCard
 							title="ChatGPT (MCP)"
-							description="Conector MCP futuro para ChatGPT — flag preparado, UI pública pendiente"
-							enabled={chatGptFlag?.enabled ?? false}
+							description="Conector MCP para que usuarios accedan a Law Analytics desde ChatGPT"
+							enabled={chatGptEnabled.production}
+							enabledByEnv={chatGptEnabled}
 							maintenanceMessage={chatGptFlag?.maintenanceMessage ?? null}
 							releaseStage={(chatGptFlag?.releaseStage as ReleaseStage) ?? "beta"}
 							saving={integrations.saving}
 							editableMessage
 							updatedAt={chatGptFlag?.updatedAt}
 							updatedBy={chatGptFlag?.updatedBy}
-							helperOff="ChatGPT MCP no expone UI pública todavía. Habilitarlo acá solo flippea el flag — la vista de /integraciones/chatgpt está pendiente."
+							helperOff="ChatGPT MCP oculto en producción. Habilitá 'Dev' para validar el flow en desarrollo antes de exponerlo."
 							onToggle={handleChatGptToggle}
+							onToggleEnv={handleChatGptToggleEnv}
 							onSaveMessage={handleChatGptMessage}
 							onChangeReleaseStage={handleChatGptReleaseStage}
 						/>

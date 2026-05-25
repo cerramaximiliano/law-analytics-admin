@@ -6,11 +6,26 @@ import adminAxios from "utils/adminAxios";
 
 export type ReleaseStage = "beta" | "stable";
 
+export type Environment = "development" | "production";
+
+/** Flag de habilitación por entorno — usada solo por AI services. */
+export interface EnabledByEnv {
+	development: boolean;
+	production: boolean;
+}
+
+/** Service simple (sin per-env) — ej. groups. */
 export interface ServiceFlag {
 	enabled: boolean;
 	maintenanceMessage: string | null;
-	/** Solo aplica a integraciones AI (claudeAi, chatGpt). El frontend público
-	 *  renderiza distinto chip/CTA según este valor. */
+	updatedAt?: string;
+	updatedBy?: string | null;
+}
+
+/** Service AI con habilitación independiente por entorno. */
+export interface AiServiceFlag {
+	enabled: EnabledByEnv;
+	maintenanceMessage: string | null;
 	releaseStage?: ReleaseStage;
 	updatedAt?: string;
 	updatedBy?: string | null;
@@ -23,9 +38,10 @@ export interface IntegrationsConfigDoc {
 		groups: ServiceFlag;
 		/** Integraciones AI — opcionales en docs viejos (default fail-closed en el
 		 *  endpoint público si faltan). El backend persiste con default
-		 *  `enabled: false, releaseStage: 'beta'` cuando se crea el singleton. */
-		claudeAi?: ServiceFlag;
-		chatGpt?: ServiceFlag;
+		 *  `enabled: { development: false, production: false }` cuando se crea
+		 *  el singleton. */
+		claudeAi?: AiServiceFlag;
+		chatGpt?: AiServiceFlag;
 	};
 	updatedAt?: string;
 	updatedBy?: string | null;
@@ -34,7 +50,9 @@ export interface IntegrationsConfigDoc {
 export type ServiceKey = "groups" | "claudeAi" | "chatGpt";
 
 export interface UpdateServicePayload {
-	enabled?: boolean;
+	/** Boolean para services simples. Para AI services se acepta también
+	 *  Partial<EnabledByEnv> para actualizar un entorno sin tocar el otro. */
+	enabled?: boolean | Partial<EnabledByEnv>;
 	maintenanceMessage?: string | null;
 	/** Solo válido para claudeAi/chatGpt — el backend rechaza si se manda en groups. */
 	releaseStage?: ReleaseStage;
