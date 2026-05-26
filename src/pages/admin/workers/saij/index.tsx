@@ -47,6 +47,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import {
 	EnrichStatsResponse,
+	SaijPipelineConfig,
 	SaijWorkerConfig,
 	getSaijEnrichStats,
 	getSaijWorkerConfigs,
@@ -58,6 +59,7 @@ import {
 	resetSaijCursor,
 	updateSaijScrapingConfig,
 	updateSaijNotificationConfig,
+	updateSaijPipelineConfig,
 } from "api/saij";
 import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES, headerBorder } from "themes/dashboardTokens";
 
@@ -675,28 +677,44 @@ export default function SaijWorkerPage() {
 								<Grid container spacing={2}>
 									{(
 										[
+											{
+												key: "cronPattern",
+												label: "Cron pattern (5 campos)",
+												type: "text",
+												help: "Sintaxis node-cron. Default '*/3 * * * *'. Requiere restart del worker para aplicarse.",
+												fullWidth: true,
+											},
 											{ key: "batchSize", label: "Batch size", type: "number" },
+											{ key: "pageSize", label: "Page size", type: "number" },
 											{ key: "delayBetweenRequests", label: "Delay entre requests (ms)", type: "number" },
-											{ key: "rateLimit", label: "Rate limit", type: "number" },
+											{ key: "rateLimit", label: "Rate limit (reqs/min, 0=sin límite)", type: "number" },
 											{ key: "pageTimeout", label: "Timeout de página (ms)", type: "number" },
 											{ key: "maxRetries", label: "Max reintentos", type: "number" },
 											{ key: "yearFrom", label: "Año desde", type: "number" },
-										] as { key: keyof SaijWorkerConfig["scraping"]; label: string; type: string }[]
-									).map(({ key, label, type }) => (
-										<Grid item xs={12} sm={6} md={4} key={key}>
-											<TextField
-												fullWidth
-												size="small"
-												label={label}
-												type={type}
-												value={scrapingForm[key] ?? ""}
-												disabled={!scrapingEdit}
-												onChange={(e) =>
-													setScrapingForm((f) => ({ ...f, [key]: type === "number" ? Number(e.target.value) : e.target.value }))
-												}
-											/>
-										</Grid>
-									))}
+										] as { key: keyof SaijWorkerConfig["scraping"]; label: string; type: string; help?: string; fullWidth?: boolean }[]
+									).map(({ key, label, type, help, fullWidth }) => {
+										const val = scrapingForm[key];
+										// Validación liviana del cron pattern: 5 tokens separados por espacios
+										const cronInvalid =
+											key === "cronPattern" && typeof val === "string" && val.length > 0 && val.trim().split(/\s+/).length !== 5;
+										return (
+											<Grid item xs={12} sm={fullWidth ? 12 : 6} md={fullWidth ? 6 : 4} key={key}>
+												<TextField
+													fullWidth
+													size="small"
+													label={label}
+													type={type}
+													value={val ?? ""}
+													disabled={!scrapingEdit}
+													error={cronInvalid}
+													helperText={cronInvalid ? "Debe tener 5 tokens (min hora dom mes dow)" : help}
+													onChange={(e) =>
+														setScrapingForm((f) => ({ ...f, [key]: type === "number" ? Number(e.target.value) : e.target.value }))
+													}
+												/>
+											</Grid>
+										);
+									})}
 								</Grid>
 								<Divider />
 								<Typography variant="subtitle2">Notificaciones</Typography>
@@ -722,6 +740,54 @@ export default function SaijWorkerPage() {
 									<Grid item xs={12} sm={6}>
 										<TextField fullWidth size="small" label="Email destinatario" value={s.notification.recipientEmail || ""} disabled />
 									</Grid>
+								</Grid>
+
+								<Divider />
+								<Stack direction="row" alignItems="center" spacing={1}>
+									<Typography variant="subtitle2">Pipeline downstream</Typography>
+									<Tooltip title="Cuando el worker captura una sentencia, ejecuta estos pasos: vincular con causa PJN → marcarla como SAIJ → agregar movimiento → bajar PDF → crear SentenciaCapturada (entrada al pipeline de embeddings). Cada toggle controla un paso. Cambios se aplican en el próximo tick del cron, sin restart.">
+										<Box component="span" sx={{ display: "inline-flex" }}>
+											<Warning2 size={14} />
+										</Box>
+									</Tooltip>
+								</Stack>
+								<Grid container spacing={2}>
+									{(
+										[
+											{ key: "enabled", label: "Activo (master)", help: "Si está off no se ejecuta ningún paso downstream — el worker sólo guarda saij-sentencias." },
+											{ key: "linkToCausa", label: "Vincular causa", help: "Lookup en pjn-api por (fuero, número, año). Sin esto los siguientes pasos no corren." },
+											{ key: "markCausa", label: "Marcar causa SAIJ", help: "PATCH /api/causas/:fuero/:id/saij — setea sub-doc saij en la causa PJN." },
+											{ key: "addMovimiento", label: "Agregar movimiento", help: "Push movimiento tipo 'SENTENCIA SAIJ' al array movimiento[] de la causa." },
+											{ key: "downloadPdf", label: "Descargar PDF", help: "Baja el PDF del fallo (Puppeteer + pdf-parse). Paso costoso — apagar si hay problemas de bandwidth." },
+											{ key: "createSentenciaCapturada", label: "Crear SentenciaCapturada", help: "Upsert en sentencias-capturadas (Atlas) con el texto + sumarios. Entrada al worker de embeddings." },
+											{ key: "createMissingCausas", label: "Crear causas faltantes (Fase 3)", help: "⚠️ EXPERIMENTAL — Si la causa no existe en URLDB_LOCAL, crearla automáticamente con verified:false para que verify-worker la procese. Activar solo después del análisis del backfill report.", warning: true },
+										] as { key: keyof SaijPipelineConfig; label: string; help: string; warning?: boolean }[]
+									).map(({ key, label, help, warning }) => (
+										<Grid item xs={12} sm={6} md={4} key={key}>
+											<Stack direction="row" alignItems="center" spacing={1}>
+												<Switch
+													size="small"
+													checked={!!s.pipeline?.[key]}
+													disabled={actionLoading}
+													color={warning ? "warning" : "primary"}
+													onChange={async (e) => {
+														try {
+															await updateSaijPipelineConfig(s.worker_id, { [key]: e.target.checked });
+															enqueueSnackbar(`${label}: ${e.target.checked ? "ON" : "OFF"}`, { variant: "success" });
+															fetchConfigs();
+														} catch {
+															enqueueSnackbar(`Error actualizando ${label}`, { variant: "error" });
+														}
+													}}
+												/>
+												<Tooltip title={help}>
+													<Typography variant="body2" sx={warning ? { color: "warning.main", fontWeight: 500 } : undefined}>
+														{label}
+													</Typography>
+												</Tooltip>
+											</Stack>
+										</Grid>
+									))}
 								</Grid>
 							</Stack>
 						)}
