@@ -94,6 +94,16 @@ export interface SentenciaStatsResponse {
 	};
 }
 
+export interface SaijPipelineConfig {
+	enabled: boolean;
+	linkToCausa: boolean;
+	markCausa: boolean;
+	addMovimiento: boolean;
+	downloadPdf: boolean;
+	createSentenciaCapturada: boolean;
+	createMissingCausas: boolean;
+}
+
 export interface SaijWorkerConfig {
 	_id: string;
 	worker_id: string;
@@ -101,6 +111,7 @@ export interface SaijWorkerConfig {
 	scraping: {
 		url: string;
 		apiUrl: string;
+		cronPattern: string;
 		yearFrom: number;
 		currentYear: number;
 		currentMonth: number;
@@ -113,6 +124,7 @@ export interface SaijWorkerConfig {
 		maxRetries: number;
 		downloadPdf: boolean;
 	};
+	pipeline: SaijPipelineConfig;
 	history: {
 		year: number;
 		month: number;
@@ -247,6 +259,11 @@ export const resetSaijCursor = async (workerId: string, year: number, month: num
 
 export const updateSaijScrapingConfig = async (workerId: string, data: Partial<SaijWorkerConfig["scraping"]>) => {
 	const response = await pjnAxios.patch(`/api/saij/config/${workerId}/scraping`, data);
+	return response.data;
+};
+
+export const updateSaijPipelineConfig = async (workerId: string, data: Partial<SaijPipelineConfig>) => {
+	const response = await pjnAxios.patch(`/api/saij/config/${workerId}/pipeline`, data);
 	return response.data;
 };
 
