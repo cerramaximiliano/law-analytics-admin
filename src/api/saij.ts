@@ -10,6 +10,21 @@ export interface CausaRef {
 	source: "app" | "cache";
 }
 
+export interface AssociatedSentenciaCapturada {
+	_id: string;
+	processingStatus?: "pending" | "processing" | "extracted_needs_ocr" | "processed" | "error";
+	embeddingStatus?: "pending" | "processing" | "completed" | "error" | "skipped";
+	embeddedAt?: string;
+	embeddingChunksCount?: number;
+	processedAt?: string;
+	category?: string;
+	source?: { origin?: "pjn" | "saij"; saijDocId?: string };
+	causaId?: string;
+	fuero?: string;
+	number?: number;
+	year?: number;
+}
+
 export interface SaijSentencia {
 	_id: string;
 	saijId: string;
@@ -35,8 +50,17 @@ export interface SaijSentencia {
 		numero: number;
 		año: number;
 		texto: string;
+		fuero?: string;
+		instancia?: string;
+		source?: "pdf" | "metadata" | "url";
+		confidence?: "high" | "medium" | "low";
 	};
 	causaRefs: CausaRef[];
+	pipelineStatus?: "pending" | "linked" | "movement_added" | "sc_created" | "sc_updated" | "failed" | "skipped";
+	pipelineError?: string;
+	pipelineUpdatedAt?: string;
+	scrapeJurisdiccion?: string;
+	sentenciaCapturada?: AssociatedSentenciaCapturada;
 	jurisdiccion: {
 		codigo: string;
 		descripcion: string;
@@ -68,6 +92,10 @@ export interface SentenciaListParams {
 	monthTo?: number;
 	workerId?: string;
 	saijSentenciaId?: string;
+	pipelineStatus?: string;
+	hasExpediente?: "true" | "false";
+	expedienteSource?: "pdf" | "metadata" | "url";
+	linked?: "true" | "false";
 	q?: string;
 }
 
@@ -91,6 +119,16 @@ export interface SentenciaStatsResponse {
 		byType: { _id: string; count: number }[];
 		byStatus: { _id: string; count: number }[];
 		byYear: { _id: number; count: number }[];
+		byPipelineStatus: { _id: string | null; count: number }[];
+		byFuero: { _id: string; count: number }[];
+		withCausaRef: number;
+		withExpediente: number;
+		withExpedientePdf: number;
+		sentenciasCapturadas: {
+			total: number;
+			byProcessingStatus: { _id: string; count: number }[];
+			byEmbeddingStatus: { _id: string; count: number }[];
+		};
 	};
 }
 
