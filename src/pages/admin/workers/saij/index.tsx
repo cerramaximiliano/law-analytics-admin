@@ -162,6 +162,8 @@ export default function SaijWorkerPage() {
 		linked: undefined,
 		pipelineStatus: undefined,
 		expedienteSource: undefined,
+		embeddingStatus: undefined,
+		hasSentenciaCapturada: undefined,
 		fuero: undefined,
 	});
 
@@ -1043,6 +1045,45 @@ export default function SaijWorkerPage() {
 											<option value="pdf">pdf</option>
 											<option value="metadata">metadata</option>
 											<option value="url">url</option>
+										</TextField>
+										<TextField
+											select
+											SelectProps={{ native: true }}
+											size="small"
+											value={pipelineFilters.embeddingStatus || ""}
+											onChange={(e) => {
+												const next = { ...pipelineFilters, embeddingStatus: (e.target.value || undefined) as SentenciaListParams["embeddingStatus"] };
+												setPipelineFilters(next);
+												loadPipelineSentencias(1, next);
+											}}
+											sx={{ minWidth: 150 }}
+											label="Embedding"
+											InputLabelProps={{ shrink: true }}
+										>
+											<option value="">(todos)</option>
+											<option value="completed">completed</option>
+											<option value="pending">pending</option>
+											<option value="processing">processing</option>
+											<option value="error">error</option>
+											<option value="skipped">skipped</option>
+										</TextField>
+										<TextField
+											select
+											SelectProps={{ native: true }}
+											size="small"
+											value={pipelineFilters.hasSentenciaCapturada || ""}
+											onChange={(e) => {
+												const next = { ...pipelineFilters, hasSentenciaCapturada: (e.target.value || undefined) as "true" | "false" | undefined };
+												setPipelineFilters(next);
+												loadPipelineSentencias(1, next);
+											}}
+											sx={{ minWidth: 140 }}
+											label="SC creado"
+											InputLabelProps={{ shrink: true }}
+										>
+											<option value="">(todos)</option>
+											<option value="true">con SC</option>
+											<option value="false">sin SC</option>
 										</TextField>
 										{pipelineFilters.fuero && (
 											<Chip

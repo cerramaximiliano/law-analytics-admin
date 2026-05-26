@@ -96,6 +96,8 @@ export interface SentenciaListParams {
 	hasExpediente?: "true" | "false";
 	expedienteSource?: "pdf" | "metadata" | "url";
 	linked?: "true" | "false";
+	embeddingStatus?: "pending" | "processing" | "completed" | "error" | "skipped";
+	hasSentenciaCapturada?: "true" | "false";
 	q?: string;
 }
 

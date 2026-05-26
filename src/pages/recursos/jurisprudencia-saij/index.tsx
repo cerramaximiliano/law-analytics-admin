@@ -806,6 +806,8 @@ export default function JurisprudenciaSaijPage() {
 	const [filterStatus, setFilterStatus] = useState("");
 	const [filterYearFrom, setFilterYearFrom] = useState("");
 	const [filterYearTo, setFilterYearTo] = useState("");
+	const [filterEmbedding, setFilterEmbedding] = useState<string>("");
+	const [filterHasSC, setFilterHasSC] = useState<string>("");
 
 	// Dialogs
 	const [selected, setSelected] = useState<SaijSentencia | null>(null);
@@ -824,8 +826,10 @@ export default function JurisprudenciaSaijPage() {
 			...(search && { q: search }),
 			...(filterYearFrom && { yearFrom: parseInt(filterYearFrom) }),
 			...(filterYearTo && { yearTo: parseInt(filterYearTo) }),
+			...(filterEmbedding && { embeddingStatus: filterEmbedding as SentenciaListParams["embeddingStatus"] }),
+			...(filterHasSC && { hasSentenciaCapturada: filterHasSC as "true" | "false" }),
 		}),
-		[docType, filterStatus, search, filterYearFrom, filterYearTo],
+		[docType, filterStatus, search, filterYearFrom, filterYearTo, filterEmbedding, filterHasSC],
 	);
 
 	const fetchData = useCallback(
@@ -863,7 +867,7 @@ export default function JurisprudenciaSaijPage() {
 	useEffect(() => {
 		setPage(0);
 		fetchData(0);
-	}, [docType, filterStatus, search, filterYearFrom, filterYearTo]);
+	}, [docType, filterStatus, search, filterYearFrom, filterYearTo, filterEmbedding, filterHasSC]);
 
 	const handlePageChange = (_: unknown, newPage: number) => {
 		setPage(newPage);
@@ -876,6 +880,8 @@ export default function JurisprudenciaSaijPage() {
 		setFilterStatus("");
 		setFilterYearFrom("");
 		setFilterYearTo("");
+		setFilterEmbedding("");
+		setFilterHasSC("");
 	};
 	const handleSaved = (updated: SaijSentencia) => {
 		setData((prev) => prev.map((d) => (d._id === updated._id ? updated : d)));
@@ -889,7 +895,7 @@ export default function JurisprudenciaSaijPage() {
 		setTotal((t) => t - 1);
 	};
 
-	const hasFilters = search || filterStatus || filterYearFrom || filterYearTo;
+	const hasFilters = search || filterStatus || filterYearFrom || filterYearTo || filterEmbedding || filterHasSC;
 
 	const fallosTotal = stats?.byType.find((t) => t._id === "jurisprudencia")?.count ?? 0;
 	const sumariosTotal = stats?.byType.find((t) => t._id === "sumario")?.count ?? 0;
@@ -1005,6 +1011,25 @@ export default function JurisprudenciaSaijPage() {
 						onChange={(e) => setFilterYearTo(e.target.value)}
 						sx={{ width: 100 }}
 					/>
+					<FormControl size="small" sx={{ minWidth: 150 }}>
+						<InputLabel>Embedding</InputLabel>
+						<Select value={filterEmbedding} label="Embedding" onChange={(e) => setFilterEmbedding(e.target.value)}>
+							<MenuItem value="">Todos</MenuItem>
+							<MenuItem value="completed">Embebido</MenuItem>
+							<MenuItem value="pending">En cola</MenuItem>
+							<MenuItem value="processing">Procesando</MenuItem>
+							<MenuItem value="error">Error</MenuItem>
+							<MenuItem value="skipped">Skipped</MenuItem>
+						</Select>
+					</FormControl>
+					<FormControl size="small" sx={{ minWidth: 130 }}>
+						<InputLabel>SC creado</InputLabel>
+						<Select value={filterHasSC} label="SC creado" onChange={(e) => setFilterHasSC(e.target.value)}>
+							<MenuItem value="">Todos</MenuItem>
+							<MenuItem value="true">Con SC</MenuItem>
+							<MenuItem value="false">Sin SC</MenuItem>
+						</Select>
+					</FormControl>
 					<Button size="small" variant="contained" onClick={handleSearch} disabled={loading}>
 						Buscar
 					</Button>
@@ -1032,20 +1057,21 @@ export default function JurisprudenciaSaijPage() {
 								<TableCell align="center">Sum.</TableCell>
 								<TableCell>Causa</TableCell>
 								<TableCell align="center">PDF</TableCell>
+								<TableCell align="center">Embedding</TableCell>
 								<TableCell align="center">Acc.</TableCell>
 							</TableRow>
 						</TableHead>
 						<TableBody>
 							{loading && (
 								<TableRow>
-									<TableCell colSpan={11} align="center" sx={{ py: 4 }}>
+									<TableCell colSpan={12} align="center" sx={{ py: 4 }}>
 										<CircularProgress size={28} />
 									</TableCell>
 								</TableRow>
 							)}
 							{!loading && data.length === 0 && (
 								<TableRow>
-									<TableCell colSpan={11} align="center" sx={{ py: 4 }}>
+									<TableCell colSpan={12} align="center" sx={{ py: 4 }}>
 										<Typography color="text.secondary">Sin resultados</Typography>
 									</TableCell>
 								</TableRow>
@@ -1139,6 +1165,30 @@ export default function JurisprudenciaSaijPage() {
 												)}
 											</TableCell>
 											<TableCell align="center">
+												{row.sentenciaCapturada?.embeddingStatus ? (
+													<Tooltip
+														title={`${row.sentenciaCapturada.embeddingChunksCount || 0} chunks · ${
+															row.sentenciaCapturada.embeddedAt ? new Date(row.sentenciaCapturada.embeddedAt).toLocaleString("es-AR") : "—"
+														}`}
+													>
+														<Chip
+															label={row.sentenciaCapturada.embeddingStatus}
+															size="small"
+															color={
+																row.sentenciaCapturada.embeddingStatus === "completed" ? "success" :
+																row.sentenciaCapturada.embeddingStatus === "error" ? "error" :
+																row.sentenciaCapturada.embeddingStatus === "pending" ? "warning" : "default"
+															}
+															sx={{ height: 20, fontSize: 10 }}
+														/>
+													</Tooltip>
+												) : (
+													<Typography variant="caption" color="text.disabled">
+														—
+													</Typography>
+												)}
+											</TableCell>
+											<TableCell align="center">
 												<Stack direction="row" spacing={0.5} justifyContent="center">
 													<Tooltip title="Ver detalle">
 														<IconButton size="small" onClick={() => setSelected(row)}>
@@ -1160,7 +1210,7 @@ export default function JurisprudenciaSaijPage() {
 										</TableRow>,
 										// Fila expandida con sumarios inline
 										<TableRow key={`${row._id}-exp`}>
-											<TableCell colSpan={11} sx={{ py: 0, px: 0, borderBottom: isExpanded ? undefined : 0 }}>
+											<TableCell colSpan={12} sx={{ py: 0, px: 0, borderBottom: isExpanded ? undefined : 0 }}>
 												<Collapse in={isExpanded} timeout="auto" unmountOnExit>
 													<Box
 														sx={{
