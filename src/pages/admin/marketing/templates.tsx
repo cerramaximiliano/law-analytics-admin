@@ -71,6 +71,9 @@ import {
 	Image,
 	Data2,
 	Magicpen,
+	ArrowSwapHorizontal,
+	TickCircle,
+	Refresh,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import AnimateButton from "components/@extended/AnimateButton";
@@ -79,11 +82,31 @@ import MarketingQuickNav from "components/admin/marketing/MarketingQuickNav";
 import GenerateAITemplateModal from "components/admin/marketing/GenerateAITemplateModal";
 
 // types
+interface TemplateMetadata {
+	isVariant?: boolean;
+	originalTemplateId?: string;
+	generatedBy?: string;
+	mergedIntoOriginalAt?: string;
+	lastPromotedAt?: string;
+	lastPromotedFromVariantId?: string;
+	previousVersion?: {
+		htmlBody?: string;
+		textBody?: string;
+		subject?: string;
+		preheader?: string;
+		variables?: string[];
+		snapshotAt?: string;
+		replacedByVariantId?: string;
+	};
+	[key: string]: unknown;
+}
+
 interface EmailTemplate {
 	_id: string;
 	category: string;
 	name: string;
 	subject: string;
+	preheader?: string;
 	htmlBody: string;
 	textBody: string;
 	description: string;
@@ -92,6 +115,7 @@ interface EmailTemplate {
 	lastModifiedBy?: string;
 	createdAt: string;
 	updatedAt: string;
+	metadata?: TemplateMetadata;
 }
 
 interface NewEmailTemplate {
@@ -453,6 +477,20 @@ const EmailTemplates = () => {
 	const [activationOpen, setActivationOpen] = useState<boolean>(false);
 	const [templateToToggle, setTemplateToToggle] = useState<EmailTemplate | null>(null);
 	const [toggling, setToggling] = useState<boolean>(false);
+
+	// State for variant compare / promote / revert
+	const [compareOpen, setCompareOpen] = useState<boolean>(false);
+	const [compareData, setCompareData] = useState<{ original: EmailTemplate; variant: EmailTemplate } | null>(null);
+	const [compareLoading, setCompareLoading] = useState<boolean>(false);
+	const [compareDevice, setCompareDevice] = useState<"desktop" | "mobile">("desktop");
+
+	const [promoteOpen, setPromoteOpen] = useState<boolean>(false);
+	const [variantToPromote, setVariantToPromote] = useState<EmailTemplate | null>(null);
+	const [promoting, setPromoting] = useState<boolean>(false);
+
+	const [revertOpen, setRevertOpen] = useState<boolean>(false);
+	const [templateToRevert, setTemplateToRevert] = useState<EmailTemplate | null>(null);
+	const [reverting, setReverting] = useState<boolean>(false);
 
 	// State for email sending
 	const [sendEmailOpen, setSendEmailOpen] = useState<boolean>(false);
@@ -1374,6 +1412,141 @@ const EmailTemplates = () => {
 		}
 	};
 
+	// Variant lookup — para cada original encontrar su v2 activa (si existe)
+	const variantByOriginalId = React.useMemo(() => {
+		const map = new Map<string, EmailTemplate>();
+		for (const t of templates) {
+			const orig = t.metadata?.originalTemplateId;
+			if (t.metadata?.isVariant && orig && t.isActive) {
+				map.set(orig, t);
+			}
+		}
+		return map;
+	}, [templates]);
+
+	// Compare dialog handlers
+	const handleOpenCompare = (template: EmailTemplate) => {
+		setCompareOpen(true);
+		setCompareDevice("desktop");
+		setCompareLoading(true);
+		setCompareData(null);
+
+		// Decidir cuál es el original y cuál es el variant
+		let originalRef: EmailTemplate | undefined;
+		let variantRef: EmailTemplate | undefined;
+		if (template.metadata?.isVariant && template.metadata.originalTemplateId) {
+			variantRef = template;
+			originalRef = templates.find((t) => t._id === template.metadata?.originalTemplateId);
+		} else {
+			originalRef = template;
+			variantRef = variantByOriginalId.get(template._id);
+		}
+
+		if (!originalRef || !variantRef) {
+			enqueueSnackbar("No se encontró el par original/variante para comparar", {
+				variant: "warning",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			setCompareOpen(false);
+			setCompareLoading(false);
+			return;
+		}
+
+		// Fetch full content of both (la lista puede traer solo metadata light según endpoint)
+		Promise.all([fetchTemplateDetails(originalRef._id), fetchTemplateDetails(variantRef._id)])
+			.then(([orig, vari]) => {
+				if (orig && vari) {
+					setCompareData({ original: orig, variant: vari });
+				}
+			})
+			.finally(() => setCompareLoading(false));
+	};
+
+	const handleCloseCompare = () => {
+		setCompareOpen(false);
+		setCompareData(null);
+	};
+
+	// Promote handlers
+	const handleOpenPromote = (variant: EmailTemplate) => {
+		setVariantToPromote(variant);
+		setPromoteOpen(true);
+	};
+
+	const handleClosePromote = () => {
+		setPromoteOpen(false);
+		setVariantToPromote(null);
+	};
+
+	const handlePromote = async () => {
+		if (!variantToPromote) return;
+		setPromoting(true);
+		try {
+			const response = await mktAxios.post(`/api/templates/${variantToPromote._id}/promote`);
+			if (response.data.success) {
+				await fetchTemplates();
+				setPromoteOpen(false);
+				setVariantToPromote(null);
+				enqueueSnackbar(response.data.message || "Variante promovida con éxito", {
+					variant: "success",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+			} else {
+				enqueueSnackbar(response.data.error || "Error al promover la variante", {
+					variant: "error",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+			}
+		} catch (err: any) {
+			enqueueSnackbar(err.response?.data?.error || err.message || "Error al promover la variante", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+		} finally {
+			setPromoting(false);
+		}
+	};
+
+	// Revert handlers
+	const handleOpenRevert = (original: EmailTemplate) => {
+		setTemplateToRevert(original);
+		setRevertOpen(true);
+	};
+
+	const handleCloseRevert = () => {
+		setRevertOpen(false);
+		setTemplateToRevert(null);
+	};
+
+	const handleRevert = async () => {
+		if (!templateToRevert) return;
+		setReverting(true);
+		try {
+			const response = await mktAxios.post(`/api/templates/${templateToRevert._id}/revert-promotion`);
+			if (response.data.success) {
+				await fetchTemplates();
+				setRevertOpen(false);
+				setTemplateToRevert(null);
+				enqueueSnackbar(response.data.message || "Promoción revertida con éxito", {
+					variant: "success",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+			} else {
+				enqueueSnackbar(response.data.error || "Error al revertir la promoción", {
+					variant: "error",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+			}
+		} catch (err: any) {
+			enqueueSnackbar(err.response?.data?.error || err.message || "Error al revertir la promoción", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+		} finally {
+			setReverting(false);
+		}
+	};
+
 	// Filter handlers
 	const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setFilter(event.target.value);
@@ -1507,62 +1680,136 @@ const EmailTemplates = () => {
 											</TableCell>
 										</TableRow>
 									) : (
-										filteredTemplates.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((template) => (
-											<TableRow hover key={template._id} tabIndex={-1}>
-												<TableCell>
-													<Typography variant="subtitle2">{template.name}</Typography>
-												</TableCell>
-												<TableCell>{categoryDisplay[template.category] || template.category}</TableCell>
-												<TableCell>{template.subject}</TableCell>
-												<TableCell>{template.description}</TableCell>
-												<TableCell>
-													<Chip
-														label={template.isActive ? "Activa" : "Inactiva"}
-														color={template.isActive ? "success" : "default"}
-														size="small"
-													/>
-												</TableCell>
-												<TableCell>{new Date(template.updatedAt).toLocaleDateString()}</TableCell>
-												<TableCell align="center">
-													<Stack direction="row" spacing={1} justifyContent="center">
-														<IconButton aria-label="ver" size="small" color="info" onClick={() => handleOpenDetail(template)}>
-															<Eye size={18} />
-														</IconButton>
-														<IconButton aria-label="editar" size="small" color="primary" onClick={() => handleOpenEdit(template)}>
-															<Edit2 size={18} />
-														</IconButton>
-														<IconButton
-															aria-label="crear variante con AI"
+										filteredTemplates.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((template) => {
+											const isVariant = !!template.metadata?.isVariant;
+											const linkedVariant = !isVariant ? variantByOriginalId.get(template._id) : undefined;
+											const hasPreviousVersion = !!template.metadata?.previousVersion;
+											const canCompare = isVariant || !!linkedVariant;
+											return (
+												<TableRow hover key={template._id} tabIndex={-1}>
+													<TableCell>
+														<Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
+															<Typography variant="subtitle2">{template.name}</Typography>
+															{isVariant && (
+																<Chip
+																	label="Variante v2"
+																	size="small"
+																	color="info"
+																	variant="outlined"
+																	sx={{ height: 20, fontSize: "0.65rem", fontWeight: 600, letterSpacing: 0.4 }}
+																/>
+															)}
+															{linkedVariant && (
+																<Chip
+																	label="Tiene v2"
+																	size="small"
+																	variant="outlined"
+																	sx={{
+																		height: 20,
+																		fontSize: "0.65rem",
+																		fontWeight: 600,
+																		letterSpacing: 0.4,
+																		borderColor: alpha(BRAND_BLUE, 0.4),
+																		color: BRAND_BLUE,
+																	}}
+																/>
+															)}
+															{hasPreviousVersion && (
+																<Chip
+																	label="Promovido"
+																	size="small"
+																	color="success"
+																	variant="outlined"
+																	sx={{ height: 20, fontSize: "0.65rem", fontWeight: 600, letterSpacing: 0.4 }}
+																/>
+															)}
+														</Stack>
+													</TableCell>
+													<TableCell>{categoryDisplay[template.category] || template.category}</TableCell>
+													<TableCell>{template.subject}</TableCell>
+													<TableCell>{template.description}</TableCell>
+													<TableCell>
+														<Chip
+															label={template.isActive ? "Activa" : "Inactiva"}
+															color={template.isActive ? "success" : "default"}
 															size="small"
-															color="secondary"
-															onClick={() => handleOpenAiVariant(template)}
-															title="Crear variante con AI"
-														>
-															<Magicpen size={18} />
-														</IconButton>
-														<IconButton
-															aria-label="enviar email"
-															size="small"
-															color="secondary"
-															onClick={() => handleOpenSendEmail(template)}
-															title="Enviar email con esta plantilla"
-															disabled={!template.isActive}
-														>
-															<Send size={18} />
-														</IconButton>
-														<IconButton
-															aria-label={template.isActive ? "desactivar" : "activar"}
-															size="small"
-															color={template.isActive ? "error" : "success"}
-															onClick={() => handleOpenActivationDialog(template)}
-															title={template.isActive ? "Desactivar plantilla" : "Activar plantilla"}
-														>
-															<Trash size={18} />
-														</IconButton>
-													</Stack>
-												</TableCell>
-											</TableRow>
-										))
+														/>
+													</TableCell>
+													<TableCell>{new Date(template.updatedAt).toLocaleDateString()}</TableCell>
+													<TableCell align="center">
+														<Stack direction="row" spacing={1} justifyContent="center">
+															<IconButton aria-label="ver" size="small" color="info" onClick={() => handleOpenDetail(template)}>
+																<Eye size={18} />
+															</IconButton>
+															{canCompare && (
+																<IconButton
+																	aria-label="comparar v1 vs v2"
+																	size="small"
+																	color="info"
+																	onClick={() => handleOpenCompare(template)}
+																	title="Comparar v1 vs v2 lado a lado"
+																>
+																	<ArrowSwapHorizontal size={18} />
+																</IconButton>
+															)}
+															{isVariant && template.isActive && (
+																<IconButton
+																	aria-label="promover variante"
+																	size="small"
+																	color="success"
+																	onClick={() => handleOpenPromote(template)}
+																	title="Promover v2 — reemplaza el contenido del original"
+																>
+																	<TickCircle size={18} />
+																</IconButton>
+															)}
+															{hasPreviousVersion && (
+																<IconButton
+																	aria-label="revertir promoción"
+																	size="small"
+																	color="warning"
+																	onClick={() => handleOpenRevert(template)}
+																	title="Revertir promoción — restaura el contenido anterior"
+																>
+																	<Refresh size={18} />
+																</IconButton>
+															)}
+															<IconButton aria-label="editar" size="small" color="primary" onClick={() => handleOpenEdit(template)}>
+																<Edit2 size={18} />
+															</IconButton>
+															<IconButton
+																aria-label="crear variante con AI"
+																size="small"
+																color="secondary"
+																onClick={() => handleOpenAiVariant(template)}
+																title="Crear variante con AI"
+															>
+																<Magicpen size={18} />
+															</IconButton>
+															<IconButton
+																aria-label="enviar email"
+																size="small"
+																color="secondary"
+																onClick={() => handleOpenSendEmail(template)}
+																title="Enviar email con esta plantilla"
+																disabled={!template.isActive}
+															>
+																<Send size={18} />
+															</IconButton>
+															<IconButton
+																aria-label={template.isActive ? "desactivar" : "activar"}
+																size="small"
+																color={template.isActive ? "error" : "success"}
+																onClick={() => handleOpenActivationDialog(template)}
+																title={template.isActive ? "Desactivar plantilla" : "Activar plantilla"}
+															>
+																<Trash size={18} />
+															</IconButton>
+														</Stack>
+													</TableCell>
+												</TableRow>
+											);
+										})
 									)}
 								</TableBody>
 							</Table>
@@ -2983,6 +3230,216 @@ const EmailTemplates = () => {
 					fetchTemplates();
 				}}
 			/>
+
+			{/* Compare v1 vs v2 dialog */}
+			<Dialog open={compareOpen} onClose={handleCloseCompare} maxWidth="xl" fullWidth>
+				<DialogTitle sx={{ pb: 1 }}>
+					<Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+						<Stack direction="row" alignItems="center" spacing={1}>
+							<ArrowSwapHorizontal size={20} color={BRAND_BLUE} />
+							<Typography variant="h5" sx={{ m: 0 }}>
+								Comparar v1 vs v2
+							</Typography>
+							{compareData && (
+								<Chip
+									label={compareData.original.name}
+									size="small"
+									variant="outlined"
+									sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}
+								/>
+							)}
+						</Stack>
+						<ButtonGroup size="small" variant="outlined">
+							<Button
+								onClick={() => setCompareDevice("desktop")}
+								variant={compareDevice === "desktop" ? "contained" : "outlined"}
+								startIcon={<Monitor size={14} />}
+							>
+								Desktop
+							</Button>
+							<Button
+								onClick={() => setCompareDevice("mobile")}
+								variant={compareDevice === "mobile" ? "contained" : "outlined"}
+								startIcon={<Mobile size={14} />}
+							>
+								Mobile
+							</Button>
+						</ButtonGroup>
+					</Stack>
+				</DialogTitle>
+				<DialogContent dividers sx={{ p: 0, bgcolor: theme.palette.grey[100], height: 700 }}>
+					{compareLoading || !compareData ? (
+						<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+							<CircularProgress />
+						</Box>
+					) : (
+						<Grid container sx={{ height: "100%" }}>
+							{(["original", "variant"] as const).map((side) => {
+								const tpl = compareData[side];
+								const label = side === "original" ? "v1 · Actual" : "v2 · Rediseño";
+								const accent = side === "original" ? theme.palette.text.secondary : BRAND_BLUE;
+								const html = expandModulesInHtml(tpl.htmlBody || "");
+								return (
+									<Grid
+										key={side}
+										item
+										xs={12}
+										md={6}
+										sx={{
+											borderRight: side === "original" ? `1px solid ${theme.palette.divider}` : undefined,
+											display: "flex",
+											flexDirection: "column",
+											height: "100%",
+										}}
+									>
+										<Box sx={{ p: 1.5, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: "background.paper" }}>
+											<Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+												<Stack direction="row" alignItems="center" spacing={1}>
+													<Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: accent }} />
+													<Typography variant="caption" sx={{ fontWeight: 600, letterSpacing: 0.4, textTransform: "uppercase", color: accent }}>
+														{label}
+													</Typography>
+													<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
+														{tpl.subject}
+													</Typography>
+												</Stack>
+												<Typography variant="caption" color="text.secondary">
+													{(tpl.htmlBody || "").length.toLocaleString()} B
+												</Typography>
+											</Stack>
+										</Box>
+										<Box
+											sx={{
+												flex: 1,
+												overflow: "auto",
+												display: "flex",
+												justifyContent: "center",
+												alignItems: "flex-start",
+												p: 2,
+												bgcolor: theme.palette.grey[100],
+											}}
+										>
+											<iframe
+												title={`${side}-preview`}
+												srcDoc={html}
+												style={{
+													width: compareDevice === "mobile" ? 375 : "100%",
+													maxWidth: 640,
+													height: 660,
+													border: `1px solid ${theme.palette.divider}`,
+													borderRadius: 8,
+													backgroundColor: "#fff",
+												}}
+											/>
+										</Box>
+									</Grid>
+								);
+							})}
+						</Grid>
+					)}
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleCloseCompare}>Cerrar</Button>
+					{compareData && compareData.variant.isActive && (
+						<Button
+							variant="contained"
+							color="success"
+							startIcon={<TickCircle size={16} />}
+							onClick={() => {
+								handleCloseCompare();
+								handleOpenPromote(compareData.variant);
+							}}
+						>
+							Promover v2 al original
+						</Button>
+					)}
+				</DialogActions>
+			</Dialog>
+
+			{/* Promote variant confirmation */}
+			<Dialog open={promoteOpen} onClose={handleClosePromote} maxWidth="sm" fullWidth>
+				{variantToPromote && (
+					<>
+						<DialogTitle>Promover variante v2</DialogTitle>
+						<DialogContent>
+							<Typography variant="body2" sx={{ mb: 2 }}>
+								Vas a reemplazar el contenido del template original con el de{" "}
+								<Box component="strong" sx={{ fontFamily: "monospace" }}>
+									{variantToPromote.name}
+								</Box>
+								. El asunto, HTML, texto plano, preheader y variables del original quedan sobrescritos.
+							</Typography>
+							<Box sx={{ p: 1.5, bgcolor: alpha(BRAND_BLUE, 0.06), borderRadius: 1, mb: 1 }}>
+								<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+									Snapshot de seguridad
+								</Typography>
+								<Typography variant="body2">
+									Antes de sobrescribir, se guarda el contenido actual del original como{" "}
+									<code>metadata.previousVersion</code>. Si después no te gusta, podés revertir con un click.
+								</Typography>
+							</Box>
+							<Typography variant="caption" color="text.secondary">
+								Las campañas que usan este template empiezan a enviar la versión nueva inmediatamente.
+							</Typography>
+						</DialogContent>
+						<DialogActions>
+							<Button onClick={handleClosePromote} disabled={promoting}>
+								Cancelar
+							</Button>
+							<Button
+								variant="contained"
+								color="success"
+								onClick={handlePromote}
+								disabled={promoting}
+								startIcon={promoting ? <CircularProgress size={16} color="inherit" /> : <TickCircle size={16} />}
+							>
+								{promoting ? "Promoviendo..." : "Promover ahora"}
+							</Button>
+						</DialogActions>
+					</>
+				)}
+			</Dialog>
+
+			{/* Revert promotion confirmation */}
+			<Dialog open={revertOpen} onClose={handleCloseRevert} maxWidth="sm" fullWidth>
+				{templateToRevert && (
+					<>
+						<DialogTitle>Revertir promoción</DialogTitle>
+						<DialogContent>
+							<Typography variant="body2" sx={{ mb: 2 }}>
+								Vas a restaurar el contenido anterior de{" "}
+								<Box component="strong" sx={{ fontFamily: "monospace" }}>
+									{templateToRevert.name}
+								</Box>
+								. El asunto, HTML, texto plano, preheader y variables vuelven al estado previo a la última promoción.
+							</Typography>
+							{templateToRevert.metadata?.previousVersion?.snapshotAt && (
+								<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+									Snapshot tomado el{" "}
+									{new Date(templateToRevert.metadata.previousVersion.snapshotAt).toLocaleString()}
+								</Typography>
+							)}
+							<Typography variant="caption" color="text.secondary">
+								Si la variante v2 todavía existe, queda re-activada para futuras promociones.
+							</Typography>
+						</DialogContent>
+						<DialogActions>
+							<Button onClick={handleCloseRevert} disabled={reverting}>
+								Cancelar
+							</Button>
+							<Button
+								variant="contained"
+								color="warning"
+								onClick={handleRevert}
+								disabled={reverting}
+								startIcon={reverting ? <CircularProgress size={16} color="inherit" /> : <Refresh size={16} />}
+							>
+								{reverting ? "Revirtiendo..." : "Revertir ahora"}
+							</Button>
+						</DialogActions>
+					</>
+				)}
+			</Dialog>
 		</MainCard>
 	);
 };
