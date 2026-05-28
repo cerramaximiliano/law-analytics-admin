@@ -9,6 +9,7 @@ import {
 	OnboardingResetResponse,
 	OnboardingUserSearchResponse,
 	OnboardingUserDetailResponse,
+	OnboardingFunnelByStepResponse,
 } from "types/onboarding";
 
 // ==============================|| ONBOARDING ANALYTICS SERVICE ||============================== //
@@ -71,6 +72,20 @@ class OnboardingService {
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al obtener tiempo de activacion");
+		}
+	}
+
+	/**
+	 * Funnel granular por step del OnboardingChecklist nuevo.
+	 * Devuelve users únicos en cada etapa (shown → step1 click → step1 done → ...)
+	 * + desglose de clicks a logos judiciales por jurisdicción + mode.
+	 */
+	static async getFunnelByStep(params?: OnboardingQueryParams): Promise<OnboardingFunnelByStepResponse> {
+		try {
+			const response = await adminAxios.get("/api/onboarding/funnel-by-step", { params });
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al obtener funnel por step");
 		}
 	}
 

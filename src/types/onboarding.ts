@@ -211,6 +211,37 @@ export interface OnboardingUserSearchResponse {
 	data: OnboardingUserSearchItem[];
 }
 
+// ── Funnel por step del OnboardingChecklist ──
+// Granular: shown → click step #1 → done step #1 → click step #2 → done #2 → ...
+// Conteo de users únicos (no de eventos).
+export interface OnboardingStepFunnelItem {
+	id: string; // first_folder | judicial_connection | first_contact | first_deadline
+	clicked: number;
+	completed: number;
+	dropOff: number; // porcentaje 0-100
+}
+
+export interface OnboardingJudicialClick {
+	jurisdiction: string; // PJN | MEV | SCBA | EJE
+	mode: string; // credential | individual
+	uniqueUsers: number;
+}
+
+export interface OnboardingFunnelByStepData {
+	totalShown: number;
+	totalCompleted: number;
+	totalDismissed: number;
+	steps: OnboardingStepFunnelItem[];
+	judicialClicks: OnboardingJudicialClick[];
+}
+
+export interface OnboardingFunnelByStepResponse {
+	success: boolean;
+	data: OnboardingFunnelByStepData;
+	filters: { dateFrom: string | null; dateTo: string | null };
+	timestamp: string;
+}
+
 // ── Detalle de onboarding de un user ──
 export interface OnboardingUserDetailResponse {
 	success: boolean;

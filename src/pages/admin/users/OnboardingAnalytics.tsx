@@ -44,6 +44,7 @@ import {
 	OnboardingFunnelData,
 	OnboardingTimeToActivationData,
 	OnboardingUserSearchItem,
+	OnboardingFunnelByStepData,
 } from "types/onboarding";
 import { useSnackbar } from "notistack";
 
@@ -169,6 +170,73 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, color
 	);
 };
 
+// Step funnel row — barra horizontal proporcional con label + métricas.
+// Reusable: el row "Mostrado" usa solo `value`, los rows de step usan
+// `value` (completed) + `secondaryValue` (clicked) + `dropOff` opcional.
+interface StepFunnelRowProps {
+	label: string;
+	subtitle?: string;
+	value: number;
+	secondaryValue?: number;
+	maxValue: number;
+	color: string;
+	theme: any;
+	dropOff?: number;
+}
+
+const StepFunnelRow: React.FC<StepFunnelRowProps> = ({ label, subtitle, value, secondaryValue, maxValue, color, theme, dropOff }) => {
+	const pctPrimary = maxValue > 0 ? (value / maxValue) * 100 : 0;
+	const pctSecondary = secondaryValue !== undefined && maxValue > 0 ? (secondaryValue / maxValue) * 100 : 0;
+	return (
+		<Box>
+			<Stack direction="row" justifyContent="space-between" alignItems="baseline" sx={{ mb: 0.5 }}>
+				<Box>
+					<Typography sx={{ fontSize: "0.92rem", fontWeight: 600, color: "text.primary" }}>{label}</Typography>
+					{subtitle && <Typography sx={{ fontSize: "0.74rem", color: "text.secondary", letterSpacing: "-0.005em" }}>{subtitle}</Typography>}
+				</Box>
+				<Stack direction="row" alignItems="center" spacing={1}>
+					{dropOff !== undefined && (
+						<Chip
+							label={`${dropOff}% dropoff`}
+							size="small"
+							color={dropOff >= 80 ? "error" : dropOff >= 50 ? "warning" : "success"}
+							variant={dropOff >= 80 ? "filled" : "outlined"}
+							sx={{ height: 20, fontSize: "0.68rem", fontWeight: 600 }}
+						/>
+					)}
+					<Typography sx={{ fontSize: "1.1rem", fontWeight: 700, color, fontVariantNumeric: "tabular-nums" }}>{value}</Typography>
+				</Stack>
+			</Stack>
+			{/* Track + barra(s). Si hay secondaryValue (clicked), se renderiza
+			    como capa de fondo más clara para visualizar dropoff. */}
+			<Box sx={{ position: "relative", height: 10, bgcolor: alpha(color, 0.08), borderRadius: 5, overflow: "hidden" }}>
+				{secondaryValue !== undefined && (
+					<Box
+						sx={{
+							position: "absolute",
+							inset: 0,
+							width: `${pctSecondary}%`,
+							bgcolor: alpha(color, 0.28),
+							borderRadius: 5,
+							transition: "width 400ms ease",
+						}}
+					/>
+				)}
+				<Box
+					sx={{
+						position: "absolute",
+						inset: 0,
+						width: `${pctPrimary}%`,
+						bgcolor: color,
+						borderRadius: 5,
+						transition: "width 400ms ease",
+					}}
+				/>
+			</Box>
+		</Box>
+	);
+};
+
 // Main component
 const OnboardingAnalytics: React.FC = () => {
 	const theme = useTheme();
@@ -180,6 +248,7 @@ const OnboardingAnalytics: React.FC = () => {
 	const [summaryData, setSummaryData] = useState<OnboardingSummaryData | null>(null);
 	const [funnelData, setFunnelData] = useState<OnboardingFunnelData | null>(null);
 	const [timeData, setTimeData] = useState<OnboardingTimeToActivationData | null>(null);
+	const [stepFunnelData, setStepFunnelData] = useState<OnboardingFunnelByStepData | null>(null);
 	const [events, setEvents] = useState<OnboardingEvent[]>([]);
 	const [stuckUsers, setStuckUsers] = useState<OnboardingStuckUser[]>([]);
 	const [eventsPage, setEventsPage] = useState(0);
@@ -211,15 +280,17 @@ const OnboardingAnalytics: React.FC = () => {
 				...(dateTo && { dateTo }),
 			};
 
-			const [summaryRes, funnelRes, timeRes] = await Promise.all([
+			const [summaryRes, funnelRes, timeRes, stepFunnelRes] = await Promise.all([
 				OnboardingService.getSummary(params),
 				OnboardingService.getFunnel(params),
 				OnboardingService.getTimeToActivation(params),
+				OnboardingService.getFunnelByStep(params),
 			]);
 
 			if (summaryRes.success) setSummaryData(summaryRes.data);
 			if (funnelRes.success) setFunnelData(funnelRes.data);
 			if (timeRes.success) setTimeData(timeRes.data);
+			if (stepFunnelRes.success) setStepFunnelData(stepFunnelRes.data);
 		} catch (error: any) {
 			enqueueSnackbar(error.message || "Error al cargar datos", { variant: "error" });
 		} finally {
@@ -629,6 +700,121 @@ const OnboardingAnalytics: React.FC = () => {
 								)}
 							</Paper>
 						</Grid>
+
+						{/* Funnel granular por step del OnboardingChecklist (4 pasos).
+						    Responde a "en qué step se atasca el flujo". Datos vienen
+						    de la collection OnboardingEvent agregada por user único. */}
+						<Grid item xs={12}>
+							<Paper elevation={0} sx={{ p: 3, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
+								<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+									<Typography variant="h6">Funnel del checklist por step</Typography>
+									{stepFunnelData && (
+										<Stack direction="row" spacing={1.5}>
+											<Chip label={`${stepFunnelData.totalShown} vieron`} size="small" variant="outlined" />
+											<Chip label={`${stepFunnelData.totalCompleted} completaron 4/4`} size="small" color="success" variant="outlined" />
+											<Chip label={`${stepFunnelData.totalDismissed} descartaron`} size="small" color="warning" variant="outlined" />
+										</Stack>
+									)}
+								</Stack>
+								{loading ? (
+									<Skeleton variant="rectangular" height={260} />
+								) : stepFunnelData && stepFunnelData.totalShown > 0 ? (
+									<Stack spacing={2}>
+										{/* Header con el "shown" como baseline */}
+										<StepFunnelRow
+											label="Mostrado"
+											subtitle="Vieron el checklist al menos una vez"
+											value={stepFunnelData.totalShown}
+											maxValue={stepFunnelData.totalShown}
+											color={BRAND_BLUE}
+											theme={theme}
+										/>
+										{stepFunnelData.steps.map((step, idx) => {
+											const stepLabel = STEP_TRANSLATIONS[step.id] || step.id;
+											const conversion =
+												stepFunnelData.totalShown > 0 ? +((step.completed / stepFunnelData.totalShown) * 100).toFixed(1) : 0;
+											// Color por severidad del dropoff
+											const dropOffColor =
+												step.clicked === 0
+													? theme.palette.grey[400]
+													: step.dropOff >= 80
+													? theme.palette.error.main
+													: step.dropOff >= 50
+													? theme.palette.warning.main
+													: theme.palette.success.main;
+											return (
+												<React.Fragment key={step.id}>
+													<StepFunnelRow
+														label={`#${idx + 1} ${stepLabel}`}
+														subtitle={`${step.clicked} clickearon · ${step.completed} completaron · ${conversion}% del total`}
+														value={step.completed}
+														secondaryValue={step.clicked}
+														maxValue={stepFunnelData.totalShown}
+														color={dropOffColor}
+														theme={theme}
+														dropOff={step.clicked > 0 ? step.dropOff : undefined}
+													/>
+												</React.Fragment>
+											);
+										})}
+									</Stack>
+								) : (
+									<Alert severity="info">
+										Todavía no hay eventos del checklist nuevo. Los datos van a aparecer cuando los users empiecen a interactuar con el
+										onboarding deployado.
+									</Alert>
+								)}
+							</Paper>
+						</Grid>
+
+						{/* Desglose de clicks a logos judiciales — útil para entender
+						    qué jurisdicción atrae más y si prefieren cred vs vincular
+						    individual en el step #2. */}
+						{stepFunnelData && stepFunnelData.judicialClicks.length > 0 && (
+							<Grid item xs={12}>
+								<Paper elevation={0} sx={{ p: 3, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
+									<Typography variant="h6" gutterBottom>
+										Step #2 — Clicks a logos judiciales
+									</Typography>
+									<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
+										Qué jurisdicción y modo (credencial vs vincular individual) prefieren los users que entraron al step 2.
+									</Typography>
+									<TableContainer>
+										<Table size="small">
+											<TableHead>
+												<TableRow>
+													<TableCell>Jurisdicción</TableCell>
+													<TableCell>Modo</TableCell>
+													<TableCell align="right">Users únicos</TableCell>
+												</TableRow>
+											</TableHead>
+											<TableBody>
+												{stepFunnelData.judicialClicks.map((c, i) => (
+													<TableRow key={`${c.jurisdiction}-${c.mode}-${i}`}>
+														<TableCell>
+															<Chip label={c.jurisdiction} size="small" variant="outlined" />
+														</TableCell>
+														<TableCell>
+															<Chip
+																label={c.mode === "credential" ? "Conectar cuenta" : "Vincular individual"}
+																size="small"
+																color={c.mode === "credential" ? "primary" : "secondary"}
+																variant="outlined"
+															/>
+														</TableCell>
+														<TableCell align="right">
+															<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+																{c.uniqueUsers}
+															</Typography>
+														</TableCell>
+													</TableRow>
+												))}
+											</TableBody>
+										</Table>
+									</TableContainer>
+								</Paper>
+							</Grid>
+						)}
 					</Grid>
 				</Box>
 			</TabPanel>
