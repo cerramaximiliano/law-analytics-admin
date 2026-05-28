@@ -25,10 +25,16 @@ import {
 	Divider,
 	Alert,
 	TextField,
+	DialogTitle,
+	DialogContent,
+	DialogContentText,
+	DialogActions,
+	CircularProgress,
 } from "@mui/material";
 import { Refresh, People, Activity, Warning2, TickCircle, CloseCircle, SearchNormal1, Trash, Link21 } from "iconsax-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
 import MainCard from "components/MainCard";
+import ResponsiveDialog from "components/@extended/ResponsiveDialog";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 import OnboardingService from "api/onboarding";
 import {
@@ -190,6 +196,12 @@ const OnboardingAnalytics: React.FC = () => {
 	const [resettingUserId, setResettingUserId] = useState<string | null>(null);
 	const [purgeEventsOnReset, setPurgeEventsOnReset] = useState(false);
 
+	// Confirm dialog state — reemplaza el window.confirm para que la UX matchee
+	// con el resto de las acciones destructivas del admin (mismo patrón que
+	// DeleteUserDialog: ResponsiveDialog + icono coloreado + datos del user +
+	// Cancelar/Confirmar con loading state).
+	const [resetConfirmUser, setResetConfirmUser] = useState<OnboardingUserSearchItem | null>(null);
+
 	// Fetch all data
 	const fetchData = useCallback(async () => {
 		setLoading(true);
@@ -288,33 +300,36 @@ const OnboardingAnalytics: React.FC = () => {
 		return () => clearTimeout(handle);
 	}, [searchQuery, tabValue, enqueueSnackbar]);
 
-	// Reset-user tool: handler de reset (con confirm() para evitar mis-clicks)
-	const handleResetUser = useCallback(
-		async (user: OnboardingUserSearchItem) => {
-			const label = user.firstName || user.email;
-			const confirmMsg = `¿Resetear el onboarding de ${label}?${
-				purgeEventsOnReset ? "\n\nTambién se borrarán sus eventos históricos." : ""
-			}`;
-			if (!window.confirm(confirmMsg)) return;
+	// Reset-user tool: abre el dialog de confirmación. Los datos del user
+	// quedan en `resetConfirmUser` hasta que el dialog confirma o cancela.
+	const openResetDialog = useCallback((user: OnboardingUserSearchItem) => {
+		setResetConfirmUser(user);
+	}, []);
 
-			try {
-				setResettingUserId(user._id);
-				const res = await OnboardingService.resetUserOnboarding(user._id, purgeEventsOnReset);
-				if (res.success) {
-					enqueueSnackbar(`Onboarding reseteado para ${label}${res.purgedEvents ? ` (${res.purgedEvents} eventos eliminados)` : ""}`, {
-						variant: "success",
-					});
-					// Refresca el resultado de búsqueda con el nuevo estado del user
-					setSearchResults((prev) => prev.map((u) => (u._id === user._id ? { ...u, onboarding: res.user.onboarding } : u)));
-				}
-			} catch (error: any) {
-				enqueueSnackbar(error.message || "Error al resetear onboarding", { variant: "error" });
-			} finally {
-				setResettingUserId(null);
+	// Ejecuta el reset una vez que el dialog confirmó. Actualiza el estado
+	// local del search (chip de estado actualizado in-place) y muestra
+	// snackbar de éxito/error.
+	const confirmResetUser = useCallback(async () => {
+		if (!resetConfirmUser) return;
+		const user = resetConfirmUser;
+		const label = user.firstName || user.email;
+
+		try {
+			setResettingUserId(user._id);
+			const res = await OnboardingService.resetUserOnboarding(user._id, purgeEventsOnReset);
+			if (res.success) {
+				enqueueSnackbar(`Onboarding reseteado para ${label}${res.purgedEvents ? ` (${res.purgedEvents} eventos eliminados)` : ""}`, {
+					variant: "success",
+				});
+				setSearchResults((prev) => prev.map((u) => (u._id === user._id ? { ...u, onboarding: res.user.onboarding } : u)));
+				setResetConfirmUser(null);
 			}
-		},
-		[purgeEventsOnReset, enqueueSnackbar],
-	);
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al resetear onboarding", { variant: "error" });
+		} finally {
+			setResettingUserId(null);
+		}
+	}, [resetConfirmUser, purgeEventsOnReset, enqueueSnackbar]);
 
 	// Helper para renderizar el estado del onboarding como chip
 	const renderOnboardingStateChip = (u: OnboardingUserSearchItem) => {
@@ -787,7 +802,7 @@ const OnboardingAnalytics: React.FC = () => {
 															startIcon={<Refresh size={14} />}
 															disabled={resettingUserId === user._id}
 															onClick={() =>
-																handleResetUser({
+																openResetDialog({
 																	_id: user._id,
 																	email: user.email,
 																	firstName: user.name,
@@ -903,7 +918,7 @@ const OnboardingAnalytics: React.FC = () => {
 													color="primary"
 													startIcon={<Refresh size={14} />}
 													disabled={resettingUserId === u._id}
-													onClick={() => handleResetUser(u)}
+													onClick={() => openResetDialog(u)}
 													sx={{ textTransform: "none", fontSize: "0.78rem" }}
 												>
 													{resettingUserId === u._id ? "Reseteando..." : "Reset"}
@@ -929,6 +944,98 @@ const OnboardingAnalytics: React.FC = () => {
 					</Typography>
 				</Box>
 			</TabPanel>
+
+			{/* Dialog de confirmación del reset — patrón consistente con el resto
+			    del admin (ver DeleteUserDialog). ResponsiveDialog + icono + datos
+			    del user + botón Reset con loading state. Bloquea cierre durante
+			    la operación. */}
+			<ResponsiveDialog
+				open={!!resetConfirmUser}
+				onClose={resettingUserId ? undefined : () => setResetConfirmUser(null)}
+				maxWidth="sm"
+				disableEscapeKeyDown={!!resettingUserId}
+			>
+				<DialogTitle sx={{ pb: 1.5 }}>
+					<Stack direction="row" spacing={1.25} alignItems="center">
+						<Box
+							sx={{
+								width: 36,
+								height: 36,
+								borderRadius: 1.25,
+								display: "flex",
+								alignItems: "center",
+								justifyContent: "center",
+								bgcolor: alpha(theme.palette.warning.main, 0.1),
+								color: "warning.main",
+							}}
+						>
+							<Refresh size={20} variant="Bold" />
+						</Box>
+						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+							Resetear onboarding
+						</Typography>
+					</Stack>
+				</DialogTitle>
+				<DialogContent>
+					<DialogContentText>
+						¿Resetear el onboarding del usuario{" "}
+						<Typography component="span" fontWeight={600}>
+							{resetConfirmUser?.firstName || resetConfirmUser?.lastName
+								? `${resetConfirmUser?.firstName || ""} ${resetConfirmUser?.lastName || ""}`.trim()
+								: "(sin nombre)"}
+						</Typography>
+						?
+					</DialogContentText>
+					<DialogContentText sx={{ mt: 2 }}>
+						Email:{" "}
+						<Typography component="span" fontWeight={600}>
+							{resetConfirmUser?.email}
+						</Typography>
+					</DialogContentText>
+					<DialogContentText sx={{ mt: 1 }}>
+						Acciones:
+						<Box component="ul" sx={{ mt: 0.5, mb: 0, pl: 2.5 }}>
+							<li>
+								Se ponen en cero los flags de <code>User.onboarding</code> (createdFirstFolder, completedSteps, dismissed, etc).
+							</li>
+							<li>
+								Las carpetas, contactos y vencimientos del usuario <strong>no se tocan</strong>.
+							</li>
+							{purgeEventsOnReset && (
+								<li>
+									<Typography component="span" sx={{ color: "warning.dark", fontWeight: 600 }}>
+										También se borran sus eventos históricos de la colección OnboardingEvent.
+									</Typography>
+								</li>
+							)}
+						</Box>
+					</DialogContentText>
+					<DialogContentText sx={{ mt: 2, fontSize: "0.78rem", fontStyle: "italic" }}>
+						El usuario tiene que limpiar su sessionStorage del browser (clave <code>onboarding_data_&lt;userId&gt;</code>) o abrir una
+						sesión nueva para que el frontend pida el estado fresco.
+					</DialogContentText>
+				</DialogContent>
+				<DialogActions sx={{ px: 3, pb: 2 }}>
+					<Button onClick={() => setResetConfirmUser(null)} color="secondary" disabled={!!resettingUserId}>
+						Cancelar
+					</Button>
+					<Button
+						onClick={confirmResetUser}
+						color="primary"
+						variant="contained"
+						disableElevation
+						disabled={!!resettingUserId}
+						startIcon={resettingUserId ? <CircularProgress size={16} color="inherit" /> : <Refresh size={16} />}
+						sx={{
+							transition: "transform 160ms ease",
+							"&:hover": { transform: "translateY(-1px)" },
+							"&:active": { transform: "scale(0.98)" },
+						}}
+					>
+						{resettingUserId ? "Reseteando..." : "Resetear"}
+					</Button>
+				</DialogActions>
+			</ResponsiveDialog>
 		</MainCard>
 	);
 };

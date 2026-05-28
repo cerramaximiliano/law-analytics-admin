@@ -107,9 +107,16 @@ class OnboardingService {
 	 */
 	static async resetUserOnboarding(userId: string, purgeEvents = false): Promise<OnboardingResetResponse> {
 		try {
-			const response = await adminAxios.post(`/api/onboarding/users/${userId}/reset`, null, {
-				params: { purgeEvents },
-			});
+			// Body {} (no null) — el body-parser strict del admin-api rechaza el
+			// literal "null" como JSON inválido. Express necesita un objeto
+			// (incluso vacío) para no tirar SyntaxError en json.js:86.
+			const response = await adminAxios.post(
+				`/api/onboarding/users/${userId}/reset`,
+				{},
+				{
+					params: { purgeEvents },
+				},
+			);
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al resetear onboarding");
