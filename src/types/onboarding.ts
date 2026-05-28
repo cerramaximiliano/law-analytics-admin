@@ -55,10 +55,17 @@ export interface OnboardingEvent {
 	event: string;
 	sessionsCount: number;
 	metadata?: {
+		// Legacy
 		folderId?: string;
 		timeToCompleteMs?: number;
 		timeToComplete?: string;
 		source?: string;
+		// Nuevos (OnboardingChecklist)
+		step_id?: string; // first_folder | judicial_connection | first_contact | first_deadline
+		jurisdiction?: string; // PJN | MEV | SCBA | EJE
+		mode?: string; // credential | individual
+		completed_count?: number;
+		total_steps?: number;
 	};
 	clientInfo?: {
 		userAgent: string;
@@ -163,4 +170,62 @@ export interface OnboardingQueryParams {
 	page?: number;
 	limit?: number;
 	minSessions?: number;
+}
+
+// ── Reset onboarding por user (admin tool) ──
+export interface OnboardingUserState {
+	createdFirstFolder: boolean;
+	createdFirstFolderAt: string | null;
+	usedFirstFeature: boolean;
+	firstFeatureUsedAt: string | null;
+	firstFeatureName: string | null;
+	onboardingComplete: boolean;
+	onboardingCompletedAt: string | null;
+	completedSteps: string[];
+	onboardingSessionsCount: number;
+	lastOnboardingSessionAt: string | null;
+	dismissed: boolean;
+	dismissedAt: string | null;
+}
+
+export interface OnboardingResetResponse {
+	success: boolean;
+	message: string;
+	user: { _id: string; email: string; onboarding: OnboardingUserState };
+	purgedEvents: number;
+}
+
+// ── Búsqueda de usuarios ──
+export interface OnboardingUserSearchItem {
+	_id: string;
+	email: string;
+	firstName?: string;
+	lastName?: string;
+	role: string;
+	createdAt: string;
+	onboarding?: OnboardingUserState | null;
+}
+
+export interface OnboardingUserSearchResponse {
+	success: boolean;
+	data: OnboardingUserSearchItem[];
+}
+
+// ── Detalle de onboarding de un user ──
+export interface OnboardingUserDetailResponse {
+	success: boolean;
+	data: {
+		user: {
+			_id: string;
+			email: string;
+			firstName?: string;
+			lastName?: string;
+			role: string;
+			createdAt: string;
+			lastLogin: string | null;
+		};
+		onboarding: OnboardingUserState | null;
+		realCounts: { folders: number };
+		recentEvents: OnboardingEvent[];
+	};
 }

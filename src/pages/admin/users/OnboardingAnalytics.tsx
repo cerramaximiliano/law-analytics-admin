@@ -26,22 +26,8 @@ import {
 	Alert,
 	TextField,
 } from "@mui/material";
-import { Refresh, Chart, People, Activity, Timer1, Warning2, TickCircle, CloseCircle, ArrowDown } from "iconsax-react";
-import {
-	BarChart,
-	Bar,
-	XAxis,
-	YAxis,
-	CartesianGrid,
-	Tooltip as RechartsTooltip,
-	ResponsiveContainer,
-	FunnelChart,
-	Funnel,
-	LabelList,
-	Cell,
-	PieChart,
-	Pie,
-} from "recharts";
+import { Refresh, People, Activity, Warning2, TickCircle, CloseCircle, SearchNormal1, Trash, Link21 } from "iconsax-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
 import MainCard from "components/MainCard";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 import OnboardingService from "api/onboarding";
@@ -51,16 +37,46 @@ import {
 	OnboardingStuckUser,
 	OnboardingFunnelData,
 	OnboardingTimeToActivationData,
+	OnboardingUserSearchItem,
 } from "types/onboarding";
 import { useSnackbar } from "notistack";
 
-// Event name translations
+// Event name translations — los 5 primeros son del onboarding viejo (banner +
+// 4 cards). Los 4 últimos son del OnboardingChecklist nuevo. Se mantienen
+// ambos en el dict para que el tab Eventos no muestre "raw event names".
 const EVENT_TRANSLATIONS: Record<string, string> = {
+	// Legacy
 	onboarding_shown: "Onboarding mostrado",
 	onboarding_cta_clicked: "Click en CTA",
 	folder_created_from_onboarding: "Carpeta creada",
 	onboarding_dismissed: "Descartado",
 	onboarding_completed: "Completado",
+	// Nuevos (OnboardingChecklist)
+	onboarding_step_clicked: "Click en step",
+	onboarding_step_completed: "Step completado",
+	onboarding_judicial_logo_clicked: "Click logo judicial",
+	onboarding_example_folder_used: "Usó carpeta de ejemplo",
+};
+
+// Color del chip por evento — visual scan rápido en la tabla de eventos.
+const EVENT_COLOR: Record<string, "default" | "primary" | "secondary" | "info" | "success" | "warning" | "error"> = {
+	onboarding_shown: "default",
+	onboarding_cta_clicked: "primary",
+	folder_created_from_onboarding: "success",
+	onboarding_dismissed: "warning",
+	onboarding_completed: "success",
+	onboarding_step_clicked: "primary",
+	onboarding_step_completed: "success",
+	onboarding_judicial_logo_clicked: "info",
+	onboarding_example_folder_used: "secondary",
+};
+
+// Traducción de step_id para no exponer enums crudos al admin
+const STEP_TRANSLATIONS: Record<string, string> = {
+	first_folder: "Primera carpeta",
+	judicial_connection: "Conexión judicial",
+	first_contact: "Primer contacto",
+	first_deadline: "Primer vencimiento",
 };
 
 // Tab Panel component
@@ -108,7 +124,11 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, color
 		>
 			<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
 				<Box>
-					<Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.3, textTransform: "uppercase", display: "block", mb: 0.5 }}>
+					<Typography
+						variant="caption"
+						color="text.secondary"
+						sx={{ letterSpacing: 0.3, textTransform: "uppercase", display: "block", mb: 0.5 }}
+					>
 						{title}
 					</Typography>
 					{loading ? (
@@ -162,6 +182,13 @@ const OnboardingAnalytics: React.FC = () => {
 	const [stuckTotal, setStuckTotal] = useState(0);
 	const [dateFrom, setDateFrom] = useState("");
 	const [dateTo, setDateTo] = useState("");
+
+	// Reset-user tool state
+	const [searchQuery, setSearchQuery] = useState("");
+	const [searchResults, setSearchResults] = useState<OnboardingUserSearchItem[]>([]);
+	const [searching, setSearching] = useState(false);
+	const [resettingUserId, setResettingUserId] = useState<string | null>(null);
+	const [purgeEventsOnReset, setPurgeEventsOnReset] = useState(false);
 
 	// Fetch all data
 	const fetchData = useCallback(async () => {
@@ -241,6 +268,73 @@ const OnboardingAnalytics: React.FC = () => {
 		setTabValue(newValue);
 	};
 
+	// Reset-user tool: búsqueda con debounce simple (350ms)
+	useEffect(() => {
+		if (tabValue !== 3 || searchQuery.trim().length < 2) {
+			setSearchResults([]);
+			return;
+		}
+		const handle = setTimeout(async () => {
+			try {
+				setSearching(true);
+				const res = await OnboardingService.searchUsers(searchQuery.trim());
+				if (res.success) setSearchResults(res.data);
+			} catch (error: any) {
+				enqueueSnackbar(error.message || "Error al buscar usuarios", { variant: "error" });
+			} finally {
+				setSearching(false);
+			}
+		}, 350);
+		return () => clearTimeout(handle);
+	}, [searchQuery, tabValue, enqueueSnackbar]);
+
+	// Reset-user tool: handler de reset (con confirm() para evitar mis-clicks)
+	const handleResetUser = useCallback(
+		async (user: OnboardingUserSearchItem) => {
+			const label = user.firstName || user.email;
+			const confirmMsg = `¿Resetear el onboarding de ${label}?${
+				purgeEventsOnReset ? "\n\nTambién se borrarán sus eventos históricos." : ""
+			}`;
+			if (!window.confirm(confirmMsg)) return;
+
+			try {
+				setResettingUserId(user._id);
+				const res = await OnboardingService.resetUserOnboarding(user._id, purgeEventsOnReset);
+				if (res.success) {
+					enqueueSnackbar(`Onboarding reseteado para ${label}${res.purgedEvents ? ` (${res.purgedEvents} eventos eliminados)` : ""}`, {
+						variant: "success",
+					});
+					// Refresca el resultado de búsqueda con el nuevo estado del user
+					setSearchResults((prev) => prev.map((u) => (u._id === user._id ? { ...u, onboarding: res.user.onboarding } : u)));
+				}
+			} catch (error: any) {
+				enqueueSnackbar(error.message || "Error al resetear onboarding", { variant: "error" });
+			} finally {
+				setResettingUserId(null);
+			}
+		},
+		[purgeEventsOnReset, enqueueSnackbar],
+	);
+
+	// Helper para renderizar el estado del onboarding como chip
+	const renderOnboardingStateChip = (u: OnboardingUserSearchItem) => {
+		const ob = u.onboarding;
+		if (!ob) return <Chip label="Sin estado" size="small" variant="outlined" />;
+		if (ob.onboardingComplete) return <Chip label="Completado" size="small" color="success" />;
+		if (ob.dismissed) return <Chip label="Descartado" size="small" color="warning" />;
+		if (ob.completedSteps?.length) {
+			return (
+				<Chip
+					label={`${ob.completedSteps.length}/4 pasos · ${ob.onboardingSessionsCount || 0} sesiones`}
+					size="small"
+					color="info"
+					variant="outlined"
+				/>
+			);
+		}
+		return <Chip label={`${ob.onboardingSessionsCount || 0} sesiones`} size="small" variant="outlined" />;
+	};
+
 	// Funnel chart colors
 	const FUNNEL_COLORS = [BRAND_BLUE, theme.palette.info.main, theme.palette.warning.main, theme.palette.success.main];
 
@@ -315,6 +409,7 @@ const OnboardingAnalytics: React.FC = () => {
 					<Tab label="Resumen" />
 					<Tab label="Eventos" />
 					<Tab label="Usuarios estancados" />
+					<Tab label="Reset por usuario" icon={<SearchNormal1 size={14} />} iconPosition="start" />
 				</Tabs>
 			</Box>
 
@@ -551,15 +646,7 @@ const OnboardingAnalytics: React.FC = () => {
 												<Chip
 													label={EVENT_TRANSLATIONS[event.event] || event.event}
 													size="small"
-													color={
-														event.event === "folder_created_from_onboarding"
-															? "success"
-															: event.event === "onboarding_dismissed"
-															? "warning"
-															: event.event === "onboarding_completed"
-															? "info"
-															: "default"
-													}
+													color={EVENT_COLOR[event.event] || "default"}
 												/>
 											</TableCell>
 											<TableCell>
@@ -584,8 +671,33 @@ const OnboardingAnalytics: React.FC = () => {
 												</Typography>
 											</TableCell>
 											<TableCell>
-												{event.metadata?.timeToComplete && <Chip label={event.metadata.timeToComplete} size="small" variant="outlined" />}
-												{event.metadata?.source && <Chip label={event.metadata.source} size="small" variant="outlined" sx={{ ml: 0.5 }} />}
+												<Stack direction="row" spacing={0.5} flexWrap="wrap" rowGap={0.5}>
+													{event.metadata?.step_id && (
+														<Chip
+															label={STEP_TRANSLATIONS[event.metadata.step_id] || event.metadata.step_id}
+															size="small"
+															variant="outlined"
+														/>
+													)}
+													{event.metadata?.jurisdiction && (
+														<Chip
+															icon={<Link21 size={12} />}
+															label={`${event.metadata.jurisdiction}${event.metadata.mode ? ` · ${event.metadata.mode}` : ""}`}
+															size="small"
+															variant="outlined"
+															color="info"
+														/>
+													)}
+													{event.metadata?.completed_count !== undefined && event.metadata?.total_steps !== undefined && (
+														<Chip
+															label={`${event.metadata.completed_count}/${event.metadata.total_steps}`}
+															size="small"
+															variant="outlined"
+														/>
+													)}
+													{event.metadata?.timeToComplete && <Chip label={event.metadata.timeToComplete} size="small" variant="outlined" />}
+													{event.metadata?.source && <Chip label={event.metadata.source} size="small" variant="outlined" />}
+												</Stack>
 											</TableCell>
 										</TableRow>
 									))
@@ -620,12 +732,13 @@ const OnboardingAnalytics: React.FC = () => {
 									<TableCell>Ultima Sesion</TableCell>
 									<TableCell>Registrado</TableCell>
 									<TableCell align="center">Dias sin Activacion</TableCell>
+									<TableCell align="center">Acciones</TableCell>
 								</TableRow>
 							</TableHead>
 							<TableBody>
 								{stuckUsers.length === 0 ? (
 									<TableRow>
-										<TableCell colSpan={5} align="center">
+										<TableCell colSpan={6} align="center">
 											<Typography color="text.secondary">No hay usuarios estancados</Typography>
 										</TableCell>
 									</TableRow>
@@ -664,6 +777,31 @@ const OnboardingAnalytics: React.FC = () => {
 													color={user.daysSinceRegistration > 14 ? "error" : user.daysSinceRegistration > 7 ? "warning" : "default"}
 												/>
 											</TableCell>
+											<TableCell align="center">
+												<Tooltip title="Resetear onboarding (vuelve a ver el checklist)" arrow>
+													<span>
+														<Button
+															size="small"
+															variant="outlined"
+															color="primary"
+															startIcon={<Refresh size={14} />}
+															disabled={resettingUserId === user._id}
+															onClick={() =>
+																handleResetUser({
+																	_id: user._id,
+																	email: user.email,
+																	firstName: user.name,
+																	role: "USER_ROLE",
+																	createdAt: user.createdAt,
+																})
+															}
+															sx={{ textTransform: "none", fontSize: "0.75rem", py: 0.25 }}
+														>
+															{resettingUserId === user._id ? "..." : "Reset"}
+														</Button>
+													</span>
+												</Tooltip>
+											</TableCell>
 										</TableRow>
 									))
 								)}
@@ -679,6 +817,116 @@ const OnboardingAnalytics: React.FC = () => {
 							labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
 						/>
 					</TableContainer>
+				</Box>
+			</TabPanel>
+
+			{/* Tab: Reset por usuario (QA/admin tool) */}
+			<TabPanel value={tabValue} index={3}>
+				<Box sx={{ px: 3, pb: 3 }}>
+					<Alert severity="info" sx={{ mb: 3 }}>
+						Buscá un usuario por email o nombre. El reset deja sus flags de onboarding en cero — el checklist vuelve a aparecer la próxima
+						vez que entre al dashboard. Los recursos del usuario (carpetas, contactos, vencimientos) no se tocan. Si el usuario ya tiene
+						carpetas, el paso 1 va a aparecer marcado automáticamente.
+					</Alert>
+
+					<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "center" }} sx={{ mb: 3 }}>
+						<TextField
+							fullWidth
+							size="small"
+							placeholder="Buscar por email o nombre (mín. 2 caracteres)..."
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+							InputProps={{
+								startAdornment: <SearchNormal1 size={16} style={{ marginRight: 8, opacity: 0.5 }} />,
+							}}
+							sx={{ maxWidth: { sm: 500 } }}
+						/>
+						<Tooltip
+							title="Si está activado, también borra los eventos históricos del usuario (deja la colección OnboardingEvent limpia para empezar de cero)"
+							arrow
+						>
+							<Button
+								variant={purgeEventsOnReset ? "contained" : "outlined"}
+								color={purgeEventsOnReset ? "warning" : "primary"}
+								startIcon={<Trash size={14} />}
+								size="small"
+								onClick={() => setPurgeEventsOnReset((v) => !v)}
+								sx={{ textTransform: "none", whiteSpace: "nowrap" }}
+							>
+								Purgar eventos: {purgeEventsOnReset ? "SÍ" : "NO"}
+							</Button>
+						</Tooltip>
+					</Stack>
+
+					{searching && <LinearProgress sx={{ mb: 2 }} />}
+
+					{searchQuery.trim().length >= 2 && !searching && searchResults.length === 0 ? (
+						<Alert severity="warning">No se encontraron usuarios con "{searchQuery}".</Alert>
+					) : searchResults.length > 0 ? (
+						<TableContainer component={Paper} elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
+							<Table>
+								<TableHead>
+									<TableRow>
+										<TableCell>Usuario</TableCell>
+										<TableCell>Rol</TableCell>
+										<TableCell>Estado del onboarding</TableCell>
+										<TableCell>Registrado</TableCell>
+										<TableCell align="right">Acción</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{searchResults.map((u) => (
+										<TableRow key={u._id} hover>
+											<TableCell>
+												<Stack>
+													<Typography variant="body2" sx={{ fontWeight: 500 }}>
+														{u.firstName || u.lastName ? `${u.firstName || ""} ${u.lastName || ""}`.trim() : "Sin nombre"}
+													</Typography>
+													<Typography variant="caption" color="text.secondary">
+														{u.email}
+													</Typography>
+												</Stack>
+											</TableCell>
+											<TableCell>
+												<Chip label={u.role} size="small" variant="outlined" color={u.role === "ADMIN_ROLE" ? "primary" : "default"} />
+											</TableCell>
+											<TableCell>{renderOnboardingStateChip(u)}</TableCell>
+											<TableCell>
+												<Typography variant="caption" color="text.secondary">
+													{new Date(u.createdAt).toLocaleDateString()}
+												</Typography>
+											</TableCell>
+											<TableCell align="right">
+												<Button
+													variant="contained"
+													size="small"
+													color="primary"
+													startIcon={<Refresh size={14} />}
+													disabled={resettingUserId === u._id}
+													onClick={() => handleResetUser(u)}
+													sx={{ textTransform: "none", fontSize: "0.78rem" }}
+												>
+													{resettingUserId === u._id ? "Reseteando..." : "Reset"}
+												</Button>
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</TableContainer>
+					) : searchQuery.trim().length < 2 ? (
+						<Typography variant="body2" color="text.secondary" sx={{ textAlign: "center", py: 4 }}>
+							Empezá a tipear para buscar usuarios.
+						</Typography>
+					) : null}
+
+					<Divider sx={{ my: 3 }} />
+
+					<Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+						Nota: después del reset, el usuario tiene que limpiar su sessionStorage (clave <code>onboarding_data_&lt;userId&gt;</code>) o
+						abrir una sesión nueva (incógnito) para que el frontend pida el estado fresco. Es un cache del lado del browser que el reset del
+						backend no toca.
+					</Typography>
 				</Box>
 			</TabPanel>
 		</MainCard>

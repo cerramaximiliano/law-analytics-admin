@@ -6,6 +6,9 @@ import {
 	OnboardingFunnelResponse,
 	OnboardingTimeToActivationResponse,
 	OnboardingQueryParams,
+	OnboardingResetResponse,
+	OnboardingUserSearchResponse,
+	OnboardingUserDetailResponse,
 } from "types/onboarding";
 
 // ==============================|| ONBOARDING ANALYTICS SERVICE ||============================== //
@@ -68,6 +71,48 @@ class OnboardingService {
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al obtener tiempo de activacion");
+		}
+	}
+
+	/**
+	 * Busca usuarios por email o nombre (autocomplete del reset-tool).
+	 * Devuelve hasta 20 resultados con su estado de onboarding.
+	 */
+	static async searchUsers(q: string): Promise<OnboardingUserSearchResponse> {
+		try {
+			const response = await adminAxios.get("/api/onboarding/users/search", { params: { q } });
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al buscar usuarios");
+		}
+	}
+
+	/**
+	 * Obtiene el estado completo del onboarding de un user (flags + counts reales
+	 * + últimos eventos). Útil para cross-check antes de resetear.
+	 */
+	static async getUserDetail(userId: string): Promise<OnboardingUserDetailResponse> {
+		try {
+			const response = await adminAxios.get(`/api/onboarding/users/${userId}`);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al obtener detalle del usuario");
+		}
+	}
+
+	/**
+	 * Resetea el onboarding de un user específico (QA/admin tool).
+	 * @param purgeEvents si true, también borra los eventos históricos del user
+	 *   de OnboardingEvent. Útil para empezar con un funnel limpio.
+	 */
+	static async resetUserOnboarding(userId: string, purgeEvents = false): Promise<OnboardingResetResponse> {
+		try {
+			const response = await adminAxios.post(`/api/onboarding/users/${userId}/reset`, null, {
+				params: { purgeEvents },
+			});
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al resetear onboarding");
 		}
 	}
 }
