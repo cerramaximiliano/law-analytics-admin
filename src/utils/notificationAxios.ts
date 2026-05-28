@@ -72,6 +72,13 @@ notificationAxios.interceptors.request.use(
 notificationAxios.interceptors.response.use(
 	(response) => response,
 	async (error) => {
+		// Cuenta autenticada pero sin rol admin (verifyAdmin en backend devuelve
+		// accountNotAdmin: true) → modal de re-login inmediato. El token es válido,
+		// el problema es el rol, no tiene sentido pasar por refresh-token.
+		if (error.response?.status === 403 && error.response?.data?.accountNotAdmin) {
+			window.dispatchEvent(new CustomEvent("showUnauthorizedModal"));
+			return Promise.reject(error);
+		}
 		const originalRequest = error.config;
 
 		// Handle 401 errors for Notification API

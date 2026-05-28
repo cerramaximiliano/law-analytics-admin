@@ -123,6 +123,13 @@ mktAxios.interceptors.response.use(
 		return response;
 	},
 	async (error) => {
+		// Cuenta autenticada pero sin rol admin (verifyAdmin en backend devuelve
+		// accountNotAdmin: true) → modal de re-login inmediato. El token es válido,
+		// el problema es el rol, no tiene sentido pasar por refresh-token.
+		if (error.response?.status === 403 && error.response?.data?.accountNotAdmin) {
+			window.dispatchEvent(new CustomEvent("showUnauthorizedModal"));
+			return Promise.reject(error);
+		}
 		const originalRequest = error.config;
 		const status = error.response?.status;
 
