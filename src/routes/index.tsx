@@ -74,6 +74,7 @@ const TrialsPage = Loadable(lazy(() => import("pages/admin/subscriptions/Trials"
 
 // Usuarios pages
 const Suscripciones = Loadable(lazy(() => import("pages/usuarios/Suscripciones")));
+const PaymentFailures = Loadable(lazy(() => import("pages/usuarios/PaymentFailures")));
 
 // Server Status
 const ServerStatus = Loadable(lazy(() => import("pages/admin/server-status")));
@@ -220,6 +221,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<Suscripciones />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "usuarios/payment-failures",
+							element: (
+								<AdminRoleGuard>
+									<PaymentFailures />
 								</AdminRoleGuard>
 							),
 						},

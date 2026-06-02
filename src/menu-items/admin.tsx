@@ -511,6 +511,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "payment-failures",
+					title: "Intentos de Pago Fallidos",
+					type: "item",
+					url: "/admin/usuarios/payment-failures",
+					breadcrumbs: true,
+				},
+				{
 					id: "stripe-webhooks",
 					title: "Stripe Webhooks",
 					type: "item",
