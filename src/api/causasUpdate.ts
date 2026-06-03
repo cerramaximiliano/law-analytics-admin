@@ -141,6 +141,52 @@ export interface RunsQueryParams {
 	endDate?: string;
 }
 
+export type ScrapeIncidentType = "search_error" | "scraping_error" | "degraded_scrape" | "processing_exception" | "login_error" | "other";
+
+export interface ScrapeIncident {
+	_id: string;
+	type: ScrapeIncidentType;
+	worker: string;
+	causaId?: string;
+	causaType?: string | null;
+	fuero?: string | null;
+	number?: string | null;
+	year?: string | null;
+	caratula?: string | null;
+	credentialsId?: string | null;
+	runId?: string | null;
+	pageUrl?: string | null;
+	errorMessage?: string | null;
+	s3Key?: string | null;
+	screenshotUrl?: string | null;
+	htmlSnippet?: string | null;
+	openedDay?: string;
+	detectionCount: number;
+	firstSeenAt?: string;
+	lastSeenAt?: string;
+	resolved: boolean;
+	resolvedAt?: string | null;
+	resolvedBy?: string | null;
+	createdAt?: string;
+	updatedAt?: string;
+}
+
+export interface IncidentsQueryParams {
+	page?: number;
+	limit?: number;
+	type?: ScrapeIncidentType;
+	fuero?: string;
+	resolved?: boolean;
+	causaId?: string;
+	startDate?: string;
+}
+
+export interface IncidentStats {
+	total: number;
+	open: number;
+	byType: Record<string, number>;
+}
+
 // ====== Service ======
 
 export class CausasUpdateService {
@@ -212,6 +258,43 @@ export class CausasUpdateService {
 	static async getCredentialRuns(credId: string, params?: { page?: number; limit?: number }): Promise<ApiResponse<CausasUpdateRun[]>> {
 		try {
 			const response = await adminAxios.get(`/api/causas-update/runs/credential/${credId}`, { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	// Scrape Incidents (evidencia de errores con screenshot en S3)
+	static async getIncidents(params?: IncidentsQueryParams): Promise<ApiResponse<ScrapeIncident[]>> {
+		try {
+			const response = await adminAxios.get("/api/causas-update/incidents", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	static async getIncidentStats(): Promise<ApiResponse<IncidentStats>> {
+		try {
+			const response = await adminAxios.get("/api/causas-update/incidents/stats");
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	static async getIncidentDetail(id: string): Promise<ApiResponse<ScrapeIncident>> {
+		try {
+			const response = await adminAxios.get(`/api/causas-update/incidents/${id}`);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	static async resolveIncident(id: string, resolved: boolean): Promise<ApiResponse<ScrapeIncident>> {
+		try {
+			const response = await adminAxios.patch(`/api/causas-update/incidents/${id}/resolve`, { resolved });
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);

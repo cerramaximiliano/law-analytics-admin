@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Stack, Tabs, Tab, Alert, Button, Skeleton, Divider, useTheme } from "@mui/material";
-import { Setting2, People, Chart, MessageQuestion, Refresh, Clock, RefreshSquare } from "iconsax-react";
+import { Setting2, People, Chart, MessageQuestion, Refresh, Clock, RefreshSquare, Warning2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { ScrapingManagerConfig, ScrapingManagerService } from "api/scrapingManager";
 import { CausasUpdateConfig, CausasUpdateService } from "api/causasUpdate";
@@ -12,6 +12,7 @@ import MisCausasHelpTab from "./MisCausasHelpTab";
 import CausasUpdateConfigTab from "./CausasUpdateConfigTab";
 import CausasUpdateHistoryTab from "./CausasUpdateHistoryTab";
 import CausasUpdateStatsTab from "./CausasUpdateStatsTab";
+import CausasUpdateIncidentsTab from "./CausasUpdateIncidentsTab";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -244,6 +245,22 @@ const MisCausasWorker: React.FC = () => {
 					<Tab
 						label={
 							<Stack direction="row" spacing={1.5} alignItems="center">
+								<Warning2 size={20} />
+								<Box>
+									<Typography variant="body2" fontWeight={500}>
+										Incidencias
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Errores con screenshot
+									</Typography>
+								</Box>
+							</Stack>
+						}
+						sx={{ textTransform: "none" }}
+					/>
+					<Tab
+						label={
+							<Stack direction="row" spacing={1.5} alignItems="center">
 								<MessageQuestion size={20} />
 								<Box>
 									<Typography variant="body2" fontWeight={500}>
@@ -288,6 +305,9 @@ const MisCausasWorker: React.FC = () => {
 					<CausasUpdateStatsTab />
 				</TabPanel>
 				<TabPanel value={activeTab} index={5}>
+					<CausasUpdateIncidentsTab />
+				</TabPanel>
+				<TabPanel value={activeTab} index={6}>
 					<MisCausasHelpTab />
 				</TabPanel>
 			</Box>
