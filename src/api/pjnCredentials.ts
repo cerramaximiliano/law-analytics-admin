@@ -32,6 +32,7 @@ export interface PjnCredential {
 		timestamp: string;
 		screenshotFile: string | null;
 	}>;
+	// NOTA: el detalle con screenshot pre-firmado se trae aparte vía getErrorHistory()
 	expectedCausasCount: number;
 	processedCausasCount: number;
 	foldersCreatedCount: number;
@@ -349,6 +350,19 @@ export interface CreatePjnCredentialPayload {
 	password: string;
 }
 
+// Entrada del historial de errores de login con screenshot pre-firmado de S3
+export interface CredentialErrorEntry {
+	message: string | null;
+	code: string | null;
+	isPortalError: boolean;
+	timestamp: string | null;
+	actionName: string | null;
+	loginUrl: string | null;
+	urlHash: string | null;
+	s3Key: string | null;
+	screenshotUrl: string | null; // URL pre-firmada (válida ~5 min) o null
+}
+
 // Servicio de Credenciales PJN
 class PjnCredentialsService {
 	/**
@@ -380,6 +394,15 @@ class PjnCredentialsService {
 	 */
 	async getCredentialById(id: string): Promise<PjnCredentialResponse> {
 		const response = await adminAxios.get(`/api/pjn-credentials/${id}`);
+		return response.data;
+	}
+
+	/**
+	 * Historial de errores de login con screenshots pre-firmados de S3.
+	 * Las screenshotUrl son URLs pre-firmadas válidas ~5 minutos.
+	 */
+	async getErrorHistory(id: string): Promise<{ success: boolean; data: CredentialErrorEntry[]; count: number }> {
+		const response = await adminAxios.get(`/api/pjn-credentials/${id}/error-history`);
 		return response.data;
 	}
 

@@ -64,6 +64,7 @@ import pjnCredentialsService, {
 	PortalStatusResponse,
 	UpdateRun,
 	SyncedCausa,
+	CredentialErrorEntry,
 } from "api/pjnCredentials";
 import EmailLogsService from "api/emailLogs";
 import { EmailLog } from "types/email-log";
@@ -397,6 +398,11 @@ const CredencialesPJN = () => {
 		open: boolean;
 		credential: PjnCredential | null;
 	}>({ open: false, credential: null });
+	// Detalle del historial de errores (traído aparte, incluye screenshots pre-firmados de S3)
+	const [errorHistoryDetail, setErrorHistoryDetail] = useState<CredentialErrorEntry[]>([]);
+	const [errorHistoryLoading, setErrorHistoryLoading] = useState(false);
+	// Lightbox para ver el screenshot en grande
+	const [screenshotLightbox, setScreenshotLightbox] = useState<string | null>(null);
 
 	// Modal de actualización de contraseña
 	const [updatePasswordDialog, setUpdatePasswordDialog] = useState<{
@@ -657,6 +663,22 @@ const CredencialesPJN = () => {
 			causasLoading: false,
 			causasFetched: false,
 		});
+
+	const handleOpenErrorHistory = async (cred: PjnCredential) => {
+		setErrorHistoryDialog({ open: true, credential: cred });
+		setErrorHistoryDetail([]);
+		setErrorHistoryLoading(true);
+		try {
+			const response = await pjnCredentialsService.getErrorHistory(cred._id);
+			if (response.success) {
+				setErrorHistoryDetail(response.data || []);
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al cargar el historial de errores", { variant: "error" });
+		} finally {
+			setErrorHistoryLoading(false);
+		}
+	};
 
 	const handleViewRaw = async (cred: PjnCredential) => {
 		setDetailDialog({
@@ -1368,7 +1390,7 @@ const CredencialesPJN = () => {
 																	: "error"
 															}
 															size="small"
-															onClick={() => setErrorHistoryDialog({ open: true, credential: cred })}
+															onClick={() => handleOpenErrorHistory(cred)}
 															sx={{ minWidth: 32, cursor: "pointer" }}
 														/>
 													) : (
@@ -2379,10 +2401,14 @@ const CredencialesPJN = () => {
 							)}
 
 							{/* Historial completo */}
-							{errorHistoryDialog.credential.errorHistory && errorHistoryDialog.credential.errorHistory.length > 0 ? (
+							{errorHistoryLoading ? (
+								<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+									<CircularProgress size={28} />
+								</Box>
+							) : errorHistoryDetail.length > 0 ? (
 								<Box>
 									<Typography variant="subtitle2" gutterBottom>
-										Historial ({errorHistoryDialog.credential.errorHistory.length} registros)
+										Historial ({errorHistoryDetail.length} registros)
 									</Typography>
 									<TableContainer component={Paper} variant="outlined">
 										<Table size="small">
@@ -2392,20 +2418,21 @@ const CredencialesPJN = () => {
 													<TableCell>Código</TableCell>
 													<TableCell>Mensaje</TableCell>
 													<TableCell align="center">Tipo</TableCell>
-													<TableCell>Screenshot</TableCell>
+													<TableCell>Acción</TableCell>
+													<TableCell align="center">Screenshot</TableCell>
 												</TableRow>
 											</TableHead>
 											<TableBody>
-												{errorHistoryDialog.credential.errorHistory.map((err, i) => (
+												{errorHistoryDetail.map((err, i) => (
 													<TableRow key={i} hover>
 														<TableCell>
 															<Typography variant="caption" noWrap>
-																{formatDate(err.timestamp)}
+																{err.timestamp ? formatDate(err.timestamp) : "—"}
 															</Typography>
 														</TableCell>
 														<TableCell>
 															<Chip
-																label={err.code}
+																label={err.code || "—"}
 																size="small"
 																color={err.isPortalError ? "warning" : "error"}
 																variant="outlined"
@@ -2413,18 +2440,18 @@ const CredencialesPJN = () => {
 															/>
 														</TableCell>
 														<TableCell>
-															<Tooltip title={err.message} arrow>
+															<Tooltip title={err.message || ""} arrow>
 																<Typography
 																	variant="caption"
 																	sx={{
-																		maxWidth: 280,
+																		maxWidth: 260,
 																		display: "block",
 																		overflow: "hidden",
 																		textOverflow: "ellipsis",
 																		whiteSpace: "nowrap",
 																	}}
 																>
-																	{err.message}
+																	{err.message || "—"}
 																</Typography>
 															</Tooltip>
 														</TableCell>
@@ -2438,16 +2465,32 @@ const CredencialesPJN = () => {
 															/>
 														</TableCell>
 														<TableCell>
-															{err.screenshotFile ? (
-																<Tooltip title={err.screenshotFile} arrow>
-																	<Typography
-																		variant="caption"
-																		color="primary.main"
-																		sx={{ fontFamily: "monospace", fontSize: "0.65rem", cursor: "default" }}
-																	>
-																		{err.screenshotFile.split("/").pop()}
-																	</Typography>
-																</Tooltip>
+															<Typography variant="caption" color={err.actionName ? "text.primary" : "text.disabled"}>
+																{err.actionName || "—"}
+															</Typography>
+														</TableCell>
+														<TableCell align="center">
+															{err.screenshotUrl ? (
+																<Box
+																	component="img"
+																	src={err.screenshotUrl}
+																	alt="screenshot del login"
+																	onClick={() => setScreenshotLightbox(err.screenshotUrl)}
+																	sx={{
+																		width: 72,
+																		height: 44,
+																		objectFit: "cover",
+																		borderRadius: 0.5,
+																		border: "1px solid",
+																		borderColor: "divider",
+																		cursor: "pointer",
+																		"&:hover": { opacity: 0.85 },
+																	}}
+																/>
+															) : err.s3Key ? (
+																<Typography variant="caption" color="text.disabled">
+																	no disponible
+																</Typography>
 															) : (
 																<Typography variant="caption" color="text.disabled">
 																	—
@@ -2470,6 +2513,26 @@ const CredencialesPJN = () => {
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setErrorHistoryDialog({ open: false, credential: null })}>Cerrar</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Lightbox del screenshot de error de login */}
+			<Dialog open={!!screenshotLightbox} onClose={() => setScreenshotLightbox(null)} maxWidth="lg">
+				<Box sx={{ position: "relative", bgcolor: "background.default" }}>
+					{screenshotLightbox && (
+						<Box
+							component="img"
+							src={screenshotLightbox}
+							alt="screenshot del login (completo)"
+							sx={{ display: "block", maxWidth: "90vw", maxHeight: "85vh", objectFit: "contain" }}
+						/>
+					)}
+				</Box>
+				<DialogActions>
+					{screenshotLightbox && (
+						<Button onClick={() => window.open(screenshotLightbox, "_blank")}>Abrir en pestaña nueva</Button>
+					)}
+					<Button onClick={() => setScreenshotLightbox(null)}>Cerrar</Button>
 				</DialogActions>
 			</Dialog>
 
