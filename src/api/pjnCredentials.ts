@@ -363,6 +363,26 @@ export interface CredentialErrorEntry {
 	screenshotUrl: string | null; // URL pre-firmada (válida ~5 min) o null
 }
 
+export interface CausaScreenshotEntry {
+	_id: string;
+	type:
+		| "search_error"
+		| "scraping_error"
+		| "degraded_scrape"
+		| "processing_exception"
+		| "login_error"
+		| "empty_movements"
+		| "other";
+	errorMessage: string | null;
+	pageUrl: string | null;
+	detectionCount: number;
+	firstSeenAt: string | null;
+	lastSeenAt: string | null;
+	resolved: boolean;
+	s3Key: string | null;
+	screenshotUrl: string | null; // URL pre-firmada (válida ~5 min) o null
+}
+
 // Servicio de Credenciales PJN
 class PjnCredentialsService {
 	/**
@@ -403,6 +423,16 @@ class PjnCredentialsService {
 	 */
 	async getErrorHistory(id: string): Promise<{ success: boolean; data: CredentialErrorEntry[]; count: number }> {
 		const response = await adminAxios.get(`/api/pjn-credentials/${id}/error-history`);
+		return response.data;
+	}
+
+	/**
+	 * Screenshots de incidencias de scraping de una causa (incl. causas sin
+	 * movimientos — type "empty_movements"). Las screenshotUrl son URLs
+	 * pre-firmadas válidas ~5 minutos.
+	 */
+	async getCausaScreenshots(causaId: string): Promise<{ success: boolean; data: CausaScreenshotEntry[]; count: number }> {
+		const response = await adminAxios.get(`/api/pjn-credentials/causa/${causaId}/screenshots`);
 		return response.data;
 	}
 

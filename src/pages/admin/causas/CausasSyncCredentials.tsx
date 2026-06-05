@@ -37,8 +37,8 @@ import dayjs from "dayjs";
 import "dayjs/locale/es";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import pjnCredentialsService, { SyncedCausa, SyncedCausasSummary, PjnCredential } from "api/pjnCredentials";
-import { Refresh, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Repeat, Eye } from "iconsax-react";
+import pjnCredentialsService, { SyncedCausa, SyncedCausasSummary, PjnCredential, CausaScreenshotEntry } from "api/pjnCredentials";
+import { Refresh, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Repeat, Eye, Gallery } from "iconsax-react";
 
 dayjs.locale("es");
 
@@ -66,6 +66,26 @@ const INITIAL_SYNC_LABELS: Record<string, string> = {
 	completed: "Completado",
 	in_progress: "En progreso",
 	pending: "Pendiente",
+};
+
+const INCIDENT_TYPE_LABELS: Record<string, string> = {
+	empty_movements: "Sin movimientos",
+	search_error: "Error de búsqueda",
+	scraping_error: "Error de scraping",
+	degraded_scrape: "Scrape degradado",
+	processing_exception: "Excepción procesando",
+	login_error: "Error de login",
+	other: "Otro",
+};
+
+const INCIDENT_TYPE_COLORS: Record<string, "default" | "warning" | "error" | "info"> = {
+	empty_movements: "warning",
+	search_error: "error",
+	scraping_error: "error",
+	degraded_scrape: "warning",
+	processing_exception: "error",
+	login_error: "error",
+	other: "default",
 };
 
 const getArgentinaDate = (): string => {
@@ -134,6 +154,12 @@ const CausasSyncCredentials = () => {
 	const [selectedCausa, setSelectedCausa] = useState<SyncedCausa | null>(null);
 	const [fullDoc, setFullDoc] = useState<Record<string, unknown> | null>(null);
 	const [loadingDoc, setLoadingDoc] = useState(false);
+
+	// Modal de capturas de incidencias (screenshots S3, incl. causas sin movimientos)
+	const [screenshotModalOpen, setScreenshotModalOpen] = useState(false);
+	const [screenshotCausa, setScreenshotCausa] = useState<SyncedCausa | null>(null);
+	const [screenshots, setScreenshots] = useState<CausaScreenshotEntry[]>([]);
+	const [loadingScreenshots, setLoadingScreenshots] = useState(false);
 
 	// Cargar credenciales para dropdown (al montar)
 	useEffect(() => {
@@ -245,6 +271,33 @@ const CausasSyncCredentials = () => {
 		setJsonModalOpen(false);
 		setSelectedCausa(null);
 		setFullDoc(null);
+	};
+
+	const handleOpenScreenshots = async (causa: SyncedCausa) => {
+		setScreenshotCausa(causa);
+		setScreenshots([]);
+		setScreenshotModalOpen(true);
+		try {
+			setLoadingScreenshots(true);
+			const response = await pjnCredentialsService.getCausaScreenshots(causa._id);
+			if (response.success) {
+				setScreenshots(response.data);
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al cargar las capturas", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			console.error(error);
+		} finally {
+			setLoadingScreenshots(false);
+		}
+	};
+
+	const handleCloseScreenshots = () => {
+		setScreenshotModalOpen(false);
+		setScreenshotCausa(null);
+		setScreenshots([]);
 	};
 
 	return (
@@ -571,11 +624,28 @@ const CausasSyncCredentials = () => {
 												)}
 											</TableCell>
 											<TableCell align="center">
-												<Tooltip title="Ver JSON">
-													<IconButton size="small" onClick={() => handleOpenJson(causa)}>
-														<Eye size={18} />
-													</IconButton>
-												</Tooltip>
+												<Stack direction="row" spacing={0.5} justifyContent="center">
+													<Tooltip
+														title={
+															(causa.movimientosCount || 0) === 0
+																? "Ver captura (causa sin movimientos / incidencias)"
+																: "Ver capturas de incidencias"
+														}
+													>
+														<IconButton
+															size="small"
+															color={(causa.movimientosCount || 0) === 0 ? "warning" : "default"}
+															onClick={() => handleOpenScreenshots(causa)}
+														>
+															<Gallery size={18} />
+														</IconButton>
+													</Tooltip>
+													<Tooltip title="Ver JSON">
+														<IconButton size="small" onClick={() => handleOpenJson(causa)}>
+															<Eye size={18} />
+														</IconButton>
+													</Tooltip>
+												</Stack>
 											</TableCell>
 										</TableRow>
 									))}
@@ -632,6 +702,93 @@ const CausasSyncCredentials = () => {
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={handleCloseJson} variant="outlined" size="small">
+						Cerrar
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Modal capturas de incidencias (S3, incl. causas sin movimientos) */}
+			<Dialog open={screenshotModalOpen} onClose={handleCloseScreenshots} maxWidth="md" fullWidth>
+				<DialogTitle>
+					<Stack direction="row" alignItems="center" justifyContent="space-between">
+						<Typography variant="h6">
+							Capturas — {`${screenshotCausa?.number ?? ""}/${screenshotCausa?.year ?? ""}`}
+						</Typography>
+						<IconButton onClick={handleCloseScreenshots} size="small">
+							<CloseCircle size={20} />
+						</IconButton>
+					</Stack>
+				</DialogTitle>
+				<DialogContent dividers>
+					{loadingScreenshots ? (
+						<Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+							<CircularProgress />
+						</Box>
+					) : screenshots.length === 0 ? (
+						<Box display="flex" justifyContent="center" alignItems="center" minHeight={160}>
+							<Typography variant="body2" color="text.secondary">
+								No hay capturas registradas para esta causa.
+							</Typography>
+						</Box>
+					) : (
+						<Stack spacing={2}>
+							{screenshots.map((shot) => (
+								<Card key={shot._id} variant="outlined" sx={{ p: 1.5 }}>
+									<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1, flexWrap: "wrap" }}>
+										<Chip
+											label={INCIDENT_TYPE_LABELS[shot.type] || shot.type}
+											color={INCIDENT_TYPE_COLORS[shot.type] || "default"}
+											size="small"
+										/>
+										{shot.detectionCount > 1 && (
+											<Chip label={`×${shot.detectionCount}`} size="small" variant="outlined" />
+										)}
+										<Typography variant="caption" color="text.secondary">
+											{formatDate(shot.lastSeenAt)}
+										</Typography>
+										{shot.resolved && <Chip label="Resuelta" color="success" size="small" variant="outlined" />}
+									</Stack>
+									{shot.errorMessage && (
+										<Typography variant="body2" sx={{ mb: 1 }}>
+											{shot.errorMessage}
+										</Typography>
+									)}
+									{shot.screenshotUrl ? (
+										<Box
+											component="a"
+											href={shot.screenshotUrl}
+											target="_blank"
+											rel="noopener noreferrer"
+											sx={{ display: "block" }}
+										>
+											<Box
+												component="img"
+												src={shot.screenshotUrl}
+												alt={INCIDENT_TYPE_LABELS[shot.type] || shot.type}
+												sx={{
+													width: "100%",
+													maxHeight: 460,
+													objectFit: "contain",
+													borderRadius: 1,
+													border: "1px solid",
+													borderColor: "divider",
+													cursor: "zoom-in",
+													bgcolor: "grey.100",
+												}}
+											/>
+										</Box>
+									) : (
+										<Typography variant="caption" color="text.secondary">
+											Sin captura disponible (incidente registrado sin screenshot).
+										</Typography>
+									)}
+								</Card>
+							))}
+						</Stack>
+					)}
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleCloseScreenshots} variant="outlined" size="small">
 						Cerrar
 					</Button>
 				</DialogActions>
