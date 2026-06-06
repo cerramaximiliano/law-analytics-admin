@@ -103,6 +103,17 @@ const getSyncStatusLabel = (status: string) => {
 	}
 };
 
+// Códigos de error transitorios/infraestructura (portal o navegador) — se
+// muestran en ámbar (warning), no en rojo: no implican credencial inválida.
+const TRANSIENT_ERROR_CODES = ["PORTAL_TIMEOUT", "NETWORK_ERROR", "PORTAL_ERROR", "LOGIN_SERVICE_ERROR", "BROWSER_ERROR"];
+
+// Un lastError se considera "resuelto" si hubo un sync exitoso posterior a su
+// timestamp. Evita mostrar indefinidamente un error transitorio ya superado.
+const isLastErrorResolved = (cred: { lastError: PjnCredential["lastError"]; lastSync: string | null }) => {
+	if (!cred.lastError?.timestamp || !cred.lastSync) return false;
+	return new Date(cred.lastSync).getTime() > new Date(cred.lastError.timestamp).getTime();
+};
+
 // Stat card helper
 const StatCard = ({ value, label, color, sx }: { value: string | number; label: string; color: string; sx?: any }) => (
 	<Card variant="outlined">
@@ -1381,18 +1392,29 @@ const CredencialesPJN = () => {
 												</TableCell>
 												<TableCell align="center">
 													{cred.consecutiveErrors > 0 || cred.lastError ? (
-														<Chip
-															label={cred.consecutiveErrors}
-															color={
-																cred.lastError?.code &&
-																["PORTAL_TIMEOUT", "NETWORK_ERROR", "PORTAL_ERROR", "LOGIN_SERVICE_ERROR"].includes(cred.lastError.code)
-																	? "warning"
-																	: "error"
+														<Tooltip
+															title={
+																cred.consecutiveErrors === 0 && isLastErrorResolved(cred)
+																	? `Último error resuelto (hubo un sync exitoso posterior)`
+																	: "Ver historial de errores"
 															}
-															size="small"
-															onClick={() => handleOpenErrorHistory(cred)}
-															sx={{ minWidth: 32, cursor: "pointer" }}
-														/>
+															arrow
+														>
+															<Chip
+																label={cred.consecutiveErrors}
+																color={
+																	cred.consecutiveErrors === 0 && isLastErrorResolved(cred)
+																		? "default"
+																		: cred.lastError?.code && TRANSIENT_ERROR_CODES.includes(cred.lastError.code)
+																			? "warning"
+																			: "error"
+																}
+																variant={cred.consecutiveErrors === 0 && isLastErrorResolved(cred) ? "outlined" : "filled"}
+																size="small"
+																onClick={() => handleOpenErrorHistory(cred)}
+																sx={{ minWidth: 32, cursor: "pointer" }}
+															/>
+														</Tooltip>
 													) : (
 														<Typography variant="body2" color="text.disabled">
 															0
@@ -2379,26 +2401,31 @@ const CredencialesPJN = () => {
 					{errorHistoryDialog.credential && (
 						<Stack spacing={2}>
 							{/* Último error destacado */}
-							{errorHistoryDialog.credential.lastError && (
-								<Alert
-									severity={
-										["PORTAL_TIMEOUT", "NETWORK_ERROR", "PORTAL_ERROR", "LOGIN_SERVICE_ERROR"].includes(
-											errorHistoryDialog.credential.lastError.code,
-										)
-											? "warning"
-											: "error"
-									}
-									variant="outlined"
-								>
-									<Typography variant="subtitle2" gutterBottom>
-										Último error — {formatDate(errorHistoryDialog.credential.lastError.timestamp)}
-									</Typography>
-									<Typography variant="body2">{errorHistoryDialog.credential.lastError.message}</Typography>
-									<Typography variant="caption" color="text.secondary">
-										Código: <strong>{errorHistoryDialog.credential.lastError.code}</strong>
-									</Typography>
-								</Alert>
-							)}
+							{errorHistoryDialog.credential.lastError &&
+								(() => {
+									const cred = errorHistoryDialog.credential!;
+									const lastError = cred.lastError!;
+									const resolved = isLastErrorResolved(cred);
+									return (
+										<Alert
+											severity={resolved ? "success" : TRANSIENT_ERROR_CODES.includes(lastError.code) ? "warning" : "error"}
+											variant="outlined"
+										>
+											<Typography variant="subtitle2" gutterBottom>
+												{resolved ? "Último error (resuelto)" : "Último error"} — {formatDate(lastError.timestamp)}
+											</Typography>
+											<Typography variant="body2">{lastError.message}</Typography>
+											<Typography variant="caption" color="text.secondary" display="block">
+												Código: <strong>{lastError.code}</strong>
+											</Typography>
+											{resolved && (
+												<Typography variant="caption" color="success.main">
+													Hubo un sync exitoso posterior ({formatDate(cred.lastSync)})
+												</Typography>
+											)}
+										</Alert>
+									);
+								})()}
 
 							{/* Historial completo */}
 							{errorHistoryLoading ? (
