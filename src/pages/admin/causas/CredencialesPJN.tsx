@@ -2801,6 +2801,59 @@ const CredencialesPJN = () => {
 									</Box>
 									<Divider sx={{ my: 2 }} />
 									<Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
+										Recorrido de recordatorios
+									</Typography>
+									{(() => {
+										const rh = (detailDialog.jsonData.reminderHistory || []) as Array<{
+											date: string; reminderNumber: number; to: string; templateName: string; status: string;
+										}>;
+										if (!rh.length) {
+											return <Chip label="Sin recordatorios enviados" size="small" sx={{ fontSize: "0.7rem", height: 22, mb: 1 }} />;
+										}
+										const rc = detailDialog.jsonData.reminderCount ?? rh.length;
+										let nextRem: Date | null = null;
+										if (detailDialog.jsonData.credentialInvalid && rc < 3) {
+											const last = detailDialog.jsonData.lastReminderAt;
+											const errN = detailDialog.jsonData.errorNotifiedAt;
+											const baseMs = last ? new Date(last).getTime() + 7 * 86400000 : errN ? new Date(errN).getTime() + 3 * 86400000 : null;
+											nextRem = baseMs ? new Date(baseMs) : null;
+										}
+										return (
+											<Box sx={{ mb: 1 }}>
+												<TableContainer>
+													<Table size="small">
+														<TableHead>
+															<TableRow>
+																<TableCell sx={{ fontSize: "0.72rem", fontWeight: "bold" }}>Fecha</TableCell>
+																<TableCell sx={{ fontSize: "0.72rem", fontWeight: "bold" }} align="center">#</TableCell>
+																<TableCell sx={{ fontSize: "0.72rem", fontWeight: "bold" }}>Destinatario</TableCell>
+																<TableCell sx={{ fontSize: "0.72rem", fontWeight: "bold" }}>Template</TableCell>
+																<TableCell sx={{ fontSize: "0.72rem", fontWeight: "bold" }} align="center">Estado</TableCell>
+															</TableRow>
+														</TableHead>
+														<TableBody>
+															{rh.slice().reverse().map((r, i) => (
+																<TableRow key={i}>
+																	<TableCell sx={{ fontSize: "0.72rem" }}>{formatDate(r.date)}</TableCell>
+																	<TableCell sx={{ fontSize: "0.72rem" }} align="center">{r.reminderNumber}</TableCell>
+																	<TableCell sx={{ fontSize: "0.72rem" }}>{r.to}</TableCell>
+																	<TableCell sx={{ fontSize: "0.72rem" }}>{r.templateName}</TableCell>
+																	<TableCell align="center">
+																		<Chip label={r.status || "sent"} size="small" color={r.status === "sent" ? "success" : "default"} sx={{ fontSize: "0.65rem", height: 18 }} />
+																	</TableCell>
+																</TableRow>
+															))}
+														</TableBody>
+													</Table>
+												</TableContainer>
+												<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+													{nextRem ? `Próximo recordatorio programado: ~${formatDate(nextRem.toISOString())}` : `Sin más recordatorios programados (${rc}/3 enviados${detailDialog.jsonData.credentialInvalid ? "" : " — credencial recuperada"}).`}
+												</Typography>
+											</Box>
+										);
+									})()}
+									<Divider sx={{ my: 2 }} />
+									<Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
 										Raw JSON
 									</Typography>
 									<Box
