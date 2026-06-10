@@ -99,7 +99,20 @@ export interface ScbaSyncedCausasResponse {
 	};
 }
 
+export interface ScbaCoverageBucket {
+	total: number;
+	updatedToday: number;
+	pending: number;
+	withErrors: number;
+	coveragePercent: number;
+	schedule: string;
+}
+
 export interface ScbaUpdateCoverage {
+	// Split por estado de carpeta (activas = refresco diario; archivadas = madrugada)
+	active?: ScbaCoverageBucket;
+	archived?: ScbaCoverageBucket;
+	// Globales (compat)
 	total: number;
 	updatedToday: number;
 	pending: number;

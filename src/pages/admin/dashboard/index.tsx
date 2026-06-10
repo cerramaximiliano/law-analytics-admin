@@ -2213,77 +2213,32 @@ const AdminDashboard = () => {
 									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
 								</Box>
 							) : scbaCoverage ? (
-								<>
-									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-										<Typography variant="body2" color="text.secondary">
-											Cobertura hoy
-										</Typography>
-										<Typography variant="h6" fontWeight="bold" color="primary.main">
-											{scbaCoverage.coveragePercent}%
-										</Typography>
-									</Box>
-									<LinearProgress
-										variant="determinate"
-										value={scbaCoverage.coveragePercent || 0}
-										sx={{
-											height: 8,
-											borderRadius: 4,
-											mb: 2,
-											backgroundColor: alpha(COLORS.neutral.light, 0.3),
-											"& .MuiLinearProgress-bar": {
-												borderRadius: 4,
-												backgroundColor:
-													(scbaCoverage.coveragePercent || 0) > 90
-														? COLORS.success.main
-														: (scbaCoverage.coveragePercent || 0) > 70
-														? COLORS.warning.main
-														: COLORS.error.main,
-											},
-										}}
-									/>
-									<Grid container spacing={2}>
-										<Grid item xs={6} sm={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
-													{scbaCoverage.updatedToday.toLocaleString()}
-												</Typography>
-												<Typography variant="caption" color="text.secondary">
-													Actualizados hoy
-												</Typography>
+								(() => {
+									const active = scbaCoverage.active ?? { coveragePercent: scbaCoverage.coveragePercent, updatedToday: scbaCoverage.updatedToday, total: scbaCoverage.total, pending: scbaCoverage.pending, withErrors: scbaCoverage.withErrors, schedule: "cada ~2 h (8-20 h)" };
+									const archived = scbaCoverage.archived ?? { coveragePercent: 0, updatedToday: 0, total: 0, pending: 0, withErrors: 0, schedule: "madrugada (4-6 h)" };
+									const barColor = (p: number) => (p >= 99 ? COLORS.success.main : p > 70 ? COLORS.warning.main : COLORS.error.main);
+									const renderLine = (label: string, b: typeof active, big: boolean, accent: string) => (
+										<Box sx={{ mb: big ? 1.5 : 0 }}>
+											<Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", mb: 0.25, gap: 1 }}>
+												<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75, minWidth: 0 }}>
+													<Typography variant="body2" fontWeight={600}>{label}</Typography>
+													<Typography variant="caption" color="text.secondary" noWrap>{b.schedule}</Typography>
+												</Box>
+												<Typography variant={big ? "h6" : "subtitle2"} fontWeight="bold" sx={{ color: accent, flexShrink: 0 }}>{b.coveragePercent}%</Typography>
 											</Box>
-										</Grid>
-										<Grid item xs={6} sm={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
-													{scbaCoverage.pending.toLocaleString()}
-												</Typography>
-												<Typography variant="caption" color="text.secondary">
-													Pendientes
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={6} sm={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.error.main}>
-													{scbaCoverage.withErrors.toLocaleString()}
-												</Typography>
-												<Typography variant="caption" color="text.secondary">
-													Con errores
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={6} sm={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.primary.main}>
-													{scbaCoverage.total.toLocaleString()}
-												</Typography>
-												<Typography variant="caption" color="text.secondary">
-													Total
-												</Typography>
-											</Box>
-										</Grid>
-									</Grid>
-								</>
+											<LinearProgress variant="determinate" value={b.coveragePercent || 0} sx={{ height: big ? 8 : 6, borderRadius: 4, backgroundColor: alpha(COLORS.neutral.light, 0.3), "& .MuiLinearProgress-bar": { borderRadius: 4, backgroundColor: accent } }} />
+											<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
+												{b.updatedToday.toLocaleString()}/{b.total.toLocaleString()} actualizadas hoy{b.withErrors > 0 ? ` · ${b.withErrors} con errores` : ""}
+											</Typography>
+										</Box>
+									);
+									return (
+										<>
+											{renderLine("Activas", active, true, barColor(active.coveragePercent || 0))}
+											{renderLine("Archivadas", archived, false, COLORS.primary.light)}
+										</>
+									);
+								})()
 							) : (
 								<Typography variant="body2" color="text.secondary" textAlign="center">
 									No se pudieron cargar las estadísticas
