@@ -44,7 +44,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import scbaCausasService, { ScbaSyncedCausa, ScbaSyncedCausasSummary } from "api/scbaCausas";
 import scbaCredentialsService, { ScbaCredential } from "api/scbaCredentials";
-import { Refresh, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Repeat, Eye } from "iconsax-react";
+import { Refresh, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Repeat, Eye, InfoCircle } from "iconsax-react";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 dayjs.locale("es");
@@ -446,6 +446,15 @@ const CausasMEVByCredential = () => {
 						/>
 					</Stack>
 				</Box>
+
+				{/* Aclaración de cadencia de actualización por estado de carpeta */}
+				<Alert severity="info" icon={<InfoCircle size={18} />} sx={{ mb: 2 }}>
+					La frecuencia de actualización depende del estado de la <strong>carpeta</strong> de cada causa: las de{" "}
+					<strong>carpeta activa</strong> se refrescan cada ~2&nbsp;h (8-20&nbsp;h), mientras que las de{" "}
+					<strong>carpeta archivada</strong> se actualizan de madrugada (4-6&nbsp;h) y solo si pasaron más de
+					24&nbsp;h desde la última. Por eso muchas causas archivadas pueden mostrar una "Última Act." de días
+					previos — es el comportamiento esperado, no un error.
+				</Alert>
 
 				{/* Tabla */}
 				{loading ? (

@@ -2180,6 +2180,18 @@ const AdminDashboard = () => {
 									<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}>
 										Cobertura SCBA
 									</Typography>
+									<Tooltip
+										arrow
+										title="La cobertura refleja sobre todo las causas con carpeta activa, que se refrescan cada ~2 h (8-20 h). Las de carpeta archivada se actualizan de madrugada (4-6 h) y solo si pasaron +24 h, por eso no suman a la cobertura del día hasta su ventana nocturna — no es un error."
+									>
+										<Box
+											component="span"
+											onClick={(e) => e.stopPropagation()}
+											sx={{ display: "inline-flex", alignItems: "center", cursor: "help", color: COLORS.neutral.light }}
+										>
+											<InfoCircle size={15} />
+										</Box>
+									</Tooltip>
 								</Box>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 									<Chip
