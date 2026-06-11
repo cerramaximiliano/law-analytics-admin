@@ -2086,7 +2086,7 @@ const AdminDashboard = () => {
 										total: misCausasCoverage.total,
 										pending: misCausasCoverage.pending,
 										withErrors: misCausasCoverage.withErrors,
-										schedule: "vía login · cada ~2-3 h",
+										schedule: "08:00–23:00 h",
 									};
 									const privadas = misCausasCoverage.privadas ?? {
 										coveragePercent: 0,
@@ -2094,7 +2094,7 @@ const AdminDashboard = () => {
 										total: 0,
 										pending: 0,
 										withErrors: 0,
-										schedule: "vía login · cada ~2-3 h",
+										schedule: "08:00–23:00 h",
 									};
 									const barColor = (p: number) => (p >= 99 ? COLORS.success.main : p > 70 ? COLORS.warning.main : COLORS.error.main);
 									const renderLine = (label: string, b: typeof publicas, accent: string) => (
