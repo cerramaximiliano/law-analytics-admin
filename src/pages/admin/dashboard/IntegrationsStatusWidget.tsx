@@ -7,12 +7,14 @@ import { ArrowRight2, Routing2 } from "iconsax-react";
 import IntegrationsConfigService from "api/integrationsConfig";
 import { ScrapingManagerService } from "api/scrapingManager";
 import ScbaManagerService from "api/scbaManager";
-import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, LIVE_PULSE_KEYFRAMES, headerBorder, headerShadow } from "themes/dashboardTokens";
+import judicialNotificationConfigService from "services/judicialNotificationConfigService";
+import { LIVE_GREEN, STALE_AMBER, LIVE_PULSE_KEYFRAMES, headerBorder, headerShadow } from "themes/dashboardTokens";
 
 interface ServiceRow {
 	key: string;
 	label: string;
 	enabled: boolean | null; // null = error
+	offLabel?: string; // chip cuando enabled=false (default "Mantenimiento")
 }
 
 const IntegrationsStatusWidget: React.FC = () => {
@@ -22,16 +24,18 @@ const IntegrationsStatusWidget: React.FC = () => {
 		{ key: "pjn", label: "PJN", enabled: null },
 		{ key: "scba", label: "SCBA", enabled: null },
 		{ key: "groups", label: "Grupos", enabled: null },
+		{ key: "movViewer", label: "Visor docs (emails)", enabled: null, offLabel: "Inactivo" },
 	]);
 	const [loading, setLoading] = useState(true);
 
 	const fetchAll = useCallback(async () => {
 		setLoading(true);
 
-		const [integrationsRes, pjnRes, scbaRes] = await Promise.allSettled([
+		const [integrationsRes, pjnRes, scbaRes, movViewerRes] = await Promise.allSettled([
 			IntegrationsConfigService.getConfig(),
 			ScrapingManagerService.getConfig(),
 			ScbaManagerService.getConfig(),
+			judicialNotificationConfigService.getConfig(),
 		]);
 
 		const rows: ServiceRow[] = [
@@ -49,6 +53,12 @@ const IntegrationsStatusWidget: React.FC = () => {
 				key: "groups",
 				label: "Grupos / Teams",
 				enabled: integrationsRes.status === "fulfilled" ? !!integrationsRes.value.data?.services?.groups?.enabled : null,
+			},
+			{
+				key: "movViewer",
+				label: "Visor docs (emails)",
+				enabled: movViewerRes.status === "fulfilled" ? !!movViewerRes.value.contentConfig?.usePublicMovementLinks : null,
+				offLabel: "Inactivo",
 			},
 		];
 
@@ -141,7 +151,7 @@ const IntegrationsStatusWidget: React.FC = () => {
 									)}
 									<Chip
 										size="small"
-										label={service.enabled === null ? "Error" : service.enabled ? "Activo" : "Mantenimiento"}
+										label={service.enabled === null ? "Error" : service.enabled ? "Activo" : service.offLabel ?? "Mantenimiento"}
 										variant="outlined"
 										sx={{
 											height: 20,

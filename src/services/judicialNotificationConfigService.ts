@@ -25,6 +25,9 @@ interface JudicialNotificationConfig {
 		maxDetalleLength: number;
 		includeExpedienteLink: boolean;
 		groupMovementsByExpediente: boolean;
+		// Apuntar el link "Ver documento" del email a la página pública /m/:token
+		// (visor de PDF desde S3) en vez del portal judicial. Lo lee la-notification.
+		usePublicMovementLinks: boolean;
 	};
 	filters: {
 		excludedMovementTypes: string[];
@@ -142,6 +145,18 @@ class JudicialNotificationConfigService {
 
 			throw new Error("Error inesperado al guardar los cambios. Por favor, intente nuevamente.");
 		}
+	}
+
+	/**
+	 * Actualiza campos puntuales de `contentConfig` vía PATCH (deep-merge en el
+	 * server). Tipado parcial para no exigir todos los campos de la sección.
+	 */
+	async updateContentConfig(content: Partial<JudicialNotificationConfig["contentConfig"]>): Promise<JudicialNotificationConfig> {
+		const response = await axios.patch(this.getEndpoint(), { contentConfig: content });
+		if (response.data && response.data.success) {
+			return response.data.data;
+		}
+		throw new Error(response.data?.message || "No se pudo actualizar la configuración de contenido.");
 	}
 
 	async toggleNotifications(): Promise<{ enabled: boolean; mode: string }> {

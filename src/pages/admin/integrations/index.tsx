@@ -29,6 +29,7 @@ import IntegrationsConfigService, {
 } from "api/integrationsConfig";
 import { ScrapingManagerService, ScrapingManagerConfig } from "api/scrapingManager";
 import ScbaManagerService, { ScbaManagerConfig } from "api/scbaManager";
+import judicialNotificationConfigService from "services/judicialNotificationConfigService";
 
 import ServiceAvailabilityCard from "./ServiceAvailabilityCard";
 
@@ -56,6 +57,11 @@ const IntegrationsPage: React.FC = () => {
 	const [integrations, setIntegrations] = useState<ServiceState<IntegrationsConfigDoc>>(initialServiceState());
 	const [pjn, setPjn] = useState<ServiceState<ScrapingManagerConfig>>(initialServiceState());
 	const [scba, setScba] = useState<ServiceState<ScbaManagerConfig>>(initialServiceState());
+	// Visor de documentos en emails (/m/:token). Fuente: JudicialNotificationConfig
+	// (contentConfig.usePublicMovementLinks). Lo lee la-notification al armar el mail.
+	const [movViewer, setMovViewer] = useState<ServiceState<{ enabled: boolean; updatedAt?: string; updatedBy?: string }>>(
+		initialServiceState(),
+	);
 	const [rawOpen, setRawOpen] = useState(false);
 
 	// ---- Fetchers ----
@@ -90,11 +96,31 @@ const IntegrationsPage: React.FC = () => {
 		}
 	}, []);
 
+	const fetchMovViewer = useCallback(async () => {
+		setMovViewer((s) => ({ ...s, loading: true, error: null }));
+		try {
+			const cfg = await judicialNotificationConfigService.getConfig();
+			setMovViewer({
+				loading: false,
+				saving: false,
+				error: null,
+				data: {
+					enabled: !!cfg.contentConfig?.usePublicMovementLinks,
+					updatedAt: cfg.updatedAt,
+					updatedBy: cfg.metadata?.lastModifiedBy,
+				},
+			});
+		} catch (err: any) {
+			setMovViewer({ loading: false, saving: false, error: err?.message || "Error", data: null });
+		}
+	}, []);
+
 	const refreshAll = useCallback(() => {
 		fetchIntegrations();
 		fetchPjn();
 		fetchScba();
-	}, [fetchIntegrations, fetchPjn, fetchScba]);
+		fetchMovViewer();
+	}, [fetchIntegrations, fetchPjn, fetchScba, fetchMovViewer]);
 
 	useEffect(() => {
 		refreshAll();
@@ -207,6 +233,21 @@ const IntegrationsPage: React.FC = () => {
 		} catch (err: any) {
 			enqueueSnackbar(err?.message || "Error al guardar mensaje SCBA", { variant: "error" });
 			setScba((s) => ({ ...s, saving: false }));
+		}
+	};
+
+	const handleMovViewerToggle = async (enabled: boolean) => {
+		setMovViewer((s) => ({ ...s, saving: true }));
+		try {
+			await judicialNotificationConfigService.updateContentConfig({ usePublicMovementLinks: enabled });
+			await fetchMovViewer();
+			enqueueSnackbar(
+				enabled ? "Visor de documentos en emails habilitado" : "Visor de documentos en emails deshabilitado",
+				{ variant: "success" },
+			);
+		} catch (err: any) {
+			enqueueSnackbar(err?.message || "Error al actualizar el visor de documentos", { variant: "error" });
+			setMovViewer((s) => ({ ...s, saving: false }));
 		}
 	};
 
@@ -387,6 +428,25 @@ const IntegrationsPage: React.FC = () => {
 							onChangeReleaseStage={handleChatGptReleaseStage}
 						/>
 					)}
+				</Grid>
+				{/* Visor de documentos en emails (/m/:token) */}
+				<Grid item xs={12} md={6}>
+					{movViewer.loading ? (
+						<Skeleton variant="rounded" height={140} />
+					) : movViewer.error ? (
+						<Alert severity="error">No se pudo cargar el visor de documentos: {movViewer.error}</Alert>
+					) : movViewer.data ? (
+						<ServiceAvailabilityCard
+							title="Visor de documentos (emails)"
+							description="Los links 'Ver documento' de los emails de movimientos apuntan a la página propia /m/:token (PDF desde S3 + tracking) en vez del portal judicial"
+							enabled={movViewer.data.enabled}
+							saving={movViewer.saving}
+							updatedAt={movViewer.data.updatedAt}
+							updatedBy={movViewer.data.updatedBy}
+							helperOff="Deshabilitado: los emails siguen linkeando al portal judicial. Al habilitarlo, el usuario abre el documento desde nuestra página pública (sirve también para causas privadas cuyo doc ya no es accesible en el portal)."
+							onToggle={handleMovViewerToggle}
+						/>
+					) : null}
 				</Grid>
 			</Grid>
 
