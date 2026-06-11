@@ -145,6 +145,9 @@ const CausasSyncCredentials = () => {
 	const [credentialId, setCredentialId] = useState<string>("");
 	const [fueroFilter, setFueroFilter] = useState<string>("");
 	const [movementsFilter, setMovementsFilter] = useState<string>("");
+	// Vista especial: privadas no actualizables (sin credencial activa). Bypassa el
+	// scope normal (trae también las de credencial muerta/eliminada).
+	const [noActFilter, setNoActFilter] = useState<boolean>(false);
 	const [sortBy, setSortBy] = useState<string>("year");
 	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 	const [soloElegibles, setSoloElegibles] = useState<boolean>(false);
@@ -189,10 +192,16 @@ const CausasSyncCredentials = () => {
 				sortBy,
 				sortOrder,
 			};
-			if (credentialId) params.credentialId = credentialId;
-			if (fueroFilter) params.fuero = fueroFilter;
-			if (movementsFilter) params.hasMovements = movementsFilter;
-			if (soloElegibles) params.soloElegibles = true;
+			if (noActFilter) {
+				// Vista "no actualizables": bypassa los demás filtros de scope.
+				params.noActualizables = true;
+				if (fueroFilter) params.fuero = fueroFilter;
+			} else {
+				if (credentialId) params.credentialId = credentialId;
+				if (fueroFilter) params.fuero = fueroFilter;
+				if (movementsFilter) params.hasMovements = movementsFilter;
+				if (soloElegibles) params.soloElegibles = true;
+			}
 
 			const response = await pjnCredentialsService.getSyncedCausas(params);
 
@@ -239,6 +248,14 @@ const CausasSyncCredentials = () => {
 		setFueroFilter("");
 		setMovementsFilter("");
 		setSoloElegibles(false);
+		setNoActFilter(false);
+		setPage(0);
+		setSearchTrigger((t) => t + 1);
+	};
+
+	// Toggle de la vista "no actualizables" (desde el card del summary).
+	const toggleNoActFilter = () => {
+		setNoActFilter((v) => !v);
 		setPage(0);
 		setSearchTrigger((t) => t + 1);
 	};
@@ -384,6 +401,34 @@ const CausasSyncCredentials = () => {
 										</Stack>
 									</CardContent>
 								</Card>
+							</Grid>
+							<Grid item xs={12} sm={6} md={2.4}>
+								<Tooltip title="Privadas sin credencial activa (deshabilitada/inválida o removida del sync) — no actualizables por pjn-mis-causas. Click para ver/ocultar el listado.">
+									<Card
+										onClick={toggleNoActFilter}
+										sx={{
+											cursor: "pointer",
+											backgroundColor: "error.lighter",
+											border: 2,
+											borderColor: noActFilter ? "error.dark" : "error.main",
+											boxShadow: noActFilter ? 3 : 0,
+											transition: "all 0.2s ease",
+											"&:hover": { boxShadow: 2 },
+										}}
+									>
+										<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
+											<Stack direction="row" spacing={0.5} alignItems="center">
+												<Typography variant="body2" color="text.secondary">
+													No actualizables
+												</Typography>
+												{noActFilter && <Chip label="filtrando" size="small" color="error" sx={{ height: 18, fontSize: "0.6rem" }} />}
+											</Stack>
+											<Typography variant="h4" color="error.main" fontWeight="bold">
+												{(summary.noActualizables ?? 0).toLocaleString()}
+											</Typography>
+										</CardContent>
+									</Card>
+								</Tooltip>
 							</Grid>
 						</Grid>
 					</Box>

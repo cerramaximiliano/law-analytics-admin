@@ -256,6 +256,8 @@ export interface SyncedCausa {
 		initialMovementsSyncAt: string | null;
 		removedFromSync?: boolean;
 		removedAt?: string | null;
+		// Motivo por el que la causa privada no es actualizable (solo en la vista "No actualizables").
+		noActualizableReason?: "sin_credencial" | "credencial_eliminada" | "credencial_invalida" | "removida_del_sync";
 	};
 }
 
@@ -271,6 +273,8 @@ export interface SyncedCausasSummary {
 		completed: number;
 		none: number;
 	};
+	// Privadas no actualizables (sin credencial activa).
+	noActualizables?: number;
 }
 
 export interface SyncedCausasFilters {
