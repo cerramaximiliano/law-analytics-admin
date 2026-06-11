@@ -2076,77 +2076,59 @@ const AdminDashboard = () => {
 									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
 								</Box>
 							) : misCausasCoverage ? (
-								<>
-									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-										<Typography variant="body2" color="text.secondary">
-											Cobertura hoy
-										</Typography>
-										<Typography variant="h6" fontWeight="bold" color="primary.main">
-											{misCausasCoverage.coveragePercent}%
-										</Typography>
-									</Box>
-									<LinearProgress
-										variant="determinate"
-										value={misCausasCoverage.coveragePercent || 0}
-										sx={{
-											height: 8,
-											borderRadius: 4,
-											mb: 2,
-											backgroundColor: alpha(COLORS.neutral.light, 0.3),
-											"& .MuiLinearProgress-bar": {
-												borderRadius: 4,
-												backgroundColor:
-													(misCausasCoverage.coveragePercent || 0) > 90
-														? COLORS.success.main
-														: (misCausasCoverage.coveragePercent || 0) > 70
-														? COLORS.warning.main
-														: COLORS.error.main,
-											},
-										}}
-									/>
-									<Grid container spacing={2}>
-										<Grid item xs={6} sm={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
-													{misCausasCoverage.updatedToday.toLocaleString()}
-												</Typography>
-												<Typography variant="caption" color="text.secondary">
-													Actualizados hoy
+								(() => {
+									// Doble barra: públicas (isPrivate≠true) + privadas (isPrivate===true).
+									// Juntas cubren la totalidad de causas de pjn-mis-causas. Fallback al
+									// shape viejo (sin split) mientras el backend no devuelva los buckets.
+									const publicas = misCausasCoverage.publicas ?? {
+										coveragePercent: misCausasCoverage.coveragePercent,
+										updatedToday: misCausasCoverage.updatedToday,
+										total: misCausasCoverage.total,
+										pending: misCausasCoverage.pending,
+										withErrors: misCausasCoverage.withErrors,
+										schedule: "vía login · cada ~2-3 h",
+									};
+									const privadas = misCausasCoverage.privadas ?? {
+										coveragePercent: 0,
+										updatedToday: 0,
+										total: 0,
+										pending: 0,
+										withErrors: 0,
+										schedule: "vía login · cada ~2-3 h",
+									};
+									const barColor = (p: number) => (p >= 99 ? COLORS.success.main : p > 70 ? COLORS.warning.main : COLORS.error.main);
+									const renderLine = (label: string, b: typeof publicas, accent: string) => (
+										<Box sx={{ mb: 1.5 }}>
+											<Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", mb: 0.25, gap: 1 }}>
+												<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75, minWidth: 0 }}>
+													<Typography variant="body2" fontWeight={600}>
+														{label}
+													</Typography>
+													<Typography variant="caption" color="text.secondary" noWrap>
+														{b.schedule}
+													</Typography>
+												</Box>
+												<Typography variant="h6" fontWeight="bold" sx={{ color: accent, flexShrink: 0 }}>
+													{b.coveragePercent}%
 												</Typography>
 											</Box>
-										</Grid>
-										<Grid item xs={6} sm={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
-													{misCausasCoverage.pending.toLocaleString()}
-												</Typography>
-												<Typography variant="caption" color="text.secondary">
-													Pendientes
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={6} sm={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.error.main}>
-													{misCausasCoverage.withErrors.toLocaleString()}
-												</Typography>
-												<Typography variant="caption" color="text.secondary">
-													Con errores
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={6} sm={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.primary.main}>
-													{misCausasCoverage.total.toLocaleString()}
-												</Typography>
-												<Typography variant="caption" color="text.secondary">
-													Total
-												</Typography>
-											</Box>
-										</Grid>
-									</Grid>
-								</>
+											<LinearProgress
+												variant="determinate"
+												value={b.coveragePercent || 0}
+												sx={{ height: 8, borderRadius: 4, backgroundColor: alpha(COLORS.neutral.light, 0.3), "& .MuiLinearProgress-bar": { borderRadius: 4, backgroundColor: accent } }}
+											/>
+											<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
+												{b.updatedToday.toLocaleString()}/{b.total.toLocaleString()} actualizadas hoy{b.pending > 0 ? ` · ${b.pending.toLocaleString()} pendientes` : ""}{b.withErrors > 0 ? ` · ${b.withErrors.toLocaleString()} con errores` : ""}
+											</Typography>
+										</Box>
+									);
+									return (
+										<>
+											{renderLine("Públicas", publicas, barColor(publicas.coveragePercent || 0))}
+											{renderLine("Privadas", privadas, barColor(privadas.coveragePercent || 0))}
+										</>
+									);
+								})()
 							) : (
 								<Typography variant="body2" color="text.secondary" textAlign="center">
 									No se pudieron cargar las estadísticas

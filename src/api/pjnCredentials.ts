@@ -329,7 +329,20 @@ export interface PortalStatusResponse {
 	};
 }
 
+export interface MisCausasCoverageBucket {
+	total: number;
+	updatedToday: number;
+	pending: number;
+	withErrors: number;
+	coveragePercent: number;
+	schedule: string;
+}
+
 export interface MisCausasCoverage {
+	// Split nuevo: públicas (isPrivate≠true) vs privadas (isPrivate===true).
+	publicas?: MisCausasCoverageBucket;
+	privadas?: MisCausasCoverageBucket;
+	// Globales (compat)
 	total: number;
 	updatedToday: number;
 	pending: number;
