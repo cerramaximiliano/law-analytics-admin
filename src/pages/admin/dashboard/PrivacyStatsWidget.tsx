@@ -184,6 +184,20 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 				</Grid>
 			</Grid>
 
+			{stats.withoutActiveCredential != null && stats.withoutActiveCredential > 0 && (
+				<Tooltip
+					arrow
+					title="Privadas con credencial deshabilitada/inválida o removida del sync. Una causa privada solo se accede vía login → sin credencial activa no se puede actualizar (no entran en la cobertura de Mis Causas)."
+				>
+					<Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center" sx={{ mt: 1, cursor: "help" }}>
+						<LockSlash size={13} color={COLORS.change24h.main} />
+						<Typography variant="caption" color="text.secondary">
+							<strong>{stats.withoutActiveCredential}</strong> sin credencial activa (no actualizables)
+						</Typography>
+					</Stack>
+				</Tooltip>
+			)}
+
 			{!compact && (
 				<>
 					<Divider sx={{ my: 2 }} />

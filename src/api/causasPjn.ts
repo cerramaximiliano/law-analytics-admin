@@ -198,6 +198,10 @@ export interface PrivacyStatsResponse {
 	success: boolean;
 	data: {
 		total: number;
+		// Privadas con/sin credencial activa: las "sin" no son actualizables por
+		// pjn-mis-causas (credencial deshabilitada/inválida o removida del sync).
+		withActiveCredential?: number;
+		withoutActiveCredential?: number;
 		byFuero: Record<"CIV" | "COM" | "CSS" | "CNT", PrivacyStatsFueroEntry>;
 		changes: { last24h: number; last7d: number };
 		recent: PrivacyStatsRecentCausa[];
