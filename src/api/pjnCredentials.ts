@@ -235,6 +235,10 @@ export interface SyncedCausa {
 		count?: number;
 		last?: string;
 		today?: { date: string; count: number; hours: number[] };
+		// Acumulado all-time de intentos fallidos (no se resetea).
+		errors?: number;
+		// Error de la ÚLTIMA actualización; el worker lo limpia al primer éxito.
+		lastError?: { message: string; phase?: string; date: string } | null;
 	};
 	createdAt: string;
 	/**
@@ -275,6 +279,8 @@ export interface SyncedCausasSummary {
 	};
 	// Privadas no actualizables (sin credencial activa).
 	noActualizables?: number;
+	// Causas cuya última actualización falló (updateStats.lastError vigente).
+	conErrores?: number;
 }
 
 export interface SyncedCausasFilters {
@@ -282,6 +288,8 @@ export interface SyncedCausasFilters {
 	fuero?: string;
 	hasMovements?: string;
 	soloElegibles?: boolean;
+	noActualizables?: boolean;
+	conErrores?: boolean;
 	page?: number;
 	limit?: number;
 	sortBy?: string;

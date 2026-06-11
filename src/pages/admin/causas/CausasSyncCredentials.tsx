@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
 	Box,
 	Card,
@@ -129,6 +130,7 @@ const CausasSyncCredentials = () => {
 	const { enqueueSnackbar } = useSnackbar();
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
+	const [searchParams] = useSearchParams();
 
 	// Estados principales
 	const [causas, setCausas] = useState<SyncedCausa[]>([]);
@@ -148,6 +150,9 @@ const CausasSyncCredentials = () => {
 	// Vista especial: privadas no actualizables (sin credencial activa). Bypassa el
 	// scope normal (trae también las de credencial muerta/eliminada).
 	const [noActFilter, setNoActFilter] = useState<boolean>(false);
+	// Causas cuya última actualización falló (updateStats.lastError vigente).
+	// Llega pre-activado desde el widget de cobertura del dashboard (?conErrores=1).
+	const [conErroresFilter, setConErroresFilter] = useState<boolean>(() => searchParams.get("conErrores") === "1");
 	const [sortBy, setSortBy] = useState<string>("year");
 	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 	const [soloElegibles, setSoloElegibles] = useState<boolean>(false);
@@ -201,6 +206,7 @@ const CausasSyncCredentials = () => {
 				if (fueroFilter) params.fuero = fueroFilter;
 				if (movementsFilter) params.hasMovements = movementsFilter;
 				if (soloElegibles) params.soloElegibles = true;
+				if (conErroresFilter) params.conErrores = true;
 			}
 
 			const response = await pjnCredentialsService.getSyncedCausas(params);
@@ -249,6 +255,7 @@ const CausasSyncCredentials = () => {
 		setMovementsFilter("");
 		setSoloElegibles(false);
 		setNoActFilter(false);
+		setConErroresFilter(false);
 		setPage(0);
 		setSearchTrigger((t) => t + 1);
 	};
@@ -256,6 +263,15 @@ const CausasSyncCredentials = () => {
 	// Toggle de la vista "no actualizables" (desde el card del summary).
 	const toggleNoActFilter = () => {
 		setNoActFilter((v) => !v);
+		setConErroresFilter(false);
+		setPage(0);
+		setSearchTrigger((t) => t + 1);
+	};
+
+	// Toggle del filtro "con errores" (última actualización fallida).
+	const toggleConErroresFilter = () => {
+		setConErroresFilter((v) => !v);
+		setNoActFilter(false);
 		setPage(0);
 		setSearchTrigger((t) => t + 1);
 	};
@@ -401,6 +417,36 @@ const CausasSyncCredentials = () => {
 										</Stack>
 									</CardContent>
 								</Card>
+							</Grid>
+							<Grid item xs={12} sm={6} md={2.4}>
+								<Tooltip title="Causas cuya ÚLTIMA actualización falló (el error se limpia solo cuando el worker vuelve a actualizarlas con éxito). Click para ver/ocultar el listado.">
+									<Card
+										onClick={toggleConErroresFilter}
+										sx={{
+											cursor: "pointer",
+											backgroundColor: "warning.lighter",
+											border: 2,
+											borderColor: conErroresFilter ? "warning.dark" : "warning.main",
+											boxShadow: conErroresFilter ? 3 : 0,
+											transition: "all 0.2s ease",
+											"&:hover": { boxShadow: 2 },
+										}}
+									>
+										<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
+											<Stack direction="row" spacing={0.5} alignItems="center">
+												<Typography variant="body2" color="text.secondary">
+													Con errores
+												</Typography>
+												{conErroresFilter && (
+													<Chip label="filtrando" size="small" color="warning" sx={{ height: 18, fontSize: "0.6rem" }} />
+												)}
+											</Stack>
+											<Typography variant="h4" color="warning.main" fontWeight="bold">
+												{(summary.conErrores ?? 0).toLocaleString()}
+											</Typography>
+										</CardContent>
+									</Card>
+								</Tooltip>
 							</Grid>
 							<Grid item xs={12} sm={6} md={2.4}>
 								<Tooltip title="Privadas sin credencial activa (deshabilitada/inválida o removida del sync) — no actualizables por pjn-mis-causas. Click para ver/ocultar el listado.">
@@ -608,9 +654,19 @@ const CausasSyncCredentials = () => {
 											<TableCell>
 												{(() => {
 													const todayInfo = getTodayUpdateInfo(causa);
+													const lastError = causa.updateStats?.lastError;
 													return (
 														<Stack direction="row" alignItems="center" spacing={0.5}>
 															<Typography variant="caption">{formatDate(causa.lastUpdate)}</Typography>
+															{lastError && (
+																<Tooltip
+																	title={`${lastError.message}${lastError.phase ? ` (fase: ${lastError.phase})` : ""} — ${formatDate(
+																		lastError.date,
+																	)}`}
+																>
+																	<Chip label="Error" color="error" size="small" variant="outlined" sx={{ height: 20 }} />
+																</Tooltip>
+															)}
 															{todayInfo.isToday && todayInfo.count > 0 && (
 																<Tooltip title={formatHoursTooltip(todayInfo.hours)}>
 																	<Chip

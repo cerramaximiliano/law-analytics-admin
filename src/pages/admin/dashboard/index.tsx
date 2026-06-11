@@ -2118,7 +2118,24 @@ const AdminDashboard = () => {
 												sx={{ height: 8, borderRadius: 4, backgroundColor: alpha(COLORS.neutral.light, 0.3), "& .MuiLinearProgress-bar": { borderRadius: 4, backgroundColor: accent } }}
 											/>
 											<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-												{b.updatedToday.toLocaleString()}/{b.total.toLocaleString()} actualizadas hoy{b.pending > 0 ? ` · ${b.pending.toLocaleString()} pendientes` : ""}{b.withErrors > 0 ? ` · ${b.withErrors.toLocaleString()} con errores` : ""}
+												{b.updatedToday.toLocaleString()}/{b.total.toLocaleString()} actualizadas hoy{b.pending > 0 ? ` · ${b.pending.toLocaleString()} pendientes` : ""}
+												{b.withErrors > 0 && (
+													<Box
+														component="span"
+														onClick={(e) => {
+															e.stopPropagation();
+															navigate("/admin/causas/synced-credentials?conErrores=1");
+														}}
+														sx={{
+															color: COLORS.error.main,
+															fontWeight: 600,
+															cursor: "pointer",
+															"&:hover": { textDecoration: "underline" },
+														}}
+													>
+														{` · ${b.withErrors.toLocaleString()} con errores`}
+													</Box>
+												)}
 											</Typography>
 										</Box>
 									);
