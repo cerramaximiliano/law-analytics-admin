@@ -135,8 +135,11 @@ const CausasSyncCredentials = () => {
 	const [summary, setSummary] = useState<SyncedCausasSummary | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(25);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [totalCount, setTotalCount] = useState(0);
+	// Disparador de búsqueda: se incrementa al aplicar/limpiar filtros para que el
+	// effect re-fetchee con los filtros actuales (sin doble-fetch ni race).
+	const [searchTrigger, setSearchTrigger] = useState(0);
 
 	// Filtros
 	const [credentialId, setCredentialId] = useState<string>("");
@@ -211,7 +214,8 @@ const CausasSyncCredentials = () => {
 
 	useEffect(() => {
 		fetchCausas();
-	}, [page, rowsPerPage, sortBy, sortOrder, soloElegibles]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [page, rowsPerPage, sortBy, sortOrder, soloElegibles, searchTrigger]);
 
 	// Handlers
 	const handleChangePage = (_event: unknown, newPage: number) => {
@@ -224,8 +228,10 @@ const CausasSyncCredentials = () => {
 	};
 
 	const handleSearch = () => {
+		// Reset de página + trigger → el effect re-fetchea UNA vez con los filtros
+		// actuales y totalCount queda con el conteo FILTRADO (corrige la paginación).
 		setPage(0);
-		fetchCausas();
+		setSearchTrigger((t) => t + 1);
 	};
 
 	const handleClear = () => {
@@ -234,6 +240,7 @@ const CausasSyncCredentials = () => {
 		setMovementsFilter("");
 		setSoloElegibles(false);
 		setPage(0);
+		setSearchTrigger((t) => t + 1);
 	};
 
 	const handleSortOrderToggle = () => {
