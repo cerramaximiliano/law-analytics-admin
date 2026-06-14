@@ -140,12 +140,53 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 	const [viewTab, setViewTab] = useState<number>(0);
 	const [deviceType, setDeviceType] = useState<DeviceType>(DeviceType.Desktop);
 
+	// Contenido dinámico de suscripción (bloques + variables) resuelto por el marketing-service,
+	// para que el preview muestre {{tablaPrecios}}/{{ofertaActual}}/{{plan.*}}/{{descuento.*}} igual que el email enviado.
+	const [subscriptionContent, setSubscriptionContent] = useState<{
+		blocks: Record<string, string>;
+		variables: Record<string, string>;
+	}>({ blocks: {}, variables: {} });
+
+	// Expande los bloques y variables de suscripción en el HTML/subject para el preview.
+	const expandPreviewHtml = (html: string): string => {
+		if (!html) return html || "";
+		let result = html;
+		for (const [name, block] of Object.entries(subscriptionContent.blocks)) {
+			const re = new RegExp(`\\{\\{\\s*${name}\\s*\\}\\}|\\$\\{\\s*${name}\\s*\\}`, "g");
+			result = result.replace(re, block || "");
+		}
+		for (const [name, value] of Object.entries(subscriptionContent.variables)) {
+			const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+			const re = new RegExp(`\\{\\{\\s*${escaped}\\s*\\}\\}|\\$\\{\\s*${escaped}\\s*\\}`, "g");
+			result = result.replace(re, value != null ? value : "");
+		}
+		return result;
+	};
+
 	// Fetch campaign emails
 	useEffect(() => {
 		if (open && campaign._id) {
 			fetchCampaignEmails();
 		}
 	}, [open, campaign._id, page, rowsPerPage]);
+
+	// Cargar contenido dinámico de suscripción al abrir el modal
+	useEffect(() => {
+		if (!open) return;
+		(async () => {
+			try {
+				const response = await mktAxios.get("/api/templates/subscription-content");
+				if (response.data.success && response.data.data) {
+					setSubscriptionContent({
+						blocks: response.data.data.blocks || {},
+						variables: response.data.data.variables || {},
+					});
+				}
+			} catch (err: any) {
+				console.error("Error fetching subscription content:", err);
+			}
+		})();
+	}, [open]);
 
 	// Function to fetch campaign emails
 	const fetchCampaignEmails = async () => {
@@ -1006,7 +1047,7 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 											<Box sx={{ mb: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
 												<Box>
 													<Typography variant="subtitle1">Asunto:</Typography>
-													<Typography variant="body1">{previewTemplate?.subject}</Typography>
+													<Typography variant="body1">{expandPreviewHtml(previewTemplate?.subject || "")}</Typography>
 												</Box>
 
 												{/* Device selector */}
@@ -1087,7 +1128,7 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 																	body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
 																</style>
 															</head>
-															<body>${previewTemplate?.htmlBody || ""}</body>
+															<body>${expandPreviewHtml(previewTemplate?.htmlBody || "")}</body>
 														</html>
 													`}
 														sandbox="allow-same-origin allow-scripts"
