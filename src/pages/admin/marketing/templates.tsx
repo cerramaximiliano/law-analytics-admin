@@ -559,6 +559,13 @@ const EmailTemplates = () => {
 	// State for email modules (for preview expansion)
 	const [modules, setModules] = useState<EmailModule[]>([]);
 
+	// Contenido dinámico de suscripción (bloques + variables) resuelto por el marketing-service,
+	// para previsualizar {{tablaPrecios}}/{{ofertaActual}}/{{plan.*}}/{{descuento.*}} igual que el email enviado.
+	const [subscriptionContent, setSubscriptionContent] = useState<{
+		blocks: Record<string, string>;
+		variables: Record<string, string>;
+	}>({ blocks: {}, variables: {} });
+
 	// Fetch email modules for preview expansion
 	const fetchModules = useCallback(async () => {
 		try {
@@ -571,30 +578,60 @@ const EmailTemplates = () => {
 		}
 	}, []);
 
-	// Helper function to expand modules in HTML content for preview
+	// Fetch contenido dinámico de suscripción para preview
+	const fetchSubscriptionContent = useCallback(async () => {
+		try {
+			const response = await mktAxios.get("/api/templates/subscription-content");
+			if (response.data.success && response.data.data) {
+				setSubscriptionContent({
+					blocks: response.data.data.blocks || {},
+					variables: response.data.data.variables || {},
+				});
+			}
+		} catch (err: any) {
+			console.error("Error fetching subscription content:", err);
+		}
+	}, []);
+
+	// Helper function to expand modules + dynamic subscription content in HTML for preview
 	const expandModulesInHtml = useCallback(
 		(html: string): string => {
-			if (!html || modules.length === 0) return html;
+			if (!html) return html;
 
 			let result = html;
-			const modulePattern = /\{\{\s*module:(\w+)\s*\}\}/g;
 
-			let match;
-			while ((match = modulePattern.exec(html)) !== null) {
-				const fullMatch = match[0];
-				const moduleName = match[1].toLowerCase();
-				const module = modules.find((m) => m.name === moduleName);
-
-				if (module) {
-					result = result.replace(fullMatch, module.htmlContent);
-				} else {
-					result = result.replace(fullMatch, `<span style="color: red; font-style: italic;">[Módulo no encontrado: ${moduleName}]</span>`);
+			// 1) Módulos {{module:nombre}}
+			if (modules.length > 0) {
+				const modulePattern = /\{\{\s*module:(\w+)\s*\}\}/g;
+				let match;
+				while ((match = modulePattern.exec(html)) !== null) {
+					const fullMatch = match[0];
+					const moduleName = match[1].toLowerCase();
+					const module = modules.find((m) => m.name === moduleName);
+					if (module) {
+						result = result.replace(fullMatch, module.htmlContent);
+					} else {
+						result = result.replace(fullMatch, `<span style="color: red; font-style: italic;">[Módulo no encontrado: ${moduleName}]</span>`);
+					}
 				}
+			}
+
+			// 2) Bloques HTML de suscripción ({{tablaPrecios}}, {{ofertaActual}})
+			for (const [name, block] of Object.entries(subscriptionContent.blocks)) {
+				const re = new RegExp(`\\{\\{\\s*${name}\\s*\\}\\}|\\$\\{\\s*${name}\\s*\\}`, "g");
+				result = result.replace(re, block || "");
+			}
+
+			// 3) Variables escalares de suscripción ({{plan.*}}, {{descuento.*}})
+			for (const [name, value] of Object.entries(subscriptionContent.variables)) {
+				const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+				const re = new RegExp(`\\{\\{\\s*${escaped}\\s*\\}\\}|\\$\\{\\s*${escaped}\\s*\\}`, "g");
+				result = result.replace(re, value != null ? value : "");
 			}
 
 			return result;
 		},
-		[modules],
+		[modules, subscriptionContent],
 	);
 
 	// Fetch email templates - convertido a callback para reutilizar
@@ -618,11 +655,12 @@ const EmailTemplates = () => {
 		}
 	}, []);
 
-	// Cargar templates y módulos al montar el componente
+	// Cargar templates, módulos y contenido de suscripción al montar el componente
 	useEffect(() => {
 		fetchTemplates();
 		fetchModules();
-	}, [fetchTemplates, fetchModules]);
+		fetchSubscriptionContent();
+	}, [fetchTemplates, fetchModules, fetchSubscriptionContent]);
 
 	// Refrescar templates cuando se procesen las peticiones encoladas
 	useRequestQueueRefresh(() => {
