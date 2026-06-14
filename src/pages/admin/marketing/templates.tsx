@@ -219,6 +219,24 @@ const AVAILABLE_VARIABLES: VariableOption[] = [
 	// Resource summary variables
 	{ name: "userResourcesSummary", description: "Tabla HTML con resumen de recursos del usuario", category: "Recursos" },
 
+	// Subscription variables (resueltas al enviar: cruzan planconfigs × descuento vigente)
+	{ name: "tablaPrecios", description: "Bloque HTML: comparativa de planes Estándar/Premium con precio cruzado", category: "Suscripciones" },
+	{ name: "ofertaActual", description: "Bloque HTML: banner del descuento vigente (vacío si no hay)", category: "Suscripciones" },
+	{ name: "descuento.activo", description: "Hay descuento vigente (true/false)", category: "Suscripciones" },
+	{ name: "descuento.codigo", description: "Código del descuento vigente (ej: DESCUENTO50)", category: "Suscripciones" },
+	{ name: "descuento.valor", description: "Valor del descuento (ej: 50%)", category: "Suscripciones" },
+	{ name: "descuento.validUntil", description: "Fecha de vencimiento del descuento (ej: 14 de junio de 2026)", category: "Suscripciones" },
+	{ name: "descuento.duracionTexto", description: "Duración del descuento (ej: durante los primeros 12 meses)", category: "Suscripciones" },
+	{ name: "descuento.badge", description: "Etiqueta del descuento (ej: 50% OFF PROMO)", category: "Suscripciones" },
+	{ name: "plan.standard.nombre", description: "Nombre del plan Estándar", category: "Suscripciones" },
+	{ name: "plan.standard.precio", description: "Precio base del plan Estándar (ej: US$19.99)", category: "Suscripciones" },
+	{ name: "plan.standard.precioFinal", description: "Precio del plan Estándar con descuento (ej: US$10.00)", category: "Suscripciones" },
+	{ name: "plan.standard.ahorro", description: "Ahorro mensual en el plan Estándar (ej: US$9.99)", category: "Suscripciones" },
+	{ name: "plan.premium.nombre", description: "Nombre del plan Premium", category: "Suscripciones" },
+	{ name: "plan.premium.precio", description: "Precio base del plan Premium (ej: US$49.99)", category: "Suscripciones" },
+	{ name: "plan.premium.precioFinal", description: "Precio del plan Premium con descuento (ej: US$25.00)", category: "Suscripciones" },
+	{ name: "plan.premium.ahorro", description: "Ahorro mensual en el plan Premium (ej: US$24.99)", category: "Suscripciones" },
+
 	// Environment variables
 	{ name: "process.env.BASE_URL", description: "URL base de la aplicación", category: "Entorno" },
 
