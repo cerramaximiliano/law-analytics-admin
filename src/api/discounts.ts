@@ -229,6 +229,8 @@ export interface DiscountCode {
 	restrictions: DiscountRestrictions;
 	activationRules: DiscountActivationRules;
 	isActive: boolean;
+	/** Propósito de sistema único (p.ej. "winback" = cupón de reconquista). Solo uno por propósito. */
+	purpose?: "winback" | null;
 	targetEnvironment: TargetEnvironment;
 	stats: DiscountStats;
 	redemptionHistory: RedemptionHistoryItem[];
@@ -278,6 +280,8 @@ export interface CreateDiscountParams {
 	targetSegments?: string[]; // Array de IDs de segmentos de contactos
 	/** Contactos individuales (EmailContact._id) — heredan elegibilidad al registrarse con el mismo email */
 	targetContacts?: string[];
+	/** Propósito de sistema único (p.ej. "winback"). Solo puede existir un cupón por propósito. */
+	purpose?: "winback";
 }
 
 export interface UpdateDiscountParams {
@@ -288,6 +292,8 @@ export interface UpdateDiscountParams {
 	restrictions?: Partial<DiscountRestrictions>;
 	activationRules?: Partial<DiscountActivationRules>;
 	isActive?: boolean;
+	/** Propósito de sistema único. null para quitarlo. */
+	purpose?: "winback" | null;
 }
 
 export interface DiscountResponse {

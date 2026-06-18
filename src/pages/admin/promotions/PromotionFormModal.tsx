@@ -115,6 +115,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 		isActive: true,
 		environments: ["development", "production"] as StripeEnvironment[],
 		targetSegments: [] as string[],
+		purpose: "" as "" | "winback",
 	});
 
 	// Cargar segmentos disponibles desde la API de Marketing
@@ -226,6 +227,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					isActive: discount.isActive,
 					environments: (discount as any).environments || (["development", "production"] as StripeEnvironment[]),
 					targetSegments: discount.restrictions.targetSegments || [],
+					purpose: (discount as any).purpose || "",
 				});
 				// Cargar usuarios objetivo existentes para mostrarlos en el Autocomplete
 				if (discount._id) {
@@ -282,6 +284,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					isActive: true,
 					environments: ["development", "production"],
 					targetSegments: [],
+					purpose: "",
 				});
 				setPendingTargetUsers([]);
 				setPendingTargetContacts([]);
@@ -424,6 +427,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 						badge: formData.badge || undefined,
 					},
 					isActive: formData.isActive,
+					purpose: formData.purpose || null,
 				};
 
 				await discountsService.updateDiscount(discount!._id, updateData);
@@ -460,6 +464,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					isActive: formData.isActive,
 					environments: formData.environments,
 					targetSegments: formData.targetSegments.length > 0 ? formData.targetSegments : undefined,
+					purpose: formData.purpose || undefined,
 				};
 
 				const response = await discountsService.createDiscount(createData);
@@ -637,6 +642,26 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 							<Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 2 }}>
 								Configuración del Descuento
 							</Typography>
+						</Grid>
+
+						<Grid item xs={12}>
+							<FormControl fullWidth>
+								<InputLabel id="purpose-label">Tipo de cupón especial</InputLabel>
+								<Select
+									labelId="purpose-label"
+									value={formData.purpose}
+									label="Tipo de cupón especial"
+									onChange={(e) => handleChange("purpose", e.target.value)}
+								>
+									<MenuItem value="">Ninguno (cupón promocional normal)</MenuItem>
+									<MenuItem value="winback">Reconquista (win-back) — usuarios desactivados</MenuItem>
+								</Select>
+								<FormHelperText>
+									{formData.purpose === "winback"
+										? "Este será EL cupón de reconquista que ofrecen el email de baja y la campaña win-back. Solo puede existir uno (la base lo garantiza)."
+										: "Marcalo como cupón de sistema único (p.ej. reconquista). Dejá 'Ninguno' para un cupón promocional común."}
+								</FormHelperText>
+							</FormControl>
 						</Grid>
 
 						<Grid item xs={12} sm={4}>
