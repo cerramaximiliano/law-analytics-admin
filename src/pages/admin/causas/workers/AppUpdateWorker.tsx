@@ -273,7 +273,11 @@ const AppUpdateWorker = () => {
 							<TableCell>Worker ID</TableCell>
 							<TableCell>Modo</TableCell>
 							<TableCell align="center">Lote</TableCell>
-							<TableCell align="center">Umbral (h)</TableCell>
+							<TableCell align="center">
+								<Tooltip title="Cada cuántas horas una causa vuelve a ser elegible para re-scrape. Este es el umbral que rige la cadencia real del worker (last_update_threshold_hours).">
+									<span style={{ borderBottom: "1px dotted currentColor", cursor: "help" }}>Umbral (h)</span>
+								</Tooltip>
+							</TableCell>
 							<TableCell align="center">Verificados</TableCell>
 							<TableCell align="center">Actualizados</TableCell>
 							<TableCell align="center">Fallidos</TableCell>

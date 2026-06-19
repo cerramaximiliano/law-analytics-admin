@@ -501,11 +501,11 @@ const ManagerConfigPanel: React.FC = () => {
 									<TextField
 										fullWidth
 										size="small"
-										label="Horas para Actualizar"
+										label="Horas Umbral (Escalado)"
 										type="number"
 										value={getValue("updateThresholdHours") || ""}
 										onChange={(e) => handleSettingChange("updateThresholdHours", parseInt(e.target.value))}
-										helperText="Threshold de actualizacion"
+										helperText="Solo decide cuántos workers levantar. NO es la cadencia de re-scrape (eso se edita en la columna 'Umbral (h)' de la tabla de configuraciones)."
 									/>
 								</Grid>
 
