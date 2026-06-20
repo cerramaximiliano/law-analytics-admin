@@ -284,6 +284,42 @@ export interface MEVLoginFailure {
 	updatedAt?: string;
 }
 
+export interface MEVPasswordRecovery {
+	status: "idle" | "requesting" | "requested" | "completed" | "failed";
+	requestedAt: string | null;
+	requestedBy: string | null;
+	triggerText: string | null;
+	triggerExpediente: string | null;
+	attempts: number;
+	lastError: string | null;
+	screenshotBase64: string | null;
+	recoveryUrl: string | null;
+	recoveryUrlLoadedAt: string | null;
+	recoveryUrlLoadedBy: string | null;
+	completedAt: string | null;
+	completedBy: string | null;
+}
+
+export interface MEVCredentialStatus {
+	username: string | null;
+	lastPasswordChange: string | null;
+	passwordRecovery: MEVPasswordRecovery;
+}
+
+export interface MEVPasswordHistoryEntry {
+	_id: string;
+	event: string;
+	username: string | null;
+	source: string | null;
+	success: boolean;
+	detail: string | null;
+	recoveryUrl: string | null;
+	oldPasswordHint: string | null;
+	newPasswordHint: string | null;
+	newPasswordLen: number | null;
+	createdAt: string;
+}
+
 export interface MEVManagerStateSnapshot {
 	timestamp: string;
 	workers: { verify: number; update: number };
@@ -619,6 +655,33 @@ class MEVWorkersService {
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al reconocer el fallo de login");
+		}
+	}
+
+	async getCredentialStatus(): Promise<{ success: boolean; data: MEVCredentialStatus }> {
+		try {
+			const response = await mevAxios.get("/api/worker-manager/credential-status");
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al obtener el estado de credenciales");
+		}
+	}
+
+	async setRecoveryUrl(url: string): Promise<any> {
+		try {
+			const response = await mevAxios.post("/api/worker-manager/recovery-url", { url });
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al guardar el path de recuperación");
+		}
+	}
+
+	async getPasswordHistory(limit = 100): Promise<{ success: boolean; data: MEVPasswordHistoryEntry[]; count: number }> {
+		try {
+			const response = await mevAxios.get("/api/worker-manager/password-history", { params: { limit } });
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al obtener el historial de contraseñas");
 		}
 	}
 
