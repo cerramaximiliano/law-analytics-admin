@@ -17,6 +17,7 @@ const AuthCodeVerification = Loadable(lazy(() => import("pages/auth/code-verific
 // Admin pages
 const WorkersPage = Loadable(lazy(() => import("pages/admin/causas/workers")));
 const WorkersMEVPage = Loadable(lazy(() => import("pages/workers/WorkersMEV")));
+const MEVLoginFailuresPage = Loadable(lazy(() => import("pages/workers/MEVLoginFailures")));
 const WorkerLogsPage = Loadable(lazy(() => import("pages/workers/WorkerLogs")));
 const EmailVerificationWorkerPage = Loadable(lazy(() => import("pages/admin/workers/email-verification")));
 const CarpetasVerificadas = Loadable(lazy(() => import("pages/admin/causas/CarpetasVerificadas")));
@@ -245,6 +246,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<WorkersMEVPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "workers/mev-login-failures",
+							element: (
+								<AdminRoleGuard>
+									<MEVLoginFailuresPage />
 								</AdminRoleGuard>
 							),
 						},

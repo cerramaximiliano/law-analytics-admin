@@ -54,6 +54,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "workers-mev-login-failures",
+					title: "MEV — Fallos de Login",
+					type: "item",
+					url: "/admin/workers/mev-login-failures",
+					breadcrumbs: true,
+				},
+				{
 					id: "workers-eje",
 					title: "Workers EJE",
 					type: "item",

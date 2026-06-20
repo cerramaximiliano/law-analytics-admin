@@ -263,6 +263,27 @@ export interface MEVManagerAlert {
 	acknowledged: boolean;
 }
 
+export interface MEVLoginFailure {
+	_id: string;
+	worker_id: string;
+	loginUsername: string | null;
+	detectedText: string | null;
+	detectedUrl: string | null;
+	errorMessage: string | null;
+	screenshotBase64: string | null;
+	screenshotMime: string;
+	lastExpediente: string | null;
+	jurisdiccion: string | null;
+	count: number;
+	firstSeen: string | null;
+	lastSeen: string | null;
+	resolved: boolean;
+	acknowledgedAt: string | null;
+	acknowledgedBy: string | null;
+	createdAt?: string;
+	updatedAt?: string;
+}
+
 export interface MEVManagerStateSnapshot {
 	timestamp: string;
 	workers: { verify: number; update: number };
@@ -578,6 +599,26 @@ class MEVWorkersService {
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al resetear configuracion del manager");
+		}
+	}
+
+	async getLoginFailures(onlyActive: boolean = false): Promise<{ success: boolean; data: MEVLoginFailure[]; count: number }> {
+		try {
+			const response = await mevAxios.get("/api/worker-manager/login-failures", {
+				params: onlyActive ? { onlyActive: true } : {},
+			});
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al obtener fallos de login del worker MEV");
+		}
+	}
+
+	async acknowledgeLoginFailure(id: string): Promise<any> {
+		try {
+			const response = await mevAxios.post(`/api/worker-manager/login-failures/${id}/acknowledge`);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al reconocer el fallo de login");
 		}
 	}
 
