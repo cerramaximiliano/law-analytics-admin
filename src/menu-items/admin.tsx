@@ -481,6 +481,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "integrations-movement-link-analytics",
+					title: "Visor de documentos",
+					type: "item",
+					url: "/admin/integrations/movement-link-analytics",
+					breadcrumbs: true,
+				},
+				{
 					id: "integrations-pjn",
 					title: "Mis Causas PJN",
 					type: "item",

@@ -158,6 +158,7 @@ const GroupsPage = Loadable(lazy(() => import("pages/admin/groups")));
 
 // Integrations page
 const IntegrationsPage = Loadable(lazy(() => import("pages/admin/integrations")));
+const MovementLinkAnalytics = Loadable(lazy(() => import("pages/admin/integrations/MovementLinkAnalytics")));
 
 // PDF Templates page
 const PdfTemplatesPage = Loadable(lazy(() => import("pages/admin/pdf-templates")));
@@ -854,6 +855,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<IntegrationsPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "integrations/movement-link-analytics",
+							element: (
+								<AdminRoleGuard>
+									<MovementLinkAnalytics />
 								</AdminRoleGuard>
 							),
 						},
