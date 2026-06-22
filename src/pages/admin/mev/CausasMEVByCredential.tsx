@@ -128,6 +128,7 @@ const CausasMEVByCredential = () => {
 	// Filtros
 	const [credentialId, setCredentialId] = useState<string>("");
 	const [movementsFilter, setMovementsFilter] = useState<string>("");
+	const [folderFilter, setFolderFilter] = useState<"" | "active" | "archived">("");
 	const [sortBy, setSortBy] = useState<string>("lastUpdate");
 	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 	const [soloActive, setSoloActive] = useState<boolean>(false);
@@ -169,6 +170,7 @@ const CausasMEVByCredential = () => {
 			};
 			if (credentialId) params.credentialId = credentialId;
 			if (movementsFilter) params.hasMovements = movementsFilter;
+			if (folderFilter) params.folderStatus = folderFilter;
 			if (soloActive) params.soloActive = "true";
 			if (search.trim()) params.search = search.trim();
 
@@ -193,7 +195,7 @@ const CausasMEVByCredential = () => {
 	useEffect(() => {
 		fetchCausas();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [page, rowsPerPage, sortBy, sortOrder, soloActive]);
+	}, [page, rowsPerPage, sortBy, sortOrder, soloActive, folderFilter]);
 
 	// Handlers
 	const handleChangePage = (_event: unknown, newPage: number) => setPage(newPage);
@@ -208,6 +210,7 @@ const CausasMEVByCredential = () => {
 	const handleClear = () => {
 		setCredentialId("");
 		setMovementsFilter("");
+		setFolderFilter("");
 		setSoloActive(false);
 		setSearch("");
 		setPage(0);
@@ -367,6 +370,22 @@ const CausasMEVByCredential = () => {
 								<MenuItem value="">Todos</MenuItem>
 								<MenuItem value="true">Con movimientos</MenuItem>
 								<MenuItem value="false">Sin movimientos</MenuItem>
+							</Select>
+						</FormControl>
+
+						<FormControl size="small" sx={{ minWidth: 180 }}>
+							<InputLabel>Carpeta</InputLabel>
+							<Select
+								value={folderFilter}
+								onChange={(e) => {
+									setFolderFilter(e.target.value as "" | "active" | "archived");
+									setPage(0);
+								}}
+								label="Carpeta"
+							>
+								<MenuItem value="">Todas</MenuItem>
+								<MenuItem value="active">Activas (refresco diurno)</MenuItem>
+								<MenuItem value="archived">Archivadas (madrugada)</MenuItem>
 							</Select>
 						</FormControl>
 

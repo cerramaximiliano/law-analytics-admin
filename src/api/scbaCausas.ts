@@ -80,6 +80,8 @@ export interface ScbaSyncedCausasFilters {
 	credentialId?: string;
 	hasMovements?: "true" | "false" | "";
 	soloActive?: "true" | "false" | "";
+	/** Estado de las carpetas vinculadas: activas (≥1 sin archivar) o archivadas (todas archivadas). */
+	folderStatus?: "active" | "archived" | "";
 	search?: string;
 	page?: number;
 	limit?: number;
