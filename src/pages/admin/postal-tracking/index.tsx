@@ -65,6 +65,25 @@ const AUDIT_ACTION_CONFIG: Record<string, { color: "default" | "warning" | "info
 	reactivate: { color: "warning", label: "Reactivado" },
 };
 
+// Deriva el origen del cierre (usuario vs sistema) y el motivo legible.
+// Devuelve origin=null si el seguimiento aún no está cerrado.
+const getClosureInfo = (
+	t: PostalTracking,
+): { origin: "user" | "system" | null; label: string; color: "success" | "info" | "default"; reason: string | null } => {
+	if (t.manuallyCompleted) {
+		return { origin: "user", label: "Usuario", color: "success", reason: CLOSURE_REASON_LABELS.manually_completed };
+	}
+	const isClosed = ["completed", "not_found"].includes(t.processingStatus);
+	if (!isClosed) return { origin: null, label: "", color: "default", reason: null };
+	if (t.autoCompletedReason) {
+		return { origin: "system", label: "Sistema", color: "info", reason: CLOSURE_REASON_LABELS[t.autoCompletedReason] || t.autoCompletedReason };
+	}
+	if (t.processingStatus === "not_found") {
+		return { origin: "system", label: "Sistema", color: "default", reason: "No encontrado" };
+	}
+	return { origin: "system", label: "Sistema", color: "info", reason: CLOSURE_REASON_LABELS.final_status };
+};
+
 const formatDate = (dateString?: string) => {
 	if (!dateString) return "-";
 	return dayjs(dateString).format("DD/MM/YYYY HH:mm");
@@ -88,6 +107,7 @@ const PostalTrackingPage = () => {
 	// Filters
 	const [filterProcessingStatus, setFilterProcessingStatus] = useState("");
 	const [filterCodeId, setFilterCodeId] = useState("");
+	const [filterClosureOrigin, setFilterClosureOrigin] = useState("");
 	const [searchTerm, setSearchTerm] = useState("");
 
 	// Selection for bulk delete
@@ -136,6 +156,7 @@ const PostalTrackingPage = () => {
 				};
 				if (filterProcessingStatus) filters.processingStatus = filterProcessingStatus;
 				if (filterCodeId) filters.codeId = filterCodeId;
+				if (filterClosureOrigin) filters.closureOrigin = filterClosureOrigin as "user" | "system";
 				if (searchTerm) filters.search = searchTerm;
 
 				const response = await ScraperService.getPostalTrackings(filters);
@@ -157,7 +178,7 @@ const PostalTrackingPage = () => {
 			cancelled = true;
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [page, rowsPerPage, filterProcessingStatus, filterCodeId, searchTerm, refreshKey]);
+	}, [page, rowsPerPage, filterProcessingStatus, filterCodeId, filterClosureOrigin, searchTerm, refreshKey]);
 
 	const fetchTrackings = useCallback(() => triggerRefresh(), [triggerRefresh]);
 
@@ -493,6 +514,23 @@ const PostalTrackingPage = () => {
 								}}
 							/>
 						</Grid>
+						<Grid item xs={12} sm={6} md={2}>
+							<FormControl fullWidth size="small">
+								<InputLabel>Origen de cierre</InputLabel>
+								<Select
+									value={filterClosureOrigin}
+									label="Origen de cierre"
+									onChange={(e) => {
+										setFilterClosureOrigin(e.target.value);
+										setPage(0);
+									}}
+								>
+									<MenuItem value="">Todos</MenuItem>
+									<MenuItem value="user">Manual (usuario)</MenuItem>
+									<MenuItem value="system">Automatico (sistema)</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
 						<Grid item xs={12} sm={6} md={4}>
 							<TextField
 								fullWidth
@@ -563,6 +601,7 @@ const PostalTrackingPage = () => {
 								<TableCell>Etiqueta</TableCell>
 								<TableCell>Usuario ID</TableCell>
 								<TableCell align="center">Estado proceso</TableCell>
+								<TableCell align="center">Cierre</TableCell>
 								<TableCell>Estado rastreo</TableCell>
 								<TableCell align="center">Errores</TableCell>
 								<TableCell>Proximo check</TableCell>
@@ -574,7 +613,7 @@ const PostalTrackingPage = () => {
 							{loading ? (
 								Array.from({ length: 5 }).map((_, i) => (
 									<TableRow key={i}>
-										{Array.from({ length: 10 }).map((_, j) => (
+										{Array.from({ length: 11 }).map((_, j) => (
 											<TableCell key={j}>
 												<Skeleton variant="text" />
 											</TableCell>
@@ -583,7 +622,7 @@ const PostalTrackingPage = () => {
 								))
 							) : trackings.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={10} align="center">
+									<TableCell colSpan={11} align="center">
 										<Alert severity="info" sx={{ justifyContent: "center" }}>
 											No se encontraron seguimientos postales
 										</Alert>
@@ -655,6 +694,28 @@ const PostalTrackingPage = () => {
 													<Chip label="Final" size="small" color="success" variant="outlined" sx={{ fontWeight: 600, letterSpacing: 0.3 }} />
 												)}
 											</Stack>
+										</TableCell>
+										<TableCell align="center">
+											{(() => {
+												const ci = getClosureInfo(tracking);
+												if (!ci.origin) return <Typography variant="caption" color="textSecondary">-</Typography>;
+												return (
+													<Stack spacing={0.3} alignItems="center">
+														<Chip
+															label={ci.label}
+															size="small"
+															color={ci.origin === "user" ? "success" : "default"}
+															variant={ci.origin === "user" ? "filled" : "outlined"}
+															sx={{ fontWeight: 600 }}
+														/>
+														{ci.reason && (
+															<Typography variant="caption" color="textSecondary" sx={{ fontSize: "0.65rem" }}>
+																{ci.reason}
+															</Typography>
+														)}
+													</Stack>
+												);
+											})()}
 										</TableCell>
 										<TableCell>
 											<Typography

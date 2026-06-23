@@ -197,6 +197,7 @@ export interface PostalTrackingFilters {
 	trackingStatus?: string;
 	codeId?: string;
 	isFinalStatus?: boolean;
+	closureOrigin?: "user" | "system";
 	search?: string;
 	startDate?: string;
 	endDate?: string;
