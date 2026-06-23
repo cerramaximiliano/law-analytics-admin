@@ -53,6 +53,7 @@ import { getTasasStatus, TasasStatus } from "utils/tasasService";
 import { getStats as getDatosPrevisionales, Stats as DatosPrevsStats } from "utils/datosPrevsionalesService";
 import GroupsService from "api/groups";
 import ServicesStatusWidget from "./ServicesStatusWidget";
+import CronsStatusWidget from "./CronsStatusWidget";
 import IntegrationsStatusWidget from "./IntegrationsStatusWidget";
 import PrivacyStatsWidget from "./PrivacyStatsWidget";
 
@@ -1429,9 +1430,12 @@ const AdminDashboard = () => {
 							<ServicesStatusWidget />
 						</Grid>
 						<Grid item xs={12} sm={6} md={3}>
+							<CronsStatusWidget />
+						</Grid>
+						<Grid item xs={12} sm={6} md={3}>
 							<IntegrationsStatusWidget />
 						</Grid>
-						<Grid item xs={12} md={6}>
+						<Grid item xs={12} sm={6} md={3}>
 							<PrivacyStatsWidget />
 						</Grid>
 					</Grid>
