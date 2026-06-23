@@ -128,6 +128,16 @@ export interface PostalTrackingEvent {
 	rawData?: string;
 }
 
+export interface PostalTrackingAuditEntry {
+	action: "auto_complete" | "not_found" | "manual_complete" | "reactivate";
+	source: "system" | "user";
+	reason?: "final_status" | "code_reuse_detected" | "disappeared_from_source" | "user_action" | null;
+	by?: string | null;
+	fromStatus?: string | null;
+	toStatus?: string | null;
+	at: string;
+}
+
 export interface PostalTracking {
 	_id: string;
 	codeId: string;
@@ -135,6 +145,13 @@ export interface PostalTracking {
 	processingStatus: "pending" | "active" | "paused" | "completed" | "error" | "not_found";
 	trackingStatus?: string;
 	isFinalStatus: boolean;
+	autoCompletedReason?: "code_reuse_detected" | "disappeared_from_source" | "manually_completed" | null;
+	manuallyCompleted?: boolean;
+	completedBy?: string | null;
+	completedAt?: string;
+	reactivatedCount?: number;
+	successorId?: string | null;
+	auditLog?: PostalTrackingAuditEntry[];
 	consecutiveErrors: number;
 	lastError?: string;
 	lastCheckedAt?: string;

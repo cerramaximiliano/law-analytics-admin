@@ -50,6 +50,21 @@ const PROCESSING_STATUS_CONFIG: Record<string, { color: "default" | "warning" | 
 	not_found: { color: "default", label: "No encontrado" },
 };
 
+const CLOSURE_REASON_LABELS: Record<string, string> = {
+	final_status: "Estado final del Correo",
+	code_reuse_detected: "Reutilización de código",
+	disappeared_from_source: "Desapareció del sitio",
+	user_action: "Acción del usuario",
+	manually_completed: "Cierre manual",
+};
+
+const AUDIT_ACTION_CONFIG: Record<string, { color: "default" | "warning" | "info" | "success" | "error"; label: string }> = {
+	manual_complete: { color: "success", label: "Completado manual" },
+	auto_complete: { color: "info", label: "Cierre automático" },
+	not_found: { color: "default", label: "No encontrado" },
+	reactivate: { color: "warning", label: "Reactivado" },
+};
+
 const formatDate = (dateString?: string) => {
 	if (!dateString) return "-";
 	return dayjs(dateString).format("DD/MM/YYYY HH:mm");
@@ -948,6 +963,127 @@ const PostalTrackingPage = () => {
 												<Alert severity="info">No hay eventos en el historial</Alert>
 											)}
 										</Box>
+
+										{/* Cierre / Auditoría */}
+										{(() => {
+											const t = detailTracking;
+											const isClosed = ["completed", "not_found"].includes(t.processingStatus);
+											const hasAudit = (t.auditLog?.length || 0) > 0;
+											if (!isClosed && !hasAudit) return null;
+
+											// Determinar origen y motivo del cierre actual
+											let origin: string | null = null;
+											let originColor: "success" | "info" | "default" = "info";
+											let reason: string | null = null;
+											if (t.manuallyCompleted) {
+												origin = "Manual (usuario)";
+												originColor = "success";
+												reason = "El usuario lo marcó como completado";
+											} else if (t.autoCompletedReason) {
+												origin = "Automático (sistema)";
+												reason = CLOSURE_REASON_LABELS[t.autoCompletedReason] || t.autoCompletedReason;
+											} else if (t.processingStatus === "completed") {
+												origin = "Automático (sistema)";
+												reason = CLOSURE_REASON_LABELS.final_status;
+											} else if (t.processingStatus === "not_found") {
+												origin = "Automático (sistema)";
+												originColor = "default";
+												reason = "El sitio confirmó que la pieza no existe";
+											}
+
+											return (
+												<Box>
+													<Typography variant="subtitle2" mb={1}>
+														Cierre y auditoría
+													</Typography>
+													{origin && (
+														<Paper variant="outlined" sx={{ p: 1.5, mb: hasAudit ? 1.5 : 0 }}>
+															<Grid container spacing={1.5}>
+																<Grid item xs={12} sm={6}>
+																	<Typography variant="caption" color="textSecondary">
+																		Cerrado por
+																	</Typography>
+																	<Box mt={0.5}>
+																		<Chip label={origin} size="small" color={originColor} />
+																	</Box>
+																</Grid>
+																<Grid item xs={12} sm={6}>
+																	<Typography variant="caption" color="textSecondary">
+																		Motivo
+																	</Typography>
+																	<Typography variant="body2">{reason || "-"}</Typography>
+																</Grid>
+																{t.completedAt && (
+																	<Grid item xs={6} sm={4}>
+																		<Typography variant="caption" color="textSecondary">
+																			Fecha de cierre
+																		</Typography>
+																		<Typography variant="body2">{formatDate(t.completedAt)}</Typography>
+																	</Grid>
+																)}
+																{t.completedBy && (
+																	<Grid item xs={6} sm={4}>
+																		<Typography variant="caption" color="textSecondary">
+																			Cerrado por (userId)
+																		</Typography>
+																		<Typography variant="body2" fontFamily="monospace" fontSize="0.7rem" sx={{ wordBreak: "break-all" }}>
+																			{t.completedBy}
+																		</Typography>
+																	</Grid>
+																)}
+																{(t.reactivatedCount || 0) > 0 && (
+																	<Grid item xs={6} sm={4}>
+																		<Typography variant="caption" color="textSecondary">
+																			Reactivaciones
+																		</Typography>
+																		<Typography variant="body2" color="warning.main">
+																			{t.reactivatedCount}
+																		</Typography>
+																	</Grid>
+																)}
+															</Grid>
+														</Paper>
+													)}
+
+													{hasAudit && (
+														<Stack spacing={1}>
+															{[...(t.auditLog || [])].reverse().map((entry, index) => {
+																const cfg = AUDIT_ACTION_CONFIG[entry.action] || { color: "default" as const, label: entry.action };
+																return (
+																	<Paper key={index} variant="outlined" sx={{ p: 1.5 }}>
+																		<Stack direction="row" spacing={2} alignItems="flex-start" justifyContent="space-between">
+																			<Box flex={1}>
+																				<Stack direction="row" spacing={1} alignItems="center" mb={0.5} flexWrap="wrap">
+																					<Chip label={cfg.label} size="small" color={cfg.color} />
+																					<Chip
+																						label={entry.source === "user" ? "Usuario" : "Sistema"}
+																						size="small"
+																						variant="outlined"
+																						color={entry.source === "user" ? "success" : "info"}
+																					/>
+																					{entry.reason && (
+																						<Typography variant="caption" color="textSecondary">
+																							{CLOSURE_REASON_LABELS[entry.reason] || entry.reason}
+																						</Typography>
+																					)}
+																				</Stack>
+																				<Typography variant="caption" color="textSecondary">
+																					{(entry.fromStatus || "?")} → {(entry.toStatus || "?")}
+																					{entry.by && ` · por ${entry.by}`}
+																				</Typography>
+																			</Box>
+																			<Typography variant="caption" color="textSecondary" sx={{ whiteSpace: "nowrap" }}>
+																				{formatDate(entry.at)}
+																			</Typography>
+																		</Stack>
+																	</Paper>
+																);
+															})}
+														</Stack>
+													)}
+												</Box>
+											);
+										})()}
 									</Stack>
 								)}
 
