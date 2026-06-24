@@ -629,6 +629,13 @@ const admin: NavItemType = {
 			breadcrumbs: true,
 			children: [
 				{
+					id: "users-dashboard",
+					title: "Dashboard",
+					type: "item",
+					url: "/admin/users/dashboard",
+					breadcrumbs: true,
+				},
+				{
 					id: "users-management",
 					title: "Administracion de Usuarios",
 					type: "item",
