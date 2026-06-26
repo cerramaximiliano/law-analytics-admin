@@ -58,6 +58,8 @@ const getSyncStatusColor = (status: string) => {
 			return "warning";
 		case "error":
 			return "error";
+		case "idle":
+			return "secondary";
 		case "never_synced":
 		default:
 			return "default";
@@ -74,11 +76,29 @@ const getSyncStatusLabel = (status: string) => {
 			return "Pendiente";
 		case "error":
 			return "Error";
+		case "idle":
+			return "Desvinculada";
 		case "never_synced":
 			return "Sin sincronizar";
 		default:
 			return status;
 	}
+};
+
+// Texto de detalle de la desvinculación para tooltip / fila secundaria.
+const formatUnlinkDetail = (cred: ScbaCredential): string | null => {
+	if (cred.syncStatus !== "idle") return null;
+	const parts: string[] = [];
+	if (cred.unlinkedAt) parts.push(`el ${new Date(cred.unlinkedAt).toLocaleString("es-AR")}`);
+	if (cred.unlinkedMode) parts.push(`modo ${cred.unlinkedMode === "delete" ? "eliminar" : "conservar"}`);
+	const actor =
+		cred.unlinkedSource === "team"
+			? `equipo${cred.unlinkedByName ? ` (${cred.unlinkedByName})` : ""}`
+			: cred.unlinkedSource === "user"
+				? "el propio usuario"
+				: null;
+	if (actor) parts.push(`por ${actor}`);
+	return parts.length ? `Desvinculada ${parts.join(", ")}` : "Desvinculada por el usuario";
 };
 
 const CredencialesSCBA = () => {
@@ -359,6 +379,7 @@ const CredencialesSCBA = () => {
 									<MenuItem value="pending">Pendiente</MenuItem>
 									<MenuItem value="error">Error</MenuItem>
 									<MenuItem value="never_synced">Sin sincronizar</MenuItem>
+									<MenuItem value="idle">Desvinculada</MenuItem>
 								</Select>
 							</FormControl>
 						</Grid>
@@ -467,12 +488,14 @@ const CredencialesSCBA = () => {
 												</Typography>
 											</TableCell>
 											<TableCell align="center">
-												<Chip
-													label={getSyncStatusLabel(cred.syncStatus)}
-													color={getSyncStatusColor(cred.syncStatus) as any}
-													size="small"
-													sx={{ fontWeight: 600, letterSpacing: 0.3 }}
-												/>
+												<Tooltip title={formatUnlinkDetail(cred) || ""} arrow disableHoverListener={cred.syncStatus !== "idle"}>
+													<Chip
+														label={getSyncStatusLabel(cred.syncStatus)}
+														color={getSyncStatusColor(cred.syncStatus) as any}
+														size="small"
+														sx={{ fontWeight: 600, letterSpacing: 0.3 }}
+													/>
+												</Tooltip>
 											</TableCell>
 											<TableCell align="center">
 												{cred.verified ? (

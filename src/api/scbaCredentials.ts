@@ -12,7 +12,7 @@ export interface ScbaCredential {
 	verified: boolean;
 	verifiedAt: string | null;
 	isExpired: boolean;
-	syncStatus: "pending" | "in_progress" | "completed" | "error" | "never_synced";
+	syncStatus: "pending" | "in_progress" | "completed" | "error" | "never_synced" | "idle";
 	lastSync: string | null;
 	lastSyncAttempt: string | null;
 	consecutiveErrors: number;
@@ -38,6 +38,12 @@ export interface ScbaCredential {
 		progress: number;
 	} | null;
 	linkedCausasCount: number;
+	// Auditoría de desvinculación (presente cuando syncStatus === "idle")
+	unlinkedAt?: string | null;
+	unlinkedMode?: "keep" | "delete" | null;
+	unlinkedSource?: "user" | "team" | null;
+	unlinkedByName?: string | null;
+	unlinkedByEmail?: string | null;
 	createdAt: string;
 	updatedAt: string;
 }
