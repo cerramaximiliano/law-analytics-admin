@@ -578,6 +578,18 @@ const CredencialesPJN = () => {
 		}
 	};
 
+	const handleToggleBandejaNotifications = async (credential: PjnCredential) => {
+		try {
+			const response = await pjnCredentialsService.toggleBandejaNotifications(credential._id, !credential.bandejaNotificationsEnabled);
+			if (response.success) {
+				enqueueSnackbar(response.message, { variant: "success" });
+				fetchCredentials();
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al actualizar notificaciones de bandeja", { variant: "error" });
+		}
+	};
+
 	const handleReset = async (credential: PjnCredential) => {
 		try {
 			const response = await pjnCredentialsService.resetCredential(credential._id);
@@ -1441,6 +1453,15 @@ const CredencialesPJN = () => {
 																color={cred.enabled ? "success" : "warning"}
 															>
 																{cred.enabled ? <ToggleOnCircle size={18} /> : <ToggleOffCircle size={18} />}
+															</IconButton>
+														</Tooltip>
+														<Tooltip title={cred.bandejaNotificationsEnabled ? "Notif. bandeja: ON (desactivar)" : "Notif. bandeja: OFF (activar)"}>
+															<IconButton
+																size="small"
+																onClick={() => handleToggleBandejaNotifications(cred)}
+																color={cred.bandejaNotificationsEnabled ? "success" : "default"}
+															>
+																<Sms size={18} variant={cred.bandejaNotificationsEnabled ? "Bold" : "Linear"} />
 															</IconButton>
 														</Tooltip>
 														<Tooltip title="Actualizar contraseña">

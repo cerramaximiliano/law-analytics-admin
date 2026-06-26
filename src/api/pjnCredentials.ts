@@ -9,6 +9,7 @@ export interface PjnCredential {
 	userPhone?: string;
 	cuilMasked: string;
 	enabled: boolean;
+	bandejaNotificationsEnabled?: boolean;
 	verified: boolean;
 	verifiedAt: string | null;
 	isValid: boolean;
@@ -466,6 +467,14 @@ class PjnCredentialsService {
 	 */
 	async toggleCredential(id: string, enabled: boolean): Promise<GenericResponse> {
 		const response = await adminAxios.patch(`/api/pjn-credentials/${id}/toggle`, { enabled });
+		return response.data;
+	}
+
+	/**
+	 * Activar/desactivar notificaciones de bandeja (cédulas) por credencial
+	 */
+	async toggleBandejaNotifications(id: string, bandejaNotificationsEnabled: boolean): Promise<GenericResponse> {
+		const response = await adminAxios.patch(`/api/pjn-credentials/${id}/bandeja-notifications`, { bandejaNotificationsEnabled });
 		return response.data;
 	}
 
