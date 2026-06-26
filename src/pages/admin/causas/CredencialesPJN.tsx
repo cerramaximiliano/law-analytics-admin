@@ -247,6 +247,25 @@ function groupRunsIntoCycles(runs: UpdateRun[]): RunWithCycle[] {
 	});
 }
 
+// Templates de email asociados al ciclo de vida de una credencial PJN.
+// El tab de notificaciones se acota a este conjunto para hacer tracking solo
+// de los avisos de credenciales (no de syncs completadas u otros emails).
+const PJN_CREDENTIAL_TEMPLATES = [
+	"pjnCredentialRequiredAction",
+	"pjnCredentialError",
+	"pjnCredentialDisabled",
+	"pjnCredentialReminder",
+	"pjnCredentialRestored",
+] as const;
+
+const CREDENTIAL_TEMPLATE_LABELS: Record<string, string> = {
+	pjnCredentialRequiredAction: "Acción requerida",
+	pjnCredentialError: "Contraseña incorrecta",
+	pjnCredentialDisabled: "Cuenta desactivada",
+	pjnCredentialReminder: "Recordatorio",
+	pjnCredentialRestored: "Restaurada",
+};
+
 const CredencialesPJN = () => {
 	const theme = useTheme();
 
@@ -456,7 +475,7 @@ const CredencialesPJN = () => {
 	const [emailLogsRowsPerPage, setEmailLogsRowsPerPage] = useState(25);
 	const [emailLogsFetched, setEmailLogsFetched] = useState(false);
 	const [emailLogsStatusFilter, setEmailLogsStatusFilter] = useState<string>("todos");
-	const [emailLogsCategoryFilter, setEmailLogsCategoryFilter] = useState<string>("");
+	const [emailLogsTemplateFilter, setEmailLogsTemplateFilter] = useState<string>("todos");
 	const [emailLogsUserFilter, setEmailLogsUserFilter] = useState<string>("");
 
 	const fetchEmailLogs = async (page = emailLogsPage, rowsPerPage = emailLogsRowsPerPage) => {
@@ -469,7 +488,10 @@ const CredencialesPJN = () => {
 				sortOrder: "desc",
 			};
 			if (emailLogsStatusFilter !== "todos") params.status = emailLogsStatusFilter;
-			if (emailLogsCategoryFilter.trim()) params.templateCategory = emailLogsCategoryFilter.trim();
+			// Acotar siempre a las notificaciones de credenciales PJN. Si se elige
+			// un tipo puntual, se filtra por ese; si no, por el set completo.
+			params.templateName =
+				emailLogsTemplateFilter !== "todos" ? emailLogsTemplateFilter : PJN_CREDENTIAL_TEMPLATES.join(",");
 			if (emailLogsUserFilter.trim()) params.to = emailLogsUserFilter.trim();
 
 			const res = await EmailLogsService.getEmailLogs(params);
@@ -892,7 +914,7 @@ const CredencialesPJN = () => {
 					<Tab label="Credenciales" />
 					<Tab label="Actividad Sync" />
 					<Tab label="Movimientos" />
-					<Tab label="Notificaciones" icon={<Sms size={16} />} iconPosition="start" />
+					<Tab label="Notif. credenciales" icon={<Sms size={16} />} iconPosition="start" />
 				</Tabs>
 			</Box>
 
@@ -2172,7 +2194,7 @@ const CredencialesPJN = () => {
 				</Grid>
 			)}
 
-			{/* Tab 3: Notificaciones */}
+			{/* Tab 3: Notificaciones de credenciales */}
 			{tabValue === 3 && (
 				<Grid container spacing={2}>
 					{/* Filtros */}
@@ -2203,14 +2225,21 @@ const CredencialesPJN = () => {
 									<MenuItem value="complained">Complaint</MenuItem>
 								</Select>
 							</FormControl>
-							<TextField
-								size="small"
-								label="Categoría"
-								placeholder="Ej: credentials"
-								value={emailLogsCategoryFilter}
-								onChange={(e) => setEmailLogsCategoryFilter(e.target.value)}
-								sx={{ minWidth: 180 }}
-							/>
+							<FormControl size="small" sx={{ minWidth: 200 }}>
+								<InputLabel>Tipo</InputLabel>
+								<Select
+									value={emailLogsTemplateFilter}
+									label="Tipo"
+									onChange={(e) => setEmailLogsTemplateFilter(e.target.value)}
+								>
+									<MenuItem value="todos">Todos los avisos</MenuItem>
+									{PJN_CREDENTIAL_TEMPLATES.map((tpl) => (
+										<MenuItem key={tpl} value={tpl}>
+											{CREDENTIAL_TEMPLATE_LABELS[tpl]}
+										</MenuItem>
+									))}
+								</Select>
+							</FormControl>
 							<Button
 								variant="contained"
 								size="small"
@@ -2228,7 +2257,7 @@ const CredencialesPJN = () => {
 								startIcon={<CloseCircle size={16} />}
 								onClick={() => {
 									setEmailLogsStatusFilter("todos");
-									setEmailLogsCategoryFilter("");
+									setEmailLogsTemplateFilter("todos");
 									setEmailLogsUserFilter("");
 									setEmailLogsPage(0);
 									setTimeout(() => fetchEmailLogs(0, emailLogsRowsPerPage), 100);
@@ -2252,8 +2281,7 @@ const CredencialesPJN = () => {
 									<TableRow>
 										<TableCell>Destinatario</TableCell>
 										<TableCell>Asunto</TableCell>
-										<TableCell>Categoría</TableCell>
-										<TableCell>Template</TableCell>
+										<TableCell>Tipo</TableCell>
 										<TableCell align="center">Estado</TableCell>
 										<TableCell>Fuente</TableCell>
 										<TableCell>Fecha</TableCell>
@@ -2262,13 +2290,13 @@ const CredencialesPJN = () => {
 								<TableBody>
 									{emailLogsLoading ? (
 										<TableRow>
-											<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+											<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
 												<CircularProgress size={28} />
 											</TableCell>
 										</TableRow>
 									) : emailLogs.length === 0 ? (
 										<TableRow>
-											<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+											<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
 												<Typography color="text.secondary">No se encontraron notificaciones</Typography>
 											</TableCell>
 										</TableRow>
@@ -2335,18 +2363,17 @@ const CredencialesPJN = () => {
 														)}
 													</TableCell>
 													<TableCell>
-														{log.templateCategory ? (
-															<Chip label={log.templateCategory} size="small" variant="outlined" />
-														) : (
-															<Typography variant="body2" color="text.disabled">
-																—
-															</Typography>
-														)}
-													</TableCell>
-													<TableCell>
-														<Typography variant="caption" color="text.secondary" fontFamily="monospace">
-															{log.templateName || "—"}
-														</Typography>
+														<Tooltip title={log.templateName || ""}>
+															<Chip
+																label={
+																	(log.templateName && CREDENTIAL_TEMPLATE_LABELS[log.templateName]) ||
+																	log.templateName ||
+																	"—"
+																}
+																size="small"
+																variant="outlined"
+															/>
+														</Tooltip>
 													</TableCell>
 													<TableCell align="center">
 														<Chip
