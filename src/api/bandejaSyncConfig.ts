@@ -15,6 +15,7 @@ export interface BandejaSyncConfig {
 	testEmails: string[];
 	notifyEnabled: boolean;
 	lookbackDays: number;
+	maxCredentialsPerRun?: number;
 	minGapMs?: number;
 	pauseBetweenCredsMs?: number;
 	updatedAt?: string | null;

@@ -32,6 +32,7 @@ const MisCausasBandejaTab: React.FC = () => {
 	const [notifyEnabled, setNotifyEnabled] = useState(true);
 	const [testEmails, setTestEmails] = useState<string[]>([]);
 	const [lookbackDays, setLookbackDays] = useState(7);
+	const [maxCredentialsPerRun, setMaxCredentialsPerRun] = useState(0);
 
 	const fetchConfig = async () => {
 		try {
@@ -44,6 +45,7 @@ const MisCausasBandejaTab: React.FC = () => {
 				setNotifyEnabled(c.notifyEnabled ?? true);
 				setTestEmails(Array.isArray(c.testEmails) ? c.testEmails : []);
 				setLookbackDays(c.lookbackDays ?? 7);
+				setMaxCredentialsPerRun(c.maxCredentialsPerRun ?? 0);
 			}
 		} catch (error: any) {
 			enqueueSnackbar(error?.response?.data?.message || "Error al obtener configuración", {
@@ -64,12 +66,13 @@ const MisCausasBandejaTab: React.FC = () => {
 		(enabled !== (config.enabled ?? false) ||
 			notifyEnabled !== (config.notifyEnabled ?? true) ||
 			lookbackDays !== (config.lookbackDays ?? 7) ||
+			maxCredentialsPerRun !== (config.maxCredentialsPerRun ?? 0) ||
 			JSON.stringify([...testEmails].sort()) !== JSON.stringify([...(config.testEmails ?? [])].sort()));
 
 	const handleSave = async () => {
 		try {
 			setSaving(true);
-			const res = await BandejaSyncConfigService.updateConfig({ enabled, notifyEnabled, testEmails, lookbackDays });
+			const res = await BandejaSyncConfigService.updateConfig({ enabled, notifyEnabled, testEmails, lookbackDays, maxCredentialsPerRun });
 			if (res.success) setConfig(res.data);
 			enqueueSnackbar("Configuración guardada", {
 				variant: "success",
@@ -191,6 +194,19 @@ const MisCausasBandejaTab: React.FC = () => {
 								onChange={(e) => setLookbackDays(Number(e.target.value))}
 								inputProps={{ min: 1, max: 365 }}
 								helperText="Ventana de consulta a la API del portal por corrida"
+							/>
+						</Grid>
+
+						<Grid item xs={12} sm={6}>
+							<TextField
+								fullWidth
+								size="small"
+								label="Máx. credenciales por corrida"
+								type="number"
+								value={maxCredentialsPerRun}
+								onChange={(e) => setMaxCredentialsPerRun(Number(e.target.value))}
+								inputProps={{ min: 0 }}
+								helperText="0 = sin límite. Procesa primero las menos recientes (rota la cobertura)."
 							/>
 						</Grid>
 					</Grid>
