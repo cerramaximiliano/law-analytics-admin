@@ -30,6 +30,7 @@ import {
 	DialogContent,
 	DialogContentText,
 	DialogActions,
+	Divider,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { alpha, useTheme } from "@mui/material/styles";
@@ -44,11 +45,12 @@ import {
 	RefreshCircle,
 	Broom,
 	Sms,
+	Notification,
 } from "iconsax-react";
 import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { AddCircle } from "iconsax-react";
-import scbaCredentialsService, { ScbaCredential, ScbaCredentialsFilters } from "api/scbaCredentials";
+import scbaCredentialsService, { ScbaCredential, ScbaCredentialDetail, ScbaCredentialsFilters } from "api/scbaCredentials";
 import EmailLogsService from "api/emailLogs";
 import { EmailLog } from "types/email-log";
 
@@ -208,6 +210,29 @@ const CredencialesSCBA = () => {
 	const [createDialog, setCreateDialog] = useState(false);
 	const [createForm, setCreateForm] = useState({ userId: "", username: "", password: "", description: "" });
 	const [creating, setCreating] = useState(false);
+
+	// Diálogo "Recorrido de recordatorios"
+	const [reminderDialog, setReminderDialog] = useState<{
+		open: boolean;
+		credential: ScbaCredential | null;
+		loading: boolean;
+		data: ScbaCredentialDetail | null;
+	}>({ open: false, credential: null, loading: false, data: null });
+
+	const handleOpenReminders = async (cred: ScbaCredential) => {
+		setReminderDialog({ open: true, credential: cred, loading: true, data: null });
+		try {
+			const res = await scbaCredentialsService.getCredentialById(cred._id);
+			if (res.success) {
+				setReminderDialog((prev) => ({ ...prev, loading: false, data: res.data }));
+			} else {
+				setReminderDialog((prev) => ({ ...prev, loading: false }));
+			}
+		} catch (error) {
+			enqueueSnackbar("Error al cargar recordatorios", { variant: "error" });
+			setReminderDialog((prev) => ({ ...prev, loading: false }));
+		}
+	};
 
 	// Cargar datos
 	const fetchCredentials = async () => {
@@ -613,6 +638,11 @@ const CredencialesSCBA = () => {
 											</TableCell>
 											<TableCell align="center">
 												<Stack direction="row" spacing={0.5} justifyContent="center">
+													<Tooltip title="Recorrido de recordatorios">
+														<IconButton size="small" onClick={() => handleOpenReminders(cred)} color="default">
+															<Notification size={18} />
+														</IconButton>
+													</Tooltip>
 													<Tooltip title={cred.enabled ? "Deshabilitar" : "Habilitar"}>
 														<IconButton size="small" onClick={() => handleToggleEnabled(cred)} color={cred.enabled ? "success" : "warning"}>
 															{cred.enabled ? <ToggleOnCircle size={18} /> : <ToggleOffCircle size={18} />}
@@ -1012,6 +1042,120 @@ const CredencialesSCBA = () => {
 						startIcon={creating ? <CircularProgress size={16} /> : undefined}
 					>
 						{creating ? "Creando..." : "Crear"}
+					</Button>
+				</DialogActions>
+			</Dialog>
+			{/* Diálogo: Recorrido de recordatorios */}
+			<Dialog
+				open={reminderDialog.open}
+				onClose={() => setReminderDialog({ open: false, credential: null, loading: false, data: null })}
+				maxWidth="md"
+				fullWidth
+			>
+				<DialogTitle>
+					Recorrido de recordatorios
+					{reminderDialog.credential && (
+						<Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+							{reminderDialog.credential.userName} — {reminderDialog.credential.userEmail}
+						</Typography>
+					)}
+				</DialogTitle>
+				<DialogContent dividers>
+					{reminderDialog.loading ? (
+						<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+							<CircularProgress size={28} />
+						</Box>
+					) : !reminderDialog.data ? (
+						<Typography color="text.secondary">No se pudo cargar la información.</Typography>
+					) : (
+						(() => {
+							const d = reminderDialog.data;
+							const rh = d.reminderHistory || [];
+							// "Inválida / pendiente de re-ingreso" = errored, no desvinculada.
+							const credentialInvalid = d.enabled === false && d.isExpired === true && !!d.errorNotifiedAt;
+							if (!rh.length) {
+								return (
+									<Stack spacing={1}>
+										<Chip label="Sin recordatorios enviados" size="small" sx={{ alignSelf: "flex-start" }} />
+										<Typography variant="caption" color="text.secondary">
+											{credentialInvalid
+												? `Credencial inválida — el 1er recordatorio se programa ~3 días después de la notificación inicial${
+														d.errorNotifiedAt ? ` (${formatDate(d.errorNotifiedAt)})` : ""
+													}.`
+												: "La credencial no está en estado de error; no hay recordatorios programados."}
+										</Typography>
+									</Stack>
+								);
+							}
+							const rc = d.reminderCount ?? rh.length;
+							let nextRem: Date | null = null;
+							if (credentialInvalid && rc < 3) {
+								const last = d.lastReminderAt;
+								const errN = d.errorNotifiedAt;
+								const baseMs = last
+									? new Date(last).getTime() + 7 * 86400000
+									: errN
+										? new Date(errN).getTime() + 3 * 86400000
+										: null;
+								nextRem = baseMs ? new Date(baseMs) : null;
+							}
+							return (
+								<Box>
+									<Stack direction="row" spacing={1} sx={{ mb: 1.5 }}>
+										<Chip label={`${rc}/3 enviados`} size="small" color={rc >= 3 ? "default" : "info"} />
+										<Chip
+											label={credentialInvalid ? "Credencial inválida" : "Credencial recuperada"}
+											size="small"
+											color={credentialInvalid ? "warning" : "success"}
+										/>
+									</Stack>
+									<TableContainer component={Paper} variant="outlined">
+										<Table size="small">
+											<TableHead>
+												<TableRow>
+													<TableCell>Fecha</TableCell>
+													<TableCell align="center">#</TableCell>
+													<TableCell>Destinatario</TableCell>
+													<TableCell>Template</TableCell>
+													<TableCell align="center">Estado</TableCell>
+												</TableRow>
+											</TableHead>
+											<TableBody>
+												{rh
+													.slice()
+													.reverse()
+													.map((r, i) => (
+														<TableRow key={i}>
+															<TableCell>{formatDate(r.date)}</TableCell>
+															<TableCell align="center">{r.reminderNumber}</TableCell>
+															<TableCell>{r.to}</TableCell>
+															<TableCell>{r.templateName}</TableCell>
+															<TableCell align="center">
+																<Chip
+																	label={r.status || "sent"}
+																	size="small"
+																	color={r.status === "sent" ? "success" : "default"}
+																/>
+															</TableCell>
+														</TableRow>
+													))}
+											</TableBody>
+										</Table>
+									</TableContainer>
+									<Divider sx={{ my: 1.5 }} />
+									<Typography variant="caption" color="text.secondary">
+										{nextRem
+											? `Próximo recordatorio programado: ~${formatDate(nextRem.toISOString())}`
+											: `Sin más recordatorios programados (${rc}/3 enviados${credentialInvalid ? "" : " — credencial recuperada"}).`}
+									</Typography>
+								</Box>
+							);
+						})()
+					)}
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setReminderDialog({ open: false, credential: null, loading: false, data: null })}>
+						Cerrar
 					</Button>
 				</DialogActions>
 			</Dialog>

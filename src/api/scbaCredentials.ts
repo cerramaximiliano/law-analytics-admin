@@ -59,6 +59,17 @@ export interface ScbaCredentialDetail extends ScbaCredential {
 		pagesProcessed: number;
 	}[];
 	linkedCausaIds?: string[];
+	// Recordatorios de credencial inválida (ver "Recorrido de recordatorios")
+	reminderCount?: number;
+	lastReminderAt?: string | null;
+	errorNotifiedAt?: string | null;
+	reminderHistory?: {
+		date: string;
+		reminderNumber: number;
+		to: string;
+		templateName: string;
+		status: string;
+	}[];
 }
 
 export interface ScbaCredentialsFilters {
