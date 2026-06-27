@@ -370,6 +370,27 @@ export interface MisCausasCoverage {
 	byFuero: Array<{ fuero: string; total: number; updatedToday: number; withErrors: number }>;
 }
 
+export interface HealthAnomaly {
+	credentialId: string;
+	userId: string | null;
+	userEmail: string | null;
+	userName: string | null;
+	total: number;
+	conError: number;
+	sinCaptura: number;
+	problem: number;
+	coveragePercent: number | null;
+	anomala: boolean;
+	firstAnomalyAt: string | null;
+	evaluatedAt: string | null;
+}
+
+export interface HealthAnomaliesResponse {
+	success: boolean;
+	data: HealthAnomaly[];
+	meta: { count: number; lastEvaluatedAt: string | null };
+}
+
 export interface GenericResponse {
 	success: boolean;
 	message?: string;
@@ -569,6 +590,15 @@ class PjnCredentialsService {
 	 */
 	async getUpdateCoverage(): Promise<{ success: boolean; data: MisCausasCoverage }> {
 		const response = await adminAxios.get("/api/pjn-credentials/update-coverage");
+		return response.data;
+	}
+
+	/**
+	 * Credenciales sanas con alto % de causas con error/sin captura (snapshot del
+	 * cron credential-health-monitor). Detecta el caso "credencial verde, causas rotas".
+	 */
+	async getHealthAnomalies(): Promise<HealthAnomaliesResponse> {
+		const response = await adminAxios.get("/api/pjn-credentials/health-anomalies");
 		return response.data;
 	}
 }

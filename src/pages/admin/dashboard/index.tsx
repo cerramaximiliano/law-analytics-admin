@@ -44,7 +44,7 @@ import { CausasPjnService, EligibilityStats } from "api/causasPjn";
 import { StuckDocumentsService, StuckDocumentsStats } from "api/stuckDocuments";
 import { CausasEjeService, WorkerStatsResponse, EligibilityStatsResponse as EjeEligibilityStatsResponse } from "api/causasEje";
 import { CausasMEVService, EligibilityStatsMEV } from "api/causasMEV";
-import pjnCredentialsService, { MisCausasCoverage } from "api/pjnCredentials";
+import pjnCredentialsService, { MisCausasCoverage, HealthAnomaly } from "api/pjnCredentials";
 import scbaCausasService, { ScbaUpdateCoverage } from "api/scbaCausas";
 import { ManagerConfigService, PjnSiteStatus } from "api/managerConfig";
 import LinearProgress from "@mui/material/LinearProgress";
@@ -592,6 +592,8 @@ const AdminDashboard = () => {
 	const [loadingEjeStats, setLoadingEjeStats] = useState(false);
 	const [misCausasCoverage, setMisCausasCoverage] = useState<MisCausasCoverage | null>(null);
 	const [loadingMisCausasCoverage, setLoadingMisCausasCoverage] = useState(false);
+	const [healthAnomalies, setHealthAnomalies] = useState<HealthAnomaly[]>([]);
+	const [healthAnomaliesMeta, setHealthAnomaliesMeta] = useState<{ count: number; lastEvaluatedAt: string | null } | null>(null);
 	const [scbaCoverage, setScbaCoverage] = useState<ScbaUpdateCoverage | null>(null);
 	const [loadingScbaCoverage, setLoadingScbaCoverage] = useState(false);
 	const [tasasStatus, setTasasStatus] = useState<TasasStatus | null>(null);
@@ -690,6 +692,18 @@ const AdminDashboard = () => {
 			console.error("Error fetching mis causas coverage:", error);
 		} finally {
 			setLoadingMisCausasCoverage(false);
+		}
+	}, []);
+
+	const fetchHealthAnomalies = useCallback(async () => {
+		try {
+			const response = await pjnCredentialsService.getHealthAnomalies();
+			if (response.success) {
+				setHealthAnomalies(response.data || []);
+				setHealthAnomaliesMeta(response.meta || null);
+			}
+		} catch (error: any) {
+			console.error("Error fetching health anomalies:", error);
 		}
 	}, []);
 
@@ -819,6 +833,7 @@ const AdminDashboard = () => {
 		fetchOpenaiBalance();
 		fetchEligibilityStats();
 		fetchMisCausasCoverage();
+		fetchHealthAnomalies();
 		fetchScbaCoverage();
 		fetchMevEligibilityStats();
 		fetchEjeEligibilityStats();
@@ -835,6 +850,7 @@ const AdminDashboard = () => {
 		fetchOpenaiBalance,
 		fetchEligibilityStats,
 		fetchMisCausasCoverage,
+		fetchHealthAnomalies,
 		fetchScbaCoverage,
 		fetchMevEligibilityStats,
 		fetchEjeEligibilityStats,
@@ -855,6 +871,7 @@ const AdminDashboard = () => {
 		fetchOpenaiBalance();
 		fetchEligibilityStats();
 		fetchMisCausasCoverage();
+		fetchHealthAnomalies();
 		fetchScbaCoverage();
 		fetchMevEligibilityStats();
 		fetchEjeEligibilityStats();
@@ -2157,6 +2174,72 @@ const AdminDashboard = () => {
 							)}
 						</Paper>
 					</Grid>
+
+					{/* Card: salud por credencial — credenciales sanas con causas en problema.
+					    Cubre el caso "credencial verde pero 100% de sus causas rotas", invisible
+					    en el agregado global. Datos del cron credential-health-monitor. */}
+					{healthAnomalies.length > 0 && (
+						<Grid item xs={12}>
+							<Paper
+								elevation={0}
+								sx={{
+									p: { xs: 1.5, sm: 2.5 },
+									borderRadius: 2,
+									bgcolor: theme.palette.background.paper,
+									border: `1px solid ${theme.palette.warning.main}`,
+								}}
+							>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+									<Typography variant="subtitle1" fontWeight={600}>
+										⚠️ Credenciales con causas en problema
+									</Typography>
+									<Box sx={{ ml: "auto" }}>
+										<Typography variant="caption" color="text.secondary">
+											{healthAnomaliesMeta?.lastEvaluatedAt
+												? `Último chequeo: ${new Date(healthAnomaliesMeta.lastEvaluatedAt).toLocaleString("es-AR")}`
+												: ""}
+										</Typography>
+									</Box>
+								</Box>
+								<Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+									Credenciales habilitadas y válidas con ≥50% de sus causas con error o sin captura. Clic para ver sus causas.
+								</Typography>
+								{healthAnomalies.map((a) => (
+									<Box
+										key={a.credentialId}
+										onClick={() =>
+											navigate(`/admin/causas/synced-credentials?credentialId=${a.credentialId}&conErrores=1`)
+										}
+										sx={{
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "space-between",
+											gap: 1,
+											py: 0.75,
+											px: 1,
+											borderRadius: 1,
+											cursor: "pointer",
+											transition: "background-color 0.15s ease",
+											"&:hover": { bgcolor: theme.palette.action.hover },
+										}}
+									>
+										<Typography variant="body2" fontWeight={500} noWrap sx={{ minWidth: 0 }}>
+											{a.userEmail || a.userName || a.credentialId}
+										</Typography>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
+											<Typography variant="caption" color="error.main">
+												{a.problem}/{a.total} con problema
+												{a.sinCaptura > 0 ? ` · ${a.sinCaptura} sin captura` : ""}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												cobertura {a.coveragePercent ?? "—"}%
+											</Typography>
+										</Box>
+									</Box>
+								))}
+							</Paper>
+						</Grid>
+					)}
 
 					{/* SCBA Update Coverage Widget */}
 					<Grid item xs={12} sm={6} md={3}>

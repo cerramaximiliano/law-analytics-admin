@@ -144,7 +144,9 @@ const CausasSyncCredentials = () => {
 	const [searchTrigger, setSearchTrigger] = useState(0);
 
 	// Filtros
-	const [credentialId, setCredentialId] = useState<string>("");
+	// credentialId puede llegar pre-seleccionado desde el card de salud del dashboard
+	// (?credentialId=...), para drillear directo a las causas de esa credencial.
+	const [credentialId, setCredentialId] = useState<string>(() => searchParams.get("credentialId") || "");
 	const [fueroFilter, setFueroFilter] = useState<string>("");
 	const [movementsFilter, setMovementsFilter] = useState<string>("");
 	// Vista especial: privadas no actualizables (sin credencial activa). Bypassa el
