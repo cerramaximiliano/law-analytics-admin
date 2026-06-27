@@ -260,6 +260,13 @@ const admin: NavItemType = {
 					url: "/admin/causas/update-eligible",
 					breadcrumbs: true,
 				},
+				{
+					id: "causas-trayectorias",
+					title: "Trayectorias",
+					type: "item",
+					url: "/admin/causas/trayectorias",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{
