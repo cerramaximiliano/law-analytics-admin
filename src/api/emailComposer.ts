@@ -14,6 +14,7 @@ export interface ComposePayload {
 	signature?: string;
 	ctaText?: string;
 	ctaUrl?: string;
+	fallbackName?: string;
 }
 
 export interface SendResult {

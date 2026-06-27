@@ -65,6 +65,7 @@ const EmailComposer = () => {
 	const [signature, setSignature] = useState(DEFAULT_SIGNATURE);
 	const [ctaText, setCtaText] = useState("");
 	const [ctaUrl, setCtaUrl] = useState("");
+	const [fallbackName, setFallbackName] = useState("");
 	const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
 
 	// Búsqueda destinatarios
@@ -120,7 +121,7 @@ const EmailComposer = () => {
 
 	const resetForm = () => {
 		setFrom("cuentas"); setRecipients([]); setSubject(""); setContent("");
-		setSignature(DEFAULT_SIGNATURE); setCtaText(""); setCtaUrl(""); setCurrentDraftId(null); setPreviewHtml("");
+		setSignature(DEFAULT_SIGNATURE); setCtaText(""); setCtaUrl(""); setFallbackName(""); setCurrentDraftId(null); setPreviewHtml("");
 	};
 
 	const loadDraft = (d: EmailDraft) => {
@@ -169,10 +170,10 @@ const EmailComposer = () => {
 	const refreshPreview = useCallback(async () => {
 		try {
 			setLoadingPreview(true);
-			setPreviewHtml(await emailComposerService.preview({ subject, contentHtml: content, signature, ctaText, ctaUrl }));
+			setPreviewHtml(await emailComposerService.preview({ subject, contentHtml: content, signature, ctaText, ctaUrl, fallbackName }));
 		} catch (e: any) { enqueueSnackbar(e?.message || "Error en vista previa", { variant: "error" }); }
 		finally { setLoadingPreview(false); }
-	}, [subject, content, signature, ctaText, ctaUrl, enqueueSnackbar]);
+	}, [subject, content, signature, ctaText, ctaUrl, fallbackName, enqueueSnackbar]);
 
 	const invalidRecipients = recipients.filter((r) => !EMAIL_RE.test(r));
 	const canSend = recipients.length > 0 && invalidRecipients.length === 0 && !!subject.trim() && !!content.replace(/<(.|\n)*?>/g, "").trim();
@@ -184,6 +185,7 @@ const EmailComposer = () => {
 			const res = await emailComposerService.send({
 				from, recipients, subject: subject.trim(), contentHtml: content, signature,
 				ctaText: ctaText.trim() || undefined, ctaUrl: ctaUrl.trim() || undefined,
+				fallbackName: fallbackName.trim() || undefined,
 			});
 			if (res.success) {
 				const failed = res.total - res.sent;
@@ -258,6 +260,20 @@ const EmailComposer = () => {
 								</Box>
 
 								<TextField size="small" fullWidth multiline minRows={2} label="Firma" value={signature} onChange={(e) => setSignature(e.target.value)} />
+
+								<Box sx={{ bgcolor: "action.hover", borderRadius: 1, p: 1.25 }}>
+									<Typography variant="caption" color="text.secondary">
+										Personalización: usá <code>{"{nombre}"}</code>, <code>{"{nombreCompleto}"}</code> o <code>{"{email}"}</code> en el asunto, contenido o firma. Se reemplazan por cada destinatario (el nombre se busca por su email en usuarios/contactos).
+									</Typography>
+								</Box>
+								<TextField
+									size="small"
+									fullWidth
+									label="Nombre por defecto (si no se conoce)"
+									placeholder="Ej: vacío, o un saludo genérico"
+									value={fallbackName}
+									onChange={(e) => setFallbackName(e.target.value)}
+								/>
 
 								<Divider textAlign="left"><Typography variant="caption" color="text.secondary">Botón (opcional)</Typography></Divider>
 								<Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
