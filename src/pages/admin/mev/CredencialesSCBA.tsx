@@ -20,6 +20,8 @@ import {
 	TextField,
 	Button,
 	Box,
+	Tabs,
+	Tab,
 	CircularProgress,
 	Card,
 	CardContent,
@@ -41,11 +43,14 @@ import {
 	ToggleOffCircle,
 	RefreshCircle,
 	Broom,
+	Sms,
 } from "iconsax-react";
 import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { AddCircle } from "iconsax-react";
 import scbaCredentialsService, { ScbaCredential, ScbaCredentialsFilters } from "api/scbaCredentials";
+import EmailLogsService from "api/emailLogs";
+import { EmailLog } from "types/email-log";
 
 // Colores para estados
 const getSyncStatusColor = (status: string) => {
@@ -101,6 +106,22 @@ const formatUnlinkDetail = (cred: ScbaCredential): string | null => {
 	return parts.length ? `Desvinculada ${parts.join(", ")}` : "Desvinculada por el usuario";
 };
 
+// El tab de notificaciones se acota a este conjunto para trackear solo los
+// avisos de credenciales SCBA (no los de sync completada, causas o listas).
+const SCBA_CREDENTIAL_TEMPLATES = [
+	"scbaCredentialError",
+	"scbaCredentialDisabled",
+	"scbaCredentialReminder",
+	"scbaCredentialRestored",
+] as const;
+
+const CREDENTIAL_TEMPLATE_LABELS: Record<string, string> = {
+	scbaCredentialError: "Contraseña incorrecta",
+	scbaCredentialDisabled: "Cuenta desactivada",
+	scbaCredentialReminder: "Recordatorio",
+	scbaCredentialRestored: "Restaurada",
+};
+
 const CredencialesSCBA = () => {
 	const theme = useTheme();
 
@@ -123,6 +144,57 @@ const CredencialesSCBA = () => {
 	// Ordenamiento
 	const [sortBy] = useState<string>("createdAt");
 	const [sortOrder] = useState<"asc" | "desc">("desc");
+
+	// Tab activo (0 = credenciales, 1 = notificaciones)
+	const [tabValue, setTabValue] = useState(0);
+
+	// Estado notificaciones (logs de emails de credenciales)
+	const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
+	const [emailLogsLoading, setEmailLogsLoading] = useState(false);
+	const [emailLogsTotal, setEmailLogsTotal] = useState(0);
+	const [emailLogsPage, setEmailLogsPage] = useState(0);
+	const [emailLogsRowsPerPage, setEmailLogsRowsPerPage] = useState(25);
+	const [emailLogsFetched, setEmailLogsFetched] = useState(false);
+	const [emailLogsStatusFilter, setEmailLogsStatusFilter] = useState<string>("todos");
+	const [emailLogsTemplateFilter, setEmailLogsTemplateFilter] = useState<string>("todos");
+	const [emailLogsUserFilter, setEmailLogsUserFilter] = useState<string>("");
+
+	const fetchEmailLogs = async (page = emailLogsPage, rowsPerPage = emailLogsRowsPerPage) => {
+		setEmailLogsLoading(true);
+		try {
+			const params: any = {
+				page: page + 1,
+				limit: rowsPerPage,
+				sortBy: "createdAt",
+				sortOrder: "desc",
+			};
+			if (emailLogsStatusFilter !== "todos") params.status = emailLogsStatusFilter;
+			// Acotar siempre a las notificaciones de credenciales SCBA. Si se elige
+			// un tipo puntual, se filtra por ese; si no, por el set completo.
+			params.templateName =
+				emailLogsTemplateFilter !== "todos" ? emailLogsTemplateFilter : SCBA_CREDENTIAL_TEMPLATES.join(",");
+			if (emailLogsUserFilter.trim()) params.to = emailLogsUserFilter.trim();
+
+			const res = await EmailLogsService.getEmailLogs(params);
+			if (res.success) {
+				setEmailLogs(res.data);
+				setEmailLogsTotal(res.pagination.totalItems);
+				setEmailLogsFetched(true);
+			}
+		} catch (error) {
+			console.error("Error fetching email logs:", error);
+		} finally {
+			setEmailLogsLoading(false);
+		}
+	};
+
+	// Lazy load: cargar los logs de notificaciones solo al activar el tab 1
+	useEffect(() => {
+		if (tabValue === 1 && !emailLogsFetched) {
+			fetchEmailLogs(0, emailLogsRowsPerPage);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [tabValue]);
 
 	// Dialogs
 	const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; credential: ScbaCredential | null }>({
@@ -329,6 +401,19 @@ const CredencialesSCBA = () => {
 	return (
 		<MainCard title="Credenciales SCBA">
 			<Grid container spacing={3}>
+				<Grid item xs={12}>
+					<Tabs
+						value={tabValue}
+						onChange={(_, v) => setTabValue(v)}
+						sx={{ borderBottom: 1, borderColor: "divider", minHeight: 40 }}
+					>
+						<Tab label="Credenciales" sx={{ minHeight: 40 }} />
+						<Tab label="Notif. credenciales" icon={<Sms size={16} />} iconPosition="start" sx={{ minHeight: 40 }} />
+					</Tabs>
+				</Grid>
+
+				{tabValue === 0 && (
+					<>
 				{/* Estadísticas */}
 				{stats && (
 					<Grid item xs={12}>
@@ -586,6 +671,218 @@ const CredencialesSCBA = () => {
 						rowsPerPageOptions={[10, 25, 50, 100]}
 					/>
 				</Grid>
+					</>
+				)}
+
+				{tabValue === 1 && (
+					<Grid item xs={12}>
+						<Grid container spacing={2}>
+							{/* Filtros */}
+							<Grid item xs={12}>
+								<Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems="flex-end" flexWrap="wrap" useFlexGap>
+									<TextField
+										size="small"
+										label="Filtrar por email destinatario"
+										placeholder="Ej: usuario@mail.com"
+										value={emailLogsUserFilter}
+										onChange={(e) => setEmailLogsUserFilter(e.target.value)}
+										onKeyPress={(e) => {
+											if (e.key === "Enter") {
+												setEmailLogsPage(0);
+												fetchEmailLogs(0, emailLogsRowsPerPage);
+											}
+										}}
+										sx={{ minWidth: 220 }}
+									/>
+									<FormControl size="small" sx={{ minWidth: 160 }}>
+										<InputLabel>Estado</InputLabel>
+										<Select value={emailLogsStatusFilter} label="Estado" onChange={(e) => setEmailLogsStatusFilter(e.target.value)}>
+											<MenuItem value="todos">Todos</MenuItem>
+											<MenuItem value="sent">Enviado</MenuItem>
+											<MenuItem value="delivered">Entregado</MenuItem>
+											<MenuItem value="failed">Fallido</MenuItem>
+											<MenuItem value="bounced">Rebotado</MenuItem>
+											<MenuItem value="complained">Complaint</MenuItem>
+										</Select>
+									</FormControl>
+									<FormControl size="small" sx={{ minWidth: 200 }}>
+										<InputLabel>Tipo</InputLabel>
+										<Select value={emailLogsTemplateFilter} label="Tipo" onChange={(e) => setEmailLogsTemplateFilter(e.target.value)}>
+											<MenuItem value="todos">Todos los avisos</MenuItem>
+											{SCBA_CREDENTIAL_TEMPLATES.map((tpl) => (
+												<MenuItem key={tpl} value={tpl}>
+													{CREDENTIAL_TEMPLATE_LABELS[tpl]}
+												</MenuItem>
+											))}
+										</Select>
+									</FormControl>
+									<Button
+										variant="contained"
+										size="small"
+										startIcon={<SearchNormal1 size={16} />}
+										onClick={() => {
+											setEmailLogsPage(0);
+											fetchEmailLogs(0, emailLogsRowsPerPage);
+										}}
+									>
+										Buscar
+									</Button>
+									<Button
+										variant="outlined"
+										size="small"
+										startIcon={<CloseCircle size={16} />}
+										onClick={() => {
+											setEmailLogsStatusFilter("todos");
+											setEmailLogsTemplateFilter("todos");
+											setEmailLogsUserFilter("");
+											setEmailLogsPage(0);
+											setTimeout(() => fetchEmailLogs(0, emailLogsRowsPerPage), 100);
+										}}
+									>
+										Limpiar
+									</Button>
+									<Tooltip title="Refrescar">
+										<IconButton size="small" onClick={() => fetchEmailLogs(emailLogsPage, emailLogsRowsPerPage)}>
+											<Refresh size={18} />
+										</IconButton>
+									</Tooltip>
+								</Stack>
+							</Grid>
+
+							{/* Tabla de logs */}
+							<Grid item xs={12}>
+								<TableContainer component={Paper} variant="outlined">
+									<Table size="small">
+										<TableHead>
+											<TableRow>
+												<TableCell>Destinatario</TableCell>
+												<TableCell>Asunto</TableCell>
+												<TableCell>Tipo</TableCell>
+												<TableCell align="center">Estado</TableCell>
+												<TableCell>Fuente</TableCell>
+												<TableCell>Fecha</TableCell>
+											</TableRow>
+										</TableHead>
+										<TableBody>
+											{emailLogsLoading ? (
+												<TableRow>
+													<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+														<CircularProgress size={28} />
+													</TableCell>
+												</TableRow>
+											) : emailLogs.length === 0 ? (
+												<TableRow>
+													<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+														<Typography color="text.secondary">No se encontraron notificaciones</Typography>
+													</TableCell>
+												</TableRow>
+											) : (
+												emailLogs.map((log) => {
+													const user = typeof log.userId === "object" && log.userId ? log.userId : null;
+													const statusColorMap: Record<string, "success" | "error" | "warning" | "default" | "info"> = {
+														sent: "info",
+														delivered: "success",
+														failed: "error",
+														bounced: "warning",
+														complained: "warning",
+													};
+													const statusLabelMap: Record<string, string> = {
+														sent: "Enviado",
+														delivered: "Entregado",
+														failed: "Fallido",
+														bounced: "Rebotado",
+														complained: "Complaint",
+													};
+													return (
+														<TableRow key={log._id} hover>
+															<TableCell>
+																<Stack>
+																	{user ? (
+																		<>
+																			<Typography variant="body2" fontWeight={500}>
+																				{user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name || user.email}
+																			</Typography>
+																			<Typography variant="caption" color="text.secondary">
+																				{log.to}
+																			</Typography>
+																		</>
+																	) : (
+																		<Typography variant="body2">{log.to}</Typography>
+																	)}
+																</Stack>
+															</TableCell>
+															<TableCell>
+																<Tooltip title={log.subject}>
+																	<Typography
+																		variant="body2"
+																		sx={{ maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+																	>
+																		{log.subject}
+																	</Typography>
+																</Tooltip>
+																{log.errorMessage && (
+																	<Tooltip title={log.errorMessage}>
+																		<Typography
+																			variant="caption"
+																			color="error.main"
+																			sx={{ display: "block", maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+																		>
+																			{log.errorMessage}
+																		</Typography>
+																	</Tooltip>
+																)}
+															</TableCell>
+															<TableCell>
+																<Tooltip title={log.templateName || ""}>
+																	<Chip
+																		label={(log.templateName && CREDENTIAL_TEMPLATE_LABELS[log.templateName]) || log.templateName || "—"}
+																		size="small"
+																		variant="outlined"
+																	/>
+																</Tooltip>
+															</TableCell>
+															<TableCell align="center">
+																<Chip
+																	label={statusLabelMap[log.status] || log.status}
+																	size="small"
+																	color={statusColorMap[log.status] || "default"}
+																/>
+															</TableCell>
+															<TableCell>
+																<Typography variant="caption" color="text.secondary">
+																	{log.source || "—"}
+																</Typography>
+															</TableCell>
+															<TableCell>
+																<Typography variant="caption">{formatDate(log.createdAt)}</Typography>
+															</TableCell>
+														</TableRow>
+													);
+												})
+											)}
+										</TableBody>
+									</Table>
+								</TableContainer>
+								<EnhancedTablePagination
+									count={emailLogsTotal}
+									page={emailLogsPage}
+									onPageChange={(_, newPage) => {
+										setEmailLogsPage(newPage);
+										fetchEmailLogs(newPage, emailLogsRowsPerPage);
+									}}
+									rowsPerPage={emailLogsRowsPerPage}
+									onRowsPerPageChange={(e) => {
+										const rows = parseInt(e.target.value, 10);
+										setEmailLogsRowsPerPage(rows);
+										setEmailLogsPage(0);
+										fetchEmailLogs(0, rows);
+									}}
+									rowsPerPageOptions={[25, 50, 100]}
+								/>
+							</Grid>
+						</Grid>
+					</Grid>
+				)}
 			</Grid>
 
 			{/* Dialog de confirmación de eliminación */}
