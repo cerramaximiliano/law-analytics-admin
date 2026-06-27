@@ -1503,7 +1503,13 @@ const CredencialesPJN = () => {
 																{cred.enabled ? <ToggleOnCircle size={18} /> : <ToggleOffCircle size={18} />}
 															</IconButton>
 														</Tooltip>
-														<Tooltip title={cred.bandejaNotificationsEnabled ? "Notif. bandeja: ON (desactivar)" : "Notif. bandeja: OFF (activar)"}>
+														<Tooltip
+															title={
+																cred.bandejaNotificationsEnabled
+																	? "Notificaciones de cédulas: ACTIVADAS — este usuario recibe un email cuando llegan cédulas electrónicas nuevas a su bandeja del PJN. Clic para desactivar."
+																	: "Notificaciones de cédulas: DESACTIVADAS — este usuario NO recibe emails de cédulas nuevas. Clic para activar."
+															}
+														>
 															<IconButton
 																size="small"
 																onClick={() => handleToggleBandejaNotifications(cred)}
