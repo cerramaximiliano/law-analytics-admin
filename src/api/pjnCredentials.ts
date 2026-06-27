@@ -14,7 +14,7 @@ export interface PjnCredential {
 	verifiedAt: string | null;
 	isValid: boolean;
 	isValidAt: string | null;
-	syncStatus: "pending" | "in_progress" | "completed" | "error" | "never_synced";
+	syncStatus: "pending" | "in_progress" | "completed" | "error" | "never_synced" | "idle";
 	lastSync: string | null;
 	lastSyncAttempt: string | null;
 	consecutiveErrors: number;
@@ -64,6 +64,12 @@ export interface PjnCredential {
 		progress: number;
 		lastBatchSample?: string[];
 	} | null;
+	// Auditoría de desvinculación/reset (presente cuando syncStatus === "idle")
+	unlinkedAt?: string | null;
+	unlinkedMode?: "keep" | "delete" | null;
+	unlinkedSource?: "user" | "team" | "admin" | null;
+	unlinkedByName?: string | null;
+	unlinkedByEmail?: string | null;
 	createdAt: string;
 	updatedAt: string;
 }

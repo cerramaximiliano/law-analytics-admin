@@ -80,13 +80,15 @@ const getSyncStatusColor = (status: string) => {
 			return "warning";
 		case "error":
 			return "error";
+		case "idle":
+			return "secondary";
 		case "never_synced":
 		default:
 			return "default";
 	}
 };
 
-const getSyncStatusLabel = (status: string) => {
+const getSyncStatusLabel = (status: string, unlinkedSource?: string | null) => {
 	switch (status) {
 		case "completed":
 			return "Completado";
@@ -96,11 +98,32 @@ const getSyncStatusLabel = (status: string) => {
 			return "Pendiente";
 		case "error":
 			return "Error";
+		case "idle":
+			return unlinkedSource === "admin" ? "Reseteada (admin)" : "Desvinculada";
 		case "never_synced":
 			return "Sin sincronizar";
 		default:
 			return status;
 	}
+};
+
+// Texto de detalle de la desvinculación/reset para tooltip (solo si syncStatus === "idle").
+const formatUnlinkDetail = (cred: { syncStatus: string; unlinkedAt?: string | null; unlinkedMode?: string | null; unlinkedSource?: string | null; unlinkedByName?: string | null }): string | null => {
+	if (cred.syncStatus !== "idle") return null;
+	const verb = cred.unlinkedSource === "admin" ? "Reseteada" : "Desvinculada";
+	const parts: string[] = [];
+	if (cred.unlinkedAt) parts.push(`el ${new Date(cred.unlinkedAt).toLocaleString("es-AR")}`);
+	if (cred.unlinkedMode) parts.push(`modo ${cred.unlinkedMode === "delete" ? "eliminar" : "conservar"}`);
+	const actor =
+		cred.unlinkedSource === "admin"
+			? `admin${cred.unlinkedByName ? ` (${cred.unlinkedByName})` : ""}`
+			: cred.unlinkedSource === "team"
+				? `equipo${cred.unlinkedByName ? ` (${cred.unlinkedByName})` : ""}`
+				: cred.unlinkedSource === "user"
+					? "el propio usuario"
+					: null;
+	if (actor) parts.push(`por ${actor}`);
+	return parts.length ? `${verb} ${parts.join(", ")}` : `${verb}`;
 };
 
 // Códigos de error transitorios/infraestructura (portal o navegador) — se
@@ -974,6 +997,7 @@ const CredencialesPJN = () => {
 										<MenuItem value="pending">Pendiente</MenuItem>
 										<MenuItem value="error">Error</MenuItem>
 										<MenuItem value="never_synced">Sin sincronizar</MenuItem>
+										<MenuItem value="idle">Desvinculada</MenuItem>
 									</Select>
 								</FormControl>
 							</Grid>
@@ -1301,11 +1325,13 @@ const CredencialesPJN = () => {
 															</Typography>
 														</Box>
 													) : (
-														<Chip
-															label={getSyncStatusLabel(cred.syncStatus)}
-															color={getSyncStatusColor(cred.syncStatus) as any}
-															size="small"
-														/>
+														<Tooltip title={formatUnlinkDetail(cred) || ""} arrow disableHoverListener={cred.syncStatus !== "idle"}>
+															<Chip
+																label={getSyncStatusLabel(cred.syncStatus, cred.unlinkedSource)}
+																color={getSyncStatusColor(cred.syncStatus) as any}
+																size="small"
+															/>
+														</Tooltip>
 													)}
 												</TableCell>
 												<TableCell align="center">
