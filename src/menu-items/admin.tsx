@@ -569,6 +569,13 @@ const admin: NavItemType = {
 			breadcrumbs: true,
 			children: [
 				{
+					id: "composer",
+					title: "Compositor de Emails",
+					type: "item",
+					url: "/admin/marketing/composer",
+					breadcrumbs: true,
+				},
+				{
 					id: "mailing",
 					title: "Campañas de Email",
 					type: "item",

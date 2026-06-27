@@ -86,6 +86,7 @@ const InfrastructurePage = Loadable(lazy(() => import("pages/admin/infrastructur
 
 // Marketing pages
 const MailingCampaigns = Loadable(lazy(() => import("pages/admin/marketing/mailing")));
+const EmailComposer = Loadable(lazy(() => import("pages/admin/marketing/composer")));
 const EmailTemplates = Loadable(lazy(() => import("pages/admin/marketing/templates")));
 const EmailModules = Loadable(lazy(() => import("pages/admin/marketing/modules")));
 const MarketingContacts = Loadable(lazy(() => import("pages/admin/marketing/contacts")));
@@ -617,6 +618,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<MailingCampaigns />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "marketing/composer",
+							element: (
+								<AdminRoleGuard>
+									<EmailComposer />
 								</AdminRoleGuard>
 							),
 						},
