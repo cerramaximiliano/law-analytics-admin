@@ -83,6 +83,7 @@ const ServerStatus = Loadable(lazy(() => import("pages/admin/server-status")));
 
 // Infrastructure (Cloud Failover)
 const InfrastructurePage = Loadable(lazy(() => import("pages/admin/infrastructure")));
+const DatabasesMonitoring = Loadable(lazy(() => import("pages/admin/infrastructure/databases")));
 
 // Marketing pages
 const MailingCampaigns = Loadable(lazy(() => import("pages/admin/marketing/mailing")));
@@ -834,6 +835,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<InfrastructurePage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "infrastructure/databases",
+							element: (
+								<AdminRoleGuard>
+									<DatabasesMonitoring />
 								</AdminRoleGuard>
 							),
 						},

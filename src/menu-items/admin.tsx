@@ -158,6 +158,14 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "data-monitoring",
+					title: "Bases de datos",
+					type: "item",
+					url: "/admin/infrastructure/databases",
+					breadcrumbs: true,
+					chip: { label: "vectores", color: "primary", variant: "outlined", size: "small" },
+				},
+				{
 					id: "system-logs",
 					title: "Logs del Ecosistema",
 					type: "item",
