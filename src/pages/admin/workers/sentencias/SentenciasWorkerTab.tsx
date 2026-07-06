@@ -973,6 +973,7 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 				topK: draft.topK,
 				batchSize: draft.batchSize,
 				searchQueryPlanner: draft.searchQueryPlanner,
+				searchLexicalLayer: draft.searchLexicalLayer,
 			});
 			setConfig(updated);
 			setDraft(updated);
@@ -993,7 +994,8 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 			draft.filterBySentenciaTipo !== config.filterBySentenciaTipo ||
 			draft.topK !== config.topK ||
 			draft.batchSize !== config.batchSize ||
-			(draft.searchQueryPlanner?.enabled ?? false) !== (config.searchQueryPlanner?.enabled ?? false));
+			(draft.searchQueryPlanner?.enabled ?? false) !== (config.searchQueryPlanner?.enabled ?? false) ||
+			(draft.searchLexicalLayer?.enabled ?? false) !== (config.searchLexicalLayer?.enabled ?? false));
 
 	return (
 		<Stack spacing={3}>
@@ -1240,6 +1242,23 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 										<Typography variant="body2">Query planner en búsqueda (experimental)</Typography>
 										<Typography variant="caption" color="text.secondary">
 											POST /sentencias/ask interpreta el prompt del usuario (deriva juzgado/sala/fecha + estrategia) con LLM. ON/OFF para evaluar y desactivar si no rinde.
+										</Typography>
+									</Box>
+								</Stack>
+
+								{/* Capa léxica de citas (experimental) */}
+								<Stack direction="row" alignItems="center" spacing={1}>
+									<Switch
+										checked={draft.searchLexicalLayer?.enabled ?? false}
+										onChange={(e) => setDraft((d) => ({ ...d, searchLexicalLayer: { enabled: e.target.checked } }))}
+										disabled={saving}
+										size="small"
+										color="warning"
+									/>
+									<Box>
+										<Typography variant="body2">Capa léxica de citas (experimental)</Typography>
+										<Typography variant="caption" color="text.secondary">
+											Filtra por citas exactas (art./ley) detectadas en el prompt. Requiere el query planner activo.
 										</Typography>
 									</Box>
 								</Stack>

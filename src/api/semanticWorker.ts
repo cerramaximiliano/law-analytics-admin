@@ -18,6 +18,10 @@ export interface SemanticWorkerConfig {
 		enabled: boolean;
 		model: string;
 	};
+	// Capa léxica: filtro por citas exactas (art/ley) en la búsqueda (opcional).
+	searchLexicalLayer?: {
+		enabled: boolean;
+	};
 	currentState: {
 		isRunning: boolean;
 		workerId?: string;
@@ -31,7 +35,7 @@ export interface SemanticWorkerConfig {
 export type SemanticWorkerConfigUpdate = Partial<
 	Pick<
 		SemanticWorkerConfig,
-		"enabled" | "minCorpusSize" | "similarityThreshold" | "filterByFuero" | "filterBySentenciaTipo" | "topK" | "batchSize" | "cronPattern" | "searchQueryPlanner"
+		"enabled" | "minCorpusSize" | "similarityThreshold" | "filterByFuero" | "filterBySentenciaTipo" | "topK" | "batchSize" | "cronPattern" | "searchQueryPlanner" | "searchLexicalLayer"
 	>
 >;
 
