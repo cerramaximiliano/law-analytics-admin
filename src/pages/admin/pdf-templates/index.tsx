@@ -41,6 +41,7 @@ import {
 	SearchNormal1,
 	CloseCircle,
 	Eye,
+	EyeSlash,
 	Edit,
 	Trash,
 	Add,
@@ -115,9 +116,13 @@ interface DetailDialogProps {
 	onToggleActive: (t: PdfTemplate) => void;
 	onEdit: (t: PdfTemplate) => void;
 	onDelete: (t: PdfTemplate) => void;
+	onSetVisibility: (t: PdfTemplate, visibility: NonNullable<PdfTemplate["visibility"]>) => void;
 }
 
-const DetailDialog: React.FC<DetailDialogProps> = ({ open, template, onClose, onToggleActive, onEdit, onDelete }) => {
+// Un template es visible en producción si su visibility es 'all'/'production' (o está ausente = 'all').
+const isVisibleInProd = (t: PdfTemplate) => !t.visibility || t.visibility === "all" || t.visibility === "production";
+
+const DetailDialog: React.FC<DetailDialogProps> = ({ open, template, onClose, onToggleActive, onEdit, onDelete, onSetVisibility }) => {
 	const [loadingUrl, setLoadingUrl] = useState(false);
 
 	const handleOpenPdf = async () => {
@@ -155,6 +160,10 @@ const DetailDialog: React.FC<DetailDialogProps> = ({ open, template, onClose, on
 								{ label: "Tipo", value: template.modelType },
 								{ label: "Método de relleno", value: template.fillMethod },
 								{ label: "Fuente", value: template.source },
+								{
+									label: "Dueño (email)",
+									value: template.ownerEmail || (template.userId ? String(template.userId) : "— (modelo de sistema)"),
+								},
 							].map(({ label, value }) => (
 								<Box key={label}>
 									<Typography variant="caption" color="textSecondary">
@@ -173,6 +182,8 @@ const DetailDialog: React.FC<DetailDialogProps> = ({ open, template, onClose, on
 							{[
 								{ label: "Seguimiento postal", value: template.supportsTracking ? "Sí" : "No" },
 								{ label: "Público", value: template.isPublic ? "Sí" : "No" },
+								{ label: "Visibilidad", value: template.visibility || "all" },
+								{ label: "Visible en producción", value: isVisibleInProd(template) ? "Sí" : "No" },
 								{ label: "Campos", value: String(template.fields?.length ?? "-") },
 								{ label: "S3 Key", value: template.s3Key },
 								{ label: "Creado", value: formatDate(template.createdAt) },
@@ -251,6 +262,13 @@ const DetailDialog: React.FC<DetailDialogProps> = ({ open, template, onClose, on
 				<Button onClick={() => onToggleActive(template)} startIcon={template.isActive ? <ToggleOff size={16} /> : <ToggleOn size={16} />}>
 					{template.isActive ? "Desactivar" : "Activar"}
 				</Button>
+				<Button
+					onClick={() => onSetVisibility(template, isVisibleInProd(template) ? "development" : "all")}
+					color={isVisibleInProd(template) ? "warning" : "success"}
+					startIcon={isVisibleInProd(template) ? <EyeSlash size={16} /> : <Eye size={16} />}
+				>
+					{isVisibleInProd(template) ? "Ocultar en prod" : "Hacer público"}
+				</Button>
 				<Button onClick={() => onEdit(template)} variant="outlined" startIcon={<Edit size={16} />}>
 					Editar
 				</Button>
@@ -284,6 +302,7 @@ const EditDialog: React.FC<EditDialogProps> = ({ open, template, onClose, onSave
 		source: "system" as PdfTemplate["source"],
 		modelType: "dynamic" as PdfTemplate["modelType"],
 		supportsTracking: false,
+		visibility: "all" as NonNullable<PdfTemplate["visibility"]>,
 	});
 
 	useEffect(() => {
@@ -300,6 +319,7 @@ const EditDialog: React.FC<EditDialogProps> = ({ open, template, onClose, onSave
 				source: template.source,
 				modelType: template.modelType,
 				supportsTracking: template.supportsTracking,
+				visibility: template.visibility || "all",
 			});
 		} else {
 			setForm({
@@ -314,6 +334,7 @@ const EditDialog: React.FC<EditDialogProps> = ({ open, template, onClose, onSave
 				source: "system",
 				modelType: "dynamic",
 				supportsTracking: false,
+				visibility: "all",
 			});
 		}
 	}, [template, open]);
@@ -435,6 +456,21 @@ const EditDialog: React.FC<EditDialogProps> = ({ open, template, onClose, onSave
 								>
 									<MenuItem value="dynamic">Dinámico</MenuItem>
 									<MenuItem value="static">Estático</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={12}>
+							<FormControl size="small" fullWidth>
+								<InputLabel>Visibilidad</InputLabel>
+								<Select
+									label="Visibilidad"
+									value={form.visibility}
+									onChange={(e) => setForm((f) => ({ ...f, visibility: e.target.value as NonNullable<PdfTemplate["visibility"]> }))}
+								>
+									<MenuItem value="all">Todos los entornos (visible en producción)</MenuItem>
+									<MenuItem value="development">Solo desarrollo (oculto en producción)</MenuItem>
+									<MenuItem value="production">Solo producción</MenuItem>
+									<MenuItem value="none">Oculto (ningún entorno)</MenuItem>
 								</Select>
 							</FormControl>
 						</Grid>
@@ -609,6 +645,24 @@ const PdfTemplatesPage: React.FC = () => {
 			if (detailTemplate?._id === t._id) setDetailTemplate((prev) => prev && { ...prev, isActive: res.data.isActive });
 		} catch (err: any) {
 			enqueueSnackbar(err?.message || "Error al cambiar estado", { variant: "error" });
+		}
+	};
+
+	const handleSetVisibility = async (t: PdfTemplate, visibility: NonNullable<PdfTemplate["visibility"]>) => {
+		try {
+			await PdfTemplatesAdminService.update(t._id, { visibility });
+			enqueueSnackbar(
+				visibility === "all"
+					? "Template visible en producción"
+					: visibility === "development"
+						? "Template oculto en producción (solo desarrollo)"
+						: `Visibilidad: ${visibility}`,
+				{ variant: "success" },
+			);
+			setTemplates((prev) => prev.map((x) => (x._id === t._id ? { ...x, visibility } : x)));
+			if (detailTemplate?._id === t._id) setDetailTemplate((prev) => (prev ? { ...prev, visibility } : prev));
+		} catch (err: any) {
+			enqueueSnackbar(err?.message || "Error al cambiar visibilidad", { variant: "error" });
 		}
 	};
 
@@ -808,6 +862,7 @@ const PdfTemplatesPage: React.FC = () => {
 							<TableCell>Fuente</TableCell>
 							<TableCell align="center">Activo</TableCell>
 							<TableCell align="center">Público</TableCell>
+							<TableCell align="center">Prod</TableCell>
 							<TableCell align="center">Campos</TableCell>
 							<TableCell>Actualizado</TableCell>
 							<TableCell align="center">Acciones</TableCell>
@@ -817,7 +872,7 @@ const PdfTemplatesPage: React.FC = () => {
 						{loading ? (
 							Array.from({ length: rowsPerPage > 10 ? 10 : rowsPerPage }).map((_, i) => (
 								<TableRow key={i}>
-									{Array.from({ length: 11 }).map((_, j) => (
+									{Array.from({ length: 12 }).map((_, j) => (
 										<TableCell key={j}>
 											<Skeleton variant="text" />
 										</TableCell>
@@ -826,7 +881,7 @@ const PdfTemplatesPage: React.FC = () => {
 							))
 						) : templates.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={11} align="center">
+								<TableCell colSpan={12} align="center">
 									<Box sx={{ py: 4 }}>
 										<DocumentText size={40} color={theme.palette.text.disabled} />
 										<Typography color="textSecondary" sx={{ mt: 1 }}>
@@ -865,6 +920,16 @@ const PdfTemplatesPage: React.FC = () => {
 									</TableCell>
 									<TableCell align="center">
 										<Chip label={t.isPublic ? "Sí" : "No"} color={t.isPublic ? "info" : "default"} size="small" sx={{ minWidth: 36 }} />
+									</TableCell>
+									<TableCell align="center">
+										<Tooltip title={`Visibilidad: ${t.visibility || "all"}`}>
+											<Chip
+												label={isVisibleInProd(t) ? "Sí" : "No"}
+												color={isVisibleInProd(t) ? "success" : "warning"}
+												size="small"
+												sx={{ minWidth: 36 }}
+											/>
+										</Tooltip>
 									</TableCell>
 									<TableCell align="center">
 										<Typography variant="body2">{"-"}</Typography>
@@ -930,6 +995,7 @@ const PdfTemplatesPage: React.FC = () => {
 				onToggleActive={handleToggleActive}
 				onEdit={handleOpenEdit}
 				onDelete={handleOpenDelete}
+				onSetVisibility={handleSetVisibility}
 			/>
 			<EditDialog
 				open={editOpen}

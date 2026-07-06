@@ -33,6 +33,8 @@ export interface PdfTemplate {
 	modelType: "static" | "dynamic";
 	supportsTracking: boolean;
 	userId?: string | null;
+	ownerEmail?: string | null;
+	visibility?: "all" | "development" | "production" | "none";
 	presignedUrl?: string;
 	createdAt: string;
 	updatedAt: string;
@@ -88,6 +90,7 @@ export interface PdfTemplateInput {
 	source?: PdfTemplate["source"];
 	modelType?: PdfTemplate["modelType"];
 	supportsTracking?: boolean;
+	visibility?: PdfTemplate["visibility"];
 }
 
 // ── Service ───────────────────────────────────────────────────────────────────
