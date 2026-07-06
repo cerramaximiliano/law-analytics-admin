@@ -13,6 +13,11 @@ export interface SemanticWorkerConfig {
 	topK: number;
 	batchSize: number;
 	cronPattern: string;
+	// Router de consulta por prompt en la búsqueda de sentencias (opcional/experimental).
+	searchQueryPlanner?: {
+		enabled: boolean;
+		model: string;
+	};
 	currentState: {
 		isRunning: boolean;
 		workerId?: string;
@@ -26,7 +31,7 @@ export interface SemanticWorkerConfig {
 export type SemanticWorkerConfigUpdate = Partial<
 	Pick<
 		SemanticWorkerConfig,
-		"enabled" | "minCorpusSize" | "similarityThreshold" | "filterByFuero" | "filterBySentenciaTipo" | "topK" | "batchSize" | "cronPattern"
+		"enabled" | "minCorpusSize" | "similarityThreshold" | "filterByFuero" | "filterBySentenciaTipo" | "topK" | "batchSize" | "cronPattern" | "searchQueryPlanner"
 	>
 >;
 

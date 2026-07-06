@@ -972,6 +972,7 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 				filterBySentenciaTipo: draft.filterBySentenciaTipo,
 				topK: draft.topK,
 				batchSize: draft.batchSize,
+				searchQueryPlanner: draft.searchQueryPlanner,
 			});
 			setConfig(updated);
 			setDraft(updated);
@@ -991,7 +992,8 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 			draft.filterByFuero !== config.filterByFuero ||
 			draft.filterBySentenciaTipo !== config.filterBySentenciaTipo ||
 			draft.topK !== config.topK ||
-			draft.batchSize !== config.batchSize);
+			draft.batchSize !== config.batchSize ||
+			(draft.searchQueryPlanner?.enabled ?? false) !== (config.searchQueryPlanner?.enabled ?? false));
 
 	return (
 		<Stack spacing={3}>
@@ -1218,6 +1220,28 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 											</Typography>
 										</Box>
 									</Stack>
+								</Stack>
+
+								{/* Query planner de búsqueda (experimental) */}
+								<Stack direction="row" alignItems="center" spacing={1}>
+									<Switch
+										checked={draft.searchQueryPlanner?.enabled ?? false}
+										onChange={(e) =>
+											setDraft((d) => ({
+												...d,
+												searchQueryPlanner: { model: d.searchQueryPlanner?.model ?? "gpt-4o-mini", enabled: e.target.checked },
+											}))
+										}
+										disabled={saving}
+										size="small"
+										color="warning"
+									/>
+									<Box>
+										<Typography variant="body2">Query planner en búsqueda (experimental)</Typography>
+										<Typography variant="caption" color="text.secondary">
+											POST /sentencias/ask interpreta el prompt del usuario (deriva juzgado/sala/fecha + estrategia) con LLM. ON/OFF para evaluar y desactivar si no rinde.
+										</Typography>
+									</Box>
 								</Stack>
 
 								{/* Último ciclo */}
