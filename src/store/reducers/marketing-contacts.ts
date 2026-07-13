@@ -75,6 +75,17 @@ export const MarketingContactService = {
 		}
 	},
 
+	// Clone a contact with a corrected email (bounced contacts workflow).
+	// The clone starts active with no campaigns/segments; the original gets tagged "reemplazado".
+	cloneContact: async (id: string, newEmail: string): Promise<MarketingContact> => {
+		try {
+			const response = await mktAxios.post(`/api/contacts/${id}/clone`, { newEmail });
+			return response.data.data;
+		} catch (error) {
+			throw error;
+		}
+	},
+
 	// Update custom fields of a contact (shallow merge on the server)
 	updateContactCustomFields: async (id: string, customFields: Record<string, any>): Promise<MarketingContact> => {
 		try {

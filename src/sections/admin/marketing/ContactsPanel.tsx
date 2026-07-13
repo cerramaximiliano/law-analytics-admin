@@ -34,6 +34,7 @@ import TableSkeleton from "components/UI/TableSkeleton";
 import ContactDetailModal from "./ContactDetailModal";
 import EditContactModal from "./EditContactModal";
 import DeleteContactDialog from "./DeleteContactDialog";
+import CloneContactDialog from "./CloneContactDialog";
 
 // project imports
 import { Add, Edit2, SearchNormal1, Trash, Eye, Copy, CopySuccess } from "iconsax-react";
@@ -82,8 +83,10 @@ const ContactsPanel = () => {
 	const [viewModalOpen, setViewModalOpen] = useState<boolean>(false);
 	const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+	const [cloneDialogOpen, setCloneDialogOpen] = useState<boolean>(false);
 	const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
 	const [selectedContactName, setSelectedContactName] = useState<string>("");
+	const [selectedContactEmail, setSelectedContactEmail] = useState<string>("");
 
 	// Contact statistics
 	const [stats, setStats] = useState({
@@ -311,6 +314,12 @@ const ContactsPanel = () => {
 		setSelectedContactId(contactId);
 		setSelectedContactName(contactName);
 		setDeleteDialogOpen(true);
+	};
+
+	const handleCloneContact = (contactId: string, contactEmail: string) => {
+		setSelectedContactId(contactId);
+		setSelectedContactEmail(contactEmail);
+		setCloneDialogOpen(true);
 	};
 
 	const handleRefreshAfterEdit = () => {
@@ -704,6 +713,18 @@ const ContactsPanel = () => {
 														<Edit2 size={18} />
 													</IconButton>
 												</Tooltip>
+												{contact.status === "bounced" && (
+													<Tooltip title="Clonar con email corregido (rebotado)">
+														<IconButton
+															aria-label="clonar"
+															size="small"
+															color="warning"
+															onClick={() => handleCloneContact(contact._id || "", contact.email)}
+														>
+															<Copy size={18} />
+														</IconButton>
+													</Tooltip>
+												)}
 												<Tooltip title="Cancelar suscripción">
 													<IconButton
 														aria-label="eliminar"
@@ -817,6 +838,14 @@ const ContactsPanel = () => {
 				contactId={selectedContactId}
 				contactName={selectedContactName}
 				onDelete={handleRefreshAfterEdit}
+			/>
+
+			<CloneContactDialog
+				open={cloneDialogOpen}
+				onClose={() => setCloneDialogOpen(false)}
+				contactId={selectedContactId}
+				contactEmail={selectedContactEmail}
+				onCloned={handleRefreshAfterEdit}
 			/>
 		</>
 	);
