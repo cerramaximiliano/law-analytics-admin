@@ -25,6 +25,8 @@ export const MarketingContactService = {
 			isEmailVerified?: string;
 			emailVerificationResult?: string;
 			isAppUser?: string;
+			hasExpedientes?: string;
+			minExpedientes?: string;
 		} = {},
 	): Promise<ContactResponse> => {
 		try {

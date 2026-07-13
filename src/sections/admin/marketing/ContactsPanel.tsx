@@ -55,6 +55,7 @@ const ContactsPanel = () => {
 	const [filterEmailVerified, setFilterEmailVerified] = useState<string>("");
 	const [filterVerificationResult, setFilterVerificationResult] = useState<string>("");
 	const [filterIsAppUser, setFilterIsAppUser] = useState<string>("");
+	const [filterExpedientes, setFilterExpedientes] = useState<string>("");
 	const [sortBy, setSortBy] = useState<string>("createdAt");
 	const [sortDir, setSortDir] = useState<string>("desc");
 
@@ -102,7 +103,18 @@ const ContactsPanel = () => {
 	useEffect(() => {
 		fetchContacts();
 		fetchStats();
-	}, [page, rowsPerPage, filterStatus, filterTag, filterEmailVerified, filterVerificationResult, filterIsAppUser, sortBy, sortDir]);
+	}, [
+		page,
+		rowsPerPage,
+		filterStatus,
+		filterTag,
+		filterEmailVerified,
+		filterVerificationResult,
+		filterIsAppUser,
+		filterExpedientes,
+		sortBy,
+		sortDir,
+	]);
 
 	// Load available tags on mount
 	useEffect(() => {
@@ -135,6 +147,11 @@ const ContactsPanel = () => {
 			if (filterEmailVerified) filters.isEmailVerified = filterEmailVerified;
 			if (filterVerificationResult) filters.emailVerificationResult = filterVerificationResult;
 			if (filterIsAppUser) filters.isAppUser = filterIsAppUser;
+			if (filterExpedientes) {
+				if (filterExpedientes === "with") filters.hasExpedientes = "true";
+				else if (filterExpedientes === "without") filters.hasExpedientes = "false";
+				else filters.minExpedientes = filterExpedientes;
+			}
 
 			const response = await MarketingContactService.getContacts(page + 1, rowsPerPage, sortBy, sortDir, filters);
 			setContacts(response.data);
@@ -212,6 +229,11 @@ const ContactsPanel = () => {
 		setPage(0);
 	};
 
+	const handleExpedientesFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setFilterExpedientes(event.target.value);
+		setPage(0);
+	};
+
 	// Clear all filters
 	const handleClearFilters = () => {
 		setSearchTerm("");
@@ -220,6 +242,7 @@ const ContactsPanel = () => {
 		setFilterEmailVerified("");
 		setFilterVerificationResult("");
 		setFilterIsAppUser("");
+		setFilterExpedientes("");
 		setSortBy("createdAt");
 		setSortDir("desc");
 		setPage(0);
@@ -228,7 +251,8 @@ const ContactsPanel = () => {
 	};
 
 	// Check if any filter is active
-	const hasActiveFilters = searchTerm || filterStatus || filterTag || filterEmailVerified || filterVerificationResult || filterIsAppUser;
+	const hasActiveFilters =
+		searchTerm || filterStatus || filterTag || filterEmailVerified || filterVerificationResult || filterIsAppUser || filterExpedientes;
 
 	// Sorting handlers
 	const handleSortChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -238,6 +262,23 @@ const ContactsPanel = () => {
 	const handleSortDirChange = () => {
 		setSortDir(sortDir === "asc" ? "desc" : "asc");
 	};
+
+	// Expedientes capturados vía scraping (customFields.expedientes) — deduplicados
+	// porque la versión vieja del worker hacía push sin $addToSet
+	const getExpedientes = (contact: MarketingContact): string[] => {
+		const cf = (contact.customFields || {}) as Record<string, any>;
+		if (!Array.isArray(cf.expedientes)) return [];
+		return Array.from(new Set(cf.expedientes.filter(Boolean).map(String)));
+	};
+
+	// Fueros del contacto: array `fueros` (worker nuevo) + fallbacks `lastFuero` y `fuero` (worker viejo)
+	const getFueros = (contact: MarketingContact): string[] => {
+		const cf = (contact.customFields || {}) as Record<string, any>;
+		const fueros = Array.isArray(cf.fueros) ? cf.fueros : [];
+		return Array.from(new Set([...fueros, cf.lastFuero, cf.fuero].filter(Boolean).map(String)));
+	};
+
+	const formatFuero = (fuero: string) => fuero.replace(/^judicial_/, "");
 
 	// Status chip color mapping
 	const getStatusColor = (status: string) => {
@@ -381,6 +422,17 @@ const ContactsPanel = () => {
 						</TextField>
 					</Grid>
 					<Grid item xs={6} sm={4} md={2}>
+						<TextField select fullWidth size="small" label="Expedientes" value={filterExpedientes} onChange={handleExpedientesFilterChange}>
+							<MenuItem value="">Todos</MenuItem>
+							<MenuItem value="with">Con expedientes</MenuItem>
+							<MenuItem value="without">Sin expedientes</MenuItem>
+							<MenuItem value="2">2 o más</MenuItem>
+							<MenuItem value="5">5 o más</MenuItem>
+							<MenuItem value="10">10 o más</MenuItem>
+							<MenuItem value="50">50 o más</MenuItem>
+						</TextField>
+					</Grid>
+					<Grid item xs={6} sm={4} md={2}>
 						<TextField select fullWidth size="small" label="Etiqueta" value={filterTag} onChange={handleTagFilterChange}>
 							<MenuItem value="">Todas</MenuItem>
 							{availableTags.map((tag) => (
@@ -480,6 +532,20 @@ const ContactsPanel = () => {
 								/>
 							)}
 							{filterTag && <Chip label={`Etiqueta: ${filterTag}`} size="small" color="secondary" onDelete={() => setFilterTag("")} />}
+							{filterExpedientes && (
+								<Chip
+									label={`Expedientes: ${
+										filterExpedientes === "with"
+											? "Con expedientes"
+											: filterExpedientes === "without"
+											? "Sin expedientes"
+											: `${filterExpedientes} o más`
+									}`}
+									size="small"
+									color="info"
+									onDelete={() => setFilterExpedientes("")}
+								/>
+							)}
 							{filterIsAppUser && (
 								<Chip
 									label={`Usuario App: ${filterIsAppUser === "true" ? "Sí" : "No"}`}
@@ -502,6 +568,8 @@ const ContactsPanel = () => {
 							<TableCell>Apellido</TableCell>
 							<TableCell>Estado</TableCell>
 							<TableCell>Fuente</TableCell>
+							<TableCell>Fuero</TableCell>
+							<TableCell align="center">Expedientes</TableCell>
 							<TableCell>Campañas</TableCell>
 							<TableCell>Segmentos</TableCell>
 							<TableCell>Fecha registro</TableCell>
@@ -510,16 +578,18 @@ const ContactsPanel = () => {
 					</TableHead>
 					<TableBody>
 						{loading ? (
-							<TableSkeleton columns={9} rows={10} />
+							<TableSkeleton columns={11} rows={10} />
 						) : contacts.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={9} align="center" sx={{ py: 3 }}>
+								<TableCell colSpan={11} align="center" sx={{ py: 3 }}>
 									<Typography variant="subtitle1">No hay contactos disponibles</Typography>
 								</TableCell>
 							</TableRow>
 						) : (
 							contacts.map((contact) => {
 								const statusInfo = getStatusColor(contact.status || "");
+								const expedientes = getExpedientes(contact);
+								const fueros = getFueros(contact);
 
 								return (
 									<TableRow hover key={contact._id} tabIndex={-1}>
@@ -547,6 +617,41 @@ const ContactsPanel = () => {
 										</TableCell>
 										<TableCell>
 											<Typography variant="body2">{contact.source || "-"}</Typography>
+										</TableCell>
+										<TableCell>
+											{fueros.length > 0 ? (
+												<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+													{fueros.slice(0, 2).map((fuero) => (
+														<Chip key={fuero} label={formatFuero(fuero)} size="small" variant="outlined" color="secondary" />
+													))}
+													{fueros.length > 2 && (
+														<Tooltip title={fueros.slice(2).map(formatFuero).join(", ")}>
+															<Chip label={`+${fueros.length - 2}`} size="small" variant="outlined" />
+														</Tooltip>
+													)}
+												</Stack>
+											) : (
+												<Typography variant="body2">-</Typography>
+											)}
+										</TableCell>
+										<TableCell align="center">
+											{expedientes.length > 0 ? (
+												<Tooltip
+													title={
+														expedientes.length <= 15
+															? expedientes.join(", ")
+															: `${expedientes.slice(0, 15).join(", ")}… (+${expedientes.length - 15})`
+													}
+												>
+													<Chip
+														label={expedientes.length}
+														size="small"
+														color={expedientes.length >= 10 ? "error" : expedientes.length >= 2 ? "warning" : "default"}
+													/>
+												</Tooltip>
+											) : (
+												<Typography variant="body2">-</Typography>
+											)}
 										</TableCell>
 										<TableCell>
 											<Typography variant="body2">
