@@ -460,6 +460,7 @@ const ContactsPanel = () => {
 							<MenuItem value="lastName">Apellido</MenuItem>
 							<MenuItem value="createdAt">Fecha de creación</MenuItem>
 							<MenuItem value="status">Estado</MenuItem>
+							<MenuItem value="expedientesCount">Cantidad de expedientes</MenuItem>
 						</TextField>
 					</Grid>
 					<Grid item xs={6} sm={4} md={2}>
