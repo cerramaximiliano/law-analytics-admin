@@ -75,6 +75,16 @@ export const MarketingContactService = {
 		}
 	},
 
+	// Update custom fields of a contact (shallow merge on the server)
+	updateContactCustomFields: async (id: string, customFields: Record<string, any>): Promise<MarketingContact> => {
+		try {
+			const response = await mktAxios.patch(`/api/contacts/${id}/custom-fields`, { customFields });
+			return response.data.data;
+		} catch (error) {
+			throw error;
+		}
+	},
+
 	// Delete a contact
 	deleteContact: async (id: string, permanent: boolean = false): Promise<{ success: boolean; message: string }> => {
 		try {

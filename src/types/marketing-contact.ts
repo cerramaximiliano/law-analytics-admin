@@ -10,6 +10,15 @@ export interface ContactCustomField {
 	value: any;
 }
 
+// Pareo expediente ↔ colección de origen (customFields.expedientesDetalle).
+// Lo escribe el email-extraction-worker de aquí en adelante y es editable desde el admin.
+export interface ExpedienteDetalle {
+	expediente: string;
+	fuero?: string;
+	coleccion?: string;
+	causaId?: string;
+}
+
 export type ContactStatus = "active" | "unsubscribed" | "bounced" | "complained";
 
 export interface EmailEngagementMetrics {

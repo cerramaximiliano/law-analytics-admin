@@ -34,6 +34,7 @@ import { MarketingContact } from "types/marketing-contact";
 import { MarketingContactService } from "store/reducers/marketing-contacts";
 import { CampaignService } from "store/reducers/campaign";
 import CampaignDetailModal from "./CampaignDetailModal";
+import ExpedientesEditor from "./ExpedientesEditor";
 import {
 	Refresh,
 	ArrowDown2,
@@ -638,6 +639,20 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 												{userData ? <UserTick size={16} /> : <User size={16} />}
 												Usuario
 											</Box>
+										}
+									/>
+									<Tab
+										label={
+											<Badge
+												badgeContent={
+													Array.isArray((contact.customFields as Record<string, any>)?.expedientes)
+														? new Set((contact.customFields as Record<string, any>).expedientes.filter(Boolean).map(String)).size
+														: 0
+												}
+												color="primary"
+											>
+												Expedientes
+											</Badge>
 										}
 									/>
 									<Tab label="JSON Raw" />
@@ -1878,8 +1893,13 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 									</Grid>
 								</TabPanel>
 
-								{/* Tab Panel 7 - JSON Raw */}
+								{/* Tab Panel 7 - Expedientes */}
 								<TabPanel value={activeTab} index={7}>
+									<ExpedientesEditor contact={contact} onSaved={() => contactId && fetchContactDetails(contactId)} />
+								</TabPanel>
+
+								{/* Tab Panel 8 - JSON Raw */}
+								<TabPanel value={activeTab} index={8}>
 									<Box sx={{ position: "relative" }}>
 										<Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 1 }}>
 											<Button
