@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
 	Alert,
+	Autocomplete,
 	Button,
 	CircularProgress,
 	Dialog,
@@ -23,8 +24,8 @@ import adminAxios from "utils/adminAxios";
 import { dispatch } from "store";
 import { openSnackbar } from "store/reducers/snackbar";
 
-import type { SecloContact } from "types/seclo";
-import { TIPO_SOCIEDAD_OPTIONS } from "types/seclo";
+import type { SecloContact, SecloFolder } from "types/seclo";
+import { CONTACT_ROLE_OPTIONS, TIPO_SOCIEDAD_OPTIONS } from "types/seclo";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 interface Props {
@@ -43,6 +44,7 @@ interface Props {
 interface FormState {
 	name: string;
 	lastName: string;
+	role: string;
 	type: string;
 	tipoSociedad: string;
 	cuit: string;
@@ -64,6 +66,7 @@ interface FormState {
 const empty: FormState = {
 	name: "",
 	lastName: "",
+	role: "",
 	type: "Persona Física",
 	tipoSociedad: "",
 	cuit: "",
@@ -87,6 +90,17 @@ const empty: FormState = {
  * Sólo se usa al cargar contactos antiguos que todavía no tienen los campos
  * separados poblados. La heurística es la misma que usa el worker SECLO.
  */
+/**
+ * Rol sugerido según el contexto SECLO: el trabajador (requirente) suele ser
+ * el cliente del estudio y el empleador (requerido) la contraparte. Es sólo
+ * un default — el admin puede elegir cualquier categoría.
+ */
+function defaultRoleFor(roleHint?: "trabajador" | "empleador"): string {
+	if (roleHint === "trabajador") return "Cliente";
+	if (roleHint === "empleador") return "Contrario";
+	return "";
+}
+
 function parseLegacyAddress(address: string | undefined): { street: string; streetNumber: string } {
 	if (!address) return { street: "", streetNumber: "" };
 	const cleaned = address.replace(/\s+[Nn][ºª°]\s*/g, " ");
@@ -112,6 +126,14 @@ export default function SecloContactDialog({ open, mode, userId, contact, folder
 	const [form, setForm] = useState<FormState>(empty);
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	// Rol con el que se prefilleó el form. En edit, sólo enviamos `role` si el
+	// admin lo cambió — así un rol array (contactos importados de PJN) no se
+	// pisa con un string al guardar otros campos.
+	const [initialRole, setInitialRole] = useState<string>("");
+	// Carpeta a vincular (sólo en modo add — el PATCH de edición no toca folderIds)
+	const [folders, setFolders] = useState<SecloFolder[]>([]);
+	const [selectedFolder, setSelectedFolder] = useState<SecloFolder | null>(null);
+	const [loadingFolders, setLoadingFolders] = useState(false);
 
 	// Cargar datos del contacto al abrir
 	useEffect(() => {
@@ -124,9 +146,15 @@ export default function SecloContactDialog({ open, mode, userId, contact, folder
 			const parsed = hasStructured
 				? { street: contact.street || "", streetNumber: contact.streetNumber || "" }
 				: parseLegacyAddress(contact.address);
+			// role puede venir como array (importados de PJN) — mostramos el primero.
+			// En edit NO defaulteamos: el contact puede venir de un populate proyectado
+			// sin role, y un default enviado pisaría el valor real en Mongo.
+			const roleValue = Array.isArray(contact.role) ? contact.role[0] || "" : contact.role || "";
+			setInitialRole(roleValue);
 			setForm({
 				name: contact.name || "",
 				lastName: contact.lastName || "",
+				role: roleValue || (mode === "add" ? defaultRoleFor(roleHint) : ""),
 				type: (contact as any).type || "Persona Física",
 				tipoSociedad: contact.tipoSociedad || "",
 				cuit: contact.cuit || "",
@@ -145,9 +173,37 @@ export default function SecloContactDialog({ open, mode, userId, contact, folder
 				company: contact.company || "",
 			});
 		} else {
-			setForm(empty);
+			setInitialRole("");
+			setForm({ ...empty, role: defaultRoleFor(roleHint) });
 		}
-	}, [open, contact]);
+	}, [open, contact, mode, roleHint]);
+
+	// Cargar las carpetas del usuario para el selector de vinculación (sólo alta).
+	// Preselecciona la carpeta del wizard si vino por prop.
+	useEffect(() => {
+		if (!open || mode !== "add" || !userId) return;
+		let cancelled = false;
+		setLoadingFolders(true);
+		adminAxios
+			.get(`/api/seclo/users/${userId}/folders`, { params: { limit: 200 } })
+			.then((res) => {
+				if (cancelled || !res.data?.success) return;
+				const list: SecloFolder[] = res.data.folders || [];
+				setFolders(list);
+				setSelectedFolder(folderId ? list.find((f) => f._id === folderId) || null : null);
+			})
+			.catch(() => {
+				// Si falla la carga, el selector queda vacío — el contacto se puede
+				// crear igual sin carpeta vinculada.
+				if (!cancelled) setFolders([]);
+			})
+			.finally(() => {
+				if (!cancelled) setLoadingFolders(false);
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, [open, mode, userId, folderId]);
 
 	const setField = (k: keyof FormState) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -158,15 +214,20 @@ export default function SecloContactDialog({ open, mode, userId, contact, folder
 	// Si type === "Persona Jurídica", el portal SECLO exige un subtipo concreto
 	// (cmbTipoSociedad). Para personas físicas se asume "Persona Física" y el
 	// campo queda implícito.
+	// role, city y state son required en el schema Contact del server para
+	// contactos manuales — sin ellos el create devuelve ValidationError.
 	const isJuridica = form.type === "Persona Jurídica";
 	const errors = {
 		name: !form.name.trim() ? "Requerido" : "",
 		lastName: !form.lastName.trim() ? "Requerido" : "",
+		role: mode === "add" && !form.role.trim() ? "Requerido" : "",
 		street: !form.street.trim() ? "Requerido por SECLO" : "",
 		streetNumber: !form.streetNumber.trim() ? "Requerido por SECLO" : "",
+		city: mode === "add" && !form.city.trim() ? "Requerido" : "",
+		state: mode === "add" && !form.state.trim() ? "Requerido" : "",
 		tipoSociedad: isJuridica && !form.tipoSociedad.trim() ? "Requerido por SECLO" : "",
 	};
-	const canSubmit = !errors.name && !errors.lastName && !errors.street && !errors.streetNumber && !errors.tipoSociedad;
+	const canSubmit = Object.values(errors).every((e) => !e);
 
 	const handleSubmit = async () => {
 		setSubmitting(true);
@@ -181,13 +242,18 @@ export default function SecloContactDialog({ open, mode, userId, contact, folder
 			// eligió el admin. Nunca dejamos el campo vacío en escritura — así los
 			// contactos creados desde acá nunca arrastran la inconsistencia legacy.
 			const tipoSociedadNorm = form.type === "Persona Jurídica" ? form.tipoSociedad : "Persona Física";
-			const payload = {
+			const payload: Record<string, unknown> = {
 				...form,
 				tipoSociedad: tipoSociedadNorm,
 				cuit: form.cuit.replace(/\D/g, "") || undefined,
 				address: composedAddress,
-				...(folderId && mode === "add" ? { folderIds: [folderId] } : {}),
+				...(mode === "add" && selectedFolder ? { folderIds: [selectedFolder._id] } : {}),
 			};
+			// En edit, sólo mandamos role si el admin lo cambió — evita convertir
+			// un role array (contactos PJN) en string al editar otros campos.
+			if (mode === "edit" && form.role === initialRole) {
+				delete payload.role;
+			}
 
 			let response;
 			if (mode === "add") {
@@ -277,6 +343,38 @@ export default function SecloContactDialog({ open, mode, userId, contact, folder
 							helperText={errors.lastName || " "}
 							fullWidth
 						/>
+					</Grid>
+
+					<Grid item xs={12}>
+						<FormControl fullWidth error={!!errors.role}>
+							<InputLabel id="role-label">{mode === "add" ? "Categoría *" : "Categoría"}</InputLabel>
+							<Select
+								labelId="role-label"
+								value={form.role}
+								label={mode === "add" ? "Categoría *" : "Categoría"}
+								onChange={(e) => setField("role")(e.target.value)}
+							>
+								{/* En edit el rol puede venir vacío (contactos legacy) o con un valor
+								    fuera del catálogo (campo Mixed) — los incluimos para que el Select
+								    no quede out-of-range. */}
+								{mode === "edit" && !form.role && (
+									<MenuItem value="">
+										<em>Sin categoría</em>
+									</MenuItem>
+								)}
+								{form.role && !CONTACT_ROLE_OPTIONS.includes(form.role as (typeof CONTACT_ROLE_OPTIONS)[number]) && (
+									<MenuItem value={form.role}>{form.role}</MenuItem>
+								)}
+								{CONTACT_ROLE_OPTIONS.map((opt) => (
+									<MenuItem key={opt} value={opt}>
+										{opt}
+									</MenuItem>
+								))}
+							</Select>
+							<Typography variant="caption" color={errors.role ? "error" : "text.secondary"} sx={{ mt: 0.5 }}>
+								{errors.role || "Rol del contacto en el sistema (ej. Cliente para el trabajador, Contrario para el empleador)."}
+							</Typography>
+						</FormControl>
 					</Grid>
 
 					<Grid item xs={12} sm={6}>
@@ -416,11 +514,64 @@ export default function SecloContactDialog({ open, mode, userId, contact, folder
 					</Grid>
 
 					<Grid item xs={12} sm={6}>
-						<TextField label="Ciudad/Localidad" value={form.city} onChange={(e) => setField("city")(e.target.value)} fullWidth />
+						<TextField
+							label={mode === "add" ? "Ciudad/Localidad *" : "Ciudad/Localidad"}
+							value={form.city}
+							onChange={(e) => setField("city")(e.target.value)}
+							error={!!errors.city}
+							helperText={errors.city || " "}
+							fullWidth
+						/>
 					</Grid>
 					<Grid item xs={12} sm={6}>
-						<TextField label="Provincia" value={form.state} onChange={(e) => setField("state")(e.target.value)} fullWidth />
+						<TextField
+							label={mode === "add" ? "Provincia *" : "Provincia"}
+							value={form.state}
+							onChange={(e) => setField("state")(e.target.value)}
+							error={!!errors.state}
+							helperText={errors.state || " "}
+							fullWidth
+						/>
 					</Grid>
+
+					{/* Vinculación con carpeta — sólo en alta. El contacto queda
+					    siempre vinculado al usuario del wizard (userId va en la URL);
+					    la carpeta es opcional y agrega el contactId a folderIds. */}
+					{mode === "add" && (
+						<>
+							<Grid item xs={12}>
+								<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+									Vinculación
+								</Typography>
+							</Grid>
+							<Grid item xs={12}>
+								<Autocomplete
+									options={folders}
+									value={selectedFolder}
+									onChange={(_e, value) => setSelectedFolder(value)}
+									getOptionLabel={(f) => f.folderName || f._id}
+									isOptionEqualToValue={(a, b) => a._id === b._id}
+									loading={loadingFolders}
+									renderInput={(params) => (
+										<TextField
+											{...params}
+											label="Carpeta (opcional)"
+											helperText="Vincula el contacto a una carpeta del usuario. Podés dejarlo vacío."
+											InputProps={{
+												...params.InputProps,
+												endAdornment: (
+													<>
+														{loadingFolders ? <CircularProgress size={16} /> : null}
+														{params.InputProps.endAdornment}
+													</>
+												),
+											}}
+										/>
+									)}
+								/>
+							</Grid>
+						</>
+					)}
 				</Grid>
 			</DialogContent>
 

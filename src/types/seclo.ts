@@ -33,6 +33,9 @@ export interface SecloContact {
 	_id: string;
 	name: string;
 	lastName?: string;
+	/** Categoría del contacto (required en el schema Contact del server).
+	 *  Puede ser array en contactos importados desde PJN (PARTE + LETRADO). */
+	role?: string | string[];
 	cuit?: string;
 	document?: string;
 	phone?: string;
@@ -115,6 +118,33 @@ export const TIPO_SOCIEDAD_OPTIONS = [
 	"Otro",
 ] as const;
 export type TipoSociedad = (typeof TIPO_SOCIEDAD_OPTIONS)[number];
+
+// Categorías de contacto — misma lista que usa law-analytics-front
+// (src/data/folder.json → categorias). El campo `role` es required en el
+// schema Contact del server, por eso el modal de alta lo exige.
+export const CONTACT_ROLE_OPTIONS = [
+	"Abogado",
+	"Acreedores",
+	"Actor",
+	"Causante",
+	"Cit. en Garantía",
+	"Cliente",
+	"Concursado",
+	"Contrario",
+	"Demandado",
+	"Ejecutado",
+	"Ejecutante",
+	"Entidad",
+	"Letrado",
+	"Letrado Apoderado",
+	"Letrado Patrocinante",
+	"Mediador",
+	"Mediador/Conciliador",
+	"Perito",
+	"Peticionante",
+	"Síndico",
+	"Testigo",
+] as const;
 
 export interface SecloDatosLaborales {
 	fechaNacimiento?: string | null;
