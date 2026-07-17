@@ -166,6 +166,14 @@ const admin: NavItemType = {
 					chip: { label: "vectores", color: "primary", variant: "outlined", size: "small" },
 				},
 				{
+					id: "portales-status",
+					title: "Estado de Portales",
+					type: "item",
+					url: "/admin/infrastructure/portales",
+					breadcrumbs: true,
+					chip: { label: "PJN·SCBA·MEV", color: "success", variant: "outlined", size: "small" },
+				},
+				{
 					id: "system-logs",
 					title: "Logs del Ecosistema",
 					type: "item",
