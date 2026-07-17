@@ -68,6 +68,7 @@ const InfolegWorkersPage = Loadable(lazy(() => import("pages/admin/workers/infol
 const InfolegNormasPage = Loadable(lazy(() => import("pages/admin/normas/infoleg")));
 const JurisprudenciaSaijPage = Loadable(lazy(() => import("pages/recursos/jurisprudencia-saij")));
 const JurisprudenciaPjnPage = Loadable(lazy(() => import("pages/recursos/jurisprudencia-pjn")));
+const JurisprudenciaPjnAskPage = Loadable(lazy(() => import("pages/recursos/jurisprudencia-pjn-ask")));
 
 // Subscriptions pages
 const StripeWebhooks = Loadable(lazy(() => import("pages/subscriptions/StripeWebhooks")));
@@ -953,6 +954,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<JurisprudenciaPjnPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "jurisprudencia/pjn-ask",
+							element: (
+								<AdminRoleGuard>
+									<JurisprudenciaPjnAskPage />
 								</AdminRoleGuard>
 							),
 						},
