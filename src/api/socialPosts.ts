@@ -2,7 +2,7 @@ import mktAxios from "utils/mktAxios";
 
 // ==================== Tipos ====================
 
-export type TemplateId = "novedad" | "dato" | "feature" | "carrusel" | "promo" | "valor-arancel";
+export type TemplateId = "novedad" | "dato" | "feature" | "carrusel" | "promo" | "valor-arancel" | "integraciones";
 export type FormatoId = "feed34" | "feed45" | "square" | "story";
 export type EstadoPost = "borrador" | "aprobado" | "publicado";
 
