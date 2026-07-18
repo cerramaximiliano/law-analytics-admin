@@ -2,7 +2,7 @@ import mktAxios from "utils/mktAxios";
 
 // ==================== Tipos ====================
 
-export type TemplateId = "novedad" | "dato" | "feature" | "carrusel" | "promo";
+export type TemplateId = "novedad" | "dato" | "feature" | "carrusel" | "promo" | "valor-arancel";
 export type FormatoId = "feed45" | "square" | "story";
 export type EstadoPost = "borrador" | "aprobado" | "publicado";
 
@@ -138,6 +138,19 @@ export const createPost = async (payload: {
 
 export const updatePost = async (id: string, payload: Partial<Pick<SocialPost, "titulo" | "formato" | "contenido" | "caption" | "hashtags" | "estado">>): Promise<SocialPost> => {
 	const res = await mktAxios.put(`/api/social/posts/${id}`, payload);
+	return res.data.data;
+};
+
+/**
+ * Clona un post aplicando solo los campos que cambian. Para posts recurrentes
+ * (valores arancelarios, índices): el mes que viene cambian dos o tres datos y
+ * el resto se hereda. No interviene el LLM.
+ */
+export const duplicatePost = async (
+	id: string,
+	payload: { contenido?: ContenidoPost; titulo?: string; formato?: FormatoId; caption?: string; hashtags?: string[]; estado?: EstadoPost },
+): Promise<SocialPost> => {
+	const res = await mktAxios.post(`/api/social/posts/${id}/duplicate`, payload);
 	return res.data.data;
 };
 
