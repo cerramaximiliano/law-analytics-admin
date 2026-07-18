@@ -193,12 +193,11 @@ export const renderSavedPost = async (id: string, formato?: FormatoId): Promise<
 
 // ==================== Helpers ====================
 
-/** Descarga una imagen base64 como archivo PNG. */
-export const downloadImage = (base64: string, filename: string) => {
-	const bytes = atob(base64);
-	const buffer = new Uint8Array(bytes.length);
-	for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i);
-	const url = URL.createObjectURL(new Blob([buffer], { type: "image/png" }));
+/** Calidad del JPG de publicación. 92 es el punto donde el peso baja mucho sin artefactos visibles en tipografía. */
+const CALIDAD_JPG = 0.92;
+
+const dispararDescarga = (blob: Blob, filename: string) => {
+	const url = URL.createObjectURL(blob);
 	const a = document.createElement("a");
 	a.href = url;
 	a.download = filename;
@@ -206,4 +205,62 @@ export const downloadImage = (base64: string, filename: string) => {
 	a.click();
 	document.body.removeChild(a);
 	URL.revokeObjectURL(url);
+};
+
+const base64ABytes = (base64: string) => {
+	const bytes = atob(base64);
+	const buffer = new Uint8Array(bytes.length);
+	for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i);
+	return buffer;
+};
+
+/**
+ * Descarga una imagen lista para publicar.
+ *
+ * El renderer devuelve PNG (sin pérdida, ideal para previsualizar y archivar),
+ * pero Instagram y Facebook reconvierten todo a JPEG al subirlo. Entregar
+ * directamente un JPG de alta calidad evita esa doble conversión y baja el peso
+ * del archivo drásticamente, que es lo que importa al publicar desde el celular.
+ *
+ * Se convierte en el navegador con canvas: el backend sigue devolviendo un solo
+ * PNG y no hace falta re-renderizar para cambiar de formato.
+ *
+ * @param tipo "jpg" (default, para publicar) o "png" (sin pérdida, para archivo)
+ */
+export const downloadImage = async (base64: string, filename: string, tipo: "jpg" | "png" = "jpg"): Promise<void> => {
+	if (tipo === "png") {
+		dispararDescarga(new Blob([base64ABytes(base64)], { type: "image/png" }), filename.replace(/\.(jpe?g|png)$/i, "") + ".png");
+		return;
+	}
+
+	const img = new Image();
+	img.src = `data:image/png;base64,${base64}`;
+	try {
+		await img.decode();
+	} catch {
+		// Si el decode falla, es preferible entregar el PNG original antes que no descargar nada.
+		dispararDescarga(new Blob([base64ABytes(base64)], { type: "image/png" }), filename.replace(/\.(jpe?g|png)$/i, "") + ".png");
+		return;
+	}
+
+	const canvas = document.createElement("canvas");
+	canvas.width = img.naturalWidth;
+	canvas.height = img.naturalHeight;
+	const ctx = canvas.getContext("2d");
+	if (!ctx) {
+		dispararDescarga(new Blob([base64ABytes(base64)], { type: "image/png" }), filename.replace(/\.(jpe?g|png)$/i, "") + ".png");
+		return;
+	}
+	// JPEG no tiene canal alfa: se pinta un fondo opaco por si el diseño tuviera
+	// transparencia, para no obtener bordes negros.
+	ctx.fillStyle = "#FFFFFF";
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+	ctx.drawImage(img, 0, 0);
+
+	const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", CALIDAD_JPG));
+	if (!blob) {
+		dispararDescarga(new Blob([base64ABytes(base64)], { type: "image/png" }), filename.replace(/\.(jpe?g|png)$/i, "") + ".png");
+		return;
+	}
+	dispararDescarga(blob, filename.replace(/\.(jpe?g|png)$/i, "") + ".jpg");
 };

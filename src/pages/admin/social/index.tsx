@@ -421,7 +421,7 @@ const SocialStudio = () => {
 		for (const v of variantes) {
 			(v.images || []).forEach((img, i) => {
 				const sufijo = (v.images || []).length > 1 ? `-${i + 1}` : "";
-				downloadImage(img, `${templateId}-${v.formato}${sufijo}.png`);
+				downloadImage(img, `${templateId}-${v.formato}${sufijo}`);
 				n++;
 			});
 		}
@@ -738,7 +738,7 @@ const SocialStudio = () => {
 																	size="small"
 																	onClick={() =>
 																		(v.images || []).forEach((img, i) =>
-																			downloadImage(img, `${templateId}-${v.formato}${(v.images || []).length > 1 ? `-${i + 1}` : ""}.png`),
+																			downloadImage(img, `${templateId}-${v.formato}${(v.images || []).length > 1 ? `-${i + 1}` : ""}`),
 																		)
 																	}
 																>
@@ -783,7 +783,7 @@ const SocialStudio = () => {
 												<Tooltip title="Descargar PNG">
 													<IconButton
 														size="small"
-														onClick={() => downloadImage(img, `${templateId}-${formato}${images.length > 1 ? `-${i + 1}` : ""}.png`)}
+														onClick={() => downloadImage(img, `${templateId}-${formato}${images.length > 1 ? `-${i + 1}` : ""}`)}
 													>
 														<DocumentDownload size={18} />
 													</IconButton>
