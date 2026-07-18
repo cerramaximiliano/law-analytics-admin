@@ -3,7 +3,7 @@ import mktAxios from "utils/mktAxios";
 // ==================== Tipos ====================
 
 export type TemplateId = "novedad" | "dato" | "feature" | "carrusel" | "promo" | "valor-arancel";
-export type FormatoId = "feed45" | "square" | "story";
+export type FormatoId = "feed34" | "feed45" | "square" | "story";
 export type EstadoPost = "borrador" | "aprobado" | "publicado";
 
 /** El contenido es forma libre: cada plantilla define sus propios campos. */
@@ -80,6 +80,17 @@ export interface RenderResponse {
 	ms: number;
 }
 
+/** Una variante renderizada. `error` viene poblado si ese formato falló. */
+export interface VarianteFormato {
+	formato: FormatoId;
+	label: string;
+	width?: number;
+	height?: number;
+	images?: string[];
+	ms?: number;
+	error?: string;
+}
+
 export interface SocialHealth {
 	renderer: { online: boolean; ok?: boolean; error?: string };
 	claudeConfigurado: boolean;
@@ -109,6 +120,16 @@ export const renderContent = async (params: {
 }): Promise<RenderResponse> => {
 	const res = await mktAxios.post("/api/social/render", params);
 	return res.data.data;
+};
+
+/** Renderiza el mismo contenido en todos los formatos de una pasada. */
+export const renderAllFormats = async (params: {
+	templateId: TemplateId;
+	contenido: ContenidoPost;
+	formatos?: FormatoId[];
+}): Promise<VarianteFormato[]> => {
+	const res = await mktAxios.post("/api/social/render-all", params);
+	return res.data.data.variantes;
 };
 
 export const listPosts = async (

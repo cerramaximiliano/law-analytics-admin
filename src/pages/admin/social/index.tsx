@@ -49,7 +49,7 @@ import {
 
 // third-party
 import { useSnackbar } from "notistack";
-import { Add, Copy, DocumentDownload, Magicpen, Refresh, Trash } from "iconsax-react";
+import { Add, Copy, DocumentDownload, Gallery, Magicpen, Refresh, Trash } from "iconsax-react";
 
 // project imports
 import MainCard from "components/MainCard";
@@ -60,6 +60,7 @@ import {
 	SocialPost,
 	TemplateId,
 	TemplateInfo,
+	VarianteFormato,
 	createPost,
 	deletePost,
 	downloadImage,
@@ -68,6 +69,7 @@ import {
 	getHealth,
 	getTemplates,
 	listPosts,
+	renderAllFormats,
 	renderContent,
 	updatePost,
 } from "api/socialPosts";
@@ -270,6 +272,9 @@ const SocialStudio = () => {
 	const [titulo, setTitulo] = useState("");
 	const [caption, setCaption] = useState("");
 	const [guardando, setGuardando] = useState(false);
+	// Variantes: el mismo contenido renderizado en los 4 formatos de una pasada.
+	const [variantes, setVariantes] = useState<VarianteFormato[]>([]);
+	const [generandoVariantes, setGenerandoVariantes] = useState(false);
 	const [editandoId, setEditandoId] = useState<string | null>(null);
 
 	// --- guardados
@@ -326,6 +331,7 @@ const SocialStudio = () => {
 		if (!tplActual) return;
 		setContenido(emptyContent(tplActual));
 		setImages([]);
+		setVariantes([]);
 		setWarnings([]);
 		setEditandoId(null);
 	}, [tplActual]);
@@ -384,6 +390,42 @@ const SocialStudio = () => {
 		} finally {
 			setRenderizando(false);
 		}
+	};
+
+	// Genera las 4 variantes de una sola vez. Cada formato ajusta su escala
+	// tipografica y su zona segura, asi que no es la misma imagen recortada:
+	// es el mismo contenido re-maquetado.
+	const handleVariantes = async () => {
+		setGenerandoVariantes(true);
+		try {
+			const res = await renderAllFormats({ templateId, contenido });
+			setVariantes(res);
+			const fallidos = res.filter((v) => v.error);
+			if (fallidos.length) {
+				enqueueSnackbar(`${fallidos.length} formato(s) fallaron: ${fallidos.map((f) => f.label).join(", ")}`, { variant: "warning" });
+			} else {
+				enqueueSnackbar(`${res.length} variantes generadas`, { variant: "success" });
+			}
+		} catch (err: any) {
+			const data = err?.response?.data;
+			if (data?.validationErrors?.length) setWarnings(data.validationErrors);
+			enqueueSnackbar(data?.error || "No se pudieron generar las variantes", { variant: "error" });
+		} finally {
+			setGenerandoVariantes(false);
+		}
+	};
+
+	/** Descarga todas las imagenes de todas las variantes generadas. */
+	const handleDescargarTodo = () => {
+		let n = 0;
+		for (const v of variantes) {
+			(v.images || []).forEach((img, i) => {
+				const sufijo = (v.images || []).length > 1 ? `-${i + 1}` : "";
+				downloadImage(img, `${templateId}-${v.formato}${sufijo}.png`);
+				n++;
+			});
+		}
+		enqueueSnackbar(`${n} archivo(s) descargados`, { variant: "success" });
 	};
 
 	const handleGuardar = async () => {
@@ -484,6 +526,7 @@ const SocialStudio = () => {
 		setTitulo("");
 		setCaption("");
 		setImages([]);
+		setVariantes([]);
 		setWarnings([]);
 		setEditandoId(null);
 	};
@@ -638,6 +681,17 @@ const SocialStudio = () => {
 								</Button>
 							</Stack>
 
+							<Button
+								variant="contained"
+								color="secondary"
+								fullWidth
+								startIcon={generandoVariantes ? <CircularProgress size={16} color="inherit" /> : <Gallery size={18} />}
+								disabled={generandoVariantes || excesos.length > 0 || !health?.renderer}
+								onClick={handleVariantes}
+							>
+								{generandoVariantes ? "Generando variantes…" : "Generar los 4 formatos"}
+							</Button>
+
 							{excesos.length > 0 && (
 								<Alert severity="error">
 									<Typography variant="subtitle2">Hay campos que exceden el límite</Typography>
@@ -647,6 +701,57 @@ const SocialStudio = () => {
 										</Typography>
 									))}
 								</Alert>
+							)}
+
+							{variantes.length > 0 && (
+								<MainCard content={false} sx={{ p: 2 }}>
+									<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+										<Typography variant="subtitle2">Variantes por formato</Typography>
+										<Button size="small" startIcon={<DocumentDownload size={16} />} onClick={handleDescargarTodo}>
+											Descargar todo
+										</Button>
+									</Stack>
+									<Grid container spacing={1.5}>
+										{variantes.map((v) => (
+											<Grid item xs={6} key={v.formato}>
+												{v.error ? (
+													<Alert severity="error">
+														<Typography variant="caption">
+															{v.label}: {v.error}
+														</Typography>
+													</Alert>
+												) : (
+													<Box>
+														<Box
+															component="img"
+															src={`data:image/png;base64,${(v.images || [])[0]}`}
+															alt={v.label}
+															sx={{ width: "100%", display: "block", borderRadius: 1, boxShadow: 2 }}
+														/>
+														<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 0.5 }}>
+															<Typography variant="caption" color="text.secondary">
+																{v.label} · {v.width}×{v.height}
+																{(v.images || []).length > 1 ? ` · ${(v.images || []).length} slides` : ""}
+															</Typography>
+															<Tooltip title="Descargar">
+																<IconButton
+																	size="small"
+																	onClick={() =>
+																		(v.images || []).forEach((img, i) =>
+																			downloadImage(img, `${templateId}-${v.formato}${(v.images || []).length > 1 ? `-${i + 1}` : ""}.png`),
+																		)
+																	}
+																>
+																	<DocumentDownload size={16} />
+																</IconButton>
+															</Tooltip>
+														</Stack>
+													</Box>
+												)}
+											</Grid>
+										))}
+									</Grid>
+								</MainCard>
 							)}
 
 							{images.length === 0 ? (
