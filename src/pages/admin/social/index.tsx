@@ -49,7 +49,7 @@ import {
 
 // third-party
 import { useSnackbar } from "notistack";
-import { Add, Copy, DocumentDownload, Gallery, Magicpen, Refresh, Trash } from "iconsax-react";
+import { Add, Copy, DocumentDownload, Gallery, Magicpen, Refresh, Trash, VideoPlay } from "iconsax-react";
 
 // project imports
 import MainCard from "components/MainCard";
@@ -61,6 +61,8 @@ import {
 	TemplateId,
 	TemplateInfo,
 	VarianteFormato,
+	VideoResponse,
+	AnimacionInfo,
 	createPost,
 	deletePost,
 	downloadImage,
@@ -71,6 +73,8 @@ import {
 	listPosts,
 	renderAllFormats,
 	renderContent,
+	renderVideo,
+	downloadVideo,
 	updatePost,
 } from "api/socialPosts";
 
@@ -275,6 +279,10 @@ const SocialStudio = () => {
 	// Variantes: el mismo contenido renderizado en los 4 formatos de una pasada.
 	const [variantes, setVariantes] = useState<VarianteFormato[]>([]);
 	const [generandoVariantes, setGenerandoVariantes] = useState(false);
+	// --- video (story 1080x1920)
+	const [animacion, setAnimacion] = useState("entrada");
+	const [video, setVideo] = useState<VideoResponse | null>(null);
+	const [generandoVideo, setGenerandoVideo] = useState(false);
 	const [editandoId, setEditandoId] = useState<string | null>(null);
 
 	// --- guardados
@@ -289,6 +297,8 @@ const SocialStudio = () => {
 	const [duplicando, setDuplicando] = useState(false);
 
 	const tplActual = useMemo(() => templates.find((t) => t.id === templateId) || null, [templates, templateId]);
+	const animsDisponibles = useMemo<AnimacionInfo[]>(() => tplActual?.animaciones || [], [tplActual]);
+
 	const fmtActual = useMemo(() => formats.find((f) => f.id === formato) || null, [formats, formato]);
 
 	// Limites de caracteres excedidos, calculados en vivo sobre lo que se edita.
@@ -332,9 +342,16 @@ const SocialStudio = () => {
 		setContenido(emptyContent(tplActual));
 		setImages([]);
 		setVariantes([]);
+		setVideo(null);
 		setWarnings([]);
 		setEditandoId(null);
 	}, [tplActual]);
+
+	useEffect(() => {
+		if (animsDisponibles.length && !animsDisponibles.some((a) => a.id === animacion)) {
+			setAnimacion(animsDisponibles[0].id);
+		}
+	}, [animsDisponibles, animacion]);
 
 	const cargarPosts = useCallback(async () => {
 		setLoadingPosts(true);
@@ -426,6 +443,22 @@ const SocialStudio = () => {
 			});
 		}
 		enqueueSnackbar(`${n} archivo(s) descargados`, { variant: "success" });
+	};
+
+	const handleVideo = async () => {
+		setGenerandoVideo(true);
+		setVideo(null);
+		try {
+			const r = await renderVideo({ templateId, contenido, animacion });
+			setVideo(r);
+			enqueueSnackbar(`Video listo: ${r.frames} frames en ${(r.ms / 1000).toFixed(0)}s`, { variant: "success" });
+		} catch (err: any) {
+			const data = err?.response?.data;
+			if (data?.validationErrors?.length) setWarnings(data.validationErrors);
+			enqueueSnackbar(data?.error || "No se pudo generar el video", { variant: "error" });
+		} finally {
+			setGenerandoVideo(false);
+		}
 	};
 
 	const handleGuardar = async () => {
@@ -527,6 +560,7 @@ const SocialStudio = () => {
 		setCaption("");
 		setImages([]);
 		setVariantes([]);
+		setVideo(null);
 		setWarnings([]);
 		setEditandoId(null);
 	};
@@ -691,6 +725,71 @@ const SocialStudio = () => {
 							>
 								{generandoVariantes ? "Generando variantes…" : "Generar los 4 formatos"}
 							</Button>
+
+							{/* Video: story 1080x1920, que es el formato en que IG publica video */}
+							<MainCard content={false} sx={{ p: 2 }}>
+								<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+									<VideoPlay size={18} />
+									<Typography variant="subtitle2">Video (story 1080×1920)</Typography>
+								</Stack>
+								<Stack spacing={1.5}>
+									<FormControl fullWidth size="small">
+										<InputLabel>Animación</InputLabel>
+										<Select value={animacion} label="Animación" onChange={(e) => setAnimacion(e.target.value)}>
+											{animsDisponibles.map((a) => (
+												<MenuItem key={a.id} value={a.id}>
+													{a.label} · {a.duracion}s
+												</MenuItem>
+											))}
+										</Select>
+									</FormControl>
+									{animsDisponibles.find((a) => a.id === animacion) && (
+										<Typography variant="caption" color="text.secondary">
+											{animsDisponibles.find((a) => a.id === animacion)?.description}
+										</Typography>
+									)}
+									<Button
+										variant="contained"
+										fullWidth
+										startIcon={generandoVideo ? <CircularProgress size={16} color="inherit" /> : <VideoPlay size={18} />}
+										disabled={generandoVideo || excesos.length > 0 || !health?.renderer}
+										onClick={handleVideo}
+									>
+										{generandoVideo ? "Renderizando video…" : "Generar video"}
+									</Button>
+									{generandoVideo && (
+										<Typography variant="caption" color="text.secondary">
+											El render captura un frame por vez: puede tardar entre 30 y 60 segundos.
+										</Typography>
+									)}
+									{video && (
+										<Box>
+											<Box
+												component="video"
+												src={`data:video/mp4;base64,${video.video}`}
+												controls
+												autoPlay
+												loop
+												muted
+												playsInline
+												sx={{ width: "100%", display: "block", borderRadius: 1, boxShadow: 3, bgcolor: "#000" }}
+											/>
+											<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 0.5 }}>
+												<Typography variant="caption" color="text.secondary">
+													{video.width}×{video.height} · {(video.duracionMs / 1000).toFixed(1)}s · {(video.bytes / 1024).toFixed(0)} KB
+												</Typography>
+												<Button
+													size="small"
+													startIcon={<DocumentDownload size={16} />}
+													onClick={() => downloadVideo(video.video, `${templateId}-${video.animacion}`)}
+												>
+													Descargar mp4
+												</Button>
+											</Stack>
+										</Box>
+									)}
+								</Stack>
+							</MainCard>
 
 							{excesos.length > 0 && (
 								<Alert severity="error">

@@ -9,12 +9,21 @@ export type EstadoPost = "borrador" | "aprobado" | "publicado";
 /** El contenido es forma libre: cada plantilla define sus propios campos. */
 export type ContenidoPost = Record<string, unknown>;
 
+export interface AnimacionInfo {
+	id: string;
+	label: string;
+	description: string;
+	duracion: number;
+}
+
 export interface TemplateInfo {
 	id: TemplateId;
 	label: string;
 	description: string;
 	multiSlide: boolean;
 	limits: Record<string, number>;
+	/** Animaciones de video aplicables a esta plantilla. */
+	animaciones?: AnimacionInfo[];
 	schema: {
 		type: string;
 		properties: Record<string, { type: string; description?: string }>;
@@ -33,6 +42,19 @@ export interface TemplatesResponse {
 	templates: TemplateInfo[];
 	formats: FormatoInfo[];
 	defaultFormat: FormatoId;
+	animaciones: AnimacionInfo[];
+}
+
+/** Video renderizado. `video` viene en base64, sin el prefijo data:. */
+export interface VideoResponse {
+	video: string;
+	frames: number;
+	bytes: number;
+	ms: number;
+	width: number;
+	height: number;
+	animacion: string;
+	duracionMs: number;
 }
 
 export interface GeneracionMeta {
@@ -130,6 +152,38 @@ export const renderAllFormats = async (params: {
 }): Promise<VarianteFormato[]> => {
 	const res = await mktAxios.post("/api/social/render-all", params);
 	return res.data.data.variantes;
+};
+
+/**
+ * Renderiza un video del contenido. Por defecto en story (1080x1920), que es
+ * el formato en que Instagram publica video.
+ */
+export const renderVideo = async (params: {
+	templateId: TemplateId;
+	contenido: ContenidoPost;
+	animacion?: string;
+	duracionSeg?: number;
+	formato?: FormatoId;
+}): Promise<VideoResponse> => {
+	// El render de video tarda bastante mas que una imagen: se sube el timeout
+	// del cliente para que no corte antes de que el server termine.
+	const res = await mktAxios.post("/api/social/video", params, { timeout: 300000 });
+	return res.data.data;
+};
+
+/** Descarga un mp4 en base64 como archivo. */
+export const downloadVideo = (base64: string, filename: string) => {
+	const bytes = atob(base64);
+	const buffer = new Uint8Array(bytes.length);
+	for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i);
+	const url = URL.createObjectURL(new Blob([buffer], { type: "video/mp4" }));
+	const a = document.createElement("a");
+	a.href = url;
+	a.download = filename.replace(/\.mp4$/i, "") + ".mp4";
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
+	URL.revokeObjectURL(url);
 };
 
 export const listPosts = async (
