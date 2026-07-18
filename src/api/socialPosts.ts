@@ -111,7 +111,9 @@ export const renderContent = async (params: {
 	return res.data.data;
 };
 
-export const listPosts = async (params: { estado?: EstadoPost; templateId?: TemplateId; page?: number; limit?: number } = {}): Promise<ListPostsResponse> => {
+export const listPosts = async (
+	params: { estado?: EstadoPost; templateId?: TemplateId; page?: number; limit?: number } = {},
+): Promise<ListPostsResponse> => {
 	const res = await mktAxios.get("/api/social/posts", { params });
 	return res.data.data;
 };
@@ -136,7 +138,10 @@ export const createPost = async (payload: {
 	return res.data.data;
 };
 
-export const updatePost = async (id: string, payload: Partial<Pick<SocialPost, "titulo" | "formato" | "contenido" | "caption" | "hashtags" | "estado">>): Promise<SocialPost> => {
+export const updatePost = async (
+	id: string,
+	payload: Partial<Pick<SocialPost, "titulo" | "formato" | "contenido" | "caption" | "hashtags" | "estado">>,
+): Promise<SocialPost> => {
 	const res = await mktAxios.put(`/api/social/posts/${id}`, payload);
 	return res.data.data;
 };

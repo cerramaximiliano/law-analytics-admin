@@ -49,7 +49,7 @@ import {
 
 // third-party
 import { useSnackbar } from "notistack";
-import { Add, DocumentDownload, Magicpen, Refresh, Trash } from "iconsax-react";
+import { Add, Copy, DocumentDownload, Magicpen, Refresh, Trash } from "iconsax-react";
 
 // project imports
 import MainCard from "components/MainCard";
@@ -63,6 +63,7 @@ import {
 	createPost,
 	deletePost,
 	downloadImage,
+	duplicatePost,
 	generateContent,
 	getHealth,
 	getTemplates,
@@ -88,11 +89,161 @@ const isStringArrayField = (schemaType: string | undefined) => schemaType === "a
 const emptyContent = (tpl: TemplateInfo): ContenidoPost => {
 	const out: ContenidoPost = {};
 	for (const [field, def] of Object.entries(tpl.schema.properties || {})) {
-		if (field === "slides") out[field] = [{ titulo: "", texto: "" }, { titulo: "", texto: "" }];
+		if (field === "slides")
+			out[field] = [
+				{ titulo: "", texto: "" },
+				{ titulo: "", texto: "" },
+			];
 		else if (isStringArrayField(def.type)) out[field] = [];
 		else out[field] = "";
 	}
 	return out;
+};
+
+// ==============================|| EDITOR DE CAMPOS ||============================== //
+
+/**
+ * Campos editables derivados del schema de una plantilla.
+ * Lo comparten el estudio y el modal de duplicado, para que editar el
+ * contenido sea la misma experiencia en los dos lugares.
+ */
+const CamposPlantilla = ({
+	tpl,
+	contenido,
+	setCampo,
+}: {
+	tpl: TemplateInfo;
+	contenido: ContenidoPost;
+	setCampo: (field: string, value: unknown) => void;
+}) => {
+	const props = tpl.schema.properties || {};
+
+	return (
+		<>
+			{Object.entries(props).map(([field, def]) => {
+				const limite = tpl.limits?.[field];
+				const value = contenido[field];
+
+				// Carrusel: los slides son un array de objetos.
+				if (field === "slides") {
+					const slides = Array.isArray(value) ? (value as Array<{ titulo: string; texto: string }>) : [];
+					return (
+						<Box key={field} sx={{ mt: 1 }}>
+							<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+								<Typography variant="subtitle2">Slides ({slides.length})</Typography>
+								<Button
+									size="small"
+									startIcon={<Add size={16} />}
+									disabled={slides.length >= 7}
+									onClick={() => setCampo("slides", [...slides, { titulo: "", texto: "" }])}
+								>
+									Agregar
+								</Button>
+							</Stack>
+							<Stack spacing={1.5}>
+								{slides.map((s, i) => (
+									<MainCard key={i} content={false} sx={{ p: 1.5 }}>
+										<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+											<Typography variant="caption" color="text.secondary">
+												Paso {i + 1}
+											</Typography>
+											<IconButton
+												size="small"
+												disabled={slides.length <= 2}
+												onClick={() =>
+													setCampo(
+														"slides",
+														slides.filter((_, idx) => idx !== i),
+													)
+												}
+											>
+												<Trash size={16} />
+											</IconButton>
+										</Stack>
+										<Stack spacing={1}>
+											<TextField
+												size="small"
+												label="Título"
+												fullWidth
+												value={s.titulo}
+												error={s.titulo.length > 48}
+												helperText={`${s.titulo.length}/48`}
+												onChange={(e) =>
+													setCampo(
+														"slides",
+														slides.map((sl, idx) => (idx === i ? { ...sl, titulo: e.target.value } : sl)),
+													)
+												}
+											/>
+											<TextField
+												size="small"
+												label="Texto"
+												fullWidth
+												multiline
+												minRows={2}
+												value={s.texto}
+												error={s.texto.length > 160}
+												helperText={`${s.texto.length}/160`}
+												onChange={(e) =>
+													setCampo(
+														"slides",
+														slides.map((sl, idx) => (idx === i ? { ...sl, texto: e.target.value } : sl)),
+													)
+												}
+											/>
+										</Stack>
+									</MainCard>
+								))}
+							</Stack>
+						</Box>
+					);
+				}
+
+				// Arrays simples: se editan como lista separada por comas.
+				if (isStringArrayField(def.type)) {
+					const arr = Array.isArray(value) ? (value as string[]) : [];
+					return (
+						<TextField
+							key={field}
+							label={field}
+							fullWidth
+							size="small"
+							value={arr.join(", ")}
+							helperText={def.description || "Separá los items con comas"}
+							onChange={(e) =>
+								setCampo(
+									field,
+									e.target.value
+										.split(",")
+										.map((s) => s.trim())
+										.filter(Boolean),
+								)
+							}
+						/>
+					);
+				}
+
+				const str = typeof value === "string" ? value : "";
+				const excedido = Boolean(limite && str.length > limite);
+				const largo = str.length > 90;
+
+				return (
+					<TextField
+						key={field}
+						label={field}
+						fullWidth
+						size="small"
+						multiline={largo}
+						minRows={largo ? 2 : undefined}
+						value={str}
+						error={excedido}
+						helperText={limite ? `${str.length}/${limite}` : def.description}
+						onChange={(e) => setCampo(field, e.target.value)}
+					/>
+				);
+			})}
+		</>
+	);
 };
 
 // ==============================|| PAGINA ||============================== //
@@ -125,6 +276,12 @@ const SocialStudio = () => {
 	const [posts, setPosts] = useState<SocialPost[]>([]);
 	const [loadingPosts, setLoadingPosts] = useState(false);
 	const [aBorrar, setABorrar] = useState<SocialPost | null>(null);
+
+	// --- duplicado (series recurrentes: UMA mes a mes, indices, etc.)
+	const [aDuplicar, setADuplicar] = useState<SocialPost | null>(null);
+	const [contenidoDup, setContenidoDup] = useState<ContenidoPost>({});
+	const [tituloDup, setTituloDup] = useState("");
+	const [duplicando, setDuplicando] = useState(false);
 
 	const tplActual = useMemo(() => templates.find((t) => t.id === templateId) || null, [templates, templateId]);
 	const fmtActual = useMemo(() => formats.find((f) => f.id === formato) || null, [formats, formato]);
@@ -290,6 +447,37 @@ const SocialStudio = () => {
 		}
 	};
 
+	// Abre el modal precargado con el contenido del original. El usuario pisa
+	// solo los campos que cambian; el resto se hereda.
+	const handleAbrirDuplicar = (post: SocialPost) => {
+		setADuplicar(post);
+		setContenidoDup({ ...post.contenido });
+		setTituloDup(`${post.titulo} (copia)`);
+	};
+
+	const handleDuplicar = async () => {
+		if (!aDuplicar) return;
+		setDuplicando(true);
+		try {
+			const copia = await duplicatePost(aDuplicar._id, {
+				contenido: contenidoDup,
+				titulo: tituloDup.trim() || undefined,
+			});
+			enqueueSnackbar(`Duplicado creado: ${copia.titulo}`, { variant: "success" });
+			setADuplicar(null);
+			cargarPosts();
+		} catch (err: any) {
+			const data = err?.response?.data;
+			if (data?.validationErrors?.length) {
+				enqueueSnackbar(data.validationErrors[0], { variant: "warning" });
+			} else {
+				enqueueSnackbar(data?.error || "No se pudo duplicar", { variant: "error" });
+			}
+		} finally {
+			setDuplicando(false);
+		}
+	};
+
 	const handleNuevo = () => {
 		if (tplActual) setContenido(emptyContent(tplActual));
 		setPrompt("");
@@ -301,124 +489,6 @@ const SocialStudio = () => {
 	};
 
 	const setCampo = (field: string, value: unknown) => setContenido((prev) => ({ ...prev, [field]: value }));
-
-	// --- render de los campos editables segun el schema de la plantilla
-	const renderCampos = () => {
-		if (!tplActual) return null;
-		const props = tplActual.schema.properties || {};
-
-		return Object.entries(props).map(([field, def]) => {
-			const limite = tplActual.limits?.[field];
-			const value = contenido[field];
-
-			// Carrusel: los slides son un array de objetos.
-			if (field === "slides") {
-				const slides = Array.isArray(value) ? (value as Array<{ titulo: string; texto: string }>) : [];
-				return (
-					<Box key={field} sx={{ mt: 1 }}>
-						<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-							<Typography variant="subtitle2">Slides ({slides.length})</Typography>
-							<Button
-								size="small"
-								startIcon={<Add size={16} />}
-								disabled={slides.length >= 7}
-								onClick={() => setCampo("slides", [...slides, { titulo: "", texto: "" }])}
-							>
-								Agregar
-							</Button>
-						</Stack>
-						<Stack spacing={1.5}>
-							{slides.map((s, i) => (
-								<MainCard key={i} content={false} sx={{ p: 1.5 }}>
-									<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-										<Typography variant="caption" color="text.secondary">
-											Paso {i + 1}
-										</Typography>
-										<IconButton
-											size="small"
-											disabled={slides.length <= 2}
-											onClick={() => setCampo("slides", slides.filter((_, idx) => idx !== i))}
-										>
-											<Trash size={16} />
-										</IconButton>
-									</Stack>
-									<Stack spacing={1}>
-										<TextField
-											size="small"
-											label="Título"
-											fullWidth
-											value={s.titulo}
-											error={s.titulo.length > 48}
-											helperText={`${s.titulo.length}/48`}
-											onChange={(e) =>
-												setCampo("slides", slides.map((sl, idx) => (idx === i ? { ...sl, titulo: e.target.value } : sl)))
-											}
-										/>
-										<TextField
-											size="small"
-											label="Texto"
-											fullWidth
-											multiline
-											minRows={2}
-											value={s.texto}
-											error={s.texto.length > 160}
-											helperText={`${s.texto.length}/160`}
-											onChange={(e) =>
-												setCampo("slides", slides.map((sl, idx) => (idx === i ? { ...sl, texto: e.target.value } : sl)))
-											}
-										/>
-									</Stack>
-								</MainCard>
-							))}
-						</Stack>
-					</Box>
-				);
-			}
-
-			// Arrays simples: se editan como lista separada por comas.
-			if (isStringArrayField(def.type)) {
-				const arr = Array.isArray(value) ? (value as string[]) : [];
-				return (
-					<TextField
-						key={field}
-						label={field}
-						fullWidth
-						size="small"
-						value={arr.join(", ")}
-						helperText={def.description || "Separá los items con comas"}
-						onChange={(e) =>
-							setCampo(
-								field,
-								e.target.value
-									.split(",")
-									.map((s) => s.trim())
-									.filter(Boolean),
-							)
-						}
-					/>
-				);
-			}
-
-			const str = typeof value === "string" ? value : "";
-			const excedido = Boolean(limite && str.length > limite);
-			const largo = str.length > 90;
-
-			return (
-				<TextField
-					key={field}
-					label={field}
-					fullWidth
-					size="small"
-					multiline={largo}
-					minRows={largo ? 2 : undefined}
-					value={str}
-					error={excedido}
-					helperText={limite ? `${str.length}/${limite}` : def.description}
-					onChange={(e) => setCampo(field, e.target.value)}
-				/>
-			);
-		});
-	};
 
 	if (loadingCatalogo) {
 		return (
@@ -521,7 +591,7 @@ const SocialStudio = () => {
 								</Typography>
 							</Divider>
 
-							<Stack spacing={1.5}>{renderCampos()}</Stack>
+							<Stack spacing={1.5}>{tplActual && <CamposPlantilla tpl={tplActual} contenido={contenido} setCampo={setCampo} />}</Stack>
 
 							<Divider>
 								<Typography variant="caption" color="text.secondary">
@@ -608,12 +678,7 @@ const SocialStudio = () => {
 												<Tooltip title="Descargar PNG">
 													<IconButton
 														size="small"
-														onClick={() =>
-															downloadImage(
-																img,
-																`${templateId}-${formato}${images.length > 1 ? `-${i + 1}` : ""}.png`,
-															)
-														}
+														onClick={() => downloadImage(img, `${templateId}-${formato}${images.length > 1 ? `-${i + 1}` : ""}.png`)}
 													>
 														<DocumentDownload size={18} />
 													</IconButton>
@@ -678,6 +743,11 @@ const SocialStudio = () => {
 												<Button size="small" onClick={() => handleAbrirPost(p)}>
 													Abrir
 												</Button>
+												<Tooltip title="Duplicar cambiando solo los datos">
+													<IconButton size="small" onClick={() => handleAbrirDuplicar(p)}>
+														<Copy size={16} />
+													</IconButton>
+												</Tooltip>
 												<IconButton size="small" color="error" onClick={() => setABorrar(p)}>
 													<Trash size={16} />
 												</IconButton>
@@ -689,6 +759,43 @@ const SocialStudio = () => {
 					</TableContainer>
 				</Box>
 			)}
+
+			{/* Duplicar: para series recurrentes, editar los datos sin pasar por el LLM */}
+			<Dialog open={Boolean(aDuplicar)} onClose={() => setADuplicar(null)} maxWidth="sm" fullWidth>
+				<DialogTitle>Duplicar post</DialogTitle>
+				<DialogContent dividers>
+					<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+						Se crea un post nuevo con la misma plantilla y el mismo caption. Cambiá solo los datos que corresponda; lo que dejes igual se
+						hereda del original.
+					</Typography>
+					<Stack spacing={1.5}>
+						<TextField label="Título interno" size="small" fullWidth value={tituloDup} onChange={(e) => setTituloDup(e.target.value)} />
+						<Divider>
+							<Typography variant="caption" color="text.secondary">
+								Contenido
+							</Typography>
+						</Divider>
+						{aDuplicar &&
+							(() => {
+								const tpl = templates.find((t) => t.id === aDuplicar.templateId);
+								if (!tpl) return null;
+								return (
+									<CamposPlantilla
+										tpl={tpl}
+										contenido={contenidoDup}
+										setCampo={(field, value) => setContenidoDup((prev) => ({ ...prev, [field]: value }))}
+									/>
+								);
+							})()}
+					</Stack>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setADuplicar(null)}>Cancelar</Button>
+					<Button variant="contained" onClick={handleDuplicar} disabled={duplicando}>
+						{duplicando ? "Duplicando…" : "Crear duplicado"}
+					</Button>
+				</DialogActions>
+			</Dialog>
 
 			<Dialog open={Boolean(aBorrar)} onClose={() => setABorrar(null)}>
 				<DialogTitle>Eliminar post</DialogTitle>
