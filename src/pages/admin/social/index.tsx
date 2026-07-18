@@ -74,6 +74,7 @@ import {
 	renderAllFormats,
 	renderContent,
 	renderVideo,
+	renderVideoSavedPost,
 	downloadVideo,
 	updatePost,
 } from "api/socialPosts";
@@ -289,6 +290,9 @@ const SocialStudio = () => {
 	const [posts, setPosts] = useState<SocialPost[]>([]);
 	const [loadingPosts, setLoadingPosts] = useState(false);
 	const [aBorrar, setABorrar] = useState<SocialPost | null>(null);
+	// Video de un post guardado, sin pasar por el estudio.
+	const [videoPost, setVideoPost] = useState<{ post: SocialPost; video: VideoResponse | null } | null>(null);
+	const [generandoVideoPost, setGenerandoVideoPost] = useState(false);
 
 	// --- duplicado (series recurrentes: UMA mes a mes, indices, etc.)
 	const [aDuplicar, setADuplicar] = useState<SocialPost | null>(null);
@@ -469,7 +473,7 @@ const SocialStudio = () => {
 		setGuardando(true);
 		try {
 			if (editandoId) {
-				await updatePost(editandoId, { titulo: titulo.trim(), formato, contenido, caption });
+				await updatePost(editandoId, { titulo: titulo.trim(), formato, contenido, caption, animacion });
 				enqueueSnackbar("Post actualizado", { variant: "success" });
 			} else {
 				const creado = await createPost({
@@ -479,6 +483,7 @@ const SocialStudio = () => {
 					prompt,
 					contenido,
 					caption,
+					animacion,
 				});
 				setEditandoId(creado._id);
 				enqueueSnackbar("Post guardado", { variant: "success" });
@@ -499,6 +504,7 @@ const SocialStudio = () => {
 		setTitulo(post.titulo);
 		setCaption(post.caption || "");
 		// Se setea despues del efecto de reset de plantilla.
+		if (post.animacion) setAnimacion(post.animacion);
 		setTimeout(() => {
 			setContenido(post.contenido);
 			setEditandoId(post._id);
@@ -506,6 +512,22 @@ const SocialStudio = () => {
 			setWarnings([]);
 		}, 0);
 		setTab(0);
+	};
+
+	// Genera el video de un post guardado usando la animación que el post tiene
+	// grabada: el flujo mensual es duplicar, cambiar datos y pedir el video.
+	const handleVideoDePost = async (post: SocialPost) => {
+		setVideoPost({ post, video: null });
+		setGenerandoVideoPost(true);
+		try {
+			const r = await renderVideoSavedPost(post._id);
+			setVideoPost({ post, video: r });
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.error || "No se pudo generar el video", { variant: "error" });
+			setVideoPost(null);
+		} finally {
+			setGenerandoVideoPost(false);
+		}
 	};
 
 	const handleBorrar = async () => {
@@ -911,6 +933,7 @@ const SocialStudio = () => {
 									<TableCell>Título</TableCell>
 									<TableCell>Plantilla</TableCell>
 									<TableCell>Formato</TableCell>
+									<TableCell>Animación</TableCell>
 									<TableCell>Estado</TableCell>
 									<TableCell>Creado</TableCell>
 									<TableCell align="right">Acciones</TableCell>
@@ -919,14 +942,14 @@ const SocialStudio = () => {
 							<TableBody>
 								{loadingPosts && (
 									<TableRow>
-										<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+										<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
 											<CircularProgress size={24} />
 										</TableCell>
 									</TableRow>
 								)}
 								{!loadingPosts && posts.length === 0 && (
 									<TableRow>
-										<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+										<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
 											<Typography variant="body2" color="text.secondary">
 												Todavía no hay posts guardados
 											</Typography>
@@ -940,6 +963,11 @@ const SocialStudio = () => {
 											<TableCell>{templates.find((t) => t.id === p.templateId)?.label || p.templateId}</TableCell>
 											<TableCell>{formats.find((f) => f.id === p.formato)?.label || p.formato}</TableCell>
 											<TableCell>
+												<Typography variant="caption" color="text.secondary">
+													{p.animacion || "entrada"}
+												</Typography>
+											</TableCell>
+											<TableCell>
 												<Chip size="small" label={p.estado} color={ESTADO_COLOR[p.estado] || "default"} variant="outlined" />
 											</TableCell>
 											<TableCell>{fmtDate(p.createdAt)}</TableCell>
@@ -947,6 +975,11 @@ const SocialStudio = () => {
 												<Button size="small" onClick={() => handleAbrirPost(p)}>
 													Abrir
 												</Button>
+												<Tooltip title="Generar video con la animación guardada">
+													<IconButton size="small" onClick={() => handleVideoDePost(p)}>
+														<VideoPlay size={16} />
+													</IconButton>
+												</Tooltip>
 												<Tooltip title="Duplicar cambiando solo los datos">
 													<IconButton size="small" onClick={() => handleAbrirDuplicar(p)}>
 														<Copy size={16} />
@@ -963,6 +996,51 @@ const SocialStudio = () => {
 					</TableContainer>
 				</Box>
 			)}
+
+			{/* Video de un post guardado: usa la animación grabada en el post */}
+			<Dialog open={Boolean(videoPost)} onClose={() => setVideoPost(null)} maxWidth="xs" fullWidth>
+				<DialogTitle>{videoPost?.post.titulo}</DialogTitle>
+				<DialogContent dividers>
+					{generandoVideoPost && (
+						<Stack alignItems="center" spacing={1.5} sx={{ py: 4 }}>
+							<CircularProgress />
+							<Typography variant="caption" color="text.secondary">
+								Renderizando con la animación «{videoPost?.post.animacion || "entrada"}». Puede tardar entre 30 y 60 segundos.
+							</Typography>
+						</Stack>
+					)}
+					{videoPost?.video && (
+						<Box>
+							<Box
+								component="video"
+								src={`data:video/mp4;base64,${videoPost.video.video}`}
+								controls
+								autoPlay
+								loop
+								muted
+								playsInline
+								sx={{ width: "100%", display: "block", borderRadius: 1, bgcolor: "#000" }}
+							/>
+							<Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+								{videoPost.video.width}×{videoPost.video.height} · {(videoPost.video.duracionMs / 1000).toFixed(1)}s ·{" "}
+								{(videoPost.video.bytes / 1024).toFixed(0)} KB · animación: {videoPost.video.animacion}
+							</Typography>
+						</Box>
+					)}
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setVideoPost(null)}>Cerrar</Button>
+					{videoPost?.video && (
+						<Button
+							variant="contained"
+							startIcon={<DocumentDownload size={16} />}
+							onClick={() => downloadVideo(videoPost.video!.video, `${videoPost.post.templateId}-${videoPost.video!.animacion}`)}
+						>
+							Descargar mp4
+						</Button>
+					)}
+				</DialogActions>
+			</Dialog>
 
 			{/* Duplicar: para series recurrentes, editar los datos sin pasar por el LLM */}
 			<Dialog open={Boolean(aDuplicar)} onClose={() => setADuplicar(null)} maxWidth="sm" fullWidth>

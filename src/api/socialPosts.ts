@@ -74,6 +74,9 @@ export interface SocialPost {
 	caption: string;
 	hashtags: string[];
 	estado: EstadoPost;
+	/** Animación del video, guardada con el post para que sirva como plantilla. */
+	animacion?: string;
+	duracionSeg?: number | null;
 	generacion?: GeneracionMeta;
 	creadoPor: string | null;
 	createdAt: string;
@@ -207,6 +210,8 @@ export const createPost = async (payload: {
 	caption?: string;
 	hashtags?: string[];
 	estado?: EstadoPost;
+	animacion?: string;
+	duracionSeg?: number;
 	usage?: { model: string; inputTokens: number; outputTokens: number };
 }): Promise<SocialPost> => {
 	const res = await mktAxios.post("/api/social/posts", payload);
@@ -215,7 +220,7 @@ export const createPost = async (payload: {
 
 export const updatePost = async (
 	id: string,
-	payload: Partial<Pick<SocialPost, "titulo" | "formato" | "contenido" | "caption" | "hashtags" | "estado">>,
+	payload: Partial<Pick<SocialPost, "titulo" | "formato" | "contenido" | "caption" | "hashtags" | "estado" | "animacion" | "duracionSeg">>,
 ): Promise<SocialPost> => {
 	const res = await mktAxios.put(`/api/social/posts/${id}`, payload);
 	return res.data.data;
@@ -231,6 +236,18 @@ export const duplicatePost = async (
 	payload: { contenido?: ContenidoPost; titulo?: string; formato?: FormatoId; caption?: string; hashtags?: string[]; estado?: EstadoPost },
 ): Promise<SocialPost> => {
 	const res = await mktAxios.post(`/api/social/posts/${id}/duplicate`, payload);
+	return res.data.data;
+};
+
+/**
+ * Renderiza el video de un post guardado. Sin `animacion` explícita usa la que
+ * el post tiene guardada, así el duplicado conserva su movimiento.
+ */
+export const renderVideoSavedPost = async (
+	id: string,
+	params: { animacion?: string; duracionSeg?: number; formato?: FormatoId } = {},
+): Promise<VideoResponse> => {
+	const res = await mktAxios.post(`/api/social/posts/${id}/video`, params, { timeout: 300000 });
 	return res.data.data;
 };
 
