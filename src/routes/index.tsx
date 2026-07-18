@@ -95,6 +95,9 @@ const EmailModules = Loadable(lazy(() => import("pages/admin/marketing/modules")
 const MarketingContacts = Loadable(lazy(() => import("pages/admin/marketing/contacts")));
 const MarketingSuppression = Loadable(lazy(() => import("pages/admin/marketing/suppression")));
 
+// Social pages
+const SocialStudio = Loadable(lazy(() => import("pages/admin/social")));
+
 // Plans page
 const PlansManagement = Loadable(lazy(() => import("pages/admin/plans")));
 const PromotionsManagement = Loadable(lazy(() => import("pages/admin/promotions")));
@@ -661,6 +664,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<MarketingSuppression />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "social/studio",
+							element: (
+								<AdminRoleGuard>
+									<SocialStudio />
 								</AdminRoleGuard>
 							),
 						},

@@ -626,6 +626,14 @@ const admin: NavItemType = {
 					url: "/admin/marketing/suppression",
 					breadcrumbs: true,
 				},
+				{
+					id: "social-studio",
+					title: "Posts Sociales",
+					type: "item",
+					url: "/admin/social/studio",
+					breadcrumbs: true,
+					chip: { label: "Nuevo", color: "primary", variant: "outlined", size: "small" },
+				},
 			],
 		},
 		{
