@@ -62,6 +62,7 @@ import {
 	TemplateInfo,
 	EstiloInfo,
 	ComposicionInfo,
+	PieInfo,
 	VarianteFormato,
 	VideoResponse,
 	AnimacionInfo,
@@ -305,6 +306,10 @@ const SocialStudio = () => {
 	const [estilos, setEstilos] = useState<EstiloInfo[]>([]);
 	const [composicion, setComposicion] = useState<string>("");
 	const [composiciones, setComposiciones] = useState<ComposicionInfo[]>([]);
+	// Dónde va el pie de marca. Eje aparte de la composición: centrar el
+	// contenido no debería obligar a que el logo viaje con él.
+	const [pie, setPie] = useState<string>("");
+	const [pies, setPies] = useState<PieInfo[]>([]);
 	const [video, setVideo] = useState<VideoResponse | null>(null);
 	const [generandoVideo, setGenerandoVideo] = useState(false);
 	const [editandoId, setEditandoId] = useState<string | null>(null);
@@ -376,6 +381,7 @@ const SocialStudio = () => {
 				setFormats(cat.formats);
 				setEstilos(cat.estilos || []);
 				setComposiciones(cat.composiciones || []);
+				setPies(cat.pies || []);
 				setFormato(cat.defaultFormat);
 				if (hp) setHealth({ renderer: hp.renderer.online, claude: hp.claudeConfigurado });
 			} catch (err: any) {
@@ -454,6 +460,7 @@ const SocialStudio = () => {
 				formato,
 				estilo: estilo || undefined,
 				composicion: composicion || undefined,
+				pie: pie || undefined,
 			});
 			setImages(res.images);
 			enqueueSnackbar(`Render listo en ${res.ms} ms`, { variant: "success" });
@@ -476,7 +483,7 @@ const SocialStudio = () => {
 	const handleVariantes = async () => {
 		setGenerandoVariantes(true);
 		try {
-			const res = await renderAllFormats({ templateId, contenido, estilo: estilo || undefined, composicion: composicion || undefined });
+			const res = await renderAllFormats({ templateId, contenido, estilo: estilo || undefined, composicion: composicion || undefined, pie: pie || undefined });
 			setVariantes(res);
 			const fallidos = res.filter((v) => v.error);
 			if (fallidos.length) {
@@ -519,6 +526,7 @@ const SocialStudio = () => {
 				formato: formatoVideo,
 				estilo: estilo || undefined,
 				composicion: composicion || undefined,
+				pie: pie || undefined,
 			});
 			setVideo(r);
 			enqueueSnackbar(`Video listo: ${r.frames} frames en ${(r.ms / 1000).toFixed(0)}s`, { variant: "success" });
@@ -548,6 +556,7 @@ const SocialStudio = () => {
 					animacion,
 					estilo: estilo || null,
 					composicion: composicion || null,
+					pie: pie || null,
 				});
 				enqueueSnackbar("Post actualizado", { variant: "success" });
 			} else {
@@ -561,6 +570,7 @@ const SocialStudio = () => {
 					animacion,
 					estilo: estilo || undefined,
 					composicion: composicion || undefined,
+					pie: pie || undefined,
 				});
 				setEditandoId(creado._id);
 				enqueueSnackbar("Post guardado", { variant: "success" });
@@ -584,6 +594,7 @@ const SocialStudio = () => {
 		if (post.animacion) setAnimacion(post.animacion);
 		setEstilo(post.estilo || "");
 		setComposicion(post.composicion || "");
+		setPie(post.pie || "");
 		setTimeout(() => {
 			setContenido(post.contenido);
 			setEditandoId(post._id);
@@ -754,6 +765,25 @@ const SocialStudio = () => {
 									))}
 								</Select>
 							</FormControl>
+
+							<FormControl fullWidth size="small">
+								<InputLabel>Pie</InputLabel>
+								<Select value={pie} label="Pie" onChange={(e) => setPie(e.target.value)}>
+									<MenuItem value="">
+										<em>Con el contenido (por defecto)</em>
+									</MenuItem>
+									{pies.map((p) => (
+										<MenuItem key={p.id} value={p.id}>
+											{p.label}
+										</MenuItem>
+									))}
+								</Select>
+							</FormControl>
+							{pie && pies.find((p) => p.id === pie) && (
+								<Typography variant="caption" color="text.secondary">
+									{pies.find((p) => p.id === pie)?.description}
+								</Typography>
+							)}
 
 							{tplActual && (
 								<Typography variant="caption" color="text.secondary">

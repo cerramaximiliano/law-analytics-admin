@@ -30,6 +30,13 @@ export interface ComposicionInfo {
 	description: string;
 }
 
+/** Dónde va (o si va) el pie de marca. Eje independiente de la composición. */
+export interface PieInfo {
+	id: string;
+	label: string;
+	description: string;
+}
+
 export interface AnimacionInfo {
 	id: string;
 	label: string;
@@ -77,6 +84,8 @@ export interface TemplatesResponse {
 	defaultEstilo: string;
 	composiciones: ComposicionInfo[];
 	defaultComposicion: string;
+	pies: PieInfo[];
+	defaultPie: string;
 }
 
 /** Video renderizado. `video` viene en base64, sin el prefijo data:. */
@@ -114,6 +123,8 @@ export interface SocialPost {
 	estilo?: string | null;
 	/** Composición: dónde se ancla el contenido. Null = el de la plantilla. */
 	composicion?: string | null;
+	/** Pie de marca: con el contenido, siempre abajo, o sin pie. */
+	pie?: string | null;
 	duracionSeg?: number | null;
 	generacion?: GeneracionMeta;
 	creadoPor: string | null;
@@ -182,6 +193,7 @@ export const renderContent = async (params: {
 	formato: FormatoId;
 	estilo?: string;
 	composicion?: string;
+	pie?: string;
 }): Promise<RenderResponse> => {
 	const res = await mktAxios.post("/api/social/render", params);
 	return res.data.data;
@@ -194,6 +206,7 @@ export const renderAllFormats = async (params: {
 	formatos?: FormatoId[];
 	estilo?: string;
 	composicion?: string;
+	pie?: string;
 }): Promise<VarianteFormato[]> => {
 	const res = await mktAxios.post("/api/social/render-all", params);
 	return res.data.data.variantes;
@@ -211,6 +224,7 @@ export const renderVideo = async (params: {
 	formato?: FormatoId;
 	estilo?: string;
 	composicion?: string;
+	pie?: string;
 }): Promise<VideoResponse> => {
 	// El render de video tarda bastante mas que una imagen: se sube el timeout
 	// del cliente para que no corte antes de que el server termine.
@@ -258,6 +272,7 @@ export const createPost = async (payload: {
 	duracionSeg?: number;
 	estilo?: string;
 	composicion?: string;
+	pie?: string;
 	usage?: { model: string; inputTokens: number; outputTokens: number };
 }): Promise<SocialPost> => {
 	const res = await mktAxios.post("/api/social/posts", payload);
@@ -269,7 +284,7 @@ export const updatePost = async (
 	payload: Partial<
 		Pick<
 			SocialPost,
-			"titulo" | "formato" | "contenido" | "caption" | "hashtags" | "estado" | "animacion" | "duracionSeg" | "estilo" | "composicion"
+			"titulo" | "formato" | "contenido" | "caption" | "hashtags" | "estado" | "animacion" | "duracionSeg" | "estilo" | "composicion" | "pie"
 		>
 	>,
 ): Promise<SocialPost> => {
@@ -296,7 +311,7 @@ export const duplicatePost = async (
  */
 export const renderVideoSavedPost = async (
 	id: string,
-	params: { animacion?: string; duracionSeg?: number; formato?: FormatoId; estilo?: string; composicion?: string } = {},
+	params: { animacion?: string; duracionSeg?: number; formato?: FormatoId; estilo?: string; composicion?: string; pie?: string } = {},
 ): Promise<VideoResponse> => {
 	const res = await mktAxios.post(`/api/social/posts/${id}/video`, params, { timeout: 300000 });
 	return res.data.data;
