@@ -98,12 +98,13 @@ const isStringArrayField = (schemaType: string | undefined) => schemaType === "a
 const emptyContent = (tpl: TemplateInfo): ContenidoPost => {
 	const out: ContenidoPost = {};
 	for (const [field, def] of Object.entries(tpl.schema.properties || {})) {
-		if (field === "slides")
-			out[field] = [
-				{ titulo: "", texto: "" },
-				{ titulo: "", texto: "" },
-			];
-		else if (isStringArrayField(def.type)) out[field] = [];
+		if (def.type === "array" && def.items?.properties) {
+			// Arranca con el mínimo que la plantilla exige, así el post nuevo ya
+			// pasa la validación sin que haya que adivinar cuántas filas faltan.
+			const min = tpl.rangos?.[field]?.[0] ?? 2;
+			const vacia = Object.fromEntries(Object.keys(def.items.properties).map((k) => [k, ""]));
+			out[field] = Array.from({ length: min }, () => ({ ...vacia }));
+		} else if (isStringArrayField(def.type)) out[field] = [];
 		else out[field] = "";
 	}
 	return out;
@@ -133,36 +134,51 @@ const CamposPlantilla = ({
 				const limite = tpl.limits?.[field];
 				const value = contenido[field];
 
-				// Carrusel: los slides son un array de objetos.
-				if (field === "slides") {
-					const slides = Array.isArray(value) ? (value as Array<{ titulo: string; texto: string }>) : [];
+				// Arrays de objetos (slides del carrusel, pasos del tutorial, items de
+				// integraciones). Se arma desde el schema en vez de por nombre de campo:
+				// con la rama atada a "slides", el tutorial y las integraciones no se
+				// podían editar desde acá aunque el backend los aceptara.
+				if (def.type === "array" && def.items?.properties) {
+					const subcampos = Object.entries(def.items.properties);
+					const filas = Array.isArray(value) ? (value as Array<Record<string, string>>) : [];
+					const [min, max] = tpl.rangos?.[field] || [1, 10];
+					const vacia = Object.fromEntries(subcampos.map(([k]) => [k, ""]));
+					const actualizar = (i: number, k: string, v: string) =>
+						setCampo(
+							field,
+							filas.map((fila, idx) => (idx === i ? { ...fila, [k]: v } : fila)),
+						);
+					// El límite por subcampo viene en la descripción del schema, que es
+					// donde el backend ya lo declara ("Maximo 46 caracteres.").
+					const limiteDe = (desc?: string) => {
+						const m = desc?.match(/[Mm]aximo (\d+) caracteres/);
+						return m ? Number(m[1]) : undefined;
+					};
+
 					return (
 						<Box key={field} sx={{ mt: 1 }}>
 							<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-								<Typography variant="subtitle2">Slides ({slides.length})</Typography>
-								<Button
-									size="small"
-									startIcon={<Add size={16} />}
-									disabled={slides.length >= 7}
-									onClick={() => setCampo("slides", [...slides, { titulo: "", texto: "" }])}
-								>
+								<Typography variant="subtitle2" sx={{ textTransform: "capitalize" }}>
+									{field} ({filas.length}/{max})
+								</Typography>
+								<Button size="small" startIcon={<Add size={16} />} disabled={filas.length >= max} onClick={() => setCampo(field, [...filas, vacia])}>
 									Agregar
 								</Button>
 							</Stack>
 							<Stack spacing={1.5}>
-								{slides.map((s, i) => (
+								{filas.map((fila, i) => (
 									<MainCard key={i} content={false} sx={{ p: 1.5 }}>
 										<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
 											<Typography variant="caption" color="text.secondary">
-												Paso {i + 1}
+												{i + 1}
 											</Typography>
 											<IconButton
 												size="small"
-												disabled={slides.length <= 2}
+												disabled={filas.length <= min}
 												onClick={() =>
 													setCampo(
-														"slides",
-														slides.filter((_, idx) => idx !== i),
+														field,
+														filas.filter((_, idx) => idx !== i),
 													)
 												}
 											>
@@ -170,36 +186,31 @@ const CamposPlantilla = ({
 											</IconButton>
 										</Stack>
 										<Stack spacing={1}>
-											<TextField
-												size="small"
-												label="Título"
-												fullWidth
-												value={s.titulo}
-												error={s.titulo.length > 48}
-												helperText={`${s.titulo.length}/48`}
-												onChange={(e) =>
-													setCampo(
-														"slides",
-														slides.map((sl, idx) => (idx === i ? { ...sl, titulo: e.target.value } : sl)),
-													)
-												}
-											/>
-											<TextField
-												size="small"
-												label="Texto"
-												fullWidth
-												multiline
-												minRows={2}
-												value={s.texto}
-												error={s.texto.length > 160}
-												helperText={`${s.texto.length}/160`}
-												onChange={(e) =>
-													setCampo(
-														"slides",
-														slides.map((sl, idx) => (idx === i ? { ...sl, texto: e.target.value } : sl)),
-													)
-												}
-											/>
+											{subcampos.map(([k, sub]) => {
+												const v = fila[k] || "";
+												const max = limiteDe(sub.description);
+												return sub.enum ? (
+													<TextField key={k} select size="small" label={k} fullWidth value={v} onChange={(e) => actualizar(i, k, e.target.value)}>
+														{sub.enum.map((op) => (
+															<MenuItem key={op} value={op}>
+																{op}
+															</MenuItem>
+														))}
+													</TextField>
+												) : (
+													<TextField
+														key={k}
+														size="small"
+														label={k}
+														fullWidth
+														multiline={!!max && max > 60}
+														value={v}
+														error={!!max && v.length > max}
+														helperText={max ? `${v.length}/${max}` : sub.description}
+														onChange={(e) => actualizar(i, k, e.target.value)}
+													/>
+												);
+											})}
 										</Stack>
 									</MainCard>
 								))}

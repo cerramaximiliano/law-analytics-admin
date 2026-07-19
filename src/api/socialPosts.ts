@@ -2,12 +2,20 @@ import mktAxios from "utils/mktAxios";
 
 // ==================== Tipos ====================
 
-export type TemplateId = "novedad" | "dato" | "feature" | "carrusel" | "promo" | "valor-arancel" | "integraciones";
+export type TemplateId = "novedad" | "dato" | "feature" | "carrusel" | "promo" | "valor-arancel" | "integraciones" | "tutorial";
 export type FormatoId = "feed34" | "feed45" | "square" | "story";
 export type EstadoPost = "borrador" | "aprobado" | "publicado";
 
 /** El contenido es forma libre: cada plantilla define sus propios campos. */
 export type ContenidoPost = Record<string, unknown>;
+
+/** Un campo del schema de una plantilla. `items` aparece en los arrays de objetos. */
+export interface SchemaProp {
+	type: string;
+	description?: string;
+	enum?: string[];
+	items?: { properties?: Record<string, SchemaProp>; required?: string[] };
+}
 
 export interface EstiloInfo {
 	id: string;
@@ -35,6 +43,8 @@ export interface TemplateInfo {
 	description: string;
 	multiSlide: boolean;
 	limits: Record<string, number>;
+	/** Mínimo y máximo de filas para los campos que son arrays de objetos. */
+	rangos?: Record<string, [number, number]>;
 	/** Animaciones de video aplicables a esta plantilla. */
 	animaciones?: AnimacionInfo[];
 	/** Estilo visual que mejor le sienta a esta plantilla. */
@@ -45,7 +55,7 @@ export interface TemplateInfo {
 	composiciones?: ComposicionInfo[];
 	schema: {
 		type: string;
-		properties: Record<string, { type: string; description?: string }>;
+		properties: Record<string, SchemaProp>;
 		required: string[];
 	};
 }
