@@ -254,7 +254,10 @@ export const createPost = async (payload: {
 export const updatePost = async (
 	id: string,
 	payload: Partial<
-		Pick<SocialPost, "titulo" | "formato" | "contenido" | "caption" | "hashtags" | "estado" | "animacion" | "duracionSeg" | "estilo">
+		Pick<
+			SocialPost,
+			"titulo" | "formato" | "contenido" | "caption" | "hashtags" | "estado" | "animacion" | "duracionSeg" | "estilo" | "composicion"
+		>
 	>,
 ): Promise<SocialPost> => {
 	const res = await mktAxios.put(`/api/social/posts/${id}`, payload);
