@@ -16,6 +16,12 @@ export interface EstiloInfo {
 	oscuro: boolean;
 }
 
+export interface ComposicionInfo {
+	id: string;
+	label: string;
+	description: string;
+}
+
 export interface AnimacionInfo {
 	id: string;
 	label: string;
@@ -35,6 +41,8 @@ export interface TemplateInfo {
 	estiloPorDefecto?: string;
 	/** Estilos disponibles (son transversales a todas las plantillas). */
 	estilos?: EstiloInfo[];
+	composicionPorDefecto?: string;
+	composiciones?: ComposicionInfo[];
 	schema: {
 		type: string;
 		properties: Record<string, { type: string; description?: string }>;
@@ -56,6 +64,8 @@ export interface TemplatesResponse {
 	animaciones: AnimacionInfo[];
 	estilos: EstiloInfo[];
 	defaultEstilo: string;
+	composiciones: ComposicionInfo[];
+	defaultComposicion: string;
 }
 
 /** Video renderizado. `video` viene en base64, sin el prefijo data:. */
@@ -91,6 +101,8 @@ export interface SocialPost {
 	animacion?: string;
 	/** Estilo visual. Null = el que la plantilla trae por defecto. */
 	estilo?: string | null;
+	/** Composición: dónde se ancla el contenido. Null = el de la plantilla. */
+	composicion?: string | null;
 	duracionSeg?: number | null;
 	generacion?: GeneracionMeta;
 	creadoPor: string | null;
@@ -158,6 +170,7 @@ export const renderContent = async (params: {
 	contenido: ContenidoPost;
 	formato: FormatoId;
 	estilo?: string;
+	composicion?: string;
 }): Promise<RenderResponse> => {
 	const res = await mktAxios.post("/api/social/render", params);
 	return res.data.data;
@@ -169,6 +182,7 @@ export const renderAllFormats = async (params: {
 	contenido: ContenidoPost;
 	formatos?: FormatoId[];
 	estilo?: string;
+	composicion?: string;
 }): Promise<VarianteFormato[]> => {
 	const res = await mktAxios.post("/api/social/render-all", params);
 	return res.data.data.variantes;
@@ -230,6 +244,7 @@ export const createPost = async (payload: {
 	animacion?: string;
 	duracionSeg?: number;
 	estilo?: string;
+	composicion?: string;
 	usage?: { model: string; inputTokens: number; outputTokens: number };
 }): Promise<SocialPost> => {
 	const res = await mktAxios.post("/api/social/posts", payload);

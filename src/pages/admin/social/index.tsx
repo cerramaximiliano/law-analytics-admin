@@ -61,6 +61,7 @@ import {
 	TemplateId,
 	TemplateInfo,
 	EstiloInfo,
+	ComposicionInfo,
 	VarianteFormato,
 	VideoResponse,
 	AnimacionInfo,
@@ -286,6 +287,8 @@ const SocialStudio = () => {
 	// Estilo visual: transversal a las plantillas. "" = el que trae la plantilla.
 	const [estilo, setEstilo] = useState<string>("");
 	const [estilos, setEstilos] = useState<EstiloInfo[]>([]);
+	const [composicion, setComposicion] = useState<string>("");
+	const [composiciones, setComposiciones] = useState<ComposicionInfo[]>([]);
 	const [video, setVideo] = useState<VideoResponse | null>(null);
 	const [generandoVideo, setGenerandoVideo] = useState(false);
 	const [editandoId, setEditandoId] = useState<string | null>(null);
@@ -332,6 +335,7 @@ const SocialStudio = () => {
 				setTemplates(cat.templates);
 				setFormats(cat.formats);
 				setEstilos(cat.estilos || []);
+				setComposiciones(cat.composiciones || []);
 				setFormato(cat.defaultFormat);
 				if (hp) setHealth({ renderer: hp.renderer.online, claude: hp.claudeConfigurado });
 			} catch (err: any) {
@@ -353,6 +357,7 @@ const SocialStudio = () => {
 		setVariantes([]);
 		setVideo(null);
 		setEstilo("");
+		setComposicion("");
 		setWarnings([]);
 		setEditandoId(null);
 	}, [tplActual]);
@@ -403,7 +408,13 @@ const SocialStudio = () => {
 	const handleRenderizar = async () => {
 		setRenderizando(true);
 		try {
-			const res = await renderContent({ templateId, contenido, formato, estilo: estilo || undefined });
+			const res = await renderContent({
+				templateId,
+				contenido,
+				formato,
+				estilo: estilo || undefined,
+				composicion: composicion || undefined,
+			});
 			setImages(res.images);
 			enqueueSnackbar(`Render listo en ${res.ms} ms`, { variant: "success" });
 		} catch (err: any) {
@@ -425,7 +436,7 @@ const SocialStudio = () => {
 	const handleVariantes = async () => {
 		setGenerandoVariantes(true);
 		try {
-			const res = await renderAllFormats({ templateId, contenido, estilo: estilo || undefined });
+			const res = await renderAllFormats({ templateId, contenido, estilo: estilo || undefined, composicion: composicion || undefined });
 			setVariantes(res);
 			const fallidos = res.filter((v) => v.error);
 			if (fallidos.length) {
@@ -479,7 +490,15 @@ const SocialStudio = () => {
 		setGuardando(true);
 		try {
 			if (editandoId) {
-				await updatePost(editandoId, { titulo: titulo.trim(), formato, contenido, caption, animacion, estilo: estilo || null });
+				await updatePost(editandoId, {
+					titulo: titulo.trim(),
+					formato,
+					contenido,
+					caption,
+					animacion,
+					estilo: estilo || null,
+					composicion: composicion || null,
+				});
 				enqueueSnackbar("Post actualizado", { variant: "success" });
 			} else {
 				const creado = await createPost({
@@ -491,6 +510,7 @@ const SocialStudio = () => {
 					caption,
 					animacion,
 					estilo: estilo || undefined,
+					composicion: composicion || undefined,
 				});
 				setEditandoId(creado._id);
 				enqueueSnackbar("Post guardado", { variant: "success" });
@@ -513,6 +533,7 @@ const SocialStudio = () => {
 		// Se setea despues del efecto de reset de plantilla.
 		if (post.animacion) setAnimacion(post.animacion);
 		setEstilo(post.estilo || "");
+		setComposicion(post.composicion || "");
 		setTimeout(() => {
 			setContenido(post.contenido);
 			setEditandoId(post._id);
@@ -592,6 +613,7 @@ const SocialStudio = () => {
 		setVariantes([]);
 		setVideo(null);
 		setEstilo("");
+		setComposicion("");
 		setWarnings([]);
 		setEditandoId(null);
 	};
@@ -661,6 +683,20 @@ const SocialStudio = () => {
 									{estilos.map((es) => (
 										<MenuItem key={es.id} value={es.id}>
 											{es.label} — {es.oscuro ? "oscuro" : "claro"}
+										</MenuItem>
+									))}
+								</Select>
+							</FormControl>
+
+							<FormControl fullWidth size="small">
+								<InputLabel>Composición</InputLabel>
+								<Select value={composicion} label="Composición" onChange={(e) => setComposicion(e.target.value)}>
+									<MenuItem value="">
+										<em>La de la plantilla{tplActual?.composicionPorDefecto ? ` (${tplActual.composicionPorDefecto})` : ""}</em>
+									</MenuItem>
+									{composiciones.map((cm) => (
+										<MenuItem key={cm.id} value={cm.id}>
+											{cm.label}
 										</MenuItem>
 									))}
 								</Select>
