@@ -13,7 +13,7 @@
  * Backend: la-marketing-service, /api/social/* (via mktAxios).
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // material-ui
 import {
@@ -311,6 +311,14 @@ const SocialStudio = () => {
 	// Video de un post guardado, sin pasar por el estudio.
 	const [videoPost, setVideoPost] = useState<{ post: SocialPost; video: VideoResponse | null } | null>(null);
 	const [generandoVideoPost, setGenerandoVideoPost] = useState(false);
+	// El renderer atiende los videos de a uno. Si se dispara otro mientras hay
+	// uno en curso queda esperando sin que la pantalla lo explique, así que se
+	// bloquean las dos entradas --estudio y tabla-- con un único estado.
+	const videoEnCurso = generandoVideo || generandoVideoPost;
+	// El estado se refleja recién en el próximo render, así que un doble clic
+	// rápido alcanza para disparar dos pedidos antes de que el botón se
+	// deshabilite. La ref se actualiza en el acto.
+	const videoEnVuelo = useRef(false);
 
 	// --- duplicado (series recurrentes: UMA mes a mes, indices, etc.)
 	const [aDuplicar, setADuplicar] = useState<SocialPost | null>(null);
@@ -478,6 +486,8 @@ const SocialStudio = () => {
 	};
 
 	const handleVideo = async () => {
+		if (videoEnVuelo.current) return;
+		videoEnVuelo.current = true;
 		setGenerandoVideo(true);
 		setVideo(null);
 		try {
@@ -489,6 +499,7 @@ const SocialStudio = () => {
 			if (data?.validationErrors?.length) setWarnings(data.validationErrors);
 			enqueueSnackbar(data?.error || "No se pudo generar el video", { variant: "error" });
 		} finally {
+			videoEnVuelo.current = false;
 			setGenerandoVideo(false);
 		}
 	};
@@ -557,6 +568,8 @@ const SocialStudio = () => {
 	// Genera el video de un post guardado usando la animación que el post tiene
 	// grabada: el flujo mensual es duplicar, cambiar datos y pedir el video.
 	const handleVideoDePost = async (post: SocialPost) => {
+		if (videoEnVuelo.current) return;
+		videoEnVuelo.current = true;
 		setVideoPost({ post, video: null });
 		setGenerandoVideoPost(true);
 		try {
@@ -566,6 +579,7 @@ const SocialStudio = () => {
 			enqueueSnackbar(err?.response?.data?.error || "No se pudo generar el video", { variant: "error" });
 			setVideoPost(null);
 		} finally {
+			videoEnVuelo.current = false;
 			setGenerandoVideoPost(false);
 		}
 	};
@@ -849,7 +863,7 @@ const SocialStudio = () => {
 										variant="contained"
 										fullWidth
 										startIcon={generandoVideo ? <CircularProgress size={16} color="inherit" /> : <VideoPlay size={18} />}
-										disabled={generandoVideo || excesos.length > 0 || !health?.renderer}
+										disabled={videoEnCurso || excesos.length > 0 || !health?.renderer}
 										onClick={handleVideo}
 									>
 										{generandoVideo ? "Renderizando video…" : "Generar video"}
@@ -1050,10 +1064,14 @@ const SocialStudio = () => {
 												<Button size="small" onClick={() => handleAbrirPost(p)}>
 													Abrir
 												</Button>
-												<Tooltip title="Generar video con la animación guardada">
-													<IconButton size="small" onClick={() => handleVideoDePost(p)}>
-														<VideoPlay size={16} />
-													</IconButton>
+												<Tooltip title={videoEnCurso ? "Hay un video generándose" : "Generar video con la animación guardada"}>
+													{/* El span hace falta para que el tooltip siga apareciendo
+													    con el botón deshabilitado. */}
+													<span>
+														<IconButton size="small" disabled={videoEnCurso} onClick={() => handleVideoDePost(p)}>
+															<VideoPlay size={16} />
+														</IconButton>
+													</span>
 												</Tooltip>
 												<Tooltip title="Duplicar cambiando solo los datos">
 													<IconButton size="small" onClick={() => handleAbrirDuplicar(p)}>
