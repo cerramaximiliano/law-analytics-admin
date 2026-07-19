@@ -60,6 +60,7 @@ import {
 	SocialPost,
 	TemplateId,
 	TemplateInfo,
+	EstiloInfo,
 	VarianteFormato,
 	VideoResponse,
 	AnimacionInfo,
@@ -282,6 +283,9 @@ const SocialStudio = () => {
 	const [generandoVariantes, setGenerandoVariantes] = useState(false);
 	// --- video (story 1080x1920)
 	const [animacion, setAnimacion] = useState("entrada");
+	// Estilo visual: transversal a las plantillas. "" = el que trae la plantilla.
+	const [estilo, setEstilo] = useState<string>("");
+	const [estilos, setEstilos] = useState<EstiloInfo[]>([]);
 	const [video, setVideo] = useState<VideoResponse | null>(null);
 	const [generandoVideo, setGenerandoVideo] = useState(false);
 	const [editandoId, setEditandoId] = useState<string | null>(null);
@@ -327,6 +331,7 @@ const SocialStudio = () => {
 				if (cancelado) return;
 				setTemplates(cat.templates);
 				setFormats(cat.formats);
+				setEstilos(cat.estilos || []);
 				setFormato(cat.defaultFormat);
 				if (hp) setHealth({ renderer: hp.renderer.online, claude: hp.claudeConfigurado });
 			} catch (err: any) {
@@ -347,6 +352,7 @@ const SocialStudio = () => {
 		setImages([]);
 		setVariantes([]);
 		setVideo(null);
+		setEstilo("");
 		setWarnings([]);
 		setEditandoId(null);
 	}, [tplActual]);
@@ -397,7 +403,7 @@ const SocialStudio = () => {
 	const handleRenderizar = async () => {
 		setRenderizando(true);
 		try {
-			const res = await renderContent({ templateId, contenido, formato });
+			const res = await renderContent({ templateId, contenido, formato, estilo: estilo || undefined });
 			setImages(res.images);
 			enqueueSnackbar(`Render listo en ${res.ms} ms`, { variant: "success" });
 		} catch (err: any) {
@@ -419,7 +425,7 @@ const SocialStudio = () => {
 	const handleVariantes = async () => {
 		setGenerandoVariantes(true);
 		try {
-			const res = await renderAllFormats({ templateId, contenido });
+			const res = await renderAllFormats({ templateId, contenido, estilo: estilo || undefined });
 			setVariantes(res);
 			const fallidos = res.filter((v) => v.error);
 			if (fallidos.length) {
@@ -473,7 +479,7 @@ const SocialStudio = () => {
 		setGuardando(true);
 		try {
 			if (editandoId) {
-				await updatePost(editandoId, { titulo: titulo.trim(), formato, contenido, caption, animacion });
+				await updatePost(editandoId, { titulo: titulo.trim(), formato, contenido, caption, animacion, estilo: estilo || null });
 				enqueueSnackbar("Post actualizado", { variant: "success" });
 			} else {
 				const creado = await createPost({
@@ -484,6 +490,7 @@ const SocialStudio = () => {
 					contenido,
 					caption,
 					animacion,
+					estilo: estilo || undefined,
 				});
 				setEditandoId(creado._id);
 				enqueueSnackbar("Post guardado", { variant: "success" });
@@ -505,6 +512,7 @@ const SocialStudio = () => {
 		setCaption(post.caption || "");
 		// Se setea despues del efecto de reset de plantilla.
 		if (post.animacion) setAnimacion(post.animacion);
+		setEstilo(post.estilo || "");
 		setTimeout(() => {
 			setContenido(post.contenido);
 			setEditandoId(post._id);
@@ -583,6 +591,7 @@ const SocialStudio = () => {
 		setImages([]);
 		setVariantes([]);
 		setVideo(null);
+		setEstilo("");
 		setWarnings([]);
 		setEditandoId(null);
 	};
@@ -643,9 +652,28 @@ const SocialStudio = () => {
 								</FormControl>
 							</Stack>
 
+							<FormControl fullWidth size="small">
+								<InputLabel>Estilo</InputLabel>
+								<Select value={estilo} label="Estilo" onChange={(e) => setEstilo(e.target.value)}>
+									<MenuItem value="">
+										<em>El de la plantilla{tplActual?.estiloPorDefecto ? ` (${tplActual.estiloPorDefecto})` : ""}</em>
+									</MenuItem>
+									{estilos.map((es) => (
+										<MenuItem key={es.id} value={es.id}>
+											{es.label} — {es.oscuro ? "oscuro" : "claro"}
+										</MenuItem>
+									))}
+								</Select>
+							</FormControl>
+
 							{tplActual && (
 								<Typography variant="caption" color="text.secondary">
 									{tplActual.description}
+								</Typography>
+							)}
+							{estilo && estilos.find((es) => es.id === estilo) && (
+								<Typography variant="caption" color="text.secondary">
+									{estilos.find((es) => es.id === estilo)?.description}
 								</Typography>
 							)}
 

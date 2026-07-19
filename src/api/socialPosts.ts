@@ -9,6 +9,13 @@ export type EstadoPost = "borrador" | "aprobado" | "publicado";
 /** El contenido es forma libre: cada plantilla define sus propios campos. */
 export type ContenidoPost = Record<string, unknown>;
 
+export interface EstiloInfo {
+	id: string;
+	label: string;
+	description: string;
+	oscuro: boolean;
+}
+
 export interface AnimacionInfo {
 	id: string;
 	label: string;
@@ -24,6 +31,10 @@ export interface TemplateInfo {
 	limits: Record<string, number>;
 	/** Animaciones de video aplicables a esta plantilla. */
 	animaciones?: AnimacionInfo[];
+	/** Estilo visual que mejor le sienta a esta plantilla. */
+	estiloPorDefecto?: string;
+	/** Estilos disponibles (son transversales a todas las plantillas). */
+	estilos?: EstiloInfo[];
 	schema: {
 		type: string;
 		properties: Record<string, { type: string; description?: string }>;
@@ -43,6 +54,8 @@ export interface TemplatesResponse {
 	formats: FormatoInfo[];
 	defaultFormat: FormatoId;
 	animaciones: AnimacionInfo[];
+	estilos: EstiloInfo[];
+	defaultEstilo: string;
 }
 
 /** Video renderizado. `video` viene en base64, sin el prefijo data:. */
@@ -76,6 +89,8 @@ export interface SocialPost {
 	estado: EstadoPost;
 	/** Animación del video, guardada con el post para que sirva como plantilla. */
 	animacion?: string;
+	/** Estilo visual. Null = el que la plantilla trae por defecto. */
+	estilo?: string | null;
 	duracionSeg?: number | null;
 	generacion?: GeneracionMeta;
 	creadoPor: string | null;
@@ -142,6 +157,7 @@ export const renderContent = async (params: {
 	templateId: TemplateId;
 	contenido: ContenidoPost;
 	formato: FormatoId;
+	estilo?: string;
 }): Promise<RenderResponse> => {
 	const res = await mktAxios.post("/api/social/render", params);
 	return res.data.data;
@@ -152,6 +168,7 @@ export const renderAllFormats = async (params: {
 	templateId: TemplateId;
 	contenido: ContenidoPost;
 	formatos?: FormatoId[];
+	estilo?: string;
 }): Promise<VarianteFormato[]> => {
 	const res = await mktAxios.post("/api/social/render-all", params);
 	return res.data.data.variantes;
@@ -212,6 +229,7 @@ export const createPost = async (payload: {
 	estado?: EstadoPost;
 	animacion?: string;
 	duracionSeg?: number;
+	estilo?: string;
 	usage?: { model: string; inputTokens: number; outputTokens: number };
 }): Promise<SocialPost> => {
 	const res = await mktAxios.post("/api/social/posts", payload);
@@ -220,7 +238,9 @@ export const createPost = async (payload: {
 
 export const updatePost = async (
 	id: string,
-	payload: Partial<Pick<SocialPost, "titulo" | "formato" | "contenido" | "caption" | "hashtags" | "estado" | "animacion" | "duracionSeg">>,
+	payload: Partial<
+		Pick<SocialPost, "titulo" | "formato" | "contenido" | "caption" | "hashtags" | "estado" | "animacion" | "duracionSeg" | "estilo">
+	>,
 ): Promise<SocialPost> => {
 	const res = await mktAxios.put(`/api/social/posts/${id}`, payload);
 	return res.data.data;
