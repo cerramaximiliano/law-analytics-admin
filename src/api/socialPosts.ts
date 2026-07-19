@@ -209,6 +209,8 @@ export const renderVideo = async (params: {
 	animacion?: string;
 	duracionSeg?: number;
 	formato?: FormatoId;
+	estilo?: string;
+	composicion?: string;
 }): Promise<VideoResponse> => {
 	// El render de video tarda bastante mas que una imagen: se sube el timeout
 	// del cliente para que no corte antes de que el server termine.
@@ -294,7 +296,7 @@ export const duplicatePost = async (
  */
 export const renderVideoSavedPost = async (
 	id: string,
-	params: { animacion?: string; duracionSeg?: number; formato?: FormatoId } = {},
+	params: { animacion?: string; duracionSeg?: number; formato?: FormatoId; estilo?: string; composicion?: string } = {},
 ): Promise<VideoResponse> => {
 	const res = await mktAxios.post(`/api/social/posts/${id}/video`, params, { timeout: 300000 });
 	return res.data.data;

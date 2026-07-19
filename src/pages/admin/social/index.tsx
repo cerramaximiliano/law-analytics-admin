@@ -512,7 +512,14 @@ const SocialStudio = () => {
 		setGenerandoVideo(true);
 		setVideo(null);
 		try {
-			const r = await renderVideo({ templateId, contenido, animacion, formato: formatoVideo });
+			const r = await renderVideo({
+				templateId,
+				contenido,
+				animacion,
+				formato: formatoVideo,
+				estilo: estilo || undefined,
+				composicion: composicion || undefined,
+			});
 			setVideo(r);
 			enqueueSnackbar(`Video listo: ${r.frames} frames en ${(r.ms / 1000).toFixed(0)}s`, { variant: "success" });
 		} catch (err: any) {
