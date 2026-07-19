@@ -3,7 +3,7 @@ import mktAxios from "utils/mktAxios";
 // ==================== Tipos ====================
 
 export type TemplateId = "novedad" | "dato" | "feature" | "carrusel" | "promo" | "valor-arancel" | "integraciones" | "tutorial";
-export type FormatoId = "feed34" | "feed45" | "square" | "story";
+export type FormatoId = "feed34" | "feed45" | "square" | "story" | "reel";
 export type EstadoPost = "borrador" | "aprobado" | "publicado";
 
 /** El contenido es forma libre: cada plantilla define sus propios campos. */
@@ -34,7 +34,8 @@ export interface AnimacionInfo {
 	id: string;
 	label: string;
 	description: string;
-	duracion: number;
+	/** Solo en las animaciones de post fijo: las transiciones de flujo toman el ritmo de la plantilla. */
+	duracion?: number;
 }
 
 export interface TemplateInfo {

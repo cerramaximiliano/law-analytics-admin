@@ -293,7 +293,12 @@ const SocialStudio = () => {
 	// Variantes: el mismo contenido renderizado en los 4 formatos de una pasada.
 	const [variantes, setVariantes] = useState<VarianteFormato[]>([]);
 	const [generandoVariantes, setGenerandoVariantes] = useState(false);
-	// --- video (story 1080x1920)
+	// Formato del video. Story y Reel comparten medidas pero no zonas seguras:
+	// en Reels la interfaz tapa abajo y a la derecha, y una story se corta cada
+	// 15s, así que para un tutorial largo el destino real es Reel.
+	const [formatoVideo, setFormatoVideo] = useState<FormatoId>("reel");
+
+	// --- video (1080x1920)
 	const [animacion, setAnimacion] = useState("entrada");
 	// Estilo visual: transversal a las plantillas. "" = el que trae la plantilla.
 	const [estilo, setEstilo] = useState<string>("");
@@ -507,7 +512,7 @@ const SocialStudio = () => {
 		setGenerandoVideo(true);
 		setVideo(null);
 		try {
-			const r = await renderVideo({ templateId, contenido, animacion });
+			const r = await renderVideo({ templateId, contenido, animacion, formato: formatoVideo });
 			setVideo(r);
 			enqueueSnackbar(`Video listo: ${r.frames} frames en ${(r.ms / 1000).toFixed(0)}s`, { variant: "success" });
 		} catch (err: any) {
@@ -589,7 +594,7 @@ const SocialStudio = () => {
 		setVideoPost({ post, video: null });
 		setGenerandoVideoPost(true);
 		try {
-			const r = await renderVideoSavedPost(post._id);
+			const r = await renderVideoSavedPost(post._id, { formato: formatoVideo });
 			setVideoPost({ post, video: r });
 		} catch (err: any) {
 			enqueueSnackbar(err?.response?.data?.error || "No se pudo generar el video", { variant: "error" });
@@ -857,15 +862,23 @@ const SocialStudio = () => {
 							<MainCard content={false} sx={{ p: 2 }}>
 								<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
 									<VideoPlay size={18} />
-									<Typography variant="subtitle2">Video (story 1080×1920)</Typography>
+									<Typography variant="subtitle2">Video 1080×1920</Typography>
 								</Stack>
 								<Stack spacing={1.5}>
+									<FormControl fullWidth size="small">
+										<InputLabel>Destino</InputLabel>
+										<Select value={formatoVideo} label="Destino" onChange={(e) => setFormatoVideo(e.target.value as FormatoId)}>
+											<MenuItem value="reel">Reel — hasta 90s</MenuItem>
+											<MenuItem value="story">Story — se corta cada 15s</MenuItem>
+										</Select>
+									</FormControl>
 									<FormControl fullWidth size="small">
 										<InputLabel>Animación</InputLabel>
 										<Select value={animacion} label="Animación" onChange={(e) => setAnimacion(e.target.value)}>
 											{animsDisponibles.map((a) => (
 												<MenuItem key={a.id} value={a.id}>
-													{a.label} · {a.duracion}s
+													{a.label}
+													{a.duracion ? ` · ${a.duracion}s` : ""}
 												</MenuItem>
 											))}
 										</Select>
