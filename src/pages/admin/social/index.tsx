@@ -329,6 +329,22 @@ const SocialStudio = () => {
 	const tplActual = useMemo(() => templates.find((t) => t.id === templateId) || null, [templates, templateId]);
 	const animsDisponibles = useMemo<AnimacionInfo[]>(() => tplActual?.animaciones || [], [tplActual]);
 
+	/**
+	 * Qué animación va a usar realmente un post. Los guardados antes de que
+	 * existieran las transiciones tienen "entrada", que en una plantilla
+	 * multi-slide ya no aplica: el backend cae a la transición por defecto, y
+	 * acá se muestra esa, no la que quedó grabada.
+	 */
+	const animacionEfectiva = useCallback(
+		(post: SocialPost) => {
+			const disponibles = templates.find((t) => t.id === post.templateId)?.animaciones || [];
+			if (!disponibles.length) return post.animacion || "entrada";
+			const guardada = disponibles.find((a) => a.id === post.animacion);
+			return (guardada || disponibles[0]).id;
+		},
+		[templates],
+	);
+
 	const fmtActual = useMemo(() => formats.find((f) => f.id === formato) || null, [formats, formato]);
 
 	// Limites de caracteres excedidos, calculados en vivo sobre lo que se edita.
@@ -1053,7 +1069,7 @@ const SocialStudio = () => {
 											<TableCell>{formats.find((f) => f.id === p.formato)?.label || p.formato}</TableCell>
 											<TableCell>
 												<Typography variant="caption" color="text.secondary">
-													{p.animacion || "entrada"}
+													{animacionEfectiva(p)}
 												</Typography>
 											</TableCell>
 											<TableCell>
@@ -1098,7 +1114,7 @@ const SocialStudio = () => {
 						<Stack alignItems="center" spacing={1.5} sx={{ py: 4 }}>
 							<CircularProgress />
 							<Typography variant="caption" color="text.secondary">
-								Renderizando con la animación «{videoPost?.post.animacion || "entrada"}». Puede tardar entre 30 y 60 segundos.
+								Renderizando con la animación «{videoPost ? animacionEfectiva(videoPost.post) : ""}». Puede tardar entre 30 y 60 segundos.
 							</Typography>
 						</Stack>
 					)}
