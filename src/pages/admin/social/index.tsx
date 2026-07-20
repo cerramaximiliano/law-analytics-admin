@@ -329,6 +329,11 @@ const SocialStudio = () => {
 	// rápido alcanza para disparar dos pedidos antes de que el botón se
 	// deshabilite. La ref se actualiza en el acto.
 	const videoEnVuelo = useRef(false);
+	// Al abrir un post, cambiar la plantilla dispara el efecto de reset de más
+	// abajo, que borra editandoId/estilo/composición. Esta ref le avisa al efecto
+	// que se saltee ESE reset (los valores los pone handleAbrirPost). Se activa
+	// solo si la plantilla realmente cambia, que es cuando el efecto va a correr.
+	const abriendoPost = useRef(false);
 
 	// --- duplicado (series recurrentes: UMA mes a mes, indices, etc.)
 	const [aDuplicar, setADuplicar] = useState<SocialPost | null>(null);
@@ -398,6 +403,12 @@ const SocialStudio = () => {
 	// Al cambiar de plantilla, resetear el contenido a la forma de la nueva.
 	useEffect(() => {
 		if (!tplActual) return;
+		// Abrir un post no debe resetear nada: handleAbrirPost ya cargó los
+		// valores del post, incluida la plantilla.
+		if (abriendoPost.current) {
+			abriendoPost.current = false;
+			return;
+		}
 		setContenido(emptyContent(tplActual));
 		setImages([]);
 		setVariantes([]);
@@ -585,22 +596,22 @@ const SocialStudio = () => {
 	};
 
 	const handleAbrirPost = (post: SocialPost) => {
+		// Si la plantilla cambia, el efecto de reset va a correr: se le pide que
+		// se saltee para no pisar lo que cargamos acá.
+		if (post.templateId !== templateId) abriendoPost.current = true;
 		setTemplateId(post.templateId);
 		setFormato(post.formato);
 		setPrompt(post.prompt || "");
 		setTitulo(post.titulo);
 		setCaption(post.caption || "");
-		// Se setea despues del efecto de reset de plantilla.
 		if (post.animacion) setAnimacion(post.animacion);
 		setEstilo(post.estilo || "");
 		setComposicion(post.composicion || "");
 		setPie(post.pie || "");
-		setTimeout(() => {
-			setContenido(post.contenido);
-			setEditandoId(post._id);
-			setImages([]);
-			setWarnings([]);
-		}, 0);
+		setContenido(post.contenido);
+		setEditandoId(post._id);
+		setImages([]);
+		setWarnings([]);
 		setTab(0);
 	};
 
