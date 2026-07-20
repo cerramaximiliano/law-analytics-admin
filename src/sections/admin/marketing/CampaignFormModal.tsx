@@ -40,7 +40,7 @@ import "dayjs/locale/es";
 import { InfoCircle } from "iconsax-react";
 
 // project imports
-import { Campaign, CampaignInput, CampaignType } from "types/campaign";
+import { Campaign, CampaignInput, CampaignType, AvailablePromo } from "types/campaign";
 import { CampaignService } from "store/reducers/campaign";
 import { useSnackbar } from "notistack";
 
@@ -77,6 +77,8 @@ interface FormValues {
 	timeWindowEnd: string;
 	// Sincronización con segmento
 	syncWithSegment: boolean;
+	// Promo adjunta ("" = sin promo)
+	promoDiscountId: string;
 	// Recurring schedule (for type='recurring')
 	recurringEnabled: boolean;
 	recurringFrequency: "daily" | "weekly" | "monthly" | "yearly";
@@ -197,8 +199,17 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [showTypeHelp, setShowTypeHelp] = useState(false);
+	const [promos, setPromos] = useState<AvailablePromo[]>([]);
 	const isEditMode = mode === "edit";
 	const { enqueueSnackbar } = useSnackbar();
+
+	// Cargar promos disponibles al abrir (para el selector de promo adjunta)
+	useEffect(() => {
+		if (!open) return;
+		CampaignService.getAvailablePromos()
+			.then(setPromos)
+			.catch(() => setPromos([]));
+	}, [open]);
 
 	// Default initial values
 	const defaultInitialValues: FormValues = {
@@ -220,6 +231,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 		timeWindowEnd: "18:00",
 		// Sincronización con segmento (por defecto habilitada)
 		syncWithSegment: true,
+		promoDiscountId: "",
 		// Recurring schedule defaults
 		recurringEnabled: false,
 		recurringFrequency: "monthly",
@@ -265,6 +277,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 							...campaign.audience,
 							syncWithSegment: values.syncWithSegment,
 						},
+						promoDiscountId: values.promoDiscountId || null,
 						settings: {
 							...campaign.settings,
 							timezone: values.timezone,
@@ -306,6 +319,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 						isPermanent: values.isPermanent,
 						category: values.category || undefined,
 						tags: tagsArray.length > 0 ? tagsArray : undefined,
+						promoDiscountId: values.promoDiscountId || null,
 						settings: {
 							timezone: values.timezone,
 							throttleRate: values.throttleRate,
@@ -411,6 +425,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 				timeWindowEnd: campaign.settings?.sendingRestrictions?.timeWindow?.end || "18:00",
 				// Sincronización con segmento (si no está definido, por defecto true)
 				syncWithSegment: campaign.audience?.syncWithSegment !== false,
+				promoDiscountId: campaign.promoDiscountId || "",
 				// Recurring schedule
 				recurringEnabled: (campaign.settings as any)?.recurringSchedule?.enabled || false,
 				recurringFrequency: (campaign.settings as any)?.recurringSchedule?.frequency || "monthly",
@@ -674,6 +689,55 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 									placeholder="Ej: Noticias, Eventos, Promociones"
 								/>
 							</FormControl>
+						</Grid>
+
+						{/* Promo adjunta (descuento) */}
+						<Grid item xs={12}>
+							<FormControl fullWidth>
+								<InputLabel id="promo-label">Promo adjunta (descuento)</InputLabel>
+								<Select
+									labelId="promo-label"
+									id="promoDiscountId"
+									name="promoDiscountId"
+									value={formik.values.promoDiscountId}
+									onChange={formik.handleChange}
+									label="Promo adjunta (descuento)"
+								>
+									<MenuItem value="">
+										<em>Sin promo adjunta</em>
+									</MenuItem>
+									{promos.map((promo) => (
+										<MenuItem key={promo._id} value={promo._id}>
+											<Stack direction="row" spacing={1} alignItems="center">
+												<Typography variant="body2" sx={{ fontFamily: "monospace", fontWeight: 600 }}>
+													{promo.code}
+												</Typography>
+												<Typography variant="body2" color="text.secondary">
+													{promo.discountType === "percentage" ? `${promo.discountValue}%` : `${promo.currency} ${promo.discountValue}`}
+													{promo.validUntil ? ` · hasta ${dayjs(promo.validUntil).format("DD/MM/YYYY")}` : ""}
+												</Typography>
+												{!promo.vigente && <Chip size="small" color="warning" variant="outlined" label="no vigente" />}
+												{promo.targeted && <Chip size="small" color="info" variant="outlined" label="dirigida" />}
+											</Stack>
+										</MenuItem>
+									))}
+								</Select>
+								<FormHelperText>
+									Define qué código completa {"{{descuento.*}}"} y {"{{tablaPrecios}}"} en los emails. Obligatoria para activar campañas cuyos
+									templates usan contenido de descuento.
+								</FormHelperText>
+							</FormControl>
+							{(() => {
+								const selected = promos.find((p) => p._id === formik.values.promoDiscountId);
+								if (!selected || selected.vigente) return null;
+								return (
+									<Alert severity="warning" sx={{ mt: 1 }}>
+										La promo <strong>{selected.code}</strong> no está vigente hoy
+										{selected.validUntil ? ` (vence/venció el ${dayjs(selected.validUntil).format("DD/MM/YYYY")})` : ""}. La campaña no va a
+										poder activarse mientras la promo no esté vigente.
+									</Alert>
+								);
+							})()}
 						</Grid>
 
 						{/* Timezone */}

@@ -91,6 +91,10 @@ export interface Campaign {
 	metrics: CampaignMetrics;
 	audience: CampaignAudience;
 	settings: CampaignSettings;
+	// Promo adjunta (doc de discountcodes). Si está seteada, el contenido dinámico
+	// de descuento ({{descuento.*}}, {{tablaPrecios}}) usa ese código en vez de la
+	// selección automática. Requerida para activar campañas cuyos emails usan descuento.
+	promoDiscountId?: string | null;
 	createdBy?: string;
 	lastModifiedBy?: string;
 	createdAt?: Date | string;
@@ -129,6 +133,34 @@ export interface CampaignInput {
 	exitConditions?: Record<string, any>;
 	audience?: Partial<CampaignAudience>;
 	settings?: Partial<CampaignSettings>;
+	promoDiscountId?: string | null;
+}
+
+// Código de descuento disponible para adjuntar a una campaña
+// (GET /api/campaigns/promos/available)
+export interface AvailablePromo {
+	_id: string;
+	code: string;
+	discountType: "percentage" | "fixed_amount";
+	discountValue: number;
+	currency: string;
+	validFrom?: string;
+	validUntil?: string;
+	duration?: string;
+	durationInMonths?: number | null;
+	priority: number;
+	isPublic: boolean;
+	targeted: boolean;
+	vigente: boolean;
+}
+
+// Estado de uso de contenido de descuento de una campaña
+// (GET /api/campaigns/:id/discount-usage)
+export interface CampaignDiscountUsage {
+	usesDiscountContent: boolean;
+	promoDiscountId: string | null;
+	promo: { _id: string; code: string | null; valid: boolean; reason: string | null } | null;
+	activationBlocked: boolean;
 }
 
 // Types for Campaign Send Logs

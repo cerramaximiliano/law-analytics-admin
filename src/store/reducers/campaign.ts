@@ -6,6 +6,8 @@ import {
 	CampaignSendLogsResponse,
 	CampaignSendStatsResponse,
 	CampaignAudienceStatsResponse,
+	AvailablePromo,
+	CampaignDiscountUsage,
 } from "types/campaign";
 import { CampaignEmailResponse, SingleCampaignEmailResponse, CampaignEmailInput } from "types/campaign-email";
 import { ContactResponse } from "types/marketing-contact";
@@ -46,6 +48,26 @@ export const CampaignService = {
 	getCampaignById: async (id: string): Promise<Campaign> => {
 		try {
 			const response = await mktAxios.get(`/api/campaigns/${id}`);
+			return response.data.data;
+		} catch (error) {
+			throw error;
+		}
+	},
+
+	// Códigos de descuento disponibles para adjuntar como promo de campaña
+	getAvailablePromos: async (): Promise<AvailablePromo[]> => {
+		try {
+			const response = await mktAxios.get("/api/campaigns/promos/available");
+			return response.data.data;
+		} catch (error) {
+			throw error;
+		}
+	},
+
+	// Estado de uso de contenido de descuento (para warnings antes de activar)
+	getDiscountUsage: async (id: string): Promise<CampaignDiscountUsage> => {
+		try {
+			const response = await mktAxios.get(`/api/campaigns/${id}/discount-usage`);
 			return response.data.data;
 		} catch (error) {
 			throw error;

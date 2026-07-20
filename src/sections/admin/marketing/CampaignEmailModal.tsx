@@ -4,6 +4,7 @@ import { useFormik } from "formik";
 
 // material-ui
 import {
+	Alert,
 	Box,
 	Button,
 	CircularProgress,
@@ -111,6 +112,18 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 	const [templates, setTemplates] = useState<EmailTemplate[]>([]);
 	const [templatesLoading, setTemplatesLoading] = useState<boolean>(false);
 	const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
+
+	// El template usa contenido dinámico de descuento ({{descuento.*}}, {{tablaPrecios}},
+	// {{ofertaActual}}): sin una promo adjunta en la campaña, el server bloquea la
+	// activación. Mismo patrón que DISCOUNT_CONTENT_REGEX del backend.
+	const discountContentRegex = /(\{\{|\$\{)\s*(descuento\.|tablaPrecios|ofertaActual)/;
+	const templateUsesDiscount = useMemo(() => {
+		if (!selectedTemplate) return false;
+		return (
+			discountContentRegex.test(selectedTemplate.subject || "") || discountContentRegex.test(selectedTemplate.htmlBody || "")
+		);
+	}, [selectedTemplate]);
+	const missingPromo = templateUsesDiscount && !campaign.promoDiscountId;
 
 	// Agrupar plantillas por categoría
 	const groupedTemplates = useMemo(() => {
@@ -568,6 +581,22 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 										)}
 									</FormHelperText>
 								</FormControl>
+
+								{/* Contexto de seguridad de promo: aviso temprano al elegir el template.
+								    No bloquea el guardado (la promo puede adjuntarse después desde el form
+								    de la campaña) — el bloqueo duro lo hace el server al activar. */}
+								{missingPromo && (
+									<Alert severity="warning" sx={{ mb: 2 }}>
+										Esta plantilla usa contenido dinámico de descuento ({"{{descuento.*}}"} / {"{{tablaPrecios}}"}) pero la campaña{" "}
+										<strong>no tiene una promo adjunta</strong>. Podés guardar el email, pero la campaña no va a poder activarse hasta
+										adjuntar un código de descuento vigente desde el formulario de la campaña.
+									</Alert>
+								)}
+								{templateUsesDiscount && campaign.promoDiscountId && (
+									<Alert severity="info" sx={{ mb: 2 }}>
+										Esta plantilla usa contenido dinámico de descuento — se completará con la promo adjunta a la campaña.
+									</Alert>
+								)}
 
 								{templatesLoading && (
 									<Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
