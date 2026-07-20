@@ -1,5 +1,5 @@
 // assets
-import { Book, HierarchySquare3, Chart, DocumentText } from "iconsax-react";
+import { Book, HierarchySquare3, Chart, DocumentText, DollarCircle } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -62,6 +62,14 @@ const recursos: NavItemType = {
 			type: "item",
 			icon: DocumentText,
 			url: "/recursos/datos-previsionales",
+			breadcrumbs: true,
+		},
+		{
+			id: "valores-arancelarios",
+			title: "Datos Arancelarios",
+			type: "item",
+			icon: DollarCircle,
+			url: "/recursos/valores-arancelarios",
 			breadcrumbs: true,
 		},
 	],
