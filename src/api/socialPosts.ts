@@ -117,6 +117,8 @@ export interface SocialPost {
 	caption: string;
 	hashtags: string[];
 	estado: EstadoPost;
+	/** Fecha en que se marcó como publicado. Null si no se publicó. */
+	publicadoEn?: string | null;
 	/** Animación del video, guardada con el post para que sirva como plantilla. */
 	animacion?: string;
 	/** Estilo visual. Null = el que la plantilla trae por defecto. */
@@ -300,7 +302,7 @@ export const updatePost = async (
 	payload: Partial<
 		Pick<
 			SocialPost,
-			"titulo" | "formato" | "contenido" | "caption" | "hashtags" | "estado" | "animacion" | "duracionSeg" | "estilo" | "composicion" | "pie"
+			"titulo" | "formato" | "contenido" | "caption" | "hashtags" | "estado" | "animacion" | "duracionSeg" | "estilo" | "composicion" | "pie" | "publicadoEn"
 		>
 	>,
 ): Promise<SocialPost> => {

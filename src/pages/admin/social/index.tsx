@@ -49,7 +49,7 @@ import {
 
 // third-party
 import { useSnackbar } from "notistack";
-import { Add, ClipboardText, Copy, DocumentDownload, Gallery, Magicpen, Refresh, Trash, VideoPlay } from "iconsax-react";
+import { Add, ClipboardText, Copy, DocumentDownload, Gallery, Magicpen, Refresh, TickCircle, Trash, VideoPlay } from "iconsax-react";
 
 // project imports
 import MainCard from "components/MainCard";
@@ -651,6 +651,17 @@ const SocialStudio = () => {
 
 	// Genera el video de un post guardado usando la animación que el post tiene
 	// grabada: el flujo mensual es duplicar, cambiar datos y pedir el video.
+	const handleTogglePublicado = async (post: SocialPost) => {
+		const nuevo = post.estado === "publicado" ? "borrador" : "publicado";
+		try {
+			await updatePost(post._id, { estado: nuevo });
+			enqueueSnackbar(nuevo === "publicado" ? "Marcado como publicado" : "Vuelto a borrador", { variant: "success" });
+			cargarPosts();
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.error || "No se pudo cambiar el estado", { variant: "error" });
+		}
+	};
+
 	const handleVideoDePost = async (post: SocialPost) => {
 		if (videoEnVuelo.current) return;
 		videoEnVuelo.current = true;
@@ -1183,12 +1194,26 @@ const SocialStudio = () => {
 											</TableCell>
 											<TableCell>
 												<Chip size="small" label={p.estado} color={ESTADO_COLOR[p.estado] || "default"} variant="outlined" />
+												{p.publicadoEn && (
+													<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+														{fmtDate(p.publicadoEn)}
+													</Typography>
+												)}
 											</TableCell>
 											<TableCell>{fmtDate(p.createdAt)}</TableCell>
 											<TableCell align="right">
 												<Button size="small" onClick={() => handleAbrirPost(p)}>
 													Abrir
 												</Button>
+												<Tooltip title={p.estado === "publicado" ? "Publicado — volver a borrador" : "Marcar como publicado"}>
+													<IconButton
+														size="small"
+														color={p.estado === "publicado" ? "success" : "default"}
+														onClick={() => handleTogglePublicado(p)}
+													>
+														<TickCircle size={16} variant={p.estado === "publicado" ? "Bold" : "Linear"} />
+													</IconButton>
+												</Tooltip>
 												<Tooltip title={p.caption ? "Copiar caption al portapapeles" : "Este post no tiene caption"}>
 													<span>
 														<IconButton size="small" disabled={!p.caption} onClick={() => copiarCaption(p.caption)}>
