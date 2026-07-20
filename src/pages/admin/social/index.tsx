@@ -49,7 +49,7 @@ import {
 
 // third-party
 import { useSnackbar } from "notistack";
-import { Add, Copy, DocumentDownload, Gallery, Magicpen, Refresh, Trash, VideoPlay } from "iconsax-react";
+import { Add, ClipboardText, Copy, DocumentDownload, Gallery, Magicpen, Refresh, Trash, VideoPlay } from "iconsax-react";
 
 // project imports
 import MainCard from "components/MainCard";
@@ -553,6 +553,21 @@ const SocialStudio = () => {
 		}
 	};
 
+	const copiarCaption = async (texto: string) => {
+		const limpio = (texto || "").trim();
+		if (!limpio) {
+			enqueueSnackbar("No hay caption para copiar", { variant: "warning" });
+			return;
+		}
+		try {
+			// navigator.clipboard requiere contexto seguro (https), que el panel tiene.
+			await navigator.clipboard.writeText(limpio);
+			enqueueSnackbar("Caption copiado al portapapeles", { variant: "success" });
+		} catch {
+			enqueueSnackbar("No se pudo copiar automáticamente", { variant: "error" });
+		}
+	};
+
 	const handleCaptionIA = async () => {
 		try {
 			setGenerandoCaption(true);
@@ -893,16 +908,20 @@ const SocialStudio = () => {
 								onChange={(e) => setCaption(e.target.value)}
 								helperText={`${caption.length}/2200 — el texto que acompaña a la imagen`}
 							/>
-							<Button
-								variant="text"
-								size="small"
-								startIcon={generandoCaption ? <CircularProgress size={14} color="inherit" /> : <Magicpen size={16} />}
-								disabled={generandoCaption}
-								onClick={handleCaptionIA}
-								sx={{ alignSelf: "flex-start" }}
-							>
-								{generandoCaption ? "Generando…" : "Generar caption con IA"}
-							</Button>
+							<Stack direction="row" spacing={1}>
+								<Button
+									variant="text"
+									size="small"
+									startIcon={generandoCaption ? <CircularProgress size={14} color="inherit" /> : <Magicpen size={16} />}
+									disabled={generandoCaption}
+									onClick={handleCaptionIA}
+								>
+									{generandoCaption ? "Generando…" : "Generar caption con IA"}
+								</Button>
+								<Button variant="text" size="small" startIcon={<ClipboardText size={16} />} disabled={!caption.trim()} onClick={() => copiarCaption(caption)}>
+									Copiar caption
+								</Button>
+							</Stack>
 						</Stack>
 					</Grid>
 
@@ -1170,6 +1189,13 @@ const SocialStudio = () => {
 												<Button size="small" onClick={() => handleAbrirPost(p)}>
 													Abrir
 												</Button>
+												<Tooltip title={p.caption ? "Copiar caption al portapapeles" : "Este post no tiene caption"}>
+													<span>
+														<IconButton size="small" disabled={!p.caption} onClick={() => copiarCaption(p.caption)}>
+															<ClipboardText size={16} />
+														</IconButton>
+													</span>
+												</Tooltip>
 												<Tooltip title={videoEnCurso ? "Hay un video generándose" : "Generar video con la animación guardada"}>
 													{/* El span hace falta para que el tooltip siga apareciendo
 													    con el botón deshabilitado. */}
