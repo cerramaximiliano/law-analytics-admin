@@ -1,5 +1,5 @@
 // assets
-import { Book, HierarchySquare3, Chart, DocumentText, DollarCircle } from "iconsax-react";
+import { Book, HierarchySquare3, Chart, DocumentText, DollarCircle, Calendar } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";
@@ -70,6 +70,14 @@ const recursos: NavItemType = {
 			type: "item",
 			icon: DollarCircle,
 			url: "/recursos/valores-arancelarios",
+			breadcrumbs: true,
+		},
+		{
+			id: "efemerides",
+			title: "Efemérides",
+			type: "item",
+			icon: Calendar,
+			url: "/recursos/efemerides",
 			breadcrumbs: true,
 		},
 	],

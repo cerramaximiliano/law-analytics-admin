@@ -118,6 +118,7 @@ const Jurisprudencia = Loadable(lazy(() => import("pages/recursos/Jurisprudencia
 const TasasInteres = Loadable(lazy(() => import("pages/recursos/tasas")));
 const DatosPrevisionales = Loadable(lazy(() => import("pages/recursos/datos-previsionales")));
 const ValoresArancelarios = Loadable(lazy(() => import("pages/recursos/valores-arancelarios")));
+const Efemerides = Loadable(lazy(() => import("pages/recursos/efemerides")));
 
 // Documentation pages
 const LegalDocuments = Loadable(lazy(() => import("pages/documentation/legal-documents")));
@@ -998,6 +999,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<ValoresArancelarios />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "efemerides",
+							element: (
+								<AdminRoleGuard>
+									<Efemerides />
 								</AdminRoleGuard>
 							),
 						},
