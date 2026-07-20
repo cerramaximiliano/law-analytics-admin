@@ -187,6 +187,22 @@ export const generateContent = async (params: { templateId: TemplateId; prompt: 
 	return res.data.data;
 };
 
+/** Caption + hashtags generados con IA a partir del contenido del post. */
+export interface CaptionResponse {
+	caption: string;
+	hashtags: string[];
+	usage: { model: string; inputTokens: number | null; outputTokens: number | null };
+}
+
+export const generateCaption = async (params: {
+	templateId: TemplateId;
+	contenido: ContenidoPost;
+	notas?: string;
+}): Promise<CaptionResponse> => {
+	const res = await mktAxios.post("/api/social/caption", params);
+	return res.data.data;
+};
+
 export const renderContent = async (params: {
 	templateId: TemplateId;
 	contenido: ContenidoPost;

@@ -71,6 +71,7 @@ import {
 	downloadImage,
 	duplicatePost,
 	generateContent,
+	generateCaption,
 	getHealth,
 	getTemplates,
 	listPosts,
@@ -334,6 +335,7 @@ const SocialStudio = () => {
 	// que se saltee ESE reset (los valores los pone handleAbrirPost). Se activa
 	// solo si la plantilla realmente cambia, que es cuando el efecto va a correr.
 	const abriendoPost = useRef(false);
+	const [generandoCaption, setGenerandoCaption] = useState(false);
 
 	// --- duplicado (series recurrentes: UMA mes a mes, indices, etc.)
 	const [aDuplicar, setADuplicar] = useState<SocialPost | null>(null);
@@ -548,6 +550,23 @@ const SocialStudio = () => {
 		} finally {
 			videoEnVuelo.current = false;
 			setGenerandoVideo(false);
+		}
+	};
+
+	const handleCaptionIA = async () => {
+		try {
+			setGenerandoCaption(true);
+			// La generación también devuelve hashtags, pero el estudio no gestiona
+			// ese campo todavía; si vienen, se agregan al final del caption, que
+			// es como aparecen en Instagram.
+			const r = await generateCaption({ templateId, contenido });
+			const texto = r.hashtags?.length ? `${r.caption}\n\n${r.hashtags.map((h) => `#${h}`).join(" ")}` : r.caption;
+			setCaption(texto);
+			enqueueSnackbar("Caption generado", { variant: "success" });
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.error || "No se pudo generar el caption", { variant: "error" });
+		} finally {
+			setGenerandoCaption(false);
 		}
 	};
 
@@ -874,6 +893,16 @@ const SocialStudio = () => {
 								onChange={(e) => setCaption(e.target.value)}
 								helperText={`${caption.length}/2200 — el texto que acompaña a la imagen`}
 							/>
+							<Button
+								variant="text"
+								size="small"
+								startIcon={generandoCaption ? <CircularProgress size={14} color="inherit" /> : <Magicpen size={16} />}
+								disabled={generandoCaption}
+								onClick={handleCaptionIA}
+								sx={{ alignSelf: "flex-start" }}
+							>
+								{generandoCaption ? "Generando…" : "Generar caption con IA"}
+							</Button>
 						</Stack>
 					</Grid>
 
