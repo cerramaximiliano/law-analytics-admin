@@ -554,7 +554,7 @@ const UserResources: React.FC = () => {
 
 	// Escritos tab states
 	const [escritos, setEscritos] = useState<PostalDocument[]>([]);
-	const [escritosTotal, setEscritosTotal] = useState(0);
+	const [, setEscritosTotal] = useState(0);
 	const [escritosLoading, setEscritosLoading] = useState(false);
 	const [escritosStats, setEscritosStats] = useState<PostalDocumentStats | null>(null);
 	const [escritosFilterStatus, setEscritosFilterStatus] = useState("");
@@ -2174,6 +2174,7 @@ const UserResources: React.FC = () => {
 											</TableCell>
 											<TableCell>Último Login</TableCell>
 											<TableCell align="center">Días Activos</TableCell>
+											<TableCell align="center">Visor email</TableCell>
 											<TableCell>
 												<TableSortLabel
 													active={sortBy === "createdAt"}
@@ -2262,7 +2263,7 @@ const UserResources: React.FC = () => {
 								) : isUsersTab ? (
 									users.length === 0 ? (
 										<TableRow>
-											<TableCell colSpan={13} align="center">
+											<TableCell colSpan={14} align="center">
 												<Typography color="textSecondary" sx={{ py: 4 }}>
 													No se encontraron usuarios
 												</Typography>
@@ -2336,6 +2337,28 @@ const UserResources: React.FC = () => {
 														}
 														sx={{ minWidth: 40 }}
 													/>
+												</TableCell>
+												<TableCell align="center">
+													{(user.emailViewer?.views || 0) + (user.emailViewer?.loginContinues || 0) > 0 ? (
+														<Tooltip
+															title={`${user.emailViewer?.views || 0} documentos vistos desde emails · ${
+																user.emailViewer?.loginContinues || 0
+															} volvieron a la app${
+																user.emailViewer?.lastActivity ? ` · última: ${dayjs(user.emailViewer.lastActivity).format("DD/MM/YY")}` : ""
+															}`}
+														>
+															<Stack direction="row" spacing={0.5} justifyContent="center">
+																<Chip size="small" variant="outlined" label={user.emailViewer?.views || 0} icon={<Eye size={12} />} />
+																{(user.emailViewer?.loginContinues || 0) > 0 && (
+																	<Chip size="small" color="warning" variant="outlined" label={`${user.emailViewer?.loginContinues} → app`} />
+																)}
+															</Stack>
+														</Tooltip>
+													) : (
+														<Typography variant="body2" color="textSecondary">
+															—
+														</Typography>
+													)}
 												</TableCell>
 												<TableCell>{formatDate(user.createdAt)}</TableCell>
 											</TableRow>

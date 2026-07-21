@@ -492,7 +492,7 @@ const UsersDashboard: React.FC = () => {
 			{/* Tab 0: Top usuarios */}
 			<TabPanel value={tab} index={0}>
 				<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-					Score = días activos × 10 + logins (ventana de {windowDays} días)
+					Score = días activos × 10 + logins + vistas de emails × 2 + logins desde email × 5 (ventana de {windowDays} días)
 				</Typography>
 				{topLoading && <LinearProgress sx={{ mb: 1 }} />}
 				<TableContainer>
@@ -505,11 +505,12 @@ const UsersDashboard: React.FC = () => {
 								<TableCell align="right">Score</TableCell>
 								<TableCell align="right">Logins</TableCell>
 								<TableCell align="right">Días activos</TableCell>
+								<TableCell align="right">Visor email</TableCell>
 								<TableCell>Último login</TableCell>
 							</TableRow>
 						</TableHead>
 						<TableBody>
-							{!topLoading && topUsers.length === 0 && emptyRow(7, "Sin actividad en el período")}
+							{!topLoading && topUsers.length === 0 && emptyRow(8, "Sin actividad en el período")}
 							{topUsers.map((u, i) => (
 								<TableRow key={u._id} hover>
 									<TableCell>
@@ -526,6 +527,22 @@ const UsersDashboard: React.FC = () => {
 									</TableCell>
 									<TableCell align="right">{fmtNum(u.totalLogins)}</TableCell>
 									<TableCell align="right">{fmtNum(u.activeDays)}</TableCell>
+									<TableCell align="right">
+										{(u.emailViews || 0) + (u.emailLoginContinues || 0) > 0 ? (
+											<Tooltip title={`${fmtNum(u.emailViews)} documentos vistos desde emails · ${fmtNum(u.emailLoginContinues)} volvieron a la app`}>
+												<Stack direction="row" spacing={0.5} justifyContent="flex-end">
+													<Chip size="small" variant="outlined" label={`${fmtNum(u.emailViews)} vistas`} />
+													{(u.emailLoginContinues || 0) > 0 && (
+														<Chip size="small" color="warning" variant="outlined" label={`${fmtNum(u.emailLoginContinues)} → app`} />
+													)}
+												</Stack>
+											</Tooltip>
+										) : (
+											<Typography variant="body2" color="text.secondary">
+												—
+											</Typography>
+										)}
+									</TableCell>
 									<TableCell>
 										<Tooltip title={fmtDate(u.lastLogin)}>
 											<Typography variant="body2">{fmtFromNow(u.lastLogin)}</Typography>

@@ -155,6 +155,13 @@ export interface UserWithResources {
 	createdAt: string;
 	resources: UserResourceCounts;
 	storage: UserStorageInfo;
+	// Engagement del visor de documentos por email (/m/:token): vistas confirmadas
+	// y regresos a la app desde el email (login_continue). All-time, sin bots.
+	emailViewer?: {
+		views: number;
+		loginContinues: number;
+		lastActivity?: string | null;
+	};
 }
 
 export interface UsersSummaryFilters {

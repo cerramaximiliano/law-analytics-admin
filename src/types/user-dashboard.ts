@@ -47,6 +47,8 @@ export interface ActivityRankingRow {
 	totalLogins: number;
 	activeDays: number;
 	lastLogin?: string;
+	emailViews: number;
+	emailLoginContinues: number;
 	score: number;
 }
 
