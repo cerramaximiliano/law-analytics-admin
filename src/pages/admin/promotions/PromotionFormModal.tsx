@@ -335,6 +335,14 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 		!effectiveStripeForValidation?.development?.couponId &&
 		!effectiveStripeForValidation?.production?.couponId;
 
+	// Stripe Coupons son inmutables: con couponId en algún entorno, el backend rechaza
+	// cambios a validUntil / maxRedemptions / minimumAmount / newCustomersOnly (400
+	// STRIPE_IMMUTABLE_FIELD_CHANGE). Deshabilitamos esos campos y los omitimos del
+	// payload de update para no invitar a un error que siempre va a ocurrir.
+	const isStripeSynced =
+		isEditing && !!(effectiveStripeForValidation?.development?.couponId || effectiveStripeForValidation?.production?.couponId);
+	const immutableHelperText = "No se puede modificar: el cupón ya está sincronizado con Stripe. Desactivá esta promoción y creá una nueva.";
+
 	// Pre-requisitos para mostrar el descuento en la landing pública (no autenticada).
 	// Si alguno falla, el switch "Mostrar en landing" queda deshabilitado y se muestra
 	// un Alert listando qué hay que cambiar. La misma validación corre en el backend.
@@ -404,20 +412,26 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 
 			if (isEditing) {
 				// Update existing discount
+				// Los campos inmutables de Stripe se omiten del payload cuando el descuento ya
+				// está sincronizado — el backend conserva los valores existentes en el merge.
 				const updateData: UpdateDiscountParams = {
 					name: formData.name,
 					description: formData.description || undefined,
 					validFrom: formData.validFrom,
-					validUntil: formData.validUntil,
+					...(isStripeSynced ? {} : { validUntil: formData.validUntil }),
 					restrictions: {
 						applicablePlans: formData.applicablePlans,
 						applicableBillingPeriods: formData.applicableBillingPeriods,
-						maxRedemptions: formData.maxRedemptions,
 						maxRedemptionsPerUser: formData.maxRedemptionsPerUser,
-						newCustomersOnly: formData.newCustomersOnly,
 						excludeActiveSubscribers: formData.excludeActiveSubscribers,
-						minimumAmount: formData.minimumAmount,
 						targetSegments: formData.targetSegments,
+						...(isStripeSynced
+							? {}
+							: {
+									maxRedemptions: formData.maxRedemptions,
+									newCustomersOnly: formData.newCustomersOnly,
+									minimumAmount: formData.minimumAmount,
+							  }),
 					},
 					activationRules: {
 						isPublic: formData.isPublic,
@@ -547,6 +561,13 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 				</Box>
 
 				<TabPanel value={tabValue} index={0}>
+					{isStripeSynced && (
+						<Alert severity="info" sx={{ mb: 2 }}>
+							Esta promoción ya está sincronizada con Stripe. Los campos económicos (tipo, valor, duración, "válido hasta", máximo de usos
+							totales y "solo clientes nuevos") no pueden modificarse porque los Coupons de Stripe son inmutables. Para cambiarlos,
+							desactivá esta promoción y creá una nueva.
+						</Alert>
+					)}
 					<Grid container spacing={3}>
 						{/* Basic Info */}
 						<Grid item xs={12}>
@@ -752,6 +773,8 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 								value={formData.validUntil}
 								onChange={(e) => handleChange("validUntil", e.target.value)}
 								InputLabelProps={{ shrink: true }}
+								disabled={isStripeSynced}
+								helperText={isStripeSynced ? immutableHelperText : undefined}
 							/>
 						</Grid>
 
@@ -814,7 +837,8 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 								label="Máximo de usos totales"
 								value={formData.maxRedemptions ?? ""}
 								onChange={(e) => handleChange("maxRedemptions", e.target.value ? Number(e.target.value) : null)}
-								helperText="Vacío = ilimitado"
+								disabled={isStripeSynced}
+								helperText={isStripeSynced ? immutableHelperText : "Vacío = ilimitado"}
 								inputProps={{ min: 1 }}
 							/>
 						</Grid>
@@ -873,6 +897,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 											checked={formData.newCustomersOnly}
 											onChange={(e) => handleChange("newCustomersOnly", e.target.checked)}
 											color="error"
+											disabled={isStripeSynced}
 										/>
 									}
 									label={
@@ -885,6 +910,11 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 									Solo para usuarios que <strong>nunca han tenido</strong> una suscripción paga (ni activa ni cancelada). Más restrictivo
 									que "Excluir suscriptores activos". Ideal para promociones de "primera vez" para captar nuevos clientes.
 								</Typography>
+								{isStripeSynced && (
+									<Typography variant="caption" color="warning.main" display="block" sx={{ ml: 4.5, mt: 0.5 }}>
+										{immutableHelperText}
+									</Typography>
+								)}
 							</Box>
 						</Grid>
 
