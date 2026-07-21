@@ -27,8 +27,13 @@ import {
 	TextField,
 	Button,
 	Divider,
+	Dialog,
+	DialogTitle,
+	DialogContent,
+	DialogContentText,
+	DialogActions,
 } from "@mui/material";
-import { Refresh, UserRemove, Sms, Trash, Setting2, Save2, Warning2 } from "iconsax-react";
+import { Refresh, UserRemove, Sms, Trash, Setting2, Save2, Warning2, Play } from "iconsax-react";
 import dayjs from "dayjs";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
 import UserLifecycleService, {
@@ -141,6 +146,9 @@ const LifecycleTab: React.FC = () => {
 	const [actionsFilter, setActionsFilter] = useState<string>("");
 	const [actionsLoading, setActionsLoading] = useState<boolean>(true);
 
+	const [runDialogOpen, setRunDialogOpen] = useState<boolean>(false);
+	const [running, setRunning] = useState<boolean>(false);
+
 	const fetchOverview = useCallback(async () => {
 		try {
 			setOverviewLoading(true);
@@ -208,6 +216,23 @@ const LifecycleTab: React.FC = () => {
 		fetchConfig();
 		fetchSnapshots();
 		fetchActions();
+	};
+
+	const handleRunNow = async () => {
+		setRunDialogOpen(false);
+		try {
+			setRunning(true);
+			const message = await UserLifecycleService.runNow();
+			enqueueSnackbar(message, { variant: "success" });
+			// Dar tiempo a que la corrida termine antes de refrescar auditoría y stats
+			setTimeout(() => {
+				handleRefresh();
+				setRunning(false);
+			}, 15000);
+		} catch (err: any) {
+			enqueueSnackbar(err.message || "Error al disparar la corrida", { variant: "error" });
+			setRunning(false);
+		}
 	};
 
 	const handleSave = async () => {
@@ -298,12 +323,40 @@ const LifecycleTab: React.FC = () => {
 					Cron diario la-user-lifecycle (09:00 ART en el hub) — reminder de verificación, purga de cuentas muertas y snapshot de stats.
 					Los cambios de configuración aplican en la próxima corrida.
 				</Typography>
-				<Tooltip title="Refrescar">
-					<IconButton onClick={handleRefresh}>
-						<Refresh size={20} />
-					</IconButton>
-				</Tooltip>
+				<Stack direction="row" spacing={1} alignItems="center">
+					<Button
+						variant="outlined"
+						size="small"
+						startIcon={<Play size={16} />}
+						onClick={() => setRunDialogOpen(true)}
+						disabled={running}
+					>
+						{running ? "Corriendo..." : "Ejecutar ahora"}
+					</Button>
+					<Tooltip title="Refrescar">
+						<IconButton onClick={handleRefresh}>
+							<Refresh size={20} />
+						</IconButton>
+					</Tooltip>
+				</Stack>
 			</Stack>
+
+			<Dialog open={runDialogOpen} onClose={() => setRunDialogOpen(false)}>
+				<DialogTitle>Ejecutar corrida ahora</DialogTitle>
+				<DialogContent>
+					<DialogContentText>
+						Se dispara una corrida completa del cron con la configuración actual: reminders
+						{config?.dryRun ? " (en dry-run, sin envíos ni borrados)" : ""}, purga (si no está en espera) y snapshot de stats.
+						¿Continuar?
+					</DialogContentText>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setRunDialogOpen(false)}>Cancelar</Button>
+					<Button variant="contained" onClick={handleRunNow}>
+						Ejecutar
+					</Button>
+				</DialogActions>
+			</Dialog>
 
 			{/* Estado vivo */}
 			<Grid container spacing={2}>

@@ -148,6 +148,15 @@ class UserLifecycleService {
 		}
 	}
 
+	static async runNow(): Promise<string> {
+		try {
+			const response = await adminAxios.post("/api/user-lifecycle/run");
+			return response.data.message;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al disparar la corrida");
+		}
+	}
+
 	static async getActions(params: {
 		action?: UserLifecycleAction["action"];
 		page?: number;
