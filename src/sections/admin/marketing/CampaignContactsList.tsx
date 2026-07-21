@@ -6,7 +6,6 @@ import {
 	Alert,
 	Box,
 	Button,
-	Checkbox,
 	Chip,
 	CircularProgress,
 	Divider,
@@ -15,6 +14,8 @@ import {
 	LinearProgress,
 	Modal,
 	Paper,
+	Radio,
+	RadioGroup,
 	Table,
 	TableBody,
 	TableCell,
@@ -102,14 +103,17 @@ const RemoveCampaignContactsDialog = ({ open, onClose, onConfirm, contactIds, co
 	);
 };
 
+// Qué hacer con el segmento dinámico al vaciar la campaña
+export type SegmentActionOnRemoveAll = "unlink" | "disableSync" | "keep";
+
 interface RemoveAllContactsDialogProps {
 	open: boolean;
 	onClose: () => void;
-	onConfirm: (disableSegmentSync: boolean) => void;
+	onConfirm: (segmentAction: SegmentActionOnRemoveAll) => void;
 	campaignName: string;
 	totalContacts: number;
-	// La campaña tiene segmento dinámico con sincronización activa: sin apagarla,
-	// el segment-sync vuelve a enrolar a todos y el vaciado no sirve.
+	// La campaña tiene segmento dinámico con sincronización activa: sin desvincularlo
+	// o apagar el sync, el segment-sync vuelve a enrolar a todos y el vaciado no sirve.
 	hasActiveSegmentSync: boolean;
 }
 
@@ -122,7 +126,7 @@ const RemoveAllContactsDialog = ({
 	hasActiveSegmentSync,
 }: RemoveAllContactsDialogProps) => {
 	const isLargeOperation = totalContacts > 100; // Consideramos operación grande si hay más de 100 contactos
-	const [disableSync, setDisableSync] = useState<boolean>(true);
+	const [segmentAction, setSegmentAction] = useState<SegmentActionOnRemoveAll>("unlink");
 	return (
 		<Modal
 			open={open}
@@ -157,13 +161,26 @@ const RemoveAllContactsDialog = ({
 				{hasActiveSegmentSync && (
 					<Box sx={{ mt: 2 }}>
 						<Alert severity="warning" sx={{ mb: 1 }}>
-							Esta campaña sincroniza contactos automáticamente con un segmento dinámico. Si no desactivás la sincronización, el próximo
-							ciclo de sincronización va a <strong>volver a agregar</strong> los contactos del segmento.
+							Esta campaña sincroniza contactos automáticamente con un segmento dinámico. Si el segmento queda vinculado y sincronizando,
+							el próximo ciclo va a <strong>volver a agregar</strong> los contactos del segmento.
 						</Alert>
-						<FormControlLabel
-							control={<Checkbox checked={disableSync} onChange={(e) => setDisableSync(e.target.checked)} />}
-							label="Desactivar la sincronización con el segmento al eliminar"
-						/>
+						<RadioGroup value={segmentAction} onChange={(e) => setSegmentAction(e.target.value as SegmentActionOnRemoveAll)}>
+							<FormControlLabel
+								value="unlink"
+								control={<Radio size="small" />}
+								label="Desvincular el segmento por completo (recomendado — después podés vincular otro)"
+							/>
+							<FormControlLabel
+								value="disableSync"
+								control={<Radio size="small" />}
+								label="Mantener el segmento vinculado pero desactivar la sincronización"
+							/>
+							<FormControlLabel
+								value="keep"
+								control={<Radio size="small" />}
+								label="No tocar el segmento (los contactos van a volver a agregarse)"
+							/>
+						</RadioGroup>
 					</Box>
 				)}
 
@@ -171,7 +188,7 @@ const RemoveAllContactsDialog = ({
 					<Button onClick={onClose} color="inherit" sx={{ mr: 1 }}>
 						Cancelar
 					</Button>
-					<Button onClick={() => onConfirm(hasActiveSegmentSync && disableSync)} variant="contained" color="error">
+					<Button onClick={() => onConfirm(hasActiveSegmentSync ? segmentAction : "keep")} variant="contained" color="error">
 						Eliminar todos los contactos
 					</Button>
 				</Box>
@@ -387,9 +404,12 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 		}
 	};
 
-	const handleRemoveAllContacts = async (disableSegmentSync: boolean = false) => {
+	const handleRemoveAllContacts = async (segmentAction: SegmentActionOnRemoveAll = "keep") => {
 		try {
-			const result = await CampaignService.removeAllContactsFromCampaign(campaign._id!, { disableSegmentSync });
+			const result = await CampaignService.removeAllContactsFromCampaign(campaign._id!, {
+				unlinkSegment: segmentAction === "unlink",
+				disableSegmentSync: segmentAction === "disableSync",
+			});
 
 			if (result.success) {
 				handleCloseDeleteAllDialog();

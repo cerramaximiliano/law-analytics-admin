@@ -245,11 +245,14 @@ export const CampaignService = {
 	// Remove all contacts from a campaign
 	removeAllContactsFromCampaign: async (
 		id: string,
-		options: { disableSegmentSync?: boolean } = {},
+		options: { disableSegmentSync?: boolean; unlinkSegment?: boolean } = {},
 	): Promise<RemoveAllContactsResponse> => {
 		try {
 			const response = await mktAxios.delete(`/api/campaigns/${id}/contacts/all`, {
-				data: { disableSegmentSync: options.disableSegmentSync === true },
+				data: {
+					disableSegmentSync: options.disableSegmentSync === true,
+					unlinkSegment: options.unlinkSegment === true,
+				},
 			});
 			return response.data;
 		} catch (error) {
