@@ -99,7 +99,14 @@ export interface MovementLinkTimeseriesResponse {
 }
 
 // GET /recent
-export type MovementLinkEventName = "open" | "view_confirmed" | "cta_click" | "download" | "fallback_click" | "login_continue";
+export type MovementLinkEventName =
+	| "open"
+	| "view_confirmed"
+	| "cta_click"
+	| "download"
+	| "fallback_click"
+	| "login_continue"
+	| "promo_click";
 
 export interface MovementLinkRecentItem {
 	_id?: string;
@@ -109,6 +116,8 @@ export interface MovementLinkRecentItem {
 	movementId?: string | null;
 	event: MovementLinkEventName;
 	source?: string | null;
+	// Sub-acción de un cta_click (vencimiento | nota | tarea, botones rápidos).
+	action?: string | null;
 	hasPdf?: boolean | null;
 	pdfStatus?: string | null;
 	fuero?: string | null;
@@ -121,4 +130,22 @@ export interface MovementLinkRecentResponse {
 	success: boolean;
 	range: MovementLinkRange;
 	items: MovementLinkRecentItem[];
+}
+
+// GET /active-promo — promo que vería un visitante de la vista pública
+// (variante universal de landing). Para la "Vista previa" del admin.
+export interface MovementLinkActivePromo {
+	code: string;
+	name: string;
+	badge: string | null;
+	promotionalMessage: string | null;
+	discountType: "percentage" | "fixed";
+	discountValue: number;
+	validUntil: string | null;
+	durationInMonths: number | null;
+}
+
+export interface MovementLinkActivePromoResponse {
+	success: boolean;
+	promo: MovementLinkActivePromo | null;
 }

@@ -30,6 +30,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsToolti
 import MainCard from "components/MainCard";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 import MovementLinkAnalyticsService from "api/movementLinkAnalytics";
+import MovementViewerPreview from "./MovementViewerPreview";
 import {
 	MovementLinkSummaryData,
 	MovementLinkByFueroItem,
@@ -48,6 +49,7 @@ const EVENT_TRANSLATIONS: Record<MovementLinkEventName, string> = {
 	download: "Descarga",
 	fallback_click: "Click al portal PJN",
 	login_continue: "Continuó en la app",
+	promo_click: "Click en promo",
 };
 
 const EVENT_COLOR: Record<MovementLinkEventName, "default" | "primary" | "secondary" | "info" | "success" | "warning" | "error"> = {
@@ -57,6 +59,7 @@ const EVENT_COLOR: Record<MovementLinkEventName, "default" | "primary" | "second
 	download: "success",
 	fallback_click: "secondary",
 	login_continue: "warning",
+	promo_click: "error",
 };
 
 // Tab Panel
@@ -284,6 +287,7 @@ const MovementLinkAnalytics: React.FC = () => {
 					<Tab label="Resumen" />
 					<Tab label="Por usuario" />
 					<Tab label="Eventos recientes" />
+					<Tab label="Vista previa" />
 				</Tabs>
 			</Box>
 
@@ -652,6 +656,11 @@ const MovementLinkAnalytics: React.FC = () => {
 						</Table>
 					</TableContainer>
 				</Box>
+			</TabPanel>
+
+			{/* Tab: Vista previa (recreación del visor público) */}
+			<TabPanel value={tabValue} index={3}>
+				<MovementViewerPreview />
 			</TabPanel>
 		</MainCard>
 	);

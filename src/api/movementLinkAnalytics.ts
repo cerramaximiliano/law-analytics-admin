@@ -6,6 +6,7 @@ import {
 	MovementLinkByUserResponse,
 	MovementLinkTimeseriesResponse,
 	MovementLinkRecentResponse,
+	MovementLinkActivePromoResponse,
 } from "types/movementLinkAnalytics";
 
 // ==============================|| MOVEMENT LINK ANALYTICS SERVICE ||============================== //
@@ -61,6 +62,16 @@ class MovementLinkAnalyticsService {
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al obtener eventos recientes");
+		}
+	}
+
+	/** Promo activa que vería un visitante de la vista pública (para la Vista previa). */
+	static async getActivePromo(): Promise<MovementLinkActivePromoResponse> {
+		try {
+			const response = await adminAxios.get("/api/movement-link-analytics/active-promo");
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al obtener la promo activa");
 		}
 	}
 }
