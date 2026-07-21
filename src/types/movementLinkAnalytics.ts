@@ -28,6 +28,7 @@ export interface MovementLinkSummaryData {
 	cta_clicks: number;
 	downloads: number;
 	fallback_clicks: number;
+	login_continues: number;
 	unique_users: number;
 	unique_causas: number;
 	rate_pdf_served: number | null;
@@ -35,6 +36,7 @@ export interface MovementLinkSummaryData {
 	rate_view_to_cta: number | null;
 	rate_view_to_download: number | null;
 	rate_cta_per_open: number | null;
+	rate_cta_to_login: number | null;
 }
 
 export interface MovementLinkSummaryResponse {
@@ -68,6 +70,7 @@ export interface MovementLinkByUserItem {
 	views: number;
 	cta_clicks: number;
 	downloads: number;
+	login_continues: number;
 	last_activity: string;
 	unique_causas: number;
 }
@@ -86,6 +89,7 @@ export interface MovementLinkTimeseriesItem {
 	cta_clicks: number;
 	downloads: number;
 	fallback_clicks: number;
+	login_continues: number;
 }
 
 export interface MovementLinkTimeseriesResponse {
@@ -95,7 +99,7 @@ export interface MovementLinkTimeseriesResponse {
 }
 
 // GET /recent
-export type MovementLinkEventName = "open" | "view_confirmed" | "cta_click" | "download" | "fallback_click";
+export type MovementLinkEventName = "open" | "view_confirmed" | "cta_click" | "download" | "fallback_click" | "login_continue";
 
 export interface MovementLinkRecentItem {
 	_id?: string;

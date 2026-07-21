@@ -25,7 +25,7 @@ import {
 	FormControlLabel,
 	Switch,
 } from "@mui/material";
-import { Refresh, Eye, DocumentText, LoginCurve, DocumentDownload, People, Folder2, ExportSquare, Warning2 } from "iconsax-react";
+import { Refresh, Eye, DocumentText, LoginCurve, DocumentDownload, People, Folder2, ExportSquare, Warning2, TickCircle } from "iconsax-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
 import MainCard from "components/MainCard";
 import { BRAND_BLUE } from "themes/dashboardTokens";
@@ -47,6 +47,7 @@ const EVENT_TRANSLATIONS: Record<MovementLinkEventName, string> = {
 	cta_click: "Click en CTA",
 	download: "Descarga",
 	fallback_click: "Click al portal PJN",
+	login_continue: "Continuó en la app",
 };
 
 const EVENT_COLOR: Record<MovementLinkEventName, "default" | "primary" | "secondary" | "info" | "success" | "warning" | "error"> = {
@@ -55,6 +56,7 @@ const EVENT_COLOR: Record<MovementLinkEventName, "default" | "primary" | "second
 	cta_click: "primary",
 	download: "success",
 	fallback_click: "secondary",
+	login_continue: "warning",
 };
 
 // Tab Panel
@@ -290,7 +292,7 @@ const MovementLinkAnalytics: React.FC = () => {
 				<Box sx={{ px: 3, pb: 3 }}>
 					{/* Cards */}
 					<Grid container spacing={3} sx={{ mb: 4 }}>
-						<Grid item xs={12} sm={6} md={2.4}>
+						<Grid item xs={12} sm={6} md={2}>
 							<StatCard
 								title="Aperturas (humanas)"
 								value={summary?.opens_human ?? 0}
@@ -300,7 +302,7 @@ const MovementLinkAnalytics: React.FC = () => {
 								loading={loading}
 							/>
 						</Grid>
-						<Grid item xs={12} sm={6} md={2.4}>
+						<Grid item xs={12} sm={6} md={2}>
 							<StatCard
 								title="Vistas confirmadas"
 								value={summary?.views_confirmed ?? 0}
@@ -310,7 +312,7 @@ const MovementLinkAnalytics: React.FC = () => {
 								loading={loading}
 							/>
 						</Grid>
-						<Grid item xs={12} sm={6} md={2.4}>
+						<Grid item xs={12} sm={6} md={2}>
 							<StatCard
 								title="Clicks en CTA"
 								value={summary?.cta_clicks ?? 0}
@@ -320,7 +322,7 @@ const MovementLinkAnalytics: React.FC = () => {
 								loading={loading}
 							/>
 						</Grid>
-						<Grid item xs={12} sm={6} md={2.4}>
+						<Grid item xs={12} sm={6} md={2}>
 							<StatCard
 								title="Descargas"
 								value={summary?.downloads ?? 0}
@@ -330,7 +332,17 @@ const MovementLinkAnalytics: React.FC = () => {
 								loading={loading}
 							/>
 						</Grid>
-						<Grid item xs={12} sm={6} md={2.4}>
+						<Grid item xs={12} sm={6} md={2}>
+							<StatCard
+								title="Continuaron en la app"
+								value={summary?.login_continues ?? 0}
+								subtitle={`${fmtRate(summary?.rate_cta_to_login)} de los CTA`}
+								icon={<TickCircle size={24} />}
+								color={theme.palette.secondary.main}
+								loading={loading}
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6} md={2}>
 							<StatCard
 								title="Usuarios únicos"
 								value={summary?.unique_users ?? 0}
@@ -369,6 +381,13 @@ const MovementLinkAnalytics: React.FC = () => {
 											theme={theme}
 										/>
 										<FunnelStep
+											label="Continuaron en la app"
+											value={summary.login_continues}
+											max={summary.opens_human}
+											color={theme.palette.secondary.main}
+											theme={theme}
+										/>
+										<FunnelStep
 											label="Descargas"
 											value={summary.downloads}
 											max={summary.opens_human}
@@ -379,6 +398,7 @@ const MovementLinkAnalytics: React.FC = () => {
 											<Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1}>
 												<Chip size="small" variant="outlined" label={`PDF servido: ${fmtRate(summary.rate_pdf_served)}`} />
 												<Chip size="small" variant="outlined" color="primary" label={`CTA/apertura: ${fmtRate(summary.rate_cta_per_open)}`} />
+												<Chip size="small" variant="outlined" color="secondary" label={`Login post-CTA: ${fmtRate(summary.rate_cta_to_login)}`} />
 											</Stack>
 										</Box>
 										{(summary.opens_expired > 0 || summary.opens_not_found > 0) && (
@@ -417,6 +437,14 @@ const MovementLinkAnalytics: React.FC = () => {
 											<Line type="monotone" dataKey="views" name="Vistas" stroke={theme.palette.info.main} strokeWidth={2} dot={false} />
 											<Line type="monotone" dataKey="cta_clicks" name="CTA" stroke={theme.palette.primary.main} strokeWidth={2} dot={false} />
 											<Line type="monotone" dataKey="downloads" name="Descargas" stroke={theme.palette.success.main} strokeWidth={2} dot={false} />
+											<Line
+												type="monotone"
+												dataKey="login_continues"
+												name="Continuó en app"
+												stroke={theme.palette.secondary.main}
+												strokeWidth={2}
+												dot={false}
+											/>
 										</LineChart>
 									</ResponsiveContainer>
 								) : (
@@ -485,6 +513,7 @@ const MovementLinkAnalytics: React.FC = () => {
 									<TableCell align="right">Aperturas</TableCell>
 									<TableCell align="right">Vistas</TableCell>
 									<TableCell align="right">CTA</TableCell>
+									<TableCell align="right">Continuó</TableCell>
 									<TableCell align="right">Descargas</TableCell>
 									<TableCell align="right">Causas</TableCell>
 									<TableCell>Última actividad</TableCell>
@@ -493,7 +522,7 @@ const MovementLinkAnalytics: React.FC = () => {
 							<TableBody>
 								{byUser.length === 0 ? (
 									<TableRow>
-										<TableCell colSpan={7} align="center">
+										<TableCell colSpan={8} align="center">
 											<Typography color="text.secondary">No hay actividad de usuarios</Typography>
 										</TableCell>
 									</TableRow>
@@ -511,6 +540,7 @@ const MovementLinkAnalytics: React.FC = () => {
 											<TableCell align="right">{u.opens}</TableCell>
 											<TableCell align="right">{u.views}</TableCell>
 											<TableCell align="right">{u.cta_clicks}</TableCell>
+											<TableCell align="right">{u.login_continues ?? 0}</TableCell>
 											<TableCell align="right">{u.downloads}</TableCell>
 											<TableCell align="right">
 												<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="flex-end">
