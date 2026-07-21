@@ -28,7 +28,7 @@ import {
 	Select,
 	MenuItem,
 } from "@mui/material";
-import { Refresh, People, Profile2User, Crown1, Card, Magicpen, UserAdd, UserTick, Warning2, Login, MoneyRecive } from "iconsax-react";
+import { Refresh, People, Profile2User, Crown1, Card, Magicpen, UserAdd, UserTick, Warning2, Login, MoneyRecive, Repeat } from "iconsax-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/es";
@@ -37,6 +37,7 @@ import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, PREMIUM_GOLD } from "themes/dashbo
 import UserDashboardService from "api/userDashboard";
 import AdminAiUsageService, { AiUsageRow } from "api/adminAiUsage";
 import { UserDashboardOverview, ActivityRankingRow, InactiveUserRow, NewUnactivatedRow, PaymentRiskRow } from "types/user-dashboard";
+import LifecycleTab from "./LifecycleTab";
 import { useSnackbar } from "notistack";
 
 dayjs.extend(relativeTime);
@@ -484,6 +485,7 @@ const UsersDashboard: React.FC = () => {
 					<Tab icon={<UserAdd size={18} />} iconPosition="start" label="Nuevos sin activar" />
 					<Tab icon={<Magicpen size={18} />} iconPosition="start" label="Heavy IA" />
 					<Tab icon={<MoneyRecive size={18} />} iconPosition="start" label="Pagos en riesgo" />
+					<Tab icon={<Repeat size={18} />} iconPosition="start" label="Ciclo de vida" />
 				</Tabs>
 			</Box>
 
@@ -770,6 +772,11 @@ const UsersDashboard: React.FC = () => {
 					rowsPerPage={ROWS_PER_PAGE}
 					rowsPerPageOptions={[ROWS_PER_PAGE]}
 				/>
+			</TabPanel>
+
+			{/* Tab 5: Ciclo de vida (cron la-user-lifecycle) */}
+			<TabPanel value={tab} index={5}>
+				<LifecycleTab />
 			</TabPanel>
 		</MainCard>
 	);
