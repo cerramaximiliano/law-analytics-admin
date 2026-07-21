@@ -611,7 +611,15 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 																<TableCell>{email.subject}</TableCell>
 																<TableCell>{email.sequenceIndex}</TableCell>
 																<TableCell>
-																	{email.conditions?.timeDelay
+																	{email.conditions?.type === "fixedDate" && email.conditions?.sendAt
+																		? `📅 ${new Date(email.conditions.sendAt).toLocaleString("es-AR", {
+																				day: "2-digit",
+																				month: "2-digit",
+																				hour: "2-digit",
+																				minute: "2-digit",
+																				timeZone: "America/Argentina/Buenos_Aires",
+																		  })}`
+																		: email.conditions?.timeDelay
 																		? `${email.conditions.timeDelay.value} ${email.conditions.timeDelay.unit}`
 																		: "Inmediato"}
 																</TableCell>
@@ -725,7 +733,11 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 																									<ListItemText
 																										primary="Condición de activación"
 																										secondary={
-																											email.conditions?.type === "time" && email.conditions.timeDelay
+																											email.conditions?.type === "fixedDate" && email.conditions?.sendAt
+																												? `Fecha fija: ${new Date(email.conditions.sendAt).toLocaleString("es-AR", {
+																														timeZone: "America/Argentina/Buenos_Aires",
+																												  })}`
+																												: email.conditions?.type === "time" && email.conditions.timeDelay
 																												? `Tiempo: ${email.conditions.timeDelay.value} ${email.conditions.timeDelay.unit} después`
 																												: email.conditions?.type === "event"
 																												? `Evento: ${email.conditions.eventTrigger?.eventName || "No especificado"}`

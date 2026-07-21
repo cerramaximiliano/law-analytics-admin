@@ -62,11 +62,13 @@ export interface CampaignEmail {
 	sender?: EmailSender;
 	replyTo?: string;
 	conditions?: {
-		type?: "time" | "event" | "custom";
+		type?: "time" | "event" | "custom" | "fixedDate";
 		timeDelay?: {
 			value: number;
 			unit: "minutes" | "hours" | "days" | "weeks";
 		};
+		// Para type='fixedDate': fecha absoluta a partir de la cual se envía este email
+		sendAt?: string | null;
 		eventTrigger?: {
 			eventName?: string;
 			maxWaitTime?: {
@@ -118,11 +120,13 @@ export interface CampaignEmailInput {
 	sender?: EmailSender;
 	replyTo?: string;
 	conditions?: {
-		type?: "time" | "event" | "custom";
+		type?: "time" | "event" | "custom" | "fixedDate";
 		timeDelay?: {
 			value: number;
 			unit: "minutes" | "hours" | "days" | "weeks";
 		};
+		// Para type='fixedDate': fecha absoluta a partir de la cual se envía este email
+		sendAt?: string | null;
 		eventTrigger?: {
 			eventName?: string;
 			maxWaitTime?: {

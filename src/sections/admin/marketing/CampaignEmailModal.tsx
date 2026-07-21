@@ -34,6 +34,11 @@ import {
 	//useTheme,
 } from "@mui/material";
 
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+
 // project imports
 import { useSnackbar } from "notistack";
 import AnimateButton from "components/@extended/AnimateButton";
@@ -740,47 +745,87 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 								</Card>
 
 								<Grid container spacing={2}>
-									<Grid item xs={6}>
-										<TextField
-											fullWidth
-											id="conditions.timeDelay.value"
-											name="conditions.timeDelay.value"
-											label="Retraso"
-											type="number"
-											InputProps={{ inputProps: { min: 0 } }}
-											value={formik.values.conditions?.timeDelay?.value || 1}
-											onChange={formik.handleChange}
-											error={Boolean(
-												formik.touched.conditions &&
-													(formik.touched.conditions as any).timeDelay?.value &&
-													formik.errors.conditions &&
-													(formik.errors.conditions as any).timeDelay?.value,
-											)}
-											helperText={
-												formik.values.sequenceIndex === 0
-													? "Tiempo de espera después de unirse a la campaña"
-													: "Tiempo de espera después del email anterior"
-											}
-										/>
-									</Grid>
-									<Grid item xs={6}>
+									<Grid item xs={12}>
 										<FormControl fullWidth>
-											<InputLabel id="time-unit-label">Unidad</InputLabel>
+											<InputLabel id="schedule-type-label">Programación</InputLabel>
 											<Select
-												labelId="time-unit-label"
-												id="conditions.timeDelay.unit"
-												name="conditions.timeDelay.unit"
-												value={formik.values.conditions?.timeDelay?.unit || "days"}
-												label="Unidad"
-												onChange={formik.handleChange}
+												labelId="schedule-type-label"
+												id="conditions.type"
+												name="conditions.type"
+												value={formik.values.conditions?.type === "fixedDate" ? "fixedDate" : "time"}
+												label="Programación"
+												onChange={(e) => {
+													formik.setFieldValue("conditions.type", e.target.value);
+													if (e.target.value === "time") {
+														formik.setFieldValue("conditions.sendAt", null);
+													}
+												}}
 											>
-												<MenuItem value="minutes">Minutos</MenuItem>
-												<MenuItem value="hours">Horas</MenuItem>
-												<MenuItem value="days">Días</MenuItem>
-												<MenuItem value="weeks">Semanas</MenuItem>
+												<MenuItem value="time">Retraso relativo (desde el email anterior)</MenuItem>
+												<MenuItem value="fixedDate">Fecha fija (absoluta)</MenuItem>
 											</Select>
 										</FormControl>
 									</Grid>
+									{formik.values.conditions?.type === "fixedDate" ? (
+										<Grid item xs={12}>
+											<LocalizationProvider dateAdapter={AdapterDayjs}>
+												<DateTimePicker
+													label="Enviar a partir de"
+													value={formik.values.conditions?.sendAt ? dayjs(formik.values.conditions.sendAt) : null}
+													onChange={(v) => formik.setFieldValue("conditions.sendAt", v ? v.toISOString() : null)}
+													slotProps={{ textField: { fullWidth: true } }}
+												/>
+											</LocalizationProvider>
+											<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
+												El email se envía a partir de esta fecha, respetando el orden de la secuencia (el contacto tiene que haber
+												recibido el paso anterior) y las restricciones de días/horario.
+											</Typography>
+										</Grid>
+									) : (
+										<>
+											<Grid item xs={6}>
+												<TextField
+													fullWidth
+													id="conditions.timeDelay.value"
+													name="conditions.timeDelay.value"
+													label="Retraso"
+													type="number"
+													InputProps={{ inputProps: { min: 0 } }}
+													value={formik.values.conditions?.timeDelay?.value || 1}
+													onChange={formik.handleChange}
+													error={Boolean(
+														formik.touched.conditions &&
+															(formik.touched.conditions as any).timeDelay?.value &&
+															formik.errors.conditions &&
+															(formik.errors.conditions as any).timeDelay?.value,
+													)}
+													helperText={
+														formik.values.sequenceIndex === 0
+															? "Tiempo de espera después de unirse a la campaña"
+															: "Tiempo de espera después del email anterior"
+													}
+												/>
+											</Grid>
+											<Grid item xs={6}>
+												<FormControl fullWidth>
+													<InputLabel id="time-unit-label">Unidad</InputLabel>
+													<Select
+														labelId="time-unit-label"
+														id="conditions.timeDelay.unit"
+														name="conditions.timeDelay.unit"
+														value={formik.values.conditions?.timeDelay?.unit || "days"}
+														label="Unidad"
+														onChange={formik.handleChange}
+													>
+														<MenuItem value="minutes">Minutos</MenuItem>
+														<MenuItem value="hours">Horas</MenuItem>
+														<MenuItem value="days">Días</MenuItem>
+														<MenuItem value="weeks">Semanas</MenuItem>
+													</Select>
+												</FormControl>
+											</Grid>
+										</>
+									)}
 								</Grid>
 									</>
 								)}
