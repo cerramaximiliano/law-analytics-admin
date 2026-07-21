@@ -3,11 +3,14 @@ import { alpha, useTheme } from "@mui/material/styles";
 
 // material-ui
 import {
+	Alert,
 	Box,
 	Button,
+	Checkbox,
 	Chip,
 	CircularProgress,
 	Divider,
+	FormControlLabel,
 	IconButton,
 	LinearProgress,
 	Modal,
@@ -102,13 +105,24 @@ const RemoveCampaignContactsDialog = ({ open, onClose, onConfirm, contactIds, co
 interface RemoveAllContactsDialogProps {
 	open: boolean;
 	onClose: () => void;
-	onConfirm: () => void;
+	onConfirm: (disableSegmentSync: boolean) => void;
 	campaignName: string;
 	totalContacts: number;
+	// La campaña tiene segmento dinámico con sincronización activa: sin apagarla,
+	// el segment-sync vuelve a enrolar a todos y el vaciado no sirve.
+	hasActiveSegmentSync: boolean;
 }
 
-const RemoveAllContactsDialog = ({ open, onClose, onConfirm, campaignName, totalContacts }: RemoveAllContactsDialogProps) => {
+const RemoveAllContactsDialog = ({
+	open,
+	onClose,
+	onConfirm,
+	campaignName,
+	totalContacts,
+	hasActiveSegmentSync,
+}: RemoveAllContactsDialogProps) => {
 	const isLargeOperation = totalContacts > 100; // Consideramos operación grande si hay más de 100 contactos
+	const [disableSync, setDisableSync] = useState<boolean>(true);
 	return (
 		<Modal
 			open={open}
@@ -140,11 +154,24 @@ const RemoveAllContactsDialog = ({ open, onClose, onConfirm, campaignName, total
 					¡Esta acción no se puede deshacer!
 				</Typography>
 
+				{hasActiveSegmentSync && (
+					<Box sx={{ mt: 2 }}>
+						<Alert severity="warning" sx={{ mb: 1 }}>
+							Esta campaña sincroniza contactos automáticamente con un segmento dinámico. Si no desactivás la sincronización, el próximo
+							ciclo de sincronización va a <strong>volver a agregar</strong> los contactos del segmento.
+						</Alert>
+						<FormControlLabel
+							control={<Checkbox checked={disableSync} onChange={(e) => setDisableSync(e.target.checked)} />}
+							label="Desactivar la sincronización con el segmento al eliminar"
+						/>
+					</Box>
+				)}
+
 				<Box sx={{ display: "flex", justifyContent: "flex-end", pt: 3 }}>
 					<Button onClick={onClose} color="inherit" sx={{ mr: 1 }}>
 						Cancelar
 					</Button>
-					<Button onClick={onConfirm} variant="contained" color="error">
+					<Button onClick={() => onConfirm(hasActiveSegmentSync && disableSync)} variant="contained" color="error">
 						Eliminar todos los contactos
 					</Button>
 				</Box>
@@ -360,9 +387,9 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 		}
 	};
 
-	const handleRemoveAllContacts = async () => {
+	const handleRemoveAllContacts = async (disableSegmentSync: boolean = false) => {
 		try {
-			const result = await CampaignService.removeAllContactsFromCampaign(campaign._id!);
+			const result = await CampaignService.removeAllContactsFromCampaign(campaign._id!, { disableSegmentSync });
 
 			if (result.success) {
 				handleCloseDeleteAllDialog();
@@ -886,6 +913,7 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 						onConfirm={handleRemoveAllContacts}
 						campaignName={campaign.name}
 						totalContacts={totalCount}
+						hasActiveSegmentSync={Boolean(campaign.audience?.segmentId) && campaign.audience?.syncWithSegment !== false}
 					/>
 
 					{/* Contact Detail Modal */}

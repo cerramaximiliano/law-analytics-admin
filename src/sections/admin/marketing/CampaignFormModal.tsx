@@ -42,6 +42,7 @@ import { InfoCircle } from "iconsax-react";
 // project imports
 import { Campaign, CampaignInput, CampaignType, AvailablePromo } from "types/campaign";
 import { CampaignService } from "store/reducers/campaign";
+import { SegmentService } from "store/reducers/segments";
 import { useSnackbar } from "notistack";
 
 // Extend dayjs with timezone support
@@ -77,6 +78,8 @@ interface FormValues {
 	timeWindowEnd: string;
 	// Sincronización con segmento
 	syncWithSegment: boolean;
+	// Desvincular el segmento de la campaña al guardar (audience.segmentId → null)
+	unlinkSegment: boolean;
 	// Promo adjunta ("" = sin promo)
 	promoDiscountId: string;
 	// Recurring schedule (for type='recurring')
@@ -200,6 +203,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 	const [error, setError] = useState<string | null>(null);
 	const [showTypeHelp, setShowTypeHelp] = useState(false);
 	const [promos, setPromos] = useState<AvailablePromo[]>([]);
+	const [segmentName, setSegmentName] = useState<string | null>(null);
 	const isEditMode = mode === "edit";
 	const { enqueueSnackbar } = useSnackbar();
 
@@ -210,6 +214,18 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 			.then(setPromos)
 			.catch(() => setPromos([]));
 	}, [open]);
+
+	// Nombre del segmento vinculado (para mostrarlo en la sección de sincronización)
+	useEffect(() => {
+		const segmentId = campaign?.audience?.segmentId;
+		if (!open || !isEditMode || !segmentId) {
+			setSegmentName(null);
+			return;
+		}
+		SegmentService.getSegmentById(segmentId)
+			.then((segment: any) => setSegmentName(segment?.name || null))
+			.catch(() => setSegmentName(null));
+	}, [open, isEditMode, campaign?.audience?.segmentId]);
 
 	// Default initial values
 	const defaultInitialValues: FormValues = {
@@ -231,6 +247,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 		timeWindowEnd: "18:00",
 		// Sincronización con segmento (por defecto habilitada)
 		syncWithSegment: true,
+		unlinkSegment: false,
 		promoDiscountId: "",
 		// Recurring schedule defaults
 		recurringEnabled: false,
@@ -273,10 +290,18 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 						isPermanent: values.isPermanent,
 						category: values.category || undefined,
 						tags: tagsArray.length > 0 ? tagsArray : undefined,
-						audience: {
-							...campaign.audience,
-							syncWithSegment: values.syncWithSegment,
-						},
+						// Desvincular segmento: segmentId → null y sync apagado, para que el
+						// segment-sync no vuelva a enrolar contactos de esta campaña.
+						audience: values.unlinkSegment
+							? {
+									...campaign.audience,
+									segmentId: null,
+									syncWithSegment: false,
+							  }
+							: {
+									...campaign.audience,
+									syncWithSegment: values.syncWithSegment,
+							  },
 						promoDiscountId: values.promoDiscountId || null,
 						settings: {
 							...campaign.settings,
@@ -425,6 +450,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 				timeWindowEnd: campaign.settings?.sendingRestrictions?.timeWindow?.end || "18:00",
 				// Sincronización con segmento (si no está definido, por defecto true)
 				syncWithSegment: campaign.audience?.syncWithSegment !== false,
+				unlinkSegment: false,
 				promoDiscountId: campaign.promoDiscountId || "",
 				// Recurring schedule
 				recurringEnabled: (campaign.settings as any)?.recurringSchedule?.enabled || false,
@@ -985,27 +1011,59 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 								</Grid>
 
 								<Grid item xs={12}>
-									<FormControlLabel
-										control={
-											<Switch
-												checked={formik.values.syncWithSegment}
-												onChange={(e) => formik.setFieldValue("syncWithSegment", e.target.checked)}
-												name="syncWithSegment"
-												color="primary"
-											/>
-										}
-										label="Sincronizar contactos automáticamente con el segmento"
-									/>
-									<FormHelperText sx={{ ml: 0 }}>
-										{formik.values.syncWithSegment
-											? "Los contactos del segmento dinámico se agregarán automáticamente a esta campaña."
-											: "Los contactos NO se sincronizarán automáticamente. Deberás agregarlos manualmente."}
-									</FormHelperText>
-									{!formik.values.syncWithSegment && (
-										<Alert severity="info" sx={{ mt: 1 }}>
-											La sincronización está deshabilitada. Esto es útil para campañas duplicadas donde quieres controlar manualmente los
-											contactos.
+									<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+										<Typography variant="body2" color="text.secondary">
+											Segmento vinculado:
+										</Typography>
+										<Chip
+											size="small"
+											color={formik.values.unlinkSegment ? "default" : "primary"}
+											variant="outlined"
+											label={segmentName || String(campaign?.audience?.segmentId)}
+											sx={formik.values.unlinkSegment ? { textDecoration: "line-through" } : undefined}
+										/>
+										{!formik.values.unlinkSegment ? (
+											<Button size="small" color="error" onClick={() => formik.setFieldValue("unlinkSegment", true)}>
+												Desvincular segmento
+											</Button>
+										) : (
+											<Button size="small" onClick={() => formik.setFieldValue("unlinkSegment", false)}>
+												Deshacer
+											</Button>
+										)}
+									</Stack>
+
+									{formik.values.unlinkSegment ? (
+										<Alert severity="warning">
+											Al guardar, el segmento quedará <strong>desvinculado</strong> de la campaña y la sincronización automática se
+											desactivará. Los contactos ya enrolados no se eliminan — podés quitarlos después desde «Gestionar contactos» sin
+											que vuelvan a agregarse.
 										</Alert>
+									) : (
+										<>
+											<FormControlLabel
+												control={
+													<Switch
+														checked={formik.values.syncWithSegment}
+														onChange={(e) => formik.setFieldValue("syncWithSegment", e.target.checked)}
+														name="syncWithSegment"
+														color="primary"
+													/>
+												}
+												label="Sincronizar contactos automáticamente con el segmento"
+											/>
+											<FormHelperText sx={{ ml: 0 }}>
+												{formik.values.syncWithSegment
+													? "Los contactos del segmento dinámico se agregarán automáticamente a esta campaña."
+													: "Los contactos NO se sincronizarán automáticamente. Deberás agregarlos manualmente."}
+											</FormHelperText>
+											{!formik.values.syncWithSegment && (
+												<Alert severity="info" sx={{ mt: 1 }}>
+													La sincronización está deshabilitada. Esto es útil para campañas duplicadas donde quieres controlar
+													manualmente los contactos.
+												</Alert>
+											)}
+										</>
 									)}
 								</Grid>
 							</>

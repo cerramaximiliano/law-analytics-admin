@@ -64,7 +64,8 @@ export interface CampaignMetrics {
 }
 
 export interface CampaignAudience {
-	segmentId?: string;
+	// null = segmento desvinculado explícitamente
+	segmentId?: string | null;
 	// Controla si la campaña sincroniza contactos automáticamente con el segmento
 	// true = sincroniza automáticamente, false = no sincroniza (default en campañas duplicadas)
 	syncWithSegment?: boolean;
