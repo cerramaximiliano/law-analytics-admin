@@ -37,6 +37,14 @@ export interface MovementLinkSummaryData {
 	rate_view_to_download: number | null;
 	rate_cta_per_open: number | null;
 	rate_cta_to_login: number | null;
+	// Join con los envíos de la-notification (notificationlogs, judicial_movement):
+	// denominador real del funnel + tasa de apertura por usuario.
+	notifications?: {
+		movements_notified: number;
+		users_notified: number;
+		users_opened: number;
+		open_rate_users: number | null;
+	};
 }
 
 export interface MovementLinkSummaryResponse {
@@ -90,6 +98,8 @@ export interface MovementLinkTimeseriesItem {
 	downloads: number;
 	fallback_clicks: number;
 	login_continues: number;
+	// Movimientos notificados por email ese día (la-notification).
+	notified?: number;
 }
 
 export interface MovementLinkTimeseriesResponse {

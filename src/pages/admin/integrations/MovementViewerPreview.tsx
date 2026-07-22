@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Box, Button, Chip, Paper, Skeleton, Stack, Typography, useTheme, alpha } from "@mui/material";
-import { ArrowRight, CalendarAdd, DocumentDownload, DocumentText, ExportSquare, Flash, LoginCurve, NoteAdd, TaskSquare } from "iconsax-react";
+import {
+	ArrowRight,
+	CalendarAdd,
+	CloseCircle,
+	DocumentDownload,
+	DocumentText,
+	ExportSquare,
+	Flash,
+	LoginCurve,
+	NoteAdd,
+	TaskSquare,
+} from "iconsax-react";
 import MovementLinkAnalyticsService from "api/movementLinkAnalytics";
 import { MovementLinkActivePromo } from "types/movementLinkAnalytics";
 
@@ -129,6 +140,7 @@ const MovementViewerPreview: React.FC = () => {
 					) : promo ? (
 						<Box
 							sx={{
+								position: "relative",
 								background: BRAND_GRADIENT_BG,
 								backgroundSize: "300% 100%",
 								color: "#fff",
@@ -145,7 +157,8 @@ const MovementViewerPreview: React.FC = () => {
 								columnGap: 1.5,
 								rowGap: 0.25,
 								py: 0.75,
-								px: 2,
+								pl: 2,
+								pr: 5,
 								textAlign: "center",
 								lineHeight: 1.25,
 							}}
@@ -185,6 +198,20 @@ const MovementViewerPreview: React.FC = () => {
 									Aprovechar promo
 								</Box>
 								<ArrowRight size={14} color="#fff" />
+							</Box>
+							{/* X de cierre (en la vista real colapsa la strip por sesión) */}
+							<Box
+								component="span"
+								sx={{
+									position: "absolute",
+									right: 8,
+									top: "50%",
+									transform: "translateY(-50%)",
+									display: "inline-flex",
+									color: alpha("#fff", 0.8),
+								}}
+							>
+								<CloseCircle size={18} />
 							</Box>
 						</Box>
 					) : (

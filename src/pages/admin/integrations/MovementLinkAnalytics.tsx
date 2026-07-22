@@ -358,6 +358,46 @@ const MovementLinkAnalytics: React.FC = () => {
 						</Grid>
 					</Grid>
 
+					{/* Join con los envíos de emails (la-notification): denominador real del
+					    funnel — cuánto se envió y qué % de usuarios llegó a la vista. */}
+					<Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5 }}>
+						Emails de movimientos enviados (la-notification)
+					</Typography>
+					<Grid container spacing={3} sx={{ mb: 4 }}>
+						<Grid item xs={12} sm={4}>
+							<StatCard
+								title="Movimientos notificados"
+								value={summary?.notifications?.movements_notified ?? 0}
+								subtitle="Logs de envío en el rango"
+								icon={<DocumentText size={24} />}
+								color={BRAND_BLUE}
+								loading={loading}
+							/>
+						</Grid>
+						<Grid item xs={12} sm={4}>
+							<StatCard
+								title="Usuarios notificados"
+								value={summary?.notifications?.users_notified ?? 0}
+								subtitle="Recibieron al menos un email"
+								icon={<People size={24} />}
+								color={theme.palette.info.main}
+								loading={loading}
+							/>
+						</Grid>
+						<Grid item xs={12} sm={4}>
+							<StatCard
+								title="Tasa de apertura"
+								value={fmtRate(summary?.notifications?.open_rate_users)}
+								subtitle={`${summary?.notifications?.users_opened ?? 0} de ${
+									summary?.notifications?.users_notified ?? 0
+								} usuarios vieron un documento`}
+								icon={<Eye size={24} />}
+								color={theme.palette.success.main}
+								loading={loading}
+							/>
+						</Grid>
+					</Grid>
+
 					<Grid container spacing={3}>
 						{/* Funnel */}
 						<Grid item xs={12} md={4}>
@@ -438,6 +478,15 @@ const MovementLinkAnalytics: React.FC = () => {
 											<YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
 											<RechartsTooltip />
 											<Legend wrapperStyle={{ fontSize: 12 }} />
+											<Line
+												type="monotone"
+												dataKey="notified"
+												name="Notificados (email)"
+												stroke={theme.palette.grey[500]}
+												strokeWidth={2}
+												strokeDasharray="5 4"
+												dot={false}
+											/>
 											<Line type="monotone" dataKey="views" name="Vistas" stroke={theme.palette.info.main} strokeWidth={2} dot={false} />
 											<Line type="monotone" dataKey="cta_clicks" name="CTA" stroke={theme.palette.primary.main} strokeWidth={2} dot={false} />
 											<Line type="monotone" dataKey="downloads" name="Descargas" stroke={theme.palette.success.main} strokeWidth={2} dot={false} />
