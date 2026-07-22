@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Box, Button, Chip, Paper, Skeleton, Stack, Typography, useTheme, alpha } from "@mui/material";
-import { CalendarAdd, DocumentDownload, DocumentText, ExportSquare, LoginCurve, NoteAdd, TaskSquare, TicketDiscount } from "iconsax-react";
+import { ArrowRight, CalendarAdd, DocumentDownload, DocumentText, ExportSquare, Flash, LoginCurve, NoteAdd, TaskSquare } from "iconsax-react";
 import MovementLinkAnalyticsService from "api/movementLinkAnalytics";
 import { MovementLinkActivePromo } from "types/movementLinkAnalytics";
 
@@ -14,6 +14,12 @@ import { MovementLinkActivePromo } from "types/movementLinkAnalytics";
 // de ejemplo. La PROMO sí es real — se levanta del mismo sistema de descuentos
 // (variante universal de landing) vía /api/movement-link-analytics/active-promo.
 // Si se cambia el layout real del visor, actualizar esta recreación a mano.
+
+// Tokens del strip de promo — mismos que DiscountBanner de la landing y que la
+// vista pública real (movement-doc.tsx del front del usuario).
+const BRAND_BLUE = "#3A7BFF";
+const BRAND_PURPLE = "#8A5CFF";
+const BRAND_GRADIENT_BG = `linear-gradient(90deg, ${BRAND_BLUE} 0%, ${BRAND_PURPLE} 50%, ${BRAND_BLUE} 100%)`;
 
 const SAMPLE = {
 	expediente: "EXPEDIENTE 123456/2023",
@@ -56,6 +62,9 @@ const MovementViewerPreview: React.FC = () => {
 	const promoLabel = promo ? promo.badge || (promo.discountType === "percentage" ? `${promo.discountValue}% OFF` : promo.name) : "";
 	const promoValidLabel = promo?.validUntil
 		? new Date(promo.validUntil).toLocaleDateString("es-AR", { day: "numeric", month: "long", timeZone: "UTC" })
+		: null;
+	const promoDurationLabel = promo?.durationInMonths
+		? `${promo.durationInMonths} ${promo.durationInMonths === 1 ? "mes" : "meses"}`
 		: null;
 
 	return (
@@ -114,29 +123,69 @@ const MovementViewerPreview: React.FC = () => {
 						</Typography>
 					</Box>
 
-					{/* Strip de promo (real) */}
+					{/* Strip de promo (real) — mismo diseño gradiente que la landing */}
 					{promoLoading ? (
 						<Skeleton variant="rectangular" height={34} />
 					) : promo ? (
 						<Box
 							sx={{
-								px: 2,
+								background: BRAND_GRADIENT_BG,
+								backgroundSize: "300% 100%",
+								color: "#fff",
+								borderBottom: `1px solid ${alpha("#000", 0.18)}`,
+								animation: "discountShift 16s linear infinite",
+								"@keyframes discountShift": {
+									"0%": { backgroundPosition: "0% 50%" },
+									"100%": { backgroundPosition: "300% 50%" },
+								},
+								display: "flex",
+								alignItems: "center",
+								justifyContent: "center",
+								flexWrap: "wrap",
+								columnGap: 1.5,
+								rowGap: 0.25,
 								py: 0.75,
-								bgcolor: alpha(theme.palette.warning.main, 0.08),
-								borderBottom: `1px solid ${alpha(theme.palette.warning.main, 0.25)}`,
+								px: 2,
+								textAlign: "center",
+								lineHeight: 1.25,
 							}}
 						>
-							<Stack direction="row" spacing={1} alignItems="center" justifyContent="center" flexWrap="wrap" rowGap={0.5}>
-								<TicketDiscount size="16" color={theme.palette.warning.dark} />
-								<Chip size="small" color="warning" label={promoLabel} sx={{ fontWeight: 600 }} />
-								<Typography variant="caption" color="text.secondary">
-									{promo.promotionalMessage || `Usá el código ${promo.code} en tu suscripción`}
-									{promoValidLabel ? ` · hasta el ${promoValidLabel}` : ""}
-								</Typography>
-								<Button size="small" color="warning" sx={{ fontWeight: 600, textTransform: "none", py: 0 }}>
-									Ver planes
-								</Button>
-							</Stack>
+							<Box
+								component="span"
+								sx={{
+									display: "inline-flex",
+									alignItems: "center",
+									gap: 0.5,
+									fontSize: "0.82rem",
+									fontWeight: 700,
+									letterSpacing: "0.02em",
+									textTransform: "uppercase",
+									whiteSpace: "nowrap",
+								}}
+							>
+								<Flash size={14} variant="Bold" color="#fff" />
+								<Box component="span">{promoLabel}</Box>
+							</Box>
+							<Box aria-hidden sx={{ width: "1px", height: 14, bgcolor: alpha("#fff", 0.4) }} />
+							<Box component="span" sx={{ fontSize: "0.8rem", fontWeight: 500, color: alpha("#fff", 0.95) }}>
+								{promoDurationLabel ? (
+									<>
+										durante <strong>{promoDurationLabel}</strong>
+										{promoValidLabel ? " · " : ""}
+									</>
+								) : null}
+								{promoValidLabel ? (
+									<>
+										hasta el <strong>{promoValidLabel}</strong>
+									</>
+								) : null}
+							</Box>
+							<Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5, fontSize: "0.82rem", fontWeight: 700 }}>
+								<Box component="span" sx={{ borderBottom: `1.5px solid ${alpha("#fff", 0.7)}`, pb: "1px" }}>
+									Aprovechar promo
+								</Box>
+								<ArrowRight size={14} color="#fff" />
+							</Box>
 						</Box>
 					) : (
 						<Box sx={{ px: 2, py: 0.75, bgcolor: theme.palette.grey[50], borderBottom: `1px dashed ${theme.palette.divider}` }}>
