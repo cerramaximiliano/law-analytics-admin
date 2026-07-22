@@ -38,75 +38,8 @@ import {
 } from "iconsax-react";
 import { dispatch } from "store";
 import { openSnackbar } from "store/reducers/snackbar";
-import judicialNotificationConfigService from "services/judicialNotificationConfigService";
-
-interface JudicialNotificationConfig {
-	_id?: string;
-	configKey: string;
-	notificationSchedule: {
-		dailyNotificationHour: number;
-		dailyNotificationMinute: number;
-		timezone: string;
-		activeDays: number[];
-	};
-	limits: {
-		maxMovementsPerBatch: number;
-		maxNotificationsPerUserPerDay: number;
-		minHoursBetweenSameExpediente: number;
-	};
-	retryConfig: {
-		maxRetries: number;
-		initialRetryDelay: number;
-		backoffMultiplier: number;
-		webhookTimeout: number;
-	};
-	contentConfig: {
-		includeFullCaratula: boolean;
-		maxDetalleLength: number;
-		includeExpedienteLink: boolean;
-		groupMovementsByExpediente: boolean;
-	};
-	filters: {
-		excludedMovementTypes: string[];
-		excludedKeywords: string[];
-		includedMovementTypes: string[];
-	};
-	dataRetention: {
-		judicialMovementRetentionDays: number;
-		notificationLogRetentionDays: number;
-		alertRetentionDays: number;
-		autoCleanupEnabled: boolean;
-		cleanupHour: number;
-	};
-	endpoints: {
-		notificationServiceUrl: string;
-		judicialMovementsEndpoint: string;
-		fallbackServiceUrl: string | null;
-	};
-	status: {
-		enabled: boolean;
-		mode: string;
-		maintenanceMessage: string;
-	};
-	stats?: {
-		lastNotificationSentAt: string | null;
-		totalNotificationsSent: number;
-		totalMovementsProcessed: number;
-		lastError?: {
-			message: string;
-			timestamp: string;
-			count: number;
-		} | null;
-	};
-	metadata?: {
-		createdBy: string;
-		lastModifiedBy: string;
-		version: string;
-		notes: string;
-	};
-	createdAt?: string;
-	updatedAt?: string;
-}
+import judicialNotificationConfigService, { JudicialNotificationConfig } from "api/judicialNotificationConfig";
+import MovementPoliciesSection from "./MovementPoliciesSection";
 
 const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
@@ -121,6 +54,7 @@ const JudicialMovementsConfig: React.FC = () => {
 		retry: false,
 		content: false,
 		filters: false,
+		policies: false,
 		dataRetention: false,
 		endpoints: false,
 		status: true,
@@ -203,6 +137,7 @@ const JudicialMovementsConfig: React.FC = () => {
 				"dataRetention",
 				"endpoints",
 				"status",
+				"movementPolicies",
 			];
 
 			for (const section of sections) {
@@ -245,6 +180,8 @@ const JudicialMovementsConfig: React.FC = () => {
 				successMessage = "URLs y endpoints actualizados correctamente";
 			} else if (updates.retryConfig) {
 				successMessage = "Configuración de reintentos actualizada correctamente";
+			} else if (updates.movementPolicies) {
+				successMessage = "Políticas de movimientos actualizadas correctamente";
 			}
 
 			// Dispatch the snackbar notification
@@ -729,6 +666,24 @@ const JudicialMovementsConfig: React.FC = () => {
 								/>
 							</Grid>
 						</Grid>
+					</Collapse>
+				</CardContent>
+			</Card>
+
+			{/* Movement Policies (por worker-source) */}
+			<Card sx={{ mb: 2 }}>
+				<CardContent>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Setting2 size={20} />
+							<Typography variant="h6">Políticas de movimientos por worker</Typography>
+						</Stack>
+						<IconButton size="small" onClick={() => handleToggleSection("policies")}>
+							{expandedSections.policies ? <ArrowUp2 /> : <ArrowDown2 />}
+						</IconButton>
+					</Stack>
+					<Collapse in={expandedSections.policies}>
+						<MovementPoliciesSection value={config.movementPolicies} onChange={(next) => handleFieldChange("movementPolicies", next)} />
 					</Collapse>
 				</CardContent>
 			</Card>

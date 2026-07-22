@@ -29,7 +29,7 @@ import IntegrationsConfigService, {
 } from "api/integrationsConfig";
 import { ScrapingManagerService, ScrapingManagerConfig } from "api/scrapingManager";
 import ScbaManagerService, { ScbaManagerConfig } from "api/scbaManager";
-import judicialNotificationConfigService from "services/judicialNotificationConfigService";
+import judicialNotificationConfigService from "api/judicialNotificationConfig";
 
 import ServiceAvailabilityCard from "./ServiceAvailabilityCard";
 
@@ -131,11 +131,7 @@ const IntegrationsPage: React.FC = () => {
 	// Handler genérico para cualquier service de IntegrationsConfig — devuelve
 	// fn que el card invoca según el tipo de cambio. Reusa el setIntegrations
 	// y respeta el shape de respuesta (siempre devuelve el doc completo).
-	const updateIntegrationService = async (
-		serviceKey: ServiceKey,
-		payload: UpdateServicePayload,
-		successMsg: string,
-	) => {
+	const updateIntegrationService = async (serviceKey: ServiceKey, payload: UpdateServicePayload, successMsg: string) => {
 		setIntegrations((s) => ({ ...s, saving: true }));
 		try {
 			const res = await IntegrationsConfigService.updateService(serviceKey, payload);
@@ -160,11 +156,7 @@ const IntegrationsPage: React.FC = () => {
 	const handleClaudeAiToggle = (enabled: boolean) =>
 		updateIntegrationService("claudeAi", { enabled }, enabled ? "Claude.ai habilitado" : "Claude.ai deshabilitado");
 	const handleClaudeAiToggleEnv = (env: Environment, value: boolean) =>
-		updateIntegrationService(
-			"claudeAi",
-			{ enabled: { [env]: value } },
-			`Claude.ai ${env} ${value ? "habilitado" : "deshabilitado"}`,
-		);
+		updateIntegrationService("claudeAi", { enabled: { [env]: value } }, `Claude.ai ${env} ${value ? "habilitado" : "deshabilitado"}`);
 	const handleClaudeAiMessage = (message: string | null) =>
 		updateIntegrationService("claudeAi", { maintenanceMessage: message }, "Mensaje Claude.ai actualizado");
 	const handleClaudeAiReleaseStage = (stage: ReleaseStage) =>
@@ -174,11 +166,7 @@ const IntegrationsPage: React.FC = () => {
 	const handleChatGptToggle = (enabled: boolean) =>
 		updateIntegrationService("chatGpt", { enabled }, enabled ? "ChatGPT habilitado" : "ChatGPT deshabilitado");
 	const handleChatGptToggleEnv = (env: Environment, value: boolean) =>
-		updateIntegrationService(
-			"chatGpt",
-			{ enabled: { [env]: value } },
-			`ChatGPT ${env} ${value ? "habilitado" : "deshabilitado"}`,
-		);
+		updateIntegrationService("chatGpt", { enabled: { [env]: value } }, `ChatGPT ${env} ${value ? "habilitado" : "deshabilitado"}`);
 	const handleChatGptMessage = (message: string | null) =>
 		updateIntegrationService("chatGpt", { maintenanceMessage: message }, "Mensaje ChatGPT actualizado");
 	const handleChatGptReleaseStage = (stage: ReleaseStage) =>
@@ -241,10 +229,9 @@ const IntegrationsPage: React.FC = () => {
 		try {
 			await judicialNotificationConfigService.updateContentConfig({ usePublicMovementLinks: enabled });
 			await fetchMovViewer();
-			enqueueSnackbar(
-				enabled ? "Visor de documentos en emails habilitado" : "Visor de documentos en emails deshabilitado",
-				{ variant: "success" },
-			);
+			enqueueSnackbar(enabled ? "Visor de documentos en emails habilitado" : "Visor de documentos en emails deshabilitado", {
+				variant: "success",
+			});
 		} catch (err: any) {
 			enqueueSnackbar(err?.message || "Error al actualizar el visor de documentos", { variant: "error" });
 			setMovViewer((s) => ({ ...s, saving: false }));
@@ -453,10 +440,10 @@ const IntegrationsPage: React.FC = () => {
 			<Box sx={{ mt: 4 }}>
 				<Stack spacing={1}>
 					<Typography variant="caption" color="text.secondary">
-						Las configuraciones de PJN y SCBA viven en sus propios servicios (pjn-api, mev-api) y se sincronizan via API. Grupos,
-						Claude.ai y ChatGPT se almacenan en <code>integrationsconfigs</code> en la base de datos principal. Las integraciones AI
-						(Claude/ChatGPT) tienen además un <em>estado de lanzamiento</em> (Beta / Estable) que controla cómo se renderea el chip y el
-						CTA en la landing pública.
+						Las configuraciones de PJN y SCBA viven en sus propios servicios (pjn-api, mev-api) y se sincronizan via API. Grupos, Claude.ai
+						y ChatGPT se almacenan en <code>integrationsconfigs</code> en la base de datos principal. Las integraciones AI (Claude/ChatGPT)
+						tienen además un <em>estado de lanzamiento</em> (Beta / Estable) que controla cómo se renderea el chip y el CTA en la landing
+						pública.
 					</Typography>
 				</Stack>
 			</Box>

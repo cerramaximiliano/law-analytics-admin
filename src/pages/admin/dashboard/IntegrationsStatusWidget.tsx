@@ -7,7 +7,7 @@ import { ArrowRight2, Routing2 } from "iconsax-react";
 import IntegrationsConfigService from "api/integrationsConfig";
 import { ScrapingManagerService } from "api/scrapingManager";
 import ScbaManagerService from "api/scbaManager";
-import judicialNotificationConfigService from "services/judicialNotificationConfigService";
+import judicialNotificationConfigService from "api/judicialNotificationConfig";
 import { LIVE_GREEN, STALE_AMBER, LIVE_PULSE_KEYFRAMES, headerBorder, headerShadow } from "themes/dashboardTokens";
 
 interface ServiceRow {
@@ -118,13 +118,9 @@ const IntegrationsStatusWidget: React.FC = () => {
 			) : (
 				<Stack spacing={0.75}>
 					{services.map((service) => {
-						const dotColor =
-							service.enabled === null ? theme.palette.error.main : service.enabled ? LIVE_GREEN : STALE_AMBER;
+						const dotColor = service.enabled === null ? theme.palette.error.main : service.enabled ? LIVE_GREEN : STALE_AMBER;
 						return (
-							<Box
-								key={service.key}
-								sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}
-							>
+							<Box key={service.key} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
 								<Typography variant="caption" color="text.secondary" noWrap sx={{ fontSize: "0.75rem" }}>
 									{service.label}
 								</Typography>
