@@ -65,6 +65,8 @@ import {
 	SearchNormal1,
 	ArrowUp2,
 	ArrowDown2,
+	ArrowLeft2,
+	ArrowRight2,
 	TextBlock,
 	Code,
 	Link21,
@@ -726,6 +728,37 @@ const EmailTemplates = () => {
 		setDetailOpen(false);
 		setSelectedTemplate(null);
 		setTemplateLinks([]);
+	};
+
+	// Navegación anterior/siguiente entre templates desde el modal de detalle
+	// (recorre la lista filtrada completa, con wrap-around; conserva el tab activo
+	// para poder revisar diseños rápidamente)
+	const handleNavigateDetail = async (direction: 1 | -1) => {
+		if (!selectedTemplate || filteredTemplates.length < 2 || loadingDetails) return;
+		const currentIndex = filteredTemplates.findIndex((t) => t._id === selectedTemplate._id);
+		const nextIndex = ((currentIndex === -1 ? 0 : currentIndex) + direction + filteredTemplates.length) % filteredTemplates.length;
+		const nextTemplate = filteredTemplates[nextIndex];
+		if (!nextTemplate || nextTemplate._id === selectedTemplate._id) return;
+		setLoadingDetails(true);
+		setSelectedTemplate(nextTemplate);
+		const fullTemplate = await fetchTemplateDetails(nextTemplate._id);
+		if (fullTemplate) {
+			setSelectedTemplate(fullTemplate);
+		}
+		setLoadingDetails(false);
+	};
+
+	// Flechas del teclado dentro del modal (ignora inputs para no interferir al escribir)
+	const handleDetailKeyDown = (event: React.KeyboardEvent) => {
+		const target = event.target as HTMLElement;
+		if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return;
+		if (event.key === "ArrowRight") {
+			event.preventDefault();
+			handleNavigateDetail(1);
+		} else if (event.key === "ArrowLeft") {
+			event.preventDefault();
+			handleNavigateDetail(-1);
+		}
 	};
 
 	const handleChangeTab = (event: React.SyntheticEvent, newValue: number) => {
@@ -1967,14 +2000,50 @@ const EmailTemplates = () => {
 			</Grid>
 
 			{/* Template Detail Dialog */}
-			<Dialog open={detailOpen} onClose={handleCloseDetail} maxWidth="lg" fullWidth>
+			<Dialog open={detailOpen} onClose={handleCloseDetail} maxWidth="lg" fullWidth onKeyDown={handleDetailKeyDown}>
 				{selectedTemplate && (
 					<>
 						<DialogTitle>
-							{selectedTemplate.name}
-							<Typography variant="body2" color="textSecondary">
-								{categoryDisplay[selectedTemplate.category] || selectedTemplate.category}
-							</Typography>
+							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+								<Box sx={{ minWidth: 0 }}>
+									{selectedTemplate.name}
+									<Typography variant="body2" color="textSecondary">
+										{categoryDisplay[selectedTemplate.category] || selectedTemplate.category}
+									</Typography>
+								</Box>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0 }}>
+									<Tooltip title="Anterior (←)">
+										<span>
+											<IconButton
+												aria-label="template anterior"
+												size="small"
+												onClick={() => handleNavigateDetail(-1)}
+												disabled={filteredTemplates.length < 2 || loadingDetails}
+											>
+												<ArrowLeft2 size={20} />
+											</IconButton>
+										</span>
+									</Tooltip>
+									<Typography variant="caption" color="textSecondary" sx={{ minWidth: 56, textAlign: "center" }}>
+										{(() => {
+											const idx = filteredTemplates.findIndex((t) => t._id === selectedTemplate._id);
+											return idx === -1 ? "— / —" : `${idx + 1} / ${filteredTemplates.length}`;
+										})()}
+									</Typography>
+									<Tooltip title="Siguiente (→)">
+										<span>
+											<IconButton
+												aria-label="template siguiente"
+												size="small"
+												onClick={() => handleNavigateDetail(1)}
+												disabled={filteredTemplates.length < 2 || loadingDetails}
+											>
+												<ArrowRight2 size={20} />
+											</IconButton>
+										</span>
+									</Tooltip>
+								</Box>
+							</Box>
 						</DialogTitle>
 						<Divider />
 						<Box sx={{ borderBottom: 1, borderColor: "divider", px: 3 }}>
