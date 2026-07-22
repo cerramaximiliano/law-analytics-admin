@@ -44,6 +44,10 @@ export interface MovementLinkSummaryData {
 		users_notified: number;
 		users_opened: number;
 		open_rate_users: number | null;
+		// Aperturas del email (pixel, sin bots): funnel enviado → abrió → vio.
+		email_opens?: number;
+		users_opened_email?: number;
+		open_rate_email?: number | null;
 	};
 }
 
@@ -100,6 +104,8 @@ export interface MovementLinkTimeseriesItem {
 	login_continues: number;
 	// Movimientos notificados por email ese día (la-notification).
 	notified?: number;
+	// Aperturas del email (pixel) ese día.
+	email_opens?: number;
 }
 
 export interface MovementLinkTimeseriesResponse {
@@ -116,7 +122,8 @@ export type MovementLinkEventName =
 	| "download"
 	| "fallback_click"
 	| "login_continue"
-	| "promo_click";
+	| "promo_click"
+	| "email_open";
 
 export interface MovementLinkRecentItem {
 	_id?: string;

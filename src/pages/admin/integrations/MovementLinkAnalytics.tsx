@@ -25,7 +25,7 @@ import {
 	FormControlLabel,
 	Switch,
 } from "@mui/material";
-import { Refresh, Eye, DocumentText, LoginCurve, DocumentDownload, People, Folder2, ExportSquare, Warning2, TickCircle } from "iconsax-react";
+import { Refresh, Eye, DocumentText, LoginCurve, DocumentDownload, People, Folder2, ExportSquare, Warning2, TickCircle, Sms } from "iconsax-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
 import MainCard from "components/MainCard";
 import { BRAND_BLUE } from "themes/dashboardTokens";
@@ -50,6 +50,7 @@ const EVENT_TRANSLATIONS: Record<MovementLinkEventName, string> = {
 	fallback_click: "Click al portal PJN",
 	login_continue: "Continuó en la app",
 	promo_click: "Click en promo",
+	email_open: "Abrió el email",
 };
 
 const EVENT_COLOR: Record<MovementLinkEventName, "default" | "primary" | "secondary" | "info" | "success" | "warning" | "error"> = {
@@ -60,6 +61,7 @@ const EVENT_COLOR: Record<MovementLinkEventName, "default" | "primary" | "second
 	fallback_click: "secondary",
 	login_continue: "warning",
 	promo_click: "error",
+	email_open: "info",
 };
 
 // Tab Panel
@@ -364,7 +366,7 @@ const MovementLinkAnalytics: React.FC = () => {
 						Emails de movimientos enviados (la-notification)
 					</Typography>
 					<Grid container spacing={3} sx={{ mb: 4 }}>
-						<Grid item xs={12} sm={4}>
+						<Grid item xs={12} sm={6} md={3}>
 							<StatCard
 								title="Movimientos notificados"
 								value={summary?.notifications?.movements_notified ?? 0}
@@ -374,7 +376,7 @@ const MovementLinkAnalytics: React.FC = () => {
 								loading={loading}
 							/>
 						</Grid>
-						<Grid item xs={12} sm={4}>
+						<Grid item xs={12} sm={6} md={3}>
 							<StatCard
 								title="Usuarios notificados"
 								value={summary?.notifications?.users_notified ?? 0}
@@ -384,13 +386,25 @@ const MovementLinkAnalytics: React.FC = () => {
 								loading={loading}
 							/>
 						</Grid>
-						<Grid item xs={12} sm={4}>
+						<Grid item xs={12} sm={6} md={3}>
 							<StatCard
-								title="Tasa de apertura"
+								title="Abrieron el email"
+								value={fmtRate(summary?.notifications?.open_rate_email)}
+								subtitle={`${summary?.notifications?.users_opened_email ?? 0} de ${
+									summary?.notifications?.users_notified ?? 0
+								} usuarios (pixel, desde 22/07)`}
+								icon={<Sms size={24} />}
+								color={theme.palette.warning.main}
+								loading={loading}
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6} md={3}>
+							<StatCard
+								title="Vieron un documento"
 								value={fmtRate(summary?.notifications?.open_rate_users)}
 								subtitle={`${summary?.notifications?.users_opened ?? 0} de ${
 									summary?.notifications?.users_notified ?? 0
-								} usuarios vieron un documento`}
+								} usuarios llegaron a la vista`}
 								icon={<Eye size={24} />}
 								color={theme.palette.success.main}
 								loading={loading}
@@ -485,6 +499,15 @@ const MovementLinkAnalytics: React.FC = () => {
 												stroke={theme.palette.grey[500]}
 												strokeWidth={2}
 												strokeDasharray="5 4"
+												dot={false}
+											/>
+											<Line
+												type="monotone"
+												dataKey="email_opens"
+												name="Abrió email"
+												stroke={theme.palette.warning.main}
+												strokeWidth={2}
+												strokeDasharray="2 3"
 												dot={false}
 											/>
 											<Line type="monotone" dataKey="views" name="Vistas" stroke={theme.palette.info.main} strokeWidth={2} dot={false} />
