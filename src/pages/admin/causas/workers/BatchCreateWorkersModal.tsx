@@ -48,6 +48,7 @@ const FUERO_OPTIONS = [
 	{ value: "CNT", label: "Trabajo" },
 	{ value: "COM", label: "Comercial" },
 	{ value: "CCF", label: "Civil y Comercial Federal" },
+	{ value: "CAF", label: "Contencioso Adm. Federal" },
 ];
 
 const CURRENT_YEAR = new Date().getFullYear();

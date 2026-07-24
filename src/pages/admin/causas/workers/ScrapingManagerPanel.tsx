@@ -51,9 +51,10 @@ const FUERO_OPTIONS = [
 	{ value: "CNT", label: "Trabajo" },
 	{ value: "COM", label: "Comercial" },
 	{ value: "CCF", label: "Civil y Comercial Federal" },
+	{ value: "CAF", label: "Contencioso Adm. Federal" },
 ];
 
-const FUEROS = ["CIV", "CSS", "CNT", "COM", "CCF"];
+const FUEROS = ["CIV", "CSS", "CNT", "COM", "CCF", "CAF"];
 
 const AUTO_REFRESH_INTERVAL = 30000; // 30s
 

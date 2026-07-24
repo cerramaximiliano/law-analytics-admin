@@ -48,6 +48,7 @@ const FUERO_OPTIONS = [
 	{ value: "CNT", label: "Trabajo" },
 	{ value: "COM", label: "Comercial" },
 	{ value: "CCF", label: "Civil y Comercial Federal" },
+	{ value: "CAF", label: "Contencioso Adm. Federal" },
 ];
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -59,6 +60,7 @@ const FUERO_COLORS: Record<string, string> = {
 	CNT: "#f57c00",
 	COM: "#7b1fa2",
 	CCF: "#00796b",
+	CAF: "#c2185b",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
