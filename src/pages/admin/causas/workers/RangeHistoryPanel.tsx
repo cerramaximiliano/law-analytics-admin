@@ -33,6 +33,7 @@ const FUERO_OPTIONS = [
 	{ value: "CSS", label: "Seguridad Social" },
 	{ value: "CNT", label: "Trabajo" },
 	{ value: "COM", label: "Comercial" },
+	{ value: "CCF", label: "Civil y Comercial Federal" },
 ];
 
 const CURRENT_YEAR = new Date().getFullYear();

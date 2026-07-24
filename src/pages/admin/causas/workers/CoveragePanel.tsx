@@ -47,6 +47,7 @@ const FUERO_OPTIONS = [
 	{ value: "CSS", label: "Seguridad Social" },
 	{ value: "CNT", label: "Trabajo" },
 	{ value: "COM", label: "Comercial" },
+	{ value: "CCF", label: "Civil y Comercial Federal" },
 ];
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -57,6 +58,7 @@ const FUERO_COLORS: Record<string, string> = {
 	CSS: "#388e3c",
 	CNT: "#f57c00",
 	COM: "#7b1fa2",
+	CCF: "#00796b",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
