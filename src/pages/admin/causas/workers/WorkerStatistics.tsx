@@ -71,7 +71,6 @@ import {
 import HourlyStatsPanel from "./HourlyStatsPanel";
 import DailySummaryPanel from "./DailySummaryPanel";
 import ZeroMovementsProtectionPanel from "./ZeroMovementsProtectionPanel";
-import RetryQueuePanel from "./RetryQueuePanel";
 import CapacityStatsWidget from "../../dashboard/CapacityStatsWidget";
 
 // Fueros disponibles
@@ -570,15 +569,6 @@ const WorkerStatistics: React.FC = () => {
 								<Stack direction="row" spacing={1} alignItems="center">
 									<Warning2 size={18} />
 									<span>Anti-eliminación</span>
-								</Stack>
-							}
-							sx={{ textTransform: "none" }}
-						/>
-						<Tab
-							label={
-								<Stack direction="row" spacing={1} alignItems="center">
-									<Refresh2 size={18} />
-									<span>Cola de retry</span>
 								</Stack>
 							}
 							sx={{ textTransform: "none" }}
@@ -1191,11 +1181,6 @@ const WorkerStatistics: React.FC = () => {
 				{/* Tab: Anti-eliminación (causas con SCRAPING_ERROR_ZERO_MOVEMENTS) */}
 				<TabPanel value={activeTab} index={4}>
 					<ZeroMovementsProtectionPanel />
-				</TabPanel>
-
-				{/* Tab: Cola de retry (pendientes y descartados por agotar reintentos) */}
-				<TabPanel value={activeTab} index={5}>
-					<RetryQueuePanel />
 				</TabPanel>
 			</Stack>
 		</LocalizationProvider>

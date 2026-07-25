@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import { Box, Tab, Tabs, Typography, Paper, Stack, Chip, useTheme, alpha, IconButton, Tooltip, Popover } from "@mui/material";
-import { TickSquare, SearchNormal1, DocumentUpload, InfoCircle, People, Warning2, SecurityUser, Lock1, Gallery } from "iconsax-react";
+import { TickSquare, SearchNormal1, DocumentUpload, InfoCircle, People, Warning2, SecurityUser, Lock1, Gallery, Refresh2 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import { BRAND_BLUE, headerBorder, navActiveBg } from "themes/dashboardTokens";
@@ -10,6 +10,7 @@ import ScrapingWorker from "./ScrapingWorker";
 import AppUpdateWorker from "./AppUpdateWorker";
 import IntervinientesWorker from "./IntervinientesWorker";
 import StuckDocumentsWorker from "./StuckDocumentsWorker";
+import RetryQueuePanel from "./RetryQueuePanel";
 import MisCausasWorker from "./MisCausasWorker";
 import PrivacyCheckerWorker from "./PrivacyCheckerWorker";
 import CaptchaDatasetTab from "./CaptchaDatasetTab";
@@ -86,6 +87,16 @@ const WorkersConfig = () => {
 			status: "active",
 			badge: "app",
 			ip: "18.228.63.73",
+		},
+		{
+			label: "Retry",
+			value: "retry",
+			icon: <Refresh2 size={20} />,
+			component: <RetryQueuePanel />,
+			description: "Reintenta expedientes cuyo captcha falló y descarta los que agotaron los intentos",
+			status: "active",
+			badge: "worker_01",
+			ip: "100.111.73.56",
 		},
 		{
 			label: "Mis Causas",
