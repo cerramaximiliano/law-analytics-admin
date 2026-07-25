@@ -29,6 +29,8 @@ const FUEROS = [
 	{ value: "COM", label: "Comercial" },
 	{ value: "CSS", label: "Seguridad Social" },
 	{ value: "CNT", label: "Trabajo" },
+	{ value: "CCF", label: "Civil y Comercial Federal" },
+	{ value: "CAF", label: "Contencioso Adm. Federal" },
 ];
 
 const TIPO_META: Record<string, { label: string; color: string }> = {
