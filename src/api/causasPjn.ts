@@ -548,6 +548,27 @@ export class CausasPjnService {
 		}
 	}
 
+	/**
+	 * Estado de la cola del retry worker: pendientes y descartados por haber
+	 * agotado los reintentos (retryProgress.exhausted).
+	 */
+	static async getRetryQueueStatus(): Promise<{
+		success: boolean;
+		data: {
+			pendientes: number;
+			agotados: number;
+			porFuero: Record<string, { pendientes: number; agotados: number }>;
+			updatedAt: string;
+		};
+	}> {
+		try {
+			const response = await pjnAxios.get("/api/causas/admin/retry-queue");
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
 	// Manejo de errores
 	static handleError(error: any): Error {
 		// Re-throw axios errors for interceptor handling
