@@ -9,6 +9,12 @@ export interface CaptchaDatasetEntry {
 	fuero?: string;
 	expediente?: string | null;
 	attempt?: number;
+	// Casos que el modelo derivó por baja confianza. Si además el proveedor
+	// falló, quedan sin etiqueta y se etiquetan a mano desde esta vista.
+	hard?: boolean;
+	needsLabel?: boolean;
+	localConfidence?: number;
+	manualLabel?: boolean;
 }
 
 export interface CaptchaDatasetListResponse {
@@ -43,6 +49,8 @@ export interface CaptchaDatasetListParams {
 	worker_id?: string;
 	fuero?: string;
 	search?: string;
+	/** true = solo los pendientes de etiquetado manual. */
+	needsLabel?: boolean;
 }
 
 export const CaptchaDatasetService = {
@@ -53,6 +61,15 @@ export const CaptchaDatasetService = {
 
 	async stats(): Promise<CaptchaDatasetStatsResponse> {
 		const response = await workersAxios.get<CaptchaDatasetStatsResponse>("/api/captcha-dataset/stats");
+		return response.data;
+	},
+
+	/**
+	 * Etiqueta a mano un captcha que ni el modelo ni el proveedor resolvieron.
+	 * El backend appendea la corrección al manifest (que es append-only).
+	 */
+	async label(file: string, label: string): Promise<{ success: boolean }> {
+		const response = await workersAxios.patch(`/api/captcha-dataset/label/${file}`, { label });
 		return response.data;
 	},
 

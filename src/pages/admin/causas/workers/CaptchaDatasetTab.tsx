@@ -9,9 +9,12 @@ import {
 	Chip,
 	Grid,
 	FormControl,
+	FormControlLabel,
 	InputLabel,
 	Select,
 	MenuItem,
+	Button,
+	Switch,
 	TextField,
 	Pagination,
 	Alert,
@@ -111,6 +114,12 @@ const CaptchaDatasetTab = () => {
 	const [page, setPage] = useState(1);
 	const [loading, setLoading] = useState(false);
 	const [verifiedFilter, setVerifiedFilter] = useState<"all" | "true" | "false">("all");
+	// Pendientes de etiquetado manual: ni el modelo ni el proveedor los
+	// resolvieron, así que no hay etiqueta automática posible para ellos.
+	const [soloSinEtiqueta, setSoloSinEtiqueta] = useState(false);
+	const [labelInput, setLabelInput] = useState("");
+	const [saving, setSaving] = useState(false);
+	const [labelMsg, setLabelMsg] = useState<string | null>(null);
 	const [workerFilter, setWorkerFilter] = useState<string>("");
 	const [search, setSearch] = useState("");
 	const [error, setError] = useState<string | null>(null);
@@ -137,6 +146,7 @@ const CaptchaDatasetTab = () => {
 				limit: PAGE_SIZE,
 			};
 			if (verifiedFilter !== "all") params.verified = verifiedFilter;
+			if (soloSinEtiqueta) params.needsLabel = true;
 			if (workerFilter) params.worker_id = workerFilter;
 			if (search) params.search = search;
 			const r = await CaptchaDatasetService.list(params);
@@ -155,14 +165,16 @@ const CaptchaDatasetTab = () => {
 
 	useEffect(() => {
 		fetchEntries();
-	}, [page, verifiedFilter, workerFilter, search]);
+	}, [page, verifiedFilter, workerFilter, search, soloSinEtiqueta]);
 
 	// Reset page when filters change
 	useEffect(() => {
 		setPage(1);
-	}, [verifiedFilter, workerFilter, search]);
+	}, [verifiedFilter, workerFilter, search, soloSinEtiqueta]);
 
 	const handleOpen = async (entry: CaptchaDatasetEntry) => {
+		setLabelInput("");
+		setLabelMsg(null);
 		setSelected(entry);
 		setSelectedBlob(null);
 		try {
@@ -279,6 +291,13 @@ const CaptchaDatasetTab = () => {
 					onChange={(e) => setSearch(e.target.value)}
 					sx={{ flex: 1 }}
 				/>
+				{/* Los pendientes de etiquetado son los casos difíciles sin etiqueta
+				    automática: el trabajo manual que realmente aporta al dataset. */}
+				<FormControlLabel
+					control={<Switch checked={soloSinEtiqueta} onChange={(e) => setSoloSinEtiqueta(e.target.checked)} />}
+					label="Solo pendientes de etiquetar"
+					sx={{ whiteSpace: "nowrap" }}
+				/>
 			</Stack>
 
 			{error && (
@@ -394,6 +413,56 @@ const CaptchaDatasetTab = () => {
 										</Typography>
 									</Grid>
 								</Grid>
+
+								{/* Etiquetado manual: solo para los que no tienen etiqueta
+								    automática, porque ni el modelo ni el proveedor los resolvieron. */}
+								{selected.needsLabel && (
+									<Box sx={{ mt: 3, p: 2, bgcolor: "warning.lighter", borderRadius: 1 }}>
+										<Typography variant="subtitle2" gutterBottom>
+											Etiquetado manual
+										</Typography>
+										<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
+											Ni el modelo ni el proveedor resolvieron este captcha. Escribí los 4 dígitos que ves en la imagen.
+										</Typography>
+										<Stack direction="row" spacing={1} alignItems="flex-start">
+											<TextField
+												size="small"
+												value={labelInput}
+												onChange={(e) => setLabelInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
+												placeholder="0000"
+												inputProps={{ maxLength: 4, style: { fontFamily: "monospace", fontSize: 18, letterSpacing: 4 } }}
+												sx={{ width: 130 }}
+												autoFocus
+											/>
+											<Button
+												variant="contained"
+												disabled={labelInput.length !== 4 || saving}
+												onClick={async () => {
+													setSaving(true);
+													setLabelMsg(null);
+													try {
+														await CaptchaDatasetService.label(selected.file, labelInput);
+														setLabelMsg("Etiqueta guardada");
+														setLabelInput("");
+														fetchEntries();
+														fetchStats();
+													} catch (err: any) {
+														setLabelMsg(err.response?.data?.message || err.message || "No se pudo guardar");
+													} finally {
+														setSaving(false);
+													}
+												}}
+											>
+												{saving ? "Guardando..." : "Guardar"}
+											</Button>
+										</Stack>
+										{labelMsg && (
+											<Typography variant="caption" sx={{ display: "block", mt: 1 }} color={labelMsg === "Etiqueta guardada" ? "success.main" : "error.main"}>
+												{labelMsg}
+											</Typography>
+										)}
+									</Box>
+								)}
 							</Box>
 						</Stack>
 					)}
