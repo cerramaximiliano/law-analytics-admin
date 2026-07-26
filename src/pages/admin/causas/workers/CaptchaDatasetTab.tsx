@@ -26,6 +26,7 @@ import {
 } from "@mui/material";
 import { CloseCircle, TickCircle, Warning2 } from "iconsax-react";
 import workersAxios from "utils/workersAxios";
+import CaptchaLabelingMode from "./CaptchaLabelingMode";
 import CaptchaDatasetService, { CaptchaDatasetEntry, CaptchaDatasetStats } from "api/captchaDataset";
 
 const PAGE_SIZE = 10;
@@ -120,6 +121,7 @@ const CaptchaDatasetTab = () => {
 	const [labelInput, setLabelInput] = useState("");
 	const [saving, setSaving] = useState(false);
 	const [labelMsg, setLabelMsg] = useState<string | null>(null);
+	const [modoEtiquetado, setModoEtiquetado] = useState(false);
 	const [workerFilter, setWorkerFilter] = useState<string>("");
 	const [search, setSearch] = useState("");
 	const [error, setError] = useState<string | null>(null);
@@ -300,7 +302,23 @@ const CaptchaDatasetTab = () => {
 					label="Solo sin etiqueta confiable"
 					sx={{ whiteSpace: "nowrap" }}
 				/>
+				{/* Etiquetar de a uno abriendo y cerrando el detalle es inviable con
+				    miles de pendientes; este modo va pasando solo. */}
+				<Button variant="contained" onClick={() => setModoEtiquetado(true)} sx={{ whiteSpace: "nowrap" }}>
+					Etiquetar
+				</Button>
 			</Stack>
+
+			<CaptchaLabelingMode
+				open={modoEtiquetado}
+				onClose={(n) => {
+					setModoEtiquetado(false);
+					if (n > 0) {
+						fetchEntries();
+						fetchStats();
+					}
+				}}
+			/>
 
 			{error && (
 				<Alert severity="error">

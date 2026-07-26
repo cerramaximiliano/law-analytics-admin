@@ -283,6 +283,20 @@ const admin: NavItemType = {
 					url: "/admin/causas/trayectorias",
 					breadcrumbs: true,
 				},
+				{
+					id: "causas-etapas",
+					title: "Etapas procesales",
+					type: "item",
+					url: "/admin/causas/etapas",
+					breadcrumbs: true,
+				},
+				{
+					id: "causas-etapa-stats",
+					title: "Estadísticas de etapas",
+					type: "item",
+					url: "/admin/causas/etapa-stats",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{
