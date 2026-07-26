@@ -73,6 +73,15 @@ export const CaptchaDatasetService = {
 		return response.data;
 	},
 
+	/**
+	 * Saca del dataset una imagen que no es un captcha (desafío expirado,
+	 * render roto). Deja de aparecer en la cola de etiquetado.
+	 */
+	async discard(file: string, reason?: string): Promise<{ success: boolean }> {
+		const response = await workersAxios.patch(`/api/captcha-dataset/discard/${file}`, { reason });
+		return response.data;
+	},
+
 	// URL que el browser usa para cargar el PNG (incluye baseURL).
 	// El token de auth viaja por el interceptor de workersAxios... pero <img src> no
 	// pasa por el interceptor de axios. Resolvemos eso usando un fetch con auth

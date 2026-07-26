@@ -13,7 +13,7 @@ import {
 	useMediaQuery,
 	useTheme,
 } from "@mui/material";
-import { CloseCircle, ArrowRight } from "iconsax-react";
+import { CloseCircle, ArrowRight, Trash } from "iconsax-react";
 import workersAxios from "utils/workersAxios";
 import { CaptchaDatasetService, CaptchaDatasetEntry } from "api/captchaDataset";
 
@@ -144,6 +144,24 @@ const CaptchaLabelingMode = ({ open, onClose }: Props) => {
 		[actual, avanzar],
 	);
 
+	// Algunas capturas no son captchas: el desafío venció entre que se abrió y
+	// se tomó la imagen, y muestran "desafío expirado". Saltear no alcanza,
+	// porque vuelven a salir en el próximo lote: hay que sacarlas del dataset.
+	const descartar = useCallback(async () => {
+		if (!actual) return;
+		setGuardando(true);
+		setError(null);
+		try {
+			await CaptchaDatasetService.discard(actual.file, "no es un captcha");
+			setPendientesTotal((n) => Math.max(0, n - 1));
+			await avanzar();
+		} catch (e: any) {
+			setError(e?.response?.data?.message || e?.message || "No se pudo descartar");
+		} finally {
+			setGuardando(false);
+		}
+	}, [actual, avanzar]);
+
 	// Al cuarto dígito guarda y avanza solo: es lo que hace que el flujo sea rápido.
 	const onChange = (v: string) => {
 		const limpio = v.replace(/\D/g, "").slice(0, 4);
@@ -229,16 +247,29 @@ const CaptchaLabelingMode = ({ open, onClose }: Props) => {
 							{actual.label ? ` El proveedor había leído "${actual.label}" y el PJN lo rechazó.` : ""}
 						</Typography>
 
-						<Button
-							variant="outlined"
-							fullWidth={esMovil}
-							endIcon={<ArrowRight size={18} />}
-							onClick={avanzar}
-							disabled={guardando}
-							size="large"
-						>
-							Saltear
-						</Button>
+						<Stack direction={esMovil ? "column" : "row"} spacing={1.5} sx={{ width: "100%" }}>
+							<Button
+								variant="outlined"
+								fullWidth
+								endIcon={<ArrowRight size={18} />}
+								onClick={avanzar}
+								disabled={guardando}
+								size="large"
+							>
+								Saltear
+							</Button>
+							<Button
+								variant="outlined"
+								color="error"
+								fullWidth
+								startIcon={<Trash size={18} />}
+								onClick={descartar}
+								disabled={guardando}
+								size="large"
+							>
+								No es un captcha
+							</Button>
+						</Stack>
 					</Stack>
 				)}
 			</Box>
