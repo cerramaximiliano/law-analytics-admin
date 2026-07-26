@@ -146,7 +146,9 @@ const CaptchaDatasetTab = () => {
 				limit: PAGE_SIZE,
 			};
 			if (verifiedFilter !== "all") params.verified = verifiedFilter;
-			if (soloSinEtiqueta) params.needsLabel = true;
+			// verified=false cubre las dos cosas que hay que etiquetar a mano: los
+			// difíciles sin etiqueta y los que tienen etiqueta pero el PJN rechazó.
+			if (soloSinEtiqueta) params.verified = "false";
 			if (workerFilter) params.worker_id = workerFilter;
 			if (search) params.search = search;
 			const r = await CaptchaDatasetService.list(params);
@@ -295,7 +297,7 @@ const CaptchaDatasetTab = () => {
 				    automática: el trabajo manual que realmente aporta al dataset. */}
 				<FormControlLabel
 					control={<Switch checked={soloSinEtiqueta} onChange={(e) => setSoloSinEtiqueta(e.target.checked)} />}
-					label="Solo pendientes de etiquetar"
+					label="Solo sin etiqueta confiable"
 					sx={{ whiteSpace: "nowrap" }}
 				/>
 			</Stack>
@@ -414,15 +416,18 @@ const CaptchaDatasetTab = () => {
 									</Grid>
 								</Grid>
 
-								{/* Etiquetado manual: solo para los que no tienen etiqueta
-								    automática, porque ni el modelo ni el proveedor los resolvieron. */}
-								{selected.needsLabel && (
+								{/* Etiquetado manual para todo lo que no tiene etiqueta confiable:
+								    los difíciles sin etiqueta y los "unverified", cuya etiqueta
+								    existe pero el PJN la rechazó (o sea, está mal). */}
+								{!selected.verified && (
 									<Box sx={{ mt: 3, p: 2, bgcolor: "warning.lighter", borderRadius: 1 }}>
 										<Typography variant="subtitle2" gutterBottom>
-											Etiquetado manual
+											{selected.needsLabel ? "Etiquetado manual" : "Corregir etiqueta"}
 										</Typography>
 										<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
-											Ni el modelo ni el proveedor resolvieron este captcha. Escribí los 4 dígitos que ves en la imagen.
+											{selected.needsLabel
+												? "Ni el modelo ni el proveedor resolvieron este captcha. Escribí los 4 dígitos que ves en la imagen."
+												: `El PJN rechazó la etiqueta "${selected.label}", así que es incorrecta. Escribí los 4 dígitos correctos.`}
 										</Typography>
 										<Stack direction="row" spacing={1} alignItems="flex-start">
 											<TextField
