@@ -33,7 +33,10 @@ const FUEROS = [
 	{ value: "CCF", label: "Civil y Comercial Federal" },
 ];
 
-const VISTAS: { value: TipoResumen; label: string }[] = [
+type VistaValue = TipoResumen | "patron";
+
+const VISTAS: { value: VistaValue; label: string }[] = [
+	{ value: "patron", label: "Patrón por objeto (abstracto)" },
 	{ value: "duracion-fuero-etapa", label: "Duración por etapa" },
 	{ value: "duracion-objeto-etapa", label: "Duración por objeto" },
 	{ value: "duracion-juzgado-etapa", label: "Duración por juzgado" },
@@ -43,6 +46,10 @@ const VISTAS: { value: TipoResumen; label: string }[] = [
 	{ value: "conformidad", label: "Conformidad con el patrón" },
 	{ value: "firma", label: "Flujos completos (firmas)" },
 ];
+
+// Vista especial (no es un tipo de resumen directo): modelo abstracto del
+// proceso para un objeto — etapas posibles con sus salidas.
+const VISTA_PATRON = "patron";
 
 const CONFORMIDAD_META: Record<string, { label: string; color: "success" | "info" | "warning" | "error" }> = {
 	"con-merito": { label: "Con resolución de mérito", color: "success" },
@@ -81,9 +88,135 @@ const ETAPA_RANK: Record<string, number> = {
 
 const fmtDias = (v?: number | null) => (v == null ? "—" : `${v} d`);
 
+// ── Vista "Patrón por objeto": modelo abstracto del proceso ────────────────────
+// Para cada etapa presente en las causas del objeto: cuántos casos la
+// transitaron, cuánto duró (p50/p90) y hacia dónde salieron (avances vs
+// salidas de terminación), más los resultados finales.
+function PatronObjeto({ fuero, objeto, etiquetas }: { fuero: string; objeto: string; etiquetas: Record<string, string> }) {
+	const theme = useTheme();
+	const [trans, setTrans] = useState<ResumenDuracion[]>([]);
+	const [dur, setDur] = useState<ResumenDuracion[]>([]);
+	const [res, setRes] = useState<ResumenDuracion[]>([]);
+	const [loading, setLoading] = useState(false);
+
+	useEffect(() => {
+		if (!objeto) return;
+		let active = true;
+		setLoading(true);
+		Promise.all([
+			EtapaStatsService.resumen({ tipo: "transicion-objeto", fuero, objeto, limit: 500 }),
+			EtapaStatsService.resumen({ tipo: "duracion-objeto-etapa", fuero, objeto, limit: 100 }),
+			EtapaStatsService.resumen({ tipo: "resultado", fuero, objeto, limit: 50 }),
+		])
+			.then(([t, d, r]) => {
+				if (!active) return;
+				setTrans(t.data || []);
+				setDur(d.data || []);
+				setRes(r.data || []);
+			})
+			.catch(() => active && enqueueSnackbar("Error al cargar el patrón del objeto", { variant: "error" }))
+			.finally(() => active && setLoading(false));
+		return () => {
+			active = false;
+		};
+	}, [fuero, objeto]);
+
+	const etiqueta = (k?: string) => (k ? etiquetas[k] || k : "—");
+
+	const filas = useMemo(() => {
+		const porEtapa = new Map<string, { etapa: string; total: number; destinos: { etapa: string; n: number; salida: boolean }[] }>();
+		for (const t of trans) {
+			if (!t.etapa || !t.etapaSiguiente) continue;
+			const row = porEtapa.get(t.etapa) || { etapa: t.etapa, total: 0, destinos: [] };
+			const salida = t.etapaSiguiente === "fin_litigio" || t.etapaSiguiente === "archivo";
+			row.total += t.n;
+			row.destinos.push({ etapa: t.etapaSiguiente, n: t.n, salida });
+			porEtapa.set(t.etapa, row);
+		}
+		return [...porEtapa.values()]
+			.map((r) => ({ ...r, destinos: r.destinos.sort((a, b) => b.n - a.n), dur: dur.find((d) => d.etapa === r.etapa) }))
+			.sort((a, b) => (ETAPA_RANK[a.etapa] || 999) - (ETAPA_RANK[b.etapa] || 999));
+	}, [trans, dur]);
+
+	const totalRes = res.reduce((a, r) => a + r.n, 0);
+
+	if (!objeto) return <Alert severity="info">Elegí un objeto para ver su patrón abstracto de etapas y salidas.</Alert>;
+	if (loading)
+		return (
+			<Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+				<CircularProgress />
+			</Box>
+		);
+	if (!filas.length) return <Alert severity="warning">Sin transiciones suficientes para este objeto (se requieren ≥5 casos por transición).</Alert>;
+
+	return (
+		<Stack spacing={2}>
+			<TableContainer>
+				<Table size="small">
+					<TableHead>
+						<TableRow>
+							<TableCell>Etapa</TableCell>
+							<TableCell align="right">Casos</TableCell>
+							<TableCell align="right">p50 / p90</TableCell>
+							<TableCell>Salidas (a dónde pasa el expediente)</TableCell>
+						</TableRow>
+					</TableHead>
+					<TableBody>
+						{filas.map((f) => (
+							<TableRow key={f.etapa} hover>
+								<TableCell>
+									<Chip size="small" label={etiqueta(f.etapa)} sx={{ height: 22, fontWeight: 700 }} />
+								</TableCell>
+								<TableCell align="right">{f.total.toLocaleString("es-AR")}</TableCell>
+								<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+									{f.dur ? `${f.dur.p50 ?? "—"} / ${f.dur.p90 ?? "—"} d` : "—"}
+								</TableCell>
+								<TableCell>
+									<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+										{f.destinos.map((d) => (
+											<Chip
+												key={d.etapa}
+												size="small"
+												variant="outlined"
+												color={d.salida ? "warning" : "default"}
+												label={`→ ${etiqueta(d.etapa)} ${Math.round((100 * d.n) / f.total)}%`}
+												sx={{ height: 21, fontSize: 11, fontWeight: d.salida ? 700 : 500 }}
+											/>
+										))}
+									</Stack>
+								</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			</TableContainer>
+
+			{res.length > 0 && (
+				<Box>
+					<Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+						Resultados finales ({totalRes.toLocaleString("es-AR")} causas terminadas)
+					</Typography>
+					<Stack spacing={0.25}>
+						{res.slice(0, 8).map((r) => (
+							<Typography key={r._id} variant="body2" sx={{ color: "text.secondary" }}>
+								<b>{Math.round((100 * r.n) / totalRes)}%</b> {(r.detalle || r.resultado || "").toLowerCase().slice(0, 70)} ·{" "}
+								{fmtDias(r.diasTotalesMean)} totales promedio
+							</Typography>
+						))}
+					</Stack>
+				</Box>
+			)}
+			<Typography variant="caption" sx={{ color: "text.secondary" }}>
+				Las salidas en naranja son terminaciones (fin del litigio / archivo) desde esa etapa; el resto, avances. Basado en segmentos
+				cerrados del corpus; grupos con menos de 5 casos excluidos.
+			</Typography>
+		</Stack>
+	);
+}
+
 const EtapaStats = () => {
 	const theme = useTheme();
-	const [vista, setVista] = useState<TipoResumen>("duracion-fuero-etapa");
+	const [vista, setVista] = useState<VistaValue>("duracion-fuero-etapa");
 	const [fuero, setFuero] = useState("CNT");
 	const [objeto, setObjeto] = useState("");
 	const [juzgado, setJuzgado] = useState("");
@@ -101,6 +234,7 @@ const EtapaStats = () => {
 	}, [fuero]);
 
 	useEffect(() => {
+		if (vista === VISTA_PATRON) return; // la vista patrón hace sus propios fetches
 		let active = true;
 		setLoading(true);
 		const params: any = { tipo: vista, fuero, limit: 500 };
@@ -173,7 +307,7 @@ const EtapaStats = () => {
 				<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
 					<FormControl size="small" sx={{ minWidth: 200 }}>
 						<InputLabel>Vista</InputLabel>
-						<Select value={vista} label="Vista" onChange={(e) => setVista(e.target.value as TipoResumen)}>
+						<Select value={vista} label="Vista" onChange={(e) => setVista(e.target.value as VistaValue)}>
 							{VISTAS.map((v) => (
 								<MenuItem key={v.value} value={v.value}>
 									{v.label}
@@ -201,7 +335,7 @@ const EtapaStats = () => {
 							))}
 						</Select>
 					</FormControl>
-					{vista === "duracion-objeto-etapa" && (
+					{(vista === "duracion-objeto-etapa" || vista === VISTA_PATRON) && (
 						<FormControl size="small" sx={{ minWidth: 260 }}>
 							<InputLabel>Objeto</InputLabel>
 							<Select value={objeto} label="Objeto" onChange={(e) => setObjeto(e.target.value)}>
@@ -266,7 +400,9 @@ const EtapaStats = () => {
 					casos se excluyen. Duraciones en días corridos.
 				</Alert>
 
-				{loading ? (
+				{vista === VISTA_PATRON ? (
+					<PatronObjeto fuero={fuero} objeto={objeto} etiquetas={filtros?.etiquetas || {}} />
+				) : loading ? (
 					<Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
 						<CircularProgress />
 					</Box>

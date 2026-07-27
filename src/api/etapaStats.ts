@@ -8,6 +8,7 @@ export type TipoResumen =
 	| "duracion-juzgado-etapa"
 	| "duracion-sala-etapa"
 	| "transicion"
+	| "transicion-objeto"
 	| "resultado"
 	| "conformidad"
 	| "firma";
