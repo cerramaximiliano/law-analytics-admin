@@ -82,6 +82,16 @@ export const CaptchaDatasetService = {
 		return response.data;
 	},
 
+	/**
+	 * Aparta un captcha válido pero imposible de leer a ojo (algún dígito tapado
+	 * por las rayas). A diferencia de discard, no sale del dataset: queda
+	 * guardado aparte por si más adelante sirve.
+	 */
+	async illegible(file: string, reason?: string): Promise<{ success: boolean }> {
+		const response = await workersAxios.patch(`/api/captcha-dataset/illegible/${file}`, { reason });
+		return response.data;
+	},
+
 	// URL que el browser usa para cargar el PNG (incluye baseURL).
 	// El token de auth viaja por el interceptor de workersAxios... pero <img src> no
 	// pasa por el interceptor de axios. Resolvemos eso usando un fetch con auth

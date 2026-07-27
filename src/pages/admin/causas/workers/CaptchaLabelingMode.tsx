@@ -13,7 +13,7 @@ import {
 	useMediaQuery,
 	useTheme,
 } from "@mui/material";
-import { CloseCircle, ArrowRight, Trash } from "iconsax-react";
+import { CloseCircle, ArrowRight, Trash, EyeSlash as Eye } from "iconsax-react";
 import workersAxios from "utils/workersAxios";
 import { CaptchaDatasetService, CaptchaDatasetEntry } from "api/captchaDataset";
 
@@ -144,6 +144,25 @@ const CaptchaLabelingMode = ({ open, onClose }: Props) => {
 		[actual, avanzar],
 	);
 
+	// Captcha válido pero ilegible: alguna raya tapa un dígito y no hay forma de
+	// leerlo. Saltearlo no servía —el lote siguiente se pide desde el principio
+	// con verified=false, así que volvía a salir—; hay que apartarlo. No se
+	// descarta: es un captcha real y puede servir con un modelo mejor.
+	const marcarIlegible = useCallback(async () => {
+		if (!actual) return;
+		setGuardando(true);
+		setError(null);
+		try {
+			await CaptchaDatasetService.illegible(actual.file, "no se lee");
+			setPendientesTotal((n) => Math.max(0, n - 1));
+			await avanzar();
+		} catch (e: any) {
+			setError(e?.response?.data?.message || e?.message || "No se pudo marcar como ilegible");
+		} finally {
+			setGuardando(false);
+		}
+	}, [actual, avanzar]);
+
 	// Algunas capturas no son captchas: el desafío venció entre que se abrió y
 	// se tomó la imagen, y muestran "desafío expirado". Saltear no alcanza,
 	// porque vuelven a salir en el próximo lote: hay que sacarlas del dataset.
@@ -173,9 +192,20 @@ const CaptchaLabelingMode = ({ open, onClose }: Props) => {
 	// porque el foco puede estar en un botón; ahí el espacio lo activaría, que
 	// no es lo que uno espera cuando viene etiquetando a ritmo.
 	const onKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === " " && !guardando) {
+		if (guardando) return;
+		if (e.key === " ") {
 			e.preventDefault();
 			avanzar();
+			return;
+		}
+		// "i" de ilegible. El campo filtra todo lo que no sea dígito, así que las
+		// letras están libres. Se ata solo ésta y no también el descarte: errarle
+		// a la "i" apenas aparta una imagen que igual no se podía etiquetar, pero
+		// un descarte accidental la saca del dataset. Yendo rápido, la asimetría
+		// importa.
+		if (e.key.toLowerCase() === "i") {
+			e.preventDefault();
+			marcarIlegible();
 		}
 	};
 
@@ -254,7 +284,7 @@ const CaptchaLabelingMode = ({ open, onClose }: Props) => {
 
 						<Typography variant="caption" color="text.secondary" align="center">
 							Escribí los 4 dígitos: guarda y pasa al siguiente automáticamente.
-							{" "}Barra espaciadora para saltear.
+							{" "}Espacio para saltear · tecla <b>I</b> si no se lee.
 							{actual.label ? ` El proveedor había leído "${actual.label}" y el PJN lo rechazó.` : ""}
 						</Typography>
 
@@ -268,6 +298,17 @@ const CaptchaLabelingMode = ({ open, onClose }: Props) => {
 								size="large"
 							>
 								Saltear
+							</Button>
+							<Button
+								variant="outlined"
+								color="warning"
+								fullWidth
+								startIcon={<Eye size={18} />}
+								onClick={marcarIlegible}
+								disabled={guardando}
+								size="large"
+							>
+								No se lee (I)
 							</Button>
 							<Button
 								variant="outlined"
