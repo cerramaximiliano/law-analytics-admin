@@ -113,6 +113,7 @@ function TimelineEtapas({ ctx }: { ctx: CausaContexto }) {
 									sx={{ bgcolor: alpha(color, 0.12), color, fontWeight: 700, height: 22 }}
 								/>
 								{s.retroceso && <Chip size="small" label="retroceso" color="warning" variant="outlined" sx={{ height: 20 }} />}
+								{s.revocacion && <Chip size="small" label="revocación — continúa" color="success" variant="outlined" sx={{ height: 20 }} />}
 								{abierto && <Chip size="small" label="vigente" color="success" variant="outlined" sx={{ height: 20 }} />}
 								<Typography variant="caption" sx={{ color: "text.secondary" }}>
 									{fmt(s.desde)} → {abierto ? "…" : fmt(s.hasta)}

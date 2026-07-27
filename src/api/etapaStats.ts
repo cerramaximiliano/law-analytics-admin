@@ -60,6 +60,7 @@ export interface SegmentoEtapa {
 	hasta?: string | null;
 	dias?: number | null;
 	retroceso?: boolean;
+	revocacion?: boolean;
 }
 
 export interface EtapaProcesalDoc {
