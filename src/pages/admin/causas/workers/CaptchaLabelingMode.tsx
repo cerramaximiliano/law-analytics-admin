@@ -13,7 +13,7 @@ import {
 	useMediaQuery,
 	useTheme,
 } from "@mui/material";
-import { CloseCircle, ArrowRight, Trash, EyeSlash as Eye } from "iconsax-react";
+import { CloseCircle, ArrowRight, Trash, EyeSlash as Eye, SearchZoomIn, SearchZoomOut } from "iconsax-react";
 import workersAxios from "utils/workersAxios";
 import { CaptchaDatasetService, CaptchaDatasetEntry } from "api/captchaDataset";
 
@@ -53,7 +53,12 @@ const CaptchaLabelingMode = ({ open, onClose }: Props) => {
 	const [error, setError] = useState<string | null>(null);
 	const [hechas, setHechas] = useState(0);
 	const [pendientesTotal, setPendientesTotal] = useState(0);
+	// Nivel de lupa. Se mantiene entre imágenes a propósito: si necesitás
+	// ampliar para leer una, vas a necesitarlo para las que siguen, y volver a
+	// activarlo en cada una rompería el ritmo.
+	const [zoom, setZoom] = useState(1);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const visorRef = useRef<HTMLDivElement>(null);
 
 	const actual = cola[idx];
 
@@ -112,6 +117,22 @@ const CaptchaLabelingMode = ({ open, onClose }: Props) => {
 	useEffect(() => {
 		if (blob && inputRef.current) inputRef.current.focus();
 	}, [blob]);
+
+	// Al cambiar de imagen se vuelve al principio del visor. Los dígitos están
+	// pegados al borde izquierdo, así que heredar el scroll de la anterior
+	// dejaría mirando el vacío de la derecha.
+	useEffect(() => {
+		if (visorRef.current) visorRef.current.scrollLeft = 0;
+	}, [idx, blob]);
+
+	// 1x → 2x → 3x → 1x. Un solo control que cicla es más rápido que botones
+	// de + y - separados, y en el móvil ocupa la mitad de lugar.
+	const ciclarZoom = useCallback(() => {
+		setZoom((z) => (z >= 3 ? 1 : z + 1));
+		// Tocar el visor saca el foco del campo; sin esto habría que volver a
+		// tocarlo para seguir tipeando.
+		inputRef.current?.focus();
+	}, []);
 
 	const avanzar = useCallback(async () => {
 		setValor("");
@@ -206,6 +227,11 @@ const CaptchaLabelingMode = ({ open, onClose }: Props) => {
 		if (e.key.toLowerCase() === "i") {
 			e.preventDefault();
 			marcarIlegible();
+			return;
+		}
+		if (e.key.toLowerCase() === "z") {
+			e.preventDefault();
+			ciclarZoom();
 		}
 	};
 
@@ -241,27 +267,81 @@ const CaptchaLabelingMode = ({ open, onClose }: Props) => {
 					</Alert>
 				) : (
 					<Stack spacing={2.5} alignItems="center">
-						<Box
-							sx={{
-								width: "100%",
-								bgcolor: "grey.100",
-								borderRadius: 2,
-								p: 1,
-								display: "flex",
-								justifyContent: "center",
-								minHeight: 120,
-								alignItems: "center",
-							}}
-						>
-							{blob ? (
-								// Ampliada: los dígitos son chicos y vienen tachados.
-								<img
-									src={blob}
-									alt="captcha"
-									style={{ width: "100%", maxWidth: 420, imageRendering: "pixelated" }}
-								/>
-							) : (
-								<CircularProgress size={28} />
+						<Box sx={{ position: "relative", width: "100%" }}>
+							<Box
+								ref={visorRef}
+								onClick={ciclarZoom}
+								sx={{
+									width: "100%",
+									bgcolor: "grey.100",
+									borderRadius: 2,
+									p: 1,
+									display: "flex",
+									alignItems: "center",
+									// Ampliada la imagen no entra: se ancla a la izquierda, que es
+									// donde están los dígitos, y el resto se recorre con scroll.
+									justifyContent: zoom === 1 ? "center" : "flex-start",
+									overflowX: zoom === 1 ? "hidden" : "auto",
+									minHeight: 120,
+									cursor: zoom >= 3 ? "zoom-out" : "zoom-in",
+									WebkitOverflowScrolling: "touch",
+								}}
+							>
+								{blob ? (
+									// Ampliada: los dígitos son chicos y vienen tachados.
+									<img
+										src={blob}
+										alt="captcha"
+										style={{
+											width: zoom === 1 ? "100%" : `${420 * zoom}px`,
+											maxWidth: zoom === 1 ? 420 : "none",
+											flexShrink: 0,
+											// Sin interpolación, a propósito: se ven los píxeles tal
+											// cual son. Suavizar al ampliar inventa trazos donde no
+											// los hay, que es justo lo que no querés cuando estás
+											// decidiendo si eso es un 3 o un 8.
+											imageRendering: "pixelated",
+										}}
+									/>
+								) : (
+									<CircularProgress size={28} />
+								)}
+							</Box>
+							{blob && (
+								<IconButton
+									onClick={(e) => {
+										e.stopPropagation();
+										ciclarZoom();
+									}}
+									size="small"
+									title={`Lupa ${zoom}x (Z)`}
+									sx={{
+										position: "absolute",
+										top: 4,
+										right: 4,
+										bgcolor: "background.paper",
+										boxShadow: 1,
+										"&:hover": { bgcolor: "background.paper" },
+									}}
+								>
+									{zoom >= 3 ? <SearchZoomOut size={18} /> : <SearchZoomIn size={18} />}
+								</IconButton>
+							)}
+							{zoom > 1 && (
+								<Typography
+									variant="caption"
+									sx={{
+										position: "absolute",
+										bottom: 6,
+										right: 8,
+										bgcolor: "background.paper",
+										px: 0.75,
+										borderRadius: 1,
+										boxShadow: 1,
+									}}
+								>
+									{zoom}x
+								</Typography>
 							)}
 						</Box>
 
@@ -284,7 +364,7 @@ const CaptchaLabelingMode = ({ open, onClose }: Props) => {
 
 						<Typography variant="caption" color="text.secondary" align="center">
 							Escribí los 4 dígitos: guarda y pasa al siguiente automáticamente.
-							{" "}Espacio para saltear · tecla <b>I</b> si no se lee.
+							{" "}Espacio para saltear · <b>I</b> si no se lee · <b>Z</b> o tocar la imagen para la lupa.
 							{actual.label ? ` El proveedor había leído "${actual.label}" y el PJN lo rechazó.` : ""}
 						</Typography>
 
