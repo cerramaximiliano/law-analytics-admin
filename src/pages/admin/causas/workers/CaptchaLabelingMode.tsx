@@ -169,8 +169,18 @@ const CaptchaLabelingMode = ({ open, onClose }: Props) => {
 		if (limpio.length === 4) guardar(limpio);
 	};
 
+	// Espacio = saltear. Se captura a nivel del diálogo y no solo del input
+	// porque el foco puede estar en un botón; ahí el espacio lo activaría, que
+	// no es lo que uno espera cuando viene etiquetando a ritmo.
+	const onKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === " " && !guardando) {
+			e.preventDefault();
+			avanzar();
+		}
+	};
+
 	return (
-		<Dialog open={open} onClose={() => onClose(hechas)} fullScreen={esMovil} maxWidth="sm" fullWidth>
+		<Dialog open={open} onClose={() => onClose(hechas)} fullScreen={esMovil} maxWidth="sm" fullWidth onKeyDown={onKeyDown}>
 			<Box sx={{ p: 2.5 }}>
 				<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
 					<Box>
@@ -244,6 +254,7 @@ const CaptchaLabelingMode = ({ open, onClose }: Props) => {
 
 						<Typography variant="caption" color="text.secondary" align="center">
 							Escribí los 4 dígitos: guarda y pasa al siguiente automáticamente.
+							{" "}Barra espaciadora para saltear.
 							{actual.label ? ` El proveedor había leído "${actual.label}" y el PJN lo rechazó.` : ""}
 						</Typography>
 
