@@ -24,6 +24,7 @@ const CarpetasVerificadas = Loadable(lazy(() => import("pages/admin/causas/Carpe
 const TrayectoriasPage = Loadable(lazy(() => import("pages/admin/causas/Trayectorias")));
 const EtapasPage = Loadable(lazy(() => import("pages/admin/causas/Etapas")));
 const EtapaStatsPage = Loadable(lazy(() => import("pages/admin/causas/EtapaStats")));
+const EtapaArbolPage = Loadable(lazy(() => import("pages/admin/causas/EtapaArbol")));
 const CarpetasVerificadasApp = Loadable(lazy(() => import("pages/admin/causas/CarpetasVerificadasApp")));
 const CarpetasNoVerificadas = Loadable(lazy(() => import("pages/admin/causas/CarpetasNoVerificadas")));
 const CausasPendientes = Loadable(lazy(() => import("pages/admin/causas/CausasPendientes")));
@@ -444,6 +445,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<EtapaStatsPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "causas/etapa-arbol",
+							element: (
+								<AdminRoleGuard>
+									<EtapaArbolPage />
 								</AdminRoleGuard>
 							),
 						},

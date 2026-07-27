@@ -112,6 +112,36 @@ export interface CausaContexto {
 	resultados: ResumenDuracion[];
 }
 
+export interface TaxonomiaMeta {
+	version: number;
+	familias: string[];
+	descripcionFamilias: Record<string, string>;
+	generatedAt: string;
+}
+
+export interface TaxonomiaEtapa {
+	_id: string;
+	familia: string;
+	etapa: string;
+	label: string;
+	rank: number;
+	fase: string;
+	descripcion: string;
+	disparadores: { tipo: string; patron: string; restriccion?: string | null }[];
+	salidas: string[];
+	prerrequisitos: string[];
+	notas?: string;
+}
+
+export interface TaxonomiaInterruptor {
+	_id: string;
+	clave: string;
+	titulo: string;
+	descripcion: string;
+	disparadores: string[];
+	notas?: string;
+}
+
 const BASE = "/api/admin/etapa-stats";
 
 const EtapaStatsService = {
@@ -140,6 +170,10 @@ const EtapaStatsService = {
 		limit?: number;
 	}): Promise<CausasEtapaResponse> {
 		const res = await pjnAxios.get(`${BASE}/causas`, { params });
+		return res.data;
+	},
+	async taxonomia(): Promise<{ success: boolean; data: { meta: TaxonomiaMeta | null; etapas: TaxonomiaEtapa[]; interruptores: TaxonomiaInterruptor[] } }> {
+		const res = await pjnAxios.get(`${BASE}/taxonomia`);
 		return res.data;
 	},
 	async causaContext(causaType: string, id: string): Promise<{ success: boolean; data: CausaContexto }> {

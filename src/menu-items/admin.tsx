@@ -297,6 +297,13 @@ const admin: NavItemType = {
 					url: "/admin/causas/etapa-stats",
 					breadcrumbs: true,
 				},
+				{
+					id: "causas-etapa-arbol",
+					title: "Árbol de etapas",
+					type: "item",
+					url: "/admin/causas/etapa-arbol",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{

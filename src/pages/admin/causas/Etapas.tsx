@@ -31,6 +31,8 @@ const FUEROS = [
 	{ value: "CSS", label: "Seguridad Social", causaType: "CausasSegSoc" },
 	{ value: "CIV", label: "Civil", causaType: "CausasCivil" },
 	{ value: "COM", label: "Comercial", causaType: "CausasComercial" },
+	{ value: "CAF", label: "Contencioso Adm. Federal", causaType: "CausasCAF" },
+	{ value: "CCF", label: "Civil y Comercial Federal", causaType: "CausasCCF" },
 ];
 
 // Color por fase (rank): primera instancia, sentencia, revisión, ejecución, terminada.
