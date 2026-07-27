@@ -72,6 +72,7 @@ export interface EtapaProcesalDoc {
 	paralizado?: boolean | null;
 	timeline?: SegmentoEtapa[];
 	suspensiones?: { desde?: string | null; hasta?: string | null }[];
+	hitos?: { tipo: string; fecha: string; detalle: string; fuente: string }[];
 	asOf?: string | null;
 	confianza?: number;
 	version?: number;

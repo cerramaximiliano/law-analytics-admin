@@ -215,6 +215,25 @@ function DetalleCausa({ causaType, causaId }: { causaType: string; causaId: stri
 	return (
 		<Stack spacing={2}>
 			<TimelineEtapas ctx={ctx} />
+			{(ep?.hitos?.length || 0) > 0 && (
+				<Box>
+					<Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+						Hitos (sentencias interlocutorias — no mueven la etapa)
+					</Typography>
+					<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+						{(ep?.hitos || []).map((h, i) => (
+							<Chip
+								key={i}
+								size="small"
+								variant="outlined"
+								color="secondary"
+								label={`${fmt(h.fecha)} · ${(h.detalle || h.tipo).slice(0, 40)}`}
+								sx={{ height: 22, fontSize: 11 }}
+							/>
+						))}
+					</Stack>
+				</Box>
+			)}
 			{ep?.terminal && ep.resultado && (
 				<Alert severity="info" icon={<Flag size={18} />}>
 					Terminada: <b>{ep.resultado.detalle || ep.resultado.etapa}</b>
