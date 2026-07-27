@@ -8,7 +8,9 @@ export type TipoResumen =
 	| "duracion-juzgado-etapa"
 	| "duracion-sala-etapa"
 	| "transicion"
-	| "resultado";
+	| "resultado"
+	| "conformidad"
+	| "firma";
 
 export interface ResumenDuracion {
 	_id: string;
@@ -24,6 +26,9 @@ export interface ResumenDuracion {
 	// resultado
 	resultado?: string;
 	detalle?: string;
+	// conformidad / firma
+	conformidad?: string;
+	firma?: string;
 	diasTotalesMean?: number;
 	diasHastaSentenciaMean?: number;
 	// duración

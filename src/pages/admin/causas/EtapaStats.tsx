@@ -40,7 +40,16 @@ const VISTAS: { value: TipoResumen; label: string }[] = [
 	{ value: "duracion-sala-etapa", label: "Duración por sala" },
 	{ value: "transicion", label: "Transiciones entre etapas" },
 	{ value: "resultado", label: "Resultados de terminación" },
+	{ value: "conformidad", label: "Conformidad con el patrón" },
+	{ value: "firma", label: "Flujos completos (firmas)" },
 ];
+
+const CONFORMIDAD_META: Record<string, { label: string; color: "success" | "info" | "warning" | "error" }> = {
+	"con-merito": { label: "Con resolución de mérito", color: "success" },
+	anticipada: { label: "Terminación anticipada (legítima)", color: "info" },
+	gap: { label: "Gap observacional (etapa faltante)", color: "warning" },
+	reapertura: { label: "Reapertura post-terminal", color: "error" },
+};
 
 // Orden canónico de etapas (rank de pjn-models etapa-procesal).
 const ETAPA_RANK: Record<string, number> = {
@@ -331,6 +340,21 @@ const EtapaStats = () => {
 												<TableCell align="right">Hasta sentencia (media)</TableCell>
 											</>
 										)}
+										{vista === "conformidad" && (
+											<>
+												<TableCell>Objeto</TableCell>
+												<TableCell>Conformidad</TableCell>
+												<TableCell align="right">Casos</TableCell>
+											</>
+										)}
+										{vista === "firma" && (
+											<>
+												<TableCell>Objeto</TableCell>
+												<TableCell>Flujo (secuencia de etapas)</TableCell>
+												<TableCell align="right">Casos</TableCell>
+												<TableCell align="right">Duración total media</TableCell>
+											</>
+										)}
 									</TableRow>
 								</TableHead>
 								<TableBody>
@@ -387,6 +411,41 @@ const EtapaStats = () => {
 													<TableCell align="right">{r.n.toLocaleString("es-AR")}</TableCell>
 													<TableCell align="right">{fmtDias(r.diasTotalesMean)}</TableCell>
 													<TableCell align="right">{fmtDias(r.diasHastaSentenciaMean)}</TableCell>
+												</>
+											)}
+											{vista === "conformidad" && (
+												<>
+													<TableCell sx={{ maxWidth: 280 }}>
+														<Typography variant="body2" noWrap>
+															{r.objeto || "—"}
+														</Typography>
+													</TableCell>
+													<TableCell>
+														<Chip
+															size="small"
+															label={CONFORMIDAD_META[r.conformidad || ""]?.label || r.conformidad}
+															color={CONFORMIDAD_META[r.conformidad || ""]?.color || "default"}
+															variant="outlined"
+															sx={{ height: 22, fontWeight: 600 }}
+														/>
+													</TableCell>
+													<TableCell align="right">{r.n.toLocaleString("es-AR")}</TableCell>
+												</>
+											)}
+											{vista === "firma" && (
+												<>
+													<TableCell sx={{ maxWidth: 220 }}>
+														<Typography variant="body2" noWrap>
+															{r.objeto || "—"}
+														</Typography>
+													</TableCell>
+													<TableCell sx={{ maxWidth: 480 }}>
+														<Typography variant="body2" noWrap title={r.firma}>
+															{(r.firma || "").split(" > ").map((e) => etiqueta(e)).join(" → ")}
+														</Typography>
+													</TableCell>
+													<TableCell align="right">{r.n.toLocaleString("es-AR")}</TableCell>
+													<TableCell align="right">{fmtDias(r.diasTotalesMean)}</TableCell>
 												</>
 											)}
 										</TableRow>
