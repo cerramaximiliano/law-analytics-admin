@@ -81,6 +81,7 @@ const ETAPA_RANK: Record<string, number> = {
 	sentencia_camara: 75,
 	recurso_extraordinario: 80,
 	sentencia_firme: 85,
+	particion: 80,
 	ejecucion: 90,
 	inscripcion: 90,
 	fin_litigio: 95,
