@@ -7,6 +7,7 @@ import NotificacionesTab from "./NotificacionesTab";
 import VencimientosTab from "./VencimientosTab";
 import NormativaTab from "./NormativaTab";
 import FeriadosTab from "./FeriadosTab";
+import DatasetTab from "./DatasetTab";
 
 export default function PlazosPage() {
 	const theme = useTheme();
@@ -62,6 +63,7 @@ export default function PlazosPage() {
 						<Tab label="Vencimientos" />
 						<Tab label="Normativa" />
 						<Tab label="Feriados" />
+						<Tab label="Dataset" />
 					</Tabs>
 				</Box>
 
@@ -69,6 +71,7 @@ export default function PlazosPage() {
 				{tab === 1 && <VencimientosTab />}
 				{tab === 2 && <NormativaTab />}
 				{tab === 3 && <FeriadosTab />}
+				{tab === 4 && <DatasetTab />}
 			</Stack>
 		</MainCard>
 	);

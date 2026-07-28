@@ -197,6 +197,39 @@ export const updateNormativa = async (id: string, cambios: Partial<PlazoNormativ
 	return data.data;
 };
 
+// ── Dataset de plazos expresos (minería de reglas empíricas) ──────────────────
+
+export interface DatasetCandidato {
+	fuero: string;
+	objeto: string | null;
+	acto: string;
+	n: number;
+	plazoDias: number;
+	tipoPlazo: "habiles" | "corridos" | null;
+	share: number;
+	variantes: Array<{ plazoDias: number; tipoPlazo: string | null; n: number }>;
+	ejemplos: string[];
+	reglaExistente: { clave: string; plazoDias: number; tipoPlazo: string; coincide: boolean } | null;
+}
+
+export interface DatasetStats {
+	total: number;
+	conPlazo: number;
+	sinPlazo: number;
+	porFuero: Array<{ fuero: string; total: number; conPlazo: number }>;
+	porActo: Array<{ acto: string; n: number }>;
+}
+
+export const getDatasetStats = async (): Promise<DatasetStats> => {
+	const { data } = await workersAxios.get("/api/admin/plazos/dataset/stats");
+	return data.data;
+};
+
+export const getDatasetCandidatos = async (params?: { minN?: number; minShare?: number }): Promise<DatasetCandidato[]> => {
+	const { data } = await workersAxios.get("/api/admin/plazos/dataset/candidatos", { params });
+	return data.data;
+};
+
 // ── Feriados ───────────────────────────────────────────────────────────────────
 
 export const getFeriados = async (params?: {
