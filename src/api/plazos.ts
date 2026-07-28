@@ -282,6 +282,40 @@ export const getDatasetCandidatos = async (params?: { minN?: number; minShare?: 
 	return data.data;
 };
 
+// ── Config del harvester del dataset (plazos-dataset-worker) ──────────────────
+
+export interface DatasetConfig {
+	_id: string;
+	enabled: boolean;
+	cronPattern: string;
+	batchSize: number;
+	maxPerCausa: number;
+	dailyLimit: number;
+	requestDelayMs: number;
+	scanCharsPerPageThreshold?: number;
+	fueros?: string[]; // ausente = todos los fueros de pjn-models
+	cursor?: Record<string, string | null>; // por fuero; 'DONE' = agotado
+	fueroIdx?: number;
+	daily?: { date: string; count: number };
+	heartbeat?: { lastCycleAt?: string; lastFuero?: string };
+	stats?: { harvested: number; conPlazo: number; sinPlazo: number; skippedOcr: number; errors: number };
+}
+
+export const getDatasetConfig = async (): Promise<DatasetConfig | null> => {
+	const { data } = await workersAxios.get("/api/admin/plazos/dataset-config");
+	return data.data;
+};
+
+export const updateDatasetConfig = async (
+	cambios: Partial<Omit<DatasetConfig, "_id" | "cursor" | "daily" | "heartbeat" | "stats">> & {
+		fueros?: string[] | null;
+		resetCursor?: string | string[];
+	},
+): Promise<DatasetConfig> => {
+	const { data } = await workersAxios.patch("/api/admin/plazos/dataset-config", cambios);
+	return data.data;
+};
+
 // ── Feriados ───────────────────────────────────────────────────────────────────
 
 export const getFeriados = async (params?: {

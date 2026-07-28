@@ -54,6 +54,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "workers-plazos-dataset",
+					title: "Dataset Plazos",
+					type: "item",
+					url: "/admin/workers/plazos-dataset",
+					breadcrumbs: true,
+				},
+				{
 					id: "workers-mev",
 					title: "Workers MEV",
 					type: "item",

@@ -66,6 +66,7 @@ const MovimientosWorkerPage = Loadable(lazy(() => import("pages/admin/workers/mo
 const SentenciasWorkerPage = Loadable(lazy(() => import("pages/admin/workers/sentencias")));
 const LiquidacionWorkerPage = Loadable(lazy(() => import("pages/admin/workers/liquidacion")));
 const PlazosWorkerPage = Loadable(lazy(() => import("pages/admin/workers/plazos")));
+const PlazosDatasetWorkerPage = Loadable(lazy(() => import("pages/admin/workers/plazos-dataset")));
 const PlazosPage = Loadable(lazy(() => import("pages/admin/causas/plazos")));
 const SaijWorkerPage = Loadable(lazy(() => import("pages/admin/workers/saij")));
 const SecloWorkerPage = Loadable(lazy(() => import("pages/admin/workers/seclo")));
@@ -343,6 +344,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<PlazosWorkerPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "workers/plazos-dataset",
+							element: (
+								<AdminRoleGuard>
+									<PlazosDatasetWorkerPage />
 								</AdminRoleGuard>
 							),
 						},
