@@ -58,6 +58,7 @@ export interface PlazoNotificacion {
 	number?: number;
 	year?: number;
 	fuero: string;
+	objeto?: string | null;
 	caratula?: string;
 	collection?: string;
 	sourceId: string;
@@ -91,6 +92,7 @@ export interface PlazoNormativaRegla {
 	label: string;
 	acto: string;
 	fuero: string[];
+	objetos?: string[];
 	matchers: string[];
 	matchersDetalle: string[];
 	plazoDias: number;

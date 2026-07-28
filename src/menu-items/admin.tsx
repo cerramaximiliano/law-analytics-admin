@@ -47,6 +47,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "workers-plazos",
+					title: "Worker Plazos",
+					type: "item",
+					url: "/admin/workers/plazos",
+					breadcrumbs: true,
+				},
+				{
 					id: "workers-mev",
 					title: "Workers MEV",
 					type: "item",
@@ -302,6 +309,13 @@ const admin: NavItemType = {
 					title: "Árbol de etapas",
 					type: "item",
 					url: "/admin/causas/etapa-arbol",
+					breadcrumbs: true,
+				},
+				{
+					id: "causas-plazos",
+					title: "Plazos procesales",
+					type: "item",
+					url: "/admin/causas/plazos",
 					breadcrumbs: true,
 				},
 			],
