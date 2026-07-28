@@ -216,9 +216,59 @@ export interface DatasetStats {
 	total: number;
 	conPlazo: number;
 	sinPlazo: number;
+	descartados?: number;
 	porFuero: Array<{ fuero: string; total: number; conPlazo: number }>;
 	porActo: Array<{ acto: string; n: number }>;
 }
+
+export interface DatasetEjemplo {
+	_id: string;
+	causaId: string;
+	collection?: string;
+	fuero: string;
+	objeto: string | null;
+	number?: number;
+	year?: number;
+	sourceId: string;
+	movimiento: { fecha: string | null; tipo: string | null; detalle: string | null; url: string | null };
+	acto: string;
+	actoReglaClave: string | null;
+	plazoDias: number | null;
+	tipoPlazo: string | null;
+	plazoHoras: number | null;
+	confianza: string | null;
+	sinPlazo: boolean;
+	snippet: string | null;
+	apercibimiento: string | null;
+	source: "inline" | "backfill";
+	harvestedAt: string;
+	revision?: { estado: "sin_revisar" | "confirmado" | "descartado"; notas: string; revisadoAt: string | null };
+	// presente solo cuando se pide ?dispersos=true
+	_disperso?: { apartado: boolean; sospechoso: boolean; dominanteGrupo: number | null; nGrupo: number };
+}
+
+export const getDataset = async (params: {
+	page?: number;
+	limit?: number;
+	fuero?: string;
+	acto?: string;
+	objeto?: string;
+	conPlazo?: boolean;
+	revision?: string;
+	dispersos?: boolean;
+}): Promise<Paginated<DatasetEjemplo>> => {
+	const { data } = await workersAxios.get("/api/admin/plazos/dataset", { params });
+	return data;
+};
+
+export const revisarDatasetEjemplo = async (
+	id: string,
+	estado: "confirmado" | "descartado" | "sin_revisar",
+	notas?: string,
+): Promise<DatasetEjemplo> => {
+	const { data } = await workersAxios.patch(`/api/admin/plazos/dataset/${encodeURIComponent(id)}/revision`, { estado, notas });
+	return data.data;
+};
 
 export const getDatasetStats = async (): Promise<DatasetStats> => {
 	const { data } = await workersAxios.get("/api/admin/plazos/dataset/stats");
