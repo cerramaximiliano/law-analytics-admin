@@ -204,6 +204,9 @@ function RevisionSection() {
 										<Typography variant="caption" sx={{ fontFamily: "monospace", display: "block", maxHeight: 60, overflow: "auto" }}>
 											«{e.snippet || "—"}»
 										</Typography>
+										{e.normaCitada && (
+											<Chip size="small" variant="outlined" label={e.normaCitada} sx={{ mt: 0.5, fontFamily: "monospace", fontSize: "0.65rem" }} />
+										)}
 									</TableCell>
 									<TableCell>
 										<Stack direction="row" spacing={0.5}>
@@ -338,6 +341,7 @@ export default function DatasetTab() {
 							<TableCell>Plazo dominante</TableCell>
 							<TableCell>n</TableCell>
 							<TableCell>Consist.</TableCell>
+							<TableCell>Norma citada</TableCell>
 							<TableCell>Variantes</TableCell>
 							<TableCell>Regla vigente</TableCell>
 						</TableRow>
@@ -346,7 +350,7 @@ export default function DatasetTab() {
 						{loading ? (
 							Array.from({ length: 6 }).map((_, i) => (
 								<TableRow key={i}>
-									<TableCell colSpan={8}>
+									<TableCell colSpan={9}>
 										<Skeleton />
 									</TableCell>
 								</TableRow>
@@ -380,6 +384,17 @@ export default function DatasetTab() {
 									</TableCell>
 									<TableCell>{c.n}</TableCell>
 									<TableCell>{Math.round(c.share * 100)}%</TableCell>
+									<TableCell sx={{ maxWidth: 180 }}>
+										{(c.normasCitadas || []).length ? (
+											<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+												{(c.normasCitadas || []).join(" · ")}
+											</Typography>
+										) : (
+											<Typography variant="caption" color="text.secondary">
+												—
+											</Typography>
+										)}
+									</TableCell>
 									<TableCell>
 										<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
 											{c.variantes.map((v) => `${v.plazoDias}d×${v.n}`).join(" · ")}
@@ -406,7 +421,7 @@ export default function DatasetTab() {
 						)}
 						{!loading && candidatos.length === 0 && (
 							<TableRow>
-								<TableCell colSpan={8}>
+								<TableCell colSpan={9}>
 									<Typography variant="body2" color="text.secondary" align="center" sx={{ py: 3 }}>
 										Aún no hay combinaciones que superen los umbrales — el dataset se está cosechando (worker plazos-dataset).
 									</Typography>

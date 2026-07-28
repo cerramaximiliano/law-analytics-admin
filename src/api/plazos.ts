@@ -209,6 +209,7 @@ export interface DatasetCandidato {
 	share: number;
 	variantes: Array<{ plazoDias: number; tipoPlazo: string | null; n: number }>;
 	ejemplos: string[];
+	normasCitadas?: string[];
 	reglaExistente: { clave: string; plazoDias: number; tipoPlazo: string; coincide: boolean } | null;
 }
 
@@ -240,6 +241,7 @@ export interface DatasetEjemplo {
 	sinPlazo: boolean;
 	snippet: string | null;
 	apercibimiento: string | null;
+	normaCitada?: string | null;
 	source: "inline" | "backfill";
 	harvestedAt: string;
 	revision?: { estado: "sin_revisar" | "confirmado" | "descartado"; notas: string; revisadoAt: string | null };
