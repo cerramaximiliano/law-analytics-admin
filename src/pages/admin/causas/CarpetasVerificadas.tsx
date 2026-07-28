@@ -272,6 +272,8 @@ const CarpetasVerificadas = () => {
 									<MenuItem value="COM">Comercial</MenuItem>
 									<MenuItem value="CSS">Seg. Social</MenuItem>
 									<MenuItem value="CNT">Trabajo</MenuItem>
+									<MenuItem value="CCF">Civil y Com. Federal</MenuItem>
+									<MenuItem value="CAF">Contencioso Adm. Federal</MenuItem>
 								</Select>
 							</FormControl>
 						</Grid>

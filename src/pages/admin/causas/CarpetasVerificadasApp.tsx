@@ -68,14 +68,18 @@ const FUERO_LABELS: Record<string, string> = {
 	COM: "Comercial",
 	CSS: "Seguridad Social",
 	CNT: "Trabajo",
+	CCF: "Civil y Comercial Federal",
+	CAF: "Contencioso Adm. Federal",
 };
 
 // Mapeo de colores por fuero
-const FUERO_COLORS: Record<string, "primary" | "success" | "warning" | "error"> = {
+const FUERO_COLORS: Record<string, "primary" | "success" | "warning" | "error" | "info" | "secondary"> = {
 	CIV: "primary",
 	COM: "success",
 	CSS: "warning",
 	CNT: "error",
+	CCF: "info",
+	CAF: "secondary",
 };
 
 /**
@@ -931,6 +935,8 @@ const CarpetasVerificadasApp = () => {
 									<MenuItem value="COM">Comercial</MenuItem>
 									<MenuItem value="CSS">Seg. Social</MenuItem>
 									<MenuItem value="CNT">Trabajo</MenuItem>
+									<MenuItem value="CCF">Civil y Com. Federal</MenuItem>
+									<MenuItem value="CAF">Contencioso Adm. Federal</MenuItem>
 								</Select>
 							</FormControl>
 						</Grid>

@@ -1,5 +1,8 @@
 import pjnAxios from "utils/pjnAxios";
 
+// Fueros PJN con scraping activo
+export type Fuero = "CIV" | "COM" | "CSS" | "CNT" | "CCF" | "CAF";
+
 // Trazabilidad de la protección anti-eliminación (SCRAPING_ERROR_ZERO_MOVEMENTS).
 // Histórico — no se resetea con éxito posterior.
 export interface ZeroMovementsProtection {
@@ -59,7 +62,7 @@ export interface Causa {
 	caratula?: string;
 	juzgado?: string;
 	objeto?: string;
-	fuero?: "CIV" | "COM" | "CSS" | "CNT";
+	fuero?: Fuero;
 	source?: "app" | "pjn-login" | "cache" | string;
 	verified?: boolean;
 	isValid?: boolean;
@@ -202,6 +205,7 @@ export interface PrivacyStatsResponse {
 		// pjn-mis-causas (credencial deshabilitada/inválida o removida del sync).
 		withActiveCredential?: number;
 		withoutActiveCredential?: number;
+		// Solo los 4 fueros originales: el privacy-checker excluye CCF/CAF a propósito
 		byFuero: Record<"CIV" | "COM" | "CSS" | "CNT", PrivacyStatsFueroEntry>;
 		changes: { last24h: number; last7d: number };
 		recent: PrivacyStatsRecentCausa[];
@@ -221,11 +225,8 @@ export interface CausasResponse {
 		hasNextPage: boolean;
 		hasPrevPage: boolean;
 	};
-	breakdown?: {
-		civil: number;
-		seguridad_social: number;
-		trabajo: number;
-	};
+	// Conteo por código de fuero (CIV/COM/CSS/CNT/CCF/CAF)
+	breakdown?: Record<string, number>;
 	filters?: {
 		fuero: string;
 	};
@@ -241,7 +242,7 @@ export class CausasPjnService {
 	static async getVerifiedCausas(params?: {
 		page?: number;
 		limit?: number;
-		fuero?: "CIV" | "COM" | "CSS" | "CNT" | "todos";
+		fuero?: Fuero | "todos";
 		number?: number;
 		year?: number;
 		objeto?: string;
@@ -270,7 +271,7 @@ export class CausasPjnService {
 	static async getNonVerifiedCausas(params?: {
 		page?: number;
 		limit?: number;
-		fuero?: "CIV" | "COM" | "CSS" | "CNT" | "todos";
+		fuero?: Fuero | "todos";
 		number?: number;
 		year?: number;
 		objeto?: string;
@@ -289,7 +290,7 @@ export class CausasPjnService {
 	/**
 	 * Obtener una causa por ID
 	 */
-	static async getCausaById(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string): Promise<CausasResponse> {
+	static async getCausaById(fuero: Fuero, id: string): Promise<CausasResponse> {
 		try {
 			const response = await pjnAxios.get(`/api/causas/${fuero}/id/${id}`);
 			return response.data;
@@ -302,7 +303,7 @@ export class CausasPjnService {
 	 * Obtener causas con carpetas vinculadas
 	 */
 	static async getCausasWithFolders(
-		fuero: "CIV" | "COM" | "CSS" | "CNT",
+		fuero: Fuero,
 		params?: {
 			page?: number;
 			limit?: number;
@@ -320,7 +321,7 @@ export class CausasPjnService {
 	/**
 	 * Buscar causa por número y año
 	 */
-	static async findByNumberAndYear(fuero: "CIV" | "COM" | "CSS" | "CNT", number: number, year: number): Promise<CausasResponse> {
+	static async findByNumberAndYear(fuero: Fuero, number: number, year: number): Promise<CausasResponse> {
 		try {
 			const response = await pjnAxios.get(`/api/causas/${fuero}/${number}/${year}`);
 			return response.data;
@@ -332,7 +333,7 @@ export class CausasPjnService {
 	/**
 	 * Obtener movimientos de una causa
 	 */
-	static async getMovimientosByDocumentId(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string): Promise<any> {
+	static async getMovimientosByDocumentId(fuero: Fuero, id: string): Promise<any> {
 		try {
 			const response = await pjnAxios.get(`/api/causas/${fuero}/${id}/movimientos`);
 			return response.data;
@@ -344,7 +345,7 @@ export class CausasPjnService {
 	/**
 	 * Listar objetos únicos
 	 */
-	static async listObjetos(fuero: "CIV" | "COM" | "CSS" | "CNT"): Promise<any> {
+	static async listObjetos(fuero: Fuero): Promise<any> {
 		try {
 			const response = await pjnAxios.get(`/api/causas/${fuero}/objetos`);
 			return response.data;
@@ -356,7 +357,7 @@ export class CausasPjnService {
 	/**
 	 * Actualizar campos de una causa
 	 */
-	static async updateCausa(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string, updateData: Partial<Causa>): Promise<CausasResponse> {
+	static async updateCausa(fuero: Fuero, id: string, updateData: Partial<Causa>): Promise<CausasResponse> {
 		try {
 			const response = await pjnAxios.patch(`/api/causas/${fuero}/${id}`, updateData);
 			return response.data;
@@ -368,7 +369,7 @@ export class CausasPjnService {
 	/**
 	 * Eliminar un movimiento específico de una causa
 	 */
-	static async deleteMovimiento(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string, movimientoIndex: number): Promise<any> {
+	static async deleteMovimiento(fuero: Fuero, id: string, movimientoIndex: number): Promise<any> {
 		try {
 			const response = await pjnAxios.delete(`/api/causas/${fuero}/${id}/movimientos/${movimientoIndex}`);
 			return response.data;
@@ -381,7 +382,7 @@ export class CausasPjnService {
 	 * Agregar un movimiento a una causa
 	 */
 	static async addMovimiento(
-		fuero: "CIV" | "COM" | "CSS" | "CNT",
+		fuero: Fuero,
 		id: string,
 		movimiento: {
 			fecha: string;
@@ -402,7 +403,7 @@ export class CausasPjnService {
 	/**
 	 * Enviar notificación de un movimiento específico
 	 */
-	static async notifyMovimiento(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string, movimientoIndex: number): Promise<any> {
+	static async notifyMovimiento(fuero: Fuero, id: string, movimientoIndex: number): Promise<any> {
 		try {
 			const response = await pjnAxios.post(`/api/causas/${fuero}/${id}/movimientos/${movimientoIndex}/notify`);
 			return response.data;
@@ -414,7 +415,7 @@ export class CausasPjnService {
 	/**
 	 * Obtener usuarios con notificaciones habilitadas para una causa
 	 */
-	static async getNotificationUsers(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string): Promise<any> {
+	static async getNotificationUsers(fuero: Fuero, id: string): Promise<any> {
 		try {
 			const response = await pjnAxios.get(`/api/causas/${fuero}/${id}/notification-users`);
 			return response.data;
@@ -426,7 +427,7 @@ export class CausasPjnService {
 	/**
 	 * Limpiar todo el historial de actualizaciones de una causa
 	 */
-	static async clearUpdateHistory(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string): Promise<any> {
+	static async clearUpdateHistory(fuero: Fuero, id: string): Promise<any> {
 		try {
 			const response = await pjnAxios.delete(`/api/causas/${fuero}/${id}/update-history`);
 			return response.data;
@@ -438,7 +439,7 @@ export class CausasPjnService {
 	/**
 	 * Eliminar una entrada específica del historial de actualizaciones
 	 */
-	static async deleteUpdateHistoryEntry(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string, entryIndex: number): Promise<any> {
+	static async deleteUpdateHistoryEntry(fuero: Fuero, id: string, entryIndex: number): Promise<any> {
 		try {
 			const response = await pjnAxios.delete(`/api/causas/${fuero}/${id}/update-history/${entryIndex}`);
 			return response.data;
@@ -453,7 +454,7 @@ export class CausasPjnService {
 	 * @param thresholdHours - Umbral en horas para considerar actualizado (default: 2)
 	 */
 	static async getEligibilityStats(params?: {
-		fuero?: "CIV" | "COM" | "CSS" | "CNT" | "todos";
+		fuero?: Fuero | "todos";
 		thresholdHours?: number;
 	}): Promise<EligibilityStatsResponse> {
 		try {
@@ -500,7 +501,7 @@ export class CausasPjnService {
 	 * Marcar causa como archivada (excluir del procesamiento de stuck documents)
 	 */
 	static async archiveCausa(
-		fuero: "CIV" | "COM" | "CSS" | "CNT",
+		fuero: Fuero,
 		id: string,
 		reason?: string,
 	): Promise<{ success: boolean; message: string }> {
@@ -515,7 +516,7 @@ export class CausasPjnService {
 	/**
 	 * Desarchivar causa (volver a incluir en procesamiento)
 	 */
-	static async unarchiveCausa(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string): Promise<{ success: boolean; message: string }> {
+	static async unarchiveCausa(fuero: Fuero, id: string): Promise<{ success: boolean; message: string }> {
 		try {
 			const response = await pjnAxios.post(`/api/workers/stuck-documents/unarchive/${fuero}/${id}`);
 			return response.data;
@@ -528,7 +529,7 @@ export class CausasPjnService {
 	 * Lista causas con protección anti-eliminación activada (count > 0).
 	 */
 	static async getZeroMovementsProtection(params: {
-		fuero?: "CIV" | "COM" | "CSS" | "CNT";
+		fuero?: Fuero;
 		page?: number;
 		limit?: number;
 		sortBy?: "count" | "lastAt" | "lastBdCount";

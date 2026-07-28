@@ -1,5 +1,8 @@
 import workersAxios from "utils/workersAxios";
 
+// Fueros PJN con scraping activo
+export type Fuero = "CIV" | "COM" | "CSS" | "CNT" | "CCF" | "CAF";
+
 // Interface para Causa
 export interface Causa {
 	_id: string | { $oid: string };
@@ -8,7 +11,7 @@ export interface Causa {
 	caratula?: string;
 	juzgado?: string;
 	objeto?: string;
-	fuero?: "CIV" | "COM" | "CSS" | "CNT";
+	fuero?: Fuero;
 	verified?: boolean;
 	isValid?: boolean;
 	update?: boolean;
@@ -31,11 +34,8 @@ export interface CausasResponse {
 		hasNextPage: boolean;
 		hasPrevPage: boolean;
 	};
-	breakdown?: {
-		civil: number;
-		seguridad_social: number;
-		trabajo: number;
-	};
+	// Conteo por código de fuero (CIV/COM/CSS/CNT/CCF/CAF)
+	breakdown?: Record<string, number>;
 	filters?: {
 		fuero: string;
 	};
@@ -51,7 +51,7 @@ export class CausasService {
 	static async getVerifiedCausas(params?: {
 		page?: number;
 		limit?: number;
-		fuero?: "CIV" | "COM" | "CSS" | "CNT" | "todos";
+		fuero?: Fuero | "todos";
 		number?: number;
 		year?: number;
 		objeto?: string;
@@ -70,7 +70,7 @@ export class CausasService {
 	/**
 	 * Obtener una causa por ID
 	 */
-	static async getCausaById(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string): Promise<CausasResponse> {
+	static async getCausaById(fuero: Fuero, id: string): Promise<CausasResponse> {
 		try {
 			const response = await workersAxios.get(`/api/causas/${fuero}/id/${id}`);
 			return response.data;
@@ -83,7 +83,7 @@ export class CausasService {
 	 * Obtener causas con carpetas vinculadas
 	 */
 	static async getCausasWithFolders(
-		fuero: "CIV" | "COM" | "CSS" | "CNT",
+		fuero: Fuero,
 		params?: {
 			page?: number;
 			limit?: number;
@@ -101,7 +101,7 @@ export class CausasService {
 	/**
 	 * Buscar causa por número y año
 	 */
-	static async findByNumberAndYear(fuero: "CIV" | "COM" | "CSS" | "CNT", number: number, year: number): Promise<CausasResponse> {
+	static async findByNumberAndYear(fuero: Fuero, number: number, year: number): Promise<CausasResponse> {
 		try {
 			const response = await workersAxios.get(`/api/causas/${fuero}/${number}/${year}`);
 			return response.data;
@@ -113,7 +113,7 @@ export class CausasService {
 	/**
 	 * Obtener movimientos de una causa
 	 */
-	static async getMovimientosByDocumentId(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string): Promise<any> {
+	static async getMovimientosByDocumentId(fuero: Fuero, id: string): Promise<any> {
 		try {
 			const response = await workersAxios.get(`/api/causas/${fuero}/${id}/movimientos`);
 			return response.data;
@@ -125,7 +125,7 @@ export class CausasService {
 	/**
 	 * Listar objetos únicos
 	 */
-	static async listObjetos(fuero: "CIV" | "COM" | "CSS" | "CNT"): Promise<any> {
+	static async listObjetos(fuero: Fuero): Promise<any> {
 		try {
 			const response = await workersAxios.get(`/api/causas/${fuero}/objetos`);
 			return response.data;
@@ -137,7 +137,7 @@ export class CausasService {
 	/**
 	 * Actualizar campos de una causa
 	 */
-	static async updateCausa(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string, updateData: Partial<Causa>): Promise<CausasResponse> {
+	static async updateCausa(fuero: Fuero, id: string, updateData: Partial<Causa>): Promise<CausasResponse> {
 		try {
 			const response = await workersAxios.patch(`/api/causas/${fuero}/${id}`, updateData);
 			return response.data;
@@ -149,7 +149,7 @@ export class CausasService {
 	/**
 	 * Eliminar un movimiento específico de una causa
 	 */
-	static async deleteMovimiento(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string, movimientoIndex: number): Promise<any> {
+	static async deleteMovimiento(fuero: Fuero, id: string, movimientoIndex: number): Promise<any> {
 		try {
 			const response = await workersAxios.delete(`/api/causas/${fuero}/${id}/movimientos/${movimientoIndex}`);
 			return response.data;
@@ -162,7 +162,7 @@ export class CausasService {
 	 * Agregar un movimiento a una causa
 	 */
 	static async addMovimiento(
-		fuero: "CIV" | "COM" | "CSS" | "CNT",
+		fuero: Fuero,
 		id: string,
 		movimiento: {
 			fecha: string;
@@ -183,7 +183,7 @@ export class CausasService {
 	/**
 	 * Enviar notificación de un movimiento específico
 	 */
-	static async notifyMovimiento(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string, movimientoIndex: number): Promise<any> {
+	static async notifyMovimiento(fuero: Fuero, id: string, movimientoIndex: number): Promise<any> {
 		try {
 			const response = await workersAxios.post(`/api/causas/${fuero}/${id}/movimientos/${movimientoIndex}/notify`);
 			return response.data;
@@ -195,7 +195,7 @@ export class CausasService {
 	/**
 	 * Obtener usuarios con notificaciones habilitadas para una causa
 	 */
-	static async getNotificationUsers(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string): Promise<any> {
+	static async getNotificationUsers(fuero: Fuero, id: string): Promise<any> {
 		try {
 			const response = await workersAxios.get(`/api/causas/${fuero}/${id}/notification-users`);
 			return response.data;
@@ -207,7 +207,7 @@ export class CausasService {
 	/**
 	 * Limpiar todo el historial de actualizaciones de una causa
 	 */
-	static async clearUpdateHistory(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string): Promise<any> {
+	static async clearUpdateHistory(fuero: Fuero, id: string): Promise<any> {
 		try {
 			const response = await workersAxios.delete(`/api/causas/${fuero}/${id}/update-history`);
 			return response.data;
@@ -219,7 +219,7 @@ export class CausasService {
 	/**
 	 * Eliminar una entrada específica del historial de actualizaciones
 	 */
-	static async deleteUpdateHistoryEntry(fuero: "CIV" | "COM" | "CSS" | "CNT", id: string, entryIndex: number): Promise<any> {
+	static async deleteUpdateHistoryEntry(fuero: Fuero, id: string, entryIndex: number): Promise<any> {
 		try {
 			const response = await workersAxios.delete(`/api/causas/${fuero}/${id}/update-history/${entryIndex}`);
 			return response.data;
