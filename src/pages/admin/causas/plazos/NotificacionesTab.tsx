@@ -32,13 +32,14 @@ const STATUS_COLOR: Record<string, "default" | "success" | "warning" | "error" |
 	parsed: "warning",
 	extracted: "warning",
 	ocr_needed: "warning",
+	revision_manual: "warning",
 	no_url: "default",
 	failed: "error",
 	not_pdf: "error",
 };
 
 const FUEROS = ["", "CIV", "CSS", "CNT", "COM"];
-const STATUSES = ["", "pending", "computed", "parsed", "extracted", "ocr_needed", "no_url", "failed", "not_pdf"];
+const STATUSES = ["", "pending", "computed", "parsed", "extracted", "revision_manual", "ocr_needed", "no_url", "failed", "not_pdf"];
 
 const day = (v?: string | null) => (v ? String(v).slice(0, 10) : "—");
 

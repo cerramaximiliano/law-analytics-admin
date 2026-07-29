@@ -22,7 +22,8 @@ export type PlazoProcessingStatus =
 	| "ocr_processing"
 	| "failed"
 	| "not_pdf"
-	| "computed";
+	| "computed"
+	| "revision_manual";
 
 export interface PlazoComputado {
 	fuente: "texto" | "norma";
@@ -283,6 +284,46 @@ export const getDatasetStats = async (): Promise<DatasetStats> => {
 
 export const getDatasetCandidatos = async (params?: { minN?: number; minShare?: number }): Promise<DatasetCandidato[]> => {
 	const { data } = await workersAxios.get("/api/admin/plazos/dataset/candidatos", { params });
+	return data.data;
+};
+
+// ── Monitoreo consolidado del subsistema ──────────────────────────────────────
+
+export interface PlazosMonitor {
+	workers: {
+		plazosWorker: { enabled: boolean; alive: boolean; lastCycleAt: string | null; lastResult: string | null; stats: Record<string, number> | null };
+		datasetWorker: {
+			enabled: boolean;
+			alive: boolean;
+			lastCycleAt: string | null;
+			lastFuero: string | null;
+			hoy: { date: string; count: number } | null;
+			dailyLimit: number | null;
+			stats: Record<string, number> | null;
+			fuerosAgotados: string[];
+		};
+		foldersWorker: {
+			enabled: boolean;
+			alive: boolean;
+			lastCycleAt: string | null;
+			lastRun: { plazosLeidos: number; validadas: number; creadas: number } | null;
+			source: string;
+			dryRun: boolean;
+			userFilter: Record<string, unknown> | null;
+			stats: Record<string, number> | null;
+		};
+	};
+	cola: Record<string, number>;
+	hoy: { detectadas: number; computadas: number };
+	revisionManual: number;
+	dispersosSinRevisar: number;
+	updaters: Array<{ fuero: string; enabled: boolean; processedToday: number | null }>;
+	alertas: string[];
+	generatedAt: string;
+}
+
+export const getMonitor = async (): Promise<PlazosMonitor> => {
+	const { data } = await workersAxios.get("/api/admin/plazos/monitor");
 	return data.data;
 };
 
