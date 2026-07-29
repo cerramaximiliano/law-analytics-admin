@@ -30,11 +30,32 @@ import {
 	getDatasetStats,
 	getDatasetCandidatos,
 	getDataset,
+	getNormativa,
 	revisarDatasetEjemplo,
 	DatasetStats,
 	DatasetCandidato,
 	DatasetEjemplo,
+	PlazoNormativaRegla,
 } from "api/plazos";
+import { ReglaDialog } from "./NormativaTab";
+
+// Slug seguro desde texto libre (objeto de causa → parte de un _id de regla).
+const slugify = (s: string) =>
+	s
+		.toLowerCase()
+		.normalize("NFD")
+		.replace(/[\u0300-\u036f]/g, "")
+		.replace(/[^a-z0-9]+/g, "_")
+		.replace(/^_+|_+$/g, "")
+		.slice(0, 24);
+
+// Regex literal segura para el campo objetos (matchea el objeto normalizado).
+const objetoARegex = (s: string) =>
+	s
+		.toUpperCase()
+		.normalize("NFD")
+		.replace(/[\u0300-\u036f]/g, "")
+		.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // ── Sección Revisión: casos dispersos / cola de verificación humana ──────────
 
@@ -391,6 +412,45 @@ export default function DatasetTab() {
 	const [loading, setLoading] = useState(true);
 	const [minN, setMinN] = useState(5);
 	const [minShare, setMinShare] = useState(0.8);
+	const [nuevaRegla, setNuevaRegla] = useState<(Partial<PlazoNormativaRegla> & { _id: string }) | null>(null);
+
+	// Pre-carga el formulario de regla con los datos del candidato: fuero,
+	// objeto (regex literal), acto, plazo dominante, cita observada, matchers
+	// heredados de la regla base del mismo acto, y la evidencia en las notas.
+	const crearReglaDesde = async (c: DatasetCandidato) => {
+		let matchers: string[] = [];
+		let matchersDetalle: string[] = [];
+		let prioridad = 50;
+		try {
+			const reglas = await getNormativa();
+			const base = reglas.find((r) => r.acto === c.acto);
+			if (base) {
+				matchers = base.matchers || [];
+				matchersDetalle = base.matchersDetalle || [];
+				prioridad = Math.max(1, (base.prioridad || 50) - 5); // gana a la base
+			}
+		} catch (_) {
+			/* sin reglas base — el admin escribe los matchers */
+		}
+		setNuevaRegla({
+			_id: `${c.acto}_${c.fuero.toLowerCase()}${c.objeto ? `_${slugify(c.objeto)}` : ""}`,
+			label: `${c.acto.replace(/_/g, " ")} (${c.fuero}${c.objeto ? ` · ${c.objeto}` : ""})`,
+			acto: c.acto,
+			fuero: [c.fuero],
+			objetos: c.objeto ? [objetoARegex(c.objeto)] : ["*"],
+			matchers,
+			matchersDetalle,
+			plazoDias: c.plazoDias,
+			tipoPlazo: (c.tipoPlazo || "habiles") as "habiles" | "corridos",
+			norma: c.normasCitadas?.[0] || "",
+			prioridad,
+			habilitado: true,
+			verificado: false,
+			notas: `Creada desde candidato del dataset: n=${c.n}, consistencia ${Math.round(c.share * 100)}%${
+				c.normasCitadas?.length ? `, normas citadas en los textos: ${c.normasCitadas.join(" · ")}` : ""
+			}. Revisar la cita legal antes de verificar.`,
+		});
+	};
 
 	const fetchAll = useCallback(async () => {
 		try {
@@ -442,8 +502,9 @@ export default function DatasetTab() {
 			</Stack>
 
 			<Typography variant="body2" color="text.secondary">
-				Candidatos a regla empírica por (fuero, objeto, acto): combinaciones donde el plazo dominante alcanza la consistencia mínima.
-				El dataset es evidencia, no autoridad — para aplicar un candidato, creá/ajustá la regla en la tab Normativa citando estos números.
+				Candidatos a regla empírica por (fuero, objeto, acto): combinaciones donde el plazo dominante alcanza la consistencia mínima
+				(solo plazos de naturaleza procesal). El dataset es evidencia, no autoridad: el botón «Crear regla» pre-carga el formulario de
+				Normativa con estos datos — la regla nace sin verificar y la aprobás vos, que sos el dueño de la tabla.
 			</Typography>
 
 			<TableContainer component={Paper} elevation={0} sx={{ maxHeight: "calc(100dvh - 460px)" }}>
@@ -516,20 +577,29 @@ export default function DatasetTab() {
 										</Typography>
 									</TableCell>
 									<TableCell>
-										{c.reglaExistente ? (
-											<Chip
-												size="small"
-												color={c.reglaExistente.coincide ? "success" : "warning"}
-												variant="outlined"
-												label={
-													c.reglaExistente.coincide
-														? `✓ ${c.reglaExistente.clave}`
-														: `⚠ ${c.reglaExistente.clave}: ${c.reglaExistente.plazoDias}d ≠ ${c.plazoDias}d`
-												}
-											/>
-										) : (
-											<Chip size="small" color="info" variant="outlined" label="SIN REGLA — candidato nuevo" />
-										)}
+										<Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap" useFlexGap>
+											{c.reglaExistente ? (
+												<Chip
+													size="small"
+													color={c.reglaExistente.coincide ? "success" : "warning"}
+													variant="outlined"
+													label={
+														c.reglaExistente.coincide
+															? `✓ ${c.reglaExistente.clave}`
+															: `⚠ ${c.reglaExistente.clave}: ${c.reglaExistente.plazoDias}d ≠ ${c.plazoDias}d`
+													}
+												/>
+											) : (
+												<Chip size="small" color="info" variant="outlined" label="SIN REGLA" />
+											)}
+											{(!c.reglaExistente || !c.reglaExistente.coincide) && (
+												<Tooltip title="Pre-carga el formulario de Normativa con los datos y la evidencia de este candidato — vos revisás la cita legal y confirmás">
+													<Button size="small" variant="outlined" onClick={() => crearReglaDesde(c)}>
+														Crear regla
+													</Button>
+												</Tooltip>
+											)}
+										</Stack>
 									</TableCell>
 								</TableRow>
 							))
@@ -558,6 +628,18 @@ export default function DatasetTab() {
 					).sort()}
 				/>
 			</Box>
+
+			{nuevaRegla && (
+				<ReglaDialog
+					regla={nuevaRegla}
+					esNueva
+					onClose={() => setNuevaRegla(null)}
+					onSaved={() => {
+						setNuevaRegla(null);
+						fetchAll();
+					}}
+				/>
+			)}
 		</Stack>
 	);
 }

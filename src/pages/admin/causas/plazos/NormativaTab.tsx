@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+	Alert,
 	Button,
 	Chip,
 	Dialog,
@@ -42,17 +43,19 @@ const EMPTY: Partial<PlazoNormativaRegla> & { _id: string } = {
 const lines = (arr?: string[]) => (arr || []).join("\n");
 const fromLines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
 
-function ReglaDialog({
+export function ReglaDialog({
 	regla,
+	esNueva,
 	onClose,
 	onSaved,
 }: {
 	regla: (Partial<PlazoNormativaRegla> & { _id: string }) | null;
+	esNueva?: boolean;
 	onClose: () => void;
 	onSaved: () => void;
 }) {
 	const { enqueueSnackbar } = useSnackbar();
-	const isNew = !!regla && !regla.label && regla._id === "";
+	const isNew = esNueva ?? (!!regla && !regla.label && regla._id === "");
 	const [form, setForm] = useState<any>(null);
 
 	useEffect(() => {
@@ -190,10 +193,22 @@ export default function NormativaTab() {
 
 	return (
 		<Stack spacing={2}>
+			<Alert severity="info" sx={{ "& .MuiAlert-message": { width: "100%" } }}>
+				<Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+					¿Quién crea esta tabla?
+				</Typography>
+				<Typography variant="body2" component="div">
+					<b>1) El seed inicial</b> sembró las reglas base (insert-only: re-ejecutarlo nunca pisa tus ediciones). <b>2) El admin
+					— dueño de la tabla —</b> crea, edita, verifica y deshabilita reglas desde esta vista; cada regla exige cita legal y el
+					worker toma los cambios en ≤10 minutos, sin deploy. <b>3) El dataset propone</b>: la tab Dataset muestra candidatos con
+					evidencia (n, consistencia, normas citadas) y el botón «Crear regla» pre-carga este formulario — pero nunca crea reglas
+					solo. Recordá: el plazo expreso del documento siempre manda; estas reglas aplican <i>en subsidio</i>, y el clasificador
+					que se entrene con el dataset solo identificará el acto — el plazo lo pone siempre esta tabla.
+				</Typography>
+			</Alert>
 			<Stack direction="row" justifyContent="space-between" alignItems="center">
 				<Typography variant="body2" color="text.secondary">
 					First-match-wins por prioridad ascendente. Las reglas específicas (fuero/objeto) deben tener prioridad menor que las genéricas.
-					El plazo se aplica en subsidio del texto expreso del documento.
 				</Typography>
 				<Button size="small" variant="contained" onClick={() => setEditing({ ...EMPTY })}>
 					Nueva regla
