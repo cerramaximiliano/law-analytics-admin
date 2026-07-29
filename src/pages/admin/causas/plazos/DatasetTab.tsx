@@ -38,25 +38,73 @@ import {
 
 // ── Sección Revisión: casos dispersos / cola de verificación humana ──────────
 
-function DescartarDialog({
+const NATURALEZAS = ["procesal", "pago", "cumplimiento", "otro"];
+
+// Actos base (los de las reglas de normativa) — el select de corrección los
+// combina con los observados en el dataset.
+const ACTOS_BASE = [
+	"sentencia_definitiva",
+	"sentencia_interlocutoria",
+	"traslado_demanda",
+	"traslado",
+	"traslado_rex",
+	"traslado_agravios",
+	"vista",
+	"liquidacion",
+	"honorarios",
+	"intimacion",
+	"resolucion",
+	"aceptacion_cargo_perito",
+	"desconocido",
+];
+
+/**
+ * Diálogo de revisión completo: además de confirmar/descartar, permite
+ * CORREGIR los labels (acto, naturaleza) — cada corrección queda marcada
+ * como etiqueta de oro (revision.corregido) que las re-cosechas nunca pisan.
+ */
+function RevisarDialog({
 	ejemplo,
+	actosConocidos,
 	onClose,
 	onDone,
 }: {
 	ejemplo: DatasetEjemplo | null;
+	actosConocidos: string[];
 	onClose: () => void;
 	onDone: (id: string) => void;
 }) {
 	const { enqueueSnackbar } = useSnackbar();
+	const [acto, setActo] = useState("");
+	const [naturaleza, setNaturaleza] = useState("procesal");
 	const [notas, setNotas] = useState("");
 
-	useEffect(() => setNotas(""), [ejemplo]);
+	useEffect(() => {
+		if (ejemplo) {
+			setActo(ejemplo.acto || "desconocido");
+			setNaturaleza(ejemplo.naturaleza || "procesal");
+			setNotas(ejemplo.revision?.notas || "");
+		}
+	}, [ejemplo]);
+
 	if (!ejemplo) return null;
 
-	const descartar = async () => {
+	const guardar = async (estado: "confirmado" | "descartado") => {
 		try {
-			await revisarDatasetEjemplo(ejemplo._id, "descartado", notas);
-			enqueueSnackbar("Ejemplo descartado — excluido de stats y candidatos", { variant: "success" });
+			const cambios: { notas?: string; acto?: string; naturaleza?: string } = { notas };
+			// Solo mandar labels si difieren del original (para no marcar
+			// corregido sin necesidad).
+			if (acto && acto !== ejemplo.acto) cambios.acto = acto.trim().toLowerCase().replace(/\s+/g, "_");
+			if (naturaleza && naturaleza !== (ejemplo.naturaleza || "procesal")) cambios.naturaleza = naturaleza;
+			await revisarDatasetEjemplo(ejemplo._id, estado, cambios);
+			enqueueSnackbar(
+				estado === "confirmado"
+					? cambios.acto || cambios.naturaleza
+						? "Confirmado con labels corregidos (etiqueta de oro)"
+						: "Confirmado"
+					: "Descartado — excluido de la minería",
+				{ variant: "success" },
+			);
 			onDone(ejemplo._id);
 			onClose();
 		} catch (err: any) {
@@ -65,39 +113,97 @@ function DescartarDialog({
 	};
 
 	return (
-		<Dialog open onClose={onClose} maxWidth="sm" fullWidth>
-			<DialogTitle>Descartar ejemplo</DialogTitle>
+		<Dialog open onClose={onClose} maxWidth="md" fullWidth>
+			<DialogTitle>
+				Revisar ejemplo — {ejemplo.number}/{ejemplo.year} [{ejemplo.fuero}]
+				{ejemplo.objeto ? ` · ${ejemplo.objeto}` : ""}
+			</DialogTitle>
 			<DialogContent dividers>
-				<Stack spacing={1.5}>
-					<Typography variant="body2">
-						{ejemplo.number}/{ejemplo.year} [{ejemplo.fuero}] · {ejemplo.acto} · {ejemplo.plazoDias}d {ejemplo.tipoPlazo}
-					</Typography>
+				<Stack spacing={2}>
+					<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+						<Chip size="small" color="primary" variant="outlined" label={`${ejemplo.plazoDias}d ${ejemplo.tipoPlazo || ""}`} />
+						{ejemplo.normaCitada && <Chip size="small" variant="outlined" label={ejemplo.normaCitada} sx={{ fontFamily: "monospace" }} />}
+						{ejemplo.juzgado != null && <Chip size="small" variant="outlined" label={`Juzg. ${ejemplo.juzgado}`} />}
+						{ejemplo.sala != null && <Chip size="small" variant="outlined" label={`Sala ${ejemplo.sala}`} />}
+						{ejemplo._disperso?.apartado && (
+							<Chip size="small" color="warning" variant="outlined" label={`su grupo dice ${ejemplo._disperso.dominanteGrupo}d (n=${ejemplo._disperso.nGrupo})`} />
+						)}
+					</Stack>
+
+					<Stack direction="row" spacing={2}>
+						<TextField
+							select
+							size="small"
+							label="Acto notificado (corregible)"
+							value={actosConocidos.includes(acto) ? acto : "__otro__"}
+							onChange={(e) => setActo(e.target.value === "__otro__" ? "" : e.target.value)}
+							sx={{ minWidth: 240 }}
+						>
+							{actosConocidos.map((a) => (
+								<MenuItem key={a} value={a}>
+									{a}
+								</MenuItem>
+							))}
+							<MenuItem value="__otro__">otro (escribir)…</MenuItem>
+						</TextField>
+						{!actosConocidos.includes(acto) && (
+							<TextField size="small" label="Acto nuevo (slug snake_case)" value={acto} onChange={(e) => setActo(e.target.value)} sx={{ minWidth: 220 }} />
+						)}
+						<TextField select size="small" label="Naturaleza del plazo" value={naturaleza} onChange={(e) => setNaturaleza(e.target.value)} sx={{ minWidth: 160 }}>
+							{NATURALEZAS.map((n) => (
+								<MenuItem key={n} value={n}>
+									{n}
+								</MenuItem>
+							))}
+						</TextField>
+					</Stack>
+
+					<TextField size="small" label="Notas" value={notas} onChange={(e) => setNotas(e.target.value)} multiline minRows={2} />
+
 					{ejemplo.snippet && (
-						<Typography variant="caption" sx={{ fontFamily: "monospace", bgcolor: "action.hover", p: 1, borderRadius: 1 }}>
-							«{ejemplo.snippet}»
-						</Typography>
+						<Box>
+							<Typography variant="caption" color="text.secondary">
+								Mención del plazo:
+							</Typography>
+							<Typography variant="caption" component="div" sx={{ fontFamily: "monospace", bgcolor: "action.hover", p: 1, borderRadius: 1 }}>
+								«{ejemplo.snippet}»
+							</Typography>
+						</Box>
 					)}
-					<TextField
-						size="small"
-						label="Motivo (opcional — p.ej. 'no es el plazo del acto, es plazo de pago')"
-						value={notas}
-						onChange={(e) => setNotas(e.target.value)}
-						multiline
-						minRows={2}
-					/>
+					{ejemplo.textoExtracto && (
+						<Box>
+							<Typography variant="caption" color="text.secondary">
+								Texto de la cédula (extracto):
+							</Typography>
+							<Box sx={{ maxHeight: 240, overflow: "auto", p: 1.5, bgcolor: "action.hover", borderRadius: 1 }}>
+								<Typography variant="caption" sx={{ whiteSpace: "pre-wrap", fontFamily: "monospace" }}>
+									{ejemplo.textoExtracto}
+								</Typography>
+							</Box>
+						</Box>
+					)}
 				</Stack>
 			</DialogContent>
 			<DialogActions>
+				{ejemplo.movimiento?.url && (
+					<Button component="a" href={ejemplo.movimiento.url} target="_blank" rel="noopener">
+						Ver PDF
+					</Button>
+				)}
+				<Box sx={{ flex: 1 }} />
 				<Button onClick={onClose}>Cancelar</Button>
-				<Button color="error" variant="contained" onClick={descartar}>
+				<Button color="error" onClick={() => guardar("descartado")}>
 					Descartar
+				</Button>
+				<Button color="success" variant="contained" onClick={() => guardar("confirmado")}>
+					Confirmar
 				</Button>
 			</DialogActions>
 		</Dialog>
 	);
 }
 
-function RevisionSection() {
+function RevisionSection({ actosConocidos }: { actosConocidos: string[] }) {
 	const { enqueueSnackbar } = useSnackbar();
 	const [rows, setRows] = useState<DatasetEjemplo[]>([]);
 	const [count, setCount] = useState(0);
@@ -106,7 +212,7 @@ function RevisionSection() {
 	const [loading, setLoading] = useState(true);
 	const [soloDispersos, setSoloDispersos] = useState(true);
 	const [revision, setRevision] = useState("sin_revisar");
-	const [descartando, setDescartando] = useState<DatasetEjemplo | null>(null);
+	const [revisando, setRevisando] = useState<DatasetEjemplo | null>(null);
 
 	const fetchList = useCallback(async () => {
 		try {
@@ -192,6 +298,9 @@ function RevisionSection() {
 									<TableCell>{e.acto}</TableCell>
 									<TableCell>
 										<Chip size="small" color="primary" variant="outlined" label={`${e.plazoDias}d ${e.tipoPlazo || ""}`} />
+										{e.naturaleza && e.naturaleza !== "procesal" && (
+											<Chip size="small" color="secondary" variant="outlined" label={e.naturaleza} sx={{ ml: 0.5 }} />
+										)}
 									</TableCell>
 									<TableCell>
 										{e._disperso?.sospechoso && <Chip size="small" color="error" variant="outlined" label="≥60d" sx={{ mr: 0.5 }} />}
@@ -199,6 +308,7 @@ function RevisionSection() {
 											<Chip size="small" color="warning" variant="outlined" label={`grupo: ${e._disperso.dominanteGrupo}d (n=${e._disperso.nGrupo})`} />
 										)}
 										{e.revision?.estado === "descartado" && <Chip size="small" label="descartado" />}
+										{e.revision?.corregido && <Chip size="small" color="info" variant="outlined" label="corregido" sx={{ ml: 0.5 }} />}
 									</TableCell>
 									<TableCell>
 										<Typography variant="caption" sx={{ fontFamily: "monospace", display: "block", maxHeight: 60, overflow: "auto" }}>
@@ -210,14 +320,14 @@ function RevisionSection() {
 									</TableCell>
 									<TableCell>
 										<Stack direction="row" spacing={0.5}>
-											<Tooltip title="Confirmar (el plazo extraído es correcto)">
+											<Tooltip title="Confirmar tal cual (plazo y labels correctos)">
 												<Button size="small" color="success" onClick={() => confirmar(e)}>
 													✓
 												</Button>
 											</Tooltip>
-											<Tooltip title="Descartar (falso positivo del extractor)">
-												<Button size="small" color="error" onClick={() => setDescartando(e)}>
-													✗
+											<Tooltip title="Revisar: corregir acto/naturaleza, ver texto completo, descartar">
+												<Button size="small" onClick={() => setRevisando(e)}>
+													✎
 												</Button>
 											</Tooltip>
 											{e.movimiento?.url && (
@@ -257,7 +367,12 @@ function RevisionSection() {
 				rowsPerPageOptions={[10, 25, 50]}
 				labelRowsPerPage="Por página:"
 			/>
-			<DescartarDialog ejemplo={descartando} onClose={() => setDescartando(null)} onDone={(id) => setRows((prev) => prev.filter((x) => x._id !== id))} />
+			<RevisarDialog
+				ejemplo={revisando}
+				actosConocidos={actosConocidos}
+				onClose={() => setRevisando(null)}
+				onDone={(id) => setRows((prev) => prev.filter((x) => x._id !== id))}
+			/>
 		</Stack>
 	);
 }
@@ -434,7 +549,14 @@ export default function DatasetTab() {
 
 			<Divider />
 			<Box>
-				<RevisionSection />
+				<RevisionSection
+					actosConocidos={Array.from(
+						new Set([
+							...ACTOS_BASE,
+							...(stats?.porActo || []).map((a) => a.acto),
+						]),
+					).sort()}
+				/>
 			</Box>
 		</Stack>
 	);
