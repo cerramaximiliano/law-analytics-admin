@@ -153,6 +153,24 @@ const DualWritePublicFlow = () => (
 
 				<div className="fd-flow" />
 
+				<div className="fd-stage">
+					<div className="fd-t">
+						<span className="fd-ico">📝</span> Extracción de texto → <code>pjn-movement-texts</code>
+					</div>
+					<div className="fd-d">
+						Si el documento es una <strong>resolución del organismo</strong> (no escritos de parte, cédulas ni oficios), se extrae el texto
+						plano del PDF recién descargado. El texto vive en una colección satélite con la misma identidad; en el espejo queda solo el
+						estado.
+					</div>
+					<div className="fd-chips">
+						<span className="fd-chip">extracted</span>
+						<span className="fd-chip">escaneado → needs_ocr</span>
+						<span className="fd-chip">parte/cédula → not_applicable</span>
+					</div>
+				</div>
+
+				<div className="fd-flow" />
+
 				<div className="fd-doc">
 					<div className="fd-doc-head">
 						<span className="fd-coll fd-mono">pjn-movements</span>
@@ -183,7 +201,21 @@ const DualWritePublicFlow = () => (
 							<span className="fd-k fd-mono">scrapingSource</span>
 							<span className="fd-v">qué worker lo trajo</span>
 						</li>
+						<li>
+							<span className="fd-k fd-mono">textoStatus</span>
+							<span className="fd-v">estado del texto (el texto vive en pjn-movement-texts)</span>
+						</li>
 					</ul>
+				</div>
+
+				<div className="fd-flow" />
+
+				<div className="fd-safety" style={{ "--fd-s-color": "var(--fd-mirror)" } as CSSProperties}>
+					<div className="fd-t">
+						<span className="fd-pulse" /> Backfill de texto histórico
+					</div>
+					El worker pjn-pdf-backfill recorre además, en paralelo, los PDFs ya guardados en S3 que aún no tienen texto y completa el corpus
+					histórico leyendo directo de S3 — cero carga sobre el portal del PJN.
 				</div>
 			</div>
 

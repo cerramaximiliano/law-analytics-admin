@@ -194,6 +194,23 @@ const DualWriteMisCausasFlow = () => (
 
 				<div className="fd-flow" />
 
+				<div className="fd-stage">
+					<div className="fd-t">
+						<span className="fd-ico">📝</span> Extracción de texto → <code>pjn-movement-texts</code>
+					</div>
+					<div className="fd-d">
+						Igual que en el flujo público: si el documento es una <strong>resolución del organismo</strong> (no escritos de parte, cédulas ni
+						oficios), se extrae el texto plano del PDF recién descargado hacia la colección satélite; en el espejo queda solo el estado.
+					</div>
+					<div className="fd-chips">
+						<span className="fd-chip">extracted</span>
+						<span className="fd-chip">escaneado → needs_ocr</span>
+						<span className="fd-chip">parte/cédula → not_applicable</span>
+					</div>
+				</div>
+
+				<div className="fd-flow" />
+
 				<div className="fd-doc">
 					<div className="fd-doc-head">
 						<span className="fd-coll fd-mono">pjn-movements</span>
@@ -223,6 +240,10 @@ const DualWriteMisCausasFlow = () => (
 						<li>
 							<span className="fd-k fd-mono">scrapingSource</span>
 							<span className="fd-v">pjn-login — vino del portal autenticado</span>
+						</li>
+						<li>
+							<span className="fd-k fd-mono">textoStatus</span>
+							<span className="fd-v">estado del texto (el texto vive en pjn-movement-texts)</span>
 						</li>
 					</ul>
 				</div>
