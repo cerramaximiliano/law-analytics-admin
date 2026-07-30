@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
 	Box,
@@ -25,64 +25,91 @@ import {
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { ArrowLeft, DocumentText, TickCircle, Warning2 } from "iconsax-react";
-import EtapaAnotacionesService, { AnotacionMovimiento, CausaParaAnotar, EstadoAnotacion } from "api/etapaAnotaciones";
+import { ArrowLeft, DocumentText, DocumentDownload, TickCircle, Trash, Warning2 } from "iconsax-react";
+import EtapaAnotacionesService, {
+	AnotacionMovimiento,
+	CausaParaAnotar,
+	CuerpoOnDemand,
+	EstadoAnotacion,
+} from "api/etapaAnotaciones";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 
-// Ruido administrativo que se oculta con el filtro "solo relevantes"
+// Ruido administrativo que se oculta con el filtro "sin ruido"
 const RE_RUIDO = /^(EN LETRA|EN DESPACHO|EN CONFRONTE|SIN DEFINIR|EN SECRETARIA|SACADO DE PARALIZADO|PRESTAMO|EN CAJA FUERTE)/i;
+// Movimientos con pinta de resolución (se resaltan en la lista)
+const RE_RESOLUCION = /SENTENCIA|RESOLUCION|RESUELVE|FALLO|HOMOLOG|INTERLOCUTOR|DECLARATORIA|DESIERTO|CADUCIDAD|INCOMPETENCIA|ARCHIV/i;
 
-const DIM_LABELS: Record<string, { titulo: string; opciones: Record<string, string> }> = {
+const DIMENSIONES_ORDEN = ["tipoResolucion", "instancia", "objetoResolucion", "modoTerminacion", "resultado"] as const;
+type DimKey = (typeof DIMENSIONES_ORDEN)[number];
+
+const DIM_LABELS: Record<DimKey, { titulo: string; corto: string; opciones: [string, string][] }> = {
 	tipoResolucion: {
 		titulo: "Tipo de resolución",
-		opciones: {
-			providencia: "Providencia",
-			interlocutoria: "Interlocutoria",
-			definitiva: "Definitiva",
-			no_resolucion: "No es resolución",
-		},
+		corto: "Tipo",
+		opciones: [
+			["providencia", "Providencia"],
+			["interlocutoria", "Interlocutoria"],
+			["definitiva", "Definitiva"],
+			["no_resolucion", "No es resolución"],
+		],
 	},
 	instancia: {
 		titulo: "Instancia",
-		opciones: { primera: "Primera", segunda: "Cámara", csjn: "CSJN" },
+		corto: "Instancia",
+		opciones: [
+			["primera", "Primera"],
+			["segunda", "Cámara"],
+			["csjn", "CSJN"],
+		],
 	},
 	objetoResolucion: {
 		titulo: "Objeto",
-		opciones: {
-			fondo: "Fondo",
-			incidental: "Incidental",
-			honorarios: "Honorarios",
-			ejecucion: "Ejecución",
-			terminacion: "Terminación",
-			impulso: "Impulso",
-		},
+		corto: "Objeto",
+		opciones: [
+			["fondo", "Fondo"],
+			["incidental", "Incidental"],
+			["honorarios", "Honorarios"],
+			["ejecucion", "Ejecución"],
+			["terminacion", "Terminación"],
+			["impulso", "Impulso"],
+		],
 	},
 	modoTerminacion: {
 		titulo: "Modo de terminación",
-		opciones: {
-			firmeza: "Firmeza",
-			allanamiento: "Allanamiento",
-			desistimiento: "Desistimiento",
-			conciliacion: "Conciliación",
-			caducidad: "Caducidad",
-			otro: "Otro",
-		},
+		corto: "Modo term.",
+		opciones: [
+			["firmeza", "Firmeza"],
+			["allanamiento", "Allanamiento"],
+			["desistimiento", "Desistimiento"],
+			["conciliacion", "Conciliación"],
+			["caducidad", "Caducidad"],
+			["otro", "Otro"],
+		],
 	},
 	resultado: {
 		titulo: "Resultado",
-		opciones: {
-			hace_lugar: "Hace lugar",
-			rechaza: "Rechaza",
-			parcial: "Parcial",
-			confirma: "Confirma",
-			revoca: "Revoca",
-			desierto: "Desierto",
-			concede: "Concede",
-			deniega: "Deniega",
-			homologa: "Homologa",
-			otro: "Otro",
-		},
+		corto: "Resultado",
+		opciones: [
+			["hace_lugar", "Hace lugar"],
+			["rechaza", "Rechaza"],
+			["parcial", "Parcial"],
+			["confirma", "Confirma"],
+			["revoca", "Revoca"],
+			["desierto", "Desierto"],
+			["concede", "Concede"],
+			["deniega", "Deniega"],
+			["homologa", "Homologa"],
+			["otro", "Otro"],
+		],
 	},
+};
+
+const DIM_CHIP_COLOR: Record<DimKey, "primary" | "secondary" | "info" | "warning" | "success"> = {
+	tipoResolucion: "primary",
+	instancia: "secondary",
+	objetoResolucion: "warning",
+	modoTerminacion: "info",
+	resultado: "success",
 };
 
 const ESTADO_COLOR: Record<EstadoAnotacion, "default" | "warning" | "info" | "success" | "error"> = {
@@ -110,20 +137,24 @@ const EtiquetadoEditor = () => {
 	const [notasCausa, setNotasCausa] = useState("");
 	const [estado, setEstado] = useState<EstadoAnotacion>("pendiente");
 	const [guardando, setGuardando] = useState(false);
+	// Modo de anotación: "libre" (todas las dimensiones) o una dimensión foco
+	const [modo, setModo] = useState<"libre" | DimKey>("libre");
+	// Cuerpos traídos bajo demanda, por idx de movimiento
+	const [cuerposOnDemand, setCuerposOnDemand] = useState<Record<number, CuerpoOnDemand>>({});
+	const [trayendoCuerpo, setTrayendoCuerpo] = useState(false);
+	const listaRef = useRef<HTMLDivElement | null>(null);
 
 	const cargar = useCallback(async () => {
 		if (!fuero || !id) return;
 		setLoading(true);
 		setError(null);
 		try {
-			// Alta idempotente en cola (para causas abiertas directo desde verified)
 			await EtapaAnotacionesService.agregarACola(fuero, id).catch(() => {});
 			const d = await EtapaAnotacionesService.getCausa(fuero, id);
 			setData(d);
 			setAnotaciones((d.anotacion?.anotaciones as Record<string, AnotacionMovimiento>) || {});
 			setNotasCausa(d.anotacion?.notasCausa || "");
 			setEstado((d.anotacion?.estado as EstadoAnotacion) || "pendiente");
-			// Selecciona el primer movimiento con etiqueta débil
 			const primero = d.movimientos.find((m) => m.etiquetaDebil);
 			setSeleccionado(primero ? primero.idx : d.movimientos.length ? d.movimientos[0].idx : null);
 		} catch (e: any) {
@@ -145,6 +176,7 @@ const EtiquetadoEditor = () => {
 
 	const cuerpoDe = useCallback(
 		(idx: number) => {
+			if (cuerposOnDemand[idx]) return { ...cuerposOnDemand[idx], detalle: "", dia: null };
 			if (!data) return null;
 			const m = data.movimientos.find((x) => x.idx === idx);
 			if (!m) return null;
@@ -154,33 +186,110 @@ const EtiquetadoEditor = () => {
 				null
 			);
 		},
-		[data],
+		[data, cuerposOnDemand],
 	);
 
-	const setDim = (idx: number, dim: keyof AnotacionMovimiento, valor: any) => {
-		const k = String(idx);
-		setAnotaciones((prev) => {
-			const actual = { ...(prev[k] || {}) };
-			// Toggle: click sobre el valor activo lo desmarca
-			(actual as any)[dim] = (actual as any)[dim] === valor ? null : valor;
-			return { ...prev, [k]: actual };
-		});
-		setDirty((prev) => new Set(prev).add(k));
-	};
+	const marcarDirty = (k: string) => setDirty((prev) => new Set(prev).add(k));
+
+	const setDim = useCallback(
+		(idx: number, dim: DimKey, valor: string, avanzar = false) => {
+			const k = String(idx);
+			setAnotaciones((prev) => {
+				const actual = { ...(prev[k] || {}) };
+				(actual as any)[dim] = (actual as any)[dim] === valor ? null : valor;
+				return { ...prev, [k]: actual };
+			});
+			marcarDirty(k);
+			if (avanzar) irA(1, idx);
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[movimientosVisibles],
+	);
 
 	const setCampo = (idx: number, campo: keyof AnotacionMovimiento, valor: any) => {
 		const k = String(idx);
 		setAnotaciones((prev) => ({ ...prev, [k]: { ...(prev[k] || {}), [campo]: valor } }));
-		setDirty((prev) => new Set(prev).add(k));
+		marcarDirty(k);
+	};
+
+	const limpiarMovimiento = (idx: number) => {
+		const k = String(idx);
+		setAnotaciones((prev) => {
+			const nuevo = { ...prev };
+			delete nuevo[k];
+			return nuevo;
+		});
+		marcarDirty(k);
+	};
+
+	// Navegación relativa dentro de la lista visible
+	const irA = useCallback(
+		(delta: number, desde?: number) => {
+			const base = desde !== undefined ? desde : seleccionado;
+			if (base === null || !movimientosVisibles.length) return;
+			const i = movimientosVisibles.findIndex((m) => m.idx === base);
+			const destino = movimientosVisibles[Math.min(Math.max(i + delta, 0), movimientosVisibles.length - 1)];
+			if (destino) {
+				setSeleccionado(destino.idx);
+				// Mantener visible en el scroll
+				const el = document.getElementById(`mov-${destino.idx}`);
+				if (el && listaRef.current) el.scrollIntoView({ block: "nearest" });
+			}
+		},
+		[seleccionado, movimientosVisibles],
+	);
+
+	// Atajos de teclado: ↑/↓ navegan; en modo foco, 1..9 asignan y avanzan; 0 limpia la dimensión
+	useEffect(() => {
+		const handler = (e: KeyboardEvent) => {
+			const tag = (e.target as HTMLElement)?.tagName;
+			if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable) return;
+			if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+				e.preventDefault();
+				irA(1);
+			} else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+				e.preventDefault();
+				irA(-1);
+			} else if (modo !== "libre" && seleccionado !== null && /^[0-9]$/.test(e.key)) {
+				e.preventDefault();
+				const n = parseInt(e.key, 10);
+				if (n === 0) {
+					setCampoDim(seleccionado, modo, null);
+				} else {
+					const opcion = DIM_LABELS[modo].opciones[n - 1];
+					if (opcion) setDim(seleccionado, modo, opcion[0], true);
+				}
+			}
+		};
+		const setCampoDim = (idx: number, dim: DimKey, valor: null) => {
+			const k = String(idx);
+			setAnotaciones((prev) => ({ ...prev, [k]: { ...(prev[k] || {}), [dim]: valor } }));
+			marcarDirty(k);
+		};
+		window.addEventListener("keydown", handler);
+		return () => window.removeEventListener("keydown", handler);
+	}, [modo, seleccionado, irA, setDim]);
+
+	const traerCuerpo = async (idx: number) => {
+		if (!fuero || !id) return;
+		setTrayendoCuerpo(true);
+		try {
+			const r = await EtapaAnotacionesService.getCuerpo(fuero, id, idx);
+			setCuerposOnDemand((prev) => ({ ...prev, [idx]: r.cuerpo }));
+		} catch (e: any) {
+			enqueueSnackbar(e?.response?.data?.message || e.message, { variant: "warning" });
+		} finally {
+			setTrayendoCuerpo(false);
+		}
 	};
 
 	const guardar = async (nuevoEstado?: EstadoAnotacion) => {
 		if (!fuero || !id) return;
 		setGuardando(true);
 		try {
-			const cambios: Record<string, AnotacionMovimiento> = {};
+			const cambios: Record<string, AnotacionMovimiento | null> = {};
 			dirty.forEach((k) => {
-				if (/^\d+$/.test(k) && anotaciones[k]) cambios[k] = anotaciones[k];
+				if (/^\d+$/.test(k)) cambios[k] = anotaciones[k] && Object.keys(anotaciones[k]).length ? anotaciones[k] : null;
 			});
 			await EtapaAnotacionesService.guardar(fuero, id, {
 				anotaciones: cambios,
@@ -190,6 +299,23 @@ const EtiquetadoEditor = () => {
 			if (nuevoEstado) setEstado(nuevoEstado);
 			setDirty(new Set());
 			enqueueSnackbar("Anotaciones guardadas", { variant: "success" });
+		} catch (e: any) {
+			enqueueSnackbar(e?.response?.data?.message || e.message, { variant: "error" });
+		} finally {
+			setGuardando(false);
+		}
+	};
+
+	const limpiarTodo = async () => {
+		if (!fuero || !id) return;
+		if (!window.confirm("¿Borrar TODAS las anotaciones de esta causa?")) return;
+		setGuardando(true);
+		try {
+			await EtapaAnotacionesService.guardar(fuero, id, { limpiarTodo: true, estado: "pendiente" });
+			setAnotaciones({});
+			setDirty(new Set());
+			setEstado("pendiente");
+			enqueueSnackbar("Anotaciones borradas", { variant: "info" });
 		} catch (e: any) {
 			enqueueSnackbar(e?.response?.data?.message || e.message, { variant: "error" });
 		} finally {
@@ -215,6 +341,7 @@ const EtiquetadoEditor = () => {
 	const mSel = seleccionado !== null ? data.movimientos.find((m) => m.idx === seleccionado) : null;
 	const aSel: AnotacionMovimiento = seleccionado !== null ? anotaciones[String(seleccionado)] || {} : {};
 	const cuerpoSel = seleccionado !== null ? cuerpoDe(seleccionado) : null;
+	const anotadosCount = Object.keys(anotaciones).filter((k) => Object.keys(anotaciones[k] || {}).length).length;
 
 	return (
 		<MainCard
@@ -227,10 +354,10 @@ const EtiquetadoEditor = () => {
 						{data.causa.fuero} {data.causa.number}/{data.causa.year}
 					</Typography>
 					<Chip size="small" label={estado} color={ESTADO_COLOR[estado]} />
+					<Chip size="small" variant="outlined" label={`${anotadosCount} anotados`} />
 					{data.causa.familia && <Chip size="small" variant="outlined" label={`familia: ${data.causa.familia}`} />}
-					{data.causa.etapaActual && <Chip size="small" variant="outlined" label={`etapa: ${data.causa.etapaActual}`} />}
 					{!data.cuerposDisponibles && (
-						<Tooltip title="Sin conexión a Atlas — cuerpos no disponibles">
+						<Tooltip title="Sin conexión a Atlas — cuerpos capturados no disponibles (la descarga directa sigue funcionando)">
 							<Warning2 size={18} color={theme.palette.warning.main} />
 						</Tooltip>
 					)}
@@ -238,6 +365,13 @@ const EtiquetadoEditor = () => {
 			}
 			secondary={
 				<Stack direction="row" spacing={1}>
+					<Tooltip title="Borrar todas las anotaciones de la causa">
+						<span>
+							<IconButton size="small" color="error" disabled={guardando} onClick={limpiarTodo}>
+								<Trash size={18} />
+							</IconButton>
+						</span>
+					</Tooltip>
 					<Button size="small" variant="outlined" disabled={guardando || dirty.size === 0} onClick={() => guardar()}>
 						Guardar {dirty.size > 0 ? `(${dirty.size})` : ""}
 					</Button>
@@ -254,16 +388,40 @@ const EtiquetadoEditor = () => {
 				</Stack>
 			}
 		>
-			<Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+			<Typography variant="body2" color="text.secondary" sx={{ mb: 0.25 }}>
 				{data.causa.caratula}
 			</Typography>
 			<Typography variant="caption" color="text.secondary">
 				{data.causa.objeto} · Juz. {data.causa.juzgado ?? "—"}
-				{data.causa.sala ? ` · Sala ${data.causa.sala}` : ""} · {data.movimientos.length} movimientos ·{" "}
-				{data.cuerpos.length} cuerpos capturados
+				{data.causa.sala ? ` · Sala ${data.causa.sala}` : ""} · {data.movimientos.length} movimientos · {data.cuerpos.length}{" "}
+				cuerpos capturados
 			</Typography>
 
-			<Grid container spacing={2} sx={{ mt: 0.5 }}>
+			{/* ── Modo de anotación (foco por dimensión, con atajos) ── */}
+			<Card variant="outlined" sx={{ p: 1, mt: 1.5, mb: 1.5, bgcolor: alpha(BRAND_BLUE, isDark ? 0.08 : 0.03) }}>
+				<Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
+					<Typography variant="caption" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
+						Modo
+					</Typography>
+					<ToggleButtonGroup size="small" exclusive value={modo} onChange={(_e, v) => v && setModo(v)}>
+						<ToggleButton value="libre" sx={{ py: 0.25, px: 1.25, textTransform: "none", fontSize: "0.74rem" }}>
+							Libre
+						</ToggleButton>
+						{DIMENSIONES_ORDEN.map((d) => (
+							<ToggleButton key={d} value={d} sx={{ py: 0.25, px: 1.25, textTransform: "none", fontSize: "0.74rem" }}>
+								{DIM_LABELS[d].corto}
+							</ToggleButton>
+						))}
+					</ToggleButtonGroup>
+					<Typography variant="caption" color="text.secondary">
+						{modo === "libre"
+							? "↑/↓ navegan movimientos. Elegí una dimensión para anotar en serie con las teclas 1-9 (0 limpia)."
+							: `Anotando "${DIM_LABELS[modo as DimKey].titulo}": teclas 1-${DIM_LABELS[modo as DimKey].opciones.length} asignan y avanzan · 0 limpia · ↑/↓ navegan.`}
+					</Typography>
+				</Stack>
+			</Card>
+
+			<Grid container spacing={2}>
 				{/* ── Columna izquierda: movimientos ── */}
 				<Grid item xs={12} md={5} lg={4}>
 					<Card variant="outlined" sx={{ p: 1 }}>
@@ -274,14 +432,18 @@ const EtiquetadoEditor = () => {
 								label={<Typography variant="caption">sin ruido</Typography>}
 							/>
 						</Stack>
-						<Box sx={{ maxHeight: "68vh", overflowY: "auto" }}>
+						<Box ref={listaRef} sx={{ maxHeight: "64vh", overflowY: "auto" }}>
 							{movimientosVisibles.map((m) => {
-								const anotado = !!anotaciones[String(m.idx)] && Object.keys(anotaciones[String(m.idx)]).length > 0;
+								const a = anotaciones[String(m.idx)];
+								const anotado = !!a && Object.keys(a).length > 0;
 								const esEstado = /CAMBIO DE ESTADO/i.test(m.tipo);
+								const esResol = !esEstado && RE_RESOLUCION.test(m.detalle);
 								const tieneCuerpo = !!cuerpoDe(m.idx);
+								const sel = m.idx === seleccionado;
 								return (
 									<Box
 										key={m.idx}
+										id={`mov-${m.idx}`}
 										onClick={() => setSeleccionado(m.idx)}
 										sx={{
 											px: 1,
@@ -289,32 +451,57 @@ const EtiquetadoEditor = () => {
 											mb: 0.25,
 											borderRadius: 1,
 											cursor: "pointer",
-											borderLeft: `3px solid ${
-												m.idx === seleccionado ? BRAND_BLUE : anotado ? theme.palette.success.main : "transparent"
-											}`,
-											bgcolor:
-												m.idx === seleccionado
-													? alpha(BRAND_BLUE, isDark ? 0.16 : 0.08)
+											borderLeft: `4px solid ${sel ? BRAND_BLUE : anotado ? theme.palette.success.main : "transparent"}`,
+											outline: sel ? `1.5px solid ${alpha(BRAND_BLUE, 0.6)}` : "none",
+											bgcolor: sel
+												? alpha(BRAND_BLUE, isDark ? 0.2 : 0.1)
+												: esResol
+													? alpha(theme.palette.warning.main, isDark ? 0.1 : 0.06)
 													: esEstado
-														? alpha(theme.palette.info.main, isDark ? 0.08 : 0.04)
+														? alpha(theme.palette.info.main, isDark ? 0.07 : 0.04)
 														: "transparent",
-											"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.1 : 0.05) },
+											"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.12 : 0.06) },
 										}}
 									>
-										<Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
-											<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums", color: "text.secondary", minWidth: 74 }}>
+										<Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+											<Typography
+												variant="caption"
+												sx={{ fontVariantNumeric: "tabular-nums", color: "text.secondary", minWidth: 72 }}
+											>
 												{m.dia}
 											</Typography>
-											<Chip size="small" variant="outlined" label={m.tipo.slice(0, 18)} sx={{ height: 18, fontSize: "0.62rem" }} />
+											<Chip size="small" variant="outlined" label={m.tipo.slice(0, 16)} sx={{ height: 17, fontSize: "0.6rem" }} />
 											{m.etiquetaDebil && (
-												<Chip size="small" color="info" label={m.etiquetaDebil} sx={{ height: 18, fontSize: "0.62rem" }} />
+												<Tooltip title="Etiqueta débil del motor (v17) — informativa, no es tu anotación">
+													<Chip
+														size="small"
+														variant="outlined"
+														color="info"
+														label={`⚙ ${m.etiquetaDebil}`}
+														sx={{ height: 17, fontSize: "0.6rem" }}
+													/>
+												</Tooltip>
 											)}
 											{tieneCuerpo && <DocumentText size={13} color={theme.palette.success.main} />}
-											{anotado && <TickCircle size={13} color={theme.palette.success.main} variant="Bold" />}
+											{m.url && !tieneCuerpo && <DocumentDownload size={13} color={theme.palette.text.disabled} />}
 										</Stack>
-										<Typography variant="caption" sx={{ display: "block", lineHeight: 1.3 }}>
+										<Typography variant="caption" sx={{ display: "block", lineHeight: 1.3, fontWeight: esResol ? 600 : 400 }}>
 											{m.detalle.slice(0, 110)}
 										</Typography>
+										{anotado && (
+											<Stack direction="row" spacing={0.4} sx={{ mt: 0.25 }} flexWrap="wrap" useFlexGap>
+												{DIMENSIONES_ORDEN.filter((d) => (a as any)[d]).map((d) => (
+													<Chip
+														key={d}
+														size="small"
+														color={DIM_CHIP_COLOR[d]}
+														label={(a as any)[d]}
+														sx={{ height: 16, fontSize: "0.58rem" }}
+													/>
+												))}
+												{a.descartar && <Chip size="small" color="error" label="descartar" sx={{ height: 16, fontSize: "0.58rem" }} />}
+											</Stack>
+										)}
 									</Box>
 								);
 							})}
@@ -326,31 +513,69 @@ const EtiquetadoEditor = () => {
 				<Grid item xs={12} md={7} lg={8}>
 					{mSel ? (
 						<Stack spacing={2}>
-							<Card variant="outlined" sx={{ p: 2 }}>
-								<Stack direction="row" spacing={1} alignItems="baseline" flexWrap="wrap">
+							<Card
+								variant="outlined"
+								sx={{ p: 2, borderLeft: `4px solid ${BRAND_BLUE}`, bgcolor: alpha(BRAND_BLUE, isDark ? 0.05 : 0.02) }}
+							>
+								<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 									<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 										#{mSel.idx} · {mSel.dia} · {mSel.tipo}
 									</Typography>
-									{mSel.etiquetaDebil && <Chip size="small" color="info" label={`etiqueta débil: ${mSel.etiquetaDebil}`} />}
+									{mSel.etiquetaDebil && (
+										<Tooltip title="Etiqueta débil del motor (informativa)">
+											<Chip size="small" variant="outlined" color="info" label={`⚙ ${mSel.etiquetaDebil}`} />
+										</Tooltip>
+									)}
+									<Box sx={{ flex: 1 }} />
+									<Tooltip title="Limpiar anotaciones de este movimiento">
+										<span>
+											<IconButton
+												size="small"
+												color="error"
+												disabled={!Object.keys(aSel).length}
+												onClick={() => limpiarMovimiento(mSel.idx)}
+											>
+												<Trash size={15} />
+											</IconButton>
+										</span>
+									</Tooltip>
 								</Stack>
-								<Typography variant="body2" fontWeight={600} sx={{ mt: 0.5, mb: 1.5 }}>
+								<Typography variant="body1" fontWeight={700} sx={{ mt: 0.5, mb: 1.5, lineHeight: 1.35 }}>
 									{mSel.detalle}
 								</Typography>
 
-								{Object.entries(DIM_LABELS).map(([dim, cfg]) => (
+								{(modo === "libre" ? DIMENSIONES_ORDEN : [modo as DimKey]).map((dim) => (
 									<Box key={dim} sx={{ mb: 1.25 }}>
-										<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
-											{cfg.titulo}
+										<Typography
+											variant="caption"
+											fontWeight={700}
+											sx={{ textTransform: "uppercase", letterSpacing: 0.5, color: `${DIM_CHIP_COLOR[dim]}.main` }}
+										>
+											{DIM_LABELS[dim].titulo}
 										</Typography>
 										<Box>
 											<ToggleButtonGroup size="small" exclusive value={(aSel as any)[dim] || null} sx={{ flexWrap: "wrap" }}>
-												{Object.entries(cfg.opciones).map(([valor, label]) => (
+												{DIM_LABELS[dim].opciones.map(([valor, label], oi) => (
 													<ToggleButton
 														key={valor}
 														value={valor}
-														onClick={() => setDim(mSel.idx, dim as keyof AnotacionMovimiento, valor)}
-														sx={{ py: 0.25, px: 1, fontSize: "0.72rem", textTransform: "none" }}
+														onClick={() => setDim(mSel.idx, dim, valor, modo !== "libre")}
+														sx={{
+															py: modo === "libre" ? 0.25 : 0.75,
+															px: modo === "libre" ? 1 : 1.75,
+															fontSize: modo === "libre" ? "0.72rem" : "0.85rem",
+															textTransform: "none",
+														}}
 													>
+														{modo !== "libre" && (
+															<Typography
+																component="span"
+																variant="caption"
+																sx={{ mr: 0.6, opacity: 0.55, fontVariantNumeric: "tabular-nums" }}
+															>
+																{oi + 1}
+															</Typography>
+														)}
 														{label}
 													</ToggleButton>
 												))}
@@ -359,91 +584,97 @@ const EtiquetadoEditor = () => {
 									</Box>
 								))}
 
-								<Grid container spacing={1.5} sx={{ mt: 0.25 }}>
-									<Grid item xs={12} sm={4}>
-										<TextField
-											fullWidth
-											size="small"
-											label="Etiqueta final (etapa/hito)"
-											value={aSel.etiqueta || ""}
-											onChange={(e) => setCampo(mSel.idx, "etiqueta", e.target.value)}
-										/>
-									</Grid>
-									<Grid item xs={6} sm={3}>
-										<TextField
-											fullWidth
-											size="small"
-											type="number"
-											label="Réplica de #"
-											value={aSel.replicaDe ?? ""}
-											onChange={(e) => setCampo(mSel.idx, "replicaDe", e.target.value === "" ? null : parseInt(e.target.value, 10))}
-										/>
-									</Grid>
-									<Grid item xs={6} sm={2}>
-										<FormControlLabel
-											control={
-												<Switch
-													size="small"
-													checked={!!aSel.descartar}
-													onChange={(e) => setCampo(mSel.idx, "descartar", e.target.checked)}
-												/>
-											}
-											label={<Typography variant="caption">Descartar</Typography>}
-										/>
-									</Grid>
-									<Grid item xs={12} sm={3}>
-										<Select
-											fullWidth
-											size="small"
-											displayEmpty
-											value=""
-											onChange={(e) => {
-												// Preset rápido: copia la anotación de otro movimiento anotado
-												const desde = e.target.value as string;
-												if (desde !== "") {
-													const src = anotaciones[desde];
-													if (src) {
-														setAnotaciones((prev) => ({ ...prev, [String(mSel.idx)]: { ...src, notas: "" } }));
-														setDirty((prev) => new Set(prev).add(String(mSel.idx)));
-													}
+								{modo === "libre" && (
+									<Grid container spacing={1.5} sx={{ mt: 0.25 }}>
+										<Grid item xs={12} sm={4}>
+											<TextField
+												fullWidth
+												size="small"
+												label="Etiqueta final (etapa/hito)"
+												value={aSel.etiqueta || ""}
+												onChange={(e) => setCampo(mSel.idx, "etiqueta", e.target.value)}
+											/>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<TextField
+												fullWidth
+												size="small"
+												type="number"
+												label="Réplica de #"
+												value={aSel.replicaDe ?? ""}
+												onChange={(e) =>
+													setCampo(mSel.idx, "replicaDe", e.target.value === "" ? null : parseInt(e.target.value, 10))
 												}
-											}}
-											renderValue={() => (
-												<Typography variant="caption" color="text.secondary">
-													Copiar de…
-												</Typography>
-											)}
-										>
-											{Object.keys(anotaciones)
-												.filter((k) => k !== String(mSel.idx) && Object.keys(anotaciones[k]).length)
-												.map((k) => (
-													<MenuItem key={k} value={k}>
-														#{k}
-													</MenuItem>
-												))}
-										</Select>
+											/>
+										</Grid>
+										<Grid item xs={6} sm={2}>
+											<FormControlLabel
+												control={
+													<Switch
+														size="small"
+														checked={!!aSel.descartar}
+														onChange={(e) => setCampo(mSel.idx, "descartar", e.target.checked)}
+													/>
+												}
+												label={<Typography variant="caption">Descartar</Typography>}
+											/>
+										</Grid>
+										<Grid item xs={12} sm={3}>
+											<Select
+												fullWidth
+												size="small"
+												displayEmpty
+												value=""
+												onChange={(e) => {
+													const desde = e.target.value as string;
+													if (desde !== "") {
+														const src = anotaciones[desde];
+														if (src) {
+															setAnotaciones((prev) => ({ ...prev, [String(mSel.idx)]: { ...src, notas: "" } }));
+															marcarDirty(String(mSel.idx));
+														}
+													}
+												}}
+												renderValue={() => (
+													<Typography variant="caption" color="text.secondary">
+														Copiar de…
+													</Typography>
+												)}
+											>
+												{Object.keys(anotaciones)
+													.filter((k) => k !== String(mSel.idx) && Object.keys(anotaciones[k]).length)
+													.map((k) => (
+														<MenuItem key={k} value={k}>
+															#{k}
+														</MenuItem>
+													))}
+											</Select>
+										</Grid>
+										<Grid item xs={12}>
+											<TextField
+												fullWidth
+												size="small"
+												multiline
+												minRows={1}
+												label="Notas del movimiento"
+												value={aSel.notas || ""}
+												onChange={(e) => setCampo(mSel.idx, "notas", e.target.value)}
+											/>
+										</Grid>
 									</Grid>
-									<Grid item xs={12}>
-										<TextField
-											fullWidth
-											size="small"
-											multiline
-											minRows={1}
-											label="Notas del movimiento"
-											value={aSel.notas || ""}
-											onChange={(e) => setCampo(mSel.idx, "notas", e.target.value)}
-										/>
-									</Grid>
-								</Grid>
+								)}
 							</Card>
 
-							{cuerpoSel && (
+							{/* ── Cuerpo del documento ── */}
+							{cuerpoSel ? (
 								<Card variant="outlined" sx={{ p: 2 }}>
 									<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
 										<DocumentText size={16} color={theme.palette.success.main} />
 										<Typography variant="subtitle2">
-											Cuerpo capturado · {cuerpoSel.caracteres.toLocaleString("es-AR")} caracteres
-											{cuerpoSel.detalle !== mSel.detalle ? ` · doc del mismo día: "${cuerpoSel.detalle.slice(0, 50)}"` : ""}
+											Cuerpo · {cuerpoSel.caracteres.toLocaleString("es-AR")} caracteres
+											{"detalle" in cuerpoSel && cuerpoSel.detalle && cuerpoSel.detalle !== mSel.detalle
+												? ` · doc del mismo día: "${(cuerpoSel as any).detalle.slice(0, 50)}"`
+												: ""}
 										</Typography>
 									</Stack>
 									<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
@@ -468,7 +699,7 @@ const EtiquetadoEditor = () => {
 									<Box
 										sx={{
 											fontFamily: "monospace",
-											fontSize: "0.74rem",
+											fontSize: "0.78rem",
 											whiteSpace: "pre-wrap",
 											bgcolor: alpha(theme.palette.success.main, isDark ? 0.1 : 0.05),
 											borderLeft: `3px solid ${theme.palette.success.main}`,
@@ -479,6 +710,25 @@ const EtiquetadoEditor = () => {
 										{cuerpoSel.tieneDispositiva ? cuerpoSel.dispositiva : cuerpoSel.colaTexto}
 									</Box>
 								</Card>
+							) : mSel.url ? (
+								<Card variant="outlined" sx={{ p: 2, textAlign: "center" }}>
+									<Button
+										variant="outlined"
+										size="small"
+										startIcon={trayendoCuerpo ? <CircularProgress size={14} /> : <DocumentDownload size={16} />}
+										disabled={trayendoCuerpo}
+										onClick={() => traerCuerpo(mSel.idx)}
+									>
+										Traer documento del PJN
+									</Button>
+									<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+										El movimiento tiene documento asociado — se descarga del viewer y se segmenta al momento.
+									</Typography>
+								</Card>
+							) : (
+								<Alert severity="info" variant="outlined">
+									Este movimiento no tiene documento asociado (solo título).
+								</Alert>
 							)}
 						</Stack>
 					) : (
@@ -497,13 +747,16 @@ const EtiquetadoEditor = () => {
 							value={notasCausa}
 							onChange={(e) => {
 								setNotasCausa(e.target.value);
-								setDirty((prev) => new Set(prev).add("__notas__"));
+								marcarDirty("__notas__");
 							}}
 							placeholder="Observaciones generales, criterios aplicados, dudas para verificación…"
 						/>
 					</Card>
 					<Divider sx={{ my: 2 }} />
 					<Stack direction="row" spacing={1} justifyContent="flex-end">
+						<Button size="small" color="error" variant="text" disabled={guardando} onClick={limpiarTodo}>
+							Limpiar todo
+						</Button>
 						<Button size="small" variant="outlined" disabled={guardando || dirty.size === 0} onClick={() => guardar()}>
 							Guardar {dirty.size > 0 ? `(${dirty.size})` : ""}
 						</Button>

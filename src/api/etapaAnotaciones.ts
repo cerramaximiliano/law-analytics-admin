@@ -47,6 +47,15 @@ export interface MovimientoAnotable {
 	etiquetaDebil: string | null;
 }
 
+export interface CuerpoOnDemand {
+	fuente: "cache" | "sentencias-capturadas" | "descarga";
+	caracteres: number;
+	encabezado: string;
+	dispositiva: string;
+	tieneDispositiva: boolean;
+	colaTexto: string | null;
+}
+
 export interface CuerpoSegmentado {
 	url: string;
 	dia: string | null;
@@ -117,10 +126,20 @@ export class EtapaAnotacionesService {
 	static async guardar(
 		fuero: string,
 		id: string,
-		payload: { anotaciones?: Record<string, AnotacionMovimiento | null>; notasCausa?: string; estado?: EstadoAnotacion },
+		payload: {
+			anotaciones?: Record<string, AnotacionMovimiento | null>;
+			notasCausa?: string;
+			estado?: EstadoAnotacion;
+			limpiarTodo?: boolean;
+		},
 	) {
 		const { data } = await workersAxios.put(`/api/admin/etapa-anotaciones/causa/${fuero}/${id}`, payload);
 		return data as { success: boolean };
+	}
+
+	static async getCuerpo(fuero: string, id: string, idx: number) {
+		const { data } = await workersAxios.get(`/api/admin/etapa-anotaciones/cuerpo/${fuero}/${id}/${idx}`);
+		return data as { success: boolean; cuerpo: CuerpoOnDemand };
 	}
 
 	static async quitar(fuero: string, id: string) {
