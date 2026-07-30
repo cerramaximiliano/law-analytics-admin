@@ -25,6 +25,8 @@ const TrayectoriasPage = Loadable(lazy(() => import("pages/admin/causas/Trayecto
 const EtapasPage = Loadable(lazy(() => import("pages/admin/causas/Etapas")));
 const EtapaStatsPage = Loadable(lazy(() => import("pages/admin/causas/EtapaStats")));
 const EtapaArbolPage = Loadable(lazy(() => import("pages/admin/causas/EtapaArbol")));
+const EtiquetadoDatasetPage = Loadable(lazy(() => import("pages/admin/causas/EtiquetadoDataset")));
+const EtiquetadoEditorPage = Loadable(lazy(() => import("pages/admin/causas/EtiquetadoEditor")));
 const CarpetasVerificadasApp = Loadable(lazy(() => import("pages/admin/causas/CarpetasVerificadasApp")));
 const CarpetasNoVerificadas = Loadable(lazy(() => import("pages/admin/causas/CarpetasNoVerificadas")));
 const CausasPendientes = Loadable(lazy(() => import("pages/admin/causas/CausasPendientes")));
@@ -472,6 +474,22 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<EtapaArbolPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "causas/etiquetado",
+							element: (
+								<AdminRoleGuard>
+									<EtiquetadoDatasetPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "causas/etiquetado/:fuero/:id",
+							element: (
+								<AdminRoleGuard>
+									<EtiquetadoEditorPage />
 								</AdminRoleGuard>
 							),
 						},

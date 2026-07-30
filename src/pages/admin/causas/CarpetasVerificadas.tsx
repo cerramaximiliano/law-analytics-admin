@@ -29,7 +29,9 @@ import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import CausasService, { Causa } from "api/causas";
-import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown } from "iconsax-react";
+import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Edit2 } from "iconsax-react";
+import { useNavigate } from "react-router-dom";
+import EtapaAnotacionesService, { EstadoAnotacion } from "api/etapaAnotaciones";
 import CausaDetalleModal from "./CausaDetalleModal";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
@@ -81,6 +83,10 @@ const CarpetasVerificadas = () => {
 	const [selectedCausa, setSelectedCausa] = useState<Causa | null>(null);
 	const [detailModalOpen, setDetailModalOpen] = useState(false);
 	const [loadingDetail, setLoadingDetail] = useState(false);
+
+	// Etiquetado de dataset (cola de anotación experta)
+	const navigate = useNavigate();
+	const [membership, setMembership] = useState<Record<string, { estado: EstadoAnotacion; motivo: string }>>({});
 
 	// Cargar causas verificadas
 	const fetchCausas = async (
@@ -143,6 +149,11 @@ const CarpetasVerificadas = () => {
 			if (response.success) {
 				setCausas(response.data);
 				setTotalCount(response.count || 0);
+				// Marca cuáles están en la cola de etiquetado (best-effort)
+				const ids = response.data.map((c) => (typeof c._id === "string" ? c._id : c._id.$oid));
+				EtapaAnotacionesService.getMembership(ids)
+					.then(setMembership)
+					.catch(() => setMembership({}));
 			}
 		} catch (error) {
 			enqueueSnackbar("Error al cargar las carpetas verificadas", {
@@ -492,20 +503,41 @@ const CarpetasVerificadas = () => {
 													</Typography>
 												</TableCell>
 												<TableCell align="center">
-													<Tooltip title="Ver detalles">
-														<IconButton
-															size="small"
-															color="primary"
-															onClick={() => handleVerDetalles(causa)}
-															disabled={loadingDetail}
-															sx={{
-																transition: "background-color 200ms ease, transform 200ms ease",
-																"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+													<Stack direction="row" spacing={0.25} justifyContent="center">
+														<Tooltip title="Ver detalles">
+															<IconButton
+																size="small"
+																color="primary"
+																onClick={() => handleVerDetalles(causa)}
+																disabled={loadingDetail}
+																sx={{
+																	transition: "background-color 200ms ease, transform 200ms ease",
+																	"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
 															}}
+															>
+																<Eye size={18} />
+															</IconButton>
+														</Tooltip>
+														<Tooltip
+															title={
+																membership[getId(causa._id)]
+																	? `Etiquetado: ${membership[getId(causa._id)].estado} (${membership[getId(causa._id)].motivo})`
+																	: "Etiquetar para dataset (agrega a la cola y abre el editor)"
+															}
 														>
-															<Eye size={18} />
-														</IconButton>
-													</Tooltip>
+															<IconButton
+																size="small"
+																color={membership[getId(causa._id)] ? "success" : "default"}
+																onClick={() => navigate(`/admin/causas/etiquetado/${causa.fuero || "CIV"}/${getId(causa._id)}`)}
+																sx={{
+																	transition: "background-color 200ms ease, transform 200ms ease",
+																	"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
+																}}
+															>
+																<Edit2 size={18} variant={membership[getId(causa._id)] ? "Bold" : "Linear"} />
+															</IconButton>
+														</Tooltip>
+													</Stack>
 												</TableCell>
 											</TableRow>
 										))}

@@ -319,6 +319,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "causas-etiquetado",
+					title: "Etiquetado de dataset",
+					type: "item",
+					url: "/admin/causas/etiquetado",
+					breadcrumbs: true,
+				},
+				{
 					id: "causas-plazos",
 					title: "Plazos procesales",
 					type: "item",
