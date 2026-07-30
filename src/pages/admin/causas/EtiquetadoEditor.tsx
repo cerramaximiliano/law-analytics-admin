@@ -482,8 +482,25 @@ const EtiquetadoEditor = () => {
 													/>
 												</Tooltip>
 											)}
-											{tieneCuerpo && <DocumentText size={13} color={theme.palette.success.main} />}
-											{m.url && !tieneCuerpo && <DocumentDownload size={13} color={theme.palette.text.disabled} />}
+											{m.corpus?.pdf === "downloaded" && (
+												<Tooltip title="PDF espejado en S3 (pjn-movements)">
+													<Chip size="small" label="PDF" color="success" variant="outlined" sx={{ height: 16, fontSize: "0.56rem" }} />
+												</Tooltip>
+											)}
+											{(m.corpus?.texto === "extracted" || m.corpus?.texto === "ocr_done") && (
+												<Tooltip title="Texto extraído (pjn-movement-texts)">
+													<Chip size="small" label="TXT" color="success" sx={{ height: 16, fontSize: "0.56rem" }} />
+												</Tooltip>
+											)}
+											{m.corpus?.texto === "needs_ocr" && (
+												<Tooltip title="PDF escaneado — en cola de OCR">
+													<Chip size="small" label="OCR" color="warning" variant="outlined" sx={{ height: 16, fontSize: "0.56rem" }} />
+												</Tooltip>
+											)}
+											{tieneCuerpo && !m.corpus?.texto && <DocumentText size={13} color={theme.palette.success.main} />}
+											{m.url && !tieneCuerpo && !m.corpus?.pdf && (
+												<DocumentDownload size={13} color={theme.palette.text.disabled} />
+											)}
 										</Stack>
 										<Typography variant="caption" sx={{ display: "block", lineHeight: 1.3, fontWeight: esResol ? 600 : 400 }}>
 											{m.detalle.slice(0, 110)}

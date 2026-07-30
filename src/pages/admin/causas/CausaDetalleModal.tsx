@@ -1281,6 +1281,9 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 													<TableCell>Descripción</TableCell>
 													<TableCell width="12%">Tipo</TableCell>
 													<TableCell width="10%" align="center">
+														Corpus
+													</TableCell>
+													<TableCell width="10%" align="center">
 														Enlace
 													</TableCell>
 													<TableCell width="8%" align="center">
@@ -1302,6 +1305,36 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 																</Typography>
 															</TableCell>
 															<TableCell>{mov.tipo && <Chip label={mov.tipo} size="small" variant="outlined" />}</TableCell>
+															<TableCell align="center">
+																{mov.corpus ? (
+																	<Stack direction="row" spacing={0.4} justifyContent="center">
+																		{mov.corpus.pdf === "downloaded" && (
+																			<Tooltip title="PDF espejado en S3 (pjn-movements)">
+																				<Chip label="PDF" size="small" color="success" variant="outlined" sx={{ height: 18, fontSize: "0.6rem" }} />
+																			</Tooltip>
+																		)}
+																		{(mov.corpus.texto === "extracted" || mov.corpus.texto === "ocr_done") && (
+																			<Tooltip title="Texto extraído (pjn-movement-texts)">
+																				<Chip label="TXT" size="small" color="success" sx={{ height: 18, fontSize: "0.6rem" }} />
+																			</Tooltip>
+																		)}
+																		{mov.corpus.texto === "needs_ocr" && (
+																			<Tooltip title="PDF escaneado — pendiente de OCR">
+																				<Chip label="OCR" size="small" color="warning" variant="outlined" sx={{ height: 18, fontSize: "0.6rem" }} />
+																			</Tooltip>
+																		)}
+																		{mov.corpus.pdf && mov.corpus.pdf !== "downloaded" && !mov.corpus.texto && (
+																			<Tooltip title={`PDF: ${mov.corpus.pdf}`}>
+																				<Chip label={mov.corpus.pdf} size="small" variant="outlined" sx={{ height: 18, fontSize: "0.6rem" }} />
+																			</Tooltip>
+																		)}
+																	</Stack>
+																) : (
+																	<Typography variant="caption" color="textSecondary">
+																		—
+																	</Typography>
+																)}
+															</TableCell>
 															<TableCell align="center">
 																{mov.url ? (
 																	<Link href={mov.url} target="_blank" rel="noopener noreferrer" underline="none">

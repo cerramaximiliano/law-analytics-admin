@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import { Box, Tab, Tabs, Typography, Paper, Stack, Chip, useTheme, alpha, IconButton, Tooltip, Popover } from "@mui/material";
-import { TickSquare, SearchNormal1, DocumentUpload, InfoCircle, People, Warning2, SecurityUser, Lock1, Gallery, Refresh2 } from "iconsax-react";
+import { TickSquare, SearchNormal1, DocumentUpload, InfoCircle, People, Warning2, SecurityUser, Lock1, Gallery, Refresh2, Book1 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import { BRAND_BLUE, headerBorder, navActiveBg } from "themes/dashboardTokens";
@@ -14,6 +14,7 @@ import RetryQueuePanel from "./RetryQueuePanel";
 import MisCausasWorker from "./MisCausasWorker";
 import PrivacyCheckerWorker from "./PrivacyCheckerWorker";
 import CaptchaDatasetTab from "./CaptchaDatasetTab";
+import DocumentationTab from "./documentation";
 
 // Interfaz para los tabs
 interface WorkerTab {
@@ -127,6 +128,13 @@ const WorkersConfig = () => {
 			status: "active",
 			badge: "worker_01",
 			ip: "100.111.73.56",
+		},
+		{
+			label: "Documentación",
+			value: "documentation",
+			icon: <Book1 size={20} />,
+			component: <DocumentationTab />,
+			description: "Diagramas de arquitectura de los workers PJN: flujo dual-write de movimientos (público y Mis Causas)",
 		},
 	];
 

@@ -37,6 +37,11 @@ export interface ItemCola {
 	updatedAt?: string;
 }
 
+export interface CorpusEstado {
+	pdf: string | null; // pdfStatus del PjnMovement (downloaded, pending, failed…)
+	texto: string | null; // textoStatus (extracted, needs_ocr, not_applicable…)
+}
+
 export interface MovimientoAnotable {
 	idx: number;
 	fecha: string;
@@ -45,6 +50,7 @@ export interface MovimientoAnotable {
 	detalle: string;
 	url: string | null;
 	etiquetaDebil: string | null;
+	corpus: CorpusEstado | null;
 }
 
 export interface CuerpoOnDemand {

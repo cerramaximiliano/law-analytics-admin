@@ -1,0 +1,736 @@
+/* Diagramas de flujo dual-write de movimientos PJN (documentación de workers).
+   Todo scopeado bajo .flowdoc; el modo oscuro lo activa .flowdoc--dark
+   (derivado de theme.palette.mode, no del media query, para seguir al toggle
+   del dashboard). Animaciones CSS-only; respetan prefers-reduced-motion. */
+
+.flowdoc {
+	--fd-bg: transparent;
+	--fd-surface: #ffffff;
+	--fd-surface-2: #e9edf2;
+	--fd-ink: #1a2230;
+	--fd-ink-soft: #4a5568;
+	--fd-ink-faint: #8b96a5;
+	--fd-line: #c9d2dc;
+	--fd-mirror: #3e7cb1;
+	--fd-mirror-soft: #e3edf6;
+	--fd-notif: #c98a2b;
+	--fd-notif-soft: #f7eedd;
+	--fd-good: #4c9a6a;
+	--fd-good-soft: #e2f0e8;
+	--fd-bad: #c25450;
+	--fd-auth: #6b5ca5;
+	--fd-auth-soft: #ece8f5;
+	--fd-cache: #2e8b84;
+	--fd-cache-soft: #dff0ee;
+	--fd-shadow: 0 1px 2px rgba(26, 34, 48, 0.06), 0 4px 16px rgba(26, 34, 48, 0.05);
+
+	color: var(--fd-ink);
+	line-height: 1.5;
+	max-width: 980px;
+	margin: 0 auto;
+	padding: 8px 4px 32px;
+}
+
+.flowdoc--dark {
+	--fd-surface: #1d2531;
+	--fd-surface-2: #253040;
+	--fd-ink: #e8ecf2;
+	--fd-ink-soft: #a8b4c4;
+	--fd-ink-faint: #6b7788;
+	--fd-line: #35404f;
+	--fd-mirror: #6fa8d6;
+	--fd-mirror-soft: #22354a;
+	--fd-notif: #e0a94e;
+	--fd-notif-soft: #3a2f1b;
+	--fd-good: #6dbb8b;
+	--fd-good-soft: #1f3529;
+	--fd-bad: #d4726e;
+	--fd-auth: #a093d6;
+	--fd-auth-soft: #2c2743;
+	--fd-cache: #5fbdb5;
+	--fd-cache-soft: #1c3634;
+	--fd-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.flowdoc * {
+	box-sizing: border-box;
+}
+
+.flowdoc code,
+.flowdoc .fd-mono {
+	font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+	font-size: 0.86em;
+}
+
+/* ============ Header ============ */
+.flowdoc .fd-header {
+	margin-bottom: 40px;
+}
+.flowdoc .fd-eyebrow {
+	display: inline-block;
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--fd-auth);
+	background: var(--fd-auth-soft);
+	border-radius: 99px;
+	padding: 4px 12px;
+	margin-bottom: 12px;
+}
+.flowdoc .fd-header h1 {
+	font-weight: 650;
+	font-size: clamp(1.3rem, 3vw, 1.7rem);
+	letter-spacing: -0.015em;
+	margin: 0 0 10px;
+	text-wrap: balance;
+}
+.flowdoc .fd-lede {
+	color: var(--fd-ink-soft);
+	max-width: 64ch;
+	margin: 0 0 20px;
+	font-size: 0.92rem;
+}
+.flowdoc .fd-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px 22px;
+	font-size: 0.82rem;
+	color: var(--fd-ink-soft);
+}
+.flowdoc .fd-legend span {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+.flowdoc .fd-swatch {
+	width: 22px;
+	height: 4px;
+	border-radius: 2px;
+	display: inline-block;
+}
+
+/* ============ Etapas ============ */
+.flowdoc .fd-step-label {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 0 0 12px;
+}
+.flowdoc .fd-step-num {
+	flex: none;
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	background: var(--fd-ink);
+	color: var(--fd-surface);
+	display: grid;
+	place-items: center;
+	font-size: 0.8rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+.flowdoc .fd-step-label h2 {
+	font-size: 1rem;
+	font-weight: 650;
+	margin: 0;
+	letter-spacing: 0.01em;
+}
+.flowdoc .fd-step-label .fd-hint {
+	color: var(--fd-ink-faint);
+	font-size: 0.8rem;
+	margin-left: auto;
+	text-align: right;
+}
+
+.flowdoc .fd-card {
+	background: var(--fd-surface);
+	border: 1px solid var(--fd-line);
+	border-radius: 10px;
+	box-shadow: var(--fd-shadow);
+	padding: 18px 20px;
+}
+
+/* ============ Workers (fuentes, flujo público) ============ */
+.flowdoc .fd-workers {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	justify-content: center;
+}
+.flowdoc .fd-worker {
+	background: var(--fd-surface);
+	border: 1px solid var(--fd-line);
+	border-radius: 8px;
+	box-shadow: var(--fd-shadow);
+	padding: 9px 14px;
+	text-align: center;
+}
+.flowdoc .fd-worker .fd-name {
+	font-weight: 600;
+	font-size: 0.88rem;
+	display: block;
+}
+.flowdoc .fd-worker .fd-repo {
+	color: var(--fd-ink-faint);
+	font-size: 0.72rem;
+	letter-spacing: 0.04em;
+}
+
+/* ============ Sesión autenticada (Mis Causas) ============ */
+.flowdoc .fd-session {
+	border: 1px solid var(--fd-auth);
+	border-radius: 12px;
+	background: var(--fd-surface);
+	box-shadow: var(--fd-shadow);
+	overflow: hidden;
+	max-width: 640px;
+	margin: 0 auto;
+}
+.flowdoc .fd-session-head {
+	background: var(--fd-auth-soft);
+	padding: 10px 18px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+.flowdoc .fd-session-head .fd-t {
+	font-weight: 700;
+	color: var(--fd-auth);
+	font-size: 0.9rem;
+}
+.flowdoc .fd-session-head .fd-n {
+	color: var(--fd-ink-soft);
+	font-size: 0.78rem;
+	margin-left: auto;
+}
+.flowdoc .fd-session-body {
+	padding: 14px 18px;
+}
+.flowdoc .fd-session-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+.flowdoc .fd-session-item {
+	flex: 1;
+	min-width: 150px;
+	background: var(--fd-surface-2);
+	border-radius: 8px;
+	padding: 9px 12px;
+	text-align: center;
+}
+.flowdoc .fd-session-item .fd-name {
+	font-weight: 600;
+	font-size: 0.84rem;
+	display: block;
+}
+.flowdoc .fd-session-item .fd-sub {
+	color: var(--fd-ink-faint);
+	font-size: 0.72rem;
+}
+.flowdoc .fd-session-arrow {
+	color: var(--fd-auth);
+	font-weight: 700;
+}
+.flowdoc .fd-session-note {
+	color: var(--fd-ink-soft);
+	font-size: 0.78rem;
+	margin-top: 10px;
+	text-align: center;
+}
+.flowdoc .fd-session-note strong {
+	color: var(--fd-auth);
+}
+
+/* ============ Conectores animados ============ */
+.flowdoc .fd-flow {
+	position: relative;
+	width: 2px;
+	height: 52px;
+	margin: 0 auto;
+	background: var(--fd-line);
+}
+.flowdoc .fd-flow::after {
+	content: "";
+	position: absolute;
+	left: 50%;
+	top: 0;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--fd-flow-c, var(--fd-ink-soft));
+	transform: translateX(-50%);
+	animation: fd-travel 2.4s linear infinite;
+}
+@keyframes fd-travel {
+	0% {
+		top: -4px;
+		opacity: 0;
+	}
+	18% {
+		opacity: 1;
+	}
+	82% {
+		opacity: 1;
+	}
+	100% {
+		top: calc(100% - 4px);
+		opacity: 0;
+	}
+}
+.flowdoc .fd-flow--delay::after {
+	animation-delay: 1.2s;
+}
+
+/* ============ Causa / comparación ============ */
+.flowdoc .fd-causa-card {
+	text-align: center;
+	max-width: 560px;
+	margin: 0 auto;
+}
+.flowdoc .fd-causa-card .fd-colls {
+	color: var(--fd-ink-faint);
+	font-size: 0.78rem;
+	margin-top: 2px;
+}
+.flowdoc .fd-causa-card .fd-field {
+	display: inline-block;
+	background: var(--fd-surface-2);
+	border-radius: 6px;
+	padding: 4px 12px;
+	margin-top: 10px;
+	font-weight: 600;
+}
+
+.flowdoc .fd-compare-card {
+	max-width: 640px;
+	margin: 0 auto;
+}
+.flowdoc .fd-compare-card .fd-intro {
+	text-align: center;
+}
+.flowdoc .fd-compare-card .fd-colls {
+	color: var(--fd-ink-faint);
+	font-size: 0.78rem;
+	margin-top: 2px;
+}
+.flowdoc .fd-cases {
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	gap: 10px;
+	margin-top: 14px;
+}
+.flowdoc .fd-case {
+	background: var(--fd-surface-2);
+	border-radius: 8px;
+	padding: 10px 12px;
+}
+.flowdoc .fd-case .fd-t {
+	font-weight: 650;
+	font-size: 0.8rem;
+}
+.flowdoc .fd-case .fd-d {
+	color: var(--fd-ink-soft);
+	font-size: 0.74rem;
+	margin-top: 3px;
+}
+.flowdoc .fd-guards {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	justify-content: center;
+	margin-top: 12px;
+}
+.flowdoc .fd-guard {
+	font-size: 0.7rem;
+	font-weight: 600;
+	color: var(--fd-bad);
+	border: 1px dashed var(--fd-bad);
+	border-radius: 99px;
+	padding: 3px 10px;
+}
+.flowdoc .fd-guards-label {
+	text-align: center;
+	color: var(--fd-ink-faint);
+	font-size: 0.74rem;
+	margin-top: 12px;
+}
+
+/* ============ Bifurcación ============ */
+.flowdoc .fd-split {
+	height: 46px;
+	max-width: 660px;
+	margin: 0 auto;
+	border-left: 2px solid var(--fd-line);
+	border-right: 2px solid var(--fd-line);
+	border-top: 2px solid var(--fd-line);
+	border-bottom: 0;
+	border-radius: 14px 14px 0 0;
+	position: relative;
+}
+.flowdoc .fd-split::before,
+.flowdoc .fd-split::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	animation: fd-travel 2.4s linear infinite;
+}
+.flowdoc .fd-split::before {
+	left: -5px;
+	background: var(--fd-mirror);
+}
+.flowdoc .fd-split::after {
+	right: -5px;
+	background: var(--fd-notif);
+	animation-delay: 0.5s;
+}
+
+.flowdoc .fd-branches {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 28px;
+	align-items: start;
+}
+.flowdoc .fd-branch {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+.flowdoc .fd-branch .fd-flow {
+	--fd-flow-c: var(--fd-b-color);
+}
+
+.flowdoc .fd-branch-head {
+	border-top: 4px solid var(--fd-b-color);
+	background: var(--fd-surface);
+	border-radius: 10px;
+	border-left: 1px solid var(--fd-line);
+	border-right: 1px solid var(--fd-line);
+	border-bottom: 1px solid var(--fd-line);
+	box-shadow: var(--fd-shadow);
+	padding: 14px 18px;
+	text-align: center;
+}
+.flowdoc .fd-branch-head .fd-tag {
+	display: inline-block;
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.09em;
+	color: var(--fd-b-color);
+	text-transform: uppercase;
+	margin-bottom: 4px;
+}
+.flowdoc .fd-branch-head h3 {
+	margin: 0;
+	font-size: 0.98rem;
+	font-weight: 650;
+}
+.flowdoc .fd-branch-head p {
+	margin: 6px 0 0;
+	color: var(--fd-ink-soft);
+	font-size: 0.84rem;
+}
+
+.flowdoc .fd-b-mirror {
+	--fd-b-color: var(--fd-mirror);
+	--fd-b-soft: var(--fd-mirror-soft);
+}
+.flowdoc .fd-b-notif {
+	--fd-b-color: var(--fd-notif);
+	--fd-b-soft: var(--fd-notif-soft);
+}
+
+.flowdoc .fd-stage {
+	background: var(--fd-surface);
+	border: 1px solid var(--fd-line);
+	border-radius: 10px;
+	box-shadow: var(--fd-shadow);
+	padding: 13px 16px;
+}
+.flowdoc .fd-stage .fd-t {
+	font-weight: 650;
+	font-size: 0.88rem;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.flowdoc .fd-stage .fd-t .fd-ico {
+	flex: none;
+	width: 26px;
+	height: 26px;
+	border-radius: 7px;
+	background: var(--fd-b-soft);
+	display: grid;
+	place-items: center;
+	font-size: 0.85rem;
+}
+.flowdoc .fd-stage .fd-d {
+	color: var(--fd-ink-soft);
+	font-size: 0.82rem;
+	margin-top: 5px;
+}
+.flowdoc .fd-stage .fd-d code {
+	background: var(--fd-surface-2);
+	border-radius: 4px;
+	padding: 1px 5px;
+}
+
+.flowdoc .fd-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 9px;
+}
+.flowdoc .fd-chip {
+	font-size: 0.72rem;
+	font-weight: 600;
+	background: var(--fd-b-soft);
+	color: var(--fd-b-color);
+	border-radius: 99px;
+	padding: 3px 10px;
+}
+.flowdoc .fd-chip--auth {
+	background: var(--fd-auth-soft);
+	color: var(--fd-auth);
+}
+
+/* ============ Documento (schema) ============ */
+.flowdoc .fd-doc {
+	border: 1px solid var(--fd-b-color);
+	border-radius: 10px;
+	background: var(--fd-surface);
+	box-shadow: var(--fd-shadow);
+	overflow: hidden;
+}
+.flowdoc .fd-doc-head {
+	background: var(--fd-b-soft);
+	padding: 10px 16px;
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+.flowdoc .fd-doc-head .fd-coll {
+	font-weight: 700;
+	color: var(--fd-b-color);
+}
+.flowdoc .fd-doc-head .fd-note {
+	color: var(--fd-ink-soft);
+	font-size: 0.78rem;
+}
+.flowdoc .fd-doc ul {
+	list-style: none;
+	margin: 0;
+	padding: 10px 16px 12px;
+}
+.flowdoc .fd-doc li {
+	display: flex;
+	gap: 12px;
+	align-items: baseline;
+	padding: 4px 0;
+	font-size: 0.82rem;
+	border-bottom: 1px dashed var(--fd-line);
+}
+.flowdoc .fd-doc li:last-child {
+	border-bottom: 0;
+}
+.flowdoc .fd-doc li .fd-k {
+	flex: none;
+	min-width: 132px;
+	font-weight: 600;
+}
+.flowdoc .fd-doc li .fd-v {
+	color: var(--fd-ink-soft);
+}
+
+/* ============ Resultados finales ============ */
+.flowdoc .fd-outcomes {
+	display: flex;
+	gap: 10px;
+}
+.flowdoc .fd-outcome {
+	flex: 1;
+	background: var(--fd-good-soft);
+	border: 1px solid var(--fd-good);
+	border-radius: 10px;
+	padding: 10px 12px;
+	text-align: center;
+}
+.flowdoc .fd-outcome .fd-t {
+	font-weight: 650;
+	font-size: 0.86rem;
+	color: var(--fd-good);
+}
+.flowdoc .fd-outcome .fd-d {
+	font-size: 0.76rem;
+	color: var(--fd-ink-soft);
+	margin-top: 2px;
+}
+
+/* ============ Redes de seguridad ============ */
+.flowdoc .fd-safety {
+	border: 1.5px dashed var(--fd-s-color, var(--fd-notif));
+	border-radius: 10px;
+	padding: 11px 14px;
+	font-size: 0.8rem;
+	color: var(--fd-ink-soft);
+}
+.flowdoc .fd-safety .fd-t {
+	font-weight: 650;
+	color: var(--fd-s-color, var(--fd-notif));
+	font-size: 0.84rem;
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+.flowdoc .fd-pulse {
+	display: inline-block;
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	background: var(--fd-s-color, var(--fd-notif));
+	animation: fd-pulse 1.8s ease-in-out infinite;
+}
+@keyframes fd-pulse {
+	0%,
+	100% {
+		box-shadow: 0 0 0 0 color-mix(in srgb, var(--fd-s-color, var(--fd-notif)) 45%, transparent);
+	}
+	55% {
+		box-shadow: 0 0 0 7px transparent;
+	}
+}
+
+/* ============ Camino alternativo: caché ============ */
+.flowdoc .fd-cache-card {
+	max-width: 720px;
+	margin: 26px auto;
+	border: 1.5px dashed var(--fd-cache);
+	border-radius: 12px;
+	background: var(--fd-surface);
+	box-shadow: var(--fd-shadow);
+	padding: 16px 20px;
+}
+.flowdoc .fd-cache-tag {
+	display: inline-block;
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+	color: var(--fd-cache);
+	background: var(--fd-cache-soft);
+	border-radius: 99px;
+	padding: 3px 10px;
+	margin-bottom: 8px;
+}
+.flowdoc .fd-cache-card h3 {
+	margin: 0 0 6px;
+	font-size: 0.98rem;
+	font-weight: 650;
+}
+.flowdoc .fd-cache-card .fd-d {
+	color: var(--fd-ink-soft);
+	font-size: 0.84rem;
+}
+.flowdoc .fd-cache-card .fd-d code {
+	background: var(--fd-surface-2);
+	border-radius: 4px;
+	padding: 1px 5px;
+}
+.flowdoc .fd-cache-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	margin: 12px 0;
+}
+.flowdoc .fd-cache-item {
+	flex: 1;
+	min-width: 150px;
+	background: var(--fd-cache-soft);
+	border-radius: 8px;
+	padding: 9px 12px;
+	text-align: center;
+}
+.flowdoc .fd-cache-item .fd-name {
+	font-weight: 600;
+	font-size: 0.84rem;
+	display: block;
+}
+.flowdoc .fd-cache-item .fd-sub {
+	color: var(--fd-ink-soft);
+	font-size: 0.72rem;
+}
+.flowdoc .fd-cache-arrow {
+	color: var(--fd-cache);
+	font-weight: 700;
+}
+.flowdoc .fd-cache-note {
+	font-size: 0.78rem;
+	color: var(--fd-ink-faint);
+	margin-top: 4px;
+}
+
+/* ============ Notas al pie ============ */
+.flowdoc .fd-keys {
+	margin-top: 42px;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px;
+}
+.flowdoc .fd-key-card {
+	border-left: 4px solid var(--fd-k-color);
+}
+.flowdoc .fd-key-card h4 {
+	margin: 0 0 6px;
+	font-size: 0.88rem;
+}
+.flowdoc .fd-key-card p {
+	margin: 0;
+	font-size: 0.82rem;
+	color: var(--fd-ink-soft);
+}
+.flowdoc .fd-key-card code {
+	background: var(--fd-surface-2);
+	border-radius: 4px;
+	padding: 1px 5px;
+}
+
+@media (max-width: 720px) {
+	.flowdoc .fd-branches {
+		grid-template-columns: 1fr;
+	}
+	.flowdoc .fd-split {
+		display: none;
+	}
+	.flowdoc .fd-keys {
+		grid-template-columns: 1fr;
+	}
+	.flowdoc .fd-cases {
+		grid-template-columns: 1fr;
+	}
+	.flowdoc .fd-branch + .fd-branch {
+		margin-top: 34px;
+	}
+	.flowdoc .fd-step-label .fd-hint {
+		display: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.flowdoc .fd-flow::after,
+	.flowdoc .fd-split::before,
+	.flowdoc .fd-split::after {
+		animation: none;
+		opacity: 0;
+	}
+	.flowdoc .fd-pulse {
+		animation: none;
+	}
+}
