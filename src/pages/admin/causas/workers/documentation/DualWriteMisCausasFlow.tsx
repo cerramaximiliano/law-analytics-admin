@@ -112,7 +112,8 @@ const DualWriteMisCausasFlow = () => (
 			<h3>La causa ya estaba en el caché del ecosistema</h3>
 			<div className="fd-d">
 				En la sincronización inicial de Mis Causas, antes de scrapear cada causa nueva se consulta el caché del ecosistema. Si está, la causa
-				nace con el historial completo (<code>source: cache</code>) sin pasar por el portal — pero sin espejo en <code>pjn-movements</code>.
+				nace con el historial completo (<code>source: cache</code>) y la marca <code>needsPdfBackfill</code> — sin espejo en{" "}
+				<code>pjn-movements</code> todavía.
 			</div>
 			<div className="fd-cache-row">
 				<div className="fd-cache-item">
@@ -122,18 +123,19 @@ const DualWriteMisCausasFlow = () => (
 				<span className="fd-cache-arrow">→</span>
 				<div className="fd-cache-item">
 					<span className="fd-name">Causa desde el caché</span>
-					<span className="fd-sub">historial completo, sin portal</span>
+					<span className="fd-sub">historial completo + marca de backfill</span>
 				</div>
 				<span className="fd-cache-arrow">→</span>
 				<div className="fd-cache-item">
-					<span className="fd-name">Reconciliación diaria</span>
-					<span className="fd-sub">detecta el faltante y lo espeja</span>
+					<span className="fd-name">Workers de backfill</span>
+					<span className="fd-sub">toman la marca en segundos</span>
 				</div>
 			</div>
 			<div className="fd-d">
-				El espejo se completa después: el job diario de reconciliación (la misma red de seguridad de la Rama A) detecta que a la causa le
-				faltan registros en <code>pjn-movements</code> y re-espeja el historial completo con sus PDFs. Las pasadas del updater cubren desde
-				entonces solo lo nuevo.
+				Dos workers siempre activos completan el espejo apenas ven la marca: el <strong>backfill público</strong> (HTTP, sin login) para causas
+				comunes, y el <strong>backfill privado</strong> para causas reservadas — hace login SSO con la credencial vinculada y descarga los PDFs
+				dentro de la sesión; si la causa no es alcanzable con esa credencial, espeja igual la metadata y re-vincula los PDFs ya guardados en
+				S3. La reconciliación diaria (la red de seguridad de la Rama A) queda como último respaldo.
 			</div>
 			<div className="fd-cache-note">
 				Avisos: la primera pasada del updater sobre una causa nacida del caché es silenciosa (establece la línea de base) — el historial viejo
