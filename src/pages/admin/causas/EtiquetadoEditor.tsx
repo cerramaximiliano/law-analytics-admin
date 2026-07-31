@@ -941,7 +941,9 @@ const EtiquetadoEditor = () => {
 									) : (
 										<>
 											<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
-												Encabezado
+												{cuerpoSel.tieneDispositiva && (cuerpoSel.encabezado || "").length > 500
+													? "Documento (previo a la parte dispositiva)"
+													: "Encabezado"}
 											</Typography>
 											<Box
 												sx={{
@@ -952,6 +954,8 @@ const EtiquetadoEditor = () => {
 													p: 1.25,
 													borderRadius: 1,
 													mb: 1.25,
+													maxHeight: "36vh",
+													overflowY: "auto",
 												}}
 											>
 												{cuerpoSel.encabezado}
@@ -968,6 +972,8 @@ const EtiquetadoEditor = () => {
 													borderLeft: `3px solid ${theme.palette.success.main}`,
 													p: 1.25,
 													borderRadius: 1,
+													maxHeight: "48vh",
+													overflowY: "auto",
 												}}
 											>
 												{cuerpoSel.tieneDispositiva ? cuerpoSel.dispositiva : cuerpoSel.colaTexto}
