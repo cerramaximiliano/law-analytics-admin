@@ -17,6 +17,8 @@ import {
 	ToggleButtonGroup,
 	Switch,
 	FormControlLabel,
+	FormControl,
+	InputLabel,
 	Select,
 	MenuItem,
 	Divider,
@@ -498,8 +500,8 @@ const EtiquetadoEditor = () => {
 					<Typography variant="h5">
 						{data.causa.fuero} {data.causa.number}/{data.causa.year}
 					</Typography>
-					<Chip size="small" label={estado} color={ESTADO_COLOR[estado]} />
-					<Chip size="small" variant="outlined" label={`${anotadosCount} anotados`} />
+					{!esMovil && <Chip size="small" label={estado} color={ESTADO_COLOR[estado]} />}
+					{!esMovil && <Chip size="small" variant="outlined" label={`${anotadosCount} anotados`} />}
 					{data.causa.familia && <Chip size="small" variant="outlined" label={`familia: ${data.causa.familia}`} />}
 					{!data.cuerposDisponibles && (
 						<Tooltip title="Sin conexión a Atlas — cuerpos capturados no disponibles (la descarga directa sigue funcionando)">
@@ -509,6 +511,7 @@ const EtiquetadoEditor = () => {
 				</Stack>
 			}
 			secondary={
+				esMovil ? undefined :
 				<Stack direction="row" spacing={1}>
 					<Tooltip title="Borrar todas las anotaciones de la causa">
 						<span>
@@ -561,6 +564,7 @@ const EtiquetadoEditor = () => {
 						))}
 					</ToggleButtonGroup>
 					</Box>
+					{!esMovil && (
 					<Typography variant="caption" color="text.secondary">
 						{modo === "libre"
 							? "↑/↓ navegan movimientos. Elegí una dimensión para anotar en serie con las teclas 1-9 (0 limpia)."
@@ -572,6 +576,7 @@ const EtiquetadoEditor = () => {
 							? "Cargando Cargas procesales (destinatario · acción · plazo · apercibimiento) · ↑/↓ navegan movimientos."
 							: `Anotando "${DIM_LABELS[modo as DimKey].titulo}": teclas 1-${DIM_LABELS[modo as DimKey].opciones.length} asignan y avanzan · 0 limpia · ↑/↓ navegan.`}
 					</Typography>
+					)}
 				</Stack>
 			</Card>
 
@@ -806,7 +811,7 @@ const EtiquetadoEditor = () => {
 										</Tooltip>
 									)}
 									<Box sx={{ flex: 1 }} />
-									{aSel.replicaDe !== null && aSel.replicaDe !== undefined && (
+									{!esMovil && aSel.replicaDe !== null && aSel.replicaDe !== undefined && (
 									<Tooltip title="Sincronizada con el original: los cambios impactan en todo el grupo. Click en ✕ para desvincular (los campos se conservan)">
 										<Chip
 											size="small"
@@ -817,6 +822,7 @@ const EtiquetadoEditor = () => {
 										/>
 									</Tooltip>
 								)}
+								{!esMovil && (
 								<Tooltip title={vinculando === mSel.idx ? "Cancelar vinculación" : "Vincular réplica: el próximo click en la lista copia estos campos y marca la réplica"}>
 									<span>
 										<Button
@@ -837,6 +843,7 @@ const EtiquetadoEditor = () => {
 										</Button>
 									</span>
 								</Tooltip>
+								)}
 								<Tooltip title="Limpiar anotaciones de este movimiento">
 										<span>
 											<IconButton
@@ -898,7 +905,43 @@ const EtiquetadoEditor = () => {
 										)}
 									</Box>
 								)}
-								{(modo === "actoProcesal" || modo === "decisiones" || modo === "cargas"
+								{/* Móvil + libre: dimensiones como selectores compactos (2 columnas) */}
+								{esMovil && modo === "libre" && (
+									<Grid container spacing={1} sx={{ mb: 1 }}>
+										{([...DIMENSIONES_ORDEN, ...(aSel.funcion === "terminacion" ? (["modoTerminacion"] as DimKey[]) : []), "estadoImpugnatorio"] as DimKey[]).map(
+											(dim) => {
+												const estR = dim === "resultado" ? estadoResultado(aSel) : null;
+												const deshab = dim === "resultado" && estR === "sin_funcion";
+												return (
+													<Grid item xs={6} key={dim}>
+														<FormControl fullWidth size="small" disabled={deshab}>
+															<InputLabel>{DIM_LABELS[dim].corto}</InputLabel>
+															<Select
+																label={DIM_LABELS[dim].corto}
+																value={(aSel as any)[dim] || ""}
+																onChange={(e) =>
+																	e.target.value === ""
+																		? setCampo(mSel.idx, dim as any, null)
+																		: setDim(mSel.idx, dim, e.target.value as string)
+																}
+															>
+																<MenuItem value="">
+																	<em>—</em>
+																</MenuItem>
+																{DIM_LABELS[dim].opciones.map(([v, l]) => (
+																	<MenuItem key={v} value={v} disabled={dim === "resultado" && estR === "auto_no_aplica" && v !== "no_aplica"}>
+																		{(sugerencias as any)[dim] === v && !(aSel as any)[dim] ? `✦ ${l}` : l}
+																	</MenuItem>
+																))}
+															</Select>
+														</FormControl>
+													</Grid>
+												);
+											},
+										)}
+									</Grid>
+								)}
+								{(modo === "actoProcesal" || modo === "decisiones" || modo === "cargas" || (esMovil && modo === "libre")
 									? ([] as DimKey[])
 									: modo === "libre"
 									? ([...DIMENSIONES_ORDEN, ...(aSel.funcion === "terminacion" ? (["modoTerminacion"] as DimKey[]) : []), "estadoImpugnatorio"] as DimKey[])
@@ -1184,6 +1227,7 @@ const EtiquetadoEditor = () => {
 
 								{modo === "libre" && (
 									<Grid container spacing={1.5} sx={{ mt: 0.25 }}>
+										{!esMovil && (
 										<Grid item xs={12} sm={4}>
 											<Autocomplete
 												size="small"
@@ -1196,6 +1240,8 @@ const EtiquetadoEditor = () => {
 												)}
 											/>
 										</Grid>
+										)}
+										{!esMovil && (
 										<Grid item xs={6} sm={3}>
 											<TextField
 												fullWidth
@@ -1209,6 +1255,7 @@ const EtiquetadoEditor = () => {
 												}
 											/>
 										</Grid>
+										)}
 										<Grid item xs={6} sm={2}>
 											<FormControlLabel
 												control={
@@ -1221,6 +1268,7 @@ const EtiquetadoEditor = () => {
 												label={<Typography variant="caption">Descartar</Typography>}
 											/>
 										</Grid>
+										{!esMovil && (
 										<Grid item xs={12} sm={3}>
 											<Select
 												fullWidth
@@ -1252,6 +1300,7 @@ const EtiquetadoEditor = () => {
 													))}
 											</Select>
 										</Grid>
+										)}
 										<Grid item xs={12}>
 											<TextField
 												fullWidth
@@ -1303,7 +1352,7 @@ const EtiquetadoEditor = () => {
 													borderLeft: `3px solid ${theme.palette.success.main}`,
 													p: 1.25,
 													borderRadius: 1,
-													maxHeight: "48vh",
+													maxHeight: esMovil ? "26vh" : "48vh",
 													overflowY: "auto",
 												}}
 											>
@@ -1326,7 +1375,7 @@ const EtiquetadoEditor = () => {
 													p: 1.25,
 													borderRadius: 1,
 													mb: 1.25,
-													maxHeight: "36vh",
+													maxHeight: esMovil ? "20vh" : "36vh",
 													overflowY: "auto",
 												}}
 											>
@@ -1344,7 +1393,7 @@ const EtiquetadoEditor = () => {
 													borderLeft: `3px solid ${theme.palette.success.main}`,
 													p: 1.25,
 													borderRadius: 1,
-													maxHeight: "48vh",
+													maxHeight: esMovil ? "26vh" : "48vh",
 													overflowY: "auto",
 												}}
 											>
@@ -1378,6 +1427,7 @@ const EtiquetadoEditor = () => {
 						<Alert severity="info">Seleccioná un movimiento de la lista.</Alert>
 					)}
 
+					{!esMovil && (
 					<Card variant="outlined" sx={{ p: 2, mt: 2 }}>
 						<Typography variant="subtitle2" sx={{ mb: 1 }}>
 							Notas de la causa
@@ -1395,6 +1445,7 @@ const EtiquetadoEditor = () => {
 							placeholder="Observaciones generales, criterios aplicados, dudas para verificación…"
 						/>
 					</Card>
+					)}
 					<Divider sx={{ my: 2 }} />
 					<Stack direction="row" spacing={1} justifyContent="flex-end">
 						<Button size="small" color="error" variant="text" disabled={guardando} onClick={limpiarTodo}>
