@@ -867,6 +867,10 @@ const EtiquetadoEditor = () => {
 												+ agregar
 											</Button>
 										</Stack>
+										<Typography variant="caption" sx={{ display: "block", color: "text.secondary", fontStyle: "italic" }}>
+											Opcional — solo para resoluciones con parte dispositiva múltiple ("confirma y modifica costas", "concede apelación
+											y deniega REX"). En la mayoría de los documentos queda vacía.
+										</Typography>
 										{(aSel.decisiones || []).map((dec, di) => (
 											<Stack key={di} direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
 												<TextField
@@ -931,7 +935,9 @@ const EtiquetadoEditor = () => {
 											</Button>
 										</Stack>
 										<Typography variant="caption" sx={{ display: "block", color: "text.secondary", fontStyle: "italic" }}>
-											Completar cuando el acto impone conductas con plazo (traslados, intimaciones, citaciones). Una fila por cada carga distinta.
+											Opcional y selectivo: completar cuando el acto impone conductas con plazo (traslados, intimaciones, citaciones), una
+											fila por carga. En resoluciones largas, cargá las 2-3 de mayor peso — para el entrenamiento, calidad y variedad valen
+											más que exhaustividad.
 										</Typography>
 										{(aSel.cargas || []).map((carga, ci) => {
 											const actualizar = (parche: Partial<typeof carga>) => {
