@@ -179,12 +179,28 @@ const EtiquetadoEditor = () => {
 
 	const marcarDirty = (k: string) => setDirty((prev) => new Set(prev).add(k));
 
+	// Funciones sin resultado propio: el resultado se auto-setea a "no_aplica".
+	const FUNCIONES_SIN_RESULTADO = ["impulso", "ordenacion", "suspension", "reanudacion"];
+	const estadoResultado = (a: AnotacionMovimiento): "sin_funcion" | "auto_no_aplica" | "habilitado" => {
+		if (!a.funcion) return "sin_funcion";
+		if (FUNCIONES_SIN_RESULTADO.includes(a.funcion)) return "auto_no_aplica";
+		return "habilitado";
+	};
+
 	const setDim = useCallback(
 		(idx: number, dim: DimKey, valor: string, avanzar = false) => {
 			const k = String(idx);
 			setAnotaciones((prev) => {
 				const actual = { ...(prev[k] || {}) };
 				(actual as any)[dim] = (actual as any)[dim] === valor ? null : valor;
+				// Consistencia Función → Resultado (validación pedida 2026-07-31):
+				// impulso/ordenación/suspensión/reanudación fijan resultado="no_aplica";
+				// decisión/terminación limpian el "no_aplica" para forzar elección real.
+				if (dim === "funcion") {
+					const f = (actual as any).funcion;
+					if (f && FUNCIONES_SIN_RESULTADO.includes(f)) actual.resultado = "no_aplica";
+					else if (f && actual.resultado === "no_aplica") actual.resultado = null;
+				}
 				return { ...prev, [k]: actual };
 			});
 			marcarDirty(k);
@@ -266,6 +282,15 @@ const EtiquetadoEditor = () => {
 			} else if (modo !== "libre" && seleccionado !== null && /^[0-9]$/.test(e.key)) {
 				e.preventDefault();
 				const n = parseInt(e.key, 10);
+				// Validación Función → Resultado también en el flujo por teclado
+				if (modo === "resultado") {
+					const est = estadoResultado(anotaciones[String(seleccionado)] || {});
+					if (est === "sin_funcion") return; // el panel muestra el aviso
+					if (est === "auto_no_aplica") {
+						setDim(seleccionado, "resultado", "no_aplica", true);
+						return;
+					}
+				}
 				if (n === 0) {
 					setCampoDim(seleccionado, modo, null);
 				} else {
@@ -281,7 +306,8 @@ const EtiquetadoEditor = () => {
 		};
 		window.addEventListener("keydown", handler);
 		return () => window.removeEventListener("keydown", handler);
-	}, [modo, seleccionado, irA, setDim]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [modo, seleccionado, irA, setDim, anotaciones]);
 
 	const traerCuerpo = async (idx: number, completo = false) => {
 		if (!fuero || !id) return;
@@ -640,12 +666,17 @@ const EtiquetadoEditor = () => {
 										DIM_CHIP_COLOR[dim] && DIM_CHIP_COLOR[dim] !== "default" ? `${DIM_CHIP_COLOR[dim]}.main` : "text.secondary";
 									const etiquetaDe = (valor: string) => def.opciones.find(([v]) => v === valor)?.[1] || valor;
 									const numeroDe = (valor: string) => def.opciones.findIndex(([v]) => v === valor) + 1;
+									// Validación Función → Resultado
+									const estResultado = dim === "resultado" ? estadoResultado(aSel) : null;
+									const botonDeshabilitado = (valor: string) =>
+										dim === "resultado" && (estResultado === "sin_funcion" || (estResultado === "auto_no_aplica" && valor !== "no_aplica"));
 									const renderBotones = (valores: string[]) => (
 										<ToggleButtonGroup size="small" exclusive value={(aSel as any)[dim] || null} sx={{ flexWrap: "wrap" }}>
 											{valores.map((valor) => (
 												<ToggleButton
 													key={valor}
 													value={valor}
+													disabled={botonDeshabilitado(valor)}
 													onClick={() => setDim(mSel.idx, dim, valor, modo !== "libre")}
 													sx={{
 														py: modo === "libre" ? 0.25 : 0.75,
@@ -677,10 +708,21 @@ const EtiquetadoEditor = () => {
 											>
 												{def.titulo}
 											</Typography>
-											{def.ayuda && (
-												<Typography variant="caption" sx={{ display: "block", color: "text.secondary", fontStyle: "italic", mb: 0.25 }}>
-													{def.ayuda}
+											{dim === "resultado" && estResultado === "sin_funcion" ? (
+												<Typography variant="caption" sx={{ display: "block", color: "warning.main", fontStyle: "italic", mb: 0.25 }}>
+													Primero marcá <b>Función</b> — el resultado depende de ella.
 												</Typography>
+											) : dim === "resultado" && estResultado === "auto_no_aplica" ? (
+												<Typography variant="caption" sx={{ display: "block", color: "success.main", fontStyle: "italic", mb: 0.25 }}>
+													Función = {DIM_LABELS.funcion.opciones.find(([v]) => v === aSel.funcion)?.[1]?.toLowerCase()}: el
+													resultado es "No aplica" (automático).
+												</Typography>
+											) : (
+												def.ayuda && (
+													<Typography variant="caption" sx={{ display: "block", color: "text.secondary", fontStyle: "italic", mb: 0.25 }}>
+														{def.ayuda}
+													</Typography>
+												)
 											)}
 											{def.grupos && modo === "libre" ? (
 												<Stack spacing={0.5}>
