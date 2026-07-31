@@ -83,10 +83,12 @@ export interface MovimientoAnotable {
 }
 
 export interface CuerpoOnDemand {
-	fuente: "cache" | "sentencias-capturadas" | "descarga";
+	fuente: "corpus" | "cache" | "sentencias-capturadas" | "descarga";
 	caracteres: number;
-	encabezado: string;
-	dispositiva: string;
+	// Documentos cortos (providencias): el texto completo, sin segmentar.
+	completo: string | null;
+	encabezado: string | null;
+	dispositiva: string | null;
 	tieneDispositiva: boolean;
 	colaTexto: string | null;
 }
@@ -96,8 +98,9 @@ export interface CuerpoSegmentado {
 	dia: string | null;
 	detalle: string;
 	caracteres: number;
-	encabezado: string;
-	dispositiva: string;
+	completo: string | null;
+	encabezado: string | null;
+	dispositiva: string | null;
 	tieneDispositiva: boolean;
 	colaTexto: string | null;
 }

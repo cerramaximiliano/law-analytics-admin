@@ -907,38 +907,63 @@ const EtiquetadoEditor = () => {
 												: ""}
 										</Typography>
 									</Stack>
-									<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
-										Encabezado
-									</Typography>
-									<Box
-										sx={{
-											fontFamily: "monospace",
-											fontSize: "0.74rem",
-											whiteSpace: "pre-wrap",
-											bgcolor: alpha(theme.palette.text.primary, isDark ? 0.08 : 0.04),
-											p: 1.25,
-											borderRadius: 1,
-											mb: 1.25,
-										}}
-									>
-										{cuerpoSel.encabezado}
-									</Box>
-									<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
-										{cuerpoSel.tieneDispositiva ? "Parte dispositiva" : "Final del documento (dispositiva no detectada)"}
-									</Typography>
-									<Box
-										sx={{
-											fontFamily: "monospace",
-											fontSize: "0.78rem",
-											whiteSpace: "pre-wrap",
-											bgcolor: alpha(theme.palette.success.main, isDark ? 0.1 : 0.05),
-											borderLeft: `3px solid ${theme.palette.success.main}`,
-											p: 1.25,
-											borderRadius: 1,
-										}}
-									>
-										{cuerpoSel.tieneDispositiva ? cuerpoSel.dispositiva : cuerpoSel.colaTexto}
-									</Box>
+									{cuerpoSel.completo ? (
+										<>
+											<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
+												Documento completo
+											</Typography>
+											<Box
+												sx={{
+													fontFamily: "monospace",
+													fontSize: "0.78rem",
+													whiteSpace: "pre-wrap",
+													bgcolor: alpha(theme.palette.success.main, isDark ? 0.1 : 0.05),
+													borderLeft: `3px solid ${theme.palette.success.main}`,
+													p: 1.25,
+													borderRadius: 1,
+													maxHeight: "48vh",
+													overflowY: "auto",
+												}}
+											>
+												{cuerpoSel.completo}
+											</Box>
+										</>
+									) : (
+										<>
+											<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
+												Encabezado
+											</Typography>
+											<Box
+												sx={{
+													fontFamily: "monospace",
+													fontSize: "0.74rem",
+													whiteSpace: "pre-wrap",
+													bgcolor: alpha(theme.palette.text.primary, isDark ? 0.08 : 0.04),
+													p: 1.25,
+													borderRadius: 1,
+													mb: 1.25,
+												}}
+											>
+												{cuerpoSel.encabezado}
+											</Box>
+											<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
+												{cuerpoSel.tieneDispositiva ? "Parte dispositiva" : "Cuerpo (desde el fin del encabezado)"}
+											</Typography>
+											<Box
+												sx={{
+													fontFamily: "monospace",
+													fontSize: "0.78rem",
+													whiteSpace: "pre-wrap",
+													bgcolor: alpha(theme.palette.success.main, isDark ? 0.1 : 0.05),
+													borderLeft: `3px solid ${theme.palette.success.main}`,
+													p: 1.25,
+													borderRadius: 1,
+												}}
+											>
+												{cuerpoSel.tieneDispositiva ? cuerpoSel.dispositiva : cuerpoSel.colaTexto}
+											</Box>
+										</>
+									)}
 								</Card>
 							) : mSel.url ? (
 								<Card variant="outlined" sx={{ p: 2, textAlign: "center" }}>
