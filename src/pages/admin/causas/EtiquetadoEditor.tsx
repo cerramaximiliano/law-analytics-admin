@@ -61,6 +61,9 @@ const esDocOrganismo = (m: { url: string | null; tipo: string }) =>
 // del texto): "LA SALA"/"EL TRIBUNAL" en el encabezado del cuerpo → segunda.
 const RE_ORGANO_SEGUNDA = /\b(LA\s+SALA|EL\s+TRIBUNAL|ESTA\s+SALA|CAMARA\s+NACIONAL|C[ÁA]MARA\s+FEDERAL)\b/i;
 
+// Tabs de la barra de modo: las 6 dimensiones principales + Modo term. y Firmeza.
+const MODOS_BARRA: DimKey[] = [...DIMENSIONES_ORDEN, "modoTerminacion", "estadoImpugnatorio"];
+
 // Semáforo de dimensiones en la lista: un cuadradito por campo, en el mismo
 // orden y color que el panel derecho — apagado si no está marcado.
 const DIMS_CUADROS: [DimKey | "actoProcesal", string][] = [
@@ -159,6 +162,12 @@ const EtiquetadoEditor = () => {
 			});
 			if (ok) completas.add(dim);
 		}
+		// Modo de terminación: solo exigible en los docs con Función = terminación.
+		const conTerminacion = organismo.filter((m) => anotaciones[String(m.idx)]?.funcion === "terminacion");
+		if (conTerminacion.length && conTerminacion.every((m) => anotaciones[String(m.idx)]?.modoTerminacion)) {
+			completas.add("modoTerminacion");
+		}
+		// Firmeza: por convención queda vacía (la deriva el motor) — sin tilde.
 		return completas;
 	}, [data, anotaciones]);
 
@@ -282,7 +291,7 @@ const EtiquetadoEditor = () => {
 			} else if (modo !== "libre" && seleccionado !== null && /^[0-9]$/.test(e.key)) {
 				e.preventDefault();
 				const n = parseInt(e.key, 10);
-				// Validación Función → Resultado también en el flujo por teclado
+				// Validación Función → Resultado / Modo de terminación por teclado
 				if (modo === "resultado") {
 					const est = estadoResultado(anotaciones[String(seleccionado)] || {});
 					if (est === "sin_funcion") return; // el panel muestra el aviso
@@ -290,6 +299,10 @@ const EtiquetadoEditor = () => {
 						setDim(seleccionado, "resultado", "no_aplica", true);
 						return;
 					}
+				}
+				if (modo === "modoTerminacion" && anotaciones[String(seleccionado)]?.funcion !== "terminacion") {
+					irA(1); // no aplica a este movimiento — avanzar
+					return;
 				}
 				if (n === 0) {
 					setCampoDim(seleccionado, modo, null);
@@ -446,7 +459,7 @@ const EtiquetadoEditor = () => {
 						<ToggleButton value="libre" sx={{ py: 0.25, px: 1.25, textTransform: "none", fontSize: "0.74rem" }}>
 							Libre
 						</ToggleButton>
-						{DIMENSIONES_ORDEN.map((d) => (
+						{MODOS_BARRA.map((d) => (
 							<ToggleButton key={d} value={d} sx={{ py: 0.25, px: 1.25, textTransform: "none", fontSize: "0.74rem", gap: 0.4 }}>
 								{DIM_LABELS[d].corto}
 								{dimsCompletas.has(d) && <TickCircle size={13} variant="Bold" color={theme.palette.success.main} />}
@@ -666,10 +679,12 @@ const EtiquetadoEditor = () => {
 										DIM_CHIP_COLOR[dim] && DIM_CHIP_COLOR[dim] !== "default" ? `${DIM_CHIP_COLOR[dim]}.main` : "text.secondary";
 									const etiquetaDe = (valor: string) => def.opciones.find(([v]) => v === valor)?.[1] || valor;
 									const numeroDe = (valor: string) => def.opciones.findIndex(([v]) => v === valor) + 1;
-									// Validación Función → Resultado
+									// Validación Función → Resultado / Modo de terminación
 									const estResultado = dim === "resultado" ? estadoResultado(aSel) : null;
+									const modoTermBloqueado = dim === "modoTerminacion" && aSel.funcion !== "terminacion";
 									const botonDeshabilitado = (valor: string) =>
-										dim === "resultado" && (estResultado === "sin_funcion" || (estResultado === "auto_no_aplica" && valor !== "no_aplica"));
+										(dim === "resultado" && (estResultado === "sin_funcion" || (estResultado === "auto_no_aplica" && valor !== "no_aplica"))) ||
+										modoTermBloqueado;
 									const renderBotones = (valores: string[]) => (
 										<ToggleButtonGroup size="small" exclusive value={(aSel as any)[dim] || null} sx={{ flexWrap: "wrap" }}>
 											{valores.map((valor) => (
@@ -708,7 +723,11 @@ const EtiquetadoEditor = () => {
 											>
 												{def.titulo}
 											</Typography>
-											{dim === "resultado" && estResultado === "sin_funcion" ? (
+											{dim === "modoTerminacion" && modoTermBloqueado ? (
+												<Typography variant="caption" sx={{ display: "block", color: "warning.main", fontStyle: "italic", mb: 0.25 }}>
+													Solo aplica cuando <b>Función = terminación</b>.
+												</Typography>
+											) : dim === "resultado" && estResultado === "sin_funcion" ? (
 												<Typography variant="caption" sx={{ display: "block", color: "warning.main", fontStyle: "italic", mb: 0.25 }}>
 													Primero marcá <b>Función</b> — el resultado depende de ella.
 												</Typography>
