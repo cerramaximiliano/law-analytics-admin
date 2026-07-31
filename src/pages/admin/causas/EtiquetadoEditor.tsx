@@ -230,23 +230,42 @@ const EtiquetadoEditor = () => {
 		return "habilitado";
 	};
 
+	// Grupo vinculado (original + todas sus réplicas): los cambios de anotación
+	// se sincronizan en el grupo — son el MISMO documento. Campos individuales
+	// (no sincronizados): notas, descartar y el propio vínculo.
+	const CAMPOS_INDIVIDUALES = new Set<string>(["notas", "replicaDe", "descartar"]);
+	const grupoVinculado = (idx: number, prev: Record<string, AnotacionMovimiento>): number[] => {
+		const original = prev[String(idx)]?.replicaDe ?? idx;
+		const grupo = new Set<number>([original, idx]);
+		for (const [k, an] of Object.entries(prev)) {
+			if (an?.replicaDe === original) grupo.add(parseInt(k, 10));
+		}
+		return [...grupo];
+	};
+
 	const setDim = useCallback(
 		(idx: number, dim: DimKey, valor: string, avanzar = false) => {
-			const k = String(idx);
 			setAnotaciones((prev) => {
-				const actual = { ...(prev[k] || {}) };
-				(actual as any)[dim] = (actual as any)[dim] === valor ? null : valor;
-				// Consistencia Función → Resultado (validación pedida 2026-07-31):
-				// impulso/ordenación/suspensión/reanudación fijan resultado="no_aplica";
-				// decisión/terminación limpian el "no_aplica" para forzar elección real.
-				if (dim === "funcion") {
-					const f = (actual as any).funcion;
-					if (f && FUNCIONES_SIN_RESULTADO.includes(f)) actual.resultado = "no_aplica";
-					else if (f && actual.resultado === "no_aplica") actual.resultado = null;
+				// El toggle se resuelve sobre el movimiento clickeado; el valor
+				// resultante se aplica a TODO el grupo vinculado.
+				const actualSel = prev[String(idx)] || {};
+				const nuevoValor = (actualSel as any)[dim] === valor ? null : valor;
+				const objetivos = grupoVinculado(idx, prev);
+				const nuevo = { ...prev };
+				for (const t of objetivos) {
+					const a = { ...(nuevo[String(t)] || {}) };
+					(a as any)[dim] = nuevoValor;
+					// Consistencia Función → Resultado en cada miembro.
+					if (dim === "funcion") {
+						const f = (a as any).funcion;
+						if (f && FUNCIONES_SIN_RESULTADO.includes(f)) a.resultado = "no_aplica";
+						else if (f && a.resultado === "no_aplica") a.resultado = null;
+					}
+					nuevo[String(t)] = a;
+					marcarDirty(String(t));
 				}
-				return { ...prev, [k]: actual };
+				return nuevo;
 			});
-			marcarDirty(k);
 			if (avanzar) irA(1, idx);
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -254,9 +273,15 @@ const EtiquetadoEditor = () => {
 	);
 
 	const setCampo = (idx: number, campo: keyof AnotacionMovimiento, valor: any) => {
-		const k = String(idx);
-		setAnotaciones((prev) => ({ ...prev, [k]: { ...(prev[k] || {}), [campo]: valor } }));
-		marcarDirty(k);
+		setAnotaciones((prev) => {
+			const objetivos = CAMPOS_INDIVIDUALES.has(campo as string) ? [idx] : grupoVinculado(idx, prev);
+			const nuevo = { ...prev };
+			for (const t of objetivos) {
+				nuevo[String(t)] = { ...(nuevo[String(t)] || {}), [campo]: valor };
+				marcarDirty(String(t));
+			}
+			return nuevo;
+		});
 	};
 
 	// Acto-primero (modo SUGERENCIA, 2026-07-31): elegir el acto marca SOLO el
@@ -287,15 +312,19 @@ const EtiquetadoEditor = () => {
 
 	const aplicarSugerencias = () => {
 		if (seleccionado === null || !Object.keys(sugerencias).length) return;
-		const k = String(seleccionado);
 		setAnotaciones((prev) => {
-			const actual = { ...(prev[k] || {}) };
-			for (const [dim, valor] of Object.entries(sugerencias)) {
-				if (!(actual as any)[dim]) (actual as any)[dim] = valor;
+			const objetivos = grupoVinculado(seleccionado, prev);
+			const nuevo = { ...prev };
+			for (const t of objetivos) {
+				const actual = { ...(nuevo[String(t)] || {}) };
+				for (const [dim, valor] of Object.entries(sugerencias)) {
+					if (!(actual as any)[dim]) (actual as any)[dim] = valor;
+				}
+				nuevo[String(t)] = actual;
+				marcarDirty(String(t));
 			}
-			return { ...prev, [k]: actual };
+			return nuevo;
 		});
-		marcarDirty(k);
 		enqueueSnackbar(`Sugerencias aplicadas: ${Object.keys(sugerencias).map((d) => DIM_LABELS[d as DimKey]?.corto || d).join(", ")}`, {
 			variant: "success",
 			autoHideDuration: 2500,
@@ -628,7 +657,7 @@ const EtiquetadoEditor = () => {
 											</Typography>
 											<Chip size="small" variant="outlined" label={m.tipo.slice(0, 16)} sx={{ height: 17, fontSize: "0.6rem" }} />
 											{a?.replicaDe !== null && a?.replicaDe !== undefined && (
-											<Tooltip title={`Réplica del movimiento ${numeroVisible(a.replicaDe)} — desvinculá desde el panel`}>
+											<Tooltip title={`Réplica del movimiento ${numeroVisible(a.replicaDe)} — sincronizada: los cambios impactan en todo el grupo`}>
 												<Chip
 													size="small"
 													color="info"
@@ -773,7 +802,7 @@ const EtiquetadoEditor = () => {
 									)}
 									<Box sx={{ flex: 1 }} />
 									{aSel.replicaDe !== null && aSel.replicaDe !== undefined && (
-									<Tooltip title="Quitar el vínculo de réplica (los campos copiados se conservan)">
+									<Tooltip title="Sincronizada con el original: los cambios impactan en todo el grupo. Click en ✕ para desvincular (los campos se conservan)">
 										<Chip
 											size="small"
 											color="info"
