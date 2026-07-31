@@ -21,11 +21,13 @@ import {
 	MenuItem,
 	Divider,
 	useTheme,
+	useMediaQuery,
+	Paper,
 	alpha,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { ArrowLeft, DocumentText, DocumentDownload, TickCircle, Trash, Warning2 } from "iconsax-react";
+import { ArrowLeft, ArrowLeft2, ArrowRight2, DocumentText, DocumentDownload, TickCircle, Trash, Warning2 } from "iconsax-react";
 import EtapaAnotacionesService, {
 	AnotacionMovimiento,
 	CausaParaAnotar,
@@ -99,6 +101,7 @@ const EtiquetadoEditor = () => {
 	const { enqueueSnackbar } = useSnackbar();
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
+	const esMovil = useMediaQuery(theme.breakpoints.down("md"));
 
 	const [data, setData] = useState<CausaParaAnotar | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -545,7 +548,8 @@ const EtiquetadoEditor = () => {
 					<Typography variant="caption" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
 						Modo
 					</Typography>
-					<ToggleButtonGroup size="small" exclusive value={modo} onChange={(_e, v) => v && setModo(v)}>
+					<Box sx={{ overflowX: "auto", maxWidth: "100%", pb: esMovil ? 0.5 : 0 }}>
+					<ToggleButtonGroup size="small" exclusive value={modo} onChange={(_e, v) => v && setModo(v)} sx={{ flexWrap: esMovil ? "nowrap" : "wrap" }}>
 						<ToggleButton value="libre" sx={{ py: 0.25, px: 1.25, textTransform: "none", fontSize: "0.74rem" }}>
 							Libre
 						</ToggleButton>
@@ -556,6 +560,7 @@ const EtiquetadoEditor = () => {
 							</ToggleButton>
 						))}
 					</ToggleButtonGroup>
+					</Box>
 					<Typography variant="caption" color="text.secondary">
 						{modo === "libre"
 							? "↑/↓ navegan movimientos. Elegí una dimensión para anotar en serie con las teclas 1-9 (0 limpia)."
@@ -590,7 +595,7 @@ const EtiquetadoEditor = () => {
 								/>
 							</Tooltip>
 						</Stack>
-						<Box ref={listaRef} sx={{ maxHeight: "64vh", overflowY: "auto" }}>
+						<Box ref={listaRef} sx={{ maxHeight: esMovil ? "30vh" : "64vh", overflowY: "auto" }}>
 							{movimientosVisibles.map((m, vi) => {
 								const a = anotaciones[String(m.idx)];
 								const anotado = !!a && Object.keys(a).length > 0;
@@ -1404,6 +1409,48 @@ const EtiquetadoEditor = () => {
 					</Stack>
 				</Grid>
 			</Grid>
+
+			{/* ── Barra fija de navegación en móvil ── */}
+			{esMovil && mSel && (
+				<>
+					<Box sx={{ height: 64 }} />
+					<Paper
+						elevation={8}
+						sx={{
+							position: "fixed",
+							bottom: 0,
+							left: 0,
+							right: 0,
+							zIndex: 1200,
+							px: 1,
+							py: 0.75,
+							display: "flex",
+							alignItems: "center",
+							gap: 0.75,
+							borderTop: `1px solid ${theme.palette.divider}`,
+						}}
+					>
+						<IconButton size="small" onClick={() => irA(-1)}>
+							<ArrowLeft2 size={22} />
+						</IconButton>
+						<Button
+							size="small"
+							onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+							sx={{ flex: 1, textTransform: "none", justifyContent: "flex-start", overflow: "hidden", minWidth: 0 }}
+						>
+							<Typography variant="caption" noWrap sx={{ fontVariantNumeric: "tabular-nums" }}>
+								{numeroVisible(mSel.idx)}/{movimientosVisibles.length} · {mSel.detalle.slice(0, 42)}
+							</Typography>
+						</Button>
+						<IconButton size="small" onClick={() => irA(1)}>
+							<ArrowRight2 size={22} />
+						</IconButton>
+						<Button size="small" variant="contained" disabled={guardando || dirty.size === 0} onClick={() => guardar()}>
+							{dirty.size > 0 ? `Guardar (${dirty.size})` : "✓"}
+						</Button>
+					</Paper>
+				</>
+			)}
 		</MainCard>
 	);
 };
