@@ -144,6 +144,24 @@ const EtiquetadoEditor = () => {
 			: ms;
 	}, [data, soloRelevantes, anotaciones]);
 
+	// Dimensiones completas: todos los documentos de organismo de la causa
+	// tienen el campo marcado (o el movimiento está descartado) → tilde verde
+	// en el tab del modo.
+	const dimsCompletas = useMemo(() => {
+		const completas = new Set<string>();
+		if (!data) return completas;
+		const organismo = data.movimientos.filter((m) => esDocOrganismo(m));
+		if (!organismo.length) return completas;
+		for (const dim of DIMENSIONES_ORDEN) {
+			const ok = organismo.every((m) => {
+				const a = anotaciones[String(m.idx)];
+				return a && ((a as any)[dim] || a.descartar);
+			});
+			if (ok) completas.add(dim);
+		}
+		return completas;
+	}, [data, anotaciones]);
+
 	const cuerpoDe = useCallback(
 		(idx: number) => {
 			if (cuerposOnDemand[idx]) return { ...cuerposOnDemand[idx], detalle: "", dia: null };
@@ -403,8 +421,9 @@ const EtiquetadoEditor = () => {
 							Libre
 						</ToggleButton>
 						{DIMENSIONES_ORDEN.map((d) => (
-							<ToggleButton key={d} value={d} sx={{ py: 0.25, px: 1.25, textTransform: "none", fontSize: "0.74rem" }}>
+							<ToggleButton key={d} value={d} sx={{ py: 0.25, px: 1.25, textTransform: "none", fontSize: "0.74rem", gap: 0.4 }}>
 								{DIM_LABELS[d].corto}
+								{dimsCompletas.has(d) && <TickCircle size={13} variant="Bold" color={theme.palette.success.main} />}
 							</ToggleButton>
 						))}
 					</ToggleButtonGroup>
