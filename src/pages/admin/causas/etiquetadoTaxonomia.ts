@@ -177,6 +177,7 @@ export const ACCIONES_REQUERIDAS: [string, string][] = [
 	["presentar_oficio", "Presentar/diligenciar oficio"],
 	["integrar_copias", "Integrar copias al sistema"],
 	["cumplir_intimacion", "Cumplir intimación (genérica)"],
+	["impulsar_proceso", "Impulsar el proceso / formular peticiones"],
 	["otro", "Otro"],
 ];
 
@@ -238,6 +239,7 @@ export const ACTOS_PROCESALES: [string, string][] = [
 	["concede_recurso", "Concede recurso"],
 	["deniega_recurso", "Deniega recurso"],
 	["eleva_autos", "Eleva autos a la alzada"],
+	["recibe_autos_devueltos", "Recibe autos devueltos del Superior"],
 	["resuelve_recurso", "Resuelve recurso (alzada, no-fondo)"],
 	["resuelve_fondo", "Resuelve el fondo"],
 	["homologa_acuerdo", "Homologa acuerdo"],
@@ -291,6 +293,7 @@ export const ACTO_AUTOFILL: Record<
 	concede_recurso: { tipoResolucion: "providencia_simple", materia: "recurso", funcion: "impulso", resultado: "concede" },
 	deniega_recurso: { materia: "recurso", funcion: "decision", resultado: "deniega" },
 	eleva_autos: { tipoResolucion: "providencia_simple", materia: "recurso", contexto: "recursiva", funcion: "impulso", resultado: "no_aplica" },
+	recibe_autos_devueltos: { tipoResolucion: "providencia_simple", contexto: "recursiva", funcion: "impulso", resultado: "no_aplica" },
 	resuelve_recurso: { tipoResolucion: "sentencia_interlocutoria", contexto: "recursiva", funcion: "decision" },
 	resuelve_fondo: { tipoResolucion: "sentencia_definitiva", materia: "fondo", funcion: "decision" },
 	homologa_acuerdo: { funcion: "terminacion", modoTerminacion: "homologacion_de_acuerdo", resultado: "homologa" },
