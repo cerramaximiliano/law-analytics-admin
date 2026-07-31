@@ -54,6 +54,7 @@ export const DIM_LABELS: Record<DimKey, DimDef> = {
 			["prueba", "Prueba"],
 			["competencia", "Competencia"],
 			["cautelar", "Cautelar"],
+			["conciliacion", "Conciliación"],
 			["honorarios", "Honorarios"],
 			["costas", "Costas"],
 			["liquidacion", "Liquidación"],
