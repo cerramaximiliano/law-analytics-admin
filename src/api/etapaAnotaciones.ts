@@ -175,8 +175,10 @@ export class EtapaAnotacionesService {
 		return data as { success: boolean };
 	}
 
-	static async getCuerpo(fuero: string, id: string, idx: number) {
-		const { data } = await workersAxios.get(`/api/admin/etapa-anotaciones/cuerpo/${fuero}/${id}/${idx}`);
+	static async getCuerpo(fuero: string, id: string, idx: number, completo = false) {
+		const { data } = await workersAxios.get(`/api/admin/etapa-anotaciones/cuerpo/${fuero}/${id}/${idx}`, {
+			params: completo ? { completo: "1" } : undefined,
+		});
 		return data as { success: boolean; cuerpo: CuerpoOnDemand };
 	}
 

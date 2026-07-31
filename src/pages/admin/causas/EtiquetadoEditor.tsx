@@ -251,11 +251,11 @@ const EtiquetadoEditor = () => {
 		return () => window.removeEventListener("keydown", handler);
 	}, [modo, seleccionado, irA, setDim]);
 
-	const traerCuerpo = async (idx: number) => {
+	const traerCuerpo = async (idx: number, completo = false) => {
 		if (!fuero || !id) return;
 		setTrayendoCuerpo(true);
 		try {
-			const r = await EtapaAnotacionesService.getCuerpo(fuero, id, idx);
+			const r = await EtapaAnotacionesService.getCuerpo(fuero, id, idx, completo);
 			setCuerposOnDemand((prev) => ({ ...prev, [idx]: r.cuerpo }));
 		} catch (e: any) {
 			enqueueSnackbar(e?.response?.data?.message || e.message, { variant: "warning" });
@@ -900,12 +900,22 @@ const EtiquetadoEditor = () => {
 								<Card variant="outlined" sx={{ p: 2 }}>
 									<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
 										<DocumentText size={16} color={theme.palette.success.main} />
-										<Typography variant="subtitle2">
+										<Typography variant="subtitle2" sx={{ flex: 1 }}>
 											Cuerpo · {cuerpoSel.caracteres.toLocaleString("es-AR")} caracteres
 											{"detalle" in cuerpoSel && cuerpoSel.detalle && cuerpoSel.detalle !== mSel.detalle
 												? ` · doc del mismo día: "${(cuerpoSel as any).detalle.slice(0, 50)}"`
 												: ""}
 										</Typography>
+										{!cuerpoSel.completo && mSel.url && (
+											<Button
+												size="small"
+												variant="text"
+												disabled={trayendoCuerpo}
+												onClick={() => traerCuerpo(mSel.idx, true)}
+											>
+												Ver documento completo
+											</Button>
+										)}
 									</Stack>
 									{cuerpoSel.completo ? (
 										<>
