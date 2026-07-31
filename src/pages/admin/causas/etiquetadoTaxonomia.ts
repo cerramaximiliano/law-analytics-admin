@@ -221,6 +221,7 @@ export const ETIQUETAS_FINALES: [string, string][] = [
 
 export const ACTOS_PROCESALES: [string, string][] = [
 	["corre_traslado", "Corre traslado"],
+	["da_vista", "Da vista (Ministerio Público / organismo)"],
 	["intima", "Intima"],
 	["fija_audiencia", "Fija audiencia"],
 	["ordena_notificacion", "Ordena notificación"],
@@ -275,6 +276,7 @@ export const ACTO_AUTOFILL: Record<
 	Partial<Record<"tipoResolucion" | "materia" | "contexto" | "funcion" | "resultado" | "modoTerminacion", string>>
 > = {
 	corre_traslado: { tipoResolucion: "providencia_simple", funcion: "impulso", resultado: "no_aplica" },
+	da_vista: { tipoResolucion: "providencia_simple", funcion: "impulso", resultado: "no_aplica" },
 	intima: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
 	fija_audiencia: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
 	ordena_notificacion: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
