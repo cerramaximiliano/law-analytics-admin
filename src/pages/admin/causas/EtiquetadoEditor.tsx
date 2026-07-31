@@ -45,10 +45,15 @@ import {
 	DimKey,
 } from "./etiquetadoTaxonomia";
 
-// Ruido administrativo que se oculta con el filtro "sin ruido"
-const RE_RUIDO = /^(EN LETRA|EN DESPACHO|EN CONFRONTE|SIN DEFINIR|EN SECRETARIA|SACADO DE PARALIZADO|PRESTAMO|EN CAJA FUERTE)/i;
 // Movimientos con pinta de resolución (se resaltan en la lista)
 const RE_RESOLUCION = /SENTENCIA|RESOLUCION|RESUELVE|FALLO|HOMOLOG|INTERLOCUTOR|DECLARATORIA|DESIERTO|CADUCIDAD|INCOMPETENCIA|ARCHIV/i;
+// Documento de organismo: con URL, excluyendo escritos de parte y notificaciones
+// (mismo criterio que el pipeline de corpus). El filtro por defecto muestra
+// SOLO estos — el paradigma v2 anota resoluciones, no títulos.
+const RE_PARTE = /^ESCRITO/i;
+const RE_NOTIF = /tipoDoc=(cedula|deo)\b|^CEDULA|^DEO$|^RETORNO CEDULA/i;
+const esDocOrganismo = (m: { url: string | null; tipo: string }) =>
+	!!m.url && !RE_PARTE.test(m.tipo) && !RE_NOTIF.test(m.url) && !RE_NOTIF.test(m.tipo);
 
 // Heurística de instancia por metadatos/encabezado (sugerencia, no inferencia
 // del texto): "LA SALA"/"EL TRIBUNAL" en el encabezado del cuerpo → segunda.
@@ -97,7 +102,10 @@ const EtiquetadoEditor = () => {
 			setAnotaciones((d.anotacion?.anotaciones as Record<string, AnotacionMovimiento>) || {});
 			setNotasCausa(d.anotacion?.notasCausa || "");
 			setEstado((d.anotacion?.estado as EstadoAnotacion) || "pendiente");
-			const primero = d.movimientos.find((m) => m.etiquetaDebil);
+			// Arranca en el primer documento de organismo (lo que se anota en v2)
+			const primero = [...d.movimientos]
+				.filter((m) => esDocOrganismo(m))
+				.sort((a, b) => (a.dia || "").localeCompare(b.dia || ""))[0];
 			setSeleccionado(primero ? primero.idx : d.movimientos.length ? d.movimientos[0].idx : null);
 		} catch (e: any) {
 			setError(e?.response?.data?.message || e.message);
@@ -113,7 +121,11 @@ const EtiquetadoEditor = () => {
 	const movimientosVisibles = useMemo(() => {
 		if (!data) return [];
 		const ms = [...data.movimientos].sort((a, b) => (a.dia || "").localeCompare(b.dia || "") || a.idx - b.idx);
-		return soloRelevantes ? ms.filter((m) => !RE_RUIDO.test(m.detalle) || anotaciones[String(m.idx)]) : ms;
+		// Filtro por defecto: solo documentos de organismo (+ los ya anotados).
+		// Con el switch apagado ("ruido") se muestra absolutamente todo.
+		return soloRelevantes
+			? ms.filter((m) => esDocOrganismo(m) || (anotaciones[String(m.idx)] && Object.keys(anotaciones[String(m.idx)]).length))
+			: ms;
 	}, [data, soloRelevantes, anotaciones]);
 
 	const cuerpoDe = useCallback(
@@ -394,10 +406,12 @@ const EtiquetadoEditor = () => {
 					<Card variant="outlined" sx={{ p: 1 }}>
 						<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 1, pb: 0.5 }}>
 							<Typography variant="subtitle2">Movimientos ({movimientosVisibles.length})</Typography>
-							<FormControlLabel
-								control={<Switch size="small" checked={soloRelevantes} onChange={(e) => setSoloRelevantes(e.target.checked)} />}
-								label={<Typography variant="caption">sin ruido</Typography>}
-							/>
+							<Tooltip title="Encendido: solo movimientos con documento de organismo (resoluciones). Apagado: todos los movimientos, incluido el ruido.">
+								<FormControlLabel
+									control={<Switch size="small" checked={soloRelevantes} onChange={(e) => setSoloRelevantes(e.target.checked)} />}
+									label={<Typography variant="caption">solo resoluciones</Typography>}
+								/>
+							</Tooltip>
 						</Stack>
 						<Box ref={listaRef} sx={{ maxHeight: "64vh", overflowY: "auto" }}>
 							{movimientosVisibles.map((m) => {
