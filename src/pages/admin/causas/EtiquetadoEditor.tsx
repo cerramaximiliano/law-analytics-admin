@@ -225,25 +225,39 @@ const EtiquetadoEditor = () => {
 		marcarDirty(k);
 	};
 
-	// Acto-primero: setea el acto y autocompleta dimensiones VACÍAS con la
-	// combinación típica; la instancia se sugiere desde el encabezado del cuerpo.
+	// Acto-primero: setea el acto y autocompleta SOLO las dimensiones VACÍAS con
+	// la combinación típica — lo marcado a mano nunca se pisa. La instancia se
+	// sugiere desde el encabezado del cuerpo. Feedback: snackbar con lo llenado.
 	const aplicarActo = (idx: number, acto: string | null) => {
 		const k = String(idx);
+		const llenados: string[] = [];
 		setAnotaciones((prev) => {
 			const actual = { ...(prev[k] || {}) };
 			actual.actoProcesal = acto;
 			if (acto && ACTO_AUTOFILL[acto]) {
 				for (const [dim, valor] of Object.entries(ACTO_AUTOFILL[acto])) {
-					if (!(actual as any)[dim]) (actual as any)[dim] = valor;
+					if (!(actual as any)[dim]) {
+						(actual as any)[dim] = valor;
+						llenados.push(DIM_LABELS[dim as DimKey]?.corto || dim);
+					}
 				}
 			}
 			if (acto && !actual.instancia) {
 				const cuerpo = cuerpoDe(idx);
 				actual.instancia = cuerpo && RE_ORGANO_SEGUNDA.test(cuerpo.encabezado || "") ? "segunda_instancia" : "primera_instancia";
+				llenados.push("Instancia (sugerida)");
 			}
 			return { ...prev, [k]: actual };
 		});
 		marcarDirty(k);
+		if (acto) {
+			enqueueSnackbar(
+				llenados.length
+					? `Autocompletado (solo campos vacíos): ${llenados.join(", ")}. Lo marcado a mano no se toca.`
+					: "Acto marcado — no había campos vacíos para autocompletar.",
+				{ variant: "info", autoHideDuration: 3500 },
+			);
+		}
 	};
 
 	const setDecisiones = (idx: number, decisiones: Decision[]) => {
@@ -657,7 +671,7 @@ const EtiquetadoEditor = () => {
 											fontWeight={700}
 											sx={{ textTransform: "uppercase", letterSpacing: 0.5, color: "primary.main" }}
 										>
-											Acto procesal (autocompleta el resto)
+											Acto procesal (completa solo los campos vacíos — lo manual no se pisa)
 										</Typography>
 										<Autocomplete
 											size="small"
