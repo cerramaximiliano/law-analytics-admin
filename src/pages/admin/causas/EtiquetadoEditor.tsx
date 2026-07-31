@@ -507,7 +507,7 @@ const EtiquetadoEditor = () => {
 						{modo === "libre"
 							? "↑/↓ navegan movimientos. Elegí una dimensión para anotar en serie con las teclas 1-9 (0 limpia)."
 							: modo === "actoProcesal"
-							? "Anotando el Acto procesal: buscá y seleccioná — avanza solo al siguiente movimiento · ↑/↓ navegan."
+							? "Anotando el Acto procesal: elegí el principal y, si hay, los secundarios · ↑/↓ navegan movimientos."
 							: modo === "decisiones"
 							? "Cargando Decisiones (una por disposición de la parte resolutiva) · ↑/↓ navegan movimientos."
 							: modo === "cargas"
@@ -716,10 +716,7 @@ const EtiquetadoEditor = () => {
 												options={ACTOS_PROCESALES.map(([v]) => v)}
 												getOptionLabel={(v) => ACTOS_PROCESALES.find(([x]) => x === v)?.[1] || v}
 												value={aSel.actoProcesal || null}
-												onChange={(_e, v) => {
-													aplicarActo(mSel.idx, v);
-													if (modo === "actoProcesal" && v) irA(1, mSel.idx);
-												}}
+												onChange={(_e, v) => aplicarActo(mSel.idx, v)}
 												renderInput={(params) => <TextField {...params} placeholder="Buscar acto… (corre traslado, homologa, resuelve fondo…)" />}
 												sx={{ flex: 1, maxWidth: 460 }}
 											/>
@@ -731,7 +728,7 @@ const EtiquetadoEditor = () => {
 												</Tooltip>
 											)}
 										</Stack>
-										{modo === "libre" && aSel.actoProcesal && (
+										{(modo === "libre" || modo === "actoProcesal") && aSel.actoProcesal && (
 											<Autocomplete
 												multiple
 												size="small"
