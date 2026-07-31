@@ -935,9 +935,9 @@ const EtiquetadoEditor = () => {
 											</Button>
 										</Stack>
 										<Typography variant="caption" sx={{ display: "block", color: "text.secondary", fontStyle: "italic" }}>
-											Opcional y selectivo: completar cuando el acto impone conductas con plazo (traslados, intimaciones, citaciones), una
-											fila por carga. En resoluciones largas, cargá las 2-3 de mayor peso — para el entrenamiento, calidad y variedad valen
-											más que exhaustividad.
+											La carga NO repite el acto: el acto clasifica ("este documento intima"), la carga extrae el contenido (a quién, qué,
+											plazo, apercibimiento). Opcional y selectivo: completar cuando el acto impone conductas con plazo, una fila por carga.
+											En resoluciones largas, cargá las 2-3 de mayor peso — calidad y variedad valen más que exhaustividad.
 										</Typography>
 										{(aSel.cargas || []).map((carga, ci) => {
 											const actualizar = (parche: Partial<typeof carga>) => {
