@@ -531,7 +531,7 @@ const EtiquetadoEditor = () => {
 							</Tooltip>
 						</Stack>
 						<Box ref={listaRef} sx={{ maxHeight: "64vh", overflowY: "auto" }}>
-							{movimientosVisibles.map((m) => {
+							{movimientosVisibles.map((m, vi) => {
 								const a = anotaciones[String(m.idx)];
 								const anotado = !!a && Object.keys(a).length > 0;
 								const esEstado = /CAMBIO DE ESTADO/i.test(m.tipo);
@@ -564,6 +564,13 @@ const EtiquetadoEditor = () => {
 										<Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
 											<Typography
 												variant="caption"
+												fontWeight={700}
+												sx={{ fontVariantNumeric: "tabular-nums", color: sel ? "primary.main" : "text.disabled", minWidth: 22, textAlign: "right" }}
+											>
+												{vi + 1}
+											</Typography>
+											<Typography
+												variant="caption"
 												sx={{ fontVariantNumeric: "tabular-nums", color: "text.secondary", minWidth: 72 }}
 											>
 												{m.dia}
@@ -580,25 +587,41 @@ const EtiquetadoEditor = () => {
 													/>
 												</Tooltip>
 											)}
-											{m.corpus?.pdf === "downloaded" && (
-												<Tooltip title="PDF espejado en S3 (pjn-movements)">
-													<Chip size="small" label="PDF" color="success" variant="outlined" sx={{ height: 16, fontSize: "0.56rem" }} />
-												</Tooltip>
-											)}
-											{(m.corpus?.texto === "extracted" || m.corpus?.texto === "ocr_done") && (
-												<Tooltip title="Texto extraído (pjn-movement-texts)">
-													<Chip size="small" label="TXT" color="success" sx={{ height: 16, fontSize: "0.56rem" }} />
-												</Tooltip>
-											)}
-											{m.corpus?.texto === "needs_ocr" && (
-												<Tooltip title="PDF escaneado — en cola de OCR">
-													<Chip size="small" label="OCR" color="warning" variant="outlined" sx={{ height: 16, fontSize: "0.56rem" }} />
-												</Tooltip>
-											)}
-											{tieneCuerpo && !m.corpus?.texto && <DocumentText size={13} color={theme.palette.success.main} />}
-											{m.url && !tieneCuerpo && !m.corpus?.pdf && (
-												<DocumentDownload size={13} color={theme.palette.text.disabled} />
-											)}
+											{m.url &&
+												(() => {
+													// Punto discreto de estado del documento: relleno verde = texto
+													// disponible; anillo verde = solo PDF; ámbar = OCR pendiente;
+													// anillo gris = sin espejar aún.
+													const ocr = m.corpus?.texto === "needs_ocr";
+													const conTexto = m.corpus?.texto === "extracted" || m.corpus?.texto === "ocr_done" || tieneCuerpo;
+													const conPdf = m.corpus?.pdf === "downloaded";
+													const col = ocr
+														? theme.palette.warning.main
+														: conTexto || conPdf
+															? theme.palette.success.main
+															: theme.palette.text.disabled;
+													const titulo = ocr
+														? "PDF escaneado — en cola de OCR"
+														: conTexto
+															? "Texto disponible"
+															: conPdf
+																? "PDF en S3 (sin texto aún)"
+																: "Documento sin espejar aún";
+													return (
+														<Tooltip title={titulo}>
+															<Box
+																sx={{
+																	width: 7,
+																	height: 7,
+																	borderRadius: "50%",
+																	flex: "none",
+																	bgcolor: conTexto || ocr ? col : "transparent",
+																	border: `1.5px solid ${col}`,
+																}}
+															/>
+														</Tooltip>
+													);
+												})()}
 										</Stack>
 										<Typography variant="caption" sx={{ display: "block", lineHeight: 1.3, fontWeight: esResol ? 600 : 400 }}>
 											{m.detalle.slice(0, 110)}
