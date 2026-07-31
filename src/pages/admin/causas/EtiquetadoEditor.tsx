@@ -115,6 +115,8 @@ const EtiquetadoEditor = () => {
 	// Cuerpos traídos bajo demanda, por idx de movimiento
 	const [cuerposOnDemand, setCuerposOnDemand] = useState<Record<number, CuerpoOnDemand>>({});
 	const [trayendoCuerpo, setTrayendoCuerpo] = useState(false);
+	// Vinculación de réplicas: idx del movimiento ORIGINAL en espera del click destino
+	const [vinculando, setVinculando] = useState<number | null>(null);
 	const listaRef = useRef<HTMLDivElement | null>(null);
 
 	const cargar = useCallback(async () => {
@@ -318,6 +320,10 @@ const EtiquetadoEditor = () => {
 		const handler = (e: KeyboardEvent) => {
 			const tag = (e.target as HTMLElement)?.tagName;
 			if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable) return;
+			if (e.key === "Escape") {
+				setVinculando(null);
+				return;
+			}
 			if (e.key === "ArrowDown" || e.key === "ArrowRight") {
 				e.preventDefault();
 				irA(1);
@@ -522,7 +528,14 @@ const EtiquetadoEditor = () => {
 				<Grid item xs={12} md={5} lg={4}>
 					<Card variant="outlined" sx={{ p: 1 }}>
 						<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 1, pb: 0.5 }}>
-							<Typography variant="subtitle2">Movimientos ({movimientosVisibles.length})</Typography>
+							<Typography variant="subtitle2">
+								Movimientos ({movimientosVisibles.length})
+								{vinculando !== null && (
+									<Typography component="span" variant="caption" sx={{ ml: 1, color: "info.main", fontWeight: 700 }}>
+										→ click en la réplica de #{vinculando} (Esc cancela)
+									</Typography>
+								)}
+							</Typography>
 							<Tooltip title="Encendido: solo movimientos con documento de organismo (resoluciones). Apagado: todos los movimientos, incluido el ruido.">
 								<FormControlLabel
 									control={<Switch size="small" checked={soloRelevantes} onChange={(e) => setSoloRelevantes(e.target.checked)} />}
@@ -542,7 +555,25 @@ const EtiquetadoEditor = () => {
 									<Box
 										key={m.idx}
 										id={`mov-${m.idx}`}
-										onClick={() => setSeleccionado(m.idx)}
+									onClick={() => {
+											if (vinculando !== null && vinculando !== m.idx) {
+												// Copia la anotación del original y marca la réplica
+												const src = anotaciones[String(vinculando)];
+												if (src) {
+													const { notas, ...resto } = src;
+													setAnotaciones((prev) => ({ ...prev, [String(m.idx)]: { ...resto, replicaDe: vinculando } }));
+													marcarDirty(String(m.idx));
+													enqueueSnackbar(`#${m.idx} marcado como réplica de #${vinculando} — campos copiados`, { variant: "success" });
+												}
+												setVinculando(null);
+												return;
+											}
+											if (vinculando === m.idx) {
+												setVinculando(null);
+												return;
+											}
+											setSeleccionado(m.idx);
+										}}
 										sx={{
 											px: 1,
 											py: 0.6,
@@ -706,7 +737,27 @@ const EtiquetadoEditor = () => {
 										</Tooltip>
 									)}
 									<Box sx={{ flex: 1 }} />
-									<Tooltip title="Limpiar anotaciones de este movimiento">
+									<Tooltip title={vinculando === mSel.idx ? "Cancelar vinculación" : "Vincular réplica: el próximo click en la lista copia estos campos y marca la réplica"}>
+									<span>
+										<Button
+											size="small"
+											variant={vinculando === mSel.idx ? "contained" : "text"}
+											color="info"
+											disabled={!Object.keys(aSel).length}
+											onClick={() => {
+												if (vinculando === mSel.idx) setVinculando(null);
+												else {
+													setVinculando(mSel.idx);
+													enqueueSnackbar(`Modo réplica: hacé click en el movimiento que es copia de #${mSel.idx} (Esc cancela)`, { variant: "info" });
+												}
+											}}
+											sx={{ py: 0, px: 1, fontSize: "0.68rem", textTransform: "none" }}
+										>
+											{vinculando === mSel.idx ? "Cancelar vínculo" : "Vincular réplica"}
+										</Button>
+									</span>
+								</Tooltip>
+								<Tooltip title="Limpiar anotaciones de este movimiento">
 										<span>
 											<IconButton
 												size="small"
