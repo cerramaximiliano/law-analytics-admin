@@ -4,13 +4,35 @@ import workersAxios from "utils/workersAxios";
 
 export type EstadoAnotacion = "pendiente" | "en_progreso" | "anotada" | "verificada" | "descartada";
 
+export interface Decision {
+	objetoDecidido: string; // ej. "recurso_apelacion", "medida_cautelar", "costas"
+	resultado: string | null;
+}
+
+export interface Plazo {
+	cantidad: number | null;
+	unidad: "dias" | "horas" | "meses";
+	tipo: "procesales" | "corridos";
+}
+
+// Taxonomía v2 (2026-07-31): tipo preciso, instancia por metadatos, objeto
+// triseccionado (materia × contexto × función), firmeza como estado aparte,
+// acto procesal accionable, decisiones multivaluadas y bloque acto completo.
 export interface AnotacionMovimiento {
-	esResolucion?: boolean;
-	tipoResolucion?: string | null; // providencia | interlocutoria | definitiva | no_resolucion
-	instancia?: string | null; // primera | segunda | csjn
-	objetoResolucion?: string | null; // fondo | incidental | honorarios | ejecucion | terminacion | impulso
-	modoTerminacion?: string | null; // firmeza | allanamiento | desistimiento | conciliacion | caducidad | otro
-	resultado?: string | null; // hace_lugar | rechaza | parcial | confirma | revoca | desierto | concede | deniega | homologa | otro
+	tipoResolucion?: string | null;
+	instancia?: string | null;
+	materia?: string | null;
+	contexto?: string | null;
+	funcion?: string | null;
+	modoTerminacion?: string | null; // solo si funcion=terminacion
+	estadoImpugnatorio?: string | null;
+	actoProcesal?: string | null;
+	resultado?: string | null; // resultado de la decisión principal
+	decisiones?: Decision[]; // disposiciones múltiples
+	destinatario?: string[];
+	accionRequerida?: string;
+	plazo?: Plazo | null;
+	apercibimiento?: string;
 	etiqueta?: string; // etapa/hito final sugerida (texto libre corto)
 	replicaDe?: number | null; // idx del movimiento del que este es réplica
 	descartar?: boolean;

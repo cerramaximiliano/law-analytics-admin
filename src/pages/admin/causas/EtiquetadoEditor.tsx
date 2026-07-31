@@ -30,87 +30,29 @@ import EtapaAnotacionesService, {
 	AnotacionMovimiento,
 	CausaParaAnotar,
 	CuerpoOnDemand,
+	Decision,
 	EstadoAnotacion,
 } from "api/etapaAnotaciones";
 import { BRAND_BLUE } from "themes/dashboardTokens";
+import Autocomplete from "@mui/material/Autocomplete";
+import {
+	ACTOS_PROCESALES,
+	ACTO_AUTOFILL,
+	DESTINATARIOS,
+	DIM_CHIP_COLOR,
+	DIM_LABELS,
+	DIMENSIONES_ORDEN,
+	DimKey,
+} from "./etiquetadoTaxonomia";
 
 // Ruido administrativo que se oculta con el filtro "sin ruido"
 const RE_RUIDO = /^(EN LETRA|EN DESPACHO|EN CONFRONTE|SIN DEFINIR|EN SECRETARIA|SACADO DE PARALIZADO|PRESTAMO|EN CAJA FUERTE)/i;
 // Movimientos con pinta de resolución (se resaltan en la lista)
 const RE_RESOLUCION = /SENTENCIA|RESOLUCION|RESUELVE|FALLO|HOMOLOG|INTERLOCUTOR|DECLARATORIA|DESIERTO|CADUCIDAD|INCOMPETENCIA|ARCHIV/i;
 
-const DIMENSIONES_ORDEN = ["tipoResolucion", "instancia", "objetoResolucion", "modoTerminacion", "resultado"] as const;
-type DimKey = (typeof DIMENSIONES_ORDEN)[number];
-
-const DIM_LABELS: Record<DimKey, { titulo: string; corto: string; opciones: [string, string][] }> = {
-	tipoResolucion: {
-		titulo: "Tipo de resolución",
-		corto: "Tipo",
-		opciones: [
-			["providencia", "Providencia"],
-			["interlocutoria", "Interlocutoria"],
-			["definitiva", "Definitiva"],
-			["no_resolucion", "No es resolución"],
-		],
-	},
-	instancia: {
-		titulo: "Instancia",
-		corto: "Instancia",
-		opciones: [
-			["primera", "Primera"],
-			["segunda", "Cámara"],
-			["csjn", "CSJN"],
-		],
-	},
-	objetoResolucion: {
-		titulo: "Objeto",
-		corto: "Objeto",
-		opciones: [
-			["fondo", "Fondo"],
-			["incidental", "Incidental"],
-			["honorarios", "Honorarios"],
-			["ejecucion", "Ejecución"],
-			["terminacion", "Terminación"],
-			["impulso", "Impulso"],
-		],
-	},
-	modoTerminacion: {
-		titulo: "Modo de terminación",
-		corto: "Modo term.",
-		opciones: [
-			["firmeza", "Firmeza"],
-			["allanamiento", "Allanamiento"],
-			["desistimiento", "Desistimiento"],
-			["conciliacion", "Conciliación"],
-			["caducidad", "Caducidad"],
-			["otro", "Otro"],
-		],
-	},
-	resultado: {
-		titulo: "Resultado",
-		corto: "Resultado",
-		opciones: [
-			["hace_lugar", "Hace lugar"],
-			["rechaza", "Rechaza"],
-			["parcial", "Parcial"],
-			["confirma", "Confirma"],
-			["revoca", "Revoca"],
-			["desierto", "Desierto"],
-			["concede", "Concede"],
-			["deniega", "Deniega"],
-			["homologa", "Homologa"],
-			["otro", "Otro"],
-		],
-	},
-};
-
-const DIM_CHIP_COLOR: Record<DimKey, "primary" | "secondary" | "info" | "warning" | "success"> = {
-	tipoResolucion: "primary",
-	instancia: "secondary",
-	objetoResolucion: "warning",
-	modoTerminacion: "info",
-	resultado: "success",
-};
+// Heurística de instancia por metadatos/encabezado (sugerencia, no inferencia
+// del texto): "LA SALA"/"EL TRIBUNAL" en el encabezado del cuerpo → segunda.
+const RE_ORGANO_SEGUNDA = /\b(LA\s+SALA|EL\s+TRIBUNAL|ESTA\s+SALA|CAMARA\s+NACIONAL|C[ÁA]MARA\s+FEDERAL)\b/i;
 
 const ESTADO_COLOR: Record<EstadoAnotacion, "default" | "warning" | "info" | "success" | "error"> = {
 	pendiente: "default",
@@ -210,6 +152,31 @@ const EtiquetadoEditor = () => {
 		const k = String(idx);
 		setAnotaciones((prev) => ({ ...prev, [k]: { ...(prev[k] || {}), [campo]: valor } }));
 		marcarDirty(k);
+	};
+
+	// Acto-primero: setea el acto y autocompleta dimensiones VACÍAS con la
+	// combinación típica; la instancia se sugiere desde el encabezado del cuerpo.
+	const aplicarActo = (idx: number, acto: string | null) => {
+		const k = String(idx);
+		setAnotaciones((prev) => {
+			const actual = { ...(prev[k] || {}) };
+			actual.actoProcesal = acto;
+			if (acto && ACTO_AUTOFILL[acto]) {
+				for (const [dim, valor] of Object.entries(ACTO_AUTOFILL[acto])) {
+					if (!(actual as any)[dim]) (actual as any)[dim] = valor;
+				}
+			}
+			if (acto && !actual.instancia) {
+				const cuerpo = cuerpoDe(idx);
+				actual.instancia = cuerpo && RE_ORGANO_SEGUNDA.test(cuerpo.encabezado || "") ? "segunda_instancia" : "primera_instancia";
+			}
+			return { ...prev, [k]: actual };
+		});
+		marcarDirty(k);
+	};
+
+	const setDecisiones = (idx: number, decisiones: Decision[]) => {
+		setCampo(idx, "decisiones", decisiones);
 	};
 
 	const limpiarMovimiento = (idx: number) => {
@@ -507,15 +474,17 @@ const EtiquetadoEditor = () => {
 										</Typography>
 										{anotado && (
 											<Stack direction="row" spacing={0.4} sx={{ mt: 0.25 }} flexWrap="wrap" useFlexGap>
-												{DIMENSIONES_ORDEN.filter((d) => (a as any)[d]).map((d) => (
-													<Chip
-														key={d}
-														size="small"
-														color={DIM_CHIP_COLOR[d]}
-														label={(a as any)[d]}
-														sx={{ height: 16, fontSize: "0.58rem" }}
-													/>
-												))}
+												{(["actoProcesal", ...DIMENSIONES_ORDEN, "modoTerminacion"] as string[])
+													.filter((d) => (a as any)[d])
+													.map((d) => (
+														<Chip
+															key={d}
+															size="small"
+															color={DIM_CHIP_COLOR[d] || "default"}
+															label={(a as any)[d]}
+															sx={{ height: 16, fontSize: "0.58rem" }}
+														/>
+													))}
 												{a.descartar && <Chip size="small" color="error" label="descartar" sx={{ height: 16, fontSize: "0.58rem" }} />}
 											</Stack>
 										)}
@@ -561,7 +530,31 @@ const EtiquetadoEditor = () => {
 									{mSel.detalle}
 								</Typography>
 
-								{(modo === "libre" ? DIMENSIONES_ORDEN : [modo as DimKey]).map((dim) => (
+								{/* Acto-primero: elegir el acto autocompleta las demás dimensiones (solo vacías) */}
+								{modo === "libre" && (
+									<Box sx={{ mb: 1.5 }}>
+										<Typography
+											variant="caption"
+											fontWeight={700}
+											sx={{ textTransform: "uppercase", letterSpacing: 0.5, color: "primary.main" }}
+										>
+											Acto procesal (autocompleta el resto)
+										</Typography>
+										<Autocomplete
+											size="small"
+											options={ACTOS_PROCESALES.map(([v]) => v)}
+											getOptionLabel={(v) => ACTOS_PROCESALES.find(([x]) => x === v)?.[1] || v}
+											value={aSel.actoProcesal || null}
+											onChange={(_e, v) => aplicarActo(mSel.idx, v)}
+											renderInput={(params) => <TextField {...params} placeholder="Buscar acto… (corre traslado, homologa, resuelve fondo…)" />}
+											sx={{ mt: 0.5, maxWidth: 460 }}
+										/>
+									</Box>
+								)}
+								{(modo === "libre"
+									? ([...DIMENSIONES_ORDEN, ...(aSel.funcion === "terminacion" ? (["modoTerminacion"] as DimKey[]) : []), "estadoImpugnatorio"] as DimKey[])
+									: [modo as DimKey]
+								).map((dim) => (
 									<Box key={dim} sx={{ mb: 1.25 }}>
 										<Typography
 											variant="caption"
@@ -600,6 +593,145 @@ const EtiquetadoEditor = () => {
 										</Box>
 									</Box>
 								))}
+
+								{/* Decisiones múltiples: una fila por disposición de la parte resolutiva */}
+								{modo === "libre" && (
+									<Box sx={{ mb: 1.25 }}>
+										<Stack direction="row" alignItems="center" spacing={1}>
+											<Typography variant="caption" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: 0.5, color: "text.secondary" }}>
+												Decisiones (una por disposición)
+											</Typography>
+											<Button
+												size="small"
+												variant="text"
+												sx={{ py: 0, minWidth: 0 }}
+												onClick={() => setDecisiones(mSel.idx, [...(aSel.decisiones || []), { objetoDecidido: "", resultado: null }])}
+											>
+												+ agregar
+											</Button>
+										</Stack>
+										{(aSel.decisiones || []).map((dec, di) => (
+											<Stack key={di} direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+												<TextField
+													size="small"
+													placeholder="objeto decidido (ej. recurso_apelacion, costas)"
+													value={dec.objetoDecidido}
+													onChange={(e) => {
+														const nuevas = [...(aSel.decisiones || [])];
+														nuevas[di] = { ...nuevas[di], objetoDecidido: e.target.value };
+														setDecisiones(mSel.idx, nuevas);
+													}}
+													sx={{ flex: 1, maxWidth: 320 }}
+												/>
+												<Select
+													size="small"
+													displayEmpty
+													value={dec.resultado || ""}
+													onChange={(e) => {
+														const nuevas = [...(aSel.decisiones || [])];
+														nuevas[di] = { ...nuevas[di], resultado: e.target.value || null };
+														setDecisiones(mSel.idx, nuevas);
+													}}
+													renderValue={(v) =>
+														v ? DIM_LABELS.resultado.opciones.find(([x]) => x === v)?.[1] || v : (
+															<Typography variant="caption" color="text.secondary">resultado…</Typography>
+														)
+													}
+													sx={{ minWidth: 170 }}
+												>
+													{DIM_LABELS.resultado.opciones.map(([v, l]) => (
+														<MenuItem key={v} value={v}>{l}</MenuItem>
+													))}
+												</Select>
+												<IconButton
+													size="small"
+													color="error"
+													onClick={() => setDecisiones(mSel.idx, (aSel.decisiones || []).filter((_x, i) => i !== di))}
+												>
+													<Trash size={14} />
+												</IconButton>
+											</Stack>
+										))}
+									</Box>
+								)}
+
+								{/* Bloque opcional: acto completo (destinatario, acción, plazo, apercibimiento) */}
+								{modo === "libre" && (
+									<details style={{ marginBottom: 12 }}>
+										<summary style={{ cursor: "pointer", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: 0.5, color: "var(--mui-palette-text-secondary, #888)", fontWeight: 700 }}>
+											Acto completo (destinatario · acción · plazo · apercibimiento)
+										</summary>
+										<Grid container spacing={1.5} sx={{ mt: 0.25 }}>
+											<Grid item xs={12} sm={5}>
+												<Autocomplete
+													multiple
+													size="small"
+													options={DESTINATARIOS.map(([v]) => v)}
+													getOptionLabel={(v) => DESTINATARIOS.find(([x]) => x === v)?.[1] || v}
+													value={aSel.destinatario || []}
+													onChange={(_e, v) => setCampo(mSel.idx, "destinatario", v)}
+													renderInput={(params) => <TextField {...params} label="Destinatario/s" />}
+												/>
+											</Grid>
+											<Grid item xs={12} sm={7}>
+												<TextField
+													fullWidth
+													size="small"
+													label="Acción requerida"
+													placeholder="contestar_traslado, impugnar_pericia, acompañar_documental…"
+													value={aSel.accionRequerida || ""}
+													onChange={(e) => setCampo(mSel.idx, "accionRequerida", e.target.value)}
+												/>
+											</Grid>
+											<Grid item xs={4} sm={2}>
+												<TextField
+													fullWidth
+													size="small"
+													type="number"
+													label="Plazo"
+													value={aSel.plazo?.cantidad ?? ""}
+													onChange={(e) =>
+														setCampo(mSel.idx, "plazo", e.target.value === ""
+															? null
+															: { cantidad: parseInt(e.target.value, 10), unidad: aSel.plazo?.unidad || "dias", tipo: aSel.plazo?.tipo || "procesales" })
+													}
+												/>
+											</Grid>
+											<Grid item xs={4} sm={2}>
+												<Select
+													fullWidth
+													size="small"
+													value={aSel.plazo?.unidad || "dias"}
+													onChange={(e) => aSel.plazo && setCampo(mSel.idx, "plazo", { ...aSel.plazo, unidad: e.target.value as any })}
+												>
+													<MenuItem value="dias">días</MenuItem>
+													<MenuItem value="horas">horas</MenuItem>
+													<MenuItem value="meses">meses</MenuItem>
+												</Select>
+											</Grid>
+											<Grid item xs={4} sm={2}>
+												<Select
+													fullWidth
+													size="small"
+													value={aSel.plazo?.tipo || "procesales"}
+													onChange={(e) => aSel.plazo && setCampo(mSel.idx, "plazo", { ...aSel.plazo, tipo: e.target.value as any })}
+												>
+													<MenuItem value="procesales">procesales</MenuItem>
+													<MenuItem value="corridos">corridos</MenuItem>
+												</Select>
+											</Grid>
+											<Grid item xs={12} sm={6}>
+												<TextField
+													fullWidth
+													size="small"
+													label="Apercibimiento"
+													value={aSel.apercibimiento || ""}
+													onChange={(e) => setCampo(mSel.idx, "apercibimiento", e.target.value)}
+												/>
+											</Grid>
+										</Grid>
+									</details>
+								)}
 
 								{modo === "libre" && (
 									<Grid container spacing={1.5} sx={{ mt: 0.25 }}>
