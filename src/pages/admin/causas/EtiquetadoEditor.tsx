@@ -550,7 +550,7 @@ const EtiquetadoEditor = () => {
 								Movimientos ({movimientosVisibles.length})
 								{vinculando !== null && (
 									<Typography component="span" variant="caption" sx={{ ml: 1, color: "info.main", fontWeight: 700 }}>
-										→ click en la réplica del movimiento {numeroVisible(vinculando)} (Esc cancela)
+										→ click en cada réplica del movimiento {numeroVisible(vinculando)} — Esc termina
 									</Typography>
 								)}
 							</Typography>
@@ -581,10 +581,12 @@ const EtiquetadoEditor = () => {
 													const { notas, ...resto } = src;
 													setAnotaciones((prev) => ({ ...prev, [String(m.idx)]: { ...resto, replicaDe: vinculando } }));
 													marcarDirty(String(m.idx));
-													enqueueSnackbar(`Movimiento ${numeroVisible(m.idx)} marcado como réplica del ${numeroVisible(vinculando)} — campos copiados`, { variant: "success" });
+													enqueueSnackbar(
+														`Movimiento ${numeroVisible(m.idx)} marcado como réplica del ${numeroVisible(vinculando)} — seguí clickeando más réplicas o Esc para terminar`,
+														{ variant: "success", autoHideDuration: 2500 },
+													);
 												}
-												setVinculando(null);
-												return;
+												return; // modo pegajoso: se sale con Esc o clickeando el original
 											}
 											if (vinculando === m.idx) {
 												setVinculando(null);
@@ -792,7 +794,7 @@ const EtiquetadoEditor = () => {
 												if (vinculando === mSel.idx) setVinculando(null);
 												else {
 													setVinculando(mSel.idx);
-													enqueueSnackbar(`Modo réplica: hacé click en el movimiento que es copia del ${numeroVisible(mSel.idx)} (Esc cancela)`, { variant: "info" });
+													enqueueSnackbar(`Modo réplica: hacé click en cada movimiento que sea copia del ${numeroVisible(mSel.idx)} — Esc para terminar`, { variant: "info" });
 												}
 											}}
 											sx={{ py: 0, px: 1, fontSize: "0.68rem", textTransform: "none" }}
