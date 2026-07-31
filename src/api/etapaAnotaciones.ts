@@ -15,6 +15,16 @@ export interface Plazo {
 	tipo: "procesales" | "corridos";
 }
 
+// Una carga procesal impuesta por el acto: quién debe hacer qué, en qué plazo
+// y bajo qué apercibimiento. Un acto puede imponer VARIAS (ej. traslado a la
+// demandada + intimación al letrado en el mismo proveído).
+export interface Carga {
+	destinatarios: string[];
+	accion: string | null; // valor de ACCIONES_REQUERIDAS (lista cerrada)
+	plazo: Plazo | null;
+	apercibimiento: string;
+}
+
 // Taxonomía v2 (2026-07-31): tipo preciso, instancia por metadatos, objeto
 // triseccionado (materia × contexto × función), firmeza como estado aparte,
 // acto procesal accionable, decisiones multivaluadas y bloque acto completo.
@@ -29,11 +39,8 @@ export interface AnotacionMovimiento {
 	actoProcesal?: string | null;
 	resultado?: string | null; // resultado de la decisión principal
 	decisiones?: Decision[]; // disposiciones múltiples
-	destinatario?: string[];
-	accionRequerida?: string;
-	plazo?: Plazo | null;
-	apercibimiento?: string;
-	etiqueta?: string; // etapa/hito final sugerida (texto libre corto)
+	cargas?: Carga[]; // cargas procesales impuestas (una por destinatario/acción)
+	etiqueta?: string; // etapa/hito final (lista cerrada ETIQUETAS_FINALES)
 	replicaDe?: number | null; // idx del movimiento del que este es réplica
 	descartar?: boolean;
 	notas?: string;

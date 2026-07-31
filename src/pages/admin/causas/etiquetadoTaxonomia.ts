@@ -11,7 +11,17 @@ export const DIMENSIONES_ORDEN = [
 ] as const;
 export type DimKey = (typeof DIMENSIONES_ORDEN)[number] | "modoTerminacion" | "estadoImpugnatorio";
 
-export const DIM_LABELS: Record<DimKey, { titulo: string; corto: string; opciones: [string, string][] }> = {
+export interface DimDef {
+	titulo: string;
+	corto: string;
+	opciones: [string, string][];
+	// Texto de ayuda que se muestra debajo del título de la dimensión.
+	ayuda?: string;
+	// Agrupación visual de opciones con subtítulo explicativo (ej. resultado).
+	grupos?: { titulo: string; valores: string[] }[];
+}
+
+export const DIM_LABELS: Record<DimKey, DimDef> = {
 	tipoResolucion: {
 		titulo: "Tipo de resolución",
 		corto: "Tipo",
@@ -100,6 +110,8 @@ export const DIM_LABELS: Record<DimKey, { titulo: string; corto: string; opcione
 	estadoImpugnatorio: {
 		titulo: "Estado impugnatorio",
 		corto: "Firmeza",
+		ayuda:
+			"Dejalo VACÍO salvo que el propio documento declare la firmeza ('firme', 'consentida') o dé cuenta del recurso — el motor la deriva de los eventos posteriores.",
 		opciones: [
 			["recurrible", "Recurrible"],
 			["recurrida", "Recurrida"],
@@ -110,6 +122,7 @@ export const DIM_LABELS: Record<DimKey, { titulo: string; corto: string; opcione
 	resultado: {
 		titulo: "Resultado (decisión principal)",
 		corto: "Resultado",
+		ayuda: "Solo cuando Función = decisión o terminación. Para impulso/ordenación: 'No aplica'.",
 		opciones: [
 			["hace_lugar", "Hace lugar"],
 			["hace_lugar_parcialmente", "Hace lugar parcialmente"],
@@ -117,15 +130,87 @@ export const DIM_LABELS: Record<DimKey, { titulo: string; corto: string; opcione
 			["confirma", "Confirma"],
 			["revoca", "Revoca"],
 			["modifica", "Modifica"],
-			["desierto", "Desierto"],
 			["concede", "Concede"],
 			["deniega", "Deniega"],
+			["desierto", "Desierto"],
 			["homologa", "Homologa"],
 			["no_aplica", "No aplica"],
 			["otro", "Otro"],
 		],
+		grupos: [
+			{ titulo: "Sobre pretensiones o peticiones", valores: ["hace_lugar", "hace_lugar_parcialmente", "rechaza"] },
+			{ titulo: "Revisión (alzada sobre lo apelado)", valores: ["confirma", "revoca", "modifica"] },
+			{ titulo: "Sobre recursos o solicitudes", valores: ["concede", "deniega", "desierto"] },
+			{ titulo: "Acuerdos", valores: ["homologa"] },
+			{ titulo: "Sin resultado", valores: ["no_aplica", "otro"] },
+		],
 	},
 };
+
+// Acciones requeridas (lista cerrada — evita variantes libres tipo
+// "contestar" vs "contestar_demanda"). Espejo del catálogo de datasets #5.
+export const ACCIONES_REQUERIDAS: [string, string][] = [
+	["contestar_demanda", "Contestar demanda"],
+	["contestar_traslado", "Contestar traslado"],
+	["contestar_agravios", "Contestar agravios"],
+	["expresar_agravios", "Expresar agravios"],
+	["acompanar_documental", "Acompañar documental"],
+	["acompanar_bono", "Acompañar bono profesional"],
+	["acreditar_personeria", "Acreditar personería"],
+	["constituir_domicilio", "Constituir domicilio"],
+	["subsanar_defecto", "Subsanar defecto"],
+	["depositar_suma", "Depositar suma"],
+	["pagar_tasa", "Pagar tasa de justicia"],
+	["presentar_liquidacion", "Presentar liquidación"],
+	["impugnar_liquidacion", "Impugnar liquidación"],
+	["impugnar_pericia", "Impugnar pericia"],
+	["producir_prueba", "Producir prueba"],
+	["presentar_informe", "Presentar informe (perito/organismo)"],
+	["comparecer_audiencia", "Comparecer a audiencia"],
+	["diligenciar_cedula", "Diligenciar cédula"],
+	["presentar_oficio", "Presentar/diligenciar oficio"],
+	["integrar_copias", "Integrar copias al sistema"],
+	["cumplir_intimacion", "Cumplir intimación (genérica)"],
+	["otro", "Otro"],
+];
+
+// Etiqueta final: lista cerrada de etapas + hitos del motor (VERSION 17).
+export const ETIQUETAS_FINALES: [string, string][] = [
+	["demanda", "Etapa: demanda"],
+	["traba_litis", "Etapa: traba de litis"],
+	["prueba", "Etapa: prueba"],
+	["puro_derecho", "Etapa: puro derecho"],
+	["alegatos", "Etapa: alegatos"],
+	["autos_sentencia", "Etapa: autos para sentencia"],
+	["sentencia_primera", "Etapa: sentencia de 1ª instancia"],
+	["segunda_instancia", "Etapa: segunda instancia"],
+	["sentencia_camara", "Etapa: sentencia de Cámara"],
+	["recurso_extraordinario", "Etapa: recurso extraordinario"],
+	["sentencia_firme", "Etapa: sentencia firme"],
+	["fin_litigio", "Etapa: fin del litigio"],
+	["ejecucion", "Etapa: ejecución"],
+	["sentencia_remate", "Etapa: sentencia de remate"],
+	["archivo", "Etapa: archivo"],
+	["apertura_sucesion", "Etapa (sucesorio): apertura"],
+	["edictos", "Etapa (sucesorio): edictos"],
+	["declaratoria", "Etapa (sucesorio): declaratoria"],
+	["inscripcion", "Etapa (sucesorio): inscripción"],
+	["particion", "Etapa (sucesorio): partición"],
+	["apertura_concurso", "Etapa (concursal): apertura"],
+	["verificacion", "Etapa (concursal): verificación"],
+	["informe_general", "Etapa (concursal): informe general"],
+	["categorizacion", "Etapa (concursal): categorización"],
+	["acuerdo", "Etapa (concursal): acuerdo"],
+	["homologacion", "Etapa (concursal): homologación"],
+	["hito:sentencia_interlocutoria", "Hito: sentencia interlocutoria"],
+	["hito:resolucion_incidente", "Hito: resolución de incidente"],
+	["hito:audiencia", "Hito: audiencia"],
+	["hito:homologacion_acuerdo", "Hito: homologación de acuerdo"],
+	["hito:desercion", "Hito: deserción"],
+	["hito:inhabilidad_instancia", "Hito: inhabilidad de instancia"],
+	["hito:archivo", "Hito: archivo"],
+	["ninguna", "Ninguna (no marca etapa ni hito)"],
+];
 
 export const ACTOS_PROCESALES: [string, string][] = [
 	["corre_traslado", "Corre traslado"],

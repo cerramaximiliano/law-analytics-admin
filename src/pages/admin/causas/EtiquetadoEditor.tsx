@@ -36,6 +36,7 @@ import EtapaAnotacionesService, {
 import { BRAND_BLUE } from "themes/dashboardTokens";
 import Autocomplete from "@mui/material/Autocomplete";
 import {
+	ACCIONES_REQUERIDAS,
 	ACTOS_PROCESALES,
 	ACTO_AUTOFILL,
 	DESTINATARIOS,
@@ -43,6 +44,7 @@ import {
 	DIM_LABELS,
 	DIMENSIONES_ORDEN,
 	DimKey,
+	ETIQUETAS_FINALES,
 } from "./etiquetadoTaxonomia";
 
 // Movimientos con pinta de resolución (se resaltan en la lista)
@@ -568,45 +570,71 @@ const EtiquetadoEditor = () => {
 								{(modo === "libre"
 									? ([...DIMENSIONES_ORDEN, ...(aSel.funcion === "terminacion" ? (["modoTerminacion"] as DimKey[]) : []), "estadoImpugnatorio"] as DimKey[])
 									: [modo as DimKey]
-								).map((dim) => (
-									<Box key={dim} sx={{ mb: 1.25 }}>
-										<Typography
-											variant="caption"
-											fontWeight={700}
-											sx={{ textTransform: "uppercase", letterSpacing: 0.5, color: `${DIM_CHIP_COLOR[dim]}.main` }}
-										>
-											{DIM_LABELS[dim].titulo}
-										</Typography>
-										<Box>
-											<ToggleButtonGroup size="small" exclusive value={(aSel as any)[dim] || null} sx={{ flexWrap: "wrap" }}>
-												{DIM_LABELS[dim].opciones.map(([valor, label], oi) => (
-													<ToggleButton
-														key={valor}
-														value={valor}
-														onClick={() => setDim(mSel.idx, dim, valor, modo !== "libre")}
-														sx={{
-															py: modo === "libre" ? 0.25 : 0.75,
-															px: modo === "libre" ? 1 : 1.75,
-															fontSize: modo === "libre" ? "0.72rem" : "0.85rem",
-															textTransform: "none",
-														}}
-													>
-														{modo !== "libre" && (
-															<Typography
-																component="span"
-																variant="caption"
-																sx={{ mr: 0.6, opacity: 0.55, fontVariantNumeric: "tabular-nums" }}
-															>
-																{oi + 1}
+								).map((dim) => {
+									const def = DIM_LABELS[dim];
+									const colorTitulo =
+										DIM_CHIP_COLOR[dim] && DIM_CHIP_COLOR[dim] !== "default" ? `${DIM_CHIP_COLOR[dim]}.main` : "text.secondary";
+									const etiquetaDe = (valor: string) => def.opciones.find(([v]) => v === valor)?.[1] || valor;
+									const numeroDe = (valor: string) => def.opciones.findIndex(([v]) => v === valor) + 1;
+									const renderBotones = (valores: string[]) => (
+										<ToggleButtonGroup size="small" exclusive value={(aSel as any)[dim] || null} sx={{ flexWrap: "wrap" }}>
+											{valores.map((valor) => (
+												<ToggleButton
+													key={valor}
+													value={valor}
+													onClick={() => setDim(mSel.idx, dim, valor, modo !== "libre")}
+													sx={{
+														py: modo === "libre" ? 0.25 : 0.75,
+														px: modo === "libre" ? 1 : 1.75,
+														fontSize: modo === "libre" ? "0.72rem" : "0.85rem",
+														textTransform: "none",
+													}}
+												>
+													{modo !== "libre" && (
+														<Typography
+															component="span"
+															variant="caption"
+															sx={{ mr: 0.6, opacity: 0.55, fontVariantNumeric: "tabular-nums" }}
+														>
+															{numeroDe(valor)}
+														</Typography>
+													)}
+													{etiquetaDe(valor)}
+												</ToggleButton>
+											))}
+										</ToggleButtonGroup>
+									);
+									return (
+										<Box key={dim} sx={{ mb: 1.25 }}>
+											<Typography
+												variant="caption"
+												fontWeight={700}
+												sx={{ textTransform: "uppercase", letterSpacing: 0.5, color: colorTitulo }}
+											>
+												{def.titulo}
+											</Typography>
+											{def.ayuda && (
+												<Typography variant="caption" sx={{ display: "block", color: "text.secondary", fontStyle: "italic", mb: 0.25 }}>
+													{def.ayuda}
+												</Typography>
+											)}
+											{def.grupos && modo === "libre" ? (
+												<Stack spacing={0.5}>
+													{def.grupos.map((g) => (
+														<Box key={g.titulo}>
+															<Typography variant="caption" sx={{ color: "text.disabled", fontSize: "0.62rem" }}>
+																{g.titulo}
 															</Typography>
-														)}
-														{label}
-													</ToggleButton>
-												))}
-											</ToggleButtonGroup>
+															<Box>{renderBotones(g.valores)}</Box>
+														</Box>
+													))}
+												</Stack>
+											) : (
+												<Box>{renderBotones(def.opciones.map(([v]) => v))}</Box>
+											)}
 										</Box>
-									</Box>
-								))}
+									);
+								})}
 
 								{/* Decisiones múltiples: una fila por disposición de la parte resolutiva */}
 								{modo === "libre" && (
@@ -669,93 +697,131 @@ const EtiquetadoEditor = () => {
 									</Box>
 								)}
 
-								{/* Bloque opcional: acto completo (destinatario, acción, plazo, apercibimiento) */}
+								{/* Cargas procesales del acto: quién debe hacer qué, plazo y apercibimiento.
+								    Un acto puede imponer VARIAS (traslado a la demandada + intimación al
+								    letrado en el mismo proveído) — una fila por carga. */}
 								{modo === "libre" && (
-									<details style={{ marginBottom: 12 }}>
-										<summary style={{ cursor: "pointer", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: 0.5, color: "var(--mui-palette-text-secondary, #888)", fontWeight: 700 }}>
-											Acto completo (destinatario · acción · plazo · apercibimiento)
-										</summary>
-										<Grid container spacing={1.5} sx={{ mt: 0.25 }}>
-											<Grid item xs={12} sm={5}>
-												<Autocomplete
-													multiple
-													size="small"
-													options={DESTINATARIOS.map(([v]) => v)}
-													getOptionLabel={(v) => DESTINATARIOS.find(([x]) => x === v)?.[1] || v}
-													value={aSel.destinatario || []}
-													onChange={(_e, v) => setCampo(mSel.idx, "destinatario", v)}
-													renderInput={(params) => <TextField {...params} label="Destinatario/s" />}
-												/>
-											</Grid>
-											<Grid item xs={12} sm={7}>
-												<TextField
-													fullWidth
-													size="small"
-													label="Acción requerida"
-													placeholder="contestar_traslado, impugnar_pericia, acompañar_documental…"
-													value={aSel.accionRequerida || ""}
-													onChange={(e) => setCampo(mSel.idx, "accionRequerida", e.target.value)}
-												/>
-											</Grid>
-											<Grid item xs={4} sm={2}>
-												<TextField
-													fullWidth
-													size="small"
-													type="number"
-													label="Plazo"
-													value={aSel.plazo?.cantidad ?? ""}
-													onChange={(e) =>
-														setCampo(mSel.idx, "plazo", e.target.value === ""
-															? null
-															: { cantidad: parseInt(e.target.value, 10), unidad: aSel.plazo?.unidad || "dias", tipo: aSel.plazo?.tipo || "procesales" })
-													}
-												/>
-											</Grid>
-											<Grid item xs={4} sm={2}>
-												<Select
-													fullWidth
-													size="small"
-													value={aSel.plazo?.unidad || "dias"}
-													onChange={(e) => aSel.plazo && setCampo(mSel.idx, "plazo", { ...aSel.plazo, unidad: e.target.value as any })}
-												>
-													<MenuItem value="dias">días</MenuItem>
-													<MenuItem value="horas">horas</MenuItem>
-													<MenuItem value="meses">meses</MenuItem>
-												</Select>
-											</Grid>
-											<Grid item xs={4} sm={2}>
-												<Select
-													fullWidth
-													size="small"
-													value={aSel.plazo?.tipo || "procesales"}
-													onChange={(e) => aSel.plazo && setCampo(mSel.idx, "plazo", { ...aSel.plazo, tipo: e.target.value as any })}
-												>
-													<MenuItem value="procesales">procesales</MenuItem>
-													<MenuItem value="corridos">corridos</MenuItem>
-												</Select>
-											</Grid>
-											<Grid item xs={12} sm={6}>
-												<TextField
-													fullWidth
-													size="small"
-													label="Apercibimiento"
-													value={aSel.apercibimiento || ""}
-													onChange={(e) => setCampo(mSel.idx, "apercibimiento", e.target.value)}
-												/>
-											</Grid>
-										</Grid>
-									</details>
+									<Box sx={{ mb: 1.25 }}>
+										<Stack direction="row" alignItems="center" spacing={1}>
+											<Typography variant="caption" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: 0.5, color: "text.secondary" }}>
+												Cargas procesales (destinatario · acción · plazo · apercibimiento)
+											</Typography>
+											<Button
+												size="small"
+												variant="text"
+												sx={{ py: 0, minWidth: 0 }}
+												onClick={() => setCampo(mSel.idx, "cargas", [...(aSel.cargas || []), { destinatarios: [], accion: null, plazo: null, apercibimiento: "" }])}
+											>
+												+ agregar carga
+											</Button>
+										</Stack>
+										<Typography variant="caption" sx={{ display: "block", color: "text.secondary", fontStyle: "italic" }}>
+											Completar cuando el acto impone conductas con plazo (traslados, intimaciones, citaciones). Una fila por cada carga distinta.
+										</Typography>
+										{(aSel.cargas || []).map((carga, ci) => {
+											const actualizar = (parche: Partial<typeof carga>) => {
+												const nuevas = [...(aSel.cargas || [])];
+												nuevas[ci] = { ...nuevas[ci], ...parche };
+												setCampo(mSel.idx, "cargas", nuevas);
+											};
+											return (
+												<Grid container spacing={1} key={ci} sx={{ mt: 0.25, pl: 1, borderLeft: "2px solid", borderColor: "divider" }}>
+													<Grid item xs={12} sm={4}>
+														<Autocomplete
+															multiple
+															size="small"
+															options={DESTINATARIOS.map(([v]) => v)}
+															getOptionLabel={(v) => DESTINATARIOS.find(([x]) => x === v)?.[1] || v}
+															value={carga.destinatarios}
+															onChange={(_e, v) => actualizar({ destinatarios: v })}
+															renderInput={(params) => <TextField {...params} label="Destinatario/s" />}
+														/>
+													</Grid>
+													<Grid item xs={12} sm={4}>
+														<Autocomplete
+															size="small"
+															options={ACCIONES_REQUERIDAS.map(([v]) => v)}
+															getOptionLabel={(v) => ACCIONES_REQUERIDAS.find(([x]) => x === v)?.[1] || v}
+															value={carga.accion}
+															onChange={(_e, v) => actualizar({ accion: v })}
+															renderInput={(params) => <TextField {...params} label="Acción requerida" />}
+														/>
+													</Grid>
+													<Grid item xs={4} sm={1.3}>
+														<TextField
+															fullWidth
+															size="small"
+															type="number"
+															label="Plazo"
+															value={carga.plazo?.cantidad ?? ""}
+															onChange={(e) =>
+																actualizar({
+																	plazo: e.target.value === ""
+																		? null
+																		: { cantidad: parseInt(e.target.value, 10), unidad: carga.plazo?.unidad || "dias", tipo: carga.plazo?.tipo || "procesales" },
+																})
+															}
+														/>
+													</Grid>
+													<Grid item xs={4} sm={1.3}>
+														<Select
+															fullWidth
+															size="small"
+															value={carga.plazo?.unidad || "dias"}
+															onChange={(e) => carga.plazo && actualizar({ plazo: { ...carga.plazo, unidad: e.target.value as any } })}
+														>
+															<MenuItem value="dias">días</MenuItem>
+															<MenuItem value="horas">horas</MenuItem>
+															<MenuItem value="meses">meses</MenuItem>
+														</Select>
+													</Grid>
+													<Grid item xs={4} sm={1.4}>
+														<Select
+															fullWidth
+															size="small"
+															value={carga.plazo?.tipo || "procesales"}
+															onChange={(e) => carga.plazo && actualizar({ plazo: { ...carga.plazo, tipo: e.target.value as any } })}
+														>
+															<MenuItem value="procesales">procesales</MenuItem>
+															<MenuItem value="corridos">corridos</MenuItem>
+														</Select>
+													</Grid>
+													<Grid item xs={10} sm={5}>
+														<TextField
+															fullWidth
+															size="small"
+															label="Apercibimiento"
+															value={carga.apercibimiento || ""}
+															onChange={(e) => actualizar({ apercibimiento: e.target.value })}
+														/>
+													</Grid>
+													<Grid item xs={2} sm={1}>
+														<IconButton
+															size="small"
+															color="error"
+															onClick={() => setCampo(mSel.idx, "cargas", (aSel.cargas || []).filter((_x, i) => i !== ci))}
+														>
+															<Trash size={14} />
+														</IconButton>
+													</Grid>
+												</Grid>
+											);
+										})}
+									</Box>
 								)}
 
 								{modo === "libre" && (
 									<Grid container spacing={1.5} sx={{ mt: 0.25 }}>
 										<Grid item xs={12} sm={4}>
-											<TextField
-												fullWidth
+											<Autocomplete
 												size="small"
-												label="Etiqueta final (etapa/hito)"
-												value={aSel.etiqueta || ""}
-												onChange={(e) => setCampo(mSel.idx, "etiqueta", e.target.value)}
+												options={ETIQUETAS_FINALES.map(([v]) => v)}
+												getOptionLabel={(v) => ETIQUETAS_FINALES.find(([x]) => x === v)?.[1] || v}
+												value={aSel.etiqueta || null}
+												onChange={(_e, v) => setCampo(mSel.idx, "etiqueta", v)}
+												renderInput={(params) => (
+													<TextField {...params} label="Etiqueta final (etapa/hito)" helperText="Opcional — solo para dejar explícito qué etapa/hito marca este documento" />
+												)}
 											/>
 										</Grid>
 										<Grid item xs={6} sm={3}>
@@ -764,6 +830,7 @@ const EtiquetadoEditor = () => {
 												size="small"
 												type="number"
 												label="Réplica de #"
+												helperText="El # del movimiento ORIGINAL (el número tras '#' en el encabezado de este panel). Anotá completo el primero; en sus copias poné ese #."
 												value={aSel.replicaDe ?? ""}
 												onChange={(e) =>
 													setCampo(mSel.idx, "replicaDe", e.target.value === "" ? null : parseInt(e.target.value, 10))
