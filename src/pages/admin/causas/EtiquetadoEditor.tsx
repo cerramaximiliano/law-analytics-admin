@@ -710,6 +710,20 @@ const EtiquetadoEditor = () => {
 												</Tooltip>
 											)}
 										</Stack>
+										{modo === "libre" && aSel.actoProcesal && (
+											<Autocomplete
+												multiple
+												size="small"
+												options={ACTOS_PROCESALES.map(([v]) => v).filter((v) => v !== aSel.actoProcesal)}
+												getOptionLabel={(v) => ACTOS_PROCESALES.find(([x]) => x === v)?.[1] || v}
+												value={aSel.actosSecundarios || []}
+												onChange={(_e, v) => setCampo(mSel.idx, "actosSecundarios", v)}
+												renderInput={(params) => (
+													<TextField {...params} label="Actos secundarios (opcional)" placeholder="otros actos del mismo documento…" />
+												)}
+												sx={{ mt: 1, maxWidth: 620 }}
+											/>
+										)}
 									</Box>
 								)}
 								{(modo === "actoProcesal"

@@ -36,7 +36,8 @@ export interface AnotacionMovimiento {
 	funcion?: string | null;
 	modoTerminacion?: string | null; // solo si funcion=terminacion
 	estadoImpugnatorio?: string | null;
-	actoProcesal?: string | null;
+	actoProcesal?: string | null; // acto PRINCIPAL (target del clasificador)
+	actosSecundarios?: string[]; // otros actos del mismo documento (opcional)
 	resultado?: string | null; // resultado de la decisión principal
 	decisiones?: Decision[]; // disposiciones múltiples
 	cargas?: Carga[]; // cargas procesales impuestas (una por destinatario/acción)
