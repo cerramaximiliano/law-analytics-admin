@@ -204,6 +204,24 @@ const EtiquetadoEditor = () => {
 
 	const marcarDirty = (k: string) => setDirty((prev) => new Set(prev).add(k));
 
+	// Número de posición en la lista visible (el que ve el usuario). Fallback: #idx.
+	const numeroVisible = (idx: number): string => {
+		const i = movimientosVisibles.findIndex((m) => m.idx === idx);
+		return i >= 0 ? String(i + 1) : `#${idx}`;
+	};
+	// Originales que tienen réplicas apuntándoles (para el indicador ⇄).
+	const replicasDe = useMemo(() => {
+		const mapa = new Map<number, number[]>();
+		for (const [k, a] of Object.entries(anotaciones)) {
+			if (a?.replicaDe !== null && a?.replicaDe !== undefined) {
+				const arr = mapa.get(a.replicaDe) || [];
+				arr.push(parseInt(k, 10));
+				mapa.set(a.replicaDe, arr);
+			}
+		}
+		return mapa;
+	}, [anotaciones]);
+
 	// Funciones sin resultado propio: el resultado se auto-setea a "no_aplica".
 	const FUNCIONES_SIN_RESULTADO = ["impulso", "ordenacion", "suspension", "reanudacion"];
 	const estadoResultado = (a: AnotacionMovimiento): "sin_funcion" | "auto_no_aplica" | "habilitado" => {
@@ -532,7 +550,7 @@ const EtiquetadoEditor = () => {
 								Movimientos ({movimientosVisibles.length})
 								{vinculando !== null && (
 									<Typography component="span" variant="caption" sx={{ ml: 1, color: "info.main", fontWeight: 700 }}>
-										→ click en la réplica de #{vinculando} (Esc cancela)
+										→ click en la réplica del movimiento {numeroVisible(vinculando)} (Esc cancela)
 									</Typography>
 								)}
 							</Typography>
@@ -563,7 +581,7 @@ const EtiquetadoEditor = () => {
 													const { notas, ...resto } = src;
 													setAnotaciones((prev) => ({ ...prev, [String(m.idx)]: { ...resto, replicaDe: vinculando } }));
 													marcarDirty(String(m.idx));
-													enqueueSnackbar(`#${m.idx} marcado como réplica de #${vinculando} — campos copiados`, { variant: "success" });
+													enqueueSnackbar(`Movimiento ${numeroVisible(m.idx)} marcado como réplica del ${numeroVisible(vinculando)} — campos copiados`, { variant: "success" });
 												}
 												setVinculando(null);
 												return;
@@ -607,7 +625,22 @@ const EtiquetadoEditor = () => {
 												{m.dia}
 											</Typography>
 											<Chip size="small" variant="outlined" label={m.tipo.slice(0, 16)} sx={{ height: 17, fontSize: "0.6rem" }} />
-											{m.etiquetaDebil && (
+											{a?.replicaDe !== null && a?.replicaDe !== undefined && (
+											<Tooltip title={`Réplica del movimiento ${numeroVisible(a.replicaDe)} — desvinculá desde el panel`}>
+												<Chip
+													size="small"
+													color="info"
+													label={`⇄ ${numeroVisible(a.replicaDe)}`}
+													sx={{ height: 16, fontSize: "0.6rem" }}
+												/>
+											</Tooltip>
+										)}
+										{replicasDe.has(m.idx) && (
+											<Tooltip title={`Tiene réplicas: ${replicasDe.get(m.idx)!.map((r) => numeroVisible(r)).join(", ")}`}>
+												<Chip size="small" variant="outlined" color="info" label="⇄" sx={{ height: 16, fontSize: "0.6rem" }} />
+											</Tooltip>
+										)}
+										{m.etiquetaDebil && (
 												<Tooltip title="Etiqueta débil del motor (v17) — informativa, no es tu anotación">
 													<Chip
 														size="small"
@@ -737,7 +770,18 @@ const EtiquetadoEditor = () => {
 										</Tooltip>
 									)}
 									<Box sx={{ flex: 1 }} />
-									<Tooltip title={vinculando === mSel.idx ? "Cancelar vinculación" : "Vincular réplica: el próximo click en la lista copia estos campos y marca la réplica"}>
+									{aSel.replicaDe !== null && aSel.replicaDe !== undefined && (
+									<Tooltip title="Quitar el vínculo de réplica (los campos copiados se conservan)">
+										<Chip
+											size="small"
+											color="info"
+											label={`⇄ Réplica del ${numeroVisible(aSel.replicaDe)}`}
+											onDelete={() => setCampo(mSel.idx, "replicaDe", null)}
+											sx={{ height: 20, fontSize: "0.66rem" }}
+										/>
+									</Tooltip>
+								)}
+								<Tooltip title={vinculando === mSel.idx ? "Cancelar vinculación" : "Vincular réplica: el próximo click en la lista copia estos campos y marca la réplica"}>
 									<span>
 										<Button
 											size="small"
@@ -748,7 +792,7 @@ const EtiquetadoEditor = () => {
 												if (vinculando === mSel.idx) setVinculando(null);
 												else {
 													setVinculando(mSel.idx);
-													enqueueSnackbar(`Modo réplica: hacé click en el movimiento que es copia de #${mSel.idx} (Esc cancela)`, { variant: "info" });
+													enqueueSnackbar(`Modo réplica: hacé click en el movimiento que es copia del ${numeroVisible(mSel.idx)} (Esc cancela)`, { variant: "info" });
 												}
 											}}
 											sx={{ py: 0, px: 1, fontSize: "0.68rem", textTransform: "none" }}
