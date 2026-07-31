@@ -169,6 +169,7 @@ export const ACCIONES_REQUERIDAS: [string, string][] = [
 	["producir_prueba", "Producir prueba"],
 	["reconocer_desconocer_documental", "Reconocer/desconocer documental"],
 	["presentar_informe", "Presentar informe (perito/organismo)"],
+	["aceptar_cargo", "Aceptar el cargo (perito/martillero)"],
 	["comparecer_audiencia", "Comparecer a audiencia"],
 	["diligenciar_cedula", "Diligenciar cédula"],
 	["presentar_oficio", "Presentar/diligenciar oficio"],
