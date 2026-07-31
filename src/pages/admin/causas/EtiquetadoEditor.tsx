@@ -62,7 +62,7 @@ const esDocOrganismo = (m: { url: string | null; tipo: string }) =>
 const RE_ORGANO_SEGUNDA = /\b(LA\s+SALA|EL\s+TRIBUNAL|ESTA\s+SALA|CAMARA\s+NACIONAL|C[ÁA]MARA\s+FEDERAL)\b/i;
 
 // Tabs de la barra de modo: las 6 dimensiones principales + Modo term. y Firmeza.
-const MODOS_BARRA: DimKey[] = [...DIMENSIONES_ORDEN, "modoTerminacion", "estadoImpugnatorio"];
+const MODOS_BARRA: (DimKey | "actoProcesal")[] = ["actoProcesal", ...DIMENSIONES_ORDEN, "modoTerminacion", "estadoImpugnatorio"];
 
 // Semáforo de dimensiones en la lista: un cuadradito por campo, en el mismo
 // orden y color que el panel derecho — apagado si no está marcado.
@@ -104,7 +104,7 @@ const EtiquetadoEditor = () => {
 	const [estado, setEstado] = useState<EstadoAnotacion>("pendiente");
 	const [guardando, setGuardando] = useState(false);
 	// Modo de anotación: "libre" (todas las dimensiones) o una dimensión foco
-	const [modo, setModo] = useState<"libre" | DimKey>("libre");
+	const [modo, setModo] = useState<"libre" | DimKey | "actoProcesal">("libre");
 	// Cuerpos traídos bajo demanda, por idx de movimiento
 	const [cuerposOnDemand, setCuerposOnDemand] = useState<Record<number, CuerpoOnDemand>>({});
 	const [trayendoCuerpo, setTrayendoCuerpo] = useState(false);
@@ -161,6 +161,13 @@ const EtiquetadoEditor = () => {
 				return a && ((a as any)[dim] || a.descartar);
 			});
 			if (ok) completas.add(dim);
+		}
+		// Acto procesal: completo cuando todos los docs de organismo lo tienen.
+		if (organismo.every((m) => {
+			const a = anotaciones[String(m.idx)];
+			return a && (a.actoProcesal || a.descartar);
+		})) {
+			completas.add("actoProcesal");
 		}
 		// Modo de terminación: solo exigible en los docs con Función = terminación.
 		const conTerminacion = organismo.filter((m) => anotaciones[String(m.idx)]?.funcion === "terminacion");
@@ -313,6 +320,7 @@ const EtiquetadoEditor = () => {
 			} else if (modo !== "libre" && seleccionado !== null && /^[0-9]$/.test(e.key)) {
 				e.preventDefault();
 				const n = parseInt(e.key, 10);
+				if (modo === "actoProcesal") return; // el acto se elige con el buscador
 				// Validación Función → Resultado / Modo de terminación por teclado
 				if (modo === "resultado") {
 					const est = estadoResultado(anotaciones[String(seleccionado)] || {});
@@ -483,7 +491,7 @@ const EtiquetadoEditor = () => {
 						</ToggleButton>
 						{MODOS_BARRA.map((d) => (
 							<ToggleButton key={d} value={d} sx={{ py: 0.25, px: 1.25, textTransform: "none", fontSize: "0.74rem", gap: 0.4 }}>
-								{DIM_LABELS[d].corto}
+								{d === "actoProcesal" ? "Acto" : DIM_LABELS[d].corto}
 								{dimsCompletas.has(d) && <TickCircle size={13} variant="Bold" color={theme.palette.success.main} />}
 							</ToggleButton>
 						))}
@@ -672,7 +680,7 @@ const EtiquetadoEditor = () => {
 								</Typography>
 
 								{/* Acto-primero: elegir el acto autocompleta las demás dimensiones (solo vacías) */}
-								{modo === "libre" && (
+								{(modo === "libre" || modo === "actoProcesal") && (
 									<Box sx={{ mb: 1.5 }}>
 										<Typography
 											variant="caption"
@@ -687,7 +695,10 @@ const EtiquetadoEditor = () => {
 												options={ACTOS_PROCESALES.map(([v]) => v)}
 												getOptionLabel={(v) => ACTOS_PROCESALES.find(([x]) => x === v)?.[1] || v}
 												value={aSel.actoProcesal || null}
-												onChange={(_e, v) => aplicarActo(mSel.idx, v)}
+												onChange={(_e, v) => {
+													aplicarActo(mSel.idx, v);
+													if (modo === "actoProcesal" && v) irA(1, mSel.idx);
+												}}
 												renderInput={(params) => <TextField {...params} placeholder="Buscar acto… (corre traslado, homologa, resuelve fondo…)" />}
 												sx={{ flex: 1, maxWidth: 460 }}
 											/>
@@ -701,7 +712,9 @@ const EtiquetadoEditor = () => {
 										</Stack>
 									</Box>
 								)}
-								{(modo === "libre"
+								{(modo === "actoProcesal"
+									? ([] as DimKey[])
+									: modo === "libre"
 									? ([...DIMENSIONES_ORDEN, ...(aSel.funcion === "terminacion" ? (["modoTerminacion"] as DimKey[]) : []), "estadoImpugnatorio"] as DimKey[])
 									: [modo as DimKey]
 								).map((dim) => {
