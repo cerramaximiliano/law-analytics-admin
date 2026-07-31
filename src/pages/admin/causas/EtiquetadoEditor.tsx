@@ -61,6 +61,20 @@ const esDocOrganismo = (m: { url: string | null; tipo: string }) =>
 // del texto): "LA SALA"/"EL TRIBUNAL" en el encabezado del cuerpo → segunda.
 const RE_ORGANO_SEGUNDA = /\b(LA\s+SALA|EL\s+TRIBUNAL|ESTA\s+SALA|CAMARA\s+NACIONAL|C[ÁA]MARA\s+FEDERAL)\b/i;
 
+// Semáforo de dimensiones en la lista: un cuadradito por campo, en el mismo
+// orden y color que el panel derecho — apagado si no está marcado.
+const DIMS_CUADROS: [DimKey | "actoProcesal", string][] = [
+	["actoProcesal", "Acto"],
+	["tipoResolucion", "Tipo"],
+	["instancia", "Instancia"],
+	["materia", "Materia"],
+	["contexto", "Contexto"],
+	["funcion", "Función"],
+	["modoTerminacion", "Modo term."],
+	["estadoImpugnatorio", "Firmeza"],
+	["resultado", "Resultado"],
+];
+
 const ESTADO_COLOR: Record<EstadoAnotacion, "default" | "warning" | "info" | "success" | "error"> = {
 	pendiente: "default",
 	en_progreso: "warning",
@@ -488,22 +502,53 @@ const EtiquetadoEditor = () => {
 										<Typography variant="caption" sx={{ display: "block", lineHeight: 1.3, fontWeight: esResol ? 600 : 400 }}>
 											{m.detalle.slice(0, 110)}
 										</Typography>
-										{anotado && (
-											<Stack direction="row" spacing={0.4} sx={{ mt: 0.25 }} flexWrap="wrap" useFlexGap>
-												{(["actoProcesal", ...DIMENSIONES_ORDEN, "modoTerminacion"] as string[])
-													.filter((d) => (a as any)[d])
-													.map((d) => (
-														<Chip
-															key={d}
-															size="small"
-															color={DIM_CHIP_COLOR[d] || "default"}
-															label={(a as any)[d]}
-															sx={{ height: 16, fontSize: "0.58rem" }}
+										<Stack direction="row" spacing={0.45} alignItems="center" sx={{ mt: 0.35 }}>
+											{DIMS_CUADROS.map(([d, nombre]) => {
+												const valor = (a as any)?.[d] || null;
+												const cName = DIM_CHIP_COLOR[d];
+												const col =
+													cName && cName !== "default" ? (theme.palette as any)[cName].main : theme.palette.text.secondary;
+												const valorLabel = valor
+													? (d === "actoProcesal"
+															? ACTOS_PROCESALES.find(([v]) => v === valor)?.[1]
+															: DIM_LABELS[d as DimKey]?.opciones.find(([v]) => v === valor)?.[1]) || valor
+													: "sin marcar";
+												return (
+													<Tooltip key={d} title={`${nombre}: ${valorLabel}`}>
+														<Box
+															sx={{
+																width: 9,
+																height: 9,
+																borderRadius: "2px",
+																bgcolor: valor ? col : alpha(col, isDark ? 0.14 : 0.12),
+																border: `1px solid ${alpha(col, valor ? 1 : 0.35)}`,
+															}}
 														/>
-													))}
-												{a.descartar && <Chip size="small" color="error" label="descartar" sx={{ height: 16, fontSize: "0.58rem" }} />}
-											</Stack>
-										)}
+													</Tooltip>
+												);
+											})}
+											{(a?.decisiones?.length || 0) > 0 && (
+												<Tooltip title={`Decisiones: ${a!.decisiones!.length}`}>
+													<Typography variant="caption" sx={{ fontSize: "0.6rem", fontWeight: 700, color: "success.main", lineHeight: 1 }}>
+														D{a!.decisiones!.length}
+													</Typography>
+												</Tooltip>
+											)}
+											{(a?.cargas?.length || 0) > 0 && (
+												<Tooltip title={`Cargas procesales: ${a!.cargas!.length}`}>
+													<Typography variant="caption" sx={{ fontSize: "0.6rem", fontWeight: 700, color: "info.main", lineHeight: 1 }}>
+														C{a!.cargas!.length}
+													</Typography>
+												</Tooltip>
+											)}
+											{a?.descartar && (
+												<Tooltip title="Descartado del entrenamiento">
+													<Typography variant="caption" sx={{ fontSize: "0.62rem", fontWeight: 700, color: "error.main", lineHeight: 1 }}>
+														✕
+													</Typography>
+												</Tooltip>
+											)}
+										</Stack>
 									</Box>
 								);
 							})}
