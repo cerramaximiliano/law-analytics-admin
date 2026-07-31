@@ -225,39 +225,47 @@ const EtiquetadoEditor = () => {
 		marcarDirty(k);
 	};
 
-	// Acto-primero: setea el acto y autocompleta SOLO las dimensiones VACÍAS con
-	// la combinación típica — lo marcado a mano nunca se pisa. La instancia se
-	// sugiere desde el encabezado del cuerpo. Feedback: snackbar con lo llenado.
+	// Acto-primero (modo SUGERENCIA, 2026-07-31): elegir el acto marca SOLO el
+	// acto. La combinación típica se muestra como sugerencias visuales (borde
+	// punteado ✦) sobre los campos vacíos — se aceptan una por una con click, o
+	// todas juntas con "Aplicar sugerencias". Nada se escribe solo.
 	const aplicarActo = (idx: number, acto: string | null) => {
-		const k = String(idx);
-		const llenados: string[] = [];
+		setCampo(idx, "actoProcesal", acto);
+	};
+
+	// Sugerencias para el movimiento seleccionado: combinación típica del acto
+	// (solo sobre campos vacíos) + instancia sugerida por el encabezado.
+	const sugerencias = useMemo((): Partial<Record<string, string>> => {
+		if (seleccionado === null) return {};
+		const a = anotaciones[String(seleccionado)] || {};
+		if (!a.actoProcesal) return {};
+		const s: Partial<Record<string, string>> = {};
+		const base = ACTO_AUTOFILL[a.actoProcesal] || {};
+		for (const [dim, valor] of Object.entries(base)) {
+			if (!(a as any)[dim]) s[dim] = valor;
+		}
+		if (!a.instancia) {
+			const cuerpo = cuerpoDe(seleccionado);
+			s.instancia = cuerpo && RE_ORGANO_SEGUNDA.test(cuerpo.encabezado || "") ? "segunda_instancia" : "primera_instancia";
+		}
+		return s;
+	}, [seleccionado, anotaciones, cuerpoDe]);
+
+	const aplicarSugerencias = () => {
+		if (seleccionado === null || !Object.keys(sugerencias).length) return;
+		const k = String(seleccionado);
 		setAnotaciones((prev) => {
 			const actual = { ...(prev[k] || {}) };
-			actual.actoProcesal = acto;
-			if (acto && ACTO_AUTOFILL[acto]) {
-				for (const [dim, valor] of Object.entries(ACTO_AUTOFILL[acto])) {
-					if (!(actual as any)[dim]) {
-						(actual as any)[dim] = valor;
-						llenados.push(DIM_LABELS[dim as DimKey]?.corto || dim);
-					}
-				}
-			}
-			if (acto && !actual.instancia) {
-				const cuerpo = cuerpoDe(idx);
-				actual.instancia = cuerpo && RE_ORGANO_SEGUNDA.test(cuerpo.encabezado || "") ? "segunda_instancia" : "primera_instancia";
-				llenados.push("Instancia (sugerida)");
+			for (const [dim, valor] of Object.entries(sugerencias)) {
+				if (!(actual as any)[dim]) (actual as any)[dim] = valor;
 			}
 			return { ...prev, [k]: actual };
 		});
 		marcarDirty(k);
-		if (acto) {
-			enqueueSnackbar(
-				llenados.length
-					? `Autocompletado (solo campos vacíos): ${llenados.join(", ")}. Lo marcado a mano no se toca.`
-					: "Acto marcado — no había campos vacíos para autocompletar.",
-				{ variant: "info", autoHideDuration: 3500 },
-			);
-		}
+		enqueueSnackbar(`Sugerencias aplicadas: ${Object.keys(sugerencias).map((d) => DIM_LABELS[d as DimKey]?.corto || d).join(", ")}`, {
+			variant: "success",
+			autoHideDuration: 2500,
+		});
 	};
 
 	const setDecisiones = (idx: number, decisiones: Decision[]) => {
@@ -671,17 +679,26 @@ const EtiquetadoEditor = () => {
 											fontWeight={700}
 											sx={{ textTransform: "uppercase", letterSpacing: 0.5, color: "primary.main" }}
 										>
-											Acto procesal (completa solo los campos vacíos — lo manual no se pisa)
+											Acto procesal (sugiere la combinación típica — nada se escribe solo)
 										</Typography>
-										<Autocomplete
-											size="small"
-											options={ACTOS_PROCESALES.map(([v]) => v)}
-											getOptionLabel={(v) => ACTOS_PROCESALES.find(([x]) => x === v)?.[1] || v}
-											value={aSel.actoProcesal || null}
-											onChange={(_e, v) => aplicarActo(mSel.idx, v)}
-											renderInput={(params) => <TextField {...params} placeholder="Buscar acto… (corre traslado, homologa, resuelve fondo…)" />}
-											sx={{ mt: 0.5, maxWidth: 460 }}
-										/>
+										<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+											<Autocomplete
+												size="small"
+												options={ACTOS_PROCESALES.map(([v]) => v)}
+												getOptionLabel={(v) => ACTOS_PROCESALES.find(([x]) => x === v)?.[1] || v}
+												value={aSel.actoProcesal || null}
+												onChange={(_e, v) => aplicarActo(mSel.idx, v)}
+												renderInput={(params) => <TextField {...params} placeholder="Buscar acto… (corre traslado, homologa, resuelve fondo…)" />}
+												sx={{ flex: 1, maxWidth: 460 }}
+											/>
+											{Object.keys(sugerencias).length > 0 && (
+												<Tooltip title="Acepta todas las sugerencias ✦ de una vez (solo campos vacíos)">
+													<Button size="small" variant="outlined" onClick={aplicarSugerencias}>
+														Aplicar sugerencias ({Object.keys(sugerencias).length})
+													</Button>
+												</Tooltip>
+											)}
+										</Stack>
 									</Box>
 								)}
 								{(modo === "libre"
@@ -701,7 +718,9 @@ const EtiquetadoEditor = () => {
 										modoTermBloqueado;
 									const renderBotones = (valores: string[]) => (
 										<ToggleButtonGroup size="small" exclusive value={(aSel as any)[dim] || null} sx={{ flexWrap: "wrap" }}>
-											{valores.map((valor) => (
+											{valores.map((valor) => {
+												const esSugerido = !(aSel as any)[dim] && (sugerencias as any)[dim] === valor;
+												return (
 												<ToggleButton
 													key={valor}
 													value={valor}
@@ -712,6 +731,9 @@ const EtiquetadoEditor = () => {
 														px: modo === "libre" ? 1 : 1.75,
 														fontSize: modo === "libre" ? "0.72rem" : "0.85rem",
 														textTransform: "none",
+														...(esSugerido && {
+															border: `1.5px dashed ${theme.palette.warning.main} !important`,
+														}),
 													}}
 												>
 													{modo !== "libre" && (
@@ -723,9 +745,15 @@ const EtiquetadoEditor = () => {
 															{numeroDe(valor)}
 														</Typography>
 													)}
+													{esSugerido && (
+														<Typography component="span" variant="caption" sx={{ mr: 0.4, color: "warning.main" }}>
+															✦
+														</Typography>
+													)}
 													{etiquetaDe(valor)}
 												</ToggleButton>
-											))}
+												);
+											})}
 										</ToggleButtonGroup>
 									);
 									return (
