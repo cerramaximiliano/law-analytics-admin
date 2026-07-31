@@ -62,7 +62,14 @@ const esDocOrganismo = (m: { url: string | null; tipo: string }) =>
 const RE_ORGANO_SEGUNDA = /\b(LA\s+SALA|EL\s+TRIBUNAL|ESTA\s+SALA|CAMARA\s+NACIONAL|C[ÁA]MARA\s+FEDERAL)\b/i;
 
 // Tabs de la barra de modo: las 6 dimensiones principales + Modo term. y Firmeza.
-const MODOS_BARRA: (DimKey | "actoProcesal")[] = ["actoProcesal", ...DIMENSIONES_ORDEN, "modoTerminacion", "estadoImpugnatorio"];
+const MODOS_BARRA: (DimKey | "actoProcesal" | "decisiones" | "cargas")[] = [
+	"actoProcesal",
+	...DIMENSIONES_ORDEN,
+	"modoTerminacion",
+	"estadoImpugnatorio",
+	"decisiones",
+	"cargas",
+];
 
 // Semáforo de dimensiones en la lista: un cuadradito por campo, en el mismo
 // orden y color que el panel derecho — apagado si no está marcado.
@@ -104,7 +111,7 @@ const EtiquetadoEditor = () => {
 	const [estado, setEstado] = useState<EstadoAnotacion>("pendiente");
 	const [guardando, setGuardando] = useState(false);
 	// Modo de anotación: "libre" (todas las dimensiones) o una dimensión foco
-	const [modo, setModo] = useState<"libre" | DimKey | "actoProcesal">("libre");
+	const [modo, setModo] = useState<"libre" | DimKey | "actoProcesal" | "decisiones" | "cargas">("libre");
 	// Cuerpos traídos bajo demanda, por idx de movimiento
 	const [cuerposOnDemand, setCuerposOnDemand] = useState<Record<number, CuerpoOnDemand>>({});
 	const [trayendoCuerpo, setTrayendoCuerpo] = useState(false);
@@ -320,7 +327,7 @@ const EtiquetadoEditor = () => {
 			} else if (modo !== "libre" && seleccionado !== null && /^[0-9]$/.test(e.key)) {
 				e.preventDefault();
 				const n = parseInt(e.key, 10);
-				if (modo === "actoProcesal") return; // el acto se elige con el buscador
+				if (modo === "actoProcesal" || modo === "decisiones" || modo === "cargas") return; // se cargan con el mouse
 				// Validación Función → Resultado / Modo de terminación por teclado
 				if (modo === "resultado") {
 					const est = estadoResultado(anotaciones[String(seleccionado)] || {});
@@ -491,7 +498,7 @@ const EtiquetadoEditor = () => {
 						</ToggleButton>
 						{MODOS_BARRA.map((d) => (
 							<ToggleButton key={d} value={d} sx={{ py: 0.25, px: 1.25, textTransform: "none", fontSize: "0.74rem", gap: 0.4 }}>
-								{d === "actoProcesal" ? "Acto" : DIM_LABELS[d].corto}
+								{d === "actoProcesal" ? "Acto" : d === "decisiones" ? "Decisiones" : d === "cargas" ? "Cargas" : DIM_LABELS[d].corto}
 								{dimsCompletas.has(d) && <TickCircle size={13} variant="Bold" color={theme.palette.success.main} />}
 							</ToggleButton>
 						))}
@@ -499,6 +506,12 @@ const EtiquetadoEditor = () => {
 					<Typography variant="caption" color="text.secondary">
 						{modo === "libre"
 							? "↑/↓ navegan movimientos. Elegí una dimensión para anotar en serie con las teclas 1-9 (0 limpia)."
+							: modo === "actoProcesal"
+							? "Anotando el Acto procesal: buscá y seleccioná — avanza solo al siguiente movimiento · ↑/↓ navegan."
+							: modo === "decisiones"
+							? "Cargando Decisiones (una por disposición de la parte resolutiva) · ↑/↓ navegan movimientos."
+							: modo === "cargas"
+							? "Cargando Cargas procesales (destinatario · acción · plazo · apercibimiento) · ↑/↓ navegan movimientos."
 							: `Anotando "${DIM_LABELS[modo as DimKey].titulo}": teclas 1-${DIM_LABELS[modo as DimKey].opciones.length} asignan y avanzan · 0 limpia · ↑/↓ navegan.`}
 					</Typography>
 				</Stack>
@@ -615,20 +628,28 @@ const EtiquetadoEditor = () => {
 													</Tooltip>
 												);
 											})}
-											{(a?.decisiones?.length || 0) > 0 && (
-												<Tooltip title={`Decisiones: ${a!.decisiones!.length}`}>
-													<Typography variant="caption" sx={{ fontSize: "0.6rem", fontWeight: 700, color: "success.main", lineHeight: 1 }}>
-														D{a!.decisiones!.length}
-													</Typography>
-												</Tooltip>
-											)}
-											{(a?.cargas?.length || 0) > 0 && (
-												<Tooltip title={`Cargas procesales: ${a!.cargas!.length}`}>
-													<Typography variant="caption" sx={{ fontSize: "0.6rem", fontWeight: 700, color: "info.main", lineHeight: 1 }}>
-														C{a!.cargas!.length}
-													</Typography>
-												</Tooltip>
-											)}
+											<Tooltip title={`Decisiones: ${a?.decisiones?.length || 0}`}>
+												<Box
+													sx={{
+														width: 9,
+														height: 9,
+														borderRadius: "2px",
+														bgcolor: (a?.decisiones?.length || 0) > 0 ? theme.palette.secondary.main : alpha(theme.palette.secondary.main, isDark ? 0.14 : 0.12),
+														border: `1px solid ${alpha(theme.palette.secondary.main, (a?.decisiones?.length || 0) > 0 ? 1 : 0.35)}`,
+													}}
+												/>
+											</Tooltip>
+											<Tooltip title={`Cargas procesales: ${a?.cargas?.length || 0}`}>
+												<Box
+													sx={{
+														width: 9,
+														height: 9,
+														borderRadius: "2px",
+														bgcolor: (a?.cargas?.length || 0) > 0 ? theme.palette.info.main : alpha(theme.palette.info.main, isDark ? 0.14 : 0.12),
+														border: `1px solid ${alpha(theme.palette.info.main, (a?.cargas?.length || 0) > 0 ? 1 : 0.35)}`,
+													}}
+												/>
+											</Tooltip>
 											{a?.descartar && (
 												<Tooltip title="Descartado del entrenamiento">
 													<Typography variant="caption" sx={{ fontSize: "0.62rem", fontWeight: 700, color: "error.main", lineHeight: 1 }}>
@@ -726,7 +747,7 @@ const EtiquetadoEditor = () => {
 										)}
 									</Box>
 								)}
-								{(modo === "actoProcesal"
+								{(modo === "actoProcesal" || modo === "decisiones" || modo === "cargas"
 									? ([] as DimKey[])
 									: modo === "libre"
 									? ([...DIMENSIONES_ORDEN, ...(aSel.funcion === "terminacion" ? (["modoTerminacion"] as DimKey[]) : []), "estadoImpugnatorio"] as DimKey[])
@@ -831,7 +852,7 @@ const EtiquetadoEditor = () => {
 								})}
 
 								{/* Decisiones múltiples: una fila por disposición de la parte resolutiva */}
-								{modo === "libre" && (
+								{modo === "decisiones" && (
 									<Box sx={{ mb: 1.25 }}>
 										<Stack direction="row" alignItems="center" spacing={1}>
 											<Typography variant="caption" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: 0.5, color: "text.secondary" }}>
@@ -894,7 +915,7 @@ const EtiquetadoEditor = () => {
 								{/* Cargas procesales del acto: quién debe hacer qué, plazo y apercibimiento.
 								    Un acto puede imponer VARIAS (traslado a la demandada + intimación al
 								    letrado en el mismo proveído) — una fila por carga. */}
-								{modo === "libre" && (
+								{modo === "cargas" && (
 									<Box sx={{ mb: 1.25 }}>
 										<Stack direction="row" alignItems="center" spacing={1}>
 											<Typography variant="caption" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: 0.5, color: "text.secondary" }}>
