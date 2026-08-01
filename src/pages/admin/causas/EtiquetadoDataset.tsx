@@ -22,13 +22,16 @@ import {
 	IconButton,
 	useTheme,
 	alpha,
+	Button,
+	Collapse,
+	Divider,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import MainCard from "components/MainCard";
 import { Edit2, Refresh } from "iconsax-react";
 import EtapaAnotacionesService, { EstadoAnotacion, ItemCola } from "api/etapaAnotaciones";
 import { BRAND_BLUE } from "themes/dashboardTokens";
-import { DIM_LABELS, DimKey } from "./etiquetadoTaxonomia";
+import { ACCIONES_REQUERIDAS, ACTOS_PROCESALES, DIM_LABELS, DimKey, OBJETOS_DECIDIDOS } from "./etiquetadoTaxonomia";
 
 const ESTADO_COLOR: Record<EstadoAnotacion, "default" | "warning" | "info" | "success" | "error"> = {
 	pendiente: "default",
@@ -54,6 +57,31 @@ const EtiquetadoDataset = () => {
 	const [rowsPerPage, setRowsPerPage] = useState(25);
 	const [estadoFilter, setEstadoFilter] = useState<string>("todos");
 	const [fueroFilter, setFueroFilter] = useState<string>("todos");
+	// Tablero de cobertura de clases (carga on-demand al abrir)
+	const [coberturaAbierta, setCoberturaAbierta] = useState(false);
+	const [cobertura, setCobertura] = useState<Awaited<ReturnType<typeof EtapaAnotacionesService.getCobertura>> | null>(null);
+	const [coberturaLoading, setCoberturaLoading] = useState(false);
+
+	const abrirCobertura = async () => {
+		const abrir = !coberturaAbierta;
+		setCoberturaAbierta(abrir);
+		if (abrir && !cobertura) {
+			setCoberturaLoading(true);
+			try {
+				setCobertura(await EtapaAnotacionesService.getCobertura());
+			} catch (e: any) {
+				setError(e?.response?.data?.message || e.message);
+				setCoberturaAbierta(false);
+			} finally {
+				setCoberturaLoading(false);
+			}
+		}
+	};
+
+	const labelDeValor = (dim: string, v: string) =>
+		dim === "actoProcesal"
+			? ACTOS_PROCESALES.find(([x]) => x === v)?.[1] || v
+			: DIM_LABELS[dim as DimKey]?.opciones.find(([x]) => x === v)?.[1] || v;
 
 	const cargar = useCallback(async () => {
 		setLoading(true);
@@ -83,9 +111,14 @@ const EtiquetadoDataset = () => {
 		<MainCard
 			title="Etiquetado de dataset — etapas procesales"
 			secondary={
-				<IconButton size="small" onClick={cargar}>
-					<Refresh size={18} />
-				</IconButton>
+				<Stack direction="row" spacing={1} alignItems="center">
+					<Button size="small" variant={coberturaAbierta ? "contained" : "outlined"} onClick={abrirCobertura}>
+						Cobertura de clases
+					</Button>
+					<IconButton size="small" onClick={cargar}>
+						<Refresh size={18} />
+					</IconButton>
+				</Stack>
 			}
 		>
 			<Typography variant="body2" color="text.secondary" sx={{ mb: 2, maxWidth: 720 }}>
@@ -93,6 +126,136 @@ const EtiquetadoDataset = () => {
 				sus movimientos, las etiquetas débiles del motor y el cuerpo segmentado de las resoluciones capturadas. También podés
 				sumar causas a la cola desde <b>Carpetas verificadas</b> con el botón de etiquetado.
 			</Typography>
+
+			{/* ── Tablero de cobertura: qué clases ya tienen ejemplos y cuáles faltan;
+			    causas pendientes sugeridas por señales de clases subrepresentadas ── */}
+			<Collapse in={coberturaAbierta}>
+				<Card variant="outlined" sx={{ p: 2, mb: 2 }}>
+					{coberturaLoading || !cobertura ? (
+						<Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+							<CircularProgress size={28} />
+						</Box>
+					) : (
+						<>
+							<Typography variant="subtitle1" fontWeight={700}>
+								Cobertura del gold set — {cobertura.causas.total} causas · {cobertura.causas.movimientosAnotados} movimientos
+								anotados
+							</Typography>
+							<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+								Los valores en gris punteado todavía no tienen NINGÚN ejemplo — son los que conviene cazar en las próximas
+								causas.
+							</Typography>
+							{["actoProcesal", "funcion", "resultado", "modoTerminacion", "materia"].map((dim) => (
+								<Box key={dim} sx={{ mt: 1.25 }}>
+									<Typography variant="caption" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
+										{dim === "actoProcesal" ? "Acto procesal" : DIM_LABELS[dim as DimKey]?.titulo || dim}
+									</Typography>
+									<Stack direction="row" flexWrap="wrap" useFlexGap sx={{ gap: 0.5, mt: 0.4 }}>
+										{(cobertura.distribucion[dim] || []).map(({ valor, n }) => (
+											<Chip
+												key={valor}
+												size="small"
+												label={`${labelDeValor(dim, valor)} ${n}`}
+												variant={n > 0 ? "filled" : "outlined"}
+												sx={{
+													fontSize: "0.66rem",
+													height: 20,
+													...(n === 0 && { opacity: 0.55, borderStyle: "dashed", color: "text.disabled" }),
+												}}
+											/>
+										))}
+									</Stack>
+								</Box>
+							))}
+							{cobertura.objetosDecididos.length > 0 && (
+								<Box sx={{ mt: 1.25 }}>
+									<Typography variant="caption" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
+										Objetos decididos (Decisiones)
+									</Typography>
+									<Stack direction="row" flexWrap="wrap" useFlexGap sx={{ gap: 0.5, mt: 0.4 }}>
+										{cobertura.objetosDecididos.map(({ valor, n }) => (
+											<Chip
+												key={valor}
+												size="small"
+												label={`${OBJETOS_DECIDIDOS.find(([x]) => x === valor)?.[1] || valor} ${n}`}
+												sx={{ fontSize: "0.66rem", height: 20 }}
+											/>
+										))}
+									</Stack>
+								</Box>
+							)}
+							{cobertura.acciones.length > 0 && (
+								<Box sx={{ mt: 1.25 }}>
+									<Typography variant="caption" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
+										Acciones requeridas (Cargas)
+									</Typography>
+									<Stack direction="row" flexWrap="wrap" useFlexGap sx={{ gap: 0.5, mt: 0.4 }}>
+										{cobertura.acciones.map(({ valor, n }) => (
+											<Chip
+												key={valor}
+												size="small"
+												label={`${ACCIONES_REQUERIDAS.find(([x]) => x === valor)?.[1] || valor} ${n}`}
+												sx={{ fontSize: "0.66rem", height: 20 }}
+											/>
+										))}
+									</Stack>
+								</Box>
+							)}
+							<Divider sx={{ my: 1.5 }} />
+							<Typography variant="subtitle2" fontWeight={700}>
+								Próximas causas sugeridas (por señales de clases faltantes)
+							</Typography>
+							<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.75 }}>
+								Cada señal pesa 1/(1+ejemplos ya anotados): anotar estas causas suma las clases que hoy faltan.
+							</Typography>
+							{cobertura.sugeridas.length === 0 ? (
+								<Typography variant="body2" color="text.secondary">
+									Sin candidatas con señales — la cola pendiente no aporta clases nuevas.
+								</Typography>
+							) : (
+								<Stack spacing={0.5}>
+									{cobertura.sugeridas.map((sug) => (
+										<Stack
+											key={`${sug.fuero}-${sug.causaId}`}
+											direction="row"
+											alignItems="center"
+											flexWrap="wrap"
+											useFlexGap
+											sx={{ gap: 0.75, py: 0.4, px: 1, borderRadius: 1, "&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.08 : 0.04) } }}
+										>
+											<Chip size="small" variant="outlined" label={sug.fuero} sx={{ height: 20, fontSize: "0.66rem" }} />
+											<Typography variant="body2" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
+												{sug.number}/{sug.year}
+											</Typography>
+											<Typography variant="caption" sx={{ flex: 1, minWidth: 160 }} noWrap>
+												{sug.caratula || "—"}
+											</Typography>
+											{sug.senales.map((se) => (
+												<Chip
+													key={se.clave}
+													size="small"
+													color="info"
+													variant="outlined"
+													label={`${se.clave}×${se.hits}`}
+													sx={{ height: 18, fontSize: "0.62rem" }}
+												/>
+											))}
+											<Button
+												size="small"
+												variant="text"
+												sx={{ py: 0, minWidth: 0 }}
+												onClick={() => navigate(`/admin/causas/etiquetado/${sug.fuero}/${sug.causaId}`)}
+											>
+												Abrir
+											</Button>
+										</Stack>
+									))}
+								</Stack>
+							)}
+						</>
+					)}
+				</Card>
+			</Collapse>
 
 			<Stack direction="row" spacing={1} sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
 				{Object.entries(porEstado).map(([e, n]) => (

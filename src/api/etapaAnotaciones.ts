@@ -156,6 +156,28 @@ export class EtapaAnotacionesService {
 		return (data.membership || {}) as Record<string, { estado: EstadoAnotacion; motivo: string }>;
 	}
 
+	static async getCobertura() {
+		const { data } = await workersAxios.get("/api/admin/etapa-anotaciones/cobertura");
+		return data as {
+			success: boolean;
+			causas: { total: number; movimientosAnotados: number };
+			distribucion: Record<string, { valor: string; n: number }[]>;
+			objetosDecididos: { valor: string; n: number }[];
+			acciones: { valor: string; n: number }[];
+			pesoSenal: Record<string, number>;
+			sugeridas: {
+				fuero: string;
+				causaId: string;
+				number: number;
+				year: number;
+				caratula?: string;
+				estado: EstadoAnotacion;
+				score: number;
+				senales: { clave: string; hits: number }[];
+			}[];
+		};
+	}
+
 	static async getCausa(fuero: string, id: string) {
 		const { data } = await workersAxios.get(`/api/admin/etapa-anotaciones/causa/${fuero}/${id}`);
 		return data as CausaParaAnotar;
