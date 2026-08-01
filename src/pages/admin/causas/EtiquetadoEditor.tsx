@@ -395,39 +395,23 @@ const EtiquetadoEditor = () => {
 		return Array.from(set);
 	}, [anotaciones]);
 
-	// Sugerencias para el movimiento seleccionado: combinación típica del acto
-	// (solo sobre campos vacíos) + instancia sugerida por el encabezado.
-	const sugerencias = useMemo((): Partial<Record<string, string>> => {
-		if (seleccionado === null) return {};
-		const a = anotaciones[String(seleccionado)] || {};
-		if (!a.actoProcesal) return {};
-		const s: Partial<Record<string, string>> = {};
-		const base = ACTO_AUTOFILL[a.actoProcesal] || {};
-		for (const [dim, valor] of Object.entries(base)) {
-			if (!(a as any)[dim]) s[dim] = valor;
-		}
-		if (!a.instancia) {
-			const cuerpo = cuerpoDe(seleccionado);
-			s.instancia = cuerpo && RE_ORGANO_SEGUNDA.test(cuerpo.encabezado || "") ? "segunda_instancia" : "primera_instancia";
-		}
-		return s;
-	}, [seleccionado, anotaciones, cuerpoDe]);
-
 	// Detector de pares primera ↔ segunda instancia: si el movimiento seleccionado
-	// parece una revisión de alzada (acto resuelve_recurso, o instancia segunda
-	// elegida/sugerida), busca hacia atrás (idx mayor = más antiguo) la decisión
-	// anotada con objetos decididos y una señal de apelación en el medio
-	// (concede_recurso / eleva_autos anotado, o detalle "CONCEDE/ELEVA"). Devuelve
-	// la sugerencia de filas de Decisiones — sugerencia, nunca autofill. El par
-	// puede no existir: sin señal no se sugiere nada.
+	// parece una revisión de alzada (acto resuelve_recurso, instancia segunda
+	// elegida, o encabezado de Sala), busca hacia atrás (idx mayor = más antiguo)
+	// la decisión anotada con objetos decididos y una señal de apelación en el
+	// medio (concede_recurso / eleva_autos anotado, o detalle "CONCEDE/ELEVA").
+	// Alimenta: filas espejo de Decisiones, sugerencia ✦ de Función=decisión y
+	// el aviso anti-doble-terminación. Sugerencia, nunca autofill; sin señal no
+	// se ofrece nada (el par puede no existir).
 	const parAlzada = useMemo(() => {
 		if (seleccionado === null || !data) return null;
 		const a = anotaciones[String(seleccionado)] || {};
-		if (a.descartar) return null;
+		if (a.descartar || a.actoProcesal === "ninguno") return null;
+		const cuerpo = cuerpoDe(seleccionado);
 		const esRevision =
 			a.actoProcesal === "resuelve_recurso" ||
 			a.instancia === "segunda_instancia" ||
-			(!a.instancia && (sugerencias as any).instancia === "segunda_instancia");
+			(!a.instancia && !!cuerpo && RE_ORGANO_SEGUNDA.test(cuerpo.encabezado || ""));
 		if (!esRevision) return null;
 		const anotados = Object.entries(anotaciones)
 			.map(([k, an]) => ({ idx: parseInt(k, 10), an }))
@@ -448,11 +432,32 @@ const EtiquetadoEditor = () => {
 			)
 			.sort((p, q) => p.idx - q.idx); // el más cercano en el tiempo primero
 		for (const c of candidatos) {
+			if (!senalEntre(c.idx)) continue;
 			const filas = (c.an.decisiones || []).filter((dd) => dd.objetoDecidido && !yaTiene.has(dd.objetoDecidido));
-			if (filas.length && senalEntre(c.idx)) return { idxOrigen: c.idx, filas };
+			return { idxOrigen: c.idx, filas, origenTerminacion: c.an.funcion === "terminacion" };
 		}
 		return null;
-	}, [seleccionado, anotaciones, data, sugerencias]);
+	}, [seleccionado, anotaciones, data, cuerpoDe]);
+
+	// Sugerencias para el movimiento seleccionado: combinación típica del acto
+	// (solo sobre campos vacíos) + instancia sugerida por el encabezado.
+	const sugerencias = useMemo((): Partial<Record<string, string>> => {
+		if (seleccionado === null) return {};
+		const a = anotaciones[String(seleccionado)] || {};
+		const s: Partial<Record<string, string>> = {};
+		// Par de alzada: la revisión de una decisión apelada típicamente es decisión
+		if (parAlzada && !a.funcion) s.funcion = "decision";
+		if (!a.actoProcesal) return s;
+		const base = ACTO_AUTOFILL[a.actoProcesal] || {};
+		for (const [dim, valor] of Object.entries(base)) {
+			if (!(a as any)[dim] && !s[dim]) s[dim] = valor;
+		}
+		if (!a.instancia) {
+			const cuerpo = cuerpoDe(seleccionado);
+			s.instancia = cuerpo && RE_ORGANO_SEGUNDA.test(cuerpo.encabezado || "") ? "segunda_instancia" : "primera_instancia";
+		}
+		return s;
+	}, [seleccionado, anotaciones, cuerpoDe, parAlzada]);
 
 	const aplicarSugerencias = () => {
 		if (seleccionado === null || !Object.keys(sugerencias).length) return;
@@ -1210,7 +1215,7 @@ const EtiquetadoEditor = () => {
 
 								{/* Par de alzada detectado: sugerir filas de Decisiones espejo de la
 								    decisión de primera instancia apelada (sugerencia, no autofill) */}
-								{(modo === "libre" || modo === "decisiones") && parAlzada && !actoNinguno && (
+								{(modo === "libre" || modo === "decisiones") && parAlzada && parAlzada.filas.length > 0 && !actoNinguno && (
 									<Box
 										sx={{
 											mb: 1.25,
@@ -1403,6 +1408,11 @@ const EtiquetadoEditor = () => {
 											{actoNinguno ? (
 												<Typography variant="caption" sx={{ display: "block", color: "success.main", fontStyle: "italic", mb: 0.25 }}>
 													Acto = ninguno (no es resolución): esta dimensión no aplica.
+												</Typography>
+											) : dim === "funcion" && aSel.funcion === "terminacion" && parAlzada?.origenTerminacion ? (
+												<Typography variant="caption" sx={{ display: "block", color: "warning.main", fontStyle: "italic", mb: 0.25 }}>
+													⚠ Este documento parece revisar la terminación del mov. {numeroVisible(parAlzada.idxOrigen)}. La
+													revisión que confirma o revoca no re-termina — usá <b>decisión</b>, salvo clausura de nuevo cuño.
 												</Typography>
 											) : dim === "modoTerminacion" && modoTermBloqueado ? (
 												<Typography variant="caption" sx={{ display: "block", color: "warning.main", fontStyle: "italic", mb: 0.25 }}>
