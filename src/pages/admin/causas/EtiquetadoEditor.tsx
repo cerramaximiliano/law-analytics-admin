@@ -413,6 +413,47 @@ const EtiquetadoEditor = () => {
 		return s;
 	}, [seleccionado, anotaciones, cuerpoDe]);
 
+	// Detector de pares primera ↔ segunda instancia: si el movimiento seleccionado
+	// parece una revisión de alzada (acto resuelve_recurso, o instancia segunda
+	// elegida/sugerida), busca hacia atrás (idx mayor = más antiguo) la decisión
+	// anotada con objetos decididos y una señal de apelación en el medio
+	// (concede_recurso / eleva_autos anotado, o detalle "CONCEDE/ELEVA"). Devuelve
+	// la sugerencia de filas de Decisiones — sugerencia, nunca autofill. El par
+	// puede no existir: sin señal no se sugiere nada.
+	const parAlzada = useMemo(() => {
+		if (seleccionado === null || !data) return null;
+		const a = anotaciones[String(seleccionado)] || {};
+		if (a.descartar) return null;
+		const esRevision =
+			a.actoProcesal === "resuelve_recurso" ||
+			a.instancia === "segunda_instancia" ||
+			(!a.instancia && (sugerencias as any).instancia === "segunda_instancia");
+		if (!esRevision) return null;
+		const anotados = Object.entries(anotaciones)
+			.map(([k, an]) => ({ idx: parseInt(k, 10), an }))
+			.filter((x) => x.idx > seleccionado && x.an && !x.an.descartar);
+		const senalEntre = (d: number) =>
+			anotados.some(
+				(x) => x.idx < d && !!x.an.actoProcesal && ["concede_recurso", "eleva_autos"].includes(x.an.actoProcesal),
+			) ||
+			data.movimientos.some(
+				(m) => m.idx > seleccionado && m.idx < d && /CONCED[EO].*APELA|ELEVA/i.test(`${m.tipo} ${m.detalle}`),
+			);
+		const yaTiene = new Set((a.decisiones || []).map((dd) => dd.objetoDecidido));
+		const candidatos = anotados
+			.filter(
+				(x) =>
+					(x.an.funcion === "decision" || x.an.funcion === "terminacion") &&
+					(x.an.decisiones || []).some((dd) => dd.objetoDecidido),
+			)
+			.sort((p, q) => p.idx - q.idx); // el más cercano en el tiempo primero
+		for (const c of candidatos) {
+			const filas = (c.an.decisiones || []).filter((dd) => dd.objetoDecidido && !yaTiene.has(dd.objetoDecidido));
+			if (filas.length && senalEntre(c.idx)) return { idxOrigen: c.idx, filas };
+		}
+		return null;
+	}, [seleccionado, anotaciones, data, sugerencias]);
+
 	const aplicarSugerencias = () => {
 		if (seleccionado === null || !Object.keys(sugerencias).length) return;
 		setAnotaciones((prev) => {
@@ -1166,6 +1207,51 @@ const EtiquetadoEditor = () => {
 										</Box>
 									) : null;
 								})()}
+
+								{/* Par de alzada detectado: sugerir filas de Decisiones espejo de la
+								    decisión de primera instancia apelada (sugerencia, no autofill) */}
+								{(modo === "libre" || modo === "decisiones") && parAlzada && !actoNinguno && (
+									<Box
+										sx={{
+											mb: 1.25,
+											px: 1,
+											py: 0.6,
+											borderRadius: 1,
+											border: `1px dashed ${alpha(theme.palette.info.main, 0.6)}`,
+											bgcolor: alpha(theme.palette.info.main, isDark ? 0.1 : 0.05),
+										}}
+									>
+										<Typography variant="caption" fontWeight={700} sx={{ color: "info.main", display: "block" }}>
+											✦ Posible par de alzada
+										</Typography>
+										<Typography variant="caption" sx={{ display: "block", color: "text.secondary" }}>
+											El mov. {numeroVisible(parAlzada.idxOrigen)} decidió{" "}
+											{parAlzada.filas
+												.map(
+													(f) =>
+														`«${OBJETOS_DECIDIDOS.find(([x]) => x === f.objetoDecidido)?.[1] || f.objetoDecidido}» (${
+															DIM_LABELS.resultado.opciones.find(([x]) => x === f.resultado)?.[1] || f.resultado || "—"
+														})`,
+												)
+												.join(" y ")}{" "}
+											y luego se concedió/elevó recurso. Si esta resolución lo revisa, agregá la fila espejo (con
+											confirma/revoca/modifica).
+										</Typography>
+										<Button
+											size="small"
+											variant="text"
+											sx={{ py: 0, minWidth: 0, mt: 0.25 }}
+											onClick={() =>
+												setDecisiones(mSel.idx, [
+													...(aSel.decisiones || []),
+													...parAlzada.filas.map((f) => ({ objetoDecidido: f.objetoDecidido, resultado: null })),
+												])
+											}
+										>
+											+ agregar fila{parAlzada.filas.length > 1 ? "s" : ""} espejo
+										</Button>
+									</Box>
+								)}
 
 								{/* Acto-primero: elegir el acto autocompleta las demás dimensiones (solo vacías) */}
 								{(modo === "libre" || modo === "actoProcesal") && (

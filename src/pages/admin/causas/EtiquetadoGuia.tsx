@@ -163,7 +163,14 @@ const SECCIONES: Seccion[] = [
 				<P>
 					El <B>objeto decidido</B> es un selector con vocabulario curado; si falta un valor, escribilo y Enter — se
 					normaliza a <Codigo>snake_case</Codigo> y reaparece como opción en la causa. En la mayoría de los documentos la
-					sección queda vacía.
+					sección queda vacía. El resultado de cada fila se limita a los sentidos coherentes con el objeto elegido
+					("Otro" siempre disponible).
+				</P>
+				<P>
+					<B>Pares de alzada</B>: si el movimiento parece una revisión de segunda instancia y antes hubo una decisión con
+					objetos decididos seguida de concesión/elevación de recurso, aparece el aviso "✦ Posible par de alzada" con un
+					botón para agregar la fila espejo (mismo objeto, resultado confirma/revoca/modifica). Es sugerencia: el par
+					puede no existir — sin señal de apelación no se ofrece.
 				</P>
 			</>
 		),
