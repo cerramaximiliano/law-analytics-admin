@@ -136,6 +136,14 @@ const SECCIONES: Seccion[] = [
 						transacción / homologación de acuerdo). Si homologa algo parcial (pago a cuenta, acuerdo de honorarios) →
 						decisión.
 					</LI>
+					<LI>
+						<B>Terminación y alzada</B>: la función mide lo que ESTE documento hace al proceso, sin mirar el futuro. La
+						primera que declara incompetencia y archiva → terminación (aunque después la revoquen). La alzada que{" "}
+						<B>revoca</B> esa terminación → decisión (reabre). La alzada que <B>confirma</B> una terminación anterior →
+						también decisión (confirma): no re-termina, agrega firmeza — y la firmeza la deriva el motor. Solo lleva
+						terminación el documento de alzada que clausura de nuevo cuño algo vivo (revoca la sentencia y rechaza la
+						demanda; declara caducidad).
+					</LI>
 				</Box>
 			</>
 		),
