@@ -190,11 +190,27 @@ const EtiquetadoEditor = () => {
 		const organismo = data.movimientos.filter((m) => esDocOrganismo(m));
 		if (!organismo.length) return completas;
 		for (const dim of DIMENSIONES_ORDEN) {
+			if (dim === "resultado") continue; // semántica propia (abajo)
 			const ok = organismo.every((m) => {
 				const a = anotaciones[String(m.idx)];
 				return a && ((a as any)[dim] || a.descartar);
 			});
 			if (ok) completas.add(dim);
+		}
+		// Resultado: exigible solo donde Función = decisión o terminación
+		// (impulso/ordenación quedan en no_aplica automático y no bloquean).
+		const conResultadoExigible = organismo.filter((m) => {
+			const a = anotaciones[String(m.idx)];
+			return a && !a.descartar && (a.funcion === "decision" || a.funcion === "terminacion");
+		});
+		if (
+			conResultadoExigible.length &&
+			conResultadoExigible.every((m) => {
+				const r = anotaciones[String(m.idx)]?.resultado;
+				return r && r !== "no_aplica";
+			})
+		) {
+			completas.add("resultado");
 		}
 		// Acto procesal: completo cuando todos los docs de organismo lo tienen.
 		if (organismo.every((m) => {
