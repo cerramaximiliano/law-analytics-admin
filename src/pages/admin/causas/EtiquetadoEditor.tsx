@@ -51,6 +51,7 @@ import {
 	DimKey,
 	ETIQUETAS_FINALES,
 	OBJETOS_DECIDIDOS,
+	RESULTADOS_POR_OBJETO,
 	normalizarObjetoDecidido,
 } from "./etiquetadoTaxonomia";
 
@@ -1424,9 +1425,16 @@ const EtiquetadoEditor = () => {
 															)
 														}
 													>
-														{DIM_LABELS.resultado.opciones.map(([v, l]) => (
-															<MenuItem key={v} value={v}>{l}</MenuItem>
-														))}
+														{DIM_LABELS.resultado.opciones
+															.filter(([v]) => {
+																if (v === "no_aplica") return false; // una fila de decisión siempre decide algo
+																if (v === "otro" || v === dec.resultado) return true; // escape + valor actual
+																const permitidos = RESULTADOS_POR_OBJETO[dec.objetoDecidido];
+																return !permitidos || permitidos.includes(v);
+															})
+															.map(([v, l]) => (
+																<MenuItem key={v} value={v}>{l}</MenuItem>
+															))}
 													</Select>
 												</Grid>
 												<Grid item xs={3} sm={1}>

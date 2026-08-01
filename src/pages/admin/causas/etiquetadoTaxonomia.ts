@@ -357,6 +357,36 @@ const OBJETOS_DECIDIDOS_BASE: [string, string][] = [
 	["beneficio_litigar_sin_gastos", "Beneficio de litigar sin gastos"],
 ];
 
+// Resultados coherentes por objeto decidido: al elegir el objeto, el selector
+// de resultado de la fila se limita a los sentidos que tienen lógica procesal
+// para ese objeto ("otro" siempre disponible como escape). Objetos creados a
+// mano o sin entrada acá ofrecen la lista completa.
+export const RESULTADOS_POR_OBJETO: Record<string, string[]> = {
+	fondo: ["hace_lugar", "hace_lugar_parcialmente", "rechaza", "confirma", "revoca", "modifica"],
+	revocatoria: ["hace_lugar", "rechaza"],
+	apelacion_subsidiaria: ["concede", "deniega"],
+	recurso_apelacion: ["concede", "deniega", "desierto", "hace_lugar", "hace_lugar_parcialmente", "rechaza"],
+	recurso_extraordinario: ["concede", "deniega", "hace_lugar", "rechaza"],
+	recurso_queja: ["concede", "deniega", "hace_lugar", "rechaza"],
+	aclaratoria: ["hace_lugar", "rechaza"],
+	nulidad: ["hace_lugar", "rechaza"],
+	excepcion_incompetencia: ["hace_lugar", "rechaza"],
+	excepcion: ["hace_lugar", "hace_lugar_parcialmente", "rechaza"],
+	incompetencia_de_oficio: ["declara", "confirma", "revoca"],
+	caducidad_instancia: ["hace_lugar", "rechaza", "declara"],
+	medida_cautelar: ["hace_lugar", "hace_lugar_parcialmente", "rechaza", "confirma", "revoca", "modifica"],
+	prueba: ["hace_lugar", "hace_lugar_parcialmente", "rechaza"],
+	homologacion: ["homologa", "rechaza"],
+	liquidacion: ["hace_lugar", "hace_lugar_parcialmente", "rechaza", "modifica"],
+	costas: ["confirma", "revoca", "modifica"],
+	honorarios: ["hace_lugar", "rechaza", "confirma", "revoca", "modifica"],
+	intereses: ["hace_lugar", "rechaza", "confirma", "revoca", "modifica"],
+	multa: ["hace_lugar", "rechaza", "confirma", "revoca", "modifica"],
+	tasa_justicia: ["hace_lugar", "rechaza"],
+	embargo: ["hace_lugar", "rechaza", "confirma", "revoca", "modifica"],
+	beneficio_litigar_sin_gastos: ["hace_lugar", "hace_lugar_parcialmente", "rechaza"],
+};
+
 // Normaliza un objeto decidido creado a mano: minúsculas, sin acentos,
 // espacios y símbolos → "_" (ej. "Recurso de Queja" → "recurso_de_queja").
 export const normalizarObjetoDecidido = (s: string): string =>
