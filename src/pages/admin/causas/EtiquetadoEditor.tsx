@@ -450,8 +450,67 @@ const EtiquetadoEditor = () => {
 		}
 	};
 
+	// Validaciones de consistencia al marcar la causa como "anotada":
+	//  V1 terminación → resultado Y modo de terminación obligatorios
+	//  V2 decisión → resultado real obligatorio (no 'no_aplica')
+	//  V3 impulso/ordenación/susp./reanud. → solo 'no_aplica' (o vacío)
+	//  V4 modo de terminación únicamente con función terminación
+	//  V5 'no es resolución' → sin acto/función/resultado
+	//  V6 decisiones con objeto → con resultado; cargas con datos → con acción
+	const validarParaAnotada = (): string[] => {
+		const errores: string[] = [];
+		if (!data) return errores;
+		for (const m of data.movimientos.filter((x) => esDocOrganismo(x))) {
+			const a = anotaciones[String(m.idx)];
+			if (!a || a.descartar || !Object.keys(a).length) continue;
+			const n = numeroVisible(m.idx);
+			if (a.tipoResolucion === "no_es_resolucion") {
+				if (a.funcion || a.resultado || a.actoProcesal) {
+					errores.push(`Mov. ${n}: "no es resolución" no debe llevar acto, función ni resultado`);
+				}
+				continue;
+			}
+			if (a.funcion === "terminacion") {
+				if (!a.resultado) errores.push(`Mov. ${n}: función terminación requiere resultado`);
+				if (!a.modoTerminacion) errores.push(`Mov. ${n}: función terminación requiere modo de terminación`);
+			} else if (a.funcion === "decision") {
+				if (!a.resultado || a.resultado === "no_aplica") {
+					errores.push(`Mov. ${n}: función decisión requiere un resultado real (no "no aplica")`);
+				}
+			} else if (a.funcion && FUNCIONES_SIN_RESULTADO.includes(a.funcion)) {
+				if (a.resultado && a.resultado !== "no_aplica") {
+					errores.push(`Mov. ${n}: función ${a.funcion} no admite resultado sustantivo (solo "no aplica")`);
+				}
+			}
+			if (a.modoTerminacion && a.funcion !== "terminacion") {
+				errores.push(`Mov. ${n}: modo de terminación solo corresponde con función terminación`);
+			}
+			(a.decisiones || []).forEach((dec, di) => {
+				if (dec.objetoDecidido && !dec.resultado) errores.push(`Mov. ${n}: la decisión ${di + 1} no tiene resultado`);
+			});
+			(a.cargas || []).forEach((c, ci) => {
+				if (((c.destinatarios && c.destinatarios.length) || c.plazo || c.apercibimiento) && !c.accion) {
+					errores.push(`Mov. ${n}: la carga ${ci + 1} no tiene acción`);
+				}
+			});
+		}
+		return errores;
+	};
+
 	const guardar = async (nuevoEstado?: EstadoAnotacion) => {
 		if (!fuero || !id) return;
+		if (nuevoEstado === "anotada") {
+			const errores = validarParaAnotada();
+			if (errores.length) {
+				enqueueSnackbar(
+					`No se puede marcar como anotada — ${errores.length} inconsistencia${errores.length > 1 ? "s" : ""}: ${errores
+						.slice(0, 3)
+						.join(" · ")}${errores.length > 3 ? ` · (+${errores.length - 3} más)` : ""}`,
+					{ variant: "error", autoHideDuration: 10000 },
+				);
+				return; // no se guarda nada hasta corregir
+			}
+		}
 		setGuardando(true);
 		try {
 			const cambios: Record<string, AnotacionMovimiento | null> = {};
