@@ -317,7 +317,10 @@ export const ACTO_AUTOFILL: Record<
 	levanta_embargo: { tipoResolucion: "sentencia_interlocutoria", materia: "cautelar", funcion: "decision" },
 	suspende_proceso: { funcion: "suspension" },
 	reanuda_proceso: { funcion: "reanudacion" },
-	archiva: { tipoResolucion: "providencia_simple", funcion: "terminacion", modoTerminacion: "archivo", resultado: "no_aplica" },
+	// Archívese de rutina: ordena la disposición administrativa (el proceso ya
+	// terminó por otro acto). Si el archivo CIERRA un trámite vivo (inactividad,
+	// sin más trámite), corregir a funcion=terminacion + modo=archivo a mano.
+	archiva: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
 };
 
 export const DIM_CHIP_COLOR: Record<string, "primary" | "secondary" | "info" | "warning" | "success" | "error" | "default"> = {
