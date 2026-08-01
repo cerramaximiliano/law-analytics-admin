@@ -1166,46 +1166,58 @@ const EtiquetadoEditor = () => {
 											y deniega REX"). En la mayoría de los documentos queda vacía.
 										</Typography>
 										{(aSel.decisiones || []).map((dec, di) => (
-											<Stack key={di} direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-												<TextField
-													size="small"
-													placeholder="objeto decidido (ej. recurso_apelacion, costas)"
-													value={dec.objetoDecidido}
-													onChange={(e) => {
-														const nuevas = [...(aSel.decisiones || [])];
-														nuevas[di] = { ...nuevas[di], objetoDecidido: e.target.value };
-														setDecisiones(mSel.idx, nuevas);
-													}}
-													sx={{ flex: 1, maxWidth: 320 }}
-												/>
-												<Select
-													size="small"
-													displayEmpty
-													value={dec.resultado || ""}
-													onChange={(e) => {
-														const nuevas = [...(aSel.decisiones || [])];
-														nuevas[di] = { ...nuevas[di], resultado: e.target.value || null };
-														setDecisiones(mSel.idx, nuevas);
-													}}
-													renderValue={(v) =>
-														v ? DIM_LABELS.resultado.opciones.find(([x]) => x === v)?.[1] || v : (
-															<Typography variant="caption" color="text.secondary">resultado…</Typography>
-														)
-													}
-													sx={{ minWidth: 170 }}
-												>
-													{DIM_LABELS.resultado.opciones.map(([v, l]) => (
-														<MenuItem key={v} value={v}>{l}</MenuItem>
-													))}
-												</Select>
-												<IconButton
-													size="small"
-													color="error"
-													onClick={() => setDecisiones(mSel.idx, (aSel.decisiones || []).filter((_x, i) => i !== di))}
-												>
-													<Trash size={14} />
-												</IconButton>
-											</Stack>
+											<Grid
+												container
+												spacing={1}
+												key={di}
+												alignItems="center"
+												sx={{ mt: 0.25, pl: 1, borderLeft: "2px solid", borderColor: "divider" }}
+											>
+												<Grid item xs={12} sm={5}>
+													<TextField
+														fullWidth
+														size="small"
+														placeholder="objeto decidido (ej. recurso_apelacion, costas)"
+														value={dec.objetoDecidido}
+														onChange={(e) => {
+															const nuevas = [...(aSel.decisiones || [])];
+															nuevas[di] = { ...nuevas[di], objetoDecidido: e.target.value };
+															setDecisiones(mSel.idx, nuevas);
+														}}
+													/>
+												</Grid>
+												<Grid item xs={9} sm={4}>
+													<Select
+														fullWidth
+														size="small"
+														displayEmpty
+														value={dec.resultado || ""}
+														onChange={(e) => {
+															const nuevas = [...(aSel.decisiones || [])];
+															nuevas[di] = { ...nuevas[di], resultado: e.target.value || null };
+															setDecisiones(mSel.idx, nuevas);
+														}}
+														renderValue={(v) =>
+															v ? DIM_LABELS.resultado.opciones.find(([x]) => x === v)?.[1] || v : (
+																<Typography variant="caption" color="text.secondary">resultado…</Typography>
+															)
+														}
+													>
+														{DIM_LABELS.resultado.opciones.map(([v, l]) => (
+															<MenuItem key={v} value={v}>{l}</MenuItem>
+														))}
+													</Select>
+												</Grid>
+												<Grid item xs={3} sm={1}>
+													<IconButton
+														size="small"
+														color="error"
+														onClick={() => setDecisiones(mSel.idx, (aSel.decisiones || []).filter((_x, i) => i !== di))}
+													>
+														<Trash size={14} />
+													</IconButton>
+												</Grid>
+											</Grid>
 										))}
 									</Box>
 								)}
