@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
 	Box,
 	Card,
@@ -99,6 +99,7 @@ const ESTADO_COLOR: Record<EstadoAnotacion, "default" | "warning" | "info" | "su
 
 const EtiquetadoEditor = () => {
 	const { fuero, id } = useParams<{ fuero: string; id: string }>();
+	const [searchParams, setSearchParams] = useSearchParams();
 	const navigate = useNavigate();
 	const { enqueueSnackbar } = useSnackbar();
 	const theme = useTheme();
@@ -135,11 +136,17 @@ const EtiquetadoEditor = () => {
 			setAnotaciones((d.anotacion?.anotaciones as Record<string, AnotacionMovimiento>) || {});
 			setNotasCausa(d.anotacion?.notasCausa || "");
 			setEstado((d.anotacion?.estado as EstadoAnotacion) || "pendiente");
-			// Arranca en el primer documento de organismo (lo que se anota en v2)
-			const primero = [...d.movimientos]
-				.filter((m) => esDocOrganismo(m))
-				.sort((a, b) => (a.dia || "").localeCompare(b.dia || ""))[0];
-			setSeleccionado(primero ? primero.idx : d.movimientos.length ? d.movimientos[0].idx : null);
+			// Posición: restaura ?mov= de la URL; si no, el primer doc de organismo
+			const movParam = parseInt(new URLSearchParams(window.location.search).get("mov") ?? "", 10);
+			if (Number.isFinite(movParam) && d.movimientos.some((m) => m.idx === movParam)) {
+				setSeleccionado(movParam);
+				setTimeout(() => document.getElementById(`mov-${movParam}`)?.scrollIntoView({ block: "center" }), 150);
+			} else {
+				const primero = [...d.movimientos]
+					.filter((m) => esDocOrganismo(m))
+					.sort((a, b) => (a.dia || "").localeCompare(b.dia || ""))[0];
+				setSeleccionado(primero ? primero.idx : d.movimientos.length ? d.movimientos[0].idx : null);
+			}
 		} catch (e: any) {
 			setError(e?.response?.data?.message || e.message);
 		} finally {
@@ -150,6 +157,19 @@ const EtiquetadoEditor = () => {
 	useEffect(() => {
 		cargar();
 	}, [cargar]);
+
+	// Persistencia de posición: ?mov=<idx> en la URL (replace — no ensucia historial)
+	useEffect(() => {
+		if (seleccionado === null) return;
+		setSearchParams(
+			(prev) => {
+				const next = new URLSearchParams(prev);
+				next.set("mov", String(seleccionado));
+				return next;
+			},
+			{ replace: true },
+		);
+	}, [seleccionado, setSearchParams]);
 
 	const movimientosVisibles = useMemo(() => {
 		if (!data) return [];
