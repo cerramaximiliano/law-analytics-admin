@@ -49,6 +49,8 @@ import {
 	DIMENSIONES_ORDEN,
 	DimKey,
 	ETIQUETAS_FINALES,
+	OBJETOS_DECIDIDOS,
+	normalizarObjetoDecidido,
 } from "./etiquetadoTaxonomia";
 
 // Movimientos con pinta de resolución (se resaltan en la lista)
@@ -332,6 +334,18 @@ const EtiquetadoEditor = () => {
 	const aplicarActo = (idx: number, acto: string | null) => {
 		setCampo(idx, "actoProcesal", acto);
 	};
+
+	// Opciones del selector de objeto decidido: vocabulario curado + valores ya
+	// usados en esta causa (los creados a mano reaparecen como opción).
+	const objetosDecididosOpciones = useMemo(() => {
+		const set = new Set(OBJETOS_DECIDIDOS.map(([v]) => v));
+		for (const a of Object.values(anotaciones)) {
+			for (const dec of a.decisiones || []) {
+				if (dec.objetoDecidido) set.add(dec.objetoDecidido);
+			}
+		}
+		return Array.from(set);
+	}, [anotaciones]);
 
 	// Sugerencias para el movimiento seleccionado: combinación típica del acto
 	// (solo sobre campos vacíos) + instancia sugerida por el encabezado.
@@ -1245,16 +1259,21 @@ const EtiquetadoEditor = () => {
 												sx={{ mt: 0.25, pl: 1, borderLeft: "2px solid", borderColor: "divider" }}
 											>
 												<Grid item xs={12} sm={5}>
-													<TextField
-														fullWidth
+													<Autocomplete
+														freeSolo
+														autoSelect
 														size="small"
-														placeholder="objeto decidido (ej. recurso_apelacion, costas)"
-														value={dec.objetoDecidido}
-														onChange={(e) => {
+														options={objetosDecididosOpciones}
+														getOptionLabel={(v) => OBJETOS_DECIDIDOS.find(([x]) => x === v)?.[1] || v}
+														value={dec.objetoDecidido || null}
+														onChange={(_e, v) => {
 															const nuevas = [...(aSel.decisiones || [])];
-															nuevas[di] = { ...nuevas[di], objetoDecidido: e.target.value };
+															nuevas[di] = { ...nuevas[di], objetoDecidido: v ? normalizarObjetoDecidido(v) : "" };
 															setDecisiones(mSel.idx, nuevas);
 														}}
+														renderInput={(params) => (
+															<TextField {...params} placeholder="objeto decidido… (elegí o escribí uno nuevo)" />
+														)}
 													/>
 												</Grid>
 												<Grid item xs={9} sm={4}>

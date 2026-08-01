@@ -323,6 +323,46 @@ export const ACTO_AUTOFILL: Record<
 	archiva: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
 };
 
+// Vocabulario curado de objetos decididos (filas de Decisiones). El selector
+// permite crear valores nuevos — se normalizan a snake_case y conviene
+// promoverlos a esta lista cuando se repiten, para unificar el dataset.
+export const OBJETOS_DECIDIDOS: [string, string][] = [
+	["fondo", "Fondo / pretensión principal"],
+	["revocatoria", "Revocatoria / reposición"],
+	["apelacion_subsidiaria", "Apelación subsidiaria"],
+	["recurso_apelacion", "Recurso de apelación"],
+	["recurso_extraordinario", "Recurso extraordinario"],
+	["recurso_queja", "Recurso de queja"],
+	["aclaratoria", "Aclaratoria"],
+	["nulidad", "Nulidad"],
+	["excepcion_incompetencia", "Excepción de incompetencia"],
+	["excepcion", "Excepción (otras)"],
+	["caducidad_instancia", "Caducidad de instancia"],
+	["medida_cautelar", "Medida cautelar"],
+	["prueba", "Prueba (admisión/producción)"],
+	["homologacion", "Homologación"],
+	["liquidacion", "Liquidación"],
+	["costas", "Costas"],
+	["honorarios", "Honorarios"],
+	["intereses", "Intereses"],
+	["multa", "Multa / astreintes"],
+	["tasa_justicia", "Tasa de justicia"],
+	["embargo", "Embargo"],
+	["beneficio_litigar_sin_gastos", "Beneficio de litigar sin gastos"],
+];
+
+// Normaliza un objeto decidido creado a mano: minúsculas, sin acentos,
+// espacios y símbolos → "_" (ej. "Recurso de Queja" → "recurso_de_queja").
+export const normalizarObjetoDecidido = (s: string): string =>
+	s
+		.trim()
+		.toLowerCase()
+		.normalize("NFD")
+		.replace(/[\u0300-\u036f]/g, "")
+		.replace(/[^a-z0-9]+/g, "_")
+		.replace(/^_+|_+$/g, "")
+		.slice(0, 60);
+
 export const DIM_CHIP_COLOR: Record<string, "primary" | "secondary" | "info" | "warning" | "success" | "error" | "default"> = {
 	tipoResolucion: "primary",
 	instancia: "secondary",
