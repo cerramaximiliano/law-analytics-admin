@@ -174,10 +174,13 @@ export class EtapaAnotacionesService {
 			notasCausa?: string;
 			estado?: EstadoAnotacion;
 			limpiarTodo?: boolean;
+			// Concurrencia optimista: updatedAt visto al cargar / último guardado.
+			// Si otra sesión guardó en el medio, el backend responde 409.
+			baseUpdatedAt?: string | null;
 		},
 	) {
 		const { data } = await workersAxios.put(`/api/admin/etapa-anotaciones/causa/${fuero}/${id}`, payload);
-		return data as { success: boolean };
+		return data as { success: boolean; updatedAt?: string };
 	}
 
 	static async getCuerpo(fuero: string, id: string, idx: number, completo = false) {

@@ -115,6 +115,12 @@ const EtiquetadoEditor = () => {
 	const [error, setError] = useState<string | null>(null);
 	const [anotaciones, setAnotaciones] = useState<Record<string, AnotacionMovimiento>>({});
 	const [guiaAbierta, setGuiaAbierta] = useState(false);
+	// Concurrencia optimista + autosave
+	const [baseUpdatedAt, setBaseUpdatedAt] = useState<string | null>(null);
+	const [ultimoAutosave, setUltimoAutosave] = useState<Date | null>(null);
+	const [conflicto, setConflicto] = useState(false);
+	const guardandoRef = useRef(false);
+	const anotacionesRef = useRef<Record<string, AnotacionMovimiento>>({});
 	const [dirty, setDirty] = useState<Set<string>>(new Set());
 	const [seleccionado, setSeleccionado] = useState<number | null>(null);
 	const [soloRelevantes, setSoloRelevantes] = useState(true);
@@ -139,6 +145,8 @@ const EtiquetadoEditor = () => {
 			const d = await EtapaAnotacionesService.getCausa(fuero, id);
 			setData(d);
 			setAnotaciones((d.anotacion?.anotaciones as Record<string, AnotacionMovimiento>) || {});
+			setBaseUpdatedAt(d.anotacion?.updatedAt || null);
+			setConflicto(false);
 			setNotasCausa(d.anotacion?.notasCausa || "");
 			setEstado((d.anotacion?.estado as EstadoAnotacion) || "pendiente");
 			// Posición: restaura ?mov= de la URL; si no, el primer doc de organismo
@@ -625,8 +633,9 @@ const EtiquetadoEditor = () => {
 		return errores;
 	};
 
-	const guardar = async (nuevoEstado?: EstadoAnotacion) => {
+	const guardar = async (nuevoEstado?: EstadoAnotacion, silencioso = false) => {
 		if (!fuero || !id) return;
+		if (guardandoRef.current) return; // nunca dos guardados en paralelo
 		if (nuevoEstado === "anotada") {
 			const errores = validarParaAnotada();
 			if (errores.length) {
@@ -639,33 +648,77 @@ const EtiquetadoEditor = () => {
 				return; // no se guarda nada hasta corregir
 			}
 		}
-		setGuardando(true);
+		guardandoRef.current = true;
+		if (!silencioso) setGuardando(true);
 		try {
 			const cambios: Record<string, AnotacionMovimiento | null> = {};
 			dirty.forEach((k) => {
 				if (/^\d+$/.test(k)) cambios[k] = anotaciones[k] && Object.keys(anotaciones[k]).length ? anotaciones[k] : null;
 			});
-			await EtapaAnotacionesService.guardar(fuero, id, {
+			// Snapshot de lo enviado: al volver, solo se limpian de dirty las claves
+			// que NO cambiaron durante el vuelo (una edición concurrente re-ensucia).
+			const enviado: Record<string, string> = {};
+			Object.entries(cambios).forEach(([k, v]) => { enviado[k] = JSON.stringify(v); });
+			// El autosave promueve pendiente → en_progreso; no toca otros estados.
+			const estadoEnviar = nuevoEstado || (silencioso && estado === "pendiente" ? "en_progreso" : estado);
+			const resp = await EtapaAnotacionesService.guardar(fuero, id, {
 				anotaciones: cambios,
 				notasCausa,
-				estado: nuevoEstado || estado,
+				estado: estadoEnviar,
+				baseUpdatedAt,
 			});
+			setBaseUpdatedAt(resp.updatedAt || null);
 			if (nuevoEstado) setEstado(nuevoEstado);
-			setDirty(new Set());
-			enqueueSnackbar("Anotaciones guardadas", { variant: "success" });
+			else if (estadoEnviar !== estado) setEstado(estadoEnviar);
+			setDirty((prev) => {
+				const next = new Set(prev);
+				for (const k of Object.keys(enviado)) {
+					const act = anotacionesRef.current[k];
+					const actual = act && Object.keys(act).length ? act : null;
+					if (JSON.stringify(actual) === enviado[k]) next.delete(k);
+				}
+				return next;
+			});
+			setConflicto(false);
+			if (silencioso) setUltimoAutosave(new Date());
+			else enqueueSnackbar("Anotaciones guardadas", { variant: "success" });
 		} catch (e: any) {
-			enqueueSnackbar(e?.response?.data?.message || e.message, { variant: "error" });
+			if (e?.response?.status === 409) {
+				setConflicto(true);
+				enqueueSnackbar(
+					"⚠ Conflicto: la causa fue modificada por otra sesión. Recargá la página antes de seguir — el guardado automático quedó pausado para no pisar cambios.",
+					{ variant: "error", autoHideDuration: 15000 },
+				);
+			} else if (!silencioso) {
+				enqueueSnackbar(e?.response?.data?.message || e.message, { variant: "error" });
+			}
 		} finally {
-			setGuardando(false);
+			guardandoRef.current = false;
+			if (!silencioso) setGuardando(false);
 		}
 	};
+
+	// Ref siempre al día para comparar tras un guardado en vuelo.
+	useEffect(() => {
+		anotacionesRef.current = anotaciones;
+	}, [anotaciones]);
+
+	// Autosave: 5s después del último cambio guarda lo pendiente, sin snackbar.
+	// Pausado ante conflicto de sesión (se reactiva al recargar la causa).
+	useEffect(() => {
+		if (!dirty.size || conflicto || loading) return;
+		const t = setTimeout(() => guardar(undefined, true), 5000);
+		return () => clearTimeout(t);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [anotaciones, notasCausa, dirty, conflicto]);
 
 	const limpiarTodo = async () => {
 		if (!fuero || !id) return;
 		if (!window.confirm("¿Borrar TODAS las anotaciones de esta causa?")) return;
 		setGuardando(true);
 		try {
-			await EtapaAnotacionesService.guardar(fuero, id, { limpiarTodo: true, estado: "pendiente" });
+			const resp = await EtapaAnotacionesService.guardar(fuero, id, { limpiarTodo: true, estado: "pendiente", baseUpdatedAt });
+			setBaseUpdatedAt(resp.updatedAt || null);
 			setAnotaciones({});
 			setDirty(new Set());
 			setEstado("pendiente");
@@ -723,6 +776,19 @@ const EtiquetadoEditor = () => {
 							<Book1 size={18} />
 						</IconButton>
 					</Tooltip>
+					{conflicto ? (
+						<Chip size="small" color="error" label="conflicto — recargá" />
+					) : dirty.size > 0 ? (
+						<Typography variant="caption" color="text.disabled">
+							sin guardar…
+						</Typography>
+					) : ultimoAutosave ? (
+						<Tooltip title="Guardado automático (cada 5 s tras el último cambio)">
+							<Typography variant="caption" color="success.main">
+								✓ auto {ultimoAutosave.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+							</Typography>
+						</Tooltip>
+					) : null}
 				</Stack>
 			}
 			secondary={
