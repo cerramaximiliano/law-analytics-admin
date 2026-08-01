@@ -29,7 +29,7 @@ import {
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { ArrowLeft, ArrowLeft2, ArrowRight2, DocumentText, DocumentDownload, TickCircle, Trash, Warning2 } from "iconsax-react";
+import { ArrowLeft, ArrowLeft2, ArrowRight2, Copy, DocumentText, DocumentDownload, TickCircle, Trash, Warning2 } from "iconsax-react";
 import EtapaAnotacionesService, {
 	AnotacionMovimiento,
 	CausaParaAnotar,
@@ -1327,6 +1327,24 @@ const EtiquetadoEditor = () => {
 												? ` · doc del mismo día: "${(cuerpoSel as any).detalle.slice(0, 50)}"`
 												: ""}
 										</Typography>
+										<Tooltip title="Copiar el texto del documento al portapapeles">
+											<IconButton
+												size="small"
+												onClick={() => {
+													const texto =
+														cuerpoSel.completo ||
+														[cuerpoSel.encabezado, cuerpoSel.tieneDispositiva ? cuerpoSel.dispositiva : cuerpoSel.colaTexto]
+															.filter(Boolean)
+															.join("\n\n");
+													navigator.clipboard
+														.writeText(texto || "")
+														.then(() => enqueueSnackbar("Texto copiado", { variant: "success", autoHideDuration: 1500 }))
+														.catch(() => enqueueSnackbar("No se pudo copiar", { variant: "warning" }));
+												}}
+											>
+												<Copy size={16} />
+											</IconButton>
+										</Tooltip>
 										{!cuerpoSel.completo && mSel.url && (
 											<Button
 												size="small"
