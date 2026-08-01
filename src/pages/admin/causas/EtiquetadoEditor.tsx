@@ -1115,6 +1115,11 @@ const EtiquetadoEditor = () => {
 													Función = {DIM_LABELS.funcion.opciones.find(([v]) => v === aSel.funcion)?.[1]?.toLowerCase()}: el
 													resultado es "No aplica" (automático).
 												</Typography>
+											) : dim === "resultado" && (aSel.funcion === "decision" || aSel.funcion === "terminacion") ? (
+												<Typography variant="caption" sx={{ display: "block", color: "info.main", fontStyle: "italic", mb: 0.25 }}>
+													Función = {DIM_LABELS.funcion.opciones.find(([v]) => v === aSel.funcion)?.[1]?.toLowerCase()}: elegí el
+													sentido de la decisión{aSel.funcion === "terminacion" ? " (y el modo de terminación abajo)" : ""}.
+												</Typography>
 											) : (
 												def.ayuda && (
 													<Typography variant="caption" sx={{ display: "block", color: "text.secondary", fontStyle: "italic", mb: 0.25 }}>
