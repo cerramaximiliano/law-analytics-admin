@@ -153,7 +153,7 @@ export const DIM_LABELS: Record<DimKey, DimDef> = {
 
 // Acciones requeridas (lista cerrada — evita variantes libres tipo
 // "contestar" vs "contestar_demanda"). Espejo del catálogo de datasets #5.
-export const ACCIONES_REQUERIDAS: [string, string][] = [
+const ACCIONES_REQUERIDAS_BASE: [string, string][] = [
 	["contestar_demanda", "Contestar demanda"],
 	["contestar_traslado", "Contestar traslado"],
 	["contestar_agravios", "Contestar agravios"],
@@ -186,7 +186,7 @@ export const ACCIONES_REQUERIDAS: [string, string][] = [
 ];
 
 // Etiqueta final: lista cerrada de etapas + hitos del motor (VERSION 17).
-export const ETIQUETAS_FINALES: [string, string][] = [
+const ETIQUETAS_FINALES_BASE: [string, string][] = [
 	["demanda", "Etapa: demanda"],
 	["traba_litis", "Etapa: traba de litis"],
 	["prueba", "Etapa: prueba"],
@@ -223,7 +223,7 @@ export const ETIQUETAS_FINALES: [string, string][] = [
 	["ninguna", "Ninguna (no marca etapa ni hito)"],
 ];
 
-export const ACTOS_PROCESALES: [string, string][] = [
+const ACTOS_PROCESALES_BASE: [string, string][] = [
 	// "ninguno" = el documento NO es una resolución (constancias, sorteos,
 	// listados…): fija tipo = no_es_resolucion y las demás dimensiones no aplican.
 	["ninguno", "Ninguno — no es resolución"],
@@ -266,7 +266,7 @@ export const ACTOS_PROCESALES: [string, string][] = [
 	["otro", "Otro"],
 ];
 
-export const DESTINATARIOS: [string, string][] = [
+const DESTINATARIOS_BASE: [string, string][] = [
 	["actora", "Actora"],
 	["demandada", "Demandada"],
 	["ambas_partes", "Ambas partes"],
@@ -331,7 +331,7 @@ export const ACTO_AUTOFILL: Record<
 // Vocabulario curado de objetos decididos (filas de Decisiones). El selector
 // permite crear valores nuevos — se normalizan a snake_case y conviene
 // promoverlos a esta lista cuando se repiten, para unificar el dataset.
-export const OBJETOS_DECIDIDOS: [string, string][] = [
+const OBJETOS_DECIDIDOS_BASE: [string, string][] = [
 	["fondo", "Fondo / pretensión principal"],
 	["revocatoria", "Revocatoria / reposición"],
 	["apelacion_subsidiaria", "Apelación subsidiaria"],
@@ -380,3 +380,26 @@ export const DIM_CHIP_COLOR: Record<string, "primary" | "secondary" | "info" | "
 	actoProcesal: "primary",
 	resultado: "success",
 };
+
+// ── Orden alfabético de los catálogos largos ─────────────────────────────────
+// Se ordena por la etiqueta visible (locale es). Pins: "ninguno" va primero
+// (meta-opción de acto) y "otro"/"ninguna" al final. El orden de las
+// dimensiones de DIM_LABELS NO se toca: es doctrinal y ancla los atajos
+// numéricos del modo por dimensión.
+const ordenarPorLabel = (
+	lista: [string, string][],
+	primero: string[] = [],
+	ultimo: string[] = ["otro"],
+): [string, string][] => [
+	...primero.map((v) => lista.find(([x]) => x === v)).filter(Boolean) as [string, string][],
+	...lista
+		.filter(([v]) => !primero.includes(v) && !ultimo.includes(v))
+		.sort((a, b) => a[1].localeCompare(b[1], "es")),
+	...ultimo.map((v) => lista.find(([x]) => x === v)).filter(Boolean) as [string, string][],
+];
+
+export const ACTOS_PROCESALES = ordenarPorLabel(ACTOS_PROCESALES_BASE, ["ninguno"]);
+export const ACCIONES_REQUERIDAS = ordenarPorLabel(ACCIONES_REQUERIDAS_BASE);
+export const DESTINATARIOS = ordenarPorLabel(DESTINATARIOS_BASE);
+export const OBJETOS_DECIDIDOS = ordenarPorLabel(OBJETOS_DECIDIDOS_BASE, [], []);
+export const ETIQUETAS_FINALES = ordenarPorLabel(ETIQUETAS_FINALES_BASE, [], ["ninguna"]);
