@@ -29,7 +29,8 @@ import {
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { ArrowLeft, ArrowLeft2, ArrowRight2, Copy, DocumentText, DocumentDownload, TickCircle, Trash, Warning2 } from "iconsax-react";
+import { ArrowLeft, ArrowLeft2, ArrowRight2, Book1, Copy, DocumentText, DocumentDownload, TickCircle, Trash, Warning2 } from "iconsax-react";
+import EtiquetadoGuia from "./EtiquetadoGuia";
 import EtapaAnotacionesService, {
 	AnotacionMovimiento,
 	CausaParaAnotar,
@@ -112,6 +113,7 @@ const EtiquetadoEditor = () => {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [anotaciones, setAnotaciones] = useState<Record<string, AnotacionMovimiento>>({});
+	const [guiaAbierta, setGuiaAbierta] = useState(false);
 	const [dirty, setDirty] = useState<Set<string>>(new Set());
 	const [seleccionado, setSeleccionado] = useState<number | null>(null);
 	const [soloRelevantes, setSoloRelevantes] = useState(true);
@@ -361,6 +363,24 @@ const EtiquetadoEditor = () => {
 		}
 		setCampo(idx, "actoProcesal", acto);
 	};
+
+	// Divergencias entre lo elegido y la combinación típica del acto
+	// (ACTO_AUTOFILL). NO son errores — la combinación típica es la frecuente,
+	// no la única válida — pero se marcan con ⚠ para releer y quedan derivables
+	// en el pase de verificación (acto + valores alcanzan para recomputarlas).
+	const divergenciasDe = useCallback((a: AnotacionMovimiento | undefined) => {
+		if (!a?.actoProcesal || a.actoProcesal === "ninguno" || a.descartar) return [];
+		const base = ACTO_AUTOFILL[a.actoProcesal] || {};
+		const out: { dim: string; elegido: string; sugerido: string }[] = [];
+		for (const [dim, sugerido] of Object.entries(base)) {
+			const elegido = (a as any)[dim];
+			if (elegido && sugerido && elegido !== sugerido) out.push({ dim, elegido, sugerido });
+		}
+		return out;
+	}, []);
+	const labelDim = (dim: string) => (DIM_LABELS as any)[dim]?.corto || dim;
+	const labelValor = (dim: string, v: string) =>
+		(DIM_LABELS as any)[dim]?.opciones.find(([x]: [string, string]) => x === v)?.[1] || v;
 
 	// Opciones del selector de objeto decidido: vocabulario curado + valores ya
 	// usados en esta causa (los creados a mano reaparecen como opción).
@@ -651,6 +671,11 @@ const EtiquetadoEditor = () => {
 							<Warning2 size={18} color={theme.palette.warning.main} />
 						</Tooltip>
 					)}
+					<Tooltip title="Guía del operador: convenciones de anotación">
+						<IconButton size="small" color="primary" onClick={() => setGuiaAbierta(true)}>
+							<Book1 size={18} />
+						</IconButton>
+					</Tooltip>
 				</Stack>
 			}
 			secondary={
@@ -679,6 +704,7 @@ const EtiquetadoEditor = () => {
 				</Stack>
 			}
 		>
+			<EtiquetadoGuia open={guiaAbierta} onClose={() => setGuiaAbierta(false)} />
 			<Typography variant="body2" color="text.secondary" sx={{ mb: 0.25 }}>
 				{data.causa.caratula}
 			</Typography>
@@ -937,6 +963,21 @@ const EtiquetadoEditor = () => {
 													</Typography>
 												</Tooltip>
 											)}
+											{(() => {
+												const divs = divergenciasDe(a);
+												return divs.length ? (
+													<Tooltip
+														title={`Difiere de la combinación típica del acto — ${divs
+															.map(
+																(dv) =>
+																	`${labelDim(dv.dim)}: «${labelValor(dv.dim, dv.elegido)}» (típico: «${labelValor(dv.dim, dv.sugerido)}»)`,
+															)
+															.join(" · ")}. No es error: verificar y confirmar.`}
+													>
+														<Warning2 size={12} color={theme.palette.warning.main} />
+													</Tooltip>
+												) : null;
+											})()}
 										</Stack>
 									</Box>
 								);
@@ -1085,6 +1126,35 @@ const EtiquetadoEditor = () => {
 										);
 									})}
 								</Stack>
+
+								{/* Divergencias vs. combinación típica del acto: informativas, no errores */}
+								{(() => {
+									const divs = divergenciasDe(aSel);
+									return divs.length ? (
+										<Box
+											sx={{
+												mb: 1.25,
+												px: 1,
+												py: 0.6,
+												borderRadius: 1,
+												border: `1px solid ${alpha(theme.palette.warning.main, 0.5)}`,
+												bgcolor: alpha(theme.palette.warning.main, isDark ? 0.12 : 0.06),
+											}}
+										>
+											<Typography variant="caption" fontWeight={700} sx={{ color: "warning.main", display: "block" }}>
+												⚠ Difiere de la combinación típica del acto — informativo, no es un error
+											</Typography>
+											{divs.map((dv) => (
+												<Typography key={dv.dim} variant="caption" sx={{ display: "block", color: "text.secondary" }}>
+													{labelDim(dv.dim)}: elegiste «{labelValor(dv.dim, dv.elegido)}»; lo típico de «
+													{ACTOS_PROCESALES.find(([x]) => x === aSel.actoProcesal)?.[1] || aSel.actoProcesal}» es «
+													{labelValor(dv.dim, dv.sugerido)}». Si al releer lo confirmás, dejalo — queda marcado para la
+													verificación.
+												</Typography>
+											))}
+										</Box>
+									) : null;
+								})()}
 
 								{/* Acto-primero: elegir el acto autocompleta las demás dimensiones (solo vacías) */}
 								{(modo === "libre" || modo === "actoProcesal") && (
