@@ -195,7 +195,7 @@ const EtiquetadoEditor = () => {
 			if (dim === "resultado") continue; // semántica propia (abajo)
 			const ok = organismo.every((m) => {
 				const a = anotaciones[String(m.idx)];
-				return a && ((a as any)[dim] || a.descartar);
+				return a && ((a as any)[dim] || a.descartar || a.actoProcesal === "ninguno");
 			});
 			if (ok) completas.add(dim);
 		}
@@ -332,6 +332,33 @@ const EtiquetadoEditor = () => {
 	// punteado ✦) sobre los campos vacíos — se aceptan una por una con click, o
 	// todas juntas con "Aplicar sugerencias". Nada se escribe solo.
 	const aplicarActo = (idx: number, acto: string | null) => {
+		if (acto === "ninguno") {
+			// Documento sin acto procesal (no es resolución): fija el tipo y limpia
+			// todas las dimensiones que no aplican, en todo el grupo vinculado.
+			setAnotaciones((prev) => {
+				const objetivos = grupoVinculado(idx, prev);
+				const nuevo = { ...prev };
+				for (const t of objetivos) {
+					const a = { ...(nuevo[String(t)] || {}) };
+					a.actoProcesal = "ninguno";
+					a.tipoResolucion = "no_es_resolucion";
+					a.instancia = null;
+					a.materia = null;
+					a.contexto = null;
+					a.funcion = null;
+					a.resultado = null;
+					a.modoTerminacion = null;
+					a.estadoImpugnatorio = null;
+					a.actosSecundarios = [];
+					a.decisiones = [];
+					a.cargas = [];
+					nuevo[String(t)] = a;
+					marcarDirty(String(t));
+				}
+				return nuevo;
+			});
+			return;
+		}
 		setCampo(idx, "actoProcesal", acto);
 	};
 
@@ -495,9 +522,13 @@ const EtiquetadoEditor = () => {
 			if (!a || a.descartar || !Object.keys(a).length) continue;
 			const n = numeroVisible(m.idx);
 			if (a.tipoResolucion === "no_es_resolucion") {
-				if (a.funcion || a.resultado || a.actoProcesal) {
-					errores.push(`Mov. ${n}: "no es resolución" no debe llevar acto, función ni resultado`);
+				if (a.funcion || a.resultado || (a.actoProcesal && a.actoProcesal !== "ninguno")) {
+					errores.push(`Mov. ${n}: "no es resolución" no debe llevar acto, función ni resultado (usá acto "ninguno")`);
 				}
+				continue;
+			}
+			if (a.actoProcesal === "ninguno") {
+				errores.push(`Mov. ${n}: acto "ninguno" requiere tipo "no es resolución"`);
 				continue;
 			}
 			if (a.funcion === "terminacion") {
@@ -596,6 +627,9 @@ const EtiquetadoEditor = () => {
 
 	const mSel = seleccionado !== null ? data.movimientos.find((m) => m.idx === seleccionado) : null;
 	const aSel: AnotacionMovimiento = seleccionado !== null ? anotaciones[String(seleccionado)] || {} : {};
+	// Acto = ninguno: el documento no es una resolución — las demás dimensiones
+	// no aplican y quedan bloqueadas (y el movimiento valida como completo).
+	const actoNinguno = aSel.actoProcesal === "ninguno";
 	const cuerpoSel = seleccionado !== null ? cuerpoDe(seleccionado) : null;
 	const anotadosCount = Object.keys(anotaciones).filter((k) => Object.keys(anotaciones[k] || {}).length).length;
 
@@ -843,6 +877,9 @@ const EtiquetadoEditor = () => {
 										<Stack direction="row" spacing={0.45} alignItems="center" sx={{ mt: 0.35 }}>
 											{DIMS_CUADROS.map(([d, nombre]) => {
 												const valor = (a as any)?.[d] || null;
+												// Acto = ninguno: las demás dimensiones no aplican → se muestran
+												// resueltas (verde tenue), no pendientes.
+												const noAplica = !valor && a?.actoProcesal === "ninguno";
 												const cName = DIM_CHIP_COLOR[d];
 												const col =
 													cName && cName !== "default" ? (theme.palette as any)[cName].main : theme.palette.text.secondary;
@@ -850,6 +887,8 @@ const EtiquetadoEditor = () => {
 													? (d === "actoProcesal"
 															? ACTOS_PROCESALES.find(([v]) => v === valor)?.[1]
 															: DIM_LABELS[d as DimKey]?.opciones.find(([v]) => v === valor)?.[1]) || valor
+													: noAplica
+													? "no aplica (acto = ninguno)"
 													: "sin marcar";
 												return (
 													<Tooltip key={d} title={`${nombre}: ${valorLabel}`}>
@@ -858,8 +897,12 @@ const EtiquetadoEditor = () => {
 																width: 9,
 																height: 9,
 																borderRadius: "2px",
-																bgcolor: valor ? col : alpha(col, isDark ? 0.14 : 0.12),
-																border: `1px solid ${alpha(col, valor ? 1 : 0.35)}`,
+																bgcolor: valor
+																	? col
+																	: noAplica
+																	? alpha(theme.palette.success.main, 0.45)
+																	: alpha(col, isDark ? 0.14 : 0.12),
+																border: `1px solid ${alpha(noAplica ? theme.palette.success.main : col, valor || noAplica ? 1 : 0.35)}`,
 															}}
 														/>
 													</Tooltip>
@@ -977,6 +1020,8 @@ const EtiquetadoEditor = () => {
 									{MODOS_BARRA.map((d) => {
 										// Modo de terminación solo aplica cuando la función es terminación
 										if (d === "modoTerminacion" && aSel.funcion !== "terminacion") return null;
+										// Acto = ninguno: solo se muestran Acto y Tipo (el resto no aplica)
+										if (actoNinguno && d !== "actoProcesal" && d !== "tipoResolucion") return null;
 										let elegido = false;
 										let texto = "";
 										let colorKey: string = DIM_CHIP_COLOR[d as string] || "default";
@@ -1069,7 +1114,7 @@ const EtiquetadoEditor = () => {
 												</Tooltip>
 											)}
 										</Stack>
-										{(modo === "libre" || modo === "actoProcesal") && aSel.actoProcesal && (
+										{(modo === "libre" || modo === "actoProcesal") && aSel.actoProcesal && !actoNinguno && (
 											<Autocomplete
 												multiple
 												size="small"
@@ -1091,7 +1136,7 @@ const EtiquetadoEditor = () => {
 										{([...DIMENSIONES_ORDEN, ...(aSel.funcion === "terminacion" ? (["modoTerminacion"] as DimKey[]) : []), "estadoImpugnatorio"] as DimKey[]).map(
 											(dim) => {
 												const estR = dim === "resultado" ? estadoResultado(aSel) : null;
-												const deshab = dim === "resultado" && estR === "sin_funcion";
+												const deshab = actoNinguno || (dim === "resultado" && estR === "sin_funcion");
 												return (
 													<Grid item xs={6} key={dim}>
 														<FormControl fullWidth size="small" disabled={deshab}>
@@ -1136,6 +1181,7 @@ const EtiquetadoEditor = () => {
 									const estResultado = dim === "resultado" ? estadoResultado(aSel) : null;
 									const modoTermBloqueado = dim === "modoTerminacion" && aSel.funcion !== "terminacion";
 									const botonDeshabilitado = (valor: string) =>
+										actoNinguno ||
 										(dim === "resultado" && (estResultado === "sin_funcion" || (estResultado === "auto_no_aplica" && valor !== "no_aplica"))) ||
 										modoTermBloqueado;
 									const renderBotones = (valores: string[]) => (
@@ -1187,7 +1233,11 @@ const EtiquetadoEditor = () => {
 											>
 												{def.titulo}
 											</Typography>
-											{dim === "modoTerminacion" && modoTermBloqueado ? (
+											{actoNinguno ? (
+												<Typography variant="caption" sx={{ display: "block", color: "success.main", fontStyle: "italic", mb: 0.25 }}>
+													Acto = ninguno (no es resolución): esta dimensión no aplica.
+												</Typography>
+											) : dim === "modoTerminacion" && modoTermBloqueado ? (
 												<Typography variant="caption" sx={{ display: "block", color: "warning.main", fontStyle: "italic", mb: 0.25 }}>
 													Solo aplica cuando <b>Función = terminación</b>.
 												</Typography>
@@ -1241,6 +1291,7 @@ const EtiquetadoEditor = () => {
 												size="small"
 												variant="text"
 												sx={{ py: 0, minWidth: 0 }}
+												disabled={actoNinguno}
 												onClick={() => setDecisiones(mSel.idx, [...(aSel.decisiones || []), { objetoDecidido: "", resultado: null }])}
 											>
 												+ agregar
@@ -1325,6 +1376,7 @@ const EtiquetadoEditor = () => {
 												size="small"
 												variant="text"
 												sx={{ py: 0, minWidth: 0 }}
+												disabled={actoNinguno}
 												onClick={() => setCampo(mSel.idx, "cargas", [...(aSel.cargas || []), { destinatarios: [], accion: null, plazo: null, apercibimiento: "" }])}
 											>
 												+ agregar carga

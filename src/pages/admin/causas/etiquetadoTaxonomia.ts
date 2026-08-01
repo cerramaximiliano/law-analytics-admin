@@ -222,6 +222,9 @@ export const ETIQUETAS_FINALES: [string, string][] = [
 ];
 
 export const ACTOS_PROCESALES: [string, string][] = [
+	// "ninguno" = el documento NO es una resolución (constancias, sorteos,
+	// listados…): fija tipo = no_es_resolucion y las demás dimensiones no aplican.
+	["ninguno", "Ninguno — no es resolución"],
 	["corre_traslado", "Corre traslado"],
 	["da_vista", "Da vista (Ministerio Público / organismo)"],
 	["intima", "Intima"],
