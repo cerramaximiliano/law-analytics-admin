@@ -903,9 +903,15 @@ const EtiquetadoEditor = () => {
 										<Stack direction="row" spacing={0.45} alignItems="center" sx={{ mt: 0.35 }}>
 											{DIMS_CUADROS.map(([d, nombre]) => {
 												const valor = (a as any)?.[d] || null;
-												// Acto = ninguno: las demás dimensiones no aplican → se muestran
-												// resueltas (verde tenue), no pendientes.
-												const noAplica = !valor && a?.actoProcesal === "ninguno";
+												// Dimensiones que NO aplican al movimiento → se muestran resueltas
+												// (verde tenue), no pendientes: acto=ninguno bloquea todo;
+												// resultado no aplica con función impulso/ordenación/susp./reanud.;
+												// modo term. no aplica cuando la función no es terminación.
+												const noAplica =
+													!valor &&
+													(a?.actoProcesal === "ninguno" ||
+														(d === "resultado" && !!a?.funcion && FUNCIONES_SIN_RESULTADO.includes(a.funcion)) ||
+														(d === "modoTerminacion" && !!a?.funcion && a.funcion !== "terminacion"));
 												const cName = DIM_CHIP_COLOR[d];
 												const col =
 													cName && cName !== "default" ? (theme.palette as any)[cName].main : theme.palette.text.secondary;
@@ -914,7 +920,11 @@ const EtiquetadoEditor = () => {
 															? ACTOS_PROCESALES.find(([v]) => v === valor)?.[1]
 															: DIM_LABELS[d as DimKey]?.opciones.find(([v]) => v === valor)?.[1]) || valor
 													: noAplica
-													? "no aplica (acto = ninguno)"
+													? a?.actoProcesal === "ninguno"
+														? "no aplica (acto = ninguno)"
+														: `no aplica (función = ${
+																DIM_LABELS.funcion.opciones.find(([v]) => v === a?.funcion)?.[1]?.toLowerCase() || a?.funcion
+														  })`
 													: "sin marcar";
 												return (
 													<Tooltip key={d} title={`${nombre}: ${valorLabel}`}>
