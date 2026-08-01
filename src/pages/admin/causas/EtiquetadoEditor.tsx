@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { Fragment, useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
 	Box,
@@ -75,8 +75,8 @@ const MODOS_BARRA: (DimKey | "actoProcesal" | "decisiones" | "cargas")[] = [
 	"cargas",
 ];
 
-// Semáforo de dimensiones en la lista: un cuadradito por campo, en el mismo
-// orden y color que el panel derecho — apagado si no está marcado.
+// Semáforo de dimensiones en la lista: un cuadradito por campo, en el MISMO
+// orden que los tabs de la barra de modo — apagado si no está marcado.
 const DIMS_CUADROS: [DimKey | "actoProcesal", string][] = [
 	["actoProcesal", "Acto"],
 	["tipoResolucion", "Tipo"],
@@ -84,9 +84,9 @@ const DIMS_CUADROS: [DimKey | "actoProcesal", string][] = [
 	["materia", "Materia"],
 	["contexto", "Contexto"],
 	["funcion", "Función"],
+	["resultado", "Resultado"],
 	["modoTerminacion", "Modo term."],
 	["estadoImpugnatorio", "Firmeza"],
-	["resultado", "Resultado"],
 ];
 
 const ESTADO_COLOR: Record<EstadoAnotacion, "default" | "warning" | "info" | "success" | "error"> = {
@@ -952,9 +952,80 @@ const EtiquetadoEditor = () => {
 										</span>
 									</Tooltip>
 								</Stack>
-								<Typography variant="body1" fontWeight={700} sx={{ mt: 0.5, mb: 1.5, lineHeight: 1.35 }}>
+								<Typography variant="body1" fontWeight={700} sx={{ mt: 0.5, mb: 1, lineHeight: 1.35 }}>
 									{mSel.detalle}
 								</Typography>
+
+								{/* Breadcrumb de tracking: lo elegido en cada tab, en el mismo orden que la
+								    barra de modo. Lo pendiente se muestra como cajita punteada con el nombre
+								    del campo. Click en cualquiera navega a su tab. */}
+								<Stack direction="row" alignItems="center" flexWrap="wrap" useFlexGap sx={{ gap: 0.5, mb: 1.5 }}>
+									{MODOS_BARRA.map((d) => {
+										// Modo de terminación solo aplica cuando la función es terminación
+										if (d === "modoTerminacion" && aSel.funcion !== "terminacion") return null;
+										let elegido = false;
+										let texto = "";
+										let colorKey: string = DIM_CHIP_COLOR[d as string] || "default";
+										if (d === "decisiones") {
+											const n = (aSel.decisiones || []).length;
+											elegido = n > 0;
+											texto = elegido ? `Decisiones ×${n}` : "Decisiones";
+											colorKey = "secondary";
+										} else if (d === "cargas") {
+											const n = (aSel.cargas || []).length;
+											elegido = n > 0;
+											texto = elegido ? `Cargas ×${n}` : "Cargas";
+											colorKey = "info";
+										} else if (d === "actoProcesal") {
+											elegido = !!aSel.actoProcesal;
+											texto = aSel.actoProcesal
+												? ACTOS_PROCESALES.find(([x]) => x === aSel.actoProcesal)?.[1] || aSel.actoProcesal
+												: "Acto";
+										} else {
+											const v = (aSel as any)[d];
+											elegido = !!v;
+											texto = v ? DIM_LABELS[d as DimKey].opciones.find(([x]) => x === v)?.[1] || v : DIM_LABELS[d as DimKey].corto;
+										}
+										const colorBase =
+											colorKey !== "default" ? (theme.palette as any)[colorKey].main : theme.palette.text.secondary;
+										return (
+											<Fragment key={d}>
+												{d !== "actoProcesal" && (
+													<Typography variant="caption" sx={{ color: "text.disabled", lineHeight: 1, userSelect: "none" }}>
+														›
+													</Typography>
+												)}
+												<Box
+													onClick={() => setModo(d as any)}
+													sx={{
+														px: 0.75,
+														py: 0.1,
+														borderRadius: 1,
+														cursor: "pointer",
+														fontSize: "0.66rem",
+														lineHeight: 1.7,
+														whiteSpace: "nowrap",
+														...(elegido
+															? {
+																	bgcolor: alpha(colorBase, isDark ? 0.22 : 0.12),
+																	border: `1px solid ${alpha(colorBase, 0.55)}`,
+																	color: "text.primary",
+																	fontWeight: 600,
+															  }
+															: {
+																	border: `1px dashed ${theme.palette.divider}`,
+																	color: "text.disabled",
+																	fontStyle: "italic",
+															  }),
+														"&:hover": { borderStyle: "solid", borderColor: alpha(colorBase, 0.8) },
+													}}
+												>
+													{texto}
+												</Box>
+											</Fragment>
+										);
+									})}
+								</Stack>
 
 								{/* Acto-primero: elegir el acto autocompleta las demás dimensiones (solo vacías) */}
 								{(modo === "libre" || modo === "actoProcesal") && (
