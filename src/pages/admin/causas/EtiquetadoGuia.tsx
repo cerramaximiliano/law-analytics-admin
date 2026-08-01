@@ -155,6 +155,12 @@ const SECCIONES: Seccion[] = [
 					<Codigo>apelacion_subsidiaria → concede</Codigo>.
 				</P>
 				<P>
+					<B>De parte vs. de oficio</B>: la <Codigo>excepcion_incompetencia</Codigo> (planteada por una parte) se
+					resuelve con hace lugar / rechaza; la <Codigo>incompetencia_de_oficio</Codigo> (el propio juzgado se declara
+					incompetente, sin petición) lleva resultado <Codigo>declara</Codigo> — no hay petición que conceder. El mismo
+					resultado "declara" sirve para otros pronunciamientos de oficio (caducidad, rebeldía).
+				</P>
+				<P>
 					El <B>objeto decidido</B> es un selector con vocabulario curado; si falta un valor, escribilo y Enter — se
 					normaliza a <Codigo>snake_case</Codigo> y reaparece como opción en la causa. En la mayoría de los documentos la
 					sección queda vacía.
