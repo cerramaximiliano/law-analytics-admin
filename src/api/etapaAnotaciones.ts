@@ -63,6 +63,10 @@ export interface ItemCola {
 	estado: EstadoAnotacion;
 	notasCausa?: string;
 	movimientosAnotados: number;
+	// Divergencias vs. combinación típica del acto (computadas por el backend
+	// con el espejo de ACTO_AUTOFILL) — ⚠ informativa en el listado.
+	divergencias?: number;
+	divergenciasDetalle?: { idx: number; dim: string; elegido: string; sugerido: string; acto: string }[];
 	createdAt?: string;
 	updatedAt?: string;
 }

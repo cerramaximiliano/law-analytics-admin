@@ -28,6 +28,7 @@ import MainCard from "components/MainCard";
 import { Edit2, Refresh } from "iconsax-react";
 import EtapaAnotacionesService, { EstadoAnotacion, ItemCola } from "api/etapaAnotaciones";
 import { BRAND_BLUE } from "themes/dashboardTokens";
+import { DIM_LABELS, DimKey } from "./etiquetadoTaxonomia";
 
 const ESTADO_COLOR: Record<EstadoAnotacion, "default" | "warning" | "info" | "success" | "error"> = {
 	pendiente: "default",
@@ -185,6 +186,36 @@ const EtiquetadoDataset = () => {
 										</TableCell>
 										<TableCell align="center" sx={{ fontVariantNumeric: "tabular-nums" }}>
 											{item.movimientosAnotados}
+											{(item.divergencias || 0) > 0 && (
+												<Tooltip
+													title={
+														<>
+															{`${item.divergencias} valor(es) difieren de la combinación típica del acto — informativo, no error:`}
+															{(item.divergenciasDetalle || []).map((dv, i) => (
+																<div key={i}>
+																	{`mov #${dv.idx} · ${DIM_LABELS[dv.dim as DimKey]?.corto || dv.dim}: «${
+																		DIM_LABELS[dv.dim as DimKey]?.opciones.find(([v]) => v === dv.elegido)?.[1] || dv.elegido
+																	}» (típico de ${dv.acto}: «${
+																		DIM_LABELS[dv.dim as DimKey]?.opciones.find(([v]) => v === dv.sugerido)?.[1] || dv.sugerido
+																	}»)`}
+																</div>
+															))}
+															{(item.divergencias || 0) > (item.divergenciasDetalle || []).length && (
+																<div>{`… y ${(item.divergencias || 0) - (item.divergenciasDetalle || []).length} más`}</div>
+															)}
+														</>
+													}
+												>
+													<Chip
+														size="small"
+														color="warning"
+														variant="outlined"
+														label={`⚠ ${item.divergencias}`}
+														sx={{ ml: 0.6, fontSize: "0.66rem", height: 20 }}
+														onClick={(e) => e.stopPropagation()}
+													/>
+												</Tooltip>
+											)}
 										</TableCell>
 										<TableCell align="center">
 											<Chip size="small" label={item.estado} color={ESTADO_COLOR[item.estado]} />
