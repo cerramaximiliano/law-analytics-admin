@@ -67,6 +67,8 @@ export interface ItemCola {
 	// con el espejo de ACTO_AUTOFILL) — ⚠ informativa en el listado.
 	divergencias?: number;
 	divergenciasDetalle?: { idx: number; dim: string; elegido: string; sugerido: string; acto: string }[];
+	// Ranking de cobertura (persistido por getCobertura): ⭐ en el listado.
+	sugerida?: { rank: number; score: number; senales: { clave: string; hits: number }[]; calculadoAt?: string };
 	createdAt?: string;
 	updatedAt?: string;
 }
@@ -137,7 +139,14 @@ export interface CausaParaAnotar {
 // ── Servicio ───────────────────────────────────────────────────────────────────
 
 export class EtapaAnotacionesService {
-	static async getCola(params?: { estado?: string; fuero?: string; motivo?: string; page?: number; limit?: number }) {
+	static async getCola(params?: {
+		estado?: string;
+		fuero?: string;
+		motivo?: string;
+		page?: number;
+		limit?: number;
+		sugeridas?: "1";
+	}) {
 		const { data } = await workersAxios.get("/api/admin/etapa-anotaciones", { params });
 		return data as {
 			success: boolean;

@@ -57,6 +57,7 @@ const EtiquetadoDataset = () => {
 	const [rowsPerPage, setRowsPerPage] = useState(25);
 	const [estadoFilter, setEstadoFilter] = useState<string>("todos");
 	const [fueroFilter, setFueroFilter] = useState<string>("todos");
+	const [soloSugeridas, setSoloSugeridas] = useState(false);
 	// Tablero de cobertura de clases (carga on-demand al abrir)
 	const [coberturaAbierta, setCoberturaAbierta] = useState(false);
 	const [cobertura, setCobertura] = useState<Awaited<ReturnType<typeof EtapaAnotacionesService.getCobertura>> | null>(null);
@@ -92,6 +93,7 @@ const EtiquetadoDataset = () => {
 				fuero: fueroFilter !== "todos" ? fueroFilter : undefined,
 				page,
 				limit: rowsPerPage,
+				sugeridas: soloSugeridas ? "1" : undefined,
 			});
 			setItems(d.items);
 			setTotal(d.total);
@@ -101,7 +103,7 @@ const EtiquetadoDataset = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [estadoFilter, fueroFilter, page, rowsPerPage]);
+	}, [estadoFilter, fueroFilter, page, rowsPerPage, soloSugeridas]);
 
 	useEffect(() => {
 		cargar();
@@ -258,6 +260,18 @@ const EtiquetadoDataset = () => {
 			</Collapse>
 
 			<Stack direction="row" spacing={1} sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
+				<Tooltip title="Solo las causas sugeridas por el tablero de cobertura (clases que faltan en el gold set), ordenadas por prioridad. Se recalculan al abrir 'Cobertura de clases'.">
+					<Chip
+						size="small"
+						label="⭐ sugeridas"
+						color="warning"
+						variant={soloSugeridas ? "filled" : "outlined"}
+						onClick={() => {
+							setSoloSugeridas(!soloSugeridas);
+							setPage(0);
+						}}
+					/>
+				</Tooltip>
 				{Object.entries(porEstado).map(([e, n]) => (
 					<Chip
 						key={e}
@@ -332,9 +346,22 @@ const EtiquetadoDataset = () => {
 											<Chip size="small" variant="outlined" label={item.fuero} />
 										</TableCell>
 										<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>
-											<Typography variant="body2" fontWeight={600}>
-												{item.number}/{item.year}
-											</Typography>
+											<Stack direction="row" alignItems="center" spacing={0.5}>
+												{item.sugerida && (
+													<Tooltip
+														title={`⭐ Sugerida #${item.sugerida.rank} por cobertura — trae: ${item.sugerida.senales
+															.map((se) => `${se.clave}×${se.hits}`)
+															.join(", ")}`}
+													>
+														<Typography component="span" sx={{ color: "warning.main", fontSize: "0.9rem", lineHeight: 1 }}>
+															★
+														</Typography>
+													</Tooltip>
+												)}
+												<Typography variant="body2" fontWeight={600}>
+													{item.number}/{item.year}
+												</Typography>
+											</Stack>
 										</TableCell>
 										<TableCell sx={{ maxWidth: 280 }}>
 											<Typography variant="body2" sx={{ whiteSpace: "normal", wordWrap: "break-word" }}>
