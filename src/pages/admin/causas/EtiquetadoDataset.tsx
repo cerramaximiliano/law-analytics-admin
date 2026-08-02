@@ -23,8 +23,9 @@ import {
 	useTheme,
 	alpha,
 	Button,
-	Collapse,
 	Divider,
+	Tabs,
+	Tab,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import MainCard from "components/MainCard";
@@ -54,29 +55,30 @@ const EtiquetadoDataset = () => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(25);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [estadoFilter, setEstadoFilter] = useState<string>("todos");
 	const [fueroFilter, setFueroFilter] = useState<string>("todos");
 	const [soloSugeridas, setSoloSugeridas] = useState(false);
-	// Tablero de cobertura de clases (carga on-demand al abrir)
-	const [coberturaAbierta, setCoberturaAbierta] = useState(false);
+	// Tab activo: 0 = cola, 1 = cobertura de clases (carga on-demand)
+	const [tab, setTab] = useState(0);
 	const [cobertura, setCobertura] = useState<Awaited<ReturnType<typeof EtapaAnotacionesService.getCobertura>> | null>(null);
 	const [coberturaLoading, setCoberturaLoading] = useState(false);
 
-	const abrirCobertura = async () => {
-		const abrir = !coberturaAbierta;
-		setCoberturaAbierta(abrir);
-		if (abrir && !cobertura) {
-			setCoberturaLoading(true);
-			try {
-				setCobertura(await EtapaAnotacionesService.getCobertura());
-			} catch (e: any) {
-				setError(e?.response?.data?.message || e.message);
-				setCoberturaAbierta(false);
-			} finally {
-				setCoberturaLoading(false);
-			}
+	const cargarCobertura = async () => {
+		setCoberturaLoading(true);
+		try {
+			setCobertura(await EtapaAnotacionesService.getCobertura());
+		} catch (e: any) {
+			setError(e?.response?.data?.message || e.message);
+		} finally {
+			setCoberturaLoading(false);
 		}
+	};
+
+	const cambiarTab = (v: number) => {
+		setTab(v);
+		if (v === 1 && !cobertura && !coberturaLoading) cargarCobertura();
+		if (v === 0) cargar(); // refresca ⭐ tras un recálculo de cobertura
 	};
 
 	const labelDeValor = (dim: string, v: string) =>
@@ -113,14 +115,9 @@ const EtiquetadoDataset = () => {
 		<MainCard
 			title="Etiquetado de dataset — etapas procesales"
 			secondary={
-				<Stack direction="row" spacing={1} alignItems="center">
-					<Button size="small" variant={coberturaAbierta ? "contained" : "outlined"} onClick={abrirCobertura}>
-						Cobertura de clases
-					</Button>
-					<IconButton size="small" onClick={cargar}>
-						<Refresh size={18} />
-					</IconButton>
-				</Stack>
+				<IconButton size="small" onClick={tab === 0 ? cargar : cargarCobertura}>
+					<Refresh size={18} />
+				</IconButton>
 			}
 		>
 			<Typography variant="body2" color="text.secondary" sx={{ mb: 2, maxWidth: 720 }}>
@@ -129,9 +126,14 @@ const EtiquetadoDataset = () => {
 				sumar causas a la cola desde <b>Carpetas verificadas</b> con el botón de etiquetado.
 			</Typography>
 
-			{/* ── Tablero de cobertura: qué clases ya tienen ejemplos y cuáles faltan;
+			<Tabs value={tab} onChange={(_e, v) => cambiarTab(v)} sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}>
+				<Tab label="Cola de causas" />
+				<Tab label="Cobertura de clases" />
+			</Tabs>
+
+			{/* ── Tab Cobertura: qué clases ya tienen ejemplos y cuáles faltan;
 			    causas pendientes sugeridas por señales de clases subrepresentadas ── */}
-			<Collapse in={coberturaAbierta}>
+			{tab === 1 && (
 				<Card variant="outlined" sx={{ p: 2, mb: 2 }}>
 					{coberturaLoading || !cobertura ? (
 						<Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
@@ -257,8 +259,10 @@ const EtiquetadoDataset = () => {
 						</>
 					)}
 				</Card>
-			</Collapse>
+			)}
 
+			{tab === 0 && (
+			<>
 			<Stack direction="row" spacing={1} sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
 				<Tooltip title="Solo las causas sugeridas por el tablero de cobertura (clases que faltan en el gold set), ordenadas por prioridad. Se recalculan al abrir 'Cobertura de clases'.">
 					<Chip
@@ -450,6 +454,8 @@ const EtiquetadoDataset = () => {
 						}}
 					/>
 				</Card>
+			)}
+			</>
 			)}
 		</MainCard>
 	);
