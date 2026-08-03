@@ -231,6 +231,7 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	["da_vista", "Da vista (Ministerio Público / organismo)"],
 	["intima", "Intima"],
 	["fija_audiencia", "Fija audiencia"],
+	["celebra_audiencia", "Celebra audiencia (acta)"],
 	["ordena_notificacion", "Ordena notificación"],
 	["ordena_oficio", "Ordena oficio"],
 	["ordena_cedula", "Ordena cédula"],
@@ -291,6 +292,10 @@ export const ACTO_AUTOFILL: Record<
 	da_vista: { tipoResolucion: "providencia_simple", funcion: "impulso", resultado: "no_aplica" },
 	intima: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
 	fija_audiencia: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
+	// Acta que documenta la audiencia (celebrada o fracasada). Si en la audiencia
+	// se decide algo (homologación, acuerdo), ESE acto es el principal y el acta
+	// va como secundario.
+	celebra_audiencia: { tipoResolucion: "otra_resolucion", funcion: "ordenacion", resultado: "no_aplica" },
 	ordena_notificacion: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
 	ordena_oficio: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
 	ordena_cedula: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },

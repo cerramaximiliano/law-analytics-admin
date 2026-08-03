@@ -20,6 +20,7 @@ import {
 	FormControl,
 	InputLabel,
 	Select,
+	Menu,
 	MenuItem,
 	Divider,
 	useTheme,
@@ -118,6 +119,7 @@ const EtiquetadoEditor = () => {
 	// Etiquetas débiles del motor v17: OCULTAS por defecto — verlas mientras se
 	// anota introduce sesgo de anclaje y el gold set debe ser independiente.
 	const [mostrarDebiles, setMostrarDebiles] = useState(false);
+	const [anchorObs, setAnchorObs] = useState<HTMLElement | null>(null);
 	// Concurrencia optimista + autosave
 	const [baseUpdatedAt, setBaseUpdatedAt] = useState<string | null>(null);
 	const [ultimoAutosave, setUltimoAutosave] = useState<Date | null>(null);
@@ -393,6 +395,16 @@ const EtiquetadoEditor = () => {
 	const labelDim = (dim: string) => (DIM_LABELS as any)[dim]?.corto || dim;
 	const labelValor = (dim: string, v: string) =>
 		(DIM_LABELS as any)[dim]?.opciones.find(([x]: [string, string]) => x === v)?.[1] || v;
+
+	// Observaciones de toda la causa: todas las divergencias vs. combinación
+	// típica, con su movimiento — el mismo dato que agrega el ⚠ del listado.
+	const divergenciasCausa = useMemo(() => {
+		const out: { idx: number; dim: string; elegido: string; sugerido: string }[] = [];
+		for (const [k, a] of Object.entries(anotaciones)) {
+			for (const dv of divergenciasDe(a)) out.push({ idx: parseInt(k, 10), ...dv });
+		}
+		return out.sort((x, y) => x.idx - y.idx);
+	}, [anotaciones, divergenciasDe]);
 
 	// Opciones del selector de objeto decidido: vocabulario curado + valores ya
 	// usados en esta causa (los creados a mano reaparecen como opción).
@@ -779,6 +791,35 @@ const EtiquetadoEditor = () => {
 							<Book1 size={18} />
 						</IconButton>
 					</Tooltip>
+					{divergenciasCausa.length > 0 && (
+						<>
+							<Tooltip title="Observaciones: valores que difieren de la combinación típica del acto (informativo, no error). Click para listarlas y saltar al movimiento.">
+								<Chip
+									size="small"
+									color="warning"
+									variant="outlined"
+									label={`⚠ ${divergenciasCausa.length}`}
+									onClick={(e) => setAnchorObs(e.currentTarget)}
+								/>
+							</Tooltip>
+							<Menu anchorEl={anchorObs} open={!!anchorObs} onClose={() => setAnchorObs(null)}>
+								{divergenciasCausa.map((dv, i) => (
+									<MenuItem
+										key={i}
+										onClick={() => {
+											setSeleccionado(dv.idx);
+											setAnchorObs(null);
+										}}
+									>
+										<Typography variant="caption">
+											Mov. {numeroVisible(dv.idx)} · {labelDim(dv.dim)}: «{labelValor(dv.dim, dv.elegido)}» — típico: «
+											{labelValor(dv.dim, dv.sugerido)}»
+										</Typography>
+									</MenuItem>
+								))}
+							</Menu>
+						</>
+					)}
 					{conflicto ? (
 						<Chip size="small" color="error" label="conflicto — recargá" />
 					) : dirty.size > 0 ? (
