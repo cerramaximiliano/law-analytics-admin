@@ -27,10 +27,11 @@ import {
 	useMediaQuery,
 	Paper,
 	alpha,
+	Dialog,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { ArrowLeft, ArrowLeft2, ArrowRight2, Book1, Copy, DocumentText, DocumentDownload, TickCircle, Trash, Warning2 } from "iconsax-react";
+import { ArrowLeft, ArrowLeft2, ArrowRight2, Book1, CloseCircle, Copy, DocumentText, DocumentDownload, TickCircle, Trash, Warning2 } from "iconsax-react";
 import EtiquetadoGuia from "./EtiquetadoGuia";
 import EtapaAnotacionesService, {
 	AnotacionMovimiento,
@@ -120,6 +121,9 @@ const EtiquetadoEditor = () => {
 	// anota introduce sesgo de anclaje y el gold set debe ser independiente.
 	const [mostrarDebiles, setMostrarDebiles] = useState(false);
 	const [anchorObs, setAnchorObs] = useState<HTMLElement | null>(null);
+	// Modo tarjeta: wizard dimensión-por-dimensión sobre el movimiento actual
+	const [tarjetaAbierta, setTarjetaAbierta] = useState(false);
+	const [pasoTarjeta, setPasoTarjeta] = useState(0);
 	// Concurrencia optimista + autosave
 	const [baseUpdatedAt, setBaseUpdatedAt] = useState<string | null>(null);
 	const [ultimoAutosave, setUltimoAutosave] = useState<Date | null>(null);
@@ -766,6 +770,41 @@ const EtiquetadoEditor = () => {
 	// no aplican y quedan bloqueadas (y el movimiento valida como completo).
 	const actoNinguno = aSel.actoProcesal === "ninguno";
 	const cuerpoSel = seleccionado !== null ? cuerpoDe(seleccionado) : null;
+
+	// Secuencia de pasos del modo tarjeta (dinámica: acto=ninguno salta todo;
+	// modo de terminación solo con función terminación).
+	const PASOS_TARJETA: string[] = mSel
+		? [
+				"actoProcesal",
+				...(actoNinguno
+					? []
+					: [
+							"tipoResolucion",
+							"instancia",
+							"materia",
+							"contexto",
+							"funcion",
+							"resultado",
+							...(aSel.funcion === "terminacion" ? ["modoTerminacion"] : []),
+							"estadoImpugnatorio",
+							"decisiones",
+							"cargas",
+					  ]),
+				"resumen",
+		  ]
+		: [];
+	const pasoKey = PASOS_TARJETA.length ? PASOS_TARJETA[Math.min(pasoTarjeta, PASOS_TARJETA.length - 1)] : "resumen";
+	const avanzarTarjeta = () => setPasoTarjeta((pp) => Math.min(pp + 1, Math.max(PASOS_TARJETA.length - 1, 0)));
+	const retrocederTarjeta = () => setPasoTarjeta((pp) => Math.max(pp - 1, 0));
+	const irAPasoTarjeta = (k: string) => {
+		const i = PASOS_TARJETA.indexOf(k);
+		if (i >= 0) setPasoTarjeta(i);
+	};
+	const textoDocumento = (cu: ReturnType<typeof cuerpoDe>) =>
+		cu
+			? cu.completo ||
+			  [cu.encabezado, cu.tieneDispositiva ? cu.dispositiva : cu.colaTexto].filter(Boolean).join("\n\n[…]\n\n")
+			: "";
 	const anotadosCount = Object.keys(anotaciones).filter((k) => Object.keys(anotaciones[k] || {}).length).length;
 
 	return (
@@ -1210,6 +1249,19 @@ const EtiquetadoEditor = () => {
 									</span>
 								</Tooltip>
 								)}
+								<Tooltip title="Modo tarjeta: anotar dimensión por dimensión con el texto del documento al lado">
+									<Button
+										size="small"
+										variant="outlined"
+										onClick={() => {
+											setPasoTarjeta(0);
+											setTarjetaAbierta(true);
+										}}
+										sx={{ py: 0, px: 1, fontSize: "0.68rem", textTransform: "none" }}
+									>
+										▶ Tarjetas
+									</Button>
+								</Tooltip>
 								<Tooltip title="Limpiar anotaciones de este movimiento">
 										<span>
 											<IconButton
@@ -2073,6 +2125,456 @@ const EtiquetadoEditor = () => {
 						</Button>
 					</Paper>
 				</>
+			)}
+
+			{/* ── Modo tarjeta: wizard de anotación dimensión por dimensión ── */}
+			{tarjetaAbierta && mSel && (
+				<Dialog open fullScreen={esMovil} maxWidth="lg" fullWidth onClose={() => setTarjetaAbierta(false)}>
+					<Box sx={{ display: "flex", flexDirection: esMovil ? "column" : "row", height: esMovil ? "100%" : "82vh" }}>
+						{/* Documento */}
+						<Box
+							sx={{
+								flex: 1.35,
+								p: 2.5,
+								overflowY: "auto",
+								borderRight: esMovil ? 0 : 1,
+								borderBottom: esMovil ? 1 : 0,
+								borderColor: "divider",
+								maxHeight: esMovil ? "36vh" : "none",
+								bgcolor: alpha(theme.palette.primary.main, isDark ? 0.04 : 0.02),
+							}}
+						>
+							<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+								<Typography variant="subtitle2" fontWeight={700}>
+									Mov. {numeroVisible(mSel.idx)} · {mSel.dia || (mSel.fecha || "").slice(0, 10)}
+								</Typography>
+								<Tooltip title="Copiar el texto del documento">
+									<IconButton
+										size="small"
+										onClick={() => {
+											navigator.clipboard
+												.writeText(textoDocumento(cuerpoSel))
+												.then(() => enqueueSnackbar("Texto copiado", { variant: "success", autoHideDuration: 1500 }))
+												.catch(() => enqueueSnackbar("No se pudo copiar", { variant: "warning" }));
+										}}
+									>
+										<Copy size={15} />
+									</IconButton>
+								</Tooltip>
+							</Stack>
+							<Typography variant="caption" fontWeight={600} sx={{ display: "block", mb: 1 }}>
+								{mSel.detalle}
+							</Typography>
+							{cuerpoSel ? (
+								<Typography variant="body2" sx={{ whiteSpace: "pre-wrap", fontSize: "0.82rem", lineHeight: 1.6 }}>
+									{textoDocumento(cuerpoSel)}
+								</Typography>
+							) : (
+								<Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
+									Sin texto capturado para este movimiento.
+								</Typography>
+							)}
+						</Box>
+
+						{/* Paso actual */}
+						<Box sx={{ width: esMovil ? "100%" : 400, p: 2.5, display: "flex", flexDirection: "column", overflowY: "auto", flex: esMovil ? 1 : "none" }}>
+							<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+								<Typography variant="caption" color="text.secondary">
+									Paso {Math.min(pasoTarjeta, PASOS_TARJETA.length - 1) + 1} / {PASOS_TARJETA.length}
+								</Typography>
+								<IconButton size="small" onClick={() => setTarjetaAbierta(false)}>
+									<CloseCircle size={18} />
+								</IconButton>
+							</Stack>
+
+							{pasoKey === "actoProcesal" ? (
+								<>
+									<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>
+										Acto procesal
+									</Typography>
+									<Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
+										¿Qué hace el juzgado en este documento? Elegirlo genera sugerencias ✦ para el resto.
+									</Typography>
+									<Autocomplete
+										size="small"
+										options={ACTOS_PROCESALES.map(([v]) => v)}
+										getOptionLabel={(v) => ACTOS_PROCESALES.find(([x]) => x === v)?.[1] || v}
+										value={aSel.actoProcesal || null}
+										onChange={(_e, v) => {
+											aplicarActo(mSel.idx, v);
+											if (v) avanzarTarjeta();
+										}}
+										renderInput={(params) => <TextField {...params} autoFocus placeholder="Buscar acto…" />}
+									/>
+									{Object.keys(sugerencias).length > 0 && (
+										<Button
+											size="small"
+											variant="outlined"
+											color="warning"
+											sx={{ mt: 1.5, textTransform: "none" }}
+											onClick={() => {
+												aplicarSugerencias();
+												irAPasoTarjeta("resumen");
+											}}
+										>
+											✦ Aplicar sugerencias ({Object.keys(sugerencias).length}) e ir al resumen
+										</Button>
+									)}
+								</>
+							) : pasoKey === "decisiones" ? (
+								<>
+									<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>
+										Decisiones
+									</Typography>
+									<Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
+										Solo si la parte dispositiva resuelve VARIAS cosas. En la mayoría queda vacía — Saltear.
+									</Typography>
+									{parAlzada && parAlzada.filas.length > 0 && !actoNinguno && (
+										<Button
+											size="small"
+											variant="outlined"
+											color="info"
+											sx={{ mb: 1, textTransform: "none" }}
+											onClick={() =>
+												setDecisiones(mSel.idx, [
+													...(aSel.decisiones || []),
+													...parAlzada.filas.map((f) => ({ objetoDecidido: f.objetoDecidido, resultado: null })),
+												])
+											}
+										>
+											✦ Par de alzada: agregar fila espejo (mov. {numeroVisible(parAlzada.idxOrigen)})
+										</Button>
+									)}
+									{(aSel.decisiones || []).map((dec, di) => (
+										<Stack key={di} spacing={0.5} sx={{ mb: 1, pl: 1, borderLeft: "2px solid", borderColor: "divider" }}>
+											<Autocomplete
+												freeSolo
+												autoSelect
+												size="small"
+												options={objetosDecididosOpciones}
+												getOptionLabel={(v) => OBJETOS_DECIDIDOS.find(([x]) => x === v)?.[1] || v}
+												value={dec.objetoDecidido || null}
+												onChange={(_e, v) => {
+													const nuevas = [...(aSel.decisiones || [])];
+													nuevas[di] = { ...nuevas[di], objetoDecidido: v ? normalizarObjetoDecidido(v) : "" };
+													setDecisiones(mSel.idx, nuevas);
+												}}
+												renderInput={(params) => <TextField {...params} placeholder="objeto decidido…" />}
+											/>
+											<Stack direction="row" spacing={1}>
+												<Select
+													fullWidth
+													size="small"
+													displayEmpty
+													value={dec.resultado || ""}
+													onChange={(ev) => {
+														const nuevas = [...(aSel.decisiones || [])];
+														nuevas[di] = { ...nuevas[di], resultado: (ev.target.value as string) || null };
+														setDecisiones(mSel.idx, nuevas);
+													}}
+													renderValue={(v) =>
+														v ? DIM_LABELS.resultado.opciones.find(([x]) => x === v)?.[1] || v : (
+															<Typography variant="caption" color="text.secondary">resultado…</Typography>
+														)
+													}
+												>
+													{DIM_LABELS.resultado.opciones
+														.filter(([v]) => {
+															if (v === "no_aplica") return false;
+															if (v === "otro" || v === dec.resultado) return true;
+															const perm = RESULTADOS_POR_OBJETO[dec.objetoDecidido];
+															return !perm || perm.includes(v);
+														})
+														.map(([v, l]) => (
+															<MenuItem key={v} value={v}>{l}</MenuItem>
+														))}
+												</Select>
+												<IconButton
+													size="small"
+													color="error"
+													onClick={() => setDecisiones(mSel.idx, (aSel.decisiones || []).filter((_x, i2) => i2 !== di))}
+												>
+													<Trash size={14} />
+												</IconButton>
+											</Stack>
+										</Stack>
+									))}
+									<Button
+										size="small"
+										variant="text"
+										sx={{ alignSelf: "flex-start", textTransform: "none" }}
+										onClick={() => setDecisiones(mSel.idx, [...(aSel.decisiones || []), { objetoDecidido: "", resultado: null }])}
+									>
+										+ agregar decisión
+									</Button>
+								</>
+							) : pasoKey === "cargas" ? (
+								<>
+									<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>
+										Cargas procesales
+									</Typography>
+									<Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
+										Solo si el acto impone conductas con plazo (a quién, qué, plazo, apercibimiento). Si no — Saltear.
+									</Typography>
+									{(aSel.cargas || []).map((carga, ci) => {
+										const actualizar = (parche: Partial<typeof carga>) => {
+											const nuevas = [...(aSel.cargas || [])];
+											nuevas[ci] = { ...nuevas[ci], ...parche };
+											setCampo(mSel.idx, "cargas", nuevas);
+										};
+										return (
+											<Stack key={ci} spacing={0.75} sx={{ mb: 1.25, pl: 1, borderLeft: "2px solid", borderColor: "divider" }}>
+												<Autocomplete
+													multiple
+													size="small"
+													options={DESTINATARIOS.map(([v]) => v)}
+													getOptionLabel={(v) => DESTINATARIOS.find(([x]) => x === v)?.[1] || v}
+													value={carga.destinatarios}
+													onChange={(_e, v) => actualizar({ destinatarios: v })}
+													renderInput={(params) => <TextField {...params} label="Destinatario/s" />}
+												/>
+												<Autocomplete
+													size="small"
+													options={ACCIONES_REQUERIDAS.map(([v]) => v)}
+													getOptionLabel={(v) => ACCIONES_REQUERIDAS.find(([x]) => x === v)?.[1] || v}
+													value={carga.accion}
+													onChange={(_e, v) => actualizar({ accion: v })}
+													renderInput={(params) => <TextField {...params} label="Acción requerida" />}
+												/>
+												<Stack direction="row" spacing={0.75}>
+													<TextField
+														size="small"
+														type="number"
+														label="Plazo"
+														sx={{ width: 90 }}
+														value={carga.plazo?.cantidad ?? ""}
+														onChange={(ev) =>
+															actualizar({
+																plazo:
+																	ev.target.value === ""
+																		? null
+																		: {
+																				cantidad: parseInt(ev.target.value, 10),
+																				unidad: carga.plazo?.unidad || "dias",
+																				tipo: carga.plazo?.tipo || "procesales",
+																		  },
+															})
+														}
+													/>
+													<Select
+														size="small"
+														value={carga.plazo?.unidad || "dias"}
+														onChange={(ev) => carga.plazo && actualizar({ plazo: { ...carga.plazo, unidad: ev.target.value as any } })}
+													>
+														<MenuItem value="dias">días</MenuItem>
+														<MenuItem value="horas">horas</MenuItem>
+														<MenuItem value="meses">meses</MenuItem>
+													</Select>
+													<Select
+														size="small"
+														value={carga.plazo?.tipo || "procesales"}
+														onChange={(ev) => carga.plazo && actualizar({ plazo: { ...carga.plazo, tipo: ev.target.value as any } })}
+													>
+														<MenuItem value="procesales">procesales</MenuItem>
+														<MenuItem value="corridos">corridos</MenuItem>
+													</Select>
+												</Stack>
+												<Stack direction="row" spacing={0.75}>
+													<TextField
+														fullWidth
+														size="small"
+														label="Apercibimiento"
+														value={carga.apercibimiento || ""}
+														onChange={(ev) => actualizar({ apercibimiento: ev.target.value })}
+													/>
+													<IconButton
+														size="small"
+														color="error"
+														onClick={() => setCampo(mSel.idx, "cargas", (aSel.cargas || []).filter((_x, i2) => i2 !== ci))}
+													>
+														<Trash size={14} />
+													</IconButton>
+												</Stack>
+											</Stack>
+										);
+									})}
+									<Button
+										size="small"
+										variant="text"
+										sx={{ alignSelf: "flex-start", textTransform: "none" }}
+										onClick={() =>
+											setCampo(mSel.idx, "cargas", [
+												...(aSel.cargas || []),
+												{ destinatarios: [], accion: null, plazo: null, apercibimiento: "" },
+											])
+										}
+									>
+										+ agregar carga
+									</Button>
+								</>
+							) : pasoKey === "resumen" ? (
+								<>
+									<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+										Resumen del movimiento {numeroVisible(mSel.idx)}
+									</Typography>
+									{(["actoProcesal", ...DIMENSIONES_ORDEN, ...(aSel.funcion === "terminacion" ? ["modoTerminacion"] : []), "estadoImpugnatorio"] as string[]).map(
+										(dim) => {
+											const valor =
+												dim === "actoProcesal"
+													? aSel.actoProcesal
+														? ACTOS_PROCESALES.find(([x]) => x === aSel.actoProcesal)?.[1] || aSel.actoProcesal
+														: null
+													: (aSel as any)[dim]
+													? DIM_LABELS[dim as DimKey]?.opciones.find(([x]) => x === (aSel as any)[dim])?.[1] || (aSel as any)[dim]
+													: null;
+											const sug = !valor && (sugerencias as any)[dim];
+											return (
+												<Stack
+													key={dim}
+													direction="row"
+													spacing={1}
+													alignItems="baseline"
+													onClick={() => irAPasoTarjeta(dim)}
+													sx={{ py: 0.35, px: 0.75, borderRadius: 1, cursor: "pointer", "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.06) } }}
+												>
+													<Typography variant="caption" sx={{ width: 82, color: "text.secondary", flexShrink: 0 }}>
+														{dim === "actoProcesal" ? "Acto" : DIM_LABELS[dim as DimKey]?.corto || dim}
+													</Typography>
+													{valor ? (
+														<Typography variant="body2" fontWeight={600}>{valor}</Typography>
+													) : sug ? (
+														<Typography variant="body2" sx={{ color: "warning.main" }}>
+															✦ {DIM_LABELS[dim as DimKey]?.opciones.find(([x]) => x === sug)?.[1] || sug} (sugerido)
+														</Typography>
+													) : (
+														<Typography variant="body2" color="text.disabled">—</Typography>
+													)}
+												</Stack>
+											);
+										},
+									)}
+									<Stack direction="row" spacing={1.5} sx={{ py: 0.35, px: 0.75 }}>
+										<Typography variant="caption" sx={{ color: "text.secondary" }} onClick={() => irAPasoTarjeta("decisiones")}>
+											Decisiones: {(aSel.decisiones || []).length}
+										</Typography>
+										<Typography variant="caption" sx={{ color: "text.secondary" }} onClick={() => irAPasoTarjeta("cargas")}>
+											Cargas: {(aSel.cargas || []).length}
+										</Typography>
+									</Stack>
+									<Divider sx={{ my: 1 }} />
+									{Object.keys(sugerencias).length > 0 && (
+										<Button size="small" variant="outlined" color="warning" sx={{ mb: 1, textTransform: "none" }} onClick={aplicarSugerencias}>
+											✦ Aplicar sugerencias pendientes ({Object.keys(sugerencias).length})
+										</Button>
+									)}
+									<Stack direction="row" spacing={1}>
+										<Button size="small" variant="contained" disabled={guardando} onClick={() => guardar()}>
+											Guardar
+										</Button>
+										<Button
+											size="small"
+											variant="contained"
+											color="success"
+											disabled={guardando}
+											onClick={() => {
+												guardar();
+												irA(1, mSel.idx);
+												setPasoTarjeta(0);
+											}}
+										>
+											Guardar y siguiente ▶
+										</Button>
+									</Stack>
+								</>
+							) : (
+								(() => {
+									const defPaso = DIM_LABELS[pasoKey as DimKey];
+									const estRT = pasoKey === "resultado" ? estadoResultado(aSel) : null;
+									return (
+										<>
+											<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>
+												{defPaso?.titulo || pasoKey}
+											</Typography>
+											{pasoKey === "resultado" && estRT === "sin_funcion" ? (
+												<Typography variant="caption" sx={{ color: "warning.main", fontStyle: "italic", mb: 1 }}>
+													Primero marcá Función — el resultado depende de ella.
+												</Typography>
+											) : pasoKey === "resultado" && estRT === "auto_no_aplica" ? (
+												<Typography variant="caption" sx={{ color: "success.main", fontStyle: "italic", mb: 1 }}>
+													Función de trámite: resultado "No aplica" (automático) — Siguiente.
+												</Typography>
+											) : (
+												defPaso?.ayuda && (
+													<Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic", mb: 1 }}>
+														{defPaso.ayuda}
+													</Typography>
+												)
+											)}
+											<Box sx={{ overflowY: "auto" }}>
+												{defPaso?.opciones.map(([v, l]) => {
+													const selV = (aSel as any)[pasoKey] === v;
+													const sugV = !selV && !(aSel as any)[pasoKey] && (sugerencias as any)[pasoKey] === v;
+													const deshab =
+														pasoKey === "resultado" &&
+														(estRT === "sin_funcion" || (estRT === "auto_no_aplica" && v !== "no_aplica"));
+													return (
+														<Button
+															key={v}
+															fullWidth
+															size="small"
+															variant={selV ? "contained" : "outlined"}
+															disabled={deshab}
+															onClick={() => {
+																setDim(mSel.idx, pasoKey as DimKey, v);
+																avanzarTarjeta();
+															}}
+															sx={{
+																justifyContent: "flex-start",
+																textTransform: "none",
+																mb: 0.5,
+																...(sugV && { border: `1.5px dashed ${theme.palette.warning.main}` }),
+															}}
+														>
+															{sugV ? "✦ " : ""}
+															{l}
+														</Button>
+													);
+												})}
+											</Box>
+										</>
+									);
+								})()
+							)}
+
+							{/* Navegación del paso */}
+							{pasoKey !== "resumen" && (
+								<Stack direction="row" spacing={1} sx={{ mt: "auto", pt: 1.5 }}>
+									<Button size="small" variant="text" disabled={pasoTarjeta === 0} onClick={retrocederTarjeta}>
+										◀ Atrás
+									</Button>
+									<Button size="small" variant="text" onClick={avanzarTarjeta}>
+										Saltear ▶
+									</Button>
+									<Box sx={{ flex: 1 }} />
+									<Button size="small" variant="text" onClick={() => irAPasoTarjeta("resumen")}>
+										Ir al resumen
+									</Button>
+								</Stack>
+							)}
+							{pasoKey === "resumen" && (
+								<Stack direction="row" sx={{ mt: "auto", pt: 1.5 }}>
+									<Button size="small" variant="text" onClick={() => setPasoTarjeta(0)}>
+										◀ Volver al inicio
+									</Button>
+									<Box sx={{ flex: 1 }} />
+									<Button size="small" variant="text" onClick={() => setTarjetaAbierta(false)}>
+										Cerrar
+									</Button>
+								</Stack>
+							)}
+						</Box>
+					</Box>
+				</Dialog>
 			)}
 		</MainCard>
 	);
