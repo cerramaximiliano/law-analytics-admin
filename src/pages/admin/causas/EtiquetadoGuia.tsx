@@ -1,6 +1,7 @@
 import { Fragment } from "react";
-import { Box, Drawer, IconButton, Stack, Typography, Divider, Chip, useTheme, alpha } from "@mui/material";
-import { CloseSquare } from "iconsax-react";
+import { useState } from "react";
+import { Box, Drawer, IconButton, Stack, Typography, Divider, Chip, Button, useTheme, alpha } from "@mui/material";
+import { ArrowLeft, CloseSquare } from "iconsax-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Guía del operador — reúne las convenciones doctrinales y de UI fijadas
@@ -261,14 +262,105 @@ const SECCIONES: Seccion[] = [
 	},
 ];
 
+// ── Detalle de Función: impulso vs ordenación con ejemplos reales ────────────
+const EJEMPLOS_IMPULSO: [string, string][] = [
+	["Incorpórese al sistema la digitalización acompañada", "recibe y sigue — nada queda pendiente"],
+	["Téngase presente lo manifestado / por presentada la memoria", "receptivo puro"],
+	["Por contestado el oficio a AFIP. Hágase saber a las partes", "recibe prueba producida (materia: prueba)"],
+	["Téngase por oblada la tasa de justicia / agréguese el CUIT", "receptivo administrativo"],
+	["Por devueltos. Hágase saber (sin más disposiciones)", "mera constancia de reingreso"],
+	["Por recibido, hágase saber la Sala que va a conocer", "de paso"],
+	["Córrase traslado de la demanda / del responde", "impone contestar, pero ES la marcha prevista del contradictorio"],
+	["Pasen las actuaciones a proveer las pruebas / autos a sentencia", "mueve el expediente a la próxima estación"],
+];
+const EJEMPLOS_ORDENACION: [string, string][] = [
+	["Intímese al perito a presentar informe en 3 días bajo apercibimiento de remoción", "exige fuera de la marcha normal, con apercibimiento"],
+	["Intímese a acreditar personería… una vez cumplido, se proveerá la presentación", "FRENA el trámite hasta el cumplimiento — señal máxima"],
+	["Señálense las audiencias del día… por MEET… notifíquese a los testigos", "configura fecha, modo y condiciones"],
+	["Desígnase perito… previa aceptación del cargo dentro de 3 días", "instrumenta la producción"],
+	["Auto de apertura a prueba (audiencias + sorteo + oficios + intimaciones)", "el configurador por excelencia — 5 páginas de organización"],
+	["Previo a resolver, líbrese oficio a la SRT (medida para mejor proveer)", "'previo a…' = condicionante"],
+	["Requisitos de giro: CBU de titularidad exclusiva, caución, constancia impositiva", "configura el trámite del cobro"],
+	["Archívese (de rutina, proceso ya terminado)", "disposición administrativa del expediente"],
+];
+
+const DetalleFuncion = () => (
+	<>
+		<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.75 }}>
+			El test central
+		</Typography>
+		<P>
+			<B>Impulso</B> = proveído <B>receptivo o de paso</B>: el juzgado recibe algo o mueve el expediente y el trámite
+			sigue solo, sin que ese proveído deje nada pendiente ni configure nada.
+		</P>
+		<P>
+			<B>Ordenación</B> = proveído <B>configurador o condicionante</B>: establece cómo, cuándo y quién — o directamente
+			frena el avance hasta que algo se cumpla.
+		</P>
+		<Box sx={{ p: 1, borderRadius: 1, bgcolor: (t) => alpha(t.palette.info.main, 0.07), mb: 1.5 }}>
+			<Typography variant="caption" sx={{ display: "block", lineHeight: 1.5 }}>
+				<B>Tres reglas de oro:</B>
+				<br />1 · "Una vez cumplido, se proveerá…" → siempre ordenación.
+				<br />2 · El avance de etapa lo captura el <B>Acto</B> (abre_a_prueba es hito por sí mismo), NO la función — no
+				uses impulso para decir "esto avanza el proceso".
+				<br />3 · El traslado impone contestar, pero es la marcha normal del contradictorio → impulso. La intimación
+				exige fuera de la marcha normal → ordenación.
+			</Typography>
+		</Box>
+		<Typography variant="subtitle2" fontWeight={700} sx={{ color: "success.main", mb: 0.5 }}>
+			✓ IMPULSO — casos reales
+		</Typography>
+		<Box component="ul" sx={{ pl: 2.25, m: 0, mb: 1.5 }}>
+			{EJEMPLOS_IMPULSO.map(([ej, por]) => (
+				<LI key={ej}>
+					<i>"{ej}"</i> — {por}
+				</LI>
+			))}
+		</Box>
+		<Typography variant="subtitle2" fontWeight={700} sx={{ color: "warning.main", mb: 0.5 }}>
+			✓ ORDENACIÓN — casos reales
+		</Typography>
+		<Box component="ul" sx={{ pl: 2.25, m: 0, mb: 1.5 }}>
+			{EJEMPLOS_ORDENACION.map(([ej, por]) => (
+				<LI key={ej}>
+					<i>"{ej}"</i> — {por}
+				</LI>
+			))}
+		</Box>
+		<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>
+			Las otras funciones, en una línea
+		</Typography>
+		<Box component="ul" sx={{ pl: 2.25, m: 0 }}>
+			<LI>
+				<B>Decisión</B>: se pronuncia sobre el mérito de una cuestión (hace lugar, rechaza, confirma…) sin cerrar el
+				proceso.
+			</LI>
+			<LI>
+				<B>Terminación</B>: ESE documento clausura el proceso (sentencia definitiva, homologación que pone fin,
+				caducidad, incompetencia que archiva). Sin lookahead: si después lo revocan, no se reescribe.
+			</LI>
+			<LI>
+				<B>Suspensión / Reanudación</B>: detiene o reactiva formalmente el curso del proceso (no un plazo puntual — la
+				suspensión del plazo de un perito va como parte del proveído, no cambia la función).
+			</LI>
+		</Box>
+	</>
+);
+
 const EtiquetadoGuia = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
 	const theme = useTheme();
+	const [vista, setVista] = useState<"principal" | "funcion">("principal");
 	return (
 		<Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: { width: { xs: "100%", sm: 520 }, p: 2.5 } }}>
 			<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
 				<Stack direction="row" alignItems="center" spacing={1}>
-					<Typography variant="h5">Guía del operador</Typography>
-					<Chip size="small" variant="outlined" label="taxonomía v2" />
+					{vista !== "principal" && (
+						<IconButton size="small" onClick={() => setVista("principal")}>
+							<ArrowLeft size={18} />
+						</IconButton>
+					)}
+					<Typography variant="h5">{vista === "funcion" ? "Función: impulso vs ordenación" : "Guía del operador"}</Typography>
+					{vista === "principal" && <Chip size="small" variant="outlined" label="taxonomía v2" />}
 				</Stack>
 				<IconButton size="small" onClick={onClose}>
 					<CloseSquare size={20} />
@@ -279,15 +371,24 @@ const EtiquetadoGuia = ({ open, onClose }: { open: boolean; onClose: () => void 
 				la duda en Notas — mejor una nota que una categoría inventada.
 			</Typography>
 			<Divider sx={{ mb: 1.5 }} />
-			{SECCIONES.map((s, i) => (
-				<Fragment key={s.titulo}>
-					{i > 0 && <Divider sx={{ my: 1.5, borderColor: alpha(theme.palette.divider, 0.6) }} />}
-					<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.75 }}>
-						{s.titulo}
-					</Typography>
-					{s.cuerpo}
-				</Fragment>
-			))}
+			{vista === "funcion" ? (
+				<DetalleFuncion />
+			) : (
+				SECCIONES.map((s, i) => (
+					<Fragment key={s.titulo}>
+						{i > 0 && <Divider sx={{ my: 1.5, borderColor: alpha(theme.palette.divider, 0.6) }} />}
+						<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.75 }}>
+							{s.titulo}
+						</Typography>
+						{s.cuerpo}
+						{i === 1 && (
+							<Button size="small" variant="text" sx={{ mt: 0.5, textTransform: "none" }} onClick={() => setVista("funcion")}>
+								→ Función en detalle: impulso vs ordenación, con ejemplos reales
+							</Button>
+						)}
+					</Fragment>
+				))
+			)}
 		</Drawer>
 	);
 };
