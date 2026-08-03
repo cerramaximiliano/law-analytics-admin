@@ -179,6 +179,7 @@ const ACCIONES_REQUERIDAS_BASE: [string, string][] = [
 	["presentar_informe", "Presentar informe (perito/organismo)"],
 	["aceptar_cargo", "Aceptar el cargo (perito/martillero)"],
 	["denunciar_datos_bancarios", "Denunciar CBU/CUIL/datos bancarios"],
+	["denunciar_datos_testigos", "Denunciar datos de testigos (tel/mail/DNI)"],
 	["prestar_caucion", "Prestar caución juratoria"],
 	["comparecer_audiencia", "Comparecer a audiencia"],
 	["diligenciar_cedula", "Diligenciar cédula"],
