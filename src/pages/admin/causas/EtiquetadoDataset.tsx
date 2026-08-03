@@ -412,7 +412,11 @@ const EtiquetadoDataset = () => {
 											)}
 										</TableCell>
 										<TableCell align="center">
-											<Chip size="small" label={item.estado} color={ESTADO_COLOR[item.estado]} />
+											<Chip
+												size="small"
+												label={item.estado === "verificada" ? "🔒 cerrada" : item.estado}
+												color={ESTADO_COLOR[item.estado]}
+											/>
 										</TableCell>
 										<TableCell align="center">
 											<Tooltip title="Abrir editor">

@@ -31,7 +31,7 @@ import {
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { ArrowLeft, ArrowLeft2, ArrowRight2, Book1, CloseCircle, Copy, DocumentText, DocumentDownload, TickCircle, Trash, Warning2 } from "iconsax-react";
+import { ArrowLeft, ArrowLeft2, ArrowRight2, Book1, CloseCircle, Copy, DocumentText, DocumentDownload, Lock1, TickCircle, Trash, Warning2 } from "iconsax-react";
 import EtiquetadoGuia from "./EtiquetadoGuia";
 import EtapaAnotacionesService, {
 	AnotacionMovimiento,
@@ -829,7 +829,13 @@ const EtiquetadoEditor = () => {
 					<Typography variant="h5">
 						{data.causa.fuero} {data.causa.number}/{data.causa.year}
 					</Typography>
-					{!esMovil && <Chip size="small" label={estado} color={ESTADO_COLOR[estado]} />}
+					{estado === "verificada" ? (
+						<Tooltip title="Causa cerrada (verificada) — sin más cambios previstos">
+							<Chip size="small" color="success" icon={<Lock1 size={13} />} label="cerrada" />
+						</Tooltip>
+					) : (
+						!esMovil && <Chip size="small" label={estado} color={ESTADO_COLOR[estado]} />
+					)}
 					{!esMovil && <Chip size="small" variant="outlined" label={`${anotadosCount} anotados`} />}
 					{data.causa.familia && <Chip size="small" variant="outlined" label={`familia: ${data.causa.familia}`} />}
 					{!data.cuerposDisponibles && (
@@ -909,6 +915,27 @@ const EtiquetadoEditor = () => {
 					>
 						Guardar y marcar anotada
 					</Button>
+					{estado === "anotada" && (
+						<Tooltip title="Cierra la causa: pasa a 'verificada' (revisión terminada, sin más cambios previstos)">
+							<Button
+								size="small"
+								variant="outlined"
+								color="success"
+								startIcon={<Lock1 size={16} />}
+								disabled={guardando}
+								onClick={() => guardar("verificada")}
+							>
+								Cerrar (verificada)
+							</Button>
+						</Tooltip>
+					)}
+					{estado === "verificada" && (
+						<Tooltip title="Causa cerrada. Reabrir la deja en 'anotada' para seguir editando.">
+							<Button size="small" variant="text" color="warning" disabled={guardando} onClick={() => guardar("anotada")}>
+								Reabrir
+							</Button>
+						</Tooltip>
+					)}
 				</Stack>
 			}
 		>
