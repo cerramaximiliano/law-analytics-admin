@@ -115,6 +115,9 @@ const EtiquetadoEditor = () => {
 	const [error, setError] = useState<string | null>(null);
 	const [anotaciones, setAnotaciones] = useState<Record<string, AnotacionMovimiento>>({});
 	const [guiaAbierta, setGuiaAbierta] = useState(false);
+	// Etiquetas débiles del motor v17: OCULTAS por defecto — verlas mientras se
+	// anota introduce sesgo de anclaje y el gold set debe ser independiente.
+	const [mostrarDebiles, setMostrarDebiles] = useState(false);
 	// Concurrencia optimista + autosave
 	const [baseUpdatedAt, setBaseUpdatedAt] = useState<string | null>(null);
 	const [ultimoAutosave, setUltimoAutosave] = useState<Date | null>(null);
@@ -881,6 +884,12 @@ const EtiquetadoEditor = () => {
 									label={<Typography variant="caption">solo resoluciones</Typography>}
 								/>
 							</Tooltip>
+							<Tooltip title="Etiquetas del motor viejo (v17). Ocultas por defecto: verlas mientras anotás sesga el gold set (anclaje). Encendé solo para consultar.">
+								<FormControlLabel
+									control={<Switch size="small" checked={mostrarDebiles} onChange={(e) => setMostrarDebiles(e.target.checked)} />}
+									label={<Typography variant="caption">⚙ v17</Typography>}
+								/>
+							</Tooltip>
 						</Stack>
 						<Box ref={listaRef} sx={{ maxHeight: esMovil ? "30vh" : "64vh", overflowY: "auto" }}>
 							{movimientosVisibles.map((m, vi) => {
@@ -963,7 +972,7 @@ const EtiquetadoEditor = () => {
 												<Chip size="small" variant="outlined" color="info" label="⇄" sx={{ height: 16, fontSize: "0.6rem" }} />
 											</Tooltip>
 										)}
-										{m.etiquetaDebil && (
+										{mostrarDebiles && m.etiquetaDebil && (
 												<Tooltip title="Etiqueta débil del motor (v17) — informativa, no es tu anotación">
 													<Chip
 														size="small"
@@ -1121,7 +1130,7 @@ const EtiquetadoEditor = () => {
 									<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 										#{mSel.idx} · {mSel.dia} · {mSel.tipo}
 									</Typography>
-									{mSel.etiquetaDebil && (
+									{mostrarDebiles && mSel.etiquetaDebil && (
 										<Tooltip title="Etiqueta débil del motor (informativa)">
 											<Chip size="small" variant="outlined" color="info" label={`⚙ ${mSel.etiquetaDebil}`} />
 										</Tooltip>
