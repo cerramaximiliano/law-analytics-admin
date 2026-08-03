@@ -386,15 +386,27 @@ const EtiquetadoEditor = () => {
 	// (ACTO_AUTOFILL). NO son errores — la combinación típica es la frecuente,
 	// no la única válida — pero se marcan con ⚠ para releer y quedan derivables
 	// en el pase de verificación (acto + valores alcanzan para recomputarlas).
+	// Dimensiones LIBRES por acto: no generan divergencia aunque difieran de la
+	// típica. Actos receptivos → la materia sigue al objeto recibido (prueba,
+	// liquidación…); "tramite" es solo el default. El contexto del por-devueltos
+	// depende de sobre qué opera la dispositiva.
+	const DIMS_LIBRES_POR_ACTO: Record<string, string[]> = {
+		tiene_presente: ["materia"],
+		agrega_documentacion: ["materia"],
+		recibe_autos_devueltos: ["materia", "contexto"],
+	};
 	const divergenciasDe = useCallback((a: AnotacionMovimiento | undefined) => {
 		if (!a?.actoProcesal || a.actoProcesal === "ninguno" || a.descartar) return [];
 		const base = ACTO_AUTOFILL[a.actoProcesal] || {};
+		const libres = DIMS_LIBRES_POR_ACTO[a.actoProcesal] || [];
 		const out: { dim: string; elegido: string; sugerido: string }[] = [];
 		for (const [dim, sugerido] of Object.entries(base)) {
+			if (libres.includes(dim)) continue;
 			const elegido = (a as any)[dim];
 			if (elegido && sugerido && elegido !== sugerido) out.push({ dim, elegido, sugerido });
 		}
 		return out;
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	const labelDim = (dim: string) => (DIM_LABELS as any)[dim]?.corto || dim;
 	const labelValor = (dim: string, v: string) =>
