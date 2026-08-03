@@ -61,6 +61,7 @@ export const DIM_LABELS: Record<DimKey, DimDef> = {
 			["ejecucion", "Ejecución"],
 			["recurso", "Recurso"],
 			["nulidad", "Nulidad"],
+			["tramite", "Trámite (sin materia)"],
 			["otro", "Otro"],
 		],
 	},
@@ -296,17 +297,17 @@ export const ACTO_AUTOFILL: Record<
 	// se decide algo (homologación, acuerdo), ESE acto es el principal y el acta
 	// va como secundario.
 	celebra_audiencia: { tipoResolucion: "otra_resolucion", funcion: "ordenacion", resultado: "no_aplica" },
-	ordena_notificacion: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
+	ordena_notificacion: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "ordenacion", resultado: "no_aplica" },
 	ordena_oficio: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
-	ordena_cedula: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
-	tiene_presente: { tipoResolucion: "providencia_simple", funcion: "impulso", resultado: "no_aplica" },
-	agrega_documentacion: { tipoResolucion: "providencia_simple", funcion: "impulso", resultado: "no_aplica" },
+	ordena_cedula: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "ordenacion", resultado: "no_aplica" },
+	tiene_presente: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
+	agrega_documentacion: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
 	abre_a_prueba: { tipoResolucion: "providencia_simple", materia: "prueba", funcion: "ordenacion", resultado: "no_aplica" },
 	medida_mejor_proveer: { tipoResolucion: "providencia_simple", materia: "prueba", funcion: "ordenacion", resultado: "no_aplica" },
 	declara_causa_puro_derecho: { tipoResolucion: "sentencia_interlocutoria", materia: "prueba", funcion: "decision" },
-	pone_autos_para_alegar: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
-	pasa_autos_sentencia: { tipoResolucion: "providencia_simple", funcion: "impulso", resultado: "no_aplica" },
-	pasa_autos_a_resolver: { tipoResolucion: "providencia_simple", funcion: "impulso", resultado: "no_aplica" },
+	pone_autos_para_alegar: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "ordenacion", resultado: "no_aplica" },
+	pasa_autos_sentencia: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
+	pasa_autos_a_resolver: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
 	regula_honorarios: { materia: "honorarios", funcion: "decision" },
 	aprueba_liquidacion: { materia: "liquidacion", contexto: "ejecucion", funcion: "decision", resultado: "hace_lugar" },
 	designa_perito: { tipoResolucion: "providencia_simple", materia: "prueba", funcion: "ordenacion", resultado: "no_aplica" },
@@ -317,7 +318,7 @@ export const ACTO_AUTOFILL: Record<
 	concede_recurso: { tipoResolucion: "providencia_simple", materia: "recurso", funcion: "decision", resultado: "concede" },
 	deniega_recurso: { materia: "recurso", funcion: "decision", resultado: "deniega" },
 	eleva_autos: { tipoResolucion: "providencia_simple", materia: "recurso", contexto: "recursiva", funcion: "impulso", resultado: "no_aplica" },
-	recibe_autos_devueltos: { tipoResolucion: "providencia_simple", contexto: "recursiva", funcion: "impulso", resultado: "no_aplica" },
+	recibe_autos_devueltos: { tipoResolucion: "providencia_simple", materia: "tramite", contexto: "recursiva", funcion: "impulso", resultado: "no_aplica" },
 	resuelve_recurso: { tipoResolucion: "sentencia_interlocutoria", funcion: "decision" },
 	resuelve_fondo: { tipoResolucion: "sentencia_definitiva", materia: "fondo", funcion: "decision" },
 	homologa_acuerdo: { funcion: "terminacion", modoTerminacion: "homologacion_de_acuerdo", resultado: "homologa" },
@@ -330,7 +331,7 @@ export const ACTO_AUTOFILL: Record<
 	// Archívese de rutina: ordena la disposición administrativa (el proceso ya
 	// terminó por otro acto). Si el archivo CIERRA un trámite vivo (inactividad,
 	// sin más trámite), corregir a funcion=terminacion + modo=archivo a mano.
-	archiva: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
+	archiva: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "ordenacion", resultado: "no_aplica" },
 };
 
 // Vocabulario curado de objetos decididos (filas de Decisiones). El selector
