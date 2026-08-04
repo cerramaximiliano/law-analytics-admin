@@ -188,6 +188,7 @@ const ACCIONES_REQUERIDAS_BASE: [string, string][] = [
 	["diligenciar_cedula", "Diligenciar cédula"],
 	["presentar_oficio", "Presentar/diligenciar oficio"],
 	["integrar_copias", "Integrar copias al sistema"],
+	["integrar_copias_fisicas", "Integrar copias físicas (papel)"],
 	["cumplir_intimacion", "Cumplir intimación (genérica)"],
 	["impulsar_proceso", "Impulsar el proceso / formular peticiones"],
 	["otro", "Otro"],
