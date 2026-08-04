@@ -250,6 +250,7 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	["medida_mejor_proveer", "Medida para mejor proveer"],
 	["declara_causa_puro_derecho", "Declara puro derecho"],
 	["declara_desistida_prueba", "Tiene por desistida la prueba (efectiviza apercibimiento)"],
+	["efectiviza_apercibimiento", "Hace efectivo un apercibimiento (incumplimiento de carga)"],
 	["pone_autos_para_alegar", "Pone autos para alegar"],
 	["pasa_autos_sentencia", "Pasa autos a sentencia"],
 	["pasa_autos_a_resolver", "Pasa autos a resolver (cuestión no-fondo)"],
@@ -318,6 +319,9 @@ export const ACTO_AUTOFILL: Record<
 	// Efectiviza el apercibimiento de una carga de prueba incumplida (desenlace
 	// negativo del episodio de carga — señal de fricción).
 	declara_desistida_prueba: { tipoResolucion: "providencia_simple", materia: "prueba", funcion: "decision", resultado: "declara" },
+	// Genérico: ejecuta el apercibimiento de cualquier carga incumplida (bono →
+	// CPACF, multas, tener por no presentado…). La materia sigue a la carga.
+	efectiviza_apercibimiento: { tipoResolucion: "providencia_simple", funcion: "decision", resultado: "declara" },
 	pone_autos_para_alegar: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
 	pasa_autos_sentencia: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
 	pasa_autos_a_resolver: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
