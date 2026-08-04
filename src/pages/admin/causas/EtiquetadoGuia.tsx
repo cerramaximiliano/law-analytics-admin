@@ -475,9 +475,72 @@ const DetalleDecisionesCargas = () => (
 	</>
 );
 
+// ── Detalle de Materia: sobre qué versa, con ejemplos reales ──────────────────
+const DetalleMateria = () => (
+	<>
+		<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.75 }}>
+			La pregunta única
+		</Typography>
+		<P>
+			<B>¿Sobre qué versa la parte dispositiva?</B> No importa de dónde viene el expediente ni en qué etapa está — solo
+			el objeto de lo que ESTE proveído dispone.
+		</P>
+		<Box sx={{ p: 1, borderRadius: 1, bgcolor: (t) => alpha(t.palette.warning.main, 0.07), mb: 1.5 }}>
+			<Typography variant="caption" sx={{ display: "block", lineHeight: 1.5 }}>
+				<B>Ojo con el default `fondo`:</B> fondo SOLO si trata la pretensión — traslados de demanda/contestación,
+				sentencia definitiva, resolución del fondo. Todo despacho de forma pura va a <Codigo>tramite</Codigo>.
+			</Typography>
+		</Box>
+		<Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5, color: "primary.main" }}>
+			Casos reales por familia
+		</Typography>
+		<Box component="ul" sx={{ pl: 2.25, m: 0, mb: 1.5 }}>
+			<LI>
+				<B>Trámite (forma pura)</B>: personería, bono profesional, tasa de justicia, copias (digitales o físicas),
+				protocolo digital Ac. 31/2020, ecos de la mediación prejudicial, pases (a sentencia, a alegar), declaración de
+				rebeldía (la señal la lleva el ACTO <Codigo>declara_rebeldia</Codigo>), oficios a la IGJ por el domicilio de
+				notificación.
+			</LI>
+			<LI>
+				<B>Receptivos — sigue al objeto recibido</B>: contestación de oficio informativo o pericia presentada →{" "}
+				<Codigo>prueba</Codigo>; liquidación presentada → <Codigo>liquidacion</Codigo>; constancias administrativas →{" "}
+				<Codigo>tramite</Codigo>.
+			</LI>
+			<LI>
+				<B>Audiencias — por su fin</B>: "a fin de que arriben a un acuerdo conciliatorio" (art. 80 LO) o ratificación
+				de acuerdo → <Codigo>conciliacion</Codigo>; testimonial → <Codigo>prueba</Codigo>.
+			</LI>
+			<LI>
+				<B>Embargos — dos mundos</B>: preventivo (art. 63 CPCCN, típico post-rebeldía, con presupuesto de intereses y
+				costas, ANTES de la sentencia) → <Codigo>cautelar</Codigo>; ejecutorio (por incumplimiento de intimación de
+				pago, DESPUÉS de la condena) → <Codigo>ejecucion</Codigo>.
+			</LI>
+			<LI>
+				<B>Circuito recursivo</B>: la tramitación (concede, deniega, eleva, radica en alzada) → <Codigo>recurso</Codigo>;
+				la RESOLUCIÓN del recurso en la alzada → la sustancia revisada (la Sala que confirma honorarios →{" "}
+				<Codigo>honorarios</Codigo>; la que revoca una incompetencia → <Codigo>competencia</Codigo>).
+			</LI>
+			<LI>
+				<B>Carril de cobro</B> (contexto = ejecución): <Codigo>liquidacion</Codigo> = el cálculo (se
+				practica/traslada/impugna/aprueba/desestima); <Codigo>honorarios</Codigo> = el crédito del profesional
+				(regulación, apelación, intimación a depositarlos); <Codigo>ejecucion</Codigo> = el cobro genérico (giros,
+				pagos, dación, requisitos de transferencia).
+			</LI>
+			<LI>
+				<B>Otras específicas</B>: excepción o declaración de incompetencia → <Codigo>competencia</Codigo>; formación de
+				incidente de recusación → <Codigo>recusacion</Codigo>; apercibimiento efectivizado → la materia de la carga
+				incumplida (bono → trámite; prueba → prueba).
+			</LI>
+		</Box>
+		<Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
+			`otro` queda reservado para materias reales que no están en la lista — nunca como comodín de trámite.
+		</Typography>
+	</>
+);
+
 const EtiquetadoGuia = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
 	const theme = useTheme();
-	const [vista, setVista] = useState<"principal" | "funcion" | "decisiones-cargas">("principal");
+	const [vista, setVista] = useState<"principal" | "funcion" | "decisiones-cargas" | "materia">("principal");
 	return (
 		<Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: { width: { xs: "100%", sm: 520 }, p: 2.5 } }}>
 			<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
@@ -492,6 +555,8 @@ const EtiquetadoGuia = ({ open, onClose }: { open: boolean; onClose: () => void 
 							? "Función: impulso vs ordenación"
 							: vista === "decisiones-cargas"
 							? "Decisiones y Cargas: cómo completarlas"
+							: vista === "materia"
+							? "Materia: sobre qué versa"
 							: "Guía del operador"}
 					</Typography>
 					{vista === "principal" && <Chip size="small" variant="outlined" label="taxonomía v2" />}
@@ -509,6 +574,8 @@ const EtiquetadoGuia = ({ open, onClose }: { open: boolean; onClose: () => void 
 				<DetalleFuncion />
 			) : vista === "decisiones-cargas" ? (
 				<DetalleDecisionesCargas />
+			) : vista === "materia" ? (
+				<DetalleMateria />
 			) : (
 				SECCIONES.map((s, i) => (
 					<Fragment key={s.titulo}>
@@ -518,9 +585,14 @@ const EtiquetadoGuia = ({ open, onClose }: { open: boolean; onClose: () => void 
 						</Typography>
 						{s.cuerpo}
 						{i === 1 && (
-							<Button size="small" variant="text" sx={{ mt: 0.5, textTransform: "none" }} onClick={() => setVista("funcion")}>
-								→ Función en detalle: impulso vs ordenación, con ejemplos reales
-							</Button>
+							<Stack spacing={0}>
+								<Button size="small" variant="text" sx={{ mt: 0.5, textTransform: "none", justifyContent: "flex-start" }} onClick={() => setVista("funcion")}>
+									→ Función en detalle: impulso vs ordenación, con ejemplos reales
+								</Button>
+								<Button size="small" variant="text" sx={{ textTransform: "none", justifyContent: "flex-start" }} onClick={() => setVista("materia")}>
+									→ Materia en detalle: fondo vs trámite y casos por familia
+								</Button>
+							</Stack>
 						)}
 						{(i === 3 || i === 4) && (
 							<Button
