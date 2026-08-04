@@ -68,6 +68,37 @@ export const getEstadoTareas = async (): Promise<{ data: EstadoTarea[]; actualiz
 	return { data: res.data.data, actualizado: res.data.actualizado };
 };
 
+/** Resultado de una corrida de sincronización (mismo shape que devuelve el server de tasas). */
+export interface SyncResumen {
+	publicados: number;
+	nuevos: number;
+	corregidos: number;
+	sinCambios: number;
+	esNovedad: boolean;
+	anunciados: string[];
+	vigente: { valor: number; periodo: string; norma?: string } | null;
+}
+
+export interface SyncResultado {
+	clave: string;
+	etiqueta: string;
+	ok: boolean;
+	resumen?: SyncResumen;
+	error?: string;
+}
+
+/** Dispara la sincronización de una jurisdicción contra su fuente oficial. */
+export const syncJurisdiccion = async (clave: string): Promise<SyncResultado> => {
+	const res = await adminAxios.post(`/api/valores-arancelarios/sync/${clave}`, null, { timeout: 120000 });
+	return res.data;
+};
+
+/** Dispara la sincronización de todas las jurisdicciones, en serie. */
+export const syncTodas = async (): Promise<{ ok: boolean; total: number; fallidas: number; resultados: SyncResultado[] }> => {
+	const res = await adminAxios.post("/api/valores-arancelarios/sync", null, { timeout: 300000 });
+	return res.data;
+};
+
 /** Serie histórica de una unidad/ámbito, del escalón más nuevo al más viejo. */
 export const getSerie = async (
 	unidad: string,

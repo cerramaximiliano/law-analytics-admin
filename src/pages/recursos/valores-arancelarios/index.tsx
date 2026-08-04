@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 // material-ui
 import {
 	Box,
+	Button,
 	Chip,
 	CircularProgress,
 	Collapse,
@@ -24,10 +25,10 @@ import MainCard from "components/MainCard";
 import { useSnackbar } from "notistack";
 
 // icons
-import { ArrowDown2, ArrowRight2, DollarCircle, TickCircle, CloseCircle, ExportSquare, Refresh } from "iconsax-react";
+import { ArrowDown2, ArrowRight2, CloudChange, DollarCircle, TickCircle, CloseCircle, ExportSquare, Refresh } from "iconsax-react";
 
 // api
-import { getResumen, getSerie, ResumenJurisdiccion, ValorArancelario } from "api/valoresArancelariosService";
+import { getResumen, getSerie, syncJurisdiccion, syncTodas, ResumenJurisdiccion, ValorArancelario } from "api/valoresArancelariosService";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -41,7 +42,14 @@ const fechaHora = (iso?: string) => (iso ? new Date(iso).toLocaleString("es-AR",
 
 // ─── Fila expandible por jurisdicción ─────────────────────────────────────────
 
-const FilaJurisdiccion = ({ fila }: { fila: ResumenJurisdiccion }) => {
+interface FilaProps {
+	fila: ResumenJurisdiccion;
+	/** Clave que se está sincronizando ("all" = todas), o null si no hay sync en curso. */
+	sincronizando: string | null;
+	onSync: (clave: string) => void;
+}
+
+const FilaJurisdiccion = ({ fila, sincronizando, onSync }: FilaProps) => {
 	const [abierta, setAbierta] = useState(false);
 	const [serie, setSerie] = useState<ValorArancelario[]>([]);
 	const [cargandoSerie, setCargandoSerie] = useState(false);
@@ -121,9 +129,26 @@ const FilaJurisdiccion = ({ fila }: { fila: ResumenJurisdiccion }) => {
 						</Tooltip>
 					)}
 				</TableCell>
+				<TableCell align="center">
+					{estado?.clave ? (
+						<Tooltip title={`Sincronizar ${fila.unidad} ${fila.ambito} contra la fuente oficial`}>
+							<span>
+								<IconButton size="small" color="primary" disabled={sincronizando !== null} onClick={() => onSync(estado.clave)}>
+									{sincronizando === estado.clave ? <CircularProgress size={16} /> : <CloudChange size={16} />}
+								</IconButton>
+							</span>
+						</Tooltip>
+					) : (
+						<Tooltip title="Sin tarea de sincronización asociada">
+							<Typography variant="caption" color="text.secondary">
+								—
+							</Typography>
+						</Tooltip>
+					)}
+				</TableCell>
 			</TableRow>
 			<TableRow>
-				<TableCell sx={{ py: 0, borderBottom: abierta ? undefined : "none" }} colSpan={8}>
+				<TableCell sx={{ py: 0, borderBottom: abierta ? undefined : "none" }} colSpan={9}>
 					<Collapse in={abierta} timeout="auto" unmountOnExit>
 						<Box sx={{ my: 2, mx: 1 }}>
 							{cargandoSerie ? (
@@ -169,6 +194,7 @@ const FilaJurisdiccion = ({ fila }: { fila: ResumenJurisdiccion }) => {
 const ValoresArancelarios = () => {
 	const [filas, setFilas] = useState<ResumenJurisdiccion[]>([]);
 	const [cargando, setCargando] = useState(false);
+	const [sincronizando, setSincronizando] = useState<string | null>(null);
 	const { enqueueSnackbar } = useSnackbar();
 
 	const cargar = useCallback(async () => {
@@ -186,6 +212,56 @@ const ValoresArancelarios = () => {
 		cargar();
 	}, [cargar]);
 
+	const describir = (r: { resumen?: { nuevos: number; corregidos: number; esNovedad: boolean; anunciados: string[] } }) => {
+		const s = r.resumen;
+		if (!s) return "";
+		if (s.esNovedad) return `¡valor nuevo! (${s.anunciados.join(" + ")}) — se generó el post y el aviso`;
+		if (s.nuevos || s.corregidos) return `${s.nuevos} nuevo(s), ${s.corregidos} corregido(s)`;
+		return "sin cambios";
+	};
+
+	const syncUna = useCallback(
+		async (clave: string) => {
+			setSincronizando(clave);
+			try {
+				const r = await syncJurisdiccion(clave);
+				if (r.ok) {
+					enqueueSnackbar(`${r.etiqueta}: ${describir(r)}`, { variant: r.resumen?.esNovedad ? "success" : "info" });
+				} else {
+					enqueueSnackbar(`${r.etiqueta ?? clave}: ${r.error ?? "falló la sincronización"}`, { variant: "error" });
+				}
+			} catch {
+				enqueueSnackbar(`No se pudo sincronizar ${clave}`, { variant: "error" });
+			} finally {
+				setSincronizando(null);
+				cargar();
+			}
+		},
+		[cargar, enqueueSnackbar],
+	);
+
+	const syncTodasHandler = useCallback(async () => {
+		setSincronizando("all");
+		try {
+			const r = await syncTodas();
+			const novedades = r.resultados.filter((x) => x.ok && x.resumen?.esNovedad);
+			if (r.fallidas > 0) {
+				const conError = r.resultados.filter((x) => !x.ok).map((x) => x.etiqueta);
+				enqueueSnackbar(`Sincronización terminada con ${r.fallidas} error(es): ${conError.join(", ")}`, { variant: "warning" });
+			}
+			if (novedades.length > 0) {
+				enqueueSnackbar(`Valores nuevos en: ${novedades.map((x) => x.etiqueta).join(", ")}`, { variant: "success" });
+			} else if (r.fallidas === 0) {
+				enqueueSnackbar(`${r.total} jurisdicciones sincronizadas, sin cambios`, { variant: "info" });
+			}
+		} catch {
+			enqueueSnackbar("No se pudo completar la sincronización", { variant: "error" });
+		} finally {
+			setSincronizando(null);
+			cargar();
+		}
+	}, [cargar, enqueueSnackbar]);
+
 	return (
 		<MainCard
 			title={
@@ -195,11 +271,24 @@ const ValoresArancelarios = () => {
 				</Stack>
 			}
 			secondary={
-				<Tooltip title="Actualizar">
-					<IconButton onClick={cargar} disabled={cargando}>
-						<Refresh size={18} />
-					</IconButton>
-				</Tooltip>
+				<Stack direction="row" spacing={1} alignItems="center">
+					<Button
+						variant="outlined"
+						size="small"
+						startIcon={sincronizando === "all" ? <CircularProgress size={14} /> : <CloudChange size={16} />}
+						disabled={sincronizando !== null}
+						onClick={syncTodasHandler}
+					>
+						Sincronizar todas
+					</Button>
+					<Tooltip title="Recargar">
+						<span>
+							<IconButton onClick={cargar} disabled={cargando || sincronizando !== null}>
+								<Refresh size={18} />
+							</IconButton>
+						</span>
+					</Tooltip>
+				</Stack>
 			}
 		>
 			<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -224,15 +313,16 @@ const ValoresArancelarios = () => {
 								<TableCell align="center">Escalones</TableCell>
 								<TableCell>Última sync</TableCell>
 								<TableCell>Fuente</TableCell>
+								<TableCell align="center">Sincronizar</TableCell>
 							</TableRow>
 						</TableHead>
 						<TableBody>
 							{filas.map((f) => (
-								<FilaJurisdiccion key={`${f.unidad}-${f.ambito}`} fila={f} />
+								<FilaJurisdiccion key={`${f.unidad}-${f.ambito}`} fila={f} sincronizando={sincronizando} onSync={syncUna} />
 							))}
 							{filas.length === 0 && (
 								<TableRow>
-									<TableCell colSpan={8}>
+									<TableCell colSpan={9}>
 										<Typography variant="body2" color="text.secondary" align="center" sx={{ py: 3 }}>
 											No hay datos arancelarios cargados.
 										</Typography>
