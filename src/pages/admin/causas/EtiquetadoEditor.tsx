@@ -1693,7 +1693,7 @@ const EtiquetadoEditor = () => {
 												alignItems="center"
 												sx={{ mt: 0.25, pl: 1, borderLeft: "2px solid", borderColor: "divider" }}
 											>
-												<Grid item xs={12} sm={5}>
+												<Grid item xs={12} sm={4}>
 													<Autocomplete
 														freeSolo
 														autoSelect
@@ -1711,7 +1711,7 @@ const EtiquetadoEditor = () => {
 														)}
 													/>
 												</Grid>
-												<Grid item xs={9} sm={4}>
+												<Grid item xs={9} sm={3}>
 													<Select
 														fullWidth
 														size="small"
@@ -1739,6 +1739,19 @@ const EtiquetadoEditor = () => {
 																<MenuItem key={v} value={v}>{l}</MenuItem>
 															))}
 													</Select>
+												</Grid>
+												<Grid item xs={9} sm={4}>
+													<TextField
+														fullWidth
+														size="small"
+														placeholder="detalle (orden causado, por mitades, 70/30…)"
+														value={dec.detalle || ""}
+														onChange={(ev) => {
+															const nuevas = [...(aSel.decisiones || [])];
+															nuevas[di] = { ...nuevas[di], detalle: ev.target.value };
+															setDecisiones(mSel.idx, nuevas);
+														}}
+													/>
 												</Grid>
 												<Grid item xs={3} sm={1}>
 													<IconButton
@@ -2299,6 +2312,16 @@ const EtiquetadoEditor = () => {
 													setDecisiones(mSel.idx, nuevas);
 												}}
 												renderInput={(params) => <TextField {...params} placeholder="objeto decidido…" />}
+											/>
+											<TextField
+												size="small"
+												placeholder="detalle (orden causado, por mitades…)"
+												value={dec.detalle || ""}
+												onChange={(ev2) => {
+													const nuevas = [...(aSel.decisiones || [])];
+													nuevas[di] = { ...nuevas[di], detalle: ev2.target.value };
+													setDecisiones(mSel.idx, nuevas);
+												}}
 											/>
 											<Stack direction="row" spacing={1}>
 												<Select

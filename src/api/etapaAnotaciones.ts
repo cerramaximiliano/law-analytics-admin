@@ -7,6 +7,9 @@ export type EstadoAnotacion = "pendiente" | "en_progreso" | "anotada" | "verific
 export interface Decision {
 	objetoDecidido: string; // ej. "recurso_apelacion", "medida_cautelar", "costas"
 	resultado: string | null;
+	// Detalle libre de la disposición (ej. costas: "orden causado", "por mitades",
+	// "comunes 50% y propias a su cargo", "70% demandada").
+	detalle?: string;
 }
 
 export interface Plazo {
