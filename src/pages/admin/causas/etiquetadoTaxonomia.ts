@@ -50,12 +50,15 @@ export const DIM_LABELS: Record<DimKey, DimDef> = {
 	materia: {
 		titulo: "Materia decisoria",
 		corto: "Materia",
+		ayuda:
+			"FONDO solo si versa sobre la pretensión (traslado de demanda/contestación, sentencia). Forma pura (personería, bono, tasa, copias, protocolo digital) → Trámite. En cobro: liquidación = el cálculo; honorarios = el crédito del profesional; ejecución = cobro genérico.",
 		opciones: [
 			["fondo", "Fondo"],
 			["prueba", "Prueba"],
 			["competencia", "Competencia"],
 			["cautelar", "Cautelar"],
 			["conciliacion", "Conciliación"],
+			["mediacion", "Mediación (previa/reapertura)"],
 			["honorarios", "Honorarios"],
 			["costas", "Costas"],
 			["liquidacion", "Liquidación"],
@@ -102,6 +105,7 @@ export const DIM_LABELS: Record<DimKey, DimDef> = {
 			["desistimiento_del_derecho", "Desist. del derecho"],
 			["transaccion", "Transacción"],
 			["conciliacion", "Conciliación"],
+			["mediacion", "Mediación (previa/reapertura)"],
 			["caducidad_de_instancia", "Caducidad de instancia"],
 			["homologacion_de_acuerdo", "Homologación"],
 			["sustraccion_de_materia", "Sustracción de materia"],
@@ -216,6 +220,7 @@ const ETIQUETAS_FINALES_BASE: [string, string][] = [
 	["declaratoria", "Etapa (sucesorio): declaratoria"],
 	["inscripcion", "Etapa (sucesorio): inscripción"],
 	["particion", "Etapa (sucesorio): partición"],
+	["mediacion", "Etapa (comercial): mediación previa"],
 	["apertura_concurso", "Etapa (concursal): apertura"],
 	["verificacion", "Etapa (concursal): verificación"],
 	["informe_general", "Etapa (concursal): informe general"],

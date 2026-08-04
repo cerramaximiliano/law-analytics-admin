@@ -88,7 +88,13 @@ const SECCIONES: Seccion[] = [
 					<B>Instancia</B>: del órgano emisor, por metadatos/encabezado ("LA SALA…" → segunda). No del expediente.
 				</LI>
 				<LI>
-					<B>Materia</B>: sobre qué versa lo decidido (fondo, prueba, competencia, honorarios, recurso…).
+					<B>Materia</B>: sobre qué versa lo dispuesto. <B>Ojo con el default:</B> <Codigo>fondo</Codigo> SOLO si trata
+					la pretensión (traslado de demanda/contestación, sentencia); los despachos de forma pura (personería, bono,
+					tasa, copias, protocolo digital, hágase saber) van a <Codigo>tramite</Codigo>. En el carril de cobro:{" "}
+					<Codigo>liquidacion</Codigo> = el cálculo (se practica/impugna/aprueba); <Codigo>honorarios</Codigo> = el
+					crédito del profesional; <Codigo>ejecucion</Codigo> = el cobro genérico (giros, pagos, embargo ejecutorio).
+					En comercial: <Codigo>mediacion</Codigo> para la etapa previa de la ley 26.589 (reapertura, rechazos o
+					intimaciones por falta de mediación).
 				</LI>
 				<LI>
 					<B>Contexto</B>: dónde ocurre (principal, incidental, ejecución, recursiva, cautelar). En una reposición, el
