@@ -93,8 +93,9 @@ const SECCIONES: Seccion[] = [
 					tasa, copias, protocolo digital, hágase saber) van a <Codigo>tramite</Codigo>. En el carril de cobro:{" "}
 					<Codigo>liquidacion</Codigo> = el cálculo (se practica/impugna/aprueba); <Codigo>honorarios</Codigo> = el
 					crédito del profesional; <Codigo>ejecucion</Codigo> = el cobro genérico (giros, pagos, embargo ejecutorio).
-					En comercial: <Codigo>mediacion</Codigo> para la etapa previa de la ley 26.589 (reapertura, rechazos o
-					intimaciones por falta de mediación).
+					La mediación previa (ley 26.589) es PREJUDICIAL: sus ecos en el expediente (constancias, reapertura,
+					intimación a acreditarla, rechazo por falta de mediación) son requisito de admisibilidad →{" "}
+					<Codigo>tramite</Codigo>.
 				</LI>
 				<LI>
 					<B>Contexto</B>: dónde ocurre (principal, incidental, ejecución, recursiva, cautelar). En una reposición, el
