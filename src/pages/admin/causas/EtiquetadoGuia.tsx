@@ -347,9 +347,130 @@ const DetalleFuncion = () => (
 	</>
 );
 
+// ── Detalle de Decisiones y Cargas: moldes con ejemplos reales ────────────────
+const DetalleDecisionesCargas = () => (
+	<>
+		<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.75 }}>
+			Decisiones — cuándo y cómo
+		</Typography>
+		<P>
+			Se crean filas cuando la parte dispositiva resuelve <B>varias cosas</B>. Si el documento decide UNA sola cosa, el
+			Resultado principal alcanza y la sección queda vacía. Solo cuenta la <B>parte dispositiva</B>: menciones en el
+			relato, apercibimientos de pérdida de honorarios o montos de giros NO generan filas.
+		</P>
+		<Typography variant="subtitle2" fontWeight={700} sx={{ mt: 1, mb: 0.5, color: "primary.main" }}>
+			Moldes reales (de FOLETTO y CENTURION)
+		</Typography>
+		<Box component="ul" sx={{ pl: 2.25, m: 0, mb: 1 }}>
+			<LI>
+				<B>Sentencia definitiva</B> — SIEMPRE tres filas: <Codigo>fondo = hace_lugar</Codigo> ·{" "}
+				<Codigo>costas = impone</Codigo> "a la demandada (art. 68)" · <Codigo>honorarios = regula</Codigo> "letrados 19
+				y 16 UMA; perito $80.000".
+			</LI>
+			<LI>
+				<B>Interlocutoria de excepción</B>: <Codigo>excepcion_incompetencia = rechaza</Codigo> ·{" "}
+				<Codigo>costas = impone</Codigo> "orden causado".
+			</LI>
+			<LI>
+				<B>Incompetencia de oficio</B>: <Codigo>incompetencia_de_oficio = declara</Codigo> ·{" "}
+				<Codigo>inconstitucionalidad = rechaza</Codigo> · <Codigo>costas = impone</Codigo> "por su orden".
+			</LI>
+			<LI>
+				<B>Reposición con apelación en subsidio</B>: <Codigo>revocatoria = rechaza</Codigo> ·{" "}
+				<Codigo>apelacion_subsidiaria = concede</Codigo>.
+			</LI>
+			<LI>
+				<B>Alzada</B>: <Codigo>incompetencia_de_oficio = revoca</Codigo> · <Codigo>costas = impone</Codigo> "sin
+				costas". (La revisión usa confirma/revoca/modifica.)
+			</LI>
+			<LI>
+				<B>Homologatoria</B>: <Codigo>honorarios = regula</Codigo> "perito 4 UMA ($41.600), a cargo de la demandada".
+			</LI>
+			<LI>
+				<B>Auto de apertura a prueba</B>: <Codigo>prueba = rechaza</Codigo> (oposición a testigos, confesional
+				desestimada).
+			</LI>
+		</Box>
+		<Box sx={{ p: 1, borderRadius: 1, bgcolor: (t) => alpha(t.palette.info.main, 0.07), mb: 1.5 }}>
+			<Typography variant="caption" sx={{ display: "block", lineHeight: 1.5 }}>
+				<B>Resultados por objeto:</B> costas de 1er grado → <Codigo>impone</Codigo>; honorarios de 1er grado →{" "}
+				<Codigo>regula</Codigo>; pronunciamientos de oficio → <Codigo>declara</Codigo>; alzada →{" "}
+				<Codigo>confirma/revoca/modifica</Codigo>; peticiones → <Codigo>hace_lugar/rechaza</Codigo>; recursos →{" "}
+				<Codigo>concede/deniega</Codigo>.
+				<br />
+				<B>Campo detalle</B> (libre): la distribución fina — "orden causado", "por mitades", "70% demandada", "comunes
+				por mitades y propias a su cargo", montos/UMA de honorarios.
+			</Typography>
+		</Box>
+
+		<Divider sx={{ my: 1.5 }} />
+		<Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.75 }}>
+			Cargas — cuándo y cómo
+		</Typography>
+		<P>
+			La carga extrae el contenido operativo: <B>quién</B> debe hacer <B>qué</B>, en qué <B>plazo</B> y bajo qué{" "}
+			<B>apercibimiento</B>. Una fila por carga (un proveído puede imponer varias). El acto clasifica ("este documento
+			intima"); la carga extrae.
+		</P>
+		<Typography variant="subtitle2" fontWeight={700} sx={{ mt: 1, mb: 0.5, color: "primary.main" }}>
+			Moldes reales
+		</Typography>
+		<Box component="ul" sx={{ pl: 2.25, m: 0, mb: 1 }}>
+			<LI>
+				<B>Traslado de demanda</B>: demandada → contestar_demanda · 10/15 días.
+			</LI>
+			<LI>
+				<B>Traslado del responde</B> (2 filas): actora → reconocer/desconocer documental · 3 días; actora → ofrecer
+				prueba · 3 días.
+			</LI>
+			<LI>
+				<B>Personería</B>: letrado → acreditar_personeria · 3 días · "tenerlo por no presentado".
+			</LI>
+			<LI>
+				<B>Auto de prueba</B> (las 3 de mayor peso): ambas → denunciar_datos_testigos · 10 días · "desistidos los
+				testigos"; demandada → cumplir_intimacion (libros a disposición del perito) · 3 días · "imposibilidad de la
+				pericial por su culpa"; partes → presentar_oficio · 60 días · "caducidad de pleno derecho".
+			</LI>
+			<LI>
+				<B>Perito designado</B> (2 filas): perito → aceptar_cargo · 3 días; perito → presentar_informe · 30 días ·
+				"remoción, pérdida de honorarios y comunicación a la CNAT".
+			</LI>
+			<LI>
+				<B>Tasa de justicia</B>: demandada → pagar_tasa · 5 días · "multa (art. 11 ley 23.898)".
+			</LI>
+			<LI>
+				<B>Copias digitales</B>: actora → integrar_copias · 3 días · "multa".
+			</LI>
+			<LI>
+				<B>Requisitos de giro</B> (sin plazo — condición operativa): actora → denunciar_datos_bancarios; letrado →
+				prestar_caucion.
+			</LI>
+			<LI>
+				<B>Impulso post-devolución</B>: ambas + perito → impulsar_proceso · 3 días · "archivo sin más trámite ni
+				recurso".
+			</LI>
+			<LI>
+				<B>Audiencia</B>: ambas + letrados → comparecer_audiencia · plazo vacío (fecha fija) · "art. 63 LO
+				(incomparecencia)".
+			</LI>
+		</Box>
+		<Box sx={{ p: 1, borderRadius: 1, bgcolor: (t) => alpha(t.palette.warning.main, 0.07) }}>
+			<Typography variant="caption" sx={{ display: "block", lineHeight: 1.5 }}>
+				<B>Criterios:</B>
+				<br />· Cargar cuando hay conducta + plazo + apercibimiento. Sin plazo, SOLO condiciones operativas reales
+				(requisitos de giro).
+				<br />· En resoluciones largas: las 2-3 de mayor peso — calidad y variedad valen más que exhaustividad.
+				<br />· La carga vive en el documento que la IMPONE: el que la refiere ("una vez denunciadas las casillas…") o
+				el que registra su cumplimiento ("por denunciados los datos") NO la repiten.
+				<br />· Fecha fija (audiencias) → plazo vacío y la fecha en el apercibimiento o nota.
+			</Typography>
+		</Box>
+	</>
+);
+
 const EtiquetadoGuia = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
 	const theme = useTheme();
-	const [vista, setVista] = useState<"principal" | "funcion">("principal");
+	const [vista, setVista] = useState<"principal" | "funcion" | "decisiones-cargas">("principal");
 	return (
 		<Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: { width: { xs: "100%", sm: 520 }, p: 2.5 } }}>
 			<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
@@ -359,7 +480,13 @@ const EtiquetadoGuia = ({ open, onClose }: { open: boolean; onClose: () => void 
 							<ArrowLeft size={18} />
 						</IconButton>
 					)}
-					<Typography variant="h5">{vista === "funcion" ? "Función: impulso vs ordenación" : "Guía del operador"}</Typography>
+					<Typography variant="h5">
+						{vista === "funcion"
+							? "Función: impulso vs ordenación"
+							: vista === "decisiones-cargas"
+							? "Decisiones y Cargas: cómo completarlas"
+							: "Guía del operador"}
+					</Typography>
 					{vista === "principal" && <Chip size="small" variant="outlined" label="taxonomía v2" />}
 				</Stack>
 				<IconButton size="small" onClick={onClose}>
@@ -373,6 +500,8 @@ const EtiquetadoGuia = ({ open, onClose }: { open: boolean; onClose: () => void 
 			<Divider sx={{ mb: 1.5 }} />
 			{vista === "funcion" ? (
 				<DetalleFuncion />
+			) : vista === "decisiones-cargas" ? (
+				<DetalleDecisionesCargas />
 			) : (
 				SECCIONES.map((s, i) => (
 					<Fragment key={s.titulo}>
@@ -384,6 +513,16 @@ const EtiquetadoGuia = ({ open, onClose }: { open: boolean; onClose: () => void 
 						{i === 1 && (
 							<Button size="small" variant="text" sx={{ mt: 0.5, textTransform: "none" }} onClick={() => setVista("funcion")}>
 								→ Función en detalle: impulso vs ordenación, con ejemplos reales
+							</Button>
+						)}
+						{(i === 3 || i === 4) && (
+							<Button
+								size="small"
+								variant="text"
+								sx={{ mt: 0.5, textTransform: "none" }}
+								onClick={() => setVista("decisiones-cargas")}
+							>
+								→ Decisiones y Cargas en detalle: moldes reales y criterios
 							</Button>
 						)}
 					</Fragment>
