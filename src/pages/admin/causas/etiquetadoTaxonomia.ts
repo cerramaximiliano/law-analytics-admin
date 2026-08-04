@@ -252,7 +252,7 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	["pasa_autos_sentencia", "Pasa autos a sentencia"],
 	["pasa_autos_a_resolver", "Pasa autos a resolver (cuestión no-fondo)"],
 	["regula_honorarios", "Regula honorarios"],
-	["aprueba_liquidacion", "Aprueba liquidación"],
+	["aprueba_liquidacion", "Resuelve liquidación (aprueba/desestima)"],
 	["designa_perito", "Designa/sortea perito"],
 	["declara_rebeldia", "Declara rebeldía"],
 	["declara_caducidad", "Declara caducidad"],
