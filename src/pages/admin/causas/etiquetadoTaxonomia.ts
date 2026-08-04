@@ -309,7 +309,7 @@ export const ACTO_AUTOFILL: Record<
 	abre_a_prueba: { tipoResolucion: "providencia_simple", materia: "prueba", funcion: "ordenacion", resultado: "no_aplica" },
 	medida_mejor_proveer: { tipoResolucion: "providencia_simple", materia: "prueba", funcion: "ordenacion", resultado: "no_aplica" },
 	declara_causa_puro_derecho: { tipoResolucion: "sentencia_interlocutoria", materia: "prueba", funcion: "decision" },
-	pone_autos_para_alegar: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "ordenacion", resultado: "no_aplica" },
+	pone_autos_para_alegar: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
 	pasa_autos_sentencia: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
 	pasa_autos_a_resolver: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
 	regula_honorarios: { materia: "honorarios", funcion: "decision" },

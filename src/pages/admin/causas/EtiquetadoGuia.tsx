@@ -271,7 +271,7 @@ const EJEMPLOS_IMPULSO: [string, string][] = [
 	["Por devueltos. Hágase saber (sin más disposiciones)", "mera constancia de reingreso"],
 	["Por recibido, hágase saber la Sala que va a conocer", "de paso"],
 	["Córrase traslado de la demanda / del responde", "impone contestar, pero ES la marcha prevista del contradictorio"],
-	["Pasen las actuaciones a proveer las pruebas / autos a sentencia", "mueve el expediente a la próxima estación"],
+	["Pasen las actuaciones a proveer las pruebas / autos a sentencia / póngase los autos para alegar", "mueve el expediente a la próxima estación del iter previsto — abre una ventana legal, no exige"],
 ];
 const EJEMPLOS_ORDENACION: [string, string][] = [
 	["Intímese al perito a presentar informe en 3 días bajo apercibimiento de remoción", "exige fuera de la marcha normal, con apercibimiento"],
