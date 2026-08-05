@@ -255,6 +255,7 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	["declara_desistida_prueba", "Tiene por desistida la prueba (efectiviza apercibimiento)"],
 	["efectiviza_apercibimiento", "Hace efectivo un apercibimiento (incumplimiento de carga)"],
 	["pone_autos_para_alegar", "Pone autos para alegar"],
+	["pone_autos_agravios", "Pone autos para expresar agravios (alzada)"],
 	["pasa_autos_sentencia", "Pasa autos a sentencia"],
 	["pasa_autos_a_resolver", "Pasa autos a resolver (cuestión no-fondo)"],
 	["regula_honorarios", "Regula honorarios"],
@@ -330,6 +331,9 @@ export const ACTO_AUTOFILL: Record<
 	// CPACF, multas, tener por no presentado…). La materia sigue a la carga.
 	efectiviza_apercibimiento: { tipoResolucion: "providencia_simple", funcion: "decision", resultado: "declara" },
 	pone_autos_para_alegar: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
+	// Alzada abre la ventana de expresión de agravios (apelación libre):
+	// familia de aperturas de ventana prevista → impulso.
+	pone_autos_agravios: { tipoResolucion: "providencia_simple", materia: "recurso", contexto: "recursiva", funcion: "impulso", resultado: "no_aplica" },
 	pasa_autos_sentencia: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
 	pasa_autos_a_resolver: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
 	regula_honorarios: { materia: "honorarios", funcion: "decision" },

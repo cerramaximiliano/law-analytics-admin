@@ -69,7 +69,7 @@ const esDocOrganismo = (m: { url: string | null; tipo: string }) =>
 
 // Heurística de instancia por metadatos/encabezado (sugerencia, no inferencia
 // del texto): "LA SALA"/"EL TRIBUNAL" en el encabezado del cuerpo → segunda.
-const RE_ORGANO_SEGUNDA = /\b(LA\s+SALA|EL\s+TRIBUNAL|ESTA\s+SALA|CAMARA\s+NACIONAL|C[ÁA]MARA\s+FEDERAL)\b/i;
+const RE_ORGANO_SEGUNDA = /\b(LA\s+SALA|EL\s+TRIBUNAL|ESTA\s+SALA|C[ÁA]MARA\s+(NACIONAL|FEDERAL|COMERCIAL|CIVIL)|SALA\s+(?:[A-Z]|[IVX]{1,4})(?![A-Za-z]))/i;
 
 // Tabs de la barra de modo: las 6 dimensiones principales + Modo term. y Firmeza.
 const MODOS_BARRA: (DimKey | "actoProcesal" | "decisiones" | "cargas")[] = [
