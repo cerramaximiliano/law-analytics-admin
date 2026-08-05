@@ -270,6 +270,7 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	["recibe_autos_devueltos", "Recibe autos devueltos del Superior"],
 	["recibe_autos_alzada", "Radica en la alzada (Sala que conoce)"],
 	["resuelve_recurso", "Resuelve recurso (no-fondo)"],
+	["aclara_rectifica", "Aclara / rectifica error material (de oficio)"],
 	["resuelve_fondo", "Resuelve el fondo"],
 	["homologa_acuerdo", "Homologa acuerdo"],
 	["registra_pago", "Registra pago / dación en pago"],
@@ -346,6 +347,9 @@ export const ACTO_AUTOFILL: Record<
 	// efectiva a segunda instancia (hito para el motor).
 	recibe_autos_alzada: { tipoResolucion: "providencia_simple", materia: "recurso", contexto: "recursiva", funcion: "impulso", resultado: "no_aplica" },
 	resuelve_recurso: { tipoResolucion: "sentencia_interlocutoria", funcion: "decision" },
+	// Corrección del propio acto (art. 166 inc. 1 CPCCN): pronunciamiento de
+	// oficio. La aclaratoria PEDIDA por una parte va como resuelve_recurso.
+	aclara_rectifica: { tipoResolucion: "providencia_simple", funcion: "decision", resultado: "declara" },
 	resuelve_fondo: { tipoResolucion: "sentencia_definitiva", materia: "fondo", funcion: "terminacion", modoTerminacion: "sentencia_sobre_fondo" },
 	homologa_acuerdo: { tipoResolucion: "sentencia_homologatoria", funcion: "terminacion", modoTerminacion: "homologacion_de_acuerdo", resultado: "homologa" },
 	registra_pago: { tipoResolucion: "providencia_simple", materia: "ejecucion", contexto: "ejecucion", funcion: "ordenacion", resultado: "no_aplica" },
