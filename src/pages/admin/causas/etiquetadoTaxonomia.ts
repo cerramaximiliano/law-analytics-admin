@@ -247,6 +247,7 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	["ordena_oficio", "Ordena oficio"],
 	["ordena_cedula", "Ordena cédula"],
 	["tiene_presente", "Tiene presente"],
+	["tiene_por_presentado", "Tiene por presentado / por parte (incorpora interviniente)"],
 	["agrega_documentacion", "Agrega documentación"],
 	["abre_a_prueba", "Abre a prueba"],
 	["medida_mejor_proveer", "Medida para mejor proveer"],
@@ -314,6 +315,9 @@ export const ACTO_AUTOFILL: Record<
 	ordena_oficio: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
 	ordena_cedula: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "ordenacion", resultado: "no_aplica" },
 	tiene_presente: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
+	// Primera presentación de cada sujeto: apoderados, terceros, síndico,
+	// herederos. Receptivo — incorpora al interviniente y el trámite sigue.
+	tiene_por_presentado: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
 	agrega_documentacion: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
 	abre_a_prueba: { tipoResolucion: "providencia_simple", materia: "prueba", funcion: "ordenacion", resultado: "no_aplica" },
 	medida_mejor_proveer: { tipoResolucion: "providencia_simple", materia: "prueba", funcion: "ordenacion", resultado: "no_aplica" },
