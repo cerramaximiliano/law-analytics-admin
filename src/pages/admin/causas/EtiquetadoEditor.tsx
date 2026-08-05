@@ -397,6 +397,7 @@ const EtiquetadoEditor = () => {
 		// La materia sigue al objeto de la medida (probatoria → prueba; notificatoria → tramite)
 		medida_mejor_proveer: ["materia"],
 		aclara_rectifica: ["materia"],
+		acepta_desistimiento: ["materia", "funcion", "resultado"],
 	};
 	const divergenciasDe = useCallback((a: AnotacionMovimiento | undefined) => {
 		if (!a?.actoProcesal || a.actoProcesal === "ninguno" || a.descartar) return [];
