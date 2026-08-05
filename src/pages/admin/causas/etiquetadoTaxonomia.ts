@@ -248,6 +248,7 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	["ordena_cedula", "Ordena cédula"],
 	["tiene_presente", "Tiene presente"],
 	["tiene_por_presentado", "Tiene por presentado / por parte (incorpora interviniente)"],
+	["tiene_por_contestada_demanda", "Tiene por contestada la demanda (traba de litis)"],
 	["agrega_documentacion", "Agrega documentación"],
 	["abre_a_prueba", "Abre a prueba"],
 	["medida_mejor_proveer", "Medida para mejor proveer"],
@@ -321,6 +322,8 @@ export const ACTO_AUTOFILL: Record<
 	// Primera presentación de cada sujeto: apoderados, terceros, síndico,
 	// herederos. Receptivo — incorpora al interviniente y el trámite sigue.
 	tiene_por_presentado: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
+	// Hito de traba de litis: la contestación queda incorporada al proceso.
+	tiene_por_contestada_demanda: { tipoResolucion: "providencia_simple", materia: "fondo", funcion: "impulso", resultado: "no_aplica" },
 	agrega_documentacion: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "impulso", resultado: "no_aplica" },
 	abre_a_prueba: { tipoResolucion: "providencia_simple", materia: "prueba", funcion: "ordenacion", resultado: "no_aplica" },
 	medida_mejor_proveer: { tipoResolucion: "providencia_simple", materia: "prueba", funcion: "ordenacion", resultado: "no_aplica" },
