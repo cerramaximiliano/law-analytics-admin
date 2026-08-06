@@ -30,6 +30,7 @@ import {
 	FormControl,
 	Grid,
 	IconButton,
+	InputAdornment,
 	InputLabel,
 	MenuItem,
 	Select,
@@ -918,6 +919,19 @@ const SocialStudio = () => {
 								value={caption}
 								onChange={(e) => setCaption(e.target.value)}
 								helperText={`${caption.length}/2200 — el texto que acompaña a la imagen`}
+								InputProps={{
+									endAdornment: (
+										<InputAdornment position="end" sx={{ alignSelf: "flex-start", mt: 0.5 }}>
+											<Tooltip title="Copiar caption">
+												<span>
+													<IconButton size="small" edge="end" disabled={!caption.trim()} onClick={() => copiarCaption(caption)}>
+														<Copy size={16} />
+													</IconButton>
+												</span>
+											</Tooltip>
+										</InputAdornment>
+									),
+								}}
 							/>
 							<Stack direction="row" spacing={1}>
 								<Button
