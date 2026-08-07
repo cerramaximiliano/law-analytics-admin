@@ -67,6 +67,7 @@ import {
 	updateSaijPipelineConfig,
 } from "api/saij";
 import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES, headerBorder } from "themes/dashboardTokens";
+import FlowTab from "./FlowTab";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -651,6 +652,7 @@ export default function SaijWorkerPage() {
 							<Tab label="Configuración" />
 							<Tab label="Historial" />
 							<Tab label="Pipeline" />
+							<Tab label="Flujo" />
 						</Tabs>
 
 						{/* ── Tab 0: Estado ── */}
@@ -1264,6 +1266,9 @@ export default function SaijWorkerPage() {
 								)}
 							</Box>
 						)}
+
+						{/* ── Tab 4: Flujo ── */}
+						{tab === 4 && <FlowTab />}
 					</Grid>
 				)}
 			</Grid>
