@@ -204,6 +204,20 @@ export interface ScbaCredentialListItem {
 	foldersCount: number;
 }
 
+/** Snapshot visual de "Mis Causas" (evidencia diaria capturada por scba-workers) */
+export interface ScbaListSnapshot {
+	_id: string;
+	date: string; // YYYY-MM-DD (ART)
+	takenAt: string;
+	causasCount: number;
+	totalPages: number;
+	trigger: "daily" | "count-changed" | "sync";
+	prevCount: number | null;
+	source: string;
+	pagesTruncated: boolean;
+	pages: { page: number; s3Key: string; url: string | null }[];
+}
+
 export interface ScbaResetPreview {
 	credentialId: string;
 	userId: string;
@@ -324,6 +338,18 @@ class ScbaManagerService {
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al listar credenciales SCBA");
+		}
+	}
+
+	async listCredentialSnapshots(
+		credentialId: string,
+		params: { days?: number; limit?: number } = {},
+	): Promise<{ success: boolean; data: ScbaListSnapshot[]; count: number }> {
+		try {
+			const response = await mevAxios.get(`/api/scba-manager/credentials/${credentialId}/list-snapshots`, { params });
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al obtener snapshots de la credencial SCBA");
 		}
 	}
 

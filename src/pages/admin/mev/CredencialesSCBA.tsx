@@ -46,11 +46,13 @@ import {
 	Broom,
 	Sms,
 	Notification,
+	Gallery,
 } from "iconsax-react";
 import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { AddCircle } from "iconsax-react";
 import scbaCredentialsService, { ScbaCredential, ScbaCredentialDetail, ScbaCredentialsFilters } from "api/scbaCredentials";
+import scbaManagerService, { ScbaListSnapshot } from "api/scbaManager";
 import EmailLogsService from "api/emailLogs";
 import { EmailLog } from "types/email-log";
 
@@ -218,6 +220,27 @@ const CredencialesSCBA = () => {
 		loading: boolean;
 		data: ScbaCredentialDetail | null;
 	}>({ open: false, credential: null, loading: false, data: null });
+
+	// Diálogo "Snapshots de Mis Causas" (evidencia visual diaria)
+	const [snapshotsDialog, setSnapshotsDialog] = useState<{
+		open: boolean;
+		credential: ScbaCredential | null;
+		loading: boolean;
+		data: ScbaListSnapshot[];
+	}>({ open: false, credential: null, loading: false, data: [] });
+	// Imagen ampliada (lightbox simple dentro del diálogo)
+	const [snapshotPreview, setSnapshotPreview] = useState<{ url: string; label: string } | null>(null);
+
+	const handleOpenSnapshots = async (cred: ScbaCredential) => {
+		setSnapshotsDialog({ open: true, credential: cred, loading: true, data: [] });
+		try {
+			const res = await scbaManagerService.listCredentialSnapshots(cred._id, { days: 30 });
+			setSnapshotsDialog((prev) => ({ ...prev, loading: false, data: res.success ? res.data : [] }));
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al cargar snapshots", { variant: "error" });
+			setSnapshotsDialog((prev) => ({ ...prev, loading: false }));
+		}
+	};
 
 	const handleOpenReminders = async (cred: ScbaCredential) => {
 		setReminderDialog({ open: true, credential: cred, loading: true, data: null });
@@ -638,6 +661,11 @@ const CredencialesSCBA = () => {
 											</TableCell>
 											<TableCell align="center">
 												<Stack direction="row" spacing={0.5} justifyContent="center">
+													<Tooltip title='Snapshots de "Mis Causas"'>
+														<IconButton size="small" onClick={() => handleOpenSnapshots(cred)} color="default">
+															<Gallery size={18} />
+														</IconButton>
+													</Tooltip>
 													<Tooltip title="Recorrido de recordatorios">
 														<IconButton size="small" onClick={() => handleOpenReminders(cred)} color="default">
 															<Notification size={18} />
@@ -1155,6 +1183,129 @@ const CredencialesSCBA = () => {
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setReminderDialog({ open: false, credential: null, loading: false, data: null })}>
+						Cerrar
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Dialog: Snapshots de "Mis Causas" (evidencia visual diaria del portal) */}
+			<Dialog
+				open={snapshotsDialog.open}
+				onClose={() => {
+					setSnapshotsDialog({ open: false, credential: null, loading: false, data: [] });
+					setSnapshotPreview(null);
+				}}
+				maxWidth="lg"
+				fullWidth
+			>
+				<DialogTitle>
+					Snapshots de "Mis Causas"
+					{snapshotsDialog.credential && (
+						<Typography variant="body2" color="text.secondary">
+							{snapshotsDialog.credential.userEmail} — pantalla del portal SCBA tal como la ven los workers (1 captura/día, o más
+							si cambió la cantidad de causas)
+						</Typography>
+					)}
+				</DialogTitle>
+				<DialogContent dividers>
+					{snapshotsDialog.loading ? (
+						<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+							<CircularProgress size={28} />
+						</Box>
+					) : snapshotPreview ? (
+						<Box sx={{ textAlign: "center" }}>
+							<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+								<Typography variant="subtitle2">{snapshotPreview.label}</Typography>
+								<Button size="small" onClick={() => setSnapshotPreview(null)}>
+									Volver al listado
+								</Button>
+							</Stack>
+							<Box
+								component="img"
+								src={snapshotPreview.url}
+								alt={snapshotPreview.label}
+								sx={{ maxWidth: "100%", border: (t) => `1px solid ${t.palette.divider}`, borderRadius: 1 }}
+							/>
+						</Box>
+					) : snapshotsDialog.data.length === 0 ? (
+						<Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
+							Todavía no hay snapshots para esta credencial. Se capturan en cada sync de lista y en la auditoría diaria (3 AM).
+						</Typography>
+					) : (
+						<Stack spacing={2}>
+							{snapshotsDialog.data.map((snap) => (
+								<Box key={snap._id}>
+									<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }} flexWrap="wrap">
+										<Typography variant="subtitle2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+											{snap.date}
+										</Typography>
+										<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
+											{new Date(snap.takenAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+										</Typography>
+										<Chip
+											size="small"
+											label={`${snap.causasCount} causa${snap.causasCount === 1 ? "" : "s"}`}
+											color={snap.causasCount > 0 ? "primary" : "default"}
+										/>
+										{snap.trigger === "count-changed" && (
+											<Chip
+												size="small"
+												color="warning"
+												label={`cambió: ${snap.prevCount ?? "?"} → ${snap.causasCount}`}
+											/>
+										)}
+										<Typography variant="caption" color="text.secondary">
+											{snap.source}
+										</Typography>
+										{snap.pagesTruncated && (
+											<Typography variant="caption" color="warning.main">
+												(capturas truncadas)
+											</Typography>
+										)}
+									</Stack>
+									<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+										{snap.pages.map((p) =>
+											p.url ? (
+												<Box
+													key={p.page}
+													onClick={() => setSnapshotPreview({ url: p.url as string, label: `${snap.date} — página ${p.page}` })}
+													sx={{
+														cursor: "pointer",
+														border: (t) => `1px solid ${t.palette.divider}`,
+														borderRadius: 1,
+														overflow: "hidden",
+														width: 150,
+														"&:hover": { borderColor: "primary.main" },
+													}}
+												>
+													<Box
+														component="img"
+														src={p.url}
+														alt={`Página ${p.page}`}
+														sx={{ width: "100%", height: 100, objectFit: "cover", objectPosition: "top", display: "block" }}
+													/>
+													<Typography variant="caption" sx={{ display: "block", textAlign: "center", py: 0.25 }}>
+														pág. {p.page}
+													</Typography>
+												</Box>
+											) : (
+												<Chip key={p.page} size="small" label={`pág. ${p.page}: sin URL`} />
+											),
+										)}
+									</Stack>
+									<Divider sx={{ mt: 1.5 }} />
+								</Box>
+							))}
+						</Stack>
+					)}
+				</DialogContent>
+				<DialogActions>
+					<Button
+						onClick={() => {
+							setSnapshotsDialog({ open: false, credential: null, loading: false, data: [] });
+							setSnapshotPreview(null);
+						}}
+					>
 						Cerrar
 					</Button>
 				</DialogActions>
