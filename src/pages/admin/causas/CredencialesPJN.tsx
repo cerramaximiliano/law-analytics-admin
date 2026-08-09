@@ -54,6 +54,7 @@ import {
 	InfoCircle,
 	Sms,
 	Lock,
+	Warning2,
 } from "iconsax-react";
 import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -65,6 +66,7 @@ import pjnCredentialsService, {
 	UpdateRun,
 	SyncedCausa,
 	CredentialErrorEntry,
+	PjnAdminAlert,
 } from "api/pjnCredentials";
 import EmailLogsService from "api/emailLogs";
 import { EmailLog } from "types/email-log";
@@ -501,6 +503,33 @@ const CredencialesPJN = () => {
 	const [emailLogsTemplateFilter, setEmailLogsTemplateFilter] = useState<string>("todos");
 	const [emailLogsUserFilter, setEmailLogsUserFilter] = useState<string>("");
 
+	// Estado alertas admin (watchdog de credenciales de pjn-mis-causas)
+	const [adminAlerts, setAdminAlerts] = useState<PjnAdminAlert[]>([]);
+	const [adminAlertsLoading, setAdminAlertsLoading] = useState(false);
+	const [adminAlertsFetched, setAdminAlertsFetched] = useState(false);
+	const [adminAlertsPage, setAdminAlertsPage] = useState(0);
+	const [adminAlertsRowsPerPage, setAdminAlertsRowsPerPage] = useState(25);
+	const [adminAlertsTotal, setAdminAlertsTotal] = useState(0);
+	const [adminAlertsActiveCount, setAdminAlertsActiveCount] = useState(0);
+	const [adminAlertsStatusFilter, setAdminAlertsStatusFilter] = useState<"all" | "active" | "resolved">("all");
+
+	const fetchAdminAlerts = async (page = adminAlertsPage, rowsPerPage = adminAlertsRowsPerPage, status = adminAlertsStatusFilter) => {
+		setAdminAlertsLoading(true);
+		try {
+			const res = await pjnCredentialsService.getAdminAlerts({ status, page: page + 1, limit: rowsPerPage });
+			if (res.success) {
+				setAdminAlerts(res.data);
+				setAdminAlertsTotal(res.pagination.total);
+				setAdminAlertsActiveCount(res.activeCount);
+				setAdminAlertsFetched(true);
+			}
+		} catch (error) {
+			console.error("Error fetching admin alerts:", error);
+		} finally {
+			setAdminAlertsLoading(false);
+		}
+	};
+
 	const fetchEmailLogs = async (page = emailLogsPage, rowsPerPage = emailLogsRowsPerPage) => {
 		setEmailLogsLoading(true);
 		try {
@@ -543,6 +572,14 @@ const CredencialesPJN = () => {
 		if (tabValue === 3 && !emailLogsFetched) {
 			fetchEmailLogs(0, emailLogsRowsPerPage);
 		}
+	}, [tabValue]);
+
+	// Lazy load: cargar alertas admin cuando se activa el tab 4
+	useEffect(() => {
+		if (tabValue === 4 && !adminAlertsFetched) {
+			fetchAdminAlerts(0, adminAlertsRowsPerPage);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [tabValue]);
 
 	// Polling silencioso cada 5s cuando hay credenciales en progreso
@@ -938,6 +975,7 @@ const CredencialesPJN = () => {
 					<Tab label="Actividad Sync" />
 					<Tab label="Movimientos" />
 					<Tab label="Notif. credenciales" icon={<Sms size={16} />} iconPosition="start" />
+					<Tab label="Alertas admin" icon={<Warning2 size={16} />} iconPosition="start" />
 				</Tabs>
 			</Box>
 
@@ -2442,6 +2480,156 @@ const CredencialesPJN = () => {
 								setEmailLogsRowsPerPage(rows);
 								setEmailLogsPage(0);
 								fetchEmailLogs(0, rows);
+							}}
+							rowsPerPageOptions={[25, 50, 100]}
+						/>
+					</Grid>
+				</Grid>
+			)}
+
+			{/* Tab 4: Alertas admin (watchdog de credenciales de pjn-mis-causas) */}
+			{tabValue === 4 && (
+				<Grid container spacing={2}>
+					<Grid item xs={12}>
+						<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
+							<Chip
+								label={`${adminAlertsActiveCount} activa${adminAlertsActiveCount === 1 ? "" : "s"}`}
+								color={adminAlertsActiveCount > 0 ? "warning" : "success"}
+								size="small"
+								sx={{ fontWeight: 600 }}
+							/>
+							<FormControl size="small" sx={{ minWidth: 160 }}>
+								<InputLabel>Estado</InputLabel>
+								<Select
+									value={adminAlertsStatusFilter}
+									label="Estado"
+									onChange={(e) => {
+										const v = e.target.value as "all" | "active" | "resolved";
+										setAdminAlertsStatusFilter(v);
+										setAdminAlertsPage(0);
+										fetchAdminAlerts(0, adminAlertsRowsPerPage, v);
+									}}
+								>
+									<MenuItem value="all">Todas</MenuItem>
+									<MenuItem value="active">Activas</MenuItem>
+									<MenuItem value="resolved">Resueltas</MenuItem>
+								</Select>
+							</FormControl>
+							<Tooltip title="Refrescar">
+								<IconButton size="small" onClick={() => fetchAdminAlerts(adminAlertsPage, adminAlertsRowsPerPage)}>
+									<Refresh size={18} />
+								</IconButton>
+							</Tooltip>
+							<Typography variant="caption" color="text.secondary">
+								Detectadas por el watchdog de pjn-mis-causas (cada 30 min) y los hooks de deshabilitación. Cada alerta se
+								emailea al admin con cooldown de 24 h.
+							</Typography>
+						</Stack>
+					</Grid>
+					<Grid item xs={12}>
+						{adminAlertsLoading ? (
+							<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+								<CircularProgress size={28} />
+							</Box>
+						) : adminAlerts.length === 0 ? (
+							<Typography variant="body2" color="text.secondary" sx={{ py: 3, textAlign: "center" }}>
+								Sin alertas registradas{adminAlertsStatusFilter !== "all" ? " con este filtro" : ""}. Buena señal.
+							</Typography>
+						) : (
+							<TableContainer component={Paper} variant="outlined">
+								<Table size="small">
+									<TableHead>
+										<TableRow>
+											<TableCell>Tipo</TableCell>
+											<TableCell>Usuario</TableCell>
+											<TableCell>Mensaje</TableCell>
+											<TableCell>Primera detección</TableCell>
+											<TableCell>Última detección</TableCell>
+											<TableCell align="center">Envíos</TableCell>
+											<TableCell align="center">Estado</TableCell>
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{adminAlerts.map((alert) => {
+											const typeLabels: Record<string, string> = {
+												credential_stuck: "Sin sync (loop)",
+												credential_disabled: "Deshabilitada",
+												transient_streak: "Racha de errores",
+											};
+											return (
+												<TableRow key={alert._id} hover>
+													<TableCell>
+														<Chip
+															label={typeLabels[alert.type] || alert.type}
+															size="small"
+															color={alert.type === "credential_disabled" ? "error" : "warning"}
+															variant={alert.resolvedAt ? "outlined" : "filled"}
+														/>
+													</TableCell>
+													<TableCell>
+														<Typography variant="body2">{alert.userEmail || "—"}</Typography>
+														{alert.credentialId && (
+															<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
+																{alert.credentialId.slice(0, 8)}…
+															</Typography>
+														)}
+													</TableCell>
+													<TableCell sx={{ maxWidth: 380 }}>
+														<Tooltip
+															title={Object.entries(alert.details || {})
+																.map(([k, v]) => `${k}: ${v}`)
+																.join(" · ")}
+															arrow
+														>
+															<Typography variant="body2" sx={{ whiteSpace: "normal", wordBreak: "break-word" }}>
+																{alert.message}
+															</Typography>
+														</Tooltip>
+													</TableCell>
+													<TableCell>
+														<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums" }}>
+															{new Date(alert.firstDetectedAt).toLocaleString("es-AR")}
+														</Typography>
+													</TableCell>
+													<TableCell>
+														<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums" }}>
+															{new Date(alert.lastDetectedAt).toLocaleString("es-AR")}
+														</Typography>
+													</TableCell>
+													<TableCell align="center">
+														<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+															{alert.sendCount}
+														</Typography>
+													</TableCell>
+													<TableCell align="center">
+														{alert.resolvedAt ? (
+															<Tooltip title={`Resuelta: ${new Date(alert.resolvedAt).toLocaleString("es-AR")}`} arrow>
+																<Chip label="Resuelta" size="small" color="success" variant="outlined" />
+															</Tooltip>
+														) : (
+															<Chip label="Activa" size="small" color="warning" />
+														)}
+													</TableCell>
+												</TableRow>
+											);
+										})}
+									</TableBody>
+								</Table>
+							</TableContainer>
+						)}
+						<EnhancedTablePagination
+							count={adminAlertsTotal}
+							page={adminAlertsPage}
+							rowsPerPage={adminAlertsRowsPerPage}
+							onPageChange={(_e: unknown, newPage: number) => {
+								setAdminAlertsPage(newPage);
+								fetchAdminAlerts(newPage, adminAlertsRowsPerPage);
+							}}
+							onRowsPerPageChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+								const rpp = parseInt(e.target.value, 10);
+								setAdminAlertsRowsPerPage(rpp);
+								setAdminAlertsPage(0);
+								fetchAdminAlerts(0, rpp);
 							}}
 							rowsPerPageOptions={[25, 50, 100]}
 						/>

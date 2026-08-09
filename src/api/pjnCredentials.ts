@@ -437,6 +437,30 @@ export interface CausaScreenshotEntry {
 }
 
 // Servicio de Credenciales PJN
+/** Alerta admin de credenciales (doc de pjn-admin-alerts, dedup por tipo+credencial) */
+export interface PjnAdminAlert {
+	_id: string;
+	key: string;
+	type: "credential_stuck" | "credential_disabled" | "transient_streak" | string;
+	credentialId: string | null;
+	userEmail: string | null;
+	message: string;
+	details: Record<string, string | number>;
+	source: string;
+	firstDetectedAt: string;
+	lastDetectedAt: string;
+	lastSentAt: string | null;
+	sendCount: number;
+	resolvedAt: string | null;
+}
+
+export interface PjnAdminAlertsResponse {
+	success: boolean;
+	data: PjnAdminAlert[];
+	activeCount: number;
+	pagination: { page: number; limit: number; total: number; pages: number };
+}
+
 class PjnCredentialsService {
 	/**
 	 * Crear credenciales PJN para un usuario
@@ -582,6 +606,17 @@ class PjnCredentialsService {
 	 */
 	async getPortalStatus(): Promise<PortalStatusResponse> {
 		const response = await adminAxios.get("/api/pjn-credentials/portal-status");
+		return response.data;
+	}
+
+	/**
+	 * Alertas admin de credenciales (watchdog + hooks de pjn-mis-causas,
+	 * colección pjn-admin-alerts).
+	 */
+	async getAdminAlerts(
+		params: { status?: "active" | "resolved" | "all"; type?: string; page?: number; limit?: number } = {},
+	): Promise<PjnAdminAlertsResponse> {
+		const response = await adminAxios.get("/api/pjn-credentials/admin-alerts", { params });
 		return response.data;
 	}
 
