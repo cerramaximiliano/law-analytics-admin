@@ -237,15 +237,20 @@ const CredencialesSCBA = () => {
 	}>({ open: false, credential: null, loading: false, data: [], page: 1, totalPages: 1, total: 0 });
 	// Imagen ampliada (lightbox simple dentro del diálogo)
 	const [snapshotPreview, setSnapshotPreview] = useState<{ url: string; label: string } | null>(null);
+	// Filtros de búsqueda dentro del diálogo (fecha + cantidad de causas)
+	const emptySnapshotFilters = { dateFrom: "", dateTo: "", countMin: "", countMax: "" };
+	const [snapshotFilters, setSnapshotFilters] = useState(emptySnapshotFilters);
 
-	const fetchSnapshotsPage = async (credentialId: string, page: number) => {
+	const fetchSnapshotsPage = async (credentialId: string, page: number, filters = snapshotFilters) => {
 		setSnapshotsDialog((prev) => ({ ...prev, loading: true }));
 		try {
-			const res = await scbaManagerService.listCredentialSnapshots(credentialId, {
-				days: 180,
-				page,
-				limit: SNAPSHOTS_PER_PAGE,
-			});
+			const params: any = { days: 180, page, limit: SNAPSHOTS_PER_PAGE };
+			if (filters.dateFrom) params.dateFrom = filters.dateFrom;
+			if (filters.dateTo) params.dateTo = filters.dateTo;
+			if (filters.countMin.trim() !== "") params.countMin = Number(filters.countMin);
+			if (filters.countMax.trim() !== "") params.countMax = Number(filters.countMax);
+
+			const res = await scbaManagerService.listCredentialSnapshots(credentialId, params);
 			setSnapshotsDialog((prev) => ({
 				...prev,
 				loading: false,
@@ -261,8 +266,9 @@ const CredencialesSCBA = () => {
 	};
 
 	const handleOpenSnapshots = (cred: ScbaCredential) => {
+		setSnapshotFilters(emptySnapshotFilters);
 		setSnapshotsDialog({ open: true, credential: cred, loading: true, data: [], page: 1, totalPages: 1, total: 0 });
-		fetchSnapshotsPage(cred._id, 1);
+		fetchSnapshotsPage(cred._id, 1, emptySnapshotFilters);
 	};
 
 	const handleOpenReminders = async (cred: ScbaCredential) => {
@@ -1232,6 +1238,66 @@ const CredencialesSCBA = () => {
 					)}
 				</DialogTitle>
 				<DialogContent dividers>
+					{!snapshotPreview && (
+						<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
+							<TextField
+								label="Desde"
+								type="date"
+								size="small"
+								value={snapshotFilters.dateFrom}
+								onChange={(e) => setSnapshotFilters((f) => ({ ...f, dateFrom: e.target.value }))}
+								InputLabelProps={{ shrink: true }}
+								sx={{ width: 160 }}
+							/>
+							<TextField
+								label="Hasta"
+								type="date"
+								size="small"
+								value={snapshotFilters.dateTo}
+								onChange={(e) => setSnapshotFilters((f) => ({ ...f, dateTo: e.target.value }))}
+								InputLabelProps={{ shrink: true }}
+								sx={{ width: 160 }}
+							/>
+							<TextField
+								label="Causas mín."
+								type="number"
+								size="small"
+								value={snapshotFilters.countMin}
+								onChange={(e) => setSnapshotFilters((f) => ({ ...f, countMin: e.target.value }))}
+								inputProps={{ min: 0 }}
+								sx={{ width: 120 }}
+							/>
+							<TextField
+								label="Causas máx."
+								type="number"
+								size="small"
+								value={snapshotFilters.countMax}
+								onChange={(e) => setSnapshotFilters((f) => ({ ...f, countMax: e.target.value }))}
+								inputProps={{ min: 0 }}
+								sx={{ width: 120 }}
+							/>
+							<Button
+								variant="contained"
+								size="small"
+								startIcon={<SearchNormal1 size={14} />}
+								disabled={snapshotsDialog.loading}
+								onClick={() => snapshotsDialog.credential && fetchSnapshotsPage(snapshotsDialog.credential._id, 1)}
+							>
+								Buscar
+							</Button>
+							<Button
+								variant="outlined"
+								size="small"
+								disabled={snapshotsDialog.loading}
+								onClick={() => {
+									setSnapshotFilters(emptySnapshotFilters);
+									if (snapshotsDialog.credential) fetchSnapshotsPage(snapshotsDialog.credential._id, 1, emptySnapshotFilters);
+								}}
+							>
+								Limpiar
+							</Button>
+						</Stack>
+					)}
 					{snapshotsDialog.loading ? (
 						<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
 							<CircularProgress size={28} />
@@ -1253,7 +1319,9 @@ const CredencialesSCBA = () => {
 						</Box>
 					) : snapshotsDialog.data.length === 0 ? (
 						<Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
-							Todavía no hay snapshots para esta credencial. Se capturan en cada sync de lista y en la auditoría diaria (3 AM).
+							{snapshotFilters.dateFrom || snapshotFilters.dateTo || snapshotFilters.countMin || snapshotFilters.countMax
+								? "Sin snapshots que coincidan con los filtros."
+								: "Todavía no hay snapshots para esta credencial. Se capturan en cada sync de lista y en la auditoría diaria (3 AM)."}
 						</Typography>
 					) : (
 						<Stack spacing={2}>

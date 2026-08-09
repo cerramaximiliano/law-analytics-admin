@@ -343,7 +343,15 @@ class ScbaManagerService {
 
 	async listCredentialSnapshots(
 		credentialId: string,
-		params: { days?: number; page?: number; limit?: number } = {},
+		params: {
+			days?: number;
+			page?: number;
+			limit?: number;
+			dateFrom?: string;
+			dateTo?: string;
+			countMin?: number;
+			countMax?: number;
+		} = {},
 	): Promise<{
 		success: boolean;
 		data: ScbaListSnapshot[];
