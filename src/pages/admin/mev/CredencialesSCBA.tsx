@@ -31,6 +31,7 @@ import {
 	DialogContentText,
 	DialogActions,
 	Divider,
+	Pagination,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { alpha, useTheme } from "@mui/material/styles";
@@ -221,25 +222,47 @@ const CredencialesSCBA = () => {
 		data: ScbaCredentialDetail | null;
 	}>({ open: false, credential: null, loading: false, data: null });
 
-	// Diálogo "Snapshots de Mis Causas" (evidencia visual diaria)
+	// Diálogo "Snapshots de Mis Causas" (evidencia visual diaria).
+	// Muestra toda la retención (180 días) paginada: las presigned URLs se
+	// generan sólo para la página visible.
+	const SNAPSHOTS_PER_PAGE = 10;
 	const [snapshotsDialog, setSnapshotsDialog] = useState<{
 		open: boolean;
 		credential: ScbaCredential | null;
 		loading: boolean;
 		data: ScbaListSnapshot[];
-	}>({ open: false, credential: null, loading: false, data: [] });
+		page: number;
+		totalPages: number;
+		total: number;
+	}>({ open: false, credential: null, loading: false, data: [], page: 1, totalPages: 1, total: 0 });
 	// Imagen ampliada (lightbox simple dentro del diálogo)
 	const [snapshotPreview, setSnapshotPreview] = useState<{ url: string; label: string } | null>(null);
 
-	const handleOpenSnapshots = async (cred: ScbaCredential) => {
-		setSnapshotsDialog({ open: true, credential: cred, loading: true, data: [] });
+	const fetchSnapshotsPage = async (credentialId: string, page: number) => {
+		setSnapshotsDialog((prev) => ({ ...prev, loading: true }));
 		try {
-			const res = await scbaManagerService.listCredentialSnapshots(cred._id, { days: 30 });
-			setSnapshotsDialog((prev) => ({ ...prev, loading: false, data: res.success ? res.data : [] }));
+			const res = await scbaManagerService.listCredentialSnapshots(credentialId, {
+				days: 180,
+				page,
+				limit: SNAPSHOTS_PER_PAGE,
+			});
+			setSnapshotsDialog((prev) => ({
+				...prev,
+				loading: false,
+				data: res.success ? res.data : [],
+				page: res.pagination?.page ?? page,
+				totalPages: res.pagination?.pages ?? 1,
+				total: res.pagination?.total ?? 0,
+			}));
 		} catch (error: any) {
 			enqueueSnackbar(error.message || "Error al cargar snapshots", { variant: "error" });
 			setSnapshotsDialog((prev) => ({ ...prev, loading: false }));
 		}
+	};
+
+	const handleOpenSnapshots = (cred: ScbaCredential) => {
+		setSnapshotsDialog({ open: true, credential: cred, loading: true, data: [], page: 1, totalPages: 1, total: 0 });
+		fetchSnapshotsPage(cred._id, 1);
 	};
 
 	const handleOpenReminders = async (cred: ScbaCredential) => {
@@ -1192,7 +1215,7 @@ const CredencialesSCBA = () => {
 			<Dialog
 				open={snapshotsDialog.open}
 				onClose={() => {
-					setSnapshotsDialog({ open: false, credential: null, loading: false, data: [] });
+					setSnapshotsDialog({ open: false, credential: null, loading: false, data: [], page: 1, totalPages: 1, total: 0 });
 					setSnapshotPreview(null);
 				}}
 				maxWidth="lg"
@@ -1203,7 +1226,8 @@ const CredencialesSCBA = () => {
 					{snapshotsDialog.credential && (
 						<Typography variant="body2" color="text.secondary">
 							{snapshotsDialog.credential.userEmail} — pantalla del portal SCBA tal como la ven los workers (1 captura/día, o más
-							si cambió la cantidad de causas)
+							si cambió la cantidad de causas). Últimos 180 días
+							{snapshotsDialog.total > 0 ? ` — ${snapshotsDialog.total} snapshot${snapshotsDialog.total === 1 ? "" : "s"}` : ""}.
 						</Typography>
 					)}
 				</DialogTitle>
@@ -1233,6 +1257,15 @@ const CredencialesSCBA = () => {
 						</Typography>
 					) : (
 						<Stack spacing={2}>
+							{snapshotsDialog.totalPages > 1 && (
+								<Pagination
+									count={snapshotsDialog.totalPages}
+									page={snapshotsDialog.page}
+									onChange={(_e, p) => snapshotsDialog.credential && fetchSnapshotsPage(snapshotsDialog.credential._id, p)}
+									size="small"
+									sx={{ alignSelf: "center" }}
+								/>
+							)}
 							{snapshotsDialog.data.map((snap) => (
 								<Box key={snap._id}>
 									<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }} flexWrap="wrap">
@@ -1296,13 +1329,22 @@ const CredencialesSCBA = () => {
 									<Divider sx={{ mt: 1.5 }} />
 								</Box>
 							))}
+							{snapshotsDialog.totalPages > 1 && (
+								<Pagination
+									count={snapshotsDialog.totalPages}
+									page={snapshotsDialog.page}
+									onChange={(_e, p) => snapshotsDialog.credential && fetchSnapshotsPage(snapshotsDialog.credential._id, p)}
+									size="small"
+									sx={{ alignSelf: "center" }}
+								/>
+							)}
 						</Stack>
 					)}
 				</DialogContent>
 				<DialogActions>
 					<Button
 						onClick={() => {
-							setSnapshotsDialog({ open: false, credential: null, loading: false, data: [] });
+							setSnapshotsDialog({ open: false, credential: null, loading: false, data: [], page: 1, totalPages: 1, total: 0 });
 							setSnapshotPreview(null);
 						}}
 					>

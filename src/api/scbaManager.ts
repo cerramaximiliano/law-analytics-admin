@@ -343,8 +343,13 @@ class ScbaManagerService {
 
 	async listCredentialSnapshots(
 		credentialId: string,
-		params: { days?: number; limit?: number } = {},
-	): Promise<{ success: boolean; data: ScbaListSnapshot[]; count: number }> {
+		params: { days?: number; page?: number; limit?: number } = {},
+	): Promise<{
+		success: boolean;
+		data: ScbaListSnapshot[];
+		count: number;
+		pagination: { page: number; limit: number; total: number; pages: number };
+	}> {
 		try {
 			const response = await mevAxios.get(`/api/scba-manager/credentials/${credentialId}/list-snapshots`, { params });
 			return response.data;
