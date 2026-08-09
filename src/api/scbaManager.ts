@@ -204,6 +204,30 @@ export interface ScbaCredentialListItem {
 	foldersCount: number;
 }
 
+/** Alerta admin de credenciales SCBA (doc de scba-admin-alerts, dedup por tipo+credencial) */
+export interface ScbaAdminAlert {
+	_id: string;
+	key: string;
+	type: "credential_stuck" | "credential_disabled" | "transient_streak" | "causas_drop" | "login_degraded" | string;
+	credentialId: string | null;
+	userEmail: string | null;
+	message: string;
+	details: Record<string, string | number>;
+	source: string;
+	firstDetectedAt: string;
+	lastDetectedAt: string;
+	lastSentAt: string | null;
+	sendCount: number;
+	resolvedAt: string | null;
+}
+
+export interface ScbaAdminAlertsResponse {
+	success: boolean;
+	data: ScbaAdminAlert[];
+	activeCount: number;
+	pagination: { page: number; limit: number; total: number; pages: number };
+}
+
 /** Snapshot visual de "Mis Causas" (evidencia diaria capturada por scba-workers) */
 export interface ScbaListSnapshot {
 	_id: string;
@@ -338,6 +362,17 @@ class ScbaManagerService {
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al listar credenciales SCBA");
+		}
+	}
+
+	async listAdminAlerts(
+		params: { status?: "active" | "resolved" | "all"; type?: string; page?: number; limit?: number } = {},
+	): Promise<ScbaAdminAlertsResponse> {
+		try {
+			const response = await mevAxios.get("/api/scba-manager/admin-alerts", { params });
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al obtener alertas de credenciales SCBA");
 		}
 	}
 
