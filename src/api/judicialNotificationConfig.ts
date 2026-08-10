@@ -181,6 +181,12 @@ export interface WorkerRegistryEntry {
 	fallback: MovementPolicy;
 	/** false = código legacy sin soporte de movementPolicies */
 	supportsPolicies: boolean;
+	/**
+	 * 1ª barrera (worker-side) para folders archivados: descripción de cómo
+	 * el worker maneja archivados de su lado, o null si NO aplica ningún
+	 * filtro propio (depende 100% de la 2ª barrera: la entrega central).
+	 */
+	archivedBarrier: string | null;
 	nota?: string;
 }
 
@@ -188,6 +194,7 @@ export const WORKER_REGISTRY: WorkerRegistryEntry[] = [
 	{
 		sourceKey: "pjn-app-update-worker",
 		proceso: "pjn-app-update-civil",
+		archivedBarrier: null,
 		repo: "pjn-workers",
 		server: "pjnworker",
 		jurisdiccion: "pjn",
@@ -197,6 +204,7 @@ export const WORKER_REGISTRY: WorkerRegistryEntry[] = [
 	{
 		sourceKey: "pjn-app-update-worker",
 		proceso: "pjn-app-update-ss",
+		archivedBarrier: null,
 		repo: "pjn-workers",
 		server: "pjnworker",
 		jurisdiccion: "pjn",
@@ -206,6 +214,7 @@ export const WORKER_REGISTRY: WorkerRegistryEntry[] = [
 	{
 		sourceKey: "pjn-app-update-worker",
 		proceso: "pjn-app-update-trabajo",
+		archivedBarrier: null,
 		repo: "pjn-workers",
 		server: "pjnworker",
 		jurisdiccion: "pjn",
@@ -215,6 +224,7 @@ export const WORKER_REGISTRY: WorkerRegistryEntry[] = [
 	{
 		sourceKey: "pjn-app-update-worker",
 		proceso: "pjn-app-update-comercial",
+		archivedBarrier: null,
 		repo: "pjn-workers",
 		server: "pjnworker",
 		jurisdiccion: "pjn",
@@ -224,6 +234,7 @@ export const WORKER_REGISTRY: WorkerRegistryEntry[] = [
 	{
 		sourceKey: "pjn-mis-causas-update-worker",
 		proceso: "pjn-private-causas-update",
+		archivedBarrier: null,
 		repo: "pjn-mis-causas",
 		server: "worker_02",
 		jurisdiccion: "pjn",
@@ -234,6 +245,7 @@ export const WORKER_REGISTRY: WorkerRegistryEntry[] = [
 	{
 		sourceKey: "app-update-worker",
 		proceso: "pjn-app-update (legacy)",
+		archivedBarrier: null,
 		repo: "pjn-workers-scraping",
 		server: "worker_01",
 		jurisdiccion: "pjn",
@@ -244,6 +256,7 @@ export const WORKER_REGISTRY: WorkerRegistryEntry[] = [
 	{
 		sourceKey: "mev-update-worker",
 		proceso: "mev-update-cluster",
+		archivedBarrier: null,
 		repo: "mev-workers",
 		server: "worker-002",
 		jurisdiccion: "mev",
@@ -253,6 +266,7 @@ export const WORKER_REGISTRY: WorkerRegistryEntry[] = [
 	{
 		sourceKey: "scba-update-worker",
 		proceso: "scba-update-worker",
+		archivedBarrier: "Solo procesa causas con ≥1 folder ACTIVO — las all-archived quedan para el worker archived",
 		repo: "scba-workers",
 		server: "worker_02",
 		jurisdiccion: "scba",
@@ -262,6 +276,7 @@ export const WORKER_REGISTRY: WorkerRegistryEntry[] = [
 	{
 		sourceKey: "scba-update-worker",
 		proceso: "scba-update-archived-worker",
+		archivedBarrier: "Aplica notifyArchivedFolders en el worker (única 1ª barrera real por flag)",
 		repo: "scba-workers",
 		server: "worker_02",
 		jurisdiccion: "scba",
@@ -272,6 +287,7 @@ export const WORKER_REGISTRY: WorkerRegistryEntry[] = [
 	{
 		sourceKey: "eje-update-worker",
 		proceso: "eje-update-worker",
+		archivedBarrier: null,
 		repo: "eje-workers",
 		server: "worker_02",
 		jurisdiccion: "eje",
@@ -281,6 +297,7 @@ export const WORKER_REGISTRY: WorkerRegistryEntry[] = [
 	{
 		sourceKey: "eje-stuck-worker",
 		proceso: "eje-stuck-worker",
+		archivedBarrier: null,
 		repo: "eje-workers",
 		server: "worker_02",
 		jurisdiccion: "eje",

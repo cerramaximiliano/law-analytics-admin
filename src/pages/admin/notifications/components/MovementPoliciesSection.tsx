@@ -248,8 +248,14 @@ const MovementPoliciesSection: React.FC<Props> = ({ value, onChange }) => {
 				Resolución por capas: <strong>override del worker → defaults → fallback hardcodeado en el código del worker</strong>. Un campo en
 				"heredar" no se guarda en el documento y deja actuar a la capa siguiente. Los workers refrescan esta configuración cada 5 minutos.
 				Además, <strong>la-notification aplica los defaults (y los overrides por jurisdicción) en la ENTREGA</strong> — incluye el
-				coordinador interno y los envíos manuales desde pjn-api, que no pasan por los workers. En particular, "Folders archivados: No
-				notificar" descarta el movimiento aunque el worker lo haya enviado.
+				coordinador interno y los envíos manuales desde pjn-api, que no pasan por los workers.
+			</Alert>
+			<Alert severity="warning" sx={{ mb: 2 }}>
+				<strong>"Folders archivados" actúa en DOS barreras.</strong> 1ª barrera (worker): hoy solo los workers SCBA filtran de su lado —
+				el modo normal no procesa causas sin folders activos y el worker archived lee este flag; PJN, Mis Causas, MEV y EJE lo ignoran
+				worker-side y envían igual. 2ª barrera (entrega central en la-notification): re-aplica la política para <em>todas</em> las
+				fuentes y es la barrera final — con "No notificar", el movimiento se descarta ('skipped' con motivo) aunque el worker lo haya
+				enviado. El estado por proceso se ve en vivo en Esquema del flujo → "Política efectiva por worker".
 			</Alert>
 
 			<Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>

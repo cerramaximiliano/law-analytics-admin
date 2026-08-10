@@ -535,6 +535,7 @@ const NotificationFlowPage = () => {
 									"Política de 1ª sincronización",
 									"Filtros de tipo / keywords · batch ≤ 100",
 									"Usuarios: userUpdatesEnabled → userCausaIds",
+									"Archivados 1ª BARRERA: solo SCBA filtra worker-side",
 								]}
 							/>
 						</Grid>
@@ -562,7 +563,7 @@ const NotificationFlowPage = () => {
 								title="4 · Entrega al usuario"
 								subtitle="Cron */15 · notifyAt ≤ ahora · agrupado por usuario"
 								items={[
-									"ENFORCEMENT CENTRAL: kill-switch global/por source, días activos, filtros de contenido, folders archivados (skipped con motivo)",
+									"ENFORCEMENT CENTRAL (2ª BARRERA): kill-switch global/por source, días activos, filtros de contenido, folders archivados (skipped con motivo) — aplica aunque el worker no haya filtrado",
 									"Límites por usuario (opt-in enforcePerUserLimits): difiere excedentes",
 									"Usuario existe + isActive ≠ false",
 									"Email (SES): channels.email ≠ false — 1 correo consolidado",
@@ -602,7 +603,7 @@ const NotificationFlowPage = () => {
 									<TableCell>verified + isValid + update + pública</TableCell>
 									<TableCell>Solo de hoy (UTC)</TableCell>
 									<TableCell>Todo mov. nuevo (sin filtro de fecha)</TableCell>
-									<TableCell>Configurable (central)</TableCell>
+									<TableCell>Solo 2ª barrera (entrega)</TableCell>
 									<TableCell>Suscriptos → todos los vinculados</TableCell>
 								</TableRow>
 								<TableRow>
@@ -610,7 +611,7 @@ const NotificationFlowPage = () => {
 									<TableCell>Credencial habilitada (sin verified)</TableCell>
 									<TableCell>Silenciosa</TableCell>
 									<TableCell>Solo movs. nuevos posteriores a referencia</TableCell>
-									<TableCell>Configurable (central)</TableCell>
+									<TableCell>Solo 2ª barrera (entrega)</TableCell>
 									<TableCell>Suscriptos → todos los vinculados</TableCell>
 								</TableRow>
 								<TableRow>
@@ -618,7 +619,7 @@ const NotificationFlowPage = () => {
 									<TableCell>verified + isValid + update + source app</TableCell>
 									<TableCell>Silenciosa</TableCell>
 									<TableCell>Todo mov. nuevo</TableCell>
-									<TableCell>Configurable (central)</TableCell>
+									<TableCell>Solo 2ª barrera (entrega)</TableCell>
 									<TableCell>Suscriptos → todos los vinculados</TableCell>
 								</TableRow>
 								<TableRow>
@@ -626,7 +627,7 @@ const NotificationFlowPage = () => {
 									<TableCell>verificado + active + ≥1 folder vinculado</TableCell>
 									<TableCell>Solo de hoy (ART)</TableCell>
 									<TableCell>Todo mov. nuevo</TableCell>
-									<TableCell>Configurable (worker dedicado)</TableCell>
+									<TableCell>Doble barrera (worker + entrega)</TableCell>
 									<TableCell>Suscriptos → todos los vinculados</TableCell>
 								</TableRow>
 								<TableRow>
@@ -634,7 +635,7 @@ const NotificationFlowPage = () => {
 									<TableCell>verified + isValid + no privada</TableCell>
 									<TableCell>Silenciosa</TableCell>
 									<TableCell>Diff por nº de movimiento</TableCell>
-									<TableCell>Configurable (central)</TableCell>
+									<TableCell>Solo 2ª barrera (entrega)</TableCell>
 									<TableCell>Suscriptos → todos los vinculados</TableCell>
 								</TableRow>
 								<TableRow>

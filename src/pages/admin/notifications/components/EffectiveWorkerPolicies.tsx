@@ -122,7 +122,9 @@ const EffectiveWorkerPolicies: React.FC<{ live: LiveJudicialConfig }> = ({ live 
 			<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
 				Resolución en vivo con la misma cascada que corre cada worker: <b>override</b> (sources[clave]) → <b>defaults</b> →{" "}
 				<b>código</b> (fallback hardcodeado) → <b>base</b>. La etiqueta junto a cada valor indica de qué capa sale. Los workers
-				refrescan el documento cada 5 minutos; esta tabla, cada 60 segundos.
+				refrescan el documento cada 5 minutos; esta tabla, cada 60 segundos. Para <b>folders archivados</b> el sistema tiene{" "}
+				<b>doble barrera</b>: la 1ª es el worker (hoy solo SCBA filtra de su lado) y la 2ª es la entrega central de la-notification,
+				que re-aplica la política para todas las fuentes — la columna indica qué barreras actúan en cada proceso.
 			</Typography>
 
 			<TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2, mb: 2 }}>
@@ -189,7 +191,31 @@ const EffectiveWorkerPolicies: React.FC<{ live: LiveJudicialConfig }> = ({ live 
 										<FieldCell field={p.activeDays} render={renderDays} />
 									</TableCell>
 									<TableCell>
-										<FieldCell field={p.notifyArchivedFolders} render={renderBool("Notificar", "No notificar")} />
+										<Stack spacing={0.5}>
+											<FieldCell field={p.notifyArchivedFolders} render={renderBool("Notificar", "No notificar")} />
+											<Tooltip
+												title={
+													w.archivedBarrier
+														? `1ª barrera (worker): ${w.archivedBarrier}. 2ª barrera: la entrega central re-aplica la política.`
+														: "El worker NO filtra archivados de su lado — la única barrera es la entrega central de la-notification."
+												}
+												arrow
+											>
+												<Chip
+													label={w.archivedBarrier ? "1ª + 2ª barrera" : "solo 2ª (entrega)"}
+													size="small"
+													sx={{
+														height: 16,
+														fontSize: 9.5,
+														width: "fit-content",
+														bgcolor: alpha(w.archivedBarrier ? LIVE_GREEN : BRAND_BLUE, 0.1),
+														color: w.archivedBarrier ? LIVE_GREEN : BRAND_BLUE,
+														border: `1px solid ${alpha(w.archivedBarrier ? LIVE_GREEN : BRAND_BLUE, 0.3)}`,
+														"& .MuiChip-label": { px: 0.6 },
+													}}
+												/>
+											</Tooltip>
+										</Stack>
 									</TableCell>
 									<TableCell>
 										<Stack direction="row" spacing={1} alignItems="center">
@@ -214,11 +240,12 @@ const EffectiveWorkerPolicies: React.FC<{ live: LiveJudicialConfig }> = ({ live 
 			</TableContainer>
 
 			<Typography variant="subtitle2" sx={{ mb: 0.75 }}>
-				Entrega central (la-notification) — resolución por jurisdicción
+				Entrega central (la-notification) — 2ª barrera, resolución por jurisdicción
 			</Typography>
 			<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-				Lo que llega al webhook o crea el coordinador se filtra de nuevo en la entrega con estas políticas (sources[jurisdicción] →
-				defaults → base). No usan el fallback de ningún worker.
+				Lo que llega al webhook o crea el coordinador se filtra DE NUEVO en la entrega con estas políticas (sources[jurisdicción] →
+				defaults → base; sin fallback de worker). Es la barrera final: aplica aunque el worker no haya filtrado (PJN/MEV/EJE) o
+				haya sido bypasseado (pjn-api manual, legacy).
 			</Typography>
 			<TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
 				<Table size="small">
