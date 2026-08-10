@@ -23,6 +23,9 @@ export interface AssociatedSentenciaCapturada {
 	fuero?: string;
 	number?: number;
 	year?: number;
+	publicationStatus?: string;
+	aiSummary?: { status?: string; generatedAt?: string; skipReason?: string };
+	aiSummaryChars?: number;
 }
 
 export interface SaijSentencia {
@@ -43,9 +46,18 @@ export interface SaijSentencia {
 	titulo: string;
 	fecha: string;
 	fechaString: string;
+	fechaUmod?: string;
 	tribunal: string;
 	tipoTribunal: string;
 	fuero: string;
+	adminNotified?: boolean;
+	adminNotifiedAt?: string;
+	userNotified?: boolean;
+	userNotifiedAt?: string;
+	userCampaignId?: string;
+	userCampaignExcluded?: boolean;
+	userCampaignExcludedAt?: string;
+	socialPost?: { generado?: boolean; postId?: string; estado?: string; markedAt?: string; markedBy?: string };
 	expediente?: {
 		numero: number;
 		año: number;
@@ -98,6 +110,11 @@ export interface SentenciaListParams {
 	linked?: "true" | "false";
 	embeddingStatus?: "pending" | "processing" | "completed" | "error" | "skipped";
 	hasSentenciaCapturada?: "true" | "false";
+	userNotified?: "true" | "false";
+	userCampaignExcluded?: "true" | "false";
+	userCampaignId?: string;
+	hasSocialPost?: "true" | "false";
+	hasAiSummary?: "true" | "false";
 	q?: string;
 }
 
@@ -130,6 +147,13 @@ export interface SentenciaStatsResponse {
 			total: number;
 			byProcessingStatus: { _id: string; count: number }[];
 			byEmbeddingStatus: { _id: string; count: number }[];
+			withAiSummary?: number;
+			publicationSkipped?: number;
+		};
+		difusion?: {
+			userNotified: number;
+			userCampaignExcluded: number;
+			socialPost: number;
 		};
 	};
 }
@@ -242,6 +266,14 @@ export const getSaijSentenciaById = async (id: string): Promise<{ success: boole
 
 export const updateSaijSentencia = async (id: string, data: Partial<SaijSentencia>): Promise<{ success: boolean; data: SaijSentencia }> => {
 	const response = await pjnAxios.patch(`/api/saij/sentencias/${id}`, data);
+	return response.data;
+};
+
+export const setSaijSentenciaSocialPost = async (
+	id: string,
+	data: { generado: boolean; postId?: string; estado?: string },
+): Promise<{ success: boolean; data: SaijSentencia }> => {
+	const response = await pjnAxios.patch(`/api/saij/sentencias/${id}/social-post`, data);
 	return response.data;
 };
 

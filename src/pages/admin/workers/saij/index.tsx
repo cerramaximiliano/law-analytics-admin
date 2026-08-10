@@ -68,6 +68,7 @@ import {
 } from "api/saij";
 import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES, headerBorder } from "themes/dashboardTokens";
 import FlowTab from "./FlowTab";
+import DifusionTab from "./DifusionTab";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -653,6 +654,7 @@ export default function SaijWorkerPage() {
 							<Tab label="Historial" />
 							<Tab label="Pipeline" />
 							<Tab label="Flujo" />
+							<Tab label="Difusión" />
 						</Tabs>
 
 						{/* ── Tab 0: Estado ── */}
@@ -1269,6 +1271,7 @@ export default function SaijWorkerPage() {
 
 						{/* ── Tab 4: Flujo ── */}
 						{tab === 4 && <FlowTab />}
+						{tab === 5 && <DifusionTab />}
 					</Grid>
 				)}
 			</Grid>
