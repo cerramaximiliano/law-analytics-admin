@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React from "react";
 import { useTheme, alpha } from "@mui/material/styles";
 import {
 	Box,
@@ -19,16 +19,17 @@ import {
 	Alert,
 } from "@mui/material";
 import { Refresh, Setting2 } from "iconsax-react";
-import judicialNotificationConfigService, { JudicialNotificationConfig } from "api/judicialNotificationConfig";
+import { JudicialNotificationConfig } from "api/judicialNotificationConfig";
+import { LiveJudicialConfig } from "./useLiveJudicialConfig";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
 
 // ----------------------------------------------------------------------
-// Resumen EN VIVO de judicial-notification-configs. Refresca solo (60 s)
-// y a demanda: siempre muestra lo que el documento dice AHORA, sin importar
-// desde dónde se haya editado (UI, API o Mongo directo).
+// Resumen EN VIVO de judicial-notification-configs. El fetch/polling vive
+// en useLiveJudicialConfig (compartido con EffectiveWorkerPolicies): siempre
+// muestra lo que el documento dice AHORA, sin importar desde dónde se haya
+// editado (UI, API o Mongo directo).
 // ----------------------------------------------------------------------
 
-const REFRESH_MS = 60_000;
 const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
 const fmtDays = (days?: number[] | null) =>
@@ -60,31 +61,9 @@ const InfoRow = ({ label, children }: { label: string; children: React.ReactNode
 	</Stack>
 );
 
-const LiveConfigSummary: React.FC = () => {
+const LiveConfigSummary: React.FC<{ live: LiveJudicialConfig }> = ({ live }) => {
 	const theme = useTheme();
-	const [config, setConfig] = useState<JudicialNotificationConfig | null>(null);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-	const [lastFetch, setLastFetch] = useState<Date | null>(null);
-
-	const fetchConfig = useCallback(async () => {
-		try {
-			const data = await judicialNotificationConfigService.getConfig();
-			setConfig(data);
-			setError(null);
-			setLastFetch(new Date());
-		} catch (e: any) {
-			setError(e?.message || "Error cargando la configuración");
-		} finally {
-			setLoading(false);
-		}
-	}, []);
-
-	useEffect(() => {
-		fetchConfig();
-		const interval = setInterval(fetchConfig, REFRESH_MS);
-		return () => clearInterval(interval);
-	}, [fetchConfig]);
+	const { config, loading, error, lastFetch, refresh: fetchConfig } = live;
 
 	if (loading) {
 		return (

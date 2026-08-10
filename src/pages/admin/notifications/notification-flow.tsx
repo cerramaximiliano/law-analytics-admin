@@ -42,6 +42,8 @@ import {
 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import LiveConfigSummary from "./components/LiveConfigSummary";
+import EffectiveWorkerPolicies from "./components/EffectiveWorkerPolicies";
+import useLiveJudicialConfig from "./components/useLiveJudicialConfig";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
 
 // ============================================================================
@@ -473,6 +475,7 @@ const FlowArrow = () => {
 const NotificationFlowPage = () => {
 	const theme = useTheme();
 	const [expandedSource, setExpandedSource] = useState<string | false>(false);
+	const live = useLiveJudicialConfig();
 
 	return (
 		<MainCard
@@ -489,7 +492,7 @@ const NotificationFlowPage = () => {
 		>
 			<Stack spacing={4}>
 				{/* ============ 0. Configuración vigente (en vivo) ============ */}
-				<LiveConfigSummary />
+				<LiveConfigSummary live={live} />
 
 				{/* ============ 1. Pipeline general ============ */}
 				<Box>
@@ -662,6 +665,11 @@ const NotificationFlowPage = () => {
 						Jurisdicciones SIN integración a la-notification: PJ Salta, PJ Catamarca y PJ Mendoza (usan email SES directo desde sus workers).
 					</Typography>
 				</Box>
+
+				<Divider />
+
+				{/* ============ 2b. Política efectiva por worker (dinámico) ============ */}
+				<EffectiveWorkerPolicies live={live} />
 
 				<Divider />
 

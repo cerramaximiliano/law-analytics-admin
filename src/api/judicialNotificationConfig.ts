@@ -163,6 +163,202 @@ export const DELIVERY_MOVEMENT_SOURCES: { key: string; label: string; hint?: str
 ];
 
 // ----------------------------------------------------------------------
+// Registro de TODOS los procesos que actualizan movimientos y notifican.
+// Un proceso por fila (varios procesos pueden compartir la misma sourceKey,
+// ej. los 4 clusters por fuero de PJN o el worker archived de SCBA).
+// `fallback` replica la política hardcodeada en el código de cada worker —
+// si se cambia allí, actualizar acá.
+// ----------------------------------------------------------------------
+
+export interface WorkerRegistryEntry {
+	/** Clave con la que el worker resuelve movementPolicies.sources */
+	sourceKey: string;
+	proceso: string; // nombre PM2
+	repo: string;
+	server: string;
+	jurisdiccion: "pjn" | "eje" | "mev" | "scba";
+	/** Política hardcodeada en el worker (capa fallback) */
+	fallback: MovementPolicy;
+	/** false = código legacy sin soporte de movementPolicies */
+	supportsPolicies: boolean;
+	nota?: string;
+}
+
+export const WORKER_REGISTRY: WorkerRegistryEntry[] = [
+	{
+		sourceKey: "pjn-app-update-worker",
+		proceso: "pjn-app-update-civil",
+		repo: "pjn-workers",
+		server: "pjnworker",
+		jurisdiccion: "pjn",
+		fallback: { firstSyncPolicy: "today-only", cacheSourceTodayOnly: true },
+		supportsPolicies: true,
+	},
+	{
+		sourceKey: "pjn-app-update-worker",
+		proceso: "pjn-app-update-ss",
+		repo: "pjn-workers",
+		server: "pjnworker",
+		jurisdiccion: "pjn",
+		fallback: { firstSyncPolicy: "today-only", cacheSourceTodayOnly: true },
+		supportsPolicies: true,
+	},
+	{
+		sourceKey: "pjn-app-update-worker",
+		proceso: "pjn-app-update-trabajo",
+		repo: "pjn-workers",
+		server: "pjnworker",
+		jurisdiccion: "pjn",
+		fallback: { firstSyncPolicy: "today-only", cacheSourceTodayOnly: true },
+		supportsPolicies: true,
+	},
+	{
+		sourceKey: "pjn-app-update-worker",
+		proceso: "pjn-app-update-comercial",
+		repo: "pjn-workers",
+		server: "pjnworker",
+		jurisdiccion: "pjn",
+		fallback: { firstSyncPolicy: "today-only", cacheSourceTodayOnly: true },
+		supportsPolicies: true,
+	},
+	{
+		sourceKey: "pjn-mis-causas-update-worker",
+		proceso: "pjn-private-causas-update",
+		repo: "pjn-mis-causas",
+		server: "worker_02",
+		jurisdiccion: "pjn",
+		fallback: { firstSyncPolicy: "silent-baseline" },
+		supportsPolicies: true,
+		nota: "Causas privadas del portal autenticado",
+	},
+	{
+		sourceKey: "app-update-worker",
+		proceso: "pjn-app-update (legacy)",
+		repo: "pjn-workers-scraping",
+		server: "worker_01",
+		jurisdiccion: "pjn",
+		fallback: {},
+		supportsPolicies: false,
+		nota: "Código legacy sin movementPolicies ni first-sync guard — debe permanecer apagado",
+	},
+	{
+		sourceKey: "mev-update-worker",
+		proceso: "mev-update-cluster",
+		repo: "mev-workers",
+		server: "worker-002",
+		jurisdiccion: "mev",
+		fallback: { firstSyncPolicy: "silent-baseline" },
+		supportsPolicies: true,
+	},
+	{
+		sourceKey: "scba-update-worker",
+		proceso: "scba-update-worker",
+		repo: "scba-workers",
+		server: "worker_02",
+		jurisdiccion: "scba",
+		fallback: { firstSyncPolicy: "today-only", notifyArchivedFolders: true },
+		supportsPolicies: true,
+	},
+	{
+		sourceKey: "scba-update-worker",
+		proceso: "scba-update-archived-worker",
+		repo: "scba-workers",
+		server: "worker_02",
+		jurisdiccion: "scba",
+		fallback: { firstSyncPolicy: "today-only", notifyArchivedFolders: true },
+		supportsPolicies: true,
+		nota: "Modo archived (1×/día 4 AM) — comparte la clave scba-update-worker; único worker que aplica notifyArchivedFolders de su lado",
+	},
+	{
+		sourceKey: "eje-update-worker",
+		proceso: "eje-update-worker",
+		repo: "eje-workers",
+		server: "worker_02",
+		jurisdiccion: "eje",
+		fallback: { firstSyncPolicy: "silent-baseline" },
+		supportsPolicies: true,
+	},
+	{
+		sourceKey: "eje-stuck-worker",
+		proceso: "eje-stuck-worker",
+		repo: "eje-workers",
+		server: "worker_02",
+		jurisdiccion: "eje",
+		fallback: { firstSyncPolicy: "silent-baseline" },
+		supportsPolicies: true,
+		nota: "First-touch nocturno: siempre es primera sincronización",
+	},
+];
+
+// ----------------------------------------------------------------------
+// Resolución de política efectiva — misma cascada que usan los workers:
+// sources[sourceKey] → defaults → fallback hardcodeado → base.
+// Devuelve cada campo con la capa de la que salió, para mostrar en la UI
+// de dónde viene cada valor.
+// ----------------------------------------------------------------------
+
+export type PolicyLayer = "override" | "defaults" | "fallback" | "base";
+
+export interface ResolvedField<T> {
+	value: T;
+	layer: PolicyLayer;
+}
+
+export interface EffectivePolicy {
+	enabled: ResolvedField<boolean>;
+	firstSyncPolicy: ResolvedField<FirstSyncPolicy>;
+	offDayMode: ResolvedField<OffDayMode>;
+	/** null = heredar notificationSchedule.activeDays global */
+	activeDays: ResolvedField<number[] | null>;
+	notifyArchivedFolders: ResolvedField<boolean>;
+	cacheSourceTodayOnly: ResolvedField<boolean | undefined>;
+	/** null = usar filters globales */
+	filters: ResolvedField<MovementPolicy["filters"]>;
+}
+
+const BASE_POLICY: Required<Pick<MovementPolicy, "enabled" | "firstSyncPolicy" | "offDayMode" | "notifyArchivedFolders">> & MovementPolicy = {
+	enabled: true,
+	firstSyncPolicy: "silent-baseline",
+	offDayMode: "skip",
+	notifyArchivedFolders: true,
+	activeDays: null,
+	filters: null,
+};
+
+export function resolveEffectivePolicy(
+	policies: MovementPolicies | null | undefined,
+	sourceKey: string,
+	fallback: MovementPolicy = {},
+): EffectivePolicy {
+	const layers: { layer: PolicyLayer; policy: MovementPolicy }[] = [
+		{ layer: "override", policy: policies?.sources?.[sourceKey] || {} },
+		{ layer: "defaults", policy: policies?.defaults || {} },
+		{ layer: "fallback", policy: fallback },
+		{ layer: "base", policy: BASE_POLICY },
+	];
+
+	function pick<K extends keyof MovementPolicy>(field: K): ResolvedField<any> {
+		for (const { layer, policy } of layers) {
+			const v = policy[field];
+			// activeDays/filters usan null como "heredar" explícito → tratarlo
+			// igual que undefined para seguir bajando de capa.
+			if (v !== undefined && v !== null) return { value: v, layer };
+		}
+		return { value: field === "activeDays" || field === "filters" ? null : undefined, layer: "base" };
+	}
+
+	return {
+		enabled: pick("enabled"),
+		firstSyncPolicy: pick("firstSyncPolicy"),
+		offDayMode: pick("offDayMode"),
+		activeDays: pick("activeDays"),
+		notifyArchivedFolders: pick("notifyArchivedFolders"),
+		cacheSourceTodayOnly: pick("cacheSourceTodayOnly"),
+		filters: pick("filters"),
+	};
+}
+
+// ----------------------------------------------------------------------
 // API
 // ----------------------------------------------------------------------
 
