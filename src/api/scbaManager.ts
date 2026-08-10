@@ -2,14 +2,15 @@ import mevAxios from "utils/mevAxios";
 
 // ========== Tipos de worker ==========
 
-export type ScbaWorkerType = "verification" | "initialScraping" | "update" | "listAudit";
+export type ScbaWorkerType = "verification" | "initialScraping" | "update" | "updateArchived" | "listAudit";
 
-export const SCBA_WORKER_TYPES: ScbaWorkerType[] = ["verification", "initialScraping", "update", "listAudit"];
+export const SCBA_WORKER_TYPES: ScbaWorkerType[] = ["verification", "initialScraping", "update", "updateArchived", "listAudit"];
 
 export const SCBA_WORKER_LABELS: Record<ScbaWorkerType, string> = {
 	verification: "Verificación de Lista",
 	initialScraping: "Extracción Inicial",
 	update: "Actualización Periódica",
+	updateArchived: "Actualización Archivadas",
 	listAudit: "Auditoría Diaria",
 };
 
@@ -19,7 +20,9 @@ export const SCBA_WORKER_DESCRIPTIONS: Record<ScbaWorkerType, string> = {
 	initialScraping:
 		"Procesa las causas marcadas como pending por el Verificación: navega a cada una, extrae todos los trámites y las deja en estado completed listas para el Actualización.",
 	update:
-		"Refresca periódicamente los movimientos de causas ya procesadas. Usa merge inteligente por (fecha+detalle+URL) para no duplicar movimientos. Respeta el threshold de horas desde la última actualización.",
+		"Refresca periódicamente los movimientos de causas ya procesadas. Usa merge inteligente por (fecha+detalle+URL) para no duplicar movimientos. Respeta el threshold de horas desde la última actualización. Con updatePolicy 'unified' cubre TODAS las causas con folder (archivadas incluidas).",
+	updateArchived:
+		"Refresca causas cuyos folders están TODOS archivados (cron diario 4 AM ART). Solo trabaja con updatePolicy 'split' — en modo 'unified' queda ocioso porque la Actualización Periódica cubre también las archivadas.",
 	listAudit:
 		"Corre una vez al día (3 AM ARG): compara la lista actual en SCBA con las causas ya guardadas, detecta altas y bajas, y dispara email consolidado al usuario con los cambios.",
 };
@@ -52,6 +55,20 @@ export interface ScbaWorkerConfig {
 
 export type ScbaWorkersConfigMap = Record<ScbaWorkerType, ScbaWorkerConfig>;
 
+/**
+ * Partición del trabajo de update:
+ *  - 'split': causas con ≥1 folder activo → update frecuente; causas con TODOS
+ *    los folders archivados → updateArchived diario (4 AM ART). Las archivadas
+ *    se descubren de madrugada y la notificación llega recién al día siguiente.
+ *  - 'unified': TODAS las causas con folder van al update principal en horario
+ *    laboral; updateArchived queda ocioso (el manager le reporta pending=0).
+ */
+export type ScbaUpdatePolicyMode = "split" | "unified";
+
+export interface ScbaUpdatePolicy {
+	mode: ScbaUpdatePolicyMode;
+}
+
 export interface ScbaManagerSettings {
 	serviceAvailable: boolean;
 	maintenanceMessage: string;
@@ -64,6 +81,7 @@ export interface ScbaManagerSettings {
 	workEndHour: number;
 	workDays: number[];
 	timezone: string;
+	updatePolicy?: ScbaUpdatePolicy;
 	workers: ScbaWorkersConfigMap;
 }
 
@@ -149,6 +167,8 @@ export interface ScbaDailyStats {
 		verification: ScbaDailyStatsByWorkerCommon;
 		initialScraping: ScbaDailyStatsWorkerWithMovimientos;
 		update: ScbaDailyStatsWorkerWithMovimientos;
+		/** Ausente en dailyStats anteriores a la incorporación del worker archived */
+		updateArchived?: ScbaDailyStatsWorkerWithMovimientos;
 		listAudit: ScbaDailyStatsListAudit;
 	};
 	cyclesRun: number;

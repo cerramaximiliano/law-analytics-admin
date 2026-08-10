@@ -385,6 +385,10 @@ const ScbaManagerTab: React.FC = () => {
 
 	const state = config?.currentState;
 
+	// Modo vigente de la política de update (edición pendiente > config guardada > default).
+	const updatePolicyMode = (editConfig.updatePolicy?.mode ?? config?.config?.updatePolicy?.mode ?? "split") as string;
+	const unifiedMode = updatePolicyMode === "unified";
+
 	// ========== Render ==========
 	return (
 		<Stack spacing={2} sx={{ ...LIVE_PULSE_KEYFRAMES }}>
@@ -612,6 +616,49 @@ const ScbaManagerTab: React.FC = () => {
 							</CardContent>
 						</Card>
 
+						{/* Política de update */}
+						<Card variant="outlined">
+							<CardContent>
+								<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
+									Política de update (causas archivadas)
+								</Typography>
+								<Grid container spacing={2} alignItems="center">
+									<Grid item xs={12} sm={5}>
+										<FormControl fullWidth size="small">
+											<InputLabel id="scba-update-policy-label">Modo</InputLabel>
+											<Select
+												labelId="scba-update-policy-label"
+												label="Modo"
+												value={getVal("updatePolicy", { mode: "split" })?.mode ?? "split"}
+												onChange={(e) => updateField("updatePolicy", { mode: e.target.value })}
+											>
+												<MenuItem value="unified">Unificado — todas las causas en horario laboral</MenuItem>
+												<MenuItem value="split">Dividido — archivadas al worker diario (4 AM)</MenuItem>
+											</Select>
+										</FormControl>
+									</Grid>
+									<Grid item xs={12} sm={7}>
+										<Typography variant="caption" color="text.secondary">
+											{(getVal("updatePolicy", { mode: "split" })?.mode ?? "split") === "unified" ? (
+												<>
+													<strong>Unificado:</strong> la Actualización Periódica procesa TODAS las causas con folder vinculado
+													(archivadas incluidas) en horario laboral. La Actualización Archivadas queda ociosa. Los movimientos de causas
+													archivadas se descubren y notifican el mismo día.
+												</>
+											) : (
+												<>
+													<strong>Dividido:</strong> las causas con todos sus folders archivados se actualizan una vez al día (4 AM) por
+													la Actualización Archivadas. Sus movimientos se descubren de madrugada y la notificación al usuario llega
+													recién al día siguiente.
+												</>
+											)}{" "}
+											El cambio aplica en el próximo ciclo de los workers (leen la config en cada corrida).
+										</Typography>
+									</Grid>
+								</Grid>
+							</CardContent>
+						</Card>
+
 						{/* Horario global */}
 						<Card variant="outlined">
 							<CardContent>
@@ -720,6 +767,12 @@ const ScbaManagerTab: React.FC = () => {
 														color={getWorkerVal(workerType, "enabled", true) ? "success" : "default"}
 													/>
 													<Chip size="small" label={workerType} variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }} />
+													{workerType === "update" && unifiedMode && (
+														<Chip size="small" label="Cubre archivadas (unified)" color="info" variant="outlined" />
+													)}
+													{workerType === "updateArchived" && unifiedMode && (
+														<Chip size="small" label="Ocioso (modo unified)" color="warning" variant="outlined" />
+													)}
 												</Stack>
 												<Typography variant="caption" color="text.secondary" sx={{ maxWidth: 680 }}>
 													{description}
@@ -736,6 +789,16 @@ const ScbaManagerTab: React.FC = () => {
 												label=""
 											/>
 										</Stack>
+
+										{workerType === "updateArchived" && unifiedMode && (
+											<Alert severity="warning" sx={{ mb: 2, py: 0.5 }}>
+												<Typography variant="caption">
+													La política de update está en modo <strong>unificado</strong>: este worker no procesa causas (pending siempre
+													0) porque la Actualización Periódica cubre también las archivadas. Cambiá el modo a "Dividido" en la pestaña
+													Configuración para reactivarlo.
+												</Typography>
+											</Alert>
+										)}
 
 										{/* Status */}
 										{wState && (
@@ -1155,7 +1218,7 @@ const ScbaManagerTab: React.FC = () => {
 										<TableRow>
 											<TableCell>Fecha</TableCell>
 											{SCBA_WORKER_TYPES.map((t) => {
-												const hasMovs = t === "initialScraping" || t === "update";
+												const hasMovs = t === "initialScraping" || t === "update" || t === "updateArchived";
 												const isAudit = t === "listAudit";
 												const cols = isAudit ? 4 : hasMovs ? 4 : 3;
 												return (
@@ -1171,7 +1234,7 @@ const ScbaManagerTab: React.FC = () => {
 										<TableRow>
 											<TableCell />
 											{SCBA_WORKER_TYPES.map((t) => {
-												const hasMovs = t === "initialScraping" || t === "update";
+												const hasMovs = t === "initialScraping" || t === "update" || t === "updateArchived";
 												const isAudit = t === "listAudit";
 												return (
 													<React.Fragment key={t}>
@@ -1196,7 +1259,7 @@ const ScbaManagerTab: React.FC = () => {
 												<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{day.date}</TableCell>
 												{SCBA_WORKER_TYPES.map((t) => {
 													const w: any = day.byWorker?.[t] || { processed: 0, success: 0, errors: 0 };
-													const hasMovs = t === "initialScraping" || t === "update";
+													const hasMovs = t === "initialScraping" || t === "update" || t === "updateArchived";
 													const isAudit = t === "listAudit";
 													return (
 														<React.Fragment key={t}>
@@ -1246,7 +1309,7 @@ const ScbaManagerTab: React.FC = () => {
 							</Typography>
 							<Typography variant="body2">
 								El sistema SCBA sincroniza expedientes desde el portal de notificaciones de la Suprema Corte de Buenos Aires (
-								<code>notificaciones.scba.gov.ar</code>). El trabajo se divide en 4 workers con responsabilidades estancas, orquestados por
+								<code>notificaciones.scba.gov.ar</code>). El trabajo se divide en 5 workers con responsabilidades estancas, orquestados por
 								un
 								<strong> manager </strong>que escala instancias +1/ciclo según la cola pendiente (patrón alineado a{" "}
 								<code>pjn-mis-causas</code>).
@@ -1256,7 +1319,7 @@ const ScbaManagerTab: React.FC = () => {
 						<Card variant="outlined">
 							<CardContent>
 								<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
-									Pipeline de los 4 workers
+									Pipeline de los 5 workers
 								</Typography>
 								<Stack spacing={1.5}>
 									{SCBA_WORKER_TYPES.map((t, idx) => (
@@ -1276,6 +1339,58 @@ const ScbaManagerTab: React.FC = () => {
 										</React.Fragment>
 									))}
 								</Stack>
+							</CardContent>
+						</Card>
+
+						<Card variant="outlined">
+							<CardContent>
+								<Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
+									<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }}>
+										Esquema del flujo de update
+									</Typography>
+									<Chip
+										size="small"
+										label={unifiedMode ? "modo: unified" : "modo: split"}
+										color={unifiedMode ? "info" : "default"}
+										sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}
+									/>
+								</Stack>
+								<Box
+									sx={{
+										fontFamily: "monospace",
+										fontSize: "0.8rem",
+										bgcolor: alpha(theme.palette.info.main, 0.05),
+										border: 1,
+										borderColor: "divider",
+										borderRadius: 1,
+										p: 1.5,
+										whiteSpace: "pre",
+										overflowX: "auto",
+									}}
+								>
+									{unifiedMode
+										? [
+												"causas completed (listStatus=active, verificadas)",
+												"  └─ con folder vinculado (activo o archivado)",
+												"       └──▶ Actualización Periódica — horario laboral, threshold corto",
+												"",
+												"Actualización Archivadas: OCIOSA (pending=0, el manager no la escala)",
+												"causas sin folder: no se procesan",
+										  ].join("\n")
+										: [
+												"causas completed (listStatus=active, verificadas)",
+												"  ├─ ≥1 folder activo",
+												"  │    └──▶ Actualización Periódica — horario laboral, threshold corto",
+												"  └─ TODOS los folders archivados",
+												"       └──▶ Actualización Archivadas — diaria 4 AM (notificación llega al día siguiente)",
+												"",
+												"causas sin folder: no se procesan",
+										  ].join("\n")}
+								</Box>
+								<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+									La política de notificación (<code>notifyArchivedFolders</code>, configurable en Notificaciones → Movimientos judiciales)
+									se evalúa por causa según el estado real de sus folders, independientemente de qué worker la procese.
+								</Typography>
 							</CardContent>
 						</Card>
 
