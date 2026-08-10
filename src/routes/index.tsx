@@ -135,6 +135,7 @@ const LegalDocuments = Loadable(lazy(() => import("pages/documentation/legal-doc
 const NotificationsMonitoring = Loadable(lazy(() => import("pages/admin/notifications")));
 const NotificationsJudicialMovements = Loadable(lazy(() => import("pages/admin/notifications/judicial-movements")));
 const FolderInactivity = Loadable(lazy(() => import("pages/admin/notifications/folder-inactivity")));
+const NotificationFlow = Loadable(lazy(() => import("pages/admin/notifications/notification-flow")));
 
 // Dashboard page
 const Dashboard = Loadable(lazy(() => import("pages/admin/dashboard")));
@@ -842,6 +843,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<FolderInactivity />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "notifications/flow",
+							element: (
+								<AdminRoleGuard>
+									<NotificationFlow />
 								</AdminRoleGuard>
 							),
 						},

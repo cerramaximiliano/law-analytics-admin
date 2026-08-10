@@ -15,7 +15,14 @@ import {
 	Tooltip,
 	Alert,
 } from "@mui/material";
-import { MovementPolicies, MovementPolicy, KNOWN_MOVEMENT_SOURCES, FirstSyncPolicy, OffDayMode } from "api/judicialNotificationConfig";
+import {
+	MovementPolicies,
+	MovementPolicy,
+	KNOWN_MOVEMENT_SOURCES,
+	DELIVERY_MOVEMENT_SOURCES,
+	FirstSyncPolicy,
+	OffDayMode,
+} from "api/judicialNotificationConfig";
 
 // ----------------------------------------------------------------------
 // Sección "Políticas de movimientos" (movementPolicies del doc global).
@@ -240,6 +247,9 @@ const MovementPoliciesSection: React.FC<Props> = ({ value, onChange }) => {
 			<Alert severity="info" sx={{ mb: 2 }}>
 				Resolución por capas: <strong>override del worker → defaults → fallback hardcodeado en el código del worker</strong>. Un campo en
 				"heredar" no se guarda en el documento y deja actuar a la capa siguiente. Los workers refrescan esta configuración cada 5 minutos.
+				Además, <strong>la-notification aplica los defaults (y los overrides por jurisdicción) en la ENTREGA</strong> — incluye el
+				coordinador interno y los envíos manuales desde pjn-api, que no pasan por los workers. En particular, "Folders archivados: No
+				notificar" descarta el movimiento aunque el worker lo haya enviado.
 			</Alert>
 
 			<Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
@@ -289,6 +299,46 @@ const MovementPoliciesSection: React.FC<Props> = ({ value, onChange }) => {
 								inheritLabel="Heredar defaults"
 								showCacheField={key === "pjn-app-update-worker"}
 							/>
+						</Box>
+					);
+				})}
+			</Stack>
+
+			<Divider sx={{ my: 3 }} />
+
+			<Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
+				Overrides por jurisdicción (entrega central)
+			</Typography>
+			<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+				la-notification resuelve la política en la entrega por la <em>jurisdicción</em> del movimiento (<code>pjn</code>,{" "}
+				<code>eje</code>, <code>mev</code>, <code>scba</code>), no por la clave del worker. Estas entradas overridean los defaults para
+				todo lo que llegue de esa jurisdicción. Campos con efecto en la entrega: <strong>Notificaciones</strong> (kill-switch),{" "}
+				<strong>Folders archivados</strong> y <strong>Día no activo</strong>; "Primera corrida" y "Docs desde cache" solo aplican en los
+				workers.
+			</Typography>
+
+			<Stack spacing={2.5}>
+				{DELIVERY_MOVEMENT_SOURCES.map(({ key, label, hint }) => {
+					const hasOverrides = !isEmptyPolicy(policies.sources?.[key]);
+					return (
+						<Box key={key} sx={{ p: 2, border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
+							<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }} flexWrap="wrap">
+								<Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+									{label}
+								</Typography>
+								<Chip label={key} size="small" variant="outlined" sx={{ fontFamily: "monospace" }} />
+								{hasOverrides ? (
+									<Chip label="con overrides" size="small" color="warning" variant="outlined" />
+								) : (
+									<Chip label="hereda defaults" size="small" color="default" variant="outlined" />
+								)}
+								{hint && (
+									<Typography variant="caption" color="text.secondary">
+										{hint}
+									</Typography>
+								)}
+							</Stack>
+							<PolicyForm policy={policies.sources?.[key]} onPolicyChange={handleSourceChange(key)} inheritLabel="Heredar defaults" />
 						</Box>
 					);
 				})}

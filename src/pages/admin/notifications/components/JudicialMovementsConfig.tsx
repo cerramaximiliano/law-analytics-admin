@@ -316,6 +316,44 @@ const JudicialMovementsConfig: React.FC = () => {
 						</Grid>
 					</Grid>
 
+					{/* Toggles de los productores internos de la-notification */}
+					<Stack direction="row" spacing={3} flexWrap="wrap" useFlexGap sx={{ mt: 1.5 }}>
+						<FormControlLabel
+							control={
+								<Switch
+									size="small"
+									checked={config.status.coordinatorEnabled !== false}
+									onChange={(e) => handleFieldChange("status.coordinatorEnabled", e.target.checked)}
+								/>
+							}
+							label={
+								<Typography variant="body2">
+									Coordinador interno PJN{" "}
+									<Typography component="span" variant="caption" color="text.secondary">
+										(safety-net que escanea causas con movimientos del día)
+									</Typography>
+								</Typography>
+							}
+						/>
+						<FormControlLabel
+							control={
+								<Switch
+									size="small"
+									checked={config.status.cedulasEnabled !== false}
+									onChange={(e) => handleFieldChange("status.cedulasEnabled", e.target.checked)}
+								/>
+							}
+							label={
+								<Typography variant="body2">
+									Cédulas (bandeja PJN){" "}
+									<Typography component="span" variant="caption" color="text.secondary">
+										(coordinación de notificaciones electrónicas)
+									</Typography>
+								</Typography>
+							}
+						/>
+					</Stack>
+
 					{/* Statistics */}
 					{config.stats && (
 						<Box
@@ -435,6 +473,29 @@ const JudicialMovementsConfig: React.FC = () => {
 									</Select>
 								</FormControl>
 							</Grid>
+							<Grid item xs={12} md={6}>
+								<TextField
+									label="Horas de reporte al admin"
+									value={(config.notificationSchedule.reportHours ?? []).join(", ")}
+									onChange={(e) =>
+										handleFieldChange(
+											"notificationSchedule.reportHours",
+											e.target.value
+												.split(",")
+												.map((h) => h.trim())
+												.filter(Boolean),
+										)
+									}
+									helperText="Formato H:mm separado por comas (ej. 15:00, 17:00, 19:30). Horas en que el cron judicial envía el reporte de monitoreo."
+									fullWidth
+								/>
+							</Grid>
+							<Grid item xs={12}>
+								<Alert severity="info">
+									La hora configurada define cuándo el coordinador programa la entrega (notifyAt) y los días activos se aplican también en la
+									entrega central de la-notification — un movimiento capturado en día no activo queda diferido hasta el próximo día activo.
+								</Alert>
+							</Grid>
 						</Grid>
 					</Collapse>
 				</CardContent>
@@ -482,6 +543,25 @@ const JudicialMovementsConfig: React.FC = () => {
 									onChange={(e) => handleFieldChange("limits.minHoursBetweenSameExpediente", parseInt(e.target.value))}
 									inputProps={{ min: 1, max: 168 }}
 									fullWidth
+								/>
+							</Grid>
+							<Grid item xs={12}>
+								<FormControlLabel
+									control={
+										<Switch
+											checked={config.limits.enforcePerUserLimits === true}
+											onChange={(e) => handleFieldChange("limits.enforcePerUserLimits", e.target.checked)}
+										/>
+									}
+									label={
+										<Typography variant="body2">
+											Aplicar límites por usuario en la entrega{" "}
+											<Typography component="span" variant="caption" color="text.secondary">
+												— con esto apagado, los dos límites anteriores son solo declarativos. Al encenderlo, la-notification difiere lo que
+												exceda el límite (queda pendiente, no se pierde).
+											</Typography>
+										</Typography>
+									}
 								/>
 							</Grid>
 						</Grid>

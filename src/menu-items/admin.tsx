@@ -794,6 +794,13 @@ const admin: NavItemType = {
 					url: "/admin/notifications/folder-inactivity",
 					breadcrumbs: true,
 				},
+				{
+					id: "notifications-flow",
+					title: "Esquema del flujo",
+					type: "item",
+					url: "/admin/notifications/flow",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{

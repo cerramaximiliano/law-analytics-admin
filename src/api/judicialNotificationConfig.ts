@@ -45,11 +45,15 @@ export interface JudicialNotificationConfig {
 		dailyNotificationMinute: number;
 		timezone: string;
 		activeDays: number[];
+		/** Horas 'H:mm' (ART) del reporte de monitoreo al admin (la-notification) */
+		reportHours?: string[];
 	};
 	limits: {
 		maxMovementsPerBatch: number;
 		maxNotificationsPerUserPerDay: number;
 		minHoursBetweenSameExpediente: number;
+		/** Aplicar los límites por usuario en la entrega (opt-in, default false) */
+		enforcePerUserLimits?: boolean;
 	};
 	retryConfig: {
 		maxRetries: number;
@@ -73,6 +77,8 @@ export interface JudicialNotificationConfig {
 		judicialMovementRetentionDays: number;
 		notificationLogRetentionDays: number;
 		alertRetentionDays: number;
+		/** Días para retener movimientos descartados por política ('skipped') */
+		skippedRetentionDays?: number;
 		autoCleanupEnabled: boolean;
 		cleanupHour: number;
 	};
@@ -85,6 +91,10 @@ export interface JudicialNotificationConfig {
 		enabled: boolean;
 		mode: string;
 		maintenanceMessage: string;
+		/** Coordinador interno de movimientos PJN (safety-net en la-notification) */
+		coordinatorEnabled?: boolean;
+		/** Coordinación de cédulas (bandeja PJN → JudicialCedula) */
+		cedulasEnabled?: boolean;
 	};
 	movementPolicies?: MovementPolicies | null;
 	stats?: {
@@ -138,6 +148,18 @@ export const KNOWN_MOVEMENT_SOURCES: { key: string; label: string; hint?: string
 	{ key: "mev-update-worker", label: "MEV — update-cluster", hint: "worker-002" },
 	{ key: "eje-update-worker", label: "EJE — update-worker", hint: "worker_02" },
 	{ key: "eje-stuck-worker", label: "EJE — stuck-worker (first-touch)", hint: "worker_02" },
+];
+
+// Claves de jurisdicción que resuelve la-notification en la ENTREGA (el
+// movimiento persistido solo trae 'pjn'|'eje'|'mev'|'scba', no la clave del
+// worker). Overridean defaults para todo lo que llegue de esa jurisdicción,
+// sin importar qué worker lo haya enviado. Para un toggle global alcanza con
+// editar los defaults.
+export const DELIVERY_MOVEMENT_SOURCES: { key: string; label: string; hint?: string }[] = [
+	{ key: "pjn", label: "Entrega central — PJN", hint: "app-update + Mis Causas + coordinador interno + pjn-api" },
+	{ key: "eje", label: "Entrega central — EJE", hint: "update + stuck worker" },
+	{ key: "mev", label: "Entrega central — MEV", hint: "update-cluster" },
+	{ key: "scba", label: "Entrega central — SCBA", hint: "update + archived worker" },
 ];
 
 // ----------------------------------------------------------------------
