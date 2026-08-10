@@ -15,34 +15,28 @@ import {
 	TableRow,
 	Tooltip,
 	Typography,
-	Accordion,
-	AccordionSummary,
-	AccordionDetails,
+	Tabs,
+	Tab,
 	Alert,
 	AlertTitle,
 } from "@mui/material";
 import {
-	ArrowDown2,
-	ArrowRight2,
 	Building,
 	Clock,
-	CloudConnection,
 	Danger,
-	DocumentText,
-	Filter,
 	InfoCircle,
 	Judge,
 	MessageNotif,
 	Notification,
 	People,
 	SecuritySafe,
-	Send2,
 	TickCircle,
 	Warning2,
 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import LiveConfigSummary from "./components/LiveConfigSummary";
 import EffectiveWorkerPolicies from "./components/EffectiveWorkerPolicies";
+import FlowDiagram from "./components/FlowDiagram";
 import useLiveJudicialConfig from "./components/useLiveJudicialConfig";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
 
@@ -404,77 +398,9 @@ const ArchivadasChip = ({ value }: { value: { valor: YesNoPartial; detalle: stri
 	);
 };
 
-const StageBox = ({
-	icon,
-	title,
-	subtitle,
-	items,
-	color,
-}: {
-	icon: React.ReactNode;
-	title: string;
-	subtitle: string;
-	items: string[];
-	color: string;
-}) => {
-	const theme = useTheme();
-	return (
-		<Paper
-			variant="outlined"
-			sx={{
-				p: 2,
-				height: "100%",
-				borderColor: alpha(color, 0.4),
-				bgcolor: alpha(color, theme.palette.mode === "dark" ? 0.08 : 0.04),
-				borderRadius: 2,
-			}}
-		>
-			<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-				<Box sx={{ color, display: "flex" }}>{icon}</Box>
-				<Typography variant="subtitle1" fontWeight={700}>
-					{title}
-				</Typography>
-			</Stack>
-			<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-				{subtitle}
-			</Typography>
-			<Stack spacing={0.5}>
-				{items.map((it) => (
-					<Typography key={it} variant="body2" sx={{ fontSize: 12.5, lineHeight: 1.45 }}>
-						• {it}
-					</Typography>
-				))}
-			</Stack>
-		</Paper>
-	);
-};
-
-const FlowArrow = () => {
-	const theme = useTheme();
-	return (
-		<Box
-			sx={{
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "center",
-				color: theme.palette.text.disabled,
-				px: { md: 0.5 },
-				py: { xs: 0.5, md: 0 },
-			}}
-		>
-			<Box sx={{ display: { xs: "none", md: "flex" } }}>
-				<ArrowRight2 size={22} />
-			</Box>
-			<Box sx={{ display: { xs: "flex", md: "none" } }}>
-				<ArrowDown2 size={22} />
-			</Box>
-		</Box>
-	);
-};
-
 const NotificationFlowPage = () => {
 	const theme = useTheme();
-	const [expandedSource, setExpandedSource] = useState<string | false>(false);
+	const [selectedSource, setSelectedSource] = useState(0);
 	const live = useLiveJudicialConfig();
 
 	return (
@@ -494,86 +420,8 @@ const NotificationFlowPage = () => {
 				{/* ============ 0. Configuración vigente (en vivo) ============ */}
 				<LiveConfigSummary live={live} />
 
-				{/* ============ 1. Pipeline general ============ */}
-				<Box>
-					<Typography variant="h5" sx={{ mb: 0.5 }}>
-						Pipeline end-to-end
-					</Typography>
-					<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-						Camino de un documento judicial desde el scraping hasta el usuario final. Todos los emisores autentican con{" "}
-						<code>INTERNAL_SERVICE_TOKEN</code> contra <code>notifications.lawanalytics.app</code> (PM2 <code>notification-service</code> en
-						worker-003).
-					</Typography>
-					<Grid container alignItems="stretch" sx={{ flexWrap: { md: "nowrap" } }}>
-						<Grid item xs={12} md>
-							<StageBox
-								icon={<CloudConnection size={20} />}
-								color={BRAND_BLUE}
-								title="1 · Workers emisores"
-								subtitle="Detectan movimientos nuevos y postean al webhook"
-								items={[
-									"PJN app-update (loop 8–22 h)",
-									"PJN Mis Causas (privadas)",
-									"MEV update (*/15)",
-									"SCBA update (*/2 + archived 4 AM)",
-									"EJE update (*/10) + stuck (first-touch)",
-									"pjn-api (envío manual admin)",
-								]}
-							/>
-						</Grid>
-						<FlowArrow />
-						<Grid item xs={12} md>
-							<StageBox
-								icon={<Filter size={20} />}
-								color="#8B5CF6"
-								title="2 · Gates del emisor"
-								subtitle="judicial-notification-configs (Mongo, cache 5 min)"
-								items={[
-									"Kill-switch global (status.enabled / maintenance)",
-									"Kill-switch por source (movementPolicies)",
-									"Días activos (default lun–vie) + offDayMode",
-									"Política de 1ª sincronización",
-									"Filtros de tipo / keywords · batch ≤ 100",
-									"Usuarios: userUpdatesEnabled → userCausaIds",
-									"Archivados 1ª BARRERA: solo SCBA filtra worker-side",
-								]}
-							/>
-						</Grid>
-						<FlowArrow />
-						<Grid item xs={12} md>
-							<StageBox
-								icon={<DocumentText size={20} />}
-								color={STALE_AMBER}
-								title="3 · Webhook + coordinación"
-								subtitle="la-notification persiste JudicialMovement / JudicialCedula"
-								items={[
-									"POST /webhook/daily-movements",
-									"Dedup por uniqueKey (user + expte + fecha + tipo + hash detalle)",
-									"'sent' nunca se re-notifica; pending/failed se resetean",
-									"Coordinador PJN: safety-net cada 15 min (11 colecciones)",
-									"Coordinador cédulas: solo día actual ART",
-								]}
-							/>
-						</Grid>
-						<FlowArrow />
-						<Grid item xs={12} md>
-							<StageBox
-								icon={<Send2 size={20} />}
-								color={LIVE_GREEN}
-								title="4 · Entrega al usuario"
-								subtitle="Cron */15 · notifyAt ≤ ahora · agrupado por usuario"
-								items={[
-									"ENFORCEMENT CENTRAL (2ª BARRERA): kill-switch global/por source, días activos, filtros de contenido, folders archivados (skipped con motivo) — aplica aunque el worker no haya filtrado",
-									"Límites por usuario (opt-in enforcePerUserLimits): difiere excedentes",
-									"Usuario existe + isActive ≠ false",
-									"Email (SES): channels.email ≠ false — 1 correo consolidado",
-									"Browser: channels.browser === true (opt-in) → Alert + WS",
-									"Retención: sent 60 d · skipped 30 d · logs 30 d",
-								]}
-							/>
-						</Grid>
-					</Grid>
-				</Box>
+				{/* ============ 1. Esquema gráfico dinámico ============ */}
+				<FlowDiagram live={live} />
 
 				<Divider />
 
@@ -683,79 +531,109 @@ const NotificationFlowPage = () => {
 						Cada fuente se identifica por su <code>source</code> key (usada en <code>movementPolicies.sources</code>, editable desde la pestaña
 						Configuración de Movimientos Judiciales).
 					</Typography>
-					{MOVEMENT_SOURCES.map((src) => (
-						<Accordion
-							key={src.key}
-							expanded={expandedSource === src.key}
-							onChange={(_e, ex) => setExpandedSource(ex ? src.key : false)}
-							disableGutters
-							sx={{ "&:before": { display: "none" }, border: `1px solid ${theme.palette.divider}`, borderRadius: "8px !important", mb: 1 }}
+					<Grid container spacing={2}>
+					<Grid item xs={12} md={4} lg={3}>
+						<Tabs
+							orientation="vertical"
+							value={selectedSource}
+							onChange={(_e, v) => setSelectedSource(v)}
+							variant="scrollable"
+							scrollButtons="auto"
+							sx={{
+								borderRight: { md: 1 },
+								borderColor: { md: "divider" },
+								"& .MuiTab-root": { alignItems: "flex-start", textAlign: "left", textTransform: "none", minHeight: 56, px: 1.5 },
+								"& .Mui-selected": { color: `${BRAND_BLUE} !important` },
+								"& .MuiTabs-indicator": { backgroundColor: BRAND_BLUE, width: 3, borderRadius: 1.5 },
+							}}
 						>
-							<AccordionSummary expandIcon={<ArrowDown2 size={18} />}>
-								<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap sx={{ width: "100%", pr: 1 }}>
-									<Judge size={18} color={BRAND_BLUE} />
-									<Typography variant="subtitle1" fontWeight={600}>
-										{src.nombre}
-									</Typography>
-									<Chip label={src.key} size="small" variant="outlined" sx={{ fontFamily: "monospace" }} />
-									<Box sx={{ flexGrow: 1 }} />
-									<Chip size="small" color={FIRST_SYNC_LABEL[src.firstSyncFallback].color} label={FIRST_SYNC_LABEL[src.firstSyncFallback].label} />
-									<ArchivadasChip value={src.archivadas} />
-								</Stack>
-							</AccordionSummary>
-							<AccordionDetails sx={{ pt: 0 }}>
-								<Grid container spacing={2}>
-									<Grid item xs={12} md={4}>
-										<Stack spacing={1}>
-											<Stack direction="row" spacing={1} alignItems="center">
-												<Building size={16} color={theme.palette.text.secondary} />
-												<Typography variant="body2">
-													<b>{src.repo}</b> · {src.server}
-												</Typography>
-											</Stack>
-											<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: 12 }}>
-												{src.pm2}
+							{MOVEMENT_SOURCES.map((src) => (
+								<Tab
+									key={src.key}
+									label={
+										<Stack alignItems="flex-start" spacing={0.25}>
+											<Typography variant="body2" fontWeight={600}>
+												{src.nombre}
 											</Typography>
-											<Stack direction="row" spacing={1} alignItems="center">
-												<Clock size={16} color={theme.palette.text.secondary} />
-												<Typography variant="body2">{src.trigger}</Typography>
-											</Stack>
-											<Stack direction="row" spacing={1} alignItems="center">
-												<People size={16} color={theme.palette.text.secondary} />
-												<Typography variant="body2">{src.usuariosDestino}</Typography>
-											</Stack>
+											<Typography variant="caption" sx={{ fontFamily: "monospace", opacity: 0.7 }}>
+												{src.key}
+											</Typography>
 										</Stack>
-									</Grid>
-									<Grid item xs={12} md={8}>
-										<Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-											Condiciones de selección y filtrado
+									}
+								/>
+							))}
+						</Tabs>
+					</Grid>
+					<Grid item xs={12} md={8} lg={9}>
+						{(() => {
+							const src = MOVEMENT_SOURCES[selectedSource];
+							if (!src) return null;
+							return (
+								<Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2, height: "100%" }}>
+									<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
+										<Judge size={18} color={BRAND_BLUE} />
+										<Typography variant="subtitle1" fontWeight={600}>
+											{src.nombre}
 										</Typography>
-										<Stack spacing={0.5}>
-											{src.seleccionCausas.map((c) => (
-												<Typography key={c} variant="body2" sx={{ fontSize: 13 }}>
-													• {c}
-												</Typography>
-											))}
-										</Stack>
-										{src.notas && src.notas.length > 0 && (
-											<>
-												<Typography variant="subtitle2" sx={{ mt: 1.5, mb: 0.5, color: STALE_AMBER }}>
-													Particularidades
-												</Typography>
-												<Stack spacing={0.5}>
-													{src.notas.map((n) => (
-														<Typography key={n} variant="body2" sx={{ fontSize: 13 }}>
-															⚠ {n}
-														</Typography>
-													))}
+										<Chip label={src.key} size="small" variant="outlined" sx={{ fontFamily: "monospace" }} />
+										<Box sx={{ flexGrow: 1 }} />
+										<Chip size="small" color={FIRST_SYNC_LABEL[src.firstSyncFallback].color} label={FIRST_SYNC_LABEL[src.firstSyncFallback].label} />
+										<ArchivadasChip value={src.archivadas} />
+									</Stack>
+									<Grid container spacing={2}>
+										<Grid item xs={12} md={4}>
+											<Stack spacing={1}>
+												<Stack direction="row" spacing={1} alignItems="center">
+													<Building size={16} color={theme.palette.text.secondary} />
+													<Typography variant="body2">
+														<b>{src.repo}</b> · {src.server}
+													</Typography>
 												</Stack>
-											</>
-										)}
+												<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: 12 }}>
+													{src.pm2}
+												</Typography>
+												<Stack direction="row" spacing={1} alignItems="center">
+													<Clock size={16} color={theme.palette.text.secondary} />
+													<Typography variant="body2">{src.trigger}</Typography>
+												</Stack>
+												<Stack direction="row" spacing={1} alignItems="center">
+													<People size={16} color={theme.palette.text.secondary} />
+													<Typography variant="body2">{src.usuariosDestino}</Typography>
+												</Stack>
+											</Stack>
+										</Grid>
+										<Grid item xs={12} md={8}>
+											<Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+												Condiciones de selección y filtrado
+											</Typography>
+											<Stack spacing={0.5}>
+												{src.seleccionCausas.map((c) => (
+													<Typography key={c} variant="body2" sx={{ fontSize: 13 }}>
+														• {c}
+													</Typography>
+												))}
+											</Stack>
+											{src.notas && src.notas.length > 0 && (
+												<>
+													<Typography variant="subtitle2" sx={{ mt: 1.5, mb: 0.5, color: STALE_AMBER }}>
+														Particularidades
+													</Typography>
+													<Stack spacing={0.5}>
+														{src.notas.map((n) => (
+															<Typography key={n} variant="body2" sx={{ fontSize: 13 }}>
+																⚠ {n}
+															</Typography>
+														))}
+													</Stack>
+												</>
+											)}
+										</Grid>
 									</Grid>
-								</Grid>
-							</AccordionDetails>
-						</Accordion>
-					))}
+								</Paper>
+							);
+						})()}
+					</Grid>
+				</Grid>
 				</Box>
 
 				<Divider />
