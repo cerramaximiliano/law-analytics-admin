@@ -266,23 +266,25 @@ export const WORKER_REGISTRY: WorkerRegistryEntry[] = [
 	{
 		sourceKey: "scba-update-worker",
 		proceso: "scba-update-worker",
-		archivedBarrier: "Solo procesa causas con ≥1 folder ACTIVO — las all-archived quedan para el worker archived",
+		archivedBarrier:
+			"Aplica notifyArchivedFolders por causa (gate cuando TODOS sus folders están archivados). Alcance según configuracion-scba.updatePolicy.mode: 'split' = solo causas con ≥1 folder activo; 'unified' = todas las causas con folder, archivadas incluidas",
 		repo: "scba-workers",
 		server: "worker_02",
 		jurisdiccion: "scba",
 		fallback: { firstSyncPolicy: "today-only", notifyArchivedFolders: true },
 		supportsPolicies: true,
+		nota: "Partición del trabajo configurable en Workers → SCBA manager → Configuración (Política de update)",
 	},
 	{
 		sourceKey: "scba-update-worker",
 		proceso: "scba-update-archived-worker",
-		archivedBarrier: "Aplica notifyArchivedFolders en el worker (única 1ª barrera real por flag)",
+		archivedBarrier: "Mismo gate por causa que el update principal (notifyArchivedFolders según estado real de folders)",
 		repo: "scba-workers",
 		server: "worker_02",
 		jurisdiccion: "scba",
 		fallback: { firstSyncPolicy: "today-only", notifyArchivedFolders: true },
 		supportsPolicies: true,
-		nota: "Modo archived (1×/día 4 AM) — comparte la clave scba-update-worker; único worker que aplica notifyArchivedFolders de su lado",
+		nota: "Modo archived (1×/día 4 AM) — solo corre con updatePolicy 'split'; en 'unified' queda ocioso (el update principal cubre las archivadas). Comparte la clave scba-update-worker",
 	},
 	{
 		sourceKey: "eje-update-worker",

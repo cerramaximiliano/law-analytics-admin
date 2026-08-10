@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { alpha } from "@mui/material/styles";
 import {
 	Box,
@@ -26,6 +26,7 @@ import {
 	PolicyLayer,
 } from "api/judicialNotificationConfig";
 import { LiveJudicialConfig } from "./useLiveJudicialConfig";
+import ScbaManagerService from "api/scbaManager";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
 
 // ----------------------------------------------------------------------
@@ -86,6 +87,24 @@ function globalDaysLabel(config: JudicialNotificationConfig | null): string {
 
 const EffectiveWorkerPolicies: React.FC<{ live: LiveJudicialConfig }> = ({ live }) => {
 	const { config, loading, error } = live;
+
+	// Modo vigente de la partición de update SCBA (configuracion-scba vía mev-api).
+	// Define el alcance real de las filas scba-update-*: en 'unified' el worker
+	// principal cubre también las archivadas y el archived queda ocioso.
+	const [scbaUpdateMode, setScbaUpdateMode] = useState<"split" | "unified" | null>(null);
+	useEffect(() => {
+		let cancelled = false;
+		ScbaManagerService.getConfig()
+			.then((r) => {
+				if (!cancelled) setScbaUpdateMode(r.data?.config?.updatePolicy?.mode ?? "split");
+			})
+			.catch(() => {
+				if (!cancelled) setScbaUpdateMode(null);
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, []);
 
 	if (loading) {
 		return (
@@ -166,14 +185,57 @@ const EffectiveWorkerPolicies: React.FC<{ live: LiveJudicialConfig }> = ({ live 
 								);
 							}
 							const p = resolveEffectivePolicy(policies, w.sourceKey, w.fallback);
+							const isScbaMain = w.proceso === "scba-update-worker";
+							const isScbaArchived = w.proceso === "scba-update-archived-worker";
+							const scbaArchivedIdle = isScbaArchived && scbaUpdateMode === "unified";
 							return (
-								<TableRow key={w.proceso}>
+								<TableRow key={w.proceso} sx={scbaArchivedIdle ? { bgcolor: alpha(STALE_AMBER, 0.06) } : undefined}>
 									<TableCell>
 										<Tooltip title={`${w.repo} · ${w.server}${w.nota ? ` — ${w.nota}` : ""}`} arrow>
 											<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: 12 }}>
 												{w.proceso}
 											</Typography>
 										</Tooltip>
+										{isScbaMain && scbaUpdateMode === "unified" && (
+											<Tooltip
+												title="configuracion-scba.updatePolicy.mode='unified': este worker procesa TODAS las causas con folder (archivadas incluidas) en horario laboral. Configurable en Workers → SCBA manager → Configuración."
+												arrow
+											>
+												<Chip
+													label="unified: cubre archivadas"
+													size="small"
+													sx={{
+														mt: 0.25,
+														height: 16,
+														fontSize: 9.5,
+														bgcolor: alpha(BRAND_BLUE, 0.1),
+														color: BRAND_BLUE,
+														border: `1px solid ${alpha(BRAND_BLUE, 0.3)}`,
+														"& .MuiChip-label": { px: 0.6 },
+													}}
+												/>
+											</Tooltip>
+										)}
+										{scbaArchivedIdle && (
+											<Tooltip
+												title="configuracion-scba.updatePolicy.mode='unified': este worker no procesa causas (el update principal cubre las archivadas). Cambiá a 'split' en Workers → SCBA manager → Configuración para reactivarlo."
+												arrow
+											>
+												<Chip
+													label="ocioso (unified)"
+													size="small"
+													sx={{
+														mt: 0.25,
+														height: 16,
+														fontSize: 9.5,
+														bgcolor: alpha(STALE_AMBER, 0.12),
+														color: STALE_AMBER,
+														border: `1px solid ${alpha(STALE_AMBER, 0.3)}`,
+														"& .MuiChip-label": { px: 0.6 },
+													}}
+												/>
+											</Tooltip>
+										)}
 									</TableCell>
 									<TableCell>
 										<Chip label={w.sourceKey} size="small" variant="outlined" sx={{ fontFamily: "monospace" }} />
