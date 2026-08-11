@@ -50,7 +50,7 @@ import { Warning2 } from "iconsax-react";
 import { getTasasStatus, TasasStatus } from "utils/tasasService";
 import { getStats as getDatosPrevisionales, Stats as DatosPrevsStats } from "utils/datosPrevsionalesService";
 import GroupsService from "api/groups";
-import { BRAND_BLUE, LIVE_GREEN, headerBorder, headerShadow } from "themes/dashboardTokens";
+import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, PREMIUM_GOLD, headerBorder, headerShadow } from "themes/dashboardTokens";
 import ServicesStatusWidget from "./ServicesStatusWidget";
 import CronsStatusWidget from "./CronsStatusWidget";
 import IntegrationsStatusWidget from "./IntegrationsStatusWidget";
@@ -220,6 +220,67 @@ const CustomChartTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) =
 		);
 	}
 	return null;
+};
+
+// Porcentaje seguro para el KPI central de las donas
+const pctOf = (part: number | undefined, total: number | undefined) => (total ? `${Math.round(((part || 0) / total) * 100)}%` : "\u2014");
+
+// Donut chart con KPI central - anillo fino, gap de 2px entre porciones
+// (relief de identidad junto con la leyenda de valores directos), sin
+// etiquetas sobre las porciones. Estilo de los widgets de la app principal.
+interface DonutChartProps {
+	data: Array<{ name: string; value: number; color: string }>;
+	centerValue: string;
+	centerLabel?: string;
+}
+
+const DonutChart: React.FC<DonutChartProps> = ({ data, centerValue, centerLabel }) => {
+	const theme = useTheme();
+	return (
+		<Box sx={{ position: "relative", width: "100%", height: "100%" }}>
+			<ResponsiveContainer width="100%" height="100%">
+				<PieChart>
+					<Pie
+						data={data}
+						cx="50%"
+						cy="50%"
+						innerRadius="70%"
+						outerRadius="94%"
+						paddingAngle={2}
+						cornerRadius={4}
+						dataKey="value"
+						stroke={theme.palette.background.paper}
+						strokeWidth={2}
+					>
+						{data.map((entry, index) => (
+							<Cell key={`cell-${index}`} fill={entry.color} />
+						))}
+					</Pie>
+					<RechartsTooltip content={<CustomChartTooltip />} />
+				</PieChart>
+			</ResponsiveContainer>
+			<Box
+				sx={{
+					position: "absolute",
+					inset: 0,
+					display: "flex",
+					flexDirection: "column",
+					alignItems: "center",
+					justifyContent: "center",
+					pointerEvents: "none",
+				}}
+			>
+				<Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1.1, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
+					{centerValue}
+				</Typography>
+				{centerLabel && (
+					<Typography variant="caption" color="text.secondary">
+						{centerLabel}
+					</Typography>
+				)}
+			</Box>
+		</Box>
+	);
 };
 
 // Primary KPI Card Component - Clean, number-focused design.
@@ -701,6 +762,9 @@ const AdminDashboard = () => {
 	const theme = useTheme();
 	const COLORS = getThemeColors(theme);
 	const isDark = theme.palette.mode === "dark";
+	// Fill apagado para la porción "resto" de las donas y barras neutras:
+	// deliberadamente recesivo (split de estado, no categoría con identidad).
+	const chartMuted = alpha(theme.palette.text.secondary, isDark ? 0.32 : 0.24);
 	const navigate = useNavigate();
 	const { enqueueSnackbar } = useSnackbar();
 	const [loading, setLoading] = useState(true);
@@ -1020,35 +1084,35 @@ const AdminDashboard = () => {
 		() =>
 			data
 				? [
-						{ name: "Activos", value: data.users.active, color: COLORS.success.main },
-						{ name: "Inactivos", value: data.users.total - data.users.active, color: COLORS.neutral.light },
+						{ name: "Activos", value: data.users.active, color: LIVE_GREEN },
+						{ name: "Inactivos", value: data.users.total - data.users.active, color: chartMuted },
 				  ]
 				: [],
-		[data],
+		[data, chartMuted],
 	);
 
 	const userVerificationData = useMemo(
 		() =>
 			data
 				? [
-						{ name: "Verificados", value: data.users.verified, color: COLORS.success.main },
-						{ name: "Sin verificar", value: data.users.total - data.users.verified, color: COLORS.neutral.light },
+						{ name: "Verificados", value: data.users.verified, color: LIVE_GREEN },
+						{ name: "Sin verificar", value: data.users.total - data.users.verified, color: chartMuted },
 				  ]
 				: [],
-		[data],
+		[data, chartMuted],
 	);
 
-	// Subscription plans: Gray=Free, Primary=Standard, Premium=Violet (only place for violet)
+	// Subscription plans: muted=Free, BRAND_BLUE=Standard, PREMIUM_GOLD=Premium (tokens del front)
 	const subscriptionPlanData = useMemo(
 		() =>
 			data
 				? [
-						{ name: "Free", value: data.subscriptions.live?.byPlan?.free || 0, color: COLORS.neutral.main },
-						{ name: "Standard", value: data.subscriptions.live?.byPlan?.standard || 0, color: COLORS.primary.main },
-						{ name: "Premium", value: data.subscriptions.live?.byPlan?.premium || 0, color: COLORS.premium.main },
+						{ name: "Free", value: data.subscriptions.live?.byPlan?.free || 0, color: chartMuted },
+						{ name: "Standard", value: data.subscriptions.live?.byPlan?.standard || 0, color: BRAND_BLUE },
+						{ name: "Premium", value: data.subscriptions.live?.byPlan?.premium || 0, color: PREMIUM_GOLD },
 				  ].filter((item) => item.value > 0)
 				: [],
-		[data],
+		[data, chartMuted],
 	);
 
 	const foldersComparisonData = useMemo(
@@ -1069,19 +1133,19 @@ const AdminDashboard = () => {
 						},
 				  ]
 				: [],
-		[data],
+		[data, chartMuted],
 	);
 
-	// Marketing - consistent: Green=Active, Gray=Inactive
+	// Marketing - consistent: LIVE_GREEN=Active, muted=Inactive
 	const marketingContactsData = useMemo(
 		() =>
 			data
 				? [
-						{ name: "Activos", value: data.marketing.contacts.active, color: COLORS.success.main },
-						{ name: "Inactivos", value: data.marketing.contacts.total - data.marketing.contacts.active, color: COLORS.neutral.light },
+						{ name: "Activos", value: data.marketing.contacts.active, color: LIVE_GREEN },
+						{ name: "Inactivos", value: data.marketing.contacts.total - data.marketing.contacts.active, color: chartMuted },
 				  ]
 				: [],
-		[data],
+		[data, chartMuted],
 	);
 
 	// Marketing - Email verification (isEmailVerified field)
@@ -1089,11 +1153,11 @@ const AdminDashboard = () => {
 		() =>
 			data
 				? [
-						{ name: "Verificados", value: data.marketing.contacts.emailVerified || 0, color: COLORS.success.main },
-						{ name: "No Verificados", value: data.marketing.contacts.emailNotVerified || 0, color: COLORS.neutral.light },
+						{ name: "Verificados", value: data.marketing.contacts.emailVerified || 0, color: LIVE_GREEN },
+						{ name: "No Verificados", value: data.marketing.contacts.emailNotVerified || 0, color: chartMuted },
 				  ]
 				: [],
-		[data],
+		[data, chartMuted],
 	);
 
 	// Marketing - Verification result (emailVerification.verified field - within verified emails)
@@ -1101,38 +1165,24 @@ const AdminDashboard = () => {
 		() =>
 			data
 				? [
-						{ name: "Válidos", value: data.marketing.contacts.verificationValid || 0, color: COLORS.success.main },
-						{ name: "No Válidos", value: data.marketing.contacts.verificationNotValid || 0, color: COLORS.neutral.light },
+						{ name: "Válidos", value: data.marketing.contacts.verificationValid || 0, color: LIVE_GREEN },
+						{ name: "No Válidos", value: data.marketing.contacts.verificationNotValid || 0, color: chartMuted },
 				  ]
 				: [],
-		[data],
+		[data, chartMuted],
 	);
 
-	// Segments - use primary blue tones (no violet - not premium)
+	// Segments - BRAND_BLUE para dinámicos, muted para estáticos
 	const segmentsData = useMemo(
 		() =>
 			data
 				? [
-						{ name: "Dinámicos", value: data.marketing.segments.dynamic, color: COLORS.primary.main },
-						{ name: "Estáticos", value: data.marketing.segments.static, color: COLORS.primary.light },
+						{ name: "Dinámicos", value: data.marketing.segments.dynamic, color: BRAND_BLUE },
+						{ name: "Estáticos", value: data.marketing.segments.static, color: chartMuted },
 				  ].filter((item) => item.value > 0)
 				: [],
-		[data],
+		[data, chartMuted],
 	);
-
-	const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-		if (percent < 0.05) return null;
-		const RADIAN = Math.PI / 180;
-		const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-		const x = cx + radius * Math.cos(-midAngle * RADIAN);
-		const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-		return (
-			<text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight="bold">
-				{`${(percent * 100).toFixed(0)}%`}
-			</text>
-		);
-	};
 
 	return (
 		<>
@@ -2793,26 +2843,11 @@ const AdminDashboard = () => {
 									) : (
 										<Grid container sx={{ height: "100%" }}>
 											<Grid item xs={7}>
-												<ResponsiveContainer width="100%" height="100%">
-													<PieChart>
-														<Pie
-															data={userStatusData}
-															cx="50%"
-															cy="50%"
-															innerRadius={40}
-															outerRadius={70}
-															paddingAngle={2}
-															dataKey="value"
-															labelLine={false}
-															label={renderCustomLabel}
-														>
-															{userStatusData.map((entry, index) => (
-																<Cell key={`cell-${index}`} fill={entry.color} />
-															))}
-														</Pie>
-														<RechartsTooltip content={<CustomChartTooltip />} />
-													</PieChart>
-												</ResponsiveContainer>
+												<DonutChart
+													data={userStatusData}
+													centerValue={pctOf(data?.users.active, data?.users.total)}
+													centerLabel="activos"
+												/>
 											</Grid>
 											<Grid item xs={5}>
 												<StatsLegend
@@ -2842,26 +2877,11 @@ const AdminDashboard = () => {
 									) : (
 										<Grid container sx={{ height: "100%" }}>
 											<Grid item xs={7}>
-												<ResponsiveContainer width="100%" height="100%">
-													<PieChart>
-														<Pie
-															data={userVerificationData}
-															cx="50%"
-															cy="50%"
-															innerRadius={40}
-															outerRadius={70}
-															paddingAngle={2}
-															dataKey="value"
-															labelLine={false}
-															label={renderCustomLabel}
-														>
-															{userVerificationData.map((entry, index) => (
-																<Cell key={`cell-${index}`} fill={entry.color} />
-															))}
-														</Pie>
-														<RechartsTooltip content={<CustomChartTooltip />} />
-													</PieChart>
-												</ResponsiveContainer>
+												<DonutChart
+													data={userVerificationData}
+													centerValue={pctOf(data?.users.verified, data?.users.total)}
+													centerLabel="verificados"
+												/>
 											</Grid>
 											<Grid item xs={5}>
 												<StatsLegend
@@ -2911,26 +2931,11 @@ const AdminDashboard = () => {
 									) : subscriptionPlanData.length > 0 ? (
 										<Grid container sx={{ height: "100%" }}>
 											<Grid item xs={7}>
-												<ResponsiveContainer width="100%" height="100%">
-													<PieChart>
-														<Pie
-															data={subscriptionPlanData}
-															cx="50%"
-															cy="50%"
-															innerRadius={40}
-															outerRadius={70}
-															paddingAngle={2}
-															dataKey="value"
-															labelLine={false}
-															label={renderCustomLabel}
-														>
-															{subscriptionPlanData.map((entry, index) => (
-																<Cell key={`cell-${index}`} fill={entry.color} />
-															))}
-														</Pie>
-														<RechartsTooltip content={<CustomChartTooltip />} />
-													</PieChart>
-												</ResponsiveContainer>
+												<DonutChart
+													data={subscriptionPlanData}
+													centerValue={(data?.subscriptions.live?.total || 0).toLocaleString()}
+													centerLabel="live"
+												/>
 											</Grid>
 											<Grid item xs={5}>
 												<StatsLegend
@@ -3151,20 +3156,27 @@ const AdminDashboard = () => {
 									) : (
 										<ResponsiveContainer width="100%" height="100%">
 											<BarChart data={foldersComparisonData} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
-												<CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} />
-												<XAxis dataKey="name" tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} />
-												<YAxis tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} />
+												<CartesianGrid strokeDasharray="3 3" vertical={false} stroke={alpha(theme.palette.divider, 0.6)} />
+												<XAxis
+													dataKey="name"
+													tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
+													axisLine={false}
+													tickLine={false}
+												/>
+												<YAxis tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} axisLine={false} tickLine={false} width={40} />
 												<RechartsTooltip
+													cursor={{ fill: alpha(theme.palette.text.secondary, 0.06) }}
 													contentStyle={{
 														backgroundColor: theme.palette.background.paper,
-														border: `1px solid ${theme.palette.divider}`,
+														border: `1px solid ${headerBorder(isDark)}`,
 														borderRadius: 8,
+														boxShadow: headerShadow(isDark),
 													}}
 												/>
-												<Legend />
-												<Bar dataKey="verificadas" name="Verificadas" fill={COLORS.success.main} radius={[4, 4, 0, 0]} />
-												<Bar dataKey="noVerificadas" name="No Verificadas" fill={COLORS.neutral.light} radius={[4, 4, 0, 0]} />
-												<Bar dataKey="pendientes" name="Pendientes" fill={COLORS.warning.main} radius={[4, 4, 0, 0]} />
+												<Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+												<Bar dataKey="verificadas" name="Verificadas" fill={LIVE_GREEN} barSize={22} radius={[4, 4, 0, 0]} />
+												<Bar dataKey="noVerificadas" name="No Verificadas" fill={chartMuted} barSize={22} radius={[4, 4, 0, 0]} />
+												<Bar dataKey="pendientes" name="Pendientes" fill={STALE_AMBER} barSize={22} radius={[4, 4, 0, 0]} />
 											</BarChart>
 										</ResponsiveContainer>
 									)}
@@ -3354,26 +3366,11 @@ const AdminDashboard = () => {
 									) : (
 										<Grid container sx={{ height: "100%" }}>
 											<Grid item xs={6}>
-												<ResponsiveContainer width="100%" height="100%">
-													<PieChart>
-														<Pie
-															data={marketingContactsData}
-															cx="50%"
-															cy="50%"
-															innerRadius={35}
-															outerRadius={60}
-															paddingAngle={2}
-															dataKey="value"
-															labelLine={false}
-															label={renderCustomLabel}
-														>
-															{marketingContactsData.map((entry, index) => (
-																<Cell key={`cell-${index}`} fill={entry.color} />
-															))}
-														</Pie>
-														<RechartsTooltip content={<CustomChartTooltip />} />
-													</PieChart>
-												</ResponsiveContainer>
+												<DonutChart
+													data={marketingContactsData}
+													centerValue={pctOf(data?.marketing.contacts.active, data?.marketing.contacts.total)}
+													centerLabel="activos"
+												/>
 											</Grid>
 											<Grid item xs={6}>
 												<StatsLegend
@@ -3408,26 +3405,11 @@ const AdminDashboard = () => {
 									) : segmentsData.length > 0 ? (
 										<Grid container sx={{ height: "100%" }}>
 											<Grid item xs={6}>
-												<ResponsiveContainer width="100%" height="100%">
-													<PieChart>
-														<Pie
-															data={segmentsData}
-															cx="50%"
-															cy="50%"
-															innerRadius={35}
-															outerRadius={60}
-															paddingAngle={2}
-															dataKey="value"
-															labelLine={false}
-															label={renderCustomLabel}
-														>
-															{segmentsData.map((entry, index) => (
-																<Cell key={`cell-${index}`} fill={entry.color} />
-															))}
-														</Pie>
-														<RechartsTooltip content={<CustomChartTooltip />} />
-													</PieChart>
-												</ResponsiveContainer>
+												<DonutChart
+													data={segmentsData}
+													centerValue={(data?.marketing.segments.total || 0).toLocaleString()}
+													centerLabel="segmentos"
+												/>
 											</Grid>
 											<Grid item xs={6}>
 												<StatsLegend
@@ -3472,26 +3454,14 @@ const AdminDashboard = () => {
 									) : emailVerificationData.some((item) => item.value > 0) ? (
 										<Grid container sx={{ height: "100%" }}>
 											<Grid item xs={6}>
-												<ResponsiveContainer width="100%" height="100%">
-													<PieChart>
-														<Pie
-															data={emailVerificationData}
-															cx="50%"
-															cy="50%"
-															innerRadius={35}
-															outerRadius={60}
-															paddingAngle={2}
-															dataKey="value"
-															labelLine={false}
-															label={renderCustomLabel}
-														>
-															{emailVerificationData.map((entry, index) => (
-																<Cell key={`cell-${index}`} fill={entry.color} />
-															))}
-														</Pie>
-														<RechartsTooltip content={<CustomChartTooltip />} />
-													</PieChart>
-												</ResponsiveContainer>
+												<DonutChart
+													data={emailVerificationData}
+													centerValue={pctOf(
+														data?.marketing.contacts.emailVerified,
+														(data?.marketing.contacts.emailVerified || 0) + (data?.marketing.contacts.emailNotVerified || 0),
+													)}
+													centerLabel="verificados"
+												/>
 											</Grid>
 											<Grid item xs={6}>
 												<StatsLegend
@@ -3538,26 +3508,14 @@ const AdminDashboard = () => {
 									) : verificationResultData.some((item) => item.value > 0) ? (
 										<Grid container sx={{ height: "100%" }}>
 											<Grid item xs={6}>
-												<ResponsiveContainer width="100%" height="100%">
-													<PieChart>
-														<Pie
-															data={verificationResultData}
-															cx="50%"
-															cy="50%"
-															innerRadius={35}
-															outerRadius={60}
-															paddingAngle={2}
-															dataKey="value"
-															labelLine={false}
-															label={renderCustomLabel}
-														>
-															{verificationResultData.map((entry, index) => (
-																<Cell key={`cell-${index}`} fill={entry.color} />
-															))}
-														</Pie>
-														<RechartsTooltip content={<CustomChartTooltip />} />
-													</PieChart>
-												</ResponsiveContainer>
+												<DonutChart
+													data={verificationResultData}
+													centerValue={pctOf(
+														data?.marketing.contacts.verificationValid,
+														(data?.marketing.contacts.verificationValid || 0) + (data?.marketing.contacts.verificationNotValid || 0),
+													)}
+													centerLabel="válidos"
+												/>
 											</Grid>
 											<Grid item xs={6}>
 												<StatsLegend
