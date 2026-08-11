@@ -138,6 +138,64 @@ const EscenariosTab = () => {
 	);
 };
 
+// Trabajo pendiente del flujo de causas — se actualiza a medida que se
+// implementan las etapas. Referencia: análisis de causas privadas 2026-08-11.
+const PENDING_ITEMS: { title: string; detail: string }[] = [
+	{
+		title: "Write-back del caché al re-verificar",
+		detail:
+			"Cuando una copia inválida del caché se re-verifica como pública (import la ignora y verify la valida), actualizar la copia del caché (Mongo local de worker_01, vía verify-worker) con los datos frescos + entrada en updateHistory documentando la transición de privacidad. Definido, sin implementar — próxima etapa.",
+	},
+	{
+		title: "Promoción de isValid en el update privado",
+		detail:
+			"private-causas-update-worker nunca promueve isValid tras un sync exitoso — las privadas de caché figuran 'inválidas' para siempre. La promoción debe ir acompañada de gating por folder: una causa reservada solo es visible para usuarios con credencial propia que la cubra (principio legal) — los folders de terceros deben quedar en 'Causa reservada'.",
+	},
+	{
+		title: "Limpieza retroactiva de docs muertos",
+		detail:
+			"Resetear a verified:false (una única vez) los docs inválidos source app/cache SIN credencial activa (~15), para que verify les dé una segunda oportunidad bajo la regla nueva de import. Las que tienen credencial no se tocan.",
+	},
+	{
+		title: "Detección de huérfanas por credencial muerta",
+		detail:
+			"Cuando una credencial pasa a disabled, sus causas privadas quedan congeladas en silencio. Falta alerta/notificación al usuario para reconectar.",
+	},
+];
+
+const PendingWork = () => {
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
+	return (
+		<Box
+			sx={{
+				mt: 3,
+				px: 2,
+				py: 1.5,
+				borderRadius: 1.5,
+				bgcolor: alpha(STALE_AMBER, isDark ? 0.1 : 0.05),
+				border: `1px dashed ${alpha(STALE_AMBER, isDark ? 0.45 : 0.35)}`,
+			}}
+		>
+			<Typography variant="subtitle2" sx={{ mb: 1 }}>
+				⏳ Pendientes del flujo (próximas etapas)
+			</Typography>
+			<Stack spacing={1}>
+				{PENDING_ITEMS.map((item) => (
+					<Box key={item.title}>
+						<Typography variant="body2" sx={{ fontWeight: 600 }}>
+							{item.title}
+						</Typography>
+						<Typography variant="body2" color="text.secondary">
+							{item.detail}
+						</Typography>
+					</Box>
+				))}
+			</Stack>
+		</Box>
+	);
+};
+
 const FlujosCausas = () => {
 	const [tab, setTab] = useState(0);
 	const isEscenarios = tab === mainSpecs.length;
@@ -159,6 +217,7 @@ const FlujosCausas = () => {
 			</Box>
 			<Box sx={{ p: { xs: 2, md: 3 } }}>
 				{isEscenarios ? <EscenariosTab /> : <DiagramCard key={mainSpecs[tab].id} spec={mainSpecs[tab]} />}
+				<PendingWork />
 			</Box>
 		</MainCard>
 	);
