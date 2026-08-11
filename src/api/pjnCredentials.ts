@@ -368,6 +368,9 @@ export interface MisCausasCoverage {
 	withErrors: number;
 	coveragePercent: number;
 	byFuero: Array<{ fuero: string; total: number; updatedToday: number; withErrors: number }>;
+	// Credenciales PJN activas (enabled + isValid). El backend ya las computa
+	// para filtrar causas, así que viene sin costo extra en el mismo payload.
+	activeCredentials?: number;
 }
 
 export interface HealthAnomaly {

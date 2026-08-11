@@ -2078,6 +2078,20 @@ const AdminDashboard = () => {
 									)}
 								</Box>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									{misCausasCoverage?.activeCredentials != null && (
+										<Tooltip title="Credenciales PJN activas (habilitadas y válidas)">
+											<Chip
+												label={`${misCausasCoverage.activeCredentials} credenciales`}
+												size="small"
+												sx={{
+													bgcolor: alpha(COLORS.success.main, 0.1),
+													color: COLORS.success.main,
+													fontWeight: 600,
+													fontSize: "0.65rem",
+												}}
+											/>
+										</Tooltip>
+									)}
 									<Chip
 										label="SSO"
 										size="small"
