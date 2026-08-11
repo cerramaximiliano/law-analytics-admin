@@ -277,6 +277,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "causas-flujos",
+					title: "Flujos de vida",
+					type: "item",
+					url: "/admin/causas/flujos",
+					breadcrumbs: true,
+				},
+				{
 					id: "causas-synced-credentials",
 					title: "Causas por Credencial",
 					type: "item",
