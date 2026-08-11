@@ -1635,8 +1635,27 @@ const AdminDashboard = () => {
 						>
 							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5, flexWrap: "wrap", gap: 0.5 }}>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-									<Refresh size={20} style={{ color: COLORS.primary.main }} />
-									<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}>
+									<Box
+										sx={{
+											width: 28,
+											height: 28,
+											borderRadius: 1,
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											flexShrink: 0,
+											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+											color: BRAND_BLUE,
+										}}
+									>
+										<Refresh size={15} />
+									</Box>
+									<Typography
+										variant="subtitle1"
+										fontWeight={600}
+										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
+									>
 										Cobertura Actualización PJN
 									</Typography>
 									{pjnSiteStatus && pjnSiteStatus.status === "maintenance" && (
@@ -1690,7 +1709,19 @@ const AdminDashboard = () => {
 										<Typography variant="body2" color="text.secondary">
 											Cobertura hoy
 										</Typography>
-										<Typography variant="h6" fontWeight="bold" color="primary.main">
+										<Typography
+											variant="h6"
+											fontWeight="bold"
+											sx={{
+												fontVariantNumeric: "tabular-nums",
+												color:
+													(eligibilityStats.coveragePercent || 0) > 90
+														? COLORS.success.main
+														: (eligibilityStats.coveragePercent || 0) > 70
+														? COLORS.warning.main
+														: COLORS.error.main,
+											}}
+										>
 											{eligibilityStats.coveragePercent}%
 										</Typography>
 									</Box>
@@ -1789,8 +1820,27 @@ const AdminDashboard = () => {
 						>
 							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Refresh size={20} style={{ color: COLORS.neutral.main }} />
-									<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}>
+									<Box
+										sx={{
+											width: 28,
+											height: 28,
+											borderRadius: 1,
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											flexShrink: 0,
+											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+											color: BRAND_BLUE,
+										}}
+									>
+										<Refresh size={15} />
+									</Box>
+									<Typography
+										variant="subtitle1"
+										fontWeight={600}
+										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
+									>
 										Cobertura Actualización MEV
 									</Typography>
 								</Box>
@@ -1819,7 +1869,19 @@ const AdminDashboard = () => {
 										<Typography variant="body2" color="text.secondary">
 											Cobertura hoy
 										</Typography>
-										<Typography variant="h6" fontWeight="bold" sx={{ color: COLORS.neutral.main }}>
+										<Typography
+											variant="h6"
+											fontWeight="bold"
+											sx={{
+												fontVariantNumeric: "tabular-nums",
+												color:
+													(mevEligibilityStats.coveragePercent || 0) > 90
+														? COLORS.success.main
+														: (mevEligibilityStats.coveragePercent || 0) > 70
+														? COLORS.warning.main
+														: COLORS.error.main,
+											}}
+										>
 											{mevEligibilityStats.coveragePercent}%
 										</Typography>
 									</Box>
@@ -1918,8 +1980,27 @@ const AdminDashboard = () => {
 						>
 							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Refresh size={20} style={{ color: COLORS.success.main }} />
-									<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}>
+									<Box
+										sx={{
+											width: 28,
+											height: 28,
+											borderRadius: 1,
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											flexShrink: 0,
+											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+											color: BRAND_BLUE,
+										}}
+									>
+										<Refresh size={15} />
+									</Box>
+									<Typography
+										variant="subtitle1"
+										fontWeight={600}
+										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
+									>
 										Cobertura Actualización EJE
 									</Typography>
 								</Box>
@@ -1948,7 +2029,19 @@ const AdminDashboard = () => {
 										<Typography variant="body2" color="text.secondary">
 											Cobertura hoy
 										</Typography>
-										<Typography variant="h6" fontWeight="bold" sx={{ color: COLORS.success.main }}>
+										<Typography
+											variant="h6"
+											fontWeight="bold"
+											sx={{
+												fontVariantNumeric: "tabular-nums",
+												color:
+													(ejeEligibilityStats.coveragePercent || 0) > 90
+														? COLORS.success.main
+														: (ejeEligibilityStats.coveragePercent || 0) > 70
+														? COLORS.warning.main
+														: COLORS.error.main,
+											}}
+										>
 											{ejeEligibilityStats.coveragePercent.toFixed(1)}%
 										</Typography>
 									</Box>
@@ -2044,8 +2137,23 @@ const AdminDashboard = () => {
 						>
 							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Warning2 size={20} style={{ color: COLORS.warning.main }} />
-									<Typography variant="subtitle1" fontWeight="bold">
+									<Box
+										sx={{
+											width: 28,
+											height: 28,
+											borderRadius: 1,
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											flexShrink: 0,
+											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+											color: BRAND_BLUE,
+										}}
+									>
+										<Warning2 size={15} />
+									</Box>
+									<Typography variant="subtitle1" fontWeight={600} sx={{ letterSpacing: "-0.005em" }}>
 										Stuck Documents Worker
 									</Typography>
 									{stuckDocumentsStats?.worker && (
@@ -2205,8 +2313,27 @@ const AdminDashboard = () => {
 						>
 							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5, flexWrap: "wrap", gap: 0.5 }}>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-									<Refresh size={20} style={{ color: COLORS.primary.main }} />
-									<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}>
+									<Box
+										sx={{
+											width: 28,
+											height: 28,
+											borderRadius: 1,
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											flexShrink: 0,
+											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+											color: BRAND_BLUE,
+										}}
+									>
+										<Refresh size={15} />
+									</Box>
+									<Typography
+										variant="subtitle1"
+										fontWeight={600}
+										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
+									>
 										Cobertura Mis Causas
 									</Typography>
 									{pjnSiteStatus && pjnSiteStatus.status === "maintenance" && (
@@ -2431,8 +2558,27 @@ const AdminDashboard = () => {
 						>
 							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Refresh size={20} style={{ color: COLORS.primary.main }} />
-									<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}>
+									<Box
+										sx={{
+											width: 28,
+											height: 28,
+											borderRadius: 1,
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											flexShrink: 0,
+											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+											color: BRAND_BLUE,
+										}}
+									>
+										<Refresh size={15} />
+									</Box>
+									<Typography
+										variant="subtitle1"
+										fontWeight={600}
+										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
+									>
 										Cobertura SCBA
 									</Typography>
 									<Tooltip
@@ -2874,7 +3020,7 @@ const AdminDashboard = () => {
 												) : (
 													<Typography
 														variant="h4"
-														sx={{ fontWeight: 600, color: COLORS.primary.main, fontSize: { xs: "1.25rem", sm: "1.5rem" } }}
+														sx={{ fontWeight: 600, fontSize: { xs: "1.25rem", sm: "1.5rem" }, fontVariantNumeric: "tabular-nums" }}
 													>
 														{(data?.subscriptions.live?.total || 0).toLocaleString()}
 													</Typography>
@@ -2970,7 +3116,6 @@ const AdminDashboard = () => {
 												variant="h3"
 												sx={{
 													fontWeight: 700,
-													color: COLORS.primary.main,
 													fontSize: { xs: "1.5rem", sm: "2rem" },
 													letterSpacing: "-0.02em",
 													fontVariantNumeric: "tabular-nums",
@@ -3024,7 +3169,6 @@ const AdminDashboard = () => {
 												variant="h3"
 												sx={{
 													fontWeight: 700,
-													color: COLORS.primary.main,
 													fontSize: { xs: "1.5rem", sm: "2rem" },
 													letterSpacing: "-0.02em",
 													fontVariantNumeric: "tabular-nums",
@@ -3066,7 +3210,7 @@ const AdminDashboard = () => {
 												{loading ? (
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.primary.main }}>
+													<Typography variant="h4" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
 														{(data?.marketing.campaigns.total || 0).toLocaleString()}
 													</Typography>
 												)}
@@ -3223,7 +3367,7 @@ const AdminDashboard = () => {
 										</Grid>
 									) : (
 										<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
-											<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.primary.main }}>
+											<Typography variant="h4" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
 												{(data?.marketing.segments.total || 0).toLocaleString()}
 											</Typography>
 											<Typography variant="body2" color="textSecondary">

@@ -1,5 +1,20 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Box, Stack, Typography, Paper, Grid, Skeleton, Slider, Divider, Chip, useTheme, alpha, Tooltip, IconButton, Theme } from "@mui/material";
+import {
+	Box,
+	Stack,
+	Typography,
+	Paper,
+	Grid,
+	Skeleton,
+	Slider,
+	Divider,
+	Chip,
+	useTheme,
+	alpha,
+	Tooltip,
+	IconButton,
+	Theme,
+} from "@mui/material";
 import { Calculator, Refresh, Chart, Document } from "iconsax-react";
 import { CausasPjnService, CapacityStatsResponse } from "api/causasPjn";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";

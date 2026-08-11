@@ -51,20 +51,14 @@ const CronsStatusWidget = () => {
 	const hasPending = pendingCount > 0;
 	const allOk = total > 0 && okCount === total && !loading;
 
-	const statusColor = hasError
-		? theme.palette.error.main
-		: hasStale || hasPending
-			? STALE_AMBER
-			: allOk
-				? LIVE_GREEN
-				: STALE_AMBER;
+	const statusColor = hasError ? theme.palette.error.main : hasStale || hasPending ? STALE_AMBER : allOk ? LIVE_GREEN : STALE_AMBER;
 	const statusBorderColor = hasError
 		? theme.palette.error.main
 		: hasStale
-			? alpha(STALE_AMBER, 0.4)
-			: allOk
-				? headerBorder(isDark)
-				: alpha(STALE_AMBER, 0.4);
+		? alpha(STALE_AMBER, 0.4)
+		: allOk
+		? headerBorder(isDark)
+		: alpha(STALE_AMBER, 0.4);
 
 	const dotColor = (status: CronHealthStatus) => {
 		if (status === "ok") return LIVE_GREEN;
@@ -87,7 +81,7 @@ const CronsStatusWidget = () => {
 				"&:hover": {
 					boxShadow: headerShadow(isDark),
 					borderColor: statusColor,
-					transform: "translateY(-1px)",
+					transform: "translateY(-2px)",
 				},
 				...LIVE_PULSE_KEYFRAMES,
 			}}

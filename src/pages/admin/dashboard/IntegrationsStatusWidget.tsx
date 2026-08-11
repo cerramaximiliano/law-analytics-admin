@@ -94,7 +94,7 @@ const IntegrationsStatusWidget: React.FC = () => {
 				"&:hover": {
 					boxShadow: headerShadow(isDark),
 					borderColor: alpha(headerColor, 0.5),
-					transform: "translateY(-1px)",
+					transform: "translateY(-2px)",
 				},
 				...LIVE_PULSE_KEYFRAMES,
 			}}

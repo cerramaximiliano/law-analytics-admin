@@ -130,7 +130,7 @@ const ServicesStatusWidget = () => {
 				"&:hover": {
 					boxShadow: headerShadow(isDark),
 					borderColor: statusColor,
-					transform: "translateY(-1px)",
+					transform: "translateY(-2px)",
 				},
 				...LIVE_PULSE_KEYFRAMES,
 			}}

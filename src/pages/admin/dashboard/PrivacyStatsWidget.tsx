@@ -84,7 +84,22 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 		return wrapper(
 			<>
 				<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-					<Lock1 size={20} style={{ color: COLORS.private.main }} />
+					<Box
+						sx={{
+							width: 28,
+							height: 28,
+							borderRadius: 1,
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							flexShrink: 0,
+							bgcolor: alpha(theme.palette.error.main, isDark ? 0.18 : 0.08),
+							border: `1px solid ${alpha(theme.palette.error.main, isDark ? 0.32 : 0.18)}`,
+							color: COLORS.private.main,
+						}}
+					>
+						<Lock1 size={15} />
+					</Box>
 					<Typography variant="subtitle1" fontWeight="bold">
 						Causas Privadas PJN
 					</Typography>
@@ -107,7 +122,22 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 			{/* Header */}
 			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
 				<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-					<Lock1 size={20} style={{ color: COLORS.private.main }} />
+					<Box
+						sx={{
+							width: 28,
+							height: 28,
+							borderRadius: 1,
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							flexShrink: 0,
+							bgcolor: alpha(theme.palette.error.main, isDark ? 0.18 : 0.08),
+							border: `1px solid ${alpha(theme.palette.error.main, isDark ? 0.32 : 0.18)}`,
+							color: COLORS.private.main,
+						}}
+					>
+						<Lock1 size={15} />
+					</Box>
 					<Typography variant={compact || summary ? "subtitle2" : "subtitle1"} fontWeight="bold">
 						Causas Privadas PJN
 					</Typography>
