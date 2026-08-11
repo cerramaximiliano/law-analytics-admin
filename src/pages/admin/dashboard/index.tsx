@@ -11,11 +11,8 @@ import {
 	InfoCircle,
 	TickCircle,
 	Clock,
-	Timer1,
 	ArrowRight2,
 	Wallet2,
-	People,
-	Calculator,
 	Chart,
 	DocumentText,
 } from "iconsax-react";
@@ -52,6 +49,7 @@ import { Warning2 } from "iconsax-react";
 import { getTasasStatus, TasasStatus } from "utils/tasasService";
 import { getStats as getDatosPrevisionales, Stats as DatosPrevsStats } from "utils/datosPrevsionalesService";
 import GroupsService from "api/groups";
+import { BRAND_BLUE, headerBorder, headerShadow } from "themes/dashboardTokens";
 import ServicesStatusWidget from "./ServicesStatusWidget";
 import CronsStatusWidget from "./CronsStatusWidget";
 import IntegrationsStatusWidget from "./IntegrationsStatusWidget";
@@ -222,21 +220,27 @@ const CustomChartTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) =
 	return null;
 };
 
-// Primary KPI Card Component - Clean, number-focused design
+// Primary KPI Card Component - Clean, number-focused design.
+// Lenguaje visual alineado con law-analytics-front (WidgetDataCard): icon chip
+// tintado BRAND_BLUE, valor en text.primary (color semántico solo para estados),
+// hover con sombra tintada brand en vez de shadow negra genérica.
 interface PrimaryKPICardProps {
 	title: string;
 	value: number;
 	icon: React.ReactNode;
-	valueColor: string;
+	/** Solo para señalar estado (warning/error). Por defecto text.primary. */
+	valueColor?: string;
+	/** Prefijo de unidad (ej. "US$"): formatea el valor con 2 decimales. */
+	prefix?: string;
 	loading?: boolean;
 	infoKey: string;
 	linkTo?: string;
 	onClick?: () => void;
 }
 
-const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, valueColor, loading, infoKey, linkTo, onClick }) => {
+const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, valueColor, prefix, loading, infoKey, linkTo, onClick }) => {
 	const theme = useTheme();
-	const COLORS = getThemeColors(theme);
+	const isDark = theme.palette.mode === "dark";
 	const navigate = useNavigate();
 	const isClickable = linkTo || onClick;
 
@@ -247,6 +251,10 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 			navigate(linkTo);
 		}
 	};
+
+	const formattedValue = prefix
+		? value.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+		: value.toLocaleString();
 
 	return (
 		<Paper
@@ -262,23 +270,40 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 				transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 				...(isClickable && {
 					"&:hover": {
-						boxShadow: theme.shadows[2],
-						borderColor: COLORS.primary.light,
-						transform: "translateY(-1px)",
+						boxShadow: headerShadow(isDark),
+						borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+						transform: "translateY(-2px)",
 					},
 				}),
 			}}
 		>
-			{/* Header: Icon + Title + Info */}
-			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 1, sm: 1.5 } }}>
-				<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 }, minWidth: 0 }}>
-					<Box sx={{ color: COLORS.neutral.light, display: "flex", flexShrink: 0 }}>{icon}</Box>
+			{/* Header: Icon chip + Title + Info */}
+			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 1.25, sm: 1.75 } }}>
+				<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.75, sm: 1.25 }, minWidth: 0 }}>
+					<Box
+						sx={{
+							width: 34,
+							height: 34,
+							borderRadius: 1.25,
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							flexShrink: 0,
+							bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+							border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+							color: BRAND_BLUE,
+							"& > svg": { color: BRAND_BLUE },
+						}}
+					>
+						{icon}
+					</Box>
 					<Typography
 						variant="body2"
 						sx={{
-							color: COLORS.neutral.text,
+							color: theme.palette.text.secondary,
 							fontWeight: 500,
 							fontSize: { xs: "0.75rem", sm: "0.875rem" },
+							letterSpacing: "-0.005em",
 							overflow: "hidden",
 							textOverflow: "ellipsis",
 							whiteSpace: "nowrap",
@@ -289,26 +314,33 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 				</Box>
 				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0 }}>
 					<InfoTooltip metricKey={infoKey} />
-					{isClickable && <ArrowRight2 size={14} style={{ color: COLORS.neutral.light }} />}
+					{isClickable && <ArrowRight2 size={14} style={{ color: theme.palette.text.secondary, opacity: 0.6 }} />}
 				</Box>
 			</Box>
 			{/* Value - The hero */}
 			{loading ? (
 				<Skeleton variant="text" width={80} height={48} />
 			) : (
-				<Typography
-					variant="h3"
-					sx={{
-						fontWeight: 700,
-						color: valueColor,
-						lineHeight: 1,
-						fontSize: { xs: "1.5rem", sm: "2rem" },
-						letterSpacing: "-0.02em",
-						fontVariantNumeric: "tabular-nums",
-					}}
-				>
-					{value.toLocaleString()}
-				</Typography>
+				<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5 }}>
+					{prefix && (
+						<Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+							{prefix}
+						</Typography>
+					)}
+					<Typography
+						variant="h3"
+						sx={{
+							fontWeight: 700,
+							color: valueColor || theme.palette.text.primary,
+							lineHeight: 1,
+							fontSize: { xs: "1.5rem", sm: "2rem" },
+							letterSpacing: "-0.02em",
+							fontVariantNumeric: "tabular-nums",
+						}}
+					>
+						{formattedValue}
+					</Typography>
+				</Box>
 			)}
 		</Paper>
 	);
@@ -323,16 +355,29 @@ interface SectionHeaderProps {
 
 const SectionHeader: React.FC<SectionHeaderProps> = ({ title, subtitle, icon }) => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 
 	return (
 		<Box sx={{ mb: { xs: 1.5, sm: 2.5 } }}>
-			<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 } }}>
-				<Box sx={{ color: theme.palette.primary.main }}>{icon}</Box>
-				<Typography
-					variant="h4"
-					fontWeight={600}
-					sx={{ fontSize: { xs: "1.05rem", sm: "1.35rem" }, letterSpacing: "-0.02em" }}
+			<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.75, sm: 1.25 } }}>
+				<Box
+					sx={{
+						width: 30,
+						height: 30,
+						borderRadius: 1,
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						flexShrink: 0,
+						bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+						border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+						color: BRAND_BLUE,
+						"& > svg": { color: BRAND_BLUE },
+					}}
 				>
+					{icon}
+				</Box>
+				<Typography variant="h4" fontWeight={600} sx={{ fontSize: { xs: "1.05rem", sm: "1.25rem" }, letterSpacing: "-0.02em" }}>
 					{title}
 				</Typography>
 			</Box>
@@ -342,7 +387,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, subtitle, icon }) 
 					color="textSecondary"
 					sx={{
 						mt: 0.5,
-						ml: { xs: 3, sm: 4 },
+						ml: { xs: 4.5, sm: 5.25 },
 						fontSize: { xs: "0.75rem", sm: "0.875rem" },
 						display: { xs: "none", sm: "block" },
 					}}
@@ -366,6 +411,7 @@ interface ChartCardProps {
 
 const ChartCard: React.FC<ChartCardProps> = ({ title, icon, children, linkTo, height = 280, mobileHeight }) => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const navigate = useNavigate();
 
 	const handleClick = () => {
@@ -387,9 +433,9 @@ const ChartCard: React.FC<ChartCardProps> = ({ title, icon, children, linkTo, he
 				transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 				...(linkTo && {
 					"&:hover": {
-						boxShadow: theme.shadows[2],
-						borderColor: alpha(theme.palette.primary.main, 0.3),
-						transform: "translateY(-1px)",
+						boxShadow: headerShadow(isDark),
+						borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+						transform: "translateY(-2px)",
 					},
 				}),
 			}}
@@ -402,12 +448,12 @@ const ChartCard: React.FC<ChartCardProps> = ({ title, icon, children, linkTo, he
 					justifyContent: "space-between",
 					mb: { xs: 1.5, sm: 2 },
 					pb: { xs: 1, sm: 1.5 },
-					borderBottom: `1px solid ${theme.palette.divider}`,
+					borderBottom: `1px solid ${headerBorder(isDark)}`,
 				}}
 			>
 				<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 } }}>
-					<Box sx={{ color: theme.palette.primary.main }}>{icon}</Box>
-					<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>
+					<Box sx={{ color: BRAND_BLUE, display: "flex" }}>{icon}</Box>
+					<Typography variant="subtitle1" fontWeight={600} sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, letterSpacing: "-0.005em" }}>
 						{title}
 					</Typography>
 				</Box>
@@ -425,8 +471,6 @@ interface StatsLegendProps {
 }
 
 const StatsLegend: React.FC<StatsLegendProps> = ({ items, loading }) => {
-	const theme = useTheme();
-
 	return (
 		<Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, justifyContent: "center", height: "100%" }}>
 			{items.map((item, index) => (
@@ -472,6 +516,7 @@ interface GroupedCardProps {
 
 const GroupedCard: React.FC<GroupedCardProps> = ({ title, icon, children, linkTo, onClick }) => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const navigate = useNavigate();
 	const isClickable = linkTo || onClick;
 
@@ -497,9 +542,9 @@ const GroupedCard: React.FC<GroupedCardProps> = ({ title, icon, children, linkTo
 				transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 				...(isClickable && {
 					"&:hover": {
-						boxShadow: theme.shadows[2],
-						borderColor: alpha(theme.palette.primary.main, 0.3),
-						transform: "translateY(-1px)",
+						boxShadow: headerShadow(isDark),
+						borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+						transform: "translateY(-2px)",
 					},
 				}),
 			}}
@@ -511,12 +556,12 @@ const GroupedCard: React.FC<GroupedCardProps> = ({ title, icon, children, linkTo
 					justifyContent: "space-between",
 					mb: { xs: 1.5, sm: 2 },
 					pb: { xs: 1, sm: 1.5 },
-					borderBottom: `1px solid ${theme.palette.divider}`,
+					borderBottom: `1px solid ${headerBorder(isDark)}`,
 				}}
 			>
 				<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 } }}>
-					<Box sx={{ color: theme.palette.primary.main }}>{icon}</Box>
-					<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>
+					<Box sx={{ color: BRAND_BLUE, display: "flex" }}>{icon}</Box>
+					<Typography variant="subtitle1" fontWeight={600} sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, letterSpacing: "-0.005em" }}>
 						{title}
 					</Typography>
 				</Box>
@@ -527,48 +572,82 @@ const GroupedCard: React.FC<GroupedCardProps> = ({ title, icon, children, linkTo
 	);
 };
 
-// Mini Stat Component - For inline stats
-interface MiniStatProps {
+// Stat Strip - franja horizontal de métricas secundarias. Evita el "muro de
+// cards": las métricas de contexto viven juntas en una sola superficie con
+// divisores, debajo de los KPIs hero (patrón del dashboard de la app de usuario).
+interface StatStripItem {
 	label: string;
 	value: number;
-	color?: string;
-	loading?: boolean;
 	infoKey: string;
+	linkTo?: string;
+	loading?: boolean;
 }
 
-const MiniStat: React.FC<MiniStatProps> = ({ label, value, color, loading, infoKey }) => {
+const StatStrip: React.FC<{ items: StatStripItem[] }> = ({ items }) => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
+	const navigate = useNavigate();
 
 	return (
-		<Box sx={{ textAlign: "center", flex: 1 }}>
-			{loading ? (
-				<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
-			) : (
-				<Typography
-					variant="h4"
+		<Paper
+			elevation={0}
+			sx={{
+				borderRadius: 2,
+				bgcolor: theme.palette.background.paper,
+				border: `1px solid ${theme.palette.divider}`,
+				display: "flex",
+				flexWrap: "wrap",
+			}}
+		>
+			{items.map((item, index) => (
+				<Box
+					key={item.label}
+					onClick={item.linkTo ? () => navigate(item.linkTo!) : undefined}
 					sx={{
-						fontWeight: 600,
-						color: color || theme.palette.text.primary,
-						letterSpacing: "-0.02em",
-						fontVariantNumeric: "tabular-nums",
+						flex: "1 1 0",
+						minWidth: { xs: "50%", sm: "20%" },
+						py: { xs: 1.5, sm: 2 },
+						px: 1,
+						textAlign: "center",
+						cursor: item.linkTo ? "pointer" : "default",
+						borderLeft: { xs: "none", sm: index > 0 ? `1px solid ${headerBorder(isDark)}` : "none" },
+						transition: "background-color 200ms ease",
+						...(item.linkTo && {
+							"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.1 : 0.05) },
+						}),
 					}}
 				>
-					{value.toLocaleString()}
-				</Typography>
-			)}
-			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-				<Typography variant="caption" color="textSecondary">
-					{label}
-				</Typography>
-				<InfoTooltip metricKey={infoKey} />
-			</Box>
-		</Box>
+					{item.loading ? (
+						<Skeleton variant="text" width={48} height={32} sx={{ mx: "auto" }} />
+					) : (
+						<Typography
+							variant="h5"
+							sx={{
+								fontWeight: 600,
+								letterSpacing: "-0.02em",
+								fontVariantNumeric: "tabular-nums",
+								lineHeight: 1.2,
+							}}
+						>
+							{item.value.toLocaleString()}
+						</Typography>
+					)}
+					<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
+						<Typography variant="caption" color="textSecondary" noWrap>
+							{item.label}
+						</Typography>
+						<InfoTooltip metricKey={item.infoKey} />
+					</Box>
+				</Box>
+			))}
+		</Paper>
 	);
 };
 
 const AdminDashboard = () => {
 	const theme = useTheme();
 	const COLORS = getThemeColors(theme);
+	const isDark = theme.palette.mode === "dark";
 	const navigate = useNavigate();
 	const { enqueueSnackbar } = useSnackbar();
 	const [loading, setLoading] = useState(true);
@@ -1040,22 +1119,19 @@ const AdminDashboard = () => {
 					}
 				`}</style>
 
-				{/* Primary KPIs Row - Most Important Metrics */}
+				{/* Primary KPIs Row - jerarquía en dos niveles: 4 KPIs hero + strip de contexto */}
 				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
-					<Typography
-						variant="overline"
-						color="textSecondary"
-						sx={{ mb: { xs: 1, sm: 2 }, display: "block", letterSpacing: 1.5, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}
-					>
-						Resumen General
-					</Typography>
+					<SectionHeader
+						title="Resumen general"
+						subtitle="Usuarios, suscripciones y causas de la plataforma"
+						icon={<Chart size={16} variant="Bold" />}
+					/>
 					<Grid container spacing={{ xs: 1, sm: 2 }}>
 						<Grid item xs={6} sm={6} md={3}>
 							<PrimaryKPICard
 								title="Total Usuarios"
 								value={data?.users.total || 0}
-								icon={<UserSquare size={20} />}
-								valueColor={COLORS.primary.main}
+								icon={<UserSquare size={18} />}
 								loading={loading}
 								infoKey="totalUsers"
 								linkTo="/admin/users"
@@ -1065,8 +1141,7 @@ const AdminDashboard = () => {
 							<PrimaryKPICard
 								title="Suscripciones Activas"
 								value={data?.subscriptions.active || 0}
-								icon={<ReceiptItem size={20} />}
-								valueColor={COLORS.success.main}
+								icon={<ReceiptItem size={18} />}
 								loading={loading}
 								infoKey="activeSubscriptions"
 								linkTo="/admin/usuarios/suscripciones"
@@ -1083,11 +1158,35 @@ const AdminDashboard = () => {
 									height: "100%",
 								}}
 							>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-									<Box sx={{ color: COLORS.success.main }}>
-										<Folder size={20} />
+								<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.75, sm: 1.25 }, mb: { xs: 1.25, sm: 1.75 } }}>
+									<Box
+										sx={{
+											width: 34,
+											height: 34,
+											borderRadius: 1.25,
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											flexShrink: 0,
+											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+											color: BRAND_BLUE,
+										}}
+									>
+										<Folder size={18} />
 									</Box>
-									<Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>
+									<Typography
+										variant="body2"
+										sx={{
+											color: theme.palette.text.secondary,
+											fontWeight: 500,
+											fontSize: { xs: "0.75rem", sm: "0.875rem" },
+											letterSpacing: "-0.005em",
+											whiteSpace: "nowrap",
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+										}}
+									>
 										Carpetas Verificadas
 									</Typography>
 									<InfoTooltip metricKey="verifiedFolders" />
@@ -1100,9 +1199,9 @@ const AdminDashboard = () => {
 											variant="h3"
 											sx={{
 												fontWeight: 700,
-												color: COLORS.success.main,
-												mb: 0.5,
-												textAlign: "center",
+												mb: 1,
+												lineHeight: 1,
+												fontSize: { xs: "1.5rem", sm: "2rem" },
 												letterSpacing: "-0.02em",
 												fontVariantNumeric: "tabular-nums",
 											}}
@@ -1113,46 +1212,29 @@ const AdminDashboard = () => {
 												(ejeStats?.status.valid || 0)
 											).toLocaleString()}
 										</Typography>
-										<Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", justifyContent: "center" }}>
-											<Chip
-												label={`PJN: ${(data?.folders.pjn?.verified || 0).toLocaleString()}`}
-												size="small"
-												onClick={() => navigate("/admin/causas/verified-app")}
-												sx={{
-													bgcolor: alpha(COLORS.primary.main, 0.1),
-													color: COLORS.primary.main,
-													fontWeight: 500,
-													fontSize: "0.65rem",
-													cursor: "pointer",
-													"&:hover": { bgcolor: alpha(COLORS.primary.main, 0.2) },
-												}}
-											/>
-											<Chip
-												label={`MEV: ${(data?.folders.mev?.verified || 0).toLocaleString()}`}
-												size="small"
-												onClick={() => navigate("/admin/mev/verified-app")}
-												sx={{
-													bgcolor: alpha(COLORS.neutral.main, 0.1),
-													color: COLORS.neutral.main,
-													fontWeight: 500,
-													fontSize: "0.65rem",
-													cursor: "pointer",
-													"&:hover": { bgcolor: alpha(COLORS.neutral.main, 0.2) },
-												}}
-											/>
-											<Chip
-												label={`EJE: ${(ejeStats?.status.valid || 0).toLocaleString()}`}
-												size="small"
-												onClick={() => navigate("/admin/eje/verified-app")}
-												sx={{
-													bgcolor: alpha(COLORS.success.main, 0.1),
-													color: COLORS.success.main,
-													fontWeight: 500,
-													fontSize: "0.65rem",
-													cursor: "pointer",
-													"&:hover": { bgcolor: alpha(COLORS.success.main, 0.2) },
-												}}
-											/>
+										<Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+											{[
+												{ label: `PJN ${(data?.folders.pjn?.verified || 0).toLocaleString()}`, to: "/admin/causas/verified-app" },
+												{ label: `MEV ${(data?.folders.mev?.verified || 0).toLocaleString()}`, to: "/admin/mev/verified-app" },
+												{ label: `EJE ${(ejeStats?.status.valid || 0).toLocaleString()}`, to: "/admin/eje/verified-app" },
+											].map((chip) => (
+												<Chip
+													key={chip.to}
+													label={chip.label}
+													size="small"
+													onClick={() => navigate(chip.to)}
+													sx={{
+														bgcolor: alpha(BRAND_BLUE, isDark ? 0.15 : 0.09),
+														color: BRAND_BLUE,
+														fontWeight: 600,
+														fontSize: "0.65rem",
+														height: 20,
+														cursor: "pointer",
+														border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+														"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.25 : 0.16) },
+													}}
+												/>
+											))}
 										</Box>
 									</>
 								)}
@@ -1162,100 +1244,83 @@ const AdminDashboard = () => {
 							<PrimaryKPICard
 								title="Carpetas Pendientes"
 								value={data?.folders.pending || 0}
-								icon={<Folder size={20} />}
-								valueColor={COLORS.warning.main}
+								icon={<Folder size={18} />}
+								valueColor={(data?.folders.pending || 0) > 0 ? theme.palette.warning.main : undefined}
 								loading={loading}
 								infoKey="pendingFolders"
 								linkTo="/admin/causas/pending"
 							/>
 						</Grid>
-						<Grid item xs={6} sm={6} md={3}>
-							<PrimaryKPICard
-								title="Carpetas Totales"
-								value={data?.folders.total || 0}
-								icon={<Folder size={20} />}
-								valueColor={COLORS.neutral.main}
-								loading={loading}
-								infoKey="totalFolders"
-							/>
-						</Grid>
-						<Grid item xs={6} sm={6} md={3}>
-							<PrimaryKPICard
-								title="Contactos Totales"
-								value={data?.contacts?.total || 0}
-								icon={<People size={20} />}
-								valueColor={COLORS.primary.main}
-								loading={loading}
-								infoKey="userContacts"
-							/>
-						</Grid>
-						<Grid item xs={6} sm={6} md={3}>
-							<PrimaryKPICard
-								title="Calculadores Totales"
-								value={data?.calculators?.total || 0}
-								icon={<Calculator size={20} />}
-								valueColor={COLORS.primary.main}
-								loading={loading}
-								infoKey="userCalculators"
-							/>
-						</Grid>
-						<Grid item xs={6} sm={6} md={3}>
-							<PrimaryKPICard
-								title="Contactos Marketing"
-								value={data?.marketing.contacts.total || 0}
-								icon={<Profile2User size={20} />}
-								valueColor={COLORS.primary.main}
-								loading={loading}
-								infoKey="totalContacts"
-								linkTo="/admin/marketing/contacts"
-							/>
-						</Grid>
-						<Grid item xs={6} sm={6} md={3}>
+					</Grid>
+
+					{/* Métricas de contexto - una sola superficie con divisores, sin muro de cards */}
+					<Box sx={{ mt: { xs: 1, sm: 2 } }}>
+						<StatStrip
+							items={[
+								{ label: "Carpetas totales", value: data?.folders.total || 0, infoKey: "totalFolders", loading },
+								{ label: "Contactos", value: data?.contacts?.total || 0, infoKey: "userContacts", loading },
+								{ label: "Calculadores", value: data?.calculators?.total || 0, infoKey: "userCalculators", loading },
+								{
+									label: "Contactos marketing",
+									value: data?.marketing.contacts.total || 0,
+									infoKey: "totalContacts",
+									linkTo: "/admin/marketing/contacts",
+									loading,
+								},
+								{
+									label: "Grupos activos",
+									value: activeGroupsCount,
+									infoKey: "activeGroups",
+									linkTo: "/admin/groups",
+									loading: loadingGroups,
+								},
+							]}
+						/>
+					</Box>
+				</Box>
+
+				{/* Créditos y recursos - saldos de servicios externos y datasets internos */}
+				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
+					<SectionHeader
+						title="Créditos y recursos"
+						subtitle="Saldos de servicios externos y datasets internos"
+						icon={<Wallet2 size={16} variant="Bold" />}
+					/>
+					<Grid container spacing={{ xs: 1, sm: 2 }}>
+						<Grid item xs={6} sm={6} md={4} lg={2.4}>
 							<PrimaryKPICard
 								title="Créditos NeverBounce"
 								value={neverBounceCredits || 0}
-								icon={<Wallet2 size={20} />}
-								valueColor={COLORS.primary.main}
+								icon={<Wallet2 size={18} />}
 								loading={loadingCredits}
 								infoKey="neverBounceCredits"
 								linkTo="/admin/workers/email-verification"
 							/>
 						</Grid>
-						<Grid item xs={6} sm={6} md={3}>
+						<Grid item xs={6} sm={6} md={4} lg={2.4}>
 							<PrimaryKPICard
 								title="Saldo Capsolver"
 								value={capsolverBalance !== null ? Number(capsolverBalance.toFixed(2)) : 0}
-								icon={<Wallet2 size={20} />}
-								valueColor={COLORS.primary.main}
+								icon={<Wallet2 size={18} />}
+								prefix="US$"
 								loading={loadingCapsolver}
 								infoKey="capsolverBalance"
 								linkTo="/admin/causas/workers"
 							/>
 						</Grid>
-						<Grid item xs={6} sm={6} md={3}>
+						<Grid item xs={6} sm={6} md={4} lg={2.4}>
 							<PrimaryKPICard
 								title={openaiBalance !== null ? "Saldo OpenAI" : "OpenAI (sin config)"}
 								value={openaiBalance !== null ? Number(openaiBalance.toFixed(2)) : 0}
-								icon={<Wallet2 size={20} />}
-								valueColor={openaiBalance !== null && openaiBalance > 0 ? COLORS.success.main : COLORS.neutral.main}
+								icon={<Wallet2 size={18} />}
+								prefix="US$"
 								loading={loadingOpenai}
 								infoKey="openaiBalance"
 								linkTo="/admin/expenses"
 							/>
 						</Grid>
-						<Grid item xs={6} sm={6} md={3}>
-							<PrimaryKPICard
-								title="Grupos Activos"
-								value={activeGroupsCount}
-								icon={<People size={20} />}
-								valueColor={COLORS.success.main}
-								loading={loadingGroups}
-								infoKey="activeGroups"
-								linkTo="/admin/groups"
-							/>
-						</Grid>
 						{/* Tasas de Interés widget */}
-						<Grid item xs={6} sm={6} md={3}>
+						<Grid item xs={6} sm={6} md={4} lg={2.4}>
 							<Paper
 								elevation={0}
 								onClick={() => navigate("/recursos/tasas")}
@@ -1266,31 +1331,48 @@ const AdminDashboard = () => {
 									border: `1px solid ${tasasStatus && tasasStatus.noActualizadas > 0 ? theme.palette.error.main : theme.palette.divider}`,
 									height: "100%",
 									cursor: "pointer",
-									transition: "all 0.2s ease",
+									transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 									"&:hover": {
-										boxShadow: theme.shadows[2],
-										borderColor: tasasStatus && tasasStatus.noActualizadas > 0 ? theme.palette.error.dark : COLORS.primary.light,
+										boxShadow: headerShadow(isDark),
+										borderColor:
+											tasasStatus && tasasStatus.noActualizadas > 0 ? theme.palette.error.dark : alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+										transform: "translateY(-2px)",
 									},
 								}}
 							>
 								{/* Header */}
-								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 1, sm: 1.5 } }}>
-									<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 }, minWidth: 0 }}>
+								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 1.25, sm: 1.75 } }}>
+									<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.75, sm: 1.25 }, minWidth: 0 }}>
 										<Box
 											sx={{
-												color: tasasStatus && tasasStatus.noActualizadas > 0 ? COLORS.error.main : COLORS.neutral.light,
+												width: 34,
+												height: 34,
+												borderRadius: 1.25,
 												display: "flex",
+												alignItems: "center",
+												justifyContent: "center",
 												flexShrink: 0,
+												bgcolor:
+													tasasStatus && tasasStatus.noActualizadas > 0
+														? alpha(theme.palette.error.main, isDark ? 0.18 : 0.1)
+														: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+												border: `1px solid ${
+													tasasStatus && tasasStatus.noActualizadas > 0
+														? alpha(theme.palette.error.main, isDark ? 0.32 : 0.18)
+														: alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)
+												}`,
+												color: tasasStatus && tasasStatus.noActualizadas > 0 ? theme.palette.error.main : BRAND_BLUE,
 											}}
 										>
-											{tasasStatus && tasasStatus.noActualizadas > 0 ? <Warning2 size={20} /> : <Chart size={20} />}
+											{tasasStatus && tasasStatus.noActualizadas > 0 ? <Warning2 size={18} /> : <Chart size={18} />}
 										</Box>
 										<Typography
 											variant="body2"
 											sx={{
-												color: COLORS.neutral.text,
+												color: theme.palette.text.secondary,
 												fontWeight: 500,
 												fontSize: { xs: "0.75rem", sm: "0.875rem" },
+												letterSpacing: "-0.005em",
 												overflow: "hidden",
 												textOverflow: "ellipsis",
 												whiteSpace: "nowrap",
@@ -1299,7 +1381,7 @@ const AdminDashboard = () => {
 											Tasas de Interés
 										</Typography>
 									</Box>
-									<ArrowRight2 size={14} style={{ color: COLORS.neutral.light }} />
+									<ArrowRight2 size={14} style={{ color: theme.palette.text.secondary, opacity: 0.6 }} />
 								</Box>
 								{/* Value */}
 								{loadingTasasStatus ? (
@@ -1354,7 +1436,7 @@ const AdminDashboard = () => {
 							</Paper>
 						</Grid>
 						{/* Datos Previsionales widget */}
-						<Grid item xs={6} sm={6} md={3}>
+						<Grid item xs={6} sm={6} md={4} lg={2.4}>
 							<Paper
 								elevation={0}
 								onClick={() => navigate("/recursos/datos-previsionales")}
@@ -1367,25 +1449,43 @@ const AdminDashboard = () => {
 									}`,
 									height: "100%",
 									cursor: "pointer",
-									transition: "all 0.2s ease",
+									transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 									"&:hover": {
-										boxShadow: theme.shadows[2],
-										borderColor: datosPrevsStats && datosPrevsStats.mesesFaltantes > 0 ? theme.palette.warning.dark : COLORS.primary.light,
+										boxShadow: headerShadow(isDark),
+										borderColor:
+											datosPrevsStats && datosPrevsStats.mesesFaltantes > 0
+												? theme.palette.warning.dark
+												: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+										transform: "translateY(-2px)",
 									},
 								}}
 							>
 								{/* Header */}
-								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 1, sm: 1.5 } }}>
-									<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 }, minWidth: 0 }}>
-										<Box sx={{ color: COLORS.neutral.light, display: "flex", flexShrink: 0 }}>
-											<DocumentText size={20} />
+								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 1.25, sm: 1.75 } }}>
+									<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.75, sm: 1.25 }, minWidth: 0 }}>
+										<Box
+											sx={{
+												width: 34,
+												height: 34,
+												borderRadius: 1.25,
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "center",
+												flexShrink: 0,
+												bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+												border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+												color: BRAND_BLUE,
+											}}
+										>
+											<DocumentText size={18} />
 										</Box>
 										<Typography
 											variant="body2"
 											sx={{
-												color: COLORS.neutral.text,
+												color: theme.palette.text.secondary,
 												fontWeight: 500,
 												fontSize: { xs: "0.75rem", sm: "0.875rem" },
+												letterSpacing: "-0.005em",
 												overflow: "hidden",
 												textOverflow: "ellipsis",
 												whiteSpace: "nowrap",
@@ -1394,7 +1494,7 @@ const AdminDashboard = () => {
 											Datos Previsionales
 										</Typography>
 									</Box>
-									<ArrowRight2 size={14} style={{ color: COLORS.neutral.light }} />
+									<ArrowRight2 size={14} style={{ color: theme.palette.text.secondary, opacity: 0.6 }} />
 								</Box>
 								{/* Value */}
 								{loadingDatosPrevsStats ? (
@@ -1406,9 +1506,10 @@ const AdminDashboard = () => {
 												variant="h3"
 												sx={{
 													fontWeight: 700,
-													color: COLORS.success.main,
 													lineHeight: 1,
 													fontSize: { xs: "1.5rem", sm: "2rem" },
+													letterSpacing: "-0.02em",
+													fontVariantNumeric: "tabular-nums",
 												}}
 											>
 												{datosPrevsStats?.total ?? 0}
@@ -1435,13 +1536,11 @@ const AdminDashboard = () => {
 
 				{/* Services Status Widget */}
 				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
-					<Typography
-						variant="overline"
-						color="textSecondary"
-						sx={{ mb: { xs: 1, sm: 2 }, display: "block", letterSpacing: 1.5, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}
-					>
-						Infraestructura
-					</Typography>
+					<SectionHeader
+						title="Infraestructura"
+						subtitle="Salud de servicios, crons e integraciones"
+						icon={<MessageProgramming size={16} variant="Bold" />}
+					/>
 					<Grid container spacing={{ xs: 1, sm: 2 }}>
 						<Grid item xs={12} sm={6} md={3}>
 							<ServicesStatusWidget />
@@ -1459,7 +1558,12 @@ const AdminDashboard = () => {
 				</Box>
 
 				{/* Worker Widgets Row */}
-				<Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: { xs: 2, sm: 4 } }}>
+				<SectionHeader
+					title="Cobertura de workers"
+					subtitle="Actualización de causas por jurisdicción y salud de credenciales"
+					icon={<Refresh size={16} variant="Bold" />}
+				/>
+				<Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mb: { xs: 2, sm: 4 } }}>
 					{/* PJN Update Coverage Widget */}
 					<Grid item xs={12} sm={6} md={3}>
 						<Paper
@@ -1471,11 +1575,12 @@ const AdminDashboard = () => {
 								bgcolor: theme.palette.background.paper,
 								border: `1px solid ${theme.palette.divider}`,
 								cursor: "pointer",
-								transition: "all 0.2s ease",
+								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 								height: "100%",
 								"&:hover": {
-									boxShadow: theme.shadows[2],
-									borderColor: COLORS.primary.light,
+									boxShadow: headerShadow(isDark),
+									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+									transform: "translateY(-2px)",
 								},
 							}}
 						>
@@ -1624,11 +1729,12 @@ const AdminDashboard = () => {
 								bgcolor: theme.palette.background.paper,
 								border: `1px solid ${theme.palette.divider}`,
 								cursor: "pointer",
-								transition: "all 0.2s ease",
+								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 								height: "100%",
 								"&:hover": {
-									boxShadow: theme.shadows[2],
-									borderColor: COLORS.neutral.light,
+									boxShadow: headerShadow(isDark),
+									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+									transform: "translateY(-2px)",
 								},
 							}}
 						>
@@ -1752,11 +1858,12 @@ const AdminDashboard = () => {
 								bgcolor: theme.palette.background.paper,
 								border: `1px solid ${theme.palette.divider}`,
 								cursor: "pointer",
-								transition: "all 0.2s ease",
+								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 								height: "100%",
 								"&:hover": {
-									boxShadow: theme.shadows[2],
-									borderColor: COLORS.success.light,
+									boxShadow: headerShadow(isDark),
+									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+									transform: "translateY(-2px)",
 								},
 							}}
 						>
@@ -1877,11 +1984,12 @@ const AdminDashboard = () => {
 								bgcolor: theme.palette.background.paper,
 								border: `1px solid ${theme.palette.divider}`,
 								cursor: "pointer",
-								transition: "all 0.2s ease",
+								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 								height: "100%",
 								"&:hover": {
-									boxShadow: theme.shadows[2],
-									borderColor: COLORS.warning.light,
+									boxShadow: headerShadow(isDark),
+									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+									transform: "translateY(-2px)",
 								},
 							}}
 						>
@@ -2037,11 +2145,12 @@ const AdminDashboard = () => {
 								bgcolor: theme.palette.background.paper,
 								border: `1px solid ${theme.palette.divider}`,
 								cursor: "pointer",
-								transition: "all 0.2s ease",
+								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 								height: "100%",
 								"&:hover": {
-									boxShadow: theme.shadows[2],
-									borderColor: COLORS.primary.light,
+									boxShadow: headerShadow(isDark),
+									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+									transform: "translateY(-2px)",
 								},
 							}}
 						>
@@ -2150,10 +2259,16 @@ const AdminDashboard = () => {
 											<LinearProgress
 												variant="determinate"
 												value={b.coveragePercent || 0}
-												sx={{ height: 8, borderRadius: 4, backgroundColor: alpha(COLORS.neutral.light, 0.3), "& .MuiLinearProgress-bar": { borderRadius: 4, backgroundColor: accent } }}
+												sx={{
+													height: 8,
+													borderRadius: 4,
+													backgroundColor: alpha(COLORS.neutral.light, 0.3),
+													"& .MuiLinearProgress-bar": { borderRadius: 4, backgroundColor: accent },
+												}}
 											/>
 											<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-												{b.updatedToday.toLocaleString()}/{b.total.toLocaleString()} actualizadas hoy{b.pending > 0 ? ` · ${b.pending.toLocaleString()} pendientes` : ""}
+												{b.updatedToday.toLocaleString()}/{b.total.toLocaleString()} actualizadas hoy
+												{b.pending > 0 ? ` · ${b.pending.toLocaleString()} pendientes` : ""}
 												{b.withErrors > 0 && (
 													<Box
 														component="span"
@@ -2221,9 +2336,7 @@ const AdminDashboard = () => {
 								{healthAnomalies.map((a) => (
 									<Box
 										key={a.credentialId}
-										onClick={() =>
-											navigate(`/admin/causas/synced-credentials?credentialId=${a.credentialId}&conErrores=1`)
-										}
+										onClick={() => navigate(`/admin/causas/synced-credentials?credentialId=${a.credentialId}&conErrores=1`)}
 										sx={{
 											display: "flex",
 											alignItems: "center",
@@ -2266,11 +2379,12 @@ const AdminDashboard = () => {
 								bgcolor: theme.palette.background.paper,
 								border: `1px solid ${theme.palette.divider}`,
 								cursor: "pointer",
-								transition: "all 0.2s ease",
+								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 								height: "100%",
 								"&:hover": {
-									boxShadow: theme.shadows[2],
-									borderColor: COLORS.primary.light,
+									boxShadow: headerShadow(isDark),
+									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+									transform: "translateY(-2px)",
 								},
 							}}
 						>
@@ -2319,21 +2433,51 @@ const AdminDashboard = () => {
 							) : scbaCoverage ? (
 								(() => {
 									const unified = scbaCoverage.updatePolicyMode === "unified";
-									const active = scbaCoverage.active ?? { coveragePercent: scbaCoverage.coveragePercent, updatedToday: scbaCoverage.updatedToday, total: scbaCoverage.total, pending: scbaCoverage.pending, withErrors: scbaCoverage.withErrors, schedule: "cada ~2 h (8-20 h)" };
-									const archived = scbaCoverage.archived ?? { coveragePercent: 0, updatedToday: 0, total: 0, pending: 0, withErrors: 0, schedule: unified ? "cada ~2 h (8-20 h, unificado)" : "madrugada (4-6 h)" };
+									const active = scbaCoverage.active ?? {
+										coveragePercent: scbaCoverage.coveragePercent,
+										updatedToday: scbaCoverage.updatedToday,
+										total: scbaCoverage.total,
+										pending: scbaCoverage.pending,
+										withErrors: scbaCoverage.withErrors,
+										schedule: "cada ~2 h (8-20 h)",
+									};
+									const archived = scbaCoverage.archived ?? {
+										coveragePercent: 0,
+										updatedToday: 0,
+										total: 0,
+										pending: 0,
+										withErrors: 0,
+										schedule: unified ? "cada ~2 h (8-20 h, unificado)" : "madrugada (4-6 h)",
+									};
 									const barColor = (p: number) => (p >= 99 ? COLORS.success.main : p > 70 ? COLORS.warning.main : COLORS.error.main);
 									const renderLine = (label: string, b: typeof active, big: boolean, accent: string) => (
 										<Box sx={{ mb: big ? 1.5 : 0 }}>
 											<Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", mb: 0.25, gap: 1 }}>
 												<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75, minWidth: 0 }}>
-													<Typography variant="body2" fontWeight={600}>{label}</Typography>
-													<Typography variant="caption" color="text.secondary" noWrap>{b.schedule}</Typography>
+													<Typography variant="body2" fontWeight={600}>
+														{label}
+													</Typography>
+													<Typography variant="caption" color="text.secondary" noWrap>
+														{b.schedule}
+													</Typography>
 												</Box>
-												<Typography variant={big ? "h6" : "subtitle2"} fontWeight="bold" sx={{ color: accent, flexShrink: 0 }}>{b.coveragePercent}%</Typography>
+												<Typography variant={big ? "h6" : "subtitle2"} fontWeight="bold" sx={{ color: accent, flexShrink: 0 }}>
+													{b.coveragePercent}%
+												</Typography>
 											</Box>
-											<LinearProgress variant="determinate" value={b.coveragePercent || 0} sx={{ height: big ? 8 : 6, borderRadius: 4, backgroundColor: alpha(COLORS.neutral.light, 0.3), "& .MuiLinearProgress-bar": { borderRadius: 4, backgroundColor: accent } }} />
+											<LinearProgress
+												variant="determinate"
+												value={b.coveragePercent || 0}
+												sx={{
+													height: big ? 8 : 6,
+													borderRadius: 4,
+													backgroundColor: alpha(COLORS.neutral.light, 0.3),
+													"& .MuiLinearProgress-bar": { borderRadius: 4, backgroundColor: accent },
+												}}
+											/>
 											<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-												{b.updatedToday.toLocaleString()}/{b.total.toLocaleString()} actualizadas hoy{b.withErrors > 0 ? ` · ${b.withErrors} con errores` : ""}
+												{b.updatedToday.toLocaleString()}/{b.total.toLocaleString()} actualizadas hoy
+												{b.withErrors > 0 ? ` · ${b.withErrors} con errores` : ""}
 											</Typography>
 										</Box>
 									);
@@ -2766,9 +2910,9 @@ const AdminDashboard = () => {
 										bgcolor: alpha(COLORS.primary.main, 0.05),
 										border: `1px solid ${alpha(COLORS.primary.main, 0.15)}`,
 										cursor: "pointer",
-										transition: "all 0.2s ease",
+										transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 										"&:hover": {
-											boxShadow: theme.shadows[2],
+											boxShadow: headerShadow(isDark),
 											transform: "translateY(-2px)",
 										},
 									}}
@@ -2781,15 +2925,15 @@ const AdminDashboard = () => {
 											<Skeleton variant="text" width={60} height={40} />
 										) : (
 											<Typography
-											variant="h3"
-											sx={{
-												fontWeight: 700,
-												color: COLORS.primary.main,
-												fontSize: { xs: "1.5rem", sm: "2rem" },
-												letterSpacing: "-0.02em",
-												fontVariantNumeric: "tabular-nums",
-											}}
-										>
+												variant="h3"
+												sx={{
+													fontWeight: 700,
+													color: COLORS.primary.main,
+													fontSize: { xs: "1.5rem", sm: "2rem" },
+													letterSpacing: "-0.02em",
+													fontVariantNumeric: "tabular-nums",
+												}}
+											>
 												{(data?.folders.pjn?.total || 0).toLocaleString()}
 											</Typography>
 										)}
@@ -2820,9 +2964,9 @@ const AdminDashboard = () => {
 										bgcolor: alpha(COLORS.primary.main, 0.05),
 										border: `1px solid ${alpha(COLORS.primary.main, 0.15)}`,
 										cursor: "pointer",
-										transition: "all 0.2s ease",
+										transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 										"&:hover": {
-											boxShadow: theme.shadows[2],
+											boxShadow: headerShadow(isDark),
 											transform: "translateY(-2px)",
 										},
 									}}
@@ -2835,15 +2979,15 @@ const AdminDashboard = () => {
 											<Skeleton variant="text" width={60} height={40} />
 										) : (
 											<Typography
-											variant="h3"
-											sx={{
-												fontWeight: 700,
-												color: COLORS.primary.main,
-												fontSize: { xs: "1.5rem", sm: "2rem" },
-												letterSpacing: "-0.02em",
-												fontVariantNumeric: "tabular-nums",
-											}}
-										>
+												variant="h3"
+												sx={{
+													fontWeight: 700,
+													color: COLORS.primary.main,
+													fontSize: { xs: "1.5rem", sm: "2rem" },
+													letterSpacing: "-0.02em",
+													fontVariantNumeric: "tabular-nums",
+												}}
+											>
 												{(data?.folders.mev?.total || 0).toLocaleString()}
 											</Typography>
 										)}
