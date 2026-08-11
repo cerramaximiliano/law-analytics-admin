@@ -15,6 +15,7 @@ import {
 	Wallet2,
 	Chart,
 	DocumentText,
+	Key,
 } from "iconsax-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -49,7 +50,7 @@ import { Warning2 } from "iconsax-react";
 import { getTasasStatus, TasasStatus } from "utils/tasasService";
 import { getStats as getDatosPrevisionales, Stats as DatosPrevsStats } from "utils/datosPrevsionalesService";
 import GroupsService from "api/groups";
-import { BRAND_BLUE, headerBorder, headerShadow } from "themes/dashboardTokens";
+import { BRAND_BLUE, LIVE_GREEN, headerBorder, headerShadow } from "themes/dashboardTokens";
 import ServicesStatusWidget from "./ServicesStatusWidget";
 import CronsStatusWidget from "./CronsStatusWidget";
 import IntegrationsStatusWidget from "./IntegrationsStatusWidget";
@@ -641,6 +642,54 @@ const StatStrip: React.FC<{ items: StatStripItem[] }> = ({ items }) => {
 				</Box>
 			))}
 		</Paper>
+	);
+};
+
+// Credenciales válidas - stat destacado al pie de las cards de cobertura que
+// dependen de login (Mis Causas, SCBA). Antes vivía como chip/caption y se perdía.
+const CredentialsStat: React.FC<{ count: number; tooltip: string }> = ({ count, tooltip }) => {
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
+	return (
+		<Tooltip title={tooltip} arrow>
+			<Box
+				sx={{
+					display: "flex",
+					alignItems: "center",
+					gap: 1,
+					mt: 1.5,
+					pt: 1.25,
+					borderTop: `1px dashed ${theme.palette.divider}`,
+					cursor: "help",
+				}}
+			>
+				<Box
+					sx={{
+						width: 28,
+						height: 28,
+						borderRadius: 1,
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						flexShrink: 0,
+						bgcolor: alpha(LIVE_GREEN, isDark ? 0.18 : 0.12),
+						border: `1px solid ${alpha(LIVE_GREEN, isDark ? 0.36 : 0.24)}`,
+						color: LIVE_GREEN,
+					}}
+				>
+					<Key size={15} />
+				</Box>
+				<Typography
+					variant="h5"
+					sx={{ fontWeight: 700, lineHeight: 1, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums", color: LIVE_GREEN }}
+				>
+					{count.toLocaleString()}
+				</Typography>
+				<Typography variant="caption" color="text.secondary">
+					credenciales válidas
+				</Typography>
+			</Box>
+		</Tooltip>
 	);
 };
 
@@ -1552,7 +1601,7 @@ const AdminDashboard = () => {
 							<IntegrationsStatusWidget />
 						</Grid>
 						<Grid item xs={12} sm={6} md={3}>
-							<PrivacyStatsWidget />
+							<PrivacyStatsWidget summary />
 						</Grid>
 					</Grid>
 				</Box>
@@ -2187,20 +2236,6 @@ const AdminDashboard = () => {
 									)}
 								</Box>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									{misCausasCoverage?.activeCredentials != null && (
-										<Tooltip title="Credenciales PJN activas (habilitadas y válidas)">
-											<Chip
-												label={`${misCausasCoverage.activeCredentials} credenciales`}
-												size="small"
-												sx={{
-													bgcolor: alpha(COLORS.success.main, 0.1),
-													color: COLORS.success.main,
-													fontWeight: 600,
-													fontSize: "0.65rem",
-												}}
-											/>
-										</Tooltip>
-									)}
 									<Chip
 										label="SSO"
 										size="small"
@@ -2293,6 +2328,12 @@ const AdminDashboard = () => {
 										<>
 											{renderLine("Públicas", publicas, barColor(publicas.coveragePercent || 0))}
 											{renderLine("Privadas", privadas, barColor(privadas.coveragePercent || 0))}
+											{misCausasCoverage.activeCredentials != null && (
+												<CredentialsStat
+													count={misCausasCoverage.activeCredentials}
+													tooltip="Credenciales PJN activas (habilitadas y válidas)"
+												/>
+											)}
 										</>
 									);
 								})()
@@ -2487,9 +2528,10 @@ const AdminDashboard = () => {
 											{/* En modo unificado las archivadas se refrescan en el día: aplica el mismo semáforo. En split, color neutro (su ventana es nocturna). */}
 											{renderLine("Archivadas", archived, false, unified ? barColor(archived.coveragePercent || 0) : COLORS.primary.light)}
 											{scbaCoverage.activeCredentials !== undefined && (
-												<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.75 }}>
-													{scbaCoverage.activeCredentials.toLocaleString()} credenciales activas
-												</Typography>
+												<CredentialsStat
+													count={scbaCoverage.activeCredentials}
+													tooltip="Credenciales SCBA activas (habilitadas y válidas)"
+												/>
 											)}
 										</>
 									);

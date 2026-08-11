@@ -8,6 +8,9 @@ import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 interface PrivacyStatsWidgetProps {
 	/** Modo compacto para incrustar como header de la tabla (sin Paper wrapper, sin recent list). */
 	compact?: boolean;
+	/** Modo resumen para el dashboard: conserva el Paper pero oculta el detalle
+	 *  del checker y la lista de últimas marcadas (viven en la vista de causas). */
+	summary?: boolean;
 	onRefresh?: () => void;
 }
 
@@ -22,7 +25,11 @@ const formatDateTime = (iso?: string | null): string => {
 	if (!iso) return "—";
 	try {
 		return new Date(iso).toLocaleString("es-AR", {
-			day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+			day: "2-digit",
+			month: "2-digit",
+			year: "numeric",
+			hour: "2-digit",
+			minute: "2-digit",
 			timeZone: "America/Argentina/Buenos_Aires",
 		});
 	} catch {
@@ -30,7 +37,7 @@ const formatDateTime = (iso?: string | null): string => {
 	}
 };
 
-const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false, onRefresh }) => {
+const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false, summary = false, onRefresh }) => {
 	const theme = useTheme();
 	const COLORS = getColors(theme);
 	const [loading, setLoading] = useState(true);
@@ -82,7 +89,7 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 						Causas Privadas PJN
 					</Typography>
 				</Box>
-				<Skeleton variant="rectangular" width="100%" height={compact ? 80 : 200} sx={{ borderRadius: 1 }} />
+				<Skeleton variant="rectangular" width="100%" height={compact || summary ? 80 : 200} sx={{ borderRadius: 1 }} />
 			</>,
 		);
 	}
@@ -101,7 +108,7 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
 				<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 					<Lock1 size={20} style={{ color: COLORS.private.main }} />
-					<Typography variant={compact ? "subtitle2" : "subtitle1"} fontWeight="bold">
+					<Typography variant={compact || summary ? "subtitle2" : "subtitle1"} fontWeight="bold">
 						Causas Privadas PJN
 					</Typography>
 				</Box>
@@ -113,7 +120,7 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 			</Box>
 
 			{/* Métricas principales */}
-			<Grid container spacing={compact ? 1 : 2} sx={{ mb: compact ? 1 : 2 }}>
+			<Grid container spacing={compact || summary ? 1 : 2} sx={{ mb: compact || summary ? 1 : 2 }}>
 				<Grid item xs={4}>
 					<Box
 						component={RouterLink}
@@ -121,7 +128,7 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 						sx={{
 							display: "block",
 							textAlign: "center",
-							p: compact ? 1 : 1.5,
+							p: compact || summary ? 1 : 1.5,
 							bgcolor: COLORS.private.lighter,
 							borderRadius: 2,
 							textDecoration: "none",
@@ -131,7 +138,7 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 						}}
 					>
 						<Typography
-							variant={compact ? "h5" : "h4"}
+							variant={compact || summary ? "h5" : "h4"}
 							fontWeight={700}
 							color={COLORS.private.main}
 							sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
@@ -147,9 +154,9 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 					</Box>
 				</Grid>
 				<Grid item xs={4}>
-					<Box sx={{ textAlign: "center", p: compact ? 1 : 1.5, bgcolor: COLORS.change24h.lighter, borderRadius: 2 }}>
+					<Box sx={{ textAlign: "center", p: compact || summary ? 1 : 1.5, bgcolor: COLORS.change24h.lighter, borderRadius: 2 }}>
 						<Typography
-							variant={compact ? "h5" : "h4"}
+							variant={compact || summary ? "h5" : "h4"}
 							fontWeight={700}
 							color={COLORS.change24h.main}
 							sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
@@ -165,9 +172,9 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 					</Box>
 				</Grid>
 				<Grid item xs={4}>
-					<Box sx={{ textAlign: "center", p: compact ? 1 : 1.5, bgcolor: COLORS.change7d.lighter, borderRadius: 2 }}>
+					<Box sx={{ textAlign: "center", p: compact || summary ? 1 : 1.5, bgcolor: COLORS.change7d.lighter, borderRadius: 2 }}>
 						<Typography
-							variant={compact ? "h5" : "h4"}
+							variant={compact || summary ? "h5" : "h4"}
 							fontWeight={700}
 							color={COLORS.change7d.main}
 							sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
@@ -198,7 +205,13 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 				</Tooltip>
 			)}
 
-			{!compact && (
+			{summary && stats.checker && (
+				<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1.5, textAlign: "center" }}>
+					Checker {stats.checker.enabled ? "habilitado" : "deshabilitado"} · última corrida {formatDateTime(stats.checker.lastRun)}
+				</Typography>
+			)}
+
+			{!compact && !summary && (
 				<>
 					<Divider sx={{ my: 2 }} />
 
@@ -226,7 +239,9 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 										size="small"
 										variant="outlined"
 										icon={<LockSlash size={12} />}
-										label={`all-time: ${stats.checker.allTimeStats.causas_marked_private ?? 0} marcadas / ${stats.checker.allTimeStats.causas_reset_public ?? 0} restauradas`}
+										label={`all-time: ${stats.checker.allTimeStats.causas_marked_private ?? 0} marcadas / ${
+											stats.checker.allTimeStats.causas_reset_public ?? 0
+										} restauradas`}
 									/>
 								)}
 							</Stack>
@@ -248,7 +263,11 @@ const PrivacyStatsWidget: React.FC<PrivacyStatsWidgetProps> = ({ compact = false
 											<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
 												{exp}
 											</Typography>
-											<Typography variant="caption" color="text.secondary" sx={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+											<Typography
+												variant="caption"
+												color="text.secondary"
+												sx={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+											>
 												{fuero} · {c.caratula ? c.caratula.slice(0, 60) : "—"}
 											</Typography>
 											<Typography variant="caption" color="text.secondary">
