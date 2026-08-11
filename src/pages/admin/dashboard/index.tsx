@@ -204,12 +204,13 @@ const CustomChartTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) =
 	if (active && payload && payload.length) {
 		return (
 			<Paper
-				elevation={3}
+				elevation={0}
 				sx={{
 					p: 1.5,
 					bgcolor: theme.palette.background.paper,
-					border: `1px solid ${theme.palette.divider}`,
-					borderRadius: 1,
+					border: `1px solid ${headerBorder(theme.palette.mode === "dark")}`,
+					borderRadius: 1.5,
+					boxShadow: headerShadow(theme.palette.mode === "dark"),
 				}}
 			>
 				<Typography variant="body2" sx={{ fontWeight: 600, color: payload[0].payload.color }}>
@@ -495,7 +496,10 @@ const StatsLegend: React.FC<StatsLegendProps> = ({ items, loading }) => {
 						{loading ? (
 							<Skeleton variant="text" width={40} height={24} />
 						) : (
-							<Typography variant="h6" sx={{ fontWeight: 600, color: item.color }}>
+							<Typography
+								variant="h6"
+								sx={{ fontWeight: 600, color: item.color, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+							>
 								{item.value.toLocaleString()}
 							</Typography>
 						)}
@@ -1689,10 +1693,12 @@ const AdminDashboard = () => {
 										label="PJN"
 										size="small"
 										sx={{
-											bgcolor: alpha(COLORS.primary.main, 0.1),
-											color: COLORS.primary.main,
-											fontWeight: 500,
+											bgcolor: alpha(BRAND_BLUE, isDark ? 0.15 : 0.09),
+											color: BRAND_BLUE,
+											fontWeight: 600,
 											fontSize: "0.65rem",
+											height: 20,
+											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
 										}}
 									/>
 									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
@@ -1747,40 +1753,49 @@ const AdminDashboard = () => {
 									<Grid container spacing={2}>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
 													{eligibilityStats.updatedToday.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
-													✅ Actualizados hoy
+													Actualizados hoy
 												</Typography>
 											</Box>
 										</Grid>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
 													{(
 														eligibilityStats.pendingToday ??
 														eligibilityStats.eligible - eligibilityStats.updatedToday - eligibilityStats.eligibleWithErrors
 													).toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
-													⚠️ Pendientes hoy
+													Pendientes hoy
 												</Typography>
 											</Box>
 										</Grid>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.error.main}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.error.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
 													{eligibilityStats.eligibleWithErrors.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
-													🔴 Con errores
+													Con errores
 												</Typography>
 											</Box>
 										</Grid>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.primary.main}>
+												<Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
 													{eligibilityStats.eligible.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
@@ -1907,7 +1922,10 @@ const AdminDashboard = () => {
 									<Grid container spacing={2}>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
 													{mevEligibilityStats.updatedToday.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
@@ -1917,7 +1935,10 @@ const AdminDashboard = () => {
 										</Grid>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
 													{(
 														mevEligibilityStats.pendingToday ??
 														mevEligibilityStats.eligible - mevEligibilityStats.updatedToday - mevEligibilityStats.eligibleWithErrors
@@ -1930,7 +1951,10 @@ const AdminDashboard = () => {
 										</Grid>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.error.main}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.error.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
 													{mevEligibilityStats.eligibleWithErrors.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
@@ -1940,7 +1964,10 @@ const AdminDashboard = () => {
 										</Grid>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.neutral.main}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
 													{mevEligibilityStats.eligible.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
@@ -2067,7 +2094,10 @@ const AdminDashboard = () => {
 									<Grid container spacing={2}>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
 													{ejeEligibilityStats.actualizadosHoy.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
@@ -2077,7 +2107,10 @@ const AdminDashboard = () => {
 										</Grid>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
 													{ejeEligibilityStats.pendientesHoy.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
@@ -2087,7 +2120,10 @@ const AdminDashboard = () => {
 										</Grid>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
 													{ejeEligibilityStats.totalElegibles.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
@@ -2097,7 +2133,10 @@ const AdminDashboard = () => {
 										</Grid>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.neutral.main}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
 													{ejeEligibilityStats.noElegibles.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
@@ -2174,10 +2213,12 @@ const AdminDashboard = () => {
 										label="PJN"
 										size="small"
 										sx={{
-											bgcolor: alpha(COLORS.primary.main, 0.1),
-											color: COLORS.primary.main,
-											fontWeight: 500,
+											bgcolor: alpha(BRAND_BLUE, isDark ? 0.15 : 0.09),
+											color: BRAND_BLUE,
+											fontWeight: 600,
 											fontSize: "0.65rem",
+											height: 20,
+											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
 										}}
 									/>
 									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
@@ -2194,7 +2235,19 @@ const AdminDashboard = () => {
 										<Typography variant="body2" color="text.secondary">
 											Tasa de éxito (últimas 24h)
 										</Typography>
-										<Typography variant="h6" fontWeight="bold" color="primary.main">
+										<Typography
+											variant="h6"
+											fontWeight="bold"
+											sx={{
+												fontVariantNumeric: "tabular-nums",
+												color:
+													parseFloat(stuckDocumentsStats.recent.successRate) > 50
+														? COLORS.success.main
+														: parseFloat(stuckDocumentsStats.recent.successRate) > 20
+														? COLORS.warning.main
+														: COLORS.error.main,
+											}}
+										>
 											{stuckDocumentsStats.recent.successRate}
 										</Typography>
 									</Box>
@@ -2220,37 +2273,46 @@ const AdminDashboard = () => {
 									<Grid container spacing={2}>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.warning.main}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
 													{stuckDocumentsStats.pending.total.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
-													⏳ Pendientes
+													Pendientes
 												</Typography>
 											</Box>
 										</Grid>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.success.main}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
 													{stuckDocumentsStats.totals.fixed.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
-													✅ Reparados
+													Reparados
 												</Typography>
 											</Box>
 										</Grid>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.error.main}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.error.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
 													{stuckDocumentsStats.totals.failed.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
-													🔴 Fallidos
+													Fallidos
 												</Typography>
 											</Box>
 										</Grid>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" fontWeight="bold" color={COLORS.primary.main}>
+												<Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
 													{stuckDocumentsStats.totals.processed.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
@@ -2262,7 +2324,7 @@ const AdminDashboard = () => {
 									{stuckDocumentsStats.repeatedFailures && stuckDocumentsStats.repeatedFailures.length > 0 && (
 										<Box sx={{ mt: 2, pt: 2, borderTop: `1px dashed ${theme.palette.divider}` }}>
 											<Typography variant="caption" color="error.main" fontWeight="bold">
-												⚠️ {stuckDocumentsStats.repeatedFailures.length} documento(s) con fallos repetidos
+												{stuckDocumentsStats.repeatedFailures.length} documento(s) con fallos repetidos
 											</Typography>
 										</Box>
 									)}
@@ -2275,7 +2337,7 @@ const AdminDashboard = () => {
 											}}
 										>
 											<Typography variant="caption" color="error.main" fontWeight="bold">
-												🔴 {stuckDocumentsStats.chronicStuck.length} documento(s) crónicamente atorados
+												{stuckDocumentsStats.chronicStuck.length} documento(s) crónicamente atorados
 												{stuckDocumentsStats.chronicStuck.some((d) => d.daysSinceFirst && d.daysSinceFirst >= 7) && (
 													<span style={{ marginLeft: 4 }}>(algunos por más de 7 días)</span>
 												)}
@@ -2367,10 +2429,12 @@ const AdminDashboard = () => {
 										label="SSO"
 										size="small"
 										sx={{
-											bgcolor: alpha(COLORS.primary.main, 0.1),
-											color: COLORS.primary.main,
-											fontWeight: 500,
+											bgcolor: alpha(BRAND_BLUE, isDark ? 0.15 : 0.09),
+											color: BRAND_BLUE,
+											fontWeight: 600,
 											fontSize: "0.65rem",
+											height: 20,
+											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
 										}}
 									/>
 									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
@@ -2483,12 +2547,28 @@ const AdminDashboard = () => {
 									p: { xs: 1.5, sm: 2.5 },
 									borderRadius: 2,
 									bgcolor: theme.palette.background.paper,
-									border: `1px solid ${theme.palette.warning.main}`,
+									border: `1px solid ${alpha(theme.palette.warning.main, 0.5)}`,
 								}}
 							>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-									<Typography variant="subtitle1" fontWeight={600}>
-										⚠️ Credenciales con causas en problema
+									<Box
+										sx={{
+											width: 28,
+											height: 28,
+											borderRadius: 1,
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											flexShrink: 0,
+											bgcolor: alpha(theme.palette.warning.main, isDark ? 0.18 : 0.1),
+											border: `1px solid ${alpha(theme.palette.warning.main, isDark ? 0.32 : 0.18)}`,
+											color: theme.palette.warning.main,
+										}}
+									>
+										<Warning2 size={15} />
+									</Box>
+									<Typography variant="subtitle1" fontWeight={600} sx={{ letterSpacing: "-0.005em" }}>
+										Credenciales con causas en problema
 									</Typography>
 									<Box sx={{ ml: "auto" }}>
 										<Typography variant="caption" color="text.secondary">
@@ -2603,10 +2683,12 @@ const AdminDashboard = () => {
 										label="SCBA"
 										size="small"
 										sx={{
-											bgcolor: alpha(COLORS.primary.main, 0.1),
-											color: COLORS.primary.main,
-											fontWeight: 500,
+											bgcolor: alpha(BRAND_BLUE, isDark ? 0.15 : 0.09),
+											color: BRAND_BLUE,
+											fontWeight: 600,
 											fontSize: "0.65rem",
+											height: 20,
+											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
 										}}
 									/>
 									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
@@ -2907,6 +2989,8 @@ const AdminDashboard = () => {
 												color: COLORS.warning.main,
 												fontWeight: 600,
 												fontSize: { xs: "0.6rem", sm: "0.65rem" },
+												borderRadius: 1,
+												border: `1px solid ${alpha(COLORS.warning.main, 0.3)}`,
 											}}
 										/>
 										<InfoTooltip metricKey="testSubscriptions" />
