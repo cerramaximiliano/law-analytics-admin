@@ -111,9 +111,13 @@ export interface ScbaCoverageBucket {
 }
 
 export interface ScbaUpdateCoverage {
-	// Split por estado de carpeta (activas = refresco diario; archivadas = madrugada)
+	// Split por estado de carpeta. Qué worker refresca cada bucket depende de
+	// updatePolicyMode: 'split' = archivadas al worker de madrugada (4-6 h);
+	// 'unified' = todas las causas con carpeta al update principal (8-20 h).
 	active?: ScbaCoverageBucket;
 	archived?: ScbaCoverageBucket;
+	/** Modo vigente en configuracion-scba.config.updatePolicy (ausente en API vieja = split) */
+	updatePolicyMode?: "split" | "unified";
 	// Globales (compat)
 	total: number;
 	updatedToday: number;

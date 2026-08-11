@@ -2268,7 +2268,11 @@ const AdminDashboard = () => {
 									</Typography>
 									<Tooltip
 										arrow
-										title="La cobertura refleja sobre todo las causas con carpeta activa, que se refrescan cada ~2 h (8-20 h). Las de carpeta archivada se actualizan de madrugada (4-6 h) y solo si pasaron +24 h, por eso no suman a la cobertura del día hasta su ventana nocturna — no es un error."
+										title={
+											scbaCoverage?.updatePolicyMode === "unified"
+												? "Política de update UNIFICADA: activas y archivadas se refrescan juntas cada ~2 h en horario laboral (8-20 h). El desglose se mantiene para ver cada segmento por separado. Configurable en Workers → SCBA manager."
+												: "Política de update DIVIDIDA: las causas con carpeta activa se refrescan cada ~2 h (8-20 h). Las de carpeta archivada se actualizan de madrugada (4-6 h) y solo si pasaron +24 h, por eso no suman a la cobertura del día hasta su ventana nocturna — no es un error. Configurable en Workers → SCBA manager."
+										}
 									>
 										<Box
 											component="span"
@@ -2300,8 +2304,9 @@ const AdminDashboard = () => {
 								</Box>
 							) : scbaCoverage ? (
 								(() => {
+									const unified = scbaCoverage.updatePolicyMode === "unified";
 									const active = scbaCoverage.active ?? { coveragePercent: scbaCoverage.coveragePercent, updatedToday: scbaCoverage.updatedToday, total: scbaCoverage.total, pending: scbaCoverage.pending, withErrors: scbaCoverage.withErrors, schedule: "cada ~2 h (8-20 h)" };
-									const archived = scbaCoverage.archived ?? { coveragePercent: 0, updatedToday: 0, total: 0, pending: 0, withErrors: 0, schedule: "madrugada (4-6 h)" };
+									const archived = scbaCoverage.archived ?? { coveragePercent: 0, updatedToday: 0, total: 0, pending: 0, withErrors: 0, schedule: unified ? "cada ~2 h (8-20 h, unificado)" : "madrugada (4-6 h)" };
 									const barColor = (p: number) => (p >= 99 ? COLORS.success.main : p > 70 ? COLORS.warning.main : COLORS.error.main);
 									const renderLine = (label: string, b: typeof active, big: boolean, accent: string) => (
 										<Box sx={{ mb: big ? 1.5 : 0 }}>
@@ -2321,7 +2326,8 @@ const AdminDashboard = () => {
 									return (
 										<>
 											{renderLine("Activas", active, true, barColor(active.coveragePercent || 0))}
-											{renderLine("Archivadas", archived, false, COLORS.primary.light)}
+											{/* En modo unificado las archivadas se refrescan en el día: aplica el mismo semáforo. En split, color neutro (su ventana es nocturna). */}
+											{renderLine("Archivadas", archived, false, unified ? barColor(archived.coveragePercent || 0) : COLORS.primary.light)}
 										</>
 									);
 								})()
