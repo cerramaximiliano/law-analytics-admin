@@ -2342,6 +2342,11 @@ const AdminDashboard = () => {
 											{renderLine("Activas", active, true, barColor(active.coveragePercent || 0))}
 											{/* En modo unificado las archivadas se refrescan en el día: aplica el mismo semáforo. En split, color neutro (su ventana es nocturna). */}
 											{renderLine("Archivadas", archived, false, unified ? barColor(archived.coveragePercent || 0) : COLORS.primary.light)}
+											{scbaCoverage.activeCredentials !== undefined && (
+												<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.75 }}>
+													{scbaCoverage.activeCredentials.toLocaleString()} credenciales activas
+												</Typography>
+											)}
 										</>
 									);
 								})()

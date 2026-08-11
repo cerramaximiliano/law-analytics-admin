@@ -118,6 +118,8 @@ export interface ScbaUpdateCoverage {
 	archived?: ScbaCoverageBucket;
 	/** Modo vigente en configuracion-scba.config.updatePolicy (ausente en API vieja = split) */
 	updatePolicyMode?: "split" | "unified";
+	/** Credenciales SCBA habilitadas — dato gratis del mismo endpoint (sin query extra) */
+	activeCredentials?: number;
 	// Globales (compat)
 	total: number;
 	updatedToday: number;
