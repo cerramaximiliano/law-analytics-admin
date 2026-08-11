@@ -73,13 +73,6 @@ const getAuthToken = () => {
 adminAxios.interceptors.request.use(
 	(config: InternalAxiosRequestConfig) => {
 		const token = getAuthToken();
-		console.log("🔑 [adminAxios] Token found:", token ? `${token.substring(0, 20)}...` : "NO TOKEN");
-		console.log("🔑 [adminAxios] Request URL:", config.url);
-		console.log("🔑 [adminAxios] Request headers before:", config.headers);
-		console.log("🍪 [adminAxios] All cookies:", document.cookie);
-		console.log("🍪 [adminAxios] authToken cookie:", Cookies.get("authToken"));
-		console.log("🍪 [adminAxios] token cookie:", Cookies.get("token"));
-		console.log("🍪 [adminAxios] auth_token_temp cookie:", Cookies.get("auth_token_temp"));
 
 		// Try to set the cookie for the admin domain if we have a token
 		if (token) {
@@ -97,14 +90,10 @@ adminAxios.interceptors.request.use(
 				secure: true,
 				sameSite: "none",
 			});
-			console.log("🍪 [adminAxios] Set auth cookies without domain restriction");
 		}
 
 		if (token && config.headers) {
 			config.headers.Authorization = `Bearer ${token}`;
-			console.log("✅ [adminAxios] Authorization header set");
-		} else {
-			console.warn("⚠️ [adminAxios] No token available or headers missing");
 		}
 
 		return config;
