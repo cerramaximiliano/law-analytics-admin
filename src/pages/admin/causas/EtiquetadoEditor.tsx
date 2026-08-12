@@ -456,10 +456,11 @@ const EtiquetadoEditor = () => {
 		const a = anotaciones[String(seleccionado)] || {};
 		if (a.descartar || a.actoProcesal === "ninguno") return null;
 		const cuerpo = cuerpoDe(seleccionado);
+		const membrete = cuerpo ? (cuerpo.encabezado || cuerpo.completo || "").slice(0, 400) : "";
 		const esRevision =
 			a.actoProcesal === "resuelve_recurso" ||
 			a.instancia === "segunda_instancia" ||
-			(!a.instancia && !!cuerpo && RE_ORGANO_SEGUNDA.test(cuerpo.encabezado || ""));
+			(!a.instancia && RE_ORGANO_SEGUNDA.test(membrete));
 		if (!esRevision) return null;
 		const anotados = Object.entries(anotaciones)
 			.map(([k, an]) => ({ idx: parseInt(k, 10), an }))
@@ -502,7 +503,10 @@ const EtiquetadoEditor = () => {
 		}
 		if (!a.instancia) {
 			const cuerpo = cuerpoDe(seleccionado);
-			s.instancia = cuerpo && RE_ORGANO_SEGUNDA.test(cuerpo.encabezado || "") ? "segunda_instancia" : "primera_instancia";
+			// Docs cortos no traen encabezado segmentado: el membrete está al
+			// inicio de "completo" — mirar ambos.
+			const membrete = cuerpo ? (cuerpo.encabezado || cuerpo.completo || "").slice(0, 400) : "";
+			s.instancia = RE_ORGANO_SEGUNDA.test(membrete) ? "segunda_instancia" : "primera_instancia";
 		}
 		return s;
 	}, [seleccionado, anotaciones, cuerpoDe, parAlzada]);
