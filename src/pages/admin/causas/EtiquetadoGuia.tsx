@@ -208,7 +208,38 @@ const SECCIONES: Seccion[] = [
 		),
 	},
 	{
-		titulo: "6 · Réplicas y vinculación",
+		titulo: "6 · Audiencias y actas",
+		cuerpo: (
+			<>
+				<Box component="ul" sx={{ pl: 2.25, m: 0 }}>
+					<LI>
+						<B>Fijación de audiencia</B>: acto <Codigo>fija_audiencia</Codigo> · ordenación · la <B>materia sigue al
+						FIN</B> de la audiencia: conciliatoria (art. 80 LO, "a fin de arribar a un acuerdo") o ratificación de
+						acuerdo → <Codigo>conciliacion</Codigo>; testimonial → <Codigo>prueba</Codigo>. Carga:
+						comparecer_audiencia con <B>plazo vacío</B> (es fecha fija) y apercibimiento SOLO si el texto lo dice
+						(art. 63 LO) — no se inventan sanciones que el documento no menciona.
+					</LI>
+					<LI>
+						<B>Acta de audiencia</B> (celebrada O fracasada por incomparecencia): acto{" "}
+						<Codigo>celebra_audiencia</Codigo> · tipo <B>Otra resolución</B> — NUNCA "no es resolución": el acta
+						documenta un acto del tribunal y casi siempre dispone algo ("OÍDO LO CUAL SS RESUELVE…"). Materia por el
+						fin (prueba / conciliación).
+					</LI>
+					<LI>
+						<B>Acta con acuerdo homologado</B>: manda la homologación — acto principal{" "}
+						<Codigo>homologa_acuerdo</Codigo> · tipo <Codigo>sentencia_homologatoria</Codigo> · terminación + modo
+						homologación · <Codigo>celebra_audiencia</Codigo> como secundario.
+					</LI>
+					<LI>
+						<B>Constancias de secretaría</B> sin dispositiva del juez (sorteos, certificados, listados): acto{" "}
+						<Codigo>ninguno</Codigo> — la frontera es el contenido dispositivo, no el formato de acta.
+					</LI>
+				</Box>
+			</>
+		),
+	},
+	{
+		titulo: "7 · Réplicas y vinculación",
 		cuerpo: (
 			<>
 				<P>
@@ -223,7 +254,7 @@ const SECCIONES: Seccion[] = [
 		),
 	},
 	{
-		titulo: "7 · Acto = ninguno y descartar",
+		titulo: "8 · Acto = ninguno y descartar",
 		cuerpo: (
 			<>
 				<P>
@@ -239,7 +270,7 @@ const SECCIONES: Seccion[] = [
 		),
 	},
 	{
-		titulo: "8 · Validaciones al marcar anotada",
+		titulo: "9 · Validaciones al marcar anotada",
 		cuerpo: (
 			<Box component="ul" sx={{ pl: 2.25, m: 0 }}>
 				<LI>Función terminación → resultado Y modo de terminación obligatorios.</LI>
@@ -252,7 +283,7 @@ const SECCIONES: Seccion[] = [
 		),
 	},
 	{
-		titulo: "9 · Advertencias ⚠ de divergencia",
+		titulo: "10 · Advertencias ⚠ de divergencia",
 		cuerpo: (
 			<>
 				<P>
