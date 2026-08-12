@@ -2448,7 +2448,7 @@ const AdminDashboard = () => {
 										fontWeight={600}
 										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
 									>
-										Cobertura Mis Causas
+										Credenciales PJN
 									</Typography>
 									{pjnSiteStatus && pjnSiteStatus.status === "maintenance" && (
 										<Tooltip
@@ -2711,7 +2711,7 @@ const AdminDashboard = () => {
 										fontWeight={600}
 										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
 									>
-										Cobertura SCBA
+										Credenciales SCBA
 									</Typography>
 									<Tooltip
 										arrow
