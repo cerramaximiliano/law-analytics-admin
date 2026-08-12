@@ -50,7 +50,7 @@ import { Warning2 } from "iconsax-react";
 import { getTasasStatus, TasasStatus } from "utils/tasasService";
 import { getStats as getDatosPrevisionales, Stats as DatosPrevsStats } from "utils/datosPrevsionalesService";
 import GroupsService from "api/groups";
-import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, PREMIUM_GOLD, headerBorder, headerShadow } from "themes/dashboardTokens";
+import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, PREMIUM_GOLD, PRO_TEAL, headerBorder, headerShadow } from "themes/dashboardTokens";
 import ServicesStatusWidget from "./ServicesStatusWidget";
 import CronsStatusWidget from "./CronsStatusWidget";
 import IntegrationsStatusWidget from "./IntegrationsStatusWidget";
@@ -102,6 +102,7 @@ const metricInfo: Record<string, string> = {
 	activeSubscriptions: "Suscripciones con estado activo que permiten acceso a las funcionalidades del plan.",
 	freePlan: "Usuarios con plan gratuito que tienen acceso limitado a funcionalidades.",
 	standardPlan: "Usuarios con plan Standard que tienen acceso a funcionalidades intermedias.",
+	proPlan: "Usuarios con plan Pro, el tier intermedio entre Standard y Premium.",
 	premiumPlan: "Usuarios con plan Premium que tienen acceso completo a todas las funcionalidades.",
 	activeGroups: "Grupos de usuarios activos en la plataforma.",
 	// Subscriptions - Live mode
@@ -1102,13 +1103,14 @@ const AdminDashboard = () => {
 		[data, chartMuted],
 	);
 
-	// Subscription plans: muted=Free, BRAND_BLUE=Standard, PREMIUM_GOLD=Premium (tokens del front)
+	// Subscription plans: muted=Free, BRAND_BLUE=Standard, PRO_TEAL=Pro, PREMIUM_GOLD=Premium
 	const subscriptionPlanData = useMemo(
 		() =>
 			data
 				? [
 						{ name: "Free", value: data.subscriptions.live?.byPlan?.free || 0, color: chartMuted },
 						{ name: "Standard", value: data.subscriptions.live?.byPlan?.standard || 0, color: BRAND_BLUE },
+						{ name: "Pro", value: data.subscriptions.live?.byPlan?.pro || 0, color: PRO_TEAL },
 						{ name: "Premium", value: data.subscriptions.live?.byPlan?.premium || 0, color: PREMIUM_GOLD },
 				  ].filter((item) => item.value > 0)
 				: [],
@@ -2943,19 +2945,25 @@ const AdminDashboard = () => {
 														{
 															label: "Free",
 															value: data?.subscriptions.live?.byPlan?.free || 0,
-															color: COLORS.neutral.main,
+															color: chartMuted,
 															infoKey: "freePlan",
 														},
 														{
 															label: "Standard",
 															value: data?.subscriptions.live?.byPlan?.standard || 0,
-															color: COLORS.primary.main,
+															color: BRAND_BLUE,
 															infoKey: "standardPlan",
+														},
+														{
+															label: "Pro",
+															value: data?.subscriptions.live?.byPlan?.pro || 0,
+															color: PRO_TEAL,
+															infoKey: "proPlan",
 														},
 														{
 															label: "Premium",
 															value: data?.subscriptions.live?.byPlan?.premium || 0,
-															color: COLORS.premium.main,
+															color: PREMIUM_GOLD,
 															infoKey: "premiumPlan",
 														},
 													]}
@@ -3001,7 +3009,7 @@ const AdminDashboard = () => {
 										<InfoTooltip metricKey="testSubscriptions" />
 									</Box>
 									<Grid container spacing={{ xs: 1, sm: 2 }}>
-										<Grid item xs={4}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												{loading ? (
 													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
@@ -3018,7 +3026,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={4}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												{loading ? (
 													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
@@ -3035,7 +3043,24 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={4}>
+										<Grid item xs={3}>
+											<Box sx={{ textAlign: "center" }}>
+												{loading ? (
+													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
+												) : (
+													<Typography
+														variant="h5"
+														sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}
+													>
+														{(data?.subscriptions.test?.byPlan?.pro || 0).toLocaleString()}
+													</Typography>
+												)}
+												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+													Pro
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												{loading ? (
 													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />

@@ -11,6 +11,10 @@ export const STALE_AMBER = "#F59E0B";
 // Acento dorado para diferenciar tier Premium del Estándar — más cálido y
 // más saturado que el amber neutro de "stale".
 export const PREMIUM_GOLD = "#D97706";
+// Teal para el tier Pro (entre Standard y Premium). Validado con el
+// validador de dataviz contra BRAND_BLUE y PREMIUM_GOLD (CVD + contraste,
+// light y dark) — el violeta falla contra el azul (ΔE deutan 1.5).
+export const PRO_TEAL = "#0E9F8C";
 
 // Nav active row — alineado con el SectionEyebrow del landing.
 // Los alphas están calibrados para ser perceptibles sobre el fondo `#F8F9FA`

@@ -9,6 +9,8 @@ export interface UserStats {
 export interface SubscriptionPlanBreakdown {
 	free: number;
 	standard: number;
+	/** Plan Pro (entre Standard y Premium). Opcional hasta que el backend deployado lo emita. */
+	pro?: number;
 	premium: number;
 }
 
