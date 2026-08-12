@@ -82,7 +82,10 @@ const SECCIONES: Seccion[] = [
 				<LI>
 					<B>Tipo</B>: forma de la resolución. Providencia simple (trámite, sin fundamentos), sentencia interlocutoria
 					(resuelve cuestión controvertida con fundamentos), sentencia definitiva (el fondo), otra, o no-es-resolución.
-					Un auto de apertura a prueba: providencia simple; si resuelve oposición, interlocutoria.
+					El tipo se juzga por ESTRUCTURA y fundamentación, no por lo que resuelve: la reposición desestimada en
+					despacho breve ("no ha lugar, presente la apelación") es providencia simple; solo es interlocutoria con
+					AUTOS Y VISTOS / considerandos o fundamentación desarrollada. Un auto de apertura a prueba: providencia
+					simple; si resuelve oposición con fundamentos, interlocutoria.
 				</LI>
 				<LI>
 					<B>Instancia</B>: del órgano emisor, por metadatos/encabezado ("LA SALA…" → segunda). No del expediente.
