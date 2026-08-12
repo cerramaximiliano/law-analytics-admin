@@ -55,6 +55,7 @@ const JudicialMovementsConfig: React.FC = () => {
 		content: false,
 		filters: false,
 		policies: false,
+		planBanner: false,
 		dataRetention: false,
 		endpoints: false,
 		status: true,
@@ -137,6 +138,7 @@ const JudicialMovementsConfig: React.FC = () => {
 				"dataRetention",
 				"endpoints",
 				"status",
+				"planBanner",
 				"movementPolicies",
 			];
 
@@ -562,6 +564,116 @@ const JudicialMovementsConfig: React.FC = () => {
 											</Typography>
 										</Typography>
 									}
+								/>
+							</Grid>
+						</Grid>
+					</Collapse>
+				</CardContent>
+			</Card>
+
+			{/* Plan upgrade banner */}
+			<Card sx={{ mb: 2 }}>
+				<CardContent>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<ChartSquare size={20} />
+							<Typography variant="h6">Banner de upgrade de plan</Typography>
+							<Chip
+								size="small"
+								label={config.planBanner?.enabled !== false ? "activo" : "apagado"}
+								color={config.planBanner?.enabled !== false ? "success" : "default"}
+								variant="outlined"
+							/>
+						</Stack>
+						<IconButton size="small" onClick={() => handleToggleSection("planBanner")}>
+							{expandedSections.planBanner ? <ArrowUp2 /> : <ArrowDown2 />}
+						</IconButton>
+					</Stack>
+					<Collapse in={expandedSections.planBanner}>
+						<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+							Bloque al final del email de movimientos para usuarios con carpetas archivadas: sugiere el plan más barato que cubra todas
+							sus causas. El contenido lo genera la-notification (no se edita en el template) y si el slot del template se borra, se
+							inyecta igual por fallback.
+						</Typography>
+						<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+							<Grid item xs={12} md={3}>
+								<FormControlLabel
+									control={
+										<Switch
+											checked={config.planBanner?.enabled !== false}
+											onChange={(e) => handleFieldChange("planBanner.enabled", e.target.checked)}
+										/>
+									}
+									label="Habilitado"
+								/>
+							</Grid>
+							<Grid item xs={12} md={3}>
+								<TextField
+									label="Cooldown (días)"
+									type="number"
+									value={config.planBanner?.cooldownDays ?? 7}
+									onChange={(e) => handleFieldChange("planBanner.cooldownDays", parseInt(e.target.value))}
+									inputProps={{ min: 0, max: 90 }}
+									helperText="Máx. 1 banner por usuario cada N días (0 = en cada email)"
+									fullWidth
+								/>
+							</Grid>
+							<Grid item xs={12} md={3}>
+								<TextField
+									label="Mín. carpetas archivadas"
+									type="number"
+									value={config.planBanner?.minArchivedFolders ?? 1}
+									onChange={(e) => handleFieldChange("planBanner.minArchivedFolders", parseInt(e.target.value))}
+									inputProps={{ min: 1, max: 1000 }}
+									fullWidth
+								/>
+							</Grid>
+							<Grid item xs={12} md={3}>
+								<TextField
+									label="Excluir planes"
+									value={(config.planBanner?.excludePlans ?? []).join(", ")}
+									onChange={(e) =>
+										handleFieldChange(
+											"planBanner.excludePlans",
+											e.target.value
+												.split(",")
+												.map((v) => v.trim())
+												.filter(Boolean),
+										)
+									}
+									helperText="planIds separados por coma (ej. pro)"
+									fullWidth
+								/>
+							</Grid>
+							<Grid item xs={12} md={3}>
+								<FormControlLabel
+									control={
+										<Switch
+											checked={config.planBanner?.promo?.enabled === true}
+											onChange={(e) => handleFieldChange("planBanner.promo.enabled", e.target.checked)}
+										/>
+									}
+									label="Promoción activa"
+								/>
+							</Grid>
+							<Grid item xs={12} md={3}>
+								<TextField
+									label="Código de promoción"
+									value={config.planBanner?.promo?.code ?? ""}
+									onChange={(e) => handleFieldChange("planBanner.promo.code", e.target.value.trim() || null)}
+									helperText="Código de /admin/promotions (DiscountCode)"
+									disabled={config.planBanner?.promo?.enabled !== true}
+									fullWidth
+								/>
+							</Grid>
+							<Grid item xs={12} md={6}>
+								<TextField
+									label="Texto de la promoción"
+									value={config.planBanner?.promo?.text ?? ""}
+									onChange={(e) => handleFieldChange("planBanner.promo.text", e.target.value || null)}
+									helperText='Ej. "20% de descuento los primeros 3 meses."'
+									disabled={config.planBanner?.promo?.enabled !== true}
+									fullWidth
 								/>
 							</Grid>
 						</Grid>

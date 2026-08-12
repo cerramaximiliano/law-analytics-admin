@@ -96,6 +96,15 @@ export interface JudicialNotificationConfig {
 		/** Coordinación de cédulas (bandeja PJN → JudicialCedula) */
 		cedulasEnabled?: boolean;
 	};
+	/** Banner de upgrade de plan en el email de movimientos (entrega central) */
+	planBanner?: {
+		enabled?: boolean;
+		/** Máx. 1 banner por usuario cada N días (0 = en cada email) */
+		cooldownDays?: number;
+		minArchivedFolders?: number;
+		excludePlans?: string[];
+		promo?: { enabled?: boolean; code?: string | null; text?: string | null };
+	};
 	movementPolicies?: MovementPolicies | null;
 	stats?: {
 		lastNotificationSentAt: string | null;
@@ -132,6 +141,7 @@ export type JudicialNotificationConfigUpdate = Partial<
 		| "dataRetention"
 		| "endpoints"
 		| "status"
+		| "planBanner"
 		| "movementPolicies"
 	>
 >;

@@ -149,6 +149,19 @@ const LiveConfigSummary: React.FC<{ live: LiveJudicialConfig }> = ({ live }) => 
 							)}
 						</InfoRow>
 						<InfoRow label="Máx. movimientos por batch">{limits.maxMovementsPerBatch ?? 100}</InfoRow>
+						<InfoRow label="Banner de upgrade">
+							{config.planBanner?.enabled !== false ? (
+								<>
+									<BoolChip value labelOn="Activo" labelOff="" /> cooldown {config.planBanner?.cooldownDays ?? 7} d · mín.{" "}
+									{config.planBanner?.minArchivedFolders ?? 1} archivadas
+									{config.planBanner?.promo?.enabled === true && config.planBanner?.promo?.code
+										? ` · promo ${config.planBanner.promo.code}`
+										: ""}
+								</>
+							) : (
+								<BoolChip value={false} labelOn="" labelOff="Apagado" />
+							)}
+						</InfoRow>
 					</Stack>
 				</Grid>
 				<Grid item xs={12} md={6}>
