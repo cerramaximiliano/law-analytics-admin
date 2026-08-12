@@ -120,6 +120,11 @@ const EtiquetadoEditor = () => {
 	// Etiquetas débiles del motor v17: OCULTAS por defecto — verlas mientras se
 	// anota introduce sesgo de anclaje y el gold set debe ser independiente.
 	const [mostrarDebiles, setMostrarDebiles] = useState(false);
+	// Dirección de avance al marcar una opción en modo por dimensión:
+	// "abajo" = siguiente movimiento (histórico) · "derecha" = siguiente campo.
+	const [avanceDerecha, setAvanceDerecha] = useState(() => {
+		try { return localStorage.getItem("etiq-avance") === "derecha"; } catch { return false; }
+	});
 	const [anchorObs, setAnchorObs] = useState<HTMLElement | null>(null);
 	// Modo tarjeta: wizard dimensión-por-dimensión sobre el movimiento actual
 	const [tarjetaAbierta, setTarjetaAbierta] = useState(false);
@@ -502,6 +507,19 @@ const EtiquetadoEditor = () => {
 		return s;
 	}, [seleccionado, anotaciones, cuerpoDe, parAlzada]);
 
+	// Avanza al siguiente tab de la barra de modo (salteando Modo term. si la
+	// función del movimiento no es terminación).
+	const avanzarModo = useCallback(() => {
+		setModo((m) => {
+			const i = MODOS_BARRA.indexOf(m as any);
+			if (i < 0) return m;
+			let j = i + 1;
+			const a = seleccionado !== null ? anotaciones[String(seleccionado)] || {} : {};
+			while (j < MODOS_BARRA.length && MODOS_BARRA[j] === "modoTerminacion" && (a as any).funcion !== "terminacion") j++;
+			return j < MODOS_BARRA.length ? (MODOS_BARRA[j] as any) : m;
+		});
+	}, [seleccionado, anotaciones]);
+
 	const aplicarSugerencias = () => {
 		if (seleccionado === null || !Object.keys(sugerencias).length) return;
 		setAnotaciones((prev) => {
@@ -590,7 +608,14 @@ const EtiquetadoEditor = () => {
 					setCampoDim(seleccionado, modo, null);
 				} else {
 					const opcion = DIM_LABELS[modo].opciones[n - 1];
-					if (opcion) setDim(seleccionado, modo, opcion[0], true);
+					if (opcion) {
+						if (avanceDerecha) {
+							setDim(seleccionado, modo, opcion[0], false);
+							avanzarModo();
+						} else {
+							setDim(seleccionado, modo, opcion[0], true);
+						}
+					}
 				}
 			}
 		};
@@ -602,7 +627,7 @@ const EtiquetadoEditor = () => {
 		window.addEventListener("keydown", handler);
 		return () => window.removeEventListener("keydown", handler);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [modo, seleccionado, irA, setDim, anotaciones]);
+	}, [modo, seleccionado, irA, setDim, anotaciones, avanceDerecha, avanzarModo]);
 
 	const traerCuerpo = async (idx: number, completo = false) => {
 		if (!fuero || !id) return;
@@ -972,6 +997,21 @@ const EtiquetadoEditor = () => {
 						))}
 					</ToggleButtonGroup>
 					</Box>
+					<Tooltip title="Al marcar una opción en un modo por dimensión: ↓ avanza al siguiente movimiento · → avanza al siguiente campo (mismo movimiento)">
+						<ToggleButtonGroup
+							size="small"
+							exclusive
+							value={avanceDerecha ? "derecha" : "abajo"}
+							onChange={(_e, v) => {
+								if (!v) return;
+								setAvanceDerecha(v === "derecha");
+								try { localStorage.setItem("etiq-avance", v); } catch {}
+							}}
+						>
+							<ToggleButton value="abajo" sx={{ py: 0.25, px: 0.9, fontSize: "0.8rem" }}>↓</ToggleButton>
+							<ToggleButton value="derecha" sx={{ py: 0.25, px: 0.9, fontSize: "0.8rem" }}>→</ToggleButton>
+						</ToggleButtonGroup>
+					</Tooltip>
 					{!esMovil && (
 					<Typography variant="caption" color="text.secondary">
 						{modo === "libre"
@@ -1576,7 +1616,14 @@ const EtiquetadoEditor = () => {
 													key={valor}
 													value={valor}
 													disabled={botonDeshabilitado(valor)}
-													onClick={() => setDim(mSel.idx, dim, valor, modo !== "libre")}
+													onClick={() => {
+														if (modo !== "libre" && avanceDerecha) {
+															setDim(mSel.idx, dim, valor, false);
+															avanzarModo();
+														} else {
+															setDim(mSel.idx, dim, valor, modo !== "libre");
+														}
+													}}
 													sx={{
 														py: modo === "libre" ? 0.25 : 0.75,
 														px: modo === "libre" ? 1 : 1.75,
