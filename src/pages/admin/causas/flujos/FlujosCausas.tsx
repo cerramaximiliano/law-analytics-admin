@@ -139,27 +139,34 @@ const EscenariosTab = () => {
 };
 
 // Trabajo pendiente del flujo de causas — se actualiza a medida que se
-// implementan las etapas. Referencia: análisis de causas privadas 2026-08-11.
+// implementan las etapas. Rediseño de causas privadas (Fases A-D) COMPLETADO
+// el 2026-08-11/12: promoción de isValid, access por credencial, ruteo dual,
+// enforcement backend (403 CAUSA_RESERVED) y gates 'reserved' en el front.
 const PENDING_ITEMS: { title: string; detail: string }[] = [
 	{
 		title: "Write-back del caché al re-verificar",
 		detail:
-			"Cuando una copia inválida del caché se re-verifica como pública (import la ignora y verify la valida), actualizar la copia del caché (Mongo local de worker_01, vía verify-worker) con los datos frescos + entrada en updateHistory documentando la transición de privacidad. Definido, sin implementar — próxima etapa.",
+			"Cuando una copia inválida del caché se re-verifica como pública (import la ignora y verify la valida), actualizar la copia del caché (Mongo local de worker_01, vía verify-worker) con los datos frescos + entrada en updateHistory documentando la transición. Definido, sin implementar — etapa diferida.",
 	},
 	{
-		title: "Promoción de isValid en el update privado",
+		title: "Notificación de credencial caída",
 		detail:
-			"private-causas-update-worker nunca promueve isValid tras un sync exitoso — las privadas de caché figuran 'inválidas' para siempre. La promoción debe ir acompañada de gating por folder: una causa reservada solo es visible para usuarios con credencial propia que la cubra (principio legal) — los folders de terceros deben quedar en 'Causa reservada'.",
+			"Cuando una credencial pasa a disabled y deja causas privadas sin acceso (folders → 'reserved'), avisar al usuario por email que necesita reconectarla. Hoy el estado es visible pero el aviso es pasivo.",
 	},
 	{
-		title: "Limpieza retroactiva de docs muertos",
+		title: "Formalizar campos nuevos en pjn-models",
 		detail:
-			"Resetear a verified:false (una única vez) los docs inválidos source app/cache SIN credencial activa (~15), para que verify les dé una segunda oportunidad bajo la regla nueva de import. Las que tienen credencial no se tocan.",
+			"access/accessChangedAt (linkedCredentials), privateSuspectCount/privateSuspectAt/privateRecheckAt y causaCredentialCovered (Folder) se escriben hoy con strict:false. Agregarlos al schema en el próximo bump del paquete.",
 	},
 	{
-		title: "Detección de huérfanas por credencial muerta",
+		title: "Mapeo del 403 CAUSA_RESERVED en el viewer (cosmético)",
 		detail:
-			"Cuando una credencial pasa a disabled, sus causas privadas quedan congeladas en silencio. Falta alerta/notificación al usuario para reconectar.",
+			"El gate 'reserved' bloquea el detalle antes de llegar al viewer de movimientos, así que el 403 del backend rara vez se ve; mapearlo explícitamente en el front es defensa secundaria pendiente.",
+	},
+	{
+		title: "Verificación de resultados (~1 semana desde el 2026-08-11)",
+		detail:
+			"Chequear que: la vista 'No Verificadas' quede casi vacía (promoción), el stock de ~431 isPrivate:true baje a las reservadas genuinas (re-test cada 3 días), y los folders descubiertos (~167) rendericen bien el gate 'reserved'.",
 	},
 ];
 
