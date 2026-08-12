@@ -270,7 +270,7 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	["deniega_recurso", "Deniega recurso"],
 	["eleva_autos", "Eleva autos a la alzada"],
 	["recibe_autos_devueltos", "Recibe autos devueltos del Superior"],
-	["recibe_autos_alzada", "Radica en la alzada (Sala que conoce)"],
+	["recibe_autos_alzada", "Recibe autos la alzada / radica en Sala"],
 	["resuelve_recurso", "Resuelve recurso (no-fondo)"],
 	["aclara_rectifica", "Aclara / rectifica error material (de oficio)"],
 	["acepta_desistimiento", "Tiene por desistido (recurso / prueba / proceso)"],
