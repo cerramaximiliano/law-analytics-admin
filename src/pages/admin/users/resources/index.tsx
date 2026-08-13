@@ -56,6 +56,7 @@ import {
 	Copy,
 	Magicpen,
 	Refresh,
+	Sms,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -74,6 +75,7 @@ import AdminResourcesService, {
 	UserWithResources,
 } from "api/adminResources";
 import UserSessionsService from "api/userSessions";
+import EmailsEngagementService, { EmailEngagementRow } from "api/emailsEngagement";
 import { getSaijEngagementBatch, SaijEngagement } from "api/saijCampaigns";
 import FoldersService from "api/folders";
 import { UserSessionMetrics, SessionStats, UserWithSessionMetrics } from "types/user-session";
@@ -94,7 +96,7 @@ dayjs.locale("es");
 
 // Tab configuration
 interface TabConfig {
-	type: ResourceType | "users" | "activity" | "escritos" | "aiUsage";
+	type: ResourceType | "users" | "activity" | "escritos" | "aiUsage" | "emails";
 	label: string;
 	icon: React.ReactElement;
 }
@@ -110,6 +112,7 @@ const tabs: TabConfig[] = [
 	{ type: "activity", label: "Actividad", icon: <Login size={18} /> },
 	{ type: "escritos", label: "Escritos", icon: <DocumentText size={18} /> },
 	{ type: "aiUsage", label: "Uso IA", icon: <Magicpen size={18} /> },
+	{ type: "emails", label: "Emails", icon: <Sms size={18} /> },
 ];
 
 const getCurrentPeriod = (): string => dayjs().format("YYYY-MM");
@@ -581,11 +584,17 @@ const UserResources: React.FC = () => {
 	const [aiResetRow, setAiResetRow] = useState<AiUsageRow | null>(null);
 	const [aiResetting, setAiResetting] = useState(false);
 
+	// Emails tab state
+	const [emailsRows, setEmailsRows] = useState<EmailEngagementRow[]>([]);
+	const [emailsSummary, setEmailsSummary] = useState<{ usersWithEmails: number; totalSent: number } | null>(null);
+	const [emailsLoading, setEmailsLoading] = useState(false);
+
 	const currentType = tabs[activeTab].type;
 	const isUsersTab = currentType === "users";
 	const isActivityTab = currentType === "activity";
 	const isEscritosTab = currentType === "escritos";
 	const isAiUsageTab = currentType === "aiUsage";
+	const isEmailsTab = currentType === "emails";
 	const isFolderTab = currentType === "folder";
 
 	/**
@@ -705,7 +714,7 @@ const UserResources: React.FC = () => {
 			setRetryLoading(false);
 		}
 	};
-	const baseColumns = isUsersTab || isActivityTab || isEscritosTab || isAiUsageTab ? [] : getColumnsByType(currentType as ResourceType, theme);
+	const baseColumns = isUsersTab || isActivityTab || isEscritosTab || isAiUsageTab || isEmailsTab ? [] : getColumnsByType(currentType as ResourceType, theme);
 
 	// Columna extra "Notif." solo para folders — chip mínimo del último envío.
 	// Se inserta antes de "Monto" / "createdAt" (= antes de las dos últimas).
@@ -980,6 +989,24 @@ const UserResources: React.FC = () => {
 		fetchStats();
 	}, [fetchStats]);
 
+	// Fetch emails engagement rows
+	const fetchEmails = useCallback(async () => {
+		if (!isEmailsTab) return;
+		setEmailsLoading(true);
+		try {
+			const response = await EmailsEngagementService.list({ page: page + 1, limit: rowsPerPage, search: search || undefined });
+			if (response.success) {
+				setEmailsRows(response.data);
+				setEmailsSummary(response.summary);
+				setTotal(response.pagination.total);
+			}
+		} catch (error) {
+			console.error("Error fetching emails engagement:", error);
+		} finally {
+			setEmailsLoading(false);
+		}
+	}, [isEmailsTab, page, rowsPerPage, search]);
+
 	useEffect(() => {
 		if (isUsersTab) {
 			fetchUsers();
@@ -989,10 +1016,12 @@ const UserResources: React.FC = () => {
 			fetchEscritos();
 		} else if (isAiUsageTab) {
 			fetchAiUsage();
+		} else if (isEmailsTab) {
+			fetchEmails();
 		} else {
 			fetchResources();
 		}
-	}, [fetchResources, fetchUsers, fetchActivityData, fetchEscritos, fetchAiUsage, isUsersTab, isActivityTab, isEscritosTab, isAiUsageTab]);
+	}, [fetchResources, fetchUsers, fetchActivityData, fetchEscritos, fetchAiUsage, fetchEmails, isUsersTab, isActivityTab, isEscritosTab, isAiUsageTab, isEmailsTab]);
 
 	useEffect(() => {
 		if (isAiUsageTab) fetchAiPeriods();
@@ -1629,6 +1658,125 @@ const UserResources: React.FC = () => {
 							<Button onClick={() => setEscritosDetailOpen(false)}>Cerrar</Button>
 						</DialogActions>
 					</Dialog>
+				</>
+			) : isEmailsTab ? (
+				<>
+					{/* Emails engagement summary */}
+					{emailsSummary && (
+						<Box sx={{ p: { xs: 1.5, sm: 2 }, borderBottom: 1, borderColor: "divider" }}>
+							<Grid container spacing={{ xs: 1, sm: 2 }}>
+								{[
+									{ label: "Usuarios con emails", value: formatNumber(emailsSummary.usersWithEmails), color: theme.palette.primary.main },
+									{ label: "Emails enviados", value: formatNumber(emailsSummary.totalSent), color: theme.palette.info.main },
+								].map((st) => (
+									<Grid item xs={6} sm={4} md={3} key={st.label}>
+										<Paper elevation={0} sx={{ p: 1.5, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, height: "100%" }}>
+											<Typography variant="caption" color="textSecondary" display="block">
+												{st.label}
+											</Typography>
+											<Typography variant="h5" sx={{ color: st.color, fontVariantNumeric: "tabular-nums" }}>
+												{st.value}
+											</Typography>
+										</Paper>
+									</Grid>
+								))}
+							</Grid>
+							<Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: "block" }}>
+								"Vista movimientos" = ingresos reales a la vista pública /m/:token (sin bots). "Visitas desde emails" = ingresos LOGUEADOS a
+								la app llegando desde un CTA de email (?source=email_*) — disponible desde el deploy de esta función.
+							</Typography>
+						</Box>
+					)}
+
+					<TableContainer>
+						<Table stickyHeader size="small">
+							<TableHead>
+								<TableRow>
+									<TableCell>Usuario</TableCell>
+									<TableCell align="right">Enviados</TableCell>
+									<TableCell>Por tipo</TableCell>
+									<TableCell>Último envío</TableCell>
+									<TableCell align="right">Vista movimientos</TableCell>
+									<TableCell align="right">Visitas desde emails</TableCell>
+									<TableCell>Fuentes de visita</TableCell>
+								</TableRow>
+							</TableHead>
+							<TableBody>
+								{emailsLoading ? (
+									<TableRow>
+										<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+											<CircularProgress size={28} />
+										</TableCell>
+									</TableRow>
+								) : emailsRows.length === 0 ? (
+									<TableRow>
+										<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+											<Typography color="textSecondary">Sin datos de emails</Typography>
+										</TableCell>
+									</TableRow>
+								) : (
+									emailsRows.map((row) => (
+										<TableRow hover key={row.userId}>
+											<TableCell>
+												<Typography variant="body2">{row.email || row.userId}</Typography>
+												{row.name && (
+													<Typography variant="caption" color="textSecondary">
+														{row.name}
+													</Typography>
+												)}
+											</TableCell>
+											<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+												{row.totalSent}
+											</TableCell>
+											<TableCell>
+												<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+													{Object.entries(row.sentByType).map(([type, count]) => (
+														<Chip
+															key={type}
+															label={`${type === "judicial_movement" ? "movimientos" : type}: ${count}`}
+															size="small"
+															variant="outlined"
+															sx={{ height: 20, fontSize: "0.65rem" }}
+														/>
+													))}
+												</Box>
+											</TableCell>
+											<TableCell>
+												<Typography variant="caption">{row.lastSentAt ? dayjs(row.lastSentAt).format("DD/MM/YY HH:mm") : "-"}</Typography>
+											</TableCell>
+											<TableCell align="right">
+												<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+													{row.movementViewEntries}
+												</Typography>
+												{row.lastMovementViewAt && (
+													<Typography variant="caption" color="textSecondary" display="block">
+														últ. {dayjs(row.lastMovementViewAt).format("DD/MM/YY")}
+													</Typography>
+												)}
+											</TableCell>
+											<TableCell align="right">
+												<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+													{row.emailVisits}
+												</Typography>
+												{row.lastEmailVisitAt && (
+													<Typography variant="caption" color="textSecondary" display="block">
+														últ. {dayjs(row.lastEmailVisitAt).format("DD/MM/YY")}
+													</Typography>
+												)}
+											</TableCell>
+											<TableCell>
+												<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+													{row.emailVisitSources.map((src) => (
+														<Chip key={src} label={src.replace(/^email_/, "")} size="small" variant="outlined" sx={{ height: 20, fontSize: "0.65rem", fontFamily: "monospace" }} />
+													))}
+												</Box>
+											</TableCell>
+										</TableRow>
+									))
+								)}
+							</TableBody>
+						</Table>
+					</TableContainer>
 				</>
 			) : isAiUsageTab ? (
 				<>

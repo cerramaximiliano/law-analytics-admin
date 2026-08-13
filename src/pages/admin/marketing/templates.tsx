@@ -114,6 +114,8 @@ interface EmailTemplate {
 	description: string;
 	variables: string[];
 	isActive: boolean;
+	/** Fuente de envío: 'la-notification' (notificaciones del sistema) | 'marketing' */
+	sendingSource?: string;
 	lastModifiedBy?: string;
 	createdAt: string;
 	updatedAt: string;
@@ -557,6 +559,7 @@ const EmailTemplates = () => {
 	// Filter state
 	const [filter, setFilter] = useState<string>("");
 	const [categoryFilter, setCategoryFilter] = useState<string>("all");
+	const [sourceFilter, setSourceFilter] = useState<string>("all");
 
 	// State for email modules (for preview expansion)
 	const [modules, setModules] = useState<EmailModule[]>([]);
@@ -1650,6 +1653,7 @@ const EmailTemplates = () => {
 	// Filter templates
 	const filteredTemplates = templates.filter(
 		(template) =>
+			(sourceFilter === "all" || (template.sendingSource || "marketing") === sourceFilter) &&
 			(categoryFilter === "all" || template.category === categoryFilter) &&
 			(template.name.toLowerCase().includes(filter.toLowerCase()) ||
 				template.subject.toLowerCase().includes(filter.toLowerCase()) ||
@@ -1723,6 +1727,25 @@ const EmailTemplates = () => {
 							/>
 						</Grid>
 						<Grid item xs={12} sm={6}>
+							<Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1 }}>
+								{[
+									{ key: "all", label: "Todas las fuentes" },
+									{ key: "la-notification", label: "Notificaciones (la-notification)" },
+									{ key: "marketing", label: "Marketing" },
+								].map((src) => (
+									<Chip
+										key={src.key}
+										label={src.label}
+										onClick={() => {
+											setSourceFilter(src.key);
+											setPage(0);
+										}}
+										color={sourceFilter === src.key ? "secondary" : "default"}
+										variant={sourceFilter === src.key ? "filled" : "outlined"}
+										size="small"
+									/>
+								))}
+							</Box>
 							<Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
 								{categories.map((category) => (
 									<Chip
@@ -1779,6 +1802,13 @@ const EmailTemplates = () => {
 													<TableCell>
 														<Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
 															<Typography variant="subtitle2">{template.name}</Typography>
+															<Chip
+																label={(template.sendingSource || "marketing") === "la-notification" ? "notificaciones" : "marketing"}
+																size="small"
+																color={(template.sendingSource || "marketing") === "la-notification" ? "primary" : "default"}
+																variant="outlined"
+																sx={{ height: 20, fontSize: "0.65rem", fontWeight: 600, letterSpacing: 0.4 }}
+															/>
 															{isVariant && (
 																<Chip
 																	label="Variante v2"
