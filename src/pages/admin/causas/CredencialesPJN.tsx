@@ -149,11 +149,18 @@ const isLastErrorResolved = (cred: { lastError: PjnCredential["lastError"]; last
 // Stat card compacta al estilo del dashboard: tabular-nums + tracking, color
 // solo cuando es estado (success/warning/error); identidades en text.primary.
 const StatCard = ({ value, label, color, sx }: { value: string | number; label: string; color: string; sx?: any }) => (
-	<Paper elevation={0} sx={{ p: 1.5, borderRadius: 2, border: (t) => `1px solid ${t.palette.divider}`, height: "100%" }}>
+	<Paper elevation={0} sx={{ p: { xs: 1, sm: 1.5 }, borderRadius: 2, border: (t) => `1px solid ${t.palette.divider}`, height: "100%" }}>
 		<Typography
 			variant="h4"
 			color={color}
-			sx={{ fontWeight: 700, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums", lineHeight: 1.2, ...sx }}
+			sx={{
+				fontWeight: 700,
+				letterSpacing: "-0.02em",
+				fontVariantNumeric: "tabular-nums",
+				lineHeight: 1.2,
+				fontSize: { xs: "1.1rem", sm: "1.5rem" },
+				...sx,
+			}}
 		>
 			{value}
 		</Typography>
@@ -1062,7 +1069,7 @@ const CredencialesPJN = () => {
 
 			{/* Tab 0: Credenciales */}
 			{tabValue === 0 && (
-				<Grid container spacing={3}>
+				<Grid container spacing={{ xs: 1.5, sm: 3 }}>
 					{/* Stat cards de credenciales */}
 					{stats && (
 						<>
@@ -1076,7 +1083,7 @@ const CredencialesPJN = () => {
 								{ value: stats.syncStatus.inProgress, label: "En progreso", color: "info.main" },
 								{ value: stats.syncStatus.neverSynced, label: "Sin sincronizar", color: "text.disabled" },
 							].map((stat, idx) => (
-								<Grid item xs={6} sm={3} md={1.5} key={idx}>
+								<Grid item xs={4} sm={3} md={1.5} key={idx}>
 									<StatCard {...stat} />
 								</Grid>
 							))}
@@ -1140,8 +1147,8 @@ const CredencialesPJN = () => {
 									</Select>
 								</FormControl>
 							</Grid>
-							<Grid item xs={6} sm={6} md={3}>
-								<Stack direction="row" spacing={1}>
+							<Grid item xs={12} sm={6} md={3}>
+								<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 									<Button variant="contained" size="small" onClick={handleSearch} startIcon={<SearchNormal1 size={16} />}>
 										Buscar
 									</Button>
@@ -1686,7 +1693,7 @@ const CredencialesPJN = () => {
 
 			{/* Tab 1: Actividad Sync */}
 			{tabValue === 1 && (
-				<Grid container spacing={2}>
+				<Grid container spacing={{ xs: 1.5, sm: 2 }}>
 					{/* Botón refrescar */}
 					<Grid item xs={12} sx={{ display: "flex", justifyContent: "flex-end" }}>
 						<Tooltip title="Refrescar actividad">
@@ -1732,7 +1739,7 @@ const CredencialesPJN = () => {
 									color: "text.primary",
 								},
 							].map((stat, idx) => (
-								<Grid item xs={6} sm={3} md={2} key={`sync-${idx}`}>
+								<Grid item xs={4} sm={3} md={2} key={`sync-${idx}`}>
 									<StatCard {...stat} />
 								</Grid>
 							))}
@@ -2293,7 +2300,7 @@ const CredencialesPJN = () => {
 
 			{/* Tab 2: Movimientos */}
 			{tabValue === 2 && (
-				<Grid container spacing={2}>
+				<Grid container spacing={{ xs: 1.5, sm: 2 }}>
 					{stats?.movementTotals ? (
 						<>
 							<Grid item xs={12}>
@@ -2347,7 +2354,7 @@ const CredencialesPJN = () => {
 
 			{/* Tab 3: Notificaciones de credenciales */}
 			{tabValue === 3 && (
-				<Grid container spacing={2}>
+				<Grid container spacing={{ xs: 1.5, sm: 2 }}>
 					{/* Filtros */}
 					<Grid item xs={12}>
 						<Stack
@@ -2570,7 +2577,7 @@ const CredencialesPJN = () => {
 
 			{/* Tab 4: Alertas admin (watchdog de credenciales de pjn-mis-causas) */}
 			{tabValue === 4 && (
-				<Grid container spacing={2}>
+				<Grid container spacing={{ xs: 1.5, sm: 2 }}>
 					<Grid item xs={12}>
 						<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 							<Chip
