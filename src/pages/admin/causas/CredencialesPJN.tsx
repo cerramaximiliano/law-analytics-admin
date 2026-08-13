@@ -2350,7 +2350,13 @@ const CredencialesPJN = () => {
 				<Grid container spacing={2}>
 					{/* Filtros */}
 					<Grid item xs={12}>
-						<Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems="flex-end" flexWrap="wrap" useFlexGap>
+						<Stack
+							direction={{ xs: "column", sm: "row" }}
+							spacing={1}
+							alignItems={{ xs: "stretch", sm: "flex-end" }}
+							flexWrap="wrap"
+							useFlexGap
+						>
 							<TextField
 								size="small"
 								label="Filtrar por email destinatario"
@@ -2363,9 +2369,9 @@ const CredencialesPJN = () => {
 										fetchEmailLogs(0, emailLogsRowsPerPage);
 									}
 								}}
-								sx={{ minWidth: 220 }}
+								sx={{ minWidth: { sm: 220 }, width: { xs: "100%", sm: "auto" } }}
 							/>
-							<FormControl size="small" sx={{ minWidth: 160 }}>
+							<FormControl size="small" sx={{ minWidth: { sm: 160 }, width: { xs: "100%", sm: "auto" } }}>
 								<InputLabel>Estado</InputLabel>
 								<Select value={emailLogsStatusFilter} label="Estado" onChange={(e) => setEmailLogsStatusFilter(e.target.value)}>
 									<MenuItem value="todos">Todos</MenuItem>
@@ -2376,7 +2382,7 @@ const CredencialesPJN = () => {
 									<MenuItem value="complained">Complaint</MenuItem>
 								</Select>
 							</FormControl>
-							<FormControl size="small" sx={{ minWidth: 200 }}>
+							<FormControl size="small" sx={{ minWidth: { sm: 200 }, width: { xs: "100%", sm: "auto" } }}>
 								<InputLabel>Tipo</InputLabel>
 								<Select value={emailLogsTemplateFilter} label="Tipo" onChange={(e) => setEmailLogsTemplateFilter(e.target.value)}>
 									<MenuItem value="todos">Todos los avisos</MenuItem>
@@ -2387,36 +2393,38 @@ const CredencialesPJN = () => {
 									))}
 								</Select>
 							</FormControl>
-							<Button
-								variant="contained"
-								size="small"
-								startIcon={<SearchNormal1 size={16} />}
-								onClick={() => {
-									setEmailLogsPage(0);
-									fetchEmailLogs(0, emailLogsRowsPerPage);
-								}}
-							>
-								Buscar
-							</Button>
-							<Button
-								variant="outlined"
-								size="small"
-								startIcon={<CloseCircle size={16} />}
-								onClick={() => {
-									setEmailLogsStatusFilter("todos");
-									setEmailLogsTemplateFilter("todos");
-									setEmailLogsUserFilter("");
-									setEmailLogsPage(0);
-									setTimeout(() => fetchEmailLogs(0, emailLogsRowsPerPage), 100);
-								}}
-							>
-								Limpiar
-							</Button>
-							<Tooltip title="Refrescar">
-								<IconButton size="small" onClick={() => fetchEmailLogs(emailLogsPage, emailLogsRowsPerPage)}>
-									<Refresh size={18} />
-								</IconButton>
-							</Tooltip>
+							<Stack direction="row" spacing={1} alignItems="center">
+								<Button
+									variant="contained"
+									size="small"
+									startIcon={<SearchNormal1 size={16} />}
+									onClick={() => {
+										setEmailLogsPage(0);
+										fetchEmailLogs(0, emailLogsRowsPerPage);
+									}}
+								>
+									Buscar
+								</Button>
+								<Button
+									variant="outlined"
+									size="small"
+									startIcon={<CloseCircle size={16} />}
+									onClick={() => {
+										setEmailLogsStatusFilter("todos");
+										setEmailLogsTemplateFilter("todos");
+										setEmailLogsUserFilter("");
+										setEmailLogsPage(0);
+										setTimeout(() => fetchEmailLogs(0, emailLogsRowsPerPage), 100);
+									}}
+								>
+									Limpiar
+								</Button>
+								<Tooltip title="Refrescar">
+									<IconButton size="small" onClick={() => fetchEmailLogs(emailLogsPage, emailLogsRowsPerPage)}>
+										<Refresh size={18} />
+									</IconButton>
+								</Tooltip>
+							</Stack>
 						</Stack>
 					</Grid>
 
