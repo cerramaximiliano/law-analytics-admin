@@ -60,7 +60,7 @@ import {
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { BRAND_BLUE } from "themes/dashboardTokens";
+import { BRAND_BLUE, PRO_TEAL, headerShadow } from "themes/dashboardTokens";
 import PostalDocumentsAdminService, { PostalDocument, PostalDocumentStats } from "api/postalDocumentsAdmin";
 import AdminResourcesService, {
 	ResourceType,
@@ -209,7 +209,12 @@ const getColumnsByType = (type: ResourceType, theme: any): ColumnDef[] => {
 					render: (r) => {
 						const f = r as FolderResource;
 						const num = f.judFolder?.numberJudFolder;
-						if (!num) return <Typography variant="caption" color="text.secondary">—</Typography>;
+						if (!num)
+							return (
+								<Typography variant="caption" color="text.secondary">
+									—
+								</Typography>
+							);
 						return (
 							<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
 								{num}
@@ -340,7 +345,7 @@ const getColumnsByType = (type: ResourceType, theme: any): ColumnDef[] => {
 						const colorMap: Record<string, string> = {
 							pendiente: theme.palette.warning.main,
 							en_progreso: theme.palette.info.main,
-							revision: theme.palette.secondary.main,
+							revision: PRO_TEAL,
 							completada: theme.palette.success.main,
 							cancelada: theme.palette.error.main,
 						};
@@ -450,12 +455,14 @@ interface StatCardProps {
 	label: string;
 	value: number;
 	icon: React.ReactNode;
-	color: string;
 	loading?: boolean;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color, loading }) => {
+// Acento único BRAND_BLUE en los icon chips (patrón del row de KPIs del
+// dashboard) — el color por card era el arcoíris que el design system evita.
+const StatCard: React.FC<StatCardProps> = ({ label, value, icon, loading }) => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	return (
 		<Paper
 			elevation={0}
@@ -465,10 +472,11 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color, loading 
 				bgcolor: theme.palette.background.paper,
 				border: `1px solid ${theme.palette.divider}`,
 				height: "100%",
-				transition: "transform 200ms ease, box-shadow 200ms ease",
+				transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 				"&:hover": {
 					transform: "translateY(-2px)",
-					boxShadow: `0 6px 20px ${alpha(color, 0.12)}`,
+					boxShadow: headerShadow(isDark),
+					borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
 				},
 			}}
 		>
@@ -478,23 +486,33 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color, loading 
 						width: { xs: 30, sm: 36 },
 						height: { xs: 30, sm: 36 },
 						borderRadius: 1.25,
-						bgcolor: alpha(color, 0.1),
-						color: color,
+						bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+						border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+						color: BRAND_BLUE,
 						display: "flex",
 						alignItems: "center",
 						justifyContent: "center",
+						flexShrink: 0,
 					}}
 				>
 					{icon}
 				</Box>
 				<Box sx={{ minWidth: 0 }}>
-					<Typography variant="caption" color="textSecondary" noWrap sx={{ letterSpacing: 0.3, textTransform: "uppercase" }}>
+					<Typography variant="caption" color="textSecondary" noWrap sx={{ letterSpacing: "-0.005em" }}>
 						{label}
 					</Typography>
 					{loading ? (
 						<Skeleton variant="text" width={40} height={28} />
 					) : (
-						<Typography variant="h5" fontWeight={600} sx={{ fontSize: { xs: "1rem", sm: "1.25rem" }, fontVariantNumeric: "tabular-nums" }}>
+						<Typography
+							variant="h5"
+							sx={{
+								fontWeight: 700,
+								fontSize: { xs: "1rem", sm: "1.25rem" },
+								letterSpacing: "-0.02em",
+								fontVariantNumeric: "tabular-nums",
+							}}
+						>
 							{value.toLocaleString()}
 						</Typography>
 					)}
@@ -714,7 +732,8 @@ const UserResources: React.FC = () => {
 			setRetryLoading(false);
 		}
 	};
-	const baseColumns = isUsersTab || isActivityTab || isEscritosTab || isAiUsageTab || isEmailsTab ? [] : getColumnsByType(currentType as ResourceType, theme);
+	const baseColumns =
+		isUsersTab || isActivityTab || isEscritosTab || isAiUsageTab || isEmailsTab ? [] : getColumnsByType(currentType as ResourceType, theme);
 
 	// Columna extra "Notif." solo para folders — chip mínimo del último envío.
 	// Se inserta antes de "Monto" / "createdAt" (= antes de las dos últimas).
@@ -1021,7 +1040,19 @@ const UserResources: React.FC = () => {
 		} else {
 			fetchResources();
 		}
-	}, [fetchResources, fetchUsers, fetchActivityData, fetchEscritos, fetchAiUsage, fetchEmails, isUsersTab, isActivityTab, isEscritosTab, isAiUsageTab, isEmailsTab]);
+	}, [
+		fetchResources,
+		fetchUsers,
+		fetchActivityData,
+		fetchEscritos,
+		fetchAiUsage,
+		fetchEmails,
+		isUsersTab,
+		isActivityTab,
+		isEscritosTab,
+		isAiUsageTab,
+		isEmailsTab,
+	]);
 
 	useEffect(() => {
 		if (isAiUsageTab) fetchAiPeriods();
@@ -1115,61 +1146,25 @@ const UserResources: React.FC = () => {
 			<Box sx={{ p: { xs: 1.5, sm: 2 }, borderBottom: 1, borderColor: "divider" }}>
 				<Grid container spacing={{ xs: 1, sm: 2 }}>
 					<Grid item xs={6} sm={4} md>
-						<StatCard label="Carpetas" value={stats.folders} icon={<Folder size={20} />} color={BRAND_BLUE} loading={statsLoading} />
+						<StatCard label="Carpetas" value={stats.folders} icon={<Folder size={20} />} loading={statsLoading} />
 					</Grid>
 					<Grid item xs={6} sm={4} md>
-						<StatCard
-							label="Contactos"
-							value={stats.contacts}
-							icon={<People size={20} />}
-							color={theme.palette.info.main}
-							loading={statsLoading}
-						/>
+						<StatCard label="Contactos" value={stats.contacts} icon={<People size={20} />} loading={statsLoading} />
 					</Grid>
 					<Grid item xs={6} sm={4} md>
-						<StatCard
-							label="Calculadores"
-							value={stats.calculators}
-							icon={<Calculator size={20} />}
-							color={theme.palette.success.main}
-							loading={statsLoading}
-						/>
+						<StatCard label="Calculadores" value={stats.calculators} icon={<Calculator size={20} />} loading={statsLoading} />
 					</Grid>
 					<Grid item xs={6} sm={4} md>
-						<StatCard
-							label="Tareas"
-							value={stats.tasks}
-							icon={<Task size={20} />}
-							color={theme.palette.warning.main}
-							loading={statsLoading}
-						/>
+						<StatCard label="Tareas" value={stats.tasks} icon={<Task size={20} />} loading={statsLoading} />
 					</Grid>
 					<Grid item xs={6} sm={4} md>
-						<StatCard
-							label="Eventos"
-							value={stats.events}
-							icon={<Calendar size={20} />}
-							color={theme.palette.secondary.main}
-							loading={statsLoading}
-						/>
+						<StatCard label="Eventos" value={stats.events} icon={<Calendar size={20} />} loading={statsLoading} />
 					</Grid>
 					<Grid item xs={6} sm={4} md>
-						<StatCard
-							label="Movimientos"
-							value={stats.movements}
-							icon={<Activity size={20} />}
-							color={theme.palette.error.main}
-							loading={statsLoading}
-						/>
+						<StatCard label="Movimientos" value={stats.movements} icon={<Activity size={20} />} loading={statsLoading} />
 					</Grid>
 					<Grid item xs={6} sm={4} md>
-						<StatCard
-							label="Total"
-							value={stats.total}
-							icon={<Folder size={20} />}
-							color={theme.palette.text.primary}
-							loading={statsLoading}
-						/>
+						<StatCard label="Total" value={stats.total} icon={<Folder size={20} />} loading={statsLoading} />
 					</Grid>
 				</Grid>
 			</Box>
@@ -1239,7 +1234,13 @@ const UserResources: React.FC = () => {
 								<Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
 									<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
 										<Box
-											sx={{ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main }}
+											sx={{
+												p: 1,
+												borderRadius: 1.5,
+												bgcolor: alpha(BRAND_BLUE, 0.1),
+												border: `1px solid ${alpha(BRAND_BLUE, 0.18)}`,
+												color: BRAND_BLUE,
+											}}
 										>
 											<Login size={20} />
 										</Box>
@@ -1261,7 +1262,15 @@ const UserResources: React.FC = () => {
 							<Grid item xs={6} sm={3}>
 								<Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
 									<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-										<Box sx={{ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette.info.main, 0.1), color: theme.palette.info.main }}>
+										<Box
+											sx={{
+												p: 1,
+												borderRadius: 1.5,
+												bgcolor: alpha(BRAND_BLUE, 0.1),
+												border: `1px solid ${alpha(BRAND_BLUE, 0.18)}`,
+												color: BRAND_BLUE,
+											}}
+										>
 											<ProfileCircle size={20} />
 										</Box>
 										<Box>
@@ -1283,7 +1292,13 @@ const UserResources: React.FC = () => {
 								<Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
 									<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
 										<Box
-											sx={{ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.1), color: theme.palette.warning.main }}
+											sx={{
+												p: 1,
+												borderRadius: 1.5,
+												bgcolor: alpha(BRAND_BLUE, 0.1),
+												border: `1px solid ${alpha(BRAND_BLUE, 0.18)}`,
+												color: BRAND_BLUE,
+											}}
 										>
 											<Chart size={20} />
 										</Box>
@@ -1309,8 +1324,9 @@ const UserResources: React.FC = () => {
 											sx={{
 												p: 1,
 												borderRadius: 1.5,
-												bgcolor: alpha(theme.palette.secondary.main, 0.1),
-												color: theme.palette.secondary.main,
+												bgcolor: alpha(BRAND_BLUE, 0.1),
+												border: `1px solid ${alpha(BRAND_BLUE, 0.18)}`,
+												color: BRAND_BLUE,
 											}}
 										>
 											<Calculator size={20} />
@@ -1464,19 +1480,22 @@ const UserResources: React.FC = () => {
 						<Box sx={{ p: { xs: 1.5, sm: 2 }, borderBottom: 1, borderColor: "divider" }}>
 							<Grid container spacing={{ xs: 1, sm: 2 }}>
 								{[
-									{ label: "Total", value: escritosStats.totals.total, color: theme.palette.primary.main },
+									{ label: "Total", value: escritosStats.totals.total, color: theme.palette.text.primary },
 									{ label: "Generados", value: escritosStats.totals.generated, color: theme.palette.success.main },
 									{ label: "Borradores", value: escritosStats.totals.draft, color: theme.palette.warning.main },
 									{ label: "Enviados", value: escritosStats.totals.sent, color: theme.palette.info.main },
 									{ label: "Archivados", value: escritosStats.totals.archived, color: theme.palette.text.secondary },
-									{ label: "Hoy", value: escritosStats.totals.createdToday, color: theme.palette.secondary.main },
+									{ label: "Hoy", value: escritosStats.totals.createdToday, color: theme.palette.text.primary },
 								].map((s) => (
 									<Grid item xs={6} sm={4} md={2} key={s.label}>
 										<Paper elevation={0} sx={{ p: 1.5, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, height: "100%" }}>
 											<Typography variant="caption" color="textSecondary" display="block">
 												{s.label}
 											</Typography>
-											<Typography variant="h6" fontWeight="bold" sx={{ color: s.color }}>
+											<Typography
+												variant="h6"
+												sx={{ fontWeight: 700, color: s.color, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+											>
 												{s.value.toLocaleString()}
 											</Typography>
 										</Paper>
@@ -1767,7 +1786,13 @@ const UserResources: React.FC = () => {
 											<TableCell>
 												<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
 													{row.emailVisitSources.map((src) => (
-														<Chip key={src} label={src.replace(/^email_/, "")} size="small" variant="outlined" sx={{ height: 20, fontSize: "0.65rem", fontFamily: "monospace" }} />
+														<Chip
+															key={src}
+															label={src.replace(/^email_/, "")}
+															size="small"
+															variant="outlined"
+															sx={{ height: 20, fontSize: "0.65rem", fontFamily: "monospace" }}
+														/>
 													))}
 												</Box>
 											</TableCell>
@@ -1796,7 +1821,10 @@ const UserResources: React.FC = () => {
 											<Typography variant="caption" color="textSecondary" display="block">
 												{s.label}
 											</Typography>
-											<Typography variant="h6" fontWeight="bold" sx={{ color: s.color }}>
+											<Typography
+												variant="h6"
+												sx={{ fontWeight: 700, color: s.color, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+											>
 												{s.value}
 											</Typography>
 										</Paper>
@@ -2358,8 +2386,7 @@ const UserResources: React.FC = () => {
 														const eligibleInPage = resources.filter(isFolderRetryEligible);
 														const allEligibleSelected =
 															eligibleInPage.length > 0 && eligibleInPage.every((r) => selectedFolderIds.has(r._id));
-														const someEligibleSelected =
-															eligibleInPage.some((r) => selectedFolderIds.has(r._id)) && !allEligibleSelected;
+														const someEligibleSelected = eligibleInPage.some((r) => selectedFolderIds.has(r._id)) && !allEligibleSelected;
 														return (
 															<Tooltip title="Seleccionar todas las elegibles de la página (omite verificadas y manuales)">
 																<Checkbox
@@ -2509,13 +2536,20 @@ const UserResources: React.FC = () => {
 															title={`${user.emailViewer?.views || 0} documentos vistos desde emails · ${
 																user.emailViewer?.loginContinues || 0
 															} volvieron a la app${
-																user.emailViewer?.lastActivity ? ` · última: ${dayjs(user.emailViewer.lastActivity).format("DD/MM/YY")}` : ""
+																user.emailViewer?.lastActivity
+																	? ` · última: ${dayjs(user.emailViewer.lastActivity).format("DD/MM/YY")}`
+																	: ""
 															}`}
 														>
 															<Stack direction="row" spacing={0.5} justifyContent="center">
 																<Chip size="small" variant="outlined" label={user.emailViewer?.views || 0} icon={<Eye size={12} />} />
 																{(user.emailViewer?.loginContinues || 0) > 0 && (
-																	<Chip size="small" color="warning" variant="outlined" label={`${user.emailViewer?.loginContinues} → app`} />
+																	<Chip
+																		size="small"
+																		color="warning"
+																		variant="outlined"
+																		label={`${user.emailViewer?.loginContinues} → app`}
+																	/>
 																)}
 															</Stack>
 														</Tooltip>
@@ -2565,7 +2599,9 @@ const UserResources: React.FC = () => {
 															<Tooltip title={tooltip}>
 																<Stack direction="row" spacing={0.5} justifyContent="center">
 																	<Chip size="small" variant="outlined" label={eng.abiertas} icon={<Eye size={12} />} />
-																	{eng.clicks > 0 && <Chip size="small" color="success" variant="outlined" label={`${eng.clicks} → vista`} />}
+																	{eng.clicks > 0 && (
+																		<Chip size="small" color="success" variant="outlined" label={`${eng.clicks} → vista`} />
+																	)}
 																</Stack>
 															</Tooltip>
 														);
@@ -2585,11 +2621,7 @@ const UserResources: React.FC = () => {
 									</TableRow>
 								) : (
 									resources.map((resource) => (
-										<TableRow
-											key={resource._id}
-											hover
-											selected={isFolderTab && selectedFolderIds.has(resource._id)}
-										>
+										<TableRow key={resource._id} hover selected={isFolderTab && selectedFolderIds.has(resource._id)}>
 											{isFolderTab && (
 												<TableCell padding="checkbox">
 													{(() => {
@@ -2646,16 +2678,16 @@ const UserResources: React.FC = () => {
 				<DialogTitle>Reintentar verificación de carpetas</DialogTitle>
 				<DialogContent>
 					<Typography variant="body2" sx={{ mb: 2 }}>
-						Vas a marcar <strong>{selectedFolderIds.size}</strong> carpeta(s) como elegibles para que los workers de scraping (PJN /
-						MEV / EJE) las procesen en su próxima ejecución.
+						Vas a marcar <strong>{selectedFolderIds.size}</strong> carpeta(s) como elegibles para que los workers de scraping (PJN / MEV /
+						EJE) las procesen en su próxima ejecución.
 					</Typography>
 					<Typography variant="caption" color="text.secondary" component="div" sx={{ mb: 1 }}>
-						- <strong>PJN</strong>: si no existe el documento en la collection de causas, se crea con <code>verified: false</code> →
-						el verify-worker lo levanta en su próximo tick.
+						- <strong>PJN</strong>: si no existe el documento en la collection de causas, se crea con <code>verified: false</code> → el
+						verify-worker lo levanta en su próximo tick.
 					</Typography>
 					<Typography variant="caption" color="text.secondary" component="div" sx={{ mb: 1 }}>
-						- <strong>MEV / EJE</strong>: solo se re-trigger si la carpeta ya tiene una asociación previa (con causaId). Las que no
-						tengan asociación previa serán salteadas.
+						- <strong>MEV / EJE</strong>: solo se re-trigger si la carpeta ya tiene una asociación previa (con causaId). Las que no tengan
+						asociación previa serán salteadas.
 					</Typography>
 					<Typography variant="caption" color="text.secondary" component="div" sx={{ mb: 1 }}>
 						- Carpetas sin plataforma activa (<code>pjn/mev/eje</code> todos en false) se saltean.
@@ -2669,8 +2701,8 @@ const UserResources: React.FC = () => {
 										Habilitar updates automáticos
 									</Typography>
 									<Typography variant="caption" color="text.secondary">
-										Si se activa, las causas vinculadas quedarán con <code>userUpdatesEnabled: true</code> (equivale a una
-										suscripción paga).
+										Si se activa, las causas vinculadas quedarán con <code>userUpdatesEnabled: true</code> (equivale a una suscripción
+										paga).
 									</Typography>
 								</Box>
 							}
