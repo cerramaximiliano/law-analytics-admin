@@ -317,6 +317,8 @@ export interface SyncedCausasSummary {
 	noActualizables?: number;
 	// Causas cuya última actualización falló (updateStats.lastError vigente).
 	conErrores?: number;
+	// Causas con movimiento fechado HOY (novedad judicial real del día).
+	movimientosHoy?: number;
 }
 
 export interface SyncedCausasFilters {
@@ -326,6 +328,8 @@ export interface SyncedCausasFilters {
 	soloElegibles?: boolean;
 	noActualizables?: boolean;
 	conErrores?: boolean;
+	/** Solo causas con movimiento fechado HOY (novedad judicial real) */
+	movimientosHoy?: boolean;
 	page?: number;
 	limit?: number;
 	sortBy?: string;

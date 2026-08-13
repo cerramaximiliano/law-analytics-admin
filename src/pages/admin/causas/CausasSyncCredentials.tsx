@@ -188,6 +188,8 @@ const CausasSyncCredentials = () => {
 	// Causas cuya última actualización falló (updateStats.lastError vigente).
 	// Llega pre-activado desde el widget de cobertura del dashboard (?conErrores=1).
 	const [conErroresFilter, setConErroresFilter] = useState<boolean>(() => searchParams.get("conErrores") === "1");
+	// Solo causas con movimiento fechado HOY (novedad judicial real del día)
+	const [movHoyFilter, setMovHoyFilter] = useState<boolean>(false);
 	const [sortBy, setSortBy] = useState<string>("year");
 	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
@@ -269,6 +271,7 @@ const CausasSyncCredentials = () => {
 				if (movementsFilter) params.hasMovements = movementsFilter;
 				if (soloElegibles) params.soloElegibles = true;
 				if (conErroresFilter) params.conErrores = true;
+				if (movHoyFilter) params.movimientosHoy = true;
 			}
 
 			const response = await pjnCredentialsService.getSyncedCausas(params);
@@ -333,6 +336,13 @@ const CausasSyncCredentials = () => {
 	// Toggle del filtro "con errores" (última actualización fallida).
 	const toggleConErroresFilter = () => {
 		setConErroresFilter((v) => !v);
+		setNoActFilter(false);
+		setPage(0);
+		setSearchTrigger((t) => t + 1);
+	};
+
+	const toggleMovHoyFilter = () => {
+		setMovHoyFilter((v) => !v);
 		setNoActFilter(false);
 		setPage(0);
 		setSearchTrigger((t) => t + 1);
@@ -505,6 +515,36 @@ const CausasSyncCredentials = () => {
 											</Stack>
 											<Typography variant="h4" color="warning.main" fontWeight="bold">
 												{(summary.conErrores ?? 0).toLocaleString()}
+											</Typography>
+										</CardContent>
+									</Card>
+								</Tooltip>
+							</Grid>
+							<Grid item xs={12} sm={6} md={2.4}>
+								<Tooltip title="Causas cuyo movimiento más reciente tiene fecha de HOY: novedad judicial real del día (distinto de 'chequeada hoy'). Click para ver/ocultar el listado.">
+									<Card
+										onClick={toggleMovHoyFilter}
+										sx={{
+											cursor: "pointer",
+											backgroundColor: "success.lighter",
+											border: 2,
+											borderColor: movHoyFilter ? "success.dark" : "success.main",
+											boxShadow: movHoyFilter ? 3 : 0,
+											transition: "all 0.2s ease",
+											"&:hover": { boxShadow: 2 },
+										}}
+									>
+										<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
+											<Stack direction="row" spacing={0.5} alignItems="center">
+												<Typography variant="body2" color="text.secondary">
+													Novedades hoy
+												</Typography>
+												{movHoyFilter && (
+													<Chip label="filtrando" size="small" color="success" sx={{ height: 18, fontSize: "0.6rem" }} />
+												)}
+											</Stack>
+											<Typography variant="h4" color="success.main" fontWeight="bold">
+												{(summary.movimientosHoy ?? 0).toLocaleString()}
 											</Typography>
 										</CardContent>
 									</Card>
@@ -812,7 +852,14 @@ const CausasSyncCredentials = () => {
 												})()}
 											</TableCell>
 											<TableCell>
-												<Typography variant="caption">{formatDate(causa.fechaUltimoMovimiento)}</Typography>
+												<Stack direction="row" alignItems="center" spacing={0.5}>
+													<Typography variant="caption">{formatDate(causa.fechaUltimoMovimiento)}</Typography>
+													{causa.fechaUltimoMovimiento && dayjs(causa.fechaUltimoMovimiento).isSame(dayjs(), "day") && (
+														<Tooltip title="Movimiento con fecha de HOY — novedad judicial del día">
+															<Chip label="HOY" size="small" color="success" sx={{ height: 18, fontSize: "0.6rem", fontWeight: 700 }} />
+														</Tooltip>
+													)}
+												</Stack>
 											</TableCell>
 											<TableCell>
 												<Stack>
