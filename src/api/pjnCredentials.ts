@@ -224,12 +224,41 @@ export interface SyncActivityResponse {
 }
 
 // Interfaces para causas sincronizadas por credenciales
+export interface CausaSyncState {
+	/** 'relacionados' = vía login de credencial | 'publico' = worker público (captcha) */
+	via: "relacionados" | "publico";
+	/** true = figura en el listado | false = salió | null = sin credencial activa para saberlo */
+	enRelacionados: boolean | null;
+	estado:
+		| "ok"
+		| "atrasada"
+		| "salio_de_relacionados"
+		| "credencial_invalida"
+		| "accion_requerida"
+		| "credencial_deshabilitada"
+		| "error_actualizacion"
+		| "sin_captura";
+	/** Cuándo entró en este estado */
+	desde: string | null;
+	detalle: string | null;
+}
+
+export interface CausaStateEvent {
+	at: string;
+	tipo: string;
+	detalle: string;
+}
+
 export interface SyncedCausa {
 	_id: string;
 	number: number;
 	year: number;
 	incidente?: string | null;
 	fuero: string;
+	/** Colección Mongo de origen (para el endpoint de historial de estado) */
+	collection?: string;
+	/** Estado de sync explícito, computado en vivo por el backend */
+	syncState?: CausaSyncState;
 	caratula: string;
 	objeto: string;
 	juzgado: string;
@@ -569,6 +598,17 @@ class PjnCredentialsService {
 	 */
 	async getSyncedCausaById(id: string, fuero: string): Promise<{ success: boolean; data: Record<string, unknown> }> {
 		const response = await adminAxios.get(`/api/pjn-credentials/synced-causas/${id}`, { params: { fuero } });
+		return response.data;
+	}
+
+	/**
+	 * Línea de tiempo de cambios de estado de una causa (click en chip Estado).
+	 */
+	async getCausaStateHistory(
+		collection: string,
+		causaId: string,
+	): Promise<{ success: boolean; data: { causa: { id: string; identificador: string; caratula: string }; events: CausaStateEvent[] } }> {
+		const response = await adminAxios.get("/api/pjn-credentials/causa-state-history", { params: { collection, causaId } });
 		return response.data;
 	}
 

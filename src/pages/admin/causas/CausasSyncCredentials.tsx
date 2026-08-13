@@ -38,7 +38,13 @@ import dayjs from "dayjs";
 import "dayjs/locale/es";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import pjnCredentialsService, { SyncedCausa, SyncedCausasSummary, PjnCredential, CausaScreenshotEntry } from "api/pjnCredentials";
+import pjnCredentialsService, {
+	SyncedCausa,
+	SyncedCausasSummary,
+	PjnCredential,
+	CausaScreenshotEntry,
+	CausaStateEvent,
+} from "api/pjnCredentials";
 import { Refresh, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Repeat, Eye, Gallery } from "iconsax-react";
 
 dayjs.locale("es");
@@ -61,6 +67,33 @@ const INITIAL_SYNC_COLORS: Record<string, "success" | "info" | "warning" | "defa
 	completed: "success",
 	in_progress: "info",
 	pending: "warning",
+};
+
+// Estado de sync explícito (computado en vivo por el backend). Click en el
+// chip → diálogo con la línea de tiempo de cambios de estado.
+const ESTADO_META: Record<string, { label: string; color: "success" | "info" | "warning" | "error" | "default"; filled?: boolean }> = {
+	ok: { label: "Al día", color: "success" },
+	atrasada: { label: "Atrasada", color: "warning" },
+	salio_de_relacionados: { label: "Salió de Relacionados", color: "warning", filled: true },
+	credencial_invalida: { label: "Clave inválida", color: "error", filled: true },
+	accion_requerida: { label: "Acción requerida", color: "error", filled: true },
+	credencial_deshabilitada: { label: "Cred. deshabilitada", color: "default", filled: true },
+	error_actualizacion: { label: "Error de act.", color: "error" },
+	sin_captura: { label: "Sin captura", color: "default" },
+};
+
+const EVENT_TIPO_LABELS: Record<string, string> = {
+	creada: "Creada",
+	vinculada: "Vinculada",
+	salio_de_relacionados: "Salió de Relacionados",
+	recheck: "Recheck",
+	credencial_invalida: "Clave inválida",
+	accion_requerida: "Acción requerida",
+	baseline: "Baseline",
+	privada: "Privada",
+	privacy_change: "Privacidad",
+	error: "Error",
+	actualizada: "Actualizada",
 };
 
 const INITIAL_SYNC_LABELS: Record<string, string> = {
@@ -157,6 +190,33 @@ const CausasSyncCredentials = () => {
 	const [conErroresFilter, setConErroresFilter] = useState<boolean>(() => searchParams.get("conErrores") === "1");
 	const [sortBy, setSortBy] = useState<string>("year");
 	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+	// Diálogo de historial de estado (click en el chip Estado)
+	const [stateHistory, setStateHistory] = useState<{
+		open: boolean;
+		loading: boolean;
+		identificador: string;
+		caratula: string;
+		events: CausaStateEvent[];
+	}>({ open: false, loading: false, identificador: "", caratula: "", events: [] });
+
+	const openStateHistory = async (causa: SyncedCausa) => {
+		if (!causa.collection) return;
+		setStateHistory({
+			open: true,
+			loading: true,
+			identificador: `${causa.fuero} ${causa.number}/${causa.year}${causa.incidente ? "/" + causa.incidente : ""}`,
+			caratula: causa.caratula || "",
+			events: [],
+		});
+		try {
+			const resp = await pjnCredentialsService.getCausaStateHistory(causa.collection, causa._id);
+			setStateHistory((prev) => ({ ...prev, loading: false, events: resp.data.events || [] }));
+		} catch (e) {
+			setStateHistory((prev) => ({ ...prev, loading: false }));
+			enqueueSnackbar("No se pudo cargar el historial de estado", { variant: "error" });
+		}
+	};
 	const [soloElegibles, setSoloElegibles] = useState<boolean>(false);
 
 	// Credenciales para el dropdown
@@ -585,6 +645,8 @@ const CausasSyncCredentials = () => {
 										<TableCell>Fuero</TableCell>
 										<TableCell>Carátula</TableCell>
 										<TableCell>Source</TableCell>
+										<TableCell align="center">Vía</TableCell>
+										<TableCell align="center">Estado</TableCell>
 										<TableCell align="center">Movimientos</TableCell>
 										<TableCell>Última act.</TableCell>
 										<TableCell>Últ. movimiento</TableCell>
@@ -644,6 +706,57 @@ const CausasSyncCredentials = () => {
 											</TableCell>
 											<TableCell>
 												<Chip label={causa.source || "N/A"} size="small" variant="outlined" />
+											</TableCell>
+											<TableCell align="center">
+												{causa.syncState ? (
+													<Tooltip
+														title={
+															causa.syncState.via === "relacionados"
+																? `Se actualiza vía login de credencial (listado Relacionados)${
+																		causa.syncState.enRelacionados === false ? " — pero SALIÓ del listado" : ""
+																  }`
+																: "Se actualiza vía worker público (captcha) — sin credencial activa"
+														}
+													>
+														<Chip
+															label={causa.syncState.via === "relacionados" ? "Relacionados" : "Público"}
+															size="small"
+															color={causa.syncState.via === "relacionados" ? "info" : "default"}
+															variant="outlined"
+														/>
+													</Tooltip>
+												) : (
+													<Typography variant="caption" color="text.secondary">
+														—
+													</Typography>
+												)}
+											</TableCell>
+											<TableCell align="center">
+												{causa.syncState ? (
+													(() => {
+														const meta = ESTADO_META[causa.syncState!.estado] || { label: causa.syncState!.estado, color: "default" as const };
+														return (
+															<Tooltip
+																title={`${causa.syncState!.detalle || meta.label}${
+																	causa.syncState!.desde ? ` — desde ${formatDate(causa.syncState!.desde)}` : ""
+																}. Click para ver el historial de cambios.`}
+															>
+																<Chip
+																	label={meta.label}
+																	size="small"
+																	color={meta.color}
+																	variant={meta.filled ? "filled" : "outlined"}
+																	onClick={() => openStateHistory(causa)}
+																	sx={{ cursor: "pointer" }}
+																/>
+															</Tooltip>
+														);
+													})()
+												) : (
+													<Typography variant="caption" color="text.secondary">
+														—
+													</Typography>
+												)}
 											</TableCell>
 											<TableCell align="center">
 												<Chip
@@ -899,6 +1012,67 @@ const CausasSyncCredentials = () => {
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={handleCloseScreenshots} variant="outlined" size="small">
+						Cerrar
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Historial de cambios de estado (click en chip Estado) */}
+			<Dialog open={stateHistory.open} onClose={() => setStateHistory((prev) => ({ ...prev, open: false }))} maxWidth="md" fullWidth>
+				<DialogTitle>
+					<Stack spacing={0.25}>
+						<Typography variant="h6" sx={{ fontFamily: "monospace" }}>
+							Historial de estado — {stateHistory.identificador}
+						</Typography>
+						<Typography variant="caption" color="text.secondary">
+							{stateHistory.caratula}
+						</Typography>
+					</Stack>
+				</DialogTitle>
+				<DialogContent dividers>
+					{stateHistory.loading ? (
+						<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+							<CircularProgress size={28} />
+						</Box>
+					) : stateHistory.events.length === 0 ? (
+						<Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 3 }}>
+							Sin eventos registrados para esta causa.
+						</Typography>
+					) : (
+						<Stack spacing={1.25}>
+							{stateHistory.events.map((ev, idx) => (
+								<Stack key={idx} direction="row" spacing={1.5} alignItems="flex-start">
+									<Typography
+										variant="caption"
+										sx={{ fontFamily: "monospace", whiteSpace: "nowrap", pt: 0.4, color: "text.secondary", minWidth: 130 }}
+									>
+										{dayjs(ev.at).format("DD/MM/YYYY HH:mm")}
+									</Typography>
+									<Chip
+										label={EVENT_TIPO_LABELS[ev.tipo] || ev.tipo}
+										size="small"
+										variant="outlined"
+										color={
+											["salio_de_relacionados", "error"].includes(ev.tipo)
+												? "warning"
+												: ["credencial_invalida", "accion_requerida"].includes(ev.tipo)
+												? "error"
+												: ["actualizada", "baseline"].includes(ev.tipo)
+												? "success"
+												: "default"
+										}
+										sx={{ minWidth: 110 }}
+									/>
+									<Typography variant="body2" sx={{ pt: 0.25 }}>
+										{ev.detalle}
+									</Typography>
+								</Stack>
+							))}
+						</Stack>
+					)}
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setStateHistory((prev) => ({ ...prev, open: false }))} variant="outlined" size="small">
 						Cerrar
 					</Button>
 				</DialogActions>
