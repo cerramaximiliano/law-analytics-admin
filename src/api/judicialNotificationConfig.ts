@@ -105,6 +105,16 @@ export interface JudicialNotificationConfig {
 		excludePlans?: string[];
 		promo?: { enabled?: boolean; code?: string | null; text?: string | null };
 	};
+	/** Banner de anuncio/feature en todos los emails de notificación */
+	featureBanner?: {
+		enabled?: boolean;
+		title?: string | null;
+		text?: string | null;
+		ctaLabel?: string | null;
+		ctaUrl?: string | null;
+		/** Mostrar aunque el email ya lleve el banner de plan */
+		showWithPlanBanner?: boolean;
+	};
 	movementPolicies?: MovementPolicies | null;
 	stats?: {
 		lastNotificationSentAt: string | null;
@@ -142,6 +152,7 @@ export type JudicialNotificationConfigUpdate = Partial<
 		| "endpoints"
 		| "status"
 		| "planBanner"
+		| "featureBanner"
 		| "movementPolicies"
 	>
 >;

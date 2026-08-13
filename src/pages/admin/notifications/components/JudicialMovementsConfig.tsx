@@ -32,6 +32,7 @@ import {
 	ChartSquare,
 	ArrowDown2,
 	ArrowUp2,
+	Notification1,
 	Save2,
 	RefreshCircle,
 	Archive,
@@ -56,6 +57,7 @@ const JudicialMovementsConfig: React.FC = () => {
 		filters: false,
 		policies: false,
 		planBanner: false,
+		featureBanner: false,
 		dataRetention: false,
 		endpoints: false,
 		status: true,
@@ -139,6 +141,7 @@ const JudicialMovementsConfig: React.FC = () => {
 				"endpoints",
 				"status",
 				"planBanner",
+				"featureBanner",
 				"movementPolicies",
 			];
 
@@ -674,6 +677,97 @@ const JudicialMovementsConfig: React.FC = () => {
 									helperText='Ej. "20% de descuento los primeros 3 meses."'
 									disabled={config.planBanner?.promo?.enabled !== true}
 									fullWidth
+								/>
+							</Grid>
+						</Grid>
+					</Collapse>
+				</CardContent>
+			</Card>
+
+			{/* Feature banner */}
+			<Card sx={{ mb: 2 }}>
+				<CardContent>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Notification1 size={20} />
+							<Typography variant="h6">Banner de anuncios / features</Typography>
+							<Chip
+								size="small"
+								label={config.featureBanner?.enabled === true ? "activo" : "apagado"}
+								color={config.featureBanner?.enabled === true ? "success" : "default"}
+								variant="outlined"
+							/>
+						</Stack>
+						<IconButton size="small" onClick={() => handleToggleSection("featureBanner")}>
+							{expandedSections.featureBanner ? <ArrowUp2 /> : <ArrowDown2 />}
+						</IconButton>
+					</Stack>
+					<Collapse in={expandedSections.featureBanner}>
+						<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+							Anuncio publicitario (features nuevos, promociones generales) que aparece al final de TODOS los emails de notificación
+							(movimientos, calendario, tareas, vencimientos, caducidad/prescripción). Por default no se muestra si el email ya lleva
+							el banner de upgrade de plan.
+						</Typography>
+						<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+							<Grid item xs={12} md={3}>
+								<FormControlLabel
+									control={
+										<Switch
+											checked={config.featureBanner?.enabled === true}
+											onChange={(e) => handleFieldChange("featureBanner.enabled", e.target.checked)}
+										/>
+									}
+									label="Habilitado"
+								/>
+							</Grid>
+							<Grid item xs={12} md={4}>
+								<TextField
+									label="Título"
+									value={config.featureBanner?.title ?? ""}
+									onChange={(e) => handleFieldChange("featureBanner.title", e.target.value || null)}
+									helperText="Requerido para que el banner aparezca"
+									fullWidth
+								/>
+							</Grid>
+							<Grid item xs={12} md={5}>
+								<TextField
+									label="Texto"
+									value={config.featureBanner?.text ?? ""}
+									onChange={(e) => handleFieldChange("featureBanner.text", e.target.value || null)}
+									fullWidth
+								/>
+							</Grid>
+							<Grid item xs={12} md={3}>
+								<TextField
+									label="Etiqueta del CTA"
+									value={config.featureBanner?.ctaLabel ?? ""}
+									onChange={(e) => handleFieldChange("featureBanner.ctaLabel", e.target.value || null)}
+									helperText='Default: "Conocer más"'
+									fullWidth
+								/>
+							</Grid>
+							<Grid item xs={12} md={5}>
+								<TextField
+									label="URL del CTA"
+									value={config.featureBanner?.ctaUrl ?? ""}
+									onChange={(e) => handleFieldChange("featureBanner.ctaUrl", e.target.value || null)}
+									helperText="Se le agrega ?source=email_<tipo>_feature para tracking"
+									fullWidth
+								/>
+							</Grid>
+							<Grid item xs={12} md={4}>
+								<FormControlLabel
+									control={
+										<Switch
+											checked={config.featureBanner?.showWithPlanBanner === true}
+											onChange={(e) => handleFieldChange("featureBanner.showWithPlanBanner", e.target.checked)}
+										/>
+									}
+									label={
+										<Typography variant="body2">
+											Mostrar junto al banner de plan
+										</Typography>
+									}
 								/>
 							</Grid>
 						</Grid>
