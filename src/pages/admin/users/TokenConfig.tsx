@@ -263,7 +263,7 @@ const TokenConfigPage = () => {
 		<MainCard
 			title="Configuración de tokens de autenticación"
 			secondary={
-				<Stack direction="row" spacing={1}>
+				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 					<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchConfig} disabled={saving}>
 						Actualizar
 					</Button>
@@ -495,7 +495,7 @@ const TokenConfigPage = () => {
 								</Grid>
 
 								<Grid item xs={12}>
-									<Stack direction="row" spacing={2} justifyContent="flex-end">
+									<Stack direction="row" spacing={2} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
 										<Button variant="outlined" onClick={handleCancel} disabled={saving}>
 											Cancelar
 										</Button>

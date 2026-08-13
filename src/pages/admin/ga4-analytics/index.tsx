@@ -919,6 +919,9 @@ const GA4Dashboard = () => {
 			{/* Tabs de navegación */}
 			<Box sx={{ borderBottom: `1px solid ${headerBorder(theme.palette.mode === "dark")}`, mb: 0 }}>
 				<Tabs
+					variant="scrollable"
+					scrollButtons="auto"
+					allowScrollButtonsMobile
 					value={tabValue}
 					onChange={handleTabChange}
 					aria-label="GA4 analytics tabs"
@@ -1886,7 +1889,7 @@ const GA4Dashboard = () => {
 								</Stack>
 
 								{/* Action Buttons */}
-								<Stack direction="row" spacing={1}>
+								<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 									<Button
 										variant="contained"
 										startIcon={<Play size={18} />}

@@ -171,10 +171,10 @@ const FeatureGrantsPage: React.FC = () => {
 		const tooltip = meta
 			? `${meta.reason ? `Reason: ${meta.reason}` : ""}${
 					meta.grantedAt ? ` · Granted: ${new Date(meta.grantedAt).toLocaleDateString()}` : ""
-				}${meta.grantedBy ? ` · By: ${meta.grantedBy}` : ""}`
+			  }${meta.grantedBy ? ` · By: ${meta.grantedBy}` : ""}`
 			: active
-				? "Granteado (formato simple)"
-				: "Revocado";
+			? "Granteado (formato simple)"
+			: "Revocado";
 		return (
 			<Tooltip title={tooltip || (active ? "Activo" : "Revocado")} arrow>
 				<Chip
@@ -208,12 +208,11 @@ const FeatureGrantsPage: React.FC = () => {
 		>
 			<Stack spacing={2}>
 				<Alert severity="info">
-					Los grants permiten habilitar features (ej. <code>mcp_access</code>) a users sin que cumplan el
-					plan + addon comercial. Útil para beta testers, admins, QA. Editable directamente en{" "}
-					<code>users.featureGrants</code> en Mongo.
+					Los grants permiten habilitar features (ej. <code>mcp_access</code>) a users sin que cumplan el plan + addon comercial. Útil para
+					beta testers, admins, QA. Editable directamente en <code>users.featureGrants</code> en Mongo.
 				</Alert>
 
-				<Stack direction="row" spacing={2} alignItems="center">
+				<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 					<FormControl size="small" sx={{ minWidth: 200 }}>
 						<InputLabel>Filtrar por feature</InputLabel>
 						<Select
@@ -304,16 +303,12 @@ const FeatureGrantsPage: React.FC = () => {
 																	</IconButton>
 																</Tooltip>
 																<Tooltip title={`Eliminar ${f}`}>
-																	<IconButton
-																		size="small"
-																		color="error"
-																		onClick={() => handleDelete(u._id, f)}
-																	>
+																	<IconButton size="small" color="error" onClick={() => handleDelete(u._id, f)}>
 																		<Trash size={16} />
 																	</IconButton>
 																</Tooltip>
 															</React.Fragment>
-														) : null
+														) : null,
 													)}
 												</Stack>
 											</TableCell>
@@ -396,9 +391,7 @@ const FeatureGrantsPage: React.FC = () => {
 								<Select
 									label="Feature"
 									value={editing.feature}
-									onChange={(e) =>
-										setEditing({ ...editing, feature: e.target.value as KnownFeature })
-									}
+									onChange={(e) => setEditing({ ...editing, feature: e.target.value as KnownFeature })}
 								>
 									{knownFeatures.map((f) => (
 										<MenuItem key={f} value={f}>
@@ -433,12 +426,7 @@ const FeatureGrantsPage: React.FC = () => {
 					<Button onClick={() => setEditing(null)} disabled={submitting}>
 						Cancelar
 					</Button>
-					<Button
-						variant="contained"
-						onClick={handleSave}
-						disabled={submitting}
-						startIcon={submitting && <CircularProgress size={16} />}
-					>
+					<Button variant="contained" onClick={handleSave} disabled={submitting} startIcon={submitting && <CircularProgress size={16} />}>
 						Guardar
 					</Button>
 				</DialogActions>

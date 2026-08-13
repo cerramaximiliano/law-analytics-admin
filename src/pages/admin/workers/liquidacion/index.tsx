@@ -52,7 +52,8 @@ export default function LiquidacionWorkerPage() {
 							Worker Liquidación Previsional
 						</Typography>
 						<Typography variant="body1" color="text.secondary">
-							Pipeline de extracción de liquidaciones previsionales (haber caja / reajustado / retroactivo) adjuntas en causas CSS (s/REAJUSTES VARIOS)
+							Pipeline de extracción de liquidaciones previsionales (haber caja / reajustado / retroactivo) adjuntas en causas CSS
+							(s/REAJUSTES VARIOS)
 						</Typography>
 					</Box>
 					<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
@@ -116,6 +117,9 @@ export default function LiquidacionWorkerPage() {
 
 				<Box sx={{ borderBottom: `1px solid ${headerBorder(isDark)}` }}>
 					<Tabs
+						variant="scrollable"
+						scrollButtons="auto"
+						allowScrollButtonsMobile
 						value={tab}
 						onChange={(_, v) => setTab(v)}
 						sx={{

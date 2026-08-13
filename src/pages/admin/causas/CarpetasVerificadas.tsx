@@ -372,7 +372,7 @@ const CarpetasVerificadas = () => {
 							</Button>
 						</Grid>
 						<Grid item xs={12} md={6} lg={7}>
-							<Stack direction="row" spacing={1}>
+							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 								<Button variant="contained" startIcon={<SearchNormal1 size={18} />} onClick={handleSearch} disabled={loading} size="small">
 									Buscar
 								</Button>
@@ -513,7 +513,7 @@ const CarpetasVerificadas = () => {
 																sx={{
 																	transition: "background-color 200ms ease, transform 200ms ease",
 																	"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },
-															}}
+																}}
 															>
 																<Eye size={18} />
 															</IconButton>

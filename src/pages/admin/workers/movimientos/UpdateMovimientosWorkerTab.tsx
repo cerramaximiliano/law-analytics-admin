@@ -410,7 +410,7 @@ function ManagerSection() {
 				</Stack>
 			</Box>
 
-			<Stack direction="row" spacing={2} alignItems="center">
+			<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 				<Button
 					variant="contained"
 					onClick={save}
@@ -689,7 +689,7 @@ function WorkersSection() {
 
 								{/* Footer con acciones y stats totales */}
 								<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
-									<Stack direction="row" spacing={2} alignItems="center">
+									<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 										<Button
 											variant="contained"
 											size="small"

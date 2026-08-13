@@ -244,13 +244,10 @@ const UsersList = () => {
 			const response = await UserStatsService.syncFolderStatsBulk();
 			if (response.success) {
 				const r: SyncFolderStatsBulkResult = response.data;
-				enqueueSnackbar(
-					`Sync masivo: ${r.processed}/${r.totalUsers} procesados, ${r.changedUsers} con cambios, ${r.errors} errores`,
-					{
-						variant: r.errors > 0 ? "warning" : "success",
-						anchorOrigin: { vertical: "bottom", horizontal: "right" },
-					},
-				);
+				enqueueSnackbar(`Sync masivo: ${r.processed}/${r.totalUsers} procesados, ${r.changedUsers} con cambios, ${r.errors} errores`, {
+					variant: r.errors > 0 ? "warning" : "success",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
 			}
 		} catch (error: any) {
 			enqueueSnackbar(error?.response?.data?.error || "Error en sync masivo", {
@@ -630,7 +627,14 @@ const UsersList = () => {
 	return (
 		<MainCard title="Administración de usuarios" content={false}>
 			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-				<Tabs value={tabValue} onChange={handleTabChange} aria-label="users admin tabs">
+				<Tabs
+					variant="scrollable"
+					scrollButtons="auto"
+					allowScrollButtonsMobile
+					value={tabValue}
+					onChange={handleTabChange}
+					aria-label="users admin tabs"
+				>
 					<Tab label="Usuarios del sistema" />
 					<Tab label="Suscripciones de Stripe" />
 					<Tab label="Estadísticas" />
@@ -639,9 +643,9 @@ const UsersList = () => {
 
 			{tabValue === 0 && (
 				<ScrollX>
-					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 3 }}>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 3 }} flexWrap="wrap" useFlexGap>
 						<Typography variant="h5">Lista de usuarios</Typography>
-						<Stack direction="row" spacing={1} alignItems="center">
+						<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 							<Tooltip title="Actualizar datos">
 								<IconButton
 									color="primary"
@@ -839,7 +843,7 @@ const UsersList = () => {
 														</Typography>
 													</Box>
 												)}
-												<Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+												<Stack direction="row" spacing={2} sx={{ mt: 3 }} flexWrap="wrap" useFlexGap>
 													<Button variant="contained" color="primary" onClick={() => dispatch(getUsers())}>
 														Reintentar
 													</Button>
@@ -979,11 +983,7 @@ const UsersList = () => {
 																	onClick={() => handleSyncFolderStats(user._id || user.id || "")}
 																	disabled={syncingUserId === (user._id || user.id)}
 																>
-																	{syncingUserId === (user._id || user.id) ? (
-																		<CircularProgress size={16} />
-																	) : (
-																		<Calculator size={18} />
-																	)}
+																	{syncingUserId === (user._id || user.id) ? <CircularProgress size={16} /> : <Calculator size={18} />}
 																</IconButton>
 															</span>
 														</Tooltip>

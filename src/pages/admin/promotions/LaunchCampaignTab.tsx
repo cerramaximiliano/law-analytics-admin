@@ -864,7 +864,14 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 												</Box>
 
 												{/* Modo de timing + controles de delay */}
-												<Stack direction="row" spacing={0.5} alignItems="center" onClick={(e) => e.stopPropagation()}>
+												<Stack
+													direction="row"
+													spacing={0.5}
+													alignItems="center"
+													onClick={(e) => e.stopPropagation()}
+													flexWrap="wrap"
+													useFlexGap
+												>
 													<Tooltip
 														title={
 															step.anchorMode === "relative"

@@ -660,7 +660,7 @@ const CoveragePanel: React.FC = () => {
 			    ═══════════════════════════════════════════════════════════════ */}
 			{mode === "fuero" && (
 				<Stack spacing={2}>
-					<Stack direction="row" spacing={2} alignItems="flex-end">
+					<Stack direction="row" spacing={2} alignItems="flex-end" flexWrap="wrap" useFlexGap>
 						<FormControl size="small" sx={{ minWidth: 180 }}>
 							<InputLabel>Fuero</InputLabel>
 							<Select

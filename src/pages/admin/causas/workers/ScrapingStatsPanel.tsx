@@ -76,12 +76,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, color
 						{loading ? (
 							<Skeleton width={60} height={32} />
 						) : (
-							<Typography
-								variant="h4"
-								fontWeight={600}
-								color={color}
-								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
-							>
+							<Typography variant="h4" fontWeight={600} color={color} sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
 								{fmt(value)}
 							</Typography>
 						)}
@@ -350,14 +345,17 @@ const ScrapingStatsPanel: React.FC = () => {
 			<Box>
 				<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
 					<Box>
-						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+						<Typography
+							variant="h5"
+							sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+						>
 							Métricas de scraping
 						</Typography>
 						<Typography variant="body2" color="text.secondary">
 							Captchas y documentos procesados por todos los workers
 						</Typography>
 					</Box>
-					<Stack direction="row" spacing={1} alignItems="center">
+					<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 						<ToggleButtonGroup value={viewMode} exclusive onChange={(_, v) => v && setViewMode(v)} size="small">
 							<ToggleButton value="today" sx={{ px: 2 }}>
 								Hoy

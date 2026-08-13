@@ -392,6 +392,9 @@ const AlertManagement = () => {
 		<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
 			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
 				<Tabs
+					variant="scrollable"
+					scrollButtons="auto"
+					allowScrollButtonsMobile
 					value={activeTab}
 					onChange={handleTabChange}
 					sx={{

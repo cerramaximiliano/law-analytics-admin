@@ -235,7 +235,9 @@ export default function SaijWorkerPage() {
 		setPipelineSentenciasLoading(true);
 		try {
 			const params: SentenciaListParams = { page, limit: 25, ...filters };
-			Object.keys(params).forEach((k) => params[k as keyof SentenciaListParams] === undefined && delete params[k as keyof SentenciaListParams]);
+			Object.keys(params).forEach(
+				(k) => params[k as keyof SentenciaListParams] === undefined && delete params[k as keyof SentenciaListParams],
+			);
 			const res = await getSaijSentencias(params);
 			setPipelineSentencias(res.data);
 			setPipelineTotal(res.pagination.total);
@@ -423,10 +425,7 @@ export default function SaijWorkerPage() {
 			<Grid container spacing={2} sx={{ ...LIVE_PULSE_KEYFRAMES }}>
 				{/* Worker selector */}
 				<Grid item xs={12} md={3}>
-					<Paper
-						variant="outlined"
-						sx={{ p: 1, borderRadius: 2, borderColor: headerBorder(theme.palette.mode === "dark") }}
-					>
+					<Paper variant="outlined" sx={{ p: 1, borderRadius: 2, borderColor: headerBorder(theme.palette.mode === "dark") }}>
 						<Typography variant="subtitle2" color="text.secondary" sx={{ px: 1, py: 0.5 }}>
 							Workers de scraping
 						</Typography>
@@ -648,7 +647,14 @@ export default function SaijWorkerPage() {
 						)}
 
 						{/* Tabs */}
-						<Tabs value={tab} onChange={handleTabChange} sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}>
+						<Tabs
+							variant="scrollable"
+							scrollButtons="auto"
+							allowScrollButtonsMobile
+							value={tab}
+							onChange={handleTabChange}
+							sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}
+						>
 							<Tab label="Estado" />
 							<Tab label="Configuración" />
 							<Tab label="Historial" />
@@ -711,9 +717,9 @@ export default function SaijWorkerPage() {
 						{/* ── Tab 1: Configuración ── */}
 						{tab === 1 && (
 							<Stack spacing={2}>
-								<Stack direction="row" justifyContent="flex-end">
+								<Stack direction="row" justifyContent="flex-end" flexWrap="wrap" useFlexGap>
 									{scrapingEdit ? (
-										<Stack direction="row" spacing={1}>
+										<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 											<Button
 												size="small"
 												onClick={() => {
@@ -813,13 +819,42 @@ export default function SaijWorkerPage() {
 								<Grid container spacing={2}>
 									{(
 										[
-											{ key: "enabled", label: "Activo (master)", help: "Si está off no se ejecuta ningún paso downstream — el worker sólo guarda saij-sentencias." },
-											{ key: "linkToCausa", label: "Vincular causa", help: "Lookup en pjn-api por (fuero, número, año). Sin esto los siguientes pasos no corren." },
-											{ key: "markCausa", label: "Marcar causa SAIJ", help: "PATCH /api/causas/:fuero/:id/saij — setea sub-doc saij en la causa PJN." },
-											{ key: "addMovimiento", label: "Agregar movimiento", help: "Push movimiento tipo 'SENTENCIA SAIJ' al array movimiento[] de la causa." },
-											{ key: "downloadPdf", label: "Descargar PDF", help: "Baja el PDF del fallo (Puppeteer + pdf-parse). Paso costoso — apagar si hay problemas de bandwidth." },
-											{ key: "createSentenciaCapturada", label: "Crear SentenciaCapturada", help: "Upsert en sentencias-capturadas (Atlas) con el texto + sumarios. Entrada al worker de embeddings." },
-											{ key: "createMissingCausas", label: "Crear causas faltantes (Fase 3)", help: "⚠️ EXPERIMENTAL — Si la causa no existe en URLDB_LOCAL, crearla automáticamente con verified:false para que verify-worker la procese. Activar solo después del análisis del backfill report.", warning: true },
+											{
+												key: "enabled",
+												label: "Activo (master)",
+												help: "Si está off no se ejecuta ningún paso downstream — el worker sólo guarda saij-sentencias.",
+											},
+											{
+												key: "linkToCausa",
+												label: "Vincular causa",
+												help: "Lookup en pjn-api por (fuero, número, año). Sin esto los siguientes pasos no corren.",
+											},
+											{
+												key: "markCausa",
+												label: "Marcar causa SAIJ",
+												help: "PATCH /api/causas/:fuero/:id/saij — setea sub-doc saij en la causa PJN.",
+											},
+											{
+												key: "addMovimiento",
+												label: "Agregar movimiento",
+												help: "Push movimiento tipo 'SENTENCIA SAIJ' al array movimiento[] de la causa.",
+											},
+											{
+												key: "downloadPdf",
+												label: "Descargar PDF",
+												help: "Baja el PDF del fallo (Puppeteer + pdf-parse). Paso costoso — apagar si hay problemas de bandwidth.",
+											},
+											{
+												key: "createSentenciaCapturada",
+												label: "Crear SentenciaCapturada",
+												help: "Upsert en sentencias-capturadas (Atlas) con el texto + sumarios. Entrada al worker de embeddings.",
+											},
+											{
+												key: "createMissingCausas",
+												label: "Crear causas faltantes (Fase 3)",
+												help: "⚠️ EXPERIMENTAL — Si la causa no existe en URLDB_LOCAL, crearla automáticamente con verified:false para que verify-worker la procese. Activar solo después del análisis del backfill report.",
+												warning: true,
+											},
 										] as { key: keyof SaijPipelineConfig; label: string; help: string; warning?: boolean }[]
 									).map(({ key, label, help, warning }) => (
 										<Grid item xs={12} sm={6} md={4} key={key}>
@@ -856,20 +891,32 @@ export default function SaijWorkerPage() {
 							<Stack spacing={2}>
 								<Stack direction="row" alignItems="center" justifyContent="space-between">
 									<Typography variant="subtitle2">Estado del pipeline downstream</Typography>
-									<Button size="small" startIcon={<Refresh size={14} />} onClick={() => { loadPipelineStats(); loadPipelineSentencias(1, pipelineFilters); }} disabled={pipelineStatsLoading}>
+									<Button
+										size="small"
+										startIcon={<Refresh size={14} />}
+										onClick={() => {
+											loadPipelineStats();
+											loadPipelineSentencias(1, pipelineFilters);
+										}}
+										disabled={pipelineStatsLoading}
+									>
 										Recargar
 									</Button>
 								</Stack>
 
 								{pipelineStatsLoading && (
-									<Box display="flex" justifyContent="center" py={2}><CircularProgress size={24} /></Box>
+									<Box display="flex" justifyContent="center" py={2}>
+										<CircularProgress size={24} />
+									</Box>
 								)}
 
 								{pipelineStats && (
 									<>
 										{/* Stats globales SAIJ */}
 										<Paper variant="outlined" sx={{ p: 2 }}>
-											<Typography variant="overline" color="text.secondary">SAIJ Sentencias (universo)</Typography>
+											<Typography variant="overline" color="text.secondary">
+												SAIJ Sentencias (universo)
+											</Typography>
 											<Stack direction="row" spacing={1.5} flexWrap="wrap" mt={1}>
 												<StatBox label="Total" value={fmtNum(pipelineStats.total)} />
 												<StatBox label="Con expediente" value={fmtNum(pipelineStats.withExpediente)} color={theme.palette.info.main} />
@@ -879,7 +926,9 @@ export default function SaijWorkerPage() {
 											{pipelineStats.total > 0 && (
 												<Box mt={1.5}>
 													<Stack direction="row" justifyContent="space-between" mb={0.5}>
-														<Typography variant="caption" color="text.secondary">Expediente parseado</Typography>
+														<Typography variant="caption" color="text.secondary">
+															Expediente parseado
+														</Typography>
 														<Typography variant="caption" color="text.secondary">
 															{((pipelineStats.withExpediente / pipelineStats.total) * 100).toFixed(1)}%
 														</Typography>
@@ -895,7 +944,9 @@ export default function SaijWorkerPage() {
 
 										{/* Pipeline downstream */}
 										<Paper variant="outlined" sx={{ p: 2 }}>
-											<Typography variant="overline" color="text.secondary">pipelineStatus (SaijSentencia)</Typography>
+											<Typography variant="overline" color="text.secondary">
+												pipelineStatus (SaijSentencia)
+											</Typography>
 											<Stack direction="row" spacing={1.5} flexWrap="wrap" mt={1}>
 												{pipelineStats.byPipelineStatus.map((g) => {
 													const colorMap: Record<string, string> = {
@@ -925,13 +976,19 @@ export default function SaijWorkerPage() {
 												SentenciaCapturada (source=saij) — entrada al pipeline de embeddings
 											</Typography>
 											<Stack direction="row" spacing={1.5} flexWrap="wrap" mt={1}>
-												<StatBox label="SC creados" value={fmtNum(pipelineStats.sentenciasCapturadas.total)} color={theme.palette.primary.main} />
+												<StatBox
+													label="SC creados"
+													value={fmtNum(pipelineStats.sentenciasCapturadas.total)}
+													color={theme.palette.primary.main}
+												/>
 												{pipelineStats.sentenciasCapturadas.byProcessingStatus.map((g) => (
 													<StatBox
 														key={"p-" + g._id}
 														label={`proc: ${g._id}`}
 														value={fmtNum(g.count)}
-														color={g._id === "error" ? theme.palette.error.main : g._id === "processed" ? theme.palette.success.main : undefined}
+														color={
+															g._id === "error" ? theme.palette.error.main : g._id === "processed" ? theme.palette.success.main : undefined
+														}
 													/>
 												))}
 												{pipelineStats.sentenciasCapturadas.byEmbeddingStatus.map((g) => (
@@ -940,33 +997,43 @@ export default function SaijWorkerPage() {
 														label={`emb: ${g._id}`}
 														value={fmtNum(g.count)}
 														color={
-															g._id === "completed" ? theme.palette.success.main :
-															g._id === "error" ? theme.palette.error.main :
-															g._id === "pending" ? theme.palette.warning.main : undefined
+															g._id === "completed"
+																? theme.palette.success.main
+																: g._id === "error"
+																? theme.palette.error.main
+																: g._id === "pending"
+																? theme.palette.warning.main
+																: undefined
 														}
 													/>
 												))}
 											</Stack>
-											{pipelineStats.sentenciasCapturadas.total > 0 && (() => {
-												const completed = pipelineStats.sentenciasCapturadas.byEmbeddingStatus.find((g) => g._id === "completed")?.count ?? 0;
-												const pct = (completed / pipelineStats.sentenciasCapturadas.total) * 100;
-												return (
-													<Box mt={1.5}>
-														<Stack direction="row" justifyContent="space-between" mb={0.5}>
-															<Typography variant="caption" color="text.secondary">Embeddings completados</Typography>
-															<Typography variant="caption" color="text.secondary">
-																{completed} / {pipelineStats.sentenciasCapturadas.total} ({pct.toFixed(1)}%)
-															</Typography>
-														</Stack>
-														<LinearProgress variant="determinate" value={pct} color="success" sx={{ height: 6, borderRadius: 1 }} />
-													</Box>
-												);
-											})()}
+											{pipelineStats.sentenciasCapturadas.total > 0 &&
+												(() => {
+													const completed =
+														pipelineStats.sentenciasCapturadas.byEmbeddingStatus.find((g) => g._id === "completed")?.count ?? 0;
+													const pct = (completed / pipelineStats.sentenciasCapturadas.total) * 100;
+													return (
+														<Box mt={1.5}>
+															<Stack direction="row" justifyContent="space-between" mb={0.5}>
+																<Typography variant="caption" color="text.secondary">
+																	Embeddings completados
+																</Typography>
+																<Typography variant="caption" color="text.secondary">
+																	{completed} / {pipelineStats.sentenciasCapturadas.total} ({pct.toFixed(1)}%)
+																</Typography>
+															</Stack>
+															<LinearProgress variant="determinate" value={pct} color="success" sx={{ height: 6, borderRadius: 1 }} />
+														</Box>
+													);
+												})()}
 										</Paper>
 
 										{/* Top fueros */}
 										<Paper variant="outlined" sx={{ p: 2 }}>
-											<Typography variant="overline" color="text.secondary">Top fueros (SAIJ)</Typography>
+											<Typography variant="overline" color="text.secondary">
+												Top fueros (SAIJ)
+											</Typography>
 											<Stack direction="row" spacing={1} flexWrap="wrap" mt={1}>
 												{pipelineStats.byFuero.slice(0, 10).map((g) => (
 													<Chip
@@ -1037,7 +1104,10 @@ export default function SaijWorkerPage() {
 											size="small"
 											value={pipelineFilters.expedienteSource || ""}
 											onChange={(e) => {
-												const next = { ...pipelineFilters, expedienteSource: (e.target.value || undefined) as "pdf" | "metadata" | "url" | undefined };
+												const next = {
+													...pipelineFilters,
+													expedienteSource: (e.target.value || undefined) as "pdf" | "metadata" | "url" | undefined,
+												};
 												setPipelineFilters(next);
 												loadPipelineSentencias(1, next);
 											}}
@@ -1056,7 +1126,10 @@ export default function SaijWorkerPage() {
 											size="small"
 											value={pipelineFilters.embeddingStatus || ""}
 											onChange={(e) => {
-												const next = { ...pipelineFilters, embeddingStatus: (e.target.value || undefined) as SentenciaListParams["embeddingStatus"] };
+												const next = {
+													...pipelineFilters,
+													embeddingStatus: (e.target.value || undefined) as SentenciaListParams["embeddingStatus"],
+												};
 												setPipelineFilters(next);
 												loadPipelineSentencias(1, next);
 											}}
@@ -1077,7 +1150,10 @@ export default function SaijWorkerPage() {
 											size="small"
 											value={pipelineFilters.hasSentenciaCapturada || ""}
 											onChange={(e) => {
-												const next = { ...pipelineFilters, hasSentenciaCapturada: (e.target.value || undefined) as "true" | "false" | undefined };
+												const next = {
+													...pipelineFilters,
+													hasSentenciaCapturada: (e.target.value || undefined) as "true" | "false" | undefined,
+												};
 												setPipelineFilters(next);
 												loadPipelineSentencias(1, next);
 											}}
@@ -1107,7 +1183,9 @@ export default function SaijWorkerPage() {
 									</Stack>
 
 									{pipelineSentenciasLoading ? (
-										<Box display="flex" justifyContent="center" py={4}><CircularProgress size={28} /></Box>
+										<Box display="flex" justifyContent="center" py={4}>
+											<CircularProgress size={28} />
+										</Box>
 									) : pipelineSentencias.length === 0 ? (
 										<Alert severity="info">Sin resultados.</Alert>
 									) : (
@@ -1145,13 +1223,17 @@ export default function SaijWorkerPage() {
 																<TableCell>{d.fuero || "-"}</TableCell>
 																<TableCell>
 																	{exp?.numero ? (
-																		<Tooltip title={`${exp.source || "?"} · ${exp.confidence || "?"}${exp.instancia ? " · " + exp.instancia : ""}`}>
+																		<Tooltip
+																			title={`${exp.source || "?"} · ${exp.confidence || "?"}${exp.instancia ? " · " + exp.instancia : ""}`}
+																		>
 																			<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums" }}>
 																				{exp.numero}/{exp.año}
 																				{exp.source === "pdf" && <span style={{ color: theme.palette.info.main }}> 📄</span>}
 																			</Typography>
 																		</Tooltip>
-																	) : "-"}
+																	) : (
+																		"-"
+																	)}
 																</TableCell>
 																<TableCell>
 																	{d.causaRefs?.length > 0 ? (
@@ -1177,9 +1259,16 @@ export default function SaijWorkerPage() {
 																<TableCell>
 																	{sc ? (
 																		<Tooltip title={`proc: ${sc.processingStatus} · ${sc.embeddingChunksCount || 0} chunks`}>
-																			<Chip label={sc.processingStatus || "?"} size="small" variant="outlined" sx={{ height: 20, fontSize: "0.7rem" }} />
+																			<Chip
+																				label={sc.processingStatus || "?"}
+																				size="small"
+																				variant="outlined"
+																				sx={{ height: 20, fontSize: "0.7rem" }}
+																			/>
 																		</Tooltip>
-																	) : "-"}
+																	) : (
+																		"-"
+																	)}
 																</TableCell>
 																<TableCell>
 																	{sc?.embeddingStatus ? (
@@ -1187,13 +1276,19 @@ export default function SaijWorkerPage() {
 																			label={sc.embeddingStatus}
 																			size="small"
 																			color={
-																				sc.embeddingStatus === "completed" ? "success" :
-																				sc.embeddingStatus === "error" ? "error" :
-																				sc.embeddingStatus === "pending" ? "warning" : "default"
+																				sc.embeddingStatus === "completed"
+																					? "success"
+																					: sc.embeddingStatus === "error"
+																					? "error"
+																					: sc.embeddingStatus === "pending"
+																					? "warning"
+																					: "default"
 																			}
 																			sx={{ height: 20, fontSize: "0.7rem" }}
 																		/>
-																	) : "-"}
+																	) : (
+																		"-"
+																	)}
 																</TableCell>
 																<TableCell>
 																	<Typography variant="caption" color="text.secondary">
@@ -1209,14 +1304,22 @@ export default function SaijWorkerPage() {
 									)}
 
 									{pipelineTotal > 25 && (
-										<Stack direction="row" justifyContent="center" spacing={1} mt={2}>
-											<Button size="small" disabled={pipelinePage <= 1 || pipelineSentenciasLoading} onClick={() => loadPipelineSentencias(pipelinePage - 1)}>
+										<Stack direction="row" justifyContent="center" spacing={1} mt={2} flexWrap="wrap" useFlexGap>
+											<Button
+												size="small"
+												disabled={pipelinePage <= 1 || pipelineSentenciasLoading}
+												onClick={() => loadPipelineSentencias(pipelinePage - 1)}
+											>
 												Anterior
 											</Button>
 											<Typography variant="caption" alignSelf="center">
 												{pipelinePage} / {Math.ceil(pipelineTotal / 25)}
 											</Typography>
-											<Button size="small" disabled={pipelinePage * 25 >= pipelineTotal || pipelineSentenciasLoading} onClick={() => loadPipelineSentencias(pipelinePage + 1)}>
+											<Button
+												size="small"
+												disabled={pipelinePage * 25 >= pipelineTotal || pipelineSentenciasLoading}
+												onClick={() => loadPipelineSentencias(pipelinePage + 1)}
+											>
 												Siguiente
 											</Button>
 										</Stack>
@@ -1312,7 +1415,7 @@ export default function SaijWorkerPage() {
 			<Dialog open={cursorDialogOpen} onClose={() => setCursorDialogOpen(false)} maxWidth="xs" fullWidth>
 				<DialogTitle>Mover cursor de scraping</DialogTitle>
 				<DialogContent>
-					<Stack direction="row" spacing={2} mt={1}>
+					<Stack direction="row" spacing={2} mt={1} flexWrap="wrap" useFlexGap>
 						<TextField
 							label="Año"
 							size="small"

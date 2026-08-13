@@ -206,6 +206,9 @@ const FolderEditModal = ({ open, onClose, folder, onFolderUpdated }: FolderEditM
 
 			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
 				<Tabs
+					variant="scrollable"
+					scrollButtons="auto"
+					allowScrollButtonsMobile
 					value={activeTab}
 					onChange={(_, v) => setActiveTab(v)}
 					TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}

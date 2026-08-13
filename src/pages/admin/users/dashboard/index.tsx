@@ -28,7 +28,20 @@ import {
 	Select,
 	MenuItem,
 } from "@mui/material";
-import { Refresh, People, Profile2User, Crown1, Card, Magicpen, UserAdd, UserTick, Warning2, Login, MoneyRecive, Repeat } from "iconsax-react";
+import {
+	Refresh,
+	People,
+	Profile2User,
+	Crown1,
+	Card,
+	Magicpen,
+	UserAdd,
+	UserTick,
+	Warning2,
+	Login,
+	MoneyRecive,
+	Repeat,
+} from "iconsax-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/es";
@@ -479,7 +492,7 @@ const UsersDashboard: React.FC = () => {
 
 			{/* Segmentos */}
 			<Box sx={{ mt: 3, borderBottom: 1, borderColor: "divider" }}>
-				<Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons="auto">
+				<Tabs variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile value={tab} onChange={(_, v) => setTab(v)}>
 					<Tab icon={<Crown1 size={18} />} iconPosition="start" label="Top usuarios" />
 					<Tab icon={<Warning2 size={18} />} iconPosition="start" label="Inactivos / churn" />
 					<Tab icon={<UserAdd size={18} />} iconPosition="start" label="Nuevos sin activar" />
@@ -529,7 +542,11 @@ const UsersDashboard: React.FC = () => {
 									<TableCell align="right">{fmtNum(u.activeDays)}</TableCell>
 									<TableCell align="right">
 										{(u.emailViews || 0) + (u.emailLoginContinues || 0) > 0 ? (
-											<Tooltip title={`${fmtNum(u.emailViews)} documentos vistos desde emails · ${fmtNum(u.emailLoginContinues)} volvieron a la app`}>
+											<Tooltip
+												title={`${fmtNum(u.emailViews)} documentos vistos desde emails · ${fmtNum(
+													u.emailLoginContinues,
+												)} volvieron a la app`}
+											>
 												<Stack direction="row" spacing={0.5} justifyContent="flex-end">
 													<Chip size="small" variant="outlined" label={`${fmtNum(u.emailViews)} vistas`} />
 													{(u.emailLoginContinues || 0) > 0 && (

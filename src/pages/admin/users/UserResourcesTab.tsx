@@ -284,6 +284,9 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 
 			{/* Tabs */}
 			<Tabs
+				variant="scrollable"
+				scrollButtons="auto"
+				allowScrollButtonsMobile
 				value={activeTab}
 				onChange={handleTabChange}
 				TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}

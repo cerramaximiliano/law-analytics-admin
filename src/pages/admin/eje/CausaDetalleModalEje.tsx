@@ -296,7 +296,10 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 						<Box sx={{ flex: 1 }}>
 							<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
 								<Typography variant="h5" sx={{ fontWeight: 600 }}>
-									Expediente: <Box component="span" sx={{ fontVariantNumeric: "tabular-nums" }}>{causa.numero}/{causa.anio}</Box>
+									Expediente:{" "}
+									<Box component="span" sx={{ fontVariantNumeric: "tabular-nums" }}>
+										{causa.numero}/{causa.anio}
+									</Box>
 								</Typography>
 								<Chip label="EJE" color="primary" size="small" />
 								{causa.isPrivate && <Chip icon={<Lock1 size={14} />} label="Privado" color="warning" size="small" />}
@@ -330,6 +333,9 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 
 				<Box sx={{ borderBottom: `1px solid ${headerBorder(isDark)}` }}>
 					<Tabs
+						variant="scrollable"
+						scrollButtons="auto"
+						allowScrollButtonsMobile
 						value={activeTab}
 						onChange={handleTabChange}
 						aria-label="causa eje detail tabs"

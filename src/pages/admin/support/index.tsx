@@ -379,7 +379,7 @@ const SupportContactsPage = () => {
 			<MainCard
 				title="Contactos de Soporte"
 				secondary={
-					<Stack direction="row" spacing={1}>
+					<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 						{selectedIds.length > 0 && (
 							<>
 								<Button variant="outlined" color="primary" size="small" onClick={() => setBulkStatusDialogOpen(true)}>

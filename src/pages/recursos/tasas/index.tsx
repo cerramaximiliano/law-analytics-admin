@@ -527,7 +527,13 @@ const TasasInteres = () => {
 		<>
 			<MainCard title="Tasas de interés" secondary={<Chart size={24} />}>
 				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-					<Tabs value={tabValue} onChange={(_e: SyntheticEvent, v: number) => setTabValue(v)}>
+					<Tabs
+						variant="scrollable"
+						scrollButtons="auto"
+						allowScrollButtonsMobile
+						value={tabValue}
+						onChange={(_e: SyntheticEvent, v: number) => setTabValue(v)}
+					>
 						<Tab label="Estado actual" />
 						<Tab label="Consulta por fecha" />
 						<Tab label="Documentación" />

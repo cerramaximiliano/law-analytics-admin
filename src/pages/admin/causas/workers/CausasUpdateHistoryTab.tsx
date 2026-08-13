@@ -119,8 +119,8 @@ const CausasUpdateHistoryTab: React.FC = () => {
 	return (
 		<Stack spacing={2}>
 			{/* Filters */}
-			<Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
-				<Stack direction="row" spacing={2} alignItems="center">
+			<Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
+				<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 					<TextField
 						select
 						size="small"
@@ -251,7 +251,10 @@ const CausasUpdateHistoryTab: React.FC = () => {
 					<>
 						<DialogTitle sx={{ pb: 1.5 }}>
 							<Stack direction="row" spacing={1} alignItems="center">
-								<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+								<Typography
+									variant="h5"
+									sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+								>
 									Detalle del run
 								</Typography>
 								<Chip

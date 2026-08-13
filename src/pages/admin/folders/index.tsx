@@ -432,21 +432,18 @@ const FoldersPage = () => {
 			{stats && (
 				<Box sx={{ mb: 3 }}>
 					<Grid container spacing={2}>
-						{(
-							[
-								{ label: "Total", value: stats.total, colorKey: "primary" as const, brand: BRAND_BLUE },
-								{ label: "Activas", value: stats.active, colorKey: "success" as const },
-								{ label: "PJN", value: stats.pjn, colorKey: "warning" as const },
-								{ label: "MEV", value: stats.mev, colorKey: "secondary" as const },
-								{ label: "EJE", value: stats.eje ?? 0, colorKey: "info" as const },
-								{ label: "SCBA", value: stats.scba ?? 0, colorKey: "success" as const },
-								{ label: "Con causa", value: stats.withCausa, colorKey: "info" as const },
-								{ label: "Archivadas", value: stats.archived, colorKey: "default" as const },
-							]
-						).map((item) => {
+						{[
+							{ label: "Total", value: stats.total, colorKey: "primary" as const, brand: BRAND_BLUE },
+							{ label: "Activas", value: stats.active, colorKey: "success" as const },
+							{ label: "PJN", value: stats.pjn, colorKey: "warning" as const },
+							{ label: "MEV", value: stats.mev, colorKey: "secondary" as const },
+							{ label: "EJE", value: stats.eje ?? 0, colorKey: "info" as const },
+							{ label: "SCBA", value: stats.scba ?? 0, colorKey: "success" as const },
+							{ label: "Con causa", value: stats.withCausa, colorKey: "info" as const },
+							{ label: "Archivadas", value: stats.archived, colorKey: "default" as const },
+						].map((item) => {
 							const accent =
-								item.brand ??
-								(item.colorKey === "default" ? theme.palette.text.secondary : (theme.palette as any)[item.colorKey].main);
+								item.brand ?? (item.colorKey === "default" ? theme.palette.text.secondary : (theme.palette as any)[item.colorKey].main);
 							return (
 								<Grid item xs={6} sm={4} md={1.5} key={item.label}>
 									<Card
@@ -587,7 +584,7 @@ const FoldersPage = () => {
 
 				{/* Acciones */}
 				<Grid item xs={12}>
-					<Stack direction="row" spacing={1}>
+					<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 						<Button
 							variant="outlined"
 							startIcon={sortOrder === "asc" ? <ArrowUp size={18} /> : <ArrowDown size={18} />}
@@ -692,11 +689,7 @@ const FoldersPage = () => {
 																</Typography>
 																<Tooltip title={copiedFolderId === folder._id ? "¡Copiado!" : "Copiar ID"}>
 																	<IconButton size="small" onClick={() => handleCopyFolderId(folder._id)} sx={{ p: 0.25 }}>
-																		{copiedFolderId === folder._id ? (
-																			<CopySuccess size={13} color="green" />
-																		) : (
-																			<Copy size={13} />
-																		)}
+																		{copiedFolderId === folder._id ? <CopySuccess size={13} color="green" /> : <Copy size={13} />}
 																	</IconButton>
 																</Tooltip>
 															</Stack>
@@ -808,11 +801,7 @@ const FoldersPage = () => {
 																			onClick={() => handleSyncFolderStats(folder.user!._id)}
 																			disabled={syncingUserId === folder.user._id}
 																		>
-																			{syncingUserId === folder.user._id ? (
-																				<CircularProgress size={16} />
-																			) : (
-																				<Calculator size={18} />
-																			)}
+																			{syncingUserId === folder.user._id ? <CircularProgress size={16} /> : <Calculator size={18} />}
 																		</IconButton>
 																	</span>
 																</Tooltip>

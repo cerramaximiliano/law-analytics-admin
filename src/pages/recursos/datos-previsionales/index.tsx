@@ -833,7 +833,13 @@ const DatosPrevisionales = () => {
 
 			{/* Tabs */}
 			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-				<Tabs value={tabValue} onChange={(_e: SyntheticEvent, v: number) => setTabValue(v)}>
+				<Tabs
+					variant="scrollable"
+					scrollButtons="auto"
+					allowScrollButtonsMobile
+					value={tabValue}
+					onChange={(_e: SyntheticEvent, v: number) => setTabValue(v)}
+				>
 					<Tab label="Listado" icon={<DocumentText size={16} />} iconPosition="start" />
 					<Tab label="Cobertura" icon={<Calendar size={16} />} iconPosition="start" sx={{ "& .MuiTab-iconWrapper": { mr: 0.5 } }} />
 					<Tab label="Estadísticas" icon={<Chart size={16} />} iconPosition="start" />
@@ -868,7 +874,7 @@ const DatosPrevisionales = () => {
 								</Select>
 							</FormControl>
 						</Stack>
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							{nextMonthDate && (
 								<Tooltip title={`Agregar ${formatMonthYear(nextMonthDate)} (mes siguiente al último registro)`}>
 									<Button

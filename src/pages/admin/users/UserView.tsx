@@ -1352,7 +1352,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 							{subscription.downgradeGracePeriod && (
 								<Grid item xs={12} md={6}>
 									<Paper elevation={0} sx={{ p: 1.5, backgroundColor: "info.light", height: "100%" }}>
-										<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+										<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" useFlexGap>
 											<Box sx={{ flex: 1 }}>
 												<Typography variant="body2">
 													Período de gracia {subscription.downgradeGracePeriod.isActive ? "activo" : "inactivo"}
@@ -1384,7 +1384,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 																}
 																label="Auto-archivar programado"
 															/>
-															<Stack direction="row" spacing={1}>
+															<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 																<Button
 																	size="small"
 																	variant="contained"
@@ -2141,7 +2141,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 											</Typography>
 										</Grid>
 										<Grid item xs={12} md={3}>
-											<Stack direction="row" spacing={1}>
+											<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 												{invoice.pdf_url && (
 													<Button size="small" variant="outlined" href={invoice.pdf_url} target="_blank" rel="noopener noreferrer">
 														PDF
@@ -2947,8 +2947,8 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 
 				{/* Botones de acción - fuera del MainCard */}
 				<Box sx={{ p: 2, pt: 1, borderTop: 1, borderColor: "divider" }}>
-					<Stack direction="row" spacing={1} justifyContent="space-between">
-						<Stack direction="row" spacing={1}>
+					<Stack direction="row" spacing={1} justifyContent="space-between" flexWrap="wrap" useFlexGap>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							<Button variant="outlined" color="error" size="small" onClick={handleDeleteClick}>
 								Eliminar Usuario
 							</Button>
@@ -2963,7 +2963,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 								{resettingOnboarding ? "Reseteando..." : "Resetear Onboarding"}
 							</Button>
 						</Stack>
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							<Button variant="outlined" size="small" onClick={onClose}>
 								Cerrar
 							</Button>

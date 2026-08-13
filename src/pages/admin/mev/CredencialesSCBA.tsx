@@ -106,8 +106,8 @@ const formatUnlinkDetail = (cred: ScbaCredential): string | null => {
 		cred.unlinkedSource === "team"
 			? `equipo${cred.unlinkedByName ? ` (${cred.unlinkedByName})` : ""}`
 			: cred.unlinkedSource === "user"
-				? "el propio usuario"
-				: null;
+			? "el propio usuario"
+			: null;
 	if (actor) parts.push(`por ${actor}`);
 	return parts.length ? `Desvinculada ${parts.join(", ")}` : "Desvinculada por el usuario";
 };
@@ -177,8 +177,7 @@ const CredencialesSCBA = () => {
 			if (emailLogsStatusFilter !== "todos") params.status = emailLogsStatusFilter;
 			// Acotar siempre a las notificaciones de credenciales SCBA. Si se elige
 			// un tipo puntual, se filtra por ese; si no, por el set completo.
-			params.templateName =
-				emailLogsTemplateFilter !== "todos" ? emailLogsTemplateFilter : SCBA_CREDENTIAL_TEMPLATES.join(",");
+			params.templateName = emailLogsTemplateFilter !== "todos" ? emailLogsTemplateFilter : SCBA_CREDENTIAL_TEMPLATES.join(",");
 			if (emailLogsUserFilter.trim()) params.to = emailLogsUserFilter.trim();
 
 			const res = await EmailLogsService.getEmailLogs(params);
@@ -481,14 +480,14 @@ const CredencialesSCBA = () => {
 			colorKey === "primary"
 				? theme.palette.primary.main
 				: colorKey === "success"
-					? theme.palette.success.main
-					: colorKey === "warning"
-						? theme.palette.warning.main
-						: colorKey === "error"
-							? theme.palette.error.main
-							: colorKey === "info"
-								? theme.palette.info.main
-								: theme.palette.secondary.main;
+				? theme.palette.success.main
+				: colorKey === "warning"
+				? theme.palette.warning.main
+				: colorKey === "error"
+				? theme.palette.error.main
+				: colorKey === "info"
+				? theme.palette.info.main
+				: theme.palette.secondary.main;
 		return (
 			<Card
 				variant="outlined"
@@ -516,6 +515,9 @@ const CredencialesSCBA = () => {
 			<Grid container spacing={3}>
 				<Grid item xs={12}>
 					<Tabs
+						variant="scrollable"
+						scrollButtons="auto"
+						allowScrollButtonsMobile
 						value={tabValue}
 						onChange={(_, v) => setTabValue(v)}
 						sx={{ borderBottom: 1, borderColor: "divider", minHeight: 40 }}
@@ -528,273 +530,277 @@ const CredencialesSCBA = () => {
 
 				{tabValue === 0 && (
 					<>
-				{/* Estadísticas */}
-				{stats && (
-					<Grid item xs={12}>
-						<Grid container spacing={2}>
-							<Grid item xs={6} sm={3} md={2}>
-								{renderStatCard("Total", stats.total, "primary")}
+						{/* Estadísticas */}
+						{stats && (
+							<Grid item xs={12}>
+								<Grid container spacing={2}>
+									<Grid item xs={6} sm={3} md={2}>
+										{renderStatCard("Total", stats.total, "primary")}
+									</Grid>
+									<Grid item xs={6} sm={3} md={2}>
+										{renderStatCard("Verificadas", stats.verified, "success")}
+									</Grid>
+									<Grid item xs={6} sm={3} md={2}>
+										{renderStatCard("Pendientes", stats.syncStatus.pending, "warning")}
+									</Grid>
+									<Grid item xs={6} sm={3} md={2}>
+										{renderStatCard("Con errores", stats.syncStatus.error, "error")}
+									</Grid>
+									<Grid item xs={6} sm={3} md={2}>
+										{renderStatCard("Causas encontradas", stats.totals.causasFound, "info")}
+									</Grid>
+									<Grid item xs={6} sm={3} md={2}>
+										{renderStatCard("Causas creadas", stats.totals.causasCreated, "secondary")}
+									</Grid>
+								</Grid>
 							</Grid>
-							<Grid item xs={6} sm={3} md={2}>
-								{renderStatCard("Verificadas", stats.verified, "success")}
-							</Grid>
-							<Grid item xs={6} sm={3} md={2}>
-								{renderStatCard("Pendientes", stats.syncStatus.pending, "warning")}
-							</Grid>
-							<Grid item xs={6} sm={3} md={2}>
-								{renderStatCard("Con errores", stats.syncStatus.error, "error")}
-							</Grid>
-							<Grid item xs={6} sm={3} md={2}>
-								{renderStatCard("Causas encontradas", stats.totals.causasFound, "info")}
-							</Grid>
-							<Grid item xs={6} sm={3} md={2}>
-								{renderStatCard("Causas creadas", stats.totals.causasCreated, "secondary")}
+						)}
+
+						{/* Filtros */}
+						<Grid item xs={12}>
+							<Grid container spacing={2} alignItems="flex-end">
+								<Grid item xs={12} sm={6} md={3}>
+									<TextField
+										fullWidth
+										size="small"
+										label="Buscar usuario"
+										placeholder="Nombre o email..."
+										value={searchText}
+										onChange={(e) => setSearchText(e.target.value)}
+										onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+									/>
+								</Grid>
+								<Grid item xs={6} sm={3} md={2}>
+									<FormControl fullWidth size="small">
+										<InputLabel>Estado Sync</InputLabel>
+										<Select value={syncStatusFilter} label="Estado Sync" onChange={(e) => setSyncStatusFilter(e.target.value)}>
+											<MenuItem value="todos">Todos</MenuItem>
+											<MenuItem value="completed">Completado</MenuItem>
+											<MenuItem value="in_progress">En progreso</MenuItem>
+											<MenuItem value="pending">Pendiente</MenuItem>
+											<MenuItem value="error">Error</MenuItem>
+											<MenuItem value="never_synced">Sin sincronizar</MenuItem>
+											<MenuItem value="idle">Desvinculada</MenuItem>
+										</Select>
+									</FormControl>
+								</Grid>
+								<Grid item xs={6} sm={3} md={2}>
+									<FormControl fullWidth size="small">
+										<InputLabel>Verificado</InputLabel>
+										<Select value={verifiedFilter} label="Verificado" onChange={(e) => setVerifiedFilter(e.target.value)}>
+											<MenuItem value="todos">Todos</MenuItem>
+											<MenuItem value="true">Sí</MenuItem>
+											<MenuItem value="false">No</MenuItem>
+										</Select>
+									</FormControl>
+								</Grid>
+								<Grid item xs={6} sm={3} md={2}>
+									<FormControl fullWidth size="small">
+										<InputLabel>Habilitado</InputLabel>
+										<Select value={enabledFilter} label="Habilitado" onChange={(e) => setEnabledFilter(e.target.value)}>
+											<MenuItem value="todos">Todos</MenuItem>
+											<MenuItem value="true">Sí</MenuItem>
+											<MenuItem value="false">No</MenuItem>
+										</Select>
+									</FormControl>
+								</Grid>
+								<Grid item xs={6} sm={6} md={3}>
+									<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+										<Button variant="contained" size="small" onClick={handleSearch} startIcon={<SearchNormal1 size={16} />}>
+											Buscar
+										</Button>
+										<Button variant="outlined" size="small" onClick={handleClearFilters} startIcon={<CloseCircle size={16} />}>
+											Limpiar
+										</Button>
+										<Tooltip title="Refrescar">
+											<IconButton
+												size="small"
+												onClick={() => {
+													fetchCredentials();
+													fetchStats();
+												}}
+											>
+												<Refresh size={18} />
+											</IconButton>
+										</Tooltip>
+										<Button
+											variant="contained"
+											size="small"
+											color="success"
+											onClick={() => setCreateDialog(true)}
+											startIcon={<AddCircle size={16} />}
+										>
+											Nueva
+										</Button>
+									</Stack>
+								</Grid>
 							</Grid>
 						</Grid>
-					</Grid>
-				)}
 
-				{/* Filtros */}
-				<Grid item xs={12}>
-					<Grid container spacing={2} alignItems="flex-end">
-						<Grid item xs={12} sm={6} md={3}>
-							<TextField
-								fullWidth
-								size="small"
-								label="Buscar usuario"
-								placeholder="Nombre o email..."
-								value={searchText}
-								onChange={(e) => setSearchText(e.target.value)}
-								onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+						{/* Tabla */}
+						<Grid item xs={12}>
+							<TableContainer component={Paper} variant="outlined">
+								<Table size="small">
+									<TableHead>
+										<TableRow>
+											<TableCell>Usuario</TableCell>
+											<TableCell>Dom. Electrónico</TableCell>
+											<TableCell align="center">Estado</TableCell>
+											<TableCell align="center">Verificado</TableCell>
+											<TableCell align="center">Habilitado</TableCell>
+											<TableCell align="right">Causas</TableCell>
+											<TableCell align="right">Creadas</TableCell>
+											<TableCell>Última Sync</TableCell>
+											<TableCell align="center">Acciones</TableCell>
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{loading ? (
+											<TableRow>
+												<TableCell colSpan={9} align="center" sx={{ py: 4 }}>
+													<CircularProgress size={32} />
+												</TableCell>
+											</TableRow>
+										) : credentials.length === 0 ? (
+											<TableRow>
+												<TableCell colSpan={9} align="center" sx={{ py: 4 }}>
+													<Typography color="text.secondary">No se encontraron credenciales</Typography>
+												</TableCell>
+											</TableRow>
+										) : (
+											credentials.map((cred) => (
+												<TableRow key={cred._id} hover sx={{ "&:hover": { bgcolor: "action.hover" } }}>
+													<TableCell>
+														<Stack>
+															<Typography variant="body2" fontWeight={500}>
+																{cred.userName}
+															</Typography>
+															<Typography variant="caption" color="text.secondary">
+																{cred.userEmail}
+															</Typography>
+														</Stack>
+													</TableCell>
+													<TableCell>
+														<Typography
+															variant="body2"
+															sx={{ fontFamily: "monospace", fontVariantNumeric: "tabular-nums", fontSize: "0.78rem" }}
+														>
+															{cred.usernameMasked}
+														</Typography>
+													</TableCell>
+													<TableCell align="center">
+														<Tooltip title={formatUnlinkDetail(cred) || ""} arrow disableHoverListener={cred.syncStatus !== "idle"}>
+															<Chip
+																label={getSyncStatusLabel(cred.syncStatus)}
+																color={getSyncStatusColor(cred.syncStatus) as any}
+																size="small"
+																sx={{ fontWeight: 600, letterSpacing: 0.3 }}
+															/>
+														</Tooltip>
+													</TableCell>
+													<TableCell align="center">
+														{cred.verified ? (
+															<TickCircle size={20} color={theme.palette.success.main} variant="Bold" />
+														) : (
+															<CloseCircle size={20} color={theme.palette.error.main} variant="Bold" />
+														)}
+													</TableCell>
+													<TableCell align="center">
+														{cred.enabled ? (
+															<TickCircle size={20} color={theme.palette.success.main} variant="Bold" />
+														) : (
+															<CloseCircle size={20} color={theme.palette.warning.main} variant="Bold" />
+														)}
+													</TableCell>
+													<TableCell align="right">
+														<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+															{cred.stats?.totalCausasFound || 0}
+														</Typography>
+													</TableCell>
+													<TableCell align="right">
+														<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+															{cred.stats?.causasCreated || 0}
+														</Typography>
+													</TableCell>
+													<TableCell>
+														<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums" }}>
+															{formatDate(cred.lastSync)}
+														</Typography>
+													</TableCell>
+													<TableCell align="center">
+														<Stack direction="row" spacing={0.5} justifyContent="center">
+															<Tooltip title='Snapshots de "Mis Causas"'>
+																<IconButton size="small" onClick={() => handleOpenSnapshots(cred)} color="default">
+																	<Gallery size={18} />
+																</IconButton>
+															</Tooltip>
+															<Tooltip title="Recorrido de recordatorios">
+																<IconButton size="small" onClick={() => handleOpenReminders(cred)} color="default">
+																	<Notification size={18} />
+																</IconButton>
+															</Tooltip>
+															<Tooltip title={cred.enabled ? "Deshabilitar" : "Habilitar"}>
+																<IconButton
+																	size="small"
+																	onClick={() => handleToggleEnabled(cred)}
+																	color={cred.enabled ? "success" : "warning"}
+																>
+																	{cred.enabled ? <ToggleOnCircle size={18} /> : <ToggleOffCircle size={18} />}
+																</IconButton>
+															</Tooltip>
+															<Tooltip title="Resetear para re-sync">
+																<IconButton size="small" onClick={() => handleReset(cred)} color="info">
+																	<RefreshCircle size={18} />
+																</IconButton>
+															</Tooltip>
+															<Tooltip title="Resetear + limpiar causas">
+																<IconButton
+																	size="small"
+																	onClick={() =>
+																		setCleanDialog({
+																			open: true,
+																			credential: cred,
+																		})
+																	}
+																	color="warning"
+																>
+																	<Broom size={18} />
+																</IconButton>
+															</Tooltip>
+															<Tooltip title="Eliminar">
+																<IconButton
+																	size="small"
+																	onClick={() =>
+																		setDeleteDialog({
+																			open: true,
+																			credential: cred,
+																		})
+																	}
+																	color="error"
+																>
+																	<Trash size={18} />
+																</IconButton>
+															</Tooltip>
+														</Stack>
+													</TableCell>
+												</TableRow>
+											))
+										)}
+									</TableBody>
+								</Table>
+							</TableContainer>
+							<EnhancedTablePagination
+								count={totalCount}
+								page={page}
+								onPageChange={(_, newPage) => setPage(newPage)}
+								rowsPerPage={rowsPerPage}
+								onRowsPerPageChange={(e) => {
+									setRowsPerPage(parseInt(e.target.value, 10));
+									setPage(0);
+								}}
+								rowsPerPageOptions={[10, 25, 50, 100]}
 							/>
 						</Grid>
-						<Grid item xs={6} sm={3} md={2}>
-							<FormControl fullWidth size="small">
-								<InputLabel>Estado Sync</InputLabel>
-								<Select value={syncStatusFilter} label="Estado Sync" onChange={(e) => setSyncStatusFilter(e.target.value)}>
-									<MenuItem value="todos">Todos</MenuItem>
-									<MenuItem value="completed">Completado</MenuItem>
-									<MenuItem value="in_progress">En progreso</MenuItem>
-									<MenuItem value="pending">Pendiente</MenuItem>
-									<MenuItem value="error">Error</MenuItem>
-									<MenuItem value="never_synced">Sin sincronizar</MenuItem>
-									<MenuItem value="idle">Desvinculada</MenuItem>
-								</Select>
-							</FormControl>
-						</Grid>
-						<Grid item xs={6} sm={3} md={2}>
-							<FormControl fullWidth size="small">
-								<InputLabel>Verificado</InputLabel>
-								<Select value={verifiedFilter} label="Verificado" onChange={(e) => setVerifiedFilter(e.target.value)}>
-									<MenuItem value="todos">Todos</MenuItem>
-									<MenuItem value="true">Sí</MenuItem>
-									<MenuItem value="false">No</MenuItem>
-								</Select>
-							</FormControl>
-						</Grid>
-						<Grid item xs={6} sm={3} md={2}>
-							<FormControl fullWidth size="small">
-								<InputLabel>Habilitado</InputLabel>
-								<Select value={enabledFilter} label="Habilitado" onChange={(e) => setEnabledFilter(e.target.value)}>
-									<MenuItem value="todos">Todos</MenuItem>
-									<MenuItem value="true">Sí</MenuItem>
-									<MenuItem value="false">No</MenuItem>
-								</Select>
-							</FormControl>
-						</Grid>
-						<Grid item xs={6} sm={6} md={3}>
-							<Stack direction="row" spacing={1}>
-								<Button variant="contained" size="small" onClick={handleSearch} startIcon={<SearchNormal1 size={16} />}>
-									Buscar
-								</Button>
-								<Button variant="outlined" size="small" onClick={handleClearFilters} startIcon={<CloseCircle size={16} />}>
-									Limpiar
-								</Button>
-								<Tooltip title="Refrescar">
-									<IconButton
-										size="small"
-										onClick={() => {
-											fetchCredentials();
-											fetchStats();
-										}}
-									>
-										<Refresh size={18} />
-									</IconButton>
-								</Tooltip>
-								<Button
-									variant="contained"
-									size="small"
-									color="success"
-									onClick={() => setCreateDialog(true)}
-									startIcon={<AddCircle size={16} />}
-								>
-									Nueva
-								</Button>
-							</Stack>
-						</Grid>
-					</Grid>
-				</Grid>
-
-				{/* Tabla */}
-				<Grid item xs={12}>
-					<TableContainer component={Paper} variant="outlined">
-						<Table size="small">
-							<TableHead>
-								<TableRow>
-									<TableCell>Usuario</TableCell>
-									<TableCell>Dom. Electrónico</TableCell>
-									<TableCell align="center">Estado</TableCell>
-									<TableCell align="center">Verificado</TableCell>
-									<TableCell align="center">Habilitado</TableCell>
-									<TableCell align="right">Causas</TableCell>
-									<TableCell align="right">Creadas</TableCell>
-									<TableCell>Última Sync</TableCell>
-									<TableCell align="center">Acciones</TableCell>
-								</TableRow>
-							</TableHead>
-							<TableBody>
-								{loading ? (
-									<TableRow>
-										<TableCell colSpan={9} align="center" sx={{ py: 4 }}>
-											<CircularProgress size={32} />
-										</TableCell>
-									</TableRow>
-								) : credentials.length === 0 ? (
-									<TableRow>
-										<TableCell colSpan={9} align="center" sx={{ py: 4 }}>
-											<Typography color="text.secondary">No se encontraron credenciales</Typography>
-										</TableCell>
-									</TableRow>
-								) : (
-									credentials.map((cred) => (
-										<TableRow key={cred._id} hover sx={{ "&:hover": { bgcolor: "action.hover" } }}>
-											<TableCell>
-												<Stack>
-													<Typography variant="body2" fontWeight={500}>
-														{cred.userName}
-													</Typography>
-													<Typography variant="caption" color="text.secondary">
-														{cred.userEmail}
-													</Typography>
-												</Stack>
-											</TableCell>
-											<TableCell>
-												<Typography
-													variant="body2"
-													sx={{ fontFamily: "monospace", fontVariantNumeric: "tabular-nums", fontSize: "0.78rem" }}
-												>
-													{cred.usernameMasked}
-												</Typography>
-											</TableCell>
-											<TableCell align="center">
-												<Tooltip title={formatUnlinkDetail(cred) || ""} arrow disableHoverListener={cred.syncStatus !== "idle"}>
-													<Chip
-														label={getSyncStatusLabel(cred.syncStatus)}
-														color={getSyncStatusColor(cred.syncStatus) as any}
-														size="small"
-														sx={{ fontWeight: 600, letterSpacing: 0.3 }}
-													/>
-												</Tooltip>
-											</TableCell>
-											<TableCell align="center">
-												{cred.verified ? (
-													<TickCircle size={20} color={theme.palette.success.main} variant="Bold" />
-												) : (
-													<CloseCircle size={20} color={theme.palette.error.main} variant="Bold" />
-												)}
-											</TableCell>
-											<TableCell align="center">
-												{cred.enabled ? (
-													<TickCircle size={20} color={theme.palette.success.main} variant="Bold" />
-												) : (
-													<CloseCircle size={20} color={theme.palette.warning.main} variant="Bold" />
-												)}
-											</TableCell>
-											<TableCell align="right">
-												<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
-													{cred.stats?.totalCausasFound || 0}
-												</Typography>
-											</TableCell>
-											<TableCell align="right">
-												<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
-													{cred.stats?.causasCreated || 0}
-												</Typography>
-											</TableCell>
-											<TableCell>
-												<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums" }}>
-													{formatDate(cred.lastSync)}
-												</Typography>
-											</TableCell>
-											<TableCell align="center">
-												<Stack direction="row" spacing={0.5} justifyContent="center">
-													<Tooltip title='Snapshots de "Mis Causas"'>
-														<IconButton size="small" onClick={() => handleOpenSnapshots(cred)} color="default">
-															<Gallery size={18} />
-														</IconButton>
-													</Tooltip>
-													<Tooltip title="Recorrido de recordatorios">
-														<IconButton size="small" onClick={() => handleOpenReminders(cred)} color="default">
-															<Notification size={18} />
-														</IconButton>
-													</Tooltip>
-													<Tooltip title={cred.enabled ? "Deshabilitar" : "Habilitar"}>
-														<IconButton size="small" onClick={() => handleToggleEnabled(cred)} color={cred.enabled ? "success" : "warning"}>
-															{cred.enabled ? <ToggleOnCircle size={18} /> : <ToggleOffCircle size={18} />}
-														</IconButton>
-													</Tooltip>
-													<Tooltip title="Resetear para re-sync">
-														<IconButton size="small" onClick={() => handleReset(cred)} color="info">
-															<RefreshCircle size={18} />
-														</IconButton>
-													</Tooltip>
-													<Tooltip title="Resetear + limpiar causas">
-														<IconButton
-															size="small"
-															onClick={() =>
-																setCleanDialog({
-																	open: true,
-																	credential: cred,
-																})
-															}
-															color="warning"
-														>
-															<Broom size={18} />
-														</IconButton>
-													</Tooltip>
-													<Tooltip title="Eliminar">
-														<IconButton
-															size="small"
-															onClick={() =>
-																setDeleteDialog({
-																	open: true,
-																	credential: cred,
-																})
-															}
-															color="error"
-														>
-															<Trash size={18} />
-														</IconButton>
-													</Tooltip>
-												</Stack>
-											</TableCell>
-										</TableRow>
-									))
-								)}
-							</TableBody>
-						</Table>
-					</TableContainer>
-					<EnhancedTablePagination
-						count={totalCount}
-						page={page}
-						onPageChange={(_, newPage) => setPage(newPage)}
-						rowsPerPage={rowsPerPage}
-						onRowsPerPageChange={(e) => {
-							setRowsPerPage(parseInt(e.target.value, 10));
-							setPage(0);
-						}}
-						rowsPerPageOptions={[10, 25, 50, 100]}
-					/>
-				</Grid>
 					</>
 				)}
 
@@ -949,7 +955,13 @@ const CredencialesSCBA = () => {
 																		<Typography
 																			variant="caption"
 																			color="error.main"
-																			sx={{ display: "block", maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+																			sx={{
+																				display: "block",
+																				maxWidth: 260,
+																				overflow: "hidden",
+																				textOverflow: "ellipsis",
+																				whiteSpace: "nowrap",
+																			}}
 																		>
 																			{log.errorMessage}
 																		</Typography>
@@ -1041,8 +1053,8 @@ const CredencialesSCBA = () => {
 								</IconButton>
 							</Tooltip>
 							<Typography variant="caption" color="text.secondary">
-								Detectadas por el watchdog de scba-workers (cada 30 min) y los hooks de deshabilitación/snapshots. Cada
-								alerta se emailea al admin con cooldown de 24 h y también aparece en el panel del manager.
+								Detectadas por el watchdog de scba-workers (cada 30 min) y los hooks de deshabilitación/snapshots. Cada alerta se emailea al
+								admin con cooldown de 24 h y también aparece en el panel del manager.
 							</Typography>
 						</Stack>
 						{adminAlertsLoading ? (
@@ -1323,7 +1335,7 @@ const CredencialesSCBA = () => {
 											{credentialInvalid
 												? `Credencial inválida — el 1er recordatorio se programa ~3 días después de la notificación inicial${
 														d.errorNotifiedAt ? ` (${formatDate(d.errorNotifiedAt)})` : ""
-													}.`
+												  }.`
 												: "La credencial no está en estado de error; no hay recordatorios programados."}
 										</Typography>
 									</Stack>
@@ -1334,11 +1346,7 @@ const CredencialesSCBA = () => {
 							if (credentialInvalid && rc < 3) {
 								const last = d.lastReminderAt;
 								const errN = d.errorNotifiedAt;
-								const baseMs = last
-									? new Date(last).getTime() + 7 * 86400000
-									: errN
-										? new Date(errN).getTime() + 3 * 86400000
-										: null;
+								const baseMs = last ? new Date(last).getTime() + 7 * 86400000 : errN ? new Date(errN).getTime() + 3 * 86400000 : null;
 								nextRem = baseMs ? new Date(baseMs) : null;
 							}
 							return (
@@ -1373,11 +1381,7 @@ const CredencialesSCBA = () => {
 															<TableCell>{r.to}</TableCell>
 															<TableCell>{r.templateName}</TableCell>
 															<TableCell align="center">
-																<Chip
-																	label={r.status || "sent"}
-																	size="small"
-																	color={r.status === "sent" ? "success" : "default"}
-																/>
+																<Chip label={r.status || "sent"} size="small" color={r.status === "sent" ? "success" : "default"} />
 															</TableCell>
 														</TableRow>
 													))}
@@ -1396,9 +1400,7 @@ const CredencialesSCBA = () => {
 					)}
 				</DialogContent>
 				<DialogActions>
-					<Button onClick={() => setReminderDialog({ open: false, credential: null, loading: false, data: null })}>
-						Cerrar
-					</Button>
+					<Button onClick={() => setReminderDialog({ open: false, credential: null, loading: false, data: null })}>Cerrar</Button>
 				</DialogActions>
 			</Dialog>
 
@@ -1416,8 +1418,8 @@ const CredencialesSCBA = () => {
 					Snapshots de "Mis Causas"
 					{snapshotsDialog.credential && (
 						<Typography variant="body2" color="text.secondary">
-							{snapshotsDialog.credential.userEmail} — pantalla del portal SCBA tal como la ven los workers (1 captura/día, o más
-							si cambió la cantidad de causas). Últimos 180 días
+							{snapshotsDialog.credential.userEmail} — pantalla del portal SCBA tal como la ven los workers (1 captura/día, o más si cambió
+							la cantidad de causas). Últimos 180 días
 							{snapshotsDialog.total > 0 ? ` — ${snapshotsDialog.total} snapshot${snapshotsDialog.total === 1 ? "" : "s"}` : ""}.
 						</Typography>
 					)}
@@ -1534,11 +1536,7 @@ const CredencialesSCBA = () => {
 											color={snap.causasCount > 0 ? "primary" : "default"}
 										/>
 										{snap.trigger === "count-changed" && (
-											<Chip
-												size="small"
-												color="warning"
-												label={`cambió: ${snap.prevCount ?? "?"} → ${snap.causasCount}`}
-											/>
+											<Chip size="small" color="warning" label={`cambió: ${snap.prevCount ?? "?"} → ${snap.causasCount}`} />
 										)}
 										<Typography variant="caption" color="text.secondary">
 											{snap.source}

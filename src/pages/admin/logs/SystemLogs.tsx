@@ -376,7 +376,7 @@ const SystemLogs = () => {
 						</Typography>
 					</Grid>
 					<Grid item>
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							<Button
 								variant="outlined"
 								color="secondary"

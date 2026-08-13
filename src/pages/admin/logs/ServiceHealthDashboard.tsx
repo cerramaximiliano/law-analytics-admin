@@ -219,7 +219,7 @@ function ReportDetailDialog({ report, open, onClose }: { report: HealthReport | 
 						<Typography variant="caption" color="text.disabled">
 							{report.aiModel} · {report.aiTokensUsed} tokens · {(report.generationDurationMs / 1000).toFixed(1)}s
 						</Typography>
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							<Button
 								size="small"
 								variant="outlined"
@@ -333,7 +333,7 @@ const ServiceHealthDashboard = () => {
 						</Typography>
 					</Grid>
 					<Grid item>
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							<Button
 								variant="outlined"
 								color="secondary"

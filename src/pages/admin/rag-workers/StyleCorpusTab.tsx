@@ -408,7 +408,7 @@ const StyleCorpusTab = () => {
 				</Typography>
 				<Paper variant="outlined" sx={{ p: 2 }}>
 					<Stack spacing={2}>
-						<Stack direction="row" spacing={2} alignItems="flex-start">
+						<Stack direction="row" spacing={2} alignItems="flex-start" flexWrap="wrap" useFlexGap>
 							<TextField
 								select
 								label="Fuero"

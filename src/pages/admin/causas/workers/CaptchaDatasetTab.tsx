@@ -320,11 +320,7 @@ const CaptchaDatasetTab = () => {
 				}}
 			/>
 
-			{error && (
-				<Alert severity="error">
-					{error}
-				</Alert>
-			)}
+			{error && <Alert severity="error">{error}</Alert>}
 
 			{/* Grid de imágenes */}
 			{loading ? (
@@ -352,14 +348,7 @@ const CaptchaDatasetTab = () => {
 			{/* Paginación */}
 			{total > PAGE_SIZE && (
 				<Stack direction="row" justifyContent="center" sx={{ pt: 1 }}>
-					<Pagination
-						count={totalPages}
-						page={page}
-						onChange={(_, p) => setPage(p)}
-						color="primary"
-						showFirstButton
-						showLastButton
-					/>
+					<Pagination count={totalPages} page={page} onChange={(_, p) => setPage(p)} color="primary" showFirstButton showLastButton />
 				</Stack>
 			)}
 
@@ -447,7 +436,7 @@ const CaptchaDatasetTab = () => {
 												? "Ni el modelo ni el proveedor resolvieron este captcha. Escribí los 4 dígitos que ves en la imagen."
 												: `El PJN rechazó la etiqueta "${selected.label}", así que es incorrecta. Escribí los 4 dígitos correctos.`}
 										</Typography>
-										<Stack direction="row" spacing={1} alignItems="flex-start">
+										<Stack direction="row" spacing={1} alignItems="flex-start" flexWrap="wrap" useFlexGap>
 											<TextField
 												size="small"
 												value={labelInput}
@@ -480,7 +469,11 @@ const CaptchaDatasetTab = () => {
 											</Button>
 										</Stack>
 										{labelMsg && (
-											<Typography variant="caption" sx={{ display: "block", mt: 1 }} color={labelMsg === "Etiqueta guardada" ? "success.main" : "error.main"}>
+											<Typography
+												variant="caption"
+												sx={{ display: "block", mt: 1 }}
+												color={labelMsg === "Etiqueta guardada" ? "success.main" : "error.main"}
+											>
 												{labelMsg}
 											</Typography>
 										)}

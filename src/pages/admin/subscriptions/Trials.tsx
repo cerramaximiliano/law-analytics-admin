@@ -388,7 +388,7 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 											</Typography>
 										</Box>
 										{editingGraceField === field.key ? (
-											<Stack direction="row" spacing={1} alignItems="center">
+											<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 												<TextField
 													size="small"
 													type="number"
@@ -868,7 +868,7 @@ const TrialsTab = ({ testMode }: { testMode: boolean }) => {
 											</Stack>
 										</Box>
 										{editingPlan === plan.planId ? (
-											<Stack direction="row" spacing={1} alignItems="center">
+											<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 												<TextField
 													size="small"
 													type="number"

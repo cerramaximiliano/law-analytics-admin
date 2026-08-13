@@ -363,7 +363,14 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 
 					{/* Tabs */}
 					<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-						<Tabs value={activeTab} onChange={handleTabChange} aria-label="configuración avanzada tabs">
+						<Tabs
+							variant="scrollable"
+							scrollButtons="auto"
+							allowScrollButtonsMobile
+							value={activeTab}
+							onChange={handleTabChange}
+							aria-label="configuración avanzada tabs"
+						>
 							<Tab icon={<Shield size={20} />} label="Servicios de Captcha" iconPosition="start" />
 							{showRangeTab && <Tab icon={<ChartCircle size={20} />} label="Rango de Búsqueda" iconPosition="start" />}
 							{showProbeTab && <Tab icon={<Scanning size={20} />} label="Frontera" iconPosition="start" />}
@@ -551,10 +558,10 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 									</Stack>
 									<Alert severity="info" variant="outlined">
 										<Typography variant="body2">
-											Cuando está activo, el worker guarda cada imagen de captcha resuelta en{" "}
-											<code>/var/lib/pjn-captcha-dataset/</code> del servidor (subcarpetas <code>verified/</code> y{" "}
-											<code>unverified/</code> según si PJN aceptó el token). Las imágenes verificadas sirven como ground truth para entrenar
-											un OCR propio. Activar solo en workers seleccionados — cada uno suma ~50-100 MB/día.
+											Cuando está activo, el worker guarda cada imagen de captcha resuelta en <code>/var/lib/pjn-captcha-dataset/</code> del
+											servidor (subcarpetas <code>verified/</code> y <code>unverified/</code> según si PJN aceptó el token). Las imágenes
+											verificadas sirven como ground truth para entrenar un OCR propio. Activar solo en workers seleccionados — cada uno
+											suma ~50-100 MB/día.
 										</Typography>
 									</Alert>
 								</Box>
@@ -571,7 +578,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 									</Typography>
 								</Alert>
 
-								<Stack direction="row" spacing={2}>
+								<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 									<TextField
 										fullWidth
 										label="Rango Inicial"

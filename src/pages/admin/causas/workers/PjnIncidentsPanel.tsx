@@ -71,7 +71,9 @@ const PjnIncidentsPanel: React.FC = () => {
 	const { enqueueSnackbar } = useSnackbar();
 	const [loading, setLoading] = useState(false);
 	const [incidents, setIncidents] = useState<PjnSiteIncident[]>([]);
-	const [summary, setSummary] = useState<{ totalDurationMs: number; avgDurationMs: number; closedCount: number; openCount: number } | null>(null);
+	const [summary, setSummary] = useState<{ totalDurationMs: number; avgDurationMs: number; closedCount: number; openCount: number } | null>(
+		null,
+	);
 	const [currentStatus, setCurrentStatus] = useState<string | null>(null);
 	const [sinceDays, setSinceDays] = useState<number>(30);
 
@@ -103,12 +105,15 @@ const PjnIncidentsPanel: React.FC = () => {
 				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
 					<Stack direction="row" spacing={1} alignItems="center">
 						<Warning2 size={20} color={theme.palette.warning.main} />
-						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+						<Typography
+							variant="h5"
+							sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+						>
 							Historial de mantenimientos del PJN
 						</Typography>
 						{isInMaintenance && <Chip label="En curso" size="small" color="warning" icon={<Warning2 size={12} />} />}
 					</Stack>
-					<Stack direction="row" spacing={1} alignItems="center">
+					<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 						<FormControl size="small" sx={{ minWidth: 160 }}>
 							<InputLabel>Período</InputLabel>
 							<Select value={sinceDays} label="Período" onChange={(e) => setSinceDays(Number(e.target.value))}>
@@ -237,7 +242,11 @@ const PjnIncidentsPanel: React.FC = () => {
 													<TableCell align="center">{inc.consecutiveDetections}</TableCell>
 													<TableCell sx={{ maxWidth: 280 }}>
 														<Tooltip title={inc.message || ""} arrow>
-															<Typography variant="caption" color="text.secondary" sx={{ display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+															<Typography
+																variant="caption"
+																color="text.secondary"
+																sx={{ display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}
+															>
 																{inc.message || "—"}
 															</Typography>
 														</Tooltip>

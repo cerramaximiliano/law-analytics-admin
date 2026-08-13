@@ -235,11 +235,11 @@ const ConfiguracionTab = () => {
 	return (
 		<Stack spacing={3}>
 			{/* Header */}
-			<Stack direction="row" justifyContent="space-between" alignItems="center">
+			<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 				<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
 					Configuración de rastreo de códigos
 				</Typography>
-				<Stack direction="row" spacing={2}>
+				<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 					<Button
 						variant="outlined"
 						startIcon={<Refresh />}
@@ -526,7 +526,11 @@ const ConfiguracionTab = () => {
 				<Grid container spacing={3}>
 					<Grid item xs={6} md={3}>
 						<Card sx={{ p: 2, bgcolor: "primary.lighter", textAlign: "center" }}>
-							<Typography variant="h4" color="primary.main" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
+							<Typography
+								variant="h4"
+								color="primary.main"
+								sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
+							>
 								{config.estadisticas?.totalCodigosRastreados?.toLocaleString() || 0}
 							</Typography>
 							<Typography variant="caption" color="text.secondary">
@@ -536,7 +540,11 @@ const ConfiguracionTab = () => {
 					</Grid>
 					<Grid item xs={6} md={3}>
 						<Card sx={{ p: 2, bgcolor: "success.lighter", textAlign: "center" }}>
-							<Typography variant="h4" color="success.main" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
+							<Typography
+								variant="h4"
+								color="success.main"
+								sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
+							>
 								{config.estadisticas?.codigosValidosEncontrados?.toLocaleString() || 0}
 							</Typography>
 							<Typography variant="caption" color="text.secondary">

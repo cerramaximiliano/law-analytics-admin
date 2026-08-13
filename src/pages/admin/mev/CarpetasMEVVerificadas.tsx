@@ -518,7 +518,12 @@ const CarpetasMEVVerificadas = () => {
 										sx={{ color: "primary.main", fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: -0.3 }}
 									>
 										{totalCount.toLocaleString()}
-										<Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5, fontVariantNumeric: "tabular-nums" }}>
+										<Typography
+											component="span"
+											variant="body2"
+											color="text.secondary"
+											sx={{ ml: 0.5, fontVariantNumeric: "tabular-nums" }}
+										>
 											/ {totalInDatabase.toLocaleString()}
 										</Typography>
 									</Typography>
@@ -786,7 +791,7 @@ const CarpetasMEVVerificadas = () => {
 							</Button>
 						</Grid>
 						<Grid item xs={12} md={6} lg={7}>
-							<Stack direction="row" spacing={1}>
+							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 								<Button variant="contained" startIcon={<SearchNormal1 size={18} />} onClick={handleSearch} disabled={loading} size="small">
 									Buscar
 								</Button>

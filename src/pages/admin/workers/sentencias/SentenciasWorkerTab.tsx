@@ -1241,7 +1241,8 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 									<Box>
 										<Typography variant="body2">Query planner en búsqueda (experimental)</Typography>
 										<Typography variant="caption" color="text.secondary">
-											POST /sentencias/ask interpreta el prompt del usuario (deriva juzgado/sala/fecha + estrategia) con LLM. ON/OFF para evaluar y desactivar si no rinde.
+											POST /sentencias/ask interpreta el prompt del usuario (deriva juzgado/sala/fecha + estrategia) con LLM. ON/OFF para
+											evaluar y desactivar si no rinde.
 										</Typography>
 									</Box>
 								</Stack>
@@ -1322,11 +1323,9 @@ function EmbeddingsConfigCard() {
 		loadCfg();
 	}, []);
 
-	const dirty = !!config && (
-		draft.cronPattern !== config.cronPattern ||
-		draft.batchSize !== config.batchSize ||
-		draft.embedBatchSize !== config.embedBatchSize
-	);
+	const dirty =
+		!!config &&
+		(draft.cronPattern !== config.cronPattern || draft.batchSize !== config.batchSize || draft.embedBatchSize !== config.embedBatchSize);
 
 	const handleSave = async () => {
 		setSaving(true);
@@ -1361,11 +1360,11 @@ function EmbeddingsConfigCard() {
 
 			<Alert severity="info" variant="outlined" sx={{ mb: 2, py: 0.5 }}>
 				<Typography variant="caption" component="div">
-					<strong>Para reducir costos:</strong> espaciar <code>cronPattern</code> o bajar <code>batchSize</code> reduce
-					la cantidad de sentencias procesadas/hora → menos vectors upserted → menos $$.
+					<strong>Para reducir costos:</strong> espaciar <code>cronPattern</code> o bajar <code>batchSize</code> reduce la cantidad de
+					sentencias procesadas/hora → menos vectors upserted → menos $$.
 					<br />
-					<strong>Para tunning de performance:</strong> <code>embedBatchSize</code> sólo cambia el shape de los calls
-					a Pinecone (1×50 vs 5×10) — el total facturado es el mismo.
+					<strong>Para tunning de performance:</strong> <code>embedBatchSize</code> sólo cambia el shape de los calls a Pinecone (1×50 vs
+					5×10) — el total facturado es el mismo.
 				</Typography>
 			</Alert>
 
@@ -1406,7 +1405,7 @@ function EmbeddingsConfigCard() {
 				</Grid>
 			</Grid>
 
-			<Stack direction="row" justifyContent="flex-end" mt={2} spacing={1}>
+			<Stack direction="row" justifyContent="flex-end" mt={2} spacing={1} flexWrap="wrap" useFlexGap>
 				<Button size="small" onClick={loadCfg} disabled={saving || loading} sx={{ textTransform: "none" }}>
 					Descartar
 				</Button>
@@ -1763,13 +1762,13 @@ function ListaSection() {
 												¿Por qué Novelty y Publicaciones muestran cantidades distintas?
 											</Typography>
 											<Typography variant="caption" sx={{ display: "block", mb: 0.5 }}>
-												<strong>Novelty</strong> en esta Lista ={" "}
-												<code>category: &apos;novelty&apos;</code> (todas las sentencias detectadas como novedad, en
-												cualquier estado del pipeline: pendientes, OCR, error, procesadas...).
+												<strong>Novelty</strong> en esta Lista = <code>category: &apos;novelty&apos;</code> (todas las sentencias detectadas
+												como novedad, en cualquier estado del pipeline: pendientes, OCR, error, procesadas...).
 											</Typography>
 											<Typography variant="caption" sx={{ display: "block" }}>
-												<strong>Publicaciones</strong> es un subconjunto: <code>novelty + embeddingStatus: completed + publicationStatus: pending</code>.
-												Es decir, solo las que llegaron al final del pipeline y están listas para publicar.
+												<strong>Publicaciones</strong> es un subconjunto:{" "}
+												<code>novelty + embeddingStatus: completed + publicationStatus: pending</code>. Es decir, solo las que llegaron al
+												final del pipeline y están listas para publicar.
 											</Typography>
 										</Box>
 									}
@@ -1801,7 +1800,13 @@ function ListaSection() {
 									</InputAdornment>
 								),
 								endAdornment: search && (
-									<IconButton size="small" onClick={() => { setSearch(""); setSearchInput(""); }}>
+									<IconButton
+										size="small"
+										onClick={() => {
+											setSearch("");
+											setSearchInput("");
+										}}
+									>
 										<CloseCircle size={14} />
 									</IconButton>
 								),
@@ -1809,10 +1814,19 @@ function ListaSection() {
 						/>
 					</Grid>
 					<Grid item xs={6} sm={3} md={2}>
-						<TextField select fullWidth size="small" label="Fuero" value={fueroFilter} onChange={(e) => setFueroFilter(e.target.value as any)}>
+						<TextField
+							select
+							fullWidth
+							size="small"
+							label="Fuero"
+							value={fueroFilter}
+							onChange={(e) => setFueroFilter(e.target.value as any)}
+						>
 							<MenuItem value="all">Todos</MenuItem>
 							{(Object.keys(FUERO_LABELS) as Fuero[]).map((f) => (
-								<MenuItem key={f} value={f}>{FUERO_LABELS[f]}</MenuItem>
+								<MenuItem key={f} value={f}>
+									{FUERO_LABELS[f]}
+								</MenuItem>
 							))}
 						</TextField>
 					</Grid>
@@ -1820,7 +1834,9 @@ function ListaSection() {
 						<TextField select fullWidth size="small" label="Tipo" value={tipoFilter} onChange={(e) => setTipoFilter(e.target.value as any)}>
 							<MenuItem value="all">Todos</MenuItem>
 							{(Object.keys(TIPO_LABELS) as SentenciaTipo[]).map((t) => (
-								<MenuItem key={t} value={t}>{TIPO_LABELS[t]}</MenuItem>
+								<MenuItem key={t} value={t}>
+									{TIPO_LABELS[t]}
+								</MenuItem>
 							))}
 						</TextField>
 					</Grid>
@@ -1835,12 +1851,21 @@ function ListaSection() {
 						>
 							<MenuItem value="all">Todos</MenuItem>
 							{(Object.keys(NOVELTY_CHECK_LABEL) as NoveltyCheckStatus[]).map((s) => (
-								<MenuItem key={s} value={s}>{NOVELTY_CHECK_LABEL[s]}</MenuItem>
+								<MenuItem key={s} value={s}>
+									{NOVELTY_CHECK_LABEL[s]}
+								</MenuItem>
 							))}
 						</TextField>
 					</Grid>
 					<Grid item xs={6} sm={3} md={2}>
-						<TextField select fullWidth size="small" label="Ordenar por" value={sortBy} onChange={(e) => setSortBy(e.target.value as SortByOpt)}>
+						<TextField
+							select
+							fullWidth
+							size="small"
+							label="Ordenar por"
+							value={sortBy}
+							onChange={(e) => setSortBy(e.target.value as SortByOpt)}
+						>
 							<MenuItem value="detectedAt">Detección</MenuItem>
 							<MenuItem value="processedAt">Procesado</MenuItem>
 							<MenuItem value="movimientoFecha">Fecha movimiento</MenuItem>
@@ -2018,7 +2043,14 @@ function SentenciaCard({ doc, onDetail }: SentenciaCardProps) {
 			</Grid>
 
 			{/* Footer: pipeline status (OCR, embeddings, novelty, publicación) */}
-			<Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mt: "auto", pt: 1, borderTop: "1px solid", borderColor: "divider" }}>
+			<Stack
+				direction="row"
+				spacing={0.5}
+				alignItems="center"
+				flexWrap="wrap"
+				useFlexGap
+				sx={{ mt: "auto", pt: 1, borderTop: "1px solid", borderColor: "divider" }}
+			>
 				{doc.ocrStatus && doc.ocrStatus !== "not_needed" && (
 					<Tooltip title={`OCR: ${OCR_STATUS_LABEL[doc.ocrStatus]}`}>
 						<Chip
@@ -2073,7 +2105,13 @@ function SentenciaCard({ doc, onDetail }: SentenciaCardProps) {
 				)}
 				<Box sx={{ flex: 1 }} />
 				<Tooltip title="Ver detalle">
-					<IconButton size="small" onClick={(e) => { e.stopPropagation(); onDetail(doc); }}>
+					<IconButton
+						size="small"
+						onClick={(e) => {
+							e.stopPropagation();
+							onDetail(doc);
+						}}
+					>
 						<DocumentText size={14} />
 					</IconButton>
 				</Tooltip>
@@ -2176,7 +2214,7 @@ function AiSummaryConfigPanel({ config, saving, onSave }: AiSummaryConfigPanelPr
 						sx={{ "& .MuiOutlinedInput-root": { bgcolor: alpha(theme.palette.background.default, 0.5) } }}
 					/>
 
-					<Stack direction="row" spacing={1} justifyContent="flex-end">
+					<Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
 						{config.aiSummary?.systemPrompt && (
 							<Button size="small" color="error" variant="outlined" onClick={handleReset} disabled={saving}>
 								Restaurar por defecto
@@ -2242,7 +2280,7 @@ function FueroRow({
 				</Stack>
 
 				{/* Year range */}
-				<Stack direction="row" spacing={1} alignItems="center">
+				<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 					<TextField
 						label="Desde"
 						type="number"

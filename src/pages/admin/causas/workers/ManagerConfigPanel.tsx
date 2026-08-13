@@ -229,7 +229,10 @@ const ManagerConfigPanel: React.FC = () => {
 				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
 					<Stack direction="row" spacing={1} alignItems="center">
 						<Setting2 size={20} color={theme.palette.primary.main} />
-						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+						<Typography
+							variant="h5"
+							sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+						>
 							Configuración del manager de workers
 						</Typography>
 						{status && (
@@ -246,9 +249,7 @@ const ManagerConfigPanel: React.FC = () => {
 													  })
 													: "—"
 										  }${status.pjnSiteStatus.message ? ` — ${status.pjnSiteStatus.message}` : ""}${
-												status.pjnSiteStatus.lastDetectedBy
-													? ` (detectado por ${status.pjnSiteStatus.lastDetectedBy})`
-													: ""
+												status.pjnSiteStatus.lastDetectedBy ? ` (detectado por ${status.pjnSiteStatus.lastDetectedBy})` : ""
 										  }`
 										: `Sitio PJN operativo${
 												status.pjnSiteStatus.lastHealthyAt
@@ -263,13 +264,7 @@ const ManagerConfigPanel: React.FC = () => {
 									label={status.pjnSiteStatus.status === "maintenance" ? "PJN en mantenimiento" : "PJN operativo"}
 									size="small"
 									color={status.pjnSiteStatus.status === "maintenance" ? "warning" : "success"}
-									icon={
-										status.pjnSiteStatus.status === "maintenance" ? (
-											<Warning2 size={14} />
-										) : (
-											<TickCircle size={14} />
-										)
-									}
+									icon={status.pjnSiteStatus.status === "maintenance" ? <Warning2 size={14} /> : <TickCircle size={14} />}
 								/>
 							</Tooltip>
 						)}
@@ -410,11 +405,11 @@ const ManagerConfigPanel: React.FC = () => {
 
 						{/* Configuracion */}
 						<Box>
-							<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+							<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
 								<Typography variant="subtitle2" fontWeight="bold">
 									Configuracion
 								</Typography>
-								<Stack direction="row" spacing={1}>
+								<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 									<Button
 										size="small"
 										variant="outlined"
@@ -605,7 +600,7 @@ const ManagerConfigPanel: React.FC = () => {
 						{/* Historial */}
 						{history && (
 							<Box>
-								<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+								<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }} flexWrap="wrap" useFlexGap>
 									<Typography variant="subtitle2" fontWeight="bold">
 										Historial ({history.stats.snapshotCount} snapshots)
 									</Typography>

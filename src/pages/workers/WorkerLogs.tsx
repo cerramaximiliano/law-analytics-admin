@@ -314,11 +314,11 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 		<Box sx={{ p: 3 }}>
 			<Stack spacing={3}>
 				{/* Header with refresh */}
-				<Stack direction="row" justifyContent="space-between" alignItems="center">
+				<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 					<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
 						Resumen de logs
 					</Typography>
-					<Stack direction="row" spacing={2} alignItems="center">
+					<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 						<FormControl size="small" sx={{ minWidth: 120 }}>
 							<InputLabel>Período</InputLabel>
 							<Select value={hoursFilter} label="Período" onChange={(e) => setHoursFilter(Number(e.target.value))}>
@@ -365,10 +365,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 									>
 										Total de logs
 									</Typography>
-									<Typography
-										variant="h3"
-										sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
-									>
+									<Typography variant="h3" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
 										{counts?.total?.toLocaleString() || 0}
 									</Typography>
 								</Stack>
@@ -395,10 +392,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 											>
 												{getWorkerTypeLabel(type)}
 											</Typography>
-											<Typography
-												variant="h4"
-												sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
-											>
+											<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
 												{count?.toLocaleString() || 0}
 											</Typography>
 										</Stack>
@@ -727,9 +721,9 @@ const WorkersTab: React.FC = () => {
 	return (
 		<Box sx={{ p: 3 }}>
 			<Stack spacing={3}>
-				<Stack direction="row" justifyContent="space-between" alignItems="center">
+				<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 					<Typography variant="h5">Workers Activos ({data?.total || 0})</Typography>
-					<Stack direction="row" spacing={2} alignItems="center">
+					<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 						<FormControl size="small" sx={{ minWidth: 160 }}>
 							<InputLabel>Tipo de worker</InputLabel>
 							<Select value={workerTypeFilter} label="Tipo de worker" onChange={(e) => setWorkerTypeFilter(String(e.target.value))}>
@@ -787,10 +781,10 @@ const WorkersTab: React.FC = () => {
 															cy="50%"
 															outerRadius={90}
 															label={(d: any) => {
-															const total = statusPieData.reduce((s, x) => s + x.count, 0);
-															const pct = total > 0 ? ((d.count / total) * 100).toFixed(1) : 0;
-															return `${d.name}: ${d.count} (${pct}%)`;
-														}}
+																const total = statusPieData.reduce((s, x) => s + x.count, 0);
+																const pct = total > 0 ? ((d.count / total) * 100).toFixed(1) : 0;
+																return `${d.name}: ${d.count} (${pct}%)`;
+															}}
 														>
 															{statusPieData.map((entry) => (
 																<Cell key={entry.status} fill={getStatusColor(entry.status, theme)} />
@@ -833,10 +827,7 @@ const WorkersTab: React.FC = () => {
 															))}
 														</Pie>
 														<RechartsTooltip
-															formatter={(v: any, _n: any, p: any) => [
-																`${v} (${p?.payload?.percentage ?? 0}%)`,
-																p?.payload?.name,
-															]}
+															formatter={(v: any, _n: any, p: any) => [`${v} (${p?.payload?.percentage ?? 0}%)`, p?.payload?.name]}
 														/>
 														<Legend />
 													</PieChart>
@@ -853,9 +844,7 @@ const WorkersTab: React.FC = () => {
 							<Card sx={{ mt: 2 }}>
 								<CardContent>
 									<Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-										<Typography variant="h6">
-											Evolución de errores por {timeline.granularity === "hour" ? "hora" : "día"}
-										</Typography>
+										<Typography variant="h6">Evolución de errores por {timeline.granularity === "hour" ? "hora" : "día"}</Typography>
 										<Typography variant="caption" color="text.secondary">
 											{timeline.errorTypes.length} categorías · {timeline.series.length} buckets
 										</Typography>
@@ -902,66 +891,66 @@ const WorkersTab: React.FC = () => {
 							</Card>
 						)}
 
-					<TableContainer component={Paper} sx={{ mt: 2 }}>
-						<Table>
-							<TableHead>
-								<TableRow>
-									<TableCell>Worker ID</TableCell>
-									<TableCell>Tipo</TableCell>
-									<TableCell>Última Actividad</TableCell>
-									<TableCell>Último Estado</TableCell>
-									<TableCell align="right">Operaciones</TableCell>
-									<TableCell align="right">Exitosas</TableCell>
-									<TableCell align="right">Tasa</TableCell>
-									<TableCell align="right">Duración Prom.</TableCell>
-									<TableCell align="right">Movimientos</TableCell>
-								</TableRow>
-							</TableHead>
-							<TableBody>
-								{data?.workers.map((worker) => (
-									<TableRow key={worker.workerId} hover>
-										<TableCell>
-											<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem">
-												{worker.workerId}
-											</Typography>
-										</TableCell>
-										<TableCell>
-											<Chip label={getWorkerTypeLabel(worker.workerType)} size="small" color="primary" variant="outlined" />
-										</TableCell>
-										<TableCell>
-											<Typography variant="body2" fontSize="0.8rem">
-												{formatDate(worker.lastActivity)}
-											</Typography>
-										</TableCell>
-										<TableCell>
-											<Chip
-												label={getStatusLabel(worker.lastStatus)}
-												size="small"
-												sx={{
-													bgcolor: alpha(getStatusColor(worker.lastStatus, theme), 0.1),
-													color: getStatusColor(worker.lastStatus, theme),
-												}}
-											/>
-										</TableCell>
-										<TableCell align="right">{worker.stats.totalOperations}</TableCell>
-										<TableCell align="right">{worker.stats.successCount}</TableCell>
-										<TableCell align="right">{worker.stats.successRate.toFixed(1)}%</TableCell>
-										<TableCell align="right">{formatDuration(worker.stats.avgDuration)}</TableCell>
-										<TableCell align="right">{worker.stats.totalMovimientos}</TableCell>
-									</TableRow>
-								))}
-								{(!data?.workers || data.workers.length === 0) && (
+						<TableContainer component={Paper} sx={{ mt: 2 }}>
+							<Table>
+								<TableHead>
 									<TableRow>
-										<TableCell colSpan={9} align="center">
-											<Typography color="text.secondary" py={3}>
-												No hay workers con actividad en el período seleccionado
-											</Typography>
-										</TableCell>
+										<TableCell>Worker ID</TableCell>
+										<TableCell>Tipo</TableCell>
+										<TableCell>Última Actividad</TableCell>
+										<TableCell>Último Estado</TableCell>
+										<TableCell align="right">Operaciones</TableCell>
+										<TableCell align="right">Exitosas</TableCell>
+										<TableCell align="right">Tasa</TableCell>
+										<TableCell align="right">Duración Prom.</TableCell>
+										<TableCell align="right">Movimientos</TableCell>
 									</TableRow>
-								)}
-							</TableBody>
-						</Table>
-					</TableContainer>
+								</TableHead>
+								<TableBody>
+									{data?.workers.map((worker) => (
+										<TableRow key={worker.workerId} hover>
+											<TableCell>
+												<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem">
+													{worker.workerId}
+												</Typography>
+											</TableCell>
+											<TableCell>
+												<Chip label={getWorkerTypeLabel(worker.workerType)} size="small" color="primary" variant="outlined" />
+											</TableCell>
+											<TableCell>
+												<Typography variant="body2" fontSize="0.8rem">
+													{formatDate(worker.lastActivity)}
+												</Typography>
+											</TableCell>
+											<TableCell>
+												<Chip
+													label={getStatusLabel(worker.lastStatus)}
+													size="small"
+													sx={{
+														bgcolor: alpha(getStatusColor(worker.lastStatus, theme), 0.1),
+														color: getStatusColor(worker.lastStatus, theme),
+													}}
+												/>
+											</TableCell>
+											<TableCell align="right">{worker.stats.totalOperations}</TableCell>
+											<TableCell align="right">{worker.stats.successCount}</TableCell>
+											<TableCell align="right">{worker.stats.successRate.toFixed(1)}%</TableCell>
+											<TableCell align="right">{formatDuration(worker.stats.avgDuration)}</TableCell>
+											<TableCell align="right">{worker.stats.totalMovimientos}</TableCell>
+										</TableRow>
+									))}
+									{(!data?.workers || data.workers.length === 0) && (
+										<TableRow>
+											<TableCell colSpan={9} align="center">
+												<Typography color="text.secondary" py={3}>
+													No hay workers con actividad en el período seleccionado
+												</Typography>
+											</TableCell>
+										</TableRow>
+									)}
+								</TableBody>
+							</Table>
+						</TableContainer>
 					</>
 				)}
 			</Stack>
@@ -1017,7 +1006,7 @@ const ActivityTab: React.FC = () => {
 							/>
 						)}
 					</Stack>
-					<Stack direction="row" spacing={2} alignItems="center">
+					<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 						<FormControl size="small" sx={{ minWidth: 120 }}>
 							<InputLabel>Período</InputLabel>
 							<Select value={minutesFilter} label="Período" onChange={(e) => setMinutesFilter(Number(e.target.value))}>
@@ -1207,9 +1196,11 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ open, onClose, log }) =
 			{/* Tabs */}
 			<Box sx={{ borderBottom: 1, borderColor: "divider", px: 2 }}>
 				<Tabs
+					variant="scrollable"
+					scrollButtons="auto"
+					allowScrollButtonsMobile
 					value={activeTab}
 					onChange={(_e, v) => setActiveTab(v)}
-					variant="fullWidth"
 					sx={{
 						minHeight: 40,
 						"& .MuiTab-root": { minHeight: 40, textTransform: "none", fontSize: "0.875rem" },
@@ -1823,7 +1814,7 @@ const ErrorsTab: React.FC = () => {
 							<Chip icon={<Warning2 size={16} />} label={`${data.total} en ${data.period}`} color={data.total > 0 ? "error" : "default"} />
 						)}
 					</Stack>
-					<Stack direction="row" spacing={2} alignItems="center">
+					<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 						<FormControl size="small" sx={{ minWidth: 120 }}>
 							<InputLabel>Período</InputLabel>
 							<Select value={hoursFilter} label="Período" onChange={(e) => setHoursFilter(Number(e.target.value))}>
@@ -1927,13 +1918,7 @@ const ErrorsTab: React.FC = () => {
 																	</Typography>
 																	<Stack spacing={0.5}>
 																		{info.examples.map((ex) => (
-																			<Stack
-																				key={ex.logId}
-																				direction="row"
-																				spacing={1}
-																				alignItems="center"
-																				flexWrap="wrap"
-																			>
+																			<Stack key={ex.logId} direction="row" spacing={1} alignItems="center" flexWrap="wrap">
 																				{ex.fuero && (
 																					<Chip label={ex.fuero} size="small" variant="outlined" sx={{ height: 18, fontSize: "0.65rem" }} />
 																				)}
@@ -2682,14 +2667,14 @@ const CleanupConfigTab: React.FC = () => {
 						<Card>
 							<CardContent>
 								<Stack spacing={2}>
-									<Stack direction="row" justifyContent="space-between" alignItems="center">
+									<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 										<Typography variant="h6">Retención</Typography>
 										{!editRetention ? (
 											<Button size="small" onClick={() => setEditRetention(true)}>
 												Editar
 											</Button>
 										) : (
-											<Stack direction="row" spacing={1}>
+											<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 												<Button size="small" variant="contained" onClick={handleSaveRetention} disabled={actionLoading}>
 													Guardar
 												</Button>
@@ -2770,14 +2755,14 @@ const CleanupConfigTab: React.FC = () => {
 						<Card>
 							<CardContent>
 								<Stack spacing={2}>
-									<Stack direction="row" justifyContent="space-between" alignItems="center">
+									<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 										<Typography variant="h6">Programación</Typography>
 										{!editSchedule ? (
 											<Button size="small" onClick={() => setEditSchedule(true)}>
 												Editar
 											</Button>
 										) : (
-											<Stack direction="row" spacing={1}>
+											<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 												<Button size="small" variant="contained" onClick={handleSaveSchedule} disabled={actionLoading}>
 													Guardar
 												</Button>

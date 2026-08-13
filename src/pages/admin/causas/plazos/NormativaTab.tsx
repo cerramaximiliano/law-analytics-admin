@@ -41,7 +41,11 @@ const EMPTY: Partial<PlazoNormativaRegla> & { _id: string } = {
 };
 
 const lines = (arr?: string[]) => (arr || []).join("\n");
-const fromLines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
+const fromLines = (s: string) =>
+	s
+		.split("\n")
+		.map((x) => x.trim())
+		.filter(Boolean);
 
 export function ReglaDialog({
 	regla,
@@ -76,8 +80,14 @@ export function ReglaDialog({
 		const payload: any = {
 			label: form.label,
 			acto: form.acto,
-			fuero: form.fueroStr.split(",").map((x: string) => x.trim()).filter(Boolean),
-			objetos: form.objetosStr.split(",").map((x: string) => x.trim()).filter(Boolean),
+			fuero: form.fueroStr
+				.split(",")
+				.map((x: string) => x.trim())
+				.filter(Boolean),
+			objetos: form.objetosStr
+				.split(",")
+				.map((x: string) => x.trim())
+				.filter(Boolean),
 			matchers: fromLines(form.matchersStr),
 			matchersDetalle: fromLines(form.matchersDetalleStr),
 			plazoDias: Number(form.plazoDias),
@@ -108,12 +118,18 @@ export function ReglaDialog({
 				<Stack spacing={2} sx={{ pt: 0.5 }}>
 					{isNew && <TextField size="small" label="_id (slug snake_case)" value={form._id} onChange={set("_id")} />}
 					<TextField size="small" label="Label" value={form.label} onChange={set("label")} />
-					<Stack direction="row" spacing={2}>
+					<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 						<TextField size="small" label="Acto (slug)" value={form.acto} onChange={set("acto")} sx={{ flex: 1 }} />
 						<TextField size="small" label="Fueros (coma, * = todos)" value={form.fueroStr} onChange={set("fueroStr")} sx={{ flex: 1 }} />
-						<TextField size="small" label="Objetos (regex, coma, * = todos)" value={form.objetosStr} onChange={set("objetosStr")} sx={{ flex: 1 }} />
+						<TextField
+							size="small"
+							label="Objetos (regex, coma, * = todos)"
+							value={form.objetosStr}
+							onChange={set("objetosStr")}
+							sx={{ flex: 1 }}
+						/>
 					</Stack>
-					<Stack direction="row" spacing={2}>
+					<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 						<TextField size="small" type="number" label="Plazo (días)" value={form.plazoDias} onChange={set("plazoDias")} />
 						<TextField size="small" select SelectProps={{ native: true }} label="Tipo" value={form.tipoPlazo} onChange={set("tipoPlazo")}>
 							<option value="habiles">hábiles</option>
@@ -198,12 +214,12 @@ export default function NormativaTab() {
 					¿Quién crea esta tabla?
 				</Typography>
 				<Typography variant="body2" component="div">
-					<b>1) El seed inicial</b> sembró las reglas base (insert-only: re-ejecutarlo nunca pisa tus ediciones). <b>2) El admin
-					— dueño de la tabla —</b> crea, edita, verifica y deshabilita reglas desde esta vista; cada regla exige cita legal y el
-					worker toma los cambios en ≤10 minutos, sin deploy. <b>3) El dataset propone</b>: la tab Dataset muestra candidatos con
-					evidencia (n, consistencia, normas citadas) y el botón «Crear regla» pre-carga este formulario — pero nunca crea reglas
-					solo. Recordá: el plazo expreso del documento siempre manda; estas reglas aplican <i>en subsidio</i>, y el clasificador
-					que se entrene con el dataset solo identificará el acto — el plazo lo pone siempre esta tabla.
+					<b>1) El seed inicial</b> sembró las reglas base (insert-only: re-ejecutarlo nunca pisa tus ediciones).{" "}
+					<b>2) El admin — dueño de la tabla —</b> crea, edita, verifica y deshabilita reglas desde esta vista; cada regla exige cita legal
+					y el worker toma los cambios en ≤10 minutos, sin deploy. <b>3) El dataset propone</b>: la tab Dataset muestra candidatos con
+					evidencia (n, consistencia, normas citadas) y el botón «Crear regla» pre-carga este formulario — pero nunca crea reglas solo.
+					Recordá: el plazo expreso del documento siempre manda; estas reglas aplican <i>en subsidio</i>, y el clasificador que se entrene
+					con el dataset solo identificará el acto — el plazo lo pone siempre esta tabla.
 				</Typography>
 			</Alert>
 			<Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -229,43 +245,41 @@ export default function NormativaTab() {
 						</TableRow>
 					</TableHead>
 					<TableBody>
-						{loading ? (
-							Array.from({ length: 6 }).map((_, i) => (
-								<TableRow key={i}>
-									<TableCell colSpan={8}>
-										<Skeleton />
-									</TableCell>
-								</TableRow>
-							))
-						) : (
-							rows.map((r) => (
-								<TableRow key={r._id} hover>
-									<TableCell>{r.prioridad}</TableCell>
-									<TableCell sx={{ cursor: "pointer" }} onClick={() => setEditing(r)}>
-										<Typography variant="body2" sx={{ fontWeight: 600 }}>
-											{r.label}
-										</Typography>
-										<Typography variant="caption" sx={{ fontFamily: "monospace" }} color="text.secondary">
-											{r._id}
-										</Typography>
-									</TableCell>
-									<TableCell>{(r.fuero || []).join(",")}</TableCell>
-									<TableCell>{(((r as any).objetos as string[]) || ["*"]).join(",")}</TableCell>
-									<TableCell>
-										{r.plazoDias}d {r.tipoPlazo}
-									</TableCell>
-									<TableCell>
-										<Chip size="small" variant="outlined" label={r.norma} />
-									</TableCell>
-									<TableCell>
-										<Switch size="small" checked={r.verificado} onChange={(e) => toggle(r, "verificado", e.target.checked)} />
-									</TableCell>
-									<TableCell>
-										<Switch size="small" checked={r.habilitado} onChange={(e) => toggle(r, "habilitado", e.target.checked)} />
-									</TableCell>
-								</TableRow>
-							))
-						)}
+						{loading
+							? Array.from({ length: 6 }).map((_, i) => (
+									<TableRow key={i}>
+										<TableCell colSpan={8}>
+											<Skeleton />
+										</TableCell>
+									</TableRow>
+							  ))
+							: rows.map((r) => (
+									<TableRow key={r._id} hover>
+										<TableCell>{r.prioridad}</TableCell>
+										<TableCell sx={{ cursor: "pointer" }} onClick={() => setEditing(r)}>
+											<Typography variant="body2" sx={{ fontWeight: 600 }}>
+												{r.label}
+											</Typography>
+											<Typography variant="caption" sx={{ fontFamily: "monospace" }} color="text.secondary">
+												{r._id}
+											</Typography>
+										</TableCell>
+										<TableCell>{(r.fuero || []).join(",")}</TableCell>
+										<TableCell>{(((r as any).objetos as string[]) || ["*"]).join(",")}</TableCell>
+										<TableCell>
+											{r.plazoDias}d {r.tipoPlazo}
+										</TableCell>
+										<TableCell>
+											<Chip size="small" variant="outlined" label={r.norma} />
+										</TableCell>
+										<TableCell>
+											<Switch size="small" checked={r.verificado} onChange={(e) => toggle(r, "verificado", e.target.checked)} />
+										</TableCell>
+										<TableCell>
+											<Switch size="small" checked={r.habilitado} onChange={(e) => toggle(r, "habilitado", e.target.checked)} />
+										</TableCell>
+									</TableRow>
+							  ))}
 					</TableBody>
 				</Table>
 			</TableContainer>

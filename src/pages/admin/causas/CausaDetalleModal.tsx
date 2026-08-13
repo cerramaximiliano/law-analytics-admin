@@ -946,6 +946,9 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 
 				<Box sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, bgcolor: alpha(BRAND_BLUE, isDark ? 0.04 : 0.02) }}>
 					<Tabs
+						variant="scrollable"
+						scrollButtons="auto"
+						allowScrollButtonsMobile
 						value={activeTab}
 						onChange={handleTabChange}
 						aria-label="causa detail tabs"
@@ -1310,7 +1313,13 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 																	<Stack direction="row" spacing={0.4} justifyContent="center">
 																		{mov.corpus.pdf === "downloaded" && (
 																			<Tooltip title="PDF espejado en S3 (pjn-movements)">
-																				<Chip label="PDF" size="small" color="success" variant="outlined" sx={{ height: 18, fontSize: "0.6rem" }} />
+																				<Chip
+																					label="PDF"
+																					size="small"
+																					color="success"
+																					variant="outlined"
+																					sx={{ height: 18, fontSize: "0.6rem" }}
+																				/>
 																			</Tooltip>
 																		)}
 																		{(mov.corpus.texto === "extracted" || mov.corpus.texto === "ocr_done") && (
@@ -1320,12 +1329,23 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 																		)}
 																		{mov.corpus.texto === "needs_ocr" && (
 																			<Tooltip title="PDF escaneado — pendiente de OCR">
-																				<Chip label="OCR" size="small" color="warning" variant="outlined" sx={{ height: 18, fontSize: "0.6rem" }} />
+																				<Chip
+																					label="OCR"
+																					size="small"
+																					color="warning"
+																					variant="outlined"
+																					sx={{ height: 18, fontSize: "0.6rem" }}
+																				/>
 																			</Tooltip>
 																		)}
 																		{mov.corpus.pdf && mov.corpus.pdf !== "downloaded" && !mov.corpus.texto && (
 																			<Tooltip title={`PDF: ${mov.corpus.pdf}`}>
-																				<Chip label={mov.corpus.pdf} size="small" variant="outlined" sx={{ height: 18, fontSize: "0.6rem" }} />
+																				<Chip
+																					label={mov.corpus.pdf}
+																					size="small"
+																					variant="outlined"
+																					sx={{ height: 18, fontSize: "0.6rem" }}
+																				/>
 																			</Tooltip>
 																		)}
 																	</Stack>
@@ -1413,7 +1433,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 							<Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
 								<Typography variant="h6">Historial de Actualizaciones</Typography>
 								{updateHistory.length > 0 && (
-									<Stack direction="row" spacing={1}>
+									<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 										<Button
 											variant="outlined"
 											color="primary"

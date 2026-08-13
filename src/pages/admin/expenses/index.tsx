@@ -403,7 +403,7 @@ const ExpensesPage = () => {
 			<MainCard
 				title="Gestión de gastos"
 				secondary={
-					<Stack direction="row" spacing={1}>
+					<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 						<Button
 							variant="outlined"
 							size="small"

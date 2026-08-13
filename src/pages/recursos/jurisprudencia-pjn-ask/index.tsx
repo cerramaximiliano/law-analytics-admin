@@ -95,7 +95,13 @@ function ChunkCard({ chunk, matched }: { chunk: { index: number; sectionType: st
 				bgcolor: matched ? alpha(color, 0.04) : "transparent",
 			}}
 		>
-			<Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1.5, py: 0.75, cursor: "pointer" }} onClick={() => setOpen((p) => !p)}>
+			<Stack
+				direction="row"
+				alignItems="center"
+				spacing={1}
+				sx={{ px: 1.5, py: 0.75, cursor: "pointer" }}
+				onClick={() => setOpen((p) => !p)}
+			>
 				<Chip label={label} size="small" sx={{ bgcolor: alpha(color, 0.12), color, fontWeight: 600, fontSize: 11 }} />
 				<Typography variant="caption" color="text.secondary" noWrap sx={{ flex: 1 }}>
 					{chunk.text.slice(0, 100)}…
@@ -164,7 +170,12 @@ function ResultCard({ result, index }: { result: SentenciaResult; index: number 
 								size="small"
 								sx={{ bgcolor: alpha(fueroColor, 0.12), color: fueroColor, fontWeight: 700, fontSize: 11 }}
 							/>
-							<Chip label={TIPO_LABEL[sentencia.sentenciaTipo] || sentencia.sentenciaTipo} size="small" variant="outlined" sx={{ fontSize: 11 }} />
+							<Chip
+								label={TIPO_LABEL[sentencia.sentenciaTipo] || sentencia.sentenciaTipo}
+								size="small"
+								variant="outlined"
+								sx={{ fontSize: 11 }}
+							/>
 							{sentencia.year && <Chip label={sentencia.year} size="small" variant="outlined" sx={{ fontSize: 11 }} />}
 							{sentencia.category === "novelty" && <Chip label="Novelty" size="small" color="secondary" sx={{ fontSize: 11 }} />}
 						</Stack>
@@ -223,7 +234,9 @@ function ResultCard({ result, index }: { result: SentenciaResult; index: number 
 						variant="text"
 						onClick={handleLoadFull}
 						disabled={loadingFull}
-						startIcon={loadingFull ? <CircularProgress size={12} color="inherit" /> : showFull ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
+						startIcon={
+							loadingFull ? <CircularProgress size={12} color="inherit" /> : showFull ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />
+						}
 					>
 						{loadingFull ? "Cargando fallo…" : showFull ? "Ocultar fallo completo" : "Ver fallo completo"}
 					</Button>
@@ -347,8 +360,8 @@ export default function JurisprudenciaPjnAskPage() {
 		<MainCard title="Jurisprudencia PJN — búsqueda por prompt (/ask · pjn-api)">
 			<Stack spacing={3}>
 				<Alert severity="info" variant="outlined" sx={{ py: 0.5 }}>
-					Esta vista consume <strong>POST /api/sentencias/ask</strong> de <strong>pjn-api</strong> (worker_01, vía VITE_WORKERS_URL). A diferencia de la
-					búsqueda semántica clásica, acepta <strong>filtro por juzgado / sala</strong> y un prompt en lenguaje natural.
+					Esta vista consume <strong>POST /api/sentencias/ask</strong> de <strong>pjn-api</strong> (worker_01, vía VITE_WORKERS_URL). A
+					diferencia de la búsqueda semántica clásica, acepta <strong>filtro por juzgado / sala</strong> y un prompt en lenguaje natural.
 				</Alert>
 
 				{/* Toggle global del query planner (config del semantic worker en Atlas) */}
@@ -367,13 +380,11 @@ export default function JurisprudenciaPjnAskPage() {
 							<Box flex={1} minWidth={220}>
 								<Typography variant="body2" fontWeight={600}>
 									Query planner {plannerEnabled === null ? "(estado no disponible)" : plannerEnabled ? "· activo" : "· inactivo"}
-									{togglingPlanner && (
-										<CircularProgress size={12} sx={{ ml: 1 }} />
-									)}
+									{togglingPlanner && <CircularProgress size={12} sx={{ ml: 1 }} />}
 								</Typography>
 								<Typography variant="caption" color="text.secondary">
-									Interpreta el prompt con LLM ({plannerModel}) para derivar filtros y estrategia. Configuración global del semantic worker (Atlas) —
-									también editable en Workers → Sentencias.
+									Interpreta el prompt con LLM ({plannerModel}) para derivar filtros y estrategia. Configuración global del semantic worker
+									(Atlas) — también editable en Workers → Sentencias.
 								</Typography>
 								{plannerError && (
 									<Typography variant="caption" color="error" display="block">
@@ -409,7 +420,11 @@ export default function JurisprudenciaPjnAskPage() {
 							<Grid item xs={6} sm={3}>
 								<FormControl fullWidth size="small">
 									<InputLabel>Fuero</InputLabel>
-									<Select label="Fuero" value={filters.fuero || ""} onChange={(e) => setFilters((f) => ({ ...f, fuero: (e.target.value as Fuero) || undefined }))}>
+									<Select
+										label="Fuero"
+										value={filters.fuero || ""}
+										onChange={(e) => setFilters((f) => ({ ...f, fuero: (e.target.value as Fuero) || undefined }))}
+									>
 										<MenuItem value="">Todos</MenuItem>
 										<MenuItem value="CIV">Civil</MenuItem>
 										<MenuItem value="CSS">Seg. Social</MenuItem>
@@ -566,7 +581,7 @@ export default function JurisprudenciaPjnAskPage() {
 						</Grid>
 					</Box>
 
-					<Stack direction="row" spacing={1}>
+					<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 						<Button
 							variant="contained"
 							startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <MessageQuestion size={16} />}

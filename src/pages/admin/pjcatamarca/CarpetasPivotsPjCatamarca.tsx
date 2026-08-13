@@ -412,8 +412,8 @@ const CarpetasPivotsPjCatamarca = () => {
 					</Grid>
 					<Grid item xs={12} md={8}>
 						<Alert severity="info" icon={<DocumentText size={20} />}>
-							Los pivots son búsquedas que encontraron múltiples resultados en PJ Catamarca. Expande cada fila para ver las opciones y seleccionar la
-							causa correcta.
+							Los pivots son búsquedas que encontraron múltiples resultados en PJ Catamarca. Expande cada fila para ver las opciones y
+							seleccionar la causa correcta.
 						</Alert>
 					</Grid>
 				</Grid>
@@ -499,7 +499,7 @@ const CarpetasPivotsPjCatamarca = () => {
 							</Button>
 						</Grid>
 						<Grid item xs={12} md={6} lg={7}>
-							<Stack direction="row" spacing={1}>
+							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 								<Button variant="contained" startIcon={<SearchNormal1 size={18} />} onClick={handleSearch} disabled={loading} size="small">
 									Buscar
 								</Button>

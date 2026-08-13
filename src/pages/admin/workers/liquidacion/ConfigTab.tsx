@@ -263,22 +263,13 @@ export default function ConfigTab({ doc, loading, onSaved }: Props) {
 					<Stack direction="row" spacing={1} alignItems="center">
 						<Typography variant="h6">URL Extractor</Typography>
 						<Chip label="pjn-liq-url-extractor" size="small" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }} />
-						<Chip
-							label={form.urlExtractor.enabled ? "ON" : "OFF"}
-							color={form.urlExtractor.enabled ? "success" : "default"}
-							size="small"
-						/>
+						<Chip label={form.urlExtractor.enabled ? "ON" : "OFF"} color={form.urlExtractor.enabled ? "success" : "default"} size="small" />
 					</Stack>
 				</AccordionSummary>
 				<AccordionDetails>
 					<Stack spacing={2}>
 						<FormControlLabel
-							control={
-								<Switch
-									checked={form.urlExtractor.enabled}
-									onChange={(e) => update("urlExtractor.enabled", e.target.checked)}
-								/>
-							}
+							control={<Switch checked={form.urlExtractor.enabled} onChange={(e) => update("urlExtractor.enabled", e.target.checked)} />}
 							label="Habilitar extractor"
 						/>
 						<Grid container spacing={2}>
@@ -402,22 +393,13 @@ export default function ConfigTab({ doc, loading, onSaved }: Props) {
 					<Stack direction="row" spacing={1} alignItems="center">
 						<Typography variant="h6">PDF Processor</Typography>
 						<Chip label="pjn-liq-pdf-processor" size="small" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }} />
-						<Chip
-							label={form.pdfProcessor.enabled ? "ON" : "OFF"}
-							color={form.pdfProcessor.enabled ? "success" : "default"}
-							size="small"
-						/>
+						<Chip label={form.pdfProcessor.enabled ? "ON" : "OFF"} color={form.pdfProcessor.enabled ? "success" : "default"} size="small" />
 					</Stack>
 				</AccordionSummary>
 				<AccordionDetails>
 					<Stack spacing={2}>
 						<FormControlLabel
-							control={
-								<Switch
-									checked={form.pdfProcessor.enabled}
-									onChange={(e) => update("pdfProcessor.enabled", e.target.checked)}
-								/>
-							}
+							control={<Switch checked={form.pdfProcessor.enabled} onChange={(e) => update("pdfProcessor.enabled", e.target.checked)} />}
 							label="Habilitar processor"
 						/>
 						<Grid container spacing={2}>
@@ -498,13 +480,10 @@ export default function ConfigTab({ doc, loading, onSaved }: Props) {
 							</Grid>
 						</Grid>
 						<Alert severity="info" variant="outlined" sx={{ fontSize: "0.8rem" }}>
-							<strong>Tasa efectiva contra PJN:</strong>{" "}
-							<code>concurrency × (1000 / (downloadAvg + requestDelayMs))</code>. Con concurrency={form.pdfProcessor.concurrency} y requestDelayMs=
+							<strong>Tasa efectiva contra PJN:</strong> <code>concurrency × (1000 / (downloadAvg + requestDelayMs))</code>. Con
+							concurrency={form.pdfProcessor.concurrency} y requestDelayMs=
 							{form.pdfProcessor.requestDelayMs}ms (asumiendo ~500ms download), tasa ≈{" "}
-							<strong>
-								{((form.pdfProcessor.concurrency * 1000) / (500 + form.pdfProcessor.requestDelayMs)).toFixed(1)} req/s
-							</strong>
-							.
+							<strong>{((form.pdfProcessor.concurrency * 1000) / (500 + form.pdfProcessor.requestDelayMs)).toFixed(1)} req/s</strong>.
 						</Alert>
 					</Stack>
 				</AccordionDetails>
@@ -550,14 +529,8 @@ export default function ConfigTab({ doc, loading, onSaved }: Props) {
 				</AccordionDetails>
 			</Accordion>
 
-			<Stack direction="row" spacing={2} justifyContent="flex-end">
-				<Button
-					variant="outlined"
-					color="warning"
-					onClick={handleReset}
-					disabled={resetting || saving}
-					startIcon={<Refresh2 size={16} />}
-				>
+			<Stack direction="row" spacing={2} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
+				<Button variant="outlined" color="warning" onClick={handleReset} disabled={resetting || saving} startIcon={<Refresh2 size={16} />}>
 					{resetting ? "Reseteando…" : "Reset a defaults"}
 				</Button>
 				<Button

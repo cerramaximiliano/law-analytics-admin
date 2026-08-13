@@ -197,7 +197,7 @@ const WorkerPricingTab = () => {
 					<Typography variant="subtitle2" sx={{ mt: 1 }}>
 						Chat / Resúmenes
 					</Typography>
-					<Stack direction="row" spacing={2}>
+					<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 						<FormControl size="small" sx={{ minWidth: 200 }}>
 							<InputLabel>Modelo</InputLabel>
 							<Select
@@ -237,7 +237,7 @@ const WorkerPricingTab = () => {
 
 					{/* Generación / Estrategias */}
 					<Typography variant="subtitle2">Generación / Estrategias</Typography>
-					<Stack direction="row" spacing={2}>
+					<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 						<FormControl size="small" sx={{ minWidth: 200 }}>
 							<InputLabel>Modelo</InputLabel>
 							<Select

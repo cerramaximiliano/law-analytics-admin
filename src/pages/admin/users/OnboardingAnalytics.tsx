@@ -438,7 +438,7 @@ const OnboardingAnalytics: React.FC = () => {
 			{/* Header with filters and refresh */}
 			<Box sx={{ p: 3, pb: 0 }}>
 				<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center" justifyContent="space-between">
-					<Stack direction="row" spacing={2} alignItems="center">
+					<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 						<TextField
 							type="date"
 							size="small"
@@ -484,6 +484,9 @@ const OnboardingAnalytics: React.FC = () => {
 			{/* Tabs */}
 			<Box sx={{ borderBottom: 1, borderColor: "divider", px: 3, pt: 2 }}>
 				<Tabs
+					variant="scrollable"
+					scrollButtons="auto"
+					allowScrollButtonsMobile
 					value={tabValue}
 					onChange={handleTabChange}
 					TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}

@@ -629,7 +629,7 @@ const EditorActionsSection = () => {
 						acción.
 					</Typography>
 				</Stack>
-				<Stack direction="row" spacing={1} alignItems="center">
+				<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 					<Tooltip title="Mostrar/ocultar acciones inactivas">
 						<Chip
 							label={showInactive ? "Mostrando todas" : `${actions.filter((a) => !a.active).length} inactivas ocultas`}
@@ -667,10 +667,7 @@ const EditorActionsSection = () => {
 					No hay acciones configuradas. Usá <strong>Seed</strong> para cargar las acciones predeterminadas o creá una nueva.
 				</Alert>
 			) : (
-				<Paper
-					variant="outlined"
-					sx={{ borderRadius: 1.5, overflow: "hidden", borderColor: headerBorder(theme.palette.mode === "dark") }}
-				>
+				<Paper variant="outlined" sx={{ borderRadius: 1.5, overflow: "hidden", borderColor: headerBorder(theme.palette.mode === "dark") }}>
 					<Table size="small">
 						<TableHead>
 							<TableRow sx={{ bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.06 : 0.035) }}>

@@ -424,7 +424,7 @@ const JudicialMovementsConfig: React.FC = () => {
 					<Collapse in={expandedSections.schedule}>
 						<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 							<Grid item xs={12} md={4}>
-								<Stack direction="row" spacing={2}>
+								<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 									<TextField
 										label="Hora"
 										type="number"
@@ -497,8 +497,9 @@ const JudicialMovementsConfig: React.FC = () => {
 							</Grid>
 							<Grid item xs={12}>
 								<Alert severity="info">
-									La hora configurada define cuándo el coordinador programa la entrega (notifyAt) y los días activos se aplican también en la
-									entrega central de la-notification — un movimiento capturado en día no activo queda diferido hasta el próximo día activo.
+									La hora configurada define cuándo el coordinador programa la entrega (notifyAt) y los días activos se aplican también en
+									la entrega central de la-notification — un movimiento capturado en día no activo queda diferido hasta el próximo día
+									activo.
 								</Alert>
 							</Grid>
 						</Grid>
@@ -594,9 +595,9 @@ const JudicialMovementsConfig: React.FC = () => {
 					</Stack>
 					<Collapse in={expandedSections.planBanner}>
 						<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-							Bloque al final del email de movimientos para usuarios con carpetas archivadas: sugiere el plan más barato que cubra todas
-							sus causas. El contenido lo genera la-notification (no se edita en el template) y si el slot del template se borra, se
-							inyecta igual por fallback.
+							Bloque al final del email de movimientos para usuarios con carpetas archivadas: sugiere el plan más barato que cubra todas sus
+							causas. El contenido lo genera la-notification (no se edita en el template) y si el slot del template se borra, se inyecta
+							igual por fallback.
 						</Typography>
 						<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 							<Grid item xs={12} md={3}>
@@ -705,8 +706,8 @@ const JudicialMovementsConfig: React.FC = () => {
 					<Collapse in={expandedSections.featureBanner}>
 						<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
 							Anuncio publicitario (features nuevos, promociones generales) que aparece al final de TODOS los emails de notificación
-							(movimientos, calendario, tareas, vencimientos, caducidad/prescripción). Por default no se muestra si el email ya lleva
-							el banner de upgrade de plan.
+							(movimientos, calendario, tareas, vencimientos, caducidad/prescripción). Por default no se muestra si el email ya lleva el
+							banner de upgrade de plan.
 						</Typography>
 						<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 							<Grid item xs={12} md={3}>
@@ -763,11 +764,7 @@ const JudicialMovementsConfig: React.FC = () => {
 											onChange={(e) => handleFieldChange("featureBanner.showWithPlanBanner", e.target.checked)}
 										/>
 									}
-									label={
-										<Typography variant="body2">
-											Mostrar junto al banner de plan
-										</Typography>
-									}
+									label={<Typography variant="body2">Mostrar junto al banner de plan</Typography>}
 								/>
 							</Grid>
 						</Grid>

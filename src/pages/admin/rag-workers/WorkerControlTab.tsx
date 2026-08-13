@@ -850,7 +850,7 @@ const WorkerControlTab = () => {
 							/>
 						</Stack>
 						<Divider />
-						<Stack direction="row" spacing={2}>
+						<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 							<TextField
 								label="Min concurrency"
 								type="number"
@@ -872,7 +872,7 @@ const WorkerControlTab = () => {
 								disabled={!scSettings.enabled}
 							/>
 						</Stack>
-						<Stack direction="row" spacing={2}>
+						<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 							<TextField
 								label="Umbral scale up"
 								type="number"
@@ -896,7 +896,7 @@ const WorkerControlTab = () => {
 								helperText="Jobs en cola para reducir"
 							/>
 						</Stack>
-						<Stack direction="row" spacing={2}>
+						<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 							<TextField
 								label="Step up"
 								type="number"
@@ -978,7 +978,7 @@ const WorkerControlTab = () => {
 							/>
 						</Stack>
 						<Divider />
-						<Stack direction="row" spacing={2}>
+						<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 							<TextField
 								label="Min instancias"
 								type="number"
@@ -1000,7 +1000,7 @@ const WorkerControlTab = () => {
 								disabled={!isSettings.enabled}
 							/>
 						</Stack>
-						<Stack direction="row" spacing={2}>
+						<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 							<TextField
 								label="Umbral scale up"
 								type="number"
@@ -1024,7 +1024,7 @@ const WorkerControlTab = () => {
 								helperText="Jobs en cola para quitar instancias"
 							/>
 						</Stack>
-						<Stack direction="row" spacing={2}>
+						<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 							<TextField
 								label="Step up"
 								type="number"

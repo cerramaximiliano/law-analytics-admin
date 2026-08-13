@@ -413,7 +413,7 @@ const CarpetasNoVerificadas = () => {
 							</Button>
 						</Grid>
 						<Grid item xs={12} md={6} lg={7}>
-							<Stack direction="row" spacing={1}>
+							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 								<Button variant="contained" startIcon={<SearchNormal1 size={18} />} onClick={handleSearch} disabled={loading} size="small">
 									Buscar
 								</Button>

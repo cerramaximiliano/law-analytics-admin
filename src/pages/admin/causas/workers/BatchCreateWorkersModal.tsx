@@ -180,7 +180,7 @@ const BatchCreateWorkersModal: React.FC<BatchCreateWorkersModalProps> = ({ open,
 						</Typography>
 					</Alert>
 
-					<Stack direction="row" spacing={2}>
+					<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 						<FormControl fullWidth error={!!errors.fuero} required>
 							<InputLabel>Fuero *</InputLabel>
 							<Select value={fuero} onChange={(e) => setFuero(e.target.value)} label="Fuero *">
@@ -229,7 +229,7 @@ const BatchCreateWorkersModal: React.FC<BatchCreateWorkersModalProps> = ({ open,
 								</IconButton>
 							</Tooltip>
 						</Stack>
-						<Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+						<Stack direction="row" spacing={2} sx={{ mt: 1 }} flexWrap="wrap" useFlexGap>
 							<TextField
 								fullWidth
 								type="number"

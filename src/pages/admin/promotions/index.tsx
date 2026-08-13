@@ -253,7 +253,7 @@ const PromotionsManagement = () => {
 			<MainCard
 				title="Gestión de promociones"
 				secondary={
-					<Stack direction="row" spacing={1.5}>
+					<Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
 						<Button
 							variant="outlined"
 							color="secondary"
@@ -344,7 +344,14 @@ const PromotionsManagement = () => {
 
 				{/* Status filter */}
 				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
-					<Tabs value={statusFilter} onChange={(_, value: StatusFilter) => setStatusFilter(value)} aria-label="Filtro de estado">
+					<Tabs
+						variant="scrollable"
+						scrollButtons="auto"
+						allowScrollButtonsMobile
+						value={statusFilter}
+						onChange={(_, value: StatusFilter) => setStatusFilter(value)}
+						aria-label="Filtro de estado"
+					>
 						<Tab label="Activas" value="active" />
 						<Tab label="Expiradas" value="expired" />
 						<Tab label="Inactivas" value="inactive" />
@@ -499,9 +506,7 @@ const PromotionsManagement = () => {
 													// = visible para todos los users activos (caso típico de error).
 													const r = discount.restrictions || ({} as any);
 													const hasTargets =
-														(r.targetUsers?.length ?? 0) > 0 ||
-														(r.targetSegments?.length ?? 0) > 0 ||
-														(r.targetContacts?.length ?? 0) > 0;
+														(r.targetUsers?.length ?? 0) > 0 || (r.targetSegments?.length ?? 0) > 0 || (r.targetContacts?.length ?? 0) > 0;
 													const hasRestriction = r.excludeActiveSubscribers || r.newCustomersOnly;
 													const isOpen = discount.activationRules.isPublic && !hasTargets && !hasRestriction;
 													if (!isOpen) return null;

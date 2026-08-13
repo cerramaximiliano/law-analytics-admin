@@ -378,7 +378,15 @@ function FalloDetail({
 			</DialogTitle>
 
 			<Box sx={{ borderBottom: 1, borderColor: "divider", px: 3 }}>
-				<Tabs value={tab} onChange={(_, v) => setTab(v)} textColor="primary" indicatorColor="primary">
+				<Tabs
+					variant="scrollable"
+					scrollButtons="auto"
+					allowScrollButtonsMobile
+					value={tab}
+					onChange={(_, v) => setTab(v)}
+					textColor="primary"
+					indicatorColor="primary"
+				>
 					<Tab label="Detalle" />
 					<Tab label={`Sumarios (${sumarioCount})`} />
 					<Tab label="JSON" />
@@ -580,7 +588,15 @@ function SumarioDetail({ sumario, onClose }: { sumario: SaijSentencia; onClose: 
 			</DialogTitle>
 
 			<Box sx={{ borderBottom: 1, borderColor: "divider", px: 3 }}>
-				<Tabs value={tab} onChange={(_, v) => setTab(v)} textColor="primary" indicatorColor="primary">
+				<Tabs
+					variant="scrollable"
+					scrollButtons="auto"
+					allowScrollButtonsMobile
+					value={tab}
+					onChange={(_, v) => setTab(v)}
+					textColor="primary"
+					indicatorColor="primary"
+				>
 					<Tab label="Texto" />
 					<Tab label="Detalle" />
 					<Tab label="JSON" />
@@ -1175,9 +1191,13 @@ export default function JurisprudenciaSaijPage() {
 															label={row.sentenciaCapturada.embeddingStatus}
 															size="small"
 															color={
-																row.sentenciaCapturada.embeddingStatus === "completed" ? "success" :
-																row.sentenciaCapturada.embeddingStatus === "error" ? "error" :
-																row.sentenciaCapturada.embeddingStatus === "pending" ? "warning" : "default"
+																row.sentenciaCapturada.embeddingStatus === "completed"
+																	? "success"
+																	: row.sentenciaCapturada.embeddingStatus === "error"
+																	? "error"
+																	: row.sentenciaCapturada.embeddingStatus === "pending"
+																	? "warning"
+																	: "default"
 															}
 															sx={{ height: 20, fontSize: 10 }}
 														/>

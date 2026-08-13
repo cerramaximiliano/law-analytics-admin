@@ -587,7 +587,7 @@ const IntervinientesWorker = () => {
 			{/* Configuración del worker */}
 			<Card variant="outlined">
 				<CardContent>
-					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
 						<Typography variant="subtitle1" fontWeight="bold">
 							Configuración del Worker
 						</Typography>
@@ -596,7 +596,7 @@ const IntervinientesWorker = () => {
 								Editar
 							</Button>
 						) : (
-							<Stack direction="row" spacing={1}>
+							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 								<Button size="small" variant="contained" onClick={handleSaveConfig}>
 									Guardar
 								</Button>
@@ -1395,11 +1395,11 @@ const IntervinientesWorker = () => {
 						{/* Acciones masivas */}
 						{someSelected && (
 							<Box sx={{ mt: 2, p: 1.5, backgroundColor: alpha(theme.palette.primary.main, 0.05), borderRadius: 1 }}>
-								<Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
+								<Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
 									<Typography variant="body2">
 										<strong>{selectedUsers.length}</strong> usuario(s) seleccionado(s)
 									</Typography>
-									<Stack direction="row" spacing={1}>
+									<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 										<Button
 											size="small"
 											variant="contained"

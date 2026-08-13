@@ -476,7 +476,7 @@ const JudicialMovementsList = () => {
 
 			{/* Filters */}
 			<Box sx={{ mb: 2 }}>
-				<Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+				<Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
 					<Button startIcon={<FilterSearch />} onClick={() => setShowFilters(!showFilters)} variant="outlined">
 						{showFilters ? "Ocultar Filtros" : "Mostrar Filtros"}
 					</Button>
@@ -553,7 +553,7 @@ const JudicialMovementsList = () => {
 								</TextField>
 							</Grid>
 							<Grid item xs={12} sm={6} md={3}>
-								<Stack direction="row" spacing={1}>
+								<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 									<Button fullWidth variant="contained" onClick={handleApplyFilters} startIcon={<FilterSearch />}>
 										Aplicar
 									</Button>

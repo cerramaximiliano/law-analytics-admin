@@ -373,7 +373,11 @@ export default function WorkerManagerTab() {
 												/>
 											</TableCell>
 											<TableCell align="center" sx={{ fontVariantNumeric: "tabular-nums" }}>
-												<Typography variant="body2" color={pending > 0 ? "warning.main" : "text.secondary"} sx={{ fontVariantNumeric: "tabular-nums" }}>
+												<Typography
+													variant="body2"
+													color={pending > 0 ? "warning.main" : "text.secondary"}
+													sx={{ fontVariantNumeric: "tabular-nums" }}
+												>
 													{pending.toLocaleString()}
 												</Typography>
 											</TableCell>
@@ -415,7 +419,7 @@ export default function WorkerManagerTab() {
 						/>
 					</Grid>
 					<Grid item xs={6} sm={3}>
-						<Stack direction="row" spacing={0.5} alignItems="center">
+						<Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap" useFlexGap>
 							<Typography variant="caption" sx={{ mr: 0.5 }}>
 								CPU:
 							</Typography>
@@ -536,7 +540,7 @@ export default function WorkerManagerTab() {
 					</Box>
 				))}
 
-				<Stack direction="row" spacing={2}>
+				<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 					<Button
 						variant="contained"
 						size="small"

@@ -1,19 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-	Box,
-	Button,
-	Chip,
-	Divider,
-	Drawer,
-	Grid,
-	IconButton,
-	Paper,
-	Skeleton,
-	Stack,
-	Typography,
-	alpha,
-	useTheme,
-} from "@mui/material";
+import { Box, Button, Chip, Divider, Drawer, Grid, IconButton, Paper, Skeleton, Stack, Typography, alpha, useTheme } from "@mui/material";
 import { ArrowRight2, CloseCircle, DocumentText, ExportSquare, Folder2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import LiquidacionWorkerConfigService, { CausaOrigen, LiquidacionDocDetail } from "api/liquidacionWorkerConfig";
@@ -176,22 +162,11 @@ export default function DocumentDetailDrawer({ docId, open, onClose }: Props) {
 								{doc.caratula}
 							</Typography>
 							<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
-								<Chip
-									label={`${doc.causaNumber}/${doc.causaYear}`}
-									size="small"
-									sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}
-								/>
+								<Chip label={`${doc.causaNumber}/${doc.causaYear}`} size="small" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }} />
 								{doc.fuero && <Chip label={doc.fuero} size="small" variant="outlined" />}
-								{doc.juzgado != null && (
-									<Chip label={`Juzg ${doc.juzgado}/Sec ${doc.secretaria ?? "-"}`} size="small" variant="outlined" />
-								)}
+								{doc.juzgado != null && <Chip label={`Juzg ${doc.juzgado}/Sec ${doc.secretaria ?? "-"}`} size="small" variant="outlined" />}
 								{doc.sectionMix && (
-									<Chip
-										label={doc.sectionMix}
-										size="small"
-										color="primary"
-										sx={{ fontFamily: "monospace", fontWeight: 600 }}
-									/>
+									<Chip label={doc.sectionMix} size="small" color="primary" sx={{ fontFamily: "monospace", fontWeight: 600 }} />
 								)}
 								{doc.extracted?.regimen && doc.extracted.regimen !== "unknown" && (
 									<Chip
@@ -199,8 +174,8 @@ export default function DocumentDetailDrawer({ docId, open, onClose }: Props) {
 											doc.extracted.regimen === "dependencia"
 												? "R. Dependencia"
 												: doc.extracted.regimen === "autonomo"
-													? "Autónomo"
-													: "Mixto"
+												? "Autónomo"
+												: "Mixto"
 										}
 										size="small"
 										sx={{
@@ -209,24 +184,19 @@ export default function DocumentDetailDrawer({ docId, open, onClose }: Props) {
 												doc.extracted.regimen === "mixto"
 													? alpha(theme.palette.warning.main, 0.18)
 													: doc.extracted.regimen === "autonomo"
-														? alpha(theme.palette.info.main, 0.18)
-														: alpha(theme.palette.success.main, 0.18),
+													? alpha(theme.palette.info.main, 0.18)
+													: alpha(theme.palette.success.main, 0.18),
 											color:
 												doc.extracted.regimen === "mixto"
 													? theme.palette.warning.main
 													: doc.extracted.regimen === "autonomo"
-														? theme.palette.info.main
-														: theme.palette.success.main,
+													? theme.palette.info.main
+													: theme.palette.success.main,
 										}}
 									/>
 								)}
 								{doc.category && (
-									<Chip
-										label={doc.category}
-										size="small"
-										variant="outlined"
-										sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}
-									/>
+									<Chip label={doc.category} size="small" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }} />
 								)}
 								{doc.pdfStatus && (
 									<Chip
@@ -234,16 +204,14 @@ export default function DocumentDetailDrawer({ docId, open, onClose }: Props) {
 										size="small"
 										sx={{
 											bgcolor:
-												doc.pdfStatus === "extracted"
-													? alpha(theme.palette.success.main, 0.15)
-													: alpha(theme.palette.grey[500], 0.15),
+												doc.pdfStatus === "extracted" ? alpha(theme.palette.success.main, 0.15) : alpha(theme.palette.grey[500], 0.15),
 										}}
 									/>
 								)}
 							</Stack>
 						</Box>
 
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							<Button
 								variant="contained"
 								size="small"
@@ -267,10 +235,7 @@ export default function DocumentDetailDrawer({ docId, open, onClose }: Props) {
 								<FieldRow
 									label="url"
 									value={
-										<Typography
-											variant="caption"
-											sx={{ fontFamily: "monospace", wordBreak: "break-all", color: theme.palette.info.main }}
-										>
+										<Typography variant="caption" sx={{ fontFamily: "monospace", wordBreak: "break-all", color: theme.palette.info.main }}>
 											{doc.url}
 										</Typography>
 									}
@@ -368,10 +333,10 @@ export default function DocumentDetailDrawer({ docId, open, onClose }: Props) {
 											e.regimen === "dependencia"
 												? "Relación de Dependencia"
 												: e.regimen === "autonomo"
-													? "Autónomo"
-													: e.regimen === "mixto"
-														? "Mixto (RD + Autónomo)"
-														: "Sin detectar"
+												? "Autónomo"
+												: e.regimen === "mixto"
+												? "Mixto (RD + Autónomo)"
+												: "Sin detectar"
 										}
 									/>
 									<FieldRow label="fuente" value={e.regimenSource} />
@@ -383,14 +348,8 @@ export default function DocumentDetailDrawer({ docId, open, onClose }: Props) {
 												Señales detectadas
 											</Typography>
 											<FieldRow label="tipo cálculo" value={e.regimenSignals.tipoCalculo} />
-											<FieldRow
-												label="categorías autón."
-												value={e.regimenSignals.hasCategoriasAutonomas ? "sí" : "no"}
-											/>
-											<FieldRow
-												label="renta prom. autón."
-												value={e.regimenSignals.hasRentaPromedioAutonoma ? "sí" : "no"}
-											/>
+											<FieldRow label="categorías autón." value={e.regimenSignals.hasCategoriasAutonomas ? "sí" : "no"} />
+											<FieldRow label="renta prom. autón." value={e.regimenSignals.hasRentaPromedioAutonoma ? "sí" : "no"} />
 											<FieldRow label="sólo dep (a/m/d)" value={e.regimenSignals.soloDepAniosMesesDias} />
 											<FieldRow label="sólo aut (a/m/d)" value={e.regimenSignals.soloAutAniosMesesDias} />
 											<FieldRow label="meses RD totales" value={e.regimenSignals.rdMesesTotal} />
@@ -447,10 +406,7 @@ export default function DocumentDetailDrawer({ docId, open, onClose }: Props) {
 										value={<strong style={{ color: theme.palette.success.main }}>{fmtNumber(e.retroactivo.capital)}</strong>}
 									/>
 									<FieldRow label="intereses" value={fmtNumber(e.retroactivo.intereses)} />
-									<FieldRow
-										label="total"
-										value={<strong>{fmtNumber(e.retroactivo.total)}</strong>}
-									/>
+									<FieldRow label="total" value={<strong>{fmtNumber(e.retroactivo.total)}</strong>} />
 									<FieldRow label="pagado en período" value={fmtNumber(e.retroactivo.pagado)} />
 									<FieldRow label="saldo" value={fmtNumber(e.retroactivo.saldo)} />
 									<Divider sx={{ my: 0.5 }} />

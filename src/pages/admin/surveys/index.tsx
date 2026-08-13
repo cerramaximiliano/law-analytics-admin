@@ -367,7 +367,7 @@ const SurveysAdminPage = () => {
 		<MainCard
 			title="Encuestas"
 			secondary={
-				<Stack direction="row" spacing={1}>
+				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 					<Button variant="contained" size="small" startIcon={<Add size={16} />} onClick={openCreate}>
 						Nueva encuesta
 					</Button>
@@ -823,7 +823,7 @@ const SurveysAdminPage = () => {
 													</Typography>
 													<Stack spacing={1} mt={1}>
 														{(q.options || []).map((opt, oIdx) => (
-															<Stack direction="row" spacing={1} key={oIdx}>
+															<Stack direction="row" spacing={1} key={oIdx} flexWrap="wrap" useFlexGap>
 																<TextField
 																	size="small"
 																	placeholder="value"

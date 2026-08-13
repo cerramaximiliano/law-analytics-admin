@@ -105,11 +105,7 @@ function PortalCard({ state }: { state: PortalState }) {
 				{down && (
 					<>
 						<Row label="Caído desde" value={fmtDate(state.activeIncident?.startedAt || state.firstFailureAt)} strong />
-						<Row
-							label="Duración"
-							value={fmtDuration(null, state.activeIncident?.startedAt || state.firstFailureAt, true)}
-							strong
-						/>
+						<Row label="Duración" value={fmtDuration(null, state.activeIncident?.startedAt || state.firstFailureAt, true)} strong />
 						<Row label="Detectado por" value={state.activeIncident?.detectedBy || "—"} />
 						{state.consecutiveFailures > 0 && <Row label="Checks fallidos" value={String(state.consecutiveFailures)} />}
 						{state.message && <Row label="Error" value={state.message} />}
@@ -236,7 +232,17 @@ export default function PortalesStatusPage() {
 				<MainCard
 					title="Historial de incidentes"
 					secondary={
-						<Tabs value={tab} onChange={(_e, v: PortalKey) => { setTab(v); setPage(0); }} sx={{ minHeight: 36 }}>
+						<Tabs
+							variant="scrollable"
+							scrollButtons="auto"
+							allowScrollButtonsMobile
+							value={tab}
+							onChange={(_e, v: PortalKey) => {
+								setTab(v);
+								setPage(0);
+							}}
+							sx={{ minHeight: 36 }}
+						>
 							<Tab label="PJN" value="pjn" sx={{ minHeight: 36 }} />
 							<Tab label="SCBA" value="scba" sx={{ minHeight: 36 }} />
 							<Tab label="MEV" value="mev" sx={{ minHeight: 36 }} />

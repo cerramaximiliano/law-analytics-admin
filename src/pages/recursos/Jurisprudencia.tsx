@@ -418,7 +418,14 @@ const Jurisprudencia = () => {
 		<>
 			<MainCard title="Jurisprudencia — El Dial" secondary={<Book size={24} />}>
 				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-					<Tabs value={tabValue} onChange={handleTabChange} aria-label="Jurisprudencia tabs">
+					<Tabs
+						variant="scrollable"
+						scrollButtons="auto"
+						allowScrollButtonsMobile
+						value={tabValue}
+						onChange={handleTabChange}
+						aria-label="Jurisprudencia tabs"
+					>
 						<Tab label="Fallos" {...a11yProps(0)} />
 						<Tab label="Documentos" {...a11yProps(1)} />
 						<Tab label="Configuración" {...a11yProps(2)} />

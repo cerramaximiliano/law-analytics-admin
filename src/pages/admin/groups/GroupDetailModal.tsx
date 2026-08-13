@@ -775,7 +775,14 @@ export default function GroupDetailModal({ open, onClose, groupId, onStatusChang
 
 					{/* Tabs */}
 					<Box>
-						<Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ borderBottom: 1, borderColor: "divider", mb: 1 }}>
+						<Tabs
+							variant="scrollable"
+							scrollButtons="auto"
+							allowScrollButtonsMobile
+							value={tab}
+							onChange={(_, v) => setTab(v)}
+							sx={{ borderBottom: 1, borderColor: "divider", mb: 1 }}
+						>
 							<Tab
 								label={
 									<Stack direction="row" spacing={0.5} alignItems="center">

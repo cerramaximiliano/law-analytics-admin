@@ -32,20 +32,15 @@ export default function PlazosPage() {
 							Plazos Procesales
 						</Typography>
 						<Typography variant="body1" color="text.secondary">
-							Cédulas detectadas en movimientos nuevos con su vencimiento computado (plazo expreso del documento o normativa
-							subsidiaria por fuero/objeto), reglas de normativa y calendario de días inhábiles.
+							Cédulas detectadas en movimientos nuevos con su vencimiento computado (plazo expreso del documento o normativa subsidiaria por
+							fuero/objeto), reglas de normativa y calendario de días inhábiles.
 						</Typography>
 					</Box>
 					<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
 						{stats && (
 							<>
 								<Chip label={`${stats.total} notificaciones`} size="small" variant="outlined" />
-								<Chip
-									label={`${stats.porStatus?.computed || 0} computadas`}
-									size="small"
-									color="success"
-									variant="outlined"
-								/>
+								<Chip label={`${stats.porStatus?.computed || 0} computadas`} size="small" color="success" variant="outlined" />
 								<Chip label={`${stats.porStatus?.pending || 0} en cola`} size="small" variant="outlined" />
 							</>
 						)}
@@ -59,7 +54,14 @@ export default function PlazosPage() {
 				</Stack>
 
 				<Box sx={{ borderBottom: `1px solid ${headerBorder(isDark)}` }}>
-					<Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ "& .MuiTab-root": { textTransform: "none", fontWeight: 500 } }}>
+					<Tabs
+						variant="scrollable"
+						scrollButtons="auto"
+						allowScrollButtonsMobile
+						value={tab}
+						onChange={(_, v) => setTab(v)}
+						sx={{ "& .MuiTab-root": { textTransform: "none", fontWeight: 500 } }}
+					>
 						<Tab label="Notificaciones" />
 						<Tab label="Vencimientos" />
 						<Tab label="Normativa" />

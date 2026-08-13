@@ -66,10 +66,7 @@ const CausasUpdateIncidentsTab: React.FC = () => {
 			const params: any = { page, limit: rowsPerPage };
 			if (typeFilter) params.type = typeFilter;
 			if (resolvedFilter) params.resolved = resolvedFilter === "true";
-			const [res, statsRes] = await Promise.all([
-				CausasUpdateService.getIncidents(params),
-				CausasUpdateService.getIncidentStats(),
-			]);
+			const [res, statsRes] = await Promise.all([CausasUpdateService.getIncidents(params), CausasUpdateService.getIncidentStats()]);
 			if (res.success) {
 				setIncidents(res.data);
 				setTotal(res.count || 0);
@@ -125,9 +122,7 @@ const CausasUpdateIncidentsTab: React.FC = () => {
 	};
 
 	const fmtDate = (d?: string | null) =>
-		d
-			? new Date(d).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
-			: "-";
+		d ? new Date(d).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "-";
 
 	if (loading && incidents.length === 0) {
 		return (
@@ -153,8 +148,8 @@ const CausasUpdateIncidentsTab: React.FC = () => {
 			)}
 
 			{/* Filtros */}
-			<Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
-				<Stack direction="row" spacing={2} alignItems="center">
+			<Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
+				<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 					<TextField
 						select
 						size="small"

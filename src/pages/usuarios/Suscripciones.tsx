@@ -755,7 +755,14 @@ const Suscripciones = () => {
 						</IconButton>
 					</Stack>
 				</DialogTitle>
-				<Tabs value={tabValue} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: "divider", px: 3 }}>
+				<Tabs
+					variant="scrollable"
+					scrollButtons="auto"
+					allowScrollButtonsMobile
+					value={tabValue}
+					onChange={handleTabChange}
+					sx={{ borderBottom: 1, borderColor: "divider", px: 3 }}
+				>
 					<Tab label="General" />
 					<Tab label="Stripe" />
 					<Tab label="Períodos" />

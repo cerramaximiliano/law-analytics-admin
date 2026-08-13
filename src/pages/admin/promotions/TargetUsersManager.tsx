@@ -313,6 +313,9 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 
 			{/* Tabs */}
 			<Tabs
+				variant="scrollable"
+				scrollButtons="auto"
+				allowScrollButtonsMobile
 				value={activeTab}
 				onChange={(_, v) => setActiveTab(v)}
 				TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
@@ -357,11 +360,11 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 			{activeTab === 0 && (
 				<Box>
 					{/* Users Header */}
-					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
 						<Typography variant="subtitle1" color="text.secondary">
 							Usuarios específicos que pueden ver este descuento
 						</Typography>
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							<Button
 								variant="outlined"
 								size="small"
@@ -534,12 +537,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 
 			{/* Contacts Tab */}
 			{activeTab === 2 && (
-				<TargetContactsTab
-					discountId={discountId}
-					discountCode={discountCode}
-					onUpdate={onUpdate}
-					onCountChange={setTotalTargetContacts}
-				/>
+				<TargetContactsTab discountId={discountId} discountCode={discountCode} onUpdate={onUpdate} onCountChange={setTotalTargetContacts} />
 			)}
 
 			{/* Add Users Dialog - Search */}

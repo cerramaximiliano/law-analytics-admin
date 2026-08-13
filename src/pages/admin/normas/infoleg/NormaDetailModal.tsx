@@ -133,6 +133,9 @@ const NormaDetailModal = ({ infolegId, open, onClose }: NormaDetailModalProps) =
 
 			<Box sx={{ borderBottom: 1, borderColor: "divider", px: 3 }}>
 				<Tabs
+					variant="scrollable"
+					scrollButtons="auto"
+					allowScrollButtonsMobile
 					value={tab}
 					onChange={(_, v) => setTab(v)}
 					sx={{

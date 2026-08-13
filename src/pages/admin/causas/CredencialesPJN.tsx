@@ -1048,11 +1048,11 @@ const CredencialesPJN = () => {
 			{/* Tabs */}
 			<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
 				<Tabs
-					value={tabValue}
-					onChange={(_, v) => setTabValue(v)}
 					variant="scrollable"
 					scrollButtons="auto"
 					allowScrollButtonsMobile
+					value={tabValue}
+					onChange={(_, v) => setTabValue(v)}
 					TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
 					sx={{
 						"& .MuiTab-root": { textTransform: "none", fontWeight: 500, fontSize: "0.875rem", minHeight: 48 },
@@ -2400,7 +2400,7 @@ const CredencialesPJN = () => {
 									))}
 								</Select>
 							</FormControl>
-							<Stack direction="row" spacing={1} alignItems="center">
+							<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 								<Button
 									variant="contained"
 									size="small"

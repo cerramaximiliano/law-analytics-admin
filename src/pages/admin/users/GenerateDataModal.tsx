@@ -482,7 +482,7 @@ const GenerateDataModal: React.FC<GenerateDataModalProps> = ({ user, open, onClo
 							</Box>
 						</DialogContent>
 						<DialogActions sx={{ flexShrink: 0, px: 3, py: 2 }}>
-							<Stack direction="row" spacing={1} justifyContent="flex-end">
+							<Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
 								<Button onClick={onClose} color="secondary">
 									Cancelar
 								</Button>

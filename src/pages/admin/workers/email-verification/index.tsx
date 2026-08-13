@@ -301,7 +301,7 @@ const EmailVerificationWorker = () => {
 		<MainCard
 			title="Worker de Verificación de Emails (NeverBounce)"
 			secondary={
-				<Stack direction="row" spacing={1} alignItems="center">
+				<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 					<Box
 						component="span"
 						sx={{
@@ -623,14 +623,14 @@ const EmailVerificationWorker = () => {
 				{/* Configuración */}
 				<Card variant="outlined">
 					<CardContent>
-						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
 							<Typography variant="h6">Configuración</Typography>
 							{!editing ? (
 								<Button variant="outlined" size="small" startIcon={<Edit2 size={16} />} onClick={handleEdit}>
 									Editar
 								</Button>
 							) : (
-								<Stack direction="row" spacing={1}>
+								<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 									<Button variant="contained" size="small" startIcon={<TickCircle size={16} />} onClick={handleSave}>
 										Guardar
 									</Button>

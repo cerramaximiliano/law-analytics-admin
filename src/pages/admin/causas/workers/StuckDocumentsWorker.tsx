@@ -313,7 +313,7 @@ const StuckDocumentsWorker = () => {
 			{/* Configuracion del worker */}
 			<Card variant="outlined">
 				<CardContent>
-					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
 						<Typography variant="subtitle1" fontWeight="bold">
 							Configuracion del Worker
 						</Typography>
@@ -322,7 +322,7 @@ const StuckDocumentsWorker = () => {
 								Editar
 							</Button>
 						) : (
-							<Stack direction="row" spacing={1}>
+							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 								<Button size="small" variant="contained" onClick={handleSaveConfig}>
 									Guardar
 								</Button>
@@ -535,7 +535,11 @@ const StuckDocumentsWorker = () => {
 							<Typography variant="caption" color="text.secondary">
 								Docs reparados
 							</Typography>
-							<Typography variant="h4" color="success.main" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+							<Typography
+								variant="h4"
+								color="success.main"
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+							>
 								{config?.documents_fixed?.toLocaleString() || 0}
 							</Typography>
 						</CardContent>
@@ -547,7 +551,11 @@ const StuckDocumentsWorker = () => {
 							<Typography variant="caption" color="text.secondary">
 								Docs fallidos
 							</Typography>
-							<Typography variant="h4" color="error.main" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+							<Typography
+								variant="h4"
+								color="error.main"
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+							>
 								{config?.documents_failed?.toLocaleString() || 0}
 							</Typography>
 						</CardContent>
@@ -559,7 +567,11 @@ const StuckDocumentsWorker = () => {
 							<Typography variant="caption" color="text.secondary">
 								Tasa de éxito
 							</Typography>
-							<Typography variant="h4" color="primary.main" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+							<Typography
+								variant="h4"
+								color="primary.main"
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+							>
 								{stats?.totals?.successRate || "0%"}
 							</Typography>
 						</CardContent>
@@ -1000,7 +1012,10 @@ const StuckDocumentsWorker = () => {
 		<Stack spacing={2}>
 			{/* Header */}
 			<Box display="flex" justifyContent="space-between" alignItems="center">
-				<Typography variant="h4" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+				<Typography
+					variant="h4"
+					sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+				>
 					Worker de documentos atorados
 				</Typography>
 				<Stack direction="row" spacing={1}>

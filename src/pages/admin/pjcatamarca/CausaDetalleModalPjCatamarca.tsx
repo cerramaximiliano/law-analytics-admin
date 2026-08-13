@@ -29,7 +29,14 @@ import {
 	FormControlLabel,
 	CircularProgress,
 } from "@mui/material";
-import { CausaPjCatamarca, CausasPjCatamarcaService, MovimientoPjCatamarca, IntervinientePjCatamarca, CausaRelacionada, UpdateHistoryEntry } from "api/causasPjCatamarca";
+import {
+	CausaPjCatamarca,
+	CausasPjCatamarcaService,
+	MovimientoPjCatamarca,
+	IntervinientePjCatamarca,
+	CausaRelacionada,
+	UpdateHistoryEntry,
+} from "api/causasPjCatamarca";
 import { CloseCircle, CloseSquare, TickCircle, ArrowDown2, ArrowUp2, Copy, Edit, Save2, Lock1, Repeat } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { BRAND_BLUE, STALE_AMBER } from "themes/dashboardTokens";
@@ -339,7 +346,14 @@ const CausaDetalleModalPjCatamarca = ({ open, onClose, causa, onCausaUpdated }: 
 				</DialogTitle>
 
 				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-					<Tabs value={activeTab} onChange={handleTabChange} aria-label="causa pjcatamarca detail tabs">
+					<Tabs
+						variant="scrollable"
+						scrollButtons="auto"
+						allowScrollButtonsMobile
+						value={activeTab}
+						onChange={handleTabChange}
+						aria-label="causa pjcatamarca detail tabs"
+					>
 						<Tab label="Información General" />
 						<Tab label={`Movimientos (${currentMovimientos.length})`} />
 						<Tab label={`Traspasos (${causa.traspasos?.length || 0})`} />
@@ -913,7 +927,9 @@ const CausaDetalleModalPjCatamarca = ({ open, onClose, causa, onCausaUpdated }: 
 																{rel.relacion ? (
 																	<Chip label={rel.relacion} size="small" variant="outlined" />
 																) : (
-																	<Typography variant="caption" color="textSecondary">—</Typography>
+																	<Typography variant="caption" color="textSecondary">
+																		—
+																	</Typography>
 																)}
 															</TableCell>
 															<TableCell>
@@ -944,8 +960,12 @@ const CausaDetalleModalPjCatamarca = ({ open, onClose, causa, onCausaUpdated }: 
 													<TableCell width="12%">Fecha firma</TableCell>
 													<TableCell width="15%">Firmantes</TableCell>
 													<TableCell width="15%">Organismo</TableCell>
-													<TableCell width="8%" align="center">Adj.</TableCell>
-													<TableCell width="8%" align="center">Notif.</TableCell>
+													<TableCell width="8%" align="center">
+														Adj.
+													</TableCell>
+													<TableCell width="8%" align="center">
+														Notif.
+													</TableCell>
 												</TableRow>
 											</TableHead>
 											<TableBody>
@@ -981,7 +1001,9 @@ const CausaDetalleModalPjCatamarca = ({ open, onClose, causa, onCausaUpdated }: 
 															{mov.notificada ? (
 																<Chip label="Sí" size="small" color="success" variant="outlined" />
 															) : (
-																<Typography variant="caption" color="textSecondary">—</Typography>
+																<Typography variant="caption" color="textSecondary">
+																	—
+																</Typography>
 															)}
 														</TableCell>
 													</TableRow>
@@ -1019,7 +1041,9 @@ const CausaDetalleModalPjCatamarca = ({ open, onClose, causa, onCausaUpdated }: 
 												<TableCell width="25%">Descripción</TableCell>
 												<TableCell>Origen → Destino</TableCell>
 												<TableCell width="15%">Observación</TableCell>
-												<TableCell width="8%" align="right">Tiempo</TableCell>
+												<TableCell width="8%" align="right">
+													Tiempo
+												</TableCell>
 											</TableRow>
 										</TableHead>
 										<TableBody>
@@ -1071,12 +1095,7 @@ const CausaDetalleModalPjCatamarca = ({ open, onClose, causa, onCausaUpdated }: 
 											{causa.intervinientes.map((interv: IntervinientePjCatamarca, index: number) => (
 												<TableRow key={index} hover>
 													<TableCell>
-														<Chip
-															label={interv.vinculo || interv.tipo || "—"}
-															size="small"
-															variant="outlined"
-															color="primary"
-														/>
+														<Chip label={interv.vinculo || interv.tipo || "—"} size="small" variant="outlined" color="primary" />
 													</TableCell>
 													<TableCell>
 														<Typography variant="body2">{interv.nombre}</Typography>

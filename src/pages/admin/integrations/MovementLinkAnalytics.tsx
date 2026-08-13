@@ -25,7 +25,19 @@ import {
 	FormControlLabel,
 	Switch,
 } from "@mui/material";
-import { Refresh, Eye, DocumentText, LoginCurve, DocumentDownload, People, Folder2, ExportSquare, Warning2, TickCircle, Sms } from "iconsax-react";
+import {
+	Refresh,
+	Eye,
+	DocumentText,
+	LoginCurve,
+	DocumentDownload,
+	People,
+	Folder2,
+	ExportSquare,
+	Warning2,
+	TickCircle,
+	Sms,
+} from "iconsax-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
 import MainCard from "components/MainCard";
 import { BRAND_BLUE } from "themes/dashboardTokens";
@@ -223,7 +235,12 @@ const MovementLinkAnalytics: React.FC = () => {
 		<MainCard title="Visor de documentos — Analytics" content={false}>
 			{/* Header: filtros + refresh */}
 			<Box sx={{ p: 3, pb: 0 }}>
-				<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "center" }} justifyContent="space-between">
+				<Stack
+					direction={{ xs: "column", sm: "row" }}
+					spacing={2}
+					alignItems={{ xs: "stretch", sm: "center" }}
+					justifyContent="space-between"
+				>
 					<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" rowGap={1}>
 						<TextField
 							type="date"
@@ -278,6 +295,9 @@ const MovementLinkAnalytics: React.FC = () => {
 			{/* Tabs */}
 			<Box sx={{ borderBottom: 1, borderColor: "divider", px: 3, pt: 2 }}>
 				<Tabs
+					variant="scrollable"
+					scrollButtons="auto"
+					allowScrollButtonsMobile
 					value={tabValue}
 					onChange={handleTabChange}
 					TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
@@ -423,7 +443,13 @@ const MovementLinkAnalytics: React.FC = () => {
 									<Skeleton variant="rectangular" height={220} />
 								) : summary ? (
 									<Stack spacing={2} sx={{ mt: 1 }}>
-										<FunnelStep label="Aperturas humanas" value={summary.opens_human} max={summary.opens_human} color={BRAND_BLUE} theme={theme} />
+										<FunnelStep
+											label="Aperturas humanas"
+											value={summary.opens_human}
+											max={summary.opens_human}
+											color={BRAND_BLUE}
+											theme={theme}
+										/>
 										<FunnelStep
 											label="Vistas confirmadas"
 											value={summary.views_confirmed}
@@ -455,8 +481,18 @@ const MovementLinkAnalytics: React.FC = () => {
 										<Box sx={{ pt: 1 }}>
 											<Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1}>
 												<Chip size="small" variant="outlined" label={`PDF servido: ${fmtRate(summary.rate_pdf_served)}`} />
-												<Chip size="small" variant="outlined" color="primary" label={`CTA/apertura: ${fmtRate(summary.rate_cta_per_open)}`} />
-												<Chip size="small" variant="outlined" color="secondary" label={`Login post-CTA: ${fmtRate(summary.rate_cta_to_login)}`} />
+												<Chip
+													size="small"
+													variant="outlined"
+													color="primary"
+													label={`CTA/apertura: ${fmtRate(summary.rate_cta_per_open)}`}
+												/>
+												<Chip
+													size="small"
+													variant="outlined"
+													color="secondary"
+													label={`Login post-CTA: ${fmtRate(summary.rate_cta_to_login)}`}
+												/>
 											</Stack>
 										</Box>
 										{(summary.opens_expired > 0 || summary.opens_not_found > 0) && (
@@ -511,8 +547,22 @@ const MovementLinkAnalytics: React.FC = () => {
 												dot={false}
 											/>
 											<Line type="monotone" dataKey="views" name="Vistas" stroke={theme.palette.info.main} strokeWidth={2} dot={false} />
-											<Line type="monotone" dataKey="cta_clicks" name="CTA" stroke={theme.palette.primary.main} strokeWidth={2} dot={false} />
-											<Line type="monotone" dataKey="downloads" name="Descargas" stroke={theme.palette.success.main} strokeWidth={2} dot={false} />
+											<Line
+												type="monotone"
+												dataKey="cta_clicks"
+												name="CTA"
+												stroke={theme.palette.primary.main}
+												strokeWidth={2}
+												dot={false}
+											/>
+											<Line
+												type="monotone"
+												dataKey="downloads"
+												name="Descargas"
+												stroke={theme.palette.success.main}
+												strokeWidth={2}
+												dot={false}
+											/>
 											<Line
 												type="monotone"
 												dataKey="login_continues"
@@ -758,9 +808,7 @@ const FunnelStep: React.FC<FunnelStepProps> = ({ label, value, max, color }) => 
 				</Stack>
 			</Stack>
 			<Box sx={{ position: "relative", height: 10, bgcolor: alpha(color, 0.08), borderRadius: 5, overflow: "hidden" }}>
-				<Box
-					sx={{ position: "absolute", inset: 0, width: `${pct}%`, bgcolor: color, borderRadius: 5, transition: "width 400ms ease" }}
-				/>
+				<Box sx={{ position: "absolute", inset: 0, width: `${pct}%`, bgcolor: color, borderRadius: 5, transition: "width 400ms ease" }} />
 			</Box>
 		</Box>
 	);

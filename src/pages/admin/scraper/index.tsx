@@ -338,7 +338,7 @@ const ConfigTab = () => {
 						<Chip key={s} label={s} size="small" onDelete={() => setFinalStatuses((prev) => prev.filter((x) => x !== s))} />
 					))}
 				</Stack>
-				<Stack direction="row" spacing={1}>
+				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 					<TextField
 						size="small"
 						label="Agregar estado final"
@@ -388,7 +388,7 @@ const ConfigTab = () => {
 						/>
 					))}
 				</Stack>
-				<Stack direction="row" spacing={1}>
+				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 					<TextField
 						size="small"
 						label="Agregar estado de entrega final"
@@ -444,7 +444,7 @@ const ConfigTab = () => {
 								/>
 							))}
 						</Stack>
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							<TextField
 								size="small"
 								label="Substring de status"
@@ -489,7 +489,7 @@ const ConfigTab = () => {
 								/>
 							))}
 						</Stack>
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							<TextField
 								size="small"
 								label="Substring de descripción"
@@ -522,7 +522,7 @@ const ConfigTab = () => {
 			</Paper>
 
 			{/* Actions */}
-			<Stack direction="row" spacing={2} justifyContent="flex-end">
+			<Stack direction="row" spacing={2} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
 				<Button variant="outlined" color="error" onClick={() => setResetDialogOpen(true)}>
 					Resetear a valores por defecto
 				</Button>
@@ -659,10 +659,7 @@ const JobsTab = () => {
 								{loadingStats ? (
 									<Skeleton variant="text" width={40} height={36} />
 								) : (
-									<Typography
-										variant="h3"
-										sx={{ color, fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
-									>
+									<Typography variant="h3" sx={{ color, fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
 										{value}
 									</Typography>
 								)}
@@ -673,7 +670,7 @@ const JobsTab = () => {
 			</Grid>
 
 			{/* Filters and actions */}
-			<Stack direction="row" spacing={2} alignItems="center">
+			<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 				<FormControl size="small" sx={{ minWidth: 160 }}>
 					<InputLabel>Estado</InputLabel>
 					<Select
@@ -929,10 +926,7 @@ const RunsTab = () => {
 								{loadingStats ? (
 									<Skeleton variant="text" width={40} height={36} />
 								) : (
-									<Typography
-										variant="h3"
-										sx={{ color, fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
-									>
+									<Typography variant="h3" sx={{ color, fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
 										{value ?? 0}
 									</Typography>
 								)}
@@ -943,7 +937,7 @@ const RunsTab = () => {
 			</Grid>
 
 			{/* Filters */}
-			<Stack direction="row" spacing={2} alignItems="center">
+			<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 				<FormControl size="small" sx={{ minWidth: 160 }}>
 					<InputLabel>Estado</InputLabel>
 					<Select
@@ -1238,10 +1232,11 @@ const ScraperWorkerPage = () => {
 			}
 		>
 			<Tabs
-				value={tab}
-				onChange={(_, v) => setTab(v)}
 				variant="scrollable"
 				scrollButtons="auto"
+				allowScrollButtonsMobile
+				value={tab}
+				onChange={(_, v) => setTab(v)}
 				sx={{
 					borderBottom: `1px solid ${headerBorder(isDark)}`,
 					"& .MuiTab-root": {

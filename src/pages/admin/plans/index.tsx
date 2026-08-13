@@ -25,7 +25,20 @@ import {
 	Typography,
 	CircularProgress,
 } from "@mui/material";
-import { Edit, Trash, Eye, Add, Refresh2, Link1, ArrowDown2, ArrowUp2, DollarCircle, DiscountShape, ArrangeVertical, Star1 } from "iconsax-react";
+import {
+	Edit,
+	Trash,
+	Eye,
+	Add,
+	Refresh2,
+	Link1,
+	ArrowDown2,
+	ArrowUp2,
+	DollarCircle,
+	DiscountShape,
+	ArrangeVertical,
+	Star1,
+} from "iconsax-react";
 import MainCard from "components/MainCard";
 import { BRAND_BLUE, PREMIUM_GOLD } from "themes/dashboardTokens";
 import { useSnackbar } from "notistack";
@@ -201,7 +214,7 @@ const PlansManagement = () => {
 			<MainCard
 				title="Gestión de planes y suscripciones"
 				secondary={
-					<Stack direction="row" spacing={1.5}>
+					<Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
 						<Button
 							variant="outlined"
 							color="secondary"
@@ -439,7 +452,12 @@ const PlansManagement = () => {
 																>
 																	{formatCurrency(plan.activeDiscounts[0].originalPrice, getPlanPricing(plan).currency)}
 																</Typography>
-																<Typography variant="subtitle2" color="success.main" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums" }}>
+																<Typography
+																	variant="subtitle2"
+																	color="success.main"
+																	fontWeight={700}
+																	sx={{ fontVariantNumeric: "tabular-nums" }}
+																>
 																	{formatCurrency(plan.activeDiscounts[0].finalPrice, getPlanPricing(plan).currency)}
 																</Typography>
 															</Stack>
@@ -595,7 +613,12 @@ const PlansManagement = () => {
 																	>
 																		{formatCurrency(plan.activeDiscounts[0].originalPrice, getPlanPricing(plan).currency)}
 																	</Typography>
-																	<Typography variant="h4" color="success.main" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums" }}>
+																	<Typography
+																		variant="h4"
+																		color="success.main"
+																		fontWeight={700}
+																		sx={{ fontVariantNumeric: "tabular-nums" }}
+																	>
 																		{formatCurrency(plan.activeDiscounts[0].finalPrice, getPlanPricing(plan).currency)}
 																	</Typography>
 																	<Typography variant="body2" component="span" color="textSecondary">
@@ -647,7 +670,9 @@ const PlansManagement = () => {
 															<Stack spacing={0.5}>
 																{plan.resourceLimits.map((limit, index) => (
 																	<Typography key={index} variant="body2" color="textSecondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
-																		<Box component="span" sx={{ color: accent, mr: 0.75 }}>›</Box>
+																		<Box component="span" sx={{ color: accent, mr: 0.75 }}>
+																			›
+																		</Box>
 																		{limit.description}: {limit.limit}
 																	</Typography>
 																))}
@@ -663,7 +688,9 @@ const PlansManagement = () => {
 																	.filter((feature) => feature.enabled)
 																	.map((feature, index) => (
 																		<Typography key={index} variant="body2" color="textSecondary">
-																			<Box component="span" sx={{ color: accent, mr: 0.75 }}>›</Box>
+																			<Box component="span" sx={{ color: accent, mr: 0.75 }}>
+																				›
+																			</Box>
 																			{feature.description}
 																		</Typography>
 																	))}

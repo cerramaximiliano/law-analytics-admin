@@ -164,7 +164,12 @@ const CamposPlantilla = ({
 								<Typography variant="subtitle2" sx={{ textTransform: "capitalize" }}>
 									{field} ({filas.length}/{max})
 								</Typography>
-								<Button size="small" startIcon={<Add size={16} />} disabled={filas.length >= max} onClick={() => setCampo(field, [...filas, vacia])}>
+								<Button
+									size="small"
+									startIcon={<Add size={16} />}
+									disabled={filas.length >= max}
+									onClick={() => setCampo(field, [...filas, vacia])}
+								>
 									Agregar
 								</Button>
 							</Stack>
@@ -193,7 +198,15 @@ const CamposPlantilla = ({
 												const v = fila[k] || "";
 												const max = limiteDe(sub.description);
 												return sub.enum ? (
-													<TextField key={k} select size="small" label={k} fullWidth value={v} onChange={(e) => actualizar(i, k, e.target.value)}>
+													<TextField
+														key={k}
+														select
+														size="small"
+														label={k}
+														fullWidth
+														value={v}
+														onChange={(e) => actualizar(i, k, e.target.value)}
+													>
 														{sub.enum.map((op) => (
 															<MenuItem key={op} value={op}>
 																{op}
@@ -497,7 +510,13 @@ const SocialStudio = () => {
 	const handleVariantes = async () => {
 		setGenerandoVariantes(true);
 		try {
-			const res = await renderAllFormats({ templateId, contenido, estilo: estilo || undefined, composicion: composicion || undefined, pie: pie || undefined });
+			const res = await renderAllFormats({
+				templateId,
+				contenido,
+				estilo: estilo || undefined,
+				composicion: composicion || undefined,
+				pie: pie || undefined,
+			});
 			setVariantes(res);
 			const fallidos = res.filter((v) => v.error);
 			if (fallidos.length) {
@@ -772,7 +791,7 @@ const SocialStudio = () => {
 					{/* ---------- Panel izquierdo: prompt y campos ---------- */}
 					<Grid item xs={12} md={6}>
 						<Stack spacing={2}>
-							<Stack direction="row" spacing={1}>
+							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 								<FormControl fullWidth size="small">
 									<InputLabel>Plantilla</InputLabel>
 									<Select value={templateId} label="Plantilla" onChange={(e) => setTemplateId(e.target.value as TemplateId)}>
@@ -863,7 +882,7 @@ const SocialStudio = () => {
 								onChange={(e) => setPrompt(e.target.value)}
 							/>
 
-							<Stack direction="row" spacing={1}>
+							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 								<Button
 									variant="contained"
 									startIcon={generando ? <CircularProgress size={16} color="inherit" /> : <Magicpen size={18} />}
@@ -933,7 +952,7 @@ const SocialStudio = () => {
 									),
 								}}
 							/>
-							<Stack direction="row" spacing={1}>
+							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 								<Button
 									variant="text"
 									size="small"
@@ -943,7 +962,13 @@ const SocialStudio = () => {
 								>
 									{generandoCaption ? "Generando…" : "Generar caption con IA"}
 								</Button>
-								<Button variant="text" size="small" startIcon={<ClipboardText size={16} />} disabled={!caption.trim()} onClick={() => copiarCaption(caption)}>
+								<Button
+									variant="text"
+									size="small"
+									startIcon={<ClipboardText size={16} />}
+									disabled={!caption.trim()}
+									onClick={() => copiarCaption(caption)}
+								>
 									Copiar caption
 								</Button>
 							</Stack>
@@ -953,7 +978,7 @@ const SocialStudio = () => {
 					{/* ---------- Panel derecho: preview ---------- */}
 					<Grid item xs={12} md={6}>
 						<Stack spacing={2}>
-							<Stack direction="row" spacing={1}>
+							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 								<Button
 									variant="contained"
 									fullWidth

@@ -639,7 +639,10 @@ const ScrapingWorker = () => {
 								gap={2}
 							>
 								<Stack direction="row" alignItems="center" spacing={1}>
-									<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+									<Typography
+										variant="h5"
+										sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+									>
 										Configuración del worker de scraping
 									</Typography>
 									<Tooltip title="Ver información">
@@ -671,7 +674,14 @@ const ScrapingWorker = () => {
 										</Box>
 									</Popover>
 								</Stack>
-								<Stack direction="row" spacing={1.5} alignItems="center" justifyContent={{ xs: "flex-start", sm: "flex-end" }}>
+								<Stack
+									direction="row"
+									spacing={1.5}
+									alignItems="center"
+									justifyContent={{ xs: "flex-start", sm: "flex-end" }}
+									flexWrap="wrap"
+									useFlexGap
+								>
 									<Button
 										variant="contained"
 										color="primary"
@@ -702,7 +712,7 @@ const ScrapingWorker = () => {
 											<Typography variant="caption" color="text.secondary" fontWeight={500}>
 												Búsqueda
 											</Typography>
-											<Stack direction="row" spacing={1} alignItems="center">
+											<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 												<TextField
 													size="small"
 													placeholder="Buscar por Worker ID"
@@ -1194,7 +1204,7 @@ const ScrapingWorker = () => {
 														</TableCell>
 														<TableCell align="center">
 															{isEditing ? (
-																<Stack direction="row" spacing={1}>
+																<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 																	<TextField
 																		size="small"
 																		type="number"

@@ -394,7 +394,7 @@ const DocumentosTab = () => {
 					<Typography variant="subtitle2" gutterBottom>
 						Acciones rápidas
 					</Typography>
-					<Stack direction="row" spacing={2}>
+					<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 						<Button size="small" variant="outlined" color="error" onClick={() => handleDeleteByEstado("invalido")}>
 							Eliminar todos los inválidos
 						</Button>

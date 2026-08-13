@@ -1049,10 +1049,7 @@ function ScheduleEditor({ sol }: { sol: SecloSolicitud }) {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [sol._id, sol.scheduledAt, sol.scheduledTimezone, sol.addToCalendar]);
 
-	const isDirty =
-		local !== initialLocal ||
-		(local && tz !== initialTz) ||
-		addToCal !== initialAddToCal;
+	const isDirty = local !== initialLocal || (local && tz !== initialTz) || addToCal !== initialAddToCal;
 
 	const handleSave = async () => {
 		setSaving(true);
@@ -1139,19 +1136,14 @@ function ScheduleEditor({ sol }: { sol: SecloSolicitud }) {
 					>
 						<FormControlLabel
 							control={
-								<Checkbox
-									checked={addToCal && !!local}
-									onChange={(e) => setAddToCal(e.target.checked)}
-									disabled={!local}
-									size="small"
-								/>
+								<Checkbox checked={addToCal && !!local} onChange={(e) => setAddToCal(e.target.checked)} disabled={!local} size="small" />
 							}
 							label={<Typography variant="body2">Agregar al calendario del usuario</Typography>}
 						/>
 					</Tooltip>
 				</Grid>
 				<Grid item xs={12}>
-					<Stack direction="row" spacing={1}>
+					<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 						<Button size="small" variant="contained" disabled={!isDirty || saving} onClick={handleSave}>
 							{saving ? "Guardando..." : "Guardar programación"}
 						</Button>
@@ -1229,7 +1221,14 @@ function SolicitudDetailDialog({ sol: initialSol, onClose }: { sol: SecloSolicit
 				</Typography>
 			</DialogTitle>
 
-			<Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ px: 3, borderBottom: 1, borderColor: "divider" }}>
+			<Tabs
+				variant="scrollable"
+				scrollButtons="auto"
+				allowScrollButtonsMobile
+				value={tab}
+				onChange={(_, v) => setTab(v)}
+				sx={{ px: 3, borderBottom: 1, borderColor: "divider" }}
+			>
 				<Tab label="Detalle" />
 				<Tab label="Formulario" />
 				<Tab label="JSON" />
@@ -1856,15 +1855,15 @@ export default function SolicitudesTab() {
 									<TableCell>
 										<Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
 											<Chip label={STATUS_LABELS[sol.status]} color={STATUS_COLORS[sol.status]} size="small" />
-												{sol.status === "pending" && sol.scheduledAt && new Date(sol.scheduledAt).getTime() > Date.now() && (
-													<Tooltip
-														title={`El worker no la procesa hasta ${new Date(sol.scheduledAt).toLocaleString("es-AR")}${
-															sol.scheduledTimezone ? ` (${sol.scheduledTimezone})` : ""
-														}`}
-													>
-														<Chip label="Programada" size="small" color="info" variant="outlined" />
-													</Tooltip>
-												)}
+											{sol.status === "pending" && sol.scheduledAt && new Date(sol.scheduledAt).getTime() > Date.now() && (
+												<Tooltip
+													title={`El worker no la procesa hasta ${new Date(sol.scheduledAt).toLocaleString("es-AR")}${
+														sol.scheduledTimezone ? ` (${sol.scheduledTimezone})` : ""
+													}`}
+												>
+													<Chip label="Programada" size="small" color="info" variant="outlined" />
+												</Tooltip>
+											)}
 											{sol.dryRun && sol.status !== "dry_run_completed" && (
 												<Tooltip title="Esta solicitud está marcada como DEV — el worker no enviará al portal">
 													<Chip label="DEV" size="small" color="warning" variant="outlined" />

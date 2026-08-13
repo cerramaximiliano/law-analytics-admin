@@ -86,8 +86,7 @@ const StatusIndicator = styled(Box)<{ status: "online" | "offline" | "checking" 
 	width: 10,
 	height: 10,
 	borderRadius: "50%",
-	backgroundColor:
-		status === "online" ? LIVE_GREEN : status === "offline" ? theme.palette.error.main : theme.palette.warning.main,
+	backgroundColor: status === "online" ? LIVE_GREEN : status === "offline" ? theme.palette.error.main : theme.palette.warning.main,
 	marginRight: theme.spacing(1),
 	...(status === "online" && {
 		"&::after": {
@@ -575,7 +574,7 @@ const MailingCampaigns = () => {
 						</Typography>
 					</Grid>
 					<Grid item>
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							<Button
 								variant="outlined"
 								color="secondary"
@@ -793,7 +792,11 @@ const MailingCampaigns = () => {
 											<TableCell align="right">
 												{(() => {
 													const tz = campaign.settings?.timezone || "UTC";
-													const fmt = (d: string | Date) => dayjs.utc(d as any).tz(tz).format("DD/MM/YYYY HH:mm");
+													const fmt = (d: string | Date) =>
+														dayjs
+															.utc(d as any)
+															.tz(tz)
+															.format("DD/MM/YYYY HH:mm");
 													if (!campaign.startDate && !campaign.endDate) return "-";
 													return (
 														<Tooltip title={`Zona horaria: ${tz}`} arrow>

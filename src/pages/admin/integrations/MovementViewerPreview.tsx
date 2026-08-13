@@ -74,16 +74,14 @@ const MovementViewerPreview: React.FC = () => {
 	const promoValidLabel = promo?.validUntil
 		? new Date(promo.validUntil).toLocaleDateString("es-AR", { day: "numeric", month: "long", timeZone: "UTC" })
 		: null;
-	const promoDurationLabel = promo?.durationInMonths
-		? `${promo.durationInMonths} ${promo.durationInMonths === 1 ? "mes" : "meses"}`
-		: null;
+	const promoDurationLabel = promo?.durationInMonths ? `${promo.durationInMonths} ${promo.durationInMonths === 1 ? "mes" : "meses"}` : null;
 
 	return (
 		<Box sx={{ px: 3, pb: 3 }}>
 			<Alert severity="info" sx={{ mb: 2 }}>
-				Recreación estática de la vista pública <strong>/m/:token</strong> (el destino de "Ver documento" en los emails de
-				movimientos). Los datos del expediente son de ejemplo; la <strong>promo es la real activa</strong> — la misma que resuelve el
-				endpoint público con la variante universal de landing (los descuentos dirigidos por usuario pueden diferir).
+				Recreación estática de la vista pública <strong>/m/:token</strong> (el destino de "Ver documento" en los emails de movimientos). Los
+				datos del expediente son de ejemplo; la <strong>promo es la real activa</strong> — la misma que resuelve el endpoint público con la
+				variante universal de landing (los descuentos dirigidos por usuario pueden diferir).
 				{promoError ? ` (No se pudo cargar la promo: ${promoError})` : ""}
 			</Alert>
 
@@ -251,7 +249,7 @@ const MovementViewerPreview: React.FC = () => {
 								</Button>
 							))}
 						</Stack>
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							<Button size="small" startIcon={<DocumentDownload size="18" />}>
 								Descargar
 							</Button>
@@ -265,8 +263,8 @@ const MovementViewerPreview: React.FC = () => {
 
 			<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1.5 }}>
 				Interacciones que se trackean desde esta vista: apertura (open/view_confirmed), click en CTA (cta_click, con sub-acción
-				vencimiento/nota/tarea), click en la promo (promo_click), descarga (download), portal PJN (fallback_click) y regreso
-				autenticado a la app (login_continue).
+				vencimiento/nota/tarea), click en la promo (promo_click), descarga (download), portal PJN (fallback_click) y regreso autenticado a
+				la app (login_continue).
 			</Typography>
 		</Box>
 	);

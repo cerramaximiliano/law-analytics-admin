@@ -259,7 +259,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 								Tendencias de rendimiento en los últimos {chartDays} días
 							</Typography>
 						</Box>
-						<Stack direction="row" spacing={1} alignItems="center">
+						<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 							<FormControl size="small" sx={{ minWidth: 100 }}>
 								<InputLabel>Días</InputLabel>
 								<Select value={chartDays} label="Días" onChange={(e) => setChartDays(Number(e.target.value))}>

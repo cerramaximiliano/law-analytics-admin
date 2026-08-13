@@ -493,7 +493,14 @@ const ChatInterface: React.FC<{ causa: IndexationCausa; onBack: () => void }> = 
 			</Box>
 
 			{/* Input */}
-			<Stack direction="row" spacing={1} alignItems="flex-end" sx={{ pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+			<Stack
+				direction="row"
+				spacing={1}
+				alignItems="flex-end"
+				sx={{ pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}
+				flexWrap="wrap"
+				useFlexGap
+			>
 				<TextField
 					fullWidth
 					multiline

@@ -38,7 +38,16 @@ const anioActual = new Date().getFullYear();
 
 function AltaDialog({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved: () => void }) {
 	const { enqueueSnackbar } = useSnackbar();
-	const [form, setForm] = useState({ modo: "dia", fecha: "", desde: "", hasta: "", tipo: "asueto", descripcion: "", fuente: "", verificado: true });
+	const [form, setForm] = useState({
+		modo: "dia",
+		fecha: "",
+		desde: "",
+		hasta: "",
+		tipo: "asueto",
+		descripcion: "",
+		fuente: "",
+		verificado: true,
+	});
 
 	const save = async () => {
 		try {
@@ -67,11 +76,32 @@ function AltaDialog({ open, onClose, onSaved }: { open: boolean; onClose: () => 
 						<MenuItem value="rango">Rango (feria/asueto extendido)</MenuItem>
 					</TextField>
 					{form.modo === "dia" ? (
-						<TextField size="small" type="date" label="Fecha" value={form.fecha} onChange={(e) => setForm({ ...form, fecha: e.target.value })} InputLabelProps={{ shrink: true }} />
+						<TextField
+							size="small"
+							type="date"
+							label="Fecha"
+							value={form.fecha}
+							onChange={(e) => setForm({ ...form, fecha: e.target.value })}
+							InputLabelProps={{ shrink: true }}
+						/>
 					) : (
-						<Stack direction="row" spacing={2}>
-							<TextField size="small" type="date" label="Desde" value={form.desde} onChange={(e) => setForm({ ...form, desde: e.target.value })} InputLabelProps={{ shrink: true }} />
-							<TextField size="small" type="date" label="Hasta" value={form.hasta} onChange={(e) => setForm({ ...form, hasta: e.target.value })} InputLabelProps={{ shrink: true }} />
+						<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+							<TextField
+								size="small"
+								type="date"
+								label="Desde"
+								value={form.desde}
+								onChange={(e) => setForm({ ...form, desde: e.target.value })}
+								InputLabelProps={{ shrink: true }}
+							/>
+							<TextField
+								size="small"
+								type="date"
+								label="Hasta"
+								value={form.hasta}
+								onChange={(e) => setForm({ ...form, hasta: e.target.value })}
+								InputLabelProps={{ shrink: true }}
+							/>
 						</Stack>
 					)}
 					<TextField select size="small" label="Tipo" value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}>
@@ -81,8 +111,18 @@ function AltaDialog({ open, onClose, onSaved }: { open: boolean; onClose: () => 
 							</MenuItem>
 						))}
 					</TextField>
-					<TextField size="small" label="Descripción" value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} />
-					<TextField size="small" label="Fuente (ley/decreto/acordada)" value={form.fuente} onChange={(e) => setForm({ ...form, fuente: e.target.value })} />
+					<TextField
+						size="small"
+						label="Descripción"
+						value={form.descripcion}
+						onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
+					/>
+					<TextField
+						size="small"
+						label="Fuente (ley/decreto/acordada)"
+						value={form.fuente}
+						onChange={(e) => setForm({ ...form, fuente: e.target.value })}
+					/>
 					<Stack direction="row" alignItems="center">
 						<Switch checked={form.verificado} onChange={(e) => setForm({ ...form, verificado: e.target.checked })} />
 						<Typography variant="body2">Verificado (confirmado contra la norma)</Typography>
@@ -170,34 +210,32 @@ export default function FeriadosTab() {
 						</TableRow>
 					</TableHead>
 					<TableBody>
-						{loading ? (
-							Array.from({ length: 8 }).map((_, i) => (
-								<TableRow key={i}>
-									<TableCell colSpan={6}>
-										<Skeleton />
-									</TableCell>
-								</TableRow>
-							))
-						) : (
-							rows.map((r) => (
-								<TableRow key={r._id} hover sx={{ opacity: r.habilitado ? 1 : 0.5 }}>
-									<TableCell sx={{ fontFamily: "monospace" }}>{r.fecha}</TableCell>
-									<TableCell>
-										<Chip size="small" variant="outlined" label={r.tipo} />
-									</TableCell>
-									<TableCell>{r.descripcion}</TableCell>
-									<TableCell>
-										<Typography variant="caption">{r.fuente}</Typography>
-									</TableCell>
-									<TableCell>
-										<Switch size="small" checked={r.verificado} onChange={(e) => toggle(r, "verificado", e.target.checked)} />
-									</TableCell>
-									<TableCell>
-										<Switch size="small" checked={r.habilitado} onChange={(e) => toggle(r, "habilitado", e.target.checked)} />
-									</TableCell>
-								</TableRow>
-							))
-						)}
+						{loading
+							? Array.from({ length: 8 }).map((_, i) => (
+									<TableRow key={i}>
+										<TableCell colSpan={6}>
+											<Skeleton />
+										</TableCell>
+									</TableRow>
+							  ))
+							: rows.map((r) => (
+									<TableRow key={r._id} hover sx={{ opacity: r.habilitado ? 1 : 0.5 }}>
+										<TableCell sx={{ fontFamily: "monospace" }}>{r.fecha}</TableCell>
+										<TableCell>
+											<Chip size="small" variant="outlined" label={r.tipo} />
+										</TableCell>
+										<TableCell>{r.descripcion}</TableCell>
+										<TableCell>
+											<Typography variant="caption">{r.fuente}</Typography>
+										</TableCell>
+										<TableCell>
+											<Switch size="small" checked={r.verificado} onChange={(e) => toggle(r, "verificado", e.target.checked)} />
+										</TableCell>
+										<TableCell>
+											<Switch size="small" checked={r.habilitado} onChange={(e) => toggle(r, "habilitado", e.target.checked)} />
+										</TableCell>
+									</TableRow>
+							  ))}
 					</TableBody>
 				</Table>
 			</TableContainer>

@@ -217,7 +217,7 @@ const FeedbackInvitesPage = () => {
 		<MainCard
 			title="Links de Invitación"
 			secondary={
-				<Stack direction="row" spacing={1}>
+				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 					<Button variant="contained" size="small" startIcon={<Add size={16} />} onClick={openCreate}>
 						Generar link
 					</Button>

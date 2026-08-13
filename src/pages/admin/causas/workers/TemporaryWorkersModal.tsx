@@ -200,7 +200,7 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 						<Typography variant="body2" color="text.secondary">
 							{loading ? "Cargando..." : `${temporaryWorkers.length} worker(s) temporario(s) encontrado(s)`}
 						</Typography>
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							{selectedIds.length > 0 && (
 								<Button
 									variant="contained"

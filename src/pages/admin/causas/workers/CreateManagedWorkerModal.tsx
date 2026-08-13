@@ -181,7 +181,7 @@ const CreateManagedWorkerModal: React.FC<CreateManagedWorkerModalProps> = ({ ope
 						<Typography variant="subtitle2" gutterBottom>
 							Rango de Expedientes *
 						</Typography>
-						<Stack direction="row" spacing={2}>
+						<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 							<TextField
 								fullWidth
 								type="number"

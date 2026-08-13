@@ -359,7 +359,7 @@ const FeedbackAdminPage = () => {
 		<MainCard
 			title="Feedback de Usuarios"
 			secondary={
-				<Stack direction="row" spacing={1}>
+				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 					{selectedIds.length > 0 && (
 						<Button variant="outlined" size="small" onClick={() => setBulkStatusOpen(true)}>
 							Cambiar estado ({selectedIds.length})

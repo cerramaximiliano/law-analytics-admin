@@ -39,7 +39,13 @@ import {
 } from "@mui/material";
 import { Refresh, TickCircle, CloseCircle, SearchNormal1, Setting2, DocumentText, Chart, Lock1 } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import RagWorkersService, { EscritosWorkerConfig, EscritosWorkerStats, GlobalDocumentEntry, EscritosSearchResult, PineconeStats } from "api/ragWorkers";
+import RagWorkersService, {
+	EscritosWorkerConfig,
+	EscritosWorkerStats,
+	GlobalDocumentEntry,
+	EscritosSearchResult,
+	PineconeStats,
+} from "api/ragWorkers";
 import WorkerControlPanel from "components/WorkerControlPanel";
 import WorkerScopeAlert from "components/admin/WorkerScopeAlert";
 import CronSelector from "components/admin/CronSelector";
@@ -168,10 +174,7 @@ function EscritosRateConfigCard() {
 		loadCfg();
 	}, []);
 
-	const dirty = !!config && (
-		draft.scanCron !== config.scanCron ||
-		draft.concurrency !== config.concurrency
-	);
+	const dirty = !!config && (draft.scanCron !== config.scanCron || draft.concurrency !== config.concurrency);
 
 	const handleSave = async () => {
 		setSaving(true);
@@ -205,11 +208,11 @@ function EscritosRateConfigCard() {
 
 			<Alert severity="info" variant="outlined" sx={{ mb: 2, py: 0.5 }}>
 				<Typography variant="caption" component="div">
-					<strong>Para reducir costos:</strong> espaciar <code>scanCron</code> reduce cuántos PDFs se procesan/día →
-					menos vectors upserted → menos $$.
+					<strong>Para reducir costos:</strong> espaciar <code>scanCron</code> reduce cuántos PDFs se procesan/día → menos vectors upserted
+					→ menos $$.
 					<br />
-					<strong>Para tunning de performance:</strong> <code>concurrency</code> sólo cambia cuántos workers procesan
-					en paralelo — el costo por PDF es el mismo (3 PDFs en serie facturan igual que 3 en paralelo).
+					<strong>Para tunning de performance:</strong> <code>concurrency</code> sólo cambia cuántos workers procesan en paralelo — el costo
+					por PDF es el mismo (3 PDFs en serie facturan igual que 3 en paralelo).
 				</Typography>
 			</Alert>
 
@@ -237,7 +240,7 @@ function EscritosRateConfigCard() {
 				</Grid>
 			</Grid>
 
-			<Stack direction="row" justifyContent="flex-end" mt={2} spacing={1}>
+			<Stack direction="row" justifyContent="flex-end" mt={2} spacing={1} flexWrap="wrap" useFlexGap>
 				<Button size="small" onClick={loadCfg} disabled={saving || loading} sx={{ textTransform: "none" }}>
 					Descartar
 				</Button>
@@ -632,7 +635,7 @@ function ConfigSection() {
 
 			<Divider />
 
-			<Stack direction="row" spacing={2} alignItems="center">
+			<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 				<Button variant="contained" onClick={save} disabled={!dirty || saving} startIcon={<TickCircle size={18} />}>
 					{saving ? "Guardando..." : "Guardar cambios"}
 				</Button>
@@ -770,8 +773,8 @@ function ResumenSection() {
 			) : null}
 
 			{/* Filtros */}
-			<Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
-				<Stack direction="row" spacing={1}>
+			<Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
+				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 					<FormControl size="small" sx={{ minWidth: 130 }}>
 						<InputLabel>Estado</InputLabel>
 						<Select
@@ -872,7 +875,7 @@ function ResumenSection() {
 					</TableContainer>
 
 					{/* Paginación con números */}
-					<Stack direction="row" justifyContent="center" alignItems="center" spacing={1}>
+					<Stack direction="row" justifyContent="center" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
 						<Button size="small" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} variant="outlined" sx={{ minWidth: 36 }}>
 							‹
 						</Button>
@@ -1276,7 +1279,9 @@ const EscritosWorkerTab: React.FC = () => {
 									<Typography variant="caption" color="text.secondary" display="block">
 										Dimensión
 									</Typography>
-									<Typography variant="body2" fontWeight={600}>{pineconeStats.indexStats.dimension ?? "—"}</Typography>
+									<Typography variant="body2" fontWeight={600}>
+										{pineconeStats.indexStats.dimension ?? "—"}
+									</Typography>
 								</Box>
 								{pineconeStats.indexStats.indexFullness != null && (
 									<Box>

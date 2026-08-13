@@ -243,7 +243,7 @@ const CreateConfigModal: React.FC<CreateConfigModalProps> = ({ open, onClose, on
 						<Typography variant="subtitle2" gutterBottom>
 							Rango de Expedientes *
 						</Typography>
-						<Stack direction="row" spacing={2}>
+						<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 							<TextField
 								fullWidth
 								type="number"

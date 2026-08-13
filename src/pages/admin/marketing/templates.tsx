@@ -224,7 +224,11 @@ const AVAILABLE_VARIABLES: VariableOption[] = [
 	{ name: "userResourcesSummary", description: "Tabla HTML con resumen de recursos del usuario", category: "Recursos" },
 
 	// Subscription variables (resueltas al enviar: cruzan planconfigs × descuento vigente)
-	{ name: "tablaPrecios", description: "Bloque HTML: comparativa de planes Estándar/Premium con precio cruzado", category: "Suscripciones" },
+	{
+		name: "tablaPrecios",
+		description: "Bloque HTML: comparativa de planes Estándar/Premium con precio cruzado",
+		category: "Suscripciones",
+	},
 	{ name: "ofertaActual", description: "Bloque HTML: banner del descuento vigente (vacío si no hay)", category: "Suscripciones" },
 	{ name: "descuento.activo", description: "Hay descuento vigente (true/false)", category: "Suscripciones" },
 	{ name: "descuento.codigo", description: "Código del descuento vigente (ej: DESCUENTO50)", category: "Suscripciones" },
@@ -616,7 +620,10 @@ const EmailTemplates = () => {
 					if (module) {
 						result = result.replace(fullMatch, module.htmlContent);
 					} else {
-						result = result.replace(fullMatch, `<span style="color: red; font-style: italic;">[Módulo no encontrado: ${moduleName}]</span>`);
+						result = result.replace(
+							fullMatch,
+							`<span style="color: red; font-style: italic;">[Módulo no encontrado: ${moduleName}]</span>`,
+						);
 					}
 				}
 			}
@@ -1692,7 +1699,7 @@ const EmailTemplates = () => {
 						</Typography>
 					</Grid>
 					<Grid item>
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							<Button
 								variant="outlined"
 								color="secondary"
@@ -2077,7 +2084,14 @@ const EmailTemplates = () => {
 						</DialogTitle>
 						<Divider />
 						<Box sx={{ borderBottom: 1, borderColor: "divider", px: 3 }}>
-							<Tabs value={viewTab} onChange={handleChangeTab} aria-label="template view tabs">
+							<Tabs
+								variant="scrollable"
+								scrollButtons="auto"
+								allowScrollButtonsMobile
+								value={viewTab}
+								onChange={handleChangeTab}
+								aria-label="template view tabs"
+							>
 								<Tab label="Vista renderizada" id="template-tab-0" aria-controls="template-tabpanel-0" />
 								<Tab label="Código HTML" id="template-tab-1" aria-controls="template-tabpanel-1" />
 								<Tab label="Texto plano" id="template-tab-2" aria-controls="template-tabpanel-2" />
@@ -3014,7 +3028,14 @@ const EmailTemplates = () => {
 						{/* Template content and preview */}
 						<Grid item xs={12} md={6}>
 							<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
-								<Tabs value={createViewTab} onChange={handleCreateChangeTab} aria-label="template edit tabs">
+								<Tabs
+									variant="scrollable"
+									scrollButtons="auto"
+									allowScrollButtonsMobile
+									value={createViewTab}
+									onChange={handleCreateChangeTab}
+									aria-label="template edit tabs"
+								>
 									<Tab label="Vista previa" id="create-tab-0" aria-controls="create-tabpanel-0" />
 									<Tab label="Código HTML" id="create-tab-1" aria-controls="create-tabpanel-1" />
 									<Tab label="Texto plano" id="create-tab-2" aria-controls="create-tabpanel-2" />
@@ -3451,7 +3472,10 @@ const EmailTemplates = () => {
 											<Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
 												<Stack direction="row" alignItems="center" spacing={1}>
 													<Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: accent }} />
-													<Typography variant="caption" sx={{ fontWeight: 600, letterSpacing: 0.4, textTransform: "uppercase", color: accent }}>
+													<Typography
+														variant="caption"
+														sx={{ fontWeight: 600, letterSpacing: 0.4, textTransform: "uppercase", color: accent }}
+													>
 														{label}
 													</Typography>
 													<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
@@ -3529,8 +3553,8 @@ const EmailTemplates = () => {
 									Snapshot de seguridad
 								</Typography>
 								<Typography variant="body2">
-									Antes de sobrescribir, se guarda el contenido actual del original como{" "}
-									<code>metadata.previousVersion</code>. Si después no te gusta, podés revertir con un click.
+									Antes de sobrescribir, se guarda el contenido actual del original como <code>metadata.previousVersion</code>. Si después
+									no te gusta, podés revertir con un click.
 								</Typography>
 							</Box>
 							<Typography variant="caption" color="text.secondary">
@@ -3570,8 +3594,7 @@ const EmailTemplates = () => {
 							</Typography>
 							{templateToRevert.metadata?.previousVersion?.snapshotAt && (
 								<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-									Snapshot tomado el{" "}
-									{new Date(templateToRevert.metadata.previousVersion.snapshotAt).toLocaleString()}
+									Snapshot tomado el {new Date(templateToRevert.metadata.previousVersion.snapshotAt).toLocaleString()}
 								</Typography>
 							)}
 							<Typography variant="caption" color="text.secondary">

@@ -121,9 +121,9 @@ const EtiquetadoDataset = () => {
 			}
 		>
 			<Typography variant="body2" color="text.secondary" sx={{ mb: 2, maxWidth: 720 }}>
-				Cola de causas para anotación experta del dataset del clasificador (Fase 2). Cada causa se abre en el editor con todos
-				sus movimientos, las etiquetas débiles del motor y el cuerpo segmentado de las resoluciones capturadas. También podés
-				sumar causas a la cola desde <b>Carpetas verificadas</b> con el botón de etiquetado.
+				Cola de causas para anotación experta del dataset del clasificador (Fase 2). Cada causa se abre en el editor con todos sus
+				movimientos, las etiquetas débiles del motor y el cuerpo segmentado de las resoluciones capturadas. También podés sumar causas a la
+				cola desde <b>Carpetas verificadas</b> con el botón de etiquetado.
 			</Typography>
 
 			<Tabs value={tab} onChange={(_e, v) => cambiarTab(v)} sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}>
@@ -142,12 +142,10 @@ const EtiquetadoDataset = () => {
 					) : (
 						<>
 							<Typography variant="subtitle1" fontWeight={700}>
-								Cobertura del gold set — {cobertura.causas.total} causas · {cobertura.causas.movimientosAnotados} movimientos
-								anotados
+								Cobertura del gold set — {cobertura.causas.total} causas · {cobertura.causas.movimientosAnotados} movimientos anotados
 							</Typography>
 							<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-								Los valores en gris punteado todavía no tienen NINGÚN ejemplo — son los que conviene cazar en las próximas
-								causas.
+								Los valores en gris punteado todavía no tienen NINGÚN ejemplo — son los que conviene cazar en las próximas causas.
 							</Typography>
 							{["actoProcesal", "funcion", "resultado", "modoTerminacion", "materia"].map((dim) => (
 								<Box key={dim} sx={{ mt: 1.25 }}>
@@ -262,204 +260,204 @@ const EtiquetadoDataset = () => {
 			)}
 
 			{tab === 0 && (
-			<>
-			<Stack direction="row" spacing={1} sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
-				<Tooltip title="Solo las causas sugeridas por el tablero de cobertura (clases que faltan en el gold set), ordenadas por prioridad. Se recalculan al abrir 'Cobertura de clases'.">
-					<Chip
-						size="small"
-						label="⭐ sugeridas"
-						color="warning"
-						variant={soloSugeridas ? "filled" : "outlined"}
-						onClick={() => {
-							setSoloSugeridas(!soloSugeridas);
-							setPage(0);
-						}}
-					/>
-				</Tooltip>
-				{Object.entries(porEstado).map(([e, n]) => (
-					<Chip
-						key={e}
-						size="small"
-						label={`${e}: ${n}`}
-						color={ESTADO_COLOR[e as EstadoAnotacion] || "default"}
-						variant={estadoFilter === e ? "filled" : "outlined"}
-						onClick={() => {
-							setEstadoFilter(estadoFilter === e ? "todos" : e);
-							setPage(0);
-						}}
-					/>
-				))}
-			</Stack>
-
-			<Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-				<FormControl size="small" sx={{ minWidth: 140 }}>
-					<InputLabel>Fuero</InputLabel>
-					<Select
-						value={fueroFilter}
-						label="Fuero"
-						onChange={(e) => {
-							setFueroFilter(e.target.value);
-							setPage(0);
-						}}
-					>
-						<MenuItem value="todos">Todos</MenuItem>
-						{FUEROS.map((f) => (
-							<MenuItem key={f} value={f}>
-								{f}
-							</MenuItem>
+				<>
+					<Stack direction="row" spacing={1} sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
+						<Tooltip title="Solo las causas sugeridas por el tablero de cobertura (clases que faltan en el gold set), ordenadas por prioridad. Se recalculan al abrir 'Cobertura de clases'.">
+							<Chip
+								size="small"
+								label="⭐ sugeridas"
+								color="warning"
+								variant={soloSugeridas ? "filled" : "outlined"}
+								onClick={() => {
+									setSoloSugeridas(!soloSugeridas);
+									setPage(0);
+								}}
+							/>
+						</Tooltip>
+						{Object.entries(porEstado).map(([e, n]) => (
+							<Chip
+								key={e}
+								size="small"
+								label={`${e}: ${n}`}
+								color={ESTADO_COLOR[e as EstadoAnotacion] || "default"}
+								variant={estadoFilter === e ? "filled" : "outlined"}
+								onClick={() => {
+									setEstadoFilter(estadoFilter === e ? "todos" : e);
+									setPage(0);
+								}}
+							/>
 						))}
-					</Select>
-				</FormControl>
-			</Stack>
+					</Stack>
 
-			{error && (
-				<Alert severity="error" sx={{ mb: 2 }}>
-					{error}
-				</Alert>
-			)}
+					<Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
+						<FormControl size="small" sx={{ minWidth: 140 }}>
+							<InputLabel>Fuero</InputLabel>
+							<Select
+								value={fueroFilter}
+								label="Fuero"
+								onChange={(e) => {
+									setFueroFilter(e.target.value);
+									setPage(0);
+								}}
+							>
+								<MenuItem value="todos">Todos</MenuItem>
+								{FUEROS.map((f) => (
+									<MenuItem key={f} value={f}>
+										{f}
+									</MenuItem>
+								))}
+							</Select>
+						</FormControl>
+					</Stack>
 
-			{loading ? (
-				<Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-					<CircularProgress />
-				</Box>
-			) : (
-				<Card variant="outlined">
-					<TableContainer>
-						<Table size="small">
-							<TableHead>
-								<TableRow>
-									<TableCell>Fuero</TableCell>
-									<TableCell>Expediente</TableCell>
-									<TableCell>Carátula</TableCell>
-									<TableCell>Objeto</TableCell>
-									<TableCell>Motivo</TableCell>
-									<TableCell align="center">Anotados</TableCell>
-									<TableCell align="center">Estado</TableCell>
-									<TableCell align="center">Acciones</TableCell>
-								</TableRow>
-							</TableHead>
-							<TableBody>
-								{items.map((item) => (
-									<TableRow
-										key={item._id}
-										hover
-										sx={{ cursor: "pointer", "&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) } }}
-										onClick={() => navigate(`/admin/causas/etiquetado/${item.fuero}/${item.causaId}`)}
-									>
-										<TableCell>
-											<Chip size="small" variant="outlined" label={item.fuero} />
-										</TableCell>
-										<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>
-											<Stack direction="row" alignItems="center" spacing={0.5}>
-												{item.sugerida && (
-													<Tooltip
-														title={`⭐ Sugerida #${item.sugerida.rank} por cobertura — trae: ${item.sugerida.senales
-															.map((se) => `${se.clave}×${se.hits}`)
-															.join(", ")}`}
-													>
-														<Typography component="span" sx={{ color: "warning.main", fontSize: "0.9rem", lineHeight: 1 }}>
-															★
+					{error && (
+						<Alert severity="error" sx={{ mb: 2 }}>
+							{error}
+						</Alert>
+					)}
+
+					{loading ? (
+						<Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+							<CircularProgress />
+						</Box>
+					) : (
+						<Card variant="outlined">
+							<TableContainer>
+								<Table size="small">
+									<TableHead>
+										<TableRow>
+											<TableCell>Fuero</TableCell>
+											<TableCell>Expediente</TableCell>
+											<TableCell>Carátula</TableCell>
+											<TableCell>Objeto</TableCell>
+											<TableCell>Motivo</TableCell>
+											<TableCell align="center">Anotados</TableCell>
+											<TableCell align="center">Estado</TableCell>
+											<TableCell align="center">Acciones</TableCell>
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{items.map((item) => (
+											<TableRow
+												key={item._id}
+												hover
+												sx={{ cursor: "pointer", "&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) } }}
+												onClick={() => navigate(`/admin/causas/etiquetado/${item.fuero}/${item.causaId}`)}
+											>
+												<TableCell>
+													<Chip size="small" variant="outlined" label={item.fuero} />
+												</TableCell>
+												<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>
+													<Stack direction="row" alignItems="center" spacing={0.5}>
+														{item.sugerida && (
+															<Tooltip
+																title={`⭐ Sugerida #${item.sugerida.rank} por cobertura — trae: ${item.sugerida.senales
+																	.map((se) => `${se.clave}×${se.hits}`)
+																	.join(", ")}`}
+															>
+																<Typography component="span" sx={{ color: "warning.main", fontSize: "0.9rem", lineHeight: 1 }}>
+																	★
+																</Typography>
+															</Tooltip>
+														)}
+														<Typography variant="body2" fontWeight={600}>
+															{item.number}/{item.year}
 														</Typography>
-													</Tooltip>
-												)}
-												<Typography variant="body2" fontWeight={600}>
-													{item.number}/{item.year}
-												</Typography>
-											</Stack>
-										</TableCell>
-										<TableCell sx={{ maxWidth: 280 }}>
-											<Typography variant="body2" sx={{ whiteSpace: "normal", wordWrap: "break-word" }}>
-												{item.caratula || "—"}
-											</Typography>
-										</TableCell>
-										<TableCell sx={{ maxWidth: 180 }}>
-											<Typography variant="caption">{item.objeto || "—"}</Typography>
-										</TableCell>
-										<TableCell>
-											<Chip size="small" variant="outlined" label={item.motivo} sx={{ fontSize: "0.68rem" }} />
-										</TableCell>
-										<TableCell align="center" sx={{ fontVariantNumeric: "tabular-nums" }}>
-											{item.movimientosAnotados}
-											{(item.divergencias || 0) > 0 && (
-												<Tooltip
-													title={
-														<>
-															{`${item.divergencias} valor(es) difieren de la combinación típica del acto — informativo, no error:`}
-															{(item.divergenciasDetalle || []).map((dv, i) => (
-																<div key={i}>
-																	{`mov #${dv.idx} · ${DIM_LABELS[dv.dim as DimKey]?.corto || dv.dim}: «${
-																		DIM_LABELS[dv.dim as DimKey]?.opciones.find(([v]) => v === dv.elegido)?.[1] || dv.elegido
-																	}» (típico de ${dv.acto}: «${
-																		DIM_LABELS[dv.dim as DimKey]?.opciones.find(([v]) => v === dv.sugerido)?.[1] || dv.sugerido
-																	}»)`}
-																</div>
-															))}
-															{(item.divergencias || 0) > (item.divergenciasDetalle || []).length && (
-																<div>{`… y ${(item.divergencias || 0) - (item.divergenciasDetalle || []).length} más`}</div>
-															)}
-														</>
-													}
-												>
+													</Stack>
+												</TableCell>
+												<TableCell sx={{ maxWidth: 280 }}>
+													<Typography variant="body2" sx={{ whiteSpace: "normal", wordWrap: "break-word" }}>
+														{item.caratula || "—"}
+													</Typography>
+												</TableCell>
+												<TableCell sx={{ maxWidth: 180 }}>
+													<Typography variant="caption">{item.objeto || "—"}</Typography>
+												</TableCell>
+												<TableCell>
+													<Chip size="small" variant="outlined" label={item.motivo} sx={{ fontSize: "0.68rem" }} />
+												</TableCell>
+												<TableCell align="center" sx={{ fontVariantNumeric: "tabular-nums" }}>
+													{item.movimientosAnotados}
+													{(item.divergencias || 0) > 0 && (
+														<Tooltip
+															title={
+																<>
+																	{`${item.divergencias} valor(es) difieren de la combinación típica del acto — informativo, no error:`}
+																	{(item.divergenciasDetalle || []).map((dv, i) => (
+																		<div key={i}>
+																			{`mov #${dv.idx} · ${DIM_LABELS[dv.dim as DimKey]?.corto || dv.dim}: «${
+																				DIM_LABELS[dv.dim as DimKey]?.opciones.find(([v]) => v === dv.elegido)?.[1] || dv.elegido
+																			}» (típico de ${dv.acto}: «${
+																				DIM_LABELS[dv.dim as DimKey]?.opciones.find(([v]) => v === dv.sugerido)?.[1] || dv.sugerido
+																			}»)`}
+																		</div>
+																	))}
+																	{(item.divergencias || 0) > (item.divergenciasDetalle || []).length && (
+																		<div>{`… y ${(item.divergencias || 0) - (item.divergenciasDetalle || []).length} más`}</div>
+																	)}
+																</>
+															}
+														>
+															<Chip
+																size="small"
+																color="warning"
+																variant="outlined"
+																label={`⚠ ${item.divergencias}`}
+																sx={{ ml: 0.6, fontSize: "0.66rem", height: 20 }}
+																onClick={(e) => e.stopPropagation()}
+															/>
+														</Tooltip>
+													)}
+												</TableCell>
+												<TableCell align="center">
 													<Chip
 														size="small"
-														color="warning"
-														variant="outlined"
-														label={`⚠ ${item.divergencias}`}
-														sx={{ ml: 0.6, fontSize: "0.66rem", height: 20 }}
-														onClick={(e) => e.stopPropagation()}
+														label={item.estado === "verificada" ? "🔒 cerrada" : item.estado}
+														color={ESTADO_COLOR[item.estado]}
 													/>
-												</Tooltip>
-											)}
-										</TableCell>
-										<TableCell align="center">
-											<Chip
-												size="small"
-												label={item.estado === "verificada" ? "🔒 cerrada" : item.estado}
-												color={ESTADO_COLOR[item.estado]}
-											/>
-										</TableCell>
-										<TableCell align="center">
-											<Tooltip title="Abrir editor">
-												<IconButton
-													size="small"
-													color="primary"
-													onClick={(e) => {
-														e.stopPropagation();
-														navigate(`/admin/causas/etiquetado/${item.fuero}/${item.causaId}`);
-													}}
-												>
-													<Edit2 size={17} />
-												</IconButton>
-											</Tooltip>
-										</TableCell>
-									</TableRow>
-								))}
-								{!items.length && (
-									<TableRow>
-										<TableCell colSpan={8}>
-											<Typography variant="body2" color="text.secondary" align="center" sx={{ py: 3 }}>
-												No hay causas en la cola con estos filtros.
-											</Typography>
-										</TableCell>
-									</TableRow>
-								)}
-							</TableBody>
-						</Table>
-					</TableContainer>
-					<EnhancedTablePagination
-						rowsPerPageOptions={[10, 25, 50, 100]}
-						count={total}
-						rowsPerPage={rowsPerPage}
-						page={page}
-						onPageChange={(_e, p) => setPage(p)}
-						onRowsPerPageChange={(e) => {
-							setRowsPerPage(parseInt(e.target.value, 10));
-							setPage(0);
-						}}
-					/>
-				</Card>
-			)}
-			</>
+												</TableCell>
+												<TableCell align="center">
+													<Tooltip title="Abrir editor">
+														<IconButton
+															size="small"
+															color="primary"
+															onClick={(e) => {
+																e.stopPropagation();
+																navigate(`/admin/causas/etiquetado/${item.fuero}/${item.causaId}`);
+															}}
+														>
+															<Edit2 size={17} />
+														</IconButton>
+													</Tooltip>
+												</TableCell>
+											</TableRow>
+										))}
+										{!items.length && (
+											<TableRow>
+												<TableCell colSpan={8}>
+													<Typography variant="body2" color="text.secondary" align="center" sx={{ py: 3 }}>
+														No hay causas en la cola con estos filtros.
+													</Typography>
+												</TableCell>
+											</TableRow>
+										)}
+									</TableBody>
+								</Table>
+							</TableContainer>
+							<EnhancedTablePagination
+								rowsPerPageOptions={[10, 25, 50, 100]}
+								count={total}
+								rowsPerPage={rowsPerPage}
+								page={page}
+								onPageChange={(_e, p) => setPage(p)}
+								onRowsPerPageChange={(e) => {
+									setRowsPerPage(parseInt(e.target.value, 10));
+									setPage(0);
+								}}
+							/>
+						</Card>
+					)}
+				</>
 			)}
 		</MainCard>
 	);

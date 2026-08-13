@@ -535,7 +535,7 @@ export default function JurisprudenciaPjnPage() {
 							</Grid>
 						</Box>
 
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							<Button
 								variant="contained"
 								startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <SearchNormal1 size={16} />}
@@ -637,7 +637,7 @@ export default function JurisprudenciaPjnPage() {
 							</Grid>
 						</Box>
 
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							<Button
 								variant="contained"
 								startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <DocumentText1 size={16} />}

@@ -136,8 +136,7 @@ function RevisarDialog({
 	return (
 		<Dialog open onClose={onClose} maxWidth="md" fullWidth>
 			<DialogTitle>
-				Revisar ejemplo — {ejemplo.number}/{ejemplo.year} [{ejemplo.fuero}]
-				{ejemplo.objeto ? ` · ${ejemplo.objeto}` : ""}
+				Revisar ejemplo — {ejemplo.number}/{ejemplo.year} [{ejemplo.fuero}]{ejemplo.objeto ? ` · ${ejemplo.objeto}` : ""}
 			</DialogTitle>
 			<DialogContent dividers>
 				<Stack spacing={2}>
@@ -147,11 +146,16 @@ function RevisarDialog({
 						{ejemplo.juzgado != null && <Chip size="small" variant="outlined" label={`Juzg. ${ejemplo.juzgado}`} />}
 						{ejemplo.sala != null && <Chip size="small" variant="outlined" label={`Sala ${ejemplo.sala}`} />}
 						{ejemplo._disperso?.apartado && (
-							<Chip size="small" color="warning" variant="outlined" label={`su grupo dice ${ejemplo._disperso.dominanteGrupo}d (n=${ejemplo._disperso.nGrupo})`} />
+							<Chip
+								size="small"
+								color="warning"
+								variant="outlined"
+								label={`su grupo dice ${ejemplo._disperso.dominanteGrupo}d (n=${ejemplo._disperso.nGrupo})`}
+							/>
 						)}
 					</Stack>
 
-					<Stack direction="row" spacing={2}>
+					<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 						<TextField
 							select
 							size="small"
@@ -168,9 +172,22 @@ function RevisarDialog({
 							<MenuItem value="__otro__">otro (escribir)…</MenuItem>
 						</TextField>
 						{!actosConocidos.includes(acto) && (
-							<TextField size="small" label="Acto nuevo (slug snake_case)" value={acto} onChange={(e) => setActo(e.target.value)} sx={{ minWidth: 220 }} />
+							<TextField
+								size="small"
+								label="Acto nuevo (slug snake_case)"
+								value={acto}
+								onChange={(e) => setActo(e.target.value)}
+								sx={{ minWidth: 220 }}
+							/>
 						)}
-						<TextField select size="small" label="Naturaleza del plazo" value={naturaleza} onChange={(e) => setNaturaleza(e.target.value)} sx={{ minWidth: 160 }}>
+						<TextField
+							select
+							size="small"
+							label="Naturaleza del plazo"
+							value={naturaleza}
+							onChange={(e) => setNaturaleza(e.target.value)}
+							sx={{ minWidth: 160 }}
+						>
 							{NATURALEZAS.map((n) => (
 								<MenuItem key={n} value={n}>
 									{n}
@@ -186,7 +203,11 @@ function RevisarDialog({
 							<Typography variant="caption" color="text.secondary">
 								Mención del plazo:
 							</Typography>
-							<Typography variant="caption" component="div" sx={{ fontFamily: "monospace", bgcolor: "action.hover", p: 1, borderRadius: 1 }}>
+							<Typography
+								variant="caption"
+								component="div"
+								sx={{ fontFamily: "monospace", bgcolor: "action.hover", p: 1, borderRadius: 1 }}
+							>
 								«{ejemplo.snippet}»
 							</Typography>
 						</Box>
@@ -273,10 +294,27 @@ function RevisionSection({ actosConocidos }: { actosConocidos: string[] }) {
 			<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
 				<Typography variant="subtitle1">Revisión de ejemplos</Typography>
 				<Stack direction="row" alignItems="center">
-					<Switch size="small" checked={soloDispersos} onChange={(e) => { setSoloDispersos(e.target.checked); setPage(0); }} />
+					<Switch
+						size="small"
+						checked={soloDispersos}
+						onChange={(e) => {
+							setSoloDispersos(e.target.checked);
+							setPage(0);
+						}}
+					/>
 					<Typography variant="body2">Solo dispersos (apartados del dominante o ≥60 días)</Typography>
 				</Stack>
-				<TextField select size="small" label="Revisión" value={revision} onChange={(e) => { setRevision(e.target.value); setPage(0); }} sx={{ minWidth: 150 }}>
+				<TextField
+					select
+					size="small"
+					label="Revisión"
+					value={revision}
+					onChange={(e) => {
+						setRevision(e.target.value);
+						setPage(0);
+					}}
+					sx={{ minWidth: 150 }}
+				>
 					<MenuItem value="sin_revisar">Sin revisar</MenuItem>
 					<MenuItem value="confirmado">Confirmados</MenuItem>
 					<MenuItem value="descartado">Descartados</MenuItem>
@@ -298,71 +336,79 @@ function RevisionSection({ actosConocidos }: { actosConocidos: string[] }) {
 						</TableRow>
 					</TableHead>
 					<TableBody>
-						{loading ? (
-							Array.from({ length: 5 }).map((_, i) => (
-								<TableRow key={i}>
-									<TableCell colSpan={7}>
-										<Skeleton />
-									</TableCell>
-								</TableRow>
-							))
-						) : (
-							rows.map((e) => (
-								<TableRow key={e._id} hover>
-									<TableCell>
-										{e.number}/{e.year}
-									</TableCell>
-									<TableCell sx={{ maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-										{e.fuero}
-										{e.objeto ? ` · ${e.objeto}` : ""}
-									</TableCell>
-									<TableCell>{e.acto}</TableCell>
-									<TableCell>
-										<Chip size="small" color="primary" variant="outlined" label={`${e.plazoDias}d ${e.tipoPlazo || ""}`} />
-										{e.naturaleza && e.naturaleza !== "procesal" && (
-											<Chip size="small" color="secondary" variant="outlined" label={e.naturaleza} sx={{ ml: 0.5 }} />
-										)}
-									</TableCell>
-									<TableCell>
-										{e._disperso?.sospechoso && <Chip size="small" color="error" variant="outlined" label="≥60d" sx={{ mr: 0.5 }} />}
-										{e._disperso?.apartado && (
-											<Chip size="small" color="warning" variant="outlined" label={`grupo: ${e._disperso.dominanteGrupo}d (n=${e._disperso.nGrupo})`} />
-										)}
-										{e.revision?.estado === "descartado" && <Chip size="small" label="descartado" />}
-										{e.revision?.corregido && <Chip size="small" color="info" variant="outlined" label="corregido" sx={{ ml: 0.5 }} />}
-									</TableCell>
-									<TableCell>
-										<Typography variant="caption" sx={{ fontFamily: "monospace", display: "block", maxHeight: 60, overflow: "auto" }}>
-											«{e.snippet || "—"}»
-										</Typography>
-										{e.normaCitada && (
-											<Chip size="small" variant="outlined" label={e.normaCitada} sx={{ mt: 0.5, fontFamily: "monospace", fontSize: "0.65rem" }} />
-										)}
-									</TableCell>
-									<TableCell>
-										<Stack direction="row" spacing={0.5}>
-											<Tooltip title="Confirmar tal cual (plazo y labels correctos)">
-												<Button size="small" color="success" onClick={() => confirmar(e)}>
-													✓
-												</Button>
-											</Tooltip>
-											<Tooltip title="Revisar: corregir acto/naturaleza, ver texto completo, descartar">
-												<Button size="small" onClick={() => setRevisando(e)}>
-													✎
-												</Button>
-											</Tooltip>
-											{e.movimiento?.url && (
-												<Tooltip title="Ver PDF de la cédula">
-													<IconButton size="small" component="a" href={e.movimiento.url} target="_blank" rel="noopener">
-														📄
-													</IconButton>
-												</Tooltip>
+						{loading
+							? Array.from({ length: 5 }).map((_, i) => (
+									<TableRow key={i}>
+										<TableCell colSpan={7}>
+											<Skeleton />
+										</TableCell>
+									</TableRow>
+							  ))
+							: rows.map((e) => (
+									<TableRow key={e._id} hover>
+										<TableCell>
+											{e.number}/{e.year}
+										</TableCell>
+										<TableCell sx={{ maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+											{e.fuero}
+											{e.objeto ? ` · ${e.objeto}` : ""}
+										</TableCell>
+										<TableCell>{e.acto}</TableCell>
+										<TableCell>
+											<Chip size="small" color="primary" variant="outlined" label={`${e.plazoDias}d ${e.tipoPlazo || ""}`} />
+											{e.naturaleza && e.naturaleza !== "procesal" && (
+												<Chip size="small" color="secondary" variant="outlined" label={e.naturaleza} sx={{ ml: 0.5 }} />
 											)}
-										</Stack>
-									</TableCell>
-								</TableRow>
-							))
-						)}
+										</TableCell>
+										<TableCell>
+											{e._disperso?.sospechoso && <Chip size="small" color="error" variant="outlined" label="≥60d" sx={{ mr: 0.5 }} />}
+											{e._disperso?.apartado && (
+												<Chip
+													size="small"
+													color="warning"
+													variant="outlined"
+													label={`grupo: ${e._disperso.dominanteGrupo}d (n=${e._disperso.nGrupo})`}
+												/>
+											)}
+											{e.revision?.estado === "descartado" && <Chip size="small" label="descartado" />}
+											{e.revision?.corregido && <Chip size="small" color="info" variant="outlined" label="corregido" sx={{ ml: 0.5 }} />}
+										</TableCell>
+										<TableCell>
+											<Typography variant="caption" sx={{ fontFamily: "monospace", display: "block", maxHeight: 60, overflow: "auto" }}>
+												«{e.snippet || "—"}»
+											</Typography>
+											{e.normaCitada && (
+												<Chip
+													size="small"
+													variant="outlined"
+													label={e.normaCitada}
+													sx={{ mt: 0.5, fontFamily: "monospace", fontSize: "0.65rem" }}
+												/>
+											)}
+										</TableCell>
+										<TableCell>
+											<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+												<Tooltip title="Confirmar tal cual (plazo y labels correctos)">
+													<Button size="small" color="success" onClick={() => confirmar(e)}>
+														✓
+													</Button>
+												</Tooltip>
+												<Tooltip title="Revisar: corregir acto/naturaleza, ver texto completo, descartar">
+													<Button size="small" onClick={() => setRevisando(e)}>
+														✎
+													</Button>
+												</Tooltip>
+												{e.movimiento?.url && (
+													<Tooltip title="Ver PDF de la cédula">
+														<IconButton size="small" component="a" href={e.movimiento.url} target="_blank" rel="noopener">
+															📄
+														</IconButton>
+													</Tooltip>
+												)}
+											</Stack>
+										</TableCell>
+									</TableRow>
+							  ))}
 						{!loading && rows.length === 0 && (
 							<TableRow>
 								<TableCell colSpan={7}>
@@ -502,9 +548,9 @@ export default function DatasetTab() {
 			</Stack>
 
 			<Typography variant="body2" color="text.secondary">
-				Candidatos a regla empírica por (fuero, objeto, acto): combinaciones donde el plazo dominante alcanza la consistencia mínima
-				(solo plazos de naturaleza procesal). El dataset es evidencia, no autoridad: el botón «Crear regla» pre-carga el formulario de
-				Normativa con estos datos — la regla nace sin verificar y la aprobás vos, que sos el dueño de la tabla.
+				Candidatos a regla empírica por (fuero, objeto, acto): combinaciones donde el plazo dominante alcanza la consistencia mínima (solo
+				plazos de naturaleza procesal). El dataset es evidencia, no autoridad: el botón «Crear regla» pre-carga el formulario de Normativa
+				con estos datos — la regla nace sin verificar y la aprobás vos, que sos el dueño de la tabla.
 			</Typography>
 
 			<TableContainer component={Paper} elevation={0} sx={{ maxHeight: "calc(100dvh - 460px)" }}>
@@ -523,87 +569,85 @@ export default function DatasetTab() {
 						</TableRow>
 					</TableHead>
 					<TableBody>
-						{loading ? (
-							Array.from({ length: 6 }).map((_, i) => (
-								<TableRow key={i}>
-									<TableCell colSpan={9}>
-										<Skeleton />
-									</TableCell>
-								</TableRow>
-							))
-						) : (
-							candidatos.map((c, i) => (
-								<TableRow key={i} hover>
-									<TableCell>{c.fuero}</TableCell>
-									<TableCell sx={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-										{c.objeto || "—"}
-									</TableCell>
-									<TableCell>{c.acto}</TableCell>
-									<TableCell>
-										<Tooltip
-											title={
-												c.ejemplos.length ? (
-													<Stack spacing={1}>
-														{c.ejemplos.map((e, j) => (
-															<Typography key={j} variant="caption" sx={{ fontFamily: "monospace" }}>
-																«{e}»
-															</Typography>
-														))}
-													</Stack>
-												) : (
-													""
-												)
-											}
-										>
-											<Chip size="small" color="primary" variant="outlined" label={`${c.plazoDias}d ${c.tipoPlazo || "habiles"}`} />
-										</Tooltip>
-									</TableCell>
-									<TableCell>{c.n}</TableCell>
-									<TableCell>{Math.round(c.share * 100)}%</TableCell>
-									<TableCell sx={{ maxWidth: 180 }}>
-										{(c.normasCitadas || []).length ? (
-											<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
-												{(c.normasCitadas || []).join(" · ")}
-											</Typography>
-										) : (
-											<Typography variant="caption" color="text.secondary">
-												—
-											</Typography>
-										)}
-									</TableCell>
-									<TableCell>
-										<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
-											{c.variantes.map((v) => `${v.plazoDias}d×${v.n}`).join(" · ")}
-										</Typography>
-									</TableCell>
-									<TableCell>
-										<Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap" useFlexGap>
-											{c.reglaExistente ? (
-												<Chip
-													size="small"
-													color={c.reglaExistente.coincide ? "success" : "warning"}
-													variant="outlined"
-													label={
-														c.reglaExistente.coincide
-															? `✓ ${c.reglaExistente.clave}`
-															: `⚠ ${c.reglaExistente.clave}: ${c.reglaExistente.plazoDias}d ≠ ${c.plazoDias}d`
-													}
-												/>
+						{loading
+							? Array.from({ length: 6 }).map((_, i) => (
+									<TableRow key={i}>
+										<TableCell colSpan={9}>
+											<Skeleton />
+										</TableCell>
+									</TableRow>
+							  ))
+							: candidatos.map((c, i) => (
+									<TableRow key={i} hover>
+										<TableCell>{c.fuero}</TableCell>
+										<TableCell sx={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+											{c.objeto || "—"}
+										</TableCell>
+										<TableCell>{c.acto}</TableCell>
+										<TableCell>
+											<Tooltip
+												title={
+													c.ejemplos.length ? (
+														<Stack spacing={1}>
+															{c.ejemplos.map((e, j) => (
+																<Typography key={j} variant="caption" sx={{ fontFamily: "monospace" }}>
+																	«{e}»
+																</Typography>
+															))}
+														</Stack>
+													) : (
+														""
+													)
+												}
+											>
+												<Chip size="small" color="primary" variant="outlined" label={`${c.plazoDias}d ${c.tipoPlazo || "habiles"}`} />
+											</Tooltip>
+										</TableCell>
+										<TableCell>{c.n}</TableCell>
+										<TableCell>{Math.round(c.share * 100)}%</TableCell>
+										<TableCell sx={{ maxWidth: 180 }}>
+											{(c.normasCitadas || []).length ? (
+												<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+													{(c.normasCitadas || []).join(" · ")}
+												</Typography>
 											) : (
-												<Chip size="small" color="info" variant="outlined" label="SIN REGLA" />
+												<Typography variant="caption" color="text.secondary">
+													—
+												</Typography>
 											)}
-											{(!c.reglaExistente || !c.reglaExistente.coincide) && (
-												<Tooltip title="Pre-carga el formulario de Normativa con los datos y la evidencia de este candidato — vos revisás la cita legal y confirmás">
-													<Button size="small" variant="outlined" onClick={() => crearReglaDesde(c)}>
-														Crear regla
-													</Button>
-												</Tooltip>
-											)}
-										</Stack>
-									</TableCell>
-								</TableRow>
-							))
-						)}
+										</TableCell>
+										<TableCell>
+											<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+												{c.variantes.map((v) => `${v.plazoDias}d×${v.n}`).join(" · ")}
+											</Typography>
+										</TableCell>
+										<TableCell>
+											<Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap" useFlexGap>
+												{c.reglaExistente ? (
+													<Chip
+														size="small"
+														color={c.reglaExistente.coincide ? "success" : "warning"}
+														variant="outlined"
+														label={
+															c.reglaExistente.coincide
+																? `✓ ${c.reglaExistente.clave}`
+																: `⚠ ${c.reglaExistente.clave}: ${c.reglaExistente.plazoDias}d ≠ ${c.plazoDias}d`
+														}
+													/>
+												) : (
+													<Chip size="small" color="info" variant="outlined" label="SIN REGLA" />
+												)}
+												{(!c.reglaExistente || !c.reglaExistente.coincide) && (
+													<Tooltip title="Pre-carga el formulario de Normativa con los datos y la evidencia de este candidato — vos revisás la cita legal y confirmás">
+														<Button size="small" variant="outlined" onClick={() => crearReglaDesde(c)}>
+															Crear regla
+														</Button>
+													</Tooltip>
+												)}
+											</Stack>
+										</TableCell>
+									</TableRow>
+							  ))}
 						{!loading && candidatos.length === 0 && (
 							<TableRow>
 								<TableCell colSpan={9}>
@@ -619,14 +663,7 @@ export default function DatasetTab() {
 
 			<Divider />
 			<Box>
-				<RevisionSection
-					actosConocidos={Array.from(
-						new Set([
-							...ACTOS_BASE,
-							...(stats?.porActo || []).map((a) => a.acto),
-						]),
-					).sort()}
-				/>
+				<RevisionSection actosConocidos={Array.from(new Set([...ACTOS_BASE, ...(stats?.porActo || []).map((a) => a.acto)])).sort()} />
 			</Box>
 
 			{nuevaRegla && (

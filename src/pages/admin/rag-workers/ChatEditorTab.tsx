@@ -524,7 +524,7 @@ const ChatEditorTab = () => {
 							sx={{ "& textarea": { fontFamily: "monospace", fontSize: "0.82rem" } }}
 							helperText={`${promptDraft.length} / 8000 caracteres`}
 						/>
-						<Stack direction="row" spacing={1} justifyContent="flex-end">
+						<Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
 							<Button variant="outlined" size="small" onClick={handleCancelEditPrompt} disabled={savingPrompt}>
 								Cancelar
 							</Button>

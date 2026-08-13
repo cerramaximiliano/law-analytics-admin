@@ -163,7 +163,10 @@ const PrivacyCheckerWorker = () => {
 						<Stack direction="row" spacing={1.5} alignItems="center">
 							<Lock1 size={24} color={theme.palette.primary.main} variant="Bold" />
 							<Box>
-								<Typography variant="h4" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+								<Typography
+									variant="h4"
+									sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+								>
 									Privacy checker
 								</Typography>
 								<Typography variant="body2" color="text.secondary">
@@ -312,7 +315,7 @@ const PrivacyCheckerWorker = () => {
 						</Grid>
 
 						<Grid item xs={12}>
-							<Stack direction="row" spacing={1.5}>
+							<Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
 								<Button variant="contained" onClick={handleSave} disabled={saving} startIcon={<TickCircle size={16} />}>
 									Guardar
 								</Button>
@@ -347,7 +350,14 @@ const PrivacyCheckerWorker = () => {
 					<Typography variant="h6" gutterBottom>
 						Folders bajo tracking
 					</Typography>
-					<Tabs value={foldersTab} onChange={(_, v) => setFoldersTab(v)} sx={{ mb: 2 }}>
+					<Tabs
+						variant="scrollable"
+						scrollButtons="auto"
+						allowScrollButtonsMobile
+						value={foldersTab}
+						onChange={(_, v) => setFoldersTab(v)}
+						sx={{ mb: 2 }}
+					>
 						<Tab label={`Reservadas (${live?.currentlyPrivate ?? 0})`} value="private" />
 						<Tab label={`Pendientes (${live?.pendingPromotion ?? 0})`} value="pending" />
 						<Tab label={`Counter > 0 (${live?.currentlyTracked ?? 0})`} value="tracked" />

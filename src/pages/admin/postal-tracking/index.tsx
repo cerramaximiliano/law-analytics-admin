@@ -76,7 +76,12 @@ const getClosureInfo = (
 	const isClosed = ["completed", "not_found"].includes(t.processingStatus);
 	if (!isClosed) return { origin: null, label: "", color: "default", reason: null };
 	if (t.autoCompletedReason) {
-		return { origin: "system", label: "Sistema", color: "info", reason: CLOSURE_REASON_LABELS[t.autoCompletedReason] || t.autoCompletedReason };
+		return {
+			origin: "system",
+			label: "Sistema",
+			color: "info",
+			reason: CLOSURE_REASON_LABELS[t.autoCompletedReason] || t.autoCompletedReason,
+		};
 	}
 	if (t.processingStatus === "not_found") {
 		return { origin: "system", label: "Sistema", color: "default", reason: "No encontrado" };
@@ -359,7 +364,7 @@ const PostalTrackingPage = () => {
 		<MainCard
 			title="Seguimientos Postales"
 			secondary={
-				<Stack direction="row" spacing={1}>
+				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 					<Button variant="contained" size="small" startIcon={<Add size={16} />} onClick={() => setCreateOpen(true)}>
 						Nuevo Seguimiento
 					</Button>
@@ -563,7 +568,7 @@ const PostalTrackingPage = () => {
 				{/* Bulk action bar */}
 				{selectedIds.size > 0 && (
 					<Paper variant="outlined" sx={{ p: 1.5, bgcolor: "error.lighter", borderColor: "error.light" }}>
-						<Stack direction="row" spacing={2} alignItems="center">
+						<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 							<Typography variant="body2" fontWeight={600} color="error.dark">
 								{selectedIds.size} seleccionado{selectedIds.size !== 1 ? "s" : ""}
 							</Typography>
@@ -691,14 +696,25 @@ const PostalTrackingPage = () => {
 													sx={{ fontWeight: 600, letterSpacing: 0.3 }}
 												/>
 												{tracking.isFinalStatus && (
-													<Chip label="Final" size="small" color="success" variant="outlined" sx={{ fontWeight: 600, letterSpacing: 0.3 }} />
+													<Chip
+														label="Final"
+														size="small"
+														color="success"
+														variant="outlined"
+														sx={{ fontWeight: 600, letterSpacing: 0.3 }}
+													/>
 												)}
 											</Stack>
 										</TableCell>
 										<TableCell align="center">
 											{(() => {
 												const ci = getClosureInfo(tracking);
-												if (!ci.origin) return <Typography variant="caption" color="textSecondary">-</Typography>;
+												if (!ci.origin)
+													return (
+														<Typography variant="caption" color="textSecondary">
+															-
+														</Typography>
+													);
 												return (
 													<Stack spacing={0.3} alignItems="center">
 														<Chip
@@ -819,7 +835,14 @@ const PostalTrackingPage = () => {
 			<Dialog open={detailOpen} onClose={() => setDetailOpen(false)} maxWidth="md" fullWidth>
 				<DialogTitle>{detailTracking ? `${detailTracking.codeId} ${detailTracking.numberId}` : "Detalle del Seguimiento"}</DialogTitle>
 				<DialogContent dividers sx={{ p: 0 }}>
-					<Tabs value={detailTab} onChange={(_, v) => setDetailTab(v)} sx={{ borderBottom: 1, borderColor: "divider", px: 2 }}>
+					<Tabs
+						variant="scrollable"
+						scrollButtons="auto"
+						allowScrollButtonsMobile
+						value={detailTab}
+						onChange={(_, v) => setDetailTab(v)}
+						sx={{ borderBottom: 1, borderColor: "divider", px: 2 }}
+					>
 						<Tab label="Historial" />
 						<Tab label="Screenshot" disabled={!detailTracking?.screenshotUrl} />
 						<Tab label="JSON" icon={<Code size={14} />} iconPosition="end" />
@@ -1129,7 +1152,7 @@ const PostalTrackingPage = () => {
 																					)}
 																				</Stack>
 																				<Typography variant="caption" color="textSecondary">
-																					{(entry.fromStatus || "?")} → {(entry.toStatus || "?")}
+																					{entry.fromStatus || "?"} → {entry.toStatus || "?"}
 																					{entry.by && ` · por ${entry.by}`}
 																				</Typography>
 																			</Box>
@@ -1220,7 +1243,7 @@ const PostalTrackingPage = () => {
 						<Typography variant="caption" color="textSecondary" fontWeight={600}>
 							Datos del envío (requeridos)
 						</Typography>
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							<TextField
 								size="small"
 								label="Código"
@@ -1269,7 +1292,7 @@ const PostalTrackingPage = () => {
 						<Typography variant="caption" color="textSecondary" fontWeight={600} sx={{ pt: 1 }}>
 							Fechas y plazos (opcionales)
 						</Typography>
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							<TextField
 								fullWidth
 								size="small"

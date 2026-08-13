@@ -397,7 +397,7 @@ const ScbaManagerTab: React.FC = () => {
 				<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
 					Configuración SCBA manager
 				</Typography>
-				<Stack direction="row" spacing={1}>
+				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 					<Button
 						variant="outlined"
 						size="small"
@@ -506,7 +506,7 @@ const ScbaManagerTab: React.FC = () => {
 			{/* Sub-tabs */}
 			<Paper sx={{ borderRadius: 2 }}>
 				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-					<Tabs value={subTab} onChange={(_e, v) => setSubTab(v)} variant="scrollable" scrollButtons="auto">
+					<Tabs variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile value={subTab} onChange={(_e, v) => setSubTab(v)}>
 						<Tab icon={<Setting2 size={18} />} iconPosition="start" label="Configuración" sx={{ textTransform: "none" }} />
 						<Tab icon={<People size={18} />} iconPosition="start" label="Workers" sx={{ textTransform: "none" }} />
 						<Tab
@@ -641,15 +641,15 @@ const ScbaManagerTab: React.FC = () => {
 										<Typography variant="caption" color="text.secondary">
 											{(getVal("updatePolicy", { mode: "split" })?.mode ?? "split") === "unified" ? (
 												<>
-													<strong>Unificado:</strong> la Actualización Periódica procesa TODAS las causas con folder vinculado
-													(archivadas incluidas) en horario laboral. La Actualización Archivadas queda ociosa. Los movimientos de causas
-													archivadas se descubren y notifican el mismo día.
+													<strong>Unificado:</strong> la Actualización Periódica procesa TODAS las causas con folder vinculado (archivadas
+													incluidas) en horario laboral. La Actualización Archivadas queda ociosa. Los movimientos de causas archivadas se
+													descubren y notifican el mismo día.
 												</>
 											) : (
 												<>
-													<strong>Dividido:</strong> las causas con todos sus folders archivados se actualizan una vez al día (4 AM) por
-													la Actualización Archivadas. Sus movimientos se descubren de madrugada y la notificación al usuario llega
-													recién al día siguiente.
+													<strong>Dividido:</strong> las causas con todos sus folders archivados se actualizan una vez al día (4 AM) por la
+													Actualización Archivadas. Sus movimientos se descubren de madrugada y la notificación al usuario llega recién al
+													día siguiente.
 												</>
 											)}{" "}
 											El cambio aplica en el próximo ciclo de los workers (leen la config en cada corrida).
@@ -702,7 +702,7 @@ const ScbaManagerTab: React.FC = () => {
 						</Card>
 
 						{/* Actions */}
-						<Stack direction="row" spacing={2} justifyContent="flex-end">
+						<Stack direction="row" spacing={2} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
 							<Button
 								variant="outlined"
 								color="error"
@@ -793,8 +793,8 @@ const ScbaManagerTab: React.FC = () => {
 										{workerType === "updateArchived" && unifiedMode && (
 											<Alert severity="warning" sx={{ mb: 2, py: 0.5 }}>
 												<Typography variant="caption">
-													La política de update está en modo <strong>unificado</strong>: este worker no procesa causas (pending siempre
-													0) porque la Actualización Periódica cubre también las archivadas. Cambiá el modo a "Dividido" en la pestaña
+													La política de update está en modo <strong>unificado</strong>: este worker no procesa causas (pending siempre 0)
+													porque la Actualización Periódica cubre también las archivadas. Cambiá el modo a "Dividido" en la pestaña
 													Configuración para reactivarlo.
 												</Typography>
 											</Alert>
@@ -840,7 +840,11 @@ const ScbaManagerTab: React.FC = () => {
 														</Typography>
 														<Typography
 															variant="h6"
-															sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", color: wState.activeInstances > 0 ? LIVE_GREEN : "inherit" }}
+															sx={{
+																fontWeight: 600,
+																fontVariantNumeric: "tabular-nums",
+																color: wState.activeInstances > 0 ? LIVE_GREEN : "inherit",
+															}}
 														>
 															{wState.activeInstances}
 														</Typography>

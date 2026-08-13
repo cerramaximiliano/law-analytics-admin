@@ -193,7 +193,7 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 
 					{/* New range form */}
 					<Typography variant="subtitle2">Nuevo Rango</Typography>
-					<Stack direction="row" spacing={2}>
+					<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 						<TextField
 							fullWidth
 							type="number"
