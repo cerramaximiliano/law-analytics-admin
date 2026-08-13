@@ -26,6 +26,9 @@ import {
 import { Refresh, TickCircle, CloseCircle, Instagram, ExportSquare } from "iconsax-react";
 
 import { getSaijSentencias, getSaijSentenciaStats, setSaijSentenciaSocialPost, SaijSentencia, SentenciaListParams } from "api/saij";
+import { getSaijCampaigns, SaijCampaign } from "api/saijCampaigns";
+import { Accordion, AccordionSummary, AccordionDetails, Divider } from "@mui/material";
+import { ArrowDown2 } from "iconsax-react";
 
 /**
  * Pestaña "Difusión" de /admin/workers/saij.
@@ -68,6 +71,8 @@ export default function DifusionTab() {
 	const [stats, setStats] = useState<{ userNotified: number; userCampaignExcluded: number; socialPost: number } | null>(null);
 	const [conResumen, setConResumen] = useState<number | null>(null);
 	const [marcando, setMarcando] = useState<string | null>(null);
+	const [campanias, setCampanias] = useState<SaijCampaign[]>([]);
+	const [campLoading, setCampLoading] = useState(false);
 
 	const load = useCallback(async () => {
 		setLoading(true);
@@ -95,6 +100,14 @@ export default function DifusionTab() {
 	useEffect(() => {
 		load();
 	}, [load]);
+
+	useEffect(() => {
+		setCampLoading(true);
+		getSaijCampaigns(1, 20)
+			.then((r) => setCampanias(r.data || []))
+			.catch(() => {})
+			.finally(() => setCampLoading(false));
+	}, []);
 
 	useEffect(() => {
 		getSaijSentenciaStats()
@@ -138,6 +151,63 @@ export default function DifusionTab() {
 				<StatChip label="Con post en redes" value={stats?.socialPost} color="secondary" />
 				<StatChip label="Con resumen IA" value={conResumen ?? undefined} color="info" />
 			</Stack>
+
+			{/* Historial de campañas enviadas */}
+			<Accordion variant="outlined" defaultExpanded>
+				<AccordionSummary expandIcon={<ArrowDown2 size={16} />}>
+					<Stack direction="row" spacing={1} alignItems="center">
+						<Typography variant="subtitle2">Campañas enviadas</Typography>
+						<Chip size="small" label={campanias.length} variant="outlined" />
+						{campLoading && <CircularProgress size={13} />}
+					</Stack>
+				</AccordionSummary>
+				<AccordionDetails sx={{ pt: 0 }}>
+					{campanias.length === 0 && !campLoading ? (
+						<Typography variant="body2" color="text.secondary">
+							Todavía no se envió ninguna campaña.
+						</Typography>
+					) : (
+						<Stack spacing={1.5} divider={<Divider flexItem />}>
+							{campanias.map((c) => (
+								<Box key={c._id}>
+									<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: 0.5 }}>
+										<Typography variant="body2" fontWeight={600}>
+											{new Date(c.createdAt).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" })}
+										</Typography>
+										<Chip size="small" label={c.status} variant="outlined" color={c.status === "completed" ? "default" : "success"} />
+										<Chip size="small" label={`${c.fallos.length} fallo(s)`} variant="outlined" />
+										<Chip size="small" color="info" variant="outlined" label={`${c.totalEnviados} enviados`} />
+										<Chip size="small" variant="outlined" label={`${c.opens} aperturas`} />
+										<Tooltip title={c.lectores.length ? `Leyeron: ${c.lectores.join(", ")}` : "Sin clicks reales todavía"}>
+											<Chip size="small" color="success" variant="outlined" label={`${c.clicksJurisprudencia} ingresaron`} />
+										</Tooltip>
+										{c.clicksBot > 0 && (
+											<Tooltip title="Clicks descartados: escáneres de seguridad de servidores de correo que abren todos los links del mail">
+												<Chip size="small" variant="outlined" label={`${c.clicksBot} escáner`} sx={{ opacity: 0.6 }} />
+											</Tooltip>
+										)}
+										{Object.entries(c.envios)
+											.filter(([k]) => k === "bounced" || k === "complained" || k === "failed")
+											.map(([k, v]) => (
+												<Chip key={k} size="small" color="error" variant="outlined" label={`${v} ${k}`} />
+											))}
+									</Stack>
+									<Stack component="ul" sx={{ m: 0, pl: 2.5 }} spacing={0.25}>
+										{c.fallos.map((f) => (
+											<Typography key={f._id} component="li" variant="caption" color="text.secondary">
+												<Link href={`${PUBLIC_BASE}/${f._id}`} target="_blank" rel="noopener" underline="hover" color="inherit">
+													{f.titulo || "(sin carátula)"}
+												</Link>
+												{f.tribunal ? ` — ${f.tribunal}` : ""}
+											</Typography>
+										))}
+									</Stack>
+								</Box>
+							))}
+						</Stack>
+					)}
+				</AccordionDetails>
+			</Accordion>
 
 			{/* Filtros */}
 			<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>

@@ -74,6 +74,7 @@ import AdminResourcesService, {
 	UserWithResources,
 } from "api/adminResources";
 import UserSessionsService from "api/userSessions";
+import { getSaijEngagementBatch, SaijEngagement } from "api/saijCampaigns";
 import FoldersService from "api/folders";
 import { UserSessionMetrics, SessionStats, UserWithSessionMetrics } from "types/user-session";
 import AdminAiUsageService, {
@@ -508,6 +509,9 @@ const UserResources: React.FC = () => {
 	const [resources, setResources] = useState<Resource[]>([]);
 	const [users, setUsers] = useState<UserWithResources[]>([]);
 	const [sessionMetrics, setSessionMetrics] = useState<Record<string, UserSessionMetrics>>({});
+	// Interacción con las campañas de novedades jurisprudenciales, por email
+	const [saijEngagement, setSaijEngagement] = useState<Record<string, SaijEngagement>>({});
+	const [saijEngLoading, setSaijEngLoading] = useState(false);
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [total, setTotal] = useState(0);
@@ -855,6 +859,18 @@ const UserResources: React.FC = () => {
 						}
 					} catch (metricsError) {
 						console.error("Error fetching session metrics:", metricsError);
+					}
+
+					// Interacción con las campañas de jurisprudencia (por email, en lote)
+					setSaijEngLoading(true);
+					try {
+						const emails = response.data.map((u) => (u.email || "").toLowerCase()).filter(Boolean);
+						const engRes = await getSaijEngagementBatch(emails);
+						if (engRes.success) setSaijEngagement(engRes.data);
+					} catch (engError) {
+						console.error("Error fetching SAIJ engagement:", engError);
+					} finally {
+						setSaijEngLoading(false);
 					}
 				}
 			}
@@ -2175,6 +2191,7 @@ const UserResources: React.FC = () => {
 											<TableCell>Último Login</TableCell>
 											<TableCell align="center">Días Activos</TableCell>
 											<TableCell align="center">Visor email</TableCell>
+											<TableCell align="center">Jurisprudencia</TableCell>
 											<TableCell>
 												<TableSortLabel
 													active={sortBy === "createdAt"}
@@ -2235,7 +2252,7 @@ const UserResources: React.FC = () => {
 										<TableRow key={index}>
 											{isUsersTab ? (
 												<>
-													{Array.from({ length: 13 }).map((_, i) => (
+													{Array.from({ length: 14 }).map((_, i) => (
 														<TableCell key={i}>
 															<Skeleton variant="text" />
 														</TableCell>
@@ -2263,7 +2280,7 @@ const UserResources: React.FC = () => {
 								) : isUsersTab ? (
 									users.length === 0 ? (
 										<TableRow>
-											<TableCell colSpan={14} align="center">
+											<TableCell colSpan={15} align="center">
 												<Typography color="textSecondary" sx={{ py: 4 }}>
 													No se encontraron usuarios
 												</Typography>
@@ -2359,6 +2376,52 @@ const UserResources: React.FC = () => {
 															—
 														</Typography>
 													)}
+												</TableCell>
+												<TableCell align="center">
+													{(() => {
+														const eng = saijEngagement[(user.email || "").toLowerCase()];
+														if (!eng || eng.recibidas === 0) {
+															if (saijEngLoading) return <Skeleton variant="rounded" width={48} height={20} />;
+															return (
+																<Typography variant="body2" color="textSecondary">
+																	—
+																</Typography>
+															);
+														}
+														const tooltip = (
+															<Box>
+																<Typography variant="caption" display="block">
+																	{eng.recibidas} campaña(s) de jurisprudencia recibida(s)
+																</Typography>
+																<Typography variant="caption" display="block">
+																	{eng.abiertas} abierta(s) · {eng.clicks} con ingreso a la vista
+																</Typography>
+																{eng.fallosVistos.length > 0 && (
+																	<Typography variant="caption" display="block">
+																		{eng.fallosVistos.length} fallo(s) abierto(s)
+																	</Typography>
+																)}
+																{eng.ultimoClickAt && (
+																	<Typography variant="caption" display="block">
+																		Último ingreso: {dayjs(eng.ultimoClickAt).format("DD/MM/YY HH:mm")}
+																	</Typography>
+																)}
+																{eng.clicksBot > 0 && (
+																	<Typography variant="caption" display="block" sx={{ opacity: 0.7 }}>
+																		{eng.clicksBot} click(s) descartado(s) (escáner de correo)
+																	</Typography>
+																)}
+															</Box>
+														);
+														return (
+															<Tooltip title={tooltip}>
+																<Stack direction="row" spacing={0.5} justifyContent="center">
+																	<Chip size="small" variant="outlined" label={eng.abiertas} icon={<Eye size={12} />} />
+																	{eng.clicks > 0 && <Chip size="small" color="success" variant="outlined" label={`${eng.clicks} → vista`} />}
+																</Stack>
+															</Tooltip>
+														);
+													})()}
 												</TableCell>
 												<TableCell>{formatDate(user.createdAt)}</TableCell>
 											</TableRow>
