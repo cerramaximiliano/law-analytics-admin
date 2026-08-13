@@ -31,13 +31,13 @@ import {
 	Tabs,
 	Tab,
 	Alert,
-	AlertTitle,
 	Divider,
 	LinearProgress,
 	InputAdornment,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, alpha } from "@mui/material/styles";
+import { BRAND_BLUE, STALE_AMBER, PRO_TEAL, PREMIUM_GOLD, LIVE_GREEN, LIVE_PULSE_KEYFRAMES, headerBorder } from "themes/dashboardTokens";
 import {
 	Eye,
 	Refresh,
@@ -110,7 +110,13 @@ const getSyncStatusLabel = (status: string, unlinkedSource?: string | null) => {
 };
 
 // Texto de detalle de la desvinculación/reset para tooltip (solo si syncStatus === "idle").
-const formatUnlinkDetail = (cred: { syncStatus: string; unlinkedAt?: string | null; unlinkedMode?: string | null; unlinkedSource?: string | null; unlinkedByName?: string | null }): string | null => {
+const formatUnlinkDetail = (cred: {
+	syncStatus: string;
+	unlinkedAt?: string | null;
+	unlinkedMode?: string | null;
+	unlinkedSource?: string | null;
+	unlinkedByName?: string | null;
+}): string | null => {
 	if (cred.syncStatus !== "idle") return null;
 	const verb = cred.unlinkedSource === "admin" ? "Reseteada" : "Desvinculada";
 	const parts: string[] = [];
@@ -120,10 +126,10 @@ const formatUnlinkDetail = (cred: { syncStatus: string; unlinkedAt?: string | nu
 		cred.unlinkedSource === "admin"
 			? `admin${cred.unlinkedByName ? ` (${cred.unlinkedByName})` : ""}`
 			: cred.unlinkedSource === "team"
-				? `equipo${cred.unlinkedByName ? ` (${cred.unlinkedByName})` : ""}`
-				: cred.unlinkedSource === "user"
-					? "el propio usuario"
-					: null;
+			? `equipo${cred.unlinkedByName ? ` (${cred.unlinkedByName})` : ""}`
+			: cred.unlinkedSource === "user"
+			? "el propio usuario"
+			: null;
 	if (actor) parts.push(`por ${actor}`);
 	return parts.length ? `${verb} ${parts.join(", ")}` : `${verb}`;
 };
@@ -140,17 +146,21 @@ const isLastErrorResolved = (cred: { lastError: PjnCredential["lastError"]; last
 };
 
 // Stat card helper
+// Stat card compacta al estilo del dashboard: tabular-nums + tracking, color
+// solo cuando es estado (success/warning/error); identidades en text.primary.
 const StatCard = ({ value, label, color, sx }: { value: string | number; label: string; color: string; sx?: any }) => (
-	<Card variant="outlined">
-		<CardContent sx={{ py: 1, px: 1.5, "&:last-child": { pb: 1 } }}>
-			<Typography variant="h4" color={color} sx={sx}>
-				{value}
-			</Typography>
-			<Typography variant="caption" color="text.secondary" noWrap>
-				{label}
-			</Typography>
-		</CardContent>
-	</Card>
+	<Paper elevation={0} sx={{ p: 1.5, borderRadius: 2, border: (t) => `1px solid ${t.palette.divider}`, height: "100%" }}>
+		<Typography
+			variant="h4"
+			color={color}
+			sx={{ fontWeight: 700, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums", lineHeight: 1.2, ...sx }}
+		>
+			{value}
+		</Typography>
+		<Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block", mt: 0.25 }}>
+			{label}
+		</Typography>
+	</Paper>
 );
 
 // Helper: formato de duración (ms → "Xs" o "Xm Ys")
@@ -192,7 +202,7 @@ const getActivityStatusColor = (status: string): "success" | "warning" | "error"
 };
 
 // Colores para distinguir ciclos adyacentes
-const CYCLE_COLORS = ["#1976d2", "#ed6c02", "#2e7d32", "#9c27b0"];
+const CYCLE_COLORS = [BRAND_BLUE, STALE_AMBER, PRO_TEAL, PREMIUM_GOLD];
 
 // Agrupa runs que pertenecen al mismo ciclo de ejecución del worker
 // (misma credencial + dentro de una ventana de 30 min)
@@ -319,8 +329,8 @@ const CredencialesPJN = () => {
 	const [searchText, setSearchText] = useState("");
 
 	// Ordenamiento
-	const [sortBy, setSortBy] = useState<string>("createdAt");
-	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+	const [sortBy] = useState<string>("createdAt");
+	const [sortOrder] = useState<"asc" | "desc">("desc");
 
 	// Modal de confirmación
 	const [deleteDialog, setDeleteDialog] = useState<{
@@ -542,8 +552,7 @@ const CredencialesPJN = () => {
 			if (emailLogsStatusFilter !== "todos") params.status = emailLogsStatusFilter;
 			// Acotar siempre a las notificaciones de credenciales PJN. Si se elige
 			// un tipo puntual, se filtra por ese; si no, por el set completo.
-			params.templateName =
-				emailLogsTemplateFilter !== "todos" ? emailLogsTemplateFilter : PJN_CREDENTIAL_TEMPLATES.join(",");
+			params.templateName = emailLogsTemplateFilter !== "todos" ? emailLogsTemplateFilter : PJN_CREDENTIAL_TEMPLATES.join(",");
 			if (emailLogsUserFilter.trim()) params.to = emailLogsUserFilter.trim();
 
 			const res = await EmailLogsService.getEmailLogs(params);
@@ -911,61 +920,122 @@ const CredencialesPJN = () => {
 				</Box>
 			)}
 
-			{/* Banner de estado del portal */}
-			{portalStatus?.activeIncident ? (
-				<Alert severity="error" sx={{ mb: 2 }}>
-					<AlertTitle>
-						Portal PJN -{" "}
-						{portalStatus.activeIncident.type === "portal_down"
-							? "Caido"
-							: portalStatus.activeIncident.type === "portal_degraded"
-							? "Degradado"
-							: "Error de Login"}
-					</AlertTitle>
-					<Typography variant="body2">
-						Detectado por: <strong>{portalStatus.activeIncident.detectedBy}</strong>
-						{" | "}
-						Desde: <strong>{formatDate(portalStatus.activeIncident.startedAt)}</strong>
-						{" | "}
-						Credenciales afectadas: <strong>{portalStatus.activeIncident.affectedCredentialsCount}</strong>
-						{" | "}
-						Errores totales: <strong>{portalStatus.activeIncident.totalErrors}</strong>
-					</Typography>
-					<Typography variant="caption" color="text.secondary">
-						Las credenciales no son penalizadas durante incidentes del portal.
-					</Typography>
-				</Alert>
-			) : (
-				portalStatus && (
-					<Alert severity="success" sx={{ mb: 2 }} variant="outlined">
-						<AlertTitle>Portal PJN - Operativo</AlertTitle>
-						<Typography variant="body2">
-							{portalStatus.lastSuccessfulConnection ? (
-								<>
-									Ultima verificacion exitosa: <strong>{formatDate(portalStatus.lastSuccessfulConnection)}</strong>
-								</>
-							) : (
-								"Sin datos de verificacion"
-							)}
-							{portalStatus.lastResolvedIncident && (
-								<>
-									{" | "}
-									Ultimo incidente:{" "}
-									{portalStatus.lastResolvedIncident.type === "portal_down"
-										? "Caida"
-										: portalStatus.lastResolvedIncident.type === "portal_degraded"
-										? "Degradacion"
-										: "Error Login"}
-									{" resuelto el "}
-									<strong>{formatDate(portalStatus.lastResolvedIncident.resolvedAt || portalStatus.lastResolvedIncident.startedAt)}</strong>
-									{portalStatus.lastResolvedIncident.durationMinutes != null && (
-										<> (duro {portalStatus.lastResolvedIncident.durationMinutes} min)</>
-									)}
-								</>
-							)}
+			{/* Banner de estado del portal - lenguaje del design system: chip de estado
+			    con pulso "live" cuando está operativo, borde ámbar/rojo en incidente */}
+			{portalStatus && (
+				<Paper
+					elevation={0}
+					sx={{
+						display: "flex",
+						alignItems: "flex-start",
+						gap: 1.5,
+						p: { xs: 1.5, sm: 2 },
+						mb: 2,
+						borderRadius: 2,
+						border: `1px solid ${
+							portalStatus.activeIncident ? alpha(theme.palette.error.main, 0.5) : headerBorder(theme.palette.mode === "dark")
+						}`,
+						...LIVE_PULSE_KEYFRAMES,
+					}}
+				>
+					<Box
+						sx={{
+							width: 28,
+							height: 28,
+							borderRadius: 1,
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							flexShrink: 0,
+							mt: 0.25,
+							bgcolor: portalStatus.activeIncident
+								? alpha(theme.palette.error.main, theme.palette.mode === "dark" ? 0.18 : 0.1)
+								: alpha(LIVE_GREEN, theme.palette.mode === "dark" ? 0.18 : 0.12),
+							border: `1px solid ${
+								portalStatus.activeIncident
+									? alpha(theme.palette.error.main, theme.palette.mode === "dark" ? 0.32 : 0.18)
+									: alpha(LIVE_GREEN, theme.palette.mode === "dark" ? 0.36 : 0.24)
+							}`,
+							color: portalStatus.activeIncident ? theme.palette.error.main : LIVE_GREEN,
+						}}
+					>
+						{portalStatus.activeIncident ? (
+							<Warning2 size={15} />
+						) : (
+							<Box
+								component="span"
+								sx={{
+									position: "relative",
+									width: 9,
+									height: 9,
+									borderRadius: "50%",
+									bgcolor: LIVE_GREEN,
+									"&::after": {
+										content: '""',
+										position: "absolute",
+										inset: 0,
+										borderRadius: "50%",
+										bgcolor: LIVE_GREEN,
+										animation: "la-live-pulse 2.4s ease-out infinite",
+									},
+								}}
+							/>
+						)}
+					</Box>
+					<Box sx={{ minWidth: 0 }}>
+						<Typography variant="subtitle1" fontWeight={600} sx={{ letterSpacing: "-0.005em", lineHeight: 1.3 }}>
+							{portalStatus.activeIncident
+								? `Portal PJN — ${
+										portalStatus.activeIncident.type === "portal_down"
+											? "Caído"
+											: portalStatus.activeIncident.type === "portal_degraded"
+											? "Degradado"
+											: "Error de Login"
+								  }`
+								: "Portal PJN operativo"}
 						</Typography>
-					</Alert>
-				)
+						{portalStatus.activeIncident ? (
+							<>
+								<Typography variant="body2" color="text.secondary">
+									Detectado por <strong>{portalStatus.activeIncident.detectedBy}</strong> desde{" "}
+									<strong>{formatDate(portalStatus.activeIncident.startedAt)}</strong> ·{" "}
+									<strong>{portalStatus.activeIncident.affectedCredentialsCount}</strong> credenciales afectadas ·{" "}
+									<strong>{portalStatus.activeIncident.totalErrors}</strong> errores totales
+								</Typography>
+								<Typography variant="caption" color="text.secondary">
+									Las credenciales no son penalizadas durante incidentes del portal.
+								</Typography>
+							</>
+						) : (
+							<Typography variant="body2" color="text.secondary">
+								{portalStatus.lastSuccessfulConnection ? (
+									<>
+										Última verificación exitosa: <strong>{formatDate(portalStatus.lastSuccessfulConnection)}</strong>
+									</>
+								) : (
+									"Sin datos de verificación"
+								)}
+								{portalStatus.lastResolvedIncident && (
+									<>
+										{" · Último incidente: "}
+										{portalStatus.lastResolvedIncident.type === "portal_down"
+											? "caída"
+											: portalStatus.lastResolvedIncident.type === "portal_degraded"
+											? "degradación"
+											: "error de login"}
+										{", resuelto el "}
+										<strong>
+											{formatDate(portalStatus.lastResolvedIncident.resolvedAt || portalStatus.lastResolvedIncident.startedAt)}
+										</strong>
+										{portalStatus.lastResolvedIncident.durationMinutes != null && (
+											<> (duró {portalStatus.lastResolvedIncident.durationMinutes} min)</>
+										)}
+									</>
+								)}
+							</Typography>
+						)}
+					</Box>
+				</Paper>
 			)}
 
 			{/* Tabs */}
@@ -986,13 +1056,13 @@ const CredencialesPJN = () => {
 					{stats && (
 						<>
 							{[
-								{ value: stats.total, label: "Total", color: "primary.main" },
+								{ value: stats.total, label: "Total", color: "text.primary" },
 								{ value: stats.enabled, label: "Habilitadas", color: "success.main" },
 								{ value: stats.verified, label: "Verificadas", color: "info.main" },
-								{ value: stats.isValid, label: "Válidas", color: "success.dark" },
+								{ value: stats.isValid, label: "Válidas", color: "success.main" },
 								{ value: stats.syncStatus.pending, label: "Pendientes", color: "warning.main" },
 								{ value: stats.syncStatus.error, label: "Errores", color: "error.main" },
-								{ value: stats.syncStatus.inProgress, label: "En progreso", color: "info.dark" },
+								{ value: stats.syncStatus.inProgress, label: "En progreso", color: "info.main" },
 								{ value: stats.syncStatus.neverSynced, label: "Sin sincronizar", color: "text.disabled" },
 							].map((stat, idx) => (
 								<Grid item xs={6} sm={3} md={1.5} key={idx}>
@@ -1000,8 +1070,8 @@ const CredencialesPJN = () => {
 								</Grid>
 							))}
 							{[
-								{ value: stats.totals.causas, label: "Total Causas", color: "info.main" },
-								{ value: stats.totals.folders, label: "Total Carpetas", color: "secondary.main" },
+								{ value: stats.totals.causas, label: "Total Causas", color: "text.primary" },
+								{ value: stats.totals.folders, label: "Total Carpetas", color: "text.primary" },
 								{ value: stats.totals.avgCausasPerUser, label: "Prom. Causas/Usuario", color: "text.primary" },
 							].map((stat, idx) => (
 								<Grid item xs={4} key={`total-${idx}`}>
@@ -1504,8 +1574,8 @@ const CredencialesPJN = () => {
 																	cred.consecutiveErrors === 0 && isLastErrorResolved(cred)
 																		? "default"
 																		: cred.lastError?.code && TRANSIENT_ERROR_CODES.includes(cred.lastError.code)
-																			? "warning"
-																			: "error"
+																		? "warning"
+																		: "error"
 																}
 																variant={cred.consecutiveErrors === 0 && isLastErrorResolved(cred) ? "outlined" : "filled"}
 																size="small"
@@ -1642,13 +1712,13 @@ const CredencialesPJN = () => {
 									label: "Duración Promedio",
 									color: "text.primary",
 								},
-								{ value: syncActivity?.additionalMetrics?.avgCausasPerSync ?? "-", label: "Prom Causas/Sync", color: "primary.main" },
+								{ value: syncActivity?.additionalMetrics?.avgCausasPerSync ?? "-", label: "Prom Causas/Sync", color: "text.primary" },
 								{
 									value: syncActivity?.additionalMetrics?.cacheVsScraping
 										? `${syncActivity.additionalMetrics.cacheVsScraping.cache}/${syncActivity.additionalMetrics.cacheVsScraping.scraping}`
 										: "-",
 									label: "Cache/Scraping",
-									color: "secondary.main",
+									color: "text.primary",
 								},
 							].map((stat, idx) => (
 								<Grid item xs={6} sm={3} md={2} key={`sync-${idx}`}>
@@ -1667,10 +1737,10 @@ const CredencialesPJN = () => {
 								</Typography>
 							</Grid>
 							{[
-								{ value: stats.updateActivity.runsLast24h, label: "Updates (24h)", color: "secondary.main" },
-								{ value: stats.updateActivity.runsLast7d, label: "Updates (7d)", color: "secondary.dark" },
+								{ value: stats.updateActivity.runsLast24h, label: "Updates (24h)", color: "text.primary" },
+								{ value: stats.updateActivity.runsLast7d, label: "Updates (7d)", color: "text.primary" },
 								{ value: stats.updateActivity.newMovements24h, label: "Mov. Nuevos (24h)", color: "success.main" },
-								{ value: stats.updateActivity.newMovements7d, label: "Mov. Nuevos (7d)", color: "success.dark" },
+								{ value: stats.updateActivity.newMovements7d, label: "Mov. Nuevos (7d)", color: "success.main" },
 							].map((stat, idx) => (
 								<Grid item xs={6} sm={3} key={`update-${idx}`}>
 									<StatCard {...stat} />
@@ -2221,9 +2291,9 @@ const CredencialesPJN = () => {
 								</Typography>
 							</Grid>
 							{[
-								{ value: stats.movementTotals.totalMovements.toLocaleString(), label: "Total Movimientos", color: "primary.main" },
+								{ value: stats.movementTotals.totalMovements.toLocaleString(), label: "Total Movimientos", color: "text.primary" },
 								{ value: stats.movementTotals.avgPerFolder, label: "Prom. Mov/Carpeta", color: "text.primary" },
-								{ value: stats.movementTotals.foldersWithMovements, label: "Carpetas con Movimientos", color: "info.main" },
+								{ value: stats.movementTotals.foldersWithMovements, label: "Carpetas con Movimientos", color: "text.primary" },
 								{
 									value: stats.movementTotals.lastGlobalMovement ? formatDate(stats.movementTotals.lastGlobalMovement) : "-",
 									label: "Último Movimiento Global",
@@ -2297,11 +2367,7 @@ const CredencialesPJN = () => {
 							</FormControl>
 							<FormControl size="small" sx={{ minWidth: 200 }}>
 								<InputLabel>Tipo</InputLabel>
-								<Select
-									value={emailLogsTemplateFilter}
-									label="Tipo"
-									onChange={(e) => setEmailLogsTemplateFilter(e.target.value)}
-								>
+								<Select value={emailLogsTemplateFilter} label="Tipo" onChange={(e) => setEmailLogsTemplateFilter(e.target.value)}>
 									<MenuItem value="todos">Todos los avisos</MenuItem>
 									{PJN_CREDENTIAL_TEMPLATES.map((tpl) => (
 										<MenuItem key={tpl} value={tpl}>
@@ -2435,11 +2501,7 @@ const CredencialesPJN = () => {
 													<TableCell>
 														<Tooltip title={log.templateName || ""}>
 															<Chip
-																label={
-																	(log.templateName && CREDENTIAL_TEMPLATE_LABELS[log.templateName]) ||
-																	log.templateName ||
-																	"—"
-																}
+																label={(log.templateName && CREDENTIAL_TEMPLATE_LABELS[log.templateName]) || log.templateName || "—"}
 																size="small"
 																variant="outlined"
 															/>
@@ -2521,8 +2583,8 @@ const CredencialesPJN = () => {
 								</IconButton>
 							</Tooltip>
 							<Typography variant="caption" color="text.secondary">
-								Detectadas por el watchdog de pjn-mis-causas (cada 30 min) y los hooks de deshabilitación. Cada alerta se
-								emailea al admin con cooldown de 24 h.
+								Detectadas por el watchdog de pjn-mis-causas (cada 30 min) y los hooks de deshabilitación. Cada alerta se emailea al admin
+								con cooldown de 24 h.
 							</Typography>
 						</Stack>
 					</Grid>
@@ -2824,9 +2886,7 @@ const CredencialesPJN = () => {
 					)}
 				</Box>
 				<DialogActions>
-					{screenshotLightbox && (
-						<Button onClick={() => window.open(screenshotLightbox, "_blank")}>Abrir en pestaña nueva</Button>
-					)}
+					{screenshotLightbox && <Button onClick={() => window.open(screenshotLightbox, "_blank")}>Abrir en pestaña nueva</Button>}
 					<Button onClick={() => setScreenshotLightbox(null)}>Cerrar</Button>
 				</DialogActions>
 			</Dialog>
@@ -3073,7 +3133,11 @@ const CredencialesPJN = () => {
 									</Typography>
 									{(() => {
 										const rh = (detailDialog.jsonData.reminderHistory || []) as Array<{
-											date: string; reminderNumber: number; to: string; templateName: string; status: string;
+											date: string;
+											reminderNumber: number;
+											to: string;
+											templateName: string;
+											status: string;
 										}>;
 										if (!rh.length) {
 											return <Chip label="Sin recordatorios enviados" size="small" sx={{ fontSize: "0.7rem", height: 22, mb: 1 }} />;
@@ -3093,29 +3157,47 @@ const CredencialesPJN = () => {
 														<TableHead>
 															<TableRow>
 																<TableCell sx={{ fontSize: "0.72rem", fontWeight: "bold" }}>Fecha</TableCell>
-																<TableCell sx={{ fontSize: "0.72rem", fontWeight: "bold" }} align="center">#</TableCell>
+																<TableCell sx={{ fontSize: "0.72rem", fontWeight: "bold" }} align="center">
+																	#
+																</TableCell>
 																<TableCell sx={{ fontSize: "0.72rem", fontWeight: "bold" }}>Destinatario</TableCell>
 																<TableCell sx={{ fontSize: "0.72rem", fontWeight: "bold" }}>Template</TableCell>
-																<TableCell sx={{ fontSize: "0.72rem", fontWeight: "bold" }} align="center">Estado</TableCell>
+																<TableCell sx={{ fontSize: "0.72rem", fontWeight: "bold" }} align="center">
+																	Estado
+																</TableCell>
 															</TableRow>
 														</TableHead>
 														<TableBody>
-															{rh.slice().reverse().map((r, i) => (
-																<TableRow key={i}>
-																	<TableCell sx={{ fontSize: "0.72rem" }}>{formatDate(r.date)}</TableCell>
-																	<TableCell sx={{ fontSize: "0.72rem" }} align="center">{r.reminderNumber}</TableCell>
-																	<TableCell sx={{ fontSize: "0.72rem" }}>{r.to}</TableCell>
-																	<TableCell sx={{ fontSize: "0.72rem" }}>{r.templateName}</TableCell>
-																	<TableCell align="center">
-																		<Chip label={r.status || "sent"} size="small" color={r.status === "sent" ? "success" : "default"} sx={{ fontSize: "0.65rem", height: 18 }} />
-																	</TableCell>
-																</TableRow>
-															))}
+															{rh
+																.slice()
+																.reverse()
+																.map((r, i) => (
+																	<TableRow key={i}>
+																		<TableCell sx={{ fontSize: "0.72rem" }}>{formatDate(r.date)}</TableCell>
+																		<TableCell sx={{ fontSize: "0.72rem" }} align="center">
+																			{r.reminderNumber}
+																		</TableCell>
+																		<TableCell sx={{ fontSize: "0.72rem" }}>{r.to}</TableCell>
+																		<TableCell sx={{ fontSize: "0.72rem" }}>{r.templateName}</TableCell>
+																		<TableCell align="center">
+																			<Chip
+																				label={r.status || "sent"}
+																				size="small"
+																				color={r.status === "sent" ? "success" : "default"}
+																				sx={{ fontSize: "0.65rem", height: 18 }}
+																			/>
+																		</TableCell>
+																	</TableRow>
+																))}
 														</TableBody>
 													</Table>
 												</TableContainer>
 												<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-													{nextRem ? `Próximo recordatorio programado: ~${formatDate(nextRem.toISOString())}` : `Sin más recordatorios programados (${rc}/3 enviados${detailDialog.jsonData.credentialInvalid ? "" : " — credencial recuperada"}).`}
+													{nextRem
+														? `Próximo recordatorio programado: ~${formatDate(nextRem.toISOString())}`
+														: `Sin más recordatorios programados (${rc}/3 enviados${
+																detailDialog.jsonData.credentialInvalid ? "" : " — credencial recuperada"
+														  }).`}
 												</Typography>
 											</Box>
 										);
