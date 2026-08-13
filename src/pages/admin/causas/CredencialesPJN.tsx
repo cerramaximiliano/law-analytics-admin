@@ -1040,7 +1040,18 @@ const CredencialesPJN = () => {
 
 			{/* Tabs */}
 			<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
-				<Tabs value={tabValue} onChange={(_, v) => setTabValue(v)}>
+				<Tabs
+					value={tabValue}
+					onChange={(_, v) => setTabValue(v)}
+					variant="scrollable"
+					scrollButtons="auto"
+					allowScrollButtonsMobile
+					TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
+					sx={{
+						"& .MuiTab-root": { textTransform: "none", fontWeight: 500, fontSize: "0.875rem", minHeight: 48 },
+						"& .Mui-selected": { fontWeight: 600, color: BRAND_BLUE + " !important" },
+					}}
+				>
 					<Tab label="Credenciales" />
 					<Tab label="Actividad Sync" />
 					<Tab label="Movimientos" />
@@ -3066,7 +3077,19 @@ const CredencialesPJN = () => {
 							</Tooltip>
 						)}
 					</Stack>
-					<Tabs value={detailDialog.activeTab} onChange={handleDetailTabChange} sx={{ mt: 1 }}>
+					<Tabs
+						value={detailDialog.activeTab}
+						onChange={handleDetailTabChange}
+						variant="scrollable"
+						scrollButtons="auto"
+						allowScrollButtonsMobile
+						TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
+						sx={{
+							mt: 1,
+							"& .MuiTab-root": { textTransform: "none", fontWeight: 500, minHeight: 44 },
+							"& .Mui-selected": { fontWeight: 600, color: BRAND_BLUE + " !important" },
+						}}
+					>
 						<Tab label="JSON" />
 						<Tab label={`Carpetas${detailDialog.foldersFetched ? ` (${detailDialog.folders.length})` : ""}`} />
 						<Tab label={`Causas${detailDialog.causasFetched ? ` (${detailDialog.causas.length})` : ""}`} />
