@@ -95,6 +95,7 @@ const ServerStatus = Loadable(lazy(() => import("pages/admin/server-status")));
 const InfrastructurePage = Loadable(lazy(() => import("pages/admin/infrastructure")));
 const DatabasesMonitoring = Loadable(lazy(() => import("pages/admin/infrastructure/databases")));
 const PortalesStatus = Loadable(lazy(() => import("pages/admin/infrastructure/portales")));
+const DataFlowPage = Loadable(lazy(() => import("pages/admin/infrastructure/dataflow")));
 
 // Marketing pages
 const MailingCampaigns = Loadable(lazy(() => import("pages/admin/marketing/mailing")));
@@ -956,6 +957,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<PortalesStatus />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "infrastructure/dataflow",
+							element: (
+								<AdminRoleGuard>
+									<DataFlowPage />
 								</AdminRoleGuard>
 							),
 						},

@@ -188,6 +188,14 @@ const admin: NavItemType = {
 					chip: { label: "PJN·SCBA·MEV", color: "success", variant: "outlined", size: "small" },
 				},
 				{
+					id: "data-flow",
+					title: "Flujo de datos",
+					type: "item",
+					url: "/admin/infrastructure/dataflow",
+					breadcrumbs: true,
+					chip: { label: "rs0·qdrant", color: "info", variant: "outlined", size: "small" },
+				},
+				{
 					id: "system-logs",
 					title: "Logs del Ecosistema",
 					type: "item",
