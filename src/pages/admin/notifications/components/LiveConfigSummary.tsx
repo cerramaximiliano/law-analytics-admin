@@ -162,6 +162,13 @@ const LiveConfigSummary: React.FC<{ live: LiveJudicialConfig }> = ({ live }) => 
 								<BoolChip value={false} labelOn="" labelOff="Apagado" />
 							)}
 						</InfoRow>
+						<InfoRow label="Aviso de opciones">
+							<BoolChip
+								value={config.notificationOptionsBanner?.enabled !== false}
+								labelOn="Activo"
+								labelOff="Apagado"
+							/>
+						</InfoRow>
 						<InfoRow label="Banner de anuncios">
 							{config.featureBanner?.enabled === true ? (
 								<>

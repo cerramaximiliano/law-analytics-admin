@@ -58,6 +58,7 @@ const JudicialMovementsConfig: React.FC = () => {
 		policies: false,
 		planBanner: false,
 		featureBanner: false,
+		optionsBanner: false,
 		dataRetention: false,
 		endpoints: false,
 		status: true,
@@ -142,6 +143,7 @@ const JudicialMovementsConfig: React.FC = () => {
 				"status",
 				"planBanner",
 				"featureBanner",
+				"notificationOptionsBanner",
 				"movementPolicies",
 			];
 
@@ -765,6 +767,56 @@ const JudicialMovementsConfig: React.FC = () => {
 										/>
 									}
 									label={<Typography variant="body2">Mostrar junto al banner de plan</Typography>}
+								/>
+							</Grid>
+						</Grid>
+					</Collapse>
+				</CardContent>
+			</Card>
+
+			{/* Aviso de opciones de notificación */}
+			<Card sx={{ mb: 2 }}>
+				<CardContent>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Notification1 size={20} />
+							<Typography variant="h6">Aviso de opciones de notificación</Typography>
+							<Chip
+								size="small"
+								label={config.notificationOptionsBanner?.enabled !== false ? "activo" : "apagado"}
+								color={config.notificationOptionsBanner?.enabled !== false ? "success" : "default"}
+								variant="outlined"
+							/>
+						</Stack>
+						<IconButton size="small" onClick={() => handleToggleSection("optionsBanner")}>
+							{expandedSections.optionsBanner ? <ArrowUp2 /> : <ArrowDown2 />}
+						</IconButton>
+					</Stack>
+					<Collapse in={expandedSections.optionsBanner}>
+						<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+							Strip compacto al final del email de movimientos que avisa al usuario que puede elegir cómo recibir los avisos
+							(inmediatas / resumen diario / desactivarlas), con link a su página de configuración (medible vía
+							?source=email_movimiento_opciones).
+						</Typography>
+						<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+							<Grid item xs={12} md={3}>
+								<FormControlLabel
+									control={
+										<Switch
+											checked={config.notificationOptionsBanner?.enabled !== false}
+											onChange={(e) => handleFieldChange("notificationOptionsBanner.enabled", e.target.checked)}
+										/>
+									}
+									label="Habilitado"
+								/>
+							</Grid>
+							<Grid item xs={12} md={9}>
+								<TextField
+									label="Texto (vacío = copy por defecto)"
+									value={config.notificationOptionsBanner?.text ?? ""}
+									onChange={(e) => handleFieldChange("notificationOptionsBanner.text", e.target.value || null)}
+									helperText='Default: "Elegí cómo recibir estos avisos: al instante, en un resumen diario, o desactivalos cuando quieras."'
+									fullWidth
 								/>
 							</Grid>
 						</Grid>

@@ -105,6 +105,12 @@ export interface JudicialNotificationConfig {
 		excludePlans?: string[];
 		promo?: { enabled?: boolean; code?: string | null; text?: string | null };
 	};
+	/** Strip informativo de opciones de notificación (email de movimientos) */
+	notificationOptionsBanner?: {
+		enabled?: boolean;
+		/** null = copy por defecto del sistema */
+		text?: string | null;
+	};
 	/** Banner de anuncio/feature en todos los emails de notificación */
 	featureBanner?: {
 		enabled?: boolean;
@@ -153,6 +159,7 @@ export type JudicialNotificationConfigUpdate = Partial<
 		| "status"
 		| "planBanner"
 		| "featureBanner"
+		| "notificationOptionsBanner"
 		| "movementPolicies"
 	>
 >;
