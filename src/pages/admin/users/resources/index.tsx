@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
 	Box,
 	Tabs,
@@ -526,7 +527,13 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, loading }) => {
 const UserResources: React.FC = () => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
-	const [activeTab, setActiveTab] = useState(0);
+	// Tab y filtro persistidos en la URL: sobreviven refresh/navegación y el
+	// link queda compartible (?tab=<type>&q=<busqueda>).
+	const [searchParams, setSearchParams] = useSearchParams();
+	const [activeTab, setActiveTab] = useState(() => {
+		const idx = tabs.findIndex((t) => t.type === searchParams.get("tab"));
+		return idx >= 0 ? idx : 0;
+	});
 	const [loading, setLoading] = useState(true);
 	const [resources, setResources] = useState<Resource[]>([]);
 	const [users, setUsers] = useState<UserWithResources[]>([]);
@@ -537,8 +544,8 @@ const UserResources: React.FC = () => {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [total, setTotal] = useState(0);
-	const [search, setSearch] = useState("");
-	const [searchInput, setSearchInput] = useState("");
+	const [search, setSearch] = useState(() => searchParams.get("q") || "");
+	const [searchInput, setSearchInput] = useState(() => searchParams.get("q") || "");
 	const [sortBy, setSortBy] = useState("createdAt");
 	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 	const [stats, setStats] = useState({ folders: 0, contacts: 0, calculators: 0, tasks: 0, events: 0, movements: 0, total: 0 });
@@ -1060,6 +1067,20 @@ const UserResources: React.FC = () => {
 	}, [isAiUsageTab, fetchAiPeriods]);
 
 	// Handlers
+	useEffect(() => {
+		setSearchParams(
+			(prev) => {
+				const params = new URLSearchParams(prev);
+				if (activeTab > 0) params.set("tab", tabs[activeTab].type);
+				else params.delete("tab");
+				if (search) params.set("q", search);
+				else params.delete("q");
+				return params;
+			},
+			{ replace: true },
+		);
+	}, [activeTab, search, setSearchParams]);
+
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
 		setActiveTab(newValue);
 		setPage(0);
@@ -2384,11 +2405,11 @@ const UserResources: React.FC = () => {
 													label="Jurisprudencia"
 													ayuda={
 														<>
-															<b>👁 número</b> — campañas de novedades jurisprudenciales que <b>abrió</b> (medido con píxel: los
-															proveedores que precargan imágenes lo inflan).
+															<b>👁 número</b> — campañas de novedades jurisprudenciales que <b>abrió</b> (medido con píxel: los proveedores
+															que precargan imágenes lo inflan).
 															<br />
-															<b>→ vista</b> — veces que <b>entró efectivamente</b> a la vista de jurisprudencia desde el correo.
-															Es el dato sólido: requiere un click real y ya excluye los escáneres de correo.
+															<b>→ vista</b> — veces que <b>entró efectivamente</b> a la vista de jurisprudencia desde el correo. Es el dato
+															sólido: requiere un click real y ya excluye los escáneres de correo.
 														</>
 													}
 												/>
