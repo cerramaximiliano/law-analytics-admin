@@ -13,6 +13,7 @@ import {
 	CardContent,
 	CardHeader,
 	Chip,
+	Collapse,
 	CircularProgress,
 	Dialog,
 	DialogActions,
@@ -45,6 +46,7 @@ import {
 	Tooltip,
 	Typography,
 	useTheme,
+	useMediaQuery,
 } from "@mui/material";
 
 // project imports
@@ -461,6 +463,7 @@ const getTemplateHtml = (t: { htmlBody?: string; htmlContent?: string } | null |
 
 const EmailTemplates = () => {
 	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 	const { enqueueSnackbar } = useSnackbar();
 
 	// State for templates data
@@ -576,6 +579,8 @@ const EmailTemplates = () => {
 	const [filter, setFilter] = useState<string>("");
 	const [categoryFilter, setCategoryFilter] = useState<string>("all");
 	const [sourceFilter, setSourceFilter] = useState<string>("all");
+	const [statusFilter, setStatusFilter] = useState<string>("all");
+	const [filtersOpen, setFiltersOpen] = useState<boolean>(false);
 
 	// State for email modules (for preview expansion)
 	const [modules, setModules] = useState<EmailModule[]>([]);
@@ -1673,14 +1678,22 @@ const EmailTemplates = () => {
 	const filteredTemplates = templates.filter(
 		(template) =>
 			(sourceFilter === "all" || (template.sendingSource || "marketing") === sourceFilter) &&
+			(statusFilter === "all" || (statusFilter === "active" ? template.isActive : !template.isActive)) &&
 			(categoryFilter === "all" || template.category === categoryFilter) &&
 			(template.name.toLowerCase().includes(filter.toLowerCase()) ||
 				template.subject.toLowerCase().includes(filter.toLowerCase()) ||
 				template.description.toLowerCase().includes(filter.toLowerCase())),
 	);
 
-	// Categories for filter
-	const categories = ["all", ...new Set(templates.map((template) => template.category))];
+	// Categories for filter (ordenadas por cantidad, con contador por categoría)
+	const categoryCounts = templates.reduce<Record<string, number>>((acc, tpl) => {
+		acc[tpl.category] = (acc[tpl.category] || 0) + 1;
+		return acc;
+	}, {});
+	const categories = ["all", ...Object.keys(categoryCounts).sort((a, b) => categoryCounts[b] - categoryCounts[a])];
+	const activeFilterCount = [filter !== "", sourceFilter !== "all", categoryFilter !== "all", statusFilter !== "all"].filter(
+		Boolean,
+	).length;
 
 	return (
 		<MainCard>
@@ -1733,52 +1746,120 @@ const EmailTemplates = () => {
 			<MarketingQuickNav />
 
 			<MainCard content={false}>
-				<Box sx={{ p: 2 }}>
-					<Grid container spacing={2} alignItems="center">
-						<Grid item xs={12} sm={6}>
-							<TextField
-								fullWidth
-								value={filter}
-								onChange={handleFilterChange}
-								label="Buscar plantilla"
-								placeholder="Buscar por nombre, asunto o descripción"
-								size="small"
-							/>
-						</Grid>
-						<Grid item xs={12} sm={6}>
-							<Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1 }}>
-								{[
-									{ key: "all", label: "Todas las fuentes" },
-									{ key: "la-notification", label: "Notificaciones (la-notification)" },
-									{ key: "marketing", label: "Marketing" },
-								].map((src) => (
-									<Chip
-										key={src.key}
-										label={src.label}
-										onClick={() => {
-											setSourceFilter(src.key);
+				<Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+					{/* Búsqueda + acceso a filtros (compacto y usable en mobile) */}
+					<Stack direction="row" spacing={1} alignItems="center">
+						<TextField
+							fullWidth
+							value={filter}
+							onChange={handleFilterChange}
+							placeholder="Buscar por nombre, asunto o descripción"
+							size="small"
+							InputProps={{
+								startAdornment: (
+									<InputAdornment position="start">
+										<SearchNormal1 size={16} />
+									</InputAdornment>
+								),
+								endAdornment: filter ? (
+									<InputAdornment position="end">
+										<IconButton size="small" onClick={() => setFilter("")} aria-label="limpiar búsqueda">
+											<Trash size={14} />
+										</IconButton>
+									</InputAdornment>
+								) : undefined,
+							}}
+						/>
+						<Button
+							size="small"
+							variant={activeFilterCount > 0 ? "contained" : "outlined"}
+							onClick={() => setFiltersOpen((v) => !v)}
+							startIcon={filtersOpen ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
+							sx={{ whiteSpace: "nowrap", minWidth: "auto" }}
+						>
+							Filtros{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+						</Button>
+					</Stack>
+
+					<Collapse in={filtersOpen || !isMobile}>
+						<Grid container spacing={1.5} sx={{ mt: 0.25 }}>
+							<Grid item xs={12} sm={4}>
+								<FormControl fullWidth size="small">
+									<InputLabel>Fuente de envío</InputLabel>
+									<Select
+										label="Fuente de envío"
+										value={sourceFilter}
+										onChange={(e) => {
+											setSourceFilter(e.target.value);
 											setPage(0);
 										}}
-										color={sourceFilter === src.key ? "secondary" : "default"}
-										variant={sourceFilter === src.key ? "filled" : "outlined"}
-										size="small"
-									/>
-								))}
-							</Box>
-							<Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-								{categories.map((category) => (
-									<Chip
-										key={category}
-										label={category === "all" ? "Todas" : categoryDisplay[category] || category}
-										onClick={() => handleCategoryFilterChange(category)}
-										color={categoryFilter === category ? "primary" : "default"}
-										variant={categoryFilter === category ? "filled" : "outlined"}
-										size="small"
-									/>
-								))}
-							</Box>
+									>
+										<MenuItem value="all">Todas las fuentes</MenuItem>
+										<MenuItem value="la-notification">Notificaciones (la-notification)</MenuItem>
+										<MenuItem value="marketing">Marketing</MenuItem>
+									</Select>
+								</FormControl>
+							</Grid>
+							<Grid item xs={12} sm={4}>
+								<FormControl fullWidth size="small">
+									<InputLabel>Categoría</InputLabel>
+									<Select
+										label="Categoría"
+										value={categoryFilter}
+										onChange={(e) => handleCategoryFilterChange(e.target.value)}
+										MenuProps={{ PaperProps: { sx: { maxHeight: 360 } } }}
+									>
+										{categories.map((category) => (
+											<MenuItem key={category} value={category}>
+												{category === "all"
+													? `Todas las categorías (${templates.length})`
+													: `${categoryDisplay[category] || category} (${categoryCounts[category] ?? 0})`}
+											</MenuItem>
+										))}
+									</Select>
+								</FormControl>
+							</Grid>
+							<Grid item xs={12} sm={4}>
+								<FormControl fullWidth size="small">
+									<InputLabel>Estado</InputLabel>
+									<Select
+										label="Estado"
+										value={statusFilter}
+										onChange={(e) => {
+											setStatusFilter(e.target.value);
+											setPage(0);
+										}}
+									>
+										<MenuItem value="all">Todos</MenuItem>
+										<MenuItem value="active">Activas</MenuItem>
+										<MenuItem value="inactive">Inactivas</MenuItem>
+									</Select>
+								</FormControl>
+							</Grid>
 						</Grid>
-					</Grid>
+					</Collapse>
+
+					<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.25 }} flexWrap="wrap" useFlexGap>
+						<Typography variant="caption" color="text.secondary">
+							{filteredTemplates.length} de {templates.length} plantillas
+						</Typography>
+						{activeFilterCount > 0 && (
+							<Button
+								size="small"
+								variant="text"
+								onClick={() => {
+									setFilter("");
+									setSourceFilter("all");
+									setCategoryFilter("all");
+									setStatusFilter("all");
+									setPage(0);
+								}}
+								sx={{ fontSize: "0.72rem", py: 0, minWidth: "auto" }}
+							>
+								Limpiar filtros
+							</Button>
+						)}
+					</Stack>
 				</Box>
 				<Divider />
 
@@ -1786,6 +1867,99 @@ const EmailTemplates = () => {
 					<Box sx={{ p: 3, textAlign: "center" }}>
 						<Typography color="error">{error}</Typography>
 					</Box>
+				) : isMobile ? (
+					<>
+						{/* Vista mobile: cards en lugar de la tabla de 7 columnas */}
+						<Box sx={{ p: 1.5 }}>
+							{loading ? (
+								<Stack alignItems="center" sx={{ py: 4 }}>
+									<CircularProgress size={28} />
+								</Stack>
+							) : filteredTemplates.length === 0 ? (
+								<Typography color="textSecondary" align="center" sx={{ py: 4 }}>
+									No se encontraron plantillas
+								</Typography>
+							) : (
+								<Stack spacing={1.25}>
+									{filteredTemplates.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((template) => (
+										<Paper key={template._id} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+											<Stack direction="row" spacing={1} alignItems="flex-start" justifyContent="space-between">
+												<Box sx={{ minWidth: 0, flex: 1 }}>
+													<Typography variant="subtitle2" sx={{ wordBreak: "break-word" }}>
+														{template.name}
+													</Typography>
+													<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
+														{template.subject}
+													</Typography>
+												</Box>
+												<IconButton size="small" onClick={() => handleOpenDetail(template)} aria-label="ver plantilla">
+													<Eye size={18} />
+												</IconButton>
+											</Stack>
+											<Stack direction="row" spacing={0.5} sx={{ mt: 1 }} flexWrap="wrap" useFlexGap>
+												<Chip
+													label={(template.sendingSource || "marketing") === "la-notification" ? "notificaciones" : "marketing"}
+													size="small"
+													color={(template.sendingSource || "marketing") === "la-notification" ? "primary" : "default"}
+													variant="outlined"
+													sx={{ height: 20, fontSize: "0.65rem" }}
+												/>
+												<Chip
+													label={categoryDisplay[template.category] || template.category}
+													size="small"
+													variant="outlined"
+													sx={{ height: 20, fontSize: "0.65rem" }}
+												/>
+												<Chip
+													label={template.isActive ? "Activa" : "Inactiva"}
+													size="small"
+													color={template.isActive ? "success" : "default"}
+													variant="outlined"
+													sx={{ height: 20, fontSize: "0.65rem" }}
+												/>
+											</Stack>
+											<Stack direction="row" spacing={0.5} sx={{ mt: 1 }} justifyContent="flex-end">
+												<IconButton size="small" color="primary" onClick={() => handleOpenEdit(template)} aria-label="editar">
+													<Edit2 size={16} />
+												</IconButton>
+												<IconButton size="small" color="secondary" onClick={() => handleOpenAiVariant(template)} aria-label="variante AI">
+													<Magicpen size={16} />
+												</IconButton>
+												<IconButton
+													size="small"
+													color="secondary"
+													onClick={() => handleOpenSendEmail(template)}
+													disabled={!template.isActive}
+													aria-label="enviar"
+												>
+													<Send size={16} />
+												</IconButton>
+												<IconButton
+													size="small"
+													color={template.isActive ? "error" : "success"}
+													onClick={() => handleOpenActivationDialog(template)}
+													aria-label={template.isActive ? "desactivar" : "activar"}
+												>
+													<Trash size={16} />
+												</IconButton>
+											</Stack>
+										</Paper>
+									))}
+								</Stack>
+							)}
+						</Box>
+						<TablePagination
+							rowsPerPageOptions={[10, 25, 50]}
+							component="div"
+							count={filteredTemplates.length}
+							rowsPerPage={rowsPerPage}
+							page={page}
+							onPageChange={handleChangePage}
+							onRowsPerPageChange={handleChangeRowsPerPage}
+							labelRowsPerPage="Filas"
+							sx={{ "& .MuiTablePagination-toolbar": { pl: 1 }, "& .MuiTablePagination-selectLabel": { m: 0 } }}
+						/>
+					</>
 				) : (
 					<>
 						<TableContainer component={Paper} sx={{ boxShadow: "none" }}>
@@ -2049,7 +2223,7 @@ const EmailTemplates = () => {
 			</Grid>
 
 			{/* Template Detail Dialog */}
-			<Dialog open={detailOpen} onClose={handleCloseDetail} maxWidth="lg" fullWidth onKeyDown={handleDetailKeyDown}>
+			<Dialog open={detailOpen} onClose={handleCloseDetail} maxWidth="lg" fullWidth fullScreen={isMobile} onKeyDown={handleDetailKeyDown}>
 				{selectedTemplate && (
 					<>
 						<DialogTitle>
@@ -2472,6 +2646,7 @@ const EmailTemplates = () => {
 				onClose={handleCloseEdit}
 				maxWidth="lg"
 				fullWidth
+				fullScreen={isMobile}
 				sx={{
 					"& .MuiDialog-paper": {
 						height: "90vh",
@@ -2774,7 +2949,7 @@ const EmailTemplates = () => {
 			</Dialog>
 
 			{/* Send Email Dialog */}
-			<Dialog open={sendEmailOpen} onClose={handleCloseSendEmail} maxWidth="md" fullWidth>
+			<Dialog open={sendEmailOpen} onClose={handleCloseSendEmail} maxWidth="md" fullWidth fullScreen={isMobile}>
 				{templateToSend && (
 					<>
 						<DialogTitle>Enviar email usando plantilla: {templateToSend.name}</DialogTitle>
@@ -2870,7 +3045,7 @@ const EmailTemplates = () => {
 			</Dialog>
 
 			{/* Create Template Dialog */}
-			<Dialog open={createOpen} onClose={handleCloseCreate} maxWidth="lg" fullWidth>
+			<Dialog open={createOpen} onClose={handleCloseCreate} maxWidth="lg" fullWidth fullScreen={isMobile}>
 				<DialogTitle>Nueva plantilla de email</DialogTitle>
 				<Divider />
 
@@ -3420,7 +3595,7 @@ const EmailTemplates = () => {
 			/>
 
 			{/* Compare v1 vs v2 dialog */}
-			<Dialog open={compareOpen} onClose={handleCloseCompare} maxWidth="xl" fullWidth>
+			<Dialog open={compareOpen} onClose={handleCloseCompare} maxWidth="xl" fullWidth fullScreen={isMobile}>
 				<DialogTitle sx={{ pb: 1 }}>
 					<Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
 						<Stack direction="row" alignItems="center" spacing={1}>
