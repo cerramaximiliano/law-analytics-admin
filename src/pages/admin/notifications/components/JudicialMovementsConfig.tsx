@@ -60,6 +60,7 @@ const JudicialMovementsConfig: React.FC = () => {
 		featureBanner: false,
 		optionsBanner: false,
 		bannerPolicy: false,
+		postal: false,
 		dataRetention: false,
 		endpoints: false,
 		status: true,
@@ -168,6 +169,7 @@ const JudicialMovementsConfig: React.FC = () => {
 				"featureBanner",
 				"notificationOptionsBanner",
 				"bannerPolicy",
+				"postalNotifications",
 				"movementPolicies",
 			];
 
@@ -946,6 +948,59 @@ const JudicialMovementsConfig: React.FC = () => {
 										);
 									})}
 								</Stack>
+							</Grid>
+						</Grid>
+					</Collapse>
+				</CardContent>
+			</Card>
+
+			{/* Seguimiento postal */}
+			<Card sx={{ mb: 2 }}>
+				<CardContent>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Notification1 size={20} />
+							<Typography variant="h6">Seguimiento postal</Typography>
+							<Chip
+								size="small"
+								label={config.postalNotifications?.enabled !== false ? "activo" : "apagado"}
+								color={config.postalNotifications?.enabled !== false ? "success" : "default"}
+								variant="outlined"
+							/>
+						</Stack>
+						<IconButton size="small" onClick={() => handleToggleSection("postal")}>
+							{expandedSections.postal ? <ArrowUp2 /> : <ArrowDown2 />}
+						</IconButton>
+					</Stack>
+					<Collapse in={expandedSections.postal}>
+						<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+							Avisos de novedades del Correo Argentino. El worker publica cada evento en el webhook de la-notification y el email sale
+							al instante. El safe guard diario (8:00 ART) reintenta los envíos fallidos y barre los seguimientos con eventos que nunca
+							llegaron al webhook.
+						</Typography>
+						<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+							<Grid item xs={12} md={4}>
+								<FormControlLabel
+									control={
+										<Switch
+											checked={config.postalNotifications?.enabled !== false}
+											onChange={(e) => handleFieldChange("postalNotifications.enabled", e.target.checked)}
+										/>
+									}
+									label="Notificaciones postales habilitadas"
+								/>
+							</Grid>
+							<Grid item xs={12} md={4}>
+								<FormControlLabel
+									control={
+										<Switch
+											checked={config.postalNotifications?.safeGuardEnabled !== false}
+											onChange={(e) => handleFieldChange("postalNotifications.safeGuardEnabled", e.target.checked)}
+											disabled={config.postalNotifications?.enabled === false}
+										/>
+									}
+									label="Safe guard diario (8:00 ART)"
+								/>
 							</Grid>
 						</Grid>
 					</Collapse>

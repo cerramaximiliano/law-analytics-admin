@@ -169,6 +169,10 @@ const LiveConfigSummary: React.FC<{ live: LiveJudicialConfig }> = ({ live }) => 
 								labelOff="Apagado"
 							/>
 						</InfoRow>
+						<InfoRow label="Seguimiento postal">
+							<BoolChip value={config.postalNotifications?.enabled !== false} labelOn="Activo" labelOff="Apagado" />
+							{config.postalNotifications?.enabled !== false && config.postalNotifications?.safeGuardEnabled === false ? " · safe guard apagado" : ""}
+						</InfoRow>
 						<InfoRow label="Banner de anuncios">
 							{config.featureBanner?.enabled === true ? (
 								<>

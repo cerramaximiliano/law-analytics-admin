@@ -115,6 +115,11 @@ export interface JudicialNotificationConfig {
 		/** Texto por tipo de email (pisa `text` para ese tipo) */
 		textByType?: Record<string, string> | null;
 	};
+	/** Notificaciones de seguimiento postal (webhook inmediato + safe guard diario) */
+	postalNotifications?: {
+		enabled?: boolean;
+		safeGuardEnabled?: boolean;
+	};
 	/** Política transversal de banners promocionales */
 	bannerPolicy?: {
 		sharedCooldown?: { enabled?: boolean; days?: number; participants?: string[] };
@@ -171,6 +176,7 @@ export type JudicialNotificationConfigUpdate = Partial<
 		| "featureBanner"
 		| "notificationOptionsBanner"
 		| "bannerPolicy"
+		| "postalNotifications"
 		| "movementPolicies"
 	>
 >;
@@ -208,6 +214,7 @@ export const EMAIL_TYPES: { key: string; label: string }[] = [
 	{ key: "tareas", label: "Tareas" },
 	{ key: "vencimiento", label: "Vencimientos" },
 	{ key: "inactividad", label: "Caducidad/prescripción" },
+	{ key: "postal", label: "Seguimiento postal" },
 ];
 
 // ----------------------------------------------------------------------
