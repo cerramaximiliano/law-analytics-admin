@@ -38,6 +38,7 @@ import { Trash, DocumentText, Send2 } from "iconsax-react";
 import emailComposerService, { RecipientOption, EmailDraft } from "api/emailComposer";
 import EmailLogsService from "api/emailLogs";
 import { EmailLog } from "types/email-log";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 
 const SENDERS = [
 	{ value: "cuentas", label: "Cuentas (cuentas@lawanalytics.app)" },
@@ -266,7 +267,7 @@ const EmailComposer = () => {
 
 	return (
 		<Box>
-			<Typography variant="h4" sx={{ mb: 0.5 }}>
+			<Typography variant="h4" sx={{ mb: 0.5, fontWeight: 600, letterSpacing: "-0.02em" }}>
 				Compositor de Emails
 			</Typography>
 			<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -279,7 +280,14 @@ const EmailComposer = () => {
 				allowScrollButtonsMobile
 				value={tab}
 				onChange={(_, v) => setTab(v)}
-				sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}
+				TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
+				sx={{
+					mb: 2,
+					borderBottom: 1,
+					borderColor: "divider",
+					"& .MuiTab-root": { textTransform: "none", fontWeight: 500, fontSize: "0.875rem", minHeight: 48 },
+					"& .Mui-selected": { fontWeight: 600, color: BRAND_BLUE + " !important" },
+				}}
 			>
 				<Tab label="Componer" />
 				<Tab label={`Borradores${drafts.length ? ` (${drafts.length})` : ""}`} />

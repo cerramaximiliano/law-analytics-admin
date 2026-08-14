@@ -640,7 +640,15 @@ const EmailModules = () => {
 						</DialogTitle>
 						<Divider />
 						<Box sx={{ borderBottom: 1, borderColor: "divider", px: 3 }}>
-							<Tabs value={viewTab} onChange={(_, v) => setViewTab(v)}>
+							<Tabs
+								value={viewTab}
+								onChange={(_, v) => setViewTab(v)}
+								TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
+								sx={{
+									"& .MuiTab-root": { textTransform: "none", fontWeight: 500 },
+									"& .Mui-selected": { fontWeight: 600, color: BRAND_BLUE + " !important" },
+								}}
+							>
 								<Tab label="Vista previa" />
 								<Tab label="Código HTML" />
 							</Tabs>
@@ -789,7 +797,15 @@ const EmailModules = () => {
 
 						<Grid item xs={12} md={6}>
 							<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
-								<Tabs value={createViewTab} onChange={(_, v) => setCreateViewTab(v)}>
+								<Tabs
+									value={createViewTab}
+									onChange={(_, v) => setCreateViewTab(v)}
+									TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
+									sx={{
+										"& .MuiTab-root": { textTransform: "none", fontWeight: 500 },
+										"& .Mui-selected": { fontWeight: 600, color: BRAND_BLUE + " !important" },
+									}}
+								>
 									<Tab label="Vista previa" />
 									<Tab label="Código HTML" />
 								</Tabs>
@@ -901,7 +917,15 @@ const EmailModules = () => {
 
 								<Grid item xs={12} md={6}>
 									<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
-										<Tabs value={editViewTab} onChange={(_, v) => setEditViewTab(v)}>
+										<Tabs
+											value={editViewTab}
+											onChange={(_, v) => setEditViewTab(v)}
+											TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
+											sx={{
+												"& .MuiTab-root": { textTransform: "none", fontWeight: 500 },
+												"& .Mui-selected": { fontWeight: 600, color: BRAND_BLUE + " !important" },
+											}}
+										>
 											<Tab label="Vista previa" />
 											<Tab label="Código HTML" />
 										</Tabs>

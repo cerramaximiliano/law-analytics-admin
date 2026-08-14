@@ -51,8 +51,7 @@ const StatusIndicator = styled(Box)<{ status: "online" | "offline" | "checking" 
 	width: 10,
 	height: 10,
 	borderRadius: "50%",
-	backgroundColor:
-		status === "online" ? LIVE_GREEN : status === "offline" ? theme.palette.error.main : theme.palette.warning.main,
+	backgroundColor: status === "online" ? LIVE_GREEN : status === "offline" ? theme.palette.error.main : theme.palette.warning.main,
 	marginRight: theme.spacing(1),
 	...(status === "online" && {
 		"&::after": {
@@ -434,7 +433,7 @@ const MarketingSuppression = () => {
 							</InputAdornment>
 						),
 					}}
-					sx={{ minWidth: 250 }}
+					sx={{ minWidth: { sm: 250 }, width: { xs: "100%", sm: "auto" } }}
 				/>
 
 				<Box sx={{ display: "flex", gap: 1 }}>

@@ -108,6 +108,13 @@ const StatusIndicator = styled(Box)<{ status: "online" | "offline" | "checking" 
 
 // ==============================|| ADMIN - MAILING CAMPAIGNS ||============================== //
 
+// Prioridad de columnas en mobile: la tabla no entra en xs, así que solo
+// quedan las esenciales y el resto aparece por breakpoint. El detalle
+// completo sigue disponible al abrir cada fila.
+const COL_SM = { display: { xs: "none", sm: "table-cell" } } as const;
+const COL_MD = { display: { xs: "none", md: "table-cell" } } as const;
+const COL_LG = { display: { xs: "none", lg: "table-cell" } } as const;
+
 const MailingCampaigns = () => {
 	const theme = useTheme();
 
@@ -687,17 +694,36 @@ const MailingCampaigns = () => {
 							/>
 						</Grid>
 						<Grid item xs={12} sm={6} md={8}>
-							<Stack direction={{ xs: "column", sm: "row" }} spacing={1} justifyContent="flex-end">
-								<TextField select size="small" label="Ordenar por" value={sortBy} onChange={handleSortChange} sx={{ minWidth: 120 }}>
+							<Stack direction="row" spacing={1} justifyContent={{ xs: "flex-start", sm: "flex-end" }} flexWrap="wrap" useFlexGap>
+								<TextField
+									select
+									size="small"
+									label="Ordenar por"
+									value={sortBy}
+									onChange={handleSortChange}
+									sx={{ minWidth: { xs: 0, sm: 120 }, flex: { xs: "1 1 45%", sm: "0 0 auto" } }}
+								>
 									<MenuItem value="name">Nombre</MenuItem>
 									<MenuItem value="createdAt">Fecha de creación</MenuItem>
 									<MenuItem value="startDate">Fecha de inicio</MenuItem>
 									<MenuItem value="status">Estado</MenuItem>
 								</TextField>
-								<Button variant="outlined" size="small" onClick={handleSortDirChange} sx={{ minWidth: 100, height: 40 }}>
+								<Button
+									variant="outlined"
+									size="small"
+									onClick={handleSortDirChange}
+									sx={{ minWidth: { xs: 0, sm: 100 }, height: 40, flex: { xs: "1 1 45%", sm: "0 0 auto" } }}
+								>
 									{sortDir === "asc" ? "Ascendente" : "Descendente"}
 								</Button>
-								<TextField select size="small" label="Tipo" value={filterType} onChange={handleTypeFilterChange} sx={{ minWidth: 120 }}>
+								<TextField
+									select
+									size="small"
+									label="Tipo"
+									value={filterType}
+									onChange={handleTypeFilterChange}
+									sx={{ minWidth: { xs: 0, sm: 120 }, flex: { xs: "1 1 45%", sm: "0 0 auto" } }}
+								>
 									<MenuItem value="">Todos</MenuItem>
 									<MenuItem value="onetime">Una vez</MenuItem>
 									<MenuItem value="automated">Automatizada</MenuItem>
@@ -710,7 +736,7 @@ const MailingCampaigns = () => {
 									label="Estado"
 									value={filterStatus}
 									onChange={handleStatusFilterChange}
-									sx={{ minWidth: 120 }}
+									sx={{ minWidth: { xs: 0, sm: 120 }, flex: { xs: "1 1 45%", sm: "0 0 auto" } }}
 								>
 									<MenuItem value="">Todos</MenuItem>
 									<MenuItem value="draft">Borrador</MenuItem>
@@ -730,14 +756,24 @@ const MailingCampaigns = () => {
 						<TableHead>
 							<TableRow>
 								<TableCell>Nombre</TableCell>
-								<TableCell>Tipo</TableCell>
+								<TableCell sx={COL_SM}>Tipo</TableCell>
 								<TableCell>Estado</TableCell>
-								<TableCell>Categoría</TableCell>
-								<TableCell align="right">Contactos</TableCell>
-								<TableCell align="right">Emails</TableCell>
-								<TableCell align="right">Límite diario</TableCell>
-								<TableCell align="right">Tasa apertura</TableCell>
-								<TableCell align="right">Vigencia</TableCell>
+								<TableCell sx={COL_LG}>Categoría</TableCell>
+								<TableCell align="right" sx={COL_SM}>
+									Contactos
+								</TableCell>
+								<TableCell align="right" sx={COL_MD}>
+									Emails
+								</TableCell>
+								<TableCell align="right" sx={COL_LG}>
+									Límite diario
+								</TableCell>
+								<TableCell align="right" sx={COL_MD}>
+									Tasa apertura
+								</TableCell>
+								<TableCell align="right" sx={COL_LG}>
+									Vigencia
+								</TableCell>
 								<TableCell align="center">Acciones</TableCell>
 							</TableRow>
 						</TableHead>
@@ -770,14 +806,18 @@ const MailingCampaigns = () => {
 													</Typography>
 												)}
 											</TableCell>
-											<TableCell>{typeLabel}</TableCell>
+											<TableCell sx={COL_SM}>{typeLabel}</TableCell>
 											<TableCell>
 												<Chip label={statusInfo.label} color={statusInfo.color as any} size="small" />
 											</TableCell>
-											<TableCell>{campaign.category || "-"}</TableCell>
-											<TableCell align="right">{campaign.metrics?.totalContacts || 0}</TableCell>
-											<TableCell align="right">{campaign.metrics?.emailCount || 0}</TableCell>
-											<TableCell align="right">
+											<TableCell sx={COL_LG}>{campaign.category || "-"}</TableCell>
+											<TableCell align="right" sx={COL_SM}>
+												{campaign.metrics?.totalContacts || 0}
+											</TableCell>
+											<TableCell align="right" sx={COL_MD}>
+												{campaign.metrics?.emailCount || 0}
+											</TableCell>
+											<TableCell align="right" sx={COL_LG}>
 												{campaign.settings?.dailyLimit && campaign.settings.dailyLimit > 0 ? (
 													<Tooltip title="Límite de emails por día">
 														<Typography variant="body2">{campaign.settings.dailyLimit.toLocaleString()}</Typography>
@@ -788,8 +828,8 @@ const MailingCampaigns = () => {
 													</Typography>
 												)}
 											</TableCell>
-											<TableCell align="right">{`${openRate}%`}</TableCell>
-											<TableCell align="right">
+											<TableCell align="right" sx={COL_MD}>{`${openRate}%`}</TableCell>
+											<TableCell align="right" sx={COL_LG}>
 												{(() => {
 													const tz = campaign.settings?.timezone || "UTC";
 													const fmt = (d: string | Date) =>

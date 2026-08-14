@@ -461,6 +461,13 @@ Dirección: \${direccion}`;
 const getTemplateHtml = (t: { htmlBody?: string; htmlContent?: string } | null | undefined): string =>
 	(t && (t.htmlBody || t.htmlContent)) || "";
 
+// Prioridad de columnas en mobile: la tabla no entra en xs, así que solo
+// quedan las esenciales y el resto aparece por breakpoint. El detalle
+// completo sigue disponible al abrir cada fila.
+const COL_SM = { display: { xs: "none", sm: "table-cell" } } as const;
+const COL_MD = { display: { xs: "none", md: "table-cell" } } as const;
+const COL_LG = { display: { xs: "none", lg: "table-cell" } } as const;
+
 const EmailTemplates = () => {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -1967,11 +1974,11 @@ const EmailTemplates = () => {
 								<TableHead>
 									<TableRow>
 										<TableCell>Nombre</TableCell>
-										<TableCell>Categoría</TableCell>
-										<TableCell>Asunto</TableCell>
-										<TableCell>Descripción</TableCell>
+										<TableCell sx={COL_SM}>Categoría</TableCell>
+										<TableCell sx={COL_MD}>Asunto</TableCell>
+										<TableCell sx={COL_LG}>Descripción</TableCell>
 										<TableCell>Estado</TableCell>
-										<TableCell>Última modificación</TableCell>
+										<TableCell sx={COL_LG}>Última modificación</TableCell>
 										<TableCell align="center">Acciones</TableCell>
 									</TableRow>
 								</TableHead>
@@ -2037,9 +2044,9 @@ const EmailTemplates = () => {
 															)}
 														</Stack>
 													</TableCell>
-													<TableCell>{categoryDisplay[template.category] || template.category}</TableCell>
-													<TableCell>{template.subject}</TableCell>
-													<TableCell>{template.description}</TableCell>
+													<TableCell sx={COL_SM}>{categoryDisplay[template.category] || template.category}</TableCell>
+													<TableCell sx={COL_MD}>{template.subject}</TableCell>
+													<TableCell sx={COL_LG}>{template.description}</TableCell>
 													<TableCell>
 														<Chip
 															label={template.isActive ? "Activa" : "Inactiva"}
@@ -2047,7 +2054,7 @@ const EmailTemplates = () => {
 															size="small"
 														/>
 													</TableCell>
-													<TableCell>{new Date(template.updatedAt).toLocaleDateString()}</TableCell>
+													<TableCell sx={COL_LG}>{new Date(template.updatedAt).toLocaleDateString()}</TableCell>
 													<TableCell align="center">
 														<Stack direction="row" spacing={1} justifyContent="center">
 															<IconButton aria-label="ver" size="small" color="info" onClick={() => handleOpenDetail(template)}>
@@ -2728,7 +2735,16 @@ const EmailTemplates = () => {
 								{/* Template content and preview */}
 								<Grid item xs={12} md={6} sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
 									<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
-										<Tabs value={editViewTab} onChange={handleEditChangeTab} aria-label="template edit tabs">
+										<Tabs
+											value={editViewTab}
+											onChange={handleEditChangeTab}
+											aria-label="template edit tabs"
+											TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
+											sx={{
+												"& .MuiTab-root": { textTransform: "none", fontWeight: 500 },
+												"& .Mui-selected": { fontWeight: 600, color: BRAND_BLUE + " !important" },
+											}}
+										>
 											<Tab label="Vista previa" id="edit-tab-0" aria-controls="edit-tabpanel-0" />
 											<Tab label="Código HTML" id="edit-tab-1" aria-controls="edit-tabpanel-1" />
 										</Tabs>
