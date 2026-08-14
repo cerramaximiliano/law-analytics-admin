@@ -111,6 +111,9 @@ interface EmailTemplate {
 	preheader?: string;
 	htmlBody: string;
 	textBody: string;
+	/** Campos legacy alternativos: algunos templates solo traen estos (ver getTemplateHtml) */
+	htmlContent?: string;
+	textContent?: string;
 	description: string;
 	variables: string[];
 	isActive: boolean;
@@ -446,6 +449,15 @@ El equipo de Law Analytics
 Dirección: \${direccion}`;
 
 // ==============================|| ADMIN - EMAIL TEMPLATES ||============================== //
+
+/**
+ * Cuerpo HTML efectivo de un template. La colección tiene campos duplicados
+ * legacy (htmlBody / htmlContent) y algunos docs solo traen uno — acceder al
+ * otro directamente rompía el detalle con "cannot read of undefined"
+ * (pantalla blanca en administration/*-report).
+ */
+const getTemplateHtml = (t: { htmlBody?: string; htmlContent?: string } | null | undefined): string =>
+	(t && (t.htmlBody || t.htmlContent)) || "";
 
 const EmailTemplates = () => {
 	const theme = useTheme();
@@ -1006,7 +1018,7 @@ const EmailTemplates = () => {
 		}
 
 		const searchText = htmlSearchQuery.toLowerCase();
-		const htmlText = editTemplate.htmlBody.toLowerCase();
+		const htmlText = getTemplateHtml(editTemplate).toLowerCase();
 		const results: number[] = [];
 		let index = htmlText.indexOf(searchText);
 
@@ -1122,7 +1134,7 @@ const EmailTemplates = () => {
 		}
 
 		const searchText = viewHtmlSearchQuery.toLowerCase();
-		const htmlText = selectedTemplate.htmlBody.toLowerCase();
+		const htmlText = getTemplateHtml(selectedTemplate).toLowerCase();
 		const results: number[] = [];
 		let index = htmlText.indexOf(searchText);
 		while (index !== -1) {
@@ -1182,10 +1194,10 @@ const EmailTemplates = () => {
 		if (!selectedTemplate) return "";
 		if (!viewHtmlSearchQuery || viewHtmlSearchResults.length === 0) {
 			// Escape HTML to show as code
-			return selectedTemplate.htmlBody.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+			return getTemplateHtml(selectedTemplate).replace(/</g, "&lt;").replace(/>/g, "&gt;");
 		}
 
-		const html = selectedTemplate.htmlBody;
+		const html = getTemplateHtml(selectedTemplate);
 		const searchLen = viewHtmlSearchQuery.length;
 		let result = "";
 		let lastIndex = 0;
@@ -1436,11 +1448,11 @@ const EmailTemplates = () => {
 			}
 		}
 
-		if (!editTemplate.htmlBody.trim()) {
+		if (!getTemplateHtml(editTemplate).trim()) {
 			newErrors.htmlBody = "El cuerpo HTML es obligatorio";
 		} else {
 			// Check for invalid variables in HTML body
-			const invalidVarsHtml = getInvalidVariables(editTemplate.htmlBody);
+			const invalidVarsHtml = getInvalidVariables(getTemplateHtml(editTemplate));
 			if (invalidVarsHtml.length > 0) {
 				newErrors.htmlBody = `El HTML contiene variables no válidas: ${invalidVarsHtml.join(", ")}`;
 			}
@@ -2198,7 +2210,7 @@ const EmailTemplates = () => {
 																body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
 															</style>
 														</head>
-														<body>${expandModulesInHtml(selectedTemplate.htmlBody)}</body>
+														<body>${expandModulesInHtml(getTemplateHtml(selectedTemplate))}</body>
 													</html>
 												`}
 														sandbox="allow-same-origin allow-scripts"
@@ -2253,7 +2265,7 @@ const EmailTemplates = () => {
 														<Box sx={{ ml: "auto" }}>
 															<IconButton
 																onClick={() => {
-																	navigator.clipboard.writeText(selectedTemplate.htmlBody);
+																	navigator.clipboard.writeText(getTemplateHtml(selectedTemplate));
 																	enqueueSnackbar("Código HTML copiado al portapapeles", {
 																		variant: "success",
 																		anchorOrigin: { vertical: "bottom", horizontal: "right" },

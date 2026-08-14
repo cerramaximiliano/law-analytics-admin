@@ -39,7 +39,7 @@ import {
 } from "iconsax-react";
 import { dispatch } from "store";
 import { openSnackbar } from "store/reducers/snackbar";
-import judicialNotificationConfigService, { JudicialNotificationConfig } from "api/judicialNotificationConfig";
+import judicialNotificationConfigService, { JudicialNotificationConfig, EMAIL_TYPES } from "api/judicialNotificationConfig";
 import MovementPoliciesSection from "./MovementPoliciesSection";
 
 const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
@@ -59,6 +59,7 @@ const JudicialMovementsConfig: React.FC = () => {
 		planBanner: false,
 		featureBanner: false,
 		optionsBanner: false,
+		bannerPolicy: false,
 		dataRetention: false,
 		endpoints: false,
 		status: true,
@@ -93,6 +94,28 @@ const JudicialMovementsConfig: React.FC = () => {
 		} finally {
 			setLoading(false);
 		}
+	};
+
+	/** Chips multi-select de tipos de email para un banner (path del config) */
+	const renderEmailTypeChips = (path: string, current: string[] | undefined) => {
+		const selected = Array.isArray(current) && current.length > 0 ? current : EMAIL_TYPES.map((e) => e.key);
+		return (
+			<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+				{EMAIL_TYPES.map((et) => {
+					const on = selected.includes(et.key);
+					return (
+						<Chip
+							key={et.key}
+							label={et.label}
+							size="small"
+							color={on ? "primary" : "default"}
+							variant={on ? "filled" : "outlined"}
+							onClick={() => handleFieldChange(path, on ? selected.filter((k) => k !== et.key) : [...selected, et.key])}
+						/>
+					);
+				})}
+			</Stack>
+		);
 	};
 
 	const handleToggleSection = (section: string) => {
@@ -144,6 +167,7 @@ const JudicialMovementsConfig: React.FC = () => {
 				"planBanner",
 				"featureBanner",
 				"notificationOptionsBanner",
+				"bannerPolicy",
 				"movementPolicies",
 			];
 
@@ -651,6 +675,12 @@ const JudicialMovementsConfig: React.FC = () => {
 									fullWidth
 								/>
 							</Grid>
+							<Grid item xs={12}>
+								<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.75 }}>
+									Tipos de email donde puede aparecer
+								</Typography>
+								{renderEmailTypeChips("planBanner.emailTypes", config.planBanner?.emailTypes)}
+							</Grid>
 							<Grid item xs={12} md={3}>
 								<FormControlLabel
 									control={
@@ -769,6 +799,12 @@ const JudicialMovementsConfig: React.FC = () => {
 									label={<Typography variant="body2">Mostrar junto al banner de plan</Typography>}
 								/>
 							</Grid>
+							<Grid item xs={12}>
+								<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.75 }}>
+									Tipos de email donde puede aparecer
+								</Typography>
+								{renderEmailTypeChips("featureBanner.emailTypes", config.featureBanner?.emailTypes)}
+							</Grid>
 						</Grid>
 					</Collapse>
 				</CardContent>
@@ -818,6 +854,98 @@ const JudicialMovementsConfig: React.FC = () => {
 									helperText='Default: "Elegí cómo recibir estos avisos: al instante, en un resumen diario, o desactivalos cuando quieras."'
 									fullWidth
 								/>
+							</Grid>
+							<Grid item xs={12}>
+								<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.75 }}>
+									Tipos de email donde puede aparecer (cada tipo usa un texto adaptado por default)
+								</Typography>
+								{renderEmailTypeChips("notificationOptionsBanner.emailTypes", config.notificationOptionsBanner?.emailTypes)}
+							</Grid>
+						</Grid>
+					</Collapse>
+				</CardContent>
+			</Card>
+
+			{/* Política de banners */}
+			<Card sx={{ mb: 2 }}>
+				<CardContent>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<ChartSquare size={20} />
+							<Typography variant="h6">Política de banners</Typography>
+							<Chip
+								size="small"
+								label={
+									config.bannerPolicy?.sharedCooldown?.enabled !== false
+										? `cooldown compartido ${config.bannerPolicy?.sharedCooldown?.days ?? 7} d`
+										: "cooldown por banner"
+								}
+								color={config.bannerPolicy?.sharedCooldown?.enabled !== false ? "primary" : "default"}
+								variant="outlined"
+							/>
+						</Stack>
+						<IconButton size="small" onClick={() => handleToggleSection("bannerPolicy")}>
+							{expandedSections.bannerPolicy ? <ArrowUp2 /> : <ArrowDown2 />}
+						</IconButton>
+					</Stack>
+					<Collapse in={expandedSections.bannerPolicy}>
+						<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+							Con el cooldown compartido activo, el usuario ve como máximo UN banner promocional cada N días sin importar cuál sea
+							(plan o anuncios) ni qué email lo dispare. El strip de opciones es informativo y por default no participa.
+						</Typography>
+						<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+							<Grid item xs={12} md={4}>
+								<FormControlLabel
+									control={
+										<Switch
+											checked={config.bannerPolicy?.sharedCooldown?.enabled !== false}
+											onChange={(e) => handleFieldChange("bannerPolicy.sharedCooldown.enabled", e.target.checked)}
+										/>
+									}
+									label="Cooldown compartido entre banners"
+								/>
+							</Grid>
+							<Grid item xs={12} md={3}>
+								<TextField
+									label="Días"
+									type="number"
+									value={config.bannerPolicy?.sharedCooldown?.days ?? 7}
+									onChange={(e) => handleFieldChange("bannerPolicy.sharedCooldown.days", parseInt(e.target.value))}
+									inputProps={{ min: 0, max: 90 }}
+									disabled={config.bannerPolicy?.sharedCooldown?.enabled === false}
+									fullWidth
+								/>
+							</Grid>
+							<Grid item xs={12} md={5}>
+								<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.75 }}>
+									Banners que participan del cooldown compartido
+								</Typography>
+								<Stack direction="row" spacing={0.75}>
+									{[
+										{ key: "plan", label: "Upgrade de plan" },
+										{ key: "feature", label: "Anuncios" },
+										{ key: "options", label: "Opciones" },
+									].map((b) => {
+										const participants = config.bannerPolicy?.sharedCooldown?.participants ?? ["plan", "feature"];
+										const on = participants.includes(b.key);
+										return (
+											<Chip
+												key={b.key}
+												label={b.label}
+												size="small"
+												color={on ? "primary" : "default"}
+												variant={on ? "filled" : "outlined"}
+												disabled={config.bannerPolicy?.sharedCooldown?.enabled === false}
+												onClick={() =>
+													handleFieldChange(
+														"bannerPolicy.sharedCooldown.participants",
+														on ? participants.filter((k: string) => k !== b.key) : [...participants, b.key],
+													)
+												}
+											/>
+										);
+									})}
+								</Stack>
 							</Grid>
 						</Grid>
 					</Collapse>

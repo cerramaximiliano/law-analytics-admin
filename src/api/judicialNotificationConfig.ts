@@ -103,13 +103,22 @@ export interface JudicialNotificationConfig {
 		cooldownDays?: number;
 		minArchivedFolders?: number;
 		excludePlans?: string[];
+		emailTypes?: string[];
 		promo?: { enabled?: boolean; code?: string | null; text?: string | null };
 	};
-	/** Strip informativo de opciones de notificación (email de movimientos) */
+	/** Strip informativo de opciones de notificación */
 	notificationOptionsBanner?: {
 		enabled?: boolean;
 		/** null = copy por defecto del sistema */
 		text?: string | null;
+		emailTypes?: string[];
+		/** Texto por tipo de email (pisa `text` para ese tipo) */
+		textByType?: Record<string, string> | null;
+	};
+	/** Política transversal de banners promocionales */
+	bannerPolicy?: {
+		sharedCooldown?: { enabled?: boolean; days?: number; participants?: string[] };
+		priority?: string[];
 	};
 	/** Banner de anuncio/feature en todos los emails de notificación */
 	featureBanner?: {
@@ -118,6 +127,7 @@ export interface JudicialNotificationConfig {
 		text?: string | null;
 		ctaLabel?: string | null;
 		ctaUrl?: string | null;
+		emailTypes?: string[];
 		/** Mostrar aunque el email ya lleve el banner de plan */
 		showWithPlanBanner?: boolean;
 	};
@@ -160,6 +170,7 @@ export type JudicialNotificationConfigUpdate = Partial<
 		| "planBanner"
 		| "featureBanner"
 		| "notificationOptionsBanner"
+		| "bannerPolicy"
 		| "movementPolicies"
 	>
 >;
@@ -188,6 +199,15 @@ export const DELIVERY_MOVEMENT_SOURCES: { key: string; label: string; hint?: str
 	{ key: "eje", label: "Entrega central — EJE", hint: "update + stuck worker" },
 	{ key: "mev", label: "Entrega central — MEV", hint: "update-cluster" },
 	{ key: "scba", label: "Entrega central — SCBA", hint: "update + archived worker" },
+];
+
+/** Tipos de email de usuario donde pueden aparecer los banners */
+export const EMAIL_TYPES: { key: string; label: string }[] = [
+	{ key: "movimiento", label: "Movimientos" },
+	{ key: "calendario", label: "Calendario" },
+	{ key: "tareas", label: "Tareas" },
+	{ key: "vencimiento", label: "Vencimientos" },
+	{ key: "inactividad", label: "Caducidad/prescripción" },
 ];
 
 // ----------------------------------------------------------------------
