@@ -87,6 +87,13 @@ const getClosureInfo = (
 	return { origin: "system", label: "Sistema", color: "info", reason: CLOSURE_REASON_LABELS.final_status };
 };
 
+// Prioridad de columnas en mobile: la tabla tiene 11 columnas y en xs solo
+// caben las esenciales (código, usuario, estado, acciones). El resto aparece
+// progresivamente; el dato completo siempre está en el modal de detalle.
+const COL_SM = { display: { xs: "none", sm: "table-cell" } } as const;
+const COL_MD = { display: { xs: "none", md: "table-cell" } } as const;
+const COL_LG = { display: { xs: "none", lg: "table-cell" } } as const;
+
 const formatDate = (dateString?: string) => {
 	if (!dateString) return "-";
 	return dayjs(dateString).format("DD/MM/YYYY HH:mm");
@@ -380,7 +387,7 @@ const PostalTrackingPage = () => {
 				</Stack>
 			}
 		>
-			<Stack spacing={3}>
+			<Stack spacing={{ xs: 2, sm: 3 }}>
 				{/* Stats Cards - lenguaje del design system: color solo en estados */}
 				<Grid container spacing={{ xs: 1, sm: 2 }}>
 					{[
@@ -420,7 +427,7 @@ const PostalTrackingPage = () => {
 				</Grid>
 
 				{/* Filters */}
-				<Paper variant="outlined" sx={{ p: 2 }}>
+				<Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 } }}>
 					<Grid container spacing={2} alignItems="center">
 						<Grid item xs={12} sm={6} md={3}>
 							<FormControl fullWidth size="small">
@@ -443,7 +450,7 @@ const PostalTrackingPage = () => {
 								</Select>
 							</FormControl>
 						</Grid>
-						<Grid item xs={12} sm={6} md={2}>
+						<Grid item xs={6} sm={6} md={2}>
 							<TextField
 								fullWidth
 								size="small"
@@ -455,7 +462,7 @@ const PostalTrackingPage = () => {
 								}}
 							/>
 						</Grid>
-						<Grid item xs={12} sm={6} md={2}>
+						<Grid item xs={6} sm={6} md={2}>
 							<FormControl fullWidth size="small">
 								<InputLabel>Origen de cierre</InputLabel>
 								<Select
@@ -492,8 +499,17 @@ const PostalTrackingPage = () => {
 							/>
 						</Grid>
 						<Grid item xs={12} sm={6} md={1}>
+							<Button
+								onClick={handleClearFilters}
+								color="error"
+								size="small"
+								startIcon={<CloseCircle size={18} />}
+								sx={{ display: { xs: "inline-flex", md: "none" } }}
+							>
+								Limpiar filtros
+							</Button>
 							<Tooltip title="Limpiar filtros">
-								<IconButton onClick={handleClearFilters} color="error">
+								<IconButton onClick={handleClearFilters} color="error" sx={{ display: { xs: "none", md: "inline-flex" } }}>
 									<CloseCircle size={20} />
 								</IconButton>
 							</Tooltip>
@@ -539,14 +555,18 @@ const PostalTrackingPage = () => {
 									/>
 								</TableCell>
 								<TableCell>Codigo / Numero</TableCell>
-								<TableCell>Etiqueta</TableCell>
+								<TableCell sx={COL_MD}>Etiqueta</TableCell>
 								<TableCell>Usuario</TableCell>
 								<TableCell align="center">Estado proceso</TableCell>
-								<TableCell align="center">Cierre</TableCell>
-								<TableCell>Estado rastreo</TableCell>
-								<TableCell align="center">Errores</TableCell>
-								<TableCell>Proximo check</TableCell>
-								<TableCell>Actualizado</TableCell>
+								<TableCell align="center" sx={COL_SM}>
+									Cierre
+								</TableCell>
+								<TableCell sx={COL_MD}>Estado rastreo</TableCell>
+								<TableCell align="center" sx={COL_SM}>
+									Errores
+								</TableCell>
+								<TableCell sx={COL_LG}>Proximo check</TableCell>
+								<TableCell sx={COL_LG}>Actualizado</TableCell>
 								<TableCell align="center">Acciones</TableCell>
 							</TableRow>
 						</TableHead>
@@ -586,7 +606,7 @@ const PostalTrackingPage = () => {
 												</Typography>
 											</Stack>
 										</TableCell>
-										<TableCell>
+										<TableCell sx={COL_MD}>
 											<Typography variant="body2" color="textSecondary">
 												{tracking.label || "-"}
 											</Typography>
@@ -649,7 +669,7 @@ const PostalTrackingPage = () => {
 												)}
 											</Stack>
 										</TableCell>
-										<TableCell align="center">
+										<TableCell align="center" sx={COL_SM}>
 											{(() => {
 												const ci = getClosureInfo(tracking);
 												if (!ci.origin)
@@ -676,7 +696,7 @@ const PostalTrackingPage = () => {
 												);
 											})()}
 										</TableCell>
-										<TableCell>
+										<TableCell sx={COL_MD}>
 											<Typography
 												variant="body2"
 												color="textSecondary"
@@ -686,7 +706,7 @@ const PostalTrackingPage = () => {
 												{tracking.trackingStatus || "-"}
 											</Typography>
 										</TableCell>
-										<TableCell align="center">
+										<TableCell align="center" sx={COL_SM}>
 											{tracking.consecutiveErrors > 0 ? (
 												<Chip label={tracking.consecutiveErrors} size="small" color="error" variant="outlined" />
 											) : (
@@ -695,12 +715,12 @@ const PostalTrackingPage = () => {
 												</Typography>
 											)}
 										</TableCell>
-										<TableCell>
+										<TableCell sx={COL_LG}>
 											<Typography variant="body2" fontSize="0.75rem" color="textSecondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 												{formatDate(tracking.nextCheckAt)}
 											</Typography>
 										</TableCell>
-										<TableCell>
+										<TableCell sx={COL_LG}>
 											<Typography variant="body2" fontSize="0.75rem" color="textSecondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 												{formatDate(tracking.updatedAt)}
 											</Typography>
