@@ -158,6 +158,8 @@ export interface PostalTracking {
 	nextCheckAt?: string;
 	history: PostalTrackingEvent[];
 	userId?: string;
+	/** Email del dueño, enriquecido por admin-api en listing y detalle. */
+	userEmail?: string | null;
 	folderId?: string;
 	movementId?: string;
 	notificationId?: string;

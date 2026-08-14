@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { alpha, useTheme } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
 import {
 	Box,
 	Grid,
@@ -26,8 +26,6 @@ import {
 	InputLabel,
 	Select,
 	Stack,
-	Card,
-	CardContent,
 	Skeleton,
 	Alert,
 	InputAdornment,
@@ -383,104 +381,42 @@ const PostalTrackingPage = () => {
 			}
 		>
 			<Stack spacing={3}>
-				{/* Stats Cards */}
-				<Grid container spacing={2}>
-					<Grid item xs={6} sm={3}>
-						<Card
-							variant="outlined"
-							sx={{
-								borderColor: alpha(theme.palette.primary.main, 0.22),
-								bgcolor: alpha(theme.palette.primary.main, 0.04),
-								transition: "transform 220ms ease, border-color 220ms ease",
-								"&:hover": { transform: "translateY(-1px)", borderColor: alpha(theme.palette.primary.main, 0.36) },
-							}}
-						>
-							<CardContent>
-								<Typography variant="body2" color="textSecondary" sx={{ letterSpacing: 0.2 }}>
-									Total
-								</Typography>
+				{/* Stats Cards - lenguaje del design system: color solo en estados */}
+				<Grid container spacing={{ xs: 1, sm: 2 }}>
+					{[
+						{ label: "Total", value: stats?.metrics?.total ?? 0, color: "text.primary" },
+						{ label: "Con errores", value: stats?.metrics?.withErrors ?? 0, color: "error.main" },
+						{ label: "Estado final", value: stats?.metrics?.finalStatuses ?? 0, color: "success.main" },
+						{ label: "Actualizados hoy", value: stats?.recentlyUpdatedToday ?? 0, color: "text.primary" },
+					].map((stat) => (
+						<Grid item xs={6} sm={3} key={stat.label}>
+							<Paper
+								elevation={0}
+								sx={{ p: { xs: 1, sm: 1.5 }, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, height: "100%" }}
+							>
 								{loadingStats ? (
 									<Skeleton variant="text" width={50} height={36} />
 								) : (
-									<Typography variant="h4" sx={{ color: "primary.main", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-										{stats?.metrics?.total ?? 0}
+									<Typography
+										variant="h4"
+										color={stat.color}
+										sx={{
+											fontWeight: 700,
+											letterSpacing: "-0.02em",
+											fontVariantNumeric: "tabular-nums",
+											lineHeight: 1.2,
+											fontSize: { xs: "1.1rem", sm: "1.5rem" },
+										}}
+									>
+										{stat.value.toLocaleString()}
 									</Typography>
 								)}
-							</CardContent>
-						</Card>
-					</Grid>
-					<Grid item xs={6} sm={3}>
-						<Card
-							variant="outlined"
-							sx={{
-								borderColor: alpha(theme.palette.error.main, 0.22),
-								bgcolor: alpha(theme.palette.error.main, 0.04),
-								transition: "transform 220ms ease, border-color 220ms ease",
-								"&:hover": { transform: "translateY(-1px)", borderColor: alpha(theme.palette.error.main, 0.36) },
-							}}
-						>
-							<CardContent>
-								<Typography variant="body2" color="textSecondary" sx={{ letterSpacing: 0.2 }}>
-									Con Errores
+								<Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block", mt: 0.25 }}>
+									{stat.label}
 								</Typography>
-								{loadingStats ? (
-									<Skeleton variant="text" width={50} height={36} />
-								) : (
-									<Typography variant="h4" sx={{ color: "error.main", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-										{stats?.metrics?.withErrors ?? 0}
-									</Typography>
-								)}
-							</CardContent>
-						</Card>
-					</Grid>
-					<Grid item xs={6} sm={3}>
-						<Card
-							variant="outlined"
-							sx={{
-								borderColor: alpha(theme.palette.success.main, 0.22),
-								bgcolor: alpha(theme.palette.success.main, 0.04),
-								transition: "transform 220ms ease, border-color 220ms ease",
-								"&:hover": { transform: "translateY(-1px)", borderColor: alpha(theme.palette.success.main, 0.36) },
-							}}
-						>
-							<CardContent>
-								<Typography variant="body2" color="textSecondary" sx={{ letterSpacing: 0.2 }}>
-									Estado Final
-								</Typography>
-								{loadingStats ? (
-									<Skeleton variant="text" width={50} height={36} />
-								) : (
-									<Typography variant="h4" sx={{ color: "success.main", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-										{stats?.metrics?.finalStatuses ?? 0}
-									</Typography>
-								)}
-							</CardContent>
-						</Card>
-					</Grid>
-					<Grid item xs={6} sm={3}>
-						<Card
-							variant="outlined"
-							sx={{
-								borderColor: alpha(theme.palette.info.main, 0.22),
-								bgcolor: alpha(theme.palette.info.main, 0.04),
-								transition: "transform 220ms ease, border-color 220ms ease",
-								"&:hover": { transform: "translateY(-1px)", borderColor: alpha(theme.palette.info.main, 0.36) },
-							}}
-						>
-							<CardContent>
-								<Typography variant="body2" color="textSecondary" sx={{ letterSpacing: 0.2 }}>
-									Actualizados hoy
-								</Typography>
-								{loadingStats ? (
-									<Skeleton variant="text" width={50} height={36} />
-								) : (
-									<Typography variant="h4" sx={{ color: "info.main", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-										{stats?.recentlyUpdatedToday ?? 0}
-									</Typography>
-								)}
-							</CardContent>
-						</Card>
-					</Grid>
+							</Paper>
+						</Grid>
+					))}
 				</Grid>
 
 				{/* Filters */}
@@ -604,7 +540,7 @@ const PostalTrackingPage = () => {
 								</TableCell>
 								<TableCell>Codigo / Numero</TableCell>
 								<TableCell>Etiqueta</TableCell>
-								<TableCell>Usuario ID</TableCell>
+								<TableCell>Usuario</TableCell>
 								<TableCell align="center">Estado proceso</TableCell>
 								<TableCell align="center">Cierre</TableCell>
 								<TableCell>Estado rastreo</TableCell>
@@ -657,30 +593,37 @@ const PostalTrackingPage = () => {
 										</TableCell>
 										<TableCell>
 											{tracking.userId ? (
-												<Stack direction="row" spacing={0.5} alignItems="center">
-													<Typography
-														variant="body2"
-														fontFamily="monospace"
-														fontSize="0.7rem"
-														color="textSecondary"
-														noWrap
-														sx={{ maxWidth: 90 }}
-													>
-														{tracking.userId}
-													</Typography>
-													<Tooltip title="Copiar ID">
-														<IconButton
-															size="small"
-															onClick={(e) => {
-																e.stopPropagation();
-																navigator.clipboard.writeText(tracking.userId!);
-																enqueueSnackbar("ID copiado al portapapeles", { variant: "success", autoHideDuration: 1500 });
-															}}
+												<Box sx={{ minWidth: 0 }}>
+													{tracking.userEmail && (
+														<Typography variant="body2" noWrap sx={{ maxWidth: 180 }}>
+															{tracking.userEmail}
+														</Typography>
+													)}
+													<Stack direction="row" spacing={0.5} alignItems="center">
+														<Typography
+															variant="caption"
+															fontFamily="monospace"
+															fontSize="0.7rem"
+															color="textSecondary"
+															noWrap
+															sx={{ maxWidth: 90 }}
 														>
-															<Copy size={13} />
-														</IconButton>
-													</Tooltip>
-												</Stack>
+															{tracking.userId}
+														</Typography>
+														<Tooltip title="Copiar ID">
+															<IconButton
+																size="small"
+																onClick={(e) => {
+																	e.stopPropagation();
+																	navigator.clipboard.writeText(tracking.userId!);
+																	enqueueSnackbar("ID copiado al portapapeles", { variant: "success", autoHideDuration: 1500 });
+																}}
+															>
+																<Copy size={13} />
+															</IconButton>
+														</Tooltip>
+													</Stack>
+												</Box>
 											) : (
 												<Typography variant="body2" color="textSecondary">
 													-
@@ -933,8 +876,9 @@ const PostalTrackingPage = () => {
 											{detailTracking.userId && (
 												<Grid item xs={12} sm={6}>
 													<Typography variant="caption" color="textSecondary">
-														Usuario ID
+														Usuario
 													</Typography>
+													{detailTracking.userEmail && <Typography variant="body2">{detailTracking.userEmail}</Typography>}
 													<Stack direction="row" spacing={0.5} alignItems="center">
 														<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem" sx={{ wordBreak: "break-all" }}>
 															{detailTracking.userId}
