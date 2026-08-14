@@ -57,6 +57,7 @@ import {
 	Magicpen,
 	Refresh,
 	Sms,
+	InfoCircle,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -2366,8 +2367,32 @@ const UserResources: React.FC = () => {
 											</TableCell>
 											<TableCell>Último Login</TableCell>
 											<TableCell align="center">Días Activos</TableCell>
-											<TableCell align="center">Visor email</TableCell>
-											<TableCell align="center">Jurisprudencia</TableCell>
+											<TableCell align="center">
+												<HeaderConAyuda
+													label="Visor email"
+													ayuda={
+														<>
+															<b>👁 número</b> — documentos que el usuario abrió desde un email (visor de documentos).
+															<br />
+															<b>→ app</b> — veces que, desde ese visor, volvió a entrar a la aplicación.
+														</>
+													}
+												/>
+											</TableCell>
+											<TableCell align="center">
+												<HeaderConAyuda
+													label="Jurisprudencia"
+													ayuda={
+														<>
+															<b>👁 número</b> — campañas de novedades jurisprudenciales que <b>abrió</b> (medido con píxel: los
+															proveedores que precargan imágenes lo inflan).
+															<br />
+															<b>→ vista</b> — veces que <b>entró efectivamente</b> a la vista de jurisprudencia desde el correo.
+															Es el dato sólido: requiere un click real y ya excluye los escáneres de correo.
+														</>
+													}
+												/>
+											</TableCell>
 											<TableCell>
 												<TableSortLabel
 													active={sortBy === "createdAt"}
@@ -2533,13 +2558,19 @@ const UserResources: React.FC = () => {
 												<TableCell align="center">
 													{(user.emailViewer?.views || 0) + (user.emailViewer?.loginContinues || 0) > 0 ? (
 														<Tooltip
-															title={`${user.emailViewer?.views || 0} documentos vistos desde emails · ${
-																user.emailViewer?.loginContinues || 0
-															} volvieron a la app${
-																user.emailViewer?.lastActivity
-																	? ` · última: ${dayjs(user.emailViewer.lastActivity).format("DD/MM/YY")}`
-																	: ""
-															}`}
+															title={
+																<Box sx={{ lineHeight: 1.6 }}>
+																	<div>
+																		<b>{user.emailViewer?.views || 0}</b> documento(s) abiertos desde un email
+																	</div>
+																	<div>
+																		<b>{user.emailViewer?.loginContinues || 0}</b> vez(ces) que volvió a la app desde el visor
+																	</div>
+																	{user.emailViewer?.lastActivity && (
+																		<div>Última actividad: {dayjs(user.emailViewer.lastActivity).format("DD/MM/YY HH:mm")}</div>
+																	)}
+																</Box>
+															}
 														>
 															<Stack direction="row" spacing={0.5} justifyContent="center">
 																<Chip size="small" variant="outlined" label={user.emailViewer?.views || 0} icon={<Eye size={12} />} />
@@ -2803,3 +2834,22 @@ const UserResources: React.FC = () => {
 };
 
 export default UserResources;
+
+/**
+ * Encabezado de columna con ayuda inline.
+ *
+ * Las columnas de seguimiento muestran dos chips distintos (aperturas vs.
+ * ingresos reales) que se confunden fácil: el ícono explica qué es cada uno.
+ */
+function HeaderConAyuda({ label, ayuda }: { label: string; ayuda: React.ReactNode }) {
+	return (
+		<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
+			<span>{label}</span>
+			<Tooltip title={<Box sx={{ p: 0.5, lineHeight: 1.6 }}>{ayuda}</Box>} arrow>
+				<Box component="span" sx={{ display: "inline-flex", cursor: "help", color: "text.disabled" }}>
+					<InfoCircle size={14} />
+				</Box>
+			</Tooltip>
+		</Stack>
+	);
+}
