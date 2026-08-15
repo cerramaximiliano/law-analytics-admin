@@ -168,6 +168,38 @@ export interface SaijPipelineConfig {
 	createMissingCausas: boolean;
 }
 
+export interface SaijUserCampaignConfig {
+	enabled?: boolean;
+	/** Base de la página pública; cada fallo linkea a <siteUrl>/<scId> */
+	siteUrl?: string;
+	segmentId?: string;
+	templateId?: string;
+	/** Hora local (0-23) a partir de la cual sale la campaña del día */
+	campaignHour?: number;
+	/** Solo lunes a viernes */
+	weekdaysOnly?: boolean;
+	/** Tope de fallos por correo */
+	maxFallosPorCampania?: number;
+	/** Antigüedad máxima del ALTA en SAIJ (días) */
+	maxPublishAgeDays?: number;
+	/** Antigüedad máxima de la SENTENCIA (días) */
+	maxDocAgeDays?: number;
+	/** Espera máxima de un fallo que aún no es publicable (horas) */
+	maxWaitHours?: number;
+	/** Ventana de envío de cada campaña (horas) */
+	windowHours?: number;
+	/** Emails por tick del scheduler */
+	throttleRate?: number;
+	/** Tope diario de emails (0 = sin límite) */
+	dailyLimit?: number;
+	/** Hora local del informe diario al admin */
+	reportHour?: number;
+	/** Ventana que cubre el informe (horas) */
+	reportLookbackHours?: number;
+	lastCampaignAt?: string;
+	lastReportAt?: string;
+}
+
 export interface SaijWorkerConfig {
 	_id: string;
 	worker_id: string;
@@ -214,7 +246,11 @@ export interface SaijWorkerConfig {
 		startupEmail: boolean;
 		errorEmail: boolean;
 		dailyReport: boolean;
+		/** Digest operativo al admin con lo capturado en cada ciclo */
+		newDocumentsEmail?: boolean;
 		recipientEmail: string;
+		/** Campañas de novedades jurisprudenciales a los usuarios */
+		userCampaign?: SaijUserCampaignConfig;
 	};
 	stats: {
 		totalProcessed: number;
@@ -339,7 +375,10 @@ export const updateSaijPipelineConfig = async (workerId: string, data: Partial<S
 	return response.data;
 };
 
-export const updateSaijNotificationConfig = async (workerId: string, data: Partial<SaijWorkerConfig["notification"]>) => {
+export const updateSaijNotificationConfig = async (
+	workerId: string,
+	data: Partial<SaijWorkerConfig["notification"]> & { userCampaign?: Partial<SaijUserCampaignConfig> },
+) => {
 	const response = await pjnAxios.patch(`/api/saij/config/${workerId}/notification`, data);
 	return response.data;
 };

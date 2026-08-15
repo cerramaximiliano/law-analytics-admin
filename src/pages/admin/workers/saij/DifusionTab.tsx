@@ -27,6 +27,7 @@ import { Refresh, TickCircle, CloseCircle, Instagram, ExportSquare } from "icons
 
 import { getSaijSentencias, getSaijSentenciaStats, setSaijSentenciaSocialPost, SaijSentencia, SentenciaListParams } from "api/saij";
 import { getSaijCampaigns, SaijCampaign } from "api/saijCampaigns";
+import CampaignConfigPanel from "./CampaignConfigPanel";
 import { Accordion, AccordionSummary, AccordionDetails, Divider } from "@mui/material";
 import { ArrowDown2 } from "iconsax-react";
 
@@ -139,6 +140,8 @@ export default function DifusionTab() {
 
 	return (
 		<Stack spacing={2}>
+			<CampaignConfigPanel />
+
 			<Alert severity="info" variant="outlined">
 				Un fallo se puede notificar como novedad solo si está publicable: tiene <strong>SentenciaCapturada</strong>, <strong>resumen IA</strong> y no está
 				dado de baja editorialmente. El worker envía hasta 5 por día, del más antiguo al más nuevo.
