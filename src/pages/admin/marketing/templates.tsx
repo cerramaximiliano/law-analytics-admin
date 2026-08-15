@@ -121,6 +121,10 @@ interface EmailTemplate {
 	isActive: boolean;
 	/** Fuente de envío: 'la-notification' (notificaciones del sistema) | 'marketing' */
 	sendingSource?: string;
+	/** Template de sistema: la API rechaza ediciones que borren sus placeholders */
+	protected?: boolean;
+	/** Slots que el template no puede perder */
+	requiredPlaceholders?: string[];
 	lastModifiedBy?: string;
 	createdAt: string;
 	updatedAt: string;
@@ -1526,8 +1530,13 @@ const EmailTemplates = () => {
 				});
 			}
 		} catch (err: any) {
-			enqueueSnackbar(err.message || "Error al actualizar la plantilla", {
+			// El backend explica qué placeholders faltan; err.message sería solo
+			// "Request failed with status code 400".
+			const apiError = err?.response?.data?.error;
+			const faltantes: string[] = err?.response?.data?.missingPlaceholders || [];
+			enqueueSnackbar(apiError || err.message || "Error al actualizar la plantilla", {
 				variant: "error",
+				autoHideDuration: faltantes.length > 0 ? 10000 : undefined,
 				anchorOrigin: { vertical: "bottom", horizontal: "right" },
 			});
 		} finally {
@@ -2002,6 +2011,19 @@ const EmailTemplates = () => {
 													<TableCell>
 														<Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
 															<Typography variant="subtitle2">{template.name}</Typography>
+															{template.protected && (
+																<Tooltip
+																	title={`Template de sistema. No puede perder: ${(template.requiredPlaceholders || []).join(", ") || "—"}`}
+																>
+																	<Chip
+																		label="protegida"
+																		size="small"
+																		color="warning"
+																		variant="outlined"
+																		sx={{ height: 20, fontSize: "0.65rem", fontWeight: 600 }}
+																	/>
+																</Tooltip>
+															)}
 															<Chip
 																label={(template.sendingSource || "marketing") === "la-notification" ? "notificaciones" : "marketing"}
 																size="small"

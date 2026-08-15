@@ -149,6 +149,13 @@ const LiveConfigSummary: React.FC<{ live: LiveJudicialConfig }> = ({ live }) => 
 							)}
 						</InfoRow>
 						<InfoRow label="Máx. movimientos por batch">{limits.maxMovementsPerBatch ?? 100}</InfoRow>
+						<InfoRow label="Exigir carpeta del usuario">
+							<BoolChip
+								value={limits.requireFolderForDelivery === true}
+								labelOn="Sí — solo causas en su cuenta"
+								labelOff="No (comportamiento por defecto)"
+							/>
+						</InfoRow>
 						<InfoRow label="Banner de upgrade">
 							{config.planBanner?.enabled !== false ? (
 								<>

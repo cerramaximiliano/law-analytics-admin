@@ -583,6 +583,25 @@ const JudicialMovementsConfig: React.FC = () => {
 								<FormControlLabel
 									control={
 										<Switch
+											checked={config.limits.requireFolderForDelivery === true}
+											onChange={(e) => handleFieldChange("limits.requireFolderForDelivery", e.target.checked)}
+										/>
+									}
+									label={
+										<Typography variant="body2">
+											Exigir carpeta del usuario para notificar{" "}
+											<Typography component="span" variant="caption" color="text.secondary">
+												— solo se notifica un movimiento si el usuario tiene esa causa en su cuenta. Cubre el fallback de los workers,
+												que notifica a todos los vinculados cuando la causa no tiene preferencias por usuario.
+											</Typography>
+										</Typography>
+									}
+								/>
+							</Grid>
+							<Grid item xs={12}>
+								<FormControlLabel
+									control={
+										<Switch
 											checked={config.limits.enforcePerUserLimits === true}
 											onChange={(e) => handleFieldChange("limits.enforcePerUserLimits", e.target.checked)}
 										/>
