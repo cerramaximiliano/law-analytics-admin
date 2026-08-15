@@ -1,4 +1,6 @@
-import pjnAxios from "utils/pjnAxios";
+// Lee del caché (pjn/cache-api → rs0), no del pjn-api del hub (→ Atlas):
+// etapa-resultados/etapa-segmentos y las causas del corpus viven en el replica set rs0. En Atlas están vacías o con la copia chica de causas vinculadas a usuarios.
+import workersAxios from "utils/workersAxios";
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 
@@ -156,11 +158,11 @@ const EtapaStatsService = {
 		etapa?: string;
 		limit?: number;
 	}): Promise<{ success: boolean; count: number; updatedAt: string | null; data: ResumenDuracion[] }> {
-		const res = await pjnAxios.get(`${BASE}/resumen`, { params });
+		const res = await workersAxios.get(`${BASE}/resumen`, { params });
 		return res.data;
 	},
 	async filtros(fuero?: string): Promise<{ success: boolean; data: FiltrosEtapaStats }> {
-		const res = await pjnAxios.get(`${BASE}/filtros`, { params: { fuero } });
+		const res = await workersAxios.get(`${BASE}/filtros`, { params: { fuero } });
 		return res.data;
 	},
 	async causas(params: {
@@ -171,15 +173,18 @@ const EtapaStatsService = {
 		page?: number;
 		limit?: number;
 	}): Promise<CausasEtapaResponse> {
-		const res = await pjnAxios.get(`${BASE}/causas`, { params });
+		const res = await workersAxios.get(`${BASE}/causas`, { params });
 		return res.data;
 	},
-	async taxonomia(): Promise<{ success: boolean; data: { meta: TaxonomiaMeta | null; etapas: TaxonomiaEtapa[]; interruptores: TaxonomiaInterruptor[] } }> {
-		const res = await pjnAxios.get(`${BASE}/taxonomia`);
+	async taxonomia(): Promise<{
+		success: boolean;
+		data: { meta: TaxonomiaMeta | null; etapas: TaxonomiaEtapa[]; interruptores: TaxonomiaInterruptor[] };
+	}> {
+		const res = await workersAxios.get(`${BASE}/taxonomia`);
 		return res.data;
 	},
 	async causaContext(causaType: string, id: string): Promise<{ success: boolean; data: CausaContexto }> {
-		const res = await pjnAxios.get(`${BASE}/causa/${causaType}/${id}`);
+		const res = await workersAxios.get(`${BASE}/causa/${causaType}/${id}`);
 		return res.data;
 	},
 };

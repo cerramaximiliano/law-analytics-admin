@@ -1,4 +1,6 @@
-import pjnAxios from "utils/pjnAxios";
+// Lee del caché (pjn/cache-api → rs0), no del pjn-api del hub (→ Atlas):
+// scraping-manager-state y configuracion-scraping viven en el replica set rs0 (los escribe el scraping-manager de worker_01). La copia de Atlas quedó congelada en la migración de agosto 2026.
+import workersAxios from "utils/workersAxios";
 
 // ====== Interfaces ======
 
@@ -109,7 +111,7 @@ export interface ApiResponse<T> {
 export class ScrapingManagerService {
 	static async getConfig(): Promise<ApiResponse<ScrapingManagerConfig>> {
 		try {
-			const response = await pjnAxios.get("/api/scraping-manager");
+			const response = await workersAxios.get("/api/scraping-manager");
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -118,7 +120,7 @@ export class ScrapingManagerService {
 
 	static async updateConfig(config: ScrapingManagerConfig): Promise<ApiResponse<ScrapingManagerConfig>> {
 		try {
-			const response = await pjnAxios.put("/api/scraping-manager", config);
+			const response = await workersAxios.put("/api/scraping-manager", config);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -129,7 +131,7 @@ export class ScrapingManagerService {
 		data: Partial<GlobalConfig> & { manager?: Partial<ManagerSettings> },
 	): Promise<ApiResponse<ScrapingManagerConfig>> {
 		try {
-			const response = await pjnAxios.patch("/api/scraping-manager/global", data);
+			const response = await workersAxios.patch("/api/scraping-manager/global", data);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -138,7 +140,7 @@ export class ScrapingManagerService {
 
 	static async updateWorker(workerName: string, data: Partial<WorkerConfig>): Promise<ApiResponse<WorkerConfig>> {
 		try {
-			const response = await pjnAxios.patch(`/api/scraping-manager/workers/${workerName}`, data);
+			const response = await workersAxios.patch(`/api/scraping-manager/workers/${workerName}`, data);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -147,7 +149,7 @@ export class ScrapingManagerService {
 
 	static async getManagerState(): Promise<ApiResponse<ManagerState>> {
 		try {
-			const response = await pjnAxios.get("/api/scraping-manager/state");
+			const response = await workersAxios.get("/api/scraping-manager/state");
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -156,7 +158,7 @@ export class ScrapingManagerService {
 
 	static async getFueroStats(): Promise<ApiResponse<FueroStats>> {
 		try {
-			const response = await pjnAxios.get("/api/scraping-manager/fuero-stats");
+			const response = await workersAxios.get("/api/scraping-manager/fuero-stats");
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);

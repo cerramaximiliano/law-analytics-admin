@@ -1,4 +1,6 @@
-import pjnAxios from "utils/pjnAxios";
+// Lee del caché (pjn/cache-api → rs0), no del pjn-api del hub (→ Atlas):
+// las trayectorias se calculan sobre el corpus de causas del replica set rs0 (854k), no sobre la copia de Atlas (432 causas de usuarios).
+import workersAxios from "utils/workersAxios";
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 
@@ -58,11 +60,11 @@ const BASE = "/api/admin/trayectorias";
 
 const TrayectoriasService = {
 	async list(params: { fuero?: string; page?: number; limit?: number }): Promise<TrayectoriasResponse> {
-		const res = await pjnAxios.get<TrayectoriasResponse>(BASE, { params });
+		const res = await workersAxios.get<TrayectoriasResponse>(BASE, { params });
 		return res.data;
 	},
 	async stats(): Promise<TrayectoriaStats> {
-		const res = await pjnAxios.get<TrayectoriaStats>(`${BASE}/stats`);
+		const res = await workersAxios.get<TrayectoriaStats>(`${BASE}/stats`);
 		return res.data;
 	},
 };
