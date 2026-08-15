@@ -634,7 +634,13 @@ const PostalTrackingPage = () => {
 								</TableRow>
 							) : (
 								trackings.map((tracking) => (
-									<TableRow key={tracking._id} hover selected={selectedIds.has(tracking._id)} sx={{ cursor: "pointer" }}>
+									<TableRow
+										key={tracking._id}
+										hover
+										selected={selectedIds.has(tracking._id)}
+										onClick={() => handleOpenDetail(tracking)}
+										sx={{ cursor: "pointer" }}
+									>
 										<TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
 											<Checkbox
 												size="small"
@@ -658,7 +664,7 @@ const PostalTrackingPage = () => {
 											{tracking.userId ? (
 												<Box sx={{ minWidth: 0 }}>
 													{tracking.userEmail && (
-														<Typography variant="body2" noWrap sx={{ maxWidth: 180 }}>
+														<Typography variant="body2" noWrap sx={{ maxWidth: { xs: 130, sm: 180 } }}>
 															{tracking.userEmail}
 														</Typography>
 													)}
@@ -768,10 +774,15 @@ const PostalTrackingPage = () => {
 												{formatDate(tracking.updatedAt)}
 											</Typography>
 										</TableCell>
-										<TableCell align="center">
+										<TableCell align="center" onClick={(e) => e.stopPropagation()}>
 											<Stack direction="row" spacing={0.5} justifyContent="center">
 												<Tooltip title="Ver historial">
-													<IconButton size="small" color="info" onClick={() => handleOpenDetail(tracking)}>
+													<IconButton
+														size="small"
+														color="info"
+														onClick={() => handleOpenDetail(tracking)}
+														sx={{ display: { xs: "none", sm: "inline-flex" } }}
+													>
 														<Eye size={16} />
 													</IconButton>
 												</Tooltip>
@@ -831,7 +842,11 @@ const PostalTrackingPage = () => {
 							setPage(0);
 						}}
 						rowsPerPageOptions={[10, 20, 50, 100]}
-						labelRowsPerPage="Filas por pagina:"
+						labelRowsPerPage="Filas por página:"
+						sx={{
+							"& .MuiTablePagination-selectLabel, & .MuiTablePagination-input": { display: { xs: "none", sm: "flex" } },
+							"& .MuiTablePagination-toolbar": { pl: { xs: 1, sm: 2 }, flexWrap: "wrap" },
+						}}
 						labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
 					/>
 				</TableContainer>
