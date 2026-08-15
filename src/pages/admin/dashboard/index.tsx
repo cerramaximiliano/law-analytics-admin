@@ -55,6 +55,7 @@ import ServicesStatusWidget from "./ServicesStatusWidget";
 import CronsStatusWidget from "./CronsStatusWidget";
 import IntegrationsStatusWidget from "./IntegrationsStatusWidget";
 import PrivacyStatsWidget from "./PrivacyStatsWidget";
+import PostalTrackingWidget from "./PostalTrackingWidget";
 
 // Theme-aware color helper - maps semantic roles to MUI theme palette tokens
 // Usage: const COLORS = getThemeColors(theme) inside any component with useTheme()
@@ -1647,17 +1648,20 @@ const AdminDashboard = () => {
 						icon={<MessageProgramming size={16} variant="Bold" />}
 					/>
 					<Grid container spacing={{ xs: 1, sm: 2 }}>
-						<Grid item xs={12} sm={6} md={3}>
+						<Grid item xs={12} sm={6} md={2.4}>
 							<ServicesStatusWidget />
 						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
+						<Grid item xs={12} sm={6} md={2.4}>
 							<CronsStatusWidget />
 						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
+						<Grid item xs={12} sm={6} md={2.4}>
 							<IntegrationsStatusWidget />
 						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
+						<Grid item xs={12} sm={6} md={2.4}>
 							<PrivacyStatsWidget summary />
+						</Grid>
+						<Grid item xs={12} sm={6} md={2.4}>
+							<PostalTrackingWidget />
 						</Grid>
 					</Grid>
 				</Box>
