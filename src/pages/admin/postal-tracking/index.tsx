@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, alpha } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import {
 	Box,
 	Grid,
@@ -36,6 +37,7 @@ import {
 import { Refresh, Trash, SearchNormal1, Eye, Play, Pause, Send2, Add, CloseCircle, Code, Copy } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import ScraperService, { PostalTracking, PostalTrackingStats, PostalTrackingFilters } from "api/scraperService";
 import dayjs from "dayjs";
 
@@ -101,6 +103,10 @@ const formatDate = (dateString?: string) => {
 
 const PostalTrackingPage = () => {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
+	// Los diálogos van a pantalla completa en el teléfono: el de detalle tiene
+	// tabs e historial y en un modal chico obliga a hacer scroll dentro del scroll.
+	const fullScreenDialogs = useMediaQuery(theme.breakpoints.down("sm"));
 	const { enqueueSnackbar } = useSnackbar();
 
 	// List state
@@ -358,6 +364,8 @@ const PostalTrackingPage = () => {
 		}
 	};
 
+	const hasActiveFilters = Boolean(filterProcessingStatus || filterCodeId || filterClosureOrigin || searchTerm);
+
 	const handleClearFilters = () => {
 		setFilterProcessingStatus("");
 		setFilterCodeId("");
@@ -371,7 +379,7 @@ const PostalTrackingPage = () => {
 			secondary={
 				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 					<Button variant="contained" size="small" startIcon={<Add size={16} />} onClick={() => setCreateOpen(true)}>
-						Nuevo Seguimiento
+						Nuevo seguimiento
 					</Button>
 					<Button
 						variant="outlined"
@@ -454,7 +462,7 @@ const PostalTrackingPage = () => {
 							<TextField
 								fullWidth
 								size="small"
-								label="Codigo (ej: CD, CP)"
+								label="Código (ej: CD, CP)"
 								value={filterCodeId}
 								onChange={(e) => {
 									setFilterCodeId(e.target.value.toUpperCase());
@@ -475,7 +483,7 @@ const PostalTrackingPage = () => {
 								>
 									<MenuItem value="">Todos</MenuItem>
 									<MenuItem value="user">Manual (usuario)</MenuItem>
-									<MenuItem value="system">Automatico (sistema)</MenuItem>
+									<MenuItem value="system">Automático (sistema)</MenuItem>
 								</Select>
 							</FormControl>
 						</Grid>
@@ -483,7 +491,7 @@ const PostalTrackingPage = () => {
 							<TextField
 								fullWidth
 								size="small"
-								placeholder="Buscar por numero, estado..."
+								placeholder="Buscar por número, estado…"
 								value={searchTerm}
 								onChange={(e) => {
 									setSearchTerm(e.target.value);
@@ -519,9 +527,17 @@ const PostalTrackingPage = () => {
 
 				{/* Bulk action bar */}
 				{selectedIds.size > 0 && (
-					<Paper variant="outlined" sx={{ p: 1.5, bgcolor: "error.lighter", borderColor: "error.light" }}>
+					<Paper
+						elevation={0}
+						sx={{
+							p: 1.5,
+							borderRadius: 2,
+							bgcolor: alpha(theme.palette.error.main, isDark ? 0.12 : 0.06),
+							border: `1px solid ${alpha(theme.palette.error.main, 0.4)}`,
+						}}
+					>
 						<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
-							<Typography variant="body2" fontWeight={600} color="error.dark">
+							<Typography variant="body2" fontWeight={600} color="error.main">
 								{selectedIds.size} seleccionado{selectedIds.size !== 1 ? "s" : ""}
 							</Typography>
 							<Button
@@ -554,7 +570,7 @@ const PostalTrackingPage = () => {
 										disabled={loading || trackings.length === 0}
 									/>
 								</TableCell>
-								<TableCell>Codigo / Numero</TableCell>
+								<TableCell>Código / Número</TableCell>
 								<TableCell sx={COL_MD}>Etiqueta</TableCell>
 								<TableCell>Usuario</TableCell>
 								<TableCell align="center">Estado proceso</TableCell>
@@ -565,7 +581,7 @@ const PostalTrackingPage = () => {
 								<TableCell align="center" sx={COL_SM}>
 									Errores
 								</TableCell>
-								<TableCell sx={COL_LG}>Proximo check</TableCell>
+								<TableCell sx={COL_LG}>Próximo check</TableCell>
 								<TableCell sx={COL_LG}>Actualizado</TableCell>
 								<TableCell align="center">Acciones</TableCell>
 							</TableRow>
@@ -574,19 +590,46 @@ const PostalTrackingPage = () => {
 							{loading ? (
 								Array.from({ length: 5 }).map((_, i) => (
 									<TableRow key={i}>
-										{Array.from({ length: 11 }).map((_, j) => (
-											<TableCell key={j}>
-												<Skeleton variant="text" />
-											</TableCell>
-										))}
+										{[undefined, undefined, COL_MD, undefined, undefined, COL_SM, COL_MD, COL_SM, COL_LG, COL_LG, undefined].map(
+											(colSx, j) => (
+												<TableCell key={j} sx={colSx}>
+													<Skeleton variant="text" />
+												</TableCell>
+											),
+										)}
 									</TableRow>
 								))
 							) : trackings.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={11} align="center">
-										<Alert severity="info" sx={{ justifyContent: "center" }}>
-											No se encontraron seguimientos postales
-										</Alert>
+									<TableCell colSpan={11} align="center" sx={{ py: 6, borderBottom: "none" }}>
+										<Box
+											sx={{
+												width: 44,
+												height: 44,
+												mx: "auto",
+												mb: 1.5,
+												borderRadius: 1.5,
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "center",
+												bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+												border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+												color: BRAND_BLUE,
+											}}
+										>
+											<SearchNormal1 size={20} />
+										</Box>
+										<Typography variant="subtitle1" fontWeight={600} sx={{ letterSpacing: "-0.005em" }}>
+											No se encontraron seguimientos
+										</Typography>
+										<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+											{hasActiveFilters ? "Probá quitar los filtros aplicados." : "Creá el primero con Nuevo seguimiento."}
+										</Typography>
+										{hasActiveFilters && (
+											<Button size="small" onClick={handleClearFilters} startIcon={<CloseCircle size={16} />} sx={{ mt: 1.5 }}>
+												Limpiar filtros
+											</Button>
+										)}
 									</TableCell>
 								</TableRow>
 							) : (
@@ -795,8 +838,24 @@ const PostalTrackingPage = () => {
 			</Stack>
 
 			{/* Detail Dialog */}
-			<Dialog open={detailOpen} onClose={() => setDetailOpen(false)} maxWidth="md" fullWidth>
-				<DialogTitle>{detailTracking ? `${detailTracking.codeId} ${detailTracking.numberId}` : "Detalle del Seguimiento"}</DialogTitle>
+			<Dialog open={detailOpen} onClose={() => setDetailOpen(false)} maxWidth="md" fullWidth fullScreen={fullScreenDialogs}>
+				<DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, pr: 1 }}>
+					<Box sx={{ minWidth: 0 }}>
+						<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }} noWrap>
+							{detailTracking ? `${detailTracking.codeId} ${detailTracking.numberId}` : "Detalle del seguimiento"}
+						</Typography>
+						{detailTracking?.label && (
+							<Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
+								{detailTracking.label}
+							</Typography>
+						)}
+					</Box>
+					<Tooltip title="Cerrar">
+						<IconButton size="small" onClick={() => setDetailOpen(false)} sx={{ flexShrink: 0 }}>
+							<CloseCircle size={20} />
+						</IconButton>
+					</Tooltip>
+				</DialogTitle>
 				<DialogContent dividers sx={{ p: 0 }}>
 					<Tabs
 						variant="scrollable"
@@ -804,7 +863,13 @@ const PostalTrackingPage = () => {
 						allowScrollButtonsMobile
 						value={detailTab}
 						onChange={(_, v) => setDetailTab(v)}
-						sx={{ borderBottom: 1, borderColor: "divider", px: 2 }}
+						TabIndicatorProps={{ sx: { height: 2.5, backgroundColor: BRAND_BLUE } }}
+						sx={{
+							borderBottom: `1px solid ${headerBorder(isDark)}`,
+							px: 2,
+							"& .MuiTab-root": { textTransform: "none", fontWeight: 500, minHeight: 44 },
+							"& .Mui-selected": { fontWeight: 600, color: BRAND_BLUE + " !important" },
+						}}
 					>
 						<Tab label="Historial" />
 						<Tab label="Screenshot" disabled={!detailTracking?.screenshotUrl} />
@@ -826,7 +891,7 @@ const PostalTrackingPage = () => {
 										<Grid container spacing={2}>
 											<Grid item xs={6} sm={3}>
 												<Typography variant="caption" color="textSecondary">
-													Codigo
+													Código
 												</Typography>
 												<Typography variant="body1" fontWeight={600} fontFamily="monospace">
 													{detailTracking.codeId}
@@ -888,7 +953,7 @@ const PostalTrackingPage = () => {
 											</Grid>
 											<Grid item xs={6}>
 												<Typography variant="caption" color="textSecondary">
-													Proximo check
+													Próximo check
 												</Typography>
 												<Typography variant="body2">{formatDate(detailTracking.nextCheckAt)}</Typography>
 											</Grid>
@@ -1181,13 +1246,16 @@ const PostalTrackingPage = () => {
 						) : null}
 					</Box>
 				</DialogContent>
-				<DialogActions>
-					<Button onClick={() => setDetailOpen(false)}>Cerrar</Button>
+				<DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 1.5, gap: 1 }}>
+					<Button onClick={() => setDetailOpen(false)} sx={{ order: { xs: 2, sm: 1 } }}>
+						Cerrar
+					</Button>
 					{detailTracking && (
 						<Button
 							variant="outlined"
 							color="success"
 							startIcon={<Send2 size={16} />}
+							sx={{ order: { xs: 1, sm: 2 } }}
 							onClick={() => {
 								setDetailOpen(false);
 								handleEnqueue(detailTracking._id);
@@ -1200,8 +1268,8 @@ const PostalTrackingPage = () => {
 			</Dialog>
 
 			{/* Create Dialog */}
-			<Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="sm" fullWidth>
-				<DialogTitle>Nuevo Seguimiento Postal</DialogTitle>
+			<Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="sm" fullWidth fullScreen={fullScreenDialogs}>
+				<DialogTitle>Nuevo seguimiento postal</DialogTitle>
 				<DialogContent dividers>
 					<Stack spacing={2} sx={{ mt: 1 }}>
 						<Typography variant="caption" color="textSecondary" fontWeight={600}>
@@ -1289,8 +1357,8 @@ const PostalTrackingPage = () => {
 			</Dialog>
 
 			{/* Delete single Dialog */}
-			<Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
-				<DialogTitle>Confirmar Eliminacion</DialogTitle>
+			<Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth="xs" fullWidth>
+				<DialogTitle>Confirmar eliminación</DialogTitle>
 				<DialogContent>
 					<Typography>Estas seguro de que queres eliminar este seguimiento postal?</Typography>
 					{trackingToDelete && (
@@ -1320,7 +1388,7 @@ const PostalTrackingPage = () => {
 			</Dialog>
 
 			{/* Bulk Delete Dialog */}
-			<Dialog open={bulkDeleteOpen} onClose={() => setBulkDeleteOpen(false)}>
+			<Dialog open={bulkDeleteOpen} onClose={() => setBulkDeleteOpen(false)} maxWidth="xs" fullWidth>
 				<DialogTitle>Eliminar {selectedIds.size} seguimientos</DialogTitle>
 				<DialogContent>
 					<Typography>
