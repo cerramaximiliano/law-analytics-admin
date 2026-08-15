@@ -378,7 +378,35 @@ const PostalTrackingPage = () => {
 			title="Seguimientos Postales"
 			secondary={
 				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-					<Button variant="contained" size="small" startIcon={<Add size={16} />} onClick={() => setCreateOpen(true)}>
+					<Tooltip title="Nuevo seguimiento">
+						<IconButton
+							size="small"
+							color="primary"
+							onClick={() => setCreateOpen(true)}
+							sx={{ display: { xs: "inline-flex", sm: "none" } }}
+						>
+							<Add size={18} />
+						</IconButton>
+					</Tooltip>
+					<Tooltip title="Actualizar">
+						<IconButton
+							size="small"
+							onClick={() => {
+								fetchTrackings();
+								fetchStats();
+							}}
+							sx={{ display: { xs: "inline-flex", sm: "none" } }}
+						>
+							<Refresh size={18} />
+						</IconButton>
+					</Tooltip>
+					<Button
+						variant="contained"
+						size="small"
+						startIcon={<Add size={16} />}
+						onClick={() => setCreateOpen(true)}
+						sx={{ display: { xs: "none", sm: "inline-flex" } }}
+					>
 						Nuevo seguimiento
 					</Button>
 					<Button
@@ -389,6 +417,7 @@ const PostalTrackingPage = () => {
 							fetchTrackings();
 							fetchStats();
 						}}
+						sx={{ display: { xs: "none", sm: "inline-flex" } }}
 					>
 						Actualizar
 					</Button>
@@ -775,7 +804,7 @@ const PostalTrackingPage = () => {
 											</Typography>
 										</TableCell>
 										<TableCell align="center" onClick={(e) => e.stopPropagation()}>
-											<Stack direction="row" spacing={0.5} justifyContent="center">
+											<Stack direction="row" spacing={0.5} justifyContent="center" flexWrap="wrap" useFlexGap>
 												<Tooltip title="Ver historial">
 													<IconButton
 														size="small"
