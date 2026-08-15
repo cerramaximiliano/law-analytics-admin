@@ -103,7 +103,11 @@ const LiveConfigSummary: React.FC<{ live: LiveJudicialConfig }> = ({ live }) => 
 			<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
 				<Setting2 size={20} color={BRAND_BLUE} />
 				<Typography variant="h6">Configuración vigente</Typography>
-				<BoolChip value={globallyOn} labelOn="Sistema activo" labelOff={status.mode === "maintenance" ? "Mantenimiento" : "Deshabilitado"} />
+				<BoolChip
+					value={globallyOn}
+					labelOn="Sistema activo"
+					labelOff={status.mode === "maintenance" ? "Mantenimiento" : "Deshabilitado"}
+				/>
 				<Chip label={status.mode || "production"} size="small" variant="outlined" />
 				<Box sx={{ flexGrow: 1 }} />
 				{lastFetch && (
@@ -170,15 +174,13 @@ const LiveConfigSummary: React.FC<{ live: LiveJudicialConfig }> = ({ live }) => 
 							)}
 						</InfoRow>
 						<InfoRow label="Aviso de opciones">
-							<BoolChip
-								value={config.notificationOptionsBanner?.enabled !== false}
-								labelOn="Activo"
-								labelOff="Apagado"
-							/>
+							<BoolChip value={config.notificationOptionsBanner?.enabled !== false} labelOn="Activo" labelOff="Apagado" />
 						</InfoRow>
 						<InfoRow label="Seguimiento postal">
 							<BoolChip value={config.postalNotifications?.enabled !== false} labelOn="Activo" labelOff="Apagado" />
-							{config.postalNotifications?.enabled !== false && config.postalNotifications?.safeGuardEnabled === false ? " · safe guard apagado" : ""}
+							{config.postalNotifications?.enabled !== false && config.postalNotifications?.safeGuardEnabled === false
+								? " · safe guard apagado"
+								: ""}
 						</InfoRow>
 						<InfoRow label="Banner de anuncios">
 							{config.featureBanner?.enabled === true ? (

@@ -1,11 +1,7 @@
 import React from "react";
 import { useTheme, alpha } from "@mui/material/styles";
 import { Box, Chip, CircularProgress, Paper, Stack, Typography } from "@mui/material";
-import {
-	JudicialNotificationConfig,
-	resolveEffectivePolicy,
-	MovementPolicies,
-} from "api/judicialNotificationConfig";
+import { JudicialNotificationConfig, resolveEffectivePolicy, MovementPolicies } from "api/judicialNotificationConfig";
 import { LiveJudicialConfig } from "./useLiveJudicialConfig";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
 
@@ -44,7 +40,22 @@ interface NodeProps {
 	bg: string;
 }
 
-const DiagramNode: React.FC<NodeProps> = ({ x, y, w, h, title, subtitle, color, off, offLabel, dashed, tooltip, textColor, subColor, bg }) => (
+const DiagramNode: React.FC<NodeProps> = ({
+	x,
+	y,
+	w,
+	h,
+	title,
+	subtitle,
+	color,
+	off,
+	offLabel,
+	dashed,
+	tooltip,
+	textColor,
+	subColor,
+	bg,
+}) => (
 	<g opacity={off ? 0.45 : 1}>
 		<rect
 			x={x}
@@ -145,15 +156,52 @@ const FlowDiagram: React.FC<{ live: LiveJudicialConfig }> = ({ live }) => {
 			? config!.notificationSchedule.activeDays.map((d) => dayNames[d] ?? String(d)).join("·")
 			: "Lun–Vie";
 	const limitsOn = config?.limits?.enforcePerUserLimits === true;
-	const horaEntrega = `${config?.notificationSchedule?.dailyNotificationHour ?? 19}:${String(config?.notificationSchedule?.dailyNotificationMinute ?? 0).padStart(2, "0")}`;
+	const horaEntrega = `${config?.notificationSchedule?.dailyNotificationHour ?? 19}:${String(
+		config?.notificationSchedule?.dailyNotificationMinute ?? 0,
+	).padStart(2, "0")}`;
 
 	// Emisores (columna 1)
 	const emitters: { y: number; title: string; subtitle: string; color: string; on: boolean; tooltip: string }[] = [
-		{ y: 30, title: "PJN — app-update", subtitle: "4 clusters por fuero · pjnworker", color: COLORS.pjn, on: pjnAppOn, tooltip: "pjn-workers: causas verified públicas. 1ª sync: solo hoy. Sin barrera de archivados worker-side." },
-		{ y: 92, title: "PJN — Mis Causas", subtitle: "causas privadas · worker_02", color: COLORS.pjn, on: misCausasOn, tooltip: "pjn-mis-causas: portal autenticado. 1ª sync silenciosa. Sin barrera de archivados worker-side." },
-		{ y: 154, title: "MEV — update", subtitle: "mev-update-cluster · worker-002", color: COLORS.mev, on: mevOn, tooltip: "Causas verified source app. 1ª sync silenciosa. Sin barrera de archivados worker-side." },
-		{ y: 216, title: "SCBA — update + archived", subtitle: "1ª barrera propia de archivados", color: COLORS.scba, on: scbaOn, tooltip: "Único con barrera worker-side: modo normal exige folders activos; worker archived (4 AM) lee notifyArchivedFolders." },
-		{ y: 278, title: "EJE — update + stuck", subtitle: "worker_02 · diff por nº", color: COLORS.eje, on: ejeOn, tooltip: "eje-workers: update (*/10) + stuck first-touch nocturno (silent-baseline)." },
+		{
+			y: 30,
+			title: "PJN — app-update",
+			subtitle: "4 clusters por fuero · pjnworker",
+			color: COLORS.pjn,
+			on: pjnAppOn,
+			tooltip: "pjn-workers: causas verified públicas. 1ª sync: solo hoy. Sin barrera de archivados worker-side.",
+		},
+		{
+			y: 92,
+			title: "PJN — Mis Causas",
+			subtitle: "causas privadas · worker_02",
+			color: COLORS.pjn,
+			on: misCausasOn,
+			tooltip: "pjn-mis-causas: portal autenticado. 1ª sync silenciosa. Sin barrera de archivados worker-side.",
+		},
+		{
+			y: 154,
+			title: "MEV — update",
+			subtitle: "mev-update-cluster · worker-002",
+			color: COLORS.mev,
+			on: mevOn,
+			tooltip: "Causas verified source app. 1ª sync silenciosa. Sin barrera de archivados worker-side.",
+		},
+		{
+			y: 216,
+			title: "SCBA — update + archived",
+			subtitle: "1ª barrera propia de archivados",
+			color: COLORS.scba,
+			on: scbaOn,
+			tooltip: "Único con barrera worker-side: modo normal exige folders activos; worker archived (4 AM) lee notifyArchivedFolders.",
+		},
+		{
+			y: 278,
+			title: "EJE — update + stuck",
+			subtitle: "worker_02 · diff por nº",
+			color: COLORS.eje,
+			on: ejeOn,
+			tooltip: "eje-workers: update (*/10) + stuck first-touch nocturno (silent-baseline).",
+		},
 	];
 
 	const webhookY = 70; // centro del nodo webhook
@@ -236,7 +284,17 @@ const FlowDiagram: React.FC<{ live: LiveJudicialConfig }> = ({ live }) => {
 						/>
 
 						{/* ==== Barrera 1 ==== */}
-						<rect x={252} y={22} width={70} height={300} rx={10} fill={bandBg} stroke={BRAND_BLUE} strokeDasharray="6 4" strokeWidth={1.2} />
+						<rect
+							x={252}
+							y={22}
+							width={70}
+							height={300}
+							rx={10}
+							fill={bandBg}
+							stroke={BRAND_BLUE}
+							strokeDasharray="6 4"
+							strokeWidth={1.2}
+						/>
 						<text x={287} y={172} fontSize={10.5} fontWeight={700} fill={BRAND_BLUE} transform="rotate(-90 287 172)" textAnchor="middle">
 							BARRERA 1 · gates del worker
 						</text>
@@ -244,7 +302,13 @@ const FlowDiagram: React.FC<{ live: LiveJudicialConfig }> = ({ live }) => {
 
 						{/* Flechas emisores → webhook (cruzan barrera 1) */}
 						{emitters.map((e) => (
-							<Edge key={e.title} from={[216, e.y + 23]} to={[416, webhookY]} color={e.on ? edgeColor : alpha(COLORS.danger, 0.5)} dashed={!e.on} />
+							<Edge
+								key={e.title}
+								from={[216, e.y + 23]}
+								to={[416, webhookY]}
+								color={e.on ? edgeColor : alpha(COLORS.danger, 0.5)}
+								dashed={!e.on}
+							/>
 						))}
 						{/* pjn-api bypass (por debajo de la barrera) */}
 						<path
@@ -267,8 +331,32 @@ const FlowDiagram: React.FC<{ live: LiveJudicialConfig }> = ({ live }) => {
 						<text x={416} y={44} fontSize={10.5} fontWeight={700} fill={BRAND_BLUE} letterSpacing={0.5}>
 							LA-NOTIFICATION · worker-003
 						</text>
-						<DiagramNode x={416} y={52} w={220} h={40} title="Webhook /daily-movements" subtitle="Bearer INTERNAL_SERVICE_TOKEN" color={BRAND_BLUE} tooltip="POST /api/judicial-movements/webhook/daily-movements — recibe un item por usuario × movimiento." textColor={text} subColor={sub} bg={bg} />
-						<DiagramNode x={416} y={116} w={220} h={40} title="Dedup por uniqueKey" subtitle="'sent' nunca se re-notifica" color={BRAND_BLUE} tooltip="uniqueKey = user + expediente + fecha + tipo + hash(detalle). pending/failed se resetean; sent se ignora." textColor={text} subColor={sub} bg={bg} />
+						<DiagramNode
+							x={416}
+							y={52}
+							w={220}
+							h={40}
+							title="Webhook /daily-movements"
+							subtitle="Bearer INTERNAL_SERVICE_TOKEN"
+							color={BRAND_BLUE}
+							tooltip="POST /api/judicial-movements/webhook/daily-movements — recibe un item por usuario × movimiento."
+							textColor={text}
+							subColor={sub}
+							bg={bg}
+						/>
+						<DiagramNode
+							x={416}
+							y={116}
+							w={220}
+							h={40}
+							title="Dedup por uniqueKey"
+							subtitle="'sent' nunca se re-notifica"
+							color={BRAND_BLUE}
+							tooltip="uniqueKey = user + expediente + fecha + tipo + hash(detalle). pending/failed se resetean; sent se ignora."
+							textColor={text}
+							subColor={sub}
+							bg={bg}
+						/>
 						<DiagramNode
 							x={416}
 							y={196}
@@ -299,7 +387,19 @@ const FlowDiagram: React.FC<{ live: LiveJudicialConfig }> = ({ live }) => {
 							subColor={sub}
 							bg={bg}
 						/>
-						<DiagramNode x={416} y={368} w={220} h={44} title="Cola pending" subtitle={`JudicialMovement + JudicialCedula · notifyAt ${horaEntrega}`} color={STALE_AMBER} tooltip={`Documentos pending esperando notifyAt (hora de entrega configurada: ${horaEntrega} ART). El cron */15 los agrupa por usuario.`} textColor={text} subColor={sub} bg={bg} />
+						<DiagramNode
+							x={416}
+							y={368}
+							w={220}
+							h={44}
+							title="Cola pending"
+							subtitle={`JudicialMovement + JudicialCedula · notifyAt ${horaEntrega}`}
+							color={STALE_AMBER}
+							tooltip={`Documentos pending esperando notifyAt (hora de entrega configurada: ${horaEntrega} ART). El cron */15 los agrupa por usuario.`}
+							textColor={text}
+							subColor={sub}
+							bg={bg}
+						/>
 						{/* flujos internos */}
 						<Edge from={[526, 92]} to={[526, 116]} color={edgeColor} />
 						<Edge from={[526, 156]} to={[526, 368]} color={edgeColor} />
@@ -353,9 +453,46 @@ const FlowDiagram: React.FC<{ live: LiveJudicialConfig }> = ({ live }) => {
 						<text x={886} y={18} fontSize={10} fontWeight={700} fill={sub} letterSpacing={1}>
 							CANALES
 						</text>
-						<DiagramNode x={886} y={110} w={190} h={44} title="Email consolidado (SES)" subtitle="movimientos + cédulas en 1 correo" color={LIVE_GREEN} tooltip="Un solo email por usuario y corrida, con cards por expediente, CTAs y torta en el reporte admin." textColor={text} subColor={sub} bg={bg} />
-						<DiagramNode x={886} y={186} w={190} h={44} title="Alerta navegador" subtitle="opt-in channels.browser === true" color={LIVE_GREEN} tooltip="Crea Alert + emite por WebSocket si el usuario activó el canal browser." textColor={text} subColor={sub} bg={bg} />
-						<DiagramNode x={886} y={330} w={190} h={44} title="Descartados ('skipped')" subtitle="con motivo · retención 30 d" color={STALE_AMBER} dashed tooltip="Lo que la barrera 2 descarta queda auditado: notificationStatus='skipped' + motivo en el historial." textColor={text} subColor={sub} bg={bg} />
+						<DiagramNode
+							x={886}
+							y={110}
+							w={190}
+							h={44}
+							title="Email consolidado (SES)"
+							subtitle="movimientos + cédulas en 1 correo"
+							color={LIVE_GREEN}
+							tooltip="Un solo email por usuario y corrida, con cards por expediente, CTAs y torta en el reporte admin."
+							textColor={text}
+							subColor={sub}
+							bg={bg}
+						/>
+						<DiagramNode
+							x={886}
+							y={186}
+							w={190}
+							h={44}
+							title="Alerta navegador"
+							subtitle="opt-in channels.browser === true"
+							color={LIVE_GREEN}
+							tooltip="Crea Alert + emite por WebSocket si el usuario activó el canal browser."
+							textColor={text}
+							subColor={sub}
+							bg={bg}
+						/>
+						<DiagramNode
+							x={886}
+							y={330}
+							w={190}
+							h={44}
+							title="Descartados ('skipped')"
+							subtitle="con motivo · retención 30 d"
+							color={STALE_AMBER}
+							dashed
+							tooltip="Lo que la barrera 2 descarta queda auditado: notificationStatus='skipped' + motivo en el historial."
+							textColor={text}
+							subColor={sub}
+							bg={bg}
+						/>
 						<Edge from={[850, 150]} to={[886, 132]} color={edgeColor} width={2} />
 						<Edge from={[850, 200]} to={[886, 208]} color={edgeColor} />
 						<Edge from={[850, 330]} to={[886, 352]} color={alpha(STALE_AMBER, 0.8)} dashed />
@@ -378,9 +515,43 @@ const FlowDiagram: React.FC<{ live: LiveJudicialConfig }> = ({ live }) => {
 						<text x={16} y={520} fontSize={10} fontWeight={700} fill={sub} letterSpacing={1}>
 							TIEMPO REAL (SIN EMAIL — pass-through WebSocket)
 						</text>
-						<DiagramNode x={16} y={532} w={230} h={44} title="Workers de sync + SECLO" subtitle="pjn-mis-causas · scba · trabajo · mev" color={COLORS.cedulas} tooltip="Emiten folder-events, sync-progress, seclo-events y transiciones de portal (system-status)." textColor={text} subColor={sub} bg={bg} />
-						<DiagramNode x={400} y={532} w={370} h={44} title="Relays: folder-events · sync-progress · seclo · system-status · alerts" subtitle="no persisten (solo alerts persiste) — retransmiten al socket" color={COLORS.cedulas} textColor={text} subColor={sub} bg={bg} />
-						<DiagramNode x={886} y={532} w={190} h={44} title="Socket.io" subtitle="room user-{id} · broadcast global" color={COLORS.cedulas} textColor={text} subColor={sub} bg={bg} />
+						<DiagramNode
+							x={16}
+							y={532}
+							w={230}
+							h={44}
+							title="Workers de sync + SECLO"
+							subtitle="pjn-mis-causas · scba · trabajo · mev"
+							color={COLORS.cedulas}
+							tooltip="Emiten folder-events, sync-progress, seclo-events y transiciones de portal (system-status)."
+							textColor={text}
+							subColor={sub}
+							bg={bg}
+						/>
+						<DiagramNode
+							x={400}
+							y={532}
+							w={370}
+							h={44}
+							title="Relays: folder-events · sync-progress · seclo · system-status · alerts"
+							subtitle="no persisten (solo alerts persiste) — retransmiten al socket"
+							color={COLORS.cedulas}
+							textColor={text}
+							subColor={sub}
+							bg={bg}
+						/>
+						<DiagramNode
+							x={886}
+							y={532}
+							w={190}
+							h={44}
+							title="Socket.io"
+							subtitle="room user-{id} · broadcast global"
+							color={COLORS.cedulas}
+							textColor={text}
+							subColor={sub}
+							bg={bg}
+						/>
 						<Edge from={[246, 554]} to={[400, 554]} color={edgeColor} />
 						<Edge from={[770, 554]} to={[886, 554]} color={edgeColor} />
 						<Edge from={[1076, 554]} to={[1150, 554]} color={edgeColor} />

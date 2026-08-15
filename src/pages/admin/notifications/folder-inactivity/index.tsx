@@ -552,7 +552,7 @@ const DetailModal: React.FC<DetailModalProps> = ({ open, onClose, folder }) => {
 
 // ======================== MAIN COMPONENT ========================
 
-const FolderInactivity: React.FC = () => {
+const FolderInactivity = ({ embedded }: { embedded?: boolean }) => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 

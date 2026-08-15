@@ -135,9 +135,6 @@ const LegalDocuments = Loadable(lazy(() => import("pages/documentation/legal-doc
 
 // Notifications pages
 const NotificationsMonitoring = Loadable(lazy(() => import("pages/admin/notifications")));
-const NotificationsJudicialMovements = Loadable(lazy(() => import("pages/admin/notifications/judicial-movements")));
-const FolderInactivity = Loadable(lazy(() => import("pages/admin/notifications/folder-inactivity")));
-const NotificationFlow = Loadable(lazy(() => import("pages/admin/notifications/notification-flow")));
 
 // Dashboard page
 const Dashboard = Loadable(lazy(() => import("pages/admin/dashboard")));
@@ -841,28 +838,19 @@ export default function Routes() {
 							),
 						},
 						{
+							// Reemplazada por el centro de notificaciones (tab "Movimientos judiciales")
 							path: "notifications/judicial-movements",
-							element: (
-								<AdminRoleGuard>
-									<NotificationsJudicialMovements />
-								</AdminRoleGuard>
-							),
+							element: <Navigate to="/admin/notifications?tab=judicial" replace />,
 						},
 						{
+							// Reemplazada por el tab "Recordatorios del usuario"
 							path: "notifications/folder-inactivity",
-							element: (
-								<AdminRoleGuard>
-									<FolderInactivity />
-								</AdminRoleGuard>
-							),
+							element: <Navigate to="/admin/notifications?tab=recordatorios" replace />,
 						},
 						{
+							// Reemplazada por el tab "Diagnóstico"
 							path: "notifications/flow",
-							element: (
-								<AdminRoleGuard>
-									<NotificationFlow />
-								</AdminRoleGuard>
-							),
+							element: <Navigate to="/admin/notifications?tab=diagnostico" replace />,
 						},
 						{
 							path: "ga4-analytics",

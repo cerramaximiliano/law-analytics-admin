@@ -251,11 +251,11 @@ const MovementPoliciesSection: React.FC<Props> = ({ value, onChange }) => {
 				coordinador interno y los envíos manuales desde pjn-api, que no pasan por los workers.
 			</Alert>
 			<Alert severity="warning" sx={{ mb: 2 }}>
-				<strong>"Folders archivados" actúa en DOS barreras.</strong> 1ª barrera (worker): hoy solo los workers SCBA filtran de su lado —
-				el modo normal no procesa causas sin folders activos y el worker archived lee este flag; PJN, Mis Causas, MEV y EJE lo ignoran
-				worker-side y envían igual. 2ª barrera (entrega central en la-notification): re-aplica la política para <em>todas</em> las
-				fuentes y es la barrera final — con "No notificar", el movimiento se descarta ('skipped' con motivo) aunque el worker lo haya
-				enviado. El estado por proceso se ve en vivo en Esquema del flujo → "Política efectiva por worker".
+				<strong>"Folders archivados" actúa en DOS barreras.</strong> 1ª barrera (worker): hoy solo los workers SCBA filtran de su lado — el
+				modo normal no procesa causas sin folders activos y el worker archived lee este flag; PJN, Mis Causas, MEV y EJE lo ignoran
+				worker-side y envían igual. 2ª barrera (entrega central en la-notification): re-aplica la política para <em>todas</em> las fuentes y
+				es la barrera final — con "No notificar", el movimiento se descarta ('skipped' con motivo) aunque el worker lo haya enviado. El
+				estado por proceso se ve en vivo en Esquema del flujo → "Política efectiva por worker".
 			</Alert>
 
 			<Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
@@ -316,9 +316,9 @@ const MovementPoliciesSection: React.FC<Props> = ({ value, onChange }) => {
 				Overrides por jurisdicción (entrega central)
 			</Typography>
 			<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-				la-notification resuelve la política en la entrega por la <em>jurisdicción</em> del movimiento (<code>pjn</code>,{" "}
-				<code>eje</code>, <code>mev</code>, <code>scba</code>), no por la clave del worker. Estas entradas overridean los defaults para
-				todo lo que llegue de esa jurisdicción. Campos con efecto en la entrega: <strong>Notificaciones</strong> (kill-switch),{" "}
+				la-notification resuelve la política en la entrega por la <em>jurisdicción</em> del movimiento (<code>pjn</code>, <code>eje</code>,{" "}
+				<code>mev</code>, <code>scba</code>), no por la clave del worker. Estas entradas overridean los defaults para todo lo que llegue de
+				esa jurisdicción. Campos con efecto en la entrega: <strong>Notificaciones</strong> (kill-switch),{" "}
 				<strong>Folders archivados</strong> y <strong>Día no activo</strong>; "Primera corrida" y "Docs desde cache" solo aplican en los
 				workers.
 			</Typography>

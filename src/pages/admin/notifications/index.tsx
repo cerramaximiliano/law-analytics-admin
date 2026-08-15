@@ -1,389 +1,129 @@
-import React from "react";
-import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { useTheme } from "@mui/material/styles";
-import {
-	Grid,
-	Tab,
-	Tabs,
-	Box,
-	Button,
-	Stack,
-	Typography,
-	Dialog,
-	DialogTitle,
-	DialogContent,
-	DialogContentText,
-	DialogActions,
-	Alert,
-	CircularProgress,
-} from "@mui/material";
-import {
-	Notification,
-	Timer1,
-	NotificationStatus,
-	InfoCircle,
-	NotificationBing,
-	Refresh,
-	Calendar,
-	TaskSquare,
-	DocumentText,
-	Trash,
-} from "iconsax-react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Box, Grid, Tab, Tabs } from "@mui/material";
+import { Notification, Setting2, Judge, Truck, Calendar1, Gift, Diagram } from "iconsax-react";
+
+// project-imports
 import MainCard from "components/MainCard";
 import { BRAND_BLUE } from "themes/dashboardTokens";
-import { alpha } from "@mui/material/styles";
-import { RootState } from "store";
-import notificationMonitoringService from "services/notificationMonitoringService";
-import UpcomingNotifications from "./components/UpcomingNotifications";
-import NotificationHistory from "./components/NotificationHistory";
-import NotificationSummary from "./components/NotificationSummary";
-import FailedNotifications from "./components/FailedNotifications";
-import AlertManagement from "./components/AlertManagement";
-import { dispatch } from "store";
-import { openSnackbar } from "store/reducers/snackbar";
-import notificationAxios from "utils/notificationAxios";
 
-interface TabPanelProps {
-	children?: React.ReactNode;
-	index: number;
-	value: number;
+import MonitoringPanel from "./components/MonitoringPanel";
+import JudicialMovementsConfig from "./components/JudicialMovementsConfig";
+import UserRemindersInfo from "./components/UserRemindersInfo";
+import useLiveJudicialConfig from "./components/useLiveJudicialConfig";
+import JudicialMovementsList from "./components/JudicialMovementsList";
+import NotificationFlowPage from "./notification-flow";
+import FolderInactivityPanel from "./folder-inactivity";
+
+// ----------------------------------------------------------------------
+// Centro de notificaciones: un tab por área.
+//
+// Reemplaza la dispersión previa (monitoreo en una página, toda la
+// configuración amontonada dentro de "Movimientos judiciales", y el esquema de
+// flujo en una tercera). Las rutas viejas redirigen acá con ?tab=N.
+// ----------------------------------------------------------------------
+
+interface TabDef {
+	key: string;
+	label: string;
+	icon: React.ReactElement;
 }
 
-function TabPanel(props: TabPanelProps) {
-	const { children, value, index, ...other } = props;
+const TABS: TabDef[] = [
+	{ key: "monitoreo", label: "Monitoreo", icon: <Notification size={18} /> },
+	{ key: "general", label: "General", icon: <Setting2 size={18} /> },
+	{ key: "judicial", label: "Movimientos judiciales", icon: <Judge size={18} /> },
+	{ key: "postal", label: "Seguimiento postal", icon: <Truck size={18} /> },
+	{ key: "recordatorios", label: "Recordatorios del usuario", icon: <Calendar1 size={18} /> },
+	{ key: "banners", label: "Banners y promociones", icon: <Gift size={18} /> },
+	{ key: "diagnostico", label: "Diagnóstico", icon: <Diagram size={18} /> },
+];
 
+function TabPanel({ children, value, index }: { children?: React.ReactNode; value: number; index: number }) {
 	return (
-		<div
-			role="tabpanel"
-			hidden={value !== index}
-			id={`notification-tabpanel-${index}`}
-			aria-labelledby={`notification-tab-${index}`}
-			{...other}
-		>
+		<div role="tabpanel" hidden={value !== index} id={`notif-tabpanel-${index}`}>
 			{value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
 		</div>
 	);
 }
 
-function a11yProps(index: number) {
-	return {
-		id: `notification-tab-${index}`,
-		"aria-controls": `notification-tabpanel-${index}`,
-	};
-}
-
-const NotificationMonitoring = () => {
-	const theme = useTheme();
+const NotificationsCenter = () => {
+	const [searchParams, setSearchParams] = useSearchParams();
 	const [activeTab, setActiveTab] = useState(0);
-	const [refreshKey, setRefreshKey] = useState(0);
-	const [cronDialog, setCronDialog] = useState<{ open: boolean; type: string | null }>({ open: false, type: null });
-	const [loading, setLoading] = useState(false);
 
-	const { upcomingEvents, upcomingTasks, upcomingMovements, pendingAlerts } = useSelector(
-		(state: RootState) => state.notificationMonitoring,
-	);
-
-	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-		setActiveTab(newValue);
-	};
-
-	const handleRefresh = () => {
-		setRefreshKey((prev) => prev + 1);
-	};
-
-	const handleOpenCronDialog = (type: string) => {
-		setCronDialog({ open: true, type });
-	};
-
-	const handleCloseCronDialog = () => {
-		setCronDialog({ open: false, type: null });
-	};
-
-	const handleExecuteCron = async () => {
-		if (!cronDialog.type) return;
-
-		setLoading(true);
-		try {
-			const response = await notificationAxios.post("/api/monitoring/cron/execute", {
-				jobType: cronDialog.type,
-			});
-
-			if (response.data && response.data.success) {
-				dispatch(
-					openSnackbar({
-						open: true,
-						message: `Cron job de ${getCronTypeName(cronDialog.type)} ejecutado exitosamente`,
-						variant: "success",
-						alert: { color: "success" },
-						close: false,
-					}),
-				);
-				handleRefresh();
-			} else {
-				throw new Error(response.data?.message || "Error al ejecutar el cron job");
-			}
-		} catch (error: any) {
-			const errorMessage = error.response?.data?.message || error.message || "Error al ejecutar el cron job";
-			dispatch(
-				openSnackbar({
-					open: true,
-					message: errorMessage,
-					variant: "error",
-					alert: { color: "error" },
-					close: false,
-				}),
-			);
-		} finally {
-			setLoading(false);
-			handleCloseCronDialog();
-		}
-	};
-
-	const getCronTypeName = (type: string) => {
-		const names: Record<string, string> = {
-			calendar: "Calendario",
-			tasks: "Tareas",
-			movements: "Movimientos",
-			clearLogs: "Limpieza de Logs",
-		};
-		return names[type] || type;
-	};
-
-	const getCronTypeDescription = (type: string) => {
-		const descriptions: Record<string, string> = {
-			calendar: "Se procesarán todos los eventos del calendario y se enviarán las notificaciones correspondientes a los usuarios.",
-			tasks: "Se procesarán todas las tareas pendientes y se enviarán las notificaciones correspondientes a los usuarios asignados.",
-			movements: "Se procesarán todos los movimientos registrados y se enviarán las notificaciones correspondientes.",
-			clearLogs: "Se eliminarán los logs antiguos del sistema para liberar espacio y mantener el rendimiento óptimo.",
-		};
-		return descriptions[type] || "";
-	};
-
+	// Deep-link por índice (?tab=2) o por clave (?tab=judicial)
 	useEffect(() => {
-		// Load initial data
-		const loadInitialData = async () => {
-			console.log("🚀 Loading notification monitoring data...");
-			console.log("  - RefreshKey:", refreshKey);
+		const raw = searchParams.get("tab");
+		if (!raw) return;
+		const byKey = TABS.findIndex((t) => t.key === raw);
+		const idx = byKey >= 0 ? byKey : Number.parseInt(raw, 10);
+		if (Number.isInteger(idx) && idx >= 0 && idx < TABS.length) setActiveTab(idx);
+	}, [searchParams]);
 
-			try {
-				await Promise.all([
-					notificationMonitoringService.getAllUpcoming({ limit: 100 }),
-					notificationMonitoringService.getPendingAlerts({ limit: 100 }),
-					notificationMonitoringService.getNotificationSummary(),
-				]);
-				console.log("✅ All notification data loaded successfully");
-			} catch (error) {
-				console.error("❌ Error loading notification data:", error);
-			}
-		};
+	const handleTabChange = (_e: React.SyntheticEvent, next: number) => {
+		setActiveTab(next);
+		setSearchParams({ tab: TABS[next].key }, { replace: true });
+	};
 
-		loadInitialData();
-	}, [refreshKey]);
-
-	// Calculate total upcoming notifications
-	const totalUpcoming =
-		(upcomingEvents.data?.length || 0) +
-		(upcomingTasks.data?.length || 0) +
-		(upcomingMovements.data?.length || 0) +
-		(pendingAlerts.data?.length || 0);
+	// Una sola suscripción a la config viva, compartida por los paneles que la usan.
+	const live = useLiveJudicialConfig();
 
 	return (
-		<MainCard title="Monitoreo de notificaciones">
+		<MainCard title="Notificaciones">
 			<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 				<Grid item xs={12}>
 					<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
 						<Tabs
 							value={activeTab}
 							onChange={handleTabChange}
-							aria-label="notification monitoring tabs"
+							aria-label="secciones de notificaciones"
 							variant="scrollable"
 							scrollButtons="auto"
 							sx={{
-								"& .MuiTab-root": { textTransform: "none", fontWeight: 500, minHeight: 44, fontVariantNumeric: "tabular-nums" },
+								"& .MuiTab-root": { textTransform: "none", fontWeight: 500, minHeight: 44 },
 								"& .Mui-selected": { color: `${BRAND_BLUE} !important` },
 								"& .MuiTabs-indicator": { backgroundColor: BRAND_BLUE, height: 3, borderRadius: 1.5 },
-								"& .MuiTabs-scrollButtons": {
-									"&.Mui-disabled": { opacity: 0.3 },
-								},
 							}}
 						>
-							<Tab
-								icon={<Notification size={20} />}
-								iconPosition="start"
-								label={`Notificaciones Próximas (${totalUpcoming})`}
-								{...a11yProps(0)}
-							/>
-							<Tab icon={<Timer1 size={20} />} iconPosition="start" label="Historial de Notificaciones" {...a11yProps(1)} />
-							<Tab icon={<NotificationStatus size={20} />} iconPosition="start" label="Resumen Estadístico" {...a11yProps(2)} />
-							<Tab icon={<InfoCircle size={20} />} iconPosition="start" label="Notificaciones Fallidas" {...a11yProps(3)} />
-							<Tab icon={<NotificationBing size={20} />} iconPosition="start" label="Gestión de Alertas" {...a11yProps(4)} />
-							<Tab icon={<Refresh size={20} />} iconPosition="start" label="Ejecución Manual" {...a11yProps(5)} />
+							{TABS.map((t) => (
+								<Tab key={t.key} icon={t.icon} iconPosition="start" label={t.label} />
+							))}
 						</Tabs>
 					</Box>
 				</Grid>
 
 				<Grid item xs={12}>
 					<TabPanel value={activeTab} index={0}>
-						<UpcomingNotifications onRefresh={handleRefresh} />
+						<MonitoringPanel />
 					</TabPanel>
 					<TabPanel value={activeTab} index={1}>
-						<NotificationHistory />
+						<JudicialMovementsConfig section="general" />
 					</TabPanel>
 					<TabPanel value={activeTab} index={2}>
-						<NotificationSummary />
+						<Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
+							<JudicialMovementsConfig section="judicial" />
+							<JudicialMovementsList />
+						</Box>
 					</TabPanel>
 					<TabPanel value={activeTab} index={3}>
-						<FailedNotifications />
+						<JudicialMovementsConfig section="postal" />
 					</TabPanel>
 					<TabPanel value={activeTab} index={4}>
-						<AlertManagement />
+						<Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
+							<UserRemindersInfo live={live} />
+							<FolderInactivityPanel embedded />
+						</Box>
 					</TabPanel>
 					<TabPanel value={activeTab} index={5}>
-						<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-							<Grid item xs={12}>
-								<Alert severity="warning" sx={{ mb: 3 }}>
-									<Typography variant="body2" fontWeight="bold" gutterBottom>
-										Advertencia: Ejecución Manual de Tareas
-									</Typography>
-									<Typography variant="body2">
-										Estas acciones ejecutarán inmediatamente las tareas programadas del sistema, lo que puede resultar en:
-									</Typography>
-									<ul style={{ margin: "8px 0", paddingLeft: "20px" }}>
-										<li>Envío masivo de correos electrónicos</li>
-										<li>Generación de múltiples notificaciones push</li>
-										<li>Creación de alertas en el sistema</li>
-										<li>Consumo de recursos del servidor</li>
-									</ul>
-									<Typography variant="body2">Use estas funciones con precaución y solo cuando sea necesario.</Typography>
-								</Alert>
-							</Grid>
-
-							<Grid item xs={12} md={6} lg={3}>
-								<MainCard>
-									<Stack spacing={2} alignItems="center">
-										<Calendar size={48} color={theme.palette.info.main} />
-										<Typography variant="h5" align="center">
-											Sincronizar Calendario
-										</Typography>
-										<Typography variant="body2" color="text.secondary" align="center" sx={{ minHeight: 60 }}>
-											Procesa todos los eventos del calendario y envía notificaciones de recordatorio
-										</Typography>
-										<Button
-											fullWidth
-											variant="contained"
-											color="primary"
-											onClick={() => handleOpenCronDialog("calendar")}
-											startIcon={<Refresh />}
-										>
-											Ejecutar
-										</Button>
-									</Stack>
-								</MainCard>
-							</Grid>
-
-							<Grid item xs={12} md={6} lg={3}>
-								<MainCard>
-									<Stack spacing={2} alignItems="center">
-										<TaskSquare size={48} color={theme.palette.success.main} />
-										<Typography variant="h5" align="center">
-											Sincronizar Tareas
-										</Typography>
-										<Typography variant="body2" color="text.secondary" align="center" sx={{ minHeight: 60 }}>
-											Procesa todas las tareas pendientes y envía notificaciones a los usuarios asignados
-										</Typography>
-										<Button
-											fullWidth
-											variant="contained"
-											color="success"
-											onClick={() => handleOpenCronDialog("tasks")}
-											startIcon={<Refresh />}
-										>
-											Ejecutar
-										</Button>
-									</Stack>
-								</MainCard>
-							</Grid>
-
-							<Grid item xs={12} md={6} lg={3}>
-								<MainCard>
-									<Stack spacing={2} alignItems="center">
-										<DocumentText size={48} color={theme.palette.warning.main} />
-										<Typography variant="h5" align="center">
-											Sincronizar Movimientos
-										</Typography>
-										<Typography variant="body2" color="text.secondary" align="center" sx={{ minHeight: 60 }}>
-											Procesa todos los movimientos registrados y envía las notificaciones correspondientes
-										</Typography>
-										<Button
-											fullWidth
-											variant="contained"
-											color="warning"
-											onClick={() => handleOpenCronDialog("movements")}
-											startIcon={<Refresh />}
-										>
-											Ejecutar
-										</Button>
-									</Stack>
-								</MainCard>
-							</Grid>
-
-							<Grid item xs={12} md={6} lg={3}>
-								<MainCard>
-									<Stack spacing={2} alignItems="center">
-										<Trash size={48} color={theme.palette.error.main} />
-										<Typography variant="h5" align="center">
-											Limpiar Logs
-										</Typography>
-										<Typography variant="body2" color="text.secondary" align="center" sx={{ minHeight: 60 }}>
-											Elimina registros antiguos del sistema para mantener el rendimiento óptimo
-										</Typography>
-										<Button
-											fullWidth
-											variant="contained"
-											color="error"
-											onClick={() => handleOpenCronDialog("clearLogs")}
-											startIcon={<Refresh />}
-										>
-											Ejecutar
-										</Button>
-									</Stack>
-								</MainCard>
-							</Grid>
-						</Grid>
+						<JudicialMovementsConfig section="banners" />
+					</TabPanel>
+					<TabPanel value={activeTab} index={6}>
+						<NotificationFlowPage embedded />
 					</TabPanel>
 				</Grid>
 			</Grid>
-
-			{/* Dialog de confirmación */}
-			<Dialog open={cronDialog.open} onClose={handleCloseCronDialog} maxWidth="sm" fullWidth>
-				<DialogTitle>Confirmar Ejecución Manual</DialogTitle>
-				<DialogContent>
-					<DialogContentText>
-						<Typography variant="body1" paragraph>
-							¿Está seguro que desea ejecutar manualmente el cron job de <strong>{getCronTypeName(cronDialog.type || "")}</strong>?
-						</Typography>
-						<Alert severity="info" sx={{ mt: 2 }}>
-							{getCronTypeDescription(cronDialog.type || "")}
-						</Alert>
-						{cronDialog.type !== "clearLogs" && (
-							<Alert severity="warning" sx={{ mt: 2 }}>
-								Esta acción puede generar múltiples notificaciones y correos electrónicos a los usuarios.
-							</Alert>
-						)}
-					</DialogContentText>
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={handleCloseCronDialog} disabled={loading}>
-						Cancelar
-					</Button>
-					<Button onClick={handleExecuteCron} variant="contained" color="primary" disabled={loading}>
-						{loading ? <CircularProgress size={20} /> : "Ejecutar"}
-					</Button>
-				</DialogActions>
-			</Dialog>
 		</MainCard>
 	);
 };
 
-export default NotificationMonitoring;
+export default NotificationsCenter;

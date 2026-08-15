@@ -363,7 +363,12 @@ const NotificationHistory = () => {
 					indicatorColor="primary"
 					sx={{ borderBottom: 1, borderColor: "divider" }}
 				>
-					<Tab label="Alertas entregadas" icon={<Notification size={20} />} iconPosition="start" sx={{ minHeight: 48, textTransform: "none" }} />
+					<Tab
+						label="Alertas entregadas"
+						icon={<Notification size={20} />}
+						iconPosition="start"
+						sx={{ minHeight: 48, textTransform: "none" }}
+					/>
 					<Tab
 						label="Historial de notificaciones"
 						icon={<NotificationBing size={20} />}

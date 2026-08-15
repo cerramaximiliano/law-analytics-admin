@@ -139,11 +139,11 @@ const EffectiveWorkerPolicies: React.FC<{ live: LiveJudicialConfig }> = ({ live 
 				<Typography variant="h5">Política efectiva por worker (en vivo)</Typography>
 			</Stack>
 			<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-				Resolución en vivo con la misma cascada que corre cada worker: <b>override</b> (sources[clave]) → <b>defaults</b> →{" "}
-				<b>código</b> (fallback hardcodeado) → <b>base</b>. La etiqueta junto a cada valor indica de qué capa sale. Los workers
-				refrescan el documento cada 5 minutos; esta tabla, cada 60 segundos. Para <b>folders archivados</b> el sistema tiene{" "}
-				<b>doble barrera</b>: la 1ª es el worker (hoy solo SCBA filtra de su lado) y la 2ª es la entrega central de la-notification,
-				que re-aplica la política para todas las fuentes — la columna indica qué barreras actúan en cada proceso.
+				Resolución en vivo con la misma cascada que corre cada worker: <b>override</b> (sources[clave]) → <b>defaults</b> → <b>código</b>{" "}
+				(fallback hardcodeado) → <b>base</b>. La etiqueta junto a cada valor indica de qué capa sale. Los workers refrescan el documento
+				cada 5 minutos; esta tabla, cada 60 segundos. Para <b>folders archivados</b> el sistema tiene <b>doble barrera</b>: la 1ª es el
+				worker (hoy solo SCBA filtra de su lado) y la 2ª es la entrega central de la-notification, que re-aplica la política para todas las
+				fuentes — la columna indica qué barreras actúan en cada proceso.
 			</Typography>
 
 			<TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2, mb: 2 }}>
@@ -305,9 +305,9 @@ const EffectiveWorkerPolicies: React.FC<{ live: LiveJudicialConfig }> = ({ live 
 				Entrega central (la-notification) — 2ª barrera, resolución por jurisdicción
 			</Typography>
 			<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-				Lo que llega al webhook o crea el coordinador se filtra DE NUEVO en la entrega con estas políticas (sources[jurisdicción] →
-				defaults → base; sin fallback de worker). Es la barrera final: aplica aunque el worker no haya filtrado (PJN/MEV/EJE) o
-				haya sido bypasseado (pjn-api manual, legacy).
+				Lo que llega al webhook o crea el coordinador se filtra DE NUEVO en la entrega con estas políticas (sources[jurisdicción] → defaults
+				→ base; sin fallback de worker). Es la barrera final: aplica aunque el worker no haya filtrado (PJN/MEV/EJE) o haya sido bypasseado
+				(pjn-api manual, legacy).
 			</Typography>
 			<TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
 				<Table size="small">
