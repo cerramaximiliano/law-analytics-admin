@@ -404,6 +404,8 @@ export interface MisCausasCoverage {
 	// Credenciales PJN activas (enabled + isValid). El backend ya las computa
 	// para filtrar causas, así que viene sin costo extra en el mismo payload.
 	activeCredentials?: number;
+	/** Política de update del worker SSO (espejo de updatePolicyMode en SCBA). */
+	updatePolicy?: { schedule: string; everyDay: boolean; enabled: boolean };
 }
 
 export interface HealthAnomaly {
@@ -454,14 +456,7 @@ export interface CredentialErrorEntry {
 
 export interface CausaScreenshotEntry {
 	_id: string;
-	type:
-		| "search_error"
-		| "scraping_error"
-		| "degraded_scrape"
-		| "processing_exception"
-		| "login_error"
-		| "empty_movements"
-		| "other";
+	type: "search_error" | "scraping_error" | "degraded_scrape" | "processing_exception" | "login_error" | "empty_movements" | "other";
 	errorMessage: string | null;
 	pageUrl: string | null;
 	detectionCount: number;

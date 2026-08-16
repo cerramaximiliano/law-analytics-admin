@@ -2454,6 +2454,28 @@ const AdminDashboard = () => {
 									>
 										Credenciales PJN
 									</Typography>
+									<Tooltip
+										arrow
+										title={
+											misCausasCoverage?.updatePolicy
+												? `Política de update: un mismo worker (SSO) refresca públicas y privadas dentro de la ventana ${
+														misCausasCoverage.updatePolicy.schedule
+												  }${
+														misCausasCoverage.updatePolicy.everyDay ? ", todos los días" : ", solo días hábiles"
+												  }. Fuera de esa ventana la cobertura no avanza — no es un error.${
+														misCausasCoverage.updatePolicy.enabled ? "" : " El schedule está deshabilitado en la config."
+												  } Configurable en Workers → PJN manager.`
+												: "Política de update: un mismo worker (SSO) refresca públicas y privadas dentro de su ventana horaria. Configurable en Workers → PJN manager."
+										}
+									>
+										<Box
+											component="span"
+											onClick={(e) => e.stopPropagation()}
+											sx={{ display: "inline-flex", alignItems: "center", cursor: "help", color: COLORS.neutral.light }}
+										>
+											<InfoCircle size={15} />
+										</Box>
+									</Tooltip>
 									{pjnSiteStatus && pjnSiteStatus.status === "maintenance" && (
 										<Tooltip
 											title={`Sitio PJN en mantenimiento desde ${
