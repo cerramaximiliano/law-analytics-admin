@@ -1,4 +1,4 @@
-import { lazy } from "react";
+import lazyWithRetry from "utils/lazyWithRetry";
 import { useRoutes, Navigate } from "react-router-dom";
 import Loadable from "components/Loadable";
 
@@ -11,179 +11,179 @@ import AdminRoleGuard from "utils/route-guard/AdminRoleGuard";
 import MainLayout from "layout/MainLayout";
 
 // Auth pages
-const AuthLogin = Loadable(lazy(() => import("pages/auth/login")));
-const AuthCodeVerification = Loadable(lazy(() => import("pages/auth/code-verification")));
+const AuthLogin = Loadable(lazyWithRetry(() => import("pages/auth/login")));
+const AuthCodeVerification = Loadable(lazyWithRetry(() => import("pages/auth/code-verification")));
 
 // Admin pages
-const WorkersPage = Loadable(lazy(() => import("pages/admin/causas/workers")));
-const WorkersMEVPage = Loadable(lazy(() => import("pages/workers/WorkersMEV")));
-const MEVLoginFailuresPage = Loadable(lazy(() => import("pages/workers/MEVLoginFailures")));
-const WorkerLogsPage = Loadable(lazy(() => import("pages/workers/WorkerLogs")));
-const EmailVerificationWorkerPage = Loadable(lazy(() => import("pages/admin/workers/email-verification")));
-const CarpetasVerificadas = Loadable(lazy(() => import("pages/admin/causas/CarpetasVerificadas")));
-const TrayectoriasPage = Loadable(lazy(() => import("pages/admin/causas/Trayectorias")));
-const EtapasPage = Loadable(lazy(() => import("pages/admin/causas/Etapas")));
-const EtapaStatsPage = Loadable(lazy(() => import("pages/admin/causas/EtapaStats")));
-const EtapaArbolPage = Loadable(lazy(() => import("pages/admin/causas/EtapaArbol")));
-const EtiquetadoDatasetPage = Loadable(lazy(() => import("pages/admin/causas/EtiquetadoDataset")));
-const EtiquetadoEditorPage = Loadable(lazy(() => import("pages/admin/causas/EtiquetadoEditor")));
-const CarpetasVerificadasApp = Loadable(lazy(() => import("pages/admin/causas/CarpetasVerificadasApp")));
-const CarpetasNoVerificadas = Loadable(lazy(() => import("pages/admin/causas/CarpetasNoVerificadas")));
-const FlujosCausas = Loadable(lazy(() => import("pages/admin/causas/flujos/FlujosCausas")));
-const CausasPendientes = Loadable(lazy(() => import("pages/admin/causas/CausasPendientes")));
-const CredencialesPJN = Loadable(lazy(() => import("pages/admin/causas/CredencialesPJN")));
-const CausasSyncCredentials = Loadable(lazy(() => import("pages/admin/causas/CausasSyncCredentials")));
-const CausasUpdateEligible = Loadable(lazy(() => import("pages/admin/causas/update-eligible")));
+const WorkersPage = Loadable(lazyWithRetry(() => import("pages/admin/causas/workers")));
+const WorkersMEVPage = Loadable(lazyWithRetry(() => import("pages/workers/WorkersMEV")));
+const MEVLoginFailuresPage = Loadable(lazyWithRetry(() => import("pages/workers/MEVLoginFailures")));
+const WorkerLogsPage = Loadable(lazyWithRetry(() => import("pages/workers/WorkerLogs")));
+const EmailVerificationWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/email-verification")));
+const CarpetasVerificadas = Loadable(lazyWithRetry(() => import("pages/admin/causas/CarpetasVerificadas")));
+const TrayectoriasPage = Loadable(lazyWithRetry(() => import("pages/admin/causas/Trayectorias")));
+const EtapasPage = Loadable(lazyWithRetry(() => import("pages/admin/causas/Etapas")));
+const EtapaStatsPage = Loadable(lazyWithRetry(() => import("pages/admin/causas/EtapaStats")));
+const EtapaArbolPage = Loadable(lazyWithRetry(() => import("pages/admin/causas/EtapaArbol")));
+const EtiquetadoDatasetPage = Loadable(lazyWithRetry(() => import("pages/admin/causas/EtiquetadoDataset")));
+const EtiquetadoEditorPage = Loadable(lazyWithRetry(() => import("pages/admin/causas/EtiquetadoEditor")));
+const CarpetasVerificadasApp = Loadable(lazyWithRetry(() => import("pages/admin/causas/CarpetasVerificadasApp")));
+const CarpetasNoVerificadas = Loadable(lazyWithRetry(() => import("pages/admin/causas/CarpetasNoVerificadas")));
+const FlujosCausas = Loadable(lazyWithRetry(() => import("pages/admin/causas/flujos/FlujosCausas")));
+const CausasPendientes = Loadable(lazyWithRetry(() => import("pages/admin/causas/CausasPendientes")));
+const CredencialesPJN = Loadable(lazyWithRetry(() => import("pages/admin/causas/CredencialesPJN")));
+const CausasSyncCredentials = Loadable(lazyWithRetry(() => import("pages/admin/causas/CausasSyncCredentials")));
+const CausasUpdateEligible = Loadable(lazyWithRetry(() => import("pages/admin/causas/update-eligible")));
 
 // MEV pages
-const CarpetasMEVVerificadas = Loadable(lazy(() => import("pages/admin/mev/CarpetasMEVVerificadas")));
-const CarpetasMEVNoVerificadas = Loadable(lazy(() => import("pages/admin/mev/CarpetasMEVNoVerificadas")));
-const CredencialesSCBA = Loadable(lazy(() => import("pages/admin/mev/CredencialesSCBA")));
-const CausasMEVByCredential = Loadable(lazy(() => import("pages/admin/mev/CausasMEVByCredential")));
+const CarpetasMEVVerificadas = Loadable(lazyWithRetry(() => import("pages/admin/mev/CarpetasMEVVerificadas")));
+const CarpetasMEVNoVerificadas = Loadable(lazyWithRetry(() => import("pages/admin/mev/CarpetasMEVNoVerificadas")));
+const CredencialesSCBA = Loadable(lazyWithRetry(() => import("pages/admin/mev/CredencialesSCBA")));
+const CausasMEVByCredential = Loadable(lazyWithRetry(() => import("pages/admin/mev/CausasMEVByCredential")));
 
 // EJE pages
-const CarpetasVerificadasEje = Loadable(lazy(() => import("pages/admin/eje/CarpetasVerificadasEje")));
-const CarpetasNoVerificadasEje = Loadable(lazy(() => import("pages/admin/eje/CarpetasNoVerificadasEje")));
-const CarpetasPivotsEje = Loadable(lazy(() => import("pages/admin/eje/CarpetasPivotsEje")));
-const EjeWorkersConfig = Loadable(lazy(() => import("pages/admin/eje/workers")));
+const CarpetasVerificadasEje = Loadable(lazyWithRetry(() => import("pages/admin/eje/CarpetasVerificadasEje")));
+const CarpetasNoVerificadasEje = Loadable(lazyWithRetry(() => import("pages/admin/eje/CarpetasNoVerificadasEje")));
+const CarpetasPivotsEje = Loadable(lazyWithRetry(() => import("pages/admin/eje/CarpetasPivotsEje")));
+const EjeWorkersConfig = Loadable(lazyWithRetry(() => import("pages/admin/eje/workers")));
 
 // PJ Salta pages
-const CarpetasVerificadasPjSalta = Loadable(lazy(() => import("pages/admin/pjsalta/CarpetasVerificadasPjSalta")));
-const CarpetasNoVerificadasPjSalta = Loadable(lazy(() => import("pages/admin/pjsalta/CarpetasNoVerificadasPjSalta")));
-const CarpetasPivotsPjSalta = Loadable(lazy(() => import("pages/admin/pjsalta/CarpetasPivotsPjSalta")));
-const PjSaltaWorkersConfig = Loadable(lazy(() => import("pages/admin/pjsalta/workers")));
+const CarpetasVerificadasPjSalta = Loadable(lazyWithRetry(() => import("pages/admin/pjsalta/CarpetasVerificadasPjSalta")));
+const CarpetasNoVerificadasPjSalta = Loadable(lazyWithRetry(() => import("pages/admin/pjsalta/CarpetasNoVerificadasPjSalta")));
+const CarpetasPivotsPjSalta = Loadable(lazyWithRetry(() => import("pages/admin/pjsalta/CarpetasPivotsPjSalta")));
+const PjSaltaWorkersConfig = Loadable(lazyWithRetry(() => import("pages/admin/pjsalta/workers")));
 // PJ Catamarca pages
-const CarpetasVerificadasPjCatamarca = Loadable(lazy(() => import("pages/admin/pjcatamarca/CarpetasVerificadasPjCatamarca")));
-const CarpetasNoVerificadasPjCatamarca = Loadable(lazy(() => import("pages/admin/pjcatamarca/CarpetasNoVerificadasPjCatamarca")));
-const CarpetasPivotsPjCatamarca = Loadable(lazy(() => import("pages/admin/pjcatamarca/CarpetasPivotsPjCatamarca")));
-const PjCatamarcaWorkersConfig = Loadable(lazy(() => import("pages/admin/pjcatamarca/workers")));
+const CarpetasVerificadasPjCatamarca = Loadable(lazyWithRetry(() => import("pages/admin/pjcatamarca/CarpetasVerificadasPjCatamarca")));
+const CarpetasNoVerificadasPjCatamarca = Loadable(lazyWithRetry(() => import("pages/admin/pjcatamarca/CarpetasNoVerificadasPjCatamarca")));
+const CarpetasPivotsPjCatamarca = Loadable(lazyWithRetry(() => import("pages/admin/pjcatamarca/CarpetasPivotsPjCatamarca")));
+const PjCatamarcaWorkersConfig = Loadable(lazyWithRetry(() => import("pages/admin/pjcatamarca/workers")));
 // PJ Mendoza pages
-const CarpetasVerificadasPjMendoza = Loadable(lazy(() => import("pages/admin/pjmendoza/CarpetasVerificadasPjMendoza")));
-const CarpetasNoVerificadasPjMendoza = Loadable(lazy(() => import("pages/admin/pjmendoza/CarpetasNoVerificadasPjMendoza")));
-const CarpetasPivotsPjMendoza = Loadable(lazy(() => import("pages/admin/pjmendoza/CarpetasPivotsPjMendoza")));
-const PjMendozaWorkersConfig = Loadable(lazy(() => import("pages/admin/pjmendoza/workers")));
-const RagWorkersPage = Loadable(lazy(() => import("pages/admin/rag-workers")));
-const CorpusWorkerPage = Loadable(lazy(() => import("pages/admin/workers/corpus")));
-const EscritosWorkerPage = Loadable(lazy(() => import("pages/admin/workers/escritos")));
-const MovimientosWorkerPage = Loadable(lazy(() => import("pages/admin/workers/movimientos")));
-const SentenciasWorkerPage = Loadable(lazy(() => import("pages/admin/workers/sentencias")));
-const LiquidacionWorkerPage = Loadable(lazy(() => import("pages/admin/workers/liquidacion")));
-const PlazosWorkerPage = Loadable(lazy(() => import("pages/admin/workers/plazos")));
-const PlazosDatasetWorkerPage = Loadable(lazy(() => import("pages/admin/workers/plazos-dataset")));
-const PlazosPage = Loadable(lazy(() => import("pages/admin/causas/plazos")));
-const SaijWorkerPage = Loadable(lazy(() => import("pages/admin/workers/saij")));
-const SecloWorkerPage = Loadable(lazy(() => import("pages/admin/workers/seclo")));
-const InfolegWorkersPage = Loadable(lazy(() => import("pages/admin/workers/infoleg")));
-const InfolegNormasPage = Loadable(lazy(() => import("pages/admin/normas/infoleg")));
-const JurisprudenciaSaijPage = Loadable(lazy(() => import("pages/recursos/jurisprudencia-saij")));
-const JurisprudenciaPjnPage = Loadable(lazy(() => import("pages/recursos/jurisprudencia-pjn")));
-const JurisprudenciaPjnAskPage = Loadable(lazy(() => import("pages/recursos/jurisprudencia-pjn-ask")));
+const CarpetasVerificadasPjMendoza = Loadable(lazyWithRetry(() => import("pages/admin/pjmendoza/CarpetasVerificadasPjMendoza")));
+const CarpetasNoVerificadasPjMendoza = Loadable(lazyWithRetry(() => import("pages/admin/pjmendoza/CarpetasNoVerificadasPjMendoza")));
+const CarpetasPivotsPjMendoza = Loadable(lazyWithRetry(() => import("pages/admin/pjmendoza/CarpetasPivotsPjMendoza")));
+const PjMendozaWorkersConfig = Loadable(lazyWithRetry(() => import("pages/admin/pjmendoza/workers")));
+const RagWorkersPage = Loadable(lazyWithRetry(() => import("pages/admin/rag-workers")));
+const CorpusWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/corpus")));
+const EscritosWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/escritos")));
+const MovimientosWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/movimientos")));
+const SentenciasWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/sentencias")));
+const LiquidacionWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/liquidacion")));
+const PlazosWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/plazos")));
+const PlazosDatasetWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/plazos-dataset")));
+const PlazosPage = Loadable(lazyWithRetry(() => import("pages/admin/causas/plazos")));
+const SaijWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/saij")));
+const SecloWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/seclo")));
+const InfolegWorkersPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/infoleg")));
+const InfolegNormasPage = Loadable(lazyWithRetry(() => import("pages/admin/normas/infoleg")));
+const JurisprudenciaSaijPage = Loadable(lazyWithRetry(() => import("pages/recursos/jurisprudencia-saij")));
+const JurisprudenciaPjnPage = Loadable(lazyWithRetry(() => import("pages/recursos/jurisprudencia-pjn")));
+const JurisprudenciaPjnAskPage = Loadable(lazyWithRetry(() => import("pages/recursos/jurisprudencia-pjn-ask")));
 
 // Subscriptions pages
-const StripeWebhooks = Loadable(lazy(() => import("pages/subscriptions/StripeWebhooks")));
-const CronConfig = Loadable(lazy(() => import("pages/subscriptions/CronConfig")));
-const TrialsPage = Loadable(lazy(() => import("pages/admin/subscriptions/Trials")));
+const StripeWebhooks = Loadable(lazyWithRetry(() => import("pages/subscriptions/StripeWebhooks")));
+const CronConfig = Loadable(lazyWithRetry(() => import("pages/subscriptions/CronConfig")));
+const TrialsPage = Loadable(lazyWithRetry(() => import("pages/admin/subscriptions/Trials")));
 
 // Usuarios pages
-const Suscripciones = Loadable(lazy(() => import("pages/usuarios/Suscripciones")));
-const PaymentFailures = Loadable(lazy(() => import("pages/usuarios/PaymentFailures")));
+const Suscripciones = Loadable(lazyWithRetry(() => import("pages/usuarios/Suscripciones")));
+const PaymentFailures = Loadable(lazyWithRetry(() => import("pages/usuarios/PaymentFailures")));
 
 // Server Status
-const ServerStatus = Loadable(lazy(() => import("pages/admin/server-status")));
+const ServerStatus = Loadable(lazyWithRetry(() => import("pages/admin/server-status")));
 
 // Infrastructure (Cloud Failover)
-const InfrastructurePage = Loadable(lazy(() => import("pages/admin/infrastructure")));
-const DatabasesMonitoring = Loadable(lazy(() => import("pages/admin/infrastructure/databases")));
-const PortalesStatus = Loadable(lazy(() => import("pages/admin/infrastructure/portales")));
-const DataFlowPage = Loadable(lazy(() => import("pages/admin/infrastructure/dataflow")));
+const InfrastructurePage = Loadable(lazyWithRetry(() => import("pages/admin/infrastructure")));
+const DatabasesMonitoring = Loadable(lazyWithRetry(() => import("pages/admin/infrastructure/databases")));
+const PortalesStatus = Loadable(lazyWithRetry(() => import("pages/admin/infrastructure/portales")));
+const DataFlowPage = Loadable(lazyWithRetry(() => import("pages/admin/infrastructure/dataflow")));
 
 // Marketing pages
-const MailingCampaigns = Loadable(lazy(() => import("pages/admin/marketing/mailing")));
-const EmailComposer = Loadable(lazy(() => import("pages/admin/marketing/composer")));
-const EmailTemplates = Loadable(lazy(() => import("pages/admin/marketing/templates")));
-const EmailModules = Loadable(lazy(() => import("pages/admin/marketing/modules")));
-const MarketingContacts = Loadable(lazy(() => import("pages/admin/marketing/contacts")));
-const MarketingSuppression = Loadable(lazy(() => import("pages/admin/marketing/suppression")));
+const MailingCampaigns = Loadable(lazyWithRetry(() => import("pages/admin/marketing/mailing")));
+const EmailComposer = Loadable(lazyWithRetry(() => import("pages/admin/marketing/composer")));
+const EmailTemplates = Loadable(lazyWithRetry(() => import("pages/admin/marketing/templates")));
+const EmailModules = Loadable(lazyWithRetry(() => import("pages/admin/marketing/modules")));
+const MarketingContacts = Loadable(lazyWithRetry(() => import("pages/admin/marketing/contacts")));
+const MarketingSuppression = Loadable(lazyWithRetry(() => import("pages/admin/marketing/suppression")));
 
 // Social pages
-const SocialStudio = Loadable(lazy(() => import("pages/admin/social")));
+const SocialStudio = Loadable(lazyWithRetry(() => import("pages/admin/social")));
 
 // Plans page
-const PlansManagement = Loadable(lazy(() => import("pages/admin/plans")));
-const PromotionsManagement = Loadable(lazy(() => import("pages/admin/promotions")));
+const PlansManagement = Loadable(lazyWithRetry(() => import("pages/admin/plans")));
+const PromotionsManagement = Loadable(lazyWithRetry(() => import("pages/admin/promotions")));
 
 // Users page
-const UsersManagement = Loadable(lazy(() => import("pages/admin/users")));
-const TokenConfig = Loadable(lazy(() => import("pages/admin/users/TokenConfig")));
-const EmailLogs = Loadable(lazy(() => import("pages/admin/users/EmailLogs")));
-const SystemLogs = Loadable(lazy(() => import("pages/admin/logs/SystemLogs")));
-const ServiceHealthDashboard = Loadable(lazy(() => import("pages/admin/logs/ServiceHealthDashboard")));
-const OnboardingAnalytics = Loadable(lazy(() => import("pages/admin/users/OnboardingAnalytics")));
-const UserResources = Loadable(lazy(() => import("pages/admin/users/resources")));
-const UsersDashboard = Loadable(lazy(() => import("pages/admin/users/dashboard")));
-const FeatureGrants = Loadable(lazy(() => import("pages/admin/users/FeatureGrants")));
+const UsersManagement = Loadable(lazyWithRetry(() => import("pages/admin/users")));
+const TokenConfig = Loadable(lazyWithRetry(() => import("pages/admin/users/TokenConfig")));
+const EmailLogs = Loadable(lazyWithRetry(() => import("pages/admin/users/EmailLogs")));
+const SystemLogs = Loadable(lazyWithRetry(() => import("pages/admin/logs/SystemLogs")));
+const ServiceHealthDashboard = Loadable(lazyWithRetry(() => import("pages/admin/logs/ServiceHealthDashboard")));
+const OnboardingAnalytics = Loadable(lazyWithRetry(() => import("pages/admin/users/OnboardingAnalytics")));
+const UserResources = Loadable(lazyWithRetry(() => import("pages/admin/users/resources")));
+const UsersDashboard = Loadable(lazyWithRetry(() => import("pages/admin/users/dashboard")));
+const FeatureGrants = Loadable(lazyWithRetry(() => import("pages/admin/users/FeatureGrants")));
 
 // Recursos pages
-const Jurisprudencia = Loadable(lazy(() => import("pages/recursos/Jurisprudencia")));
-const TasasInteres = Loadable(lazy(() => import("pages/recursos/tasas")));
-const DatosPrevisionales = Loadable(lazy(() => import("pages/recursos/datos-previsionales")));
-const ValoresArancelarios = Loadable(lazy(() => import("pages/recursos/valores-arancelarios")));
-const Efemerides = Loadable(lazy(() => import("pages/recursos/efemerides")));
+const Jurisprudencia = Loadable(lazyWithRetry(() => import("pages/recursos/Jurisprudencia")));
+const TasasInteres = Loadable(lazyWithRetry(() => import("pages/recursos/tasas")));
+const DatosPrevisionales = Loadable(lazyWithRetry(() => import("pages/recursos/datos-previsionales")));
+const ValoresArancelarios = Loadable(lazyWithRetry(() => import("pages/recursos/valores-arancelarios")));
+const Efemerides = Loadable(lazyWithRetry(() => import("pages/recursos/efemerides")));
 
 // Documentation pages
-const LegalDocuments = Loadable(lazy(() => import("pages/documentation/legal-documents")));
+const LegalDocuments = Loadable(lazyWithRetry(() => import("pages/documentation/legal-documents")));
 
 // Notifications pages
-const NotificationsMonitoring = Loadable(lazy(() => import("pages/admin/notifications")));
+const NotificationsMonitoring = Loadable(lazyWithRetry(() => import("pages/admin/notifications")));
 
 // Dashboard page
-const Dashboard = Loadable(lazy(() => import("pages/admin/dashboard")));
+const Dashboard = Loadable(lazyWithRetry(() => import("pages/admin/dashboard")));
 
 // GA4 Analytics page
-const GA4Analytics = Loadable(lazy(() => import("pages/admin/ga4-analytics")));
+const GA4Analytics = Loadable(lazyWithRetry(() => import("pages/admin/ga4-analytics")));
 
 // Funnel Snapshots page (data persistida por la-ads cron)
-const FunnelSnapshots = Loadable(lazy(() => import("pages/admin/funnel-snapshots")));
+const FunnelSnapshots = Loadable(lazyWithRetry(() => import("pages/admin/funnel-snapshots")));
 
 // Expenses page
-const ExpensesPage = Loadable(lazy(() => import("pages/admin/expenses")));
+const ExpensesPage = Loadable(lazyWithRetry(() => import("pages/admin/expenses")));
 
 // Support page
-const SupportContactsPage = Loadable(lazy(() => import("pages/admin/support")));
+const SupportContactsPage = Loadable(lazyWithRetry(() => import("pages/admin/support")));
 
 // Feedback page
-const FeedbackAdminPage = Loadable(lazy(() => import("pages/admin/feedback")));
+const FeedbackAdminPage = Loadable(lazyWithRetry(() => import("pages/admin/feedback")));
 
 // Surveys page
-const SurveysAdminPage = Loadable(lazy(() => import("pages/admin/surveys")));
+const SurveysAdminPage = Loadable(lazyWithRetry(() => import("pages/admin/surveys")));
 
 // Feedback invites page
-const FeedbackInvitesPage = Loadable(lazy(() => import("pages/admin/feedback-invites")));
+const FeedbackInvitesPage = Loadable(lazyWithRetry(() => import("pages/admin/feedback-invites")));
 
 // Tasks page
-const AdminTasksPage = Loadable(lazy(() => import("pages/admin/tasks")));
+const AdminTasksPage = Loadable(lazyWithRetry(() => import("pages/admin/tasks")));
 
 // Folders page
-const FoldersPage = Loadable(lazy(() => import("pages/admin/folders")));
+const FoldersPage = Loadable(lazyWithRetry(() => import("pages/admin/folders")));
 
 // Scraper worker page
-const ScraperWorkerPage = Loadable(lazy(() => import("pages/admin/scraper")));
+const ScraperWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/scraper")));
 
 // Postal tracking page
-const PostalTrackingPage = Loadable(lazy(() => import("pages/admin/postal-tracking")));
+const PostalTrackingPage = Loadable(lazyWithRetry(() => import("pages/admin/postal-tracking")));
 
 // Groups page
-const GroupsPage = Loadable(lazy(() => import("pages/admin/groups")));
+const GroupsPage = Loadable(lazyWithRetry(() => import("pages/admin/groups")));
 
 // Integrations page
-const IntegrationsPage = Loadable(lazy(() => import("pages/admin/integrations")));
-const MovementLinkAnalytics = Loadable(lazy(() => import("pages/admin/integrations/MovementLinkAnalytics")));
+const IntegrationsPage = Loadable(lazyWithRetry(() => import("pages/admin/integrations")));
+const MovementLinkAnalytics = Loadable(lazyWithRetry(() => import("pages/admin/integrations/MovementLinkAnalytics")));
 
 // PDF Templates page
-const PdfTemplatesPage = Loadable(lazy(() => import("pages/admin/pdf-templates")));
+const PdfTemplatesPage = Loadable(lazyWithRetry(() => import("pages/admin/pdf-templates")));
 
 // SECLO page
-const SecloPage = Loadable(lazy(() => import("pages/admin/seclo")));
+const SecloPage = Loadable(lazyWithRetry(() => import("pages/admin/seclo")));
 
 // ==============================|| ROUTES ||============================== //
 
