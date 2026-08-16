@@ -13,9 +13,22 @@ import useConfig from "hooks/useConfig";
 import { KeyedObject } from "types/root";
 
 // header style
+// El CardHeader de MUI mantiene título y acciones en una fila que no envuelve
+// y cuyo slot `action` no se encoge (flex: 0 0 auto): con dos o más botones de
+// texto el bloque desborda la tarjeta en mobile. Acotamos el slot al ancho
+// disponible y dejamos que su contenido envuelva; si aun así no entra, baja a
+// su propia fila. Las acciones chicas (un icono) siguen alineadas a la derecha.
 const headerSX = {
 	p: 2.5,
-	"& .MuiCardHeader-action": { m: "0px auto", alignSelf: "center" },
+	flexWrap: { xs: "wrap", sm: "nowrap" },
+	rowGap: 1,
+	"& .MuiCardHeader-content": { minWidth: 0 },
+	"& .MuiCardHeader-action": {
+		m: "0px auto",
+		alignSelf: "center",
+		maxWidth: "100%",
+		"& > *": { flexWrap: "wrap" },
+	},
 };
 
 // ==============================|| CUSTOM - MAIN CARD ||============================== //
