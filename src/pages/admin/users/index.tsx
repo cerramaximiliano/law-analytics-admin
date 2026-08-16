@@ -37,7 +37,7 @@ import {
 // project imports
 import MainCard from "components/MainCard";
 import ScrollX from "components/ScrollX";
-import { BRAND_BLUE } from "themes/dashboardTokens";
+import { BRAND_BLUE, LIVE_GREEN } from "themes/dashboardTokens";
 import { alpha } from "@mui/material/styles";
 import { getUsers, searchUsers, SearchUsersParams } from "store/reducers/users";
 import { DefaultRootStateProps } from "types/root";
@@ -54,7 +54,7 @@ import UserStatsService, { SyncFolderStatsResult, SyncFolderStatsBulkResult } fr
 import { useSnackbar } from "notistack";
 
 // assets
-import { Eye, Trash, Edit, Add, Chart, SearchNormal1, CloseCircle, Refresh, Copy, CopySuccess, Calculator } from "iconsax-react";
+import { Eye, Trash, Edit, Add, Chart, SearchNormal1, CloseCircle, Refresh, Copy, CopySuccess, Calculator, Calendar } from "iconsax-react";
 
 // table sort
 function descendingComparator(a: any, b: any, orderBy: string) {
@@ -146,6 +146,13 @@ const headCells = [
 		sortable: true,
 	},
 	{
+		id: "googleCalendar",
+		numeric: false,
+		label: "Calendar",
+		align: "left",
+		sortable: false,
+	},
+	{
 		id: "actions",
 		numeric: false,
 		label: "Acciones",
@@ -190,6 +197,9 @@ const UsersList = () => {
 	const [searchText, setSearchText] = useState("");
 	const [roleFilter, setRoleFilter] = useState<string>("");
 	const [statusFilter, setStatusFilter] = useState<string>("");
+	// Filtro de Google Calendar: client-side, porque el listado ya trae todos
+	// los usuarios y el backend no expone este campo como parámetro de búsqueda.
+	const [gcalFilter, setGcalFilter] = useState<string>("");
 
 	// Estado para el diálogo de detalles de usuario
 	const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -329,6 +339,7 @@ const UsersList = () => {
 		setSearchText("");
 		setRoleFilter("");
 		setStatusFilter("");
+		setGcalFilter("");
 		setOrderBy("createdAt");
 		setOrder("desc");
 		setPage(0);
@@ -402,8 +413,21 @@ const UsersList = () => {
 			return [];
 		}
 
-		return stableSort<User>(users as User[], getComparator(order, orderBy)).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-	}, [users, order, orderBy, page, rowsPerPage]);
+		const base =
+			gcalFilter === ""
+				? (users as User[])
+				: (users as User[]).filter((u) =>
+						gcalFilter === "true" ? u.googleCalendarConnected === true : u.googleCalendarConnected !== true,
+				  );
+
+		return stableSort<User>(base, getComparator(order, orderBy)).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+	}, [users, order, orderBy, page, rowsPerPage, gcalFilter]);
+
+	// Total de usuarios con Calendar vinculado (sobre el set completo, no la página)
+	const gcalConnectedCount = useMemo(
+		() => (Array.isArray(users) ? (users as User[]).filter((u) => u.googleCalendarConnected === true).length : 0),
+		[users],
+	);
 
 	// Renderizado de chip de estado basado en isActive (boolean)
 	const renderActiveStatusChip = (isActive: boolean | undefined | null) => {
@@ -574,6 +598,39 @@ const UsersList = () => {
 	};
 
 	// Renderizado de chip de método de registro (authProvider)
+	// Google Calendar vinculado: chip verde con la cuenta de Google y la última
+	// sincronización en el tooltip. Sin vincular no dibuja nada (la mayoría de
+	// los usuarios no lo tiene y un chip gris por fila sería puro ruido).
+	const renderCalendarChip = (user: User) => {
+		if (user.googleCalendarConnected !== true) {
+			return (
+				<Typography variant="caption" color="text.secondary">
+					—
+				</Typography>
+			);
+		}
+		const lastSync = user.googleCalendarLastSync ? new Date(user.googleCalendarLastSync).toLocaleString("es-AR") : "sin registro";
+		return (
+			<Tooltip arrow title={`Cuenta: ${user.googleCalendarEmail || "—"} · Última sincronización: ${lastSync}`}>
+				<Chip
+					size="small"
+					icon={<Calendar size={13} />}
+					label="Vinculado"
+					sx={{
+						height: 22,
+						fontSize: "0.65rem",
+						fontWeight: 600,
+						cursor: "help",
+						color: LIVE_GREEN,
+						bgcolor: alpha(LIVE_GREEN, 0.12),
+						border: `1px solid ${alpha(LIVE_GREEN, 0.32)}`,
+						"& .MuiChip-icon": { color: LIVE_GREEN },
+					}}
+				/>
+			</Tooltip>
+		);
+	};
+
 	const renderAuthProviderChip = (authProvider: string | undefined | null, authProviderUpdatedAt: string | undefined | null) => {
 		let backgroundColor;
 		let textColor;
@@ -747,13 +804,33 @@ const UsersList = () => {
 							</Select>
 						</FormControl>
 
+						{/* Filtro por Google Calendar (client-side) */}
+						<FormControl size="small" sx={{ minWidth: { sm: 170 }, width: { xs: "100%", sm: "auto" } }}>
+							<InputLabel id="gcal-filter-label">Google Calendar</InputLabel>
+							<Select
+								labelId="gcal-filter-label"
+								value={gcalFilter}
+								label="Google Calendar"
+								onChange={(e) => {
+									setGcalFilter(e.target.value);
+									setPage(0);
+								}}
+							>
+								<MenuItem value="">
+									<em>Todos</em>
+								</MenuItem>
+								<MenuItem value="true">Vinculado ({gcalConnectedCount})</MenuItem>
+								<MenuItem value="false">Sin vincular</MenuItem>
+							</Select>
+						</FormControl>
+
 						{/* Botón de buscar */}
 						<Button variant="contained" size="small" onClick={handleSearchSubmit} sx={{ height: 40 }}>
 							Buscar
 						</Button>
 
 						{/* Botón limpiar filtros */}
-						{(searchText || roleFilter || statusFilter) && (
+						{(searchText || roleFilter || statusFilter || gcalFilter) && (
 							<Button variant="outlined" size="small" onClick={handleClearFilters} color="secondary" sx={{ height: 40 }}>
 								Limpiar filtros
 							</Button>
@@ -957,6 +1034,7 @@ const UsersList = () => {
 													/>
 												</TableCell>
 												<TableCell>{renderAuthProviderChip(user.authProvider, user.authProviderUpdatedAt)}</TableCell>
+												<TableCell>{renderCalendarChip(user)}</TableCell>
 												<TableCell>{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : "Nunca"}</TableCell>
 												<TableCell>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}</TableCell>
 												<TableCell align="center">

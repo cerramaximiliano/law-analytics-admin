@@ -249,6 +249,10 @@ export interface User {
 	lastLogin?: string;
 	authProvider?: "email" | "google" | null;
 	authProviderUpdatedAt?: string | null;
+	/** Google Calendar vinculado desde la app del usuario. */
+	googleCalendarConnected?: boolean;
+	googleCalendarEmail?: string | null;
+	googleCalendarLastSync?: string | null;
 	subscription?: Subscription;
 	subscriptions?: SubscriptionsByEnvironment;
 	stripeHistory?: StripeHistoryByEnvironment;
