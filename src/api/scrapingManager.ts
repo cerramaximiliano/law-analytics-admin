@@ -1,6 +1,8 @@
 // Lee del caché (pjn/cache-api → rs0), no del pjn-api del hub (→ Atlas):
 // scraping-manager-state y configuracion-scraping viven en el replica set rs0 (los escribe el scraping-manager de worker_01). La copia de Atlas quedó congelada en la migración de agosto 2026.
-import workersAxios from "utils/workersAxios";
+// scraping-manager vive en ATLAS (lo escribe pjn-mis-causas en worker_02) —
+// NO usar workersAxios (/cache → rs0): ahí la colección no existe (500).
+import { pjnAtlasAxios as workersAxios } from "utils/workersAxios";
 
 // ====== Interfaces ======
 

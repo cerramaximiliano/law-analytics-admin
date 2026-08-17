@@ -4,16 +4,27 @@ import authTokenService from "services/authTokenService";
 import secureStorage from "services/secureStorage";
 import { requestQueueService } from "services/requestQueueService";
 
-// Instancia de Axios para la API de workers
-const workersAxios: AxiosInstance = axios.create({
-	baseURL: import.meta.env.VITE_WORKERS_URL || "http://localhost:3035",
-	timeout: 30000,
-	headers: {
-		"Content-Type": "application/json",
-		"ngrok-skip-browser-warning": "true", // Requiere configuración de CORS en el backend
-	},
-	withCredentials: false, // No necesitamos cookies, usamos Authorization header
-});
+// Factory: instancia de Axios para las APIs de workers con la misma cadena de
+// auth (token + refresh + cola). Hay DOS bases posibles:
+//   - VITE_WORKERS_URL (…/cache): pjn/cache-api contra el rs0 — corpus de causas
+//     y datos que viven en el Mongo local de worker_01 (replicados en rs0).
+//   - VITE_PJN_API_URL (raíz de api.lawanalytics.app): pjn/api contra ATLAS —
+//     datos que viven en Atlas (config del scraping-manager de pjn-mis-causas,
+//     failover, causas-update-config). ⚠️ Estos NO existen en el rs0: apuntarlos
+//     al /cache da 500 "Config no encontrada" (incidente Integraciones 2026-08-17).
+const createWorkersAxiosInstance = (baseURL: string): AxiosInstance => {
+	const instance: AxiosInstance = axios.create({
+		baseURL,
+		timeout: 30000,
+		headers: {
+			"Content-Type": "application/json",
+			"ngrok-skip-browser-warning": "true", // Requiere configuración de CORS en el backend
+		},
+		withCredentials: false, // No necesitamos cookies, usamos Authorization header
+	});
+	attachAuthInterceptors(instance);
+	return instance;
+};
 
 // Helper function to get auth token
 const getAuthToken = () => {
@@ -70,24 +81,26 @@ const getAuthToken = () => {
 	return null;
 };
 
-// Request interceptor to add auth token
-workersAxios.interceptors.request.use(
-	(config: InternalAxiosRequestConfig) => {
-		const token = getAuthToken();
+// Interceptores compartidos (token en request + refresh/cola en response)
+function attachAuthInterceptors(instance: AxiosInstance) {
+	// Request interceptor to add auth token
+	instance.interceptors.request.use(
+		(config: InternalAxiosRequestConfig) => {
+			const token = getAuthToken();
 
-		if (token && config.headers) {
-			config.headers.Authorization = `Bearer ${token}`;
-		}
+			if (token && config.headers) {
+				config.headers.Authorization = `Bearer ${token}`;
+			}
 
-		return config;
-	},
-	(error) => {
-		return Promise.reject(error);
-	},
-);
+			return config;
+		},
+		(error) => {
+			return Promise.reject(error);
+		},
+	);
 
-// Response interceptor for error handling and token refresh
-workersAxios.interceptors.response.use(
+	// Response interceptor for error handling and token refresh
+	instance.interceptors.response.use(
 	(response: AxiosResponse) => {
 		// Capturar token del header si viene (para mantener token actualizado)
 		const token = response.headers["authorization"] || response.headers["x-auth-token"];
@@ -139,7 +152,7 @@ workersAxios.interceptors.response.use(
 				}
 
 				// Reintentar la petición original con el nuevo token
-				return workersAxios(originalRequest);
+				return instance(originalRequest);
 			} catch (refreshError) {
 				// Si el refresh falla, encolar la petición y mostrar modal de autenticación
 				// en lugar de redirigir directamente al login
@@ -157,8 +170,18 @@ workersAxios.interceptors.response.use(
 			}
 		}
 
-		return Promise.reject(error);
-	},
+			return Promise.reject(error);
+		},
+	);
+}
+
+// Instancia principal: cache-api (rs0) — corpus de causas y datos worker_01-local.
+const workersAxios: AxiosInstance = createWorkersAxiosInstance(import.meta.env.VITE_WORKERS_URL || "http://localhost:3035");
+
+// Instancia hermana: pjn/api contra ATLAS (raíz de api.lawanalytics.app) — para
+// services cuyos datos NO están en el rs0 (scraping-manager, failover, etc.).
+export const pjnAtlasAxios: AxiosInstance = createWorkersAxiosInstance(
+	import.meta.env.VITE_PJN_API_URL || "https://api.lawanalytics.app",
 );
 
 export default workersAxios;

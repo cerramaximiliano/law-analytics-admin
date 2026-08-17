@@ -1,4 +1,6 @@
-import workersAxios from "utils/workersAxios";
+// causas-update-config y las causas elegibles viven en ATLAS — no en el rs0
+// del /cache (misma clase que scraping-manager, incidente Integraciones 2026-08-17).
+import { pjnAtlasAxios as workersAxios } from "utils/workersAxios";
 
 // Apunta a la pjn-api del worker_01 (DB local), expuesta vía VITE_WORKERS_URL.
 // Las causas viven en el caché local del server donde corre update-movimientos-worker.
