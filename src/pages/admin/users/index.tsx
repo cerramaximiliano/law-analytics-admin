@@ -39,7 +39,7 @@ import MainCard from "components/MainCard";
 import ScrollX from "components/ScrollX";
 import { BRAND_BLUE, LIVE_GREEN } from "themes/dashboardTokens";
 import { alpha } from "@mui/material/styles";
-import { getUsers, searchUsers, SearchUsersParams } from "store/reducers/users";
+import { searchUsers, SearchUsersParams } from "store/reducers/users";
 import { DefaultRootStateProps } from "types/root";
 import { User } from "types/user";
 import UserView from "./UserView";
@@ -57,28 +57,6 @@ import { useSnackbar } from "notistack";
 import { Eye, Trash, Edit, Add, Chart, SearchNormal1, CloseCircle, Refresh, Copy, CopySuccess, Calculator, Calendar } from "iconsax-react";
 
 // table sort
-function descendingComparator(a: any, b: any, orderBy: string) {
-	if (b[orderBy] < a[orderBy]) {
-		return -1;
-	}
-	if (b[orderBy] > a[orderBy]) {
-		return 1;
-	}
-	return 0;
-}
-
-const getComparator = (order: string, orderBy: string) =>
-	order === "desc" ? (a: any, b: any) => descendingComparator(a, b, orderBy) : (a: any, b: any) => -descendingComparator(a, b, orderBy);
-
-function stableSort<T>(array: T[], comparator: (a: T, b: T) => number) {
-	const stabilizedThis = array.map((el, index) => [el, index] as [T, number]);
-	stabilizedThis.sort((a, b) => {
-		const order = comparator(a[0], b[0]);
-		if (order !== 0) return order;
-		return a[1] - b[1];
-	});
-	return stabilizedThis.map((el) => el[0]);
-}
 
 // table header options
 const headCells = [
@@ -167,7 +145,7 @@ const UsersList = () => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
-	const { users, loading, error } = useSelector((state: DefaultRootStateProps) => state.users);
+	const { users, loading, error, usersTotal } = useSelector((state: DefaultRootStateProps) => state.users);
 
 	// Estado para los tabs
 	const [tabValue, setTabValue] = useState(0);
@@ -285,24 +263,24 @@ const UsersList = () => {
 	// Función para realizar la búsqueda con filtros
 	const fetchUsers = useCallback(
 		(overrideParams?: Partial<SearchUsersParams>) => {
+			// Paginación, orden y filtros los resuelve el backend: antes se traían
+			// los usuarios completos (limit 1000) y se ordenaba/paginaba en el
+			// navegador, lo que no escala y transfiere datos personales de más.
 			const params: SearchUsersParams = {
 				search: searchText || undefined,
 				role: roleFilter || undefined,
 				isActive: statusFilter || undefined,
+				googleCalendar: gcalFilter || undefined,
 				sortBy: orderBy,
 				sortOrder: order,
-				limit: 1000, // Obtener todos los usuarios para la página de administración
+				page: page + 1, // el backend cuenta desde 1
+				limit: rowsPerPage,
 				...overrideParams,
 			};
 
-			// Si no hay filtros ni búsqueda, usar getUsers simple
-			if (!params.search && !params.role && params.isActive === undefined && params.sortBy === "createdAt" && params.sortOrder === "desc") {
-				dispatch(getUsers());
-			} else {
-				dispatch(searchUsers(params));
-			}
+			dispatch(searchUsers(params));
 		},
-		[searchText, roleFilter, statusFilter, orderBy, order],
+		[searchText, roleFilter, statusFilter, gcalFilter, orderBy, order, page, rowsPerPage],
 	);
 
 	// Handlers para filtros
@@ -343,16 +321,27 @@ const UsersList = () => {
 		setOrderBy("createdAt");
 		setOrder("desc");
 		setPage(0);
-		dispatch(getUsers());
+		fetchUsers({
+			search: undefined,
+			role: undefined,
+			isActive: undefined,
+			googleCalendar: undefined,
+			sortBy: "createdAt",
+			sortOrder: "desc",
+			page: 1,
+		});
 	};
 
 	const handleChangePage = (_event: React.MouseEvent<HTMLButtonElement, MouseEvent> | null, newPage: number) => {
 		setPage(newPage);
+		fetchUsers({ page: newPage + 1 });
 	};
 
 	const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | undefined) => {
-		event?.target.value && setRowsPerPage(parseInt(event.target.value, 10));
+		const nextRows = event?.target.value ? parseInt(event.target.value, 10) : rowsPerPage;
+		setRowsPerPage(nextRows);
 		setPage(0);
+		fetchUsers({ page: 1, limit: nextRows });
 	};
 
 	const handleUserView = (user: User) => {
@@ -404,30 +393,15 @@ const UsersList = () => {
 	};
 
 	useEffect(() => {
-		dispatch(getUsers());
+		// Primera página paginada; antes traía la colección completa.
+		fetchUsers({ page: 1 });
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	// Aplicamos paginación y ordenamiento
-	const visibleRows = useMemo(() => {
-		if (!users || !Array.isArray(users) || users.length === 0) {
-			return [];
-		}
-
-		const base =
-			gcalFilter === ""
-				? (users as User[])
-				: (users as User[]).filter((u) =>
-						gcalFilter === "true" ? u.googleCalendarConnected === true : u.googleCalendarConnected !== true,
-				  );
-
-		return stableSort<User>(base, getComparator(order, orderBy)).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-	}, [users, order, orderBy, page, rowsPerPage, gcalFilter]);
-
-	// Total de usuarios con Calendar vinculado (sobre el set completo, no la página)
-	const gcalConnectedCount = useMemo(
-		() => (Array.isArray(users) ? (users as User[]).filter((u) => u.googleCalendarConnected === true).length : 0),
-		[users],
-	);
+	// El backend devuelve ya la página ordenada y filtrada; no queda nada por
+	// recortar ni ordenar en el cliente.
+	const visibleRows = useMemo(() => (Array.isArray(users) ? (users as User[]) : []), [users]);
 
 	// Renderizado de chip de estado basado en isActive (boolean)
 	const renderActiveStatusChip = (isActive: boolean | undefined | null) => {
@@ -814,12 +788,13 @@ const UsersList = () => {
 								onChange={(e) => {
 									setGcalFilter(e.target.value);
 									setPage(0);
+									fetchUsers({ googleCalendar: e.target.value || undefined, page: 1 });
 								}}
 							>
 								<MenuItem value="">
 									<em>Todos</em>
 								</MenuItem>
-								<MenuItem value="true">Vinculado ({gcalConnectedCount})</MenuItem>
+								<MenuItem value="true">Vinculado</MenuItem>
 								<MenuItem value="false">Sin vincular</MenuItem>
 							</Select>
 						</FormControl>
@@ -921,7 +896,7 @@ const UsersList = () => {
 													</Box>
 												)}
 												<Stack direction="row" spacing={2} sx={{ mt: 3 }} flexWrap="wrap" useFlexGap>
-													<Button variant="contained" color="primary" onClick={() => dispatch(getUsers())}>
+													<Button variant="contained" color="primary" onClick={() => fetchUsers()}>
 														Reintentar
 													</Button>
 													<Button variant="outlined" color="primary" onClick={() => window.location.reload()}>
@@ -1084,7 +1059,7 @@ const UsersList = () => {
 						<TablePagination
 							rowsPerPageOptions={[5, 10, 25]}
 							component="div"
-							count={users.length}
+							count={usersTotal}
 							rowsPerPage={rowsPerPage}
 							page={page}
 							onPageChange={handleChangePage}

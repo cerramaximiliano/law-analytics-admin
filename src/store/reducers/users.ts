@@ -4,6 +4,7 @@ import { dispatch } from "../index";
 
 // ACTION TYPES
 export const SET_USERS = "@users/SET_USERS";
+export const SET_USERS_TOTAL = "@users/SET_USERS_TOTAL";
 export const SET_USER = "@users/SET_USER";
 export const SET_LOADING = "@users/SET_LOADING";
 export const SET_ERROR = "@users/SET_ERROR";
@@ -28,6 +29,8 @@ export interface UsersStateProps {
 	} | null;
 	loading: boolean;
 	error: object | string | null;
+	/** Total de usuarios que matchean el filtro actual (paginación server-side). */
+	usersTotal: number;
 }
 
 export const initialState: UsersStateProps = {
@@ -38,6 +41,7 @@ export const initialState: UsersStateProps = {
 	stripeHistory: null,
 	loading: false,
 	error: null,
+	usersTotal: 0,
 };
 
 // Datos de ejemplo para usar si la API no devuelve datos
@@ -100,6 +104,11 @@ const users = (state = initialState, action: any) => {
 			return {
 				...state,
 				users: action.payload,
+			};
+		case SET_USERS_TOTAL:
+			return {
+				...state,
+				usersTotal: action.payload,
 			};
 		case SET_USER:
 			return {
@@ -173,6 +182,8 @@ export interface SearchUsersParams {
 	search?: string;
 	role?: string;
 	isActive?: boolean | string;
+	/** "true" | "false": vinculación con Google Calendar. */
+	googleCalendar?: string;
 	page?: number;
 	limit?: number;
 	sortBy?: string;
@@ -257,6 +268,7 @@ export const searchUsers = (params: SearchUsersParams) => {
 			if (params.isActive !== undefined && params.isActive !== "") {
 				queryParams.append("isActive", String(params.isActive));
 			}
+			if (params.googleCalendar) queryParams.append("googleCalendar", params.googleCalendar);
 			if (params.page) queryParams.append("page", String(params.page));
 			if (params.limit) queryParams.append("limit", String(params.limit));
 			if (params.sortBy) queryParams.append("sortBy", params.sortBy);
@@ -293,6 +305,12 @@ export const searchUsers = (params: SearchUsersParams) => {
 			dispatch({
 				type: SET_USERS,
 				payload: userData,
+			});
+			// El backend pagina: guardamos el total del filtro para que la tabla
+			// no tenga que traerse todos los usuarios para saber cuántos hay.
+			dispatch({
+				type: SET_USERS_TOTAL,
+				payload: response.data?.data?.pagination?.totalUsers ?? userData.length,
 			});
 
 			return response.data;
