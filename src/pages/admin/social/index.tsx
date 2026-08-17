@@ -68,6 +68,8 @@ import {
 	VideoResponse,
 	AnimacionInfo,
 	ClipInfo,
+	EstadoPost,
+	OrdenPosts,
 	createPost,
 	deletePost,
 	downloadImage,
@@ -338,6 +340,10 @@ const SocialStudio = () => {
 	// --- guardados
 	const [posts, setPosts] = useState<SocialPost[]>([]);
 	const [loadingPosts, setLoadingPosts] = useState(false);
+	// Filtros tipados del listado: "" = sin filtro (todas/todos).
+	const [filtroPlantilla, setFiltroPlantilla] = useState<TemplateId | "">("");
+	const [filtroEstado, setFiltroEstado] = useState<EstadoPost | "">("");
+	const [ordenPosts, setOrdenPosts] = useState<OrdenPosts>("recientes");
 	const [aBorrar, setABorrar] = useState<SocialPost | null>(null);
 	// Video de un post guardado, sin pasar por el estudio.
 	const [videoPost, setVideoPost] = useState<{ post: SocialPost; video: VideoResponse | null } | null>(null);
@@ -451,14 +457,19 @@ const SocialStudio = () => {
 	const cargarPosts = useCallback(async () => {
 		setLoadingPosts(true);
 		try {
-			const res = await listPosts({ limit: 50 });
+			const res = await listPosts({
+				limit: 50,
+				templateId: filtroPlantilla || undefined,
+				estado: filtroEstado || undefined,
+				orden: ordenPosts,
+			});
 			setPosts(res.posts);
 		} catch (err: any) {
 			enqueueSnackbar(err?.response?.data?.error || "No se pudieron cargar los posts", { variant: "error" });
 		} finally {
 			setLoadingPosts(false);
 		}
-	}, [enqueueSnackbar]);
+	}, [enqueueSnackbar, filtroPlantilla, filtroEstado, ordenPosts]);
 
 	useEffect(() => {
 		if (tab === 1) cargarPosts();
@@ -1231,7 +1242,35 @@ const SocialStudio = () => {
 
 			{tab === 1 && (
 				<Box>
-					<Stack direction="row" justifyContent="flex-end" sx={{ mb: 1 }}>
+					<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.5 }}>
+						<FormControl size="small" sx={{ minWidth: 220 }}>
+							<InputLabel>Plantilla</InputLabel>
+							<Select value={filtroPlantilla} label="Plantilla" onChange={(e) => setFiltroPlantilla(e.target.value as TemplateId | "")}>
+								<MenuItem value="">Todas las plantillas</MenuItem>
+								{templates.map((t) => (
+									<MenuItem key={t.id} value={t.id}>
+										{t.label}
+									</MenuItem>
+								))}
+							</Select>
+						</FormControl>
+						<FormControl size="small" sx={{ minWidth: 150 }}>
+							<InputLabel>Estado</InputLabel>
+							<Select value={filtroEstado} label="Estado" onChange={(e) => setFiltroEstado(e.target.value as EstadoPost | "")}>
+								<MenuItem value="">Todos</MenuItem>
+								<MenuItem value="borrador">Borrador</MenuItem>
+								<MenuItem value="aprobado">Aprobado</MenuItem>
+								<MenuItem value="publicado">Publicado</MenuItem>
+							</Select>
+						</FormControl>
+						<FormControl size="small" sx={{ minWidth: 160 }}>
+							<InputLabel>Orden</InputLabel>
+							<Select value={ordenPosts} label="Orden" onChange={(e) => setOrdenPosts(e.target.value as OrdenPosts)}>
+								<MenuItem value="recientes">Más recientes</MenuItem>
+								<MenuItem value="antiguos">Más antiguos</MenuItem>
+							</Select>
+						</FormControl>
+						<Box sx={{ flex: 1 }} />
 						<Button size="small" startIcon={<Refresh size={16} />} onClick={cargarPosts} disabled={loadingPosts}>
 							Actualizar
 						</Button>

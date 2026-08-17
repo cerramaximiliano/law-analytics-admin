@@ -19,6 +19,8 @@ export type TemplateId =
 	| "planes";
 export type FormatoId = "feed34" | "feed45" | "square" | "story" | "reel";
 export type EstadoPost = "borrador" | "aprobado" | "publicado";
+/** Orden del listado de guardados. El backend cae a "recientes" ante cualquier otro valor. */
+export type OrdenPosts = "recientes" | "antiguos";
 
 /** El contenido es forma libre: cada plantilla define sus propios campos. */
 export type ContenidoPost = Record<string, unknown>;
@@ -302,7 +304,7 @@ export const downloadVideo = (base64: string, filename: string) => {
 };
 
 export const listPosts = async (
-	params: { estado?: EstadoPost; templateId?: TemplateId; page?: number; limit?: number } = {},
+	params: { estado?: EstadoPost; templateId?: TemplateId; page?: number; limit?: number; orden?: OrdenPosts } = {},
 ): Promise<ListPostsResponse> => {
 	const res = await mktAxios.get("/api/social/posts", { params });
 	return res.data.data;
