@@ -67,12 +67,14 @@ import {
 	VarianteFormato,
 	VideoResponse,
 	AnimacionInfo,
+	ClipInfo,
 	createPost,
 	deletePost,
 	downloadImage,
 	duplicatePost,
 	generateContent,
 	generateCaption,
+	getClips,
 	getHealth,
 	getTemplates,
 	listPosts,
@@ -316,6 +318,10 @@ const SocialStudio = () => {
 
 	// --- video (1080x1920)
 	const [animacion, setAnimacion] = useState("entrada");
+	// Clips de marca (loaders SVG de la app) antes y después del post. "" = sin clip.
+	const [clips, setClips] = useState<ClipInfo[]>([]);
+	const [introClip, setIntroClip] = useState<string>("");
+	const [cierreClip, setCierreClip] = useState<string>("");
 	// Estilo visual: transversal a las plantillas. "" = el que trae la plantilla.
 	const [estilo, setEstilo] = useState<string>("");
 	const [estilos, setEstilos] = useState<EstiloInfo[]>([]);
@@ -396,7 +402,7 @@ const SocialStudio = () => {
 		let cancelado = false;
 		(async () => {
 			try {
-				const [cat, hp] = await Promise.all([getTemplates(), getHealth().catch(() => null)]);
+				const [cat, hp, cl] = await Promise.all([getTemplates(), getHealth().catch(() => null), getClips().catch(() => [])]);
 				if (cancelado) return;
 				setTemplates(cat.templates);
 				setFormats(cat.formats);
@@ -404,6 +410,7 @@ const SocialStudio = () => {
 				setComposiciones(cat.composiciones || []);
 				setPies(cat.pies || []);
 				setFormato(cat.defaultFormat);
+				setClips(cl);
 				if (hp) setHealth({ renderer: hp.renderer.online, claude: hp.claudeConfigurado });
 			} catch (err: any) {
 				if (!cancelado) enqueueSnackbar(err?.response?.data?.error || "No se pudo cargar el catálogo de plantillas", { variant: "error" });
@@ -560,6 +567,8 @@ const SocialStudio = () => {
 				estilo: estilo || undefined,
 				composicion: composicion || undefined,
 				pie: pie || undefined,
+				intro: introClip || undefined,
+				cierre: cierreClip || undefined,
 			});
 			setVideo(r);
 			enqueueSnackbar(`Video listo: ${r.frames} frames en ${(r.ms / 1000).toFixed(0)}s`, { variant: "success" });
@@ -688,7 +697,13 @@ const SocialStudio = () => {
 		setVideoPost({ post, video: null });
 		setGenerandoVideoPost(true);
 		try {
-			const r = await renderVideoSavedPost(post._id, { formato: formatoVideo });
+			// Los clips elegidos en el estudio aplican también al video de un post
+			// guardado: son un ajuste de render, no algo que se persista en el post.
+			const r = await renderVideoSavedPost(post._id, {
+				formato: formatoVideo,
+				intro: introClip || undefined,
+				cierre: cierreClip || undefined,
+			});
 			setVideoPost({ post, video: r });
 		} catch (err: any) {
 			enqueueSnackbar(err?.response?.data?.error || "No se pudo generar el video", { variant: "error" });
@@ -1032,6 +1047,37 @@ const SocialStudio = () => {
 									{animsDisponibles.find((a) => a.id === animacion) && (
 										<Typography variant="caption" color="text.secondary">
 											{animsDisponibles.find((a) => a.id === animacion)?.description}
+										</Typography>
+									)}
+									{clips.length > 0 && (
+										<Stack direction="row" spacing={1}>
+											<FormControl fullWidth size="small">
+												<InputLabel>Intro</InputLabel>
+												<Select value={introClip} label="Intro" onChange={(e) => setIntroClip(e.target.value)}>
+													<MenuItem value="">Sin intro</MenuItem>
+													{clips.map((c) => (
+														<MenuItem key={c.id} value={c.id}>
+															{c.label} · {(c.duracionMs / 1000).toFixed(1)}s
+														</MenuItem>
+													))}
+												</Select>
+											</FormControl>
+											<FormControl fullWidth size="small">
+												<InputLabel>Cierre</InputLabel>
+												<Select value={cierreClip} label="Cierre" onChange={(e) => setCierreClip(e.target.value)}>
+													<MenuItem value="">Sin cierre</MenuItem>
+													{clips.map((c) => (
+														<MenuItem key={c.id} value={c.id}>
+															{c.label} · {(c.duracionMs / 1000).toFixed(1)}s
+														</MenuItem>
+													))}
+												</Select>
+											</FormControl>
+										</Stack>
+									)}
+									{(introClip || cierreClip) && (
+										<Typography variant="caption" color="text.secondary">
+											El logo animado de la app abre y/o cierra el video. Su duración sale del tope de 35s: el post cede ese tiempo.
 										</Typography>
 									)}
 									<Button

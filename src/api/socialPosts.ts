@@ -111,6 +111,19 @@ export interface VideoResponse {
 	height: number;
 	animacion: string;
 	duracionMs: number;
+	/** Clips de marca aplicados (null si el video salió sin ellos). */
+	intro?: string | null;
+	cierre?: string | null;
+}
+
+/** Clip de marca (loader SVG animado) para intro/cierre de videos. */
+export interface ClipInfo {
+	id: string;
+	label: string;
+	description: string;
+	/** Posición recomendada; la API acepta cualquier clip en cualquier posición. */
+	tipo: "intro" | "cierre";
+	duracionMs: number;
 }
 
 export interface GeneracionMeta {
@@ -197,6 +210,11 @@ export const getHealth = async (): Promise<SocialHealth> => {
 	return res.data.data;
 };
 
+export const getClips = async (): Promise<ClipInfo[]> => {
+	const res = await mktAxios.get("/api/social/clips");
+	return res.data.data;
+};
+
 export const generateContent = async (params: { templateId: TemplateId; prompt: string; notas?: string }): Promise<GenerateResponse> => {
 	const res = await mktAxios.post("/api/social/generate", params);
 	return res.data.data;
@@ -256,6 +274,10 @@ export const renderVideo = async (params: {
 	estilo?: string;
 	composicion?: string;
 	pie?: string;
+	/** Clip de marca antes del post (id de ClipInfo). */
+	intro?: string;
+	/** Clip de marca después del post (id de ClipInfo). */
+	cierre?: string;
 }): Promise<VideoResponse> => {
 	// El render de video tarda bastante mas que una imagen: se sube el timeout
 	// del cliente para que no corte antes de que el server termine.
@@ -342,7 +364,16 @@ export const duplicatePost = async (
  */
 export const renderVideoSavedPost = async (
 	id: string,
-	params: { animacion?: string; duracionSeg?: number; formato?: FormatoId; estilo?: string; composicion?: string; pie?: string } = {},
+	params: {
+		animacion?: string;
+		duracionSeg?: number;
+		formato?: FormatoId;
+		estilo?: string;
+		composicion?: string;
+		pie?: string;
+		intro?: string;
+		cierre?: string;
+	} = {},
 ): Promise<VideoResponse> => {
 	const res = await mktAxios.post(`/api/social/posts/${id}/video`, params, { timeout: 300000 });
 	return res.data.data;
