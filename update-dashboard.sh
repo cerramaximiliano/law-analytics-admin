@@ -132,6 +132,14 @@ else
 			rm -rf build.old
 			[ -d "build" ] && mv build build.old
 			mv build.new build
+			# Conservar los assets del build anterior: un usuario con la app abierta
+			# sigue pidiendo chunks con el hash viejo y, si se borraron, la vista
+			# queda en blanco (o fuerza recarga). Los nombres llevan hash de
+			# contenido, así que conviven sin colisionar. Se podan a los 7 días.
+			if [ -d build.old/assets ] && [ -d build/assets ]; then
+				cp -pn build.old/assets/* build/assets/ 2>/dev/null || true
+				find build/assets -type f -mtime +7 -delete 2>/dev/null || true
+			fi
 			rm -rf build.old
 		else
 			# Si el build con outDir falla (ej. incompatibilidad), fallback directo
@@ -149,6 +157,12 @@ else
 				rm -rf build.old
 				[ -d 'build' ] && mv build build.old
 				mv build.new build
+				# Conservar assets del build anterior (ver comentario arriba): evita
+				# la pantalla blanca de quien tenga la app abierta durante el deploy.
+				if [ -d build.old/assets ] && [ -d build/assets ]; then
+					cp -pn build.old/assets/* build/assets/ 2>/dev/null || true
+					find build/assets -type f -mtime +7 -delete 2>/dev/null || true
+				fi
 				rm -rf build.old
 			else
 				rm -rf build.new
