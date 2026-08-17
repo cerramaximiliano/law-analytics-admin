@@ -85,16 +85,11 @@ export default defineConfig({
 					if (id.includes("node_modules/dayjs") || id.includes("node_modules/date-fns")) {
 						return "vendor-dates";
 					}
-					// Núcleo de React y router: siempre necesario, se cachea aparte
-					// para que un cambio de dependencias no lo invalide.
-					if (
-						id.includes("node_modules/react/") ||
-						id.includes("node_modules/react-dom/") ||
-						id.includes("node_modules/react-router") ||
-						id.includes("node_modules/scheduler")
-					) {
-						return "vendor-react";
-					}
+					// NO separar React en su propio chunk: react/react-dom quedan en
+					// `vendor` junto a sus consumidores. Aislarlos genera una
+					// dependencia circular entre chunks y en runtime falla con
+					// "Cannot set properties of undefined (setting 'Children')",
+					// dejando la app sin montar (incidente 2026-08-17).
 					// Todo lo demás
 					if (id.includes("node_modules")) {
 						return "vendor";
