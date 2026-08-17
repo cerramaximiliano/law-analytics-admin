@@ -64,6 +64,7 @@ import { CampaignService } from "store/reducers/campaign";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { COL_SM, COL_MD, COL_LG } from "utils/responsiveColumns";
 
 // Extend dayjs with timezone support
 dayjs.extend(utc);
@@ -107,13 +108,6 @@ const StatusIndicator = styled(Box)<{ status: "online" | "offline" | "checking" 
 }));
 
 // ==============================|| ADMIN - MAILING CAMPAIGNS ||============================== //
-
-// Prioridad de columnas en mobile: la tabla no entra en xs, así que solo
-// quedan las esenciales y el resto aparece por breakpoint. El detalle
-// completo sigue disponible al abrir cada fila.
-const COL_SM = { display: { xs: "none", sm: "table-cell" } } as const;
-const COL_MD = { display: { xs: "none", md: "table-cell" } } as const;
-const COL_LG = { display: { xs: "none", lg: "table-cell" } } as const;
 
 const MailingCampaigns = () => {
 	const theme = useTheme();

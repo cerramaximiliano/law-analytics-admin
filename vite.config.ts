@@ -72,6 +72,29 @@ export default defineConfig({
 					if (id.includes("node_modules/simplebar")) {
 						return "vendor-simplebar";
 					}
+					// Charts: solo los usa el dashboard y algunas vistas de stats,
+					// no tiene sentido que viajen en el bundle inicial de todos.
+					if (id.includes("node_modules/recharts") || id.includes("node_modules/d3-") || id.includes("node_modules/victory-")) {
+						return "vendor-charts";
+					}
+					// Editor de texto enriquecido: lo usan plantillas y compositor.
+					if (id.includes("node_modules/react-quill") || id.includes("node_modules/quill")) {
+						return "vendor-editor";
+					}
+					// Fechas
+					if (id.includes("node_modules/dayjs") || id.includes("node_modules/date-fns")) {
+						return "vendor-dates";
+					}
+					// Núcleo de React y router: siempre necesario, se cachea aparte
+					// para que un cambio de dependencias no lo invalide.
+					if (
+						id.includes("node_modules/react/") ||
+						id.includes("node_modules/react-dom/") ||
+						id.includes("node_modules/react-router") ||
+						id.includes("node_modules/scheduler")
+					) {
+						return "vendor-react";
+					}
 					// Todo lo demás
 					if (id.includes("node_modules")) {
 						return "vendor";

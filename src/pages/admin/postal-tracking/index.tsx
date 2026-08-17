@@ -40,6 +40,7 @@ import MainCard from "components/MainCard";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import ScraperService, { PostalTracking, PostalTrackingStats, PostalTrackingFilters } from "api/scraperService";
 import dayjs from "dayjs";
+import { COL_SM, COL_MD, COL_LG } from "utils/responsiveColumns";
 
 const PROCESSING_STATUS_CONFIG: Record<string, { color: "default" | "warning" | "info" | "success" | "error"; label: string }> = {
 	pending: { color: "warning", label: "Pendiente" },
@@ -88,13 +89,6 @@ const getClosureInfo = (
 	}
 	return { origin: "system", label: "Sistema", color: "info", reason: CLOSURE_REASON_LABELS.final_status };
 };
-
-// Prioridad de columnas en mobile: la tabla tiene 11 columnas y en xs solo
-// caben las esenciales (código, usuario, estado, acciones). El resto aparece
-// progresivamente; el dato completo siempre está en el modal de detalle.
-const COL_SM = { display: { xs: "none", sm: "table-cell" } } as const;
-const COL_MD = { display: { xs: "none", md: "table-cell" } } as const;
-const COL_LG = { display: { xs: "none", lg: "table-cell" } } as const;
 
 const formatDate = (dateString?: string) => {
 	if (!dateString) return "-";

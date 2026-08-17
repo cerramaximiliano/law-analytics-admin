@@ -84,6 +84,7 @@ import AnimateButton from "components/@extended/AnimateButton";
 import TableSkeleton from "components/UI/TableSkeleton";
 import MarketingQuickNav from "components/admin/marketing/MarketingQuickNav";
 import GenerateAITemplateModal from "components/admin/marketing/GenerateAITemplateModal";
+import { COL_SM, COL_MD, COL_LG } from "utils/responsiveColumns";
 
 // types
 interface TemplateMetadata {
@@ -464,13 +465,6 @@ Dirección: \${direccion}`;
  */
 const getTemplateHtml = (t: { htmlBody?: string; htmlContent?: string } | null | undefined): string =>
 	(t && (t.htmlBody || t.htmlContent)) || "";
-
-// Prioridad de columnas en mobile: la tabla no entra en xs, así que solo
-// quedan las esenciales y el resto aparece por breakpoint. El detalle
-// completo sigue disponible al abrir cada fila.
-const COL_SM = { display: { xs: "none", sm: "table-cell" } } as const;
-const COL_MD = { display: { xs: "none", md: "table-cell" } } as const;
-const COL_LG = { display: { xs: "none", lg: "table-cell" } } as const;
 
 const EmailTemplates = () => {
 	const theme = useTheme();
