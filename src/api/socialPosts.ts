@@ -8,6 +8,7 @@ export type TemplateId =
 	| "feature"
 	| "carrusel"
 	| "jurisprudencia-carrusel"
+	| "educativo-carrusel"
 	| "promo"
 	| "valor-arancel"
 	| "integraciones"
