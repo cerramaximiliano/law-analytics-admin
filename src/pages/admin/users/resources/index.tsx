@@ -62,7 +62,7 @@ import {
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { BRAND_BLUE, PRO_TEAL, headerShadow } from "themes/dashboardTokens";
+import { BRAND_BLUE, PRO_TEAL, LIVE_GREEN, headerShadow } from "themes/dashboardTokens";
 import PostalDocumentsAdminService, { PostalDocument, PostalDocumentStats } from "api/postalDocumentsAdmin";
 import AdminResourcesService, {
 	ResourceType,
@@ -2418,6 +2418,22 @@ const UserResources: React.FC = () => {
 											</TableCell>
 											<TableCell align="center">
 												<HeaderConAyuda
+													label="Flujo email"
+													ayuda={
+														<>
+															Recorrido del usuario a partir de una notificación judicial:
+															<br />
+															<b>✉ enviados</b> → <b>👁 abrió</b> el documento → <b>✚ creó</b> un vencimiento, nota o tarea desde el
+															movimiento →<b>↩ volvió</b> a la app.
+															<br />
+															Las aperturas descuentan bots (requieren que corra JS). El paso "creó" se mide por <code>movementRef</code>,
+															así que cuenta igual en PJN, SCBA, MEV y EJE.
+														</>
+													}
+												/>
+											</TableCell>
+											<TableCell align="center">
+												<HeaderConAyuda
 													label="Jurisprudencia"
 													ayuda={
 														<>
@@ -2626,6 +2642,67 @@ const UserResources: React.FC = () => {
 															—
 														</Typography>
 													)}
+												</TableCell>
+												<TableCell align="center">
+													{(() => {
+														// Embudo: enviado → abrió → creó → volvió. Los pasos sin dato quedan
+														// apagados para que se vea dónde se corta el recorrido.
+														const pasos = [
+															{ icono: "✉", valor: user.emailsSent || 0, ayuda: "notificaciones enviadas" },
+															{ icono: "👁", valor: user.emailViewer?.views || 0, ayuda: "documentos abiertos" },
+															{ icono: "✚", valor: user.movementActions?.total || 0, ayuda: "vencimientos, notas y tareas creados" },
+															{ icono: "↩", valor: user.emailViewer?.loginContinues || 0, ayuda: "vueltas a la app" },
+														];
+														if (pasos.every((p) => p.valor === 0)) {
+															return (
+																<Typography variant="caption" color="text.secondary">
+																	—
+																</Typography>
+															);
+														}
+														return (
+															<Tooltip
+																arrow
+																title={
+																	<Box>
+																		{pasos.map((p) => (
+																			<div key={p.ayuda}>
+																				{p.icono} <b>{p.valor}</b> {p.ayuda}
+																			</div>
+																		))}
+																		{(user.movementActions?.total || 0) > 0 && (
+																			<div style={{ marginTop: 4 }}>
+																				Creó: {user.movementActions?.vencimientos || 0} venc. · {user.movementActions?.notas || 0} nota(s) ·{" "}
+																				{user.movementActions?.tareas || 0} tarea(s)
+																			</div>
+																		)}
+																	</Box>
+																}
+															>
+																<Stack direction="row" spacing={0.25} justifyContent="center" alignItems="center" sx={{ cursor: "help" }}>
+																	{pasos.map((p, i) => (
+																		<React.Fragment key={p.ayuda}>
+																			{i > 0 && (
+																				<Typography variant="caption" sx={{ color: "text.disabled", mx: 0.15 }}>
+																					›
+																				</Typography>
+																			)}
+																			<Typography
+																				variant="caption"
+																				sx={{
+																					fontWeight: 600,
+																					fontVariantNumeric: "tabular-nums",
+																					color: p.valor > 0 ? (i === 3 ? LIVE_GREEN : "text.primary") : "text.disabled",
+																				}}
+																			>
+																				{p.valor}
+																			</Typography>
+																		</React.Fragment>
+																	))}
+																</Stack>
+															</Tooltip>
+														);
+													})()}
 												</TableCell>
 												<TableCell align="center">
 													{(() => {

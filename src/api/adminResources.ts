@@ -167,6 +167,16 @@ export interface UserWithResources {
 		lastLogin: string | null;
 		activeDays: number;
 	};
+	/** Notificaciones judiciales enviadas: primer paso del embudo. */
+	emailsSent?: number;
+	/** Vencimientos, notas y tareas creados desde un movimiento judicial. */
+	movementActions?: {
+		vencimientos: number;
+		notas: number;
+		tareas: number;
+		total: number;
+		lastActivity?: string | null;
+	};
 }
 
 export interface UsersSummaryFilters {
