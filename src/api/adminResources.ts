@@ -170,11 +170,16 @@ export interface UserWithResources {
 	/** Embudo del email judicial. `emails` son envíos reales (el digest agrupa
 	 *  varios expedientes por email), `expedientes` los cubiertos por esos envíos. */
 	emailFunnel?: {
+		/** Pasos del embudo, en expedientes (unidad comparable). */
+		notificados: number;
+		abiertos: number;
+		vistos: number;
+		/** Contexto: envíos reales y eventos de apertura (con reaperturas). */
 		emails: number;
-		expedientes: number;
+		opensEventos: number;
 		lastSent?: string | null;
-		opens: number;
 		lastOpen?: string | null;
+		windowDays?: number;
 	};
 	/** Vencimientos, notas y tareas creados desde un movimiento judicial. */
 	movementActions?: {

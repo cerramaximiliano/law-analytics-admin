@@ -2423,8 +2423,11 @@ const UserResources: React.FC = () => {
 														<>
 															Recorrido del usuario a partir de una notificación judicial:
 															<br />
-															<b>✉ enviados</b> → <b>👁 abrió</b> el documento → <b>✚ creó</b> un vencimiento, nota o tarea desde el
-															movimiento →<b>↩ volvió</b> a la app.
+															<b>✉ notificados</b> → <b>📬 abrió el aviso</b> → <b>👁 vio el documento</b> → <b>✚ creó</b> un vencimiento,
+															nota o tarea → <b>↩ volvió</b> a la app.
+															<br />
+															Los tres primeros pasos cuentan <b>expedientes distintos</b>, así son comparables entre sí: el píxel del
+															correo dispara en cada recarga, y un mismo email agrupa varios expedientes.
 															<br />
 															Las aperturas descuentan bots (requieren que corra JS). El paso "creó" se mide por <code>movementRef</code>,
 															así que cuenta igual en PJN, SCBA, MEV y EJE.
@@ -2659,9 +2662,9 @@ const UserResources: React.FC = () => {
 														// Embudo: enviado → abrió → creó → volvió. Los pasos sin dato quedan
 														// apagados para que se vea dónde se corta el recorrido.
 														const pasos = [
-															{ icono: "✉", valor: user.emailFunnel?.emails || 0, ayuda: "emails enviados (digest)" },
-															{ icono: "📬", valor: user.emailFunnel?.opens || 0, ayuda: "emails abiertos" },
-															{ icono: "👁", valor: user.emailViewer?.views || 0, ayuda: "documentos abiertos" },
+															{ icono: "✉", valor: user.emailFunnel?.notificados || 0, ayuda: "expedientes notificados" },
+															{ icono: "📬", valor: user.emailFunnel?.abiertos || 0, ayuda: "expedientes cuyo aviso abrió" },
+															{ icono: "👁", valor: user.emailFunnel?.vistos || 0, ayuda: "expedientes cuyo documento vio" },
 															{ icono: "✚", valor: user.movementActions?.total || 0, ayuda: "vencimientos, notas y tareas creados" },
 															{ icono: "↩", valor: user.emailViewer?.loginContinues || 0, ayuda: "vueltas a la app" },
 														];
@@ -2682,6 +2685,12 @@ const UserResources: React.FC = () => {
 																				{p.icono} <b>{p.valor}</b> {p.ayuda}
 																			</div>
 																		))}
+																		{(user.emailFunnel?.emails || 0) > 0 && (
+																			<div style={{ marginTop: 4, opacity: 0.85 }}>
+																				{user.emailFunnel?.emails} email(s) enviados · {user.emailFunnel?.opensEventos || 0} apertura(s)
+																				contando reaperturas
+																			</div>
+																		)}
 																		{(user.movementActions?.total || 0) > 0 && (
 																			<div style={{ marginTop: 4 }}>
 																				Creó: {user.movementActions?.vencimientos || 0} venc. · {user.movementActions?.notas || 0} nota(s) ·{" "}
