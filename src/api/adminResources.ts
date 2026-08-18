@@ -162,6 +162,11 @@ export interface UserWithResources {
 		loginContinues: number;
 		lastActivity?: string | null;
 	};
+	/** Métricas de sesión (30 días) que ahora vienen en el mismo payload. */
+	sessionMetrics?: {
+		lastLogin: string | null;
+		activeDays: number;
+	};
 }
 
 export interface UsersSummaryFilters {
