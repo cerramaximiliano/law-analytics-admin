@@ -22,12 +22,29 @@ export interface EmailEngagementRow {
 	emailVisits: number;
 	lastEmailVisitAt: string | null;
 	emailVisitSources: string[];
+	/** Entrega real (tracking SES vía SNS, desde el 18/08). */
+	delivery?: {
+		/** Enviados que pueden tener estado: los previos al tracking no cuentan. */
+		withTracking: number;
+		delivered: number;
+		failed: number;
+		bouncePermanent: number;
+		complaints: number;
+	};
 }
 
 export interface EmailsEngagementResponse {
 	success: boolean;
 	data: EmailEngagementRow[];
-	summary: { usersWithEmails: number; totalSent: number };
+	summary: {
+		usersWithEmails: number;
+		totalSent: number;
+		withTracking?: number;
+		delivered?: number;
+		failed?: number;
+		bouncePermanent?: number;
+		complaints?: number;
+	};
 	pagination: { page: number; limit: number; total: number; pages: number };
 }
 

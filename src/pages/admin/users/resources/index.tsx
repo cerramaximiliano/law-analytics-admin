@@ -77,7 +77,7 @@ import AdminResourcesService, {
 	UserWithResources,
 } from "api/adminResources";
 import UserSessionsService from "api/userSessions";
-import EmailsEngagementService, { EmailEngagementRow } from "api/emailsEngagement";
+import EmailsEngagementService, { EmailEngagementRow, EmailsEngagementResponse } from "api/emailsEngagement";
 import { getSaijEngagementBatch, SaijEngagement } from "api/saijCampaigns";
 import FoldersService from "api/folders";
 import { UserSessionMetrics, SessionStats, UserWithSessionMetrics } from "types/user-session";
@@ -612,7 +612,7 @@ const UserResources: React.FC = () => {
 
 	// Emails tab state
 	const [emailsRows, setEmailsRows] = useState<EmailEngagementRow[]>([]);
-	const [emailsSummary, setEmailsSummary] = useState<{ usersWithEmails: number; totalSent: number } | null>(null);
+	const [emailsSummary, setEmailsSummary] = useState<EmailsEngagementResponse["summary"] | null>(null);
 	const [emailsLoading, setEmailsLoading] = useState(false);
 
 	const currentType = tabs[activeTab].type;
@@ -1709,6 +1709,25 @@ const UserResources: React.FC = () => {
 								{[
 									{ label: "Usuarios con emails", value: formatNumber(emailsSummary.usersWithEmails), color: theme.palette.primary.main },
 									{ label: "Emails enviados", value: formatNumber(emailsSummary.totalSent), color: theme.palette.info.main },
+									// Entrega: solo tiene sentido sobre los envíos con tracking. Los
+									// anteriores al 18/08 no tienen estado y no son "no entregados".
+									...((emailsSummary.withTracking || 0) > 0
+										? [
+												{
+													label: "Entregados",
+													value: `${formatNumber(emailsSummary.delivered || 0)} / ${formatNumber(emailsSummary.withTracking || 0)}`,
+													color: LIVE_GREEN,
+												},
+												{
+													label: "Rebotes / quejas",
+													value: `${formatNumber(emailsSummary.bouncePermanent || 0)} / ${formatNumber(emailsSummary.complaints || 0)}`,
+													color:
+														(emailsSummary.bouncePermanent || 0) + (emailsSummary.complaints || 0) > 0
+															? theme.palette.error.main
+															: theme.palette.text.primary,
+												},
+										  ]
+										: []),
 								].map((st) => (
 									<Grid item xs={6} sm={4} md={3} key={st.label}>
 										<Paper elevation={0} sx={{ p: 1.5, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, height: "100%" }}>
@@ -1725,6 +1744,13 @@ const UserResources: React.FC = () => {
 							<Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: "block" }}>
 								"Vista movimientos" = ingresos reales a la vista pública /m/:token (sin bots). "Visitas desde emails" = ingresos LOGUEADOS a
 								la app llegando desde un CTA de email (?source=email_*) — disponible desde el deploy de esta función.
+								{(emailsSummary.withTracking || 0) === 0 && (
+									<>
+										{" "}
+										El estado de entrega (entregado / rebote / queja) se registra desde el 18/08 vía SES: los envíos anteriores figuran como
+										"enviado" porque no había forma de saber si llegaron.
+									</>
+								)}
 							</Typography>
 						</Box>
 					)}
@@ -1768,6 +1794,38 @@ const UserResources: React.FC = () => {
 											</TableCell>
 											<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
 												{row.totalSent}
+												{/* Señal de entrega: distingue "no abre" de "no le llega", que hoy
+												    se veían igual. Solo aplica a los envíos con tracking. */}
+												{(row.delivery?.bouncePermanent || 0) > 0 || (row.delivery?.complaints || 0) > 0 ? (
+													<Tooltip
+														arrow
+														title={
+															<Box>
+																{(row.delivery?.bouncePermanent || 0) > 0 && (
+																	<div>
+																		{row.delivery?.bouncePermanent} rebote(s) permanente(s): la dirección no existe o está bloqueada
+																	</div>
+																)}
+																{(row.delivery?.complaints || 0) > 0 && (
+																	<div>{row.delivery?.complaints} queja(s) de spam: seguir enviándole daña la reputación del dominio</div>
+																)}
+															</Box>
+														}
+													>
+														<Box component="span" sx={{ ml: 0.5, color: "error.main", cursor: "help", fontWeight: 700 }}>
+															!
+														</Box>
+													</Tooltip>
+												) : (row.delivery?.delivered || 0) > 0 ? (
+													<Tooltip
+														arrow
+														title={`${row.delivery?.delivered} de ${row.delivery?.withTracking} con tracking fueron entregados`}
+													>
+														<Box component="span" sx={{ ml: 0.5, color: LIVE_GREEN, cursor: "help" }}>
+															✓
+														</Box>
+													</Tooltip>
+												) : null}
 											</TableCell>
 											<TableCell>
 												<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
