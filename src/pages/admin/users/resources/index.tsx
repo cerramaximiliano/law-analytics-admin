@@ -2432,6 +2432,17 @@ const UserResources: React.FC = () => {
 													}
 												/>
 											</TableCell>
+											<TableCell>
+												<HeaderConAyuda
+													label="Últ. apertura"
+													ayuda={
+														<>
+															Última vez que el usuario <b>abrió un email</b> de notificación judicial (píxel de apertura). “nunca” =
+															recibió correos pero no abrió ninguno.
+														</>
+													}
+												/>
+											</TableCell>
 											<TableCell align="center">
 												<HeaderConAyuda
 													label="Jurisprudencia"
@@ -2648,7 +2659,8 @@ const UserResources: React.FC = () => {
 														// Embudo: enviado → abrió → creó → volvió. Los pasos sin dato quedan
 														// apagados para que se vea dónde se corta el recorrido.
 														const pasos = [
-															{ icono: "✉", valor: user.emailsSent || 0, ayuda: "notificaciones enviadas" },
+															{ icono: "✉", valor: user.emailFunnel?.emails || 0, ayuda: "emails enviados (digest)" },
+															{ icono: "📬", valor: user.emailFunnel?.opens || 0, ayuda: "emails abiertos" },
 															{ icono: "👁", valor: user.emailViewer?.views || 0, ayuda: "documentos abiertos" },
 															{ icono: "✚", valor: user.movementActions?.total || 0, ayuda: "vencimientos, notas y tareas creados" },
 															{ icono: "↩", valor: user.emailViewer?.loginContinues || 0, ayuda: "vueltas a la app" },
@@ -2692,7 +2704,7 @@ const UserResources: React.FC = () => {
 																				sx={{
 																					fontWeight: 600,
 																					fontVariantNumeric: "tabular-nums",
-																					color: p.valor > 0 ? (i === 3 ? LIVE_GREEN : "text.primary") : "text.disabled",
+																					color: p.valor > 0 ? (i === pasos.length - 1 ? LIVE_GREEN : "text.primary") : "text.disabled",
 																				}}
 																			>
 																				{p.valor}
@@ -2703,6 +2715,19 @@ const UserResources: React.FC = () => {
 															</Tooltip>
 														);
 													})()}
+												</TableCell>
+												<TableCell>
+													{user.emailFunnel?.lastOpen ? (
+														<Tooltip arrow title={dayjs(user.emailFunnel.lastOpen).format("DD/MM/YYYY HH:mm")}>
+															<Typography variant="body2" sx={{ cursor: "help", whiteSpace: "nowrap" }}>
+																{dayjs(user.emailFunnel.lastOpen).fromNow()}
+															</Typography>
+														</Tooltip>
+													) : (
+														<Typography variant="caption" color="text.secondary">
+															{(user.emailFunnel?.emails || 0) > 0 ? "nunca" : "—"}
+														</Typography>
+													)}
 												</TableCell>
 												<TableCell align="center">
 													{(() => {

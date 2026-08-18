@@ -167,8 +167,15 @@ export interface UserWithResources {
 		lastLogin: string | null;
 		activeDays: number;
 	};
-	/** Notificaciones judiciales enviadas: primer paso del embudo. */
-	emailsSent?: number;
+	/** Embudo del email judicial. `emails` son envíos reales (el digest agrupa
+	 *  varios expedientes por email), `expedientes` los cubiertos por esos envíos. */
+	emailFunnel?: {
+		emails: number;
+		expedientes: number;
+		lastSent?: string | null;
+		opens: number;
+		lastOpen?: string | null;
+	};
 	/** Vencimientos, notas y tareas creados desde un movimiento judicial. */
 	movementActions?: {
 		vencimientos: number;
