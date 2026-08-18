@@ -1300,6 +1300,18 @@ const CredencialesPJN = () => {
 												</Tooltip>
 											</Box>
 										</TableCell>
+										<TableCell align="center">
+											Avisos
+											<Tooltip
+												title="Recordatorios de credencial ya enviados a este usuario. Permite ver si una credencial caída fue notificada y desde cuándo se insiste sin respuesta."
+												arrow
+												placement="top"
+											>
+												<Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5, ml: 0.5 }}>
+													<InfoCircle size={13} />
+												</Box>
+											</Tooltip>
+										</TableCell>
 										<TableCell align="right">
 											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.5 }}>
 												Movimientos
@@ -1550,6 +1562,50 @@ const CredencialesPJN = () => {
 														</Tooltip>
 													) : (
 														<Typography variant="body2">{cred.foldersCreatedCount || 0}</Typography>
+													)}
+												</TableCell>
+												<TableCell align="center">
+													{(cred.avisos?.total ?? 0) > 0 ? (
+														<Tooltip
+															arrow
+															title={
+																<Box>
+																	<div>{cred.avisos?.total} aviso(s) de credencial enviados</div>
+																	{cred.avisos?.firstAt && <div>Primero: {new Date(cred.avisos.firstAt).toLocaleDateString("es-AR")}</div>}
+																	{cred.avisos?.lastAt && <div>Último: {new Date(cred.avisos.lastAt).toLocaleDateString("es-AR")}</div>}
+																	{cred.avisos?.lastSubject && (
+																		<div style={{ marginTop: 4, opacity: 0.85 }}>“{cred.avisos.lastSubject}”</div>
+																	)}
+																</Box>
+															}
+														>
+															<Chip
+																size="small"
+																label={cred.avisos?.total}
+																sx={{
+																	height: 22,
+																	fontWeight: 600,
+																	cursor: "help",
+																	fontVariantNumeric: "tabular-nums",
+																	// Sin insistir = neutro; ya avisado varias veces sin reconexión = ámbar.
+																	color: !cred.enabled && (cred.avisos?.total ?? 0) >= 3 ? STALE_AMBER : "text.secondary",
+																	bgcolor: (t) =>
+																		!cred.enabled && (cred.avisos?.total ?? 0) >= 3
+																			? alpha(STALE_AMBER, 0.12)
+																			: alpha(t.palette.text.secondary, 0.08),
+																	border: (t) =>
+																		`1px solid ${
+																			!cred.enabled && (cred.avisos?.total ?? 0) >= 3
+																				? alpha(STALE_AMBER, 0.32)
+																				: alpha(t.palette.text.secondary, 0.16)
+																		}`,
+																}}
+															/>
+														</Tooltip>
+													) : (
+														<Typography variant="caption" color="text.secondary">
+															—
+														</Typography>
 													)}
 												</TableCell>
 												<TableCell align="right">

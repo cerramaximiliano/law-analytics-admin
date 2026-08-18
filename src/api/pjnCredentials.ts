@@ -49,6 +49,13 @@ export interface PjnCredential {
 	};
 	successfulSyncs: number;
 	firstSync: string | null;
+	/** Avisos de credencial ya enviados a este usuario (cruce con emaillogs). */
+	avisos?: {
+		total: number;
+		lastAt: string | null;
+		lastSubject: string | null;
+		firstAt: string | null;
+	};
 	initialMovementsSync: string | null;
 	initialMovementsSyncAt: string | null;
 	totalMovements: number;
