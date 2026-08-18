@@ -67,6 +67,7 @@ import {
 	VarianteFormato,
 	VideoResponse,
 	AnimacionInfo,
+	AudioInfo,
 	ClipInfo,
 	EstadoPost,
 	OrdenPosts,
@@ -76,6 +77,7 @@ import {
 	duplicatePost,
 	generateContent,
 	generateCaption,
+	getAudios,
 	getClips,
 	getHealth,
 	getTemplates,
@@ -324,6 +326,9 @@ const SocialStudio = () => {
 	const [clips, setClips] = useState<ClipInfo[]>([]);
 	const [introClip, setIntroClip] = useState<string>("");
 	const [cierreClip, setCierreClip] = useState<string>("");
+	// Música embebida en el mp4. "" = video mudo.
+	const [audios, setAudios] = useState<AudioInfo[]>([]);
+	const [audioPista, setAudioPista] = useState<string>("");
 	// Estilo visual: transversal a las plantillas. "" = el que trae la plantilla.
 	const [estilo, setEstilo] = useState<string>("");
 	const [estilos, setEstilos] = useState<EstiloInfo[]>([]);
@@ -408,7 +413,12 @@ const SocialStudio = () => {
 		let cancelado = false;
 		(async () => {
 			try {
-				const [cat, hp, cl] = await Promise.all([getTemplates(), getHealth().catch(() => null), getClips().catch(() => [])]);
+				const [cat, hp, cl, au] = await Promise.all([
+					getTemplates(),
+					getHealth().catch(() => null),
+					getClips().catch(() => []),
+					getAudios().catch(() => []),
+				]);
 				if (cancelado) return;
 				setTemplates(cat.templates);
 				setFormats(cat.formats);
@@ -417,6 +427,7 @@ const SocialStudio = () => {
 				setPies(cat.pies || []);
 				setFormato(cat.defaultFormat);
 				setClips(cl);
+				setAudios(au);
 				if (hp) setHealth({ renderer: hp.renderer.online, claude: hp.claudeConfigurado });
 			} catch (err: any) {
 				if (!cancelado) enqueueSnackbar(err?.response?.data?.error || "No se pudo cargar el catálogo de plantillas", { variant: "error" });
@@ -580,6 +591,7 @@ const SocialStudio = () => {
 				pie: pie || undefined,
 				intro: introClip || undefined,
 				cierre: cierreClip || undefined,
+				audio: audioPista || undefined,
 			});
 			setVideo(r);
 			enqueueSnackbar(`Video listo: ${r.frames} frames en ${(r.ms / 1000).toFixed(0)}s`, { variant: "success" });
@@ -714,6 +726,7 @@ const SocialStudio = () => {
 				formato: formatoVideo,
 				intro: introClip || undefined,
 				cierre: cierreClip || undefined,
+				audio: audioPista || undefined,
 			});
 			setVideoPost({ post, video: r });
 		} catch (err: any) {
@@ -1090,6 +1103,19 @@ const SocialStudio = () => {
 										<Typography variant="caption" color="text.secondary">
 											El logo animado de la app abre y/o cierra el video. Su duración sale del tope de 35s: el post cede ese tiempo.
 										</Typography>
+									)}
+									{audios.length > 0 && (
+										<FormControl fullWidth size="small">
+											<InputLabel>Música</InputLabel>
+											<Select value={audioPista} label="Música" onChange={(e) => setAudioPista(e.target.value)}>
+												<MenuItem value="">Sin música</MenuItem>
+												{audios.map((a) => (
+													<MenuItem key={a.id} value={a.id}>
+														{a.label}
+													</MenuItem>
+												))}
+											</Select>
+										</FormControl>
 									)}
 									<Button
 										variant="contained"

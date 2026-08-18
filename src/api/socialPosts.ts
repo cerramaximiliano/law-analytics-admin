@@ -129,6 +129,13 @@ export interface ClipInfo {
 	duracionMs: number;
 }
 
+/** Pista de música embebible en los videos (assets/audio del backend). */
+export interface AudioInfo {
+	id: string;
+	label: string;
+	description: string;
+}
+
 export interface GeneracionMeta {
 	modelo: string | null;
 	inputTokens: number | null;
@@ -218,6 +225,11 @@ export const getClips = async (): Promise<ClipInfo[]> => {
 	return res.data.data;
 };
 
+export const getAudios = async (): Promise<AudioInfo[]> => {
+	const res = await mktAxios.get("/api/social/audios");
+	return res.data.data;
+};
+
 export const generateContent = async (params: { templateId: TemplateId; prompt: string; notas?: string }): Promise<GenerateResponse> => {
 	const res = await mktAxios.post("/api/social/generate", params);
 	return res.data.data;
@@ -281,6 +293,8 @@ export const renderVideo = async (params: {
 	intro?: string;
 	/** Clip de marca después del post (id de ClipInfo). */
 	cierre?: string;
+	/** Pista de música (id de AudioInfo); el renderer la loopea con fade de salida. */
+	audio?: string;
 }): Promise<VideoResponse> => {
 	// El render de video tarda bastante mas que una imagen: se sube el timeout
 	// del cliente para que no corte antes de que el server termine.
@@ -376,6 +390,7 @@ export const renderVideoSavedPost = async (
 		pie?: string;
 		intro?: string;
 		cierre?: string;
+		audio?: string;
 	} = {},
 ): Promise<VideoResponse> => {
 	const res = await mktAxios.post(`/api/social/posts/${id}/video`, params, { timeout: 300000 });
