@@ -290,9 +290,13 @@ export default function JurisprudenciaPjnAskPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [lastPrompt, setLastPrompt] = useState<string>("");
 
-	// Estado del query planner (config global del semantic worker, en Atlas).
-	// Se lee/escribe vía SemanticWorkerService (pjnAxios → hub → Atlas). El flag
-	// afecta a TODAS las llamadas /ask, no solo a esta sesión.
+	// Estado del query planner (config global del semantic worker).
+	// Se lee/escribe con SemanticWorkerService → GET/PUT /api/configuracion-semantic-worker
+	// de **pjn-api** (repo pjn-api, PM2 `pjn/api` en el hub 15.229.93.121, expuesto
+	// en api.lawanalytics.app vía pjnAxios) contra la colección
+	// `configuracion-semantic-worker`. Ojo: es la MISMA colección que lee el /ask de
+	// pjn-rag-api, así que el toggle afecta a las dos APIs y a TODAS las sesiones,
+	// no solo a esta.
 	const [plannerEnabled, setPlannerEnabled] = useState<boolean | null>(null);
 	const [plannerModel, setPlannerModel] = useState<string>("gpt-4o-mini");
 	const [togglingPlanner, setTogglingPlanner] = useState(false);
@@ -357,11 +361,25 @@ export default function JurisprudenciaPjnAskPage() {
 	const results = response?.results ?? null;
 
 	return (
-		<MainCard title="Jurisprudencia PJN — búsqueda por prompt (/ask · pjn-api)">
+		<MainCard title="Jurisprudencia PJN — búsqueda por prompt (/ask · pjn-rag-api)">
 			<Stack spacing={3}>
+				{/* Origen de los datos: dejarlo a la vista evita tener que abrir el código
+				    para saber a qué API se está pegando cuando algo falla. */}
 				<Alert severity="info" variant="outlined" sx={{ py: 0.5 }}>
-					Esta vista consume <strong>POST /api/sentencias/ask</strong> de <strong>pjn-api</strong> (worker_01, vía VITE_WORKERS_URL). A
-					diferencia de la búsqueda semántica clásica, acepta <strong>filtro por juzgado / sala</strong> y un prompt en lenguaje natural.
+					<Typography variant="body2" sx={{ mb: 1 }}>
+						Esta vista consume <strong>POST /rag/sentencias/ask</strong>. A diferencia de la búsqueda semántica clásica, acepta{" "}
+						<strong>filtro por juzgado / sala</strong> y un prompt en lenguaje natural.
+					</Typography>
+					<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+						<Chip size="small" variant="outlined" label="repo: pjn-rag-api (pjn-rag-service)" />
+						<Chip size="small" variant="outlined" label="server: hub 15.229.93.121" />
+						<Chip size="small" variant="outlined" label="PM2: pjn-rag-api · :5005" />
+						<Chip size="small" variant="outlined" label="ia.lawanalytics.app (VITE_RAG_URL)" />
+					</Stack>
+					<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+						Migrado desde <strong>pjn-api</strong> (PM2 <code>pjn/api</code>, mismo hub) en 08/2026 para unificar la búsqueda de sentencias
+						en una sola API. El endpoint viejo <code>POST /api/sentencias/ask</code> sigue activo como respaldo.
+					</Typography>
 				</Alert>
 
 				{/* Toggle global del query planner (config del semantic worker en Atlas) */}
@@ -384,7 +402,12 @@ export default function JurisprudenciaPjnAskPage() {
 								</Typography>
 								<Typography variant="caption" color="text.secondary">
 									Interpreta el prompt con LLM ({plannerModel}) para derivar filtros y estrategia. Configuración global del semantic worker
-									(Atlas) — también editable en Workers → Sentencias.
+									— también editable en Workers → Sentencias.
+								</Typography>
+								<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+									Este toggle escribe en <code>PUT /api/configuracion-semantic-worker</code> de <strong>pjn-api</strong> (PM2{" "}
+									<code>pjn/api</code>, hub 15.229.93.121). La colección la comparten ambas APIs: el cambio impacta también en el /ask de
+									pjn-api.
 								</Typography>
 								{plannerError && (
 									<Typography variant="caption" color="error" display="block">

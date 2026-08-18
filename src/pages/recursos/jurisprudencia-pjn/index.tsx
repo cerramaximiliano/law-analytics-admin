@@ -357,6 +357,21 @@ export default function JurisprudenciaPjnPage() {
 	return (
 		<MainCard title="Jurisprudencia PJN — búsqueda semántica">
 			<Stack spacing={3}>
+				{/* Origen de los datos: dejarlo a la vista evita tener que abrir el código
+				    para saber a qué API se está pegando cuando algo falla. */}
+				<Alert severity="info" variant="outlined" sx={{ py: 0.5 }}>
+					<Typography variant="body2" sx={{ mb: 1 }}>
+						Búsqueda semántica pura sobre Qdrant: <strong>POST /rag/sentencias/buscar</strong>. Sin query planner ni filtro por juzgado/sala
+						— para eso está la vista <strong>búsqueda por prompt</strong>.
+					</Typography>
+					<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+						<Chip size="small" variant="outlined" label="repo: pjn-rag-api (pjn-rag-service)" />
+						<Chip size="small" variant="outlined" label="server: hub 15.229.93.121" />
+						<Chip size="small" variant="outlined" label="PM2: pjn-rag-api · :5005" />
+						<Chip size="small" variant="outlined" label="ia.lawanalytics.app (VITE_RAG_URL)" />
+					</Stack>
+				</Alert>
+
 				{/* Tabs de modo */}
 				<Tabs
 					value={tab}

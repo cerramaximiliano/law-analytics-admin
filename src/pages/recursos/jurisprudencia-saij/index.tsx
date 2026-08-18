@@ -934,6 +934,22 @@ export default function JurisprudenciaSaijPage() {
 				</Tooltip>
 			}
 		>
+			{/* Origen de los datos: dejarlo a la vista evita tener que abrir el código
+			    para saber a qué API se está pegando cuando algo falla. Ojo: a diferencia
+			    de las vistas de Jurisprudencia PJN (que ya consumen pjn-rag-api), SAIJ
+			    sigue leyendo de pjn-api. */}
+			<Alert severity="info" variant="outlined" sx={{ py: 0.5, mb: 2 }}>
+				<Typography variant="body2" sx={{ mb: 1 }}>
+					Listado y edición del corpus SAIJ: <strong>GET /api/saij/sentencias</strong>.
+				</Typography>
+				<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+					<Chip size="small" variant="outlined" label="repo: pjn-api" />
+					<Chip size="small" variant="outlined" label="server: hub 15.229.93.121" />
+					<Chip size="small" variant="outlined" label="PM2: pjn/api" />
+					<Chip size="small" variant="outlined" label="api.lawanalytics.app (VITE_API_PJN)" />
+				</Stack>
+			</Alert>
+
 			{/* Stats strip */}
 			{!statsLoading && stats && (
 				<Stack direction="row" spacing={1.5} flexWrap="wrap" mb={2}>

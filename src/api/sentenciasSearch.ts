@@ -1,6 +1,17 @@
 import ragAxios from "utils/ragAxios";
 import { Fuero, SentenciaTipo } from "./sentenciasCapturadas";
 
+// ── Búsqueda semántica de sentencias (endpoint /buscar) ───────────────────────
+//
+// DE DÓNDE SE CONSUME
+//   Repositorio : pjn-rag-api  (github: cerramaximiliano/pjn-rag-service)
+//   Servidor    : hub 15.229.93.121 — PM2 `pjn-rag-api`, /var/www/pjn-rag-service:5005
+//   Dominio     : https://ia.lawanalytics.app  (VITE_RAG_URL → ragAxios)
+//   Rutas       : POST /rag/sentencias/buscar, /buscar/similar · GET /:id/chunks, /:id/texto
+//
+// Búsqueda semántica pura contra Qdrant. Para prompt en lenguaje natural con
+// query planner y filtro por juzgado/sala, ver `api/sentenciasAsk` (/ask, misma API).
+
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
 export interface MatchedChunk {
