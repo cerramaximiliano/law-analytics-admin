@@ -878,7 +878,9 @@ const UserResources: React.FC = () => {
 				page: page + 1,
 				limit: rowsPerPage,
 				search: search || undefined,
-				sortBy,
+				// Las columnas que se ordenan en el cliente no viajan al backend
+				// (las ignoraría): se mantiene el último orden server-side válido.
+				sortBy: CLIENT_SORTED_COLUMNS.includes(sortBy) ? "createdAt" : sortBy,
 				sortOrder,
 			});
 			if (response.success) {
@@ -1144,6 +1146,30 @@ const UserResources: React.FC = () => {
 		setSortOrder(isAsc ? "desc" : "asc");
 		setSortBy(columnId);
 	};
+
+	// "Último Login" y "Días Activos" no salen del endpoint del listado: llegan
+	// en una segunda request (session metrics) solo para los usuarios de la
+	// página visible, así que el backend no puede ordenar por ellas. Para esas
+	// dos se ordena en el cliente, dentro de la página. El resto de las columnas
+	// sigue ordenándose en el servidor sobre el set completo.
+	const CLIENT_SORTED_COLUMNS = ["lastLogin", "activeDays"];
+	const usersSorted = useMemo(() => {
+		if (!CLIENT_SORTED_COLUMNS.includes(sortBy)) return users;
+		const dir = sortOrder === "asc" ? 1 : -1;
+		return [...users].sort((a, b) => {
+			if (sortBy === "activeDays") {
+				return ((sessionMetrics[a._id]?.activeDays || 0) - (sessionMetrics[b._id]?.activeDays || 0)) * dir;
+			}
+			// Sin login previo va siempre al final, ordene como ordene.
+			const ta = sessionMetrics[a._id]?.lastLogin ? new Date(sessionMetrics[a._id].lastLogin as string).getTime() : null;
+			const tb = sessionMetrics[b._id]?.lastLogin ? new Date(sessionMetrics[b._id].lastLogin as string).getTime() : null;
+			if (ta === null && tb === null) return 0;
+			if (ta === null) return 1;
+			if (tb === null) return -1;
+			return (ta - tb) * dir;
+		});
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [users, sessionMetrics, sortBy, sortOrder]);
 
 	const handleSearch = () => {
 		setSearch(searchInput);
@@ -2386,8 +2412,24 @@ const UserResources: React.FC = () => {
 													</Box>
 												</TableSortLabel>
 											</TableCell>
-											<TableCell>Último Login</TableCell>
-											<TableCell align="center">Días Activos</TableCell>
+											<TableCell>
+												<TableSortLabel
+													active={sortBy === "lastLogin"}
+													direction={sortBy === "lastLogin" ? sortOrder : "asc"}
+													onClick={() => handleSort("lastLogin")}
+												>
+													Último Login
+												</TableSortLabel>
+											</TableCell>
+											<TableCell align="center">
+												<TableSortLabel
+													active={sortBy === "activeDays"}
+													direction={sortBy === "activeDays" ? sortOrder : "asc"}
+													onClick={() => handleSort("activeDays")}
+												>
+													Días Activos
+												</TableSortLabel>
+											</TableCell>
 											<TableCell align="center">
 												<HeaderConAyuda
 													label="Visor email"
@@ -2508,7 +2550,7 @@ const UserResources: React.FC = () => {
 											</TableCell>
 										</TableRow>
 									) : (
-										users.map((user) => (
+										usersSorted.map((user) => (
 											<TableRow key={user._id} hover>
 												<TableCell>
 													<Box>
