@@ -7,6 +7,9 @@ export interface MovementLinkQueryParams {
 	to?: string;
 	includeBots?: "1";
 	limit?: number;
+	// Acota todo el embudo a un usuario. Lo usa el enlace desde la tabla de
+	// usuarios (/admin/users/resources?tab=users) para ver su recorrido.
+	userId?: string;
 }
 
 export interface MovementLinkRange {

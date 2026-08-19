@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useSearchParams, Link as RouterLink } from "react-router-dom";
 import {
 	Grid,
 	Typography,
@@ -174,13 +175,29 @@ const MovementLinkAnalytics: React.FC = () => {
 	const [dateTo, setDateTo] = useState("");
 	const [includeBots, setIncludeBots] = useState(false);
 
+	// Filtro por usuario vía URL (?userId=). Entra así desde la tabla de usuarios,
+	// que es el recorrido que cierra el flujo mail → vista → CTA → login para una
+	// persona concreta. Vive en la URL y no en estado local para que el link sea
+	// compartible y el back del navegador lo saque.
+	const [searchParams, setSearchParams] = useSearchParams();
+	const userIdFilter = searchParams.get("userId") || "";
+	const userEmailLabel = searchParams.get("userEmail") || "";
+
+	const clearUserFilter = useCallback(() => {
+		const next = new URLSearchParams(searchParams);
+		next.delete("userId");
+		next.delete("userEmail");
+		setSearchParams(next, { replace: true });
+	}, [searchParams, setSearchParams]);
+
 	const buildParams = useCallback(() => {
 		return {
 			...(dateFrom && { from: dateFrom }),
 			...(dateTo && { to: dateTo }),
 			...(includeBots && { includeBots: "1" as const }),
+			...(userIdFilter && { userId: userIdFilter }),
 		};
-	}, [dateFrom, dateTo, includeBots]);
+	}, [dateFrom, dateTo, includeBots, userIdFilter]);
 
 	// Resumen + datos de la primera tab.
 	const fetchData = useCallback(async () => {
@@ -233,6 +250,34 @@ const MovementLinkAnalytics: React.FC = () => {
 
 	return (
 		<MainCard title="Visor de documentos — Analytics" content={false}>
+			{/* Filtro por usuario activo: tiene que ser imposible leer el embudo de UNA
+			    persona creyendo que es el global. Por eso va arriba de todo y no como
+			    un chip más entre los filtros de fecha. */}
+			{userIdFilter && (
+				<Box sx={{ px: 3, pt: 3 }}>
+					<Alert
+						severity="info"
+						icon={<People size={18} />}
+						action={
+							<Stack direction="row" spacing={1}>
+								<Button
+									size="small"
+									component={RouterLink}
+									to={`/admin/users/resources?tab=users&q=${encodeURIComponent(userEmailLabel || userIdFilter)}`}
+								>
+									Ver usuario
+								</Button>
+								<Button size="small" onClick={clearUserFilter}>
+									Ver todos
+								</Button>
+							</Stack>
+						}
+					>
+						Embudo acotado a <strong>{userEmailLabel || userIdFilter}</strong> — los totales de abajo son solo de este usuario.
+					</Alert>
+				</Box>
+			)}
+
 			{/* Header: filtros + refresh */}
 			<Box sx={{ p: 3, pb: 0 }}>
 				<Stack

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link as RouterLink } from "react-router-dom";
 import {
 	Box,
 	Tabs,
@@ -47,6 +47,7 @@ import {
 	Task,
 	Calendar,
 	ProfileCircle,
+	Chart2,
 	CloudConnection,
 	Activity,
 	Login,
@@ -2527,6 +2528,8 @@ const UserResources: React.FC = () => {
 													Registrado
 												</TableSortLabel>
 											</TableCell>
+											{/* No ordenable: es un acceso, no un dato del usuario. */}
+											<TableCell align="center">Embudo</TableCell>
 										</>
 									) : (
 										<>
@@ -2605,7 +2608,7 @@ const UserResources: React.FC = () => {
 								) : isUsersTab ? (
 									users.length === 0 ? (
 										<TableRow>
-											<TableCell colSpan={15} align="center">
+											<TableCell colSpan={16} align="center">
 												<Typography color="textSecondary" sx={{ py: 4 }}>
 													No se encontraron usuarios
 												</Typography>
@@ -2845,6 +2848,22 @@ const UserResources: React.FC = () => {
 													})()}
 												</TableCell>
 												<TableCell>{formatDate(user.createdAt)}</TableCell>
+												{/* Cierra el recorrido mail → vista → CTA → login para ESTE usuario.
+												    Llevamos el email además del id para que el destino pueda rotularlo
+												    sin tener que resolverlo de nuevo. */}
+												<TableCell align="center">
+													<Tooltip title={`Ver embudo del visor de documentos de ${user.email}`}>
+														<IconButton
+															size="small"
+															component={RouterLink}
+															to={`/admin/integrations/movement-link-analytics?userId=${user._id}&userEmail=${encodeURIComponent(
+																user.email,
+															)}`}
+														>
+															<Chart2 size={16} />
+														</IconButton>
+													</Tooltip>
+												</TableCell>
 											</TableRow>
 										))
 									)
