@@ -47,7 +47,7 @@ import {
 
 // third-party
 import { useSnackbar } from "notistack";
-import { CloseCircle, Edit2, Refresh, Trash } from "iconsax-react";
+import { CloseCircle, Edit2, ExportSquare, Eye, Refresh, Trash } from "iconsax-react";
 
 // project imports
 import MainCard from "components/MainCard";
@@ -85,6 +85,144 @@ const fmtDate = (iso?: string | null) => (iso ? new Date(iso).toLocaleString("es
 const contarPalabras = (texto: string) => texto.trim().split(/\s+/).filter(Boolean).length;
 
 /** Fallo del editor: el guardado + flags locales de la sesión de edición. */
+// ==============================|| VISTA PREVIA ||============================== //
+// Render aproximado de cómo se ve el artículo en lawanalytics.app/educativo:
+// mismo parseo de markdown acotado (##, ###, listas, **negritas**) y la
+// identidad "Apuntes" (resaltador amarillo en títulos, margen de cuaderno).
+
+const EDU_RESALTADOR = "#FDE047";
+const EDU_TINTA = "#16203A";
+
+const renderNegritas = (texto: string) =>
+	texto.split(/(\*\*[^*]+\*\*)/g).map((parte, i) =>
+		parte.startsWith("**") && parte.endsWith("**") ? <strong key={i}>{parte.slice(2, -2)}</strong> : <span key={i}>{parte}</span>,
+	);
+
+const CuerpoPreview = ({ cuerpo }: { cuerpo: string }) => {
+	// Parseo idéntico al ArticleContent del front (formato acotado del backend).
+	const bloques: Array<{ tipo: "h2" | "h3" | "p" | "li"; texto: string }> = [];
+	for (const cruda of cuerpo.split("\n")) {
+		const linea = cruda.trim();
+		if (!linea) continue;
+		if (linea.startsWith("### ")) bloques.push({ tipo: "h3", texto: linea.slice(4) });
+		else if (linea.startsWith("## ")) bloques.push({ tipo: "h2", texto: linea.slice(3) });
+		else if (/^[-*]\s+/.test(linea)) bloques.push({ tipo: "li", texto: linea.replace(/^[-*]\s+/, "") });
+		else bloques.push({ tipo: "p", texto: linea });
+	}
+	let apunte = 0;
+	return (
+		<Stack spacing={1.5} sx={{ borderLeft: "2px solid rgba(58,123,255,0.28)", pl: 3 }}>
+			{bloques.map((b, i) => {
+				if (b.tipo === "h2") {
+					apunte += 1;
+					return (
+						<Typography key={i} component="h2" sx={{ fontSize: "1.1rem", fontWeight: 600, mt: i === 0 ? 0 : 1.5, lineHeight: 1.5 }}>
+							<Box component="span" sx={{ color: "primary.main", fontFamily: "monospace", fontSize: "0.75rem", mr: 1 }}>
+								{String(apunte).padStart(2, "0")}
+							</Box>
+							<Box component="span" sx={{ backgroundColor: EDU_RESALTADOR, color: EDU_TINTA, px: 0.75, py: 0.25 }}>
+								{b.texto}
+							</Box>
+						</Typography>
+					);
+				}
+				if (b.tipo === "h3") {
+					return (
+						<Typography key={i} component="h3" sx={{ fontSize: "0.95rem", fontWeight: 600, mt: 1 }}>
+							{b.texto}
+						</Typography>
+					);
+				}
+				if (b.tipo === "li") {
+					return (
+						<Typography key={i} component="li" variant="body2" color="text.secondary" sx={{ ml: 3, lineHeight: 1.6 }}>
+							{renderNegritas(b.texto)}
+						</Typography>
+					);
+				}
+				return (
+					<Typography key={i} variant="body2" color="text.secondary" sx={{ lineHeight: 1.65 }}>
+						{renderNegritas(b.texto)}
+					</Typography>
+				);
+			})}
+		</Stack>
+	);
+};
+
+const VistaPreviaArticulo = ({
+	titulo,
+	resumen,
+	cuerpo,
+	fallos,
+	onClose,
+}: {
+	titulo: string;
+	resumen: string;
+	cuerpo: string;
+	fallos: JurisprudenciaRef[];
+	onClose: () => void;
+}) => (
+	<Dialog open onClose={onClose} maxWidth="md" fullWidth>
+		<DialogTitle>
+			<Stack direction="row" alignItems="center" justifyContent="space-between">
+				<Typography variant="h5">Vista previa</Typography>
+				<IconButton onClick={onClose}>
+					<CloseCircle />
+				</IconButton>
+			</Stack>
+		</DialogTitle>
+		<DialogContent dividers>
+			<Stack spacing={3} sx={{ py: 1 }}>
+				<Box>
+					<Typography variant="caption" sx={{ backgroundColor: EDU_RESALTADOR, color: EDU_TINTA, px: 0.75, py: 0.25, fontWeight: 700, letterSpacing: "0.14em" }}>
+						APUNTES
+					</Typography>
+					<Typography variant="h3" sx={{ mt: 1.5, lineHeight: 1.4 }}>
+						<Box component="span" sx={{ backgroundColor: EDU_RESALTADOR, color: EDU_TINTA, px: 0.75, py: 0.25, boxDecorationBreak: "clone", WebkitBoxDecorationBreak: "clone" }}>
+							{titulo}
+						</Box>
+					</Typography>
+					{resumen && (
+						<Typography variant="body1" color="text.secondary" sx={{ mt: 1.5 }}>
+							{resumen}
+						</Typography>
+					)}
+				</Box>
+				<CuerpoPreview cuerpo={cuerpo} />
+				{fallos.length > 0 && (
+					<Box>
+						<Typography variant="h5" sx={{ mb: 1.5 }}>
+							§ Jurisprudencia sobre el tema
+						</Typography>
+						<Stack spacing={1.5}>
+							{fallos.map((f) => (
+								<MainCard key={f.sentenciaId} content={false} sx={{ p: 2 }}>
+									<Typography variant="subtitle2">{f.caratula}</Typography>
+									{f.tribunal && (
+										<Typography variant="caption" color="text.secondary" sx={{ textTransform: "capitalize" }}>
+											{f.tribunal.toLowerCase()}
+										</Typography>
+									)}
+									<Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+										{f.comentario}
+									</Typography>
+									<Typography variant="caption" color={f.enlazable ? "primary" : "text.secondary"} sx={{ display: "block", mt: 1 }}>
+										{f.enlazable ? "Enlaza a la ficha pública del fallo" : "Se cita sin enlace (invita a buscar desde la cuenta)"}
+									</Typography>
+								</MainCard>
+							))}
+						</Stack>
+					</Box>
+				)}
+			</Stack>
+		</DialogContent>
+		<DialogActions>
+			<Button onClick={onClose}>Cerrar</Button>
+		</DialogActions>
+	</Dialog>
+);
+
 interface FalloEditable extends JurisprudenciaRef {
 	/** true = se quita del artículo al guardar. */
 	quitar: boolean;
@@ -189,6 +327,7 @@ const EditorArticulo = ({ id, onClose, onChanged }: { id: string; onClose: () =>
 	};
 
 	const esPublicado = articulo?.estado === "publicado";
+	const [previewAbierta, setPreviewAbierta] = useState(false);
 
 	return (
 		<Dialog open fullScreen onClose={onClose}>
@@ -373,6 +512,21 @@ const EditorArticulo = ({ id, onClose, onChanged }: { id: string; onClose: () =>
 					Eliminar
 				</Button>
 				<Box sx={{ flexGrow: 1 }} />
+				{/* La vista previa usa lo que está en pantalla, incluidos cambios sin guardar */}
+				<Button startIcon={<Eye size={18} />} disabled={cargando} onClick={() => setPreviewAbierta(true)}>
+					Vista previa
+				</Button>
+				{esPublicado && articulo && (
+					<Button
+						startIcon={<ExportSquare size={18} />}
+						component="a"
+						href={`https://lawanalytics.app/educativo/${articulo.slug}`}
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						Ver en el sitio
+					</Button>
+				)}
 				<Button onClick={onClose} disabled={guardando}>
 					Cerrar
 				</Button>
@@ -388,6 +542,17 @@ const EditorArticulo = ({ id, onClose, onChanged }: { id: string; onClose: () =>
 					{esPublicado ? "Volver a borrador" : "Publicar"}
 				</Button>
 			</DialogActions>
+
+			{/* Vista previa con el estado actual del editor (incluye cambios sin guardar) */}
+			{previewAbierta && (
+				<VistaPreviaArticulo
+					titulo={titulo}
+					resumen={resumen}
+					cuerpo={cuerpo}
+					fallos={fallosActivos}
+					onClose={() => setPreviewAbierta(false)}
+				/>
+			)}
 
 			{/* Confirmación de publicar / despublicar (guarda también los cambios pendientes) */}
 			<Dialog open={confirmPublicar} onClose={() => !guardando && setConfirmPublicar(false)}>
@@ -445,6 +610,19 @@ const ArticulosBlog = () => {
 	const [pages, setPages] = useState(1);
 	const [total, setTotal] = useState(0);
 	const [abierto, setAbierto] = useState<string | null>(null);
+	// Vista previa directa desde la tabla (el listado viene sin cuerpo: se pide el detalle).
+	const [preview, setPreview] = useState<EducativoArticulo | null>(null);
+
+	const abrirPreview = useCallback(
+		async (id: string) => {
+			try {
+				setPreview(await getArticulo(id));
+			} catch (err: any) {
+				enqueueSnackbar(err?.response?.data?.error || "No se pudo cargar el artículo", { variant: "error" });
+			}
+		},
+		[enqueueSnackbar],
+	);
 
 	const cargar = useCallback(async () => {
 		setCargando(true);
@@ -547,6 +725,17 @@ const ArticulosBlog = () => {
 										<TableCell>{fmtDate(art.createdAt)}</TableCell>
 										<TableCell>{fmtDate(art.publicadoEn)}</TableCell>
 										<TableCell align="right">
+											<Tooltip title="Ver contenido">
+												<IconButton
+													size="small"
+													onClick={(e) => {
+														e.stopPropagation();
+														abrirPreview(art._id);
+													}}
+												>
+													<Eye size={18} />
+												</IconButton>
+											</Tooltip>
 											<Tooltip title="Revisar y editar">
 												<IconButton
 													size="small"
@@ -573,6 +762,15 @@ const ArticulosBlog = () => {
 			)}
 
 			{abierto && <EditorArticulo id={abierto} onClose={() => setAbierto(null)} onChanged={cargar} />}
+			{preview && (
+				<VistaPreviaArticulo
+					titulo={preview.titulo}
+					resumen={preview.resumen}
+					cuerpo={preview.cuerpo || ""}
+					fallos={preview.jurisprudencia || []}
+					onClose={() => setPreview(null)}
+				/>
+			)}
 		</MainCard>
 	);
 };
