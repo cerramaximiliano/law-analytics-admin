@@ -885,6 +885,13 @@ const admin: NavItemType = {
 					url: "/admin/social/articulos",
 					breadcrumbs: true,
 				},
+{
+					id: "bio-links",
+					title: "Link-in-bio",
+					type: "item",
+					url: "/admin/social/links",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{
