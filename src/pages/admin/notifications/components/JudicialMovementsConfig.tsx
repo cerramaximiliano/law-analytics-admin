@@ -66,6 +66,7 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 		policies: false,
 		planBanner: false,
 		featureBanner: false,
+		googleCalendarBanner: false,
 		optionsBanner: false,
 		bannerPolicy: false,
 		postal: false,
@@ -175,6 +176,7 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 				"status",
 				"planBanner",
 				"featureBanner",
+				"googleCalendarBanner",
 				"notificationOptionsBanner",
 				"bannerPolicy",
 				"postalNotifications",
@@ -840,6 +842,112 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 										Tipos de email donde puede aparecer
 									</Typography>
 									{renderEmailTypeChips("featureBanner.emailTypes", config.featureBanner?.emailTypes)}
+								</Grid>
+							</Grid>
+						</Collapse>
+					</CardContent>
+				</Card>
+			)}
+
+			{/* Banner de Google Calendar */}
+			{show("banners") && (
+				<Card sx={{ mb: 2 }}>
+					<CardContent>
+						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+							<Stack direction="row" spacing={1} alignItems="center">
+								<Notification1 size={20} />
+								<Typography variant="h6">Banner de Google Calendar</Typography>
+								<Chip
+									size="small"
+									label={config.googleCalendarBanner?.enabled !== false ? "activo" : "apagado"}
+									color={config.googleCalendarBanner?.enabled !== false ? "success" : "default"}
+									variant="outlined"
+								/>
+							</Stack>
+							<IconButton size="small" onClick={() => handleToggleSection("googleCalendarBanner")}>
+								{expandedSections.googleCalendarBanner ? <ArrowUp2 /> : <ArrowDown2 />}
+							</IconButton>
+						</Stack>
+						<Collapse in={expandedSections.googleCalendarBanner}>
+							<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+								Invitación a sincronizar Google Calendar, con el logo oficial de Calendar. Solo se muestra a usuarios que NO conectaron su
+								cuenta de Google. Activo por default con textos del sistema; los campos vacíos usan esos defaults. Nunca se apila con el
+								banner de plan ni con el de anuncios (salvo override).
+							</Typography>
+							<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+								<Grid item xs={12} md={3}>
+									<FormControlLabel
+										control={
+											<Switch
+												checked={config.googleCalendarBanner?.enabled !== false}
+												onChange={(e) => handleFieldChange("googleCalendarBanner.enabled", e.target.checked)}
+											/>
+										}
+										label="Habilitado"
+									/>
+								</Grid>
+								<Grid item xs={12} md={4}>
+									<TextField
+										label="Título"
+										value={config.googleCalendarBanner?.title ?? ""}
+										onChange={(e) => handleFieldChange("googleCalendarBanner.title", e.target.value || null)}
+										helperText='Default: "Conectá tu Google Calendar"'
+										fullWidth
+									/>
+								</Grid>
+								<Grid item xs={12} md={5}>
+									<TextField
+										label="Texto"
+										value={config.googleCalendarBanner?.text ?? ""}
+										onChange={(e) => handleFieldChange("googleCalendarBanner.text", e.target.value || null)}
+										helperText="Vacío = copy por defecto del sistema"
+										fullWidth
+									/>
+								</Grid>
+								<Grid item xs={12} md={3}>
+									<TextField
+										label="Etiqueta del CTA"
+										value={config.googleCalendarBanner?.ctaLabel ?? ""}
+										onChange={(e) => handleFieldChange("googleCalendarBanner.ctaLabel", e.target.value || null)}
+										helperText='Default: "Conectar mi calendario"'
+										fullWidth
+									/>
+								</Grid>
+								<Grid item xs={12} md={4}>
+									<TextField
+										label="URL del CTA"
+										value={config.googleCalendarBanner?.ctaUrl ?? ""}
+										onChange={(e) => handleFieldChange("googleCalendarBanner.ctaUrl", e.target.value || null)}
+										helperText="Default: /apps/calendar — se agrega ?source=email_<tipo>_gcal"
+										fullWidth
+									/>
+								</Grid>
+								<Grid item xs={12} md={2}>
+									<TextField
+										label="Cooldown (días)"
+										type="number"
+										value={config.googleCalendarBanner?.cooldownDays ?? 14}
+										onChange={(e) => handleFieldChange("googleCalendarBanner.cooldownDays", parseInt(e.target.value))}
+										helperText="0 = en cada email"
+										fullWidth
+									/>
+								</Grid>
+								<Grid item xs={12} md={3}>
+									<FormControlLabel
+										control={
+											<Switch
+												checked={config.googleCalendarBanner?.showWithOtherBanners === true}
+												onChange={(e) => handleFieldChange("googleCalendarBanner.showWithOtherBanners", e.target.checked)}
+											/>
+										}
+										label={<Typography variant="body2">Apilar con otros banners</Typography>}
+									/>
+								</Grid>
+								<Grid item xs={12}>
+									<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.75 }}>
+										Tipos de email donde puede aparecer
+									</Typography>
+									{renderEmailTypeChips("googleCalendarBanner.emailTypes", config.googleCalendarBanner?.emailTypes)}
 								</Grid>
 							</Grid>
 						</Collapse>

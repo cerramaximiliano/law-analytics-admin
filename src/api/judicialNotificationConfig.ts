@@ -138,6 +138,19 @@ export interface JudicialNotificationConfig {
 		/** Mostrar aunque el email ya lleve el banner de plan */
 		showWithPlanBanner?: boolean;
 	};
+	/** Banner de invitación a sincronizar Google Calendar (solo usuarios no conectados) */
+	googleCalendarBanner?: {
+		enabled?: boolean;
+		title?: string | null;
+		text?: string | null;
+		ctaLabel?: string | null;
+		ctaUrl?: string | null;
+		emailTypes?: string[];
+		/** Cooldown propio en días (default 14; 0 = en cada email) */
+		cooldownDays?: number;
+		/** Mostrar aunque el email ya lleve el banner de plan o el de feature */
+		showWithOtherBanners?: boolean;
+	};
 	movementPolicies?: MovementPolicies | null;
 	stats?: {
 		lastNotificationSentAt: string | null;
@@ -176,6 +189,7 @@ export type JudicialNotificationConfigUpdate = Partial<
 		| "status"
 		| "planBanner"
 		| "featureBanner"
+		| "googleCalendarBanner"
 		| "notificationOptionsBanner"
 		| "bannerPolicy"
 		| "postalNotifications"
@@ -392,14 +406,15 @@ export interface EffectivePolicy {
 	filters: ResolvedField<MovementPolicy["filters"]>;
 }
 
-const BASE_POLICY: Required<Pick<MovementPolicy, "enabled" | "firstSyncPolicy" | "offDayMode" | "notifyArchivedFolders">> & MovementPolicy = {
-	enabled: true,
-	firstSyncPolicy: "silent-baseline",
-	offDayMode: "skip",
-	notifyArchivedFolders: true,
-	activeDays: null,
-	filters: null,
-};
+const BASE_POLICY: Required<Pick<MovementPolicy, "enabled" | "firstSyncPolicy" | "offDayMode" | "notifyArchivedFolders">> & MovementPolicy =
+	{
+		enabled: true,
+		firstSyncPolicy: "silent-baseline",
+		offDayMode: "skip",
+		notifyArchivedFolders: true,
+		activeDays: null,
+		filters: null,
+	};
 
 export function resolveEffectivePolicy(
 	policies: MovementPolicies | null | undefined,
