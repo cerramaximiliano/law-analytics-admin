@@ -105,6 +105,8 @@ const EditorArticulo = ({ id, onClose, onChanged }: { id: string; onClose: () =>
 	const [seoTitle, setSeoTitle] = useState("");
 	const [seoDescription, setSeoDescription] = useState("");
 	const [fallos, setFallos] = useState<FalloEditable[]>([]);
+	// Publicación coordinada: el artículo sale cuando se publica el post de IG.
+	const [publicarConPost, setPublicarConPost] = useState(true);
 
 	const [guardando, setGuardando] = useState(false);
 	const [confirmPublicar, setConfirmPublicar] = useState(false);
@@ -124,6 +126,7 @@ const EditorArticulo = ({ id, onClose, onChanged }: { id: string; onClose: () =>
 				setSeoTitle(data.seo?.title || "");
 				setSeoDescription(data.seo?.description || "");
 				setFallos((data.jurisprudencia || []).map((j) => ({ ...j, quitar: false })));
+				setPublicarConPost(data.publicarConPost !== false);
 			})
 			.catch((err) => {
 				enqueueSnackbar(err?.response?.data?.error || "No se pudo cargar el artículo", { variant: "error" });
@@ -147,6 +150,7 @@ const EditorArticulo = ({ id, onClose, onChanged }: { id: string; onClose: () =>
 		seo: { title: seoTitle, description: seoDescription },
 		// Solo sentenciaId + comentario: la carátula y el origen los conserva el backend.
 		jurisprudencia: fallosActivos.map((f) => ({ sentenciaId: f.sentenciaId, comentario: f.comentario })),
+		publicarConPost,
 		...(estado ? { estado } : {}),
 	});
 
@@ -327,6 +331,23 @@ const EditorArticulo = ({ id, onClose, onChanged }: { id: string; onClose: () =>
 									inputProps={{ maxLength: 170 }}
 									helperText={`${seoDescription.length}/170`}
 								/>
+							</Stack>
+						</Box>
+
+						{/* Publicación coordinada con el post de IG */}
+						<Box>
+							<Typography variant="h5" sx={{ mb: 1.5 }}>
+								Publicación
+							</Typography>
+							<Stack direction="row" alignItems="center" spacing={1}>
+								<Switch checked={publicarConPost} onChange={(e) => setPublicarConPost(e.target.checked)} size="small" />
+								<Box>
+									<Typography variant="body2">Publicar junto con el post de Instagram</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Al marcar publicado el post de la serie en el Social Studio, este artículo sale automáticamente. Desactivalo para
+										manejar la publicación a mano. Volver el post a borrador nunca despublica el artículo.
+									</Typography>
+								</Box>
 							</Stack>
 						</Box>
 

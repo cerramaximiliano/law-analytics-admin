@@ -54,6 +54,8 @@ export interface EducativoArticulo {
 	publicadoEn: string | null;
 	/** Post social hermano (el carrusel de IG del mismo tema). */
 	postId: string | null;
+	/** Publicación coordinada: al publicar el post de IG, el artículo sale con él. */
+	publicarConPost?: boolean;
 	generacion?: GeneracionArticuloMeta;
 	createdAt: string;
 	updatedAt: string;
@@ -79,6 +81,7 @@ export interface UpdateArticuloPayload {
 	seo?: Partial<Pick<SeoArticulo, "title" | "description">> & { keywords?: string[] };
 	estado?: EstadoArticulo;
 	jurisprudencia?: Array<{ sentenciaId: string; comentario?: string }>;
+	publicarConPost?: boolean;
 }
 
 // ==================== Endpoints ====================
