@@ -407,7 +407,7 @@ export const SENTENCIAS_DETAILS: Record<string, SFDetail> = {
 	saij: {
 		title: "Workers SAIJ",
 		server: "worker_01",
-		pm2: "worker_SAIJ_0 · worker_SAIJ_PROV_0 · worker_SAIJ_BACKFILL_0 · worker_SAIJ_enrich",
+		pm2: "worker_SAIJ_{0,1} + _PROV_0 + _BACKFILL_0 + _enrich (solo _0 y _enrich son alwaysOnline)",
 		steps: [
 			"Scrapean el portal SAIJ por cursor (nacional, provincial y backfill histórico)",
 			"Guardan el fallo en saij-sentencias + el PDF a S3",
@@ -415,7 +415,7 @@ export const SENTENCIAS_DETAILS: Record<string, SFDetail> = {
 			"enrich: genera el resumen IA que consume la sección pública de jurisprudencia",
 		],
 		escribe: "saij-sentencias, sentencias-capturadas (rs0); PDFs a S3",
-		frecuencia: "continuo por cursor",
+		frecuencia: "_0 y _enrich continuos; _PROV y _BACKFILL son intermitentes (corridas puntuales)",
 	},
 	worker: {
 		title: "sentencias-worker",
