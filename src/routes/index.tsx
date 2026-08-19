@@ -108,6 +108,7 @@ const MarketingSuppression = Loadable(lazyWithRetry(() => import("pages/admin/ma
 
 // Social pages
 const SocialStudio = Loadable(lazyWithRetry(() => import("pages/admin/social")));
+const ArticulosBlog = Loadable(lazyWithRetry(() => import("pages/admin/social/articulos")));
 
 // Plans page
 const PlansManagement = Loadable(lazyWithRetry(() => import("pages/admin/plans")));
@@ -763,6 +764,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<SocialStudio />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "social/articulos",
+							element: (
+								<AdminRoleGuard>
+									<ArticulosBlog />
 								</AdminRoleGuard>
 							),
 						},

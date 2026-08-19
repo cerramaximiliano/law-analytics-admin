@@ -878,6 +878,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 					chip: { label: "Nuevo", color: "primary", variant: "outlined", size: "small" },
 				},
+				{
+					id: "educativo-articulos",
+					title: "Artículos del Blog",
+					type: "item",
+					url: "/admin/social/articulos",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{
