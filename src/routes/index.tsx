@@ -30,6 +30,7 @@ const EtiquetadoEditorPage = Loadable(lazyWithRetry(() => import("pages/admin/ca
 const CarpetasVerificadasApp = Loadable(lazyWithRetry(() => import("pages/admin/causas/CarpetasVerificadasApp")));
 const CarpetasNoVerificadas = Loadable(lazyWithRetry(() => import("pages/admin/causas/CarpetasNoVerificadas")));
 const FlujosCausas = Loadable(lazyWithRetry(() => import("pages/admin/causas/flujos/FlujosCausas")));
+const FlujosEcosistema = Loadable(lazyWithRetry(() => import("pages/admin/flujos")));
 const CausasPendientes = Loadable(lazyWithRetry(() => import("pages/admin/causas/CausasPendientes")));
 const CredencialesPJN = Loadable(lazyWithRetry(() => import("pages/admin/causas/CredencialesPJN")));
 const CausasSyncCredentials = Loadable(lazyWithRetry(() => import("pages/admin/causas/CausasSyncCredentials")));
@@ -418,6 +419,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<CarpetasNoVerificadas />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "flujos",
+							element: (
+								<AdminRoleGuard>
+									<FlujosEcosistema />
 								</AdminRoleGuard>
 							),
 						},

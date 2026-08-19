@@ -3,6 +3,7 @@ import { Grid, Typography, Box, Chip, Stack, Table, TableBody, TableCell, TableH
 import { useTheme, alpha } from "@mui/material/styles";
 import { Hierarchy, InfoCircle } from "iconsax-react";
 import MainCard from "components/MainCard";
+import FlowsHubLink from "../flujos/FlowsHubLink";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, PRO_TEAL, PREMIUM_GOLD, headerBorder } from "themes/dashboardTokens";
 
 // Salto HTTP (lectura vía API). Es la única clase de flecha que no tiene color
@@ -910,6 +911,7 @@ const DataFlowPage = () => {
 						</Typography>
 					}
 				>
+					<FlowsHubLink current="El data plane" />
 					<Box sx={{ overflowX: "auto", pb: 1 }}>
 						<Box
 							component="svg"

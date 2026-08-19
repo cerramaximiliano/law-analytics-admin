@@ -5,6 +5,7 @@ import MainCard from "components/MainCard";
 import { ArrowLeft2, ArrowRight2 } from "iconsax-react";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
 import FlowDiagram from "./FlowDiagram";
+import FlowsHubLink from "../../flujos/FlowsHubLink";
 import { mainSpecs, escenarios } from "./flowData";
 import { FlowSpec } from "./flowTypes";
 
@@ -214,6 +215,9 @@ const FlujosCausas = () => {
 			content={false}
 			sx={{ "& .MuiCardHeader-root": { flexWrap: "wrap", rowGap: 1 } }}
 		>
+			<Box sx={{ px: 2, pt: 2 }}>
+				<FlowsHubLink current="El ciclo de vida de causas y folders" />
+			</Box>
 			<Box sx={{ borderBottom: 1, borderColor: "divider", px: 2 }}>
 				<Tabs value={tab} onChange={(_e, v) => setTab(v)} variant="scrollable" scrollButtons="auto">
 					{mainSpecs.map((spec) => (

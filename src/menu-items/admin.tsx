@@ -526,6 +526,14 @@ const admin: NavItemType = {
 					chip: { label: "PJN·SCBA·MEV", color: "success", variant: "outlined", size: "small" },
 				},
 				{
+					id: "flujos-ecosistema",
+					title: "Flujos del ecosistema",
+					type: "item",
+					url: "/admin/flujos",
+					breadcrumbs: true,
+					chip: { label: "docs", color: "primary", variant: "outlined", size: "small" },
+				},
+				{
 					id: "data-flow",
 					title: "Flujo de datos",
 					type: "item",

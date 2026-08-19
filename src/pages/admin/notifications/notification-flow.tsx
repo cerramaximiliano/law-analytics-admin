@@ -37,6 +37,7 @@ import MainCard from "components/MainCard";
 import LiveConfigSummary from "./components/LiveConfigSummary";
 import EffectiveWorkerPolicies from "./components/EffectiveWorkerPolicies";
 import FlowDiagram from "./components/FlowDiagram";
+import FlowsHubLink from "../flujos/FlowsHubLink";
 import useLiveJudicialConfig from "./components/useLiveJudicialConfig";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
 
@@ -430,6 +431,8 @@ const NotificationFlowPage = ({ embedded }: NotificationFlowPageProps) => {
 			}
 		>
 			<Stack spacing={4}>
+				<FlowsHubLink current="El flujo de notificaciones" />
+
 				{/* ============ 0. Configuración vigente (en vivo) ============ */}
 				<LiveConfigSummary live={live} />
 
