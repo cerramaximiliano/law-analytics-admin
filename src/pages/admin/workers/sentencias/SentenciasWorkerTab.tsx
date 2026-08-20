@@ -974,6 +974,7 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 				batchSize: draft.batchSize,
 				searchQueryPlanner: draft.searchQueryPlanner,
 				searchLexicalLayer: draft.searchLexicalLayer,
+				searchCorpus: draft.searchCorpus,
 			});
 			setConfig(updated);
 			setDraft(updated);
@@ -995,7 +996,9 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 			draft.topK !== config.topK ||
 			draft.batchSize !== config.batchSize ||
 			(draft.searchQueryPlanner?.enabled ?? false) !== (config.searchQueryPlanner?.enabled ?? false) ||
-			(draft.searchLexicalLayer?.enabled ?? false) !== (config.searchLexicalLayer?.enabled ?? false));
+			(draft.searchLexicalLayer?.enabled ?? false) !== (config.searchLexicalLayer?.enabled ?? false) ||
+			(draft.searchCorpus?.app ?? "saij") !== (config.searchCorpus?.app ?? "saij") ||
+			(draft.searchCorpus?.mcp ?? "saij") !== (config.searchCorpus?.mcp ?? "saij"));
 
 	return (
 		<Stack spacing={3}>
@@ -1263,6 +1266,54 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 										</Typography>
 									</Box>
 								</Stack>
+
+								{/* Corpus habilitado por consumidor — lo enfuerza pjn-rag-api server-side */}
+								<Box>
+									<Typography variant="body2" sx={{ mb: 0.5 }}>
+										Corpus de búsqueda semántica
+									</Typography>
+									<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+										"Solo SAIJ" = corpus curado público (~10k fallos con resumen, igual que /jurisprudencia). "Todo" = corpus completo
+										(~320k, incluye sentencias PJN capturadas de causas de usuarios). Se aplica en el servidor: el cliente no puede
+										ampliarlo.
+									</Typography>
+									<Stack direction="row" spacing={2}>
+										<TextField
+											select
+											size="small"
+											label="App (law-analytics-front)"
+											value={draft.searchCorpus?.app ?? "saij"}
+											onChange={(e) =>
+												setDraft((d) => ({
+													...d,
+													searchCorpus: { app: e.target.value as "saij" | "all", mcp: d.searchCorpus?.mcp ?? "saij" },
+												}))
+											}
+											disabled={saving}
+											sx={{ minWidth: 230 }}
+										>
+											<MenuItem value="saij">Solo SAIJ (público)</MenuItem>
+											<MenuItem value="all">Todo el corpus</MenuItem>
+										</TextField>
+										<TextField
+											select
+											size="small"
+											label="MCP (Claude / IA externas)"
+											value={draft.searchCorpus?.mcp ?? "saij"}
+											onChange={(e) =>
+												setDraft((d) => ({
+													...d,
+													searchCorpus: { app: d.searchCorpus?.app ?? "saij", mcp: e.target.value as "saij" | "all" },
+												}))
+											}
+											disabled={saving}
+											sx={{ minWidth: 230 }}
+										>
+											<MenuItem value="saij">Solo SAIJ (público)</MenuItem>
+											<MenuItem value="all">Todo el corpus</MenuItem>
+										</TextField>
+									</Stack>
+								</Box>
 
 								{/* Último ciclo */}
 								{config.currentState?.lastRunAt && (

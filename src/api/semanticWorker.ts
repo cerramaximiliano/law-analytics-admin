@@ -22,6 +22,13 @@ export interface SemanticWorkerConfig {
 	searchLexicalLayer?: {
 		enabled: boolean;
 	};
+	// Corpus habilitado para la búsqueda semántica, por consumidor. 'saij' = solo
+	// el corpus curado público (~10k); 'all' = todo el corpus embebido (~320k,
+	// incluye sentencias PJN de causas de usuarios). Lo enfuerza pjn-rag-api.
+	searchCorpus?: {
+		app: "saij" | "all";
+		mcp: "saij" | "all";
+	};
 	currentState: {
 		isRunning: boolean;
 		workerId?: string;
@@ -35,7 +42,17 @@ export interface SemanticWorkerConfig {
 export type SemanticWorkerConfigUpdate = Partial<
 	Pick<
 		SemanticWorkerConfig,
-		"enabled" | "minCorpusSize" | "similarityThreshold" | "filterByFuero" | "filterBySentenciaTipo" | "topK" | "batchSize" | "cronPattern" | "searchQueryPlanner" | "searchLexicalLayer"
+		| "enabled"
+		| "minCorpusSize"
+		| "similarityThreshold"
+		| "filterByFuero"
+		| "filterBySentenciaTipo"
+		| "topK"
+		| "batchSize"
+		| "cronPattern"
+		| "searchQueryPlanner"
+		| "searchLexicalLayer"
+		| "searchCorpus"
 	>
 >;
 
