@@ -103,6 +103,10 @@ const ConfigTab = () => {
 	const [minWorkers, setMinWorkers] = useState(1);
 	const [maxWorkers, setMaxWorkers] = useState(3);
 	const [batchSize, setBatchSize] = useState(50);
+	// Alerta operativa: seguimientos sin actualizar
+	const [staleAlertEnabled, setStaleAlertEnabled] = useState(true);
+	const [staleAfterHours, setStaleAfterHours] = useState(24);
+	const [staleResendEveryHours, setStaleResendEveryHours] = useState(24);
 	// Estados finales y patrones de notificación
 	const [finalStatuses, setFinalStatuses] = useState<string[]>([]);
 	const [finalStatusInput, setFinalStatusInput] = useState("");
@@ -132,6 +136,9 @@ const ConfigTab = () => {
 			setFinalDeliveryStatuses(cfg.scraping?.finalDeliveryStatuses ?? []);
 			setNotifStatusMatches(cfg.scraping?.notificationPatterns?.statusMatches ?? []);
 			setNotifDescMatches(cfg.scraping?.notificationPatterns?.descriptionMatches ?? []);
+			setStaleAlertEnabled(cfg.alerts?.staleTracking?.enabled !== false);
+			setStaleAfterHours(cfg.alerts?.staleTracking?.staleAfterHours ?? 24);
+			setStaleResendEveryHours(cfg.alerts?.staleTracking?.resendEveryHours ?? 24);
 		} catch (error: any) {
 			enqueueSnackbar(error?.message || "Error al cargar la configuracion", { variant: "error" });
 		} finally {
@@ -163,6 +170,13 @@ const ConfigTab = () => {
 					scraper: {
 						scaling: { minInstances: minWorkers, maxInstances: maxWorkers },
 						cron: { batchSize },
+					},
+				},
+				alerts: {
+					staleTracking: {
+						enabled: staleAlertEnabled,
+						staleAfterHours,
+						resendEveryHours: staleResendEveryHours,
 					},
 				},
 			});
@@ -281,6 +295,50 @@ const ConfigTab = () => {
 						label="Headless en produccion"
 					/>
 				</Stack>
+			</Paper>
+
+			{/* Alerta operativa: seguimientos sin actualizar */}
+			<Paper variant="outlined" sx={{ p: 2 }}>
+				<Typography variant="subtitle2" mb={0.5} color="textSecondary">
+					Alerta de seguimientos sin actualizar
+				</Typography>
+				<Typography variant="caption" color="textSecondary" sx={{ display: "block", mb: 2 }}>
+					El manager envía un email al admin cuando un seguimiento activo supera el umbral sin ser consultado (pipeline roto), y otro
+					al normalizarse. El switch de envío y los destinatarios del canal normal se administran en Notificaciones → Seguimiento
+					postal; acá se controla el detector.
+				</Typography>
+				<Grid container spacing={2} alignItems="center">
+					<Grid item xs={12} sm={4}>
+						<FormControlLabel
+							control={<Switch checked={staleAlertEnabled} onChange={(e) => setStaleAlertEnabled(e.target.checked)} />}
+							label="Detector habilitado"
+						/>
+					</Grid>
+					<Grid item xs={12} sm={4}>
+						<TextField
+							fullWidth
+							size="small"
+							label="Umbral sin consulta (horas)"
+							type="number"
+							value={staleAfterHours}
+							onChange={(e) => setStaleAfterHours(Number(e.target.value))}
+							inputProps={{ min: 1, max: 168 }}
+							disabled={!staleAlertEnabled}
+						/>
+					</Grid>
+					<Grid item xs={12} sm={4}>
+						<TextField
+							fullWidth
+							size="small"
+							label="Re-alertar cada (horas)"
+							type="number"
+							value={staleResendEveryHours}
+							onChange={(e) => setStaleResendEveryHours(Number(e.target.value))}
+							inputProps={{ min: 1, max: 168 }}
+							disabled={!staleAlertEnabled}
+						/>
+					</Grid>
+				</Grid>
 			</Paper>
 
 			{/* Workers scaling */}

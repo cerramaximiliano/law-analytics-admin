@@ -59,6 +59,17 @@ export interface ScraperConfig {
 	};
 	workers: ScraperConfigWorkers;
 	scraping: ScraperConfigScraping;
+	/** Alertas operativas del manager */
+	alerts?: {
+		/** Alerta por seguimientos activos que el worker no consulta */
+		staleTracking?: {
+			enabled?: boolean;
+			staleAfterHours?: number;
+			resendEveryHours?: number;
+			/** Solo para el fallback SES directo; los destinatarios del canal normal se configuran en la-notification */
+			recipients?: string[];
+		};
+	};
 	updatedAt?: string;
 }
 
