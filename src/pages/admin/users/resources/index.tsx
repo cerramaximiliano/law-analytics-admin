@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, Link as RouterLink } from "react-router-dom";
+import UserEmailActivityPanel from "./UserEmailActivity";
 import {
 	Box,
 	Tabs,
@@ -48,6 +49,8 @@ import {
 	Calendar,
 	ProfileCircle,
 	Chart2,
+	ArrowUp2,
+	ArrowDown2,
 	CloudConnection,
 	Activity,
 	Login,
@@ -634,6 +637,8 @@ const UserResources: React.FC = () => {
 	const isEscritosTab = currentType === "escritos";
 	const isAiUsageTab = currentType === "aiUsage";
 	const isEmailsTab = currentType === "emails";
+	// Fila desplegada del tab Emails: se carga bajo demanda, un usuario por vez.
+	const [expandedEmailUser, setExpandedEmailUser] = useState<string | null>(null);
 	const isFolderTab = currentType === "folder";
 
 	/**
@@ -1772,6 +1777,7 @@ const UserResources: React.FC = () => {
 						<Table stickyHeader size="small">
 							<TableHead>
 								<TableRow>
+									<TableCell sx={{ width: 40 }} />
 									<TableCell>Usuario</TableCell>
 									<TableCell align="right">Enviados</TableCell>
 									<TableCell>Por tipo</TableCell>
@@ -1784,112 +1790,131 @@ const UserResources: React.FC = () => {
 							<TableBody>
 								{emailsLoading ? (
 									<TableRow>
-										<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+										<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
 											<CircularProgress size={28} />
 										</TableCell>
 									</TableRow>
 								) : emailsRows.length === 0 ? (
 									<TableRow>
-										<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+										<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
 											<Typography color="textSecondary">Sin datos de emails</Typography>
 										</TableCell>
 									</TableRow>
 								) : (
 									emailsRows.map((row) => (
-										<TableRow hover key={row.userId}>
-											<TableCell>
-												<Typography variant="body2">{row.email || row.userId}</Typography>
-												{row.name && (
-													<Typography variant="caption" color="textSecondary">
-														{row.name}
-													</Typography>
-												)}
-											</TableCell>
-											<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
-												{row.totalSent}
-												{/* Señal de entrega: distingue "no abre" de "no le llega", que hoy
+										<React.Fragment key={row.userId}>
+											<TableRow hover>
+												<TableCell sx={{ width: 40 }}>
+													<Tooltip title="Ver toda la actividad de envíos de este usuario">
+														<IconButton
+															size="small"
+															onClick={() => setExpandedEmailUser((prev) => (prev === row.userId ? null : row.userId))}
+														>
+															{expandedEmailUser === row.userId ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
+														</IconButton>
+													</Tooltip>
+												</TableCell>
+												<TableCell>
+													<Typography variant="body2">{row.email || row.userId}</Typography>
+													{row.name && (
+														<Typography variant="caption" color="textSecondary">
+															{row.name}
+														</Typography>
+													)}
+												</TableCell>
+												<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+													{row.totalSent}
+													{/* Señal de entrega: distingue "no abre" de "no le llega", que hoy
 												    se veían igual. Solo aplica a los envíos con tracking. */}
-												{(row.delivery?.bouncePermanent || 0) > 0 || (row.delivery?.complaints || 0) > 0 ? (
-													<Tooltip
-														arrow
-														title={
-															<Box>
-																{(row.delivery?.bouncePermanent || 0) > 0 && (
-																	<div>
-																		{row.delivery?.bouncePermanent} rebote(s) permanente(s): la dirección no existe o está bloqueada
-																	</div>
-																)}
-																{(row.delivery?.complaints || 0) > 0 && (
-																	<div>{row.delivery?.complaints} queja(s) de spam: seguir enviándole daña la reputación del dominio</div>
-																)}
+													{(row.delivery?.bouncePermanent || 0) > 0 || (row.delivery?.complaints || 0) > 0 ? (
+														<Tooltip
+															arrow
+															title={
+																<Box>
+																	{(row.delivery?.bouncePermanent || 0) > 0 && (
+																		<div>
+																			{row.delivery?.bouncePermanent} rebote(s) permanente(s): la dirección no existe o está bloqueada
+																		</div>
+																	)}
+																	{(row.delivery?.complaints || 0) > 0 && (
+																		<div>{row.delivery?.complaints} queja(s) de spam: seguir enviándole daña la reputación del dominio</div>
+																	)}
+																</Box>
+															}
+														>
+															<Box component="span" sx={{ ml: 0.5, color: "error.main", cursor: "help", fontWeight: 700 }}>
+																!
 															</Box>
-														}
-													>
-														<Box component="span" sx={{ ml: 0.5, color: "error.main", cursor: "help", fontWeight: 700 }}>
-															!
-														</Box>
-													</Tooltip>
-												) : (row.delivery?.delivered || 0) > 0 ? (
-													<Tooltip
-														arrow
-														title={`${row.delivery?.delivered} de ${row.delivery?.withTracking} con tracking fueron entregados`}
-													>
-														<Box component="span" sx={{ ml: 0.5, color: LIVE_GREEN, cursor: "help" }}>
-															✓
-														</Box>
-													</Tooltip>
-												) : null}
-											</TableCell>
-											<TableCell>
-												<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-													{Object.entries(row.sentByType).map(([type, count]) => (
-														<Chip
-															key={type}
-															label={`${ENTITY_TYPE_LABELS[type] ?? type}: ${count}`}
-															size="small"
-															variant="outlined"
-															sx={{ height: 20, fontSize: "0.65rem" }}
-														/>
-													))}
-												</Box>
-											</TableCell>
-											<TableCell>
-												<Typography variant="caption">{row.lastSentAt ? dayjs(row.lastSentAt).format("DD/MM/YY HH:mm") : "-"}</Typography>
-											</TableCell>
-											<TableCell align="right">
-												<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
-													{row.movementViewEntries}
-												</Typography>
-												{row.lastMovementViewAt && (
-													<Typography variant="caption" color="textSecondary" display="block">
-														últ. {dayjs(row.lastMovementViewAt).format("DD/MM/YY")}
+														</Tooltip>
+													) : (row.delivery?.delivered || 0) > 0 ? (
+														<Tooltip
+															arrow
+															title={`${row.delivery?.delivered} de ${row.delivery?.withTracking} con tracking fueron entregados`}
+														>
+															<Box component="span" sx={{ ml: 0.5, color: LIVE_GREEN, cursor: "help" }}>
+																✓
+															</Box>
+														</Tooltip>
+													) : null}
+												</TableCell>
+												<TableCell>
+													<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+														{Object.entries(row.sentByType).map(([type, count]) => (
+															<Chip
+																key={type}
+																label={`${ENTITY_TYPE_LABELS[type] ?? type}: ${count}`}
+																size="small"
+																variant="outlined"
+																sx={{ height: 20, fontSize: "0.65rem" }}
+															/>
+														))}
+													</Box>
+												</TableCell>
+												<TableCell>
+													<Typography variant="caption">{row.lastSentAt ? dayjs(row.lastSentAt).format("DD/MM/YY HH:mm") : "-"}</Typography>
+												</TableCell>
+												<TableCell align="right">
+													<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+														{row.movementViewEntries}
 													</Typography>
-												)}
-											</TableCell>
-											<TableCell align="right">
-												<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
-													{row.emailVisits}
-												</Typography>
-												{row.lastEmailVisitAt && (
-													<Typography variant="caption" color="textSecondary" display="block">
-														últ. {dayjs(row.lastEmailVisitAt).format("DD/MM/YY")}
+													{row.lastMovementViewAt && (
+														<Typography variant="caption" color="textSecondary" display="block">
+															últ. {dayjs(row.lastMovementViewAt).format("DD/MM/YY")}
+														</Typography>
+													)}
+												</TableCell>
+												<TableCell align="right">
+													<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+														{row.emailVisits}
 													</Typography>
-												)}
-											</TableCell>
-											<TableCell>
-												<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-													{row.emailVisitSources.map((src) => (
-														<Chip
-															key={src}
-															label={src.replace(/^email_/, "")}
-															size="small"
-															variant="outlined"
-															sx={{ height: 20, fontSize: "0.65rem", fontFamily: "monospace" }}
-														/>
-													))}
-												</Box>
-											</TableCell>
-										</TableRow>
+													{row.lastEmailVisitAt && (
+														<Typography variant="caption" color="textSecondary" display="block">
+															últ. {dayjs(row.lastEmailVisitAt).format("DD/MM/YY")}
+														</Typography>
+													)}
+												</TableCell>
+												<TableCell>
+													<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+														{row.emailVisitSources.map((src) => (
+															<Chip
+																key={src}
+																label={src.replace(/^email_/, "")}
+																size="small"
+																variant="outlined"
+																sx={{ height: 20, fontSize: "0.65rem", fontFamily: "monospace" }}
+															/>
+														))}
+													</Box>
+												</TableCell>
+											</TableRow>
+											{expandedEmailUser === row.userId && (
+												<TableRow>
+													<TableCell colSpan={8} sx={{ py: 0, borderBottom: 0, bgcolor: "action.hover" }}>
+														<UserEmailActivityPanel userId={row.userId} />
+													</TableCell>
+												</TableRow>
+											)}
+										</React.Fragment>
 									))
 								)}
 							</TableBody>
