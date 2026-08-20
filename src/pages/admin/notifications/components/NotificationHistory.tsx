@@ -235,6 +235,10 @@ const NotificationHistory = () => {
 			case "alert":
 			case "alerta":
 				return "Alerta";
+			case "postal":
+				return "Postal";
+			case "judicial_movement":
+				return "Mov. judicial";
 			default:
 				return "Otro";
 		}
@@ -255,6 +259,10 @@ const NotificationHistory = () => {
 			case "alert":
 			case "alerta":
 				return "error";
+			case "postal":
+				return "info";
+			case "judicial_movement":
+				return "secondary";
 			default:
 				return "default";
 		}
@@ -558,6 +566,8 @@ const NotificationHistory = () => {
 								<MenuItem value="event">Eventos</MenuItem>
 								<MenuItem value="task">Tareas</MenuItem>
 								<MenuItem value="movement">Movimientos</MenuItem>
+								<MenuItem value="judicial_movement">Mov. judiciales</MenuItem>
+								<MenuItem value="postal">Postales</MenuItem>
 								<MenuItem value="alert">Alertas</MenuItem>
 							</TextField>
 
