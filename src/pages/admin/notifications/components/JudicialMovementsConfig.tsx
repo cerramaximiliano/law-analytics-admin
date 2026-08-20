@@ -434,14 +434,27 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 									</Typography>
 								</Grid>
 							</Grid>
-							{config.stats.lastError && (
-								<Alert severity="error" sx={{ mt: 2 }}>
-									<Typography variant="body2">
-										<strong>Último error ({config.stats.lastError.count} veces):</strong> {config.stats.lastError.message}
+							{/* `updateStats` del modelo pone count=0 al primer envío exitoso pero
+							    CONSERVA el objeto lastError (mensaje + fecha) como historial. Si
+							    la alerta roja se muestra mirando solo si el objeto existe, un
+							    error ya resuelto queda gritando para siempre: pasó con un 404 del
+							    22/07 que se seguía viendo un mes después, en las 4 tabs que
+							    comparten este config. count > 0 es lo que separa "está fallando"
+							    de "falló alguna vez". */}
+							{config.stats.lastError &&
+								(config.stats.lastError.count > 0 ? (
+									<Alert severity="error" sx={{ mt: 2 }}>
+										<Typography variant="body2">
+											<strong>Último error ({config.stats.lastError.count} veces):</strong> {config.stats.lastError.message}
+										</Typography>
+										<Typography variant="caption">{new Date(config.stats.lastError.timestamp).toLocaleString("es-AR")}</Typography>
+									</Alert>
+								) : (
+									<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 2 }}>
+										Sin errores desde el último envío exitoso. El anterior fue el{" "}
+										{new Date(config.stats.lastError.timestamp).toLocaleString("es-AR")}: {config.stats.lastError.message}
 									</Typography>
-									<Typography variant="caption">{new Date(config.stats.lastError.timestamp).toLocaleString("es-AR")}</Typography>
-								</Alert>
-							)}
+								))}
 						</Box>
 					)}
 				</CardContent>
