@@ -28,6 +28,7 @@ import MainCard from "components/MainCard";
 import SentenciasAskService, { AskFilters, AskOptions, AskResponse } from "api/sentenciasAsk";
 import { SentenciaResult, FullChunk } from "api/sentenciasSearch";
 import SemanticWorkerService from "api/semanticWorker";
+import SearchUsageService, { SearchUsageResponse } from "api/searchUsage";
 import { Fuero, SentenciaTipo } from "api/sentenciasCapturadas";
 
 // ── Helpers (mismos códigos de color/labels que la vista de búsqueda semántica) ─
@@ -305,6 +306,26 @@ export default function JurisprudenciaPjnAskPage() {
 	const [corpus, setCorpus] = useState<{ app: "saij" | "all"; mcp: "saij" | "all" } | null>(null);
 	const [savingCorpus, setSavingCorpus] = useState(false);
 
+	// Uso mensual de la búsqueda (rag-usage-monthly vía /rag/admin/search-usage)
+	const [usage, setUsage] = useState<SearchUsageResponse | null>(null);
+	const [usageLoading, setUsageLoading] = useState(false);
+	const [usagePeriod, setUsagePeriod] = useState<string>("");
+
+	const loadUsage = (period?: string) => {
+		setUsageLoading(true);
+		SearchUsageService.get(period)
+			.then((data) => {
+				setUsage(data);
+				setUsagePeriod(data.period);
+			})
+			.catch(() => setUsage(null))
+			.finally(() => setUsageLoading(false));
+	};
+
+	useEffect(() => {
+		loadUsage();
+	}, []);
+
 	useEffect(() => {
 		let alive = true;
 		SemanticWorkerService.getConfig()
@@ -471,6 +492,89 @@ export default function JurisprudenciaPjnAskPage() {
 								{savingCorpus && <CircularProgress size={10} sx={{ ml: 1 }} />}
 							</Typography>
 						</Stack>
+					</CardContent>
+				</Card>
+
+				{/* Uso mensual de la búsqueda semántica (todos los planes; el gating solo aplica a free) */}
+				<Card variant="outlined">
+					<CardContent sx={{ py: "12px !important" }}>
+						<Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" rowGap={1}>
+							<Stack direction="row" alignItems="center" spacing={1.5}>
+								<Typography variant="body2" fontWeight={600}>
+									Uso de búsqueda semántica
+								</Typography>
+								{usageLoading && <CircularProgress size={12} />}
+								{usage && (
+									<Typography variant="caption" color="text.secondary">
+										{usage.totals.searches} búsquedas · {usage.totals.users} usuarios en {usage.period}
+									</Typography>
+								)}
+							</Stack>
+							<Stack direction="row" spacing={1} alignItems="center">
+								<TextField
+									select
+									size="small"
+									label="Período"
+									value={usagePeriod || ""}
+									onChange={(e) => loadUsage(e.target.value)}
+									disabled={usageLoading || !usage}
+									sx={{ minWidth: 130 }}
+								>
+									{(usage?.periods?.length ? usage.periods : usagePeriod ? [usagePeriod] : []).map((p) => (
+										<MenuItem key={p} value={p}>
+											{p}
+										</MenuItem>
+									))}
+								</TextField>
+								<Tooltip title="Refrescar">
+									<Button size="small" onClick={() => loadUsage(usagePeriod || undefined)} disabled={usageLoading} sx={{ minWidth: 0 }}>
+										<Refresh size={16} />
+									</Button>
+								</Tooltip>
+							</Stack>
+						</Stack>
+
+						{usage === null && !usageLoading ? (
+							<Typography variant="caption" color="text.secondary">
+								Sin datos de uso disponibles.
+							</Typography>
+						) : usage ? (
+							<>
+								<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
+									{usage.byPlan.map((p) => (
+										<Chip key={p.plan} size="small" variant="outlined" label={`${p.plan}: ${p.searches} búsq. · ${p.users} usr`} />
+									))}
+									{usage.byConsumer.map((c) => (
+										<Chip
+											key={c.consumer}
+											size="small"
+											variant="outlined"
+											color={c.consumer === "mcp" ? "warning" : "default"}
+											label={`${c.consumer}: ${c.searches}`}
+										/>
+									))}
+								</Stack>
+								{usage.topUsers.length > 0 && (
+									<Box sx={{ mt: 1.25 }}>
+										<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+											Top usuarios del período
+										</Typography>
+										<Stack spacing={0.25}>
+											{usage.topUsers.map((u) => (
+												<Stack key={u.userId} direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+													<Typography variant="caption" sx={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
+														{u.email || u.userId}
+													</Typography>
+													<Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
+														{u.plan} · {u.consumer} · <strong>{u.searches}</strong>
+													</Typography>
+												</Stack>
+											))}
+										</Stack>
+									</Box>
+								)}
+							</>
+						) : null}
 					</CardContent>
 				</Card>
 
