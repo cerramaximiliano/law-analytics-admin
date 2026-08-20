@@ -419,6 +419,52 @@ const PostalTrackingPage = () => {
 			}
 		>
 			<Stack spacing={{ xs: 2, sm: 3 }}>
+				{/* Estado del servicio: worker vivo vs alerta operativa activa */}
+				{stats?.serviceHealth &&
+					(() => {
+						const sh = stats.serviceHealth!;
+						const alertActive = sh.alert?.active === true;
+						const staleNow = stats.metrics?.staleActive || 0;
+						const degraded = alertActive || staleNow > 0;
+						const color = degraded ? theme.palette.error.main : theme.palette.success.main;
+						return (
+							<Paper
+								elevation={0}
+								sx={{
+									p: 1.5,
+									borderRadius: 2,
+									bgcolor: alpha(color, isDark ? 0.12 : 0.06),
+									border: `1px solid ${alpha(color, 0.35)}`,
+								}}
+							>
+								<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
+									<Chip
+										size="small"
+										label={degraded ? "Pipeline con problemas" : "Pipeline operativo"}
+										sx={{ fontWeight: 700, bgcolor: alpha(color, 0.15), color }}
+									/>
+									<Typography variant="caption" color="text.secondary">
+										Última consulta del worker: <b>{formatDate(sh.lastWorkerCheckAt ?? undefined)}</b>
+									</Typography>
+									{degraded && (
+										<Typography variant="caption" sx={{ color, fontWeight: 600 }}>
+											{staleNow > 0 && `${staleNow} seguimiento${staleNow === 1 ? "" : "s"} sin actualizar >24h. `}
+											{alertActive &&
+												`Alerta activa desde ${formatDate(sh.alert?.activeSince ?? undefined)} (último aviso: ${formatDate(
+													sh.alert?.lastAlertAt ?? undefined,
+												)}).`}
+										</Typography>
+									)}
+									{!degraded && sh.alert?.recoveredAt && (
+										<Typography variant="caption" color="text.secondary">
+											Último incidente resuelto: {formatDate(sh.alert.recoveredAt)}
+										</Typography>
+									)}
+								</Stack>
+							</Paper>
+						);
+					})()}
+
 				{/* Stats Cards - lenguaje del design system: color solo en estados */}
 				<Grid container spacing={{ xs: 1, sm: 2 }}>
 					{[

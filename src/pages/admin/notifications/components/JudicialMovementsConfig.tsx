@@ -1163,6 +1163,48 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 									/>
 								</Grid>
 							</Grid>
+
+							{/* Alerta operativa al admin (pipeline de scraping caído) */}
+							<Typography variant="subtitle2" sx={{ mt: 3, mb: 0.5 }}>
+								Alerta operativa al admin
+							</Typography>
+							<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+								El manager de postal-tracking-service dispara este email cuando su worker deja de consultar seguimientos activos por más
+								de 24h (pipeline roto), y de nuevo al normalizarse. El umbral y la cadencia de re-envío se configuran en el worker
+								(scraper-config); acá se controla el envío y sus destinatarios.
+							</Typography>
+							<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+								<Grid item xs={12} md={4}>
+									<FormControlLabel
+										control={
+											<Switch
+												checked={config.postalNotifications?.adminAlerts?.enabled !== false}
+												onChange={(e) => handleFieldChange("postalNotifications.adminAlerts.enabled", e.target.checked)}
+											/>
+										}
+										label="Alertas al admin habilitadas"
+									/>
+								</Grid>
+								<Grid item xs={12} md={8}>
+									<TextField
+										label="Destinatarios (separados por coma)"
+										value={(config.postalNotifications?.adminAlerts?.recipients || []).join(", ")}
+										onChange={(e) =>
+											handleFieldChange(
+												"postalNotifications.adminAlerts.recipients",
+												e.target.value
+													.split(",")
+													.map((s) => s.trim())
+													.filter(Boolean),
+											)
+										}
+										placeholder="vacío = usa ADMIN_EMAIL del servicio"
+										helperText="Emails que reciben la alerta y el aviso de recuperación"
+										fullWidth
+										disabled={config.postalNotifications?.adminAlerts?.enabled === false}
+									/>
+								</Grid>
+							</Grid>
 						</Collapse>
 					</CardContent>
 				</Card>

@@ -121,6 +121,12 @@ export interface JudicialNotificationConfig {
 	postalNotifications?: {
 		enabled?: boolean;
 		safeGuardEnabled?: boolean;
+		/** Alerta operativa al admin cuando el worker deja de consultar seguimientos */
+		adminAlerts?: {
+			enabled?: boolean;
+			/** Destinatarios; vacío = usa env ADMIN_EMAIL de la-notification */
+			recipients?: string[];
+		};
 	};
 	/** Política transversal de banners promocionales */
 	bannerPolicy?: {

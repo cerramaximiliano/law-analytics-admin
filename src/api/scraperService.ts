@@ -188,8 +188,23 @@ export interface PostalTrackingStats {
 		withErrors: number;
 		finalStatuses: number;
 		avgConsecutiveErrors: number;
+		/** Activos/pendientes sin consulta del worker hace más de 24h */
+		staleActive?: number;
 	};
 	recentlyUpdatedToday: number;
+	/** Salud del pipeline de scraping (worker + alerta operativa) */
+	serviceHealth?: {
+		/** Última consulta exitosa del worker sobre cualquier pieza */
+		lastWorkerCheckAt: string | null;
+		/** Estado del alerta que mantiene el manager (colección alert-state) */
+		alert: {
+			active: boolean;
+			activeSince: string | null;
+			lastAlertAt: string | null;
+			recoveredAt: string | null;
+			staleCount: number;
+		} | null;
+	};
 }
 
 export interface PostalTrackingFilters {
