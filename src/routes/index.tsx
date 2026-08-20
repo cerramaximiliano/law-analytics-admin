@@ -31,6 +31,7 @@ const CarpetasVerificadasApp = Loadable(lazyWithRetry(() => import("pages/admin/
 const CarpetasNoVerificadas = Loadable(lazyWithRetry(() => import("pages/admin/causas/CarpetasNoVerificadas")));
 const FlujosCausas = Loadable(lazyWithRetry(() => import("pages/admin/causas/flujos/FlujosCausas")));
 const FlujosEcosistema = Loadable(lazyWithRetry(() => import("pages/admin/flujos")));
+const EmailFunnels = Loadable(lazyWithRetry(() => import("pages/admin/notifications/EmailFunnels")));
 const CausasPendientes = Loadable(lazyWithRetry(() => import("pages/admin/causas/CausasPendientes")));
 const CredencialesPJN = Loadable(lazyWithRetry(() => import("pages/admin/causas/CredencialesPJN")));
 const CausasSyncCredentials = Loadable(lazyWithRetry(() => import("pages/admin/causas/CausasSyncCredentials")));
@@ -777,7 +778,7 @@ export default function Routes() {
 								</AdminRoleGuard>
 							),
 						},
-{
+						{
 							path: "social/links",
 							element: (
 								<AdminRoleGuard>
@@ -882,6 +883,14 @@ export default function Routes() {
 							// Reemplazada por el tab "Recordatorios del usuario"
 							path: "notifications/folder-inactivity",
 							element: <Navigate to="/admin/notifications?tab=recordatorios" replace />,
+						},
+						{
+							path: "notifications/embudos",
+							element: (
+								<AdminRoleGuard>
+									<EmailFunnels />
+								</AdminRoleGuard>
+							),
 						},
 						{
 							// Reemplazada por el tab "Diagnóstico"

@@ -885,7 +885,7 @@ const admin: NavItemType = {
 					url: "/admin/social/articulos",
 					breadcrumbs: true,
 				},
-{
+				{
 					id: "bio-links",
 					title: "Link-in-bio",
 					type: "item",
@@ -914,6 +914,14 @@ const admin: NavItemType = {
 					type: "item",
 					url: "/admin/notifications",
 					breadcrumbs: true,
+				},
+				{
+					id: "notifications-embudos",
+					title: "Embudos de correo",
+					type: "item",
+					url: "/admin/notifications/embudos",
+					breadcrumbs: true,
+					chip: { label: "por fuente", color: "primary", variant: "outlined", size: "small" },
 				},
 				{
 					id: "notifications-config",
