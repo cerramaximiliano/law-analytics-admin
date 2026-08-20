@@ -69,6 +69,17 @@ export interface ScbaUpdatePolicy {
 	mode: ScbaUpdatePolicyMode;
 }
 
+/**
+ * Rechazos explícitos de login ("Datos inválidos") en credenciales ESTABLECIDAS:
+ * cuántos rechazos (con separación mínima entre el primero y el que confirma)
+ * antes de deshabilitar la credencial y emailear al usuario. Las credenciales
+ * nuevas disparan siempre al primer rechazo (feedback inmediato al vincular).
+ */
+export interface ScbaCredentialPolicy {
+	rejectionConfirmations: number;
+	rejectionMinSpacingMinutes: number;
+}
+
 export interface ScbaManagerSettings {
 	serviceAvailable: boolean;
 	maintenanceMessage: string;
@@ -82,6 +93,7 @@ export interface ScbaManagerSettings {
 	workDays: number[];
 	timezone: string;
 	updatePolicy?: ScbaUpdatePolicy;
+	credentialPolicy?: ScbaCredentialPolicy;
 	workers: ScbaWorkersConfigMap;
 }
 

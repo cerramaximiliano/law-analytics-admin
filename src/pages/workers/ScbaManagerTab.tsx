@@ -659,6 +659,60 @@ const ScbaManagerTab: React.FC = () => {
 							</CardContent>
 						</Card>
 
+						{/* Política de credenciales (confirmación de rechazos) */}
+						<Card variant="outlined">
+							<CardContent>
+								<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
+									Política de credenciales (rechazos de login)
+								</Typography>
+								<Grid container spacing={2} alignItems="center">
+									<Grid item xs={6} sm={3}>
+										<TextField
+											fullWidth
+											size="small"
+											type="number"
+											label="Rechazos para deshabilitar"
+											value={getVal("credentialPolicy", { rejectionConfirmations: 2, rejectionMinSpacingMinutes: 5 })?.rejectionConfirmations ?? 2}
+											onChange={(e) =>
+												updateField("credentialPolicy", {
+													...getVal("credentialPolicy", { rejectionConfirmations: 2, rejectionMinSpacingMinutes: 5 }),
+													rejectionConfirmations: Math.max(1, Math.min(5, parseInt(e.target.value) || 2)),
+												})
+											}
+											inputProps={{ min: 1, max: 5 }}
+										/>
+									</Grid>
+									<Grid item xs={6} sm={3}>
+										<TextField
+											fullWidth
+											size="small"
+											type="number"
+											label="Separación mínima (min)"
+											value={getVal("credentialPolicy", { rejectionConfirmations: 2, rejectionMinSpacingMinutes: 5 })?.rejectionMinSpacingMinutes ?? 5}
+											onChange={(e) =>
+												updateField("credentialPolicy", {
+													...getVal("credentialPolicy", { rejectionConfirmations: 2, rejectionMinSpacingMinutes: 5 }),
+													rejectionMinSpacingMinutes: Math.max(0, Math.min(120, parseInt(e.target.value) || 5)),
+												})
+											}
+											inputProps={{ min: 0, max: 120 }}
+										/>
+									</Grid>
+									<Grid item xs={12} sm={6}>
+										<Typography variant="caption" color="text.secondary">
+											Una credencial <strong>establecida</strong> (ya verificada) recién se deshabilita y se emailea al usuario tras{" "}
+											{getVal("credentialPolicy", { rejectionConfirmations: 2, rejectionMinSpacingMinutes: 5 })?.rejectionConfirmations ?? 2}{" "}
+											rechazo(s) explícito(s) del portal ("Datos inválidos") separados por al menos{" "}
+											{getVal("credentialPolicy", { rejectionConfirmations: 2, rejectionMinSpacingMinutes: 5 })?.rejectionMinSpacingMinutes ?? 5}{" "}
+											min — protege contra falsos positivos (tipeo parcial del bot, glitch del portal). Un login exitoso resetea el
+											contador. Las credenciales <strong>nuevas</strong> disparan al primer rechazo (feedback inmediato al vincular). 1 =
+											comportamiento histórico.
+										</Typography>
+									</Grid>
+								</Grid>
+							</CardContent>
+						</Card>
+
 						{/* Horario global */}
 						<Card variant="outlined">
 							<CardContent>
