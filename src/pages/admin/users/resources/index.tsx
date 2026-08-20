@@ -118,6 +118,18 @@ const tabs: TabConfig[] = [
 	{ type: "emails", label: "Emails", icon: <Sms size={18} /> },
 ];
 
+// Etiquetas de `entityType` de notificationlogs. Sin esto la columna mostraba el
+// enum crudo ("event", "task"), y saber qué usuarios recibieron el aviso de
+// calendario obligaba a conocer el enum de memoria.
+const ENTITY_TYPE_LABELS: Record<string, string> = {
+	judicial_movement: "movimientos",
+	event: "calendario",
+	task: "tareas",
+	movement: "vencimientos",
+	alert: "alertas",
+	custom: "otros",
+};
+
 const getCurrentPeriod = (): string => dayjs().format("YYYY-MM");
 
 const formatCostUsd = (n: number | undefined): string => {
@@ -1833,7 +1845,7 @@ const UserResources: React.FC = () => {
 													{Object.entries(row.sentByType).map(([type, count]) => (
 														<Chip
 															key={type}
-															label={`${type === "judicial_movement" ? "movimientos" : type}: ${count}`}
+															label={`${ENTITY_TYPE_LABELS[type] ?? type}: ${count}`}
 															size="small"
 															variant="outlined"
 															sx={{ height: 20, fontSize: "0.65rem" }}
