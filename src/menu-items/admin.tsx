@@ -892,6 +892,13 @@ const admin: NavItemType = {
 					url: "/admin/social/links",
 					breadcrumbs: true,
 				},
+				{
+					id: "public-banners",
+					title: "Banners públicos",
+					type: "item",
+					url: "/admin/social/banners",
+					breadcrumbs: true,
+				},
 			],
 		},
 		{
