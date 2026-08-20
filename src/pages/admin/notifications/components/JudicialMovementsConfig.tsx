@@ -107,6 +107,60 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 	};
 
 	/** Chips multi-select de tipos de email para un banner (path del config) */
+	// Controles de cooldown propio de un banner: alcance (qué cuenta como
+	// repetición) y ventana por tipo de correo (vacío = usa el default).
+	const renderCooldownControls = (
+		prefix: string,
+		cfg: { cooldownScope?: string; cooldownByEmailType?: Record<string, number> | null } | undefined,
+	) => (
+		<>
+			<Grid item xs={12} md={4}>
+				<TextField
+					select
+					label="Alcance del cooldown"
+					value={cfg?.cooldownScope ?? "banner"}
+					onChange={(e) => handleFieldChange(`${prefix}.cooldownScope`, e.target.value)}
+					helperText={
+						(cfg?.cooldownScope ?? "banner") === "banner"
+							? "Si lo recibió en cualquier tipo de correo, no se repite en ninguno"
+							: "Solo cuenta si lo recibió en este mismo tipo de correo"
+					}
+					fullWidth
+					size="small"
+				>
+					<MenuItem value="banner">Por banner (cualquier correo)</MenuItem>
+					<MenuItem value="banner-email">Por banner + tipo de correo</MenuItem>
+				</TextField>
+			</Grid>
+			<Grid item xs={12}>
+				<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.75 }}>
+					Ventana (días) por tipo de correo — vacío usa el cooldown general, 0 lo desactiva para ese tipo
+				</Typography>
+				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+					{EMAIL_TYPES.map((et) => (
+						<TextField
+							key={et.key}
+							label={et.label}
+							type="number"
+							size="small"
+							sx={{ width: 120 }}
+							value={cfg?.cooldownByEmailType?.[et.key] ?? ""}
+							onChange={(e) => {
+								const next: Record<string, number> = { ...(cfg?.cooldownByEmailType || {}) };
+								if (e.target.value === "") {
+									delete next[et.key];
+								} else {
+									next[et.key] = parseInt(e.target.value);
+								}
+								handleFieldChange(`${prefix}.cooldownByEmailType`, Object.keys(next).length ? next : null);
+							}}
+						/>
+					))}
+				</Stack>
+			</Grid>
+		</>
+	);
+
 	const renderEmailTypeChips = (path: string, current: string[] | undefined) => {
 		const selected = Array.isArray(current) && current.length > 0 ? current : EMAIL_TYPES.map((e) => e.key);
 		return (
@@ -697,6 +751,7 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 										fullWidth
 									/>
 								</Grid>
+								{renderCooldownControls("planBanner", config.planBanner)}
 								<Grid item xs={12} md={3}>
 									<TextField
 										label="Mín. carpetas archivadas"
@@ -850,6 +905,17 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 										label={<Typography variant="body2">Mostrar junto al banner de plan</Typography>}
 									/>
 								</Grid>
+								<Grid item xs={12} md={3}>
+									<TextField
+										label="Cooldown propio (días)"
+										type="number"
+										value={config.featureBanner?.cooldownDays ?? 0}
+										onChange={(e) => handleFieldChange("featureBanner.cooldownDays", parseInt(e.target.value))}
+										helperText="0 = solo rige el cooldown compartido"
+										fullWidth
+									/>
+								</Grid>
+								{renderCooldownControls("featureBanner", config.featureBanner)}
 								<Grid item xs={12}>
 									<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.75 }}>
 										Tipos de email donde puede aparecer
@@ -945,6 +1011,7 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 										fullWidth
 									/>
 								</Grid>
+								{renderCooldownControls("googleCalendarBanner", config.googleCalendarBanner)}
 								<Grid item xs={12} md={3}>
 									<FormControlLabel
 										control={
@@ -1169,8 +1236,8 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 								Alerta operativa al admin
 							</Typography>
 							<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-								El manager de postal-tracking-service dispara este email cuando su worker deja de consultar seguimientos activos por más
-								de 24h (pipeline roto), y de nuevo al normalizarse. El umbral y la cadencia de re-envío se configuran en el worker
+								El manager de postal-tracking-service dispara este email cuando su worker deja de consultar seguimientos activos por más de
+								24h (pipeline roto), y de nuevo al normalizarse. El umbral y la cadencia de re-envío se configuran en el worker
 								(scraper-config); acá se controla el envío y sus destinatarios.
 							</Typography>
 							<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>

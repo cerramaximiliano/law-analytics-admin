@@ -103,6 +103,10 @@ export interface JudicialNotificationConfig {
 		enabled?: boolean;
 		/** Máx. 1 banner por usuario cada N días (0 = en cada email) */
 		cooldownDays?: number;
+		/** Alcance del cooldown propio: 'banner' = cualquier correo; 'banner-email' = solo el mismo tipo */
+		cooldownScope?: "banner" | "banner-email";
+		/** Override de la ventana (días) por tipo de correo, ej { calendario: 7 } */
+		cooldownByEmailType?: Record<string, number> | null;
 		minArchivedFolders?: number;
 		excludePlans?: string[];
 		emailTypes?: string[];
@@ -136,6 +140,12 @@ export interface JudicialNotificationConfig {
 	/** Banner de anuncio/feature en todos los emails de notificación */
 	featureBanner?: {
 		enabled?: boolean;
+		/** Cooldown propio en días (0 = solo rige el compartido) */
+		cooldownDays?: number;
+		/** Alcance del cooldown propio: 'banner' = cualquier correo; 'banner-email' = solo el mismo tipo */
+		cooldownScope?: "banner" | "banner-email";
+		/** Override de la ventana (días) por tipo de correo, ej { calendario: 7 } */
+		cooldownByEmailType?: Record<string, number> | null;
 		title?: string | null;
 		text?: string | null;
 		ctaLabel?: string | null;
@@ -154,6 +164,10 @@ export interface JudicialNotificationConfig {
 		emailTypes?: string[];
 		/** Cooldown propio en días (default 14; 0 = en cada email) */
 		cooldownDays?: number;
+		/** Alcance del cooldown propio: 'banner' = cualquier correo; 'banner-email' = solo el mismo tipo */
+		cooldownScope?: "banner" | "banner-email";
+		/** Override de la ventana (días) por tipo de correo, ej { calendario: 7 } */
+		cooldownByEmailType?: Record<string, number> | null;
 		/** Mostrar aunque el email ya lleve el banner de plan o el de feature */
 		showWithOtherBanners?: boolean;
 	};
