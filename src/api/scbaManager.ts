@@ -216,6 +216,13 @@ export interface ScbaCredentialListItem {
 	consecutiveErrors: number;
 	errorNotifiedAt: string | null;
 	errorRecoveryPending: boolean;
+	/** Último error de login persistido por los workers (hasScreenshot = hay evidencia visual en S3) */
+	lastError?: {
+		message: string | null;
+		code: string | null;
+		date: string | null;
+		hasScreenshot: boolean;
+	} | null;
 	stats: {
 		causasCreated: number;
 		causasLinked: number;
@@ -393,6 +400,18 @@ class ScbaManagerService {
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al obtener alertas de credenciales SCBA");
+		}
+	}
+
+	/** Presigned URL (10 min) del screenshot del último rechazo de login de la credencial. */
+	async getLoginErrorScreenshot(
+		credentialId: string,
+	): Promise<{ success: boolean; data: { url: string; capturedAt: string | null; message: string | null } }> {
+		try {
+			const response = await mevAxios.get(`/api/scba-manager/credentials/${credentialId}/login-error-screenshot`);
+			return response.data;
+		} catch (error: any) {
+			throw new Error(error.response?.data?.message || "Error al obtener el screenshot del rechazo de login");
 		}
 	}
 

@@ -49,6 +49,7 @@ import {
 	Notification,
 	Gallery,
 	Warning2,
+	Camera,
 } from "iconsax-react";
 import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -304,6 +305,32 @@ const CredencialesSCBA = () => {
 		setSnapshotFilters(emptySnapshotFilters);
 		setSnapshotsDialog({ open: true, credential: cred, loading: true, data: [], page: 1, totalPages: 1, total: 0 });
 		fetchSnapshotsPage(cred._id, 1, emptySnapshotFilters);
+	};
+
+	// Screenshot del rechazo de login (evidencia S3 subida por los workers).
+	const [loginShotPreview, setLoginShotPreview] = useState<{
+		open: boolean;
+		loading: boolean;
+		url: string | null;
+		label: string;
+		message: string | null;
+	} | null>(null);
+
+	const handleOpenLoginErrorShot = async (cred: ScbaCredential) => {
+		setLoginShotPreview({ open: true, loading: true, url: null, label: cred.userEmail || cred._id, message: null });
+		try {
+			const res = await scbaManagerService.getLoginErrorScreenshot(cred._id);
+			setLoginShotPreview({
+				open: true,
+				loading: false,
+				url: res.data.url,
+				label: `${cred.userEmail || cred._id}${res.data.capturedAt ? ` — ${formatDate(res.data.capturedAt)}` : ""}`,
+				message: res.data.message,
+			});
+		} catch (error: any) {
+			enqueueSnackbar(error.message || "Error al cargar el screenshot", { variant: "error" });
+			setLoginShotPreview(null);
+		}
 	};
 
 	const handleOpenReminders = async (cred: ScbaCredential) => {
@@ -739,6 +766,13 @@ const CredencialesSCBA = () => {
 																	<Notification size={18} />
 																</IconButton>
 															</Tooltip>
+															{cred.lastError?.screenshotKey && (
+																<Tooltip title="Captura del rechazo de login (evidencia del portal)">
+																	<IconButton size="small" onClick={() => handleOpenLoginErrorShot(cred)} color="error">
+																		<Camera size={18} />
+																	</IconButton>
+																</Tooltip>
+															)}
 															<Tooltip title={cred.enabled ? "Deshabilitar" : "Habilitar"}>
 																<IconButton
 																	size="small"
@@ -1601,6 +1635,42 @@ const CredencialesSCBA = () => {
 					>
 						Cerrar
 					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Screenshot del rechazo de login (evidencia S3 del portal diciendo "Datos inválidos") */}
+			<Dialog open={!!loginShotPreview?.open} onClose={() => setLoginShotPreview(null)} maxWidth="md" fullWidth>
+				<DialogTitle>
+					Captura del rechazo de login
+					{loginShotPreview && (
+						<Typography variant="body2" color="text.secondary">
+							{loginShotPreview.label} — página de login del portal SCBA tal como la vio el worker al ser rechazado.
+						</Typography>
+					)}
+				</DialogTitle>
+				<DialogContent dividers>
+					{loginShotPreview?.loading ? (
+						<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+							<CircularProgress size={28} />
+						</Box>
+					) : loginShotPreview?.url ? (
+						<Box sx={{ textAlign: "center" }}>
+							{loginShotPreview.message && (
+								<Typography variant="caption" color="error.main" sx={{ display: "block", mb: 1 }}>
+									{loginShotPreview.message}
+								</Typography>
+							)}
+							<Box
+								component="img"
+								src={loginShotPreview.url}
+								alt="Rechazo de login SCBA"
+								sx={{ maxWidth: "100%", border: (t) => `1px solid ${t.palette.divider}`, borderRadius: 1 }}
+							/>
+						</Box>
+					) : null}
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setLoginShotPreview(null)}>Cerrar</Button>
 				</DialogActions>
 			</Dialog>
 		</MainCard>

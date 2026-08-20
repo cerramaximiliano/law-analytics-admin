@@ -20,6 +20,8 @@ export interface ScbaCredential {
 		message: string;
 		date: string;
 		code: string;
+		/** Key S3 del screenshot del rechazo de login (evidencia visual, presign vía mev-api) */
+		screenshotKey?: string | null;
 	} | null;
 	stats?: {
 		totalCausasFound: number;
