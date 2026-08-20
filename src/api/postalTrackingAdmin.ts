@@ -15,9 +15,21 @@ export interface PostalTrackingStats {
 		withErrors: number;
 		finalStatuses: number;
 		avgConsecutiveErrors: number;
+		/** Activos/pendientes sin consulta del worker hace más de 24h */
+		staleActive: number;
 	};
 	/** Seguimientos con cambio de estado registrado hoy */
 	recentlyUpdatedToday: number;
+	/** Detalle (hasta 20) de los seguimientos activos sin actualizar >24h */
+	staleActiveTrackings: {
+		_id: string;
+		codeId: string;
+		numberId: string;
+		trackingStatus: string | null;
+		processingStatus: string;
+		lastCheckedAt: string | null;
+		label: string | null;
+	}[];
 }
 
 const PostalTrackingAdminService = {

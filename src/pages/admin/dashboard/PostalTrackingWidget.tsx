@@ -116,6 +116,8 @@ const PostalTrackingWidget: React.FC<PostalTrackingWidgetProps> = ({ onRefresh }
 	const completados = byStatus.completed || 0;
 	const noEncontrados = byStatus.not_found || 0;
 	const conErrores = stats.metrics?.withErrors || 0;
+	const desactualizados = stats.metrics?.staleActive || 0;
+	const desactualizadosDetalle = stats.staleActiveTrackings || [];
 
 	const filas: { label: string; value: number; color: string }[] = [
 		{ label: "Pendientes", value: pendientes, color: theme.palette.text.secondary },
@@ -127,6 +129,47 @@ const PostalTrackingWidget: React.FC<PostalTrackingWidgetProps> = ({ onRefresh }
 	return wrapper(
 		<>
 			{header}
+
+			{/* Alerta: seguimientos activos que el worker no consulta hace >24h */}
+			{desactualizados > 0 && (
+				<Tooltip
+					title={
+						<Box>
+							{desactualizadosDetalle.slice(0, 5).map((t) => (
+								<Typography key={t._id} variant="caption" display="block">
+									{t.codeId} {t.numberId} — última consulta:{" "}
+									{t.lastCheckedAt ? new Date(t.lastCheckedAt).toLocaleString("es-AR") : "nunca"}
+								</Typography>
+							))}
+							{desactualizados > 5 && (
+								<Typography variant="caption" display="block">
+									…y {desactualizados - 5} más
+								</Typography>
+							)}
+						</Box>
+					}
+				>
+					<Box
+						onClick={() => navigate("/admin/postal-tracking")}
+						sx={{
+							display: "flex",
+							alignItems: "center",
+							gap: 0.75,
+							mb: 1.5,
+							px: 1,
+							py: 0.5,
+							borderRadius: 1,
+							cursor: "pointer",
+							bgcolor: alpha(theme.palette.error.main, isDark ? 0.18 : 0.08),
+							border: `1px solid ${alpha(theme.palette.error.main, isDark ? 0.4 : 0.25)}`,
+						}}
+					>
+						<Typography variant="caption" sx={{ color: theme.palette.error.main, fontWeight: 600 }}>
+							⚠ {desactualizados === 1 ? "1 seguimiento activo sin actualizar" : `${desactualizados} seguimientos activos sin actualizar`} hace más de 24h
+						</Typography>
+					</Box>
+				</Tooltip>
+			)}
 
 			{/* KPI principal: envíos en seguimiento activo */}
 			<Box
