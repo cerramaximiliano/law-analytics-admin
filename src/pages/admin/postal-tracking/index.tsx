@@ -676,6 +676,36 @@ const PostalTrackingPage = () => {
 												<Typography variant="body2" fontWeight={500} fontFamily="monospace">
 													{tracking.codeId} {tracking.numberId}
 												</Typography>
+												{/* En pantallas chicas las columnas Etiqueta / Estado rastreo / Actualizado
+												    se ocultan por breakpoint: se compactan acá como sublíneas, cada una
+												    visible solo mientras su columna real no entre. */}
+												{tracking.label && (
+													<Typography
+														variant="caption"
+														color="textSecondary"
+														noWrap
+														sx={{ display: { xs: "block", md: "none" }, maxWidth: 150 }}
+													>
+														{tracking.label}
+													</Typography>
+												)}
+												{tracking.trackingStatus && (
+													<Typography
+														variant="caption"
+														color="textSecondary"
+														noWrap
+														sx={{ display: { xs: "block", md: "none" }, maxWidth: 150 }}
+													>
+														{tracking.trackingStatus}
+													</Typography>
+												)}
+												<Typography
+													variant="caption"
+													color="textSecondary"
+													sx={{ display: { xs: "block", lg: "none" }, fontSize: "0.65rem", fontVariantNumeric: "tabular-nums" }}
+												>
+													Act: {formatDate(tracking.updatedAt)}
+												</Typography>
 											</Stack>
 										</TableCell>
 										<TableCell sx={COL_MD}>
@@ -799,13 +829,8 @@ const PostalTrackingPage = () => {
 										</TableCell>
 										<TableCell align="center" onClick={(e) => e.stopPropagation()}>
 											<Stack direction="row" spacing={0.5} justifyContent="center" flexWrap="wrap" useFlexGap>
-												<Tooltip title="Ver historial">
-													<IconButton
-														size="small"
-														color="info"
-														onClick={() => handleOpenDetail(tracking)}
-														sx={{ display: { xs: "none", sm: "inline-flex" } }}
-													>
+												<Tooltip title="Ver detalle completo">
+													<IconButton size="small" color="info" onClick={() => handleOpenDetail(tracking)}>
 														<Eye size={16} />
 													</IconButton>
 												</Tooltip>
