@@ -35,6 +35,7 @@ import { SegmentService } from "store/reducers/segments";
 import { Segment } from "types/segment";
 import TargetContactsTab from "./TargetContactsTab";
 import { BRAND_BLUE } from "themes/dashboardTokens";
+import CopyButton from "components/CopyButton";
 
 interface TargetUsersManagerProps {
 	discountId: string;
@@ -416,7 +417,10 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 									{targetUsers.map((user) => (
 										<TableRow key={user._id} hover>
 											<TableCell>
-												<Typography variant="body2">{user.email}</Typography>
+												<Stack direction="row" alignItems="center" spacing={0}>
+													<Typography variant="body2">{user.email}</Typography>
+													<CopyButton value={user.email} label="email" />
+												</Stack>
 											</TableCell>
 											<TableCell>
 												<Typography variant="body2">{user.fullName || "-"}</Typography>

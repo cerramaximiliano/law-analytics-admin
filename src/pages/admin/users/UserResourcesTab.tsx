@@ -34,6 +34,7 @@ import {
 	ContactStats,
 } from "api/userResources";
 import ragAxios from "utils/ragAxios";
+import CopyButton from "components/CopyButton";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 
 interface AiUsageRow {
@@ -518,7 +519,10 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 												<Typography variant="caption">{contact.type}</Typography>
 											</TableCell>
 											<TableCell>
-												<Typography variant="caption">{contact.email || "-"}</Typography>
+												<Stack direction="row" alignItems="center" spacing={0}>
+													<Typography variant="caption">{contact.email || "-"}</Typography>
+													<CopyButton value={contact.email} label="email" />
+												</Stack>
 											</TableCell>
 											<TableCell>
 												<Typography variant="caption">{contact.phone || "-"}</Typography>

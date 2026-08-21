@@ -32,6 +32,7 @@ import {
 import { Refresh, SearchNormal1, Eye, People, Crown1, TickCircle, Warning2, Archive, Trash } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import CopyButton from "components/CopyButton";
 import GroupsService, { Group, GroupStats, GroupFilters } from "api/groups";
 import IntegrationsConfigService, { ServiceFlag } from "api/integrationsConfig";
 import ServiceAvailabilityCard from "pages/admin/integrations/ServiceAvailabilityCard";
@@ -455,6 +456,7 @@ export default function GroupsPage() {
 												<Typography variant="body2">{getUserFullName(group.owner)}</Typography>
 												<Typography variant="caption" color="text.secondary">
 													{group.owner?.email}
+													<CopyButton value={group.owner?.email} label="email" />
 												</Typography>
 											</Box>
 										</TableCell>

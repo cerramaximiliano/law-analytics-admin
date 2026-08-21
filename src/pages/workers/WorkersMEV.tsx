@@ -57,6 +57,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import CopyButton from "components/CopyButton";
 import { TabPanel } from "components/ui-component/TabPanel";
 import MEVWorkersService, { MEVWorkerConfig, SystemConfig } from "api/workersMEV";
 import SyncCheckTab from "./SyncCheckTab";
@@ -2266,6 +2267,7 @@ const MEVWorkers = () => {
 										<TableCell>
 											<Typography variant="body2" fontWeight={500}>
 												{config.userId}
+												<CopyButton value={config.userId} label="ID" />
 											</Typography>
 										</TableCell>
 										<TableCell>

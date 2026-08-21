@@ -38,6 +38,7 @@ import {
 	InputAdornment,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
+import CopyButton from "components/CopyButton";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
 import { useSnackbar } from "notistack";
@@ -469,10 +470,9 @@ const CausasMEVByCredential = () => {
 				{/* Aclaración de cadencia de actualización por estado de carpeta */}
 				<Alert severity="info" icon={<InfoCircle size={18} />} sx={{ mb: 2 }}>
 					La frecuencia de actualización depende del estado de la <strong>carpeta</strong> de cada causa: las de{" "}
-					<strong>carpeta activa</strong> se refrescan cada ~2&nbsp;h (8-20&nbsp;h), mientras que las de{" "}
-					<strong>carpeta archivada</strong> se actualizan de madrugada (4-6&nbsp;h) y solo si pasaron más de
-					24&nbsp;h desde la última. Por eso muchas causas archivadas pueden mostrar una "Última Act." de días
-					previos — es el comportamiento esperado, no un error.
+					<strong>carpeta activa</strong> se refrescan cada ~2&nbsp;h (8-20&nbsp;h), mientras que las de <strong>carpeta archivada</strong>{" "}
+					se actualizan de madrugada (4-6&nbsp;h) y solo si pasaron más de 24&nbsp;h desde la última. Por eso muchas causas archivadas
+					pueden mostrar una "Última Act." de días previos — es el comportamiento esperado, no un error.
 				</Alert>
 
 				{/* Tabla */}
@@ -618,6 +618,7 @@ const CausasMEVByCredential = () => {
 														</Typography>
 														<Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 150 }}>
 															{causa.credential.userEmail}
+															<CopyButton value={causa.credential.userEmail} label="email" />
 														</Typography>
 														{causa.credential.removedFromSync && (
 															<Tooltip

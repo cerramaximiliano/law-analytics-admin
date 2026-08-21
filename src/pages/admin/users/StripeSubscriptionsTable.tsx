@@ -29,6 +29,7 @@ import {
 } from "@mui/material";
 import { Trash, Eye } from "iconsax-react";
 import dayjs from "utils/dayjs-config";
+import CopyButton from "components/CopyButton";
 import { fetchStripeCustomers, deleteStripeCustomer } from "store/reducers/stripe-subscriptions";
 import { StripeCustomer } from "types/stripe-subscription";
 import StripeCustomerDetailModal from "./StripeCustomerDetailModal";
@@ -345,7 +346,10 @@ const StripeSubscriptionsTable = () => {
 									</Typography>
 								</TableCell>
 								<TableCell>
-									<Typography variant="body2">{customer.email}</Typography>
+									<Stack direction="row" alignItems="center" spacing={0}>
+										<Typography variant="body2">{customer.email}</Typography>
+										<CopyButton value={customer.email} label="email" />
+									</Stack>
 								</TableCell>
 								<TableCell>
 									{customer.subscription ? (
@@ -385,6 +389,7 @@ const StripeSubscriptionsTable = () => {
 								<TableCell>
 									<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
 										{customer.metadata.userId}
+										<CopyButton value={customer.metadata.userId} label="ID" />
 									</Typography>
 								</TableCell>
 								<TableCell>

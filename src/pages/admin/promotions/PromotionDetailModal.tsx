@@ -48,6 +48,7 @@ import discountsService from "api/discounts";
 import { useSnackbar } from "notistack";
 import TargetUsersManager from "./TargetUsersManager";
 import LaunchCampaignTab from "./LaunchCampaignTab";
+import CopyButton from "components/CopyButton";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -1051,7 +1052,10 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 									{stripeData.subscribers.list.map((sub) => (
 										<TableRow key={sub.subscriptionId}>
 											<TableCell>
-												<Typography variant="body2">{sub.customerEmail || "Sin email"}</Typography>
+												<Stack direction="row" alignItems="center" spacing={0}>
+													<Typography variant="body2">{sub.customerEmail || "Sin email"}</Typography>
+													<CopyButton value={sub.customerEmail} label="email" />
+												</Stack>
 												{sub.customerName && (
 													<Typography variant="caption" color="textSecondary">
 														{sub.customerName}

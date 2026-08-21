@@ -27,6 +27,7 @@ import {
 	Button,
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
+import CopyButton from "components/CopyButton";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import FoldersService, { Folder, FolderStats } from "api/folders";
@@ -698,6 +699,7 @@ const FoldersPage = () => {
 													<TableCell sx={{ maxWidth: 150 }}>
 														<Typography variant="caption" sx={{ wordBreak: "break-all" }}>
 															{folder.user?.email || "N/A"}
+															<CopyButton value={folder.user?.email} label="email" />
 														</Typography>
 													</TableCell>
 													<TableCell>

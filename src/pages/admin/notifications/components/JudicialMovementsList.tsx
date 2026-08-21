@@ -46,6 +46,7 @@ import {
 	Clock,
 } from "iconsax-react";
 import dayjs from "utils/dayjs-config";
+import CopyButton from "components/CopyButton";
 import { alpha } from "@mui/material/styles";
 import judicialMovementsService, {
 	JudicialMovement,
@@ -626,6 +627,7 @@ const JudicialMovementsList = () => {
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
 													{movement.userId?.email || "-"}
+													<CopyButton value={movement.userId?.email} label="email" />
 												</Typography>
 											</Stack>
 										</TableCell>

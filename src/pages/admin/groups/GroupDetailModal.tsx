@@ -47,6 +47,7 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { useSnackbar } from "notistack";
 import GroupsService, { Group, GroupMember, GroupInvitation, GroupHistoryEntry } from "api/groups";
+import CopyButton from "components/CopyButton";
 
 // ====================================
 // HELPERS
@@ -211,6 +212,7 @@ function MembersTab({ groupId, onMemberRemoved }: MembersTabProps) {
 											</Typography>
 											<Typography variant="caption" color="text.secondary">
 												{userEmail}
+												<CopyButton value={userEmail} label="email" />
 											</Typography>
 										</Box>
 									</Stack>
@@ -343,7 +345,10 @@ function InvitationsTab({ groupId }: InvitationsTabProps) {
 							{invitations.map((inv) => (
 								<TableRow key={inv._id} hover>
 									<TableCell>
-										<Typography variant="body2">{inv.email}</Typography>
+										<Stack direction="row" alignItems="center" spacing={0}>
+											<Typography variant="body2">{inv.email}</Typography>
+											<CopyButton value={inv.email} label="email" />
+										</Stack>
 									</TableCell>
 									<TableCell>
 										<Typography variant="body2">{ROLE_LABEL[inv.role] ?? inv.role}</Typography>

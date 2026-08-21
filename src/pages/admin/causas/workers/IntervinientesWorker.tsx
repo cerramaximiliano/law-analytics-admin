@@ -53,6 +53,7 @@ import {
 	Calendar,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
+import CopyButton from "components/CopyButton";
 import ExtraInfoConfigService, {
 	ExtraInfoConfig,
 	ExtraInfoStatus,
@@ -1467,7 +1468,10 @@ const IntervinientesWorker = () => {
 												<Checkbox checked={selectedUsers.includes(user._id)} onChange={() => handleSelectUser(user._id)} />
 											</TableCell>
 											<TableCell>
-												<Typography variant="body2">{user.email}</Typography>
+												<Stack direction="row" alignItems="center" spacing={0}>
+													<Typography variant="body2">{user.email}</Typography>
+													<CopyButton value={user.email} label="email" />
+												</Stack>
 											</TableCell>
 											<TableCell>
 												<Typography variant="body2" color="text.secondary">

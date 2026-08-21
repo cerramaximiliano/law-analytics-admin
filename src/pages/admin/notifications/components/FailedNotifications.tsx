@@ -25,6 +25,7 @@ import {
 import { Refresh, Eye } from "iconsax-react";
 import { alpha } from "@mui/material/styles";
 import dayjs from "utils/dayjs-config";
+import CopyButton from "components/CopyButton";
 import notificationMonitoringService from "services/notificationMonitoringService";
 import { headerBorder } from "themes/dashboardTokens";
 
@@ -211,6 +212,7 @@ const FailedNotifications = () => {
 											<Typography variant="body2">{notification.user?.name || "N/A"}</Typography>
 											<Typography variant="caption" color="text.secondary">
 												{notification.user?.email || "N/A"}
+												<CopyButton value={notification.user?.email} label="email" />
 											</Typography>
 										</Box>
 									</TableCell>

@@ -58,6 +58,9 @@ import {
 } from "iconsax-react";
 import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import ImageActions from "components/ImageActions";
+import CopyButton from "components/CopyButton";
+import { fetchImageBlob } from "utils/imageActions";
 import pjnCredentialsService, {
 	PjnCredential,
 	PjnCredentialsFilters,
@@ -474,7 +477,7 @@ const CredencialesPJN = () => {
 	const [errorHistoryDetail, setErrorHistoryDetail] = useState<CredentialErrorEntry[]>([]);
 	const [errorHistoryLoading, setErrorHistoryLoading] = useState(false);
 	// Lightbox para ver el screenshot en grande
-	const [screenshotLightbox, setScreenshotLightbox] = useState<string | null>(null);
+	const [screenshotLightbox, setScreenshotLightbox] = useState<{ url: string; label: string } | null>(null);
 
 	// Modal de actualización de contraseña
 	const [updatePasswordDialog, setUpdatePasswordDialog] = useState<{
@@ -1437,6 +1440,7 @@ const CredencialesPJN = () => {
 														</Typography>
 														<Typography variant="caption" color="text.secondary">
 															{cred.userEmail}
+															<CopyButton value={cred.userEmail} label="email" />
 														</Typography>
 													</Stack>
 												</TableCell>
@@ -1934,6 +1938,7 @@ const CredencialesPJN = () => {
 																</Typography>
 																<Typography variant="caption" color="text.secondary">
 																	{sync.userEmail}
+																	<CopyButton value={sync.userEmail} label="email" />
 																</Typography>
 															</Stack>
 														</TableCell>
@@ -2091,6 +2096,7 @@ const CredencialesPJN = () => {
 																		</Stack>
 																		<Typography variant="caption" color="text.secondary">
 																			{run.userEmail}
+																			<CopyButton value={run.userEmail} label="email" />
 																		</Typography>
 																	</Stack>
 																</TableCell>
@@ -2191,6 +2197,7 @@ const CredencialesPJN = () => {
 															</Typography>
 															<Typography variant="caption" color="text.secondary">
 																{err.userEmail}
+																<CopyButton value={err.userEmail} label="email" />
 															</Typography>
 														</Stack>
 													</TableCell>
@@ -2711,7 +2718,10 @@ const CredencialesPJN = () => {
 														/>
 													</TableCell>
 													<TableCell>
-														<Typography variant="body2">{alert.userEmail || "—"}</Typography>
+														<Stack direction="row" alignItems="center" spacing={0}>
+															<Typography variant="body2">{alert.userEmail || "—"}</Typography>
+															<CopyButton value={alert.userEmail} label="email" />
+														</Stack>
 														{alert.credentialId && (
 															<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
 																{alert.credentialId.slice(0, 8)}…
@@ -2914,7 +2924,12 @@ const CredencialesPJN = () => {
 																	component="img"
 																	src={err.screenshotUrl}
 																	alt="screenshot del login"
-																	onClick={() => setScreenshotLightbox(err.screenshotUrl)}
+																	onClick={() =>
+																		setScreenshotLightbox({
+																			url: err.screenshotUrl as string,
+																			label: `login-error ${err.timestamp || ""}`.trim(),
+																		})
+																	}
 																	sx={{
 																		width: 72,
 																		height: 44,
@@ -2961,14 +2976,21 @@ const CredencialesPJN = () => {
 					{screenshotLightbox && (
 						<Box
 							component="img"
-							src={screenshotLightbox}
+							src={screenshotLightbox.url}
 							alt="screenshot del login (completo)"
 							sx={{ display: "block", maxWidth: "90vw", maxHeight: "85vh", objectFit: "contain" }}
 						/>
 					)}
 				</Box>
 				<DialogActions>
-					{screenshotLightbox && <Button onClick={() => window.open(screenshotLightbox, "_blank")}>Abrir en pestaña nueva</Button>}
+					{screenshotLightbox && (
+						<>
+							{/* El bucket pjn-rag-documents permite GET desde el dashboard, así
+							    que se puede leer la presigned URL directo (a diferencia de SCBA). */}
+							<ImageActions getBlob={() => fetchImageBlob(screenshotLightbox.url)} label={screenshotLightbox.label || "screenshot"} />
+							<Button onClick={() => window.open(screenshotLightbox.url, "_blank")}>Abrir en pestaña nueva</Button>
+						</>
+					)}
 					<Button onClick={() => setScreenshotLightbox(null)}>Cerrar</Button>
 				</DialogActions>
 			</Dialog>

@@ -33,6 +33,7 @@ import {
 import { Refresh, Trash, SearchNormal1, Filter, CloseCircle, Eye, Add, Copy, Forbidden2, Link21 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import CopyButton from "components/CopyButton";
 import FeedbackInvitesService, { FeedbackInvite, InviteFilters, InviteStatus, InviteType, InviteCreatePayload } from "api/feedbackInvites";
 import SurveyAdminService, { Survey } from "api/surveys";
 
@@ -366,6 +367,7 @@ const FeedbackInvitesPage = () => {
 													</Typography>
 													<Typography variant="caption" color="textSecondary">
 														{it.recipientEmail || ""}
+														<CopyButton value={it.recipientEmail} label="email" />
 													</Typography>
 												</>
 											) : (

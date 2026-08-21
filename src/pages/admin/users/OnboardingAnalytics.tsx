@@ -34,6 +34,7 @@ import {
 import { Refresh, People, Activity, Warning2, TickCircle, CloseCircle, SearchNormal1, Trash, Link21 } from "iconsax-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
 import MainCard from "components/MainCard";
+import CopyButton from "components/CopyButton";
 import ResponsiveDialog from "components/@extended/ResponsiveDialog";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 import OnboardingService from "api/onboarding";
@@ -859,6 +860,7 @@ const OnboardingAnalytics: React.FC = () => {
 														<Typography variant="body2">{event.userId.name || "Sin nombre"}</Typography>
 														<Typography variant="caption" color="text.secondary">
 															{event.userId.email}
+															<CopyButton value={event.userId.email} label="email" />
 														</Typography>
 													</Stack>
 												) : (
@@ -954,6 +956,7 @@ const OnboardingAnalytics: React.FC = () => {
 													<Typography variant="body2">{user.name || "Sin nombre"}</Typography>
 													<Typography variant="caption" color="text.secondary">
 														{user.email}
+														<CopyButton value={user.email} label="email" />
 													</Typography>
 												</Stack>
 											</TableCell>
@@ -1088,6 +1091,7 @@ const OnboardingAnalytics: React.FC = () => {
 													</Typography>
 													<Typography variant="caption" color="text.secondary">
 														{u.email}
+														<CopyButton value={u.email} label="email" />
 													</Typography>
 												</Stack>
 											</TableCell>

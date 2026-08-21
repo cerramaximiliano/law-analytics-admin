@@ -27,6 +27,7 @@ import { Add, Trash, UserAdd } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import discountsService, { TargetContact } from "api/discounts";
 import { BRAND_BLUE } from "themes/dashboardTokens";
+import CopyButton from "components/CopyButton";
 
 interface TargetContactsTabProps {
 	discountId: string;
@@ -136,8 +137,8 @@ const TargetContactsTab = ({ discountId, discountCode, onUpdate, onCountChange }
 		<Box>
 			<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
 				<Typography variant="subtitle1" color="text.secondary">
-					Contactos individuales (de la base de marketing) que verán el descuento{" "}
-					<strong>{discountCode}</strong> al registrarse con su mismo email.
+					Contactos individuales (de la base de marketing) que verán el descuento <strong>{discountCode}</strong> al registrarse con su
+					mismo email.
 				</Typography>
 				<Button
 					variant="contained"
@@ -157,8 +158,8 @@ const TargetContactsTab = ({ discountId, discountCode, onUpdate, onCountChange }
 			</Stack>
 
 			<Alert severity="info" sx={{ mb: 2 }}>
-				Útil para otorgar el descuento de forma discrecional a prospectos que aún no son usuarios de la plataforma. Cuando creen su
-				cuenta con el mismo email, verán el código en su panel.
+				Útil para otorgar el descuento de forma discrecional a prospectos que aún no son usuarios de la plataforma. Cuando creen su cuenta
+				con el mismo email, verán el código en su panel.
 			</Alert>
 
 			{contacts.length > 0 ? (
@@ -181,6 +182,7 @@ const TargetContactsTab = ({ discountId, discountCode, onUpdate, onCountChange }
 									<TableCell>
 										<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
 											{c.email}
+											<CopyButton value={c.email} label="email" />
 										</Typography>
 									</TableCell>
 									<TableCell>{c.fullName || "-"}</TableCell>
@@ -196,12 +198,7 @@ const TargetContactsTab = ({ discountId, discountCode, onUpdate, onCountChange }
 									</TableCell>
 									<TableCell align="center">
 										<Tooltip title="Quitar del descuento">
-											<IconButton
-												size="small"
-												color="error"
-												onClick={() => handleRemove(c._id)}
-												disabled={removing === c._id}
-											>
+											<IconButton size="small" color="error" onClick={() => handleRemove(c._id)} disabled={removing === c._id}>
 												{removing === c._id ? <CircularProgress size={16} /> : <Trash size={18} />}
 											</IconButton>
 										</Tooltip>
@@ -229,8 +226,7 @@ const TargetContactsTab = ({ discountId, discountCode, onUpdate, onCountChange }
 				</DialogTitle>
 				<DialogContent>
 					<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-						Buscá por email, nombre o apellido. Los contactos que agregues podrán usar el descuento al registrarse con ese mismo
-						email.
+						Buscá por email, nombre o apellido. Los contactos que agregues podrán usar el descuento al registrarse con ese mismo email.
 					</Typography>
 					<Autocomplete
 						multiple

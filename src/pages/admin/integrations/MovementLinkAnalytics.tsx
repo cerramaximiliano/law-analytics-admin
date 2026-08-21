@@ -41,6 +41,7 @@ import {
 } from "iconsax-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
 import MainCard from "components/MainCard";
+import CopyButton from "components/CopyButton";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 import MovementLinkAnalyticsService from "api/movementLinkAnalytics";
 import MovementViewerPreview from "./MovementViewerPreview";
@@ -705,6 +706,7 @@ const MovementLinkAnalytics: React.FC = () => {
 													<Typography variant="body2">{u.name || "Sin nombre"}</Typography>
 													<Typography variant="caption" color="text.secondary">
 														{u.email || u.userId}
+														<CopyButton value={u.email} label="email" />
 													</Typography>
 												</Stack>
 											</TableCell>

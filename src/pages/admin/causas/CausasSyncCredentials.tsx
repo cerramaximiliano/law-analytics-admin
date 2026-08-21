@@ -34,6 +34,7 @@ import {
 } from "@mui/material";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
+import CopyButton from "components/CopyButton";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
 import { useSnackbar } from "notistack";
@@ -539,9 +540,7 @@ const CausasSyncCredentials = () => {
 												<Typography variant="body2" color="text.secondary">
 													Novedades hoy
 												</Typography>
-												{movHoyFilter && (
-													<Chip label="filtrando" size="small" color="success" sx={{ height: 18, fontSize: "0.6rem" }} />
-												)}
+												{movHoyFilter && <Chip label="filtrando" size="small" color="success" sx={{ height: 18, fontSize: "0.6rem" }} />}
 											</Stack>
 											<Typography variant="h4" color="success.main" fontWeight="bold">
 												{(summary.movimientosHoy ?? 0).toLocaleString()}
@@ -707,11 +706,7 @@ const CausasSyncCredentials = () => {
 										>
 											<TableCell>
 												<Stack spacing={0.5}>
-													<Typography
-														variant="body2"
-														fontWeight={600}
-														sx={{ fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }}
-													>
+													<Typography variant="body2" fontWeight={600} sx={{ fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }}>
 														{causa.number}/{causa.year}
 													</Typography>
 													{causa.folder?.listRemoved && (
@@ -774,7 +769,10 @@ const CausasSyncCredentials = () => {
 											<TableCell align="center">
 												{causa.syncState ? (
 													(() => {
-														const meta = ESTADO_META[causa.syncState!.estado] || { label: causa.syncState!.estado, color: "default" as const };
+														const meta = ESTADO_META[causa.syncState!.estado] || {
+															label: causa.syncState!.estado,
+															color: "default" as const,
+														};
 														return (
 															<Tooltip
 																title={`${causa.syncState!.detalle || meta.label}${
@@ -868,6 +866,7 @@ const CausasSyncCredentials = () => {
 													</Typography>
 													<Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 150 }}>
 														{causa.credential.userEmail}
+														<CopyButton value={causa.credential.userEmail} label="email" />
 													</Typography>
 													{causa.credential.removedFromSync && (
 														<Tooltip
@@ -981,9 +980,7 @@ const CausasSyncCredentials = () => {
 			<Dialog open={screenshotModalOpen} onClose={handleCloseScreenshots} maxWidth="md" fullWidth>
 				<DialogTitle>
 					<Stack direction="row" alignItems="center" justifyContent="space-between">
-						<Typography variant="h6">
-							Capturas — {`${screenshotCausa?.number ?? ""}/${screenshotCausa?.year ?? ""}`}
-						</Typography>
+						<Typography variant="h6">Capturas — {`${screenshotCausa?.number ?? ""}/${screenshotCausa?.year ?? ""}`}</Typography>
 						<IconButton onClick={handleCloseScreenshots} size="small">
 							<CloseCircle size={20} />
 						</IconButton>
@@ -1010,9 +1007,7 @@ const CausasSyncCredentials = () => {
 											color={INCIDENT_TYPE_COLORS[shot.type] || "default"}
 											size="small"
 										/>
-										{shot.detectionCount > 1 && (
-											<Chip label={`×${shot.detectionCount}`} size="small" variant="outlined" />
-										)}
+										{shot.detectionCount > 1 && <Chip label={`×${shot.detectionCount}`} size="small" variant="outlined" />}
 										<Typography variant="caption" color="text.secondary">
 											{formatDate(shot.lastSeenAt)}
 										</Typography>
@@ -1024,13 +1019,7 @@ const CausasSyncCredentials = () => {
 										</Typography>
 									)}
 									{shot.screenshotUrl ? (
-										<Box
-											component="a"
-											href={shot.screenshotUrl}
-											target="_blank"
-											rel="noopener noreferrer"
-											sx={{ display: "block" }}
-										>
+										<Box component="a" href={shot.screenshotUrl} target="_blank" rel="noopener noreferrer" sx={{ display: "block" }}>
 											<Box
 												component="img"
 												src={shot.screenshotUrl}

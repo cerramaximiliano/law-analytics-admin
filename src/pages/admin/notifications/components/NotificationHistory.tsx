@@ -20,10 +20,13 @@ import {
 	Grid,
 	Tabs,
 	Tab,
+	Tooltip,
+	Stack,
 } from "@mui/material";
 import { Notification, TaskSquare, CalendarRemove, TableDocument, Message, NotificationBing, TickCircle } from "iconsax-react";
 import { alpha } from "@mui/material/styles";
 import dayjs from "utils/dayjs-config";
+import CopyButton from "components/CopyButton";
 import notificationMonitoringService from "services/notificationMonitoringService";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -515,6 +518,7 @@ const NotificationHistory = () => {
 															<Typography variant="body2">{alert.userId?.name || "Usuario desconocido"}</Typography>
 															<Typography variant="caption" color="text.secondary">
 																{alert.userId?.email || "Sin email"}
+																<CopyButton value={alert.userId?.email} label="email" />
 															</Typography>
 														</Box>
 													</Box>
@@ -645,12 +649,13 @@ const NotificationHistory = () => {
 										<TableCell>Fecha de envío</TableCell>
 										<TableCell>Método</TableCell>
 										<TableCell align="center">Estado</TableCell>
+										<TableCell align="center">Interacción</TableCell>
 									</TableRow>
 								</TableHead>
 								<TableBody>
 									{history.data.length === 0 ? (
 										<TableRow>
-											<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+											<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
 												<Typography variant="body1" color="text.secondary">
 													No hay notificaciones para mostrar
 												</Typography>
@@ -678,6 +683,7 @@ const NotificationHistory = () => {
 																<Typography variant="body2">{item.user?.name || "Usuario desconocido"}</Typography>
 																<Typography variant="caption" color="text.secondary">
 																	{item.user?.email || "Sin email"}
+																	<CopyButton value={item.user?.email} label="email" />
 																</Typography>
 															</Box>
 														</Box>
@@ -693,10 +699,52 @@ const NotificationHistory = () => {
 													</TableCell>
 													<TableCell align="center">
 														<Chip
-															label={item.notification?.status === "delivered" ? "Entregado" : "Enviado"}
-															color={item.notification?.status === "delivered" ? "success" : "info"}
+															label={
+																item.notification?.status === "delivered"
+																	? "Entregado"
+																	: item.notification?.status === "failed"
+																		? "Fallido"
+																		: "Enviado"
+															}
+															color={
+																item.notification?.status === "delivered"
+																	? "success"
+																	: item.notification?.status === "failed"
+																		? "error"
+																		: "info"
+															}
 															size="small"
 														/>
+													</TableCell>
+													<TableCell align="center">
+														{(() => {
+															const eng = item.notification?.engagement;
+															if (!eng || (!eng.opens && !eng.clicks)) {
+																return (
+																	<Typography variant="caption" color="text.secondary">
+																		—
+																	</Typography>
+																);
+															}
+															return (
+																<Stack direction="row" spacing={0.5} justifyContent="center">
+																	{eng.opens > 0 && (
+																		<Tooltip
+																			title={`Aperturas vía píxel (sobre-cuentan por los proxies de Gmail/Apple). Última: ${
+																				eng.lastOpenAt ? formatDate(eng.lastOpenAt) : "?"
+																			}`}
+																		>
+																			<Chip label={`${eng.opens} apert.`} size="small" variant="outlined" />
+																		</Tooltip>
+																	)}
+																	{eng.clicks > 0 && (
+																		<Tooltip title={`Último click: ${eng.lastClickUrl || "?"}`}>
+																			<Chip label={`${eng.clicks} click${eng.clicks > 1 ? "s" : ""}`} size="small" color="success" />
+																		</Tooltip>
+																	)}
+																</Stack>
+															);
+														})()}
 													</TableCell>
 												</TableRow>
 											);

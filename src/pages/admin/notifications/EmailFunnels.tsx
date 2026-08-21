@@ -34,6 +34,7 @@ import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip as
 import { ExportSquare, Refresh, Sms } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import CopyButton from "components/CopyButton";
 import EmailFunnelsService, { EmailFunnelSource, FunnelTopUser } from "api/emailFunnels";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, PRO_TEAL } from "themes/dashboardTokens";
 import dayjs from "utils/dayjs-config";
@@ -404,6 +405,7 @@ const EmailFunnels: React.FC = () => {
 																<TableCell sx={{ py: 0.5 }}>
 																	<Typography variant="caption" noWrap sx={{ maxWidth: 200, display: "block" }}>
 																		{u.email || u.userId || "—"}
+																		<CopyButton value={u.email} label="email" />
 																	</Typography>
 																</TableCell>
 																<TableCell align="right" sx={{ py: 0.5, fontVariantNumeric: "tabular-nums" }}>

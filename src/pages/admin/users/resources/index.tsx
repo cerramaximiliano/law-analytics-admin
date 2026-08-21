@@ -66,6 +66,7 @@ import {
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import CopyButton from "components/CopyButton";
 import { BRAND_BLUE, PRO_TEAL, LIVE_GREEN, headerShadow } from "themes/dashboardTokens";
 import PostalDocumentsAdminService, { PostalDocument, PostalDocumentStats } from "api/postalDocumentsAdmin";
 import AdminResourcesService, {
@@ -1467,6 +1468,7 @@ const UserResources: React.FC = () => {
 												<Box>
 													<Typography variant="body2" fontWeight="medium">
 														{user.email}
+														<CopyButton value={user.email} label="email" />
 													</Typography>
 													{user.name && (
 														<Typography variant="caption" color="textSecondary">
@@ -1815,7 +1817,10 @@ const UserResources: React.FC = () => {
 													</Tooltip>
 												</TableCell>
 												<TableCell>
-													<Typography variant="body2">{row.email || row.userId}</Typography>
+													<Stack direction="row" alignItems="center" spacing={0}>
+														<Typography variant="body2">{row.email || row.userId}</Typography>
+														<CopyButton value={row.email} label="email" />
+													</Stack>
 													{row.name && (
 														<Typography variant="caption" color="textSecondary">
 															{row.name}
@@ -1886,6 +1891,7 @@ const UserResources: React.FC = () => {
 												<TableCell align="right">
 													<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
 														{row.emailVisits}
+														<CopyButton value={row.email} label="email" />
 													</Typography>
 													{row.lastEmailVisitAt && (
 														<Typography variant="caption" color="textSecondary" display="block">
@@ -2084,6 +2090,7 @@ const UserResources: React.FC = () => {
 															fontStyle={row.email ? "normal" : "italic"}
 														>
 															{row.email || "(usuario eliminado)"}
+															<CopyButton value={row.email} label="email" />
 														</Typography>
 														{fullName && (
 															<Typography variant="caption" color="textSecondary">
@@ -2658,6 +2665,7 @@ const UserResources: React.FC = () => {
 													<Box>
 														<Typography variant="body2" fontWeight="medium">
 															{user.email}
+															<CopyButton value={user.email} label="email" />
 														</Typography>
 														{user.name && user.name !== "-" && (
 															<Typography variant="caption" color="textSecondary">

@@ -65,6 +65,7 @@ import {
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import CopyButton from "components/CopyButton";
 import SupportContactsService, {
 	SupportContact,
 	SupportContactFilters,
@@ -665,6 +666,7 @@ const SupportContactsPage = () => {
 											<TableCell>
 												<Typography variant="body2" color="textSecondary">
 													{contact.email}
+													<CopyButton value={contact.email} label="email" />
 												</Typography>
 											</TableCell>
 											<TableCell>

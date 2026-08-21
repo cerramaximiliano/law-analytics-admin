@@ -36,6 +36,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/es";
 import MainCard from "components/MainCard";
+import CopyButton from "components/CopyButton";
 import TrialsService, {
 	TrialSubscription,
 	TrialStats,
@@ -498,6 +499,7 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 												<Box>
 													<Typography variant="body2" fontWeight={500}>
 														{row.user?.email ?? "—"}
+														<CopyButton value={row.user?.email} label="email" />
 													</Typography>
 													{row.user?.name && (
 														<Typography variant="caption" color="text.secondary">
@@ -964,6 +966,7 @@ const TrialsTab = ({ testMode }: { testMode: boolean }) => {
 												<Box>
 													<Typography variant="body2" fontWeight={500}>
 														{row.user?.email ?? "—"}
+														<CopyButton value={row.user?.email} label="email" />
 													</Typography>
 													{row.user?.name && (
 														<Typography variant="caption" color="text.secondary">

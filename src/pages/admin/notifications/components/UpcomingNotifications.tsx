@@ -28,6 +28,7 @@ import {
 import { Calendar, Timer1, DollarCircle, Notification, Refresh, ArrowDown2, ArrowUp2 } from "iconsax-react";
 import { alpha } from "@mui/material/styles";
 import dayjs from "utils/dayjs-config";
+import CopyButton from "components/CopyButton";
 import { RootState } from "store";
 import notificationMonitoringService from "services/notificationMonitoringService";
 import type { UpcomingEvent, UpcomingTask } from "types/notificationMonitoring";
@@ -217,6 +218,7 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 																		<Typography variant="caption">{event.user?.name || "Usuario desconocido"}</Typography>
 																		<Typography variant="caption" color="text.secondary" display="block">
 																			{event.user?.email || "Sin email"}
+																			<CopyButton value={event.user?.email} label="email" />
 																		</Typography>
 																	</Box>
 																</Box>
@@ -288,6 +290,7 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 																		<Typography variant="caption">{task.user?.name || "Usuario desconocido"}</Typography>
 																		<Typography variant="caption" color="text.secondary" display="block">
 																			{task.user?.email || "Sin email"}
+																			<CopyButton value={task.user?.email} label="email" />
 																		</Typography>
 																	</Box>
 																</Box>
@@ -389,6 +392,7 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 																		<Typography variant="caption">{movement.user?.name || "Usuario desconocido"}</Typography>
 																		<Typography variant="caption" color="text.secondary" display="block">
 																			{movement.user?.email || "Sin email"}
+																			<CopyButton value={movement.user?.email} label="email" />
 																		</Typography>
 																	</Box>
 																</Box>
@@ -483,6 +487,7 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 																		<Typography variant="caption">{alert.userId?.name || "Usuario desconocido"}</Typography>
 																		<Typography variant="caption" color="text.secondary" display="block">
 																			{alert.userId?.email || "Sin email"}
+																			<CopyButton value={alert.userId?.email} label="email" />
 																		</Typography>
 																	</Box>
 																</Box>

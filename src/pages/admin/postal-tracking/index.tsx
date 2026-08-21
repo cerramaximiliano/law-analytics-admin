@@ -37,6 +37,7 @@ import {
 import { Refresh, Trash, SearchNormal1, Eye, Play, Pause, Send2, Add, CloseCircle, Code, Copy } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import CopyButton from "components/CopyButton";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import ScraperService, { PostalTracking, PostalTrackingStats, PostalTrackingFilters } from "api/scraperService";
 import dayjs from "dayjs";
@@ -765,6 +766,7 @@ const PostalTrackingPage = () => {
 													{tracking.userEmail && (
 														<Typography variant="body2" noWrap sx={{ maxWidth: { xs: 130, sm: 180 } }}>
 															{tracking.userEmail}
+															<CopyButton value={tracking.userEmail} label="email" />
 														</Typography>
 													)}
 													<Stack direction="row" spacing={0.5} alignItems="center">
@@ -777,6 +779,7 @@ const PostalTrackingPage = () => {
 															sx={{ maxWidth: 90 }}
 														>
 															{tracking.userId}
+															<CopyButton value={tracking.userId} label="ID" />
 														</Typography>
 														<Tooltip title="Copiar ID">
 															<IconButton

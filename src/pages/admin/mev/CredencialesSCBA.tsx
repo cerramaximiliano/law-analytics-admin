@@ -55,6 +55,8 @@ import {
 } from "iconsax-react";
 import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import ImageActions from "components/ImageActions";
+import CopyButton from "components/CopyButton";
 import { AddCircle } from "iconsax-react";
 import scbaCredentialsService, { ScbaCredential, ScbaCredentialDetail, ScbaCredentialsFilters } from "api/scbaCredentials";
 import scbaManagerService, { ScbaListSnapshot, ScbaAdminAlert } from "api/scbaManager";
@@ -275,8 +277,6 @@ const CredencialesSCBA = () => {
 	}>({ open: false, credential: null, loading: false, data: [], page: 1, totalPages: 1, total: 0 });
 	// Imagen ampliada (lightbox simple dentro del diálogo)
 	const [snapshotPreview, setSnapshotPreview] = useState<{ url: string; label: string; s3Key: string } | null>(null);
-	// Descarga/copia en curso, por s3Key, para deshabilitar el botón puntual.
-	const [snapshotBusy, setSnapshotBusy] = useState<string | null>(null);
 	// Filtros de búsqueda dentro del diálogo (fecha + cantidad de causas)
 	const emptySnapshotFilters = { dateFrom: "", dateTo: "", countMin: "", countMax: "" };
 	const [snapshotFilters, setSnapshotFilters] = useState(emptySnapshotFilters);
@@ -302,52 +302,6 @@ const CredencialesSCBA = () => {
 		} catch (error: any) {
 			enqueueSnackbar(error.message || "Error al cargar snapshots", { variant: "error" });
 			setSnapshotsDialog((prev) => ({ ...prev, loading: false }));
-		}
-	};
-
-	/**
-	 * Descarga y copiado de un snapshot.
-	 *
-	 * Los bytes se piden a mev-api y no a la presigned URL de S3: el bucket no
-	 * tiene CORS, así que el navegador no puede leer el blob directamente (y sin
-	 * blob no hay copiado; el atributo `download` además se ignora cross-origin).
-	 */
-	const handleDownloadSnapshot = async (credentialId: string, s3Key: string, label: string) => {
-		setSnapshotBusy(s3Key);
-		try {
-			const blob = await scbaManagerService.fetchSnapshotImage(credentialId, s3Key);
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement("a");
-			a.href = url;
-			// Nombre legible en vez del hash de la key: "2026-08-21 — página 2.png"
-			a.download = `${label.replace(/[\\/:*?"<>|]/g, "-")}.png`;
-			document.body.appendChild(a);
-			a.click();
-			a.remove();
-			// Liberar en el próximo tick: revocar antes puede abortar la descarga.
-			setTimeout(() => URL.revokeObjectURL(url), 1000);
-		} catch (error: any) {
-			enqueueSnackbar(error?.message || "No se pudo descargar la imagen", { variant: "error" });
-		} finally {
-			setSnapshotBusy(null);
-		}
-	};
-
-	const handleCopySnapshot = async (credentialId: string, s3Key: string) => {
-		setSnapshotBusy(s3Key);
-		try {
-			if (!navigator.clipboard || typeof window.ClipboardItem === "undefined") {
-				throw new Error("El navegador no permite copiar imágenes al portapapeles");
-			}
-			const blob = await scbaManagerService.fetchSnapshotImage(credentialId, s3Key);
-			// Los snapshots son PNG, que es el único tipo que el portapapeles
-			// acepta de forma amplia — no hace falta convertir por canvas.
-			await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-			enqueueSnackbar("Imagen copiada al portapapeles", { variant: "success" });
-		} catch (error: any) {
-			enqueueSnackbar(error?.message || "No se pudo copiar la imagen", { variant: "error" });
-		} finally {
-			setSnapshotBusy(null);
 		}
 	};
 
@@ -754,6 +708,7 @@ const CredencialesSCBA = () => {
 															</Typography>
 															<Typography variant="caption" color="text.secondary">
 																{cred.userEmail}
+																<CopyButton value={cred.userEmail} label="email" />
 															</Typography>
 														</Stack>
 													</TableCell>
@@ -1183,7 +1138,10 @@ const CredencialesSCBA = () => {
 														/>
 													</TableCell>
 													<TableCell>
-														<Typography variant="body2">{alert.userEmail || "—"}</Typography>
+														<Stack direction="row" alignItems="center" spacing={0}>
+															<Typography variant="body2">{alert.userEmail || "—"}</Typography>
+															<CopyButton value={alert.userEmail} label="email" />
+														</Stack>
 														{alert.credentialId && (
 															<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
 																{alert.credentialId.slice(0, 8)}…
@@ -1578,25 +1536,13 @@ const CredencialesSCBA = () => {
 							<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }} flexWrap="wrap" useFlexGap>
 								<Typography variant="subtitle2">{snapshotPreview.label}</Typography>
 								<Stack direction="row" spacing={1} alignItems="center">
-									<Button
-										size="small"
-										startIcon={<Copy size={15} />}
-										disabled={snapshotBusy === snapshotPreview.s3Key}
-										onClick={() => snapshotsDialog.credential && handleCopySnapshot(snapshotsDialog.credential._id, snapshotPreview.s3Key)}
-									>
-										Copiar
-									</Button>
-									<Button
-										size="small"
-										startIcon={<DocumentDownload size={15} />}
-										disabled={snapshotBusy === snapshotPreview.s3Key}
-										onClick={() =>
-											snapshotsDialog.credential &&
-											handleDownloadSnapshot(snapshotsDialog.credential._id, snapshotPreview.s3Key, snapshotPreview.label)
-										}
-									>
-										Descargar
-									</Button>
+									{/* El bucket scba-docs no tiene CORS: los bytes salen del proxy de mev-api. */}
+									{snapshotsDialog.credential && (
+										<ImageActions
+											getBlob={() => scbaManagerService.fetchSnapshotImage(snapshotsDialog.credential!._id, snapshotPreview.s3Key)}
+											label={snapshotPreview.label}
+										/>
+									)}
 									<Button size="small" onClick={() => setSnapshotPreview(null)}>
 										Volver al listado
 									</Button>
@@ -1677,23 +1623,14 @@ const CredencialesSCBA = () => {
 													/>
 													<Stack direction="row" alignItems="center" justifyContent="center" spacing={0.25} sx={{ py: 0.25 }}>
 														<Typography variant="caption">pág. {p.page}</Typography>
-														{/* stopPropagation: el contenedor abre el lightbox al hacer clic */}
-														<Tooltip title="Descargar esta página">
-															<span>
-																<IconButton
-																	size="small"
-																	sx={{ p: 0.25 }}
-																	disabled={snapshotBusy === p.s3Key}
-																	onClick={(e) => {
-																		e.stopPropagation();
-																		if (snapshotsDialog.credential)
-																			handleDownloadSnapshot(snapshotsDialog.credential._id, p.s3Key, `${snap.date} — página ${p.page}`);
-																	}}
-																>
-																	<DocumentDownload size={13} />
-																</IconButton>
-															</span>
-														</Tooltip>
+														{snapshotsDialog.credential && (
+															<ImageActions
+																variant="icon"
+																showCopy={false}
+																getBlob={() => scbaManagerService.fetchSnapshotImage(snapshotsDialog.credential!._id, p.s3Key)}
+																label={`${snap.date} — página ${p.page}`}
+															/>
+														)}
 													</Stack>
 												</Box>
 											) : (
