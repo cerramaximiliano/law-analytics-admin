@@ -703,15 +703,15 @@ const NotificationHistory = () => {
 																item.notification?.status === "delivered"
 																	? "Entregado"
 																	: item.notification?.status === "failed"
-																		? "Fallido"
-																		: "Enviado"
+																	? "Fallido"
+																	: "Enviado"
 															}
 															color={
 																item.notification?.status === "delivered"
 																	? "success"
 																	: item.notification?.status === "failed"
-																		? "error"
-																		: "info"
+																	? "error"
+																	: "info"
 															}
 															size="small"
 														/>
