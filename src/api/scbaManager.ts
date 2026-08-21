@@ -452,6 +452,22 @@ class ScbaManagerService {
 		}
 	}
 
+	/**
+	 * Bytes de un snapshot, para copiar al portapapeles o descargar.
+	 *
+	 * No se usa la presigned URL directamente porque el bucket scba-docs no tiene
+	 * CORS: el navegador puede MOSTRAR la imagen (<img> no pide CORS) pero no
+	 * leerla con fetch, y sin el blob no hay copiado ni descarga forzada (el
+	 * atributo `download` se ignora cross-origin). mev-api sí manda CORS.
+	 */
+	async fetchSnapshotImage(credentialId: string, s3Key: string): Promise<Blob> {
+		const response = await mevAxios.get(`/api/scba-manager/credentials/${credentialId}/snapshot-image`, {
+			params: { key: s3Key },
+			responseType: "blob",
+		});
+		return response.data as Blob;
+	}
+
 	async previewResetCredential(credentialId: string): Promise<{ success: boolean; dryRun: boolean; data: ScbaResetPreview }> {
 		try {
 			const response = await mevAxios.post(`/api/scba-manager/credentials/${credentialId}/reset`, null, {

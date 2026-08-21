@@ -39,6 +39,8 @@ import {
 	Refresh,
 	SearchNormal1,
 	CloseCircle,
+	Copy,
+	DocumentDownload,
 	TickCircle,
 	Trash,
 	ToggleOnCircle,
@@ -272,7 +274,9 @@ const CredencialesSCBA = () => {
 		total: number;
 	}>({ open: false, credential: null, loading: false, data: [], page: 1, totalPages: 1, total: 0 });
 	// Imagen ampliada (lightbox simple dentro del diálogo)
-	const [snapshotPreview, setSnapshotPreview] = useState<{ url: string; label: string } | null>(null);
+	const [snapshotPreview, setSnapshotPreview] = useState<{ url: string; label: string; s3Key: string } | null>(null);
+	// Descarga/copia en curso, por s3Key, para deshabilitar el botón puntual.
+	const [snapshotBusy, setSnapshotBusy] = useState<string | null>(null);
 	// Filtros de búsqueda dentro del diálogo (fecha + cantidad de causas)
 	const emptySnapshotFilters = { dateFrom: "", dateTo: "", countMin: "", countMax: "" };
 	const [snapshotFilters, setSnapshotFilters] = useState(emptySnapshotFilters);
@@ -298,6 +302,52 @@ const CredencialesSCBA = () => {
 		} catch (error: any) {
 			enqueueSnackbar(error.message || "Error al cargar snapshots", { variant: "error" });
 			setSnapshotsDialog((prev) => ({ ...prev, loading: false }));
+		}
+	};
+
+	/**
+	 * Descarga y copiado de un snapshot.
+	 *
+	 * Los bytes se piden a mev-api y no a la presigned URL de S3: el bucket no
+	 * tiene CORS, así que el navegador no puede leer el blob directamente (y sin
+	 * blob no hay copiado; el atributo `download` además se ignora cross-origin).
+	 */
+	const handleDownloadSnapshot = async (credentialId: string, s3Key: string, label: string) => {
+		setSnapshotBusy(s3Key);
+		try {
+			const blob = await scbaManagerService.fetchSnapshotImage(credentialId, s3Key);
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			// Nombre legible en vez del hash de la key: "2026-08-21 — página 2.png"
+			a.download = `${label.replace(/[\\/:*?"<>|]/g, "-")}.png`;
+			document.body.appendChild(a);
+			a.click();
+			a.remove();
+			// Liberar en el próximo tick: revocar antes puede abortar la descarga.
+			setTimeout(() => URL.revokeObjectURL(url), 1000);
+		} catch (error: any) {
+			enqueueSnackbar(error?.message || "No se pudo descargar la imagen", { variant: "error" });
+		} finally {
+			setSnapshotBusy(null);
+		}
+	};
+
+	const handleCopySnapshot = async (credentialId: string, s3Key: string) => {
+		setSnapshotBusy(s3Key);
+		try {
+			if (!navigator.clipboard || typeof window.ClipboardItem === "undefined") {
+				throw new Error("El navegador no permite copiar imágenes al portapapeles");
+			}
+			const blob = await scbaManagerService.fetchSnapshotImage(credentialId, s3Key);
+			// Los snapshots son PNG, que es el único tipo que el portapapeles
+			// acepta de forma amplia — no hace falta convertir por canvas.
+			await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+			enqueueSnackbar("Imagen copiada al portapapeles", { variant: "success" });
+		} catch (error: any) {
+			enqueueSnackbar(error?.message || "No se pudo copiar la imagen", { variant: "error" });
+		} finally {
+			setSnapshotBusy(null);
 		}
 	};
 
@@ -1525,11 +1575,32 @@ const CredencialesSCBA = () => {
 						</Box>
 					) : snapshotPreview ? (
 						<Box sx={{ textAlign: "center" }}>
-							<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+							<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }} flexWrap="wrap" useFlexGap>
 								<Typography variant="subtitle2">{snapshotPreview.label}</Typography>
-								<Button size="small" onClick={() => setSnapshotPreview(null)}>
-									Volver al listado
-								</Button>
+								<Stack direction="row" spacing={1} alignItems="center">
+									<Button
+										size="small"
+										startIcon={<Copy size={15} />}
+										disabled={snapshotBusy === snapshotPreview.s3Key}
+										onClick={() => snapshotsDialog.credential && handleCopySnapshot(snapshotsDialog.credential._id, snapshotPreview.s3Key)}
+									>
+										Copiar
+									</Button>
+									<Button
+										size="small"
+										startIcon={<DocumentDownload size={15} />}
+										disabled={snapshotBusy === snapshotPreview.s3Key}
+										onClick={() =>
+											snapshotsDialog.credential &&
+											handleDownloadSnapshot(snapshotsDialog.credential._id, snapshotPreview.s3Key, snapshotPreview.label)
+										}
+									>
+										Descargar
+									</Button>
+									<Button size="small" onClick={() => setSnapshotPreview(null)}>
+										Volver al listado
+									</Button>
+								</Stack>
 							</Stack>
 							<Box
 								component="img"
@@ -1586,7 +1657,9 @@ const CredencialesSCBA = () => {
 											p.url ? (
 												<Box
 													key={p.page}
-													onClick={() => setSnapshotPreview({ url: p.url as string, label: `${snap.date} — página ${p.page}` })}
+													onClick={() =>
+														setSnapshotPreview({ url: p.url as string, label: `${snap.date} — página ${p.page}`, s3Key: p.s3Key })
+													}
 													sx={{
 														cursor: "pointer",
 														border: (t) => `1px solid ${t.palette.divider}`,
@@ -1602,9 +1675,26 @@ const CredencialesSCBA = () => {
 														alt={`Página ${p.page}`}
 														sx={{ width: "100%", height: 100, objectFit: "cover", objectPosition: "top", display: "block" }}
 													/>
-													<Typography variant="caption" sx={{ display: "block", textAlign: "center", py: 0.25 }}>
-														pág. {p.page}
-													</Typography>
+													<Stack direction="row" alignItems="center" justifyContent="center" spacing={0.25} sx={{ py: 0.25 }}>
+														<Typography variant="caption">pág. {p.page}</Typography>
+														{/* stopPropagation: el contenedor abre el lightbox al hacer clic */}
+														<Tooltip title="Descargar esta página">
+															<span>
+																<IconButton
+																	size="small"
+																	sx={{ p: 0.25 }}
+																	disabled={snapshotBusy === p.s3Key}
+																	onClick={(e) => {
+																		e.stopPropagation();
+																		if (snapshotsDialog.credential)
+																			handleDownloadSnapshot(snapshotsDialog.credential._id, p.s3Key, `${snap.date} — página ${p.page}`);
+																	}}
+																>
+																	<DocumentDownload size={13} />
+																</IconButton>
+															</span>
+														</Tooltip>
+													</Stack>
 												</Box>
 											) : (
 												<Chip key={p.page} size="small" label={`pág. ${p.page}: sin URL`} />
