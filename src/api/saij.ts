@@ -219,6 +219,12 @@ export interface SaijWorkerConfig {
 		pageTimeout: number;
 		maxRetries: number;
 		downloadPdf: boolean;
+		/** Canal que barre el worker. CSJN = Federal + Tribunal/CORTE SUPREMA DE JUSTICIA DE LA NACION */
+		jurisdiccion?: "NACIONAL" | "PROVINCIAL" | "CSJN";
+		/** backfill = barrido histórico por cursor; incremental = solo novedades por fecha-umod */
+		mode?: "backfill" | "incremental";
+		sortOrder?: "ASC" | "DESC";
+		fechaUmodWatermark?: string;
 	};
 	pipeline: SaijPipelineConfig;
 	history: {
@@ -261,6 +267,10 @@ export interface SaijWorkerConfig {
 		lastSuccessAt: string;
 		lastErrorAt: string;
 		lastErrorMessage: string;
+		/** Rechazos 403 de SAIJ observados por este worker (el límite es por IP) */
+		saijRechazos6h?: number;
+		saijRechazosUltimaHora?: number;
+		saijUltimoRechazoAt?: string;
 	};
 	lastUpdate: string;
 	createdAt: string;
@@ -322,6 +332,43 @@ export const deleteSaijSentencia = async (id: string): Promise<{ success: boolea
 
 export const getSaijWorkerConfigs = async (): Promise<{ success: boolean; data: SaijWorkerConfig[] }> => {
 	const response = await pjnAxios.get("/api/saij/config");
+	return response.data;
+};
+
+export interface SaijWorkerProgress {
+	workerId: string;
+	enabled: boolean;
+	paused: boolean;
+	jurisdiccion: "NACIONAL" | "PROVINCIAL" | "CSJN";
+	mode: "backfill" | "incremental";
+	cursor: { year: number | null; month: number | null; offset: number; yearFrom: number; yearTarget: number };
+	/** % del calendario recorrido; 100 en incremental (el backfill ya cerró) */
+	avance: number;
+	docs: number;
+	ultimoDocAt: string | null;
+	watermark: string | null;
+	rateLimit: number | null;
+	cronPattern: string | null;
+	lastRunAt: string | null;
+	rechazos: { ultimaHora: number; seisHoras: number; ultimoAt: string | null };
+}
+
+export interface SaijProgressResponse {
+	success: boolean;
+	data: {
+		workers: SaijWorkerProgress[];
+		totales: {
+			porJurisdiccion: Record<string, number>;
+			docs: number;
+			/** Suma de rateLimit de los workers activos: es lo que SAIJ mide por IP */
+			rateAgregado: number;
+			rechazosUltimaHora: number;
+		};
+	};
+}
+
+export const getSaijProgress = async (): Promise<SaijProgressResponse> => {
+	const response = await pjnAxios.get("/api/saij/config/progress");
 	return response.data;
 };
 

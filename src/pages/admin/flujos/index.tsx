@@ -20,6 +20,7 @@ import { BRAND_BLUE } from "themes/dashboardTokens";
 
 import SentenciasFlow from "./SentenciasFlow";
 import ScbaWorkersFlow from "./ScbaWorkersFlow";
+import SaijWorkersFlow from "./SaijWorkersFlow";
 import CausasFlowDiagram from "../causas/flujos/FlowDiagram";
 import { mainSpecs } from "../causas/flujos/flowData";
 import NotificationsFlowDiagram from "../notifications/components/FlowDiagram";
@@ -62,6 +63,13 @@ const TABS: FlowTab[] = [
 			"El pipeline completo de SCBA: de la credencial del usuario a la notificación del movimiento. El diagrama lee la configuración en vivo (updatePolicy) y redibuja la partición del update — en 'unified' el worker de archivadas aparece ocioso.",
 		href: "/admin/workers/mev",
 		hrefLabel: "Operar el SCBA manager (pestaña SCBA)",
+	},
+	{
+		label: "Workers SAIJ",
+		intro:
+			"Los cuatro canales de captura de jurisprudencia de SAIJ — nacional, provincial, Corte Suprema y el backfill histórico — que comparten el mismo código y se diferencian solo por configuración. Solo el nacional alimenta el pipeline PJN y las campañas a usuarios.",
+		href: "/admin/workers/saij",
+		hrefLabel: "Operar los workers SAIJ",
 	},
 	{
 		label: "Data plane",
@@ -159,7 +167,9 @@ const FlujosEcosistema: React.FC = () => {
 
 					{tab === 3 && <ScbaWorkersFlow />}
 
-					{tab === 4 && (
+					{tab === 4 && <SaijWorkersFlow />}
+
+					{tab === 5 && (
 						// El data plane no se embebe: es una página con panel de detalle propio
 						// y su valor está en poder clickear cada nodo. Duplicar acá una versión
 						// recortada daría dos fuentes de verdad para el mismo diagrama.

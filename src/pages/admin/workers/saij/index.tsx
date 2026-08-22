@@ -67,7 +67,8 @@ import {
 	updateSaijPipelineConfig,
 } from "api/saij";
 import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES, headerBorder } from "themes/dashboardTokens";
-import FlowTab from "./FlowTab";
+import SaijWorkersFlow from "pages/admin/flujos/SaijWorkersFlow";
+import ProgresoPanel from "./ProgresoPanel";
 import DifusionTab from "./DifusionTab";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -666,6 +667,8 @@ export default function SaijWorkerPage() {
 						{/* ── Tab 0: Estado ── */}
 						{tab === 0 && (
 							<Stack spacing={2}>
+								{/* Avance de todos los workers: cantidades reales y año en curso */}
+								<ProgresoPanel />
 								<Stack direction="row" spacing={1.5} flexWrap="wrap">
 									<StatBox label="Procesados" value={fmtNum(s.stats?.totalProcessed)} />
 									<StatBox label="Exitosos" value={fmtNum(s.stats?.totalSuccess)} color={theme.palette.success.main} />
@@ -1373,7 +1376,7 @@ export default function SaijWorkerPage() {
 						)}
 
 						{/* ── Tab 4: Flujo ── */}
-						{tab === 4 && <FlowTab />}
+						{tab === 4 && <SaijWorkersFlow />}
 						{tab === 5 && <DifusionTab />}
 					</Grid>
 				)}
