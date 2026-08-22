@@ -21,6 +21,7 @@ import { BRAND_BLUE } from "themes/dashboardTokens";
 import SentenciasFlow from "./SentenciasFlow";
 import ScbaWorkersFlow from "./ScbaWorkersFlow";
 import SaijWorkersFlow from "./SaijWorkersFlow";
+import CijurWorkersFlow from "./CijurWorkersFlow";
 import PostalWorkersFlow from "./PostalWorkersFlow";
 import CausasFlowDiagram from "../causas/flujos/FlowDiagram";
 import { mainSpecs } from "../causas/flujos/flowData";
@@ -78,6 +79,13 @@ const TABS: FlowTab[] = [
 			"El pipeline del seguimiento postal (Correo Argentino): del alta de la pieza al email de novedades — el manager encola los vencidos, los scraper-workers efímeros consultan el portal ONDNC y la-notification entrega al usuario. Incluye el circuito de alerta operativa al admin cuando el pipeline deja de actualizar.",
 		href: "/admin/workers/scraper",
 		hrefLabel: "Operar el worker postal",
+	},
+	{
+		label: "Worker CIJur",
+		intro:
+			"La captura de la selección curada del Ministerio Público de Buenos Aires: dos canales, backfill una sola vez y vigilancia diaria. El sitio no corta la paginación con 404 y duplica cada fallo en el HTML — las dos cosas condicionan el diseño.",
+		href: "/admin/workers/cijur",
+		hrefLabel: "Operar el worker CIJur",
 	},
 	{
 		label: "Data plane",
@@ -176,6 +184,8 @@ const FlujosEcosistema: React.FC = () => {
 					{tab === 3 && <ScbaWorkersFlow />}
 
 					{tab === 4 && <SaijWorkersFlow />}
+
+					{tab === 5 && <CijurWorkersFlow />}
 
 					{tab === 5 && <PostalWorkersFlow />}
 

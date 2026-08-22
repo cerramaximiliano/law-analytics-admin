@@ -465,6 +465,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "workers-cijur",
+					title: "Worker CIJur",
+					type: "item",
+					url: "/admin/workers/cijur",
+					breadcrumbs: true,
+				},
+				{
 					id: "workers-seclo",
 					title: "Workers SECLO",
 					type: "item",
