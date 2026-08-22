@@ -480,3 +480,67 @@ export const downloadImage = async (base64: string, filename: string, tipo: "jpg
 	}
 	dispararDescarga(blob, filename.replace(/\.(jpe?g|png)$/i, "") + ".jpg");
 };
+
+// ==================== Piezas guardadas (S3) ====================
+
+/** Pieza persistida de un post. `url` es prefirmada y expira (ttlSegundos). */
+export interface MediaImagen {
+	key: string;
+	formato?: string;
+	indice?: number;
+	bytes?: number;
+	generadoEn?: string;
+	url: string;
+}
+
+export interface MediaVideo {
+	key: string;
+	formato?: string;
+	duracionMs?: number | null;
+	fps?: number | null;
+	bytes?: number;
+	generadoEn?: string;
+	url: string;
+}
+
+export interface MediaPost {
+	imagenes: MediaImagen[];
+	video: MediaVideo | null;
+	actualizadoEn: string | null;
+	ttlSegundos: number;
+}
+
+export interface GuardarMediaPayload {
+	/** PNGs en base64 (sin prefijo data:), en orden de slide. */
+	imagenes?: string[];
+	/** MP4 en base64. */
+	video?: string;
+	formato?: FormatoId;
+	duracionMs?: number;
+	fps?: number;
+	/** Sin esto, si el post ya tiene piezas la API responde 409. */
+	reemplazar?: boolean;
+}
+
+/**
+ * Sube al post las piezas ya renderizadas. Ante un post que ya las tiene, la
+ * API responde 409 con `requiereConfirmacion`: la UI pregunta y reintenta con
+ * `reemplazar: true`.
+ */
+export const guardarMediaPost = async (
+	id: string,
+	payload: GuardarMediaPayload,
+): Promise<{ imagenes: number; video: boolean; actualizadoEn: string }> => {
+	const res = await mktAxios.post(`/api/social/posts/${id}/media`, payload);
+	return res.data.data;
+};
+
+export const getMediaPost = async (id: string): Promise<MediaPost> => {
+	const res = await mktAxios.get(`/api/social/posts/${id}/media`);
+	return res.data.data;
+};
+
+export const borrarMediaPost = async (id: string): Promise<{ borrados: number }> => {
+	const res = await mktAxios.delete(`/api/social/posts/${id}/media`);
+	return res.data.data;
+};

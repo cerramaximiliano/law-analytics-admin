@@ -55,6 +55,7 @@ import { Add, ClipboardText, Copy, DocumentDownload, Gallery, Magicpen, Refresh,
 // project imports
 import MainCard from "components/MainCard";
 import {
+	guardarMediaPost,
 	ContenidoPost,
 	FormatoId,
 	FormatoInfo,
@@ -332,6 +333,13 @@ const SocialStudio = () => {
 	// Duración del video. "" = automática (la del ritmo de la plantilla o de la
 	// animación). El tope es 90s, el mismo del renderer.
 	const [duracionVideo, setDuracionVideo] = useState<string>("");
+	// Confirmación de reemplazo de piezas ya guardadas en S3. La API responde 409
+	// con requiereConfirmacion; acá se guarda lo pendiente para reintentar.
+	const [confirmarReemplazo, setConfirmarReemplazo] = useState<{
+		postId: string;
+		existente: { imagenes: number; video: boolean; actualizadoEn?: string };
+	} | null>(null);
+	const [guardandoPiezas, setGuardandoPiezas] = useState(false);
 	// Estilo visual: transversal a las plantillas. "" = el que trae la plantilla.
 	const [estilo, setEstilo] = useState<string>("");
 	const [estilos, setEstilos] = useState<EstiloInfo[]>([]);
@@ -641,6 +649,40 @@ const SocialStudio = () => {
 		}
 	};
 
+	/**
+	 * Sube al post las piezas que están en pantalla (PNGs y/o MP4). Devuelve
+	 * "confirmar" si el post ya tenía piezas: la API pide confirmación explícita
+	 * antes de pisarlas.
+	 */
+	const persistirPiezas = async (postId: string, reemplazar = false): Promise<"ok" | "confirmar" | "nada" | "error"> => {
+		if (images.length === 0 && !video) return "nada";
+		setGuardandoPiezas(true);
+		try {
+			await guardarMediaPost(postId, {
+				imagenes: images.length > 0 ? images : undefined,
+				video: video ? video.video : undefined,
+				formato,
+				duracionMs: video?.duracionMs,
+				reemplazar: reemplazar || undefined,
+			});
+			enqueueSnackbar(
+				`Piezas guardadas: ${images.length > 0 ? `${images.length} imagen(es)` : ""}${images.length > 0 && video ? " + " : ""}${video ? "video" : ""}`,
+				{ variant: "success" },
+			);
+			return "ok";
+		} catch (err: any) {
+			const data = err?.response?.data;
+			if (data?.requiereConfirmacion) {
+				setConfirmarReemplazo({ postId, existente: data.existente });
+				return "confirmar";
+			}
+			enqueueSnackbar(data?.error || "No se pudieron guardar las piezas", { variant: "error" });
+			return "error";
+		} finally {
+			setGuardandoPiezas(false);
+		}
+	};
+
 	const handleGuardar = async () => {
 		if (!titulo.trim()) {
 			enqueueSnackbar("Poné un título para identificar el post", { variant: "warning" });
@@ -660,6 +702,7 @@ const SocialStudio = () => {
 					pie: pie || null,
 				});
 				enqueueSnackbar("Post actualizado", { variant: "success" });
+				await persistirPiezas(editandoId);
 			} else {
 				const creado = await createPost({
 					titulo: titulo.trim(),
@@ -675,6 +718,7 @@ const SocialStudio = () => {
 				});
 				setEditandoId(creado._id);
 				enqueueSnackbar("Post guardado", { variant: "success" });
+				await persistirPiezas(creado._id);
 			}
 		} catch (err: any) {
 			const data = err?.response?.data;
@@ -1510,6 +1554,41 @@ const SocialStudio = () => {
 					<Button onClick={() => setABorrar(null)}>Cancelar</Button>
 					<Button color="error" variant="contained" onClick={handleBorrar}>
 						Eliminar
+					</Button>
+				</DialogActions>
+			</Dialog>
+			<Dialog open={Boolean(confirmarReemplazo)} onClose={() => setConfirmarReemplazo(null)} maxWidth="xs" fullWidth>
+				<DialogTitle>Reemplazar las piezas guardadas</DialogTitle>
+				<DialogContent>
+					<Typography variant="body2" sx={{ mb: 1 }}>
+						Este post ya tiene {confirmarReemplazo?.existente.imagenes ? `${confirmarReemplazo.existente.imagenes} imagen(es)` : ""}
+						{confirmarReemplazo?.existente.imagenes && confirmarReemplazo?.existente.video ? " y " : ""}
+						{confirmarReemplazo?.existente.video ? "un video" : ""} guardadas
+						{confirmarReemplazo?.existente.actualizadoEn
+							? ` el ${new Date(confirmarReemplazo.existente.actualizadoEn).toLocaleString("es-AR")}`
+							: ""}
+						.
+					</Typography>
+					<Typography variant="body2" color="text.secondary">
+						Si continuás, se suben las que están en pantalla y las anteriores se borran. Solo se reemplaza lo que estás
+						guardando ahora: si no renderizaste el video, el video guardado queda como está.
+					</Typography>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setConfirmarReemplazo(null)} disabled={guardandoPiezas}>
+						Conservar las guardadas
+					</Button>
+					<Button
+						variant="contained"
+						disabled={guardandoPiezas}
+						onClick={async () => {
+							const pendiente = confirmarReemplazo;
+							if (!pendiente) return;
+							setConfirmarReemplazo(null);
+							await persistirPiezas(pendiente.postId, true);
+						}}
+					>
+						{guardandoPiezas ? "Guardando…" : "Reemplazar"}
 					</Button>
 				</DialogActions>
 			</Dialog>
