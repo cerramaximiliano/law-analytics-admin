@@ -329,6 +329,9 @@ const SocialStudio = () => {
 	// Música embebida en el mp4. "" = video mudo.
 	const [audios, setAudios] = useState<AudioInfo[]>([]);
 	const [audioPista, setAudioPista] = useState<string>("");
+	// Duración del video. "" = automática (la del ritmo de la plantilla o de la
+	// animación). El tope es 90s, el mismo del renderer.
+	const [duracionVideo, setDuracionVideo] = useState<string>("");
 	// Estilo visual: transversal a las plantillas. "" = el que trae la plantilla.
 	const [estilo, setEstilo] = useState<string>("");
 	const [estilos, setEstilos] = useState<EstiloInfo[]>([]);
@@ -592,6 +595,7 @@ const SocialStudio = () => {
 				intro: introClip || undefined,
 				cierre: cierreClip || undefined,
 				audio: audioPista || undefined,
+				duracionSeg: duracionVideo ? Number(duracionVideo) : undefined,
 			});
 			setVideo(r);
 			enqueueSnackbar(`Video listo: ${r.frames} frames en ${(r.ms / 1000).toFixed(0)}s`, { variant: "success" });
@@ -1073,6 +1077,22 @@ const SocialStudio = () => {
 											{animsDisponibles.find((a) => a.id === animacion)?.description}
 										</Typography>
 									)}
+									<FormControl fullWidth size="small">
+										<InputLabel>Duración</InputLabel>
+										<Select value={duracionVideo} label="Duración" onChange={(e) => setDuracionVideo(e.target.value)}>
+											<MenuItem value="">Automática — según el contenido</MenuItem>
+											<MenuItem value="20">20 s</MenuItem>
+											<MenuItem value="30">30 s</MenuItem>
+											<MenuItem value="45">45 s</MenuItem>
+											<MenuItem value="60">60 s — tope de una story</MenuItem>
+											<MenuItem value="90">90 s — solo reel</MenuItem>
+										</Select>
+									</FormControl>
+									{Number(duracionVideo) > 60 && (
+										<Typography variant="caption" color="warning.main">
+											Más de 60 s: Instagram lo acepta como reel; una story se corta en tramos.
+										</Typography>
+									)}
 									{clips.length > 0 && (
 										<Stack direction="row" spacing={1}>
 											<FormControl fullWidth size="small">
@@ -1101,7 +1121,7 @@ const SocialStudio = () => {
 									)}
 									{(introClip || cierreClip) && (
 										<Typography variant="caption" color="text.secondary">
-											El logo animado de la app abre y/o cierra el video. Su duración sale del tope de 35s: el post cede ese tiempo.
+											El logo animado de la app abre y/o cierra el video. Su duración sale del tope de 90s: el post cede ese tiempo.
 										</Typography>
 									)}
 									{audios.length > 0 && (
@@ -1128,7 +1148,7 @@ const SocialStudio = () => {
 									</Button>
 									{generandoVideo && (
 										<Typography variant="caption" color="text.secondary">
-											El render captura un frame por vez: puede tardar entre 30 y 60 segundos.
+											El render captura un frame por vez: un video de 30 s tarda ~2 minutos y uno de 90 s, ~3.
 										</Typography>
 									)}
 									{video && (
@@ -1405,7 +1425,7 @@ const SocialStudio = () => {
 						<Stack alignItems="center" spacing={1.5} sx={{ py: 4 }}>
 							<CircularProgress />
 							<Typography variant="caption" color="text.secondary">
-								Renderizando con la animación «{videoPost ? animacionEfectiva(videoPost.post) : ""}». Puede tardar entre 30 y 60 segundos.
+								Renderizando con la animación «{videoPost ? animacionEfectiva(videoPost.post) : ""}». Un video de 30 s tarda ~2 minutos.
 							</Typography>
 						</Stack>
 					)}
