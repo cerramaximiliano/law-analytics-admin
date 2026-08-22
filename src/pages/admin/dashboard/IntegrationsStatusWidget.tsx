@@ -34,7 +34,7 @@ const IntegrationsStatusWidget: React.FC = () => {
 		const [integrationsRes, pjnRes, scbaRes, movViewerRes] = await Promise.allSettled([
 			IntegrationsConfigService.getConfig(),
 			ScrapingManagerService.getConfig(),
-			ScbaManagerService.getConfig(),
+			ScbaManagerService.getSettings(),
 			judicialNotificationConfigService.getConfig(),
 		]);
 
@@ -47,7 +47,7 @@ const IntegrationsStatusWidget: React.FC = () => {
 			{
 				key: "scba",
 				label: "Mis Causas SCBA",
-				enabled: scbaRes.status === "fulfilled" ? !!scbaRes.value.data?.config?.serviceAvailable : null,
+				enabled: scbaRes.status === "fulfilled" ? !!scbaRes.value.data?.serviceAvailable : null,
 			},
 			{
 				key: "groups",

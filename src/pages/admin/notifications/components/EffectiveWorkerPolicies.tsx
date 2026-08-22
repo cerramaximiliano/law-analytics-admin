@@ -94,9 +94,9 @@ const EffectiveWorkerPolicies: React.FC<{ live: LiveJudicialConfig }> = ({ live 
 	const [scbaUpdateMode, setScbaUpdateMode] = useState<"split" | "unified" | null>(null);
 	useEffect(() => {
 		let cancelled = false;
-		ScbaManagerService.getConfig()
+		ScbaManagerService.getSettings()
 			.then((r) => {
-				if (!cancelled) setScbaUpdateMode(r.data?.config?.updatePolicy?.mode ?? "split");
+				if (!cancelled) setScbaUpdateMode(r.data?.updatePolicy?.mode ?? "split");
 			})
 			.catch(() => {
 				if (!cancelled) setScbaUpdateMode(null);

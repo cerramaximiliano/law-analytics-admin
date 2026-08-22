@@ -20,9 +20,9 @@ const ScbaWorkersFlow: React.FC = () => {
 
 	useEffect(() => {
 		let cancelled = false;
-		ScbaManagerService.getConfig()
+		ScbaManagerService.getSettings()
 			.then((r) => {
-				if (!cancelled) setMode(r.data?.config?.updatePolicy?.mode ?? "split");
+				if (!cancelled) setMode(r.data?.updatePolicy?.mode ?? "split");
 			})
 			.catch(() => {
 				if (!cancelled) {

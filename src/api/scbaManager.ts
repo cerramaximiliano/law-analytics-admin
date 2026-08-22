@@ -323,6 +323,12 @@ class ScbaManagerService {
 		}
 	}
 
+	/**
+	 * Solo la sección `config` (sin history/dailyStats/alerts). ~4x más liviano y
+	 * rápido que getConfig — usar SIEMPRE que solo se necesiten settings
+	 * (serviceAvailable, updatePolicy, credentialPolicy, workers). Medición
+	 * 2026-08-22: getConfig tardaba 2.2s en el dashboard por el doc completo.
+	 */
 	async getSettings(): Promise<{ success: boolean; data: ScbaManagerSettings }> {
 		try {
 			const response = await mevAxios.get("/api/scba-manager/settings");
