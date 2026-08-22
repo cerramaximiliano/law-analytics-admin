@@ -128,7 +128,7 @@ export function buildScbaWorkersSpec(mode: ScbaUpdatePolicyMode): FlowSpec {
 	const edges: FlowEdge[] = [
 		{ id: "e-user-creds", from: "user", to: "creds", label: "alta / recovery" },
 		{ id: "e-creds-verif", from: "creds", to: "verification", kind: "handoff", label: "pending sync", fromSide: "right", toSide: "left" },
-		{ id: "e-manager-workers", from: "manager", to: "updateArchived", kind: "handoff", label: "spawnea y escala los 5 workers", fromSide: "right", toSide: "left", labelDx: 46, labelDy: 26 },
+		{ id: "e-manager-workers", from: "manager", to: "updateArchived", kind: "handoff", label: "escala los 5 workers", fromSide: "right", toSide: "left", labelDy: -16 },
 		{ id: "e-verif-portal", from: "verification", to: "portal", label: "login + lista Mis Causas", fromSide: "right", toSide: "top" },
 		{ id: "e-verif-causas", from: "verification", to: "causas", kind: "ok", label: "upsert (pending)", fromSide: "right", toSide: "left", labelDy: -10 },
 		{ id: "e-init-portal", from: "initial", to: "portal", label: "trámites 1ª vez", fromSide: "right", toSide: "left" },
