@@ -11,7 +11,6 @@ export type TemplateId =
 	| "educativo-carrusel"
 	| "promo"
 	| "valor-arancel"
-	| "integraciones"
 	| "tutorial"
 	| "agenda"
 	| "ranking"
