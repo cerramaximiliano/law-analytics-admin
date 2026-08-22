@@ -21,6 +21,7 @@ import { BRAND_BLUE } from "themes/dashboardTokens";
 import SentenciasFlow from "./SentenciasFlow";
 import ScbaWorkersFlow from "./ScbaWorkersFlow";
 import SaijWorkersFlow from "./SaijWorkersFlow";
+import PostalWorkersFlow from "./PostalWorkersFlow";
 import CausasFlowDiagram from "../causas/flujos/FlowDiagram";
 import { mainSpecs } from "../causas/flujos/flowData";
 import NotificationsFlowDiagram from "../notifications/components/FlowDiagram";
@@ -72,6 +73,13 @@ const TABS: FlowTab[] = [
 		hrefLabel: "Operar los workers SAIJ",
 	},
 	{
+		label: "Worker postal",
+		intro:
+			"El pipeline del seguimiento postal (Correo Argentino): del alta de la pieza al email de novedades — el manager encola los vencidos, los scraper-workers efímeros consultan el portal ONDNC y la-notification entrega al usuario. Incluye el circuito de alerta operativa al admin cuando el pipeline deja de actualizar.",
+		href: "/admin/workers/scraper",
+		hrefLabel: "Operar el worker postal",
+	},
+	{
 		label: "Data plane",
 		intro:
 			"La infraestructura por debajo de todo lo anterior: el replica set rs0, Qdrant, las APIs y quién lee de dónde. Es el plano físico; los otros tres son el plano lógico.",
@@ -98,7 +106,7 @@ const FlujosEcosistema: React.FC = () => {
 		>
 			<Box sx={{ p: 3, pb: 0 }}>
 				<Typography variant="body2" color="text.secondary">
-					Los cinco diagramas que documentan cómo se mueve el dato, juntos. Cada uno sigue viviendo en su sección —acá están para poder
+					Los diagramas que documentan cómo se mueve el dato, juntos. Cada uno sigue viviendo en su sección —acá están para poder
 					leerlos de corrido— y desde cada pestaña se salta a la vista donde ese flujo se opera.
 				</Typography>
 			</Box>
@@ -169,7 +177,9 @@ const FlujosEcosistema: React.FC = () => {
 
 					{tab === 4 && <SaijWorkersFlow />}
 
-					{tab === 5 && (
+					{tab === 5 && <PostalWorkersFlow />}
+
+					{tab === 6 && (
 						// El data plane no se embebe: es una página con panel de detalle propio
 						// y su valor está en poder clickear cada nodo. Duplicar acá una versión
 						// recortada daría dos fuentes de verdad para el mismo diagrama.

@@ -37,9 +37,11 @@ import {
 	useTheme,
 	alpha,
 } from "@mui/material";
-import { Refresh, Trash, Setting3 } from "iconsax-react";
+import { Refresh, Trash, Setting3, ExportSquare } from "iconsax-react";
+import { Link as RouterLink } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import PostalWorkersFlow from "../flujos/PostalWorkersFlow";
 import ScraperService, { ScraperConfig, ScraperJob, ScraperRun, ScraperJobStats, ScraperRunStats } from "api/scraperService";
 import dayjs from "dayjs";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
@@ -1286,6 +1288,15 @@ const ScraperWorkerPage = () => {
 					>
 						100.111.73.56
 					</Box>
+					<Button
+						size="small"
+						variant="outlined"
+						component={RouterLink}
+						to="/admin/postal-tracking"
+						endIcon={<ExportSquare size={14} />}
+					>
+						Datos postales
+					</Button>
 				</Stack>
 			}
 		>
@@ -1306,11 +1317,15 @@ const ScraperWorkerPage = () => {
 					},
 				}}
 			>
+				<Tab label="Flujo" value="flow" />
 				<Tab label="Configuración" value="config" />
 				<Tab label="Cola de trabajos" value="jobs" />
 				<Tab label="Ejecuciones de workers" value="runs" />
 			</Tabs>
 
+			<TabPanel value={tab} index="flow">
+				<PostalWorkersFlow />
+			</TabPanel>
 			<TabPanel value={tab} index="config">
 				<ConfigTab />
 			</TabPanel>
