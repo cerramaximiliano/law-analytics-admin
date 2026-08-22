@@ -52,6 +52,7 @@ import {
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { BRAND_BLUE, headerBorder, LIVE_GREEN, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
+import ScbaWorkersFlow from "pages/admin/flujos/ScbaWorkersFlow";
 import ScbaManagerService, {
 	ScbaManagerConfig,
 	ScbaManagerSettings,
@@ -1402,53 +1403,11 @@ const ScbaManagerTab: React.FC = () => {
 
 						<Card variant="outlined">
 							<CardContent>
-								<Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
-									<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }}>
-										Esquema del flujo de update
-									</Typography>
-									<Chip
-										size="small"
-										label={unifiedMode ? "modo: unified" : "modo: split"}
-										color={unifiedMode ? "info" : "default"}
-										sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}
-									/>
-								</Stack>
-								<Box
-									sx={{
-										fontFamily: "monospace",
-										fontSize: "0.8rem",
-										bgcolor: alpha(theme.palette.info.main, 0.05),
-										border: 1,
-										borderColor: "divider",
-										borderRadius: 1,
-										p: 1.5,
-										whiteSpace: "pre",
-										overflowX: "auto",
-									}}
-								>
-									{unifiedMode
-										? [
-												"causas completed (listStatus=active, verificadas)",
-												"  └─ con folder vinculado (activo o archivado)",
-												"       └──▶ Actualización Periódica — horario laboral, threshold corto",
-												"",
-												"Actualización Archivadas: OCIOSA (pending=0, el manager no la escala)",
-												"causas sin folder: no se procesan",
-										  ].join("\n")
-										: [
-												"causas completed (listStatus=active, verificadas)",
-												"  ├─ ≥1 folder activo",
-												"  │    └──▶ Actualización Periódica — horario laboral, threshold corto",
-												"  └─ TODOS los folders archivados",
-												"       └──▶ Actualización Archivadas — diaria 4 AM (notificación llega al día siguiente)",
-												"",
-												"causas sin folder: no se procesan",
-										  ].join("\n")}
-								</Box>
-								<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
-									La política de notificación (<code>notifyArchivedFolders</code>, configurable en Notificaciones → Movimientos judiciales)
-									se evalúa por causa según el estado real de sus folders, independientemente de qué worker la procese.
+								<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
+									Diagrama del pipeline (config en vivo)
 								</Typography>
+								{/* Mismo componente que la pestaña "Workers SCBA" de /admin/flujos — una sola fuente. */}
+								<ScbaWorkersFlow />
 							</CardContent>
 						</Card>
 

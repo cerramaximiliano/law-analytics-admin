@@ -19,6 +19,7 @@ import MainCard from "components/MainCard";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 
 import SentenciasFlow from "./SentenciasFlow";
+import ScbaWorkersFlow from "./ScbaWorkersFlow";
 import CausasFlowDiagram from "../causas/flujos/FlowDiagram";
 import { mainSpecs } from "../causas/flujos/flowData";
 import NotificationsFlowDiagram from "../notifications/components/FlowDiagram";
@@ -56,6 +57,13 @@ const TABS: FlowTab[] = [
 		hrefLabel: "Abrir la vista completa (config en vivo por emisor)",
 	},
 	{
+		label: "Workers SCBA",
+		intro:
+			"El pipeline completo de SCBA: de la credencial del usuario a la notificación del movimiento. El diagrama lee la configuración en vivo (updatePolicy) y redibuja la partición del update — en 'unified' el worker de archivadas aparece ocioso.",
+		href: "/admin/workers/mev",
+		hrefLabel: "Operar el SCBA manager (pestaña SCBA)",
+	},
+	{
 		label: "Data plane",
 		intro:
 			"La infraestructura por debajo de todo lo anterior: el replica set rs0, Qdrant, las APIs y quién lee de dónde. Es el plano físico; los otros tres son el plano lógico.",
@@ -82,7 +90,7 @@ const FlujosEcosistema: React.FC = () => {
 		>
 			<Box sx={{ p: 3, pb: 0 }}>
 				<Typography variant="body2" color="text.secondary">
-					Los cuatro diagramas que documentan cómo se mueve el dato, juntos. Cada uno sigue viviendo en su sección —acá están para poder
+					Los cinco diagramas que documentan cómo se mueve el dato, juntos. Cada uno sigue viviendo en su sección —acá están para poder
 					leerlos de corrido— y desde cada pestaña se salta a la vista donde ese flujo se opera.
 				</Typography>
 			</Box>
@@ -149,7 +157,9 @@ const FlujosEcosistema: React.FC = () => {
 
 					{tab === 2 && <NotificationsFlowDiagram live={live} />}
 
-					{tab === 3 && (
+					{tab === 3 && <ScbaWorkersFlow />}
+
+					{tab === 4 && (
 						// El data plane no se embebe: es una página con panel de detalle propio
 						// y su valor está en poder clickear cada nodo. Duplicar acá una versión
 						// recortada daría dos fuentes de verdad para el mismo diagrama.
