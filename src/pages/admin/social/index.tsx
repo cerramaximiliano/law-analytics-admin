@@ -1369,6 +1369,8 @@ const SocialStudio = () => {
 						<Table size="small">
 							<TableHead>
 								<TableRow>
+									{/* Miniatura de la pieza ya generada y guardada en S3 */}
+									<TableCell sx={{ width: 72 }} />
 									<TableCell>Título</TableCell>
 									<TableCell>Plantilla</TableCell>
 									<TableCell>Formato</TableCell>
@@ -1381,14 +1383,14 @@ const SocialStudio = () => {
 							<TableBody>
 								{loadingPosts && (
 									<TableRow>
-										<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+										<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
 											<CircularProgress size={24} />
 										</TableCell>
 									</TableRow>
 								)}
 								{!loadingPosts && posts.length === 0 && (
 									<TableRow>
-										<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+										<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
 											<Typography variant="body2" color="text.secondary">
 												Todavía no hay posts guardados
 											</Typography>
@@ -1398,6 +1400,56 @@ const SocialStudio = () => {
 								{!loadingPosts &&
 									posts.map((p) => (
 										<TableRow key={p._id} hover>
+											<TableCell sx={{ width: 72, pr: 0 }}>
+												{p.mediaResumen?.previewUrl ? (
+													<Tooltip
+														title={`Guardado: ${p.mediaResumen.imagenes} imagen(es)${p.mediaResumen.video ? " + video" : ""}`}
+													>
+														<Box
+															component="img"
+															src={p.mediaResumen.previewUrl}
+															alt=""
+															sx={{
+																width: 48,
+																height: 64,
+																objectFit: "cover",
+																borderRadius: 1,
+																border: "1px solid",
+																borderColor: "divider",
+																display: "block",
+															}}
+														/>
+													</Tooltip>
+												) : p.mediaResumen?.video ? (
+													<Tooltip title="Video guardado">
+														<Box
+															sx={{
+																width: 48,
+																height: 64,
+																borderRadius: 1,
+																border: "1px solid",
+																borderColor: "divider",
+																display: "flex",
+																alignItems: "center",
+																justifyContent: "center",
+																color: "text.secondary",
+															}}
+														>
+															<VideoPlay size={20} />
+														</Box>
+													</Tooltip>
+												) : (
+													<Box
+														sx={{
+															width: 48,
+															height: 64,
+															borderRadius: 1,
+															border: "1px dashed",
+															borderColor: "divider",
+														}}
+													/>
+												)}
+											</TableCell>
 											<TableCell>{p.titulo}</TableCell>
 											<TableCell>{templates.find((t) => t.id === p.templateId)?.label || p.templateId}</TableCell>
 											<TableCell>{formats.find((f) => f.id === p.formato)?.label || p.formato}</TableCell>

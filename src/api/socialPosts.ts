@@ -142,9 +142,20 @@ export interface GeneracionMeta {
 	generadoEn: string | null;
 }
 
+/** Resumen de las piezas guardadas en S3, con miniatura firmada. */
+export interface MediaResumen {
+	imagenes: number;
+	video: boolean;
+	actualizadoEn?: string | null;
+	/** URL prefirmada de la primera imagen (expira a los 15 min). */
+	previewUrl?: string;
+}
+
 export interface SocialPost {
 	_id: string;
 	titulo: string;
+	/** Presente solo si el post ya tiene piezas persistidas. */
+	mediaResumen?: MediaResumen;
 	templateId: TemplateId;
 	formato: FormatoId;
 	prompt: string;
