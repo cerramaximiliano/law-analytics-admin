@@ -308,7 +308,7 @@ export const renderVideo = async (params: {
 }): Promise<VideoResponse> => {
 	// El render de video tarda bastante mas que una imagen: se sube el timeout
 	// del cliente para que no corte antes de que el server termine.
-	const res = await mktAxios.post("/api/social/video", params, { timeout: 300000 });
+	const res = await mktAxios.post("/api/social/video", params, { timeout: 600000 });
 	return res.data.data;
 };
 
@@ -403,7 +403,7 @@ export const renderVideoSavedPost = async (
 		audio?: string;
 	} = {},
 ): Promise<VideoResponse> => {
-	const res = await mktAxios.post(`/api/social/posts/${id}/video`, params, { timeout: 300000 });
+	const res = await mktAxios.post(`/api/social/posts/${id}/video`, params, { timeout: 600000 });
 	return res.data.data;
 };
 
@@ -542,7 +542,9 @@ export const guardarMediaPost = async (
 	id: string,
 	payload: GuardarMediaPayload,
 ): Promise<{ imagenes: number; video: boolean; actualizadoEn: string }> => {
-	const res = await mktAxios.post(`/api/social/posts/${id}/media`, payload);
+	// Sube los PNG/MP4 en base64: con el timeout por defecto (30s) una
+	// carga de varios MB se corta a mitad de camino.
+	const res = await mktAxios.post(`/api/social/posts/${id}/media`, payload, { timeout: 300000 });
 	return res.data.data;
 };
 
