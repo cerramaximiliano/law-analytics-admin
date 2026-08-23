@@ -13,10 +13,10 @@ export interface MovimientoPjSalta {
 	adjuntos?: number;
 	notificada?: boolean;
 	// Aliases para compat con UI copiada de eje (no se populan en runtime).
-	tipo?: string;        // alias de `titulo` para UI
+	tipo?: string; // alias de `titulo` para UI
 	descripcion?: string; // alias de `titulo` para UI
-	detalle?: string;     // no aplica en pjsalta
-	firmante?: string;    // alias singular
+	detalle?: string; // no aplica en pjsalta
+	firmante?: string; // alias singular
 }
 
 export interface TraspasoPjSalta {
@@ -87,10 +87,10 @@ export interface CausaPjSalta {
 	corteJusticia?: string;
 	juez?: string;
 	juzgado?: string;
-	sala?: string;            // no aplica en pjsalta — alias compat UI eje
+	sala?: string; // no aplica en pjsalta — alias compat UI eje
 	tribunalSuperior?: string; // no aplica en pjsalta — alias compat UI eje
-	monto?: number;            // no aplica en pjsalta — alias compat UI eje
-	montoMoneda?: string;      // no aplica en pjsalta — alias compat UI eje
+	monto?: number; // no aplica en pjsalta — alias compat UI eje
+	montoMoneda?: string; // no aplica en pjsalta — alias compat UI eje
 	ubicacionActual?: string;
 	expedienteAdministrativoUACF?: string;
 	// Sub-docs
@@ -238,7 +238,30 @@ export interface EligibilityStatsResponse {
 	};
 }
 
+export interface PipelineStatsResponse {
+	success: boolean;
+	data: {
+		folders: { total: number; success: number; pendingSelection: number; pending: number; failed: number };
+		documentos: {
+			espejados: number;
+			pdf: { downloaded: number; pending: number; failed: number; unavailable: number; skipped: number };
+			adjuntosEnS3: number;
+			cedulas: number;
+			bytesEnS3: number;
+			textos: { extracted: number; empty: number; pending: number; failed: number; docs: number };
+		};
+		digest: { eventos: number; notificados: number; skipped: number; pendientes: number };
+	};
+}
+
 export class CausasPjSaltaService {
+	/** Estadísticas del pipeline completo: folders vinculadas, espejo documental
+	 *  (PDFs/textos en S3) y digest de pivotes. Para el dashboard admin. */
+	static async getPipelineStats(): Promise<PipelineStatsResponse> {
+		const response = await pjsaltaAxios.get("/causas/pipeline-stats");
+		return response.data;
+	}
+
 	/** Causas verificadas y válidas (vista Carpetas Verificadas) */
 	static async getVerifiedCausas(params?: ListParams): Promise<CausasPjSaltaResponse> {
 		const queryParams: Record<string, any> = { verified: true, isValid: true, isPivot: false, ...params };
@@ -298,7 +321,12 @@ export class CausasPjSaltaService {
 	}
 
 	/** Crear causa para que el verifier la procese */
-	static async createCausa(payload: { searchTerm: string; caratula?: string; userCausaId?: string; folderId?: string }): Promise<CausasPjSaltaResponse> {
+	static async createCausa(payload: {
+		searchTerm: string;
+		caratula?: string;
+		userCausaId?: string;
+		folderId?: string;
+	}): Promise<CausasPjSaltaResponse> {
 		const response = await pjsaltaAxios.post("/causas", payload);
 		return response.data;
 	}
