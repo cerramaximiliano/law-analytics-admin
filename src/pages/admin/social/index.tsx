@@ -726,24 +726,32 @@ const SocialStudio = () => {
 		// no pasa por el estado del Studio.
 		otras?: { imagenes?: string[]; video?: string; formato?: FormatoId; duracionMs?: number },
 	): Promise<"ok" | "confirmar" | "nada" | "error"> => {
-		// "Generar variantes" llena `variantes` y no `images`: sin esto, guardar
-		// después de generar todos los formatos no archivaba nada. Se toma la
-		// variante del formato elegido, que es la que se está viendo.
-		const deVariantes = variantes.find((v) => v.formato === formato)?.images || [];
-		const imgs = otras ? otras.imagenes || [] : images.length > 0 ? images : deVariantes;
+		// "Generar variantes" llena `variantes` y no `images`. Se archivan TODOS
+		// los formatos generados, no solo el que se está viendo: rehacerlos
+		// después cuesta un render por formato.
+		const conImagenes = variantes.filter((v) => (v.images || []).length > 0);
+		const lote = otras
+			? undefined
+			: conImagenes.length > 0
+				? conImagenes.map((v) => ({ formato: v.formato as FormatoId, imagenes: v.images as string[] }))
+				: undefined;
+		const imgs = otras ? otras.imagenes || [] : lote ? [] : images;
 		const vid = otras ? otras.video : video?.video;
-		if (imgs.length === 0 && !vid) return "nada";
+		if (imgs.length === 0 && !lote && !vid) return "nada";
 		setGuardandoPiezas(true);
 		try {
 			await guardarMediaPost(postId, {
 				imagenes: imgs.length > 0 ? imgs : undefined,
+				variantes: lote,
 				video: vid,
 				formato: otras?.formato ?? formato,
 				duracionMs: otras?.duracionMs ?? video?.duracionMs,
 				reemplazar: reemplazar || undefined,
 			});
+			const cuantas = lote ? lote.reduce((a, v) => a + v.imagenes.length, 0) : imgs.length;
+			const detalle = lote ? ` en ${lote.length} formato${lote.length > 1 ? "s" : ""}` : "";
 			enqueueSnackbar(
-				`Piezas guardadas: ${imgs.length > 0 ? `${imgs.length} imagen(es)` : ""}${imgs.length > 0 && vid ? " + " : ""}${vid ? "video" : ""}`,
+				`Piezas guardadas: ${cuantas > 0 ? `${cuantas} imagen(es)${detalle}` : ""}${cuantas > 0 && vid ? " + " : ""}${vid ? "video" : ""}`,
 				{ variant: "success" },
 			);
 			return "ok";
@@ -1165,12 +1173,14 @@ const SocialStudio = () => {
 							<Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
 								{images.length > 0 || variantes.some((v) => v.formato === formato && (v.images || []).length > 0) || video
 									? (() => {
+											const conImg = variantes.filter((v) => (v.images || []).length > 0);
 											const n =
-												images.length > 0
-													? images.length
-													: (variantes.find((v) => v.formato === formato)?.images || []).length;
+												conImg.length > 0
+													? conImg.reduce((a, v) => a + (v.images || []).length, 0)
+													: images.length;
+											const fmts = conImg.length > 0 ? ` en ${conImg.length} formato${conImg.length > 1 ? "s" : ""}` : "";
 											return `Al guardar también quedan archivadas las piezas de esta pantalla${
-												n > 0 ? `: ${n} imagen${n > 1 ? "es" : ""}` : ""
+												n > 0 ? `: ${n} imagen${n > 1 ? "es" : ""}${fmts}` : ""
 											}${n > 0 && video ? " y" : video ? ": " : ""}${video ? " el video" : ""}.`;
 										})()
 									: "Guarda el contenido del post. Si además renderizás, las piezas quedan archivadas junto con él."}
@@ -1503,7 +1513,11 @@ const SocialStudio = () => {
 											<TableCell sx={{ width: 72, pr: 0 }}>
 												{p.mediaResumen?.previewUrl ? (
 													<Tooltip
-														title={`Ver lo guardado: ${p.mediaResumen.imagenes} imagen(es)${p.mediaResumen.video ? " + video" : ""}`}
+														title={`Ver lo guardado: ${p.mediaResumen.imagenes} imagen(es)${
+															p.mediaResumen.formatos?.length
+																? ` en ${p.mediaResumen.formatos.length} formato${p.mediaResumen.formatos.length > 1 ? "s" : ""}`
+																: ""
+														}${p.mediaResumen.video ? " + video" : ""}`}
 													>
 														<Box
 															component="img"
@@ -1758,38 +1772,53 @@ const SocialStudio = () => {
 									Guardadas el {fmtDate(piezas.actualizadoEn)}
 								</Typography>
 							)}
-							{piezas.imagenes.length > 0 && (
-								<Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 1.5 }}>
-									{piezas.imagenes.map((img, i) => (
-										<Box key={img.key} sx={{ position: "relative" }}>
-											<Box
-												component="a"
-												href={img.url}
-												target="_blank"
-												rel="noopener"
-												sx={{ display: "block", textDecoration: "none" }}
-											>
-												<Box
-													component="img"
-													src={img.url}
-													alt={`Slide ${i + 1}`}
-													sx={{
-														width: "100%",
-														borderRadius: 1,
-														border: "1px solid",
-														borderColor: "divider",
-														display: "block",
-													}}
-												/>
-											</Box>
-											<Typography variant="caption" color="text.secondary">
-												{piezas.imagenes.length > 1 ? `Slide ${i + 1}` : "Imagen"} ·{" "}
-												{img.bytes ? `${Math.round(img.bytes / 1024)} KB` : ""}
-											</Typography>
+							{/* Agrupadas por formato: un post puede tener el mismo carrusel
+							    archivado en feed, square y story. */}
+							{piezas.imagenes.length > 0 &&
+								Object.entries(
+									piezas.imagenes.reduce<Record<string, typeof piezas.imagenes>>((acc, img) => {
+										const f = img.formato || "sin formato";
+										(acc[f] = acc[f] || []).push(img);
+										return acc;
+									}, {}),
+								).map(([fmt, imgs]) => (
+									<Box key={fmt}>
+										<Typography variant="subtitle2" sx={{ mb: 1 }}>
+											{formats.find((f) => f.id === fmt)?.label || fmt} · {imgs.length} imagen
+											{imgs.length > 1 ? "es" : ""}
+										</Typography>
+										<Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 1.5 }}>
+											{imgs.map((img, i) => (
+												<Box key={img.key}>
+													<Box
+														component="a"
+														href={img.url}
+														target="_blank"
+														rel="noopener"
+														sx={{ display: "block", textDecoration: "none" }}
+													>
+														<Box
+															component="img"
+															src={img.url}
+															alt={`Slide ${i + 1}`}
+															sx={{
+																width: "100%",
+																borderRadius: 1,
+																border: "1px solid",
+																borderColor: "divider",
+																display: "block",
+															}}
+														/>
+													</Box>
+													<Typography variant="caption" color="text.secondary">
+														{imgs.length > 1 ? `Slide ${i + 1}` : "Imagen"}
+														{img.bytes ? ` · ${Math.round(img.bytes / 1024)} KB` : ""}
+													</Typography>
+												</Box>
+											))}
 										</Box>
-									))}
-								</Box>
-							)}
+									</Box>
+								))}
 							{piezas.video && (
 								<Box>
 									<Typography variant="subtitle2" sx={{ mb: 1 }}>

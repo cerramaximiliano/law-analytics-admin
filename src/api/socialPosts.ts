@@ -145,6 +145,8 @@ export interface GeneracionMeta {
 /** Resumen de las piezas guardadas en S3, con miniatura firmada. */
 export interface MediaResumen {
 	imagenes: number;
+	/** Formatos efectivamente archivados. */
+	formatos?: string[];
 	video: boolean;
 	actualizadoEn?: string | null;
 	/** URL prefirmada de la primera imagen (expira a los 15 min). */
@@ -522,8 +524,10 @@ export interface MediaPost {
 }
 
 export interface GuardarMediaPayload {
-	/** PNGs en base64 (sin prefijo data:), en orden de slide. */
+	/** PNGs en base64 (sin prefijo data:), en orden de slide. Un solo formato. */
 	imagenes?: string[];
+	/** Varios formatos de una: lo que produce "Generar variantes". */
+	variantes?: { formato: FormatoId; imagenes: string[] }[];
 	/** MP4 en base64. */
 	video?: string;
 	formato?: FormatoId;
