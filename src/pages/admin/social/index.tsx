@@ -1138,10 +1138,23 @@ const SocialStudio = () => {
 								>
 									{renderizando ? "Renderizando…" : "Renderizar"}
 								</Button>
-								<Button variant="outlined" fullWidth disabled={guardando} onClick={handleGuardar}>
-									{editandoId ? "Actualizar" : "Guardar"}
+								<Button variant="outlined" fullWidth disabled={guardando || guardandoPiezas} onClick={handleGuardar}>
+									{guardando || guardandoPiezas
+										? "Guardando…"
+										: editandoId
+											? "Actualizar post"
+											: "Guardar post"}
 								</Button>
 							</Stack>
+							{/* Guardar hace dos cosas y no era evidente: persiste el contenido y
+							    sube a S3 lo que esté renderizado en pantalla. */}
+							<Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
+								{images.length > 0 || video
+									? `Al guardar también quedan archivadas las piezas de esta pantalla${
+											images.length > 0 ? `: ${images.length} imagen${images.length > 1 ? "es" : ""}` : ""
+										}${images.length > 0 && video ? " y" : video ? ": " : ""}${video ? " el video" : ""}.`
+									: "Guarda el contenido del post. Si además renderizás, las piezas quedan archivadas junto con él."}
+							</Typography>
 
 							<Button
 								variant="contained"
