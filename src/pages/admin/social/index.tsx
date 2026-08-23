@@ -343,6 +343,8 @@ const SocialStudio = () => {
 	const [confirmarReemplazo, setConfirmarReemplazo] = useState<{
 		postId: string;
 		existente: { imagenes: number; video: boolean; actualizadoEn?: string };
+		/** Piezas a reintentar si vienen de fuera del Studio (tabla de Guardados). */
+		otras?: { imagenes?: string[]; video?: string; formato?: FormatoId; duracionMs?: number };
 	} | null>(null);
 	const [guardandoPiezas, setGuardandoPiezas] = useState(false);
 	// Progreso del render de video: la espera puede ser de minutos y un spinner
@@ -717,26 +719,38 @@ const SocialStudio = () => {
 	 * "confirmar" si el post ya tenía piezas: la API pide confirmación explícita
 	 * antes de pisarlas.
 	 */
-	const persistirPiezas = async (postId: string, reemplazar = false): Promise<"ok" | "confirmar" | "nada" | "error"> => {
-		if (images.length === 0 && !video) return "nada";
+	const persistirPiezas = async (
+		postId: string,
+		reemplazar = false,
+		// Piezas de otro origen: el video renderizado desde la tabla de Guardados
+		// no pasa por el estado del Studio.
+		otras?: { imagenes?: string[]; video?: string; formato?: FormatoId; duracionMs?: number },
+	): Promise<"ok" | "confirmar" | "nada" | "error"> => {
+		// "Generar variantes" llena `variantes` y no `images`: sin esto, guardar
+		// después de generar todos los formatos no archivaba nada. Se toma la
+		// variante del formato elegido, que es la que se está viendo.
+		const deVariantes = variantes.find((v) => v.formato === formato)?.images || [];
+		const imgs = otras ? otras.imagenes || [] : images.length > 0 ? images : deVariantes;
+		const vid = otras ? otras.video : video?.video;
+		if (imgs.length === 0 && !vid) return "nada";
 		setGuardandoPiezas(true);
 		try {
 			await guardarMediaPost(postId, {
-				imagenes: images.length > 0 ? images : undefined,
-				video: video ? video.video : undefined,
-				formato,
-				duracionMs: video?.duracionMs,
+				imagenes: imgs.length > 0 ? imgs : undefined,
+				video: vid,
+				formato: otras?.formato ?? formato,
+				duracionMs: otras?.duracionMs ?? video?.duracionMs,
 				reemplazar: reemplazar || undefined,
 			});
 			enqueueSnackbar(
-				`Piezas guardadas: ${images.length > 0 ? `${images.length} imagen(es)` : ""}${images.length > 0 && video ? " + " : ""}${video ? "video" : ""}`,
+				`Piezas guardadas: ${imgs.length > 0 ? `${imgs.length} imagen(es)` : ""}${imgs.length > 0 && vid ? " + " : ""}${vid ? "video" : ""}`,
 				{ variant: "success" },
 			);
 			return "ok";
 		} catch (err: any) {
 			const data = err?.response?.data;
 			if (data?.requiereConfirmacion) {
-				setConfirmarReemplazo({ postId, existente: data.existente });
+				setConfirmarReemplazo({ postId, existente: data.existente, otras });
 				return "confirmar";
 			}
 			enqueueSnackbar(data?.error || "No se pudieron guardar las piezas", { variant: "error" });
@@ -1149,10 +1163,16 @@ const SocialStudio = () => {
 							{/* Guardar hace dos cosas y no era evidente: persiste el contenido y
 							    sube a S3 lo que esté renderizado en pantalla. */}
 							<Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
-								{images.length > 0 || video
-									? `Al guardar también quedan archivadas las piezas de esta pantalla${
-											images.length > 0 ? `: ${images.length} imagen${images.length > 1 ? "es" : ""}` : ""
-										}${images.length > 0 && video ? " y" : video ? ": " : ""}${video ? " el video" : ""}.`
+								{images.length > 0 || variantes.some((v) => v.formato === formato && (v.images || []).length > 0) || video
+									? (() => {
+											const n =
+												images.length > 0
+													? images.length
+													: (variantes.find((v) => v.formato === formato)?.images || []).length;
+											return `Al guardar también quedan archivadas las piezas de esta pantalla${
+												n > 0 ? `: ${n} imagen${n > 1 ? "es" : ""}` : ""
+											}${n > 0 && video ? " y" : video ? ": " : ""}${video ? " el video" : ""}.`;
+										})()
 									: "Guarda el contenido del post. Si además renderizás, las piezas quedan archivadas junto con él."}
 							</Typography>
 
@@ -1636,6 +1656,27 @@ const SocialStudio = () => {
 					)}
 				</DialogContent>
 				<DialogActions>
+					{videoPost?.video && (
+						<Button
+							variant="contained"
+							disabled={guardandoPiezas}
+							onClick={async () => {
+								if (!videoPost?.video) return;
+								const r = await persistirPiezas(videoPost.post._id, false, {
+									video: videoPost.video.video,
+									formato: videoPost.post.formato,
+									duracionMs: videoPost.video.duracionMs,
+								});
+								if (r === "ok") {
+									setVideoPost(null);
+									cargarPosts();
+								}
+							}}
+						>
+							{guardandoPiezas ? "Guardando…" : "Guardar en el post"}
+						</Button>
+					)}
+					<Box sx={{ flex: 1 }} />
 					<Button onClick={() => setVideoPost(null)}>Cerrar</Button>
 					{videoPost?.video && (
 						<Button
@@ -1817,7 +1858,7 @@ const SocialStudio = () => {
 							const pendiente = confirmarReemplazo;
 							if (!pendiente) return;
 							setConfirmarReemplazo(null);
-							await persistirPiezas(pendiente.postId, true);
+							await persistirPiezas(pendiente.postId, true, pendiente.otras);
 						}}
 					>
 						{guardandoPiezas ? "Guardando…" : "Reemplazar"}
