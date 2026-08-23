@@ -555,3 +555,18 @@ export const borrarMediaPost = async (id: string): Promise<{ borrados: number }>
 	const res = await mktAxios.delete(`/api/social/posts/${id}/media`);
 	return res.data.data;
 };
+
+/** Progreso del video que el renderer está capturando ahora mismo. */
+export interface ProgresoRender {
+	activo: boolean;
+	frames?: number;
+	total?: number;
+	porcentaje?: number;
+	encodeando?: boolean;
+	segundos?: number;
+}
+
+export const getProgresoRender = async (): Promise<ProgresoRender> => {
+	const res = await mktAxios.get("/api/social/render-progreso");
+	return res.data.data;
+};

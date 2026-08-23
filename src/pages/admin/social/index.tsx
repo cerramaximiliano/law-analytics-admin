@@ -56,6 +56,8 @@ import { Add, ClipboardText, Copy, DocumentDownload, Gallery, Magicpen, Refresh,
 import MainCard from "components/MainCard";
 import {
 	guardarMediaPost,
+	getProgresoRender,
+	type ProgresoRender,
 	ContenidoPost,
 	FormatoId,
 	FormatoInfo,
@@ -340,6 +342,9 @@ const SocialStudio = () => {
 		existente: { imagenes: number; video: boolean; actualizadoEn?: string };
 	} | null>(null);
 	const [guardandoPiezas, setGuardandoPiezas] = useState(false);
+	// Progreso del render de video: la espera puede ser de minutos y un spinner
+	// solo no dice nada. Se sondea mientras hay un video en curso.
+	const [progresoRender, setProgresoRender] = useState<ProgresoRender | null>(null);
 	// Estilo visual: transversal a las plantillas. "" = el que trae la plantilla.
 	const [estilo, setEstilo] = useState<string>("");
 	const [estilos, setEstilos] = useState<EstiloInfo[]>([]);
@@ -585,6 +590,30 @@ const SocialStudio = () => {
 		}
 		enqueueSnackbar(`${n} archivo(s) descargados`, { variant: "success" });
 	};
+
+	// Sondeo del progreso mientras se renderiza un video (propio o de un post
+	// guardado). Se apaga solo al terminar; un fallo del sondeo no interrumpe.
+	useEffect(() => {
+		if (!videoEnCurso) {
+			setProgresoRender(null);
+			return;
+		}
+		let vivo = true;
+		const tick = async () => {
+			try {
+				const p = await getProgresoRender();
+				if (vivo) setProgresoRender(p.activo ? p : null);
+			} catch {
+				/* sin progreso: queda el spinner */
+			}
+		};
+		tick();
+		const id = setInterval(tick, 2500);
+		return () => {
+			vivo = false;
+			clearInterval(id);
+		};
+	}, [videoEnCurso]);
 
 	const handleVideo = async () => {
 		if (videoEnVuelo.current) return;
@@ -1192,7 +1221,11 @@ const SocialStudio = () => {
 									</Button>
 									{generandoVideo && (
 										<Typography variant="caption" color="text.secondary">
-											El render captura un frame por vez: un video de 30 s tarda ~2 minutos y uno de 90 s, ~3.
+											{progresoRender?.activo
+												? progresoRender.encodeando
+													? `Capturados ${progresoRender.total} frames — armando el video…`
+													: `Capturando ${progresoRender.frames} de ${progresoRender.total} frames (${progresoRender.porcentaje}%) · ${progresoRender.segundos}s`
+												: "El render captura un frame por vez: un video de 30 s tarda ~2 minutos y uno de 90 s, ~3."}
 										</Typography>
 									)}
 									{video && (
@@ -1521,7 +1554,12 @@ const SocialStudio = () => {
 						<Stack alignItems="center" spacing={1.5} sx={{ py: 4 }}>
 							<CircularProgress />
 							<Typography variant="caption" color="text.secondary">
-								Renderizando con la animación «{videoPost ? animacionEfectiva(videoPost.post) : ""}». Un video de 30 s tarda ~2 minutos.
+								Renderizando con la animación «{videoPost ? animacionEfectiva(videoPost.post) : ""}».{" "}
+								{progresoRender?.activo
+									? progresoRender.encodeando
+										? "Armando el video…"
+										: `${progresoRender.porcentaje}% — ${progresoRender.frames}/${progresoRender.total} frames.`
+									: "Un video de 30 s tarda ~2 minutos."}
 							</Typography>
 						</Stack>
 					)}
