@@ -630,7 +630,7 @@ const SocialStudio = () => {
 	// Sondeo del progreso mientras se renderiza un video (propio o de un post
 	// guardado). Se apaga solo al terminar; un fallo del sondeo no interrumpe.
 	useEffect(() => {
-		if (!videoEnCurso) {
+		if (!videoEnCurso && !generandoVariantes) {
 			setProgresoRender(null);
 			return;
 		}
@@ -638,7 +638,7 @@ const SocialStudio = () => {
 		const tick = async () => {
 			try {
 				const p = await getProgresoRender();
-				if (vivo) setProgresoRender(p.activo ? p : null);
+				if (vivo) setProgresoRender(p.activo || p.variantes?.activo ? p : null);
 			} catch {
 				/* sin progreso: queda el spinner */
 			}
@@ -649,7 +649,7 @@ const SocialStudio = () => {
 			vivo = false;
 			clearInterval(id);
 		};
-	}, [videoEnCurso]);
+	}, [videoEnCurso, generandoVariantes]);
 
 	const handleVideo = async () => {
 		if (videoEnVuelo.current) return;
@@ -1196,6 +1196,15 @@ const SocialStudio = () => {
 							>
 								{generandoVariantes ? "Generando variantes…" : "Generar los 4 formatos"}
 							</Button>
+							{generandoVariantes && progresoRender?.variantes?.activo && (
+								<Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
+									Formato {progresoRender.variantes.indice} de {progresoRender.variantes.total}
+									{progresoRender.variantes.formato
+										? ` · ${formats.find((f) => f.id === progresoRender.variantes?.formato)?.label || progresoRender.variantes.formato}`
+										: ""}
+									{progresoRender.variantes.segundos ? ` · ${progresoRender.variantes.segundos}s` : ""}
+								</Typography>
+							)}
 
 							{/* Video: story 1080x1920, que es el formato en que IG publica video */}
 							<MainCard content={false} sx={{ p: 2 }}>

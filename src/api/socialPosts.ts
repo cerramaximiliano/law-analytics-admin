@@ -569,6 +569,8 @@ export const borrarMediaPost = async (id: string): Promise<{ borrados: number }>
 /** Progreso del video que el renderer está capturando ahora mismo. */
 export interface ProgresoRender {
 	activo: boolean;
+	/** Tanda de "generar todos los formatos" en curso (la lleva la API). */
+	variantes?: { activo: boolean; indice?: number; total?: number; formato?: string; segundos?: number };
 	frames?: number;
 	total?: number;
 	porcentaje?: number;
