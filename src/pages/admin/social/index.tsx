@@ -1783,10 +1783,20 @@ const SocialStudio = () => {
 									}, {}),
 								).map(([fmt, imgs]) => (
 									<Box key={fmt}>
-										<Typography variant="subtitle2" sx={{ mb: 1 }}>
-											{formats.find((f) => f.id === fmt)?.label || fmt} · {imgs.length} imagen
-											{imgs.length > 1 ? "es" : ""}
-										</Typography>
+										<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+											<Typography variant="subtitle2">{formats.find((f) => f.id === fmt)?.label || fmt}</Typography>
+											{(() => {
+												const info = formats.find((f) => f.id === fmt);
+												const pesoKb = imgs.reduce((a, x) => a + (x.bytes || 0), 0) / 1024;
+												return (
+													<Typography variant="caption" color="text.secondary">
+														{info ? `${info.width}×${info.height} · ` : ""}
+														{imgs.length} imagen{imgs.length > 1 ? "es" : ""} ·{" "}
+														{pesoKb >= 1024 ? `${(pesoKb / 1024).toFixed(1)} MB` : `${Math.round(pesoKb)} KB`}
+													</Typography>
+												);
+											})()}
+										</Stack>
 										<Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 1.5 }}>
 											{imgs.map((img, i) => (
 												<Box key={img.key}>
@@ -1810,10 +1820,17 @@ const SocialStudio = () => {
 															}}
 														/>
 													</Box>
-													<Typography variant="caption" color="text.secondary">
-														{imgs.length > 1 ? `Slide ${i + 1}` : "Imagen"}
-														{img.bytes ? ` · ${Math.round(img.bytes / 1024)} KB` : ""}
-													</Typography>
+													<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="space-between">
+														<Typography variant="caption" color="text.secondary">
+															{imgs.length > 1 ? `Slide ${i + 1}` : "Imagen"}
+															{img.bytes ? ` · ${Math.round(img.bytes / 1024)} KB` : ""}
+														</Typography>
+														<Tooltip title="Descargar PNG">
+															<IconButton size="small" component="a" href={img.urlDescarga || img.url} download>
+																<DocumentDownload size={14} />
+															</IconButton>
+														</Tooltip>
+													</Stack>
 												</Box>
 											))}
 										</Box>
@@ -1851,7 +1868,12 @@ const SocialStudio = () => {
 					</Button>
 					<Box sx={{ flex: 1 }} />
 					{piezas?.video && (
-						<Button component="a" href={piezas.video.url} startIcon={<DocumentDownload size={16} />}>
+						<Button
+							component="a"
+							href={piezas.video.urlDescarga || piezas.video.url}
+							download
+							startIcon={<DocumentDownload size={16} />}
+						>
 							Descargar mp4
 						</Button>
 					)}

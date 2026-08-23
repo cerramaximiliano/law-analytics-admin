@@ -503,11 +503,15 @@ export interface MediaImagen {
 	indice?: number;
 	bytes?: number;
 	generadoEn?: string;
+	/** Para ver en el visor (inline). */
 	url: string;
+	/** Para bajar el archivo con nombre legible (Content-Disposition). */
+	urlDescarga?: string;
 }
 
 export interface MediaVideo {
 	key: string;
+	urlDescarga?: string;
 	formato?: string;
 	duracionMs?: number | null;
 	fps?: number | null;
