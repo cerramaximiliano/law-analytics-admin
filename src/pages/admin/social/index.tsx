@@ -57,6 +57,9 @@ import MainCard from "components/MainCard";
 import {
 	guardarMediaPost,
 	getProgresoRender,
+	getMediaPost,
+	borrarMediaPost,
+	type MediaPost,
 	type ProgresoRender,
 	ContenidoPost,
 	FormatoId,
@@ -366,6 +369,11 @@ const SocialStudio = () => {
 	const [filtroEstado, setFiltroEstado] = useState<EstadoPost | "">("");
 	const [ordenPosts, setOrdenPosts] = useState<OrdenPosts>("recientes");
 	const [aBorrar, setABorrar] = useState<SocialPost | null>(null);
+	// Visor de las piezas guardadas de un post (se abre desde la miniatura de la
+	// tabla). Las URLs vienen firmadas y vencen, así que se piden al abrir.
+	const [piezasDe, setPiezasDe] = useState<SocialPost | null>(null);
+	const [piezas, setPiezas] = useState<MediaPost | null>(null);
+	const [cargandoPiezas, setCargandoPiezas] = useState(false);
 	// Video de un post guardado, sin pasar por el estudio.
 	const [videoPost, setVideoPost] = useState<{ post: SocialPost; video: VideoResponse | null } | null>(null);
 	const [generandoVideoPost, setGenerandoVideoPost] = useState(false);
@@ -589,6 +597,32 @@ const SocialStudio = () => {
 			});
 		}
 		enqueueSnackbar(`${n} archivo(s) descargados`, { variant: "success" });
+	};
+
+	const handleVerPiezas = async (post: SocialPost) => {
+		setPiezasDe(post);
+		setPiezas(null);
+		setCargandoPiezas(true);
+		try {
+			setPiezas(await getMediaPost(post._id));
+		} catch {
+			enqueueSnackbar("No se pudieron cargar las piezas guardadas", { variant: "error" });
+			setPiezasDe(null);
+		} finally {
+			setCargandoPiezas(false);
+		}
+	};
+
+	const handleBorrarPiezas = async () => {
+		if (!piezasDe) return;
+		try {
+			const r = await borrarMediaPost(piezasDe._id);
+			enqueueSnackbar(`Piezas eliminadas (${r.borrados} archivo/s)`, { variant: "success" });
+			setPiezasDe(null);
+			cargarPosts();
+		} catch {
+			enqueueSnackbar("No se pudieron eliminar", { variant: "error" });
+		}
 	};
 
 	// Sondeo del progreso mientras se renderiza un video (propio o de un post
@@ -1436,12 +1470,13 @@ const SocialStudio = () => {
 											<TableCell sx={{ width: 72, pr: 0 }}>
 												{p.mediaResumen?.previewUrl ? (
 													<Tooltip
-														title={`Guardado: ${p.mediaResumen.imagenes} imagen(es)${p.mediaResumen.video ? " + video" : ""}`}
+														title={`Ver lo guardado: ${p.mediaResumen.imagenes} imagen(es)${p.mediaResumen.video ? " + video" : ""}`}
 													>
 														<Box
 															component="img"
 															src={p.mediaResumen.previewUrl}
 															alt=""
+															onClick={() => handleVerPiezas(p)}
 															sx={{
 																width: 48,
 																height: 64,
@@ -1450,13 +1485,18 @@ const SocialStudio = () => {
 																border: "1px solid",
 																borderColor: "divider",
 																display: "block",
+																cursor: "pointer",
+																transition: "all 0.2s ease",
+																"&:hover": { borderColor: "primary.main", transform: "scale(1.06)" },
 															}}
 														/>
 													</Tooltip>
 												) : p.mediaResumen?.video ? (
-													<Tooltip title="Video guardado">
+													<Tooltip title="Ver el video guardado">
 														<Box
+															onClick={() => handleVerPiezas(p)}
 															sx={{
+																cursor: "pointer",
 																width: 48,
 																height: 64,
 																borderRadius: 1,
@@ -1647,6 +1687,95 @@ const SocialStudio = () => {
 					</Button>
 				</DialogActions>
 			</Dialog>
+			{/* Visor de piezas guardadas: se abre desde la miniatura de la tabla. Las
+			    URLs son prefirmadas y vencen a los 15 min, por eso se piden al abrir. */}
+			<Dialog open={Boolean(piezasDe)} onClose={() => setPiezasDe(null)} maxWidth="md" fullWidth>
+				<DialogTitle>Piezas guardadas — {piezasDe?.titulo}</DialogTitle>
+				<DialogContent dividers>
+					{cargandoPiezas && (
+						<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+							<CircularProgress size={28} />
+						</Box>
+					)}
+					{!cargandoPiezas && piezas && (
+						<Stack spacing={2}>
+							{piezas.actualizadoEn && (
+								<Typography variant="caption" color="text.secondary">
+									Guardadas el {fmtDate(piezas.actualizadoEn)}
+								</Typography>
+							)}
+							{piezas.imagenes.length > 0 && (
+								<Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 1.5 }}>
+									{piezas.imagenes.map((img, i) => (
+										<Box key={img.key} sx={{ position: "relative" }}>
+											<Box
+												component="a"
+												href={img.url}
+												target="_blank"
+												rel="noopener"
+												sx={{ display: "block", textDecoration: "none" }}
+											>
+												<Box
+													component="img"
+													src={img.url}
+													alt={`Slide ${i + 1}`}
+													sx={{
+														width: "100%",
+														borderRadius: 1,
+														border: "1px solid",
+														borderColor: "divider",
+														display: "block",
+													}}
+												/>
+											</Box>
+											<Typography variant="caption" color="text.secondary">
+												{piezas.imagenes.length > 1 ? `Slide ${i + 1}` : "Imagen"} ·{" "}
+												{img.bytes ? `${Math.round(img.bytes / 1024)} KB` : ""}
+											</Typography>
+										</Box>
+									))}
+								</Box>
+							)}
+							{piezas.video && (
+								<Box>
+									<Typography variant="subtitle2" sx={{ mb: 1 }}>
+										Video {piezas.video.duracionMs ? `· ${(piezas.video.duracionMs / 1000).toFixed(1)}s` : ""}{" "}
+										{piezas.video.bytes ? `· ${(piezas.video.bytes / 1048576).toFixed(1)} MB` : ""}
+									</Typography>
+									<Box
+										component="video"
+										src={piezas.video.url}
+										controls
+										sx={{ width: "100%", maxHeight: 420, borderRadius: 1, bgcolor: "black" }}
+									/>
+								</Box>
+							)}
+							{piezas.imagenes.length === 0 && !piezas.video && (
+								<Typography variant="body2" color="text.secondary">
+									Este post no tiene piezas guardadas.
+								</Typography>
+							)}
+							<Typography variant="caption" color="text.secondary">
+								Los enlaces vencen a los {Math.round((piezas.ttlSegundos || 900) / 60)} minutos: si el visor queda abierto
+								mucho tiempo, volvé a abrirlo.
+							</Typography>
+						</Stack>
+					)}
+				</DialogContent>
+				<DialogActions>
+					<Button color="error" onClick={handleBorrarPiezas} disabled={cargandoPiezas || !piezas}>
+						Eliminar guardadas
+					</Button>
+					<Box sx={{ flex: 1 }} />
+					{piezas?.video && (
+						<Button component="a" href={piezas.video.url} startIcon={<DocumentDownload size={16} />}>
+							Descargar mp4
+						</Button>
+					)}
+					<Button onClick={() => setPiezasDe(null)}>Cerrar</Button>
+				</DialogActions>
+			</Dialog>
+
 			<Dialog open={Boolean(confirmarReemplazo)} onClose={() => setConfirmarReemplazo(null)} maxWidth="xs" fullWidth>
 				<DialogTitle>Reemplazar las piezas guardadas</DialogTitle>
 				<DialogContent>
