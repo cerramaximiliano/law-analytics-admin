@@ -9,8 +9,10 @@ import {
 	DialogTitle,
 	Grid,
 	IconButton,
+	MenuItem,
 	Skeleton,
 	Stack,
+	TextField,
 	Tooltip,
 	Typography,
 	alpha,
@@ -26,7 +28,26 @@ import IntegrationsConfigService, {
 	ServiceKey,
 	Environment,
 	UpdateServicePayload,
+	LandingIntegrationKey,
+	LandingIntegrationStatus,
 } from "api/integrationsConfig";
+
+// Jurisdicciones del strip "Integrado con" de la landing pública. La metadata
+// visual (logo/color) vive en el front; acá solo el estado por jurisdicción.
+const LANDING_ITEMS: Array<{ key: LandingIntegrationKey; label: string }> = [
+	{ key: "pjn", label: "PJN — Poder Judicial de la Nación" },
+	{ key: "mev", label: "MEV — Prov. de Buenos Aires" },
+	{ key: "eje", label: "EJE — Ciudad de Buenos Aires" },
+	{ key: "seclo", label: "SECLO" },
+	{ key: "pjsalta", label: "Poder Judicial de Salta" },
+	{ key: "pjcatamarca", label: "Poder Judicial de Catamarca" },
+];
+
+const LANDING_STATUS_OPTIONS: Array<{ value: LandingIntegrationStatus; label: string }> = [
+	{ value: "available", label: "Disponible" },
+	{ value: "comingSoon", label: "Próximamente" },
+	{ value: "hidden", label: "Oculto" },
+];
 import { ScrapingManagerService, ScrapingManagerConfig } from "api/scrapingManager";
 import ScbaManagerService, { ScbaManagerConfig } from "api/scbaManager";
 import judicialNotificationConfigService from "api/judicialNotificationConfig";
@@ -139,6 +160,19 @@ const IntegrationsPage: React.FC = () => {
 			enqueueSnackbar(successMsg, { variant: "success" });
 		} catch (err: any) {
 			enqueueSnackbar(err?.response?.data?.message || `Error al actualizar ${serviceKey}`, { variant: "error" });
+			setIntegrations((s) => ({ ...s, saving: false }));
+		}
+	};
+
+	// Strip "Integrado con" de la landing pública — un select por jurisdicción
+	const handleLandingStatus = async (key: LandingIntegrationKey, status: LandingIntegrationStatus) => {
+		setIntegrations((s) => ({ ...s, saving: true }));
+		try {
+			const res = await IntegrationsConfigService.updateLandingIntegration(key, status);
+			setIntegrations({ loading: false, saving: false, error: null, data: res.data });
+			enqueueSnackbar(`Landing: ${key} → ${status}`, { variant: "success" });
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.message || `Error al actualizar ${key}`, { variant: "error" });
 			setIntegrations((s) => ({ ...s, saving: false }));
 		}
 	};
@@ -436,6 +470,64 @@ const IntegrationsPage: React.FC = () => {
 					) : null}
 				</Grid>
 			</Grid>
+
+			{/* Strip "Integrado con" de la landing pública */}
+			<Box sx={{ mt: 4 }}>
+				<Typography variant="h5" sx={{ mb: 0.5 }}>
+					Landing — "Integrado con"
+				</Typography>
+				<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
+					Estado de cada ícono del strip de integraciones en la landing pública (lawanalytics.app). "Disponible" = ícono pleno con pulso
+					verde · "Próximamente" = atenuado · "Oculto" = no se muestra. Impacta sin deploy (la landing lo lee de /plan-configs/public).
+				</Typography>
+				{integrations.loading ? (
+					<Skeleton variant="rounded" height={120} />
+				) : (
+					<Grid container spacing={1.5}>
+						{LANDING_ITEMS.map((item) => {
+							const flag = integrations.data?.landingIntegrations?.[item.key];
+							const value: LandingIntegrationStatus =
+								flag?.status ?? (item.key === "pjn" || item.key === "mev" || item.key === "eje" ? "available" : "comingSoon");
+							return (
+								<Grid item xs={12} sm={6} md={4} key={item.key}>
+									<Stack
+										direction="row"
+										alignItems="center"
+										justifyContent="space-between"
+										spacing={1}
+										sx={{ p: 1.25, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}
+									>
+										<Box sx={{ minWidth: 0 }}>
+											<Typography variant="body2" fontWeight={600} noWrap>
+												{item.label}
+											</Typography>
+											{flag?.updatedBy && (
+												<Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
+													{flag.updatedBy}
+												</Typography>
+											)}
+										</Box>
+										<TextField
+											select
+											size="small"
+											value={value}
+											onChange={(e) => handleLandingStatus(item.key, e.target.value as LandingIntegrationStatus)}
+											disabled={integrations.saving}
+											sx={{ minWidth: 150, flexShrink: 0 }}
+										>
+											{LANDING_STATUS_OPTIONS.map((o) => (
+												<MenuItem key={o.value} value={o.value}>
+													{o.label}
+												</MenuItem>
+											))}
+										</TextField>
+									</Stack>
+								</Grid>
+							);
+						})}
+					</Grid>
+				)}
+			</Box>
 
 			<Box sx={{ mt: 4 }}>
 				<Stack spacing={1}>

@@ -31,6 +31,18 @@ export interface AiServiceFlag {
 	updatedBy?: string | null;
 }
 
+/** Estado de un ícono del strip "Integrado con" de la landing pública. */
+export type LandingIntegrationStatus = "available" | "comingSoon" | "hidden";
+
+export interface LandingIntegrationFlag {
+	status: LandingIntegrationStatus;
+	updatedAt?: string;
+	updatedBy?: string | null;
+}
+
+/** Jurisdicciones del strip — la metadata visual (logo/color/nombre) vive en el front. */
+export type LandingIntegrationKey = "pjn" | "mev" | "eje" | "seclo" | "pjsalta" | "pjcatamarca";
+
 export interface IntegrationsConfigDoc {
 	_id?: string;
 	key: string;
@@ -43,6 +55,8 @@ export interface IntegrationsConfigDoc {
 		claudeAi?: AiServiceFlag;
 		chatGpt?: AiServiceFlag;
 	};
+	/** Strip "Integrado con" de la landing — opcional en docs previos al feature. */
+	landingIntegrations?: Partial<Record<LandingIntegrationKey, LandingIntegrationFlag>>;
 	updatedAt?: string;
 	updatedBy?: string | null;
 }
@@ -73,6 +87,15 @@ class IntegrationsConfigService {
 		payload: UpdateServicePayload,
 	): Promise<{ success: boolean; message: string; data: IntegrationsConfigDoc }> {
 		const res = await adminAxios.patch(`/api/integrations-config/services/${serviceKey}`, payload);
+		return res.data;
+	}
+
+	/** Cambia el estado de un ícono del strip "Integrado con" de la landing. */
+	async updateLandingIntegration(
+		integrationKey: LandingIntegrationKey,
+		status: LandingIntegrationStatus,
+	): Promise<{ success: boolean; message: string; data: IntegrationsConfigDoc }> {
+		const res = await adminAxios.patch(`/api/integrations-config/landing/${integrationKey}`, { status });
 		return res.data;
 	}
 }
