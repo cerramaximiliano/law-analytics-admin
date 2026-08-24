@@ -55,6 +55,7 @@ import MainCard from "components/MainCard";
 import CronSelector, { getCronLabel } from "components/admin/CronSelector";
 import { useTheme, alpha } from "@mui/material/styles";
 import DocumentationTabs from "./DocumentationTabs";
+import { CausasPjCatamarcaService, PipelineStatsResponse } from "api/causasPjCatamarca";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
 import configPjCatamarca, {
 	IAllWorkersResponse,
@@ -117,12 +118,12 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ workerType, config, status, eff
 	const theme = useTheme();
 
 	const workerLabels: Record<string, { name: string; description: string; icon: React.ReactNode }> = {
-	verifier: {
+		verifier: {
 			name: "Verificación",
 			description: "Verifica que los expedientes existen en el sistema PJ Catamarca",
 			icon: <SearchNormal1 size={24} />,
 		},
-	updater: {
+		updater: {
 			name: "Actualización",
 			description: "Actualiza expedientes verificados con nuevos movimientos",
 			icon: <Refresh size={24} />,
@@ -179,9 +180,7 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ workerType, config, status, eff
 									: alpha(theme.palette.grey[500], 0.12),
 								color: config?.enabled ? LIVE_GREEN : "text.secondary",
 								border: 1,
-								borderColor: config?.enabled
-									? alpha(LIVE_GREEN, theme.palette.mode === "dark" ? 0.42 : 0.28)
-									: "divider",
+								borderColor: config?.enabled ? alpha(LIVE_GREEN, theme.palette.mode === "dark" ? 0.42 : 0.28) : "divider",
 							}}
 						/>
 					</Stack>
@@ -357,8 +356,8 @@ const EditWorkerDialog: React.FC<EditDialogProps> = ({ open, workerType, config,
 	};
 
 	const workerLabels: Record<string, string> = {
-		verification: "Verificación",
-		update: "Actualización",
+		verifier: "Verificación",
+		updater: "Actualización",
 		stuck: "Recuperación",
 	};
 
@@ -608,18 +607,22 @@ const PjCatamarcaWorkersConfig: React.FC = () => {
 	const [workersData, setWorkersData] = useState<IAllWorkersResponse | null>(null);
 	const [todayStats, setTodayStats] = useState<IDailyWorkerStats[]>([]);
 	const [alerts, setAlerts] = useState<IAlert[]>([]);
+	const [pipelineStats, setPipelineStats] = useState<PipelineStatsResponse["data"] | null>(null);
 
 	// Fetch all data
 	const fetchData = useCallback(async () => {
 		try {
-			const [workersResponse, statsData, alertsData] = await Promise.all([
+			const [workersResponse, statsData, alertsData, pipelineData] = await Promise.all([
 				configPjCatamarca.getAllWorkersConfig(),
 				configPjCatamarca.getTodaySummary(),
 				configPjCatamarca.getAlerts(false),
+				// Tolerante: el resto del dashboard no depende de esta llamada.
+				CausasPjCatamarcaService.getPipelineStats().catch(() => null),
 			]);
 			setWorkersData(workersResponse);
 			setTodayStats(statsData);
 			setAlerts(alertsData);
+			setPipelineStats(pipelineData?.data ?? null);
 		} catch (error) {
 			console.error("Error fetching PJ Catamarca config:", error);
 			setSnackbar({
@@ -942,7 +945,7 @@ const PjCatamarcaWorkersConfig: React.FC = () => {
 								/>
 								<Tooltip title="API REST en server principal, PM2 process: pjcatamarca-api">
 									<Chip
-										label="pjsal.lawanalytics.app · API"
+										label="pjcatamarca.lawanalytics.app · API"
 										size="small"
 										color="default"
 										variant="outlined"
@@ -951,7 +954,8 @@ const PjCatamarcaWorkersConfig: React.FC = () => {
 								</Tooltip>
 							</Stack>
 							<Typography variant="body2" color="text.secondary">
-								Gestión de workers para el sistema PJ Catamarca (portal IOL del Poder Judicial de Salta) — Verificación, actualización y liberación de causas
+								Gestión de workers para el sistema PJ Catamarca (portal IOL del Poder Judicial de Salta) — Verificación, actualización y
+								liberación de causas
 							</Typography>
 						</Stack>
 					</MainCard>
@@ -973,10 +977,7 @@ const PjCatamarcaWorkersConfig: React.FC = () => {
 						<CardContent>
 							<Stack direction="row" justifyContent="space-between" alignItems="center">
 								<Box>
-									<Typography
-										variant="h4"
-										sx={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
-									>
+									<Typography variant="h4" sx={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
 										{summaryStats.processed}
 									</Typography>
 									<Typography variant="body2" color="text.secondary">
@@ -1064,10 +1065,7 @@ const PjCatamarcaWorkersConfig: React.FC = () => {
 						<CardContent>
 							<Stack direction="row" justifyContent="space-between" alignItems="center">
 								<Box>
-									<Typography
-										variant="h4"
-										sx={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
-									>
+									<Typography variant="h4" sx={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
 										{(workersData?.managerState.systemResources?.cpuUsage || 0) * 100 < 1
 											? "<1"
 											: ((workersData?.managerState.systemResources?.cpuUsage || 0) * 100).toFixed(0)}
@@ -1082,6 +1080,178 @@ const PjCatamarcaWorkersConfig: React.FC = () => {
 						</CardContent>
 					</Card>
 				</Grid>
+				{/* Pipeline de carpetas y documentos — datos de /causas/pipeline-stats */}
+				{pipelineStats && (
+					<>
+						<Grid item xs={12}>
+							<Typography variant="h5" sx={{ mt: 1, fontWeight: 600, letterSpacing: "-0.01em" }}>
+								Carpetas y documentos
+							</Typography>
+						</Grid>
+						<Grid item xs={12} sm={6} md={3}>
+							<Card
+								sx={{
+									border: 1,
+									borderColor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.32 : 0.2),
+									bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.08 : 0.04),
+									boxShadow: "none",
+									borderRadius: 1.5,
+									height: "100%",
+								}}
+							>
+								<CardContent>
+									<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+										<Box>
+											<Typography
+												variant="h4"
+												sx={{ color: BRAND_BLUE, fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
+											>
+												{pipelineStats.folders.total}
+											</Typography>
+											<Typography variant="body2" color="text.secondary">
+												Carpetas vinculadas
+											</Typography>
+											<Typography
+												variant="caption"
+												color="text.secondary"
+												sx={{ display: "block", mt: 0.75, fontVariantNumeric: "tabular-nums" }}
+											>
+												{pipelineStats.folders.success} activas · {pipelineStats.folders.pendingSelection} eligiendo expediente
+												{pipelineStats.folders.pending > 0 ? ` · ${pipelineStats.folders.pending} verificando` : ""}
+												{pipelineStats.folders.failed > 0 ? ` · ${pipelineStats.folders.failed} no encontradas` : ""}
+											</Typography>
+										</Box>
+										<Briefcase size={32} color={BRAND_BLUE} />
+									</Stack>
+								</CardContent>
+							</Card>
+						</Grid>
+						<Grid item xs={12} sm={6} md={3}>
+							<Card
+								sx={{
+									border: 1,
+									borderColor: alpha(LIVE_GREEN, theme.palette.mode === "dark" ? 0.32 : 0.2),
+									bgcolor: alpha(LIVE_GREEN, theme.palette.mode === "dark" ? 0.08 : 0.04),
+									boxShadow: "none",
+									borderRadius: 1.5,
+									height: "100%",
+								}}
+							>
+								<CardContent>
+									<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+										<Box>
+											<Typography
+												variant="h4"
+												sx={{ color: LIVE_GREEN, fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
+											>
+												{pipelineStats.documentos.pdf.downloaded}
+												<Typography component="span" variant="h6" sx={{ color: "text.secondary", fontWeight: 500 }}>
+													{" "}
+													/ {pipelineStats.documentos.espejados}
+												</Typography>
+											</Typography>
+											<Typography variant="body2" color="text.secondary">
+												PDFs en S3
+											</Typography>
+											<Typography
+												variant="caption"
+												color="text.secondary"
+												sx={{ display: "block", mt: 0.75, fontVariantNumeric: "tabular-nums" }}
+											>
+												{(pipelineStats.documentos.bytesEnS3 / 1024 / 1024).toFixed(1)} MB · {pipelineStats.documentos.adjuntosEnS3}{" "}
+												adjuntos
+												{pipelineStats.documentos.pdf.failed > 0 ? ` · ${pipelineStats.documentos.pdf.failed} fallidos` : ""}
+												{pipelineStats.documentos.pdf.pending > 0 ? ` · ${pipelineStats.documentos.pdf.pending} en cola` : ""}
+											</Typography>
+										</Box>
+										<DocumentText1 size={32} color={LIVE_GREEN} />
+									</Stack>
+								</CardContent>
+							</Card>
+						</Grid>
+						<Grid item xs={12} sm={6} md={3}>
+							<Card
+								sx={{
+									border: 1,
+									borderColor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.32 : 0.2),
+									bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.08 : 0.04),
+									boxShadow: "none",
+									borderRadius: 1.5,
+									height: "100%",
+								}}
+							>
+								<CardContent>
+									<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+										<Box>
+											<Typography
+												variant="h4"
+												sx={{ color: BRAND_BLUE, fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
+											>
+												{pipelineStats.documentos.textos.extracted}
+											</Typography>
+											<Typography variant="body2" color="text.secondary">
+												Textos extraídos
+											</Typography>
+											<Typography
+												variant="caption"
+												color="text.secondary"
+												sx={{ display: "block", mt: 0.75, fontVariantNumeric: "tabular-nums" }}
+											>
+												{pipelineStats.documentos.textos.empty} escaneados (para OCR)
+												{pipelineStats.documentos.textos.failed > 0 ? ` · ${pipelineStats.documentos.textos.failed} fallidos` : ""}
+												{pipelineStats.documentos.cedulas > 0 ? ` · ${pipelineStats.documentos.cedulas} cédulas` : ""}
+											</Typography>
+										</Box>
+										<Book1 size={32} color={BRAND_BLUE} />
+									</Stack>
+								</CardContent>
+							</Card>
+						</Grid>
+						<Grid item xs={12} sm={6} md={3}>
+							<Card
+								sx={{
+									border: 1,
+									borderColor: alpha(STALE_AMBER, theme.palette.mode === "dark" ? 0.32 : 0.2),
+									bgcolor: alpha(STALE_AMBER, theme.palette.mode === "dark" ? 0.08 : 0.04),
+									boxShadow: "none",
+									borderRadius: 1.5,
+									height: "100%",
+								}}
+							>
+								<CardContent>
+									<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+										<Box>
+											<Typography
+												variant="h4"
+												sx={{ color: STALE_AMBER, fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
+											>
+												{pipelineStats.digest.notificados}
+												<Typography component="span" variant="h6" sx={{ color: "text.secondary", fontWeight: 500 }}>
+													{" "}
+													/ {pipelineStats.digest.eventos}
+												</Typography>
+											</Typography>
+											<Typography variant="body2" color="text.secondary">
+												Avisos de pivote enviados
+											</Typography>
+											<Typography
+												variant="caption"
+												color="text.secondary"
+												sx={{ display: "block", mt: 0.75, fontVariantNumeric: "tabular-nums" }}
+											>
+												{pipelineStats.digest.pendientes > 0
+													? `${pipelineStats.digest.pendientes} en espera de envío`
+													: "sin envíos pendientes"}
+												{pipelineStats.digest.skipped > 0 ? ` · ${pipelineStats.digest.skipped} resueltos antes del aviso` : ""}
+											</Typography>
+										</Box>
+										<SearchNormal1 size={32} color={STALE_AMBER} />
+									</Stack>
+								</CardContent>
+							</Card>
+						</Grid>
+					</>
+				)}
 
 				{/* Alerts */}
 				{alerts.length > 0 && (
@@ -1283,9 +1453,7 @@ const PjCatamarcaWorkersConfig: React.FC = () => {
 														</TableRow>
 														<TableRow>
 															<TableCell>Días</TableCell>
-															<TableCell align="right">
-																{formatWorkDays(getWorkerData("verifier")?.effectiveSchedule?.workDays)}
-															</TableCell>
+															<TableCell align="right">{formatWorkDays(getWorkerData("verifier")?.effectiveSchedule?.workDays)}</TableCell>
 														</TableRow>
 													</TableBody>
 												</Table>
@@ -1756,7 +1924,8 @@ const PjCatamarcaWorkersConfig: React.FC = () => {
 				<DialogContent>
 					<Stack spacing={2} sx={{ pt: 1 }}>
 						<Alert severity="info" variant="outlined">
-							El cambio se guarda inmediatamente, pero requiere reiniciar el proceso PM2 <code>pjcatamarca-workers-manager</code> en producción para aplicar.
+							El cambio se guarda inmediatamente, pero requiere reiniciar el proceso PM2 <code>pjcatamarca-workers-manager</code> en producción
+							para aplicar.
 						</Alert>
 						<CronSelector
 							label="Frecuencia"

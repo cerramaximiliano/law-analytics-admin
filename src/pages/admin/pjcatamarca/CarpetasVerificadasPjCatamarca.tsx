@@ -965,12 +965,7 @@ const CarpetasVerificadasPjCatamarca = () => {
 			</Grid>
 
 			{/* Modal de detalles PJ Catamarca */}
-			<CausaDetalleModalPjCatamarca
-				open={detailModalOpen}
-				onClose={handleCloseModal}
-				causa={selectedCausa}
-				onCausaUpdated={handleRefresh}
-			/>
+			<CausaDetalleModalPjCatamarca open={detailModalOpen} onClose={handleCloseModal} causa={selectedCausa} onCausaUpdated={handleRefresh} />
 		</MainCard>
 	);
 };

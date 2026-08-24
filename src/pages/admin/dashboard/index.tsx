@@ -47,6 +47,11 @@ import {
 	WorkerStatsResponse as PjSaltaWorkerStatsResponse,
 	EligibilityStatsResponse as PjSaltaEligibilityStatsResponse,
 } from "api/causasPjSalta";
+import {
+	CausasPjCatamarcaService,
+	WorkerStatsResponse as PjCatamarcaWorkerStatsResponse,
+	EligibilityStatsResponse as PjCatamarcaEligibilityStatsResponse,
+} from "api/causasPjCatamarca";
 import pjnCredentialsService, { MisCausasCoverage, HealthAnomaly } from "api/pjnCredentials";
 import scbaCausasService, { ScbaUpdateCoverage } from "api/scbaCausas";
 import { ManagerConfigService, PjnSiteStatus } from "api/managerConfig";
@@ -797,6 +802,10 @@ const AdminDashboard = () => {
 	const [loadingPjsaltaStats, setLoadingPjsaltaStats] = useState(false);
 	const [pjsaltaEligibilityStats, setPjsaltaEligibilityStats] = useState<PjSaltaEligibilityStatsResponse["data"] | null>(null);
 	const [loadingPjsaltaEligibility, setLoadingPjsaltaEligibility] = useState(false);
+	const [pjcatamarcaStats, setPjcatamarcaStats] = useState<PjCatamarcaWorkerStatsResponse["data"] | null>(null);
+	const [loadingPjcatamarcaStats, setLoadingPjcatamarcaStats] = useState(false);
+	const [pjcatamarcaEligibilityStats, setPjcatamarcaEligibilityStats] = useState<PjCatamarcaEligibilityStatsResponse["data"] | null>(null);
+	const [loadingPjcatamarcaEligibility, setLoadingPjcatamarcaEligibility] = useState(false);
 	const [misCausasCoverage, setMisCausasCoverage] = useState<MisCausasCoverage | null>(null);
 	const [loadingMisCausasCoverage, setLoadingMisCausasCoverage] = useState(false);
 	const [healthAnomalies, setHealthAnomalies] = useState<HealthAnomaly[]>([]);
@@ -888,6 +897,34 @@ const AdminDashboard = () => {
 			console.error("Error fetching PJ Salta eligibility stats:", error);
 		} finally {
 			setLoadingPjsaltaEligibility(false);
+		}
+	}, []);
+
+	const fetchPjcatamarcaStats = useCallback(async () => {
+		try {
+			setLoadingPjcatamarcaStats(true);
+			const response = await CausasPjCatamarcaService.getWorkerStats();
+			if (response.success) {
+				setPjcatamarcaStats(response.data);
+			}
+		} catch (error: any) {
+			console.error("Error fetching PJ Catamarca stats:", error);
+		} finally {
+			setLoadingPjcatamarcaStats(false);
+		}
+	}, []);
+
+	const fetchPjcatamarcaEligibilityStats = useCallback(async () => {
+		try {
+			setLoadingPjcatamarcaEligibility(true);
+			const response = await CausasPjCatamarcaService.getEligibilityStats();
+			if (response.success) {
+				setPjcatamarcaEligibilityStats(response.data);
+			}
+		} catch (error: any) {
+			console.error("Error fetching PJ Catamarca eligibility stats:", error);
+		} finally {
+			setLoadingPjcatamarcaEligibility(false);
 		}
 	}, []);
 
@@ -1076,6 +1113,8 @@ const AdminDashboard = () => {
 		fetchEjeStats();
 		fetchPjsaltaStats();
 		fetchPjsaltaEligibilityStats();
+		fetchPjcatamarcaStats();
+		fetchPjcatamarcaEligibilityStats();
 		fetchTasasStatus();
 		fetchDatosPrevsStats();
 		fetchActiveGroups();
@@ -1095,6 +1134,8 @@ const AdminDashboard = () => {
 		fetchEjeStats,
 		fetchPjsaltaStats,
 		fetchPjsaltaEligibilityStats,
+		fetchPjcatamarcaStats,
+		fetchPjcatamarcaEligibilityStats,
 		fetchTasasStatus,
 		fetchDatosPrevsStats,
 		fetchActiveGroups,
@@ -1118,6 +1159,8 @@ const AdminDashboard = () => {
 		fetchEjeStats();
 		fetchPjsaltaStats();
 		fetchPjsaltaEligibilityStats();
+		fetchPjcatamarcaStats();
+		fetchPjcatamarcaEligibilityStats();
 		fetchTasasStatus();
 		fetchDatosPrevsStats();
 		fetchActiveGroups();
@@ -1340,7 +1383,7 @@ const AdminDashboard = () => {
 									</Typography>
 									<InfoTooltip metricKey="verifiedFolders" />
 								</Box>
-								{loading || loadingEjeStats || loadingPjsaltaStats ? (
+								{loading || loadingEjeStats || loadingPjsaltaStats || loadingPjcatamarcaStats ? (
 									<Skeleton variant="text" width={80} height={48} />
 								) : (
 									<>
@@ -1359,7 +1402,8 @@ const AdminDashboard = () => {
 												(data?.folders.pjn?.verified || 0) +
 												(data?.folders.mev?.verified || 0) +
 												(ejeStats?.status.valid || 0) +
-												(pjsaltaStats?.status.valid || 0)
+												(pjsaltaStats?.status.valid || 0) +
+												(pjcatamarcaStats?.status.valid || 0)
 											).toLocaleString()}
 										</Typography>
 										<Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
@@ -1368,6 +1412,7 @@ const AdminDashboard = () => {
 												{ label: `MEV ${(data?.folders.mev?.verified || 0).toLocaleString()}`, to: "/admin/mev/verified-app" },
 												{ label: `EJE ${(ejeStats?.status.valid || 0).toLocaleString()}`, to: "/admin/eje/verified-app" },
 												{ label: `Salta ${(pjsaltaStats?.status.valid || 0).toLocaleString()}`, to: "/admin/pjsalta/verified-app" },
+												{ label: `Catamarca ${(pjcatamarcaStats?.status.valid || 0).toLocaleString()}`, to: "/admin/pjcatamarca/verified-app" },
 											].map((chip) => (
 												<Chip
 													key={chip.to}
@@ -2408,6 +2453,175 @@ const AdminDashboard = () => {
 													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
 													{pjsaltaEligibilityStats.noElegibles.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													No elegibles
+												</Typography>
+											</Box>
+										</Grid>
+									</Grid>
+								</>
+							) : (
+								<Typography variant="body2" color="text.secondary" textAlign="center">
+									No se pudieron cargar las estadísticas
+								</Typography>
+							)}
+						</Paper>
+					</Grid>
+
+					{/* PJ Catamarca Update Coverage Widget */}
+					<Grid item xs={12} sm={6} md={3}>
+						<Paper
+							elevation={0}
+							onClick={() => navigate("/admin/pjcatamarca/verified-app")}
+							sx={{
+								p: { xs: 1.5, sm: 2.5 },
+								borderRadius: 2,
+								bgcolor: theme.palette.background.paper,
+								border: `1px solid ${theme.palette.divider}`,
+								cursor: "pointer",
+								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
+								height: "100%",
+								"&:hover": {
+									boxShadow: headerShadow(isDark),
+									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+									transform: "translateY(-2px)",
+								},
+							}}
+						>
+							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									<Box
+										sx={{
+											width: 28,
+											height: 28,
+											borderRadius: 1,
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											flexShrink: 0,
+											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+											color: BRAND_BLUE,
+										}}
+									>
+										<Refresh size={15} />
+									</Box>
+									<Typography
+										variant="subtitle1"
+										fontWeight={600}
+										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
+									>
+										Cobertura Actualización Catamarca
+									</Typography>
+								</Box>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									<Chip
+										label="Catamarca"
+										size="small"
+										sx={{
+											bgcolor: alpha(COLORS.success.main, 0.1),
+											color: COLORS.success.main,
+											fontWeight: 500,
+											fontSize: "0.65rem",
+										}}
+									/>
+									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
+								</Box>
+							</Box>
+
+							{loadingPjcatamarcaEligibility ? (
+								<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
+								</Box>
+							) : pjcatamarcaEligibilityStats ? (
+								<>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+										<Typography variant="body2" color="text.secondary">
+											Cobertura hoy
+										</Typography>
+										<Typography
+											variant="h6"
+											fontWeight="bold"
+											sx={{
+												fontVariantNumeric: "tabular-nums",
+												color:
+													(pjcatamarcaEligibilityStats.coveragePercent || 0) > 90
+														? COLORS.success.main
+														: (pjcatamarcaEligibilityStats.coveragePercent || 0) > 70
+														? COLORS.warning.main
+														: COLORS.error.main,
+											}}
+										>
+											{pjcatamarcaEligibilityStats.coveragePercent.toFixed(1)}%
+										</Typography>
+									</Box>
+									<LinearProgress
+										variant="determinate"
+										value={pjcatamarcaEligibilityStats.coveragePercent || 0}
+										sx={{
+											height: 8,
+											borderRadius: 4,
+											mb: 2,
+											backgroundColor: alpha(COLORS.neutral.light, 0.3),
+											"& .MuiLinearProgress-bar": {
+												borderRadius: 4,
+												backgroundColor:
+													(pjcatamarcaEligibilityStats.coveragePercent || 0) > 90
+														? COLORS.success.main
+														: (pjcatamarcaEligibilityStats.coveragePercent || 0) > 70
+														? COLORS.warning.main
+														: COLORS.error.main,
+											},
+										}}
+									/>
+									<Grid container spacing={2}>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
+													{pjcatamarcaEligibilityStats.actualizadosHoy.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Actualizados hoy
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
+													{pjcatamarcaEligibilityStats.pendientesHoy.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Pendientes hoy
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
+													{pjcatamarcaEligibilityStats.totalElegibles.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Total elegibles
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
+													{pjcatamarcaEligibilityStats.noElegibles.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
 													No elegibles

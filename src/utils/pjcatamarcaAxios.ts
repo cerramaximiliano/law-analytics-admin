@@ -6,7 +6,7 @@ import { requestQueueService } from "services/requestQueueService";
 
 // Instancia de Axios para la API de PJ Catamarca (portal IOL)
 const pjcatamarcaAxios: AxiosInstance = axios.create({
-	baseURL: import.meta.env.VITE_API_PJCATAMARCA || "https://pjsal.lawanalytics.app/api",
+	baseURL: import.meta.env.VITE_API_PJCATAMARCA || "https://pjcatamarca.lawanalytics.app/api",
 	timeout: 30000,
 	headers: {
 		"Content-Type": "application/json",
