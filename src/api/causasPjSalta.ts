@@ -60,7 +60,7 @@ export interface UpdateHistoryEntry {
 
 export interface UpdateStats {
 	count: number;
-	errors: number;
+	errorCount: number; // ex `errors` (reservado en Mongoose)
 	newMovs: number;
 	avgMs: number;
 	last?: { $date: string } | string;
