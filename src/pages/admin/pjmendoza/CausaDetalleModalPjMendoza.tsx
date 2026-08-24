@@ -277,8 +277,8 @@ const CausaDetalleModalPjMendoza = ({ open, onClose, causa, onCausaUpdated }: Ca
 				{stats.newMovs !== undefined && stats.newMovs > 0 && (
 					<Chip label={`+${stats.newMovs} movimientos`} size="small" color="success" variant="outlined" />
 				)}
-				{stats.errors !== undefined && stats.errors > 0 && (
-					<Chip label={`${stats.errors} errores`} size="small" color="error" variant="outlined" />
+				{stats.errorCount !== undefined && stats.errorCount > 0 && (
+					<Chip label={`${stats.errorCount} errores`} size="small" color="error" variant="outlined" />
 				)}
 			</Stack>
 		);
