@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
 	Alert,
 	Box,
@@ -21,6 +21,9 @@ import {
 import { Code1, Copy, Refresh } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import logoPJNacion from "assets/images/logos/logo_pj_nacion.png";
+import logoPJBuenosAires from "assets/images/logos/logo_pj_buenos_aires.svg";
+import logoPJCatamarca from "assets/images/logos/logo_pj_catamarca.png";
 
 import IntegrationsConfigService, {
 	IntegrationsConfigDoc,
@@ -48,6 +51,33 @@ const LANDING_STATUS_OPTIONS: Array<{ value: LandingIntegrationStatus; label: st
 	{ value: "comingSoon", label: "Próximamente" },
 	{ value: "hidden", label: "Oculto" },
 ];
+
+// Metadata visual del strip — espejo de INTEGRATIONS en el Header de la
+// landing (law-analytics-front). Solo para la previsualización del admin.
+const LANDING_VISUALS: Record<LandingIntegrationKey, { shortName: string; logoSrc: string; bgColor: string; hasBorder: boolean }> = {
+	pjn: { shortName: "PJN", logoSrc: logoPJNacion, bgColor: "#232D4F", hasBorder: false },
+	mev: { shortName: "MEV", logoSrc: logoPJBuenosAires, bgColor: "#ffffff", hasBorder: true },
+	eje: {
+		shortName: "EJE",
+		logoSrc: "https://res.cloudinary.com/dqyoeolib/image/upload/v1770081495/ChatGPT_Image_2_feb_2026_09_44_56_p.m._ymi66g.png",
+		bgColor: "#ffffff",
+		hasBorder: true,
+	},
+	seclo: {
+		shortName: "SECLO",
+		logoSrc: "https://res.cloudinary.com/dqyoeolib/image/upload/q_auto/f_auto/v1776203385/seclo-removebg-preview_rxcvzm.png",
+		bgColor: "#ffffff",
+		hasBorder: true,
+	},
+	pjsalta: {
+		shortName: "SALTA",
+		logoSrc:
+			"https://res.cloudinary.com/dqyoeolib/image/upload/v1779137783/ChatGPT_Image_18_may_2026__05_52_35_p.m.-removebg-preview_bngpqd.png",
+		bgColor: "#ffffff",
+		hasBorder: true,
+	},
+	pjcatamarca: { shortName: "CATAMARCA", logoSrc: logoPJCatamarca, bgColor: "#ffffff", hasBorder: true },
+};
 import { ScrapingManagerService, ScrapingManagerConfig } from "api/scrapingManager";
 import ScbaManagerService, { ScbaManagerConfig } from "api/scbaManager";
 import judicialNotificationConfigService from "api/judicialNotificationConfig";
@@ -174,6 +204,62 @@ const IntegrationsPage: React.FC = () => {
 			enqueueSnackbar(`Landing: ${key} → ${detail}`, { variant: "success" });
 		} catch (err: any) {
 			enqueueSnackbar(err?.response?.data?.message || `Error al actualizar ${key}`, { variant: "error" });
+			setIntegrations((s) => ({ ...s, saving: false }));
+		}
+	};
+
+	// ── Preview + reordenamiento drag & drop del strip de la landing ──
+	// orderDraft = null → sin cambios locales (se deriva del doc); array →
+	// orden en edición pendiente de "Guardar orden".
+	const [orderDraft, setOrderDraft] = useState<LandingIntegrationKey[] | null>(null);
+	const dragKeyRef = useRef<LandingIntegrationKey | null>(null);
+
+	const landingFlagOf = (key: LandingIntegrationKey) => integrations.data?.landingIntegrations?.[key];
+	const landingStatusOf = (key: LandingIntegrationKey): LandingIntegrationStatus =>
+		landingFlagOf(key)?.status ?? (key === "pjn" || key === "mev" || key === "eje" ? "available" : "comingSoon");
+	const landingOrderFromConfig = (): LandingIntegrationKey[] =>
+		[...LANDING_ITEMS]
+			.map((item) => ({ key: item.key, order: landingFlagOf(item.key)?.order ?? item.defaultOrder }))
+			.sort((a, b) => a.order - b.order)
+			.map((x) => x.key);
+	const effectiveOrder = orderDraft ?? landingOrderFromConfig();
+	const orderDirty = orderDraft !== null && JSON.stringify(orderDraft) !== JSON.stringify(landingOrderFromConfig());
+
+	const handleTileDragStart = (key: LandingIntegrationKey) => {
+		dragKeyRef.current = key;
+	};
+	const handleTileDragOver = (e: React.DragEvent, overKey: LandingIntegrationKey) => {
+		e.preventDefault();
+		const from = dragKeyRef.current;
+		if (!from || from === overKey) return;
+		setOrderDraft((prev) => {
+			const list = [...(prev ?? landingOrderFromConfig())];
+			const fi = list.indexOf(from);
+			const ti = list.indexOf(overKey);
+			if (fi < 0 || ti < 0 || fi === ti) return prev ?? list;
+			list.splice(fi, 1);
+			list.splice(ti, 0, from);
+			return list;
+		});
+	};
+	const handleSaveOrder = async () => {
+		if (!orderDraft) return;
+		setIntegrations((s) => ({ ...s, saving: true }));
+		try {
+			let lastDoc: IntegrationsConfigDoc | null = null;
+			for (let i = 0; i < orderDraft.length; i++) {
+				const key = orderDraft[i];
+				const current = landingFlagOf(key)?.order;
+				if (current !== i + 1) {
+					const res = await IntegrationsConfigService.updateLandingIntegration(key, { order: i + 1 });
+					lastDoc = res.data;
+				}
+			}
+			setIntegrations((s) => ({ loading: false, saving: false, error: null, data: lastDoc ?? s.data }));
+			setOrderDraft(null);
+			enqueueSnackbar("Orden del strip guardado", { variant: "success" });
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.message || "Error al guardar el orden", { variant: "error" });
 			setIntegrations((s) => ({ ...s, saving: false }));
 		}
 	};
@@ -549,6 +635,138 @@ const IntegrationsPage: React.FC = () => {
 								</Grid>
 							))}
 					</Grid>
+				)}
+
+				{/* Previsualización del strip como se ve en la landing — arrastrá los
+				    íconos para reordenar y guardá. Los ocultos aparecen punteados
+				    (no se muestran al público) pero se pueden posicionar igual. */}
+				{!integrations.loading && (
+					<Box sx={{ mt: 3 }}>
+						<Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" rowGap={1} sx={{ mb: 1.5 }}>
+							<Box>
+								<Typography variant="subtitle2">Previsualización — así se ve en la landing</Typography>
+								<Typography variant="caption" color="text.secondary">
+									Arrastrá los íconos para cambiar el orden y guardalo con el botón.
+								</Typography>
+							</Box>
+							{orderDirty && (
+								<Stack direction="row" spacing={1}>
+									<Button size="small" onClick={() => setOrderDraft(null)} disabled={integrations.saving}>
+										Descartar
+									</Button>
+									<Button size="small" variant="contained" onClick={handleSaveOrder} disabled={integrations.saving}>
+										{integrations.saving ? "Guardando…" : "Guardar orden"}
+									</Button>
+								</Stack>
+							)}
+						</Stack>
+						<Box
+							sx={{
+								p: 2.5,
+								borderRadius: 2,
+								border: `1px dashed ${theme.palette.divider}`,
+								bgcolor: alpha(theme.palette.text.primary, 0.02),
+							}}
+						>
+							<Typography
+								sx={{
+									textAlign: "center",
+									color: "text.secondary",
+									fontSize: "0.72rem",
+									textTransform: "uppercase",
+									letterSpacing: "0.1em",
+									mb: 2,
+								}}
+							>
+								Integrado con
+							</Typography>
+							<Stack direction="row" spacing={3} justifyContent="center" alignItems="flex-start" flexWrap="wrap" rowGap={2} useFlexGap>
+								{effectiveOrder.map((key) => {
+									const visual = LANDING_VISUALS[key];
+									const item = LANDING_ITEMS.find((i) => i.key === key)!;
+									const status = landingStatusOf(key);
+									const isAvailable = status === "available";
+									const isHidden = status === "hidden";
+									return (
+										<Tooltip key={key} title={`${item.label} — arrastrar para reordenar`}>
+											<Box
+												draggable
+												onDragStart={() => handleTileDragStart(key)}
+												onDragOver={(e) => handleTileDragOver(e, key)}
+												onDragEnd={() => (dragKeyRef.current = null)}
+												sx={{
+													display: "flex",
+													flexDirection: "column",
+													alignItems: "center",
+													gap: 0.75,
+													width: 110,
+													cursor: "grab",
+													"&:active": { cursor: "grabbing" },
+													opacity: isHidden ? 0.35 : isAvailable ? 1 : 0.55,
+												}}
+											>
+												<Box
+													sx={{
+														position: "relative",
+														width: 64,
+														height: 64,
+														borderRadius: 2,
+														bgcolor: visual.bgColor,
+														border: isHidden
+															? `2px dashed ${theme.palette.error.main}`
+															: visual.hasBorder
+															? "1px solid rgba(0,0,0,0.1)"
+															: "none",
+														boxShadow: "0 4px 14px rgba(0,0,0,0.12)",
+														display: "flex",
+														alignItems: "center",
+														justifyContent: "center",
+														p: 0.75,
+														filter: isAvailable ? "none" : "grayscale(40%)",
+													}}
+												>
+													<Box
+														component="img"
+														src={visual.logoSrc}
+														alt={item.label}
+														draggable={false}
+														sx={{ width: "100%", height: "100%", objectFit: "contain" }}
+													/>
+													{isAvailable && (
+														<Box
+															sx={{
+																position: "absolute",
+																top: -3,
+																right: -3,
+																width: 10,
+																height: 10,
+																borderRadius: "50%",
+																bgcolor: "#22C55E",
+																border: `2px solid ${theme.palette.background.paper}`,
+															}}
+														/>
+													)}
+												</Box>
+												<Typography variant="caption" sx={{ textAlign: "center", lineHeight: 1.2, color: "text.secondary" }}>
+													{visual.shortName}
+													{isHidden && (
+														<Box component="span" sx={{ display: "block", color: theme.palette.error.main, fontSize: "0.62rem" }}>
+															Oculto
+														</Box>
+													)}
+													{!isHidden && !isAvailable && (
+														<Box component="span" sx={{ display: "block", fontSize: "0.62rem" }}>
+															Próximamente
+														</Box>
+													)}
+												</Typography>
+											</Box>
+										</Tooltip>
+									);
+								})}
+							</Stack>
+						</Box>
+					</Box>
 				)}
 			</Box>
 
