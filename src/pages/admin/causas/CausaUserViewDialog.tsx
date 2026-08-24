@@ -87,6 +87,14 @@ export const LIST_TOOLTIPS: Record<string, string> = {
 	invalid: "Causa inválida - No se pudo verificar en el Poder Judicial",
 	ok: "Causa vinculada a PJN",
 	ok_cred_error: "PJN — Sincronización pausada: tus credenciales fueron rechazadas. Actualizalas desde Perfil → Cuentas Judiciales.",
+	cred_status: "Credencial MEV: cargala/actualizala en tu perfil → Integraciones → MEV.",
+};
+
+const MEV_CRED_LABEL: Record<string, string> = {
+	missing: "Credencial requerida",
+	invalid: "Credencial inválida",
+	expired: "Contraseña expirada",
+	disabled: "Credencial desactivada",
 };
 
 export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
@@ -109,6 +117,8 @@ export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
 				return <TickCircle size={16} variant="Bold" color={BRAND_BLUE} />;
 			case "ok_cred_error":
 				return <Warning2 size={16} variant="Bold" color={STALE_AMBER} />;
+			case "cred_status":
+				return <Warning2 size={16} variant="Bold" color={STALE_AMBER} />;
 			default:
 				return null;
 		}
@@ -123,6 +133,10 @@ export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
 				return <MiniChip color={STALE_AMBER} text="Pendiente de verificación" />;
 			case "invalid":
 				return <MiniChip color={RED} text="Causa inválida" />;
+			case "cred_status":
+				return (
+					<MiniChip color={STALE_AMBER} text={MEV_CRED_LABEL[folder.mevCredentialStatus || ""] || "Credencial requerida"} dot={false} />
+				);
 			default:
 				return name;
 		}

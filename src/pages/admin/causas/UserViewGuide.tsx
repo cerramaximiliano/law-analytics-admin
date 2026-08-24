@@ -17,6 +17,8 @@ import {
 	TableCell,
 	TableHead,
 	TableRow,
+	Tab,
+	Tabs,
 	ToggleButton,
 	ToggleButtonGroup,
 	Tooltip,
@@ -29,7 +31,7 @@ import MainCard from "components/MainCard";
 import { BRAND_BLUE, STALE_AMBER } from "themes/dashboardTokens";
 import pjnCredentialsService, { CausaUserViewEntry, UserViewStatsCombo, UserViewStatsData } from "api/pjnCredentials";
 import CausaUserViewDialog, { ListRowReplica, GATE_META, baseFolder } from "./CausaUserViewDialog";
-import { GUIDE_GROUPS, GUIDE_FINDINGS } from "./userViewGuideData";
+import { GUIDE_BY_JURISDICTION, JURISDICTIONS, GuideJurisdiction } from "./userViewGuideData";
 
 /**
  * Guía visual de la lista de carpetas del usuario: (1) todas las filas
@@ -47,7 +49,9 @@ const ROW_LABEL: Record<string, string> = {
 	invalid: "Causa inválida (chip rojo)",
 	reserved: "Causa reservada (warning rojo)",
 	list_removed: "Ya no en la lista (warning ámbar)",
-	plain: "Sin indicador (no PJN)",
+	cred_status: "Credencial MEV requerida/inválida (chip ámbar)",
+	plain: "Sin indicador",
+	invisible: "INVISIBLE — en ninguna tabla",
 	hidden_archived: "No aparece — archivada",
 };
 
@@ -181,6 +185,7 @@ function DistributionBars({ rows, total }: { rows: UserViewStatsData["byRow"]; t
 
 export default function UserViewGuide() {
 	const theme = useTheme();
+	const [jurisdiction, setJurisdiction] = useState<GuideJurisdiction>("pjn");
 	const [archived, setArchived] = useState<"all" | "true" | "false">("false");
 	const [userId, setUserId] = useState<string>("");
 	const [data, setData] = useState<UserViewStatsData | null>(null);
@@ -194,24 +199,39 @@ export default function UserViewGuide() {
 		setLoading(true);
 		setError(null);
 		pjnCredentialsService
-			.getUserViewStats({ archived, userId: userId || undefined })
+			.getUserViewStats({ archived, userId: userId || undefined, jurisdiction })
 			.then((r: { data: UserViewStatsData }) => setData(r.data))
 			.catch((e: { response?: { data?: { message?: string } }; message?: string }) =>
 				setError(e?.response?.data?.message || e?.message || "Error"),
 			)
 			.finally(() => setLoading(false));
 	};
-	useEffect(load, [archived, userId]); // eslint-disable-line react-hooks/exhaustive-deps
+	useEffect(load, [archived, userId, jurisdiction]); // eslint-disable-line react-hooks/exhaustive-deps
+	const guide = GUIDE_BY_JURISDICTION[jurisdiction];
+	const jurLabel = JURISDICTIONS.find((j) => j.key === jurisdiction)?.label || jurisdiction;
 
 	const combos = useMemo(() => (data ? data.combos.filter((c) => !onlyFlagged || c.flags.length > 0) : []), [data, onlyFlagged]);
 	const flaggedTotal = useMemo(() => (data ? data.combos.filter((c) => c.flags.length).reduce((a, c) => a + c.n, 0) : 0), [data]);
 
 	return (
 		<Stack spacing={3}>
+			<Tabs
+				value={jurisdiction}
+				onChange={(_, v) => {
+					setJurisdiction(v);
+					setUserId("");
+				}}
+				variant="scrollable"
+				scrollButtons="auto"
+			>
+				{JURISDICTIONS.map((j) => (
+					<Tab key={j.key} value={j.key} label={j.label} />
+				))}
+			</Tabs>
 			<MainCard
 				title={
 					<Stack spacing={0.25}>
-						<Typography variant="h5">Guía: la lista de carpetas del usuario</Typography>
+						<Typography variant="h5">Guía: la lista de carpetas del usuario — {jurLabel}</Typography>
 						<Typography variant="caption" color="text.secondary">
 							Todas las filas posibles del listado PJN (según los estados que escriben pjn-workers, el hub y pjn-mis-causas) y cómo se
 							distribuyen hoy en la base.
@@ -219,8 +239,13 @@ export default function UserViewGuide() {
 					</Stack>
 				}
 			>
+				{guide.note && guide.groups.length === 0 && (
+					<Alert severity="info" sx={{ mb: 2 }}>
+						{guide.note}
+					</Alert>
+				)}
 				<Stack spacing={3.5}>
-					{GUIDE_GROUPS.map((g) => (
+					{guide.groups.map((g) => (
 						<Box key={g.row}>
 							<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }} flexWrap="wrap" useFlexGap>
 								<Chip size="small" label={g.row} sx={{ fontFamily: "monospace" }} />
@@ -505,7 +530,12 @@ export default function UserViewGuide() {
 				}
 			>
 				<Stack spacing={1.5}>
-					{GUIDE_FINDINGS.map((f) => (
+					{guide.findings.length === 0 && (
+						<Typography variant="body2" color="text.secondary">
+							Sin hallazgos cargados para {jurLabel} todavía.
+						</Typography>
+					)}
+					{guide.findings.map((f) => (
 						<Stack key={f.id} direction="row" spacing={1.5} alignItems="flex-start">
 							<Chip
 								size="small"

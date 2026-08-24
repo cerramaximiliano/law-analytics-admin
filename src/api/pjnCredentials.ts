@@ -319,7 +319,8 @@ export type UserViewList =
 	| "pending"
 	| "invalid"
 	| "ok"
-	| "ok_cred_error";
+	| "ok_cred_error"
+	| "cred_status";
 
 export interface CausaUserViewEntry {
 	user: { id: string | null; email: string | null; name: string | null };
@@ -335,6 +336,13 @@ export interface CausaUserViewEntry {
 		archived?: boolean;
 		source?: string;
 		pjn?: boolean;
+		mev?: boolean;
+		eje?: boolean;
+		scba?: boolean;
+		pjsalta?: boolean;
+		pjcatamarca?: boolean;
+		pjmendoza?: boolean;
+		mevCredentialStatus?: string | null;
 		causaVerified?: boolean;
 		causaIsValid?: boolean;
 		causaIsPrivate?: boolean;
@@ -412,7 +420,10 @@ export interface UserViewStatsCombo {
 		causaIsPrivate: boolean | null;
 		causaCredentialCovered: boolean | null;
 		listRemoved: boolean;
+		listRemovedSource?: string | null;
 		pjnNotFound: boolean;
+		mevCredentialStatus?: string | null;
+		hasPending?: boolean;
 		hasCausa: boolean;
 		credError: boolean;
 	};
@@ -426,7 +437,7 @@ export interface UserViewStatsCombo {
 
 export interface UserViewStatsData {
 	total: number;
-	filters: { archived: string; userId: string | null };
+	filters: { archived: string; userId: string | null; jurisdiction?: string };
 	byRow: Array<{ row: string; n: number; pct: number; combos: number; flagged: number }>;
 	byGate: Record<string, number>;
 	combos: UserViewStatsCombo[];
@@ -769,6 +780,7 @@ class PjnCredentialsService {
 	async getUserViewStats(params: {
 		archived?: "all" | "true" | "false";
 		userId?: string;
+		jurisdiction?: string;
 	}): Promise<{ success: boolean; data: UserViewStatsData }> {
 		const response = await adminAxios.get("/api/pjn-credentials/user-view-stats", { params });
 		return response.data;
