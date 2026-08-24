@@ -397,6 +397,10 @@ export const getAllWorkersConfig = async (): Promise<IAllWorkersResponse> => {
 			minWorkers: cfg.minInstances,
 			maxWorkers: cfg.maxInstances,
 			updateThresholdHours: settings.updateThresholdHours,
+			// Semántica EJE para el diálogo de edición: useGlobalSchedule = !schedule.enabled
+			schedule: cfg.schedule
+				? { ...cfg.schedule, useGlobalSchedule: !cfg.schedule.enabled }
+				: { useGlobalSchedule: true },
 		};
 		const status = state.workers?.[workerType] || ({} as IWorkerStatus);
 		const sched = cfg.schedule;
@@ -453,7 +457,26 @@ export const updateWorkerConfig = async (
 	workerType: PjSaltaWorkerType,
 	updates: Partial<IManagerWorkerConfig>,
 ): Promise<IManagerWorkerConfig> => {
-	const response = await pjsaltaAxios.patch(`/config/manager/worker/${workerType}`, updates);
+	// La UI (copiada de eje) habla en aliases: minWorkers/maxWorkers,
+	// schedule.useGlobalSchedule y updateThresholdHours per-worker. El contrato
+	// de pjsalta-api es minInstances/maxInstances, schedule.enabled (true =
+	// override propio) y updateThresholdHours GLOBAL. Traducimos acá; el Joi
+	// del API hace stripUnknown, así que mandar un alias sin traducir se
+	// descarta en silencio (y un schedule sin `enabled` pisaría el subdoc
+	// borrando el override — pérdida silenciosa del horario).
+	const { minWorkers, maxWorkers, updateThresholdHours, schedule, ...rest } = updates;
+	const body: Record<string, unknown> = { ...rest };
+	if (minWorkers !== undefined) body.minInstances = minWorkers;
+	if (maxWorkers !== undefined) body.maxInstances = maxWorkers;
+	if (schedule !== undefined) {
+		const { useGlobalSchedule, enabled, ...hours } = schedule;
+		body.schedule = { ...hours, enabled: enabled ?? !(useGlobalSchedule ?? true) };
+	}
+	// updateThresholdHours vive en settings globales del manager, no per-worker.
+	if (updateThresholdHours !== undefined) {
+		await pjsaltaAxios.patch("/config/manager", { updateThresholdHours });
+	}
+	const response = await pjsaltaAxios.patch(`/config/manager/worker/${workerType}`, body);
 	return response.data.data;
 };
 

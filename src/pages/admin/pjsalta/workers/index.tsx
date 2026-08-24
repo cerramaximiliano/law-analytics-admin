@@ -356,8 +356,8 @@ const EditWorkerDialog: React.FC<EditDialogProps> = ({ open, workerType, config,
 	};
 
 	const workerLabels: Record<string, string> = {
-		verification: "Verificación",
-		update: "Actualización",
+		verifier: "Verificación",
+		updater: "Actualización",
 		stuck: "Recuperación",
 	};
 
