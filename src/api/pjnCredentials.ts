@@ -308,6 +308,100 @@ export interface SyncedCausa {
 	};
 }
 
+export type UserViewGate = "archived" | "pending_selection" | "reserved" | "reserved_revoked" | "failed" | "invalid" | "pending" | null;
+
+export type UserViewList =
+	| "plain"
+	| "reserved"
+	| "list_removed"
+	| "pending_selection"
+	| "failed"
+	| "pending"
+	| "invalid"
+	| "ok"
+	| "ok_cred_error";
+
+export interface CausaUserViewEntry {
+	user: { id: string | null; email: string | null; name: string | null };
+	folder: {
+		_id: string;
+		userId: string | null;
+		causaId?: string | null;
+		causaType?: string;
+		folderName?: string;
+		materia?: string;
+		status?: string;
+		orderStatus?: string;
+		archived?: boolean;
+		source?: string;
+		pjn?: boolean;
+		causaVerified?: boolean;
+		causaIsValid?: boolean;
+		causaIsPrivate?: boolean;
+		causaCredentialCovered?: boolean;
+		causaAssociationStatus?: string;
+		listRemoved?: boolean;
+		listRemovedSource?: string | null;
+		listRemovedAt?: string | null;
+		pjnNotFound?: boolean;
+		lastMovementDate?: string | null;
+		verificationAttempts?: number;
+		expedientNumber?: string;
+		expedientYear?: string;
+		description?: string;
+		judFolder?: Record<string, unknown>;
+		folderJuris?: { label?: string } | string;
+		initialDateFolder?: string | null;
+		finalDateFolder?: string | null;
+		scrapingProgress?: { status?: string; isComplete?: boolean } | null;
+		createdAt?: string;
+		updatedAt?: string;
+	};
+	links: Array<{
+		credentialId: string | null;
+		removedFromSync: boolean;
+		removedAt: string | null;
+		access: string | null;
+		accessChangedAt: string | null;
+		credentialEnabled: boolean | null;
+		credentialValid: boolean | null;
+		credentialSyncStatus: string | null;
+		credentialLastErrorCode: string | null;
+	}>;
+	view: {
+		list: UserViewList;
+		expanded: { label: string; accent: "red" | "amber" | "green"; badge: string };
+		detail: { chip: { label: string; accent: "red" | "amber" | "green"; badge: string }; gate: UserViewGate };
+		hiddenFromList: boolean;
+		inAttentionTable: boolean;
+		contentBlocked: boolean;
+		credError: { code: string; message: string | null } | null;
+		isPjnPrivateCovered: boolean;
+	};
+}
+
+export interface CausaUserViewData {
+	causa: null | {
+		_id: string;
+		number: number;
+		year: number;
+		incidente: string | null;
+		fuero: string;
+		caratula: string;
+		objeto?: string;
+		juzgado?: string;
+		isPrivate: boolean | null;
+		source?: string;
+		lastUpdate: string | null;
+		movimientosCount: number;
+		fechaUltimoMovimiento: string | null;
+		verified?: boolean | null;
+		isValid?: boolean | null;
+		lastError: { message: string; phase?: string; date: string } | null;
+	};
+	entries: CausaUserViewEntry[];
+}
+
 export interface SyncedCausasSummary {
 	totalCausas: number;
 	withMovements: number;
@@ -615,6 +709,19 @@ class PjnCredentialsService {
 		causaId: string,
 	): Promise<{ success: boolean; data: { causa: { id: string; identificador: string; caratula: string }; events: CausaStateEvent[] } }> {
 		const response = await adminAxios.get("/api/pjn-credentials/causa-state-history", { params: { collection, causaId } });
+		return response.data;
+	}
+
+	/**
+	 * Vista del usuario: lo que cada usuario vinculado ve en su lista/detalle
+	 * de carpeta para esta causa (lógica espejada del front).
+	 */
+	async getCausaUserView(params: {
+		collection?: string;
+		causaId?: string;
+		folderId?: string;
+	}): Promise<{ success: boolean; data: CausaUserViewData }> {
+		const response = await adminAxios.get("/api/pjn-credentials/user-view", { params });
 		return response.data;
 	}
 

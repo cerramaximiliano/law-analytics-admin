@@ -47,7 +47,9 @@ import {
 	Copy,
 	CopySuccess,
 	Calculator,
+	UserSquare,
 } from "iconsax-react";
+import CausaUserViewDialog from "../causas/CausaUserViewDialog";
 import CausaDetalleModal from "../causas/CausaDetalleModal";
 import FolderEditModal from "./FolderEditModal";
 import CausaEditModal from "./CausaEditModal";
@@ -123,6 +125,7 @@ const FoldersPage = () => {
 
 	// Modal de detalle de folder
 	const [detailModalOpen, setDetailModalOpen] = useState(false);
+	const [userViewFolderId, setUserViewFolderId] = useState<string | null>(null);
 	const [selectedFolderForDetail, setSelectedFolderForDetail] = useState<Folder | null>(null);
 
 	// Copia de _id al portapapeles
@@ -784,6 +787,11 @@ const FoldersPage = () => {
 													</TableCell>
 													<TableCell align="center">
 														<Stack direction="row" spacing={0} justifyContent="center">
+															<Tooltip title="Vista del usuario — cómo ve esta carpeta el usuario en su lista y en el detalle">
+																<IconButton size="small" onClick={() => setUserViewFolderId(folder._id)}>
+																	<UserSquare size={18} />
+																</IconButton>
+															</Tooltip>
 															<Tooltip title="Ver detalles">
 																<IconButton size="small" color="primary" onClick={() => handleViewDetail(folder)}>
 																	<Eye size={18} />
@@ -856,6 +864,7 @@ const FoldersPage = () => {
 			)}
 			{/* Modal de Detalle de Folder */}
 			<FolderDetalleModal open={detailModalOpen} onClose={handleCloseDetailModal} folder={selectedFolderForDetail} />
+			<CausaUserViewDialog open={!!userViewFolderId} onClose={() => setUserViewFolderId(null)} folderId={userViewFolderId} />
 		</MainCard>
 	);
 };

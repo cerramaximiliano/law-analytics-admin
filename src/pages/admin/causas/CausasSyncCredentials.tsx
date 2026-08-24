@@ -46,7 +46,8 @@ import pjnCredentialsService, {
 	CausaScreenshotEntry,
 	CausaStateEvent,
 } from "api/pjnCredentials";
-import { Refresh, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Repeat, Eye, Gallery } from "iconsax-react";
+import { Refresh, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Repeat, Eye, Gallery, UserSquare } from "iconsax-react";
+import CausaUserViewDialog from "./CausaUserViewDialog";
 
 dayjs.locale("es");
 
@@ -220,6 +221,11 @@ const CausasSyncCredentials = () => {
 			enqueueSnackbar("No se pudo cargar el historial de estado", { variant: "error" });
 		}
 	};
+	const [userView, setUserView] = useState<{ open: boolean; collection: string | null; causaId: string | null }>({
+		open: false,
+		collection: null,
+		causaId: null,
+	});
 	const [soloElegibles, setSoloElegibles] = useState<boolean>(false);
 
 	// Credenciales para el dropdown
@@ -909,6 +915,17 @@ const CausasSyncCredentials = () => {
 															<Gallery size={18} />
 														</IconButton>
 													</Tooltip>
+													<Tooltip title="Vista del usuario — cómo se ve esta causa en la lista y el detalle de cada usuario vinculado">
+														<span>
+															<IconButton
+																size="small"
+																disabled={!causa.collection}
+																onClick={() => setUserView({ open: true, collection: causa.collection || null, causaId: causa._id })}
+															>
+																<UserSquare size={18} />
+															</IconButton>
+														</span>
+													</Tooltip>
 													<Tooltip title="Ver JSON">
 														<IconButton size="small" onClick={() => handleOpenJson(causa)}>
 															<Eye size={18} />
@@ -1054,6 +1071,12 @@ const CausasSyncCredentials = () => {
 			</Dialog>
 
 			{/* Historial de cambios de estado (click en chip Estado) */}
+			<CausaUserViewDialog
+				open={userView.open}
+				onClose={() => setUserView((p) => ({ ...p, open: false }))}
+				collection={userView.collection}
+				causaId={userView.causaId}
+			/>
 			<Dialog open={stateHistory.open} onClose={() => setStateHistory((prev) => ({ ...prev, open: false }))} maxWidth="md" fullWidth>
 				<DialogTitle>
 					<Stack spacing={0.25}>
