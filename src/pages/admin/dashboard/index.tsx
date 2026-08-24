@@ -42,6 +42,11 @@ import { CausasPjnService, EligibilityStats } from "api/causasPjn";
 import { StuckDocumentsService, StuckDocumentsStats } from "api/stuckDocuments";
 import { CausasEjeService, WorkerStatsResponse, EligibilityStatsResponse as EjeEligibilityStatsResponse } from "api/causasEje";
 import { CausasMEVService, EligibilityStatsMEV } from "api/causasMEV";
+import {
+	CausasPjSaltaService,
+	WorkerStatsResponse as PjSaltaWorkerStatsResponse,
+	EligibilityStatsResponse as PjSaltaEligibilityStatsResponse,
+} from "api/causasPjSalta";
 import pjnCredentialsService, { MisCausasCoverage, HealthAnomaly } from "api/pjnCredentials";
 import scbaCausasService, { ScbaUpdateCoverage } from "api/scbaCausas";
 import { ManagerConfigService, PjnSiteStatus } from "api/managerConfig";
@@ -114,7 +119,7 @@ const metricInfo: Record<string, string> = {
 	testActive: "Suscripciones activas en modo test.",
 	// Folders
 	totalFolders: "Total de carpetas/causas creadas por todos los usuarios en la plataforma.",
-	verifiedFolders: "Carpetas vinculadas y verificadas con fuentes externas (PJN + MEV).",
+	verifiedFolders: "Carpetas vinculadas y verificadas con fuentes externas (PJN + MEV + EJE + PJ Salta).",
 	pendingFolders: "Carpetas pendientes de verificación (aún no han sido procesadas por el sistema de verificación).",
 	// PJN Folders
 	pjnTotal: "Total de causas PJN (Poder Judicial de la Nación) = Verificadas + No Verificadas + Pendientes.",
@@ -788,6 +793,10 @@ const AdminDashboard = () => {
 	const [loadingStuckDocuments, setLoadingStuckDocuments] = useState(false);
 	const [ejeStats, setEjeStats] = useState<WorkerStatsResponse["data"] | null>(null);
 	const [loadingEjeStats, setLoadingEjeStats] = useState(false);
+	const [pjsaltaStats, setPjsaltaStats] = useState<PjSaltaWorkerStatsResponse["data"] | null>(null);
+	const [loadingPjsaltaStats, setLoadingPjsaltaStats] = useState(false);
+	const [pjsaltaEligibilityStats, setPjsaltaEligibilityStats] = useState<PjSaltaEligibilityStatsResponse["data"] | null>(null);
+	const [loadingPjsaltaEligibility, setLoadingPjsaltaEligibility] = useState(false);
 	const [misCausasCoverage, setMisCausasCoverage] = useState<MisCausasCoverage | null>(null);
 	const [loadingMisCausasCoverage, setLoadingMisCausasCoverage] = useState(false);
 	const [healthAnomalies, setHealthAnomalies] = useState<HealthAnomaly[]>([]);
@@ -851,6 +860,34 @@ const AdminDashboard = () => {
 			console.error("Error fetching EJE stats:", error);
 		} finally {
 			setLoadingEjeStats(false);
+		}
+	}, []);
+
+	const fetchPjsaltaStats = useCallback(async () => {
+		try {
+			setLoadingPjsaltaStats(true);
+			const response = await CausasPjSaltaService.getWorkerStats();
+			if (response.success) {
+				setPjsaltaStats(response.data);
+			}
+		} catch (error: any) {
+			console.error("Error fetching PJ Salta stats:", error);
+		} finally {
+			setLoadingPjsaltaStats(false);
+		}
+	}, []);
+
+	const fetchPjsaltaEligibilityStats = useCallback(async () => {
+		try {
+			setLoadingPjsaltaEligibility(true);
+			const response = await CausasPjSaltaService.getEligibilityStats();
+			if (response.success) {
+				setPjsaltaEligibilityStats(response.data);
+			}
+		} catch (error: any) {
+			console.error("Error fetching PJ Salta eligibility stats:", error);
+		} finally {
+			setLoadingPjsaltaEligibility(false);
 		}
 	}, []);
 
@@ -1037,6 +1074,8 @@ const AdminDashboard = () => {
 		fetchEjeEligibilityStats();
 		fetchStuckDocumentsStats();
 		fetchEjeStats();
+		fetchPjsaltaStats();
+		fetchPjsaltaEligibilityStats();
 		fetchTasasStatus();
 		fetchDatosPrevsStats();
 		fetchActiveGroups();
@@ -1054,6 +1093,8 @@ const AdminDashboard = () => {
 		fetchEjeEligibilityStats,
 		fetchStuckDocumentsStats,
 		fetchEjeStats,
+		fetchPjsaltaStats,
+		fetchPjsaltaEligibilityStats,
 		fetchTasasStatus,
 		fetchDatosPrevsStats,
 		fetchActiveGroups,
@@ -1075,6 +1116,8 @@ const AdminDashboard = () => {
 		fetchEjeEligibilityStats();
 		fetchStuckDocumentsStats();
 		fetchEjeStats();
+		fetchPjsaltaStats();
+		fetchPjsaltaEligibilityStats();
 		fetchTasasStatus();
 		fetchDatosPrevsStats();
 		fetchActiveGroups();
@@ -1297,7 +1340,7 @@ const AdminDashboard = () => {
 									</Typography>
 									<InfoTooltip metricKey="verifiedFolders" />
 								</Box>
-								{loading || loadingEjeStats ? (
+								{loading || loadingEjeStats || loadingPjsaltaStats ? (
 									<Skeleton variant="text" width={80} height={48} />
 								) : (
 									<>
@@ -1315,7 +1358,8 @@ const AdminDashboard = () => {
 											{(
 												(data?.folders.pjn?.verified || 0) +
 												(data?.folders.mev?.verified || 0) +
-												(ejeStats?.status.valid || 0)
+												(ejeStats?.status.valid || 0) +
+												(pjsaltaStats?.status.valid || 0)
 											).toLocaleString()}
 										</Typography>
 										<Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
@@ -1323,6 +1367,7 @@ const AdminDashboard = () => {
 												{ label: `PJN ${(data?.folders.pjn?.verified || 0).toLocaleString()}`, to: "/admin/causas/verified-app" },
 												{ label: `MEV ${(data?.folders.mev?.verified || 0).toLocaleString()}`, to: "/admin/mev/verified-app" },
 												{ label: `EJE ${(ejeStats?.status.valid || 0).toLocaleString()}`, to: "/admin/eje/verified-app" },
+												{ label: `Salta ${(pjsaltaStats?.status.valid || 0).toLocaleString()}`, to: "/admin/pjsalta/verified-app" },
 											].map((chip) => (
 												<Chip
 													key={chip.to}
@@ -2194,6 +2239,175 @@ const AdminDashboard = () => {
 													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
 													{ejeEligibilityStats.noElegibles.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													No elegibles
+												</Typography>
+											</Box>
+										</Grid>
+									</Grid>
+								</>
+							) : (
+								<Typography variant="body2" color="text.secondary" textAlign="center">
+									No se pudieron cargar las estadísticas
+								</Typography>
+							)}
+						</Paper>
+					</Grid>
+
+					{/* PJ Salta Update Coverage Widget */}
+					<Grid item xs={12} sm={6} md={3}>
+						<Paper
+							elevation={0}
+							onClick={() => navigate("/admin/pjsalta/verified-app")}
+							sx={{
+								p: { xs: 1.5, sm: 2.5 },
+								borderRadius: 2,
+								bgcolor: theme.palette.background.paper,
+								border: `1px solid ${theme.palette.divider}`,
+								cursor: "pointer",
+								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
+								height: "100%",
+								"&:hover": {
+									boxShadow: headerShadow(isDark),
+									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+									transform: "translateY(-2px)",
+								},
+							}}
+						>
+							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									<Box
+										sx={{
+											width: 28,
+											height: 28,
+											borderRadius: 1,
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											flexShrink: 0,
+											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+											color: BRAND_BLUE,
+										}}
+									>
+										<Refresh size={15} />
+									</Box>
+									<Typography
+										variant="subtitle1"
+										fontWeight={600}
+										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
+									>
+										Cobertura Actualización Salta
+									</Typography>
+								</Box>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									<Chip
+										label="Salta"
+										size="small"
+										sx={{
+											bgcolor: alpha(COLORS.success.main, 0.1),
+											color: COLORS.success.main,
+											fontWeight: 500,
+											fontSize: "0.65rem",
+										}}
+									/>
+									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
+								</Box>
+							</Box>
+
+							{loadingPjsaltaEligibility ? (
+								<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
+								</Box>
+							) : pjsaltaEligibilityStats ? (
+								<>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+										<Typography variant="body2" color="text.secondary">
+											Cobertura hoy
+										</Typography>
+										<Typography
+											variant="h6"
+											fontWeight="bold"
+											sx={{
+												fontVariantNumeric: "tabular-nums",
+												color:
+													(pjsaltaEligibilityStats.coveragePercent || 0) > 90
+														? COLORS.success.main
+														: (pjsaltaEligibilityStats.coveragePercent || 0) > 70
+														? COLORS.warning.main
+														: COLORS.error.main,
+											}}
+										>
+											{pjsaltaEligibilityStats.coveragePercent.toFixed(1)}%
+										</Typography>
+									</Box>
+									<LinearProgress
+										variant="determinate"
+										value={pjsaltaEligibilityStats.coveragePercent || 0}
+										sx={{
+											height: 8,
+											borderRadius: 4,
+											mb: 2,
+											backgroundColor: alpha(COLORS.neutral.light, 0.3),
+											"& .MuiLinearProgress-bar": {
+												borderRadius: 4,
+												backgroundColor:
+													(pjsaltaEligibilityStats.coveragePercent || 0) > 90
+														? COLORS.success.main
+														: (pjsaltaEligibilityStats.coveragePercent || 0) > 70
+														? COLORS.warning.main
+														: COLORS.error.main,
+											},
+										}}
+									/>
+									<Grid container spacing={2}>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
+													{pjsaltaEligibilityStats.actualizadosHoy.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Actualizados hoy
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
+													{pjsaltaEligibilityStats.pendientesHoy.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Pendientes hoy
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
+													{pjsaltaEligibilityStats.totalElegibles.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Total elegibles
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
+													{pjsaltaEligibilityStats.noElegibles.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
 													No elegibles
