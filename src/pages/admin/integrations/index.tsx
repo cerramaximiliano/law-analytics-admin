@@ -34,6 +34,11 @@ import IntegrationsConfigService, {
 	LandingIntegrationKey,
 	LandingIntegrationStatus,
 } from "api/integrationsConfig";
+import { ScrapingManagerService, ScrapingManagerConfig } from "api/scrapingManager";
+import ScbaManagerService, { ScbaManagerConfig } from "api/scbaManager";
+import judicialNotificationConfigService from "api/judicialNotificationConfig";
+
+import ServiceAvailabilityCard from "./ServiceAvailabilityCard";
 
 // Jurisdicciones del strip "Integrado con" de la landing pública. La metadata
 // visual (logo/color) vive en el front; acá solo el estado por jurisdicción.
@@ -78,11 +83,6 @@ const LANDING_VISUALS: Record<LandingIntegrationKey, { shortName: string; logoSr
 	},
 	pjcatamarca: { shortName: "CATAMARCA", logoSrc: logoPJCatamarca, bgColor: "#ffffff", hasBorder: true },
 };
-import { ScrapingManagerService, ScrapingManagerConfig } from "api/scrapingManager";
-import ScbaManagerService, { ScbaManagerConfig } from "api/scbaManager";
-import judicialNotificationConfigService from "api/judicialNotificationConfig";
-
-import ServiceAvailabilityCard from "./ServiceAvailabilityCard";
 
 // ====================================
 // TYPES
