@@ -199,6 +199,8 @@ const categoryDisplay: Record<string, string> = {
 	booking: "Reservas",
 	newsletter: "Newsletter",
 	transactional: "Transaccional",
+	operational: "Operacional (workers)",
+	judicial: "Judicial (verificación)",
 	reactivation: "Reactivación",
 	improved: "Mejorado",
 	"ab-test": "Test A/B",
