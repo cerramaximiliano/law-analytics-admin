@@ -3,10 +3,12 @@ import {
 	Alert,
 	Box,
 	Button,
+	Checkbox,
 	Dialog,
 	DialogActions,
 	DialogContent,
 	DialogTitle,
+	FormControlLabel,
 	Grid,
 	IconButton,
 	MenuItem,
@@ -18,7 +20,7 @@ import {
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { Code1, Copy, Refresh } from "iconsax-react";
+import { Add, Code1, Copy, Edit2, Refresh, Trash } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import logoPJNacion from "assets/images/logos/logo_pj_nacion.png";
@@ -33,6 +35,9 @@ import IntegrationsConfigService, {
 	UpdateServicePayload,
 	LandingIntegrationKey,
 	LandingIntegrationStatus,
+	LandingCatalogEntry,
+	UpsertLandingCatalogPayload,
+	CORE_LANDING_KEYS,
 } from "api/integrationsConfig";
 import { ScrapingManagerService, ScrapingManagerConfig } from "api/scrapingManager";
 import ScbaManagerService, { ScbaManagerConfig } from "api/scbaManager";
@@ -208,27 +213,129 @@ const IntegrationsPage: React.FC = () => {
 		}
 	};
 
+	// ── Catálogo dinámico de jurisdicciones (fuente de verdad) ──
+	// El backend lo seedea en getSingleton; el fallback (backend previo al
+	// catálogo) lo reconstruye desde los items core + el mapa legacy.
+	const catalogEntries: LandingCatalogEntry[] = (() => {
+		const cat = integrations.data?.landingCatalog;
+		if (cat && cat.length > 0) return [...cat].sort((a, b) => a.order - b.order);
+		return LANDING_ITEMS.map((item) => {
+			const flag = integrations.data?.landingIntegrations?.[item.key];
+			return {
+				key: item.key,
+				shortName: LANDING_VISUALS[item.key]?.shortName,
+				name: item.label,
+				status: flag?.status ?? (item.key === "pjn" || item.key === "mev" || item.key === "eje" ? "available" : "comingSoon"),
+				order: flag?.order ?? item.defaultOrder,
+			} as LandingCatalogEntry;
+		}).sort((a, b) => a.order - b.order);
+	})();
+	const entryOf = (key: string) => catalogEntries.find((e) => e.key === key);
+	const isCoreKey = (key: string) => (CORE_LANDING_KEYS as readonly string[]).includes(key);
+	// Metadata visual para la previsualización: las core usan el asset local;
+	// las agregadas por admin, su logoUrl remoto.
+	const visualOf = (entry: LandingCatalogEntry) => {
+		const core = LANDING_VISUALS[entry.key];
+		return {
+			shortName: entry.shortName || core?.shortName || entry.key.toUpperCase(),
+			logoSrc: core?.logoSrc || entry.logoUrl || "",
+			bgColor: core?.bgColor || entry.bgColor || "#ffffff",
+			hasBorder: core ? core.hasBorder : entry.hasBorder !== false,
+		};
+	};
+
+	// Alta/edición/baja de jurisdicciones del catálogo
+	const emptyDraft: UpsertLandingCatalogPayload & { key: string } = {
+		key: "",
+		shortName: "",
+		name: "",
+		listLabel: "",
+		logoUrl: "",
+		bgColor: "#ffffff",
+		hasBorder: true,
+		status: "hidden",
+		capabilities: { credentialSync: false, individualCauses: true },
+	};
+	const [catalogDialog, setCatalogDialog] = useState<{ mode: "create" | "edit"; draft: typeof emptyDraft } | null>(null);
+
+	const handleCatalogUpsert = async (key: string, payload: UpsertLandingCatalogPayload, successMsg: string) => {
+		setIntegrations((s) => ({ ...s, saving: true }));
+		try {
+			const res = await IntegrationsConfigService.upsertLandingCatalogEntry(key, payload);
+			setIntegrations({ loading: false, saving: false, error: null, data: res.data });
+			enqueueSnackbar(successMsg, { variant: "success" });
+			return true;
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.message || `Error al guardar ${key}`, { variant: "error" });
+			setIntegrations((s) => ({ ...s, saving: false }));
+			return false;
+		}
+	};
+	const handleCatalogDelete = async (key: string) => {
+		if (!window.confirm(`¿Eliminar la jurisdicción "${key}" del catálogo? Desaparece de la landing y de los textos de marketing.`)) return;
+		setIntegrations((s) => ({ ...s, saving: true }));
+		try {
+			const res = await IntegrationsConfigService.deleteLandingCatalogEntry(key);
+			setIntegrations({ loading: false, saving: false, error: null, data: res.data });
+			enqueueSnackbar(`Jurisdicción ${key} eliminada`, { variant: "success" });
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.message || `Error al eliminar ${key}`, { variant: "error" });
+			setIntegrations((s) => ({ ...s, saving: false }));
+		}
+	};
+	const openCatalogDialog = (entry?: LandingCatalogEntry) => {
+		if (!entry) {
+			setCatalogDialog({ mode: "create", draft: { ...emptyDraft } });
+			return;
+		}
+		setCatalogDialog({
+			mode: "edit",
+			draft: {
+				key: entry.key,
+				shortName: entry.shortName || "",
+				name: entry.name || "",
+				listLabel: entry.listLabel || "",
+				logoUrl: entry.logoUrl || "",
+				bgColor: entry.bgColor || "#ffffff",
+				hasBorder: entry.hasBorder !== false,
+				status: entry.status,
+				capabilities: {
+					credentialSync: entry.capabilities?.credentialSync === true,
+					individualCauses: entry.capabilities?.individualCauses !== false,
+				},
+			},
+		});
+	};
+	const submitCatalogDialog = async () => {
+		if (!catalogDialog) return;
+		const { key, ...payload } = catalogDialog.draft;
+		if (!key.trim()) {
+			enqueueSnackbar("La key es obligatoria (ej: pjmendoza)", { variant: "warning" });
+			return;
+		}
+		const ok = await handleCatalogUpsert(
+			key.trim(),
+			{ ...payload, logoUrl: payload.logoUrl?.trim() || null },
+			catalogDialog.mode === "create" ? `Jurisdicción ${key} agregada` : `Jurisdicción ${key} actualizada`,
+		);
+		if (ok) setCatalogDialog(null);
+	};
+
 	// ── Preview + reordenamiento drag & drop del strip de la landing ──
 	// orderDraft = null → sin cambios locales (se deriva del doc); array →
 	// orden en edición pendiente de "Guardar orden".
-	const [orderDraft, setOrderDraft] = useState<LandingIntegrationKey[] | null>(null);
-	const dragKeyRef = useRef<LandingIntegrationKey | null>(null);
+	const [orderDraft, setOrderDraft] = useState<string[] | null>(null);
+	const dragKeyRef = useRef<string | null>(null);
 
-	const landingFlagOf = (key: LandingIntegrationKey) => integrations.data?.landingIntegrations?.[key];
-	const landingStatusOf = (key: LandingIntegrationKey): LandingIntegrationStatus =>
-		landingFlagOf(key)?.status ?? (key === "pjn" || key === "mev" || key === "eje" ? "available" : "comingSoon");
-	const landingOrderFromConfig = (): LandingIntegrationKey[] =>
-		[...LANDING_ITEMS]
-			.map((item) => ({ key: item.key, order: landingFlagOf(item.key)?.order ?? item.defaultOrder }))
-			.sort((a, b) => a.order - b.order)
-			.map((x) => x.key);
+	const landingStatusOf = (key: string): LandingIntegrationStatus => entryOf(key)?.status ?? "comingSoon";
+	const landingOrderFromConfig = (): string[] => catalogEntries.map((e) => e.key);
 	const effectiveOrder = orderDraft ?? landingOrderFromConfig();
 	const orderDirty = orderDraft !== null && JSON.stringify(orderDraft) !== JSON.stringify(landingOrderFromConfig());
 
-	const handleTileDragStart = (key: LandingIntegrationKey) => {
+	const handleTileDragStart = (key: string) => {
 		dragKeyRef.current = key;
 	};
-	const handleTileDragOver = (e: React.DragEvent, overKey: LandingIntegrationKey) => {
+	const handleTileDragOver = (e: React.DragEvent, overKey: string) => {
 		e.preventDefault();
 		const from = dragKeyRef.current;
 		if (!from || from === overKey) return;
@@ -249,7 +356,7 @@ const IntegrationsPage: React.FC = () => {
 			let lastDoc: IntegrationsConfigDoc | null = null;
 			for (let i = 0; i < orderDraft.length; i++) {
 				const key = orderDraft[i];
-				const current = landingFlagOf(key)?.order;
+				const current = entryOf(key)?.order;
 				if (current !== i + 1) {
 					const res = await IntegrationsConfigService.updateLandingIntegration(key, { order: i + 1 });
 					lastDoc = res.data;
@@ -563,77 +670,133 @@ const IntegrationsPage: React.FC = () => {
 				<Typography variant="h5" sx={{ mb: 0.5 }}>
 					Landing — "Integrado con"
 				</Typography>
-				<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
-					Estado de cada ícono del strip de integraciones en la landing pública (lawanalytics.app). "Disponible" = ícono pleno con pulso
-					verde · "Próximamente" = atenuado · "Oculto" = no se muestra. Impacta sin deploy (la landing lo lee de /plan-configs/public).
-				</Typography>
+				<Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1} sx={{ mb: 2 }}>
+					<Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+						Catálogo de jurisdicciones de la landing pública (lawanalytics.app). "Disponible" = ícono pleno con pulso verde · "Próximamente"
+						= atenuado · "Oculto" = no se muestra. Las capacidades (sync de credenciales / alta individual de causas) alimentan los textos
+						de marketing ("Empezá en 3 pasos", hero, planes). Impacta sin deploy (la landing lo lee de /plan-configs/public).
+					</Typography>
+					<Button size="small" variant="outlined" startIcon={<Add size={16} />} onClick={() => openCatalogDialog()} sx={{ flexShrink: 0 }}>
+						Agregar jurisdicción
+					</Button>
+				</Stack>
 				{integrations.loading ? (
 					<Skeleton variant="rounded" height={120} />
 				) : (
 					<Grid container spacing={1.5}>
-						{[...LANDING_ITEMS]
-							.map((item) => {
-								const flag = integrations.data?.landingIntegrations?.[item.key];
-								const value: LandingIntegrationStatus =
-									flag?.status ?? (item.key === "pjn" || item.key === "mev" || item.key === "eje" ? "available" : "comingSoon");
-								const order = typeof flag?.order === "number" ? flag.order : item.defaultOrder;
-								return { item, flag, value, order };
-							})
-							.sort((a, b) => a.order - b.order)
-							.map(({ item, flag, value, order }) => (
-								<Grid item xs={12} sm={6} md={4} key={item.key}>
-									<Stack
-										direction="row"
-										alignItems="center"
-										justifyContent="space-between"
-										spacing={1}
-										sx={{ p: 1.25, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}
-									>
-										<Box sx={{ minWidth: 0, flex: 1 }}>
-											<Typography variant="body2" fontWeight={600} noWrap>
-												{item.label}
-											</Typography>
-											{flag?.updatedBy && (
-												<Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
-													{flag.updatedBy}
+						{catalogEntries.map((entry) => {
+							const visual = visualOf(entry);
+							const core = isCoreKey(entry.key);
+							return (
+								<Grid item xs={12} sm={6} md={4} key={entry.key}>
+									<Stack spacing={0.75} sx={{ p: 1.25, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}>
+										<Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+											<Box sx={{ minWidth: 0, flex: 1 }}>
+												<Typography variant="body2" fontWeight={600} noWrap>
+													{entry.name || visual.shortName}
 												</Typography>
-											)}
-										</Box>
-										<Tooltip title="Posición en el strip (menor = más a la izquierda). El orden se refleja en la landing y en este listado.">
+												{entry.updatedBy && (
+													<Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
+														{entry.updatedBy}
+													</Typography>
+												)}
+											</Box>
+											<Tooltip title="Posición en el strip (menor = más a la izquierda). El orden se refleja en la landing y en este listado.">
+												<TextField
+													size="small"
+													type="number"
+													label="Orden"
+													defaultValue={entry.order}
+													key={`${entry.key}-order-${entry.order}`}
+													inputProps={{ min: 1, max: 99, style: { width: 44 } }}
+													disabled={integrations.saving}
+													onBlur={(e) => {
+														const next = parseInt(e.target.value, 10);
+														if (!isNaN(next) && next >= 1 && next <= 99 && next !== entry.order) {
+															handleLandingUpdate(entry.key, { order: next });
+														}
+													}}
+													sx={{ flexShrink: 0 }}
+												/>
+											</Tooltip>
 											<TextField
+												select
 												size="small"
-												type="number"
-												label="Orden"
-												defaultValue={order}
-												key={`${item.key}-order-${order}`}
-												inputProps={{ min: 1, max: 99, style: { width: 44 } }}
+												value={entry.status}
+												onChange={(e) => handleLandingUpdate(entry.key, { status: e.target.value as LandingIntegrationStatus })}
 												disabled={integrations.saving}
-												onBlur={(e) => {
-													const next = parseInt(e.target.value, 10);
-													if (!isNaN(next) && next >= 1 && next <= 99 && next !== order) {
-														handleLandingUpdate(item.key, { order: next });
+												sx={{ minWidth: 150, flexShrink: 0 }}
+											>
+												{LANDING_STATUS_OPTIONS.map((o) => (
+													<MenuItem key={o.value} value={o.value}>
+														{o.label}
+													</MenuItem>
+												))}
+											</TextField>
+										</Stack>
+										<Stack direction="row" alignItems="center" spacing={0.5}>
+											<Tooltip title="Permite vincular credenciales y sincronizar causas automáticamente (aparece en 'Conectá tus credenciales…').">
+												<FormControlLabel
+													control={
+														<Checkbox
+															size="small"
+															checked={entry.capabilities?.credentialSync === true}
+															disabled={integrations.saving}
+															onChange={(e) =>
+																handleCatalogUpsert(
+																	entry.key,
+																	{ capabilities: { credentialSync: e.target.checked } },
+																	`${visual.shortName}: sync de credenciales ${e.target.checked ? "habilitado" : "deshabilitado"}`,
+																)
+															}
+														/>
 													}
-												}}
-												sx={{ flexShrink: 0 }}
-											/>
-										</Tooltip>
-										<TextField
-											select
-											size="small"
-											value={value}
-											onChange={(e) => handleLandingUpdate(item.key, { status: e.target.value as LandingIntegrationStatus })}
-											disabled={integrations.saving}
-											sx={{ minWidth: 150, flexShrink: 0 }}
-										>
-											{LANDING_STATUS_OPTIONS.map((o) => (
-												<MenuItem key={o.value} value={o.value}>
-													{o.label}
-												</MenuItem>
-											))}
-										</TextField>
+													label={<Typography variant="caption">Sync credenciales</Typography>}
+													sx={{ mr: 0.5 }}
+												/>
+											</Tooltip>
+											<Tooltip title="Permite agregar causas individualmente por N° de expediente, sin credenciales.">
+												<FormControlLabel
+													control={
+														<Checkbox
+															size="small"
+															checked={entry.capabilities?.individualCauses !== false}
+															disabled={integrations.saving}
+															onChange={(e) =>
+																handleCatalogUpsert(
+																	entry.key,
+																	{ capabilities: { individualCauses: e.target.checked } },
+																	`${visual.shortName}: alta individual ${e.target.checked ? "habilitada" : "deshabilitada"}`,
+																)
+															}
+														/>
+													}
+													label={<Typography variant="caption">Alta individual</Typography>}
+												/>
+											</Tooltip>
+											<Box sx={{ flex: 1 }} />
+											<Tooltip title="Editar metadata (nombres, logo, color)">
+												<IconButton size="small" onClick={() => openCatalogDialog(entry)} disabled={integrations.saving}>
+													<Edit2 size={16} />
+												</IconButton>
+											</Tooltip>
+											{!core && (
+												<Tooltip title="Eliminar del catálogo">
+													<IconButton
+														size="small"
+														color="error"
+														onClick={() => handleCatalogDelete(entry.key)}
+														disabled={integrations.saving}
+													>
+														<Trash size={16} />
+													</IconButton>
+												</Tooltip>
+											)}
+										</Stack>
 									</Stack>
 								</Grid>
-							))}
+							);
+						})}
 					</Grid>
 				)}
 
@@ -682,13 +845,14 @@ const IntegrationsPage: React.FC = () => {
 							</Typography>
 							<Stack direction="row" spacing={3} justifyContent="center" alignItems="flex-start" flexWrap="wrap" rowGap={2} useFlexGap>
 								{effectiveOrder.map((key) => {
-									const visual = LANDING_VISUALS[key];
-									const item = LANDING_ITEMS.find((i) => i.key === key)!;
+									const entry = entryOf(key);
+									if (!entry) return null;
+									const visual = visualOf(entry);
 									const status = landingStatusOf(key);
 									const isAvailable = status === "available";
 									const isHidden = status === "hidden";
 									return (
-										<Tooltip key={key} title={`${item.label} — arrastrar para reordenar`}>
+										<Tooltip key={key} title={`${entry.name || visual.shortName} — arrastrar para reordenar`}>
 											<Box
 												draggable
 												onDragStart={() => handleTileDragStart(key)}
@@ -725,13 +889,19 @@ const IntegrationsPage: React.FC = () => {
 														filter: isAvailable ? "none" : "grayscale(40%)",
 													}}
 												>
-													<Box
-														component="img"
-														src={visual.logoSrc}
-														alt={item.label}
-														draggable={false}
-														sx={{ width: "100%", height: "100%", objectFit: "contain" }}
-													/>
+													{visual.logoSrc ? (
+														<Box
+															component="img"
+															src={visual.logoSrc}
+															alt={entry.name || visual.shortName}
+															draggable={false}
+															sx={{ width: "100%", height: "100%", objectFit: "contain" }}
+														/>
+													) : (
+														<Typography variant="caption" sx={{ fontWeight: 700, color: "text.secondary" }}>
+															{visual.shortName}
+														</Typography>
+													)}
 													{isAvailable && (
 														<Box
 															sx={{
@@ -780,6 +950,142 @@ const IntegrationsPage: React.FC = () => {
 					</Typography>
 				</Stack>
 			</Box>
+
+			{/* Alta / edición de jurisdicción del catálogo */}
+			<Dialog open={!!catalogDialog} onClose={() => setCatalogDialog(null)} maxWidth="sm" fullWidth>
+				<DialogTitle>
+					{catalogDialog?.mode === "create" ? "Agregar jurisdicción" : `Editar jurisdicción — ${catalogDialog?.draft.key}`}
+				</DialogTitle>
+				{catalogDialog && (
+					<DialogContent dividers>
+						<Stack spacing={2} sx={{ mt: 0.5 }}>
+							<TextField
+								size="small"
+								label="Key (identificador único)"
+								value={catalogDialog.draft.key}
+								disabled={catalogDialog.mode === "edit"}
+								onChange={(e) =>
+									setCatalogDialog((d) =>
+										d ? { ...d, draft: { ...d.draft, key: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") } } : d,
+									)
+								}
+								helperText="Minúsculas, sin espacios. Ej: pjmendoza, pjsanluis. No se puede cambiar después."
+							/>
+							<Stack direction="row" spacing={2}>
+								<TextField
+									size="small"
+									label="Nombre corto (bajo el ícono)"
+									value={catalogDialog.draft.shortName}
+									onChange={(e) => setCatalogDialog((d) => (d ? { ...d, draft: { ...d.draft, shortName: e.target.value } } : d))}
+									helperText="Ej: MENDOZA"
+									fullWidth
+								/>
+								<TextField
+									size="small"
+									label="Etiqueta en listas de texto"
+									value={catalogDialog.draft.listLabel}
+									onChange={(e) => setCatalogDialog((d) => (d ? { ...d, draft: { ...d.draft, listLabel: e.target.value } } : d))}
+									helperText='Ej: Mendoza → "PJN, MEV y Mendoza"'
+									fullWidth
+								/>
+							</Stack>
+							<TextField
+								size="small"
+								label="Nombre completo (tooltip)"
+								value={catalogDialog.draft.name}
+								onChange={(e) => setCatalogDialog((d) => (d ? { ...d, draft: { ...d.draft, name: e.target.value } } : d))}
+								helperText="Ej: Poder Judicial de la Provincia de Mendoza"
+							/>
+							<TextField
+								size="small"
+								label="Logo URL (https)"
+								value={catalogDialog.draft.logoUrl || ""}
+								onChange={(e) => setCatalogDialog((d) => (d ? { ...d, draft: { ...d.draft, logoUrl: e.target.value } } : d))}
+								helperText={
+									isCoreKey(catalogDialog.draft.key)
+										? "Las jurisdicciones core usan el asset local del front — este campo se ignora para ellas."
+										: "Obligatorio para que el ícono aparezca en la landing. Ej: URL de Cloudinary con fondo transparente."
+								}
+							/>
+							<Stack direction="row" spacing={2} alignItems="center">
+								<TextField
+									size="small"
+									label="Color de fondo"
+									value={catalogDialog.draft.bgColor}
+									onChange={(e) => setCatalogDialog((d) => (d ? { ...d, draft: { ...d.draft, bgColor: e.target.value } } : d))}
+									sx={{ width: 140 }}
+								/>
+								<FormControlLabel
+									control={
+										<Checkbox
+											size="small"
+											checked={catalogDialog.draft.hasBorder !== false}
+											onChange={(e) => setCatalogDialog((d) => (d ? { ...d, draft: { ...d.draft, hasBorder: e.target.checked } } : d))}
+										/>
+									}
+									label={<Typography variant="caption">Borde en el tile</Typography>}
+								/>
+								<TextField
+									select
+									size="small"
+									label="Estado inicial"
+									value={catalogDialog.draft.status}
+									onChange={(e) =>
+										setCatalogDialog((d) => (d ? { ...d, draft: { ...d.draft, status: e.target.value as LandingIntegrationStatus } } : d))
+									}
+									sx={{ minWidth: 150 }}
+								>
+									{LANDING_STATUS_OPTIONS.map((o) => (
+										<MenuItem key={o.value} value={o.value}>
+											{o.label}
+										</MenuItem>
+									))}
+								</TextField>
+							</Stack>
+							<Stack direction="row" spacing={1}>
+								<FormControlLabel
+									control={
+										<Checkbox
+											size="small"
+											checked={catalogDialog.draft.capabilities?.credentialSync === true}
+											onChange={(e) =>
+												setCatalogDialog((d) =>
+													d
+														? { ...d, draft: { ...d.draft, capabilities: { ...d.draft.capabilities, credentialSync: e.target.checked } } }
+														: d,
+												)
+											}
+										/>
+									}
+									label={<Typography variant="caption">Sync de credenciales</Typography>}
+								/>
+								<FormControlLabel
+									control={
+										<Checkbox
+											size="small"
+											checked={catalogDialog.draft.capabilities?.individualCauses !== false}
+											onChange={(e) =>
+												setCatalogDialog((d) =>
+													d
+														? { ...d, draft: { ...d.draft, capabilities: { ...d.draft.capabilities, individualCauses: e.target.checked } } }
+														: d,
+												)
+											}
+										/>
+									}
+									label={<Typography variant="caption">Alta individual de causas</Typography>}
+								/>
+							</Stack>
+						</Stack>
+					</DialogContent>
+				)}
+				<DialogActions>
+					<Button onClick={() => setCatalogDialog(null)}>Cancelar</Button>
+					<Button variant="contained" onClick={submitCatalogDialog} disabled={integrations.saving}>
+						{integrations.saving ? "Guardando…" : catalogDialog?.mode === "create" ? "Agregar" : "Guardar"}
+					</Button>
+				</DialogActions>
+			</Dialog>
 
 			{/* RAW JSON dialog */}
 			<Dialog open={rawOpen} onClose={() => setRawOpen(false)} maxWidth="md" fullWidth>
