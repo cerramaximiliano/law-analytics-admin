@@ -712,7 +712,7 @@ const EjeWorkersConfig: React.FC = () => {
 	const handleAcknowledgeAlert = async (alertId: string) => {
 		try {
 			await configEje.acknowledgeAlert(alertId);
-			setAlerts((prev) => prev.filter((a) => a._id !== alertId));
+			setAlerts((prev) => prev.filter((a) => (a._id ?? a.timestamp) !== alertId));
 			setSnackbar({
 				open: true,
 				message: "Alerta confirmada",
@@ -983,7 +983,7 @@ const EjeWorkersConfig: React.FC = () => {
 											key={index}
 											severity={alert.type?.includes("high") || alert.type === "manager_stopped" ? "warning" : "info"}
 											action={
-												<Button size="small" onClick={() => handleAcknowledgeAlert(alert._id)}>
+												<Button size="small" onClick={() => handleAcknowledgeAlert(alert._id ?? alert.timestamp)}>
 													Confirmar
 												</Button>
 											}

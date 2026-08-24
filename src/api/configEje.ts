@@ -126,7 +126,7 @@ export interface IManagerState {
 }
 
 export interface IAlert {
-	_id: string;
+	_id?: string; // AlertSchema eje tiene _id:false — se identifica por timestamp
 	type: "high_cpu" | "high_memory" | "no_workers" | "high_pending" | "manager_stopped" | "stuck_documents";
 	message: string;
 	timestamp: string;
