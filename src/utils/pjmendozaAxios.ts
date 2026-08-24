@@ -6,7 +6,7 @@ import { requestQueueService } from "services/requestQueueService";
 
 // Instancia de Axios para la API de PJ Mendoza (portal IOL)
 const pjmendozaAxios: AxiosInstance = axios.create({
-	baseURL: import.meta.env.VITE_API_PJMENDOZA || "https://pjsal.lawanalytics.app/api",
+	baseURL: import.meta.env.VITE_API_PJMENDOZA || "https://pjmendoza.lawanalytics.app/api",
 	timeout: 30000,
 	headers: {
 		"Content-Type": "application/json",

@@ -52,6 +52,11 @@ import {
 	WorkerStatsResponse as PjCatamarcaWorkerStatsResponse,
 	EligibilityStatsResponse as PjCatamarcaEligibilityStatsResponse,
 } from "api/causasPjCatamarca";
+import {
+	CausasPjMendozaService,
+	WorkerStatsResponse as PjMendozaWorkerStatsResponse,
+	EligibilityStatsResponse as PjMendozaEligibilityStatsResponse,
+} from "api/causasPjMendoza";
 import pjnCredentialsService, { MisCausasCoverage, HealthAnomaly } from "api/pjnCredentials";
 import scbaCausasService, { ScbaUpdateCoverage } from "api/scbaCausas";
 import { ManagerConfigService, PjnSiteStatus } from "api/managerConfig";
@@ -806,6 +811,10 @@ const AdminDashboard = () => {
 	const [loadingPjcatamarcaStats, setLoadingPjcatamarcaStats] = useState(false);
 	const [pjcatamarcaEligibilityStats, setPjcatamarcaEligibilityStats] = useState<PjCatamarcaEligibilityStatsResponse["data"] | null>(null);
 	const [loadingPjcatamarcaEligibility, setLoadingPjcatamarcaEligibility] = useState(false);
+	const [pjmendozaStats, setPjmendozaStats] = useState<PjMendozaWorkerStatsResponse["data"] | null>(null);
+	const [loadingPjmendozaStats, setLoadingPjmendozaStats] = useState(false);
+	const [pjmendozaEligibilityStats, setPjmendozaEligibilityStats] = useState<PjMendozaEligibilityStatsResponse["data"] | null>(null);
+	const [loadingPjmendozaEligibility, setLoadingPjmendozaEligibility] = useState(false);
 	const [misCausasCoverage, setMisCausasCoverage] = useState<MisCausasCoverage | null>(null);
 	const [loadingMisCausasCoverage, setLoadingMisCausasCoverage] = useState(false);
 	const [healthAnomalies, setHealthAnomalies] = useState<HealthAnomaly[]>([]);
@@ -925,6 +934,30 @@ const AdminDashboard = () => {
 			console.error("Error fetching PJ Catamarca eligibility stats:", error);
 		} finally {
 			setLoadingPjcatamarcaEligibility(false);
+		}
+	}, []);
+
+	const fetchPjmendozaStats = useCallback(async () => {
+		try {
+			setLoadingPjmendozaStats(true);
+			const response = await CausasPjMendozaService.getWorkerStats();
+			if (response.success) setPjmendozaStats(response.data);
+		} catch (error: any) {
+			console.error("Error fetching PJ Mendoza stats:", error);
+		} finally {
+			setLoadingPjmendozaStats(false);
+		}
+	}, []);
+
+	const fetchPjmendozaEligibilityStats = useCallback(async () => {
+		try {
+			setLoadingPjmendozaEligibility(true);
+			const response = await CausasPjMendozaService.getEligibilityStats();
+			if (response.success) setPjmendozaEligibilityStats(response.data);
+		} catch (error: any) {
+			console.error("Error fetching PJ Mendoza eligibility stats:", error);
+		} finally {
+			setLoadingPjmendozaEligibility(false);
 		}
 	}, []);
 
@@ -1115,6 +1148,8 @@ const AdminDashboard = () => {
 		fetchPjsaltaEligibilityStats();
 		fetchPjcatamarcaStats();
 		fetchPjcatamarcaEligibilityStats();
+		fetchPjmendozaStats();
+		fetchPjmendozaEligibilityStats();
 		fetchTasasStatus();
 		fetchDatosPrevsStats();
 		fetchActiveGroups();
@@ -1136,6 +1171,8 @@ const AdminDashboard = () => {
 		fetchPjsaltaEligibilityStats,
 		fetchPjcatamarcaStats,
 		fetchPjcatamarcaEligibilityStats,
+		fetchPjmendozaStats,
+		fetchPjmendozaEligibilityStats,
 		fetchTasasStatus,
 		fetchDatosPrevsStats,
 		fetchActiveGroups,
@@ -1161,6 +1198,8 @@ const AdminDashboard = () => {
 		fetchPjsaltaEligibilityStats();
 		fetchPjcatamarcaStats();
 		fetchPjcatamarcaEligibilityStats();
+		fetchPjmendozaStats();
+		fetchPjmendozaEligibilityStats();
 		fetchTasasStatus();
 		fetchDatosPrevsStats();
 		fetchActiveGroups();
@@ -1383,7 +1422,7 @@ const AdminDashboard = () => {
 									</Typography>
 									<InfoTooltip metricKey="verifiedFolders" />
 								</Box>
-								{loading || loadingEjeStats || loadingPjsaltaStats || loadingPjcatamarcaStats ? (
+								{loading || loadingEjeStats || loadingPjsaltaStats || loadingPjcatamarcaStats || loadingPjmendozaStats ? (
 									<Skeleton variant="text" width={80} height={48} />
 								) : (
 									<>
@@ -2622,6 +2661,175 @@ const AdminDashboard = () => {
 													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
 													{pjcatamarcaEligibilityStats.noElegibles.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													No elegibles
+												</Typography>
+											</Box>
+										</Grid>
+									</Grid>
+								</>
+							) : (
+								<Typography variant="body2" color="text.secondary" textAlign="center">
+									No se pudieron cargar las estadísticas
+								</Typography>
+							)}
+						</Paper>
+					</Grid>
+
+					{/* PJ Mendoza Update Coverage Widget */}
+					<Grid item xs={12} sm={6} md={3}>
+						<Paper
+							elevation={0}
+							onClick={() => navigate("/admin/pjmendoza/verified-app")}
+							sx={{
+								p: { xs: 1.5, sm: 2.5 },
+								borderRadius: 2,
+								bgcolor: theme.palette.background.paper,
+								border: `1px solid ${theme.palette.divider}`,
+								cursor: "pointer",
+								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
+								height: "100%",
+								"&:hover": {
+									boxShadow: headerShadow(isDark),
+									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+									transform: "translateY(-2px)",
+								},
+							}}
+						>
+							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									<Box
+										sx={{
+											width: 28,
+											height: 28,
+											borderRadius: 1,
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											flexShrink: 0,
+											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+											color: BRAND_BLUE,
+										}}
+									>
+										<Refresh size={15} />
+									</Box>
+									<Typography
+										variant="subtitle1"
+										fontWeight={600}
+										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
+									>
+										Cobertura Actualización Mendoza
+									</Typography>
+								</Box>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									<Chip
+										label="Mendoza"
+										size="small"
+										sx={{
+											bgcolor: alpha(COLORS.success.main, 0.1),
+											color: COLORS.success.main,
+											fontWeight: 500,
+											fontSize: "0.65rem",
+										}}
+									/>
+									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
+								</Box>
+							</Box>
+
+							{loadingPjmendozaEligibility ? (
+								<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
+								</Box>
+							) : pjmendozaEligibilityStats ? (
+								<>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+										<Typography variant="body2" color="text.secondary">
+											Cobertura hoy
+										</Typography>
+										<Typography
+											variant="h6"
+											fontWeight="bold"
+											sx={{
+												fontVariantNumeric: "tabular-nums",
+												color:
+													(pjmendozaEligibilityStats.coveragePercent || 0) > 90
+														? COLORS.success.main
+														: (pjmendozaEligibilityStats.coveragePercent || 0) > 70
+														? COLORS.warning.main
+														: COLORS.error.main,
+											}}
+										>
+											{pjmendozaEligibilityStats.coveragePercent.toFixed(1)}%
+										</Typography>
+									</Box>
+									<LinearProgress
+										variant="determinate"
+										value={pjmendozaEligibilityStats.coveragePercent || 0}
+										sx={{
+											height: 8,
+											borderRadius: 4,
+											mb: 2,
+											backgroundColor: alpha(COLORS.neutral.light, 0.3),
+											"& .MuiLinearProgress-bar": {
+												borderRadius: 4,
+												backgroundColor:
+													(pjmendozaEligibilityStats.coveragePercent || 0) > 90
+														? COLORS.success.main
+														: (pjmendozaEligibilityStats.coveragePercent || 0) > 70
+														? COLORS.warning.main
+														: COLORS.error.main,
+											},
+										}}
+									/>
+									<Grid container spacing={2}>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
+													{pjmendozaEligibilityStats.actualizadosHoy.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Actualizados hoy
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
+													{pjmendozaEligibilityStats.pendientesHoy.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Pendientes hoy
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
+													{pjmendozaEligibilityStats.totalElegibles.toLocaleString()}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													Total elegibles
+												</Typography>
+											</Box>
+										</Grid>
+										<Grid item xs={6} sm={3}>
+											<Box sx={{ textAlign: "center" }}>
+												<Typography
+													variant="h5"
+													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
+												>
+													{pjmendozaEligibilityStats.noElegibles.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
 													No elegibles
