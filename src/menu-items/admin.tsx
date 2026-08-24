@@ -100,6 +100,13 @@ const admin: NavItemType = {
 							breadcrumbs: true,
 						},
 						{
+							id: "causas-user-view-guide",
+							title: "Guía vista del usuario",
+							type: "item",
+							url: "/admin/causas/user-view-guide",
+							breadcrumbs: true,
+						},
+						{
 							id: "causas-update-eligible",
 							title: "Causas en Update",
 							type: "item",

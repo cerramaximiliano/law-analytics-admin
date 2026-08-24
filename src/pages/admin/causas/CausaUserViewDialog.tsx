@@ -77,7 +77,7 @@ const MiniChip = ({ color, text, dot = true }: { color: string; text: string; do
 	);
 };
 
-const LIST_TOOLTIPS: Record<string, string> = {
+export const LIST_TOOLTIPS: Record<string, string> = {
 	reserved: "Causa reservada — el tribunal restringió la consulta web pública. El sistema sigue verificando si vuelve a estar accesible.",
 	list_removed:
 		"Esta causa ya no aparece en tu lista de Mis Causas del portal PJN. Puede haber sido archivada o desvinculada por el tribunal.",
@@ -89,7 +89,7 @@ const LIST_TOOLTIPS: Record<string, string> = {
 	ok_cred_error: "PJN — Sincronización pausada: tus credenciales fueron rechazadas. Actualizalas desde Perfil → Cuentas Judiciales.",
 };
 
-function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
+export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
 	const { folder, view } = entry;
 	const name = <span style={{ flex: 1 }}>{formatFolderName(folder.folderName, 50)}</span>;
 	const right = (() => {
@@ -216,7 +216,7 @@ const BADGE_META: Record<string, { icon: JSX.Element; tooltip: string }> = {
 	invalid: { icon: <CloseCircle size={14} variant="Bold" color={RED} />, tooltip: "Causa inválida" },
 };
 
-function BindingPill({
+export function BindingPill({
 	label,
 	accent,
 	badge,
@@ -279,7 +279,7 @@ function BindingPill({
 
 // ---------- DETALLE: gates (PendingVerificationView.tsx / ArchivedFolderView.tsx) ----------
 
-const GATE_META: Record<
+export const GATE_META: Record<
 	Exclude<UserViewGate, null>,
 	{ label: string; title: string; description: string; tone: "amber" | "red" | "blue"; icon: JSX.Element; cta?: string; note?: string }
 > = {
@@ -349,7 +349,7 @@ const GATE_META: Record<
 	},
 };
 
-function GateReplica({ gate, folderName }: { gate: Exclude<UserViewGate, null>; folderName?: string }) {
+export function GateReplica({ gate, folderName }: { gate: Exclude<UserViewGate, null>; folderName?: string }) {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
 	const meta = GATE_META[gate];
@@ -459,7 +459,7 @@ const Section = ({ title, hint, children }: { title: string; hint?: string; chil
 const fmt = (d?: string | null) => (d ? dayjs(d).format("DD/MM/YYYY HH:mm") : "—");
 const flag = (v: unknown) => (v === undefined || v === null ? "—" : String(v));
 
-function EntryPanel({ entry }: { entry: CausaUserViewEntry }) {
+export function EntryPanel({ entry }: { entry: CausaUserViewEntry }) {
 	const theme = useTheme();
 	const { folder, view, links, user } = entry;
 	const chipAccent = accentHex(view.detail.chip.accent);
@@ -603,7 +603,7 @@ interface CatalogCase {
 	entry: CausaUserViewEntry;
 }
 
-const baseFolder = (over: Partial<CausaUserViewEntry["folder"]>): CausaUserViewEntry["folder"] => ({
+export const baseFolder = (over: Partial<CausaUserViewEntry["folder"]>): CausaUserViewEntry["folder"] => ({
 	_id: "000000000000000000000000",
 	userId: "u",
 	folderName: "PÉREZ, JUAN c/ GÓMEZ, MARÍA s/DAÑOS Y PERJUICIOS",
@@ -632,7 +632,7 @@ const mk = (
 	entry: { user: { id: "u", email: "usuario@ejemplo.com", name: null }, folder: baseFolder(folder), links, view },
 });
 
-const okView = (over: Partial<CausaUserViewEntry["view"]> = {}): CausaUserViewEntry["view"] => ({
+export const okView = (over: Partial<CausaUserViewEntry["view"]> = {}): CausaUserViewEntry["view"] => ({
 	list: "ok",
 	expanded: { label: "Vinculado con PJN", accent: "green", badge: "valid" },
 	detail: { chip: { label: "Vinculado con PJN", accent: "green", badge: "valid" }, gate: null },

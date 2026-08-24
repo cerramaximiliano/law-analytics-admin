@@ -402,6 +402,37 @@ export interface CausaUserViewData {
 	entries: CausaUserViewEntry[];
 }
 
+export interface UserViewStatsCombo {
+	key: {
+		source: string | null;
+		archived: boolean;
+		causaVerified: boolean | null;
+		causaIsValid: boolean | null;
+		causaAssociationStatus: string | null;
+		causaIsPrivate: boolean | null;
+		causaCredentialCovered: boolean | null;
+		listRemoved: boolean;
+		pjnNotFound: boolean;
+		hasCausa: boolean;
+		credError: boolean;
+	};
+	n: number;
+	pct: number;
+	users: number;
+	sampleFolderId: string | null;
+	view: CausaUserViewEntry["view"];
+	flags: string[];
+}
+
+export interface UserViewStatsData {
+	total: number;
+	filters: { archived: string; userId: string | null };
+	byRow: Array<{ row: string; n: number; pct: number; combos: number; flagged: number }>;
+	byGate: Record<string, number>;
+	combos: UserViewStatsCombo[];
+	users: Array<{ id: string; email: string | null; n: number; archived: number; credError: boolean }>;
+}
+
 export interface SyncedCausasSummary {
 	totalCausas: number;
 	withMovements: number;
@@ -722,6 +753,17 @@ class PjnCredentialsService {
 		folderId?: string;
 	}): Promise<{ success: boolean; data: CausaUserViewData }> {
 		const response = await adminAxios.get("/api/pjn-credentials/user-view", { params });
+		return response.data;
+	}
+
+	/**
+	 * Distribución real de tipos de fila del listado del usuario (folders PJN).
+	 */
+	async getUserViewStats(params: {
+		archived?: "all" | "true" | "false";
+		userId?: string;
+	}): Promise<{ success: boolean; data: UserViewStatsData }> {
+		const response = await adminAxios.get("/api/pjn-credentials/user-view-stats", { params });
 		return response.data;
 	}
 

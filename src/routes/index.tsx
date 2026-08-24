@@ -35,6 +35,7 @@ const EmailFunnels = Loadable(lazyWithRetry(() => import("pages/admin/notificati
 const CausasPendientes = Loadable(lazyWithRetry(() => import("pages/admin/causas/CausasPendientes")));
 const CredencialesPJN = Loadable(lazyWithRetry(() => import("pages/admin/causas/CredencialesPJN")));
 const CausasSyncCredentials = Loadable(lazyWithRetry(() => import("pages/admin/causas/CausasSyncCredentials")));
+const UserViewGuide = Loadable(lazyWithRetry(() => import("pages/admin/causas/UserViewGuide")));
 const CausasUpdateEligible = Loadable(lazyWithRetry(() => import("pages/admin/causas/update-eligible")));
 
 // MEV pages
@@ -464,6 +465,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<CausasSyncCredentials />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "causas/user-view-guide",
+							element: (
+								<AdminRoleGuard>
+									<UserViewGuide />
 								</AdminRoleGuard>
 							),
 						},
