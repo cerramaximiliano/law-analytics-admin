@@ -106,8 +106,8 @@ const WorkersConfig = () => {
 			component: <MisCausasWorker />,
 			description: "Gestión del scraping y actualización de causas PJN (login SSO)",
 			status: "active",
-			badge: "worker_02",
-			ip: "100.98.180.101",
+			badge: "worker-cloud-02",
+			ip: "100.102.208.69",
 		},
 		{
 			label: "Privacy Checker",

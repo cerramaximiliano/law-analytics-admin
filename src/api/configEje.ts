@@ -126,6 +126,7 @@ export interface IManagerState {
 }
 
 export interface IAlert {
+	_id: string;
 	type: "high_cpu" | "high_memory" | "no_workers" | "high_pending" | "manager_stopped" | "stuck_documents";
 	message: string;
 	timestamp: string;
@@ -273,8 +274,8 @@ export const getAlerts = async (acknowledged: boolean = false): Promise<IAlert[]
 	return response.data.data;
 };
 
-export const acknowledgeAlert = async (index: number): Promise<void> => {
-	await ejeAxios.post(`/config/manager/alerts/${index}/acknowledge`);
+export const acknowledgeAlert = async (alertId: string): Promise<void> => {
+	await ejeAxios.post(`/config/manager/alerts/${alertId}/acknowledge`);
 };
 
 export const getDailyStats = async (days: number = 30): Promise<IDailyStats[]> => {

@@ -753,10 +753,10 @@ const PjMendozaWorkersConfig: React.FC = () => {
 		}
 	};
 
-	const handleAcknowledgeAlert = async (index: number) => {
+	const handleAcknowledgeAlert = async (alertId: string) => {
 		try {
-			await configPjMendoza.acknowledgeAlert(index);
-			setAlerts((prev) => prev.filter((_, i) => i !== index));
+			await configPjMendoza.acknowledgeAlert(alertId);
+			setAlerts((prev) => prev.filter((a) => a._id !== alertId));
 			setSnackbar({
 				open: true,
 				message: "Alerta confirmada",
@@ -908,7 +908,7 @@ const PjMendozaWorkersConfig: React.FC = () => {
 										letterSpacing: "0.5px",
 									}}
 								>
-									worker_02
+									worker-cloud-01
 								</Box>
 								<Box
 									component="span"
@@ -925,9 +925,9 @@ const PjMendozaWorkersConfig: React.FC = () => {
 										fontFamily: "monospace",
 									}}
 								>
-									100.98.180.101
+									100.90.187.124
 								</Box>
-								<Tooltip title="4 procesos PM2 en worker_02: manager (fork) · verifier (cluster) · updater (cluster) · stuck (fork)">
+								<Tooltip title="4 procesos PM2 en worker-cloud-01: manager (fork) · verifier (cluster) · updater (cluster) · stuck (fork)">
 									<Chip
 										label="PM2: manager · verifier · updater · stuck"
 										size="small"
@@ -1265,7 +1265,7 @@ const PjMendozaWorkersConfig: React.FC = () => {
 											key={index}
 											severity={alert.type.includes("high") || alert.type === "manager_stopped" ? "warning" : "info"}
 											action={
-												<Button size="small" onClick={() => handleAcknowledgeAlert(index)}>
+												<Button size="small" onClick={() => handleAcknowledgeAlert(alert._id)}>
 													Confirmar
 												</Button>
 											}
@@ -1329,7 +1329,7 @@ const PjMendozaWorkersConfig: React.FC = () => {
 															letterSpacing: "0.5px",
 														}}
 													>
-														worker_02
+														worker-cloud-01
 													</Box>
 													<Box
 														component="span"
@@ -1346,7 +1346,7 @@ const PjMendozaWorkersConfig: React.FC = () => {
 															fontFamily: "monospace",
 														}}
 													>
-														100.98.180.101
+														100.90.187.124
 													</Box>
 												</Stack>
 											</Box>
