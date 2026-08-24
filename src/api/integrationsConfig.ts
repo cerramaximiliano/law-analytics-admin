@@ -36,6 +36,8 @@ export type LandingIntegrationStatus = "available" | "comingSoon" | "hidden";
 
 export interface LandingIntegrationFlag {
 	status: LandingIntegrationStatus;
+	/** Posición del ícono en el strip (menor = más a la izquierda). */
+	order?: number;
 	updatedAt?: string;
 	updatedBy?: string | null;
 }
@@ -90,12 +92,12 @@ class IntegrationsConfigService {
 		return res.data;
 	}
 
-	/** Cambia el estado de un ícono del strip "Integrado con" de la landing. */
+	/** Cambia el estado y/u orden de un ícono del strip "Integrado con" de la landing. */
 	async updateLandingIntegration(
 		integrationKey: LandingIntegrationKey,
-		status: LandingIntegrationStatus,
+		payload: { status?: LandingIntegrationStatus; order?: number },
 	): Promise<{ success: boolean; message: string; data: IntegrationsConfigDoc }> {
-		const res = await adminAxios.patch(`/api/integrations-config/landing/${integrationKey}`, { status });
+		const res = await adminAxios.patch(`/api/integrations-config/landing/${integrationKey}`, payload);
 		return res.data;
 	}
 }

@@ -34,13 +34,13 @@ import IntegrationsConfigService, {
 
 // Jurisdicciones del strip "Integrado con" de la landing pública. La metadata
 // visual (logo/color) vive en el front; acá solo el estado por jurisdicción.
-const LANDING_ITEMS: Array<{ key: LandingIntegrationKey; label: string }> = [
-	{ key: "pjn", label: "PJN — Poder Judicial de la Nación" },
-	{ key: "mev", label: "MEV — Prov. de Buenos Aires" },
-	{ key: "eje", label: "EJE — Ciudad de Buenos Aires" },
-	{ key: "seclo", label: "SECLO" },
-	{ key: "pjsalta", label: "Poder Judicial de Salta" },
-	{ key: "pjcatamarca", label: "Poder Judicial de Catamarca" },
+const LANDING_ITEMS: Array<{ key: LandingIntegrationKey; label: string; defaultOrder: number }> = [
+	{ key: "pjn", label: "PJN — Poder Judicial de la Nación", defaultOrder: 1 },
+	{ key: "mev", label: "MEV — Prov. de Buenos Aires", defaultOrder: 2 },
+	{ key: "eje", label: "EJE — Ciudad de Buenos Aires", defaultOrder: 3 },
+	{ key: "seclo", label: "SECLO", defaultOrder: 4 },
+	{ key: "pjsalta", label: "Poder Judicial de Salta", defaultOrder: 5 },
+	{ key: "pjcatamarca", label: "Poder Judicial de Catamarca", defaultOrder: 6 },
 ];
 
 const LANDING_STATUS_OPTIONS: Array<{ value: LandingIntegrationStatus; label: string }> = [
@@ -164,13 +164,14 @@ const IntegrationsPage: React.FC = () => {
 		}
 	};
 
-	// Strip "Integrado con" de la landing pública — un select por jurisdicción
-	const handleLandingStatus = async (key: LandingIntegrationKey, status: LandingIntegrationStatus) => {
+	// Strip "Integrado con" de la landing pública — status y orden por jurisdicción
+	const handleLandingUpdate = async (key: LandingIntegrationKey, payload: { status?: LandingIntegrationStatus; order?: number }) => {
 		setIntegrations((s) => ({ ...s, saving: true }));
 		try {
-			const res = await IntegrationsConfigService.updateLandingIntegration(key, status);
+			const res = await IntegrationsConfigService.updateLandingIntegration(key, payload);
 			setIntegrations({ loading: false, saving: false, error: null, data: res.data });
-			enqueueSnackbar(`Landing: ${key} → ${status}`, { variant: "success" });
+			const detail = payload.status !== undefined ? payload.status : `orden ${payload.order}`;
+			enqueueSnackbar(`Landing: ${key} → ${detail}`, { variant: "success" });
 		} catch (err: any) {
 			enqueueSnackbar(err?.response?.data?.message || `Error al actualizar ${key}`, { variant: "error" });
 			setIntegrations((s) => ({ ...s, saving: false }));
@@ -484,11 +485,16 @@ const IntegrationsPage: React.FC = () => {
 					<Skeleton variant="rounded" height={120} />
 				) : (
 					<Grid container spacing={1.5}>
-						{LANDING_ITEMS.map((item) => {
-							const flag = integrations.data?.landingIntegrations?.[item.key];
-							const value: LandingIntegrationStatus =
-								flag?.status ?? (item.key === "pjn" || item.key === "mev" || item.key === "eje" ? "available" : "comingSoon");
-							return (
+						{[...LANDING_ITEMS]
+							.map((item) => {
+								const flag = integrations.data?.landingIntegrations?.[item.key];
+								const value: LandingIntegrationStatus =
+									flag?.status ?? (item.key === "pjn" || item.key === "mev" || item.key === "eje" ? "available" : "comingSoon");
+								const order = typeof flag?.order === "number" ? flag.order : item.defaultOrder;
+								return { item, flag, value, order };
+							})
+							.sort((a, b) => a.order - b.order)
+							.map(({ item, flag, value, order }) => (
 								<Grid item xs={12} sm={6} md={4} key={item.key}>
 									<Stack
 										direction="row"
@@ -497,7 +503,7 @@ const IntegrationsPage: React.FC = () => {
 										spacing={1}
 										sx={{ p: 1.25, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}
 									>
-										<Box sx={{ minWidth: 0 }}>
+										<Box sx={{ minWidth: 0, flex: 1 }}>
 											<Typography variant="body2" fontWeight={600} noWrap>
 												{item.label}
 											</Typography>
@@ -507,11 +513,29 @@ const IntegrationsPage: React.FC = () => {
 												</Typography>
 											)}
 										</Box>
+										<Tooltip title="Posición en el strip (menor = más a la izquierda). El orden se refleja en la landing y en este listado.">
+											<TextField
+												size="small"
+												type="number"
+												label="Orden"
+												defaultValue={order}
+												key={`${item.key}-order-${order}`}
+												inputProps={{ min: 1, max: 99, style: { width: 44 } }}
+												disabled={integrations.saving}
+												onBlur={(e) => {
+													const next = parseInt(e.target.value, 10);
+													if (!isNaN(next) && next >= 1 && next <= 99 && next !== order) {
+														handleLandingUpdate(item.key, { order: next });
+													}
+												}}
+												sx={{ flexShrink: 0 }}
+											/>
+										</Tooltip>
 										<TextField
 											select
 											size="small"
 											value={value}
-											onChange={(e) => handleLandingStatus(item.key, e.target.value as LandingIntegrationStatus)}
+											onChange={(e) => handleLandingUpdate(item.key, { status: e.target.value as LandingIntegrationStatus })}
 											disabled={integrations.saving}
 											sx={{ minWidth: 150, flexShrink: 0 }}
 										>
@@ -523,8 +547,7 @@ const IntegrationsPage: React.FC = () => {
 										</TextField>
 									</Stack>
 								</Grid>
-							);
-						})}
+							))}
 					</Grid>
 				)}
 			</Box>
