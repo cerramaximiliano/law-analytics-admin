@@ -433,6 +433,13 @@ export interface UserViewStatsData {
 	users: Array<{ id: string; email: string | null; n: number; archived: number; credError: boolean }>;
 }
 
+export interface FolderRowStatsData {
+	total: number;
+	filters: { archived: string };
+	byRow: Array<{ row: string; n: number; pct: number }>;
+	jurisdictions: Array<{ jurisdiction: string; total: number; pct: number; rows: Array<{ row: string; n: number; pct: number }> }>;
+}
+
 export interface SyncedCausasSummary {
 	totalCausas: number;
 	withMovements: number;
@@ -764,6 +771,14 @@ class PjnCredentialsService {
 		userId?: string;
 	}): Promise<{ success: boolean; data: UserViewStatsData }> {
 		const response = await adminAxios.get("/api/pjn-credentials/user-view-stats", { params });
+		return response.data;
+	}
+
+	/**
+	 * Tipos de fila del listado del usuario por jurisdicción (todas las carpetas vinculadas).
+	 */
+	async getFolderRowStats(params: { archived?: "all" | "true" | "false" }): Promise<{ success: boolean; data: FolderRowStatsData }> {
+		const response = await adminAxios.get("/api/pjn-credentials/folder-row-stats", { params });
 		return response.data;
 	}
 
