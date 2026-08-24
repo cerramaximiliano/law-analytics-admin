@@ -584,6 +584,18 @@ const EmailTemplates = () => {
 	const [filter, setFilter] = useState<string>("");
 	const [categoryFilter, setCategoryFilter] = useState<string>("all");
 	const [sourceFilter, setSourceFilter] = useState<string>("all");
+
+	// Origen del envío (campo sendingSource de emailtemplates). "marketing" es el
+	// default histórico de los docs sin campo; los workers de scraping (hoy
+	// eje-workers) etiquetan el suyo al seedear — ver seed-eje-verify-templates.ts.
+	const SOURCE_LABELS: Record<string, string> = {
+		marketing: "marketing",
+		"la-notification": "notificaciones",
+		"eje-workers": "eje-workers",
+	};
+	const sourceLabel = (src?: string) => SOURCE_LABELS[src || "marketing"] || src || "marketing";
+	const sourceColor = (src?: string): "primary" | "secondary" | "default" =>
+		(src || "marketing") === "la-notification" ? "primary" : src === "eje-workers" ? "secondary" : "default";
 	const [statusFilter, setStatusFilter] = useState<string>("all");
 	const [filtersOpen, setFiltersOpen] = useState<boolean>(false);
 
@@ -1807,6 +1819,7 @@ const EmailTemplates = () => {
 										<MenuItem value="all">Todas las fuentes</MenuItem>
 										<MenuItem value="la-notification">Notificaciones (la-notification)</MenuItem>
 										<MenuItem value="marketing">Marketing</MenuItem>
+										<MenuItem value="eje-workers">Workers EJE (eje-workers)</MenuItem>
 									</Select>
 								</FormControl>
 							</Grid>
@@ -1908,9 +1921,9 @@ const EmailTemplates = () => {
 											</Stack>
 											<Stack direction="row" spacing={0.5} sx={{ mt: 1 }} flexWrap="wrap" useFlexGap>
 												<Chip
-													label={(template.sendingSource || "marketing") === "la-notification" ? "notificaciones" : "marketing"}
+													label={sourceLabel(template.sendingSource)}
 													size="small"
-													color={(template.sendingSource || "marketing") === "la-notification" ? "primary" : "default"}
+													color={sourceColor(template.sendingSource)}
 													variant="outlined"
 													sx={{ height: 20, fontSize: "0.65rem" }}
 												/>
@@ -2019,9 +2032,9 @@ const EmailTemplates = () => {
 																</Tooltip>
 															)}
 															<Chip
-																label={(template.sendingSource || "marketing") === "la-notification" ? "notificaciones" : "marketing"}
+																label={sourceLabel(template.sendingSource)}
 																size="small"
-																color={(template.sendingSource || "marketing") === "la-notification" ? "primary" : "default"}
+																color={sourceColor(template.sendingSource)}
 																variant="outlined"
 																sx={{ height: 20, fontSize: "0.65rem", fontWeight: 600, letterSpacing: 0.4 }}
 															/>
