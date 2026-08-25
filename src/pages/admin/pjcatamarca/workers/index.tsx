@@ -35,6 +35,7 @@ import {
 	DialogContent,
 	DialogActions,
 	InputAdornment,
+	MenuItem,
 } from "@mui/material";
 import {
 	Refresh,
@@ -61,6 +62,8 @@ import configPjCatamarca, {
 	IAllWorkersResponse,
 	IManagerWorkerConfig,
 	IWorkerStatusDetail,
+	EngineMode,
+	IEngineStats,
 	IDailyWorkerStats,
 	IAlert,
 	IEffectiveSchedule,
@@ -114,6 +117,42 @@ const formatWorkDays = (days: number[] = []): string => {
 };
 
 // Worker Card Component
+// Motor de datos: modo configurado vs. lo que el worker usó de verdad
+// (currentState.workers.X.engine, reportado al cierre de cada ciclo).
+const ENGINE_LABEL: Record<string, string> = { auto: "Auto", api: "Solo API", scraper: "Solo scraping" };
+const EngineBadge = ({ configured, stats }: { configured?: EngineMode; stats?: IEngineStats }) => {
+	const mode = configured || "auto";
+	const apiOk = stats?.apiOk || 0;
+	const fallbacks = stats?.fallbacks || 0;
+	const scraperCalls = stats?.scraperCalls || 0;
+	const total = apiOk + fallbacks + scraperCalls;
+	const degraded = mode === "auto" && fallbacks > 0;
+	const fmt = (d?: string) => (d ? new Date(d).toLocaleString("es-AR") : "-");
+	const tooltip = stats?.reportedAt
+		? `Desde ${stats.since ? fmt(stats.since) : "el arranque"}: ${apiOk} por API · ${fallbacks} fallback${fallbacks === 1 ? "" : "s"} a scraping · ${scraperCalls} por scraping` +
+		  (stats.lastFallbackAt ? `\nÚltimo fallback ${fmt(stats.lastFallbackAt)}: ${stats.lastFallbackReason || "-"}` : "") +
+		  `\nReportado ${fmt(stats.reportedAt)}`
+		: "El worker todavía no reportó estadísticas del motor (se informan al cierre de cada ciclo)";
+	const usedLabel = !stats?.reportedAt
+		? "sin datos"
+		: total === 0
+		? "sin llamadas"
+		: stats?.lastEngineUsed === "scraper"
+		? "usando scraping"
+		: fallbacks > 0
+		? `API · ${fallbacks} fallback${fallbacks === 1 ? "" : "s"}`
+		: "usando API";
+	const color: "default" | "success" | "warning" = !stats?.reportedAt ? "default" : degraded || stats?.lastEngineUsed === "scraper" ? "warning" : "success";
+	return (
+		<Tooltip title={<span style={{ whiteSpace: "pre-line" }}>{tooltip}</span>}>
+			<Stack direction="row" spacing={0.5} alignItems="center">
+				<Chip label={ENGINE_LABEL[mode] || mode} size="small" variant="outlined" />
+				<Chip label={usedLabel} size="small" color={color} />
+			</Stack>
+		</Tooltip>
+	);
+};
+
 const WorkerCard: React.FC<WorkerCardProps> = ({ workerType, config, status, effectiveSchedule, onToggle, onEdit, loading }) => {
 	const theme = useTheme();
 
@@ -225,6 +264,12 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ workerType, config, status, eff
 									{status?.optimalInstances || 0}
 								</Typography>
 							</Box>
+							{(workerType === "verifier" || workerType === "updater") && (
+								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+									<Typography variant="body2">Motor de datos:</Typography>
+									<EngineBadge configured={config?.engine} stats={status?.engine} />
+								</Box>
+							)}
 						</Stack>
 					</Grid>
 
@@ -473,6 +518,23 @@ const EditWorkerDialog: React.FC<EditDialogProps> = ({ open, workerType, config,
 							InputProps={{ inputProps: { min: 0, max: 10 } }}
 						/>
 					</Grid>
+					{(workerType === "verifier" || workerType === "updater") && (
+						<Grid item xs={12}>
+							<TextField
+								select
+								label="Motor de datos"
+								fullWidth
+								size="small"
+								value={formData.engine || "auto"}
+								onChange={(e) => setFormData((prev) => ({ ...prev, engine: e.target.value as EngineMode }))}
+								helperText="Se aplica en el próximo ciclo, sin reinicio. Auto = API pública del portal con fallback a scraping (Puppeteer) si falla."
+							>
+								<MenuItem value="auto">Auto — API con fallback a scraping</MenuItem>
+								<MenuItem value="api">Solo API (sin fallback)</MenuItem>
+								<MenuItem value="scraper">Solo scraping (Puppeteer)</MenuItem>
+							</TextField>
+						</Grid>
+					)}
 					<Grid item xs={12}>
 						<CronSelector
 							label="Frecuencia"

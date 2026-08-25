@@ -22,6 +22,20 @@ export interface IEffectiveSchedule extends IWorkerSchedule {
 	source?: "global" | "worker-specific";
 }
 
+export type EngineMode = "auto" | "api" | "scraper";
+
+export interface IEngineStats {
+	mode?: EngineMode;
+	lastEngineUsed?: "api" | "scraper";
+	apiOk?: number;
+	fallbacks?: number;
+	scraperCalls?: number;
+	lastFallbackAt?: string;
+	lastFallbackReason?: string;
+	since?: string;
+	reportedAt?: string;
+}
+
 export interface IManagerWorkerConfig {
 	enabled: boolean;
 	cronExpression: string;
@@ -42,6 +56,7 @@ export interface IManagerWorkerConfig {
 	workerScript: string;
 	maxMemoryRestart: string;
 	pivotMaxResults?: number; // sólo aplica a verifier
+	engine?: EngineMode; // verifier/updater: auto (API→fallback scraping) | api | scraper
 }
 
 export interface IEmailConfig {
@@ -78,6 +93,7 @@ export interface IWorkerStatus {
 	lastHeartbeat?: string;
 	processedThisCycle: number;
 	errorsThisCycle: number;
+	engine?: IEngineStats; // qué motor usó de verdad (reportado por el worker)
 }
 
 export interface ISystemResources {
