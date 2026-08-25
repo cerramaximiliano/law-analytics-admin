@@ -3394,8 +3394,8 @@ const AdminDashboard = () => {
 										arrow
 										title={
 											scbaCoverage?.updatePolicyMode === "unified"
-												? "Política de update UNIFICADA: activas y archivadas se refrescan juntas cada ~2 h en horario laboral (8-20 h). El desglose se mantiene para ver cada segmento por separado. Configurable en Workers → SCBA manager."
-												: "Política de update DIVIDIDA: las causas con carpeta activa se refrescan cada ~2 h (8-20 h). Las de carpeta archivada se actualizan de madrugada (4-6 h) y solo si pasaron +24 h, por eso no suman a la cobertura del día hasta su ventana nocturna — no es un error. Configurable en Workers → SCBA manager."
+												? `Política de update UNIFICADA: activas y archivadas se refrescan juntas en la ventana del update (${scbaCoverage?.active?.schedule ?? "ver SCBA manager"}). El desglose se mantiene para ver cada segmento por separado. Configurable en Workers → SCBA manager.`
+												: `Política de update DIVIDIDA: las causas con carpeta activa se refrescan en la ventana del update (${scbaCoverage?.active?.schedule ?? "ver SCBA manager"}). Las de carpeta archivada se actualizan en su ventana propia (${scbaCoverage?.archived?.schedule ?? "madrugada"}) y solo si pasaron +24 h, por eso no suman a la cobertura del día hasta esa ventana — no es un error. Configurable en Workers → SCBA manager.`
 										}
 									>
 										<Box
@@ -3437,7 +3437,7 @@ const AdminDashboard = () => {
 										total: scbaCoverage.total,
 										pending: scbaCoverage.pending,
 										withErrors: scbaCoverage.withErrors,
-										schedule: "cada ~2 h (8-20 h)",
+										schedule: "ventana del update (ver SCBA manager)",
 									};
 									const archived = scbaCoverage.archived ?? {
 										coveragePercent: 0,
@@ -3445,7 +3445,7 @@ const AdminDashboard = () => {
 										total: 0,
 										pending: 0,
 										withErrors: 0,
-										schedule: unified ? "cada ~2 h (8-20 h, unificado)" : "madrugada (4-6 h)",
+										schedule: unified ? "ventana del update (unificado)" : "madrugada (4-6 h)",
 									};
 									const barColor = (p: number) => (p >= 99 ? COLORS.success.main : p > 70 ? COLORS.warning.main : COLORS.error.main);
 									const renderLine = (label: string, b: typeof active, big: boolean, accent: string) => (

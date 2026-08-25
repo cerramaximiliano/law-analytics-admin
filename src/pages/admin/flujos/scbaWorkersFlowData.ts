@@ -6,8 +6,20 @@
 import { FlowSpec, FlowNode, FlowEdge } from "../causas/flujos/flowTypes";
 import { ScbaUpdatePolicyMode } from "api/scbaManager";
 
-export function buildScbaWorkersSpec(mode: ScbaUpdatePolicyMode): FlowSpec {
+export interface ScbaUpdateScheduleInfo {
+	/** Ventana horaria ART del update, ej. "16-18 ART". */
+	window?: string;
+	/** updateThresholdHours vigente (cada causa se refresca como máximo una vez por este lapso). */
+	thresholdHours?: number;
+}
+
+export function buildScbaWorkersSpec(mode: ScbaUpdatePolicyMode, schedule: ScbaUpdateScheduleInfo = {}): FlowSpec {
 	const unified = mode === "unified";
+	// Data-driven desde configuracion-scba (workers.update.schedule + updateThresholdHours);
+	// el fallback solo aplica si el settings no pudo leerse.
+	const updateWindow = schedule.window ?? "ventana horaria (config)";
+	const updateThreshold = schedule.thresholdHours != null ? `threshold ${schedule.thresholdHours}h` : "threshold (config)";
+	const updateHead = `${updateWindow} · ${updateThreshold}`;
 
 	const nodes: FlowNode[] = [
 		{ id: "user", x: 40, y: 30, w: 200, h: 60, kind: "actor", label: "Usuario", sub: ["alta / actualización de credencial"] },
@@ -60,8 +72,8 @@ export function buildScbaWorkersSpec(mode: ScbaUpdatePolicyMode): FlowSpec {
 			kind: "private",
 			label: "Actualización Periódica",
 			sub: unified
-				? ["8-20 ART · threshold 2h", "TODAS las causas con folder", "(archivadas incluidas — unified)"]
-				: ["8-20 ART · threshold 2h", "solo causas con ≥1 folder activo"],
+				? [updateHead, "TODAS las causas con folder", "(archivadas incluidas — unified)"]
+				: [updateHead, "solo causas con ≥1 folder activo"],
 		},
 		{
 			id: "updateArchived",

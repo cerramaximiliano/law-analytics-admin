@@ -11,18 +11,30 @@
 import React, { useEffect, useState } from "react";
 import { Box, Chip, Skeleton, Stack, Typography } from "@mui/material";
 import FlowDiagram from "../causas/flujos/FlowDiagram";
-import { buildScbaWorkersSpec } from "./scbaWorkersFlowData";
+import { buildScbaWorkersSpec, ScbaUpdateScheduleInfo } from "./scbaWorkersFlowData";
 import ScbaManagerService, { ScbaUpdatePolicyMode } from "api/scbaManager";
 
 const ScbaWorkersFlow: React.FC = () => {
 	const [mode, setMode] = useState<ScbaUpdatePolicyMode | null>(null);
+	const [schedule, setSchedule] = useState<ScbaUpdateScheduleInfo>({});
 	const [failed, setFailed] = useState(false);
 
 	useEffect(() => {
 		let cancelled = false;
 		ScbaManagerService.getSettings()
 			.then((r) => {
-				if (!cancelled) setMode(r.data?.updatePolicy?.mode ?? "split");
+				if (cancelled) return;
+				const cfg: any = r.data ?? {};
+				setMode(cfg.updatePolicy?.mode ?? "split");
+				// Horario del update, data-driven: schedule propio del worker o el global.
+				const upd = cfg.workers?.update ?? {};
+				const sch = upd.schedule?.useGlobalSchedule === false && upd.schedule ? upd.schedule : cfg;
+				const start = sch?.workStartHour;
+				const end = sch?.workEndHour;
+				setSchedule({
+					window: typeof start === "number" && typeof end === "number" ? `${start}-${end} ART` : undefined,
+					thresholdHours: typeof upd.updateThresholdHours === "number" ? upd.updateThresholdHours : undefined,
+				});
 			})
 			.catch(() => {
 				if (!cancelled) {
@@ -40,7 +52,7 @@ const ScbaWorkersFlow: React.FC = () => {
 	}
 
 	const unified = mode === "unified";
-	const spec = buildScbaWorkersSpec(mode);
+	const spec = buildScbaWorkersSpec(mode, schedule);
 
 	return (
 		<Box>
