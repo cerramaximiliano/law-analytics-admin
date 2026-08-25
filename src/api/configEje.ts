@@ -5,11 +5,26 @@ import ejeAxios from "../utils/ejeAxios";
 
 // ========== INTERFACES ==========
 
+export type EngineMode = "auto" | "api" | "scraper";
+
+export interface IEngineStats {
+	mode?: EngineMode;
+	lastEngineUsed?: "api" | "scraper";
+	apiOk?: number;
+	fallbacks?: number;
+	scraperCalls?: number;
+	lastFallbackAt?: string;
+	lastFallbackReason?: string;
+	since?: string;
+	reportedAt?: string;
+}
+
 export interface IWorkerConfig {
 	enabled: boolean;
 	batchSize: number;
 	delayBetweenRequests: number;
 	maxRetries: number;
+	engine?: EngineMode; // verification/update: auto (API→fallback scraping) | api | scraper
 	retryDelay: number;
 }
 
@@ -329,6 +344,7 @@ export interface IManagerWorkerConfig {
 	batchSize: number;
 	delayBetweenRequests: number;
 	maxRetries: number;
+	engine?: EngineMode; // verification/update: auto | api | scraper
 	schedule?: IWorkerSchedule;
 	cronExpression: string;
 	workerName: string;
@@ -343,6 +359,7 @@ export interface IWorkerStatusDetail {
 	lastProcessedAt?: string;
 	processedThisCycle: number;
 	errorsThisCycle: number;
+	engine?: IEngineStats; // qué motor usó de verdad (reportado por el worker)
 }
 
 export interface IGlobalSettings {
