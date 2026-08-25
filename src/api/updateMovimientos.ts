@@ -1,4 +1,9 @@
-import pjnAxios from "utils/pjnAxios";
+// workersAxios (pjn/cache-api → rs0) y NO pjnAxios (pjn/api del hub → Atlas):
+// el manager y los workers de update-movimientos leen su configuración de rs0.
+// Con pjnAxios, los PUT de esta vista escribían en Atlas — el worker nunca los
+// veía y el espejo local→Atlas los pisaba en el ciclo siguiente (split-brain,
+// detectado 25/08/2026). Mismo patrón que etapaStats.ts / plazos.ts.
+import workersAxios from "utils/workersAxios";
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
@@ -95,22 +100,22 @@ const BASE = "/api/configuracion-update-movimientos";
 
 const UpdateMovimientosService = {
 	async getWorkerConfigs(): Promise<UpdateMovimientosWorkerConfig[]> {
-		const res = await pjnAxios.get<{ success: boolean; data: UpdateMovimientosWorkerConfig[] }>(BASE + "/");
+		const res = await workersAxios.get<{ success: boolean; data: UpdateMovimientosWorkerConfig[] }>(BASE + "/");
 		return res.data.data;
 	},
 
 	async updateWorkerConfig(id: string, data: Partial<UpdateMovimientosWorkerConfig>): Promise<UpdateMovimientosWorkerConfig> {
-		const res = await pjnAxios.put<{ success: boolean; data: UpdateMovimientosWorkerConfig }>(`${BASE}/${id}`, data);
+		const res = await workersAxios.put<{ success: boolean; data: UpdateMovimientosWorkerConfig }>(`${BASE}/${id}`, data);
 		return res.data.data;
 	},
 
 	async getManagerConfig(): Promise<UpdateMovimientosManagerConfig> {
-		const res = await pjnAxios.get<{ success: boolean; data: UpdateMovimientosManagerConfig }>(BASE + "/manager");
+		const res = await workersAxios.get<{ success: boolean; data: UpdateMovimientosManagerConfig }>(BASE + "/manager");
 		return res.data.data;
 	},
 
 	async updateManagerConfig(config: Partial<UpdateMovimientosManagerConfig["config"]>): Promise<UpdateMovimientosManagerConfig> {
-		const res = await pjnAxios.put<{ success: boolean; data: UpdateMovimientosManagerConfig }>(BASE + "/manager", { config });
+		const res = await workersAxios.put<{ success: boolean; data: UpdateMovimientosManagerConfig }>(BASE + "/manager", { config });
 		return res.data.data;
 	},
 };
