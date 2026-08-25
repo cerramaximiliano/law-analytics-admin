@@ -358,7 +358,9 @@ const CarpetasPivotsPjSalta = () => {
 		try {
 			const response = await CausasPjSaltaService.resolvePivot(confirmDialog.pivotId, confirmDialog.causaId);
 			if (response.success) {
-				enqueueSnackbar("Pivot resuelto exitosamente", {
+				const d = response.data || ({} as any);
+				const resumen = `${d.foldersMoved ?? 0} carpeta(s) vinculada(s)${d.foldersSkipped ? ` · ${d.foldersSkipped} ya resuelta(s) por el usuario (no se pisan)` : ""}${d.foldersRemaining ? ` · ${d.foldersRemaining} siguen pendientes en el pivote` : " · pivote resuelto"}`;
+				enqueueSnackbar(`Resuelto: ${resumen}`, {
 					variant: "success",
 					anchorOrigin: { vertical: "bottom", horizontal: "right" },
 				});
@@ -644,7 +646,7 @@ const CarpetasPivotsPjSalta = () => {
 						</Box>
 					)}
 					<Alert severity="warning" sx={{ mt: 2 }}>
-						Esta acción vinculará el folder original a la causa seleccionada y eliminará las demás opciones no utilizadas.
+						Se vincularán a esta causa solo las carpetas que todavía están esperando selección sobre este pivote; las que el usuario ya resolvió no se modifican. Las demás candidatas quedan como causas (no se eliminan).
 					</Alert>
 				</DialogContent>
 				<DialogActions>

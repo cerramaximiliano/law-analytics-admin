@@ -201,7 +201,7 @@ function normalizePaginationResponse(resp: CausasPjMendozaResponse): CausasPjMen
 			hasNextPage: p.page < p.pages,
 			hasPrevPage: p.page > 1,
 		};
-		resp.count = Array.isArray(resp.data) ? resp.data.length : 0;
+		resp.count = p.total ?? (Array.isArray(resp.data) ? resp.data.length : 0); // total real, no el largo de la página
 		resp.totalInDatabase = p.total;
 	}
 	return resp;
@@ -312,11 +312,14 @@ export class CausasPjMendozaService {
 	static async resolvePivot(
 		pivotId: string,
 		selectedCausaId: string,
+		folderIds?: string[],
 	): Promise<{
 		success: boolean;
-		data: { pivot: CausaPjMendoza; selectedCausa: CausaPjMendoza; foldersMoved: number };
+		data: { pivot: CausaPjMendoza; selectedCausa: CausaPjMendoza; foldersMoved: number; foldersSkipped?: number; foldersRemaining?: number };
 	}> {
-		const response = await pjmendozaAxios.post(`/causas/${encodeURIComponent(pivotId)}/resolve-pivot`, { selectedCausaId });
+		// Resolución POR FOLDER: solo se mueven los que siguen pendientes sobre el pivote
+		// (o el subconjunto `folderIds`); el pivote queda resuelto al vaciarse.
+		const response = await pjmendozaAxios.post(`/causas/${encodeURIComponent(pivotId)}/resolve-pivot`, { selectedCausaId, ...(folderIds?.length ? { folderIds } : {}) });
 		return response.data;
 	}
 

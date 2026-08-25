@@ -1473,7 +1473,7 @@ const iolGroups = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", label: string):
 				{
 					key: `${jur}.ok.resolved_api`,
 					title: "Pivote resuelto por API (global)",
-					producer: `${jur}-api causasController.js resolve-pivot → moveFoldersFromPivotToSelected: mueve TODOS los folders del pivote a la causa elegida${
+					producer: `${jur}-api causasController.js resolve-pivot → moveFoldersFromPivotToSelected: mueve solo los folders que siguen pending_selection sobre ese pivote (resolución por folder, IOL-6; body.folderIds acota)${
 						isMza
 							? " — versión degradada en Mendoza: no propaga carátula/materia/folderJuris/judFolder ni limpia causaAssociationError"
 							: ""
@@ -1495,7 +1495,7 @@ const iolGroups = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", label: string):
 				{
 					key: `${jur}.ok.stale_reset`,
 					title: "Causa reseteada por admin, folder no enterado",
-					producer: `${jur}-api causasController.js resetVerification: solo la causa (verified=false); el folder sigue success/true/true`,
+					producer: `${jur}-api causasController.js resetVerification: la causa (verified=false, errorCount=0) y el folder vuelve a 'pending' + causaVerified=false (IOL-10)`,
 					fields: "source=auto · verified=true · isValid=true · assoc=success (causa verified=false)",
 					entry: entry({ ...base }, { expanded: pill("valid"), detail: { chip: pill("valid"), gate: null } }),
 					warn: "Muestra “válida” sobre una causa sin verificar.",
@@ -1521,7 +1521,7 @@ const iolGroups = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", label: string):
 				{
 					key: `${jur}.pending.stuck`,
 					title: "Causa marcada inválida por stuck-worker, folder congelado",
-					producer: `${jur}-workers stuck-worker.js:74-82: errorCount≥10 → causa isValid=false, verified=true; CERO escrituras a folders`,
+					producer: `${jur}-workers stuck-worker.js: reencola errorCount≥3 cada 2h durante 48h y luego invalida (causa isValid=false) aplicando W1 al folder ('failed') + mail (IOL-2/T2)`,
 					fields: "source=auto · verified=false · assoc=pending (causa isValid=false)",
 					entry: entry(
 						{ ...base, causaVerified: false, causaIsValid: undefined, causaAssociationStatus: "pending" },
@@ -1577,7 +1577,7 @@ const iolGroups = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", label: string):
 							inAttentionTable: true,
 						},
 					),
-					warn: "Indistinguible del caso anterior: el selector muestra 10 candidatos como si fueran todos; el “N de M — refinar” no llega al front.",
+					warn: "El folder guarda tooManyResults/searchTotalResults y el selector muestra “se muestran 10 de M — refiná” (IOL-1, efectivo desde 2026-08-25).",
 				},
 				{
 					key: `${jur}.pivot.reuse`,
@@ -1694,7 +1694,7 @@ const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: strin
 			severity: "alta",
 			title: "stuck-worker invalida la causa pero no el folder",
 			detail:
-				"Tras 10 errores la causa pasa a isValid=false/verified=true y se manda mail 'failed', pero el folder queda 'pending' + causaVerified=false para siempre.",
+				"Tras 48h con errores la causa pasa a isValid=false y el folder a 'failed' (W1) con mail; antes (≤48h) se reencola cada 2h.",
 			where: `${jur}-workers stuck-worker.js:74-82`,
 		},
 		{
@@ -1718,7 +1718,7 @@ const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: strin
 			severity: "media",
 			title: "Sin señal cuando el expediente desaparece del portal",
 			detail:
-				"listRemovedSource no admite IOL; el updater solo incrementa errorCount en la causa y causaLastSyncDate se congela sin indicador.",
+				"listRemovedSource admite pjsalta/pjcatamarca/pjmendoza: 3 'no encontrado' consecutivos (notFoundStreak) → listRemoved y badge “Ya no en el portal” (IOL-8).",
 			where: "models/Folder.js:638 · updater.js (U2)",
 		},
 		{
@@ -1726,14 +1726,14 @@ const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: strin
 			severity: "baja",
 			title: "storePendingCausas rechaza IOL",
 			detail:
-				"causaService acepta solo CausasEje|MEV mientras el controller valida CausasPjSalta: ruta muerta (los workers escriben pending_selection directo).",
+				"causaService y el controller aceptan los 3 tipos IOL (IOL-9); en la práctica pending_selection lo escriben los workers.",
 			where: "law-analytics-server causaService.js:629 · folderController.js:5141",
 		},
 		{
 			id: `${prefix}7`,
 			severity: "baja",
 			title: "Reset de verificación por admin no toca el folder",
-			detail: "resetVerification deja la causa verified=false y el folder success/true/true.",
+			detail: "resetVerification resetea causa (verified=false, errorCount=0) y folder ('pending', causaVerified=false).",
 			where: `${jur}-api causasController.js:295`,
 		},
 	];
@@ -1742,7 +1742,7 @@ const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: strin
 			{
 				id: `${prefix}0a`,
 				severity: "alta",
-				title: "Toda carpeta de Mendoza nace etiquetada “Catamarca”",
+				title: "Default de Mendoza corregido (“Mendoza - 1ª Circunscripción - Mendoza”, IOL-3; 3 carpetas backfilleadas)",
 				detail:
 					"defaultMendozaFolderJuris = { label: 'Catamarca', item: 'Catamarca - 1ª Circunscripción - Capital' }. Solo se corrige si el verifier encuentra 1 resultado con overwrite; nunca en pending/failed/pivote ni en la resolución por API.",
 				where: "law-analytics-server folderController.js:1781, :1795, :1811",
@@ -1771,7 +1771,7 @@ const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: strin
 			severity: "baja",
 			title: "deleteFolder sin rama propia",
 			detail:
-				"Solo CausasPjSalta tiene rama en deleteFolderById; Catamarca/Mendoza caen al else (pjn-api) y funcionan por el fallback local, sin pasar por su API (sin updateHistory).",
+				"Las 3 IOL tienen rama propia en deleteFolderById con fallback local (IOL-11) (sin updateHistory).",
 			where: "law-analytics-server folderController.js:3097-3140",
 		});
 	}

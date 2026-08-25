@@ -380,6 +380,7 @@ const CarpetasNoVerificadasPjMendoza = () => {
 											<TableCell align="center">Válido</TableCell>
 											<TableCell align="center">Errores</TableCell>
 											<TableCell>Último error</TableCell>
+											<TableCell align="center">Acciones</TableCell>
 										</TableRow>
 									</TableHead>
 									<TableBody>
@@ -438,6 +439,24 @@ const CarpetasNoVerificadasPjMendoza = () => {
 													<Typography variant="caption" color="error.main" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
 														{causa.lastError || "—"}
 													</Typography>
+												</TableCell>
+												<TableCell align="center">
+													<Tooltip title="Reintentar verificación (errorCount=0, la carpeta vuelve a 'pendiente')">
+														<IconButton
+															size="small"
+															onClick={async () => {
+																try {
+																	await CausasPjMendozaService.resetVerification(getId(causa._id));
+																	enqueueSnackbar("Re-verificación encolada", { variant: "success" });
+																	handleRefresh();
+																} catch (e: any) {
+																	enqueueSnackbar(e.response?.data?.message || "No se pudo encolar la re-verificación", { variant: "error" });
+																}
+															}}
+														>
+															<Refresh size={16} />
+														</IconButton>
+													</Tooltip>
 												</TableCell>
 											</TableRow>
 										))}

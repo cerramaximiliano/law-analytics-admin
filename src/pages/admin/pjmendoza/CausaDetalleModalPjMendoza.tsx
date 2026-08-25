@@ -219,7 +219,9 @@ const CausaDetalleModalPjMendoza = ({ open, onClose, causa, onCausaUpdated }: Ca
 			const causaId = getId(causa._id);
 
 			// Preparar datos para enviar
-			const dataToUpdate = { ...editedCausa };
+			// La API solo persiste `update` (y userUpdatesEnabled/folderIds/userCausaIds); los
+			// demás campos son datos del portal y no se editan a mano.
+			const dataToUpdate: Record<string, any> = { update: editedCausa.update };
 
 			// Convertir lastUpdate si fue editado
 			if (dataToUpdate.lastUpdate) {
@@ -241,7 +243,7 @@ const CausaDetalleModalPjMendoza = ({ open, onClose, causa, onCausaUpdated }: Ca
 			const response = await CausasPjMendozaService.updateCausa(causaId, dataToUpdate);
 
 			if (response.success) {
-				enqueueSnackbar("Causa PJ Mendoza actualizada correctamente", {
+				enqueueSnackbar("Flag de actualización guardado (los datos del expediente los escribe el worker)", {
 					variant: "success",
 					anchorOrigin: { vertical: "bottom", horizontal: "right" },
 				});
