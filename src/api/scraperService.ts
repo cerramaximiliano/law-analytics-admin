@@ -179,7 +179,10 @@ export interface PostalTracking {
 	startDate?: string;
 	notificationDate?: string;
 	deadlineDays?: number;
+	/** Fecha del último scrape que no encontró la pieza. Se limpia al reencontrarla. */
 	notFoundAt?: string;
+	/** Respuestas "no encontrada" consecutivas. 0 = el último scrape SÍ la encontró. */
+	consecutiveNotFound?: number;
 	label?: string;
 	tags?: string[];
 	screenshotEnabled?: boolean;

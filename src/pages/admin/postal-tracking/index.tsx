@@ -1045,10 +1045,26 @@ const PostalTrackingPage = () => {
 													<Typography variant="body2">{detailTracking.trackingStatus}</Typography>
 												</Grid>
 											)}
-											{detailTracking.notFoundAt && (
+											{/* La alerta depende del estado ACTUAL, no de la sola presencia de
+											    `notFoundAt`: un único glitch transitorio del Correo dejaba el campo
+											    seteado para siempre y la pieza figuraba como perdida aunque se
+											    siguiera scrapeando bien. */}
+											{detailTracking.processingStatus === "not_found" && (
 												<Grid item xs={12}>
 													<Alert severity="warning">
-														Pieza no encontrada en Correo Argentino desde {formatDate(detailTracking.notFoundAt)}
+														Pieza no encontrada en Correo Argentino
+														{detailTracking.notFoundAt ? ` desde ${formatDate(detailTracking.notFoundAt)}` : ""}
+													</Alert>
+												</Grid>
+											)}
+											{detailTracking.processingStatus !== "not_found" && (detailTracking.consecutiveNotFound ?? 0) > 0 && (
+												<Grid item xs={12}>
+													<Alert severity="info">
+														El Correo no devolvió datos en {detailTracking.consecutiveNotFound}{" "}
+														{detailTracking.consecutiveNotFound === 1 ? "consulta" : "consultas"} consecutiva
+														{detailTracking.consecutiveNotFound === 1 ? "" : "s"}
+														{detailTracking.notFoundAt ? ` (última: ${formatDate(detailTracking.notFoundAt)})` : ""}. El seguimiento
+														sigue activo y se reintenta en el próximo ciclo.
 													</Alert>
 												</Grid>
 											)}
