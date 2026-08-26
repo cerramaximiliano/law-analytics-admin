@@ -455,14 +455,24 @@ export interface FolderRowStatsData {
 
 export type DailySyncState = "ok" | "no_run_today" | "incomplete" | "error" | "invalid" | "interrupted" | "running" | "inactive_user";
 
+export interface CausaCoverageHuerfana {
+	credentialId: string;
+	email: string | null;
+	causas: number;
+	motivo: string;
+}
+
 export interface CausaCoverageData {
 	universo: number;
+	credencialesEnabled: number;
+	porEstadoCredencial: { validas: number; sinCredencialViva: number };
+	porEstadoListado: { activas: number; salidas: number };
 	via: { lista: number; numero: number };
 	motivo: Record<string, number>;
 	actualizador: { "privado-lista": number; "privado-numero": number; "privado+publico": number };
-	credencialViva: { si: number; no: number };
-	porFuero: Record<string, { total: number; lista: number; numero: number }>;
-	invariante: { suma: number; universo: number; cierra: boolean };
+	huerfanas: CausaCoverageHuerfana[];
+	porFuero: Record<string, { total: number; vivas: number; lista: number; numero: number }>;
+	invariante: { suma: number; base: number; cierra: boolean; universo: number; cierraUniverso: boolean };
 }
 
 export interface WorkerStatKpi {

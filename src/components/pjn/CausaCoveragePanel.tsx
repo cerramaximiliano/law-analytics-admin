@@ -34,6 +34,10 @@ import pjnCredentialsService, { CausaCoverageData } from "api/pjnCredentials";
 // Orden FIJO: el color sigue a la categoría, no a su tamaño. Si un gajo cambia
 // de tamaño entre corridas no debe cambiar de color.
 const PALETA = ["#3A7BFF", "#0E9F8C", "#D97706", "#8B5CF6"];
+// Par de estado para el primer corte: verde-azulado = la credencial sirve,
+// ámbar = no la actualiza nadie. Sale de la misma paleta validada, así que
+// mantiene el contraste y la separación para daltonismo.
+const PALETA_ESTADO = ["#0E9F8C", "#D97706"];
 
 interface Gajo {
 	name: string;
@@ -78,6 +82,22 @@ const CausaCoveragePanel: React.FC = () => {
 	}
 	if (error || !data) return <Alert severity="warning">{error || "Sin datos de cobertura"}</Alert>;
 
+	// Primer corte: ¿la credencial sirve? Una causa vinculada a una credencial
+	// deshabilitada o inválida no la actualiza nadie — repartirla por vía de
+	// acceso junto al resto sobreestimaba la cobertura.
+	const estadoCredencial: Gajo[] = [
+		{ name: "Con credencial válida", value: data.porEstadoCredencial.validas, desc: `las actualiza el worker privado (${data.credencialesEnabled} credenciales activas)` },
+		{ name: "Sin credencial usable", value: data.porEstadoCredencial.sinCredencialViva, desc: "credencial deshabilitada o inválida: no las actualiza nadie por credencial" },
+	].filter((g) => g.value > 0);
+
+	// Segundo corte del universo: ¿sigue en el listado del portal? Una causa que
+	// salió (todos sus vínculos con removedFromSync) ya no está en Mis Causas —
+	// es distinto de "no tiene credencial": acá la credencial anda, la causa se fue.
+	const estadoListado: Gajo[] = [
+		{ name: "En el listado", value: data.porEstadoListado.activas, desc: "aparece en Mis Causas de al menos una credencial" },
+		{ name: "Salidas del listado", value: data.porEstadoListado.salidas, desc: "todos sus vínculos marcados removedFromSync: el portal ya no la lista" },
+	].filter((g) => g.value > 0);
+
 	const via: Gajo[] = [
 		{ name: "Por lista", value: data.via.lista, desc: "solo se llega entrando al listado de Mis Causas" },
 		{ name: "Por número", value: data.via.numero, desc: "el buscador en sesión las resuelve, sin captcha" },
@@ -95,9 +115,12 @@ const CausaCoveragePanel: React.FC = () => {
 		{ name: "Solo-listado", value: data.motivo["solo-listado"] || 0, desc: "sin prefijo de fuero: no hay número con qué buscarla" },
 	].filter((g) => g.value > 0);
 
-	const pct = (n: number) => (data.universo ? Math.round((n / data.universo) * 1000) / 10 : 0);
+	const base = data.porEstadoCredencial.validas;
+	// Los porcentajes del reparto son sobre las causas con credencial usable, que
+	// es el universo que el worker privado puede recorrer.
+	const pct = (n: number) => (base ? Math.round((n / base) * 1000) / 10 : 0);
 
-	const Torta: React.FC<{ titulo: string; sub: string; datos: Gajo[]; total: number }> = ({ titulo, sub, datos, total }) => (
+	const Torta: React.FC<{ titulo: string; sub: string; datos: Gajo[]; total: number; paleta?: string[] }> = ({ titulo, sub, datos, total, paleta = PALETA }) => (
 		<Card variant="outlined" sx={{ height: "100%" }}>
 			<CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
 				<Typography variant="subtitle2" fontWeight="bold">
@@ -125,7 +148,7 @@ const CausaCoveragePanel: React.FC = () => {
 							strokeWidth={2}
 						>
 							{datos.map((_g, i) => (
-								<Cell key={i} fill={PALETA[i % PALETA.length]} />
+								<Cell key={i} fill={paleta[i % paleta.length]} />
 							))}
 						</Pie>
 						<RechartsTooltip
@@ -152,48 +175,95 @@ const CausaCoveragePanel: React.FC = () => {
 
 	return (
 		<Stack spacing={2}>
-			<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+			<Stack direction="row" spacing={1} alignItems="baseline" flexWrap="wrap" useFlexGap>
 				<Typography variant="h5">{data.universo.toLocaleString("es-AR")}</Typography>
 				<Typography variant="body2" color="text.secondary">
-					causas con credencial vinculada
+					causas con credencial vinculada, de las cuales
+				</Typography>
+				<Typography variant="h5" sx={{ color: PALETA_ESTADO[0] }}>
+					{base.toLocaleString("es-AR")}
+				</Typography>
+				<Typography variant="body2" color="text.secondary">
+					tienen una credencial que sirve
 				</Typography>
 				<Chip
 					size="small"
 					color={data.invariante.cierra ? "success" : "error"}
-					label={
-						data.invariante.cierra
-							? `reparto completo: ${data.via.lista} + ${data.via.numero}`
-							: `NO CIERRA: ${data.invariante.suma} de ${data.invariante.universo}`
-					}
+					label={data.invariante.cierra ? `reparto: ${data.via.lista} + ${data.via.numero} = ${base}` : `NO CIERRA: ${data.invariante.suma} de ${base}`}
 					sx={{ fontSize: "0.68rem", fontFamily: "monospace" }}
-				/>
-				<Chip
-					size="small"
-					variant="outlined"
-					color={data.credencialViva.no ? "warning" : "default"}
-					label={`credencial viva: ${data.credencialViva.si} · sin credencial activa: ${data.credencialViva.no}`}
-					sx={{ fontSize: "0.68rem" }}
 				/>
 			</Stack>
 
 			{!data.invariante.cierra && (
 				<Alert severity="error" variant="outlined">
-					El reparto no suma el universo: hay {data.invariante.universo - data.invariante.suma} causa(s) que no caen en ninguna vía. Es un
-					caso sin clasificar, no un problema de conteo.
+					El reparto no suma las causas con credencial válida: hay {data.invariante.base - data.invariante.suma} causa(s) que no caen en
+					ninguna vía. Es un caso sin clasificar, no un problema de conteo.
 				</Alert>
 			)}
 
 			<Grid container spacing={2}>
-				<Grid item xs={12} md={4}>
-					<Torta titulo="Vía de acceso" sub="cómo se llega a la causa en el portal" datos={via} total={data.universo} />
+				<Grid item xs={12} md={2.4}>
+					<Torta
+						titulo="En el listado"
+						sub={`de las ${data.universo}, cuáles sigue listando el portal`}
+						datos={estadoListado}
+						total={data.universo}
+						paleta={PALETA_ESTADO}
+					/>
 				</Grid>
-				<Grid item xs={12} md={4}>
-					<Torta titulo="Quién la actualiza" sub="qué worker le baja los movimientos" datos={actualizador} total={data.universo} />
+				<Grid item xs={12} md={2.4}>
+					<Torta
+						titulo="Estado de la credencial"
+						sub={`las ${data.universo} del universo, según si su credencial sirve`}
+						datos={estadoCredencial}
+						total={data.universo}
+						paleta={PALETA_ESTADO}
+					/>
 				</Grid>
-				<Grid item xs={12} md={4}>
-					<Torta titulo="Por qué van por lista" sub={`desglose de las ${data.via.lista} que no son buscables`} datos={motivos} total={data.via.lista} />
+				<Grid item xs={12} md={2.4}>
+					<Torta titulo="Vía de acceso" sub={`de las ${base} con credencial válida`} datos={via} total={base} />
+				</Grid>
+				<Grid item xs={12} md={2.4}>
+					<Torta titulo="Quién la actualiza" sub={`de las ${base} con credencial válida`} datos={actualizador} total={base} />
+				</Grid>
+				<Grid item xs={12} md={2.4}>
+					<Torta titulo="Por qué van por lista" sub={`desglose de las ${data.via.lista} no buscables`} datos={motivos} total={data.via.lista} />
 				</Grid>
 			</Grid>
+
+			{data.huerfanas.length > 0 && (
+				<Card variant="outlined" sx={{ borderColor: PALETA_ESTADO[1] }}>
+					<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
+						<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+							Las {data.porEstadoCredencial.sinCredencialViva} causas que no actualiza nadie
+						</Typography>
+						<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+							Su credencial no sirve, así que el worker privado las trae y las descarta al agrupar. El worker público solo alcanza a las
+							que además sean buscables por número.
+						</Typography>
+						<TableContainer sx={{ overflowX: "auto" }}>
+							<Table size="small">
+								<TableHead>
+									<TableRow>
+										<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Credencial</TableCell>
+										<TableCell align="right" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Causas</TableCell>
+										<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Por qué no sirve</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{data.huerfanas.map((h) => (
+										<TableRow key={h.credentialId}>
+											<TableCell sx={{ fontSize: "0.8rem" }}>{h.email || <code>{h.credentialId.slice(-8)}</code>}</TableCell>
+											<TableCell align="right" sx={{ fontSize: "0.8rem", fontFamily: "monospace" }}>{h.causas}</TableCell>
+											<TableCell sx={{ fontSize: "0.78rem", color: "text.secondary" }}>{h.motivo}</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</TableContainer>
+					</CardContent>
+				</Card>
+			)}
 
 			{/* Vista de tabla: los mismos números sin depender del color ni del hover. */}
 			<Card variant="outlined">
@@ -242,9 +312,10 @@ const CausaCoveragePanel: React.FC = () => {
 						</Table>
 					</TableContainer>
 					<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1.5 }}>
-						El reparto lo decide <code>viaDeAcceso</code> en private-causas-update, con el mismo criterio que se registra en cada corrida
-						(<code>viaLista</code> / <code>viaNumero</code> / <code>reclasificadas</code>). “Privado + público” es el ruteo dual: esas causas
-						las mantiene frescas el worker con credencial y solo caen al público con captcha si el privado se atrasa.
+						Los porcentajes de esta tabla son sobre las {base} causas con credencial válida, no sobre el universo. El reparto lo decide{" "}
+						<code>viaDeAcceso</code> en private-causas-update, con el mismo criterio que se registra en cada corrida (<code>viaLista</code> /{" "}
+						<code>viaNumero</code> / <code>reclasificadas</code>). “Privado + público” es el ruteo dual: esas causas las mantiene frescas el
+						worker con credencial y solo caen al público con captcha si el privado se atrasa.
 					</Typography>
 				</CardContent>
 			</Card>
