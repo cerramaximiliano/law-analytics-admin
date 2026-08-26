@@ -455,6 +455,26 @@ export interface FolderRowStatsData {
 
 export type DailySyncState = "ok" | "no_run_today" | "incomplete" | "error" | "invalid" | "interrupted" | "running" | "inactive_user";
 
+export interface WorkerStatKpi {
+	label: string;
+	value: number;
+	unit?: string;
+	tone?: "success" | "warning" | "error";
+}
+
+export interface WorkerStatBlock {
+	source: string;
+	runs: { total: number; byStatus: Record<string, number> } | null;
+	ultimaActividad: string | null;
+	kpis: WorkerStatKpi[];
+}
+
+export interface WorkerStatsData {
+	days: number;
+	since: string;
+	workers: Record<string, WorkerStatBlock>;
+}
+
 export interface DailySyncRow {
 	credentialId: string;
 	user: { id: string | null; email: string | null; name: string | null; isActive: boolean | null };
@@ -872,6 +892,14 @@ class PjnCredentialsService {
 	 */
 	async getDailySyncControl(params: { days?: number }): Promise<{ success: boolean; data: DailySyncControlData }> {
 		const response = await adminAxios.get("/api/pjn-credentials/daily-sync", { params });
+		return response.data;
+	}
+
+	/**
+	 * Estadísticas agregadas por worker de pjn-mis-causas (tabs de la UI Admin).
+	 */
+	async getWorkerStats(params: { days?: number }): Promise<{ success: boolean } & WorkerStatsData> {
+		const response = await adminAxios.get("/api/pjn-credentials/worker-stats", { params });
 		return response.data;
 	}
 

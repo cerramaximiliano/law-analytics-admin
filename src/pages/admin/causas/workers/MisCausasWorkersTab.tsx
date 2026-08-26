@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
 	Box,
 	Card,
@@ -24,11 +24,15 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
+	Tabs,
+	Tab,
+	CircularProgress,
 } from "@mui/material";
 import { ArrowDown2, ArrowUp2, TickCircle, Timer1, Setting2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { ScrapingManagerConfig, WorkerConfig, ScrapingManagerService } from "api/scrapingManager";
 import DailySyncPanel from "components/pjn/DailySyncPanel";
+import pjnCredentialsService, { WorkerStatsData, WorkerStatKpi } from "api/pjnCredentials";
 
 interface Props {
 	config: ScrapingManagerConfig;
@@ -52,10 +56,71 @@ const WORKER_LABELS: Record<string, string> = {
 	"private-causas-update": "Actualización de Movimientos",
 };
 
+interface WorkerDoc {
+	proceso: string;
+	queHace: string;
+	cuandoCorre: string;
+	escribe: string;
+	senales: string[];
+}
+
+// Explicación de cada worker: qué resuelve, cuándo se dispara y qué deja escrito.
+// Sirve para leer las estadísticas de al lado sin tener que abrir el código.
+const WORKER_DOCS: Record<string, WorkerDoc> = {
+	"credentials-processor": {
+		proceso: "pjn-credentials-processor",
+		queHace:
+			"Toma las credenciales recién cargadas o marcadas para revisión, entra al portal con el CUIL/clave y confirma si sirven. Según el resultado marca la credencial como válida, inválida o con acción requerida (cambio de clave obligatorio, 2FA) y dispara el aviso al usuario.",
+		cuandoCorre: "Por cola: el manager lo levanta cuando hay credenciales pendientes y lo apaga al vaciarse.",
+		escribe: "pjn-credentials (verified, isValid, credentialInvalid, errorHistory) + screenshots de error en S3.",
+		senales: [
+			"Pendientes de verificar creciendo = cola trabada o worker apagado.",
+			"Error sostenido (≥2 consecutivos) es lo que dispara alerta; un error aislado es ruido.",
+		],
+	},
+	"mis-causas": {
+		proceso: "pjn-mis-causas",
+		queHace:
+			"Sync completa de una credencial: recorre todo el listado de Expedientes Relacionados, crea las causas que faltan, arma las carpetas y hace el backfill inicial de movimientos (silencioso, sin notificar).",
+		cuandoCorre: "On-demand: al validar una credencial nueva o cuando se pide un resync desde la UI.",
+		escribe: "mis-causas-syncs (triggeredBy ≠ update-worker), causas-*, folders.",
+		senales: [
+			"Corridas interrupted/incomplete = la sesión o la paginación se cortó; se reintenta en la próxima ventana.",
+			"Carpetas creadas ≫ causas nuevas indica causas ya existentes que se vincularon a este usuario.",
+		],
+	},
+	"update-sync": {
+		proceso: "pjn-update-sync",
+		queHace:
+			"Una pasada diaria por credencial sobre el listado completo. Compara el portal contra las carpetas del usuario por expediente y por carátula: lo que aparece de más se crea, lo que ya no está se marca como salido del listado (listRemoved) y si vuelve se limpia la marca.",
+		cuandoCorre: "Diario, a la hora configurada abajo (modo daily). Recorre siempre todas las páginas.",
+		escribe: "mis-causas-syncs (triggeredBy = update-worker), folders.listRemoved*, capturas del listado en S3 (TTL 60 días).",
+		senales: [
+			"Scan completo < 100% = quedaron páginas sin leer; ese run no habilita marcar salidas.",
+			"Salidas del listado con pico repentino suele ser portal degradado, no bajas reales.",
+		],
+	},
+	"private-causas-update": {
+		proceso: "pjn-private-causas-update",
+		queHace:
+			"Actualiza los movimientos de las causas privadas entrando con la credencial del usuario (las públicas las cubre pjn-workers). Baja los PDFs nuevos a S3 y alimenta las notificaciones de novedades.",
+		cuandoCorre: "Incremental en horario laboral; el scrapeo inicial de causas sin capturar corre también fuera de horario.",
+		escribe: "causas-update-runs, causas-* (movimiento), pjn-movements + PDFs en S3.",
+		senales: [
+			"Runs partial repetidos sobre la misma credencial = catch-up trabado, revisar el cooldown.",
+			"Movimientos nuevos en 0 durante días con causas procesadas > 0 es normal fuera de feria; sostenido no.",
+		],
+	},
+};
+
 const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 	const [expandedWorker, setExpandedWorker] = useState<string | null>(null);
+	const [activeTab, setActiveTab] = useState<string>("__resumen__");
+	const [statsDays, setStatsDays] = useState<number>(7);
+	const [stats, setStats] = useState<WorkerStatsData | null>(null);
+	const [statsLoading, setStatsLoading] = useState<boolean>(false);
 	const [saving, setSaving] = useState<string | null>(null);
 	const [editValues, setEditValues] = useState<Record<string, WorkerConfig>>({});
 
@@ -137,9 +202,201 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 		});
 	};
 
+	const loadStats = useCallback(async () => {
+		setStatsLoading(true);
+		try {
+			const res = await pjnCredentialsService.getWorkerStats({ days: statsDays });
+			if (res.success) setStats(res as unknown as WorkerStatsData);
+		} catch (err) {
+			// las estadísticas son informativas: si fallan no bloquean la configuración
+			setStats(null);
+		} finally {
+			setStatsLoading(false);
+		}
+	}, [statsDays]);
+
+	useEffect(() => {
+		loadStats();
+	}, [loadStats]);
+
+	const toneColor = (tone?: WorkerStatKpi["tone"]) =>
+		tone === "success"
+			? theme.palette.success.main
+			: tone === "warning"
+			? theme.palette.warning.main
+			: tone === "error"
+			? theme.palette.error.main
+			: theme.palette.text.primary;
+
+	const fmtFecha = (v?: string | null) => (v ? new Date(v).toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" }) : "—");
+
+	const renderWorkerInfo = (workerName: string) => {
+		const doc = WORKER_DOCS[workerName];
+		const block = stats?.workers?.[workerName];
+		return (
+			<Stack spacing={2}>
+				{doc && (
+					<Card variant="outlined" sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}>
+						<CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
+							<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+								<Setting2 size={16} color={theme.palette.primary.main} />
+								<Typography variant="subtitle2" fontWeight="bold">
+									Qué hace este worker
+								</Typography>
+								<Chip label={doc.proceso} size="small" variant="outlined" sx={{ fontSize: "0.65rem", fontFamily: "monospace" }} />
+							</Stack>
+							<Typography variant="body2" sx={{ mb: 1.5 }}>
+								{doc.queHace}
+							</Typography>
+							<Grid container spacing={1.5}>
+								<Grid item xs={12} sm={6}>
+									<Typography variant="caption" color="text.secondary" display="block">
+										Cuándo corre
+									</Typography>
+									<Typography variant="body2">{doc.cuandoCorre}</Typography>
+								</Grid>
+								<Grid item xs={12} sm={6}>
+									<Typography variant="caption" color="text.secondary" display="block">
+										Qué deja escrito
+									</Typography>
+									<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+										{doc.escribe}
+									</Typography>
+								</Grid>
+							</Grid>
+							<Divider sx={{ my: 1.5 }} />
+							<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+								Cómo leer las métricas
+							</Typography>
+							{doc.senales.map((sig) => (
+								<Stack key={sig} direction="row" spacing={0.75} alignItems="flex-start">
+									<TickCircle size={14} color={theme.palette.text.secondary} style={{ marginTop: 3, flexShrink: 0 }} />
+									<Typography variant="body2" color="text.secondary">
+										{sig}
+									</Typography>
+								</Stack>
+							))}
+						</CardContent>
+					</Card>
+				)}
+
+				<Card variant="outlined">
+					<CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
+						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+							<Stack direction="row" spacing={1} alignItems="center">
+								<Timer1 size={16} color={theme.palette.text.secondary} />
+								<Typography variant="subtitle2" fontWeight="bold">
+									Estadísticas
+								</Typography>
+								{statsLoading && <CircularProgress size={14} />}
+							</Stack>
+							<Stack direction="row" spacing={0.5}>
+								{[1, 7, 30].map((d) => (
+									<Chip
+										key={d}
+										label={d === 1 ? "24h" : `${d}d`}
+										size="small"
+										color={statsDays === d ? "primary" : "default"}
+										variant={statsDays === d ? "filled" : "outlined"}
+										onClick={() => setStatsDays(d)}
+										sx={{ fontSize: "0.65rem", height: 22 }}
+									/>
+								))}
+							</Stack>
+						</Stack>
+						{!block ? (
+							<Typography variant="body2" color="text.secondary">
+								{statsLoading ? "Cargando…" : "Sin estadísticas disponibles."}
+							</Typography>
+						) : (
+							<>
+								<Grid container spacing={1.5}>
+									{block.kpis.map((k) => (
+										<Grid item xs={6} sm={4} md={3} key={k.label}>
+											<Box
+												sx={{
+													p: 1.25,
+													borderRadius: 1,
+													border: `1px solid ${theme.palette.divider}`,
+													textAlign: "center",
+												}}
+											>
+												<Typography variant="h5" sx={{ color: toneColor(k.tone), lineHeight: 1.2 }}>
+													{k.value.toLocaleString("es-AR")}
+													{k.unit ? <Typography component="span" variant="caption">{k.unit}</Typography> : null}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													{k.label}
+												</Typography>
+											</Box>
+										</Grid>
+									))}
+								</Grid>
+								<Stack direction="row" spacing={1} sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap alignItems="center">
+									{block.runs &&
+										Object.entries(block.runs.byStatus).map(([st, n]) => (
+											<Chip
+												key={st}
+												label={`${st}: ${n}`}
+												size="small"
+												variant="outlined"
+												color={st === "completed" ? "success" : st === "error" ? "error" : st === "in_progress" ? "info" : "warning"}
+												sx={{ fontSize: "0.65rem", height: 20 }}
+											/>
+										))}
+									<Typography variant="caption" color="text.secondary">
+										Última actividad: {fmtFecha(block.ultimaActividad)} · fuente {block.source}
+									</Typography>
+								</Stack>
+							</>
+						)}
+					</CardContent>
+				</Card>
+
+				{workerName === "update-sync" && (
+					<Card variant="outlined">
+						<CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
+							<DailySyncPanel days={14} />
+						</CardContent>
+					</Card>
+				)}
+			</Stack>
+		);
+	};
+
+	const workerNames = Object.keys(config.workers);
+
 	return (
 		<Stack spacing={2}>
+			<Tabs
+				value={workerNames.includes(activeTab) || activeTab === "__resumen__" ? activeTab : "__resumen__"}
+				onChange={(_e, v) => setActiveTab(v)}
+				variant="scrollable"
+				scrollButtons="auto"
+				sx={{ borderBottom: 1, borderColor: "divider", minHeight: 40, "& .MuiTab-root": { minHeight: 40, textTransform: "none" } }}
+			>
+				<Tab value="__resumen__" label="Resumen" />
+				{workerNames.map((name) => (
+					<Tab
+						key={name}
+						value={name}
+						label={
+							<Stack direction="row" spacing={0.75} alignItems="center">
+								<span>{WORKER_LABELS[name] || name}</span>
+								<Chip
+									label={config.workers[name].enabled ? "ON" : "OFF"}
+									size="small"
+									color={config.workers[name].enabled ? "success" : "default"}
+									sx={{ fontSize: "0.6rem", height: 16 }}
+								/>
+							</Stack>
+						}
+					/>
+				))}
+			</Tabs>
+
 			{/* Tabla resumen */}
+			{activeTab === "__resumen__" && (
 			<Card variant="outlined">
 				<CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
 					<Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
@@ -237,26 +494,30 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 						</Table>
 					</TableContainer>
 
-					{/* Control diario del update-sync (data-driven, por credencial) */}
-					<Box sx={{ mt: 3 }}>
-						<DailySyncPanel days={14} />
-					</Box>
+					<Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: "block" }}>
+						Cada worker tiene su propia pestaña arriba, con la explicación de qué hace, sus estadísticas y su configuración.
+					</Typography>
 				</CardContent>
 			</Card>
+			)}
 
-			{Object.entries(config.workers).map(([workerName, workerConfig]) => {
+			{Object.entries(config.workers)
+				.filter(([workerName]) => workerName === activeTab)
+				.map(([workerName, workerConfig]) => {
 				const worker = getEditValue(workerName);
-				const isExpanded = expandedWorker === workerName;
+				const isExpanded = expandedWorker !== workerName;
 				const hasEdits = !!editValues[workerName];
 				const isSaving = saving === workerName;
 
 				return (
-					<Card key={workerName} variant="outlined">
+					<React.Fragment key={workerName}>
+					{renderWorkerInfo(workerName)}
+					<Card variant="outlined">
 						<CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
 							{/* Header del worker */}
 							<Stack direction="row" justifyContent="space-between" alignItems="center">
 								<Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1 }}>
-									<IconButton size="small" onClick={() => setExpandedWorker(isExpanded ? null : workerName)}>
+									<IconButton size="small" onClick={() => setExpandedWorker(isExpanded ? workerName : null)}>
 										{isExpanded ? <ArrowUp2 size={18} /> : <ArrowDown2 size={18} />}
 									</IconButton>
 									<Box sx={{ flex: 1 }}>
@@ -757,6 +1018,7 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 							</Collapse>
 						</CardContent>
 					</Card>
+					</React.Fragment>
 				);
 			})}
 		</Stack>
