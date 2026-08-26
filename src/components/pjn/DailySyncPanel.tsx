@@ -245,6 +245,12 @@ export default function DailySyncPanel({ days = 14, compact = false }: { days?: 
 							tone={t.todayListRemovedMarked > 0 ? "warn" : "neutral"}
 						/>
 						<StatTile
+							label="Sin carpeta"
+							value={t.todayPortalWithoutFolder}
+							sub={t.todayMatchedByCaratula ? `${t.todayMatchedByCaratula} match x carátula` : "expedientes del portal"}
+							tone={t.todayPortalWithoutFolder > 0 ? "warn" : "neutral"}
+						/>
+						<StatTile
 							label="OK hoy"
 							value={t.byState.ok || 0}
 							sub={`de ${t.credentials}`}
@@ -388,12 +394,27 @@ export default function DailySyncPanel({ days = 14, compact = false }: { days?: 
 															—
 														</Typography>
 													) : r.changes.scanComplete ? (
-														<Chip
-															size="small"
-															label={`completo${r.changes.pagesScanned ? ` · ${r.changes.pagesScanned} pág.` : ""}`}
-															variant="outlined"
-															sx={{ height: 20, fontSize: "0.64rem" }}
-														/>
+														<Tooltip
+															title={
+																r.reconciliation.portalExpedientes !== null
+																	? `${r.reconciliation.portalExpedientes} expedientes leídos · ${
+																			r.reconciliation.matchedByKey ?? 0
+																	  } match por expediente · ${r.reconciliation.matchedByCaratula ?? 0} por carátula · ${
+																			r.reconciliation.portalWithoutFolder ?? 0
+																	  } en portal sin carpeta`
+																	: "escaneo completo"
+															}
+														>
+															<Chip
+																size="small"
+																label={`completo${r.changes.pagesScanned ? ` · ${r.changes.pagesScanned} pág.` : ""}${
+																	r.reconciliation.matchedByCaratula ? ` · ${r.reconciliation.matchedByCaratula} x carátula` : ""
+																}${r.reconciliation.portalWithoutFolder ? ` · ${r.reconciliation.portalWithoutFolder} sin carpeta` : ""}`}
+																variant="outlined"
+																color={r.reconciliation.portalWithoutFolder ? "warning" : "default"}
+																sx={{ height: 20, fontSize: "0.64rem" }}
+															/>
+														</Tooltip>
 													) : (
 														<Chip size="small" label="incompleto" color="warning" sx={{ height: 20, fontSize: "0.64rem" }} />
 													)}

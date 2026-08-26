@@ -491,6 +491,12 @@ export interface DailySyncRow {
 		scanComplete: boolean | null;
 		pagesScanned: number | null;
 	};
+	reconciliation: {
+		portalExpedientes: number | null;
+		matchedByKey: number | null;
+		matchedByCaratula: number | null;
+		portalWithoutFolder: number | null;
+	};
 	folders: { total: number; active: number; archived: number; listRemoved: number };
 	series: Array<{ date: string; total: number }>;
 	runsInPeriod: number;
@@ -513,6 +519,8 @@ export interface DailySyncControlData {
 		todayNewCausas: number;
 		todayFoldersCreated: number;
 		todayListRemovedMarked: number;
+		todayMatchedByCaratula: number;
+		todayPortalWithoutFolder: number;
 	};
 }
 
