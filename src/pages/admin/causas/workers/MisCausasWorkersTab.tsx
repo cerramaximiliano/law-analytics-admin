@@ -34,6 +34,7 @@ import { ScrapingManagerConfig, WorkerConfig, ScrapingManagerService } from "api
 import DailySyncPanel from "components/pjn/DailySyncPanel";
 import pjnCredentialsService, { WorkerStatsData, WorkerStatKpi } from "api/pjnCredentials";
 import MisCausasWorkersFlow from "../../flujos/MisCausasWorkersFlow";
+import CausaCoveragePanel from "components/pjn/CausaCoveragePanel";
 
 interface Props {
 	config: ScrapingManagerConfig;
@@ -502,6 +503,16 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 					<Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: "block" }}>
 						Cada worker tiene su propia pestaña arriba, con la explicación de qué hace, sus estadísticas y su configuración.
 					</Typography>
+
+					<Divider sx={{ my: 2.5 }} />
+
+					<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+						Reparto de las causas con credencial
+					</Typography>
+					<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
+						Cuántas causas hay, cómo se llega a cada una y qué worker la actualiza. Los tres cortes suman el mismo universo.
+					</Typography>
+					<CausaCoveragePanel />
 
 					<Divider sx={{ my: 2.5 }} />
 

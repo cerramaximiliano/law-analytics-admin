@@ -455,6 +455,16 @@ export interface FolderRowStatsData {
 
 export type DailySyncState = "ok" | "no_run_today" | "incomplete" | "error" | "invalid" | "interrupted" | "running" | "inactive_user";
 
+export interface CausaCoverageData {
+	universo: number;
+	via: { lista: number; numero: number };
+	motivo: Record<string, number>;
+	actualizador: { "privado-lista": number; "privado-numero": number; "privado+publico": number };
+	credencialViva: { si: number; no: number };
+	porFuero: Record<string, { total: number; lista: number; numero: number }>;
+	invariante: { suma: number; universo: number; cierra: boolean };
+}
+
 export interface WorkerStatKpi {
 	label: string;
 	value: number;
@@ -900,6 +910,14 @@ class PjnCredentialsService {
 	 */
 	async getWorkerStats(params: { days?: number }): Promise<{ success: boolean } & WorkerStatsData> {
 		const response = await adminAxios.get("/api/pjn-credentials/worker-stats", { params });
+		return response.data;
+	}
+
+	/**
+	 * Reparto de las causas con credencial: por vía de acceso y por quién actualiza.
+	 */
+	async getCausaCoverage(): Promise<{ success: boolean } & CausaCoverageData> {
+		const response = await adminAxios.get("/api/pjn-credentials/causa-coverage");
 		return response.data;
 	}
 
