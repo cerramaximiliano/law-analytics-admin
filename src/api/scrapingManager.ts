@@ -25,6 +25,10 @@ export interface ScheduleConfig {
 	workingHoursStart: string;
 	workingHoursEnd: string;
 	allowWeekends: boolean;
+	/** "window" (franja horaria, default) | "daily" (una pasada por día desde dailyRunAt) */
+	mode?: "window" | "daily";
+	/** HH:mm en timezone; solo con mode "daily" */
+	dailyRunAt?: string;
 }
 
 export interface QueueConfig {
@@ -40,10 +44,20 @@ export interface HealthCheckConfig {
 	autoRestartOnStuck: boolean;
 }
 
+export interface ProcessingConfig {
+	/** Usuarios (credenciales) que procesa cada instancia por corrida, en secuencia */
+	maxUsersPerBatch?: number;
+	/** Pausa entre usuarios dentro de una instancia (segundos) */
+	pauseBetweenUsersSec?: number;
+}
+
 export interface WorkerConfig {
 	enabled: boolean;
 	pm2ProcessName: string;
 	description: string;
+	processing?: ProcessingConfig;
+	/** update-sync: horas mínimas entre corridas por usuario (modo window) */
+	minHoursBetweenUpdates?: number;
 	scaling: ScalingConfig;
 	schedule: ScheduleConfig;
 	queue: QueueConfig;

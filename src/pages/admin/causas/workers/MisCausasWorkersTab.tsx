@@ -98,6 +98,8 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 				schedule: workerData.schedule,
 				queue: workerData.queue,
 				healthCheck: workerData.healthCheck,
+				...(workerData.processing ? { processing: workerData.processing } : {}),
+				...(workerData.minHoursBetweenUpdates !== undefined ? { minHoursBetweenUpdates: workerData.minHoursBetweenUpdates } : {}),
 			});
 			enqueueSnackbar(`Worker ${WORKER_LABELS[workerName]} actualizado`, {
 				variant: "success",
@@ -189,10 +191,26 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 											/>
 										</TableCell>
 										<TableCell align="center" sx={{ fontSize: "0.8rem", fontFamily: "monospace" }}>
-											{w.schedule.enabled ? `${w.schedule.workingHoursStart} - ${w.schedule.workingHoursEnd}` : "24/7"}
+											{!w.schedule.enabled
+												? "24/7"
+												: w.schedule.mode === "daily" && w.schedule.dailyRunAt
+												? `Diario ${w.schedule.dailyRunAt} → ${w.schedule.workingHoursEnd}`
+												: `${w.schedule.workingHoursStart} - ${w.schedule.workingHoursEnd}`}
 										</TableCell>
 										<TableCell align="center" sx={{ fontSize: "0.8rem" }}>
-											{w.scaling.minInstances} - {w.scaling.maxInstances}
+											<Stack alignItems="center" spacing={0.25}>
+												<Chip
+													label={w.scaling.maxInstances > 1 ? `Simultáneo ≤${w.scaling.maxInstances}` : "Secuencial"}
+													size="small"
+													color={w.scaling.maxInstances > 1 ? "info" : "default"}
+													variant="outlined"
+													sx={{ fontSize: "0.65rem", height: 20 }}
+												/>
+												<Typography variant="caption" color="text.secondary">
+													{w.scaling.minInstances} - {w.scaling.maxInstances} inst.
+													{w.processing?.maxUsersPerBatch ? ` · lote ${w.processing.maxUsersPerBatch}` : ""}
+												</Typography>
+											</Stack>
 										</TableCell>
 										<TableCell align="center" sx={{ fontSize: "0.8rem" }}>
 											{w.scaling.scaleUpThreshold}
@@ -385,6 +403,95 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 									</Grid>
 								</Box>
 
+								{/* Procesamiento (concurrencia data-driven: maxInstances) */}
+								<Box sx={{ mb: 3 }}>
+									<Typography variant="subtitle2" fontWeight="bold" gutterBottom color="primary">
+										Procesamiento de credenciales
+									</Typography>
+									<Grid container spacing={2} alignItems="center">
+										<Grid item xs={12} sm={4}>
+											<TextField
+												select
+												label="Modo"
+												size="small"
+												fullWidth
+												SelectProps={{ native: true }}
+												value={worker.scaling.maxInstances > 1 ? "parallel" : "sequential"}
+												onChange={(e) =>
+													setWorkerEdit(workerName, {
+														scaling: {
+															...worker.scaling,
+															maxInstances: e.target.value === "sequential" ? 1 : Math.max(2, worker.scaling.maxInstances),
+														},
+													})
+												}
+												helperText={
+													worker.scaling.maxInstances > 1
+														? `Hasta ${worker.scaling.maxInstances} credenciales a la vez (una instancia por credencial; escala de a ${
+																worker.scaling.scaleUpStep
+														  } cada ${Math.round(worker.scaling.cooldownMs / 1000)}s)`
+														: "Una instancia: las credenciales se procesan una por una"
+												}
+											>
+												<option value="sequential">Secuencial</option>
+												<option value="parallel">Simultáneo</option>
+											</TextField>
+										</Grid>
+										{worker.scaling.maxInstances > 1 && (
+											<Grid item xs={6} sm={2}>
+												<TextField
+													label="Máx. simultáneas"
+													type="number"
+													size="small"
+													fullWidth
+													inputProps={{ min: 2, max: 10 }}
+													value={worker.scaling.maxInstances}
+													onChange={(e) =>
+														setWorkerEdit(workerName, {
+															scaling: { ...worker.scaling, maxInstances: Math.max(2, Number(e.target.value) || 2) },
+														})
+													}
+												/>
+											</Grid>
+										)}
+										{workerName === "update-sync" && (
+											<>
+												<Grid item xs={6} sm={2}>
+													<TextField
+														label="Usuarios por lote"
+														type="number"
+														size="small"
+														fullWidth
+														inputProps={{ min: 1, max: 100 }}
+														value={worker.processing?.maxUsersPerBatch ?? 10}
+														onChange={(e) =>
+															setWorkerEdit(workerName, {
+																processing: { ...(worker.processing || {}), maxUsersPerBatch: Number(e.target.value) || 1 },
+															})
+														}
+														helperText="por instancia, en secuencia"
+													/>
+												</Grid>
+												<Grid item xs={6} sm={2}>
+													<TextField
+														label="Pausa entre usuarios (s)"
+														type="number"
+														size="small"
+														fullWidth
+														inputProps={{ min: 0, max: 600 }}
+														value={worker.processing?.pauseBetweenUsersSec ?? 10}
+														onChange={(e) =>
+															setWorkerEdit(workerName, {
+																processing: { ...(worker.processing || {}), pauseBetweenUsersSec: Number(e.target.value) || 0 },
+															})
+														}
+													/>
+												</Grid>
+											</>
+										)}
+									</Grid>
+								</Box>
+
 								{/* Schedule */}
 								<Box sx={{ mb: 3 }}>
 									<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
@@ -404,6 +511,63 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 											{worker.schedule.enabled ? "Restricción activa" : "24/7 (sin restricción)"}
 										</Typography>
 									</Stack>
+									{worker.schedule.enabled && workerName === "update-sync" && (
+										<Grid container spacing={2} sx={{ mb: 1 }}>
+											<Grid item xs={12} sm={4}>
+												<TextField
+													select
+													label="Frecuencia"
+													size="small"
+													fullWidth
+													SelectProps={{ native: true }}
+													value={worker.schedule.mode === "daily" ? "daily" : "window"}
+													onChange={(e) =>
+														setWorkerEdit(workerName, {
+															schedule: {
+																...worker.schedule,
+																mode: e.target.value as "daily" | "window",
+																dailyRunAt: e.target.value === "daily" ? worker.schedule.dailyRunAt || "09:00" : worker.schedule.dailyRunAt,
+															},
+														})
+													}
+													helperText={
+														worker.schedule.mode === "daily"
+															? "Una pasada por día: cada usuario se procesa una vez, a partir de la hora elegida y hasta la hora fin"
+															: `Dentro de la franja, cada usuario se reprocesa cuando pasaron ${worker.minHoursBetweenUpdates ?? 24} h`
+													}
+												>
+													<option value="daily">Diario a una hora</option>
+													<option value="window">Franja horaria (cada N horas)</option>
+												</TextField>
+											</Grid>
+											{worker.schedule.mode === "daily" ? (
+												<Grid item xs={6} sm={3}>
+													<TextField
+														label="Hora de procesamiento"
+														type="time"
+														size="small"
+														fullWidth
+														InputLabelProps={{ shrink: true }}
+														value={worker.schedule.dailyRunAt || "09:00"}
+														onChange={(e) => setWorkerEdit(workerName, { schedule: { ...worker.schedule, dailyRunAt: e.target.value } })}
+														helperText={worker.schedule.timezone || "America/Argentina/Buenos_Aires"}
+													/>
+												</Grid>
+											) : (
+												<Grid item xs={6} sm={3}>
+													<TextField
+														label="Horas entre corridas"
+														type="number"
+														size="small"
+														fullWidth
+														inputProps={{ min: 1, max: 168 }}
+														value={worker.minHoursBetweenUpdates ?? 24}
+														onChange={(e) => setWorkerEdit(workerName, { minHoursBetweenUpdates: Number(e.target.value) || 1 })}
+													/>
+												</Grid>
+											)}
+										</Grid>
+									)}
 									{worker.schedule.enabled && (
 										<Grid container spacing={2}>
 											<Grid item xs={12} sm={6}>
