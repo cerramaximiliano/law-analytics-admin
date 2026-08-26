@@ -24,6 +24,7 @@ import SaijWorkersFlow from "./SaijWorkersFlow";
 import CijurWorkersFlow from "./CijurWorkersFlow";
 import PostalWorkersFlow from "./PostalWorkersFlow";
 import MisCausasWorkersFlow from "./MisCausasWorkersFlow";
+import MisCausasRepoFlow from "./MisCausasRepoFlow";
 import CausasFlowDiagram from "../causas/flujos/FlowDiagram";
 import { mainSpecs } from "../causas/flujos/flowData";
 import NotificationsFlowDiagram from "../notifications/components/FlowDiagram";
@@ -66,6 +67,13 @@ const TABS: FlowTab[] = [
 			"El pipeline completo de SCBA: de la credencial del usuario a la notificación del movimiento. El diagrama lee la configuración en vivo (updatePolicy) y redibuja la partición del update — en 'unified' el worker de archivadas aparece ocioso.",
 		href: "/admin/workers/mev",
 		hrefLabel: "Operar el SCBA manager (pestaña SCBA)",
+	},
+	{
+		label: "pjn-mis-causas (repo)",
+		intro:
+			"El mapa completo del repositorio: sus 13 procesos y cómo se encadenan alrededor de la credencial del usuario — verificarla, traer sus causas, mantenerlas al día, leer su bandeja y vigilar que nada se caiga.",
+		href: "/admin/causas/workers",
+		hrefLabel: "Operar los workers de pjn-mis-causas",
 	},
 	{
 		label: "Causas PJN por credencial",
@@ -191,15 +199,17 @@ const FlujosEcosistema: React.FC = () => {
 
 					{tab === 3 && <ScbaWorkersFlow />}
 
-					{tab === 4 && <MisCausasWorkersFlow />}
+					{tab === 4 && <MisCausasRepoFlow />}
 
-					{tab === 5 && <SaijWorkersFlow />}
+					{tab === 5 && <MisCausasWorkersFlow />}
 
-					{tab === 6 && <PostalWorkersFlow />}
+					{tab === 6 && <SaijWorkersFlow />}
 
-					{tab === 7 && <CijurWorkersFlow />}
+					{tab === 7 && <PostalWorkersFlow />}
 
-					{tab === 8 && (
+					{tab === 8 && <CijurWorkersFlow />}
+
+					{tab === 9 && (
 						// El data plane no se embebe: es una página con panel de detalle propio
 						// y su valor está en poder clickear cada nodo. Duplicar acá una versión
 						// recortada daría dos fuentes de verdad para el mismo diagrama.
