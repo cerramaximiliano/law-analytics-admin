@@ -117,12 +117,14 @@ export const PJN_GROUPS: GuideGroup[] = [
 				entry: entry(
 					{ source: "pjn-login", causaCredentialCovered: false },
 					{
+						list: "revoked",
+						expanded: { label: "PJN — Acceso restringido", accent: "amber", badge: "revoked" },
 						detail: { chip: { label: "Vinculado con PJN", accent: "green", badge: "valid" }, gate: "reserved_revoked" },
 						contentBlocked: true,
 					},
 					[{ ...credOk[0], removedFromSync: true, access: "revoked" }],
 				),
-				warn: "La LISTA la muestra como OK; recién al abrir el detalle aparece el gate “Tu credencial ya no accede a este expediente” y el server responde 403 en movimientos/PDFs.",
+				warn: "Desde F2 (2026-08-25) la lista lo muestra con candado ámbar “Acceso restringido”; el detalle bloquea con el gate y el server responde 403 en movimientos/PDFs.",
 			},
 			{
 				key: "ok.inaccessible",
@@ -363,14 +365,14 @@ export const PJN_GROUPS: GuideGroup[] = [
 				entry: entry(
 					{ causaIsPrivate: true, causaCredentialCovered: true },
 					{
-						list: "reserved",
-						expanded: { label: "PJN — Causa reservada", accent: "red", badge: "reserved" },
+						list: "reserved_covered",
+						expanded: { label: "PJN — Reservada (con acceso)", accent: "green", badge: "covered" },
 						detail: { chip: { label: "PJN — Reservada (con acceso)", accent: "green", badge: "valid" }, gate: null },
 						isPjnPrivateCovered: true,
 					},
 					credOk,
 				),
-				warn: "La LISTA la pinta en rojo “reservada” (no recibe causaCredentialCovered) mientras el detalle dice verde “Reservada (con acceso)”.",
+				warn: "Desde F2 (2026-08-25) la lista muestra candado verde “Reservada con acceso”, igual que el detalle.",
 			},
 			{
 				key: "reserved.nofolderflag",
@@ -382,7 +384,7 @@ export const PJN_GROUPS: GuideGroup[] = [
 					{ causaCredentialCovered: false },
 					{ detail: { chip: { label: "Vinculado con PJN", accent: "green", badge: "valid" }, gate: "reserved" }, contentBlocked: true },
 				),
-				warn: "Es la combinación MÁS frecuente en la base hoy: se ve OK en la lista, y en el detalle salta el gate de reservada. Los predicados del front (causaIsPrivate===true && covered) no matchean.",
+				warn: "Era la combinación más frecuente (F3 la corrigió sellando causaIsPrivate en pjn-login). Desde F2 la lista muestra candado ámbar aunque falte causaIsPrivate, porque la rama revocada solo mira covered=false.",
 			},
 		],
 	},
@@ -464,7 +466,7 @@ export const PJN_FINDINGS: GuideFinding[] = [
 	{
 		id: "F1",
 		severity: "alta",
-		title: "“Ya no en la lista” no se marca desde el 24/04/2026",
+		title: "[RESUELTO 2026-08-25, F1] “Ya no en la lista” no se marca desde el 24/04/2026",
 		detail:
 			"El schema local de Folder en pjn-mis-causas no declara listRemoved/listRemovedSource/listRemovedAt y Folder.bulkWrite corre en modo strict: el $set se descarta y solo se ejecuta $unset pjnNotFound. Los contadores y logs reportan “N marcados” igual.",
 		where: "pjn-mis-causas src/models/folder.js (falta el campo) · src/services/causa-sync-service.js:1808-1837",
@@ -472,7 +474,7 @@ export const PJN_FINDINGS: GuideFinding[] = [
 	{
 		id: "F2",
 		severity: "alta",
-		title: "Acceso revocado / reservada invisible en la lista",
+		title: "[RESUELTO 2026-08-25, F2] Acceso revocado / reservada invisible en la lista",
 		detail:
 			"La lista no recibe causaCredentialCovered (store/reducers/folder.ts:271,298,572,620 no lo proyectan) y solo marca “reservada” si causaIsPrivate=true y source≠pjn-login. Resultado: carpetas con gate de reservada en el detalle se ven OK en la lista (5 no archivadas hoy; 146 archivadas).",
 		where: "law-analytics-front folders.tsx:2733 · store/reducers/folder.ts · details.tsx:710",
@@ -480,7 +482,7 @@ export const PJN_FINDINGS: GuideFinding[] = [
 	{
 		id: "F3",
 		severity: "alta",
-		title: "causaIsPrivate solo se escribe en la transición",
+		title: "[RESUELTO 2026-08-25, F3] causaIsPrivate solo se escribe en la transición",
 		detail:
 			"Un folder creado sobre una causa que YA era privada (o desde caché privado) nunca recibe causaIsPrivate=true, pero sí causaCredentialCovered. Los predicados del front que exigen causaIsPrivate===true no matchean → ni “reservada” en la lista ni “Reservada (con acceso)” en el detalle.",
 		where:
@@ -489,7 +491,7 @@ export const PJN_FINDINGS: GuideFinding[] = [
 	{
 		id: "F4",
 		severity: "alta",
-		title: "Despritavización asimétrica → gate residual",
+		title: "[RESUELTO 2026-08-25, F4] Despritavización asimétrica → gate residual",
 		detail:
 			"El privacy-checker (resetToPublic) hace $unset causaPrivateDetectedAt pero NO $unset causaCredentialCovered; el worker privado sí. Una causa vuelta pública por el checker puede quedar con causaCredentialCovered=false y el detalle sigue bloqueando (403 CAUSA_RESERVED).",
 		where: "pjn-workers pjn-privacy-checker-worker.js:381-388 vs pjn-mis-causas private-causas-update-worker.js:1560-1566",
@@ -1693,8 +1695,7 @@ const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: strin
 			id: `${prefix}2`,
 			severity: "alta",
 			title: "stuck-worker invalida la causa pero no el folder",
-			detail:
-				"Tras 48h con errores la causa pasa a isValid=false y el folder a 'failed' (W1) con mail; antes (≤48h) se reencola cada 2h.",
+			detail: "Tras 48h con errores la causa pasa a isValid=false y el folder a 'failed' (W1) con mail; antes (≤48h) se reencola cada 2h.",
 			where: `${jur}-workers stuck-worker.js:74-82`,
 		},
 		{
@@ -1725,8 +1726,7 @@ const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: strin
 			id: `${prefix}6`,
 			severity: "baja",
 			title: "storePendingCausas rechaza IOL",
-			detail:
-				"causaService y el controller aceptan los 3 tipos IOL (IOL-9); en la práctica pending_selection lo escriben los workers.",
+			detail: "causaService y el controller aceptan los 3 tipos IOL (IOL-9); en la práctica pending_selection lo escriben los workers.",
 			where: "law-analytics-server causaService.js:629 · folderController.js:5141",
 		},
 		{
@@ -1770,8 +1770,7 @@ const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: strin
 			id: `${prefix}8`,
 			severity: "baja",
 			title: "deleteFolder sin rama propia",
-			detail:
-				"Las 3 IOL tienen rama propia en deleteFolderById con fallback local (IOL-11) (sin updateHistory).",
+			detail: "Las 3 IOL tienen rama propia en deleteFolderById con fallback local (IOL-11) (sin updateHistory).",
 			where: "law-analytics-server folderController.js:3097-3140",
 		});
 	}

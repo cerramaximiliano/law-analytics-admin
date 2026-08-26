@@ -79,6 +79,9 @@ const MiniChip = ({ color, text, dot = true }: { color: string; text: string; do
 
 export const LIST_TOOLTIPS: Record<string, string> = {
 	reserved: "Causa reservada — el tribunal restringió la consulta web pública. El sistema sigue verificando si vuelve a estar accesible.",
+	reserved_covered: "Causa reservada por el tribunal — accedés a sus movimientos a través de tu credencial PJN vinculada.",
+	revoked:
+		"Acceso restringido — el tribunal reservó esta causa y ya no figura entre las asignadas a tu credencial PJN. El acceso se restablece solo si vuelve a aparecer en tu listado de Mis Causas.",
 	list_removed:
 		"Esta causa ya no aparece en tu lista de Mis Causas del portal PJN. Puede haber sido archivada o desvinculada por el tribunal.",
 	pending_selection: "Se encontraron múltiples expedientes - Haz clic para seleccionar",
@@ -104,6 +107,10 @@ export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
 		switch (view.list) {
 			case "reserved":
 				return <Warning2 size={16} variant="Bold" color={RED} />;
+			case "reserved_covered":
+				return <Lock1 size={16} variant="Bold" color={LIVE_GREEN} />;
+			case "revoked":
+				return <Lock1 size={16} variant="Bold" color={STALE_AMBER} />;
 			case "list_removed":
 				return <Warning2 size={16} variant="Bold" color={STALE_AMBER} />;
 			case "pending_selection":
@@ -224,6 +231,8 @@ export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
 
 const BADGE_META: Record<string, { icon: JSX.Element; tooltip: string }> = {
 	reserved: { icon: <Warning2 size={14} variant="Bold" color={RED} />, tooltip: LIST_TOOLTIPS.reserved },
+	revoked: { icon: <Lock1 size={14} variant="Bold" color={STALE_AMBER} />, tooltip: LIST_TOOLTIPS.revoked },
+	covered: { icon: <Lock1 size={14} variant="Bold" color={LIVE_GREEN} />, tooltip: LIST_TOOLTIPS.reserved_covered },
 	list_removed: { icon: <Warning2 size={14} variant="Bold" color={STALE_AMBER} />, tooltip: LIST_TOOLTIPS.list_removed },
 	pending: { icon: <InfoCircle size={14} variant="Bold" color={STALE_AMBER} />, tooltip: "Pendiente de verificación" },
 	valid: { icon: <TickCircle size={14} variant="Bold" color={LIVE_GREEN} />, tooltip: "Causa válida" },

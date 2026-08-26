@@ -48,6 +48,8 @@ const ROW_LABEL: Record<string, string> = {
 	failed: "Asociación fallida (chip rojo)",
 	invalid: "Causa inválida (chip rojo)",
 	reserved: "Causa reservada (warning rojo)",
+	reserved_covered: "Reservada con acceso (candado verde)",
+	revoked: "Acceso restringido (candado ámbar)",
 	list_removed: "Ya no en la lista (warning ámbar)",
 	cred_status: "Credencial MEV requerida/inválida (chip ámbar)",
 	plain: "Sin indicador",

@@ -313,6 +313,8 @@ export type UserViewGate = "archived" | "pending_selection" | "reserved" | "rese
 export type UserViewList =
 	| "plain"
 	| "reserved"
+	| "reserved_covered"
+	| "revoked"
 	| "list_removed"
 	| "pending_selection"
 	| "failed"

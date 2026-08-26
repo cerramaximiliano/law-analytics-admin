@@ -49,6 +49,8 @@ const ROW_LABEL: Record<string, string> = {
 	failed: "Asociación fallida",
 	invalid: "Causa inválida",
 	reserved: "Causa reservada",
+	reserved_covered: "Reservada con acceso",
+	revoked: "Acceso restringido",
 	list_removed: "Ya no en la lista",
 	cred_status: "Credencial MEV requerida/inválida",
 	plain: "Sin indicador",
@@ -72,6 +74,8 @@ const ROW_ORDER = [
 type Tone = "ok" | "warn" | "bad" | "neutral";
 const ROW_TONE: Record<string, Tone> = {
 	ok: "ok",
+	reserved_covered: "ok",
+	revoked: "warn",
 	ok_cred_error: "warn",
 	pending: "warn",
 	pending_selection: "warn",
