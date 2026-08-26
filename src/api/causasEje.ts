@@ -419,7 +419,10 @@ export class CausasEjeService {
 	 */
 	static async updateCausa(id: string, updateData: Partial<CausaEje>): Promise<CausasEjeResponse> {
 		try {
-			const response = await ejeAxios.put(`/causas-eje/${id}`, updateData);
+			// eje-api registra PATCH, no PUT (`router.patch('/:id')`): con PUT la
+			// llamada no matcheaba ninguna ruta y la edición devolvía 404 sin
+			// llegar nunca al backend. 2026-08-26.
+			const response = await ejeAxios.patch(`/causas-eje/${id}`, updateData);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
