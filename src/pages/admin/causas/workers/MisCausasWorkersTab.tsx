@@ -28,6 +28,7 @@ import {
 import { ArrowDown2, ArrowUp2, TickCircle, Timer1, Setting2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { ScrapingManagerConfig, WorkerConfig, ScrapingManagerService } from "api/scrapingManager";
+import DailySyncPanel from "components/pjn/DailySyncPanel";
 
 interface Props {
 	config: ScrapingManagerConfig;
@@ -235,6 +236,11 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 							</TableBody>
 						</Table>
 					</TableContainer>
+
+					{/* Control diario del update-sync (data-driven, por credencial) */}
+					<Box sx={{ mt: 3 }}>
+						<DailySyncPanel days={14} />
+					</Box>
 				</CardContent>
 			</Card>
 

@@ -453,6 +453,69 @@ export interface FolderRowStatsData {
 	jurisdictions: Array<{ jurisdiction: string; total: number; pct: number; rows: Array<{ row: string; n: number; pct: number }> }>;
 }
 
+export type DailySyncState = "ok" | "no_run_today" | "incomplete" | "error" | "invalid" | "interrupted" | "running" | "inactive_user";
+
+export interface DailySyncRow {
+	credentialId: string;
+	user: { id: string | null; email: string | null; name: string | null; isActive: boolean | null };
+	credential: {
+		isValid: boolean;
+		syncStatus: string;
+		lastErrorCode: string | null;
+		retries: number;
+		lastIncrementalSync: string | null;
+		lastAttemptAt: string | null;
+		lastFullSync: string | null;
+	};
+	state: DailySyncState;
+	stateReason: string;
+	lastRun: {
+		id: string;
+		status: string;
+		startedAt: string;
+		completedAt: string | null;
+		triggeredBy: string | null;
+		outcome: string | null;
+		durationMs: number | null;
+		error: string | null;
+	} | null;
+	totals: { previous: number | null; current: number | null; delta: number | null };
+	changes: {
+		causasEncontradas: number;
+		causasNuevas: number;
+		foldersCreados: number;
+		foldersArchivados: number;
+		foldersPendientesLimite: number;
+		listRemovedMarked: number;
+		listRemovedCleared: number;
+		scanComplete: boolean | null;
+		pagesScanned: number | null;
+	};
+	folders: { total: number; active: number; archived: number; listRemoved: number };
+	series: Array<{ date: string; total: number }>;
+	runsInPeriod: number;
+}
+
+export interface DailySyncControlData {
+	generatedAt: string;
+	days: number;
+	today: string;
+	rows: DailySyncRow[];
+	totals: {
+		credentials: number;
+		byState: Record<string, number>;
+		portalCausas: number;
+		portalCausasPrevious: number;
+		foldersTotal: number;
+		foldersActive: number;
+		foldersArchived: number;
+		foldersListRemoved: number;
+		todayNewCausas: number;
+		todayFoldersCreated: number;
+		todayListRemovedMarked: number;
+	};
+}
+
 export interface SyncedCausasSummary {
 	totalCausas: number;
 	withMovements: number;
@@ -793,6 +856,14 @@ class PjnCredentialsService {
 	 */
 	async getFolderRowStats(params: { archived?: "all" | "true" | "false" }): Promise<{ success: boolean; data: FolderRowStatsData }> {
 		const response = await adminAxios.get("/api/pjn-credentials/folder-row-stats", { params });
+		return response.data;
+	}
+
+	/**
+	 * Control diario de Mis Causas por credencial (update-sync).
+	 */
+	async getDailySyncControl(params: { days?: number }): Promise<{ success: boolean; data: DailySyncControlData }> {
+		const response = await adminAxios.get("/api/pjn-credentials/daily-sync", { params });
 		return response.data;
 	}
 

@@ -61,6 +61,7 @@ import MainCard from "components/MainCard";
 import ImageActions from "components/ImageActions";
 import CopyButton from "components/CopyButton";
 import { fetchImageBlob } from "utils/imageActions";
+import DailySyncPanel from "components/pjn/DailySyncPanel";
 import pjnCredentialsService, {
 	PjnCredential,
 	PjnCredentialsFilters,
@@ -1754,6 +1755,12 @@ const CredencialesPJN = () => {
 			{/* Tab 1: Actividad Sync */}
 			{tabValue === 1 && (
 				<Grid container spacing={{ xs: 1.5, sm: 2 }}>
+					{/* Control diario de Mis Causas por credencial (update-sync) */}
+					<Grid item xs={12}>
+						<MainCard content={false} sx={{ p: { xs: 1.5, sm: 2 } }}>
+							<DailySyncPanel days={14} />
+						</MainCard>
+					</Grid>
 					{/* Botón refrescar */}
 					<Grid item xs={12} sx={{ display: "flex", justifyContent: "flex-end" }}>
 						<Tooltip title="Refrescar actividad">
