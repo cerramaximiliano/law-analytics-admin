@@ -33,6 +33,7 @@ import { useSnackbar } from "notistack";
 import { ScrapingManagerConfig, WorkerConfig, ScrapingManagerService } from "api/scrapingManager";
 import DailySyncPanel from "components/pjn/DailySyncPanel";
 import pjnCredentialsService, { WorkerStatsData, WorkerStatKpi } from "api/pjnCredentials";
+import MisCausasWorkersFlow from "../../flujos/MisCausasWorkersFlow";
 
 interface Props {
 	config: ScrapingManagerConfig;
@@ -81,23 +82,27 @@ const WORKER_DOCS: Record<string, WorkerDoc> = {
 	"mis-causas": {
 		proceso: "pjn-mis-causas",
 		queHace:
-			"Sync completa de una credencial: recorre todo el listado de Expedientes Relacionados, crea las causas que faltan, arma las carpetas y hace el backfill inicial de movimientos (silencioso, sin notificar).",
+			"Sync completa de una credencial. Recorre TODO el listado de Expedientes Relacionados y procesa cada fila: busca la causa en la base local, si no está la pide al caché y si tampoco está la crea desde el portal. Después arma la carpeta del usuario y vincula la credencial a la causa. Las filas sin prefijo de fuero (Tribunal Oral) van por un camino aparte — no se pueden buscar por número — y se dan de alta desde el detalle del listado. El backfill de movimientos es silencioso: no notifica.",
 		cuandoCorre: "On-demand: al validar una credencial nueva o cuando se pide un resync desde la UI.",
-		escribe: "mis-causas-syncs (triggeredBy ≠ update-worker), causas-*, folders.",
+		escribe: "mis-causas-syncs (triggeredBy ≠ update-worker), causas-*, folders (+ linkedCredentials en la causa).",
 		senales: [
 			"Corridas interrupted/incomplete = la sesión o la paginación se cortó; se reintenta en la próxima ventana.",
-			"Carpetas creadas ≫ causas nuevas indica causas ya existentes que se vincularon a este usuario.",
+			"Carpetas creadas ≫ causas nuevas: la causa ya existía (la trajo otro usuario o el worker público) y acá solo se vinculó.",
+			"Total de causas > creadas + vinculadas: la diferencia son las que el plan bloqueó — mirar archivadas y pendientes por límite.",
+			"Pendientes por límite > 0 = el usuario llegó al tope de storage; esas causas quedan SIN carpeta y reaparecen cada día como 'portal sin carpeta'.",
 		],
 	},
 	"update-sync": {
 		proceso: "pjn-update-sync",
 		queHace:
-			"Una pasada diaria por credencial sobre el listado completo. Compara el portal contra las carpetas del usuario por expediente y por carátula: lo que aparece de más se crea, lo que ya no está se marca como salido del listado (listRemoved) y si vuelve se limpia la marca.",
+			"Una pasada diaria por credencial sobre el listado completo. Compara el portal contra las carpetas del usuario por expediente y por carátula: lo que aparece de más se da de alta, lo que ya no está se marca como salido del listado (listRemoved) y si vuelve se limpia la marca. El alta la decide esa comparación contra las carpetas reales — no la heurística de rangos de carátulas, que daba por conocido casi todo.",
 		cuandoCorre: "Diario, a la hora configurada abajo (modo daily). Recorre siempre todas las páginas.",
 		escribe: "mis-causas-syncs (triggeredBy = update-worker), folders.listRemoved*, capturas del listado en S3 (TTL 60 días).",
 		senales: [
-			"Scan completo < 100% = quedaron páginas sin leer; ese run no habilita marcar salidas.",
+			"Scan completo < 100% = quedaron páginas sin leer; ese run no habilita marcar salidas ni dar altas por reconciliación.",
 			"Salidas del listado con pico repentino suele ser portal degradado, no bajas reales.",
+			"Altas por reconciliación > 0 = expedientes que el portal lista y no tenían carpeta. Es el dato real, no la heurística de carátulas.",
+			"Portal sin carpeta que no baja de una corrida a la otra = o el plan del usuario las bloquea, o el alta está fallando: el run guarda cuáles son.",
 		],
 	},
 	"private-causas-update": {
@@ -497,6 +502,17 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 					<Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: "block" }}>
 						Cada worker tiene su propia pestaña arriba, con la explicación de qué hace, sus estadísticas y su configuración.
 					</Typography>
+
+					<Divider sx={{ my: 2.5 }} />
+
+					<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+						Flujo de sincronización
+					</Typography>
+					<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
+						Cómo una fila del listado de Mis Causas termina siendo una carpeta del usuario. Es el mismo diagrama que vive en Flujos del
+						ecosistema; lee la config del manager en vivo.
+					</Typography>
+					<MisCausasWorkersFlow />
 				</CardContent>
 			</Card>
 			)}

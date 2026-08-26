@@ -23,6 +23,7 @@ import ScbaWorkersFlow from "./ScbaWorkersFlow";
 import SaijWorkersFlow from "./SaijWorkersFlow";
 import CijurWorkersFlow from "./CijurWorkersFlow";
 import PostalWorkersFlow from "./PostalWorkersFlow";
+import MisCausasWorkersFlow from "./MisCausasWorkersFlow";
 import CausasFlowDiagram from "../causas/flujos/FlowDiagram";
 import { mainSpecs } from "../causas/flujos/flowData";
 import NotificationsFlowDiagram from "../notifications/components/FlowDiagram";
@@ -65,6 +66,13 @@ const TABS: FlowTab[] = [
 			"El pipeline completo de SCBA: de la credencial del usuario a la notificación del movimiento. El diagrama lee la configuración en vivo (updatePolicy) y redibuja la partición del update — en 'unified' el worker de archivadas aparece ocioso.",
 		href: "/admin/workers/mev",
 		hrefLabel: "Operar el SCBA manager (pestaña SCBA)",
+	},
+	{
+		label: "Causas PJN por credencial",
+		intro:
+			"Los dos workers que llevan una fila del listado de Mis Causas hasta una carpeta: la sync completa del alta de credencial y la pasada diaria. Incluye las tres bifurcaciones que dejaban huecos silenciosos — las filas sin prefijo de fuero, quién decide que una causa falta, y el techo del plan.",
+		href: "/admin/causas/workers",
+		hrefLabel: "Operar los workers de pjn-mis-causas",
 	},
 	{
 		label: "Workers SAIJ",
@@ -183,13 +191,15 @@ const FlujosEcosistema: React.FC = () => {
 
 					{tab === 3 && <ScbaWorkersFlow />}
 
-					{tab === 4 && <SaijWorkersFlow />}
+					{tab === 4 && <MisCausasWorkersFlow />}
 
-					{tab === 5 && <CijurWorkersFlow />}
+					{tab === 5 && <SaijWorkersFlow />}
 
-					{tab === 5 && <PostalWorkersFlow />}
+					{tab === 6 && <PostalWorkersFlow />}
 
-					{tab === 6 && (
+					{tab === 7 && <CijurWorkersFlow />}
+
+					{tab === 8 && (
 						// El data plane no se embebe: es una página con panel de detalle propio
 						// y su valor está en poder clickear cada nodo. Duplicar acá una versión
 						// recortada daría dos fuentes de verdad para el mismo diagrama.
