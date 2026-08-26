@@ -3,6 +3,8 @@ import adminAxios from "utils/adminAxios";
 // ─── Scraper Config ───────────────────────────────────────────────────────────
 
 export interface ScraperConfigSchedule {
+	/** Si es falsy (o falta la clave), NO hay restricción horaria: el worker corre 24/7. */
+	enabled?: boolean;
 	workingHoursStart: number;
 	workingHoursEnd: number;
 	workingDays: number[];

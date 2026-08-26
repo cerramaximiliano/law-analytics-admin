@@ -98,6 +98,7 @@ const ConfigTab = () => {
 	// Edit state (flat for easier binding)
 	const [enabled, setEnabled] = useState(true);
 	const [checkIntervalHours, setCheckIntervalHours] = useState(3);
+	const [scheduleEnabled, setScheduleEnabled] = useState(false);
 	const [workingHoursStart, setWorkingHoursStart] = useState(8);
 	const [workingHoursEnd, setWorkingHoursEnd] = useState(20);
 	const [headlessDev, setHeadlessDev] = useState(false);
@@ -127,6 +128,9 @@ const ConfigTab = () => {
 			setConfig(cfg);
 			setEnabled(cfg.global?.enabled ?? true);
 			setCheckIntervalHours(cfg.scraping?.checkIntervalHours ?? 3);
+			// Sin la clave `enabled` el manager NO aplica la ventana (corre 24/7), así
+			// que el switch tiene que reflejar eso y no un default optimista.
+			setScheduleEnabled(cfg.scraping?.schedule?.enabled === true);
 			setWorkingHoursStart(cfg.scraping?.schedule?.workingHoursStart ?? 8);
 			setWorkingHoursEnd(cfg.scraping?.schedule?.workingHoursEnd ?? 20);
 			setHeadlessDev(cfg.scraping?.headless?.development ?? false);
@@ -158,7 +162,7 @@ const ConfigTab = () => {
 			await ScraperService.updateConfig({
 				scraping: {
 					checkIntervalHours,
-					schedule: { workingHoursStart, workingHoursEnd },
+					schedule: { enabled: scheduleEnabled, workingHoursStart, workingHoursEnd },
 					headless: { development: headlessDev, production: headlessProd },
 					finalStatuses,
 					finalDeliveryStatuses,
@@ -245,6 +249,17 @@ const ConfigTab = () => {
 				<Typography variant="subtitle2" mb={2} color="textSecondary">
 					Horario de Procesamiento
 				</Typography>
+				<Stack spacing={1} mb={2}>
+					<FormControlLabel
+						control={<Switch checked={scheduleEnabled} onChange={(e) => setScheduleEnabled(e.target.checked)} />}
+						label="Restringir a una ventana horaria"
+					/>
+					<Alert severity={scheduleEnabled ? "info" : "warning"} sx={{ py: 0.5 }}>
+						{scheduleEnabled
+							? `El worker solo consulta entre las ${workingHoursStart} y las ${workingHoursEnd} hs (ART), de lunes a viernes. Fuera de esa ventana los seguimientos vencidos esperan a la próxima apertura.`
+							: "Sin restricción horaria: el worker consulta 24/7, fines de semana incluidos. Las horas de abajo quedan guardadas pero NO se aplican hasta que actives el switch."}
+					</Alert>
+				</Stack>
 				<Grid container spacing={2}>
 					<Grid item xs={12} sm={4}>
 						<TextField
@@ -266,6 +281,7 @@ const ConfigTab = () => {
 							value={workingHoursStart}
 							onChange={(e) => setWorkingHoursStart(Number(e.target.value))}
 							inputProps={{ min: 0, max: 23 }}
+							disabled={!scheduleEnabled}
 						/>
 					</Grid>
 					<Grid item xs={12} sm={4}>
@@ -277,6 +293,7 @@ const ConfigTab = () => {
 							value={workingHoursEnd}
 							onChange={(e) => setWorkingHoursEnd(Number(e.target.value))}
 							inputProps={{ min: 1, max: 24 }}
+							disabled={!scheduleEnabled}
 						/>
 					</Grid>
 				</Grid>

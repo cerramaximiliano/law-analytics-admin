@@ -7,6 +7,8 @@ import { FlowSpec, FlowNode, FlowEdge } from "../causas/flujos/flowTypes";
 
 export interface PostalFlowLiveConfig {
 	checkIntervalHours: number;
+	/** false ⇒ la ventana horaria NO se aplica: el worker consulta 24/7. */
+	scheduleEnabled: boolean;
 	workingHoursStart: number;
 	workingHoursEnd: number;
 	staleAlertEnabled: boolean;
@@ -83,7 +85,11 @@ export function buildPostalWorkersSpec(cfg: PostalFlowLiveConfig): FlowSpec {
 			h: 84,
 			kind: "ext",
 			label: "Correo Argentino ONDNC",
-			sub: ["formularios/ondnc", "público · sin captcha ni login", `horario ${cfg.workingHoursStart}-${cfg.workingHoursEnd} ART`],
+			sub: [
+				"formularios/ondnc",
+				"público · sin captcha ni login",
+				cfg.scheduleEnabled ? `horario ${cfg.workingHoursStart}-${cfg.workingHoursEnd} ART lun-vie` : "sin ventana horaria · 24/7",
+			],
 		},
 		{
 			id: "lanotif",

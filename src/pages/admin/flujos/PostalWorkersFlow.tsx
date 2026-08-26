@@ -19,6 +19,7 @@ import ScraperService from "api/scraperService";
 
 const DEFAULTS: PostalFlowLiveConfig = {
 	checkIntervalHours: 3,
+	scheduleEnabled: false,
 	workingHoursStart: 8,
 	workingHoursEnd: 20,
 	staleAlertEnabled: true,
@@ -37,6 +38,8 @@ const PostalWorkersFlow: React.FC = () => {
 				const c = r.data;
 				setCfg({
 					checkIntervalHours: c.scraping?.checkIntervalHours ?? DEFAULTS.checkIntervalHours,
+					// `enabled` ausente ⇒ el manager ignora la ventana y corre 24/7.
+					scheduleEnabled: c.scraping?.schedule?.enabled === true,
 					workingHoursStart: c.scraping?.schedule?.workingHoursStart ?? DEFAULTS.workingHoursStart,
 					workingHoursEnd: c.scraping?.schedule?.workingHoursEnd ?? DEFAULTS.workingHoursEnd,
 					staleAlertEnabled: c.alerts?.staleTracking?.enabled !== false,
@@ -65,7 +68,9 @@ const PostalWorkersFlow: React.FC = () => {
 			<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }} flexWrap="wrap" useFlexGap>
 				<Chip
 					size="small"
-					label={`checks cada ${cfg.checkIntervalHours}h · ${cfg.workingHoursStart}-${cfg.workingHoursEnd} ART${failed ? " (no se pudo leer la config — defaults)" : ""}`}
+					label={`checks cada ${cfg.checkIntervalHours}h · ${
+						cfg.scheduleEnabled ? `${cfg.workingHoursStart}-${cfg.workingHoursEnd} ART lun-vie` : "24/7"
+					}${failed ? " (no se pudo leer la config — defaults)" : ""}`}
 					sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}
 				/>
 				<Chip
