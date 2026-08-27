@@ -582,3 +582,22 @@ export const getProgresoRender = async (): Promise<ProgresoRender> => {
 	const res = await mktAxios.get("/api/social/render-progreso");
 	return res.data.data;
 };
+
+// ==================== Carrusel de un fallo (SAIJ) ====================
+
+export interface FalloExplicadoResponse {
+	creado: boolean;
+	postId?: string;
+	content: { caratula?: string; rama?: string; bloques?: { rotulo: string; texto: string }[] };
+	caption?: string;
+	warnings?: string[];
+}
+
+/**
+ * Genera el carrusel de UNA sentencia del corpus SAIJ y lo deja en borrador.
+ * El prompt lo arma el backend con el texto del fallo: acá solo se elige cuál.
+ */
+export const crearFalloExplicado = async (scId: string, notas?: string): Promise<FalloExplicadoResponse> => {
+	const { data } = await mktAxios.post("/api/social/fallo-explicado", { scId, notas });
+	return data.data;
+};

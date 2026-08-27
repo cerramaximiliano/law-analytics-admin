@@ -23,10 +23,11 @@ import {
 	Tooltip,
 	Typography,
 } from "@mui/material";
-import { Refresh, TickCircle, CloseCircle, Instagram, ExportSquare } from "iconsax-react";
+import { Refresh, TickCircle, CloseCircle, Instagram, ExportSquare, MagicStar } from "iconsax-react";
 
 import { getSaijSentencias, getSaijSentenciaStats, setSaijSentenciaSocialPost, SaijSentencia, SentenciaListParams } from "api/saij";
 import { getSaijCampaigns, SaijCampaign } from "api/saijCampaigns";
+import { crearFalloExplicado } from "api/socialPosts";
 import CampaignConfigPanel from "./CampaignConfigPanel";
 import { Accordion, AccordionSummary, AccordionDetails, Divider } from "@mui/material";
 import { ArrowDown2 } from "iconsax-react";
@@ -70,6 +71,8 @@ export default function DifusionTab() {
 	const [resumenFiltro, setResumenFiltro] = useState<"" | "true" | "false">("");
 	const [q, setQ] = useState("");
 	const [stats, setStats] = useState<{ userNotified: number; userCampaignExcluded: number; socialPost: number } | null>(null);
+	const [generando, setGenerando] = useState<string | null>(null);
+	const [aviso, setAviso] = useState<{ tipo: "success" | "error"; texto: string } | null>(null);
 	const [conResumen, setConResumen] = useState<number | null>(null);
 	const [marcando, setMarcando] = useState<string | null>(null);
 	const [campanias, setCampanias] = useState<SaijCampaign[]>([]);
@@ -118,6 +121,25 @@ export default function DifusionTab() {
 			})
 			.catch(() => {});
 	}, []);
+
+	// Genera el carrusel "fallo explicado" del fallo elegido. El post queda en
+	// BORRADOR: la revisión editorial es parte del flujo, no un extra.
+	const generarCarrusel = async (scId: string, caratula: string) => {
+		setGenerando(scId);
+		setAviso(null);
+		try {
+			const r = await crearFalloExplicado(scId);
+			setAviso({
+				tipo: "success",
+				texto: `Carrusel en borrador (${r.content?.bloques?.length ?? 0} slides) — ${caratula.slice(0, 40)}. Revisalo en Social.`,
+			});
+			await load();
+		} catch (e: any) {
+			setAviso({ tipo: "error", texto: e?.response?.data?.error || e.message || "No se pudo generar el carrusel" });
+		} finally {
+			setGenerando(null);
+		}
+	};
 
 	const toggleSocialPost = async (row: SaijSentencia) => {
 		const generado = !row.socialPost?.generado;
@@ -276,6 +298,11 @@ export default function DifusionTab() {
 
 			{error && <Alert severity="error">{error}</Alert>}
 
+			{aviso && (
+				<Alert severity={aviso.tipo} onClose={() => setAviso(null)} sx={{ mb: 1.5 }}>
+					{aviso.texto}
+				</Alert>
+			)}
 			<TableContainer component={Paper} variant="outlined">
 				<Table size="small">
 					<TableHead>
@@ -362,6 +389,26 @@ export default function DifusionTab() {
 											)}
 										</TableCell>
 										<TableCell align="center">
+											<Tooltip
+												title={
+													!pub
+														? "Necesita página pública y resumen IA para poder explicarse"
+														: r.socialPost?.generado
+															? "Ya tiene un post generado"
+															: "Generar carrusel explicando este fallo (queda en borrador)"
+												}
+											>
+												<span>
+													<IconButton
+														size="small"
+														onClick={() => sc?._id && generarCarrusel(sc._id, r.titulo || "")}
+														disabled={!pub || !!r.socialPost?.generado || generando === sc?._id}
+														color="primary"
+													>
+														{generando === sc?._id ? <CircularProgress size={14} /> : <MagicStar size={16} />}
+													</IconButton>
+												</span>
+											</Tooltip>
 											<Tooltip title={r.socialPost?.generado ? "Post generado — click para desmarcar" : "Marcar que se generó un post"}>
 												<span>
 													<IconButton
