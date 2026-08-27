@@ -64,6 +64,10 @@ interface WorkerDoc {
 	cuandoCorre: string;
 	escribe: string;
 	senales: string[];
+	/** Conceptos del worker que no se entienden solos leyendo una métrica. */
+	glosario?: { termino: string; texto: string }[];
+	/** Alertas que este worker puede emitir, con su condición exacta. */
+	alertas?: { nombre: string; cuando: string; umbral?: string }[];
 }
 
 // Explicación de cada worker: qué resuelve, cuándo se dispara y qué deja escrito.
@@ -92,6 +96,18 @@ const WORKER_DOCS: Record<string, WorkerDoc> = {
 			"Total de causas > creadas + vinculadas: la diferencia son las que el plan bloqueó — mirar archivadas y pendientes por límite.",
 			"Pendientes por límite > 0 = el usuario llegó al tope de storage; esas causas quedan SIN carpeta y reaparecen cada día como 'portal sin carpeta'.",
 		],
+		glosario: [
+			{
+				termino: "Filas sin prefijo de fuero",
+				texto:
+					"El portal lista los expedientes asignados a Tribunal Oral como “031319/1996/TO01”, sin fuero adelante. No se pueden buscar por número —no hay fuero con qué buscar— así que el alta por número no sirve: se abren desde el detalle del listado y se les infiere el fuero del tribunal, solo para clasificarlas. Quedan marcadas listOnly y nunca se buscan en el portal público.",
+			},
+			{
+				termino: "Archivadas vs pendientes por límite",
+				texto:
+					"Sobre el tope de carpetas del plan la carpeta se crea igual, pero archivada. Sin storage disponible NO se crea: esa causa queda sin carpeta de forma legítima y va a reaparecer cada día en el conteo de portal sin carpeta.",
+			},
+		],
 	},
 	"update-sync": {
 		proceso: "pjn-update-sync",
@@ -105,6 +121,23 @@ const WORKER_DOCS: Record<string, WorkerDoc> = {
 			"Altas por reconciliación > 0 = expedientes que el portal lista y no tenían carpeta. Es el dato real, no la heurística de carátulas.",
 			"Portal sin carpeta que no baja de una corrida a la otra = o el plan del usuario las bloquea, o el alta está fallando: el run guarda cuáles son.",
 		],
+		glosario: [
+			{
+				termino: "Portal sin carpeta",
+				texto:
+					"Expedientes que el portal lista y que no tienen carpeta del usuario. La comparación es contra las carpetas reales, por expediente y por carátula. Antes esto lo decidía una heurística de rangos alfabéticos de carátulas que daba por conocido casi todo, y así se perdían altas sin dejar rastro: el 26/08 había 25 expedientes sin carpeta en 7 de 10 credenciales. El run guarda cuáles son, no solo cuántos.",
+			},
+			{
+				termino: "Altas por reconciliación",
+				texto:
+					"Las que se dan de alta a partir de esa comparación. Solo se hacen con escaneo completo: si quedaron páginas sin leer, “no tiene carpeta” no significa nada y podría crear duplicados o marcar bajas falsas.",
+			},
+			{
+				termino: "Salidas del listado (listRemoved)",
+				texto:
+					"Carpetas cuya causa dejó de aparecer en el listado. También exige escaneo completo: con una pasada parcial, la ausencia no prueba nada y un portal degradado convertiría causas sanas en bajas.",
+			},
+		],
 	},
 	"private-causas-update": {
 		proceso: "pjn-private-causas-update",
@@ -116,7 +149,36 @@ const WORKER_DOCS: Record<string, WorkerDoc> = {
 			"Runs partial repetidos sobre la misma credencial = catch-up trabado, revisar el cooldown.",
 			"Movimientos nuevos en 0 durante días con causas procesadas > 0 es normal fuera de feria; sostenido no.",
 			"Por lista + por número debe dar el total de causas de la credencial: si no cierra, hay un caso sin clasificar.",
-			"Sweep re-paginó: el sweep abre todas las causas de la vía lista en UNA pasada del listado y vuelve con “Volver a Mi Lista”. Cuando no encuentra ese enlace tiene que re-navegar y paginar desde la página 1 — funciona, pero pierde todo el ahorro. Debe ser 0; sobre el 5% de las causas por lista salta alerta.",
+			"Sweep re-paginó debe ser 0. Ver el glosario abajo: es el modo degradado del sweep.",
+		],
+		glosario: [
+			{
+				termino: "Vía de acceso",
+				texto:
+					"Cada causa se resuelve de una de dos formas, y el criterio es explícito (viaDeAcceso). Por LISTA: las privadas, los incidentes y las solo-listado, que el buscador por número no puede devolver — se entra al listado de Mis Causas y se abre el detalle. Por NÚMERO: el resto, que el buscador resuelve dentro de la sesión, sin captcha. Las dos usan la credencial del usuario: ninguna pasa por el mundo público.",
+			},
+			{
+				termino: "Reclasificadas",
+				texto:
+					"Causas que entraron por la vía número, el buscador las rechazó y las terminó resolviendo el listado. No son un error: es el traspaso previsto entre las dos vías, y por eso se cuentan aparte.",
+			},
+			{
+				termino: "Sweep",
+				texto:
+					"Las causas de la vía lista se abren todas en UNA sola pasada del listado, en vez de paginar desde cero por cada una. Después de cada causa se vuelve con el enlace “Volver a Mi Lista”, que devuelve a la misma página donde estaba. Con 24 causas eso es una paginación en lugar de 24.",
+			},
+			{
+				termino: "Sweep re-paginó",
+				texto:
+					"El modo degradado del sweep. Cuando no encuentra el enlace de volver no tiene forma de retomar, así que re-navega al listado y pagina desde la página 1. Sigue funcionando —por eso las causas se procesan igual— pero pierde todo el ahorro, y el costo escala con el tamaño del listado. El 27/08 el 100% de los casos era el mismo: el scrape entraba a “Ver históricas” y no volvía, así que el sweep buscaba el enlace en una página que no lo tiene. Debe ser 0.",
+			},
+		],
+		alertas: [
+			{
+				nombre: "El sweep está re-paginando el listado",
+				cuando: "una corrida re-navega el listado más de lo tolerado, en vez de resolverlo en una sola pasada",
+				umbral: "más del 5% de las causas que fueron por lista, y solo con 10 o más (sweepAlertMaxRate / sweepAlertMinCausas)",
+			},
 		],
 	},
 };
@@ -284,6 +346,66 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 									</Typography>
 								</Stack>
 							))}
+
+							{/* Glosario: los términos que una métrica sola no explica. Va acá y
+							    no en un doc aparte para que la aclaración viva donde se lee el número. */}
+							{doc.glosario && doc.glosario.length > 0 && (
+								<>
+									<Divider sx={{ my: 1.5 }} />
+									<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.75 }}>
+										Qué significa cada término
+									</Typography>
+									<Stack spacing={1}>
+										{doc.glosario.map((g) => (
+											<Box key={g.termino}>
+												<Typography variant="body2" fontWeight={600}>
+													{g.termino}
+												</Typography>
+												<Typography variant="body2" color="text.secondary">
+													{g.texto}
+												</Typography>
+											</Box>
+										))}
+									</Stack>
+								</>
+							)}
+
+							{doc.alertas && doc.alertas.length > 0 && (
+								<>
+									<Divider sx={{ my: 1.5 }} />
+									<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.75 }}>
+										Alertas que emite este worker
+									</Typography>
+									<Stack spacing={1}>
+										{doc.alertas.map((a) => (
+											<Box
+												key={a.nombre}
+												sx={{
+													p: 1.25,
+													borderRadius: 1,
+													border: `1px solid ${alpha(theme.palette.warning.main, 0.4)}`,
+													bgcolor: alpha(theme.palette.warning.main, 0.05),
+												}}
+											>
+												<Typography variant="body2" fontWeight={600}>
+													{a.nombre}
+												</Typography>
+												<Typography variant="body2" color="text.secondary">
+													Salta cuando {a.cuando}.
+												</Typography>
+												{a.umbral && (
+													<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
+														Umbral: {a.umbral}
+													</Typography>
+												)}
+											</Box>
+										))}
+									</Stack>
+									<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+										Aparecen en la sección de alertas del admin y se envían por email, por el mismo circuito que las de credenciales.
+									</Typography>
+								</>
+							)}
 						</CardContent>
 					</Card>
 				)}
