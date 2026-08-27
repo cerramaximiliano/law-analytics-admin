@@ -233,8 +233,12 @@ export interface EligibilityStatsResponse {
 		totalElegibles: number;
 		actualizadosHoy: number;
 		pendientesHoy: number;
+		/** Elegibles que NO están vencidas: es el numerador de la cobertura. */
+		alDia?: number;
 		coveragePercent: number;
 		thresholdHours: number;
+		/** Inicio del ciclo de trabajo de hoy, en la zona del worker. */
+		inicioCiclo?: string;
 	};
 }
 
@@ -410,6 +414,7 @@ export class CausasPjSaltaService {
 				data: {
 					elegibles: 0,
 					noElegibles: 0,
+					alDia: 0,
 					totalElegibles: 0,
 					actualizadosHoy: 0,
 					pendientesHoy: 0,
