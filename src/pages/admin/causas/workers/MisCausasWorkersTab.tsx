@@ -115,6 +115,8 @@ const WORKER_DOCS: Record<string, WorkerDoc> = {
 		senales: [
 			"Runs partial repetidos sobre la misma credencial = catch-up trabado, revisar el cooldown.",
 			"Movimientos nuevos en 0 durante días con causas procesadas > 0 es normal fuera de feria; sostenido no.",
+			"Por lista + por número debe dar el total de causas de la credencial: si no cierra, hay un caso sin clasificar.",
+			"Sweep re-paginó: el sweep abre todas las causas de la vía lista en UNA pasada del listado y vuelve con “Volver a Mi Lista”. Cuando no encuentra ese enlace tiene que re-navegar y paginar desde la página 1 — funciona, pero pierde todo el ahorro. Debe ser 0; sobre el 5% de las causas por lista salta alerta.",
 		],
 	},
 };
