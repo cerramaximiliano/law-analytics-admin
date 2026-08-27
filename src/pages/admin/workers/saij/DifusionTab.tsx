@@ -47,6 +47,22 @@ import { ArrowDown2 } from "iconsax-react";
 
 const PUBLIC_BASE = "https://lawanalytics.app/jurisprudencia";
 
+// Motivos por los que un fallo queda fuera del boletín. Los escribe el worker
+// en userCampaignExcludedReason; antes solo iban al log y no se podía saber
+// desde el admin qué contenido se estaba perdiendo.
+const MOTIVO_EXCLUSION: Record<string, string> = {
+	"sin-sentencia-capturada": "Nunca llegó a tener página pública (no se le pudo vincular causa a tiempo)",
+	"sin-resumen-ia": "No se le pudo generar el resumen IA, que es requisito del correo y de la vista pública",
+	"publicacion-skipped": "Dado de baja editorialmente desde el admin",
+	"backfill-sin-causa": "Recuperado en un backfill: se publicó en el sitio pero no se anuncia como novedad",
+};
+const MOTIVO_CORTO: Record<string, string> = {
+	"sin-sentencia-capturada": "sin página",
+	"sin-resumen-ia": "sin resumen",
+	"publicacion-skipped": "dado de baja",
+	"backfill-sin-causa": "backfill",
+};
+
 type FiltroDifusion = "todos" | "notificados" | "en-cola" | "excluidos" | "con-post" | "sin-post";
 
 const FILTROS: { value: FiltroDifusion; label: string; params: Partial<SentenciaListParams> }[] = [
@@ -381,8 +397,13 @@ export default function DifusionTab() {
 													<Chip size="small" color="success" label={fmtDate(r.userNotifiedAt)} />
 												</Tooltip>
 											) : r.userCampaignExcluded ? (
-												<Tooltip title={`Excluido el ${fmtDate(r.userCampaignExcludedAt)}`}>
-													<Chip size="small" color="warning" variant="outlined" label="excluido" />
+												<Tooltip title={`${MOTIVO_EXCLUSION[r.userCampaignExcludedReason || ""] || "Excluido"} · ${fmtDate(r.userCampaignExcludedAt)}`}>
+													<Chip
+														size="small"
+														color="warning"
+														variant="outlined"
+														label={MOTIVO_CORTO[r.userCampaignExcludedReason || ""] || "excluido"}
+													/>
 												</Tooltip>
 											) : (
 												<Chip size="small" variant="outlined" label={pub ? "en cola" : "no elegible"} />

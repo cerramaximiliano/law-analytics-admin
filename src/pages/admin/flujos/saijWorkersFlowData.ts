@@ -6,9 +6,14 @@
 // ritmo — por eso sumar un canal es crear una config, no escribir un scraper.
 //
 // La bifurcación que importa es NACIONAL vs. el resto: solo el nacional
-// alimenta el pipeline PJN (link a causa, movimientos, SentenciaCapturada,
-// embeddings) y las campañas a usuarios. Provincial y CSJN se detienen en la
-// colección, porque sus fallos no existen en las causas PJN.
+// alimenta el pipeline PJN completo (link a causa y movimiento en el
+// expediente del usuario). Provincial se detiene en la colección.
+//
+// CSJN es el caso intermedio (2026-08): sus fallos no tienen causa PJN, pero
+// igual se proyectan a SentenciaCapturada con causaId null, así que reciben
+// resumen IA, página pública, embeddings y su sección propia en el boletín.
+// El mismo mecanismo cubre los fallos nacionales cuyo expediente no matcheó
+// (pipeline.createScSinCausa): antes quedaban invisibles.
 
 import { FlowSpec, FlowNode, FlowEdge } from "../causas/flujos/flowTypes";
 
@@ -101,7 +106,7 @@ export function buildSaijWorkersSpec(): FlowSpec {
 			h: 96,
 			kind: "private",
 			label: "Pipeline PJN",
-			sub: ["link a causa + movimiento", "SentenciaCapturada", "embeddings + resumen IA"],
+			sub: ["con causa: movimiento en el expediente", "sin causa: SC con causaId null", "resumen IA + embeddings"],
 		},
 		{
 			id: "campania",
@@ -110,8 +115,19 @@ export function buildSaijWorkersSpec(): FlowSpec {
 			w: 210,
 			h: 84,
 			kind: "ok",
-			label: "Campaña a usuarios",
-			sub: ["novedades jurisprudenciales", "5 fallos, 12h, lun-vie"],
+			label: "Boletín a usuarios",
+			sub: ["5 generales + 2 de la Corte", "12h lun-vie, más reciente primero", "ventana de alta: 30 días"],
+		},
+
+		{
+			id: "social",
+			x: 1250,
+			y: 150,
+			w: 210,
+			h: 96,
+			kind: "ok",
+			label: "Carruseles sociales",
+			sub: ["multi-fallo: cron diario por rama", "fallo explicado: mar y jue", "quedan en BORRADOR"],
 		},
 
 		// ── Salidas comunes ──────────────────────────────────────────────────
@@ -153,11 +169,20 @@ export function buildSaijWorkersSpec(): FlowSpec {
 		// Solo el nacional sigue hacia el pipeline PJN: hay un guard duro por
 		// scrapeJurisdiccion, más allá de lo que diga la config.
 		{
+			id: "e-pipe-social",
+			from: "pipeline",
+			to: "social",
+			kind: "handoff",
+			label: "fallos con resumen",
+			fromSide: "right",
+			toSide: "left",
+		},
+		{
 			id: "e-col-pipe",
 			from: "coleccion",
 			to: "pipeline",
 			kind: "handoff",
-			label: "solo NACIONAL",
+			label: "NACIONAL y CSJN",
 			fromSide: "top",
 			toSide: "bottom",
 		},

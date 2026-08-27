@@ -65,6 +65,7 @@ import {
 	updateSaijScrapingConfig,
 	updateSaijNotificationConfig,
 	updateSaijPipelineConfig,
+	vincularCausaSaij,
 } from "api/saij";
 import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES, headerBorder } from "themes/dashboardTokens";
 import SaijWorkersFlow from "pages/admin/flujos/SaijWorkersFlow";
@@ -130,6 +131,12 @@ export default function SaijWorkerPage() {
 	const [loading, setLoading] = useState(true);
 	const [selected, setSelected] = useState<SaijWorkerConfig | null>(null);
 	const [tab, setTab] = useState(0);
+	// Vinculación manual de causa: el pipeline solo vincula cuando puede
+	// parsear el expediente del PDF; esto cubre los fallos que quedaron sueltos.
+	const [causaDialog, setCausaDialog] = useState<{ id: string; titulo: string } | null>(null);
+	const [causaForm, setCausaForm] = useState({ fuero: "", number: "", year: "" });
+	const [causaMsg, setCausaMsg] = useState<string | null>(null);
+	const [causaLoading, setCausaLoading] = useState(false);
 	const [actionLoading, setActionLoading] = useState(false);
 
 	// History
@@ -1244,7 +1251,22 @@ export default function SaijWorkerPage() {
 																			<TickCircle size={14} color={theme.palette.success.main} />
 																		</Tooltip>
 																	) : (
-																		<CloseCircle size={14} color={theme.palette.text.disabled} />
+																		<Tooltip title="Sin causa vinculada — click para vincularla a mano">
+																			<IconButton
+																				size="small"
+																				onClick={() => {
+																					setCausaDialog({ id: d._id, titulo: d.titulo || "" });
+																					setCausaForm({
+																						fuero: d.fuero || "",
+																						number: d.expediente?.numero ? String(d.expediente.numero) : "",
+																						year: d.expediente?.año ? String(d.expediente.año) : "",
+																					});
+																					setCausaMsg(null);
+																				}}
+																			>
+																				<CloseCircle size={14} color={theme.palette.text.disabled} />
+																			</IconButton>
+																		</Tooltip>
 																	)}
 																</TableCell>
 																<TableCell>
@@ -1441,6 +1463,77 @@ export default function SaijWorkerPage() {
 					<Button onClick={() => setCursorDialogOpen(false)}>Cancelar</Button>
 					<Button variant="contained" onClick={handleResetCursor} disabled={!cursorYear || !cursorMonth || actionLoading}>
 						Aplicar
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* ── Dialog: vincular causa a mano ── */}
+			<Dialog open={!!causaDialog} onClose={() => setCausaDialog(null)} maxWidth="sm" fullWidth>
+				<DialogTitle>Vincular con una causa</DialogTitle>
+				<DialogContent>
+					<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
+						{causaDialog?.titulo}
+					</Typography>
+					<Alert severity="info" variant="outlined" sx={{ mb: 2, py: 0.25 }}>
+						La causa tiene que existir en la base. Al vincular, la sentencia capturada queda colgada de ese
+						expediente y el fallo aparece entre sus movimientos.
+					</Alert>
+					<Stack direction="row" spacing={2}>
+						<TextField
+							label="Fuero"
+							size="small"
+							value={causaForm.fuero}
+							onChange={(e) => setCausaForm((f) => ({ ...f, fuero: e.target.value.toUpperCase().slice(0, 4) }))}
+							placeholder="CIV"
+							sx={{ width: 110 }}
+						/>
+						<TextField
+							label="Número"
+							size="small"
+							type="number"
+							value={causaForm.number}
+							onChange={(e) => setCausaForm((f) => ({ ...f, number: e.target.value }))}
+						/>
+						<TextField
+							label="Año"
+							size="small"
+							type="number"
+							value={causaForm.year}
+							onChange={(e) => setCausaForm((f) => ({ ...f, year: e.target.value }))}
+						/>
+					</Stack>
+					{causaMsg && (
+						<Alert severity={causaMsg.startsWith("OK") ? "success" : "error"} sx={{ mt: 2 }}>
+							{causaMsg.replace(/^OK · /, "")}
+						</Alert>
+					)}
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setCausaDialog(null)}>Cerrar</Button>
+					<Button
+						variant="contained"
+						disabled={!causaForm.fuero || !causaForm.number || !causaForm.year || causaLoading}
+						onClick={async () => {
+							if (!causaDialog) return;
+							setCausaLoading(true);
+							setCausaMsg(null);
+							try {
+								const r = await vincularCausaSaij(causaDialog.id, {
+									fuero: causaForm.fuero,
+									number: Number(causaForm.number),
+									year: Number(causaForm.year),
+								});
+								setCausaMsg(`OK · Vinculado con "${r.data?.causa?.caratula || "la causa"}"`);
+								enqueueSnackbar("Fallo vinculado con la causa", { variant: "success" });
+								loadPipelineSentencias();
+							} catch (e: any) {
+								setCausaMsg(e?.response?.data?.message || e.message || "No se pudo vincular");
+							} finally {
+								setCausaLoading(false);
+							}
+						}}
+					>
+						{causaLoading ? <CircularProgress size={16} /> : "Vincular"}
 					</Button>
 				</DialogActions>
 			</Dialog>

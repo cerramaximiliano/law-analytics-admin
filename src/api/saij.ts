@@ -58,6 +58,8 @@ export interface SaijSentencia {
 	userCampaignExcluded?: boolean;
 	userCampaignExcludedAt?: string;
 	socialPost?: { generado?: boolean; postId?: string; estado?: string; markedAt?: string; markedBy?: string };
+	/** Por qué quedó afuera del boletín: sin-sentencia-capturada | sin-resumen-ia | publicacion-skipped | backfill-sin-causa */
+	userCampaignExcludedReason?: string;
 	expediente?: {
 		numero: number;
 		año: number;
@@ -439,5 +441,18 @@ export const updateSaijNotificationConfig = async (
 	data: Partial<SaijWorkerConfig["notification"]> & { userCampaign?: Partial<SaijUserCampaignConfig> },
 ) => {
 	const response = await pjnAxios.patch(`/api/saij/config/${workerId}/notification`, data);
+	return response.data;
+};
+
+/**
+ * Vincula a mano un fallo con una causa PJN (o la suelta con desvincular).
+ * El pipeline solo vincula cuando puede parsear el expediente del PDF; esto
+ * cubre los fallos cuyo expediente no matcheó.
+ */
+export const vincularCausaSaij = async (
+	id: string,
+	data: { fuero: string; number: number; year: number } | { desvincular: true },
+) => {
+	const response = await pjnAxios.patch(`/api/saij/sentencias/${id}/causa`, data);
 	return response.data;
 };
