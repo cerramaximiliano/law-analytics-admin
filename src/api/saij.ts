@@ -202,6 +202,12 @@ export interface SaijUserCampaignConfig {
 	csjnMaxItems?: number;
 	/** Antigüedad máxima de la sentencia de la Corte para entrar (días) */
 	csjnMaxDocAgeDays?: number;
+	/** Criterio de la sección general: más reciente primero o FIFO */
+	ordenSeleccion?: "reciente" | "antiguo";
+	/** Criterio de la sección Corte */
+	csjnOrden?: "reciente" | "antiguo";
+	/** Asunto del correo */
+	subject?: string;
 	lastCampaignAt?: string;
 	lastReportAt?: string;
 }

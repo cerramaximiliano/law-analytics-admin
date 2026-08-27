@@ -3,7 +3,6 @@ import {
 	Alert,
 	Box,
 	Button,
-	Chip,
 	CircularProgress,
 	Divider,
 	FormControl,
@@ -57,6 +56,11 @@ type Campos = Required<
 		| "reportLookbackHours"
 		| "csjnMaxItems"
 		| "csjnMaxDocAgeDays"
+		| "ordenSeleccion"
+		| "csjnOrden"
+		| "subject"
+		| "segmentId"
+		| "templateId"
 	>
 >;
 
@@ -76,6 +80,11 @@ const DEFAULTS: Campos = {
 	reportLookbackHours: 48,
 	csjnMaxItems: 2,
 	csjnMaxDocAgeDays: 30,
+	ordenSeleccion: "reciente",
+	csjnOrden: "antiguo",
+	subject: "Novedades Jurisprudenciales",
+	segmentId: "",
+	templateId: "",
 };
 
 const fmt = (d?: string) => (d ? new Date(d).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" }) : "—");
@@ -238,6 +247,20 @@ export default function CampaignConfigPanel() {
 						Qué fallos entran
 					</Typography>
 				</Grid>
+				<Grid item xs={12} sm={6} md={4}>
+					<FormControl fullWidth size="small">
+						<InputLabel>Criterio de selección</InputLabel>
+						<Select value={campos.ordenSeleccion} label="Criterio de selección" onChange={(e) => cambio("ordenSeleccion")(e.target.value)}>
+							<MenuItem value="reciente">Más reciente primero</MenuItem>
+							<MenuItem value="antiguo">Más antiguo primero (FIFO)</MenuItem>
+						</Select>
+					</FormControl>
+					<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
+						{campos.ordenSeleccion === "reciente"
+							? "Prioriza lo recién dado de alta en SAIJ; la cola vieja expira por la ventana de alta."
+							: "Drena la cola en orden, sin saltear ninguno — pero el correo puede anunciar fallos de hace meses."}
+					</Typography>
+				</Grid>
 				{numero("maxFallosPorCampania", "Fallos por correo", "Tope de fallos que incluye cada campaña. El resto espera su turno, del más antiguo al más nuevo.", 1)}
 				{numero(
 					"maxPublishAgeDays",
@@ -302,6 +325,18 @@ export default function CampaignConfigPanel() {
 					"Antigüedad máxima de la sentencia de la Corte para entrar en la sección.",
 					1,
 				)}
+				<Grid item xs={12} sm={6} md={4}>
+					<FormControl fullWidth size="small">
+						<InputLabel>Criterio de la Corte</InputLabel>
+						<Select value={campos.csjnOrden} label="Criterio de la Corte" onChange={(e) => cambio("csjnOrden")(e.target.value)}>
+							<MenuItem value="antiguo">Más antiguo primero (FIFO)</MenuItem>
+							<MenuItem value="reciente">Más reciente primero</MenuItem>
+						</Select>
+					</FormControl>
+					<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
+						Cola aparte de la general: los topes se suman ({campos.maxFallosPorCampania} + {campos.csjnMaxItems} por correo).
+					</Typography>
+				</Grid>
 
 				{/* Publicación */}
 				<Grid item xs={12}>
@@ -338,13 +373,35 @@ export default function CampaignConfigPanel() {
 					/>
 				</Grid>
 				<Grid item xs={12} md={6}>
-					<Stack direction="row" spacing={1} alignItems="center" sx={{ height: "100%" }}>
-						<Chip size="small" variant="outlined" label={`Segmento ${meta.segmentId ? meta.segmentId.slice(-6) : "—"}`} />
-						<Chip size="small" variant="outlined" label={`Template ${meta.templateId ? meta.templateId.slice(-6) : "—"}`} />
-						<Typography variant="caption" color="text.secondary">
-							(se cambian por script)
-						</Typography>
-					</Stack>
+					<TextField
+						fullWidth
+						size="small"
+						label={<>Asunto del correo<Ayuda texto="Lo ve el usuario en su bandeja. Entre 3 y 120 caracteres." /></>}
+						value={campos.subject}
+						onChange={(e) => cambio("subject")(e.target.value)}
+					/>
+				</Grid>
+				<Grid item xs={12} md={6}>
+					<TextField
+						fullWidth
+						size="small"
+						label={<>Segmento (id)<Ayuda texto="Audiencia principal del correo. Es el id de un segmento de la-marketing-service (24 caracteres hexadecimales)." /></>}
+						value={campos.segmentId}
+						onChange={(e) => cambio("segmentId")(e.target.value.trim())}
+						error={!!campos.segmentId && !/^[a-f0-9]{24}$/i.test(campos.segmentId)}
+						helperText={!!campos.segmentId && !/^[a-f0-9]{24}$/i.test(campos.segmentId) ? "Id inválido" : " "}
+					/>
+				</Grid>
+				<Grid item xs={12} md={6}>
+					<TextField
+						fullWidth
+						size="small"
+						label={<>Template (id)<Ayuda texto="Plantilla del correo en emailtemplates. El worker le pasa las variables con los fallos; cambiarla cambia el diseño de todo el boletín." /></>}
+						value={campos.templateId}
+						onChange={(e) => cambio("templateId")(e.target.value.trim())}
+						error={!!campos.templateId && !/^[a-f0-9]{24}$/i.test(campos.templateId)}
+						helperText={!!campos.templateId && !/^[a-f0-9]{24}$/i.test(campos.templateId) ? "Id inválido" : " "}
+					/>
 				</Grid>
 			</Grid>
 
