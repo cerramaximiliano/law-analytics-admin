@@ -369,11 +369,11 @@ export default function CampaignConfigPanel() {
 							},
 							{
 								t: "Cómo se eligen los fallos",
-								d: "En orden de llegada según la fecha de alta en SAIJ, no según la fecha de la sentencia: la cola se drena en el orden en que SAIJ fue publicando. Para entrar, un fallo debe estar dentro de las dos ventanas de antigüedad, tener página pública, tener resumen IA y no estar vetado editorialmente. El que todavía no está listo espera hasta el tope de espera; pasado ese plazo queda excluido y se registra el motivo. Los sumarios de SAIJ nunca entran: solo fallos.",
+								d: "Se ordenan por fecha de alta en SAIJ, del más reciente al más antiguo, no por la fecha de la sentencia. SAIJ da de alta unos 30 fallos nacionales por día y el correo anuncia 5, así que siempre queda contenido afuera: se prioriza lo recién publicado y la cola vieja expira por la ventana de alta. Para entrar, un fallo debe estar dentro de las dos ventanas de antigüedad, tener página pública, tener resumen IA y no estar vetado editorialmente. El que todavía no está listo espera hasta el tope de espera; pasado ese plazo queda excluido y se registra el motivo. Los sumarios de SAIJ nunca entran: solo fallos.",
 							},
 							{
 								t: "La sección Corte Suprema",
-								d: "Los fallos de la Corte los captura otro worker (worker_SAIJ_CSJN_0) y se consultan aparte. Van en el mismo correo, en una card propia, con su tope y su ventana independientes.",
+								d: "Los fallos de la Corte los captura otro worker (worker_SAIJ_CSJN_0) y se consultan aparte, con su propio tope y su propia ventana: son colas independientes y los topes se suman (por defecto 5 generales + 2 de la Corte por correo). A diferencia de la sección general, esta va en orden de publicación: su flujo entra en el cupo, así que la cola se drena entera sin saltear ninguno. Van en el mismo correo, en una card propia.",
 							},
 							{
 								t: "A quién le llega",
