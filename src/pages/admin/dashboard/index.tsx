@@ -2423,7 +2423,7 @@ const AdminDashboard = () => {
 								<>
 									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
 										<Typography variant="body2" color="text.secondary">
-											Al día
+											Cobertura hoy
 										</Typography>
 										<Typography
 											variant="h6"
@@ -2470,7 +2470,7 @@ const AdminDashboard = () => {
 													{pjsaltaEligibilityStats.actualizadosHoy.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
-													Actualizados en el ciclo
+													Actualizados hoy
 												</Typography>
 											</Box>
 										</Grid>
@@ -2483,7 +2483,7 @@ const AdminDashboard = () => {
 													{pjsaltaEligibilityStats.pendientesHoy.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
-													Vencidas
+													Pendientes hoy
 												</Typography>
 											</Box>
 										</Grid>
@@ -2592,7 +2592,7 @@ const AdminDashboard = () => {
 								<>
 									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
 										<Typography variant="body2" color="text.secondary">
-											Al día
+											Cobertura hoy
 										</Typography>
 										<Typography
 											variant="h6"
@@ -2639,7 +2639,7 @@ const AdminDashboard = () => {
 													{pjcatamarcaEligibilityStats.actualizadosHoy.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
-													Actualizados en el ciclo
+													Actualizados hoy
 												</Typography>
 											</Box>
 										</Grid>
@@ -2652,7 +2652,7 @@ const AdminDashboard = () => {
 													{pjcatamarcaEligibilityStats.pendientesHoy.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
-													Vencidas
+													Pendientes hoy
 												</Typography>
 											</Box>
 										</Grid>
@@ -2761,7 +2761,7 @@ const AdminDashboard = () => {
 								<>
 									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
 										<Typography variant="body2" color="text.secondary">
-											Al día
+											Cobertura hoy
 										</Typography>
 										<Typography
 											variant="h6"
@@ -2808,7 +2808,7 @@ const AdminDashboard = () => {
 													{pjmendozaEligibilityStats.actualizadosHoy.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
-													Actualizados en el ciclo
+													Actualizados hoy
 												</Typography>
 											</Box>
 										</Grid>
@@ -2821,7 +2821,7 @@ const AdminDashboard = () => {
 													{pjmendozaEligibilityStats.pendientesHoy.toLocaleString()}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
-													Vencidas
+													Pendientes hoy
 												</Typography>
 											</Box>
 										</Grid>
