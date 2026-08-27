@@ -166,6 +166,8 @@ export interface SaijPipelineConfig {
 	downloadPdf: boolean;
 	createSentenciaCapturada: boolean;
 	createMissingCausas: boolean;
+	/** Publicar fallos sin causa PJN vinculada (SC con causaId null) */
+	createScSinCausa?: boolean;
 }
 
 export interface SaijUserCampaignConfig {
@@ -196,6 +198,10 @@ export interface SaijUserCampaignConfig {
 	reportHour?: number;
 	/** Ventana que cubre el informe (horas) */
 	reportLookbackHours?: number;
+	/** Fallos de la Corte Suprema por correo (0 = sección apagada) */
+	csjnMaxItems?: number;
+	/** Antigüedad máxima de la sentencia de la Corte para entrar (días) */
+	csjnMaxDocAgeDays?: number;
 	lastCampaignAt?: string;
 	lastReportAt?: string;
 }

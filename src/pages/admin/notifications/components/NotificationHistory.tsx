@@ -22,8 +22,20 @@ import {
 	Tab,
 	Tooltip,
 	Stack,
+	InputAdornment,
+	IconButton,
 } from "@mui/material";
-import { Notification, TaskSquare, CalendarRemove, TableDocument, Message, NotificationBing, TickCircle } from "iconsax-react";
+import {
+	Notification,
+	TaskSquare,
+	CalendarRemove,
+	TableDocument,
+	Message,
+	NotificationBing,
+	TickCircle,
+	SearchNormal1,
+	CloseCircle,
+} from "iconsax-react";
 import { alpha } from "@mui/material/styles";
 import dayjs from "utils/dayjs-config";
 import CopyButton from "components/CopyButton";
@@ -67,6 +79,8 @@ const NotificationHistory = () => {
 	const [filterType, setFilterType] = useState<string>("all");
 	const [filterMethod, setFilterMethod] = useState<string>("all");
 	const [filterHistoryStatus, setFilterHistoryStatus] = useState<string>("all");
+	const [filterEmail, setFilterEmail] = useState<string>("");
+	const [debouncedEmail, setDebouncedEmail] = useState<string>("");
 	const [historyStartDate, setHistoryStartDate] = useState<Date | null>(null);
 	const [historyEndDate, setHistoryEndDate] = useState<Date | null>(null);
 
@@ -77,9 +91,19 @@ const NotificationHistory = () => {
 		loadAlerts();
 	}, [alertsPage, alertsRowsPerPage, filterStatus, filterSourceType, alertsStartDate, alertsEndDate]);
 
+	// Debounce del filtro por email para no disparar una consulta por tecla
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedEmail(filterEmail.trim());
+			setHistoryPage(0);
+		}, 400);
+
+		return () => clearTimeout(timer);
+	}, [filterEmail]);
+
 	useEffect(() => {
 		loadHistory();
-	}, [historyPage, historyRowsPerPage, filterType, filterMethod, filterHistoryStatus, historyStartDate, historyEndDate]);
+	}, [historyPage, historyRowsPerPage, filterType, filterMethod, filterHistoryStatus, debouncedEmail, historyStartDate, historyEndDate]);
 
 	const loadAlerts = async () => {
 		try {
@@ -138,6 +162,10 @@ const NotificationHistory = () => {
 
 			if (filterMethod !== "all") {
 				params.method = filterMethod;
+			}
+
+			if (debouncedEmail) {
+				params.email = debouncedEmail;
 			}
 
 			if (historyStartDate) {
@@ -605,6 +633,29 @@ const NotificationHistory = () => {
 								<MenuItem value="webhook">Webhook</MenuItem>
 								<MenuItem value="sms">SMS</MenuItem>
 							</TextField>
+
+							<TextField
+								label="Email"
+								placeholder="Buscar por email"
+								value={filterEmail}
+								onChange={(e) => setFilterEmail(e.target.value)}
+								size="small"
+								sx={{ minWidth: 260 }}
+								InputProps={{
+									startAdornment: (
+										<InputAdornment position="start">
+											<SearchNormal1 size={16} />
+										</InputAdornment>
+									),
+									endAdornment: filterEmail ? (
+										<InputAdornment position="end">
+											<IconButton size="small" aria-label="Limpiar búsqueda por email" onClick={() => setFilterEmail("")}>
+												<CloseCircle size={16} />
+											</IconButton>
+										</InputAdornment>
+									) : null,
+								}}
+							/>
 
 							<DatePicker
 								label="Fecha inicio"

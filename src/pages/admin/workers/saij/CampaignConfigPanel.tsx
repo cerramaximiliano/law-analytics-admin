@@ -19,9 +19,10 @@ import {
 	Tooltip,
 	Typography,
 } from "@mui/material";
-import { InfoCircle } from "iconsax-react";
+import { InfoCircle, ArrowDown2 } from "iconsax-react";
+import { Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 
-import { getSaijWorkerConfig, updateSaijNotificationConfig, SaijUserCampaignConfig } from "api/saij";
+import { getSaijWorkerConfig, updateSaijNotificationConfig, updateSaijPipelineConfig, SaijUserCampaignConfig } from "api/saij";
 
 /**
  * Panel de control de las campañas de novedades jurisprudenciales.
@@ -54,6 +55,8 @@ type Campos = Required<
 		| "dailyLimit"
 		| "reportHour"
 		| "reportLookbackHours"
+		| "csjnMaxItems"
+		| "csjnMaxDocAgeDays"
 	>
 >;
 
@@ -71,6 +74,8 @@ const DEFAULTS: Campos = {
 	dailyLimit: 0,
 	reportHour: 8,
 	reportLookbackHours: 48,
+	csjnMaxItems: 2,
+	csjnMaxDocAgeDays: 30,
 };
 
 const fmt = (d?: string) => (d ? new Date(d).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" }) : "—");
@@ -89,6 +94,9 @@ export default function CampaignConfigPanel() {
 	const [campos, setCampos] = useState<Campos>(DEFAULTS);
 	const [original, setOriginal] = useState<Campos>(DEFAULTS);
 	const [meta, setMeta] = useState<{ lastCampaignAt?: string; lastReportAt?: string; segmentId?: string; templateId?: string }>({});
+	// Vive en `pipeline`, no en `userCampaign`: se carga y guarda aparte.
+	const [publicarSinCausa, setPublicarSinCausa] = useState(false);
+	const [publicarSinCausaOrig, setPublicarSinCausaOrig] = useState(false);
 	const [loading, setLoading] = useState(true);
 	const [guardando, setGuardando] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -107,6 +115,9 @@ export default function CampaignConfigPanel() {
 			setCampos(valores);
 			setOriginal(valores);
 			setMeta({ lastCampaignAt: uc.lastCampaignAt, lastReportAt: uc.lastReportAt, segmentId: uc.segmentId, templateId: uc.templateId });
+			const sinCausa = !!res.data?.pipeline?.createScSinCausa;
+			setPublicarSinCausa(sinCausa);
+			setPublicarSinCausaOrig(sinCausa);
 		} catch (e: any) {
 			setError(e?.response?.data?.message || e.message || "No se pudo cargar la configuración");
 		} finally {
@@ -119,7 +130,7 @@ export default function CampaignConfigPanel() {
 	}, []);
 
 	const cambio = (k: keyof Campos) => (valor: any) => setCampos((prev) => ({ ...prev, [k]: valor }));
-	const hayCambios = JSON.stringify(campos) !== JSON.stringify(original);
+	const hayCambios = JSON.stringify(campos) !== JSON.stringify(original) || publicarSinCausa !== publicarSinCausaOrig;
 
 	const guardar = async () => {
 		setGuardando(true);
@@ -127,6 +138,10 @@ export default function CampaignConfigPanel() {
 		setOk(null);
 		try {
 			await updateSaijNotificationConfig(WORKER_ID, { userCampaign: campos });
+			if (publicarSinCausa !== publicarSinCausaOrig) {
+				await updateSaijPipelineConfig(WORKER_ID, { createScSinCausa: publicarSinCausa });
+				setPublicarSinCausaOrig(publicarSinCausa);
+			}
 			setOriginal(campos);
 			setOk("Configuración guardada — el worker la toma en su próximo ciclo");
 		} catch (e: any) {
@@ -268,6 +283,51 @@ export default function CampaignConfigPanel() {
 						Destino
 					</Typography>
 				</Grid>
+				{/* Sección Corte Suprema */}
+				<Grid item xs={12}>
+					<Divider sx={{ my: 0.5 }} />
+					<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
+						Sección Corte Suprema
+					</Typography>
+				</Grid>
+				{numero(
+					"csjnMaxItems",
+					"Fallos de la Corte por correo",
+					"Van en una card propia dentro del mismo correo. Es un tope por CANTIDAD y no un recorte de ventana: la Corte publica en tandas (días sin nada y días con doce), así que una ventana corta dejaría la sección vacía casi siempre. 0 apaga la sección.",
+					0,
+				)}
+				{numero(
+					"csjnMaxDocAgeDays",
+					"Antigüedad de la sentencia (días)",
+					"Antigüedad máxima de la sentencia de la Corte para entrar en la sección.",
+					1,
+				)}
+
+				{/* Publicación */}
+				<Grid item xs={12}>
+					<Divider sx={{ my: 0.5 }} />
+					<Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
+						Publicación
+					</Typography>
+				</Grid>
+				<Grid item xs={12}>
+					<FormControlLabel
+						control={<Switch size="small" checked={publicarSinCausa} onChange={(e) => setPublicarSinCausa(e.target.checked)} />}
+						label={
+							<Typography variant="caption">
+								Publicar fallos sin causa PJN vinculada
+								<Ayuda texto="Un fallo cuyo expediente no matcheó con ninguna causa igual se publica: se le crea la sentencia capturada sin causa, recibe resumen IA, página pública y puede entrar al boletín. Apagado, esos fallos quedan invisibles aunque tengan el texto completo guardado." />
+							</Typography>
+						}
+						sx={{ ml: 0 }}
+					/>
+					{!publicarSinCausa && (
+						<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
+							Con esto apagado se pierde el 11-17% de los fallos de cada año, que quedan sin página aunque tengan texto.
+						</Typography>
+					)}
+				</Grid>
+
 				<Grid item xs={12} md={6}>
 					<TextField
 						fullWidth
@@ -287,6 +347,55 @@ export default function CampaignConfigPanel() {
 					</Stack>
 				</Grid>
 			</Grid>
+
+			{/* Ayuda: cómo funciona el flujo de punta a punta */}
+			<Accordion variant="outlined" disableGutters sx={{ mt: 2, "&:before": { display: "none" } }}>
+				<AccordionSummary expandIcon={<ArrowDown2 size={14} />}>
+					<Stack direction="row" spacing={0.75} alignItems="center">
+						<InfoCircle size={14} />
+						<Typography variant="caption">Cómo se arma y se envía este correo</Typography>
+					</Stack>
+				</AccordionSummary>
+				<AccordionDetails>
+					<Stack spacing={1.5}>
+						{[
+							{
+								t: "Quién lo arma y cuándo",
+								d: "Lo arma el worker worker_SAIJ_0 en su ciclo (cada 4 horas). Sale una sola campaña por día, a partir de la hora configurada y solo en días hábiles si el interruptor está activo. Si a esa hora no hay ningún fallo publicable, no sale nada y se reintenta en el ciclo siguiente.",
+							},
+							{
+								t: "Quién lo envía",
+								d: "El worker no envía correos: crea la campaña en la-marketing-service y el envío real lo hace el scheduler (email-scheduler-prod), que corre cada 5 minutos y aplica las bajas, las supresiones y el límite de envío de SES.",
+							},
+							{
+								t: "Cómo se eligen los fallos",
+								d: "En orden de llegada según la fecha de alta en SAIJ, no según la fecha de la sentencia: la cola se drena en el orden en que SAIJ fue publicando. Para entrar, un fallo debe estar dentro de las dos ventanas de antigüedad, tener página pública, tener resumen IA y no estar vetado editorialmente. El que todavía no está listo espera hasta el tope de espera; pasado ese plazo queda excluido y se registra el motivo. Los sumarios de SAIJ nunca entran: solo fallos.",
+							},
+							{
+								t: "La sección Corte Suprema",
+								d: "Los fallos de la Corte los captura otro worker (worker_SAIJ_CSJN_0) y se consultan aparte. Van en el mismo correo, en una card propia, con su tope y su ventana independientes.",
+							},
+							{
+								t: "A quién le llega",
+								d: "Al segmento principal (usuarios registrados y verificados) más los segmentos adicionales configurados. La audiencia se congela al crear la campaña, así que quien se registre después entra recién en la del día siguiente.",
+							},
+							{
+								t: "Qué pasa con los fallos sin causa",
+								d: "Históricamente, un fallo cuyo expediente no matcheaba con ninguna causa no llegaba a tener página pública y quedaba invisible. Con la opción de Publicación activada se publica igual, sin causa vinculada. Los que quedan afuera se listan con su motivo en la pestaña Difusión.",
+							},
+						].map((x) => (
+							<Box key={x.t}>
+								<Typography variant="caption" sx={{ fontWeight: 600, display: "block" }}>
+									{x.t}
+								</Typography>
+								<Typography variant="caption" color="text.secondary">
+									{x.d}
+								</Typography>
+							</Box>
+						))}
+					</Stack>
+				</AccordionDetails>
+			</Accordion>
 
 			{error && (
 				<Alert severity="error" sx={{ mt: 1.5 }}>

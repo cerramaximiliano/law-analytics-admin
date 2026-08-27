@@ -208,6 +208,9 @@ export interface AlertsQueryParams {
 export interface HistoryQueryParams {
 	type?: "event" | "task" | "movement" | "alert";
 	userId?: string;
+	email?: string;
+	status?: "sent" | "delivered" | "failed" | "pending" | "retry";
+	method?: "email" | "browser" | "webhook" | "sms";
 	startDate?: string;
 	endDate?: string;
 	limit?: number;
