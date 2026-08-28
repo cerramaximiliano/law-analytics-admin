@@ -81,6 +81,8 @@ interface WorkerCardProps {
 	config: IManagerWorkerConfig;
 	status: IWorkerStatusDetail;
 	effectiveSchedule?: IEffectiveSchedule;
+	/** Umbral global (config.updateThresholdHours) — solo aplica al update worker. */
+	updateThresholdHours?: number;
 	onToggle: () => void;
 	onEdit: () => void;
 	loading?: boolean;
@@ -91,7 +93,9 @@ interface EditDialogProps {
 	workerType: "verification" | "update" | "stuck" | null;
 	config: IManagerWorkerConfig | null;
 	onClose: () => void;
-	onSave: (updates: Partial<IManagerWorkerConfig>) => void;
+	/** Umbral global, editable desde el diálogo del update worker. */
+	globalThresholdHours?: number;
+	onSave: (updates: Partial<IManagerWorkerConfig> & { updateThresholdHours?: number }) => void;
 	loading?: boolean;
 }
 
@@ -151,7 +155,7 @@ const EngineBadge = ({ configured, stats }: { configured?: EngineMode; stats?: I
 	);
 };
 
-const WorkerCard: React.FC<WorkerCardProps> = ({ workerType, config, status, effectiveSchedule, onToggle, onEdit, loading }) => {
+const WorkerCard: React.FC<WorkerCardProps> = ({ workerType, config, status, effectiveSchedule, updateThresholdHours, onToggle, onEdit, loading }) => {
 	const theme = useTheme();
 
 	const workerLabels: Record<string, { name: string; description: string; icon: React.ReactNode }> = {
@@ -279,7 +283,7 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ workerType, config, status, eff
 								<Box sx={{ display: "flex", justifyContent: "space-between" }}>
 									<Typography variant="body2">Re-actualizar cada:</Typography>
 									<Typography variant="body2" fontWeight="bold">
-										{config?.updateThresholdHours || 24}h
+										{updateThresholdHours || 24}h
 									</Typography>
 								</Box>
 							)}
@@ -337,8 +341,10 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ workerType, config, status, eff
 };
 
 // Edit Dialog Component
-const EditWorkerDialog: React.FC<EditDialogProps> = ({ open, workerType, config, onClose, onSave, loading }) => {
-	const [formData, setFormData] = useState<Partial<IManagerWorkerConfig> & { schedule?: Partial<IWorkerSchedule> }>({});
+const EditWorkerDialog: React.FC<EditDialogProps> = ({ open, workerType, config, globalThresholdHours, onClose, onSave, loading }) => {
+	const [formData, setFormData] = useState<
+		Partial<IManagerWorkerConfig> & { schedule?: Partial<IWorkerSchedule>; updateThresholdHours?: number }
+	>({});
 
 	useEffect(() => {
 		if (config) {
@@ -347,7 +353,7 @@ const EditWorkerDialog: React.FC<EditDialogProps> = ({ open, workerType, config,
 				maxWorkers: config.maxWorkers,
 				scaleUpThreshold: config.scaleUpThreshold,
 				scaleDownThreshold: config.scaleDownThreshold,
-				updateThresholdHours: config.updateThresholdHours,
+				updateThresholdHours: globalThresholdHours,
 				batchSize: config.batchSize,
 				delayBetweenRequests: config.delayBetweenRequests,
 				maxRetries: config.maxRetries,
@@ -362,7 +368,7 @@ const EditWorkerDialog: React.FC<EditDialogProps> = ({ open, workerType, config,
 		}
 	}, [config]);
 
-	const handleChange = (field: keyof IManagerWorkerConfig) => (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleChange = (field: keyof IManagerWorkerConfig | "updateThresholdHours") => (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.type === "number" ? Number(e.target.value) : e.target.value;
 		setFormData((prev) => ({ ...prev, [field]: value }));
 	};
@@ -459,7 +465,7 @@ const EditWorkerDialog: React.FC<EditDialogProps> = ({ open, workerType, config,
 									endAdornment: <InputAdornment position="end">horas</InputAdornment>,
 									inputProps: { min: 1, max: 168 },
 								}}
-								helperText="Horas antes de volver a actualizar un expediente"
+								helperText="Horas antes de volver a actualizar un expediente (ajuste global del manager)"
 							/>
 						</Grid>
 					)}
@@ -747,12 +753,18 @@ const EjeWorkersConfig: React.FC = () => {
 		});
 	};
 
-	const handleSaveWorkerConfig = async (updates: Partial<IManagerWorkerConfig>) => {
+	const handleSaveWorkerConfig = async (updates: Partial<IManagerWorkerConfig> & { updateThresholdHours?: number }) => {
 		if (!editDialog.workerType) return;
 
 		setActionLoading(true);
 		try {
-			await configEje.updateWorkerConfig(editDialog.workerType, updates);
+			// El umbral vive a nivel manager (config.updateThresholdHours), no por worker:
+			// se guarda por su propio endpoint. Ver docs del ajuste 2026-08-28.
+			const { updateThresholdHours, ...workerUpdates } = updates;
+			await configEje.updateWorkerConfig(editDialog.workerType, workerUpdates);
+			if (updateThresholdHours !== undefined && editDialog.workerType === "update") {
+				await configEje.updateGlobalSettings({ updateThresholdHours });
+			}
 			setSnackbar({
 				open: true,
 				message: "Configuración actualizada",
@@ -1145,6 +1157,7 @@ const EjeWorkersConfig: React.FC = () => {
 										config={getWorkerData("verification")?.config || ({} as IManagerWorkerConfig)}
 										status={getWorkerData("verification")?.status || ({} as IWorkerStatusDetail)}
 										effectiveSchedule={getWorkerData("verification")?.effectiveSchedule}
+										updateThresholdHours={workersData?.globalSettings?.updateThresholdHours}
 										onToggle={() => handleToggleWorker("verification")}
 										onEdit={() => handleEditWorker("verification")}
 										loading={actionLoading}
@@ -1255,6 +1268,7 @@ const EjeWorkersConfig: React.FC = () => {
 										config={getWorkerData("update")?.config || ({} as IManagerWorkerConfig)}
 										status={getWorkerData("update")?.status || ({} as IWorkerStatusDetail)}
 										effectiveSchedule={getWorkerData("update")?.effectiveSchedule}
+										updateThresholdHours={workersData?.globalSettings?.updateThresholdHours}
 										onToggle={() => handleToggleWorker("update")}
 										onEdit={() => handleEditWorker("update")}
 										loading={actionLoading}
@@ -1331,7 +1345,7 @@ const EjeWorkersConfig: React.FC = () => {
 														</TableRow>
 														<TableRow>
 															<TableCell>Re-actualizar cada</TableCell>
-															<TableCell align="right">{getWorkerData("update")?.config?.updateThresholdHours || 24} horas</TableCell>
+															<TableCell align="right">{workersData?.globalSettings?.updateThresholdHours || 24} horas</TableCell>
 														</TableRow>
 														<TableRow>
 															<TableCell>Delay entre requests</TableCell>
@@ -1523,6 +1537,7 @@ const EjeWorkersConfig: React.FC = () => {
 										config={getWorkerData("stuck")?.config || ({} as IManagerWorkerConfig)}
 										status={getWorkerData("stuck")?.status || ({} as IWorkerStatusDetail)}
 										effectiveSchedule={getWorkerData("stuck")?.effectiveSchedule}
+										updateThresholdHours={workersData?.globalSettings?.updateThresholdHours}
 										onToggle={() => handleToggleWorker("stuck")}
 										onEdit={() => handleEditWorker("stuck")}
 										loading={actionLoading}
@@ -1670,6 +1685,7 @@ const EjeWorkersConfig: React.FC = () => {
 				open={editDialog.open}
 				workerType={editDialog.workerType}
 				config={editDialog.config}
+				globalThresholdHours={workersData?.globalSettings?.updateThresholdHours}
 				onClose={() => setEditDialog({ open: false, workerType: null, config: null })}
 				onSave={handleSaveWorkerConfig}
 				loading={actionLoading}

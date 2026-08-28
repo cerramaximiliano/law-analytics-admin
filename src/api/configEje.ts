@@ -340,7 +340,6 @@ export interface IManagerWorkerConfig {
 	maxWorkers: number;
 	scaleUpThreshold: number;
 	scaleDownThreshold: number;
-	updateThresholdHours?: number;
 	batchSize: number;
 	delayBetweenRequests: number;
 	maxRetries: number;
