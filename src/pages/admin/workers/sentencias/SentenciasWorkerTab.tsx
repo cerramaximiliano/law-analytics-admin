@@ -26,6 +26,7 @@ import {
 	Tooltip,
 	Typography,
 	alpha,
+	useMediaQuery,
 	useTheme,
 } from "@mui/material";
 import {
@@ -171,7 +172,7 @@ interface SentenciaRowProps {
 function SentenciaRow({ doc, onDetail, onRetry, onRetryOcr }: SentenciaRowProps) {
 	const color = TIPO_COLORS[doc.sentenciaTipo] || "#616161";
 	return (
-		<Box sx={{ display: "flex", alignItems: "center", gap: 1.5, py: 1, px: 1, borderRadius: 1, "&:hover": { bgcolor: "action.hover" } }}>
+		<Box sx={{ display: "flex", alignItems: { xs: "flex-start", sm: "center" }, gap: 1.5, py: 1, px: 1, borderRadius: 1, "&:hover": { bgcolor: "action.hover" } }}>
 			<Box sx={{ width: 4, height: 40, borderRadius: 2, bgcolor: color, flexShrink: 0 }} />
 			<Box flex={1} minWidth={0}>
 				<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
@@ -211,13 +212,32 @@ function SentenciaRow({ doc, onDetail, onRetry, onRetryOcr }: SentenciaRowProps)
 						/>
 					)}
 				</Stack>
-				<Typography variant="caption" color="text.secondary" noWrap display="block">
+				<Typography
+					variant="caption"
+					color="text.secondary"
+					display="block"
+					sx={{
+						// En mobile la carátula se corta a 2 líneas en vez de truncarse
+						// a una: es el dato que identifica la causa.
+						whiteSpace: { xs: "normal", sm: "nowrap" },
+						overflow: "hidden",
+						textOverflow: "ellipsis",
+						display: { xs: "-webkit-box", sm: "block" },
+						WebkitLineClamp: { xs: 2, sm: "unset" },
+						WebkitBoxOrient: "vertical",
+					}}
+				>
 					{doc.caratula || "Sin carátula"} ·{" "}
 					<Tooltip title={fmtDate(doc.processedAt || doc.detectedAt)}>
 						<span>{timeAgo(doc.processedAt || doc.detectedAt)}</span>
 					</Tooltip>
 				</Typography>
-				<Typography variant="caption" color="text.disabled" sx={{ fontFamily: "monospace", fontSize: 10 }} display="block">
+				<Typography
+					variant="caption"
+					color="text.disabled"
+					display="block"
+					sx={{ fontFamily: "monospace", fontSize: 10, display: { xs: "none", sm: "block" } }}
+				>
 					{doc._id}
 				</Typography>
 				{doc.processingResult && (
@@ -1290,7 +1310,7 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 												}))
 											}
 											disabled={saving}
-											sx={{ minWidth: 230 }}
+											sx={{ minWidth: { xs: 0, sm: 230 }, width: { xs: '100%', sm: 'auto' } }}
 										>
 											<MenuItem value="saij">Solo SAIJ (público)</MenuItem>
 											<MenuItem value="all">Todo el corpus</MenuItem>
@@ -1307,7 +1327,7 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 												}))
 											}
 											disabled={saving}
-											sx={{ minWidth: 230 }}
+											sx={{ minWidth: { xs: 0, sm: 230 }, width: { xs: '100%', sm: 'auto' } }}
 										>
 											<MenuItem value="saij">Solo SAIJ (público)</MenuItem>
 											<MenuItem value="all">Todo el corpus</MenuItem>
@@ -2318,7 +2338,7 @@ function FueroRow({
 				bgcolor: fuero.enabled ? alpha(theme.palette.primary.main, 0.02) : undefined,
 			}}
 		>
-			<Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap">
+			<Stack direction={{ xs: "column", sm: "row" }} alignItems={{ xs: "stretch", sm: "center" }} spacing={1.5} flexWrap="wrap">
 				{/* Label + toggle */}
 				<Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 120 }}>
 					<Switch size="small" checked={fuero.enabled} onChange={(e) => onToggle(fuero.fuero, e.target.checked)} disabled={saving} />
@@ -2340,7 +2360,7 @@ function FueroRow({
 						onChange={(e) => onYearChange(fuero.fuero, "yearFrom", Number(e.target.value))}
 						onBlur={() => onSaveYears(fuero.fuero)}
 						disabled={saving}
-						sx={{ width: 90 }}
+						sx={{ width: { xs: "calc(50% - 4px)", sm: 90 } }}
 						inputProps={{ min: 2010, max: new Date().getFullYear() }}
 					/>
 					<TextField
@@ -2351,7 +2371,7 @@ function FueroRow({
 						onChange={(e) => onYearChange(fuero.fuero, "yearTo", Number(e.target.value))}
 						onBlur={() => onSaveYears(fuero.fuero)}
 						disabled={saving}
-						sx={{ width: 90 }}
+						sx={{ width: { xs: "calc(50% - 4px)", sm: 90 } }}
 						inputProps={{ min: 2010, max: new Date().getFullYear() }}
 					/>
 				</Stack>
@@ -2650,6 +2670,9 @@ const SECTIONS: { label: string; icon: React.ReactElement; group: SectionGroup }
 
 export default function SentenciasWorkerTab() {
 	const theme = useTheme();
+	// Debajo de md los tabs pasan a horizontales: el sidebar fijo de 170px
+	// se comía la mitad del ancho en un teléfono.
+	const tabsVerticales = useMediaQuery(theme.breakpoints.up('md'));
 	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 	const [section, setSection] = useState(0);
@@ -3014,9 +3037,19 @@ export default function SentenciasWorkerTab() {
 				)}
 			</Paper>
 
-			<Stack direction="row" sx={{ minHeight: 500 }}>
-				{/* Vertical tabs on left — 2 grupos: config (gestión del pipeline) y data (resultados) */}
-				<Box sx={{ borderRight: 1, borderColor: "divider", flexShrink: 0, width: 170 }}>
+			{/* En mobile los tabs verticales dejaban ~190px utiles de 360: el
+			    sidebar fijo de 170px comprimia TODO el contenido. Abajo de md
+			    pasan a ser tabs horizontales scrolleables arriba del panel. */}
+			<Stack direction={{ xs: "column", md: "row" }} sx={{ minHeight: { md: 500 } }}>
+				<Box
+					sx={{
+						borderRight: { md: 1 },
+						borderBottom: { xs: 1, md: 0 },
+						borderColor: "divider",
+						flexShrink: 0,
+						width: { xs: "100%", md: 170 },
+					}}
+				>
 					{/* Grupo 1: Operativa del pipeline */}
 					<Typography
 						variant="overline"
@@ -3035,10 +3068,12 @@ export default function SentenciasWorkerTab() {
 					</Typography>
 					<Box sx={{ bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) }}>
 						<Tabs
-							orientation="vertical"
+							orientation={tabsVerticales ? "vertical" : "horizontal"}
+							variant={tabsVerticales ? "standard" : "scrollable"}
+							scrollButtons={false}
 							value={SECTIONS[section]?.group === "config" ? section : false}
 							onChange={(_, v) => setSection(v)}
-							TabIndicatorProps={{ sx: { width: 2.5, bgcolor: BRAND_BLUE } }}
+							TabIndicatorProps={{ sx: { width: tabsVerticales ? 2.5 : undefined, height: tabsVerticales ? undefined : 2.5, bgcolor: BRAND_BLUE } }}
 							sx={{
 								"& .MuiTab-root": {
 									alignItems: "flex-start",
@@ -3091,7 +3126,9 @@ export default function SentenciasWorkerTab() {
 					</Typography>
 					<Box sx={{ bgcolor: alpha(theme.palette.success.main, 0.04) }}>
 						<Tabs
-							orientation="vertical"
+							orientation={tabsVerticales ? "vertical" : "horizontal"}
+							variant={tabsVerticales ? "standard" : "scrollable"}
+							scrollButtons={false}
 							value={SECTIONS[section]?.group === "data" ? section : false}
 							onChange={(_, v) => setSection(v)}
 							sx={{
@@ -3126,7 +3163,7 @@ export default function SentenciasWorkerTab() {
 				</Box>
 
 				{/* Content on right — orden debe matchear SECTIONS arriba */}
-				<Box sx={{ flex: 1, minWidth: 0, pl: 3, pt: 1 }}>
+				<Box sx={{ flex: 1, minWidth: 0, pl: { xs: 0, md: 3 }, pt: { xs: 2, md: 1 } }}>
 					{/* Grupo CONFIG */}
 					<TabPanel value={section} index={0}>
 						<EstadoSection stats={stats} loading={loading} onRefresh={loadStats} onRetry={handleRetry} />
