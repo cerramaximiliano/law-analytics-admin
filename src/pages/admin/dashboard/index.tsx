@@ -2460,6 +2460,13 @@ const AdminDashboard = () => {
 											},
 										}}
 									/>
+									{/* Ventana de trabajo y umbral, leídos de la config del manager
+									    (no hardcodeados): sin esto no se puede saber si una cobertura
+									    baja es un problema o simplemente que la jornada no empezó. */}
+									<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
+										Ventana {pjsaltaEligibilityStats.schedule ?? "—"}
+										{pjsaltaEligibilityStats.thresholdHours ? ` · cada ${pjsaltaEligibilityStats.thresholdHours} h` : ""}
+									</Typography>
 									<Grid container spacing={2}>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
@@ -2629,6 +2636,13 @@ const AdminDashboard = () => {
 											},
 										}}
 									/>
+									{/* Ventana de trabajo y umbral, leídos de la config del manager
+									    (no hardcodeados): sin esto no se puede saber si una cobertura
+									    baja es un problema o simplemente que la jornada no empezó. */}
+									<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
+										Ventana {pjcatamarcaEligibilityStats.schedule ?? "—"}
+										{pjcatamarcaEligibilityStats.thresholdHours ? ` · cada ${pjcatamarcaEligibilityStats.thresholdHours} h` : ""}
+									</Typography>
 									<Grid container spacing={2}>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>
@@ -2798,6 +2812,13 @@ const AdminDashboard = () => {
 											},
 										}}
 									/>
+									{/* Ventana de trabajo y umbral, leídos de la config del manager
+									    (no hardcodeados): sin esto no se puede saber si una cobertura
+									    baja es un problema o simplemente que la jornada no empezó. */}
+									<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
+										Ventana {pjmendozaEligibilityStats.schedule ?? "—"}
+										{pjmendozaEligibilityStats.thresholdHours ? ` · cada ${pjmendozaEligibilityStats.thresholdHours} h` : ""}
+									</Typography>
 									<Grid container spacing={2}>
 										<Grid item xs={6} sm={3}>
 											<Box sx={{ textAlign: "center" }}>

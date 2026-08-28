@@ -237,8 +237,15 @@ export interface EligibilityStatsResponse {
 		alDia?: number;
 		coveragePercent: number;
 		thresholdHours: number;
-		/** Inicio del ciclo de trabajo de hoy, en la zona del worker. */
-		inicioCiclo?: string;
+		/** Fecha argentina usada para contar "actualizadas hoy". */
+		hoyArgentina?: string;
+		/** Ventana de trabajo del updater, tal como está configurada. */
+		schedule?: string;
+		workStartHour?: number;
+		workEndHour?: number;
+		workDays?: number[];
+		allDays?: boolean;
+		timezone?: string;
 	};
 }
 
