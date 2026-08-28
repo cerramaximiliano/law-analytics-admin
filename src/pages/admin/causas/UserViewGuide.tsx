@@ -31,13 +31,17 @@ import MainCard from "components/MainCard";
 import { BRAND_BLUE, STALE_AMBER } from "themes/dashboardTokens";
 import pjnCredentialsService, { CausaUserViewEntry, UserViewStatsCombo, UserViewStatsData } from "api/pjnCredentials";
 import CausaUserViewDialog, { ListRowReplica, GATE_META, baseFolder } from "./CausaUserViewDialog";
+import FolderRowStatsWidget from "./FolderRowStatsWidget";
 import { GUIDE_BY_JURISDICTION, JURISDICTIONS, GuideJurisdiction } from "./userViewGuideData";
 
 /**
- * Guía visual de la lista de carpetas del usuario: (1) todas las filas
- * posibles con la condición y el productor; (2) distribución real sobre los
- * folders PJN de la base, por tipo de fila y por combinación de campos, con
- * banderas de anomalía cuando el listado no representa el estado real.
+ * Guía visual de la lista de carpetas del usuario: (0) panorama transversal
+ * de todas las jurisdicciones (FolderRowStatsWidget, movido acá desde el
+ * dashboard principal — es el índice desde el que se baja a cada una);
+ * (1) todas las filas posibles con la condición y el productor; (2)
+ * distribución real sobre los folders de la jurisdicción elegida, por tipo
+ * de fila y por combinación de campos, con banderas de anomalía cuando el
+ * listado no representa el estado real.
  */
 
 const ROW_LABEL: Record<string, string> = {
@@ -215,17 +219,15 @@ export default function UserViewGuide() {
 	const combos = useMemo(() => (data ? data.combos.filter((c) => !onlyFlagged || c.flags.length > 0) : []), [data, onlyFlagged]);
 	const flaggedTotal = useMemo(() => (data ? data.combos.filter((c) => c.flags.length).reduce((a, c) => a + c.n, 0) : 0), [data]);
 
+	const selectJurisdiction = (v: string) => {
+		setJurisdiction(v as GuideJurisdiction);
+		setUserId("");
+	};
+
 	return (
 		<Stack spacing={3}>
-			<Tabs
-				value={jurisdiction}
-				onChange={(_, v) => {
-					setJurisdiction(v);
-					setUserId("");
-				}}
-				variant="scrollable"
-				scrollButtons="auto"
-			>
+			<FolderRowStatsWidget hideGuideLink onSelectJurisdiction={selectJurisdiction} selectedJurisdiction={jurisdiction} />
+			<Tabs value={jurisdiction} onChange={(_, v) => selectJurisdiction(v)} variant="scrollable" scrollButtons="auto">
 				{JURISDICTIONS.map((j) => (
 					<Tab key={j.key} value={j.key} label={j.label} />
 				))}

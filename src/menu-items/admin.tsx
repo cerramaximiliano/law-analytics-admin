@@ -58,6 +58,16 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					// Cubre TODAS las jurisdicciones (panorama + guía por pestaña),
+					// por eso cuelga del grupo y no de "Carpetas PJN".
+					id: "causas-user-view-guide",
+					title: "Carpetas por jurisdicción — vista del usuario",
+					type: "item",
+					icon: Folder2,
+					url: "/admin/causas/user-view-guide",
+					breadcrumbs: true,
+				},
+				{
 					id: "causas",
 					title: "Carpetas PJN",
 					type: "collapse",
@@ -97,13 +107,6 @@ const admin: NavItemType = {
 							title: "Causas por Credencial",
 							type: "item",
 							url: "/admin/causas/synced-credentials",
-							breadcrumbs: true,
-						},
-						{
-							id: "causas-user-view-guide",
-							title: "Guía vista del usuario",
-							type: "item",
-							url: "/admin/causas/user-view-guide",
 							breadcrumbs: true,
 						},
 						{

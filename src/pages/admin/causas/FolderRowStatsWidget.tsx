@@ -22,13 +22,28 @@ import { Link as RouterLink } from "react-router-dom";
 import { Refresh, Book1 } from "iconsax-react";
 import pjnCredentialsService, { FolderRowStatsData } from "api/pjnCredentials";
 import { LIVE_GREEN, STALE_AMBER, headerBorder } from "themes/dashboardTokens";
+import { JURISDICTIONS } from "./userViewGuideData";
 
 /**
  * Estado de las carpetas vinculadas a un poder judicial, por jurisdicción,
  * medido con la misma lógica que dibuja la lista del usuario (tipo de fila).
  * Barra apilada por tono (OK / Atención / Problema / Archivada) + tabla con
  * el desglose completo por tipo de fila.
+ *
+ * Vive en la "Guía vista del usuario" (/admin/causas/user-view-guide) como
+ * panorama transversal: la guía explica cada tipo de fila para UNA
+ * jurisdicción y este widget muestra cuántas hay de cada una en TODAS.
+ * Con `onSelectJurisdiction` las filas son clickeables y bajan al detalle.
  */
+
+type Props = {
+	/** Si viene, cada jurisdicción es clickeable y selecciona esa pestaña de la guía. */
+	onSelectJurisdiction?: (jurisdiction: string) => void;
+	/** Jurisdicción resaltada (la pestaña activa de la guía). */
+	selectedJurisdiction?: string;
+	/** Oculta el atajo a la guía (redundante cuando el widget ya vive dentro de ella). */
+	hideGuideLink?: boolean;
+};
 
 const JUR_LABEL: Record<string, string> = {
 	pjn: "PJN",
@@ -89,7 +104,7 @@ const ROW_TONE: Record<string, Tone> = {
 };
 const TONE_LABEL: Record<Tone, string> = { ok: "OK", warn: "Requiere atención", bad: "Problema", neutral: "Archivada / sin indicador" };
 
-export default function FolderRowStatsWidget() {
+export default function FolderRowStatsWidget({ onSelectJurisdiction, selectedJurisdiction, hideGuideLink }: Props = {}) {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
 	const RED = theme.palette.error.main;
@@ -111,6 +126,9 @@ export default function FolderRowStatsWidget() {
 	useEffect(load, [archived]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const rowsPresent = data ? ROW_ORDER.filter((r) => data.byRow.some((x) => x.row === r)) : [];
+	// "none" (carpetas sin jurisdicción) no tiene guía propia: no es navegable.
+	const hasGuide = (j: string) => JURISDICTIONS.some((x) => x.key === j);
+	const goTo = (j: string) => (onSelectJurisdiction && hasGuide(j) ? () => onSelectJurisdiction(j) : undefined);
 
 	return (
 		<Paper variant="outlined" sx={{ p: 2, borderColor: headerBorder(isDark), borderRadius: 2 }}>
@@ -121,6 +139,7 @@ export default function FolderRowStatsWidget() {
 					</Typography>
 					<Typography variant="caption" color="text.secondary">
 						{data ? `${data.total} carpetas vinculadas · tipo de fila calculado con la lógica de la lista del usuario` : "—"}
+						{onSelectJurisdiction ? " · clic en una jurisdicción para ver su guía y su detalle" : ""}
 					</Typography>
 				</Stack>
 				<Stack direction="row" spacing={1} alignItems="center">
@@ -128,11 +147,13 @@ export default function FolderRowStatsWidget() {
 						<ToggleButton value="false">No archivadas</ToggleButton>
 						<ToggleButton value="all">Todas</ToggleButton>
 					</ToggleButtonGroup>
-					<Tooltip title="Guía: todas las filas posibles y por qué">
-						<IconButton size="small" component={RouterLink} to="/admin/causas/user-view-guide">
-							<Book1 size={18} />
-						</IconButton>
-					</Tooltip>
+					{!hideGuideLink && (
+						<Tooltip title="Guía: todas las filas posibles y por qué">
+							<IconButton size="small" component={RouterLink} to="/admin/causas/user-view-guide">
+								<Book1 size={18} />
+							</IconButton>
+						</Tooltip>
+					)}
 					<Tooltip title="Actualizar">
 						<IconButton size="small" onClick={load} disabled={loading}>
 							<Refresh size={18} />
@@ -154,8 +175,26 @@ export default function FolderRowStatsWidget() {
 							const byTone: Record<Tone, number> = { ok: 0, warn: 0, bad: 0, neutral: 0 };
 							for (const r of j.rows) byTone[ROW_TONE[r.row] || "neutral"] += r.n;
 							const tones: Tone[] = ["ok", "warn", "bad", "neutral"];
+							const onClick = goTo(j.jurisdiction);
+							const selected = selectedJurisdiction === j.jurisdiction;
 							return (
-								<Box key={j.jurisdiction} sx={{ display: "grid", gridTemplateColumns: "120px 1fr 90px", alignItems: "center", gap: 1.5 }}>
+								<Box
+									key={j.jurisdiction}
+									onClick={onClick}
+									sx={{
+										display: "grid",
+										gridTemplateColumns: "120px 1fr 90px",
+										alignItems: "center",
+										gap: 1.5,
+										px: 0.75,
+										py: 0.25,
+										mx: -0.75,
+										borderRadius: 1,
+										cursor: onClick ? "pointer" : "default",
+										bgcolor: selected ? alpha(theme.palette.primary.main, isDark ? 0.16 : 0.08) : "transparent",
+										"&:hover": onClick ? { bgcolor: alpha(theme.palette.primary.main, isDark ? 0.22 : 0.12) } : undefined,
+									}}
+								>
 									<Typography variant="body2" sx={{ fontSize: "0.8rem", fontWeight: 600 }} noWrap>
 										{JUR_LABEL[j.jurisdiction] || j.jurisdiction}
 									</Typography>
@@ -226,7 +265,13 @@ export default function FolderRowStatsWidget() {
 							</TableHead>
 							<TableBody>
 								{data.jurisdictions.map((j) => (
-									<TableRow key={j.jurisdiction} hover>
+									<TableRow
+										key={j.jurisdiction}
+										hover
+										onClick={goTo(j.jurisdiction)}
+										selected={selectedJurisdiction === j.jurisdiction}
+										sx={{ cursor: goTo(j.jurisdiction) ? "pointer" : "default" }}
+									>
 										<TableCell sx={{ fontWeight: 600 }}>{JUR_LABEL[j.jurisdiction] || j.jurisdiction}</TableCell>
 										<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
 											{j.total}

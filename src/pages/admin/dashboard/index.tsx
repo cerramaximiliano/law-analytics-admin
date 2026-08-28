@@ -8,7 +8,6 @@ import {
 	Sms,
 	Profile2User,
 	MessageProgramming,
-	Folder2,
 	InfoCircle,
 	TickCircle,
 	Clock,
@@ -72,7 +71,6 @@ import CronsStatusWidget from "./CronsStatusWidget";
 import IntegrationsStatusWidget from "./IntegrationsStatusWidget";
 import PrivacyStatsWidget from "./PrivacyStatsWidget";
 import PostalTrackingWidget from "./PostalTrackingWidget";
-import FolderRowStatsWidget from "./FolderRowStatsWidget";
 
 // Theme-aware color helper - maps semantic roles to MUI theme palette tokens
 // Usage: const COLORS = getThemeColors(theme) inside any component with useTheme()
@@ -1798,16 +1796,6 @@ const AdminDashboard = () => {
 							<PostalTrackingWidget />
 						</Grid>
 					</Grid>
-				</Box>
-
-				{/* Carpetas por jurisdicción (tipo de fila que ve el usuario) */}
-				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
-					<SectionHeader
-						title="Carpetas por jurisdicción"
-						subtitle="Estado de las carpetas vinculadas, medido como las ve el usuario en su lista"
-						icon={<Folder2 size={16} variant="Bold" />}
-					/>
-					<FolderRowStatsWidget />
 				</Box>
 
 				{/* Worker Widgets Row */}
