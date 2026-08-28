@@ -193,3 +193,46 @@ const SentenciasService = {
 };
 
 export default SentenciasService;
+
+// ==================== Flujo del pipeline ====================
+
+export interface FlujoConteo {
+	saij: number;
+	pjn: number;
+	total: number;
+}
+
+export interface FlujoEtapa {
+	id: string;
+	label: string;
+	total: FlujoConteo;
+	/** Lo que está esperando para pasar a la etapa siguiente */
+	enCola: FlujoConteo;
+	errores: FlujoConteo;
+	pausada: boolean;
+	/** Corre, pero solo para una parte del corpus (hoy: solo SAIJ) */
+	pausadaParcial?: boolean;
+	nota: string;
+}
+
+export interface FlujoResponse {
+	etapas: FlujoEtapa[];
+	interruptores: {
+		embeddingsHabilitado: boolean;
+		soloSaij: boolean;
+		ocrHabilitado: boolean;
+		capturaHabilitada: boolean;
+		reintentosHabilitados: boolean;
+	};
+}
+
+export const getFlujoSentencias = async (): Promise<FlujoResponse> => {
+	const res = await pjnAxios.get<{ success: boolean; data: FlujoResponse }>(BASE + "/flujo");
+	return res.data.data;
+};
+
+/** Pausa o reanuda el re-indexado del corpus PJN sin frenar el material nuevo. */
+export const setSoloSaij = async (activo: boolean) => {
+	const res = await pjnAxios.patch(BASE + "/flujo/solo-saij", { activo });
+	return res.data;
+};

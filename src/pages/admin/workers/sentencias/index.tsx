@@ -1,6 +1,7 @@
 import { Box, Chip, Paper, Stack, Typography, alpha, useTheme } from "@mui/material";
 import MainCard from "components/MainCard";
 import SentenciasWorkerTab from "./SentenciasWorkerTab";
+import FlujoPanel from "./FlujoPanel";
 import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
@@ -115,7 +116,8 @@ export default function SentenciasWorkerPage() {
 						bgcolor: theme.palette.background.paper,
 					}}
 				>
-					<SentenciasWorkerTab />
+					<FlujoPanel />
+				<SentenciasWorkerTab />
 				</Paper>
 			</Stack>
 		</MainCard>
