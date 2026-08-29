@@ -32,6 +32,7 @@ import {
 import {
 	Activity,
 	ArrowDown2,
+	ArrowUp2,
 	CloseCircle,
 	Data,
 	DocumentText,
@@ -45,7 +46,7 @@ import {
 	Notification,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 import SentenciasService, {
 	Category,
 	EmbeddingStatus,
@@ -136,7 +137,6 @@ interface StatCardProps {
 	sub?: string;
 }
 function StatCard({ label, value, color, sub }: StatCardProps) {
-	const theme = useTheme();
 	return (
 		<Paper
 			variant="outlined"
@@ -172,7 +172,17 @@ interface SentenciaRowProps {
 function SentenciaRow({ doc, onDetail, onRetry, onRetryOcr }: SentenciaRowProps) {
 	const color = TIPO_COLORS[doc.sentenciaTipo] || "#616161";
 	return (
-		<Box sx={{ display: "flex", alignItems: { xs: "flex-start", sm: "center" }, gap: 1.5, py: 1, px: 1, borderRadius: 1, "&:hover": { bgcolor: "action.hover" } }}>
+		<Box
+			sx={{
+				display: "flex",
+				alignItems: { xs: "flex-start", sm: "center" },
+				gap: 1.5,
+				py: 1,
+				px: 1,
+				borderRadius: 1,
+				"&:hover": { bgcolor: "action.hover" },
+			}}
+		>
 			<Box sx={{ width: 4, height: 40, borderRadius: 2, bgcolor: color, flexShrink: 0 }} />
 			<Box flex={1} minWidth={0}>
 				<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
@@ -517,6 +527,49 @@ function TabPanel({ children, value, index }: TabPanelProps) {
 const CATEGORY_COLOR: Record<Category, string> = { novelty: "#7b1fa2", rutina: "#1565c0" };
 const CATEGORY_LABEL: Record<Category, string> = { novelty: "Novelty", rutina: "Rutina" };
 
+/**
+ * Lista de sentencias que en pantallas chicas muestra solo las primeras filas.
+ *
+ * Cada fila mide ~130px en un teléfono: diez filas son 1.300px por lista, y el
+ * tab "Estado general" tiene tres listas (procesadas, novelty y errores). Eran
+ * 4 de las 8 pantallas de scroll de la vista. En escritorio se muestran todas.
+ */
+function ListaDocs({
+	docs,
+	onDetail,
+	onRetry,
+	borderColor,
+	visiblesEnMobile = 3,
+}: {
+	docs: SentenciaCapturada[];
+	onDetail: (doc: SentenciaCapturada) => void;
+	onRetry?: (id: string) => void;
+	borderColor?: string;
+	visiblesEnMobile?: number;
+}) {
+	const theme = useTheme();
+	const esEscritorio = useMediaQuery(theme.breakpoints.up("md"));
+	const [expandida, setExpandida] = useState(false);
+	const tope = esEscritorio || expandida ? docs.length : visiblesEnMobile;
+	const ocultas = docs.length - tope;
+
+	return (
+		<Paper variant="outlined" sx={{ p: 1, ...(borderColor ? { borderColor } : {}) }}>
+			{docs.slice(0, tope).map((doc, i) => (
+				<Box key={doc._id}>
+					{i > 0 && <Divider sx={{ my: 0.5 }} />}
+					<SentenciaRow doc={doc} onDetail={onDetail} onRetry={onRetry} />
+				</Box>
+			))}
+			{ocultas > 0 && (
+				<Button fullWidth size="small" onClick={() => setExpandida(true)} sx={{ mt: 0.5, textTransform: "none" }}>
+					Ver {ocultas} más
+				</Button>
+			)}
+		</Paper>
+	);
+}
+
 function EstadoSection({
 	stats,
 	loading,
@@ -540,6 +593,13 @@ function EstadoSection({
 	const processed = stats?.totals.processed || 0;
 	const total = stats?.totals.total || 0;
 	const pct = total > 0 ? Math.round((processed / total) * 100) : 0;
+
+	const esEscritorio = useMediaQuery(theme.breakpoints.up("md"));
+	const [todosLosFueros, setTodosLosFueros] = useState(false);
+	const fuerosOrdenados = [...(stats?.byFuero || [])].sort((a, b) => b.total - a.total);
+	const topeFueros = esEscritorio || todosLosFueros ? fuerosOrdenados.length : 6;
+	const fuerosVisibles = fuerosOrdenados.slice(0, topeFueros);
+	const fuerosOcultos = fuerosOrdenados.length - topeFueros;
 
 	return (
 		<Stack spacing={3}>
@@ -595,13 +655,20 @@ function EstadoSection({
 						<LinearProgress variant="determinate" value={pct} sx={{ height: 8, borderRadius: 4 }} color="success" />
 					</Box>
 
-					{/* Por fuero */}
+					{/* Por fuero — 17 fueros en dos columnas son ~900px de scroll en un
+					    teléfono, y la cola real vive en tres o cuatro. Se ordenan por
+					    volumen y en mobile se muestran los primeros. */}
 					<Box>
-						<Typography variant="subtitle2" mb={1}>
-							Por fuero
-						</Typography>
+						<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
+							<Typography variant="subtitle2">Por fuero</Typography>
+							{fuerosOcultos > 0 && (
+								<Button size="small" onClick={() => setTodosLosFueros(true)} sx={{ textTransform: "none" }}>
+									Ver {fuerosOcultos} más
+								</Button>
+							)}
+						</Stack>
 						<Grid container spacing={1.5}>
-							{stats.byFuero.map((f) => (
+							{fuerosVisibles.map((f) => (
 								<Grid item xs={6} sm={3} key={f._id}>
 									<Paper variant="outlined" sx={{ p: 1.5 }}>
 										<Typography variant="body2" fontWeight={700}>
@@ -644,7 +711,7 @@ function EstadoSection({
 									return (
 										<Stack key={t._id} direction="row" alignItems="center" spacing={1.5}>
 											<Box sx={{ width: 12, height: 12, borderRadius: "50%", bgcolor: color, flexShrink: 0 }} />
-											<Typography variant="body2" width={160} flexShrink={0}>
+											<Typography variant="body2" sx={{ width: { xs: 92, sm: 160 }, flexShrink: 0 }} noWrap>
 												{TIPO_LABELS[t._id] || t._id}
 											</Typography>
 											<LinearProgress
@@ -652,10 +719,22 @@ function EstadoSection({
 												value={stats.totals.processed > 0 ? (t.count / stats.totals.processed) * 100 : 0}
 												sx={{ flex: 1, height: 8, borderRadius: 4, "& .MuiLinearProgress-bar": { bgcolor: color } }}
 											/>
-											<Typography variant="body2" width={28} textAlign="right" fontWeight={600}>
+											<Typography
+												variant="body2"
+												sx={{ width: { xs: 52, sm: 28 }, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}
+												textAlign="right"
+												fontWeight={600}
+											>
 												{t.count}
 											</Typography>
-											<Typography variant="caption" color="text.secondary" width={100} textAlign="right">
+											{/* El promedio de caracteres no entra en 390px: la fila se
+											    cortaba contra el borde derecho. Solo desde sm. */}
+											<Typography
+												variant="caption"
+												color="text.secondary"
+												sx={{ display: { xs: "none", sm: "block" }, width: 100, flexShrink: 0 }}
+												textAlign="right"
+											>
 												~{fmtNum(Math.round(t.avgChars))} chars
 											</Typography>
 										</Stack>
@@ -672,14 +751,7 @@ function EstadoSection({
 								<TickCircle size={16} color={theme.palette.success.main} />
 								<Typography variant="subtitle2">Últimas procesadas</Typography>
 							</Stack>
-							<Paper variant="outlined" sx={{ p: 1 }}>
-								{stats.recientes.map((doc, i) => (
-									<Box key={doc._id}>
-										{i > 0 && <Divider sx={{ my: 0.5 }} />}
-										<SentenciaRow doc={doc} onDetail={handleDetail} />
-									</Box>
-								))}
-							</Paper>
+							<ListaDocs docs={stats.recientes} onDetail={handleDetail} />
 						</Box>
 					)}
 
@@ -745,14 +817,7 @@ function EstadoSection({
 									Últimas Novelty (newsletter)
 								</Typography>
 							</Stack>
-							<Paper variant="outlined" sx={{ p: 1, borderColor: alpha(CATEGORY_COLOR.novelty, 0.3) }}>
-								{stats.noveltyRecientes.map((doc, i) => (
-									<Box key={doc._id}>
-										{i > 0 && <Divider sx={{ my: 0.5 }} />}
-										<SentenciaRow doc={doc} onDetail={handleDetail} />
-									</Box>
-								))}
-							</Paper>
+							<ListaDocs docs={stats.noveltyRecientes} onDetail={handleDetail} borderColor={alpha(CATEGORY_COLOR.novelty, 0.3)} />
 						</Box>
 					)}
 
@@ -765,14 +830,12 @@ function EstadoSection({
 									Errores
 								</Typography>
 							</Stack>
-							<Paper variant="outlined" sx={{ p: 1, borderColor: alpha(theme.palette.error.main, 0.3) }}>
-								{stats.errores.map((doc, i) => (
-									<Box key={doc._id}>
-										{i > 0 && <Divider sx={{ my: 0.5 }} />}
-										<SentenciaRow doc={doc} onDetail={handleDetail} onRetry={onRetry} />
-									</Box>
-								))}
-							</Paper>
+							<ListaDocs
+								docs={stats.errores}
+								onDetail={handleDetail}
+								onRetry={onRetry}
+								borderColor={alpha(theme.palette.error.main, 0.3)}
+							/>
 						</Box>
 					)}
 				</>
@@ -1310,7 +1373,7 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 												}))
 											}
 											disabled={saving}
-											sx={{ minWidth: { xs: 0, sm: 230 }, width: { xs: '100%', sm: 'auto' } }}
+											sx={{ minWidth: { xs: 0, sm: 230 }, width: { xs: "100%", sm: "auto" } }}
 										>
 											<MenuItem value="saij">Solo SAIJ (público)</MenuItem>
 											<MenuItem value="all">Todo el corpus</MenuItem>
@@ -1327,7 +1390,7 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 												}))
 											}
 											disabled={saving}
-											sx={{ minWidth: { xs: 0, sm: 230 }, width: { xs: '100%', sm: 'auto' } }}
+											sx={{ minWidth: { xs: 0, sm: 230 }, width: { xs: "100%", sm: "auto" } }}
 										>
 											<MenuItem value="saij">Solo SAIJ (público)</MenuItem>
 											<MenuItem value="all">Todo el corpus</MenuItem>
@@ -1488,6 +1551,153 @@ function EmbeddingsConfigCard() {
 	);
 }
 
+/**
+ * Consumo de Pinecone (queries, upserts, vectores, tamaño del índice).
+ *
+ * Vivía arriba de las pestañas, visible siempre: 400px de métricas de
+ * infraestructura que en un teléfono había que cruzar antes de llegar a
+ * cualquier dato del pipeline. Es material del tab Embeddings —es el índice
+ * que ese worker escribe— y ahora se carga recién cuando se abre ese tab.
+ */
+function PineconeUsageCard() {
+	const [pineconeStats, setPineconeStats] = useState<PineconeStats | null>(null);
+	const [pineconeStatsLoading, setPineconeStatsLoading] = useState(false);
+
+	const loadPineconeStats = async () => {
+		setPineconeStatsLoading(true);
+		try {
+			setPineconeStats(await RagWorkersService.getSentenciasPineconeStats());
+		} catch {
+			/* silently ignore */
+		} finally {
+			setPineconeStatsLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		loadPineconeStats();
+	}, []);
+
+	return (
+		<Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+			<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1.5}>
+				<Box>
+					<Typography variant="subtitle2" fontWeight={600}>
+						Consumo Pinecone
+					</Typography>
+					<Typography variant="caption" color="text.secondary">
+						{pineconeStats?.lastUpdated
+							? `Última actualización: ${new Date(pineconeStats.lastUpdated).toLocaleString("es-AR")}`
+							: "Sin datos aún"}
+					</Typography>
+				</Box>
+				<Button size="small" onClick={loadPineconeStats} disabled={pineconeStatsLoading} sx={{ textTransform: "none" }}>
+					{pineconeStatsLoading ? "Cargando..." : "Refrescar"}
+				</Button>
+			</Stack>
+
+			{(() => {
+				const fmt = (n: number) => n.toLocaleString("es-AR");
+				const cells: { label: string; data?: { queries: number; upsertCalls: number; vectorsUpserted: number } }[] = [
+					{ label: "All-time", data: pineconeStats?.totals },
+					{ label: "Últimas 24h", data: pineconeStats?.last24h },
+					{ label: "Últimos 7d", data: pineconeStats?.last7d },
+					{ label: "Últimos 30d", data: pineconeStats?.last30d },
+				];
+				return (
+					<Stack
+						direction={{ xs: "column", sm: "row" }}
+						spacing={1.5}
+						divider={<Divider orientation="vertical" flexItem sx={{ display: { xs: "none", sm: "block" } }} />}
+					>
+						{cells.map((c) => (
+							<Box key={c.label} flex={1}>
+								<Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+									{c.label}
+								</Typography>
+								<Stack direction="row" spacing={2}>
+									<Box>
+										<Typography variant="caption" color="text.secondary" display="block">
+											Queries
+										</Typography>
+										<Typography variant="body2" fontWeight={600}>
+											{c.data ? fmt(c.data.queries) : "—"}
+										</Typography>
+									</Box>
+									<Box>
+										<Typography variant="caption" color="text.secondary" display="block">
+											Upserts
+										</Typography>
+										<Typography variant="body2" fontWeight={600}>
+											{c.data ? fmt(c.data.upsertCalls) : "—"}
+										</Typography>
+									</Box>
+									<Box>
+										<Typography variant="caption" color="text.secondary" display="block">
+											Vectors
+										</Typography>
+										<Typography variant="body2" fontWeight={600}>
+											{c.data ? fmt(c.data.vectorsUpserted) : "—"}
+										</Typography>
+									</Box>
+								</Stack>
+							</Box>
+						))}
+					</Stack>
+				);
+			})()}
+
+			{pineconeStats?.indexStats && (
+				<>
+					<Divider sx={{ my: 1.5 }} />
+					<Stack direction={{ xs: "column", sm: "row" }} spacing={3} alignItems={{ sm: "center" }}>
+						<Box>
+							<Typography variant="caption" color="text.secondary" display="block">
+								Tamaño índice (records)
+							</Typography>
+							<Typography variant="body2" fontWeight={600}>
+								{pineconeStats.indexStats.totalRecordCount != null
+									? pineconeStats.indexStats.totalRecordCount.toLocaleString("es-AR")
+									: "—"}
+							</Typography>
+						</Box>
+						<Box>
+							<Typography variant="caption" color="text.secondary" display="block">
+								Dimensión
+							</Typography>
+							<Typography variant="body2" fontWeight={600}>
+								{pineconeStats.indexStats.dimension ?? "—"}
+							</Typography>
+						</Box>
+						{pineconeStats.indexStats.indexFullness != null && (
+							<Box>
+								<Typography variant="caption" color="text.secondary" display="block">
+									Fullness
+								</Typography>
+								<Typography variant="body2" fontWeight={600}>
+									{(pineconeStats.indexStats.indexFullness * 100).toFixed(2)}%
+								</Typography>
+							</Box>
+						)}
+						{pineconeStats.indexStats.namespaces && Object.keys(pineconeStats.indexStats.namespaces).length > 0 && (
+							<Box flex={1} minWidth={0}>
+								<Typography variant="caption" color="text.secondary" display="block">
+									Namespaces
+								</Typography>
+								<Typography variant="caption" sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>
+									{Object.entries(pineconeStats.indexStats.namespaces)
+										.map(([n, v]) => `${n}: ${(v.recordCount ?? v.vectorCount ?? 0).toLocaleString("es-AR")}`)
+										.join(" · ")}
+								</Typography>
+							</Box>
+						)}
+					</Stack>
+				</>
+			)}
+		</Paper>
+	);
+}
+
 function EmbeddingsSection({
 	stats,
 	loading,
@@ -1521,6 +1731,9 @@ function EmbeddingsSection({
 
 			{/* Config del ritmo del worker (cron + batch sizes) */}
 			<EmbeddingsConfigCard />
+
+			{/* Consumo del índice que este worker escribe */}
+			<PineconeUsageCard />
 
 			{loading && !stats ? (
 				<Grid container spacing={2}>
@@ -2672,7 +2885,7 @@ export default function SentenciasWorkerTab() {
 	const theme = useTheme();
 	// Debajo de md los tabs pasan a horizontales: el sidebar fijo de 170px
 	// se comía la mitad del ancho en un teléfono.
-	const tabsVerticales = useMediaQuery(theme.breakpoints.up('md'));
+	const tabsVerticales = useMediaQuery(theme.breakpoints.up("md"));
 	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 	const [section, setSection] = useState(0);
@@ -2695,10 +2908,13 @@ export default function SentenciasWorkerTab() {
 		"sentencias-retry": null,
 	});
 	const [togglingPipelineWorker, setTogglingPipelineWorker] = useState<Record<string, boolean>>({});
-	// Pinecone usage stats (cargado bajo demanda y refrescable)
-	const [pineconeStats, setPineconeStats] = useState<PineconeStats | null>(null);
-	const [pineconeStatsLoading, setPineconeStatsLoading] = useState(false);
+	const [subflagsAbiertos, setSubflagsAbiertos] = useState(false);
 	const [togglingSemantic, setTogglingSemantic] = useState(false);
+
+	// Resumen del grupo plegado: cuántos sub-flags están prendidos de los que
+	// ya respondieron (los null todavía están cargando).
+	const subflagsCargados = Object.values(pipelineWorkers).filter((v) => v !== null).length;
+	const subflagsActivos = Object.values(pipelineWorkers).filter((v) => v === true).length;
 
 	const loadStats = async () => {
 		setLoading(true);
@@ -2791,21 +3007,9 @@ export default function SentenciasWorkerTab() {
 		}
 	};
 
-	const loadPineconeStats = async () => {
-		setPineconeStatsLoading(true);
-		try {
-			setPineconeStats(await RagWorkersService.getSentenciasPineconeStats());
-		} catch {
-			/* silently ignore */
-		} finally {
-			setPineconeStatsLoading(false);
-		}
-	};
-
 	useEffect(() => {
 		loadStats();
 		loadControlStates();
-		loadPineconeStats();
 	}, []);
 
 	const handleRetry = async (id: string) => {
@@ -2870,172 +3074,79 @@ export default function SentenciasWorkerTab() {
 			{/* ── Granularidad: sub-flags individuales del grupo "PDF · OCR · Embeddings" ──
 			    Cada uno controla un proceso PM2 específico. La regla efectiva es
 			    embEnabled (master) AND el sub-flag individual: si el master está OFF,
-			    todos los workers quedan OFF aunque su sub-flag esté ON. */}
+			    todos los workers quedan OFF aunque su sub-flag esté ON.
+
+			    Plegado por defecto: son el control fino, y desplegados ocupaban
+			    440px arriba de las pestañas. El resumen "N de 5 activos" dice si
+			    hace falta abrirlo. */}
 			<Box>
-				<Typography variant="caption" color="text.secondary" sx={{ pl: 0.5, mb: 0.5, display: "block" }}>
-					Control individual del grupo PDF · OCR · Embeddings (queda anulado si el master está OFF)
-				</Typography>
-				<WorkerControlPanel
-					processes={[
-						{
-							label: "sentencias-worker",
-							description: "PDF download + extracción",
-							enabled: pipelineWorkers["sentencias-worker"] ?? null,
-							toggling: togglingPipelineWorker["sentencias-worker"],
-							onToggle: (v) => handleTogglePipelineWorker("sentencias-worker", v),
-						},
-						{
-							label: "sentencias-worker-2",
-							description: "PDF download + extracción (instancia 2)",
-							enabled: pipelineWorkers["sentencias-worker-2"] ?? null,
-							toggling: togglingPipelineWorker["sentencias-worker-2"],
-							onToggle: (v) => handleTogglePipelineWorker("sentencias-worker-2", v),
-						},
-						{
-							label: "sentencias-embeddings",
-							description: "Generación de embeddings + upsert Pinecone",
-							enabled: pipelineWorkers["sentencias-embeddings"] ?? null,
-							toggling: togglingPipelineWorker["sentencias-embeddings"],
-							onToggle: (v) => handleTogglePipelineWorker("sentencias-embeddings", v),
-						},
-						{
-							label: "ocr-worker",
-							description: "OCR para PDFs escaneados",
-							enabled: pipelineWorkers["ocr-worker"] ?? null,
-							toggling: togglingPipelineWorker["ocr-worker"],
-							onToggle: (v) => handleTogglePipelineWorker("ocr-worker", v),
-						},
-						{
-							label: "sentencias-retry",
-							description: "Reintentos de sentencias fallidas",
-							enabled: pipelineWorkers["sentencias-retry"] ?? null,
-							toggling: togglingPipelineWorker["sentencias-retry"],
-							onToggle: (v) => handleTogglePipelineWorker("sentencias-retry", v),
-						},
-					]}
-				/>
-			</Box>
-
-			{/* ── Consumo Pinecone (queries, upserts, vectors, index size) ── */}
-			<Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-				<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1.5}>
-					<Box>
-						<Typography variant="subtitle2" fontWeight={600}>
-							Consumo Pinecone
-						</Typography>
-						<Typography variant="caption" color="text.secondary">
-							{pineconeStats?.lastUpdated
-								? `Última actualización: ${new Date(pineconeStats.lastUpdated).toLocaleString("es-AR")}`
-								: "Sin datos aún"}
-						</Typography>
-					</Box>
-					<Button size="small" onClick={loadPineconeStats} disabled={pineconeStatsLoading} sx={{ textTransform: "none" }}>
-						{pineconeStatsLoading ? "Cargando..." : "Refrescar"}
-					</Button>
+				<Stack
+					direction="row"
+					alignItems="center"
+					spacing={0.75}
+					onClick={() => setSubflagsAbiertos((v) => !v)}
+					sx={{ cursor: "pointer", pl: 0.5, mb: 0.5, color: "text.secondary" }}
+				>
+					{subflagsAbiertos ? <ArrowUp2 size={13} /> : <ArrowDown2 size={13} />}
+					{/* El texto completo ocupa tres líneas en un teléfono; ahí basta con
+					    decir qué hay adentro. */}
+					<Typography variant="caption" sx={{ display: { xs: "none", sm: "block" } }}>
+						Control individual del grupo PDF · OCR · Embeddings (queda anulado si el master está OFF)
+					</Typography>
+					<Typography variant="caption" sx={{ display: { xs: "block", sm: "none" } }}>
+						Control individual de los 5 workers
+					</Typography>
+					{!subflagsAbiertos && (
+						<Chip
+							size="small"
+							variant="outlined"
+							label={subflagsCargados === 0 ? "—" : `${subflagsActivos} de ${subflagsCargados} activos`}
+							sx={{ height: 18, fontSize: "0.65rem" }}
+						/>
+					)}
 				</Stack>
-
-				{(() => {
-					const fmt = (n: number) => n.toLocaleString("es-AR");
-					const cells: { label: string; data?: { queries: number; upsertCalls: number; vectorsUpserted: number } }[] = [
-						{ label: "All-time", data: pineconeStats?.totals },
-						{ label: "Últimas 24h", data: pineconeStats?.last24h },
-						{ label: "Últimos 7d", data: pineconeStats?.last7d },
-						{ label: "Últimos 30d", data: pineconeStats?.last30d },
-					];
-					return (
-						<Stack
-							direction={{ xs: "column", sm: "row" }}
-							spacing={1.5}
-							divider={<Divider orientation="vertical" flexItem sx={{ display: { xs: "none", sm: "block" } }} />}
-						>
-							{cells.map((c) => (
-								<Box key={c.label} flex={1}>
-									<Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
-										{c.label}
-									</Typography>
-									<Stack direction="row" spacing={2}>
-										<Box>
-											<Typography variant="caption" color="text.secondary" display="block">
-												Queries
-											</Typography>
-											<Typography variant="body2" fontWeight={600}>
-												{c.data ? fmt(c.data.queries) : "—"}
-											</Typography>
-										</Box>
-										<Box>
-											<Typography variant="caption" color="text.secondary" display="block">
-												Upserts
-											</Typography>
-											<Typography variant="body2" fontWeight={600}>
-												{c.data ? fmt(c.data.upsertCalls) : "—"}
-											</Typography>
-										</Box>
-										<Box>
-											<Typography variant="caption" color="text.secondary" display="block">
-												Vectors
-											</Typography>
-											<Typography variant="body2" fontWeight={600}>
-												{c.data ? fmt(c.data.vectorsUpserted) : "—"}
-											</Typography>
-										</Box>
-									</Stack>
-								</Box>
-							))}
-						</Stack>
-					);
-				})()}
-
-				{pineconeStats?.indexStats && (
-					<>
-						<Divider sx={{ my: 1.5 }} />
-						<Stack direction={{ xs: "column", sm: "row" }} spacing={3} alignItems={{ sm: "center" }}>
-							<Box>
-								<Typography variant="caption" color="text.secondary" display="block">
-									Tamaño índice (records)
-								</Typography>
-								<Typography variant="body2" fontWeight={600}>
-									{pineconeStats.indexStats.totalRecordCount != null
-										? pineconeStats.indexStats.totalRecordCount.toLocaleString("es-AR")
-										: "—"}
-								</Typography>
-							</Box>
-							<Box>
-								<Typography variant="caption" color="text.secondary" display="block">
-									Dimensión
-								</Typography>
-								<Typography variant="body2" fontWeight={600}>
-									{pineconeStats.indexStats.dimension ?? "—"}
-								</Typography>
-							</Box>
-							{pineconeStats.indexStats.indexFullness != null && (
-								<Box>
-									<Typography variant="caption" color="text.secondary" display="block">
-										Fullness
-									</Typography>
-									<Typography variant="body2" fontWeight={600}>
-										{(pineconeStats.indexStats.indexFullness * 100).toFixed(2)}%
-									</Typography>
-								</Box>
-							)}
-							{pineconeStats.indexStats.namespaces && Object.keys(pineconeStats.indexStats.namespaces).length > 0 && (
-								<Box flex={1} minWidth={0}>
-									<Typography variant="caption" color="text.secondary" display="block">
-										Namespaces
-									</Typography>
-									<Typography
-										variant="caption"
-										sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}
-									>
-										{Object.entries(pineconeStats.indexStats.namespaces)
-											.map(([n, v]) => `${n}: ${(v.recordCount ?? v.vectorCount ?? 0).toLocaleString("es-AR")}`)
-											.join(" · ")}
-									</Typography>
-								</Box>
-							)}
-						</Stack>
-					</>
-				)}
-			</Paper>
+				<Collapse in={subflagsAbiertos} unmountOnExit>
+					<WorkerControlPanel
+						processes={[
+							{
+								label: "sentencias-worker",
+								description: "PDF download + extracción",
+								enabled: pipelineWorkers["sentencias-worker"] ?? null,
+								toggling: togglingPipelineWorker["sentencias-worker"],
+								onToggle: (v) => handleTogglePipelineWorker("sentencias-worker", v),
+							},
+							{
+								label: "sentencias-worker-2",
+								description: "PDF download + extracción (instancia 2)",
+								enabled: pipelineWorkers["sentencias-worker-2"] ?? null,
+								toggling: togglingPipelineWorker["sentencias-worker-2"],
+								onToggle: (v) => handleTogglePipelineWorker("sentencias-worker-2", v),
+							},
+							{
+								label: "sentencias-embeddings",
+								description: "Generación de embeddings + upsert Pinecone",
+								enabled: pipelineWorkers["sentencias-embeddings"] ?? null,
+								toggling: togglingPipelineWorker["sentencias-embeddings"],
+								onToggle: (v) => handleTogglePipelineWorker("sentencias-embeddings", v),
+							},
+							{
+								label: "ocr-worker",
+								description: "OCR para PDFs escaneados",
+								enabled: pipelineWorkers["ocr-worker"] ?? null,
+								toggling: togglingPipelineWorker["ocr-worker"],
+								onToggle: (v) => handleTogglePipelineWorker("ocr-worker", v),
+							},
+							{
+								label: "sentencias-retry",
+								description: "Reintentos de sentencias fallidas",
+								enabled: pipelineWorkers["sentencias-retry"] ?? null,
+								toggling: togglingPipelineWorker["sentencias-retry"],
+								onToggle: (v) => handleTogglePipelineWorker("sentencias-retry", v),
+							},
+						]}
+					/>
+				</Collapse>
+			</Box>
 
 			{/* En mobile los tabs verticales dejaban ~190px utiles de 360: el
 			    sidebar fijo de 170px comprimia TODO el contenido. Abajo de md
@@ -3073,7 +3184,9 @@ export default function SentenciasWorkerTab() {
 							scrollButtons={false}
 							value={SECTIONS[section]?.group === "config" ? section : false}
 							onChange={(_, v) => setSection(v)}
-							TabIndicatorProps={{ sx: { width: tabsVerticales ? 2.5 : undefined, height: tabsVerticales ? undefined : 2.5, bgcolor: BRAND_BLUE } }}
+							TabIndicatorProps={{
+								sx: { width: tabsVerticales ? 2.5 : undefined, height: tabsVerticales ? undefined : 2.5, bgcolor: BRAND_BLUE },
+							}}
 							sx={{
 								"& .MuiTab-root": {
 									alignItems: "flex-start",

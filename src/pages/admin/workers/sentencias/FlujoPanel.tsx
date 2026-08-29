@@ -1,8 +1,23 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Box, Chip, CircularProgress, FormControlLabel, IconButton, Paper, Stack, Switch, Tooltip, Typography, alpha, useTheme } from "@mui/material";
+import {
+	Alert,
+	Box,
+	Chip,
+	CircularProgress,
+	FormControlLabel,
+	IconButton,
+	Paper,
+	Stack,
+	Switch,
+	Tooltip,
+	Typography,
+	alpha,
+	useMediaQuery,
+	useTheme,
+} from "@mui/material";
 import { ArrowDown2, ArrowRight2, InfoCircle, Pause, Refresh, Warning2 } from "iconsax-react";
 import { FlujoEtapa, FlujoResponse, getFlujoSentencias, setSoloSaij } from "api/sentenciasCapturadas";
-import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
+import { BRAND_BLUE, STALE_AMBER } from "themes/dashboardTokens";
 
 /**
  * Radiografía del pipeline de sentencias: en qué etapa está parado el material
@@ -39,6 +54,75 @@ function Conteo({ label, valor, color }: { label: string; valor: { saij: number;
 				</Typography>
 			</Box>
 		</Tooltip>
+	);
+}
+
+/**
+ * Versión compacta para pantallas chicas. Las tarjetas de escritorio miden
+ * ~165px cada una: cinco etapas eran 900px de scroll —una pantalla entera de
+ * teléfono— para leer cinco números. La fila dice lo mismo en ~90px.
+ */
+function EtapaFila({ etapa, esCuelloDeBotella }: { etapa: FlujoEtapa; esCuelloDeBotella: boolean }) {
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
+	const acento = etapa.pausada ? theme.palette.error.main : esCuelloDeBotella ? STALE_AMBER : BRAND_BLUE;
+	const total = etapa.total.saij + etapa.total.pjn;
+
+	return (
+		<Box
+			sx={{
+				display: "flex",
+				gap: 1.25,
+				py: 1,
+				px: 1.25,
+				borderLeft: `3px solid ${acento}`,
+				borderRadius: 0.5,
+				bgcolor: alpha(acento, isDark ? 0.07 : 0.035),
+			}}
+		>
+			<Box sx={{ flex: 1, minWidth: 0 }}>
+				<Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 0.25 }}>
+					<Typography variant="subtitle2" sx={{ color: acento, lineHeight: 1.3 }}>
+						{etapa.label}
+					</Typography>
+					{etapa.pausada && (
+						<Box sx={{ display: "inline-flex", color: theme.palette.error.main }}>
+							<Pause size={13} variant="Bold" />
+						</Box>
+					)}
+					{etapa.pausadaParcial && !etapa.pausada && (
+						<Chip size="small" label="parcial" sx={{ height: 16, fontSize: 9 }} color="warning" variant="outlined" />
+					)}
+				</Stack>
+				<Typography variant="caption" color="text.secondary" sx={{ display: "block", fontSize: 10.5, lineHeight: 1.35 }}>
+					SAIJ {fmt(etapa.total.saij)} · PJN {fmt(etapa.total.pjn)}
+				</Typography>
+				<Stack direction="row" spacing={1.25} flexWrap="wrap" useFlexGap sx={{ mt: 0.25 }}>
+					{etapa.enCola.total > 0 && (
+						<Typography
+							variant="caption"
+							sx={{ fontSize: 10.5, color: esCuelloDeBotella ? STALE_AMBER : "text.secondary", fontWeight: 600 }}
+						>
+							{fmt(etapa.enCola.total)} en cola
+						</Typography>
+					)}
+					{etapa.errores.total > 0 && (
+						<Typography variant="caption" sx={{ fontSize: 10.5, color: theme.palette.error.main, fontWeight: 600 }}>
+							{fmt(etapa.errores.total)} {etapa.id === "publicada" ? "de baja" : "errores"}
+						</Typography>
+					)}
+				</Stack>
+				<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5, fontSize: 10.5, lineHeight: 1.35 }}>
+					{etapa.nota}
+				</Typography>
+			</Box>
+			<Typography
+				variant="h5"
+				sx={{ color: acento, fontVariantNumeric: "tabular-nums", lineHeight: 1.2, flexShrink: 0, alignSelf: "flex-start" }}
+			>
+				{fmt(total)}
+			</Typography>
+		</Box>
 	);
 }
 
@@ -81,8 +165,12 @@ function EtapaCard({ etapa, esCuelloDeBotella }: { etapa: FlujoEtapa; esCuelloDe
 
 			<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 				<Conteo label="procesadas" valor={etapa.total} color={theme.palette.text.primary} />
-				{etapa.enCola.total > 0 && <Conteo label="en cola" valor={etapa.enCola} color={esCuelloDeBotella ? STALE_AMBER : theme.palette.text.secondary} />}
-				{etapa.errores.total > 0 && <Conteo label={etapa.id === "publicada" ? "de baja" : "errores"} valor={etapa.errores} color={theme.palette.error.main} />}
+				{etapa.enCola.total > 0 && (
+					<Conteo label="en cola" valor={etapa.enCola} color={esCuelloDeBotella ? STALE_AMBER : theme.palette.text.secondary} />
+				)}
+				{etapa.errores.total > 0 && (
+					<Conteo label={etapa.id === "publicada" ? "de baja" : "errores"} valor={etapa.errores} color={theme.palette.error.main} />
+				)}
 			</Stack>
 
 			<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1, lineHeight: 1.4 }}>
@@ -94,6 +182,8 @@ function EtapaCard({ etapa, esCuelloDeBotella }: { etapa: FlujoEtapa; esCuelloDe
 
 export default function FlujoPanel() {
 	const theme = useTheme();
+	// Abajo de md el pipeline se dibuja como lista compacta, no como tarjetas.
+	const esEscritorio = useMediaQuery(theme.breakpoints.up("md"));
 	const [data, setData] = useState<FlujoResponse | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [guardando, setGuardando] = useState(false);
@@ -124,7 +214,14 @@ export default function FlujoPanel() {
 	}
 	if (error) {
 		return (
-			<Alert severity="error" action={<IconButton size="small" onClick={cargar}><Refresh size={15} /></IconButton>}>
+			<Alert
+				severity="error"
+				action={
+					<IconButton size="small" onClick={cargar}>
+						<Refresh size={15} />
+					</IconButton>
+				}
+			>
 				{error}
 			</Alert>
 		);
@@ -186,39 +283,44 @@ export default function FlujoPanel() {
 			)}
 			{data.interruptores.soloSaij && (
 				<Alert severity="info" variant="outlined" sx={{ mb: 1.5, py: 0.25 }}>
-					Modo <strong>solo SAIJ</strong>: los embeddings procesan el material nuevo y el corpus PJN espera. Apagá el interruptor para reanudarlo.
+					Modo <strong>solo SAIJ</strong>: los embeddings procesan el material nuevo y el corpus PJN espera. Apagá el interruptor para
+					reanudarlo.
 				</Alert>
 			)}
 
-			{/* En mobile el pipeline se lee de arriba hacia abajo: cinco tarjetas
-			    en fila sobre 360px quedan ilegibles. La flecha acompaña la
-			    dirección de lectura en cada caso. */}
-			<Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems="stretch" flexWrap={{ md: "wrap" }} useFlexGap>
-				{data.etapas.map((e, i) => (
-					<Stack
-						key={e.id}
-						direction={{ xs: "column", md: "row" }}
-						spacing={{ xs: 0.5, md: 1 }}
-						alignItems={{ xs: "stretch", md: "center" }}
-						sx={{ flex: { xs: "1 1 auto", md: "1 1 190px" } }}
-					>
-						<EtapaCard etapa={e} esCuelloDeBotella={e.enCola.total > 0 && e.enCola.total === mayorCola} />
-						{i < data.etapas.length - 1 && (
-							<>
-								<Box sx={{ display: { xs: "none", md: "inline-flex" }, color: theme.palette.text.disabled }}>
+			{/* En escritorio el pipeline se lee de izquierda a derecha en tarjetas;
+			    en pantallas chicas, como lista compacta de arriba hacia abajo (las
+			    tarjetas costaban 900px de scroll para cinco números). */}
+			{esEscritorio ? (
+				<Stack direction="row" spacing={1} alignItems="stretch" flexWrap="wrap" useFlexGap>
+					{data.etapas.map((e, i) => (
+						<Stack key={e.id} direction="row" spacing={1} alignItems="center" sx={{ flex: "1 1 190px" }}>
+							<EtapaCard etapa={e} esCuelloDeBotella={e.enCola.total > 0 && e.enCola.total === mayorCola} />
+							{i < data.etapas.length - 1 && (
+								<Box sx={{ display: "inline-flex", color: theme.palette.text.disabled }}>
 									<ArrowRight2 size={14} />
 								</Box>
-								<Box sx={{ display: { xs: "flex", md: "none" }, justifyContent: "center", color: theme.palette.text.disabled }}>
-									<ArrowDown2 size={14} />
+							)}
+						</Stack>
+					))}
+				</Stack>
+			) : (
+				<Stack spacing={0.5}>
+					{data.etapas.map((e, i) => (
+						<Box key={e.id}>
+							<EtapaFila etapa={e} esCuelloDeBotella={e.enCola.total > 0 && e.enCola.total === mayorCola} />
+							{i < data.etapas.length - 1 && (
+								<Box sx={{ display: "flex", justifyContent: "center", color: theme.palette.text.disabled, mt: 0.25 }}>
+									<ArrowDown2 size={12} />
 								</Box>
-							</>
-						)}
-					</Stack>
-				))}
-			</Stack>
+							)}
+						</Box>
+					))}
+				</Stack>
+			)}
 
 			<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1.5 }}>
-				Cada número suma SAIJ y PJN (el desglose se ve debajo en pantallas chicas). La etapa en ámbar es donde hay más material esperando.
+				Cada número suma SAIJ y PJN. La etapa en ámbar es donde hay más material esperando.
 			</Typography>
 		</Paper>
 	);
