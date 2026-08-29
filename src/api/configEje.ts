@@ -293,6 +293,21 @@ export const acknowledgeAlert = async (alertId: string): Promise<void> => {
 	await ejeAxios.post(`/config/manager/alerts/${alertId}/acknowledge`);
 };
 
+/**
+ * Confirma en bloque las alertas abiertas. Sin esto, una tanda de decenas de
+ * alertas de un mismo incidente queda para siempre en la vista: confirmarlas de
+ * a una no es viable y nada las vence.
+ */
+export const acknowledgeAllAlerts = async (
+	olderThanHours?: number,
+): Promise<{ acknowledged: number; acknowledgedBy: string; olderThanHours: number | null }> => {
+	const response = await ejeAxios.post(
+		"/config/manager/alerts/acknowledge-all",
+		olderThanHours !== undefined ? { olderThanHours } : {},
+	);
+	return response.data.data;
+};
+
 export const getDailyStats = async (days: number = 30): Promise<IDailyStats[]> => {
 	const response = await ejeAxios.get("/config/manager/daily-stats", { params: { days } });
 	return response.data.data;
@@ -445,6 +460,7 @@ export default {
 	getManagerHistory,
 	getAlerts,
 	acknowledgeAlert,
+	acknowledgeAllAlerts,
 	getDailyStats,
 	getWorkerStats,
 	getTodaySummary,
