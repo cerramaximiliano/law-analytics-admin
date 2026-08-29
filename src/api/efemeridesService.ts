@@ -1,6 +1,6 @@
 import adminAxios from "utils/adminAxios";
 
-export type Emblema = "escarapela" | "bandera" | null;
+export type Emblema = "escarapela" | "bandera" | "balanza" | null;
 
 export interface Efemeride {
 	_id: string;

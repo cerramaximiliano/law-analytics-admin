@@ -145,10 +145,11 @@ const EditorEfemeride = ({
 						fullWidth
 						value={form.emblema ?? ""}
 						onChange={(e) => set("emblema", (e.target.value || null) as Emblema)}
-						helperText="Escarapela o bandera para fechas patrias; ninguno para efemérides profesionales"
+						helperText="Escarapela o bandera para fechas patrias; balanza para efemérides del oficio (Día del Abogado)"
 					>
 						<MenuItem value="">Ninguno</MenuItem>
 						<MenuItem value="escarapela">Escarapela</MenuItem>
+						<MenuItem value="balanza">Balanza</MenuItem>
 						<MenuItem value="bandera">Bandera</MenuItem>
 					</TextField>
 					<TextField
