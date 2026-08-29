@@ -286,6 +286,19 @@ export const acknowledgeAlert = async (
 	return response.data.data;
 };
 
+/**
+ * Confirma en bloque las alertas abiertas. Sin esto, una tanda de decenas de
+ * alertas de un mismo incidente queda para siempre en "Alertas Activas":
+ * confirmarlas de a una no es viable y nada las vence.
+ */
+export const acknowledgeAllAlerts = async (
+	olderThanHours?: number,
+): Promise<{ acknowledged: number; acknowledgedBy: string; olderThanHours: number | null }> => {
+	const response = await pjmendozaAxios.post("/config/manager/alerts/acknowledge-all", 
+		olderThanHours !== undefined ? { olderThanHours } : {});
+	return response.data.data;
+};
+
 // Retorna stats en el shape eje (`IDailyWorkerStats[]` con una entrada por
 // (workerType × día)). Use `getDailyStatsRaw` para el shape nativo pjmendoza.
 export const getDailyStats = async (days: number = 30): Promise<IDailyWorkerStats[]> => {
@@ -569,6 +582,7 @@ export default {
 	pauseManager,
 	getHistory,
 	getAlerts,
+	acknowledgeAllAlerts,
 	acknowledgeAlert,
 	getDailyStats,
 	// Workers

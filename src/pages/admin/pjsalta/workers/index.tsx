@@ -669,6 +669,7 @@ const PjSaltaWorkersConfig: React.FC = () => {
 	const [workersData, setWorkersData] = useState<IAllWorkersResponse | null>(null);
 	const [todayStats, setTodayStats] = useState<IDailyWorkerStats[]>([]);
 	const [alerts, setAlerts] = useState<IAlert[]>([]);
+	const [mostrarAlertasViejas, setMostrarAlertasViejas] = useState(false);
 	const [pipelineStats, setPipelineStats] = useState<PipelineStatsResponse["data"] | null>(null);
 
 	// Fetch all data
@@ -810,6 +811,44 @@ const PjSaltaWorkersConfig: React.FC = () => {
 				message: "Error actualizando configuración",
 				severity: "error",
 			});
+		} finally {
+			setActionLoading(false);
+		}
+	};
+
+	// "Alertas sin confirmar" ≠ "alertas activas ahora": nada las vence, así que
+	// un incidente ya resuelto sigue apilado meses. Separar las últimas 24 h de
+	// las anteriores y mostrar la antigüedad evita leer historia como presente.
+	const VENTANA_ALERTA_RECIENTE_H = 24;
+	const esAlertaReciente = (ts?: string) =>
+		!!ts && Date.now() - new Date(ts).getTime() < VENTANA_ALERTA_RECIENTE_H * 3600 * 1000;
+	const alertasRecientes = alerts.filter((a) => esAlertaReciente(a.timestamp));
+	const alertasViejas = alerts.filter((a) => !esAlertaReciente(a.timestamp));
+
+	const antiguedadAlerta = (ts?: string) => {
+		if (!ts) return "sin fecha";
+		const min = Math.floor((Date.now() - new Date(ts).getTime()) / 60000);
+		if (min < 1) return "recién";
+		if (min < 60) return `hace ${min} min`;
+		const h = Math.floor(min / 60);
+		if (h < 24) return `hace ${h} h`;
+		const d = Math.floor(h / 24);
+		return d === 1 ? "hace 1 día" : `hace ${d} días`;
+	};
+
+	const handleAcknowledgeAllAlerts = async () => {
+		setActionLoading(true);
+		try {
+			const r = await configPjSalta.acknowledgeAllAlerts();
+			setAlerts([]);
+			setMostrarAlertasViejas(false);
+			setSnackbar({
+				open: true,
+				message: `${r.acknowledged} alerta(s) confirmada(s)`,
+				severity: "success",
+			});
+		} catch (error) {
+			setSnackbar({ open: true, message: "Error confirmando las alertas", severity: "error" });
 		} finally {
 			setActionLoading(false);
 		}
@@ -1318,13 +1357,34 @@ const PjSaltaWorkersConfig: React.FC = () => {
 				{/* Alerts */}
 				{alerts.length > 0 && (
 					<Grid item xs={12}>
-						<Card variant="outlined" sx={{ borderColor: theme.palette.warning.main }}>
-							<CardHeader title="Alertas Activas" avatar={<Warning2 size={20} color={theme.palette.warning.main} />} />
+						<Card
+							variant="outlined"
+							sx={{ borderColor: alertasRecientes.length > 0 ? theme.palette.warning.main : theme.palette.divider }}
+						>
+							<CardHeader
+								title="Alertas sin confirmar"
+								subheader={
+									alertasRecientes.length > 0
+										? `${alertasRecientes.length} en las últimas 24 h · ${alertasViejas.length} anteriores`
+										: `Ninguna en las últimas 24 h · ${alertasViejas.length} anteriores`
+								}
+								avatar={
+									<Warning2
+										size={20}
+										color={alertasRecientes.length > 0 ? theme.palette.warning.main : theme.palette.text.disabled}
+									/>
+								}
+								action={
+									<Button size="small" onClick={handleAcknowledgeAllAlerts} disabled={actionLoading}>
+										Confirmar todas
+									</Button>
+								}
+							/>
 							<CardContent>
 								<Stack spacing={1}>
-									{alerts.map((alert, index) => (
+									{(mostrarAlertasViejas ? alerts : alertasRecientes).map((alert, index) => (
 										<Alert
-											key={index}
+											key={alert._id ?? index}
 											severity={alert.type.includes("high") || alert.type === "manager_stopped" ? "warning" : "info"}
 											action={
 												<Button size="small" onClick={() => handleAcknowledgeAlert(alert._id)}>
@@ -1333,8 +1393,21 @@ const PjSaltaWorkersConfig: React.FC = () => {
 											}
 										>
 											{alert.message}
+											<Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+												· {antiguedadAlerta(alert.timestamp)}
+											</Typography>
 										</Alert>
 									))}
+									{alertasViejas.length > 0 && (
+										<Button
+											size="small"
+											color="inherit"
+											onClick={() => setMostrarAlertasViejas((v) => !v)}
+											sx={{ alignSelf: "flex-start" }}
+										>
+											{mostrarAlertasViejas ? "Ocultar anteriores" : `Ver ${alertasViejas.length} anteriores`}
+										</Button>
+									)}
 								</Stack>
 							</CardContent>
 						</Card>
