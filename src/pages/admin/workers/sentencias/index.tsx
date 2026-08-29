@@ -3,12 +3,14 @@ import { Box, Chip, Collapse, Stack, Typography, alpha, useMediaQuery, useTheme 
 import { ArrowDown2, ArrowUp2 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import SentenciasWorkerTab from "./SentenciasWorkerTab";
-import FlujoPanel from "./FlujoPanel";
 import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 
 /**
- * Encabezado de la vista + flujo del pipeline + el resto de la operativa.
+ * Encabezado de la vista. Todo lo demás vive en las pestañas de
+ * SentenciasWorkerTab —incluido el flujo del pipeline, que antes se dibujaba
+ * acá y por lo tanto había que scrollearlo estuvieras en la pestaña que
+ * estuvieras.
  *
  * La identificación técnica (host, colecciones, repos) ocupaba ~430px antes de
  * cualquier dato: en un teléfono era media pantalla de metadata para llegar a
@@ -137,7 +139,6 @@ export default function SentenciasWorkerPage() {
 					</Stack>
 				</Collapse>
 
-				<FlujoPanel />
 				<SentenciasWorkerTab />
 			</Stack>
 		</MainCard>

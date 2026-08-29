@@ -33,9 +33,11 @@ import {
 	Activity,
 	ArrowDown2,
 	ArrowUp2,
+	Clock,
 	CloseCircle,
 	Data,
 	DocumentText,
+	Hierarchy,
 	InfoCircle,
 	Refresh,
 	Scanner,
@@ -63,6 +65,7 @@ import RagWorkersService, { PineconeStats, SentenciasWorkerConfig } from "api/ra
 import WorkerControlPanel from "components/WorkerControlPanel";
 import CronSelector from "components/admin/CronSelector";
 import PublicacionesSection from "./PublicacionesSection";
+import FlujoPanel from "./FlujoPanel";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -203,11 +206,11 @@ function SentenciaRow({ doc, onDetail, onRetry, onRetryOcr }: SentenciaRowProps)
 					/>
 					{doc.category && (
 						<Chip
-							label={CATEGORY_LABEL[doc.category]}
+							label={catLabel(doc.category)}
 							size="small"
 							sx={{
-								bgcolor: alpha(CATEGORY_COLOR[doc.category], 0.12),
-								color: CATEGORY_COLOR[doc.category],
+								bgcolor: alpha(catColor(doc.category), 0.12),
+								color: catColor(doc.category),
 								fontWeight: 600,
 								fontSize: 10,
 							}}
@@ -528,6 +531,17 @@ const CATEGORY_COLOR: Record<Category, string> = { novelty: "#7b1fa2", rutina: "
 const CATEGORY_LABEL: Record<Category, string> = { novelty: "Novelty", rutina: "Rutina" };
 
 /**
+ * El tipo dice "novelty" | "rutina", pero la colección tiene documentos con
+ * otras categorías: ahí el map devuelve undefined, `alpha(undefined)` tira
+ * TypeError y el error boundary se lleva puesta la vista entera —así estaba
+ * quedando en blanco el tab "Lista". Con fallback la categoría desconocida se
+ * muestra en gris en vez de romper la pantalla.
+ */
+const CAT_FALLBACK = "#616161";
+const catColor = (c?: string) => CATEGORY_COLOR[c as Category] || CAT_FALLBACK;
+const catLabel = (c?: string) => CATEGORY_LABEL[c as Category] || c || "";
+
+/**
  * Lista de sentencias que en pantallas chicas muestra solo las primeras filas.
  *
  * Cada fila mide ~130px en un teléfono: diez filas son 1.300px por lista, y el
@@ -570,25 +584,8 @@ function ListaDocs({
 	);
 }
 
-function EstadoSection({
-	stats,
-	loading,
-	onRefresh,
-	onRetry,
-}: {
-	stats: SentenciasStats | null;
-	loading: boolean;
-	onRefresh: () => void;
-	onRetry: (id: string) => void;
-}) {
+function EstadoSection({ stats, loading, onRefresh }: { stats: SentenciasStats | null; loading: boolean; onRefresh: () => void }) {
 	const theme = useTheme();
-	const [selectedDoc, setSelectedDoc] = useState<SentenciaCapturada | null>(null);
-	const [dialogOpen, setDialogOpen] = useState(false);
-
-	const handleDetail = (doc: SentenciaCapturada) => {
-		setSelectedDoc(doc);
-		setDialogOpen(true);
-	};
 
 	const processed = stats?.totals.processed || 0;
 	const total = stats?.totals.total || 0;
@@ -744,17 +741,6 @@ function EstadoSection({
 						</Box>
 					)}
 
-					{/* Últimas procesadas */}
-					{stats.recientes.length > 0 && (
-						<Box>
-							<Stack direction="row" alignItems="center" spacing={1} mb={1}>
-								<TickCircle size={16} color={theme.palette.success.main} />
-								<Typography variant="subtitle2">Últimas procesadas</Typography>
-							</Stack>
-							<ListaDocs docs={stats.recientes} onDetail={handleDetail} />
-						</Box>
-					)}
-
 					{/* Por categoría */}
 					{stats.byCategory && stats.byCategory.length > 0 && (
 						<Box>
@@ -807,8 +793,65 @@ function EstadoSection({
 							</Grid>
 						</Box>
 					)}
+				</>
+			) : null}
+		</Stack>
+	);
+}
 
-					{/* Últimas novelty procesadas */}
+// ── Recientes Section ─────────────────────────────────────────────────────────
+/**
+ * Las tres muestras de documentos del pipeline: lo último procesado, lo último
+ * marcado como novelty (lo que sale en el newsletter) y lo que falló.
+ *
+ * Vivían al final de "Estado general", que así mezclaba métricas agregadas con
+ * 30 filas de detalle y medía 3,4 pantallas de teléfono. Son cosas distintas:
+ * las métricas responden "cómo viene el pipeline", estas listas "qué pasó con
+ * estos documentos".
+ */
+function RecientesSection({
+	stats,
+	loading,
+	onRefresh,
+	onRetry,
+}: {
+	stats: SentenciasStats | null;
+	loading: boolean;
+	onRefresh: () => void;
+	onRetry: (id: string) => void;
+}) {
+	const theme = useTheme();
+	const [selectedDoc, setSelectedDoc] = useState<SentenciaCapturada | null>(null);
+	const [dialogOpen, setDialogOpen] = useState(false);
+
+	const handleDetail = (doc: SentenciaCapturada) => {
+		setSelectedDoc(doc);
+		setDialogOpen(true);
+	};
+
+	return (
+		<Stack spacing={3}>
+			<Stack direction="row" justifyContent="space-between" alignItems="center">
+				<Typography variant="h6">Últimas y errores</Typography>
+				<Button startIcon={<Refresh size={16} />} size="small" onClick={onRefresh} disabled={loading}>
+					Actualizar
+				</Button>
+			</Stack>
+
+			{loading && !stats ? (
+				<Skeleton height={240} variant="rounded" />
+			) : stats ? (
+				<>
+					{stats.recientes.length > 0 && (
+						<Box>
+							<Stack direction="row" alignItems="center" spacing={1} mb={1}>
+								<TickCircle size={16} color={theme.palette.success.main} />
+								<Typography variant="subtitle2">Últimas procesadas</Typography>
+							</Stack>
+							<ListaDocs docs={stats.recientes} onDetail={handleDetail} />
+						</Box>
+					)}
+
 					{stats.noveltyRecientes && stats.noveltyRecientes.length > 0 && (
 						<Box>
 							<Stack direction="row" alignItems="center" spacing={1} mb={1}>
@@ -821,7 +864,6 @@ function EstadoSection({
 						</Box>
 					)}
 
-					{/* Errores */}
 					{stats.errores.length > 0 && (
 						<Box>
 							<Stack direction="row" alignItems="center" spacing={1} mb={1}>
@@ -837,6 +879,12 @@ function EstadoSection({
 								borderColor={alpha(theme.palette.error.main, 0.3)}
 							/>
 						</Box>
+					)}
+
+					{stats.recientes.length === 0 && stats.errores.length === 0 && (
+						<Typography variant="body2" color="text.secondary">
+							Todavía no hay documentos procesados ni fallidos para mostrar.
+						</Typography>
 					)}
 				</>
 			) : null}
@@ -2255,11 +2303,11 @@ function SentenciaCard({ doc, onDetail }: SentenciaCardProps) {
 				/>
 				{doc.category && (
 					<Chip
-						label={CATEGORY_LABEL[doc.category]}
+						label={catLabel(doc.category)}
 						size="small"
 						sx={{
-							bgcolor: alpha(CATEGORY_COLOR[doc.category], 0.12),
-							color: CATEGORY_COLOR[doc.category],
+							bgcolor: alpha(catColor(doc.category), 0.12),
+							color: catColor(doc.category),
 							fontWeight: 600,
 							fontSize: 10,
 							height: 18,
@@ -2869,13 +2917,16 @@ function CollectorSection() {
 // que el pipeline genera y publica). El orden importa porque el `value` del Tab
 // es su índice — los componentes del switch abajo deben mapear los índices.
 type SectionGroup = "config" | "data";
+// El orden importa: los TabPanel de abajo se indexan por posición.
 const SECTIONS: { label: string; icon: React.ReactElement; group: SectionGroup }[] = [
 	// Grupo configuración / operativa
+	{ label: "Flujo y workers", icon: <Hierarchy size={16} />, group: "config" },
 	{ label: "Estado general", icon: <Activity size={16} />, group: "config" },
 	{ label: "Collector", icon: <Setting3 size={16} />, group: "config" },
 	{ label: "OCR", icon: <Scanner size={16} />, group: "config" },
 	{ label: "Embeddings", icon: <Data size={16} />, group: "config" },
 	// Grupo datos / resultados
+	{ label: "Últimas y errores", icon: <Clock size={16} />, group: "data" },
 	{ label: "Lista", icon: <DocumentText size={16} />, group: "data" },
 	{ label: "Publicaciones", icon: <Notification size={16} />, group: "data" },
 	{ label: "Novedades", icon: <TickCircle size={16} />, group: "data" },
@@ -3044,110 +3095,6 @@ export default function SentenciasWorkerTab() {
 
 	return (
 		<Stack spacing={2}>
-			{/* ── Worker Control Panel ── */}
-			<WorkerControlPanel
-				processes={[
-					{
-						label: "PDF · OCR · Embeddings",
-						description: "sentencias-worker · sentencias-embeddings-worker",
-						enabled: embEnabled,
-						toggling: togglingEmb,
-						onToggle: handleToggleEmb,
-					},
-					{
-						label: "Collector",
-						description: "sentencias-collector-worker",
-						enabled: collectorEnabled,
-						toggling: togglingCollector,
-						onToggle: handleToggleCollector,
-					},
-					{
-						label: "Layer 2 Semántico",
-						description: "sentencias-semantic-worker",
-						enabled: semanticEnabled,
-						toggling: togglingSemantic,
-						onToggle: handleToggleSemantic,
-					},
-				]}
-			/>
-
-			{/* ── Granularidad: sub-flags individuales del grupo "PDF · OCR · Embeddings" ──
-			    Cada uno controla un proceso PM2 específico. La regla efectiva es
-			    embEnabled (master) AND el sub-flag individual: si el master está OFF,
-			    todos los workers quedan OFF aunque su sub-flag esté ON.
-
-			    Plegado por defecto: son el control fino, y desplegados ocupaban
-			    440px arriba de las pestañas. El resumen "N de 5 activos" dice si
-			    hace falta abrirlo. */}
-			<Box>
-				<Stack
-					direction="row"
-					alignItems="center"
-					spacing={0.75}
-					onClick={() => setSubflagsAbiertos((v) => !v)}
-					sx={{ cursor: "pointer", pl: 0.5, mb: 0.5, color: "text.secondary" }}
-				>
-					{subflagsAbiertos ? <ArrowUp2 size={13} /> : <ArrowDown2 size={13} />}
-					{/* El texto completo ocupa tres líneas en un teléfono; ahí basta con
-					    decir qué hay adentro. */}
-					<Typography variant="caption" sx={{ display: { xs: "none", sm: "block" } }}>
-						Control individual del grupo PDF · OCR · Embeddings (queda anulado si el master está OFF)
-					</Typography>
-					<Typography variant="caption" sx={{ display: { xs: "block", sm: "none" } }}>
-						Control individual de los 5 workers
-					</Typography>
-					{!subflagsAbiertos && (
-						<Chip
-							size="small"
-							variant="outlined"
-							label={subflagsCargados === 0 ? "—" : `${subflagsActivos} de ${subflagsCargados} activos`}
-							sx={{ height: 18, fontSize: "0.65rem" }}
-						/>
-					)}
-				</Stack>
-				<Collapse in={subflagsAbiertos} unmountOnExit>
-					<WorkerControlPanel
-						processes={[
-							{
-								label: "sentencias-worker",
-								description: "PDF download + extracción",
-								enabled: pipelineWorkers["sentencias-worker"] ?? null,
-								toggling: togglingPipelineWorker["sentencias-worker"],
-								onToggle: (v) => handleTogglePipelineWorker("sentencias-worker", v),
-							},
-							{
-								label: "sentencias-worker-2",
-								description: "PDF download + extracción (instancia 2)",
-								enabled: pipelineWorkers["sentencias-worker-2"] ?? null,
-								toggling: togglingPipelineWorker["sentencias-worker-2"],
-								onToggle: (v) => handleTogglePipelineWorker("sentencias-worker-2", v),
-							},
-							{
-								label: "sentencias-embeddings",
-								description: "Generación de embeddings + upsert Pinecone",
-								enabled: pipelineWorkers["sentencias-embeddings"] ?? null,
-								toggling: togglingPipelineWorker["sentencias-embeddings"],
-								onToggle: (v) => handleTogglePipelineWorker("sentencias-embeddings", v),
-							},
-							{
-								label: "ocr-worker",
-								description: "OCR para PDFs escaneados",
-								enabled: pipelineWorkers["ocr-worker"] ?? null,
-								toggling: togglingPipelineWorker["ocr-worker"],
-								onToggle: (v) => handleTogglePipelineWorker("ocr-worker", v),
-							},
-							{
-								label: "sentencias-retry",
-								description: "Reintentos de sentencias fallidas",
-								enabled: pipelineWorkers["sentencias-retry"] ?? null,
-								toggling: togglingPipelineWorker["sentencias-retry"],
-								onToggle: (v) => handleTogglePipelineWorker("sentencias-retry", v),
-							},
-						]}
-					/>
-				</Collapse>
-			</Box>
-
 			{/* En mobile los tabs verticales dejaban ~190px utiles de 360: el
 			    sidebar fijo de 170px comprimia TODO el contenido. Abajo de md
 			    pasan a ser tabs horizontales scrolleables arriba del panel. */}
@@ -3279,25 +3226,136 @@ export default function SentenciasWorkerTab() {
 				<Box sx={{ flex: 1, minWidth: 0, pl: { xs: 0, md: 3 }, pt: { xs: 2, md: 1 } }}>
 					{/* Grupo CONFIG */}
 					<TabPanel value={section} index={0}>
-						<EstadoSection stats={stats} loading={loading} onRefresh={loadStats} onRetry={handleRetry} />
+						<Stack spacing={2}>
+							<FlujoPanel />
+							{/* ── Worker Control Panel ── */}
+							<WorkerControlPanel
+								processes={[
+									{
+										label: "PDF · OCR · Embeddings",
+										description: "sentencias-worker · sentencias-embeddings-worker",
+										enabled: embEnabled,
+										toggling: togglingEmb,
+										onToggle: handleToggleEmb,
+									},
+									{
+										label: "Collector",
+										description: "sentencias-collector-worker",
+										enabled: collectorEnabled,
+										toggling: togglingCollector,
+										onToggle: handleToggleCollector,
+									},
+									{
+										label: "Layer 2 Semántico",
+										description: "sentencias-semantic-worker",
+										enabled: semanticEnabled,
+										toggling: togglingSemantic,
+										onToggle: handleToggleSemantic,
+									},
+								]}
+							/>
+
+							{/* ── Granularidad: sub-flags individuales del grupo "PDF · OCR · Embeddings" ──
+					    Cada uno controla un proceso PM2 específico. La regla efectiva es
+					    embEnabled (master) AND el sub-flag individual: si el master está OFF,
+					    todos los workers quedan OFF aunque su sub-flag esté ON.
+
+					    Plegado por defecto: son el control fino, y desplegados ocupaban
+					    440px arriba de las pestañas. El resumen "N de 5 activos" dice si
+					    hace falta abrirlo. */}
+							<Box>
+								<Stack
+									direction="row"
+									alignItems="center"
+									spacing={0.75}
+									onClick={() => setSubflagsAbiertos((v) => !v)}
+									sx={{ cursor: "pointer", pl: 0.5, mb: 0.5, color: "text.secondary" }}
+								>
+									{subflagsAbiertos ? <ArrowUp2 size={13} /> : <ArrowDown2 size={13} />}
+									{/* El texto completo ocupa tres líneas en un teléfono; ahí basta con
+							    decir qué hay adentro. */}
+									<Typography variant="caption" sx={{ display: { xs: "none", sm: "block" } }}>
+										Control individual del grupo PDF · OCR · Embeddings (queda anulado si el master está OFF)
+									</Typography>
+									<Typography variant="caption" sx={{ display: { xs: "block", sm: "none" } }}>
+										Control individual de los 5 workers
+									</Typography>
+									{!subflagsAbiertos && (
+										<Chip
+											size="small"
+											variant="outlined"
+											label={subflagsCargados === 0 ? "—" : `${subflagsActivos} de ${subflagsCargados} activos`}
+											sx={{ height: 18, fontSize: "0.65rem" }}
+										/>
+									)}
+								</Stack>
+								<Collapse in={subflagsAbiertos} unmountOnExit>
+									<WorkerControlPanel
+										processes={[
+											{
+												label: "sentencias-worker",
+												description: "PDF download + extracción",
+												enabled: pipelineWorkers["sentencias-worker"] ?? null,
+												toggling: togglingPipelineWorker["sentencias-worker"],
+												onToggle: (v) => handleTogglePipelineWorker("sentencias-worker", v),
+											},
+											{
+												label: "sentencias-worker-2",
+												description: "PDF download + extracción (instancia 2)",
+												enabled: pipelineWorkers["sentencias-worker-2"] ?? null,
+												toggling: togglingPipelineWorker["sentencias-worker-2"],
+												onToggle: (v) => handleTogglePipelineWorker("sentencias-worker-2", v),
+											},
+											{
+												label: "sentencias-embeddings",
+												description: "Generación de embeddings + upsert Pinecone",
+												enabled: pipelineWorkers["sentencias-embeddings"] ?? null,
+												toggling: togglingPipelineWorker["sentencias-embeddings"],
+												onToggle: (v) => handleTogglePipelineWorker("sentencias-embeddings", v),
+											},
+											{
+												label: "ocr-worker",
+												description: "OCR para PDFs escaneados",
+												enabled: pipelineWorkers["ocr-worker"] ?? null,
+												toggling: togglingPipelineWorker["ocr-worker"],
+												onToggle: (v) => handleTogglePipelineWorker("ocr-worker", v),
+											},
+											{
+												label: "sentencias-retry",
+												description: "Reintentos de sentencias fallidas",
+												enabled: pipelineWorkers["sentencias-retry"] ?? null,
+												toggling: togglingPipelineWorker["sentencias-retry"],
+												onToggle: (v) => handleTogglePipelineWorker("sentencias-retry", v),
+											},
+										]}
+									/>
+								</Collapse>
+							</Box>
+						</Stack>
 					</TabPanel>
 					<TabPanel value={section} index={1}>
-						<CollectorSection />
+						<EstadoSection stats={stats} loading={loading} onRefresh={loadStats} />
 					</TabPanel>
 					<TabPanel value={section} index={2}>
-						<OcrSection stats={stats} loading={loading} onRefresh={loadStats} onRetryOcr={handleRetryOcr} />
+						<CollectorSection />
 					</TabPanel>
 					<TabPanel value={section} index={3}>
+						<OcrSection stats={stats} loading={loading} onRefresh={loadStats} onRetryOcr={handleRetryOcr} />
+					</TabPanel>
+					<TabPanel value={section} index={4}>
 						<EmbeddingsSection stats={stats} loading={loading} onRefresh={loadStats} onRetryEmbedding={handleRetryEmbedding} />
 					</TabPanel>
 					{/* Grupo DATA */}
-					<TabPanel value={section} index={4}>
-						<ListaSection />
-					</TabPanel>
 					<TabPanel value={section} index={5}>
-						<PublicacionesSection />
+						<RecientesSection stats={stats} loading={loading} onRefresh={loadStats} onRetry={handleRetry} />
 					</TabPanel>
 					<TabPanel value={section} index={6}>
+						<ListaSection />
+					</TabPanel>
+					<TabPanel value={section} index={7}>
+						<PublicacionesSection />
+					</TabPanel>
+					<TabPanel value={section} index={8}>
 						<NoveltySection stats={stats} loading={loading} onRefresh={loadStats} />
 					</TabPanel>
 				</Box>
