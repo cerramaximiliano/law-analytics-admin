@@ -700,12 +700,11 @@ const SocialStudio = () => {
 	const handleCaptionIA = async () => {
 		try {
 			setGenerandoCaption(true);
-			// La generación también devuelve hashtags, pero el estudio no gestiona
-			// ese campo todavía; si vienen, se agregan al final del caption, que
-			// es como aparecen en Instagram.
+			// El caption ya viene cerrado desde la API con "Link in BIO" y los
+			// hashtags dentro del texto (services/social/captionCierre). Antes se
+			// pegaban acá; hacerlo de nuevo los duplicaría.
 			const r = await generateCaption({ templateId, contenido });
-			const texto = r.hashtags?.length ? `${r.caption}\n\n${r.hashtags.map((h) => `#${h}`).join(" ")}` : r.caption;
-			setCaption(texto);
+			setCaption(r.caption);
 			enqueueSnackbar("Caption generado", { variant: "success" });
 		} catch (err: any) {
 			enqueueSnackbar(err?.response?.data?.error || "No se pudo generar el caption", { variant: "error" });
