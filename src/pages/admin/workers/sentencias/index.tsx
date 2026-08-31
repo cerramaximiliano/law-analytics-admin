@@ -27,15 +27,11 @@ export default function SentenciasWorkerPage() {
 	return (
 		<MainCard>
 			<Stack spacing={{ xs: 2, md: 3 }}>
-				<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1.5}>
-					<Box sx={{ maxWidth: 720 }}>
-						<Typography variant="h3" sx={{ mb: 0.75 }}>
-							Worker Sentencias (IA)
-						</Typography>
-						<Typography variant="body1" color="text.secondary">
-							Pipeline de captura, extracción OCR, embeddings y detección de novedad de sentencias judiciales
-						</Typography>
-					</Box>
+				<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1.5}>
+					{/* El título lo pone el breadcrumb del layout; acá solo la bajada. */}
+					<Typography variant="body1" color="text.secondary" sx={{ maxWidth: 720 }}>
+						Pipeline de captura, extracción OCR, embeddings y detección de novedad de sentencias judiciales
+					</Typography>
 					{!esEscritorio && (
 						<Chip
 							size="small"

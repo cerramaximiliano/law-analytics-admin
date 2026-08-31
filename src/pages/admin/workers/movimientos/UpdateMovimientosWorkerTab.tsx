@@ -9,7 +9,6 @@ import {
 	Button,
 	Chip,
 	Alert,
-	AlertTitle,
 	Skeleton,
 	Divider,
 	FormControl,
@@ -153,6 +152,101 @@ function Metrica({
 	);
 }
 
+/**
+ * Cifra en línea para la banda de resumen: número y etiqueta en la misma
+ * línea, detalle debajo. Las tarjetas con borde medían 170px de alto y
+ * empujaban el contenido de las pestañas fuera de la primera pantalla.
+ */
+function Cifra({
+	valor,
+	etiqueta,
+	detalle,
+	color,
+	ayuda,
+}: {
+	valor: number | string;
+	etiqueta: string;
+	detalle?: string;
+	color?: string;
+	ayuda?: string;
+}) {
+	return (
+		<Box sx={{ minWidth: 0 }}>
+			<Stack direction="row" alignItems="baseline" spacing={0.75}>
+				<Typography
+					variant="h5"
+					fontWeight={700}
+					sx={{ color: color || "text.primary", fontVariantNumeric: "tabular-nums", lineHeight: 1.2 }}
+				>
+					{typeof valor === "number" ? fmtNum(valor) : valor}
+				</Typography>
+				<Stack direction="row" alignItems="center" spacing={0.35}>
+					<Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.3, whiteSpace: "nowrap" }}>
+						{etiqueta}
+					</Typography>
+					{ayuda && (
+						<Tooltip title={ayuda} arrow enterTouchDelay={0}>
+							<Box sx={{ display: "inline-flex", color: "text.disabled", cursor: "help" }}>
+								<InfoCircle size={13} />
+							</Box>
+						</Tooltip>
+					)}
+				</Stack>
+			</Stack>
+			{detalle && (
+				<Typography variant="caption" color="text.secondary" sx={{ display: "block", lineHeight: 1.35 }}>
+					{detalle}
+				</Typography>
+			)}
+		</Box>
+	);
+}
+
+/**
+ * Fila de un formulario de configuración: etiqueta y explicación a la
+ * izquierda, control en una columna de ancho fijo a la derecha. Todos los
+ * controles caen en la misma vertical, que es lo que un muro de TextFields
+ * sueltos en un Grid no lograba.
+ */
+function Campo({
+	label,
+	ayuda,
+	children,
+	ultimo,
+	ancho = 200,
+}: {
+	label: string;
+	ayuda?: string;
+	children: React.ReactNode;
+	ultimo?: boolean;
+	/** Los controles de chips necesitan más aire que un input numérico. */
+	ancho?: number;
+}) {
+	const theme = useTheme();
+	return (
+		<Stack
+			direction={{ xs: "column", sm: "row" }}
+			alignItems={{ sm: "center" }}
+			spacing={{ xs: 0.75, sm: 2 }}
+			sx={{ py: 1.25, borderBottom: ultimo ? "none" : `1px solid ${alpha(theme.palette.divider, 0.7)}` }}
+		>
+			<Box sx={{ flex: 1, minWidth: 0 }}>
+				<Typography variant="body2" fontWeight={500}>
+					{label}
+				</Typography>
+				{ayuda && (
+					<Typography variant="caption" color="text.secondary" sx={{ display: "block", lineHeight: 1.35 }}>
+						{ayuda}
+					</Typography>
+				)}
+			</Box>
+			<Box sx={{ width: { xs: "100%", sm: ancho }, flexShrink: 0, display: "flex", justifyContent: "flex-end" }}>
+				<Box sx={{ width: "100%" }}>{children}</Box>
+			</Box>
+		</Stack>
+	);
+}
+
 // ── Datos derivados que comparten todas las secciones ─────────────────────────
 
 type Resumen = ReturnType<typeof calcularResumen>;
@@ -239,58 +333,58 @@ function ResumenFlujo({ r, loading, onRefresh }: { r: Resumen; loading: boolean;
 	const minutosDeCola = porMinuto && porMinuto > 0 && r.cola > 0 ? Math.ceil(r.cola / porMinuto) : null;
 
 	return (
-		<Paper variant="outlined" sx={{ p: { xs: 2, md: 2.5 }, borderRadius: 2, borderColor: headerBorder(isDark) }}>
-			<Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1} sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
-				<Box>
-					<Typography variant="subtitle1" fontWeight={700}>
-						Resumen del flujo
+		<Paper variant="outlined" sx={{ px: { xs: 2, md: 2.5 }, py: 1.5, borderRadius: 2, borderColor: headerBorder(isDark) }}>
+			<Stack
+				direction={{ xs: "column", lg: "row" }}
+				spacing={{ xs: 1.5, lg: 3 }}
+				alignItems={{ lg: "center" }}
+				divider={<Divider orientation="vertical" flexItem sx={{ display: { xs: "none", lg: "block" }, my: 0.5 }} />}
+			>
+				<Cifra
+					valor={r.cola}
+					etiqueta="en cola"
+					color={r.cola > 0 ? STALE_AMBER : undefined}
+					detalle={minutosDeCola ? `≈ ${minutosDeCola} min de trabajo` : "nada esperando"}
+					ayuda="Causas marcadas para revisar (update=true, verificadas y válidas). Las marca el pipeline de novedad; el worker las relee y las desmarca."
+				/>
+				<Cifra
+					valor={r.procesadasHoy}
+					etiqueta="releídas hoy"
+					color={r.procesadasHoy > 0 && r.exitosasHoy === 0 ? theme.palette.error.main : undefined}
+					detalle={r.procesadasHoy > 0 ? `${fmtNum(r.exitosasHoy)} ok · ${fmtNum(r.fallidasHoy)} con error` : "sin actividad hoy"}
+					ayuda="Causas que los workers releyeron hoy, sumando los cuatro fueros."
+				/>
+				<Cifra
+					valor={r.movimientosHoy}
+					etiqueta="movs. nuevos"
+					color={r.movimientosHoy > 0 ? LIVE_GREEN : undefined}
+					detalle="lo que el flujo produce"
+					ayuda="Movimientos que no estaban y aparecieron al releer. Es el resultado del circuito, no el trabajo hecho."
+				/>
+				<Cifra
+					valor={r.capacidadTotal != null ? `${fmtNum(r.capacidadTotal)}/día` : "—"}
+					etiqueta="de capacidad"
+					detalle={textoRitmo ? `${textoRitmo} · ${textoLote}` : "ritmo no derivable del cron"}
+					ayuda="Techo teórico: ciclos que entran en la ventana de trabajo × causas por ciclo × instancias activas. No es lo que se procesa, es lo que se podría."
+				/>
+				<Box sx={{ flexGrow: 1 }} />
+				<Stack direction="row" alignItems="center" spacing={1.5}>
+					<Typography variant="caption" color="text.secondary" sx={{ textAlign: { lg: "right" } }}>
+						Histórico
+						<br />
+						{fmtNum(r.totalHistorico)} releídas · {fmtNum(r.movimientosHistoricos)} movs.
 					</Typography>
-					<Typography variant="caption" color="text.secondary">
-						Histórico: {fmtNum(r.totalHistorico)} causas releídas · {fmtNum(r.movimientosHistoricos)} movimientos nuevos encontrados
-					</Typography>
-				</Box>
-				<Button size="small" startIcon={<Refresh size={15} />} onClick={onRefresh} disabled={loading} sx={{ textTransform: "none" }}>
-					Actualizar
-				</Button>
+					<Button
+						size="small"
+						startIcon={<Refresh size={15} />}
+						onClick={onRefresh}
+						disabled={loading}
+						sx={{ textTransform: "none", flexShrink: 0 }}
+					>
+						Actualizar
+					</Button>
+				</Stack>
 			</Stack>
-
-			<Grid container spacing={2}>
-				<Grid item xs={6} md={3}>
-					<Metrica
-						label="En cola ahora"
-						value={r.cola}
-						color={r.cola > 0 ? STALE_AMBER : undefined}
-						sub={minutosDeCola ? `≈ ${minutosDeCola} min de trabajo` : "nada esperando"}
-						ayuda="Causas marcadas para revisar (update=true, verificadas y válidas). Las marca el pipeline de novedad; el worker las relee y las desmarca."
-					/>
-				</Grid>
-				<Grid item xs={6} md={3}>
-					<Metrica
-						label="Releídas hoy"
-						value={r.procesadasHoy}
-						sub={r.procesadasHoy > 0 ? `${fmtNum(r.exitosasHoy)} ok · ${fmtNum(r.fallidasHoy)} con error` : "sin actividad hoy"}
-						color={r.procesadasHoy > 0 && r.exitosasHoy === 0 ? theme.palette.error.main : undefined}
-						ayuda="Causas que los workers releyeron hoy, sumando los cuatro fueros."
-					/>
-				</Grid>
-				<Grid item xs={6} md={3}>
-					<Metrica
-						label="Movimientos nuevos hoy"
-						value={r.movimientosHoy}
-						color={r.movimientosHoy > 0 ? LIVE_GREEN : undefined}
-						sub="lo que el flujo produce"
-						ayuda="Movimientos que no estaban y aparecieron al releer. Es el resultado del circuito, no el trabajo hecho."
-					/>
-				</Grid>
-				<Grid item xs={6} md={3}>
-					<Metrica
-						label="Capacidad"
-						value={r.capacidadTotal != null ? `${fmtNum(r.capacidadTotal)}/día` : "—"}
-						sub={textoRitmo ? `${textoRitmo} · ${textoLote}` : "ritmo no derivable del cron"}
-						ayuda="Techo teórico: ciclos que entran en la ventana de trabajo × causas por ciclo × instancias activas. No es lo que se procesa, es lo que se podría."
-					/>
-				</Grid>
-			</Grid>
 		</Paper>
 	);
 }
@@ -299,23 +393,26 @@ function ResumenFlujo({ r, loading, onRefresh }: { r: Resumen; loading: boolean;
 
 function AvisosSalud({ r }: { r: Resumen }) {
 	if (r.parados.length === 0 && r.fallandoTodo.length === 0) return null;
+	// Una línea por problema: son avisos, no artículos. Con AlertTitle ocupaban
+	// 150px arriba de las pestañas.
+	const sx = { py: 0.25, flex: 1, "& .MuiAlert-message": { py: 0.5 } };
 	return (
-		<Stack spacing={1.5}>
+		<Stack direction={{ xs: "column", lg: "row" }} spacing={1} alignItems="stretch">
 			{r.parados.length > 0 && (
-				<Alert severity="warning" icon={<InfoCircle size={18} />}>
-					<AlertTitle sx={{ mb: 0.25 }}>
+				<Alert severity="warning" sx={sx}>
+					<b>
 						{r.parados.length === 1
-							? "Un worker habilitado no está corriendo"
-							: `${r.parados.length} workers habilitados no están corriendo`}
-					</AlertTitle>
-					{r.parados.map((f) => `${f.label} (última corrida ${timeAgo(f.ultimaCorrida)})`).join(" · ")}. El switch dice habilitado, pero el
-					proceso no reporta ciclos: revisá PM2 en worker_01.
+							? "Un worker habilitado no reporta ciclos"
+							: `${r.parados.length} workers habilitados no reportan ciclos`}
+					</b>{" "}
+					— {r.parados.map((f) => `${f.label} (${timeAgo(f.ultimaCorrida)})`).join(" · ")}. Puede ser que no tengan cola, o que el proceso
+					esté caído en worker_01.
 				</Alert>
 			)}
 			{r.fallandoTodo.length > 0 && (
-				<Alert severity="error" icon={<CloseCircle size={18} />}>
-					<AlertTitle sx={{ mb: 0.25 }}>Hoy está fallando todo lo que se intenta</AlertTitle>
-					{r.fallandoTodo.map((f) => `${f.label}: ${fmtNum(f.procesadasHoy)} intentos, ninguno exitoso`).join(" · ")}.
+				<Alert severity="error" sx={sx}>
+					<b>Hoy falla todo lo que se intenta</b> —{" "}
+					{r.fallandoTodo.map((f) => `${f.label}: ${fmtNum(f.procesadasHoy)} intentos sin ninguno exitoso`).join(" · ")}.
 				</Alert>
 			)}
 		</Stack>
@@ -560,172 +657,166 @@ function ManagerSection({
 				</Stack>
 			</Paper>
 
-			<Box>
-				<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+			{/* Tres bloques, una sola columna de controles: todos los campos caen en
+			    la misma vertical y cada fila mide lo mismo. Antes era un Grid con
+			    filas de 4, 3 y 2 columnas, así que ningún input quedaba alineado
+			    con el de arriba ni con el de abajo. */}
+			<Paper variant="outlined" sx={{ borderRadius: 2, borderColor: headerBorder(isDark) }}>
+				<Typography variant="subtitle2" fontWeight={700} sx={{ px: 2, pt: 1.75, pb: 0.5 }}>
 					Escalado
 				</Typography>
-				<Grid container spacing={2}>
-					<Grid item xs={12} sm={6} md={3}>
+				<Box sx={{ px: 2, pb: 1 }}>
+					<Campo label="Escalar arriba" ayuda="Cuando la cola supera esta cantidad de causas, va al máximo de instancias">
 						<TextField
 							fullWidth
-							label="Escalar arriba si la cola supera"
 							type="number"
 							value={cfg.scaleThreshold ?? 100}
 							onChange={(e) => patch("scaleThreshold", parseInt(e.target.value, 10))}
-							helperText="causas esperando"
 							size="small"
 						/>
-					</Grid>
-					<Grid item xs={12} sm={6} md={3}>
+					</Campo>
+					<Campo label="Bajar al mínimo" ayuda="Cuando la cola baja de esta cantidad, vuelve al mínimo de instancias">
 						<TextField
 							fullWidth
-							label="Bajar al mínimo si la cola baja de"
 							type="number"
 							value={cfg.scaleDownThreshold ?? 10}
 							onChange={(e) => patch("scaleDownThreshold", parseInt(e.target.value, 10))}
-							helperText="causas esperando"
 							size="small"
 						/>
-					</Grid>
-					<Grid item xs={6} sm={6} md={3}>
+					</Campo>
+					<Campo label="Instancias máximas" ayuda="Techo de workers simultáneos por fuero">
 						<TextField
 							fullWidth
-							label="Instancias máximas"
 							type="number"
 							value={cfg.maxWorkers ?? 3}
 							onChange={(e) => patch("maxWorkers", parseInt(e.target.value, 10))}
-							helperText="por fuero"
 							size="small"
 							inputProps={{ min: 1, max: 10 }}
 						/>
-					</Grid>
-					<Grid item xs={6} sm={6} md={3}>
+					</Campo>
+					<Campo label="Instancias mínimas" ayuda="0 apaga el fuero fuera de la ventana de trabajo" ultimo>
 						<TextField
 							fullWidth
-							label="Instancias mínimas"
 							type="number"
 							value={cfg.minWorkers ?? 0}
 							onChange={(e) => patch("minWorkers", parseInt(e.target.value, 10))}
-							helperText="0 apaga fuera de horario"
 							size="small"
 							inputProps={{ min: 0, max: 10 }}
 						/>
-					</Grid>
-				</Grid>
-			</Box>
+					</Campo>
+				</Box>
+			</Paper>
 
-			<Box>
-				<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+			<Paper variant="outlined" sx={{ borderRadius: 2, borderColor: headerBorder(isDark) }}>
+				<Typography variant="subtitle2" fontWeight={700} sx={{ px: 2, pt: 1.75, pb: 0.5 }}>
 					Frenos por recursos
 				</Typography>
-				<Grid container spacing={2}>
-					<Grid item xs={12} sm={4}>
+				<Box sx={{ px: 2, pb: 1 }}>
+					<Campo
+						label="Intervalo de chequeo"
+						ayuda={`Milisegundos entre ciclos de scaling — ahora ${Math.round((cfg.checkInterval ?? 60000) / 1000)} s`}
+					>
 						<TextField
 							fullWidth
-							label="Intervalo de chequeo (ms)"
 							type="number"
 							value={cfg.checkInterval ?? 60000}
 							onChange={(e) => patch("checkInterval", parseInt(e.target.value, 10))}
-							helperText={`= ${Math.round((cfg.checkInterval ?? 60000) / 1000)} s entre ciclos de scaling`}
 							size="small"
 						/>
-					</Grid>
-					<Grid item xs={6} sm={4}>
+					</Campo>
+					<Campo
+						label="Tope de CPU"
+						ayuda={`De 0 a 1. No escala por encima — ahora ${((manager.currentState?.resources?.cpuUsage ?? 0) * 100).toFixed(1)}%`}
+					>
 						<TextField
 							fullWidth
-							label="Tope de CPU"
 							type="number"
 							value={cfg.cpuThreshold ?? 0.75}
 							onChange={(e) => patch("cpuThreshold", parseFloat(e.target.value))}
-							helperText={`0 a 1 · ahora ${((manager.currentState?.resources?.cpuUsage ?? 0) * 100).toFixed(1)}%`}
 							size="small"
 							inputProps={{ min: 0, max: 1, step: 0.05 }}
 						/>
-					</Grid>
-					<Grid item xs={6} sm={4}>
+					</Campo>
+					<Campo
+						label="Tope de memoria"
+						ayuda={`De 0 a 1. No escala por encima — ahora ${((manager.currentState?.resources?.memoryUsage ?? 0) * 100).toFixed(1)}%`}
+						ultimo
+					>
 						<TextField
 							fullWidth
-							label="Tope de memoria"
 							type="number"
 							value={cfg.memoryThreshold ?? 0.8}
 							onChange={(e) => patch("memoryThreshold", parseFloat(e.target.value))}
-							helperText={`0 a 1 · ahora ${((manager.currentState?.resources?.memoryUsage ?? 0) * 100).toFixed(1)}%`}
 							size="small"
 							inputProps={{ min: 0, max: 1, step: 0.05 }}
 						/>
-					</Grid>
-				</Grid>
-			</Box>
+					</Campo>
+				</Box>
+			</Paper>
 
-			<Box>
-				<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+			<Paper variant="outlined" sx={{ borderRadius: 2, borderColor: headerBorder(isDark) }}>
+				<Typography variant="subtitle2" fontWeight={700} sx={{ px: 2, pt: 1.75, pb: 0.5 }}>
 					Ventana de trabajo
 				</Typography>
-				<Grid container spacing={2} sx={{ mb: 2 }}>
-					<Grid item xs={6} sm={3}>
+				<Box sx={{ px: 2, pb: 1 }}>
+					<Campo label="Hora de inicio" ayuda="De 0 a 23">
 						<TextField
 							fullWidth
-							label="Hora de inicio"
 							type="number"
 							value={cfg.workStartHour ?? 7}
 							onChange={(e) => patch("workStartHour", parseInt(e.target.value, 10))}
-							helperText="0 a 23"
 							size="small"
 							inputProps={{ min: 0, max: 23 }}
 						/>
-					</Grid>
-					<Grid item xs={6} sm={3}>
+					</Campo>
+					<Campo label="Hora de fin" ayuda="Exclusiva. 24 = sin corte">
 						<TextField
 							fullWidth
-							label="Hora de fin"
 							type="number"
 							value={cfg.workEndHour ?? 23}
 							onChange={(e) => patch("workEndHour", parseInt(e.target.value, 10))}
-							helperText="exclusiva · 24 = sin corte"
 							size="small"
 							inputProps={{ min: 0, max: 24 }}
 						/>
-					</Grid>
-				</Grid>
-				<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.75 }}>
-					Días
-				</Typography>
-				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
-					{DAY_LABELS.map((label, idx) => {
-						const active = (cfg.workDays ?? [1, 2, 3, 4, 5]).includes(idx);
-						return (
-							<Chip
-								key={idx}
-								label={label}
-								size="small"
-								variant={active ? "filled" : "outlined"}
-								color={active ? "primary" : "default"}
-								onClick={() => toggleDay(idx)}
-								sx={{ cursor: "pointer", minWidth: 46 }}
-							/>
-						);
-					})}
-				</Stack>
-				<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.75 }}>
-					Fueros que el manager escala
-				</Typography>
-				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-					{ALL_FUEROS.map((f) => {
-						const active = (cfg.fueros ?? ["CIV"]).includes(f);
-						return (
-							<Chip
-								key={f}
-								label={FUERO_LABELS[f] || f}
-								size="small"
-								variant={active ? "filled" : "outlined"}
-								color={active ? "secondary" : "default"}
-								onClick={() => toggleFuero(f)}
-								sx={{ cursor: "pointer" }}
-							/>
-						);
-					})}
-				</Stack>
-			</Box>
+					</Campo>
+					<Campo label="Días" ayuda="En los días apagados no corre ningún worker" ancho={280}>
+						<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap justifyContent="flex-end">
+							{DAY_LABELS.map((label, idx) => {
+								const active = (cfg.workDays ?? [1, 2, 3, 4, 5]).includes(idx);
+								return (
+									<Chip
+										key={idx}
+										label={label}
+										size="small"
+										variant={active ? "filled" : "outlined"}
+										color={active ? "primary" : "default"}
+										onClick={() => toggleDay(idx)}
+										sx={{ cursor: "pointer", minWidth: 44 }}
+									/>
+								);
+							})}
+						</Stack>
+					</Campo>
+					<Campo label="Fueros que escala" ayuda="Los que el manager vigila para subir y bajar instancias" ancho={280} ultimo>
+						<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap justifyContent="flex-end">
+							{ALL_FUEROS.map((f) => {
+								const active = (cfg.fueros ?? ["CIV"]).includes(f);
+								return (
+									<Chip
+										key={f}
+										label={FUERO_LABELS[f] || f}
+										size="small"
+										variant={active ? "filled" : "outlined"}
+										color={active ? "secondary" : "default"}
+										onClick={() => toggleFuero(f)}
+										sx={{ cursor: "pointer" }}
+									/>
+								);
+							})}
+						</Stack>
+					</Campo>
+				</Box>
+			</Paper>
 
 			<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 				<Button

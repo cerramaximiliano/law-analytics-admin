@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Chip, Collapse, Stack, Typography, alpha, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Chip, Collapse, Stack, Typography, alpha, useTheme } from "@mui/material";
 import { ArrowDown2, ArrowUp2 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import UpdateMovimientosWorkerTab from "./UpdateMovimientosWorkerTab";
@@ -7,8 +7,9 @@ import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 
 /**
- * Encabezado de la vista. Mismo patrón que la vista de sentencias: título,
- * bajada, y la identificación técnica plegada abajo de md.
+ * Encabezado de la vista: la bajada y, plegada, la identificación técnica
+ * (host, colecciones, repos). Es material de referencia que se consulta una
+ * vez cada tanto y ocupaba ~90px empujando hacia abajo lo que sí se mira.
  *
  * Antes esto envolvía el contenido en un `<Tabs>` de una sola pestaña
  * ("Update Movimientos"): 56px de cromo de navegación que no navegaba a
@@ -17,35 +18,29 @@ import { BRAND_BLUE } from "themes/dashboardTokens";
 
 export default function MovimientosWorkerPage() {
 	const theme = useTheme();
-	const esEscritorio = useMediaQuery(theme.breakpoints.up("md"));
 	const [detallesAbiertos, setDetallesAbiertos] = useState(false);
-	const mostrarDetalles = esEscritorio || detallesAbiertos;
 
 	return (
 		<MainCard>
-			<Stack spacing={{ xs: 2, md: 3 }}>
-				<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1.5}>
-					<Box sx={{ maxWidth: 720 }}>
-						<Typography variant="h3" sx={{ mb: 0.75 }}>
-							Worker Update (IA)
-						</Typography>
-						<Typography variant="body1" color="text.secondary">
-							Relee las causas que el pipeline de novedad marca para revisar y guarda los movimientos nuevos que aparecieron
-						</Typography>
-					</Box>
-					{!esEscritorio && (
-						<Chip
-							size="small"
-							variant="outlined"
-							onClick={() => setDetallesAbiertos((v) => !v)}
-							icon={detallesAbiertos ? <ArrowUp2 size={13} /> : <ArrowDown2 size={13} />}
-							label="Detalles técnicos"
-							sx={{ fontSize: "0.72rem" }}
-						/>
-					)}
+			<Stack spacing={{ xs: 1.5, md: 2 }}>
+				{/* El título de la vista ya lo pone el breadcrumb del layout; repetirlo
+				    acá era decir "Worker Update (IA)" dos veces seguidas. Queda solo
+				    la bajada, que es lo que el breadcrumb no dice. */}
+				<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1.5}>
+					<Typography variant="body1" color="text.secondary" sx={{ maxWidth: 720 }}>
+						Relee las causas que el pipeline de novedad marca para revisar y guarda los movimientos nuevos que aparecieron
+					</Typography>
+					<Chip
+						size="small"
+						variant="outlined"
+						onClick={() => setDetallesAbiertos((v) => !v)}
+						icon={detallesAbiertos ? <ArrowUp2 size={13} /> : <ArrowDown2 size={13} />}
+						label="Detalles técnicos"
+						sx={{ fontSize: "0.72rem", flexShrink: 0 }}
+					/>
 				</Stack>
 
-				<Collapse in={mostrarDetalles} unmountOnExit>
+				<Collapse in={detallesAbiertos} unmountOnExit>
 					<Stack spacing={1.5}>
 						<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
 							<Box
