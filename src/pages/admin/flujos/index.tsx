@@ -21,6 +21,7 @@ import { BRAND_BLUE } from "themes/dashboardTokens";
 import SentenciasFlow from "./SentenciasFlow";
 import ScbaWorkersFlow from "./ScbaWorkersFlow";
 import SaijWorkersFlow from "./SaijWorkersFlow";
+import SaijApareoFlow from "./SaijApareoFlow";
 import CijurWorkersFlow from "./CijurWorkersFlow";
 import PostalWorkersFlow from "./PostalWorkersFlow";
 import MisCausasWorkersFlow from "./MisCausasWorkersFlow";
@@ -88,6 +89,13 @@ const TABS: FlowTab[] = [
 			"Los cuatro canales de captura de jurisprudencia de SAIJ — nacional, provincial, Corte Suprema y el backfill histórico — que comparten el mismo código y se diferencian solo por configuración. Solo el nacional alimenta el pipeline PJN y las campañas a usuarios.",
 		href: "/admin/workers/saij",
 		hrefLabel: "Operar los workers SAIJ",
+	},
+	{
+		label: "Apareo SAIJ",
+		intro:
+			"Qué pasa con un fallo nacional después de capturado: el linker con sus cinco gates, la herencia de identidad hacia SentenciaCapturada (carátula, expediente, causaId — de la causa; el texto — del fallo), y la conciliación que deshace un apareo equivocado hasta el embedding.",
+		href: "/admin/saij/conciliacion",
+		hrefLabel: "Abrir la vista de conciliación",
 	},
 	{
 		label: "Worker postal",
@@ -205,11 +213,13 @@ const FlujosEcosistema: React.FC = () => {
 
 					{tab === 6 && <SaijWorkersFlow />}
 
-					{tab === 7 && <PostalWorkersFlow />}
+					{tab === 7 && <SaijApareoFlow />}
 
-					{tab === 8 && <CijurWorkersFlow />}
+					{tab === 8 && <PostalWorkersFlow />}
 
-					{tab === 9 && (
+					{tab === 9 && <CijurWorkersFlow />}
+
+					{tab === 10 && (
 						// El data plane no se embebe: es una página con panel de detalle propio
 						// y su valor está en poder clickear cada nodo. Duplicar acá una versión
 						// recortada daría dos fuentes de verdad para el mismo diagrama.
