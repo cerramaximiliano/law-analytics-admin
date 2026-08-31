@@ -1,46 +1,52 @@
-import React, { useState } from "react";
-import { Box, Chip, Tab, Tabs, Typography, Paper, Stack, useTheme, alpha } from "@mui/material";
-import { Setting2, InfoCircle } from "iconsax-react";
+import { useState } from "react";
+import { Box, Chip, Collapse, Stack, Typography, alpha, useMediaQuery, useTheme } from "@mui/material";
+import { ArrowDown2, ArrowUp2 } from "iconsax-react";
 import MainCard from "components/MainCard";
-import { TabPanel } from "components/ui-component/TabPanel";
 import UpdateMovimientosWorkerTab from "./UpdateMovimientosWorkerTab";
 import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
-import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 
-interface TabDef {
-	label: string;
-	value: string;
-	icon: React.ReactNode;
-	component: React.ReactNode;
-}
+/**
+ * Encabezado de la vista. Mismo patrón que la vista de sentencias: título,
+ * bajada, y la identificación técnica plegada abajo de md.
+ *
+ * Antes esto envolvía el contenido en un `<Tabs>` de una sola pestaña
+ * ("Update Movimientos"): 56px de cromo de navegación que no navegaba a
+ * ningún lado. Las pestañas reales viven adentro del componente.
+ */
 
-const MovimientosWorkerPage = () => {
+export default function MovimientosWorkerPage() {
 	const theme = useTheme();
-	const isDark = theme.palette.mode === "dark";
-	const [activeTab, setActiveTab] = useState("movimientos");
-
-	const tabs: TabDef[] = [
-		{
-			label: "Update Movimientos",
-			value: "movimientos",
-			icon: <Setting2 size={20} />,
-			component: <UpdateMovimientosWorkerTab />,
-		},
-	];
+	const esEscritorio = useMediaQuery(theme.breakpoints.up("md"));
+	const [detallesAbiertos, setDetallesAbiertos] = useState(false);
+	const mostrarDetalles = esEscritorio || detallesAbiertos;
 
 	return (
 		<MainCard>
-			<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-				<Box>
-					<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1.5}>
-						<Box sx={{ maxWidth: 720 }}>
-							<Typography variant="h3" sx={{ mb: 0.75 }}>
-								Worker Update (IA)
-							</Typography>
-							<Typography variant="body1" color="text.secondary">
-								Scraping de nuevos movimientos en causas marcadas por el pipeline de novelty — instancias dinámicas vía manager
-							</Typography>
-						</Box>
+			<Stack spacing={{ xs: 2, md: 3 }}>
+				<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1.5}>
+					<Box sx={{ maxWidth: 720 }}>
+						<Typography variant="h3" sx={{ mb: 0.75 }}>
+							Worker Update (IA)
+						</Typography>
+						<Typography variant="body1" color="text.secondary">
+							Relee las causas que el pipeline de novedad marca para revisar y guarda los movimientos nuevos que aparecieron
+						</Typography>
+					</Box>
+					{!esEscritorio && (
+						<Chip
+							size="small"
+							variant="outlined"
+							onClick={() => setDetallesAbiertos((v) => !v)}
+							icon={detallesAbiertos ? <ArrowUp2 size={13} /> : <ArrowDown2 size={13} />}
+							label="Detalles técnicos"
+							sx={{ fontSize: "0.72rem" }}
+						/>
+					)}
+				</Stack>
+
+				<Collapse in={mostrarDetalles} unmountOnExit>
+					<Stack spacing={1.5}>
 						<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
 							<Box
 								component="span"
@@ -80,13 +86,6 @@ const MovimientosWorkerPage = () => {
 								100.111.73.56
 							</Box>
 							<Chip
-								label="sin Pinecone"
-								size="small"
-								color="default"
-								variant="outlined"
-								sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
-							/>
-							<Chip
 								label="CausasCIV/CNT/CSS/COM · local"
 								size="small"
 								variant="outlined"
@@ -104,75 +103,35 @@ const MovimientosWorkerPage = () => {
 								variant="outlined"
 								sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
 							/>
+							<Chip
+								label="sin Pinecone"
+								size="small"
+								color="default"
+								variant="outlined"
+								sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+							/>
 						</Stack>
-					</Stack>
-				</Box>
-
-				<RepoBadgeGroup
-					repos={[
-						{
-							localName: "pjn-workers-scraping",
-							role: "Worker + Manager",
-							description:
-								"src/tasks/update-movimientos-manager.js (escala) + src/tasks/update-movimientos-worker.js (uno por fuero). PM2: pm2.update-movimientos.config.js. Lee config de configuracion-update-movimientos[-manager] en law_analytics.",
-						},
-						{
-							localName: "pjn-api",
-							role: "API config",
-							description:
-								"Endpoints /api/configuracion-update-movimientos/ y /manager (CRUD de la config que lee el worker). Controllers y rutas en src/controllers + src/routes.",
-						},
-					]}
-				/>
-
-				<Paper
-					variant="outlined"
-					sx={{ borderRadius: 2, overflow: "hidden", borderColor: headerBorder(isDark), boxShadow: "none" }}
-				>
-					<Box sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, bgcolor: alpha(BRAND_BLUE, isDark ? 0.04 : 0.025) }}>
-						<Tabs
-							value={activeTab}
-							onChange={(_, v) => setActiveTab(v)}
-							variant="scrollable"
-							scrollButtons="auto"
-							sx={{
-								"& .MuiTab-root": {
-									minHeight: 56,
-									textTransform: "none",
-									fontSize: "0.875rem",
-									fontWeight: 500,
-									transition: "color 200ms ease",
+						<RepoBadgeGroup
+							repos={[
+								{
+									localName: "pjn-workers-scraping",
+									role: "Worker + Manager",
+									description:
+										"src/tasks/update-movimientos-manager.js (escala) + src/tasks/update-movimientos-worker.js (uno por fuero). PM2: pm2.update-movimientos.config.js. Lee config de configuracion-update-movimientos[-manager] en law_analytics.",
 								},
-							}}
-						>
-							{tabs.map((tab) => (
-								<Tab
-									key={tab.value}
-									label={
-										<Stack direction="row" spacing={1} alignItems="center">
-											<Box sx={{ color: theme.palette.primary.main, display: "flex" }}>{tab.icon}</Box>
-											<Typography variant="body2" fontWeight={500}>
-												{tab.label}
-											</Typography>
-										</Stack>
-									}
-									value={tab.value}
-								/>
-							))}
-						</Tabs>
-					</Box>
+								{
+									localName: "pjn-api",
+									role: "API config",
+									description:
+										"Endpoints /api/configuracion-update-movimientos/ y /manager (CRUD de la config que lee el worker). Controllers y rutas en src/controllers + src/routes.",
+								},
+							]}
+						/>
+					</Stack>
+				</Collapse>
 
-					<Box sx={{ bgcolor: theme.palette.background.paper }}>
-						{tabs.map((tab) => (
-							<TabPanel key={tab.value} value={activeTab} index={tab.value}>
-								{tab.component}
-							</TabPanel>
-						))}
-					</Box>
-				</Paper>
+				<UpdateMovimientosWorkerTab />
 			</Stack>
 		</MainCard>
 	);
-};
-
-export default MovimientosWorkerPage;
+}

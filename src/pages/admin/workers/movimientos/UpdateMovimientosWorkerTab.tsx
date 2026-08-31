@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
 	Box,
 	Stack,
@@ -9,58 +9,143 @@ import {
 	Button,
 	Chip,
 	Alert,
+	AlertTitle,
 	Skeleton,
 	Divider,
 	FormControl,
 	InputLabel,
 	Select,
 	MenuItem,
-	Card,
-	CardContent,
-	LinearProgress,
+	Collapse,
+	Paper,
+	Tab,
+	Tabs,
 	Tooltip,
 	useTheme,
 	alpha,
 	Grid,
 } from "@mui/material";
-import { Refresh, TickCircle, CloseCircle, Setting2, Chart, ArrowUp, ArrowDown } from "iconsax-react";
+import { Refresh, TickCircle, CloseCircle, Setting2, Chart, ArrowUp, ArrowDown2, ArrowUp2, InfoCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import UpdateMovimientosService, { UpdateMovimientosWorkerConfig, UpdateMovimientosManagerConfig } from "api/updateMovimientos";
 import WorkerControlPanel from "components/WorkerControlPanel";
-import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder } from "themes/dashboardTokens";
 
 const FUERO_LABELS: Record<string, string> = { CIV: "Civil", CNT: "Trabajo", CSS: "Seg. Social", COM: "Comercial" };
 const ALL_FUEROS = ["CIV", "CNT", "CSS", "COM"];
 const DAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
+/** Horas sin correr a partir de las cuales un worker habilitado se considera parado. */
+const HORAS_PARA_CONSIDERAR_PARADO = 6;
+
+const fmtNum = (n?: number) => (n ?? 0).toLocaleString("es-AR");
+
 function fmtDate(d?: string) {
-	if (!d) return "-";
+	if (!d) return "—";
 	return new Date(d).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
 }
 
-function StatCard({ label, value, color, sub }: { label: string; value: number | string; color?: string; sub?: string }) {
+function timeAgo(d?: string): string {
+	if (!d) return "nunca";
+	const diffMin = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
+	if (diffMin < 1) return "hace un momento";
+	if (diffMin < 60) return `hace ${diffMin} min`;
+	const diffH = Math.floor(diffMin / 60);
+	if (diffH < 24) return `hace ${diffH} h`;
+	return `hace ${Math.floor(diffH / 24)} días`;
+}
+
+function horasDesde(d?: string): number | null {
+	if (!d) return null;
+	return (Date.now() - new Date(d).getTime()) / 3600000;
+}
+
+/** Fecha local en el formato que guarda statsToday.date ("2026-08-31"). */
+function hoyISO(): string {
+	const d = new Date();
+	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/**
+ * Minutos entre ciclos, para los patrones de intervalo que usa este worker
+ * ("*\/2 * * * *"). Devuelve null en patrones con hora fija, que no son un
+ * ritmo sino un horario — ahí no tiene sentido derivar capacidad diaria.
+ */
+function cronCadaMin(pattern?: string): number | null {
+	if (!pattern) return null;
+	const partes = pattern.trim().split(/\s+/);
+	if (partes.length < 2) return null;
+	const [min, hora] = partes;
+	if (hora !== "*") return null;
+	if (/^\*\/\d+$/.test(min)) return parseInt(min.slice(2), 10) || null;
+	if (min === "*") return 1;
+	return null;
+}
+
+/** Causas por día que puede tomar un worker: ciclos dentro de la ventana × causas por ciclo. */
+function capacidadDiaria(cadaMin: number | null, batchSize: number, horasVentana: number, instancias: number): number | null {
+	if (!cadaMin || cadaMin <= 0 || horasVentana <= 0) return null;
+	return Math.round((60 / cadaMin) * horasVentana * Math.max(batchSize, 1) * Math.max(instancias, 1));
+}
+
+function describeVentana(inicio: number, fin: number, dias: number[]): string {
+	const horas = Math.max(fin - inicio, 0);
+	const textoHoras = horas >= 24 ? "24 h" : `${inicio}:00 a ${fin}:00`;
+	const todos = dias.length === 7;
+	const habiles = dias.length === 5 && [1, 2, 3, 4, 5].every((d) => dias.includes(d));
+	const textoDias = todos ? "todos los días" : habiles ? "de lunes a viernes" : dias.map((d) => DAY_LABELS[d]).join(", ");
+	return `${textoHoras}, ${textoDias}`;
+}
+
+// ── Métrica ───────────────────────────────────────────────────────────────────
+
+function Metrica({
+	label,
+	value,
+	sub,
+	color,
+	ayuda,
+}: {
+	label: string;
+	value: number | string;
+	sub?: string;
+	color?: string;
+	ayuda?: string;
+}) {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
 	return (
 		<Box
 			sx={{
 				p: 2,
+				height: "100%",
 				borderRadius: 2,
 				border: `1px solid ${headerBorder(isDark)}`,
 				bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03),
-				minWidth: 110,
-				transition: "transform 200ms ease, box-shadow 200ms ease",
-				"&:hover": { transform: "translateY(-1px)", boxShadow: `0 4px 12px ${alpha(BRAND_BLUE, 0.12)}` },
 			}}
 		>
-			<Typography variant="h4" fontWeight={700} color={color || "text.primary"} sx={{ fontVariantNumeric: "tabular-nums" }}>
-				{typeof value === "number" ? value.toLocaleString("es-AR") : value}
-			</Typography>
-			<Typography variant="caption" color="text.secondary" display="block">
-				{label}
+			<Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 0.25 }}>
+				<Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.3 }}>
+					{label}
+				</Typography>
+				{ayuda && (
+					<Tooltip title={ayuda} arrow enterTouchDelay={0}>
+						<Box sx={{ display: "inline-flex", color: "text.disabled", cursor: "help" }}>
+							<InfoCircle size={13} />
+						</Box>
+					</Tooltip>
+				)}
+			</Stack>
+			<Typography
+				variant="h4"
+				fontWeight={700}
+				color={color || "text.primary"}
+				sx={{ fontVariantNumeric: "tabular-nums", lineHeight: 1.2 }}
+			>
+				{typeof value === "number" ? fmtNum(value) : value}
 			</Typography>
 			{sub && (
-				<Typography variant="caption" color="text.disabled" display="block">
+				<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25, lineHeight: 1.35 }}>
 					{sub}
 				</Typography>
 			)}
@@ -68,180 +153,369 @@ function StatCard({ label, value, color, sub }: { label: string; value: number |
 	);
 }
 
-// ── Tab: Estado del Manager ───────────────────────────────────────────────────
+// ── Datos derivados que comparten todas las secciones ─────────────────────────
 
-function EstadoSection() {
+type Resumen = ReturnType<typeof calcularResumen>;
+
+function calcularResumen(manager: UpdateMovimientosManagerConfig | null, workers: UpdateMovimientosWorkerConfig[]) {
+	const hoy = hoyISO();
+	const cfg = manager?.config;
+	const horasVentana = cfg ? Math.max((cfg.workEndHour ?? 24) - (cfg.workStartHour ?? 0), 0) : 24;
+
+	const porFuero = workers.map((w) => {
+		const esDeHoy = w.statsToday?.date === hoy;
+		const estado = manager?.currentState?.fueros?.[w.fuero];
+		const cadaMin = cronCadaMin(w.cronPattern);
+		return {
+			config: w,
+			fuero: w.fuero,
+			label: FUERO_LABELS[w.fuero] || w.fuero,
+			cola: estado?.pending ?? 0,
+			instancias: estado?.current ?? 0,
+			optimo: estado?.optimal ?? 0,
+			accion: estado?.action ?? "",
+			cadaMin,
+			capacidad: capacidadDiaria(cadaMin, w.batchSize ?? 1, horasVentana, estado?.current ?? 1),
+			// statsToday no se limpia solo: si la fecha no es la de hoy, esos
+			// números son del último día que el worker efectivamente corrió.
+			esDeHoy,
+			procesadasHoy: esDeHoy ? w.statsToday?.processed ?? 0 : 0,
+			exitosasHoy: esDeHoy ? w.statsToday?.success ?? 0 : 0,
+			fallidasHoy: esDeHoy ? w.statsToday?.failed ?? 0 : 0,
+			movimientosHoy: esDeHoy ? w.statsToday?.newMovimientos ?? 0 : 0,
+			ultimaCorrida: w.stats?.lastRun,
+			horasSinCorrer: horasDesde(w.stats?.lastRun),
+		};
+	});
+
+	const suma = (f: (x: (typeof porFuero)[number]) => number) => porFuero.reduce((a, x) => a + f(x), 0);
+	const capacidades = porFuero.map((f) => f.capacidad).filter((c): c is number => c != null);
+
+	return {
+		hoy,
+		horasVentana,
+		porFuero,
+		cola: manager?.currentState?.totalPending ?? suma((f) => f.cola),
+		procesadasHoy: suma((f) => f.procesadasHoy),
+		exitosasHoy: suma((f) => f.exitosasHoy),
+		fallidasHoy: suma((f) => f.fallidasHoy),
+		movimientosHoy: suma((f) => f.movimientosHoy),
+		capacidadTotal: capacidades.length ? capacidades.reduce((a, b) => a + b, 0) : null,
+		totalHistorico: workers.reduce((a, w) => a + (w.stats?.totalProcessed ?? 0), 0),
+		movimientosHistoricos: workers.reduce((a, w) => a + (w.stats?.totalNewMovimientos ?? 0), 0),
+		// Un worker habilitado que no corre hace horas es el modo de falla real
+		// de esta vista: el switch dice "Habilitado" y no pasa nada.
+		parados: porFuero.filter((f) => f.config.enabled && (f.horasSinCorrer ?? Infinity) > HORAS_PARA_CONSIDERAR_PARADO),
+		fallandoTodo: porFuero.filter((f) => f.esDeHoy && f.procesadasHoy > 0 && f.exitosasHoy === 0),
+	};
+}
+
+// ── Resumen del flujo ─────────────────────────────────────────────────────────
+
+/**
+ * Lo que faltaba de un vistazo: cuántas causas hay en el circuito, cuántas se
+ * procesaron hoy, qué salió de eso, y cada cuánto corre la cosa.
+ *
+ * Los números ya venían de la API pero estaban repartidos: la cola solo en
+ * "Estado", el ritmo escondido en un campo "Cron pattern" dentro de la ficha
+ * de cada worker, y la capacidad en ningún lado.
+ */
+function ResumenFlujo({ r, loading, onRefresh }: { r: Resumen; loading: boolean; onRefresh: () => void }) {
 	const theme = useTheme();
-	const { enqueueSnackbar } = useSnackbar();
-	const [manager, setManager] = useState<UpdateMovimientosManagerConfig | null>(null);
-	const [loading, setLoading] = useState(true);
+	const isDark = theme.palette.mode === "dark";
 
-	const load = useCallback(async () => {
-		setLoading(true);
-		try {
-			setManager(await UpdateMovimientosService.getManagerConfig());
-		} catch {
-			enqueueSnackbar("Error al cargar estado del manager", { variant: "error" });
-		} finally {
-			setLoading(false);
-		}
-	}, [enqueueSnackbar]);
+	const ritmos = Array.from(new Set(r.porFuero.map((f) => f.cadaMin).filter((m): m is number => m != null)));
+	const textoRitmo =
+		ritmos.length === 1
+			? `un ciclo cada ${ritmos[0]} min`
+			: ritmos.length > 1
+			? `un ciclo cada ${Math.min(...ritmos)}–${Math.max(...ritmos)} min`
+			: null;
+	const lotes = Array.from(new Set(r.porFuero.map((f) => f.config.batchSize ?? 1)));
+	const textoLote = lotes.length === 1 ? `${lotes[0]} causa${lotes[0] > 1 ? "s" : ""} por ciclo` : "según el fuero";
 
-	useEffect(() => {
-		load();
-	}, [load]);
-
-	if (loading)
-		return (
-			<Stack spacing={2}>
-				{[...Array(3)].map((_, i) => (
-					<Skeleton key={i} variant="rounded" height={80} />
-				))}
-			</Stack>
-		);
-	if (!manager) return null;
-
-	const state = manager.currentState;
-	const resources = state?.resources;
+	// Cuánto tarda en drenarse lo que hay en cola, al ritmo configurado.
+	const porMinuto = r.capacidadTotal ? r.capacidadTotal / (r.horasVentana * 60) : null;
+	const minutosDeCola = porMinuto && porMinuto > 0 && r.cola > 0 ? Math.ceil(r.cola / porMinuto) : null;
 
 	return (
-		<Stack spacing={3}>
-			{/* Resumen general */}
-			<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap alignItems="center">
-				<StatCard label="Causas pendientes" value={state?.totalPending ?? 0} color={theme.palette.warning.main} />
-				{resources && (
-					<>
-						<StatCard
-							label="CPU"
-							value={`${(resources.cpuUsage * 100).toFixed(1)}%`}
-							color={resources.cpuUsage > (manager.config.cpuThreshold ?? 0.75) ? theme.palette.error.main : theme.palette.success.main}
-						/>
-						<StatCard
-							label="Memoria"
-							value={`${(resources.memoryUsage * 100).toFixed(1)}%`}
-							color={
-								resources.memoryUsage > (manager.config.memoryThreshold ?? 0.8) ? theme.palette.error.main : theme.palette.success.main
-							}
-						/>
-						<StatCard label="RAM libre" value={`${resources.freeMemoryMB} MB`} />
-					</>
-				)}
-				{state?.timestamp && (
-					<Box sx={{ ml: "auto" }}>
-						<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
-							Último ciclo: {fmtDate(state.timestamp)}
-						</Typography>
-						<Button
-							size="small"
-							startIcon={<Refresh size={14} />}
-							onClick={load}
-							sx={{
-								ml: 1,
-								transition: "background-color 200ms ease, transform 200ms ease",
-								"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.08), transform: "translateY(-1px)" },
-							}}
-						>
-							Refrescar
-						</Button>
-					</Box>
-				)}
+		<Paper variant="outlined" sx={{ p: { xs: 2, md: 2.5 }, borderRadius: 2, borderColor: headerBorder(isDark) }}>
+			<Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1} sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
+				<Box>
+					<Typography variant="subtitle1" fontWeight={700}>
+						Resumen del flujo
+					</Typography>
+					<Typography variant="caption" color="text.secondary">
+						Histórico: {fmtNum(r.totalHistorico)} causas releídas · {fmtNum(r.movimientosHistoricos)} movimientos nuevos encontrados
+					</Typography>
+				</Box>
+				<Button size="small" startIcon={<Refresh size={15} />} onClick={onRefresh} disabled={loading} sx={{ textTransform: "none" }}>
+					Actualizar
+				</Button>
 			</Stack>
 
-			<Divider />
-
-			{/* Estado por fuero */}
-			<Typography variant="subtitle2" fontWeight={600}>
-				Estado por fuero
-			</Typography>
-
-			{Object.keys(state?.fueros ?? {}).length === 0 ? (
-				<Alert severity="info">Sin datos de estado. El manager aún no ha ejecutado un ciclo.</Alert>
-			) : (
-				<Grid container spacing={2}>
-					{Object.entries(state.fueros).map(([fuero, fs]) => (
-						<Grid item xs={12} sm={6} md={3} key={fuero}>
-							<Card variant="outlined">
-								<CardContent>
-									<Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={1}>
-										<Typography fontWeight={700}>{FUERO_LABELS[fuero] || fuero}</Typography>
-										<Chip
-											label={fs.current > 0 ? `${fs.current} worker${fs.current > 1 ? "s" : ""}` : "inactivo"}
-											size="small"
-											color={fs.current > 0 ? "success" : "default"}
-											variant={fs.current > 0 ? "filled" : "outlined"}
-										/>
-									</Stack>
-									<Typography variant="h5" fontWeight={700} color={theme.palette.warning.main}>
-										{fs.pending.toLocaleString("es-AR")}
-									</Typography>
-									<Typography variant="caption" color="text.secondary">
-										causas pendientes
-									</Typography>
-									<Box mt={1}>
-										<Typography variant="caption" color="text.secondary">
-											Óptimo: {fs.optimal} · {fs.action}
-										</Typography>
-									</Box>
-								</CardContent>
-							</Card>
-						</Grid>
-					))}
+			<Grid container spacing={2}>
+				<Grid item xs={6} md={3}>
+					<Metrica
+						label="En cola ahora"
+						value={r.cola}
+						color={r.cola > 0 ? STALE_AMBER : undefined}
+						sub={minutosDeCola ? `≈ ${minutosDeCola} min de trabajo` : "nada esperando"}
+						ayuda="Causas marcadas para revisar (update=true, verificadas y válidas). Las marca el pipeline de novedad; el worker las relee y las desmarca."
+					/>
 				</Grid>
+				<Grid item xs={6} md={3}>
+					<Metrica
+						label="Releídas hoy"
+						value={r.procesadasHoy}
+						sub={r.procesadasHoy > 0 ? `${fmtNum(r.exitosasHoy)} ok · ${fmtNum(r.fallidasHoy)} con error` : "sin actividad hoy"}
+						color={r.procesadasHoy > 0 && r.exitosasHoy === 0 ? theme.palette.error.main : undefined}
+						ayuda="Causas que los workers releyeron hoy, sumando los cuatro fueros."
+					/>
+				</Grid>
+				<Grid item xs={6} md={3}>
+					<Metrica
+						label="Movimientos nuevos hoy"
+						value={r.movimientosHoy}
+						color={r.movimientosHoy > 0 ? LIVE_GREEN : undefined}
+						sub="lo que el flujo produce"
+						ayuda="Movimientos que no estaban y aparecieron al releer. Es el resultado del circuito, no el trabajo hecho."
+					/>
+				</Grid>
+				<Grid item xs={6} md={3}>
+					<Metrica
+						label="Capacidad"
+						value={r.capacidadTotal != null ? `${fmtNum(r.capacidadTotal)}/día` : "—"}
+						sub={textoRitmo ? `${textoRitmo} · ${textoLote}` : "ritmo no derivable del cron"}
+						ayuda="Techo teórico: ciclos que entran en la ventana de trabajo × causas por ciclo × instancias activas. No es lo que se procesa, es lo que se podría."
+					/>
+				</Grid>
+			</Grid>
+		</Paper>
+	);
+}
+
+// ── Avisos de salud ───────────────────────────────────────────────────────────
+
+function AvisosSalud({ r }: { r: Resumen }) {
+	if (r.parados.length === 0 && r.fallandoTodo.length === 0) return null;
+	return (
+		<Stack spacing={1.5}>
+			{r.parados.length > 0 && (
+				<Alert severity="warning" icon={<InfoCircle size={18} />}>
+					<AlertTitle sx={{ mb: 0.25 }}>
+						{r.parados.length === 1
+							? "Un worker habilitado no está corriendo"
+							: `${r.parados.length} workers habilitados no están corriendo`}
+					</AlertTitle>
+					{r.parados.map((f) => `${f.label} (última corrida ${timeAgo(f.ultimaCorrida)})`).join(" · ")}. El switch dice habilitado, pero el
+					proceso no reporta ciclos: revisá PM2 en worker_01.
+				</Alert>
+			)}
+			{r.fallandoTodo.length > 0 && (
+				<Alert severity="error" icon={<CloseCircle size={18} />}>
+					<AlertTitle sx={{ mb: 0.25 }}>Hoy está fallando todo lo que se intenta</AlertTitle>
+					{r.fallandoTodo.map((f) => `${f.label}: ${fmtNum(f.procesadasHoy)} intentos, ninguno exitoso`).join(" · ")}.
+				</Alert>
 			)}
 		</Stack>
 	);
 }
 
-// ── Tab: Configuración del Manager ────────────────────────────────────────────
+// ── Sección: Estado ───────────────────────────────────────────────────────────
 
-function ManagerSection() {
+function EstadoSection({ r, manager }: { r: Resumen; manager: UpdateMovimientosManagerConfig | null }) {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
+	const recursos = manager?.currentState?.resources;
+	const cfg = manager?.config;
+
+	return (
+		<Stack spacing={3}>
+			<Box>
+				<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+					Estado por fuero
+				</Typography>
+				{r.porFuero.length === 0 ? (
+					<Alert severity="info">Sin datos de estado. El manager todavía no ejecutó un ciclo.</Alert>
+				) : (
+					<Grid container spacing={2}>
+						{r.porFuero.map((f) => {
+							const activo = f.instancias > 0;
+							const parado = f.config.enabled && (f.horasSinCorrer ?? Infinity) > HORAS_PARA_CONSIDERAR_PARADO;
+							const acento = parado ? STALE_AMBER : activo ? LIVE_GREEN : theme.palette.text.disabled;
+							return (
+								<Grid item xs={12} sm={6} lg={3} key={f.fuero}>
+									<Paper
+										variant="outlined"
+										sx={{
+											p: 2,
+											height: "100%",
+											borderRadius: 2,
+											borderColor: alpha(acento, isDark ? 0.45 : 0.32),
+											transition: "box-shadow 200ms ease, border-color 200ms ease",
+											"&:hover": { boxShadow: `0 4px 14px ${alpha(acento, 0.14)}` },
+										}}
+									>
+										<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.25 }}>
+											<Typography fontWeight={700}>{f.label}</Typography>
+											<Chip
+												label={activo ? `${f.instancias} worker${f.instancias > 1 ? "s" : ""}` : "sin instancias"}
+												size="small"
+												variant="outlined"
+												sx={{ height: 20, fontSize: "0.68rem", color: acento, borderColor: alpha(acento, 0.5) }}
+											/>
+										</Stack>
+
+										<Stack direction="row" spacing={2.5} sx={{ mb: 1.25 }}>
+											<Box>
+												<Typography
+													variant="h4"
+													fontWeight={700}
+													sx={{ fontVariantNumeric: "tabular-nums", lineHeight: 1.15, color: f.cola > 0 ? STALE_AMBER : "text.primary" }}
+												>
+													{fmtNum(f.cola)}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													en cola
+												</Typography>
+											</Box>
+											<Box>
+												<Typography variant="h4" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums", lineHeight: 1.15 }}>
+													{fmtNum(f.procesadasHoy)}
+												</Typography>
+												<Typography variant="caption" color="text.secondary">
+													releídas hoy
+												</Typography>
+											</Box>
+										</Stack>
+
+										<Stack spacing={0.25}>
+											{f.esDeHoy && f.procesadasHoy > 0 && (
+												<Typography variant="caption" sx={{ color: f.exitosasHoy === 0 ? theme.palette.error.main : "text.secondary" }}>
+													{fmtNum(f.exitosasHoy)} ok · {fmtNum(f.fallidasHoy)} con error · {fmtNum(f.movimientosHoy)} movs. nuevos
+												</Typography>
+											)}
+											<Typography variant="caption" color={parado ? "warning.main" : "text.secondary"}>
+												Última corrida {timeAgo(f.ultimaCorrida)}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												{f.cadaMin ? `Un ciclo cada ${f.cadaMin} min` : f.config.cronPattern} ·{" "}
+												{f.capacidad != null ? `hasta ${fmtNum(f.capacidad)}/día` : "—"}
+											</Typography>
+											{f.accion && f.accion !== "sin cambios" && (
+												<Typography variant="caption" color="info.main">
+													Manager: {f.accion} (óptimo {f.optimo})
+												</Typography>
+											)}
+										</Stack>
+									</Paper>
+								</Grid>
+							);
+						})}
+					</Grid>
+				)}
+			</Box>
+
+			<Divider />
+
+			{/* Recursos del box: contexto, no el dato principal de esta vista. */}
+			<Box>
+				<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+					Recursos de worker_01
+				</Typography>
+				<Stack direction="row" spacing={3} flexWrap="wrap" useFlexGap alignItems="baseline">
+					{recursos ? (
+						<>
+							<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+								CPU{" "}
+								<Box
+									component="span"
+									sx={{ fontWeight: 700, color: recursos.cpuUsage > (cfg?.cpuThreshold ?? 0.75) ? "error.main" : "success.main" }}
+								>
+									{(recursos.cpuUsage * 100).toFixed(1)}%
+								</Box>
+								<Box component="span" sx={{ color: "text.secondary" }}>
+									{" "}
+									/ tope {((cfg?.cpuThreshold ?? 0.75) * 100).toFixed(0)}%
+								</Box>
+							</Typography>
+							<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+								Memoria{" "}
+								<Box
+									component="span"
+									sx={{ fontWeight: 700, color: recursos.memoryUsage > (cfg?.memoryThreshold ?? 0.8) ? "error.main" : "success.main" }}
+								>
+									{(recursos.memoryUsage * 100).toFixed(1)}%
+								</Box>
+								<Box component="span" sx={{ color: "text.secondary" }}>
+									{" "}
+									/ tope {((cfg?.memoryThreshold ?? 0.8) * 100).toFixed(0)}%
+								</Box>
+							</Typography>
+							<Typography variant="body2" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
+								RAM libre {fmtNum(recursos.freeMemoryMB)} MB
+							</Typography>
+						</>
+					) : (
+						<Typography variant="body2" color="text.secondary">
+							El manager todavía no reportó recursos.
+						</Typography>
+					)}
+					<Typography variant="caption" color="text.secondary" sx={{ ml: "auto", fontVariantNumeric: "tabular-nums" }}>
+						Último ciclo del manager: {fmtDate(manager?.currentState?.timestamp)}
+					</Typography>
+				</Stack>
+			</Box>
+		</Stack>
+	);
+}
+
+// ── Sección: Manager ──────────────────────────────────────────────────────────
+
+function ManagerSection({
+	manager,
+	r,
+	onSaved,
+}: {
+	manager: UpdateMovimientosManagerConfig | null;
+	r: Resumen;
+	onSaved: (m: UpdateMovimientosManagerConfig) => void;
+}) {
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
-	const [manager, setManager] = useState<UpdateMovimientosManagerConfig | null>(null);
-	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [local, setLocal] = useState<Partial<UpdateMovimientosManagerConfig["config"]>>({});
 	const [dirty, setDirty] = useState(false);
 
-	const load = useCallback(async () => {
-		setLoading(true);
-		try {
-			const data = await UpdateMovimientosService.getManagerConfig();
-			setManager(data);
-			setLocal(data.config ?? {});
-			setDirty(false);
-		} catch {
-			enqueueSnackbar("Error al cargar configuración del manager", { variant: "error" });
-		} finally {
-			setLoading(false);
-		}
-	}, [enqueueSnackbar]);
-
 	useEffect(() => {
-		load();
-	}, [load]);
+		setLocal({});
+		setDirty(false);
+	}, [manager?.updatedAt]);
 
 	function patch<K extends keyof UpdateMovimientosManagerConfig["config"]>(key: K, value: UpdateMovimientosManagerConfig["config"][K]) {
 		setLocal((p) => ({ ...p, [key]: value }));
 		setDirty(true);
 	}
 
+	const cfg = { ...manager?.config, ...local } as UpdateMovimientosManagerConfig["config"];
+
 	function toggleDay(day: number) {
-		const cur = local.workDays ?? manager?.config.workDays ?? [1, 2, 3, 4, 5];
+		const cur = cfg.workDays ?? [1, 2, 3, 4, 5];
 		patch("workDays", cur.includes(day) ? cur.filter((d) => d !== day) : [...cur, day].sort());
 	}
 
 	function toggleFuero(f: string) {
-		const cur = local.fueros ?? manager?.config.fueros ?? ["CIV"];
+		const cur = cfg.fueros ?? ["CIV"];
 		patch("fueros", cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f]);
 	}
 
 	async function save() {
 		setSaving(true);
 		try {
-			const saved = await UpdateMovimientosService.updateManagerConfig(local);
-			setManager(saved);
-			setLocal(saved.config ?? {});
+			onSaved(await UpdateMovimientosService.updateManagerConfig(local));
+			setLocal({});
 			setDirty(false);
 			enqueueSnackbar("Configuración guardada", { variant: "success" });
 		} catch {
@@ -251,125 +525,172 @@ function ManagerSection() {
 		}
 	}
 
-	if (loading)
-		return (
-			<Stack spacing={2}>
-				{[...Array(4)].map((_, i) => (
-					<Skeleton key={i} variant="rounded" height={56} />
-				))}
-			</Stack>
-		);
+	if (!manager) return <Alert severity="info">No se pudo leer la configuración del manager.</Alert>;
 
-	const cfg = { ...manager?.config, ...local };
+	const instanciasActuales = r.porFuero.reduce((a, f) => a + f.instancias, 0);
+	const sinVentana = (cfg.workEndHour ?? 24) - (cfg.workStartHour ?? 0) >= 24 && (cfg.workDays ?? []).length === 7;
 
 	return (
 		<Stack spacing={3}>
-			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-				<TextField
-					label="Intervalo de chequeo (ms)"
-					type="number"
-					value={cfg.checkInterval ?? 60000}
-					onChange={(e) => patch("checkInterval", parseInt(e.target.value, 10))}
-					helperText="Milisegundos entre ciclos de scaling"
-					size="small"
-					sx={{ flex: 1 }}
-				/>
-				<TextField
-					label="Workers máximos"
-					type="number"
-					value={cfg.maxWorkers ?? 3}
-					onChange={(e) => patch("maxWorkers", parseInt(e.target.value, 10))}
-					helperText="Instancias máximas por fuero"
-					size="small"
-					inputProps={{ min: 1, max: 10 }}
-					sx={{ flex: 1 }}
-				/>
-				<TextField
-					label="Workers mínimos"
-					type="number"
-					value={cfg.minWorkers ?? 0}
-					onChange={(e) => patch("minWorkers", parseInt(e.target.value, 10))}
-					helperText="0 = apagar fuera de horario"
-					size="small"
-					inputProps={{ min: 0, max: 10 }}
-					sx={{ flex: 1 }}
-				/>
-			</Stack>
-
-			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-				<TextField
-					label="Umbral escalar arriba"
-					type="number"
-					value={cfg.scaleThreshold ?? 100}
-					onChange={(e) => patch("scaleThreshold", parseInt(e.target.value, 10))}
-					helperText="Pending > N → escalar al máximo"
-					size="small"
-					sx={{ flex: 1 }}
-				/>
-				<TextField
-					label="Umbral escalar abajo"
-					type="number"
-					value={cfg.scaleDownThreshold ?? 10}
-					onChange={(e) => patch("scaleDownThreshold", parseInt(e.target.value, 10))}
-					helperText="Pending < N → reducir al mínimo"
-					size="small"
-					sx={{ flex: 1 }}
-				/>
-				<TextField
-					label="Umbral CPU"
-					type="number"
-					value={cfg.cpuThreshold ?? 0.75}
-					onChange={(e) => patch("cpuThreshold", parseFloat(e.target.value))}
-					helperText="No escalar si CPU > N (0-1)"
-					size="small"
-					inputProps={{ min: 0, max: 1, step: 0.05 }}
-					sx={{ flex: 1 }}
-				/>
-				<TextField
-					label="Umbral memoria"
-					type="number"
-					value={cfg.memoryThreshold ?? 0.8}
-					onChange={(e) => patch("memoryThreshold", parseFloat(e.target.value))}
-					helperText="No escalar si memoria > N (0-1)"
-					size="small"
-					inputProps={{ min: 0, max: 1, step: 0.05 }}
-					sx={{ flex: 1 }}
-				/>
-			</Stack>
-
-			<Divider />
-			<Typography variant="body2" fontWeight={600}>
-				Horario laboral
-			</Typography>
-
-			<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-				<TextField
-					label="Hora inicio"
-					type="number"
-					value={cfg.workStartHour ?? 7}
-					onChange={(e) => patch("workStartHour", parseInt(e.target.value, 10))}
-					helperText="Hora de inicio (0-23)"
-					size="small"
-					inputProps={{ min: 0, max: 23 }}
-					sx={{ flex: 1 }}
-				/>
-				<TextField
-					label="Hora fin"
-					type="number"
-					value={cfg.workEndHour ?? 23}
-					onChange={(e) => patch("workEndHour", parseInt(e.target.value, 10))}
-					helperText="Hora de fin (0-23, exclusivo)"
-					size="small"
-					inputProps={{ min: 0, max: 23 }}
-					sx={{ flex: 1 }}
-				/>
-			</Stack>
+			{/* La regla en castellano, con dónde estamos parados. Antes había que
+			    deducirla de cuatro campos numéricos con nombres crípticos. */}
+			<Paper
+				variant="outlined"
+				sx={{ p: 2, borderRadius: 2, borderColor: alpha(BRAND_BLUE, 0.3), bgcolor: alpha(BRAND_BLUE, isDark ? 0.07 : 0.035) }}
+			>
+				<Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+					Qué hace el manager
+				</Typography>
+				<Stack spacing={0.75}>
+					<Typography variant="body2">
+						Cada <b>{Math.round((cfg.checkInterval ?? 60000) / 1000)} s</b> mira la cola de cada fuero. Con más de{" "}
+						<b>{fmtNum(cfg.scaleThreshold ?? 100)}</b> causas esperando escala hasta <b>{cfg.maxWorkers ?? 3}</b> instancias; con menos de{" "}
+						<b>{fmtNum(cfg.scaleDownThreshold ?? 10)}</b> baja a <b>{cfg.minWorkers ?? 0}</b>.
+					</Typography>
+					<Typography variant="body2">
+						No escala si la CPU supera <b>{((cfg.cpuThreshold ?? 0.75) * 100).toFixed(0)}%</b> o la memoria{" "}
+						<b>{((cfg.memoryThreshold ?? 0.8) * 100).toFixed(0)}%</b>. {sinVentana ? "Corre sin corte" : "Solo corre"}:{" "}
+						<b>{describeVentana(cfg.workStartHour ?? 0, cfg.workEndHour ?? 24, cfg.workDays ?? [1, 2, 3, 4, 5])}</b>.
+					</Typography>
+					<Typography variant="body2" color="text.secondary">
+						Ahora mismo: <b>{fmtNum(r.cola)}</b> en cola y <b>{instanciasActuales}</b> instancia{instanciasActuales === 1 ? "" : "s"}{" "}
+						corriendo
+						{r.cola < (cfg.scaleDownThreshold ?? 10) ? " — por debajo del umbral de bajada, así que se queda en el mínimo." : "."}
+					</Typography>
+				</Stack>
+			</Paper>
 
 			<Box>
-				<Typography variant="body2" fontWeight={600} mb={1}>
-					Días laborales
+				<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+					Escalado
 				</Typography>
-				<Stack direction="row" spacing={1}>
+				<Grid container spacing={2}>
+					<Grid item xs={12} sm={6} md={3}>
+						<TextField
+							fullWidth
+							label="Escalar arriba si la cola supera"
+							type="number"
+							value={cfg.scaleThreshold ?? 100}
+							onChange={(e) => patch("scaleThreshold", parseInt(e.target.value, 10))}
+							helperText="causas esperando"
+							size="small"
+						/>
+					</Grid>
+					<Grid item xs={12} sm={6} md={3}>
+						<TextField
+							fullWidth
+							label="Bajar al mínimo si la cola baja de"
+							type="number"
+							value={cfg.scaleDownThreshold ?? 10}
+							onChange={(e) => patch("scaleDownThreshold", parseInt(e.target.value, 10))}
+							helperText="causas esperando"
+							size="small"
+						/>
+					</Grid>
+					<Grid item xs={6} sm={6} md={3}>
+						<TextField
+							fullWidth
+							label="Instancias máximas"
+							type="number"
+							value={cfg.maxWorkers ?? 3}
+							onChange={(e) => patch("maxWorkers", parseInt(e.target.value, 10))}
+							helperText="por fuero"
+							size="small"
+							inputProps={{ min: 1, max: 10 }}
+						/>
+					</Grid>
+					<Grid item xs={6} sm={6} md={3}>
+						<TextField
+							fullWidth
+							label="Instancias mínimas"
+							type="number"
+							value={cfg.minWorkers ?? 0}
+							onChange={(e) => patch("minWorkers", parseInt(e.target.value, 10))}
+							helperText="0 apaga fuera de horario"
+							size="small"
+							inputProps={{ min: 0, max: 10 }}
+						/>
+					</Grid>
+				</Grid>
+			</Box>
+
+			<Box>
+				<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+					Frenos por recursos
+				</Typography>
+				<Grid container spacing={2}>
+					<Grid item xs={12} sm={4}>
+						<TextField
+							fullWidth
+							label="Intervalo de chequeo (ms)"
+							type="number"
+							value={cfg.checkInterval ?? 60000}
+							onChange={(e) => patch("checkInterval", parseInt(e.target.value, 10))}
+							helperText={`= ${Math.round((cfg.checkInterval ?? 60000) / 1000)} s entre ciclos de scaling`}
+							size="small"
+						/>
+					</Grid>
+					<Grid item xs={6} sm={4}>
+						<TextField
+							fullWidth
+							label="Tope de CPU"
+							type="number"
+							value={cfg.cpuThreshold ?? 0.75}
+							onChange={(e) => patch("cpuThreshold", parseFloat(e.target.value))}
+							helperText={`0 a 1 · ahora ${((manager.currentState?.resources?.cpuUsage ?? 0) * 100).toFixed(1)}%`}
+							size="small"
+							inputProps={{ min: 0, max: 1, step: 0.05 }}
+						/>
+					</Grid>
+					<Grid item xs={6} sm={4}>
+						<TextField
+							fullWidth
+							label="Tope de memoria"
+							type="number"
+							value={cfg.memoryThreshold ?? 0.8}
+							onChange={(e) => patch("memoryThreshold", parseFloat(e.target.value))}
+							helperText={`0 a 1 · ahora ${((manager.currentState?.resources?.memoryUsage ?? 0) * 100).toFixed(1)}%`}
+							size="small"
+							inputProps={{ min: 0, max: 1, step: 0.05 }}
+						/>
+					</Grid>
+				</Grid>
+			</Box>
+
+			<Box>
+				<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+					Ventana de trabajo
+				</Typography>
+				<Grid container spacing={2} sx={{ mb: 2 }}>
+					<Grid item xs={6} sm={3}>
+						<TextField
+							fullWidth
+							label="Hora de inicio"
+							type="number"
+							value={cfg.workStartHour ?? 7}
+							onChange={(e) => patch("workStartHour", parseInt(e.target.value, 10))}
+							helperText="0 a 23"
+							size="small"
+							inputProps={{ min: 0, max: 23 }}
+						/>
+					</Grid>
+					<Grid item xs={6} sm={3}>
+						<TextField
+							fullWidth
+							label="Hora de fin"
+							type="number"
+							value={cfg.workEndHour ?? 23}
+							onChange={(e) => patch("workEndHour", parseInt(e.target.value, 10))}
+							helperText="exclusiva · 24 = sin corte"
+							size="small"
+							inputProps={{ min: 0, max: 24 }}
+						/>
+					</Grid>
+				</Grid>
+				<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.75 }}>
+					Días
+				</Typography>
+				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
 					{DAY_LABELS.map((label, idx) => {
 						const active = (cfg.workDays ?? [1, 2, 3, 4, 5]).includes(idx);
 						return (
@@ -380,19 +701,15 @@ function ManagerSection() {
 								variant={active ? "filled" : "outlined"}
 								color={active ? "primary" : "default"}
 								onClick={() => toggleDay(idx)}
-								sx={{ cursor: "pointer", minWidth: 42 }}
+								sx={{ cursor: "pointer", minWidth: 46 }}
 							/>
 						);
 					})}
 				</Stack>
-			</Box>
-
-			<Divider />
-			<Box>
-				<Typography variant="body2" fontWeight={600} mb={1}>
-					Fueros activos
+				<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.75 }}>
+					Fueros que el manager escala
 				</Typography>
-				<Stack direction="row" spacing={1}>
+				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 					{ALL_FUEROS.map((f) => {
 						const active = (cfg.fueros ?? ["CIV"]).includes(f);
 						return (
@@ -417,319 +734,287 @@ function ManagerSection() {
 					disabled={!dirty || saving}
 					startIcon={<TickCircle size={18} />}
 					sx={{
+						textTransform: "none",
 						transition: "transform 200ms ease, box-shadow 200ms ease",
 						"&:hover:not(:disabled)": { transform: "translateY(-1px)", boxShadow: `0 4px 12px ${alpha(BRAND_BLUE, 0.32)}` },
 						"&:active:not(:disabled)": { transform: "scale(0.98)" },
 					}}
 				>
-					{saving ? "Guardando..." : "Guardar cambios"}
+					{saving ? "Guardando…" : "Guardar cambios"}
 				</Button>
 				{dirty && (
-					<Button
-						variant="outlined"
-						color="inherit"
-						onClick={() => {
-							setLocal(manager?.config ?? {});
-							setDirty(false);
-						}}
-						startIcon={<CloseCircle size={18} />}
-					>
-						Descartar
-					</Button>
-				)}
-				{dirty && (
-					<Alert severity="warning" sx={{ py: 0.5, px: 1 }}>
-						Cambios sin guardar
-					</Alert>
+					<>
+						<Button
+							variant="outlined"
+							color="inherit"
+							onClick={() => {
+								setLocal({});
+								setDirty(false);
+							}}
+							startIcon={<CloseCircle size={18} />}
+							sx={{ textTransform: "none" }}
+						>
+							Descartar
+						</Button>
+						<Typography variant="caption" color="warning.main">
+							Hay cambios sin guardar
+						</Typography>
+					</>
 				)}
 			</Stack>
 		</Stack>
 	);
 }
 
-// ── Tab: Workers por fuero ────────────────────────────────────────────────────
+// ── Sección: Workers ──────────────────────────────────────────────────────────
 
-function WorkersSection() {
+function WorkerCard({ fila, onSaved }: { fila: Resumen["porFuero"][number]; onSaved: (c: UpdateMovimientosWorkerConfig) => void }) {
 	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
-	const [configs, setConfigs] = useState<UpdateMovimientosWorkerConfig[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [saving, setSaving] = useState<Record<string, boolean>>({});
-	const [locals, setLocals] = useState<Record<string, Partial<UpdateMovimientosWorkerConfig>>>({});
-	const [dirty, setDirty] = useState<Record<string, boolean>>({});
+	const config = fila.config;
+	const [local, setLocal] = useState<Partial<UpdateMovimientosWorkerConfig>>({});
+	const [saving, setSaving] = useState(false);
+	const [ajustesAbiertos, setAjustesAbiertos] = useState(false);
 
-	const load = useCallback(async () => {
-		setLoading(true);
-		try {
-			const data = await UpdateMovimientosService.getWorkerConfigs();
-			setConfigs(data);
-			const init: Record<string, Partial<UpdateMovimientosWorkerConfig>> = {};
-			data.forEach((c) => {
-				init[c._id] = {};
-			});
-			setLocals(init);
-			setDirty({});
-		} catch {
-			enqueueSnackbar("Error al cargar workers", { variant: "error" });
-		} finally {
-			setLoading(false);
-		}
-	}, [enqueueSnackbar]);
+	const dirty = Object.keys(local).length > 0;
+	const merged = { ...config, ...local };
+	const parado = config.enabled && (fila.horasSinCorrer ?? Infinity) > HORAS_PARA_CONSIDERAR_PARADO;
+	const acento = !config.enabled ? theme.palette.text.disabled : parado ? STALE_AMBER : LIVE_GREEN;
 
-	useEffect(() => {
-		load();
-	}, [load]);
-
-	function patchWorker(id: string, key: string, value: unknown) {
-		setLocals((p) => ({ ...p, [id]: { ...p[id], [key]: value } }));
-		setDirty((p) => ({ ...p, [id]: true }));
+	function patch(key: string, value: unknown) {
+		setLocal((p) => ({ ...p, [key]: value }));
 	}
 
-	async function saveWorker(config: UpdateMovimientosWorkerConfig) {
-		setSaving((p) => ({ ...p, [config._id]: true }));
+	async function save() {
+		setSaving(true);
 		try {
-			const updated = await UpdateMovimientosService.updateWorkerConfig(config._id, locals[config._id] ?? {});
-			setConfigs((prev) => prev.map((c) => (c._id === config._id ? updated : c)));
-			setLocals((p) => ({ ...p, [config._id]: {} }));
-			setDirty((p) => ({ ...p, [config._id]: false }));
-			enqueueSnackbar(`Worker ${config.fuero} guardado`, { variant: "success" });
+			onSaved(await UpdateMovimientosService.updateWorkerConfig(config._id, local));
+			setLocal({});
+			enqueueSnackbar(`Worker ${FUERO_LABELS[config.fuero] || config.fuero} guardado`, { variant: "success" });
 		} catch {
 			enqueueSnackbar("Error al guardar", { variant: "error" });
 		} finally {
-			setSaving((p) => ({ ...p, [config._id]: false }));
+			setSaving(false);
 		}
 	}
 
-	if (loading)
-		return (
-			<Stack spacing={2}>
-				{[...Array(2)].map((_, i) => (
-					<Skeleton key={i} variant="rounded" height={200} />
-				))}
-			</Stack>
-		);
-
 	return (
-		<Stack spacing={3}>
-			<Stack direction="row" justifyContent="flex-end">
-				<Button size="small" startIcon={<Refresh size={16} />} onClick={load} variant="outlined">
-					Actualizar
-				</Button>
+		<Paper variant="outlined" sx={{ borderRadius: 2, borderColor: alpha(acento, isDark ? 0.45 : 0.3), overflow: "hidden" }}>
+			<Box sx={{ p: 2 }}>
+				<Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1} flexWrap="wrap" useFlexGap>
+					<Box>
+						<Typography variant="h5" fontWeight={700}>
+							{fila.label}
+						</Typography>
+						<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
+							{config.worker_id}
+						</Typography>
+					</Box>
+					<FormControlLabel
+						sx={{ mr: 0 }}
+						control={<Switch checked={merged.enabled} onChange={(e) => patch("enabled", e.target.checked)} color="success" />}
+						label={
+							<Typography variant="body2" fontWeight={600} color={merged.enabled ? "success.main" : "text.secondary"}>
+								{merged.enabled ? "Habilitado" : "Deshabilitado"}
+							</Typography>
+						}
+					/>
+				</Stack>
+
+				{/* Una línea que dice qué hace y a qué ritmo: era lo que había que
+				    deducir del campo "Cron pattern". */}
+				<Typography variant="body2" color="text.secondary" sx={{ mt: 1.25 }}>
+					{fila.cadaMin ? (
+						<>
+							Un ciclo cada <b>{fila.cadaMin} min</b>, <b>{merged.batchSize ?? 1}</b> causa{(merged.batchSize ?? 1) > 1 ? "s" : ""} por
+							ciclo
+							{fila.capacidad != null ? (
+								<>
+									{" "}
+									→ hasta <b>{fmtNum(fila.capacidad)}</b> causas por día
+								</>
+							) : null}
+							.
+						</>
+					) : (
+						<>
+							Cron <b style={{ fontFamily: "monospace" }}>{merged.cronPattern}</b> · {merged.batchSize ?? 1} causa por ciclo.
+						</>
+					)}{" "}
+					Última corrida <b style={{ color: parado ? STALE_AMBER : undefined }}>{timeAgo(fila.ultimaCorrida)}</b>.
+				</Typography>
+
+				<Grid container spacing={1.5} sx={{ mt: 0.5 }}>
+					<Grid item xs={6} sm={3}>
+						<Metrica label="En cola" value={fila.cola} color={fila.cola > 0 ? STALE_AMBER : undefined} />
+					</Grid>
+					<Grid item xs={6} sm={3}>
+						<Metrica
+							label="Releídas hoy"
+							value={fila.procesadasHoy}
+							sub={fila.esDeHoy ? undefined : `sin actividad · último día ${config.statsToday?.date || "—"}`}
+						/>
+					</Grid>
+					<Grid item xs={6} sm={3}>
+						<Metrica label="Con error hoy" value={fila.fallidasHoy} color={fila.fallidasHoy > 0 ? theme.palette.error.main : undefined} />
+					</Grid>
+					<Grid item xs={6} sm={3}>
+						<Metrica label="Movs. nuevos hoy" value={fila.movimientosHoy} color={fila.movimientosHoy > 0 ? LIVE_GREEN : undefined} />
+					</Grid>
+				</Grid>
+
+				<Stack direction="row" spacing={2} sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
+					<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
+						Histórico: {fmtNum(config.stats?.totalProcessed)} releídas · {fmtNum(config.stats?.totalSuccess)} ok ·{" "}
+						{fmtNum(config.stats?.totalFailed)} con error · {fmtNum(config.stats?.totalNewMovimientos)} movimientos nuevos
+					</Typography>
+				</Stack>
+			</Box>
+
+			<Divider />
+
+			<Stack
+				direction="row"
+				alignItems="center"
+				spacing={0.75}
+				onClick={() => setAjustesAbiertos((v) => !v)}
+				sx={{ px: 2, py: 1, cursor: "pointer", color: "text.secondary", "&:hover": { bgcolor: alpha(BRAND_BLUE, 0.04) } }}
+			>
+				{ajustesAbiertos ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
+				<Typography variant="caption">Ajustes del worker (cron, lote, captcha, cooldown)</Typography>
 			</Stack>
 
-			{configs.length === 0 && (
-				<Alert severity="info">No hay configuraciones de worker. Se crean automáticamente al iniciar el worker.</Alert>
+			<Collapse in={ajustesAbiertos} unmountOnExit>
+				<Box sx={{ px: 2, pb: 2 }}>
+					<Grid container spacing={2}>
+						<Grid item xs={12} md={8}>
+							<TextField
+								fullWidth
+								label="Cron pattern"
+								value={merged.cronPattern ?? "*/2 * * * *"}
+								onChange={(e) => patch("cronPattern", e.target.value)}
+								helperText="Ritmo de los ciclos. El horario lo decide el manager, no este cron."
+								size="small"
+							/>
+						</Grid>
+						<Grid item xs={12} md={4}>
+							<TextField
+								fullWidth
+								label="Causas por ciclo"
+								type="number"
+								value={merged.batchSize ?? 1}
+								onChange={(e) => patch("batchSize", parseInt(e.target.value, 10))}
+								size="small"
+								inputProps={{ min: 1, max: 20 }}
+							/>
+						</Grid>
+						<Grid item xs={12} sm={4}>
+							<TextField
+								fullWidth
+								label="Timeout del lock (min)"
+								type="number"
+								value={merged.lockTimeoutMinutes ?? 5}
+								onChange={(e) => patch("lockTimeoutMinutes", parseInt(e.target.value, 10))}
+								helperText="Tras esto la causa vuelve a estar disponible"
+								size="small"
+								inputProps={{ min: 1, max: 60 }}
+							/>
+						</Grid>
+						<Grid item xs={12} sm={4}>
+							<FormControl size="small" fullWidth>
+								<InputLabel>Proveedor de captcha</InputLabel>
+								<Select
+									label="Proveedor de captcha"
+									value={merged.captcha?.defaultProvider ?? "capsolver"}
+									onChange={(e) => patch("captcha", { ...merged.captcha, defaultProvider: e.target.value })}
+								>
+									<MenuItem value="capsolver">Capsolver</MenuItem>
+									<MenuItem value="2captcha">2Captcha</MenuItem>
+									<MenuItem value="captchaai">CaptchaAI</MenuItem>
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={12} sm={4}>
+							<TextField
+								fullWidth
+								label="Balance mínimo de captcha"
+								type="number"
+								value={merged.captcha?.minimumBalance ?? 0.5}
+								onChange={(e) => patch("captcha", { ...merged.captcha, minimumBalance: parseFloat(e.target.value) })}
+								size="small"
+								inputProps={{ min: 0, step: 0.1 }}
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6}>
+							<TextField
+								fullWidth
+								label="Errores seguidos antes de pausar"
+								type="number"
+								value={merged.errorCooldown?.maxConsecutiveErrors ?? 3}
+								onChange={(e) => patch("errorCooldown", { ...merged.errorCooldown, maxConsecutiveErrors: parseInt(e.target.value, 10) })}
+								size="small"
+								inputProps={{ min: 1, max: 20 }}
+							/>
+						</Grid>
+						<Grid item xs={12} sm={6}>
+							<TextField
+								fullWidth
+								label="Horas de pausa tras esos errores"
+								type="number"
+								value={merged.errorCooldown?.cooldownHours ?? 6}
+								onChange={(e) => patch("errorCooldown", { ...merged.errorCooldown, cooldownHours: parseInt(e.target.value, 10) })}
+								size="small"
+								inputProps={{ min: 1, max: 72 }}
+							/>
+						</Grid>
+					</Grid>
+				</Box>
+			</Collapse>
+
+			{dirty && (
+				<>
+					<Divider />
+					<Stack direction="row" spacing={1.5} alignItems="center" sx={{ px: 2, py: 1.5, bgcolor: alpha(STALE_AMBER, 0.08) }}>
+						<Button
+							variant="contained"
+							size="small"
+							disabled={saving}
+							onClick={save}
+							startIcon={<TickCircle size={16} />}
+							sx={{ textTransform: "none" }}
+						>
+							{saving ? "Guardando…" : "Guardar"}
+						</Button>
+						<Button
+							variant="outlined"
+							size="small"
+							color="inherit"
+							onClick={() => setLocal({})}
+							startIcon={<CloseCircle size={16} />}
+							sx={{ textTransform: "none" }}
+						>
+							Descartar
+						</Button>
+						<Typography variant="caption" color="warning.main">
+							Cambios sin guardar
+						</Typography>
+					</Stack>
+				</>
 			)}
+		</Paper>
+	);
+}
 
-			{configs.map((config) => {
-				const loc = locals[config._id] ?? {};
-				const merged = { ...config, ...loc };
-				const isDirty = dirty[config._id] ?? false;
-				const isSaving = saving[config._id] ?? false;
-
-				return (
-					<Card
-						key={config._id}
-						variant="outlined"
-						sx={{ borderColor: merged.enabled ? theme.palette.success.main : theme.palette.divider }}
-					>
-						<CardContent>
-							<Stack spacing={2}>
-								{/* Header */}
-								<Stack direction="row" justifyContent="space-between" alignItems="center">
-									<Box>
-										<Typography variant="h5" fontWeight={700}>
-											{FUERO_LABELS[config.fuero] || config.fuero}
-										</Typography>
-										<Typography variant="caption" color="text.secondary">
-											{config.worker_id}
-										</Typography>
-									</Box>
-									<FormControlLabel
-										control={
-											<Switch
-												checked={merged.enabled}
-												onChange={(e) => patchWorker(config._id, "enabled", e.target.checked)}
-												color="success"
-											/>
-										}
-										label={
-											<Typography variant="body2" fontWeight={600} color={merged.enabled ? "success.main" : "text.secondary"}>
-												{merged.enabled ? "Habilitado" : "Deshabilitado"}
-											</Typography>
-										}
-									/>
-								</Stack>
-
-								<Divider />
-
-								{/* Stats hoy */}
-								<Box>
-									<Typography variant="caption" color="text.secondary" fontWeight={600} display="block" mb={1}>
-										Hoy ({config.statsToday?.date || "-"})
-									</Typography>
-									<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-										<StatCard label="Procesadas" value={config.statsToday?.processed ?? 0} />
-										<StatCard label="Exitosas" value={config.statsToday?.success ?? 0} color={theme.palette.success.main} />
-										<StatCard
-											label="Fallidas"
-											value={config.statsToday?.failed ?? 0}
-											color={config.statsToday?.failed ? theme.palette.error.main : undefined}
-										/>
-										<StatCard label="Nuevos movs." value={config.statsToday?.newMovimientos ?? 0} color={theme.palette.info.main} />
-									</Stack>
-								</Box>
-
-								{/* Progreso */}
-								{config.updateProgress?.totalEligible > 0 && (
-									<Box>
-										<Stack direction="row" justifyContent="space-between" mb={0.5}>
-											<Typography variant="caption" color="text.secondary">
-												Progreso del ciclo
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												{config.updateProgress.processedToday}/{config.updateProgress.totalEligible} (
-												{config.updateProgress.completionPercentage.toFixed(1)}%)
-											</Typography>
-										</Stack>
-										<LinearProgress
-											variant="determinate"
-											value={Math.min(config.updateProgress.completionPercentage, 100)}
-											sx={{ height: 6, borderRadius: 3 }}
-										/>
-									</Box>
-								)}
-
-								<Divider />
-
-								{/* Config editable */}
-								<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-									<TextField
-										label="Cron pattern"
-										value={merged.cronPattern ?? "*/2 * * * *"}
-										onChange={(e) => patchWorker(config._id, "cronPattern", e.target.value)}
-										helperText="Frecuencia de ciclos (sin horario, el manager controla el scaling)"
-										size="small"
-										sx={{ flex: 2 }}
-									/>
-									<TextField
-										label="Causas por ciclo"
-										type="number"
-										value={merged.batchSize ?? 1}
-										onChange={(e) => patchWorker(config._id, "batchSize", parseInt(e.target.value, 10))}
-										helperText="Causas procesadas por ciclo"
-										size="small"
-										inputProps={{ min: 1, max: 20 }}
-										sx={{ flex: 1 }}
-									/>
-								</Stack>
-
-								<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-									<TextField
-										label="Timeout lock (min)"
-										type="number"
-										value={merged.lockTimeoutMinutes ?? 5}
-										onChange={(e) => patchWorker(config._id, "lockTimeoutMinutes", parseInt(e.target.value, 10))}
-										size="small"
-										inputProps={{ min: 1, max: 60 }}
-										sx={{ flex: 1 }}
-									/>
-									<FormControl size="small" sx={{ flex: 1 }}>
-										<InputLabel>Proveedor captcha</InputLabel>
-										<Select
-											label="Proveedor captcha"
-											value={merged.captcha?.defaultProvider ?? "capsolver"}
-											onChange={(e) => patchWorker(config._id, "captcha", { ...merged.captcha, defaultProvider: e.target.value })}
-										>
-											<MenuItem value="capsolver">Capsolver</MenuItem>
-											<MenuItem value="2captcha">2Captcha</MenuItem>
-											<MenuItem value="captchaai">CaptchaAI</MenuItem>
-										</Select>
-									</FormControl>
-									<TextField
-										label="Balance mínimo captcha"
-										type="number"
-										value={merged.captcha?.minimumBalance ?? 0.5}
-										onChange={(e) => patchWorker(config._id, "captcha", { ...merged.captcha, minimumBalance: parseFloat(e.target.value) })}
-										size="small"
-										inputProps={{ min: 0, step: 0.1 }}
-										sx={{ flex: 1 }}
-									/>
-								</Stack>
-
-								<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-									<TextField
-										label="Máx. errores consecutivos"
-										type="number"
-										value={merged.errorCooldown?.maxConsecutiveErrors ?? 3}
-										onChange={(e) =>
-											patchWorker(config._id, "errorCooldown", {
-												...merged.errorCooldown,
-												maxConsecutiveErrors: parseInt(e.target.value, 10),
-											})
-										}
-										helperText="Errores antes de entrar en cooldown"
-										size="small"
-										inputProps={{ min: 1, max: 20 }}
-										sx={{ flex: 1 }}
-									/>
-									<TextField
-										label="Cooldown por errores (h)"
-										type="number"
-										value={merged.errorCooldown?.cooldownHours ?? 6}
-										onChange={(e) =>
-											patchWorker(config._id, "errorCooldown", { ...merged.errorCooldown, cooldownHours: parseInt(e.target.value, 10) })
-										}
-										helperText="Horas de pausa tras errores consecutivos"
-										size="small"
-										inputProps={{ min: 1, max: 72 }}
-										sx={{ flex: 1 }}
-									/>
-								</Stack>
-
-								{/* Footer con acciones y stats totales */}
-								<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
-									<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
-										<Button
-											variant="contained"
-											size="small"
-											disabled={!isDirty || isSaving}
-											onClick={() => saveWorker(config)}
-											startIcon={<TickCircle size={16} />}
-										>
-											{isSaving ? "Guardando..." : "Guardar"}
-										</Button>
-										{isDirty && (
-											<Button
-												variant="outlined"
-												size="small"
-												color="inherit"
-												onClick={() => {
-													setLocals((p) => ({ ...p, [config._id]: {} }));
-													setDirty((p) => ({ ...p, [config._id]: false }));
-												}}
-												startIcon={<CloseCircle size={16} />}
-											>
-												Descartar
-											</Button>
-										)}
-									</Stack>
-									<Stack direction="row" spacing={2}>
-										<Tooltip title={`Éxitos: ${config.stats?.totalSuccess ?? 0} · Fallidas: ${config.stats?.totalFailed ?? 0}`}>
-											<Typography variant="caption" color="text.secondary">
-												Total: {(config.stats?.totalProcessed ?? 0).toLocaleString("es-AR")} procesadas
-											</Typography>
-										</Tooltip>
-										<Typography variant="caption" color="text.secondary">
-											Última: {fmtDate(config.stats?.lastRun)}
-										</Typography>
-									</Stack>
-								</Stack>
-							</Stack>
-						</CardContent>
-					</Card>
-				);
-			})}
+function WorkersSection({ r, onSaved }: { r: Resumen; onSaved: (c: UpdateMovimientosWorkerConfig) => void }) {
+	if (r.porFuero.length === 0) {
+		return <Alert severity="info">No hay configuraciones de worker. Se crean solas cuando el worker arranca por primera vez.</Alert>;
+	}
+	return (
+		<Stack spacing={2}>
+			{r.porFuero.map((fila) => (
+				<WorkerCard key={fila.config._id} fila={fila} onSaved={onSaved} />
+			))}
 		</Stack>
 	);
 }
@@ -737,33 +1022,51 @@ function WorkersSection() {
 // ── Componente principal ──────────────────────────────────────────────────────
 
 const SECTIONS = [
-	{ label: "Estado", value: "estado", icon: <Chart size={18} /> },
-	{ label: "Manager", value: "manager", icon: <ArrowUp size={18} /> },
-	{ label: "Workers", value: "workers", icon: <Setting2 size={18} /> },
+	{ label: "Estado", value: "estado", icon: <Chart size={16} /> },
+	{ label: "Manager", value: "manager", icon: <ArrowUp size={16} /> },
+	{ label: "Workers", value: "workers", icon: <Setting2 size={16} /> },
 ];
 
 export default function UpdateMovimientosWorkerTab() {
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 	const [section, setSection] = useState("estado");
 
-	// ── Worker control state (por fuero) ──────────────────────────────────────
-	const [workerConfigs, setWorkerConfigs] = useState<UpdateMovimientosWorkerConfig[]>([]);
+	// Una sola carga para toda la vista: antes cada sección pedía lo mismo por
+	// su cuenta (tres fetch de los mismos dos endpoints) y podían mostrar
+	// números de momentos distintos.
+	const [manager, setManager] = useState<UpdateMovimientosManagerConfig | null>(null);
+	const [workers, setWorkers] = useState<UpdateMovimientosWorkerConfig[]>([]);
+	const [loading, setLoading] = useState(true);
 	const [toggling, setToggling] = useState<Record<string, boolean>>({});
 
+	const load = useCallback(async () => {
+		setLoading(true);
+		const [m, w] = await Promise.allSettled([UpdateMovimientosService.getManagerConfig(), UpdateMovimientosService.getWorkerConfigs()]);
+		if (m.status === "fulfilled") setManager(m.value);
+		if (w.status === "fulfilled") setWorkers(w.value);
+		if (m.status === "rejected" || w.status === "rejected") {
+			enqueueSnackbar("Error al cargar la configuración del flujo", { variant: "error" });
+		}
+		setLoading(false);
+	}, [enqueueSnackbar]);
+
 	useEffect(() => {
-		UpdateMovimientosService.getWorkerConfigs()
-			.then(setWorkerConfigs)
-			.catch(() => {
-				/* silently ignore */
-			});
-	}, []);
+		load();
+	}, [load]);
+
+	const r = useMemo(() => calcularResumen(manager, workers), [manager, workers]);
+
+	const upsertWorker = (c: UpdateMovimientosWorkerConfig) => setWorkers((prev) => prev.map((w) => (w._id === c._id ? c : w)));
 
 	const handleToggleFuero = async (config: UpdateMovimientosWorkerConfig, val: boolean) => {
 		setToggling((p) => ({ ...p, [config._id]: true }));
 		try {
-			const updated = await UpdateMovimientosService.updateWorkerConfig(config._id, { enabled: val });
-			setWorkerConfigs((prev) => prev.map((c) => (c._id === updated._id ? updated : c)));
-			enqueueSnackbar(`Worker ${config.fuero} ${val ? "habilitado" : "deshabilitado"}`, { variant: val ? "success" : "warning" });
+			upsertWorker(await UpdateMovimientosService.updateWorkerConfig(config._id, { enabled: val }));
+			enqueueSnackbar(`Worker ${FUERO_LABELS[config.fuero] || config.fuero} ${val ? "habilitado" : "deshabilitado"}`, {
+				variant: val ? "success" : "warning",
+			});
 		} catch {
 			enqueueSnackbar("Error actualizando", { variant: "error" });
 		} finally {
@@ -771,13 +1074,22 @@ export default function UpdateMovimientosWorkerTab() {
 		}
 	};
 
+	if (loading && !manager && workers.length === 0) {
+		return (
+			<Stack spacing={2}>
+				<Skeleton variant="rounded" height={72} />
+				<Skeleton variant="rounded" height={168} />
+				<Skeleton variant="rounded" height={220} />
+			</Stack>
+		);
+	}
+
 	return (
-		<Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
-			{/* ── Worker Control Panel ── */}
+		<Stack spacing={3}>
 			<WorkerControlPanel
 				processes={
-					workerConfigs.length > 0
-						? workerConfigs.map((cfg) => ({
+					workers.length > 0
+						? workers.map((cfg) => ({
 								label: FUERO_LABELS[cfg.fuero] || cfg.fuero,
 								description: cfg.worker_id,
 								enabled: cfg.enabled,
@@ -786,34 +1098,54 @@ export default function UpdateMovimientosWorkerTab() {
 						  }))
 						: ALL_FUEROS.map((f) => ({
 								label: FUERO_LABELS[f] || f,
-								description: "cargando...",
+								description: "cargando…",
 								enabled: null,
 								onToggle: () => {},
 						  }))
 				}
 			/>
 
-			{/* Sub-tabs */}
-			<Stack direction="row" spacing={1}>
-				{SECTIONS.map((s) => (
-					<Button
-						key={s.value}
-						variant={section === s.value ? "contained" : "outlined"}
-						size="small"
-						startIcon={s.icon}
-						onClick={() => setSection(s.value)}
-						sx={{ textTransform: "none" }}
-					>
-						{s.label}
-					</Button>
-				))}
-			</Stack>
+			<ResumenFlujo r={r} loading={loading} onRefresh={load} />
+			<AvisosSalud r={r} />
 
-			<Divider />
+			<Box>
+				<Tabs
+					value={section}
+					onChange={(_, v) => setSection(v)}
+					variant="scrollable"
+					scrollButtons="auto"
+					sx={{
+						borderBottom: `1px solid ${headerBorder(isDark)}`,
+						mb: 3,
+						"& .MuiTab-root": {
+							minHeight: 46,
+							textTransform: "none",
+							fontSize: "0.875rem",
+							fontWeight: 500,
+							transition: "color 200ms ease",
+							"&.Mui-selected": { color: BRAND_BLUE, fontWeight: 600 },
+						},
+						"& .MuiTabs-indicator": { bgcolor: BRAND_BLUE, height: 2.5 },
+					}}
+				>
+					{SECTIONS.map((s) => (
+						<Tab
+							key={s.value}
+							value={s.value}
+							label={
+								<Stack direction="row" spacing={1} alignItems="center">
+									<Box sx={{ display: "flex", color: section === s.value ? BRAND_BLUE : theme.palette.text.secondary }}>{s.icon}</Box>
+									<span>{s.label}</span>
+								</Stack>
+							}
+						/>
+					))}
+				</Tabs>
 
-			{section === "estado" && <EstadoSection />}
-			{section === "manager" && <ManagerSection />}
-			{section === "workers" && <WorkersSection />}
+				{section === "estado" && <EstadoSection r={r} manager={manager} />}
+				{section === "manager" && <ManagerSection manager={manager} r={r} onSaved={setManager} />}
+				{section === "workers" && <WorkersSection r={r} onSaved={upsertWorker} />}
+			</Box>
 		</Stack>
 	);
 }
