@@ -1,10 +1,36 @@
 import React from "react";
 import { useState } from "react";
-import { Box, Tab, Tabs, Typography, Paper, Stack, Chip, useTheme, alpha, IconButton, Tooltip, Popover } from "@mui/material";
-import { TickSquare, SearchNormal1, DocumentUpload, InfoCircle, People, Warning2, SecurityUser, Lock1, Gallery, Refresh2, Book1 } from "iconsax-react";
+import {
+	Box,
+	Typography,
+	Stack,
+	useTheme,
+	alpha,
+	IconButton,
+	Tooltip,
+	Popover,
+	ButtonBase,
+	Divider,
+	Select,
+	MenuItem,
+	ListSubheader,
+} from "@mui/material";
+import {
+	TickSquare,
+	SearchNormal1,
+	DocumentUpload,
+	InfoCircle,
+	People,
+	Warning2,
+	SecurityUser,
+	Lock1,
+	Gallery,
+	Refresh2,
+	Book1,
+} from "iconsax-react";
 import MainCard from "components/MainCard";
-import { TabPanel } from "components/ui-component/TabPanel";
-import { BRAND_BLUE, headerBorder, navActiveBg } from "themes/dashboardTokens";
+import { BRAND_BLUE, headerBorder, navActiveBg, navHoverBg, railBorder, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
+import { useTabParam } from "hooks/useTabParam";
 import VerificationWorker from "./VerificationWorker";
 import ScrapingWorker from "./ScrapingWorker";
 import AppUpdateWorker from "./AppUpdateWorker";
@@ -16,129 +42,146 @@ import PrivacyCheckerWorker from "./PrivacyCheckerWorker";
 import CaptchaDatasetTab from "./CaptchaDatasetTab";
 import DocumentationTab from "./documentation";
 
-// Interfaz para los tabs
 interface WorkerTab {
 	label: string;
 	value: string;
 	icon: React.ReactNode;
-	component: React.ReactNode;
 	description: string;
 	status?: "active" | "inactive" | "error";
-	badge?: string;
+	/** Host donde corre el proceso PM2. */
+	host?: string;
 	ip?: string;
 }
 
+// El rail agrupa por etapa del pipeline, no por orden histórico de aparición:
+// un worker se busca por lo que hace ("¿dónde configuro la captura?"), no por
+// su posición en una fila de tabs.
+const WORKER_TABS: WorkerTab[] = [
+	{
+		label: "Scraping PJN",
+		value: "scraping",
+		icon: <SearchNormal1 size={20} />,
+		description: "Busca y recopila nuevas causas judiciales en el portal público del PJN",
+		status: "active",
+		host: "worker_01",
+		ip: "100.111.73.56",
+	},
+	{
+		label: "Retry",
+		value: "retry",
+		icon: <Refresh2 size={20} />,
+		description: "Reintenta expedientes cuyo captcha falló y descarta los que agotaron los intentos",
+		status: "active",
+		host: "worker_01",
+		ip: "100.111.73.56",
+	},
+	{
+		label: "Captcha dataset",
+		value: "captcha-dataset",
+		icon: <Gallery size={20} />,
+		description: "Imágenes de captcha capturadas para entrenar un OCR propio",
+		status: "active",
+		host: "worker_01",
+		ip: "100.111.73.56",
+	},
+	{
+		label: "Verificación",
+		value: "verification",
+		icon: <TickSquare size={20} />,
+		description: "Verifica que las causas capturadas existan y estén bien identificadas",
+		status: "active",
+		host: "app",
+		ip: "18.228.63.73",
+	},
+	{
+		label: "Actualización",
+		value: "app-update",
+		icon: <DocumentUpload size={20} />,
+		description: "Mantiene actualizados los documentos de causas judiciales vía la API del PJN",
+		status: "active",
+		host: "app",
+		ip: "18.228.63.73",
+	},
+	{
+		label: "Intervinientes",
+		value: "intervinientes",
+		icon: <People size={20} />,
+		description: "Extrae partes y letrados de cada causa desde el PJN",
+		status: "active",
+		host: "app",
+		ip: "18.228.63.73",
+	},
+	{
+		label: "Stuck documents",
+		value: "stuck-documents",
+		icon: <Warning2 size={20} />,
+		description: "Procesa documentos verificados que quedaron sin movimientos guardados",
+		status: "active",
+		host: "app",
+		ip: "18.228.63.73",
+	},
+	{
+		label: "Mis Causas",
+		value: "mis-causas",
+		icon: <SecurityUser size={20} />,
+		description: "Scraping y actualización del portal autenticado del PJN (login SSO)",
+		status: "active",
+		host: "worker-cloud-02",
+		ip: "100.102.208.69",
+	},
+	{
+		label: "Privacy checker",
+		value: "privacy-checker",
+		icon: <Lock1 size={20} />,
+		description: "Detecta causas que pasaron a estado reservado y mantiene el flag automáticamente",
+		status: "active",
+		host: "app",
+		ip: "18.228.63.73",
+	},
+	{
+		label: "Documentación",
+		value: "documentation",
+		icon: <Book1 size={20} />,
+		description: "Diagramas de arquitectura de los workers PJN y del flujo dual-write de movimientos",
+	},
+];
+
+const WORKER_GROUPS: { label: string; values: string[] }[] = [
+	{ label: "Captura", values: ["scraping", "retry", "captcha-dataset"] },
+	{ label: "Enriquecimiento", values: ["verification", "app-update", "intervinientes", "stuck-documents"] },
+	{ label: "Portal autenticado", values: ["mis-causas"] },
+	{ label: "Cumplimiento", values: ["privacy-checker"] },
+];
+
+// Documentación no es un worker: va al pie del rail, separada del pipeline.
+const PINNED_VALUES = ["documentation"];
+
+const WORKER_VALUES = WORKER_TABS.map((t) => t.value);
+// Al cambiar de worker se limpia `tab`: el sub-tab del anterior no aplica al nuevo.
+const WORKER_RESETS = ["tab"] as const;
+
+const PANELS: Record<string, React.ReactNode> = {
+	scraping: <ScrapingWorker />,
+	retry: <RetryQueuePanel />,
+	"captcha-dataset": <CaptchaDatasetTab />,
+	verification: <VerificationWorker />,
+	"app-update": <AppUpdateWorker />,
+	intervinientes: <IntervinientesWorker />,
+	"stuck-documents": <StuckDocumentsWorker />,
+	"mis-causas": <MisCausasWorker />,
+	"privacy-checker": <PrivacyCheckerWorker />,
+	documentation: <DocumentationTab />,
+};
+
+const byValue = (value: string) => WORKER_TABS.find((t) => t.value === value)!;
+
 const WorkersConfig = () => {
 	const theme = useTheme();
-	const [activeTab, setActiveTab] = useState("scraping");
+	const isDark = theme.palette.mode === "dark";
+	const [activeTab, setActiveTab] = useTabParam("worker", WORKER_VALUES, { resets: WORKER_RESETS });
 	const [infoAnchorEl, setInfoAnchorEl] = useState<HTMLButtonElement | null>(null);
 
-	const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
-		setActiveTab(newValue);
-	};
-
-	// Definición de las pestañas de workers
-	const workerTabs: WorkerTab[] = [
-		{
-			label: "Scraping PJN",
-			value: "scraping",
-			icon: <SearchNormal1 size={20} />,
-			component: <ScrapingWorker />,
-			description: "Configura los workers que buscan y recopilan nuevas causas judiciales",
-			status: "active",
-			badge: "worker_01",
-			ip: "100.111.73.56",
-		},
-		{
-			label: "Verificación",
-			value: "verification",
-			icon: <TickSquare size={20} />,
-			component: <VerificationWorker />,
-			description: "Configura los parámetros del worker de verificación de causas",
-			status: "active",
-			badge: "app",
-			ip: "18.228.63.73",
-		},
-		{
-			label: "Actualización",
-			value: "app-update",
-			icon: <DocumentUpload size={20} />,
-			component: <AppUpdateWorker />,
-			description: "Mantiene actualizados los documentos de causas judiciales (API de PJN)",
-			status: "active",
-			badge: "app",
-			ip: "18.228.63.73",
-		},
-		{
-			label: "Intervinientes",
-			value: "intervinientes",
-			icon: <People size={20} />,
-			component: <IntervinientesWorker />,
-			description: "Extrae intervinientes (partes y letrados) de las causas desde PJN",
-			status: "active",
-			badge: "app",
-			ip: "18.228.63.73",
-		},
-		{
-			label: "Stuck Documents",
-			value: "stuck-documents",
-			icon: <Warning2 size={20} />,
-			component: <StuckDocumentsWorker />,
-			description: "Procesa documentos verificados sin movimientos guardados",
-			status: "active",
-			badge: "app",
-			ip: "18.228.63.73",
-		},
-		{
-			label: "Retry",
-			value: "retry",
-			icon: <Refresh2 size={20} />,
-			component: <RetryQueuePanel />,
-			description: "Reintenta expedientes cuyo captcha falló y descarta los que agotaron los intentos",
-			status: "active",
-			badge: "worker_01",
-			ip: "100.111.73.56",
-		},
-		{
-			label: "Mis Causas",
-			value: "mis-causas",
-			icon: <SecurityUser size={20} />,
-			component: <MisCausasWorker />,
-			description: "Gestión del scraping y actualización de causas PJN (login SSO)",
-			status: "active",
-			badge: "worker-cloud-02",
-			ip: "100.102.208.69",
-		},
-		{
-			label: "Privacy Checker",
-			value: "privacy-checker",
-			icon: <Lock1 size={20} />,
-			component: <PrivacyCheckerWorker />,
-			description: "Detecta causas PJN individuales que pasaron a estado reservado y mantiene el flag automáticamente",
-			status: "active",
-			badge: "app",
-			ip: "18.228.63.73",
-		},
-		{
-			label: "Captcha Dataset",
-			value: "captcha-dataset",
-			icon: <Gallery size={20} />,
-			component: <CaptchaDatasetTab />,
-			description: "Visualiza las imágenes de captcha capturadas para entrenar un OCR propio",
-			status: "active",
-			badge: "worker_01",
-			ip: "100.111.73.56",
-		},
-		{
-			label: "Documentación",
-			value: "documentation",
-			icon: <Book1 size={20} />,
-			component: <DocumentationTab />,
-			description: "Diagramas de arquitectura de los workers PJN: flujo dual-write de movimientos (público y Mis Causas)",
-		},
-	];
-
-	const getStatusColor = (status?: string) => {
+	const statusColor = (status?: string) => {
 		switch (status) {
 			case "active":
 				return theme.palette.success.main;
@@ -151,163 +194,260 @@ const WorkersConfig = () => {
 		}
 	};
 
-	const isDark = theme.palette.mode === "dark";
+	const current = byValue(activeTab);
+
+	const monoChip = (text: string, tone: "neutral" | "info") => (
+		<Box
+			component="span"
+			sx={{
+				display: "inline-flex",
+				alignItems: "center",
+				px: 0.75,
+				py: 0.25,
+				borderRadius: 0.75,
+				bgcolor: tone === "info" ? alpha(theme.palette.info.main, 0.1) : alpha(theme.palette.text.primary, isDark ? 0.16 : 0.07),
+				color: tone === "info" ? theme.palette.info.main : theme.palette.text.secondary,
+				fontSize: "0.68rem",
+				fontWeight: 500,
+				fontFamily: "monospace",
+				fontVariantNumeric: "tabular-nums",
+				letterSpacing: "0.02em",
+			}}
+		>
+			{text}
+		</Box>
+	);
+
+	const renderRailItem = (tab: WorkerTab) => {
+		const selected = tab.value === activeTab;
+		const dot = statusColor(tab.status);
+		return (
+			<ButtonBase
+				key={tab.value}
+				role="tab"
+				aria-selected={selected}
+				onClick={() => setActiveTab(tab.value)}
+				sx={{
+					position: "relative",
+					width: "100%",
+					justifyContent: "flex-start",
+					textAlign: "left",
+					gap: 1.25,
+					px: 1.75,
+					py: 1.1,
+					borderRadius: 1.5,
+					color: selected ? BRAND_BLUE : theme.palette.text.primary,
+					bgcolor: selected ? navActiveBg(isDark) : "transparent",
+					transition: "background-color 200ms ease, color 200ms ease",
+					"&:hover": { bgcolor: selected ? navActiveBg(isDark) : navHoverBg(isDark) },
+					"&:active": { transform: "translateY(1px)" },
+					"&:focus-visible": { outline: `2px solid ${alpha(BRAND_BLUE, 0.6)}`, outlineOffset: 2 },
+					// Barra de acento a la izquierda del item activo.
+					"&::before": selected
+						? {
+								content: '""',
+								position: "absolute",
+								left: 0,
+								top: 8,
+								bottom: 8,
+								width: 3,
+								borderRadius: 3,
+								bgcolor: BRAND_BLUE,
+						  }
+						: undefined,
+				}}
+			>
+				<Box sx={{ display: "flex", color: selected ? BRAND_BLUE : theme.palette.text.secondary }}>{tab.icon}</Box>
+				<Box sx={{ minWidth: 0, flexGrow: 1 }}>
+					<Typography variant="body2" fontWeight={selected ? 600 : 500} noWrap>
+						{tab.label}
+					</Typography>
+					{tab.host && (
+						<Typography
+							variant="caption"
+							noWrap
+							sx={{ display: "block", fontFamily: "monospace", fontSize: "0.66rem", color: theme.palette.text.secondary }}
+						>
+							{tab.host}
+						</Typography>
+					)}
+				</Box>
+				{tab.status && (
+					<Tooltip title={tab.status === "active" ? "Activo" : tab.status === "inactive" ? "Inactivo" : "Error"}>
+						<Box sx={{ position: "relative", display: "flex", flexShrink: 0 }}>
+							<Box sx={{ width: 7, height: 7, borderRadius: "50%", bgcolor: dot }} />
+							{tab.status === "active" && (
+								<Box
+									sx={{
+										...LIVE_PULSE_KEYFRAMES,
+										position: "absolute",
+										inset: 0,
+										borderRadius: "50%",
+										bgcolor: dot,
+										animation: "la-live-pulse 2.4s ease-out infinite",
+									}}
+								/>
+							)}
+						</Box>
+					</Tooltip>
+				)}
+			</ButtonBase>
+		);
+	};
 
 	return (
-		<MainCard>
-			<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-				{/* Header */}
-				<Box>
-					<Stack direction="row" alignItems="center" spacing={1}>
-						<Typography variant="h3" sx={{ letterSpacing: "-0.01em" }}>
-							Configuración de workers
-						</Typography>
-						<Tooltip title="Ver información">
-							<IconButton size="small" color="info" onClick={(e) => setInfoAnchorEl(e.currentTarget)}>
-								<InfoCircle size={22} />
-							</IconButton>
-						</Tooltip>
-						<Popover
-							open={Boolean(infoAnchorEl)}
-							anchorEl={infoAnchorEl}
-							onClose={() => setInfoAnchorEl(null)}
-							anchorOrigin={{
-								vertical: "bottom",
-								horizontal: "left",
-							}}
-							transformOrigin={{
-								vertical: "top",
-								horizontal: "left",
-							}}
-						>
-							<Box sx={{ p: 2, maxWidth: 400 }}>
-								<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-									Información sobre Workers
-								</Typography>
-								<Typography variant="body2" color="text.secondary">
-									Los workers son procesos automatizados que ejecutan tareas en segundo plano. Cada worker tiene su propia configuración y
-									puede ser activado o desactivado según las necesidades del sistema.
-								</Typography>
-							</Box>
-						</Popover>
-					</Stack>
-					<Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-						Gestiona y configura los diferentes workers del sistema de causas
+		<MainCard contentSX={{ p: 0 }}>
+			{/* Encabezado de la vista */}
+			<Box sx={{ px: { xs: 2, md: 3 }, pt: { xs: 2, md: 3 }, pb: 2.5 }}>
+				<Stack direction="row" alignItems="center" spacing={1}>
+					<Typography
+						variant="h3"
+						sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+					>
+						Workers PJN
 					</Typography>
-				</Box>
+					<Tooltip title="Ver información">
+						<IconButton size="small" color="info" onClick={(e) => setInfoAnchorEl(e.currentTarget)}>
+							<InfoCircle size={22} />
+						</IconButton>
+					</Tooltip>
+					<Popover
+						open={Boolean(infoAnchorEl)}
+						anchorEl={infoAnchorEl}
+						onClose={() => setInfoAnchorEl(null)}
+						anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+						transformOrigin={{ vertical: "top", horizontal: "left" }}
+					>
+						<Box sx={{ p: 2, maxWidth: 420 }}>
+							<Typography variant="subtitle2" fontWeight={600} gutterBottom>
+								Cómo se organiza esta vista
+							</Typography>
+							<Typography variant="body2" color="text.secondary">
+								Los workers son procesos automatizados que corren en segundo plano. El panel de la izquierda los agrupa por etapa del
+								pipeline: <b>captura</b> trae causas nuevas del portal, <b>enriquecimiento</b> completa los datos de las ya capturadas,{" "}
+								<b>portal autenticado</b> cubre Mis Causas y <b>cumplimiento</b> vigila las causas reservadas. El worker y la sección
+								abierta quedan en la URL, así que el enlace se puede compartir y sobrevive al refresh.
+							</Typography>
+						</Box>
+					</Popover>
+				</Stack>
+				<Typography variant="body1" color="text.secondary" sx={{ mt: 0.75, maxWidth: "68ch" }}>
+					Configuración y estado de los procesos que alimentan la base de causas del Poder Judicial de la Nación.
+				</Typography>
+			</Box>
 
-				{/* Tabs de navegación */}
-				<Paper
-					elevation={0}
+			<Divider sx={{ borderColor: headerBorder(isDark) }} />
+
+			<Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, alignItems: "stretch" }}>
+				{/* Rail de workers — md+ */}
+				<Box
+					role="tablist"
+					aria-label="Workers"
 					sx={{
-						borderRadius: 2,
-						overflow: "hidden",
-						border: `1px solid ${headerBorder(isDark)}`,
+						display: { xs: "none", md: "block" },
+						flexShrink: 0,
+						width: { md: 236, lg: 252 },
+						borderRight: `1px solid ${railBorder(isDark)}`,
+						bgcolor: alpha(BRAND_BLUE, isDark ? 0.03 : 0.015),
+						py: 1,
 					}}
 				>
-					<Box sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, bgcolor: alpha(BRAND_BLUE, isDark ? 0.04 : 0.02) }}>
-						<Tabs
-							value={activeTab}
-							onChange={handleTabChange}
-							variant="scrollable"
-							scrollButtons="auto"
-							TabIndicatorProps={{ sx: { backgroundColor: BRAND_BLUE, height: 2.5 } }}
-							sx={{
-								"& .MuiTab-root": {
-									minHeight: 64,
-									textTransform: "none",
-									fontSize: "0.875rem",
-									fontWeight: 500,
-									transition: "background-color 200ms ease, color 200ms ease",
-									"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.04) },
-								},
-								"& .MuiTab-root.Mui-selected": { color: BRAND_BLUE, bgcolor: navActiveBg(isDark) },
-							}}
-						>
-							{workerTabs.map((tab) => (
-								<Tab
-									key={tab.value}
-									label={
-										<Stack direction="row" spacing={1.5} alignItems="center">
-											<Box sx={{ color: getStatusColor(tab.status) }}>{tab.icon}</Box>
-											<Box>
-												<Stack direction="row" spacing={0.75} alignItems="center">
-													<Typography variant="body2" fontWeight={500}>
-														{tab.label}
-													</Typography>
-													{tab.badge && (
-														<Box
-															component="span"
-															sx={{
-																display: "inline-flex",
-																alignItems: "center",
-																px: 1,
-																py: 0.25,
-																borderRadius: 1,
-																bgcolor: alpha(theme.palette.text.primary, isDark ? 0.18 : 0.08),
-																color: theme.palette.text.primary,
-																fontSize: "0.65rem",
-																fontWeight: 500,
-																fontFamily: "monospace",
-																letterSpacing: "0.5px",
-																fontVariantNumeric: "tabular-nums",
-															}}
-														>
-															{tab.badge}
-														</Box>
-													)}
-													{tab.ip && (
-														<Box
-															component="span"
-															sx={{
-																display: "inline-flex",
-																alignItems: "center",
-																px: 0.75,
-																py: 0.25,
-																borderRadius: 1,
-																bgcolor: alpha(theme.palette.info.main, 0.1),
-																color: theme.palette.info.main,
-																fontSize: "0.6rem",
-																fontWeight: 500,
-																fontFamily: "monospace",
-															}}
-														>
-															{tab.ip}
-														</Box>
-													)}
-												</Stack>
-												{tab.status && (
-													<Chip
-														label={tab.status === "active" ? "Activo" : tab.status === "inactive" ? "Inactivo" : "Error"}
-														size="small"
-														sx={{
-															height: 16,
-															fontSize: "0.7rem",
-															mt: 0.5,
-															bgcolor: alpha(getStatusColor(tab.status), 0.1),
-															color: getStatusColor(tab.status),
-														}}
-													/>
-												)}
-											</Box>
-										</Stack>
-									}
-									value={tab.value}
-								/>
-							))}
-						</Tabs>
+					{WORKER_GROUPS.map((group) => (
+						<Box key={group.label} sx={{ px: 1, pb: 0.5 }}>
+							<Typography
+								variant="caption"
+								sx={{
+									display: "block",
+									px: 0.75,
+									pt: 1.75,
+									pb: 0.75,
+									fontWeight: 600,
+									fontSize: "0.66rem",
+									letterSpacing: "0.09em",
+									textTransform: "uppercase",
+									color: theme.palette.text.secondary,
+								}}
+							>
+								{group.label}
+							</Typography>
+							<Stack spacing={0.25}>{group.values.map((v) => renderRailItem(byValue(v)))}</Stack>
+						</Box>
+					))}
+
+					<Divider sx={{ my: 1.25, mx: 1.75, borderColor: headerBorder(isDark) }} />
+					<Box sx={{ px: 1, pb: 1 }}>
+						<Stack spacing={0.25}>{PINNED_VALUES.map((v) => renderRailItem(byValue(v)))}</Stack>
+					</Box>
+				</Box>
+
+				{/* Selector de worker — xs/sm */}
+				<Box sx={{ display: { xs: "block", md: "none" }, px: 2, pt: 2 }}>
+					<Select
+						fullWidth
+						size="small"
+						value={activeTab}
+						onChange={(e) => setActiveTab(e.target.value as string)}
+						aria-label="Worker"
+						sx={{ "& .MuiSelect-select": { display: "flex", alignItems: "center", gap: 1 } }}
+					>
+						{WORKER_GROUPS.flatMap((group) => [
+							<ListSubheader key={group.label} sx={{ fontSize: "0.66rem", letterSpacing: "0.09em", textTransform: "uppercase" }}>
+								{group.label}
+							</ListSubheader>,
+							...group.values.map((v) => (
+								<MenuItem key={v} value={v}>
+									{byValue(v).label}
+								</MenuItem>
+							)),
+						])}
+						<ListSubheader sx={{ fontSize: "0.66rem", letterSpacing: "0.09em", textTransform: "uppercase" }}>Referencia</ListSubheader>
+						{PINNED_VALUES.map((v) => (
+							<MenuItem key={v} value={v}>
+								{byValue(v).label}
+							</MenuItem>
+						))}
+					</Select>
+				</Box>
+
+				{/* Contenido */}
+				<Box sx={{ flexGrow: 1, minWidth: 0 }}>
+					{/* Franja de contexto: saca host, IP y estado del control de navegación */}
+					<Box
+						sx={{
+							px: { xs: 2, md: 3 },
+							py: 2,
+							borderBottom: `1px solid ${headerBorder(isDark)}`,
+							bgcolor: alpha(BRAND_BLUE, isDark ? 0.02 : 0.01),
+						}}
+					>
+						<Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ sm: "flex-start" }} gap={1.5}>
+							<Box sx={{ minWidth: 0 }}>
+								<Typography
+									variant="h5"
+									sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+								>
+									{current.label}
+								</Typography>
+								<Typography variant="body2" color="text.secondary" sx={{ mt: 0.4, maxWidth: "72ch" }}>
+									{current.description}
+								</Typography>
+							</Box>
+							{current.status && (
+								<Stack direction="row" spacing={0.75} alignItems="center" sx={{ flexShrink: 0 }}>
+									<Box sx={{ width: 7, height: 7, borderRadius: "50%", bgcolor: statusColor(current.status) }} />
+									<Typography variant="caption" sx={{ color: statusColor(current.status), fontWeight: 600, mr: 0.5 }}>
+										{current.status === "active" ? "Activo" : current.status === "inactive" ? "Inactivo" : "Error"}
+									</Typography>
+									{current.host && monoChip(current.host, "neutral")}
+									{current.ip && monoChip(current.ip, "info")}
+								</Stack>
+							)}
+						</Stack>
 					</Box>
 
-					{/* Contenido de las pestañas */}
-					<Box sx={{ bgcolor: theme.palette.background.paper }}>
-						{workerTabs.map((tab) => (
-							<TabPanel key={tab.value} value={activeTab} index={tab.value}>
-								{tab.component}
-							</TabPanel>
-						))}
-					</Box>
-				</Paper>
-			</Stack>
+					<Box>{PANELS[activeTab]}</Box>
+				</Box>
+			</Box>
 		</MainCard>
 	);
 };

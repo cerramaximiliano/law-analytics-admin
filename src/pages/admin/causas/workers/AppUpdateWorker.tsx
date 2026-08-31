@@ -36,6 +36,7 @@ import ManagerConfigPanel from "./ManagerConfigPanel";
 import PjnIncidentsPanel from "./PjnIncidentsPanel";
 import PjnHtmlDriftPanel from "./PjnHtmlDriftPanel";
 import WorkerStatistics from "./WorkerStatistics";
+import { useTabIndexParam } from "hooks/useTabParam";
 
 // Enums para el worker de actualización
 const UPDATE_MODE_OPTIONS = [
@@ -67,6 +68,9 @@ function TabPanel(props: TabPanelProps) {
 	);
 }
 
+// Slugs del sub-tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
+const SUB_TABS = ["manager", "workers", "estadisticas", "html-drift", "ayuda"] as const;
+
 const AppUpdateWorker = () => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
@@ -76,7 +80,7 @@ const AppUpdateWorker = () => {
 	const [editValues, setEditValues] = useState<Partial<WorkerConfig>>({});
 	const [advancedConfigOpen, setAdvancedConfigOpen] = useState(false);
 	const [selectedConfig, setSelectedConfig] = useState<WorkerConfig | null>(null);
-	const [activeTab, setActiveTab] = useState(0);
+	const [activeTab, setActiveTab] = useTabIndexParam("tab", SUB_TABS);
 
 	// Helper para obtener label del modo de actualización
 	const getUpdateModeLabel = (value: string) => {

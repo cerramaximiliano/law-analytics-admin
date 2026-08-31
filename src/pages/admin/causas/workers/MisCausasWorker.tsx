@@ -14,6 +14,7 @@ import CausasUpdateHistoryTab from "./CausasUpdateHistoryTab";
 import CausasUpdateStatsTab from "./CausasUpdateStatsTab";
 import CausasUpdateIncidentsTab from "./CausasUpdateIncidentsTab";
 import MisCausasBandejaTab from "./MisCausasBandejaTab";
+import { useTabIndexParam } from "hooks/useTabParam";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -38,12 +39,15 @@ function TabPanel(props: TabPanelProps) {
 	);
 }
 
+// Slugs del sub-tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
+const SUB_TABS = ["manager", "workers", "config-updates", "historial", "estadisticas", "incidencias", "bandeja", "ayuda"] as const;
+
 const MisCausasWorker: React.FC = () => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 	const [config, setConfig] = useState<ScrapingManagerConfig | null>(null);
 	const [loading, setLoading] = useState(true);
-	const [activeTab, setActiveTab] = useState(0);
+	const [activeTab, setActiveTab] = useTabIndexParam("tab", SUB_TABS);
 	const [updateConfig, setUpdateConfig] = useState<CausasUpdateConfig | null>(null);
 	const [updateConfigLoading, setUpdateConfigLoading] = useState(true);
 

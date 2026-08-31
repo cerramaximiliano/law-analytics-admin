@@ -69,6 +69,7 @@ import FueroStatsPanel from "./FueroStatsPanel";
 import CoveragePanel from "./CoveragePanel";
 import ScrapingStatsPanel from "./ScrapingStatsPanel";
 import { BRAND_BLUE } from "themes/dashboardTokens";
+import { useTabIndexParam } from "hooks/useTabParam";
 
 // Enums para el worker de scraping
 const FUERO_OPTIONS = [
@@ -83,6 +84,9 @@ const FUERO_OPTIONS = [
 // Años disponibles para filtros (de más reciente a más antiguo)
 const CURRENT_YEAR = new Date().getFullYear();
 const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - 2015 + 1 }, (_, i) => String(CURRENT_YEAR - i));
+
+// Slugs del sub-tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
+const SUB_TABS = ["configuraciones", "pm2", "historial", "cobertura", "estadisticas"] as const;
 
 const ScrapingWorker = () => {
 	const { enqueueSnackbar } = useSnackbar();
@@ -130,7 +134,7 @@ const ScrapingWorker = () => {
 	const [showExtraColumns, setShowExtraColumns] = useState<boolean>(false);
 
 	// Sub-tabs: Configuraciones vs Manager PM2
-	const [subTab, setSubTab] = useState<number>(0);
+	const [subTab, setSubTab] = useTabIndexParam("tab", SUB_TABS);
 
 	// Cargar configuraciones
 	const fetchConfigs = async (

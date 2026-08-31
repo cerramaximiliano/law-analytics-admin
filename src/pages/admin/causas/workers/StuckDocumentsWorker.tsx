@@ -39,6 +39,7 @@ import {
 } from "@mui/material";
 import { Setting2, Chart, DocumentText, Refresh, Edit2, Timer, TickCircle, CloseCircle, Warning2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
+import { useTabIndexParam } from "hooks/useTabParam";
 import StuckDocumentsService, {
 	StuckDocumentsConfig,
 	StuckDocumentsStats,
@@ -86,10 +87,13 @@ const formatDate = (dateStr?: string | null): string => {
 // Helper para nombres de días
 const dayNames = ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"];
 
+// Slugs del sub-tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
+const SUB_TABS = ["configuracion", "estadisticas", "logs", "pendientes"] as const;
+
 const StuckDocumentsWorker = () => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
-	const [activeTab, setActiveTab] = useState(0);
+	const [activeTab, setActiveTab] = useTabIndexParam("tab", SUB_TABS);
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
 

@@ -54,6 +54,7 @@ import {
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import CopyButton from "components/CopyButton";
+import { useTabIndexParam } from "hooks/useTabParam";
 import ExtraInfoConfigService, {
 	ExtraInfoConfig,
 	ExtraInfoStatus,
@@ -106,10 +107,13 @@ const formatDate = (dateStr?: string): string => {
 // Helper para nombres de días
 const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
+// Slugs del sub-tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
+const SUB_TABS = ["configuracion", "flujo", "estadisticas", "ayuda", "usuarios", "historial"] as const;
+
 const IntervinientesWorker = () => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
-	const [activeTab, setActiveTab] = useState(0);
+	const [activeTab, setActiveTab] = useTabIndexParam("tab", SUB_TABS);
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
 

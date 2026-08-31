@@ -30,6 +30,7 @@ import { useTheme } from "@mui/material/styles";
 import { Refresh, TickCircle, Warning2, Lock1, Setting2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { PrivacyCheckerService, PrivacyCheckerConfig, PrivacyCheckerLive, PrivacyCheckerFolder } from "api/privacyChecker";
+import { useTabParam } from "hooks/useTabParam";
 
 const FUEROS: Array<{ key: "CIV" | "CSS" | "CNT" | "COM"; label: string }> = [
 	{ key: "CIV", label: "Civil" },
@@ -37,6 +38,9 @@ const FUEROS: Array<{ key: "CIV" | "CSS" | "CNT" | "COM"; label: string }> = [
 	{ key: "CNT", label: "Trabajo" },
 	{ key: "COM", label: "Comercial" },
 ];
+
+// Slugs del sub-tab en la URL (?tab=...).
+const FOLDER_TABS = ["private", "pending", "tracked"] as const;
 
 const PrivacyCheckerWorker = () => {
 	const theme = useTheme();
@@ -58,7 +62,7 @@ const PrivacyCheckerWorker = () => {
 		COM: true,
 	});
 
-	const [foldersTab, setFoldersTab] = useState<"tracked" | "private" | "pending">("private");
+	const [foldersTab, setFoldersTab] = useTabParam("tab", FOLDER_TABS) as [(typeof FOLDER_TABS)[number], (v: string) => void];
 	const [folders, setFolders] = useState<PrivacyCheckerFolder[]>([]);
 	const [foldersLoading, setFoldersLoading] = useState(false);
 
