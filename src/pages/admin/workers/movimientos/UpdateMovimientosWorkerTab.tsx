@@ -628,7 +628,7 @@ function ManagerSection({
 	const sinVentana = (cfg.workEndHour ?? 24) - (cfg.workStartHour ?? 0) >= 24 && (cfg.workDays ?? []).length === 7;
 
 	return (
-		<Stack spacing={3}>
+		<Stack spacing={3} sx={{ maxWidth: 900 }}>
 			{/* La regla en castellano, con dónde estamos parados. Antes había que
 			    deducirla de cuatro campos numéricos con nombres crípticos. */}
 			<Paper
