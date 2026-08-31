@@ -226,3 +226,32 @@ export const buscarCausa = async (fuero: string, number: string, year: string, s
 		veredicto: (CandidatoConciliacion & { motivo?: string }) | null;
 	};
 };
+
+/**
+ * Lote de casos "claros": carátula sin relación con nombres completos en ambos
+ * lados. dryRun devuelve el conteo y una muestra; sin dryRun desvincula y, si
+ * el expediente actual del fallo apunta a otra causa cuya carátula coincide,
+ * lo re-aparea automáticamente con los gates nuevos.
+ */
+export interface LoteDryRun {
+	dryRun: true;
+	total: number;
+	muestra: Array<Pick<CandidatoConciliacion, "fuero" | "number" | "year" | "caratulaCausa" | "caratulaFallo" | "jaccard" | "flags">>;
+}
+export interface LoteResultado {
+	dryRun: false;
+	procesados: number;
+	desvinculados: number;
+	reapareados: number;
+	errores: Array<{ id: string; expte: string; error: string }>;
+}
+
+export const desvincularLote = async (opts: {
+	dryRun?: boolean;
+	jaccardMax?: number;
+	reintentarApareo?: boolean;
+	notas?: string;
+}): Promise<LoteDryRun | LoteResultado> => {
+	const { data } = await pjnAxios.post("/api/saij/conciliacion/desvincular-lote", opts);
+	return data.data;
+};

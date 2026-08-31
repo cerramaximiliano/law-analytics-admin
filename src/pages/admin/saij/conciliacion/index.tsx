@@ -40,6 +40,8 @@ import MainCard from "components/MainCard";
 import {
 	CandidatoConciliacion,
 	DetalleConciliacion,
+	LoteDryRun,
+	LoteResultado,
 	EstadoConciliacion,
 	FlagConciliacion,
 	ResumenConciliacion,
@@ -48,6 +50,7 @@ import {
 	desvincular as apiDesvincular,
 	escanear as apiEscanear,
 	ignorar as apiIgnorar,
+	desvincularLote as apiDesvincularLote,
 	listarCandidatos,
 	obtenerDetalle,
 	obtenerResumen,
@@ -105,6 +108,12 @@ const ConciliacionSaijPage = () => {
 	const [detalle, setDetalle] = useState<DetalleConciliacion | null>(null);
 	const [cargandoDetalle, setCargandoDetalle] = useState(false);
 	const [accionando, setAccionando] = useState(false);
+
+	// Lote de claros
+	const [loteAbierto, setLoteAbierto] = useState(false);
+	const [lotePreview, setLotePreview] = useState<LoteDryRun | null>(null);
+	const [loteResultado, setLoteResultado] = useState<LoteResultado | null>(null);
+	const [loteCorriendo, setLoteCorriendo] = useState(false);
 
 	// Re-apareo
 	const [reapareoAbierto, setReapareoAbierto] = useState(false);
@@ -177,6 +186,36 @@ const ConciliacionSaijPage = () => {
 		}
 	};
 
+	const abrirLote = async () => {
+		setLoteAbierto(true);
+		setLotePreview(null);
+		setLoteResultado(null);
+		try {
+			setLotePreview((await apiDesvincularLote({ dryRun: true })) as LoteDryRun);
+		} catch (e: any) {
+			enqueueSnackbar(e?.response?.data?.message || "No se pudo previsualizar el lote", { variant: "error" });
+			setLoteAbierto(false);
+		}
+	};
+
+	const ejecutarLote = async () => {
+		setLoteCorriendo(true);
+		try {
+			const r = (await apiDesvincularLote({ dryRun: false })) as LoteResultado;
+			setLoteResultado(r);
+			enqueueSnackbar(
+				`Lote listo: ${r.desvinculados} desvinculados, ${r.reapareados} reapareados a su causa correcta` +
+					(r.errores.length ? `, ${r.errores.length} errores` : ""),
+				{ variant: r.errores.length ? "warning" : "success" },
+			);
+			await refrescarTodo();
+		} catch (e: any) {
+			enqueueSnackbar(e?.response?.data?.message || "El lote falló", { variant: "error" });
+		} finally {
+			setLoteCorriendo(false);
+		}
+	};
+
 	const ejecutar = async (fn: () => Promise<unknown>, exito: string) => {
 		setAccionando(true);
 		try {
@@ -230,6 +269,9 @@ const ConciliacionSaijPage = () => {
 					</Button>
 					<Button size="small" variant="contained" onClick={lanzarEscaneo} disabled={escaneando}>
 						{escaneando ? "Escaneando…" : "Escanear apareos"}
+					</Button>
+					<Button size="small" color="error" variant="outlined" onClick={abrirLote}>
+						Desvincular claros…
 					</Button>
 				</Stack>
 			}
@@ -521,6 +563,58 @@ const ConciliacionSaijPage = () => {
 					>
 						Desvincular
 					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* ── Lote de claros ──────────────────────────────────────────────── */}
+			<Dialog open={loteAbierto} onClose={() => !loteCorriendo && setLoteAbierto(false)} maxWidth="md" fullWidth>
+				<DialogTitle>Desvincular los casos claros en lote</DialogTitle>
+				<DialogContent dividers>
+					{!lotePreview && !loteResultado && <CircularProgress size={22} />}
+					{lotePreview && !loteResultado && (
+						<>
+							<Alert severity="warning" sx={{ mb: 2 }}>
+								Se van a desvincular <strong>{lotePreview.total}</strong> apareos donde las carátulas no tienen relación y ambas
+								tienen nombres completos (sin la excusa de la anonimización ni de una carátula placeholder). Cada uno queda
+								respaldado en <code>saij-desvinculacion-backup</code>, la sentencia capturada recupera la carátula del propio
+								fallo (queda publicada sin causa) y su embedding se re-encola. Si el expediente actual del fallo apunta a otra
+								causa cuya carátula sí coincide, se re-aparea solo.
+							</Alert>
+							<Typography variant="caption" color="text.secondary" gutterBottom display="block">
+								Los peores de la muestra:
+							</Typography>
+							{lotePreview.muestra.map((m, i) => (
+								<Box key={i} sx={{ mb: 1, p: 1, bgcolor: alpha(theme.palette.error.main, 0.04), borderRadius: 1 }}>
+									<Typography variant="caption" display="block">
+										<strong>{m.fuero} {m.number}/{m.year}</strong> · jaccard {pct(m.jaccard)}
+									</Typography>
+									<Typography variant="caption" display="block">CAUSA: {m.caratulaCausa}</Typography>
+									<Typography variant="caption" display="block" color="text.secondary">FALLO: {m.caratulaFallo}</Typography>
+								</Box>
+							))}
+						</>
+					)}
+					{loteResultado && (
+						<Alert severity={loteResultado.errores.length ? "warning" : "success"}>
+							Procesados {loteResultado.procesados}: <strong>{loteResultado.desvinculados} desvinculados</strong> y{" "}
+							<strong>{loteResultado.reapareados} re-apareados</strong> a la causa que declara su expediente corregido.
+							{loteResultado.errores.length > 0 && (
+								<>
+									{" "}Errores: {loteResultado.errores.map((e) => `${e.expte} (${e.error})`).join(" · ")}
+								</>
+							)}
+						</Alert>
+					)}
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setLoteAbierto(false)} disabled={loteCorriendo}>
+						{loteResultado ? "Cerrar" : "Cancelar"}
+					</Button>
+					{!loteResultado && (
+						<Button color="error" variant="contained" onClick={ejecutarLote} disabled={loteCorriendo || !lotePreview}>
+							{loteCorriendo ? "Desvinculando…" : `Desvincular ${lotePreview?.total ?? ""}`}
+						</Button>
+					)}
 				</DialogActions>
 			</Dialog>
 
