@@ -75,6 +75,7 @@ const PlazosWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/worker
 const PlazosDatasetWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/plazos-dataset")));
 const PlazosPage = Loadable(lazyWithRetry(() => import("pages/admin/causas/plazos")));
 const SaijWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/saij")));
+const ConciliacionSaijPage = Loadable(lazyWithRetry(() => import("pages/admin/saij/conciliacion")));
 const CijurWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/cijur")));
 const SecloWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/seclo")));
 const InfolegWorkersPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/infoleg")));
@@ -369,6 +370,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<SaijWorkerPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "saij/conciliacion",
+							element: (
+								<AdminRoleGuard>
+									<ConciliacionSaijPage />
 								</AdminRoleGuard>
 							),
 						},

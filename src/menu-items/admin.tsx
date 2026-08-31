@@ -475,6 +475,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "saij-conciliacion",
+					title: "Conciliación SAIJ",
+					type: "item",
+					url: "/admin/saij/conciliacion",
+					breadcrumbs: true,
+				},
+				{
 					id: "workers-cijur",
 					title: "Worker CIJur",
 					type: "item",

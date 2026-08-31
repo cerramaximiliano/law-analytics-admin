@@ -1463,18 +1463,19 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 										<Table size="small">
 											<TableHead>
 												<TableRow>
-													<TableCell width="20%">Fecha/Hora</TableCell>
-													<TableCell width="15%">Tipo</TableCell>
-													<TableCell width="10%" align="center">
+													<TableCell width="14%">Fecha/Hora</TableCell>
+													<TableCell width="13%">Tipo</TableCell>
+													<TableCell width="8%" align="center">
 														Estado
 													</TableCell>
-													<TableCell width="12%" align="center">
+													<TableCell width="9%" align="center">
 														Mov. Added
 													</TableCell>
-													<TableCell width="12%" align="center">
+													<TableCell width="9%" align="center">
 														Mov. Total
 													</TableCell>
-													<TableCell width="15%">Origen</TableCell>
+													<TableCell width="12%">Origen</TableCell>
+													<TableCell width="25%">Motivo / autor</TableCell>
 													<TableCell width="10%" align="center">
 														Acciones
 													</TableCell>
@@ -1523,6 +1524,40 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 															</TableCell>
 															<TableCell>
 																<Typography variant="body2">{entry.source || "N/A"}</Typography>
+															</TableCell>
+															<TableCell>
+																{/* El flag `update` decide si la causa entra al circuito de
+																    actualización. Toda transición se registra con su motivo y
+																    su autor (worker, servicio del hub, o admin por email). */}
+																{entry.details?.previousUpdate !== undefined || entry.details?.newUpdate !== undefined ? (
+																	<Chip
+																		size="small"
+																		label={`update: ${String(entry.details?.previousUpdate ?? "?")} → ${String(entry.details?.newUpdate)}`}
+																		color={entry.details?.newUpdate ? "success" : "default"}
+																		variant="outlined"
+																		sx={{ mb: 0.5 }}
+																	/>
+																) : null}
+																{entry.details?.reason && (
+																	<Typography variant="caption" display="block">
+																		{entry.details.reason}
+																	</Typography>
+																)}
+																{entry.details?.actor && (
+																	<Typography variant="caption" color="text.secondary" display="block">
+																		por {entry.details.actor}
+																	</Typography>
+																)}
+																{entry.details?.saijDocId && (
+																	<Typography variant="caption" color="text.secondary" display="block">
+																		fallo SAIJ {String(entry.details.saijDocId).slice(-8)}
+																	</Typography>
+																)}
+																{!entry.details?.reason && !entry.details?.actor && entry.details?.message && (
+																	<Typography variant="caption" color="text.secondary">
+																		{entry.details.message}
+																	</Typography>
+																)}
 															</TableCell>
 															<TableCell align="center">
 																<Tooltip title="Eliminar entrada">
