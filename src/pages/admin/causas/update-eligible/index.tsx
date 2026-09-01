@@ -38,7 +38,7 @@ import {
 	Link,
 } from "@mui/material";
 import { Refresh, SearchNormal1, InfoCircle, Clock, TickCircle, CloseCircle, DocumentText, Setting2, ArrowDown2, ArrowUp2 } from "iconsax-react";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useSearchParams } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
@@ -82,7 +82,10 @@ const CausasUpdateEligiblePage = () => {
 	// Qué circuito de update:true se está mirando. "cache" = la cola real del
 	// update-movimientos-worker (rs0/worker_01); "atlas" = las causas de
 	// carpetas de usuarios del hub, que enciende associateFolderToCausa.
-	const [fuente, setFuente] = useState<FuenteElegibles>("cache");
+	// ?fuente=atlas preselecciona el tablero (lo usan los links "Ver los datos"
+	// de las vistas de configuración de cada worker).
+	const [searchParams] = useSearchParams();
+	const [fuente, setFuente] = useState<FuenteElegibles>(searchParams.get("fuente") === "atlas" ? "atlas" : "cache");
 	const [activeFuero, setActiveFuero] = useState<Fuero>("CIV");
 	const [stats, setStats] = useState<Record<Fuero, FueroStats> | null>(null);
 	const [statsLoading, setStatsLoading] = useState(true);
@@ -209,7 +212,7 @@ const CausasUpdateEligiblePage = () => {
 						<ToggleButtonGroup
 							size="small"
 							exclusive
-							sx={{ flexWrap: "wrap" }}
+							sx={{ width: { xs: "100%", sm: "auto" }, "& .MuiToggleButton-root": { flex: { xs: 1, sm: "initial" } } }}
 							value={fuente}
 							onChange={(_, v) => {
 								if (!v) return;

@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Box, Chip, Collapse, Stack, Typography, alpha, useTheme } from "@mui/material";
-import { ArrowDown2, ArrowUp2 } from "iconsax-react";
+import { Box, Button, Chip, Collapse, Stack, Typography, alpha, useTheme } from "@mui/material";
+import { ArrowDown2, ArrowUp2, DocumentText } from "iconsax-react";
+import { Link as RouterLink } from "react-router-dom";
 import MainCard from "components/MainCard";
 import UpdateMovimientosWorkerTab from "./UpdateMovimientosWorkerTab";
 import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
@@ -30,14 +31,25 @@ export default function MovimientosWorkerPage() {
 					<Typography variant="body1" color="text.secondary" sx={{ maxWidth: 720 }}>
 						Relee las causas que el pipeline de novedad marca para revisar y guarda los movimientos nuevos que aparecieron
 					</Typography>
-					<Chip
-						size="small"
-						variant="outlined"
-						onClick={() => setDetallesAbiertos((v) => !v)}
-						icon={detallesAbiertos ? <ArrowUp2 size={13} /> : <ArrowDown2 size={13} />}
-						label="Detalles técnicos"
-						sx={{ fontSize: "0.72rem", flexShrink: 0 }}
-					/>
+					<Stack direction="row" spacing={1} alignItems="center" flexShrink={0}>
+						<Button
+							size="small"
+							variant="outlined"
+							component={RouterLink}
+							to="/admin/causas/update-eligible"
+							startIcon={<DocumentText size={15} />}
+						>
+							Ver los datos
+						</Button>
+						<Chip
+							size="small"
+							variant="outlined"
+							onClick={() => setDetallesAbiertos((v) => !v)}
+							icon={detallesAbiertos ? <ArrowUp2 size={13} /> : <ArrowDown2 size={13} />}
+							label="Detalles técnicos"
+							sx={{ fontSize: "0.72rem", flexShrink: 0 }}
+						/>
+					</Stack>
 				</Stack>
 
 				<Collapse in={detallesAbiertos} unmountOnExit>
