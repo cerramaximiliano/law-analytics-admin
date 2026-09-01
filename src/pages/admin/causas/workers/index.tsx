@@ -59,7 +59,7 @@ interface WorkerTab {
 	 * dibuja la franja de contexto: así el par datos↔worker se declara una vez
 	 * acá y no lo reimplementa cada panel.
 	 */
-	dataView?: { to: string; labels?: { datos?: string; worker?: string }; tooltip?: string };
+	dataView?: { to: string; tooltip?: string };
 }
 
 // El rail agrupa por etapa del pipeline, no por orden histórico de aparición:
@@ -457,7 +457,7 @@ const WorkersConfig = () => {
 							</Box>
 							<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ flexShrink: 0 }}>
 								{current.dataView && (
-									<CrossViewPair side="worker" to={current.dataView.to} labels={current.dataView.labels} tooltip={current.dataView.tooltip} />
+									<CrossViewPair side="worker" to={current.dataView.to} tooltip={current.dataView.tooltip} />
 								)}
 								{current.status && (
 									<Stack direction="row" spacing={0.75} alignItems="center" sx={{ flexShrink: 0 }}>

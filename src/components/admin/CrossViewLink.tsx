@@ -27,6 +27,9 @@ import { BRAND_BLUE } from "themes/dashboardTokens";
  *
  * En pantallas chicas los dos segmentos no entran, así que colapsa a un solo
  * chip con la frase completa ("Ver los datos"), que se entiende sin el par.
+ *
+ * Las etiquetas no se pueden personalizar a propósito: el par se lee igual en
+ * todo el admin, y un "Flujo · Datos postales" suelto rompía esa lectura.
  */
 
 export type CrossViewSide = "datos" | "worker";
@@ -36,8 +39,6 @@ export interface CrossViewPairProps {
 	side: CrossViewSide;
 	/** Ruta de la otra mitad — la única que es link. */
 	to: string;
-	/** Para pares que no son "Datos"/"Worker" a secas (ej. "Datos postales"). */
-	labels?: Partial<Record<CrossViewSide, string>>;
 	/** Qué vas a encontrar del otro lado. */
 	tooltip?: string;
 }
@@ -49,13 +50,13 @@ const DEFAULT_TOOLTIP: Record<CrossViewSide, string> = {
 	worker: "Ir a la configuración del worker que extrae estos datos",
 };
 
-const CrossViewPair = ({ side, to, labels, tooltip }: CrossViewPairProps) => {
+const CrossViewPair = ({ side, to, tooltip }: CrossViewPairProps) => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
 	const compacto = useMediaQuery(theme.breakpoints.down("sm"));
 
 	const otro: CrossViewSide = side === "datos" ? "worker" : "datos";
-	const label = (s: CrossViewSide) => labels?.[s] ?? DEFAULT_LABELS[s];
+	const label = (s: CrossViewSide) => DEFAULT_LABELS[s];
 	const title = tooltip ?? DEFAULT_TOOLTIP[otro];
 
 	const activoBg = isDark ? "#3A6FE0" : BRAND_BLUE;
@@ -120,7 +121,7 @@ const CrossViewPair = ({ side, to, labels, tooltip }: CrossViewPairProps) => {
 						"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.22 : 0.16), color: azul },
 					}}
 				>
-					{labels?.[otro] ?? MOBILE_LABELS[otro]}
+					{MOBILE_LABELS[otro]}
 					{flecha}
 				</Box>
 			</Tooltip>

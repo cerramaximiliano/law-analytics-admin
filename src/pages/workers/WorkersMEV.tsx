@@ -2494,17 +2494,12 @@ const MEVWorkers = () => {
 
 	return (
 		<>
-			<MainCard>
+			<MainCard
+				title="Workers MEV"
+				subheader="Gestiona y configura los workers del sistema MEV"
+				secondary={<CrossViewPair side="worker" to="/admin/mev/verified-app" />}
+			>
 				<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-					<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1.5}>
-						<Box>
-							<Typography variant="h3">Workers MEV</Typography>
-							<Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-								Gestiona y configura los workers del sistema MEV
-							</Typography>
-						</Box>
-						<CrossViewPair side="worker" to="/admin/mev/verified-app" />
-					</Stack>
 
 					<Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
 						<Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: alpha(theme.palette.primary.main, 0.02) }}>

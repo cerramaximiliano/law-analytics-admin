@@ -97,7 +97,6 @@ const PostalWorkersFlow: React.FC = () => {
 				<CrossViewPair
 					side="worker"
 					to="/admin/postal-tracking"
-					labels={{ datos: "Datos postales", worker: "Flujo" }}
 					tooltip="Ir a seguimientos, historial, screenshots y salud del pipeline postal"
 				/>
 			</Stack>

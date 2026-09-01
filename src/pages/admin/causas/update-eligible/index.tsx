@@ -252,25 +252,25 @@ const CausasUpdateEligiblePage = () => {
 	const currentStats = useMemo(() => stats?.[activeFuero], [stats, activeFuero]);
 
 	return (
-		<MainCard>
+		<MainCard
+			title="Causas en Update"
+			secondary={
+				<CrossViewPair
+					side="datos"
+					to={fuente === "cache" ? "/admin/workers/movimientos" : "/admin/causas/workers?worker=app-update"}
+					tooltip={
+						fuente === "cache"
+							? "Ir al update-movimientos-worker, que consume esta cola"
+							: "Ir al worker de actualización que procesa las causas de carpetas"
+					}
+				/>
+			}
+		>
 			<Stack spacing={2}>
 				<Box>
-					<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
-						{/* El link al worker vive acá y no en la banda de stats: es navegación,
-						    no una métrica más. Y cuelga del título porque el worker de destino
-						    depende de la fuente elegida, que es el control de al lado. */}
-						<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
-							<Typography variant="h3">Causas en Update</Typography>
-							<CrossViewPair
-								side="datos"
-								to={fuente === "cache" ? "/admin/workers/movimientos" : "/admin/causas/workers?worker=app-update"}
-								tooltip={
-									fuente === "cache"
-										? "Ir al update-movimientos-worker, que consume esta cola"
-										: "Ir al worker de actualización que procesa las causas de carpetas"
-								}
-							/>
-						</Stack>
+					{/* El toggle de fuente queda solo en su fila: el título y el par al
+					    worker subieron al encabezado del card, como en el resto del admin. */}
+					<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent={{ sm: "flex-end" }}>
 						<ToggleButtonGroup
 							size="small"
 							exclusive
