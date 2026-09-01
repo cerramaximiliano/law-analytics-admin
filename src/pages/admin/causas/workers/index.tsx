@@ -141,6 +141,10 @@ const WORKER_TABS: WorkerTab[] = [
 		status: "active",
 		host: "worker-cloud-02",
 		ip: "100.102.208.69",
+		dataView: {
+			to: "/admin/causas/credentials",
+			tooltip: "Ir a las credenciales PJN con las que este worker entra al portal",
+		},
 	},
 	{
 		label: "Mis Causas · Updates",
@@ -150,6 +154,10 @@ const WORKER_TABS: WorkerTab[] = [
 		status: "active",
 		host: "worker-cloud-02",
 		ip: "100.102.208.69",
+		dataView: {
+			to: "/admin/causas/synced-credentials",
+			tooltip: "Ir a las causas que este worker sincronizó por credencial",
+		},
 	},
 	{
 		label: "Privacy checker",
