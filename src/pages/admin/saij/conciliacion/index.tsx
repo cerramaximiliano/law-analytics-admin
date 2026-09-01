@@ -482,11 +482,24 @@ const ConciliacionSaijPage = () => {
 										</Tooltip>
 										<Chip size="small" label={detalle.fallo?.expediente?.source || "?"} variant="outlined" />
 									</Stack>
-									{detalle.fallo?.url && (
-										<Link href={detalle.fallo.url} target="_blank" rel="noopener" variant="caption">
-											<DocumentText size={13} style={{ verticalAlign: "middle", marginRight: 4 }} />
-											Ver el fallo en SAIJ
-										</Link>
+									<Stack direction="row" spacing={2}>
+										{detalle.fallo?.url && (
+											<Link href={detalle.fallo.url} target="_blank" rel="noopener" variant="caption">
+												<DocumentText size={13} style={{ verticalAlign: "middle", marginRight: 4 }} />
+												Ver el fallo en SAIJ
+											</Link>
+										)}
+										{detalle.fallo?.pdfUrl && (
+											<Link href={detalle.fallo.pdfUrl} target="_blank" rel="noopener" variant="caption" fontWeight={600}>
+												<DocumentText size={13} style={{ verticalAlign: "middle", marginRight: 4 }} />
+												PDF del fallo
+											</Link>
+										)}
+									</Stack>
+									{!detalle.fallo?.pdfUrl && !detalle.fallo?.url && (
+										<Typography variant="caption" color="text.secondary">
+											El fallo no tiene URL ni PDF registrados.
+										</Typography>
 									)}
 									<Divider sx={{ my: 1.5 }} />
 									<Typography variant="caption" color="text.secondary">
