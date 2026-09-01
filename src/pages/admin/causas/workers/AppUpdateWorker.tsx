@@ -1,6 +1,6 @@
 import React from "react";
-import { useState, useEffect } from "react";
 import { Link as RouterLink } from "react-router-dom";
+import { useState, useEffect } from "react";
 import {
 	Box,
 	Card,
@@ -24,8 +24,6 @@ import {
 	Skeleton,
 	Chip,
 	LinearProgress,
-	Tabs,
-	Tab,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { Edit2, TickCircle, CloseCircle, Refresh, Setting2, InfoCircle, Chart, People, MessageQuestion, Code1 } from "iconsax-react";
@@ -38,6 +36,7 @@ import PjnIncidentsPanel from "./PjnIncidentsPanel";
 import PjnHtmlDriftPanel from "./PjnHtmlDriftPanel";
 import WorkerStatistics from "./WorkerStatistics";
 import { useTabIndexParam } from "hooks/useTabParam";
+import WorkerSubTabs, { SubTabDef } from "./WorkerSubTabs";
 
 // Enums para el worker de actualización
 const UPDATE_MODE_OPTIONS = [
@@ -45,32 +44,16 @@ const UPDATE_MODE_OPTIONS = [
 	{ value: "single", label: "Documento único" },
 ];
 
-// Interfaz para tabs laterales
-interface TabPanelProps {
-	children?: React.ReactNode;
-	index: number;
-	value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-	const { children, value, index, ...other } = props;
-
-	return (
-		<div
-			role="tabpanel"
-			hidden={value !== index}
-			id={`vertical-tabpanel-${index}`}
-			aria-labelledby={`vertical-tab-${index}`}
-			style={{ width: "100%" }}
-			{...other}
-		>
-			{value === index && <Box sx={{ pl: { xs: 0, md: 3 }, pt: { xs: 2, md: 0 } }}>{children}</Box>}
-		</div>
-	);
-}
-
 // Slugs del sub-tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
 const SUB_TABS = ["manager", "workers", "estadisticas", "html-drift", "ayuda"] as const;
+
+const TAB_DEFS: SubTabDef[] = [
+	{ label: "Manager", icon: <Setting2 size={18} />, hint: "Config. general" },
+	{ label: "Workers", icon: <People size={18} />, hint: "Config. por worker" },
+	{ label: "Estadísticas", icon: <Chart size={18} />, hint: "Por fuero y día" },
+	{ label: "HTML drift", icon: <Code1 size={18} />, hint: "Cambios en la estructura del PJN" },
+	{ label: "Ayuda", icon: <MessageQuestion size={18} />, hint: "Guía de uso" },
+];
 
 const AppUpdateWorker = () => {
 	const theme = useTheme();
@@ -202,10 +185,6 @@ const AppUpdateWorker = () => {
 	const handleCloseAdvancedConfig = () => {
 		setAdvancedConfigOpen(false);
 		setSelectedConfig(null);
-	};
-
-	const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-		setActiveTab(newValue);
 	};
 
 	// Contenido del tab de Manager
@@ -576,146 +555,31 @@ const AppUpdateWorker = () => {
 	}
 
 	return (
-		<Stack spacing={2}>
-			{/* Header */}
-			<Box display="flex" justifyContent="space-between" alignItems="center">
-				<Typography variant="h5">Worker de Actualización (App)</Typography>
-				<Box display="flex" gap={1}>
-					<Button variant="outlined" size="small" component={RouterLink} to="/admin/causas/update-eligible?fuente=atlas">
-						Ver los datos
-					</Button>
-					<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchConfigs}>
-						Actualizar
-					</Button>
-				</Box>
-			</Box>
+		<Box>
+			<WorkerSubTabs value={activeTab} onChange={setActiveTab} tabs={TAB_DEFS} aria-label="Secciones del worker de actualización" />
 
-			{/* Información del worker */}
-			<Alert severity="info" variant="outlined" sx={{ py: 1 }}>
-				<Typography variant="body2">
-					Este worker mantiene actualizados los documentos de causas judiciales, verificando periódicamente cambios en los expedientes.
-				</Typography>
-			</Alert>
+			<Box sx={{ p: { xs: 2, md: 3 } }}>
+				<Stack spacing={2}>
+					<Box display="flex" justifyContent="flex-end" gap={1}>
+						<Button
+							variant="outlined"
+							size="small"
+							component={RouterLink}
+							to="/admin/causas/update-eligible?fuente=atlas"
+						>
+							Ver los datos
+						</Button>
+						<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchConfigs}>
+							Actualizar
+						</Button>
+					</Box>
 
-			{/* Layout con tabs laterales */}
-			<Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" } }}>
-				{/* Tabs laterales */}
-				<Tabs
-					orientation="vertical"
-					variant="scrollable"
-					value={activeTab}
-					onChange={handleTabChange}
-					sx={{
-						borderRight: { md: 1 },
-						borderBottom: { xs: 1, md: 0 },
-						borderColor: "divider",
-						minWidth: { md: 200 },
-						"& .MuiTab-root": {
-							alignItems: "flex-start",
-							textAlign: "left",
-							minHeight: 60,
-							px: 2,
-						},
-					}}
-				>
-					<Tab
-						label={
-							<Stack direction="row" spacing={1.5} alignItems="center">
-								<Setting2 size={20} />
-								<Box>
-									<Typography variant="body2" fontWeight={500}>
-										Manager
-									</Typography>
-									<Typography variant="caption" color="text.secondary">
-										Config. general
-									</Typography>
-								</Box>
-							</Stack>
-						}
-						sx={{ textTransform: "none" }}
-					/>
-					<Tab
-						label={
-							<Stack direction="row" spacing={1.5} alignItems="center">
-								<People size={20} />
-								<Box>
-									<Typography variant="body2" fontWeight={500}>
-										Workers
-									</Typography>
-									<Typography variant="caption" color="text.secondary">
-										Config. workers
-									</Typography>
-								</Box>
-							</Stack>
-						}
-						sx={{ textTransform: "none" }}
-					/>
-					<Tab
-						label={
-							<Stack direction="row" spacing={1.5} alignItems="center">
-								<Chart size={20} />
-								<Box>
-									<Typography variant="body2" fontWeight={500}>
-										Estadísticas
-									</Typography>
-									<Typography variant="caption" color="text.secondary">
-										Por fuero y día
-									</Typography>
-								</Box>
-							</Stack>
-						}
-						sx={{ textTransform: "none" }}
-					/>
-					<Tab
-						label={
-							<Stack direction="row" spacing={1.5} alignItems="center">
-								<Code1 size={20} />
-								<Box>
-									<Typography variant="body2" fontWeight={500}>
-										HTML Drift
-									</Typography>
-									<Typography variant="caption" color="text.secondary">
-										Estructura del PJN
-									</Typography>
-								</Box>
-							</Stack>
-						}
-						sx={{ textTransform: "none" }}
-					/>
-					<Tab
-						label={
-							<Stack direction="row" spacing={1.5} alignItems="center">
-								<MessageQuestion size={20} />
-								<Box>
-									<Typography variant="body2" fontWeight={500}>
-										Ayuda
-									</Typography>
-									<Typography variant="caption" color="text.secondary">
-										Guía de uso
-									</Typography>
-								</Box>
-							</Stack>
-						}
-						sx={{ textTransform: "none" }}
-					/>
-				</Tabs>
-
-				{/* Contenido de los tabs */}
-				<TabPanel value={activeTab} index={0}>
-					<ManagerContent />
-				</TabPanel>
-				<TabPanel value={activeTab} index={1}>
-					<WorkersContent />
-				</TabPanel>
-				<TabPanel value={activeTab} index={2}>
-					<WorkerStatistics />
-				</TabPanel>
-				<TabPanel value={activeTab} index={3}>
-					<PjnHtmlDriftPanel />
-				</TabPanel>
-				<TabPanel value={activeTab} index={4}>
-					<HelpContent />
-				</TabPanel>
+					{activeTab === 0 && <ManagerContent />}
+					{activeTab === 1 && <WorkersContent />}
+					{activeTab === 2 && <WorkerStatistics />}
+					{activeTab === 3 && <PjnHtmlDriftPanel />}
+					{activeTab === 4 && <HelpContent />}
+				</Stack>
 			</Box>
 
 			{/* Modal de configuración avanzada */}
@@ -728,7 +592,7 @@ const AppUpdateWorker = () => {
 					workerType="app-update"
 				/>
 			)}
-		</Stack>
+		</Box>
 	);
 };
 

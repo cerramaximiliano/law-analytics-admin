@@ -363,20 +363,13 @@ const CaptchaLabelingMode = ({ open, onClose }: Props) => {
 						/>
 
 						<Typography variant="caption" color="text.secondary" align="center">
-							Escribí los 4 dígitos: guarda y pasa al siguiente automáticamente.
-							{" "}Espacio para saltear · <b>I</b> si no se lee · <b>Z</b> o tocar la imagen para la lupa.
+							Escribí los 4 dígitos: guarda y pasa al siguiente automáticamente. Espacio para saltear · <b>I</b> si no se lee · <b>Z</b> o
+							tocar la imagen para la lupa.
 							{actual.label ? ` El proveedor había leído "${actual.label}" y el PJN lo rechazó.` : ""}
 						</Typography>
 
 						<Stack direction={esMovil ? "column" : "row"} spacing={1.5} sx={{ width: "100%" }}>
-							<Button
-								variant="outlined"
-								fullWidth
-								endIcon={<ArrowRight size={18} />}
-								onClick={avanzar}
-								disabled={guardando}
-								size="large"
-							>
+							<Button variant="outlined" fullWidth endIcon={<ArrowRight size={18} />} onClick={avanzar} disabled={guardando} size="large">
 								Saltear
 							</Button>
 							<Button

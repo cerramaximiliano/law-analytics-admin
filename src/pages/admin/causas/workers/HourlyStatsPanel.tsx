@@ -77,12 +77,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, color
 						{loading ? (
 							<Skeleton width={60} height={32} />
 						) : (
-							<Typography
-								variant="h4"
-								fontWeight={600}
-								color={color}
-								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
-							>
+							<Typography variant="h4" fontWeight={600} color={color} sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
 								{typeof value === "number" ? value.toLocaleString("es-AR") : value}
 							</Typography>
 						)}

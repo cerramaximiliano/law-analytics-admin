@@ -202,9 +202,6 @@ const VerificationWorker = () => {
 			{/* Header con acciones */}
 			<Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
 				<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-					<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
-						Configuración del worker de verificación
-					</Typography>
 					{managerStatus?.pjnSiteStatus && managerStatus.pjnSiteStatus.status !== "unknown" && (
 						<Tooltip
 							title={
@@ -537,7 +534,11 @@ const VerificationWorker = () => {
 							<Typography variant="subtitle2" color="text.secondary" gutterBottom>
 								Workers activos
 							</Typography>
-							<Typography variant="h4" color="success.main" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+							<Typography
+								variant="h4"
+								color="success.main"
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+							>
 								{configs.filter((c) => c.enabled).length}
 							</Typography>
 						</CardContent>
@@ -561,7 +562,11 @@ const VerificationWorker = () => {
 							<Typography variant="subtitle2" color="text.secondary" gutterBottom>
 								Tasa de éxito
 							</Typography>
-							<Typography variant="h4" color="info.main" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+							<Typography
+								variant="h4"
+								color="info.main"
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+							>
 								{(() => {
 									const total = configs.reduce((acc, c) => acc + (c.documents_verified || 0), 0);
 									const valid = configs.reduce((acc, c) => acc + (c.documents_valid || 0), 0);

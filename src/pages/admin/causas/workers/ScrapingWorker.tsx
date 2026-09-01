@@ -35,8 +35,6 @@ import {
 	DialogActions,
 	TableSortLabel,
 	Popover,
-	Tabs,
-	Tab,
 } from "@mui/material";
 import {
 	Edit2,
@@ -68,8 +66,8 @@ import RangeHistoryPanel from "./RangeHistoryPanel";
 import FueroStatsPanel from "./FueroStatsPanel";
 import CoveragePanel from "./CoveragePanel";
 import ScrapingStatsPanel from "./ScrapingStatsPanel";
-import { BRAND_BLUE } from "themes/dashboardTokens";
 import { useTabIndexParam } from "hooks/useTabParam";
+import WorkerSubTabs, { SubTabDef } from "./WorkerSubTabs";
 
 // Enums para el worker de scraping
 const FUERO_OPTIONS = [
@@ -87,6 +85,14 @@ const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - 2015 + 1 }, (_, i) => S
 
 // Slugs del sub-tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
 const SUB_TABS = ["configuraciones", "pm2", "historial", "cobertura", "estadisticas"] as const;
+
+const TAB_DEFS: SubTabDef[] = [
+	{ label: "Configuraciones", icon: <Setting4 size={18} />, hint: "Gestión de workers" },
+	{ label: "Control PM2", icon: <Cpu size={18} />, hint: "Estado y operaciones" },
+	{ label: "Historial", icon: <Clock size={18} />, hint: "Rangos completados" },
+	{ label: "Cobertura", icon: <Map1 size={18} />, hint: "Períodos faltantes" },
+	{ label: "Estadísticas", icon: <ChartSquare size={18} />, hint: "Captchas y documentos" },
+];
 
 const ScrapingWorker = () => {
 	const { enqueueSnackbar } = useSnackbar();
@@ -558,54 +564,8 @@ const ScrapingWorker = () => {
 
 	return (
 		<>
-			<Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" } }}>
-				<Tabs
-					orientation="vertical"
-					variant="scrollable"
-					value={subTab}
-					onChange={(_, v) => setSubTab(v)}
-					sx={{
-						borderRight: { md: 1 },
-						borderBottom: { xs: 1, md: 0 },
-						borderColor: "divider",
-						minWidth: { md: 200 },
-						"& .MuiTab-root": {
-							textTransform: "none",
-							alignItems: "flex-start",
-							minHeight: 64,
-							px: 2,
-						},
-						"& .MuiTabs-indicator": { width: 2.5, backgroundColor: BRAND_BLUE },
-						"& .Mui-selected": { color: `${BRAND_BLUE} !important` },
-					}}
-				>
-					{(
-						[
-							{ label: "Configuraciones", subtitle: "Gestión de workers", icon: <Setting4 size={20} /> },
-							{ label: "Control PM2", subtitle: "Estado y operaciones", icon: <Cpu size={20} /> },
-							{ label: "Historial", subtitle: "Rangos completados", icon: <Clock size={20} /> },
-							{ label: "Cobertura", subtitle: "Períodos faltantes", icon: <Map1 size={20} /> },
-							{ label: "Estadísticas", subtitle: "Captchas y documentos", icon: <ChartSquare size={20} /> },
-						] as { label: string; subtitle: string; icon: React.ReactNode }[]
-					).map((tab, i) => (
-						<Tab
-							key={i}
-							label={
-								<Stack direction="row" spacing={1.5} alignItems="center">
-									{tab.icon}
-									<Box textAlign="left">
-										<Typography variant="body2" fontWeight={500}>
-											{tab.label}
-										</Typography>
-										<Typography variant="caption" color="text.secondary">
-											{tab.subtitle}
-										</Typography>
-									</Box>
-								</Stack>
-							}
-						/>
-					))}
-				</Tabs>
+			<Box sx={{ display: "flex", flexDirection: "column" }}>
+				<WorkerSubTabs value={subTab} onChange={setSubTab} tabs={TAB_DEFS} aria-label="Secciones del worker de scraping" />
 
 				<Box sx={{ flexGrow: 1, minWidth: 0 }}>
 					{subTab === 1 && (
@@ -643,17 +603,9 @@ const ScrapingWorker = () => {
 								gap={2}
 							>
 								<Stack direction="row" alignItems="center" spacing={1}>
-									<Typography
-										variant="h5"
-										sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
-									>
-										Configuración del worker de scraping
-									</Typography>
-									<Tooltip title="Ver información">
-										<IconButton size="small" color="info" onClick={(e) => setInfoAnchorEl(e.currentTarget)}>
-											<InfoCircle size={20} />
-										</IconButton>
-									</Tooltip>
+									<Button size="small" color="info" startIcon={<InfoCircle size={18} />} onClick={(e) => setInfoAnchorEl(e.currentTarget)}>
+										Cómo funciona
+									</Button>
 									<Popover
 										open={Boolean(infoAnchorEl)}
 										anchorEl={infoAnchorEl}

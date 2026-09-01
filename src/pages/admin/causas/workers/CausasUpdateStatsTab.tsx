@@ -77,7 +77,10 @@ const CausasUpdateStatsTab: React.FC = () => {
 		<Stack spacing={3}>
 			{/* Header */}
 			<Stack direction="row" justifyContent="space-between" alignItems="center">
-				<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+				<Typography
+					variant="h5"
+					sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+				>
 					Estadísticas del worker
 				</Typography>
 				<Button startIcon={<Refresh size={18} />} onClick={fetchStats} size="small" variant="outlined">
@@ -90,7 +93,11 @@ const CausasUpdateStatsTab: React.FC = () => {
 				<Grid item xs={6} sm={3}>
 					<Card variant="outlined">
 						<CardContent sx={{ textAlign: "center", py: 2 }}>
-							<Typography variant="h4" color="primary.main" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+							<Typography
+								variant="h4"
+								color="primary.main"
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+							>
 								{today.totalRuns}
 							</Typography>
 							<Typography variant="caption" color="text.secondary">
@@ -102,7 +109,11 @@ const CausasUpdateStatsTab: React.FC = () => {
 				<Grid item xs={6} sm={3}>
 					<Card variant="outlined">
 						<CardContent sx={{ textAlign: "center", py: 2 }}>
-							<Typography variant="h4" color="success.main" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+							<Typography
+								variant="h4"
+								color="success.main"
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+							>
 								{today.causasUpdated}
 							</Typography>
 							<Typography variant="caption" color="text.secondary">
@@ -114,7 +125,11 @@ const CausasUpdateStatsTab: React.FC = () => {
 				<Grid item xs={6} sm={3}>
 					<Card variant="outlined">
 						<CardContent sx={{ textAlign: "center", py: 2 }}>
-							<Typography variant="h4" color="info.main" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
+							<Typography
+								variant="h4"
+								color="info.main"
+								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
+							>
 								{today.newMovimientos}
 							</Typography>
 							<Typography variant="caption" color="text.secondary">

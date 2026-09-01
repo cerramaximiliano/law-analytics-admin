@@ -17,7 +17,8 @@ const NotificationWorker = () => {
 					Próximamente podrás configurar
 				</Typography>
 				<Typography variant="body2" color="text.primary" sx={{ lineHeight: 1.8 }}>
-					Tipos de notificaciones · Canales de envío (email, SMS, push) · Horarios de envío · Plantillas de mensajes · Reglas de notificación
+					Tipos de notificaciones · Canales de envío (email, SMS, push) · Horarios de envío · Plantillas de mensajes · Reglas de
+					notificación
 				</Typography>
 			</Box>
 		</Stack>

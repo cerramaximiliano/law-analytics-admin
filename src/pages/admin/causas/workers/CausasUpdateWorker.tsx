@@ -146,7 +146,10 @@ const CausasUpdateWorker: React.FC = () => {
 					</TabPanel>
 					<TabPanel value={activeTab} index={3}>
 						<Stack spacing={2}>
-							<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+							<Typography
+								variant="h5"
+								sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+							>
 								Guía del worker de actualización de causas
 							</Typography>
 							<Alert severity="info" variant="outlined">

@@ -101,8 +101,8 @@ const MisCausasBandejaTab: React.FC = () => {
 	const effectiveMode = enabled
 		? "Procesa TODAS las credenciales habilitadas + verificadas + válidas."
 		: testEmails.length > 0
-			? `Deshabilitado, pero procesa SOLO los ${testEmails.length} email(s) de prueba.`
-			: "Deshabilitado: el worker no procesa ninguna credencial.";
+		? `Deshabilitado, pero procesa SOLO los ${testEmails.length} email(s) de prueba.`
+		: "Deshabilitado: el worker no procesa ninguna credencial.";
 
 	return (
 		<Stack spacing={3}>

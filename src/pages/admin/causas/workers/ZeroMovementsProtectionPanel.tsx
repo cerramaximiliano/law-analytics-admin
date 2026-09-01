@@ -105,8 +105,8 @@ const ZeroMovementsProtectionPanel: React.FC = () => {
 		<Stack spacing={2}>
 			<Alert severity="info" icon={<InfoCircle size={20} />}>
 				<Typography variant="body2">
-					Causas en las que se activó la <strong>protección anti-eliminación</strong>: el sitio del PJN devolvió 0 movimientos cuando la BD tenía
-					al menos 1. El conteo es histórico y no se resetea — sirve para detectar causas crónicas con problemas de scraping.
+					Causas en las que se activó la <strong>protección anti-eliminación</strong>: el sitio del PJN devolvió 0 movimientos cuando la BD
+					tenía al menos 1. El conteo es histórico y no se resetea — sirve para detectar causas crónicas con problemas de scraping.
 				</Typography>
 			</Alert>
 
@@ -114,7 +114,10 @@ const ZeroMovementsProtectionPanel: React.FC = () => {
 				<Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} sx={{ mb: 2 }}>
 					<Stack direction="row" alignItems="center" spacing={1}>
 						<ShieldCross size={20} color={theme.palette.warning.main} />
-						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+						<Typography
+							variant="h5"
+							sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+						>
 							Protección anti-eliminación activada
 						</Typography>
 						<Chip label={`${total} causas`} size="small" color="warning" />
@@ -155,7 +158,11 @@ const ZeroMovementsProtectionPanel: React.FC = () => {
 								<TableCell sx={{ maxWidth: 300 }}>Carátula</TableCell>
 								<TableCell align="right">Movs BD</TableCell>
 								<TableCell align="right" sortDirection={sortBy === "count" ? sortOrder : false}>
-									<TableSortLabel active={sortBy === "count"} direction={sortBy === "count" ? sortOrder : "desc"} onClick={() => handleSort("count")}>
+									<TableSortLabel
+										active={sortBy === "count"}
+										direction={sortBy === "count" ? sortOrder : "desc"}
+										onClick={() => handleSort("count")}
+									>
 										Veces
 									</TableSortLabel>
 								</TableCell>
@@ -169,7 +176,11 @@ const ZeroMovementsProtectionPanel: React.FC = () => {
 									</TableSortLabel>
 								</TableCell>
 								<TableCell sortDirection={sortBy === "lastAt" ? sortOrder : false}>
-									<TableSortLabel active={sortBy === "lastAt"} direction={sortBy === "lastAt" ? sortOrder : "desc"} onClick={() => handleSort("lastAt")}>
+									<TableSortLabel
+										active={sortBy === "lastAt"}
+										direction={sortBy === "lastAt" ? sortOrder : "desc"}
+										onClick={() => handleSort("lastAt")}
+									>
 										Última activación
 									</TableSortLabel>
 								</TableCell>
@@ -177,62 +188,62 @@ const ZeroMovementsProtectionPanel: React.FC = () => {
 							</TableRow>
 						</TableHead>
 						<TableBody>
-							{loading
-								? Array.from({ length: 5 }).map((_, i) => (
-										<TableRow key={i}>
-											{Array.from({ length: 8 }).map((__, j) => (
-												<TableCell key={j}>
-													<Skeleton variant="text" />
-												</TableCell>
-											))}
-										</TableRow>
-								  ))
-								: causas.length === 0
-								? (
-										<TableRow>
-											<TableCell colSpan={8} align="center">
-												<Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
-													No hay causas con la protección activada.
+							{loading ? (
+								Array.from({ length: 5 }).map((_, i) => (
+									<TableRow key={i}>
+										{Array.from({ length: 8 }).map((__, j) => (
+											<TableCell key={j}>
+												<Skeleton variant="text" />
+											</TableCell>
+										))}
+									</TableRow>
+								))
+							) : causas.length === 0 ? (
+								<TableRow>
+									<TableCell colSpan={8} align="center">
+										<Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
+											No hay causas con la protección activada.
+										</Typography>
+									</TableCell>
+								</TableRow>
+							) : (
+								causas.map((c) => {
+									const zmp = c.scrapingProgress?.zeroMovementsProtection;
+									return (
+										<TableRow key={getCausaId(c)} hover>
+											<TableCell>
+												<Chip label={c.fuero || "?"} size="small" />
+											</TableCell>
+											<TableCell>
+												<Typography variant="body2" fontWeight="medium">
+													{c.number}/{c.year}
 												</Typography>
 											</TableCell>
-										</TableRow>
-								  )
-								: causas.map((c) => {
-										const zmp = c.scrapingProgress?.zeroMovementsProtection;
-										return (
-											<TableRow key={getCausaId(c)} hover>
-												<TableCell>
-													<Chip label={c.fuero || "?"} size="small" />
-												</TableCell>
-												<TableCell>
-													<Typography variant="body2" fontWeight="medium">
-														{c.number}/{c.year}
+											<TableCell sx={{ maxWidth: 300 }}>
+												<Tooltip title={c.caratula || ""}>
+													<Typography
+														variant="body2"
+														sx={{
+															overflow: "hidden",
+															textOverflow: "ellipsis",
+															whiteSpace: "nowrap",
+														}}
+													>
+														{c.caratula || "—"}
 													</Typography>
-												</TableCell>
-												<TableCell sx={{ maxWidth: 300 }}>
-													<Tooltip title={c.caratula || ""}>
-														<Typography
-															variant="body2"
-															sx={{
-																overflow: "hidden",
-																textOverflow: "ellipsis",
-																whiteSpace: "nowrap",
-															}}
-														>
-															{c.caratula || "—"}
-														</Typography>
-													</Tooltip>
-												</TableCell>
-												<TableCell align="right">{c.movimientosCount ?? "—"}</TableCell>
-												<TableCell align="right">
-													<Chip label={zmp?.count ?? 0} size="small" color={(zmp?.count ?? 0) >= 5 ? "error" : "warning"} />
-												</TableCell>
-												<TableCell align="right">{zmp?.lastBdCount ?? "—"}</TableCell>
-												<TableCell>{renderDate(zmp?.lastAt)}</TableCell>
-												<TableCell>{renderDate(c.lastUpdate)}</TableCell>
-											</TableRow>
-										);
-								  })}
+												</Tooltip>
+											</TableCell>
+											<TableCell align="right">{c.movimientosCount ?? "—"}</TableCell>
+											<TableCell align="right">
+												<Chip label={zmp?.count ?? 0} size="small" color={(zmp?.count ?? 0) >= 5 ? "error" : "warning"} />
+											</TableCell>
+											<TableCell align="right">{zmp?.lastBdCount ?? "—"}</TableCell>
+											<TableCell>{renderDate(zmp?.lastAt)}</TableCell>
+											<TableCell>{renderDate(c.lastUpdate)}</TableCell>
+										</TableRow>
+									);
+								})
+							)}
 						</TableBody>
 					</Table>
 				</TableContainer>

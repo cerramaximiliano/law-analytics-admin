@@ -34,31 +34,10 @@ import {
 	TextField,
 	Divider,
 } from "@mui/material";
-import {
-	Refresh2,
-	Warning2,
-	TickCircle,
-	Activity,
-	Code1,
-	InfoCircle,
-	CloseCircle,
-} from "iconsax-react";
+import { Refresh2, Warning2, TickCircle, Activity, Code1, InfoCircle, CloseCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import {
-	LineChart,
-	Line,
-	XAxis,
-	YAxis,
-	Tooltip as RechartsTooltip,
-	ResponsiveContainer,
-	CartesianGrid,
-} from "recharts";
-import {
-	HtmlDriftService,
-	HtmlDriftIncident,
-	HtmlDriftListSummary,
-	FingerprintStats,
-} from "api/htmlDrift";
+import { LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { HtmlDriftService, HtmlDriftIncident, HtmlDriftListSummary, FingerprintStats } from "api/htmlDrift";
 
 const REFRESH_INTERVAL_MS = 30_000;
 
@@ -196,10 +175,7 @@ const PjnHtmlDriftPanel: React.FC = () => {
 	// Derivados para los stat cards.
 	const openCount = summary?.openCount ?? 0;
 	const openCritical = summary?.openCritical ?? 0;
-	const totalInWindow = useMemo(
-		() => (summary?.byType || []).reduce((acc, t) => acc + t.total, 0),
-		[summary],
-	);
+	const totalInWindow = useMemo(() => (summary?.byType || []).reduce((acc, t) => acc + t.total, 0), [summary]);
 	const avgSpans = stats?.avgTotalSpans ?? 0;
 
 	const driftTypes = useMemo(() => {
@@ -215,7 +191,10 @@ const PjnHtmlDriftPanel: React.FC = () => {
 				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
 					<Stack direction="row" spacing={1} alignItems="center">
 						<Code1 size={20} color={theme.palette.primary.main} />
-						<Typography variant="h5" sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}>
+						<Typography
+							variant="h5"
+							sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
+						>
 							HTML structure drift
 						</Typography>
 						<Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
@@ -224,13 +203,7 @@ const PjnHtmlDriftPanel: React.FC = () => {
 					</Stack>
 					<Stack direction="row" spacing={1} alignItems="center">
 						<FormControlLabel
-							control={
-								<Switch
-									size="small"
-									checked={autoRefresh}
-									onChange={(e) => setAutoRefresh(e.target.checked)}
-								/>
-							}
+							control={<Switch size="small" checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} />}
 							label={<Typography variant="caption">Auto 30s</Typography>}
 						/>
 						<Tooltip title="Recargar">
@@ -288,7 +261,11 @@ const PjnHtmlDriftPanel: React.FC = () => {
 							<Typography variant="h6" sx={{ fontWeight: 600 }}>
 								{relativeFrom(summary?.lastEventAt ?? null)}
 							</Typography>
-							<Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>
+							<Typography
+								variant="caption"
+								color="text.secondary"
+								sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}
+							>
 								{summary?.lastEventType || "—"}
 							</Typography>
 						</Paper>
@@ -312,11 +289,7 @@ const PjnHtmlDriftPanel: React.FC = () => {
 				<Stack direction="row" spacing={1} sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
 					<FormControl size="small" sx={{ minWidth: 140 }}>
 						<InputLabel>Período</InputLabel>
-						<Select
-							value={sinceDays}
-							label="Período"
-							onChange={(e) => setSinceDays(Number(e.target.value))}
-						>
+						<Select value={sinceDays} label="Período" onChange={(e) => setSinceDays(Number(e.target.value))}>
 							{PERIOD_OPTIONS.map((o) => (
 								<MenuItem key={o.value} value={o.value}>
 									{o.label}
@@ -326,11 +299,7 @@ const PjnHtmlDriftPanel: React.FC = () => {
 					</FormControl>
 					<FormControl size="small" sx={{ minWidth: 140 }}>
 						<InputLabel>Estado</InputLabel>
-						<Select
-							value={resolvedFilter}
-							label="Estado"
-							onChange={(e) => setResolvedFilter(e.target.value as any)}
-						>
+						<Select value={resolvedFilter} label="Estado" onChange={(e) => setResolvedFilter(e.target.value as any)}>
 							{RESOLVED_OPTIONS.map((o) => (
 								<MenuItem key={o.value} value={o.value}>
 									{o.label}
@@ -393,14 +362,7 @@ const PjnHtmlDriftPanel: React.FC = () => {
 										<TableRow key={inc._id} hover>
 											<TableCell>
 												<Stack direction="row" spacing={0.5} alignItems="center">
-													<Icon
-														size={14}
-														color={
-															inc.severity === "critical"
-																? theme.palette.error.main
-																: theme.palette.warning.main
-														}
-													/>
+													<Icon size={14} color={inc.severity === "critical" ? theme.palette.error.main : theme.palette.warning.main} />
 													<Typography variant="caption" sx={{ fontWeight: 600 }}>
 														{inc.type}
 													</Typography>
@@ -425,20 +387,9 @@ const PjnHtmlDriftPanel: React.FC = () => {
 											</TableCell>
 											<TableCell align="center">
 												{isOpen ? (
-													<Chip
-														label="Abierto"
-														size="small"
-														color={severityColor(inc.severity) as any}
-														icon={<Warning2 size={12} />}
-													/>
+													<Chip label="Abierto" size="small" color={severityColor(inc.severity) as any} icon={<Warning2 size={12} />} />
 												) : (
-													<Chip
-														label="Resuelto"
-														size="small"
-														color="success"
-														variant="outlined"
-														icon={<TickCircle size={12} />}
-													/>
+													<Chip label="Resuelto" size="small" color="success" variant="outlined" icon={<TickCircle size={12} />} />
 												)}
 											</TableCell>
 											<TableCell align="right">
@@ -456,9 +407,7 @@ const PjnHtmlDriftPanel: React.FC = () => {
 											</TableCell>
 											<TableCell>
 												<Typography variant="caption">
-													{isOpen
-														? formatDuration(Date.now() - new Date(inc.startedAt).getTime())
-														: formatDuration(inc.durationMs)}
+													{isOpen ? formatDuration(Date.now() - new Date(inc.startedAt).getTime()) : formatDuration(inc.durationMs)}
 												</Typography>
 											</TableCell>
 											<TableCell>
@@ -474,9 +423,7 @@ const PjnHtmlDriftPanel: React.FC = () => {
 															{sample.dependencia && <div>dependencia: "{sample.dependencia}"</div>}
 															{sample.situacion && <div>situación: "{sample.situacion}"</div>}
 															{sample.causaRef && <div>causa: {sample.causaRef}</div>}
-															{sample.idsPresentes && sample.idsPresentes.length > 0 && (
-																<div>ids: {sample.idsPresentes.join(", ")}</div>
-															)}
+															{sample.idsPresentes && sample.idsPresentes.length > 0 && <div>ids: {sample.idsPresentes.join(", ")}</div>}
 														</Box>
 													}
 												>
@@ -491,9 +438,7 @@ const PjnHtmlDriftPanel: React.FC = () => {
 															color: "text.secondary",
 														}}
 													>
-														{sample.caratula
-															? `"${sample.caratula}"`
-															: sample.causaRef || "—"}
+														{sample.caratula ? `"${sample.caratula}"` : sample.causaRef || "—"}
 													</Typography>
 												</Tooltip>
 											</TableCell>
@@ -541,22 +486,10 @@ const PjnHtmlDriftPanel: React.FC = () => {
 										<XAxis dataKey="date" tick={{ fontSize: 11 }} />
 										<YAxis
 											tick={{ fontSize: 11 }}
-											domain={[
-												(dataMin: number) => Math.floor(dataMin * 0.95),
-												(dataMax: number) => Math.ceil(dataMax * 1.05),
-											]}
+											domain={[(dataMin: number) => Math.floor(dataMin * 0.95), (dataMax: number) => Math.ceil(dataMax * 1.05)]}
 										/>
-										<RechartsTooltip
-											formatter={(value: number) => value.toFixed(1)}
-											labelStyle={{ fontSize: 12 }}
-										/>
-										<Line
-											type="monotone"
-											dataKey="avgTotalSpans"
-											stroke={theme.palette.primary.main}
-											strokeWidth={2}
-											dot={{ r: 3 }}
-										/>
+										<RechartsTooltip formatter={(value: number) => value.toFixed(1)} labelStyle={{ fontSize: 12 }} />
+										<Line type="monotone" dataKey="avgTotalSpans" stroke={theme.palette.primary.main} strokeWidth={2} dot={{ r: 3 }} />
 									</LineChart>
 								</ResponsiveContainer>
 							)}
@@ -579,16 +512,10 @@ const PjnHtmlDriftPanel: React.FC = () => {
 										return (
 											<Box key={s.id}>
 												<Stack direction="row" justifyContent="space-between">
-													<Typography
-														variant="caption"
-														sx={{ fontFamily: "monospace", fontWeight: isFlaky ? 600 : 400 }}
-													>
+													<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: isFlaky ? 600 : 400 }}>
 														{s.id}
 													</Typography>
-													<Typography
-														variant="caption"
-														color={isFlaky ? "warning.main" : "text.secondary"}
-													>
+													<Typography variant="caption" color={isFlaky ? "warning.main" : "text.secondary"}>
 														{pct}%
 													</Typography>
 												</Stack>
@@ -629,12 +556,7 @@ const PjnHtmlDriftPanel: React.FC = () => {
 				)}
 
 				{/* Dialog cerrar manual */}
-				<Dialog
-					open={closeDialog.open}
-					onClose={() => setCloseDialog({ open: false, notes: "" })}
-					maxWidth="sm"
-					fullWidth
-				>
+				<Dialog open={closeDialog.open} onClose={() => setCloseDialog({ open: false, notes: "" })} maxWidth="sm" fullWidth>
 					<DialogTitle>Cerrar drift manualmente</DialogTitle>
 					<DialogContent>
 						<Typography variant="body2" sx={{ mb: 2 }}>
@@ -648,9 +570,7 @@ const PjnHtmlDriftPanel: React.FC = () => {
 							multiline
 							minRows={2}
 							value={closeDialog.notes}
-							onChange={(e) =>
-								setCloseDialog((s) => ({ ...s, notes: e.target.value }))
-							}
+							onChange={(e) => setCloseDialog((s) => ({ ...s, notes: e.target.value }))}
 						/>
 					</DialogContent>
 					<DialogActions>

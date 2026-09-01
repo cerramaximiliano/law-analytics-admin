@@ -9,15 +9,12 @@ import {
 	Alert,
 	Stack,
 	Chip,
-	Tabs,
-	Tab,
 	Table,
 	TableBody,
 	TableCell,
 	TableContainer,
 	TableHead,
 	TableRow,
-	Paper,
 	Divider,
 	useTheme,
 	alpha,
@@ -26,51 +23,15 @@ import {
 	Skeleton,
 	TextField,
 	FormControlLabel,
-	Checkbox,
 	IconButton,
 	Tooltip,
-	LinearProgress,
-	Select,
-	MenuItem,
-	FormControl,
-	InputLabel,
 	Pagination,
-	CircularProgress,
 } from "@mui/material";
 import { Setting2, Chart, DocumentText, Refresh, Edit2, Timer, TickCircle, CloseCircle, Warning2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { useTabIndexParam } from "hooks/useTabParam";
-import StuckDocumentsService, {
-	StuckDocumentsConfig,
-	StuckDocumentsStats,
-	StuckDocumentsLog,
-	StuckDocument,
-	ChronicStuckDocument,
-} from "api/stuckDocuments";
-
-// Interfaz para tabs laterales
-interface TabPanelProps {
-	children?: React.ReactNode;
-	index: number;
-	value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-	const { children, value, index, ...other } = props;
-
-	return (
-		<div
-			role="tabpanel"
-			hidden={value !== index}
-			id={`stuck-tabpanel-${index}`}
-			aria-labelledby={`stuck-tab-${index}`}
-			style={{ width: "100%" }}
-			{...other}
-		>
-			{value === index && <Box sx={{ pl: { xs: 0, md: 3 }, pt: { xs: 2, md: 0 } }}>{children}</Box>}
-		</div>
-	);
-}
+import WorkerSubTabs, { SubTabDef } from "./WorkerSubTabs";
+import StuckDocumentsService, { StuckDocumentsConfig, StuckDocumentsStats, StuckDocumentsLog, StuckDocument } from "api/stuckDocuments";
 
 // Helper para formatear fecha
 const formatDate = (dateStr?: string | null): string => {
@@ -90,6 +51,13 @@ const dayNames = ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"];
 // Slugs del sub-tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
 const SUB_TABS = ["configuracion", "estadisticas", "logs", "pendientes"] as const;
 
+const TAB_DEFS: SubTabDef[] = [
+	{ label: "Configuración", icon: <Setting2 size={18} />, hint: "Estado y ajustes" },
+	{ label: "Estadísticas", icon: <Chart size={18} />, hint: "Métricas y fallos" },
+	{ label: "Logs", icon: <DocumentText size={18} />, hint: "Actividad reciente" },
+	{ label: "Pendientes", icon: <Timer size={18} />, hint: "Cola de proceso" },
+];
+
 const StuckDocumentsWorker = () => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
@@ -108,10 +76,6 @@ const StuckDocumentsWorker = () => {
 	// Estado de edicion
 	const [editing, setEditing] = useState(false);
 	const [editValues, setEditValues] = useState<Partial<StuckDocumentsConfig>>({});
-
-	const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-		setActiveTab(newValue);
-	};
 
 	// Cargar datos
 	const fetchData = async (showRefreshing = false) => {
@@ -1013,130 +977,30 @@ const StuckDocumentsWorker = () => {
 	}
 
 	return (
-		<Stack spacing={2}>
-			{/* Header */}
-			<Box display="flex" justifyContent="space-between" alignItems="center">
-				<Typography
-					variant="h4"
-					sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
-				>
-					Worker de documentos atorados
-				</Typography>
-				<Stack direction="row" spacing={1}>
-					<Chip
-						label={stats?.worker?.health === "healthy" ? "Saludable" : stats?.worker?.health || "Desconocido"}
-						size="small"
-						sx={{
-							backgroundColor: alpha(getHealthColor(stats?.worker?.health), 0.1),
-							color: getHealthColor(stats?.worker?.health),
-						}}
-					/>
-					<Chip label={config?.enabled ? "Habilitado" : "Deshabilitado"} size="small" color={config?.enabled ? "primary" : "default"} />
+		<Box>
+			<WorkerSubTabs value={activeTab} onChange={setActiveTab} tabs={TAB_DEFS} aria-label="Secciones del worker de documentos atorados" />
+
+			<Box sx={{ p: { xs: 2, md: 3 } }}>
+				<Stack spacing={2}>
+					<Stack direction="row" spacing={1} justifyContent="flex-end">
+						<Chip
+							label={stats?.worker?.health === "healthy" ? "Saludable" : stats?.worker?.health || "Desconocido"}
+							size="small"
+							sx={{
+								backgroundColor: alpha(getHealthColor(stats?.worker?.health), 0.1),
+								color: getHealthColor(stats?.worker?.health),
+							}}
+						/>
+						<Chip label={config?.enabled ? "Habilitado" : "Deshabilitado"} size="small" color={config?.enabled ? "primary" : "default"} />
+					</Stack>
+
+					{activeTab === 0 && <ConfigContent />}
+					{activeTab === 1 && <StatsContent />}
+					{activeTab === 2 && <LogsContent />}
+					{activeTab === 3 && <PendingContent />}
 				</Stack>
 			</Box>
-
-			{/* Info alert */}
-			<Alert severity="info" variant="outlined" sx={{ py: 1 }}>
-				<Typography variant="body2">
-					Este worker procesa documentos verificados que no tienen movimientos guardados, recuperandolos mediante scraping.
-				</Typography>
-			</Alert>
-
-			{/* Layout con tabs */}
-			<Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" } }}>
-				<Tabs
-					orientation="vertical"
-					variant="scrollable"
-					value={activeTab}
-					onChange={handleTabChange}
-					sx={{
-						borderRight: { md: 1 },
-						borderBottom: { xs: 1, md: 0 },
-						borderColor: "divider",
-						minWidth: { md: 180 },
-						"& .MuiTab-root": { alignItems: "flex-start", textAlign: "left", minHeight: 56, px: 2 },
-					}}
-				>
-					<Tab
-						label={
-							<Stack direction="row" spacing={1.5} alignItems="center">
-								<Setting2 size={20} />
-								<Box>
-									<Typography variant="body2" fontWeight={500}>
-										Configuracion
-									</Typography>
-									<Typography variant="caption" color="text.secondary">
-										Estado y ajustes
-									</Typography>
-								</Box>
-							</Stack>
-						}
-						sx={{ textTransform: "none" }}
-					/>
-					<Tab
-						label={
-							<Stack direction="row" spacing={1.5} alignItems="center">
-								<Chart size={20} />
-								<Box>
-									<Typography variant="body2" fontWeight={500}>
-										Estadisticas
-									</Typography>
-									<Typography variant="caption" color="text.secondary">
-										Metricas y fallos
-									</Typography>
-								</Box>
-							</Stack>
-						}
-						sx={{ textTransform: "none" }}
-					/>
-					<Tab
-						label={
-							<Stack direction="row" spacing={1.5} alignItems="center">
-								<DocumentText size={20} />
-								<Box>
-									<Typography variant="body2" fontWeight={500}>
-										Logs
-									</Typography>
-									<Typography variant="caption" color="text.secondary">
-										Actividad reciente
-									</Typography>
-								</Box>
-							</Stack>
-						}
-						sx={{ textTransform: "none" }}
-					/>
-					<Tab
-						label={
-							<Stack direction="row" spacing={1.5} alignItems="center">
-								<Timer size={20} />
-								<Box>
-									<Typography variant="body2" fontWeight={500}>
-										Pendientes
-									</Typography>
-									<Typography variant="caption" color="text.secondary">
-										Cola de proceso
-									</Typography>
-								</Box>
-							</Stack>
-						}
-						sx={{ textTransform: "none" }}
-					/>
-				</Tabs>
-
-				<TabPanel value={activeTab} index={0}>
-					<ConfigContent />
-				</TabPanel>
-				<TabPanel value={activeTab} index={1}>
-					<StatsContent />
-				</TabPanel>
-				<TabPanel value={activeTab} index={2}>
-					<LogsContent />
-				</TabPanel>
-				<TabPanel value={activeTab} index={3}>
-					<PendingContent />
-				</TabPanel>
-			</Box>
-		</Stack>
+		</Box>
 	);
 };
 

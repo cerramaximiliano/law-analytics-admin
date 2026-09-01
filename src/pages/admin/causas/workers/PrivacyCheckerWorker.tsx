@@ -164,20 +164,9 @@ const PrivacyCheckerWorker = () => {
 			<Card>
 				<CardContent>
 					<Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
-						<Stack direction="row" spacing={1.5} alignItems="center">
-							<Lock1 size={24} color={theme.palette.primary.main} variant="Bold" />
-							<Box>
-								<Typography
-									variant="h4"
-									sx={{ fontFamily: '"Geist Variable", "Geist", system-ui, sans-serif', letterSpacing: "-0.02em", fontWeight: 600 }}
-								>
-									Privacy checker
-								</Typography>
-								<Typography variant="body2" color="text.secondary">
-									Monitorea causas PJN individuales que pasaron a estado reservado
-								</Typography>
-							</Box>
-						</Stack>
+						<Typography variant="subtitle2" color="text.secondary">
+							Estado actual
+						</Typography>
 						<Tooltip title="Recargar">
 							<IconButton
 								onClick={() => {

@@ -27,6 +27,7 @@ import {
 	Gallery,
 	Refresh2,
 	Book1,
+	RefreshSquare,
 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { BRAND_BLUE, headerBorder, navActiveBg, navHoverBg, railBorder, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
@@ -37,7 +38,8 @@ import AppUpdateWorker from "./AppUpdateWorker";
 import IntervinientesWorker from "./IntervinientesWorker";
 import StuckDocumentsWorker from "./StuckDocumentsWorker";
 import RetryQueuePanel from "./RetryQueuePanel";
-import MisCausasWorker from "./MisCausasWorker";
+import MisCausasScrapingWorker from "./MisCausasScrapingWorker";
+import MisCausasUpdatesWorker from "./MisCausasUpdatesWorker";
 import PrivacyCheckerWorker from "./PrivacyCheckerWorker";
 import CaptchaDatasetTab from "./CaptchaDatasetTab";
 import DocumentationTab from "./documentation";
@@ -121,10 +123,19 @@ const WORKER_TABS: WorkerTab[] = [
 		ip: "18.228.63.73",
 	},
 	{
-		label: "Mis Causas",
+		label: "Mis Causas · Scraping",
 		value: "mis-causas",
 		icon: <SecurityUser size={20} />,
-		description: "Scraping y actualización del portal autenticado del PJN (login SSO)",
+		description: "Captura de causas desde el portal autenticado del PJN (login SSO)",
+		status: "active",
+		host: "worker-cloud-02",
+		ip: "100.102.208.69",
+	},
+	{
+		label: "Mis Causas · Updates",
+		value: "mis-causas-updates",
+		icon: <RefreshSquare size={20} />,
+		description: "Actualización de las causas ya capturadas del portal autenticado",
 		status: "active",
 		host: "worker-cloud-02",
 		ip: "100.102.208.69",
@@ -149,7 +160,7 @@ const WORKER_TABS: WorkerTab[] = [
 const WORKER_GROUPS: { label: string; values: string[] }[] = [
 	{ label: "Captura", values: ["scraping", "retry", "captcha-dataset"] },
 	{ label: "Enriquecimiento", values: ["verification", "app-update", "intervinientes", "stuck-documents"] },
-	{ label: "Portal autenticado", values: ["mis-causas"] },
+	{ label: "Portal autenticado", values: ["mis-causas", "mis-causas-updates"] },
 	{ label: "Cumplimiento", values: ["privacy-checker"] },
 ];
 
@@ -168,7 +179,8 @@ const PANELS: Record<string, React.ReactNode> = {
 	"app-update": <AppUpdateWorker />,
 	intervinientes: <IntervinientesWorker />,
 	"stuck-documents": <StuckDocumentsWorker />,
-	"mis-causas": <MisCausasWorker />,
+	"mis-causas": <MisCausasScrapingWorker />,
+	"mis-causas-updates": <MisCausasUpdatesWorker />,
 	"privacy-checker": <PrivacyCheckerWorker />,
 	documentation: <DocumentationTab />,
 };

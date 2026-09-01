@@ -9,8 +9,6 @@ import {
 	Alert,
 	Stack,
 	Chip,
-	Tabs,
-	Tab,
 	Table,
 	TableBody,
 	TableCell,
@@ -55,6 +53,7 @@ import {
 import { useSnackbar } from "notistack";
 import CopyButton from "components/CopyButton";
 import { useTabIndexParam } from "hooks/useTabParam";
+import WorkerSubTabs, { SubTabDef } from "./WorkerSubTabs";
 import ExtraInfoConfigService, {
 	ExtraInfoConfig,
 	ExtraInfoStatus,
@@ -63,34 +62,11 @@ import ExtraInfoConfigService, {
 	EligibleCountResponse,
 	IntervinientesStatsResponse,
 	AllUsersResponse,
-	UserWithSync,
 	DailyStat,
 	DailyStatsSummary,
 } from "api/extraInfoConfig";
 
 // Interfaz para tabs laterales
-interface TabPanelProps {
-	children?: React.ReactNode;
-	index: number;
-	value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-	const { children, value, index, ...other } = props;
-
-	return (
-		<div
-			role="tabpanel"
-			hidden={value !== index}
-			id={`intervinientes-tabpanel-${index}`}
-			aria-labelledby={`intervinientes-tab-${index}`}
-			style={{ width: "100%" }}
-			{...other}
-		>
-			{value === index && <Box sx={{ pl: { xs: 0, md: 3 }, pt: { xs: 2, md: 0 } }}>{children}</Box>}
-		</div>
-	);
-}
 
 // Helper para formatear fecha
 const formatDate = (dateStr?: string): string => {
@@ -108,7 +84,18 @@ const formatDate = (dateStr?: string): string => {
 const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
 // Slugs del sub-tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
-const SUB_TABS = ["configuracion", "flujo", "estadisticas", "ayuda", "usuarios", "historial"] as const;
+const SUB_TABS = ["configuracion", "flujo", "estadisticas", "usuarios", "historial", "ayuda"] as const;
+
+// Operación del worker primero, gestión de usuarios después, ayuda al final:
+// antes "Ayuda" caía en el medio y partía en dos el grupo de operación.
+const TAB_DEFS: SubTabDef[] = [
+	{ label: "Configuración", icon: <Setting2 size={18} />, hint: "Estado y ajustes" },
+	{ label: "Flujo", icon: <DocumentText size={18} />, hint: "Proceso del worker" },
+	{ label: "Estadísticas", icon: <Chart size={18} />, hint: "Métricas y usuarios" },
+	{ label: "Usuarios", icon: <People size={18} />, hint: "Gestión de sync" },
+	{ label: "Historial", icon: <Calendar size={18} />, hint: "Estadísticas diarias" },
+	{ label: "Ayuda", icon: <MessageQuestion size={18} />, hint: "Guía y archivos" },
+];
 
 const IntervinientesWorker = () => {
 	const theme = useTheme();
@@ -144,10 +131,6 @@ const IntervinientesWorker = () => {
 	const [dailySummary, setDailySummary] = useState<DailyStatsSummary | null>(null);
 	const [dailyStatsLoading, setDailyStatsLoading] = useState(false);
 	const [summaryPeriod, setSummaryPeriod] = useState<7 | 30 | 90>(30);
-
-	const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-		setActiveTab(newValue);
-	};
 
 	// Cargar datos
 	const fetchData = async (showRefreshing = false) => {
@@ -202,14 +185,14 @@ const IntervinientesWorker = () => {
 
 	// Cargar usuarios cuando se selecciona el tab de usuarios
 	useEffect(() => {
-		if (activeTab === 4) {
+		if (activeTab === 3) {
 			fetchUsers();
 		}
 	}, [activeTab, usersPage, usersFilter]);
 
 	// Debounce para búsqueda
 	useEffect(() => {
-		if (activeTab === 4) {
+		if (activeTab === 3) {
 			const timer = setTimeout(() => {
 				setUsersPage(1);
 				fetchUsers();
@@ -307,7 +290,7 @@ const IntervinientesWorker = () => {
 
 	// Cargar estadísticas diarias cuando se selecciona el tab de historial
 	useEffect(() => {
-		if (activeTab === 5) {
+		if (activeTab === 4) {
 			fetchDailyStats();
 		}
 	}, [activeTab, summaryPeriod]);
@@ -1841,136 +1824,14 @@ const IntervinientesWorker = () => {
 			</Alert>
 
 			{/* Layout con tabs */}
-			<Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" } }}>
-				<Tabs
-					orientation="vertical"
-					variant="scrollable"
-					value={activeTab}
-					onChange={handleTabChange}
-					sx={{
-						borderRight: { md: 1 },
-						borderBottom: { xs: 1, md: 0 },
-						borderColor: "divider",
-						minWidth: { md: 200 },
-						"& .MuiTab-root": { alignItems: "flex-start", textAlign: "left", minHeight: 60, px: 2 },
-					}}
-				>
-					<Tab
-						label={
-							<Stack direction="row" spacing={1.5} alignItems="center">
-								<Setting2 size={20} />
-								<Box>
-									<Typography variant="body2" fontWeight={500}>
-										Configuración
-									</Typography>
-									<Typography variant="caption" color="text.secondary">
-										Estado y ajustes
-									</Typography>
-								</Box>
-							</Stack>
-						}
-						sx={{ textTransform: "none" }}
-					/>
-					<Tab
-						label={
-							<Stack direction="row" spacing={1.5} alignItems="center">
-								<DocumentText size={20} />
-								<Box>
-									<Typography variant="body2" fontWeight={500}>
-										Flujo
-									</Typography>
-									<Typography variant="caption" color="text.secondary">
-										Proceso del worker
-									</Typography>
-								</Box>
-							</Stack>
-						}
-						sx={{ textTransform: "none" }}
-					/>
-					<Tab
-						label={
-							<Stack direction="row" spacing={1.5} alignItems="center">
-								<Chart size={20} />
-								<Box>
-									<Typography variant="body2" fontWeight={500}>
-										Estadísticas
-									</Typography>
-									<Typography variant="caption" color="text.secondary">
-										Métricas y usuarios
-									</Typography>
-								</Box>
-							</Stack>
-						}
-						sx={{ textTransform: "none" }}
-					/>
-					<Tab
-						label={
-							<Stack direction="row" spacing={1.5} alignItems="center">
-								<MessageQuestion size={20} />
-								<Box>
-									<Typography variant="body2" fontWeight={500}>
-										Ayuda
-									</Typography>
-									<Typography variant="caption" color="text.secondary">
-										Guía y archivos
-									</Typography>
-								</Box>
-							</Stack>
-						}
-						sx={{ textTransform: "none" }}
-					/>
-					<Tab
-						label={
-							<Stack direction="row" spacing={1.5} alignItems="center">
-								<People size={20} />
-								<Box>
-									<Typography variant="body2" fontWeight={500}>
-										Usuarios
-									</Typography>
-									<Typography variant="caption" color="text.secondary">
-										Gestión de sync
-									</Typography>
-								</Box>
-							</Stack>
-						}
-						sx={{ textTransform: "none" }}
-					/>
-					<Tab
-						label={
-							<Stack direction="row" spacing={1.5} alignItems="center">
-								<Calendar size={20} />
-								<Box>
-									<Typography variant="body2" fontWeight={500}>
-										Historial
-									</Typography>
-									<Typography variant="caption" color="text.secondary">
-										Estadísticas diarias
-									</Typography>
-								</Box>
-							</Stack>
-						}
-						sx={{ textTransform: "none" }}
-					/>
-				</Tabs>
-
-				<TabPanel value={activeTab} index={0}>
-					<ConfigContent />
-				</TabPanel>
-				<TabPanel value={activeTab} index={1}>
-					<FlowContent />
-				</TabPanel>
-				<TabPanel value={activeTab} index={2}>
-					<StatsContent />
-				</TabPanel>
-				<TabPanel value={activeTab} index={3}>
-					<HelpContent />
-				</TabPanel>
-				<TabPanel value={activeTab} index={4}>
-					<UsersContent />
-				</TabPanel>
-				<TabPanel value={activeTab} index={5}>
-					<HistoryContent />
-				</TabPanel>
+			<WorkerSubTabs value={activeTab} onChange={setActiveTab} tabs={TAB_DEFS} aria-label="Secciones del worker de intervinientes" />
+			<Box>
+				{activeTab === 0 && <ConfigContent />}
+				{activeTab === 1 && <FlowContent />}
+				{activeTab === 2 && <StatsContent />}
+				{activeTab === 3 && <UsersContent />}
+				{activeTab === 4 && <HistoryContent />}
+				{activeTab === 5 && <HelpContent />}
 			</Box>
 		</Stack>
 	);

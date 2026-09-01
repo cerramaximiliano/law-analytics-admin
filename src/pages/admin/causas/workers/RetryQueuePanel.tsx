@@ -1,5 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Box, Card, CardContent, Chip, CircularProgress, Grid, IconButton, LinearProgress, Stack, Tooltip, Typography } from "@mui/material";
+import {
+	Alert,
+	Box,
+	Card,
+	CardContent,
+	Chip,
+	CircularProgress,
+	Grid,
+	IconButton,
+	LinearProgress,
+	Stack,
+	Tooltip,
+	Typography,
+} from "@mui/material";
 import { Refresh } from "iconsax-react";
 import CausasPjnService from "api/causasPjn";
 
@@ -149,9 +162,19 @@ const RetryQueuePanel: React.FC = () => {
 												<b>{fuero}</b> — {FUERO_LABELS[fuero] || fuero}
 											</Typography>
 											<Stack direction="row" spacing={1}>
-												<Chip size="small" label={`${v.pendientes.toLocaleString("es-AR")} pendientes`} color="primary" variant="outlined" />
+												<Chip
+													size="small"
+													label={`${v.pendientes.toLocaleString("es-AR")} pendientes`}
+													color="primary"
+													variant="outlined"
+												/>
 												{v.agotados > 0 && (
-													<Chip size="small" label={`${v.agotados.toLocaleString("es-AR")} descartados`} color="warning" variant="outlined" />
+													<Chip
+														size="small"
+														label={`${v.agotados.toLocaleString("es-AR")} descartados`}
+														color="warning"
+														variant="outlined"
+													/>
 												)}
 											</Stack>
 										</Stack>

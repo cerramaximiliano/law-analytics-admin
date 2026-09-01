@@ -217,7 +217,12 @@ const MisCausasStatsTab: React.FC = () => {
 													</Typography>
 													<Typography variant="h6" sx={{ fontVariantNumeric: "tabular-nums" }}>
 														{ws.currentInstances}
-														<Typography component="span" variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
+														<Typography
+															component="span"
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontVariantNumeric: "tabular-nums" }}
+														>
 															{" "}
 															/ {ws.desiredInstances}
 														</Typography>
