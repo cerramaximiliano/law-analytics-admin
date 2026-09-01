@@ -25,9 +25,11 @@ import {
 	Tooltip,
 	Typography,
 	useTheme,
+	useMediaQuery,
 	alpha,
 	ToggleButton,
 	ToggleButtonGroup,
+	Collapse,
 	Dialog,
 	DialogActions,
 	DialogContent,
@@ -35,7 +37,7 @@ import {
 	Divider,
 	Link,
 } from "@mui/material";
-import { Refresh, SearchNormal1, InfoCircle, Clock, TickCircle, CloseCircle, DocumentText, Setting2 } from "iconsax-react";
+import { Refresh, SearchNormal1, InfoCircle, Clock, TickCircle, CloseCircle, DocumentText, Setting2, ArrowDown2, ArrowUp2 } from "iconsax-react";
 import { Link as RouterLink } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -93,6 +95,12 @@ const CausasUpdateEligiblePage = () => {
 	const [search, setSearch] = useState("");
 	const [searchInput, setSearchInput] = useState("");
 	const [onlyAvailable, setOnlyAvailable] = useState(false);
+
+	// Detalles técnicos (repos detrás de la vista): visibles en escritorio,
+	// colapsados en mobile — mismo patrón que /admin/workers/sentencias.
+	const esEscritorio = useMediaQuery(theme.breakpoints.up("md"));
+	const [detallesAbiertos, setDetallesAbiertos] = useState(false);
+	const mostrarDetalles = esEscritorio || detallesAbiertos;
 
 	// Panel SAIJ de una causa: fallos vinculados + sentencias capturadas.
 	const [saijDetalle, setSaijDetalle] = useState<CausaSaijDetalle | null>(null);
@@ -253,22 +261,34 @@ const CausasUpdateEligiblePage = () => {
 					</Typography>
 				</Box>
 
-				<RepoBadgeGroup
-					repos={[
-						{
-							localName: "pjn-workers-scraping",
-							role: "Worker (consumer)",
-							description:
-								"src/tasks/update-movimientos-worker.js — el query de elegibilidad replicado en esta vista vive en countEligible() y findAndLock().",
-						},
-						{
-							localName: "pjn-api",
-							role: "API (lectura)",
-							description:
-								"Endpoint /api/causas-elegibles-update sirve la lista paginada y stats. Esta vista lo consume vía VITE_WORKERS_URL apuntando a la pjn-api del worker_01 (DB local).",
-						},
-					]}
-				/>
+				{!esEscritorio && (
+					<Chip
+						size="small"
+						variant="outlined"
+						onClick={() => setDetallesAbiertos((v) => !v)}
+						icon={detallesAbiertos ? <ArrowUp2 size={13} /> : <ArrowDown2 size={13} />}
+						label="Detalles técnicos"
+						sx={{ fontSize: "0.72rem", alignSelf: "flex-start" }}
+					/>
+				)}
+				<Collapse in={mostrarDetalles} unmountOnExit>
+					<RepoBadgeGroup
+						repos={[
+							{
+								localName: "pjn-workers-scraping",
+								role: "Worker (consumer)",
+								description:
+									"src/tasks/update-movimientos-worker.js — el query de elegibilidad replicado en esta vista vive en countEligible() y findAndLock().",
+							},
+							{
+								localName: "pjn-api",
+								role: "API (lectura)",
+								description:
+									"Endpoint /api/causas-elegibles-update sirve la lista paginada y stats. Esta vista lo consume vía VITE_WORKERS_URL apuntando a la pjn-api del worker_01 (DB local).",
+							},
+						]}
+					/>
+				</Collapse>
 
 				{/* Stats globales por fuero */}
 				<Paper variant="outlined" sx={{ p: 1.5 }}>
