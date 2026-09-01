@@ -38,8 +38,12 @@ echo -e "${GREEN}========================================${NC}"
 
 # Función para ejecutar comandos con sudo en el servidor.
 # Asume que el usuario remoto tiene NOPASSWD configurado (ver /etc/sudoers.d/).
+# El -n es necesario, no cosmético: sin él ssh consume el stdin del script
+# entero, y el `read` del paso 2 se encuentra con EOF. Bajo `set -e` eso mata
+# el deploy en silencio justo despues de imprimir el prompt, dejando el server
+# con código nuevo y build viejo.
 remote_sudo() {
-	ssh -i "${SSH_KEY}" "${SERVER_USER}@${SERVER_IP}" "sudo bash -c '$1'"
+	ssh -n -i "${SSH_KEY}" "${SERVER_USER}@${SERVER_IP}" "sudo bash -c '$1'"
 }
 
 # Función para ejecutar comandos localmente con sudo.
@@ -62,41 +66,45 @@ echo -e "${GREEN}✓ Ownership verificado${NC}"
 
 # 1. Actualizar código
 echo -e "\n${YELLOW}[1/4] Obteniendo últimos cambios de Git...${NC}"
+# Qué se compila se decide comparando HEAD contra el commit que produjo el
+# build que está en disco (build/.built-commit), NO contra lo que trajo el pull.
+# Con el criterio viejo, un deploy interrumpido después del pull dejaba al
+# server con código nuevo y build viejo, y las corridas siguientes se negaban a
+# recompilar porque "no hay cambios" — reportando éxito.
 CODE_CHANGED=true
 if [ "$IS_REMOTE" = true ]; then
 	# Ejecutando en el servidor
 	cd ${REMOTE_PATH}
-	BEFORE=$(git rev-parse HEAD)
 	git fetch origin
 	git reset --hard origin/main
 	AFTER=$(git rev-parse HEAD)
-	if [ "$BEFORE" = "$AFTER" ]; then
-		CODE_CHANGED=false
-	fi
+	BUILT=$(cat build/.built-commit 2>/dev/null || echo "")
 	echo 'Código actualizado'
 else
 	# Ejecutando desde local
-	BEFORE_AFTER=$(ssh -i "${SSH_KEY}" "${SERVER_USER}@${SERVER_IP}" "
+	REMOTE_STATE=$(ssh -n -i "${SSH_KEY}" "${SERVER_USER}@${SERVER_IP}" "
 		cd ${REMOTE_PATH}
-		BEFORE=\$(git rev-parse HEAD)
-		git fetch origin
-		git reset --hard origin/main
-		AFTER=\$(git rev-parse HEAD)
-		echo \"\${BEFORE} \${AFTER}\"
+		git fetch origin >/dev/null 2>&1
+		git reset --hard origin/main >/dev/null
+		echo \"\$(git rev-parse HEAD) \$(cat build/.built-commit 2>/dev/null || echo none)\"
 	")
-	BEFORE=$(echo "$BEFORE_AFTER" | tail -1 | awk '{print $1}')
-	AFTER=$(echo "$BEFORE_AFTER" | tail -1 | awk '{print $2}')
-	if [ "$BEFORE" = "$AFTER" ]; then
-		CODE_CHANGED=false
-	fi
+	AFTER=$(echo "$REMOTE_STATE" | tail -1 | awk '{print $1}')
+	BUILT=$(echo "$REMOTE_STATE" | tail -1 | awk '{print $2}')
 	echo 'Código actualizado'
+fi
+if [ -n "$AFTER" ] && [ "$BUILT" = "$AFTER" ]; then
+	CODE_CHANGED=false
+	echo -e "${YELLOW}⚠ El build en disco ya corresponde a ${AFTER:0:7}${NC}"
 fi
 echo -e "${GREEN}✓ Código actualizado${NC}"
 
 # 2. Preguntar si actualizar .env (solo si estamos en local)
 if [ "$IS_REMOTE" = false ]; then
 	echo -e "\n${YELLOW}[2/4] ¿Deseas actualizar el archivo .env? (s/n)${NC}"
-	read -r update_env
+	# `|| true`: en una corrida no interactiva (cron, pipe, background) el read
+	# recibe EOF y devuelve 1, que con set -e abortaría el deploy. Sin respuesta
+	# se asume "n", que es conservar el .env del servidor.
+	read -r update_env || update_env="n"
 	if [ "$update_env" = "s" ] || [ "$update_env" = "S" ]; then
 		if [ -f ".env.production" ]; then
 			scp -i "${SSH_KEY}" .env.production "${SERVER_USER}@${SERVER_IP}:${REMOTE_PATH}/.env"
@@ -146,10 +154,13 @@ else
 			rm -rf build.new
 			npm run build
 		fi
+		# Sello del commit que produjo este build. Viaja dentro de build/, así el
+		# swap atómico lo mueve junto con los assets que describe.
+		echo "${AFTER}" > build/.built-commit
 		echo 'Build completado'
 	else
 		# Ejecutando desde local
-		ssh -i "${SSH_KEY}" "${SERVER_USER}@${SERVER_IP}" "
+		ssh -n -i "${SSH_KEY}" "${SERVER_USER}@${SERVER_IP}" "
 			cd ${REMOTE_PATH}
 			npm install
 			rm -rf build.new
@@ -168,6 +179,7 @@ else
 				rm -rf build.new
 				npm run build
 			fi
+			echo '${AFTER}' > build/.built-commit
 			echo 'Build completado'
 		"
 	fi
