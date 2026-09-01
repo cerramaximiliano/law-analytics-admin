@@ -49,6 +49,13 @@ export interface CausaElegible {
 	isInCooldown: boolean;
 	cooldownUntil: string | null;
 	source: string;
+	/** Presente sólo si la causa está vinculada a SAIJ. */
+	saij: {
+		isFromSaij: boolean;
+		createdViaSaij: boolean;
+		fallosVinculados: number;
+		linkedAt: string | null;
+	} | null;
 	createdAt: string;
 	updatedAt: string;
 }

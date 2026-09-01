@@ -255,3 +255,38 @@ export const desvincularLote = async (opts: {
 	const { data } = await pjnAxios.post("/api/saij/conciliacion/desvincular-lote", opts);
 	return data.data;
 };
+
+// ── Contexto SAIJ de una causa puntual (vista "Causas en Update") ─────────────
+
+export interface FalloDeCausa extends FalloDeCandidato {
+	veredicto?: {
+		veredicto: VeredictoApareo;
+		jaccard: number | null;
+		flags: FlagConciliacion[];
+		sospechoso: boolean;
+	};
+}
+
+export interface CausaSaijDetalle {
+	causa: CausaDeCandidato & { movimiento: MovimientoSaij[] };
+	fallos: FalloDeCausa[];
+	sentenciasCapturadas: Array<
+		ScDeCandidato & { movimientoTipo?: string; movimientoFecha?: string; source?: { origin?: string; saijDocId?: string } }
+	>;
+}
+
+/** Fallos SAIJ y sentencias capturadas colgados de una causa del caché (rs0). */
+export const causaSaij = async (fuero: string, causaId: string): Promise<CausaSaijDetalle> => {
+	const { data } = await pjnAxios.get(`/api/saij/conciliacion/causa/${fuero}/${causaId}`);
+	return data.data;
+};
+
+/**
+ * Desvinculación completa sin pasar por la cola (si el par tenía candidato
+ * pendiente, también se cierra). Mismo servicio que la vista de conciliación:
+ * respaldo + carátula del fallo + re-embed.
+ */
+export const desvincularDirecto = async (body: { saijDocId: string; causaId: string; fuero: string; notas?: string }) => {
+	const { data } = await pjnAxios.post("/api/saij/conciliacion/desvincular-directo", body);
+	return data.data as { movimientoQuitado: boolean; sentenciasCapturadasTocadas: number; embeddingReencolado: number; backupId: string };
+};

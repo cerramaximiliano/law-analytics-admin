@@ -28,8 +28,15 @@ import {
 	alpha,
 	ToggleButton,
 	ToggleButtonGroup,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
+	Divider,
+	Link,
 } from "@mui/material";
-import { Refresh, SearchNormal1, InfoCircle, Clock, TickCircle, CloseCircle } from "iconsax-react";
+import { Refresh, SearchNormal1, InfoCircle, Clock, TickCircle, CloseCircle, DocumentText, Setting2 } from "iconsax-react";
+import { Link as RouterLink } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
@@ -41,6 +48,7 @@ import CausasElegiblesUpdateService, {
 	FueroStats,
 } from "api/causasElegiblesUpdate";
 import type { FuenteElegibles } from "api/causasElegiblesUpdate";
+import { CausaSaijDetalle, causaSaij as fetchCausaSaij, desvincularDirecto } from "api/saijConciliacion";
 
 const FUEROS: Fuero[] = ["CIV", "COM", "CSS", "CNT"];
 
@@ -85,6 +93,50 @@ const CausasUpdateEligiblePage = () => {
 	const [search, setSearch] = useState("");
 	const [searchInput, setSearchInput] = useState("");
 	const [onlyAvailable, setOnlyAvailable] = useState(false);
+
+	// Panel SAIJ de una causa: fallos vinculados + sentencias capturadas.
+	const [saijDetalle, setSaijDetalle] = useState<CausaSaijDetalle | null>(null);
+	const [saijAbierto, setSaijAbierto] = useState(false);
+	const [saijCargando, setSaijCargando] = useState(false);
+	const [desvinculando, setDesvinculando] = useState<string | null>(null);
+
+	const abrirSaij = async (fuero: string, causaId: string) => {
+		setSaijAbierto(true);
+		setSaijDetalle(null);
+		setSaijCargando(true);
+		try {
+			setSaijDetalle(await fetchCausaSaij(fuero, causaId));
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.message || "No se pudo cargar el contexto SAIJ", { variant: "error" });
+			setSaijAbierto(false);
+		} finally {
+			setSaijCargando(false);
+		}
+	};
+
+	const desvincularFallo = async (saijDocId: string) => {
+		if (!saijDetalle) return;
+		setDesvinculando(saijDocId);
+		try {
+			const r = await desvincularDirecto({
+				saijDocId,
+				causaId: saijDetalle.causa._id,
+				fuero: saijDetalle.causa.fuero || activeFuero,
+			});
+			enqueueSnackbar(
+				`Desvinculado: movimiento ${r.movimientoQuitado ? "quitado" : "no estaba"}, ${r.sentenciasCapturadasTocadas} SC despegada(s), embedding re-encolado`,
+				{ variant: "success" },
+			);
+			// Refrescar el panel y la tabla: la causa pudo quedar sin vínculos SAIJ.
+			await abrirSaij(saijDetalle.causa.fuero || activeFuero, saijDetalle.causa._id);
+			fetchList();
+			fetchStats();
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.message || "La desvinculación falló", { variant: "error" });
+		} finally {
+			setDesvinculando(null);
+		}
+	};
 
 	const fetchStats = useCallback(async () => {
 		try {
@@ -146,6 +198,16 @@ const CausasUpdateEligiblePage = () => {
 				<Box>
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
 						<Typography variant="h3">Causas en Update</Typography>
+						<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+						<Button
+							size="small"
+							variant="outlined"
+							component={RouterLink}
+							to="/admin/workers/movimientos"
+							startIcon={<Setting2 size={15} />}
+						>
+							Config del worker
+						</Button>
 						<ToggleButtonGroup
 							size="small"
 							exclusive
@@ -160,6 +222,7 @@ const CausasUpdateEligiblePage = () => {
 							<ToggleButton value="cache">Caché rs0 · worker de scraping</ToggleButton>
 							<ToggleButton value="atlas">Atlas · carpetas de usuarios</ToggleButton>
 						</ToggleButtonGroup>
+						</Stack>
 					</Stack>
 					<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
 						Criterio de elegibilidad: <code>update=true, verified=true, isValid≠false</code>.{" "}
@@ -320,6 +383,7 @@ const CausasUpdateEligiblePage = () => {
 							>
 								<TableCell>Expediente</TableCell>
 								<TableCell>Carátula</TableCell>
+								<TableCell>Origen</TableCell>
 								<TableCell>Juzgado</TableCell>
 								<TableCell align="center">Movs.</TableCell>
 								<TableCell align="center">Folders</TableCell>
@@ -332,7 +396,7 @@ const CausasUpdateEligiblePage = () => {
 							{loading ? (
 								Array.from({ length: 8 }).map((_, i) => (
 									<TableRow key={i}>
-										{Array.from({ length: 8 }).map((__, j) => (
+										{Array.from({ length: 9 }).map((__, j) => (
 											<TableCell key={j}>
 												<Skeleton variant="text" />
 											</TableCell>
@@ -341,7 +405,7 @@ const CausasUpdateEligiblePage = () => {
 								))
 							) : rows.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={8} align="center" sx={{ py: 6 }}>
+									<TableCell colSpan={9} align="center" sx={{ py: 6 }}>
 										<Stack alignItems="center" spacing={1}>
 											<InfoCircle size={36} color={theme.palette.text.disabled} />
 											<Typography variant="body2" color="text.secondary">
@@ -371,6 +435,28 @@ const CausasUpdateEligiblePage = () => {
 													{c.caratula || "—"}
 												</Typography>
 											</Tooltip>
+										</TableCell>
+										<TableCell>
+											<Stack direction="row" spacing={0.5} alignItems="center">
+												<Chip size="small" label={c.source || "?"} variant="outlined" />
+												{c.saij?.isFromSaij && (
+													<Tooltip
+														title={
+															fuente === "cache"
+																? `${c.saij.fallosVinculados} fallo(s) SAIJ vinculados — click para ver y desvincular`
+																: `${c.saij.fallosVinculados} fallo(s) SAIJ vinculados`
+														}
+													>
+														<Chip
+															size="small"
+															color="secondary"
+															label={`SAIJ ×${c.saij.fallosVinculados}`}
+															onClick={fuente === "cache" ? () => abrirSaij(c.fuero, c._id) : undefined}
+															sx={fuente === "cache" ? { cursor: "pointer" } : undefined}
+														/>
+													</Tooltip>
+												)}
+											</Stack>
 										</TableCell>
 										<TableCell>
 											<Typography variant="caption" color="text.secondary">
@@ -425,6 +511,116 @@ const CausasUpdateEligiblePage = () => {
 						</TableBody>
 					</Table>
 				</TableContainer>
+
+				{/* ── Panel SAIJ de una causa: fallos + sentencias capturadas ───── */}
+				<Dialog open={saijAbierto} onClose={() => setSaijAbierto(false)} maxWidth="md" fullWidth>
+					<DialogTitle>
+						Vínculos SAIJ — {saijDetalle ? `${saijDetalle.causa.fuero} ${saijDetalle.causa.number}/${saijDetalle.causa.year}` : "…"}
+					</DialogTitle>
+					<DialogContent dividers>
+						{saijCargando && <CircularProgress size={22} />}
+						{saijDetalle && (
+							<Stack spacing={2}>
+								<Typography variant="body2">{saijDetalle.causa.caratula || "(sin carátula)"}</Typography>
+
+								<Divider textAlign="left">
+									<Typography variant="caption" color="text.secondary">
+										Fallos SAIJ vinculados ({saijDetalle.fallos.length})
+									</Typography>
+								</Divider>
+								{saijDetalle.fallos.length === 0 && (
+									<Typography variant="caption" color="text.secondary">
+										La causa no tiene fallos SAIJ vinculados (pudo haberse desvinculado recién).
+									</Typography>
+								)}
+								{saijDetalle.fallos.map((f) => (
+									<Paper key={f._id} variant="outlined" sx={{ p: 1.5 }}>
+										<Stack spacing={0.75}>
+											<Typography variant="body2" fontWeight={600}>
+												{f.titulo || "(sin título)"}
+											</Typography>
+											<Typography variant="caption" color="text.secondary">
+												{f.tribunal || ""} {f.fecha ? `· ${new Date(f.fecha).toLocaleDateString("es-AR")}` : ""}
+											</Typography>
+											<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap alignItems="center">
+												<Chip
+													size="small"
+													variant="outlined"
+													label={`exp: ${f.expediente?.fuero || "?"} ${f.expediente?.numero ?? "?"}/${f.expediente?.año ?? "?"} · ${f.expediente?.confidence || "?"}`}
+												/>
+												{f.veredicto && (
+													<Tooltip title={`jaccard ${f.veredicto.jaccard ?? "—"} · ${(f.veredicto.flags || []).join(", ") || "sin banderas"}`}>
+														<Chip
+															size="small"
+															label={f.veredicto.veredicto}
+															color={f.veredicto.veredicto === "coincide" ? "success" : f.veredicto.veredicto === "no_coincide" ? "error" : "warning"}
+														/>
+													</Tooltip>
+												)}
+												{f.url && (
+													<Link href={f.url} target="_blank" rel="noopener" variant="caption">
+														<DocumentText size={12} style={{ verticalAlign: "middle", marginRight: 3 }} />
+														Ver en SAIJ
+													</Link>
+												)}
+												{f.pdfUrl && (
+													<Link href={f.pdfUrl} target="_blank" rel="noopener" variant="caption">
+														PDF
+													</Link>
+												)}
+												<Box sx={{ flex: 1 }} />
+												<Button
+													size="small"
+													color="error"
+													variant="outlined"
+													disabled={desvinculando === f._id}
+													onClick={() => desvincularFallo(f._id)}
+												>
+													{desvinculando === f._id ? "Desvinculando…" : "Desvincular"}
+												</Button>
+											</Stack>
+										</Stack>
+									</Paper>
+								))}
+
+								<Divider textAlign="left">
+									<Typography variant="caption" color="text.secondary">
+										Sentencias capturadas de esta causa ({saijDetalle.sentenciasCapturadas.length})
+									</Typography>
+								</Divider>
+								{saijDetalle.sentenciasCapturadas.map((sc) => (
+									<Paper key={sc._id} variant="outlined" sx={{ p: 1.5 }}>
+										<Typography variant="caption" display="block">{sc.caratula}</Typography>
+										<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap alignItems="center" sx={{ mt: 0.5 }}>
+											<Chip size="small" variant="outlined" label={sc.source?.origin === "saij" ? "origen SAIJ" : "origen PJN"} />
+											{sc.movimientoTipo && <Chip size="small" variant="outlined" label={sc.movimientoTipo} />}
+											<Chip size="small" variant="outlined" label={`embedding: ${sc.embeddingStatus || "?"}`} />
+											{sc.url && (
+												<Link href={sc.url} target="_blank" rel="noopener" variant="caption">
+													<DocumentText size={12} style={{ verticalAlign: "middle", marginRight: 3 }} />
+													Ver documento
+												</Link>
+											)}
+										</Stack>
+									</Paper>
+								))}
+
+								<Alert severity="info">
+									Desvincular deshace el apareo completo: quita el movimiento de la causa, firma el historial, la sentencia
+									capturada recupera la carátula del propio fallo (queda publicada sin causa) y su embedding se re-encola. Queda
+									respaldo en <code>saij-desvinculacion-backup</code>. Es lo mismo que hace la vista de Conciliación SAIJ.
+								</Alert>
+							</Stack>
+						)}
+					</DialogContent>
+					<DialogActions>
+						<Button component={RouterLink} to="/admin/saij/conciliacion" size="small">
+							Abrir Conciliación SAIJ
+						</Button>
+						<Box sx={{ flex: 1 }} />
+						<Button onClick={() => setSaijAbierto(false)}>Cerrar</Button>
+					</DialogActions>
+				</Dialog>
 
 				<TablePagination
 					component="div"
