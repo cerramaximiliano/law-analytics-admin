@@ -1,6 +1,12 @@
 // causas-update-config y las causas elegibles viven en ATLAS — no en el rs0
 // del /cache (misma clase que scraping-manager, incidente Integraciones 2026-08-17).
-import { pjnAtlasAxios as workersAxios } from "utils/workersAxios";
+// Instancia cache-api (rs0): esta vista documenta la cola del
+// update-movimientos-worker, que corre en worker_01 contra el Mongo local
+// (= primary de rs0). El commit a556ce8 la había movido a la instancia Atlas
+// junto con otros services y desde entonces mostraba el circuito equivocado:
+// las causas update:true del hub (~980, otro subsistema), no las ~10 que el
+// worker de scraping realmente ve.
+import workersAxios from "utils/workersAxios";
 
 // Apunta a la pjn-api del worker_01 (DB local), expuesta vía VITE_WORKERS_URL.
 // Las causas viven en el caché local del server donde corre update-movimientos-worker.
