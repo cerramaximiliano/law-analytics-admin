@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Box, Chip, Tab, Tabs, Typography, Paper, Stack, useTheme, alpha } from "@mui/material";
 import { Edit, InfoCircle } from "iconsax-react";
 import MainCard from "components/MainCard";
@@ -7,6 +7,7 @@ import EscritosWorkerTab from "pages/admin/rag-workers/EscritosWorkerTab";
 import EscritosHelpTab from "./EscritosHelpTab";
 import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { useTabParam } from "hooks/useTabParam";
 
 interface TabDef {
 	label: string;
@@ -15,10 +16,15 @@ interface TabDef {
 	component: React.ReactNode;
 }
 
+// Slugs del tab en la URL (?tab=...). Espeja los `value` de `tabs`.
+const TAB_VALUES = ["escritos", "help"] as const;
+// Al cambiar de tab se limpia `sub`: el sub-tab del anterior no aplica al nuevo.
+const TAB_RESETS = ["sub", "sub2"] as const;
+
 const EscritosWorkerPage = () => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
-	const [activeTab, setActiveTab] = useState("escritos");
+	const [activeTab, setActiveTab] = useTabParam("tab", TAB_VALUES, { resets: TAB_RESETS });
 
 	const tabs: TabDef[] = [
 		{

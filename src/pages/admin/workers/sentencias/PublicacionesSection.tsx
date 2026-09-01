@@ -53,6 +53,7 @@ import { useSnackbar } from "notistack";
 import SentenciasService, { AiSummary, SentenciaCapturada, Fuero, SentenciaTipo, PublicationStatus } from "api/sentenciasCapturadas";
 import RepoBadge from "components/admin/RepoBadge";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { useTabParam } from "hooks/useTabParam";
 
 const FUERO_LABELS: Record<string, string> = { CIV: "Civil", CSS: "Seg. Social", CNT: "Trabajo", COM: "Comercial" };
 const FUERO_COLORS: Record<string, "primary" | "warning" | "error" | "success"> = {
@@ -309,6 +310,8 @@ function SummaryDialog({ open, doc, onClose, onSaved }: SummaryDialogProps) {
 
 type ViewTab = "pending" | "skipped" | "published";
 
+const VIEW_TABS: ViewTab[] = ["pending", "skipped", "published"];
+
 const TAB_LABELS: Record<ViewTab, string> = {
 	pending: "Pendientes",
 	skipped: "Archivadas",
@@ -320,7 +323,8 @@ export default function PublicacionesSection() {
 	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 
-	const [activeTab, setActiveTab] = useState<ViewTab>("pending");
+	const [activeTabRaw, setActiveTab] = useTabParam("sub", VIEW_TABS);
+	const activeTab = activeTabRaw as ViewTab;
 	const [docs, setDocs] = useState<SentenciaCapturada[]>([]);
 	const [total, setTotal] = useState(0);
 	const [loading, setLoading] = useState(false);
@@ -584,7 +588,7 @@ export default function PublicacionesSection() {
 				sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, minHeight: 36 }}
 				TabIndicatorProps={{ sx: { height: 2.5, bgcolor: BRAND_BLUE } }}
 			>
-				{(["pending", "skipped", "published"] as ViewTab[]).map((tab) => (
+				{VIEW_TABS.map((tab) => (
 					<Tab
 						key={tab}
 						value={tab}

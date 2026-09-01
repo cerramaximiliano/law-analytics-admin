@@ -8,11 +8,15 @@ import ConfigTab from "./ConfigTab";
 import StatusTab from "./StatusTab";
 import AlertsTab from "./AlertsTab";
 import DocumentsTab from "./DocumentsTab";
+import { useTabIndexParam } from "hooks/useTabParam";
+
+// Slugs del tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
+const TAB_SLUGS = ["configuracion", "estado", "documentos", "alertas"] as const;
 
 export default function LiquidacionWorkerPage() {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
-	const [tab, setTab] = useState(0);
+	const [tab, setTab] = useTabIndexParam("tab", TAB_SLUGS);
 	const [doc, setDoc] = useState<FullDoc | null>(null);
 	const [loading, setLoading] = useState(true);
 

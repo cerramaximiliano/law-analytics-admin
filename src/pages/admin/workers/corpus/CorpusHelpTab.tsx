@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import { Box, Stack, Tab, Tabs, Typography, useTheme, alpha, Chip } from "@mui/material";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { useTabParam } from "hooks/useTabParam";
 
 // ── Shared diagram primitives ─────────────────────────────────────────────────
 
@@ -496,10 +497,13 @@ const TABS = [
 	{ label: "Troubleshooting", value: "trouble" },
 ];
 
+// Slugs del sub-tab en la URL (?sub=...).
+const TAB_VALUES = TABS.map((t) => t.value);
+
 const CorpusHelpTab: React.FC = () => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
-	const [sub, setSub] = useState("overview");
+	const [sub, setSub] = useTabParam("sub", TAB_VALUES);
 
 	return (
 		<Stack spacing={0}>

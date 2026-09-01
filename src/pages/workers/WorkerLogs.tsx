@@ -89,6 +89,7 @@ import {
 	CartesianGrid,
 } from "recharts";
 import { Link as RouterLink } from "react-router-dom";
+import { useTabParam } from "hooks/useTabParam";
 import CleanupConfigService, { CleanupConfig, CleanupStatusResponse, ExecutionHistoryItem } from "api/cleanupConfig";
 
 // ======================== HELPER FUNCTIONS ========================
@@ -2996,9 +2997,12 @@ interface WorkerLogsTab {
 	description: string;
 }
 
+// Slugs del tab en la URL (?tab=...). Espeja los `value` de `tabs`.
+const TAB_VALUES = ["overview", "workers", "activity", "logs", "search", "errors", "cleanup"] as const;
+
 const WorkerLogs: React.FC = () => {
 	const theme = useTheme();
-	const [activeTab, setActiveTab] = useState("overview");
+	const [activeTab, setActiveTab] = useTabParam("tab", TAB_VALUES);
 	const [refreshKey, setRefreshKey] = useState(0);
 
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {

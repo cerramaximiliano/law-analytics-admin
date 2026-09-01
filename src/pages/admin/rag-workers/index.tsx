@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import { Box, Tab, Tabs, Typography, Paper, Stack, useTheme, alpha } from "@mui/material";
 import { Setting3, Chart, DollarSquare, InfoCircle, DocumentText, CpuSetting, Activity, MessageText } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { TabPanel } from "components/ui-component/TabPanel";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { useTabParam } from "hooks/useTabParam";
 import WorkerControlTab from "./WorkerControlTab";
 import WorkerStatsTab from "./WorkerStatsTab";
 import WorkerPricingTab from "./WorkerPricingTab";
@@ -14,12 +15,19 @@ import WorkerHelpTab from "./WorkerHelpTab";
 import ChatRagTab from "./ChatRagTab";
 import ChatEditorTab from "./ChatEditorTab";
 
+// Slugs de los tabs en la URL. El principal va en `?tab=`, el sub-tab en `?sub=`.
+const TAB_VALUES = ["control", "metricas", "pricing", "indexation", "pipeline", "chat", "help"] as const;
+// Al cambiar de tab se limpia `sub`: el sub-tab del anterior no aplica al nuevo.
+const TAB_RESETS = ["sub"] as const;
+const METRICAS_SUB = ["stats", "analytics"] as const;
+const CHAT_SUB = ["rag", "editor"] as const;
+
 // ── Sub-tab wrappers ─────────────────────────────────────────────────────────
 
 const MetricasTab = () => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
-	const [sub, setSub] = useState("stats");
+	const [sub, setSub] = useTabParam("sub", METRICAS_SUB);
 	return (
 		<Stack spacing={0}>
 			<Tabs
@@ -43,7 +51,7 @@ const MetricasTab = () => {
 const ChatTab = () => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
-	const [sub, setSub] = useState("rag");
+	const [sub, setSub] = useTabParam("sub", CHAT_SUB);
 	return (
 		<Stack spacing={0}>
 			<Tabs
@@ -76,7 +84,7 @@ interface RagWorkerTab {
 const RagWorkersPage = () => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
-	const [activeTab, setActiveTab] = useState("control");
+	const [activeTab, setActiveTab] = useTabParam("tab", TAB_VALUES, { resets: TAB_RESETS });
 
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
 		setActiveTab(newValue);

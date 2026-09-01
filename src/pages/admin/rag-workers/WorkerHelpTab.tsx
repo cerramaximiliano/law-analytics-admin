@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { Box, Stack, Tab, Tabs, Typography, useTheme, alpha } from "@mui/material";
+import { useTabParam } from "hooks/useTabParam";
 
 // ── Flow node components ─────────────────────────────────────────────────────
 
@@ -2664,9 +2665,12 @@ const HELP_TABS = [
 	{ label: "Corpus de Estilo", value: "style-corpus" },
 ] as const;
 
+// Slugs del sub-tab en la URL (?sub=...).
+const HELP_TAB_VALUES = HELP_TABS.map((t) => t.value);
+
 const WorkerHelpTab = () => {
 	const theme = useTheme();
-	const [subTab, setSubTab] = useState("summary");
+	const [subTab, setSubTab] = useTabParam("sub", HELP_TAB_VALUES);
 
 	return (
 		<Stack spacing={0}>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Box, Chip, Tab, Tabs, Typography, Paper, Stack, useTheme, alpha } from "@mui/material";
 import { Book, InfoCircle } from "iconsax-react";
 import MainCard from "components/MainCard";
@@ -6,6 +6,7 @@ import { TabPanel } from "components/ui-component/TabPanel";
 import StyleCorpusTab from "pages/admin/rag-workers/StyleCorpusTab";
 import CorpusHelpTab from "./CorpusHelpTab";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { useTabParam } from "hooks/useTabParam";
 
 interface TabDef {
 	label: string;
@@ -14,10 +15,15 @@ interface TabDef {
 	component: React.ReactNode;
 }
 
+// Slugs del tab en la URL (?tab=...). Espeja los `value` de `tabs`.
+const TAB_VALUES = ["corpus", "help"] as const;
+// Al cambiar de tab se limpia `sub`: el sub-tab del anterior no aplica al nuevo.
+const TAB_RESETS = ["sub"] as const;
+
 const CorpusWorkerPage = () => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
-	const [activeTab, setActiveTab] = useState("corpus");
+	const [activeTab, setActiveTab] = useTabParam("tab", TAB_VALUES, { resets: TAB_RESETS });
 
 	const tabs: TabDef[] = [
 		{

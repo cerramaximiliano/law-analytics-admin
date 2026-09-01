@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, SyntheticEvent } from "react";
+import { useTabIndexParam } from "hooks/useTabParam";
 import JurisdictionStatusTab from "./JurisdictionStatusTab";
 import {
 	Box,
@@ -70,6 +71,9 @@ const DAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 const WORKER_TYPES: ("verify" | "update")[] = ["verify", "update"];
 const WORKER_LABELS: Record<string, string> = { verify: "Verificación", update: "Actualización" };
 
+// Slugs del sub-tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
+const SUB_TABS = ["estado", "configuracion", "alertas", "estadisticas", "jurisdicciones"] as const;
+
 export default function WorkerManagerTab() {
 	const { enqueueSnackbar } = useSnackbar();
 
@@ -85,7 +89,7 @@ export default function WorkerManagerTab() {
 	const [saving, setSaving] = useState(false);
 
 	// Tab vertical activa
-	const [tabValue, setTabValue] = useState(0);
+	const [tabValue, setTabValue] = useTabIndexParam("tab", SUB_TABS);
 	const theme = useTheme();
 
 	const handleTabChange = (_event: SyntheticEvent, newValue: number) => {

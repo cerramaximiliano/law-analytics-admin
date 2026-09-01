@@ -39,6 +39,7 @@ import {
 } from "@mui/material";
 import { Refresh, Trash, Setting3, ExportSquare } from "iconsax-react";
 import { Link as RouterLink } from "react-router-dom";
+import { useTabParam } from "hooks/useTabParam";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import PostalWorkersFlow from "../flujos/PostalWorkersFlow";
@@ -1252,8 +1253,12 @@ const RunsTab = () => {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
+// Slugs del tab en la URL (?tab=...). Espeja los `value` de los <Tab>.
+// `config` va primero: es el tab por defecto de la vista.
+const TAB_VALUES = ["config", "flow", "jobs", "runs"] as const;
+
 const ScraperWorkerPage = () => {
-	const [tab, setTab] = useState("config");
+	const [tab, setTab] = useTabParam("tab", TAB_VALUES);
 	const theme = useTheme();
 
 	const badgeStyle = {

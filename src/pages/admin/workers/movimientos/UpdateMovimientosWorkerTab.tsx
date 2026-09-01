@@ -29,6 +29,7 @@ import { useSnackbar } from "notistack";
 import UpdateMovimientosService, { UpdateMovimientosWorkerConfig, UpdateMovimientosManagerConfig } from "api/updateMovimientos";
 import WorkerControlPanel from "components/WorkerControlPanel";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder } from "themes/dashboardTokens";
+import { useTabParam } from "hooks/useTabParam";
 
 const FUERO_LABELS: Record<string, string> = { CIV: "Civil", CNT: "Trabajo", CSS: "Seg. Social", COM: "Comercial" };
 const ALL_FUEROS = ["CIV", "CNT", "CSS", "COM"];
@@ -1118,11 +1119,14 @@ const SECTIONS = [
 	{ label: "Workers", value: "workers", icon: <Setting2 size={16} /> },
 ];
 
+// Slugs de la sección en la URL (?tab=...). Espeja los `value` de SECTIONS.
+const SECTION_VALUES = SECTIONS.map((s) => s.value);
+
 export default function UpdateMovimientosWorkerTab() {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
-	const [section, setSection] = useState("estado");
+	const [section, setSection] = useTabParam("tab", SECTION_VALUES);
 
 	// Una sola carga para toda la vista: antes cada sección pedía lo mismo por
 	// su cuenta (tres fetch de los mismos dos endpoints) y podían mostrar

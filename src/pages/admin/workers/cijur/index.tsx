@@ -15,9 +15,13 @@ import CijurWorkersFlow from "pages/admin/flujos/CijurWorkersFlow";
 import EstadoTab from "./EstadoTab";
 import FallosTab from "./FallosTab";
 import ConfigTab from "./ConfigTab";
+import { useTabIndexParam } from "hooks/useTabParam";
+
+// Slugs del tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
+const TAB_SLUGS = ["estado", "fallos", "configuracion", "flujo"] as const;
 
 export default function CijurWorkerPage() {
-	const [tab, setTab] = useState(0);
+	const [tab, setTab] = useTabIndexParam("tab", TAB_SLUGS);
 	const [progress, setProgress] = useState<CijurProgressResponse["data"] | null>(null);
 	const [config, setConfig] = useState<CijurWorkerConfig | null>(null);
 	const [error, setError] = useState<string | null>(null);

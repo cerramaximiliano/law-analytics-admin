@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTabIndexParam } from "hooks/useTabParam";
 import {
 	Box,
 	Card,
@@ -115,6 +116,9 @@ function formatElapsed(date?: string): string {
 	return "ahora";
 }
 
+// Slugs del sub-tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
+const SUB_TABS = ["configuracion", "workers", "alertas", "estadisticas", "info", "credenciales"] as const;
+
 // ========== Main Component ==========
 const ScbaManagerTab: React.FC = () => {
 	const theme = useTheme();
@@ -123,7 +127,7 @@ const ScbaManagerTab: React.FC = () => {
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [config, setConfig] = useState<ScbaManagerConfig | null>(null);
-	const [subTab, setSubTab] = useState(0);
+	const [subTab, setSubTab] = useTabIndexParam("tab", SUB_TABS);
 	const [error, setError] = useState<string | null>(null);
 
 	// Editable state

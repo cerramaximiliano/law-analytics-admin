@@ -71,6 +71,7 @@ import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES, headerBorder } from "them
 import SaijWorkersFlow from "pages/admin/flujos/SaijWorkersFlow";
 import ProgresoPanel from "./ProgresoPanel";
 import DifusionTab from "./DifusionTab";
+import { useTabIndexParam } from "hooks/useTabParam";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -123,6 +124,9 @@ function StatBox({ label, value, color }: { label: string; value: string | numbe
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
+// Slugs del tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
+const TAB_SLUGS = ["estado", "configuracion", "historial", "pipeline", "flujo", "difusion"] as const;
+
 export default function SaijWorkerPage() {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
@@ -130,7 +134,7 @@ export default function SaijWorkerPage() {
 	const [configs, setConfigs] = useState<SaijWorkerConfig[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [selected, setSelected] = useState<SaijWorkerConfig | null>(null);
-	const [tab, setTab] = useState(0);
+	const [tab, setTab] = useTabIndexParam("tab", TAB_SLUGS);
 	// Vinculación manual de causa: el pipeline solo vincula cuando puede
 	// parsear el expediente del PDF; esto cubre los fallos que quedaron sueltos.
 	const [causaDialog, setCausaDialog] = useState<{ id: string; titulo: string } | null>(null);
@@ -259,12 +263,18 @@ export default function SaijWorkerPage() {
 
 	const handleTabChange = (_: React.SyntheticEvent, newVal: number) => {
 		setTab(newVal);
-		if (newVal === 2 && history.length === 0) loadHistory();
-		if (newVal === 3) {
+	};
+
+	// Carga on-demand de los tabs pesados. Va en un efecto y no en el onChange
+	// porque el tab puede venir restaurado desde la URL, sin click de por medio.
+	useEffect(() => {
+		if (tab === 2 && history.length === 0) loadHistory();
+		if (tab === 3) {
 			if (!pipelineStats) loadPipelineStats();
 			if (pipelineSentencias.length === 0) loadPipelineSentencias(1, pipelineFilters);
 		}
-	};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [tab]);
 
 	const selectWorker = (cfg: SaijWorkerConfig) => {
 		setSelected(cfg);

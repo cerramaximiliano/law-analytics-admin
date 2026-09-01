@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Box, Paper, Stack, Tab, Tabs, Typography, alpha, useTheme } from "@mui/material";
 import { Activity, CpuSetting, InfoCircle, Setting3 } from "iconsax-react";
 import MainCard from "components/MainCard";
@@ -7,11 +6,15 @@ import StatsTab from "./StatsTab";
 import ConfigTab from "./ConfigTab";
 import HelpTab from "./HelpTab";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { useTabParam } from "hooks/useTabParam";
+
+// Slugs del tab en la URL (?tab=...). Espeja los `value` de `tabs`.
+const TAB_VALUES = ["status", "stats", "config", "help"] as const;
 
 const InfolegWorkersPage = () => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
-	const [tab, setTab] = useState("status");
+	const [tab, setTab] = useTabParam("tab", TAB_VALUES);
 
 	const tabs = [
 		{ value: "status", label: "Estado / Control", icon: <CpuSetting size={18} /> },

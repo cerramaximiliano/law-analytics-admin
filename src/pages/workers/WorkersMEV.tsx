@@ -1,5 +1,6 @@
 import React from "react";
 import { useState, useEffect } from "react";
+import { useTabParam } from "hooks/useTabParam";
 import {
 	Box,
 	Card,
@@ -75,10 +76,15 @@ interface WorkerTab {
 	ip?: string;
 }
 
+// Slugs de los workers en la URL (?worker=...). El orden espeja el de `workerTabs`.
+const WORKER_VALUES = ["manager", "verification", "update", "sync-check", "system-config", "scba"] as const;
+// Al cambiar de worker se limpia `tab`: el sub-tab del anterior no aplica al nuevo.
+const WORKER_RESETS = ["tab"] as const;
+
 const MEVWorkers = () => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
-	const [activeTab, setActiveTab] = useState("manager");
+	const [activeTab, setActiveTab] = useTabParam("worker", WORKER_VALUES, { resets: WORKER_RESETS });
 	const [configs, setConfigs] = useState<MEVWorkerConfig[]>([]);
 	const [systemConfigs, setSystemConfigs] = useState<SystemConfig[]>([]);
 	const [loading, setLoading] = useState(true);

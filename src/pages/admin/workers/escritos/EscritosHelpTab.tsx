@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { Box, Stack, Tab, Tabs, Typography, useTheme, alpha } from "@mui/material";
 import WorkerScopeAlert from "components/admin/WorkerScopeAlert";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { useTabParam } from "hooks/useTabParam";
 
 // ── Diagram primitives ────────────────────────────────────────────────────────
 
@@ -820,10 +821,13 @@ const TABS = [
 	{ label: "Troubleshooting", value: "trouble" },
 ];
 
+// Slugs del sub-tab en la URL (?sub=...).
+const TAB_VALUES = TABS.map((t) => t.value);
+
 const EscritosHelpTab: React.FC = () => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
-	const [sub, setSub] = useState("overview");
+	const [sub, setSub] = useTabParam("sub", TAB_VALUES);
 
 	return (
 		<Stack spacing={0}>

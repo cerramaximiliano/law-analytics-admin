@@ -3,6 +3,7 @@
  * Organiza toda la documentación de EJE Workers
  */
 import { useState, SyntheticEvent } from "react";
+import { useTabIndexParam } from "hooks/useTabParam";
 import {
 	Box,
 	Tabs,
@@ -644,10 +645,22 @@ npx ts-node scripts/test-verification-flow.ts 162321/2020 162512/2020`}
 	);
 };
 
+// Slugs del sub-tab de documentación en la URL (?tab=...). El orden fija el índice de cada <Tab>.
+const DOC_SLUGS = [
+	"control",
+	"flujo-verificacion",
+	"flujo-actualizacion",
+	"arquitectura",
+	"campos",
+	"historial-asociacion",
+	"metricas",
+	"scripts",
+] as const;
+
 const DocumentationTabs = () => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
-	const [tabValue, setTabValue] = useState(0);
+	const [tabValue, setTabValue] = useTabIndexParam("tab", DOC_SLUGS);
 
 	const handleTabChange = (_event: SyntheticEvent, newValue: number) => {
 		setTabValue(newValue);

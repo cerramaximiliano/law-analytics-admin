@@ -49,6 +49,7 @@ import RagWorkersService, {
 import WorkerControlPanel from "components/WorkerControlPanel";
 import WorkerScopeAlert from "components/admin/WorkerScopeAlert";
 import CronSelector from "components/admin/CronSelector";
+import { useTabParam } from "hooks/useTabParam";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 // ── Constantes ───────────────────────────────────────────────────────────────
@@ -539,6 +540,11 @@ function ConfigNovelty({
 	);
 }
 
+// Slugs de los tabs internos en la URL: `?sub=` el principal, `?sub2=` el de config.
+const SUB_VALUES = ["resumen", "busqueda", "config"] as const;
+const SUB_RESETS = ["sub2"] as const;
+const CONFIG_SUB_VALUES = ["general", "novelty"] as const;
+
 // ── Tab: Configuración (con tabs verticales) ──────────────────────────────────
 
 function ConfigSection() {
@@ -548,7 +554,7 @@ function ConfigSection() {
 	const [saving, setSaving] = useState(false);
 	const [local, setLocal] = useState<Partial<EscritosWorkerConfig>>({});
 	const [dirty, setDirty] = useState(false);
-	const [subTab, setSubTab] = useState("general");
+	const [subTab, setSubTab] = useTabParam("sub2", CONFIG_SUB_VALUES);
 
 	const load = useCallback(async () => {
 		setLoading(true);
@@ -1085,7 +1091,7 @@ function BusquedaSection() {
 
 const EscritosWorkerTab: React.FC = () => {
 	const { enqueueSnackbar } = useSnackbar();
-	const [tab, setTab] = useState("resumen");
+	const [tab, setTab] = useTabParam("sub", SUB_VALUES, { resets: SUB_RESETS });
 
 	// ── Worker control state ──────────────────────────────────────────────────
 	const [workerEnabled, setWorkerEnabled] = useState<boolean | null>(null);

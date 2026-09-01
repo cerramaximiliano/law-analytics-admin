@@ -3,6 +3,7 @@
  * Comprehensive dashboard for managing PJ Mendoza workers with separate tabs for each worker type
  */
 import React, { useState, useEffect, useCallback } from "react";
+import { useTabIndexParam } from "hooks/useTabParam";
 import {
 	Grid,
 	Box,
@@ -98,6 +99,11 @@ interface EditDialogProps {
 }
 
 // ========== HELPER COMPONENTS ==========
+
+// Slugs del tab principal en la URL (?worker=...). El orden fija el índice de cada <Tab>.
+const WORKER_SLUGS = ["verificacion", "actualizacion", "sistema", "estadisticas", "documentacion"] as const;
+// Al cambiar de tab se limpia `tab`: el sub-tab del anterior no aplica al nuevo.
+const WORKER_RESETS = ["tab"] as const;
 
 function TabPanel(props: TabPanelProps) {
 	const { children, value, index, ...other } = props;
@@ -634,7 +640,7 @@ const EditWorkerDialog: React.FC<EditDialogProps> = ({ open, workerType, config,
 
 const PjMendozaWorkersConfig: React.FC = () => {
 	const theme = useTheme();
-	const [tabValue, setTabValue] = useState(0);
+	const [tabValue, setTabValue] = useTabIndexParam("worker", WORKER_SLUGS, { resets: WORKER_RESETS });
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
 	const [actionLoading, setActionLoading] = useState(false);

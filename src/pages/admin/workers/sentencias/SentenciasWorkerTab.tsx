@@ -66,6 +66,7 @@ import WorkerControlPanel from "components/WorkerControlPanel";
 import CronSelector from "components/admin/CronSelector";
 import PublicacionesSection from "./PublicacionesSection";
 import FlujoPanel from "./FlujoPanel";
+import { useTabIndexParam } from "hooks/useTabParam";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -2932,6 +2933,11 @@ const SECTIONS: { label: string; icon: React.ReactElement; group: SectionGroup }
 	{ label: "Novedades", icon: <TickCircle size={16} />, group: "data" },
 ];
 
+// Slugs de la sección en la URL (?tab=...). El orden espeja el de SECTIONS.
+const SECTION_SLUGS = ["flujo", "estado", "collector", "ocr", "embeddings", "ultimas", "lista", "publicaciones", "novedades"] as const;
+// Al cambiar de sección se limpia `sub`: el sub-tab de la anterior no aplica.
+const SECTION_RESETS = ["sub"] as const;
+
 export default function SentenciasWorkerTab() {
 	const theme = useTheme();
 	// Debajo de md los tabs pasan a horizontales: el sidebar fijo de 170px
@@ -2939,7 +2945,7 @@ export default function SentenciasWorkerTab() {
 	const tabsVerticales = useMediaQuery(theme.breakpoints.up("md"));
 	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
-	const [section, setSection] = useState(0);
+	const [section, setSection] = useTabIndexParam("tab", SECTION_SLUGS, { resets: SECTION_RESETS });
 	const [stats, setStats] = useState<SentenciasStats | null>(null);
 	const [loading, setLoading] = useState(false);
 
