@@ -149,6 +149,7 @@ const CausasUpdateEligiblePage = () => {
 						<ToggleButtonGroup
 							size="small"
 							exclusive
+							sx={{ flexWrap: "wrap" }}
 							value={fuente}
 							onChange={(_, v) => {
 								if (!v) return;
@@ -227,6 +228,9 @@ const CausasUpdateEligiblePage = () => {
 				<Tabs
 					value={activeFuero}
 					onChange={handleFueroChange}
+					variant="scrollable"
+					scrollButtons="auto"
+					allowScrollButtonsMobile
 					TabIndicatorProps={{ sx: { backgroundColor: BRAND_BLUE, height: 2.5 } }}
 					sx={{
 						borderBottom: `1px solid ${headerBorder(isDark)}`,
