@@ -55,6 +55,7 @@ import {
 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import CronSelector, { getCronLabel } from "components/admin/CronSelector";
+import CrossViewPair from "components/admin/CrossViewLink";
 import { useTheme, alpha } from "@mui/material/styles";
 import DocumentationTabs from "./DocumentationTabs";
 import { CausasPjCatamarcaService, PipelineStatsResponse } from "api/causasPjCatamarca";
@@ -919,6 +920,7 @@ const PjCatamarcaWorkersConfig: React.FC = () => {
 						title="Workers PJ Catamarca"
 						secondary={
 							<Stack direction="row" spacing={1} alignItems="center">
+								<CrossViewPair side="worker" to="/admin/pjcatamarca/verified-app" />
 								<Box
 									sx={{
 										display: "inline-flex",

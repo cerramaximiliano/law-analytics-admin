@@ -31,6 +31,7 @@ import {
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import CrossViewPair from "components/admin/CrossViewLink";
 import { CausasEjeService, CausaEje, WorkerStatsResponse, EligibilityStatsResponse } from "api/causasEje";
 import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Lock1, Repeat } from "iconsax-react";
 import CausaDetalleModalEje from "./CausaDetalleModalEje";
@@ -428,7 +429,7 @@ const CarpetasVerificadasEje = () => {
 	};
 
 	return (
-		<MainCard title="Carpetas Verificadas EJE (App)">
+		<MainCard title="Carpetas Verificadas EJE (App)" secondary={<CrossViewPair side="datos" to="/admin/eje/workers?worker=actualizacion" />}>
 			{/* Header: Resultados + Estadísticas */}
 			<Box sx={{ mb: 2 }}>
 				<Grid container spacing={2} alignItems="center">

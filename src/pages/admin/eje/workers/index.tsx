@@ -55,6 +55,7 @@ import {
 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import CronSelector from "components/admin/CronSelector";
+import CrossViewPair from "components/admin/CrossViewLink";
 import { useTheme, alpha } from "@mui/material/styles";
 import DocumentationTabs from "./DocumentationTabs";
 import configEje, {
@@ -887,6 +888,7 @@ const EjeWorkersConfig: React.FC = () => {
 						title="Workers EJE"
 						secondary={
 							<Stack direction="row" spacing={1} alignItems="center">
+								<CrossViewPair side="worker" to="/admin/eje/verified-app" />
 								<Chip
 									label={workersData?.managerState.isRunning ? "Manager Activo" : "Manager Detenido"}
 									color={workersData?.managerState.isRunning ? "success" : "error"}

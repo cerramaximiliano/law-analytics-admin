@@ -31,6 +31,7 @@ import {
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import CrossViewPair from "components/admin/CrossViewLink";
 import { CausasPjMendozaService, CausaPjMendoza, WorkerStatsResponse, EligibilityStatsResponse } from "api/causasPjMendoza";
 import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Lock1, Repeat } from "iconsax-react";
 import CausaDetalleModalPjMendoza from "./CausaDetalleModalPjMendoza";
@@ -427,7 +428,7 @@ const CarpetasVerificadasPjMendoza = () => {
 	};
 
 	return (
-		<MainCard title="Carpetas verificadas PJ Mendoza (App)">
+		<MainCard title="Carpetas verificadas PJ Mendoza (App)" secondary={<CrossViewPair side="datos" to="/admin/pjmendoza/workers?worker=actualizacion" />}>
 			{/* Header: Resultados + Estadísticas */}
 			<Box sx={{ mb: 2 }}>
 				<Grid container spacing={2} alignItems="center">

@@ -60,6 +60,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import CopyButton from "components/CopyButton";
 import { TabPanel } from "components/ui-component/TabPanel";
+import CrossViewPair from "components/admin/CrossViewLink";
 import MEVWorkersService, { MEVWorkerConfig, SystemConfig } from "api/workersMEV";
 import SyncCheckTab from "./SyncCheckTab";
 import WorkerManagerTab from "./WorkerManagerTab";
@@ -100,7 +101,6 @@ const MEVWorkers = () => {
 	const [passwordModalUserId, setPasswordModalUserId] = useState<string>("");
 	const [passwordChangeDate, setPasswordChangeDate] = useState<Dayjs | null>(dayjs());
 	const [instructionsOpen, setInstructionsOpen] = useState(false);
-	const [workerGuideOpen, setWorkerGuideOpen] = useState(false);
 	const [workerInfoModalOpen, setWorkerInfoModalOpen] = useState(false);
 	const [guideModalOpen, setGuideModalOpen] = useState(false);
 	const [eligibilityModalOpen, setEligibilityModalOpen] = useState(false);
@@ -2496,12 +2496,15 @@ const MEVWorkers = () => {
 		<>
 			<MainCard>
 				<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-					<Box>
-						<Typography variant="h3">Workers MEV</Typography>
-						<Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-							Gestiona y configura los workers del sistema MEV
-						</Typography>
-					</Box>
+					<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1.5}>
+						<Box>
+							<Typography variant="h3">Workers MEV</Typography>
+							<Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
+								Gestiona y configura los workers del sistema MEV
+							</Typography>
+						</Box>
+						<CrossViewPair side="worker" to="/admin/mev/verified-app" />
+					</Stack>
 
 					<Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
 						<Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
