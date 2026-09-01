@@ -13,6 +13,7 @@
       background: #0a0f1e;
       color: #e2e8f0;
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -32,8 +33,10 @@
 
     .card-header {
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
+      gap: 10px;
       margin-bottom: 40px;
     }
 
@@ -62,6 +65,7 @@
       text-transform: uppercase;
       padding: 6px 14px;
       border-radius: 100px;
+      max-width: 100%;
     }
 
     .dot {
@@ -111,6 +115,45 @@
 
     .footer a:hover {
       text-decoration: underline;
+    }
+
+    /* El logo (183px) y el chip (~215px) suman ~400px, pero un viewport de
+       360px sólo deja 216px una vez descontados los padding de body y card.
+       El corte va en 620px y no en 520: entre 521 y 616 la tarjeta todavía es
+       más angosta que su max-width y la fila seguía sin entrar. */
+    @media (max-width: 620px) {
+      body {
+        padding: 16px;
+      }
+
+      .card {
+        padding: 36px 22px;
+        border-radius: 14px;
+      }
+
+      .card-header {
+        justify-content: center;
+        gap: 14px;
+        margin-bottom: 28px;
+      }
+
+      .logo img.large-logo {
+        height: 38px;
+      }
+
+      .status-badge {
+        font-size: 11px;
+        letter-spacing: 0.3px;
+        padding: 5px 11px;
+      }
+
+      h1 {
+        font-size: 23px;
+      }
+
+      p {
+        font-size: 14px;
+      }
     }
   </style>
 </head>
