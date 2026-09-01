@@ -106,6 +106,28 @@ const CausasUpdateEligiblePage = () => {
 	const [detallesAbiertos, setDetallesAbiertos] = useState(false);
 	const mostrarDetalles = esEscritorio || detallesAbiertos;
 
+	// Apagar el seguimiento (update=false) con motivo obligatorio y firmado.
+	const [flagCausa, setFlagCausa] = useState<CausaElegible | null>(null);
+	const [flagMotivo, setFlagMotivo] = useState("");
+	const [flagGuardando, setFlagGuardando] = useState(false);
+
+	const apagarUpdate = async () => {
+		if (!flagCausa || !flagMotivo.trim()) return;
+		setFlagGuardando(true);
+		try {
+			await CausasElegiblesUpdateService.setUpdateFlag(activeFuero, flagCausa._id, false, flagMotivo.trim());
+			enqueueSnackbar(`update=false en ${flagCausa.number}/${flagCausa.year} — motivo firmado en el historial`, { variant: "success" });
+			setFlagCausa(null);
+			setFlagMotivo("");
+			fetchList();
+			fetchStats();
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.message || "No se pudo cambiar el flag", { variant: "error" });
+		} finally {
+			setFlagGuardando(false);
+		}
+	};
+
 	// Panel SAIJ de una causa: fallos vinculados + sentencias capturadas.
 	const [saijDetalle, setSaijDetalle] = useState<CausaSaijDetalle | null>(null);
 	const [saijAbierto, setSaijAbierto] = useState(false);
@@ -430,6 +452,7 @@ const CausasUpdateEligiblePage = () => {
 								<TableCell align="center">Usuarios</TableCell>
 								<TableCell>Last update</TableCell>
 								<TableCell align="center">Estado</TableCell>
+								{fuente === "cache" && <TableCell align="center">Acciones</TableCell>}
 							</TableRow>
 						</TableHead>
 						<TableBody>
@@ -445,7 +468,7 @@ const CausasUpdateEligiblePage = () => {
 								))
 							) : rows.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={9} align="center" sx={{ py: 6 }}>
+									<TableCell colSpan={fuente === "cache" ? 10 : 9} align="center" sx={{ py: 6 }}>
 										<Stack alignItems="center" spacing={1}>
 											<InfoCircle size={36} color={theme.palette.text.disabled} />
 											<Typography variant="body2" color="text.secondary">
@@ -545,12 +568,63 @@ const CausasUpdateEligiblePage = () => {
 												<Chip size="small" icon={<TickCircle size={12} />} label="Disponible" color="success" variant="outlined" />
 											)}
 										</TableCell>
+										{fuente === "cache" && (
+											<TableCell align="center">
+												<Tooltip title="Quitar del circuito de actualización (update=false), con motivo firmado en el historial">
+													<Button
+														size="small"
+														color="error"
+														onClick={() => {
+															setFlagMotivo("");
+															setFlagCausa(c);
+														}}
+													>
+														Quitar
+													</Button>
+												</Tooltip>
+											</TableCell>
+										)}
 									</TableRow>
 								))
 							)}
 						</TableBody>
 					</Table>
 				</TableContainer>
+
+				{/* ── Quitar seguimiento (update=false) con motivo ─────────────── */}
+				<Dialog open={!!flagCausa} onClose={() => !flagGuardando && setFlagCausa(null)} maxWidth="sm" fullWidth>
+					<DialogTitle>
+						Quitar del circuito — {flagCausa?.fuero} {flagCausa?.number}/{flagCausa?.year}
+					</DialogTitle>
+					<DialogContent dividers>
+						<Typography variant="body2" sx={{ mb: 1.5 }}>
+							{flagCausa?.caratula || "(sin carátula)"}
+						</Typography>
+						<Alert severity="info" sx={{ mb: 2 }}>
+							Se marca <code>update = false</code>: el worker deja de intentarla. La transición queda en el historial de la causa
+							con tu email y el motivo. Reversible desde el mismo historial (o re-encendida por el pipeline de novelty si vuelve a
+							detectar algo).
+						</Alert>
+						<TextField
+							fullWidth
+							autoFocus
+							multiline
+							minRows={2}
+							label="Motivo (obligatorio)"
+							placeholder="ej: el portal devuelve solo incidentes; el principal pasó a reservado"
+							value={flagMotivo}
+							onChange={(e) => setFlagMotivo(e.target.value)}
+						/>
+					</DialogContent>
+					<DialogActions>
+						<Button onClick={() => setFlagCausa(null)} disabled={flagGuardando}>
+							Cancelar
+						</Button>
+						<Button color="error" variant="contained" onClick={apagarUpdate} disabled={flagGuardando || !flagMotivo.trim()}>
+							{flagGuardando ? "Guardando…" : "Quitar seguimiento"}
+						</Button>
+					</DialogActions>
+				</Dialog>
 
 				{/* ── Panel SAIJ de una causa: fallos + sentencias capturadas ───── */}
 				<Dialog open={saijAbierto} onClose={() => setSaijAbierto(false)} maxWidth="md" fullWidth>

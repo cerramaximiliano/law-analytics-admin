@@ -103,6 +103,14 @@ const CausasElegiblesUpdateService = {
 		const res = await clientePorFuente[params.fuente ?? "cache"].get<CausasUpdateListResponse>(`${BASE}?${qs.toString()}`);
 		return res.data;
 	},
+	/**
+	 * Apaga/enciende el seguimiento de una causa. La transición queda firmada en
+	 * updateHistory (quién, cuándo, por qué) — el motivo es obligatorio.
+	 * Siempre vía cache-api (rs0): es una operación sobre el caché del worker.
+	 */
+	async setUpdateFlag(fuero: Fuero, id: string, update: boolean, reason: string): Promise<void> {
+		await workersAxios.patch(`${BASE}/${fuero}/${id}/update-flag`, { update, reason });
+	},
 };
 
 export default CausasElegiblesUpdateService;
