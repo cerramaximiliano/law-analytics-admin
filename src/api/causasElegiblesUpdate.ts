@@ -111,6 +111,14 @@ const CausasElegiblesUpdateService = {
 	async setUpdateFlag(fuero: Fuero, id: string, update: boolean, reason: string): Promise<void> {
 		await workersAxios.patch(`${BASE}/${fuero}/${id}/update-flag`, { update, reason });
 	},
+	/**
+	 * Marca la causa como reservada: update=false + isValid=false + isPrivate=true.
+	 * Usar cuando el portal ya no muestra el principal (responde "no disponible"
+	 * o lista únicamente incidentes). Firmado en updateHistory (privacy_change).
+	 */
+	async marcarReservada(fuero: Fuero, id: string, reason: string): Promise<void> {
+		await workersAxios.patch(`${BASE}/${fuero}/${id}/marcar-reservada`, { reason });
+	},
 };
 
 export default CausasElegiblesUpdateService;

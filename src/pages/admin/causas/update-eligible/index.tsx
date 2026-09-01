@@ -128,6 +128,31 @@ const CausasUpdateEligiblePage = () => {
 		}
 	};
 
+	// Marcar reservada: update=false + isValid=false + isPrivate=true, firmado.
+	const [reservadaCausa, setReservadaCausa] = useState<CausaElegible | null>(null);
+	const [reservadaMotivo, setReservadaMotivo] = useState("");
+	const [reservadaGuardando, setReservadaGuardando] = useState(false);
+
+	const marcarReservada = async () => {
+		if (!reservadaCausa || !reservadaMotivo.trim()) return;
+		setReservadaGuardando(true);
+		try {
+			await CausasElegiblesUpdateService.marcarReservada(activeFuero, reservadaCausa._id, reservadaMotivo.trim());
+			enqueueSnackbar(
+				`${reservadaCausa.number}/${reservadaCausa.year} marcada reservada: sin seguimiento, inválida para el caché, isPrivate=true`,
+				{ variant: "success" },
+			);
+			setReservadaCausa(null);
+			setReservadaMotivo("");
+			fetchList();
+			fetchStats();
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.message || "No se pudo marcar como reservada", { variant: "error" });
+		} finally {
+			setReservadaGuardando(false);
+		}
+	};
+
 	// Panel SAIJ de una causa: fallos vinculados + sentencias capturadas.
 	const [saijDetalle, setSaijDetalle] = useState<CausaSaijDetalle | null>(null);
 	const [saijAbierto, setSaijAbierto] = useState(false);
@@ -570,18 +595,32 @@ const CausasUpdateEligiblePage = () => {
 										</TableCell>
 										{fuente === "cache" && (
 											<TableCell align="center">
-												<Tooltip title="Quitar del circuito de actualización (update=false), con motivo firmado en el historial">
-													<Button
-														size="small"
-														color="error"
-														onClick={() => {
-															setFlagMotivo("");
-															setFlagCausa(c);
-														}}
-													>
-														Quitar
-													</Button>
-												</Tooltip>
+												<Stack direction="row" spacing={0.5} justifyContent="center">
+													<Tooltip title="Quitar del circuito de actualización (update=false), con motivo firmado en el historial">
+														<Button
+															size="small"
+															color="error"
+															onClick={() => {
+																setFlagMotivo("");
+																setFlagCausa(c);
+															}}
+														>
+															Quitar
+														</Button>
+													</Tooltip>
+													<Tooltip title="El portal ya no muestra el principal (reservado): update=false + isValid=false + isPrivate=true">
+														<Button
+															size="small"
+															color="warning"
+															onClick={() => {
+																setReservadaMotivo("el portal lista solo incidentes: el principal pasó a reservado");
+																setReservadaCausa(c);
+															}}
+														>
+															Reservada
+														</Button>
+													</Tooltip>
+												</Stack>
 											</TableCell>
 										)}
 									</TableRow>
@@ -590,6 +629,67 @@ const CausasUpdateEligiblePage = () => {
 						</TableBody>
 					</Table>
 				</TableContainer>
+
+				{/* ── Marcar reservada: el combo completo, con la explicación ──── */}
+				<Dialog open={!!reservadaCausa} onClose={() => !reservadaGuardando && setReservadaCausa(null)} maxWidth="sm" fullWidth>
+					<DialogTitle>
+						Marcar reservada — {reservadaCausa?.fuero} {reservadaCausa?.number}/{reservadaCausa?.year}
+					</DialogTitle>
+					<DialogContent dividers>
+						<Typography variant="body2" sx={{ mb: 1.5 }}>
+							{reservadaCausa?.caratula || "(sin carátula)"}
+						</Typography>
+						<Alert severity="warning" sx={{ mb: 1.5 }}>
+							<Typography variant="body2" fontWeight={600} gutterBottom>
+								Cuándo usarlo
+							</Typography>
+							<Typography variant="body2">
+								Cuando el portal público ya no muestra el expediente principal: responde{" "}
+								<em>"no disponible para su consulta"</em> o la búsqueda lista <strong>únicamente incidentes</strong> (
+								<code>/1</code>, <code>/2</code>…). Eso significa que el principal pasó a reservado — la causa existe, pero ya
+								no es consultable sin login.
+							</Typography>
+						</Alert>
+						<Alert severity="info" sx={{ mb: 2 }}>
+							<Typography variant="body2" fontWeight={600} gutterBottom>
+								Consecuencias
+							</Typography>
+							<Typography variant="body2" component="div">
+								<ul style={{ margin: 0, paddingLeft: 18 }}>
+									<li>
+										<code>update = false</code> — el worker deja de intentarla (y de gastar captcha).
+									</li>
+									<li>
+										<code>isValid = false</code> — el caché deja de servir esta copia al hub: si un usuario la vincula a
+										una carpeta, se crea un documento fresco que se verifica contra el estado <em>actual</em> del portal.
+									</li>
+									<li>
+										<code>isPrivate = true</code> — el estado real (reservada, no inexistente). Reversible si el
+										expediente vuelve a ser público.
+									</li>
+									<li>Todo queda firmado en el historial de la causa con tu email y el motivo.</li>
+								</ul>
+							</Typography>
+						</Alert>
+						<TextField
+							fullWidth
+							autoFocus
+							multiline
+							minRows={2}
+							label="Motivo (obligatorio)"
+							value={reservadaMotivo}
+							onChange={(e) => setReservadaMotivo(e.target.value)}
+						/>
+					</DialogContent>
+					<DialogActions>
+						<Button onClick={() => setReservadaCausa(null)} disabled={reservadaGuardando}>
+							Cancelar
+						</Button>
+						<Button color="warning" variant="contained" onClick={marcarReservada} disabled={reservadaGuardando || !reservadaMotivo.trim()}>
+							{reservadaGuardando ? "Guardando…" : "Marcar reservada"}
+						</Button>
+					</DialogActions>
+				</Dialog>
 
 				{/* ── Quitar seguimiento (update=false) con motivo ─────────────── */}
 				<Dialog open={!!flagCausa} onClose={() => !flagGuardando && setFlagCausa(null)} maxWidth="sm" fullWidth>
