@@ -15,6 +15,8 @@ export interface UpdateMovimientosWorkerConfig {
 	cronPattern: string;
 	batchSize: number;
 	lockTimeoutMinutes: number;
+	/** Una causa se intenta a lo sumo una vez por esta ventana (h). 0 = sin límite. */
+	updateThresholdHours?: number;
 	errorCooldown: {
 		enabled: boolean;
 		maxConsecutiveErrors: number;

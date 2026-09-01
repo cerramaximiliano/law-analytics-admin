@@ -575,10 +575,12 @@ function ManagerSection({
 	manager,
 	r,
 	onSaved,
+	onWorkerSaved,
 }: {
 	manager: UpdateMovimientosManagerConfig | null;
 	r: Resumen;
 	onSaved: (m: UpdateMovimientosManagerConfig) => void;
+	onWorkerSaved: (w: UpdateMovimientosWorkerConfig) => void;
 }) {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
@@ -586,6 +588,37 @@ function ManagerSection({
 	const [saving, setSaving] = useState(false);
 	const [local, setLocal] = useState<Partial<UpdateMovimientosManagerConfig["config"]>>({});
 	const [dirty, setDirty] = useState(false);
+
+	// Threshold de intento por causa: vive en la config POR FUERO (el worker lo
+	// lee de ahí), pero se administra desde acá aplicándolo a todos los fueros.
+	const valoresThreshold = r.porFuero.map((f) => f.config.updateThresholdHours ?? 24);
+	const thresholdComun = valoresThreshold.length && valoresThreshold.every((v) => v === valoresThreshold[0]) ? valoresThreshold[0] : null;
+	const [thresholdInput, setThresholdInput] = useState<number | "">("");
+	const [aplicandoThreshold, setAplicandoThreshold] = useState(false);
+	const thresholdMostrado = thresholdInput === "" ? thresholdComun ?? "" : thresholdInput;
+
+	async function aplicarThreshold() {
+		const valor = Number(thresholdMostrado);
+		if (Number.isNaN(valor) || valor < 0) return;
+		setAplicandoThreshold(true);
+		try {
+			const actualizados = await Promise.all(
+				r.porFuero.map((f) => UpdateMovimientosService.updateWorkerConfig(f.config._id, { updateThresholdHours: valor })),
+			);
+			actualizados.forEach(onWorkerSaved);
+			setThresholdInput("");
+			enqueueSnackbar(
+				valor === 0
+					? "Threshold deshabilitado en los 4 fueros: las causas pueden reintentarse sin ventana"
+					: `Threshold aplicado: cada causa se intenta a lo sumo una vez cada ${valor} h (los 4 fueros)`,
+				{ variant: "success" },
+			);
+		} catch {
+			enqueueSnackbar("Error aplicando el threshold", { variant: "error" });
+		} finally {
+			setAplicandoThreshold(false);
+		}
+	}
 
 	useEffect(() => {
 		setLocal({});
@@ -656,6 +689,40 @@ function ManagerSection({
 						{r.cola < (cfg.scaleDownThreshold ?? 10) ? " — por debajo del umbral de bajada, así que se queda en el mínimo." : "."}
 					</Typography>
 				</Stack>
+			</Paper>
+
+			{/* Frecuencia por causa: además del cooldown por errores, cada causa se
+			    intenta a lo sumo una vez por ventana — evita que una causa que
+			    falla cicle indefinidamente todos los días. */}
+			<Paper variant="outlined" sx={{ borderRadius: 2, borderColor: headerBorder(isDark) }}>
+				<Typography variant="subtitle2" fontWeight={700} sx={{ px: 2, pt: 1.75, pb: 0.5 }}>
+					Frecuencia por causa
+				</Typography>
+				<Box sx={{ px: 2, pb: 2 }}>
+					<Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+						Cada causa se intenta <b>a lo sumo una vez</b> por esta ventana, salga bien o mal — complementa al cooldown por
+						errores, que solo frena rachas. Con 24 h, una causa se actualiza una vez al día. <b>0</b> la deshabilita
+						(comportamiento previo: reintento en cuanto vence el cooldown).
+					</Typography>
+					<Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ sm: "center" }}>
+						<TextField
+							label="Ventana (horas)"
+							type="number"
+							size="small"
+							value={thresholdMostrado}
+							onChange={(e) => setThresholdInput(e.target.value === "" ? "" : parseInt(e.target.value, 10))}
+							inputProps={{ min: 0, max: 168 }}
+							sx={{ width: 160 }}
+							helperText={thresholdComun === null ? "Valores mixtos entre fueros" : undefined}
+						/>
+						<Button size="small" variant="contained" onClick={aplicarThreshold} disabled={aplicandoThreshold || thresholdMostrado === ""}>
+							{aplicandoThreshold ? "Aplicando…" : "Aplicar a los 4 fueros"}
+						</Button>
+						<Typography variant="caption" color="text.secondary">
+							Actual: {r.porFuero.map((f) => `${f.fuero} ${f.config.updateThresholdHours ?? 24}h`).join(" · ") || "—"}
+						</Typography>
+					</Stack>
+				</Box>
 			</Paper>
 
 			{/* Tres bloques, una sola columna de controles: todos los campos caen en
@@ -1004,6 +1071,18 @@ function WorkerCard({ fila, onSaved }: { fila: Resumen["porFuero"][number]; onSa
 						<Grid item xs={12} sm={4}>
 							<TextField
 								fullWidth
+								label="Threshold de intento (h)"
+								type="number"
+								value={merged.updateThresholdHours ?? 24}
+								onChange={(e) => patch("updateThresholdHours", parseInt(e.target.value, 10))}
+								helperText="Una causa se intenta a lo sumo una vez por esta ventana. 0 = sin límite"
+								size="small"
+								inputProps={{ min: 0, max: 168 }}
+							/>
+						</Grid>
+						<Grid item xs={12} sm={4}>
+							<TextField
+								fullWidth
 								label="Timeout del lock (min)"
 								type="number"
 								value={merged.lockTimeoutMinutes ?? 5}
@@ -1238,7 +1317,7 @@ export default function UpdateMovimientosWorkerTab() {
 				</Tabs>
 
 				{section === "estado" && <EstadoSection r={r} manager={manager} />}
-				{section === "manager" && <ManagerSection manager={manager} r={r} onSaved={setManager} />}
+				{section === "manager" && <ManagerSection manager={manager} r={r} onSaved={setManager} onWorkerSaved={upsertWorker} />}
 				{section === "workers" && <WorkersSection r={r} onSaved={upsertWorker} />}
 			</Box>
 		</Stack>
