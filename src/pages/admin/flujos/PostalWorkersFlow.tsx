@@ -10,9 +10,8 @@
 // sin duplicar: un solo componente, una sola fuente.
 
 import React, { useEffect, useState } from "react";
-import { Box, Button, Chip, Skeleton, Stack, Typography } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
-import { ExportSquare } from "iconsax-react";
+import { Box, Chip, Skeleton, Stack, Typography } from "@mui/material";
+import { VerDatosLink } from "components/admin/CrossViewLink";
 import FlowDiagram from "../causas/flujos/FlowDiagram";
 import { buildPostalWorkersSpec, PostalFlowLiveConfig } from "./postalWorkersFlowData";
 import ScraperService from "api/scraperService";
@@ -92,19 +91,14 @@ const PostalWorkersFlow: React.FC = () => {
 				sx={{ mt: 1 }}
 			>
 				<Typography variant="caption" color="text.secondary" sx={{ maxWidth: 720 }}>
-					Los seguimientos y su historial completo (estados, screenshots, auditoría de cierres, salud del pipeline) se operan en la
-					vista de datos postales. El envío de emails y sus destinatarios se administran en Notificaciones → Seguimiento postal.
+					Los seguimientos y su historial completo (estados, screenshots, auditoría de cierres, salud del pipeline) se operan en la vista de
+					datos postales. El envío de emails y sus destinatarios se administran en Notificaciones → Seguimiento postal.
 				</Typography>
-				<Button
-					size="small"
-					variant="outlined"
-					component={RouterLink}
+				<VerDatosLink
 					to="/admin/postal-tracking"
-					endIcon={<ExportSquare size={15} />}
-					sx={{ flexShrink: 0 }}
-				>
-					Ver los datos postales
-				</Button>
+					label="Ver los datos postales"
+					tooltip="Ir a seguimientos, historial, screenshots y salud del pipeline postal"
+				/>
 			</Stack>
 		</Box>
 	);

@@ -43,6 +43,7 @@ import MisCausasUpdatesWorker from "./MisCausasUpdatesWorker";
 import PrivacyCheckerWorker from "./PrivacyCheckerWorker";
 import CaptchaDatasetTab from "./CaptchaDatasetTab";
 import DocumentationTab from "./documentation";
+import { VerDatosLink } from "components/admin/CrossViewLink";
 
 interface WorkerTab {
 	label: string;
@@ -53,6 +54,12 @@ interface WorkerTab {
 	/** Host donde corre el proceso PM2. */
 	host?: string;
 	ip?: string;
+	/**
+	 * Vista de datos que produce este worker, si tiene una. El link cruzado lo
+	 * dibuja la franja de contexto: así el par datos↔worker se declara una vez
+	 * acá y no lo reimplementa cada panel.
+	 */
+	dataView?: { to: string; label?: string; tooltip?: string };
 }
 
 // El rail agrupa por etapa del pipeline, no por orden histórico de aparición:
@@ -103,6 +110,10 @@ const WORKER_TABS: WorkerTab[] = [
 		status: "active",
 		host: "app",
 		ip: "18.228.63.73",
+		dataView: {
+			to: "/admin/causas/update-eligible?fuente=atlas",
+			tooltip: "Ir a las causas elegibles de Atlas, la cola que consume este worker",
+		},
 	},
 	{
 		label: "Intervinientes",
@@ -444,16 +455,21 @@ const WorkersConfig = () => {
 									{current.description}
 								</Typography>
 							</Box>
-							{current.status && (
-								<Stack direction="row" spacing={0.75} alignItems="center" sx={{ flexShrink: 0 }}>
-									<Box sx={{ width: 7, height: 7, borderRadius: "50%", bgcolor: statusColor(current.status) }} />
-									<Typography variant="caption" sx={{ color: statusColor(current.status), fontWeight: 600, mr: 0.5 }}>
-										{current.status === "active" ? "Activo" : current.status === "inactive" ? "Inactivo" : "Error"}
-									</Typography>
-									{current.host && monoChip(current.host, "neutral")}
-									{current.ip && monoChip(current.ip, "info")}
-								</Stack>
-							)}
+							<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ flexShrink: 0 }}>
+								{current.dataView && (
+									<VerDatosLink to={current.dataView.to} label={current.dataView.label} tooltip={current.dataView.tooltip} />
+								)}
+								{current.status && (
+									<Stack direction="row" spacing={0.75} alignItems="center" sx={{ flexShrink: 0 }}>
+										<Box sx={{ width: 7, height: 7, borderRadius: "50%", bgcolor: statusColor(current.status) }} />
+										<Typography variant="caption" sx={{ color: statusColor(current.status), fontWeight: 600, mr: 0.5 }}>
+											{current.status === "active" ? "Activo" : current.status === "inactive" ? "Inactivo" : "Error"}
+										</Typography>
+										{current.host && monoChip(current.host, "neutral")}
+										{current.ip && monoChip(current.ip, "info")}
+									</Stack>
+								)}
+							</Stack>
 						</Stack>
 					</Box>
 

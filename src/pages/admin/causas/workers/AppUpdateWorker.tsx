@@ -1,5 +1,4 @@
 import React from "react";
-import { Link as RouterLink } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
 	Box,
@@ -560,15 +559,9 @@ const AppUpdateWorker = () => {
 
 			<Box sx={{ p: { xs: 2, md: 3 } }}>
 				<Stack spacing={2}>
+					{/* "Ver los datos" salió de acá: lo dibuja la franja de contexto del
+					    rail, declarado en dataView. Queda sólo la acción de esta vista. */}
 					<Box display="flex" justifyContent="flex-end" gap={1}>
-						<Button
-							variant="outlined"
-							size="small"
-							component={RouterLink}
-							to="/admin/causas/update-eligible?fuente=atlas"
-						>
-							Ver los datos
-						</Button>
 						<Button variant="outlined" size="small" startIcon={<Refresh size={16} />} onClick={fetchConfigs}>
 							Actualizar
 						</Button>

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Box, Button, Chip, Collapse, Stack, Typography, alpha, useTheme } from "@mui/material";
-import { ArrowDown2, ArrowUp2, DocumentText } from "iconsax-react";
-import { Link as RouterLink } from "react-router-dom";
+import { Box, Chip, Collapse, Stack, Typography, alpha, useTheme } from "@mui/material";
+import { ArrowDown2, ArrowUp2 } from "iconsax-react";
 import MainCard from "components/MainCard";
+import { VerDatosLink } from "components/admin/CrossViewLink";
 import UpdateMovimientosWorkerTab from "./UpdateMovimientosWorkerTab";
 import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
 import { BRAND_BLUE } from "themes/dashboardTokens";
@@ -32,15 +32,10 @@ export default function MovimientosWorkerPage() {
 						Relee las causas que el pipeline de novedad marca para revisar y guarda los movimientos nuevos que aparecieron
 					</Typography>
 					<Stack direction="row" spacing={1} alignItems="center" flexShrink={0}>
-						<Button
-							size="small"
-							variant="outlined"
-							component={RouterLink}
-							to="/admin/causas/update-eligible"
-							startIcon={<DocumentText size={15} />}
-						>
-							Ver los datos
-						</Button>
+						{/* fuente=cache explícito: este worker consume la cola de rs0, no las
+						    causas de carpetas de Atlas. Antes se apoyaba en que "cache" fuera
+						    el default de la vista de datos. */}
+						<VerDatosLink to="/admin/causas/update-eligible?fuente=cache" />
 						<Chip
 							size="small"
 							variant="outlined"

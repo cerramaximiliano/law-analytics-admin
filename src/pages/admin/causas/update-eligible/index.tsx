@@ -37,11 +37,12 @@ import {
 	Divider,
 	Link,
 } from "@mui/material";
-import { Refresh, SearchNormal1, InfoCircle, Clock, TickCircle, CloseCircle, DocumentText, Setting2, ArrowDown2, ArrowUp2 } from "iconsax-react";
+import { Refresh, SearchNormal1, InfoCircle, Clock, TickCircle, CloseCircle, DocumentText, ArrowDown2, ArrowUp2 } from "iconsax-react";
 import { Link as RouterLink, useSearchParams } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
+import { ConfigWorkerLink } from "components/admin/CrossViewLink";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import CausasElegiblesUpdateService, {
 	CausaElegible,
@@ -208,7 +209,20 @@ const CausasUpdateEligiblePage = () => {
 			<Stack spacing={2}>
 				<Box>
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
-						<Typography variant="h3">Causas en Update</Typography>
+						{/* El link al worker vive acá y no en la banda de stats: es navegación,
+						    no una métrica más. Y cuelga del título porque el worker de destino
+						    depende de la fuente elegida, que es el control de al lado. */}
+						<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
+							<Typography variant="h3">Causas en Update</Typography>
+							<ConfigWorkerLink
+								to={fuente === "cache" ? "/admin/workers/movimientos" : "/admin/causas/workers?worker=app-update"}
+								tooltip={
+									fuente === "cache"
+										? "Ir al update-movimientos-worker, que consume esta cola"
+										: "Ir al worker de actualización que procesa las causas de carpetas"
+								}
+							/>
+						</Stack>
 						<ToggleButtonGroup
 							size="small"
 							exclusive
@@ -304,15 +318,6 @@ const CausasUpdateEligiblePage = () => {
 							</>
 						)}
 						<Box sx={{ flex: 1 }} />
-						<Button
-							size="small"
-							variant="outlined"
-							component={RouterLink}
-							to={fuente === "cache" ? "/admin/workers/movimientos" : "/admin/causas/workers?worker=app-update"}
-							startIcon={<Setting2 size={15} />}
-						>
-							Config del worker
-						</Button>
 						<Tooltip title="Refrescar stats">
 							<IconButton size="small" onClick={fetchStats} disabled={statsLoading}>
 								<Refresh size={18} />
