@@ -206,16 +206,6 @@ const CausasUpdateEligiblePage = () => {
 				<Box>
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
 						<Typography variant="h3">Causas en Update</Typography>
-						<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-						<Button
-							size="small"
-							variant="outlined"
-							component={RouterLink}
-							to={fuente === "cache" ? "/admin/workers/movimientos" : "/admin/causas/workers?worker=app-update"}
-							startIcon={<Setting2 size={15} />}
-						>
-							Config del worker
-						</Button>
 						<ToggleButtonGroup
 							size="small"
 							exclusive
@@ -240,7 +230,6 @@ const CausasUpdateEligiblePage = () => {
 								</Box>
 							</ToggleButton>
 						</ToggleButtonGroup>
-						</Stack>
 					</Stack>
 					<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: { xs: "block", sm: "none" } }}>
 						{fuente === "cache" ? "Cola del update-movimientos-worker (rs0/worker_01)." : "Causas de carpetas de usuarios (Atlas/hub)."}
@@ -312,6 +301,15 @@ const CausasUpdateEligiblePage = () => {
 							</>
 						)}
 						<Box sx={{ flex: 1 }} />
+						<Button
+							size="small"
+							variant="outlined"
+							component={RouterLink}
+							to={fuente === "cache" ? "/admin/workers/movimientos" : "/admin/causas/workers?worker=app-update"}
+							startIcon={<Setting2 size={15} />}
+						>
+							Config del worker
+						</Button>
 						<Tooltip title="Refrescar stats">
 							<IconButton size="small" onClick={fetchStats} disabled={statsLoading}>
 								<Refresh size={18} />
