@@ -203,7 +203,7 @@ const CausasUpdateEligiblePage = () => {
 							size="small"
 							variant="outlined"
 							component={RouterLink}
-							to="/admin/workers/movimientos"
+							to={fuente === "cache" ? "/admin/workers/movimientos" : "/admin/causas/workers?worker=app-update"}
 							startIcon={<Setting2 size={15} />}
 						>
 							Config del worker
@@ -219,12 +219,25 @@ const CausasUpdateEligiblePage = () => {
 								setPage(0);
 							}}
 						>
-							<ToggleButton value="cache">Caché rs0 · worker de scraping</ToggleButton>
-							<ToggleButton value="atlas">Atlas · carpetas de usuarios</ToggleButton>
+							<ToggleButton value="cache">
+								Caché rs0
+								<Box component="span" sx={{ display: { xs: "none", md: "inline" }, ml: 0.5 }}>
+									· worker de scraping
+								</Box>
+							</ToggleButton>
+							<ToggleButton value="atlas">
+								Atlas
+								<Box component="span" sx={{ display: { xs: "none", md: "inline" }, ml: 0.5 }}>
+									· carpetas de usuarios
+								</Box>
+							</ToggleButton>
 						</ToggleButtonGroup>
 						</Stack>
 					</Stack>
-					<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+					<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: { xs: "block", sm: "none" } }}>
+						{fuente === "cache" ? "Cola del update-movimientos-worker (rs0/worker_01)." : "Causas de carpetas de usuarios (Atlas/hub)."}
+					</Typography>
+					<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, display: { xs: "none", sm: "block" } }}>
 						Criterio de elegibilidad: <code>update=true, verified=true, isValid≠false</code>.{" "}
 						{fuente === "cache" ? (
 							<>
