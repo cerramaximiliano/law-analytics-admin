@@ -1,94 +1,157 @@
-import { Button, Tooltip, alpha, useTheme } from "@mui/material";
-import { ArrowRight2, DocumentText, Setting2 } from "iconsax-react";
+import { Box, Tooltip, alpha, useMediaQuery, useTheme } from "@mui/material";
+import { ArrowRight2 } from "iconsax-react";
 import { Link as RouterLink } from "react-router-dom";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 
 /**
- * El par de links que conecta una vista de datos con el worker que los extrae.
+ * El par datos↔worker, como control segmentado.
  *
  * Casi toda vista de datos del admin tiene un worker detrás, y casi toda vista
  * de worker tiene datos que mirar. Antes cada una resolvía ese salto por su
- * cuenta: cuatro implementaciones con tres etiquetas distintas ("Ver los
- * datos", "Config del worker", "Configuración del worker"), tres íconos y tres
- * ubicaciones. El salto se veía distinto según de dónde vinieras.
+ * cuenta, con tres etiquetas, tres íconos y tres ubicaciones distintas.
  *
- * Dos decisiones de diseño acá:
+ * La decisión de diseño de fondo: esto no es un link suelto, es orientación.
+ * Un botón te ofrece ir a algún lado; este control además te dice que las dos
+ * vistas *son* un par y en cuál de las dos mitades estás parado. Como el patrón
+ * se repite en todo el admin, esa lección se enseña una vez y después se lee
+ * sola.
  *
- * 1. **No es un botón de acción.** "Actualizar" o "Guardar" hacen algo en esta
- *    vista; esto te lleva a otra. Por eso el tinte azul de marca y la flecha
- *    final, en vez del outlined neutro que usan las acciones: a un golpe de
- *    vista se distingue "voy a otro lado" de "esto ejecuta algo".
+ * Detalles que lo hacen encajar en la franja de contexto, donde vive:
  *
- * 2. **El ícono nombra el destino, no el origen.** Vas a *datos* (documento) o
- *    vas a *configuración* (engranaje). Es la señal que te dice qué mitad del
- *    par estás mirando ahora mismo.
+ * - Toma el radio (6px) y el fondo tintado de los `monoChip` vecinos, en vez
+ *   del radio 12px y el borde de un Button MUI. En esta interfaz el borde
+ *   grueso significa "esto ejecuta algo", y navegar no ejecuta nada.
+ * - El lado activo va sólido y no es clickeable; el otro es el único link.
+ * - Sin engranaje ni documento: "Worker" y "Datos" ya nombran el destino, y el
+ *   engranaje además nombraba mal (vas a un worker, no a un panel de ajustes).
  *
- * Va siempre en la fila de encabezado de la vista, alineado a la derecha y
- * antes de los demás recursos del encabezado.
+ * En pantallas chicas los dos segmentos no entran, así que colapsa a un solo
+ * chip con la frase completa ("Ver los datos"), que se entiende sin el par.
  */
 
-export type CrossViewKind = "datos" | "worker";
+export type CrossViewSide = "datos" | "worker";
 
-export interface CrossViewLinkProps {
-	/** A qué mitad del par vas: los datos, o el worker que los produce. */
-	kind: CrossViewKind;
+export interface CrossViewPairProps {
+	/** En qué mitad del par está la vista actual. */
+	side: CrossViewSide;
+	/** Ruta de la otra mitad — la única que es link. */
 	to: string;
-	/** Sólo para destinos que no son "los datos" a secas (ej. "Ver los datos postales"). */
-	label?: string;
-	/** Qué vas a encontrar del otro lado. Por defecto describe el tipo de destino. */
+	/** Para pares que no son "Datos"/"Worker" a secas (ej. "Datos postales"). */
+	labels?: Partial<Record<CrossViewSide, string>>;
+	/** Qué vas a encontrar del otro lado. */
 	tooltip?: string;
 }
 
-const DEFAULTS: Record<CrossViewKind, { label: string; tooltip: string }> = {
-	datos: { label: "Ver los datos", tooltip: "Ir a la vista de datos que produce este worker" },
-	worker: { label: "Configuración del worker", tooltip: "Ir a la configuración del worker que extrae estos datos" },
+const DEFAULT_LABELS: Record<CrossViewSide, string> = { datos: "Datos", worker: "Worker" };
+const MOBILE_LABELS: Record<CrossViewSide, string> = { datos: "Ver los datos", worker: "Ver el worker" };
+const DEFAULT_TOOLTIP: Record<CrossViewSide, string> = {
+	datos: "Ir a la vista de datos que produce este worker",
+	worker: "Ir a la configuración del worker que extrae estos datos",
 };
 
-const CrossViewLink = ({ kind, to, label, tooltip }: CrossViewLinkProps) => {
+const CrossViewPair = ({ side, to, labels, tooltip }: CrossViewPairProps) => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
-	const defaults = DEFAULTS[kind];
+	const compacto = useMediaQuery(theme.breakpoints.down("sm"));
+
+	const otro: CrossViewSide = side === "datos" ? "worker" : "datos";
+	const label = (s: CrossViewSide) => labels?.[s] ?? DEFAULT_LABELS[s];
+	const title = tooltip ?? DEFAULT_TOOLTIP[otro];
+
+	const activoBg = isDark ? "#3A6FE0" : BRAND_BLUE;
+	const hoverBg = alpha(BRAND_BLUE, isDark ? 0.16 : 0.1);
+	const azul = isDark ? "#5B90FF" : BRAND_BLUE;
+
+	const base = {
+		display: "inline-flex",
+		alignItems: "center",
+		gap: 0.6,
+		px: 1.1,
+		py: 0.7,
+		fontSize: "0.71rem",
+		letterSpacing: "0.01em",
+		lineHeight: 1,
+		border: 0,
+		whiteSpace: "nowrap",
+		textDecoration: "none",
+		transition: theme.transitions.create(["background-color", "color", "transform"], { duration: 180 }),
+		"@media (prefers-reduced-motion: reduce)": { transition: "none" },
+	} as const;
+
+	const linkSx = {
+		...base,
+		fontWeight: 500,
+		color: theme.palette.text.secondary,
+		cursor: "pointer",
+		"&:hover": { bgcolor: hoverBg, color: azul },
+		"&:hover .cvl-arrow": { transform: "translateX(2px)" },
+		"&:active": { transform: "translateY(1px)" },
+		"&:focus-visible": { outline: `2px solid ${azul}`, outlineOffset: 2, borderRadius: 0.75 },
+	};
+
+	const flecha = (
+		<Box
+			className="cvl-arrow"
+			component="span"
+			sx={{
+				display: "inline-flex",
+				transition: theme.transitions.create("transform", { duration: 180 }),
+				"@media (prefers-reduced-motion: reduce)": { transition: "none" },
+			}}
+		>
+			<ArrowRight2 size={11} />
+		</Box>
+	);
+
+	// Móvil: los dos segmentos no entran. Un solo chip con la frase completa,
+	// que no necesita el par al lado para entenderse.
+	if (compacto) {
+		return (
+			<Tooltip title={title}>
+				<Box
+					component={RouterLink}
+					to={to}
+					sx={{
+						...linkSx,
+						borderRadius: 0.75,
+						fontWeight: 600,
+						color: azul,
+						bgcolor: alpha(BRAND_BLUE, isDark ? 0.14 : 0.09),
+						"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.22 : 0.16), color: azul },
+					}}
+				>
+					{labels?.[otro] ?? MOBILE_LABELS[otro]}
+					{flecha}
+				</Box>
+			</Tooltip>
+		);
+	}
 
 	return (
-		<Tooltip title={tooltip ?? defaults.tooltip}>
-			<Button
-				size="small"
-				variant="outlined"
-				component={RouterLink}
-				to={to}
-				startIcon={kind === "datos" ? <DocumentText size={15} /> : <Setting2 size={15} />}
-				endIcon={<ArrowRight2 size={13} />}
-				sx={{
-					flexShrink: 0,
-					whiteSpace: "nowrap",
-					textTransform: "none",
-					fontWeight: 600,
-					fontSize: "0.75rem",
-					borderRadius: 1.5,
-					py: 0.4,
-					pl: 1.1,
-					pr: 0.9,
-					color: BRAND_BLUE,
-					borderColor: alpha(BRAND_BLUE, isDark ? 0.38 : 0.26),
-					bgcolor: alpha(BRAND_BLUE, isDark ? 0.08 : 0.04),
-					"&:hover": {
-						borderColor: alpha(BRAND_BLUE, isDark ? 0.6 : 0.45),
-						bgcolor: alpha(BRAND_BLUE, isDark ? 0.16 : 0.09),
-					},
-					"& .MuiButton-startIcon": { mr: 0.7 },
-					"& .MuiButton-endIcon": { ml: 0.4, opacity: 0.65 },
-				}}
-			>
-				{label ?? defaults.label}
-			</Button>
-		</Tooltip>
+		<Box
+			component="nav"
+			aria-label="Vistas del par datos y worker"
+			sx={{
+				display: "inline-flex",
+				alignItems: "stretch",
+				borderRadius: 0.75,
+				overflow: "hidden",
+				flexShrink: 0,
+				border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.16 : 0.1)}`,
+				bgcolor: alpha(theme.palette.text.primary, isDark ? 0.16 : 0.07),
+			}}
+		>
+			<Box component="span" aria-current="page" sx={{ ...base, fontWeight: 600, bgcolor: activoBg, color: "#fff" }}>
+				{label(side)}
+			</Box>
+			<Tooltip title={title}>
+				<Box component={RouterLink} to={to} sx={linkSx}>
+					{label(otro)}
+					{flecha}
+				</Box>
+			</Tooltip>
+		</Box>
 	);
 };
 
-/** Desde una vista de worker hacia los datos que produce. */
-export const VerDatosLink = (props: Omit<CrossViewLinkProps, "kind">) => <CrossViewLink kind="datos" {...props} />;
-
-/** Desde una vista de datos hacia el worker que los extrae. */
-export const ConfigWorkerLink = (props: Omit<CrossViewLinkProps, "kind">) => <CrossViewLink kind="worker" {...props} />;
-
-export default CrossViewLink;
+export default CrossViewPair;

@@ -42,7 +42,7 @@ import { Link as RouterLink, useSearchParams } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
-import { ConfigWorkerLink } from "components/admin/CrossViewLink";
+import CrossViewPair from "components/admin/CrossViewLink";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import CausasElegiblesUpdateService, {
 	CausaElegible,
@@ -214,7 +214,8 @@ const CausasUpdateEligiblePage = () => {
 						    depende de la fuente elegida, que es el control de al lado. */}
 						<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
 							<Typography variant="h3">Causas en Update</Typography>
-							<ConfigWorkerLink
+							<CrossViewPair
+								side="datos"
 								to={fuente === "cache" ? "/admin/workers/movimientos" : "/admin/causas/workers?worker=app-update"}
 								tooltip={
 									fuente === "cache"
