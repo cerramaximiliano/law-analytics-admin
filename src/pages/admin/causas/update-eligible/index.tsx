@@ -26,6 +26,8 @@ import {
 	Typography,
 	useTheme,
 	alpha,
+	ToggleButton,
+	ToggleButtonGroup,
 } from "@mui/material";
 import { Refresh, SearchNormal1, InfoCircle, Clock, TickCircle, CloseCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
@@ -38,6 +40,7 @@ import CausasElegiblesUpdateService, {
 	FUERO_LABELS,
 	FueroStats,
 } from "api/causasElegiblesUpdate";
+import type { FuenteElegibles } from "api/causasElegiblesUpdate";
 
 const FUEROS: Fuero[] = ["CIV", "COM", "CSS", "CNT"];
 
@@ -66,6 +69,10 @@ const CausasUpdateEligiblePage = () => {
 	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
 
+	// Qué circuito de update:true se está mirando. "cache" = la cola real del
+	// update-movimientos-worker (rs0/worker_01); "atlas" = las causas de
+	// carpetas de usuarios del hub, que enciende associateFolderToCausa.
+	const [fuente, setFuente] = useState<FuenteElegibles>("cache");
 	const [activeFuero, setActiveFuero] = useState<Fuero>("CIV");
 	const [stats, setStats] = useState<Record<Fuero, FueroStats> | null>(null);
 	const [statsLoading, setStatsLoading] = useState(true);
@@ -82,7 +89,7 @@ const CausasUpdateEligiblePage = () => {
 	const fetchStats = useCallback(async () => {
 		try {
 			setStatsLoading(true);
-			const res = await CausasElegiblesUpdateService.getStats();
+			const res = await CausasElegiblesUpdateService.getStats(fuente);
 			setStats(res.data);
 		} catch (err: any) {
 			console.error("Error stats:", err);
@@ -90,7 +97,7 @@ const CausasUpdateEligiblePage = () => {
 		} finally {
 			setStatsLoading(false);
 		}
-	}, [enqueueSnackbar]);
+	}, [fuente, enqueueSnackbar]);
 
 	const fetchList = useCallback(async () => {
 		try {
@@ -101,6 +108,7 @@ const CausasUpdateEligiblePage = () => {
 				limit: rowsPerPage,
 				search: search || undefined,
 				onlyAvailable: onlyAvailable || undefined,
+				fuente,
 			});
 			setRows(res.data);
 			setTotal(res.pagination.total);
@@ -110,7 +118,7 @@ const CausasUpdateEligiblePage = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [activeFuero, page, rowsPerPage, search, onlyAvailable, enqueueSnackbar]);
+	}, [activeFuero, page, rowsPerPage, search, onlyAvailable, fuente, enqueueSnackbar]);
 
 	useEffect(() => {
 		fetchStats();
@@ -136,11 +144,35 @@ const CausasUpdateEligiblePage = () => {
 		<MainCard>
 			<Stack spacing={2}>
 				<Box>
-					<Typography variant="h3">Causas en Update (worker_01)</Typography>
+					<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
+						<Typography variant="h3">Causas en Update</Typography>
+						<ToggleButtonGroup
+							size="small"
+							exclusive
+							value={fuente}
+							onChange={(_, v) => {
+								if (!v) return;
+								setFuente(v);
+								setPage(0);
+							}}
+						>
+							<ToggleButton value="cache">Caché rs0 · worker de scraping</ToggleButton>
+							<ToggleButton value="atlas">Atlas · carpetas de usuarios</ToggleButton>
+						</ToggleButtonGroup>
+					</Stack>
 					<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-						Causas elegibles para scraping de movimientos según el criterio del{" "}
-						<code>update-movimientos-worker</code>: <code>update=true, verified=true, isValid≠false</code>. Lectura del caché local del
-						server donde corre el worker.
+						Criterio de elegibilidad: <code>update=true, verified=true, isValid≠false</code>.{" "}
+						{fuente === "cache" ? (
+							<>
+								Fuente: <strong>caché local de worker_01 (rs0)</strong> — la cola real del <code>update-movimientos-worker</code>,
+								encendida por el pipeline de novelty. Es donde se trabaja el scraping.
+							</>
+						) : (
+							<>
+								Fuente: <strong>Atlas (hub)</strong> — las causas de carpetas de usuarios, que{" "}
+								<code>associateFolderToCausa</code> enciende al vincular un folder. Otro circuito, otro worker.
+							</>
+						)}
 					</Typography>
 				</Box>
 

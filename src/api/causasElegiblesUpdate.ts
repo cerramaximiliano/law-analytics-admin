@@ -1,15 +1,23 @@
-// causas-update-config y las causas elegibles viven en ATLAS — no en el rs0
-// del /cache (misma clase que scraping-manager, incidente Integraciones 2026-08-17).
-// Instancia cache-api (rs0): esta vista documenta la cola del
-// update-movimientos-worker, que corre en worker_01 contra el Mongo local
-// (= primary de rs0). El commit a556ce8 la había movido a la instancia Atlas
-// junto con otros services y desde entonces mostraba el circuito equivocado:
-// las causas update:true del hub (~980, otro subsistema), no las ~10 que el
-// worker de scraping realmente ve.
-import workersAxios from "utils/workersAxios";
+// Hay DOS circuitos de update:true y esta vista puede mostrar ambos:
+//
+//   - "cache" (rs0, vía cache-api): la cola real del update-movimientos-worker
+//     que corre en worker_01 contra el Mongo local (= primary de rs0). Es el
+//     worker de scraping — normalmente ~decenas de causas encendidas por el
+//     pipeline de novelty.
+//   - "atlas" (hub pjn/api): las causas update:true de la base del hub — el
+//     subsistema de carpetas de usuarios (associateFolderToCausa las enciende
+//     al vincular un folder). Población distinta, worker distinto.
+//
+// Historia: la vista nació documentando el worker del caché, a556ce8 la movió
+// entera a Atlas, y desde 2026-09-01 el llamador elige la fuente.
+import workersAxios, { pjnAtlasAxios } from "utils/workersAxios";
 
-// Apunta a la pjn-api del worker_01 (DB local), expuesta vía VITE_WORKERS_URL.
-// Las causas viven en el caché local del server donde corre update-movimientos-worker.
+export type FuenteElegibles = "cache" | "atlas";
+
+const clientePorFuente: Record<FuenteElegibles, typeof workersAxios> = {
+	cache: workersAxios,     // cache-api → rs0 (worker_01)
+	atlas: pjnAtlasAxios,    // pjn/api del hub → Atlas
+};
 
 export type Fuero = "CIV" | "COM" | "CSS" | "CNT";
 
@@ -66,8 +74,8 @@ export interface CausasUpdateListResponse {
 const BASE = "/api/causas-elegibles-update";
 
 const CausasElegiblesUpdateService = {
-	async getStats(): Promise<CausasUpdateStatsResponse> {
-		const res = await workersAxios.get<CausasUpdateStatsResponse>(`${BASE}/stats`);
+	async getStats(fuente: FuenteElegibles = "cache"): Promise<CausasUpdateStatsResponse> {
+		const res = await clientePorFuente[fuente].get<CausasUpdateStatsResponse>(`${BASE}/stats`);
 		return res.data;
 	},
 
@@ -77,6 +85,7 @@ const CausasElegiblesUpdateService = {
 		limit?: number;
 		search?: string;
 		onlyAvailable?: boolean;
+		fuente?: FuenteElegibles;
 	}): Promise<CausasUpdateListResponse> {
 		const qs = new URLSearchParams();
 		qs.append("fuero", params.fuero);
@@ -84,7 +93,7 @@ const CausasElegiblesUpdateService = {
 		if (params.limit) qs.append("limit", String(params.limit));
 		if (params.search) qs.append("search", params.search);
 		if (params.onlyAvailable) qs.append("onlyAvailable", "true");
-		const res = await workersAxios.get<CausasUpdateListResponse>(`${BASE}?${qs.toString()}`);
+		const res = await clientePorFuente[params.fuente ?? "cache"].get<CausasUpdateListResponse>(`${BASE}?${qs.toString()}`);
 		return res.data;
 	},
 };
