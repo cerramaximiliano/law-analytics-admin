@@ -71,7 +71,10 @@ import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES, headerBorder } from "them
 import SaijWorkersFlow from "pages/admin/flujos/SaijWorkersFlow";
 import ProgresoPanel from "./ProgresoPanel";
 import DifusionTab from "./DifusionTab";
-import { useTabIndexParam } from "hooks/useTabParam";
+import { useTabIndexParam, useTabParam } from "hooks/useTabParam";
+import { useSearchParams } from "react-router-dom";
+import CrossViewPair from "components/admin/CrossViewLink";
+import { ConciliacionSaijContent } from "pages/admin/saij/conciliacion";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -125,7 +128,10 @@ function StatBox({ label, value, color }: { label: string; value: string | numbe
 // ── Main component ─────────────────────────────────────────────────────────────
 
 // Slugs del tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
-const TAB_SLUGS = ["estado", "configuracion", "historial", "pipeline", "flujo", "difusion"] as const;
+const TAB_SLUGS = ["estado", "configuracion", "historial", "pipeline", "flujo", "difusion", "conciliacion"] as const;
+// Panel izquierdo (canales de scraping vs enriquecimiento), también en la URL:
+// la navegación entera queda deep-linkeable y sobrevive al refresh.
+const PANEL_SLUGS = ["scraping", "enrich"] as const;
 
 export default function SaijWorkerPage() {
 	const theme = useTheme();
@@ -162,7 +168,10 @@ export default function SaijWorkerPage() {
 	// Enrich worker
 	const [enrichStats, setEnrichStats] = useState<EnrichStatsResponse["data"] | null>(null);
 	const [enrichLoading, setEnrichLoading] = useState(false);
-	const [sideTab, setSideTab] = useState<"scraping" | "enrich">("scraping");
+	const [sideTab, setSideTabParam] = useTabParam("panel", PANEL_SLUGS);
+	const setSideTab = setSideTabParam as (v: "scraping" | "enrich") => void;
+	// Canal seleccionado, persistido como ?canal=<worker_id>.
+	const [searchParams, setSearchParams] = useSearchParams();
 
 	// Pipeline view (tab 3)
 	const [pipelineStats, setPipelineStats] = useState<SentenciaStatsResponse["data"] | null>(null);
@@ -199,8 +208,14 @@ export default function SaijWorkerPage() {
 
 	const handleSideTabChange = (val: "scraping" | "enrich") => {
 		setSideTab(val);
-		if (val === "enrich" && !enrichStats) loadEnrichStats();
 	};
+
+	// La carga de enrich va por efecto y no en el onChange: el panel puede venir
+	// restaurado desde la URL, sin click de por medio.
+	useEffect(() => {
+		if (sideTab === "enrich" && !enrichStats) loadEnrichStats();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [sideTab]);
 
 	const fetchConfigs = async () => {
 		try {
@@ -208,8 +223,11 @@ export default function SaijWorkerPage() {
 			const res = await getSaijWorkerConfigs();
 			setConfigs(res.data);
 			if (res.data.length > 0) {
-				setSelected(res.data[0]);
-				setScrapingForm(res.data[0].scraping);
+				// Restaurar el canal desde la URL; si no hay (o ya no existe), el primero.
+				const canalParam = searchParams.get("canal");
+				const restaurado = (canalParam && res.data.find((c) => c.worker_id === canalParam)) || res.data[0];
+				setSelected(restaurado);
+				setScrapingForm(restaurado.scraping);
 			}
 		} catch {
 			enqueueSnackbar("Error cargando configuración de workers SAIJ", { variant: "error" });
@@ -281,6 +299,14 @@ export default function SaijWorkerPage() {
 		setScrapingForm(cfg.scraping);
 		setHistory([]);
 		setTab(0);
+		setSearchParams(
+			(prev) => {
+				const sp = new URLSearchParams(prev);
+				sp.set("canal", cfg.worker_id);
+				return sp;
+			},
+			{ replace: true },
+		);
 	};
 
 	const handleToggleEnabled = async () => {
@@ -679,11 +705,16 @@ export default function SaijWorkerPage() {
 							<Tab label="Pipeline" />
 							<Tab label="Flujo" />
 							<Tab label="Difusión" />
+							<Tab label="Conciliación" />
 						</Tabs>
 
 						{/* ── Tab 0: Estado ── */}
 						{tab === 0 && (
 							<Stack spacing={2}>
+								{/* Par worker↔datos, mismo control que en el resto del admin */}
+								<Box>
+									<CrossViewPair side="worker" to="/recursos/jurisprudencia/saij" />
+								</Box>
 								{/* Avance de todos los workers: cantidades reales y año en curso */}
 								<ProgresoPanel />
 								<Stack direction="row" spacing={1.5} flexWrap="wrap">
@@ -1410,6 +1441,9 @@ export default function SaijWorkerPage() {
 						{/* ── Tab 4: Flujo ── */}
 						{tab === 4 && <SaijWorkersFlow />}
 						{tab === 5 && <DifusionTab />}
+
+						{/* ── Tab 6: Conciliación de apareos SAIJ ↔ causas ── */}
+						{tab === 6 && <ConciliacionSaijContent />}
 					</Grid>
 				)}
 			</Grid>

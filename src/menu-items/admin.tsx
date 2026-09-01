@@ -478,7 +478,7 @@ const admin: NavItemType = {
 					id: "saij-conciliacion",
 					title: "Conciliación SAIJ",
 					type: "item",
-					url: "/admin/saij/conciliacion",
+					url: "/admin/workers/saij?tab=conciliacion",
 					breadcrumbs: true,
 				},
 				{

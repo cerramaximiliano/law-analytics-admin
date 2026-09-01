@@ -85,7 +85,12 @@ const colorSimilitud = (j?: number | null) => {
 	return "error" as const;
 };
 
-const ConciliacionSaijPage = () => {
+/**
+ * Contenido de la conciliación, sin el cascarón de página: se embebe como tab
+ * "Conciliación" en /admin/workers/saij y también se sirve standalone en
+ * /admin/saij/conciliacion (links históricos + botón de Causas en Update).
+ */
+export const ConciliacionSaijContent = () => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
@@ -260,22 +265,18 @@ const ConciliacionSaijPage = () => {
 	);
 
 	return (
-		<MainCard
-			title="Conciliación de apareos SAIJ"
-			secondary={
-				<Stack direction="row" spacing={1}>
-					<Button size="small" startIcon={<Refresh size={16} />} onClick={refrescarTodo} disabled={cargando}>
-						Refrescar
-					</Button>
-					<Button size="small" variant="contained" onClick={lanzarEscaneo} disabled={escaneando}>
-						{escaneando ? "Escaneando…" : "Escanear apareos"}
-					</Button>
-					<Button size="small" color="error" variant="outlined" onClick={abrirLote}>
-						Desvincular claros…
-					</Button>
-				</Stack>
-			}
-		>
+		<Box>
+			<Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
+				<Button size="small" startIcon={<Refresh size={16} />} onClick={refrescarTodo} disabled={cargando}>
+					Refrescar
+				</Button>
+				<Button size="small" variant="contained" onClick={lanzarEscaneo} disabled={escaneando}>
+					{escaneando ? "Escaneando…" : "Escanear apareos"}
+				</Button>
+				<Button size="small" color="error" variant="outlined" onClick={abrirLote}>
+					Desvincular claros…
+				</Button>
+			</Stack>
 			<Alert severity="info" sx={{ mb: 2 }}>
 				El apareo automático vincula un fallo con una causa por <strong>fuero + número + año</strong>. Cuando el número de expediente sale de
 				una cita del PDF, o el mismo número existe en otro fuero, el fallo termina colgado de una causa ajena — y su carátula se propaga a{" "}
@@ -688,8 +689,14 @@ const ConciliacionSaijPage = () => {
 					</Button>
 				</DialogActions>
 			</Dialog>
-		</MainCard>
+		</Box>
 	);
 };
+
+const ConciliacionSaijPage = () => (
+	<MainCard title="Conciliación de apareos SAIJ">
+		<ConciliacionSaijContent />
+	</MainCard>
+);
 
 export default ConciliacionSaijPage;
