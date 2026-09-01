@@ -1,4 +1,4 @@
-import { Box, Tooltip, alpha, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Tooltip, alpha, useTheme } from "@mui/material";
 import { ArrowRight2 } from "iconsax-react";
 import { Link as RouterLink } from "react-router-dom";
 import { BRAND_BLUE } from "themes/dashboardTokens";
@@ -25,11 +25,15 @@ import { BRAND_BLUE } from "themes/dashboardTokens";
  * - Sin engranaje ni documento: "Worker" y "Datos" ya nombran el destino, y el
  *   engranaje además nombraba mal (vas a un worker, no a un panel de ajustes).
  *
- * En pantallas chicas los dos segmentos no entran, así que colapsa a un solo
- * chip con la frase completa ("Ver los datos"), que se entiende sin el par.
+ * El control es el mismo en todos los breakpoints. Antes colapsaba a un chip
+ * suelto en pantallas chicas, pero era una precaución innecesaria: los dos
+ * segmentos miden ~136px y entran hasta en 320px. Colapsar sólo lograba que
+ * el par se leyera distinto según el dispositivo, que es justo lo que este
+ * componente viene a evitar. Cuando el encabezado se queda sin lugar, el
+ * CardHeader del MainCard ya baja las acciones a su propia fila.
  *
- * Las etiquetas no se pueden personalizar a propósito: el par se lee igual en
- * todo el admin, y un "Flujo · Datos postales" suelto rompía esa lectura.
+ * Las etiquetas tampoco se pueden personalizar, por lo mismo: el par se lee
+ * igual en todo el admin.
  */
 
 export type CrossViewSide = "datos" | "worker";
@@ -44,7 +48,6 @@ export interface CrossViewPairProps {
 }
 
 const DEFAULT_LABELS: Record<CrossViewSide, string> = { datos: "Datos", worker: "Worker" };
-const MOBILE_LABELS: Record<CrossViewSide, string> = { datos: "Ver los datos", worker: "Ver el worker" };
 const DEFAULT_TOOLTIP: Record<CrossViewSide, string> = {
 	datos: "Ir a la vista de datos que produce este worker",
 	worker: "Ir a la configuración del worker que extrae estos datos",
@@ -53,7 +56,6 @@ const DEFAULT_TOOLTIP: Record<CrossViewSide, string> = {
 const CrossViewPair = ({ side, to, tooltip }: CrossViewPairProps) => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
-	const compacto = useMediaQuery(theme.breakpoints.down("sm"));
 
 	const otro: CrossViewSide = side === "datos" ? "worker" : "datos";
 	const label = (s: CrossViewSide) => DEFAULT_LABELS[s];
@@ -103,30 +105,6 @@ const CrossViewPair = ({ side, to, tooltip }: CrossViewPairProps) => {
 			<ArrowRight2 size={11} />
 		</Box>
 	);
-
-	// Móvil: los dos segmentos no entran. Un solo chip con la frase completa,
-	// que no necesita el par al lado para entenderse.
-	if (compacto) {
-		return (
-			<Tooltip title={title}>
-				<Box
-					component={RouterLink}
-					to={to}
-					sx={{
-						...linkSx,
-						borderRadius: 0.75,
-						fontWeight: 600,
-						color: azul,
-						bgcolor: alpha(BRAND_BLUE, isDark ? 0.14 : 0.09),
-						"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.22 : 0.16), color: azul },
-					}}
-				>
-					{MOBILE_LABELS[otro]}
-					{flecha}
-				</Box>
-			</Tooltip>
-		);
-	}
 
 	return (
 		<Box
