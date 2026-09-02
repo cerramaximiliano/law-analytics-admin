@@ -431,6 +431,61 @@ export interface CoverageGap {
 	size: number;
 	assigned: boolean;
 	workerId: string | null;
+	/** Qué le pasa al worker que ocupa el hueco. `assigned` solo dice que está ocupado. */
+	estado?: WorkerEstado;
+	/** El hueco está más allá de la frontera del año: no hay expedientes que encontrar. */
+	masAllaDeFrontera?: boolean;
+}
+
+/**
+ * Estado de un worker respecto de su rango. Distinguir "cerrado" de "detenido"
+ * es lo que permite saber si hace falta encender algo o si el período terminó.
+ */
+export type WorkerEstado = "libre" | "en_curso" | "terminando" | "cerrado" | "cerrado_sin_mail" | "detenido";
+
+export interface RealCoverageWorker {
+	worker_id: string;
+	range_start: number;
+	range_end: number;
+	current: number;
+	enabled: boolean;
+	estado: WorkerEstado;
+}
+
+/**
+ * Cobertura medida sobre las causas, no sobre el historial de rangos. El scraper
+ * deja un documento por cada número intentado, así que su presencia es el
+ * registro exacto de qué se barrió — a diferencia del historial, que solo se
+ * escribe cuando un worker se reasigna.
+ */
+export interface RealCoverageData {
+	fuero: string;
+	year: string;
+	maxRange: number;
+	/** Números efectivamente intentados. */
+	barridos: number;
+	/** De esos, los que resultaron ser un expediente real. */
+	validas: number;
+	densidad: number;
+	/** Último bloque de 1.000 con >=5 válidas: donde termina el año de verdad. */
+	frontera: number;
+	topeBarrido: number;
+	/** Frontera + margen de confirmación. Nunca el tope duro. */
+	objetivo: number;
+	faltanHastaObjetivo: number;
+	coveragePercent: number;
+	coveredRanges: CoverageRange[];
+	totalCovered: number;
+	/** Números sueltos sin barrer: territorio del retry-worker, no de un rango. */
+	sueltos: number;
+	gaps: CoverageGap[];
+	workers: RealCoverageWorker[];
+}
+
+export interface RealCoverageResponse {
+	success: boolean;
+	message?: string;
+	data: RealCoverageData;
 }
 
 export interface CoverageActiveWorker {
@@ -439,6 +494,8 @@ export interface CoverageActiveWorker {
 	range_end: number;
 	current: number;
 	max_number: number;
+	enabled?: boolean;
+	estado?: WorkerEstado;
 }
 
 export interface ScrapingCoverageData {
@@ -885,6 +942,23 @@ export class WorkersService {
 		try {
 			const params = maxRange ? { maxRange } : {};
 			const response = await workersAxios.get(`/api/configuracion-scraping-history/coverage/fuero/${fuero}/year/${year}`, { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Cobertura real, medida sobre las causas. Más cara que la del historial
+	 * (~0,4-4 s por fuero/año, escanea el índice de números) pero dice lo que de
+	 * verdad se barrió en vez de lo que quedó registrado administrativamente.
+	 */
+	static async getRealScrapingCoverage(fuero: string, year: string, maxRange = 150000): Promise<RealCoverageResponse> {
+		try {
+			const response = await workersAxios.get(`/api/configuracion-scraping-history/coverage-real/fuero/${fuero}/year/${year}`, {
+				params: { maxRange },
+				timeout: 90000,
+			});
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);

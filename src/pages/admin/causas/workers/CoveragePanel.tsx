@@ -36,7 +36,7 @@ import {
 } from "@mui/material";
 import { Refresh, AddCircle, TickCircle, Warning2, SearchNormal1, Flash, CloseCircle, ArrowDown2, ArrowUp2, Ranking } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import { WorkersService, ScrapingCoverageData, CoverageGap, WorkerConfig } from "api/workers";
+import { WorkersService, ScrapingCoverageData, CoverageGap, WorkerConfig, RealCoverageData, WorkerEstado } from "api/workers";
 import { BRAND_BLUE, navActiveBg } from "themes/dashboardTokens";
 import { alpha } from "@mui/material/styles";
 import CreateConfigModal from "./CreateConfigModal";
@@ -80,8 +80,35 @@ const getConfigId = (config: WorkerConfig): string => {
 interface YearData {
 	status: "idle" | "loading" | "success" | "error";
 	coverage: ScrapingCoverageData | null;
+	/**
+	 * Cobertura medida sobre las causas. Es la fuente de verdad: el historial de
+	 * rangos solo se escribe cuando un worker se reasigna, así que un rango
+	 * barrido por un worker que quedó parado no figura ahí y aparecía como hueco.
+	 */
+	real: RealCoverageData | null;
 	expanded: boolean;
 }
+
+/** Tope duro de numeración por año. Ningún fuero se acerca. */
+const TOPE_NUMERO = 150000;
+
+const ESTADO_LABEL: Record<WorkerEstado, string> = {
+	libre: "Libre",
+	en_curso: "En curso",
+	terminando: "Terminando",
+	cerrado: "Cerrado",
+	cerrado_sin_mail: "Completo (sin cerrar)",
+	detenido: "Asignado pero DETENIDO",
+};
+
+const ESTADO_COLOR: Record<WorkerEstado, "default" | "success" | "warning" | "error" | "info"> = {
+	libre: "error",
+	en_curso: "success",
+	terminando: "info",
+	cerrado: "default",
+	cerrado_sin_mail: "warning",
+	detenido: "warning",
+};
 
 interface GlobalGap {
 	fuero: string;
@@ -356,25 +383,40 @@ const CoveragePanel: React.FC = () => {
 		// Inicializar todos los años como "loading"
 		const initial: Record<string, YearData> = {};
 		for (const y of YEAR_OPTIONS) {
-			initial[y] = { status: "loading", coverage: null, expanded: false };
+			initial[y] = { status: "loading", coverage: null, real: null, expanded: false };
 		}
 		setYearDataMap(initial);
 
-		// Cargar todos los años en paralelo
+		// Las dos coberturas en paralelo: la real (sobre las causas) manda para
+		// decidir qué falta; la del historial se conserva porque dice qué rangos
+		// se dieron por cerrados administrativamente. El tope va explícito —sin
+		// él el backend lo deriva de lo ya barrido y los huecos de cola quedan
+		// invisibles, que es justo lo que ocultaba los años sin tocar.
 		const results = await Promise.allSettled(
-			YEAR_OPTIONS.map((y) => WorkersService.getScrapingCoverage(fuero, y).then((res) => ({ year: y, data: res.data }))),
+			YEAR_OPTIONS.map(async (y) => {
+				const [hist, real] = await Promise.allSettled([
+					WorkersService.getScrapingCoverage(fuero, y, TOPE_NUMERO),
+					WorkersService.getRealScrapingCoverage(fuero, y, TOPE_NUMERO),
+				]);
+				return {
+					year: y,
+					data: hist.status === "fulfilled" ? hist.value.data : null,
+					real: real.status === "fulfilled" ? real.value.data : null,
+				};
+			}),
 		);
 
 		const updated: Record<string, YearData> = { ...initial };
 		for (const result of results) {
 			if (result.status === "fulfilled") {
-				const { year: y, data } = result.value;
-				// Auto-expandir años con gaps libres
-				const hasFreeGaps = data.gaps.some((g) => !g.assigned);
-				updated[y] = { status: "success", coverage: data, expanded: hasFreeGaps };
+				const { year: y, data, real } = result.value;
+				// Auto-expandir los años que tienen trabajo pendiente de verdad,
+				// no los que simplemente no figuran en el historial.
+				const pendiente = real ? real.faltanHastaObjetivo > 0 : !!data?.gaps.some((g) => !g.assigned);
+				updated[y] = { status: "success", coverage: data, real, expanded: pendiente };
 			} else {
 				const y = YEAR_OPTIONS[results.indexOf(result)];
-				updated[y] = { status: "error", coverage: null, expanded: false };
+				updated[y] = { status: "error", coverage: null, real: null, expanded: false };
 			}
 		}
 
@@ -706,21 +748,40 @@ const CoveragePanel: React.FC = () => {
 									<TableRow>
 										<TableCell width={20} />
 										<TableCell>Año</TableCell>
-										<TableCell>Cobertura visual</TableCell>
-										<TableCell align="right">Cubierto</TableCell>
-										<TableCell align="right">Gaps libres</TableCell>
-										<TableCell align="right">Asignados</TableCell>
-										<TableCell align="right">Workers activos</TableCell>
+										<TableCell>Cobertura real</TableCell>
+										<TableCell align="right">
+											<Tooltip title="Números efectivamente barridos y qué proporción resultó ser un expediente" arrow>
+												<span>Barrido</span>
+											</Tooltip>
+										</TableCell>
+										<TableCell align="right">
+											<Tooltip
+												title="Último bloque de 1.000 con al menos 5 expedientes válidos: dónde termina el año de verdad. Más allá, barrer no encuentra nada."
+												arrow
+											>
+												<span>Frontera</span>
+											</Tooltip>
+										</TableCell>
+										<TableCell align="right">
+											<Tooltip title="Números sin barrer hasta la frontera + 15.000 de margen. No hasta el tope: eso sería desierto." arrow>
+												<span>Faltan</span>
+											</Tooltip>
+										</TableCell>
+										<TableCell align="right">Huecos libres</TableCell>
+										<TableCell align="right">Workers</TableCell>
 									</TableRow>
 								</TableHead>
 								<TableBody>
 									{YEAR_OPTIONS.map((y) => {
 										const yd = yearDataMap[y];
 										if (!yd) return null;
-										const { status, coverage, expanded } = yd;
-										const freeGaps = coverage?.gaps.filter((g) => !g.assigned) ?? [];
-										const assignedGaps = coverage?.gaps.filter((g) => g.assigned) ?? [];
-										const hasData = status === "success" && coverage && coverage.maxRange > 0;
+										const { status, coverage, real, expanded } = yd;
+										// Solo cuentan como "libres" los huecos sin worker que además están
+										// del lado útil de la frontera: más allá no hay nada que encontrar.
+										const freeGaps = (real?.gaps ?? coverage?.gaps ?? []).filter((g) => !g.assigned && !g.masAllaDeFrontera);
+										const detenidos = (real?.workers ?? []).filter((w) => w.estado === "detenido");
+										const hasData = status === "success" && (!!real || (coverage && coverage.maxRange > 0));
+										const faltan = real?.faltanHastaObjetivo ?? 0;
 
 										return (
 											<React.Fragment key={y}>
@@ -728,7 +789,7 @@ const CoveragePanel: React.FC = () => {
 												<TableRow
 													sx={{
 														cursor: hasData ? "pointer" : "default",
-														bgcolor: freeGaps.length > 0 ? "error.lighter" : undefined,
+														bgcolor: faltan > 0 ? "error.lighter" : detenidos.length > 0 ? "warning.lighter" : undefined,
 														"&:hover": hasData ? { bgcolor: "action.hover" } : undefined,
 													}}
 													onClick={() => hasData && toggleYearExpanded(y)}
@@ -741,9 +802,21 @@ const CoveragePanel: React.FC = () => {
 														)}
 													</TableCell>
 													<TableCell>
-														<Typography variant="body2" fontWeight={freeGaps.length > 0 ? 700 : 400}>
-															{y}
-														</Typography>
+														<Stack direction="row" alignItems="center" spacing={0.75}>
+															<Typography variant="body2" fontWeight={faltan > 0 ? 700 : 400}>
+																{y}
+															</Typography>
+															{detenidos.length > 0 && (
+																<Tooltip
+																	title={`${detenidos.length} worker(s) con rango asignado pero detenido: ${detenidos
+																		.map((w) => w.worker_id)
+																		.join(", ")}`}
+																	arrow
+																>
+																	<Chip size="small" color="warning" variant="outlined" label="detenido" sx={{ height: 18 }} />
+																</Tooltip>
+															)}
+														</Stack>
 													</TableCell>
 													<TableCell sx={{ minWidth: 180 }}>
 														{status === "loading" && <LinearProgress sx={{ height: 8, borderRadius: 1 }} />}
@@ -752,21 +825,59 @@ const CoveragePanel: React.FC = () => {
 																Error al cargar
 															</Typography>
 														)}
-														{status === "success" && coverage && coverage.maxRange === 0 && (
-															<Typography variant="caption" color="text.disabled">
-																Sin registros
+														{status === "success" && real && real.barridos === 0 && (
+															<Typography variant="caption" color="error.main" fontWeight={600}>
+																Nunca barrido
 															</Typography>
 														)}
-														{hasData && (
+														{hasData && real && real.barridos > 0 && (
 															<Box sx={{ position: "relative" }}>
-																<CoverageBar data={coverage!} compact />
+																<CoverageBar
+																	data={{
+																		fuero: real.fuero,
+																		year: real.year,
+																		maxRange: real.objetivo,
+																		coveredRanges: real.coveredRanges,
+																		totalCovered: real.totalCovered,
+																		coveragePercent: real.coveragePercent,
+																		gaps: real.gaps.filter((g) => g.start <= real.objetivo),
+																		activeWorkers: [],
+																	}}
+																	compact
+																/>
 															</Box>
 														)}
 													</TableCell>
 													<TableCell align="right">
-														{hasData && (
-															<Typography variant="body2" color="success.main">
-																{coverage!.coveragePercent}%
+														{real && (
+															<Tooltip
+																title={`${real.validas.toLocaleString()} expedientes de ${real.barridos.toLocaleString()} números`}
+																arrow
+															>
+																<Box>
+																	<Typography variant="body2">{real.barridos.toLocaleString()}</Typography>
+																	<Typography variant="caption" color="text.secondary">
+																		{real.densidad}% útil
+																	</Typography>
+																</Box>
+															</Tooltip>
+														)}
+													</TableCell>
+													<TableCell align="right">
+														{real && (
+															<Typography variant="body2" color={real.frontera > 0 ? "text.primary" : "text.disabled"}>
+																{real.frontera > 0 ? real.frontera.toLocaleString() : "—"}
+															</Typography>
+														)}
+													</TableCell>
+													<TableCell align="right">
+														{real && (
+															<Typography
+																variant="body2"
+																color={faltan > 0 ? "error.main" : "success.main"}
+																fontWeight={faltan > 0 ? 700 : 400}
+															>
+																{faltan > 0 ? faltan.toLocaleString() : "cerrado"}
 															</Typography>
 														)}
 													</TableCell>
@@ -782,17 +893,15 @@ const CoveragePanel: React.FC = () => {
 														)}
 													</TableCell>
 													<TableCell align="right">
-														{hasData && (
-															<Typography variant="body2" color={assignedGaps.length > 0 ? "warning.main" : "text.disabled"}>
-																{assignedGaps.length}
-															</Typography>
-														)}
-													</TableCell>
-													<TableCell align="right">
-														{hasData && (
-															<Typography variant="body2" color={coverage!.activeWorkers.length > 0 ? "info.main" : "text.disabled"}>
-																{coverage!.activeWorkers.length}
-															</Typography>
+														{real && (
+															<Tooltip
+																title={real.workers.map((w) => `${w.worker_id}: ${ESTADO_LABEL[w.estado]}`).join(" · ") || "sin workers"}
+																arrow
+															>
+																<Typography variant="body2" color={real.workers.length > 0 ? "info.main" : "text.disabled"}>
+																	{real.workers.filter((w) => w.enabled).length}/{real.workers.length}
+																</Typography>
+															</Tooltip>
 														)}
 													</TableCell>
 												</TableRow>
@@ -800,32 +909,71 @@ const CoveragePanel: React.FC = () => {
 												{/* Fila expandible: detalle del año */}
 												{hasData && (
 													<TableRow>
-														<TableCell colSpan={7} sx={{ p: 0, border: expanded ? undefined : "none" }}>
+														<TableCell colSpan={8} sx={{ p: 0, border: expanded ? undefined : "none" }}>
 															<Collapse in={expanded} timeout="auto" unmountOnExit>
 																<Box sx={{ px: 3, py: 2, bgcolor: "background.default" }}>
 																	<Stack spacing={1.5}>
-																		{/* Barra detallada */}
-																		<CoverageBar data={coverage!} />
+																		{/* Barra detallada, hasta el objetivo del año y no hasta el tope */}
+																		{real && real.barridos > 0 && (
+																			<CoverageBar
+																				data={{
+																					fuero: real.fuero,
+																					year: real.year,
+																					maxRange: real.objetivo,
+																					coveredRanges: real.coveredRanges,
+																					totalCovered: real.totalCovered,
+																					coveragePercent: real.coveragePercent,
+																					gaps: real.gaps.filter((g) => g.start <= real.objetivo),
+																					activeWorkers: [],
+																				}}
+																			/>
+																		)}
 
-																		{/* Workers activos */}
-																		{coverage!.activeWorkers.length > 0 && (
+																		{real && (
+																			<Alert severity={real.faltanHastaObjetivo > 0 ? "warning" : "success"} variant="outlined">
+																				{real.barridos === 0 ? (
+																					<>
+																						Año <strong>nunca barrido</strong>. No hay ningún dato: el objetivo inicial sugerido es 1 —
+																						20.000, y se extiende según la densidad que aparezca.
+																					</>
+																				) : real.faltanHastaObjetivo > 0 ? (
+																					<>
+																						Faltan <strong>{real.faltanHastaObjetivo.toLocaleString()}</strong> números hasta{" "}
+																						{real.objetivo.toLocaleString()} (frontera {real.frontera.toLocaleString()} + margen de
+																						confirmación). Se barrieron {real.barridos.toLocaleString()} con {real.validas.toLocaleString()}{" "}
+																						expedientes ({real.densidad}%).
+																						{real.sueltos > 0 &&
+																							` Además hay ${real.sueltos.toLocaleString()} números sueltos sin barrer: son del retry-worker, no de un rango.`}
+																					</>
+																				) : (
+																					<>
+																						Año <strong>cerrado</strong>: barrido completo hasta {real.topeBarrido.toLocaleString()}, con la
+																						frontera de expedientes reales en {real.frontera.toLocaleString()}. Más allá no hay nada que
+																						encontrar.
+																					</>
+																				)}
+																			</Alert>
+																		)}
+
+																		{/* Workers del año, con su estado real */}
+																		{real && real.workers.length > 0 && (
 																			<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 																				<Typography variant="caption" color="text.secondary" sx={{ alignSelf: "center" }}>
-																					Workers activos:
+																					Workers del período:
 																				</Typography>
-																				{coverage!.activeWorkers.map((w) => (
+																				{real.workers.map((w) => (
 																					<Tooltip
 																						key={w.worker_id}
-																						title={`${w.range_start.toLocaleString()} — ${w.range_end.toLocaleString()} | pos: ${
+																						title={`${w.range_start.toLocaleString()} — ${w.range_end.toLocaleString()} | posición: ${
 																							w.current?.toLocaleString() ?? "—"
-																						}`}
+																						} | ${ESTADO_LABEL[w.estado]}`}
 																						arrow
 																					>
 																						<Chip
-																							label={w.worker_id}
+																							label={`${w.worker_id} · ${ESTADO_LABEL[w.estado]}`}
 																							size="small"
-																							color="primary"
-																							variant="outlined"
+																							color={ESTADO_COLOR[w.estado]}
+																							variant={w.enabled ? "filled" : "outlined"}
 																							sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}
 																						/>
 																					</Tooltip>
@@ -834,94 +982,118 @@ const CoveragePanel: React.FC = () => {
 																		)}
 
 																		{/* Gaps */}
-																		{coverage!.gaps.length > 0 ? (
-																			<Box>
-																				<Typography
-																					variant="caption"
-																					color="text.secondary"
-																					fontWeight={600}
-																					sx={{ mb: 0.5, display: "block" }}
-																				>
-																					Períodos faltantes ({coverage!.gaps.length})
-																				</Typography>
-																				<TableContainer component={Paper} variant="outlined">
-																					<Table size="small">
-																						<TableHead>
-																							<TableRow>
-																								<TableCell>Inicio</TableCell>
-																								<TableCell>Fin</TableCell>
-																								<TableCell align="right">Tamaño</TableCell>
-																								<TableCell align="center">Estado</TableCell>
-																								<TableCell align="center">Acción</TableCell>
-																							</TableRow>
-																						</TableHead>
-																						<TableBody>
-																							{coverage!.gaps.map((gap, i) => (
-																								<TableRow key={i} sx={{ bgcolor: gap.assigned ? "warning.lighter" : "error.lighter" }}>
-																									<TableCell>
-																										<Typography variant="body2" fontFamily="monospace">
-																											{gap.start.toLocaleString()}
-																										</Typography>
-																									</TableCell>
-																									<TableCell>
-																										<Typography variant="body2" fontFamily="monospace">
-																											{gap.end.toLocaleString()}
-																										</Typography>
-																									</TableCell>
-																									<TableCell align="right">
-																										<Typography variant="body2">{gap.size.toLocaleString()}</Typography>
-																									</TableCell>
-																									<TableCell align="center">
-																										{gap.assigned ? (
-																											<Tooltip title={`Worker: ${gap.workerId}`} arrow>
+																		{(() => {
+																			const huecosUtiles = (real?.gaps ?? coverage?.gaps ?? []).filter((g) => !g.masAllaDeFrontera);
+																			return huecosUtiles.length > 0 ? (
+																				<Box>
+																					<Typography
+																						variant="caption"
+																						color="text.secondary"
+																						fontWeight={600}
+																						sx={{ mb: 0.5, display: "block" }}
+																					>
+																						Períodos faltantes ({huecosUtiles.length})
+																					</Typography>
+																					<TableContainer component={Paper} variant="outlined">
+																						<Table size="small">
+																							<TableHead>
+																								<TableRow>
+																									<TableCell>Inicio</TableCell>
+																									<TableCell>Fin</TableCell>
+																									<TableCell align="right">Tamaño</TableCell>
+																									<TableCell align="center">Estado</TableCell>
+																									<TableCell align="center">Acción</TableCell>
+																								</TableRow>
+																							</TableHead>
+																							<TableBody>
+																								{huecosUtiles.map((gap, i) => (
+																									<TableRow
+																										key={i}
+																										sx={{
+																											bgcolor:
+																												gap.estado === "en_curso" || gap.estado === "terminando"
+																													? "success.lighter"
+																													: gap.assigned
+																													? "warning.lighter"
+																													: "error.lighter",
+																										}}
+																									>
+																										<TableCell>
+																											<Typography variant="body2" fontFamily="monospace">
+																												{gap.start.toLocaleString()}
+																											</Typography>
+																										</TableCell>
+																										<TableCell>
+																											<Typography variant="body2" fontFamily="monospace">
+																												{gap.end.toLocaleString()}
+																											</Typography>
+																										</TableCell>
+																										<TableCell align="right">
+																											<Typography variant="body2">{gap.size.toLocaleString()}</Typography>
+																										</TableCell>
+																										<TableCell align="center">
+																											{gap.assigned ? (
+																												<Tooltip
+																													title={`Worker ${gap.workerId} — ${
+																														gap.estado ? ESTADO_LABEL[gap.estado] : "asignado"
+																													}`}
+																													arrow
+																												>
+																													<Chip
+																														icon={
+																															gap.estado === "en_curso" || gap.estado === "terminando" ? (
+																																<TickCircle size={12} />
+																															) : (
+																																<Warning2 size={12} />
+																															)
+																														}
+																														label={gap.estado ? ESTADO_LABEL[gap.estado] : "Asignado"}
+																														size="small"
+																														color={gap.estado ? ESTADO_COLOR[gap.estado] : "warning"}
+																														variant="outlined"
+																													/>
+																												</Tooltip>
+																											) : (
 																												<Chip
-																													icon={<Warning2 size={12} />}
-																													label="Asignado"
+																													icon={<CloseCircle size={12} />}
+																													label="Libre"
 																													size="small"
-																													color="warning"
+																													color="error"
 																													variant="outlined"
 																												/>
-																											</Tooltip>
-																										) : (
-																											<Chip
-																												icon={<CloseCircle size={12} />}
-																												label="Libre"
+																											)}
+																										</TableCell>
+																										<TableCell align="center">
+																											<Button
 																												size="small"
-																												color="error"
 																												variant="outlined"
-																											/>
-																										)}
-																									</TableCell>
-																									<TableCell align="center">
-																										<Button
-																											size="small"
-																											variant="outlined"
-																											startIcon={<AddCircle size={12} />}
-																											disabled={gap.assigned}
-																											onClick={() => {
-																												setCreateModalInitial({
-																													fuero,
-																													year: Number(y),
-																													rangeStart: gap.start,
-																													rangeEnd: gap.end,
-																												});
-																												setCreateModalOpen(true);
-																											}}
-																										>
-																											Crear config
-																										</Button>
-																									</TableCell>
-																								</TableRow>
-																							))}
-																						</TableBody>
-																					</Table>
-																				</TableContainer>
-																			</Box>
-																		) : (
-																			<Alert severity="success" icon={<TickCircle size={16} />} sx={{ py: 0.5 }}>
-																				Cobertura completa para {fuero} — {y}
-																			</Alert>
-																		)}
+																												startIcon={<AddCircle size={12} />}
+																												disabled={gap.assigned}
+																												onClick={() => {
+																													setCreateModalInitial({
+																														fuero,
+																														year: Number(y),
+																														rangeStart: gap.start,
+																														rangeEnd: gap.end,
+																													});
+																													setCreateModalOpen(true);
+																												}}
+																											>
+																												Crear config
+																											</Button>
+																										</TableCell>
+																									</TableRow>
+																								))}
+																							</TableBody>
+																						</Table>
+																					</TableContainer>
+																				</Box>
+																			) : (
+																				<Alert severity="success" icon={<TickCircle size={16} />} sx={{ py: 0.5 }}>
+																					Cobertura completa para {fuero} — {y}
+																				</Alert>
+																			);
+																		})()}
 																	</Stack>
 																</Box>
 															</Collapse>
