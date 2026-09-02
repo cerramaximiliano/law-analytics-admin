@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 
 // material-ui
 import { useTheme } from "@mui/material/styles";
-import { Avatar, Chip, ListItemButton, ListItemIcon, ListItemText, Typography, useMediaQuery } from "@mui/material";
+import { Avatar, Box, Chip, ListItemButton, ListItemIcon, ListItemText, Typography, useMediaQuery } from "@mui/material";
 
 // project-imports
 import Dot from "components/@extended/Dot";
@@ -38,7 +38,31 @@ const NavItem = ({ item, level }: Props) => {
 	const isSelected = openItem.findIndex((id) => id === item.id) > -1;
 
 	const Icon = item.icon!;
-	const itemIcon = item.icon ? <Icon variant="Bulk" size={drawerOpen ? 20 : 22} /> : false;
+	// Un logo de organismo se dibuja sobre pastilla clara: los escudos vienen
+	// pensados para fondo blanco y en tema oscuro se pierden contra el drawer.
+	const itemIcon = item.iconImage ? (
+		<Box
+			sx={{
+				width: drawerOpen ? 22 : 24,
+				height: drawerOpen ? 22 : 24,
+				borderRadius: 0.75,
+				bgcolor: "#fff",
+				border: "1px solid",
+				borderColor: "divider",
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "center",
+				overflow: "hidden",
+				flexShrink: 0,
+			}}
+		>
+			<Box component="img" src={item.iconImage} alt="" sx={{ width: "84%", height: "84%", objectFit: "contain" }} />
+		</Box>
+	) : item.icon ? (
+		<Icon variant="Bulk" size={drawerOpen ? 20 : 22} />
+	) : (
+		false
+	);
 
 	const { pathname } = useLocation();
 

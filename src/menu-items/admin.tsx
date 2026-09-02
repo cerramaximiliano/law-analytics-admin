@@ -1,4 +1,9 @@
 // assets
+// Los mismos logos que la vista de integraciones y la landing usan para cada
+// organismo — que un submenú de credenciales muestre el escudo del portal al
+// que pertenecen ahorra leer.
+import logoPJNacion from "assets/images/logos/logo_pj_nacion.png";
+import logoPJBuenosAires from "assets/images/logos/logo_pj_buenos_aires.svg";
 import {
 	Setting3,
 	Folder2,
@@ -392,22 +397,25 @@ const admin: NavItemType = {
 			children: [
 				{
 					id: "causas-credentials",
-					title: "Credenciales PJN",
+					title: "PJN",
 					type: "item",
+					iconImage: logoPJNacion,
 					url: "/admin/causas/credentials",
 					breadcrumbs: true,
 				},
 				{
 					id: "mev-scba-credentials",
-					title: "Credenciales SCBA",
+					title: "SCBA",
 					type: "item",
+					iconImage: logoPJBuenosAires,
 					url: "/admin/mev/scba-credentials",
 					breadcrumbs: true,
 				},
 				{
 					id: "workers-mev-login-failures",
-					title: "MEV — Credenciales",
+					title: "MEV",
 					type: "item",
+					iconImage: logoPJBuenosAires,
 					url: "/admin/workers/mev-login-failures",
 					breadcrumbs: true,
 				},

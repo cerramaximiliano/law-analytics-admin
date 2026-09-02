@@ -20,6 +20,10 @@ export type NavItemType = {
 	/** Color del ícono del item (token del theme, p. ej. "success.main").
 	 *  Para tríos de estado donde el color ES el significado. */
 	iconColor?: string;
+	/** Logo del organismo en vez de un ícono vectorial, para los ítems que
+	 *  identifican una jurisdicción. Va sobre una pastilla clara porque casi
+	 *  todos los escudos están pensados para fondo blanco. */
+	iconImage?: string;
 	id?: string;
 	search?: string;
 	target?: boolean;
