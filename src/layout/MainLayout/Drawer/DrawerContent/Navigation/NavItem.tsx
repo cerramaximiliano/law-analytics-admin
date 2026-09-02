@@ -126,7 +126,10 @@ const NavItem = ({ item, level }: Props) => {
 						<ListItemIcon
 							sx={{
 								minWidth: 38,
-								color: isSelected ? iconSelectedColor : textColor,
+								// El color propio del item gana sobre el de selección: en los
+								// tríos de estado (verificadas / no verificadas / pivotes) el
+								// color es el significado, no decoración.
+								color: item.iconColor ?? (isSelected ? iconSelectedColor : textColor),
 								...(!drawerOpen &&
 									level === 1 && {
 										borderRadius: 1,

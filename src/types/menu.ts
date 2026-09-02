@@ -17,6 +17,9 @@ export type NavItemType = {
 	disabled?: boolean;
 	external?: boolean;
 	icon?: GenericCardProps["iconPrimary"] | string;
+	/** Color del ícono del item (token del theme, p. ej. "success.main").
+	 *  Para tríos de estado donde el color ES el significado. */
+	iconColor?: string;
 	id?: string;
 	search?: string;
 	target?: boolean;
