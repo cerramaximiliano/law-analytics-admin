@@ -14,39 +14,18 @@ import {
 	Chip,
 	LinearProgress,
 	Button,
-	CircularProgress,
 	Collapse,
 	Alert,
 } from "@mui/material";
 import { Refresh, TickCircle, Warning2, CloseCircle, Minus } from "iconsax-react";
 import { WorkersService, CoverageMatrixData, MatrixYear, PeriodoEstado } from "api/workers";
+import { FUEROS_CON_SCRAPING } from "utils/fueros";
 
 // ─── Alcance ──────────────────────────────────────────────────────────────────
-// Los 6 fueros con volumen van primero porque son los que se miran a diario;
-// después CCF/CAF y al final los 15 distritos federales, que recién arrancan.
-const FUEROS: { code: string; label: string; grupo: string }[] = [
-	{ code: "CIV", label: "Civil", grupo: "Cámaras nacionales" },
-	{ code: "CNT", label: "Trabajo", grupo: "Cámaras nacionales" },
-	{ code: "CSS", label: "Seguridad Social", grupo: "Cámaras nacionales" },
-	{ code: "COM", label: "Comercial", grupo: "Cámaras nacionales" },
-	{ code: "CCF", label: "Civil y Comercial Federal", grupo: "Cámaras federales" },
-	{ code: "CAF", label: "Contencioso Adm. Federal", grupo: "Cámaras federales" },
-	{ code: "FLP", label: "La Plata", grupo: "Justicia federal del interior" },
-	{ code: "FRO", label: "Rosario", grupo: "Justicia federal del interior" },
-	{ code: "FCB", label: "Córdoba", grupo: "Justicia federal del interior" },
-	{ code: "FSM", label: "San Martín", grupo: "Justicia federal del interior" },
-	{ code: "FMZ", label: "Mendoza", grupo: "Justicia federal del interior" },
-	{ code: "FMP", label: "Mar del Plata", grupo: "Justicia federal del interior" },
-	{ code: "FTU", label: "Tucumán", grupo: "Justicia federal del interior" },
-	{ code: "FBB", label: "Bahía Blanca", grupo: "Justicia federal del interior" },
-	{ code: "FSA", label: "Salta", grupo: "Justicia federal del interior" },
-	{ code: "FRE", label: "Resistencia", grupo: "Justicia federal del interior" },
-	{ code: "FPA", label: "Paraná", grupo: "Justicia federal del interior" },
-	{ code: "FCT", label: "Corrientes", grupo: "Justicia federal del interior" },
-	{ code: "FPO", label: "Posadas", grupo: "Justicia federal del interior" },
-	{ code: "FGR", label: "General Roca", grupo: "Justicia federal del interior" },
-	{ code: "FCR", label: "Comodoro Rivadavia", grupo: "Justicia federal del interior" },
-];
+// Del catálogo compartido. Se muestran solo los fueros con workers: el resto
+// serían 7 filas vacías que no dicen nada. El orden del catálogo ya agrupa por
+// cámaras nacionales, federales y justicia federal del interior.
+const FUEROS = FUEROS_CON_SCRAPING.map((f) => ({ code: f.value, label: f.label, grupo: f.grupo as string }));
 
 const DESDE = 2018;
 const HASTA = new Date().getFullYear();
@@ -205,7 +184,9 @@ const CoverageMatrix: React.FC = () => {
 				</Button>
 			</Stack>
 
-			{cargando && <LinearProgress variant="determinate" value={(listas / FUEROS.length) * 100} sx={{ mb: 1.5, height: 4, borderRadius: 2 }} />}
+			{cargando && (
+				<LinearProgress variant="determinate" value={(listas / FUEROS.length) * 100} sx={{ mb: 1.5, height: 4, borderRadius: 2 }} />
+			)}
 
 			<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap mb={1.5}>
 				<Chip size="small" label={`${miles(totales.barridos)} números barridos`} />
@@ -395,7 +376,9 @@ const CoverageMatrix: React.FC = () => {
 				{(Object.keys(ESTADO) as PeriodoEstado[]).map((k) => (
 					<Tooltip key={k} title={ESTADO[k].hint} arrow>
 						<Stack direction="row" alignItems="center" spacing={0.5}>
-							<Box sx={{ width: 12, height: 12, borderRadius: 0.5, bgcolor: ESTADO[k].bg, border: "1px solid", borderColor: ESTADO[k].fg }} />
+							<Box
+								sx={{ width: 12, height: 12, borderRadius: 0.5, bgcolor: ESTADO[k].bg, border: "1px solid", borderColor: ESTADO[k].fg }}
+							/>
 							<Typography variant="caption" color="text.secondary">
 								{ESTADO[k].label}
 							</Typography>

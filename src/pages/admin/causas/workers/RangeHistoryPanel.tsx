@@ -27,15 +27,11 @@ import {
 import { Refresh2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, ScrapingHistory } from "api/workers";
+import { FUERO_OPTIONS as CATALOGO_FUEROS } from "utils/fueros";
 
-const FUERO_OPTIONS = [
-	{ value: "CIV", label: "Civil" },
-	{ value: "CSS", label: "Seguridad Social" },
-	{ value: "CNT", label: "Trabajo" },
-	{ value: "COM", label: "Comercial" },
-	{ value: "CCF", label: "Civil y Comercial Federal" },
-	{ value: "CAF", label: "Contencioso Adm. Federal" },
-];
+// Los fueros salen del catálogo compartido: esta lista estaba congelada en
+// los seis originales y no mostraba los 22 que se cablearon después.
+const FUERO_OPTIONS = CATALOGO_FUEROS;
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEAR_OPTIONS = Array.from({ length: 12 }, (_, i) => String(CURRENT_YEAR - i));

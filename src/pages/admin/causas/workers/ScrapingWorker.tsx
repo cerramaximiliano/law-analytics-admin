@@ -73,16 +73,12 @@ import CoverageMatrix from "./CoverageMatrix";
 import ScrapingStatsPanel from "./ScrapingStatsPanel";
 import { useTabIndexParam } from "hooks/useTabParam";
 import WorkerSubTabs, { SubTabDef } from "./WorkerSubTabs";
+import { FUERO_OPTIONS as CATALOGO_FUEROS } from "utils/fueros";
 
 // Enums para el worker de scraping
-const FUERO_OPTIONS = [
-	{ value: "CIV", label: "Civil" },
-	{ value: "CSS", label: "Seguridad Social" },
-	{ value: "CNT", label: "Trabajo" },
-	{ value: "COM", label: "Comercial" },
-	{ value: "CCF", label: "Civil y Comercial Federal" },
-	{ value: "CAF", label: "Contencioso Adm. Federal" },
-];
+// Los fueros salen del catálogo compartido: esta lista estaba congelada en
+// los seis originales y no mostraba los 22 que se cablearon después.
+const FUERO_OPTIONS = CATALOGO_FUEROS;
 
 // Años disponibles para filtros (de más reciente a más antiguo)
 const CURRENT_YEAR = new Date().getFullYear();

@@ -41,20 +41,15 @@ import CreateManagedWorkerModal from "./CreateManagedWorkerModal";
 import BatchCreateWorkersModal from "./BatchCreateWorkersModal";
 import LinkExistingConfigModal from "./LinkExistingConfigModal";
 import UpdateRangeModal from "./UpdateRangeModal";
+import { FUERO_OPTIONS as CATALOGO_FUEROS, FUERO_CODES } from "utils/fueros";
 
 const getId = (id: string | { $oid: string }): string => (typeof id === "string" ? id : id.$oid);
 
-const FUERO_OPTIONS = [
-	{ value: "", label: "Todos" },
-	{ value: "CIV", label: "Civil" },
-	{ value: "CSS", label: "Seguridad Social" },
-	{ value: "CNT", label: "Trabajo" },
-	{ value: "COM", label: "Comercial" },
-	{ value: "CCF", label: "Civil y Comercial Federal" },
-	{ value: "CAF", label: "Contencioso Adm. Federal" },
-];
+// Del catálogo compartido: esta lista estaba congelada en los seis fueros
+// originales y no mostraba los 22 que se cablearon después.
+const FUERO_OPTIONS = [{ value: "", label: "Todos" }, ...CATALOGO_FUEROS];
 
-const FUEROS = ["CIV", "CSS", "CNT", "COM", "CCF", "CAF"];
+const FUEROS = FUERO_CODES;
 
 const AUTO_REFRESH_INTERVAL = 30000; // 30s
 

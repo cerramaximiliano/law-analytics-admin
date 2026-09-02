@@ -72,24 +72,11 @@ import HourlyStatsPanel from "./HourlyStatsPanel";
 import DailySummaryPanel from "./DailySummaryPanel";
 import ZeroMovementsProtectionPanel from "./ZeroMovementsProtectionPanel";
 import CapacityStatsWidget from "../../dashboard/CapacityStatsWidget";
+import { FUERO_CODES, labelDeFuero } from "utils/fueros";
 
-// Fueros disponibles
-const FUEROS = ["CIV", "COM", "CNT", "CSS", "CAF", "CCF", "CNE", "CPE", "CFP", "CCC", "CSJ"];
-
-// Nombres completos de fueros
-const FUERO_NAMES: Record<string, string> = {
-	CIV: "Civil",
-	COM: "Comercial",
-	CNT: "Trabajo",
-	CSS: "Seguridad Social",
-	CAF: "Contencioso Administrativo Federal",
-	CCF: "Civil y Comercial Federal",
-	CNE: "Electoral",
-	CPE: "Penal Económico",
-	CFP: "Criminal y Correccional Federal",
-	CCC: "Criminal y Correccional",
-	CSJ: "Corte Suprema",
-};
+// Fueros disponibles: del catálogo compartido, que además de los 11 que había
+// acá incluye las casaciones penales y los 15 distritos federales del interior.
+const FUEROS = FUERO_CODES;
 
 // Componente de tarjeta de estadística
 interface StatCardProps {
@@ -828,7 +815,7 @@ const WorkerStatistics: React.FC = () => {
 																		{fuero.fuero}
 																	</Typography>
 																	<Typography variant="caption" color="text.secondary">
-																		{FUERO_NAMES[fuero.fuero] || fuero.fuero}
+																		{labelDeFuero(fuero.fuero)}
 																	</Typography>
 																</Stack>
 															</TableCell>
