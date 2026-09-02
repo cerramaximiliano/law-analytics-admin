@@ -17,6 +17,7 @@ import {
 	Like1,
 	Link21,
 	Chart,
+	Clock,
 	TaskSquare,
 	Timer1,
 	TickCircle,
@@ -51,30 +52,43 @@ const admin: NavItemType = {
 			breadcrumbs: true,
 			children: [
 				{
-					id: "causas-pending",
-					title: "Causas Pendientes de Verificación",
-					type: "item",
-					icon: Folder2,
-					url: "/admin/causas/pending",
+					// Las tres vistas que cruzan jurisdicciones, juntas y separadas de los
+					// grupos por jurisdicción que siguen abajo. Antes colgaban sueltas del
+					// grupo "Causas", al mismo nivel que "Carpetas PJN", "Carpetas MEV" y
+					// compañía, lo que las hacía parecer una jurisdicción más.
+					id: "causas-todas",
+					title: "Todas las jurisdicciones",
+					type: "collapse",
+					icon: Category2,
 					breadcrumbs: true,
-				},
-				{
-					id: "app-folders",
-					title: "Carpetas (App)",
-					type: "item",
-					icon: Folder2,
-					url: "/admin/folders",
-					breadcrumbs: true,
-				},
-				{
-					// Cubre TODAS las jurisdicciones (panorama + guía por pestaña),
-					// por eso cuelga del grupo y no de "Carpetas PJN".
-					id: "causas-user-view-guide",
-					title: "Carpetas por jurisdicción — vista del usuario",
-					type: "item",
-					icon: Folder2,
-					url: "/admin/causas/user-view-guide",
-					breadcrumbs: true,
+					children: [
+						{
+							id: "causas-pending",
+							title: "Pendientes de verificación",
+							type: "item",
+							icon: Clock,
+							// Ámbar, igual que "Pivotes": una cola esperando resolución.
+							iconColor: "warning.main",
+							url: "/admin/causas/pending",
+							breadcrumbs: true,
+						},
+						{
+							id: "app-folders",
+							title: "Todas las carpetas",
+							type: "item",
+							icon: Folder2,
+							url: "/admin/folders",
+							breadcrumbs: true,
+						},
+						{
+							id: "causas-user-view-guide",
+							title: "Vista del usuario",
+							type: "item",
+							icon: ProfileCircle,
+							url: "/admin/causas/user-view-guide",
+							breadcrumbs: true,
+						},
+					],
 				},
 				{
 					id: "causas",
