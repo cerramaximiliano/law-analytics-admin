@@ -54,6 +54,10 @@ import {
 	MovementLinkEventName,
 } from "types/movementLinkAnalytics";
 import { useSnackbar } from "notistack";
+import { useTabIndexParam } from "hooks/useTabParam";
+
+// Slugs del tab en la URL; el orden fija el índice de cada <Tab>.
+const TAB_SLUGS = ["resumen", "usuarios", "eventos", "preview"] as const;
 
 // Traducción de eventos para no exponer enums crudos.
 const EVENT_TRANSLATIONS: Record<MovementLinkEventName, string> = {
@@ -164,7 +168,7 @@ const MovementLinkAnalytics: React.FC = () => {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
 
-	const [tabValue, setTabValue] = useState(0);
+	const [tabValue, setTabValue] = useTabIndexParam("tab", TAB_SLUGS);
 	const [loading, setLoading] = useState(true);
 	const [summary, setSummary] = useState<MovementLinkSummaryData | null>(null);
 	const [series, setSeries] = useState<MovementLinkTimeseriesItem[]>([]);

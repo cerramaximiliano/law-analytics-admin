@@ -10,7 +10,7 @@
 // vistas originales, así un cambio en el flujo se refleja en los dos lugares.
 // El data plane es la excepción y está explicado abajo.
 
-import React, { useState } from "react";
+import React from "react";
 import { Alert, Box, Button, Chip, Stack, Tab, Tabs, Typography, useTheme } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { Link as RouterLink } from "react-router-dom";
@@ -30,9 +30,13 @@ import CausasFlowDiagram from "../causas/flujos/FlowDiagram";
 import { mainSpecs } from "../causas/flujos/flowData";
 import NotificationsFlowDiagram from "../notifications/components/FlowDiagram";
 import useLiveJudicialConfig from "../notifications/components/useLiveJudicialConfig";
+import { useTabIndexParam } from "hooks/useTabParam";
 
 interface FlowTab {
 	label: string;
+	/** Slug del tab en la URL (?tab=). Explícito y no derivado del label:
+	 *  "pjn-mis-causas (repo)" daría una URL ilegible. */
+	slug: string;
 	/** Qué responde este flujo, en una línea. */
 	intro: string;
 	/** Vista donde ese flujo se opera (no solo se documenta). */
@@ -43,6 +47,7 @@ interface FlowTab {
 const TABS: FlowTab[] = [
 	{
 		label: "Sentencias",
+		slug: "sentencias",
 		intro:
 			"De la captura en el portal al consumo: cómo entra una sentencia (por movimiento nuevo, por barrido histórico o desde SAIJ), qué worker la procesa en cada estado, cómo se vectoriza y quién la consulta.",
 		href: "/admin/workers/sentencias",
@@ -50,6 +55,7 @@ const TABS: FlowTab[] = [
 	},
 	{
 		label: "Causas y folders",
+		slug: "causas",
 		intro:
 			"El ciclo de vida de una causa: cómo se da de alta desde la app o con credencial, cuándo pasa a ser pública o privada, y qué la mantiene actualizada.",
 		href: "/admin/causas/flujos",
@@ -57,6 +63,7 @@ const TABS: FlowTab[] = [
 	},
 	{
 		label: "Notificaciones",
+		slug: "notificaciones",
 		intro:
 			"Qué dispara un aviso, qué emisor lo manda y qué kill-switches lo pueden frenar. El diagrama refleja la configuración en vivo, así que cambia si alguien toca la config.",
 		href: "/admin/notifications/flow",
@@ -64,6 +71,7 @@ const TABS: FlowTab[] = [
 	},
 	{
 		label: "Workers SCBA",
+		slug: "scba",
 		intro:
 			"El pipeline completo de SCBA: de la credencial del usuario a la notificación del movimiento. El diagrama lee la configuración en vivo (updatePolicy) y redibuja la partición del update — en 'unified' el worker de archivadas aparece ocioso.",
 		href: "/admin/workers/mev",
@@ -71,6 +79,7 @@ const TABS: FlowTab[] = [
 	},
 	{
 		label: "pjn-mis-causas (repo)",
+		slug: "mis-causas",
 		intro:
 			"El mapa completo del repositorio: sus 13 procesos y cómo se encadenan alrededor de la credencial del usuario — verificarla, traer sus causas, mantenerlas al día, leer su bandeja y vigilar que nada se caiga.",
 		href: "/admin/causas/workers",
@@ -78,6 +87,7 @@ const TABS: FlowTab[] = [
 	},
 	{
 		label: "Causas PJN por credencial",
+		slug: "credenciales",
 		intro:
 			"Los dos workers que llevan una fila del listado de Mis Causas hasta una carpeta: la sync completa del alta de credencial y la pasada diaria. Incluye las tres bifurcaciones que dejaban huecos silenciosos — las filas sin prefijo de fuero, quién decide que una causa falta, y el techo del plan.",
 		href: "/admin/causas/workers",
@@ -85,6 +95,7 @@ const TABS: FlowTab[] = [
 	},
 	{
 		label: "Workers SAIJ",
+		slug: "saij",
 		intro:
 			"Los cuatro canales de captura de jurisprudencia de SAIJ — nacional, provincial, Corte Suprema y el backfill histórico — que comparten el mismo código y se diferencian solo por configuración. Solo el nacional alimenta el pipeline PJN y las campañas a usuarios.",
 		href: "/admin/workers/saij",
@@ -92,6 +103,7 @@ const TABS: FlowTab[] = [
 	},
 	{
 		label: "Apareo SAIJ",
+		slug: "apareo-saij",
 		intro:
 			"Qué pasa con un fallo nacional después de capturado: el linker con sus cinco gates, la herencia de identidad hacia SentenciaCapturada (carátula, expediente, causaId — de la causa; el texto — del fallo), y la conciliación que deshace un apareo equivocado hasta el embedding.",
 		href: "/admin/saij/conciliacion",
@@ -99,6 +111,7 @@ const TABS: FlowTab[] = [
 	},
 	{
 		label: "Worker postal",
+		slug: "postal",
 		intro:
 			"El pipeline del seguimiento postal (Correo Argentino): del alta de la pieza al email de novedades — el manager encola los vencidos, los scraper-workers efímeros consultan el portal ONDNC y la-notification entrega al usuario. Incluye el circuito de alerta operativa al admin cuando el pipeline deja de actualizar.",
 		href: "/admin/workers/scraper",
@@ -106,6 +119,7 @@ const TABS: FlowTab[] = [
 	},
 	{
 		label: "Worker CIJur",
+		slug: "cijur",
 		intro:
 			"La captura de la selección curada del Ministerio Público de Buenos Aires: dos canales, backfill una sola vez y vigilancia diaria. El sitio no corta la paginación con 404 y duplica cada fallo en el HTML — las dos cosas condicionan el diseño.",
 		href: "/admin/workers/cijur",
@@ -113,6 +127,7 @@ const TABS: FlowTab[] = [
 	},
 	{
 		label: "Data plane",
+		slug: "data-plane",
 		intro:
 			"La infraestructura por debajo de todo lo anterior: el replica set rs0, Qdrant, las APIs y quién lee de dónde. Es el plano físico; los otros tres son el plano lógico.",
 		href: "/admin/infrastructure/dataflow",
@@ -120,9 +135,12 @@ const TABS: FlowTab[] = [
 	},
 ];
 
+// Slugs en el orden de TABS: el índice del tab es su posición acá.
+const TAB_SLUGS = TABS.map((t) => t.slug);
+
 const FlujosEcosistema: React.FC = () => {
 	const theme = useTheme();
-	const [tab, setTab] = useState(0);
+	const [tab, setTab] = useTabIndexParam("tab", TAB_SLUGS);
 	const live = useLiveJudicialConfig();
 	const current = TABS[tab];
 

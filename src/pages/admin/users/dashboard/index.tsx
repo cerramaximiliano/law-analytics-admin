@@ -52,6 +52,10 @@ import AdminAiUsageService, { AiUsageRow } from "api/adminAiUsage";
 import { UserDashboardOverview, ActivityRankingRow, InactiveUserRow, NewUnactivatedRow, PaymentRiskRow } from "types/user-dashboard";
 import LifecycleTab from "./LifecycleTab";
 import { useSnackbar } from "notistack";
+import { useTabIndexParam } from "hooks/useTabParam";
+
+// Slugs del tab en la URL; el orden fija el índice de cada <Tab>.
+const TAB_SLUGS = ["top", "churn", "sin-activar", "heavy-ia", "pagos", "ciclo-vida"] as const;
 
 dayjs.extend(relativeTime);
 dayjs.locale("es");
@@ -207,7 +211,7 @@ const UsersDashboard: React.FC = () => {
 	const { enqueueSnackbar } = useSnackbar();
 
 	const [windowDays, setWindowDays] = useState<number>(30);
-	const [tab, setTab] = useState<number>(0);
+	const [tab, setTab] = useTabIndexParam("tab", TAB_SLUGS);
 
 	// Overview
 	const [overview, setOverview] = useState<UserDashboardOverview | null>(null);

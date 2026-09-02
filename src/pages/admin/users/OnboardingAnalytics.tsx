@@ -48,6 +48,10 @@ import {
 	OnboardingFunnelByStepData,
 } from "types/onboarding";
 import { useSnackbar } from "notistack";
+import { useTabIndexParam } from "hooks/useTabParam";
+
+// Slugs del tab en la URL; el orden fija el índice de cada <Tab>.
+const TAB_SLUGS = ["resumen", "eventos", "estancados", "reset"] as const;
 
 // Event name translations — los 5 primeros son del onboarding viejo (banner +
 // 4 cards). Los 4 últimos son del OnboardingChecklist nuevo. Se mantienen
@@ -244,7 +248,7 @@ const OnboardingAnalytics: React.FC = () => {
 	const { enqueueSnackbar } = useSnackbar();
 
 	// State
-	const [tabValue, setTabValue] = useState(0);
+	const [tabValue, setTabValue] = useTabIndexParam("tab", TAB_SLUGS);
 	const [loading, setLoading] = useState(true);
 	const [summaryData, setSummaryData] = useState<OnboardingSummaryData | null>(null);
 	const [funnelData, setFunnelData] = useState<OnboardingFunnelData | null>(null);

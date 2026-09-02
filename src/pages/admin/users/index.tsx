@@ -55,6 +55,10 @@ import { useSnackbar } from "notistack";
 
 // assets
 import { Eye, Trash, Edit, Add, Chart, SearchNormal1, CloseCircle, Refresh, Copy, CopySuccess, Calculator, Calendar } from "iconsax-react";
+import { useTabIndexParam } from "hooks/useTabParam";
+
+// Slugs del tab en la URL; el orden fija el índice de cada <Tab>.
+const TAB_SLUGS = ["usuarios", "suscripciones", "estadisticas"] as const;
 
 // table sort
 
@@ -148,7 +152,7 @@ const UsersList = () => {
 	const { users, loading, error, usersTotal } = useSelector((state: DefaultRootStateProps) => state.users);
 
 	// Estado para los tabs
-	const [tabValue, setTabValue] = useState(0);
+	const [tabValue, setTabValue] = useTabIndexParam("tab", TAB_SLUGS);
 
 	// Estado para feedback de copia de ID
 	const [copiedId, setCopiedId] = useState<string | null>(null);
