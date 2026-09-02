@@ -31,6 +31,7 @@ import { mainSpecs } from "../causas/flujos/flowData";
 import NotificationsFlowDiagram from "../notifications/components/FlowDiagram";
 import useLiveJudicialConfig from "../notifications/components/useLiveJudicialConfig";
 import { useTabIndexParam } from "hooks/useTabParam";
+import CrossViewPair from "components/admin/CrossViewLink";
 
 interface FlowTab {
 	label: string;
@@ -42,12 +43,18 @@ interface FlowTab {
 	/** Vista donde ese flujo se opera (no solo se documenta). */
 	href: string;
 	hrefLabel: string;
+	/** Cuando esa vista es la de un worker, el salto se muestra como el par
+	 *  worker↔flujo del resto del admin. Los flujos cuyo href apunta a otra
+	 *  cosa (una conciliación, un diagrama de infraestructura) conservan el
+	 *  botón descriptivo, porque "Worker" ahí sería mentira. */
+	esWorker?: boolean;
 }
 
 const TABS: FlowTab[] = [
 	{
 		label: "Sentencias",
 		slug: "sentencias",
+		esWorker: true,
 		intro:
 			"De la captura en el portal al consumo: cómo entra una sentencia (por movimiento nuevo, por barrido histórico o desde SAIJ), qué worker la procesa en cada estado, cómo se vectoriza y quién la consulta.",
 		href: "/admin/workers/sentencias",
@@ -72,6 +79,7 @@ const TABS: FlowTab[] = [
 	{
 		label: "Workers SCBA",
 		slug: "scba",
+		esWorker: true,
 		intro:
 			"El pipeline completo de SCBA: de la credencial del usuario a la notificación del movimiento. El diagrama lee la configuración en vivo (updatePolicy) y redibuja la partición del update — en 'unified' el worker de archivadas aparece ocioso.",
 		href: "/admin/workers/mev",
@@ -80,6 +88,7 @@ const TABS: FlowTab[] = [
 	{
 		label: "pjn-mis-causas (repo)",
 		slug: "mis-causas",
+		esWorker: true,
 		intro:
 			"El mapa completo del repositorio: sus 13 procesos y cómo se encadenan alrededor de la credencial del usuario — verificarla, traer sus causas, mantenerlas al día, leer su bandeja y vigilar que nada se caiga.",
 		href: "/admin/causas/workers",
@@ -88,6 +97,7 @@ const TABS: FlowTab[] = [
 	{
 		label: "Causas PJN por credencial",
 		slug: "credenciales",
+		esWorker: true,
 		intro:
 			"Los dos workers que llevan una fila del listado de Mis Causas hasta una carpeta: la sync completa del alta de credencial y la pasada diaria. Incluye las tres bifurcaciones que dejaban huecos silenciosos — las filas sin prefijo de fuero, quién decide que una causa falta, y el techo del plan.",
 		href: "/admin/causas/workers",
@@ -96,6 +106,7 @@ const TABS: FlowTab[] = [
 	{
 		label: "Workers SAIJ",
 		slug: "saij",
+		esWorker: true,
 		intro:
 			"Los cuatro canales de captura de jurisprudencia de SAIJ — nacional, provincial, Corte Suprema y el backfill histórico — que comparten el mismo código y se diferencian solo por configuración. Solo el nacional alimenta el pipeline PJN y las campañas a usuarios.",
 		href: "/admin/workers/saij",
@@ -112,6 +123,7 @@ const TABS: FlowTab[] = [
 	{
 		label: "Worker postal",
 		slug: "postal",
+		esWorker: true,
 		intro:
 			"El pipeline del seguimiento postal (Correo Argentino): del alta de la pieza al email de novedades — el manager encola los vencidos, los scraper-workers efímeros consultan el portal ONDNC y la-notification entrega al usuario. Incluye el circuito de alerta operativa al admin cuando el pipeline deja de actualizar.",
 		href: "/admin/workers/scraper",
@@ -120,6 +132,7 @@ const TABS: FlowTab[] = [
 	{
 		label: "Worker CIJur",
 		slug: "cijur",
+		esWorker: true,
 		intro:
 			"La captura de la selección curada del Ministerio Público de Buenos Aires: dos canales, backfill una sola vez y vigilancia diaria. El sitio no corta la paginación con 404 y duplica cada fallo en el HTML — las dos cosas condicionan el diseño.",
 		href: "/admin/workers/cijur",
@@ -191,16 +204,20 @@ const FlujosEcosistema: React.FC = () => {
 						<Typography variant="body2" color="text.secondary" sx={{ maxWidth: 780 }}>
 							{current.intro}
 						</Typography>
-						<Button
-							size="small"
-							variant="outlined"
-							component={RouterLink}
-							to={current.href}
-							endIcon={<ExportSquare size={15} />}
-							sx={{ flexShrink: 0 }}
-						>
-							{current.hrefLabel}
-						</Button>
+						{current.esWorker ? (
+							<CrossViewPair side="flujo" target="worker" to={current.href} tooltip={current.hrefLabel} />
+						) : (
+							<Button
+								size="small"
+								variant="outlined"
+								component={RouterLink}
+								to={current.href}
+								endIcon={<ExportSquare size={15} />}
+								sx={{ flexShrink: 0 }}
+							>
+								{current.hrefLabel}
+							</Button>
+						)}
 					</Stack>
 
 					{tab === 0 && <SentenciasFlow />}

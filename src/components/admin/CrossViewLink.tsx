@@ -4,7 +4,12 @@ import { Link as RouterLink } from "react-router-dom";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 
 /**
- * El par datos↔worker, como control segmentado.
+ * El par de vistas emparejadas, como control segmentado.
+ *
+ * Hay dos pares en el admin: datos↔worker (una vista de datos y el worker que
+ * los extrae) y worker↔flujo (un worker y el diagrama del pipeline que
+ * integra). El `target` dice cuál es el otro lado cuando no es el complemento
+ * obvio.
  *
  * Casi toda vista de datos del admin tiene un worker detrás, y casi toda vista
  * de worker tiene datos que mirar. Antes cada una resolvía ese salto por su
@@ -36,28 +41,32 @@ import { BRAND_BLUE } from "themes/dashboardTokens";
  * igual en todo el admin.
  */
 
-export type CrossViewSide = "datos" | "worker";
+export type CrossViewSide = "datos" | "worker" | "flujo";
 
 export interface CrossViewPairProps {
 	/** En qué mitad del par está la vista actual. */
 	side: CrossViewSide;
+	/** La otra mitad. Por defecto el complemento de datos↔worker; explícito
+	 *  cuando el par no es ese (worker↔flujo, por ejemplo). */
+	target?: CrossViewSide;
 	/** Ruta de la otra mitad — la única que es link. */
 	to: string;
 	/** Qué vas a encontrar del otro lado. */
 	tooltip?: string;
 }
 
-const DEFAULT_LABELS: Record<CrossViewSide, string> = { datos: "Datos", worker: "Worker" };
+const DEFAULT_LABELS: Record<CrossViewSide, string> = { datos: "Datos", worker: "Worker", flujo: "Flujo" };
 const DEFAULT_TOOLTIP: Record<CrossViewSide, string> = {
 	datos: "Ir a la vista de datos que produce este worker",
-	worker: "Ir a la configuración del worker que extrae estos datos",
+	worker: "Ir a la configuración del worker",
+	flujo: "Ir al diagrama del flujo que este worker integra",
 };
 
-const CrossViewPair = ({ side, to, tooltip }: CrossViewPairProps) => {
+const CrossViewPair = ({ side, target, to, tooltip }: CrossViewPairProps) => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
 
-	const otro: CrossViewSide = side === "datos" ? "worker" : "datos";
+	const otro: CrossViewSide = target ?? (side === "datos" ? "worker" : "datos");
 	const label = (s: CrossViewSide) => DEFAULT_LABELS[s];
 	const title = tooltip ?? DEFAULT_TOOLTIP[otro];
 
