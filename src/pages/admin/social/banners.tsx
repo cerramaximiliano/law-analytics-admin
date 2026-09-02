@@ -42,6 +42,9 @@ import {
 	TextField,
 	Tooltip,
 	Typography,
+	alpha,
+	useMediaQuery,
+	useTheme,
 } from "@mui/material";
 
 // third-party
@@ -71,6 +74,8 @@ const SLOT_URL: Record<BannerKey, string> = {
 const RANGOS = [7, 30, 90] as const;
 
 const BannersAdmin = () => {
+	const theme = useTheme();
+	const esMobile = useMediaQuery(theme.breakpoints.down("md"));
 	const { enqueueSnackbar } = useSnackbar();
 
 	const [banners, setBanners] = useState<PublicBanner[]>([]);
@@ -146,7 +151,7 @@ const BannersAdmin = () => {
 		<MainCard
 			title="Banners de las páginas públicas"
 			secondary={
-				<Stack direction="row" spacing={1} alignItems="center">
+				<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 					<FormControl size="small" sx={{ minWidth: 120 }}>
 						<InputLabel>Rango</InputLabel>
 						<Select label="Rango" value={days} onChange={(e) => setDays(Number(e.target.value))}>
@@ -166,16 +171,104 @@ const BannersAdmin = () => {
 			}
 		>
 			<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-				El copy se sirve en vivo (cache de 60s en la API + 5 min en el navegador del visitante). Tokens: <code>{"{fallos}"}</code>{" "}
-				inserta la cifra dinámica del corpus buscable; <code>==texto==</code> lo pinta con resaltador. Los clicks se atribuyen al
-				origen de la sesión: <em>instagram</em> (links.lawanalytics.app), <em>email</em> (correos de jurisprudencia), <em>app</em>{" "}
-				(vista dentro de la SPA) o <em>directo</em>.
+				El copy se sirve en vivo (cache de 60s en la API + 5 min en el navegador del visitante). Tokens: <code>{"{fallos}"}</code> inserta
+				la cifra dinámica del corpus buscable; <code>==texto==</code> lo pinta con resaltador. Los clicks se atribuyen al origen de la
+				sesión: <em>instagram</em> (links.lawanalytics.app), <em>email</em> (correos de jurisprudencia), <em>app</em> (vista dentro de la
+				SPA) o <em>directo</em>.
 			</Typography>
 
 			{loading ? (
 				<Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
 					<CircularProgress size={28} />
 				</Box>
+			) : esMobile ? (
+				/* Ocho columnas, tres de ellas numéricas, no entran en un teléfono.
+				   Las métricas pasan a una fila de tres y los orígenes debajo. */
+				<Stack spacing={1.25}>
+					{banners.map((banner) => {
+						const st = statsDe(banner.key);
+						return (
+							<Box
+								key={banner.key}
+								sx={{
+									p: 1.5,
+									borderRadius: 1.5,
+									border: `1px solid ${theme.palette.divider}`,
+									bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.04 : 0.02),
+									opacity: banner.habilitado ? 1 : 0.6,
+								}}
+							>
+								<Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
+									<Box sx={{ minWidth: 0 }}>
+										<Typography variant="subtitle2">{banner.nombre}</Typography>
+										<Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+											{banner.key}
+										</Typography>
+									</Box>
+									<Switch size="small" checked={banner.habilitado} onChange={() => toggleHabilitado(banner)} sx={{ flexShrink: 0 }} />
+								</Stack>
+								<Typography variant="body2" sx={{ mt: 0.5 }}>
+									{banner.titulo}
+								</Typography>
+								<Stack direction="row" spacing={2.5} sx={{ mt: 1 }}>
+									<Box>
+										<Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+											Views
+										</Typography>
+										<Typography variant="subtitle2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+											{st ? st.views.toLocaleString("es-AR") : "—"}
+										</Typography>
+									</Box>
+									<Box>
+										<Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+											Clicks
+										</Typography>
+										<Typography variant="subtitle2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+											{st ? st.clicks.toLocaleString("es-AR") : "—"}
+										</Typography>
+									</Box>
+									<Box>
+										<Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+											CTR
+										</Typography>
+										{st && st.views > 0 ? (
+											<Chip size="small" color={st.ctr >= 2 ? "success" : "default"} label={`${st.ctr}%`} sx={{ mt: 0.2 }} />
+										) : (
+											<Typography variant="subtitle2">—</Typography>
+										)}
+									</Box>
+								</Stack>
+								{st && Object.keys(st.origenes).length > 0 && (
+									<Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap", rowGap: 0.5, mt: 1 }}>
+										{Object.entries(st.origenes).map(([origen, n]) => (
+											<Chip key={origen} size="small" variant="outlined" label={`${origen}: ${n}`} />
+										))}
+									</Stack>
+								)}
+								<Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+									<Button size="small" startIcon={<Edit2 size={16} />} onClick={() => abrirEditor(banner)}>
+										Editar
+									</Button>
+									<Button
+										size="small"
+										component="a"
+										href={SLOT_URL[banner.key]}
+										target="_blank"
+										rel="noopener"
+										startIcon={<ExportSquare size={16} />}
+									>
+										Ver
+									</Button>
+								</Stack>
+							</Box>
+						);
+					})}
+					{banners.length === 0 && (
+						<Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
+							Sin banners — correr el seed en el server (scripts/seedPublicBanners.js).
+						</Typography>
+					)}
+				</Stack>
 			) : (
 				<TableContainer>
 					<Table size="small">
@@ -210,11 +303,7 @@ const BannersAdmin = () => {
 										<TableCell align="right">{s ? s.views.toLocaleString("es-AR") : "—"}</TableCell>
 										<TableCell align="right">{s ? s.clicks.toLocaleString("es-AR") : "—"}</TableCell>
 										<TableCell align="right">
-											{s && s.views > 0 ? (
-												<Chip size="small" color={s.ctr >= 2 ? "success" : "default"} label={`${s.ctr}%`} />
-											) : (
-												"—"
-											)}
+											{s && s.views > 0 ? <Chip size="small" color={s.ctr >= 2 ? "success" : "default"} label={`${s.ctr}%`} /> : "—"}
 										</TableCell>
 										<TableCell>
 											<Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap", rowGap: 0.5 }}>
@@ -339,10 +428,7 @@ const BannersAdmin = () => {
 							/>
 						</Stack>
 						<Stack direction="row" spacing={1} alignItems="center">
-							<Switch
-								checked={form.habilitado ?? true}
-								onChange={(e) => setForm((f) => ({ ...f, habilitado: e.target.checked }))}
-							/>
+							<Switch checked={form.habilitado ?? true} onChange={(e) => setForm((f) => ({ ...f, habilitado: e.target.checked }))} />
 							<Typography variant="body2">Visible (apagado → el sitio muestra su copy de respaldo)</Typography>
 						</Stack>
 					</Stack>

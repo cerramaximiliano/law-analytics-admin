@@ -43,6 +43,9 @@ import {
 	TextField,
 	Tooltip,
 	Typography,
+	alpha,
+	useMediaQuery,
+	useTheme,
 } from "@mui/material";
 
 // third-party
@@ -94,9 +97,11 @@ const EDU_RESALTADOR = "#FDE047";
 const EDU_TINTA = "#16203A";
 
 const renderNegritas = (texto: string) =>
-	texto.split(/(\*\*[^*]+\*\*)/g).map((parte, i) =>
-		parte.startsWith("**") && parte.endsWith("**") ? <strong key={i}>{parte.slice(2, -2)}</strong> : <span key={i}>{parte}</span>,
-	);
+	texto
+		.split(/(\*\*[^*]+\*\*)/g)
+		.map((parte, i) =>
+			parte.startsWith("**") && parte.endsWith("**") ? <strong key={i}>{parte.slice(2, -2)}</strong> : <span key={i}>{parte}</span>,
+		);
 
 const CuerpoPreview = ({ cuerpo }: { cuerpo: string }) => {
 	// Parseo idéntico al ArticleContent del front (formato acotado del backend).
@@ -175,11 +180,24 @@ const VistaPreviaArticulo = ({
 		<DialogContent dividers>
 			<Stack spacing={3} sx={{ py: 1 }}>
 				<Box>
-					<Typography variant="caption" sx={{ backgroundColor: EDU_RESALTADOR, color: EDU_TINTA, px: 0.75, py: 0.25, fontWeight: 700, letterSpacing: "0.14em" }}>
+					<Typography
+						variant="caption"
+						sx={{ backgroundColor: EDU_RESALTADOR, color: EDU_TINTA, px: 0.75, py: 0.25, fontWeight: 700, letterSpacing: "0.14em" }}
+					>
 						APUNTES
 					</Typography>
 					<Typography variant="h3" sx={{ mt: 1.5, lineHeight: 1.4 }}>
-						<Box component="span" sx={{ backgroundColor: EDU_RESALTADOR, color: EDU_TINTA, px: 0.75, py: 0.25, boxDecorationBreak: "clone", WebkitBoxDecorationBreak: "clone" }}>
+						<Box
+							component="span"
+							sx={{
+								backgroundColor: EDU_RESALTADOR,
+								color: EDU_TINTA,
+								px: 0.75,
+								py: 0.25,
+								boxDecorationBreak: "clone",
+								WebkitBoxDecorationBreak: "clone",
+							}}
+						>
 							{titulo}
 						</Box>
 					</Typography>
@@ -600,7 +618,12 @@ const EditorArticulo = ({ id, onClose, onChanged }: { id: string; onClose: () =>
 
 // ==============================|| PAGINA: ARTICULOS DEL BLOG ||============================== //
 
+/** Dónde quedan publicados estos artículos, de cara al público. */
+const BLOG_PUBLICO = "https://lawanalytics.app/educativo";
+
 const ArticulosBlog = () => {
+	const theme = useTheme();
+	const esMobile = useMediaQuery(theme.breakpoints.down("md"));
 	const { enqueueSnackbar } = useSnackbar();
 
 	const [articulos, setArticulos] = useState<EducativoArticulo[]>([]);
@@ -649,15 +672,41 @@ const ArticulosBlog = () => {
 	return (
 		<MainCard
 			title={
-				<Stack direction="row" alignItems="center" justifyContent="space-between">
-					<Box>
+				<Stack
+					direction={{ xs: "column", sm: "row" }}
+					alignItems={{ xs: "stretch", sm: "center" }}
+					justifyContent="space-between"
+					gap={1.5}
+				>
+					<Box sx={{ minWidth: 0 }}>
 						<Typography variant="h4">Artículos del blog</Typography>
-						<Typography variant="caption" color="text.secondary">
+						<Typography variant="caption" color="text.secondary" component="div">
 							Revisión editorial de los artículos educativos generados por el cron ({total} en total)
 						</Typography>
+						{/* Dónde termina publicado lo que se revisa acá. */}
+						<Typography
+							component="a"
+							href={BLOG_PUBLICO}
+							target="_blank"
+							rel="noopener noreferrer"
+							variant="caption"
+							sx={{
+								display: "inline-flex",
+								alignItems: "center",
+								gap: 0.5,
+								mt: 0.4,
+								color: "primary.main",
+								fontWeight: 600,
+								textDecoration: "none",
+								"&:hover": { textDecoration: "underline" },
+							}}
+						>
+							lawanalytics.app/educativo
+							<ExportSquare size={13} />
+						</Typography>
 					</Box>
-					<Stack direction="row" spacing={1.5} alignItems="center">
-						<FormControl size="small" sx={{ minWidth: 160 }}>
+					<Stack direction="row" spacing={1.5} alignItems="center" sx={{ flexShrink: 0 }}>
+						<FormControl size="small" sx={{ minWidth: 160, flex: { xs: 1, sm: "initial" } }}>
 							<InputLabel>Estado</InputLabel>
 							<Select
 								label="Estado"
@@ -692,67 +741,124 @@ const ArticulosBlog = () => {
 				</Typography>
 			) : (
 				<>
-					<TableContainer>
-						<Table size="small">
-							<TableHead>
-								<TableRow>
-									<TableCell>Título</TableCell>
-									<TableCell>Slug</TableCell>
-									<TableCell>Estado</TableCell>
-									<TableCell align="center">Fallos</TableCell>
-									<TableCell>Creado</TableCell>
-									<TableCell>Publicado</TableCell>
-									<TableCell align="right" />
-								</TableRow>
-							</TableHead>
-							<TableBody>
-								{articulos.map((art) => (
-									<TableRow key={art._id} hover sx={{ cursor: "pointer" }} onClick={() => setAbierto(art._id)}>
-										<TableCell sx={{ maxWidth: 380 }}>
-											<Typography variant="subtitle2" noWrap title={art.titulo}>
-												{art.titulo}
-											</Typography>
-										</TableCell>
-										<TableCell sx={{ maxWidth: 220 }}>
-											<Typography variant="caption" color="text.secondary" noWrap title={art.slug}>
-												{art.slug}
-											</Typography>
-										</TableCell>
-										<TableCell>
-											<Chip size="small" label={ESTADO_LABEL[art.estado]} color={ESTADO_COLOR[art.estado]} />
-										</TableCell>
-										<TableCell align="center">{art.jurisprudencia?.length || 0}</TableCell>
-										<TableCell>{fmtDate(art.createdAt)}</TableCell>
-										<TableCell>{fmtDate(art.publicadoEn)}</TableCell>
-										<TableCell align="right">
-											<Tooltip title="Ver contenido">
-												<IconButton
-													size="small"
-													onClick={(e) => {
-														e.stopPropagation();
-														abrirPreview(art._id);
-													}}
-												>
-													<Eye size={18} />
-												</IconButton>
-											</Tooltip>
-											<Tooltip title="Revisar y editar">
-												<IconButton
-													size="small"
-													onClick={(e) => {
-														e.stopPropagation();
-														setAbierto(art._id);
-													}}
-												>
-													<Edit2 size={18} />
-												</IconButton>
-											</Tooltip>
-										</TableCell>
+					{esMobile ? (
+						/* Siete columnas no entran en un teléfono. Una tarjeta por artículo,
+						   con el título completo en vez de recortado y las fechas en una línea. */
+						<Stack spacing={1.25}>
+							{articulos.map((art) => (
+								<Box
+									key={art._id}
+									onClick={() => setAbierto(art._id)}
+									sx={{
+										p: 1.5,
+										borderRadius: 1.5,
+										border: `1px solid ${theme.palette.divider}`,
+										bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.04 : 0.02),
+										cursor: "pointer",
+									}}
+								>
+									<Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
+										<Typography variant="subtitle2" sx={{ minWidth: 0 }}>
+											{art.titulo}
+										</Typography>
+										<Chip size="small" label={ESTADO_LABEL[art.estado]} color={ESTADO_COLOR[art.estado]} sx={{ flexShrink: 0 }} />
+									</Stack>
+									<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.3, wordBreak: "break-all" }}>
+										{art.slug}
+									</Typography>
+									<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 1 }} gap={1}>
+										<Typography variant="caption" color="text.secondary">
+											{fmtDate(art.createdAt)}
+											{art.publicadoEn ? ` · publicado ${fmtDate(art.publicadoEn)}` : ""}
+											{art.jurisprudencia?.length ? ` · ${art.jurisprudencia.length} fallos` : ""}
+										</Typography>
+										<Stack direction="row" sx={{ flexShrink: 0 }}>
+											<IconButton
+												size="small"
+												onClick={(e) => {
+													e.stopPropagation();
+													abrirPreview(art._id);
+												}}
+											>
+												<Eye size={17} />
+											</IconButton>
+											<IconButton
+												size="small"
+												onClick={(e) => {
+													e.stopPropagation();
+													setAbierto(art._id);
+												}}
+											>
+												<Edit2 size={17} />
+											</IconButton>
+										</Stack>
+									</Stack>
+								</Box>
+							))}
+						</Stack>
+					) : (
+						<TableContainer>
+							<Table size="small">
+								<TableHead>
+									<TableRow>
+										<TableCell>Título</TableCell>
+										<TableCell>Slug</TableCell>
+										<TableCell>Estado</TableCell>
+										<TableCell align="center">Fallos</TableCell>
+										<TableCell>Creado</TableCell>
+										<TableCell>Publicado</TableCell>
+										<TableCell align="right" />
 									</TableRow>
-								))}
-							</TableBody>
-						</Table>
-					</TableContainer>
+								</TableHead>
+								<TableBody>
+									{articulos.map((art) => (
+										<TableRow key={art._id} hover sx={{ cursor: "pointer" }} onClick={() => setAbierto(art._id)}>
+											<TableCell sx={{ maxWidth: 380 }}>
+												<Typography variant="subtitle2" noWrap title={art.titulo}>
+													{art.titulo}
+												</Typography>
+											</TableCell>
+											<TableCell sx={{ maxWidth: 220 }}>
+												<Typography variant="caption" color="text.secondary" noWrap title={art.slug}>
+													{art.slug}
+												</Typography>
+											</TableCell>
+											<TableCell>
+												<Chip size="small" label={ESTADO_LABEL[art.estado]} color={ESTADO_COLOR[art.estado]} />
+											</TableCell>
+											<TableCell align="center">{art.jurisprudencia?.length || 0}</TableCell>
+											<TableCell>{fmtDate(art.createdAt)}</TableCell>
+											<TableCell>{fmtDate(art.publicadoEn)}</TableCell>
+											<TableCell align="right">
+												<Tooltip title="Ver contenido">
+													<IconButton
+														size="small"
+														onClick={(e) => {
+															e.stopPropagation();
+															abrirPreview(art._id);
+														}}
+													>
+														<Eye size={18} />
+													</IconButton>
+												</Tooltip>
+												<Tooltip title="Revisar y editar">
+													<IconButton
+														size="small"
+														onClick={(e) => {
+															e.stopPropagation();
+															setAbierto(art._id);
+														}}
+													>
+														<Edit2 size={18} />
+													</IconButton>
+												</Tooltip>
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</TableContainer>
+					)}
 					{pages > 1 && (
 						<Stack alignItems="center" sx={{ mt: 2 }}>
 							<Pagination count={pages} page={page} onChange={(_e, value) => setPage(value)} />

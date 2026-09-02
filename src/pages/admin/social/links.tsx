@@ -36,6 +36,9 @@ import {
 	TextField,
 	Tooltip,
 	Typography,
+	alpha,
+	useMediaQuery,
+	useTheme,
 } from "@mui/material";
 
 // third-party
@@ -53,9 +56,18 @@ const ICONO_LABEL: Record<BioLinkIcono, string> = {
 	link: "Enlace (genérico)",
 };
 
-const VACIO: BioLinkPayload & { titulo: string; url: string } = { titulo: "", descripcion: "", url: "https://", icono: "link", habilitado: false, orden: 10 };
+const VACIO: BioLinkPayload & { titulo: string; url: string } = {
+	titulo: "",
+	descripcion: "",
+	url: "https://",
+	icono: "link",
+	habilitado: false,
+	orden: 10,
+};
 
 const LinksBio = () => {
+	const theme = useTheme();
+	const esMobile = useMediaQuery(theme.breakpoints.down("md"));
 	const { enqueueSnackbar } = useSnackbar();
 
 	const [links, setLinks] = useState<BioLink[]>([]);
@@ -86,7 +98,14 @@ const LinksBio = () => {
 		setForm(
 			link === "nuevo"
 				? VACIO
-				: { titulo: link.titulo, descripcion: link.descripcion, url: link.url, icono: link.icono, habilitado: link.habilitado, orden: link.orden },
+				: {
+						titulo: link.titulo,
+						descripcion: link.descripcion,
+						url: link.url,
+						icono: link.icono,
+						habilitado: link.habilitado,
+						orden: link.orden,
+				  },
 		);
 	};
 
@@ -138,14 +157,19 @@ const LinksBio = () => {
 	return (
 		<MainCard
 			title={
-				<Stack direction="row" alignItems="center" justifyContent="space-between">
-					<Box>
+				<Stack
+					direction={{ xs: "column", sm: "row" }}
+					alignItems={{ xs: "stretch", sm: "center" }}
+					justifyContent="space-between"
+					gap={1.5}
+				>
+					<Box sx={{ minWidth: 0 }}>
 						<Typography variant="h4">Link-in-bio</Typography>
 						<Typography variant="caption" color="text.secondary">
 							Los enlaces de links.lawanalytics.app — los cambios impactan en vivo (cache de 60 segundos)
 						</Typography>
 					</Box>
-					<Stack direction="row" spacing={1}>
+					<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ flexShrink: 0 }}>
 						<Button
 							size="small"
 							startIcon={<ExportSquare size={16} />}
@@ -166,66 +190,119 @@ const LinksBio = () => {
 				</Stack>
 			}
 		>
-			<TableContainer>
-				<Table size="small">
-					<TableHead>
-						<TableRow>
-							<TableCell width={70}>Orden</TableCell>
-							<TableCell>Título</TableCell>
-							<TableCell>URL</TableCell>
-							<TableCell>Icono</TableCell>
-							<TableCell align="center">Visible</TableCell>
-							<TableCell align="right">Acciones</TableCell>
-						</TableRow>
-					</TableHead>
-					<TableBody>
-						{cargando && (
-							<TableRow>
-								<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-									<CircularProgress size={24} />
-								</TableCell>
-							</TableRow>
-						)}
-						{!cargando &&
-							links.map((link) => (
-								<TableRow key={link._id} hover>
-									<TableCell>{link.orden}</TableCell>
-									<TableCell>
-										<Typography variant="subtitle2">{link.titulo}</Typography>
+			{esMobile ? (
+				/* Seis columnas no entran en un teléfono. Tarjeta por link, con la URL
+				   completa (que es lo que se verifica) en vez de recortada. */
+				<Stack spacing={1.25}>
+					{cargando && (
+						<Stack alignItems="center" sx={{ py: 4 }}>
+							<CircularProgress size={24} />
+						</Stack>
+					)}
+					{!cargando &&
+						links.map((link) => (
+							<Box
+								key={link._id}
+								sx={{
+									p: 1.5,
+									borderRadius: 1.5,
+									border: `1px solid ${theme.palette.divider}`,
+									bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.04 : 0.02),
+									opacity: link.habilitado ? 1 : 0.6,
+								}}
+							>
+								<Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
+									<Box sx={{ minWidth: 0 }}>
+										<Typography variant="subtitle2">
+											{link.orden}. {link.titulo}
+										</Typography>
 										{link.descripcion && (
-											<Typography variant="caption" color="text.secondary">
+											<Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
 												{link.descripcion}
 											</Typography>
 										)}
-									</TableCell>
-									<TableCell sx={{ maxWidth: 280 }}>
-										<Typography variant="caption" color="text.secondary" noWrap title={link.url} sx={{ display: "block" }}>
-											{link.url}
-										</Typography>
-									</TableCell>
-									<TableCell>
-										<Chip size="small" variant="outlined" label={ICONO_LABEL[link.icono] || link.icono} />
-									</TableCell>
-									<TableCell align="center">
-										<Switch size="small" checked={link.habilitado} onChange={() => toggleHabilitado(link)} />
-									</TableCell>
-									<TableCell align="right">
-										<Tooltip title="Editar">
-											<IconButton size="small" onClick={() => abrirEditor(link)}>
-												<Edit2 size={18} />
-											</IconButton>
-										</Tooltip>
-										<Tooltip title="Eliminar">
-											<IconButton size="small" color="error" onClick={() => setAEliminar(link)}>
-												<Trash size={18} />
-											</IconButton>
-										</Tooltip>
+									</Box>
+									<Switch size="small" checked={link.habilitado} onChange={() => toggleHabilitado(link)} sx={{ flexShrink: 0 }} />
+								</Stack>
+								<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5, wordBreak: "break-all" }}>
+									{link.url}
+								</Typography>
+								<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 1 }} gap={1}>
+									<Chip size="small" variant="outlined" label={ICONO_LABEL[link.icono] || link.icono} />
+									<Stack direction="row" sx={{ flexShrink: 0 }}>
+										<IconButton size="small" onClick={() => abrirEditor(link)}>
+											<Edit2 size={17} />
+										</IconButton>
+										<IconButton size="small" color="error" onClick={() => setAEliminar(link)}>
+											<Trash size={17} />
+										</IconButton>
+									</Stack>
+								</Stack>
+							</Box>
+						))}
+				</Stack>
+			) : (
+				<TableContainer>
+					<Table size="small">
+						<TableHead>
+							<TableRow>
+								<TableCell width={70}>Orden</TableCell>
+								<TableCell>Título</TableCell>
+								<TableCell>URL</TableCell>
+								<TableCell>Icono</TableCell>
+								<TableCell align="center">Visible</TableCell>
+								<TableCell align="right">Acciones</TableCell>
+							</TableRow>
+						</TableHead>
+						<TableBody>
+							{cargando && (
+								<TableRow>
+									<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+										<CircularProgress size={24} />
 									</TableCell>
 								</TableRow>
-							))}
-					</TableBody>
-				</Table>
-			</TableContainer>
+							)}
+							{!cargando &&
+								links.map((link) => (
+									<TableRow key={link._id} hover>
+										<TableCell>{link.orden}</TableCell>
+										<TableCell>
+											<Typography variant="subtitle2">{link.titulo}</Typography>
+											{link.descripcion && (
+												<Typography variant="caption" color="text.secondary">
+													{link.descripcion}
+												</Typography>
+											)}
+										</TableCell>
+										<TableCell sx={{ maxWidth: 280 }}>
+											<Typography variant="caption" color="text.secondary" noWrap title={link.url} sx={{ display: "block" }}>
+												{link.url}
+											</Typography>
+										</TableCell>
+										<TableCell>
+											<Chip size="small" variant="outlined" label={ICONO_LABEL[link.icono] || link.icono} />
+										</TableCell>
+										<TableCell align="center">
+											<Switch size="small" checked={link.habilitado} onChange={() => toggleHabilitado(link)} />
+										</TableCell>
+										<TableCell align="right">
+											<Tooltip title="Editar">
+												<IconButton size="small" onClick={() => abrirEditor(link)}>
+													<Edit2 size={18} />
+												</IconButton>
+											</Tooltip>
+											<Tooltip title="Eliminar">
+												<IconButton size="small" color="error" onClick={() => setAEliminar(link)}>
+													<Trash size={18} />
+												</IconButton>
+											</Tooltip>
+										</TableCell>
+									</TableRow>
+								))}
+						</TableBody>
+					</Table>
+				</TableContainer>
+			)}
 
 			{/* Alta / edición */}
 			<Dialog open={editando !== null} onClose={() => !guardando && setEditando(null)} maxWidth="sm" fullWidth>
@@ -256,7 +333,11 @@ const LinksBio = () => {
 						<Stack direction="row" spacing={2}>
 							<FormControl size="small" sx={{ minWidth: 220 }}>
 								<InputLabel>Icono</InputLabel>
-								<Select value={form.icono} label="Icono" onChange={(e) => setForm((f) => ({ ...f, icono: e.target.value as BioLinkIcono }))}>
+								<Select
+									value={form.icono}
+									label="Icono"
+									onChange={(e) => setForm((f) => ({ ...f, icono: e.target.value as BioLinkIcono }))}
+								>
 									{(Object.keys(ICONO_LABEL) as BioLinkIcono[]).map((k) => (
 										<MenuItem key={k} value={k}>
 											{ICONO_LABEL[k]}
@@ -273,7 +354,11 @@ const LinksBio = () => {
 								sx={{ width: 110 }}
 							/>
 							<Stack direction="row" alignItems="center" spacing={0.5}>
-								<Switch size="small" checked={!!form.habilitado} onChange={(e) => setForm((f) => ({ ...f, habilitado: e.target.checked }))} />
+								<Switch
+									size="small"
+									checked={!!form.habilitado}
+									onChange={(e) => setForm((f) => ({ ...f, habilitado: e.target.checked }))}
+								/>
 								<Typography variant="body2">Visible</Typography>
 							</Stack>
 						</Stack>

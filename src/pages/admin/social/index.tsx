@@ -732,8 +732,8 @@ const SocialStudio = () => {
 		const lote = otras
 			? undefined
 			: conImagenes.length > 0
-				? conImagenes.map((v) => ({ formato: v.formato as FormatoId, imagenes: v.images as string[] }))
-				: undefined;
+			? conImagenes.map((v) => ({ formato: v.formato as FormatoId, imagenes: v.images as string[] }))
+			: undefined;
 		const imgs = otras ? otras.imagenes || [] : lote ? [] : images;
 		const vid = otras ? otras.video : video?.video;
 		if (imgs.length === 0 && !lote && !vid) return "nada";
@@ -945,7 +945,7 @@ const SocialStudio = () => {
 		<MainCard
 			title="Estudio de posts sociales"
 			secondary={
-				<Stack direction="row" spacing={1} alignItems="center">
+				<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 					{health && !health.claude && <Chip size="small" color="error" variant="outlined" label="Claude sin API key" />}
 					{health && !health.renderer && <Chip size="small" color="error" variant="outlined" label="Renderer offline" />}
 					{health && health.claude && health.renderer && <Chip size="small" color="success" variant="outlined" label="Servicio OK" />}
@@ -1160,11 +1160,7 @@ const SocialStudio = () => {
 									{renderizando ? "Renderizando…" : "Renderizar"}
 								</Button>
 								<Button variant="outlined" fullWidth disabled={guardando || guardandoPiezas} onClick={handleGuardar}>
-									{guardando || guardandoPiezas
-										? "Guardando…"
-										: editandoId
-											? "Actualizar post"
-											: "Guardar post"}
+									{guardando || guardandoPiezas ? "Guardando…" : editandoId ? "Actualizar post" : "Guardar post"}
 								</Button>
 							</Stack>
 							{/* Guardar hace dos cosas y no era evidente: persiste el contenido y
@@ -1173,15 +1169,12 @@ const SocialStudio = () => {
 								{images.length > 0 || variantes.some((v) => v.formato === formato && (v.images || []).length > 0) || video
 									? (() => {
 											const conImg = variantes.filter((v) => (v.images || []).length > 0);
-											const n =
-												conImg.length > 0
-													? conImg.reduce((a, v) => a + (v.images || []).length, 0)
-													: images.length;
+											const n = conImg.length > 0 ? conImg.reduce((a, v) => a + (v.images || []).length, 0) : images.length;
 											const fmts = conImg.length > 0 ? ` en ${conImg.length} formato${conImg.length > 1 ? "s" : ""}` : "";
 											return `Al guardar también quedan archivadas las piezas de esta pantalla${
 												n > 0 ? `: ${n} imagen${n > 1 ? "es" : ""}${fmts}` : ""
 											}${n > 0 && video ? " y" : video ? ": " : ""}${video ? " el video" : ""}.`;
-										})()
+									  })()
 									: "Guarda el contenido del post. Si además renderizás, las piezas quedan archivadas junto con él."}
 							</Typography>
 
@@ -1450,7 +1443,7 @@ const SocialStudio = () => {
 
 			{tab === 1 && (
 				<Box>
-					<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.5 }}>
+					<Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
 						<FormControl size="small" sx={{ minWidth: 220 }}>
 							<InputLabel>Plantilla</InputLabel>
 							<Select value={filtroPlantilla} label="Plantilla" onChange={(e) => setFiltroPlantilla(e.target.value as TemplateId | "")}>
@@ -1478,7 +1471,7 @@ const SocialStudio = () => {
 								<MenuItem value="antiguos">Más antiguos</MenuItem>
 							</Select>
 						</FormControl>
-						<Box sx={{ flex: 1 }} />
+						<Box sx={{ flex: 1, display: { xs: "none", sm: "block" } }} />
 						<Button size="small" startIcon={<Refresh size={16} />} onClick={cargarPosts} disabled={loadingPosts}>
 							Actualizar
 						</Button>
@@ -1490,11 +1483,14 @@ const SocialStudio = () => {
 									{/* Miniatura de la pieza ya generada y guardada en S3 */}
 									<TableCell sx={{ width: 72 }} />
 									<TableCell>Título</TableCell>
-									<TableCell>Plantilla</TableCell>
-									<TableCell>Formato</TableCell>
-									<TableCell>Animación</TableCell>
+									{/* En mobile sobreviven miniatura, título, estado y acciones: lo que
+									    identifica un post y lo que se hace con él. Plantilla, formato,
+									    animación y fecha son metadata que ahí sólo aporta scroll. */}
+									<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>Plantilla</TableCell>
+									<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>Formato</TableCell>
+									<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>Animación</TableCell>
 									<TableCell>Estado</TableCell>
-									<TableCell>Creado</TableCell>
+									<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>Creado</TableCell>
 									<TableCell align="right">Acciones</TableCell>
 								</TableRow>
 							</TableHead>
@@ -1579,9 +1575,13 @@ const SocialStudio = () => {
 												)}
 											</TableCell>
 											<TableCell>{p.titulo}</TableCell>
-											<TableCell>{templates.find((t) => t.id === p.templateId)?.label || p.templateId}</TableCell>
-											<TableCell>{formats.find((f) => f.id === p.formato)?.label || p.formato}</TableCell>
-											<TableCell>
+											<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
+												{templates.find((t) => t.id === p.templateId)?.label || p.templateId}
+											</TableCell>
+											<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
+												{formats.find((f) => f.id === p.formato)?.label || p.formato}
+											</TableCell>
+											<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
 												<Typography variant="caption" color="text.secondary">
 													{animacionEfectiva(p)}
 												</Typography>
@@ -1594,7 +1594,7 @@ const SocialStudio = () => {
 													</Typography>
 												)}
 											</TableCell>
-											<TableCell>{fmtDate(p.createdAt)}</TableCell>
+											<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>{fmtDate(p.createdAt)}</TableCell>
 											<TableCell align="right">
 												<Button size="small" onClick={() => handleAbrirPost(p)}>
 													Abrir
@@ -1864,8 +1864,8 @@ const SocialStudio = () => {
 								</Typography>
 							)}
 							<Typography variant="caption" color="text.secondary">
-								Los enlaces vencen a los {Math.round((piezas.ttlSegundos || 900) / 60)} minutos: si el visor queda abierto
-								mucho tiempo, volvé a abrirlo.
+								Los enlaces vencen a los {Math.round((piezas.ttlSegundos || 900) / 60)} minutos: si el visor queda abierto mucho tiempo,
+								volvé a abrirlo.
 							</Typography>
 						</Stack>
 					)}
@@ -1876,12 +1876,7 @@ const SocialStudio = () => {
 					</Button>
 					<Box sx={{ flex: 1 }} />
 					{piezas?.video && (
-						<Button
-							component="a"
-							href={piezas.video.urlDescarga || piezas.video.url}
-							download
-							startIcon={<DocumentDownload size={16} />}
-						>
+						<Button component="a" href={piezas.video.urlDescarga || piezas.video.url} download startIcon={<DocumentDownload size={16} />}>
 							Descargar mp4
 						</Button>
 					)}
@@ -1902,8 +1897,8 @@ const SocialStudio = () => {
 						.
 					</Typography>
 					<Typography variant="body2" color="text.secondary">
-						Si continuás, se suben las que están en pantalla y las anteriores se borran. Solo se reemplaza lo que estás
-						guardando ahora: si no renderizaste el video, el video guardado queda como está.
+						Si continuás, se suben las que están en pantalla y las anteriores se borran. Solo se reemplaza lo que estás guardando ahora: si
+						no renderizaste el video, el video guardado queda como está.
 					</Typography>
 				</DialogContent>
 				<DialogActions>
