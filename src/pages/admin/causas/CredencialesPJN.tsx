@@ -62,7 +62,7 @@ import ImageActions from "components/ImageActions";
 import CopyButton from "components/CopyButton";
 import { fetchImageBlob } from "utils/imageActions";
 import DailySyncPanel from "components/pjn/DailySyncPanel";
-import CrossViewPair from "components/admin/CrossViewLink";
+import CrossViewLinks from "components/admin/CrossViewLink";
 import pjnCredentialsService, {
 	PjnCredential,
 	PjnCredentialsFilters,
@@ -899,7 +899,7 @@ const CredencialesPJN = () => {
 	};
 
 	return (
-		<MainCard title="Credenciales PJN" secondary={<CrossViewPair side="datos" to="/admin/causas/workers?worker=mis-causas" />}>
+		<MainCard title="Credenciales PJN" secondary={<CrossViewLinks current="datos" to={{ worker: "/admin/causas/workers?worker=mis-causas" }} />}>
 			{/* Stats loading/error */}
 			{statsLoading && (
 				<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>

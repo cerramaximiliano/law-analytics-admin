@@ -36,7 +36,7 @@ import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/es";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import CrossViewPair from "components/admin/CrossViewLink";
+import CrossViewLinks from "components/admin/CrossViewLink";
 import { CausasMEVService, CausaMEV, EligibilityStatsMEV } from "api/causasMEV";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
 import {
@@ -496,7 +496,7 @@ const CarpetasMEVVerificadas = () => {
 	};
 
 	return (
-		<MainCard title="Carpetas MEV Verificadas (App)" secondary={<CrossViewPair side="datos" to="/admin/workers/mev?worker=update" />}>
+		<MainCard title="Carpetas MEV Verificadas (App)" secondary={<CrossViewLinks current="datos" to={{ worker: "/admin/workers/mev?worker=update" }} />}>
 			{/* Header: Resultados + Cobertura */}
 			<Box sx={{ mb: 2 }}>
 				<Grid container spacing={2} alignItems="center">

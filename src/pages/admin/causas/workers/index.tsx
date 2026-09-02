@@ -43,7 +43,7 @@ import MisCausasUpdatesWorker from "./MisCausasUpdatesWorker";
 import PrivacyCheckerWorker from "./PrivacyCheckerWorker";
 import CaptchaDatasetTab from "./CaptchaDatasetTab";
 import DocumentationTab from "./documentation";
-import CrossViewPair from "components/admin/CrossViewLink";
+import CrossViewLinks from "components/admin/CrossViewLink";
 
 interface WorkerTab {
 	label: string;
@@ -60,6 +60,10 @@ interface WorkerTab {
 	 * acá y no lo reimplementa cada panel.
 	 */
 	dataView?: { to: string; tooltip?: string };
+	/** Flujo que explica el pipeline de este worker, si hay uno documentado.
+	 *  Se declara acá por lo mismo que dataView: el rail dibuja el control y
+	 *  ningún panel tiene que reimplementar el salto. */
+	flowView?: string;
 }
 
 // El rail agrupa por etapa del pipeline, no por orden histórico de aparición:
@@ -141,6 +145,7 @@ const WORKER_TABS: WorkerTab[] = [
 		status: "active",
 		host: "worker-cloud-02",
 		ip: "100.102.208.69",
+		flowView: "/admin/flujos?tab=credenciales",
 		dataView: {
 			to: "/admin/causas/credentials",
 			tooltip: "Ir a las credenciales PJN con las que este worker entra al portal",
@@ -154,6 +159,7 @@ const WORKER_TABS: WorkerTab[] = [
 		status: "active",
 		host: "worker-cloud-02",
 		ip: "100.102.208.69",
+		flowView: "/admin/flujos?tab=mis-causas",
 		dataView: {
 			to: "/admin/causas/synced-credentials",
 			tooltip: "Ir a las causas que este worker sincronizó por credencial",
@@ -465,7 +471,11 @@ const WorkersConfig = () => {
 							</Box>
 							<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ flexShrink: 0 }}>
 								{current.dataView && (
-									<CrossViewPair side="worker" to={current.dataView.to} tooltip={current.dataView.tooltip} />
+									<CrossViewLinks
+										current="worker"
+										to={{ datos: current.dataView.to, flujo: current.flowView }}
+										tooltips={{ datos: current.dataView.tooltip }}
+									/>
 								)}
 								{current.status && (
 									<Stack direction="row" spacing={0.75} alignItems="center" sx={{ flexShrink: 0 }}>

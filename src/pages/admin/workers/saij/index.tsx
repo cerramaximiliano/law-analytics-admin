@@ -73,7 +73,7 @@ import ProgresoPanel from "./ProgresoPanel";
 import DifusionTab from "./DifusionTab";
 import { useTabIndexParam, useTabParam } from "hooks/useTabParam";
 import { useSearchParams } from "react-router-dom";
-import CrossViewPair from "components/admin/CrossViewLink";
+import CrossViewLinks from "components/admin/CrossViewLink";
 import { ConciliacionSaijContent } from "pages/admin/saij/conciliacion";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -713,7 +713,7 @@ export default function SaijWorkerPage() {
 							<Stack spacing={2}>
 								{/* Par worker↔datos, mismo control que en el resto del admin */}
 								<Box>
-									<CrossViewPair side="worker" to="/recursos/jurisprudencia/saij" />
+									<CrossViewLinks current="worker" to={{ datos: "/recursos/jurisprudencia/saij", flujo: "/admin/flujos?tab=saij" }} />
 								</Box>
 								{/* Avance de todos los workers: cantidades reales y año en curso */}
 								<ProgresoPanel />

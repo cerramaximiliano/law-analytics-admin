@@ -39,7 +39,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/es";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import CrossViewPair from "components/admin/CrossViewLink";
+import CrossViewLinks from "components/admin/CrossViewLink";
 import pjnCredentialsService, {
 	SyncedCausa,
 	SyncedCausasSummary,
@@ -422,7 +422,7 @@ const CausasSyncCredentials = () => {
 
 	return (
 		<>
-			<MainCard title="Causas Sincronizadas por Credenciales" secondary={<CrossViewPair side="datos" to="/admin/causas/workers?worker=mis-causas-updates" />}>
+			<MainCard title="Causas Sincronizadas por Credenciales" secondary={<CrossViewLinks current="datos" to={{ worker: "/admin/causas/workers?worker=mis-causas-updates" }} />}>
 				{/* Summary Cards */}
 				{summary && (
 					<Box sx={{ mb: 3 }}>

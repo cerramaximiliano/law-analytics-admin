@@ -66,6 +66,7 @@ import { getTasasStatus, TasasStatus } from "utils/tasasService";
 import { getStats as getDatosPrevisionales, Stats as DatosPrevsStats } from "utils/datosPrevsionalesService";
 import GroupsService from "api/groups";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, PREMIUM_GOLD, PRO_TEAL, headerBorder, headerShadow } from "themes/dashboardTokens";
+import IncidentsWidget from "./IncidentsWidget";
 import ServicesStatusWidget from "./ServicesStatusWidget";
 import CronsStatusWidget from "./CronsStatusWidget";
 import IntegrationsStatusWidget from "./IntegrationsStatusWidget";
@@ -1349,6 +1350,12 @@ const AdminDashboard = () => {
 						to { transform: rotate(360deg); }
 					}
 				`}</style>
+
+				{/* Incidentes abiertos — lo primero que se ve, antes que cualquier métrica.
+				    El dashboard muestra excepciones; el resto es drill-down bajo demanda. */}
+				<Box sx={{ mb: { xs: 2, sm: 3 } }}>
+					<IncidentsWidget />
+				</Box>
 
 				{/* Primary KPIs Row - jerarquía en dos niveles: 4 KPIs hero + strip de contexto */}
 				<Box sx={{ mb: { xs: 2, sm: 4 } }}>

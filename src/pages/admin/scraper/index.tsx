@@ -46,6 +46,7 @@ import PostalWorkersFlow from "../flujos/PostalWorkersFlow";
 import ScraperService, { ScraperConfig, ScraperJob, ScraperRun, ScraperJobStats, ScraperRunStats } from "api/scraperService";
 import dayjs from "dayjs";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import CrossViewLinks from "components/admin/CrossViewLink";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -1282,6 +1283,7 @@ const ScraperWorkerPage = () => {
 			title="Scraper postal"
 			secondary={
 				<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+					<CrossViewLinks current="worker" to={{ flujo: "/admin/flujos?tab=postal" }} />
 					<Setting3 size={20} />
 					<Typography variant="body2" color="textSecondary">
 						Worker de seguimiento postal (Correo Argentino)

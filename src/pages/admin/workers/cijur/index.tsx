@@ -16,6 +16,7 @@ import EstadoTab from "./EstadoTab";
 import FallosTab from "./FallosTab";
 import ConfigTab from "./ConfigTab";
 import { useTabIndexParam } from "hooks/useTabParam";
+import CrossViewLinks from "components/admin/CrossViewLink";
 
 // Slugs del tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
 const TAB_SLUGS = ["estado", "fallos", "configuracion", "flujo"] as const;
@@ -54,6 +55,7 @@ export default function CijurWorkerPage() {
 					</Typography>
 				</Stack>
 			}
+			secondary={<CrossViewLinks current="worker" to={{ flujo: "/admin/flujos?tab=cijur" }} />}
 		>
 			{error && (
 				<Card variant="outlined" sx={{ mb: 2 }}>

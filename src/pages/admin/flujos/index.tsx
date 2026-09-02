@@ -31,7 +31,7 @@ import { mainSpecs } from "../causas/flujos/flowData";
 import NotificationsFlowDiagram from "../notifications/components/FlowDiagram";
 import useLiveJudicialConfig from "../notifications/components/useLiveJudicialConfig";
 import { useTabIndexParam } from "hooks/useTabParam";
-import CrossViewPair from "components/admin/CrossViewLink";
+import CrossViewLinks from "components/admin/CrossViewLink";
 
 interface FlowTab {
 	label: string;
@@ -82,7 +82,7 @@ const TABS: FlowTab[] = [
 		esWorker: true,
 		intro:
 			"El pipeline completo de SCBA: de la credencial del usuario a la notificación del movimiento. El diagrama lee la configuración en vivo (updatePolicy) y redibuja la partición del update — en 'unified' el worker de archivadas aparece ocioso.",
-		href: "/admin/workers/mev",
+		href: "/admin/workers/mev?worker=scba",
 		hrefLabel: "Operar el SCBA manager (pestaña SCBA)",
 	},
 	{
@@ -205,7 +205,7 @@ const FlujosEcosistema: React.FC = () => {
 							{current.intro}
 						</Typography>
 						{current.esWorker ? (
-							<CrossViewPair side="flujo" target="worker" to={current.href} tooltip={current.hrefLabel} />
+							<CrossViewLinks current="flujo" to={{ worker: current.href }} tooltips={{ worker: current.hrefLabel }} />
 						) : (
 							<Button
 								size="small"

@@ -31,7 +31,7 @@ import {
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import CrossViewPair from "components/admin/CrossViewLink";
+import CrossViewLinks from "components/admin/CrossViewLink";
 import { CausasPjCatamarcaService, CausaPjCatamarca, WorkerStatsResponse, EligibilityStatsResponse } from "api/causasPjCatamarca";
 import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Lock1, Repeat } from "iconsax-react";
 import CausaDetalleModalPjCatamarca from "./CausaDetalleModalPjCatamarca";
@@ -428,7 +428,7 @@ const CarpetasVerificadasPjCatamarca = () => {
 	};
 
 	return (
-		<MainCard title="Carpetas verificadas PJ Catamarca (App)" secondary={<CrossViewPair side="datos" to="/admin/pjcatamarca/workers?worker=actualizacion" />}>
+		<MainCard title="Carpetas verificadas PJ Catamarca (App)" secondary={<CrossViewLinks current="datos" to={{ worker: "/admin/pjcatamarca/workers?worker=actualizacion" }} />}>
 			{/* Header: Resultados + Estadísticas */}
 			<Box sx={{ mb: 2 }}>
 				<Grid container spacing={2} alignItems="center">

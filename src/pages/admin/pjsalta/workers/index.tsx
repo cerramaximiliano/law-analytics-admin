@@ -55,7 +55,7 @@ import {
 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import CronSelector, { getCronLabel } from "components/admin/CronSelector";
-import CrossViewPair from "components/admin/CrossViewLink";
+import CrossViewLinks from "components/admin/CrossViewLink";
 import { useTheme, alpha } from "@mui/material/styles";
 import DocumentationTabs from "./DocumentationTabs";
 import { CausasPjSaltaService, PipelineStatsResponse } from "api/causasPjSalta";
@@ -920,7 +920,7 @@ const PjSaltaWorkersConfig: React.FC = () => {
 						title="Workers PJ Salta"
 						secondary={
 							<Stack direction="row" spacing={1} alignItems="center">
-								<CrossViewPair side="worker" to="/admin/pjsalta/verified-app" />
+								<CrossViewLinks current="worker" to={{ datos: "/admin/pjsalta/verified-app" }} />
 								<Box
 									sx={{
 										display: "inline-flex",

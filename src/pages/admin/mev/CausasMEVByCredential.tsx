@@ -43,7 +43,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/es";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import CrossViewPair from "components/admin/CrossViewLink";
+import CrossViewLinks from "components/admin/CrossViewLink";
 import scbaCausasService, { ScbaSyncedCausa, ScbaSyncedCausasSummary } from "api/scbaCausas";
 import scbaCredentialsService, { ScbaCredential } from "api/scbaCredentials";
 import { Refresh, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Repeat, Eye, InfoCircle } from "iconsax-react";
@@ -256,7 +256,7 @@ const CausasMEVByCredential = () => {
 
 	return (
 		<>
-			<MainCard title="Causas SCBA por Credencial" secondary={<CrossViewPair side="datos" to="/admin/workers/mev?worker=scba" />}>
+			<MainCard title="Causas SCBA por Credencial" secondary={<CrossViewLinks current="datos" to={{ worker: "/admin/workers/mev?worker=scba", flujo: "/admin/flujos?tab=scba" }} />}>
 				{/* Summary Cards */}
 				{summary && (
 					<Box sx={{ mb: 3 }}>

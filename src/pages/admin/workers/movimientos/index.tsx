@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Box, Chip, Collapse, Stack, Typography, alpha, useTheme } from "@mui/material";
 import { ArrowDown2, ArrowUp2 } from "iconsax-react";
 import MainCard from "components/MainCard";
-import CrossViewPair from "components/admin/CrossViewLink";
+import CrossViewLinks from "components/admin/CrossViewLink";
 import UpdateMovimientosWorkerTab from "./UpdateMovimientosWorkerTab";
 import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
 import { BRAND_BLUE } from "themes/dashboardTokens";
@@ -35,7 +35,7 @@ export default function MovimientosWorkerPage() {
 						{/* fuente=cache explícito: este worker consume la cola de rs0, no las
 						    causas de carpetas de Atlas. Antes se apoyaba en que "cache" fuera
 						    el default de la vista de datos. */}
-						<CrossViewPair side="worker" to="/admin/causas/update-eligible?fuente=cache" />
+						<CrossViewLinks current="worker" to={{ datos: "/admin/causas/update-eligible?fuente=cache" }} />
 						<Chip
 							size="small"
 							variant="outlined"

@@ -60,7 +60,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import CopyButton from "components/CopyButton";
 import { TabPanel } from "components/ui-component/TabPanel";
-import CrossViewPair from "components/admin/CrossViewLink";
+import CrossViewLinks from "components/admin/CrossViewLink";
 import MEVWorkersService, { MEVWorkerConfig, SystemConfig } from "api/workersMEV";
 import SyncCheckTab from "./SyncCheckTab";
 import WorkerManagerTab from "./WorkerManagerTab";
@@ -86,6 +86,12 @@ const WORKER_VALUES = ["manager", "verification", "update", "sync-check", "syste
 const DATOS_POR_WORKER: Partial<Record<(typeof WORKER_VALUES)[number], string>> = {
 	update: "/admin/mev/verified-app",
 	scba: "/admin/mev/causes-by-credential",
+};
+
+// Y qué flujo lo explica. Con los tres —datos, worker y flujo— se puede ir de
+// cualquiera a cualquiera sin volver al menú.
+const FLUJO_POR_WORKER: Partial<Record<(typeof WORKER_VALUES)[number], string>> = {
+	scba: "/admin/flujos?tab=scba",
 };
 // Al cambiar de worker se limpia `tab`: el sub-tab del anterior no aplica al nuevo.
 const WORKER_RESETS = ["tab"] as const;
@@ -2506,9 +2512,13 @@ const MEVWorkers = () => {
 				title="Workers MEV"
 				subheader="Gestiona y configura los workers del sistema MEV"
 				secondary={
-					DATOS_POR_WORKER[activeTab as (typeof WORKER_VALUES)[number]] ? (
-						<CrossViewPair side="worker" to={DATOS_POR_WORKER[activeTab as (typeof WORKER_VALUES)[number]]!} />
-					) : undefined
+					<CrossViewLinks
+						current="worker"
+						to={{
+							datos: DATOS_POR_WORKER[activeTab as (typeof WORKER_VALUES)[number]],
+							flujo: FLUJO_POR_WORKER[activeTab as (typeof WORKER_VALUES)[number]],
+						}}
+					/>
 				}
 			>
 				<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>

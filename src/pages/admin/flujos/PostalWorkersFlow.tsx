@@ -11,7 +11,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Box, Chip, Skeleton, Stack, Typography } from "@mui/material";
-import CrossViewPair from "components/admin/CrossViewLink";
+import CrossViewLinks from "components/admin/CrossViewLink";
 import FlowDiagram from "../causas/flujos/FlowDiagram";
 import { buildPostalWorkersSpec, PostalFlowLiveConfig } from "./postalWorkersFlowData";
 import ScraperService from "api/scraperService";
@@ -94,10 +94,10 @@ const PostalWorkersFlow: React.FC = () => {
 					Los seguimientos y su historial completo (estados, screenshots, auditoría de cierres, salud del pipeline) se operan en la vista de
 					datos postales. El envío de emails y sus destinatarios se administran en Notificaciones → Seguimiento postal.
 				</Typography>
-				<CrossViewPair
-					side="worker"
-					to="/admin/postal-tracking"
-					tooltip="Ir a seguimientos, historial, screenshots y salud del pipeline postal"
+				<CrossViewLinks
+					current="worker"
+					to={{ datos: "/admin/postal-tracking", flujo: "/admin/flujos?tab=postal" }}
+					tooltips={{ datos: "Ir a seguimientos, historial, screenshots y salud del pipeline postal" }}
 				/>
 			</Stack>
 		</Box>

@@ -4,71 +4,67 @@ import { Link as RouterLink } from "react-router-dom";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 
 /**
- * El par de vistas emparejadas, como control segmentado.
+ * Las vistas emparejadas de un mismo asunto, como control segmentado.
  *
- * Hay dos pares en el admin: datos↔worker (una vista de datos y el worker que
- * los extrae) y worker↔flujo (un worker y el diagrama del pipeline que
- * integra). El `target` dice cuál es el otro lado cuando no es el complemento
- * obvio.
+ * En el admin un mismo asunto se mira desde tres lados: los **datos** que se
+ * capturaron, el **worker** que los captura y el **flujo** que explica el
+ * pipeline entero. Casi toda vista es uno de esos tres y tiene al menos otro
+ * del que depende, pero antes cada una resolvía el salto por su cuenta —tres
+ * etiquetas distintas, tres íconos, tres ubicaciones— y ninguna decía de qué
+ * lado estabas parado.
  *
- * Casi toda vista de datos del admin tiene un worker detrás, y casi toda vista
- * de worker tiene datos que mirar. Antes cada una resolvía ese salto por su
- * cuenta, con tres etiquetas, tres íconos y tres ubicaciones distintas.
+ * Este control muestra los lados que existen para ese asunto y marca el
+ * actual. Deja de ser un link suelto y pasa a ser orientación: en vez de
+ * ofrecerte un salto, te dice que estas vistas son un conjunto y en cuál
+ * estás. Como el patrón se repite en todo el admin, la lección se enseña una
+ * vez y después se lee sola.
  *
- * La decisión de diseño de fondo: esto no es un link suelto, es orientación.
- * Un botón te ofrece ir a algún lado; este control además te dice que las dos
- * vistas *son* un par y en cuál de las dos mitades estás parado. Como el patrón
- * se repite en todo el admin, esa lección se enseña una vez y después se lee
- * sola.
+ * El orden es siempre datos → worker → flujo, que es el del propio pipeline:
+ * los datos salen de un worker, y el worker es una pieza de un flujo. Un orden
+ * fijo hace que la posición del segmento activo ya te ubique.
  *
  * Detalles que lo hacen encajar en la franja de contexto, donde vive:
  *
  * - Toma el radio (6px) y el fondo tintado de los `monoChip` vecinos, en vez
  *   del radio 12px y el borde de un Button MUI. En esta interfaz el borde
  *   grueso significa "esto ejecuta algo", y navegar no ejecuta nada.
- * - El lado activo va sólido y no es clickeable; el otro es el único link.
- * - Sin engranaje ni documento: "Worker" y "Datos" ya nombran el destino, y el
- *   engranaje además nombraba mal (vas a un worker, no a un panel de ajustes).
+ * - El lado activo va sólido y no es clickeable; los otros son los links.
+ * - Sin íconos: "Datos", "Worker" y "Flujo" ya nombran el destino.
  *
- * El control es el mismo en todos los breakpoints. Antes colapsaba a un chip
- * suelto en pantallas chicas, pero era una precaución innecesaria: los dos
- * segmentos miden ~136px y entran hasta en 320px. Colapsar sólo lograba que
- * el par se leyera distinto según el dispositivo, que es justo lo que este
- * componente viene a evitar. Cuando el encabezado se queda sin lugar, el
+ * El control es el mismo en todos los breakpoints. Colapsarlo en pantallas
+ * chicas sólo lograba que se leyera distinto según el dispositivo, que es
+ * justo lo que viene a evitar; cuando el encabezado se queda sin lugar, el
  * CardHeader del MainCard ya baja las acciones a su propia fila.
  *
- * Las etiquetas tampoco se pueden personalizar, por lo mismo: el par se lee
+ * Las etiquetas no se pueden personalizar, por lo mismo: el conjunto se lee
  * igual en todo el admin.
  */
 
 export type CrossViewSide = "datos" | "worker" | "flujo";
 
-export interface CrossViewPairProps {
-	/** En qué mitad del par está la vista actual. */
-	side: CrossViewSide;
-	/** La otra mitad. Por defecto el complemento de datos↔worker; explícito
-	 *  cuando el par no es ese (worker↔flujo, por ejemplo). */
-	target?: CrossViewSide;
-	/** Ruta de la otra mitad — la única que es link. */
-	to: string;
-	/** Qué vas a encontrar del otro lado. */
-	tooltip?: string;
+export interface CrossViewLinksProps {
+	/** En cuál de las tres vistas estás parado. */
+	current: CrossViewSide;
+	/** Las otras que existen para este asunto, con su ruta. */
+	to: Partial<Record<CrossViewSide, string>>;
+	/** Qué vas a encontrar de cada lado. Opcional; hay uno por defecto. */
+	tooltips?: Partial<Record<CrossViewSide, string>>;
 }
 
-const DEFAULT_LABELS: Record<CrossViewSide, string> = { datos: "Datos", worker: "Worker", flujo: "Flujo" };
-const DEFAULT_TOOLTIP: Record<CrossViewSide, string> = {
-	datos: "Ir a la vista de datos que produce este worker",
+/** datos → worker → flujo: el orden del pipeline, fijo en todo el admin. */
+const ORDEN: readonly CrossViewSide[] = ["datos", "worker", "flujo"];
+
+const LABELS: Record<CrossViewSide, string> = { datos: "Datos", worker: "Worker", flujo: "Flujo" };
+
+const TOOLTIPS: Record<CrossViewSide, string> = {
+	datos: "Ir a la vista de datos de este worker",
 	worker: "Ir a la configuración del worker",
-	flujo: "Ir al diagrama del flujo que este worker integra",
+	flujo: "Ir al diagrama del flujo que explica este pipeline",
 };
 
-const CrossViewPair = ({ side, target, to, tooltip }: CrossViewPairProps) => {
+const CrossViewLinks = ({ current, to, tooltips }: CrossViewLinksProps) => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
-
-	const otro: CrossViewSide = target ?? (side === "datos" ? "worker" : "datos");
-	const label = (s: CrossViewSide) => DEFAULT_LABELS[s];
-	const title = tooltip ?? DEFAULT_TOOLTIP[otro];
 
 	const activoBg = isDark ? "#3A6FE0" : BRAND_BLUE;
 	const hoverBg = alpha(BRAND_BLUE, isDark ? 0.16 : 0.1);
@@ -90,35 +86,14 @@ const CrossViewPair = ({ side, target, to, tooltip }: CrossViewPairProps) => {
 		"@media (prefers-reduced-motion: reduce)": { transition: "none" },
 	} as const;
 
-	const linkSx = {
-		...base,
-		fontWeight: 500,
-		color: theme.palette.text.secondary,
-		cursor: "pointer",
-		"&:hover": { bgcolor: hoverBg, color: azul },
-		"&:hover .cvl-arrow": { transform: "translateX(2px)" },
-		"&:active": { transform: "translateY(1px)" },
-		"&:focus-visible": { outline: `2px solid ${azul}`, outlineOffset: 2, borderRadius: 0.75 },
-	};
-
-	const flecha = (
-		<Box
-			className="cvl-arrow"
-			component="span"
-			sx={{
-				display: "inline-flex",
-				transition: theme.transitions.create("transform", { duration: 180 }),
-				"@media (prefers-reduced-motion: reduce)": { transition: "none" },
-			}}
-		>
-			<ArrowRight2 size={11} />
-		</Box>
-	);
+	// Los lados que existen para este asunto, en el orden del pipeline.
+	const lados = ORDEN.filter((s) => s === current || to[s]);
+	if (lados.length < 2) return null;
 
 	return (
 		<Box
 			component="nav"
-			aria-label="Vistas del par datos y worker"
+			aria-label="Vistas relacionadas: datos, worker y flujo"
 			sx={{
 				display: "inline-flex",
 				alignItems: "stretch",
@@ -129,17 +104,45 @@ const CrossViewPair = ({ side, target, to, tooltip }: CrossViewPairProps) => {
 				bgcolor: alpha(theme.palette.text.primary, isDark ? 0.16 : 0.07),
 			}}
 		>
-			<Box component="span" aria-current="page" sx={{ ...base, fontWeight: 600, bgcolor: activoBg, color: "#fff" }}>
-				{label(side)}
-			</Box>
-			<Tooltip title={title}>
-				<Box component={RouterLink} to={to} sx={linkSx}>
-					{label(otro)}
-					{flecha}
-				</Box>
-			</Tooltip>
+			{lados.map((lado) =>
+				lado === current ? (
+					<Box key={lado} component="span" aria-current="page" sx={{ ...base, fontWeight: 600, bgcolor: activoBg, color: "#fff" }}>
+						{LABELS[lado]}
+					</Box>
+				) : (
+					<Tooltip key={lado} title={tooltips?.[lado] ?? TOOLTIPS[lado]}>
+						<Box
+							component={RouterLink}
+							to={to[lado]!}
+							sx={{
+								...base,
+								fontWeight: 500,
+								color: theme.palette.text.secondary,
+								cursor: "pointer",
+								"&:hover": { bgcolor: hoverBg, color: azul },
+								"&:hover .cvl-arrow": { transform: "translateX(2px)" },
+								"&:active": { transform: "translateY(1px)" },
+								"&:focus-visible": { outline: `2px solid ${azul}`, outlineOffset: 2, borderRadius: 0.75 },
+							}}
+						>
+							{LABELS[lado]}
+							<Box
+								className="cvl-arrow"
+								component="span"
+								sx={{
+									display: "inline-flex",
+									transition: theme.transitions.create("transform", { duration: 180 }),
+									"@media (prefers-reduced-motion: reduce)": { transition: "none" },
+								}}
+							>
+								<ArrowRight2 size={11} />
+							</Box>
+						</Box>
+					</Tooltip>
+				),
+			)}
 		</Box>
 	);
 };
 
-export default CrossViewPair;
+export default CrossViewLinks;

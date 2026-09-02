@@ -42,14 +42,9 @@ import { Link as RouterLink, useSearchParams } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
-import CrossViewPair from "components/admin/CrossViewLink";
+import CrossViewLinks from "components/admin/CrossViewLink";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
-import CausasElegiblesUpdateService, {
-	CausaElegible,
-	Fuero,
-	FUERO_LABELS,
-	FueroStats,
-} from "api/causasElegiblesUpdate";
+import CausasElegiblesUpdateService, { CausaElegible, Fuero, FUERO_LABELS, FueroStats } from "api/causasElegiblesUpdate";
 import type { FuenteElegibles } from "api/causasElegiblesUpdate";
 import { CausaSaijDetalle, causaSaij as fetchCausaSaij, desvincularDirecto } from "api/saijConciliacion";
 
@@ -183,7 +178,9 @@ const CausasUpdateEligiblePage = () => {
 				fuero: saijDetalle.causa.fuero || activeFuero,
 			});
 			enqueueSnackbar(
-				`Desvinculado: movimiento ${r.movimientoQuitado ? "quitado" : "no estaba"}, ${r.sentenciasCapturadasTocadas} SC despegada(s), embedding re-encolado`,
+				`Desvinculado: movimiento ${r.movimientoQuitado ? "quitado" : "no estaba"}, ${
+					r.sentenciasCapturadasTocadas
+				} SC despegada(s), embedding re-encolado`,
 				{ variant: "success" },
 			);
 			// Refrescar el panel y la tabla: la causa pudo quedar sin vínculos SAIJ.
@@ -255,14 +252,15 @@ const CausasUpdateEligiblePage = () => {
 		<MainCard
 			title="Causas en Update"
 			secondary={
-				<CrossViewPair
-					side="datos"
-					to={fuente === "cache" ? "/admin/workers/movimientos" : "/admin/causas/workers?worker=app-update"}
-					tooltip={
-						fuente === "cache"
-							? "Ir al update-movimientos-worker, que consume esta cola"
-							: "Ir al worker de actualización que procesa las causas de carpetas"
-					}
+				<CrossViewLinks
+					current="datos"
+					to={{ worker: fuente === "cache" ? "/admin/workers/movimientos" : "/admin/causas/workers?worker=app-update" }}
+					tooltips={{
+						worker:
+							fuente === "cache"
+								? "Ir al update-movimientos-worker, que consume esta cola"
+								: "Ir al worker de actualización que procesa las causas de carpetas",
+					}}
 				/>
 			}
 		>
@@ -303,13 +301,13 @@ const CausasUpdateEligiblePage = () => {
 						Criterio de elegibilidad: <code>update=true, verified=true, isValid≠false</code>.{" "}
 						{fuente === "cache" ? (
 							<>
-								Fuente: <strong>caché local de worker_01 (rs0)</strong> — la cola real del <code>update-movimientos-worker</code>,
-								encendida por el pipeline de novelty. Es donde se trabaja el scraping.
+								Fuente: <strong>caché local de worker_01 (rs0)</strong> — la cola real del <code>update-movimientos-worker</code>, encendida
+								por el pipeline de novelty. Es donde se trabaja el scraping.
 							</>
 						) : (
 							<>
-								Fuente: <strong>Atlas (hub)</strong> — las causas de carpetas de usuarios, que{" "}
-								<code>associateFolderToCausa</code> enciende al vincular un folder. Otro circuito, otro worker.
+								Fuente: <strong>Atlas (hub)</strong> — las causas de carpetas de usuarios, que <code>associateFolderToCausa</code> enciende
+								al vincular un folder. Otro circuito, otro worker.
 							</>
 						)}
 					</Typography>
@@ -396,11 +394,7 @@ const CausasUpdateEligiblePage = () => {
 								<Stack direction="row" spacing={1} alignItems="center">
 									<span>{FUERO_LABELS[f]}</span>
 									{stats?.[f] && (
-										<Chip
-											size="small"
-											label={stats[f].eligibles.toLocaleString("es-AR")}
-											sx={{ fontVariantNumeric: "tabular-nums" }}
-										/>
+										<Chip size="small" label={stats[f].eligibles.toLocaleString("es-AR")} sx={{ fontVariantNumeric: "tabular-nums" }} />
 									)}
 								</Stack>
 							}
@@ -423,7 +417,13 @@ const CausasUpdateEligiblePage = () => {
 								</InputAdornment>
 							),
 							endAdornment: search && (
-								<IconButton size="small" onClick={() => { setSearch(""); setSearchInput(""); }}>
+								<IconButton
+									size="small"
+									onClick={() => {
+										setSearch("");
+										setSearchInput("");
+									}}
+								>
 									<CloseCircle size={14} />
 								</IconButton>
 							),
@@ -434,7 +434,16 @@ const CausasUpdateEligiblePage = () => {
 						Buscar
 					</Button>
 					<FormControlLabel
-						control={<Switch checked={onlyAvailable} onChange={(e) => { setOnlyAvailable(e.target.checked); setPage(0); }} size="small" />}
+						control={
+							<Switch
+								checked={onlyAvailable}
+								onChange={(e) => {
+									setOnlyAvailable(e.target.checked);
+									setPage(0);
+								}}
+								size="small"
+							/>
+						}
 						label={<Typography variant="caption">Solo disponibles (excluir en proceso y cooldown)</Typography>}
 					/>
 					<Box sx={{ flex: 1 }} />
@@ -644,10 +653,9 @@ const CausasUpdateEligiblePage = () => {
 								Cuándo usarlo
 							</Typography>
 							<Typography variant="body2">
-								Cuando el portal público ya no muestra el expediente principal: responde{" "}
-								<em>"no disponible para su consulta"</em> o la búsqueda lista <strong>únicamente incidentes</strong> (
-								<code>/1</code>, <code>/2</code>…). Eso significa que el principal pasó a reservado — la causa existe, pero ya
-								no es consultable sin login.
+								Cuando el portal público ya no muestra el expediente principal: responde <em>"no disponible para su consulta"</em> o la
+								búsqueda lista <strong>únicamente incidentes</strong> (<code>/1</code>, <code>/2</code>…). Eso significa que el principal
+								pasó a reservado — la causa existe, pero ya no es consultable sin login.
 							</Typography>
 						</Alert>
 						<Alert severity="info" sx={{ mb: 2 }}>
@@ -660,12 +668,12 @@ const CausasUpdateEligiblePage = () => {
 										<code>update = false</code> — el worker deja de intentarla (y de gastar captcha).
 									</li>
 									<li>
-										<code>isValid = false</code> — el caché deja de servir esta copia al hub: si un usuario la vincula a
-										una carpeta, se crea un documento fresco que se verifica contra el estado <em>actual</em> del portal.
+										<code>isValid = false</code> — el caché deja de servir esta copia al hub: si un usuario la vincula a una carpeta, se
+										crea un documento fresco que se verifica contra el estado <em>actual</em> del portal.
 									</li>
 									<li>
-										<code>isPrivate = true</code> — el estado real (reservada, no inexistente). Reversible si el
-										expediente vuelve a ser público.
+										<code>isPrivate = true</code> — el estado real (reservada, no inexistente). Reversible si el expediente vuelve a ser
+										público.
 									</li>
 									<li>Todo queda firmado en el historial de la causa con tu email y el motivo.</li>
 								</ul>
@@ -701,9 +709,8 @@ const CausasUpdateEligiblePage = () => {
 							{flagCausa?.caratula || "(sin carátula)"}
 						</Typography>
 						<Alert severity="info" sx={{ mb: 2 }}>
-							Se marca <code>update = false</code>: el worker deja de intentarla. La transición queda en el historial de la causa
-							con tu email y el motivo. Reversible desde el mismo historial (o re-encendida por el pipeline de novelty si vuelve a
-							detectar algo).
+							Se marca <code>update = false</code>: el worker deja de intentarla. La transición queda en el historial de la causa con tu
+							email y el motivo. Reversible desde el mismo historial (o re-encendida por el pipeline de novelty si vuelve a detectar algo).
 						</Alert>
 						<TextField
 							fullWidth
@@ -760,14 +767,24 @@ const CausasUpdateEligiblePage = () => {
 												<Chip
 													size="small"
 													variant="outlined"
-													label={`exp: ${f.expediente?.fuero || "?"} ${f.expediente?.numero ?? "?"}/${f.expediente?.año ?? "?"} · ${f.expediente?.confidence || "?"}`}
+													label={`exp: ${f.expediente?.fuero || "?"} ${f.expediente?.numero ?? "?"}/${f.expediente?.año ?? "?"} · ${
+														f.expediente?.confidence || "?"
+													}`}
 												/>
 												{f.veredicto && (
-													<Tooltip title={`jaccard ${f.veredicto.jaccard ?? "—"} · ${(f.veredicto.flags || []).join(", ") || "sin banderas"}`}>
+													<Tooltip
+														title={`jaccard ${f.veredicto.jaccard ?? "—"} · ${(f.veredicto.flags || []).join(", ") || "sin banderas"}`}
+													>
 														<Chip
 															size="small"
 															label={f.veredicto.veredicto}
-															color={f.veredicto.veredicto === "coincide" ? "success" : f.veredicto.veredicto === "no_coincide" ? "error" : "warning"}
+															color={
+																f.veredicto.veredicto === "coincide"
+																	? "success"
+																	: f.veredicto.veredicto === "no_coincide"
+																	? "error"
+																	: "warning"
+															}
 														/>
 													</Tooltip>
 												)}
@@ -804,7 +821,9 @@ const CausasUpdateEligiblePage = () => {
 								</Divider>
 								{saijDetalle.sentenciasCapturadas.map((sc) => (
 									<Paper key={sc._id} variant="outlined" sx={{ p: 1.5 }}>
-										<Typography variant="caption" display="block">{sc.caratula}</Typography>
+										<Typography variant="caption" display="block">
+											{sc.caratula}
+										</Typography>
 										<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap alignItems="center" sx={{ mt: 0.5 }}>
 											<Chip size="small" variant="outlined" label={sc.source?.origin === "saij" ? "origen SAIJ" : "origen PJN"} />
 											{sc.movimientoTipo && <Chip size="small" variant="outlined" label={sc.movimientoTipo} />}
@@ -820,9 +839,9 @@ const CausasUpdateEligiblePage = () => {
 								))}
 
 								<Alert severity="info">
-									Desvincular deshace el apareo completo: quita el movimiento de la causa, firma el historial, la sentencia
-									capturada recupera la carátula del propio fallo (queda publicada sin causa) y su embedding se re-encola. Queda
-									respaldo en <code>saij-desvinculacion-backup</code>. Es lo mismo que hace la vista de Conciliación SAIJ.
+									Desvincular deshace el apareo completo: quita el movimiento de la causa, firma el historial, la sentencia capturada
+									recupera la carátula del propio fallo (queda publicada sin causa) y su embedding se re-encola. Queda respaldo en{" "}
+									<code>saij-desvinculacion-backup</code>. Es lo mismo que hace la vista de Conciliación SAIJ.
 								</Alert>
 							</Stack>
 						)}
@@ -842,7 +861,10 @@ const CausasUpdateEligiblePage = () => {
 					page={page}
 					onPageChange={(_, p) => setPage(p)}
 					rowsPerPage={rowsPerPage}
-					onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+					onRowsPerPageChange={(e) => {
+						setRowsPerPage(parseInt(e.target.value, 10));
+						setPage(0);
+					}}
 					rowsPerPageOptions={[10, 20, 50, 100]}
 					labelRowsPerPage="Por página:"
 				/>

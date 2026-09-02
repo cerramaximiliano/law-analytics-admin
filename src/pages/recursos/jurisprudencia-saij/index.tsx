@@ -40,7 +40,7 @@ import { Alert } from "@mui/material";
 import { ArrowDown2, ArrowUp2, CloseCircle, DocumentDownload, Edit, Eye, Link21, Refresh, SearchNormal1, Trash } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import CrossViewPair from "components/admin/CrossViewLink";
+import CrossViewLinks from "components/admin/CrossViewLink";
 import {
 	CausaRef,
 	SaijSentencia,
@@ -923,7 +923,7 @@ export default function JurisprudenciaSaijPage() {
 			secondary={
 				<Stack direction="row" spacing={1} alignItems="center">
 					{/* Par datos↔worker, mismo control que en el resto del admin */}
-					<CrossViewPair side="datos" to="/admin/workers/saij?tab=estado" />
+					<CrossViewLinks current="datos" to={{ worker: "/admin/workers/saij?tab=estado", flujo: "/admin/flujos?tab=saij" }} />
 					<Tooltip title="Recargar">
 						<IconButton
 							size="small"

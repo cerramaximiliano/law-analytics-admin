@@ -31,7 +31,7 @@ import {
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import CrossViewPair from "components/admin/CrossViewLink";
+import CrossViewLinks from "components/admin/CrossViewLink";
 import { CausasPjSaltaService, CausaPjSalta, WorkerStatsResponse, EligibilityStatsResponse } from "api/causasPjSalta";
 import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Lock1, Repeat } from "iconsax-react";
 import CausaDetalleModalPjSalta from "./CausaDetalleModalPjSalta";
@@ -428,7 +428,7 @@ const CarpetasVerificadasPjSalta = () => {
 	};
 
 	return (
-		<MainCard title="Carpetas verificadas PJ Salta (App)" secondary={<CrossViewPair side="datos" to="/admin/pjsalta/workers?worker=actualizacion" />}>
+		<MainCard title="Carpetas verificadas PJ Salta (App)" secondary={<CrossViewLinks current="datos" to={{ worker: "/admin/pjsalta/workers?worker=actualizacion" }} />}>
 			{/* Header: Resultados + Estadísticas */}
 			<Box sx={{ mb: 2 }}>
 				<Grid container spacing={2} alignItems="center">

@@ -4,7 +4,7 @@ import { ArrowDown2, ArrowUp2 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import SentenciasWorkerTab from "./SentenciasWorkerTab";
 import RepoBadgeGroup from "components/admin/RepoBadgeGroup";
-import CrossViewPair from "components/admin/CrossViewLink";
+import CrossViewLinks from "components/admin/CrossViewLink";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 
 /**
@@ -34,7 +34,7 @@ export default function SentenciasWorkerPage() {
 						Pipeline de captura, extracción OCR, embeddings y detección de novedad de sentencias judiciales
 					</Typography>
 					<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ flexShrink: 0 }}>
-						<CrossViewPair side="worker" target="flujo" to="/admin/flujos?tab=sentencias" />
+						<CrossViewLinks current="worker" to={{ flujo: "/admin/flujos?tab=sentencias" }} />
 						{!esEscritorio && (
 							<Chip
 								size="small"
