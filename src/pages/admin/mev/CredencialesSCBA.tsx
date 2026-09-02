@@ -57,6 +57,7 @@ import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import ImageActions from "components/ImageActions";
 import CopyButton from "components/CopyButton";
+import { useTabParam, useTabIndexParam } from "hooks/useTabParam";
 import { AddCircle } from "iconsax-react";
 import scbaCredentialsService, { ScbaCredential, ScbaCredentialDetail, ScbaCredentialsFilters } from "api/scbaCredentials";
 import scbaManagerService, { ScbaListSnapshot, ScbaAdminAlert } from "api/scbaManager";
@@ -133,6 +134,20 @@ const CREDENTIAL_TEMPLATE_LABELS: Record<string, string> = {
 	scbaCredentialRestored: "Restaurada",
 };
 
+// Slugs de la URL. El orden fija el índice de cada <Tab>.
+const TAB_SLUGS = ["credenciales", "notificaciones", "alertas"] as const;
+// Al cambiar de tab se limpian los filtros del anterior: no aplican al nuevo.
+const TAB_RESETS = ["sync", "verificada", "habilitada", "estado", "tipo", "alerta"] as const;
+
+// Valores válidos de cada filtro. Van como constantes de módulo y no inline:
+// un array nuevo por render le cambiaría la identidad al setter del hook.
+const SYNC_VALUES = ["todos", "completed", "in_progress", "pending", "error", "never_synced", "idle"] as const;
+const BOOL_VALUES = ["todos", "true", "false"] as const;
+const LOG_STATUS_VALUES = ["todos", "sent", "delivered", "failed", "bounced", "complained"] as const;
+const TEMPLATE_VALUES = ["todos", ...SCBA_CREDENTIAL_TEMPLATES] as const;
+const ALERT_STATUS_VALUES = ["all", "active", "resolved"] as const;
+type AlertStatus = (typeof ALERT_STATUS_VALUES)[number];
+
 const CredencialesSCBA = () => {
 	const theme = useTheme();
 
@@ -147,9 +162,9 @@ const CredencialesSCBA = () => {
 	const [totalCount, setTotalCount] = useState(0);
 
 	// Filtros
-	const [syncStatusFilter, setSyncStatusFilter] = useState<string>("todos");
-	const [verifiedFilter, setVerifiedFilter] = useState<string>("todos");
-	const [enabledFilter, setEnabledFilter] = useState<string>("todos");
+	const [syncStatusFilter, setSyncStatusFilter] = useTabParam("sync", SYNC_VALUES);
+	const [verifiedFilter, setVerifiedFilter] = useTabParam("verificada", BOOL_VALUES);
+	const [enabledFilter, setEnabledFilter] = useTabParam("habilitada", BOOL_VALUES);
 	const [searchText, setSearchText] = useState("");
 
 	// Ordenamiento
@@ -157,7 +172,7 @@ const CredencialesSCBA = () => {
 	const [sortOrder] = useState<"asc" | "desc">("desc");
 
 	// Tab activo (0 = credenciales, 1 = notificaciones)
-	const [tabValue, setTabValue] = useState(0);
+	const [tabValue, setTabValue] = useTabIndexParam("tab", TAB_SLUGS, { resets: TAB_RESETS });
 
 	// Estado notificaciones (logs de emails de credenciales)
 	const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
@@ -166,8 +181,8 @@ const CredencialesSCBA = () => {
 	const [emailLogsPage, setEmailLogsPage] = useState(0);
 	const [emailLogsRowsPerPage, setEmailLogsRowsPerPage] = useState(25);
 	const [emailLogsFetched, setEmailLogsFetched] = useState(false);
-	const [emailLogsStatusFilter, setEmailLogsStatusFilter] = useState<string>("todos");
-	const [emailLogsTemplateFilter, setEmailLogsTemplateFilter] = useState<string>("todos");
+	const [emailLogsStatusFilter, setEmailLogsStatusFilter] = useTabParam("estado", LOG_STATUS_VALUES);
+	const [emailLogsTemplateFilter, setEmailLogsTemplateFilter] = useTabParam("tipo", TEMPLATE_VALUES);
 	const [emailLogsUserFilter, setEmailLogsUserFilter] = useState<string>("");
 
 	const fetchEmailLogs = async (page = emailLogsPage, rowsPerPage = emailLogsRowsPerPage) => {
@@ -214,7 +229,13 @@ const CredencialesSCBA = () => {
 	const [adminAlertsRowsPerPage, setAdminAlertsRowsPerPage] = useState(25);
 	const [adminAlertsTotal, setAdminAlertsTotal] = useState(0);
 	const [adminAlertsActiveCount, setAdminAlertsActiveCount] = useState(0);
-	const [adminAlertsStatusFilter, setAdminAlertsStatusFilter] = useState<"all" | "active" | "resolved">("all");
+	// El cast estrecha lo que el hook devuelve como string: el propio hook
+	// garantiza que el valor sea uno de ALERT_STATUS_VALUES, y listAdminAlerts
+	// pide la unión. Mismo patrón que PrivacyCheckerWorker.
+	const [adminAlertsStatusFilter, setAdminAlertsStatusFilter] = useTabParam("alerta", ALERT_STATUS_VALUES) as [
+		AlertStatus,
+		(v: AlertStatus) => void,
+	];
 
 	const fetchAdminAlerts = async (page = adminAlertsPage, rowsPerPage = adminAlertsRowsPerPage, status = adminAlertsStatusFilter) => {
 		setAdminAlertsLoading(true);
