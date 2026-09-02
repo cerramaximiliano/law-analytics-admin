@@ -23,9 +23,7 @@ import {
 import { Add, Code1, Copy, Edit2, Refresh, Trash } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import logoPJNacion from "assets/images/logos/logo_pj_nacion.png";
-import logoPJBuenosAires from "assets/images/logos/logo_pj_buenos_aires.svg";
-import logoPJCatamarca from "assets/images/logos/logo_pj_catamarca.png";
+import { JURISDICTION_LOGOS } from "assets/images/logos/jurisdictions";
 
 import IntegrationsConfigService, {
 	IntegrationsConfigDoc,
@@ -65,28 +63,27 @@ const LANDING_STATUS_OPTIONS: Array<{ value: LandingIntegrationStatus; label: st
 // Metadata visual del strip — espejo de INTEGRATIONS en el Header de la
 // landing (law-analytics-front). Solo para la previsualización del admin.
 const LANDING_VISUALS: Record<LandingIntegrationKey, { shortName: string; logoSrc: string; bgColor: string; hasBorder: boolean }> = {
-	pjn: { shortName: "PJN", logoSrc: logoPJNacion, bgColor: "#232D4F", hasBorder: false },
-	mev: { shortName: "MEV", logoSrc: logoPJBuenosAires, bgColor: "#ffffff", hasBorder: true },
+	pjn: { shortName: "PJN", logoSrc: JURISDICTION_LOGOS.pjn, bgColor: "#232D4F", hasBorder: false },
+	mev: { shortName: "MEV", logoSrc: JURISDICTION_LOGOS.mev, bgColor: "#ffffff", hasBorder: true },
 	eje: {
 		shortName: "EJE",
-		logoSrc: "https://res.cloudinary.com/dqyoeolib/image/upload/v1770081495/ChatGPT_Image_2_feb_2026_09_44_56_p.m._ymi66g.png",
+		logoSrc: JURISDICTION_LOGOS.eje,
 		bgColor: "#ffffff",
 		hasBorder: true,
 	},
 	seclo: {
 		shortName: "SECLO",
-		logoSrc: "https://res.cloudinary.com/dqyoeolib/image/upload/q_auto/f_auto/v1776203385/seclo-removebg-preview_rxcvzm.png",
+		logoSrc: JURISDICTION_LOGOS.seclo,
 		bgColor: "#ffffff",
 		hasBorder: true,
 	},
 	pjsalta: {
 		shortName: "SALTA",
-		logoSrc:
-			"https://res.cloudinary.com/dqyoeolib/image/upload/v1779137783/ChatGPT_Image_18_may_2026__05_52_35_p.m.-removebg-preview_bngpqd.png",
+		logoSrc: JURISDICTION_LOGOS.pjsalta,
 		bgColor: "#ffffff",
 		hasBorder: true,
 	},
-	pjcatamarca: { shortName: "CATAMARCA", logoSrc: logoPJCatamarca, bgColor: "#ffffff", hasBorder: true },
+	pjcatamarca: { shortName: "CATAMARCA", logoSrc: JURISDICTION_LOGOS.pjcatamarca, bgColor: "#ffffff", hasBorder: true },
 };
 
 // ====================================
