@@ -34,7 +34,6 @@ import {
 	CloseCircle,
 	Refresh,
 	Setting2,
-	DocumentText,
 	TickCircle,
 	Warning2,
 	Calendar,

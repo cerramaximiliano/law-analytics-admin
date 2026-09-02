@@ -31,7 +31,6 @@ import {
 	Alert,
 	Tabs,
 	Tab,
-	Divider,
 	Switch,
 	FormControlLabel,
 	useTheme,

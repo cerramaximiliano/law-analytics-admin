@@ -193,7 +193,9 @@ const CausasSyncCredentials = () => {
 	const [conErroresFilter, setConErroresFilter] = useState<boolean>(() => searchParams.get("conErrores") === "1");
 	// Solo causas con movimiento fechado HOY (novedad judicial real del día)
 	const [movHoyFilter, setMovHoyFilter] = useState<boolean>(false);
-	const [sortBy, setSortBy] = useState<string>("year");
+	// El orden es fijo por ahora; si en algún momento se hace configurable,
+	// hay que volver a exponer el setter y colgarlo de un control.
+	const [sortBy] = useState<string>("year");
 	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
 	// Diálogo de historial de estado (click en el chip Estado)
