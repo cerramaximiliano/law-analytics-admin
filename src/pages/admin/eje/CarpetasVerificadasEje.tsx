@@ -429,7 +429,10 @@ const CarpetasVerificadasEje = () => {
 	};
 
 	return (
-		<MainCard title="Carpetas Verificadas EJE (App)" secondary={<CrossViewPair side="datos" to="/admin/eje/workers?worker=actualizacion" />}>
+		<MainCard
+			title="Carpetas Verificadas EJE (App)"
+			secondary={<CrossViewPair side="datos" to="/admin/eje/workers?worker=actualizacion" />}
+		>
 			{/* Header: Resultados + Estadísticas */}
 			<Box sx={{ mb: 2 }}>
 				<Grid container spacing={2} alignItems="center">
@@ -816,7 +819,16 @@ const CarpetasVerificadasEje = () => {
 							}}
 						>
 							<TableContainer sx={{ maxHeight: "calc(100dvh - 360px)" }}>
-								<Table stickyHeader size="small">
+								<Table
+									stickyHeader
+									size="small"
+									sx={{
+										[theme.breakpoints.down("md")]: {
+											"& > thead > tr > th:nth-of-type(2), & > tbody > tr > td:nth-of-type(2), & > thead > tr > th:nth-of-type(3), & > tbody > tr > td:nth-of-type(3), & > thead > tr > th:nth-of-type(5), & > tbody > tr > td:nth-of-type(5), & > thead > tr > th:nth-of-type(6), & > tbody > tr > td:nth-of-type(6), & > thead > tr > th:nth-of-type(7), & > tbody > tr > td:nth-of-type(7), & > thead > tr > th:nth-of-type(9), & > tbody > tr > td:nth-of-type(9), & > thead > tr > th:nth-of-type(10), & > tbody > tr > td:nth-of-type(10), & > thead > tr > th:nth-of-type(11), & > tbody > tr > td:nth-of-type(11), & > thead > tr > th:nth-of-type(12), & > tbody > tr > td:nth-of-type(12), & > thead > tr > th:nth-of-type(13), & > tbody > tr > td:nth-of-type(13), & > thead > tr > th:nth-of-type(14), & > tbody > tr > td:nth-of-type(14), & > thead > tr > th:nth-of-type(15), & > tbody > tr > td:nth-of-type(15)":
+												{ display: "none" },
+										},
+									}}
+								>
 									<TableHead>
 										<TableRow
 											sx={{

@@ -529,7 +529,16 @@ const CarpetasPivotsEje = () => {
 							}}
 						>
 							<TableContainer sx={{ maxHeight: "calc(100dvh - 360px)" }}>
-								<Table stickyHeader size="small">
+								<Table
+									stickyHeader
+									size="small"
+									sx={{
+										[theme.breakpoints.down("md")]: {
+											"& > thead > tr > th:nth-of-type(3), & > tbody > tr > td:nth-of-type(3), & > thead > tr > th:nth-of-type(5), & > tbody > tr > td:nth-of-type(5)":
+												{ display: "none" },
+										},
+									}}
+								>
 									<TableHead>
 										<TableRow
 											sx={{

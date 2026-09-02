@@ -348,7 +348,14 @@ const CarpetasNoVerificadasEje = () => {
 					) : (
 						<Card>
 							<TableContainer>
-								<Table>
+								<Table
+									sx={{
+										[theme.breakpoints.down("md")]: {
+											"& > thead > tr > th:nth-of-type(2), & > tbody > tr > td:nth-of-type(2), & > thead > tr > th:nth-of-type(3), & > tbody > tr > td:nth-of-type(3), & > thead > tr > th:nth-of-type(5), & > tbody > tr > td:nth-of-type(5), & > thead > tr > th:nth-of-type(6), & > tbody > tr > td:nth-of-type(6), & > thead > tr > th:nth-of-type(7), & > tbody > tr > td:nth-of-type(7), & > thead > tr > th:nth-of-type(9), & > tbody > tr > td:nth-of-type(9)":
+												{ display: "none" },
+										},
+									}}
+								>
 									<TableHead>
 										<TableRow>
 											<TableCell>Expediente</TableCell>

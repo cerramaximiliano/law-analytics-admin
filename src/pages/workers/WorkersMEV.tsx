@@ -79,6 +79,14 @@ interface WorkerTab {
 
 // Slugs de los workers en la URL (?worker=...). El orden espeja el de `workerTabs`.
 const WORKER_VALUES = ["manager", "verification", "update", "sync-check", "system-config", "scba"] as const;
+
+// Qué vista de datos produce cada worker. Los que no figuran no tienen una, y
+// entonces no se dibuja el par: un link a "los datos" que no lleva a los datos
+// de ese worker confunde más de lo que ayuda.
+const DATOS_POR_WORKER: Partial<Record<(typeof WORKER_VALUES)[number], string>> = {
+	update: "/admin/mev/verified-app",
+	scba: "/admin/mev/causes-by-credential",
+};
 // Al cambiar de worker se limpia `tab`: el sub-tab del anterior no aplica al nuevo.
 const WORKER_RESETS = ["tab"] as const;
 
@@ -2497,10 +2505,13 @@ const MEVWorkers = () => {
 			<MainCard
 				title="Workers MEV"
 				subheader="Gestiona y configura los workers del sistema MEV"
-				secondary={<CrossViewPair side="worker" to="/admin/mev/verified-app" />}
+				secondary={
+					DATOS_POR_WORKER[activeTab as (typeof WORKER_VALUES)[number]] ? (
+						<CrossViewPair side="worker" to={DATOS_POR_WORKER[activeTab as (typeof WORKER_VALUES)[number]]!} />
+					) : undefined
+				}
 			>
 				<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-
 					<Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
 						<Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
 							<Tabs

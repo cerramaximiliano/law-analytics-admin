@@ -16,12 +16,15 @@ import {
 	Link21,
 	Chart,
 	TaskSquare,
+	TickCircle,
 	Box1,
 	People,
 	Judge,
+	Hierarchy,
 	Routing2,
 	Key,
 	Category2,
+	CloseCircle,
 } from "iconsax-react";
 
 // type
@@ -199,22 +202,27 @@ const admin: NavItemType = {
 					children: [
 						{
 							id: "eje-verified-app",
-							title: "Carpetas Verificadas (App)",
+							title: "Verificadas",
 							type: "item",
+							icon: TickCircle,
 							url: "/admin/eje/verified-app",
 							breadcrumbs: true,
 						},
 						{
 							id: "eje-non-verified",
-							title: "Carpetas No Verificadas (App)",
+							title: "No verificadas",
 							type: "item",
+							icon: CloseCircle,
 							url: "/admin/eje/non-verified",
 							breadcrumbs: true,
 						},
 						{
 							id: "eje-pivots",
-							title: "Pivots (Múltiples Resultados)",
+							// Un pivote es una búsqueda que devolvió varias causas y quedó sin
+							// resolver: Hierarchy dibuja justamente esa bifurcación.
+							title: "Pivotes",
 							type: "item",
+							icon: Hierarchy,
 							url: "/admin/eje/pivots",
 							breadcrumbs: true,
 						},
