@@ -144,8 +144,16 @@ const logsService = {
 		return res.data;
 	},
 
-	async listHealthReports(params: { service?: string; host?: string; score?: string; date?: string } = {}) {
-		const res = await adminAxios.get<{ success: boolean; data: HealthReport[] }>("/api/logs/health-reports", { params });
+	async listHealthReports(params: { service?: string; host?: string; score?: string; date?: string; page?: number; limit?: number } = {}) {
+		const res = await adminAxios.get<{
+			success: boolean;
+			data: HealthReport[];
+			// Conteos sobre el TOTAL de servicios, no sobre la página devuelta.
+			// Sumar lo recibido daba números falsos en cuanto había más
+			// combinaciones que el límite de página.
+			summary?: { green: number; yellow: number; red: number; unknown: number };
+			pagination?: { page: number; limit: number; total: number; totalPages: number };
+		}>("/api/logs/health-reports", { params });
 		return res.data;
 	},
 

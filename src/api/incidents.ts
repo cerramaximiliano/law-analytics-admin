@@ -39,6 +39,18 @@ export interface Incident extends IncidentSummaryRow {
 	ackReason: string | null;
 	resolvedAt: string | null;
 	resolvedBy: string | null;
+	/**
+	 * Escrito por el modelo cuando el incidente ya fue confirmado por una regla.
+	 * Explica y propone el próximo paso; no decide si el problema existe.
+	 * Sólo se genera para severidad high/critical.
+	 */
+	aiTriage?: {
+		summary: string | null;
+		rootCause: string | null;
+		nextStep: string | null;
+		model: string | null;
+		at: string | null;
+	};
 	meta?: Record<string, any>;
 }
 

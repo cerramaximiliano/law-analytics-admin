@@ -727,6 +727,13 @@ const admin: NavItemType = {
 					chip: { label: "rs0·qdrant", color: "info", variant: "outlined", size: "small" },
 				},
 				{
+					id: "system-incidents",
+					title: "Incidentes",
+					type: "item",
+					url: "/admin/incidentes",
+					breadcrumbs: true,
+				},
+				{
 					id: "system-logs",
 					title: "Logs del Ecosistema",
 					type: "item",

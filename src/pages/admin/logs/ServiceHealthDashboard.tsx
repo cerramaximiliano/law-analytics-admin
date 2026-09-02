@@ -258,6 +258,8 @@ const ServiceHealthDashboard = () => {
 	const { enqueueSnackbar } = useSnackbar();
 
 	const [reports, setReports] = useState<HealthReport[]>([]);
+	const [summary, setSummary] = useState<Record<string, number> | null>(null);
+	const [total, setTotal] = useState<number>(0);
 	const [loading, setLoading] = useState(false);
 	const [generating, setGenerating] = useState(false);
 	const [scoreFilter, setScoreFilter] = useState("");
@@ -272,6 +274,8 @@ const ServiceHealthDashboard = () => {
 				date: selectedDate || undefined,
 			});
 			setReports(res.data);
+			setSummary(res.summary ?? null);
+			setTotal(res.pagination?.total ?? res.data.length);
 		} catch (err: any) {
 			enqueueSnackbar(err.message || "Error al cargar reports", { variant: "error" });
 		} finally {
@@ -296,13 +300,20 @@ const ServiceHealthDashboard = () => {
 		}
 	};
 
-	const counts = reports.reduce(
-		(acc, r) => {
-			acc[r.healthScore] = (acc[r.healthScore] || 0) + 1;
-			return acc;
-		},
-		{ green: 0, yellow: 0, red: 0, unknown: 0 } as Record<string, number>,
-	);
+	// Los contadores vienen del backend calculados sobre TODOS los servicios.
+	// Sumar `reports` (la página) daba "100 OK / 0 Crítico" cuando había 155
+	// combinaciones: los 100 primeros eran verdes y los rojos ni llegaban.
+	// El fallback solo aplica contra un backend viejo.
+	const counts =
+		summary ??
+		reports.reduce(
+			(acc, r) => {
+				acc[r.healthScore] = (acc[r.healthScore] || 0) + 1;
+				return acc;
+			},
+			{ green: 0, yellow: 0, red: 0, unknown: 0 } as Record<string, number>,
+		);
+	const truncado = total > reports.length;
 
 	return (
 		<MainCard>
@@ -411,6 +422,11 @@ const ServiceHealthDashboard = () => {
 								</Typography>
 							</Stack>
 						</Stack>
+						{truncado && (
+							<Typography variant="caption" color="warning.main" sx={{ display: "block", mt: 0.75 }}>
+								Mostrando {reports.length} de {total} servicios — los contadores de arriba son sobre el total.
+							</Typography>
+						)}
 					</Grid>
 					<Grid item xs={12} sm={6} sx={{ textAlign: { sm: "right" } }}>
 						<Stack direction="row" spacing={1} justifyContent={{ sm: "flex-end" }} flexWrap="wrap" useFlexGap>

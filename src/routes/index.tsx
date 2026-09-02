@@ -126,6 +126,7 @@ const TokenConfig = Loadable(lazyWithRetry(() => import("pages/admin/users/Token
 const EmailLogs = Loadable(lazyWithRetry(() => import("pages/admin/users/EmailLogs")));
 const SystemLogs = Loadable(lazyWithRetry(() => import("pages/admin/logs/SystemLogs")));
 const ServiceHealthDashboard = Loadable(lazyWithRetry(() => import("pages/admin/logs/ServiceHealthDashboard")));
+const IncidentsPage = Loadable(lazyWithRetry(() => import("pages/admin/incidents")));
 const OnboardingAnalytics = Loadable(lazyWithRetry(() => import("pages/admin/users/OnboardingAnalytics")));
 const UserResources = Loadable(lazyWithRetry(() => import("pages/admin/users/resources")));
 const UsersDashboard = Loadable(lazyWithRetry(() => import("pages/admin/users/dashboard")));
@@ -1041,6 +1042,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<ServiceHealthDashboard />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "incidentes",
+							element: (
+								<AdminRoleGuard>
+									<IncidentsPage />
 								</AdminRoleGuard>
 							),
 						},

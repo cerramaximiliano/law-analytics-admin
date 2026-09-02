@@ -111,7 +111,7 @@ const IncidentsWidget = () => {
 		return (
 			<Paper
 				elevation={0}
-				onClick={() => navigate("/admin/logs/health")}
+				onClick={() => navigate("/admin/incidentes")}
 				sx={{
 					p: { xs: 1.5, sm: 2 },
 					borderRadius: 2,
@@ -149,7 +149,7 @@ const IncidentsWidget = () => {
 		>
 			{/* Cabecera: los tres números que resumen todo */}
 			<Box
-				onClick={() => navigate("/admin/logs/health")}
+				onClick={() => navigate("/admin/incidentes")}
 				sx={{
 					px: { xs: 1.5, sm: 2.5 },
 					py: { xs: 1.25, sm: 1.75 },
