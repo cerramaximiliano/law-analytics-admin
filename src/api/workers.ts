@@ -488,6 +488,59 @@ export interface RealCoverageResponse {
 	data: RealCoverageData;
 }
 
+/**
+ * Estado de un período (fuero + año) en la matriz de cobertura. Responde la
+ * pregunta que la vista anterior no contestaba: ¿hay alguien trabajando esto,
+ * o quedó a medias?
+ */
+export type PeriodoEstado =
+	| "sin_tocar" //           nunca se barrió y no hay worker asignado
+	| "asignado_sin_datos" //  hay worker pero todavía no produjo nada
+	| "en_curso" //            hay al menos un worker encendido avanzando
+	| "detenido" //            hay worker asignado pero apagado a mitad de rango
+	| "sin_worker" //          falta barrer y nadie lo tiene asignado
+	| "cerrado"; //            se llegó al objetivo
+
+export interface MatrixWorker {
+	worker_id: string;
+	range_start: number;
+	range_end: number;
+	current: number;
+	enabled: boolean;
+	estado: WorkerEstado;
+	restante: number;
+}
+
+export interface MatrixYear {
+	year: number;
+	barridos: number;
+	validas: number;
+	densidad: number;
+	frontera: number;
+	objetivo: number;
+	faltanAprox: number;
+	avancePct: number;
+	estado: PeriodoEstado;
+	workersActivos: number;
+	workers: MatrixWorker[];
+}
+
+export interface CoverageMatrixData {
+	fuero: string;
+	maxRange: number;
+	desde: number;
+	hasta: number;
+	calculoMs: number;
+	totales: { barridos: number; validas: number; faltanAprox: number; workersActivos: number };
+	anios: MatrixYear[];
+}
+
+export interface CoverageMatrixResponse {
+	success: boolean;
+	message?: string;
+	data: CoverageMatrixData;
+}
+
 export interface CoverageActiveWorker {
 	worker_id: string;
 	range_start: number;
@@ -942,6 +995,25 @@ export class WorkersService {
 		try {
 			const params = maxRange ? { maxRange } : {};
 			const response = await workersAxios.get(`/api/configuracion-scraping-history/coverage/fuero/${fuero}/year/${year}`, { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Todos los años de un fuero en una sola llamada, para el panorama de la
+	 * matriz. Los fueros grandes tardan (CIV ~20 s, CNT ~11 s) porque recorren
+	 * cientos de miles de entradas de índice; los 17 chicos responden en menos
+	 * de 150 ms. Por eso la vista los pide en paralelo y dibuja cada fila
+	 * cuando llega, en vez de esperar a todos.
+	 */
+	static async getCoverageMatrix(fuero: string, opts?: { desde?: number; hasta?: number; maxRange?: number }): Promise<CoverageMatrixResponse> {
+		try {
+			const response = await workersAxios.get(`/api/configuracion-scraping-history/coverage-matrix/fuero/${fuero}`, {
+				params: { maxRange: opts?.maxRange ?? 150000, desde: opts?.desde, hasta: opts?.hasta },
+				timeout: 180000,
+			});
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);

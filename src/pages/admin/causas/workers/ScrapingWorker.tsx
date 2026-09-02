@@ -64,7 +64,12 @@ import TemporaryWorkersModal from "./TemporaryWorkersModal";
 import ScrapingManagerPanel from "./ScrapingManagerPanel";
 import RangeHistoryPanel from "./RangeHistoryPanel";
 import FueroStatsPanel from "./FueroStatsPanel";
-import CoveragePanel from "./CoveragePanel";
+// La vista de cobertura pasó a ser una matriz fuero × año: con 21 fueros en
+// producción, el panel anterior —que obligaba a elegir uno y pedía un año por
+// request— no daba una foto del conjunto. CoveragePanel sigue en el repo
+// porque tiene el análisis global y la asignación de rangos, que todavía no
+// se portaron.
+import CoverageMatrix from "./CoverageMatrix";
 import ScrapingStatsPanel from "./ScrapingStatsPanel";
 import { useTabIndexParam } from "hooks/useTabParam";
 import WorkerSubTabs, { SubTabDef } from "./WorkerSubTabs";
@@ -580,7 +585,7 @@ const ScrapingWorker = () => {
 					)}
 					{subTab === 3 && (
 						<Box sx={{ p: { xs: 2, md: 3 } }}>
-							<CoveragePanel />
+							<CoverageMatrix />
 						</Box>
 					)}
 					{subTab === 4 && (
