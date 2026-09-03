@@ -23,6 +23,26 @@ const createWorkersAxiosInstance = (baseURL: string): AxiosInstance => {
 		withCredentials: false, // No necesitamos cookies, usamos Authorization header
 	});
 	attachAuthInterceptors(instance);
+
+	// Rompe-caché en cada GET. Estos endpoints devuelven estado operativo que
+	// cambia cada pocos minutos, y la respuesta no traía Cache-Control —solo
+	// ETag—, así que el navegador le aplicaba frescura heurística y podía servir
+	// una foto de días atrás. Pasó el 2026-09-03: el panel del corpus mostraba un
+	// total viejo y, cuando el backend agregó campos nuevos, los gráficos salían
+	// en cero porque la respuesta cacheada no los incluía.
+	//
+	// Se agregó `no-store` en nginx, pero eso impide guardar respuestas NUEVAS y
+	// no invalida las que ya están en el caché del cliente —de ahí que ni
+	// Ctrl+Shift+R alcanzara—. Con un parámetro variable la URL no coincide con
+	// ninguna entrada guardada y el navegador pide de nuevo, sin depender de que
+	// respete cabeceras.
+	instance.interceptors.request.use((config) => {
+		if ((config.method ?? "get").toLowerCase() === "get") {
+			config.params = { ...(config.params ?? {}), _: Date.now() };
+		}
+		return config;
+	});
+
 	return instance;
 };
 
@@ -101,74 +121,74 @@ function attachAuthInterceptors(instance: AxiosInstance) {
 
 	// Response interceptor for error handling and token refresh
 	instance.interceptors.response.use(
-	(response: AxiosResponse) => {
-		// Capturar token del header si viene (para mantener token actualizado)
-		const token = response.headers["authorization"] || response.headers["x-auth-token"];
-		if (token) {
-			const cleanToken = token.replace("Bearer ", "");
-			authTokenService.setToken(cleanToken);
-			secureStorage.setAuthToken(cleanToken);
-		}
-
-		// Si la respuesta contiene un token en el body
-		if (response.data?.token) {
-			authTokenService.setToken(response.data.token);
-			secureStorage.setAuthToken(response.data.token);
-		}
-
-		return response;
-	},
-	async (error) => {
-		// Cuenta autenticada pero sin rol admin (verifyAdmin en backend devuelve
-		// accountNotAdmin: true) → modal de re-login inmediato. El token es válido,
-		// el problema es el rol, no tiene sentido pasar por refresh-token.
-		if (error.response?.status === 403 && error.response?.data?.accountNotAdmin) {
-			window.dispatchEvent(new CustomEvent("showUnauthorizedModal"));
-			return Promise.reject(error);
-		}
-		const originalRequest = error.config;
-
-		// Si recibimos un 401 del servidor y no hemos intentado refrescar aún
-		if (error.response?.status === 401 && !originalRequest._retry && !originalRequest._queued) {
-			originalRequest._retry = true;
-
-			try {
-				// Intentar refrescar el token usando la API de autenticación
-				const authBaseURL = import.meta.env.VITE_AUTH_URL || "https://api.lawanalytics.app";
-				const refreshResponse = await axios.post(`${authBaseURL}/api/auth/refresh-token`, {}, { withCredentials: true });
-
-				// Capturar el nuevo token de la respuesta del refresh
-				const newToken =
-					refreshResponse.headers["authorization"]?.replace("Bearer ", "") ||
-					refreshResponse.headers["x-auth-token"] ||
-					refreshResponse.data?.token;
-
-				if (newToken) {
-					authTokenService.setToken(newToken);
-					secureStorage.setAuthToken(newToken);
-					if (originalRequest.headers) {
-						originalRequest.headers.Authorization = `Bearer ${newToken}`;
-					}
-				}
-
-				// Reintentar la petición original con el nuevo token
-				return instance(originalRequest);
-			} catch (refreshError) {
-				// Si el refresh falla, encolar la petición y mostrar modal de autenticación
-				// en lugar de redirigir directamente al login
-
-				// Marcar como encolada para evitar reencolar
-				originalRequest._queued = true;
-
-				const queuedPromise = requestQueueService.enqueue(originalRequest);
-
-				// Emitir evento para que el contexto de autenticación muestre el modal
-				window.dispatchEvent(new CustomEvent("showUnauthorizedModal"));
-
-				// Retornar la Promise encolada que se resolverá después del login
-				return queuedPromise;
+		(response: AxiosResponse) => {
+			// Capturar token del header si viene (para mantener token actualizado)
+			const token = response.headers["authorization"] || response.headers["x-auth-token"];
+			if (token) {
+				const cleanToken = token.replace("Bearer ", "");
+				authTokenService.setToken(cleanToken);
+				secureStorage.setAuthToken(cleanToken);
 			}
-		}
+
+			// Si la respuesta contiene un token en el body
+			if (response.data?.token) {
+				authTokenService.setToken(response.data.token);
+				secureStorage.setAuthToken(response.data.token);
+			}
+
+			return response;
+		},
+		async (error) => {
+			// Cuenta autenticada pero sin rol admin (verifyAdmin en backend devuelve
+			// accountNotAdmin: true) → modal de re-login inmediato. El token es válido,
+			// el problema es el rol, no tiene sentido pasar por refresh-token.
+			if (error.response?.status === 403 && error.response?.data?.accountNotAdmin) {
+				window.dispatchEvent(new CustomEvent("showUnauthorizedModal"));
+				return Promise.reject(error);
+			}
+			const originalRequest = error.config;
+
+			// Si recibimos un 401 del servidor y no hemos intentado refrescar aún
+			if (error.response?.status === 401 && !originalRequest._retry && !originalRequest._queued) {
+				originalRequest._retry = true;
+
+				try {
+					// Intentar refrescar el token usando la API de autenticación
+					const authBaseURL = import.meta.env.VITE_AUTH_URL || "https://api.lawanalytics.app";
+					const refreshResponse = await axios.post(`${authBaseURL}/api/auth/refresh-token`, {}, { withCredentials: true });
+
+					// Capturar el nuevo token de la respuesta del refresh
+					const newToken =
+						refreshResponse.headers["authorization"]?.replace("Bearer ", "") ||
+						refreshResponse.headers["x-auth-token"] ||
+						refreshResponse.data?.token;
+
+					if (newToken) {
+						authTokenService.setToken(newToken);
+						secureStorage.setAuthToken(newToken);
+						if (originalRequest.headers) {
+							originalRequest.headers.Authorization = `Bearer ${newToken}`;
+						}
+					}
+
+					// Reintentar la petición original con el nuevo token
+					return instance(originalRequest);
+				} catch (refreshError) {
+					// Si el refresh falla, encolar la petición y mostrar modal de autenticación
+					// en lugar de redirigir directamente al login
+
+					// Marcar como encolada para evitar reencolar
+					originalRequest._queued = true;
+
+					const queuedPromise = requestQueueService.enqueue(originalRequest);
+
+					// Emitir evento para que el contexto de autenticación muestre el modal
+					window.dispatchEvent(new CustomEvent("showUnauthorizedModal"));
+
+					// Retornar la Promise encolada que se resolverá después del login
+					return queuedPromise;
+				}
+			}
 
 			return Promise.reject(error);
 		},
@@ -180,8 +200,6 @@ const workersAxios: AxiosInstance = createWorkersAxiosInstance(import.meta.env.V
 
 // Instancia hermana: pjn/api contra ATLAS (raíz de api.lawanalytics.app) — para
 // services cuyos datos NO están en el rs0 (scraping-manager, failover, etc.).
-export const pjnAtlasAxios: AxiosInstance = createWorkersAxiosInstance(
-	import.meta.env.VITE_PJN_API_URL || "https://api.lawanalytics.app",
-);
+export const pjnAtlasAxios: AxiosInstance = createWorkersAxiosInstance(import.meta.env.VITE_PJN_API_URL || "https://api.lawanalytics.app");
 
 export default workersAxios;
