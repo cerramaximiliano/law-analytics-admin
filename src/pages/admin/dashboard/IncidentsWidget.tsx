@@ -309,84 +309,113 @@ const IncidentsWidget = () => {
 			}}
 		>
 			{/* Cabecera: los tres números que resumen todo. Comprimido, esto es
-			    todo el widget. Toda la barra abre y cierra —es el gesto que se
-			    busca al llegar—, y el salto al panel completo queda en su propio
-			    botón para que un clic no signifique dos cosas. */}
-			<ButtonBase
-				focusRipple
-				onClick={toggle}
-				aria-expanded={expanded}
-				aria-controls="incidents-widget-list"
+			    todo el widget.
+
+			    Son DOS destinos, no uno, porque son dos intenciones distintas y
+			    conviene que cada una tenga su blanco: los números llevan al panel
+			    de incidentes —donde se puede filtrar, silenciar y resolver—, y
+			    "Ver los N" despliega la lista acá mismo. Van como botones
+			    hermanos, no anidados: un <button> dentro de otro es HTML
+			    inválido y el clic interior se propaga al de afuera.
+
+			    El separador entre los dos no es decorativo: es lo que hace legible
+			    que el hover ilumine solo una mitad. */}
+			<Box
 				sx={{
-					width: "100%",
-					textAlign: "left",
-					px: { xs: 1.5, sm: 2.5 },
-					py: { xs: 1.25, sm: 1.75 },
 					display: "flex",
-					alignItems: "center",
-					gap: { xs: 1, sm: 2 },
+					alignItems: "stretch",
 					bgcolor: alpha(accent, isDark ? 0.1 : 0.06),
 					borderBottom: expanded ? `1px solid ${theme.palette.divider}` : "none",
-					transition: "background-color 200ms ease",
-					"&:hover": { bgcolor: alpha(accent, isDark ? 0.16 : 0.1) },
 				}}
 			>
-				<Stack
-					direction="row"
-					spacing={{ xs: 2, sm: 4 }}
-					alignItems="baseline"
-					flexWrap="wrap"
-					useFlexGap
-					sx={{ flexGrow: 1, minWidth: 0 }}
+				<ButtonBase
+					focusRipple
+					onClick={() => navigate("/admin/incidentes")}
+					aria-label="Abrir el panel de incidentes"
+					sx={{
+						flexGrow: 1,
+						minWidth: 0,
+						textAlign: "left",
+						justifyContent: "flex-start",
+						px: { xs: 1.5, sm: 2.5 },
+						py: { xs: 1.25, sm: 1.75 },
+						transition: "background-color 200ms ease",
+						"&:hover": { bgcolor: alpha(accent, isDark ? 0.16 : 0.1) },
+					}}
 				>
-					<Stack direction="row" spacing={1} alignItems="center">
-						<Danger size={18} color={accent} variant="Bold" />
-						<Typography variant="h4" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums" }}>
-							{open}
-						</Typography>
-						<Typography variant="body2" color="text.secondary">
-							abierto{open !== 1 ? "s" : ""}
-						</Typography>
-					</Stack>
-
-					{criticalCount > 0 && (
-						<Stack direction="row" spacing={0.75} alignItems="baseline">
-							<Typography variant="h4" fontWeight={700} color="error.main" sx={{ fontVariantNumeric: "tabular-nums" }}>
-								{criticalCount}
+					<Stack
+						direction="row"
+						spacing={{ xs: 2, sm: 4 }}
+						alignItems="baseline"
+						flexWrap="wrap"
+						useFlexGap
+						sx={{ flexGrow: 1, minWidth: 0 }}
+					>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Danger size={18} color={accent} variant="Bold" />
+							<Typography variant="h4" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums" }}>
+								{open}
 							</Typography>
 							<Typography variant="body2" color="text.secondary">
-								grave{criticalCount !== 1 ? "s" : ""}
+								abierto{open !== 1 ? "s" : ""}
 							</Typography>
 						</Stack>
-					)}
 
-					<Stack direction="row" spacing={0.75} alignItems="baseline">
-						<Clock size={14} color={ageColor(oldestDays)} />
-						<Typography variant="h4" fontWeight={700} sx={{ color: ageColor(oldestDays), fontVariantNumeric: "tabular-nums" }}>
-							{oldestDays}
-						</Typography>
-						<Typography variant="body2" color="text.secondary">
-							{oldestDays === 1 ? "día el más viejo" : "días el más viejo"}
-						</Typography>
+						{criticalCount > 0 && (
+							<Stack direction="row" spacing={0.75} alignItems="baseline">
+								<Typography variant="h4" fontWeight={700} color="error.main" sx={{ fontVariantNumeric: "tabular-nums" }}>
+									{criticalCount}
+								</Typography>
+								<Typography variant="body2" color="text.secondary">
+									grave{criticalCount !== 1 ? "s" : ""}
+								</Typography>
+							</Stack>
+						)}
+
+						<Stack direction="row" spacing={0.75} alignItems="baseline">
+							<Clock size={14} color={ageColor(oldestDays)} />
+							<Typography variant="h4" fontWeight={700} sx={{ color: ageColor(oldestDays), fontVariantNumeric: "tabular-nums" }}>
+								{oldestDays}
+							</Typography>
+							<Typography variant="body2" color="text.secondary">
+								{oldestDays === 1 ? "día el más viejo" : "días el más viejo"}
+							</Typography>
+						</Stack>
+
+						{silenced > 0 && (
+							<Typography variant="caption" color="text.secondary">
+								{silenced} silenciado{silenced !== 1 ? "s" : ""}
+							</Typography>
+						)}
 					</Stack>
+				</ButtonBase>
 
-					{silenced > 0 && (
-						<Typography variant="caption" color="text.secondary">
-							{silenced} silenciado{silenced !== 1 ? "s" : ""}
-						</Typography>
-					)}
-				</Stack>
-
-				{/* El ícono dice qué va a pasar; el texto, cuánto hay detrás. */}
-				<Stack direction="row" spacing={0.5} alignItems="center" sx={{ flexShrink: 0 }}>
+				{/* El ícono dice qué va a pasar; el texto, cuánto hay detrás. En
+				    mobile queda solo el ícono, pero el aria-label lo nombra igual. */}
+				<ButtonBase
+					focusRipple
+					onClick={toggle}
+					aria-expanded={expanded}
+					aria-controls="incidents-widget-list"
+					aria-label={expanded ? "Ocultar la lista de incidentes" : `Ver los ${open} incidentes abiertos`}
+					sx={{
+						flexShrink: 0,
+						gap: 0.5,
+						px: { xs: 1.25, sm: 2 },
+						borderLeft: `1px solid ${alpha(theme.palette.divider, 0.9)}`,
+						color: "text.secondary",
+						transition: "background-color 200ms ease",
+						"&:hover": { bgcolor: alpha(accent, isDark ? 0.16 : 0.1) },
+					}}
+				>
 					<Typography variant="caption" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
 						{expanded ? "Ocultar" : `Ver los ${open}`}
 					</Typography>
-					<Box aria-hidden sx={{ display: "flex", color: "text.secondary" }}>
+					<Box aria-hidden sx={{ display: "flex" }}>
 						{expanded ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}
 					</Box>
-				</Stack>
-			</ButtonBase>
+				</ButtonBase>
+			</Box>
 
 			<Collapse in={expanded} unmountOnExit>
 				<Box id="incidents-widget-list">
