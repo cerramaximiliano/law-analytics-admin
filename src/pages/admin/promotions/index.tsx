@@ -237,7 +237,6 @@ const PromotionsManagement = () => {
 	// Statistics
 	const activeCount = discounts.filter((d) => isValidNow(d)).length;
 	const scheduledCount = discounts.filter((d) => d.isActive && new Date(d.validFrom) > new Date()).length;
-	const expiredCount = discounts.filter((d) => new Date(d.validUntil) < new Date()).length;
 	const totalRedemptions = discounts.reduce((acc, d) => acc + d.stats.timesRedeemed, 0);
 
 	if (loading) {

@@ -231,6 +231,7 @@ const WorkerControlTab = () => {
 	const handleOpenScaling = (worker: WorkerConfig) => {
 		setEditScalingWorker(worker);
 		if (worker.scaling) {
+			// Se descartan los campos de telemetría (solo lectura) para editar sólo la config.
 			const { lastScaledConcurrency, lastScaledAt, lastQueueDepth, ...editable } = worker.scaling;
 			setScSettings({ ...DEFAULT_SCALING, ...editable });
 		} else {

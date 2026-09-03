@@ -1,27 +1,28 @@
 import React, { useState, useEffect } from "react";
 import {
-	Box,
-	Card,
-	Typography,
-	Stack,
-	Chip,
 	Alert,
-	Skeleton,
+	Box,
 	Button,
+	Card,
+	Chip,
+	CircularProgress,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
+	MenuItem,
+	Skeleton,
+	Stack,
 	Table,
 	TableBody,
 	TableCell,
 	TableContainer,
 	TableHead,
-	TableRow,
 	TablePagination,
-	Dialog,
-	DialogTitle,
-	DialogContent,
-	DialogActions,
+	TableRow,
 	TextField,
-	MenuItem,
 	Tooltip,
+	Typography,
 	useTheme,
 } from "@mui/material";
 import { Refresh, Gallery, ExportSquare, TickCircle } from "iconsax-react";
@@ -298,7 +299,21 @@ const CausasUpdateIncidentsTab: React.FC = () => {
 			</Card>
 
 			{/* Dialog de detalle */}
-			<Dialog open={!!selected} onClose={() => setSelected(null)} maxWidth="md" fullWidth>
+			{/* Abre apenas se pide el detalle, no cuando llega: antes el clic no
+			    producía nada visible hasta que respondía el servidor. */}
+			<Dialog
+				open={!!selected || detailLoading}
+				onClose={() => !detailLoading && setSelected(null)}
+				maxWidth="md"
+				fullWidth
+			>
+				{detailLoading && !selected && (
+					<DialogContent>
+						<Stack alignItems="center" sx={{ py: 6 }}>
+							<CircularProgress size={28} />
+						</Stack>
+					</DialogContent>
+				)}
 				{selected && (
 					<>
 						<DialogTitle sx={{ pb: 1.5 }}>

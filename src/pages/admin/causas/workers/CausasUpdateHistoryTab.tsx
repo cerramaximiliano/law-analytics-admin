@@ -1,29 +1,30 @@
 import React, { useState, useEffect } from "react";
 import {
+	Alert,
 	Box,
+	Button,
 	Card,
 	CardContent,
-	Typography,
-	Stack,
 	Chip,
-	Alert,
+	CircularProgress,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
+	MenuItem,
 	Skeleton,
-	Button,
+	Stack,
 	Table,
 	TableBody,
 	TableCell,
 	TableContainer,
 	TableHead,
-	TableRow,
 	TablePagination,
-	Dialog,
-	DialogTitle,
-	DialogContent,
-	DialogActions,
+	TableRow,
 	TextField,
-	MenuItem,
-	useTheme,
+	Typography,
 	alpha,
+	useTheme,
 } from "@mui/material";
 import { Refresh, TickCircle, CloseCircle, Warning2, Clock, Timer1 } from "iconsax-react";
 import { useSnackbar } from "notistack";
@@ -246,7 +247,21 @@ const CausasUpdateHistoryTab: React.FC = () => {
 			</Card>
 
 			{/* Detail Dialog */}
-			<Dialog open={!!selectedRun} onClose={() => setSelectedRun(null)} maxWidth="md" fullWidth>
+			{/* Abre apenas se pide el detalle, no cuando llega: antes el clic no
+			    producía nada visible hasta que respondía el servidor. */}
+			<Dialog
+				open={!!selectedRun || detailLoading}
+				onClose={() => !detailLoading && setSelectedRun(null)}
+				maxWidth="md"
+				fullWidth
+			>
+				{detailLoading && !selectedRun && (
+					<DialogContent>
+						<Stack alignItems="center" sx={{ py: 6 }}>
+							<CircularProgress size={28} />
+						</Stack>
+					</DialogContent>
+				)}
 				{selectedRun && (
 					<>
 						<DialogTitle sx={{ pb: 1.5 }}>

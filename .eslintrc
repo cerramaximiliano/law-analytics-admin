@@ -47,7 +47,9 @@
 			"error",
 			{
 				"vars": "all",
-				"args": "none"
+				"args": "none",
+				"ignoreRestSiblings": true,
+				"varsIgnorePattern": "^_"
 			}
 		],
 		"prettier/prettier": [

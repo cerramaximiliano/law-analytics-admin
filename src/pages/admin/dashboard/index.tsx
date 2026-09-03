@@ -1449,7 +1449,8 @@ const AdminDashboard = () => {
 												(data?.folders.mev?.verified || 0) +
 												(ejeStats?.status.valid || 0) +
 												(pjsaltaStats?.status.valid || 0) +
-												(pjcatamarcaStats?.status.valid || 0)
+												(pjcatamarcaStats?.status.valid || 0) +
+												(pjmendozaStats?.status.valid || 0)
 											).toLocaleString()}
 										</Typography>
 										<Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
@@ -1461,6 +1462,10 @@ const AdminDashboard = () => {
 												{
 													label: `Catamarca ${(pjcatamarcaStats?.status.valid || 0).toLocaleString()}`,
 													to: "/admin/pjcatamarca/verified-app",
+												},
+												{
+													label: `Mendoza ${(pjmendozaStats?.status.valid || 0).toLocaleString()}`,
+													to: "/admin/pjmendoza/verified-app",
 												},
 											].map((chip) => (
 												<Chip
