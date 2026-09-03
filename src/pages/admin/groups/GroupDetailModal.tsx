@@ -29,25 +29,12 @@ import {
 	FormControl,
 	InputLabel,
 } from "@mui/material";
-import {
-	CloseCircle,
-	People,
-	Messages2,
-	Clock,
-	TickCircle,
-	CloseSquare,
-	Trash,
-	Warning2,
-	UserRemove,
-	Crown1,
-	DocumentText,
-	Code,
-	Copy,
-} from "iconsax-react";
+import { CloseCircle, People, Messages2, Clock, CloseSquare, UserRemove, Crown1, DocumentText, Code, Copy } from "iconsax-react";
 import { useTheme } from "@mui/material/styles";
 import { useSnackbar } from "notistack";
 import GroupsService, { Group, GroupMember, GroupInvitation, GroupHistoryEntry } from "api/groups";
 import CopyButton from "components/CopyButton";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 
 // ====================================
 // HELPERS
@@ -134,8 +121,8 @@ interface MembersTabProps {
 }
 
 function MembersTab({ groupId, onMemberRemoved }: MembersTabProps) {
-	const { enqueueSnackbar } = useSnackbar();
 	const theme = useTheme();
+	const { enqueueSnackbar } = useSnackbar();
 	const [data, setData] = useState<{ owner: GroupMember | null; members: GroupMember[] } | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [removing, setRemoving] = useState<string | null>(null);
@@ -156,8 +143,12 @@ function MembersTab({ groupId, onMemberRemoved }: MembersTabProps) {
 		load();
 	}, [groupId]);
 
-	const handleRemove = async (userId: string, userName: string) => {
-		if (!confirm(`¿Remover a "${userName}" del grupo?`)) return;
+	const [aRemover, setARemover] = useState<{ id: string; nombre: string } | null>(null);
+
+	const confirmarRemove = async () => {
+		if (!aRemover) return;
+		const { id: userId } = aRemover;
+		setARemover(null);
 		setRemoving(userId);
 		try {
 			await GroupsService.removeGroupMember(groupId, userId);
@@ -180,6 +171,8 @@ function MembersTab({ groupId, onMemberRemoved }: MembersTabProps) {
 	if (!data) return <Alert severity="error">Error al cargar miembros</Alert>;
 
 	const allMembers = data.owner ? [data.owner, ...data.members] : data.members;
+
+	const handleRemove = (userId: string, userName: string) => setARemover({ id: userId, nombre: userName });
 
 	return (
 		<TableContainer component={Paper} variant="outlined">
@@ -257,6 +250,15 @@ function MembersTab({ groupId, onMemberRemoved }: MembersTabProps) {
 					})}
 				</TableBody>
 			</Table>
+			<ConfirmDialog
+				open={!!aRemover}
+				title={`¿Remover a ${aRemover?.nombre ?? ""} del grupo?`}
+				description="Pierde el acceso a los recursos compartidos del grupo. Se lo puede volver a invitar después."
+				confirmLabel="Remover"
+				loading={!!removing}
+				onConfirm={confirmarRemove}
+				onClose={() => setARemover(null)}
+			/>
 		</TableContainer>
 	);
 }
@@ -293,8 +295,14 @@ function InvitationsTab({ groupId }: InvitationsTabProps) {
 		load();
 	}, [groupId, statusFilter]);
 
-	const handleCancel = async (invitationId: string, email: string) => {
-		if (!confirm(`¿Revocar la invitación para "${email}"?`)) return;
+	const [aRevocar, setARevocar] = useState<{ id: string; email: string } | null>(null);
+
+	const handleCancel = (invitationId: string, email: string) => setARevocar({ id: invitationId, email });
+
+	const confirmarCancel = async () => {
+		if (!aRevocar) return;
+		const invitationId = aRevocar.id;
+		setARevocar(null);
 		setCancelling(invitationId);
 		try {
 			await GroupsService.cancelGroupInvitation(groupId, invitationId);
@@ -393,6 +401,15 @@ function InvitationsTab({ groupId }: InvitationsTabProps) {
 					</Table>
 				</TableContainer>
 			)}
+			<ConfirmDialog
+				open={!!aRevocar}
+				title={`¿Revocar la invitación para ${aRevocar?.email ?? ""}?`}
+				description="El link deja de funcionar. Se puede volver a invitar al mismo correo."
+				confirmLabel="Revocar"
+				loading={!!cancelling}
+				onConfirm={confirmarCancel}
+				onClose={() => setARevocar(null)}
+			/>
 		</Stack>
 	);
 }
@@ -589,7 +606,6 @@ const PLAN_COLOR: Record<string, "default" | "primary" | "warning"> = { free: "d
 
 export default function GroupDetailModal({ open, onClose, groupId, onStatusChanged }: GroupDetailModalProps) {
 	const { enqueueSnackbar } = useSnackbar();
-	const theme = useTheme();
 
 	const handleCopyId = (id: string) => {
 		navigator.clipboard.writeText(id).then(() => {
@@ -621,15 +637,23 @@ export default function GroupDetailModal({ open, onClose, groupId, onStatusChang
 		}
 	}, [open, groupId]);
 
-	const handleStatusChange = async (newStatus: "active" | "suspended" | "archived") => {
-		if (!group) return;
-		const labels: Record<string, string> = { active: "activar", suspended: "suspender", archived: "archivar" };
-		if (!confirm(`¿Deseas ${labels[newStatus]} el grupo "${group.name}"?`)) return;
+	// Etiqueta del verbo, compartida entre el diálogo y el mensaje de éxito.
+	const STATUS_VERBO: Record<string, string> = { active: "activar", suspended: "suspender", archived: "archivar" };
+	const [nuevoEstado, setNuevoEstado] = useState<"active" | "suspended" | "archived" | null>(null);
 
+	const handleStatusChange = (newStatus: "active" | "suspended" | "archived") => {
+		if (!group) return;
+		setNuevoEstado(newStatus);
+	};
+
+	const confirmarStatusChange = async () => {
+		if (!group || !nuevoEstado) return;
+		const newStatus = nuevoEstado;
+		setNuevoEstado(null);
 		setUpdatingStatus(true);
 		try {
 			await GroupsService.updateGroupStatus(group._id, newStatus);
-			enqueueSnackbar(`Grupo ${labels[newStatus]}do correctamente`, { variant: "success" });
+			enqueueSnackbar(`Grupo ${STATUS_VERBO[newStatus]}do correctamente`, { variant: "success" });
 			onStatusChanged();
 			load();
 		} catch {
@@ -854,6 +878,24 @@ export default function GroupDetailModal({ open, onClose, groupId, onStatusChang
 					</Box>
 				</DialogContent>
 			)}
+			<ConfirmDialog
+				open={!!nuevoEstado}
+				title={`¿${nuevoEstado ? STATUS_VERBO[nuevoEstado][0].toUpperCase() + STATUS_VERBO[nuevoEstado].slice(1) : ""} el grupo ${
+					group?.name ?? ""
+				}?`}
+				description={
+					nuevoEstado === "archived"
+						? "El grupo deja de aparecer en los listados. Sus miembros y recursos se conservan."
+						: nuevoEstado === "suspended"
+						? "Los miembros pierden el acceso hasta que se reactive."
+						: "Los miembros recuperan el acceso a los recursos del grupo."
+				}
+				confirmLabel={nuevoEstado ? STATUS_VERBO[nuevoEstado][0].toUpperCase() + STATUS_VERBO[nuevoEstado].slice(1) : ""}
+				confirmColor={nuevoEstado === "active" ? "primary" : "error"}
+				loading={updatingStatus}
+				onConfirm={confirmarStatusChange}
+				onClose={() => setNuevoEstado(null)}
+			/>
 		</Dialog>
 	);
 }
