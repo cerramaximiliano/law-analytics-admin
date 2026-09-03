@@ -1,92 +1,215 @@
-import React, { useEffect, useState, useCallback } from "react";
+// Mapa de la infraestructura del ecosistema.
+//
+// La pestaña general lista los diez boxes con sus características y su estado;
+// cada uno tiene su propia pestaña con los procesos que corren adentro. Hacer
+// click en un box de la general abre su pestaña.
+//
+// Antes esta vista era solo el panel de failover del scraping, y todavía decía
+// que el box respaldado era worker_02 — el servicio se había mudado a
+// worker-cloud-02 en agosto de 2026. Ese panel ahora vive dentro de la pestaña
+// del box que efectivamente lo corre, que es donde se lo busca.
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-	Grid,
-	Typography,
+	Alert,
 	Box,
 	Chip,
-	Stack,
+	CircularProgress,
+	Grid,
 	IconButton,
-	Tooltip,
-	Table,
-	TableBody,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
+	LinearProgress,
 	Paper,
-	Alert,
+	Stack,
+	Tab,
+	Tabs,
+	Tooltip,
+	Typography,
+	alpha,
+	useTheme,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
-import { Refresh, Cloud, Cpu, Activity, Timer1, Warning2 } from "iconsax-react";
+import { Cloud, Cpu, Data, Refresh, Warning2 } from "iconsax-react";
 import MainCard from "components/MainCard";
-import { FailoverService, FailoverStatus, FailoverHistoryEntry } from "api/workers";
-import { LIVE_GREEN, STALE_AMBER, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
+import { useTabParam } from "hooks/useTabParam";
+import InfrastructureService, { InfraBox } from "api/infrastructure";
+import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder, navHoverBg } from "themes/dashboardTokens";
+import BoxPanel from "./BoxPanel";
+import FailoverPanel from "./FailoverPanel";
 
-// ====== Helpers ======
+// Orden de los grupos en la vista general: primero lo que sostiene al resto.
+const GROUP_ORDER = ["Núcleo", "Datos", "Cloud", "Workers"];
 
-function formatDate(val: string | null | undefined): string {
-	if (!val) return "N/A";
-	return new Date(val).toLocaleString("es-AR", {
-		day: "2-digit",
-		month: "2-digit",
-		year: "numeric",
-		hour: "2-digit",
-		minute: "2-digit",
-		second: "2-digit",
-		timeZone: "America/Argentina/Buenos_Aires",
-	});
-}
+const GROUP_ICON: Record<string, React.ReactNode> = {
+	Núcleo: <Cpu size={16} />,
+	Datos: <Data size={16} />,
+	Cloud: <Cloud size={16} />,
+	Workers: <Cpu size={16} />,
+};
 
-function formatElapsed(ms: number | null): string {
-	if (ms === null) return "N/A";
-	const s = Math.round(ms / 1000);
-	if (s < 60) return `${s}s`;
-	const m = Math.round(s / 60);
-	if (m < 60) return `${m}m`;
-	return `${Math.floor(m / 60)}h ${m % 60}m`;
-}
+/** Color de la barra de uso: verde, ámbar arriba de 80, rojo arriba de 90. */
+const usageColor = (pct: number | null) => (pct === null ? "#94A3B8" : pct >= 90 ? "#EF4444" : pct >= 80 ? STALE_AMBER : LIVE_GREEN);
 
-function formatDuration(activatedAt: string | null): string {
-	if (!activatedAt) return "";
-	const ms = Date.now() - new Date(activatedAt).getTime();
-	const totalMin = Math.floor(ms / 60000);
-	const h = Math.floor(totalMin / 60);
-	const m = totalMin % 60;
-	return h > 0 ? `${h}h ${m}m` : `${m}m`;
-}
+const MiniBar = ({ label, pct, hint }: { label: string; pct: number | null; hint?: string }) => (
+	<Box sx={{ flex: 1, minWidth: 84 }}>
+		<Stack direction="row" justifyContent="space-between" alignItems="baseline">
+			<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.68rem" }}>
+				{label}
+			</Typography>
+			<Typography variant="caption" sx={{ fontWeight: 600, fontSize: "0.68rem", fontVariantNumeric: "tabular-nums" }}>
+				{pct === null ? "—" : `${Math.round(pct)}%`}
+			</Typography>
+		</Stack>
+		<Tooltip title={hint || ""}>
+			<LinearProgress
+				variant="determinate"
+				value={pct ?? 0}
+				sx={{
+					mt: 0.4,
+					height: 4,
+					borderRadius: 2,
+					bgcolor: alpha(usageColor(pct), 0.15),
+					"& .MuiLinearProgress-bar": { bgcolor: usageColor(pct), borderRadius: 2 },
+				}}
+			/>
+		</Tooltip>
+	</Box>
+);
 
-function truncateArn(arn: string): string {
-	// Mostrar solo la parte final: cluster/task-name/taskId
-	const parts = arn.split("/");
-	if (parts.length >= 2) return parts.slice(-2).join("/");
-	return arn;
-}
+const BoxCard = ({ box, onOpen }: { box: InfraBox; onOpen: () => void }) => {
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
+	const live = box.live;
+	const memPct = live.memory ? parseFloat(live.memory.percent) : null;
+	const diskPct = live.disk ? live.disk.percent : null;
+	const loadPct = live.cpu ? (parseFloat(live.cpu.load1) / live.cpu.cores) * 100 : null;
+	const unreachable = box.agent === "malla" && !live.reachable;
 
-function estimateCost(activatedAt: string | null, taskCount: number): string {
-	if (!activatedAt) return "$0.00";
-	const hours = (Date.now() - new Date(activatedAt).getTime()) / 3600000;
-	// cloud-manager: $0.016/h, cada worker task: $0.064/h
-	const cost = 0.016 * hours + 0.064 * taskCount * hours;
-	return `$${cost.toFixed(2)}`;
-}
+	return (
+		<Paper
+			variant="outlined"
+			onClick={onOpen}
+			sx={{
+				p: 2,
+				height: "100%",
+				borderRadius: 2,
+				cursor: "pointer",
+				borderColor: unreachable ? theme.palette.error.main : headerBorder(isDark),
+				transition: "background-color 200ms ease, border-color 200ms ease",
+				"&:hover": { bgcolor: navHoverBg(isDark), borderColor: alpha(BRAND_BLUE, 0.45) },
+			}}
+		>
+			<Stack spacing={1.25}>
+				<Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
+					<Box sx={{ minWidth: 0 }}>
+						<Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+							<Typography variant="subtitle1" sx={{ fontFamily: "monospace", fontWeight: 600 }}>
+								{box.name}
+							</Typography>
+							{box.critical && (
+								<Chip size="small" label="crítico" color="error" variant="outlined" sx={{ height: 18, fontSize: "0.62rem" }} />
+							)}
+							{box.retired && <Chip size="small" label="sin producción" variant="outlined" sx={{ height: 18, fontSize: "0.62rem" }} />}
+							{box.hasFailover && (
+								<Chip size="small" label="respaldo" color="warning" variant="outlined" sx={{ height: 18, fontSize: "0.62rem" }} />
+							)}
+						</Stack>
+						<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
+							{box.role}
+						</Typography>
+					</Box>
+					<Box
+						sx={{
+							width: 9,
+							height: 9,
+							mt: 0.75,
+							borderRadius: "50%",
+							flexShrink: 0,
+							bgcolor: unreachable ? theme.palette.error.main : live.reachable ? LIVE_GREEN : "#94A3B8",
+						}}
+					/>
+				</Stack>
 
-// ====== Componente principal ======
+				<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+					<Chip size="small" variant="outlined" label={box.provider} sx={{ height: 20, fontSize: "0.65rem" }} />
+					<Chip
+						size="small"
+						variant="outlined"
+						label={box.instanceType}
+						sx={{ height: 20, fontSize: "0.65rem", fontFamily: "monospace" }}
+					/>
+					<Chip size="small" variant="outlined" label={box.zone} sx={{ height: 20, fontSize: "0.65rem" }} />
+					{box.monthlyCostUsd && (
+						<Chip size="small" variant="outlined" label={`US$ ${box.monthlyCostUsd}/mes`} sx={{ height: 20, fontSize: "0.65rem" }} />
+					)}
+				</Stack>
+
+				{live.reachable ? (
+					<Stack direction="row" spacing={1.5}>
+						<MiniBar label="RAM" pct={memPct} hint={live.memory ? `${live.memory.usedGB} / ${live.memory.totalGB} GB` : ""} />
+						<MiniBar label="Disco" pct={diskPct} hint={live.disk ? `${live.disk.availHuman} libres` : ""} />
+						<MiniBar label="Carga" pct={loadPct} hint={live.cpu ? `load ${live.cpu.load1} sobre ${live.cpu.cores} vCPU` : ""} />
+					</Stack>
+				) : (
+					<Typography variant="caption" color={unreachable ? "error.main" : "text.secondary"}>
+						{unreachable ? `Agente sin respuesta${live.error ? ` — ${live.error}` : ""}` : "Sin agente de métricas en este box"}
+					</Typography>
+				)}
+
+				<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+					{live.reachable ? (
+						<Typography variant="caption" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+							{box.processSummary.online}
+							<Typography component="span" variant="caption" color="text.secondary" sx={{ fontWeight: 400 }}>
+								{" "}
+								de {box.processSummary.total} procesos online
+							</Typography>
+						</Typography>
+					) : (
+						<Typography variant="caption" color="text.secondary">
+							{box.processSummary.total} procesos declarados · estado no observable
+						</Typography>
+					)}
+					{box.processSummary.errored > 0 && (
+						<Chip size="small" color="error" label={`${box.processSummary.errored} en error`} sx={{ height: 18, fontSize: "0.62rem" }} />
+					)}
+					{live.alerts && live.alerts.length > 0 && (
+						<Chip
+							size="small"
+							color="warning"
+							variant="outlined"
+							icon={<Warning2 size={11} />}
+							label={live.alerts.length}
+							sx={{ height: 18, fontSize: "0.62rem" }}
+						/>
+					)}
+				</Stack>
+			</Stack>
+		</Paper>
+	);
+};
 
 const InfrastructurePage = () => {
-	const [status, setStatus] = useState<FailoverStatus | null>(null);
-	const [history, setHistory] = useState<FailoverHistoryEntry[]>([]);
-	const [loading, setLoading] = useState(false);
-	const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
+	const [data, setData] = useState<InfraBox[]>([]);
+	const [generatedAt, setGeneratedAt] = useState<string | null>(null);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
 
-	const fetchData = useCallback(async () => {
+	// Los slugs de las pestañas se derivan de los boxes que devuelve el backend,
+	// pero useTabParam necesita una lista estable: se calcula una sola vez con
+	// las claves conocidas y se recalcula sólo si el inventario cambia.
+	const tabValues = useMemo(() => ["general", ...data.map((b) => b.key)], [data]);
+
+	const [activeTab, setActiveTab] = useTabParam("box", tabValues.length > 1 ? tabValues : ["general"]);
+
+	const fetchData = useCallback(async (force = false) => {
 		setLoading(true);
 		try {
-			const [statusRes, historyRes] = await Promise.all([FailoverService.getStatus(), FailoverService.getHistory()]);
-			if (statusRes.data.success) setStatus(statusRes.data.data);
-			if (historyRes.data.success) setHistory(historyRes.data.data);
-			setLastRefresh(new Date());
-		} catch (err) {
-			console.error("Error cargando estado de failover:", err);
+			const res = await InfrastructureService.getInventory(force);
+			setData(res.boxes || []);
+			setGeneratedAt(res.generatedAt);
+			setError(null);
+		} catch (err: any) {
+			setError(err?.response?.data?.message || err.message || "No se pudo cargar el inventario");
 		} finally {
 			setLoading(false);
 		}
@@ -94,296 +217,157 @@ const InfrastructurePage = () => {
 
 	useEffect(() => {
 		fetchData();
-		const interval = setInterval(fetchData, 30000);
+		// La malla corre su monitor cada 60s: refrescar con esa cadencia alcanza.
+		const interval = setInterval(() => fetchData(), 60000);
 		return () => clearInterval(interval);
 	}, [fetchData]);
 
-	const cloudActive = status?.cloudActive ?? false;
-	const draining = status?.draining ?? false;
+	const grouped = useMemo(() => {
+		const byGroup = new Map<string, InfraBox[]>();
+		for (const box of data) {
+			if (!byGroup.has(box.group)) byGroup.set(box.group, []);
+			byGroup.get(box.group)!.push(box);
+		}
+		return GROUP_ORDER.filter((g) => byGroup.has(g)).map((g) => ({ group: g, boxes: byGroup.get(g)! }));
+	}, [data]);
 
-	const liveDot = (color: string) => (
-		<Box
-			component="span"
-			sx={{
-				position: "relative",
-				display: "inline-block",
-				width: 10,
-				height: 10,
-				borderRadius: "50%",
-				bgcolor: color,
-				mr: 1,
-				boxShadow: `0 0 0 2px ${alpha(color, 0.2)}`,
-				...LIVE_PULSE_KEYFRAMES,
-				"&::after": {
-					content: '""',
-					position: "absolute",
-					inset: 0,
-					borderRadius: "50%",
-					backgroundColor: color,
-					animation: "la-live-pulse 2.4s ease-out infinite",
-				},
-			}}
-		/>
-	);
+	// Los procesos de los boxes sin agente no se suman a "online": nadie los está
+	// mirando, y contarlos como caídos mentiría igual que contarlos como vivos.
+	const totals = useMemo(() => {
+		const online = data.reduce((n, b) => n + b.processSummary.online, 0);
+		const observed = data.reduce((n, b) => n + b.processSummary.total - b.processSummary.unknown, 0);
+		const unobserved = data.reduce((n, b) => n + b.processSummary.unknown, 0);
+		const errored = data.reduce((n, b) => n + b.processSummary.errored, 0);
+		const down = data.filter((b) => b.agent === "malla" && !b.live.reachable).length;
+		const cost = data.reduce((n, b) => n + (b.monthlyCostUsd || 0), 0);
+		return { online, observed, unobserved, errored, down, cost };
+	}, [data]);
+
+	const current = data.find((b) => b.key === activeTab);
 
 	return (
-		<Grid container spacing={3}>
-			{/* Banner de estado */}
-			<Grid item xs={12}>
-				<Alert
-					severity={draining ? "warning" : cloudActive ? "error" : "success"}
-					icon={draining ? <Timer1 /> : cloudActive ? <Warning2 /> : <Activity />}
-					sx={{
-						fontSize: "1rem",
-						fontWeight: 600,
-						alignItems: "center",
-						borderRadius: 1.5,
-						"& .MuiAlert-message": { display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1 },
-					}}
-					action={
-						<Tooltip title="Actualizar">
-							<IconButton size="small" onClick={fetchData} disabled={loading}>
-								<Refresh size={18} />
-							</IconButton>
-						</Tooltip>
-					}
-				>
-					{draining ? (
-						<>
-							{liveDot(STALE_AMBER)}
-							<strong>CLOUD DRENANDO — On-prem recuperado</strong>
-							{status?.drainingStartedAt && ` — Drain iniciado hace ${formatDuration(status.drainingStartedAt)}`}
-							{` — ${status?.cloudTasksTotal ?? 0} task(s) activa(s)`}
-						</>
-					) : cloudActive ? (
-						<>
-							<strong>CLOUD FAILOVER ACTIVO</strong>
-							{status?.activatedAt && ` — Activado hace ${formatDuration(status.activatedAt)}`}
-							{status?.reason && ` (${status.reason})`}
-						</>
-					) : (
-						<>
-							{liveDot(LIVE_GREEN)}
-							<strong>ON-PREM ACTIVO — Funcionamiento normal</strong>
-						</>
-					)}
-					{lastRefresh && (
-						<Typography variant="caption" sx={{ ml: 2, opacity: 0.7, fontVariantNumeric: "tabular-nums" }}>
-							Actualizado: {formatDate(lastRefresh.toISOString())}
+		<MainCard>
+			<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+				<Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1.5}>
+					<Box sx={{ maxWidth: 760 }}>
+						<Typography variant="h3" sx={{ mb: 0.75 }}>
+							Infraestructura
 						</Typography>
-					)}
-				</Alert>
-			</Grid>
-
-			{/* Cards de estado */}
-			<Grid item xs={12} sm={4}>
-				<MainCard>
-					<Stack spacing={1} alignItems="flex-start">
-						<Stack direction="row" spacing={1} alignItems="center">
-							<Cpu size={20} />
-							<Typography variant="subtitle2" color="text.secondary">
-								Servidor activo
-							</Typography>
-						</Stack>
-						<Chip
-							label={cloudActive ? "Cloud (ECS Fargate)" : "On-prem (worker_02)"}
-							color={cloudActive ? "error" : "success"}
-							size="small"
-						/>
-						{status?.updatedAt && (
-							<Typography variant="caption" color="text.secondary">
-								Actualizado: {formatDate(status.updatedAt)}
+						<Typography variant="body1" color="text.secondary">
+							Los servidores del ecosistema y los procesos que corren en cada uno. El estado sale en vivo del monitor que cada box publica
+							por Tailscale.
+						</Typography>
+					</Box>
+					<Stack direction="row" spacing={1} alignItems="center">
+						{generatedAt && (
+							<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
+								{new Date(generatedAt).toLocaleTimeString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" })}
 							</Typography>
 						)}
+						<Tooltip title="Volver a consultar a cada box">
+							<span>
+								<IconButton size="small" onClick={() => fetchData(true)} disabled={loading}>
+									{loading ? <CircularProgress size={16} /> : <Refresh size={18} />}
+								</IconButton>
+							</span>
+						</Tooltip>
 					</Stack>
-				</MainCard>
-			</Grid>
+				</Stack>
 
-			<Grid item xs={12} sm={4}>
-				<MainCard>
-					<Stack spacing={1} alignItems="flex-start">
-						<Stack direction="row" spacing={1} alignItems="center">
-							<Timer1 size={20} />
-							<Typography variant="subtitle2" color="text.secondary">
-								Heartbeat on-prem
-							</Typography>
-						</Stack>
-						{status?.heartbeat.msSinceLastPoll !== null ? (
-							<>
-								<Chip
-									label={status?.heartbeat.alive ? "Vivo" : "Sin respuesta"}
-									color={status?.heartbeat.alive ? "success" : "error"}
-									size="small"
-									sx={{ fontWeight: 600, letterSpacing: 0.3 }}
+				{error && <Alert severity="error">{error}</Alert>}
+
+				<Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", borderColor: headerBorder(isDark), boxShadow: "none" }}>
+					<Box sx={{ borderBottom: `1px solid ${headerBorder(isDark)}`, bgcolor: alpha(BRAND_BLUE, isDark ? 0.04 : 0.025) }}>
+						<Tabs
+							value={tabValues.includes(activeTab) ? activeTab : "general"}
+							onChange={(_, v) => setActiveTab(v)}
+							variant="scrollable"
+							scrollButtons="auto"
+							sx={{
+								"& .MuiTab-root": {
+									minHeight: 48,
+									textTransform: "none",
+									fontSize: "0.85rem",
+									fontWeight: 500,
+									transition: "color 200ms ease",
+								},
+							}}
+						>
+							<Tab value="general" label="Vista general" />
+							{data.map((box) => (
+								<Tab
+									key={box.key}
+									value={box.key}
+									label={
+										<Stack direction="row" spacing={0.75} alignItems="center">
+											<Box
+												sx={{
+													width: 7,
+													height: 7,
+													borderRadius: "50%",
+													bgcolor:
+														box.agent === "malla" && !box.live.reachable
+															? theme.palette.error.main
+															: box.live.reachable
+															? LIVE_GREEN
+															: "#94A3B8",
+												}}
+											/>
+											<span style={{ fontFamily: "monospace" }}>{box.name}</span>
+										</Stack>
+									}
 								/>
-								<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
-									Último poll: hace {formatElapsed(status?.heartbeat.msSinceLastPoll ?? null)}
-								</Typography>
-								<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
-									{formatDate(status?.heartbeat.lastPoll ?? null)}
-								</Typography>
-							</>
-						) : (
-							<Typography variant="body2" color="text.secondary">
-								N/A
-							</Typography>
-						)}
-					</Stack>
-				</MainCard>
-			</Grid>
+							))}
+						</Tabs>
+					</Box>
 
-			<Grid item xs={12} sm={4}>
-				<MainCard>
-					<Stack spacing={1} alignItems="flex-start">
-						<Stack direction="row" spacing={1} alignItems="center">
-							<Cloud size={20} />
-							<Typography variant="subtitle2" color="text.secondary">
-								Leader Lock
-							</Typography>
-						</Stack>
-						{status?.leaderLock ? (
-							<>
-								<Chip
-									label={`${status.leaderLock.lockedBy} (prioridad ${status.leaderLock.priority})`}
-									color={status.leaderLock.lockedBy === "cloud" ? "warning" : "success"}
-									size="small"
-								/>
-								<Typography variant="caption" color="text.secondary">
-									Expira: {formatDate(status.leaderLock.expiresAt)}
-								</Typography>
-							</>
-						) : (
-							<Typography variant="body2" color="text.secondary">
-								N/A — sin lock activo
-							</Typography>
-						)}
-					</Stack>
-				</MainCard>
-			</Grid>
+					<Box sx={{ p: { xs: 1.5, sm: 2.5 } }}>
+						{activeTab === "general" || !current ? (
+							<Stack spacing={3}>
+								<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+									<Chip size="small" variant="outlined" label={`${data.length} servidores`} />
+									<Chip size="small" variant="outlined" label={`${totals.online} de ${totals.observed} procesos online`} />
+									{totals.unobserved > 0 && (
+										<Tooltip title="Boxes sin el stack de monitoreo: no publican estado de procesos">
+											<Chip size="small" variant="outlined" label={`${totals.unobserved} sin lectura en vivo`} />
+										</Tooltip>
+									)}
+									{totals.errored > 0 && <Chip size="small" color="error" label={`${totals.errored} procesos en error`} />}
+									{totals.down > 0 && <Chip size="small" color="error" label={`${totals.down} box(es) sin responder`} />}
+									{totals.cost > 0 && <Chip size="small" variant="outlined" label={`US$ ${totals.cost}/mes en Lightsail`} />}
+								</Stack>
 
-			{/* Tasks ECS (solo visible si cloud activo) */}
-			{cloudActive && (
-				<Grid item xs={12}>
-					<MainCard
-						title={
-							<Stack direction="row" spacing={1} alignItems="center">
-								<Cloud size={18} />
-								<span>Workers ECS activos ({status?.cloudTasksTotal ?? 0})</span>
-								{status?.activatedAt && (
-									<Chip
-										label={`Costo estimado: ${estimateCost(status.activatedAt, status?.cloudTasksTotal ?? 0)}`}
-										color="warning"
-										size="small"
-										sx={{ ml: 2 }}
-									/>
+								{loading && data.length === 0 ? (
+									<Stack alignItems="center" sx={{ py: 6 }}>
+										<CircularProgress size={28} />
+									</Stack>
+								) : (
+									grouped.map(({ group, boxes }) => (
+										<Stack key={group} spacing={1.5}>
+											<Stack direction="row" spacing={1} alignItems="center">
+												<Box sx={{ color: BRAND_BLUE, display: "flex" }}>{GROUP_ICON[group]}</Box>
+												<Typography variant="overline" sx={{ letterSpacing: "0.08em", fontWeight: 700, color: "text.secondary" }}>
+													{group}
+												</Typography>
+											</Stack>
+											<Grid container spacing={2}>
+												{boxes.map((box) => (
+													<Grid item xs={12} sm={6} lg={4} key={box.key}>
+														<BoxCard box={box} onOpen={() => setActiveTab(box.key)} />
+													</Grid>
+												))}
+											</Grid>
+										</Stack>
+									))
 								)}
 							</Stack>
-						}
-					>
-						{status?.cloudTasks && status.cloudTasks.length > 0 ? (
-							<TableContainer component={Paper} variant="outlined">
-								<Table size="small">
-									<TableHead>
-										<TableRow>
-											<TableCell>Worker</TableCell>
-											<TableCell>Task ARN</TableCell>
-											<TableCell>Iniciado</TableCell>
-											<TableCell>Tiempo activo</TableCell>
-										</TableRow>
-									</TableHead>
-									<TableBody>
-										{status.cloudTasks.map((task, idx) => (
-											<TableRow key={idx} hover>
-												<TableCell>
-													<Chip label={task.worker} size="small" sx={{ fontWeight: 600, fontFamily: "monospace", fontSize: "0.7rem" }} />
-												</TableCell>
-												<TableCell>
-													<Typography variant="caption" fontFamily="monospace" sx={{ wordBreak: "break-all", opacity: 0.85 }}>
-														{truncateArn(task.taskArn)}
-													</Typography>
-												</TableCell>
-												<TableCell>
-													<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums" }}>
-														{formatDate(task.startedAt)}
-													</Typography>
-												</TableCell>
-												<TableCell>
-													<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
-														{task.startedAt ? formatElapsed(Date.now() - new Date(task.startedAt).getTime()) : "N/A"}
-													</Typography>
-												</TableCell>
-											</TableRow>
-										))}
-									</TableBody>
-								</Table>
-							</TableContainer>
 						) : (
-							<Typography variant="body2" color="text.secondary">
-								No hay tasks ECS activas registradas.
-							</Typography>
+							<BoxPanel box={current}>{current.hasFailover ? <FailoverPanel /> : null}</BoxPanel>
 						)}
-						{status?.cloudStatusUpdatedAt && (
-							<Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-								Estado de tasks actualizado: {formatDate(status.cloudStatusUpdatedAt)}
-							</Typography>
-						)}
-					</MainCard>
-				</Grid>
-			)}
-
-			{/* Historial de failovers */}
-			<Grid item xs={12}>
-				<MainCard title="Historial de failovers (últimos 20 eventos)">
-					{history.length > 0 ? (
-						<TableContainer component={Paper} variant="outlined">
-							<Table size="small">
-								<TableHead>
-									<TableRow>
-										<TableCell>Fecha</TableCell>
-										<TableCell>Evento</TableCell>
-										<TableCell>Razón</TableCell>
-										<TableCell>Duración</TableCell>
-									</TableRow>
-								</TableHead>
-								<TableBody>
-									{history.map((entry, idx) => (
-										<TableRow key={idx} hover>
-											<TableCell>
-												<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums" }}>
-													{formatDate(entry.at)}
-												</Typography>
-											</TableCell>
-											<TableCell>
-												<Chip
-													label={entry.event === "activated" ? "Activado" : "Desactivado"}
-													color={entry.event === "activated" ? "error" : "success"}
-													size="small"
-													sx={{ fontWeight: 600, letterSpacing: 0.3 }}
-												/>
-											</TableCell>
-											<TableCell>
-												<Typography variant="caption">{entry.reason}</Typography>
-											</TableCell>
-											<TableCell>
-												<Typography variant="caption" sx={{ fontVariantNumeric: "tabular-nums" }}>
-													{entry.durationMin !== undefined ? `${entry.durationMin} min` : "—"}
-												</Typography>
-											</TableCell>
-										</TableRow>
-									))}
-								</TableBody>
-							</Table>
-						</TableContainer>
-					) : (
-						<Box sx={{ p: 2 }}>
-							<Typography variant="body2" color="text.secondary">
-								Sin eventos registrados todavía.
-							</Typography>
-						</Box>
-					)}
-				</MainCard>
-			</Grid>
-		</Grid>
+					</Box>
+				</Paper>
+			</Stack>
+		</MainCard>
 	);
 };
 
