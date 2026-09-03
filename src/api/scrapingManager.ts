@@ -192,13 +192,36 @@ export class ScrapingManagerService {
 // ====== Fuero Stats Interfaces ======
 
 export interface FueroStat {
-	causas: { count: number; pct: number };
+	causas: {
+		/** Expedientes que existen en el portal (isValid=true). */
+		count: number;
+		/** Qué porcentaje del total de causas válidas representa este fuero. */
+		pct: number;
+		/**
+		 * Todos los documentos de la colección. El scraper deja uno por CADA
+		 * NÚMERO INTENTADO, así que incluye los inexistentes: sin este dato no se
+		 * distingue "cuánto barrimos" de "cuánto encontramos".
+		 */
+		docs?: number | null;
+		/** Válidas que además pasaron la verificación del worker. */
+		verificadas?: number | null;
+		sinVerificar?: number | null;
+		/** Números barridos que resultaron no existir. */
+		inexistentes?: number | null;
+		/** Proporción de lo intentado que resultó ser un expediente real. */
+		rendimiento?: number | null;
+	};
 	sentencias: { count: number };
 	escritos: { count: number };
 }
 
 export interface FueroStats {
+	/** Causas válidas: los expedientes que existen. */
 	total: number;
+	/** Universo completo de documentos, incluidos los números inexistentes. */
+	docsTotal?: number;
+	verificadasTotal?: number;
+	inexistentesTotal?: number;
 	fueros: Record<string, FueroStat>;
 	updatedAt: string;
 	/** Sentencias actualmente indexadas en Pinecone (embeddingStatus=completed en MongoDB) */

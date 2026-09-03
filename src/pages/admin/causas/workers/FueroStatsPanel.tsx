@@ -15,8 +15,15 @@ import {
 	useTheme,
 	alpha,
 	Divider,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableHead,
+	TableRow,
 } from "@mui/material";
 import { Refresh2, FolderOpen, DocumentText, Book1, Clock, InfoCircle } from "iconsax-react";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Legend, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { useSnackbar } from "notistack";
 import { ScrapingManagerService, FueroStats, FueroStat } from "api/scrapingManager";
 import { labelCortoDeFuero, paletaDeFuero } from "utils/fueros";
@@ -136,6 +143,48 @@ const FueroStatsPanel: React.FC = () => {
 	const totalSentenciasActivas = stats?.sentenciasActivas?.total ?? null;
 	const totalEscritos = fueroEntries.reduce((acc, [, s]) => acc + s.escritos.count, 0);
 
+	// Universo por fuero. Solo los que tienen documentos: los fueros cableados
+	// pero nunca barridos aportarían filas en cero que no dicen nada.
+	const universo = fueroEntries
+		.map(([code, s]) => ({
+			code,
+			docs: s.causas.docs ?? 0,
+			validas: s.causas.count ?? 0,
+			verificadas: s.causas.verificadas ?? 0,
+			sinVerificar: s.causas.sinVerificar ?? 0,
+			inexistentes: s.causas.inexistentes ?? 0,
+			rendimiento: s.causas.rendimiento ?? 0,
+		}))
+		.filter((f) => f.docs > 0)
+		.sort((a, b) => b.docs - a.docs);
+
+	const tot = universo.reduce(
+		(a, f) => ({
+			docs: a.docs + f.docs,
+			validas: a.validas + f.validas,
+			verificadas: a.verificadas + f.verificadas,
+			sinVerificar: a.sinVerificar + f.sinVerificar,
+			inexistentes: a.inexistentes + f.inexistentes,
+		}),
+		{ docs: 0, validas: 0, verificadas: 0, sinVerificar: 0, inexistentes: 0 },
+	);
+
+	// La composición es lo que más sorprende del corpus: la mitad de los
+	// documentos son números que no existen en el portal.
+	const composicion = [
+		{ name: "Verificadas", value: tot.verificadas, color: theme.palette.success.main },
+		{ name: "Sin verificar", value: tot.sinVerificar, color: theme.palette.warning.main },
+		{ name: "Inexistentes", value: tot.inexistentes, color: theme.palette.grey[400] },
+	].filter((x) => x.value > 0);
+
+	const porFuero = universo
+		.filter((f) => f.validas > 0)
+		.map((f) => ({ name: f.code, value: f.validas, color: theme.palette[paletaDeFuero(f.code)].main }));
+
+	const rendimiento = universo
+		.filter((f) => f.docs > 500)
+		.map((f) => ({ name: f.code, value: f.rendimiento, color: theme.palette[paletaDeFuero(f.code)].main }));
+
 	return (
 		<Stack spacing={3}>
 			{/* Header */}
@@ -218,6 +267,157 @@ const FueroStatsPanel: React.FC = () => {
 					/>
 				</Grid>
 			</Grid>
+
+			{/* ── Universo del corpus ─────────────────────────────────────────── */}
+			<Card variant="outlined" sx={{ borderRadius: 2 }}>
+				<CardContent>
+					<Stack direction="row" alignItems="baseline" spacing={1} mb={0.5}>
+						<Typography variant="subtitle1" fontWeight={600}>
+							Universo de documentos
+						</Typography>
+						<Tooltip
+							title="El scraper deja un documento por cada número que intenta, exista o no el expediente. Por eso el total de documentos casi duplica al de causas: la mitad son huecos, y son los que permiten medir cobertura."
+							arrow
+						>
+							<InfoCircle size={15} style={{ opacity: 0.5 }} />
+						</Tooltip>
+					</Stack>
+
+					<Grid container spacing={3} alignItems="center">
+						{/* Composición: qué proporción de lo barrido resultó ser un expediente */}
+						<Grid item xs={12} md={4}>
+							<Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+								Composición de lo barrido
+							</Typography>
+							<ResponsiveContainer width="100%" height={190}>
+								<PieChart>
+									<Pie
+										data={composicion}
+										dataKey="value"
+										nameKey="name"
+										cx="50%"
+										cy="50%"
+										innerRadius={45}
+										outerRadius={72}
+										paddingAngle={2}
+									>
+										{composicion.map((e) => (
+											<Cell key={e.name} fill={e.color} />
+										))}
+									</Pie>
+									<RechartsTooltip formatter={(v: number, n: string) => [formatNumber(v), n]} />
+									<Legend verticalAlign="bottom" height={32} iconSize={9} formatter={(v) => <span style={{ fontSize: 11 }}>{v}</span>} />
+								</PieChart>
+							</ResponsiveContainer>
+						</Grid>
+
+						{/* Reparto de las causas válidas entre fueros */}
+						<Grid item xs={12} md={4}>
+							<Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+								Causas válidas por fuero
+							</Typography>
+							<ResponsiveContainer width="100%" height={190}>
+								<PieChart>
+									<Pie data={porFuero} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={72} paddingAngle={2}>
+										{porFuero.map((e) => (
+											<Cell key={e.name} fill={e.color} />
+										))}
+									</Pie>
+									<RechartsTooltip formatter={(v: number, n: string) => [formatNumber(v), n]} />
+									<Legend verticalAlign="bottom" height={32} iconSize={9} formatter={(v) => <span style={{ fontSize: 11 }}>{v}</span>} />
+								</PieChart>
+							</ResponsiveContainer>
+						</Grid>
+
+						{/* Rendimiento: cuántos intentos cuesta encontrar un expediente */}
+						<Grid item xs={12} md={4}>
+							<Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+								Rendimiento por fuero
+							</Typography>
+							<Tooltip
+								title="Porcentaje de números intentados que resultaron ser un expediente real. Cuanto más alto, menos búsquedas cuesta cada causa."
+								arrow
+							>
+								<Box>
+									<ResponsiveContainer width="100%" height={190}>
+										<BarChart data={rendimiento} layout="vertical" margin={{ left: 8, right: 24 }}>
+											<XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} unit="%" />
+											<YAxis type="category" dataKey="name" width={44} tick={{ fontSize: 10 }} />
+											<RechartsTooltip formatter={(v: number) => [`${v}%`, "rendimiento"]} />
+											<Bar dataKey="value" radius={[0, 4, 4, 0]}>
+												{rendimiento.map((e) => (
+													<Cell key={e.name} fill={e.color} />
+												))}
+											</Bar>
+										</BarChart>
+									</ResponsiveContainer>
+								</Box>
+							</Tooltip>
+						</Grid>
+					</Grid>
+
+					{/* Tabla detallada */}
+					<TableContainer sx={{ mt: 2 }}>
+						<Table size="small">
+							<TableHead>
+								<TableRow>
+									<TableCell>Fuero</TableCell>
+									<TableCell align="right">Documentos</TableCell>
+									<TableCell align="right">Válidas</TableCell>
+									<TableCell align="right">Inexistentes</TableCell>
+									<TableCell align="right">Rendimiento</TableCell>
+									<TableCell align="right">Verificadas</TableCell>
+									<TableCell align="right">Sin verificar</TableCell>
+								</TableRow>
+							</TableHead>
+							<TableBody>
+								{universo.map((f) => (
+									<TableRow key={f.code} hover>
+										<TableCell>
+											<Typography variant="body2" fontWeight={600} component="span">
+												{f.code}
+											</Typography>
+											<Typography variant="caption" color="text.secondary" sx={{ ml: 0.75 }}>
+												{labelCortoDeFuero(f.code)}
+											</Typography>
+										</TableCell>
+										<TableCell align="right">{formatNumber(f.docs)}</TableCell>
+										<TableCell align="right">{formatNumber(f.validas)}</TableCell>
+										<TableCell align="right">
+											<Typography variant="body2" color="text.secondary">
+												{formatNumber(f.inexistentes)}
+											</Typography>
+										</TableCell>
+										<TableCell align="right">
+											<Chip
+												size="small"
+												label={`${f.rendimiento}%`}
+												color={f.rendimiento >= 70 ? "success" : f.rendimiento >= 45 ? "warning" : "default"}
+												variant="outlined"
+											/>
+										</TableCell>
+										<TableCell align="right">{formatNumber(f.verificadas)}</TableCell>
+										<TableCell align="right">
+											<Typography variant="body2" color={f.sinVerificar > 0 ? "warning.main" : "text.disabled"}>
+												{f.sinVerificar > 0 ? formatNumber(f.sinVerificar) : "—"}
+											</Typography>
+										</TableCell>
+									</TableRow>
+								))}
+								<TableRow sx={{ "& td": { fontWeight: 700, borderTop: "2px solid", borderColor: "divider" } }}>
+									<TableCell>TOTAL</TableCell>
+									<TableCell align="right">{formatNumber(tot.docs)}</TableCell>
+									<TableCell align="right">{formatNumber(tot.validas)}</TableCell>
+									<TableCell align="right">{formatNumber(tot.inexistentes)}</TableCell>
+									<TableCell align="right">{tot.docs ? `${Math.round((tot.validas / tot.docs) * 1000) / 10}%` : "—"}</TableCell>
+									<TableCell align="right">{formatNumber(tot.verificadas)}</TableCell>
+									<TableCell align="right">{formatNumber(tot.sinVerificar)}</TableCell>
+								</TableRow>
+							</TableBody>
+						</Table>
+					</TableContainer>
+				</CardContent>
+			</Card>
 
 			{/* Per-fuero breakdown */}
 			<Card variant="outlined" sx={{ borderRadius: 2 }}>
