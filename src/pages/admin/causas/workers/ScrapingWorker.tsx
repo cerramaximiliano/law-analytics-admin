@@ -55,6 +55,8 @@ import {
 	Clock,
 	ChartSquare,
 	Map1,
+	Chart2,
+	Data,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig } from "api/workers";
@@ -86,6 +88,22 @@ const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - 2015 + 1 }, (_, i) => S
 
 // Slugs del sub-tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
 const SUB_TABS = ["configuraciones", "pm2", "historial", "cobertura", "estadisticas"] as const;
+
+// Estadísticas junta dos cosas distintas y muy largas: el FLUJO (qué se barrió
+// hoy, ayer, este mes) y el STOCK (qué hay acumulado en el corpus). Apiladas
+// obligaban a scrollear toda la primera para llegar a la segunda. Se separan en
+// sub-tabs propios, con su parámetro en la URL para que sean enlazables.
+const STATS_TABS = ["produccion", "corpus"] as const;
+
+// Al cambiar de sección principal se limpia el sub-tab de estadísticas: si no,
+// queda ?stats=corpus colgado en la URL de Configuraciones o Cobertura, donde
+// no significa nada.
+const SUB_TAB_RESETS = ["stats"] as const;
+
+const STATS_TAB_DEFS: SubTabDef[] = [
+	{ label: "Producción", icon: <Chart2 size={18} />, hint: "Qué se barrió: totales del día, por hora y por fuero" },
+	{ label: "Corpus", icon: <Data size={18} />, hint: "Qué hay acumulado: causas, sentencias y escritos por fuero" },
+];
 
 const TAB_DEFS: SubTabDef[] = [
 	{ label: "Configuraciones", icon: <Setting4 size={18} />, hint: "Gestión de workers" },
@@ -141,7 +159,8 @@ const ScrapingWorker = () => {
 	const [showExtraColumns, setShowExtraColumns] = useState<boolean>(false);
 
 	// Sub-tabs: Configuraciones vs Manager PM2
-	const [subTab, setSubTab] = useTabIndexParam("tab", SUB_TABS);
+	const [subTab, setSubTab] = useTabIndexParam("tab", SUB_TABS, { resets: SUB_TAB_RESETS });
+	const [statsTab, setStatsTab] = useTabIndexParam("stats", STATS_TABS);
 
 	// Cargar configuraciones
 	const fetchConfigs = async (
@@ -585,11 +604,12 @@ const ScrapingWorker = () => {
 						</Box>
 					)}
 					{subTab === 4 && (
-						<Box sx={{ p: { xs: 2, md: 3 } }}>
-							<Stack spacing={4}>
-								<ScrapingStatsPanel />
-								<FueroStatsPanel />
-							</Stack>
+						<Box>
+							<WorkerSubTabs value={statsTab} onChange={setStatsTab} tabs={STATS_TAB_DEFS} aria-label="Secciones de estadísticas" />
+							<Box sx={{ p: { xs: 2, md: 3 } }}>
+								{statsTab === 0 && <ScrapingStatsPanel />}
+								{statsTab === 1 && <FueroStatsPanel />}
+							</Box>
 						</Box>
 					)}
 
